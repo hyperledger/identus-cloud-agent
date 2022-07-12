@@ -1,0 +1,64 @@
+name: Check PR
+
+env:
+  # Maximum number of lines allowed to be changed in one PR
+  MAX_CHANGED_LINES: 500
+  PR_TITLE_MAX_LENGTH: 70
+  # Title must be `[ATL-1234] ...`
+  PR_TITLE_REGEXP: '\[\w+-\d+\] .+'
+
+defaults:
+  run:
+    shell: bash
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  check-pr-title:
+    name: "Check PR title"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: deepakputhraya/action-pr-title@master
+        name: Validate PR Title
+        with:
+          regex: ${{ env.PR_TITLE_REGEXP }}
+          max_length: ${{ env.PR_TITLE_MAX_LENGTH }}
+          github_token: ${{ secrets.ATALA_GITHUB_TOKEN }}
+      - uses: mshick/add-pr-comment@v1
+        name: Comment on PR
+        if: failure()
+        env:
+          GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
+        with:
+          message: |
+            Please fix the title of this PR.<br>
+            If you don't have ATL number, you must create it.<br>
+            Examples:
+              * `[ATL-1234] New feature description`
+              * `[ATL-1234] [HUGE] Huge new feature description (mind the space between ] and [)`
+  check-pr-size:
+    name: "Check PR size"
+    runs-on: ubuntu-latest
+    env:
+      TITLE: ${{ github.event.pull_request.title }}
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v2
+      - name: Get diff
+        uses: technote-space/get-diff-action@v5
+        with:
+          SET_ENV_NAME_LINES: LINES_CHANGED
+      - name: Check diff size
+        run: |
+          echo "This PR changes: ${LINES_CHANGED} lines"
+          if [[ ${TITLE} =~ [HUGE] ]]; then
+            echo "PR marked as [HUGE], skipping size check."
+            exit 0
+          fi
+          if (( LINES_CHANGED > MAX_CHANGED_LINES )); then
+            echo "ERROR: This PR changes more than ${MAX_CHANGED_LINES} lines."
+            echo "Please, separate this PR to small parts. Thanks!"
+            exit 1
+          fi
