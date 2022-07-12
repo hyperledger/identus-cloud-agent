@@ -1,0 +1,71 @@
+name: Linter
+
+# Default shell is `sh`
+# which is old, use bourne-again version instead
+defaults:
+  run:
+    shell: bash
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  lint:
+    name: Lint changes
+    runs-on: ubuntu-latest
+    env:
+      APPLY_FIXES: all
+      APPLY_FIXES_EVENT: pull_request
+      APPLY_FIXES_MODE: commit
+      VALIDATE_ALL_CODEBASE: ${{ github.ref_name == 'main' }}
+      DISABLE: COPYPASTE,SPELL
+      GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.ATALA_GITHUB_TOKEN }}
+          fetch-depth: 0
+      - name: Mega-Linter
+        id: ml
+        uses: megalinter/megalinter@v5
+      - name: Prepare commit
+        if: |
+          (success() || failure()) &&
+          steps.ml.outputs.has_updated_sources == 1 &&
+          github.event_name == 'pull_request'
+        run: sudo chown -Rc ${UID} .git/
+      - name: Import GPG key
+        id: import_gpg
+        if: |
+          (success() || failure()) &&
+          steps.ml.outputs.has_updated_sources == 1 &&
+          github.event_name == 'pull_request'
+        uses: crazy-max/ghaction-import-gpg@v3
+        with:
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          git-user-signingkey: true
+          git-commit-gpgsign: true
+      - name: Commit and push applied linter fixes
+        if: |
+          (success() || failure()) &&
+          steps.ml.outputs.has_updated_sources == 1 &&
+          github.event_name == 'pull_request'
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          branch: ${{ github.event.pull_request.head.ref }}
+          commit_message: "[Mega-Linter] Apply linters fixes"
+          commit_options: "--gpg-sign"
+          commit_user_name: ${{ steps.import_gpg.outputs.name }}
+          commit_user_email: ${{ steps.import_gpg.outputs.email }}
+      - name: Archive production artifacts
+        if: success() || failure()
+        uses: actions/upload-artifact@v2
+        with:
+          name: Mega-Linter reports
+          path: |
+            report
+            mega-linter.log

@@ -1,0 +1,17 @@
+repo:
+  - "*"
+apollo:
+  - apollo/**/*
+castor:
+  - castor/**/*
+mercury:
+  - mercury/**/*
+pluto:
+  - pluto/**/*
+pollux:
+  - pollux/**/*
+ci:
+  - .github/**/*
+docs:
+  - docs/**/*
+  - README.md

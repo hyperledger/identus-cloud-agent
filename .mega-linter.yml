@@ -1,0 +1,20 @@
+# Configuration file for Mega-Linter
+# See all available variables at https://megalinter.github.io/configuration/
+
+APPLY_FIXES: all
+DEFAULT_BRANCH: main
+DISABLE: [COPYPASTE, SPELL, CREDENTIALS]
+SHOW_ELAPSED_TIME: false
+FILEIO_REPORTER: false
+FLAVOR_SUGGESTIONS: false
+PRINT_ALPACA: false
+VALIDATE_ALL_CODEBASE: false
+SHOW_SKIPPED_LINTERS: false
+LOG_LEVEL: INFO
+# This pre-command fixes complex CLRF bug
+# when MegaLinter takes changes, it checkouts code twice
+# that could lead to new files in workspace created
+# with CLRF instead of CL due docker/python/git chain
+PRE_COMMANDS:
+  - command: git config --global core.autocrlf input
+    cwd: "workspace"
