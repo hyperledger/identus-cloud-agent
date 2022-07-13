@@ -1,4 +1,4 @@
-# Atala v2 Documentation 
+# Atala v2 Documentation
 
 This is the landing page for the Atala v2 technical documentation set.  
 
@@ -34,7 +34,7 @@ docker build -t atala-structurizr-lite docs/architecture
 
 ### Visualisation
 
-[Swagger UI](https://swagger.io/tools/swagger-ui/) is used and allows development teams and service consumers to visualize and interact with the API’s resources 
+[Swagger UI](https://swagger.io/tools/swagger-ui/) is used and allows development teams and service consumers to visualize and interact with the API’s resources
 without having any of the implementation logic in place. It is automatically generated from the OpenAPI specification.
 
 Swagger UI is available as a [Docker image](https://hub.docker.com/r/swaggerapi/swagger-ui).
@@ -47,8 +47,8 @@ The following [docker-compose.yml](./docker-compose.yml) file can be used to run
 ```bash
 docker-compose -f docs/docker-compose.yml up
 ```
-- Architecture diagrams doc is available here: http://localhost:8080
-- OpenAPI specifications doc is available here: http://localhost:8081
+- Architecture diagrams doc is available here: <http://localhost:8080>
+- OpenAPI specifications doc is available here: <http://localhost:8081>
 
 
 
