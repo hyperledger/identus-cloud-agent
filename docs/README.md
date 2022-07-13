@@ -4,7 +4,7 @@ This is the landing page for the Atala v2 technical documentation set.
 
 ## Architecture diagrams
 
-The diagrams are based on the [C4 model]([here](https://c4model.com)) to describe the architecture at different levels of details:
+The diagrams are based on the [C4 model](https://c4model.com) to describe the architecture at different levels of details:
 1. ***Context***: provides a starting point, showing how the software system in scope fits into the world around it.
 2. ***Containers***: zooms into the software system in scope, showing the high-level technical building blocks.
 3. ***Components***: zooms into an individual container, showing the components inside it.
@@ -47,8 +47,8 @@ The following [docker-compose.yml](./docker-compose.yml) file can be used to run
 ```bash
 docker-compose -f docs/docker-compose.yml up
 ```
-- Architecture diagrams doc is available here: <http://localhost:8080>
-- OpenAPI specifications doc is available here: <http://localhost:8081>
+- Architecture diagrams doc is available on *localhost:8080*
+- OpenAPI specifications doc is available *localhost:8081*
 
 
 
