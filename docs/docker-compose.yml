@@ -1,19 +1,18 @@
-version: '3'
+version: "3"
 
 services:
-
   atala-structurizr-lite:
-    image: atala-structurizr-lite:latest
+    image: atala-structurizr-lite
     ports:
       - "8080:8080"
 
   swagger-ui:
-    image: swaggerapi/swagger-ui:latest
+    image: swaggerapi/swagger-ui
     ports:
       - "8081:8080"
     environment:
-      URLS: "[ 
-               { name: \"Castor\", url: \"https://petstore.swagger.io/v2/swagger.json\" }, 
-               { name: \"Pollux\", url: \"https://petstore.swagger.io/v2/swagger.json\" }, 
-               { name: \"Mercury\", url: \"https://petstore.swagger.io/v2/swagger.json\" } 
-             ]"
+      URLS: '[
+        { name: "Castor", url: "https://petstore.swagger.io/v2/swagger.json" },
+        { name: "Pollux", url: "https://petstore.swagger.io/v2/swagger.json" },
+        { name: "Mercury", url: "https://petstore.swagger.io/v2/swagger.json" }
+        ]'
