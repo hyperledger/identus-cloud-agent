@@ -43,7 +43,7 @@ object CreateInvitationResponse {
       service = Seq(service)
     )
 
-    val encodedString = Base64.getEncoder.encode(invitation.asJson.noSpaces.getBytes)
+    val encodedString = Base64.getEncoder.encodeToString(invitation.asJson.noSpaces.getBytes)
     val invitationUrl = s"http://localhost:8080/invitation?_oob=$encodedString"
     CreateInvitationResponse(alias = "Mediator", invitation, invitationUrl)
   }
