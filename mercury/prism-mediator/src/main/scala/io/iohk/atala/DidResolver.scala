@@ -1,7 +1,7 @@
 package io.iohk.atala
 
 object DidResolver {
-  def lookupDid(): Option[DidDocument] = {
+  def lookupDid(did: String): Option[DidDocument] = {
     Some(DidDocument("did:prism:testnet:12345"))
   }
 

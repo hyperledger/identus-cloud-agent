@@ -12,7 +12,8 @@ object Main extends ZIOAppDefault {
 
   override def run: ZIO[Any with ZIOAppArgs with Scope, Any, Any] = {
 
-    val routes = ZHttp4sServerInterpreter().from(Endpoints.all).toRoutes <+> new SwaggerHttp4s(Endpoints.yaml).routes
+    val routes =
+      ZHttp4sServerInterpreter().from(Endpoints.all).toRoutes <+> new SwaggerHttp4s(Endpoints.yaml).routes
 
     BlazeServerBuilder[Task]
       .withExecutionContext(runtime.executor.asExecutionContext)
@@ -21,7 +22,7 @@ object Main extends ZIOAppDefault {
       .resource
       .use { _ =>
         ZIO.succeedBlocking {
-          println("Server started at http://localhost:8080. Press ENTER key to exit.")
+          println("Server started at http://localhost:8080. \n Open API docs at http://localhost:8080/docs. \n Press ENTER key to exit.")
           StdIn.readLine()
         }
       }

@@ -19,7 +19,7 @@ lazy val rootProject = (project in file(".")).settings(
       "com.softwaremill.sttp.tapir" %% "tapir-openapi-docs" % tapirVersion,
       "com.softwaremill.sttp.tapir" %% "tapir-openapi-circe-yaml" % "1.0.0-M9",
       "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui" % tapirVersion,
-      "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-http4s" % "0.19.0-M4",
+      "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-http4s" % "0.19.0-M1",
       "com.softwaremill.sttp.apispec" %% "openapi-circe-yaml" % "0.2.1"
     ),
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
