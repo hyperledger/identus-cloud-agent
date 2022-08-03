@@ -1,21 +1,19 @@
 package io.iohk.atala
 
+import cats.syntax.all._
+import io.iohk.atala.resolvers.{AliceSecretResolver, BobSecretResolver, UniversalDidResolver}
+import org.didcommx.didcomm.DIDComm
+import org.didcommx.didcomm.message.MessageBuilder
+import org.didcommx.didcomm.model.PackEncryptedParams.Builder
+import org.didcommx.didcomm.model.UnpackParams
 import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.server.Router
 import sttp.tapir.server.http4s.ztapir.ZHttp4sServerInterpreter
+import sttp.tapir.swagger.http4s.SwaggerHttp4s
 import zio.interop.catz._
 import zio.{Scope, Task, ZIO, ZIOAppArgs, ZIOAppDefault}
-
-import scala.jdk.CollectionConverters._
 import scala.io.StdIn
-import sttp.tapir.swagger.http4s.SwaggerHttp4s
-import cats.syntax.all._
-import com.google.gson.Gson
-import io.iohk.atala.resolvers.{AliceSecretResolver, BobSecretResolver, UniversalDidResolver}
-import org.didcommx.didcomm.DIDComm
-import org.didcommx.didcomm.message.{Message, MessageBuilder}
-import org.didcommx.didcomm.model.PackEncryptedParams.Builder
-import org.didcommx.didcomm.model.UnpackParams
+import scala.jdk.CollectionConverters._
 
 object Main extends ZIOAppDefault {
 
@@ -49,17 +47,6 @@ object Main extends ZIOAppDefault {
         .secretResolver(BobSecretResolver.secretResolver)
         .build()
     )
-    val gson = new Gson()
-    try {
-      val xwww = unpackResult.getMessage.toString
-      println(s"ddddddddd\n$xwww\ndddddd")
-
-      val messageJson = gson.fromJson(xwww, classOf[org.didcommx.didcomm.message.Message])
-      println(s"\n$messageJson\n")
-
-    } catch {
-      case e: Exception => println(e)
-    }
 
     println(s"**************************************************************************************************************************")
     println(s"\nGot ${unpackResult.getMessage} message\n")
