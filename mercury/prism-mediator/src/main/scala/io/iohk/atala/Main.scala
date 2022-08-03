@@ -12,6 +12,8 @@ import sttp.tapir.server.http4s.ztapir.ZHttp4sServerInterpreter
 import sttp.tapir.swagger.http4s.SwaggerHttp4s
 import zio.interop.catz._
 import zio.{Scope, Task, ZIO, ZIOAppArgs, ZIOAppDefault}
+
+import java.time.{LocalDateTime, ZoneOffset}
 import scala.io.StdIn
 import scala.jdk.CollectionConverters._
 
@@ -19,17 +21,19 @@ object Main extends ZIOAppDefault {
 
   override def run: ZIO[Any with ZIOAppArgs with Scope, Any, Any] = {
     val didComm = new DIDComm(UniversalDidResolver, AliceSecretResolver.secretResolver)
-
     val id = "1234567890"
     val body = Map("messagespecificattribute" -> "and its value").asJava
-    val `type` = "http://example.com/protocols/lets_do_lunch/1.0/proposal"
+    val `type` = "http://atalaprism.io/lets_connect/proposal"
     val message = new MessageBuilder(id, body, `type`)
     val ALICE_DID = "did:example:alice"
     val BOB_DID = "did:example:bob"
+    val createdTime = LocalDateTime.now().toEpochSecond(ZoneOffset.of("Z"))
+    val expiresTime = createdTime + 1000
+
     message.from(ALICE_DID)
     message.to(Seq(BOB_DID).asJava)
-    message.createdTime(1516269022)
-    message.expiresTime(1516385931)
+    message.createdTime(createdTime)
+    message.expiresTime(expiresTime)
     val xxx = message.build()
 
     val xx = new Builder(xxx, BOB_DID)
