@@ -20,7 +20,11 @@ lazy val rootProject = (project in file(".")).settings(
       "com.softwaremill.sttp.tapir" %% "tapir-openapi-circe-yaml" % "1.0.0-M9",
       "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui" % tapirVersion,
       "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-http4s" % "0.19.0-M1",
-      "com.softwaremill.sttp.apispec" %% "openapi-circe-yaml" % "0.2.1"
+      "com.softwaremill.sttp.apispec" %% "openapi-circe-yaml" % "0.2.1",
+      "org.didcommx" % "didcomm" % "0.3.1",
+      "org.jetbrains.kotlin" % "kotlin-runtime" % "1.2.71",
+      "org.jetbrains.kotlin" % "kotlin-stdlib" % "1.7.10",
+      "com.google.code.gson" % "gson" % "2.9.1"
     ),
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
