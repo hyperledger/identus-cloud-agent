@@ -13,7 +13,7 @@ import scala.io.StdIn
 object Main extends ZIOAppDefault {
 
   override def run: ZIO[Any with ZIOAppArgs with Scope, Any, Any] = {
-
+    DIDCommPlay.run()
     val routes =
       ZHttp4sServerInterpreter().from(Endpoints.all).toRoutes <+> new SwaggerHttp4s(Endpoints.yaml).routes
 

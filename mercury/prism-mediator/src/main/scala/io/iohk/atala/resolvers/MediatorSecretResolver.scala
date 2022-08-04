@@ -35,7 +35,7 @@ object MediatorSecretResolver {
   )
 
   val secretKeyAgreement2 = new Secret(
-    "did:example:mediator#key-agreement-1",
+    "did:example:mediator#key-agreement-2",
     VerificationMethodType.JSON_WEB_KEY_2020,
     new VerificationMaterial(
       VerificationMaterialFormat.JWK,
@@ -48,11 +48,41 @@ object MediatorSecretResolver {
     )
   )
 
+//  val secretKeyAgreementBob1 = new Secret(
+//    "did:example:bob#key-agreement-1",
+//    VerificationMethodType.JSON_WEB_KEY_2020,
+//    new VerificationMaterial(
+//      VerificationMaterialFormat.JWK,
+//      """{
+//        |                           "kty":"OKP",
+//        |                           "d":"b9NnuOCB0hm7YGNvaE9DMhwH_wjZA1-gWD6dA0JWdL0",
+//        |                           "crv":"X25519",
+//        |                           "x":"GDTrI66K0pFfO54tlCSvfjjNapIs44dzpneBgyx0S3E"
+//        |}""".stripMargin
+//    )
+//  )
+//  val secretKeyAgreementBob2 = new Secret(
+//    "did:example:bob#key-agreement-2",
+//    VerificationMethodType.JSON_WEB_KEY_2020,
+//    new VerificationMaterial(
+//      VerificationMaterialFormat.JWK,
+//      """{
+//        |                           "kty":"OKP",
+//        |                           "d":"p-vteoF1gopny1HXywt76xz_uC83UUmrgszsI-ThBKk",
+//        |                           "crv":"X25519",
+//        |                           "x":"UT9S3F5ep16KSNBBShU2wh3qSfqYjlasZimn0mB8_VM"
+//        |}""".stripMargin
+//    )
+//  )
+
   val secretResolver = new SecretResolverInMemory(
     Map(
       "did:example:mediator#key-3" -> secretKey1,
       "did:example:mediator#key-agreement-1" -> secretKeyAgreement1,
       "did:example:mediator#key-agreement-2" -> secretKeyAgreement2
+//      "did:example:bob#key-agreement-1" -> secretKeyAgreementBob1,
+//      "did:example:bob#key-agreement-2" -> secretKeyAgreementBob2
     ).asJava
   )
+
 }

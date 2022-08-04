@@ -1,7 +1,7 @@
 package io.iohk.atala
 
 import io.circe.generic.auto._
-import io.iohk.atala.Mediator.{ConnectionId, Message, httpErrors, messages}
+import io.iohk.atala.Mediator.{ConnectionId, Message, httpErrors}
 import io.iohk.atala.outofband.{CreateInvitation, CreateInvitationResponse}
 import sttp.apispec.openapi.circe.yaml._
 import sttp.tapir.docs.openapi.OpenAPIDocsInterpreter
@@ -11,16 +11,21 @@ import sttp.tapir.ztapir._
 import sttp.tapir.{PublicEndpoint, endpoint, query}
 import zio.ZIO
 
+import scala.collection.mutable
+
 object Endpoints {
 
-  val retrieveMessages: PublicEndpoint[ConnectionId, Unit, List[Message], Any] = endpoint.get
+  val messages = mutable.Map[ConnectionId, String]()
+
+  val retrieveMessages: PublicEndpoint[ConnectionId, Unit, List[String], Any] = endpoint.get
     .tag("mediator")
+    .summary("Retrieve Messages for connectionId")
     .in("mediator" / "messages")
     .in(query[ConnectionId]("connectionId"))
-    .out(jsonBody[List[Message]])
+    .out(jsonBody[List[String]])
 
   val retrieveMessagesServerEndpoint: ZServerEndpoint[Any, Any] =
-    retrieveMessages.serverLogicSuccess(id => ZIO.succeed(messages.get().filter(_.connectionId == id.connectionId)))
+    retrieveMessages.serverLogicSuccess(id => ZIO.succeed(List(messages.getOrElse(ConnectionId(id.connectionId), ""))))
 
   val registerMediator: PublicEndpoint[ConnectionId, ErrorInfo, Unit, Any] =
     endpoint.post
@@ -34,11 +39,15 @@ object Endpoints {
   val sendMessage: PublicEndpoint[Message, ErrorInfo, Unit, Any] =
     endpoint.post
       .tag("mediator")
+      .summary("Mediator service endpoint for sending message")
       .in("mediator" / "send" / "message")
       .in(jsonBody[Message])
       .errorOut(httpErrors)
 
-  val sendMessageServerEndpoint: ZServerEndpoint[Any, Any] = sendMessage.serverLogicSuccess(_ => ZIO.succeed(()))
+  val sendMessageServerEndpoint: ZServerEndpoint[Any, Any] = sendMessage.serverLogicSuccess { message =>
+    messages += ConnectionId(message.connectionId) -> message.msg
+    ZIO.succeed(())
+  }
 
   val createInvitation: PublicEndpoint[CreateInvitation, ErrorInfo, CreateInvitationResponse, Any] =
     endpoint.post

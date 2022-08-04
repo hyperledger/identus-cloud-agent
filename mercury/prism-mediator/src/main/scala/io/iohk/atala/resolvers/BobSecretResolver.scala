@@ -36,4 +36,5 @@ object BobSecretResolver {
   val secretResolver = new SecretResolverInMemory(
     Map("did:example:bob#key-3" -> secretKey1, "did:example:bob#key-agreement-1" -> secretKeyAgreement1).asJava
   )
+
 }
