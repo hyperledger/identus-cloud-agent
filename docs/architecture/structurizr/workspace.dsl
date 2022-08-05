@@ -14,14 +14,20 @@ workspace {
             atalaPrism = softwareSystem "Atala PRISM" "Exposes a suite of operations to create, manage and resolve standards based DIDs in a user-controlled manner, and a suite of operations to issue, manage and verify standards based VCs in a privacy preserving manner" {
                 mobileApp = container "Mobile App" "" "" "Mobile App" {
                     appCode = component "Mobile App Logic"
-                    bbSDK = component "Building Block SDK"
-                    edgeAgent = component "Edge Agent"
-                    wallet = component "Wallet"
+
+                    # Reference: https://livebook.manning.com/book/self-sovereign-identity/chapter-9/36
+                    # A digital agent is to a digital wallet what an operating system is to a computer or smart-phone.
+                    # It is the software that enables a person to take actions, perform communications, store information, and track usage of the digital wallet.
+                    group "Digital Wallet" {
+                        edgeAgent = component "Edge Agent" "A software that enables a person to take actions, perform communications, store information, and track usage of the digital wallet"
+                        bbSDK = component "Building Block SDK" "Client side logic for BBs"
+                        bbClient = component "Building Block HTTP Client" "OpenAPI generated stubs for all BBs"
+                    }
 
                     # relations within container
                     appCode -> edgeAgent "Operates"
-                    appCode -> bbSDK "Uses"
-                    edgeAgent -> wallet "Uses"
+                    edgeAgent -> bbSDK "Uses"
+                    bbSDK -> bbClient "Uses"
                 }
 
                 apiGateway = container "API Gateway" "Acts as the the entry point to API exposed by the backend microservices. Main functions: API backend documentation, TLS endpoint, reverse proxy, authentication & authorization, traffic monitoring, rate limiting, etc" "Middleware"
@@ -41,7 +47,6 @@ workspace {
                 }
 
                 # relations to/from containers within Prism
-                mobileApp -> apiGateway "Makes API calls to" "REST/HTTPS"
                 apiGateway -> castorApi "Routes requests to" "REST/HTTP"
                 apiGateway -> pollux "Routes requests to" "REST/HTTP"
                 apiGateway -> mercury "Routes requests to" "REST/HTTP"
@@ -53,7 +58,7 @@ workspace {
 
                 # relations to/from components within Prism
                 mobileApp.edgeAgent -> apiGateway "Communicates with Mercury Cloud Agent" "DIDComm"
-                mobileApp.bbSDK -> apiGateway "Makes API calls to BB" "REST/HTTPS"
+                mobileApp.bbClient -> apiGateway "Makes API calls to BB" "REST/HTTPS"
                 msgQueue -> castorWorker.dltEventConsumer "Notifies DLT changes to"
             }
 
