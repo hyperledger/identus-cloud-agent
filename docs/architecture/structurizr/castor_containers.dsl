@@ -37,4 +37,4 @@ castorWorker.opsProcessor -> castorDatabase "Writes observed DID operations to" 
 castorWorker.opsProcessor -> castorCache "Invalidates cache" "JDBC"
 castorWorker.scheduledOpsSyncProc -> castorDatabase "Updates operations" "JDBC"
 castorWorker.publishedOpsSyncProc -> castorDatabase "Updates operations" "JDBC"
-castorWorker.publishedOpsSyncProc -> castorCache "Invalidates cache" "JDBC
+castorWorker.publishedOpsSyncProc -> castorCache "Invalidates cache" "JDBC"
