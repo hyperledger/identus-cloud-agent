@@ -18,14 +18,14 @@ workspace {
                     # Reference: https://livebook.manning.com/book/self-sovereign-identity/chapter-9/36
                     # A digital agent is to a digital wallet what an operating system is to a computer or smart-phone.
                     # It is the software that enables a person to take actions, perform communications, store information, and track usage of the digital wallet.
-                    group "Digital Wallet" {
-                        edgeAgent = component "Edge Agent" "A software that enables a person to take actions, perform communications, store information, and track usage of the digital wallet"
-                        bbSDK = component "Building Block SDK" "Client side logic for BBs"
-                        bbClient = component "Building Block HTTP Client" "OpenAPI generated stubs for all BBs"
-                    }
+                    edgeAgent = component "Edge Agent" "A software that enables a person to take actions, perform communications, store information, and track usage of the digital wallet"
+                    wallet = component "Wallet" "A software (and optionally hardware) that enables the wallet’s controller to generate, store, manage, and protect cryptographic keys, secrets, and other sensitive private data"
+                    bbSDK = component "Building Block SDK" "Client side logic for BBs"
+                    bbClient = component "Building Block HTTP Client" "OpenAPI generated stubs for all BBs"
 
                     # relations within container
                     appCode -> edgeAgent "Operates"
+                    edgeAgent -> wallet "Uses"
                     edgeAgent -> bbSDK "Uses"
                     bbSDK -> bbClient "Uses"
                 }
