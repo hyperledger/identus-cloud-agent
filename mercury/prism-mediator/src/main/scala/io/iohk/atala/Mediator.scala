@@ -2,10 +2,9 @@ package io.iohk.atala
 
 import sttp.model.StatusCode
 import sttp.tapir.EndpointOutput.OneOf
+import sttp.tapir.generic.auto._
 import sttp.tapir.json.circe.jsonBody
 import sttp.tapir.ztapir.{oneOf, oneOfVariant}
-import sttp.tapir.generic.auto._
-import java.util.concurrent.atomic.AtomicReference
 
 object Mediator {
   import io.circe.generic.auto._
@@ -19,12 +18,4 @@ object Mediator {
     oneOfVariant(StatusCode.NotFound, jsonBody[NotFound])
   )
 
-  val messages = new AtomicReference(
-    List(
-      Message("1", "first"),
-      Message("1", "second"),
-      Message("2", "first"),
-      Message("2", "second")
-    )
-  )
 }
