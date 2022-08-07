@@ -1,2 +1,11 @@
 .idea
 report
+
+.vscode
+.bloop
+.bsp
+.metals
+
+**/project/metals.sbt
+
+target
