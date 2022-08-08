@@ -1,7 +1,7 @@
 package io.iohk.atala
 
 import io.circe.generic.auto._
-import io.iohk.atala.Mediator.{ConnectionId, Message, httpErrors}
+import io.iohk.atala.Mediator.{ConnectionId, ConnectionIdFIXME, Message, httpErrors}
 import io.iohk.atala.outofband.{CreateInvitation, CreateInvitationResponse}
 import sttp.apispec.openapi.circe.yaml._
 import sttp.tapir.docs.openapi.OpenAPIDocsInterpreter
@@ -27,14 +27,15 @@ object Endpoints {
   val retrieveMessagesServerEndpoint: ZServerEndpoint[Any, Any] =
     retrieveMessages.serverLogicSuccess(id => ZIO.succeed(List(messages.getOrElse(ConnectionId(id.connectionId), ""))))
 
-  val registerMediator: PublicEndpoint[ConnectionId, ErrorInfo, Unit, Any] =
+  val registerMediator: PublicEndpoint[ConnectionIdFIXME, ErrorInfo, Unit, Any] =
     endpoint.post
       .tag("mediator")
       .summary("Registers the agent with the router.")
       .in("mediator" / "register")
-      .in(jsonBody[ConnectionId])
+      .in(jsonBody[ConnectionIdFIXME])
       .errorOut(httpErrors)
-  val registerMediatorServerEndpoint: ZServerEndpoint[Any, Any] = registerMediator.serverLogicSuccess(_ => ZIO.succeed(()))
+  val registerMediatorServerEndpoint: ZServerEndpoint[Any, Any] =
+    registerMediator.serverLogicSuccess(_ => ZIO.succeed(()))
 
   val sendMessage: PublicEndpoint[Message, ErrorInfo, Unit, Any] =
     endpoint.post
@@ -49,21 +50,29 @@ object Endpoints {
     ZIO.succeed(())
   }
 
-  val createInvitation: PublicEndpoint[CreateInvitation, ErrorInfo, CreateInvitationResponse, Any] =
+  val createInvitation: PublicEndpoint[CreateInvitation, ErrorInfo, CreateInvitationResponse, Any] = {
     endpoint.post
       .tag("out-of-band")
       .summary("Create a new DIDCommV2 out of band invitation.")
       .in("outofband" / "create-invitation")
       .in(jsonBody[CreateInvitation])
-      .errorOut(httpErrors)
       .out(jsonBody[CreateInvitationResponse])
+      .errorOut(httpErrors)
       .description("Create Invitation Response")
+  }
 
   val createInvitationServerEndpoint: ZServerEndpoint[Any, Any] =
-    createInvitation.serverLogicSuccess(invitation => ZIO.succeed(CreateInvitationResponse(invitation.goal, invitation.goal_code)))
+    createInvitation.serverLogicSuccess(invitation =>
+      ZIO.succeed(CreateInvitationResponse(invitation.goal, invitation.goal_code))
+    )
 
   val all: List[ZServerEndpoint[Any, Any]] =
-    List(createInvitationServerEndpoint, retrieveMessagesServerEndpoint, registerMediatorServerEndpoint, sendMessageServerEndpoint)
+    List(
+      createInvitationServerEndpoint,
+      retrieveMessagesServerEndpoint,
+      registerMediatorServerEndpoint,
+      sendMessageServerEndpoint
+    )
   val docs =
     OpenAPIDocsInterpreter().toOpenAPI(
       List(createInvitation, retrieveMessages, registerMediator, sendMessage),

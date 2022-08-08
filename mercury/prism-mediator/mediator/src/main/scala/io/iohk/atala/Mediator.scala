@@ -10,6 +10,7 @@ object Mediator {
   import io.circe.generic.auto._
 
   case class ConnectionId(connectionId: String) extends AnyVal
+  case class ConnectionIdFIXME(connectionId: String)
   case class Message(connectionId: String, msg: String)
 
   val httpErrors: OneOf[ErrorInfo, ErrorInfo] = oneOf[ErrorInfo](

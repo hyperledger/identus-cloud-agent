@@ -11,14 +11,20 @@ case class Invitation(
     label: String,
     body: Body,
     handshake_protocols: Seq[String],
-    service: Seq[ServiceType]
+    service: Seq[Service] // FIXME service: Seq[ServiceType]
 )
 
 case class CreateInvitationResponse(alias: String, invitation: Invitation, invitationUrl: String)
+
 case class Body(goal: String, goal_code: String, accept: Seq[String])
 sealed trait ServiceType
-case class Service(id: String, serviceEndpoint: String, `type`: String, recipientKeys: Seq[String], routingKeys: Seq[String])
-    extends ServiceType
+case class Service(
+    id: String,
+    serviceEndpoint: String,
+    `type`: String,
+    recipientKeys: Seq[String],
+    routingKeys: Seq[String]
+) extends ServiceType
 case class Did(did: String) extends ServiceType
 
 object CreateInvitationResponse {
