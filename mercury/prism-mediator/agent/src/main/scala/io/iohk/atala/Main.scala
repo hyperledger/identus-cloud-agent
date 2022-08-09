@@ -53,6 +53,7 @@ val program2 = for {
   _ <- Console.printLine("msgInBob: " + msgInBob.getMessage)
 } yield ()
 
+// TODO Make tests and remove this main
 @main def didCommPlay() = {
 
   val app1 = program1.provide(

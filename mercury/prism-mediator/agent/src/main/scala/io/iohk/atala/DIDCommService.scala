@@ -4,6 +4,8 @@ import zio._
 
 import io.iohk.atala.model._
 
+//TODO RENAME package io.iohk.atala to io.iohk.atala.mercury (everywhere)
+//TODO RENAME to DidComm only
 trait DIDCommService {
   def packSigned(msg: Message): UIO[SignedMesage]
   def packEncrypted(msg: Message, to: String): UIO[EncryptedMessage]
