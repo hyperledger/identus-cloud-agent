@@ -17,7 +17,9 @@ case class Invitation(
 case class CreateInvitationResponse(alias: String, invitation: Invitation, invitationUrl: String)
 
 case class Body(goal: String, goal_code: String, accept: Seq[String])
+
 sealed trait ServiceType
+
 case class Service(
     id: String,
     serviceEndpoint: String,
@@ -25,6 +27,7 @@ case class Service(
     recipientKeys: Seq[String],
     routingKeys: Seq[String]
 ) extends ServiceType
+
 case class Did(did: String) extends ServiceType
 
 object CreateInvitationResponse {

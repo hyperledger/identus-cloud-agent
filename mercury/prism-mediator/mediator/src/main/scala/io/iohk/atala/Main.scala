@@ -1,11 +1,11 @@
 package io.iohk.atala
 
-import cats.syntax.all._
+import cats.syntax.all.*
 import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.server.Router
 import sttp.tapir.server.http4s.ztapir.ZHttp4sServerInterpreter
 import sttp.tapir.swagger.http4s.SwaggerHttp4s
-import zio.interop.catz._
+import zio.interop.catz.*
 import zio.{Scope, Task, ZIO, ZIOAppArgs, ZIOAppDefault}
 
 import scala.io.StdIn
@@ -13,12 +13,10 @@ import scala.io.StdIn
 object Main extends ZIOAppDefault {
 
   override def run: ZIO[Any with ZIOAppArgs with Scope, Any, Any] = {
-    // DIDCommPlay.run()
     val routes =
       ZHttp4sServerInterpreter().from(Endpoints.all).toRoutes <+> new SwaggerHttp4s(Endpoints.yaml).routes
 
     BlazeServerBuilder[Task]
-      // FIXME .withExecutionContext(runtime.executor.asExecutionContext)
       .bindHttp(8080, "localhost")
       .withHttpApp(Router("/" -> routes).orNotFound)
       .resource

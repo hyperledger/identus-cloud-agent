@@ -1,3 +1,5 @@
+import jdk.internal.agent.resources.agent
+
 val tapirVersion = "1.0.3"
 val VERSION = "0.1.0-SNAPSHOT"
 
@@ -55,6 +57,7 @@ lazy val mediator = project
     ),
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
+  .dependsOn(agents)
 
 lazy val resolver = project
   .in(file("resolver"))

@@ -55,8 +55,8 @@ object BobDidDoc {
   ).asJava
   val didCommServices = Seq(
     new DIDCommService(
-      "did:example:sssssmediator#didcomm-1",
-      "http://example.com/path",
+      "did:example:mediator#didcomm-1",
+      "http://atalaprism.io/path",
       Seq("did:example:mediator#key-agreement-1").asJava,
       Seq("didcomm/v2").asJava
     )
