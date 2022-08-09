@@ -1,36 +1,27 @@
 package io.iohk.atala
 
-// import org.didcommx.didcomm.secret.SecretResolverInMemory
-import org.didcommx.didcomm.message.Message
-import org.didcommx.didcomm.model.PackSignedResult
-import org.didcommx.didcomm.DIDComm
-import org.didcommx.didcomm.model.PackSignedParams
-
 import zio._
 
-import io.iohk.atala.resolvers.UniversalDidResolver
-import io.iohk.atala.resolvers.AliceSecretResolver
-import io.iohk.atala.resolvers.MediatorSecretResolver
-import org.didcommx.didcomm.model.PackEncryptedParams
-import org.didcommx.didcomm.model.PackEncryptedResult
-import org.didcommx.didcomm.model.UnpackParams
-import io.iohk.atala.resolvers.BobSecretResolver
-import org.didcommx.didcomm.model.UnpackResult
-import org.didcommx.didcomm.protocols.routing.Routing
+import io.iohk.atala.model._
 
 trait DIDCommService {
-  def packSigned(msg: Message): UIO[PackSignedResult]
-  def packEncrypted(msg: Message, to: String): UIO[PackEncryptedResult]
-  def unpack(base64str: String): UIO[UnpackResult]
+  def packSigned(msg: Message): UIO[SignedMesage]
+  def packEncrypted(msg: Message, to: String): UIO[EncryptedMessage]
+  def unpack(str: String): UIO[UnpackMesage]
+  def unpackBase64(base64str: String): UIO[UnpackMesage] // FIXME TODO Make this a Overloading method
 }
 
 object DIDCommService {
-  def packSigned(msg: Message): URIO[DIDCommService, PackSignedResult] =
+  def packSigned(msg: Message): URIO[DIDCommService, SignedMesage] =
     ZIO.serviceWithZIO(_.packSigned(msg))
 
-  def packEncrypted(msg: Message, to: String): URIO[DIDCommService, PackEncryptedResult] =
+  def packEncrypted(msg: Message, to: String): URIO[DIDCommService, EncryptedMessage] =
     ZIO.serviceWithZIO(_.packEncrypted(msg, to))
 
-  def unpack(base64str: String): URIO[DIDCommService, UnpackResult] =
+  def unpack(str: String): URIO[DIDCommService, UnpackMesage] =
+    ZIO.serviceWithZIO(_.unpack(str))
+
+  def unpackBase64(base64str: String): URIO[DIDCommService, UnpackMesage] =
     ZIO.serviceWithZIO(_.unpack(base64str))
+
 }
