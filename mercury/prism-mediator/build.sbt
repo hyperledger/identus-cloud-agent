@@ -49,6 +49,8 @@ lazy val mediator = project
       "com.softwaremill.sttp.tapir" %% "tapir-openapi-circe-yaml" % "1.0.0-M9",
       "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui" % tapirVersion,
       "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-http4s" % "0.19.0-M4",
+      "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % "1.0.3", // This helps with Arrow Functions. But swagger is just a pain!
+      "com.softwaremill.sttp.tapir" %% "tapir-redoc-http4s" % "0.19.0-M4",
       "com.softwaremill.sttp.apispec" %% "openapi-circe-yaml" % "0.2.1",
       // D.didcomm.value,
       // "org.jetbrains.kotlin" % "kotlin-runtime" % "1.2.71",

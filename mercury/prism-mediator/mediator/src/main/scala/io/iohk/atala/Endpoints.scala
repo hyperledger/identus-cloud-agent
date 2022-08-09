@@ -9,10 +9,13 @@ import sttp.tapir.generic.auto.*
 import sttp.tapir.json.circe.*
 import sttp.tapir.ztapir.*
 import sttp.tapir.{PublicEndpoint, endpoint, query}
-import zio.{Console, RIO, ZIO}
+
+import zio._
 
 import java.io.IOException
 import scala.collection.mutable
+
+import DIDCommService._
 
 object Endpoints {
 
@@ -25,7 +28,7 @@ object Endpoints {
     .in(query[String]("connectionId"))
     .out(jsonBody[List[String]])
 
-  val retrieveMessagesServerEndpoint: ZServerEndpoint[Any, Any] =
+  val retrieveMessagesServerEndpoint: ZServerEndpoint[DIDCommService, Any] =
     retrieveMessages.serverLogicSuccess(id => ZIO.succeed(messages.getOrElse(ConnectionId(id), List.empty[String])))
 
   val registerMediator: PublicEndpoint[ConnectionId, ErrorInfo, Unit, Any] =
@@ -35,7 +38,7 @@ object Endpoints {
       .in("mediator" / "register")
       .in(jsonBody[ConnectionId])
       .errorOut(httpErrors)
-  val registerMediatorServerEndpoint: ZServerEndpoint[Any, Any] =
+  val registerMediatorServerEndpoint: ZServerEndpoint[DIDCommService, Any] =
     registerMediator.serverLogicSuccess(_ => ZIO.succeed(()))
 
   val sendMessage: PublicEndpoint[Message, ErrorInfo, Unit, Any] =
@@ -46,11 +49,11 @@ object Endpoints {
       .in(jsonBody[Message])
       .errorOut(httpErrors)
 
-  val sendMessageServerEndpoint: ZServerEndpoint[Any, Any] = {
+  val sendMessageServerEndpoint: ZServerEndpoint[DIDCommService, Any] = {
     sendMessage.serverLogicSuccess { (message: Message) =>
       for {
-        mediator <- ZIO.service[AgentService[Agent.Mediator.type]]
-        unPackMsg <- mediator.unpack(message.msg)
+        // mediator <- ZIO.service[DIDCommService]
+        unPackMsg <- DIDCommService.unpack(message.msg)
         _ <- Console.printLine("SignedMessage: " + unPackMsg.getMessage)
         sss <- ZIO.succeed {
           val msgList: List[String] =
@@ -59,7 +62,6 @@ object Endpoints {
         }
       } yield ()
 
-    //  ZIO.succeed(())
     }
   }
 
@@ -74,12 +76,12 @@ object Endpoints {
       .description("Create Invitation Response")
   }
 
-  val createInvitationServerEndpoint: ZServerEndpoint[Any, Any] =
+  val createInvitationServerEndpoint: ZServerEndpoint[DIDCommService, Any] =
     createInvitation.serverLogicSuccess(invitation =>
       ZIO.succeed(CreateInvitationResponse(invitation.goal, invitation.goal_code))
     )
 
-  val all: List[ZServerEndpoint[Any, Any]] =
+  val all: List[ZServerEndpoint[DIDCommService, Any]] =
     List(
       createInvitationServerEndpoint,
       retrieveMessagesServerEndpoint,
@@ -87,14 +89,13 @@ object Endpoints {
       sendMessageServerEndpoint
     )
 
-  val docs =
-    OpenAPIDocsInterpreter().toOpenAPI(
-      List(createInvitation, retrieveMessages, registerMediator, sendMessage),
-      "Atala Prism Mediator",
-      "0.1.0"
-    )
-
-  val yaml = docs.toYaml
-
-  println(yaml)
+  // val docs =
+  //   OpenAPIDocsInterpreter().toOpenAPI(
+  //     List(createInvitation, retrieveMessages, registerMediator, sendMessage),
+  //     "Atala Prism Mediator",
+  //     "0.1.0"
+  //   )
+  // val yaml = docs.toYaml
+  // println(yaml)
+  // TODO Log  OpenAPI or create a endpoint to print OpenAPI
 }
