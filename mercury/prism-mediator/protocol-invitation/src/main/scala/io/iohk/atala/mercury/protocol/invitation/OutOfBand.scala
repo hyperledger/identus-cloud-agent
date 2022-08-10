@@ -1,8 +1,11 @@
-package io.iohk.atala.outofband
+package io.iohk.atala.mercury.protocol.invitation
 
 import io.circe.syntax.EncoderOps
-
+import io.circe.generic.auto._
 import java.util.Base64
+
+// TODO split into files
+
 case class CreateInvitation(goal: String, goal_code: String)
 
 case class Invitation(
@@ -31,7 +34,6 @@ case class Service(
 case class Did(did: String) extends ServiceType
 
 object CreateInvitationResponse {
-  import io.circe.generic.auto._
   val accepts = Seq("didcomm/v2")
 
   def apply(goal: String, goal_code: String): CreateInvitationResponse = {

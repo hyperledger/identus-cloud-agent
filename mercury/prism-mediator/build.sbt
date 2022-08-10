@@ -16,6 +16,9 @@ lazy val V = new {
   // https://mvnrepository.com/artifact/dev.zio/zio
   val zio = "2.0.0"
   val zioJson = "0.3.0-RC10"
+
+  // https://mvnrepository.com/artifact/io.circe/circe-core
+  val circe = "0.14.2"
 }
 
 /** Dependencies */
@@ -24,18 +27,72 @@ lazy val D = new {
   val zioStreams = Def.setting("dev.zio" %% "zio-streams" % V.zio)
   val zioJson = Def.setting("dev.zio" %% "zio-json" % V.zioJson)
 
+  
+  val circeCore =  Def.setting("io.circe" %% "circe-core" % V.circe)
+  val circeGeneric = Def.setting("io.circe" %% "circe-generic" % V.circe)
+  val circeParser = Def.setting("io.circe" %% "circe-parser" % V.circe)
+
   // Test DID comm
   val didcomm = Def.setting("org.didcommx" % "didcomm" % "0.3.1")
+  val didScala = Def.setting("app.fmgp" % "didscala" % "0.1.0-SNAPSHOT")
 
   // For munit https://scalameta.org/munit/docs/getting-started.html#scalajs-setup
   val munit = Def.setting("org.scalameta" %% "munit" % V.munit % Test)
 }
 
+// Just data models and interfaces of service (must not depend on external libraries)
+lazy val models = project
+  .in(file("models"))
+  .settings(name := "mercury-data-models", version := VERSION)
+  .settings(
+    libraryDependencies ++= Seq(D.zio.value),
+    libraryDependencies ++= Seq(D.didcomm.value) // FIXME REMOVE almost done
+  )
+
+lazy val protocolInvitation = project
+  .in(file("protocol-invitation"))
+  .settings(name := "mercury-protocol-invitation", version := VERSION)
+  .settings( libraryDependencies += D.zio.value)
+  .settings(libraryDependencies ++= Seq(D.circeCore.value, D.circeGeneric.value, D.circeParser.value))
+  .dependsOn(models)
+
+
+// TODO move stuff to the models module
+lazy val resolver = project
+  .in(file("resolver"))
+  .settings(name := "mercury-resolver", version := VERSION)
+  .settings(
+    libraryDependencies ++= Seq(
+      D.didcomm.value,
+      "org.jetbrains.kotlin" % "kotlin-runtime" % "1.2.71",
+      "org.jetbrains.kotlin" % "kotlin-stdlib" % "1.7.10",
+    )
+  )
+  .dependsOn(models)
+
+
+// For demos agents and services implementation
+lazy val agentDidcommx = project
+  .in(file("agent-didcommx"))
+  .settings(name := "mercury-agent-didcommx", version := VERSION)
+  .settings(  libraryDependencies += D.didcomm.value)
+  .dependsOn(models)
+  .dependsOn(resolver)
+
+// lazy val agentDidScala = project
+//   .in(file("agent-didcommx"))
+//   .settings(name := "mercury-agent-didscala", version := VERSION)
+//   .settings(libraryDependencies += D.didScala.value)
+//   .dependsOn(models)
+//   .dependsOn(resolver) //FIXME resolver for didScala
+
+
+// The mediator service
 lazy val mediator = project
   .in(file("mediator"))
   .settings(name := "mercury-mediator", version := VERSION)
   .settings(
-    libraryDependencies ++= Seq(
+    libraryDependencies ++= Seq( //TODO cleanup
       "com.softwaremill.sttp.tapir" %% "tapir-http4s-server-zio" % tapirVersion,
       "com.softwaremill.sttp.tapir" %% "tapir-http4s-server" % tapirVersion,
       "org.http4s" %% "http4s-blaze-server" % "0.23.12",
@@ -59,23 +116,4 @@ lazy val mediator = project
     ),
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
-  .dependsOn(agents)
-
-lazy val resolver = project
-  .in(file("resolver"))
-  .settings(name := "mercury-resolver", version := VERSION)
-  .settings(
-    libraryDependencies ++= Seq(
-      D.didcomm.value,
-      "org.jetbrains.kotlin" % "kotlin-runtime" % "1.2.71",
-      "org.jetbrains.kotlin" % "kotlin-stdlib" % "1.7.10",
-    )
-  )
-
-lazy val agents = project
-  .in(file("agent"))
-  .settings(name := "mercury-agent", version := VERSION)
-  .settings(
-    libraryDependencies ++= Seq(D.zio.value, D.didcomm.value)
-  )
-  .dependsOn(resolver)
+  .dependsOn(protocolInvitation, agentDidcommx, resolver)

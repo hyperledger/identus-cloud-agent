@@ -1,4 +1,4 @@
-package io.iohk.atala
+package io.iohk.atala.mercury.mediator
 
 import cats.syntax.all._
 import org.http4s.blaze.server.BlazeServerBuilder
@@ -6,12 +6,8 @@ import org.http4s.server.Router
 import sttp.tapir.server.http4s.ztapir.ZHttp4sServerInterpreter
 import sttp.tapir.swagger.http4s.SwaggerHttp4s
 import zio.interop.catz._
-import zio.{Scope, Task, ZIO, ZIOAppArgs, ZIOAppDefault}
 import org.http4s._
 
-import scala.io.StdIn
-
-import cats.syntax.all._
 import io.circe.generic.auto._
 import org.http4s._
 import org.http4s.blaze.server.BlazeServerBuilder
@@ -29,10 +25,13 @@ import zio._
 import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.Endpoint
 
-type MyTask[+A] = // [_] =>> zio.RIO[io.iohk.atala.DIDCommService, _]
-  ZIO[DIDCommService, Throwable, A] // TODO improve this Throwable (is too much)
+import io.iohk.atala.mercury.DidComm
+import io.iohk.atala.mercury.AgentService
 
-object Main extends ZIOAppDefault {
+type MyTask[+A] = // [_] =>> zio.RIO[io.iohk.atala.DidComm, _]
+  ZIO[DidComm, Throwable, A] // TODO improve this Throwable (is too much)
+
+object Mediator extends ZIOAppDefault {
 
   // API
   val apiRoutes: org.http4s.HttpRoutes[MyTask] = ZHttp4sServerInterpreter()
@@ -48,7 +47,7 @@ object Main extends ZIOAppDefault {
   }
 
   //
-  val serve: ZIO[DIDCommService, Throwable, Unit] = {
+  val serve: ZIO[DidComm, Throwable, Unit] = {
     Console.printLine("""
         |   ███╗   ███╗███████╗██████╗  ██████╗██╗   ██╗██████╗ ██╗   ██╗
         |   ████╗ ████║██╔════╝██╔══██╗██╔════╝██║   ██║██╔══██╗╚██╗ ██╔╝
@@ -76,5 +75,5 @@ object Main extends ZIOAppDefault {
   }
 
   override def run =
-    serve.provide(AgentService.mediator: ZLayer[Any, Nothing, DIDCommService]).exitCode
+    serve.provide(AgentService.mediator: ZLayer[Any, Nothing, DidComm]).exitCode
 }

@@ -1,4 +1,4 @@
-package io.iohk.atala
+package io.iohk.atala.mercury.mediator
 
 sealed trait ErrorInfo
 case class NotFound(msg: String) extends ErrorInfo

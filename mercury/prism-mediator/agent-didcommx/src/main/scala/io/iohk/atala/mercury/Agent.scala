@@ -1,4 +1,4 @@
-package io.iohk.atala
+package io.iohk.atala.mercury
 
 import org.didcommx.didcomm.DIDComm
 
@@ -6,23 +6,24 @@ import zio._
 import org.didcommx.didcomm.model._
 
 import io.iohk.atala.resolvers._
-import io.iohk.atala.model.{Message, SignedMesage, EncryptedMessage, UnpackMesage, given}
+import io.iohk.atala.mercury.model.{_, given}
 import java.util.Base64
+import io.iohk.atala.mercury.DidComm
 
-enum Agent(val id: String):
-  case Alice extends Agent("did:example:alice")
-  case Bob extends Agent("did:example:bob")
-  case Mediator extends Agent("did:example:mediator")
+enum Agent(val id: DidId):
+  case Alice extends Agent(DidId("did:example:alice"))
+  case Bob extends Agent(DidId("did:example:bob"))
+  case Mediator extends Agent(DidId("did:example:mediator"))
 
-case class AgentService[A <: Agent](didComm: DIDComm, did: A) extends DIDCommService {
+case class AgentService[A <: Agent](didComm: DIDComm, did: A) extends DidComm {
 
   override def packSigned(msg: Message): UIO[SignedMesage] = {
-    val params = new PackSignedParams.Builder(msg, did.id).build()
+    val params = new PackSignedParams.Builder(msg, did.id.value).build()
     ZIO.succeed(didComm.packSigned(params))
   }
 
-  override def packEncrypted(msg: Message, to: String): UIO[EncryptedMessage] = {
-    val params = new PackEncryptedParams.Builder(msg, to).from(did.id).build()
+  override def packEncrypted(msg: Message, to: DidId): UIO[EncryptedMessage] = {
+    val params = new PackEncryptedParams.Builder(msg, to.value).from(did.id.value).build()
     ZIO.succeed(didComm.packEncrypted(params))
   }
 

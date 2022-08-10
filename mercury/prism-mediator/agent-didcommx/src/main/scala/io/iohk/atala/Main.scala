@@ -8,12 +8,14 @@ import java.util.Base64
 
 import zio._
 
-import io.iohk.atala.model.Message
 import io.iohk.atala.resolvers.{AliceSecretResolver, BobSecretResolver, MediatorSecretResolver, UniversalDidResolver}
+import io.iohk.atala.mercury.model.Message
+import io.iohk.atala.mercury.Agent
+import io.iohk.atala.mercury.AgentService
 
 def makeMsg(from: Agent, to: Agent) = Message(
-  from,
-  to,
+  from.id,
+  to.id,
   Map(
     "connectionId" -> "8fb9ea21-d094-4506-86b6-c7c1627d753a",
     "msg" -> "Hello Bob"
