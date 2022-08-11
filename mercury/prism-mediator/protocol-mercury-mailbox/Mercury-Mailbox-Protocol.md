@@ -37,16 +37,13 @@ idle --> recieved_forward_message
 recieved_forward_message --> validation             :Store Message
 validation --> idle                                 :Failed validation delete message
 validation --> notify_recipient                     :New message
-notify_recipient --> notify_recipient               :Retry 
-notify_recipient --> confirm                        :Ack recieved message
-confirm          --> [*]                            :End
+notify_recipient --> [*]
 idle --> send_challenge                             :Recived Message pickup       
 send_challenge --> message_sent                     :Validate Challenge response
-message_sent -->  send_challenge                    :Retry 
 send_challenge --> send_challenge                   :Retry send challenge
 send_challenge --> idle                             :Retry Give up   
 message_sent --> message_recieved                   :Ack recieved message
-message_recieved --> [*]                            :End 
+message_recieved --> [*]                             
 ```
 
 ### Service State Machine - Alice Agent POV
