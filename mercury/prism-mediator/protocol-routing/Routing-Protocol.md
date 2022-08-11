@@ -38,8 +38,9 @@ stateDiagram-v2
 
 ```mermaid
 stateDiagram-v2
-  [*] --> Sending
-  Sending --> P1: receive foward messagem
+  % [*] --> Sending
+  % Sending --> P1: receive foward messagem
+  [*] --> P1: receive foward messagem
   P1 --> Sending
   Sending --> Sending: retry error
   Sending --> Idle: msg sent
