@@ -27,60 +27,36 @@ sequenceDiagram
   end
 ```
 
----
-
-### Client State Machine - Alice POV
-
-After reading the out-of-band invitation from the Mediator
-
-```mermaid
-stateDiagram-v2
-    [*]           --> Preparation1  : Processing Invitation
-    Preparation1  --> Preparation2  : Create Reply Messagem
-    Preparation2  --> Connecting    : Connect
-    Connecting    --> Connecting    : Reconnecting
-    Connecting    --> [*]           : Giveup (timeout)
-    Connecting    --> Enrolling     : Send Reply Messagem
-    Enrolling     --> Connecting    : Reconnecting
-    Enrolling     --> Enrolling     : Timeout - Resend Messagem
-    Enrolling     --> Registered    : Positive response
-    Enrolling     --> [*]           : Giveup (timeout)
-    Enrolling     --> NotRegistered : Negative Response
-    NotRegistered --> [*]           : Negative Response (Giveup)
-    NotRegistered --> Preparation1  : Negative Response (Retry)
-    Registered    --> Checking      : Update my DID document
-    Checking      --> Checking      : Fail or Timeout
-    Checking      --> [*]           : Confirmation
-    Checking      --> [*]           : Giveup
-```
-
----
 
 ### Service State Machine - Mediator POV
-
 ```mermaid
 stateDiagram-v2
-    state "Idle" as idle
-    state "
-      Received Message
-      (Accepting Invitation)
-    " as received_message
-    state "Validation \n  Check Message validity " as validation
-    state "Enrollment Process-1" as enrollment_process1
-    % Check if is alredy Registered
-    state "Enrollment Process-2" as enrollment_process2
+state "Idle" as idle
+[*] --> idle
+idle --> recieved_forward_message
+recieved_forward_message --> validation             :Store Message
+validation --> idle                                 :Failed validation delete message
+validation --> notify_recipient                     :New message
+notify_recipient --> notify_recipient               :Retry 
+notify_recipient --> confirm                        :Ack recieved message
+confirm          --> [*]                            :End
+idle --> send_challenge                             :Recived Message pickup       
+send_challenge --> message_sent                     :Validate Challenge response
+message_sent -->  send_challenge                    :Retry 
+send_challenge --> send_challenge                   :Retry send challenge
+send_challenge --> idle                             :Retry Give up   
+message_sent --> message_recieved                   :Ack recieved message
+message_recieved --> [*]                            :End 
+```
 
-    [*] --> idle
-    idle                --> idle                : Waiting for new conections
-    idle                --> received_message    : New Conection
-    received_message    --> idle                : Negative Response
-    received_message    --> validation          : Find DID Document \n (DID revolver)
-    validation          --> idle                : Fail
-    validation          --> enrollment_process1 : Meet enrollment conditions
-    enrollment_process1 --> enrollment_process2 : Create a persistent storage entry for the user
-    enrollment_process1 --> reply : Was already enrolled
-    enrollment_process2 --> reply 
-    reply --> idle
-
-    
+### Service State Machine - Alice Agent POV
+```mermaid
+stateDiagram-v2
+state "Idle" as idle
+idle --> messages_requested                         :Requested pending messages pickup       
+messages_requested --> message_replyed              :Recived message solve the Challenge
+message_replyed -->  recieve_messages               :recived the messages 
+message_replyed --> messages_requested              :Retry with new challenge
+recieve_messages --> messages_requested             :Request more messages 
+recieve_messages --> complete                       :send Ack
 ```
