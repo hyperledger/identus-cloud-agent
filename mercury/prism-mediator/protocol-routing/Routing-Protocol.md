@@ -17,7 +17,11 @@ Optional: The mediator can use the "Problem Reports Protocol" to return a proble
 ## Roles
 
 - sender - The sender emits messages of type forward to the mediator.
+**[See Sender Process here](https://identity.foundation/didcomm-messaging/spec/#sender-process-to-enable-forwarding)**
+
 - mediator - The mediator unpacks (decrypts) the payload of an encrypted forward message and passes on the result (a blob that probably contains a differently encrypted payload) to the recipient.
+**[See Sender Mediator here](https://identity.foundation/didcomm-messaging/spec/#mediator-process)**
+
 - recipient - The intended recipient of the sender.
 
 ## Diagrams
@@ -33,6 +37,8 @@ stateDiagram-v2
   error_detected --> Idle
   Idle --> [*]
 ```
+
+---
 
 ### Mediator state machine
 
@@ -50,6 +56,8 @@ stateDiagram-v2
 
 **NOTE:** The state P1 is protocol consosition!
 In our case is the Mercury Mailbox protocol.
+
+---
 
 ### Receiver state machine
 
