@@ -40,7 +40,7 @@ validation --> notify_recipient                     :New message
 notify_recipient --> [*]
 idle --> send_challenge                             :Recived Message pickup       
 send_challenge --> message_sent                     :Validate Challenge response
-message_sent --> [*]                             
+message_sent --> [*]                                      
 ```
 
 ### Service State Machine - Alice Agent POV
@@ -52,5 +52,5 @@ messages_requested --> message_replyed              :Recived message solve the C
 message_replyed -->  recieve_messages               :recived the messages 
 message_replyed --> messages_requested              :Retry with new challenge
 recieve_messages --> messages_requested             :Request more messages 
-recieve_messages --> complete                       :send Ack
+recieve_messages --> [*]
 ```
