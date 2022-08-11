@@ -40,7 +40,6 @@ validation --> notify_recipient                     :New message
 notify_recipient --> [*]
 idle --> send_challenge                             :Recived Message pickup       
 send_challenge --> message_sent                     :Validate Challenge response
-send_challenge --> send_challenge                   :Retry send challenge
 send_challenge --> idle                             :Retry Give up   
 message_sent --> message_recieved                   :Ack recieved message
 message_recieved --> [*]                             
