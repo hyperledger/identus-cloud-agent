@@ -27,8 +27,7 @@ lazy val D = new {
   val zioStreams = Def.setting("dev.zio" %% "zio-streams" % V.zio)
   val zioJson = Def.setting("dev.zio" %% "zio-json" % V.zioJson)
 
-  
-  val circeCore =  Def.setting("io.circe" %% "circe-core" % V.circe)
+  val circeCore = Def.setting("io.circe" %% "circe-core" % V.circe)
   val circeGeneric = Def.setting("io.circe" %% "circe-generic" % V.circe)
   val circeParser = Def.setting("io.circe" %% "circe-parser" % V.circe)
 
@@ -40,7 +39,14 @@ lazy val D = new {
   val munit = Def.setting("org.scalameta" %% "munit" % V.munit % Test)
 }
 
-// Just data models and interfaces of service (must not depend on external libraries)
+// #########################
+// ### Models & Services ###
+// #########################
+
+/** Just data models and interfaces of service.
+  *
+  * This module must not depend on external libraries!
+  */
 lazy val models = project
   .in(file("models"))
   .settings(name := "mercury-data-models", version := VERSION)
@@ -49,13 +55,32 @@ lazy val models = project
     libraryDependencies ++= Seq(D.didcomm.value) // FIXME REMOVE almost done
   )
 
+// #################
+// ### Protocols ###
+// #################
+
 lazy val protocolInvitation = project
   .in(file("protocol-invitation"))
   .settings(name := "mercury-protocol-invitation", version := VERSION)
-  .settings( libraryDependencies += D.zio.value)
+  .settings(libraryDependencies += D.zio.value)
   .settings(libraryDependencies ++= Seq(D.circeCore.value, D.circeGeneric.value, D.circeParser.value))
   .dependsOn(models)
 
+lazy val protocolMercuryMailbox = project
+  .in(file("protocol-mercury-mailbox"))
+  .settings(name := "mercury-protocol-mailbox", version := VERSION)
+  .settings(libraryDependencies += D.zio.value)
+  .dependsOn(models, protocolInvitation, protocolRouting)
+
+lazy val protocolRouting = project
+  .in(file("protocol-routing"))
+  .settings(name := "mercury-protocol-routing-2_0", version := VERSION)
+  .settings(libraryDependencies += D.zio.value)
+  .dependsOn(models)
+
+// ################
+// ### Resolver ###
+// ################
 
 // TODO move stuff to the models module
 lazy val resolver = project
@@ -70,29 +95,36 @@ lazy val resolver = project
   )
   .dependsOn(models)
 
+// ##############
+// ### Agents ###
+// ##############
 
-// For demos agents and services implementation
+/** Demos agents and services implementation with didcommx */
 lazy val agentDidcommx = project
   .in(file("agent-didcommx"))
   .settings(name := "mercury-agent-didcommx", version := VERSION)
-  .settings(  libraryDependencies += D.didcomm.value)
-  .dependsOn(models)
+  .settings(libraryDependencies += D.didcomm.value)
+  .dependsOn(models, protocolInvitation)
   .dependsOn(resolver)
 
+///** TODO Demos agents and services implementation with did-scala */
 // lazy val agentDidScala = project
-//   .in(file("agent-didcommx"))
+//   .in(file("agent-did-scala"))
 //   .settings(name := "mercury-agent-didscala", version := VERSION)
 //   .settings(libraryDependencies += D.didScala.value)
 //   .dependsOn(models)
 //   .dependsOn(resolver) //FIXME resolver for didScala
 
+// ################
+// ### Mediator ###
+// ################
 
-// The mediator service
+/** The mediator service */
 lazy val mediator = project
   .in(file("mediator"))
   .settings(name := "mercury-mediator", version := VERSION)
   .settings(
-    libraryDependencies ++= Seq( //TODO cleanup
+    libraryDependencies ++= Seq( // TODO cleanup
       "com.softwaremill.sttp.tapir" %% "tapir-http4s-server-zio" % tapirVersion,
       "com.softwaremill.sttp.tapir" %% "tapir-http4s-server" % tapirVersion,
       "org.http4s" %% "http4s-blaze-server" % "0.23.12",
@@ -116,4 +148,9 @@ lazy val mediator = project
     ),
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
-  .dependsOn(protocolInvitation, agentDidcommx, resolver)
+  .dependsOn(agentDidcommx, resolver)
+  .dependsOn(
+    protocolInvitation,
+    protocolMercuryMailbox,
+    protocolRouting,
+  )
