@@ -132,35 +132,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/Connection"
 
-  /connections:
-    post:
-      tags:
-        - connection
-      summary: Create a new connection
-      operationId: CreateInvitation
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                data:
-                  type: object
-                  properties:
-                    goal-code:
-                      $ref: "#/components/schemas/GoalCode"
-      responses:
-        201:
-          description: connection created
-          content:
-            application/json:
-              schema:
-                required:
-                  - connection
-                properties:
-                  invitation:
-                    $ref: "#/components/schemas/CreateConnection"
 
   /messages:
     post:
