@@ -98,7 +98,7 @@ paths:
     delete:
       tags:
         - connection
-      summary: Delete a out-of-band invitation
+      summary: Delete the connection
       operationId: DeleteConnection
       responses:
         200:
@@ -122,7 +122,7 @@ paths:
     patch:
       tags:
         - connection
-      summary: update connection e.g keylist
+      summary: update connection
       operationId: GetConnection
       responses:
         200:
@@ -131,6 +131,36 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Connection"
+
+  /connections:
+    post:
+      tags:
+        - connection
+      summary: Create a new connection
+      operationId: CreateInvitation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: object
+                  properties:
+                    goal-code:
+                      $ref: "#/components/schemas/GoalCode"
+      responses:
+        201:
+          description: connection created
+          content:
+            application/json:
+              schema:
+                required:
+                  - connection
+                properties:
+                  invitation:
+                    $ref: "#/components/schemas/CreateConnection"
 
   /messages:
     post:
