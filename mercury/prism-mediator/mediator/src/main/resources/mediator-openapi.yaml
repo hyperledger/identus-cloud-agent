@@ -9,12 +9,12 @@ servers:
   - url: http://localhost:8080
     description:  for local testing
 paths:
-  /outofband/create-invitation:
+  /invitations:
     post:
       tags:
-        - outofband
-      summary: Create a new DIDCommV2 out of band invitation
-      operationId: DIDCommV2CreateInvitation
+        - invitation
+      summary: Create a new out of band invitation
+      operationId: CreateInvitation
       requestBody:
         required: true
         content:
@@ -28,7 +28,7 @@ paths:
                     goal-code:
                       $ref: "#/components/schemas/GoalCode"
       responses:
-        200:
+        201:
           description: Invitation created
           content:
             application/json:
@@ -37,105 +37,106 @@ paths:
                   - invitation
                 properties:
                   invitation:
-                    $ref: "#/components/schemas/DIDCommV2Invitation"
-  /outofband/accept-invitation:
+                    $ref: "#/components/schemas/Invitation"
+
+  /invitations/{id}:
+    delete:
+      tags:
+        - invitation
+      summary: Delete a out-of-band invitation
+      operationId: DeleteInvitation
+      responses:
+        200:
+          description: Invitation deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteResponse"
+    get:
+      tags:
+        - invitation
+      summary: Get out-of-band invitation
+      operationId: GetInvitation
+      responses:
+        200:
+          description: Invitation deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invitation"
+  /connections:
     post:
       tags:
-        - outofband
-      summary: Accept a DIDCommV2 out of band invitation
-      operationId: DIDCommV2AcceptInvitation
+        - connection
+      summary: Create a new connection
+      operationId: CreateInvitation
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required:
-                - data
               properties:
                 data:
                   type: object
                   properties:
-                    invitation:
-                      $ref: "#/components/schemas/DIDCommV2Invitation"
+                    goal-code:
+                      $ref: "#/components/schemas/GoalCode"
       responses:
-        200:
-          description: Invitation accepted
+        201:
+          description: connection created
           content:
             application/json:
               schema:
                 required:
-                  - connection_id
+                  - connection
                 properties:
-                  connection_id:
-                    $ref: "#/components/schemas/ConnectionId"
-  /mediator/register:
-    post:
+                  invitation:
+                    $ref: "#/components/schemas/CreateConnection"
+
+  /connections/{id}:
+    delete:
       tags:
-        - mediator
-      summary: Register the agent with the router mediate request.
-      operationId: MediateRequest
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - id
-              properties:
-                id:
-                  $ref: "#/components/schemas/ConnectionId"
+        - connection
+      summary: Delete a out-of-band invitation
+      operationId: DeleteConnection
       responses:
         200:
-          description: Messages retrieved
+          description: connection deleted
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/MessageResponse"
-        default:
-          description: other_status
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/GenericErrorBody"
-
-  /mediator/messages:
-    post:
+                $ref: "#/components/schemas/DeleteResponse"
+    get:
       tags:
-        - mediator
-      summary: Messages  pending messages for given connection
-      operationId: MessageRequest
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - id
-              properties:
-                id:
-                  $ref: "#/components/schemas/ConnectionId"
+        - connection
+      summary: Get connection details
+      operationId: GetConnection
       responses:
         200:
-          description: Messages retrieved
+          description: get a connection
           content:
             application/json:
               schema:
-                $ref:  "#/components/schemas/MessageResponse"
-        default:
-          description: other_status
+                $ref: "#/components/schemas/Connection"
+    patch:
+      tags:
+        - connection
+      summary: update connection e.g keylist
+      operationId: GetConnection
+      responses:
+        200:
+          description: update the connection
           content:
             application/json:
               schema:
-                $ref:  "#/components/schemas/GenericErrorBody"
+                $ref: "#/components/schemas/Connection"
 
-  /mediator/send/message:
+  /messages:
     post:
       tags:
         - mediator
-      summary:  send message for given connection.
+      summary: send a message
       operationId: SendMessage
       requestBody:
         required: true
@@ -149,6 +150,26 @@ paths:
                 id:
                   $ref: "#/components/schemas/ConnectionId"
       responses:
+        201:
+          description: Messages retrieved
+          content:
+            application/json:
+              schema:
+                $ref:  "#/components/schemas/MessageResponse"
+        default:
+          description: other_status
+          content:
+            application/json:
+              schema:
+                $ref:  "#/components/schemas/GenericErrorBody"
+
+  /messages/{id}:
+    get:
+      tags:
+        - mediator
+      summary:  Get messages for given connection.
+      operationId: GetMessage
+      responses:
         200:
           description: Send Message Response
           content:
@@ -161,24 +182,11 @@ paths:
             application/json:
               schema:
                 $ref:  "#/components/schemas/GenericErrorBody"
-
-  /mediator/unregister:
     delete:
       tags:
         - mediator
-      summary: Unregisters the agent with the router.
-      operationId: UnregisterMediator
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - id
-              properties:
-                id:
-                  $ref: "#/components/schemas/ConnectionId"
+      summary: delete a message.
+      operationId: delete message
       responses:
         200:
           description: Unregister the mediator for this Connection
@@ -193,30 +201,10 @@ paths:
               schema:
                 $ref:  "#/components/schemas/GenericErrorBody"
 
-  /mediator/connections:
-    get:
-      tags:
-        - mediator-admin
-      summary:  Retrieves the router`s connections.
-      operationId: GetMediatorConnections
-      responses:
-        200:
-          description: Messages retrieved
-          content:
-            application/json:
-              schema:
-                $ref:  "#/components/schemas/GetConnectionResponse"
-        default:
-          description: other_status
-          content:
-            application/json:
-              schema:
-                $ref:  "#/components/schemas/GenericErrorBody"
-
 components:
   schemas:
-    DIDCommV2Invitation:
-      title: DIDCommV2 Out of Band Invitation
+    Invitation:
+      title:  Out of Band Invitation
       type: object
       example:
         {
@@ -224,6 +212,26 @@ components:
           "type": "https://didcomm.org/out-of-band/2.0/invitation",
           "from": "did:prism:testnet:EiCRKRZKozDBAlxpZ0UI2UylXW6AmwSdQfguo0VGeyVKKg",
           "body": { "goal-code": "create-connection", "accept": [ "didcomm/v2" ] },
+        }
+    CreateConnection:
+      title:  Create Connection
+      type: object
+      example:
+        {
+          "id": "f3375429-b116-4224-b55f-563d7ef461f1",
+          "type": "https://didcomm.org/connections/2.0/create-connection",
+          "from": "did:prism:testnet:EiCRKRZKozDBAlxpZ0UI2UylXW6AmwSdQfguo0VGeyVKKg",
+          "body": {},
+        }
+    Connection:
+      title: Connection
+      type: object
+      example:
+        {
+          "id": "f3375429-b116-4224-b55f-563d7ef461f1",
+          "type": "https://didcomm.org/connections/2.0/create-connection",
+          "from": "did:prism:testnet:EiCRKRZKozDBAlxpZ0UI2UylXW6AmwSdQfguo0VGeyVKKg",
+          "body": { },
         }
     GoalCode:
       title: DIDCommV2 Out of Band Invitation Goal Code
@@ -271,6 +279,10 @@ components:
     DeleteMessageResponse:
       type: object
       title: send message response.
+      example: "{}"
+    DeleteResponse:
+      type: object
+      title: delete response.
       example: "{}"
     Code:
       type: integer

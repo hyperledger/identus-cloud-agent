@@ -4,7 +4,7 @@
 
 TODO maybe ??? `https://atalaprism.io/mercury/mailbox/1.0`
 
-## Diagrams (Mailbox Enrollment)
+## Diagrams (Mailbox Operations)
 
 ### Flow Diagram
 
