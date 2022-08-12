@@ -69,7 +69,7 @@ paths:
       tags:
         - connection
       summary: Create a new connection
-      operationId: CreateInvitation
+      operationId: CreateConnection
       requestBody:
         required: true
         content:
@@ -122,8 +122,8 @@ paths:
     patch:
       tags:
         - connection
-      summary: update connection
-      operationId: GetConnection
+      summary: update connection single field
+      operationId: UpdateConnection
       responses:
         200:
           description: update the connection
