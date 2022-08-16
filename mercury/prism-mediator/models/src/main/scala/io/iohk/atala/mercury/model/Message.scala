@@ -14,5 +14,6 @@ case class Message(
     id: String = java.util.UUID.randomUUID.toString(),
     piuri: PIURI = "http://atalaprism.io/lets_connect/proposal",
     createdTime: Long = LocalDateTime.now().toEpochSecond(ZoneOffset.of("Z")),
-    expiresTimePlus: Long = 1000
+    expiresTimePlus: Long = 1000,
+    attachments: Seq[Attachment] = Seq.empty, // id -> data  (data is also a json)
 ) {}

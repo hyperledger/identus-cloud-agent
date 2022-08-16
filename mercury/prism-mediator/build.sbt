@@ -52,7 +52,12 @@ lazy val models = project
   .settings(name := "mercury-data-models", version := VERSION)
   .settings(
     libraryDependencies ++= Seq(D.zio.value),
-    libraryDependencies ++= Seq(D.didcomm.value) // FIXME REMOVE almost done
+    libraryDependencies ++= Seq(
+      D.circeCore.value,
+      D.circeGeneric.value,
+      D.circeParser.value
+    ), // TODO try to remove this from this module
+    libraryDependencies ++= Seq(D.didcomm.value), // FIXME REMOVE almost done
   )
 
 // #################
@@ -104,7 +109,7 @@ lazy val agentDidcommx = project
   .in(file("agent-didcommx"))
   .settings(name := "mercury-agent-didcommx", version := VERSION)
   .settings(libraryDependencies += D.didcomm.value)
-  .dependsOn(models, protocolInvitation)
+  .dependsOn(models, protocolInvitation, protocolRouting)
   .dependsOn(resolver)
 
 ///** TODO Demos agents and services implementation with did-scala */
