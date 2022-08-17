@@ -5,6 +5,8 @@ import scala.jdk.CollectionConverters.*
 
 import io.iohk.atala.mercury.DidComm._
 import io.iohk.atala.mercury.DidComm
+import io.iohk.atala.mercury.mediator.MyDB
+import io.iohk.atala.mercury.model.DidId
 
 object MediatorProgram {
   val port = 8080
@@ -27,7 +29,9 @@ object MediatorProgram {
 
   // val messages = scala.collection mutable.Map[DidId, List[String]]() // TODO must be a service
 
-  def program(base64EncodedString: String): ZIO[DidComm, Nothing, Unit] = {
+  def program(
+      base64EncodedString: String
+  ): ZIO[DidComm & zio.ZState[io.iohk.atala.mercury.mediator.MyDB], Nothing, Unit] = {
     ZIO.logAnnotate("request-id", java.util.UUID.randomUUID.toString()) {
       for {
         _ <- ZIO.logInfo("Received new message")
@@ -37,11 +41,8 @@ object MediatorProgram {
         msg = mediatorMessage.getAttachments().get(0).getData().toJSONObject().get("json").toString()
         to = mediatorMessage.getTo.asScala.toList.head
         _ <- ZIO.log(s"Store Massage for ${to}: " + mediatorMessage.getTo.asScala.toList)
-        // _ <- ZIO.succeed {
-        //   val msgList: List[String] =
-        //     messages.getOrElse(DidId(to), List.empty[String]) :+ msg
-        //     messages += (DidId(to) -> msgList)
-        // }
+        // db <- ZIO.service[ZState[MyDB]]
+        _ <- MyDB.store(DidId(to), msg)
         _ <- ZIO.log("Done")
       } yield ()
     }

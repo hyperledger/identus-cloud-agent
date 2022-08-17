@@ -44,7 +44,7 @@ object Endpoints {
   val registerMediatorServerEndpoint: ZServerEndpoint[Any, Any] =
     registerMediator.serverLogicSuccess(_ => ZIO.succeed(()))
 
-  val sendMessageServerEndpoint: ZServerEndpoint[DidComm, Any] = {
+  val sendMessageServerEndpoint: ZServerEndpoint[DidComm & ZDB, Any] = {
     val sendMessage: PublicEndpoint[String, ErrorInfo, Unit, Any] =
       endpoint.post
         .tag("mediator")
@@ -71,11 +71,11 @@ object Endpoints {
       ZIO.succeed(CreateInvitationResponse(invitation.goal, invitation.goal_code))
     )
 
-  val all: List[ZServerEndpoint[DidComm, Any]] =
+  val all: List[ZServerEndpoint[DidComm & ZDB, Any]] =
     List(
-      createInvitationServerEndpoint.widen[DidComm],
-      retrieveMessagesServerEndpoint.widen[DidComm],
-      registerMediatorServerEndpoint.widen[DidComm],
+      createInvitationServerEndpoint.widen[DidComm & ZDB],
+      retrieveMessagesServerEndpoint.widen[DidComm & ZDB],
+      registerMediatorServerEndpoint.widen[DidComm & ZDB],
       sendMessageServerEndpoint
     )
 }

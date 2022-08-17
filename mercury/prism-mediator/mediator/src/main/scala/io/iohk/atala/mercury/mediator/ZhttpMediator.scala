@@ -17,7 +17,9 @@ object ZhttpMediator extends ZIOAppDefault {
     req.bodyAsString
       .flatMap(data => MediatorProgram.program(data))
       .map(unit => Response.text("Done"))
-      .provideLayer(AgentService.mediator)
+      .provideLayer(AgentService.mediator ++ MyDB.live)
+  // .provideLayer(MyDB.live)
+
   }
 
   override val run = MediatorProgram.startLogo *> Server.start(MediatorProgram.port, app)
