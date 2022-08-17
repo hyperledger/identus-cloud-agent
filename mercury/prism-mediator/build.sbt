@@ -109,6 +109,7 @@ lazy val agentDidcommx = project
   .in(file("agent-didcommx"))
   .settings(name := "mercury-agent-didcommx", version := VERSION)
   .settings(libraryDependencies += D.didcomm.value)
+  .settings(libraryDependencies += "io.d11" %% "zhttp" % "2.0.0-RC10")
   .dependsOn(models, protocolInvitation, protocolRouting)
   .dependsOn(resolver)
 
