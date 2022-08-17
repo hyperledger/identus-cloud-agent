@@ -10,9 +10,9 @@ services:
     image: swaggerapi/swagger-ui
     ports:
       - "8081:8080"
+    volumes:
+      - ../commons:/usr/share/nginx/html/commons
     environment:
       URLS: '[
-        { name: "Castor", url: "https://petstore.swagger.io/v2/swagger.json" },
-        { name: "Pollux", url: "https://petstore.swagger.io/v2/swagger.json" },
-        { name: "Mercury", url: "https://petstore.swagger.io/v2/swagger.json" }
+        { name: "Mob Sessions", url: "/commons/atala-openapi.yaml" }
         ]'
