@@ -16,7 +16,7 @@ object ZhttpMediator extends ZIOAppDefault {
   val app: HttpApp[Any, Throwable] = Http.collectZIO[Request] { case req @ Method.POST -> !! =>
     req.bodyAsString
       .flatMap(data => MediatorProgram.program(data))
-      .map(unit => Response.text("Done"))
+      .map(str => Response.text(s"Done $str"))
       .provideLayer(AgentService.mediator ++ MyDB.live)
   // .provideLayer(MyDB.live)
 

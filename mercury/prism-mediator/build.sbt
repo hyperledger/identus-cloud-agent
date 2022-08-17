@@ -110,7 +110,7 @@ lazy val agentDidcommx = project
   .settings(name := "mercury-agent-didcommx", version := VERSION)
   .settings(libraryDependencies += D.didcomm.value)
   .settings(libraryDependencies += "io.d11" %% "zhttp" % "2.0.0-RC10")
-  .dependsOn(models, protocolInvitation, protocolRouting)
+  .dependsOn(models, protocolInvitation, protocolRouting, protocolMercuryMailbox)
   .dependsOn(resolver)
 
 ///** TODO Demos agents and services implementation with did-scala */
