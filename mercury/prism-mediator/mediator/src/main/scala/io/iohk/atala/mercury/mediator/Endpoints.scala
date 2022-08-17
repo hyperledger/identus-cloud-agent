@@ -88,14 +88,4 @@ object Endpoints {
       registerMediatorServerEndpoint,
       sendMessageServerEndpoint
     )
-
-  // val docs =
-  //   OpenAPIDocsInterpreter().toOpenAPI(
-  //     List(createInvitation, retrieveMessages, registerMediator, sendMessage),
-  //     "Atala Prism Mediator",
-  //     "0.1.0"
-  //   )
-  // val yaml = docs.toYaml
-  // println(yaml)
-  // TODO Log  OpenAPI or create a endpoint to print OpenAPI
 }
