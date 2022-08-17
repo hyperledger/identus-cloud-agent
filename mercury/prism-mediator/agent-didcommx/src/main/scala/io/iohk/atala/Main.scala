@@ -62,7 +62,7 @@ val program2 = for {
   _ <- Console.printLine("Sending bytes to BOB ...")
   msgToBob = msgInMediator.getMessage.getAttachments().get(0).getData().toJSONObject().get("json").toString()
   _ <- Console.printLine("msgToBob: " + msgToBob)
-  _ <- Console.printLine("Bob read Messagem ...")
+  _ <- Console.printLine("Bob read Message ...")
   msgInBob <- bob.unpack(msgToBob)
   _ <- Console.printLine("msgInBob: " + msgInBob.getMessage)
 } yield ()
@@ -104,7 +104,7 @@ val program4 = for {
   _ <- Console.printLine("Sending bytes to BOB ...")
   msgToBob = msgInMediator.getMessage.getAttachments().get(0).getData().toJSONObject().get("json").toString()
   _ <- Console.printLine("msgToBob: " + msgToBob)
-  _ <- Console.printLine("Bob read Messagem ...")
+  _ <- Console.printLine("Bob read Message ...")
 
   // bob <- ZIO.service[AgentService[Agent.Bob.type]]
   // msgInBob <- bob.unpack(msgToBob)

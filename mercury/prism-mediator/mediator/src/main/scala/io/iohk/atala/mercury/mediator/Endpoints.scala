@@ -53,10 +53,9 @@ object Endpoints {
   val sendMessageServerEndpoint: ZServerEndpoint[DidComm, Any] = {
     sendMessage.serverLogicSuccess { (message: Message) =>
       for {
-        // mediator <- ZIO.service[DidComm]
         unPackMsg <- DidComm.unpack(message.msg)
         _ <- Console.printLine("SignedMessage: " + unPackMsg.getMessage)
-        sss <- ZIO.succeed {
+        _ <- ZIO.succeed {
           val msgList: List[String] =
             messages.getOrElse(ConnectionId(message.connectionId), List.empty[String]) :+ unPackMsg.getMessage.toString
           messages += (ConnectionId(message.connectionId) -> msgList)

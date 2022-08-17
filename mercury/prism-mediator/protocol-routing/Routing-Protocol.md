@@ -45,8 +45,8 @@ stateDiagram-v2
 ```mermaid
 stateDiagram-v2
   % [*] --> Sending
-  % Sending --> P1: receive foward messagem
-  [*] --> P1: receive foward messagem
+  % Sending --> P1: receive foward message
+  [*] --> P1: receive foward message
   P1 --> Sending
   Sending --> Sending: retry error
   Sending --> Idle: msg sent
@@ -54,7 +54,7 @@ stateDiagram-v2
   Idle --> [*]
 ```
 
-**NOTE:** The state P1 is protocol consosition!
+**NOTE:** The state P1 is protocol composition!
 In our case is the Mercury Mailbox protocol.
 
 ---
@@ -63,5 +63,5 @@ In our case is the Mercury Mailbox protocol.
 
 ```mermaid
 stateDiagram-v2
-  [*] --> [*] : receive messagem
+  [*] --> [*] : receive message
 ```
