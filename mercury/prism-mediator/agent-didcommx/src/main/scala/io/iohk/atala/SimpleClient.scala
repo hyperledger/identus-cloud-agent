@@ -8,27 +8,28 @@ import io.iohk.atala.mercury.AgentService
 import io.iohk.atala.mercury.Agent
 import io.iohk.atala.mercury.model.EncryptedMessage
 import io.iohk.atala.mercury.protocol.mailbox.Mailbox.ReadMessage
-object SimpleClient extends ZIOAppDefault {
-  val env = ChannelFactory.auto ++ EventLoopGroup.auto()
 
-  // TEST https://httpbin.org/
-  val program = for {
-    res <- Client.request(
-      url = "https://httpbin.org/post",
-      method = Method.POST,
-      // headers = Headers.empty,
-      content = HttpData.fromChunk(Chunk.fromArray("TestChunk".getBytes)),
-      // ssl = ClientSSLOptions.DefaultSSL,
-    )
-    data <- res.bodyAsString
-    _ <- Console.printLine(data)
-  } yield ()
+// object SimpleClient extends ZIOAppDefault {
+//   val env = ChannelFactory.auto ++ EventLoopGroup.auto()
 
-  override val run = program.provide(env)
+//   // TEST https://httpbin.org/
+//   val program = for {
+//     res <- Client.request(
+//       url = "https://httpbin.org/post",
+//       method = Method.POST,
+//       // headers = Headers.empty,
+//       content = HttpData.fromChunk(Chunk.fromArray("TestChunk".getBytes)),
+//       // ssl = ClientSSLOptions.DefaultSSL,
+//     )
+//     data <- res.bodyAsString
+//     _ <- Console.printLine(data)
+//   } yield ()
 
-}
+//   override val run = program.provide(env)
 
-@main def AgentClient() = {
+// }
+
+@main def AgentClientAlice() = {
 
   val program = for {
     _ <- Console.printLine("\n#### Program 4 ####")
@@ -49,7 +50,7 @@ object SimpleClient extends ZIOAppDefault {
     // HTTP
 
     res <- Client.request(
-      url = "http://localhost:8080/message",
+      url = "http://localhost:8080",
       method = Method.POST,
       // headers = Headers.empty,
       content = HttpData.fromChunk(Chunk.fromArray(base64EncodedString.getBytes)),
@@ -60,12 +61,7 @@ object SimpleClient extends ZIOAppDefault {
   } yield ()
 
   val env = ChannelFactory.auto ++ EventLoopGroup.auto()
-  val app = program.provide(
-    env,
-    AgentService.alice,
-    // AgentService.bob,
-    // AgentService.mediator
-  )
+  val app = program.provide(env, AgentService.alice)
 
   Unsafe.unsafe { Runtime.default.unsafe.run(app).getOrThrowFiberFailure() }
 
@@ -89,7 +85,7 @@ object SimpleClient extends ZIOAppDefault {
     _ <- Console.printLine(base64EncodedString)
     // HTTP
     res <- Client.request(
-      url = "http://localhost:8080/message",
+      url = "http://localhost:8080",
       method = Method.POST,
       // headers = Headers.empty,
       content = HttpData.fromChunk(Chunk.fromArray(base64EncodedString.getBytes)),

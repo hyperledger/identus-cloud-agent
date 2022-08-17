@@ -17,7 +17,7 @@ object ZhttpMediator extends ZIOAppDefault {
     req.bodyAsString
       .flatMap(data => MediatorProgram.program(data))
       .map(str => Response.text(s"Done $str"))
-      .provideLayer(AgentService.mediator ++ MyDB.live)
+      .provideLayer(AgentService.mediator) // ++ MyDB.live)
   // .provideLayer(MyDB.live)
 
   }
