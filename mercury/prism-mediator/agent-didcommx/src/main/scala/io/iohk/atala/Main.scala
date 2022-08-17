@@ -103,12 +103,13 @@ val program4 = for {
   _ <- Console.printLine(msgInMediator.getMessage)
   _ <- Console.printLine("Sending bytes to BOB ...")
   msgToBob = msgInMediator.getMessage.getAttachments().get(0).getData().toJSONObject().get("json").toString()
-  _ <- Console.printLine("msgToBob: " + msgToBob)
+  _ <- Console.printLine("msgToBob:")
+  _ <- Console.printLine(msgToBob)
   _ <- Console.printLine("Bob read Message ...")
 
-  // bob <- ZIO.service[AgentService[Agent.Bob.type]]
-  // msgInBob <- bob.unpack(msgToBob)
-  // _ <- Console.printLine("msgInBob: " + msgInBob.getMessage)
+  bob <- ZIO.service[AgentService[Agent.Bob.type]]
+  msgInBob <- bob.unpack(msgToBob)
+  _ <- Console.printLine("msgInBob: " + msgInBob.getMessage)
 } yield ()
 
 // TODO Make tests and remove this main

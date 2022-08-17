@@ -21,8 +21,7 @@ sequenceDiagram
   end
 ```
 
-
-## Use Case Flow Diagram 
+## Use Case Flow Diagram
 
 ```mermaid
 sequenceDiagram

@@ -35,7 +35,7 @@ def json2Map(json: Json): Any = json match {
   case e if e.isBoolean => e.asBoolean.get
   case e if e.isNull    => null
   case e if e.isNumber  => e.asNumber.flatMap(_.toBigDecimal).get
-  case e if e.isObject  => e.asObject.get.toMap.mapValues(json2Map).toMap
+  case e if e.isObject  => e.asObject.get.toMap.mapValues(json2Map).toMap.asJava
   case e if e.isString  => e.asString.get
 }
 
