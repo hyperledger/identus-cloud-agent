@@ -22,7 +22,6 @@ import java.util.Base64
 
 object Endpoints {
 
-  // val messages = mutable.Map[ConnectionId, List[String]]()
   val messages = mutable.Map[DidId, List[String]]()
 
   val retrieveMessages: PublicEndpoint[String, Unit, List[String], Any] = endpoint.get
@@ -32,7 +31,7 @@ object Endpoints {
     .in(path[String]("connectionId"))
     .out(jsonBody[List[String]])
 
-  val retrieveMessagesServerEndpoint: ZServerEndpoint[DidComm, Any] =
+  val retrieveMessagesServerEndpoint: ZServerEndpoint[Any, Any] =
     retrieveMessages.serverLogicSuccess(id => ZIO.succeed(messages.getOrElse(DidId(id), List.empty[String])))
 
   val registerMediator: PublicEndpoint[ConnectionId, ErrorInfo, Unit, Any] =
@@ -42,37 +41,18 @@ object Endpoints {
       .in("register")
       .in(jsonBody[ConnectionId])
       .errorOut(httpErrors)
-  val registerMediatorServerEndpoint: ZServerEndpoint[DidComm, Any] =
+  val registerMediatorServerEndpoint: ZServerEndpoint[Any, Any] =
     registerMediator.serverLogicSuccess(_ => ZIO.succeed(()))
 
-  val sendMessage: PublicEndpoint[String, ErrorInfo, Unit, Any] =
-    endpoint.post
-      .tag("mediator")
-      .summary("Mediator service endpoint for sending message")
-      .in("message")
-      .in(jsonBody[String])
-      .errorOut(httpErrors)
-
   val sendMessageServerEndpoint: ZServerEndpoint[DidComm, Any] = {
-    sendMessage.serverLogicSuccess { (base64EncodedString: String) =>
-      for {
-        _ <- Console.printLine("received message ...")
-        msgInMediator <- DidComm.unpackBase64(base64EncodedString)
-        _ <- Console.printLine("msgInMediator: ")
-        _ <- Console.printLine(msgInMediator.getMessage)
-        _ <- Console.printLine("Sending bytes to BOB ...")
-        msg = msgInMediator.getMessage.getAttachments().get(0).getData().toJSONObject().get("json").toString()
-        _ <- Console.printLine("message to: " + msgInMediator.getMessage.getTo.asScala.toList)
-        to <- ZIO.succeed(msgInMediator.getMessage.getTo.asScala.toList.head)
-        _ <- Console.printLine("msgToBob: " + msg)
-        _ <- ZIO.succeed {
-          val msgList: List[String] =
-            messages.getOrElse(DidId(to), List.empty[String]) :+ msg
-          messages += (DidId(to) -> msgList)
-        }
-      } yield ()
-
-    }
+    val sendMessage: PublicEndpoint[String, ErrorInfo, Unit, Any] =
+      endpoint.post
+        .tag("mediator")
+        .summary("Mediator service endpoint for sending message")
+        .in("message")
+        .in(stringBody)
+        .errorOut(httpErrors)
+    sendMessage.serverLogicSuccess { (base64EncodedString: String) => MediatorProgram.program(base64EncodedString) }
   }
 
   val createInvitation: PublicEndpoint[CreateInvitation, ErrorInfo, CreateInvitationResponse, Any] = {
@@ -86,16 +66,16 @@ object Endpoints {
       .description("Create Invitation Response")
   }
 
-  val createInvitationServerEndpoint: ZServerEndpoint[DidComm, Any] =
+  val createInvitationServerEndpoint: ZServerEndpoint[Any, Any] =
     createInvitation.serverLogicSuccess(invitation =>
       ZIO.succeed(CreateInvitationResponse(invitation.goal, invitation.goal_code))
     )
 
   val all: List[ZServerEndpoint[DidComm, Any]] =
     List(
-      createInvitationServerEndpoint,
-      retrieveMessagesServerEndpoint,
-      registerMediatorServerEndpoint,
+      createInvitationServerEndpoint.widen[DidComm],
+      retrieveMessagesServerEndpoint.widen[DidComm],
+      registerMediatorServerEndpoint.widen[DidComm],
       sendMessageServerEndpoint
     )
 }

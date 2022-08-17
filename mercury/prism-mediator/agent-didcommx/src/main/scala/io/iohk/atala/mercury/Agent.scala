@@ -60,8 +60,5 @@ object AgentService {
       Agent.Mediator
     )
   )
-  val zzz = AgentService[Agent.Mediator.type](
-    new DIDComm(UniversalDidResolver, MediatorSecretResolver.secretResolver),
-    Agent.Mediator
-  )
+
 }

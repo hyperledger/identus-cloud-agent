@@ -46,33 +46,16 @@ object Mediator extends ZIOAppDefault {
       .toRoutes
   }
 
-  //
-  val serve: ZIO[DidComm, Throwable, Unit] = {
-    Console.printLine("""
-        |   ███╗   ███╗███████╗██████╗  ██████╗██╗   ██╗██████╗ ██╗   ██╗
-        |   ████╗ ████║██╔════╝██╔══██╗██╔════╝██║   ██║██╔══██╗╚██╗ ██╔╝
-        |   ██╔████╔██║█████╗  ██████╔╝██║     ██║   ██║██████╔╝ ╚████╔╝
-        |   ██║╚██╔╝██║██╔══╝  ██╔══██╗██║     ██║   ██║██╔══██╗  ╚██╔╝
-        |   ██║ ╚═╝ ██║███████╗██║  ██║╚██████╗╚██████╔╝██║  ██║   ██║
-        |   ╚═╝     ╚═╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═════╝ ╚═╝  ╚═╝   ╚═╝
-        |""".stripMargin) *>
-      Console.printLine(
-        """#####################################################
-          |###  Starting the server at http://localhost:8080 ###
-          |###  Open API docs at http://localhost:8080/docs  ###
-          |###  Press ENTER key to exit.                     ###
-          |#####################################################""".stripMargin // FIXME But server is not shutting down
-      ) *>
-      ZIO.executor.flatMap(executor =>
-        BlazeServerBuilder[MyTask]
-          .withExecutionContext(executor.asExecutionContext)
-          .bindHttp(8080, "localhost")
-          .withHttpApp(Router("/" -> (apiRoutes <+> swaggerRoutes)).orNotFound)
-          .serve
-          .compile
-          .drain
-      )
-  }
+  val serve: ZIO[DidComm, Throwable, Unit] = MediatorProgram.startLogo *>
+    ZIO.executor.flatMap(executor =>
+      BlazeServerBuilder[MyTask]
+        .withExecutionContext(executor.asExecutionContext)
+        .bindHttp(MediatorProgram.port, "localhost")
+        .withHttpApp(Router("/" -> (apiRoutes <+> swaggerRoutes)).orNotFound)
+        .serve
+        .compile
+        .drain
+    )
 
   override def run =
     serve.provide(AgentService.mediator: ZLayer[Any, Nothing, DidComm]).exitCode

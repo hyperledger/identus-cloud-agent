@@ -22,6 +22,6 @@ object DidComm {
     ZIO.serviceWithZIO(_.unpack(str))
 
   def unpackBase64(base64str: String): URIO[DidComm, UnpackMesage] =
-    ZIO.serviceWithZIO(_.unpack(base64str))
+    ZIO.serviceWithZIO(_.unpackBase64(base64str))
 
 }
