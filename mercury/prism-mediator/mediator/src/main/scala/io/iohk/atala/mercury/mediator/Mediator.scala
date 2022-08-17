@@ -29,7 +29,7 @@ import io.iohk.atala.mercury.DidComm
 import io.iohk.atala.mercury.AgentService
 
 type MyTask[+A] = // [_] =>> zio.RIO[io.iohk.atala.DidComm, _]
-  ZIO[DidComm /* & ZDB*/, Throwable, A] // TODO improve this Throwable (is too much)
+  ZIO[DidComm & MailStorage, Throwable, A] // TODO improve this Throwable (is too much)
 
 object Mediator extends ZIOAppDefault {
 
@@ -46,7 +46,7 @@ object Mediator extends ZIOAppDefault {
       .toRoutes
   }
 
-  val serve: ZIO[DidComm, Throwable, Unit] = MediatorProgram.startLogo *>
+  val serve: ZIO[DidComm & MailStorage, Throwable, Unit] = MediatorProgram.startLogo *>
     ZIO.executor.flatMap(executor =>
       BlazeServerBuilder[MyTask]
         .withExecutionContext(executor.asExecutionContext)
@@ -58,5 +58,10 @@ object Mediator extends ZIOAppDefault {
     )
 
   override def run =
-    serve.provide(AgentService.mediator: ZLayer[Any, Nothing, DidComm]).exitCode
+    serve
+      .provide(
+        (AgentService.mediator: ZLayer[Any, Nothing, DidComm]) ++
+          MailStorage.layer
+      )
+      .exitCode
 }

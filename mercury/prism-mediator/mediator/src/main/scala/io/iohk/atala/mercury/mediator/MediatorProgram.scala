@@ -5,7 +5,7 @@ import scala.jdk.CollectionConverters.*
 
 import io.iohk.atala.mercury.DidComm._
 import io.iohk.atala.mercury.DidComm
-import io.iohk.atala.mercury.mediator.MyDB
+import io.iohk.atala.mercury.mediator.MailStorage
 import io.iohk.atala.mercury.model.DidId
 
 object MediatorProgram {
@@ -33,7 +33,7 @@ object MediatorProgram {
 
   def program(
       base64EncodedString: String
-  ): ZIO[DidComm /* & ZDB*/, Nothing, String] = {
+  ): ZIO[DidComm & MailStorage, Nothing, String] = {
     ZIO.logAnnotate("request-id", java.util.UUID.randomUUID.toString()) {
       for {
         _ <- ZIO.logInfo("Received new message")
@@ -52,7 +52,7 @@ object MediatorProgram {
                   )
                   _ <- ZIO.log(s"Store Massage for ${nextRecipient}: " + mediatorMessage.getTo.asScala.toList)
                   // db <- ZIO.service[ZState[MyDB]]
-                  _ <- MyDB.store(nextRecipient, msg)
+                  _ <- MailStorage.store(nextRecipient, msg)
                   _ <- ZIO.log(s"Stored Message for '$nextRecipient'")
                 } yield ("Message Forwarded")
               case "https://atalaprism.io/mercury/mailbox/1.0/ReadMessages" =>
@@ -60,7 +60,7 @@ object MediatorProgram {
                   _ <- ZIO.logInfo("Mediator ReadMessages: " + mediatorMessage.toString)
                   senderDID = DidId(mediatorMessage.getFrom())
                   _ <- ZIO.logInfo(s"Mediator ReadMessages get Messagems from: $senderDID")
-                  seqMsg <- MyDB.get(senderDID)
+                  seqMsg <- MailStorage.get(senderDID)
                 } yield (seqMsg.mkString("[", "; ", "]"))
               case _ =>
                 ZIO.succeed("Unknown Message Type")
