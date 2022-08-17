@@ -7,30 +7,33 @@ import sttp.tapir.generic.auto.*
 import sttp.tapir.json.circe.*
 import sttp.tapir.ztapir.*
 import sttp.tapir.{PublicEndpoint, endpoint, query}
-
-import zio._
+import zio.*
 
 import java.io.IOException
 import scala.collection.mutable
+import io.iohk.atala.mercury.mediator.*
+import io.iohk.atala.mercury.model.DidId
+import io.iohk.atala.mercury.{Agent, AgentService, DidComm}
+import io.iohk.atala.mercury.protocol.invitation.*
 
-import io.iohk.atala.mercury.mediator._
-import io.iohk.atala.mercury.DidComm
-import io.iohk.atala.mercury.protocol.invitation._
+import scala.jdk.CollectionConverters.*
+import java.util.Base64
 // import io.iohk.atala.mercury.DidComm._ // For the dsl
 
 object Endpoints {
 
-  val messages = mutable.Map[ConnectionId, List[String]]()
+  // val messages = mutable.Map[ConnectionId, List[String]]()
+  val messages = mutable.Map[DidId, List[String]]()
 
   val retrieveMessages: PublicEndpoint[String, Unit, List[String], Any] = endpoint.get
     .tag("mediator")
-    .summary("Retrieve Messages for connectionId")
+    .summary("Retrieve Messages")
     .in("messages")
     .in(path[String]("connectionId"))
     .out(jsonBody[List[String]])
 
   val retrieveMessagesServerEndpoint: ZServerEndpoint[DidComm, Any] =
-    retrieveMessages.serverLogicSuccess(id => ZIO.succeed(messages.getOrElse(ConnectionId(id), List.empty[String])))
+    retrieveMessages.serverLogicSuccess(id => ZIO.succeed(messages.getOrElse(DidId(id), List.empty[String])))
 
   val registerMediator: PublicEndpoint[ConnectionId, ErrorInfo, Unit, Any] =
     endpoint.post
@@ -42,23 +45,30 @@ object Endpoints {
   val registerMediatorServerEndpoint: ZServerEndpoint[DidComm, Any] =
     registerMediator.serverLogicSuccess(_ => ZIO.succeed(()))
 
-  val sendMessage: PublicEndpoint[Message, ErrorInfo, Unit, Any] =
+  val sendMessage: PublicEndpoint[String, ErrorInfo, Unit, Any] =
     endpoint.post
       .tag("mediator")
       .summary("Mediator service endpoint for sending message")
       .in("message")
-      .in(jsonBody[Message])
+      .in(jsonBody[String])
       .errorOut(httpErrors)
 
   val sendMessageServerEndpoint: ZServerEndpoint[DidComm, Any] = {
-    sendMessage.serverLogicSuccess { (message: Message) =>
+    sendMessage.serverLogicSuccess { (base64EncodedString: String) =>
       for {
-        unPackMsg <- DidComm.unpack(message.msg)
-        _ <- Console.printLine("SignedMessage: " + unPackMsg.getMessage)
+        _ <- Console.printLine("received message ...")
+        msgInMediator <- DidComm.unpackBase64(base64EncodedString)
+        _ <- Console.printLine("msgInMediator: ")
+        _ <- Console.printLine(msgInMediator.getMessage)
+        _ <- Console.printLine("Sending bytes to BOB ...")
+        msg = msgInMediator.getMessage.getAttachments().get(0).getData().toJSONObject().get("json").toString()
+        _ <- Console.printLine("message to: " + msgInMediator.getMessage.getTo.asScala.toList)
+        to <- ZIO.succeed(msgInMediator.getMessage.getTo.asScala.toList.head)
+        _ <- Console.printLine("msgToBob: " + msg)
         _ <- ZIO.succeed {
           val msgList: List[String] =
-            messages.getOrElse(ConnectionId(message.connectionId), List.empty[String]) :+ unPackMsg.getMessage.toString
-          messages += (ConnectionId(message.connectionId) -> msgList)
+            messages.getOrElse(DidId(to), List.empty[String]) :+ msg
+          messages += (DidId(to) -> msgList)
         }
       } yield ()
 
@@ -88,14 +98,4 @@ object Endpoints {
       registerMediatorServerEndpoint,
       sendMessageServerEndpoint
     )
-
-  // val docs =
-  //   OpenAPIDocsInterpreter().toOpenAPI(
-  //     List(createInvitation, retrieveMessages, registerMediator, sendMessage),
-  //     "Atala Prism Mediator",
-  //     "0.1.0"
-  //   )
-  // val yaml = docs.toYaml
-  // println(yaml)
-  // TODO Log  OpenAPI or create a endpoint to print OpenAPI
 }
