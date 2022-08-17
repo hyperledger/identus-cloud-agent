@@ -25,8 +25,8 @@ object Endpoints {
   val retrieveMessages: PublicEndpoint[String, Unit, List[String], Any] = endpoint.get
     .tag("mediator")
     .summary("Retrieve Messages for connectionId")
-    .in("mediator" / "messages")
-    .in(query[String]("connectionId"))
+    .in("messages")
+    .in(path[String]("connectionId"))
     .out(jsonBody[List[String]])
 
   val retrieveMessagesServerEndpoint: ZServerEndpoint[DidComm, Any] =
@@ -36,7 +36,7 @@ object Endpoints {
     endpoint.post
       .tag("mediator")
       .summary("Registers the agent with the router.")
-      .in("mediator" / "register")
+      .in("register")
       .in(jsonBody[ConnectionId])
       .errorOut(httpErrors)
   val registerMediatorServerEndpoint: ZServerEndpoint[DidComm, Any] =
@@ -46,7 +46,7 @@ object Endpoints {
     endpoint.post
       .tag("mediator")
       .summary("Mediator service endpoint for sending message")
-      .in("mediator" / "message")
+      .in("message")
       .in(jsonBody[Message])
       .errorOut(httpErrors)
 
@@ -69,7 +69,7 @@ object Endpoints {
     endpoint.post
       .tag("out-of-band")
       .summary("Create a new DIDCommV2 out of band invitation.")
-      .in("outofband" / "create-invitation")
+      .in("invitations")
       .in(jsonBody[CreateInvitation])
       .out(jsonBody[CreateInvitationResponse])
       .errorOut(httpErrors)
