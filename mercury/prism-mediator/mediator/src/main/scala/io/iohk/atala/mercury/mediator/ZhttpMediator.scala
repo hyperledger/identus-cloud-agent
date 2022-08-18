@@ -21,7 +21,7 @@ object ZhttpMediator extends ZIOAppDefault {
         if req.headersAsList.exists(h => h._1.equalsIgnoreCase(header._1) && h._2.equalsIgnoreCase(header._2)) =>
       req.bodyAsString
         .flatMap(data => MediatorProgram.program(data))
-        .map(str => Response.text(s"Done $str"))
+        .map(str => Response.text(str))
     case req =>
       ZIO.succeed(
         Response.text(

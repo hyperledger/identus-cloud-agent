@@ -8,9 +8,11 @@ import zhttp.http.{Method, Headers, HttpData}
 import io.iohk.atala.mercury.Agent
 import io.iohk.atala.mercury.AgentService
 import io.iohk.atala.mercury.MediaTypes
+import io.circe.Printer
+import io.circe.syntax._
 
 @main def AgentClientAlice() = {
-
+  val printer = Printer.spaces4
   val program = for {
     _ <- Console.printLine("\n#### Program 4 ####")
     messageCreated <- ZIO.succeed(makeMsg(Agent.Alice, Agent.Bob))
@@ -18,7 +20,7 @@ import io.iohk.atala.mercury.MediaTypes
 
     // ##########################################
     encryptedMsg <- alice.packEncrypted(messageCreated, to = Agent.Bob.id)
-    _ <- Console.printLine("EncryptedMsg: " + encryptedMsg.string)
+    _ <- Console.printLine("EncryptedMsg: " + encryptedMsg.asJson)
 
     forwardMessage = makeForwardMessage(Agent.Alice, Agent.Mediator, Agent.Bob, encryptedMsg).asMessage
 

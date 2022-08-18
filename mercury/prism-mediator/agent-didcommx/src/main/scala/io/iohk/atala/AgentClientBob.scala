@@ -1,14 +1,14 @@
 package io.iohk.atala
 
-import zio._
-
+import zio.*
 import zhttp.service.{ChannelFactory, Client, EventLoopGroup}
-import zhttp.http.{Method, Headers, HttpData}
-
+import zhttp.http.{Headers, HttpData, Method}
 import io.iohk.atala.mercury.Agent
 import io.iohk.atala.mercury.AgentService
 import io.iohk.atala.mercury.MediaTypes
+import io.iohk.atala.mercury.model.UnpackMesage
 import io.iohk.atala.mercury.protocol.mailbox.Mailbox.ReadMessage
+import org.didcommx.didcomm.message.Attachment.Data.Json
 
 @main def AgentClientBob() = {
 
@@ -22,7 +22,7 @@ import io.iohk.atala.mercury.protocol.mailbox.Mailbox.ReadMessage
 
     // ##########################################
     encryptedMsg <- bob.packEncrypted(messageCreated.asMessage, to = Agent.Mediator.id)
-    _ <- Console.printLine("EncryptedMsg: " + encryptedMsg.string)
+    _ <- Console.printLine("EncryptedMsg: " + encryptedMsg)
     _ <- Console.printLine("Sending bytes ...")
     base64EncodedString = encryptedMsg.base64
     _ <- Console.printLine(base64EncodedString)
@@ -36,8 +36,13 @@ import io.iohk.atala.mercury.protocol.mailbox.Mailbox.ReadMessage
     )
     data <- res.bodyAsString
     _ <- Console.printLine(data)
-    messageReceived <- bob.unpackBase64(data)
-    _ <- Console.printLine("Message Received" + messageReceived.getMessage)
+    // TODO fix this
+    dataArray: Seq[String] = data.stripPrefix("[").stripSuffix("]").split(";").toList
+    messageReceived: Seq[UIO[UnpackMesage]] <- ZIO.succeed(
+      dataArray.map(bob.unpack(_))
+    )
+    unpackedMsg <- dataArray.map(bob.unpack(_))
+    xx <- messageReceived.foreach(_.forEachZIO(ss => Console.printLine("Message Received" + ss.getMessage)))
 
   } yield ()
 
