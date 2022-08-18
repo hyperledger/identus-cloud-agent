@@ -19,6 +19,10 @@ import io.iohk.atala.mercury.model.Message
 import io.circe.generic.auto._, io.circe.syntax._
 import io.circe._, io.circe.parser._
 @main def AgentClientAlice() = {
+  def toPrettyJson(parseToJson: String) = {
+    parse(parseToJson).getOrElse(???).spaces2
+  }
+
   val program = for {
     _ <- Console.printLine("\n#### Program 4 ####")
     messageCreated <- ZIO.succeed(makeMsg(Agent.Alice, Agent.Bob))
@@ -27,7 +31,7 @@ import io.circe._, io.circe.parser._
     _ <- Console.printLine("Send Message")
     _ <- Console.printLine(
       "\n*********************************************************************************************************************************\n"
-        + parse(msg.toString).getOrElse(???).spaces2
+        + toPrettyJson(msg.toString)
         + "\n********************************************************************************************************************************\n"
     )
     // ##########################################

@@ -17,9 +17,8 @@ import io.circe.JsonObject
   def makeReadMessage(from: Agent, mediator: Agent) =
     ReadMessage(from = from.id, to = mediator.id, expires_time = None)
 
-  def toJson(parseToJson: String): JsonObject = {
-    val aaa = parse(parseToJson).getOrElse(???)
-    aaa.asObject.getOrElse(???)
+  def toPrettyJson(parseToJson: String) = {
+    parse(parseToJson).getOrElse(???).spaces2
   }
 
   val program = for {
@@ -46,7 +45,7 @@ import io.circe.JsonObject
     _ <- Console.printLine("Unpacking and decrypting the received message ...")
     _ <- Console.printLine(
       "\n*********************************************************************************************************************************\n"
-        + fromJsonObject(toJson(messageReceived.getMessage.toString)).spaces2
+        + toPrettyJson(messageReceived.getMessage.toString)
         + "\n********************************************************************************************************************************\n"
     )
 
