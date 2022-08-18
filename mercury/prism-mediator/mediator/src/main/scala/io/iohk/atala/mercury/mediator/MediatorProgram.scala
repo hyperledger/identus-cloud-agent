@@ -7,6 +7,9 @@ import io.iohk.atala.mercury.DidComm._
 import io.iohk.atala.mercury.DidComm
 import io.iohk.atala.mercury.mediator.MailStorage
 import io.iohk.atala.mercury.model.DidId
+import io.circe.Json._
+import io.circe.parser._
+import io.circe.JsonObject
 
 object MediatorProgram {
   val port = 8080
@@ -27,6 +30,11 @@ object MediatorProgram {
          |#####################################################""".stripMargin // FIXME But server is not shutting down
     )
 
+  def toJson(parseToJson: String): JsonObject = {
+    val aaa = parse(parseToJson).getOrElse(???)
+    aaa.asObject.getOrElse(???)
+  }
+
   // val messages = scala.collection mutable.Map[DidId, List[String]]() // TODO must be a service
 
   // private def messageProcessing(message: org.didcommx.didcomm.message.Message): String =
@@ -46,6 +54,11 @@ object MediatorProgram {
               case "https://didcomm.org/routing/2.0/forward" =>
                 for {
                   _ <- ZIO.logInfo("Mediator Forward Message: " + mediatorMessage.toString)
+                  _ <- ZIO.logInfo(
+                    "\n*********************************************************************************************************************************\n"
+                      + fromJsonObject(toJson(mediatorMessage.toString)).spaces2
+                      + "\n********************************************************************************************************************************\n"
+                  )
                   msg = mediatorMessage.getAttachments().get(0).getData().toJSONObject().get("json").toString()
                   nextRecipient = DidId(
                     mediatorMessage.getBody.asScala.get("next").map(e => e.asInstanceOf[String]).get
