@@ -36,6 +36,9 @@ import io.iohk.atala.mercury.protocol.mailbox.Mailbox.ReadMessage
     )
     data <- res.bodyAsString
     _ <- Console.printLine(data)
+    messageReceived <- bob.unpackBase64(data)
+    _ <- Console.printLine("Message Received" + messageReceived.getMessage)
+
   } yield ()
 
   val env = ChannelFactory.auto ++ EventLoopGroup.auto()
