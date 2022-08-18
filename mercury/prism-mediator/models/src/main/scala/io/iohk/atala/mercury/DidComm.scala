@@ -12,6 +12,7 @@ trait DidComm {
 }
 
 object DidComm {
+
   def packSigned(msg: Message): URIO[DidComm, SignedMesage] =
     ZIO.serviceWithZIO(_.packSigned(msg))
 
