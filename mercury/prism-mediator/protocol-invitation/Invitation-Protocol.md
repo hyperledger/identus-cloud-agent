@@ -1,4 +1,4 @@
-# [WIP] Invitation Protocol
+# Invitation Protocol
 
 This Protocol is parte of the DIDComm Messaging Specification.
 

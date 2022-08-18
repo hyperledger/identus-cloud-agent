@@ -1,6 +1,6 @@
-# [WIP] Mercury Mailbox Mediator
+# Mercury Mailbox Mediator
 
-## Flow Diagram
+## Accept Invitation for Mailbox (Flow Diagram)
 
 ```mermaid
 sequenceDiagram
@@ -21,32 +21,43 @@ sequenceDiagram
   end
 ```
 
-## Use Case Flow Diagram
+---
+
+## Send message through the mediator (Flow Diagram)
+
+**Alice wants to send a message to Bob:**
 
 ```mermaid
 sequenceDiagram
   participant Alice
-  participant AliceMediator
   participant DID Resolver
-  participant AdultWebsite
-  participant Verifier
+  participant Mediator
+  participant Bob
 
-  note over Alice: Alice is using Mediator
+  note over Bob: Mediation client or Mediated Agent
 
   rect rgb(0, 120, 255)
-  Alice ->>+ AdultWebsite: Visiting website scans QR code(out-band invitattion protocol)
-  note right of AdultWebsite:  provide DID or Inline DidDoc (DID and publicKey and serviceendpoint).
-  Alice -->>+DID Resolver: resolves DID for Website to access Diddoc
-  note over Alice: If Website provides Inline Diddoc, DID Resolver step wont be required
-  Alice->>+ AdultWebsite: anonEncrypted Signed Message with Inlined message to Access with Website (Alice did + publicKey + serviceEndpoint)/ (Alice Did)
-  note over AdultWebsite: decryptMessage and verify Signature
-  AdultWebsite ->>+DID Resolver: resolves DID for Alice to access Diddoc
-  note over AdultWebsite: If Alice provides Inline Diddoc, DID Resolver step wont be required
-  AdultWebsite ->>+ AliceMediator : Encrypted Message Age proof request
-  AliceMediator --> Alice: Message forwarded
-  Alice ->>+ AdultWebsite:Proof Age with Signature
-  AdultWebsite -->>+ Verifier : Verify the Proof for Age
-  note over AdultWebsite: Grant Access to website with connectionId can be reused
-  Alice ->>+ AdultWebsite: Has Access
+    Alice->>+DID Resolver: Ask for Bob DID document
+    DID Resolver-->>-Alice: DID document
+    note over Alice: Find the serviceEndpoint of Bob
+    note over Alice: Mediation Request
+    Alice->>+Mediator: Forward {Message to Bob}
+
+    opt Depending on the registration (config)
+      Mediator->>-Bob: Notify or send the playload to Bob
+      note over Mediator,Bob: This can be an Email, Webhook, Push API, WebSocket (that is already open), etc
+    end
+  end
+
+  rect rgb(0, 120, 255)
+    opt Bob read Message.
+      Bob->>+Mediator: Get message
+      opt If the cache is too old
+        Mediator->>+DID Resolver: Get updated Bob's DID document
+        DID Resolver-->>-Mediator: DID document
+      end
+      note over Mediator: Confirm the identity
+      Mediator-->>-Bob: {Message to Bob} (the playload of the Forward Message)
+    end
   end
 ```

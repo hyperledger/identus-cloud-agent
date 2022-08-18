@@ -59,7 +59,7 @@ object MediatorProgram {
                 for {
                   _ <- ZIO.logInfo("Mediator ReadMessages: " + mediatorMessage.toString)
                   senderDID = DidId(mediatorMessage.getFrom())
-                  _ <- ZIO.logInfo(s"Mediator ReadMessages get Messagems from: $senderDID")
+                  _ <- ZIO.logInfo(s"Mediator ReadMessages get Messages from: $senderDID")
                   seqMsg <- MailStorage.get(senderDID)
                 } yield (seqMsg.mkString("[", "; ", "]"))
               case _ =>

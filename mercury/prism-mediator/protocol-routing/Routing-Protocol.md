@@ -1,4 +1,4 @@
-# [WIP] Routing Protocol 2.0
+# Routing Protocol 2.0
 
 This Protocol is parte of the DIDComm Messaging Specification.
 

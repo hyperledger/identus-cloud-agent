@@ -1,39 +1,103 @@
-# Mediator
+# Mercury
 
-## Quick start
+## Index
 
-If you don't have [sbt](https://www.scala-sbt.org) installed already, you can use the provided wrapper script:
+- [Mediator (Mailbox)](./mediator/Mercury-Mailbox-Mediator.md)
+- Protocols:
+  - [Invitation-Protocol](./protocol-invitation/Invitation-Protocol.md)
+  - [Mercury-Mailbox-Protocol](./protocol-mercury-mailbox/Mercury-Mailbox-Protocol.md)
+  - [Routing-Protocol](./protocol-routing/Routing-Protocol.md)
+- [Quick start](./QuickStart.md)
+- [UseCases](./UseCases.md)
 
-```shell
-./sbtx -h # shows an usage of a wrapper script
-./sbtx compile # build the project
-./sbtx test # run the tests
-./sbtx mediator/run # run the application (Main)
-./sbtx agents/run # run example of encrypt / decrypt messages
+## Project structure
+
+Dependencies:
+
+```mermaid
+flowchart BT
+  models %%[mercury-data-models]
+  resolver %%[mercury-resolver]
+  invitation[protocol-invitation]
+  mailbox[protocol-mercury-mailbox]
+  routing[mercury-protocol-routing-2_0]
+  agent
+  agent-didcommx
+  agent-didscala
+
+  alice((Alice))
+  bob((Bob))
+
+  subgraph Libs
+    didcommx
+    did-scala
+    http[shttp or zhttp]
+  end
+
+
+
+  subgraph Mercury
+    subgraph Protocols
+      invitation
+      mailbox
+      routing
+    end
+
+    subgraph DID agents
+      alice
+      bob
+      mediator
+    end
+
+    resolver --> models
+    agent --> resolver
+
+    invitation --> models
+    mailbox --> models
+    routing --> models
+    mailbox --> invitation
+    mailbox --> routing
+
+
+    mediator -.->|server| mailbox
+    %%mediator --> resolver
+    mediator -.-> http
+
+    agent ---> models
+    agent -..-> invitation
+
+    agent-didscala
+    agent-didscala --> agent
+    agent-didscala -.-> did-scala
+
+    agent-didcommx --> agent
+    agent-didcommx -.-> didcommx
+
+
+    mediator --> agent-didcommx
+
+
+    alice -.->|client| mailbox
+    alice --> agent-didcommx
+    bob --> agent-didcommx
+  end
+
+
+
 ```
 
-For more details check the [sbtx usage](https://github.com/dwijnand/sbt-extras#sbt--h) page.
-
-Otherwise, if sbt is already installed, you can use the standard commands:
+## Quick Reference Guide
 
 ```shell
-sbt compile # build the project
-sbt test # run the tests
-sbt mediator/run # run the application (Main)
-sbt agents/run # run example of encrypt / decrypt messages
+# Mailbox Mediator (zhttp)
+sbt "mediator/runMain io.iohk.atala.mercury.mediator.ZhttpMediator"
+
+# Mailbox Mediator (akka)
+sbt "mediator/runMain io.iohk.atala.mercury.mediator.Mediator"
+
+# Alice Agent (send messagem to Bob's Mediator)
+sbt "agentDidcommx/runMain io.iohk.atala.AgentClientAlice"
+
+# Bob Agent (fetch his message from Mediator)
+sbt "agentDidcommx/runMain io.iohk.atala.AgentClientBob"
 ```
-
-## open api docs explorer
-
-```shell
- http://localhost:8080/docs 
- currently the above url defaults to swagger petstore was not able to fix in mean while follow bellow step.
- once you open above docs url in browser insert in the explorer input box `/docs/docs.yaml`
-```
-
-## Links
-
-* [tapir documentation](https://tapir.softwaremill.com/en/latest/)
-* [tapir github](https://github.com/softwaremill/tapir)
-* [bootzooka: template microservice using tapir](https://softwaremill.github.io/bootzooka/)
-* [sbtx wrapper](https://github.com/dwijnand/sbt-extras#installation)
