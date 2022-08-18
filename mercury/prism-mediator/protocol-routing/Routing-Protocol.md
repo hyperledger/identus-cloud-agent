@@ -10,19 +10,21 @@ See [https://identity.foundation/didcomm-messaging/spec/#routing-protocol-20]
 
 ## Notes
 
-The protocol is one-way. sender -> mediator* -> recipient
+The protocol is one-way:
+
+- `sender -> mediator* -> recipient`
 
 Optional: The mediator can use the "Problem Reports Protocol" to return a problem-report to the sender identifying the unsupported feature.
 
 ## Roles
 
-- sender - The sender emits messages of type forward to the mediator.
+- `sender` - The sender emits messages of type forward to the mediator.
 **[See Sender Process here](https://identity.foundation/didcomm-messaging/spec/#sender-process-to-enable-forwarding)**
 
-- mediator - The mediator unpacks (decrypts) the payload of an encrypted forward message and passes on the result (a blob that probably contains a differently encrypted payload) to the recipient.
+- `mediator` - The mediator unpacks (decrypts) the payload of an encrypted forward message and passes on the result (a blob that probably contains a differently encrypted payload) to the recipient.
 **[See Sender Mediator here](https://identity.foundation/didcomm-messaging/spec/#mediator-process)**
 
-- recipient - The intended recipient of the sender.
+- `recipient` - The intended recipient of the sender.
 
 ## Diagrams
 
