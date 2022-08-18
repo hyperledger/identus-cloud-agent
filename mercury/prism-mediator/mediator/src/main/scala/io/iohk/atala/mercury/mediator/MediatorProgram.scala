@@ -61,7 +61,7 @@ object MediatorProgram {
                   senderDID = DidId(mediatorMessage.getFrom())
                   _ <- ZIO.logInfo(s"Mediator ReadMessages get Messages from: $senderDID")
                   seqMsg <- MailStorage.get(senderDID)
-                } yield (seqMsg.mkString("[", "; ", "]"))
+                } yield (seqMsg.last)
               case _ =>
                 ZIO.succeed("Unknown Message Type")
             }

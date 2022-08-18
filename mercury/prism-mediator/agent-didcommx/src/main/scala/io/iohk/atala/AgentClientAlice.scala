@@ -10,9 +10,10 @@ import io.iohk.atala.mercury.AgentService
 import io.iohk.atala.mercury.MediaTypes
 import io.circe.Printer
 import io.circe.syntax._
-
+import io.circe.Json._
+import io.circe.parser._
+import io.circe.JsonObject
 @main def AgentClientAlice() = {
-  val printer = Printer.spaces4
   val program = for {
     _ <- Console.printLine("\n#### Program 4 ####")
     messageCreated <- ZIO.succeed(makeMsg(Agent.Alice, Agent.Bob))
@@ -21,7 +22,11 @@ import io.circe.syntax._
     // ##########################################
     encryptedMsg <- alice.packEncrypted(messageCreated, to = Agent.Bob.id)
     _ <- Console.printLine("EncryptedMsg: " + encryptedMsg.asJson)
-
+    _ <- Console.printLine(
+      "\n*********************************************************************************************************************************\n"
+        + fromJsonObject(encryptedMsg.asJson).spaces2
+        + "\n********************************************************************************************************************************\n"
+    )
     forwardMessage = makeForwardMessage(Agent.Alice, Agent.Mediator, Agent.Bob, encryptedMsg).asMessage
 
     encryptedForwardMessage <- alice.packEncrypted(forwardMessage, to = Agent.Mediator.id)
