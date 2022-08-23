@@ -8,15 +8,6 @@ import java.util.Base64
 
 case class CreateInvitation(goal: String, goal_code: String)
 
-case class Invitation(
-    id: String,
-    `@type`: String,
-    label: String,
-    body: Body,
-    handshake_protocols: Seq[String],
-    service: Seq[Service] // FIXME service: Seq[ServiceType]
-)
-
 case class CreateInvitationResponse(alias: String, invitation: Invitation, invitationUrl: String)
 
 case class Body(goal: String, goal_code: String, accept: Seq[String])
