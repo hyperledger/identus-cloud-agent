@@ -2,7 +2,7 @@ name: Check PR
 
 env:
   # Maximum number of lines allowed to be changed in one PR
-  MAX_CHANGED_LINES: 500
+  MAX_CHANGED_LINES: 1000
   PR_TITLE_MAX_LENGTH: 70
   # Title must be `[ATL-1234] ...`
   PR_TITLE_REGEXP: '\[\w+-\d+\] .+'

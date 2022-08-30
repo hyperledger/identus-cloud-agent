@@ -1,0 +1,602 @@
+openapi: 3.0.3
+info:
+  title: Pollux OpenAPI specification
+  description: OpenAPI specification for Schema and Verifiable Credentials operations
+  version: 1.0.0
+  contact:
+    name: Core DID
+    email: atala-coredid@iohk.io
+
+servers:
+  - url: "https://api.atala.io"
+
+tags:
+  - name: Schema Registry
+    description: Schema Registry REST API
+  - name: Issue Credentials
+    description: Verifiable Credentials creation and issuance REST API
+  - name: Verify Credentials
+    description: Verifiable Credentials verification REST API
+  - name: Revoke Credentials
+    description: Verifiable Credentials revocation REST API
+
+paths:
+  /schema-registry/v1/schemas:
+    post:
+      tags: ["Schema Registry"]
+      operationId: createSchema
+      summary: Publish new schema to the schema registry
+      description: |-
+        Publish the new schema with claims to the schema registry on behalf of Cloud Agent
+        Schema will be signed by the keys of Cloud Agent and issued by the DID that corresponds to it
+      requestBody:
+        description: SchemaInput object with the metadata and claims
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/W3CSchemaInput"
+            example:
+              name: ""
+              version: "1.0"
+              claims:
+                - name: "email"
+                  type: "string"
+      responses:
+        "201":
+          description: The new schema is created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/W3CSchema"
+        "400":
+          description: Schema input document cannot be used for the schema creation
+        "401":
+          description: Client is unauthorized to call the API
+    get:
+      tags: ["Schema Registry"]
+      operationId: fetchSchemasByQuery
+      summary: Fetch schemas by query
+      description: |-
+        Lookup the schemas in the registry to query by the author, version, name
+      parameters:
+        - in: query
+          name: author
+          description: Fetch schemas by the author (issuer) DID
+          example: "did:prism:abcdefg"
+          schema:
+            type: string
+        - in: query
+          name: name
+          description: Fetch schemas by the name
+          example: UniversityDegree
+          schema:
+            type: string
+        - in: query
+          name: offset
+          description: Pagination offset
+          example: 15
+          schema:
+            type: integer
+        - in: query
+          name: limit
+          description: Pagination limit
+          example: 100
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Schemas are fetched by the query
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/W3CSchemaPaginated"
+  /schema-registry/v1/schemas/{id}:
+    get:
+      tags: ["Schema Registry"]
+      operationId: getSchemaById
+      summary: Fetch the schema from the registry by id
+      description: |-
+        Fetch the schema by the unique identifier. Verifiable Credential Schema in json format is returned
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Unique identifier of the schema published in the registry
+          example: "did:example:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0"
+      responses:
+        "200":
+          description: Successful response, W3C compliant schema is returned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/W3CSchema"
+        "404":
+          description: Schema is not found by id
+
+  /issue-credentials/v1/credentials:
+    post:
+      tags: ["Issue Credentials"]
+      operationId: createCredentials
+      summary: Create a new instances of Verifiable Credentials objects
+      description: |-
+        New credentials are created and stored by Pollux backend in the database
+        Credentials can be fetched either by issuance batchId or credential id
+        Any other manipulations and the issuance protocols execution can be performed on this object
+      requestBody:
+        description: CredentialInput object with the metadata and claims
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: ["credentials"]
+              properties:
+                batchId:
+                  type: string
+                  description: Batch ID of the credential objects that will be created together
+                credentials:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/W3CCredentialInput"
+                  example:
+                    - subjectId: "did:prism:subject123"
+                      schemaId: "unique schema id"
+                      claims:
+                        alumni_of: "University"
+                        degree: "Master"
+      responses:
+        "201":
+          description: "Array of created verifiable credentials objects"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  batchId:
+                    type: string
+                    description: "BatchId of the current set of credentials"
+                  count:
+                    type: integer
+                    description: "Total count of the credential object in a given batch"
+                  credentials:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/W3CCredential"
+
+    get:
+      tags: ["Issue Credentials"]
+      operationId: getCredentialsByBatchId
+      summary: Returns the list of the credentials associated with the given batchId
+      description: Returns the list of the credentials associated with the given batchId
+      parameters:
+        - in: query
+          name: batchId
+          description: "Issuance batchId associated with the set of credentials"
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: offset
+          description: "Offset pagination parameter"
+          required: false
+          schema:
+            type: integer
+        - in: query
+          name: limit
+          description: "Limit pagination parameter"
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: "Paginated response of the verifiable credentials objects"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/W3CCredentialsPaginated"
+
+  /issue-credentials/v1/credentials/{id}:
+    get:
+      tags: ["Issue Credentials"]
+      operationId: getCredentialById
+      summary: Fetch the credential by id
+      description: |-
+        Fetch the credential by id
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Identifier of the credential
+          example: "06e126d1-fa44-4882-a243-1e326fbe21db"
+      responses:
+        "200":
+          description: Successful response, instance of Verifiable Credential is returned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/W3CCredential"
+        "404":
+          description: Schema is not found by id
+    put:
+      tags: ["Issue Credentials"]
+      operationId: updateCredentialById
+      summary: Update the credential by id
+      description: Update the credential by id
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Identifier of the credential
+          example: "06e126d1-fa44-4882-a243-1e326fbe21db"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/W3CCredentialInput"
+      responses:
+        "200":
+          description: "Credential was updated successfully"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/W3CCredential"
+    delete:
+      tags: ["Issue Credentials"]
+      operationId: deleteCredentialById
+      summary: Delete the credential by id
+      description: Delete the credential by id
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Identifier of the credential
+          example: "06e126d1-fa44-4882-a243-1e326fbe21db"
+      responses:
+        "204":
+          description: "Credential was deleted"
+
+  /issue-credentials/v1/issuance-batches:
+    get:
+      tags: ["Issue Credentials"]
+      operationId: getIssuanceBatches
+      summary: Fetch the available list of issuance-batches
+      description: Fetch the list of issuance-batches
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+        - in: query
+          name: offset
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Returns the paginated list of issuance-batch objects
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/W3CIssuanceBatchPaginated"
+
+  /issue-credentials/v1/issuance-batches/{batchId}/actions:
+    post:
+      tags: ["Issue Credentials"]
+      summary: "Submit the list of actions performed on the credentials associated with the issuance-batch"
+      operationId: "submitIssuanceBatchActions"
+      description: |-
+        List of action is submitted, actions are scheduled and IDs are returned for tracking the status
+        Each action is executed asynchronously in the sequential order according to the state of the issuance batch
+        Sign -> Issue -> Send
+      parameters:
+        - in: path
+          name: batchId
+          description: "The batchId of the issuance-batch object"
+          schema:
+            type: string
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/W3CIssuanceBatchAction"
+      responses:
+        "200":
+          description: "Returns the set of actions performed on the issuance-batch"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/W3CIssuanceBatchAction"
+    get:
+      tags: ["Issue Credentials"]
+      operationId: "getIssuanceBatchActions"
+      summary: "Fetch the actions performed on the issuance-batch"
+      description: "Fetch the actions performed on the issuance-batch"
+      parameters:
+        - in: path
+          name: batchId
+          description: "The batchId of the issuance-batch object"
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: "Returns the set of actions performed on the issuance-batch"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/W3CIssuanceBatchAction"
+
+components:
+  schemas:
+    W3CProof:
+      description: "Proof object implemented according https://w3c.github.io/vc-data-integrity/ specification"
+      externalDocs:
+        url: "https://w3c.github.io/vc-data-integrity/"
+      required:
+        ["type", "created", "verificationMethod", "proofPurpose", "proofValue"]
+      properties:
+        type:
+          type: string
+          description: "The specific proof type used. For example, an Ed25519Signature2020 type indicates that the proof includes a digital signature produced by an ed25519 cryptographic key."
+          example: "JcsSignature2020"
+        created:
+          type: string
+          description: "The string value of an [ISO8601] combined date and time string generated by the Proof Algorithm"
+          example: "2020-11-05T19:23:24Z"
+        verificationMethod:
+          type: string
+          description: "A set of parameters required to independently verify the proof, such as an identifier for a public/private key pair that would be used in the proof."
+          example: "https://di.example/issuer#z6MkjLrk3gKS2nnkeWcmcxiZPGskmesDpuwRBorgHxUXfxnG"
+        proofPurpose:
+          type: string
+          description: "The specific intent for the proof, the reason why an entity created it. Acts as a safeguard to prevent the proof from being misused for a purpose other than the one it was intended for. For example, a proof can be used for purposes of authentication, for asserting control of a Verifiable Credential (assertionMethod), and several others."
+          example: "assertionMethod"
+        proofValue:
+          type: string
+          description: "One of any number of valid representations of proof value generated by the Proof Algorithm."
+          example: "zQeVbY4oey5q2M3XKaxup3tmzN4DRFTLVqpLMweBrSxMY2xHX5XTYV8nQApmEcqaqA3Q1gVHMrXFkXJeV6doDwLWx"
+        domain:
+          type: string
+          description: "A string value specifying the restricted domain of the proof."
+
+    W3CSchemaInput:
+      description: SchemaInput object with the metadata and claims
+      required: ["name", "version", "claims"]
+      properties:
+        name:
+          type: string
+          description: Human friendly name of the schema
+          example: UniversityDegree
+        version:
+          type: string
+          description: SemVer of the schema
+          example: "1.0"
+        description:
+          type: string
+          description: Schema description
+        claims:
+          type: "array"
+          description: "List of claims"
+          items:
+            type: "object"
+            properties:
+              name:
+                type: "string"
+                description: "Name of the claim attribute"
+              type:
+                type: "string"
+                description: "Type of the claim attribute (bool, string, datetime, integer)"
+
+    W3CSchemaMeta:
+      description: Schema metadata
+      properties:
+        type:
+          type: string #should be URI
+          description: The URI of the schema
+          example: "https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json"
+        version:
+          type: string
+          description: Semantic version of the schema
+          example: "1.0"
+        id:
+          type: string
+          description: Globally unique identifier of the schema (composed of issuer did, schema id and version)
+          example: "did:example:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0"
+        name:
+          type: string
+          description: Human readable schema name
+          example: "UniversityDegree"
+        author:
+          type: string
+          description: Issuer DID
+          example: "did:example:MDP8AsFhHzhwUvGNuYkX7T"
+        authored:
+          type: string
+          description: Datetime of the schema issuance in ISO format
+          example: "2021-01-01T00:00:00+00:00"
+
+    W3CSchemaClaims:
+      description: Verifiable Credentials Schema Claims
+      properties:
+        $schema:
+          type: string
+          description: "Schema reference that can be used for validation"
+          example: "https://json-schema.org/draft/2019-09/schema"
+        $id:
+          type: string
+          description: UID of this Schema
+          example: "06e126d1-fa44-4882-a243-1e326fbe21db"
+        description:
+          type: string
+          description: "Schema description"
+        type:
+          type: string
+          description: "OpenAPI specification field that describes the object declaration"
+          example: "object"
+        properties:
+          type: object
+          description: "Set of clames"
+          additionalProperties: true
+        required:
+          type: array
+          items:
+            type: string
+          description: "Defines the set of required claims"
+        additionalProperties:
+          type: boolean
+          description: "Restrict the claims set to have additional attributes"
+
+    W3CSchema:
+      description: "W3C Json format of the verifiable credentials schema according to VC Data Model"
+      allOf:
+        - $ref: "#/components/schemas/W3CSchemaMeta"
+        - type: object
+          properties:
+            schema:
+              $ref: "#/components/schemas/W3CSchemaClaims"
+            proof:
+              $ref: "#/components/schemas/W3CProof"
+
+    W3CSchemaPaginated:
+      description: "Paginated response that contains an array of the schema objects"
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/W3CSchema"
+        offset:
+          type: integer
+        limit:
+          type: integer
+        count:
+          type: integer
+
+    W3CCredentialInput:
+      description: |-
+        Credential input object based on which the new instance of the verifiable credentials is created.
+        Object contains the minimal set of the fields required to create the credentials for the given subject.
+        All other required fields of the verifiable credential depend on the context of the cloud agent
+      properties:
+        schemaId:
+          type: string
+          description: "Identity of the Verifiable Credentials Schema associated with this object"
+          example: "did:example:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0"
+        subjectId:
+          type: string
+          description: "Subject DID of the verifiable credentials object"
+          example: "did:prism:subjectofverifiablecredentials"
+        claims:
+          type: object
+          additionalProperties: true
+          description: "Clams associated with given credentials object (for now it's just a key/value, later should be more complex"
+
+    W3CCredential:
+      description: "Verifiable Credential Object according to W3C specification"
+      required: ["id", "type", "issuer", "issuanceDate"]
+      properties:
+        id:
+          type: string
+          description: "Credential id or url that can be used to get the status of revoke the credential"
+          example: "http://example.edu/credentials/1872"
+        type:
+          type: string
+          description: "Credential type according to W3C specification. Must include VerifiableCredentials and type of concrete credentials"
+          example: '["VerifiableCredential", "AlumniCredential"]'
+        issuer:
+          type: string
+          description: "Issuer DID"
+          example: "did:prism:issuerdid"
+        issuanceDate":
+          type: string
+          description: "Datetime in ISO format that corresponds to the date of issuance"
+          example: "2010-01-01T19:23:24Z"
+        credentialSubject:
+          type: object
+          additionalProperties: true
+          required: ["id"]
+          description: "Credentials subject DID and claims according to the schema object"
+          example:
+            id: "did:prism:subject12345"
+            alumni_of: "University"
+            degree: "master of openapi specification"
+          properties:
+            id:
+              type: string
+              description: "DID of the subject of the credential"
+
+        proof:
+          $ref: "#/components/schemas/W3CProof"
+
+    W3CCredentialsPaginated:
+      description: "Paginated response that contains an array of the credential objects"
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/W3CCredential"
+        offset:
+          type: integer
+        limit:
+          type: integer
+        count:
+          type: integer
+
+    W3CIssuanceBatch:
+      description: "An issuance batch object that is associated with thelist of verifiable credentials"
+      properties:
+        id:
+          type: string
+          description: "Issuance batch id"
+        count:
+          type: integer
+          description: "Count of the verifiable credentials object in the batch"
+        actions:
+          type: array
+          items:
+            $ref: "#/components/schemas/W3CIssuanceBatchAction"
+
+    W3CIssuanceBatchAction:
+      description: "Action performed on the list of credentials associated with the issuance batch"
+      properties:
+        action:
+          description: "Action name"
+          type: string
+          enum: ["sign", "issue", "send"]
+          example: "issue"
+        id:
+          description: "Action id for tracking"
+          type: string
+          example: "uid"
+        status:
+          description: "Action status"
+          type: string
+          enum: ["scheduled", "pending", "completed", "failed"]
+
+    W3CIssuanceBatchPaginated:
+      description: "Paginated response that contains an array of the issuance-batch objects"
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/W3CIssuanceBatch"
+        offset:
+          type: integer
+        limit:
+          type: integer
+        count:
+          type: integer
