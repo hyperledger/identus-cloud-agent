@@ -58,28 +58,24 @@ flowchart BT
     mailbox --> invitation
     mailbox --> routing
 
+    alice -.->|client| mailbox
+    alice --> agent-didcommx
+    bob --> agent-didcommx
 
     mediator -.->|server| mailbox
+    mediator --> agent-didcommx
     %%mediator --> resolver
     mediator -.-> http
 
     agent ---> models
-    agent -..-> invitation
+    agent -..-> routing %% invitation
 
-    agent-didscala
-    agent-didscala --> agent
-    agent-didscala -.-> did-scala
 
     agent-didcommx --> agent
     agent-didcommx -.-> didcommx
 
-
-    mediator --> agent-didcommx
-
-
-    alice -.->|client| mailbox
-    alice --> agent-didcommx
-    bob --> agent-didcommx
+    agent-didscala --> agent
+    agent-didscala -.-> did-scala
   end
 
 
