@@ -14,7 +14,7 @@ tags:
 paths:
   /did/v1/dids:
     post:
-      tags: [ "DID" ]
+      tags: ["DID"]
       operationId: publishDid
       summary: Publishs DID with the associated DID Document to ledger.
       description: Publishs DID with the associated DID Document to ledger.
@@ -23,14 +23,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PublishDIDRequest'
+              $ref: "#/components/schemas/PublishDIDRequest"
       responses:
         202:
           description: Publishing DID to ledger.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PublishDIDResponse'
+                $ref: "#/components/schemas/PublishDIDResponse"
           headers:
             Location:
               schema:
@@ -41,48 +41,48 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
   /did/v1/dids/{didRef}:
     get:
-      tags: [ "DID" ]
+      tags: ["DID"]
       operationId: getDID
       summary: Resolves a DID, returning the associated DID Document
       description: Get a DID and associated DID Document.
       parameters:
-        - $ref: '#/components/parameters/didRefInPath'
+        - $ref: "#/components/parameters/didRefInPath"
       responses:
         200:
           description: The DID resource
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResolveDIDResponse'
+                $ref: "#/components/schemas/ResolveDIDResponse"
         404:
           description: There is no DID existing for the 'didRef'.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
     post:
-      tags: [ "DID" ]
+      tags: ["DID"]
       operationId: updatePublishedDid
       summary: Updates the DID Document of a published DID on the ledger.
       description: Updates the DID Document of a published DID on the ledger.
       parameters:
-        - $ref: '#/components/parameters/didRefInPath'
+        - $ref: "#/components/parameters/didRefInPath"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateDIDRequest'
+              $ref: "#/components/schemas/UpdateDIDRequest"
       responses:
         202:
           description: Updating DID on ledger.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UpdateDIDResponse'
+                $ref: "#/components/schemas/UpdateDIDResponse"
           headers:
             Location:
               schema:
@@ -93,27 +93,27 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
         422:
           description: The DID update failed.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
     delete:
-      tags: [ "DID" ]
+      tags: ["DID"]
       operationId: deactivateDID
       summary: Deactivates a published DID.
       description: Deactivates a published DID.
       parameters:
-        - $ref: '#/components/parameters/didRefInPath'
+        - $ref: "#/components/parameters/didRefInPath"
       responses:
         202:
           description: Deactivating DID on ledger.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeactivateDIDResponse'
+                $ref: "#/components/schemas/DeactivateDIDResponse"
           headers:
             Location:
               schema:
@@ -124,57 +124,57 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
         422:
           description: The DID deactivation failed.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
   /did/v1/operations/{operationRef}:
     get:
-      tags: [ "DID Operations" ]
+      tags: ["DID Operations"]
       operationId: getDidOperation
       summary: Get Did Operation.
       description: Get Did Operation.
       parameters:
-        - $ref: '#/components/parameters/didOperationRefInPath'
+        - $ref: "#/components/parameters/didOperationRefInPath"
       responses:
         200:
           description: The DID Operation resource
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetDIDOperationResponse'
+                $ref: "#/components/schemas/GetDIDOperationResponse"
         404:
           description: There is no DID Operation existing for the 'didRef'.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
   /did/v1/operations/{didRef}:
     get:
-      tags: [ "DID Operations" ]
+      tags: ["DID Operations"]
       operationId: getDidOperationsByDidRef
       summary: Get All DID Operations for given DID.
       description: Get All DID Operations for given DID.
       parameters:
-        - $ref: '#/components/parameters/didRefInPath'
+        - $ref: "#/components/parameters/didRefInPath"
       responses:
         200:
           description: All DID Operations for a given DID.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetDIDOperationsByDIDRefResponse'
+                $ref: "#/components/schemas/GetDIDOperationsByDIDRefResponse"
         404:
           description: There is no DID existing for the 'didRef'.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
 components:
   parameters:
@@ -196,57 +196,57 @@ components:
   schemas:
     PublishDIDRequest:
       allOf:
-        - $ref: '#/components/schemas/DID'
+        - $ref: "#/components/schemas/DID"
     PublishDIDResponse:
       type: object
       properties:
         did:
-          $ref: '#/components/schemas/DID'
+          $ref: "#/components/schemas/DID"
         CurrentDidStatus:
-          $ref: '#/components/schemas/DIDStatus'
+          $ref: "#/components/schemas/DIDStatus"
         scheduledOperation:
-          $ref: '#/components/schemas/DidOperation'
+          $ref: "#/components/schemas/DidOperation"
 
     UpdateDIDRequest:
       allOf:
-        - $ref: '#/components/schemas/DID'
+        - $ref: "#/components/schemas/DID"
     UpdateDIDResponse:
       type: object
       properties:
         did:
-          $ref: '#/components/schemas/DID'
+          $ref: "#/components/schemas/DID"
         CurrentDidStatus:
-          $ref: '#/components/schemas/DIDStatus'
+          $ref: "#/components/schemas/DIDStatus"
         scheduledOperation:
-          $ref: '#/components/schemas/DidOperation'
+          $ref: "#/components/schemas/DidOperation"
 
     DeactivateDIDResponse:
       type: object
       properties:
         did:
-          $ref: '#/components/schemas/DID'
+          $ref: "#/components/schemas/DID"
         CurrentDidStatus:
-          $ref: '#/components/schemas/DIDStatus'
+          $ref: "#/components/schemas/DIDStatus"
         scheduledOperation:
-          $ref: '#/components/schemas/DidOperation'
+          $ref: "#/components/schemas/DidOperation"
 
     ResolveDIDResponse:
       type: object
       properties:
         did:
-          $ref: '#/components/schemas/DID'
+          $ref: "#/components/schemas/DID"
         CurrentDidStatus:
-          $ref: '#/components/schemas/DIDStatus'
+          $ref: "#/components/schemas/DIDStatus"
 
     GetDIDOperationResponse:
       allOf:
-        - $ref: '#/components/schemas/DidOperation'
+        - $ref: "#/components/schemas/DidOperation"
 
     GetDIDOperationsByDIDRefResponse:
       type: array
       items:
         allOf:
-          - $ref: '#/components/schemas/DidOperation'
+          - $ref: "#/components/schemas/DidOperation"
 
     DIDStatus:
       type: string
@@ -265,9 +265,9 @@ components:
           type: string
           example: "did:prism:123"
         type:
-          $ref: '#/components/schemas/DidOperationType'
+          $ref: "#/components/schemas/DidOperationType"
         status:
-          $ref: '#/components/schemas/DidOperationStatus'
+          $ref: "#/components/schemas/DidOperationStatus"
 
     DidOperationStatus:
       type: string
@@ -296,35 +296,35 @@ components:
         verificationMethod:
           type: array
           items:
-            $ref: '#/components/schemas/VerificationMethod'
+            $ref: "#/components/schemas/VerificationMethod"
         authentication:
           type: array
           items:
             oneOf:
-              - $ref: '#/components/schemas/VerificationMethodRef'
-              - $ref: '#/components/schemas/VerificationMethod'
+              - $ref: "#/components/schemas/VerificationMethodRef"
+              - $ref: "#/components/schemas/VerificationMethod"
         assertionMethod:
           type: array
           items:
             oneOf:
-              - $ref: '#/components/schemas/VerificationMethodRef'
-              - $ref: '#/components/schemas/VerificationMethod'
+              - $ref: "#/components/schemas/VerificationMethodRef"
+              - $ref: "#/components/schemas/VerificationMethod"
         keyAgreement:
           type: array
           items:
             oneOf:
-              - $ref: '#/components/schemas/VerificationMethodRef'
-              - $ref: '#/components/schemas/VerificationMethod'
+              - $ref: "#/components/schemas/VerificationMethodRef"
+              - $ref: "#/components/schemas/VerificationMethod"
         capabilityInvocation:
           type: array
           items:
             oneOf:
-              - $ref: '#/components/schemas/VerificationMethodRef'
-              - $ref: '#/components/schemas/VerificationMethod'
+              - $ref: "#/components/schemas/VerificationMethodRef"
+              - $ref: "#/components/schemas/VerificationMethod"
         service:
           type: array
           items:
-            $ref: '#/components/schemas/Service'
+            $ref: "#/components/schemas/Service"
 
     VerificationMethodRef:
       type: string
@@ -344,7 +344,7 @@ components:
               type: string
               example: "did:prism:456"
         - oneOf:
-            - $ref: '#/components/schemas/JsonWebKey2020'
+            - $ref: "#/components/schemas/JsonWebKey2020"
 
     JsonWebKey2020:
       type: object
@@ -352,7 +352,7 @@ components:
         - publicKeyJwk
       properties:
         publicKeyJwk:
-          $ref: '#/components/schemas/PublicKeyJwk'
+          $ref: "#/components/schemas/PublicKeyJwk"
 
     PublicKeyJwk:
       type: object
