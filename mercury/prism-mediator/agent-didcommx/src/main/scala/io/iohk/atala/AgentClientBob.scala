@@ -30,13 +30,13 @@ import io.circe.JsonObject
     encryptedMsg <- bob.packEncrypted(messageCreated.asMessage, to = Agent.Mediator.id)
     _ <- Console.printLine("EncryptedMsg: \n" + fromJsonObject(encryptedMsg.asJson).spaces2 + "\n")
     _ <- Console.printLine("Sending bytes ...")
-    base64EncodedString = encryptedMsg.base64
+    jsonString = encryptedMsg.string
     // HTTP
     res <- Client.request(
       url = "http://localhost:8080",
       method = Method.POST,
       headers = Headers("content-type" -> MediaTypes.contentTypeEncrypted),
-      content = HttpData.fromChunk(Chunk.fromArray(base64EncodedString.getBytes)),
+      content = HttpData.fromChunk(Chunk.fromArray(jsonString.getBytes)),
       // ssl = ClientSSLOptions.DefaultSSL,
     )
     data <- res.bodyAsString

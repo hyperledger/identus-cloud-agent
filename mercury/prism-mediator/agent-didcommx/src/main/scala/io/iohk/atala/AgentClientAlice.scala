@@ -46,8 +46,8 @@ import io.circe._, io.circe.parser._
 
     encryptedForwardMessage <- alice.packEncrypted(forwardMessage, to = Agent.Mediator.id)
     _ <- Console.printLine("Sending bytes ...")
-    base64EncodedString = encryptedForwardMessage.base64
-    _ <- Console.printLine(base64EncodedString)
+    jsonString = encryptedForwardMessage.string
+    _ <- Console.printLine(jsonString)
 
     // HTTP
 
@@ -55,7 +55,7 @@ import io.circe._, io.circe.parser._
       url = "http://localhost:8080",
       method = Method.POST,
       headers = Headers("content-type" -> MediaTypes.contentTypeEncrypted),
-      content = HttpData.fromChunk(Chunk.fromArray(base64EncodedString.getBytes)),
+      content = HttpData.fromChunk(Chunk.fromArray(jsonString.getBytes)),
       // ssl = ClientSSLOptions.DefaultSSL,
     )
     data <- res.bodyAsString

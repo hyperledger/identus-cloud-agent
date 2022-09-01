@@ -40,13 +40,14 @@ object MediatorProgram {
   // private def messageProcessing(message: org.didcommx.didcomm.message.Message): String =
 
   def program(
-      base64EncodedString: String
+      jsonString: String
   ): ZIO[DidComm & MailStorage, Nothing, String] = {
     ZIO.logAnnotate("request-id", java.util.UUID.randomUUID.toString()) {
       for {
         _ <- ZIO.logInfo("Received new message")
-        _ <- ZIO.logTrace(base64EncodedString)
-        mediatorMessage <- unpackBase64(base64EncodedString).map(_.getMessage)
+        _ <- ZIO.logTrace(jsonString)
+        mediatorMessage <- unpack(jsonString).map(_.getMessage)
+
         ret <- // messageProcessing(mediatorMessage)
           {
             // val recipient = DidId(mediatorMessage.getTo.asScala.toList.head) // FIXME unsafe
