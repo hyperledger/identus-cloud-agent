@@ -31,7 +31,7 @@ jobs:
           fetch-depth: 0
       - name: Mega-Linter
         id: ml
-        uses: megalinter/megalinter@v5
+        uses: megalinter/megalinter@v6
       - name: Prepare commit
         if: |
           (success() || failure()) &&
