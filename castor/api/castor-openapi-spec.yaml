@@ -3,8 +3,11 @@ info:
   title: Castor OpenAPI specification
   description: OpenAPI specification for Decentralized Identifiers (DID) Operations
   version: 1.0.0
+  contact:
+    name: Core DID
+    email: atala-coredid@iohk.io
 servers:
-  - url: "https://api.atala.io/"
+  - url: "https://api.atala.io"
 tags:
   - name: DID
     description: DID REST API
@@ -25,7 +28,7 @@ paths:
             schema:
               $ref: "#/components/schemas/PublishDIDRequest"
       responses:
-        202:
+        "202":
           description: Publishing DID to ledger.
           content:
             application/json:
@@ -36,7 +39,7 @@ paths:
               schema:
                 type: string
               description: URL to access DID resource and publication status.
-        422:
+        "422":
           description: The DID publication failed.
           content:
             application/json:
@@ -51,13 +54,13 @@ paths:
       parameters:
         - $ref: "#/components/parameters/didRefInPath"
       responses:
-        200:
+        "200":
           description: The DID resource
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ResolveDIDResponse"
-        404:
+        "404":
           description: There is no DID existing for the 'didRef'.
           content:
             application/json:
@@ -77,7 +80,7 @@ paths:
             schema:
               $ref: "#/components/schemas/UpdateDIDRequest"
       responses:
-        202:
+        "202":
           description: Updating DID on ledger.
           content:
             application/json:
@@ -88,13 +91,13 @@ paths:
               schema:
                 type: string
               description: URL to access DID resource and update status.
-        404:
+        "404":
           description: The specified DID was not found.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        422:
+        "422":
           description: The DID update failed.
           content:
             application/json:
@@ -108,7 +111,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/didRefInPath"
       responses:
-        202:
+        "202":
           description: Deactivating DID on ledger.
           content:
             application/json:
@@ -119,20 +122,20 @@ paths:
               schema:
                 type: string
               description: URL to access DID resource and deactivation status.
-        404:
+        "404":
           description: The specified DID was not found.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        422:
+        "422":
           description: The DID deactivation failed.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-  /did/v1/operations/{operationRef}:
+  /did/v1/operations/{didOperationRef}:
     get:
       tags: ["DID Operations"]
       operationId: getDidOperation
@@ -141,35 +144,35 @@ paths:
       parameters:
         - $ref: "#/components/parameters/didOperationRefInPath"
       responses:
-        200:
+        "200":
           description: The DID Operation resource
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/GetDIDOperationResponse"
-        404:
+        "404":
           description: There is no DID Operation existing for the 'didRef'.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-  /did/v1/operations/{didRef}:
+  /did/v1/operations/:
     get:
       tags: ["DID Operations"]
       operationId: getDidOperationsByDidRef
       summary: Get All DID Operations for given DID.
       description: Get All DID Operations for given DID.
       parameters:
-        - $ref: "#/components/parameters/didRefInPath"
+        - $ref: "#/components/parameters/didRefInQuery"
       responses:
-        200:
+        "200":
           description: All DID Operations for a given DID.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/GetDIDOperationsByDIDRefResponse"
-        404:
+        "404":
           description: There is no DID existing for the 'didRef'.
           content:
             application/json:
@@ -190,6 +193,13 @@ components:
       name: didOperationRef
       required: true
       description: DID Operation Reference.
+      schema:
+        type: string
+    didRefInQuery:
+      in: query
+      name: didRef
+      required: true
+      description: DID reference
       schema:
         type: string
 
