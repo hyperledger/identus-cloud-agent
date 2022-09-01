@@ -1,11 +1,14 @@
-# NOTE: This should be merged to the main openapi spec yaml
+# NOTE: This should be merged to the main yaml
 openapi: 3.0.1
 info:
   title: Castor OpenAPI specification
   description: OpenAPI specification for Decentralized Identifiers (DID) Operations
   version: 1.0.0
+  contact:
+    name: Core DID
+    email: atala-coredid@iohk.io
 servers:
-  - url: "https://api.atala.io/"
+  - url: "https://api.atala.io"
 tags:
   - name: DID Authentication
     description: DID Authentication REST API
@@ -26,13 +29,13 @@ paths:
             schema:
               $ref: "#/components/schemas/CreateAuthenticationChallengeRequest"
       responses:
-        200:
+        "200":
           description: Authentication challenge created successfully
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/CreateAuthenticationChallengeResponse"
-        400:
+        "400":
           description: A create AuthenticationChallenge payload is malformed
           content:
             application/json:
@@ -53,13 +56,13 @@ paths:
             schema:
               $ref: "#/components/schemas/AuthenticationChallengeSubmissionRequest"
       responses:
-        200:
+        "200":
           description: Authentication challenge has been successfully verified
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/AuthenticationChallengeSubmissionResponse"
-        400:
+        "400":
           description: ChallengeSubmission is malformed
           content:
             application/json:
