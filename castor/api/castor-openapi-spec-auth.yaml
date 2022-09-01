@@ -88,13 +88,12 @@ components:
           type: number
           description: A number of seconds that challenge will be considered valid.
           example: 900
-        purpose:
+        state:
           type: string
           description: |
             An opaque string provided by a relying-party indicating the purpose of
             this challenge in order to avoid repurposing the challenge submission.
-            May be used to represent a domain name, intention, connection id, etc.
-          example: example.com
+          example: qrcode#123
         subject:
           $ref: "#/components/schemas/AuthenticationChallengeSubject"
 
@@ -131,13 +130,12 @@ components:
         success:
           type: boolean
           example: true
-        purpose:
+        state:
           type: string
           description: |
             An opaque string provided by a relying-party indicating the purpose of
             this challenge in order to avoid repurposing the challenge submission.
-            May be used to represent a domain name, intention, connection id, etc.
-          example: example.com
+          example: qrcode#123
 
     AuthenticationChallengeSubject:
       description: |
@@ -152,7 +150,7 @@ components:
       type: string
       description: |
         A JWT challenge that a user must provide to Castor SDK to create a ChallengeSubmission.
-        JWT payload contains nonce, purpose, expiration, issuer
+        JWT payload contains nonce, state, expiration, issuer
       example: eyJhbGciOiJIUzI1NiIsInR5c...0eu8Ri_WSPSsBTlCes2YMpuB1mHU
 
     ErrorResponse:
