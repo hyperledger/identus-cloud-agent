@@ -55,21 +55,15 @@ components:
             [
               {
                 "encrypted_key": "3n1olyBR3nY7ZGAprOx-b7wYAKza6cvOYjNwVg3miTnbLwPP_FmE1A",
-                "header": {
-                  "kid": "did:example:bob#key-x25519-1"
-                },
+                "header": { "kid": "did:example:bob#key-x25519-1" },
               },
               {
                 "encrypted_key": "j5eSzn3kCrIkhQAWPnEwrFPMW6hG0zF_y37gUvvc5gvlzsuNX4hXrQ",
-                "header": {
-                  "kid": "did:example:bob#key-x25519-2"
-                },
+                "header": { "kid": "did:example:bob#key-x25519-2" },
               },
               {
                 "encrypted_key": "TEWlqlq-ao7Lbynf0oZYhxs7ZB39SUWBCK4qjqQqfeItfwmNyDm73A",
-                "header": {
-                  "kid": "did:example:bob#key-x25519-3"
-                },
+                "header": { "kid": "did:example:bob#key-x25519-3" },
               },
             ]
         tag:
