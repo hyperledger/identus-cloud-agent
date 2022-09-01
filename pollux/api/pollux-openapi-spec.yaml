@@ -17,11 +17,11 @@ tags:
     description: Verifiable Credentials creation and issuance REST API
   - name: Verify Credentials
     description: Verifiable Credentials verification REST API
-  - name: Revoke Credentials
+  - name: Revocation
     description: Verifiable Credentials revocation REST API
 
 paths:
-  /schema-registry/v1/schemas:
+  /schema-registry/schemas:
     post:
       tags: ["Schema Registry"]
       operationId: createSchema
@@ -91,7 +91,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/W3CSchemaPaginated"
-  /schema-registry/v1/schemas/{id}:
+  /schema-registry/schemas/{id}:
     get:
       tags: ["Schema Registry"]
       operationId: getSchemaById
@@ -116,7 +116,7 @@ paths:
         "404":
           description: Schema is not found by id
 
-  /issue-credentials/v1/credentials:
+  /issue-credentials/credentials:
     post:
       tags: ["Issue Credentials"]
       operationId: createCredentials
@@ -198,7 +198,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/W3CCredentialsPaginated"
 
-  /issue-credentials/v1/credentials/{id}:
+  /issue-credentials/credentials/{id}:
     get:
       tags: ["Issue Credentials"]
       operationId: getCredentialById
@@ -264,7 +264,7 @@ paths:
         "204":
           description: "Credential was deleted"
 
-  /issue-credentials/v1/issuance-batches:
+  /issue-credentials/issuance-batches:
     get:
       tags: ["Issue Credentials"]
       operationId: getIssuanceBatches
@@ -287,7 +287,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/W3CIssuanceBatchPaginated"
 
-  /issue-credentials/v1/issuance-batches/{batchId}/actions:
+  /issue-credentials/issuance-batches/{batchId}/actions:
     post:
       tags: ["Issue Credentials"]
       summary: "Submit the list of actions performed on the credentials associated with the issuance-batch"
@@ -340,6 +340,67 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/W3CIssuanceBatchAction"
+
+  /revocation-registry/credential-status/{id}:
+    get:
+      tags: ["Revocation Registry"]
+      operationId: getCredentialRevocationStatusById
+      summary: Get credentials revocation status by credential id
+      description: Get credentials revocation status by credential id
+      parameters:
+        - in: path
+          name: id
+          description: Verifiable Credential Id
+          schema:
+            type: string
+          required: true
+          example: "abcde12345"
+      responses:
+        "200":
+          description: Status request processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/W3CCredentialStatus"
+
+  /revocation-registry/revoke:
+    post:
+      tags: ["Revocation Registry"]
+      operationId: revokeCredentialById
+      summary: Revoke credential by id
+      description: Revoke credential by id
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/W3CCredentialRevocationRequest"
+      responses:
+        "200":
+          description: Revocation request successfully submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/W3CCredentialRevocationResponse"
+
+  /revocation-registry/operations/{id}:
+    get:
+      tags: ["Revocation Registry"]
+      operationId: getRevocationOperationStatusById
+      summary: Get revocation operation status by id
+      description: Get revocation operation status by id
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: Success, operation status is returned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RevocationStatus"
 
 components:
   schemas:
@@ -600,3 +661,61 @@ components:
           type: integer
         count:
           type: integer
+
+    W3CCredentialStatus:
+      description: Verifiable Credential revocation status
+      required:
+        - status
+      properties:
+        status:
+          description: Status name
+          type: string
+          enum:
+            - issued
+            - revoked
+          example: "issued"
+        description:
+          type: string
+          description: Description about the status
+          example: "Issued by did:prism:issuer12354 on 2022-02-01"
+
+    W3CCredentialRevocationRequest:
+      description: Credential revocation request. Contain credential id and other information required for revocation
+      required:
+        - credentialId
+      additionalProperties: true
+      properties:
+        credentialId:
+          type: string
+          description: Credential identity
+          example: "abcde-12345"
+
+    W3CCredentialRevocationResponse:
+      description: Credential revocation response. Contain credential id and revocation operation for tracing the completion
+      required:
+        - credentialId
+        - operationId
+        - status
+      properties:
+        credentialId:
+          type: string
+          description: Credential identity
+          example: "abcde-12345"
+        operation:
+          $ref: "#/components/schemas/RevocationStatus"
+
+    RevocationStatus:
+      description: Revocation status record
+      properties:
+        id:
+          type: string
+          description: Operation id
+          example: "operation1235"
+        status:
+          type: string
+          description: Operation status
+          enum:
+            - scheduled
+            - pending
+            - completed
+            - failed
