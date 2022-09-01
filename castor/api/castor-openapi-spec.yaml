@@ -1,0 +1,441 @@
+openapi: 3.0.1
+info:
+  title: Castor OpenAPI specification
+  description: OpenAPI specification for Decentralized Identifiers (DID) Operations
+  version: 1.0.0
+  contact:
+    name: Core DID
+    email: atala-coredid@iohk.io
+servers:
+  - url: "https://api.atala.io"
+tags:
+  - name: DID
+    description: DID REST API
+  - name: DID Operations
+    description: DID Operations REST API
+
+paths:
+  /did/v1/dids:
+    post:
+      tags: ["DID"]
+      operationId: publishDid
+      summary: Publishs DID with the associated DID Document to ledger.
+      description: Publishs DID with the associated DID Document to ledger.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PublishDIDRequest"
+      responses:
+        "202":
+          description: Publishing DID to ledger.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublishDIDResponse"
+          headers:
+            Location:
+              schema:
+                type: string
+              description: URL to access DID resource and publication status.
+        "422":
+          description: The DID publication failed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /did/v1/dids/{didRef}:
+    get:
+      tags: ["DID"]
+      operationId: getDID
+      summary: Resolves a DID, returning the associated DID Document
+      description: Get a DID and associated DID Document.
+      parameters:
+        - $ref: "#/components/parameters/didRefInPath"
+      responses:
+        "200":
+          description: The DID resource
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResolveDIDResponse"
+        "404":
+          description: There is no DID existing for the 'didRef'.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      tags: ["DID"]
+      operationId: updatePublishedDid
+      summary: Updates the DID Document of a published DID on the ledger.
+      description: Updates the DID Document of a published DID on the ledger.
+      parameters:
+        - $ref: "#/components/parameters/didRefInPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateDIDRequest"
+      responses:
+        "202":
+          description: Updating DID on ledger.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UpdateDIDResponse"
+          headers:
+            Location:
+              schema:
+                type: string
+              description: URL to access DID resource and update status.
+        "404":
+          description: The specified DID was not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: The DID update failed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      tags: ["DID"]
+      operationId: deactivateDID
+      summary: Deactivates a published DID.
+      description: Deactivates a published DID.
+      parameters:
+        - $ref: "#/components/parameters/didRefInPath"
+      responses:
+        "202":
+          description: Deactivating DID on ledger.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeactivateDIDResponse"
+          headers:
+            Location:
+              schema:
+                type: string
+              description: URL to access DID resource and deactivation status.
+        "404":
+          description: The specified DID was not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: The DID deactivation failed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /did/v1/operations/{didOperationRef}:
+    get:
+      tags: ["DID Operations"]
+      operationId: getDidOperation
+      summary: Get Did Operation.
+      description: Get Did Operation.
+      parameters:
+        - $ref: "#/components/parameters/didOperationRefInPath"
+      responses:
+        "200":
+          description: The DID Operation resource
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetDIDOperationResponse"
+        "404":
+          description: There is no DID Operation existing for the 'didRef'.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /did/v1/operations/:
+    get:
+      tags: ["DID Operations"]
+      operationId: getDidOperationsByDidRef
+      summary: Get All DID Operations for given DID.
+      description: Get All DID Operations for given DID.
+      parameters:
+        - $ref: "#/components/parameters/didRefInQuery"
+      responses:
+        "200":
+          description: All DID Operations for a given DID.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetDIDOperationsByDIDRefResponse"
+        "404":
+          description: There is no DID existing for the 'didRef'.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  parameters:
+    didRefInPath:
+      in: path
+      name: didRef
+      required: true
+      description: DID reference.
+      schema:
+        type: string
+    didOperationRefInPath:
+      in: path
+      name: didOperationRef
+      required: true
+      description: DID Operation Reference.
+      schema:
+        type: string
+    didRefInQuery:
+      in: query
+      name: didRef
+      required: true
+      description: DID reference
+      schema:
+        type: string
+
+  schemas:
+    PublishDIDRequest:
+      allOf:
+        - $ref: "#/components/schemas/DID"
+    PublishDIDResponse:
+      type: object
+      properties:
+        did:
+          $ref: "#/components/schemas/DID"
+        CurrentDidStatus:
+          $ref: "#/components/schemas/DIDStatus"
+        scheduledOperation:
+          $ref: "#/components/schemas/DidOperation"
+
+    UpdateDIDRequest:
+      allOf:
+        - $ref: "#/components/schemas/DID"
+    UpdateDIDResponse:
+      type: object
+      properties:
+        did:
+          $ref: "#/components/schemas/DID"
+        CurrentDidStatus:
+          $ref: "#/components/schemas/DIDStatus"
+        scheduledOperation:
+          $ref: "#/components/schemas/DidOperation"
+
+    DeactivateDIDResponse:
+      type: object
+      properties:
+        did:
+          $ref: "#/components/schemas/DID"
+        CurrentDidStatus:
+          $ref: "#/components/schemas/DIDStatus"
+        scheduledOperation:
+          $ref: "#/components/schemas/DidOperation"
+
+    ResolveDIDResponse:
+      type: object
+      properties:
+        did:
+          $ref: "#/components/schemas/DID"
+        CurrentDidStatus:
+          $ref: "#/components/schemas/DIDStatus"
+
+    GetDIDOperationResponse:
+      allOf:
+        - $ref: "#/components/schemas/DidOperation"
+
+    GetDIDOperationsByDIDRefResponse:
+      type: array
+      items:
+        allOf:
+          - $ref: "#/components/schemas/DidOperation"
+
+    DIDStatus:
+      type: string
+      enum:
+        - DEACTIVATED
+        - PUBLISHED
+        - PUBLISHING
+
+    DidOperation:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "123"
+        didRef:
+          type: string
+          example: "did:prism:123"
+        type:
+          $ref: "#/components/schemas/DidOperationType"
+        status:
+          $ref: "#/components/schemas/DidOperationStatus"
+
+    DidOperationStatus:
+      type: string
+      enum:
+        - EXECUTED
+        - EXECUTING
+
+    DidOperationType:
+      type: string
+      enum:
+        - DEACTIVATE
+        - UPDATE
+        - PUBLISH
+
+    DID:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          example: "did:prism:123"
+        controller:
+          type: string
+          example: "did:prism:456"
+        verificationMethod:
+          type: array
+          items:
+            $ref: "#/components/schemas/VerificationMethod"
+        authentication:
+          type: array
+          items:
+            oneOf:
+              - $ref: "#/components/schemas/VerificationMethodRef"
+              - $ref: "#/components/schemas/VerificationMethod"
+        assertionMethod:
+          type: array
+          items:
+            oneOf:
+              - $ref: "#/components/schemas/VerificationMethodRef"
+              - $ref: "#/components/schemas/VerificationMethod"
+        keyAgreement:
+          type: array
+          items:
+            oneOf:
+              - $ref: "#/components/schemas/VerificationMethodRef"
+              - $ref: "#/components/schemas/VerificationMethod"
+        capabilityInvocation:
+          type: array
+          items:
+            oneOf:
+              - $ref: "#/components/schemas/VerificationMethodRef"
+              - $ref: "#/components/schemas/VerificationMethod"
+        service:
+          type: array
+          items:
+            $ref: "#/components/schemas/Service"
+
+    VerificationMethodRef:
+      type: string
+      example: "did:example:123456789abcdefghi#keys-1"
+
+    VerificationMethod:
+      allOf:
+        - type: object
+          properties:
+            id:
+              type: string
+              example: "did:prism:123#key-1"
+            type:
+              type: string
+              example: "JsonWebKey2020"
+            controller:
+              type: string
+              example: "did:prism:456"
+        - oneOf:
+            - $ref: "#/components/schemas/JsonWebKey2020"
+
+    JsonWebKey2020:
+      type: object
+      required:
+        - publicKeyJwk
+      properties:
+        publicKeyJwk:
+          $ref: "#/components/schemas/PublicKeyJwk"
+
+    PublicKeyJwk:
+      type: object
+      properties:
+        crv:
+          type: string
+          example: "P-256"
+        x:
+          type: string
+          example: "38M1FDts7Oea7urmseiugGW7tWc3mLpJh6rKe7xINZ8"
+        y:
+          type: string
+          example: "nDQW6XZ7b_u2Sy9slofYLlG03sOEoug3I0aAPQ0exs4"
+        kty:
+          type: string
+          example: "EC"
+        kid:
+          type: string
+          example: "_TKzHv2jFIyvdTGF1Dsgwngfdg3SH6TpDv0Ta1aOEkw"
+
+    Service:
+      type: object
+      required:
+        - id
+        - type
+        - serviceEndpoint
+      properties:
+        id:
+          type: string
+          example: "did:prism:123#edv"
+        type:
+          type: string
+          enum:
+            - EncryptedDataVault
+            - DIDCommMessaging
+          example: EncryptedDataVault
+        serviceEndpoint:
+          type: string
+          example: "https://bar.example.com"
+
+    ErrorResponse:
+      type: object
+      description: An RFC-7807 compliant data structure for reporting errors to the client
+      required:
+        - type
+        - title
+        - status
+        - instance
+      properties:
+        type:
+          type: string
+          description: A URI reference that identifies the problem type.
+          example: https://example.org/doc/#model-MalformedEmail
+        title:
+          type: string
+          example: "Malformed email"
+          description: |-
+            A short, human-readable summary of the problem type. It does not
+            change from occurrence to occurrence of the problem.
+        status:
+          type: integer
+          format: int32
+          example: 400
+          description: |-
+            The HTTP status code for this occurrence of the problem.
+        detail:
+          type: string
+          description: |-
+            A human-readable explanation specific to this occurrence of the problem.
+          example: "The received '{}à!è@!.b}' email does not conform to the email format"
+        instance:
+          type: string
+          example: "/problems/d914e"
+          description: |-
+            A URI reference that identifies the specific occurrence of the problem.
+            It may or may not yield further information if dereferenced.
