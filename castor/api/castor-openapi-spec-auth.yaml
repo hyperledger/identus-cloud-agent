@@ -1,0 +1,190 @@
+# NOTE: This should be merged to the main openapi spec yaml
+openapi: 3.0.1
+info:
+  title: Castor OpenAPI specification
+  description: OpenAPI specification for Decentralized Identifiers (DID) Operations
+  version: 1.0.0
+servers:
+  - url: "https://api.atala.io/"
+tags:
+  - name: DID Authentication
+    description: DID Authentication REST API
+
+paths:
+  /did-authentication/v1/challenges:
+    post:
+      tags: ["DID Authentication"]
+      operationId: createDidAuthenticationChallenge
+      summary: Create a new authentication challenge
+      description: |
+        Create a new authentication challenge that will be later verified
+        by Castor for a relying-party.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAuthenticationChallengeRequest"
+      responses:
+        200:
+          description: Authentication challenge created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateAuthenticationChallengeResponse"
+        400:
+          description: A create AuthenticationChallenge payload is malformed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /did-authentication/v1/challenge-submissions:
+    post:
+      tags: ["DID Authentication"]
+      operationId: createDidAuthenticationChallengeSubmission
+      summary: Create a verification from challenge
+      description: |
+        Submit a challenge submission that will be verified by Castor for a relying-party.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthenticationChallengeSubmissionRequest"
+      responses:
+        200:
+          description: Authentication challenge has been successfully verified
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthenticationChallengeSubmissionResponse"
+        400:
+          description: ChallengeSubmission is malformed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  schemas:
+    DIDRef:
+      type: string
+      example: "did:example:123456789abcdefghi"
+
+    VerificationMethodRef:
+      type: string
+      example: "did:example:123456789abcdefghi#keys-1"
+
+    CreateAuthenticationChallengeRequest:
+      type: object
+      required:
+        - ttl
+      properties:
+        ttl:
+          type: number
+          description: A number of seconds that challenge will be considered valid.
+          example: 900
+        purpose:
+          type: string
+          description: |
+            An opaque string provided by a relying-party indicating the purpose of
+            this challenge in order to avoid repurposing the challenge submission.
+            May be used to represent a domain name, intention, connection id, etc.
+          example: example.com
+        subject:
+          $ref: "#/components/schemas/AuthenticationChallengeSubject"
+
+    CreateAuthenticationChallengeResponse:
+      type: object
+      required:
+        - challenge
+      properties:
+        challenge:
+          $ref: "#/components/schemas/AuthenticationChallengeJwt"
+        subject:
+          $ref: "#/components/schemas/AuthenticationChallengeSubject"
+
+    AuthenticationChallengeSubmissionRequest:
+      type: object
+      required:
+        - subject
+        - challenge
+        - signature
+      properties:
+        challenge:
+          $ref: "#/components/schemas/AuthenticationChallengeJwt"
+        subject:
+          $ref: "#/components/schemas/AuthenticationChallengeSubject"
+        signature:
+          type: string
+          example: 243b9ed6561ab3...5d497f609b8cd04
+
+    AuthenticationChallengeSubmissionResponse:
+      type: object
+      required:
+        - success
+      properties:
+        success:
+          type: boolean
+          example: true
+        purpose:
+          type: string
+          description: |
+            An opaque string provided by a relying-party indicating the purpose of
+            this challenge in order to avoid repurposing the challenge submission.
+            May be used to represent a domain name, intention, connection id, etc.
+          example: example.com
+
+    AuthenticationChallengeSubject:
+      description: |
+        A challenged subject that must complete the challenge.
+        If VerificationMethodRef is used, it must be a verification method
+        in the authentication relationship.
+      oneOf:
+        - $ref: "#/components/schemas/DIDRef"
+        - $ref: "#/components/schemas/VerificationMethodRef"
+
+    AuthenticationChallengeJwt:
+      type: string
+      description: |
+        A JWT challenge that a user must provide to Castor SDK to create a ChallengeSubmission.
+        JWT payload contains nonce, purpose, expiration, issuer
+      example: eyJhbGciOiJIUzI1NiIsInR5c...0eu8Ri_WSPSsBTlCes2YMpuB1mHU
+
+    ErrorResponse:
+      type: object
+      description: An RFC-7807 compliant data structure for reporting errors to the client
+      required:
+        - type
+        - title
+        - status
+        - instance
+      properties:
+        type:
+          type: string
+          description: A URI reference that identifies the problem type.
+          example: https://example.org/doc/#model-MalformedEmail
+        title:
+          type: string
+          example: "Malformed email"
+          description: |-
+            A short, human-readable summary of the problem type. It does not
+            change from occurrence to occurrence of the problem.
+        status:
+          type: integer
+          format: int32
+          example: 400
+          description: |-
+            The HTTP status code for this occurrence of the problem.
+        detail:
+          type: string
+          description: |-
+            A human-readable explanation specific to this occurrence of the problem.
+          example: "The received '{}à!è@!.b}' email does not conform to the email format"
+        instance:
+          type: string
+          example: "/problems/d914e"
+          description: |-
+            A URI reference that identifies the specific occurrence of the problem.
+            It may or may not yield further information if dereferenced.
