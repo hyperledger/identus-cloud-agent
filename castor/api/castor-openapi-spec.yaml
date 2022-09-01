@@ -13,6 +13,8 @@ tags:
     description: DID REST API
   - name: DID Operations
     description: DID Operations REST API
+  - name: DID Authentication
+    description: DID Authentication REST API
 
 paths:
   /did/v1/dids:
@@ -179,6 +181,61 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /did-authentication/v1/challenges:
+    post:
+      tags: ["DID Authentication"]
+      operationId: createDidAuthenticationChallenge
+      summary: Create a new authentication challenge
+      description: |
+        Create a new authentication challenge that will be later verified
+        by Castor for a relying-party.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAuthenticationChallengeRequest"
+      responses:
+        "200":
+          description: Authentication challenge created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateAuthenticationChallengeResponse"
+        "400":
+          description: A create AuthenticationChallenge payload is malformed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /did-authentication/v1/challenge-submissions:
+    post:
+      tags: ["DID Authentication"]
+      operationId: createDidAuthenticationChallengeSubmission
+      summary: Create a verification from challenge
+      description: |
+        Submit a challenge submission that will be verified by Castor for a relying-party.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthenticationChallengeSubmissionRequest"
+      responses:
+        "200":
+          description: Authentication challenge has been successfully verified
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthenticationChallengeSubmissionResponse"
+        "400":
+          description: ChallengeSubmission is malformed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
   parameters:
     didRefInPath:
@@ -336,6 +393,10 @@ components:
           items:
             $ref: "#/components/schemas/Service"
 
+    DIDRef:
+      type: string
+      example: "did:example:123456789abcdefghi"
+
     VerificationMethodRef:
       type: string
       example: "did:example:123456789abcdefghi#keys-1"
@@ -402,6 +463,80 @@ components:
         serviceEndpoint:
           type: string
           example: "https://bar.example.com"
+
+    CreateAuthenticationChallengeRequest:
+      type: object
+      required:
+        - ttl
+      properties:
+        ttl:
+          type: number
+          description: A number of seconds that challenge will be considered valid.
+          example: 900
+        state:
+          type: string
+          description: |
+            An opaque string provided by a relying-party indicating the purpose of
+            this challenge in order to avoid repurposing the challenge submission.
+          example: qrcode#123
+        subject:
+          $ref: "#/components/schemas/AuthenticationChallengeSubject"
+
+    CreateAuthenticationChallengeResponse:
+      type: object
+      required:
+        - challenge
+      properties:
+        challenge:
+          $ref: "#/components/schemas/AuthenticationChallengeJwt"
+        subject:
+          $ref: "#/components/schemas/AuthenticationChallengeSubject"
+
+    AuthenticationChallengeSubmissionRequest:
+      type: object
+      required:
+        - subject
+        - challenge
+        - signature
+      properties:
+        challenge:
+          $ref: "#/components/schemas/AuthenticationChallengeJwt"
+        subject:
+          $ref: "#/components/schemas/AuthenticationChallengeSubject"
+        signature:
+          type: string
+          example: 243b9ed6561ab3...5d497f609b8cd04
+
+    AuthenticationChallengeSubmissionResponse:
+      type: object
+      required:
+        - success
+      properties:
+        success:
+          type: boolean
+          example: true
+        state:
+          type: string
+          description: |
+            An opaque string provided by a relying-party indicating the purpose of
+            this challenge in order to avoid repurposing the challenge submission.
+          example: qrcode#123
+
+    AuthenticationChallengeSubject:
+      description: |
+        A challenged subject that must complete the challenge.
+        If VerificationMethodRef is used, it must be a verification method
+        in the authentication relationship.
+      oneOf:
+        - $ref: "#/components/schemas/DIDRef"
+        - $ref: "#/components/schemas/VerificationMethodRef"
+
+    AuthenticationChallengeJwt:
+      type: string
+      description: |
+        A JWT challenge that a user must provide to Castor SDK to create a ChallengeSubmission.
+        JWT payload contains nonce, state, expiration, issuer
+      example: eyJhbGciOiJIUzI1NiIsInR5c...0eu8Ri_WSPSsBTlCes2YMpuB1mHU
 
     ErrorResponse:
       type: object
