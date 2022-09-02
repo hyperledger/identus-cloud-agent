@@ -10,6 +10,11 @@ inThisBuild(
   )
 )
 
+val useDidLib = false
+def didScalaAUX =
+  if (useDidLib) (libraryDependencies += D.didScala.value)
+  else (libraryDependencies ++= Seq())
+
 lazy val V = new {
   val munit = "1.0.0-M6" // "0.7.29"
 
@@ -32,8 +37,8 @@ lazy val D = new {
   val circeParser = Def.setting("io.circe" %% "circe-parser" % V.circe)
 
   // Test DID comm
-  val didcomm = Def.setting("org.didcommx" % "didcomm" % "0.3.1")
-  val didScala = Def.setting("app.fmgp" % "didscala" % "0.1.0-SNAPSHOT")
+  val didcommx = Def.setting("org.didcommx" % "didcomm" % "0.3.1")
+  val didScala = Def.setting("app.fmgp" %% "did" % "0.0.0+74-691ada28+20220902-0934-SNAPSHOT")
 
   // For munit https://scalameta.org/munit/docs/getting-started.html#scalajs-setup
   val munit = Def.setting("org.scalameta" %% "munit" % V.munit % Test)
@@ -57,7 +62,8 @@ lazy val models = project
       D.circeGeneric.value,
       D.circeParser.value
     ), // TODO try to remove this from this module
-    libraryDependencies ++= Seq(D.didcomm.value), // FIXME REMOVE almost done
+    libraryDependencies += D.didcommx.value, // FIXME REMOVE almost done
+    didScalaAUX, // D.didScala.value, // Just the data models
   )
 
 // #################
@@ -95,12 +101,12 @@ lazy val protocolRouting = project
 // ################
 
 // TODO move stuff to the models module
-lazy val resolver = project
+lazy val resolver = project // maybe merge into models
   .in(file("resolver"))
   .settings(name := "mercury-resolver", version := VERSION)
   .settings(
     libraryDependencies ++= Seq(
-      D.didcomm.value,
+      D.didcommx.value,
       "org.jetbrains.kotlin" % "kotlin-runtime" % "1.2.71",
       "org.jetbrains.kotlin" % "kotlin-stdlib" % "1.7.10",
     )
@@ -111,22 +117,30 @@ lazy val resolver = project
 // ### Agents ###
 // ##############
 
+lazy val agent = project // maybe merge into models
+  // .in(file("agent-generic"))
+  // .settings(name := "mercury-agent-generic", version := VERSION)
+  .settings(libraryDependencies += "io.d11" %% "zhttp" % "2.0.0-RC10")
+  .dependsOn(models, resolver, protocolInvitation, protocolRouting, protocolMercuryMailbox)
+
 /** Demos agents and services implementation with didcommx */
 lazy val agentDidcommx = project
   .in(file("agent-didcommx"))
   .settings(name := "mercury-agent-didcommx", version := VERSION)
-  .settings(libraryDependencies += D.didcomm.value)
-  .settings(libraryDependencies += "io.d11" %% "zhttp" % "2.0.0-RC10")
-  .dependsOn(models, protocolInvitation, protocolRouting, protocolMercuryMailbox)
-  .dependsOn(resolver)
+  .settings(libraryDependencies += D.didcommx.value)
+  .dependsOn(agent)
 
 ///** TODO Demos agents and services implementation with did-scala */
-// lazy val agentDidScala = project
-//   .in(file("agent-did-scala"))
-//   .settings(name := "mercury-agent-didscala", version := VERSION)
-//   .settings(libraryDependencies += D.didScala.value)
-//   .dependsOn(models)
-//   .dependsOn(resolver) //FIXME resolver for didScala
+lazy val agentDidScala =
+  project
+    .in(file("agent-did-scala"))
+    .settings(name := "mercury-agent-didscala", version := VERSION)
+    .settings(
+      didScalaAUX,
+      if (useDidLib) (Compile / sources ++= Seq())
+      else (Compile / sources := Seq()),
+    )
+    .dependsOn(agent)
 
 // ################
 // ### Mediator ###
@@ -154,7 +168,7 @@ lazy val mediator = project
       "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % "1.0.3", // This helps with Arrow Functions. But swagger is just a pain!
       "com.softwaremill.sttp.tapir" %% "tapir-redoc-http4s" % "0.19.0-M4",
       "com.softwaremill.sttp.apispec" %% "openapi-circe-yaml" % "0.2.1",
-      // D.didcomm.value,
+      // D.didcommx.value,
       // "org.jetbrains.kotlin" % "kotlin-runtime" % "1.2.71",
       // "org.jetbrains.kotlin" % "kotlin-stdlib" % "1.7.10",
       // "com.google.code.gson" % "gson" % "2.9.1"

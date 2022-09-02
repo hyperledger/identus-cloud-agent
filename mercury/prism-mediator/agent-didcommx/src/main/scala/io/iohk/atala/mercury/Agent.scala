@@ -10,11 +10,6 @@ import io.iohk.atala.mercury.model.{_, given}
 import java.util.Base64
 import io.iohk.atala.mercury.DidComm
 
-enum Agent(val id: DidId):
-  case Alice extends Agent(DidId("did:example:alice"))
-  case Bob extends Agent(DidId("did:example:bob"))
-  case Mediator extends Agent(DidId("did:example:mediator"))
-
 case class AgentService[A <: Agent](didComm: DIDComm, did: A) extends DidComm {
 
   override def packSigned(msg: Message): UIO[SignedMesage] = {
@@ -31,11 +26,6 @@ case class AgentService[A <: Agent](didComm: DIDComm, did: A) extends DidComm {
   }
 
   override def unpack(data: String): UIO[UnpackMesage] = {
-    ZIO.succeed(didComm.unpack(new UnpackParams.Builder(data).build()))
-  }
-
-  override def unpackBase64(dataBase64: String): UIO[UnpackMesage] = {
-    val data = new String(Base64.getUrlDecoder.decode(dataBase64))
     ZIO.succeed(didComm.unpack(new UnpackParams.Builder(data).build()))
   }
 

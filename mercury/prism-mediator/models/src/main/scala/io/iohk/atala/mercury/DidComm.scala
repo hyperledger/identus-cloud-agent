@@ -3,12 +3,17 @@ package io.iohk.atala.mercury
 import zio._
 
 import io.iohk.atala.mercury.model._
+import java.util.Base64
 
 trait DidComm {
   def packSigned(msg: Message): UIO[SignedMesage]
   def packEncrypted(msg: Message, to: DidId): UIO[EncryptedMessage]
   def unpack(str: String): UIO[UnpackMesage]
-  def unpackBase64(base64str: String): UIO[UnpackMesage] // FIXME TODO Make this a Overloading method
+  def unpackBase64(dataBase64: String): UIO[UnpackMesage] = {
+    val data = new String(Base64.getUrlDecoder.decode(dataBase64))
+    unpack(data)
+    // ZIO.succeed(didComm.unpack(new UnpackParams.Builder(data).build()))
+  }
 }
 
 object DidComm {

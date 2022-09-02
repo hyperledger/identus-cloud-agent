@@ -16,24 +16,6 @@ import io.iohk.atala.mercury.protocol.routing._
 import io.iohk.atala.mercury.model.Attachment
 import io.iohk.atala.mercury.model.EncryptedMessage
 
-def makeMsg(from: Agent, to: Agent) = Message(
-  from.id,
-  to.id,
-  Map(
-    "connectionId" -> "8fb9ea21-d094-4506-86b6-c7c1627d753a",
-    "msg" -> "Hello Bob"
-  ),
-)
-
-def makeForwardMessage(from: Agent, mediator: Agent, to: Agent, msg: EncryptedMessage) =
-  ForwardMessage(
-    from = from.id,
-    to = mediator.id,
-    expires_time = None,
-    body = ForwardBody(next = to.id), // TODO check msg header
-    attachments = Seq(Attachment(data = msg.asJson)),
-  )
-
 val program1 = for {
   messageCreated <- ZIO.succeed(makeMsg(Agent.Alice, Agent.Bob))
   alice <- ZIO.service[AgentService[Agent.Alice.type]]
