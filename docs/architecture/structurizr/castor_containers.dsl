@@ -26,19 +26,15 @@ castorWorker = container "Castor DLT Worker" "Consumes events from a message que
     taskScheduler -> scheduledOpsSyncProc "Calls"
 }
 castorDatabase = container "DID Operation Database" "Stores DID published operations / operations scheduled for publishing" "PostgreSQL" "Database"
-castorCache = container "DID Resolution Cache" "Stores resolved DID documents." "Redis" "Database"
 universalResolverWeb = container "Universal Resolver" "A self-host instance of the universal resolver. Uses for resolving DIDs that are not did:prism" "Service" "Existing Container"
 universalResolverDriver = container "Universal Resolver Driver" "A driver for resolving specific DID method" "Service" "Existing Container"
 
 # relations within BB
 castorApi.didOpComponent -> castorDatabase "Writes scheduled DID operations" "JDBC"
 castorApi.didResolveComponent -> castorDatabase "Reads DID operations" "JDBC"
-castorApi.didResolveComponent -> castorCache "Writes / Reads resolved DID Documents" "JDBC"
 castorApi.didResolveComponent -> universalResolverWeb "Resolves DIDs" "REST/HTTP"
 universalResolverWeb -> universalResolverDriver "Resolves DIDs" "REST/HTTP"
 
 castorWorker.opsProcessor -> castorDatabase "Writes observed DID operations to" "JDBC"
-castorWorker.opsProcessor -> castorCache "Invalidates cache" "JDBC"
 castorWorker.scheduledOpsSyncProc -> castorDatabase "Updates operations" "JDBC"
 castorWorker.publishedOpsSyncProc -> castorDatabase "Updates operations" "JDBC"
-castorWorker.publishedOpsSyncProc -> castorCache "Invalidates cache" "JDBC"
