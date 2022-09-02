@@ -42,11 +42,12 @@ workspace {
                     !include castor_containers.dsl
                 }
 
-                dltGroup = group "DTL Proxy" {
+                dltGroup = group "DLT Proxy" {
                     !include iris_containers.dsl
                 }
 
                 # relations to/from containers within Prism
+                mobileApp -> apiGateway "Makes API calls to BB" "REST/HTTPS"
                 apiGateway -> castorApi "Routes requests to" "REST/HTTP"
                 apiGateway -> pollux "Routes requests to" "REST/HTTP"
                 apiGateway -> mercury "Routes requests to" "REST/HTTP"
