@@ -1,0 +1,127 @@
+openapi: 3.0.3
+
+info:
+  title: Atala PRISM API
+  version: 0.1.0
+
+paths:
+  /schemas:
+    get:
+      tags: ["Schemas [Pollux]"]
+      operationId: getSchemas
+      summary: Get all available schemas
+      description: |-
+        Get all schemas available
+        Search query params ? => issuer, name, ISODatetime, version
+      responses:
+        "200":
+          description: The collection of schemas
+
+    post:
+      tags: ["Schemas [Pollux]"]
+      operationId: createSchema
+      summary: An interface to create and publish schemas when they are ready
+      description: Create new schema - auto publishes first time - future improvement to control by param
+      responses:
+        "201":
+          description: The schema has been successfully created (what about publishing on the ledger ?)
+
+  /schemas/{id}:
+    get:
+      tags: ["Schemas [Pollux]"]
+      operationId: getSchema
+      summary: Retrieve a specific schema
+      description: Retrieve a specific schema
+      parameters:
+        - name: id
+          in: path
+          description: The credential unique identifier
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: The schema identified by the given 'id'
+
+  /credentials:
+    description: |-
+      An interface to issue and revoke credentials (Aries RFC-0453)
+      step1 Assemble credential object
+      step2 publish cred proof (merkle tree root) to the ledger - is this required?
+    post:
+      tags: ["Credentials [Pollux]"]
+      operationId: issueCredential
+      summary: Issue credential in the context of a connection [connectionId in body]
+      responses:
+        "201":
+          description: A VC presentation request has been sent
+
+  /credentials/{id}/revocations:
+    post:
+      tags: ["Credentials [Pollux]"]
+      operationId: revokeCredential
+      summary: Revoke credential revocation [alternative to PATCH credentials/{id}]
+      parameters:
+        - name: id
+          in: path
+          description: The credential unique identifier
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: The credential has been revoked successfully
+
+  /credentials/{id}:
+    patch:
+      tags: ["Credentials [Pollux]"]
+      operationId: revokeCredentialAlternative
+      summary: Update credential status to e.g. 'REVOKE' [alternative to POST credentials/{id}/revocations]
+      parameters:
+        - name: id
+          in: path
+          description: The credential unique identifier
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: The credential has been revoked successfully
+    get:
+      tags: ["Credentials [Pollux]"]
+      operationId: getCredentialStatus
+      summary: Get the credential status (revocation status)
+      parameters:
+        - name: id
+          in: path
+          description: The credential unique identifier
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: The credential has been revoked successfully
+
+  /presentations/request:
+    post:
+      tags: ["Presentations [Mercury]"]
+      operationId: sendPresentationRequest
+      summary: Sends a VC presentation request to the peer
+      responses:
+        "201":
+          description: A VC presentation request has been sent
+
+  /presentations/verify:
+    post:
+      tags: ["Presentations [Mercury]"]
+      operationId: verifyPresentation
+      summary: Verifies a presentation received from the holder
+      responses:
+        "200":
+          description: The presentation was verified either successfully or not. See response content
+
+  #/connections: ???
