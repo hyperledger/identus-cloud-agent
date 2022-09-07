@@ -443,8 +443,3 @@ type ForwardAttachment = Attachment
 +---------------+--------------------------+---------------+-------+-------+--------+
 
 [GitHub Comment Reporter] Posted summary as comment on input-output-hk/atala-prism-building-blocks #PR16
-[Updated Sources Reporter] copied 4 fixed source files in folder /github/workspace/megalinter-reports/updated_sources.
-Download it from artifacts then copy-paste it in your local repo to apply linters updates
-[31m❌ Error(s) have been found during linting[0m
-To disable linters or customize their checks, you can use a .mega-linter.yml file at the root of your repository
-More info at https://oxsecurity.github.io/megalinter/6/configuration/

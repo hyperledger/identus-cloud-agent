@@ -1,0 +1,11 @@
+Results of git_diff linter (version 2.34.4)
+See documentation on https://oxsecurity.github.io/megalinter/6/descriptors/repository_git_diff/
+-----------------------------------------------
+
+❌ [ERROR] for workspace /github/workspace
+Linter raw log:
+megalinter-reports/linters_logs/ERROR-OPENAPI_SPECTRAL.log:7: trailing whitespace.
++    
+megalinter-reports/linters_logs/ERROR-OPENAPI_SPECTRAL.log:53: trailing whitespace.
++    
+
