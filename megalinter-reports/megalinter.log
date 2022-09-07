@@ -1,0 +1,332 @@
+----------------------------------------------------------------------------------------------------
+------------------------------------ MegaLinter, by OX Security ------------------------------------
+----------------------------------------------------------------------------------------------------
+ - Image Creation Date: 2022-09-04T21:37:10Z
+ - Image Revision: 5bd2d83c5
+ - Image Version: v6
+----------------------------------------------------------------------------------------------------
+The MegaLinter documentation can be found at:
+ - https://oxsecurity.github.io/megalinter/6
+----------------------------------------------------------------------------------------------------
+::group::MegaLinter initialization (expand for details)
+GITHUB_REPOSITORY: input-output-hk/atala-prism-building-blocks
+GITHUB_REF: refs/pull/16/merge
+GITHUB_RUN_ID: 3008990117
+
+
+[Pre] run: [git config --global core.autocrlf input] in cwd [/github/workspace]
+[Pre] 
+[Activation] EDITORCONFIG_EDITORCONFIG_CHECKER has been set inactive, as none of these files has been found: ['.editorconfig']
+[Activation] JAVASCRIPT_ES has been set inactive, as none of these files has been found: ['.eslintrc.json', '.eslintrc.yml', '.eslintrc.yaml', '.eslintrc.js', '.eslintrc.cjs', 'package.json:eslintConfig']
+[Activation] JSX_ESLINT has been set inactive, as none of these files has been found: ['.eslintrc.json', '.eslintrc.yml', '.eslintrc.yaml', '.eslintrc.js', '.eslintrc.cjs', 'package.json:eslintConfig']
+[Activation] REPOSITORY_GOODCHECK has been set inactive, as none of these files has been found: ['goodcheck.yml']
+[SemgrepLinter] Deactivated because no ruleset has been defined
+[Activation] SQL_SQLFLUFF has been set inactive, as none of these files has been found: ['.sqlfluff']
+[Activation] SWIFT_SWIFTLINT has been set inactive, as none of these files has been found: ['.swiftlint.yml']
+[Activation] TSX_ESLINT has been set inactive, as none of these files has been found: ['.eslintrc.json', '.eslintrc.yml', '.eslintrc.yaml', '.eslintrc.js', '.eslintrc.cjs', 'package.json:eslintConfig']
+[Activation] TYPESCRIPT_ES has been set inactive, as none of these files has been found: ['.eslintrc.json', '.eslintrc.yml', '.eslintrc.yaml', '.eslintrc.js', '.eslintrc.cjs', 'package.json:eslintConfig']
+MARKDOWN_REMARK_LINT has been temporary disabled in MegaLinter, please use a previous MegaLinter version or wait for the next one !
+SNAKEMAKE_SNAKEFMT has been temporary disabled in MegaLinter, please use a previous MegaLinter version or wait for the next one !
+To receive reports as email, please set variable EMAIL_REPORTER_EMAIL
+::endgroup::
+::group::MegaLinter now collects the files to analyse (expand for details)
+Listing updated files in [/github/workspace] using git diff.
+Modified files:
+.gitignore
+mercury/prism-mediator/.scalafmt.conf
+mercury/prism-mediator/QuickStart.md
+mercury/prism-mediator/README.md
+mercury/prism-mediator/UseCases.md
+mercury/prism-mediator/agent-didcommx/src/main/scala/io/iohk/atala/AgentClientAlice.scala
+mercury/prism-mediator/agent-didcommx/src/main/scala/io/iohk/atala/AgentClientBob.scala
+mercury/prism-mediator/agent-didcommx/src/main/scala/io/iohk/atala/Main.scala
+mercury/prism-mediator/agent-didcommx/src/main/scala/io/iohk/atala/mercury/AgentService.scala
+mercury/prism-mediator/agent-didcommx/src/main/scala/io/iohk/atala/mercury/Conversions.scala
+mercury/prism-mediator/agent-didcommx/src/main/scala/io/iohk/atala/resolvers/AliceSecretResolver.scala
+mercury/prism-mediator/agent-didcommx/src/main/scala/io/iohk/atala/resolvers/BobSecretResolver.scala
+mercury/prism-mediator/agent/src/main/scala/io/iohk/atala/AgentPrograms.scala
+mercury/prism-mediator/agent/src/main/scala/io/iohk/atala/mercury/Agent.scala
+mercury/prism-mediator/build.sbt
+mercury/prism-mediator/mediator/Mercury-Mailbox-Mediator.md
+mercury/prism-mediator/mediator/src/main/resources/mediator-openapi.yaml
+mercury/prism-mediator/mediator/src/main/scala/io/iohk/atala/mercury/mediator/Endpoints.scala
+mercury/prism-mediator/mediator/src/main/scala/io/iohk/atala/mercury/mediator/ErrorInfo.scala
+mercury/prism-mediator/mediator/src/main/scala/io/iohk/atala/mercury/mediator/MailStorage.scala
+mercury/prism-mediator/mediator/src/main/scala/io/iohk/atala/mercury/mediator/Mediator.scala
+mercury/prism-mediator/mediator/src/main/scala/io/iohk/atala/mercury/mediator/MediatorProgram.scala
+mercury/prism-mediator/mediator/src/main/scala/io/iohk/atala/mercury/mediator/Models.scala
+mercury/prism-mediator/mediator/src/main/scala/io/iohk/atala/mercury/mediator/ZhttpMediator.scala
+mercury/prism-mediator/mediator/src/main/scala/io/iohk/atala/mercury/resolvers/MediatorDidComm.scala
+mercury/prism-mediator/mediator/src/main/scala/io/iohk/atala/mercury/resolvers/MediatorSecretResolver.scala
+mercury/prism-mediator/models/src/main/scala/io/iohk/atala/mercury/DidComm.scala
+mercury/prism-mediator/models/src/main/scala/io/iohk/atala/mercury/MediaTypes.scala
+mercury/prism-mediator/models/src/main/scala/io/iohk/atala/mercury/model/Attachment.scala
+mercury/prism-mediator/models/src/main/scala/io/iohk/atala/mercury/model/DidId.scala
+mercury/prism-mediator/models/src/main/scala/io/iohk/atala/mercury/model/EncryptedMessage.scala
+mercury/prism-mediator/models/src/main/scala/io/iohk/atala/mercury/model/Message.scala
+mercury/prism-mediator/models/src/main/scala/io/iohk/atala/mercury/model/SignedMesage.scala
+mercury/prism-mediator/models/src/main/scala/io/iohk/atala/mercury/model/UnpackResult.scala
+mercury/prism-mediator/project/build.properties
+mercury/prism-mediator/project/plugins.sbt
+mercury/prism-mediator/protocol-connection/src/main/scala/io/iohk/atala/mercury/protocol/connection/Request.scala
+mercury/prism-mediator/protocol-connection/src/main/scala/io/iohk/atala/mercury/protocol/connection/Response.scala
+mercury/prism-mediator/protocol-invitation/Invitation-Protocol.md
+mercury/prism-mediator/protocol-invitation/src/main/scala/io/iohk/atala/mercury/protocol/invitation/Invitation.scala
+mercury/prism-mediator/protocol-invitation/src/main/scala/io/iohk/atala/mercury/protocol/invitation/OutOfBand.scala
+mercury/prism-mediator/protocol-mercury-mailbox/Mercury-Mailbox-Protocol.md
+mercury/prism-mediator/protocol-mercury-mailbox/src/main/scala/io/iohk/atala/mercury/protocol/mailbox/Mailbox.scala
+mercury/prism-mediator/protocol-routing/Routing-Protocol.md
+mercury/prism-mediator/protocol-routing/src/main/scala/io/iohk/atala/mercury/protocol/routing/ForwardMessage.scala
+mercury/prism-mediator/resolver/src/main/scala/io/iohk/atala/resolvers/AliceDidDoc.scala
+mercury/prism-mediator/resolver/src/main/scala/io/iohk/atala/resolvers/BobDidDoc.scala
+mercury/prism-mediator/resolver/src/main/scala/io/iohk/atala/resolvers/MediatorDidDoc.scala
+mercury/prism-mediator/resolver/src/main/scala/io/iohk/atala/resolvers/UniversalDidResolver.scala
+mercury/prism-mediator/sbtx
+- File extensions: , .R, .RMD, .Rmd, .bash, .c, .c++, .cc, .cdxml, .clj, .cljc, .cljs, .coffee, .cpp, .cs, .css, .cu, .cuh, .cxx, .dart, .dash, .edn, .env, .feature, .go, .gradle, .graphql, .groovy, .gvy, .h, .h++, .hcl, .hh, .hpp, .htm, .html, .hxx, .java, .js, .json, .json5, .jsonc, .ksh, .kt, .kts, .lua, .md, .nf, .p6, .php, .pl, .pl6, .pm, .pm6, .pp, .proto, .ps1, .ps1xml, .psd1, .psm1, .psrc, .pssc, .py, .r, .raku, .rakumod, .rakutest, .rb, .rs, .rst, .saas, .scala, .scss, .sh, .smk, .sql, .t, .tex, .tf, .ts, .vb, .xml, .yaml, .yml
+- File names (regex): Jenkinsfile, Makefile, Snakefile
+- Excluding .gitignored files [0]: 
+Kept [46] files on [50] found files
+
++----MATCHING LINTERS-------------------+------------------+----------------+------------+
+| Descriptor | Linter                   | Criteria         | Matching files | Format/Fix |
++------------+--------------------------+------------------+----------------+------------+
+| MARKDOWN   | markdownlint             | .md              | 7              | yes        |
+| MARKDOWN   | markdown-link-check      | .md              | 7              | no         |
+| MARKDOWN   | markdown-table-formatter | .md              | 7              | yes        |
+| OPENAPI    | spectral                 | .yml|.yaml|.json | 1              | no         |
+| REPOSITORY | dustilock                |                  | project        | no         |
+| REPOSITORY | git_diff                 |                  | project        | no         |
+| REPOSITORY | secretlint               |                  | project        | no         |
+| REPOSITORY | syft                     |                  | project        | no         |
+| SCALA      | scalafix                 | .scala           | 36             | no         |
+| YAML       | prettier                 | .yml|.yaml       | 1              | yes        |
+| YAML       | yamllint                 | .yml|.yaml       | 1              | no         |
+| YAML       | v8r                      | .yml|.yaml       | 1              | no         |
++------------+--------------------------+------------------+----------------+------------+
+::endgroup::
+::group::[32m✅ Linted [MARKDOWN] files with [markdownlint] successfully - (0.9s)[0m (expand for details)
+- Using [markdownlint v0.32.2] https://oxsecurity.github.io/megalinter/6/descriptors/markdown_markdownlint
+- MegaLinter key: [MARKDOWN_MARKDOWNLINT]
+- Rules config: [.markdownlint.json]
+- Number of files analyzed: [7]
+::endgroup::
+::group::[32m✅ Linted [YAML] files with [prettier] successfully - (1.17s)[0m (expand for details)
+- Using [prettier v2.7.1] https://oxsecurity.github.io/megalinter/6/descriptors/yaml_prettier
+- MegaLinter key: [YAML_PRETTIER]
+- Rules config: identified by [prettier]
+- Number of files analyzed: [1]
+::endgroup::
+::group::[32m✅ Linted [MARKDOWN] files with [markdown-table-formatter] successfully - (0.38s)[0m (expand for details)
+- Using [markdown-table-formatter v1.4.0] https://oxsecurity.github.io/megalinter/6/descriptors/markdown_markdown_table_formatter
+- MegaLinter key: [MARKDOWN_MARKDOWN_TABLE_FORMATTER]
+- Rules config: identified by [markdown-table-formatter]
+- Number of files analyzed: [7]
+::endgroup::
+::group::[32m✅ Linted [MARKDOWN] files with [markdown-link-check] successfully - (1.94s)[0m (expand for details)
+- Using [markdown-link-check v3.10.2] https://oxsecurity.github.io/megalinter/6/descriptors/markdown_markdown_link_check
+- MegaLinter key: [MARKDOWN_MARKDOWN_LINK_CHECK]
+- Rules config: [.markdown-link-check.json]
+- Number of files analyzed: [7]
+::endgroup::
+::group::[32m✅ Linted [YAML] files with [v8r] successfully - (2.48s)[0m (expand for details)
+- Using [v8r v0.13.0] https://oxsecurity.github.io/megalinter/6/descriptors/yaml_v8r
+- MegaLinter key: [YAML_V8R]
+- Rules config: identified by [v8r]
+- Number of files analyzed: [1]
+::endgroup::
+::group::[32m✅ Linted [REPOSITORY] files with [dustilock] successfully - (0.02s)[0m (expand for details)
+- Using [dustilock v0.0.0] https://oxsecurity.github.io/megalinter/6/descriptors/repository_dustilock
+- MegaLinter key: [REPOSITORY_DUSTILOCK]
+- Rules config: identified by [dustilock]
+::endgroup::
+::group::[31m❌ Linted [OPENAPI] files with [spectral]: Found 1 error(s) - (2.57s)[0m (expand for details)
+- Using [spectral v5.9.2] https://oxsecurity.github.io/megalinter/6/descriptors/openapi_spectral
+- MegaLinter key: [OPENAPI_SPECTRAL]
+- Rules config: [.openapirc.yml]
+- Number of files analyzed: [1]
+[31m[spectral] mercury/prism-mediator/mediator/src/main/resources/mediator-openapi.yaml - ERROR - 1 error(s)[0m
+[31m--Error detail:
+OpenAPI 3.x detected
+
+/github/workspace/mercury/prism-mediator/mediator/src/main/resources/mediator-openapi.yaml
+   1:1   warning  openapi-tags                        OpenAPI object should have non-empty `tags` array.
+   2:6   warning  info-contact                        Info object should contain `contact` object.                                              info
+  13:10  warning  operation-description               Operation `description` must be present and non-empty string.                             paths./invitations.post
+  15:11  warning  operation-tag-defined               Operation tags should be defined in global tags.                                          paths./invitations.post.tags[0]
+  31:9     error  parser                              Mapping key must be a string scalar rather than number                                    paths./invitations.post.responses[201]
+  43:12  warning  operation-description               Operation `description` must be present and non-empty string.                             paths./invitations/{id}.delete
+  43:12    error  path-params                         The operation does not define the parameter `{id}` expected by path `/invitations/{id}`.  paths./invitations/{id}.delete
+  45:11  warning  operation-tag-defined               Operation tags should be defined in global tags.                                          paths./invitations/{id}.delete.tags[0]
+  49:9     error  parser                              Mapping key must be a string scalar rather than number                                    paths./invitations/{id}.delete.responses[200]
+  55:9   warning  operation-description               Operation `description` must be present and non-empty string.                             paths./invitations/{id}.get
+  55:9     error  path-params                         The operation does not define the parameter `{id}` expected by path `/invitations/{id}`.  paths./invitations/{id}.get
+  57:11  warning  operation-tag-defined               Operation tags should be defined in global tags.                                          paths./invitations/{id}.get.tags[0]
+  61:9     error  parser                              Mapping key must be a string scalar rather than number                                    paths./invitations/{id}.get.responses[200]
+  68:10  warning  operation-description               Operation `description` must be present and non-empty string.                             paths./connections.post
+  70:11  warning  operation-tag-defined               Operation tags should be defined in global tags.                                          paths./connections.post.tags[0]
+  86:9     error  parser                              Mapping key must be a string scalar rather than number                                    paths./connections.post.responses[201]
+  98:12  warning  operation-description               Operation `description` must be present and non-empty string.                             paths./connections/{id}.delete
+  98:12    error  path-params                         The operation does not define the parameter `{id}` expected by path `/connections/{id}`.  paths./connections/{id}.delete
+ 100:11  warning  operation-tag-defined               Operation tags should be defined in global tags.                                          paths./connections/{id}.delete.tags[0]
+  104:9    error  parser                              Mapping key must be a string scalar rather than number                                    paths./connections/{id}.delete.responses[200]
+  110:9  warning  operation-description               Operation `description` must be present and non-empty string.                             paths./connections/{id}.get
+  110:9    error  path-params                         The operation does not define the parameter `{id}` expected by path `/connections/{id}`.  paths./connections/{id}.get
+ 112:11  warning  operation-tag-defined               Operation tags should be defined in global tags.                                          paths./connections/{id}.get.tags[0]
+  116:9    error  parser                              Mapping key must be a string scalar rather than number                                    paths./connections/{id}.get.responses[200]
+ 122:11  warning  operation-description               Operation `description` must be present and non-empty string.                             paths./connections/{id}.patch
+ 122:11    error  path-params                         The operation does not define the parameter `{id}` expected by path `/connections/{id}`.  paths./connections/{id}.patch
+ 124:11  warning  operation-tag-defined               Operation tags should be defined in global tags.                                          paths./connections/{id}.patch.tags[0]
+  128:9    error  parser                              Mapping key must be a string scalar rather than number                                    paths./connections/{id}.patch.responses[200]
+ 136:10  warning  operation-description               Operation `description` must be present and non-empty string.                             paths./messages.post
+ 138:11  warning  operation-tag-defined               Operation tags should be defined in global tags.                                          paths./messages.post.tags[0]
+  153:9    error  parser                              Mapping key must be a string scalar rather than number                                    paths./messages.post.responses[201]
+  167:9  warning  operation-description               Operation `description` must be present and non-empty string.                             paths./messages/{id}.get
+  167:9    error  path-params                         The operation does not define the parameter `{id}` expected by path `/messages/{id}`.     paths./messages/{id}.get
+ 169:11  warning  operation-tag-defined               Operation tags should be defined in global tags.                                          paths./messages/{id}.get.tags[0]
+  173:9    error  parser                              Mapping key must be a string scalar rather than number                                    paths./messages/{id}.get.responses[200]
+ 185:12  warning  operation-description               Operation `description` must be present and non-empty string.                             paths./messages/{id}.delete
+ 185:12    error  path-params                         The operation does not define the parameter `{id}` expected by path `/messages/{id}`.     paths./messages/{id}.delete
+ 187:11  warning  operation-tag-defined               Operation tags should be defined in global tags.                                          paths./messages/{id}.delete.tags[0]
+ 189:20  warning  operation-operationId-valid-in-url  operationId may only use characters that are valid when used in a URL.                    paths./messages/{id}.delete.operationId
+  191:9    error  parser                              Mapping key must be a string scalar rather than number                                    paths./messages/{id}.delete.responses[200]
+ 263:27  warning  oas3-unused-components-schema       Potentially unused components schema has been detected.                                   components.schemas.GetConnectionResponse
+ 279:16    error  oas3-valid-schema-example           `example` property type should be object                                                  components.schemas.SendMessageResponse.example
+ 283:16    error  oas3-valid-schema-example           `example` property type should be object                                                  components.schemas.DeleteMessageResponse.example
+ 287:16    error  oas3-valid-schema-example           `example` property type should be object                                                  components.schemas.DeleteResponse.example
+
+✖ 44 problems (20 errors, 24 warnings, 0 infos, 0 hints)
+
+[0m
+::endgroup::
+::group::[32m✅ Linted [REPOSITORY] files with [secretlint] successfully - (1.33s)[0m (expand for details)
+- Using [secretlint v5.2.4] https://oxsecurity.github.io/megalinter/6/descriptors/repository_secretlint
+- MegaLinter key: [REPOSITORY_SECRETLINT]
+- Rules config: [.secretlintrc.json]
+- Ignore file: [.secretlintignore]
+::endgroup::
+::group::[32m✅ Linted [REPOSITORY] files with [syft] successfully - (0.74s)[0m (expand for details)
+- Using [syft v0.55.0] https://oxsecurity.github.io/megalinter/6/descriptors/repository_syft
+- MegaLinter key: [REPOSITORY_SYFT]
+- Rules config: identified by [syft]
+::endgroup::
+::group::[31m❌ Linted [YAML] files with [yamllint]: Found 1 error(s) - (0.36s)[0m (expand for details)
+- Using [yamllint v1.27.1] https://oxsecurity.github.io/megalinter/6/descriptors/yaml_yamllint
+- MegaLinter key: [YAML_YAMLLINT]
+- Rules config: [.yamllint.yml]
+- Number of files analyzed: [1]
+--Error detail:
+::group::/github/workspace/mercury/prism-mediator/mediator/src/main/resources/mediator-openapi.yaml
+::warning file=/github/workspace/mercury/prism-mediator/mediator/src/main/resources/mediator-openapi.yaml,line=1,col=1::1:1 [document-start] missing document start "---"
+::error file=/github/workspace/mercury/prism-mediator/mediator/src/main/resources/mediator-openapi.yaml,line=215,col=14::215:14 [braces] too many spaces inside braces
+::error file=/github/workspace/mercury/prism-mediator/mediator/src/main/resources/mediator-openapi.yaml,line=215,col=73::215:73 [braces] too many spaces inside braces
+::endgroup::
+
+
+::endgroup::
+::group::[32m✅ Linted [REPOSITORY] files with [git_diff] successfully - (0.02s)[0m (expand for details)
+- Using [git_diff v2.34.4] https://oxsecurity.github.io/megalinter/6/descriptors/repository_git_diff
+- MegaLinter key: [REPOSITORY_GIT_DIFF]
+- Rules config: identified by [git_diff]
+::endgroup::
+::group::[31m❌ Linted [SCALA] files with [scalafix]: Found 12 error(s) - (71.88s)[0m (expand for details)
+- Using [scalafix v0.10.1] https://oxsecurity.github.io/megalinter/6/descriptors/scala_scalafix
+- MegaLinter key: [SCALA_SCALAFIX]
+- Rules config: [.scalafix.conf]
+- Number of files analyzed: [36]
+[31m[scalafix] mercury/prism-mediator/agent-didcommx/src/main/scala/io/iohk/atala/AgentClientAlice.scala - ERROR - 1 error(s)[0m
+[31m--Error detail:
+/github/workspace/mercury/prism-mediator/agent-didcommx/src/main/scala/io/iohk/atala/AgentClientAlice.scala:22:7: error: expected start of definition
+@main def AgentClientAlice() = {
+      ^^^
+[0m
+[31m[scalafix] mercury/prism-mediator/agent-didcommx/src/main/scala/io/iohk/atala/AgentClientBob.scala - ERROR - 1 error(s)[0m
+[31m--Error detail:
+/github/workspace/mercury/prism-mediator/agent-didcommx/src/main/scala/io/iohk/atala/AgentClientBob.scala:13:7: error: expected start of definition
+@main def AgentClientBob() = {
+      ^^^
+[0m
+[31m[scalafix] mercury/prism-mediator/agent-didcommx/src/main/scala/io/iohk/atala/mercury/AgentService.scala - ERROR - 1 error(s)[0m
+[31m--Error detail:
+/github/workspace/mercury/prism-mediator/agent-didcommx/src/main/scala/io/iohk/atala/mercury/AgentService.scala:9:37: error: Wildcard import must be in the last position
+import io.iohk.atala.mercury.model.{_, given}
+                                    ^
+[0m
+[31m[scalafix] mercury/prism-mediator/agent-didcommx/src/main/scala/io/iohk/atala/mercury/Conversions.scala - ERROR - 1 error(s)[0m
+[31m--Error detail:
+/github/workspace/mercury/prism-mediator/agent-didcommx/src/main/scala/io/iohk/atala/mercury/Conversions.scala:14:1: error: illegal start of definition identifier
+given Conversion[PackEncryptedResult, EncryptedMessage] with {
+^^^^^
+[0m
+[31m[scalafix] mercury/prism-mediator/agent/src/main/scala/io/iohk/atala/AgentPrograms.scala - ERROR - 1 error(s)[0m
+[31m--Error detail:
+/github/workspace/mercury/prism-mediator/agent/src/main/scala/io/iohk/atala/AgentPrograms.scala:10:31: error: Wildcard import must be in the last position
+import io.iohk.atala.mercury.{_, given}
+                              ^
+[0m
+[31m[scalafix] mercury/prism-mediator/agent/src/main/scala/io/iohk/atala/mercury/Agent.scala - ERROR - 1 error(s)[0m
+[31m--Error detail:
+/github/workspace/mercury/prism-mediator/agent/src/main/scala/io/iohk/atala/mercury/Agent.scala:5:1: error: illegal start of definition identifier
+enum Agent(val id: DidId):
+^^^^
+[0m
+[31m[scalafix] mercury/prism-mediator/mediator/src/main/scala/io/iohk/atala/mercury/mediator/MailStorage.scala - ERROR - 1 error(s)[0m
+[31m--Error detail:
+/github/workspace/mercury/prism-mediator/mediator/src/main/scala/io/iohk/atala/mercury/mediator/MailStorage.scala:7:1: error: illegal start of definition type
+type MessageString = String //FIXME Replace with Message
+^^^^
+[0m
+[31m[scalafix] mercury/prism-mediator/mediator/src/main/scala/io/iohk/atala/mercury/mediator/Mediator.scala - ERROR - 1 error(s)[0m
+[31m--Error detail:
+/github/workspace/mercury/prism-mediator/mediator/src/main/scala/io/iohk/atala/mercury/mediator/Mediator.scala:33:1: error: illegal start of definition type
+type MyTask[+A] = // [_] =>> zio.RIO[io.iohk.atala.DidComm, _]
+^^^^
+[0m
+[31m[scalafix] mercury/prism-mediator/mediator/src/main/scala/io/iohk/atala/mercury/mediator/Models.scala - ERROR - 1 error(s)[0m
+[31m--Error detail:
+/github/workspace/mercury/prism-mediator/mediator/src/main/scala/io/iohk/atala/mercury/mediator/Models.scala:15:1: error: illegal start of definition val
+val httpErrors: OneOf[ErrorInfo, ErrorInfo] = oneOf[ErrorInfo](
+^^^
+[0m
+[31m[scalafix] mercury/prism-mediator/models/src/main/scala/io/iohk/atala/mercury/model/Attachment.scala - ERROR - 1 error(s)[0m
+[31m--Error detail:
+/github/workspace/mercury/prism-mediator/models/src/main/scala/io/iohk/atala/mercury/model/Attachment.scala:33:1: error: illegal start of definition type
+type AttachmentData = JsonObject
+^^^^
+[0m
+[31m[scalafix] mercury/prism-mediator/models/src/main/scala/io/iohk/atala/mercury/model/Message.scala - ERROR - 1 error(s)[0m
+[31m--Error detail:
+/github/workspace/mercury/prism-mediator/models/src/main/scala/io/iohk/atala/mercury/model/Message.scala:9:1: error: illegal start of definition type
+type PIURI = String //type URI or URL?
+^^^^
+[0m
+[31m[scalafix] mercury/prism-mediator/protocol-routing/src/main/scala/io/iohk/atala/mercury/protocol/routing/ForwardMessage.scala - ERROR - 1 error(s)[0m
+[31m--Error detail:
+/github/workspace/mercury/prism-mediator/protocol-routing/src/main/scala/io/iohk/atala/mercury/protocol/routing/ForwardMessage.scala:5:1: error: illegal start of definition type
+type ForwardAttachment = Attachment
+^^^^
+[0m
+::endgroup::
+
++----SUMMARY----+--------------------------+---------------+-------+-------+--------+
+| Descriptor    | Linter                   | Mode          | Files | Fixed | Errors |
++---------------+--------------------------+---------------+-------+-------+--------+
+| ✅ MARKDOWN   | markdownlint             | list_of_files |     7 |     0 |      0 |
+| ✅ MARKDOWN   | markdown-link-check      | list_of_files |     7 |       |      0 |
+| ✅ MARKDOWN   | markdown-table-formatter | list_of_files |     7 |     0 |      0 |
+| ❌ OPENAPI    | spectral                 | file          |     1 |       |      1 |
+| ✅ REPOSITORY | dustilock                | project       |   n/a |       |      0 |
+| ✅ REPOSITORY | git_diff                 | project       |   n/a |       |      0 |
+| ✅ REPOSITORY | secretlint               | project       |   n/a |       |      0 |
+| ✅ REPOSITORY | syft                     | project       |   n/a |       |      0 |
+| ❌ SCALA      | scalafix                 | file          |    36 |       |     12 |
+| ✅ YAML       | prettier                 | list_of_files |     1 |     1 |      0 |
+| ✅ YAML       | v8r                      | list_of_files |     1 |       |      0 |
+| ❌ YAML       | yamllint                 | list_of_files |     1 |       |      1 |
++---------------+--------------------------+---------------+-------+-------+--------+
+
+[GitHub Comment Reporter] Posted summary as comment on input-output-hk/atala-prism-building-blocks #PR16
+[Updated Sources Reporter] copied 1 fixed source files in folder /github/workspace/megalinter-reports/updated_sources.
+Download it from artifacts then copy-paste it in your local repo to apply linters updates
+[31m❌ Error(s) have been found during linting[0m
+To disable linters or customize their checks, you can use a .mega-linter.yml file at the root of your repository
+More info at https://oxsecurity.github.io/megalinter/6/configuration/

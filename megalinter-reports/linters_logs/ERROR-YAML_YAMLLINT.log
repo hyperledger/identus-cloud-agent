@@ -1,0 +1,13 @@
+Results of yamllint linter (version 1.27.1)
+See documentation on https://oxsecurity.github.io/megalinter/6/descriptors/yaml_yamllint/
+-----------------------------------------------
+
+❌ [ERROR] for workspace /github/workspace
+Linter raw log:
+::group::/github/workspace/mercury/prism-mediator/mediator/src/main/resources/mediator-openapi.yaml
+::warning file=/github/workspace/mercury/prism-mediator/mediator/src/main/resources/mediator-openapi.yaml,line=1,col=1::1:1 [document-start] missing document start "---"
+::error file=/github/workspace/mercury/prism-mediator/mediator/src/main/resources/mediator-openapi.yaml,line=215,col=14::215:14 [braces] too many spaces inside braces
+::error file=/github/workspace/mercury/prism-mediator/mediator/src/main/resources/mediator-openapi.yaml,line=215,col=73::215:73 [braces] too many spaces inside braces
+::endgroup::
+
+
