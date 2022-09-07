@@ -11,7 +11,7 @@ The MegaLinter documentation can be found at:
 ::group::MegaLinter initialization (expand for details)
 GITHUB_REPOSITORY: input-output-hk/atala-prism-building-blocks
 GITHUB_REF: refs/pull/16/merge
-GITHUB_RUN_ID: 3011383030
+GITHUB_RUN_ID: 3011402730
 
 
 [Pre] run: [git config --global core.autocrlf input] in cwd [/github/workspace]
@@ -139,55 +139,55 @@ Kept [53] files on [81] found files
 | YAML       | v8r                      | .yml|.yaml          | 4              | no         |
 +------------+--------------------------+---------------------+----------------+------------+
 ::endgroup::
-::group::[32m✅ Linted [YAML] files with [prettier] successfully - (1.28s)[0m (expand for details)
+::group::[32m✅ Linted [YAML] files with [prettier] successfully - (1.12s)[0m (expand for details)
 - Using [prettier v2.7.1] https://oxsecurity.github.io/megalinter/6/descriptors/yaml_prettier
 - MegaLinter key: [YAML_PRETTIER]
 - Rules config: identified by [prettier]
 - Number of files analyzed: [4]
 ::endgroup::
-::group::[32m✅ Linted [MARKDOWN] files with [markdownlint] successfully - (0.53s)[0m (expand for details)
+::group::[32m✅ Linted [MARKDOWN] files with [markdownlint] successfully - (0.46s)[0m (expand for details)
 - Using [markdownlint v0.32.2] https://oxsecurity.github.io/megalinter/6/descriptors/markdown_markdownlint
 - MegaLinter key: [MARKDOWN_MARKDOWNLINT]
 - Rules config: [.markdownlint.json]
 - Number of files analyzed: [7]
 ::endgroup::
-::group::[32m✅ Linted [MARKDOWN] files with [markdown-table-formatter] successfully - (0.41s)[0m (expand for details)
+::group::[32m✅ Linted [MARKDOWN] files with [markdown-table-formatter] successfully - (0.33s)[0m (expand for details)
 - Using [markdown-table-formatter v1.4.0] https://oxsecurity.github.io/megalinter/6/descriptors/markdown_markdown_table_formatter
 - MegaLinter key: [MARKDOWN_MARKDOWN_TABLE_FORMATTER]
 - Rules config: identified by [markdown-table-formatter]
 - Number of files analyzed: [7]
 ::endgroup::
-::group::[32m✅ Linted [JSON] files with [eslint-plugin-jsonc] successfully - (1.79s)[0m (expand for details)
+::group::[32m✅ Linted [JSON] files with [eslint-plugin-jsonc] successfully - (1.54s)[0m (expand for details)
 - Using [eslint-plugin-jsonc v2.4.0] https://oxsecurity.github.io/megalinter/6/descriptors/json_eslint_plugin_jsonc
 - MegaLinter key: [JSON_ESLINT_PLUGIN_JSONC]
 - Rules config: [.eslintrc-json.json]
 - Number of files analyzed: [4]
 ::endgroup::
-::group::[32m✅ Linted [JSON] files with [v8r] successfully - (3.13s)[0m (expand for details)
-- Using [v8r v0.13.0] https://oxsecurity.github.io/megalinter/6/descriptors/json_v8r
-- MegaLinter key: [JSON_V8R]
-- Rules config: identified by [v8r]
-- Number of files analyzed: [4]
-::endgroup::
-::group::[32m✅ Linted [JSON] files with [prettier] successfully - (0.69s)[0m (expand for details)
+::group::[32m✅ Linted [JSON] files with [prettier] successfully - (0.55s)[0m (expand for details)
 - Using [prettier v2.7.1] https://oxsecurity.github.io/megalinter/6/descriptors/json_prettier
 - MegaLinter key: [JSON_PRETTIER]
 - Rules config: identified by [prettier]
 - Number of files analyzed: [4]
 ::endgroup::
-::group::[32m✅ Linted [MARKDOWN] files with [markdown-link-check] successfully - (2.25s)[0m (expand for details)
+::group::[32m✅ Linted [JSON] files with [v8r] successfully - (3.31s)[0m (expand for details)
+- Using [v8r v0.13.0] https://oxsecurity.github.io/megalinter/6/descriptors/json_v8r
+- MegaLinter key: [JSON_V8R]
+- Rules config: identified by [v8r]
+- Number of files analyzed: [4]
+::endgroup::
+::group::[32m✅ Linted [MARKDOWN] files with [markdown-link-check] successfully - (1.95s)[0m (expand for details)
 - Using [markdown-link-check v3.10.2] https://oxsecurity.github.io/megalinter/6/descriptors/markdown_markdown_link_check
 - MegaLinter key: [MARKDOWN_MARKDOWN_LINK_CHECK]
 - Rules config: [.markdown-link-check.json]
 - Number of files analyzed: [7]
 ::endgroup::
-::group::[32m✅ Linted [JSON] files with [jsonlint] successfully - (0.68s)[0m (expand for details)
+::group::[32m✅ Linted [JSON] files with [jsonlint] successfully - (0.27s)[0m (expand for details)
 - Using [jsonlint v11.6.0] https://oxsecurity.github.io/megalinter/6/descriptors/json_jsonlint
 - MegaLinter key: [JSON_JSONLINT]
 - Rules config: identified by [jsonlint]
 - Number of files analyzed: [4]
 ::endgroup::
-::group::[32m✅ Linted [YAML] files with [v8r] successfully - (2.24s)[0m (expand for details)
+::group::[32m✅ Linted [YAML] files with [v8r] successfully - (1.9s)[0m (expand for details)
 - Using [v8r v0.13.0] https://oxsecurity.github.io/megalinter/6/descriptors/yaml_v8r
 - MegaLinter key: [YAML_V8R]
 - Rules config: identified by [v8r]
@@ -198,18 +198,18 @@ Kept [53] files on [81] found files
 - MegaLinter key: [REPOSITORY_DUSTILOCK]
 - Rules config: identified by [dustilock]
 ::endgroup::
-::group::[32m✅ Linted [REPOSITORY] files with [secretlint] successfully - (1.22s)[0m (expand for details)
+::group::[32m✅ Linted [REPOSITORY] files with [secretlint] successfully - (1.0s)[0m (expand for details)
 - Using [secretlint v5.2.4] https://oxsecurity.github.io/megalinter/6/descriptors/repository_secretlint
 - MegaLinter key: [REPOSITORY_SECRETLINT]
 - Rules config: [.secretlintrc.json]
 - Ignore file: [.secretlintignore]
 ::endgroup::
-::group::[32m✅ Linted [REPOSITORY] files with [syft] successfully - (0.58s)[0m (expand for details)
+::group::[32m✅ Linted [REPOSITORY] files with [syft] successfully - (0.61s)[0m (expand for details)
 - Using [syft v0.55.0] https://oxsecurity.github.io/megalinter/6/descriptors/repository_syft
 - MegaLinter key: [REPOSITORY_SYFT]
 - Rules config: identified by [syft]
 ::endgroup::
-::group::[31m❌ Linted [OPENAPI] files with [spectral]: Found 2 error(s) - (4.38s)[0m (expand for details)
+::group::[31m❌ Linted [OPENAPI] files with [spectral]: Found 2 error(s) - (3.76s)[0m (expand for details)
 - Using [spectral v5.9.2] https://oxsecurity.github.io/megalinter/6/descriptors/openapi_spectral
 - MegaLinter key: [OPENAPI_SPECTRAL]
 - Rules config: [.openapirc.yml]
@@ -321,7 +321,7 @@ OpenAPI 3.x detected
 
 [0m
 ::endgroup::
-::group::[31m❌ Linted [YAML] files with [yamllint]: Found 1 error(s) - (0.41s)[0m (expand for details)
+::group::[31m❌ Linted [YAML] files with [yamllint]: Found 1 error(s) - (0.31s)[0m (expand for details)
 - Using [yamllint v1.27.1] https://oxsecurity.github.io/megalinter/6/descriptors/yaml_yamllint
 - MegaLinter key: [YAML_YAMLLINT]
 - Rules config: [.yamllint.yml]
@@ -341,12 +341,12 @@ OpenAPI 3.x detected
 
 
 ::endgroup::
-::group::[32m✅ Linted [REPOSITORY] files with [git_diff] successfully - (0.03s)[0m (expand for details)
+::group::[32m✅ Linted [REPOSITORY] files with [git_diff] successfully - (0.01s)[0m (expand for details)
 - Using [git_diff v2.34.4] https://oxsecurity.github.io/megalinter/6/descriptors/repository_git_diff
 - MegaLinter key: [REPOSITORY_GIT_DIFF]
 - Rules config: identified by [git_diff]
 ::endgroup::
-::group::[31m❌ Linted [SCALA] files with [scalafix]: Found 12 error(s) - (68.79s)[0m (expand for details)
+::group::[31m❌ Linted [SCALA] files with [scalafix]: Found 12 error(s) - (55.77s)[0m (expand for details)
 - Using [scalafix v0.10.1] https://oxsecurity.github.io/megalinter/6/descriptors/scala_scalafix
 - MegaLinter key: [SCALA_SCALAFIX]
 - Rules config: [.scalafix.conf]
