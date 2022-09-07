@@ -44,11 +44,5 @@ object AgentService {
       Agent.Bob
     )
   )
-  val mediator = ZLayer.succeed(
-    AgentService[Agent.Mediator.type](
-      new DIDComm(UniversalDidResolver, MediatorSecretResolver.secretResolver),
-      Agent.Mediator
-    )
-  )
 
 }

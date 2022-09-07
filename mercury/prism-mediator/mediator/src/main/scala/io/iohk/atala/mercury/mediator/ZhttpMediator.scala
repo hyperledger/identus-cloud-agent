@@ -5,11 +5,11 @@ import zhttp.service.Server
 import zio._
 import java.nio.charset.StandardCharsets
 
-import io.iohk.atala.mercury.AgentService
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.Agent
 import io.iohk.atala.mercury.DidComm
 import io.iohk.atala.mercury.MediaTypes
+import io.iohk.atala.mercury.resolvers.MediatorDidComm
 
 /** sbt "mediator/runMain io.iohk.atala.mercury.mediator.ZhttpMediator" */
 object ZhttpMediator extends ZIOAppDefault {
@@ -31,5 +31,5 @@ object ZhttpMediator extends ZIOAppDefault {
   }
 
   override val run = { MediatorProgram.startLogo *> Server.start(MediatorProgram.port, app) }
-    .provide(AgentService.mediator ++ MailStorage.layer)
+    .provide(MediatorDidComm.mediator ++ MailStorage.layer)
 }

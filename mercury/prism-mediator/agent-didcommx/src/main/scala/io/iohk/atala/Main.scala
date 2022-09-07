@@ -1,3 +1,4 @@
+/*
 package io.iohk.atala
 
 import java.time.{LocalDateTime, ZoneOffset}
@@ -125,3 +126,4 @@ val program4 = for {
   Unsafe.unsafe { Runtime.default.unsafe.run(app4).getOrThrowFiberFailure() }
 
 }
+ */

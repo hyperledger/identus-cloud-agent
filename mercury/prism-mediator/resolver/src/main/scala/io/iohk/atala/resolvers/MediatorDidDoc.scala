@@ -15,12 +15,11 @@ object MediatorDidDoc {
       new VerificationMaterial(
         VerificationMaterialFormat.JWK,
         """{
-           "kty":"EC",
-           "crv":"secp256k1",
-           "x":"aToW5EaTq5mlAf8C5ECYDSkqsJycrW-e1SQ6_GJcAOk",
-           "y":"JAGX94caA21WKreXwYUaOCYTBMrqaX4KWIlsQZTHWCk"
-        }
-    """.stripMargin
+          |  "kty":"EC",
+          |  "crv":"secp256k1",
+          |  "x":"aToW5EaTq5mlAf8C5ECYDSkqsJycrW-e1SQ6_GJcAOk",
+          |  "y":"JAGX94caA21WKreXwYUaOCYTBMrqaX4KWIlsQZTHWCk"
+          |}""".stripMargin
       ),
       s"$did#key-3"
     ),
@@ -30,11 +29,10 @@ object MediatorDidDoc {
       new VerificationMaterial(
         VerificationMaterialFormat.JWK,
         """{
-                   "kty":"OKP",
-                   "crv":"X25519",
-                   "x":"GDTrI66K0pFfO54tlCSvfjjNapIs44dzpneBgyx0S3E"
-                }
-            """.stripMargin
+          |  "kty":"OKP",
+          |  "crv":"X25519",
+          |  "x":"GDTrI66K0pFfO54tlCSvfjjNapIs44dzpneBgyx0S3E"
+          |}""".stripMargin
       ),
       s"$did#key-agreement-1"
     ),
@@ -44,11 +42,10 @@ object MediatorDidDoc {
       new VerificationMaterial(
         VerificationMaterialFormat.JWK,
         """{
-                   "kty":"OKP",
-                   "crv":"X25519",
-                   "x":"UT9S3F5ep16KSNBBShU2wh3qSfqYjlasZimn0mB8_VM"
-                }
-            """.stripMargin
+          |  "kty":"OKP",
+          |  "crv":"X25519",
+          |  "x":"UT9S3F5ep16KSNBBShU2wh3qSfqYjlasZimn0mB8_VM"
+          |}""".stripMargin
       ),
       s"$did#key-agreement-2"
     )

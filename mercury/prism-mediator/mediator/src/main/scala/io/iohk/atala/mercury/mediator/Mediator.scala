@@ -27,6 +27,8 @@ import sttp.tapir.Endpoint
 
 import io.iohk.atala.mercury.DidComm
 import io.iohk.atala.mercury.AgentService
+import io.iohk.atala.mercury.resolvers.MediatorDidComm
+import org.didcommx.didcomm.DIDComm
 
 type MyTask[+A] = // [_] =>> zio.RIO[io.iohk.atala.DidComm, _]
   ZIO[DidComm & MailStorage, Throwable, A] // TODO improve this Throwable (is too much)
@@ -57,11 +59,7 @@ object Mediator extends ZIOAppDefault {
         .drain
     )
 
-  override def run =
-    serve
-      .provide(
-        (AgentService.mediator: ZLayer[Any, Nothing, DidComm]) ++
-          MailStorage.layer
-      )
-      .exitCode
+  override def run = serve
+    .provide(MediatorDidComm.mediator ++ MailStorage.layer)
+    .exitCode
 }
