@@ -11,7 +11,7 @@ The MegaLinter documentation can be found at:
 ::group::MegaLinter initialization (expand for details)
 GITHUB_REPOSITORY: input-output-hk/atala-prism-building-blocks
 GITHUB_REF: refs/pull/16/merge
-GITHUB_RUN_ID: 3009023692
+GITHUB_RUN_ID: 3009048461
 
 
 [Pre] run: [git config --global core.autocrlf input] in cwd [/github/workspace]
@@ -34,6 +34,7 @@ Listing updated files in [/github/workspace] using git diff.
 Modified files:
 .gitignore
 megalinter-reports/IDE-config.txt
+megalinter-reports/IDE-config/.eslintrc-json.json
 megalinter-reports/IDE-config/.markdown-link-check.json
 megalinter-reports/IDE-config/.markdownlint.json
 megalinter-reports/IDE-config/.openapirc.yml
@@ -41,8 +42,13 @@ megalinter-reports/IDE-config/.scalafix.conf
 megalinter-reports/IDE-config/.secretlintrc.json
 megalinter-reports/IDE-config/.yamllint.yml
 megalinter-reports/linters_logs/ERROR-OPENAPI_SPECTRAL.log
+megalinter-reports/linters_logs/ERROR-REPOSITORY_GIT_DIFF.log
 megalinter-reports/linters_logs/ERROR-SCALA_SCALAFIX.log
 megalinter-reports/linters_logs/ERROR-YAML_YAMLLINT.log
+megalinter-reports/linters_logs/SUCCESS-JSON_ESLINT_PLUGIN_JSONC.log
+megalinter-reports/linters_logs/SUCCESS-JSON_JSONLINT.log
+megalinter-reports/linters_logs/SUCCESS-JSON_PRETTIER.log
+megalinter-reports/linters_logs/SUCCESS-JSON_V8R.log
 megalinter-reports/linters_logs/SUCCESS-MARKDOWN_MARKDOWNLINT.log
 megalinter-reports/linters_logs/SUCCESS-MARKDOWN_MARKDOWN_LINK_CHECK.log
 megalinter-reports/linters_logs/SUCCESS-MARKDOWN_MARKDOWN_TABLE_FORMATTER.log
@@ -53,6 +59,10 @@ megalinter-reports/linters_logs/SUCCESS-REPOSITORY_SYFT.log
 megalinter-reports/linters_logs/SUCCESS-YAML_PRETTIER.log
 megalinter-reports/linters_logs/SUCCESS-YAML_V8R.log
 megalinter-reports/megalinter.log
+megalinter-reports/updated_sources/megalinter-reports/IDE-config.txt
+megalinter-reports/updated_sources/megalinter-reports/linters_logs/ERROR-OPENAPI_SPECTRAL.log
+megalinter-reports/updated_sources/megalinter-reports/linters_logs/ERROR-YAML_YAMLLINT.log
+megalinter-reports/updated_sources/megalinter-reports/megalinter.log
 megalinter-reports/updated_sources/mercury/prism-mediator/mediator/src/main/resources/mediator-openapi.yaml
 mercury/prism-mediator/.scalafmt.conf
 mercury/prism-mediator/QuickStart.md
@@ -106,15 +116,15 @@ mercury/prism-mediator/sbtx
 - File extensions: , .R, .RMD, .Rmd, .bash, .c, .c++, .cc, .cdxml, .clj, .cljc, .cljs, .coffee, .cpp, .cs, .css, .cu, .cuh, .cxx, .dart, .dash, .edn, .env, .feature, .go, .gradle, .graphql, .groovy, .gvy, .h, .h++, .hcl, .hh, .hpp, .htm, .html, .hxx, .java, .js, .json, .json5, .jsonc, .ksh, .kt, .kts, .lua, .md, .nf, .p6, .php, .pl, .pl6, .pm, .pm6, .pp, .proto, .ps1, .ps1xml, .psd1, .psm1, .psrc, .pssc, .py, .r, .raku, .rakumod, .rakutest, .rb, .rs, .rst, .saas, .scala, .scss, .sh, .smk, .sql, .t, .tex, .tf, .ts, .vb, .xml, .yaml, .yml
 - File names (regex): Jenkinsfile, Makefile, Snakefile
 - Excluding .gitignored files [0]: 
-Kept [52] files on [71] found files
+Kept [53] files on [81] found files
 
 +----MATCHING LINTERS-------------------+---------------------+----------------+------------+
 | Descriptor | Linter                   | Criteria            | Matching files | Format/Fix |
 +------------+--------------------------+---------------------+----------------+------------+
-| JSON       | jsonlint                 | .json               | 3              | no         |
-| JSON       | eslint-plugin-jsonc      | .json|.json5|.jsonc | 3              | yes        |
-| JSON       | v8r                      | .json               | 3              | no         |
-| JSON       | prettier                 | .json               | 3              | yes        |
+| JSON       | jsonlint                 | .json               | 4              | no         |
+| JSON       | eslint-plugin-jsonc      | .json|.json5|.jsonc | 4              | yes        |
+| JSON       | v8r                      | .json               | 4              | no         |
+| JSON       | prettier                 | .json               | 4              | yes        |
 | MARKDOWN   | markdownlint             | .md                 | 7              | yes        |
 | MARKDOWN   | markdown-link-check      | .md                 | 7              | no         |
 | MARKDOWN   | markdown-table-formatter | .md                 | 7              | yes        |
@@ -129,58 +139,58 @@ Kept [52] files on [71] found files
 | YAML       | v8r                      | .yml|.yaml          | 4              | no         |
 +------------+--------------------------+---------------------+----------------+------------+
 ::endgroup::
-::group::[32m✅ Linted [YAML] files with [prettier] successfully - (0.82s)[0m (expand for details)
+::group::[32m✅ Linted [YAML] files with [prettier] successfully - (1.1s)[0m (expand for details)
 - Using [prettier v2.7.1] https://oxsecurity.github.io/megalinter/6/descriptors/yaml_prettier
 - MegaLinter key: [YAML_PRETTIER]
 - Rules config: identified by [prettier]
 - Number of files analyzed: [4]
 ::endgroup::
-::group::[32m✅ Linted [MARKDOWN] files with [markdownlint] successfully - (0.36s)[0m (expand for details)
+::group::[32m✅ Linted [MARKDOWN] files with [markdownlint] successfully - (0.49s)[0m (expand for details)
 - Using [markdownlint v0.32.2] https://oxsecurity.github.io/megalinter/6/descriptors/markdown_markdownlint
 - MegaLinter key: [MARKDOWN_MARKDOWNLINT]
 - Rules config: [.markdownlint.json]
 - Number of files analyzed: [7]
 ::endgroup::
-::group::[32m✅ Linted [MARKDOWN] files with [markdown-table-formatter] successfully - (0.34s)[0m (expand for details)
+::group::[32m✅ Linted [MARKDOWN] files with [markdown-table-formatter] successfully - (0.32s)[0m (expand for details)
 - Using [markdown-table-formatter v1.4.0] https://oxsecurity.github.io/megalinter/6/descriptors/markdown_markdown_table_formatter
 - MegaLinter key: [MARKDOWN_MARKDOWN_TABLE_FORMATTER]
 - Rules config: identified by [markdown-table-formatter]
 - Number of files analyzed: [7]
 ::endgroup::
-::group::[32m✅ Linted [JSON] files with [eslint-plugin-jsonc] successfully - (1.1s)[0m (expand for details)
+::group::[32m✅ Linted [JSON] files with [eslint-plugin-jsonc] successfully - (1.61s)[0m (expand for details)
 - Using [eslint-plugin-jsonc v2.4.0] https://oxsecurity.github.io/megalinter/6/descriptors/json_eslint_plugin_jsonc
 - MegaLinter key: [JSON_ESLINT_PLUGIN_JSONC]
 - Rules config: [.eslintrc-json.json]
-- Number of files analyzed: [3]
+- Number of files analyzed: [4]
 ::endgroup::
-::group::[32m✅ Linted [JSON] files with [prettier] successfully - (0.45s)[0m (expand for details)
+::group::[32m✅ Linted [JSON] files with [prettier] successfully - (0.65s)[0m (expand for details)
 - Using [prettier v2.7.1] https://oxsecurity.github.io/megalinter/6/descriptors/json_prettier
 - MegaLinter key: [JSON_PRETTIER]
 - Rules config: identified by [prettier]
-- Number of files analyzed: [3]
+- Number of files analyzed: [4]
 ::endgroup::
-::group::[32m✅ Linted [JSON] files with [v8r] successfully - (2.61s)[0m (expand for details)
+::group::[32m✅ Linted [JSON] files with [v8r] successfully - (3.56s)[0m (expand for details)
 - Using [v8r v0.13.0] https://oxsecurity.github.io/megalinter/6/descriptors/json_v8r
 - MegaLinter key: [JSON_V8R]
 - Rules config: identified by [v8r]
-- Number of files analyzed: [3]
+- Number of files analyzed: [4]
 ::endgroup::
-::group::[32m✅ Linted [MARKDOWN] files with [markdown-link-check] successfully - (1.63s)[0m (expand for details)
+::group::[32m✅ Linted [MARKDOWN] files with [markdown-link-check] successfully - (2.54s)[0m (expand for details)
 - Using [markdown-link-check v3.10.2] https://oxsecurity.github.io/megalinter/6/descriptors/markdown_markdown_link_check
 - MegaLinter key: [MARKDOWN_MARKDOWN_LINK_CHECK]
 - Rules config: [.markdown-link-check.json]
 - Number of files analyzed: [7]
 ::endgroup::
-::group::[32m✅ Linted [JSON] files with [jsonlint] successfully - (0.21s)[0m (expand for details)
-- Using [jsonlint v11.6.0] https://oxsecurity.github.io/megalinter/6/descriptors/json_jsonlint
-- MegaLinter key: [JSON_JSONLINT]
-- Rules config: identified by [jsonlint]
-- Number of files analyzed: [3]
-::endgroup::
-::group::[32m✅ Linted [YAML] files with [v8r] successfully - (1.62s)[0m (expand for details)
+::group::[32m✅ Linted [YAML] files with [v8r] successfully - (2.26s)[0m (expand for details)
 - Using [v8r v0.13.0] https://oxsecurity.github.io/megalinter/6/descriptors/yaml_v8r
 - MegaLinter key: [YAML_V8R]
 - Rules config: identified by [v8r]
+- Number of files analyzed: [4]
+::endgroup::
+::group::[32m✅ Linted [JSON] files with [jsonlint] successfully - (0.26s)[0m (expand for details)
+- Using [jsonlint v11.6.0] https://oxsecurity.github.io/megalinter/6/descriptors/json_jsonlint
+- MegaLinter key: [JSON_JSONLINT]
+- Rules config: identified by [jsonlint]
 - Number of files analyzed: [4]
 ::endgroup::
 ::group::[32m✅ Linted [REPOSITORY] files with [dustilock] successfully - (0.01s)[0m (expand for details)
@@ -188,18 +198,18 @@ Kept [52] files on [71] found files
 - MegaLinter key: [REPOSITORY_DUSTILOCK]
 - Rules config: identified by [dustilock]
 ::endgroup::
-::group::[32m✅ Linted [REPOSITORY] files with [secretlint] successfully - (0.82s)[0m (expand for details)
+::group::[32m✅ Linted [REPOSITORY] files with [secretlint] successfully - (1.1s)[0m (expand for details)
 - Using [secretlint v5.2.4] https://oxsecurity.github.io/megalinter/6/descriptors/repository_secretlint
 - MegaLinter key: [REPOSITORY_SECRETLINT]
 - Rules config: [.secretlintrc.json]
 - Ignore file: [.secretlintignore]
 ::endgroup::
-::group::[32m✅ Linted [REPOSITORY] files with [syft] successfully - (0.68s)[0m (expand for details)
+::group::[32m✅ Linted [REPOSITORY] files with [syft] successfully - (0.73s)[0m (expand for details)
 - Using [syft v0.55.0] https://oxsecurity.github.io/megalinter/6/descriptors/repository_syft
 - MegaLinter key: [REPOSITORY_SYFT]
 - Rules config: identified by [syft]
 ::endgroup::
-::group::[31m❌ Linted [OPENAPI] files with [spectral]: Found 2 error(s) - (2.9s)[0m (expand for details)
+::group::[31m❌ Linted [OPENAPI] files with [spectral]: Found 2 error(s) - (4.12s)[0m (expand for details)
 - Using [spectral v5.9.2] https://oxsecurity.github.io/megalinter/6/descriptors/openapi_spectral
 - MegaLinter key: [OPENAPI_SPECTRAL]
 - Rules config: [.openapirc.yml]
@@ -311,7 +321,7 @@ OpenAPI 3.x detected
 
 [0m
 ::endgroup::
-::group::[31m❌ Linted [YAML] files with [yamllint]: Found 1 error(s) - (0.33s)[0m (expand for details)
+::group::[31m❌ Linted [YAML] files with [yamllint]: Found 1 error(s) - (0.34s)[0m (expand for details)
 - Using [yamllint v1.27.1] https://oxsecurity.github.io/megalinter/6/descriptors/yaml_yamllint
 - MegaLinter key: [YAML_YAMLLINT]
 - Rules config: [.yamllint.yml]
@@ -331,18 +341,12 @@ OpenAPI 3.x detected
 
 
 ::endgroup::
-::group::[31m❌ Linted [REPOSITORY] files with [git_diff]: Found 1 error(s) - (0.02s)[0m (expand for details)
+::group::[32m✅ Linted [REPOSITORY] files with [git_diff] successfully - (0.01s)[0m (expand for details)
 - Using [git_diff v2.34.4] https://oxsecurity.github.io/megalinter/6/descriptors/repository_git_diff
 - MegaLinter key: [REPOSITORY_GIT_DIFF]
 - Rules config: identified by [git_diff]
---Error detail:
-megalinter-reports/linters_logs/ERROR-OPENAPI_SPECTRAL.log:7: trailing whitespace.
-+    
-megalinter-reports/linters_logs/ERROR-OPENAPI_SPECTRAL.log:53: trailing whitespace.
-+    
-
 ::endgroup::
-::group::[31m❌ Linted [SCALA] files with [scalafix]: Found 12 error(s) - (48.51s)[0m (expand for details)
+::group::[31m❌ Linted [SCALA] files with [scalafix]: Found 12 error(s) - (63.27s)[0m (expand for details)
 - Using [scalafix v0.10.1] https://oxsecurity.github.io/megalinter/6/descriptors/scala_scalafix
 - MegaLinter key: [SCALA_SCALAFIX]
 - Rules config: [.scalafix.conf]
@@ -424,16 +428,16 @@ type ForwardAttachment = Attachment
 +----SUMMARY----+--------------------------+---------------+-------+-------+--------+
 | Descriptor    | Linter                   | Mode          | Files | Fixed | Errors |
 +---------------+--------------------------+---------------+-------+-------+--------+
-| ✅ JSON       | eslint-plugin-jsonc      | list_of_files |     3 |     0 |      0 |
-| ✅ JSON       | jsonlint                 | list_of_files |     3 |       |      0 |
-| ✅ JSON       | prettier                 | list_of_files |     3 |     2 |      0 |
-| ✅ JSON       | v8r                      | list_of_files |     3 |       |      0 |
+| ✅ JSON       | eslint-plugin-jsonc      | list_of_files |     4 |     0 |      0 |
+| ✅ JSON       | jsonlint                 | list_of_files |     4 |       |      0 |
+| ✅ JSON       | prettier                 | list_of_files |     4 |     3 |      0 |
+| ✅ JSON       | v8r                      | list_of_files |     4 |       |      0 |
 | ✅ MARKDOWN   | markdownlint             | list_of_files |     7 |     0 |      0 |
 | ✅ MARKDOWN   | markdown-link-check      | list_of_files |     7 |       |      0 |
 | ✅ MARKDOWN   | markdown-table-formatter | list_of_files |     7 |     0 |      0 |
 | ❌ OPENAPI    | spectral                 | file          |     2 |       |      2 |
 | ✅ REPOSITORY | dustilock                | project       |   n/a |       |      0 |
-| ❌ REPOSITORY | git_diff                 | project       |   n/a |       |      1 |
+| ✅ REPOSITORY | git_diff                 | project       |   n/a |       |      0 |
 | ✅ REPOSITORY | secretlint               | project       |   n/a |       |      0 |
 | ✅ REPOSITORY | syft                     | project       |   n/a |       |      0 |
 | ❌ SCALA      | scalafix                 | file          |    36 |       |     12 |
@@ -443,7 +447,7 @@ type ForwardAttachment = Attachment
 +---------------+--------------------------+---------------+-------+-------+--------+
 
 [GitHub Comment Reporter] Posted summary as comment on input-output-hk/atala-prism-building-blocks #PR16
-[Updated Sources Reporter] copied 4 fixed source files in folder /github/workspace/megalinter-reports/updated_sources.
+[Updated Sources Reporter] copied 1 fixed source files in folder /github/workspace/megalinter-reports/updated_sources.
 Download it from artifacts then copy-paste it in your local repo to apply linters updates
 [31m❌ Error(s) have been found during linting[0m
 To disable linters or customize their checks, you can use a .mega-linter.yml file at the root of your repository
