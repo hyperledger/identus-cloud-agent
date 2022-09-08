@@ -5,5 +5,7 @@ object Dependencies {
     val zio = "2.0.2"
   }
 
-  lazy val zio = "dev.zio" %% "zio" % Versions.zio
+  private lazy val zio = "dev.zio" %% "zio" % Versions.zio
+
+  lazy val baseDependencies: Seq[ModuleID] = Seq(zio)
 }

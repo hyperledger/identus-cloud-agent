@@ -2,14 +2,20 @@ import Dependencies._
 
 ThisBuild / version := "0.1.0-SNAPSHOT"
 ThisBuild / scalaVersion := "3.1.3"
+ThisBuild / organization := "io.iohk.atala"
 
 lazy val root = project
   .in(file("."))
-  .aggregate(`castor-models`)
+  .aggregate(models)
 
-lazy val `castor-models` = project
-  .in(file("castor-models"))
+lazy val models = project
+  .in(file("models"))
+  .settings(name := "castor-models")
+
+lazy val `http-server` = project
+  .in(file("http-server"))
   .settings(
-    name := "castor-models",
-    libraryDependencies ++= Nil
+    name := "castor-http-server",
+    libraryDependencies ++= baseDependencies
   )
+  .dependsOn(models)
