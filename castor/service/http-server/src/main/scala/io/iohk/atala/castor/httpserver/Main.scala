@@ -4,6 +4,6 @@ import zio.*
 
 object Main extends ZIOAppDefault {
 
-  override def run = Layers.app
+  override def run = Modules.app
 
 }
