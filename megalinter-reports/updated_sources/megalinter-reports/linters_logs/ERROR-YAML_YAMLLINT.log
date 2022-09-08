@@ -4,16 +4,19 @@ See documentation on https://oxsecurity.github.io/megalinter/6/descriptors/yaml_
 
 ❌ [ERROR] for workspace /github/workspace
 Linter raw log:
-::group::/github/workspace/megalinter-reports/updated_sources/mercury/prism-mediator/mediator/src/main/resources/mediator-openapi.yaml
-::warning file=/github/workspace/megalinter-reports/updated_sources/mercury/prism-mediator/mediator/src/main/resources/mediator-openapi.yaml,line=1,col=1::1:1 [document-start] missing document start "---"
-::error file=/github/workspace/megalinter-reports/updated_sources/mercury/prism-mediator/mediator/src/main/resources/mediator-openapi.yaml,line=215,col=14::215:14 [braces] too many spaces inside braces
-::error file=/github/workspace/megalinter-reports/updated_sources/mercury/prism-mediator/mediator/src/main/resources/mediator-openapi.yaml,line=215,col=73::215:73 [braces] too many spaces inside braces
+::group::/github/workspace/.github/workflows/lint.yml
+::warning file=/github/workspace/.github/workflows/lint.yml,line=1,col=1::1:1 [document-start] missing document start "---"
+::warning file=/github/workspace/.github/workflows/lint.yml,line=9,col=1::9:1 [truthy] truthy value should be one of [false, true]
+::endgroup::
+
+::group::/github/workspace/.mega-linter.yml
+::warning file=/github/workspace/.mega-linter.yml,line=4,col=1::4:1 [document-start] missing document start "---"
 ::endgroup::
 
 ::group::/github/workspace/mercury/prism-mediator/mediator/src/main/resources/mediator-openapi.yaml
 ::warning file=/github/workspace/mercury/prism-mediator/mediator/src/main/resources/mediator-openapi.yaml,line=1,col=1::1:1 [document-start] missing document start "---"
-::error file=/github/workspace/mercury/prism-mediator/mediator/src/main/resources/mediator-openapi.yaml,line=215,col=14::215:14 [braces] too many spaces inside braces
-::error file=/github/workspace/mercury/prism-mediator/mediator/src/main/resources/mediator-openapi.yaml,line=215,col=73::215:73 [braces] too many spaces inside braces
+::error file=/github/workspace/mercury/prism-mediator/mediator/src/main/resources/mediator-openapi.yaml,line=233,col=14::233:14 [braces] too many spaces inside braces
+::error file=/github/workspace/mercury/prism-mediator/mediator/src/main/resources/mediator-openapi.yaml,line=233,col=73::233:73 [braces] too many spaces inside braces
 ::endgroup::
 
 

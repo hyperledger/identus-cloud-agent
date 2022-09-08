@@ -230,7 +230,7 @@ components:
           "type": "https://didcomm.org/out-of-band/2.0/invitation",
           "from": "did:prism:testnet:EiCRKRZKozDBAlxpZ0UI2UylXW6AmwSdQfguo0VGeyVKKg",
           "body":
-            {"goal-code": "create-connection", "accept": ["didcomm/v2"]},
+            { "goal-code": "create-connection", "accept": ["didcomm/v2"] },
         }
     CreateConnection:
       title: Create Connection
