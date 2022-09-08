@@ -15,10 +15,7 @@ object Dependencies {
   private lazy val akkaHttp = "com.typesafe.akka" %% "akka-http" % Versions.akkaHttp
   private lazy val akkaSprayJson = "com.typesafe.akka" %% "akka-http-spray-json" % Versions.akkaHttp
 
-  private lazy val logback = "ch.qos.logback" % "logback-classic" % Versions.logback % Runtime
-
   // Dependencies
   lazy val baseDependencies: Seq[ModuleID] = Seq(zio)
-  lazy val runtimeDependencies: Seq[ModuleID] = Seq(logback)
   lazy val akkaHttpDependencies: Seq[ModuleID] = Seq(akkaTyped, akkaStream, akkaHttp, akkaSprayJson).map(_.cross(CrossVersion.for3Use2_13))
 }
