@@ -12,6 +12,10 @@ on:
       - main
   pull_request:
 
+env:
+  # https://oxsecurity.github.io/megalinter/5.8.0/descriptors/scala_scalafix/
+  DISABLE_LINTERS: SCALA_SCALAFIX
+
 jobs:
   lint:
     name: Lint changes
