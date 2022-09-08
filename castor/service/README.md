@@ -1,7 +1,1 @@
-# Castor BB Service
-
-## Quickstart
-
-```bash
-sbt clean openApiGenerateClasses compile
-```
+# Castor BB

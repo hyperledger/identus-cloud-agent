@@ -19,7 +19,7 @@ lazy val `http-server` = project
     libraryDependencies ++= baseDependencies ++ runtimeDependencies ++ akkaHttpDependencies,
     Compile / sourceGenerators += openApiGenerateClasses,
     openApiGeneratorSpec := baseDirectory.value / "../../api/http/castor-openapi-spec.yaml",
-    openApiGeneratorConfig := baseDirectory.value / "../openapi/generator-config/config.yaml"
+    openApiGeneratorConfig := baseDirectory.value / "openapi/generator-config/config.yaml"
   )
   .enablePlugins(OpenApiGeneratorPlugin)
   .dependsOn(models)
