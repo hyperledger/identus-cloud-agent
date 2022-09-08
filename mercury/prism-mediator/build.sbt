@@ -70,13 +70,6 @@ lazy val models = project
 // ### Protocols ###
 // #################
 
-lazy val protocolInvitation = project
-  .in(file("protocol-invitation"))
-  .settings(name := "mercury-protocol-invitation", version := VERSION)
-  .settings(libraryDependencies += D.zio.value)
-  .settings(libraryDependencies ++= Seq(D.circeCore.value, D.circeGeneric.value, D.circeParser.value))
-  .dependsOn(models)
-
 lazy val protocolConnection = project
   .in(file("protocol-connection"))
   .settings(name := "mercury-protocol-connection", version := VERSION)
@@ -84,11 +77,23 @@ lazy val protocolConnection = project
   .settings(libraryDependencies ++= Seq(D.circeCore.value, D.circeGeneric.value, D.circeParser.value))
   .dependsOn(models, protocolInvitation)
 
+lazy val protocolInvitation = project
+  .in(file("protocol-invitation"))
+  .settings(name := "mercury-protocol-invitation", version := VERSION)
+  .settings(libraryDependencies += D.zio.value)
+  .settings(libraryDependencies ++= Seq(D.circeCore.value, D.circeGeneric.value, D.circeParser.value))
+  .dependsOn(models)
+
 lazy val protocolMercuryMailbox = project
   .in(file("protocol-mercury-mailbox"))
   .settings(name := "mercury-protocol-mailbox", version := VERSION)
   .settings(libraryDependencies += D.zio.value)
   .dependsOn(models, protocolInvitation, protocolRouting)
+
+lazy val protocolReportProblem = project
+  .in(file("protocol-report-problem"))
+  .settings(name := "aries_RFC0035-protocol-report_problem-1_0", version := VERSION)
+  .dependsOn(models)
 
 lazy val protocolRouting = project
   .in(file("protocol-routing"))
@@ -177,8 +182,9 @@ lazy val mediator = project
   )
   .dependsOn(agentDidcommx, resolver)
   .dependsOn(
-    protocolInvitation,
     protocolConnection,
+    protocolInvitation,
     protocolMercuryMailbox,
+    protocolReportProblem,
     protocolRouting,
   )
