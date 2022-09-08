@@ -9,8 +9,8 @@ defaults:
 on:
   push:
     branches:
-      - main
-  pull_request:
+      - fixme
+  # pull_request:
 
 env:
   # https://oxsecurity.github.io/megalinter/5.8.0/descriptors/scala_scalafix/
@@ -36,35 +36,6 @@ jobs:
       - name: Mega-Linter
         id: ml
         uses: megalinter/megalinter@v6
-      - name: Prepare commit
-        if: |
-          (success() || failure()) &&
-          steps.ml.outputs.has_updated_sources == 1 &&
-          github.event_name == 'pull_request'
-        run: sudo chown -Rc ${UID} .git/
-      - name: Import GPG key
-        id: import_gpg
-        if: |
-          (success() || failure()) &&
-          steps.ml.outputs.has_updated_sources == 1 &&
-          github.event_name == 'pull_request'
-        uses: crazy-max/ghaction-import-gpg@v3
-        with:
-          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
-          git-user-signingkey: true
-          git-commit-gpgsign: true
-      - name: Commit and push applied linter fixes
-        if: |
-          (success() || failure()) &&
-          steps.ml.outputs.has_updated_sources == 1 &&
-          github.event_name == 'pull_request'
-        uses: stefanzweifel/git-auto-commit-action@v4
-        with:
-          branch: ${{ github.event.pull_request.head.ref }}
-          commit_message: "[Mega-Linter] Apply linters fixes"
-          commit_options: "--gpg-sign"
-          commit_user_name: ${{ steps.import_gpg.outputs.name }}
-          commit_user_email: ${{ steps.import_gpg.outputs.email }}
       - name: Archive production artifacts
         if: success() || failure()
         uses: actions/upload-artifact@v2

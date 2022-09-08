@@ -521,7 +521,7 @@ components:
           type: string
           description: "Issuer DID"
           example: "did:prism:issuerdid"
-        issuanceDate":
+        issuanceDate:
           type: string
           description: "Datetime in ISO format that corresponds to the date of issuance"
           example: "2010-01-01T19:23:24Z"
