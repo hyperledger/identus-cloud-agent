@@ -9,8 +9,8 @@ defaults:
 on:
   push:
     branches:
-      - main
-  pull_request:
+      - fixme
+  # pull_request:
 
 jobs:
   lint:
