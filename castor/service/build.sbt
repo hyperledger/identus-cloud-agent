@@ -17,12 +17,8 @@ lazy val `http-server` = project
   .settings(
     name := "castor-http-server",
     libraryDependencies ++= baseDependencies ++ httpDependencies,
-    Compile / guardrailTasks := List(
-      ScalaServer(
-        specPath = file("../api/http/castor-openapi-spec.yaml"),
-        pkg = "io.iohk.atala.castor.server",
-        framework = "http4s"
-      )
-    )
+    openApiGeneratorSpec := baseDirectory.value / "../../api/http/castor-openapi-spec.yaml",
+    openApiGeneratorConfig := baseDirectory.value / "../openapi/generator-config/config.yaml"
   )
+  .enablePlugins(OpenApiGeneratorPlugin)
   .dependsOn(models)
