@@ -9,6 +9,11 @@ Linter raw log:
 ::warning file=/github/workspace/.github/workflows/lint.yml,line=9,col=1::9:1 [truthy] truthy value should be one of [false, true]
 ::endgroup::
 
+::group::/github/workspace/.github/workflows/pr-check.yml
+::warning file=/github/workspace/.github/workflows/pr-check.yml,line=1,col=1::1:1 [document-start] missing document start "---"
+::warning file=/github/workspace/.github/workflows/pr-check.yml,line=14,col=1::14:1 [truthy] truthy value should be one of [false, true]
+::endgroup::
+
 ::group::/github/workspace/.mega-linter.yml
 ::warning file=/github/workspace/.mega-linter.yml,line=4,col=1::4:1 [document-start] missing document start "---"
 ::endgroup::
