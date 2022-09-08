@@ -6,7 +6,7 @@ ThisBuild / organization := "io.iohk.atala"
 
 lazy val root = project
   .in(file("."))
-  .aggregate(models)
+  .aggregate(models, `http-server`)
 
 lazy val models = project
   .in(file("models"))
@@ -16,6 +16,13 @@ lazy val `http-server` = project
   .in(file("http-server"))
   .settings(
     name := "castor-http-server",
-    libraryDependencies ++= baseDependencies
+    libraryDependencies ++= baseDependencies ++ httpDependencies,
+    Compile / guardrailTasks := List(
+      ScalaServer(
+        specPath = file("../api/http/castor-openapi-spec.yaml"),
+        pkg = "io.iohk.atala.castor.server",
+        framework = "http4s"
+      )
+    )
   )
   .dependsOn(models)
