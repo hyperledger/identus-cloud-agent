@@ -16,7 +16,8 @@ lazy val `http-server` = project
   .in(file("http-server"))
   .settings(
     name := "castor-http-server",
-    libraryDependencies ++= baseDependencies ++ httpDependencies,
+    libraryDependencies ++= baseDependencies ++ runtimeDependencies ++ akkaHttpDependencies,
+    Compile / sourceGenerators += openApiGenerateClasses,
     openApiGeneratorSpec := baseDirectory.value / "../../api/http/castor-openapi-spec.yaml",
     openApiGeneratorConfig := baseDirectory.value / "../openapi/generator-config/config.yaml"
   )
