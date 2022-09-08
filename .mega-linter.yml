@@ -12,6 +12,10 @@ VALIDATE_ALL_CODEBASE: false
 SHOW_SKIPPED_LINTERS: false
 LOG_LEVEL: INFO
 IGNORE_GITIGNORED_FILES: true
+
+# https://oxsecurity.github.io/megalinter/5.8.0/descriptors/scala_scalafix/
+DISABLE_LINTERS: [SCALA_SCALAFIX]
+
 # This pre-command fixes complex CLRF bug
 # when MegaLinter takes changes, it checkouts code twice
 # that could lead to new files in workspace created
