@@ -28,7 +28,7 @@ paths:
                     goal-code:
                       $ref: "#/components/schemas/GoalCode"
       responses:
-        201:
+        "201":
           description: Invitation created
           content:
             application/json:
@@ -40,13 +40,19 @@ paths:
                     $ref: "#/components/schemas/Invitation"
 
   /invitations/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
     delete:
       tags:
         - invitation
       summary: Delete a out-of-band invitation
       operationId: DeleteInvitation
       responses:
-        200:
+        "200":
           description: Invitation deleted
           content:
             application/json:
@@ -58,7 +64,7 @@ paths:
       summary: Get out-of-band invitation
       operationId: GetInvitation
       responses:
-        200:
+        "200":
           description: Invitation deleted
           content:
             application/json:
@@ -83,7 +89,7 @@ paths:
                     goal-code:
                       $ref: "#/components/schemas/GoalCode"
       responses:
-        201:
+        "201":
           description: connection created
           content:
             application/json:
@@ -95,13 +101,19 @@ paths:
                     $ref: "#/components/schemas/CreateConnection"
 
   /connections/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
     delete:
       tags:
         - connection
       summary: Delete the connection
       operationId: DeleteConnection
       responses:
-        200:
+        "200":
           description: connection deleted
           content:
             application/json:
@@ -113,7 +125,7 @@ paths:
       summary: Get connection details
       operationId: GetConnection
       responses:
-        200:
+        "200":
           description: get a connection
           content:
             application/json:
@@ -125,7 +137,7 @@ paths:
       summary: update connection single field
       operationId: UpdateConnection
       responses:
-        200:
+        "200":
           description: update the connection
           content:
             application/json:
@@ -150,7 +162,7 @@ paths:
                 id:
                   $ref: "#/components/schemas/ConnectionId"
       responses:
-        201:
+        "201":
           description: Messages retrieved
           content:
             application/json:
@@ -164,13 +176,19 @@ paths:
                 $ref: "#/components/schemas/GenericErrorBody"
 
   /messages/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
     get:
       tags:
         - mediator
       summary: Get messages for given connection.
       operationId: GetMessage
       responses:
-        200:
+        "200":
           description: Send Message Response
           content:
             application/json:
@@ -188,7 +206,7 @@ paths:
       summary: delete a message.
       operationId: delete message
       responses:
-        200:
+        "200":
           description: Unregister the mediator for this Connection
           content:
             application/json:
@@ -276,15 +294,15 @@ components:
     SendMessageResponse:
       type: object
       title: send message response.
-      example: "{}"
+      example: {}
     DeleteMessageResponse:
       type: object
       title: send message response.
-      example: "{}"
+      example: {}
     DeleteResponse:
       type: object
       title: delete response.
-      example: "{}"
+      example: {}
     Code:
       type: integer
       format: int32

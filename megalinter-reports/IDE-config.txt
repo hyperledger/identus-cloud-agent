@@ -62,6 +62,18 @@ spectral (OPENAPI)
   - vscode:
     - vscode-spectral: https://github.com/stoplightio/vscode-spectral
 
+checkov (REPOSITORY)
+  - vscode:
+    - Checkov: https://marketplace.visualstudio.com/items?itemName=Bridgecrew.checkov
+
+devskim (REPOSITORY)
+  - vscode:
+    - VsCode DevSkim: https://marketplace.visualstudio.com/items?itemName=MS-CST-E.vscode-devskim
+
+trivy (REPOSITORY)
+  - vscode:
+    - VsCode Trivy: https://marketplace.visualstudio.com/items?itemName=AquaSecurityOfficial.trivy-vulnerability-scanner
+
 prettier (YAML)
   - atom:
     - prettier-atom: https://github.com/prettier/prettier-atom

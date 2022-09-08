@@ -4,8 +4,8 @@ See documentation on https://oxsecurity.github.io/megalinter/6/descriptors/repos
 
 ❌ [ERROR] for workspace /github/workspace
 Linter raw log:
-megalinter-reports/linters_logs/ERROR-OPENAPI_SPECTRAL.log:7: trailing whitespace.
-+    
-megalinter-reports/linters_logs/ERROR-OPENAPI_SPECTRAL.log:53: trailing whitespace.
-+    
+warning: CRLF will be replaced by LF in megalinter-reports/megalinter.log.
+The file will have its original line endings in your working directory
+megalinter-reports/megalinter.log:563: trailing whitespace.
++		2 | 
 
