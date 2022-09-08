@@ -19,7 +19,6 @@ PRINT_ALPACA: false
 VALIDATE_ALL_CODEBASE: false
 SHOW_SKIPPED_LINTERS: false
 LOG_LEVEL: INFO
-IGNORE_GITIGNORED_FILES: true
 # This pre-command fixes complex CLRF bug
 # when MegaLinter takes changes, it checkouts code twice
 # that could lead to new files in workspace created
