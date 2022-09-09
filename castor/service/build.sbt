@@ -6,11 +6,19 @@ ThisBuild / organization := "io.iohk.atala"
 
 lazy val root = project
   .in(file("."))
-  .aggregate(models, `http-server`)
+  .aggregate(models, core, `http-server`)
 
 lazy val models = project
   .in(file("models"))
   .settings(name := "castor-models")
+
+lazy val core = project
+  .in(file("core"))
+  .settings(
+    name := "castor-core",
+    libraryDependencies ++= baseDependencies,
+  )
+  .dependsOn(models)
 
 lazy val `http-server` = project
   .in(file("http-server"))
@@ -22,4 +30,4 @@ lazy val `http-server` = project
     openApiGeneratorConfig := baseDirectory.value / "openapi/generator-config/config.yaml"
   )
   .enablePlugins(OpenApiGeneratorPlugin)
-  .dependsOn(models)
+  .dependsOn(models, core)

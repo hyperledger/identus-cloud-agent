@@ -1,15 +1,14 @@
 package io.iohk.atala.castor.httpserver
 
 import akka.actor.typed.ActorSystem
-import akka.actor.typed.scaladsl.Behaviors
-import akka.http.scaladsl.server.Directives.*
 import akka.http.scaladsl.Http
+import akka.http.scaladsl.server.Directives.*
+import akka.http.scaladsl.server.Route
 import zio.*
 
 object HttpServer {
-  def start(port: Int): ZIO[ActorSystem[Nothing], Throwable, Unit] = {
-    val routes = get { complete("Hello") } // TODO: replace with actual implementation
 
+  def start(port: Int, routes: Route): ZIO[ActorSystem[Nothing], Throwable, Unit] = {
     val managedBinding =
       ZIO
         .acquireRelease(
@@ -39,4 +38,5 @@ object HttpServer {
         } yield ()
       }
   }
+
 }
