@@ -1,9 +1,12 @@
-# Report Problem Protocol 1.0
+# Report Problem Protocol 1.0 & 2.0
 
 This Protocol is parte of Aries (RFC 0035).
 Describes how to report errors and warnings in a powerful, interoperable way.
 
-See [https://github.com/hyperledger/aries-rfcs/tree/main/features/0035-report-problem]
+- Version 1.0 - see [https://github.com/hyperledger/aries-rfcs/tree/main/features/0035-report-problem]
+- Version 2.0:
+  - see [https://identity.foundation/didcomm-messaging/spec/#problem-reports]
+  - see [https://didcomm.org/report-problem/2.0/]
 
 NOTE: In this context never reference to `Error` or `Warning`. Always reference as `Problem`.
 
@@ -11,7 +14,10 @@ TODO: Support [l10n](https://github.com/hyperledger/aries-rfcs/blob/main/feature
 
 ## PIURI
 
-`https://didcomm.org/report-problem/1.0`
+- Version 1.0:
+  - `https://didcomm.org/report-problem/1.0`
+- Version 2.0:
+  - `https://didcomm.org/report-problem/2.0/problem-report`
 
 ## Notes
 
@@ -21,25 +27,3 @@ The protocol is one-way, a simple one-step notification protocol:
 
 - `notifier` - Who sends notification.
 - `notified` - Who receive notification.
-
-## Diagrams
-
-TODO
-
-### Notifier state machine
-
-```mermaid
-stateDiagram-v2
-  [*] --> ???
-  ??? --> [*]
-```
-
----
-
-### Notified state machine
-
-```mermaid
-stateDiagram-v2
-  [*] --> ???
-  ??? --> [*]
-```

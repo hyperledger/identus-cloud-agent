@@ -1,6 +1,7 @@
-package io.iohk.atala.mercury.protocol.reportproblem
+package io.iohk.atala.mercury.protocol.reportproblem.v1
 
 import io.iohk.atala.mercury.model.Message
+import io.iohk.atala.mercury.model.PIURI
 
 /** ReportProblem
   *
@@ -40,11 +41,20 @@ final case class ReportProblem(
     escalation_ur: Option[URI] = None,
 ) {
   // assert(`@type` == "https://didcomm.org/report-problem/1.0/problem-report") // this is something for the parser TODO
-  def `@type` = "https://didcomm.org/report-problem/1.0/problem-report"
+  def `@type`: PIURI = "https://didcomm.org/report-problem/1.0/problem-report"
 }
 
 object ReportProblem {
-  def toMessage(obj: ReportProblem): Message = ??? // TODO FIXME
+  def toMessage(obj: ReportProblem): Message = {
+    // FIXME this doesn't seems to full fit the DIDComm message
+    Message(
+      from = ???,
+      to = ???,
+      body = ???,
+      id = obj.`@id`.getOrElse(java.util.UUID.randomUUID.toString()),
+      piuri = obj.`@type`,
+    )
+  }
   def fromMessage(msg: Message): ReportProblem = ??? // TODO FIXME
 }
 
