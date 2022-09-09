@@ -6,7 +6,7 @@ val VERSION = "0.1.0-SNAPSHOT"
 inThisBuild(
   Seq(
     organization := "io.iohk.atala",
-    scalaVersion := "3.1.3"
+    scalaVersion := "3.2.0"
   )
 )
 
