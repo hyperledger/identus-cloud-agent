@@ -1,4 +1,4 @@
-package io.iohk.atala.castor.httpserver.api.marshaller
+package io.iohk.atala.castor.apiserver.http.marshaller
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import io.iohk.atala.castor.openapi.model.{

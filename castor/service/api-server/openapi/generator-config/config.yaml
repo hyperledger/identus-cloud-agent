@@ -1,5 +1,5 @@
 # The folder where templates can be found
-templateDir: "http-server/openapi/generator-config/scala-akka-http-server"
+templateDir: "api-server/openapi/generator-config/scala-akka-http-server"
 
 # Only generate output for templates registered with the 'Apis' or 'Models' types
 globalProperties:

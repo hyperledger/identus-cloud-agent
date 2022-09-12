@@ -1,4 +1,4 @@
-package io.iohk.atala.castor.httpserver
+package io.iohk.atala.castor.apiserver
 
 import zio.*
 

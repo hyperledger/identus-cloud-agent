@@ -1,10 +1,9 @@
-package io.iohk.atala.castor.httpserver
+package io.iohk.atala.castor.apiserver.http
 
 import akka.actor.typed.ActorSystem
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.server.Directives.*
 import akka.http.scaladsl.server.Route
-import zio.*
+import zio.ZIO
 
 object HttpServer {
 
@@ -22,7 +21,7 @@ object HttpServer {
             _ <- ZIO.logInfo(s"http server listening on port $port")
           } yield binding
         )(binding =>
-          import scala.concurrent.duration._
+          import scala.concurrent.duration.*
           for {
             _ <- ZIO.logInfo("stopping http server")
             _ <- ZIO.fromFuture(_ => binding.terminate(10.seconds)).orDie

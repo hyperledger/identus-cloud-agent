@@ -1,8 +1,9 @@
-package io.iohk.atala.castor.httpserver
+package io.iohk.atala.castor.apiserver
 
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.server.Route
+import io.iohk.atala.castor.apiserver.http.{HttpRoutes, HttpServer}
 import io.iohk.atala.castor.core.service.{
   DIDAuthenticationService,
   DIDService,
@@ -10,12 +11,12 @@ import io.iohk.atala.castor.core.service.{
   MockDIDOperationService,
   MockDIDService
 }
-import io.iohk.atala.castor.httpserver.api.marshaller.{
+import io.iohk.atala.castor.apiserver.http.marshaller.{
   DIDApiMarshallerImpl,
   DIDAuthenticationApiMarshallerImpl,
   DIDOperationsApiMarshallerImpl
 }
-import io.iohk.atala.castor.httpserver.api.service.{
+import io.iohk.atala.castor.apiserver.http.service.{
   DIDApiServiceImpl,
   DIDAuthenticationApiServiceImpl,
   DIDOperationsApiServiceImpl
@@ -59,12 +60,12 @@ object Modules {
   }
 
   val app = {
-    val serverApp = for {
+    val httpServerApp = for {
       routes <- HttpRoutes.routes
       _ <- HttpServer.start(8000, routes)
     } yield ()
 
-    serverApp.provideLayer(actorSystemLayer ++ didApiLayer ++ didOperationsApiLayer ++ didAuthenticationApiLayer)
+    httpServerApp.provideLayer(actorSystemLayer ++ didApiLayer ++ didOperationsApiLayer ++ didAuthenticationApiLayer)
   }
 
 }

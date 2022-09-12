@@ -1,4 +1,4 @@
-package io.iohk.atala.castor.httpserver.api.service
+package io.iohk.atala.castor.apiserver.http.service
 
 import akka.http.scaladsl.marshalling.ToEntityMarshaller
 import akka.http.scaladsl.server.Route

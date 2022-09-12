@@ -6,7 +6,7 @@ ThisBuild / organization := "io.iohk.atala"
 
 lazy val root = project
   .in(file("."))
-  .aggregate(models, core, `http-server`, worker)
+  .aggregate(models, core, `api-server`, worker)
 
 lazy val models = project
   .in(file("models"))
@@ -20,10 +20,10 @@ lazy val core = project
   )
   .dependsOn(models)
 
-lazy val `http-server` = project
-  .in(file("http-server"))
+lazy val `api-server` = project
+  .in(file("api-server"))
   .settings(
-    name := "castor-http-server",
+    name := "castor-api-server",
     libraryDependencies ++= httpServerDependencies,
     Compile / sourceGenerators += openApiGenerateClasses,
     openApiGeneratorSpec := baseDirectory.value / "../../api/http/castor-openapi-spec.yaml",
