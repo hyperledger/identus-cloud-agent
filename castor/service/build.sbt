@@ -6,7 +6,7 @@ ThisBuild / organization := "io.iohk.atala"
 
 lazy val root = project
   .in(file("."))
-  .aggregate(models, core, `http-server`)
+  .aggregate(models, core, `http-server`, worker)
 
 lazy val models = project
   .in(file("models"))
@@ -16,7 +16,7 @@ lazy val core = project
   .in(file("core"))
   .settings(
     name := "castor-core",
-    libraryDependencies ++= baseDependencies,
+    libraryDependencies ++= coreDependencies,
   )
   .dependsOn(models)
 
@@ -24,10 +24,18 @@ lazy val `http-server` = project
   .in(file("http-server"))
   .settings(
     name := "castor-http-server",
-    libraryDependencies ++= baseDependencies ++ akkaHttpDependencies,
+    libraryDependencies ++= httpServerDependencies,
     Compile / sourceGenerators += openApiGenerateClasses,
     openApiGeneratorSpec := baseDirectory.value / "../../api/http/castor-openapi-spec.yaml",
     openApiGeneratorConfig := baseDirectory.value / "openapi/generator-config/config.yaml"
   )
   .enablePlugins(OpenApiGeneratorPlugin)
-  .dependsOn(models, core)
+  .dependsOn(core)
+
+lazy val worker = project
+  .in(file("worker"))
+  .settings(
+    name := "castor-worker",
+    libraryDependencies ++= workerDependencies
+  )
+  .dependsOn(core)

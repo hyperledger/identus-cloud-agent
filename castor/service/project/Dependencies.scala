@@ -16,6 +16,11 @@ object Dependencies {
   private lazy val akkaSprayJson = "com.typesafe.akka" %% "akka-http-spray-json" % Versions.akkaHttp
 
   // Dependencies
-  lazy val baseDependencies: Seq[ModuleID] = Seq(zio)
-  lazy val akkaHttpDependencies: Seq[ModuleID] = Seq(akkaTyped, akkaStream, akkaHttp, akkaSprayJson).map(_.cross(CrossVersion.for3Use2_13))
+  private lazy val baseDependencies: Seq[ModuleID] = Seq(zio)
+  private lazy val akkaHttpDependencies: Seq[ModuleID] = Seq(akkaTyped, akkaStream, akkaHttp, akkaSprayJson).map(_.cross(CrossVersion.for3Use2_13))
+
+  // Project Dependecies
+  lazy val coreDependencies: Seq[ModuleID] = baseDependencies
+  lazy val httpServerDependencies: Seq[ModuleID] = baseDependencies ++ akkaHttpDependencies
+  lazy val workerDependencies: Seq[ModuleID] = baseDependencies
 }
