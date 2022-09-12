@@ -10,12 +10,12 @@ import io.iohk.atala.castor.core.service.{
   MockDIDOperationService,
   MockDIDService
 }
-import io.iohk.atala.castor.httpserver.apimarshaller.{
+import io.iohk.atala.castor.httpserver.api.marshaller.{
   DIDApiMarshallerImpl,
   DIDAuthenticationApiMarshallerImpl,
   DIDOperationsApiMarshallerImpl
 }
-import io.iohk.atala.castor.httpserver.apiservice.{
+import io.iohk.atala.castor.httpserver.api.service.{
   DIDApiServiceImpl,
   DIDAuthenticationApiServiceImpl,
   DIDOperationsApiServiceImpl
@@ -38,33 +38,33 @@ object Modules {
   )
 
   val didApiLayer: ULayer[DIDApi] = {
-    val serviceLayer = MockDIDService.layer
+    val serviceLayer = MockDIDService.layer // TODO: replace with actual implementation
     val apiServiceLayer = serviceLayer >>> DIDApiServiceImpl.layer
     val apiMarshallerLayer = DIDApiMarshallerImpl.layer
     (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new DIDApi(_, _))
   }
 
   val didOperationsApiLayer: ULayer[DIDOperationsApi] = {
-    val serviceLayer = MockDIDOperationService.layer
+    val serviceLayer = MockDIDOperationService.layer // TODO: replace with actual implementation
     val apiServiceLayer = serviceLayer >>> DIDOperationsApiServiceImpl.layer
     val apiMarshallerLayer = DIDOperationsApiMarshallerImpl.layer
     (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new DIDOperationsApi(_, _))
   }
 
   val didAuthenticationApiLayer: ULayer[DIDAuthenticationApi] = {
-    val serviceLayer = MockDIDAuthenticationService.layer
+    val serviceLayer = MockDIDAuthenticationService.layer // TODO: replace with actual implementation
     val apiServiceLayer = serviceLayer >>> DIDAuthenticationApiServiceImpl.layer
     val apiMarshallerLayer = DIDAuthenticationApiMarshallerImpl.layer
     (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new DIDAuthenticationApi(_, _))
   }
 
   val app = {
-    val server = for {
+    val serverApp = for {
       routes <- HttpRoutes.routes
       _ <- HttpServer.start(8000, routes)
     } yield ()
 
-    server.provideLayer(actorSystemLayer ++ didApiLayer ++ didOperationsApiLayer ++ didAuthenticationApiLayer)
+    serverApp.provideLayer(actorSystemLayer ++ didApiLayer ++ didOperationsApiLayer ++ didAuthenticationApiLayer)
   }
 
 }

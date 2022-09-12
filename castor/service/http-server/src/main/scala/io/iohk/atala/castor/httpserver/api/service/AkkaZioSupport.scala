@@ -1,4 +1,4 @@
-package io.iohk.atala.castor.httpserver.apiservice
+package io.iohk.atala.castor.httpserver.api.service
 
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.Directives.*

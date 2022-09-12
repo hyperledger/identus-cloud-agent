@@ -5,10 +5,10 @@ object Dependencies {
     val zio = "2.0.2"
     val akka = "2.6.19"
     val akkaHttp = "10.2.9"
-    val logback = "1.2.11"
   }
 
   private lazy val zio = "dev.zio" %% "zio" % Versions.zio
+  private lazy val zioStream = "dev.zio" %% "zio-streams" % Versions.zio
 
   private lazy val akkaTyped = "com.typesafe.akka" %% "akka-actor-typed" % Versions.akka
   private lazy val akkaStream = "com.typesafe.akka" %% "akka-stream" % Versions.akka
@@ -22,5 +22,5 @@ object Dependencies {
   // Project Dependecies
   lazy val coreDependencies: Seq[ModuleID] = baseDependencies
   lazy val httpServerDependencies: Seq[ModuleID] = baseDependencies ++ akkaHttpDependencies
-  lazy val workerDependencies: Seq[ModuleID] = baseDependencies
+  lazy val workerDependencies: Seq[ModuleID] = baseDependencies ++ Seq(zioStream)
 }

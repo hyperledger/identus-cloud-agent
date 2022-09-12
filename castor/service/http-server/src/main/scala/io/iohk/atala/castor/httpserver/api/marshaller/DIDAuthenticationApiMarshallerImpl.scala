@@ -1,4 +1,4 @@
-package io.iohk.atala.castor.httpserver.apimarshaller
+package io.iohk.atala.castor.httpserver.api.marshaller
 
 import akka.http.scaladsl.marshalling.ToEntityMarshaller
 import akka.http.scaladsl.unmarshalling.FromEntityUnmarshaller
