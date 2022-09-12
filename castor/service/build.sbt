@@ -11,11 +11,7 @@ ThisBuild / apiBaseDirectory := baseDirectory.value / "../api"
 // Project definitions
 lazy val root = project
   .in(file("."))
-  .aggregate(models, core, `api-server`, worker)
-
-lazy val models = project
-  .in(file("models"))
-  .settings(name := "castor-models")
+  .aggregate(core, `api-server`, worker)
 
 lazy val core = project
   .in(file("core"))
@@ -23,7 +19,6 @@ lazy val core = project
     name := "castor-core",
     libraryDependencies ++= coreDependencies,
   )
-  .dependsOn(models)
 
 lazy val `api-server` = project
   .in(file("api-server"))
