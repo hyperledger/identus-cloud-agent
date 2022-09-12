@@ -5,6 +5,7 @@ object Dependencies {
     val zio = "2.0.2"
     val akka = "2.6.19"
     val akkaHttp = "10.2.9"
+    val grpcNetty = "1.49.0"
   }
 
   private lazy val zio = "dev.zio" %% "zio" % Versions.zio
@@ -15,12 +16,17 @@ object Dependencies {
   private lazy val akkaHttp = "com.typesafe.akka" %% "akka-http" % Versions.akkaHttp
   private lazy val akkaSprayJson = "com.typesafe.akka" %% "akka-http-spray-json" % Versions.akkaHttp
 
-  // Dependencies
+  private lazy val grpcNetty = "io.grpc" % "grpc-netty" % Versions.grpcNetty
+  private lazy val scalaPbProto = "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion % "protobuf"
+  private lazy val scalaPbGrpc = "com.thesamet.scalapb" %% "scalapb-runtime-grpc" % scalapb.compiler.Version.scalapbVersion
+
+  // Dependency Modules
   private lazy val baseDependencies: Seq[ModuleID] = Seq(zio)
   private lazy val akkaHttpDependencies: Seq[ModuleID] = Seq(akkaTyped, akkaStream, akkaHttp, akkaSprayJson).map(_.cross(CrossVersion.for3Use2_13))
+  private lazy val grpcDependencies: Seq[ModuleID] = Seq(grpcNetty, scalaPbProto, scalaPbGrpc)
 
-  // Project Dependecies
+  // Project Dependencies
   lazy val coreDependencies: Seq[ModuleID] = baseDependencies
-  lazy val httpServerDependencies: Seq[ModuleID] = baseDependencies ++ akkaHttpDependencies
+  lazy val apiServerDependencies: Seq[ModuleID] = baseDependencies ++ akkaHttpDependencies ++ grpcDependencies
   lazy val workerDependencies: Seq[ModuleID] = baseDependencies ++ Seq(zioStream)
 }
