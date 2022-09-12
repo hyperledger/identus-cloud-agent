@@ -7,15 +7,25 @@ import io.iohk.atala.castor.core.service.{
   DIDAuthenticationService,
   DIDService,
   MockDIDAuthenticationService,
+  MockDIDOperationService,
   MockDIDService
 }
-import io.iohk.atala.castor.httpserver.apimarshaller.{DIDApiMarshallerImpl, DIDAuthenticationApiMarshallerImpl}
-import io.iohk.atala.castor.httpserver.apiservice.{DIDApiServiceImpl, DIDAuthenticationApiServiceImpl}
+import io.iohk.atala.castor.httpserver.apimarshaller.{
+  DIDApiMarshallerImpl,
+  DIDAuthenticationApiMarshallerImpl,
+  DIDOperationsApiMarshallerImpl
+}
+import io.iohk.atala.castor.httpserver.apiservice.{
+  DIDApiServiceImpl,
+  DIDAuthenticationApiServiceImpl,
+  DIDOperationsApiServiceImpl
+}
 import io.iohk.atala.castor.openapi.api.{
   DIDApi,
   DIDAuthenticationApi,
   DIDAuthenticationApiMarshaller,
-  DIDAuthenticationApiService
+  DIDAuthenticationApiService,
+  DIDOperationsApi
 }
 import zio.*
 
@@ -34,6 +44,13 @@ object Modules {
     (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new DIDApi(_, _))
   }
 
+  val didOperationsApiLayer: ULayer[DIDOperationsApi] = {
+    val serviceLayer = MockDIDOperationService.layer
+    val apiServiceLayer = serviceLayer >>> DIDOperationsApiServiceImpl.layer
+    val apiMarshallerLayer = DIDOperationsApiMarshallerImpl.layer
+    (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new DIDOperationsApi(_, _))
+  }
+
   val didAuthenticationApiLayer: ULayer[DIDAuthenticationApi] = {
     val serviceLayer = MockDIDAuthenticationService.layer
     val apiServiceLayer = serviceLayer >>> DIDAuthenticationApiServiceImpl.layer
@@ -47,7 +64,7 @@ object Modules {
       _ <- HttpServer.start(8000, routes)
     } yield ()
 
-    server.provideLayer(actorSystemLayer ++ didApiLayer ++ didAuthenticationApiLayer)
+    server.provideLayer(actorSystemLayer ++ didApiLayer ++ didOperationsApiLayer ++ didAuthenticationApiLayer)
   }
 
 }
