@@ -17,6 +17,7 @@ def didScalaAUX =
 
 lazy val V = new {
   val munit = "1.0.0-M6" // "0.7.29"
+  val munitZio = "0.1.1"
 
   // https://mvnrepository.com/artifact/dev.zio/zio
   val zio = "2.0.0"
@@ -42,6 +43,9 @@ lazy val D = new {
 
   // For munit https://scalameta.org/munit/docs/getting-started.html#scalajs-setup
   val munit = Def.setting("org.scalameta" %% "munit" % V.munit % Test)
+  // For munit zio https://github.com/poslegm/munit-zio
+  val munitZio = Def.setting("com.github.poslegm" %% "munit-zio" % V.munitZio % Test)
+
 }
 
 // #########################
@@ -74,7 +78,15 @@ lazy val protocolInvitation = project
   .in(file("protocol-invitation"))
   .settings(name := "mercury-protocol-invitation", version := VERSION)
   .settings(libraryDependencies += D.zio.value)
-  .settings(libraryDependencies ++= Seq(D.circeCore.value, D.circeGeneric.value, D.circeParser.value))
+  .settings(
+    libraryDependencies ++= Seq(
+      D.circeCore.value,
+      D.circeGeneric.value,
+      D.circeParser.value,
+      D.munit.value,
+      D.munitZio.value
+    )
+  )
   .dependsOn(models)
 
 lazy val protocolConnection = project
