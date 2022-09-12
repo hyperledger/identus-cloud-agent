@@ -15,7 +15,7 @@ import io.iohk.atala.castor.openapi.model.{
 import zio.*
 
 // TODO: replace with actual implementation
-final class DIDAuthenticationApiServiceImpl(service: DIDAuthenticationService)(using runtime: Runtime[Any])
+class DIDAuthenticationApiServiceImpl(service: DIDAuthenticationService)(using runtime: Runtime[Any])
     extends DIDAuthenticationApiService
     with AkkaZioSupport {
 
@@ -27,11 +27,14 @@ final class DIDAuthenticationApiServiceImpl(service: DIDAuthenticationService)(u
       ],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
-    val mockResult = CreateAuthenticationChallengeResponse(
-      challenge = "eyJhbGciOiJIUzI1NiIsInR5c...0eu8Ri_WSPSsBTlCes2YMpuB1mHU",
-      subject = Some("did:example:123456789abcdefghi")
-    )
-    onZioSuccess(ZIO.succeed(mockResult)) { createDidAuthenticationChallenge200(_) }
+    onZioSuccess(ZIO.unit) { _ =>
+      createDidAuthenticationChallenge200(
+        CreateAuthenticationChallengeResponse(
+          challenge = "eyJhbGciOiJIUzI1NiIsInR5c...0eu8Ri_WSPSsBTlCes2YMpuB1mHU",
+          subject = Some("did:example:123456789abcdefghi")
+        )
+      )
+    }
   }
 
   override def createDidAuthenticationChallengeSubmission(
@@ -42,11 +45,14 @@ final class DIDAuthenticationApiServiceImpl(service: DIDAuthenticationService)(u
       ],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
-    val mockResult = AuthenticationChallengeSubmissionResponse(
-      success = true,
-      state = Some("af72a673-7fb5-463d-9966-6a8c6a2cc2e8")
-    )
-    onZioSuccess(ZIO.succeed(mockResult)) { createDidAuthenticationChallengeSubmission200(_) }
+    onZioSuccess(ZIO.unit) { _ =>
+      createDidAuthenticationChallengeSubmission200(
+        AuthenticationChallengeSubmissionResponse(
+          success = true,
+          state = Some("af72a673-7fb5-463d-9966-6a8c6a2cc2e8")
+        )
+      )
+    }
   }
 
 }
