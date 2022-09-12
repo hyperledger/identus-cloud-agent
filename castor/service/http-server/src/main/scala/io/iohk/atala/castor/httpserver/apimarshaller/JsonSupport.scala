@@ -2,7 +2,6 @@ package io.iohk.atala.castor.httpserver.apimarshaller
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import io.iohk.atala.castor.openapi.model.{
-  AuthenticationChallengeSubject,
   AuthenticationChallengeSubmissionRequest,
   AuthenticationChallengeSubmissionResponse,
   CreateAuthenticationChallengeRequest,
@@ -13,7 +12,6 @@ import spray.json.{DefaultJsonProtocol, RootJsonFormat}
 
 trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 
-  given RootJsonFormat[AuthenticationChallengeSubject] = jsonFormat0(AuthenticationChallengeSubject.apply)
   given RootJsonFormat[AuthenticationChallengeSubmissionRequest] = jsonFormat3(
     AuthenticationChallengeSubmissionRequest.apply
   )

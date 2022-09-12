@@ -26,7 +26,13 @@ final class DIDAuthenticationApiServiceImpl(service: DIDAuthenticationService)(u
         CreateAuthenticationChallengeResponse
       ],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
-  ): Route = onZioSuccess(ZIO.succeed("hello createDidAuthenticationChallenge")) { complete(_) }
+  ): Route = {
+    val mockResult = CreateAuthenticationChallengeResponse(
+      challenge = "eyJhbGciOiJIUzI1NiIsInR5c...0eu8Ri_WSPSsBTlCes2YMpuB1mHU",
+      subject = Some("did:example:123456789abcdefghi")
+    )
+    onZioSuccess(ZIO.succeed(mockResult)) { createDidAuthenticationChallenge200(_) }
+  }
 
   override def createDidAuthenticationChallengeSubmission(
       authenticationChallengeSubmissionRequest: AuthenticationChallengeSubmissionRequest
@@ -35,7 +41,13 @@ final class DIDAuthenticationApiServiceImpl(service: DIDAuthenticationService)(u
         AuthenticationChallengeSubmissionResponse
       ],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
-  ): Route = onZioSuccess(ZIO.succeed("hello createDidAuthenticationChallengeSubmission")) { complete(_) }
+  ): Route = {
+    val mockResult = AuthenticationChallengeSubmissionResponse(
+      success = true,
+      state = Some("af72a673-7fb5-463d-9966-6a8c6a2cc2e8")
+    )
+    onZioSuccess(ZIO.succeed(mockResult)) { createDidAuthenticationChallengeSubmission200(_) }
+  }
 
 }
 
