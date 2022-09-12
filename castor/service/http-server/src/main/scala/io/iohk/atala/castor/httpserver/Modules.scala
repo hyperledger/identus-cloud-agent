@@ -23,9 +23,9 @@ object Modules {
   )
 
   val didAuthenticationApiLayer: ULayer[DIDAuthenticationApi] = {
-    val serviceLayer: ULayer[DIDAuthenticationService] = MockDIDAuthenticationService.layer
-    val apiServiceLayer: ULayer[DIDAuthenticationApiService] = serviceLayer >>> DIDAuthenticationApiServiceImpl.layer
-    val apiMarshallerLayer: ULayer[DIDAuthenticationApiMarshaller] = DIDAuthenticationApiMarshallerImpl.layer
+    val serviceLayer = MockDIDAuthenticationService.layer
+    val apiServiceLayer = serviceLayer >>> DIDAuthenticationApiServiceImpl.layer
+    val apiMarshallerLayer = DIDAuthenticationApiMarshallerImpl.layer
     (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new DIDAuthenticationApi(_, _))
   }
 

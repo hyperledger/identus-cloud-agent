@@ -15,8 +15,9 @@ import io.iohk.atala.castor.openapi.model.{
 import zio.*
 
 // TODO: replace with actual implementation
-final class DIDAuthenticationApiServiceImpl(service: DIDAuthenticationService)(runtime: Runtime[Any])
-    extends DIDAuthenticationApiService {
+final class DIDAuthenticationApiServiceImpl(service: DIDAuthenticationService)(using runtime: Runtime[Any])
+    extends DIDAuthenticationApiService
+    with AkkaZioSupport {
 
   override def createDidAuthenticationChallenge(
       createAuthenticationChallengeRequest: CreateAuthenticationChallengeRequest
@@ -25,9 +26,7 @@ final class DIDAuthenticationApiServiceImpl(service: DIDAuthenticationService)(r
         CreateAuthenticationChallengeResponse
       ],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
-  ): Route = {
-    complete("Hello from createDidAuthenticationChallenge")
-  }
+  ): Route = onZioSuccess(ZIO.succeed("hello createDidAuthenticationChallenge")) { complete(_) }
 
   override def createDidAuthenticationChallengeSubmission(
       authenticationChallengeSubmissionRequest: AuthenticationChallengeSubmissionRequest
@@ -36,9 +35,7 @@ final class DIDAuthenticationApiServiceImpl(service: DIDAuthenticationService)(r
         AuthenticationChallengeSubmissionResponse
       ],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
-  ): Route = {
-    ???
-  }
+  ): Route = onZioSuccess(ZIO.succeed("hello createDidAuthenticationChallengeSubmission")) { complete(_) }
 
 }
 
@@ -47,6 +44,6 @@ object DIDAuthenticationApiServiceImpl {
     for {
       rt <- ZIO.runtime[Any]
       svc <- ZIO.service[DIDAuthenticationService]
-    } yield DIDAuthenticationApiServiceImpl(svc)(rt)
+    } yield DIDAuthenticationApiServiceImpl(svc)(using rt)
   }
 }
