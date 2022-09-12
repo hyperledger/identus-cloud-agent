@@ -1,4 +1,12 @@
 .idea
 report
-.vscode/
-.metals/
+megalinter-reports
+
+.vscode
+.bloop
+.bsp
+.metals
+
+**/project/metals.sbt
+
+target
