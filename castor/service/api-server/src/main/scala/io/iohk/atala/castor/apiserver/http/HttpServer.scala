@@ -3,7 +3,7 @@ package io.iohk.atala.castor.apiserver.http
 import akka.actor.typed.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Route
-import zio.ZIO
+import zio.*
 
 object HttpServer {
 

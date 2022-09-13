@@ -3,6 +3,7 @@ package io.iohk.atala.castor.apiserver
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.server.Route
+import io.iohk.atala.castor.apiserver.grpc.GrpcServer
 import io.iohk.atala.castor.apiserver.http.{HttpRoutes, HttpServer}
 import io.iohk.atala.castor.core.service.{
   DIDAuthenticationService,
@@ -59,13 +60,12 @@ object Modules {
     (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new DIDAuthenticationApi(_, _))
   }
 
-  val app = {
-    val httpServerApp = for {
-      routes <- HttpRoutes.routes
-      _ <- HttpServer.start(8000, routes)
-    } yield ()
+  val app: Task[Unit] = {
+    val httpServerApp = HttpRoutes.routes.flatMap(HttpServer.start(8080, _))
+    val grpcServerApp = GrpcServer.start(8081)
 
-    httpServerApp.provideLayer(actorSystemLayer ++ didApiLayer ++ didOperationsApiLayer ++ didAuthenticationApiLayer)
+    (httpServerApp <&> grpcServerApp).unit
+      .provideLayer(actorSystemLayer ++ didApiLayer ++ didOperationsApiLayer ++ didAuthenticationApiLayer)
   }
 
 }
