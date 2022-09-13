@@ -38,7 +38,7 @@ final case class ReportProblem(
     where: Option[Where] = None,
     noticed_time: Option[ISO8601UTC] = None,
     tracking_uri: Option[URI] = None,
-    escalation_ur: Option[URI] = None,
+    escalation_uri: Option[URI] = None,
 ) {
   // assert(`@type` == "https://didcomm.org/report-problem/1.0/problem-report") // this is something for the parser TODO
   def `@type`: PIURI = "https://didcomm.org/report-problem/1.0/problem-report"
