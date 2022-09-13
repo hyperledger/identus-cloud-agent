@@ -17,7 +17,7 @@ lazy val core = project
   .in(file("core"))
   .settings(
     name := "castor-core",
-    libraryDependencies ++= coreDependencies,
+    libraryDependencies ++= coreDependencies
   )
 
 lazy val `api-server` = project

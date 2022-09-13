@@ -1,6 +1,6 @@
 import sbt.Keys.sourceManaged
 import sbt.io.syntax._
-import sbt.{ AutoPlugin, Compile, Def, File, settingKey, taskKey }
+import sbt.{AutoPlugin, Compile, Def, File, settingKey, taskKey}
 
 object OpenApiGeneratorPlugin extends AutoPlugin {
 
