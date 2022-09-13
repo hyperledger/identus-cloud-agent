@@ -17,6 +17,6 @@ message Pong {
     string message = 1;
 }
 
-service PingPong {
+service DIDService {
     rpc SendPing(Ping) returns (Pong) {}
 }

@@ -9,7 +9,8 @@ trait DIDService {
 
 object MockDIDService {
   val layer: ULayer[DIDService] = ZLayer.succeed {
-    new DIDService:
+    new DIDService {
       override def resolveDID(did: String): UIO[Unit] = ZIO.unit
+    }
   }
 }

@@ -7,7 +7,7 @@ import zio.*
 
 object HttpServer {
 
-  def start(port: Int, routes: Route): ZIO[ActorSystem[Nothing], Throwable, Unit] = {
+  def start(port: Int, routes: Route): RIO[ActorSystem[Nothing], Unit] = {
     val managedBinding =
       ZIO
         .acquireRelease(

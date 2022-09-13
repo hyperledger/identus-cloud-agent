@@ -1,19 +1,21 @@
 package io.iohk.atala.castor.apiserver.grpc
 
-import io.grpc.ServerBuilder
+import io.grpc.{ServerBuilder, ServerServiceDefinition}
+import io.grpc.protobuf.services.ProtoReflectionService
+import io.iohk.atala.castor.proto.castor_api.DIDServiceGrpc.DIDService
 import zio.*
 
 object GrpcServer {
 
-  def start(port: Int): Task[Unit] = {
+  def start(port: Int, services: Seq[ServerServiceDefinition]): Task[Unit] = {
     val managedServer = ZIO.acquireRelease(
       for {
         _ <- ZIO.logInfo(s"staring grpc server on port $port")
         server <- ZIO.attempt {
-          ServerBuilder
-            .forPort(port)
-            .build()
-            .start()
+          val builder = ServerBuilder.forPort(port)
+          services.foreach(s => builder.addService(s))
+          builder.addService(ProtoReflectionService.newInstance())
+          builder.build().start()
         }
         _ <- ZIO.logInfo(s"grpc server listening on port $port")
       } yield server

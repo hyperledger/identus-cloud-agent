@@ -20,7 +20,7 @@ object Modules {
     serviceLayer >>> EventConsumer.layer
   }
 
-  val app = {
+  val app: UIO[Unit] = {
     val consumerApp = for {
       source <- irisNotificationSource
       consumer <- ZIO.service[EventConsumer]
