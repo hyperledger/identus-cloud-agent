@@ -10,7 +10,7 @@ object GrpcServer {
   def start(port: Int, services: Seq[ServerServiceDefinition]): Task[Unit] = {
     val managedServer = ZIO.acquireRelease(
       for {
-        _ <- ZIO.logInfo(s"staring grpc server on port $port")
+        _ <- ZIO.logInfo(s"starting grpc server on port $port")
         server <- ZIO.attempt {
           val builder = ServerBuilder.forPort(port)
           services.foreach(s => builder.addService(s))
