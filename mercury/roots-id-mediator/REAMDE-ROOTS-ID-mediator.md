@@ -8,7 +8,7 @@ This [ROOTS-ID's Mediator probject is LICENSE](https://raw.githubusercontent.com
 
 ## Goal
 
-The idea is to test our agents (the client side) against this mediator.
+The idea is to test the interoperability of our agents (the client side) against this mediator.
 
 So our client agents should work exactly the same way with this mediator and our mediator.
 
