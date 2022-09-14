@@ -11,11 +11,11 @@ import zio.interop.catz.*
 class JdbcDIDOperationRepository(xa: Transactor[Task]) extends DIDOperationRepository[Task] {
 
   override def getPublishedOperations: Task[Seq[PublishedDIDOperation]] = {
-    val io = sql"""
+    val cxnIO = sql"""
          |SELECT foo FROM public.published_did_operations
          |""".stripMargin.query[String].to[Seq]
 
-    io.transact(xa)
+    cxnIO.transact(xa)
       .map(_.map(PublishedDIDOperation.apply))
   }
 

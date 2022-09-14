@@ -13,7 +13,7 @@ services:
     volumes:
       -   pg_data_castor_db:/var/lib/postgresql/data
 
-  # delay to ensure DB is up before apply migrations
+  # delay to ensure DB is up before applying migrations
   db_init_delay:
     image: alpine:3
     command: sleep 5

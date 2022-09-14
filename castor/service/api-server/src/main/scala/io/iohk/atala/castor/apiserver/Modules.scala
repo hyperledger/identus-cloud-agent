@@ -99,16 +99,20 @@ object GrpcModule {
 }
 
 object RepoModule {
-  val transactorLayer: ULayer[Transactor[Task]] = ZLayer.succeed(
-    Transactor.fromDriverManager[Task](
-      "org.postgresql.Driver",
-      "jdbc:postgresql://localhost:5432/castor?user=postgres&password=postgres",
-      "postgres",
-      "postgres"
+  // NOTE: consider migrating to Hikari connection pool
+  val transactorLayer: TaskLayer[Transactor[Task]] = ZLayer.fromZIO(
+    ZIO.attempt(
+      Transactor.fromDriverManager[Task](
+        "org.postgresql.Driver",
+        "jdbc:postgresql://localhost:5432/castor",
+        "postgres",
+        "postgres"
+      )
     )
   )
 
-  val didOperationRepoLayer: ULayer[DIDOperationRepository[Task]] = transactorLayer >>> JdbcDIDOperationRepository.layer
+  val didOperationRepoLayer: TaskLayer[DIDOperationRepository[Task]] =
+    transactorLayer >>> JdbcDIDOperationRepository.layer
 
   val layers = didOperationRepoLayer
 }
