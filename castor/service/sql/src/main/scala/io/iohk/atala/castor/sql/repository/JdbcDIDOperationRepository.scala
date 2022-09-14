@@ -15,7 +15,8 @@ class JdbcDIDOperationRepository(xa: Transactor[Task]) extends DIDOperationRepos
          |SELECT foo FROM public.published_did_operations
          |""".stripMargin.query[String].to[Seq]
 
-    cxnIO.transact(xa)
+    cxnIO
+      .transact(xa)
       .map(_.map(PublishedDIDOperation.apply))
   }
 

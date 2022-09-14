@@ -11,7 +11,7 @@ services:
     ports:
       - 5432:5432
     volumes:
-      -   pg_data_castor_db:/var/lib/postgresql/data
+      - pg_data_castor_db:/var/lib/postgresql/data
 
   # delay to ensure DB is up before applying migrations
   db_init_delay:

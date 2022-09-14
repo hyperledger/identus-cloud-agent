@@ -5,8 +5,8 @@ object Dependencies {
     val zio = "2.0.2"
     val akka = "2.6.19"
     val akkaHttp = "10.2.9"
-    val doobie = "0.13.4"
-    val zioCatsInterop = "22.0.0.0"
+    val doobie = "1.0.0-RC2"
+    val zioCatsInterop = "3.3.0"
   }
 
   private lazy val zio = "dev.zio" %% "zio" % Versions.zio
@@ -24,15 +24,17 @@ object Dependencies {
   private lazy val scalaPbGrpc = "com.thesamet.scalapb" %% "scalapb-runtime-grpc" % scalapb.compiler.Version.scalapbVersion
 
   private lazy val doobiePostgres = "org.tpolecat" %% "doobie-postgres" % Versions.doobie
+  private lazy val doobieHikari = "org.tpolecat" %% "doobie-hikari" % Versions.doobie
 
   // Dependency Modules
   private lazy val baseDependencies: Seq[ModuleID] = Seq(zio)
   private lazy val akkaHttpDependencies: Seq[ModuleID] = Seq(akkaTyped, akkaStream, akkaHttp, akkaSprayJson).map(_.cross(CrossVersion.for3Use2_13))
   private lazy val grpcDependencies: Seq[ModuleID] = Seq(grpcNetty, grpcServices, scalaPbProto, scalaPbGrpc)
+  private lazy val doobieDependencies: Seq[ModuleID] = Seq(doobiePostgres, doobieHikari)
 
   // Project Dependencies
   lazy val coreDependencies: Seq[ModuleID] = baseDependencies
-  lazy val sqlDependencies: Seq[ModuleID] = baseDependencies ++ Seq(doobiePostgres, zioCatsInterop)
+  lazy val sqlDependencies: Seq[ModuleID] = baseDependencies ++ doobieDependencies ++ Seq(zioCatsInterop)
   lazy val apiServerDependencies: Seq[ModuleID] = baseDependencies ++ akkaHttpDependencies ++ grpcDependencies
   lazy val workerDependencies: Seq[ModuleID] = baseDependencies ++ Seq(zioStream)
 }

@@ -34,9 +34,10 @@ import io.iohk.atala.castor.openapi.api.{
   DIDOperationsApi
 }
 import io.iohk.atala.castor.proto.castor_api.DIDServiceGrpc
-import io.iohk.atala.castor.sql.repository.JdbcDIDOperationRepository
+import io.iohk.atala.castor.sql.repository.{JdbcDIDOperationRepository, TransactorLayer}
 import zio.*
 import zio.interop.catz.*
+import cats.effect.std.Dispatcher
 
 object Modules {
 
@@ -99,17 +100,19 @@ object GrpcModule {
 }
 
 object RepoModule {
-  // NOTE: consider migrating to Hikari connection pool
-  val transactorLayer: TaskLayer[Transactor[Task]] = ZLayer.fromZIO(
-    ZIO.attempt(
-      Transactor.fromDriverManager[Task](
-        "org.postgresql.Driver",
-        "jdbc:postgresql://localhost:5432/castor",
-        "postgres",
-        "postgres"
-      )
-    )
-  )
+  val transactorLayer: TaskLayer[Transactor[Task]] =
+    ZLayer.fromZIO {
+      Dispatcher[Task].allocated.map { case (dispatcher, _) =>
+        given Dispatcher[Task] = dispatcher
+        TransactorLayer.hikari[Task](
+          TransactorLayer.DbConfig(
+            username = "postgres",
+            password = "postgres",
+            jdbcUrl = "jdbc:postgresql://localhost:5432/castor"
+          )
+        )
+      }
+    }.flatten
 
   val didOperationRepoLayer: TaskLayer[DIDOperationRepository[Task]] =
     transactorLayer >>> JdbcDIDOperationRepository.layer
