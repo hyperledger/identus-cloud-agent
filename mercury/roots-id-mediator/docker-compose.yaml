@@ -1,0 +1,34 @@
+version: '3.9'
+
+services:
+  mongo:
+    image: mongo:5.0
+    ports:
+      - 27017:27017
+    #volumes:
+    # - ./tmp/mongo:/data/db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=admin
+
+  rootsid-mediator:
+    image: rodopincha/didcomm-mediator
+    ports:
+      - 8000:8000
+    environment:
+      - DB_URL=mongodb://admin:admin@mongo:27017
+      - MONGODB_USER=admin
+      - MONGODB_PASSWORD=admin
+      - PUBLIC_URL=http://127.0.0.1:8000
+      - ROTATE_OOB=0
+
+# GET invitation with 
+# docker logs roots-id-mediator-rootsid-mediator-1
+
+
+# RUN
+# docker-compose up -d
+# docker-compose ps
+# docker-compose exec mongo /bin/sh
+# docker-compose exec rootsid-mediator /bin/sh
+# docker exec -it roots-id-mediator-rootsid-mediator-1 bash
