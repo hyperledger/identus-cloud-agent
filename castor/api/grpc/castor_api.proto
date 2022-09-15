@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+import "scalapb/scalapb.proto";
+
+option (scalapb.options) = {
+  no_default_values_in_constructor: true
+  package_name: "io.iohk.atala.castor.proto"
+};
+
+
+message Ping {
+    string message = 1;
+    float delaySeconds = 2;
+}
+
+message Pong {
+    string message = 1;
+}
+
+service DIDService {
+    rpc SendPing(Ping) returns (Pong) {}
+}
