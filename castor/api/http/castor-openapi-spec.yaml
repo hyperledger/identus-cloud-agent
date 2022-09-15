@@ -17,7 +17,7 @@ tags:
     description: DID Authentication REST API
 
 paths:
-  /dids/v1/:
+  /dids/:
     post:
       tags: [ "DID" ]
       operationId: createDid
@@ -54,12 +54,12 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-  /dids/v1/{didRef}:
+  /dids/{didRef}:
     post:
       tags: [ "DID" ]
-      operationId: updateDid
-      summary: Update DID.
-      description: Update DID.
+      operationId: updateOrRecoverDid
+      summary: Update Or Recover DID.
+      description: Update Or Recover DID.
       parameters:
         - $ref: "#/components/parameters/didRefInPath"
       requestBody:
@@ -103,17 +103,11 @@ paths:
 
     get:
       tags: [ "DID" ]
-      operationId: recoverDid
-      summary: Recover DID.
-      description: Recover DID.
+      operationId: getDid
+      summary: Get DID.
+      description: Get DID.
       parameters:
         - $ref: "#/components/parameters/didRefInPath"
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/RecoverDIDRequest"
       responses:
         "200":
           description: The DID resource
@@ -172,7 +166,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-  /dids/v1/operations{didOperationRef}:
+  /dids/operations/{didOperationRef}:
     get:
       tags: [ "DID Operations" ]
       operationId: getDidOperation
@@ -194,7 +188,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-  /dids/v1/operations:
+  /dids/operations:
     get:
       tags: [ "DID Operations" ]
       operationId: getDidOperationsByDidRef
@@ -216,7 +210,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-  /did-authentication/challenges:
+  /authentication/challenges:
     post:
       tags: [ "DID Authentication" ]
       operationId: createDidAuthenticationChallenge
@@ -244,7 +238,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-  /did-authentication/challenge-submissions:
+  /authentication/challenge-submissions:
     post:
       tags: [ "DID Authentication" ]
       operationId: createDidAuthenticationChallengeSubmission
@@ -726,10 +720,10 @@ components:
     DidOperationType:
       type: string
       enum:
-        - PUBLISH_PUBLISHED_DID
-        - PUBLISH_ON_CHAIN_UNPUBLISHED_DID_PROOF
-        - UPDATE_PUBLISHED_DID
-        - UPDATE_ON_CHAIN_UNPUBLISHED_DID_PROOF
+        - PUBLISH
+        - PUBLISH_PROOF
+        - UPDATE
+        - UPDATE_PROOF
         - DEACTIVATE
 
     # ----------------------------------
@@ -741,7 +735,7 @@ components:
         - ttl
       properties:
         ttl:
-          type: integer
+          type: number
           description: A number of seconds that challenge will be considered valid.
           example: 900
         state:
