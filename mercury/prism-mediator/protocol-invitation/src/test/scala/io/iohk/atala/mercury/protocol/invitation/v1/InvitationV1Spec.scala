@@ -1,4 +1,4 @@
-package io.iohk.atala.mercury.protocol.invitation
+package io.iohk.atala.mercury.protocol.invitation.v1
 
 import munit.*
 import zio.*
@@ -6,9 +6,12 @@ import cats.implicits._
 import io.circe.syntax._
 import io.circe.Json
 import io.circe.generic.auto._
-import InvitationCodec._
 import io.circe.parser._
-class InvitationSpec extends ZSuite {
+
+import io.iohk.atala.mercury.protocol.invitation._
+import io.iohk.atala.mercury.protocol.invitation.InvitationCodec._
+
+class InvitationV1Spec extends ZSuite {
 
   test("out-of-band invitation") {
     val payload = "attachmentData"
@@ -64,5 +67,4 @@ class InvitationSpec extends ZSuite {
     val result = invitation.asJson.deepDropNullValues
     assertEquals(result, expectedJson)
   }
-
 }

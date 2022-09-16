@@ -4,6 +4,8 @@ import io.circe.syntax._
 import io.circe.generic.semiauto._
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.{Decoder, Encoder, HCursor, Json}
+import io.iohk.atala.mercury.protocol.invitation.v1.{Invitation => InvitationV1}
+import io.iohk.atala.mercury.protocol.invitation.v2.{Invitation => InvitationV2}
 
 object InvitationCodec {
 
@@ -30,7 +32,7 @@ object InvitationCodec {
   implicit val attachmentDescriptorEncoder: Encoder[AttachmentDescriptor] = deriveEncoder[AttachmentDescriptor]
   implicit val attachmentDescriptorDecoder: Decoder[AttachmentDescriptor] = deriveDecoder[AttachmentDescriptor]
 
-  implicit val invitationEncoder: Encoder[Invitation] = (entity: Invitation) =>
+  implicit val invitationEncoderV1: Encoder[InvitationV1] = (entity: InvitationV1) =>
     Json.obj(
       "@id" -> Json.fromString(entity.`@id`),
       "@type" -> Json.fromString(entity.`@type`),
@@ -42,6 +44,8 @@ object InvitationCodec {
       "requests~attach" -> entity.`requests~attach`.asJson,
       "services" -> entity.services.asJson
     )
-  implicit val invitationDecoder: Decoder[Invitation] = deriveDecoder[Invitation]
+  implicit val invitationDecoderV1: Decoder[InvitationV1] = deriveDecoder[InvitationV1]
 
+  implicit val invitationEncoderV2: Encoder[InvitationV2] = deriveEncoder[InvitationV2]
+  implicit val invitationDecoderV2: Decoder[InvitationV2] = deriveDecoder[InvitationV2]
 }

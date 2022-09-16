@@ -1,4 +1,4 @@
-package io.iohk.atala.mercury.protocol.invitation
+package io.iohk.atala.mercury.protocol.invitation.v1
 import cats.implicits._
 import io.circe.syntax._
 import io.circe.generic.semiauto._
@@ -6,6 +6,8 @@ import io.circe.{Encoder, Json}
 import io.iohk.atala.mercury.model.PIURI
 
 import scala.annotation.targetName
+import io.iohk.atala.mercury.protocol.invitation.AttachmentDescriptor
+import io.iohk.atala.mercury.protocol.invitation.ServiceType
 
 /** Out-Of-Band invitation Example
   * @see
@@ -20,7 +22,7 @@ import scala.annotation.targetName
   * @param services
   */
 final case class Invitation(
-    `@id`: String = getNewMsgId,
+    `@id`: String = io.iohk.atala.mercury.protocol.invitation.getNewMsgId,
     label: String,
     goal: String,
     goal_code: String,
@@ -31,5 +33,3 @@ final case class Invitation(
 ) {
   val `@type`: PIURI = "https://didcomm.org/out-of-band/2.0/invitation"
 }
-
-
