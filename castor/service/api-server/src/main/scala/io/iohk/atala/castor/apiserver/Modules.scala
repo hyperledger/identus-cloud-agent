@@ -45,24 +45,36 @@ import io.iohk.atala.castor.apiserver.worker.{EventConsumer, WorkerApp}
 import io.iohk.atala.castor.core.model.IrisNotification
 import zio.stream.ZStream
 
-object Modules {
+import java.util.concurrent.Executors
 
-  val actorSystemLayer: TaskLayer[ActorSystem[Nothing]] = ZLayer.scoped(
-    ZIO.acquireRelease(ZIO.attempt(ActorSystem(Behaviors.empty, "actor-system")))(system =>
-      ZIO.attempt(system.terminate()).orDie
-    )
-  )
+object Modules {
 
   val app: Task[Unit] = {
     val httpServerApp = HttpRoutes.routes.flatMap(HttpServer.start(8080, _))
     val grpcServerApp = GrpcServices.services.flatMap(GrpcServer.start(8081, _))
-    val workerApp = WorkerApp.start
+    val workerApp = WorkerApp.start.provideSomeLayer(SystemModule.workerRuntimeLayer)
 
     (httpServerApp <&> grpcServerApp <&> workerApp)
-      .provideLayer(actorSystemLayer ++ HttpModule.layers ++ GrpcModule.layers ++ WorkerModule.layers)
+      .provideLayer(SystemModule.actorSystemLayer ++ HttpModule.layers ++ GrpcModule.layers ++ WorkerModule.layers)
       .unit
   }
 
+}
+
+object SystemModule {
+  val actorSystemLayer: TaskLayer[ActorSystem[Nothing]] = ZLayer.scoped(
+    ZIO.acquireRelease(
+      ZIO.executor
+        .map(_.asExecutionContext)
+        .flatMap(ec =>
+          ZIO.attempt(ActorSystem(Behaviors.empty, "actor-system", BootstrapSetup().withDefaultExecutionContext(ec)))
+        )
+    )(system => ZIO.attempt(system.terminate()).orDie)
+  )
+
+  val workerRuntimeLayer: ULayer[Unit] = Runtime.setExecutor(
+    Executor.fromJavaExecutor(Executors.newFixedThreadPool(8, new Thread(_, "castor-worker")))
+  )
 }
 
 // TODO: replace with actual implementation
