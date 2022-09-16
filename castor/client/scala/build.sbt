@@ -14,7 +14,12 @@ lazy val root = project
   .settings(
     name := "castor-client",
     libraryDependencies ++= clientDependencies,
+    // OpenAPI settings
+    Compile / sourceGenerators += openApiGenerateClasses,
+    openApiGeneratorSpec := apiBaseDirectory.value / "http/castor-openapi-spec.yaml",
+    openApiGeneratorConfig := baseDirectory.value / "openapi/generator-config/config.yaml",
     // gRPC settings
     Compile / PB.targets := Seq(scalapb.gen() -> (Compile / sourceManaged).value / "scalapb"),
     Compile / PB.protoSources := Seq(apiBaseDirectory.value / "grpc")
   )
+  .enablePlugins(OpenApiGeneratorPlugin)

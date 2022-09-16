@@ -1,0 +1,22 @@
+# The folder where templates can be found
+templateDir: "openapi/generator-config/scala-sttp"
+
+# Only generate output for templates registered with the 'Apis' or 'Models' types
+globalProperties:
+  apis: ""
+  models: ""
+  supportingFiles: "JsonSupport.scala,DateSerializers.scala,AdditionalTypeSerializers.scala"
+
+# Define output packages for generated classes
+invokerPackage: "io.iohk.atala.castor.openapi"
+apiPackage: "io.iohk.atala.castor.openapi.api"
+modelPackage: "io.iohk.atala.castor.openapi.model"
+
+# The generator to use
+generatorName: "scala-sttp"
+
+# Use handwritten classes for the types below. This is useful to customize the (de)serialization
+#importMappings:
+
+# Library to use
+jsonLibrary: "circe"
