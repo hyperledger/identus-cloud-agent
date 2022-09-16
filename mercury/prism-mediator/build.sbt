@@ -92,7 +92,7 @@ lazy val protocolMercuryMailbox = project
 
 lazy val protocolReportProblem = project
   .in(file("protocol-report-problem"))
-  .settings(name := "aries_RFC0035-protocol-report_problem-1_0", version := VERSION)
+  .settings(name := "protocol-report_problem", version := VERSION)
   .dependsOn(models)
 
 lazy val protocolRouting = project
