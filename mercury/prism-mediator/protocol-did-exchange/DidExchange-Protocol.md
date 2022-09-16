@@ -23,7 +23,7 @@ See [https://github.com/hyperledger/aries-rfcs/tree/main/features/0023-did-excha
   
 
 ### Requester request did-exchange
-step1-->step2-->step3 
+step1-->step2-->step3 Is a happy path flow
 
 error - error received or sent and state transition
 
@@ -44,7 +44,7 @@ stateDiagram-v2
 
 
 ### Responder responds to did-exchange
-step1-->step2-->step3 is all good
+step1-->step2-->step3 Is a happy path flow
 
 error received or sent and state transition
 ```mermaid
