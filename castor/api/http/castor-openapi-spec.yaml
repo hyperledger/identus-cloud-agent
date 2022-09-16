@@ -302,7 +302,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-  /did-authentication/v1/challenges:
+  /did-authentication/challenges:
     post:
       tags: ["DID Authentication"]
       operationId: createDidAuthenticationChallenge
@@ -330,7 +330,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-  /did-authentication/v1/challenge-submissions:
+  /did-authentication/challenge-submissions:
     post:
       tags: ["DID Authentication"]
       operationId: createDidAuthenticationChallengeSubmission
@@ -513,10 +513,6 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Service"
-
-    DIDRef:
-      type: string
-      example: "did:example:123456789abcdefghi"
 
     VerificationMethodRef:
       type: string
@@ -843,7 +839,7 @@ components:
         - ttl
       properties:
         ttl:
-          type: number
+          type: integer
           description: A number of seconds that challenge will be considered valid.
           example: 900
         state:
@@ -898,11 +894,10 @@ components:
     AuthenticationChallengeSubject:
       description: |
         A challenged subject that must complete the challenge.
-        If VerificationMethodRef is used, it must be a verification method
-        in the authentication relationship.
-      oneOf:
-        - $ref: "#/components/schemas/DIDRef"
-        - $ref: "#/components/schemas/VerificationMethodRef"
+        May refer to DID or VerificationMethod inside a DID. If VerificationMethod
+        is used, it must be inside the authentication verification relationship.
+      type: string
+      example: "did:example:123456789abcdefghi"
 
     AuthenticationChallengeJwt:
       type: string

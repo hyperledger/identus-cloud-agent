@@ -10,3 +10,6 @@ megalinter-reports
 **/project/metals.sbt
 
 target
+
+shell.nix
+.envrc
