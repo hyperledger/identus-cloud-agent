@@ -32,36 +32,36 @@ import io.iohk.atala.mercury.resolvers.MediatorDidComm
 import org.didcommx.didcomm.DIDComm
 
 type MyTask[+A] = // [_] =>> zio.RIO[io.iohk.atala.DidComm, _]
- ZIO[DidComm & MailStorage, Throwable, A] // TODO improve this Throwable (is too much)
+  ZIO[DidComm & MailStorage, Throwable, A] // TODO improve this Throwable (is too much)
 
 object Mediator extends ZIOAppDefault {
 
- // API
- val apiRoutes: org.http4s.HttpRoutes[MyTask] = ZHttp4sServerInterpreter()
-   .from(Endpoints.all)
-   .toRoutes
+  // API
+  val apiRoutes: org.http4s.HttpRoutes[MyTask] = ZHttp4sServerInterpreter()
+    .from(Endpoints.all)
+    .toRoutes
 
- // Documentation
- val swaggerRoutes: HttpRoutes[MyTask] = {
-   val allEndpoints: List[Endpoint[_, _, _, _, _]] = Endpoints.all.map(_.endpoint)
-   ZHttp4sServerInterpreter()
-     .from(SwaggerInterpreter().fromEndpoints[MyTask](allEndpoints, "Atala Prism Mediator", "0.1.0"))
-     .toRoutes
- }
+  // Documentation
+  val swaggerRoutes: HttpRoutes[MyTask] = {
+    val allEndpoints: List[Endpoint[_, _, _, _, _]] = Endpoints.all.map(_.endpoint)
+    ZHttp4sServerInterpreter()
+      .from(SwaggerInterpreter().fromEndpoints[MyTask](allEndpoints, "Atala Prism Mediator", "0.1.0"))
+      .toRoutes
+  }
 
- val serve: ZIO[DidComm & MailStorage, Throwable, Unit] = MediatorProgram.startLogo *>
-   ZIO.executor.flatMap(executor =>
-     BlazeServerBuilder[MyTask]
-       .withExecutionContext(executor.asExecutionContext)
-       .bindHttp(MediatorProgram.port, "localhost")
-       .withHttpApp(Router("/" -> (apiRoutes <+> swaggerRoutes)).orNotFound)
-       .serve
-       .compile
-       .drain
-   )
+  val serve: ZIO[DidComm & MailStorage, Throwable, Unit] = MediatorProgram.startLogo *>
+    ZIO.executor.flatMap(executor =>
+      BlazeServerBuilder[MyTask]
+        .withExecutionContext(executor.asExecutionContext)
+        .bindHttp(MediatorProgram.port, "localhost")
+        .withHttpApp(Router("/" -> (apiRoutes <+> swaggerRoutes)).orNotFound)
+        .serve
+        .compile
+        .drain
+    )
 
- override def run = serve
-   .provide(MediatorDidComm.mediator ++ MailStorage.layer)
-   .exitCode
+  override def run = serve
+    .provide(MediatorDidComm.mediator ++ MailStorage.layer)
+    .exitCode
 }
  */
