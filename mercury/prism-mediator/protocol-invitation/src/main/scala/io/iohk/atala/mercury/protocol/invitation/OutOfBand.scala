@@ -22,14 +22,4 @@ object OutOfBand {
     parseLink(url).map(e => parse(e).getOrElse(???).as[Invitation].getOrElse(???))
   }
 
-  // {"type":"https://didcomm.org/out-of-band/2.0/invitation",
-  //   "id":"421dbbc8-57ca-4341-aa3a-f5b4215c568f",
-  //   "from":"did:peer:2.Ez6LSmLmWmTvwjgLSuUaEQHdHSFWPwyibgzomWjFmnC6FhLnU.Vz6MktNgLh4N1u9KNhDiqe8KZ8bsLzLcqsifoNiUtBoSs9jxf.SeyJpZCI6Im5ldy1pZCIsInQiOiJkbSIsInMiOiJodHRwOi8vMTI3LjAuMC4xOjgwMDAiLCJhIjpbImRpZGNvbW0vdjIiXX0",
-  //   "body":{
-  //     "goal_code":"request-mediate",
-  //     "goal":"RequestMediate",
-  //     "accept":["didcomm/v2","didcomm/aip2;env=rfc587"]
-  //   }
-  // }
-
 }
