@@ -6,6 +6,7 @@
 - Protocols:
   - [Invitation-Protocol](./protocol-invitation/Invitation-Protocol.md)
   - [Mercury-Mailbox-Protocol](./protocol-mercury-mailbox/Mercury-Mailbox-Protocol.md)
+  - [Report-Problem-Protocol](protocol-report-problem/Report-Problem-Protocol.md)
   - [Routing-Protocol](./protocol-routing/Routing-Protocol.md)
 - [Quick start](./QuickStart.md)
 - [UseCases](./UseCases.md)

@@ -102,6 +102,11 @@ lazy val protocolMercuryMailbox = project
   .settings(libraryDependencies += D.zio.value)
   .dependsOn(models, protocolInvitation, protocolRouting)
 
+lazy val protocolReportProblem = project
+  .in(file("protocol-report-problem"))
+  .settings(name := "protocol-report_problem", version := VERSION)
+  .dependsOn(models)
+
 lazy val protocolRouting = project
   .in(file("protocol-routing"))
   .settings(name := "mercury-protocol-routing-2_0", version := VERSION)
@@ -189,8 +194,9 @@ lazy val mediator = project
   )
   .dependsOn(agentDidcommx, resolver)
   .dependsOn(
-    protocolInvitation,
     protocolConnection,
+    protocolInvitation,
     protocolMercuryMailbox,
+    protocolReportProblem,
     protocolRouting,
   )
