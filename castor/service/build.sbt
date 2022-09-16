@@ -11,7 +11,7 @@ ThisBuild / apiBaseDirectory := baseDirectory.value / "../api"
 // Project definitions
 lazy val root = project
   .in(file("."))
-  .aggregate(core, sql, `api-server`, worker)
+  .aggregate(core, sql, `api-server`)
 
 lazy val core = project
   .in(file("core"))
@@ -42,12 +42,4 @@ lazy val `api-server` = project
     Compile / PB.protoSources := Seq(apiBaseDirectory.value / "grpc")
   )
   .enablePlugins(OpenApiGeneratorPlugin)
-  .dependsOn(core, sql)
-
-lazy val worker = project
-  .in(file("worker"))
-  .settings(
-    name := "castor-worker",
-    libraryDependencies ++= workerDependencies
-  )
   .dependsOn(core, sql)

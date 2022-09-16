@@ -1,4 +1,4 @@
-package io.iohk.atala.castor.worker.app
+package io.iohk.atala.castor.apiserver.worker
 
 import io.iohk.atala.castor.core.model.IrisNotification
 import io.iohk.atala.castor.core.service.IrisNotificationService

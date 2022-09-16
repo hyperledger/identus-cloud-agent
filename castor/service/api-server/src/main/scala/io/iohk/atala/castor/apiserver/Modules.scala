@@ -1,5 +1,7 @@
 package io.iohk.atala.castor.apiserver
 
+import akka.actor.BootstrapSetup
+import akka.actor.setup.ActorSystemSetup
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.server.Route
@@ -13,7 +15,8 @@ import io.iohk.atala.castor.core.service.{
   DIDService,
   MockDIDAuthenticationService,
   MockDIDOperationService,
-  MockDIDService
+  MockDIDService,
+  MockIrisNotificationService
 }
 import io.iohk.atala.castor.apiserver.http.marshaller.{
   DIDApiMarshallerImpl,
@@ -38,6 +41,9 @@ import io.iohk.atala.castor.sql.repository.{JdbcDIDOperationRepository, Transact
 import zio.*
 import zio.interop.catz.*
 import cats.effect.std.Dispatcher
+import io.iohk.atala.castor.apiserver.worker.{EventConsumer, WorkerApp}
+import io.iohk.atala.castor.core.model.IrisNotification
+import zio.stream.ZStream
 
 object Modules {
 
@@ -50,9 +56,10 @@ object Modules {
   val app: Task[Unit] = {
     val httpServerApp = HttpRoutes.routes.flatMap(HttpServer.start(8080, _))
     val grpcServerApp = GrpcServices.services.flatMap(GrpcServer.start(8081, _))
+    val workerApp = WorkerApp.start
 
-    (httpServerApp <&> grpcServerApp)
-      .provideLayer(actorSystemLayer ++ HttpModule.layers ++ GrpcModule.layers)
+    (httpServerApp <&> grpcServerApp <&> workerApp)
+      .provideLayer(actorSystemLayer ++ HttpModule.layers ++ GrpcModule.layers ++ WorkerModule.layers)
       .unit
   }
 
@@ -97,6 +104,22 @@ object GrpcModule {
   }
 
   val layers = didServiceGrpcLayer
+}
+
+object WorkerModule {
+  // TODO: replace with actual implementation
+  val irisNotificationSource: ULayer[ZStream[Any, Nothing, IrisNotification]] = ZLayer.succeed {
+    ZStream
+      .tick(1.seconds)
+      .as(IrisNotification(foo = "bar"))
+  }
+
+  val eventConsumerLayer: ULayer[EventConsumer] = {
+    val serviceLayer = MockIrisNotificationService.layer // TODO: replace with actual implementation
+    serviceLayer >>> EventConsumer.layer
+  }
+
+  val layers = irisNotificationSource ++ eventConsumerLayer
 }
 
 object RepoModule {
