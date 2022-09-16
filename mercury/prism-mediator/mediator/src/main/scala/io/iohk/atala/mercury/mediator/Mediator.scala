@@ -1,3 +1,4 @@
+/*
 package io.iohk.atala.mercury.mediator
 
 import cats.syntax.all._
@@ -63,3 +64,4 @@ object Mediator extends ZIOAppDefault {
     .provide(MediatorDidComm.mediator ++ MailStorage.layer)
     .exitCode
 }
+ */

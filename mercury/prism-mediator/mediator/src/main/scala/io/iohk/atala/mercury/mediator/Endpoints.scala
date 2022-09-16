@@ -1,3 +1,4 @@
+/*
 package io.iohk.atala.mercury.mediator
 
 import io.circe.generic.auto.*
@@ -102,3 +103,4 @@ object Endpoints {
       sendMessageServerEndpoint
     )
 }
+ */
