@@ -23,7 +23,8 @@ See [https://github.com/hyperledger/aries-rfcs/tree/main/features/0023-did-excha
   
 
 ### Requester request did-exchange
-step1-->step2-->step3 is all good
+step1-->step2-->step3 
+
 error - error received or sent and state transition
 
 ```mermaid
@@ -44,7 +45,8 @@ stateDiagram-v2
 
 ### Responder responds to did-exchange
 step1-->step2-->step3 is all good
-error - error received or sent and state transition
+
+error received or sent and state transition
 ```mermaid
 stateDiagram-v2
   [*] --> invitation_sent:out-of-band send Invitation
