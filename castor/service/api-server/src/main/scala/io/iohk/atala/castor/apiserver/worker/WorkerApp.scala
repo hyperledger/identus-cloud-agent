@@ -7,7 +7,6 @@ import zio.stream.ZStream
 object WorkerApp {
 
   def start: URIO[ZStream[Any, Nothing, IrisNotification] & EventConsumer, Unit] = {
-    // TODO: execute this in scoped runtime
     for {
       source <- ZIO.service[ZStream[Any, Nothing, IrisNotification]]
       consumer <- ZIO.service[EventConsumer]
