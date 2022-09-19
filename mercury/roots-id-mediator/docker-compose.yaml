@@ -19,12 +19,18 @@ services:
       - DB_URL=mongodb://admin:admin@mongo:27017
       - MONGODB_USER=admin
       - MONGODB_PASSWORD=admin
-      - PUBLIC_URL=http://127.0.0.1:8000
+      - PUBLIC_URL=http://rootsid-mediator:8000
       - ROTATE_OOB=0
+
+  notebooks:
+    image: atala/didcomm-jupyter
+    ports:
+      - 8888:8888
+    volumes:
+      - ./notebooks:/home/jovyan
 
 # GET invitation with 
 # docker logs roots-id-mediator-rootsid-mediator-1
-
 
 # RUN
 # docker-compose up -d
