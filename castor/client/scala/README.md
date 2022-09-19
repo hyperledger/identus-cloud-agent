@@ -1,8 +1,15 @@
-## sbt project compiled with Scala 3
+# Castor BB client
 
-### Usage
+## Quickstart
 
-This is a normal sbt project. You can compile code with `sbt compile`, run it with `sbt run`, and `sbt console` will start a Scala 3 REPL.
+__Generate client from api specifications__
 
-For more information on the sbt-dotty plugin, see the
-[scala3-example-project](https://github.com/scala/scala3-example-project/blob/main/README.md).
+```bash
+sbt clean compile
+```
+
+## Known issues
+
+### Imperfect sttp code generation
+
+Sttp OpenAPI generator sometime fail to generate the code on some edge case (e.g. schema of a primitive type). During specification development, we should validate OpenAPI spec to make sure that it is compiled and the client is successfully generated.

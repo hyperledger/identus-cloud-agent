@@ -1,1 +1,1 @@
-libraryDependencies ++= Seq("org.openapitools" % "openapi-generator" % "6.0.0")
+addSbtPlugin("io.github.ghostbuster91.sttp-openapi" % "sbt-codegen-plugin" % "0.4.2")
