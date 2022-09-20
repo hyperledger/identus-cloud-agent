@@ -5,6 +5,7 @@ import io.circe.generic.semiauto._
 import io.circe.{Decoder, Encoder, HCursor, Json}
 import io.iohk.atala.mercury.protocol.invitation.v1.{Invitation => InvitationV1}
 import io.iohk.atala.mercury.protocol.invitation.v2.{Invitation => InvitationV2}
+import io.iohk.atala.mercury.model.AttachmentDescriptorCodec._
 
 object InvitationCodec {
 
@@ -24,12 +25,6 @@ object InvitationCodec {
       Decoder[Service].widen,
       Decoder[Did].widen
     ).reduceLeft(_ or _)
-
-  implicit val base64Encoder: Encoder[Base64] = deriveEncoder[Base64]
-  implicit val base64eDecoder: Decoder[Base64] = deriveDecoder[Base64]
-
-  implicit val attachmentDescriptorEncoder: Encoder[AttachmentDescriptor] = deriveEncoder[AttachmentDescriptor]
-  implicit val attachmentDescriptorDecoder: Decoder[AttachmentDescriptor] = deriveDecoder[AttachmentDescriptor]
 
   implicit val invitationEncoderV1: Encoder[InvitationV1] = (entity: InvitationV1) =>
     Json.obj(

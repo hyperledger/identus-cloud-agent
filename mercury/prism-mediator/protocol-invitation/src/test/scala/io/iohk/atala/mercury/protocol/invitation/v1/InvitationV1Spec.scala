@@ -10,6 +10,7 @@ import io.circe.parser._
 
 import io.iohk.atala.mercury.protocol.invitation._
 import io.iohk.atala.mercury.protocol.invitation.InvitationCodec._
+import io.iohk.atala.mercury.model.AttachmentDescriptor
 
 class InvitationV1Spec extends ZSuite {
 
