@@ -38,12 +38,6 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/W3CSchemaInput"
-            example:
-              name: ""
-              version: "1.0"
-              claims:
-                - name: "email"
-                  type: "string"
       responses:
         "201":
           description: The new schema is created
@@ -373,12 +367,18 @@ paths:
             schema:
               $ref: "#/components/schemas/W3CCredentialRevocationRequest"
       responses:
-        "200":
+        "202":
           description: Revocation request successfully submitted
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/W3CCredentialRevocationResponse"
+          headers:
+            Location:
+              schema:
+                type: string
+              description: URL to access credential revocation status.
+
   /revocation-registry/operations/{id}:
     get:
       tags: ["Revocation Registry"]
@@ -404,9 +404,7 @@ paths:
       tags: ["Present Proof"]
       operationId: createVerifiablePresentation
       summary: Create new instance of VerifiablePresentation
-      description: |-
-        Verifier creates the instance of Verifiable Presentation object to be used in present proof communication protocol with Prover
-        Verifiable Presentation is an analogue of the schema object
+      description: Verifier creates the instance of Verifiable Presentation object to be used in present proof communication protocol with Prover
       requestBody:
         description: PresentationInput object with the schema references and claims
         required: true
@@ -524,18 +522,15 @@ components:
         description:
           type: string
           description: Schema description
-        claims:
+        attributes:
           type: "array"
-          description: "List of claims"
+          description: List of attributes
           items:
-            type: "object"
-            properties:
-              name:
-                type: "string"
-                description: "Name of the claim attribute"
-              type:
-                type: "string"
-                description: "Type of the claim attribute (bool, string, datetime, integer)"
+            type: "string"
+          example:
+            - first_name
+            - last_name
+            - date_of_birth
 
     W3CSchemaMeta:
       description: Schema metadata
