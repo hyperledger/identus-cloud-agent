@@ -1,0 +1,8 @@
+secrets.json
+
+.local
+.jupyter
+.ipython
+.ipynb_checkpoints
+.config
+.cache
