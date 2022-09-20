@@ -386,24 +386,32 @@ components:
             oneOf:
               - $ref: "#/components/schemas/VerificationMethodRef"
               - $ref: "#/components/schemas/VerificationMethod"
+            discriminator:
+              propertyName: objectType
         assertionMethod:
           type: array
           items:
             oneOf:
               - $ref: "#/components/schemas/VerificationMethodRef"
               - $ref: "#/components/schemas/VerificationMethod"
+            discriminator:
+              propertyName: objectType
         keyAgreement:
           type: array
           items:
             oneOf:
               - $ref: "#/components/schemas/VerificationMethodRef"
               - $ref: "#/components/schemas/VerificationMethod"
+            discriminator:
+              propertyName: objectType
         capabilityInvocation:
           type: array
           items:
             oneOf:
               - $ref: "#/components/schemas/VerificationMethodRef"
               - $ref: "#/components/schemas/VerificationMethod"
+            discriminator:
+              propertyName: objectType
         service:
           type: array
           items:
@@ -411,23 +419,40 @@ components:
 
     VerificationMethodRef:
       type: string
-      example: "did:example:123456789abcdefghi#keys-1"
+      required:
+        - objectType
+        - ref
+      properties:
+        objectType:
+          type: string
+        ref:
+          type: string
+          example: "did:example:123456789abcdefghi#keys-1"
+
 
     VerificationMethod:
-      allOf:
-        - type: object
-          properties:
-            id:
-              type: string
-              example: "did:prism:123#key-1"
-            type:
-              type: string
-              example: "JsonWebKey2020"
-            controller:
-              type: string
-              example: "did:prism:456"
-        - oneOf:
-            - $ref: "#/components/schemas/JsonWebKey2020"
+      type: object
+      required:
+        - objectType
+        - id
+        - type
+        - controller
+        - jsonWebKey2020
+
+      properties:
+        objectType:
+          type: string
+        id:
+          type: string
+          example: "did:prism:123#key-1"
+        type:
+          type: string
+          example: "JsonWebKey2020"
+        controller:
+          type: string
+          example: "did:prism:456"
+        jsonWebKey2020:
+          $ref: "#/components/schemas/JsonWebKey2020"
 
     CreateDIDRequest:
       type: object
@@ -462,8 +487,7 @@ components:
             publicKeys:
               type: array
               items:
-                oneOf:
-                  - $ref: "#/components/schemas/PublicKey"
+              $ref: "#/components/schemas/PublicKey"
         services:
           type: array
           items:
@@ -540,18 +564,24 @@ components:
           example: "a56d8c8cee25d810840c6f77b0797af36f2cb7247101a59f4607f9542c8f7aee"
           description: "SHA256 of last DID operation"
         delta:
-          allOf:
-            - $ref: "#/components/schemas/DeltaUpdate"
-            - type: object
-              properties:
-                recoveryCommitment:
-                  type: string
-                  example: "42d8267c184d06898e80878a1b2f187fbf907c3055560867"
-                  description: "SHA256 of recovery public key"
+          $ref: "#/components/schemas/Delta"
         signature:
           type: string
           example: "eyJhbGciOiJFUzI1NksifQ.eyJ1cGRhdGVLZXkiOnsia3R5IjoiRUMiLCJjcnYiOiJzZWNwMjU2azEiLCJ4Ijoid2Z3UUNKM09ScVZkbkhYa1Q4UC1MZ19HdHhCRWhYM3R5OU5VbnduSHJtdyIsInkiOiJ1aWU4cUxfVnVBblJEZHVwaFp1eExPNnFUOWtQcDNLUkdFSVJsVHBXcmZVIn0sImRlbHRhSGFzaCI6IkVpQ3BqTjQ3ZjBNcTZ4RE5VS240aFNlZ01FcW9EU19ycFEyOVd5MVY3M1ZEYncifQ.RwZK1DG5zcr4EsrRImzStb0VX5j2ZqApXZnuoAkA3IoRdErUscNG8RuxNZ0FjlJtjMJ0a-kn-_MdtR0wwvWVgg"
           description: "Base64 of signature of data in the request"
+
+    Delta:
+      type: object
+      required:
+        - deltaUpdate
+        - recoveryCommitment
+      properties:
+        deltaUpdate:
+          $ref: "#/components/schemas/DeltaUpdate"
+        recoveryCommitment:
+          type: string
+          example: "42d8267c184d06898e80878a1b2f187fbf907c3055560867"
+          description: "SHA256 of recovery public key"
 
     DidType:
       type: string
@@ -606,14 +636,17 @@ components:
           description: SHA256 hash of current operation
 
     OperationProofSigned:
-      allOf:
-        - $ref: "#/components/schemas/OperationProof"
-        - type: object
-          properties:
-            signature:
-              type: string
-              example: "eyJhbGciOiJFUzI1NksifQ.eyJ1cGRhdGVLZXkiOnsia3R5IjoiRUMiLCJjcnYiOiJzZWNwMjU2azEiLCJ4Ijoid2Z3UUNKM09ScVZkbkhYa1Q4UC1MZ19HdHhCRWhYM3R5OU5VbnduSHJtdyIsInkiOiJ1aWU4cUxfVnVBblJEZHVwaFp1eExPNnFUOWtQcDNLUkdFSVJsVHBXcmZVIn0sImRlbHRhSGFzaCI6IkVpQ3BqTjQ3ZjBNcTZ4RE5VS240aFNlZ01Fc"
-              description: "Base64 of signature of the proof"
+      type: object
+      required:
+        - operationProof
+        - signature
+      properties:
+        operationProof:
+          $ref: "#/components/schemas/OperationProof"
+        signature:
+          type: string
+          example: "eyJhbGciOiJFUzI1NksifQ.eyJ1cGRhdGVLZXkiOnsia3R5IjoiRUMiLCJjcnYiOiJzZWNwMjU2azEiLCJ4Ijoid2Z3UUNKM09ScVZkbkhYa1Q4UC1MZ19HdHhCRWhYM3R5OU5VbnduSHJtdyIsInkiOiJ1aWU4cUxfVnVBblJEZHVwaFp1eExPNnFUOWtQcDNLUkdFSVJsVHBXcmZVIn0sImRlbHRhSGFzaCI6IkVpQ3BqTjQ3ZjBNcTZ4RE5VS240aFNlZ01Fc"
+          description: "Base64 of signature of the proof"
 
     DeltaUpdate:
       type: object
@@ -627,33 +660,38 @@ components:
             $ref: "#/components/schemas/UpdatePatch"
 
     PublicKey:
-      allOf:
-        - type: object
-          properties:
-            id:
-              type: string
-              example: "key-1"
-            type:
-              type: string
-              example: "JsonWebKey2020"
-            controller:
-              type: string
-              example: "did:prism:456"
-            purposes:
-              type: array
-              items:
-                type: string
-                enum:
-                  [
-                    "authentification",
-                    "assertionMethod",
-                    "keyAgreement",
-                    "capabilityInvocation",
-                    "capabilityDelegation",
-                  ]
-              example: [ "authentification", "assertionMethod" ]
-        - oneOf:
-            - $ref: "#/components/schemas/JsonWebKey2020"
+      type: object
+      required:
+        - id
+        - type
+        - controller
+        - purposes
+        - jsonWebKey2020
+      properties:
+        id:
+          type: string
+          example: "key-1"
+        type:
+          type: string
+          example: "JsonWebKey2020"
+        controller:
+          type: string
+          example: "did:prism:456"
+        purposes:
+          type: array
+          items:
+            type: string
+            enum:
+              [
+                "authentification",
+                "assertionMethod",
+                "keyAgreement",
+                "capabilityInvocation",
+                "capabilityDelegation",
+              ]
+          example: [ "authentification", "assertionMethod" ]
+        jsonWebKey2020:
+          $ref: "#/components/schemas/JsonWebKey2020"
 
     JsonWebKey2020:
       type: object
@@ -719,22 +757,19 @@ components:
             ]
           example: "add-public-keys"
         publicKeys:
-          oneOf:
-            - $ref: "#/components/schemas/PublicKey"
+          $ref: "#/components/schemas/PublicKey"
 
 
     # ----------------------------------
     # ASYNC OPERATIONS
     # ----------------------------------
     GetDIDOperationResponse:
-      allOf:
-        - $ref: "#/components/schemas/DidOperation"
+      $ref: "#/components/schemas/DidOperation"
 
     GetDIDOperationsByDIDRefResponse:
       type: array
       items:
-        allOf:
-          - $ref: "#/components/schemas/DidOperation"
+        $ref: "#/components/schemas/DidOperation"
 
     DidOperation:
       type: object
