@@ -79,6 +79,20 @@ lazy val models = project
 // ### Protocols ###
 // #################
 
+lazy val protocolConnection = project
+  .in(file("protocol-connection"))
+  .settings(name := "mercury-protocol-connection", version := VERSION)
+  .settings(libraryDependencies += D.zio.value)
+  .settings(libraryDependencies ++= Seq(D.circeCore.value, D.circeGeneric.value, D.circeParser.value))
+  .dependsOn(models, protocolInvitation)
+
+lazy val protocolCoordinateMediation = project
+  .in(file("protocol-coordinate-mediation"))
+  .settings(name := "mercury-protocol-coordinate-mediation", version := VERSION)
+  .settings(libraryDependencies += D.zio.value)
+  .settings(libraryDependencies ++= Seq(D.circeCore.value, D.circeGeneric.value, D.circeParser.value))
+  .dependsOn(models)
+
 lazy val protocolInvitation = project
   .in(file("protocol-invitation"))
   .settings(name := "mercury-protocol-invitation", version := VERSION)
@@ -93,13 +107,6 @@ lazy val protocolInvitation = project
     )
   )
   .dependsOn(models)
-
-lazy val protocolConnection = project
-  .in(file("protocol-connection"))
-  .settings(name := "mercury-protocol-connection", version := VERSION)
-  .settings(libraryDependencies += D.zio.value)
-  .settings(libraryDependencies ++= Seq(D.circeCore.value, D.circeGeneric.value, D.circeParser.value))
-  .dependsOn(models, protocolInvitation)
 
 lazy val protocolMercuryMailbox = project
   .in(file("protocol-mercury-mailbox"))
