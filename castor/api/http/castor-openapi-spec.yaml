@@ -17,25 +17,31 @@ tags:
     description: DID Authentication REST API
 
 paths:
-  /dids/v1/published/create:
+  /dids/:
     post:
-      tags: ["DID"]
-      operationId: createPublishedDid
-      summary: Publish DID with the associated DID Document to blockchain.
-      description: Publish DID with the associated DID Document to blockchain.
+      tags: [ "DID" ]
+      operationId: createDid
+      summary: Create DID with the associated DID Document with the option to publish to blockchain.
+      description: Create DID with the associated DID Document with the option to publish to blockchain.
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateDIDOperation"
+              $ref: "#/components/schemas/CreateDIDRequest"
       responses:
-        "202":
-          description: Publishing DID to blockchain.
+        "200":
+          description: Created DID.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PublishDIDResponse"
+                $ref: "#/components/schemas/DIDResponse"
+        "202":
+          description: Created DID. Publishing DID or Proof to Blockchain.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DIDResponseWithAsyncOutcome"
           headers:
             Location:
               schema:
@@ -48,12 +54,12 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-  /dids/v1/published/update/{didRef}:
-    post:
-      tags: ["DID"]
-      operationId: updatePublishedDid
-      summary: Update published DID.
-      description: Update published DID.
+  /dids/{didRef}:
+    put:
+      tags: [ "DID" ]
+      operationId: updateDid
+      summary: Update DID.
+      description: Update DID.
       parameters:
         - $ref: "#/components/parameters/didRefInPath"
       requestBody:
@@ -61,104 +67,27 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UpdateDIDOperation"
+              $ref: "#/components/schemas/UpdateDIDRequest"
       responses:
         "200":
-          description: The DID resource
+          description: Updated DID.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResolveDIDResponse"
-        "404":
-          description: There is no DID existing for the 'didRef'.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
-  /dids/v1/published/recover/{didRef}:
-    post:
-      tags: ["DID"]
-      operationId: recoverPublishedDid
-      summary: Recover published DID.
-      description: Recover published DID.
-      parameters:
-        - $ref: "#/components/parameters/didRefInPath"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/RecoverDIDOperation"
-      responses:
-        "200":
-          description: The DID resource
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ResolveDIDResponse"
-        "404":
-          description: There is no DID existing for the 'didRef'.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
-  /dids/v1/unpublished/create:
-    post:
-      tags: ["DID"]
-      operationId: createUnpublishedDid
-      summary: Register DID with the associated DID Document on the server, push proof of operation to the blockchain.
-      description: Register DID with the associated DID Document on the server, push proof of operation to the blockchain.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreateDIDWithProof"
-      responses:
+                $ref: "#/components/schemas/DIDResponse"
         "202":
-          description: Publishing DID proof to blockchain.
+          description: Updated DID. Publishing Updated DID or Update Proof to Blockchain.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PublishDIDResponse"
-          headers:
-            Location:
-              schema:
-                type: string
-              description: URL to access DID resource and update status.
-        "422":
-          description: The DID creation failed.
-
-  /dids/v1/unpublished/update/{didRef}:
-    post:
-      tags: ["DID"]
-      operationId: updateUnpublishedDid
-      summary: Register DID update on the server, push proof of operation to blockchain.
-      description: Register DID update on the server, push proof of operation to blockchain.
-      parameters:
-        - $ref: "#/components/parameters/didRefInPath"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UpdateDIDWithProof"
-      responses:
-        "202":
-          description: Publishing DID proof to blockchain.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PublishDIDResponse"
+                $ref: "#/components/schemas/DIDResponseWithAsyncOutcome"
           headers:
             Location:
               schema:
                 type: string
               description: URL to access DID resource and publication status.
         "422":
-          description: The DID update failed.
+          description: The DID Update failed.
           content:
             application/json:
               schema:
@@ -170,40 +99,11 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-  /dids/v1/unpublished/recover/{didRef}:
-    post:
-      tags: ["DID"]
-      operationId: recoverUnpublishedDid
-      summary: Recover unpublished DID.
-      description: Recover unpublished DID.
-      parameters:
-        - $ref: "#/components/parameters/didRefInPath"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/RecoverDIDWithProof"
-      responses:
-        "200":
-          description: The DID resource
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ResolveDIDResponse"
-        "404":
-          description: There is no DID existing for the 'didRef'.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
-  /dids/v1/{didRef}:
     get:
-      tags: ["DID"]
-      operationId: getDID
-      summary: Resolves a DID, returning the associated DID Document
-      description: Get a DID and associated DID Document.
+      tags: [ "DID" ]
+      operationId: getDid
+      summary: Get DID.
+      description: Get DID.
       parameters:
         - $ref: "#/components/parameters/didRefInPath"
       responses:
@@ -212,7 +112,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResolveDIDResponse"
+                $ref: "#/components/schemas/DIDResponse"
         "404":
           description: There is no DID existing for the 'didRef'.
           content:
@@ -220,8 +120,9 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-    delete:
-      tags: ["DID"]
+  /dids/{didRef}/deactivations:
+    put:
+      tags: [ "DID" ]
       operationId: deactivateDID
       summary: Deactivates either published or unpublished DID.
       description: Deactivates either published or unpublished DID.
@@ -232,35 +133,86 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/DeactivateDIDOperation"
+              $ref: "#/components/schemas/DeactivateDIDRequest"
       responses:
+        "200":
+          description: DID Deactivated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DIDResponse"
         "202":
           description: Deactivating DID.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/DeactivateDIDResponse"
+                $ref: "#/components/schemas/DIDResponseWithAsyncOutcome"
           headers:
             Location:
               schema:
                 type: string
-              description: URL to access DID resource and deactivation status.
-        "404":
-          description: The specified DID was not found.
+              description: URL to access DID resource and publication status.
+        "422":
+          description: The DID Deactivation failed.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        "422":
-          description: The DID deactivation failed.
+        "404":
+          description: There is no DID existing for the 'didRef'.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-  /did/v1/operations/{didOperationRef}:
+  /dids/{didRef}/recoveries:
+    post:
+      tags: [ "DID" ]
+      operationId: recoverDid
+      summary: Recover DID.
+      description: Recover DID.
+      parameters:
+        - $ref: "#/components/parameters/didRefInPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecoverDIDRequest"
+      responses:
+        "200":
+          description: Recovered DID.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DIDResponse"
+        "202":
+          description: Recovered DID. Publishing Recovered DID or Recovery Proof to Blockchain.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DIDResponseWithAsyncOutcome"
+          headers:
+            Location:
+              schema:
+                type: string
+              description: URL to access DID resource and publication status.
+        "422":
+          description: The DID Update failed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: There is no DID existing for the 'didRef'.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /did-operations/{didOperationRef}:
     get:
-      tags: ["DID Operations"]
+      tags: [ "DID Operations" ]
       operationId: getDidOperation
       summary: Get Did Operation.
       description: Get Did Operation.
@@ -280,14 +232,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-  /did/v1/operations/:
+  /dids/{didRef}/operations:
     get:
-      tags: ["DID Operations"]
+      tags: [ "DID Operations" ]
       operationId: getDidOperationsByDidRef
       summary: Get All DID Operations for given DID.
       description: Get All DID Operations for given DID.
       parameters:
-        - $ref: "#/components/parameters/didRefInQuery"
+        - $ref: "#/components/parameters/didRefInPath"
       responses:
         "200":
           description: All DID Operations for a given DID.
@@ -302,9 +254,9 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-  /did-authentication/challenges:
+  /authentication/challenges:
     post:
-      tags: ["DID Authentication"]
+      tags: [ "DID Authentication" ]
       operationId: createDidAuthenticationChallenge
       summary: Create a new authentication challenge
       description: |
@@ -330,9 +282,9 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-  /did-authentication/challenge-submissions:
+  /authentication/challenge-submissions:
     post:
-      tags: ["DID Authentication"]
+      tags: [ "DID Authentication" ]
       operationId: createDidAuthenticationChallengeSubmission
       summary: Create a verification from challenge
       description: |
@@ -382,93 +334,36 @@ components:
         type: string
 
   schemas:
-    PublishDIDRequest:
-      allOf:
-        - $ref: "#/components/schemas/CreateDIDOperation"
-    PublishDIDResponse:
+    DIDResponse:
       type: object
+      required:
+        - did
+        - type
+        - deactivated
       properties:
         did:
           $ref: "#/components/schemas/DID"
-        CurrentDidStatus:
-          $ref: "#/components/schemas/DIDStatus"
-        scheduledOperation:
-          $ref: "#/components/schemas/DidOperation"
-
-    UpdateDIDRequest:
-      allOf:
-        - $ref: "#/components/schemas/DID"
-    UpdateDIDResponse:
-      type: object
-      properties:
-        did:
-          $ref: "#/components/schemas/DID"
-        CurrentDidStatus:
-          $ref: "#/components/schemas/DIDStatus"
-        scheduledOperation:
-          $ref: "#/components/schemas/DidOperation"
-
-    DeactivateDIDResponse:
-      type: object
-      properties:
-        did:
-          $ref: "#/components/schemas/DID"
-        CurrentDidStatus:
-          $ref: "#/components/schemas/DIDStatus"
-        scheduledOperation:
-          $ref: "#/components/schemas/DidOperation"
-
-    ResolveDIDResponse:
-      type: object
-      properties:
-        did:
-          $ref: "#/components/schemas/DID"
-        CurrentDidStatus:
-          $ref: "#/components/schemas/DIDStatus"
-
-    GetDIDOperationResponse:
-      allOf:
-        - $ref: "#/components/schemas/DidOperation"
-
-    GetDIDOperationsByDIDRefResponse:
-      type: array
-      items:
-        allOf:
-          - $ref: "#/components/schemas/DidOperation"
-
-    DIDStatus:
-      type: string
-      enum:
-        - DEACTIVATED
-        - PUBLISHED
-        - PUBLISHING
-
-    DidOperation:
-      type: object
-      properties:
-        id:
-          type: string
-          example: "123"
-        didRef:
-          type: string
-          example: "did:prism:123"
         type:
-          $ref: "#/components/schemas/DidOperationType"
-        status:
-          $ref: "#/components/schemas/DidOperationStatus"
+          $ref: "#/components/schemas/DidTypeWithProof"
+        deactivated:
+          type: boolean
 
-    DidOperationStatus:
-      type: string
-      enum:
-        - EXECUTED
-        - EXECUTING
-
-    DidOperationType:
-      type: string
-      enum:
-        - DEACTIVATE
-        - UPDATE
-        - PUBLISH
+    DIDResponseWithAsyncOutcome:
+      type: object
+      required:
+        - did
+        - type
+        - deactivated
+        - scheduledOperation
+      properties:
+        did:
+          $ref: "#/components/schemas/DID"
+        type:
+          $ref: "#/components/schemas/DidTypeWithProof"
+        deactivated:
+          type: boolean
+        scheduledOperation:
+          $ref: "#/components/schemas/DidOperation"
 
     DID:
       type: object
@@ -488,53 +383,57 @@ components:
         authentication:
           type: array
           items:
-            oneOf:
-              - $ref: "#/components/schemas/VerificationMethodRef"
-              - $ref: "#/components/schemas/VerificationMethod"
+            $ref: "#/components/schemas/VerificationMethodOrRef"
         assertionMethod:
           type: array
           items:
-            oneOf:
-              - $ref: "#/components/schemas/VerificationMethodRef"
-              - $ref: "#/components/schemas/VerificationMethod"
+            $ref: "#/components/schemas/VerificationMethodOrRef"
         keyAgreement:
           type: array
           items:
-            oneOf:
-              - $ref: "#/components/schemas/VerificationMethodRef"
-              - $ref: "#/components/schemas/VerificationMethod"
+            $ref: "#/components/schemas/VerificationMethodOrRef"
         capabilityInvocation:
           type: array
           items:
-            oneOf:
-              - $ref: "#/components/schemas/VerificationMethodRef"
-              - $ref: "#/components/schemas/VerificationMethod"
+            $ref: "#/components/schemas/VerificationMethodOrRef"
         service:
           type: array
           items:
             $ref: "#/components/schemas/Service"
 
-    VerificationMethodRef:
-      type: string
-      example: "did:example:123456789abcdefghi#keys-1"
+    VerificationMethodOrRef:
+      description: |
+        A reference to VerificationMethod or VerificationMethod object.
+        Exactly one property must be present to be valid.
+      type: object
+      properties:
+        ref:
+          type: string
+          example: "did:example:123456789abcdefghi#keys-1"
+        verificationMethod:
+          $ref: "#/components/schemas/VerificationMethod"
 
     VerificationMethod:
-      allOf:
-        - type: object
-          properties:
-            id:
-              type: string
-              example: "did:prism:123#key-1"
-            type:
-              type: string
-              example: "JsonWebKey2020"
-            controller:
-              type: string
-              example: "did:prism:456"
-        - oneOf:
-            - $ref: "#/components/schemas/JsonWebKey2020"
+      type: object
+      required:
+        - id
+        - type
+        - controller
+        - jsonWebKey2020
+      properties:
+        id:
+          type: string
+          example: "did:prism:123#key-1"
+        type:
+          type: string
+          example: "JsonWebKey2020"
+        controller:
+          type: string
+          example: "did:prism:456"
+        jsonWebKey2020:
+          $ref: "#/components/schemas/JsonWebKey2020"
 
-    CreateDIDOperation:
+    CreateDIDRequest:
       type: object
       required:
         - type
@@ -543,10 +442,10 @@ components:
         - storage
         - document
       properties:
-        type:
-          type: string
-          example: "create"
-          description: "Type of operation"
+        requestType:
+          $ref: "#/components/schemas/OperationType"
+        didType:
+          $ref: "#/components/schemas/DidTypeWithProof"
         updateCommitment:
           type: string
           example: "e0f10749ef6d7ea351cf9e23ef505a933e8386123413a044d11945fd45bad3ba"
@@ -558,7 +457,6 @@ components:
         storage:
           type: string
           example: "mainnet"
-
         document:
           type: object
           properties:
@@ -568,15 +466,13 @@ components:
             publicKeys:
               type: array
               items:
-                oneOf:
-                  - $ref: "#/components/schemas/PublicKey"
-
+                $ref: "#/components/schemas/PublicKey"
         services:
           type: array
           items:
             $ref: "#/components/schemas/Service"
 
-    UpdateDIDOperation:
+    UpdateDIDRequest:
       type: object
       required:
         - type
@@ -585,10 +481,10 @@ components:
         - previousVersion
         - delta
       properties:
-        type:
-          type: string
-          example: "update"
-          description: "Type of operation"
+        requestType:
+          $ref: "#/components/schemas/OperationType"
+        didType:
+          $ref: "#/components/schemas/DidTypeWithSignedProof"
         did:
           type: string
           example: did:prism:unpublished:7a3a5cd1beab57a65c18c584848029c513ca27c8edfb69ceb2c7aef3d659bf44?instance=https://offchain-storage.com"
@@ -603,18 +499,16 @@ components:
         delta:
           $ref: "#/components/schemas/DeltaUpdate"
 
-    DeactivateDIDOperation:
+    DeactivateDIDRequest:
       type: object
       required:
-        - type
         - did
         - recoveryPublicKey
         - previousVersion
         - signature
       properties:
-        type:
-          type: string
-          example: "deactivate"
+        requestType:
+          $ref: "#/components/schemas/OperationType"
         did:
           type: string
           example: "did:prism:mainnet:7a3a5cd1beab57a65c18c584848029c513ca27c8edfb69ceb2c7aef3d659bf44"
@@ -631,12 +525,13 @@ components:
           example: "eyJhbGciOiJFUzI1NksifQ.eyJ1cGRhdGVLZXkiOnsia3R5IjoiRUMiLCJjcnYiOiJzZWNwMjU2azEiLCJ4Ijoid2Z3UUNKM09ScVZkbkhYa1Q4UC1MZ19HdHhCRWhYM3R5OU5VbnduSHJtdyIsInkiOiJ1aWU4cUxfVnVBblJEZHVwaFp1eExPNnFUOWtQcDNLUkdFSVJsVHBXcmZVIn0sImRlbHRhSGFzaCI6IkVpQ3BqTjQ3ZjBNcTZ4RE5VS240aFNlZ01FcW9EU19ycFEyOVd5MVY3M1ZEYncifQ.RwZK1DG5zcr4EsrRImzStb0VX5j2ZqApXZnuoAkA3IoRdErUscNG8RuxNZ0FjlJtjMJ0a-kn-_MdtR0wwvWVgg"
           description: "Base64 of signature of data in the request"
 
-    RecoverDIDOperation:
+    RecoverDIDRequest:
       type: object
       properties:
-        type:
-          type: string
-          example: "recovery"
+        requestType:
+          $ref: "#/components/schemas/OperationType"
+        didType:
+          $ref: "#/components/schemas/DidTypeWithSignedProof"
         did:
           type: string
           example: "did:prism:mainnet:7a3a5cd1beab57a65c18c584848029c513ca27c8edfb69ceb2c7aef3d659bf44"
@@ -648,51 +543,59 @@ components:
           example: "a56d8c8cee25d810840c6f77b0797af36f2cb7247101a59f4607f9542c8f7aee"
           description: "SHA256 of last DID operation"
         delta:
-          allOf:
-            - $ref: "#/components/schemas/DeltaUpdate"
-            - type: object
-              properties:
-                recoveryCommitment:
-                  type: string
-                  example: "42d8267c184d06898e80878a1b2f187fbf907c3055560867"
-                  description: "SHA256 of recovery public key"
+          $ref: "#/components/schemas/Delta"
         signature:
           type: string
           example: "eyJhbGciOiJFUzI1NksifQ.eyJ1cGRhdGVLZXkiOnsia3R5IjoiRUMiLCJjcnYiOiJzZWNwMjU2azEiLCJ4Ijoid2Z3UUNKM09ScVZkbkhYa1Q4UC1MZ19HdHhCRWhYM3R5OU5VbnduSHJtdyIsInkiOiJ1aWU4cUxfVnVBblJEZHVwaFp1eExPNnFUOWtQcDNLUkdFSVJsVHBXcmZVIn0sImRlbHRhSGFzaCI6IkVpQ3BqTjQ3ZjBNcTZ4RE5VS240aFNlZ01FcW9EU19ycFEyOVd5MVY3M1ZEYncifQ.RwZK1DG5zcr4EsrRImzStb0VX5j2ZqApXZnuoAkA3IoRdErUscNG8RuxNZ0FjlJtjMJ0a-kn-_MdtR0wwvWVgg"
           description: "Base64 of signature of data in the request"
 
-    CreateDIDWithProof:
+    Delta:
       type: object
       required:
-        - operation
-        - proof
+        - deltaUpdate
+        - recoveryCommitment
       properties:
-        operation:
-          $ref: "#/components/schemas/CreateDIDOperation"
+        deltaUpdate:
+          $ref: "#/components/schemas/DeltaUpdate"
+        recoveryCommitment:
+          type: string
+          example: "42d8267c184d06898e80878a1b2f187fbf907c3055560867"
+          description: "SHA256 of recovery public key"
+
+    DidType:
+      type: string
+      enum:
+        - PUBLISHED
+        - UNPUBLISHED_OFF_CHAIN
+        - UNPUBLISHED_ON_CHAIN
+
+    DidTypeWithProof:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          $ref: "#/components/schemas/DidType"
         proof:
           $ref: "#/components/schemas/OperationProof"
 
-    UpdateDIDWithProof:
+    DidTypeWithSignedProof:
       type: object
       required:
-        - operation
-        - proof
+        - type
       properties:
-        operation:
-          $ref: "#/components/schemas/UpdateDIDOperation"
+        type:
+          $ref: "#/components/schemas/DidType"
         proof:
           $ref: "#/components/schemas/OperationProofSigned"
 
-    RecoverDIDWithProof:
-      type: object
-      required:
-        - operation
-        - proof
-      properties:
-        operation:
-          $ref: "#/components/schemas/RecoverDIDOperation"
-        proof:
-          $ref: "#/components/schemas/OperationProofSigned"
+    OperationType:
+      type: string
+      enum:
+        - create
+        - update
+        - deactivate
+        - recover
 
     OperationProof:
       type: object
@@ -701,13 +604,8 @@ components:
         - didHash
         - version
       properties:
-        type:
-          type: string
-          enum:
-            - create
-            - update
-            - deactivate
-            - recover
+        operationType:
+          $ref: "#/components/schemas/OperationType"
         didHash:
           type: string
           example: "8ccfa10d3b642543c2cb80340559ba0b083ae0052a93b6168df3fdb157a203bc"
@@ -717,14 +615,17 @@ components:
           description: SHA256 hash of current operation
 
     OperationProofSigned:
-      allOf:
-        - $ref: "#/components/schemas/OperationProof"
-        - type: object
-          properties:
-            signature:
-              type: string
-              example: "eyJhbGciOiJFUzI1NksifQ.eyJ1cGRhdGVLZXkiOnsia3R5IjoiRUMiLCJjcnYiOiJzZWNwMjU2azEiLCJ4Ijoid2Z3UUNKM09ScVZkbkhYa1Q4UC1MZ19HdHhCRWhYM3R5OU5VbnduSHJtdyIsInkiOiJ1aWU4cUxfVnVBblJEZHVwaFp1eExPNnFUOWtQcDNLUkdFSVJsVHBXcmZVIn0sImRlbHRhSGFzaCI6IkVpQ3BqTjQ3ZjBNcTZ4RE5VS240aFNlZ01Fc"
-              description: "Base64 of signature of the proof"
+      type: object
+      required:
+        - operationProof
+        - signature
+      properties:
+        operationProof:
+          $ref: "#/components/schemas/OperationProof"
+        signature:
+          type: string
+          example: "eyJhbGciOiJFUzI1NksifQ.eyJ1cGRhdGVLZXkiOnsia3R5IjoiRUMiLCJjcnYiOiJzZWNwMjU2azEiLCJ4Ijoid2Z3UUNKM09ScVZkbkhYa1Q4UC1MZ19HdHhCRWhYM3R5OU5VbnduSHJtdyIsInkiOiJ1aWU4cUxfVnVBblJEZHVwaFp1eExPNnFUOWtQcDNLUkdFSVJsVHBXcmZVIn0sImRlbHRhSGFzaCI6IkVpQ3BqTjQ3ZjBNcTZ4RE5VS240aFNlZ01Fc"
+          description: "Base64 of signature of the proof"
 
     DeltaUpdate:
       type: object
@@ -738,33 +639,38 @@ components:
             $ref: "#/components/schemas/UpdatePatch"
 
     PublicKey:
-      allOf:
-        - type: object
-          properties:
-            id:
-              type: string
-              example: "key-1"
-            type:
-              type: string
-              example: "JsonWebKey2020"
-            controller:
-              type: string
-              example: "did:prism:456"
-            purposes:
-              type: array
-              items:
-                type: string
-                enum:
-                  [
-                    "authentification",
-                    "assertionMethod",
-                    "keyAgreement",
-                    "capabilityInvocation",
-                    "capabilityDelegation",
-                  ]
-              example: ["authentification", "assertionMethod"]
-        - oneOf:
-            - $ref: "#/components/schemas/JsonWebKey2020"
+      type: object
+      required:
+        - id
+        - type
+        - controller
+        - purposes
+        - jsonWebKey2020
+      properties:
+        id:
+          type: string
+          example: "key-1"
+        type:
+          type: string
+          example: "JsonWebKey2020"
+        controller:
+          type: string
+          example: "did:prism:456"
+        purposes:
+          type: array
+          items:
+            type: string
+            enum:
+              [
+                "authentification",
+                "assertionMethod",
+                "keyAgreement",
+                "capabilityInvocation",
+                "capabilityDelegation",
+              ]
+          example: [ "authentification", "assertionMethod" ]
+        jsonWebKey2020:
+          $ref: "#/components/schemas/JsonWebKey2020"
 
     JsonWebKey2020:
       type: object
@@ -830,16 +736,64 @@ components:
             ]
           example: "add-public-keys"
         publicKeys:
-          oneOf:
-            - $ref: "#/components/schemas/PublicKey"
+          $ref: "#/components/schemas/PublicKey"
 
+
+    # ----------------------------------
+    # ASYNC OPERATIONS
+    # ----------------------------------
+    GetDIDOperationResponse:
+      $ref: "#/components/schemas/DidOperation"
+
+    GetDIDOperationsByDIDRefResponse:
+      type: array
+      items:
+        $ref: "#/components/schemas/DidOperation"
+
+    DidOperation:
+      type: object
+      required:
+        - id
+        - didRef
+        - type
+        - status
+      properties:
+        id:
+          type: string
+          example: "123"
+        didRef:
+          type: string
+          example: "did:prism:123"
+        type:
+          $ref: "#/components/schemas/DidOperationType"
+        status:
+          $ref: "#/components/schemas/DidOperationStatus"
+
+    DidOperationStatus:
+      type: string
+      enum:
+        - EXECUTED
+        - EXECUTING
+
+    DidOperationType:
+      type: string
+      enum:
+        - PUBLISH
+        - PUBLISH_PROOF
+        - UPDATE
+        - UPDATE_PROOF
+        - DEACTIVATE
+
+    # ----------------------------------
+    # AUTHENTICATION
+    # ----------------------------------
     CreateAuthenticationChallengeRequest:
       type: object
       required:
         - ttl
       properties:
         ttl:
-          type: integer
+          type: number
           description: A number of seconds that challenge will be considered valid.
           example: 900
         state:
