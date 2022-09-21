@@ -196,6 +196,7 @@ lazy val mediator = project
     dockerExposedPorts := Seq(8080),
     dockerBaseImage := "openjdk:11"
   )
+  .enablePlugins(JavaAppPackaging, DockerPlugin)
   .dependsOn(agentDidcommx, resolver)
   .dependsOn(
     protocolConnection,

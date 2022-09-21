@@ -2,10 +2,9 @@ version: '3.8'
 
 services:
   castor:
-    image: hashicorp/http-echo:alpine
-    command:
-      - -listen=:80
-      - -text="I'm Castor"
+    image: atala-prism.io/castor-api-server:0.1.0-SNAPSHOT
+    ports:
+      - 8080:8080
 
   pollux:
     image: hashicorp/http-echo:alpine
@@ -14,10 +13,9 @@ services:
       - -text="I'm Pollux"
 
   mercury:
-    image: hashicorp/http-echo:alpine
-    command:
-      - -listen=:80
-      - -text="I'm Mercury"
+    image: atala-prism.io/mercury-mediator:0.1.0-SNAPSHOT
+    ports:
+      - 8081:8080
 
   swagger-ui:
     image: swaggerapi/swagger-ui:v4.14.0
