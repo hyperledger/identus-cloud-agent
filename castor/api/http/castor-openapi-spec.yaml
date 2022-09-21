@@ -383,65 +383,44 @@ components:
         authentication:
           type: array
           items:
-            oneOf:
-              - $ref: "#/components/schemas/VerificationMethodRef"
-              - $ref: "#/components/schemas/VerificationMethod"
-            discriminator:
-              propertyName: objectType
+            $ref: "#/components/schemas/VerificationMethodOrRef"
         assertionMethod:
           type: array
           items:
-            oneOf:
-              - $ref: "#/components/schemas/VerificationMethodRef"
-              - $ref: "#/components/schemas/VerificationMethod"
-            discriminator:
-              propertyName: objectType
+            $ref: "#/components/schemas/VerificationMethodOrRef"
         keyAgreement:
           type: array
           items:
-            oneOf:
-              - $ref: "#/components/schemas/VerificationMethodRef"
-              - $ref: "#/components/schemas/VerificationMethod"
-            discriminator:
-              propertyName: objectType
+            $ref: "#/components/schemas/VerificationMethodOrRef"
         capabilityInvocation:
           type: array
           items:
-            oneOf:
-              - $ref: "#/components/schemas/VerificationMethodRef"
-              - $ref: "#/components/schemas/VerificationMethod"
-            discriminator:
-              propertyName: objectType
+            $ref: "#/components/schemas/VerificationMethodOrRef"
         service:
           type: array
           items:
             $ref: "#/components/schemas/Service"
 
-    VerificationMethodRef:
-      type: string
-      required:
-        - objectType
-        - ref
+    VerificationMethodOrRef:
+      description: |
+        A reference to VerificationMethod or VerificationMethod object.
+        Exactly one property must be present to be valid.
+      type: object
       properties:
-        objectType:
-          type: string
         ref:
           type: string
           example: "did:example:123456789abcdefghi#keys-1"
-
+        verificationMethod:
+          $ref: "#/components/schemas/VerificationMethod"
 
     VerificationMethod:
       type: object
       required:
-        - objectType
         - id
         - type
         - controller
         - jsonWebKey2020
-
       properties:
-        objectType:
-          type: string
         id:
           type: string
           example: "did:prism:123#key-1"
