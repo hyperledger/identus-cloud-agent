@@ -4,7 +4,7 @@ import akka.http.scaladsl.marshalling.ToEntityMarshaller
 import akka.http.scaladsl.server.Route
 import io.iohk.atala.castor.core.service.DIDOperationService
 import io.iohk.atala.castor.openapi.api.DIDOperationsApiService
-import io.iohk.atala.castor.openapi.model.{DidOperation, ErrorResponse}
+import io.iohk.atala.castor.openapi.model.{DidOperation, DidOperationStatus, DidOperationType, ErrorResponse}
 import zio.*
 
 // TODO: replace with actual implementation
@@ -12,15 +12,30 @@ class DIDOperationsApiServiceImpl(service: DIDOperationService)(using runtime: R
     extends DIDOperationsApiService
     with AkkaZioSupport {
 
+  private val mockDIDOperation = DidOperation(
+    id = "123",
+    didRef = "did:prism:1:abcdef123456",
+    `type` = DidOperationType(),
+    status = DidOperationStatus()
+  )
+
   override def getDidOperation(didOperationRef: String)(implicit
       toEntityMarshallerDidOperation: ToEntityMarshaller[DidOperation],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
-  ): Route = ???
+  ): Route = {
+    onZioSuccess(ZIO.unit) { _ =>
+      getDidOperation200(mockDIDOperation)
+    }
+  }
 
   override def getDidOperationsByDidRef(didRef: String)(implicit
       toEntityMarshallerDidOperationarray: ToEntityMarshaller[Seq[DidOperation]],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
-  ): Route = ???
+  ): Route = {
+    onZioSuccess(ZIO.unit) { _ =>
+      getDidOperationsByDidRef200(Seq.fill(4)(mockDIDOperation))
+    }
+  }
 
 }
 

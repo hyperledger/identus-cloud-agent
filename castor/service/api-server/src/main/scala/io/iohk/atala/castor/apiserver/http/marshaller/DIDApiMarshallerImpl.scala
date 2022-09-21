@@ -18,7 +18,6 @@ import zio.*
 object DIDApiMarshallerImpl extends JsonSupport {
 
   val layer: ULayer[DIDApiMarshaller] = ZLayer.succeed {
-    // TODO: replace with actual implementation
     new DIDApiMarshaller {
       implicit def fromEntityUnmarshallerCreateDIDRequest: FromEntityUnmarshaller[CreateDIDRequest] =
         summon[RootJsonFormat[CreateDIDRequest]]

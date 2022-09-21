@@ -9,7 +9,6 @@ import zio.*
 object DIDOperationsApiMarshallerImpl extends JsonSupport {
 
   val layer: ULayer[DIDOperationsApiMarshaller] = ZLayer.succeed {
-    // TODO: replace with actual implementation
     new DIDOperationsApiMarshaller {
       implicit def toEntityMarshallerDidOperation: ToEntityMarshaller[DidOperation] =
         summon[RootJsonFormat[DidOperation]]
