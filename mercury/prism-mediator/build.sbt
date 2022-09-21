@@ -190,7 +190,11 @@ lazy val mediator = project
       // "org.jetbrains.kotlin" % "kotlin-stdlib" % "1.7.10",
       // "com.google.code.gson" % "gson" % "2.9.1"
     ),
-    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+    Docker / maintainer := "atala-coredid@iohk.io",
+    Docker / dockerRepository := Some("atala-prism.io"),
+    dockerExposedPorts := Seq(8080),
+    dockerBaseImage := "openjdk:11"
   )
   .dependsOn(agentDidcommx, resolver)
   .dependsOn(

@@ -39,7 +39,12 @@ lazy val `api-server` = project
     openApiGeneratorConfig := baseDirectory.value / "openapi/generator-config/config.yaml",
     // gRPC settings
     Compile / PB.targets := Seq(scalapb.gen() -> (Compile / sourceManaged).value / "scalapb"),
-    Compile / PB.protoSources := Seq(apiBaseDirectory.value / "grpc")
+    Compile / PB.protoSources := Seq(apiBaseDirectory.value / "grpc"),
+    Docker / maintainer := "atala-coredid@iohk.io",
+    Docker / dockerRepository := Some("atala-prism.io"),
+    // Docker / packageName := s"atala-prism/${packageName.value}",
+    dockerExposedPorts := Seq(8080),
+    dockerBaseImage := "openjdk:11"
   )
-  .enablePlugins(OpenApiGeneratorPlugin)
+  .enablePlugins(OpenApiGeneratorPlugin, JavaAppPackaging, DockerPlugin)
   .dependsOn(core, sql)
