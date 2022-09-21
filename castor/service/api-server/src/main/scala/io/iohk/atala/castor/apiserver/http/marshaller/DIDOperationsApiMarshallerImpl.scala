@@ -3,18 +3,22 @@ package io.iohk.atala.castor.apiserver.http.marshaller
 import akka.http.scaladsl.marshalling.ToEntityMarshaller
 import io.iohk.atala.castor.openapi.api.DIDOperationsApiMarshaller
 import io.iohk.atala.castor.openapi.model.{DidOperation, ErrorResponse}
+import spray.json.RootJsonFormat
 import zio.*
 
-object DIDOperationsApiMarshallerImpl {
+object DIDOperationsApiMarshallerImpl extends JsonSupport {
 
   val layer: ULayer[DIDOperationsApiMarshaller] = ZLayer.succeed {
     // TODO: replace with actual implementation
     new DIDOperationsApiMarshaller {
-      implicit def toEntityMarshallerDidOperation: ToEntityMarshaller[DidOperation] = ???
+      implicit def toEntityMarshallerDidOperation: ToEntityMarshaller[DidOperation] =
+        summon[RootJsonFormat[DidOperation]]
 
-      implicit def toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse] = ???
+      implicit def toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse] =
+        summon[RootJsonFormat[ErrorResponse]]
 
-      implicit def toEntityMarshallerDidOperationarray: ToEntityMarshaller[Seq[DidOperation]] = ???
+      implicit def toEntityMarshallerDidOperationarray: ToEntityMarshaller[Seq[DidOperation]] =
+        summon[RootJsonFormat[Seq[DidOperation]]]
     }
   }
 

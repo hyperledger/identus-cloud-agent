@@ -13,22 +13,22 @@ object DIDAuthenticationApiMarshallerImpl extends JsonSupport {
     new DIDAuthenticationApiMarshaller {
       implicit def fromEntityUnmarshallerAuthenticationChallengeSubmissionRequest
           : FromEntityUnmarshaller[AuthenticationChallengeSubmissionRequest] =
-        implicitly[RootJsonFormat[AuthenticationChallengeSubmissionRequest]]
+        summon[RootJsonFormat[AuthenticationChallengeSubmissionRequest]]
 
       implicit def fromEntityUnmarshallerCreateAuthenticationChallengeRequest
           : FromEntityUnmarshaller[CreateAuthenticationChallengeRequest] =
-        implicitly[RootJsonFormat[CreateAuthenticationChallengeRequest]]
+        summon[RootJsonFormat[CreateAuthenticationChallengeRequest]]
 
       implicit def toEntityMarshallerAuthenticationChallengeSubmissionResponse
           : ToEntityMarshaller[AuthenticationChallengeSubmissionResponse] =
-        implicitly[RootJsonFormat[AuthenticationChallengeSubmissionResponse]]
+        summon[RootJsonFormat[AuthenticationChallengeSubmissionResponse]]
 
       implicit def toEntityMarshallerCreateAuthenticationChallengeResponse
           : ToEntityMarshaller[CreateAuthenticationChallengeResponse] =
-        implicitly[RootJsonFormat[CreateAuthenticationChallengeResponse]]
+        summon[RootJsonFormat[CreateAuthenticationChallengeResponse]]
 
       implicit def toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse] =
-        implicitly[RootJsonFormat[ErrorResponse]]
+        summon[RootJsonFormat[ErrorResponse]]
     }
   }
 

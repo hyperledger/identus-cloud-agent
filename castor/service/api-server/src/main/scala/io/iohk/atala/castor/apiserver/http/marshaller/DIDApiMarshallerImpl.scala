@@ -20,19 +20,25 @@ object DIDApiMarshallerImpl extends JsonSupport {
   val layer: ULayer[DIDApiMarshaller] = ZLayer.succeed {
     // TODO: replace with actual implementation
     new DIDApiMarshaller {
-      implicit def fromEntityUnmarshallerCreateDIDRequest: FromEntityUnmarshaller[CreateDIDRequest] = ???
+      implicit def fromEntityUnmarshallerCreateDIDRequest: FromEntityUnmarshaller[CreateDIDRequest] =
+        summon[RootJsonFormat[CreateDIDRequest]]
 
-      implicit def fromEntityUnmarshallerDeactivateDIDRequest: FromEntityUnmarshaller[DeactivateDIDRequest] = ???
+      implicit def fromEntityUnmarshallerDeactivateDIDRequest: FromEntityUnmarshaller[DeactivateDIDRequest] =
+        summon[RootJsonFormat[DeactivateDIDRequest]]
 
-      implicit def fromEntityUnmarshallerRecoverDIDRequest: FromEntityUnmarshaller[RecoverDIDRequest] = ???
+      implicit def fromEntityUnmarshallerRecoverDIDRequest: FromEntityUnmarshaller[RecoverDIDRequest] =
+        summon[RootJsonFormat[RecoverDIDRequest]]
 
-      implicit def fromEntityUnmarshallerUpdateDIDRequest: FromEntityUnmarshaller[UpdateDIDRequest] = ???
+      implicit def fromEntityUnmarshallerUpdateDIDRequest: FromEntityUnmarshaller[UpdateDIDRequest] =
+        summon[RootJsonFormat[UpdateDIDRequest]]
 
-      implicit def toEntityMarshallerDIDResponseWithAsyncOutcome: ToEntityMarshaller[DIDResponseWithAsyncOutcome] = ???
+      implicit def toEntityMarshallerDIDResponseWithAsyncOutcome: ToEntityMarshaller[DIDResponseWithAsyncOutcome] =
+        summon[RootJsonFormat[DIDResponseWithAsyncOutcome]]
 
-      implicit def toEntityMarshallerDIDResponse: ToEntityMarshaller[DIDResponse] = ???
+      implicit def toEntityMarshallerDIDResponse: ToEntityMarshaller[DIDResponse] = summon[RootJsonFormat[DIDResponse]]
 
-      implicit def toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse] = ???
+      implicit def toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse] =
+        summon[RootJsonFormat[ErrorResponse]]
     }
   }
 
