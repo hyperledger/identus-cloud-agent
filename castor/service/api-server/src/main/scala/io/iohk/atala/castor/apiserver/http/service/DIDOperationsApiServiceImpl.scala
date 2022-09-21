@@ -15,8 +15,8 @@ class DIDOperationsApiServiceImpl(service: DIDOperationService)(using runtime: R
   private val mockDIDOperation = DidOperation(
     id = "123",
     didRef = "did:prism:1:abcdef123456",
-    `type` = DidOperationType(),
-    status = DidOperationStatus()
+    `type` = "PUBLISH",
+    status = "EXECUTED"
   )
 
   override def getDidOperation(didOperationRef: String)(implicit

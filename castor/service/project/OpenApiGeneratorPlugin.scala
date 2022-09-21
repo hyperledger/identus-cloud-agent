@@ -8,6 +8,7 @@ object OpenApiGeneratorPlugin extends AutoPlugin {
     val openApiGeneratorSpec = settingKey[File]("The OpenAPI specification file.")
     val openApiGeneratorConfig = settingKey[File]("The generator config file.")
     val openApiGenerateClasses = taskKey[Seq[File]]("Generate API & model classes.")
+    val openApiGeneratorImportMapping = settingKey[Map[String, String]]("The generator custom import mapping.")
   }
 
   import autoImport._
@@ -21,6 +22,7 @@ object OpenApiGeneratorPlugin extends AutoPlugin {
       configurator.setInputSpec(openApiGeneratorSpec.value.getPath)
       configurator.setOutputDir(((Compile / sourceManaged).value / "openapi").getPath)
       configurator.setValidateSpec(true)
+      configurator.setImportMappings(openApiGeneratorImportMapping.value.asJava)
       val gen = new DefaultGenerator()
       gen.opts(configurator.toClientOptInput)
       gen.generate().asScala

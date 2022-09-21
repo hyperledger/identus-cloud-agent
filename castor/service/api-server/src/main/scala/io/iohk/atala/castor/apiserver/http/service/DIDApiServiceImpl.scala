@@ -44,7 +44,7 @@ class DIDApiServiceImpl(service: DIDService)(using runtime: Runtime[Any]) extend
 
   private val mockDIDResponse = DIDResponse(
     did = mockDID,
-    `type` = DidTypeWithProof(`type` = DidType(), proof = None),
+    `type` = DidTypeWithProof(`type` = "PUBLISHED", proof = None),
     deactivated = false
   )
 

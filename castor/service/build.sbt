@@ -37,6 +37,9 @@ lazy val `api-server` = project
     Compile / sourceGenerators += openApiGenerateClasses,
     openApiGeneratorSpec := apiBaseDirectory.value / "http/castor-openapi-spec.yaml",
     openApiGeneratorConfig := baseDirectory.value / "openapi/generator-config/config.yaml",
+    openApiGeneratorImportMapping := Seq("DidType", "DidOperationType", "DidOperationStatus")
+      .map(model => (model, s"io.iohk.atala.castor.apiserver.http.OASModelPatches.$model"))
+      .toMap,
     // gRPC settings
     Compile / PB.targets := Seq(scalapb.gen() -> (Compile / sourceManaged).value / "scalapb"),
     Compile / PB.protoSources := Seq(apiBaseDirectory.value / "grpc")
