@@ -4,17 +4,13 @@ import akka.http.scaladsl.marshalling.ToEntityMarshaller
 import akka.http.scaladsl.unmarshalling.FromEntityUnmarshaller
 import io.iohk.atala.castor.openapi.api.DIDApiMarshaller
 import io.iohk.atala.castor.openapi.model.{
-  CreateDIDOperation,
-  CreateDIDWithProof,
-  DeactivateDIDOperation,
-  DeactivateDIDResponse,
-  ErrorResponse,
-  PublishDIDResponse,
-  RecoverDIDOperation,
-  RecoverDIDWithProof,
-  ResolveDIDResponse,
-  UpdateDIDOperation,
-  UpdateDIDWithProof
+  CreateDIDRequest,
+  DeactivateDIDRequest,
+  RecoverDIDRequest,
+  UpdateDIDRequest,
+  DIDResponseWithAsyncOutcome,
+  DIDResponse,
+  ErrorResponse
 }
 import spray.json.RootJsonFormat
 import zio.*
@@ -24,38 +20,19 @@ object DIDApiMarshallerImpl extends JsonSupport {
   val layer: ULayer[DIDApiMarshaller] = ZLayer.succeed {
     // TODO: replace with actual implementation
     new DIDApiMarshaller {
-      implicit def fromEntityUnmarshallerCreateDIDWithProof: FromEntityUnmarshaller[CreateDIDWithProof] =
-        ???
+      implicit def fromEntityUnmarshallerCreateDIDRequest: FromEntityUnmarshaller[CreateDIDRequest] = ???
 
-      implicit def fromEntityUnmarshallerCreateDIDOperation: FromEntityUnmarshaller[CreateDIDOperation] =
-        ???
+      implicit def fromEntityUnmarshallerDeactivateDIDRequest: FromEntityUnmarshaller[DeactivateDIDRequest] = ???
 
-      implicit def fromEntityUnmarshallerRecoverDIDWithProof: FromEntityUnmarshaller[RecoverDIDWithProof] =
-        ???
+      implicit def fromEntityUnmarshallerRecoverDIDRequest: FromEntityUnmarshaller[RecoverDIDRequest] = ???
 
-      implicit def fromEntityUnmarshallerDeactivateDIDOperation: FromEntityUnmarshaller[DeactivateDIDOperation] =
-        ???
+      implicit def fromEntityUnmarshallerUpdateDIDRequest: FromEntityUnmarshaller[UpdateDIDRequest] = ???
 
-      implicit def fromEntityUnmarshallerUpdateDIDWithProof: FromEntityUnmarshaller[UpdateDIDWithProof] =
-        ???
+      implicit def toEntityMarshallerDIDResponseWithAsyncOutcome: ToEntityMarshaller[DIDResponseWithAsyncOutcome] = ???
 
-      implicit def fromEntityUnmarshallerRecoverDIDOperation: FromEntityUnmarshaller[RecoverDIDOperation] =
-        ???
+      implicit def toEntityMarshallerDIDResponse: ToEntityMarshaller[DIDResponse] = ???
 
-      implicit def fromEntityUnmarshallerUpdateDIDOperation: FromEntityUnmarshaller[UpdateDIDOperation] =
-        ???
-
-      implicit def toEntityMarshallerDeactivateDIDResponse: ToEntityMarshaller[DeactivateDIDResponse] =
-        ???
-
-      implicit def toEntityMarshallerResolveDIDResponse: ToEntityMarshaller[ResolveDIDResponse] =
-        ???
-
-      implicit def toEntityMarshallerPublishDIDResponse: ToEntityMarshaller[PublishDIDResponse] =
-        ???
-
-      implicit def toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse] =
-        ???
+      implicit def toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse] = ???
     }
   }
 

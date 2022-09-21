@@ -4,11 +4,7 @@ import akka.http.scaladsl.marshalling.ToEntityMarshaller
 import akka.http.scaladsl.server.Route
 import io.iohk.atala.castor.core.service.DIDOperationService
 import io.iohk.atala.castor.openapi.api.DIDOperationsApiService
-import io.iohk.atala.castor.openapi.model.{
-  ErrorResponse,
-  GetDIDOperationResponse,
-  GetDIDOperationsByDIDRefResponseInner
-}
+import io.iohk.atala.castor.openapi.model.{DidOperation, ErrorResponse}
 import zio.*
 
 // TODO: replace with actual implementation
@@ -17,14 +13,12 @@ class DIDOperationsApiServiceImpl(service: DIDOperationService)(using runtime: R
     with AkkaZioSupport {
 
   override def getDidOperation(didOperationRef: String)(implicit
-      toEntityMarshallerGetDIDOperationResponse: ToEntityMarshaller[GetDIDOperationResponse],
+      toEntityMarshallerDidOperation: ToEntityMarshaller[DidOperation],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = ???
 
   override def getDidOperationsByDidRef(didRef: String)(implicit
-      toEntityMarshallerGetDIDOperationsByDIDRefResponseInnerarray: ToEntityMarshaller[
-        Seq[GetDIDOperationsByDIDRefResponseInner]
-      ],
+      toEntityMarshallerDidOperationarray: ToEntityMarshaller[Seq[DidOperation]],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = ???
 
