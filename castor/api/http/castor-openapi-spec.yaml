@@ -589,7 +589,7 @@ components:
         - PUBLISHED
         - UNPUBLISHED_OFF_CHAIN
         - UNPUBLISHED_ON_CHAIN
-        -
+
     DidTypeWithProof:
       type: object
       required:
