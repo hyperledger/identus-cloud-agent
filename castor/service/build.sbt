@@ -11,7 +11,7 @@ ThisBuild / apiBaseDirectory := baseDirectory.value / "../api"
 // Project definitions
 lazy val root = project
   .in(file("."))
-  .aggregate(core, sql, `api-server`)
+  .aggregate(core, sql, server)
 
 lazy val core = project
   .in(file("core"))
@@ -28,17 +28,17 @@ lazy val sql = project
   )
   .dependsOn(core)
 
-lazy val `api-server` = project
-  .in(file("api-server"))
+lazy val server = project
+  .in(file("server"))
   .settings(
-    name := "castor-api-server",
+    name := "castor-server",
     libraryDependencies ++= apiServerDependencies,
     // OpenAPI settings
     Compile / sourceGenerators += openApiGenerateClasses,
     openApiGeneratorSpec := apiBaseDirectory.value / "http/castor-openapi-spec.yaml",
     openApiGeneratorConfig := baseDirectory.value / "openapi/generator-config/config.yaml",
     openApiGeneratorImportMapping := Seq("DidType", "DidOperationType", "DidOperationStatus")
-      .map(model => (model, s"io.iohk.atala.castor.apiserver.http.OASModelPatches.$model"))
+      .map(model => (model, s"io.iohk.atala.castor.server.http.OASModelPatches.$model"))
       .toMap,
     // gRPC settings
     Compile / PB.targets := Seq(scalapb.gen() -> (Compile / sourceManaged).value / "scalapb"),
