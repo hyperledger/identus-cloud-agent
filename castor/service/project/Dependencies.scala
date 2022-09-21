@@ -31,10 +31,10 @@ object Dependencies {
   private lazy val akkaHttpDependencies: Seq[ModuleID] = Seq(akkaTyped, akkaStream, akkaHttp, akkaSprayJson).map(_.cross(CrossVersion.for3Use2_13))
   private lazy val grpcDependencies: Seq[ModuleID] = Seq(grpcNetty, grpcServices, scalaPbProto, scalaPbGrpc)
   private lazy val doobieDependencies: Seq[ModuleID] = Seq(doobiePostgres, doobieHikari)
+  private lazy val streamingDependencies: Seq[ModuleID] = Seq(zioStream)
 
   // Project Dependencies
   lazy val coreDependencies: Seq[ModuleID] = baseDependencies
   lazy val sqlDependencies: Seq[ModuleID] = baseDependencies ++ doobieDependencies ++ Seq(zioCatsInterop)
-  lazy val apiServerDependencies: Seq[ModuleID] = baseDependencies ++ akkaHttpDependencies ++ grpcDependencies
-  lazy val workerDependencies: Seq[ModuleID] = baseDependencies ++ Seq(zioStream)
+  lazy val apiServerDependencies: Seq[ModuleID] = baseDependencies ++ akkaHttpDependencies ++ grpcDependencies ++ streamingDependencies
 }
