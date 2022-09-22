@@ -17,7 +17,7 @@ tags:
     description: DID Authentication REST API
 
 paths:
-  /dids/:
+  /dids:
     post:
       tags: [ "DID" ]
       operationId: createDid
