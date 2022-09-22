@@ -39,6 +39,7 @@ lazy val D = new {
 
   // Test DID comm
   val didcommx = Def.setting("org.didcommx" % "didcomm" % "0.3.1")
+  val peerDidcommx = Def.setting("org.didcommx" % "peerdid" % "0.3.0")
   val didScala = Def.setting("app.fmgp" %% "did" % "0.0.0+74-691ada28+20220902-0934-SNAPSHOT")
 
   // For munit https://scalameta.org/munit/docs/getting-started.html#scalajs-setup
@@ -124,9 +125,13 @@ lazy val resolver = project // maybe merge into models
   .settings(
     libraryDependencies ++= Seq(
       D.didcommx.value,
+      D.peerDidcommx.value,
+      D.munit.value,
+      D.munitZio.value,
       "org.jetbrains.kotlin" % "kotlin-runtime" % "1.2.71",
       "org.jetbrains.kotlin" % "kotlin-stdlib" % "1.7.10",
-    )
+    ),
+    testFrameworks += new TestFramework("munit.Framework")
   )
   .dependsOn(models)
 
