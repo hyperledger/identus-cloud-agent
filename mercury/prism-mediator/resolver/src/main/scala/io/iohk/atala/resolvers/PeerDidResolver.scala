@@ -85,3 +85,36 @@ object PeerDidResolver {
     ZIO.serviceWithZIO(_.resolveDidAsJson(did))
   }
 }
+
+object PeerDid {
+
+  val keyAgreement = VerificationMaterialPeerDID[VerificationMethodTypeAgreement](
+    VerificationMaterialFormatPeerDID.MULTIBASE,
+    "z6LSbysY2xFMRpGMhb7tFTLMpeuPRaqaWM1yECx2AtzE3KCc", // x$1: Object,
+    VerificationMethodTypeAgreement.X25519_KEY_AGREEMENT_KEY_2020.INSTANCE
+  )
+  val keyAuthentication = VerificationMaterialPeerDID[VerificationMethodTypeAuthentication](
+    VerificationMaterialFormatPeerDID.MULTIBASE,
+    "z6MkqRYqQiSgvZQdnBytw86Qbs2ZWUkGv22od935YF4s8M7V", // x$1: Object,
+    VerificationMethodTypeAuthentication.ED25519_VERIFICATION_KEY_2020.INSTANCE
+  )
+
+  val service =
+    """[{
+      |  "type": "DIDCommMessaging",
+      |  "serviceEndpoint": "http://localhost:8000/",
+      |  "routingKeys": ["did:example:somemediator#somekey"]
+      |},
+      |{
+      |  "type": "example",
+      |  "serviceEndpoint": "http://localhost:8000/",
+      |  "routingKeys": ["did:example:somemediator#somekey2"],
+      |  "accept": ["didcomm/v2", "didcomm/aip2;env=rfc587"]
+      |}]"""
+
+  def keyExample = org.didcommx.peerdid.PeerDIDCreator.createPeerDIDNumalgo2(
+    List(keyAgreement).asJava,
+    List(keyAuthentication).asJava,
+    "service"
+  )
+}

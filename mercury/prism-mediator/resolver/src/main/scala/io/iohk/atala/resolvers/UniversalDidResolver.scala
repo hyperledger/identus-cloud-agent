@@ -22,7 +22,7 @@ object UniversalDidResolver extends DIDDocResolver {
       case regex(peer) =>
         val peerDidResolver = PeerDidResolverImpl()
         val didDocJson = peerDidResolver.resolveDidAsJson(peer)
-        Some(???).toJava
+        Some(PeerDidResolver.getDIDDoc(peer)).toJava
       case anydid: String => new DIDDocResolverInMemory(diddocs).resolve(anydid)
     }
   }
