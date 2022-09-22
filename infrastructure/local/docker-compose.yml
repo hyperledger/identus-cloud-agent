@@ -3,8 +3,6 @@ version: '3.8'
 services:
   castor:
     image: atala-prism.io/castor-server:0.1.0-SNAPSHOT
-    ports:
-      - 8080:8080
 
   pollux:
     image: hashicorp/http-echo:alpine
@@ -14,8 +12,6 @@ services:
 
   mercury:
     image: atala-prism.io/mercury-mediator:0.1.0-SNAPSHOT
-    ports:
-      - 8081:8080
 
   swagger-ui:
     image: swaggerapi/swagger-ui:v4.14.0

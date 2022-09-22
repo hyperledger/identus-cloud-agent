@@ -8,7 +8,7 @@ info:
     email: atala-coredid@iohk.io
 
 servers:
-  - url: https://mailbox.mediator.atalaprism.io
+  - url: http://localhost/mercury
 
 tags:
   - name: Mailbox Mediator
