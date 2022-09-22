@@ -10,6 +10,10 @@ inThisBuild(
   )
 )
 
+// Custom keys
+val apiBaseDirectory = settingKey[File]("The base directory for Castor API specifications")
+ThisBuild / apiBaseDirectory := baseDirectory.value / ".." / "api"
+
 val useDidLib = false
 def didScalaAUX =
   if (useDidLib) (libraryDependencies += D.didScala.value)
@@ -190,7 +194,8 @@ lazy val mediator = project
       // "org.jetbrains.kotlin" % "kotlin-stdlib" % "1.7.10",
       // "com.google.code.gson" % "gson" % "2.9.1"
     ),
-    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+    Compile / unmanagedResourceDirectories += apiBaseDirectory.value,
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
   )
   .dependsOn(agentDidcommx, resolver)
   .dependsOn(

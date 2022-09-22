@@ -7,6 +7,8 @@ We are following the directory structure defined in [RFC 0013 - Service-Oriented
 - `api`:
   Contains the API's for the Mercury Building Block.
 
+  **Warning:** this folder is a dependicy of `prism-mediator`/`build.sbt`'s `apiBaseDirectory` property.
+
 - `prism-mediator`:
   Is our project implementation of the DID Comm protocols, DID Comm mediator agent and its client agents.
 
