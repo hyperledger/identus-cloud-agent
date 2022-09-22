@@ -34,6 +34,7 @@ lazy val server = project
     name := "castor-server",
     libraryDependencies ++= apiServerDependencies,
     // OpenAPI settings
+    Compile / unmanagedResourceDirectories += apiBaseDirectory.value / "http",
     Compile / sourceGenerators += openApiGenerateClasses,
     openApiGeneratorSpec := apiBaseDirectory.value / "http/castor-openapi-spec.yaml",
     openApiGeneratorConfig := baseDirectory.value / "openapi/generator-config/config.yaml",

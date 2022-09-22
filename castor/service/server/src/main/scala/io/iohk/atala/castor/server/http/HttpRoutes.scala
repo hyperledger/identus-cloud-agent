@@ -1,5 +1,6 @@
 package io.iohk.atala.castor.server.http
 
+import akka.http.scaladsl.model.{ContentType, ContentTypes}
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.Directives.*
 import io.iohk.atala.castor.openapi.api.{DIDApi, DIDAuthenticationApi, DIDOperationsApi}
@@ -12,6 +13,14 @@ object HttpRoutes {
       didApi <- ZIO.service[DIDApi]
       didOperationsApi <- ZIO.service[DIDOperationsApi]
       didAuthApi <- ZIO.service[DIDAuthenticationApi]
-    } yield didApi.route ~ didOperationsApi.route ~ didAuthApi.route
+    } yield additionalRoute ~ didApi.route ~ didOperationsApi.route ~ didAuthApi.route
+
+  private def additionalRoute: Route = {
+    path("api" / "openapi-spec.yaml") {
+      get {
+        getFromResource("castor-openapi-spec.yaml", ContentTypes.`text/plain(UTF-8)`)
+      }
+    }
+  }
 
 }
