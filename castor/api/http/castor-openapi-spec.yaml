@@ -7,7 +7,7 @@ info:
     name: Core DID
     email: atala-coredid@iohk.io
 servers:
-  - url: "https://api.atala.io"
+  - url: "http://localhost/castor"
 tags:
   - name: DID
     description: DID REST API
