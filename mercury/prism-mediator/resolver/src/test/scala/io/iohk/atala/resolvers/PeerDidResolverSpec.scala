@@ -1,12 +1,16 @@
 package io.iohk.atala.resolvers
+import cats.Traverse
+import io.circe.Decoder.Result
+import io.circe.{DecodingFailure, HCursor, Json}
 import zio.*
 import munit.*
 import io.circe.parser.*
+import org.didcommx.didcomm.diddoc.{DIDCommService, DIDDoc, VerificationMethod}
 
 class PeerDidResolverSpec extends ZSuite {
 
   testZ("peer did") {
-    val a =
+    val peerDid =
       "did:peer:2.Ez6LSbysY2xFMRpGMhb7tFTLMpeuPRaqaWM1yECx2AtzE3KCc.Vz6MkqRYqQiSgvZQdnBytw86Qbs2ZWUkGv22od935YF4s8M7V.Vz6MkgoLTnTypo3tDRwCkZXSccTPHRLhF4ZnjhueYAFpEX6vg.SeyJ0IjoiZG0iLCJzIjoiaHR0cHM6Ly9leGFtcGxlLmNvbS9lbmRwb2ludCIsInIiOlsiZGlkOmV4YW1wbGU6c29tZW1lZGlhdG9yI3NvbWVrZXkiXSwiYSI6WyJkaWRjb21tL3YyIiwiZGlkY29tbS9haXAyO2Vudj1yZmM1ODciXX0"
     val expectedDidDocJson = parse("""{
         |   "id": "did:peer:2.Ez6LSbysY2xFMRpGMhb7tFTLMpeuPRaqaWM1yECx2AtzE3KCc.Vz6MkqRYqQiSgvZQdnBytw86Qbs2ZWUkGv22od935YF4s8M7V.Vz6MkgoLTnTypo3tDRwCkZXSccTPHRLhF4ZnjhueYAFpEX6vg.SeyJ0IjoiZG0iLCJzIjoiaHR0cHM6Ly9leGFtcGxlLmNvbS9lbmRwb2ludCIsInIiOlsiZGlkOmV4YW1wbGU6c29tZW1lZGlhdG9yI3NvbWVrZXkiXSwiYSI6WyJkaWRjb21tL3YyIiwiZGlkY29tbS9haXAyO2Vudj1yZmM1ODciXX0",
@@ -46,9 +50,11 @@ class PeerDidResolverSpec extends ZSuite {
         |       }
         |   ]
         |}""".stripMargin).toOption
+
     val peerDidResolver = PeerDidResolverImpl()
-    val didDocJson = peerDidResolver.resolveDidAsJson(a)
+    val didDocJson = peerDidResolver.resolveDidAsJson(peerDid)
     didDocJson.map(assertEquals(_, expectedDidDocJson))
+
     // assertEqualsZ(didDocJson,expectedDidDocJson) // this fails need find why
   }
 
