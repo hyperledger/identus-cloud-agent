@@ -25,7 +25,7 @@ tags:
 paths:
   /schema-registry/schemas:
     post:
-      tags: [ "Schema Registry" ]
+      tags: ["Schema Registry"]
       operationId: createSchema
       summary: Publish new schema to the schema registry
       description: |-
@@ -50,7 +50,7 @@ paths:
         "401":
           description: Client is unauthorized to call the API
     get:
-      tags: [ "Schema Registry" ]
+      tags: ["Schema Registry"]
       operationId: fetchSchemasByQuery
       summary: Fetch schemas by query
       description: |-
@@ -87,9 +87,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/W3CSchemaPaginated"
+
   /schema-registry/schemas/{id}:
     get:
-      tags: [ "Schema Registry" ]
+      tags: ["Schema Registry"]
       operationId: getSchemaById
       summary: Fetch the schema from the registry by id
       description: |-
@@ -114,7 +115,7 @@ paths:
 
   /issue-credentials/credentials:
     post:
-      tags: [ "Issue Credentials" ]
+      tags: ["Issue Credentials"]
       operationId: createCredentials
       summary: Create a new instances of Verifiable Credentials objects
       description: |-
@@ -128,7 +129,7 @@ paths:
           application/json:
             schema:
               type: object
-              required: [ "credentials" ]
+              required: ["credentials"]
               properties:
                 batchId:
                   type: string
@@ -163,7 +164,7 @@ paths:
                       $ref: "#/components/schemas/W3CCredential"
 
     get:
-      tags: [ "Issue Credentials" ]
+      tags: ["Issue Credentials"]
       operationId: getCredentialsByBatchId
       summary: Returns the list of the credentials associated with the given batchId
       description: Returns the list of the credentials associated with the given batchId
@@ -193,9 +194,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/W3CCredentialsPaginated"
+
   /issue-credentials/credentials/{id}:
     get:
-      tags: [ "Issue Credentials" ]
+      tags: ["Issue Credentials"]
       operationId: getCredentialById
       summary: Fetch the credential by id
       description: |-
@@ -221,7 +223,7 @@ paths:
         "404":
           description: Schema is not found by id
     put:
-      tags: [ "Issue Credentials" ]
+      tags: ["Issue Credentials"]
       operationId: updateCredentialById
       summary: Update the credential by id
       description: Update the credential by id
@@ -249,7 +251,7 @@ paths:
                   - $ref: "#/components/schemas/JWTCompactSerialisation"
                   - $ref: "#/components/schemas/JWTCredential"
     delete:
-      tags: [ "Issue Credentials" ]
+      tags: ["Issue Credentials"]
       operationId: deleteCredentialById
       summary: Delete the credential by id
       description: Delete the credential by id
@@ -264,9 +266,10 @@ paths:
       responses:
         "204":
           description: "Credential was deleted"
+
   /issue-credentials/issuance-batches:
     get:
-      tags: [ "Issue Credentials" ]
+      tags: ["Issue Credentials"]
       operationId: getIssuanceBatches
       summary: Fetch the available list of issuance-batches
       description: Fetch the list of issuance-batches
@@ -286,9 +289,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/W3CIssuanceBatchPaginated"
+
   /issue-credentials/issuance-batches/{batchId}/actions:
     post:
-      tags: [ "Issue Credentials" ]
+      tags: ["Issue Credentials"]
       summary: "Submit the list of actions performed on the credentials associated with the issuance-batch"
       operationId: "submitIssuanceBatchActions"
       description: |-
@@ -319,7 +323,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/W3CIssuanceBatchAction"
     get:
-      tags: [ "Issue Credentials" ]
+      tags: ["Issue Credentials"]
       operationId: "getIssuanceBatchActions"
       summary: "Fetch the actions performed on the issuance-batch"
       description: "Fetch the actions performed on the issuance-batch"
@@ -342,7 +346,7 @@ paths:
 
   /revocation-registry/credential-status/{id}:
     get:
-      tags: [ "Revocation Registry" ]
+      tags: ["Revocation Registry"]
       operationId: getCredentialRevocationStatusById
       summary: Get credentials revocation status by credential id
       description: Get credentials revocation status by credential id
@@ -361,9 +365,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/W3CCredentialStatus"
+
   /revocation-registry/revoke:
     post:
-      tags: [ "Revocation Registry" ]
+      tags: ["Revocation Registry"]
       operationId: revokeCredentialById
       summary: Revoke credential by id
       description: Revoke credential by id
@@ -387,7 +392,7 @@ paths:
 
   /revocation-registry/operations/{id}:
     get:
-      tags: [ "Revocation Registry" ]
+      tags: ["Revocation Registry"]
       operationId: getRevocationOperationStatusById
       summary: Get revocation operation status by id
       description: Get revocation operation status by id
@@ -407,7 +412,7 @@ paths:
 
   /present-proof/verifiable-presentations:
     post:
-      tags: [ "Present Proof" ]
+      tags: ["Present Proof"]
       operationId: createVerifiablePresentation
       summary: Create new instance of VerifiablePresentation
       description: Verifier creates the instance of Verifiable Presentation object to be used in present proof communication protocol with Prover
@@ -428,7 +433,7 @@ paths:
         # TODO: Add other corner cases and error responses
 
     get:
-      tags: [ "Present Proof" ]
+      tags: ["Present Proof"]
       operationId: fetchPresentationByQuery
       summary: Fetch presentation by query
       description: Fetch presentation by query
@@ -461,7 +466,7 @@ paths:
 
   /present-proof/verifiable-presentations/{id}:
     get:
-      tags: [ "Present Proof" ]
+      tags: ["Present Proof"]
       operationId: getPresentationById
       summary: Fetch the presentation from the collection by id
       description: Fetch the presentation from the collection by id
@@ -483,11 +488,11 @@ paths:
 
   /present-proof/verifiable-presentations/submit:
     post:
-      tags: [ "Present Proof" ]
+      tags: ["Present Proof"]
       operationId: submitVerifiablePresentation
       summary: Sumbit the verifiable presentation object for verification
       description: -|
-      Holder composes the verifiable presentation object and submits it to the verifier to present proof
+        Holder composes the verifiable presentation object and submits it to the verifier to present proof
       requestBody:
         description: Verifiable Presentation in json or JWT encoding
         required: true
@@ -512,7 +517,7 @@ components:
       externalDocs:
         url: "https://w3c.github.io/vc-data-integrity/"
       required:
-        [ "type", "created", "verificationMethod", "proofPurpose", "proofValue" ]
+        ["type", "created", "verificationMethod", "proofPurpose", "proofValue"]
       properties:
         type:
           type: string
@@ -540,7 +545,7 @@ components:
 
     W3CSchemaInput:
       description: SchemaInput object with the metadata and claims
-      required: [ "name", "version", "claims" ]
+      required: ["name", "version", "claims"]
       properties:
         name:
           type: string
@@ -674,7 +679,7 @@ components:
 
     W3CCredential:
       description: "Verifiable Credential Object according to W3C specification"
-      required: [ "id", "type", "issuer", "issuanceDate" ]
+      required: ["id", "type", "issuer", "issuanceDate"]
       properties:
         id:
           type: string
@@ -699,7 +704,7 @@ components:
         credentialSubject:
           type: object
           additionalProperties: true
-          required: [ "id" ]
+          required: ["id"]
           description: "Credentials subject DID and claims according to the schema object"
           example:
             id: "did:prism:subject12345"
@@ -718,23 +723,22 @@ components:
       type: string
       externalDocs:
         url: "https://w3c.github.io/vc-jwt/#example-verifiable-credential-using-jwt-compact-serialization-non-normative"
-      format: "^([a-zA-Z0-9_=]+)\.([a-zA-Z0-9_=]+)\.([a-zA-Z0-9_\-\+\/=]*)"
-      example: -|
-      eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImRpZDpleGFtcGxlOmFiZmUxM2Y3MTIxMjA0
-      MzFjMjc2ZTEyZWNhYiNrZXlzLTEifQ.eyJzdWIiOiJkaWQ6ZXhhbXBsZTplYmZlYjFmNzEyZWJjNmYxY
-      zI3NmUxMmVjMjEiLCJqdGkiOiJodHRwOi8vZXhhbXBsZS5lZHUvY3JlZGVudGlhbHMvMzczMiIsImlzc
-      yI6Imh0dHBzOi8vZXhhbXBsZS5jb20va2V5cy9mb28uandrIiwibmJmIjoxNTQxNDkzNzI0LCJpYXQiO
-      jE1NDE0OTM3MjQsImV4cCI6MTU3MzAyOTcyMywibm9uY2UiOiI2NjAhNjM0NUZTZXIiLCJ2YyI6eyJAY
-      29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvMjAxOC9jcmVkZW50aWFscy92MSIsImh0dHBzOi8vd
-      3d3LnczLm9yZy8yMDE4L2NyZWRlbnRpYWxzL2V4YW1wbGVzL3YxIl0sInR5cGUiOlsiVmVyaWZpYWJsZ
-      UNyZWRlbnRpYWwiLCJVbml2ZXJzaXR5RGVncmVlQ3JlZGVudGlhbCJdLCJjcmVkZW50aWFsU3ViamVjd
-      CI6eyJkZWdyZWUiOnsidHlwZSI6IkJhY2hlbG9yRGVncmVlIiwibmFtZSI6IjxzcGFuIGxhbmc9J2ZyL
-      UNBJz5CYWNjYWxhdXLDqWF0IGVuIG11c2lxdWVzIG51bcOpcmlxdWVzPC9zcGFuPiJ9fX19.KLJo5GAy
-      BND3LDTn9H7FQokEsUEi8jKwXhGvoN3JtRa51xrNDgXDb0cq1UTYB-rK4Ft9YVmR1NI_ZOF8oGc_7wAp
-      8PHbF2HaWodQIoOBxxT-4WNqAxft7ET6lkH-4S6Ux3rSGAmczMohEEf8eCeN-jC8WekdPl6zKZQj0YPB
-      1rx6X0-xlFBs7cl6Wt8rfBP_tZ9YgVWrQmUWypSioc0MUyiphmyEbLZagTyPlUyflGlEdqrZAv6eSe6R
-      txJy6M1-lD7a5HTzanYTWBPAUHDZGyGKXdJw-W_x0IWChBzI8t3kpG253fg6V3tPgHeKXE94fz_QpYfg
-      --7kLsyBAfQGbg
+      example:
+        "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImRpZDpleGFtcGxlOmFiZmUxM2Y3MTIxMjA0
+        MzFjMjc2ZTEyZWNhYiNrZXlzLTEifQ.eyJzdWIiOiJkaWQ6ZXhhbXBsZTplYmZlYjFmNzEyZWJjNmYxY
+        zI3NmUxMmVjMjEiLCJqdGkiOiJodHRwOi8vZXhhbXBsZS5lZHUvY3JlZGVudGlhbHMvMzczMiIsImlzc
+        yI6Imh0dHBzOi8vZXhhbXBsZS5jb20va2V5cy9mb28uandrIiwibmJmIjoxNTQxNDkzNzI0LCJpYXQiO
+        jE1NDE0OTM3MjQsImV4cCI6MTU3MzAyOTcyMywibm9uY2UiOiI2NjAhNjM0NUZTZXIiLCJ2YyI6eyJAY
+        29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvMjAxOC9jcmVkZW50aWFscy92MSIsImh0dHBzOi8vd
+        3d3LnczLm9yZy8yMDE4L2NyZWRlbnRpYWxzL2V4YW1wbGVzL3YxIl0sInR5cGUiOlsiVmVyaWZpYWJsZ
+        UNyZWRlbnRpYWwiLCJVbml2ZXJzaXR5RGVncmVlQ3JlZGVudGlhbCJdLCJjcmVkZW50aWFsU3ViamVjd
+        CI6eyJkZWdyZWUiOnsidHlwZSI6IkJhY2hlbG9yRGVncmVlIiwibmFtZSI6IjxzcGFuIGxhbmc9J2ZyL
+        UNBJz5CYWNjYWxhdXLDqWF0IGVuIG11c2lxdWVzIG51bcOpcmlxdWVzPC9zcGFuPiJ9fX19.KLJo5GAy
+        BND3LDTn9H7FQokEsUEi8jKwXhGvoN3JtRa51xrNDgXDb0cq1UTYB-rK4Ft9YVmR1NI_ZOF8oGc_7wAp
+        8PHbF2HaWodQIoOBxxT-4WNqAxft7ET6lkH-4S6Ux3rSGAmczMohEEf8eCeN-jC8WekdPl6zKZQj0YPB
+        1rx6X0-xlFBs7cl6Wt8rfBP_tZ9YgVWrQmUWypSioc0MUyiphmyEbLZagTyPlUyflGlEdqrZAv6eSe6R
+        txJy6M1-lD7a5HTzanYTWBPAUHDZGyGKXdJw-W_x0IWChBzI8t3kpG253fg6V3tPgHeKXE94fz_QpYfg
+        --7kLsyBAfQGbg"
 
     JWTHeader:
       description: "JWT Header for Verifiable Credentials or Verifiable Presentation"
@@ -748,8 +752,8 @@ components:
         alg:
           type: string
           description: -|
-          Must be set for digital signatures.
-          If only the proof property is needed for the chosen signature method, the alg header MUST be set to none
+            Must be set for digital signatures.
+            If only the proof property is needed for the chosen signature method, the alg header MUST be set to none
           example: RS256
         type:
           type: string
@@ -757,15 +761,15 @@ components:
         kid:
           type: string #TODO: clarify the better type for DID key id
           description: -|
-          MAY be used if there are multiple keys associated with the issuer of the JWT.
-          The key discovery is out of the scope of this specification.
-          For example, the kid can refer to a key in a DID document, or can be the identifier of a key inside a JWKS
+            MAY be used if there are multiple keys associated with the issuer of the JWT.
+            The key discovery is out of the scope of this specification.
+            For example, the kid can refer to a key in a DID document, or can be the identifier of a key inside a JWKS
 
     JWTCredential:
       description: "Verifiable Credential Object according to JWT specification"
       externalDocs:
         url: "https://w3c.github.io/vc-jwt/"
-      required: [ "exp", "iss", "nbf", "jti", "sub" ]
+      required: ["exp", "iss", "nbf", "jti", "sub"]
       properties:
         exp:
           type: string
@@ -774,19 +778,19 @@ components:
         iss:
           type: string
           description: -|
-          MUST represent the issuer property of a verifiable credential or the holder property of a verifiable presentation.
-          In JSON or JSON-LD formats it's 'issuer' field
+            MUST represent the issuer property of a verifiable credential or the holder property of a verifiable presentation.
+            In JSON or JSON-LD formats it's 'issuer' field
           example: "did:prism:issuerdid"
         nbf:
           type: string
           description: -|
-          MUST represent issuanceDate, encoded as a UNIX timestamp (NumericDate).
-          Datetime in ISO format that corresponds to the date of issuance
+            MUST represent issuanceDate, encoded as a UNIX timestamp (NumericDate).
+            Datetime in ISO format that corresponds to the date of issuance
           example: "2022-01-01T19:23:24Z"
         jti:
           type: string
           description: -|
-          MUST represent the id property of the verifiable credential or verifiable presentation.
+            MUST represent the id property of the verifiable credential or verifiable presentation.
           example: "http://example.edu/credentials/1872"
         sub:
           type: string
@@ -815,7 +819,7 @@ components:
             credentialSubject:
               type: object
               additionalProperties: true
-              required: [ "id" ]
+              required: ["id"]
               description: "Credentials subject DID and claims according to the schema object"
               example:
                 id: "did:prism:subject12345"
@@ -865,7 +869,7 @@ components:
         action:
           description: "Action name"
           type: string
-          enum: [ "sign", "issue", "send" ]
+          enum: ["sign", "issue", "send"]
           example: "issue"
         id:
           description: "Action id for tracking"
@@ -874,7 +878,7 @@ components:
         status:
           description: "Action status"
           type: string
-          enum: [ "scheduled", "pending", "completed", "failed" ]
+          enum: ["scheduled", "pending", "completed", "failed"]
 
     W3CIssuanceBatchPaginated:
       description: "Paginated response that contains an array of the issuance-batch objects"
@@ -950,9 +954,9 @@ components:
 
     W3CPresentationRequestInput:
       description: -|
-      Verifiable Presentation Request input.
-      Verifier creates this entry in order to send it to the holder and request the list of credentials
-      required: [ "type", "verifiableCredentialSchema", "id" ]
+        Verifiable Presentation Request input.
+        Verifier creates this entry in order to send it to the holder and request the list of credentials
+      required: ["type", "verifiableCredentialSchema", "id"]
       properties:
         type:
           type: string
@@ -982,10 +986,11 @@ components:
 
     W3CPresentationRequest:
       description: -|
-      Verifiable Presentation Request object.
-      Holder receives this object from the verifier and composes the verifiable presentations
-      This request can be encoded as JWT
-      required: [ "type", "verifiableCredentialSchema", "id", "verifier", "proof" ]
+        Verifiable Presentation Request object.
+        Holder receives this object from the verifier and composes the verifiable presentations
+        This request can be encoded as JWT
+      required:
+        ["type", "verifiableCredentialSchema", "id", "verifier", "proof"]
       properties:
         type:
           type: string
@@ -1021,10 +1026,11 @@ components:
 
     W3CVerifiablePresentation:
       description: -|
-      Verifiable Presentation object.
-      Holder sends this object to the verifier
-      This request can be encoded as JWT
-      required: [ "type", "verifiableCredentialSchema", "id", "verifier", "proof" ]
+        Verifiable Presentation object.
+        Holder sends this object to the verifier
+        This request can be encoded as JWT
+      required:
+        ["type", "verifiableCredentialSchema", "id", "verifier", "proof"]
       properties:
         type:
           type: string
@@ -1072,7 +1078,7 @@ components:
 
     W3CVerifiablePresentationProofResult:
       description: "Verifiable Presentation proof result"
-      required: [ "status" ]
+      required: ["status"]
       properties:
         status:
           type: string
@@ -1085,4 +1091,3 @@ components:
           type: string
           description: Custom message that is provided by the Verified to the Holder
           example: "Your presentation is validated successfully"
-
