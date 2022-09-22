@@ -58,4 +58,17 @@ class PeerDidResolverSpec extends ZSuite {
     // assertEqualsZ(didDocJson,expectedDidDocJson) // this fails need find why
   }
 
+  test("peer did creation (from the example)") {
+    assertEquals(
+      PeerDid.example,
+      "did:peer:2.Ez6LSbysY2xFMRpGMhb7tFTLMpeuPRaqaWM1yECx2AtzE3KCc.Vz6MkqRYqQiSgvZQdnBytw86Qbs2ZWUkGv22od935YF4s8M7V.SW3sidCI6ImRtIiwicyI6Imh0dHA6Ly9sb2NhbGhvc3Q6ODAwMC8iLCJyIjpbImRpZDpleGFtcGxlOnNvbWVtZWRpYXRvciNzb21la2V5Il19LHsidCI6ImV4YW1wbGUiLCJzIjoiaHR0cDovL2xvY2FsaG9zdDo4MDAwLyIsInIiOlsiZGlkOmV4YW1wbGU6c29tZW1lZGlhdG9yI3NvbWVrZXkyIl0sImEiOlsiZGlkY29tbS92MiIsImRpZGNvbW0vYWlwMjtlbnY9cmZjNTg3Il19XQ"
+    )
+  }
+
+  test("get did DIDDoc from the DID peer example") {
+    assertEquals(
+      PeerDid.example,
+      PeerDidResolver.getDIDDoc(PeerDid.example).getDid()
+    )
+  }
 }

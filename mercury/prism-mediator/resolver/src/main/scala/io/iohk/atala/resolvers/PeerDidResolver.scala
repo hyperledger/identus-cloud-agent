@@ -53,14 +53,12 @@ object PeerDidResolver {
     val didCommServices: List[DIDCommService] = service
       .map {
         _.map { item =>
-
           val id = item.hcursor.downField("id").as[String].getOrElse(???)
-          val typ = item.hcursor.downField("type").as[String].getOrElse(???)
+          // val typ = item.hcursor.downField("type").as[String].getOrElse(???)
           val serviceEndpoint = item.hcursor.downField("serviceEndpoint").as[String].getOrElse(???)
-          val routingKeys: Seq[String] = item.hcursor.downField("routingKeys").as[List[String]].getOrElse(???)
-          val accept: Seq[String] = item.hcursor.downField("accept").as[List[String]].getOrElse(???)
+          val routingKeys: Seq[String] = item.hcursor.downField("routingKeys").as[List[String]].getOrElse(Seq.empty)
+          val accept: Seq[String] = item.hcursor.downField("accept").as[List[String]].getOrElse(Seq.empty)
           new DIDCommService(id, serviceEndpoint, routingKeys.asJava, accept.asJava)
-
         }
       }
       .getOrElse(???)
@@ -90,12 +88,12 @@ object PeerDid {
 
   val keyAgreement = VerificationMaterialPeerDID[VerificationMethodTypeAgreement](
     VerificationMaterialFormatPeerDID.MULTIBASE,
-    "z6LSbysY2xFMRpGMhb7tFTLMpeuPRaqaWM1yECx2AtzE3KCc", // x$1: Object,
+    "z6LSbysY2xFMRpGMhb7tFTLMpeuPRaqaWM1yECx2AtzE3KCc",
     VerificationMethodTypeAgreement.X25519_KEY_AGREEMENT_KEY_2020.INSTANCE
   )
   val keyAuthentication = VerificationMaterialPeerDID[VerificationMethodTypeAuthentication](
     VerificationMaterialFormatPeerDID.MULTIBASE,
-    "z6MkqRYqQiSgvZQdnBytw86Qbs2ZWUkGv22od935YF4s8M7V", // x$1: Object,
+    "z6MkqRYqQiSgvZQdnBytw86Qbs2ZWUkGv22od935YF4s8M7V",
     VerificationMethodTypeAuthentication.ED25519_VERIFICATION_KEY_2020.INSTANCE
   )
 
@@ -110,11 +108,11 @@ object PeerDid {
       |  "serviceEndpoint": "http://localhost:8000/",
       |  "routingKeys": ["did:example:somemediator#somekey2"],
       |  "accept": ["didcomm/v2", "didcomm/aip2;env=rfc587"]
-      |}]"""
+      |}]""".stripMargin
 
-  def keyExample = org.didcommx.peerdid.PeerDIDCreator.createPeerDIDNumalgo2(
+  def example = org.didcommx.peerdid.PeerDIDCreator.createPeerDIDNumalgo2(
     List(keyAgreement).asJava,
     List(keyAuthentication).asJava,
-    "service"
+    service
   )
 }
