@@ -9,6 +9,7 @@ import io.circe.generic.auto._
 import io.circe.parser._
 import zio._
 import zio.{Console, Task, UIO, URLayer, ZIO}
+import java.util.Optional
 
 trait PeerDidResolver {
   def resolve(did: String): UIO[String]
@@ -29,6 +30,19 @@ case class PeerDidResolverImpl() extends PeerDidResolver {
 }
 
 object PeerDidResolver {
+
+  def resolveUnsafe(didPeer: String) =
+    parse(resolvePeerDID(didPeer, VerificationMaterialFormatPeerDID.MULTIBASE)).toOption.get
+
+  def getDIDDocResolver(didPeer: String): DIDDocResolver = {
+
+    new DIDDocResolver {
+      override def resolve(did: String): Optional[DIDDoc] = {
+        val json = resolveUnsafe(didPeer)
+        ???
+      }
+    }
+  }
 
   val layer: ULayer[PeerDidResolver] = {
     ZLayer.succeedEnvironment(

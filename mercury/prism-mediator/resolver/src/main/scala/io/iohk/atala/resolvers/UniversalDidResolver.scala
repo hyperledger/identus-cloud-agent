@@ -7,6 +7,7 @@ import org.didcommx.didcomm.diddoc._
 
 import java.util.Optional
 import scala.jdk.CollectionConverters._
+import scala.jdk.OptionConverters._
 
 object UniversalDidResolver extends DIDDocResolver {
 
@@ -15,5 +16,15 @@ object UniversalDidResolver extends DIDDocResolver {
     "did:example:mediator" -> didDocMediator,
     "did:example:bob" -> didDocBob
   ).asJava
-  override def resolve(did: String): Optional[DIDDoc] = new DIDDocResolverInMemory(diddocs).resolve(did)
+  override def resolve(did: String): Optional[DIDDoc] = {
+    val regex = "(did:peer:.+)".r
+    did match {
+      case regex(peer) =>
+        val peerDidResolver = PeerDidResolverImpl()
+        val didDocJson = peerDidResolver.resolveDidAsJson(peer)
+        Some(???).toJava
+      case anydid: String => new DIDDocResolverInMemory(diddocs).resolve(anydid)
+    }
+  }
+
 }
