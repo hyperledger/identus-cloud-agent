@@ -68,6 +68,7 @@ object ReportProblem {
   def reportProblemToMessagem(problem: ReportProblem, msg: Message): Message = {
     assert(problem.pthid == msg.id) // This is a reply!
     Message(
+      piuri = "https://didcomm.org/report-problem/2.0/problem-report",
       from = msg.to,
       to = msg.from,
       body = Map(

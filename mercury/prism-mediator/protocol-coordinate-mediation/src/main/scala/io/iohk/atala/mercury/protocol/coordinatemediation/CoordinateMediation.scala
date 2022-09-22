@@ -2,7 +2,10 @@ package io.iohk.atala.mercury.protocol.coordinatemediation
 
 import io.iohk.atala.mercury.model.PIURI
 
-final case class MediateRequest(id: String, `type`: PIURI) { assert(`type` == MediateRequest.`type`) }
+final case class MediateRequest(
+    id: String = java.util.UUID.randomUUID.toString(),
+    `type`: PIURI = MediateRequest.`type`
+) { assert(`type` == MediateRequest.`type`) }
 object MediateRequest {
   def `type`: PIURI = "https://didcomm.org/coordinate-mediation/2.0/mediate-request"
 }

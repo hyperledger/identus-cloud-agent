@@ -13,9 +13,10 @@ import io.iohk.atala.mercury.protocol.mailbox.Mailbox.ReadMessage
 import io.iohk.atala.mercury.protocol.routing._
 
 def makeMsg(from: Agent, to: Agent) = Message(
-  from.id,
-  to.id,
-  Map(
+  piuri = "http://atalaprism.io/lets_connect/proposal",
+  from = from.id,
+  to = to.id,
+  body = Map(
     "connectionId" -> "8fb9ea21-d094-4506-86b6-c7c1627d753a",
     "msg" -> "Hello Bob"
   ),
@@ -96,6 +97,7 @@ object AgentPrograms {
 
     // HTTP
 
+    alice <- ZIO.service[DidComm]
     res <- Client.request(
       url = "http://localhost:8080",
       method = Method.POST,

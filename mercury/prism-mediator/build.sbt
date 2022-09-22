@@ -35,6 +35,8 @@ lazy val V = new {
 lazy val D = new {
   val zio = Def.setting("dev.zio" %% "zio" % V.zio)
   val zioStreams = Def.setting("dev.zio" %% "zio-streams" % V.zio)
+  val zioLog = Def.setting("dev.zio" %% "zio-logging" % V.zio)
+  val zioSLF4J = Def.setting("dev.zio" %% "zio-logging-slf4j" % V.zio)
   val zioJson = Def.setting("dev.zio" %% "zio-json" % V.zioJson)
 
   val circeCore = Def.setting("io.circe" %% "circe-core" % V.circe)
@@ -154,7 +156,15 @@ lazy val agent = project // maybe merge into models
   // .in(file("agent-generic"))
   // .settings(name := "mercury-agent-generic", version := VERSION)
   .settings(libraryDependencies += "io.d11" %% "zhttp" % "2.0.0-RC10")
-  .dependsOn(models, resolver, protocolInvitation, protocolRouting, protocolMercuryMailbox)
+  .settings(libraryDependencies ++= Seq(D.zioLog.value)) // , D.zioSLF4J.value))
+  .dependsOn(
+    models,
+    resolver,
+    protocolCoordinateMediation,
+    protocolInvitation,
+    protocolRouting,
+    protocolMercuryMailbox
+  )
 
 /** Demos agents and services implementation with didcommx */
 lazy val agentDidcommx = project
