@@ -10,6 +10,8 @@ import io.iohk.atala.mercury.Agent
 import io.iohk.atala.mercury.DidComm
 import io.iohk.atala.mercury.MediaTypes
 import io.iohk.atala.mercury.resolvers.MediatorDidComm
+import org.http4s.dsl.request
+import scala.io.Source
 
 /** sbt "mediator/runMain io.iohk.atala.mercury.mediator.ZhttpMediator" */
 object ZhttpMediator extends ZIOAppDefault {
@@ -22,6 +24,12 @@ object ZhttpMediator extends ZIOAppDefault {
       req.bodyAsString
         .flatMap(data => MediatorProgram.program(data))
         .map(str => Response.text(str))
+    case Method.GET -> !! / "api" / "openapi-spec.yaml" =>
+      ZIO.succeed(
+        Response.text(
+          Source.fromResource("mercury-openapi-spec-auth.yaml").iter.mkString
+        )
+      )
     case req =>
       ZIO.succeed(
         Response.text(

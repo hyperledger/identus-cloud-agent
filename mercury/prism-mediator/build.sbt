@@ -10,6 +10,10 @@ inThisBuild(
   )
 )
 
+// Custom keys
+val apiBaseDirectory = settingKey[File]("The base directory for Castor API specifications")
+ThisBuild / apiBaseDirectory := baseDirectory.value / ".." / "api"
+
 val useDidLib = false
 def didScalaAUX =
   if (useDidLib) (libraryDependencies += D.didScala.value)
@@ -39,6 +43,7 @@ lazy val D = new {
 
   // Test DID comm
   val didcommx = Def.setting("org.didcommx" % "didcomm" % "0.3.1")
+  val peerDidcommx = Def.setting("org.didcommx" % "peerdid" % "0.3.0")
   val didScala = Def.setting("app.fmgp" %% "did" % "0.0.0+74-691ada28+20220902-0934-SNAPSHOT")
 
   // For munit https://scalameta.org/munit/docs/getting-started.html#scalajs-setup
@@ -124,9 +129,13 @@ lazy val resolver = project // maybe merge into models
   .settings(
     libraryDependencies ++= Seq(
       D.didcommx.value,
+      D.peerDidcommx.value,
+      D.munit.value,
+      D.munitZio.value,
       "org.jetbrains.kotlin" % "kotlin-runtime" % "1.2.71",
       "org.jetbrains.kotlin" % "kotlin-stdlib" % "1.7.10",
-    )
+    ),
+    testFrameworks += new TestFramework("munit.Framework")
   )
   .dependsOn(models)
 
@@ -190,11 +199,8 @@ lazy val mediator = project
       // "org.jetbrains.kotlin" % "kotlin-stdlib" % "1.7.10",
       // "com.google.code.gson" % "gson" % "2.9.1"
     ),
+    Compile / unmanagedResourceDirectories += apiBaseDirectory.value,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
-    Docker / maintainer := "atala-coredid@iohk.io",
-    Docker / dockerRepository := Some("atala-prism.io"),
-    dockerExposedPorts := Seq(8080),
-    dockerBaseImage := "openjdk:11"
   )
   .enablePlugins(JavaAppPackaging, DockerPlugin)
   .dependsOn(agentDidcommx, resolver)
