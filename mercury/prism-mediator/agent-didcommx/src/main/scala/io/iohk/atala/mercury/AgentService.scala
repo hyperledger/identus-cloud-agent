@@ -45,4 +45,11 @@ object AgentService {
     )
   )
 
+  val charlie = ZLayer.succeed(
+    AgentService[Agent.Charlie.type](
+      new DIDComm(UniversalDidResolver, CharlieSecretResolver.secretResolver),
+      Agent.Charlie
+    )
+  )
+
 }

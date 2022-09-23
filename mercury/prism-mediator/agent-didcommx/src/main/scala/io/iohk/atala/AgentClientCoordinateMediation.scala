@@ -27,7 +27,7 @@ import io.iohk.atala.mercury.InvitationPrograms
   val env = ChannelFactory.auto ++ EventLoopGroup.auto()
   val app = CoordinateMediationPrograms
     .senderMediationRequestProgram()
-    .provide(env, AgentService.alice)
+    .provide(env, AgentService.charlie)
 
   Unsafe.unsafe { Runtime.default.unsafe.run(app).getOrThrowFiberFailure() }
 

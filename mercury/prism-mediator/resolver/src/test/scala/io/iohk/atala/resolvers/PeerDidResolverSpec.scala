@@ -6,6 +6,8 @@ import zio.*
 import munit.*
 import io.circe.parser.*
 import org.didcommx.didcomm.diddoc.{DIDCommService, DIDDoc, VerificationMethod}
+import org.didcommx.peerdid._
+import scala.jdk.CollectionConverters._
 
 class PeerDidResolverSpec extends ZSuite {
 
@@ -58,17 +60,47 @@ class PeerDidResolverSpec extends ZSuite {
     // assertEqualsZ(didDocJson,expectedDidDocJson) // this fails need find why
   }
 
+  val keyAgreement = VerificationMaterialPeerDID[VerificationMethodTypeAgreement](
+    VerificationMaterialFormatPeerDID.MULTIBASE,
+    "z6LSbysY2xFMRpGMhb7tFTLMpeuPRaqaWM1yECx2AtzE3KCc",
+    VerificationMethodTypeAgreement.X25519_KEY_AGREEMENT_KEY_2020.INSTANCE
+  )
+  val keyAuthentication = VerificationMaterialPeerDID[VerificationMethodTypeAuthentication](
+    VerificationMaterialFormatPeerDID.MULTIBASE,
+    "z6MkqRYqQiSgvZQdnBytw86Qbs2ZWUkGv22od935YF4s8M7V",
+    VerificationMethodTypeAuthentication.ED25519_VERIFICATION_KEY_2020.INSTANCE
+  )
+
+  val service =
+    """[{
+      |  "type": "DIDCommMessaging",
+      |  "serviceEndpoint": "http://localhost:8000/",
+      |  "routingKeys": ["did:example:somemediator#somekey"]
+      |},
+      |{
+      |  "type": "example",
+      |  "serviceEndpoint": "http://localhost:8000/",
+      |  "routingKeys": ["did:example:somemediator#somekey2"],
+      |  "accept": ["didcomm/v2", "didcomm/aip2;env=rfc587"]
+      |}]""".stripMargin
+
+  def didPeerExample = org.didcommx.peerdid.PeerDIDCreator.createPeerDIDNumalgo2(
+    List(keyAgreement).asJava,
+    List(keyAuthentication).asJava,
+    service
+  )
+
   test("peer did creation (from the example)") {
     assertEquals(
-      PeerDid.example,
+      didPeerExample,
       "did:peer:2.Ez6LSbysY2xFMRpGMhb7tFTLMpeuPRaqaWM1yECx2AtzE3KCc.Vz6MkqRYqQiSgvZQdnBytw86Qbs2ZWUkGv22od935YF4s8M7V.SW3sidCI6ImRtIiwicyI6Imh0dHA6Ly9sb2NhbGhvc3Q6ODAwMC8iLCJyIjpbImRpZDpleGFtcGxlOnNvbWVtZWRpYXRvciNzb21la2V5Il19LHsidCI6ImV4YW1wbGUiLCJzIjoiaHR0cDovL2xvY2FsaG9zdDo4MDAwLyIsInIiOlsiZGlkOmV4YW1wbGU6c29tZW1lZGlhdG9yI3NvbWVrZXkyIl0sImEiOlsiZGlkY29tbS92MiIsImRpZGNvbW0vYWlwMjtlbnY9cmZjNTg3Il19XQ"
     )
   }
 
   test("get did DIDDoc from the DID peer example") {
     assertEquals(
-      PeerDid.example,
-      PeerDidResolver.getDIDDoc(PeerDid.example).getDid()
+      didPeerExample,
+      PeerDidResolver.getDIDDoc(didPeerExample).getDid()
     )
   }
 }
