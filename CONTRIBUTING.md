@@ -117,7 +117,7 @@ The `footer` is optional. The [Commit Message Footer](#commit-footer) format des
   │       │             │
   │       │             └─⫸ Summary in present tense. Not capitalized. No period at the end.
   │       │
-  │       └─⫸ Commit Scope: apollo|castor|pollux|mercury|pluto|athena|pistis
+  │       └─⫸ Commit Scope: iris|apollo|castor|pollux|mercury|pluto|athena|pistis|atlas|agent
   │
   └─⫸ Commit Type: build|ci|docs|feat|fix|perf|refactor|test
 
@@ -145,6 +145,7 @@ The scope should be the name of the affected module or building block (as percei
 
 The following is the list of supported scopes:
 
+* `iris`
 * `apollo`
 * `castor`
 * `pollux`
@@ -152,6 +153,8 @@ The following is the list of supported scopes:
 * `pluto`
 * `athena`
 * `pistis`
+* `atlas`
+* `agent`
 
 ##### Summary
 
