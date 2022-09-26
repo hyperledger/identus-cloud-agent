@@ -10,7 +10,7 @@ import io.iohk.atala.iris.apiserver.grpc.{GrpcServer, GrpcServices}
 import io.iohk.atala.iris.core.repository.OperationsRepository
 import io.iohk.atala.iris.core.service.*
 import io.iohk.atala.iris.core.worker.{MockPublishingScheduler, PublishingScheduler}
-import io.iohk.atala.iris.proto.iris_api.IrisServiceGrpc
+import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import io.iohk.atala.iris.sql.repository.{JdbcOperationsRepository, TransactorLayer}
 import zio.*
 import zio.interop.catz.*

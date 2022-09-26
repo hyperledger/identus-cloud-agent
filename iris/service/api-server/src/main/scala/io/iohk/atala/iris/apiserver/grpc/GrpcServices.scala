@@ -2,7 +2,7 @@ package io.iohk.atala.iris.apiserver.grpc
 
 import akka.actor.typed.ActorSystem
 import io.grpc.ServerServiceDefinition
-import io.iohk.atala.iris.proto.iris_api.IrisServiceGrpc
+import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import zio.*
 
 object GrpcServices {

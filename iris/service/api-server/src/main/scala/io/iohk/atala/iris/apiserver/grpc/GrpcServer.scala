@@ -2,7 +2,7 @@ package io.iohk.atala.iris.apiserver.grpc
 
 import io.grpc.{ServerBuilder, ServerServiceDefinition}
 import io.grpc.protobuf.services.ProtoReflectionService
-import io.iohk.atala.iris.proto.iris_api.IrisServiceGrpc
+import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import zio.*
 
 object GrpcServer {
