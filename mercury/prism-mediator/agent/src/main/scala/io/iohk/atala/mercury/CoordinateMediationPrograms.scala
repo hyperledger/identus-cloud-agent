@@ -35,8 +35,8 @@ object CoordinateMediationPrograms {
       invitationFrom = DidId(link.get.from)
       _ <- ZIO.log(s"Invitation from $invitationFrom")
 
-      alice <- ZIO.service[DidComm]
-      encryptedMessage <- alice.packEncrypted(planMessage, to = invitationFrom)
+      charlie <- ZIO.service[DidComm]
+      encryptedMessage <- charlie.packEncrypted(planMessage, to = invitationFrom)
       _ <- ZIO.log("Sending bytes ...")
       // jsonString = encryptedMessage.string
       // _ <- ZIO.log(jsonString)
