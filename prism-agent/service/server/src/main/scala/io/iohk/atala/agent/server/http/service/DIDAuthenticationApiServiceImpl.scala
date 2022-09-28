@@ -3,7 +3,6 @@ package io.iohk.atala.agent.server.http.service
 import akka.http.scaladsl.marshalling.ToEntityMarshaller
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.Directives.*
-import io.iohk.atala.agent.core.service.DIDAuthenticationService
 import io.iohk.atala.agent.openapi.api.DIDAuthenticationApiService
 import io.iohk.atala.agent.openapi.model.{
   AuthenticationChallengeSubmissionRequest,
@@ -15,7 +14,7 @@ import io.iohk.atala.agent.openapi.model.{
 import zio.*
 
 // TODO: replace with actual implementation
-class DIDAuthenticationApiServiceImpl(service: DIDAuthenticationService)(using runtime: Runtime[Any])
+class DIDAuthenticationApiServiceImpl()(using runtime: Runtime[Any])
     extends DIDAuthenticationApiService
     with AkkaZioSupport {
 
@@ -58,10 +57,9 @@ class DIDAuthenticationApiServiceImpl(service: DIDAuthenticationService)(using r
 }
 
 object DIDAuthenticationApiServiceImpl {
-  val layer: URLayer[DIDAuthenticationService, DIDAuthenticationApiService] = ZLayer.fromZIO {
+  val layer: ULayer[DIDAuthenticationApiService] = ZLayer.fromZIO {
     for {
       rt <- ZIO.runtime[Any]
-      svc <- ZIO.service[DIDAuthenticationService]
-    } yield DIDAuthenticationApiServiceImpl(svc)(using rt)
+    } yield DIDAuthenticationApiServiceImpl()(using rt)
   }
 }

@@ -11,22 +11,7 @@ ThisBuild / apiBaseDirectory := baseDirectory.value / "../api"
 // Project definitions
 lazy val root = project
   .in(file("."))
-  .aggregate(core, sql, server)
-
-lazy val core = project
-  .in(file("core"))
-  .settings(
-    name := "agent-core",
-    libraryDependencies ++= coreDependencies
-  )
-
-lazy val sql = project
-  .in(file("sql"))
-  .settings(
-    name := "agent-sql",
-    libraryDependencies ++= sqlDependencies
-  )
-  .dependsOn(core)
+  .aggregate(server)
 
 lazy val server = project
   .in(file("server"))
@@ -42,4 +27,3 @@ lazy val server = project
       .toMap,
   )
   .enablePlugins(OpenApiGeneratorPlugin)
-  .dependsOn(core, sql)

@@ -7,15 +7,7 @@ import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.server.Route
 import doobie.util.transactor.Transactor
 import io.iohk.atala.agent.server.http.{HttpRoutes, HttpServer}
-import io.iohk.atala.agent.core.service.{
-  DIDAuthenticationService,
-  DIDOperationService,
-  DIDService,
-  MockDIDAuthenticationService,
-  MockDIDOperationService,
-  MockDIDService,
-  MockIrisNotificationService
-}
+import io.iohk.atala.castor.core.service.{DIDService, MockDIDService}
 import io.iohk.atala.agent.server.http.marshaller.{
   DIDApiMarshallerImpl,
   DIDAuthenticationApiMarshallerImpl,
@@ -26,7 +18,7 @@ import io.iohk.atala.agent.server.http.service.{
   DIDAuthenticationApiServiceImpl,
   DIDOperationsApiServiceImpl
 }
-import io.iohk.atala.agent.core.repository.DIDOperationRepository
+import io.iohk.atala.castor.core.repository.DIDOperationRepository
 import io.iohk.atala.agent.openapi.api.{
   DIDApi,
   DIDAuthenticationApi,
@@ -34,12 +26,11 @@ import io.iohk.atala.agent.openapi.api.{
   DIDAuthenticationApiService,
   DIDOperationsApi
 }
-import io.iohk.atala.agent.sql.repository.{JdbcDIDOperationRepository, TransactorLayer}
+import io.iohk.atala.castor.sql.repository.{JdbcDIDOperationRepository, TransactorLayer}
 import zio.*
 import zio.interop.catz.*
 import cats.effect.std.Dispatcher
-import io.iohk.atala.agent.server.worker.{EventConsumer, WorkerApp}
-import io.iohk.atala.agent.core.model.IrisNotification
+import io.iohk.atala.castor.core.model.IrisNotification
 import zio.stream.ZStream
 
 import java.util.concurrent.Executors
@@ -48,10 +39,9 @@ object Modules {
 
   val app: Task[Unit] = {
     val httpServerApp = HttpRoutes.routes.flatMap(HttpServer.start(8080, _))
-    val workerApp = WorkerApp.start.provideSomeLayer(SystemModule.workerRuntimeLayer)
 
-    (httpServerApp <&> workerApp)
-      .provideLayer(SystemModule.actorSystemLayer ++ HttpModule.layers ++ WorkerModule.layers)
+    httpServerApp
+      .provideLayer(SystemModule.actorSystemLayer ++ HttpModule.layers)
       .unit
   }
 
@@ -67,17 +57,11 @@ object SystemModule {
         )
     )(system => ZIO.attempt(system.terminate()).orDie)
   )
-
-  val workerRuntimeLayer: ULayer[Unit] = Runtime.setExecutor(
-    Executor.fromJavaExecutor(Executors.newFixedThreadPool(8, new Thread(_, "castor-worker")))
-  )
 }
 
 // TODO: replace with actual implementation
 object AppModule {
   val didServiceLayer: ULayer[DIDService] = MockDIDService.layer
-  val didAuthenticationServiceLayer: ULayer[DIDAuthenticationService] = MockDIDAuthenticationService.layer
-  val didOperationServiceLayer: ULayer[DIDOperationService] = MockDIDOperationService.layer
 }
 
 object HttpModule {
@@ -89,36 +73,18 @@ object HttpModule {
   }
 
   val didOperationsApiLayer: ULayer[DIDOperationsApi] = {
-    val serviceLayer = AppModule.didOperationServiceLayer
-    val apiServiceLayer = serviceLayer >>> DIDOperationsApiServiceImpl.layer
+    val apiServiceLayer = DIDOperationsApiServiceImpl.layer
     val apiMarshallerLayer = DIDOperationsApiMarshallerImpl.layer
     (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new DIDOperationsApi(_, _))
   }
 
   val didAuthenticationApiLayer: ULayer[DIDAuthenticationApi] = {
-    val serviceLayer = AppModule.didAuthenticationServiceLayer
-    val apiServiceLayer = serviceLayer >>> DIDAuthenticationApiServiceImpl.layer
+    val apiServiceLayer = DIDAuthenticationApiServiceImpl.layer
     val apiMarshallerLayer = DIDAuthenticationApiMarshallerImpl.layer
     (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new DIDAuthenticationApi(_, _))
   }
 
   val layers = didApiLayer ++ didOperationsApiLayer ++ didAuthenticationApiLayer
-}
-
-object WorkerModule {
-  // TODO: replace with actual implementation
-  val irisNotificationSource: ULayer[ZStream[Any, Nothing, IrisNotification]] = ZLayer.succeed {
-    ZStream
-      .tick(1.seconds)
-      .as(IrisNotification(foo = "bar"))
-  }
-
-  val eventConsumerLayer: ULayer[EventConsumer] = {
-    val serviceLayer = MockIrisNotificationService.layer // TODO: replace with actual implementation
-    serviceLayer >>> EventConsumer.layer
-  }
-
-  val layers = irisNotificationSource ++ eventConsumerLayer
 }
 
 object RepoModule {

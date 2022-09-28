@@ -2,7 +2,7 @@ package io.iohk.atala.agent.server.http.service
 
 import akka.http.scaladsl.marshalling.ToEntityMarshaller
 import akka.http.scaladsl.server.Route
-import io.iohk.atala.agent.core.service.DIDService
+import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.agent.openapi.api.DIDApiService
 import io.iohk.atala.agent.openapi.model.*
 import zio.*
