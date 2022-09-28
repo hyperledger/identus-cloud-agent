@@ -1,12 +1,12 @@
-package io.iohk.atala.iris.apiserver
+package io.iohk.atala.iris.server
 
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.server.Route
 import cats.effect.std.Dispatcher
 import doobie.util.transactor.Transactor
-import io.iohk.atala.iris.apiserver.grpc.service.IrisServiceGrpcImpl
-import io.iohk.atala.iris.apiserver.grpc.{GrpcServer, GrpcServices}
+import io.iohk.atala.iris.server.grpc.service.IrisServiceGrpcImpl
+import io.iohk.atala.iris.server.grpc.{GrpcServer, GrpcServices}
 import io.iohk.atala.iris.core.repository.OperationsRepository
 import io.iohk.atala.iris.core.service.*
 import io.iohk.atala.iris.core.worker.{MockPublishingScheduler, PublishingScheduler}

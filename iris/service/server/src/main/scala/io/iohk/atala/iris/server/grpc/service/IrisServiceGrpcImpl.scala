@@ -1,4 +1,4 @@
-package io.iohk.atala.iris.apiserver.grpc.service
+package io.iohk.atala.iris.server.grpc.service
 
 import com.google.protobuf.ByteString
 import io.iohk.atala.iris.core.service.PublishingService
