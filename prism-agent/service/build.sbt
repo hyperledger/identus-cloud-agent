@@ -35,7 +35,7 @@ lazy val server = project
     libraryDependencies ++= apiServerDependencies,
     // OpenAPI settings
     Compile / sourceGenerators += openApiGenerateClasses,
-    openApiGeneratorSpec := apiBaseDirectory.value / "http/castor-openapi-spec.yaml",
+    openApiGeneratorSpec := apiBaseDirectory.value / "http/prism-agent-openapi-spec.yaml",
     openApiGeneratorConfig := baseDirectory.value / "openapi/generator-config/config.yaml",
     openApiGeneratorImportMapping := Seq("DidType", "DidOperationType", "DidOperationStatus")
       .map(model => (model, s"io.iohk.atala.castor.server.http.OASModelPatches.$model"))
