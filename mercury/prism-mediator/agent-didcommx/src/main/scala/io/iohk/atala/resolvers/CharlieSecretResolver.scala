@@ -8,7 +8,6 @@ import org.didcommx.peerdid._
 object CharlieSecretResolver {
 
   val jwkKey1 = """  {
-    "kid":"did:example:alice#key-2",
     "kty":"EC",
     "d":"7TCIdt1rhThFtWcEiLnk_COEjh1ZfQhM4bW2wz-dp4A",
     "crv":"P-256",
@@ -56,7 +55,7 @@ object CharlieSecretResolver {
 
   val secretResolver = new SecretResolverInMemory(
     Map(
-      "did:example:charlie#key-3" -> secretKey1
+      s"$charlieDID#key-1" -> secretKey1
     ) // , "did:example:charlie#key-agreement-1" -> secretKeyAgreement1)
       .asJava
   )
@@ -85,19 +84,10 @@ object CharlieSecretResolver {
     VerificationMethodTypeAuthentication.JSON_WEB_KEY_2020.INSTANCE
   )
 
-  def charlieDID = org.didcommx.peerdid.PeerDIDCreator.createPeerDIDNumalgo2(
-    List(keyAgreement).asJava,
-    List().asJava, // List(keyAuthentication).asJava,
-    service
-  )
+  def charlieDID = io.iohk.atala.mercury.charlieFIXME
 
   @main def testPEER() = {
-    // println(charlieDID)
-    val aux =
-      // "did:peer:2.Ez6LSbysY2xFMRpGMhb7tFTLMpeuPRaqaWM1yECx2AtzE3KCc"
-      "did:peer:2.Ez6LbvzTrb3uVNixQZBEmSNKASyX7bpauQ29skxx3DidJyWyg"
-    // avH0O2Y4tqLAq8y9zpianr8ajii5m4F_mICrzNlatXs
-    val aaa = org.didcommx.peerdid.PeerDIDResolver.resolvePeerDID(aux, VerificationMaterialFormatPeerDID.JWK)
+    val aaa = org.didcommx.peerdid.PeerDIDResolver.resolvePeerDID(charlieDID, VerificationMaterialFormatPeerDID.JWK)
     println(aaa)
   }
 
