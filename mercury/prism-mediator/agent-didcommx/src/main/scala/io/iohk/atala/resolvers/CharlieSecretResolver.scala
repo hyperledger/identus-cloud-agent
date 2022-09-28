@@ -30,7 +30,7 @@ object CharlieSecretResolver {
     xxx
   )
   val secretKeyAgreement1 = new Secret(
-    io.iohk.atala.mercury.charlieFIXME + "#6LSiseNCbbtmG6ascxpPvoyT8ewrWdtJZxwmPNxYAPWxzM8",
+    io.iohk.atala.mercury.charlieFIXME + "#6MkgLBGee6xL5KH8SZmqmKmQKS2o1qd4RG4dSmjtRGTfsxX",
     VerificationMethodType.JSON_WEB_KEY_2020,
     new VerificationMaterial(VerificationMaterialFormat.JWK, jwkKey2)
   )
@@ -38,7 +38,7 @@ object CharlieSecretResolver {
   val secretResolver = new SecretResolverInMemory(
     Map(
       (io.iohk.atala.mercury.charlieFIXME + "#6LSiseNCbbtmG6ascxpPvoyT8ewrWdtJZxwmPNxYAPWxzM8") -> secretKey1,
-      (io.iohk.atala.mercury.charlieFIXME + "#6LSiseNCbbtmG6ascxpPvoyT8ewrWdtJZxwmPNxYAPWxzM8") -> secretKeyAgreement1
+      (io.iohk.atala.mercury.charlieFIXME + "#6MkgLBGee6xL5KH8SZmqmKmQKS2o1qd4RG4dSmjtRGTfsxX") -> secretKeyAgreement1
     ).asJava
   )
 
