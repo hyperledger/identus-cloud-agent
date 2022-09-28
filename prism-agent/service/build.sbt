@@ -16,14 +16,14 @@ lazy val root = project
 lazy val core = project
   .in(file("core"))
   .settings(
-    name := "castor-core",
+    name := "agent-core",
     libraryDependencies ++= coreDependencies
   )
 
 lazy val sql = project
   .in(file("sql"))
   .settings(
-    name := "castor-sql",
+    name := "agent-sql",
     libraryDependencies ++= sqlDependencies
   )
   .dependsOn(core)
@@ -31,14 +31,14 @@ lazy val sql = project
 lazy val server = project
   .in(file("server"))
   .settings(
-    name := "castor-server",
+    name := "agent-server",
     libraryDependencies ++= apiServerDependencies,
     // OpenAPI settings
     Compile / sourceGenerators += openApiGenerateClasses,
     openApiGeneratorSpec := apiBaseDirectory.value / "http/prism-agent-openapi-spec.yaml",
     openApiGeneratorConfig := baseDirectory.value / "openapi/generator-config/config.yaml",
     openApiGeneratorImportMapping := Seq("DidType", "DidOperationType", "DidOperationStatus")
-      .map(model => (model, s"io.iohk.atala.castor.server.http.OASModelPatches.$model"))
+      .map(model => (model, s"io.iohk.atala.agent.server.http.OASModelPatches.$model"))
       .toMap,
   )
   .enablePlugins(OpenApiGeneratorPlugin)

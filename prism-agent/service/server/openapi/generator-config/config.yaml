@@ -7,8 +7,8 @@ globalProperties:
   models: ""
 
 # Define output packages for generated classes
-apiPackage: "io.iohk.atala.castor.openapi.api"
-modelPackage: "io.iohk.atala.castor.openapi.model"
+apiPackage: "io.iohk.atala.agent.openapi.api"
+modelPackage: "io.iohk.atala.agent.openapi.model"
 
 # The generator to use
 generatorName: "scala-akka-http-server"

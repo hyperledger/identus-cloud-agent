@@ -26,9 +26,9 @@ object Dependencies {
   private lazy val castorSqlDoobie = "io.iohk.atala" %% "castor-sql-doobie" % Versions.castor
 
   // Dependency Modules
-  private lazy val baseDependencies: Seq[ModuleID] = Seq(zio, castorCore)
+  private lazy val baseDependencies: Seq[ModuleID] = Seq(zio)
   private lazy val akkaHttpDependencies: Seq[ModuleID] = Seq(akkaTyped, akkaStream, akkaHttp, akkaSprayJson).map(_.cross(CrossVersion.for3Use2_13))
-  private lazy val doobieDependencies: Seq[ModuleID] = Seq(doobiePostgres, doobieHikari, castorSqlDoobie)
+  private lazy val doobieDependencies: Seq[ModuleID] = Seq(doobiePostgres, doobieHikari)
   private lazy val streamingDependencies: Seq[ModuleID] = Seq(zioStream)
 
   // Project Dependencies
