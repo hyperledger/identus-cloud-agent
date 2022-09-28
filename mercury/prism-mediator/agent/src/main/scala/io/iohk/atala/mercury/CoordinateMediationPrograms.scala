@@ -32,20 +32,22 @@ object CoordinateMediationPrograms {
       link <- InvitationPrograms.getInvitationProgram(mediatorURL + "/oob_url")
       planMessage = link.map(replyToInvitation(_)).get
       _ <- ZIO.log(planMessage.toString())
+      invitationFrom = DidId(link.get.from)
+      _ <- ZIO.log(s"Invitation from $invitationFrom")
 
       alice <- ZIO.service[DidComm]
-      encryptedMessage <- alice.packEncrypted(planMessage, to = Agent.Mediator.id)
+      encryptedMessage <- alice.packEncrypted(planMessage, to = invitationFrom)
       _ <- ZIO.log("Sending bytes ...")
-      jsonString = encryptedMessage.string
-      _ <- ZIO.log(jsonString)
+      // jsonString = encryptedMessage.string
+      // _ <- ZIO.log(jsonString)
 
-      res <- Client.request(
-        url = mediatorURL,
-        method = Method.POST,
-        headers = Headers("content-type" -> MediaTypes.contentTypeEncrypted),
-        content = HttpData.fromChunk(Chunk.fromArray(jsonString.getBytes)),
-        // ssl = ClientSSLOptions.DefaultSSL,
-      )
+      // res <- Client.request(
+      //   url = mediatorURL,
+      //   method = Method.POST,
+      //   headers = Headers("content-type" -> MediaTypes.contentTypeEncrypted),
+      //   content = HttpData.fromChunk(Chunk.fromArray(jsonString.getBytes)),
+      //   // ssl = ClientSSLOptions.DefaultSSL,
+      // )
 
     } yield ()
   }

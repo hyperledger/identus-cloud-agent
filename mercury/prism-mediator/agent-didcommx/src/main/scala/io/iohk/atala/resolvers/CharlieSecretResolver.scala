@@ -7,14 +7,30 @@ import org.didcommx.peerdid._
 
 object CharlieSecretResolver {
 
-  val jwkKey1 =
-    """{
-      |  "kty":"EC",
-      |  "d":"N3Hm1LXA210YVGGsXw_GklMwcLu_bMgnzDese6YQIyA",
-      |  "crv":"secp256k1",
-      |  "x":"aToW5EaTq5mlAf8C5ECYDSkqsJycrW-e1SQ6_GJcAOk",
-      |  "y":"JAGX94caA21WKreXwYUaOCYTBMrqaX4KWIlsQZTHWCk"
-      |}""".stripMargin
+  val jwkKey1 = """  {
+    "kid":"did:example:alice#key-2",
+    "kty":"EC",
+    "d":"7TCIdt1rhThFtWcEiLnk_COEjh1ZfQhM4bW2wz-dp4A",
+    "crv":"P-256",
+    "x":"2syLh57B-dGpa0F8p1JrO6JU7UUSF6j7qL-vfk1eOoY",
+    "y":"BgsGtI7UPsObMRjdElxLOrgAO9JggNMjOcfzEPox18w"
+  }"""
+  // """{
+  //   |  "kty":"EC",
+  //   |  "d":"N3Hm1LXA210YVGGsXw_GklMwcLu_bMgnzDese6YQIyA",
+  //   |  "crv":"secp256k1",
+  //   |  "x":"aToW5EaTq5mlAf8C5ECYDSkqsJycrW-e1SQ6_GJcAOk",
+  //   |  "y":"JAGX94caA21WKreXwYUaOCYTBMrqaX4KWIlsQZTHWCk"
+  //   |}""".stripMargin
+  // """{
+  //   |  "alg":"EC",
+  //   |  "crv":"secp256k1",
+  //   |  "d":"N3Hm1LXA210YVGGsXw_GklMwcLu_bMgnzDese6YQIyA",
+  //   |  "x":"aToW5EaTq5mlAf8C5ECYDSkqsJycrW-e1SQ6_GJcAOk",
+  //   |  "y":"JAGX94caA21WKreXwYUaOCYTBMrqaX4KWIlsQZTHWCk",
+  //   |  "use":"enc",
+  //   |  "kid":"1"
+  //   |}""".stripMargin
 
   val jwkKey2 = // example from did:example:alice#key-1
     """  {
@@ -25,10 +41,12 @@ object CharlieSecretResolver {
     "x":"G-boxFB6vOZBu-wXkm-9Lh79I8nf9Z50cILaOgKKGww"
   },""".stripMargin
 
+  val xxx = new VerificationMaterial(VerificationMaterialFormat.JWK, jwkKey1)
+
   val secretKey1 = new Secret(
     "did:example:charlie#key-3",
     VerificationMethodType.JSON_WEB_KEY_2020,
-    new VerificationMaterial(VerificationMaterialFormat.JWK, jwkKey1)
+    xxx
   )
   val secretKeyAgreement1 = new Secret(
     "did:example:charlie#key-agreement-1",
@@ -37,7 +55,10 @@ object CharlieSecretResolver {
   )
 
   val secretResolver = new SecretResolverInMemory(
-    Map("did:example:charlie#key-3" -> secretKey1, "did:example:charlie#key-agreement-1" -> secretKeyAgreement1).asJava
+    Map(
+      "did:example:charlie#key-3" -> secretKey1
+    ) // , "did:example:charlie#key-agreement-1" -> secretKeyAgreement1)
+      .asJava
   )
 
   val service =
@@ -66,8 +87,18 @@ object CharlieSecretResolver {
 
   def charlieDID = org.didcommx.peerdid.PeerDIDCreator.createPeerDIDNumalgo2(
     List(keyAgreement).asJava,
-    List(keyAuthentication).asJava,
+    List().asJava, // List(keyAuthentication).asJava,
     service
   )
+
+  @main def testPEER() = {
+    // println(charlieDID)
+    val aux =
+      // "did:peer:2.Ez6LSbysY2xFMRpGMhb7tFTLMpeuPRaqaWM1yECx2AtzE3KCc"
+      "did:peer:2.Ez6LbvzTrb3uVNixQZBEmSNKASyX7bpauQ29skxx3DidJyWyg"
+    // avH0O2Y4tqLAq8y9zpianr8ajii5m4F_mICrzNlatXs
+    val aaa = org.didcommx.peerdid.PeerDIDResolver.resolvePeerDID(aux, VerificationMaterialFormatPeerDID.JWK)
+    println(aaa)
+  }
 
 }
