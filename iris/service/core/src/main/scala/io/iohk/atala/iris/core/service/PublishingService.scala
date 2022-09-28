@@ -1,17 +1,17 @@
 package io.iohk.atala.iris.core.service
 
-import io.iohk.atala.iris.core.model.SignedIrisOperation
+import io.iohk.atala.iris.proto.service as proto
 import zio.*
 
 // TODO: replace with actual implementation
 trait PublishingService {
-  def publishOperations(op: SignedIrisOperation): UIO[Unit]
+  def publishOperation(op: proto.IrisOperation): UIO[Unit] = ???
 }
 
 object MockPublishingService {
   val layer: ULayer[PublishingService] = ZLayer.succeed {
     new PublishingService {
-      override def publishOperations(op: SignedIrisOperation): UIO[Unit] = ZIO.unit
+      override def publishOperation(op: proto.IrisOperation): UIO[Unit] = ZIO.unit
     }
   }
 }

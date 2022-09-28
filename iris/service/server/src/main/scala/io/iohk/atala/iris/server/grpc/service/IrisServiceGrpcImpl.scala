@@ -1,10 +1,11 @@
-package io.iohk.atala.iris.apiserver.grpc.service
+package io.iohk.atala.iris.server.grpc.service
 
 import com.google.protobuf.ByteString
 import io.iohk.atala.iris.core.service.PublishingService
 import io.iohk.atala.iris.core.worker.PublishingScheduler
+import io.iohk.atala.iris.proto.did_operations.{CreateDid, DocumentDefinition}
+import io.iohk.atala.iris.proto.service as proto
 import io.iohk.atala.iris.proto.service.*
-import io.iohk.atala.iris.proto.did_operations.{CreateDid, DocumentDefinition};
 import zio.*
 
 import scala.concurrent.Future

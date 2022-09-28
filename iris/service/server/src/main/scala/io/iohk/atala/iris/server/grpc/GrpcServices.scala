@@ -1,4 +1,4 @@
-package io.iohk.atala.iris.apiserver.grpc
+package io.iohk.atala.iris.server.grpc
 
 import akka.actor.typed.ActorSystem
 import io.grpc.ServerServiceDefinition

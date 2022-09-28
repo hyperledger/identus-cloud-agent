@@ -1,4 +1,4 @@
-package io.iohk.atala.iris.apiserver.grpc
+package io.iohk.atala.iris.server.grpc
 
 import io.grpc.{ServerBuilder, ServerServiceDefinition}
 import io.grpc.protobuf.services.ProtoReflectionService
