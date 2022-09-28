@@ -1,0 +1,95 @@
+syntax = "proto3";
+
+import "scalapb/scalapb.proto";
+
+option (scalapb.options) = {
+  no_default_values_in_constructor: true
+  package_name: "io.iohk.atala.iris.proto"
+};
+
+message PublicKeyJwk {
+  message ECKeyData {
+    string curve = 1; // The curve name, like secp256k1.
+    bytes x = 2; // The x coordinate, represented as bytes.
+    bytes y = 3; // The y coordinate, represented as bytes.
+  }
+
+  oneof key {
+    ECKeyData ecKey = 1;
+  }
+}
+
+message DocumentDefinition {
+  message PublicKey {
+    string id = 1;
+
+    enum Type {
+      secp256k1 = 0;
+    }
+    Type type = 2;
+
+    PublicKeyJwk jwk = 3;
+
+    enum Purpose {
+      authentication = 0;
+      keyAgreement = 1;
+      assertionMethod = 2;
+      capabilityInvocation = 3;
+    }
+    Purpose purpose = 4;
+  }
+
+  message Service {
+    string id = 1;
+    enum Type {
+      MediatorService = 0;
+    }
+    Type type = 2;
+    string serviceEndpoint = 3;
+  }
+
+  repeated PublicKey publicKeys = 1;
+  repeated Service services = 2;
+}
+
+message CreateDid {
+  bytes initialUpdateCommitment = 1;
+  bytes initialRecoveryCommitment = 2;
+  string storage = 3;
+  DocumentDefinition document = 4;
+}
+
+message UpdateDid {
+  message Patch {
+    oneof patch {
+        DocumentDefinition.PublicKey addPublicKey = 1;
+        string removePublicKey = 2;
+        DocumentDefinition.Service addService = 3;
+        string removeService = 4;
+    }
+  }
+
+  string did = 1;
+  bytes revealedUpdateKey = 2;
+  bytes previousVersion = 3;
+  bytes forwardUpdateCommitment = 4;
+  repeated Patch patches = 5;
+  bytes signature = 6;
+}
+
+message RecoverDid {
+  string did = 1;
+  bytes revealedRecoveryKey = 2;
+  bytes previousVersion = 3;
+  bytes forwardUpdateCommitment = 4;
+  bytes forwardRecoveryCommitment = 5;
+  repeated DocumentDefinition document = 6;
+  bytes signature = 7;
+}
+
+message DeactivateDid {
+  string did = 1;
+  bytes revealedRecoveryKey = 2;
+  bytes previousVersion = 3;
+  bytes signature = 4;
+}

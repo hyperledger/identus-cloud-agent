@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+import "did_operations.proto";
+import "vc_operations.proto";
+import "scalapb/scalapb.proto";
+
+option (scalapb.options) = {
+  no_default_values_in_constructor: true
+  package_name: "io.iohk.atala.iris.proto"
+};
+
+// The possible operations affecting the blockchain.
+message IrisOperation {
+  // The actual operation.
+  oneof operation {
+    // Used to create a public DID.
+    CreateDid createDid = 1;
+
+    // Used to update an existing public DID.
+    UpdateDid updateDid = 2;
+
+    // Used to recover an existing public DID.
+    RecoverDid recoverDid = 3;
+
+    // Used to deactivate DID
+    DeactivateDid deactivateDid = 4;
+
+    IssueCredentialsBatch issueCredentialsBatch = 5;
+
+    RevokeCredentials revokeCredentials = 6;
+  };
+}
+
+message IrisOperationId {
+  bytes id = 1;
+}
+
+message IrisOperationOutcome {
+  bytes operationId = 1;
+}
+
+enum IrisOperationStatus {
+  PENDING = 0;
+  SUBMITTED = 1;
+  ROLLED_BACK = 2;
+  CONFIRMED = 3;
+};
+
+message IrisOperationInfo {
+  bytes operationId = 1;
+  oneof operation {
+    CreateDid createDid = 2;
+    UpdateDid updateDid = 3;
+    RecoverDid recoveryDid = 4;
+    DeactivateDid deactivateDid = 5;
+  }
+}
+
+service IrisService {
+    rpc scheduleOperation(IrisOperation) returns (IrisOperationOutcome) {}
+    rpc getOperation(IrisOperationId) returns (IrisOperationInfo) {}
+}

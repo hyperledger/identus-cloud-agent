@@ -1,0 +1,17 @@
+// This file contains gRCP messages for data which will go into the blockchain
+// but not exposed to the Iris user
+
+syntax = "proto3";
+
+import "scalapb/scalapb.proto";
+import "service.proto";
+
+option (scalapb.options) = {
+  no_default_values_in_constructor: true
+  package_name: "io.iohk.atala.iris.proto"
+};
+
+
+message AtalaObject {
+  repeated IrisOperation operations = 1;
+}

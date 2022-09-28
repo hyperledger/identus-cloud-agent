@@ -1,4 +1,4 @@
-package io.iohk.atala.iris.apiserver
+package io.iohk.atala.iris.server
 
 import zio.*
 

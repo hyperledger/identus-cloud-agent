@@ -5,4 +5,3 @@ final case class IrisNotification(foo: String)
 
 final case class IrisOperationId(id: String)
 final case class IrisOperation(foo: String)
-final case class SignedIrisOperation(foo: String)

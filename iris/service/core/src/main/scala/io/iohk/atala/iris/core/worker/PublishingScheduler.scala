@@ -1,17 +1,16 @@
 package io.iohk.atala.iris.core.worker
 
-import io.iohk.atala.iris.core.model.SignedIrisOperation
-import io.iohk.atala.iris.core.service.PublishingService
+import io.iohk.atala.iris.proto.service as proto
 import zio.{UIO, ULayer, ZIO, ZLayer}
 
 trait PublishingScheduler {
-  def scheduleOperations(op: SignedIrisOperation): UIO[Unit]
+  def scheduleOperations(op: proto.IrisOperation): UIO[Unit]
 }
 
 object MockPublishingScheduler {
   val layer: ULayer[PublishingScheduler] = ZLayer.succeed {
     new PublishingScheduler {
-      def scheduleOperations(op: SignedIrisOperation): UIO[Unit] = ZIO.unit
+      def scheduleOperations(op: proto.IrisOperation): UIO[Unit] = ZIO.unit
     }
   }
 }
