@@ -7,6 +7,7 @@ object Dependencies {
     val akkaHttp = "10.2.9"
     val doobie = "1.0.0-RC2"
     val zioCatsInterop = "3.3.0"
+    val castor = "0.1.0-SNAPSHOT"
   }
 
   private lazy val zio = "dev.zio" %% "zio" % Versions.zio
@@ -21,10 +22,13 @@ object Dependencies {
   private lazy val doobiePostgres = "org.tpolecat" %% "doobie-postgres" % Versions.doobie
   private lazy val doobieHikari = "org.tpolecat" %% "doobie-hikari" % Versions.doobie
 
+  private lazy val castorCore = "io.iohk.atala" %% "castor-core" % Versions.castor
+  private lazy val castorSqlDoobie = "io.iohk.atala" %% "castor-sql-doobie" % Versions.castor
+
   // Dependency Modules
-  private lazy val baseDependencies: Seq[ModuleID] = Seq(zio)
+  private lazy val baseDependencies: Seq[ModuleID] = Seq(zio, castorCore)
   private lazy val akkaHttpDependencies: Seq[ModuleID] = Seq(akkaTyped, akkaStream, akkaHttp, akkaSprayJson).map(_.cross(CrossVersion.for3Use2_13))
-  private lazy val doobieDependencies: Seq[ModuleID] = Seq(doobiePostgres, doobieHikari)
+  private lazy val doobieDependencies: Seq[ModuleID] = Seq(doobiePostgres, doobieHikari, castorSqlDoobie)
   private lazy val streamingDependencies: Seq[ModuleID] = Seq(zioStream)
 
   // Project Dependencies
