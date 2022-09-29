@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+import "scalapb/scalapb.proto";
+import "protocol/vc_operations.proto";
+import "protocol/did_operations.proto";
+
+option (scalapb.options) = {
+  no_default_values_in_constructor: true
+  package_name: "io.iohk.atala.iris.proto"
+};
+
+// The possible operations affecting the blockchain.
+message IrisOperation {
+  // The actual operation.
+  oneof operation {
+    // Used to create a public DID.
+    CreateDid createDid = 1;
+
+    // Used to update an existing public DID.
+    UpdateDid updateDid = 2;
+
+    // Used to recover an existing public DID.
+    RecoverDid recoverDid = 3;
+
+    // Used to deactivate DID
+    DeactivateDid deactivateDid = 4;
+
+    IssueCredentialsBatch issueCredentialsBatch = 5;
+
+    RevokeCredentials revokeCredentials = 6;
+  };
+}
+
+// List of operations which will be stored in the blockchain transaction metadata
+message AtalaObject {
+  repeated IrisOperation operations = 1;
+}
