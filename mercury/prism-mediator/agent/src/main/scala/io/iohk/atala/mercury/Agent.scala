@@ -57,5 +57,5 @@ val service =
 def charlieFIXME = org.didcommx.peerdid.PeerDIDCreator.createPeerDIDNumalgo2(
   List(keyAgreement).asJava,
   List(keyAuthentication).asJava,
-  service
+  null // service
 )

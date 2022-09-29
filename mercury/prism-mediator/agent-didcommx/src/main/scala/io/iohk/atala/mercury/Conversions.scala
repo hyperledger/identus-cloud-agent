@@ -21,17 +21,19 @@ given Conversion[Message, org.didcommx.didcomm.message.Message] with {
   def apply(msg: Message): org.didcommx.didcomm.message.Message = {
     val attachments = msg.attachments.map { e => e: XAttachment } // cast
     val aux = new MessageBuilder(msg.id, msg.body.asJava, msg.piuri)
-      .from(msg.from.value)
-      .to(Seq(msg.to.value).asJava)
-      .createdTime(msg.createdTime)
-      .expiresTime(msg.createdTime + msg.expiresTimePlus)
-      .attachments(attachments.toList.asJava) // TODO test
+      // .from(msg.from.value)
+      // .to(Seq(msg.to.value).asJava)
+      // .createdTime(msg.createdTime)
+      // .expiresTime(msg.createdTime + msg.expiresTimePlus)
+      // .attachments(attachments.toList.asJava) // TODO test
+      .customHeader("return_route", "all")
 
     msg.ack.foreach(str => aux.ack(str))
     msg.thid.foreach(str => aux.thid(str))
     msg.pthid.foreach(str => aux.pthid(str))
     aux.build()
   }
+
 }
 
 def json2Map(json: Json): Any = json match {

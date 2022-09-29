@@ -61,7 +61,7 @@ object PeerDidResolver {
           new DIDCommService(id, serviceEndpoint, routingKeys.asJava, accept.asJava)
         }
       }
-      .getOrElse(???)
+      .getOrElse(List.empty)
 
     val keyAgreements1 = cursor.downField("keyAgreement").as[List[Json]]
     val verificationMethodList: List[VerificationMethod] = keyAgreements1
