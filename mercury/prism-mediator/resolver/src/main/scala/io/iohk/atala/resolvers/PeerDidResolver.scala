@@ -36,7 +36,7 @@ case class PeerDidResolverImpl() extends PeerDidResolver {
 object PeerDidResolver {
   import io.circe.Decoder, io.circe.generic.auto._
   def resolveUnsafe(didPeer: String) =
-    parse(resolvePeerDID(didPeer, VerificationMaterialFormatPeerDID.MULTIBASE)).toOption.get
+    parse(resolvePeerDID(didPeer, VerificationMaterialFormatPeerDID.JWK)).toOption.get
 
   def getDIDDoc(didPeer: String): DIDDoc = {
     val json = resolveUnsafe(didPeer)
@@ -73,7 +73,7 @@ object PeerDidResolver {
             .as[String]
             .getOrElse(item.hcursor.downField("publicKeyMultibase").as[String].getOrElse(""))
           val controller = item.hcursor.downField("controller").as[String].getOrElse("")
-          val verificationMaterial = new VerificationMaterial(VerificationMaterialFormat.MULTIBASE, publicKeyJwk)
+          val verificationMaterial = new VerificationMaterial(VerificationMaterialFormat.JWK, publicKeyJwk)
           new VerificationMethod(id, VerificationMethodType.JSON_WEB_KEY_2020, verificationMaterial, controller)
         )
       }
@@ -88,7 +88,7 @@ object PeerDidResolver {
     val didDoc =
       new DIDDoc(
         did,
-        keyAgreements.asJava,
+        keyIds.asJava,
         authentications.asJava,
         verificationMethodList.asJava,
         didCommServices.asJava

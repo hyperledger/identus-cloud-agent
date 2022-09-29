@@ -40,7 +40,8 @@ object CharlieSecretResolver {
   val secretResolver = new SecretResolverInMemory(
     Map(
       (io.iohk.atala.mercury.charlieFIXME + "#6LSiseNCbbtmG6ascxpPvoyT8ewrWdtJZxwmPNxYAPWxzM8") -> secretKey1,
-      (io.iohk.atala.mercury.charlieFIXME + "#6MkgLBGee6xL5KH8SZmqmKmQKS2o1qd4RG4dSmjtRGTfsxX") -> secretKeyAgreement1
+      (io.iohk.atala.mercury.charlieFIXME + "#6MkgLBGee6xL5KH8SZmqmKmQKS2o1qd4RG4dSmjtRGTfsxX") -> secretKeyAgreement1,
+      (io.iohk.atala.mercury.charlieFIXME) -> secretKeyAgreement1
     ).asJava
   )
 
