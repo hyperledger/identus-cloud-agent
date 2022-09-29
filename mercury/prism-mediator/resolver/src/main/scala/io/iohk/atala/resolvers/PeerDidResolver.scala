@@ -63,6 +63,31 @@ object PeerDidResolver {
       }
       .getOrElse(List.empty)
 
+    val authentications1 = cursor.downField("authentication").as[List[Json]]
+    val verificationMethodList1: List[VerificationMethod] = authentications1
+      .map {
+        _.map(item =>
+          val id = item.hcursor.downField("id").as[String].getOrElse(???)
+
+          val publicKeyJwk = item.hcursor
+            .downField("publicKeyJwk")
+            .as[Json]
+            .map(_.toString)
+            .getOrElse(???)
+
+          val controller = item.hcursor.downField("controller").as[String].getOrElse(???)
+          val verificationMaterial = new VerificationMaterial(VerificationMaterialFormat.JWK, publicKeyJwk)
+          new VerificationMethod(id, VerificationMethodType.JSON_WEB_KEY_2020, verificationMaterial, controller)
+        )
+      }
+      .getOrElse(???)
+
+    val keyIdAuthentications: List[String] = authentications1
+      .map {
+        _.map(item => item.hcursor.downField("id").as[String].getOrElse(???))
+      }
+      .getOrElse(???)
+
     val keyAgreements1 = cursor.downField("keyAgreement").as[List[Json]]
     val verificationMethodList: List[VerificationMethod] = keyAgreements1
       .map {
@@ -87,13 +112,14 @@ object PeerDidResolver {
         _.map(item => item.hcursor.downField("id").as[String].getOrElse(???))
       }
       .getOrElse(???)
+    val mergedList = verificationMethodList ++ verificationMethodList1
 
     val didDoc =
       new DIDDoc(
         did,
         keyIds.asJava,
-        authentications.asJava,
-        verificationMethodList.asJava,
+        keyIdAuthentications.asJava,
+        mergedList.asJava,
         didCommServices.asJava
       )
     didDoc
