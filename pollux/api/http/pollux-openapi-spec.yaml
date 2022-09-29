@@ -235,6 +235,7 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/W3CCredentialInput"
+        required: true
       responses:
         "200":
           description: "Credential was updated successfully"
@@ -303,6 +304,7 @@ paths:
               type: array
               items:
                 $ref: "#/components/schemas/W3CIssuanceBatchAction"
+        required: true
       responses:
         "200":
           description: "Returns the set of actions performed on the issuance-batch"
@@ -366,6 +368,7 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/W3CCredentialRevocationRequest"
+        required: true
       responses:
         "202":
           description: Revocation request successfully submitted
@@ -581,7 +584,11 @@ components:
         properties:
           type: object
           description: "Set of clames"
-          additionalProperties: true
+          additionalProperties: false
+          properties:
+            claim1:
+              type: string
+              description: "Some example claim"
         required:
           type: array
           items:
@@ -632,8 +639,12 @@ components:
           example: "did:prism:subjectofverifiablecredentials"
         claims:
           type: object
-          additionalProperties: true
+          additionalProperties: false
           description: "Clams associated with given credentials object (for now it's just a key/value, later should be more complex"
+          properties:
+            claim1:
+              type: string
+              description: "Some example claim"
 
     W3CCredential:
       description: "Verifiable Credential Object according to W3C specification"
@@ -657,7 +668,7 @@ components:
           example: "2010-01-01T19:23:24Z"
         credentialSubject:
           type: object
-          additionalProperties: true
+          additionalProperties: false
           required: ["id"]
           description: "Credentials subject DID and claims according to the schema object"
           example:
@@ -752,7 +763,7 @@ components:
       description: Credential revocation request. Contain credential id and other information required for revocation
       required:
         - credentialId
-      additionalProperties: true
+      additionalProperties: false
       properties:
         credentialId:
           type: string
