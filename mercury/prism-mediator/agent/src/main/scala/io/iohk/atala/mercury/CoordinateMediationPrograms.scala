@@ -25,6 +25,10 @@ object CoordinateMediationPrograms {
     )
   }
 
+  def toPrettyJson(parseToJson: String) = {
+    parse(parseToJson).getOrElse(???).spaces2
+  }
+
   def senderMediationRequestProgram() = {
     val mediatorURL = "http://localhost:8000"
 
@@ -59,8 +63,19 @@ object CoordinateMediationPrograms {
         // ssl = ClientSSLOptions.DefaultSSL,
       )
       data <- res.bodyAsString
-      _ <- ZIO.log("  ")
-      _ <- Console.printLine(data.asJson)
+      _ <- Console.printLine("  ")
+      _ <- Console.printLine(data)
+      _ <- Console.printLine("  ")
+      data2 = parse(data).getOrElse(???).asString.get
+      _ <- Console.printLine(parse(parse(data).getOrElse(???).asString.get).getOrElse(???).spaces2)
+
+      messageReceived <- charlie.unpack(data2)
+      _ <- Console.printLine("Unpacking and decrypting the received message ...")
+      _ <- Console.printLine(
+        "\n*********************************************************************************************************************************\n"
+          + toPrettyJson(messageReceived.getMessage.toString)
+          + "\n********************************************************************************************************************************\n"
+      )
     } yield ()
   }
 
