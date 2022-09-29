@@ -15,7 +15,7 @@ message IrisOperationId {
 }
 
 message IrisOperationOutcome {
-  bytes operationId = 1;
+  bytes operation_id = 1;
 }
 
 enum IrisOperationStatus {
@@ -28,14 +28,14 @@ enum IrisOperationStatus {
 message IrisOperationInfo {
   bytes operationId = 1;
   oneof operation {
-    CreateDid createDid = 2;
-    UpdateDid updateDid = 3;
-    RecoverDid recoveryDid = 4;
-    DeactivateDid deactivateDid = 5;
+    CreateDid create_did = 2;
+    UpdateDid update_did = 3;
+    RecoverDid recovery_did = 4;
+    DeactivateDid deactivate_did = 5;
   }
 }
 
 service IrisService {
-    rpc scheduleOperation(IrisOperation) returns (IrisOperationOutcome) {}
-    rpc getOperation(IrisOperationId) returns (IrisOperationInfo) {}
+    rpc ScheduleOperation(IrisOperation) returns (IrisOperationOutcome) {}
+    rpc GetOperation(IrisOperationId) returns (IrisOperationInfo) {}
 }

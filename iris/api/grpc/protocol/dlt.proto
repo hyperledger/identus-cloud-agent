@@ -14,20 +14,20 @@ message IrisOperation {
   // The actual operation.
   oneof operation {
     // Used to create a public DID.
-    CreateDid createDid = 1;
+    CreateDid create_did = 1;
 
     // Used to update an existing public DID.
-    UpdateDid updateDid = 2;
+    UpdateDid update_did = 2;
 
     // Used to recover an existing public DID.
-    RecoverDid recoverDid = 3;
+    RecoverDid recover_did = 3;
 
     // Used to deactivate DID
-    DeactivateDid deactivateDid = 4;
+    DeactivateDid deactivate_did = 4;
 
-    IssueCredentialsBatch issueCredentialsBatch = 5;
+    IssueCredentialsBatch issue_credentials_batch = 5;
 
-    RevokeCredentials revokeCredentials = 6;
+    RevokeCredentials revoke_credentials = 6;
   };
 }
 

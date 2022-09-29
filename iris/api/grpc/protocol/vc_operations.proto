@@ -8,12 +8,12 @@ option (scalapb.options) = {
 };
 
 message IssueCredentialsBatch {
-  string issuerDid = 1;
-  bytes merkleRoot = 2;
+  string issuer_did = 1;
+  bytes merkle_root = 2;
 }
 
 message RevokeCredentials {
-  string revokerDid = 1;
-  bytes issuanceBatchDigest = 2;
-  repeated bytes credentialsToRevoke = 3;
+  string revoker_did = 1;
+  bytes issuance_batch_digest = 2;
+  repeated bytes credentials_to_revoke = 3;
 }

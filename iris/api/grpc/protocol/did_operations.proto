@@ -15,7 +15,7 @@ message PublicKeyJwk {
   }
 
   oneof key {
-    ECKeyData ecKey = 1;
+    ECKeyData ec_key = 1;
   }
 }
 
@@ -24,17 +24,17 @@ message DocumentDefinition {
     string id = 1;
 
     enum Type {
-      secp256k1 = 0;
+      SECP256K1 = 0;
     }
     Type type = 2;
 
     PublicKeyJwk jwk = 3;
 
     enum Purpose {
-      authentication = 0;
-      keyAgreement = 1;
-      assertionMethod = 2;
-      capabilityInvocation = 3;
+      AUTHENTICATION = 0;
+      KEY_AGREEMENT = 1;
+      ASSERTION_METHOD = 2;
+      CAPABILITY_INVOCATION = 3;
     }
     Purpose purpose = 4;
   }
@@ -42,19 +42,19 @@ message DocumentDefinition {
   message Service {
     string id = 1;
     enum Type {
-      MediatorService = 0;
+      MEDIATOR_SERVICE = 0;
     }
     Type type = 2;
-    string serviceEndpoint = 3;
+    string service_endpoint = 3;
   }
 
-  repeated PublicKey publicKeys = 1;
+  repeated PublicKey public_keys = 1;
   repeated Service services = 2;
 }
 
 message CreateDid {
-  bytes initialUpdateCommitment = 1;
-  bytes initialRecoveryCommitment = 2;
+  bytes initial_update_commitment = 1;
+  bytes initial_recovery_commitment = 2;
   string storage = 3;
   DocumentDefinition document = 4;
 }
@@ -62,34 +62,34 @@ message CreateDid {
 message UpdateDid {
   message Patch {
     oneof patch {
-        DocumentDefinition.PublicKey addPublicKey = 1;
-        string removePublicKey = 2;
-        DocumentDefinition.Service addService = 3;
-        string removeService = 4;
+        DocumentDefinition.PublicKey add_public_key = 1;
+        string remove_public_key = 2;
+        DocumentDefinition.Service add_service = 3;
+        string remove_service = 4;
     }
   }
 
   string did = 1;
-  bytes revealedUpdateKey = 2;
-  bytes previousVersion = 3;
-  bytes forwardUpdateCommitment = 4;
+  bytes revealed_update_key = 2;
+  bytes previous_version = 3;
+  bytes forward_update_commitment = 4;
   repeated Patch patches = 5;
   bytes signature = 6;
 }
 
 message RecoverDid {
   string did = 1;
-  bytes revealedRecoveryKey = 2;
-  bytes previousVersion = 3;
-  bytes forwardUpdateCommitment = 4;
-  bytes forwardRecoveryCommitment = 5;
+  bytes revealed_recovery_key = 2;
+  bytes previous_version = 3;
+  bytes forward_update_commitment = 4;
+  bytes forward_recovery_commitment = 5;
   repeated DocumentDefinition document = 6;
   bytes signature = 7;
 }
 
 message DeactivateDid {
   string did = 1;
-  bytes revealedRecoveryKey = 2;
-  bytes previousVersion = 3;
+  bytes revealed_recovery_key = 2;
+  bytes previous_version = 3;
   bytes signature = 4;
 }
