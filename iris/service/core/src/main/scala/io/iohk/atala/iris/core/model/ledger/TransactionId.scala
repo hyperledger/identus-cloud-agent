@@ -1,11 +1,13 @@
 package io.iohk.atala.iris.core.model.ledger
 
 import com.typesafe.config.ConfigMemorySize
-import io.iohk.atala.shared.{HashValueConfig, HashValueFrom}
+import io.iohk.atala.shared.{HashValue, HashValueConfig, HashValueFrom}
 
 import scala.collection.immutable.ArraySeq
 
-case class TransactionId(hex: ArraySeq[Byte])
+class TransactionId(bytes: ArraySeq[Byte]) extends HashValue {
+  override def value: ArraySeq[Byte] = bytes
+}
 
 object TransactionId extends HashValueFrom[TransactionId] {
 

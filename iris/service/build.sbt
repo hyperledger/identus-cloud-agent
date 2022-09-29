@@ -1,4 +1,5 @@
 import Dependencies._
+import sbt.Keys.testFrameworks
 import sbtghpackages.GitHubPackagesPlugin.autoImport._
 
 ThisBuild / version := "0.1.0-SNAPSHOT"
@@ -25,6 +26,7 @@ lazy val core = project
     resolvers +=
       "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven",
     libraryDependencies ++= coreDependencies,
+    testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
     // gRPC settings
     Compile / PB.targets := Seq(scalapb.gen() -> (Compile / sourceManaged).value / "scalapb"),
     Compile / PB.protoSources := Seq(apiBaseDirectory.value / "grpc")
