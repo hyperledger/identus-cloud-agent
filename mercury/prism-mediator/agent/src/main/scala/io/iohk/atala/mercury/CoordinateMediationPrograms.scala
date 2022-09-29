@@ -66,7 +66,7 @@ object CoordinateMediationPrograms {
       _ <- Console.printLine("  ")
       _ <- Console.printLine(data)
       _ <- Console.printLine("  ")
-      data2 = parse(data).getOrElse(???).asString.get
+      data2 = parse(data).getOrElse(???).asString.get // FIXME https://github.com/roots-id/didcomm-mediator/issues/16
       _ <- Console.printLine(parse(parse(data).getOrElse(???).asString.get).getOrElse(???).spaces2)
 
       messageReceived <- charlie.unpack(data2)
