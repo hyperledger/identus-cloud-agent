@@ -68,11 +68,14 @@ object PeerDidResolver {
       .map {
         _.map(item =>
           val id = item.hcursor.downField("id").as[String].getOrElse(???)
+
           val publicKeyJwk = item.hcursor
             .downField("publicKeyJwk")
-            .as[String]
-            .getOrElse(item.hcursor.downField("publicKeyMultibase").as[String].getOrElse(""))
-          val controller = item.hcursor.downField("controller").as[String].getOrElse("")
+            .as[Json]
+            .map(_.toString)
+            .getOrElse(???)
+
+          val controller = item.hcursor.downField("controller").as[String].getOrElse(???)
           val verificationMaterial = new VerificationMaterial(VerificationMaterialFormat.JWK, publicKeyJwk)
           new VerificationMethod(id, VerificationMethodType.JSON_WEB_KEY_2020, verificationMaterial, controller)
         )
