@@ -7,7 +7,8 @@ import org.didcommx.peerdid._
 
 object CharlieSecretResolver {
 
-  val jwkKey1 = """{
+  val jwkKey1 = s"""{
+    "kid":"${io.iohk.atala.mercury.charlieFIXME}#6LSiseNCbbtmG6ascxpPvoyT8ewrWdtJZxwmPNxYAPWxzM8",
     "kty":"OKP",
     "d":"r-jK2cO3taR8LQnJB1_ikLBTAnOtShJOsHXRUWT-aZA",
     "crv":"X25519",
@@ -15,7 +16,8 @@ object CharlieSecretResolver {
   }"""
 
   val jwkKey2 = // example from did:example:alice#key-1
-    """    {
+    s"""{
+    "kid":"${io.iohk.atala.mercury.charlieFIXME}#6MkgLBGee6xL5KH8SZmqmKmQKS2o1qd4RG4dSmjtRGTfsxX",
     "kty":"OKP",
     "d":"pFRUKkyzx4kHdJtFSnlPA9WzqkDT1HWV0xZ5OYZd2SY",
     "crv":"Ed25519",
@@ -54,17 +56,6 @@ object CharlieSecretResolver {
   //     |  "routingKeys": ["did:example:somemediator#somekey2"],
   //     |  "accept": ["didcomm/v2", "didcomm/aip2;env=rfc587"]
   //     |}]""".stripMargin
-
-  // val keyAgreement = VerificationMaterialPeerDID[VerificationMethodTypeAgreement](
-  //   VerificationMaterialFormatPeerDID.JWK,
-  //   jwkKey1,
-  //   VerificationMethodTypeAgreement.JSON_WEB_KEY_2020.INSTANCE
-  // )
-  // val keyAuthentication = VerificationMaterialPeerDID[VerificationMethodTypeAuthentication](
-  //   VerificationMaterialFormatPeerDID.JWK,
-  //   jwkKey2,
-  //   VerificationMethodTypeAuthentication.JSON_WEB_KEY_2020.INSTANCE
-  // )
 
   def charlieDID = io.iohk.atala.mercury.charlieFIXME
 

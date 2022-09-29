@@ -103,4 +103,26 @@ class PeerDidResolverSpec extends ZSuite {
       PeerDidResolver.getDIDDoc(didPeerExample).getDid()
     )
   }
+
+  val keyAgreement2 = VerificationMaterialPeerDID[VerificationMethodTypeAgreement](
+    VerificationMaterialFormatPeerDID.JWK,
+    """{"kty":"OKP","crv":"X25519","x":"avH0O2Y4tqLAq8y9zpianr8ajii5m4F_mICrzNlatXs"}""",
+    VerificationMethodTypeAgreement.JSON_WEB_KEY_2020.INSTANCE
+  )
+  val keyAuthentication2 = VerificationMaterialPeerDID[VerificationMethodTypeAuthentication](
+    VerificationMaterialFormatPeerDID.JWK,
+    """{"kty":"OKP","crv":"Ed25519","x":"G-boxFB6vOZBu-wXkm-9Lh79I8nf9Z50cILaOgKKGww"}""",
+    VerificationMethodTypeAuthentication.JSON_WEB_KEY_2020.INSTANCE
+  )
+
+  def didPeerExample2 = org.didcommx.peerdid.PeerDIDCreator.createPeerDIDNumalgo2(
+    List(keyAgreement2).asJava,
+    List(keyAuthentication2).asJava,
+    service
+  )
+
+  test("TODO") {
+    println(didPeerExample2)
+    println(PeerDidResolver.getDIDDoc(didPeerExample2))
+  }
 }

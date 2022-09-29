@@ -62,10 +62,37 @@ object PeerDidResolver {
         }
       }
       .getOrElse(???)
-    val verficationMethods = Seq.empty[VerificationMethod]
+
+    val keyAgreements1 = cursor.downField("keyAgreement").as[List[Json]]
+    val verificationMethodList: List[VerificationMethod] = keyAgreements1
+      .map {
+        _.map(item =>
+          val id = item.hcursor.downField("id").as[String].getOrElse(???)
+          val publicKeyJwk = item.hcursor
+            .downField("publicKeyJwk")
+            .as[String]
+            .getOrElse(item.hcursor.downField("publicKeyMultibase").as[String].getOrElse(""))
+          val controller = item.hcursor.downField("controller").as[String].getOrElse("")
+          val verificationMaterial = new VerificationMaterial(VerificationMaterialFormat.MULTIBASE, publicKeyJwk)
+          new VerificationMethod(id, VerificationMethodType.JSON_WEB_KEY_2020, verificationMaterial, controller)
+        )
+      }
+      .getOrElse(???)
+
+    val keyIds: List[String] = keyAgreements1
+      .map {
+        _.map(item => item.hcursor.downField("id").as[String].getOrElse(???))
+      }
+      .getOrElse(???)
 
     val didDoc =
-      new DIDDoc(did, keyAgreements.asJava, authentications.asJava, verficationMethods.asJava, didCommServices.asJava)
+      new DIDDoc(
+        did,
+        keyAgreements.asJava,
+        authentications.asJava,
+        verificationMethodList.asJava,
+        didCommServices.asJava
+      )
     didDoc
   }
 

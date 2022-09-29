@@ -20,8 +20,10 @@ object UniversalDidResolver extends DIDDocResolver {
     val regex = "(did:peer:.+)".r
     did match {
       case regex(peer) =>
-        val peerDidResolver = PeerDidResolverImpl()
-        val didDocJson = peerDidResolver.resolveDidAsJson(peer)
+        // val peerDidResolver = PeerDidResolverImpl()
+        // val didDocJson = peerDidResolver.resolveDidAsJson(peer)
+        println(PeerDidResolver.getDIDDoc(peer))
+        println("----------------")
         Some(PeerDidResolver.getDIDDoc(peer)).toJava
       case anydid: String => new DIDDocResolverInMemory(diddocs).resolve(anydid)
     }
