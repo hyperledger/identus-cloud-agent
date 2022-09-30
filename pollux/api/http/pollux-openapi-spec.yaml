@@ -8,7 +8,7 @@ info:
     email: atala-coredid@iohk.io
 
 servers:
-  - url: "https://api.atala.io"
+  - url: "http://localhost/pollux"
 
 tags:
   - name: Schema Registry
