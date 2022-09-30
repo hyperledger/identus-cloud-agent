@@ -34,11 +34,8 @@ lazy val server = project
     openApiGeneratorSpec := apiBaseDirectory.value / "http/prism-agent-openapi-spec.yaml",
     openApiGeneratorConfig := baseDirectory.value / "openapi/generator-config/config.yaml",
     openApiGeneratorImportMapping := Seq("DidType", "DidOperationType", "DidOperationStatus", "OperationType")
-      .map(model => (model, s"io.iohk.atala.castor.server.http.OASModelPatches.$model"))
+      .map(model => (model, s"io.iohk.atala.agent.server.http.OASModelPatches.$model"))
       .toMap,
-    // gRPC settings
-    Compile / PB.targets := Seq(scalapb.gen() -> (Compile / sourceManaged).value / "scalapb"),
-    Compile / PB.protoSources := Seq(apiBaseDirectory.value / "grpc"),
     Docker / maintainer := "atala-coredid@iohk.io",
     Docker / dockerRepository := Some("atala-prism.io"),
     // Docker / packageName := s"atala-prism/${packageName.value}",
@@ -46,4 +43,3 @@ lazy val server = project
     dockerBaseImage := "openjdk:11"
   )
   .enablePlugins(OpenApiGeneratorPlugin, JavaAppPackaging, DockerPlugin)
-  .dependsOn(core, sql)

@@ -18,7 +18,7 @@ object HttpRoutes {
   private def additionalRoute: Route = {
     path("api" / "openapi-spec.yaml") {
       get {
-        getFromResource("castor-openapi-spec.yaml", ContentTypes.`text/plain(UTF-8)`)
+        getFromResource("prism-agent-openapi-spec.yaml", ContentTypes.`text/plain(UTF-8)`)
       }
     }
   }
