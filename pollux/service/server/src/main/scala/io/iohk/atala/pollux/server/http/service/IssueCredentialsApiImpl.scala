@@ -10,14 +10,6 @@ import zio.*
 // TODO: replace with actual implementation
 class IssueCredentialsApiImpl()(using runtime: Runtime[Any]) extends IssueCredentialsApiService with AkkaZioSupport {
 
-  private val mockCredentialResponse = CreateCredentials201Response(
-    batchId = Some("1"),
-    count = Some(1),
-    credentials = Some(
-      Seq(mockW3Credential)
-    )
-  )
-
   private val mockW3Credential = W3CCredential(
     id = "fsdf234t523fdf3",
     `type` = "University degree",
@@ -37,6 +29,14 @@ class IssueCredentialsApiImpl()(using runtime: Runtime[Any]) extends IssueCreden
         proofValue = "proofValue",
         domain = Some("domain")
       )
+    )
+  )
+  
+  private val mockCredentialResponse = CreateCredentials201Response(
+    batchId = Some("1"),
+    count = Some(1),
+    credentials = Some(
+      Seq(mockW3Credential)
     )
   )
 
