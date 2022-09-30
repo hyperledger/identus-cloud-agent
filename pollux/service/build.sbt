@@ -5,42 +5,24 @@ ThisBuild / scalaVersion := "3.1.3"
 ThisBuild / organization := "io.iohk.atala"
 
 // Custom keys
-val apiBaseDirectory = settingKey[File]("The base directory for Castor API specifications")
+val apiBaseDirectory = settingKey[File]("The base directory for Pollux API specifications")
 ThisBuild / apiBaseDirectory := baseDirectory.value / "../api"
 
 // Project definitions
 lazy val root = project
   .in(file("."))
-  .aggregate(core, sql, server)
-
-lazy val core = project
-  .in(file("core"))
-  .settings(
-    name := "castor-core",
-    libraryDependencies ++= coreDependencies
-  )
-
-lazy val sql = project
-  .in(file("sql"))
-  .settings(
-    name := "castor-sql",
-    libraryDependencies ++= sqlDependencies
-  )
-  .dependsOn(core)
+  .aggregate(server)
 
 lazy val server = project
   .in(file("server"))
   .settings(
-    name := "castor-server",
+    name := "pollux-server",
     libraryDependencies ++= apiServerDependencies,
     // OpenAPI settings
     Compile / unmanagedResourceDirectories += apiBaseDirectory.value / "http",
     Compile / sourceGenerators += openApiGenerateClasses,
-    openApiGeneratorSpec := apiBaseDirectory.value / "http/castor-openapi-spec.yaml",
+    openApiGeneratorSpec := apiBaseDirectory.value / "http/pollux-openapi-spec.yaml",
     openApiGeneratorConfig := baseDirectory.value / "openapi/generator-config/config.yaml",
-    openApiGeneratorImportMapping := Seq("DidType", "DidOperationType", "DidOperationStatus", "OperationType")
-      .map(model => (model, s"io.iohk.atala.castor.server.http.OASModelPatches.$model"))
-      .toMap,
     // gRPC settings
     Compile / PB.targets := Seq(scalapb.gen() -> (Compile / sourceManaged).value / "scalapb"),
     Compile / PB.protoSources := Seq(apiBaseDirectory.value / "grpc"),
@@ -51,4 +33,3 @@ lazy val server = project
     dockerBaseImage := "openjdk:11"
   )
   .enablePlugins(OpenApiGeneratorPlugin, JavaAppPackaging, DockerPlugin)
-  .dependsOn(core, sql)

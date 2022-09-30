@@ -201,7 +201,12 @@ lazy val mediator = project
     ),
     Compile / unmanagedResourceDirectories += apiBaseDirectory.value,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+    Docker / maintainer := "atala-coredid@iohk.io",
+    Docker / dockerRepository := Some("atala-prism.io"),
+    dockerExposedPorts := Seq(8080),
+    dockerBaseImage := "openjdk:11"
   )
+  .enablePlugins(JavaAppPackaging, DockerPlugin)
   .dependsOn(agentDidcommx, resolver)
   .dependsOn(
     protocolConnection,
