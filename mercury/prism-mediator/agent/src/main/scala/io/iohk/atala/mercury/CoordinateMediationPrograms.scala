@@ -1,5 +1,6 @@
 package io.iohk.atala.mercury
 
+import scala.util.chaining._
 import zio._
 import zhttp.service.Client
 import zhttp.http._
@@ -74,7 +75,22 @@ object CoordinateMediationPrograms {
       _ <- Console.printLine("*" * 100)
       _ <- Console.printLine(toPrettyJson(messageReceived.getMessage.toString))
       _ <- Console.printLine("*" * 100)
-    } yield ()
+      ret = parse(messageReceived.getMessage.toString)
+        .getOrElse(???)
+        // .flatMap()
+        .pipe { json =>
+          json.as[MediateGrant] match {
+            case Right(mediateGrant) => Right(mediateGrant)
+            case Left(_) =>
+              json.as[MediateDeny] match {
+                case Right(mediateDeny) => Left(mediateDeny)
+                case Left(_)            => ???
+              }
+          }
+        }
+      _ <- Console.printLine(ret)
+      _ <- Console.printLine("*" * 100)
+    } yield (ret)
   }
 
 }
