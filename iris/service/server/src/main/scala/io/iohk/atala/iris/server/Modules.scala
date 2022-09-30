@@ -1,8 +1,5 @@
 package io.iohk.atala.iris.server
 
-import akka.actor.typed.ActorSystem
-import akka.actor.typed.scaladsl.Behaviors
-import akka.http.scaladsl.server.Route
 import cats.effect.std.Dispatcher
 import doobie.util.transactor.Transactor
 import io.iohk.atala.iris.server.grpc.service.IrisServiceGrpcImpl

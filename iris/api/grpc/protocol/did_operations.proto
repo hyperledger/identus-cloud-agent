@@ -55,7 +55,7 @@ message DocumentDefinition {
 message CreateDid {
   bytes initial_update_commitment = 1;
   bytes initial_recovery_commitment = 2;
-  string storage = 3;
+  string ledger = 3;
   DocumentDefinition document = 4;
 }
 

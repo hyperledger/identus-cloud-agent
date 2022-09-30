@@ -23,9 +23,8 @@ object InmemoryUnderlyingLedgerServiceSpec extends ZIOSpecDefault {
     }
 
     def foreachZIO[R](srv: InmemoryUnderlyingLedgerService)(xs: Iterable[PublishThenAdjust]): ZIO[R, Any, Unit] =
-      ZIO.foreachDiscard[R, Any, PublishThenAdjust](xs) {
-        case PublishThenAdjust(ops, adj) =>
-          srv.publish(ops).flatMap(_ => TestClock.adjust(adj))
+      ZIO.foreachDiscard[R, Any, PublishThenAdjust](xs) { case PublishThenAdjust(ops, adj) =>
+        srv.publish(ops).flatMap(_ => TestClock.adjust(adj))
       }
   }
 
@@ -47,23 +46,23 @@ object InmemoryUnderlyingLedgerServiceSpec extends ZIOSpecDefault {
             _ <- PublishThenAdjust.foreachZIO(srvc)(scenario)
             mempool <- srvc.getMempool
             blocks <- srvc.getBlocks
-          } yield
+          } yield assertTrue(mempool == List.empty) &&
             assertTrue(
-              mempool == List.empty &&
-                blocks == List(
-                  CardanoBlock(List()),
-                  CardanoBlock(List(
+              blocks == List(
+                CardanoBlock(List()),
+                CardanoBlock(
+                  List(
                     CardanoTransaction(Seq(op(0))),
                     CardanoTransaction(Seq(op(1))),
                     CardanoTransaction(Seq(op(2))),
                     CardanoTransaction(Seq(op(3)))
-                  )),
-                  CardanoBlock(List())
-                )
+                  )
+                ),
+                CardanoBlock(List())
+              )
             )
         testCase.provideLayer(inmemoryLedger)
       },
-
       test("Operations distributed between 2 blocks") {
         val testCase =
           for {
@@ -72,32 +71,33 @@ object InmemoryUnderlyingLedgerServiceSpec extends ZIOSpecDefault {
             scenario = List(
               Seq(op(0)) >> 1.seconds,
               Seq(op(1)) >> 10.seconds,
-
               Seq(op(2)) >> 0.seconds,
               Seq(op(3)) >> 10.seconds
             )
             _ <- PublishThenAdjust.foreachZIO(srvc)(scenario)
             mempool <- srvc.getMempool
             blocks <- srvc.getBlocks
-          } yield
+          } yield assertTrue(mempool == List.empty) &&
             assertTrue(
-              mempool == List.empty &&
-                blocks == List(
-                  CardanoBlock(List()),
-                  CardanoBlock(List(
+              blocks == List(
+                CardanoBlock(List()),
+                CardanoBlock(
+                  List(
                     CardanoTransaction(Seq(op(0))),
                     CardanoTransaction(Seq(op(1))),
-                  )),
-                  CardanoBlock(List(
+                  )
+                ),
+                CardanoBlock(
+                  List(
                     CardanoTransaction(Seq(op(2))),
                     CardanoTransaction(Seq(op(3))),
-                  )),
-                )
+                  )
+                ),
+              )
             )
         testCase.provideLayer(inmemoryLedger)
       }
     ),
-
     suite("getTransactionDetails")(
       test("Find unconfirmed transaction") {
         val testCase =
@@ -107,18 +107,15 @@ object InmemoryUnderlyingLedgerServiceSpec extends ZIOSpecDefault {
             scenario = List(
               Seq(op(0)) >> 1.seconds,
               Seq(op(1)) >> 10.seconds,
-
               Seq(op(2), op(3)) >> 0.seconds,
               Seq(op(4)) >> 2.seconds
             )
             _ <- PublishThenAdjust.foreachZIO(srvc)(scenario)
             targetTx = CardanoTransaction(Seq(op(2), op(3)))
             txDetails <- srvc.getTransactionDetails(targetTx.transactionId)
-          } yield
-            assertTrue(txDetails == TransactionDetails(targetTx.transactionId, InMempool))
+          } yield assertTrue(txDetails == TransactionDetails(targetTx.transactionId, InMempool))
         testCase.provideLayer(inmemoryLedger)
       },
-
       test("Find confirmed transaction") {
         val testCase =
           for {
@@ -133,11 +130,9 @@ object InmemoryUnderlyingLedgerServiceSpec extends ZIOSpecDefault {
             _ <- PublishThenAdjust.foreachZIO(srvc)(scenario)
             targetTx = CardanoTransaction(Seq(op(2), op(3)))
             txDetails <- srvc.getTransactionDetails(targetTx.transactionId)
-          } yield
-            assertTrue(txDetails == TransactionDetails(targetTx.transactionId, InLedger))
+          } yield assertTrue(txDetails == TransactionDetails(targetTx.transactionId, InLedger))
         testCase.provideLayer(inmemoryLedger)
       },
-
       test("Find unknown transaction") {
         val testCase =
           for {
@@ -158,7 +153,6 @@ object InmemoryUnderlyingLedgerServiceSpec extends ZIOSpecDefault {
         testCase.provideLayer(inmemoryLedger)
       }
     ),
-
     suite("deleteTransaction")(
       test("Delete transaction from mempool") {
         val testCase =
@@ -168,7 +162,6 @@ object InmemoryUnderlyingLedgerServiceSpec extends ZIOSpecDefault {
             scenario = List(
               Seq(op(0)) >> 1.seconds,
               Seq(op(1)) >> 10.seconds,
-
               Seq(op(2), op(3)) >> 0.seconds,
               Seq(op(4)) >> 2.seconds
             )
@@ -176,11 +169,9 @@ object InmemoryUnderlyingLedgerServiceSpec extends ZIOSpecDefault {
             targetTx = CardanoTransaction(Seq(op(2), op(3)))
             _ <- srvc.deleteTransaction(targetTx.transactionId)
             mempool <- srvc.getMempool
-          } yield
-              assertTrue(mempool ==  List(CardanoTransaction(Seq(op(4)))))
+          } yield assertTrue(mempool == List(CardanoTransaction(Seq(op(4)))))
         testCase.provideLayer(inmemoryLedger)
       },
-
       test("Delete confirmed transaction") {
         val testCase =
           for {
@@ -189,7 +180,6 @@ object InmemoryUnderlyingLedgerServiceSpec extends ZIOSpecDefault {
             scenario = List(
               Seq(op(0)) >> 1.seconds,
               Seq(op(1)) >> 10.seconds,
-
               Seq(op(2), op(3)) >> 0.seconds,
               Seq(op(4)) >> 2.seconds
             )
@@ -197,8 +187,7 @@ object InmemoryUnderlyingLedgerServiceSpec extends ZIOSpecDefault {
             targetTx = CardanoTransaction(Seq(op(1)))
             testResult <-
               assertZIO(srvc.deleteTransaction(targetTx.transactionId).exit) {
-                fails(
-                  equalTo(LedgerError(s"Transaction ${targetTx.transactionId} not found in the mempool")))
+                fails(equalTo(LedgerError(s"Transaction ${targetTx.transactionId} not found in the mempool")))
               }
           } yield testResult
         testCase.provideLayer(inmemoryLedger)

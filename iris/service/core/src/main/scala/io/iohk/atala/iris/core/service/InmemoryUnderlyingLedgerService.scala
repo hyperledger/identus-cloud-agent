@@ -13,14 +13,14 @@ object InmemoryUnderlyingLedgerService {
 
   case class CardanoTransaction(operations: Seq[proto.IrisOperation]) {
     lazy val transactionId: TransactionId = {
-      val objectBytes = proto.AtalaObject(operations).toByteArray
+      val objectBytes = proto.IrisObject(operations).toByteArray
       val hash = Sha256.compute(objectBytes)
       TransactionId
         .from(hash.getValue)
         .getOrElse(throw new RuntimeException("Unexpected invalid hash"))
     }
   }
-  
+
   case class CardanoBlock(txs: Seq[CardanoTransaction])
 
   def layer(config: Config): ULayer[InmemoryUnderlyingLedgerService] = ZLayer.fromZIO {
@@ -35,11 +35,11 @@ object InmemoryUnderlyingLedgerService {
 }
 
 class InmemoryUnderlyingLedgerService(
-                                       config: Config,
-                                       mempoolRef: TRef[Vector[CardanoTransaction]],
-                                       blocksRef: TRef[Vector[CardanoBlock]],
-                                       balanceRef: TRef[Funds]
-                                     ) extends UnderlyingLedgerService {
+    config: Config,
+    mempoolRef: TRef[Vector[CardanoTransaction]],
+    blocksRef: TRef[Vector[CardanoBlock]],
+    balanceRef: TRef[Funds]
+) extends UnderlyingLedgerService {
 
   override def publish(operations: Seq[proto.IrisOperation]): IO[LedgerError, Unit] =
     STM.atomically {
@@ -60,15 +60,19 @@ class InmemoryUnderlyingLedgerService(
       for {
         mempool <- mempoolRef.get
         blockchain <- blocksRef.get
-        tdetails <- STM.fromOption {
-          mempool.find(_.transactionId == transactionId)
-            .map(_ => TransactionDetails(transactionId, InMempool))
-        }.orElse {
-          STM.fromOption {
-            blockchain.find(block => block.txs.exists(t => t.transactionId == transactionId))
-              .map(_ => TransactionDetails(transactionId, InLedger))
+        tdetails <- STM
+          .fromOption {
+            mempool
+              .find(_.transactionId == transactionId)
+              .map(_ => TransactionDetails(transactionId, InMempool))
           }
-        }
+          .orElse {
+            STM.fromOption {
+              blockchain
+                .find(block => block.txs.exists(t => t.transactionId == transactionId))
+                .map(_ => TransactionDetails(transactionId, InLedger))
+            }
+          }
           .orElseFail(LedgerError(s"Couldn't find tx $transactionId"))
       } yield tdetails
     }
@@ -76,7 +80,8 @@ class InmemoryUnderlyingLedgerService(
   override def deleteTransaction(transactionId: TransactionId): IO[LedgerError, Unit] = STM.atomically {
     for {
       mempool <- mempoolRef.get
-      _ <- STM.cond(mempool.exists(_.transactionId == transactionId),
+      _ <- STM.cond(
+        mempool.exists(_.transactionId == transactionId),
         (),
         LedgerError(s"Transaction $transactionId not found in the mempool")
       )
@@ -91,13 +96,15 @@ class InmemoryUnderlyingLedgerService(
 
   def getBlocks: UIO[List[CardanoBlock]] = blocksRef.get.commit.map(_.toList)
 
-  private[service] def startBackgroundProcess(): UIO[Unit] = STM.atomically {
-    for {
-      // Craft a new block from mempool transactions
-      txs <- mempoolRef.modify(old => (old, Vector.empty))
-      _ <- blocksRef.update(_.appended(CardanoBlock(txs)))
-    } yield ()
-  }
+  private[service] def startBackgroundProcess(): UIO[Unit] = STM
+    .atomically {
+      for {
+        // Craft a new block from mempool transactions
+        txs <- mempoolRef.modify(old => (old, Vector.empty))
+        _ <- blocksRef.update(_.appended(CardanoBlock(txs)))
+      } yield ()
+    }
     .repeat(Schedule.spaced(config.blockEvery))
-    .fork.map(_ => ())
+    .fork
+    .map(_ => ())
 }

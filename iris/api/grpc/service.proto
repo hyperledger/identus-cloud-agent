@@ -32,6 +32,8 @@ message IrisOperationInfo {
     UpdateDid update_did = 3;
     RecoverDid recovery_did = 4;
     DeactivateDid deactivate_did = 5;
+    IssueCredentialsBatch issue_credentials_batch = 6;
+    RevokeCredentials revoke_credentials = 7;
   }
 }
 

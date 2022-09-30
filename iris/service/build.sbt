@@ -44,6 +44,6 @@ lazy val server = project
   .in(file("server"))
   .settings(
     name := "iris-server",
-    libraryDependencies ++= apiServerDependencies,
+    libraryDependencies ++= serverDependencies,
   )
   .dependsOn(core, sql)

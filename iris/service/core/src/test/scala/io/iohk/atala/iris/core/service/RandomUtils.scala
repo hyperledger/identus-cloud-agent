@@ -14,16 +14,16 @@ object RandomUtils {
     for {
       updComm <- nextBytes(20)
       recComm <- nextBytes(20)
-    } yield
-      proto.IrisOperation(proto.IrisOperation.Operation.CreateDid(
+    } yield proto.IrisOperation(
+      proto.IrisOperation.Operation.CreateDid(
         CreateDid(
           initialUpdateCommitment = updComm,
           initialRecoveryCommitment = recComm,
-          storage = "mainnet",
+          ledger = "mainnet",
           document = Some(DocumentDefinition(publicKeys = Seq(), services = Seq()))
         )
       )
-      )
+    )
 
   def genUpdateOperation(): UIO[proto.IrisOperation] =
     for {
@@ -32,8 +32,8 @@ object RandomUtils {
       prevVers <- nextBytes(20)
       forwUpdComm <- nextBytes(20)
       sig <- nextBytes(20)
-    } yield
-      proto.IrisOperation(proto.IrisOperation.Operation.UpdateDid(
+    } yield proto.IrisOperation(
+      proto.IrisOperation.Operation.UpdateDid(
         UpdateDid(
           did = "did:prism:" + didSuff,
           revealedUpdateKey = updKey,
@@ -43,12 +43,13 @@ object RandomUtils {
           signature = sig
         )
       )
-      )
+    )
 
   def genOperation(): UIO[proto.IrisOperation] =
     for {
       op <- Random.nextBoolean
-      res <- if (op) genCreateOperation()
-      else genUpdateOperation()
+      res <-
+        if (op) genCreateOperation()
+        else genUpdateOperation()
     } yield res
 }
