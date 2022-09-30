@@ -1,13 +1,13 @@
 openapi: 3.0.1
 info:
-  title: Castor OpenAPI specification
+  title: PrismAgent OpenAPI specification
   description: OpenAPI specification for Decentralized Identifiers (DID) Operations
   version: 1.0.0
   contact:
     name: Core DID
     email: atala-coredid@iohk.io
 servers:
-  - url: "http://localhost/castor"
+  - url: "http://localhost/prism-agent"
 tags:
   - name: DID
     description: DID REST API
