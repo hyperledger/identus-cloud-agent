@@ -1,4 +1,4 @@
-package io.iohk.atala.agent.server.http
+package io.iohk.atala.pollux.server.http
 
 object OASModelPatches {
 

@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+import "scalapb/scalapb.proto";
+
+option (scalapb.options) = {
+  no_default_values_in_constructor: true
+  package_name: "io.iohk.atala.iris.proto"
+};
+
+message IssueCredentialsBatch {
+  string issuer_did = 1;
+  bytes merkle_root = 2;
+}
+
+message RevokeCredentials {
+  string revoker_did = 1;
+  bytes issuance_batch_digest = 2;
+  repeated bytes credentials_to_revoke = 3;
+}
