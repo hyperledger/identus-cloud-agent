@@ -5,10 +5,7 @@ services:
     image: atala-prism.io/castor-server:0.1.0-SNAPSHOT
 
   pollux:
-    image: hashicorp/http-echo:alpine
-    command:
-      - -listen=:80
-      - -text="I'm Pollux"
+    image: atala-prism.io/pollux-server:0.1.0-SNAPSHOT
 
   mercury:
     image: atala-prism.io/mercury-mediator:0.1.0-SNAPSHOT
