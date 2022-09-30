@@ -3,7 +3,7 @@ import sbt.Keys.testFrameworks
 import sbtghpackages.GitHubPackagesPlugin.autoImport._
 
 // Custom keys
-val apiBaseDirectory = settingKey[File]("The base directory for Iris API specifications")
+val apiBaseDirectory = settingKey[File]("The base directory for Iris gRPC specifications")
 ThisBuild / apiBaseDirectory := baseDirectory.value / "../api"
 
 def commonProject(project: Project): Project =

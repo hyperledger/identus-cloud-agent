@@ -40,6 +40,7 @@ object RandomUtils {
           previousVersion = prevVers,
           forwardUpdateCommitment = forwUpdComm,
           patches = Seq(),
+          ledger = "mainnet",
           signature = sig
         )
       )

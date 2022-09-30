@@ -13,7 +13,7 @@ object InmemoryUnderlyingLedgerService {
 
   case class CardanoTransaction(operations: Seq[proto.IrisOperation]) {
     lazy val transactionId: TransactionId = {
-      val objectBytes = proto.IrisObject(operations).toByteArray
+      val objectBytes = proto.IrisBatch(operations).toByteArray
       val hash = Sha256.compute(objectBytes)
       TransactionId
         .from(hash.getValue)

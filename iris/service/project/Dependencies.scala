@@ -3,6 +3,8 @@ import sbt._
 object Dependencies {
   object Versions {
     val zio = "2.0.2"
+    val circe = "0.14.1"
+    val circeOptics = "0.14.1"
     val akka = "2.6.19"
     val doobie = "1.0.0-RC2"
     val zioCatsInterop = "3.3.0"
@@ -34,19 +36,27 @@ object Dependencies {
   private lazy val doobiePostgres = "org.tpolecat" %% "doobie-postgres" % Versions.doobie
   private lazy val doobieHikari = "org.tpolecat" %% "doobie-hikari" % Versions.doobie
 
+  val circeCore = "io.circe" %% "circe-core" % Versions.circe
+  val circeGeneric = "io.circe" %% "circe-generic" % Versions.circe
+//  val circeGenericExtras = ("io.circe" %% "circe-generic-extras" % Versions.circe).cross(CrossVersion.for3Use2_13)
+  val circeParser = "io.circe" %% "circe-parser" % Versions.circe
+//  val circeOptics = ("io.circe" %% "circe-optics" % Versions.circeOptics).cross(CrossVersion.for3Use2_13)
+
   // Tests
   private lazy val zioTest = "dev.zio" %% "zio-test" % "2.0.2" % Test
   private lazy val zioTestSbt = "dev.zio" %% "zio-test-sbt" % "2.0.2" % Test
   private lazy val zioTestMagnolia = "dev.zio" %% "zio-test-magnolia" % "2.0.2" % Test
 
   // Dependency Modules
-  private lazy val baseDependencies: Seq[ModuleID] = Seq(zio, prismCrypto, shared, enumeratum)
+  private lazy val baseDependencies: Seq[ModuleID] = Seq(zio, zioStream, prismCrypto, shared, enumeratum)
   private lazy val grpcDependencies: Seq[ModuleID] = Seq(grpcNetty, grpcServices, scalaPbProto, scalaPbGrpc)
   private lazy val doobieDependencies: Seq[ModuleID] = Seq(doobiePostgres, doobieHikari)
+  private lazy val circeDependencies: Seq[ModuleID] =
+    Seq(circeCore, circeGeneric, circeParser)
   private lazy val zioTestDependencies: Seq[ModuleID] = Seq(zioTest, zioTestSbt, zioTestMagnolia)
 
   // Project Dependencies
-  lazy val coreDependencies: Seq[ModuleID] = baseDependencies ++ grpcDependencies ++ zioTestDependencies
+  lazy val coreDependencies: Seq[ModuleID] = baseDependencies ++ grpcDependencies ++ circeDependencies ++ zioTestDependencies
   lazy val sqlDependencies: Seq[ModuleID] = baseDependencies ++ doobieDependencies ++ Seq(zioCatsInterop)
   lazy val serverDependencies: Seq[ModuleID] = baseDependencies
 }
