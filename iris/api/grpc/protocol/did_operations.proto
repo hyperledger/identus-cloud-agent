@@ -1,0 +1,95 @@
+syntax = "proto3";
+
+import "scalapb/scalapb.proto";
+
+option (scalapb.options) = {
+  no_default_values_in_constructor: true
+  package_name: "io.iohk.atala.iris.proto"
+};
+
+message PublicKeyJwk {
+  message ECKeyData {
+    string curve = 1; // The curve name, like secp256k1.
+    bytes x = 2; // The x coordinate, represented as bytes.
+    bytes y = 3; // The y coordinate, represented as bytes.
+  }
+
+  oneof key {
+    ECKeyData ec_key = 1;
+  }
+}
+
+message DocumentDefinition {
+  message PublicKey {
+    string id = 1;
+
+    enum Type {
+      SECP256K1 = 0;
+    }
+    Type type = 2;
+
+    PublicKeyJwk jwk = 3;
+
+    enum Purpose {
+      AUTHENTICATION = 0;
+      KEY_AGREEMENT = 1;
+      ASSERTION_METHOD = 2;
+      CAPABILITY_INVOCATION = 3;
+    }
+    Purpose purpose = 4;
+  }
+
+  message Service {
+    string id = 1;
+    enum Type {
+      MEDIATOR_SERVICE = 0;
+    }
+    Type type = 2;
+    string service_endpoint = 3;
+  }
+
+  repeated PublicKey public_keys = 1;
+  repeated Service services = 2;
+}
+
+message CreateDid {
+  bytes initial_update_commitment = 1;
+  bytes initial_recovery_commitment = 2;
+  string storage = 3;
+  DocumentDefinition document = 4;
+}
+
+message UpdateDid {
+  message Patch {
+    oneof patch {
+        DocumentDefinition.PublicKey add_public_key = 1;
+        string remove_public_key = 2;
+        DocumentDefinition.Service add_service = 3;
+        string remove_service = 4;
+    }
+  }
+
+  string did = 1;
+  bytes revealed_update_key = 2;
+  bytes previous_version = 3;
+  bytes forward_update_commitment = 4;
+  repeated Patch patches = 5;
+  bytes signature = 6;
+}
+
+message RecoverDid {
+  string did = 1;
+  bytes revealed_recovery_key = 2;
+  bytes previous_version = 3;
+  bytes forward_update_commitment = 4;
+  bytes forward_recovery_commitment = 5;
+  repeated DocumentDefinition document = 6;
+  bytes signature = 7;
+}
+
+message DeactivateDid {
+  string did = 1;
+  bytes revealed_recovery_key = 2;
+  bytes previous_version = 3;
+  bytes signature = 4;
+}

@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+import "scalapb/scalapb.proto";
+import "protocol/did_operations.proto";
+import "protocol/vc_operations.proto";
+import "protocol/dlt.proto";
+
+option (scalapb.options) = {
+  no_default_values_in_constructor: true
+  package_name: "io.iohk.atala.iris.proto"
+};
+
+message IrisOperationId {
+  bytes id = 1;
+}
+
+message IrisOperationOutcome {
+  bytes operation_id = 1;
+}
+
+enum IrisOperationStatus {
+  PENDING = 0;
+  SUBMITTED = 1;
+  ROLLED_BACK = 2;
+  CONFIRMED = 3;
+};
+
+message IrisOperationInfo {
+  bytes operationId = 1;
+  oneof operation {
+    CreateDid create_did = 2;
+    UpdateDid update_did = 3;
+    RecoverDid recovery_did = 4;
+    DeactivateDid deactivate_did = 5;
+  }
+}
+
+service IrisService {
+    rpc ScheduleOperation(IrisOperation) returns (IrisOperationOutcome) {}
+    rpc GetOperation(IrisOperationId) returns (IrisOperationInfo) {}
+}
