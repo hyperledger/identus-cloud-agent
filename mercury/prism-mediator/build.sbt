@@ -93,6 +93,7 @@ lazy val protocolCoordinateMediation = project
   .settings(name := "mercury-protocol-coordinate-mediation", version := VERSION)
   .settings(libraryDependencies += D.zio.value)
   .settings(libraryDependencies ++= Seq(D.circeCore.value, D.circeGeneric.value, D.circeParser.value))
+  .settings(libraryDependencies += D.munitZio.value)
   .dependsOn(models)
 
 lazy val protocolInvitation = project

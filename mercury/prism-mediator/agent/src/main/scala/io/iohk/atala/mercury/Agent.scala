@@ -7,21 +7,20 @@ enum Agent(val id: DidId):
   case Alice extends Agent(DidId("did:example:alice"))
   case Bob extends Agent(DidId("did:example:bob"))
   case Mediator extends Agent(DidId("did:example:mediator"))
-  case Charlie extends Agent(DidId(charlieFIXME))
-  // case Charlie extends Agent(DidId("did:example:bob"))
+  case Charlie extends Agent(DidId(charlie))
+  case Charlie2
+      extends Agent(DidId({
+        val S =
+          // "eyJ0IjoiZG0iLCJzIjoiaHR0cDovL2xvY2FsaG9zdDo4MDAwIiwiYSI6WyJkaWRjb21tL3YyIiwiZGlkY29tbS9haXAyO2Vudj1yZmM1ODciXX0"
+          // "eyJ0IjoiZG0iLCJzIjoiaHR0cHM6Ly9leGFtcGxlLmNvbS9lbmRwb2ludCIsInIiOlsiZGlkOmV4YW1wbGU6c29tZW1lZGlhdG9yI3NvbWVrZXkiXSwiYSI6WyJkaWRjb21tL3YyIiwiZGlkY29tbS9haXAyO2Vudj1yZmM1ODciXX0="
+          // "eyJ0IjoiZG0iLCJzIjoiaHR0cHM6Ly9leGFtcGxlLmNvbS9lbmRwb2ludCIsInIiOlsiZGlkOmV4YW1wbGU6c29tZW1lZGlhdG9yI3NvbWVrZXkiXSwiYSI6WyJkaWRjb21tL3YyIiwiZGlkY29tbS9haXAyO2Vudj1yZmM1ODciXX0"
+          "eyJpZCI6Im5ldy1pZCIsInQiOiJkbSIsInMiOiJodHRwOi8vcm9vdHNpZC1tZWRpYXRvcjo4MDAwIiwiYSI6WyJkaWRjb21tL3YyIl19"
 
-def charlieFIXME2 = {
-  val S =
-    // "eyJ0IjoiZG0iLCJzIjoiaHR0cDovL2xvY2FsaG9zdDo4MDAwIiwiYSI6WyJkaWRjb21tL3YyIiwiZGlkY29tbS9haXAyO2Vudj1yZmM1ODciXX0"
-    // "eyJ0IjoiZG0iLCJzIjoiaHR0cHM6Ly9leGFtcGxlLmNvbS9lbmRwb2ludCIsInIiOlsiZGlkOmV4YW1wbGU6c29tZW1lZGlhdG9yI3NvbWVrZXkiXSwiYSI6WyJkaWRjb21tL3YyIiwiZGlkY29tbS9haXAyO2Vudj1yZmM1ODciXX0="
-    // "eyJ0IjoiZG0iLCJzIjoiaHR0cHM6Ly9leGFtcGxlLmNvbS9lbmRwb2ludCIsInIiOlsiZGlkOmV4YW1wbGU6c29tZW1lZGlhdG9yI3NvbWVrZXkiXSwiYSI6WyJkaWRjb21tL3YyIiwiZGlkY29tbS9haXAyO2Vudj1yZmM1ODciXX0"
-    "eyJpZCI6Im5ldy1pZCIsInQiOiJkbSIsInMiOiJodHRwOi8vcm9vdHNpZC1tZWRpYXRvcjo4MDAwIiwiYSI6WyJkaWRjb21tL3YyIl19"
-
-  "did:peer:2.Ez6LSiseNCbbtmG6ascxpPvoyT8ewrWdtJZxwmPNxYAPWxzM8" +
-    // ".Ez" + "6LSdJfkX7F3BJsYUwjDNeptqV4Wb9md6YWd3gCewQBycmwE" +
-    ".Vz" + "6MkgLBGee6xL5KH8SZmqmKmQKS2o1qd4RG4dSmjtRGTfsxX" +
-    ".S" + S
-}
+        "did:peer:2.Ez6LSiseNCbbtmG6ascxpPvoyT8ewrWdtJZxwmPNxYAPWxzM8" +
+          // ".Ez" + "6LSdJfkX7F3BJsYUwjDNeptqV4Wb9md6YWd3gCewQBycmwE" +
+          ".Vz" + "6MkgLBGee6xL5KH8SZmqmKmQKS2o1qd4RG4dSmjtRGTfsxX" +
+          ".S" + S
+      }))
 
 import org.didcommx.peerdid._
 import scala.jdk.CollectionConverters._
@@ -48,14 +47,14 @@ val service =
       |  "routingKeys": ["did:example:somemediator#somekey"]
       |},
       |{
-      |  "type": "example",
+      |  "type": "DIDCommMessaging",
       |  "serviceEndpoint": "http://localhost:8000/",
       |  "routingKeys": ["did:example:somemediator#somekey2"],
       |  "accept": ["didcomm/v2", "didcomm/aip2;env=rfc587"]
       |}]""".stripMargin
 
-def charlieFIXME = org.didcommx.peerdid.PeerDIDCreator.createPeerDIDNumalgo2(
+def charlie = org.didcommx.peerdid.PeerDIDCreator.createPeerDIDNumalgo2(
   List(keyAgreement).asJava,
   List(keyAuthentication).asJava,
-  null // service
+  null, // service
 )
