@@ -6,6 +6,7 @@ echo "--------------------------------------"
 
 cd castor/service; sbt docker:publishLocal; cd -
 cd mercury/prism-mediator; sbt "project mediator; docker:publishLocal"; cd -
+cd pollux/service; sbt docker:publishLocal; cd -
 
 echo "--------------------------------------"
 echo "Bringing up stack using docker-compose"
