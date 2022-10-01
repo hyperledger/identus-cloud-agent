@@ -32,6 +32,6 @@ message IrisOperation {
 }
 
 // List of operations which will be stored in the blockchain transaction metadata
-message AtalaObject {
+message IrisObject {
   repeated IrisOperation operations = 1;
 }

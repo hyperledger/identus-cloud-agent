@@ -14,6 +14,13 @@ trait HashValue extends Any {
   override def toString: String = {
     BytesOps.bytesToHex(value)
   }
+
+  override def equals(obj: Any): Boolean = {
+    if (obj == null || obj.getClass != this.getClass)
+      return false
+
+    value.equals(obj.asInstanceOf[HashValue].value)
+  }
 }
 
 trait HashValueFrom[A] {

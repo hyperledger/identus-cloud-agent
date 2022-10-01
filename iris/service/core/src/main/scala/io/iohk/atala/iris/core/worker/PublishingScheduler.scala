@@ -1,6 +1,6 @@
 package io.iohk.atala.iris.core.worker
 
-import io.iohk.atala.iris.proto.service as proto
+import io.iohk.atala.iris.proto.dlt as proto
 import zio.{UIO, ULayer, ZIO, ZLayer}
 
 trait PublishingScheduler {

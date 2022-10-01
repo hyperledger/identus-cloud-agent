@@ -1,11 +1,11 @@
 package io.iohk.atala.iris.core.service
 
-import io.iohk.atala.iris.proto.service as proto
+import io.iohk.atala.iris.proto.dlt as proto
 import zio.*
 
 // TODO: replace with actual implementation
 trait PublishingService {
-  def publishOperation(op: proto.IrisOperation): UIO[Unit] = ???
+  def publishOperation(op: proto.IrisOperation): UIO[Unit]
 }
 
 object MockPublishingService {

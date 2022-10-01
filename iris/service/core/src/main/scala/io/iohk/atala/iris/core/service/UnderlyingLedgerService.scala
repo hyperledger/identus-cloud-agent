@@ -1,6 +1,6 @@
 package io.iohk.atala.iris.core.service
 
-import io.iohk.atala.iris.proto.{service => proto}
+import io.iohk.atala.iris.proto.dlt as proto
 import io.iohk.atala.iris.core.model.IrisOperation
 import io.iohk.atala.iris.core.model.ledger.{Funds, TransactionDetails, TransactionId}
 import zio.{IO, UIO}

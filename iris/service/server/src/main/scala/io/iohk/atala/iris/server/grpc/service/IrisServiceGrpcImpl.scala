@@ -4,7 +4,7 @@ import com.google.protobuf.ByteString
 import io.iohk.atala.iris.core.service.PublishingService
 import io.iohk.atala.iris.core.worker.PublishingScheduler
 import io.iohk.atala.iris.proto.did_operations.{CreateDid, DocumentDefinition}
-import io.iohk.atala.iris.proto.service as proto
+import io.iohk.atala.iris.proto.dlt.IrisOperation
 import io.iohk.atala.iris.proto.service.*
 import zio.*
 
@@ -19,7 +19,7 @@ class IrisServiceGrpcImpl(service: PublishingScheduler)(using runtime: Runtime[A
       initialRecoveryCommitment = ByteString.copyFrom("b".getBytes()),
       storage = "https://atalaprism.io",
       document = Some(DocumentDefinition(publicKeys = Seq(), services = Seq()))
-    ));
+    ))
 
   override def scheduleOperation(request: IrisOperation): Future[IrisOperationOutcome] = Unsafe.unsafe { implicit unsafe =>
     runtime.unsafe.runToFuture(ZIO.succeed(IrisOperationOutcome(mockOperationId)))
