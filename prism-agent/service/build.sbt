@@ -29,7 +29,7 @@ lazy val server = project
     name := "prism-agent-server",
     libraryDependencies ++= apiServerDependencies,
     // OpenAPI settings
-    Compile / unmanagedResourceDirectories += apiBaseDirectory.value / "http",
+    Compile / unmanagedResourceDirectories += apiBaseDirectory.value,
     Compile / sourceGenerators += openApiGenerateClasses,
     openApiGeneratorSpec := apiBaseDirectory.value / "http/prism-agent-openapi-spec.yaml",
     openApiGeneratorConfig := baseDirectory.value / "openapi/generator-config/config.yaml",
