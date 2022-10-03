@@ -5,7 +5,8 @@ object Dependencies {
     val zio = "2.0.2"
     val akka = "2.6.19"
     val akkaHttp = "10.2.9"
-    val castor = "0.1.0-SNAPSHOT"
+    val castor = "0.1.0"
+    val pollux = "0.1.0"
   }
 
   private lazy val zio = "dev.zio" %% "zio" % Versions.zio
@@ -18,11 +19,15 @@ object Dependencies {
   private lazy val castorCore = "io.iohk.atala" %% "castor-core" % Versions.castor
   private lazy val castorSqlDoobie = "io.iohk.atala" %% "castor-sql-doobie" % Versions.castor
 
+  private lazy val polluxCore = "io.iohk.atala" %% "pollux-core" % Versions.pollux
+  private lazy val polluxSqlDoobie = "io.iohk.atala" %% "pollux-sql-doobie" % Versions.pollux
+
   // Dependency Modules
   private lazy val baseDependencies: Seq[ModuleID] = Seq(zio)
   private lazy val castorDependencies: Seq[ModuleID] = Seq(castorCore, castorSqlDoobie)
+  private lazy val polluxDependencies: Seq[ModuleID] = Seq(polluxCore, polluxSqlDoobie)
   private lazy val akkaHttpDependencies: Seq[ModuleID] = Seq(akkaTyped, akkaStream, akkaHttp, akkaSprayJson).map(_.cross(CrossVersion.for3Use2_13))
 
   // Project Dependencies
-  lazy val apiServerDependencies: Seq[ModuleID] = baseDependencies ++ akkaHttpDependencies ++ castorDependencies
+  lazy val serverDependencies: Seq[ModuleID] = baseDependencies ++ akkaHttpDependencies ++ castorDependencies ++ polluxDependencies
 }

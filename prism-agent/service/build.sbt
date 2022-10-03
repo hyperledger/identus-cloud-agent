@@ -27,7 +27,7 @@ lazy val server = project
   .settings(commonSettings)
   .settings(
     name := "prism-agent-server",
-    libraryDependencies ++= apiServerDependencies,
+    libraryDependencies ++= serverDependencies,
     // OpenAPI settings
     Compile / unmanagedResourceDirectories += apiBaseDirectory.value,
     Compile / sourceGenerators += openApiGenerateClasses,
