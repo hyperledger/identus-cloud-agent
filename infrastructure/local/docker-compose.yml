@@ -2,9 +2,6 @@ version: '3.8'
 
 services:
 
-  pollux:
-    image: atala-prism.io/pollux-server:0.1.0-SNAPSHOT
-
   mercury:
     image: atala-prism.io/mercury-mediator:0.1.0-SNAPSHOT
 
@@ -15,9 +12,8 @@ services:
     image: swaggerapi/swagger-ui:v4.14.0
     environment:
       - 'URLS=[
-          { name: "Pollux", url: "/pollux/api/openapi-spec.yaml" },
-          { name: "Mercury", url: "/mercury/api/openapi-spec.yaml" },
           { name: "PrismAgent", url: "/prism-agent/api/openapi-spec.yaml" },
+          { name: "Mercury", url: "/mercury/api/openapi-spec.yaml" }
         ]'
       - BASE_URL=/apidocs
 
@@ -26,7 +22,6 @@ services:
     ports:
       - "80:80"   # Http
     depends_on:
-      - pollux
       - mercury
       - prism-agent
       - swagger-ui
