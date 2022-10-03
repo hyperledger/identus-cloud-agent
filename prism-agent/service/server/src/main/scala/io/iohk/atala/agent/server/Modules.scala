@@ -11,21 +11,17 @@ import io.iohk.atala.castor.core.service.{DIDService, MockDIDService}
 import io.iohk.atala.agent.server.http.marshaller.{
   DIDApiMarshallerImpl,
   DIDAuthenticationApiMarshallerImpl,
-  DIDOperationsApiMarshallerImpl
+  DIDOperationsApiMarshallerImpl,
+  IssueCredentialsApiMarshallerImpl
 }
 import io.iohk.atala.agent.server.http.service.{
   DIDApiServiceImpl,
   DIDAuthenticationApiServiceImpl,
-  DIDOperationsApiServiceImpl
+  DIDOperationsApiServiceImpl,
+  IssueCredentialsApiServiceImpl
 }
 import io.iohk.atala.castor.core.repository.DIDOperationRepository
-import io.iohk.atala.agent.openapi.api.{
-  DIDApi,
-  DIDAuthenticationApi,
-  DIDAuthenticationApiMarshaller,
-  DIDAuthenticationApiService,
-  DIDOperationsApi
-}
+import io.iohk.atala.agent.openapi.api.{DIDApi, DIDAuthenticationApi, DIDOperationsApi, IssueCredentialsApi}
 import io.iohk.atala.castor.sql.repository.{JdbcDIDOperationRepository, TransactorLayer}
 import zio.*
 import zio.interop.catz.*
@@ -84,7 +80,13 @@ object HttpModule {
     (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new DIDAuthenticationApi(_, _))
   }
 
-  val layers = didApiLayer ++ didOperationsApiLayer ++ didAuthenticationApiLayer
+  val issueCredentialsApiLayer: ULayer[IssueCredentialsApi] = {
+    val apiServiceLayer = IssueCredentialsApiServiceImpl.layer
+    val apiMarshallerLayer = IssueCredentialsApiMarshallerImpl.layer
+    (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new IssueCredentialsApi(_, _))
+  }
+
+  val layers = didApiLayer ++ didOperationsApiLayer ++ didAuthenticationApiLayer ++ issueCredentialsApiLayer
 }
 
 object RepoModule {
