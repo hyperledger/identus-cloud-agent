@@ -33,16 +33,6 @@ object Dependencies {
 
   private lazy val doobiePostgres = "org.tpolecat" %% "doobie-postgres" % Versions.doobie
   private lazy val doobieHikari = "org.tpolecat" %% "doobie-hikari" % Versions.doobie
-  // We have to exclude bouncycastle since for some reason bitcoinj depends on bouncycastle jdk15to18
-  // (i.e. JDK 1.5 to 1.8), but we are using JDK 11
-  private lazy val prismCrypto = "io.iohk.atala" % "prism-crypto-jvm" % Versions.prismSdk excludeAll
-    ExclusionRule(
-      organization = "org.bouncycastle"
-    )
-
-  private lazy val shared = "io.iohk.atala" % "shared" % Versions.shared
-
-  private lazy val enumeratum = ("com.beachape" %% "enumeratum" % Versions.enumeratum).cross(CrossVersion.for3Use2_13)
 
   // Tests
   private lazy val zioTest = "dev.zio" %% "zio-test" % "2.0.2" % Test
