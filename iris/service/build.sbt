@@ -10,21 +10,25 @@ ThisBuild / organization := "io.iohk.atala"
 val apiBaseDirectory = settingKey[File]("The base directory for Iris API specifications")
 ThisBuild / apiBaseDirectory := baseDirectory.value / "../api"
 
+val commonSettings = Seq(
+  githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN"),
+  resolvers += Resolver.githubPackages("input-output-hk", "atala-prism-sdk"),
+  // Needed for Kotlin coroutines that support new memory management mode
+  resolvers +=
+    "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven",
+)
+
 // Project definitions
 lazy val root = project
   .in(file("."))
+  .settings(commonSettings)
   .aggregate(core, sql, server)
 
 lazy val core = project
   .in(file("core"))
+  .settings(commonSettings)
   .settings(
     name := "iris-core",
-    githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN"),
-    resolvers += Resolver
-      .githubPackages("input-output-hk", "atala-prism-sdk"),
-    // Needed for Kotlin coroutines that support new memory management mode
-    resolvers +=
-      "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven",
     libraryDependencies ++= coreDependencies,
     testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
     // gRPC settings
@@ -34,6 +38,7 @@ lazy val core = project
 
 lazy val sql = project
   .in(file("sql"))
+  .settings(commonSettings)
   .settings(
     name := "iris-sql",
     libraryDependencies ++= sqlDependencies
@@ -42,6 +47,7 @@ lazy val sql = project
 
 lazy val server = project
   .in(file("server"))
+  .settings(commonSettings)
   .settings(
     name := "iris-server",
     libraryDependencies ++= serverDependencies,

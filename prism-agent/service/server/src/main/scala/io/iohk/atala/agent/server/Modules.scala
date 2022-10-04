@@ -7,7 +7,7 @@ import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.server.Route
 import doobie.util.transactor.Transactor
 import io.iohk.atala.agent.server.http.{HttpRoutes, HttpServer}
-import io.iohk.atala.castor.core.service.{DIDService, MockDIDService}
+import io.iohk.atala.castor.core.service.{DIDService, DIDServiceImpl}
 import io.iohk.atala.agent.server.http.marshaller.{
   DIDApiMarshallerImpl,
   DIDAuthenticationApiMarshallerImpl,
@@ -26,7 +26,10 @@ import io.iohk.atala.castor.sql.repository.{JdbcDIDOperationRepository, Transact
 import zio.*
 import zio.interop.catz.*
 import cats.effect.std.Dispatcher
+import io.grpc.ManagedChannelBuilder
 import io.iohk.atala.castor.core.model.IrisNotification
+import io.iohk.atala.iris.proto.service.IrisServiceGrpc
+import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
 import zio.stream.ZStream
 
 import java.util.concurrent.Executors
@@ -55,13 +58,21 @@ object SystemModule {
   )
 }
 
-// TODO: replace with actual implementation
 object AppModule {
-  val didServiceLayer: ULayer[DIDService] = MockDIDService.layer
+  val didServiceLayer: TaskLayer[DIDService] = GrpcModule.irisStub >>> DIDServiceImpl.layer
+}
+
+object GrpcModule {
+  val irisStub: TaskLayer[IrisServiceStub] = ZLayer.fromZIO(
+    ZIO.attempt {
+      val channel = ManagedChannelBuilder.forAddress("localhost", 8081).usePlaintext.build
+      IrisServiceGrpc.stub(channel)
+    }
+  )
 }
 
 object HttpModule {
-  val didApiLayer: ULayer[DIDApi] = {
+  val didApiLayer: TaskLayer[DIDApi] = {
     val serviceLayer = AppModule.didServiceLayer
     val apiServiceLayer = serviceLayer >>> DIDApiServiceImpl.layer
     val apiMarshallerLayer = DIDApiMarshallerImpl.layer
