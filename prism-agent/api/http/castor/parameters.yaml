@@ -1,0 +1,23 @@
+components:
+  parameters:
+    didRefInPath:
+      in: path
+      name: didRef
+      required: true
+      description: DID reference.
+      schema:
+        type: string
+    didOperationRefInPath:
+      in: path
+      name: didOperationRef
+      required: true
+      description: DID Operation Reference.
+      schema:
+        type: string
+    didRefInQuery:
+      in: query
+      name: didRef
+      required: true
+      description: DID reference
+      schema:
+        type: string

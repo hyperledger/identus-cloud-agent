@@ -1,21 +1,18 @@
 version: '3.8'
 
 services:
-  castor:
-    image: atala-prism.io/castor-server:0.1.0-SNAPSHOT
-
-  pollux:
-    image: atala-prism.io/pollux-server:0.1.0-SNAPSHOT
 
   mercury:
     image: atala-prism.io/mercury-mediator:0.1.0-SNAPSHOT
+
+  prism-agent:
+    image: atala-prism.io/prism-agent-server:0.1.0-SNAPSHOT
 
   swagger-ui:
     image: swaggerapi/swagger-ui:v4.14.0
     environment:
       - 'URLS=[
-          { name: "Castor", url: "/castor/api/openapi-spec.yaml" },
-          { name: "Pollux", url: "/pollux/api/openapi-spec.yaml" },
+          { name: "PrismAgent", url: "/prism-agent/api/openapi-spec.yaml" },
           { name: "Mercury", url: "/mercury/api/openapi-spec.yaml" }
         ]'
       - BASE_URL=/apidocs
@@ -25,9 +22,8 @@ services:
     ports:
       - "80:80"   # Http
     depends_on:
-      - castor
-      - pollux
       - mercury
+      - prism-agent
       - swagger-ui
     volumes:
       - ./haproxy:/usr/local/etc/haproxy:ro

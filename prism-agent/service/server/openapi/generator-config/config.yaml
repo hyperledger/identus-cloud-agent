@@ -1,0 +1,17 @@
+# The folder where templates can be found
+templateDir: "server/openapi/generator-config/scala-akka-http-server"
+
+# Only generate output for templates registered with the 'Apis' or 'Models' types
+globalProperties:
+  apis: ""
+  models: ""
+
+# Define output packages for generated classes
+apiPackage: "io.iohk.atala.agent.openapi.api"
+modelPackage: "io.iohk.atala.agent.openapi.model"
+
+# The generator to use
+generatorName: "scala-akka-http-server"
+
+# Use handwritten classes for the types below. This is useful to customize the (de)serialization
+#importMappings:
