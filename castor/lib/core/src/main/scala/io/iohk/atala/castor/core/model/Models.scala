@@ -8,7 +8,7 @@ import io.iohk.atala.castor.core.model.did.{
   DIDStorage,
   Service,
   ServiceType,
-  VerificationRelationShip
+  VerificationRelationship
 }
 import io.iohk.atala.prism.crypto.util.BytesOps
 

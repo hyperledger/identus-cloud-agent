@@ -10,7 +10,7 @@ import io.iohk.atala.castor.core.model.did.{
   PublishedDIDOperation,
   Service,
   ServiceType,
-  VerificationRelationShip
+  VerificationRelationship
 }
 import io.iohk.atala.iris.proto as iris_proto
 
@@ -76,14 +76,14 @@ private[castor] trait ProtoModelHelper {
     }
   }
 
-  extension (purpose: VerificationRelationShip) {
+  extension (purpose: VerificationRelationship) {
     def toProto: iris_proto.did_operations.DocumentDefinition.PublicKey.Purpose = {
       import iris_proto.did_operations.DocumentDefinition.PublicKey.Purpose.*
       purpose match {
-        case VerificationRelationShip.Authentication       => AUTHENTICATION
-        case VerificationRelationShip.AssertionMethod      => ASSERTION_METHOD
-        case VerificationRelationShip.KeyAgreement         => KEY_AGREEMENT
-        case VerificationRelationShip.CapabilityInvocation => CAPABILITY_INVOCATION
+        case VerificationRelationship.Authentication       => AUTHENTICATION
+        case VerificationRelationship.AssertionMethod      => ASSERTION_METHOD
+        case VerificationRelationship.KeyAgreement         => KEY_AGREEMENT
+        case VerificationRelationship.CapabilityInvocation => CAPABILITY_INVOCATION
       }
     }
   }
