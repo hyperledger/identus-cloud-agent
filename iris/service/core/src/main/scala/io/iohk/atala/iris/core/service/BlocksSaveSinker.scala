@@ -5,8 +5,8 @@ import cats.syntax.applicative.*
 import cats.syntax.flatMap.*
 import cats.syntax.functor.*
 import cats.syntax.traverse.*
-import io.iohk.atala.iris.core.model.ConfirmedBlock
-import io.iohk.atala.iris.core.repository.{DbTransactor, IrisBatchesRepository, KeyValueRepository}
+import io.iohk.atala.iris.core.model.{ConfirmedBlock, ConfirmedIrisBatch}
+import io.iohk.atala.iris.core.repository.{DbRepositoryTransactor, IrisBatchesRepository, KeyValueRepository}
 import zio.*
 import zio.stream.*
 
@@ -15,20 +15,29 @@ trait BlocksSaveSinker {
 }
 
 object BlocksSaveSinker {
-  def layer[F[_]: TagK: Monad]: URLayer[
-    KeyValueRepository[F] & IrisBatchesRepository[F] & DbTransactor[F],
+  def layer[F[_]: TagK: Monad, S[_]: TagK]: URLayer[
+    KeyValueRepository[F] & IrisBatchesRepository[F, S] & DbRepositoryTransactor[F],
     BlocksSaveSinker
   ] =
-    ZLayer.fromFunction((x: KeyValueRepository[F], y: IrisBatchesRepository[F], z: DbTransactor[F]) =>
+    ZLayer.fromFunction((x: KeyValueRepository[F], y: IrisBatchesRepository[F, S], z: DbRepositoryTransactor[F]) =>
       BlocksSaveSinkerImpl(x, y, z)
     )
 
 }
 
-class BlocksSaveSinkerImpl[F[_]: Monad](
+/** @param keyValueRepo
+  * @param batchesRepo
+  * @param transactor
+  * @tparam F
+  *   \- a monad which support combining operations which might be performed within one database transaction, like
+  *   doobie.ConnectionIO
+  * @tparam S
+  *   \- type representing a streaming type
+  */
+class BlocksSaveSinkerImpl[F[_]: Monad, S[_]](
     keyValueRepo: KeyValueRepository[F],
-    batchesRepo: IrisBatchesRepository[F],
-    transactor: DbTransactor[F]
+    batchesRepo: IrisBatchesRepository[F, S],
+    transactor: DbRepositoryTransactor[F]
 ) extends BlocksSaveSinker {
 
   private val LAST_SYNCED_BLOCK_NO = "last_synced_block_no"
@@ -44,7 +53,7 @@ class BlocksSaveSinkerImpl[F[_]: Monad](
         _ <- keyValueRepo.set(LAST_SYNCED_BLOCK_NO, Some(block.blockLevel))
         _ <- keyValueRepo.set(LAST_SYNCED_BLOCK_TIMESTAMP, Some(timestampEpochMilli.toString))
         _ <- block.transactions.zipWithIndex.traverse { case ((txId, batch), i) =>
-          batchesRepo.saveIrisBatch(block.blockLevel, block.blockTimestamp, i, txId, batch)
+          batchesRepo.saveIrisBatch(ConfirmedIrisBatch(block.blockLevel, block.blockTimestamp, i, txId, batch))
         }
       } yield ()
     }

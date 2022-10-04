@@ -7,6 +7,6 @@ import zio.*
  * Former to make possible to combine several operations in one DB transaction,
  * latter to run repository operations without additional hustle.
 */
-trait DbTransactor[F[_]] {
+trait DbRepositoryTransactor[F[_]] {
   def runAtomically[A](action: F[A]): Task[A]
 }
