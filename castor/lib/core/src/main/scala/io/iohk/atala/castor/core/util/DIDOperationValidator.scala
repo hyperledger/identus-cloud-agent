@@ -12,7 +12,7 @@ object DIDOperationValidator {
   def layer(config: Config): ULayer[DIDOperationValidator] = ZLayer.succeed(DIDOperationValidator(config))
 }
 
-private[castor] class DIDOperationValidator(config: Config) {
+class DIDOperationValidator(config: Config) {
 
   def validate(operation: PublishedDIDOperation): Either[DIDOperationError, Unit] = {
     for {

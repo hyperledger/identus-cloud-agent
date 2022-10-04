@@ -28,6 +28,7 @@ import zio.interop.catz.*
 import cats.effect.std.Dispatcher
 import io.grpc.ManagedChannelBuilder
 import io.iohk.atala.castor.core.model.IrisNotification
+import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
 import zio.stream.ZStream
@@ -59,7 +60,13 @@ object SystemModule {
 }
 
 object AppModule {
-  val didServiceLayer: TaskLayer[DIDService] = GrpcModule.irisStub >>> DIDServiceImpl.layer
+  val didOpValidatorLayer: ULayer[DIDOperationValidator] = DIDOperationValidator.layer(
+    DIDOperationValidator.Config(
+      publicKeyLimit = 50,
+      serviceLimit = 50
+    )
+  )
+  val didServiceLayer: TaskLayer[DIDService] = (GrpcModule.irisStub ++ didOpValidatorLayer) >>> DIDServiceImpl.layer
 }
 
 object GrpcModule {
