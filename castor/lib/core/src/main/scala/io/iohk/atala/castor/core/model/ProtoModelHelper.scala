@@ -1,7 +1,7 @@
 package io.iohk.atala.castor.core.model
 
 import com.google.protobuf.ByteString
-import io.iohk.atala.castor.core.model.HexStrings.*
+import io.iohk.atala.shared.models.HexStrings.*
 import io.iohk.atala.castor.core.model.did.{
   DIDDocument,
   EllipticCurve,
@@ -16,8 +16,8 @@ import io.iohk.atala.iris.proto as iris_proto
 
 private[castor] trait ProtoModelHelper {
 
-  extension (s: HexString) {
-    def toProto: ByteString = ByteString.copyFrom(s.toByteArray)
+  extension (bytes: Array[Byte]) {
+    def toProto: ByteString = ByteString.copyFrom(bytes)
   }
 
   extension (operation: PublishedDIDOperation.Create) {
@@ -25,8 +25,8 @@ private[castor] trait ProtoModelHelper {
       iris_proto.dlt.IrisOperation(
         operation = iris_proto.dlt.IrisOperation.Operation.CreateDid(
           value = iris_proto.did_operations.CreateDid(
-            initialUpdateCommitment = operation.updateCommitment.toProto,
-            initialRecoveryCommitment = operation.recoveryCommitment.toProto,
+            initialUpdateCommitment = operation.updateCommitment.toByteArray.toProto,
+            initialRecoveryCommitment = operation.recoveryCommitment.toByteArray.toProto,
             ledger = operation.storage.ledgerName,
             document = Some(operation.document.toProto)
           )
@@ -96,8 +96,8 @@ private[castor] trait ProtoModelHelper {
             key = iris_proto.did_operations.PublicKeyJwk.Key.EcKey(
               iris_proto.did_operations.PublicKeyJwk.ECKeyData(
                 curve = k.crv.toProto,
-                x = k.x.toProto,
-                y = k.y.toProto
+                x = k.x.toByteArray.toProto,
+                y = k.y.toByteArray.toProto
               )
             )
           )

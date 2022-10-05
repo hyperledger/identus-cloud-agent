@@ -1,6 +1,6 @@
 package io.iohk.atala.castor.core.util
 
-import io.iohk.atala.castor.core.model.HexStrings.*
+import io.iohk.atala.shared.models.HexStrings.*
 import io.iohk.atala.castor.core.model.did.PublishedDIDOperation
 import io.iohk.atala.castor.core.model.error.DIDOperationError
 import io.iohk.atala.castor.core.util.DIDOperationValidator.Config
