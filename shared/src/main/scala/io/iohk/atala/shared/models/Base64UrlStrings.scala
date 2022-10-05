@@ -1,0 +1,22 @@
+package io.iohk.atala.shared.models
+
+import io.iohk.atala.shared.utils.Base64Utils
+
+import scala.util.Try
+
+object Base64UrlStrings {
+
+  opaque type Base64UrlString = String
+
+  object Base64UrlString {
+    def fromStringUnsafe(s: String): Base64UrlString = s
+    def fromString(s: String): Try[Base64UrlString] = Try(Base64Utils.decodeURL(s)).map(_ => s)
+    def fromByteArray(bytes: Array[Byte]): Base64UrlString = Base64Utils.encodeURL(bytes)
+  }
+
+  extension (s: Base64UrlString) {
+    def toByteArray: Array[Byte] = Base64Utils.decodeURL(s)
+    def toString: String = s
+  }
+
+}

@@ -1,8 +1,8 @@
 package io.iohk.atala.castor.core.util
 
 import java.net.URI
-import io.iohk.atala.castor.core.model.did
-import io.iohk.atala.castor.core.model.HexStrings.HexString
+import io.iohk.atala.shared.models.HexStrings.*
+import io.iohk.atala.shared.models.Base64UrlStrings.*
 import io.iohk.atala.castor.core.model.did.{
   DIDDocument,
   EllipticCurve,
@@ -26,8 +26,8 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
 
   private val publishedDIDSuite = {
     def createPublishedDIDOperation(
-        updateCommitment: HexString = HexString.fromString("0" * 64).get,
-        recoveryCommitment: HexString = HexString.fromString("0" * 64).get,
+        updateCommitment: HexString = HexString.fromStringUnsafe("0" * 64),
+        recoveryCommitment: HexString = HexString.fromStringUnsafe("0" * 64),
         publicKeys: Seq[PublicKey] = Nil,
         services: Seq[Service] = Nil
     ) =
@@ -88,8 +88,8 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
               purposes = Nil,
               publicKeyJwk = PublicKeyJwk.ECPublicKeyData(
                 crv = EllipticCurve.SECP256K1,
-                x = HexString.fromString("00").get,
-                y = HexString.fromString("00").get
+                x = Base64UrlString.fromStringUnsafe("00"),
+                y = Base64UrlString.fromStringUnsafe("00")
               )
             )
           )
@@ -105,7 +105,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         val serviceCountGen = Gen.int(0, 30)
         check(serviceLimitGen, serviceCountGen) { (serviceLimit, serviceCount) =>
           val services = (1 to serviceCount).map(i =>
-            did.Service(
+            Service(
               id = s"did:example:123#service-$i",
               `type` = ServiceType.MediatorService,
               serviceEndpoint = URI.create("https://example.com")
