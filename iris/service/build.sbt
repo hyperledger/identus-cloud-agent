@@ -2,37 +2,40 @@ import Dependencies._
 import sbt.Keys.testFrameworks
 import sbtghpackages.GitHubPackagesPlugin.autoImport._
 
-ThisBuild / version := "0.1.0-SNAPSHOT"
-ThisBuild / scalaVersion := "3.1.3"
-ThisBuild / organization := "io.iohk.atala"
-
 // Custom keys
 val apiBaseDirectory = settingKey[File]("The base directory for Iris API specifications")
 ThisBuild / apiBaseDirectory := baseDirectory.value / "../api"
 
-// Project definitions
-lazy val root = project
-  .in(file("."))
-  .aggregate(core, sql, server)
-
-lazy val core = project
-  .in(file("core"))
-  .settings(
-    name := "iris-core",
+def commonProject(project: Project): Project =
+  project.settings(
+    version := "0.1.0-SNAPSHOT",
+    organization := "io.iohk.atala",
+    scalaVersion := "3.1.3",
     githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN"),
     resolvers += Resolver
       .githubPackages("input-output-hk", "atala-prism-sdk"),
     // Needed for Kotlin coroutines that support new memory management mode
     resolvers +=
       "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven",
-    libraryDependencies ++= coreDependencies,
+  )
+
+// Project definitions
+lazy val root = commonProject(project)
+  .in(file("."))
+  .aggregate(core, sql, server)
+
+lazy val core = commonProject(project)
+  .in(file("core"))
+  .settings(
+    name := "iris-core",
     testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
+    libraryDependencies ++= coreDependencies,
     // gRPC settings
     Compile / PB.targets := Seq(scalapb.gen() -> (Compile / sourceManaged).value / "scalapb"),
     Compile / PB.protoSources := Seq(apiBaseDirectory.value / "grpc")
   )
 
-lazy val sql = project
+lazy val sql = commonProject(project)
   .in(file("sql"))
   .settings(
     name := "iris-sql",
@@ -40,7 +43,7 @@ lazy val sql = project
   )
   .dependsOn(core)
 
-lazy val server = project
+lazy val server = commonProject(project)
   .in(file("server"))
   .settings(
     name := "iris-server",
