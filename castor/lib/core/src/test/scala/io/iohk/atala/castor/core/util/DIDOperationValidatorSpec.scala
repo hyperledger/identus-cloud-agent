@@ -54,8 +54,8 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         val recoveryCommitmentGen = Gen.stringN(64)(Gen.hexCharLower)
         check(updateCommitmentGen, recoveryCommitmentGen) { (u, r) =>
           val op = createPublishedDIDOperation(
-            updateCommitment = HexString.fromString(u).get,
-            recoveryCommitment = HexString.fromString(r).get
+            updateCommitment = HexString.fromStringUnsafe(u),
+            recoveryCommitment = HexString.fromStringUnsafe(r)
           )
           assert(DIDOperationValidator(Config(50, 50)).validate(op))(
             isLeft(isSubtype[DIDOperationError.InvalidArgument](anything))
@@ -70,8 +70,8 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
           .filter(_.length != 64)
         check(updateCommitmentGen, recoveryCommitmentGen) { (u, r) =>
           val op = createPublishedDIDOperation(
-            updateCommitment = HexString.fromString(u).get,
-            recoveryCommitment = HexString.fromString(r).get
+            updateCommitment = HexString.fromStringUnsafe(u),
+            recoveryCommitment = HexString.fromStringUnsafe(r)
           )
           assert(DIDOperationValidator(Config(50, 50)).validate(op))(
             isLeft(isSubtype[DIDOperationError.InvalidArgument](anything))
