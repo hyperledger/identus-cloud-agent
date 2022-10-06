@@ -1,15 +1,12 @@
 .idea
 report
 megalinter-reports
-
 .vscode
 .bloop
 .bsp
 .metals
-
 **/project/metals.sbt
-
 target
-
+**/.DS_Store
 shell.nix
 .envrc

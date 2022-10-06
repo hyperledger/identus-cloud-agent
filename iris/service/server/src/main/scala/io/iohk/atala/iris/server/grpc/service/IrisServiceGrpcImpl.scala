@@ -17,7 +17,7 @@ class IrisServiceGrpcImpl(service: PublishingScheduler)(using runtime: Runtime[A
     CreateDid(
       initialUpdateCommitment = ByteString.copyFrom("a".getBytes()),
       initialRecoveryCommitment = ByteString.copyFrom("b".getBytes()),
-      storage = "https://atalaprism.io",
+      ledger = "https://atalaprism.io",
       document = Some(DocumentDefinition(publicKeys = Seq(), services = Seq()))
     ))
 
