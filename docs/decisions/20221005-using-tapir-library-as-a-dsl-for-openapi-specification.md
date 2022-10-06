@@ -16,7 +16,7 @@ The following tool was selected for code generation: [OpenAPI Tools](https://git
 
 [Tapir](https://tapir.softwaremill.com/en/latest/index.html) is proposed to enforce a type safety and introduce DSL in Scala for OAS files.
 
-Technology stack that is going to be used in Prism v2: Scala3 + ZIO + ZIO ecosystem
+Technology stack that is going to be used in Prism v2 backend: Scala3 + ZIO + ZIO ecosystem
 
 Akka framework cannot be used because [Lightbend changed the license type to BSL 1.1](https://www.lightbend.com/blog/why-we-are-changing-the-license-for-akka)
 
@@ -81,7 +81,33 @@ graph TD
     I --> |Try again| U
     S --> |Success| T(Complete Feature)
 ```
-
+[OAS First with Tapir Workflow](https://mermaid.ink/img/pako:eNp1k8Fu2zAMhl-F0GFQgRa75zAgtd3NwAIPlYMdkh40m3GF2ZJByx2Cuu8-xlYTp01ycUB-_EX-lF5F4UoUC1GRbp8hj7cW-LfeKK_JwwNq3xM-wd3dNxiS0nhIbNk6Yz2oFguzM4X2xtkBklgeUzHujDWH-E3Qmwmktu3916z3_IF832I3QLySsWu0sbDidupQlcRT2VgxQJ7IXLeG4Kf5Q5r2gYpXH6gpnCdT-DtaJO1xgOV5IrUeqSXkGhVJhfSCBBEff3OViyIZ1QZ5wgvcL3JlX_A56rdU_3RVsdw6vQY9xvIRS1d8RiLXtKYeXYWEyNEA64lYbrKlggdTvy8kjJx8NjnHpq3HqUMy2QQjHMGXY7p74pKjRTAzYYD7C56MLZ74mRlszgVvopGfJmIki2Tmn0fJMUIBy-bc2eTpGaD6osCO70s-b-eH6zzsWA50Byfn-Va97yEccz83-LAoqQpd64_dqKt7SGVqX7DzpuLpA51OdE570BXf4OO2gsypZ3lQrJF9C88qKIhb0SDx7S_5Hb4eYlvBLjW4FQv-W2r6uxVb-8ac7r1Te1uIhaceb0XfltxJbDQ_30Ysdrru8O0_qcg2yA)](https://mermaid-js.github.io/mermaid-live-editor/edit#pako:eNp1k8Fu2zAMhl-F0GFQgRa75zAgtd3NwAIPlYMdkh40m3GF2ZJByx2Cuu8-xlYTp01ycUB-_EX-lF5F4UoUC1GRbp8hj7cW-LfeKK_JwwNq3xM-wd3dNxiS0nhIbNk6Yz2oFguzM4X2xtkBklgeUzHujDWH-E3Qmwmktu3916z3_IF832I3QLySsWu0sbDidupQlcRT2VgxQJ7IXLeG4Kf5Q5r2gYpXH6gpnCdT-DtaJO1xgOV5IrUeqSXkGhVJhfSCBBEff3OViyIZ1QZ5wgvcL3JlX_A56rdU_3RVsdw6vQY9xvIRS1d8RiLXtKYeXYWEyNEA64lYbrKlggdTvy8kjJx8NjnHpq3HqUMy2QQjHMGXY7p74pKjRTAzYYD7C56MLZ74mRlszgVvopGfJmIki2Tmn0fJMUIBy-bc2eTpGaD6osCO70s-b-eH6zzsWA50Byfn-Va97yEccz83-LAoqQpd64_dqKt7SGVqX7DzpuLpA51OdE570BXf4OO2gsypZ3lQrJF9C88qKIhb0SDx7S_5Hb4eYlvBLjW4FQv-W2r6uxVb-8ac7r1Te1uIhaceb0XfltxJbDQ_30Ysdrru8O0_qcg2yA)
+```mermaid
+graph TD
+    U[Start Feature] --> |Edit Endpoint Specification| ED(Endpoint Definition)
+    U --> |Edit Input/Output Types| DM(Domain Model)
+    ED --> |Input| TE(Tapir Library)
+    DM --> |Input| TE
+    TE --> |Generate| A
+    TE --> |Interpret| SC(Server Code)
+    TE --> |Interpret| CC(Client Code)
+    TE --> |Produce| SW(Swagger UI)
+    TE --> |Produce| RD(Redoc UI)
+    TE --> |Compilation Error| U
+    A[OAS File] --> |Input| E
+    U --> |Edit Template| E
+    E[Generator & Templates]-->|Generate Server Code| B(Server Code)
+    E -->|Generate Client Code| C(Client Code)
+    C -->|Compile| OC(Other Compiler)
+    OC -->|Compilation Error| I
+    OC -->|Success| T
+    E -->|Host file as Swagger UI| D(Swagger)
+    B --> |Compile| S(Scala Compiler)
+    S --> |Compilation Error| I(Investigate)
+    I --> |Try again| U
+    S --> |Success| T(Complete Feature)
+    
+```
 ---
 Options and fields below will not be a part of the ADS. I will remove these later. Feel free to use these sections for argumentation.
 ## Pros and Cons of the Options <!-- optional -->
