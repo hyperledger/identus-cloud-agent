@@ -5,6 +5,7 @@ ThisBuild / scalaVersion := "3.1.3"
 ThisBuild / organization := "io.iohk.atala"
 
 val commonSettings = Seq(
+  testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
   githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN"),
   resolvers += Resolver.githubPackages("input-output-hk", "atala-prism-sdk"),
   // Needed for Kotlin coroutines that support new memory management mode

@@ -8,8 +8,11 @@ option (scalapb.options) = {
 };
 
 message PublicKeyJwk {
+  enum Curve {
+    SECP256K1 = 0;
+  }
   message ECKeyData {
-    string curve = 1; // The curve name, like secp256k1.
+    Curve curve = 1; // The curve name, like secp256k1.
     bytes x = 2; // The x coordinate, represented as bytes.
     bytes y = 3; // The y coordinate, represented as bytes.
   }
@@ -23,12 +26,7 @@ message DocumentDefinition {
   message PublicKey {
     string id = 1;
 
-    enum Type {
-      SECP256K1 = 0;
-    }
-    Type type = 2;
-
-    PublicKeyJwk jwk = 3;
+    PublicKeyJwk jwk = 2;
 
     enum Purpose {
       AUTHENTICATION = 0;
@@ -36,7 +34,7 @@ message DocumentDefinition {
       ASSERTION_METHOD = 2;
       CAPABILITY_INVOCATION = 3;
     }
-    Purpose purpose = 4;
+    repeated Purpose purposes = 3;
   }
 
   message Service {
