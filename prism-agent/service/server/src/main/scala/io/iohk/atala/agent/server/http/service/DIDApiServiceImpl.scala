@@ -1,14 +1,21 @@
 package io.iohk.atala.agent.server.http.service
 
+import akka.http.scaladsl.server.Directives.*
 import akka.http.scaladsl.marshalling.ToEntityMarshaller
 import akka.http.scaladsl.server.Route
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.agent.openapi.api.DIDApiService
 import io.iohk.atala.agent.openapi.model.*
+import io.iohk.atala.agent.server.http.model.{HttpServiceError, OASDomainModelSupport, OASErrorModelSupport}
+import io.iohk.atala.castor.core.model.error.DIDOperationError
 import zio.*
 
 // TODO: replace with actual implementation
-class DIDApiServiceImpl(service: DIDService)(using runtime: Runtime[Any]) extends DIDApiService with AkkaZioSupport {
+class DIDApiServiceImpl(service: DIDService)(using runtime: Runtime[Any])
+    extends DIDApiService,
+      AkkaZioSupport,
+      OASDomainModelSupport,
+      OASErrorModelSupport {
 
   private val mockDID = DID(
     id = "did:prism:1:mainnet:abcdef123456",
@@ -53,7 +60,17 @@ class DIDApiServiceImpl(service: DIDService)(using runtime: Runtime[Any]) extend
       toEntityMarshallerDIDResponse: ToEntityMarshaller[DIDResponse],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
-    onZioSuccess(ZIO.unit) { _ => createDid200(mockDIDResponse) }
+    val result = for {
+      operation <- ZIO.fromEither(createDIDRequest.toDomain).mapError(HttpServiceError.InvalidPayload.apply)
+      errorOrResult <- service
+        .createPublishedDID(operation)
+        .mapError(HttpServiceError.ServiceError[DIDOperationError].apply)
+    } yield errorOrResult
+
+    onZioSuccess(result.mapError(_.toErrorResponse).either) {
+      case Left(error)   => complete(error.status -> error)
+      case Right(result) => createDid200(mockDIDResponse) // TODO: return actual response
+    }
   }
 
   override def deactivateDID(didRef: String, deactivateDIDRequest: DeactivateDIDRequest)(implicit

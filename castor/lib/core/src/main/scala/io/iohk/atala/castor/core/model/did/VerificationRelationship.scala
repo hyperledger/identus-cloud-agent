@@ -1,13 +1,8 @@
 package io.iohk.atala.castor.core.model.did
 
-sealed trait VerificationRelationship
-
-object VerificationRelationship {
-  case object Authentication extends VerificationRelationship
-
-  case object AssertionMethod extends VerificationRelationship
-
-  case object KeyAgreement extends VerificationRelationship
-
-  case object CapabilityInvocation extends VerificationRelationship
+enum VerificationRelationship(val name: String) {
+  case Authentication extends VerificationRelationship("authentication")
+  case AssertionMethod extends VerificationRelationship("assertionMethod")
+  case KeyAgreement extends VerificationRelationship("keyAgreement")
+  case CapabilityInvocation extends VerificationRelationship("capabilityInvocation")
 }

@@ -15,7 +15,7 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   )
   given RootJsonFormat[CreateAuthenticationChallengeRequest] = jsonFormat3(CreateAuthenticationChallengeRequest.apply)
   given RootJsonFormat[CreateAuthenticationChallengeResponse] = jsonFormat2(CreateAuthenticationChallengeResponse.apply)
-  given RootJsonFormat[CreateDIDRequest] = jsonFormat7(CreateDIDRequest.apply)
+  given RootJsonFormat[CreateDIDRequest] = jsonFormat5(CreateDIDRequest.apply)
   given RootJsonFormat[CreateDIDRequestDocument] = jsonFormat2(CreateDIDRequestDocument.apply)
   given RootJsonFormat[DeactivateDIDRequest] = jsonFormat5(DeactivateDIDRequest.apply)
   given RootJsonFormat[Delta] = jsonFormat2(Delta.apply)

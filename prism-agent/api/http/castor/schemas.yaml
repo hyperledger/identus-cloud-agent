@@ -108,8 +108,6 @@ components:
         - storage
         - document
       properties:
-        requestType:
-          $ref: "#/components/schemas/OperationType"
         didType:
           $ref: "#/components/schemas/DidTypeWithProof"
         updateCommitment:
@@ -126,17 +124,14 @@ components:
         document:
           type: object
           properties:
-            controller:
-              type: string
-              example: "did:prism:mainnet:ab1cfedfl39420dkel"
             publicKeys:
               type: array
               items:
                 $ref: "#/components/schemas/PublicKey"
-        services:
-          type: array
-          items:
-            $ref: "#/components/schemas/Service"
+            services:
+              type: array
+              items:
+                $ref: "#/components/schemas/Service"
 
     UpdateDIDRequest:
       type: object
