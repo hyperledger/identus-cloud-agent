@@ -64,6 +64,24 @@ Chosen option: "use Tapir library", because in solves the challenges of managing
 
 - OAS is going to be generated from the model defined by DLS, so the granular/manual control over the spec will be replaced by Tapir generator
 
+[OAS First OpenAPI Yaml File Workflow](https://mermaid.ink/img/pako:eNpdksFuwjAMhl_FymHKJPYCPUyCUraeekg5UQ5Wa0q0Nq3SlAkR3n0GMtYupzj-_OeP44sou4pEJGqL_RHydWGA13anHFoHG0I3WtrD29s7-KTSDrKl8rB8YMsdR7DRzS-Rmn50HpKgMinLqe0bdPRMJrsPMmTRdRZenulhzyU-ZAgU2RNZiNmjh5WchK9BBWZ83GgyLvCxnISBj-983LU9m_aQxTJzx7vk_cQGLJty6HRnILG2sx7SGaDGsqRh8JBP7Xx2g4MDywEOoL6xrvmGbephLUMUrlk9GvS0o6QqscH_btQUm7uRqTnR4HTNrw90-qBzewasURsP25nMn2d5U2yI-xb-OSiIhWjJtqgrHozL7awQ3KWWChHxtkL7VYjCXJnD0XXqbEoROTvSQox9xU7WGnmeWhEdsBno-gNchcLt)](https://mermaid-js.github.io/mermaid-live-editor/edit#pako:eNpdksFuwjAMhl_FymHKJPYCPUyCUraeekg5UQ5Wa0q0Nq3SlAkR3n0GMtYupzj-_OeP44sou4pEJGqL_RHydWGA13anHFoHG0I3WtrD29s7-KTSDrKl8rB8YMsdR7DRzS-Rmn50HpKgMinLqe0bdPRMJrsPMmTRdRZenulhzyU-ZAgU2RNZiNmjh5WchK9BBWZ83GgyLvCxnISBj-983LU9m_aQxTJzx7vk_cQGLJty6HRnILG2sx7SGaDGsqRh8JBP7Xx2g4MDywEOoL6xrvmGbephLUMUrlk9GvS0o6QqscH_btQUm7uRqTnR4HTNrw90-qBzewasURsP25nMn2d5U2yI-xb-OSiIhWjJtqgrHozL7awQ3KWWChHxtkL7VYjCXJnD0XXqbEoROTvSQox9xU7WGnmeWhEdsBno-gNchcLt)
+```mermaid
+graph TD
+    U[Start Feature] --> |Edit OAS| A
+    A[OAS File] --> |Input| E
+    U --> |Edit Template| E
+    E[Generator & Templates]-->|Generate Server Code| B(Server Code)
+    E -->|Generate Client Code| C(Client Code)
+    C -->|Compile| OC(Other Compiler)
+    OC -->|Compilation Error| I
+    OC -->|Success| T
+    E -->|Host file as Swagger UI| D(Swagger)
+    B --> |Compile| S(Scala Compiler)
+    S --> |Compilation Error| I(Investigate)
+    I --> |Try again| U
+    S --> |Success| T(Complete Feature)
+```
+
 ---
 Options and fields below will not be a part of the ADS. I will remove these later. Feel free to use these sections for argumentation.
 ## Pros and Cons of the Options <!-- optional -->
