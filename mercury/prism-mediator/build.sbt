@@ -48,6 +48,8 @@ lazy val D = new {
   val peerDidcommx = Def.setting("org.didcommx" % "peerdid" % "0.3.0")
   val didScala = Def.setting("app.fmgp" %% "did" % "0.0.0+74-691ada28+20220902-0934-SNAPSHOT")
 
+  val jwk = Def.setting("com.nimbusds" % "nimbus-jose-jwt" % "9.25.4")
+
   // For munit https://scalameta.org/munit/docs/getting-started.html#scalajs-setup
   val munit = Def.setting("org.scalameta" %% "munit" % V.munit % Test)
   // For munit zio https://github.com/poslegm/munit-zio
@@ -142,6 +144,7 @@ lazy val resolver = project // maybe merge into models
       D.peerDidcommx.value,
       D.munit.value,
       D.munitZio.value,
+      D.jwk.value,
       "org.jetbrains.kotlin" % "kotlin-runtime" % "1.2.71",
       "org.jetbrains.kotlin" % "kotlin-stdlib" % "1.7.10",
     ),

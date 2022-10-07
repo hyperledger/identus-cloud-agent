@@ -41,7 +41,7 @@ object MediatorProgram {
 
   def program(
       jsonString: String
-  ): ZIO[DidComm & MailStorage, Nothing, String] = {
+  ): ZIO[DidComm & MailStorage & ConnectionStorage, Nothing, String] = {
     ZIO.logAnnotate("request-id", java.util.UUID.randomUUID.toString()) {
       for {
         _ <- ZIO.logInfo("Received new message")
