@@ -77,7 +77,7 @@ trait OASDomainModelSupport {
       for {
         crv <- jwk.crv
           .toRight("expected crv field in JWK")
-          .flatMap(i => ellipticCurveLookup.get(i).toRight("unsupported curve $i"))
+          .flatMap(i => ellipticCurveLookup.get(i).toRight(s"unsupported curve $i"))
         x <- jwk.x
           .toRight("expected x field in JWK")
           .flatMap(
