@@ -6,3 +6,11 @@ enum VerificationRelationship(val name: String) {
   case KeyAgreement extends VerificationRelationship("keyAgreement")
   case CapabilityInvocation extends VerificationRelationship("capabilityInvocation")
 }
+
+object VerificationRelationship {
+
+  private val lookup = VerificationRelationship.values.map(i => i.name -> i).toMap
+
+  def parseString(s: String): Option[VerificationRelationship] = lookup.get(s)
+
+}

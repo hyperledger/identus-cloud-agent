@@ -4,7 +4,7 @@ import io.iohk.atala.agent.openapi.model.{CreateDIDRequest, JsonWebKey2020, Publ
 import io.iohk.atala.castor.core.model.did as domain
 import io.iohk.atala.shared.models.HexStrings.*
 import io.iohk.atala.shared.models.Base64UrlStrings.*
-import io.iohk.atala.agent.server.util.Traverse.*
+import io.iohk.atala.shared.utils.Traverse.*
 
 import java.net.URI
 import scala.util.Try
@@ -48,7 +48,7 @@ trait OASDomainModelSupport {
     def toDomain: Either[String, domain.Service] = {
       for {
         serviceEndpoint <- Try(URI.create(service.serviceEndpoint)).toEither.left.map(_ =>
-          "unable to parse serviceEndpoint as URI"
+          s"unable to parse serviceEndpoint ${service.serviceEndpoint} as URI"
         )
         serviceType <- serviceTypeLookup.get(service.`type`).toRight(s"unsupported serviceType ${service.`type`}")
       } yield domain.Service(

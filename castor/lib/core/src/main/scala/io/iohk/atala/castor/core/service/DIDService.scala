@@ -9,6 +9,7 @@ import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
 import io.iohk.atala.prism.crypto.Sha256
 import io.iohk.atala.shared.models.HexStrings.HexString
+import io.iohk.atala.iris.proto as iris_proto
 
 trait DIDService {
   def createPublishedDID(operation: PublishedDIDOperation.Create): IO[DIDOperationError, PublishedDIDOperation.Create]
@@ -40,8 +41,11 @@ private class DIDServiceImpl(
   override def createPublishedDID(
       operation: PublishedDIDOperation.Create
   ): IO[DIDOperationError, PublishedDIDOperation.Create] = {
-    val protoModel = operation.toProto
-    val didSuffix = HexString.fromStringUnsafe(Sha256.compute(protoModel.toByteArray).getHexValue)
+    val createDIDProto = operation.toProto
+    val irisOpProto = iris_proto.dlt.IrisOperation(
+      operation = iris_proto.dlt.IrisOperation.Operation.CreateDid(createDIDProto)
+    )
+    val didSuffix = HexString.fromStringUnsafe(Sha256.compute(createDIDProto.toByteArray).getHexValue)
     for {
       _ <- ZIO.fromEither(operationValidator.validate(operation))
       confirmedOps <- didOpRepo
@@ -57,7 +61,7 @@ private class DIDServiceImpl(
           )
         )
       _ <- ZIO
-        .fromFuture(_ => irisClient.scheduleOperation(protoModel))
+        .fromFuture(_ => irisClient.scheduleOperation(irisOpProto))
         .mapError(DIDOperationError.DLTProxyError.apply)
     } yield operation
   }

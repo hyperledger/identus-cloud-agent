@@ -27,7 +27,6 @@ import zio.*
 import zio.interop.catz.*
 import cats.effect.std.Dispatcher
 import io.grpc.ManagedChannelBuilder
-import io.iohk.atala.castor.core.model.IrisNotification
 import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub

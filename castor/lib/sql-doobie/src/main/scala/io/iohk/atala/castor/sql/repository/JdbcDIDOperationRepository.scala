@@ -2,18 +2,25 @@ package io.iohk.atala.castor.sql.repository
 
 import doobie.*
 import doobie.implicits.*
-import io.iohk.atala.castor.core.model.IrisNotification
 import io.iohk.atala.castor.core.model.did.ConfirmedPublishedDIDOperation
 import io.iohk.atala.castor.core.repository.DIDOperationRepository
+import io.iohk.atala.castor.sql.model.SqlModelHelper
+import io.iohk.atala.castor.sql.repository.Utils.connectionIOSafe
+import io.iohk.atala.castor.sql.repository.dao.DIDOperationDAO
 import io.iohk.atala.shared.models.HexStrings.HexString
+import io.iohk.atala.shared.utils.Traverse.*
 import zio.*
 import zio.interop.catz.*
 
-class JdbcDIDOperationRepository(xa: Transactor[Task]) extends DIDOperationRepository[Task] {
+class JdbcDIDOperationRepository(xa: Transactor[Task]) extends DIDOperationRepository[Task], SqlModelHelper {
 
-  // TODO: implement
   override def getConfirmedPublishedDIDOperations(didSuffix: HexString): Task[Seq[ConfirmedPublishedDIDOperation]] = {
-    ZIO.succeed(Nil)
+    val query = DIDOperationDAO.getConfirmedPublishedDIDOperation(didSuffix)
+    connectionIOSafe(query)
+      .transact(xa)
+      .absolve
+      .map(_.traverse(_.toDomain).left.map(Exception(_)))
+      .absolve
   }
 
 }

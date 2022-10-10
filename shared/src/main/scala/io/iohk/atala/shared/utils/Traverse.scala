@@ -1,4 +1,4 @@
-package io.iohk.atala.agent.server.util
+package io.iohk.atala.shared.utils
 
 /** A lightweight DIY version of traverse to not rely on Cats because Scala3 + Cats implicits breaks the IDE compile
   * server making the development counterproductive.
