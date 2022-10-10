@@ -64,13 +64,9 @@ object CoordinateMediationPrograms {
         // ssl = ClientSSLOptions.DefaultSSL,
       )
       data <- res.bodyAsString
-      _ <- Console.printLine("")
-      _ <- Console.printLine(data)
-      _ <- Console.printLine("")
-      data2 = parse(data).getOrElse(???).asString.get // FIXME  https://github.com/roots-id/didcomm-mediator/issues/16
-      _ <- Console.printLine(parse(parse(data).getOrElse(???).asString.get).getOrElse(???).spaces2)
+      _ <- ZIO.log(data)
 
-      messageReceived <- charlie.unpack(data2)
+      messageReceived <- charlie.unpack(data)
       _ <- Console.printLine("Unpacking and decrypting the received message ...")
       _ <- Console.printLine("*" * 100)
       _ <- Console.printLine(toPrettyJson(messageReceived.getMessage.toString))
