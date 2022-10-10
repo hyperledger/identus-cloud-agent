@@ -7,11 +7,15 @@ import io.iohk.atala.mercury.DidComm.*
 import io.iohk.atala.mercury.DidComm
 import io.iohk.atala.mercury.mediator.MailStorage
 import io.iohk.atala.mercury.model.DidId
+import io.iohk.atala.mercury.model.Message
 import io.circe.Json.*
 import io.circe.parser.*
 import io.circe.JsonObject
 import io.iohk.atala.mercury.mediator.MediationState.{Denied, Granted, Requested}
-
+import io.iohk.atala.mercury.protocol.coordinatemediation.Keylist.Body
+import io.iohk.atala.mercury.protocol.coordinatemediation.{MediateDeny, MediateGrant}
+import io.iohk.atala.mercury.Agent
+import io.iohk.atala.mercury.Agent.Mediator
 object MediatorProgram {
   val port = 8080
 
@@ -89,13 +93,45 @@ object MediatorProgram {
                     .map(_ => ZIO.succeed(Denied))
                     .getOrElse(ConnectionStorage.store(senderDID, Granted))
                   _ <- ZIO.logInfo(s"$senderDID state $grantedOrDenied")
+                  messagePrepared <- ZIO.succeed(makeMsg(Mediator, senderDID, grantedOrDenied))
+                  _ <- ZIO.logInfo("Message Prepared: " + messagePrepared.toString)
+                  _ <- ZIO.logInfo("Sending Message...")
+                  encryptedMsg <- packEncrypted(messagePrepared, to = senderDID)
+                  _ <- ZIO.logInfo(
+                    "\n*********************************************************************************************************************************\n"
+                      + fromJsonObject(encryptedMsg.asJson).spaces2
+                      + "\n***************************************************************************************************************************************\n"
+                  )
 
-                } yield (grantedOrDenied.toString)
+                } yield (encryptedMsg.asJson.toString)
               case _ =>
                 ZIO.succeed("Unknown Message Type")
             }
           }
       } yield (ret)
     }
+  }
+
+  def makeMsg(from: Agent, to: DidId, messageState: MediationState): Message = {
+
+    messageState match
+      case Granted =>
+        val body = MediateGrant.Body(routing_did = from.id.value)
+        val mediateGrant =
+          MediateGrant(id = java.util.UUID.randomUUID().toString, `type` = MediateGrant.`type`, body = body)
+        Message(
+          piuri = mediateGrant.`type`,
+          from = from.id,
+          to = to,
+          body = Map("routing_did" -> from.id.value),
+        )
+      case _ =>
+        val mediateDeny =
+          MediateDeny(id = java.util.UUID.randomUUID().toString, `type` = MediateDeny.`type`)
+        Message(
+          piuri = mediateDeny.`type`,
+          from = from.id,
+          to = to
+        )
   }
 }
