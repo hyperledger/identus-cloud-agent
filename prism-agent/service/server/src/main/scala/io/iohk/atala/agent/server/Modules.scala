@@ -66,7 +66,8 @@ object AppModule {
       serviceLimit = 50
     )
   )
-  val didServiceLayer: TaskLayer[DIDService] = (GrpcModule.irisStub ++ didOpValidatorLayer) >>> DIDServiceImpl.layer
+  val didServiceLayer: TaskLayer[DIDService] =
+    (GrpcModule.irisStub ++ RepoModule.layers ++ didOpValidatorLayer) >>> DIDServiceImpl.layer
 }
 
 object GrpcModule {

@@ -3,21 +3,17 @@ package io.iohk.atala.castor.sql.repository
 import doobie.*
 import doobie.implicits.*
 import io.iohk.atala.castor.core.model.IrisNotification
+import io.iohk.atala.castor.core.model.did.ConfirmedPublishedDIDOperation
 import io.iohk.atala.castor.core.repository.DIDOperationRepository
+import io.iohk.atala.shared.models.HexStrings.HexString
 import zio.*
 import zio.interop.catz.*
 
-// TODO: replace with actual implementation
 class JdbcDIDOperationRepository(xa: Transactor[Task]) extends DIDOperationRepository[Task] {
 
-  override def getIrisNotification: Task[Seq[IrisNotification]] = {
-    val cxnIO = sql"""
-         |SELECT foo FROM public.published_did_operations
-         |""".stripMargin.query[String].to[Seq]
-
-    cxnIO
-      .transact(xa)
-      .map(_.map(IrisNotification.apply))
+  // TODO: implement
+  override def getConfirmedPublishedDIDOperations(didSuffix: HexString): Task[Seq[ConfirmedPublishedDIDOperation]] = {
+    ZIO.succeed(Nil)
   }
 
 }

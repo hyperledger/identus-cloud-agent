@@ -4,6 +4,7 @@ import io.iohk.atala.castor.core.model.did.{DIDDocument, PublishedDIDOperation}
 import zio.*
 import io.iohk.atala.castor.core.model.ProtoModelHelper
 import io.iohk.atala.castor.core.model.error.DIDOperationError
+import io.iohk.atala.castor.core.repository.DIDOperationRepository
 import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
 import io.iohk.atala.prism.crypto.Sha256
@@ -25,24 +26,38 @@ object MockDIDService {
 }
 
 object DIDServiceImpl {
-  val layer: URLayer[IrisServiceStub & DIDOperationValidator, DIDService] = ZLayer.fromFunction(DIDServiceImpl(_, _))
+  val layer: URLayer[IrisServiceStub & DIDOperationValidator & DIDOperationRepository[Task], DIDService] =
+    ZLayer.fromFunction(DIDServiceImpl(_, _, _))
 }
 
-private class DIDServiceImpl(irisClient: IrisServiceStub, operationValidator: DIDOperationValidator)
-    extends DIDService,
+private class DIDServiceImpl(
+    irisClient: IrisServiceStub,
+    operationValidator: DIDOperationValidator,
+    didOpRepo: DIDOperationRepository[Task]
+) extends DIDService,
       ProtoModelHelper {
 
-  // TODO:
-  // 1. generate DID identifier from operation
-  // 2. check if DID already exists
-  // 3. persist state
   override def createPublishedDID(
       operation: PublishedDIDOperation.Create
   ): IO[DIDOperationError, PublishedDIDOperation.Create] = {
+    val protoModel = operation.toProto
+    val didSuffix = HexString.fromStringUnsafe(Sha256.compute(protoModel.toByteArray).getHexValue)
     for {
       _ <- ZIO.fromEither(operationValidator.validate(operation))
+      confirmedOps <- didOpRepo
+        .getConfirmedPublishedDIDOperations(didSuffix)
+        .mapError(DIDOperationError.InternalErrorDB.apply)
+      _ <- confirmedOps
+        .map(_.operation)
+        .collectFirst { case op: PublishedDIDOperation.Create => op }
+        .fold(ZIO.unit)(_ =>
+          ZIO.fail(
+            DIDOperationError
+              .InvalidPrecondition(s"PublishedDID with suffix $didSuffix has already been created and confirmed")
+          )
+        )
       _ <- ZIO
-        .fromFuture(_ => irisClient.scheduleOperation(operation.toProto))
+        .fromFuture(_ => irisClient.scheduleOperation(protoModel))
         .mapError(DIDOperationError.DLTProxyError.apply)
     } yield operation
   }
