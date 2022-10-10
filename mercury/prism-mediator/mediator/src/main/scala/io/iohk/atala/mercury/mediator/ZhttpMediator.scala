@@ -18,7 +18,7 @@ object ZhttpMediator extends ZIOAppDefault {
   val header = "content-type" -> MediaTypes.contentTypeEncrypted
 
   // Create HTTP route
-  val app: HttpApp[DidComm & MailStorage, Throwable] = Http.collectZIO[Request] {
+  val app: HttpApp[DidComm & MailStorage & ConnectionStorage, Throwable] = Http.collectZIO[Request] {
     case req @ Method.POST -> !!
         if req.headersAsList.exists(h => h._1.equalsIgnoreCase(header._1) && h._2.equalsIgnoreCase(header._2)) =>
       req.bodyAsString
@@ -39,5 +39,5 @@ object ZhttpMediator extends ZIOAppDefault {
   }
 
   override val run = { MediatorProgram.startLogo *> Server.start(MediatorProgram.port, app) }
-    .provide(MediatorDidComm.mediator ++ MailStorage.layer)
+    .provide(MediatorDidComm.mediator ++ MailStorage.layer ++ ConnectionStorage.layer)
 }

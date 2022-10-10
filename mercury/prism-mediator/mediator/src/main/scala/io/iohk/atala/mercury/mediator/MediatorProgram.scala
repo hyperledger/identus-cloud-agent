@@ -1,15 +1,16 @@
 package io.iohk.atala.mercury.mediator
 
-import zio._
-import scala.jdk.CollectionConverters.*
+import zio.*
 
-import io.iohk.atala.mercury.DidComm._
+import scala.jdk.CollectionConverters.*
+import io.iohk.atala.mercury.DidComm.*
 import io.iohk.atala.mercury.DidComm
 import io.iohk.atala.mercury.mediator.MailStorage
 import io.iohk.atala.mercury.model.DidId
-import io.circe.Json._
-import io.circe.parser._
+import io.circe.Json.*
+import io.circe.parser.*
 import io.circe.JsonObject
+import io.iohk.atala.mercury.mediator.MediationState.{Denied, Granted, Requested}
 
 object MediatorProgram {
   val port = 8080
@@ -76,6 +77,20 @@ object MediatorProgram {
                   _ <- ZIO.logInfo(s"Mediator ReadMessages get Messages from: $senderDID")
                   seqMsg <- MailStorage.get(senderDID)
                 } yield (seqMsg.last)
+              case "https://didcomm.org/coordinate-mediation/2.0/mediate-request" =>
+                for {
+                  _ <- ZIO.logInfo("Mediator ReadMessages: " + mediatorMessage.toString)
+                  senderDID = DidId(mediatorMessage.getFrom())
+                  _ <- ZIO.logInfo(s"Mediator ReadMessages get Messages from: $senderDID")
+                  mayBeConnection <- ConnectionStorage.get(senderDID)
+                  _ <- ZIO.logInfo(s"$senderDID state $mayBeConnection")
+                  // DO some checks before we grant this logic need more thought
+                  grantedOrDenied <- mayBeConnection
+                    .map(_ => ZIO.succeed(Denied))
+                    .getOrElse(ConnectionStorage.store(senderDID, Granted))
+                  _ <- ZIO.logInfo(s"$senderDID state $grantedOrDenied")
+
+                } yield (grantedOrDenied.toString)
               case _ =>
                 ZIO.succeed("Unknown Message Type")
             }

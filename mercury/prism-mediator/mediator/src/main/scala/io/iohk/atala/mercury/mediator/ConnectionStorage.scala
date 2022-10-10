@@ -10,17 +10,20 @@ enum MediationState:
   case Denied extends MediationState
 
 trait ConnectionStorage {
-  def store(id: DidId, msg: MediationState): UIO[Unit]
-  def get(id: DidId): UIO[MediationState]
+  def store(id: DidId, msg: MediationState): UIO[MediationState]
+  def get(id: DidId): UIO[Option[MediationState]]
 }
 
 final case class InMemoryConnectionStorage(private var bd: Map[DidId, MediationState]) extends ConnectionStorage {
-  def store(id: DidId, msg: MediationState): UIO[Unit] =
-    ZIO.succeed { bd = bd + (id -> msg) }
+  def store(id: DidId, msg: MediationState): UIO[MediationState] =
+    ZIO.succeed {
+      bd = bd + (id -> msg)
+      msg
+    }
       <* ZIO.logInfo(s"InMemoryConnectionStorage: $bd")
 
-  def get(id: DidId): UIO[MediationState] =
-    ZIO.succeed { bd.get(id).toSeq.flatten }
+  def get(id: DidId): UIO[Option[MediationState]] =
+    ZIO.succeed { bd.get(id) }
 }
 
 object ConnectionStorage {
@@ -31,10 +34,10 @@ object ConnectionStorage {
     )
   }
 
-  def store(id: DidId, msg: MediationState): URIO[ConnectionStorage, Unit] =
+  def store(id: DidId, msg: MediationState): URIO[ConnectionStorage, MediationState] =
     ZIO.serviceWithZIO(_.store(id, msg))
 
-  def get(id: DidId): URIO[ConnectionStorage, MediationState] =
+  def get(id: DidId): URIO[ConnectionStorage, Option[MediationState]] =
     ZIO.serviceWithZIO(_.get(id))
 
 }
