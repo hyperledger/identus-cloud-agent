@@ -14,7 +14,6 @@ object DIDOperationValidator {
 
 class DIDOperationValidator(config: Config) {
 
-  // TODO: add some test on unique key validation
   def validate(operation: PublishedDIDOperation): Either[DIDOperationError, Unit] = {
     for {
       _ <- validateOperationCommitment(operation)
