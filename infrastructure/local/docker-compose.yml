@@ -2,6 +2,9 @@ version: '3.8'
 
 services:
 
+  ##########################
+  # Databases
+  ##########################
   db_castor:
     image: postgres:13
     restart: always
@@ -31,6 +34,9 @@ services:
       db_castor_init_delay:
         condition: service_completed_successfully
 
+  ##########################
+  # Services
+  ##########################
   mercury:
     image: atala-prism.io/mercury-mediator:0.1.0-SNAPSHOT
 
