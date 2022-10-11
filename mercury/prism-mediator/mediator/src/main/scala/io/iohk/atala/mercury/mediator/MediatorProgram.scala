@@ -15,7 +15,7 @@ import io.iohk.atala.mercury.mediator.MediationState.{Denied, Granted, Requested
 import io.iohk.atala.mercury.protocol.coordinatemediation.Keylist.Body
 import io.iohk.atala.mercury.protocol.coordinatemediation.{MediateDeny, MediateGrant}
 import io.iohk.atala.mercury.Agent
-import io.iohk.atala.mercury.Agent.Mediator
+import io.iohk.atala.mercury.Agent.PeerDidMediator
 object MediatorProgram {
   val port = 8080
 
@@ -83,18 +83,18 @@ object MediatorProgram {
                 } yield (seqMsg.last)
               case "https://didcomm.org/coordinate-mediation/2.0/mediate-request" =>
                 for {
-                  _ <- ZIO.logInfo("Mediator ReadMessages: " + mediatorMessage.toString)
+                  _ <- ZIO.logInfo("\nMediator ReadMessages: " + mediatorMessage.toString)
                   senderDID = DidId(mediatorMessage.getFrom())
-                  _ <- ZIO.logInfo(s"Mediator ReadMessages get Messages from: $senderDID")
+                  _ <- ZIO.logInfo(s"\nMediator ReadMessages get Messages from: $senderDID")
                   mayBeConnection <- ConnectionStorage.get(senderDID)
                   _ <- ZIO.logInfo(s"$senderDID state $mayBeConnection")
                   // DO some checks before we grant this logic need more thought
                   grantedOrDenied <- mayBeConnection
                     .map(_ => ZIO.succeed(Denied))
                     .getOrElse(ConnectionStorage.store(senderDID, Granted))
-                  _ <- ZIO.logInfo(s"$senderDID state $grantedOrDenied")
-                  messagePrepared <- ZIO.succeed(makeMsg(Mediator, senderDID, grantedOrDenied))
-                  _ <- ZIO.logInfo("Message Prepared: " + messagePrepared.toString)
+                  _ <- ZIO.logInfo(s"\n$senderDID state $grantedOrDenied")
+                  messagePrepared <- ZIO.succeed(makeMsg(PeerDidMediator, senderDID, grantedOrDenied))
+                  _ <- ZIO.logInfo("\nMessage Prepared: " + messagePrepared.toString)
                   encryptedMsg <- packEncrypted(messagePrepared, to = senderDID)
                   _ <- ZIO.logInfo(
                     "\n*********************************************************************************************************************************\n"
@@ -102,7 +102,7 @@ object MediatorProgram {
                       + "\n***************************************************************************************************************************************\n"
                   )
 
-                } yield (encryptedMsg.asJson.toString)
+                } yield (fromJsonObject(encryptedMsg.asJson).noSpaces)
               case _ =>
                 ZIO.succeed("Unknown Message Type")
             }

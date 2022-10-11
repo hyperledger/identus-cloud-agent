@@ -16,12 +16,12 @@ object MediatorDidComm {
   )
 
   val peerDidMediator: ZLayer[Any, Nothing, DidComm] = ZLayer.succeed(
-    AgentService[Agent.Mediator.type](
+    AgentService[Agent.PeerDidMediator.type](
       new DIDComm(
         io.iohk.atala.resolvers.UniversalDidResolver,
-        MediatorSecretResolver.secretResolver
+        PeerDidMediatorSecretResolver.secretResolver
       ),
-      Agent.Mediator
+      Agent.PeerDidMediator
     )
   )
 }

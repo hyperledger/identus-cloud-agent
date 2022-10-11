@@ -37,5 +37,5 @@ object ZhttpMediator extends ZIOAppDefault {
   }
 
   override val run = { MediatorProgram.startLogo *> Server.start(MediatorProgram.port, app) }
-    .provide(MediatorDidComm.mediator ++ MailStorage.layer ++ ConnectionStorage.layer)
+    .provide(MediatorDidComm.peerDidMediator ++ MailStorage.layer ++ ConnectionStorage.layer)
 }

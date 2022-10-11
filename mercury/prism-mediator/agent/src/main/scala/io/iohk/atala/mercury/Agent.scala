@@ -2,12 +2,13 @@ package io.iohk.atala.mercury
 
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.resolvers.PeerDidResolver
+import io.iohk.atala.resolvers.PeerDidMediatorDidDoc
 
 enum Agent(val id: DidId):
   case Alice extends Agent(DidId("did:example:alice"))
   case Bob extends Agent(DidId("did:example:bob"))
   case Mediator extends Agent(DidId("did:example:mediator"))
-  case PeerDidMediator extends Agent(DidId())
+  case PeerDidMediator extends Agent(DidId(PeerDidMediatorDidDoc.peerDidMediator))
   case Charlie extends Agent(DidId(charlie))
   case Charlie2
       extends Agent(DidId({
