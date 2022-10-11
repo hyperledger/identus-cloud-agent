@@ -11,7 +11,7 @@ import io.circe.parser.*
 import io.iohk.atala.resolvers.AliceDidDoc.verficationMethods
 import zio.*
 import zio.{Console, Task, UIO, URLayer, ZIO}
-
+import org.didcommx.didcomm.common._
 import scala.jdk.CollectionConverters.*
 import java.util.Optional
 

@@ -28,6 +28,10 @@ object ZhttpMediator extends ZIOAppDefault {
           Source.fromResource("mercury-openapi-spec-auth.yaml").iter.mkString
         )
       )
+    case req @ Method.GET -> !! / "oob_url" =>
+      val serverUrl = s"http://locahost:${MediatorProgram.port}?_oob=}"
+      InvitationPrograms.createInvitationV2().map(oob => Response.text(serverUrl + oob))
+
     case req =>
       ZIO.succeed(
         Response.text(
