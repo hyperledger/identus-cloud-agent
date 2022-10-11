@@ -31,7 +31,8 @@ object CoordinateMediationPrograms {
   }
 
   def senderMediationRequestProgram() = {
-    val mediatorURL = "http://localhost:8000"
+    // val mediatorURL = "http://localhost:8000"
+    val mediatorURL = "http://localhost:8080"
 
     def makeMsg(from: Agent, to: DidId) = Message(
       piuri = "http://atalaprism.io/lets_connect/proposal",
@@ -54,7 +55,7 @@ object CoordinateMediationPrograms {
       encryptedMessage <- charlie.packEncrypted(planMessage, to = invitationFrom)
       _ <- ZIO.log("Sending bytes ...")
       jsonString = encryptedMessage.string
-      _ <- ZIO.log(jsonString)
+      _ <- ZIO.log(s"\n\n$jsonString\n\n")
 
       res <- Client.request(
         url = mediatorURL,
