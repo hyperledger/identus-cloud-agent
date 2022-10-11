@@ -259,7 +259,7 @@ components:
       properties:
         crv:
           type: string
-          example: "P-256"
+          example: "secp256k1"
         x:
           type: string
           example: "38M1FDts7Oea7urmseiugGW7tWc3mLpJh6rKe7xINZ8"

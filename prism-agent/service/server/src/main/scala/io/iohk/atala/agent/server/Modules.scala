@@ -116,7 +116,7 @@ object RepoModule {
           TransactorLayer.DbConfig(
             username = "postgres",
             password = "postgres",
-            jdbcUrl = "jdbc:postgresql://localhost:5432/castor"
+            jdbcUrl = "jdbc:postgresql://db_castor:5432/castor"
           )
         )
       }

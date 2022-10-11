@@ -2,11 +2,43 @@ version: '3.8'
 
 services:
 
+  db_castor:
+    image: postgres:13
+    restart: always
+    environment:
+      POSTGRES_DB: castor
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - 5432:5432
+    volumes:
+      - pg_data_castor_db:/var/lib/postgresql/data
+
+  # delay to ensure DB is up before applying migrations
+  db_castor_init_delay:
+    image: alpine:3
+    command: sleep 5
+    depends_on:
+      db_castor:
+        condition: service_started
+
+  db_castor_init:
+    image: flyway/flyway:9.3.0-alpine
+    volumes:
+      - $PWD/castor/lib/sql-doobie/src/main/resources/sql:/flyway/sql
+    command: -url=jdbc:postgresql://db_castor:5432/castor?user=postgres&password=postgres migrate
+    depends_on:
+      db_castor_init_delay:
+        condition: service_completed_successfully
+
   mercury:
     image: atala-prism.io/mercury-mediator:0.1.0-SNAPSHOT
 
   prism-agent:
     image: atala-prism.io/prism-agent-server:0.1.0-SNAPSHOT
+    depends_on:
+      db_castor_init:
+        condition: service_completed_successfully
 
   swagger-ui:
     image: swaggerapi/swagger-ui:v4.14.0
@@ -27,3 +59,6 @@ services:
       - swagger-ui
     volumes:
       - ./haproxy:/usr/local/etc/haproxy:ro
+
+volumes:
+  pg_data_castor_db:

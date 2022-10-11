@@ -32,7 +32,7 @@ trait OASErrorModelHelper {
         `type` = "error-type",
         title = "error-title",
         status = 500,
-        detail = Some("error-detail"),
+        detail = Some(error.toString),
         instance = "error-instance"
       )
     }
