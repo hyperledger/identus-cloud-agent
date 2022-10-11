@@ -96,7 +96,6 @@ trait OASDomainModelHelper {
   }
 
   extension (outcome: domain.PublishedDIDOperationOutcome) {
-    // TODO: consider adding DIDOperationSubmissionResponse since PublishedDIDOperationOutcome
     def toOAS: DIDOperationResponse = DIDOperationResponse(
       scheduledOperation = DidOperationSubmission(
         id = outcome.operationId.toString,

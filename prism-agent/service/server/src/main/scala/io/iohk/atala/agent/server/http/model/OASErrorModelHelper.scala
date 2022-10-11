@@ -27,7 +27,7 @@ trait OASErrorModelHelper {
   }
 
   given ToErrorResponse[DIDOperationError] with {
-    def toErrorResponse(DIDOperationError: DIDOperationError): ErrorResponse = {
+    def toErrorResponse(error: DIDOperationError): ErrorResponse = {
       ErrorResponse(
         `type` = "error-type",
         title = "error-title",
