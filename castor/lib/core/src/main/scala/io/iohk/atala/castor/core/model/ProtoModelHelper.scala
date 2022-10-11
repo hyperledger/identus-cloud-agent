@@ -217,9 +217,4 @@ private[castor] trait ProtoModelHelper {
     }
   }
 
-  extension (irisOperationId: iris_proto.service.IrisOperationOutcome) {
-    def toDomain: PublishedDIDOperationOutcome =
-      PublishedDIDOperationOutcome(operationId = HexString.fromByteArray(irisOperationId.operationId.toByteArray))
-  }
-
 }

@@ -13,4 +13,8 @@ object PublishedDIDOperation {
   ) extends PublishedDIDOperation
 }
 
-final case class PublishedDIDOperationOutcome(operationId: HexString)
+final case class PublishedDIDOperationOutcome(
+    did: PrismDID,
+    operation: PublishedDIDOperation,
+    operationId: HexString
+)

@@ -1,6 +1,11 @@
 package io.iohk.atala.castor.core.service
 
-import io.iohk.atala.castor.core.model.did.{DIDDocument, PublishedDIDOperation, PublishedDIDOperationOutcome}
+import io.iohk.atala.castor.core.model.did.{
+  DIDDocument,
+  PrismDIDV1,
+  PublishedDIDOperation,
+  PublishedDIDOperationOutcome
+}
 import zio.*
 import io.iohk.atala.castor.core.model.ProtoModelHelper
 import io.iohk.atala.castor.core.model.error.DIDOperationError
@@ -41,15 +46,14 @@ private class DIDServiceImpl(
   override def createPublishedDID(
       operation: PublishedDIDOperation.Create
   ): IO[DIDOperationError, PublishedDIDOperationOutcome] = {
-    val createDIDProto = operation.toProto
+    val prismDID = PrismDIDV1.fromCreateOperation(operation)
     val irisOpProto = iris_proto.dlt.IrisOperation(
-      operation = iris_proto.dlt.IrisOperation.Operation.CreateDid(createDIDProto)
+      operation = iris_proto.dlt.IrisOperation.Operation.CreateDid(operation.toProto)
     )
-    val didSuffix = HexString.fromStringUnsafe(Sha256.compute(createDIDProto.toByteArray).getHexValue)
     for {
       _ <- ZIO.fromEither(operationValidator.validate(operation))
       confirmedOps <- didOpRepo
-        .getConfirmedPublishedDIDOperations(didSuffix)
+        .getConfirmedPublishedDIDOperations(prismDID)
         .mapError(DIDOperationError.InternalErrorDB.apply)
       _ <- confirmedOps
         .map(_.operation)
@@ -57,13 +61,18 @@ private class DIDServiceImpl(
         .fold(ZIO.unit)(_ =>
           ZIO.fail(
             DIDOperationError
-              .InvalidPrecondition(s"PublishedDID with suffix $didSuffix has already been created and confirmed")
+              .InvalidPrecondition(s"PublishedDID with suffix ${prismDID.did} has already been created and confirmed")
           )
         )
-      operationId <- ZIO
+      irisOutcome <- ZIO
         .fromFuture(_ => irisClient.scheduleOperation(irisOpProto))
         .mapError(DIDOperationError.DLTProxyError.apply)
-    } yield operationId.toDomain
+      _ <- Console.printLine(s"creating ${prismDID.did}").ignore
+    } yield PublishedDIDOperationOutcome(
+      did = prismDID,
+      operation = operation,
+      operationId = HexString.fromByteArray(irisOutcome.operationId.toByteArray)
+    )
   }
 
 }
