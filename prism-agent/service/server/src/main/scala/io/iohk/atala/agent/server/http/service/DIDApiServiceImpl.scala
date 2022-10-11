@@ -69,7 +69,7 @@ class DIDApiServiceImpl(service: DIDService)(using runtime: Runtime[Any])
       operation <- ZIO.fromEither(createDIDRequest.toDomain).mapError(HttpServiceError.InvalidPayload.apply)
       outcome <- service
         .createPublishedDID(operation)
-        .mapError(HttpServiceError.ServiceError[DIDOperationError].apply)
+        .mapError(HttpServiceError.DomainError[DIDOperationError].apply)
     } yield outcome
 
     onZioSuccess(result.mapBoth(_.toOAS, _.toOAS).either) {

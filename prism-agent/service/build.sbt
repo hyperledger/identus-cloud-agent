@@ -34,7 +34,7 @@ lazy val server = project
     openApiGeneratorSpec := apiBaseDirectory.value / "http/prism-agent-openapi-spec.yaml",
     openApiGeneratorConfig := baseDirectory.value / "openapi/generator-config/config.yaml",
     openApiGeneratorImportMapping := Seq("DidOperationType", "DidOperationStatus")
-      .map(model => (model, s"io.iohk.atala.agent.server.http.OASModelPatches.$model"))
+      .map(model => (model, s"io.iohk.atala.agent.server.http.model.OASModelPatches.$model"))
       .toMap,
     Docker / maintainer := "atala-coredid@iohk.io",
     Docker / dockerRepository := Some("atala-prism.io"),

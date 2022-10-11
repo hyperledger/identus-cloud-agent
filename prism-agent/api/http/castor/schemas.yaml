@@ -344,8 +344,6 @@ components:
       required:
         - id
         - didRef
-        - type
-        - status
       properties:
         id:
           type: string

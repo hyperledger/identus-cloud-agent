@@ -22,7 +22,7 @@ trait OASErrorModelHelper {
             detail = Some(msg),
             instance = "error-instance"
           )
-        case HttpServiceError.ServiceError(cause) => te.toErrorResponse(cause)
+        case HttpServiceError.DomainError(cause) => te.toErrorResponse(cause)
     }
   }
 
