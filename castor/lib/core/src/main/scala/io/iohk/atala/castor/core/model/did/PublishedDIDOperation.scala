@@ -12,3 +12,5 @@ object PublishedDIDOperation {
       document: DIDDocument
   ) extends PublishedDIDOperation
 }
+
+final case class PublishedDIDOperationOutcome(operationId: HexString)

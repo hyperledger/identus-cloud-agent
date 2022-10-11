@@ -12,6 +12,7 @@ import io.iohk.atala.castor.core.model.did.{
   PublicKey,
   PublicKeyJwk,
   PublishedDIDOperation,
+  PublishedDIDOperationOutcome,
   Service,
   ServiceType,
   VerificationRelationship
@@ -214,6 +215,11 @@ private[castor] trait ProtoModelHelper {
       case Curve.SECP256K1           => Right(EllipticCurve.SECP256K1)
       case Curve.Unrecognized(value) => Left(s"unrecognized elliptic-curve value $value")
     }
+  }
+
+  extension (irisOperationId: iris_proto.service.IrisOperationOutcome) {
+    def toDomain: PublishedDIDOperationOutcome =
+      PublishedDIDOperationOutcome(operationId = HexString.fromByteArray(irisOperationId.operationId.toByteArray))
   }
 
 }
