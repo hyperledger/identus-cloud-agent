@@ -95,7 +95,6 @@ object MediatorProgram {
                   _ <- ZIO.logInfo(s"$senderDID state $grantedOrDenied")
                   messagePrepared <- ZIO.succeed(makeMsg(Mediator, senderDID, grantedOrDenied))
                   _ <- ZIO.logInfo("Message Prepared: " + messagePrepared.toString)
-                  _ <- ZIO.logInfo("Sending Message...")
                   encryptedMsg <- packEncrypted(messagePrepared, to = senderDID)
                   _ <- ZIO.logInfo(
                     "\n*********************************************************************************************************************************\n"

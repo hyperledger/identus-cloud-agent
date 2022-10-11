@@ -6,6 +6,7 @@ import io.iohk.atala.mercury.protocol.invitation.v2._
 import io.iohk.atala.mercury.protocol.invitation.InvitationCodec._
 import io.circe._
 import io.circe.parser._
+import io.iohk.atala.mercury
 
 object OutOfBand {
 
@@ -21,5 +22,7 @@ object OutOfBand {
   def parseInvitation(url: String): Option[Invitation] = {
     parseLink(url).map(e => parse(e).getOrElse(???).as[Invitation].getOrElse(???))
   }
+
+
 
 }

@@ -1,15 +1,21 @@
 package io.iohk.atala.mercury
 
-import zio._
+import zio.*
 import zhttp.service.Client
-import zhttp.http._
-import io.circe.Json._
-import io.circe.parser._
+import zhttp.http.*
+import io.circe.Json.*
+import io.circe.parser.*
 import io.circe.JsonObject
-
-import io.iohk.atala.mercury.{_, given}
-import io.iohk.atala.mercury.model._
-import io.iohk.atala.mercury.protocol.invitation._
+import io.iohk.atala.mercury.{*, given}
+import io.iohk.atala.mercury.model.*
+import io.iohk.atala.mercury.protocol.invitation.*
+import io.iohk.atala.mercury.protocol.invitation.v2.*
+import io.iohk.atala.mercury.protocol.invitation.InvitationCodec.*
+import cats.implicits.*
+import io.circe.syntax.*
+import io.circe.Json
+import io.circe.generic.auto.*
+import io.circe.parser.*
 
 object InvitationPrograms {
 
@@ -20,4 +26,17 @@ object InvitationPrograms {
     message = OutOfBand.parseInvitation(data)
     _ <- ZIO.log(message.toString)
   } yield (message)
+
+  def createInvitationV2(): ZIO[Any, Nothing, String] = {
+    val invitation = Invitation(
+      "https://didcomm.org/out-of-band/2.0/invitation",
+      getNewMsgId,
+      Agent.Mediator.id.value,
+      Body("request-mediate", "RequestMediate", Seq("didcomm/v2", "didcomm/aip2;env=rfc587")),
+      None
+    )
+    val result = invitation.asJson.deepDropNullValues
+    ZIO.succeed(java.util.Base64.getUrlEncoder.encodeToString(result.noSpaces.getBytes))
+  }
+
 }
