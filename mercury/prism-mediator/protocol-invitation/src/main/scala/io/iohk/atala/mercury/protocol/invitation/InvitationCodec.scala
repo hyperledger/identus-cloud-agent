@@ -2,7 +2,6 @@ package io.iohk.atala.mercury.protocol.invitation
 import cats.implicits._
 import io.circe.syntax._
 import io.circe.generic.semiauto._
-import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.{Decoder, Encoder, HCursor, Json}
 import io.iohk.atala.mercury.protocol.invitation.v1.{Invitation => InvitationV1}
 import io.iohk.atala.mercury.protocol.invitation.v2.{Invitation => InvitationV2}
