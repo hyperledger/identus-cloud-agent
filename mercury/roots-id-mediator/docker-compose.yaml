@@ -21,6 +21,8 @@ services:
       - MONGODB_PASSWORD=admin
       - PUBLIC_URL=http://rootsid-mediator:8000
       - ROTATE_OOB=0
+    depends_on:
+      - "mongo"
 
   notebooks:
     image: atala/didcomm-jupyter
@@ -28,6 +30,8 @@ services:
       - 8888:8888
     volumes:
       - ./notebooks:/home/jovyan
+    depends_on:
+      - "rootsid-mediator"
 
 # GET invitation with 
 # docker logs roots-id-mediator-rootsid-mediator-1

@@ -18,10 +18,14 @@ case class AgentService[A <: Agent](didComm: DIDComm, did: A) extends DidComm {
   }
 
   override def packEncrypted(msg: Message, to: DidId): UIO[EncryptedMessage] = {
+
     val params = new PackEncryptedParams.Builder(msg, to.value)
       .from(did.id.value)
       .forward(false)
       .build()
+
+    didComm.packEncrypted(params)
+
     ZIO.succeed(didComm.packEncrypted(params))
   }
 
@@ -42,6 +46,13 @@ object AgentService {
     AgentService[Agent.Bob.type](
       new DIDComm(UniversalDidResolver, BobSecretResolver.secretResolver),
       Agent.Bob
+    )
+  )
+
+  val charlie = ZLayer.succeed(
+    AgentService[Agent.Charlie.type](
+      new DIDComm(UniversalDidResolver, CharlieSecretResolver.secretResolver),
+      Agent.Charlie
     )
   )
 

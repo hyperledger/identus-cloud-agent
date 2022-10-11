@@ -6,9 +6,7 @@ import zio._
 import java.nio.charset.StandardCharsets
 
 import io.iohk.atala.mercury.model.DidId
-import io.iohk.atala.mercury.Agent
-import io.iohk.atala.mercury.DidComm
-import io.iohk.atala.mercury.MediaTypes
+import io.iohk.atala.mercury.{Agent, DidComm, InvitationPrograms, MediaTypes}
 import io.iohk.atala.mercury.resolvers.MediatorDidComm
 import org.http4s.dsl.request
 import scala.io.Source
@@ -18,7 +16,7 @@ object ZhttpMediator extends ZIOAppDefault {
   val header = "content-type" -> MediaTypes.contentTypeEncrypted
 
   // Create HTTP route
-  val app: HttpApp[DidComm & MailStorage, Throwable] = Http.collectZIO[Request] {
+  val app: HttpApp[DidComm & MailStorage & ConnectionStorage, Throwable] = Http.collectZIO[Request] {
     case req @ Method.POST -> !!
         if req.headersAsList.exists(h => h._1.equalsIgnoreCase(header._1) && h._2.equalsIgnoreCase(header._2)) =>
       req.bodyAsString
@@ -30,6 +28,10 @@ object ZhttpMediator extends ZIOAppDefault {
           Source.fromResource("mercury-openapi-spec-auth.yaml").iter.mkString
         )
       )
+    case req @ Method.GET -> !! / "oob_url" =>
+      val serverUrl = s"http://locahost:${MediatorProgram.port}?_oob=}"
+      InvitationPrograms.createInvitationV2().map(oob => Response.text(serverUrl + oob))
+
     case req =>
       ZIO.succeed(
         Response.text(
@@ -39,5 +41,5 @@ object ZhttpMediator extends ZIOAppDefault {
   }
 
   override val run = { MediatorProgram.startLogo *> Server.start(MediatorProgram.port, app) }
-    .provide(MediatorDidComm.mediator ++ MailStorage.layer)
+    .provide(MediatorDidComm.peerDidMediator ++ MailStorage.layer ++ ConnectionStorage.layer)
 }

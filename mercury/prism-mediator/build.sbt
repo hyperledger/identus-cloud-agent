@@ -35,6 +35,8 @@ lazy val V = new {
 lazy val D = new {
   val zio = Def.setting("dev.zio" %% "zio" % V.zio)
   val zioStreams = Def.setting("dev.zio" %% "zio-streams" % V.zio)
+  val zioLog = Def.setting("dev.zio" %% "zio-logging" % V.zio)
+  val zioSLF4J = Def.setting("dev.zio" %% "zio-logging-slf4j" % V.zio)
   val zioJson = Def.setting("dev.zio" %% "zio-json" % V.zioJson)
 
   val circeCore = Def.setting("io.circe" %% "circe-core" % V.circe)
@@ -45,6 +47,8 @@ lazy val D = new {
   val didcommx = Def.setting("org.didcommx" % "didcomm" % "0.3.1")
   val peerDidcommx = Def.setting("org.didcommx" % "peerdid" % "0.3.0")
   val didScala = Def.setting("app.fmgp" %% "did" % "0.0.0+74-691ada28+20220902-0934-SNAPSHOT")
+
+  val jwk = Def.setting("com.nimbusds" % "nimbus-jose-jwt" % "9.25.4")
 
   // For munit https://scalameta.org/munit/docs/getting-started.html#scalajs-setup
   val munit = Def.setting("org.scalameta" %% "munit" % V.munit % Test)
@@ -79,6 +83,21 @@ lazy val models = project
 // ### Protocols ###
 // #################
 
+lazy val protocolConnection = project
+  .in(file("protocol-connection"))
+  .settings(name := "mercury-protocol-connection", version := VERSION)
+  .settings(libraryDependencies += D.zio.value)
+  .settings(libraryDependencies ++= Seq(D.circeCore.value, D.circeGeneric.value, D.circeParser.value))
+  .dependsOn(models, protocolInvitation)
+
+lazy val protocolCoordinateMediation = project
+  .in(file("protocol-coordinate-mediation"))
+  .settings(name := "mercury-protocol-coordinate-mediation", version := VERSION)
+  .settings(libraryDependencies += D.zio.value)
+  .settings(libraryDependencies ++= Seq(D.circeCore.value, D.circeGeneric.value, D.circeParser.value))
+  .settings(libraryDependencies += D.munitZio.value)
+  .dependsOn(models)
+
 lazy val protocolInvitation = project
   .in(file("protocol-invitation"))
   .settings(name := "mercury-protocol-invitation", version := VERSION)
@@ -93,13 +112,6 @@ lazy val protocolInvitation = project
     )
   )
   .dependsOn(models)
-
-lazy val protocolConnection = project
-  .in(file("protocol-connection"))
-  .settings(name := "mercury-protocol-connection", version := VERSION)
-  .settings(libraryDependencies += D.zio.value)
-  .settings(libraryDependencies ++= Seq(D.circeCore.value, D.circeGeneric.value, D.circeParser.value))
-  .dependsOn(models, protocolInvitation)
 
 lazy val protocolMercuryMailbox = project
   .in(file("protocol-mercury-mailbox"))
@@ -132,6 +144,7 @@ lazy val resolver = project // maybe merge into models
       D.peerDidcommx.value,
       D.munit.value,
       D.munitZio.value,
+      D.jwk.value,
       "org.jetbrains.kotlin" % "kotlin-runtime" % "1.2.71",
       "org.jetbrains.kotlin" % "kotlin-stdlib" % "1.7.10",
     ),
@@ -147,7 +160,15 @@ lazy val agent = project // maybe merge into models
   // .in(file("agent-generic"))
   // .settings(name := "mercury-agent-generic", version := VERSION)
   .settings(libraryDependencies += "io.d11" %% "zhttp" % "2.0.0-RC10")
-  .dependsOn(models, resolver, protocolInvitation, protocolRouting, protocolMercuryMailbox)
+  .settings(libraryDependencies ++= Seq(D.zioLog.value)) // , D.zioSLF4J.value))
+  .dependsOn(
+    models,
+    resolver,
+    protocolCoordinateMediation,
+    protocolInvitation,
+    protocolRouting,
+    protocolMercuryMailbox
+  )
 
 /** Demos agents and services implementation with didcommx */
 lazy val agentDidcommx = project
