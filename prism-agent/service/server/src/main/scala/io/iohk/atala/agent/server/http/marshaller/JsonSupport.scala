@@ -25,7 +25,7 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   given RootJsonFormat[DidOperationStatus] = jsonFormat0(DidOperationStatus.apply)
   given RootJsonFormat[DidOperationType] = jsonFormat0(DidOperationType.apply)
   given RootJsonFormat[DIDResponse] = jsonFormat3(DIDResponse.apply)
-  given RootJsonFormat[DIDResponseWithAsyncOutcome] = jsonFormat4(DIDResponseWithAsyncOutcome.apply)
+  given RootJsonFormat[DIDOperationResponse] = jsonFormat4(DIDOperationResponse.apply)
   given RootJsonFormat[DidType] = jsonFormat0(DidType.apply)
   given RootJsonFormat[DidTypeWithProof] = jsonFormat2(DidTypeWithProof.apply)
   given RootJsonFormat[DidTypeWithSignedProof] = jsonFormat2(DidTypeWithSignedProof.apply)

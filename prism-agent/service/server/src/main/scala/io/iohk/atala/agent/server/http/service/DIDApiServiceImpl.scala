@@ -55,9 +55,20 @@ class DIDApiServiceImpl(service: DIDService)(using runtime: Runtime[Any])
     deactivated = false
   )
 
+  private val mockDIDOperationResponse = DIDOperationResponse(
+    did = mockDID,
+    `type` = DidTypeWithProof(`type` = "PUBLISHED", proof = None),
+    deactivated = false,
+    scheduledOperation = DidOperation(
+      id = "0123456789abcdef",
+      didRef = "did:example:123",
+      `type` = "PUBLISHED",
+      status = "EXECUTING"
+    )
+  )
+
   override def createDid(createDIDRequest: CreateDIDRequest)(implicit
-      toEntityMarshallerDIDResponseWithAsyncOutcome: ToEntityMarshaller[DIDResponseWithAsyncOutcome],
-      toEntityMarshallerDIDResponse: ToEntityMarshaller[DIDResponse],
+      toEntityMarshallerDIDOperationResponse: ToEntityMarshaller[DIDOperationResponse],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
     val result = for {
@@ -69,16 +80,15 @@ class DIDApiServiceImpl(service: DIDService)(using runtime: Runtime[Any])
 
     onZioSuccess(result.mapError(_.toErrorResponse).either) {
       case Left(error)   => complete(error.status -> error)
-      case Right(result) => createDid200(mockDIDResponse) // TODO: return actual response
+      case Right(result) => createDid202(mockDIDOperationResponse)
     }
   }
 
   override def deactivateDID(didRef: String, deactivateDIDRequest: DeactivateDIDRequest)(implicit
-      toEntityMarshallerDIDResponseWithAsyncOutcome: ToEntityMarshaller[DIDResponseWithAsyncOutcome],
-      toEntityMarshallerDIDResponse: ToEntityMarshaller[DIDResponse],
+      toEntityMarshallerDIDOperationResponse: ToEntityMarshaller[DIDOperationResponse],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
-    onZioSuccess(ZIO.unit) { _ => deactivateDID200(mockDIDResponse) }
+    onZioSuccess(ZIO.unit) { _ => deactivateDID202(mockDIDOperationResponse) }
   }
 
   override def getDid(didRef: String)(implicit
@@ -89,19 +99,17 @@ class DIDApiServiceImpl(service: DIDService)(using runtime: Runtime[Any])
   }
 
   override def recoverDid(didRef: String, recoverDIDRequest: RecoverDIDRequest)(implicit
-      toEntityMarshallerDIDResponseWithAsyncOutcome: ToEntityMarshaller[DIDResponseWithAsyncOutcome],
-      toEntityMarshallerDIDResponse: ToEntityMarshaller[DIDResponse],
+      toEntityMarshallerDIDOperationResponse: ToEntityMarshaller[DIDOperationResponse],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
-    onZioSuccess(ZIO.unit) { _ => recoverDid200(mockDIDResponse) }
+    onZioSuccess(ZIO.unit) { _ => recoverDid202(mockDIDOperationResponse) }
   }
 
   override def updateDid(didRef: String, updateDIDRequest: UpdateDIDRequest)(implicit
-      toEntityMarshallerDIDResponseWithAsyncOutcome: ToEntityMarshaller[DIDResponseWithAsyncOutcome],
-      toEntityMarshallerDIDResponse: ToEntityMarshaller[DIDResponse],
+      toEntityMarshallerDIDOperationResponse: ToEntityMarshaller[DIDOperationResponse],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
-    onZioSuccess(ZIO.unit) { _ => updateDid200(mockDIDResponse) }
+    onZioSuccess(ZIO.unit) { _ => updateDid202(mockDIDOperationResponse) }
   }
 
 }
