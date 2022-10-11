@@ -11,12 +11,6 @@ import scala.util.Try
 
 trait OASDomainModelSupport {
 
-  private val verificationRelationshipLookup = domain.VerificationRelationship.values.map(i => i.name -> i).toMap
-
-  private val ellipticCurveLookup = domain.EllipticCurve.values.map(i => i.name -> i).toMap
-
-  private val serviceTypeLookup = domain.ServiceType.values.map(i => i.name -> i).toMap
-
   /** Only provide support for PublishedDID until other types of DID has been approved. Eventually this conversion
     * should check for `didType` and convert to the right operation on a given `didType`
     */
@@ -50,7 +44,9 @@ trait OASDomainModelSupport {
         serviceEndpoint <- Try(URI.create(service.serviceEndpoint)).toEither.left.map(_ =>
           s"unable to parse serviceEndpoint ${service.serviceEndpoint} as URI"
         )
-        serviceType <- serviceTypeLookup.get(service.`type`).toRight(s"unsupported serviceType ${service.`type`}")
+        serviceType <- domain.ServiceType
+          .parseString(service.`type`)
+          .toRight(s"unsupported serviceType ${service.`type`}")
       } yield domain.Service(
         id = service.id,
         `type` = serviceType,
@@ -63,8 +59,8 @@ trait OASDomainModelSupport {
     def toDomain: Either[String, domain.PublicKey] = {
       for {
         purposes <- key.purposes.traverse(i =>
-          verificationRelationshipLookup
-            .get(i)
+          domain.VerificationRelationship
+            .parseString(i)
             .toRight(s"unsupported verificationRelationship $i")
         )
         publicKeyJwk <- key.jsonWebKey2020.publicKeyJwk.toDomain
@@ -77,7 +73,7 @@ trait OASDomainModelSupport {
       for {
         crv <- jwk.crv
           .toRight("expected crv field in JWK")
-          .flatMap(i => ellipticCurveLookup.get(i).toRight(s"unsupported curve $i"))
+          .flatMap(i => domain.EllipticCurve.parseString(i).toRight(s"unsupported curve $i"))
         x <- jwk.x
           .toRight("expected x field in JWK")
           .flatMap(
