@@ -30,19 +30,7 @@ object CoordinateMediationPrograms {
     parse(parseToJson).getOrElse(???).spaces2
   }
 
-  def senderMediationRequestProgram() = {
-    // val mediatorURL = "http://localhost:8000"
-    val mediatorURL = "http://localhost:8080"
-
-    def makeMsg(from: Agent, to: DidId) = Message(
-      piuri = "http://atalaprism.io/lets_connect/proposal",
-      from = from.id,
-      to = to,
-      body = Map(
-        "connectionId" -> "8fb9ea21-d094-4506-86b6-c7c1627d753a",
-        "msg" -> "Hello Bob"
-      ),
-    )
+  def senderMediationRequestProgram(mediatorURL: String) = {
 
     for {
       _ <- ZIO.log("#### Send Mediation request  ####")

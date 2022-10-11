@@ -23,10 +23,22 @@ import io.iohk.atala.mercury.InvitationPrograms
 
 }
 
+@main def AgentClientCoordinateMediationWithRootsId() = {
+  val env = ChannelFactory.auto ++ EventLoopGroup.auto()
+  val mediatorURL = "http://localhost:8000"
+  val app = CoordinateMediationPrograms
+    .senderMediationRequestProgram(mediatorURL)
+    .provide(env, AgentService.charlie)
+
+  Unsafe.unsafe { Runtime.default.unsafe.run(app).getOrThrowFiberFailure() }
+
+}
+
 @main def AgentClientCoordinateMediation() = {
   val env = ChannelFactory.auto ++ EventLoopGroup.auto()
+  val mediatorURL = "http://localhost:8080"
   val app = CoordinateMediationPrograms
-    .senderMediationRequestProgram()
+    .senderMediationRequestProgram(mediatorURL)
     .provide(env, AgentService.charlie)
 
   Unsafe.unsafe { Runtime.default.unsafe.run(app).getOrThrowFiberFailure() }
