@@ -29,7 +29,7 @@ object ZhttpMediator extends ZIOAppDefault {
         )
       )
     case req @ Method.GET -> !! / "oob_url" =>
-      val serverUrl = s"http://locahost:${MediatorProgram.port}?_oob=}"
+      val serverUrl = s"http://locahost:${MediatorProgram.port}?_oob="
       InvitationPrograms.createInvitationV2().map(oob => Response.text(serverUrl + oob))
 
     case req =>
