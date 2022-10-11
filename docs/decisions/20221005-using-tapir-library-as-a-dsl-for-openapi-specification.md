@@ -192,6 +192,19 @@ graph TD
 - Bad, because the granular control over OAS YAML file will be lost (OAS file is generated automatically)
 - Bad, because we need to spend 3-5 day to transform OAS files into Tapir DSL
 
+## How to migrate from the current state to Tapir?
+### Current state: OpenAPI Tools + mustache templates for Akka server
+### Desired state: Endpoint Definitions in Tapir + ZIO-HTTP
+Estimated migration time is 4-6 days which we don't really want to waste.
+
+So, engineering team can proceed with keeping the existing endpoints in the current state and even work on the new endpoints using generated server stubs for Akka.
+
+At the same time OAS file can be translated to Tapir step-by-step and the endpoint definitions can be [interpreted by Tapir library as Akka routes](https://tapir.softwaremill.com/en/latest/server/akkahttp.html), and attached to the server endpoint in the same way as generated endpoints.
+
+This transitions period might take 2-3 weeks till engineering team get enough knowledge of using Tapir.
+
+Then all the endpoints are translated to Tapir, it will be possible to switch the interpreter from Akka to [ZIO-HTTP library](https://tapir.softwaremill.com/en/latest/server/ziohttp.html).
+
 ## Links <!-- optional -->
 
 - [OpenAPI Tools](https://github.com/OpenAPITools/openapi-generator)
