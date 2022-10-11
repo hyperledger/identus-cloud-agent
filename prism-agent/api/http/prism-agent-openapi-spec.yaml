@@ -63,6 +63,28 @@ paths:
               schema:
                 $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
 
+  /dids/{didRef}:
+    get:
+      tags: [ "DID" ]
+      operationId: getDid
+      summary: Get DID.
+      description: Get DID.
+      parameters:
+        - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
+      responses:
+        "200":
+          description: The DID resource
+          content:
+            application/json:
+              schema:
+                $ref: "./castor/schemas.yaml#/components/schemas/DIDResponse"
+        "404":
+          description: There is no DID existing for the 'didRef'.
+          content:
+            application/json:
+              schema:
+                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
+
   /dids/{didRef}/updates:
     post:
       tags: [ "DID" ]
@@ -95,27 +117,6 @@ paths:
             application/json:
               schema:
                 $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
-        "404":
-          description: There is no DID existing for the 'didRef'.
-          content:
-            application/json:
-              schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
-
-    get:
-      tags: [ "DID" ]
-      operationId: getDid
-      summary: Get DID.
-      description: Get DID.
-      parameters:
-        - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
-      responses:
-        "200":
-          description: The DID resource
-          content:
-            application/json:
-              schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/DIDResponse"
         "404":
           description: There is no DID existing for the 'didRef'.
           content:

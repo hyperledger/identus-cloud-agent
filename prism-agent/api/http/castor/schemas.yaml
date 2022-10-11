@@ -9,8 +9,6 @@ components:
       properties:
         did:
           $ref: "#/components/schemas/DID"
-        type:
-          $ref: "#/components/schemas/DidTypeWithProof"
         deactivated:
           type: boolean
 
@@ -22,12 +20,6 @@ components:
         - deactivated
         - scheduledOperation
       properties:
-        did:
-          $ref: "#/components/schemas/DID"
-        type:
-          $ref: "#/components/schemas/DidTypeWithProof"
-        deactivated:
-          type: boolean
         scheduledOperation:
           $ref: "#/components/schemas/DidOperation"
 
@@ -102,14 +94,11 @@ components:
     CreateDIDRequest:
       type: object
       required:
-        - type
         - updateCommitment
         - recoveryCommitment
         - storage
         - document
       properties:
-        didType:
-          $ref: "#/components/schemas/DidTypeWithProof"
         updateCommitment:
           type: string
           example: "e0f10749ef6d7ea351cf9e23ef505a933e8386123413a044d11945fd45bad3ba"
@@ -136,16 +125,11 @@ components:
     UpdateDIDRequest:
       type: object
       required:
-        - type
         - did
         - updatePublicKey
         - previousVersion
         - delta
       properties:
-        requestType:
-          $ref: "#/components/schemas/OperationType"
-        didType:
-          $ref: "#/components/schemas/DidTypeWithSignedProof"
         did:
           type: string
           example: did:prism:unpublished:7a3a5cd1beab57a65c18c584848029c513ca27c8edfb69ceb2c7aef3d659bf44?instance=https://offchain-storage.com"
@@ -168,8 +152,6 @@ components:
         - previousVersion
         - signature
       properties:
-        requestType:
-          $ref: "#/components/schemas/OperationType"
         did:
           type: string
           example: "did:prism:mainnet:7a3a5cd1beab57a65c18c584848029c513ca27c8edfb69ceb2c7aef3d659bf44"
@@ -189,10 +171,6 @@ components:
     RecoverDIDRequest:
       type: object
       properties:
-        requestType:
-          $ref: "#/components/schemas/OperationType"
-        didType:
-          $ref: "#/components/schemas/DidTypeWithSignedProof"
         did:
           type: string
           example: "did:prism:mainnet:7a3a5cd1beab57a65c18c584848029c513ca27c8edfb69ceb2c7aef3d659bf44"
@@ -222,71 +200,6 @@ components:
           type: string
           example: "42d8267c184d06898e80878a1b2f187fbf907c3055560867"
           description: "SHA256 of recovery public key"
-
-    DidType:
-      type: string
-      enum:
-        - PUBLISHED
-        - UNPUBLISHED_OFF_CHAIN
-        - UNPUBLISHED_ON_CHAIN
-
-    DidTypeWithProof:
-      type: object
-      required:
-        - type
-      properties:
-        type:
-          $ref: "#/components/schemas/DidType"
-        proof:
-          $ref: "#/components/schemas/OperationProof"
-
-    DidTypeWithSignedProof:
-      type: object
-      required:
-        - type
-      properties:
-        type:
-          $ref: "#/components/schemas/DidType"
-        proof:
-          $ref: "#/components/schemas/OperationProofSigned"
-
-    OperationType:
-      type: string
-      enum:
-        - create
-        - update
-        - deactivate
-        - recover
-
-    OperationProof:
-      type: object
-      required:
-        - type
-        - didHash
-        - version
-      properties:
-        operationType:
-          $ref: "#/components/schemas/OperationType"
-        didHash:
-          type: string
-          example: "8ccfa10d3b642543c2cb80340559ba0b083ae0052a93b6168df3fdb157a203bc"
-        version:
-          type: string
-          example: "1b819cd435f8d58b959f5c17c81d66eb37b629caad1f4d874527debb8ad7b51b"
-          description: SHA256 hash of current operation
-
-    OperationProofSigned:
-      type: object
-      required:
-        - operationProof
-        - signature
-      properties:
-        operationProof:
-          $ref: "#/components/schemas/OperationProof"
-        signature:
-          type: string
-          example: "eyJhbGciOiJFUzI1NksifQ.eyJ1cGRhdGVLZXkiOnsia3R5IjoiRUMiLCJjcnYiOiJzZWNwMjU2azEiLCJ4Ijoid2Z3UUNKM09ScVZkbkhYa1Q4UC1MZ19HdHhCRWhYM3R5OU5VbnduSHJtdyIsInkiOiJ1aWU4cUxfVnVBblJEZHVwaFp1eExPNnFUOWtQcDNLUkdFSVJsVHBXcmZVIn0sImRlbHRhSGFzaCI6IkVpQ3BqTjQ3ZjBNcTZ4RE5VS240aFNlZ01Fc"
-          description: "Base64 of signature of the proof"
 
     DeltaUpdate:
       type: object
@@ -323,13 +236,13 @@ components:
             type: string
             enum:
               [
-                "authentification",
+                "authentication",
                 "assertionMethod",
                 "keyAgreement",
                 "capabilityInvocation",
                 "capabilityDelegation",
               ]
-          example: [ "authentification", "assertionMethod" ]
+          example: [ "authentication", "assertionMethod" ]
         jsonWebKey2020:
           $ref: "#/components/schemas/JsonWebKey2020"
 
@@ -373,9 +286,8 @@ components:
         type:
           type: string
           enum:
-            - EncryptedDataVault
-            - DIDCommMessaging
-          example: EncryptedDataVault
+            - MediatorService
+          example: MediatorService
         serviceEndpoint:
           type: string
           example: "https://bar.example.com"
@@ -436,11 +348,10 @@ components:
     DidOperationType:
       type: string
       enum:
-        - PUBLISH
-        - PUBLISH_PROOF
+        - CREATE
         - UPDATE
-        - UPDATE_PROOF
         - DEACTIVATE
+        - RECOVER
 
     # ----------------------------------
     # AUTHENTICATION

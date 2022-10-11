@@ -51,14 +51,10 @@ class DIDApiServiceImpl(service: DIDService)(using runtime: Runtime[Any])
 
   private val mockDIDResponse = DIDResponse(
     did = mockDID,
-    `type` = DidTypeWithProof(`type` = "PUBLISHED", proof = None),
     deactivated = false
   )
 
   private val mockDIDOperationResponse = DIDOperationResponse(
-    did = mockDID,
-    `type` = DidTypeWithProof(`type` = "PUBLISHED", proof = None),
-    deactivated = false,
     scheduledOperation = DidOperation(
       id = "0123456789abcdef",
       didRef = "did:example:123",
