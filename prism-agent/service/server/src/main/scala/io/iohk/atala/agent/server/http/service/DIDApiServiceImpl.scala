@@ -6,7 +6,7 @@ import akka.http.scaladsl.server.Route
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.agent.openapi.api.DIDApiService
 import io.iohk.atala.agent.openapi.model.*
-import io.iohk.atala.agent.server.http.model.{HttpServiceError, OASDomainModelSupport, OASErrorModelSupport}
+import io.iohk.atala.agent.server.http.model.{HttpServiceError, OASDomainModelHelper, OASErrorModelHelper}
 import io.iohk.atala.castor.core.model.error.DIDOperationError
 import zio.*
 
@@ -14,8 +14,8 @@ import zio.*
 class DIDApiServiceImpl(service: DIDService)(using runtime: Runtime[Any])
     extends DIDApiService,
       AkkaZioSupport,
-      OASDomainModelSupport,
-      OASErrorModelSupport {
+      OASDomainModelHelper,
+      OASErrorModelHelper {
 
   private val mockDID = DID(
     id = "did:prism:1:mainnet:abcdef123456",
@@ -55,11 +55,9 @@ class DIDApiServiceImpl(service: DIDService)(using runtime: Runtime[Any])
   )
 
   private val mockDIDOperationResponse = DIDOperationResponse(
-    scheduledOperation = DidOperation(
+    scheduledOperation = DidOperationSubmission(
       id = "0123456789abcdef",
-      didRef = "did:example:123",
-      `type` = "PUBLISHED",
-      status = "EXECUTING"
+      didRef = "did:example:123"
     )
   )
 
@@ -69,14 +67,14 @@ class DIDApiServiceImpl(service: DIDService)(using runtime: Runtime[Any])
   ): Route = {
     val result = for {
       operation <- ZIO.fromEither(createDIDRequest.toDomain).mapError(HttpServiceError.InvalidPayload.apply)
-      errorOrResult <- service
+      outcome <- service
         .createPublishedDID(operation)
         .mapError(HttpServiceError.ServiceError[DIDOperationError].apply)
-    } yield errorOrResult
+    } yield outcome
 
-    onZioSuccess(result.mapError(_.toErrorResponse).either) {
+    onZioSuccess(result.mapBoth(_.toOAS, _.toOAS).either) {
       case Left(error)   => complete(error.status -> error)
-      case Right(result) => createDid202(mockDIDOperationResponse)
+      case Right(result) => createDid202(result)
     }
   }
 

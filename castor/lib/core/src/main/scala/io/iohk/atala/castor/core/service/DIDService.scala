@@ -67,7 +67,6 @@ private class DIDServiceImpl(
       irisOutcome <- ZIO
         .fromFuture(_ => irisClient.scheduleOperation(irisOpProto))
         .mapError(DIDOperationError.DLTProxyError.apply)
-      _ <- Console.printLine(s"creating ${prismDID.did}").ignore
     } yield PublishedDIDOperationOutcome(
       did = prismDID,
       operation = operation,

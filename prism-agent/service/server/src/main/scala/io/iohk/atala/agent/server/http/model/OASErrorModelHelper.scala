@@ -9,10 +9,10 @@ trait ToErrorResponse[E] {
 }
 
 // TODO: properly define error representation for error models
-trait OASErrorModelSupport {
+trait OASErrorModelHelper {
 
   extension [E](e: HttpServiceError[E]) {
-    def toErrorResponse(using te: ToErrorResponse[E]): ErrorResponse = {
+    def toOAS(using te: ToErrorResponse[E]): ErrorResponse = {
       e match
         case HttpServiceError.InvalidPayload(msg) =>
           ErrorResponse(

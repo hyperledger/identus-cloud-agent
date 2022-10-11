@@ -21,7 +21,7 @@ components:
         - scheduledOperation
       properties:
         scheduledOperation:
-          $ref: "#/components/schemas/DidOperation"
+          $ref: "#/components/schemas/DidOperationSubmission"
 
     DID:
       type: object
@@ -338,6 +338,21 @@ components:
           $ref: "#/components/schemas/DidOperationType"
         status:
           $ref: "#/components/schemas/DidOperationStatus"
+
+    DidOperationSubmission:
+      type: object
+      required:
+        - id
+        - didRef
+        - type
+        - status
+      properties:
+        id:
+          type: string
+          example: "123"
+        didRef:
+          type: string
+          example: "did:prism:123"
 
     DidOperationStatus:
       type: string

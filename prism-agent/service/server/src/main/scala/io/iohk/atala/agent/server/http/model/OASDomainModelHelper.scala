@@ -1,7 +1,17 @@
 package io.iohk.atala.agent.server.http.model
 
-import io.iohk.atala.agent.openapi.model.{CreateDIDRequest, JsonWebKey2020, PublicKey, PublicKeyJwk, Service}
+import io.iohk.atala.agent.openapi.model.{
+  CreateDIDRequest,
+  DIDOperationResponse,
+  DidOperation,
+  JsonWebKey2020,
+  PublicKey,
+  PublicKeyJwk,
+  Service,
+  DidOperationSubmission
+}
 import io.iohk.atala.castor.core.model.did as domain
+import io.iohk.atala.castor.core.model.did.PublishedDIDOperation
 import io.iohk.atala.shared.models.HexStrings.*
 import io.iohk.atala.shared.models.Base64UrlStrings.*
 import io.iohk.atala.shared.utils.Traverse.*
@@ -9,11 +19,8 @@ import io.iohk.atala.shared.utils.Traverse.*
 import java.net.URI
 import scala.util.Try
 
-trait OASDomainModelSupport {
+trait OASDomainModelHelper {
 
-  /** Only provide support for PublishedDID until other types of DID has been approved. Eventually this conversion
-    * should check for `didType` and convert to the right operation on a given `didType`
-    */
   extension (req: CreateDIDRequest) {
     def toDomain: Either[String, domain.PublishedDIDOperation.Create] = {
       for {
@@ -86,6 +93,16 @@ trait OASDomainModelSupport {
           )
       } yield domain.PublicKeyJwk.ECPublicKeyData(crv = crv, x = x, y = y)
     }
+  }
+
+  extension (outcome: domain.PublishedDIDOperationOutcome) {
+    // TODO: consider adding DIDOperationSubmissionResponse since PublishedDIDOperationOutcome
+    def toOAS: DIDOperationResponse = DIDOperationResponse(
+      scheduledOperation = DidOperationSubmission(
+        id = outcome.operationId.toString,
+        didRef = outcome.did.toString
+      )
+    )
   }
 
 }
