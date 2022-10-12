@@ -24,20 +24,20 @@ final case class PeerDID(
     val keyIdAuthentication = PeerDIDUtils.createMultibaseEncnumbasis(keyAuthentication).drop(1)
 
     val secretKeyAgreement = new Secret(
-      s"$did#$keyIdAgreement",
+      s"${did.value}#$keyIdAgreement",
       VerificationMethodType.JSON_WEB_KEY_2020,
       new VerificationMaterial(VerificationMaterialFormat.JWK, jwkForKeyAgreement.toJSONString)
     )
     val secretKeyAuthentication = new Secret(
-      s"$did#$keyIdAuthentication",
+      s"${did.value}#$keyIdAuthentication",
       VerificationMethodType.JSON_WEB_KEY_2020,
       new VerificationMaterial(VerificationMaterialFormat.JWK, jwkForKeyAuthentication.toJSONString)
     )
 
     new SecretResolverInMemory(
       Map(
-        s"$did#$keyIdAgreement" -> secretKeyAgreement,
-        s"$did#$keyIdAuthentication" -> secretKeyAuthentication,
+        s"${did.value}#$keyIdAgreement" -> secretKeyAgreement,
+        s"${did.value}#$keyIdAuthentication" -> secretKeyAuthentication,
       ).asJava
     )
   }
