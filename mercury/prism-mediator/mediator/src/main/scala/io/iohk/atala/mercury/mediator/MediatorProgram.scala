@@ -15,7 +15,6 @@ import io.iohk.atala.mercury.mediator.MediationState.{Denied, Granted, Requested
 import io.iohk.atala.mercury.protocol.coordinatemediation.Keylist.Body
 import io.iohk.atala.mercury.protocol.coordinatemediation.{MediateDeny, MediateGrant}
 import io.iohk.atala.mercury.Agent
-import io.iohk.atala.mercury.Agent.PeerDidMediator
 object MediatorProgram {
   val port = 8080
 
@@ -80,6 +79,7 @@ object MediatorProgram {
                   _ <- MailStorage.store(nextRecipient, msg)
                   _ <- ZIO.log(s"Stored Message for '$nextRecipient'")
                 } yield ("Message Forwarded")
+
               case "https://atalaprism.io/mercury/mailbox/1.0/ReadMessages" =>
                 for {
                   _ <- ZIO.logInfo("Mediator ReadMessages: " + mediatorMessage.toString)
@@ -87,20 +87,21 @@ object MediatorProgram {
                   _ <- ZIO.logInfo(s"Mediator ReadMessages get Messages from: $senderDID")
                   seqMsg <- MailStorage.get(senderDID)
                 } yield (seqMsg.last)
+
               case "https://didcomm.org/coordinate-mediation/2.0/mediate-request" =>
                 for {
-                  _ <- ZIO.logInfo("\nMediator ReadMessages: " + mediatorMessage.toString)
+                  _ <- ZIO.logInfo("Mediator ReadMessages: " + mediatorMessage.toString)
                   senderDID = DidId(mediatorMessage.getFrom())
-                  _ <- ZIO.logInfo(s"\nMediator ReadMessages get Messages from: $senderDID")
+                  _ <- ZIO.logInfo(s"Mediator ReadMessages get Messages from: $senderDID")
                   mayBeConnection <- ConnectionStorage.get(senderDID)
                   _ <- ZIO.logInfo(s"$senderDID state $mayBeConnection")
                   // DO some checks before we grant this logic need more thought
                   grantedOrDenied <- mayBeConnection
                     .map(_ => ZIO.succeed(Denied))
                     .getOrElse(ConnectionStorage.store(senderDID, Granted))
-                  _ <- ZIO.logInfo(s"\n$senderDID state $grantedOrDenied")
-                  messagePrepared <- ZIO.succeed(makeMsg(PeerDidMediator, senderDID, grantedOrDenied))
-                  _ <- ZIO.logInfo("\nMessage Prepared: " + messagePrepared.toString)
+                  _ <- ZIO.logInfo(s"$senderDID state $grantedOrDenied")
+                  messagePrepared <- makeMsg(senderDID, grantedOrDenied)
+                  _ <- ZIO.logInfo("Message Prepared: " + messagePrepared.toString)
                   encryptedMsg <- packEncrypted(messagePrepared, to = senderDID)
                   _ <- ZIO.logInfo(
                     "\n*********************************************************************************************************************************\n"
@@ -117,26 +118,27 @@ object MediatorProgram {
     }
   }
 
-  def makeMsg(from: Agent, to: DidId, messageState: MediationState): Message = {
-
-    messageState match
+  def makeMsg(to: DidId, messageState: MediationState): ZIO[DidComm, Nothing, Message] = for {
+    from <- ZIO.service[DidComm].map(_.myDid)
+    message = messageState match
       case Granted =>
-        val body = MediateGrant.Body(routing_did = from.id.value)
+        val body = MediateGrant.Body(routing_did = from.value)
         val mediateGrant =
           MediateGrant(id = java.util.UUID.randomUUID().toString, `type` = MediateGrant.`type`, body = body)
         Message(
           piuri = mediateGrant.`type`,
-          from = from.id,
+          from = from,
           to = to,
-          body = Map("routing_did" -> from.id.value),
+          body = Map("routing_did" -> from.value),
         )
       case _ =>
         val mediateDeny =
           MediateDeny(id = java.util.UUID.randomUUID().toString, `type` = MediateDeny.`type`)
         Message(
           piuri = mediateDeny.`type`,
-          from = from.id,
+          from = from,
           to = to
         )
-  }
+  } yield (message)
+
 }

@@ -44,7 +44,7 @@ object CoordinateMediationPrograms {
       encryptedMessage <- agentService.packEncrypted(planMessage, to = invitationFrom)
       _ <- ZIO.log("Sending bytes ...")
       jsonString = encryptedMessage.string
-      _ <- ZIO.log(s"\n\n$jsonString\n\n")
+      _ <- ZIO.log(jsonString)
 
       res <- Client.request(
         url = mediatorURL,

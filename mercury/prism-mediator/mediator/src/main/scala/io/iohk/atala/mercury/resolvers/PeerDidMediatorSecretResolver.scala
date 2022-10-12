@@ -2,7 +2,6 @@ package io.iohk.atala.mercury.resolvers
 
 import com.nimbusds.jose.jwk.*
 import com.nimbusds.jose.jwk.gen.*
-import io.iohk.atala.resolvers.PeerDidMediatorDidDoc
 import org.didcommx.didcomm.common.{VerificationMaterial, VerificationMaterialFormat, VerificationMethodType}
 import org.didcommx.didcomm.secret.{Secret, SecretResolverInMemory}
 import org.didcommx.peerdid.*

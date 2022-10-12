@@ -21,7 +21,7 @@ class AgentServiceAny(didComm: DIDComm, val myDid: DidId) extends DidComm {
 
   override def packEncrypted(msg: Message, to: DidId): UIO[EncryptedMessage] = {
 
-    assert(msg.from == myDid, "msg in msg is not right")
+    assert(msg.from == myDid, s"ERROR in packEncrypted: ${msg.from} must be ${myDid}")
 
     val params = new PackEncryptedParams.Builder(msg, to.value)
       .from(myDid.value)
