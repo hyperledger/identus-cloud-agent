@@ -1,0 +1,36 @@
+name: Mercury-CI
+
+on:
+  pull_request:
+    branches-ignore:
+      - "gh-pages"
+    paths:
+      - "mercury/**"
+  push:
+    branches:
+      - "main"
+    paths:
+      - "mercury/**"
+
+jobs:
+  Run-Tests:
+    name: CI
+    runs-on: ubuntu-latest
+    steps:
+      # https://github.com/japgolly/setup-everything-scala
+      - uses: actions/checkout@v3
+      - name: Setup Java and Scala
+        uses: olafurpg/setup-scala@v13
+      # - name: Setup Node
+      #   uses: actions/setup-node@v3
+      #   with:
+      #     node-version: "16" # or whatever
+      # - name: Setup Scala.JS
+      #   uses: japgolly/setup-scalajs@v1
+      - name: Cache sbt
+        uses: coursier/cache-action@v6.3
+      ### Tasks ###
+      - name: Test SBT start
+        run: sbt version
+      - name: Test
+        run: sbt -mem 2048 -J-Xmx5120m test
