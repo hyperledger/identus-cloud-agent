@@ -48,14 +48,9 @@ final case class PeerDID(
 
 object PeerDID {
 
-  def makeNewJwkKeyX25519: OctetKeyPair = new OctetKeyPairGenerator(Curve.X25519)
-    //  .keyUse(KeyUse.SIGNATURE) // indicate the intended use of the key
-    // .keyID(java.util.UUID.randomUUID.toString()) // give the key a unique ID
-    .generate()
+  def makeNewJwkKeyX25519: OctetKeyPair = new OctetKeyPairGenerator(Curve.X25519).generate()
 
-  def makeNewJwkKeyEd25519: OctetKeyPair = new OctetKeyPairGenerator(Curve.Ed25519)
-    // .keyID(java.util.UUID.randomUUID.toString()) // give the key a unique ID
-    .generate()
+  def makeNewJwkKeyEd25519: OctetKeyPair = new OctetKeyPairGenerator(Curve.Ed25519).generate()
 
   def makePeerDid(
       jwkForKeyAgreement: OctetKeyPair = makeNewJwkKeyX25519,

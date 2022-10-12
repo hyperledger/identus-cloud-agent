@@ -19,21 +19,27 @@ import io.iohk.atala.mercury.Agent.PeerDidMediator
 object MediatorProgram {
   val port = 8080
 
-  val startLogo = Console.printLine("""
+  val startLogo =
+    for {
+      _ <- Console.printLine("""
         |   ███╗   ███╗███████╗██████╗  ██████╗██╗   ██╗██████╗ ██╗   ██╗
         |   ████╗ ████║██╔════╝██╔══██╗██╔════╝██║   ██║██╔══██╗╚██╗ ██╔╝
         |   ██╔████╔██║█████╗  ██████╔╝██║     ██║   ██║██████╔╝ ╚████╔╝
         |   ██║╚██╔╝██║██╔══╝  ██╔══██╗██║     ██║   ██║██╔══██╗  ╚██╔╝
         |   ██║ ╚═╝ ██║███████╗██║  ██║╚██████╗╚██████╔╝██║  ██║   ██║
         |   ╚═╝     ╚═╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═════╝ ╚═╝  ╚═╝   ╚═╝
-        |""".stripMargin) *>
-    Console.printLine(
-      s"""#####################################################
-         |###  Starting the server at http://localhost:$port ###
-         |###  Open API docs at http://localhost:$port/docs  ###
-         |###  Press ENTER key to exit.                     ###
-         |#####################################################""".stripMargin // FIXME But server is not shutting down
-    )
+        |""".stripMargin)
+      mediator <- ZIO.service[DidComm]
+      _ <- Console.printLine(
+        s"""
+        |#####################################################
+        |###  Starting the server at http://localhost:$port
+        |###  Open API docs at http://localhost:$port/docs
+        |###  ${mediator.myDid.value}
+        |###  Press ENTER key to exit.
+        |#####################################################""".stripMargin
+      )
+    } yield ()
 
   def toJson(parseToJson: String): JsonObject = {
     val aaa = parse(parseToJson).getOrElse(???)
