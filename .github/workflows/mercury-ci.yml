@@ -12,6 +12,11 @@ on:
     paths:
       - "mercury/**"
 
+defaults:
+  run:
+    shell: bash
+    working-directory: "mercury/prism-mediator"
+
 jobs:
   Run-Tests:
     name: CI
