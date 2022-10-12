@@ -1,70 +1,65 @@
 package io.iohk.atala.resolvers
 
-import com.nimbusds.jose.jwk.{Curve, OctetKeyPair}
-import com.nimbusds.jose.jwk.gen.OctetKeyPairGenerator
 import org.didcommx.didcomm.common.{VerificationMaterial, VerificationMaterialFormat, VerificationMethodType}
 import org.didcommx.didcomm.diddoc.{DIDCommService, DIDDoc, VerificationMethod}
 import io.iohk.atala.resolvers
-import org.didcommx.didcomm.secret.{Secret, SecretResolverInMemory}
-import org.didcommx.peerdid.core.PeerDIDUtils
-import org.didcommx.peerdid.{
-  VerificationMaterialFormatPeerDID,
-  VerificationMaterialPeerDID,
-  VerificationMethodTypeAgreement,
-  VerificationMethodTypeAuthentication
-}
-
 import scala.jdk.CollectionConverters.*
 
 object PeerDidMediatorDidDoc {
 
-  val jwkKeyX25519: OctetKeyPair = new OctetKeyPairGenerator(Curve.X25519)
-    //  .keyUse(KeyUse.SIGNATURE) // indicate the intended use of the key
-    .keyID(java.util.UUID.randomUUID.toString()) // give the key a unique ID
-    .generate();
-  println("********** X25519 ****************")
-  println(jwkKeyX25519.toJSONString)
-  println(jwkKeyX25519.toPublicJWK)
-
-  val jwkKeyEd25519: OctetKeyPair = new OctetKeyPairGenerator(Curve.Ed25519)
-    .keyID(java.util.UUID.randomUUID.toString()) // give the key a unique ID
-    .generate();
-  println("********** Ed25519 ****************")
-
-  println(jwkKeyEd25519.toJSONString)
-  println(jwkKeyEd25519.toPublicJWK)
-
-  val keyAgreement = VerificationMaterialPeerDID[VerificationMethodTypeAgreement](
-    VerificationMaterialFormatPeerDID.JWK,
-    jwkKeyX25519.toPublicJWK,
-    VerificationMethodTypeAgreement.JSON_WEB_KEY_2020.INSTANCE
-  )
-
-  val keyAuthentication = VerificationMaterialPeerDID[VerificationMethodTypeAuthentication](
-    VerificationMaterialFormatPeerDID.JWK,
-    jwkKeyEd25519.toPublicJWK,
-    VerificationMethodTypeAuthentication.JSON_WEB_KEY_2020.INSTANCE
-  )
-  val keyIdAgreement = PeerDIDUtils.createMultibaseEncnumbasis(keyAgreement).drop(1)
-  val keyIdAuthentication = PeerDIDUtils.createMultibaseEncnumbasis(keyAuthentication).drop(1)
-
-  val peerDidMediator = org.didcommx.peerdid.PeerDIDCreator.createPeerDIDNumalgo2(
-    List(keyAgreement).asJava,
-    List(keyAuthentication).asJava,
-    null, // service
-  )
-  println(s"*******peerDidMediator******$peerDidMediator*************************************")
-  println(s"*******keyIdAgreement******$keyIdAgreement*************************************")
-  println(s"*******keyIdAuthentication******$keyIdAuthentication*************************************")
-
-  @main def mediatorPeerDidDoc(): Unit = {
-    println(
-      org.didcommx.peerdid.PeerDIDResolver
-        .resolvePeerDID(
-          peerDidMediator,
-          VerificationMaterialFormatPeerDID.JWK
-        )
+  val did = "did:example:mediator"
+  val authentications = Seq(s"$did#key-3").asJava
+  val keyAgreements = Seq(s"$did#key-agreement-1", s"$did#key-agreement-2").asJava
+  val verficationMethods = Seq(
+    new VerificationMethod(
+      s"$did#key-3",
+      VerificationMethodType.JSON_WEB_KEY_2020,
+      new VerificationMaterial(
+        VerificationMaterialFormat.JWK,
+        """{
+          |  "kty":"EC",
+          |  "crv":"secp256k1",
+          |  "x":"aToW5EaTq5mlAf8C5ECYDSkqsJycrW-e1SQ6_GJcAOk",
+          |  "y":"JAGX94caA21WKreXwYUaOCYTBMrqaX4KWIlsQZTHWCk"
+          |}""".stripMargin
+      ),
+      s"$did#key-3"
+    ),
+    new VerificationMethod(
+      s"$did#key-agreement-1",
+      VerificationMethodType.JSON_WEB_KEY_2020,
+      new VerificationMaterial(
+        VerificationMaterialFormat.JWK,
+        """{
+          |  "kty":"OKP",
+          |  "crv":"X25519",
+          |  "x":"GDTrI66K0pFfO54tlCSvfjjNapIs44dzpneBgyx0S3E"
+          |}""".stripMargin
+      ),
+      s"$did#key-agreement-1"
+    ),
+    new VerificationMethod(
+      s"$did#key-agreement-2",
+      VerificationMethodType.JSON_WEB_KEY_2020,
+      new VerificationMaterial(
+        VerificationMaterialFormat.JWK,
+        """{
+          |  "kty":"OKP",
+          |  "crv":"X25519",
+          |  "x":"UT9S3F5ep16KSNBBShU2wh3qSfqYjlasZimn0mB8_VM"
+          |}""".stripMargin
+      ),
+      s"$did#key-agreement-2"
     )
-  }
+  ).asJava
 
+  val didCommServices = Seq.empty[DIDCommService].asJava
+
+  val didDocMediator = new DIDDoc(
+    did,
+    keyAgreements,
+    authentications,
+    verficationMethods,
+    didCommServices
+  )
 }

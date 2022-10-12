@@ -30,16 +30,17 @@ object CoordinateMediationPrograms {
     parse(parseToJson).getOrElse(???).spaces2
   }
 
-  def senderMediationRequestProgram(mediatorURL: String) = {
+  def senderMediationRequestProgram(fromDID: DidId, mediatorURL: String = "http://localhost:8000") = {
 
     for {
       _ <- ZIO.log("#### Send Mediation request  ####")
       link <- InvitationPrograms.getInvitationProgram(mediatorURL + "/oob_url")
-      planMessage = link.map(to => replyToInvitation(Agent.Charlie.id, to)).get
+      charlie <- ZIO.service[DidComm]
+
+      planMessage = link.map(to => replyToInvitation(fromDID, to)).get
       invitationFrom = DidId(link.get.from)
       _ <- ZIO.log(s"Invitation from $invitationFrom")
 
-      charlie <- ZIO.service[DidComm]
       encryptedMessage <- charlie.packEncrypted(planMessage, to = invitationFrom)
       _ <- ZIO.log("Sending bytes ...")
       jsonString = encryptedMessage.string

@@ -18,7 +18,7 @@ import io.circe._
   */
 final case class Attachment(
     data: AttachmentData,
-    id: String = java.util.UUID.randomUUID.toString(), // id: Option[String], OPTIONAL ????
+    id: String = java.util.UUID.randomUUID.toString(), // id: Option[String], OPTIONAL ?
     // description:Option[String],
     // media_type:Option[String],
     // format:Option[String],
