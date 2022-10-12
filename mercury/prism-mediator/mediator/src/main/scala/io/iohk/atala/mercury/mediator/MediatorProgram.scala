@@ -27,6 +27,7 @@ object MediatorProgram {
         |   ██║╚██╔╝██║██╔══╝  ██╔══██╗██║     ██║   ██║██╔══██╗  ╚██╔╝
         |   ██║ ╚═╝ ██║███████╗██║  ██║╚██████╗╚██████╔╝██║  ██║   ██║
         |   ╚═╝     ╚═╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═════╝ ╚═╝  ╚═╝   ╚═╝
+        |DID Comm V2 - Mediator agent - Build by Atala (IOHK)
         |""".stripMargin)
       mediator <- ZIO.service[DidComm]
       _ <- Console.printLine(
