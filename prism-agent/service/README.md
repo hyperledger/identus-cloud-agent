@@ -6,16 +6,15 @@
 
 __Environmental setup__
 
-First, we need to publish a set of libraries that is used by `prism-agent`.
 Set the environment variable `ATALA_GITHUB_TOKEN` so we can pull `prism-crypto` from Github packages.
 
 __Spin up PrismAgent dependencies__
 
-Then we need to spin up the database for Castor, Pollux and optionally Iris.
-The easiest way is to reuse the `./infrastructure/local/docker-compose.yml`
-which contains databases and all the services.
-It should also apply migration on startup.
-Some services may be commented out if not needed during local development.
+Then we need to spin up services and databases for Castor, Pollux and optionally Iris.
+The easiest way is to reuse the `./infrastructure/local/docker-compose.yml` which contains
+databases and all the services. It should also apply database migrations on startup.
+Some services in `docker-compose.yml` can be commented out if not needed
+during local development.
 
 ```bash
 # From the root directory
