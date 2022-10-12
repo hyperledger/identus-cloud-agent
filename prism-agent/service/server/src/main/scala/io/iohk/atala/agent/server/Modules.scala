@@ -72,7 +72,7 @@ object AppModule {
 object GrpcModule {
   val irisStub: TaskLayer[IrisServiceStub] = ZLayer.fromZIO(
     ZIO.attempt {
-      val channel = ManagedChannelBuilder.forAddress("localhost", 8081).usePlaintext.build
+      val channel = ManagedChannelBuilder.forAddress("iris", 8081).usePlaintext.build
       IrisServiceGrpc.stub(channel)
     }
   )
