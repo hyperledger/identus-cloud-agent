@@ -27,7 +27,7 @@ import io.iohk.atala.mercury.InvitationPrograms
   val env = ChannelFactory.auto ++ EventLoopGroup.auto()
   val mediatorURL = "http://localhost:8000"
   val app = CoordinateMediationPrograms
-    .senderMediationRequestProgram(Agent.Charlie.id, mediatorURL)
+    .senderMediationRequestProgram(mediatorURL)
     .provide(env, AgentService.charlie)
 
   Unsafe.unsafe { Runtime.default.unsafe.run(app).getOrThrowFiberFailure() }
@@ -38,7 +38,7 @@ import io.iohk.atala.mercury.InvitationPrograms
   val env = ChannelFactory.auto ++ EventLoopGroup.auto()
   val mediatorURL = "http://localhost:8080"
   val app = CoordinateMediationPrograms
-    .senderMediationRequestProgram(Agent.Charlie.id, mediatorURL)
+    .senderMediationRequestProgram(mediatorURL)
     .provide(env, AgentService.charlie)
 
   Unsafe.unsafe { Runtime.default.unsafe.run(app).getOrThrowFiberFailure() }

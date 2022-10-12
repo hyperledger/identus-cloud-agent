@@ -63,7 +63,7 @@ object AgentCli extends ZIOAppDefault {
         case str => ZIO.succeed(str)
       }
       _ <- CoordinateMediationPrograms
-        .senderMediationRequestProgram(peer.did, mediatorURL = url)
+        .senderMediationRequestProgram(mediatorURL = url)
         .provide(env, agentLayer)
     } yield ()
   }
