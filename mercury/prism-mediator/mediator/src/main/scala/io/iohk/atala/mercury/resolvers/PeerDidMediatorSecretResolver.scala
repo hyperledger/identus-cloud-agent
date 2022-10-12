@@ -13,8 +13,6 @@ import scala.jdk.CollectionConverters.*
 
 object PeerDidMediatorSecretResolver {
 
-  private val did = PeerDID.makePeerDid()
-
-  val secretResolver = did.getSecretResolverInMemory
+  val peer = PeerDID.makePeerDid()
 
 }

@@ -52,7 +52,7 @@ object AgentCli extends ZIOAppDefault {
     val agentLayer = ZLayer.succeed(
       io.iohk.atala.mercury.AgentServiceAny(
         new DIDComm(UniversalDidResolver, peer.getSecretResolverInMemory),
-        peer.did.value
+        peer.did
       )
     )
 

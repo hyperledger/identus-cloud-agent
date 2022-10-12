@@ -10,12 +10,12 @@ import io.iohk.atala.mercury.model.{_, given}
 import java.util.Base64
 import io.iohk.atala.mercury.DidComm
 
-case class AgentService[A <: Agent](didComm: DIDComm, did: A) extends AgentServiceAny(didComm, did.id.value)
+case class AgentService[A <: Agent](didComm: DIDComm, did: A) extends AgentServiceAny(didComm, did.id)
 
-class AgentServiceAny(didComm: DIDComm, did: String) extends DidComm {
+class AgentServiceAny(didComm: DIDComm, val myDid: DidId) extends DidComm {
 
   override def packSigned(msg: Message): UIO[SignedMesage] = {
-    val params = new PackSignedParams.Builder(msg, did).build()
+    val params = new PackSignedParams.Builder(msg, myDid.value).build()
     ZIO.succeed(didComm.packSigned(params))
   }
 
@@ -23,11 +23,11 @@ class AgentServiceAny(didComm: DIDComm, did: String) extends DidComm {
 
     println("%" * 100)
     println(to)
-    println(did)
+    println(myDid.value)
     println(msg)
 
     val params = new PackEncryptedParams.Builder(msg, to.value)
-      .from(did)
+      .from(myDid.value)
       .forward(false)
       .build()
 
