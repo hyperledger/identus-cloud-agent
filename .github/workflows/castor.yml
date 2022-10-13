@@ -1,0 +1,67 @@
+name: Castor testing workflow
+
+# Cancel previously running workflows if new commit pushed to the branch
+# this will help to push fixes earlier and stop previous workflows
+concurrency:
+  group: ${{ github.head_ref }}${{ github.ref }}-castor
+  cancel-in-progress: true
+
+# Default shell is `sh`
+# which is old, use bourne-again version instead
+defaults:
+  run:
+    shell: bash
+
+on:
+  # Run with every push to `main` branch
+  # Run with each PR opened vs Castor
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/castor.yml"
+      - "castor/**"
+  pull_request:
+    paths:
+      - ".github/workflows/castor.yml"
+      - "castor/**"
+
+# Global environment variables for all jobs
+env:
+  JAVA_VERSION: openjdk@1.11
+  ATALA_GITHUB_ACTOR: ${{ secrets.ATALA_GITHUB_ACTOR }}
+  ATALA_GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
+
+jobs:
+  build-and-test-castor:
+    name: "Build and test Castor"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Scala
+        uses: olafurpg/setup-scala@v11
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+
+      # Step to be removed after adding publishing of shared module
+      - name: Build shared module
+        run: cd shared && sbt publishLocal
+
+      # Step to be removed after adding publishing of Iris client
+      - name: Build Iris client
+        run: cd iris/client/scala-client && sbt publishLocal
+      
+      - name: Run Scala formatter
+        run: cd castor/lib && sbt scalafmtCheckAll
+      
+      - name: Build and test Castor
+        run: cd castor/lib && sbt test
+
+      - name: Publish test results
+        # Publish even if the previous test step fails
+        if: always()
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          junit_files: "castor/lib/core/target/test-reports/TEST-*.xml"
