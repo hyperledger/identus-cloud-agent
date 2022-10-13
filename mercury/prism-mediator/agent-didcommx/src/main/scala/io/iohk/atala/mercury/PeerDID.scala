@@ -4,6 +4,7 @@ import org.didcommx.didcomm.common.{VerificationMaterial, VerificationMaterialFo
 import org.didcommx.didcomm.secret.{Secret, SecretResolverInMemory}
 import org.didcommx.peerdid.core.PeerDIDUtils
 import org.didcommx.peerdid.*
+
 import com.nimbusds.jose.jwk.*
 import com.nimbusds.jose.jwk.gen.*
 import io.circe.Encoder
@@ -12,8 +13,8 @@ import cats.implicits._
 import io.circe.syntax._
 import io.circe.generic.semiauto._
 import scala.jdk.CollectionConverters.*
+
 import io.iohk.atala.mercury.model.DidId
-import io.iohk.atala.mercury.protocol.coordinatemediation.MediateGrant
 
 final case class PeerDID(
     did: DidId,
@@ -91,12 +92,6 @@ object PeerDID {
           List(keyAuthentication).asJava,
           null, // service
         )
-
-//    val did = org.didcommx.peerdid.PeerDIDCreator.createPeerDIDNumalgo2(
-//      List(keyAgreement).asJava,
-//      List(keyAuthentication).asJava,
-//      null, // service
-//    )
 
     PeerDID(
       DidId(did),
