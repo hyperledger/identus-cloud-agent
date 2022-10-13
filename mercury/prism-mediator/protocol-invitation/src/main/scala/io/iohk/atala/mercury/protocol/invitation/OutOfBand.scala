@@ -23,6 +23,4 @@ object OutOfBand {
     parseLink(url).map(e => parse(e).getOrElse(???).as[Invitation].getOrElse(???))
   }
 
-
-
 }
