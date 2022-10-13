@@ -8,7 +8,6 @@ import java.nio.charset.StandardCharsets
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.{Agent, DidComm, InvitationPrograms, MediaTypes}
 import io.iohk.atala.mercury.resolvers.MediatorDidComm
-import org.http4s.dsl.request
 import scala.io.Source
 
 /** sbt "mediator/runMain io.iohk.atala.mercury.mediator.ZhttpMediator" */

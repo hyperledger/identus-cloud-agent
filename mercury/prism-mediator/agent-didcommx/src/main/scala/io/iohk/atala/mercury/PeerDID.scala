@@ -54,7 +54,8 @@ object PeerDID {
 
   def makePeerDid(
       jwkForKeyAgreement: OctetKeyPair = makeNewJwkKeyX25519,
-      jwkForKeyAuthentication: OctetKeyPair = makeNewJwkKeyEd25519
+      jwkForKeyAuthentication: OctetKeyPair = makeNewJwkKeyEd25519,
+      service: Option[String] = None, // TODO
   ): PeerDID = {
 
     val keyAgreement = VerificationMaterialPeerDID[VerificationMethodTypeAgreement](
