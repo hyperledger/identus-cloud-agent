@@ -1,8 +1,11 @@
 package io.iohk.atala.pollux.vc.jwt
 
 import cats.data.{Validated, ValidatedNel}
-import io.circe.Json
+import cats.implicits._
+import cats.Applicative
 import pdi.jwt.Jwt
+import io.circe.generic.auto._, io.circe.syntax._
+import io.circe.{Decoder, Encoder, HCursor, Json}
 
 import java.security.{KeyPairGenerator, PublicKey}
 import java.time.{Instant, ZonedDateTime}
@@ -28,176 +31,234 @@ case class CredentialStatus(
     id: String,
     `type`: String
 )
-
 case class RefreshService(
     id: String,
     `type`: String
 )
-
 case class CredentialSchema(
     id: String,
     `type`: String
 )
+sealed trait CredentialPayload(
+    maybeSub: Option[String],
+    `@context`: Vector[String],
+    `type`: Vector[String],
+    maybeJti: Option[String],
+    maybeNbf: Option[Instant],
+    aud: Vector[String],
+    maybeExp: Option[Instant],
+    maybeIss: Option[String],
+    maybeConnectionStatus: Option[CredentialStatus],
+    maybeRefreshService: Option[RefreshService],
+    maybeEvidence: Option[Json],
+    maybeTermsOfUse: Option[Json],
+    maybeCredentialSchema: Option[CredentialSchema],
+    credentialSubject: Json
+) {
+  def toJwtCredentialPayload: JwtCredentialPayload =
+    JwtCredentialPayload(
+      maybeIss = maybeIss,
+      maybeSub = maybeSub,
+      vc = JwtVc(
+        `@context` = `@context`,
+        `type` = `type`,
+        maybeCredentialSchema = maybeCredentialSchema,
+        credentialSubject = credentialSubject,
+        maybeCredentialStatus = maybeConnectionStatus,
+        maybeRefreshService = maybeRefreshService,
+        maybeEvidence = maybeEvidence,
+        maybeTermsOfUse = maybeTermsOfUse
+      ),
+      maybeNbf = maybeNbf,
+      aud = aud,
+      maybeExp = maybeExp,
+      maybeJti = maybeJti
+    )
 
-trait JsonPayload {
-  def toJson: Json
+  def toW3CCredentialPayload: ValidatedNel[String, W3CCredentialPayload] =
+    (
+      Validated
+        .cond(maybeIss.isDefined, maybeIss.get, "Iss must be defined")
+        .toValidatedNel,
+      Validated
+        .cond(maybeNbf.isDefined, maybeNbf.get, "Nbf must be defined")
+        .toValidatedNel
+    ).mapN((iss, nbf) =>
+      W3CCredentialPayload(
+        `@context` = `@context`.distinct,
+        id = maybeJti,
+        `type` = `type`.distinct,
+        issuer = IssuerDID(id = iss),
+        issuanceDate = nbf,
+        maybeExpirationDate = maybeExp,
+        maybeCredentialSchema = maybeCredentialSchema,
+        credentialSubject = credentialSubject,
+        maybeCredentialStatus = maybeConnectionStatus,
+        maybeRefreshService = maybeRefreshService,
+        maybeEvidence = maybeEvidence,
+        maybeTermsOfUse = maybeTermsOfUse
+      )
+    )
 }
 
 case class JwtVc(
     `@context`: Vector[String],
     `type`: Vector[String],
-    credentialSchema: Option[CredentialSchema],
+    maybeCredentialSchema: Option[CredentialSchema],
     credentialSubject: Json,
-    credentialStatus: Option[CredentialStatus],
-    refreshService: Option[RefreshService],
-    evidence: Option[Json],
-    termsOfUse: Option[Json]
-) extends JsonPayload {
-  override def toJson: Json = Json.Null // TODO
-}
-
+    maybeCredentialStatus: Option[CredentialStatus],
+    maybeRefreshService: Option[RefreshService],
+    maybeEvidence: Option[Json],
+    maybeTermsOfUse: Option[Json]
+)
 case class JwtCredentialPayload(
-    iss: Option[String],
-    sub: Option[String],
+    maybeIss: Option[String],
+    maybeSub: Option[String],
     vc: JwtVc,
-    nbf: Option[Instant],
+    maybeNbf: Option[Instant],
     aud: Vector[String],
-    exp: Option[Instant],
-    jti: Option[String]
-) extends CredentialPayload,
-      JsonPayload {
-  override def validate: ValidatedNel[String, JwtCredentialPayload] = Validated.Valid(this).toValidatedNel // TODO
+    maybeExp: Option[Instant],
+    maybeJti: Option[String]
+) extends CredentialPayload(
+      maybeSub = maybeSub.orElse(vc.credentialSubject.hcursor.downField("id").as[String].toOption),
+      `@context` = vc.`@context`.distinct,
+      `type` = vc.`type`.distinct,
+      maybeJti = maybeJti,
+      maybeNbf = maybeNbf,
+      aud = aud,
+      maybeExp = maybeExp,
+      maybeIss = maybeIss,
+      maybeConnectionStatus = vc.maybeCredentialStatus,
+      maybeRefreshService = vc.maybeRefreshService,
+      maybeEvidence = vc.maybeEvidence,
+      maybeTermsOfUse = vc.maybeTermsOfUse,
+      maybeCredentialSchema = vc.maybeCredentialSchema,
+      credentialSubject = vc.credentialSubject
+    )
 
-  override def toJson: Json = Json.Null // TODO
-}
-
+object JwtCredentialPayload {}
 case class W3CCredentialPayload(
     `@context`: Vector[String],
     id: Option[String],
     `type`: Vector[String],
     issuer: IssuerDID,
     issuanceDate: Instant,
-    expirationDate: Option[Instant],
-    credentialSchema: Option[CredentialSchema],
+    maybeExpirationDate: Option[Instant],
+    maybeCredentialSchema: Option[CredentialSchema],
     credentialSubject: Json,
-    credentialStatus: Option[CredentialStatus],
-    refreshService: Option[RefreshService],
-    evidence: Option[Json],
-    termsOfUse: Option[Json]
-) extends CredentialPayload,
-      JsonPayload {
-  override def validate: ValidatedNel[String, W3CCredentialPayload] = Validated.Valid(this).toValidatedNel // TODO
-  override def toJson: Json = Json.Null // TODO
-}
+    maybeCredentialStatus: Option[CredentialStatus],
+    maybeRefreshService: Option[RefreshService],
+    maybeEvidence: Option[Json],
+    maybeTermsOfUse: Option[Json]
+) extends CredentialPayload(
+      maybeSub = credentialSubject.hcursor.downField("id").as[String].toOption,
+      `@context` = `@context`.distinct,
+      `type` = `type`.distinct,
+      maybeJti = id,
+      maybeNbf = Some(issuanceDate),
+      aud = Vector.empty,
+      maybeExp = maybeExpirationDate,
+      maybeIss = Some(issuer.id),
+      maybeConnectionStatus = maybeCredentialStatus,
+      maybeRefreshService = maybeRefreshService,
+      maybeEvidence = maybeEvidence,
+      maybeTermsOfUse = maybeTermsOfUse,
+      maybeCredentialSchema = maybeCredentialSchema,
+      credentialSubject = credentialSubject
+    )
 
-sealed trait CredentialPayload extends JsonPayload {
-  def validate: ValidatedNel[String, CredentialPayload]
-}
+object VerifiedCredentialJson {
+  object Encoders {
+    object Implicits {
+      implicit val refreshServiceEncoder: Encoder[RefreshService] =
+        (refreshService: RefreshService) =>
+          Json
+            .obj(
+              ("id", refreshService.id.asJson),
+              ("type", refreshService.`type`.asJson)
+            )
 
-object CredentialPayload {
+      implicit val credentialSchemaEncoder: Encoder[CredentialSchema] =
+        (credentialSchema: CredentialSchema) =>
+          Json
+            .obj(
+              ("id", credentialSchema.id.asJson),
+              ("type", credentialSchema.`type`.asJson)
+            )
 
-  def validate(credentialSubject: Json): Validated[String, Json] =
-    Validated
-      .cond(
-        credentialSubject.isArray,
-        credentialSubject,
-        "CredentialSubject of type array not supported"
-      )
+      implicit val credentialStatusEncoder: Encoder[CredentialStatus] =
+        (credentialStatus: CredentialStatus) =>
+          Json
+            .obj(
+              ("id", credentialStatus.id.asJson),
+              ("type", credentialStatus.`type`.asJson)
+            )
 
-  def toJwtCredentialPayload(credentialPayload: CredentialPayload): ValidatedNel[String, JwtCredentialPayload] =
-    val unvalidatedCredentialSubject = credentialPayload match
-      case payload: JwtCredentialPayload => payload.vc.credentialSubject
-      case payload: W3CCredentialPayload => payload.credentialSubject
+      implicit val w3cCredentialPayloadEncoder: Encoder[W3CCredentialPayload] =
+        (w3cCredentialPayload: W3CCredentialPayload) =>
+          Json
+            .obj(
+              ("@context", w3cCredentialPayload.`@context`.asJson),
+              ("id", w3cCredentialPayload.id.asJson),
+              ("type", w3cCredentialPayload.`type`.asJson),
+              ("issuer", Json.fromString(w3cCredentialPayload.issuer.id)),
+              ("issuanceDate", w3cCredentialPayload.issuanceDate.asJson),
+              ("expirationDate", w3cCredentialPayload.maybeExpirationDate.asJson),
+              ("credentialSchema", w3cCredentialPayload.maybeCredentialSchema.asJson),
+              ("credentialSubject", w3cCredentialPayload.credentialSubject),
+              ("credentialStatus", w3cCredentialPayload.maybeCredentialStatus.asJson),
+              ("refreshService", w3cCredentialPayload.maybeRefreshService.asJson),
+              ("evidence", w3cCredentialPayload.maybeEvidence.asJson),
+              ("termsOfUse", w3cCredentialPayload.maybeTermsOfUse.asJson)
+            )
+            .deepDropNullValues
+            .dropEmptyValues
 
-    validate(unvalidatedCredentialSubject).toValidatedNel
-      .map(validatedCredentialSubject => {
-        val maybeExtractedSub = credentialPayload match
-          case payload: JwtCredentialPayload => payload.sub
-          case _: W3CCredentialPayload       => Option.empty
-        val maybeSub = maybeExtractedSub.orElse(validatedCredentialSubject.hcursor.downField("id").as[String].toOption)
+      implicit val jwtVcEncoder: Encoder[JwtVc] =
+        (jwtVc: JwtVc) =>
+          Json
+            .obj(
+              ("@context", jwtVc.`@context`.asJson),
+              ("type", jwtVc.`type`.asJson),
+              ("credentialSchema", jwtVc.maybeCredentialSchema.asJson),
+              ("credentialSubject", jwtVc.credentialSubject),
+              ("credentialStatus", jwtVc.maybeCredentialStatus.asJson),
+              ("refreshService", jwtVc.maybeRefreshService.asJson),
+              ("evidence", jwtVc.maybeEvidence.asJson),
+              ("termsOfUse", jwtVc.maybeTermsOfUse.asJson)
+            )
+            .deepDropNullValues
+            .dropEmptyValues
 
-        val `extracted@context` = credentialPayload match
-          case payload: JwtCredentialPayload => payload.vc.`@context`
-          case payload: W3CCredentialPayload => payload.`@context`
-        val `@context` = `extracted@context`.toSet.toVector
+      implicit val jwtCredentialPayloadEncoder: Encoder[JwtCredentialPayload] =
+        (jwtCredentialPayload: JwtCredentialPayload) =>
+          Json
+            .obj(
+              ("iss", jwtCredentialPayload.maybeIss.asJson),
+              ("sub", jwtCredentialPayload.maybeSub.asJson),
+              ("vc", jwtCredentialPayload.vc.asJson),
+              ("nbf", jwtCredentialPayload.maybeNbf.asJson),
+              ("aud", jwtCredentialPayload.aud.asJson),
+              ("exp", jwtCredentialPayload.maybeExp.asJson),
+              ("jti", jwtCredentialPayload.maybeJti.asJson)
+            )
+            .deepDropNullValues
+            .dropEmptyValues
+    }
+  }
 
-        val extractedType = credentialPayload match
-          case payload: JwtCredentialPayload => payload.vc.`type`
-          case payload: W3CCredentialPayload => payload.`type`
-        val `type` = extractedType.toSet.toVector
-
-        val extractedMaybeJti = credentialPayload match
-          case payload: JwtCredentialPayload => payload.jti
-          case payload: W3CCredentialPayload => payload.id
-        val maybeJti = extractedMaybeJti
-
-        val extractedMaybeNbf = credentialPayload match
-          case payload: JwtCredentialPayload => payload.nbf
-          case payload: W3CCredentialPayload => Some(payload.issuanceDate)
-        val maybeNbf = extractedMaybeNbf
-
-        val extractedMaybeExp = credentialPayload match
-          case payload: JwtCredentialPayload => payload.exp
-          case payload: W3CCredentialPayload => payload.expirationDate
-        val maybeExp = extractedMaybeExp
-
-        val extractedMaybeIss = credentialPayload match
-          case payload: JwtCredentialPayload => payload.iss
-          case payload: W3CCredentialPayload => Some(payload.issuer.id)
-        val maybeIss = extractedMaybeIss
-
-        val extractedMaybeConnectionStatus = credentialPayload match
-          case payload: JwtCredentialPayload => payload.vc.credentialStatus
-          case payload: W3CCredentialPayload => payload.credentialStatus
-        val maybeConnectionStatus = extractedMaybeConnectionStatus
-
-        val extractedMaybeRefreshService = credentialPayload match
-          case payload: JwtCredentialPayload => payload.vc.refreshService
-          case payload: W3CCredentialPayload => payload.refreshService
-        val maybeRefreshService = extractedMaybeRefreshService
-
-        val extractedMaybeEvidence = credentialPayload match
-          case payload: JwtCredentialPayload => payload.vc.evidence
-          case payload: W3CCredentialPayload => payload.evidence
-        val maybeEvidence = extractedMaybeEvidence
-
-        val extractedMaybeTermsOfUse = credentialPayload match
-          case payload: JwtCredentialPayload => payload.vc.termsOfUse
-          case payload: W3CCredentialPayload => payload.termsOfUse
-        val maybeTermsOfUse = extractedMaybeTermsOfUse
-
-        val extractedMaybeCredentialSchema = credentialPayload match
-          case payload: JwtCredentialPayload => payload.vc.credentialSchema
-          case payload: W3CCredentialPayload => payload.credentialSchema
-        val maybeCredentialSchema = extractedMaybeCredentialSchema
-
-        JwtCredentialPayload(
-          iss = maybeIss,
-          sub = maybeSub,
-          vc = JwtVc(
-            `@context` = `@context`,
-            `type` = `type`,
-            credentialSchema = maybeCredentialSchema,
-            credentialSubject = validatedCredentialSubject,
-            credentialStatus = maybeConnectionStatus,
-            refreshService = maybeRefreshService,
-            evidence = maybeEvidence,
-            termsOfUse = maybeTermsOfUse
-          ),
-          nbf = maybeNbf,
-          aud = Vector.empty,
-          exp = maybeExp,
-          jti = maybeJti
-        )
-      })
 }
 
 object VerifiableCredential {
-  def createJwt(payload: CredentialPayload, issuer: Issuer): JWT = {
-    val validatedJwtCredentialPayload = CredentialPayload.toJwtCredentialPayload(payload)
-    val validationResult = validatedJwtCredentialPayload
-      .andThen(_.validate)
+  import VerifiedCredentialJson.Encoders.Implicits._
+  def createJwt(payload: JwtCredentialPayload, issuer: Issuer): JWT = {
+    val jwtCredentialPayload = payload
+    /* val validationResult = jwtCredentialPayload
       .map(payload => issuer.signer.encode(payload.toJson))
+     */
     JWT("")
   }
+
+  def createJsonW3CCredential(payload: W3CCredentialPayload): Json =
+    payload.asJson
 }
