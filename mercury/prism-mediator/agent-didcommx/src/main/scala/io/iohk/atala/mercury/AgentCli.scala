@@ -18,11 +18,11 @@ object AgentCli extends ZIOAppDefault {
 
   def questionYN(q: String): ZIO[Any, IOException, Boolean] = {
     for {
-      _ <- Console.printLine(q + " [y(defualt)/n] ")
+      _ <- Console.printLine(q + " [y(default)/n] ")
       ret <- Console.readLine.flatMap {
         case "y" | "Y" => ZIO.succeed(true)
         case "n" | "N" => ZIO.succeed(false)
-        case ""        => ZIO.succeed(true) // defualt
+        case ""        => ZIO.succeed(true) // default
         case _         => Console.print("[RETRY] ") *> questionYN(q)
       }
     } yield (ret)
@@ -67,7 +67,7 @@ object AgentCli extends ZIOAppDefault {
     )
 
     for {
-      _ <- Console.printLine("Inserte the Mediator URL (defualt is 'http://localhost:8000')")
+      _ <- Console.printLine("Enter the Mediator URL (defualt is 'http://localhost:8000')")
       url <- Console.readLine.flatMap {
         case ""  => ZIO.succeed("http://localhost:8000") // defualt
         case str => ZIO.succeed(str)
@@ -81,10 +81,22 @@ object AgentCli extends ZIOAppDefault {
   def run = for {
     _ <- startLogo
     makeNewDID <- questionYN("Generate new 'peer' DID?")
+    haveServiceEndpoint <- questionYN("Do you have a serviceEndpoint url? e.g http://localhost:8080/myendpoint")
+    _ <- ZIO.when(haveServiceEndpoint)(Console.printLine("Enter the serviceEndpoint URL"))
+    serviceEndpoint <- ZIO.when(haveServiceEndpoint) {
+      Console.readLine.flatMap {
+        case ""  => ZIO.succeed(None) // defualt
+        case str => ZIO.succeed(Some(str))
+      }
+    }
+
     agentDID <-
       // if (makeNewDID)  //FIXME
       for {
-        peer <- ZIO.succeed(PeerDID.makePeerDid())
+        _ <- Console.printLine(s"New DID: ${makeNewDID}")
+        _ <- Console.printLine(s"New DID: ${haveServiceEndpoint}")
+        _ <- Console.printLine(s"New DID: ${serviceEndpoint.flatten}")
+        peer <- ZIO.succeed(PeerDID.makePeerDid(serviceEndpoint = serviceEndpoint.flatten))
         // jwkForKeyAgreement <- ZIO.succeed(PeerDID.makeNewJwkKeyX25519)
         // jwkForKeyAuthentication <- ZIO.succeed(PeerDID.makeNewJwkKeyEd25519)
         // (jwkForKeyAgreement, jwkForKeyAuthentication)
