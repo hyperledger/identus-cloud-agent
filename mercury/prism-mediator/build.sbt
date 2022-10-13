@@ -135,6 +135,14 @@ lazy val protocolRouting = project
   .settings(libraryDependencies += D.zio.value)
   .dependsOn(models)
 
+lazy val protocolIssueCredential = project
+  .in(file("protocol-issue-credential"))
+  .settings(name := "mercury-protocol-issue-credential", version := VERSION)
+  .settings(libraryDependencies += D.zio.value)
+  .settings(libraryDependencies ++= Seq(D.circeCore.value, D.circeGeneric.value, D.circeParser.value))
+  .settings(libraryDependencies += D.munitZio.value)
+  .dependsOn(models)
+
 // ################
 // ### Resolver ###
 // ################
@@ -241,4 +249,5 @@ lazy val mediator = project
     protocolMercuryMailbox,
     protocolReportProblem,
     protocolRouting,
+    protocolIssueCredential
   )

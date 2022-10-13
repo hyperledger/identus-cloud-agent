@@ -1,49 +1,74 @@
-# Invitation Protocol
+# Issue Credential Protocol
 
-This Protocol is parte of the **DIDComm Messaging Specification** but also **Aries RFC 0434: Out-of-Band Protocol 1.1**
+This Protocol is part of the **DIDComm Messaging Specification** but also **0453-issue-credential-v2**
 
-Its a out-of-band style protocol.
+Its a Issue Credential protocol based on DIDCOMMv2 message format.
 
-The out-of-band protocol is used when you wish to engage with another agent and you don't have a DIDComm connection to use for the interaction.
+A standard protocol for issuing credentials. This is the basis of interoperability between Issuers and Holders.
 
-See [https://identity.foundation/didcomm-messaging/spec/#invitation]
-See [https://github.com/hyperledger/aries-rfcs/blob/main/features/0434-outofband/README.md]
+See [https://identity.foundation/didcomm-messaging/spec]
+See [https://github.com/hyperledger/aries-rfcs/tree/main/features/0453-issue-credential-v2]
 
 ## PIURI
 
-Version 1.0: `https://didcomm.org/out-of-band/1.0/invitation`
+Version 1.0: `https://didcomm.org/issue-credential/1.0/propose-credential`
 
-Version 2.0: `https://didcomm.org/out-of-band/2.0/invitation`
 
 ### Roles
 
-- Sender
-  - Will create the message `https://didcomm.org/out-of-band/2.0/invitation`
-- Receiver
-  - Will accept the invitation
+- Issuer
+  - Begin with a offer credential
+- Holder
+  - Begin with a proposal credential
+  - Begin with a request credential
 
-### Notes
+  
 
-- Invitation has expiry date
 
-### Sender create invitation message  (Flow Diagram)
+### Issuer received credential proposal (Flow Diagram)
+```mermaid
+stateDiagram-v2
+  [*] --> Initial
+  Initial --> proposal_received:credential proposal received as DIDCOMMV2 message
+  proposal_received --> offer_sent:credential-offer-sent as DIDCOMMV2 message
+  proposal_received --> error:send problem report response
+  offer_sent --> [*]:follow credential sent offer flow
+```
+### Issuer Send offer credential  (Flow Diagram)
 
 ```mermaid
 stateDiagram-v2
   [*] --> Initial
-  Initial --> await_response:Send out-of-band invitation message
-  await_response --> done:receive DIDCOMM response message(single use)
-  await_response --> await_response:recieve DIDCOMM response message(multi use message)
+  Initial --> await_response:credential-offer-sent DIDCOMMV2 message
+  await_response --> request_received:received DIDCOMMV2 credential request
+  request_received --> credential_issued:send DIDCOMMV2 issue credential message
+  credential_issued --> done
   await_response --> error:recieve problem report response
   done --> [*]
 ```
 
-### Receiver accepting invitation (Flow Diagram)
+
+### Holder proposal credential (Flow Diagram)
 
 ```mermaid
 stateDiagram-v2
   [*] --> Initial
-  Initial --> prepare_response:recieve out-of-band invitation message
-  prepare_response --> done:send DIDCOMM response message
+  Initial --> await_response:credential-proposal-sent DIDCOMMV2 message
+  await_response --> offer_received:recieved credential offer DIDCOMMV2 message
+  offer_received --> [*]:follow credential request flow for Holder
+  await_response --> error:recieve problem report response
+```
+
+### Holder request credential (Flow Diagram)
+
+```mermaid
+stateDiagram-v2
+  [*] --> Initial
+  Initial --> offer_received:recieved credential offer DIDCOMMV2 message
+  offer_received --> request_sent: send DIDCOMMV2 credential request
+  request_sent --> credential_received:received DIDCOMMV2 issue credentia message
+  credential_received --> done
+  offer_received --> error:send problem report response
   done --> [*]
 ```
+
