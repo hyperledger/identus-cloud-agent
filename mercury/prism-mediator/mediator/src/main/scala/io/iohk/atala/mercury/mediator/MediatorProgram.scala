@@ -128,8 +128,8 @@ object MediatorProgram {
           MediateGrant(id = java.util.UUID.randomUUID().toString, `type` = MediateGrant.`type`, body = body)
         Message(
           piuri = mediateGrant.`type`,
-          from = from,
-          to = to,
+          from = Some(from),
+          to = Some(to),
           body = Map("routing_did" -> from.value),
         )
       case _ =>
@@ -137,8 +137,8 @@ object MediatorProgram {
           MediateDeny(id = java.util.UUID.randomUUID().toString, `type` = MediateDeny.`type`)
         Message(
           piuri = mediateDeny.`type`,
-          from = from,
-          to = to
+          from = Some(from),
+          to = Some(to)
         )
   } yield (message)
 

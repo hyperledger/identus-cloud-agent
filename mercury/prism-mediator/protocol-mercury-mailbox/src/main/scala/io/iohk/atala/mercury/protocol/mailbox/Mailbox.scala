@@ -15,8 +15,8 @@ object Mailbox {
 
     def asMessage = {
       Message(
-        from = from,
-        to = to,
+        from = Some(from),
+        to = Some(to),
         body = Map.empty[String, String],
         id = id,
         piuri = `type`

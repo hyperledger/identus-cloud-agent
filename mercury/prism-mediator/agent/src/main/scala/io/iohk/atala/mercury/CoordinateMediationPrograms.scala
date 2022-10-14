@@ -16,17 +16,17 @@ import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
 
 object CoordinateMediationPrograms {
 
-  def replyToInvitation(from: DidId, invitation: Invitation) = {
+  def replyToInvitation(replier: DidId, invitation: Invitation) = {
     val requestMediation = MediateRequest()
     Message(
-      from = from,
-      to = DidId(invitation.from),
+      from = Some(replier),
+      to = Some(invitation.from),
       id = requestMediation.id,
       piuri = requestMediation.`type`
     )
   }
 
-  def toPrettyJson(parseToJson: String) = {
+  private def toPrettyJson(parseToJson: String) = {
     parse(parseToJson).getOrElse(???).spaces2
   }
 
@@ -38,7 +38,7 @@ object CoordinateMediationPrograms {
       agentService <- ZIO.service[DidComm]
 
       planMessage = link.map(to => replyToInvitation(agentService.myDid, to)).get
-      invitationFrom = DidId(link.get.from)
+      invitationFrom = link.get.from
       _ <- ZIO.log(s"Invitation from $invitationFrom")
 
       encryptedMessage <- agentService.packEncrypted(planMessage, to = invitationFrom)

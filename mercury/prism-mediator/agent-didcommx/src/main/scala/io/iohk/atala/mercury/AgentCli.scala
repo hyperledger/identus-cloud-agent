@@ -31,11 +31,11 @@ object AgentCli extends ZIOAppDefault {
     } yield (ret)
   }
 
-  def options(p: Map[String, ZIO[Any, Throwable, Unit]]): ZIO[Any, Throwable, Unit] = {
+  def options(p: Seq[(String, ZIO[Any, Throwable, Unit])]): ZIO[Any, Throwable, Unit] = {
     for {
       _ <- Console.printLine("--- Choose an option: ---")
       _ <- ZIO.foreach(p.zipWithIndex)(e => Console.printLine(e._2 + " - " + e._1._1))
-      _ <- Console.readLine.flatMap { e => p.values.toSeq(e.toInt) }
+      _ <- Console.readLine.flatMap { e => p.map(_._2).toSeq(e.toInt) }
     } yield ()
   }
 
@@ -71,6 +71,16 @@ object AgentCli extends ZIOAppDefault {
     } yield ()
   }
 
+  def generateLoginInvitation = {
+    // InvitationPrograms.createInvitationV2().map(oob => Response.text(serverUrl + oob))
+    for {
+      didCommService <- ZIO.service[DidComm]
+      serverUrl = s"http://locahost:${8888}?_oob=${didCommService.myDid}"
+      _ <- Console.printLine(QRcode.getQr(serverUrl).toString)
+      _ <- Console.printLine(serverUrl)
+    } yield ()
+  }
+
   def app(port: Int): HttpApp[DidComm, Throwable] = {
     val header = "content-type" -> MediaTypes.contentTypeEncrypted
     Http.collectZIO[Request] {
@@ -80,19 +90,7 @@ object AgentCli extends ZIOAppDefault {
           // .flatMap(data => MediatorProgram.program(data))
           .map(str => Response.text(str))
       case Method.GET -> !! / "test" => ZIO.succeed(Response.text("Test ok!"))
-      case req @ Method.GET -> !! / "oob_url" =>
-        val serverUrl = s"http://locahost:${port}?_oob="
-        InvitationPrograms.createInvitationV2().map(oob => Response.text(serverUrl + oob))
-      case req @ Method.GET -> !! / "login" =>
-        val serverUrl = s"http://locahost:${port}?_oob=" // TODO WIP
-        // InvitationPrograms.createInvitationV2().map(oob => Response.text(serverUrl + oob))
-        ZIO.succeed(Response.text(QRcode.getQr(serverUrl).toString))
-      case req =>
-        ZIO.succeed(
-          Response.text(
-            s"The request must be a POST to root with the Header $header"
-          )
-        )
+      case req => ZIO.succeed(Response.text(s"The request must be a POST to root with the Header $header"))
     }
   }
 
@@ -110,39 +108,38 @@ object AgentCli extends ZIOAppDefault {
 
   def run = for {
     _ <- startLogo
-    makeNewDID <- questionYN("Generate new 'peer' DID?")
-    haveServiceEndpoint <- questionYN("Do you have a serviceEndpoint url? e.g http://localhost:8080/myendpoint")
-    _ <- ZIO.when(haveServiceEndpoint)(Console.printLine("Enter the serviceEndpoint URL"))
-    serviceEndpoint <- ZIO.when(haveServiceEndpoint) {
-      Console.readLine.flatMap {
-        case ""  => ZIO.succeed(None) // defualt
-        case str => ZIO.succeed(Some(str))
-      }
+    // makeNewDID <- questionYN("Generate new 'peer' DID?")
+    _ <- Console.printLine("Generating a new 'peer' DID!")
+    // haveServiceEndpoint <- questionYN("Do you have a serviceEndpoint url? e.g http://localhost:8080/myendpoint")
+    // ZIO.when(haveServiceEndpoint)( // )
+    _ <- Console.printLine("Enter the serviceEndpoint URL (defualt None)")
+    serviceEndpoint <- Console.readLine.flatMap {
+      case ""  => ZIO.succeed(None) // defualt
+      case str => ZIO.succeed(Some(str))
     }
 
-    agentDID <-
-      // if (makeNewDID)//TODO
-      for {
-
-        peer <- ZIO.succeed(PeerDID.makePeerDid(serviceEndpoint = serviceEndpoint.flatten))
-        // jwkForKeyAgreement <- ZIO.succeed(PeerDID.makeNewJwkKeyX25519)
-        // jwkForKeyAuthentication <- ZIO.succeed(PeerDID.makeNewJwkKeyEd25519)
-        // (jwkForKeyAgreement, jwkForKeyAuthentication)
-        _ <- Console.printLine(s"New DID: ${peer.did}") *>
-          Console.printLine(s"JWK for KeyAgreement: ${peer.jwkForKeyAgreement.toJSONString}") *>
-          Console.printLine(s"JWK for KeyAuthentication: ${peer.jwkForKeyAuthentication.toJSONString}")
-      } yield (peer)
+    agentDID <- for {
+      peer <- ZIO.succeed(PeerDID.makePeerDid(serviceEndpoint = serviceEndpoint))
+      // jwkForKeyAgreement <- ZIO.succeed(PeerDID.makeNewJwkKeyX25519)
+      // jwkForKeyAuthentication <- ZIO.succeed(PeerDID.makeNewJwkKeyEd25519)
+      // (jwkForKeyAgreement, jwkForKeyAuthentication)
+      _ <- Console.printLine(s"New DID: ${peer.did}") *>
+        Console.printLine(s"JWK for KeyAgreement: ${peer.jwkForKeyAgreement.toJSONString}") *>
+        Console.printLine(s"JWK for KeyAuthentication: ${peer.jwkForKeyAuthentication.toJSONString}")
+    } yield (peer)
 
     didCommLayer = agentLayer(agentDID)
 
     _ <- options(
-      Map(
+      Seq(
         "Show DID" -> Console.printLine(agentDID),
         "Get DID Document" ->
           Console.printLine("DID Document:") *>
           Console.printLine(agentDID.getDIDDocument),
         "Ask for Mediation Coordinate" -> askForMediation.provide(didCommLayer),
         "Start a endpoint" -> startEndpoint.provide(didCommLayer),
+        "Generate login invitation" -> generateLoginInvitation.provide(didCommLayer),
+        "Login with DID" -> Console.print("TODO"),
       )
     ).repeatN(10)
 

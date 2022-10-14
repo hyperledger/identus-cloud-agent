@@ -34,7 +34,7 @@ object InvitationPrograms {
       invitation = Invitation(
         "https://didcomm.org/out-of-band/2.0/invitation",
         getNewMsgId,
-        merdiator.myDid.value,
+        merdiator.myDid,
         Body("request-mediate", "RequestMediate", Seq("didcomm/v2", "didcomm/aip2;env=rfc587")),
         None
       )
