@@ -4,9 +4,7 @@ import io.circe.syntax._
 import io.circe.generic.semiauto._
 import io.circe.{Encoder, Json}
 import io.iohk.atala.mercury.model.PIURI
-
-import scala.annotation.targetName
-import io.iohk.atala.mercury.protocol.invitation.AttachmentDescriptor
+import io.iohk.atala.mercury.model.AttachmentDescriptor
 
 /** Out-Of-Band invitation
   * @see

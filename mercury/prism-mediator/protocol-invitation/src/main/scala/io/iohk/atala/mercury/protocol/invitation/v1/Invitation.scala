@@ -6,7 +6,7 @@ import io.circe.{Encoder, Json}
 import io.iohk.atala.mercury.model.PIURI
 
 import scala.annotation.targetName
-import io.iohk.atala.mercury.protocol.invitation.AttachmentDescriptor
+import io.iohk.atala.mercury.model.AttachmentDescriptor
 import io.iohk.atala.mercury.protocol.invitation.ServiceType
 
 /** Out-Of-Band invitation Example
