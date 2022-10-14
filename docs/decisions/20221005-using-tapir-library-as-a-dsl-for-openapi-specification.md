@@ -1,13 +1,11 @@
 # Using tapir library as a DSL for OpenAPI specification
 
-- Status: [ proposed ] <!-- optional -->
-- Deciders: [ Yurii Shynbuiev, David Poltorak, Benjamin Voiturier, Ilya Peresadin ] <!-- optional -->
-- Date: [2022-10-05 when the decision was last updated] <!-- optional. To customize the ordering without relying on Git creation dates and filenames -->
+- Status: [ accepted ] <!-- optional -->
+- Deciders: [ Yurii Shynbuiev, David Poltorak, Benjamin Voiturier, Ilya Peresadin, Bart Suichies ] <!-- optional -->
+- Date: [2022-10-05] <!-- optional. To customize the ordering without relying on Git creation dates and filenames -->
 - Tags: [ OpenAPI, DLS, Tapir, code generation, REST API] <!-- optional -->
 
 Related ADR/AIP: [Introduce REST HTTP for existing Node services](https://input-output.atlassian.net/wiki/spaces/AV2/pages/3454500948/AIP+-+001)
-
-Technical Story: [description | ticket/issue URL] <!-- optional -->
 
 ## Context and Problem Statement
 Prism Platform v2 will contain the REST API. The decision was made by technical director (@Bart) and technical architects (@Ben)
