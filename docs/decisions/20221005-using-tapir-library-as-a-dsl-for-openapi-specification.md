@@ -18,7 +18,7 @@ The following tool was selected for code generation: [OpenAPI Tools](https://git
 
 [Tapir](https://tapir.softwaremill.com/en/latest/index.html) is proposed to enforce a type safety and introduce DSL in Scala for OAS files.
 
-Technology stack that is going to be used in Prism v2 backend: Scala3 + ZIO + ZIO ecosystem
+Technology stack that is going to be used in Prism v2 backend: Scala 3 + ZIO ecosystem
 
 Akka framework after version 2.6.x cannot be used because [Lightbend changed the license type to BSL 1.1](https://www.lightbend.com/blog/why-we-are-changing-the-license-for-akka). 
 
