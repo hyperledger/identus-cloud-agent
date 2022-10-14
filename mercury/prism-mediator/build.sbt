@@ -123,6 +123,15 @@ lazy val protocolMercuryMailbox = project
   .settings(libraryDependencies += D.zio.value)
   .dependsOn(models, protocolInvitation, protocolRouting)
 
+lazy val protocolLogin = project
+  .in(file("protocol-outofband-login"))
+  .settings(name := "mercury-protocol-outofband-login", version := VERSION)
+  .settings(libraryDependencies += D.zio.value)
+  .settings(libraryDependencies += D.zio.value)
+  .settings(libraryDependencies ++= Seq(D.circeCore.value, D.circeGeneric.value, D.circeParser.value))
+  .settings(libraryDependencies += D.munitZio.value)
+  .dependsOn(models)
+
 lazy val protocolReportProblem = project
   .in(file("protocol-report-problem"))
   .settings(name := "protocol-report_problem", version := VERSION)
@@ -171,7 +180,8 @@ lazy val agent = project // maybe merge into models
     protocolCoordinateMediation,
     protocolInvitation,
     protocolRouting,
-    protocolMercuryMailbox
+    protocolMercuryMailbox,
+    protocolLogin,
   )
 
 /** Demos agents and services implementation with didcommx */
