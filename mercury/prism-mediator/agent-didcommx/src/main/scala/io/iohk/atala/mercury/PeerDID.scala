@@ -7,8 +7,8 @@ import org.didcommx.peerdid.*
 
 import com.nimbusds.jose.jwk.*
 import com.nimbusds.jose.jwk.gen.*
-import io.circe.Encoder
-import io.circe.generic.semiauto.deriveEncoder
+import io.circe._
+import io.circe.generic.semiauto._
 import cats.implicits._
 import io.circe.syntax._
 import io.circe.generic.semiauto._
@@ -52,8 +52,28 @@ final case class PeerDID(
 
 object PeerDID {
 
-  case class Service(`type`: String, serviceEndpoint: String, routingKeys: Seq[String], accept: Seq[String])
-  given Encoder[Service] = deriveEncoder[Service]
+  /** PeerDidServiceEndpoint
+    *
+    * @param r
+    *   routingKeys are OPTIONAL. An ordered array of strings referencing keys to be used when preparing the message for
+    *   transmission as specified in Sender Process to Enable Forwarding, above.
+    */
+  case class Service(
+      t: String = "dm",
+      s: String,
+      r: Seq[String] = Seq.empty,
+      a: Seq[String] = Seq("didcomm/v2")
+  ) {
+    def `type` = t
+    def serviceEndpoint = s
+    def routingKeys = r
+    def accept = a
+  }
+  object Service {
+    implicit val encoder: Encoder[Service] = deriveEncoder[Service]
+    implicit val decoder: Decoder[Service] = deriveDecoder[Service]
+    def apply(endpoint: String) = new Service(s = endpoint)
+  }
 
   def makeNewJwkKeyX25519: OctetKeyPair = new OctetKeyPairGenerator(Curve.X25519).generate()
 
@@ -76,22 +96,15 @@ object PeerDID {
       jwkForKeyAuthentication.toPublicJWK,
       VerificationMethodTypeAuthentication.JSON_WEB_KEY_2020.INSTANCE
     )
-    def service(serviceEndpoint: String) =
-      Service("DIDCommMessaging", serviceEndpoint, Seq.empty[String], Seq("didcomm/v2", "didcomm/aip2;env=rfc587"))
 
-    val did = serviceEndpoint match
-      case Some(endpoint) =>
-        org.didcommx.peerdid.PeerDIDCreator.createPeerDIDNumalgo2(
-          List(keyAgreement).asJava,
-          List(keyAuthentication).asJava,
-          Seq(service(endpoint)).asJson.noSpaces // service
-        )
-      case _ =>
-        org.didcommx.peerdid.PeerDIDCreator.createPeerDIDNumalgo2(
-          List(keyAgreement).asJava,
-          List(keyAuthentication).asJava,
-          null, // service
-        )
+    val did = org.didcommx.peerdid.PeerDIDCreator.createPeerDIDNumalgo2(
+      List(keyAgreement).asJava,
+      List(keyAuthentication).asJava,
+      serviceEndpoint match {
+        case Some(endpoint) => Service(endpoint).asJson.noSpaces
+        case None           => null
+      }
+    )
 
     PeerDID(
       DidId(did),
