@@ -9,5 +9,5 @@ trait W3CPresentation(
 
 trait VerifiablePresentation
 trait W3CVerifiablePresentation extends W3CPresentation, Verifiable
-trait JWTVerifiablePresentation(jwt: JWT) extends VerifiablePresentation
+trait JWTVerifiablePresentation(jwt: EncodedJWT) extends VerifiablePresentation
 trait VerifiedPresentation extends JWTVerified, W3CVerifiablePresentation

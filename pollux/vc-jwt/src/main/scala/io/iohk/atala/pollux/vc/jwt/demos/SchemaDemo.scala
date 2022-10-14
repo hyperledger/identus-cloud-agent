@@ -1,4 +1,4 @@
-package io.iohk.atala.pollux.vc.jwt
+package io.iohk.atala.pollux.vc.jwt.demos
 
 import cats.implicits.*
 import io.circe.*
