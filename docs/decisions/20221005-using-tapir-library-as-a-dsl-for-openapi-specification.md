@@ -78,7 +78,7 @@ All endpoint definition are written in Tapir DSL.
 
 OpenAPI specification generated based on endpoint definition and is published as an artefact. (must be a part of CI)
 
-Server side is interpreted using ZIO-HTTP interpreter to be aligned with the give technology stack.
+The server side is interpreted using a ZIO-HTTP interpreter to be aligned with the given technology stack.
 
 Client side stubs are generated using OpenAPI tools and OpenAPI specification file. (must be a part of CI)
 
