@@ -34,7 +34,9 @@ object CoordinateMediationPrograms {
 
     for {
       _ <- ZIO.log("#### Send Mediation request  ####")
-      link <- InvitationPrograms.getInvitationProgram(mediatorURL + "/oob_url")
+      link <- InvitationPrograms
+        .getInvitationProgram(mediatorURL + "/oob_url")
+        .map(_.toOption) // FIXME
       agentService <- ZIO.service[DidComm]
 
       planMessage = link.map(to => replyToInvitation(agentService.myDid, to)).get
