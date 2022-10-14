@@ -8,8 +8,7 @@
 Related ADR/AIP: [Introduce REST HTTP for existing Node services](https://input-output.atlassian.net/wiki/spaces/AV2/pages/3454500948/AIP+-+001)
 
 ## Context and Problem Statement
-Prism Platform v2 will contain the REST API. The decision was made by technical director (@Bart) and technical architects (@Ben)
-to follow "OpenAPI specification first" approach and generate stubs, server side and client side code based on OAS.
+Prism Platform v2 will contain the REST API. The decision was made by team consensus during the first AOH meeting to follow "OpenAPI specification first" approach and generate stubs, server side and client side code based on OAS.
 Following this strategy we currently have 4-5 OAS files (Castor, Pollux, Mercury, Configuration).
 
 The following tool was selected for code generation: [OpenAPI Tools](https://github.com/OpenAPITools/openapi-generator)
