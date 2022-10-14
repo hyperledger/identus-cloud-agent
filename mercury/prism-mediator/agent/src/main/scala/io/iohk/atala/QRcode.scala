@@ -37,5 +37,4 @@ object QRcode {
 @main def QRcodeMain() = {
   val text = "https://localhost:8001/?_oob=asfyukfuhgkflajfl"
   System.out.println(QRcode.getQr(text))
-
 }
