@@ -20,13 +20,14 @@ val commonSettings = Seq(
 lazy val root = project
   .in(file("."))
   .settings(commonSettings)
-  .aggregate(keystore, server)
+  .aggregate(custodian, server)
 
-lazy val keystore = project
-  .in(file("keystore"))
+lazy val custodian = project
+  .in(file("custodian"))
   .settings(commonSettings)
   .settings(
-    name := "prism-agent-keystore"
+    name := "prism-agent-custodian",
+    libraryDependencies ++= custodianDependencies
   )
 
 lazy val server = project
@@ -50,4 +51,4 @@ lazy val server = project
     dockerBaseImage := "openjdk:11"
   )
   .enablePlugins(OpenApiGeneratorPlugin, JavaAppPackaging, DockerPlugin)
-  .dependsOn(keystore)
+  .dependsOn(custodian)
