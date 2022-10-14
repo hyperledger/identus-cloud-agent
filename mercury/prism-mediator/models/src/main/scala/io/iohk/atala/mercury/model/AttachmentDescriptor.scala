@@ -1,10 +1,20 @@
-package io.iohk.atala.mercury.protocol.invitation
+package io.iohk.atala.mercury.model
+
 import java.util.{Base64 => JBase64}
 import io.circe.Encoder
 import io.circe.generic.semiauto._
 import io.circe.syntax._
 
+/** @see
+  *   data in attachments https://identity.foundation/didcomm-messaging/spec/#attachments
+  */
 sealed trait AttachmentData
+
+final case class Header(kid: String)
+
+final case class Jws(header: Header, `protected`: String, signature: String)
+
+final case class JwsData(base64: String, jws: Jws) extends AttachmentData
 
 final case class Base64(base64: String) extends AttachmentData
 

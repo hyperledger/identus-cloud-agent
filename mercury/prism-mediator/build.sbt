@@ -111,6 +111,13 @@ lazy val protocolInvitation = project
   )
   .dependsOn(models)
 
+lazy val protocolDidExchange = project
+  .in(file("protocol-did-exchange"))
+  .settings(name := "mercury-protocol-did-exchange", version := VERSION)
+  .settings(libraryDependencies += D.zio.value)
+  .settings(libraryDependencies ++= Seq(D.circeCore.value, D.circeGeneric.value, D.circeParser.value))
+  .dependsOn(models, protocolInvitation)
+
 lazy val protocolMercuryMailbox = project
   .in(file("protocol-mercury-mailbox"))
   .settings(name := "mercury-protocol-mailbox", version := VERSION)
@@ -228,8 +235,9 @@ lazy val mediator = project
   // .enablePlugins(JavaAppPackaging, DockerPlugin)
   .dependsOn(agentDidcommx, resolver)
   .dependsOn(
-    protocolConnection,
     protocolInvitation,
+    protocolConnection,
+    protocolDidExchange,
     protocolMercuryMailbox,
     protocolReportProblem,
     protocolRouting,
