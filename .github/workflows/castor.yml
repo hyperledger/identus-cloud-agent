@@ -28,7 +28,6 @@ on:
 
 # Global environment variables for all jobs
 env:
-  JAVA_VERSION: openjdk@1.11
   ATALA_GITHUB_ACTOR: ${{ secrets.ATALA_GITHUB_ACTOR }}
   ATALA_GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
 
@@ -40,10 +39,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Setup Scala
-        uses: olafurpg/setup-scala@v11
+      - name: Setup Java and Scala
+        uses: olafurpg/setup-scala@v13
         with:
-          java-version: ${{ env.JAVA_VERSION }}
+          java-version: openjdk@1.11
+
+      - name: Cache sbt
+        uses: coursier/cache-action@v6.3
 
       # Step to be removed after adding publishing of shared module
       - name: Build shared module
@@ -59,9 +61,17 @@ jobs:
       - name: Build and test Castor
         run: cd castor/lib && sbt test
 
+      - name: Aggregate test reports
+        if: always()
+        uses: ./.github/actions/aggregate-test-reports
+        with:
+          tests-dir: "castor/lib"
+
       - name: Publish test results
         # Publish even if the previous test step fails
         if: always()
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:
-          junit_files: "castor/lib/core/target/test-reports/TEST-*.xml"
+          junit_files: "castor/lib/target/test-reports/**/TEST-*.xml"
+          comment_title: "Castor Test Results"
+          check_name: "Castor Test Results"
