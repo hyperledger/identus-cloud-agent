@@ -4,6 +4,15 @@ import io.circe.{Encoder, Decoder}
 import io.circe.generic.semiauto._
 import io.iohk.atala.mercury.model.{AttachmentData, PIURI}
 
+/** ALL parameterS are DIDCOMMV2 format and naming conventions and follows the protocol
+  * @see
+  *   https://github.com/hyperledger/aries-rfcs/tree/main/features/0453-issue-credential-v2
+  *
+  * @param id
+  * @param `type`
+  * @param body
+  * @param attachments
+  */
 final case class IssueCredential(id: String, `type`: PIURI, body: IssueCredential.Body, attachments: AttachmentData) {
   assert(`type` == IssueCredential.`type`)
 }
