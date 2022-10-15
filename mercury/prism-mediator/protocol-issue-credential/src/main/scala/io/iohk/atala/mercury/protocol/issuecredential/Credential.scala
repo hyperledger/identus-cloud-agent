@@ -4,6 +4,10 @@ import io.circe.generic.semiauto._
 
 final case class Attributes(name: String, mimeType: String, value: String)
 
+/** https://github.com/hyperledger/aries-rfcs/tree/main/features/0453-issue-credential-v2#preview-credential
+  * @param `@type`
+  * @param attributes
+  */
 final case class CredentialPreview(
     `@type`: String = "https://didcomm.org/issue-credential/2.0/credential-preview",
     attributes: Attributes
