@@ -33,5 +33,6 @@ object Dependencies {
   private lazy val akkaHttpDependencies: Seq[ModuleID] = Seq(akkaTyped, akkaStream, akkaHttp, akkaSprayJson).map(_.cross(CrossVersion.for3Use2_13))
 
   // Project Dependencies
+  lazy val custodianDependencies: Seq[ModuleID] = baseDependencies ++ castorDependencies
   lazy val serverDependencies: Seq[ModuleID] = baseDependencies ++ akkaHttpDependencies ++ castorDependencies ++ polluxDependencies
 }
