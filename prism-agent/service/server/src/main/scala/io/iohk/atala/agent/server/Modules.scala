@@ -26,10 +26,14 @@ import io.iohk.atala.castor.sql.repository.{JdbcDIDOperationRepository, Transact
 import zio.*
 import zio.interop.catz.*
 import cats.effect.std.Dispatcher
+import com.typesafe.config.ConfigFactory
 import io.grpc.ManagedChannelBuilder
+import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
+import zio.config.typesafe.TypesafeConfigSource
+import zio.config.{ReadError, read}
 import zio.stream.ZStream
 
 import java.util.concurrent.Executors
@@ -56,6 +60,16 @@ object SystemModule {
         )
     )(system => ZIO.attempt(system.terminate()).orDie)
   )
+
+  val configLayer: Layer[ReadError[String], AppConfig] = ZLayer.fromZIO {
+    read(
+      AppConfig.descriptor.from(
+        TypesafeConfigSource.fromTypesafeConfig(
+          ZIO.attempt(ConfigFactory.load())
+        )
+      )
+    )
+  }
 }
 
 object AppModule {
@@ -66,16 +80,25 @@ object AppModule {
     )
   )
   val didServiceLayer: TaskLayer[DIDService] =
-    (GrpcModule.irisStub ++ RepoModule.layers ++ didOpValidatorLayer) >>> DIDServiceImpl.layer
+    (GrpcModule.layers ++ RepoModule.layers ++ didOpValidatorLayer) >>> DIDServiceImpl.layer
 }
 
 object GrpcModule {
-  val irisStub: TaskLayer[IrisServiceStub] = ZLayer.fromZIO(
-    ZIO.attempt {
-      val channel = ManagedChannelBuilder.forAddress("localhost", 8081).usePlaintext.build
-      IrisServiceGrpc.stub(channel)
-    }
-  )
+  val irisStubLayer: TaskLayer[IrisServiceStub] = {
+    val stubLayer = ZLayer.fromZIO(
+      ZIO
+        .service[AppConfig]
+        .map(_.iris.service)
+        .flatMap(config =>
+          ZIO.attempt(
+            IrisServiceGrpc.stub(ManagedChannelBuilder.forAddress(config.host, config.port).usePlaintext.build)
+          )
+        )
+    )
+    SystemModule.configLayer >>> stubLayer
+  }
+
+  val layers = irisStubLayer
 }
 
 object HttpModule {
@@ -108,19 +131,23 @@ object HttpModule {
 }
 
 object RepoModule {
-  val transactorLayer: TaskLayer[Transactor[Task]] =
-    ZLayer.fromZIO {
-      Dispatcher[Task].allocated.map { case (dispatcher, _) =>
-        given Dispatcher[Task] = dispatcher
-        TransactorLayer.hikari[Task](
-          TransactorLayer.DbConfig(
-            username = "postgres",
-            password = "postgres",
-            jdbcUrl = "jdbc:postgresql://db_castor:5432/castor"
+  val transactorLayer: TaskLayer[Transactor[Task]] = {
+    val transactorLayer = ZLayer.fromZIO {
+      ZIO.service[AppConfig].map(_.castor.database).flatMap { config =>
+        Dispatcher[Task].allocated.map { case (dispatcher, _) =>
+          given Dispatcher[Task] = dispatcher
+          TransactorLayer.hikari[Task](
+            TransactorLayer.DbConfig(
+              username = config.username,
+              password = config.password,
+              jdbcUrl = s"jdbc:postgresql://${config.host}:${config.port}/${config.databaseName}"
+            )
           )
-        )
+        }
       }
     }.flatten
+    SystemModule.configLayer >>> transactorLayer
+  }
 
   val didOperationRepoLayer: TaskLayer[DIDOperationRepository[Task]] =
     transactorLayer >>> JdbcDIDOperationRepository.layer
