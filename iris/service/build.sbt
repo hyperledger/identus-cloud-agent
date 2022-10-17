@@ -48,5 +48,11 @@ lazy val server = commonProject(project)
   .settings(
     name := "iris-server",
     libraryDependencies ++= serverDependencies,
+    Docker / maintainer := "atala-coredid@iohk.io",
+    Docker / dockerRepository := Some("atala-prism.io"),
+    // Docker / packageName := s"atala-prism/${packageName.value}",
+    dockerExposedPorts := Seq(8081),
+    dockerBaseImage := "openjdk:11"
   )
+  .enablePlugins(JavaAppPackaging, DockerPlugin)
   .dependsOn(core, sql)

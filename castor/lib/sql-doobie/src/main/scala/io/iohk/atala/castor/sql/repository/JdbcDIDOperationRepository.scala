@@ -2,22 +2,25 @@ package io.iohk.atala.castor.sql.repository
 
 import doobie.*
 import doobie.implicits.*
-import io.iohk.atala.castor.core.model.IrisNotification
+import io.iohk.atala.castor.core.model.did.{ConfirmedPublishedDIDOperation, PrismDIDV1}
 import io.iohk.atala.castor.core.repository.DIDOperationRepository
+import io.iohk.atala.castor.sql.model.SqlModelHelper
+import io.iohk.atala.castor.sql.repository.Utils.connectionIOSafe
+import io.iohk.atala.castor.sql.repository.dao.DIDOperationDAO
+import io.iohk.atala.shared.models.HexStrings.HexString
+import io.iohk.atala.shared.utils.Traverse.*
 import zio.*
 import zio.interop.catz.*
 
-// TODO: replace with actual implementation
-class JdbcDIDOperationRepository(xa: Transactor[Task]) extends DIDOperationRepository[Task] {
+class JdbcDIDOperationRepository(xa: Transactor[Task]) extends DIDOperationRepository[Task], SqlModelHelper {
 
-  override def getIrisNotification: Task[Seq[IrisNotification]] = {
-    val cxnIO = sql"""
-         |SELECT foo FROM public.published_did_operations
-         |""".stripMargin.query[String].to[Seq]
-
-    cxnIO
+  override def getConfirmedPublishedDIDOperations(did: PrismDIDV1): Task[Seq[ConfirmedPublishedDIDOperation]] = {
+    val query = DIDOperationDAO.getConfirmedPublishedDIDOperation(did.suffix)
+    connectionIOSafe(query)
       .transact(xa)
-      .map(_.map(IrisNotification.apply))
+      .absolve
+      .map(_.traverse(_.toDomain).left.map(Exception(_)))
+      .absolve
   }
 
 }

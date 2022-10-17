@@ -8,7 +8,7 @@ import io.iohk.atala.agent.openapi.model.{
   DeactivateDIDRequest,
   RecoverDIDRequest,
   UpdateDIDRequest,
-  DIDResponseWithAsyncOutcome,
+  DIDOperationResponse,
   DIDResponse,
   ErrorResponse
 }
@@ -31,13 +31,14 @@ object DIDApiMarshallerImpl extends JsonSupport {
       implicit def fromEntityUnmarshallerUpdateDIDRequest: FromEntityUnmarshaller[UpdateDIDRequest] =
         summon[RootJsonFormat[UpdateDIDRequest]]
 
-      implicit def toEntityMarshallerDIDResponseWithAsyncOutcome: ToEntityMarshaller[DIDResponseWithAsyncOutcome] =
-        summon[RootJsonFormat[DIDResponseWithAsyncOutcome]]
+      implicit def toEntityMarshallerDIDOperationResponse: ToEntityMarshaller[DIDOperationResponse] =
+        summon[RootJsonFormat[DIDOperationResponse]]
 
       implicit def toEntityMarshallerDIDResponse: ToEntityMarshaller[DIDResponse] = summon[RootJsonFormat[DIDResponse]]
 
       implicit def toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse] =
         summon[RootJsonFormat[ErrorResponse]]
+
     }
   }
 

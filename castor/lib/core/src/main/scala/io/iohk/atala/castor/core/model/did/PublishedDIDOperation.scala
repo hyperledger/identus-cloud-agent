@@ -12,3 +12,9 @@ object PublishedDIDOperation {
       document: DIDDocument
   ) extends PublishedDIDOperation
 }
+
+final case class PublishedDIDOperationOutcome(
+    did: PrismDID,
+    operation: PublishedDIDOperation,
+    operationId: HexString
+)

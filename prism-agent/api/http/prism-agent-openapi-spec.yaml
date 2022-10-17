@@ -45,18 +45,12 @@ paths:
             schema:
               $ref: "./castor/schemas.yaml#/components/schemas/CreateDIDRequest"
       responses:
-        "200":
-          description: Created DID.
-          content:
-            application/json:
-              schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/DIDResponse"
         "202":
           description: Created DID. Publishing DID or Proof to Blockchain.
           content:
             application/json:
               schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/DIDResponseWithAsyncOutcome"
+                $ref: "./castor/schemas.yaml#/components/schemas/DIDOperationResponse"
           headers:
             Location:
               schema:
@@ -70,50 +64,6 @@ paths:
                 $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
 
   /dids/{didRef}:
-    put:
-      tags: [ "DID" ]
-      operationId: updateDid
-      summary: Update DID.
-      description: Update DID.
-      parameters:
-        - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "./castor/schemas.yaml#/components/schemas/UpdateDIDRequest"
-      responses:
-        "200":
-          description: Updated DID.
-          content:
-            application/json:
-              schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/DIDResponse"
-        "202":
-          description: Updated DID. Publishing Updated DID or Update Proof to Blockchain.
-          content:
-            application/json:
-              schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/DIDResponseWithAsyncOutcome"
-          headers:
-            Location:
-              schema:
-                type: string
-              description: URL to access DID resource and publication status.
-        "422":
-          description: The DID Update failed.
-          content:
-            application/json:
-              schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
-        "404":
-          description: There is no DID existing for the 'didRef'.
-          content:
-            application/json:
-              schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
-
     get:
       tags: [ "DID" ]
       operationId: getDid
@@ -135,8 +85,47 @@ paths:
               schema:
                 $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
 
+  /dids/{didRef}/updates:
+    post:
+      tags: [ "DID" ]
+      operationId: updateDid
+      summary: Update DID.
+      description: Update DID.
+      parameters:
+        - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "./castor/schemas.yaml#/components/schemas/UpdateDIDRequest"
+      responses:
+        "202":
+          description: Updated DID. Publishing Updated DID or Update Proof to Blockchain.
+          content:
+            application/json:
+              schema:
+                $ref: "./castor/schemas.yaml#/components/schemas/DIDOperationResponse"
+          headers:
+            Location:
+              schema:
+                type: string
+              description: URL to access DID resource and publication status.
+        "422":
+          description: The DID Update failed.
+          content:
+            application/json:
+              schema:
+                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
+        "404":
+          description: There is no DID existing for the 'didRef'.
+          content:
+            application/json:
+              schema:
+                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
+
   /dids/{didRef}/deactivations:
-    put:
+    post:
       tags: [ "DID" ]
       operationId: deactivateDID
       summary: Deactivates either published or unpublished DID.
@@ -150,18 +139,12 @@ paths:
             schema:
               $ref: "./castor/schemas.yaml#/components/schemas/DeactivateDIDRequest"
       responses:
-        "200":
-          description: DID Deactivated.
-          content:
-            application/json:
-              schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/DIDResponse"
         "202":
           description: Deactivating DID.
           content:
             application/json:
               schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/DIDResponseWithAsyncOutcome"
+                $ref: "./castor/schemas.yaml#/components/schemas/DIDOperationResponse"
           headers:
             Location:
               schema:
@@ -195,18 +178,12 @@ paths:
             schema:
               $ref: "./castor/schemas.yaml#/components/schemas/RecoverDIDRequest"
       responses:
-        "200":
-          description: Recovered DID.
-          content:
-            application/json:
-              schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/DIDResponse"
         "202":
           description: Recovered DID. Publishing Recovered DID or Recovery Proof to Blockchain.
           content:
             application/json:
               schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/DIDResponseWithAsyncOutcome"
+                $ref: "./castor/schemas.yaml#/components/schemas/DIDOperationResponse"
           headers:
             Location:
               schema:
