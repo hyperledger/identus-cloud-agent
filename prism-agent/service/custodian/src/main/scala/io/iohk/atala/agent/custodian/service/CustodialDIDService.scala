@@ -7,7 +7,7 @@ import zio.*
 
 // TODO: implement
 /** A wrapper around Castor's DIDService providing custodian capabilities */
-final class CustodialDIDService[Tx, E <: Throwable](store: DIDKeyStorage[Tx, E]) {
+final class CustodialDIDService(store: DIDKeyStorage) {
 
   def createAndStoreDID(publishToLedger: Boolean = false): UIO[DID] = ???
 
@@ -16,6 +16,6 @@ final class CustodialDIDService[Tx, E <: Throwable](store: DIDKeyStorage[Tx, E])
 }
 
 object CustodialDIDService {
-  def inMemoryStorage: ULayer[CustodialDIDService[Any, Nothing]] =
-    InMemoryDIDKeyStorage.layer >>> ZLayer.fromFunction(CustodialDIDService[Any, Nothing](_))
+  def inMemoryStorage: ULayer[CustodialDIDService] =
+    InMemoryDIDKeyStorage.layer >>> ZLayer.fromFunction(CustodialDIDService(_))
 }

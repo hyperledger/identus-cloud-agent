@@ -34,7 +34,9 @@ Then configure `prism-agent` to use the services listed above.
 
 ## Custodial key management
 
-`prism-agent` also has a responsibility of managing DID key-pairs for users.
+`prism-agent` is a cloud agent that represents the digital identity (is a DID controller)
+of the Issuing / Verification organization. As a DID controller, it needs to perform
+the operation with private and public keys through the Wallet API abstraction level.
 The interface for key-mangement is heavily inspired by
 [indy-sdk-java-wrapper](https://github.com/hyperledger/indy-sdk/tree/main/wrappers/java).
 
