@@ -15,9 +15,6 @@ components:
     DIDOperationResponse:
       type: object
       required:
-        - did
-        - type
-        - deactivated
         - scheduledOperation
       properties:
         scheduledOperation:
@@ -188,6 +185,62 @@ components:
           example: "eyJhbGciOiJFUzI1NksifQ.eyJ1cGRhdGVLZXkiOnsia3R5IjoiRUMiLCJjcnYiOiJzZWNwMjU2azEiLCJ4Ijoid2Z3UUNKM09ScVZkbkhYa1Q4UC1MZ19HdHhCRWhYM3R5OU5VbnduSHJtdyIsInkiOiJ1aWU4cUxfVnVBblJEZHVwaFp1eExPNnFUOWtQcDNLUkdFSVJsVHBXcmZVIn0sImRlbHRhSGFzaCI6IkVpQ3BqTjQ3ZjBNcTZ4RE5VS240aFNlZ01FcW9EU19ycFEyOVd5MVY3M1ZEYncifQ.RwZK1DG5zcr4EsrRImzStb0VX5j2ZqApXZnuoAkA3IoRdErUscNG8RuxNZ0FjlJtjMJ0a-kn-_MdtR0wwvWVgg"
           description: "Base64 of signature of data in the request"
 
+    CreateCustodialDidRequest:
+      type: object
+      required:
+        - documentTemplate
+      properties:
+        publicationOption:
+          $ref: "#/components/schemas/PublicationOption"
+        documentTemplate:
+          type: object
+          required:
+            - services
+            - publicKeys
+          properties:
+            services:
+              type: array
+              items:
+                $ref: "#/components/schemas/Service"
+            publicKeys:
+              type: array
+              items:
+                type: object
+                required:
+                  - id
+                  - purposes
+                properties:
+                  id:
+                    type: string
+                    description: Identifier of a verification material in the DID Document
+                    example: key-01
+                  purposes:
+                    type: array
+                    items:
+                      type: string
+                      enum:
+                        [
+                          "authentication",
+                          "assertionMethod",
+                          "keyAgreement",
+                          "capabilityInvocation",
+                          "capabilityDelegation",
+                        ]
+                    example: [ "authentication", "assertionMethod" ]
+
+    CreateCustodialUnpublishedDIDResponse:
+      type: object
+      required:
+        - did
+        - longFormDid
+      properties:
+        did:
+          $ref: "#/components/schemas/DID"
+        longFormDid:
+          type: string
+          description: A long-form DID for the created unpublished DID
+          example: did:prism:1:abc123:abc123
+
     Delta:
       type: object
       required:
@@ -311,6 +364,15 @@ components:
         publicKeys:
           $ref: "#/components/schemas/PublicKey"
 
+    PublicationOption:
+      type: object
+      required:
+        - ledger
+      properties:
+        ledger:
+          type: string
+          description: Name of the ledger to publish operations to
+          example: mainnet
 
     # ----------------------------------
     # ASYNC OPERATIONS

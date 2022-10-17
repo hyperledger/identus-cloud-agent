@@ -16,6 +16,8 @@ tags:
     description: DID Operations REST API
   - name: DID Authentication
     description: DID Authentication REST API
+  - name: DID Registrar
+    description: DID Registrar REST API
   # Pollux
   - name: Schema Registry
     description: Schema Registry REST API
@@ -296,6 +298,40 @@ paths:
                 $ref: "./castor/schemas.yaml#/components/schemas/AuthenticationChallengeSubmissionResponse"
         "400":
           description: ChallengeSubmission is malformed
+          content:
+            application/json:
+              schema:
+                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
+
+  /did-registrar/dids:
+    post:
+      tags: [ "DID Registrar" ]
+      operationId: createCustodialDid
+      summary: Create DID with the associated DID Document with the option to publish to blockchain.
+      description: |
+        Create DID with the associated DID Document with the option to publish to blockchain where
+        the private keys will be managed by PrismAgent.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "./castor/schemas.yaml#/components/schemas/CreateCustodialDidRequest"
+      responses:
+        "200":
+          description: Created custodial unpublished DID.
+          content:
+            application/json:
+              schema:
+                $ref: "./castor/schemas.yaml#/components/schemas/CreateCustodialUnpublishedDIDResponse"
+        "202":
+          description: Created DID. Publishing DID to Blockchain.
+          content:
+            application/json:
+              schema:
+                $ref: "./castor/schemas.yaml#/components/schemas/DIDOperationResponse"
+        "422":
+          description: The DID publication failed.
           content:
             application/json:
               schema:
