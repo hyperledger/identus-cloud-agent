@@ -366,16 +366,6 @@ components:
         publicKeys:
           $ref: "#/components/schemas/PublicKey"
 
-    PublicationOption:
-      type: object
-      required:
-        - ledger
-      properties:
-        ledger:
-          type: string
-          description: Name of the ledger to publish operations to
-          example: mainnet
-
     # ----------------------------------
     # ASYNC OPERATIONS
     # ----------------------------------

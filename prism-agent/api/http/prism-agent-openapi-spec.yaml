@@ -38,8 +38,8 @@ paths:
     post:
       tags: [ "DID" ]
       operationId: createDid
-      summary: Published DID create operation to blockchain.
-      description: Published DID create operation to blockchain.
+      summary: Publish DID create operation to blockchain.
+      description: Publish DID create operation to blockchain.
       requestBody:
         required: true
         content:
@@ -91,8 +91,8 @@ paths:
     post:
       tags: [ "DID" ]
       operationId: updateDid
-      summary: Published DID update operation to blockchain.
-      description: Published DID update operation to blockchain.
+      summary: Publish DID update operation to blockchain.
+      description: Publish DID update operation to blockchain.
       parameters:
         - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
       requestBody:
@@ -130,8 +130,8 @@ paths:
     post:
       tags: [ "DID" ]
       operationId: deactivateDID
-      summary: Published DID deactivate operation to blockchain.
-      description: Published DID deactivate operation to blockchain.
+      summary: Publish DID deactivate operation to blockchain.
+      description: Publish DID deactivate operation to blockchain.
       parameters:
         - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
       requestBody:
@@ -169,8 +169,8 @@ paths:
     post:
       tags: [ "DID" ]
       operationId: recoverDid
-      summary: Published DID recover operation to blockchain.
-      description: Published DID recover operation to blockchain.
+      summary: Publish DID recover operation to blockchain.
+      description: Publish DID recover operation to blockchain.
       parameters:
         - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
       requestBody:
@@ -253,6 +253,7 @@ paths:
       tags: [ "DID Authentication" ]
       operationId: createDidAuthenticationChallenge
       summary: Create a new authentication challenge
+      deprecated: true
       description: |
         Create a new authentication challenge that will be later verified
         by Castor for a relying-party.
@@ -281,6 +282,7 @@ paths:
       tags: [ "DID Authentication" ]
       operationId: createDidAuthenticationChallengeSubmission
       summary: Create a verification from challenge
+      deprecated: true
       description: |
         Submit a challenge submission that will be verified by Castor for a relying-party.
       requestBody:
