@@ -18,23 +18,3 @@ private[custodian] trait DIDKeyStorage {
   def removeKey(did: DID, keyId: String): Task[Option[ECKeyPair]]
 
 }
-
-// TODO: implement
-private[custodian] class InMemoryDIDKeyStorage(store: Ref[Map[DID, Map[String, ECKeyPair]]]) extends DIDKeyStorage {
-  override def listKeys(did: DID): Task[Map[String, ECKeyPair]] = ???
-
-  override def getKey(did: DID, keyId: String): Task[Option[ECKeyPair]] = ???
-
-  override def upsertKey(did: DID, keyId: String, keyPair: ECKeyPair): Task[Unit] = ???
-
-  override def removeKey(did: DID, keyId: String): Task[Option[ECKeyPair]] = ???
-
-}
-
-private[custodian] object InMemoryDIDKeyStorage {
-  val layer: ULayer[DIDKeyStorage] = {
-    ZLayer.fromZIO(
-      Ref.make(Map.empty[DID, Map[String, ECKeyPair]]).map(store => InMemoryDIDKeyStorage(store))
-    )
-  }
-}
