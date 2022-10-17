@@ -27,7 +27,6 @@ import zio.*
 import zio.interop.catz.*
 import cats.effect.std.Dispatcher
 import io.grpc.ManagedChannelBuilder
-import io.iohk.atala.castor.core.model.IrisNotification
 import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
@@ -66,7 +65,8 @@ object AppModule {
       serviceLimit = 50
     )
   )
-  val didServiceLayer: TaskLayer[DIDService] = (GrpcModule.irisStub ++ didOpValidatorLayer) >>> DIDServiceImpl.layer
+  val didServiceLayer: TaskLayer[DIDService] =
+    (GrpcModule.irisStub ++ RepoModule.layers ++ didOpValidatorLayer) >>> DIDServiceImpl.layer
 }
 
 object GrpcModule {
@@ -116,7 +116,7 @@ object RepoModule {
           TransactorLayer.DbConfig(
             username = "postgres",
             password = "postgres",
-            jdbcUrl = "jdbc:postgresql://localhost:5432/castor"
+            jdbcUrl = "jdbc:postgresql://db_castor:5432/castor"
           )
         )
       }

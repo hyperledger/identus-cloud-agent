@@ -1,9 +1,8 @@
 package io.iohk.atala.castor.core.repository
 
-import io.iohk.atala.castor.core.model.IrisNotification
+import io.iohk.atala.castor.core.model.did.{ConfirmedPublishedDIDOperation, PrismDIDV1}
 import zio.*
 
-// TODO: replace with actual implementation
 trait DIDOperationRepository[F[_]] {
-  def getIrisNotification: F[Seq[IrisNotification]]
+  def getConfirmedPublishedDIDOperations(did: PrismDIDV1): F[Seq[ConfirmedPublishedDIDOperation]]
 }

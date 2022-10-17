@@ -1,10 +1,6 @@
-package io.iohk.atala.agent.server.http
+package io.iohk.atala.agent.server.http.model
 
 object OASModelPatches {
-
-  type DidType = String
   type DidOperationType = String
   type DidOperationStatus = String
-  type OperationType = String
-
 }

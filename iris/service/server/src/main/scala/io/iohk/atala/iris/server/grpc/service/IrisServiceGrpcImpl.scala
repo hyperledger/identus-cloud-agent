@@ -10,7 +10,8 @@ import zio.*
 
 import scala.concurrent.Future
 
-class IrisServiceGrpcImpl(service: PublishingScheduler)(using runtime: Runtime[Any]) extends IrisServiceGrpc.IrisService {
+class IrisServiceGrpcImpl(service: PublishingScheduler)(using runtime: Runtime[Any])
+    extends IrisServiceGrpc.IrisService {
 
   private val mockOperationId = ByteString.copyFrom("aaafff111".getBytes())
   private val mockOperation = IrisOperationInfo.Operation.CreateDid(
@@ -19,18 +20,23 @@ class IrisServiceGrpcImpl(service: PublishingScheduler)(using runtime: Runtime[A
       initialRecoveryCommitment = ByteString.copyFrom("b".getBytes()),
       ledger = "https://atalaprism.io",
       document = Some(DocumentDefinition(publicKeys = Seq(), services = Seq()))
-    ))
+    )
+  )
 
-  override def scheduleOperation(request: IrisOperation): Future[IrisOperationOutcome] = Unsafe.unsafe { implicit unsafe =>
-    runtime.unsafe.runToFuture(ZIO.succeed(IrisOperationOutcome(mockOperationId)))
+  override def scheduleOperation(request: IrisOperation): Future[IrisOperationOutcome] = Unsafe.unsafe {
+    implicit unsafe =>
+      runtime.unsafe.runToFuture(ZIO.succeed(IrisOperationOutcome(mockOperationId)))
   }
 
   override def getOperation(request: IrisOperationId): Future[IrisOperationInfo] = Unsafe.unsafe { implicit unsafe =>
-    runtime.unsafe.runToFuture(ZIO.succeed(
-      IrisOperationInfo(
-        operationId = mockOperationId,
-        operation = mockOperation
-      )))
+    runtime.unsafe.runToFuture(
+      ZIO.succeed(
+        IrisOperationInfo(
+          operationId = mockOperationId,
+          operation = mockOperation
+        )
+      )
+    )
   }
 }
 
