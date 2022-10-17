@@ -13,7 +13,7 @@ Following this strategy we currently have 4-5 OAS files (Castor, Pollux, Mercury
 
 The following tool was selected for code generation: [OpenAPI Tools](https://github.com/OpenAPITools/openapi-generator)
 
-[Tapir](https://tapir.softwaremill.com/en/latest/index.html) is proposed to enforce a type safety and introduce DSL in Scala for OAS files.
+Instead of using the yaml file as OpenAPI specification and openapi-generator for server and client stub generation - this ADR proposes to use [Tapir](https://tapir.softwaremill.com/en/latest/index.html) Scala library as DSL for OpenAPI specification, `interpret` the endpoint defitions as Scala server and client stub, generate the yaml file, and use openapi-generator for client stubs.
 
 Technology stack that is going to be used in Prism v2 backend: Scala 3 + ZIO ecosystem
 
@@ -154,8 +154,6 @@ graph TD
 ## Pros and Cons of the Options <!-- optional -->
 
 ### Option 1: use OpenAPI tools and mustache templates for Akka server
-
-[example | description | pointer to more information | …] <!-- optional -->
 
 - Good, because @Pat and @Shota already stabilized the templates, and we have a working solution
 - Good, because any engineer from CoreDID and Product Foundry team is able to contribute to the documentation
