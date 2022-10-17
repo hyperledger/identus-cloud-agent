@@ -1,4 +1,5 @@
-package io.iohk.atala.pollux.vc.jwt
+package io.iohk.atala.pollux.vc.jwt.demos
+
 import io.circe.*
 import pdi.jwt.JwtClaim
 import pdi.jwt.{JwtAlgorithm, JwtCirce}

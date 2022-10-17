@@ -18,7 +18,7 @@ import cats.implicits.*
 import io.circe.Json
 import pdi.jwt.algorithms.JwtECDSAAlgorithm
 
-case class JWT(jwt: String)
+case class EncodedJWT(jwt: String)
 case class JWTHeader(typ: String = "JWT", alg: Option[String])
 case class JWTPayload(
     iss: Option[String],
