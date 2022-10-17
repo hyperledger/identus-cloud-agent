@@ -38,8 +38,8 @@ paths:
     post:
       tags: [ "DID" ]
       operationId: createDid
-      summary: Create DID with the associated DID Document with the option to publish to blockchain.
-      description: Create DID with the associated DID Document with the option to publish to blockchain.
+      summary: Published DID create operation to blockchain.
+      description: Published DID create operation to blockchain.
       requestBody:
         required: true
         content:
@@ -69,8 +69,8 @@ paths:
     get:
       tags: [ "DID" ]
       operationId: getDid
-      summary: Get DID.
-      description: Get DID.
+      summary: Resolve DID.
+      description: Resolve DID.
       parameters:
         - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
       responses:
@@ -91,8 +91,8 @@ paths:
     post:
       tags: [ "DID" ]
       operationId: updateDid
-      summary: Update DID.
-      description: Update DID.
+      summary: Published DID update operation to blockchain.
+      description: Published DID update operation to blockchain.
       parameters:
         - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
       requestBody:
@@ -130,8 +130,8 @@ paths:
     post:
       tags: [ "DID" ]
       operationId: deactivateDID
-      summary: Deactivates either published or unpublished DID.
-      description: Deactivates either published or unpublished DID.
+      summary: Published DID deactivate operation to blockchain.
+      description: Published DID deactivate operation to blockchain.
       parameters:
         - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
       requestBody:
@@ -169,8 +169,8 @@ paths:
     post:
       tags: [ "DID" ]
       operationId: recoverDid
-      summary: Recover DID.
-      description: Recover DID.
+      summary: Published DID recover operation to blockchain.
+      description: Published DID recover operation to blockchain.
       parameters:
         - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
       requestBody:
@@ -307,10 +307,8 @@ paths:
     post:
       tags: [ "DID Registrar" ]
       operationId: createCustodialDid
-      summary: Create DID with the associated DID Document with the option to publish to blockchain.
-      description: |
-        Create DID with the associated DID Document with the option to publish to blockchain where
-        the private keys will be managed by PrismAgent.
+      summary: Create DID with the DID Document template where keys are managed by PrismAgent.
+      description: Create DID with the DID Document template where keys are managed by PrismAgent.
       requestBody:
         required: true
         content:
@@ -319,13 +317,29 @@ paths:
               $ref: "./castor/schemas.yaml#/components/schemas/CreateCustodialDidRequest"
       responses:
         "200":
-          description: Created custodial unpublished DID.
+          description: Created unpublished DID.
           content:
             application/json:
               schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/CreateCustodialUnpublishedDIDResponse"
+                $ref: "./castor/schemas.yaml#/components/schemas/CreateCustodialDIDResponse"
+        "422":
+          description: The DID creation failed.
+          content:
+            application/json:
+              schema:
+                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
+
+  /did-registrar/dids/{didRef}/publications:
+    post:
+      tags: [ "DID Registrar" ]
+      operationId: publishCustodialDid
+      summary: Publish DID stored in PrismAgent wallet to blockchain
+      description: Publish DID stored in PrismAgent wallet to blockchain
+      parameters:
+        - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
+      responses:
         "202":
-          description: Created DID. Publishing DID to Blockchain.
+          description: Publishing DID to Blockchain.
           content:
             application/json:
               schema:

@@ -190,18 +190,16 @@ components:
       required:
         - documentTemplate
       properties:
-        publicationOption:
-          $ref: "#/components/schemas/PublicationOption"
         documentTemplate:
           type: object
           required:
-            - services
+            - storage
             - publicKeys
+            - services
           properties:
-            services:
-              type: array
-              items:
-                $ref: "#/components/schemas/Service"
+            storage:
+              type: string
+              example: "mainnet"
             publicKeys:
               type: array
               items:
@@ -227,8 +225,12 @@ components:
                           "capabilityDelegation",
                         ]
                     example: [ "authentication", "assertionMethod" ]
+            services:
+              type: array
+              items:
+                $ref: "#/components/schemas/Service"
 
-    CreateCustodialUnpublishedDIDResponse:
+    CreateCustodialDIDResponse:
       type: object
       required:
         - did
@@ -238,7 +240,7 @@ components:
           $ref: "#/components/schemas/DID"
         longFormDid:
           type: string
-          description: A long-form DID for the created unpublished DID
+          description: A long-form DID for the created DID
           example: did:prism:1:abc123:abc123
 
     Delta:

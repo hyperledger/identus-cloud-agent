@@ -6,8 +6,8 @@ import io.iohk.atala.agent.custodian.service.CustodialDIDService
 import zio.*
 import io.iohk.atala.agent.openapi.api.DIDRegistrarApiService
 import io.iohk.atala.agent.openapi.model.{
+  CreateCustodialDIDResponse,
   CreateCustodialDidRequest,
-  CreateCustodialUnpublishedDIDResponse,
   CreateDIDRequest,
   DIDOperationResponse,
   DIDResponse,
@@ -23,10 +23,13 @@ class DIDRegistrarApiServiceImpl(service: CustodialDIDService)(using runtime: Ru
 
   // TODO: implement
   override def createCustodialDid(createCustodialDidRequest: CreateCustodialDidRequest)(implicit
+      toEntityMarshallerCreateCustodialDIDResponse: ToEntityMarshaller[CreateCustodialDIDResponse],
+      toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
+  ): Route = ???
+
+  // TODO: implement
+  override def publishCustodialDid(didRef: String)(implicit
       toEntityMarshallerDIDOperationResponse: ToEntityMarshaller[DIDOperationResponse],
-      toEntityMarshallerCreateCustodialUnpublishedDIDResponse: ToEntityMarshaller[
-        CreateCustodialUnpublishedDIDResponse
-      ],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = ???
 
