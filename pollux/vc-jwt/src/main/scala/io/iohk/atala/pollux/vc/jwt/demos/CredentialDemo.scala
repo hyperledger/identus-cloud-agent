@@ -2,7 +2,7 @@ package io.iohk.atala.pollux.vc.jwt.demos
 import io.iohk.atala.pollux.vc.jwt.{
   CredentialSchema,
   CredentialStatus,
-  IssuerDID,
+  DID,
   JwtCredentialPayload,
   RefreshService,
   W3CCredentialPayload
@@ -28,7 +28,7 @@ import java.time.{Instant, ZonedDateTime}
     `@context` = Vector("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
     maybeId = Some("http://example.edu/credentials/3732"),
     `type` = Vector("VerifiableCredential", "UniversityDegreeCredential"),
-    issuer = IssuerDID(id = "https://example.edu/issuers/565049"),
+    issuer = DID("https://example.edu/issuers/565049"),
     issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
     maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
     maybeCredentialSchema = Some(

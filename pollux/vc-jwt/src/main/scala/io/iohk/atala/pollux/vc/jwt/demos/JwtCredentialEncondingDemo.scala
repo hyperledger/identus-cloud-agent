@@ -29,7 +29,7 @@ import java.time.{Instant, ZonedDateTime}
   val publicKey = keyPair.getPublic
   val issuer =
     Issuer(
-      did = IssuerDID("did:issuer:MDP8AsFhHzhwUvGNuYkX7T"),
+      did = DID("did:issuer:MDP8AsFhHzhwUvGNuYkX7T"),
       signer = ES256Signer(privateKey),
       publicKey = publicKey
     )
@@ -43,7 +43,7 @@ import java.time.{Instant, ZonedDateTime}
     `@context` = Vector("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
     maybeId = Some("http://example.edu/credentials/3732"),
     `type` = Vector("VerifiableCredential", "UniversityDegreeCredential"),
-    issuer = IssuerDID(id = "https://example.edu/issuers/565049"),
+    issuer = DID("https://example.edu/issuers/565049"),
     issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
     maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
     maybeCredentialSchema = Some(
@@ -79,7 +79,7 @@ import java.time.{Instant, ZonedDateTime}
   println("W3C => Encoded JWT")
   println("==================")
   val encodedJWT = JwtVerifiableCredential.toEncodedJwt(w3cCredentialPayload, issuer)
-  println(encodedJWT.jwt)
+  println(encodedJWT)
 
   println("")
   println("==================")

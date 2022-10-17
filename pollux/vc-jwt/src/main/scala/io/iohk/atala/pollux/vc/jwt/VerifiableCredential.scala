@@ -16,22 +16,31 @@ case class Proof(`type`: String)
 
 trait Verifiable(proof: Proof)
 
-case class IssuerDID(id: String)
-case class Issuer(did: IssuerDID, signer: Signer, publicKey: PublicKey)
+opaque type DID = String
+
+object DID {
+  def apply(value: String): DID = value
+
+  extension (did: DID) {
+    def value: String = did
+  }
+}
+
+case class Issuer(did: DID, signer: Signer, publicKey: PublicKey)
 
 trait W3CCredential(
-    `@context`: IndexedSeq[String],
-    `type`: IndexedSeq[String],
-    issuer: IssuerDID,
-    issuanceDate: ZonedDateTime,
-    expirationDate: ZonedDateTime
-)
+                     `@context`: IndexedSeq[String],
+                     `type`: IndexedSeq[String],
+                     issuer: DID,
+                     issuanceDate: ZonedDateTime,
+                     expirationDate: ZonedDateTime
+                   )
 
 trait VerifiableCredential
 
 trait W3CVerifiableCredential extends W3CCredential, Verifiable
 
-case class JwtVerifiableCredential(jwt: EncodedJWT) extends VerifiableCredential
+case class JwtVerifiableCredential(jwt: JWT) extends VerifiableCredential
 
 trait VerifiedCredential extends JWTVerified, W3CVerifiableCredential
 
@@ -95,7 +104,7 @@ sealed trait CredentialPayload(
         `@context` = `@context`.distinct,
         maybeId = maybeJti,
         `type` = `type`.distinct,
-        issuer = IssuerDID(id = iss),
+        issuer = DID(iss),
         issuanceDate = nbf,
         maybeExpirationDate = maybeExp,
         maybeCredentialSchema = maybeCredentialSchema,
@@ -145,20 +154,20 @@ case class JwtCredentialPayload(
     )
 
 case class W3CCredentialPayload(
-    `@context`: IndexedSeq[String],
-    maybeId: Option[String],
-    `type`: IndexedSeq[String],
-    issuer: IssuerDID,
-    issuanceDate: Instant,
-    maybeExpirationDate: Option[Instant],
-    maybeCredentialSchema: Option[CredentialSchema],
-    credentialSubject: Json,
-    maybeCredentialStatus: Option[CredentialStatus],
-    maybeRefreshService: Option[RefreshService],
-    maybeEvidence: Option[Json],
-    maybeTermsOfUse: Option[Json],
+                                 `@context`: IndexedSeq[String],
+                                 maybeId: Option[String],
+                                 `type`: IndexedSeq[String],
+                                 issuer: DID,
+                                 issuanceDate: Instant,
+                                 maybeExpirationDate: Option[Instant],
+                                 maybeCredentialSchema: Option[CredentialSchema],
+                                 credentialSubject: Json,
+                                 maybeCredentialStatus: Option[CredentialStatus],
+                                 maybeRefreshService: Option[RefreshService],
+                                 maybeEvidence: Option[Json],
+                                 maybeTermsOfUse: Option[Json],
 
-    /** Not part of W3C Credential but included to preserve in case of conversion from JWT. */
+                                 /** Not part of W3C Credential but included to preserve in case of conversion from JWT. */
     aud: IndexedSeq[String] = IndexedSeq.empty
 ) extends CredentialPayload(
       maybeSub = credentialSubject.hcursor.downField("id").as[String].toOption,
@@ -168,7 +177,7 @@ case class W3CCredentialPayload(
       maybeNbf = Some(issuanceDate),
       aud = aud,
       maybeExp = maybeExpirationDate,
-      maybeIss = Some(issuer.id),
+      maybeIss = Some(issuer.value),
       maybeConnectionStatus = maybeCredentialStatus,
       maybeRefreshService = maybeRefreshService,
       maybeEvidence = maybeEvidence,
@@ -211,7 +220,7 @@ object VerifiedCredentialJson {
               ("@context", w3cCredentialPayload.`@context`.asJson),
               ("id", w3cCredentialPayload.maybeId.asJson),
               ("type", w3cCredentialPayload.`type`.asJson),
-              ("issuer", w3cCredentialPayload.issuer.id.asJson),
+              ("issuer", w3cCredentialPayload.issuer.value.asJson),
               ("issuanceDate", w3cCredentialPayload.issuanceDate.asJson),
               ("expirationDate", w3cCredentialPayload.maybeExpirationDate.asJson),
               ("credentialSchema", w3cCredentialPayload.maybeCredentialSchema.asJson),
@@ -306,7 +315,7 @@ object VerifiedCredentialJson {
               `@context` = `@context`.distinct,
               maybeId = maybeId,
               `type` = `type`.distinct,
-              issuer = IssuerDID(id = issuer),
+              issuer = DID(issuer),
               issuanceDate = issuanceDate,
               maybeExpirationDate = maybeExpirationDate,
               maybeCredentialSchema = maybeCredentialSchema,
@@ -373,16 +382,15 @@ object JwtVerifiableCredential {
   import VerifiedCredentialJson.Decoders.Implicits.*
   import VerifiedCredentialJson.Encoders.Implicits.*
 
-  def encodeJwt(payload: JwtCredentialPayload, issuer: Issuer): EncodedJWT =
-    EncodedJWT(jwt = issuer.signer.encode(payload.asJson))
+  def encodeJwt(payload: JwtCredentialPayload, issuer: Issuer): JWT = issuer.signer.encode(payload.asJson)
 
-  def toEncodedJwt(payload: W3CCredentialPayload, issuer: Issuer): EncodedJWT =
+  def toEncodedJwt(payload: W3CCredentialPayload, issuer: Issuer): JWT =
     encodeJwt(payload.toJwtCredentialPayload, issuer)
 
-  def decodeJwt(encodedJWT: EncodedJWT, publicKey: PublicKey): Try[JwtCredentialPayload] = {
-    JwtCirce.decodeRaw(encodedJWT.jwt, publicKey).flatMap(decode[JwtCredentialPayload](_).toTry)
+  def decodeJwt(jwt: JWT, publicKey: PublicKey): Try[JwtCredentialPayload] = {
+    JwtCirce.decodeRaw(jwt.value, publicKey).flatMap(decode[JwtCredentialPayload](_).toTry)
   }
 
-  def validateEncodedJwt(encodedJWT: EncodedJWT, publicKey: PublicKey): Boolean =
-    JwtCirce.isValid(encodedJWT.jwt, publicKey)
+  def validateEncodedJwt(jwt: JWT, publicKey: PublicKey): Boolean =
+    JwtCirce.isValid(jwt.value, publicKey)
 }
