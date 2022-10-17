@@ -22,7 +22,7 @@ import io.circe.Json
   val privateKey = keyPair.getPrivate
   val publicKey = keyPair.getPublic
 
-  val Right(claimJson) = jawn.parse(s"""{"expires":${Instant.now.getEpochSecond}}""")
+  val Right(claimJson) : Right[io.circe.ParsingFailure, io.circe.Json] @unchecked = jawn.parse(s"""{"expires":${Instant.now.getEpochSecond}}""")
 
   val jwt = JwtCirce.encode(claimJson, privateKey, JwtAlgorithm.ES256)
 
