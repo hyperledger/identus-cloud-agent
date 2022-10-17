@@ -11,8 +11,6 @@ final class CustodialDIDService(store: DIDKeyStorage) {
 
   def createAndStoreDID(publishToLedger: Boolean = false): UIO[DID] = ???
 
-  def signWithDID(did: DID, keyId: String, bytes: HexString): UIO[HexString] = ???
-
 }
 
 object CustodialDIDService {

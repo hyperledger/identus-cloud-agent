@@ -1,17 +1,22 @@
 package io.iohk.atala.agent.custodian.keystore
 
-import io.iohk.atala.castor.core.model.did.DID
+import io.iohk.atala.castor.core.model.did.{DIDDocument, DIDStorage, PrismDIDV1, PublishedDIDOperation}
 import io.iohk.atala.agent.custodian.model.*
 import io.iohk.atala.agent.custodian.model.ECCoordinates.*
+import io.iohk.atala.shared.models.HexStrings.HexString
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
 
 object InMemoryDIDKeyStorageSpec extends ZIOSpecDefault {
 
-  private val didExample = DID(
-    method = "example",
-    methodSpecificId = "abc"
+  private val didExample = PrismDIDV1.fromCreateOperation(
+    PublishedDIDOperation.Create(
+      updateCommitment = HexString.fromStringUnsafe("00"),
+      recoveryCommitment = HexString.fromStringUnsafe("00"),
+      storage = DIDStorage.Cardano("testnet"),
+      document = DIDDocument(publicKeys = Nil, services = Nil)
+    )
   )
 
   def generateKeyPair(publicKey: (Int, Int) = (0, 0), privateKey: (Int, Int) = (0, 0)): ECKeyPair = ECKeyPair(
