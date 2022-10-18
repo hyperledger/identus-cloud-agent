@@ -1,23 +1,12 @@
 package io.iohk.atala.pollux.vc.jwt.demos
-import io.iohk.atala.pollux.vc.jwt.{
-  CredentialSchema,
-  CredentialStatus,
-  DID,
-  JwtCredentialPayload,
-  RefreshService,
-  W3cCredentialPayload
-}
-import io.iohk.atala.pollux.vc.jwt.VerifiedCredentialJson.Encoders.Implicits.*
-import io.iohk.atala.pollux.vc.jwt.VerifiedCredentialJson.Decoders.Implicits.*
-import cats.implicits.*
+
 import io.circe.*
-import net.reactivecore.cjs.resolver.Downloader
-import net.reactivecore.cjs.{DocumentValidator, Loader, Result}
-import pdi.jwt.{JwtAlgorithm, JwtCirce, JwtClaim}
 import io.circe.generic.auto.*
-import io.circe.syntax.*
-import io.circe.{Decoder, Encoder, HCursor, Json}
 import io.circe.parser.decode
+import io.circe.syntax.*
+import io.iohk.atala.pollux.vc.jwt.*
+import io.iohk.atala.pollux.vc.jwt.CredentialPayload.Implicits.*
+import pdi.jwt.{JwtAlgorithm, JwtCirce, JwtClaim}
 
 import java.security.*
 import java.security.spec.*

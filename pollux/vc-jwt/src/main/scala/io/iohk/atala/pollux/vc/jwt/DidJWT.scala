@@ -1,7 +1,10 @@
 package io.iohk.atala.pollux.vc.jwt
 
-import cats.implicits.*
+import io.circe
 import io.circe.*
+import io.circe.generic.auto.*
+import io.circe.parser.decode
+import io.circe.syntax.*
 import net.reactivecore.cjs.resolver.Downloader
 import net.reactivecore.cjs.{DocumentValidator, Loader, Result}
 import pdi.jwt.algorithms.JwtECDSAAlgorithm
@@ -19,6 +22,11 @@ object JWT {
 
   extension (jwt: JWT) {
     def value: String = jwt
+  }
+
+  object Implicits {
+    implicit val jwtEncoder: Encoder[JWT] =
+      (jwt: JWT) => jwt.value.asJson
   }
 }
 

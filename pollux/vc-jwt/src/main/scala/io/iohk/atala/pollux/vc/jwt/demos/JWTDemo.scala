@@ -1,18 +1,14 @@
 package io.iohk.atala.pollux.vc.jwt.demos
 
+import cats.implicits.*
 import io.circe.*
-import pdi.jwt.JwtClaim
-import pdi.jwt.{JwtAlgorithm, JwtCirce}
+import net.reactivecore.cjs.resolver.Downloader
+import net.reactivecore.cjs.{DocumentValidator, Loader, Result}
+import pdi.jwt.{JwtAlgorithm, JwtCirce, JwtClaim}
 
 import java.security.*
 import java.security.spec.*
 import java.time.Instant
-import net.reactivecore.cjs.Loader
-
-import net.reactivecore.cjs.{DocumentValidator, Loader, Result}
-import net.reactivecore.cjs.resolver.Downloader
-import cats.implicits._
-import io.circe.Json
 
 @main def jwtDemo(): Unit =
   val keyGen = KeyPairGenerator.getInstance("EC")
