@@ -5,7 +5,7 @@ import io.iohk.atala.pollux.vc.jwt.{
   DID,
   JwtCredentialPayload,
   RefreshService,
-  W3CCredentialPayload
+  W3cCredentialPayload
 }
 import io.iohk.atala.pollux.vc.jwt.VerifiedCredentialJson.Encoders.Implicits.*
 import io.iohk.atala.pollux.vc.jwt.VerifiedCredentialJson.Decoders.Implicits.*
@@ -24,7 +24,7 @@ import java.security.spec.*
 import java.time.{Instant, ZonedDateTime}
 
 @main def CredentialDemo(): Unit =
-  val w3cCredentialPayload = W3CCredentialPayload(
+  val w3cCredentialPayload = W3cCredentialPayload(
     `@context` = Vector("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
     maybeId = Some("http://example.edu/credentials/3732"),
     `type` = Vector("VerifiableCredential", "UniversityDegreeCredential"),
@@ -69,7 +69,7 @@ import java.time.{Instant, ZonedDateTime}
   println("==================")
   println("W3C Json => W3C")
   println("==================")
-  val decodedW3CJson = decode[W3CCredentialPayload](w3cJson).toOption.get
+  val decodedW3CJson = decode[W3cCredentialPayload](w3cJson).toOption.get
   println(decodedW3CJson)
 
   println("")

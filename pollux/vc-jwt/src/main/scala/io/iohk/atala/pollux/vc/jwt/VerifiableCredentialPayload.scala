@@ -12,10 +12,6 @@ import java.security.{KeyPairGenerator, PublicKey}
 import java.time.{Instant, ZonedDateTime}
 import scala.util.{Failure, Success, Try}
 
-case class Proof(`type`: String)
-
-trait Verifiable(proof: Proof)
-
 opaque type DID = String
 
 object DID {
@@ -28,31 +24,29 @@ object DID {
 
 case class Issuer(did: DID, signer: Signer, publicKey: PublicKey)
 
-trait W3CCredential(
-                     `@context`: IndexedSeq[String],
-                     `type`: IndexedSeq[String],
-                     issuer: DID,
-                     issuanceDate: ZonedDateTime,
-                     expirationDate: ZonedDateTime
-                   )
+case class Proof(`type`: String, other: Json)
 
-trait VerifiableCredential
+trait Verifiable(proof: Proof)
 
-trait W3CVerifiableCredential extends W3CCredential, Verifiable
+sealed trait VerifiableCredentialPayload
 
-case class JwtVerifiableCredential(jwt: JWT) extends VerifiableCredential
+case class W3cVerifiableCredentialPayload(payload: W3cCredentialPayload, proof: Proof)
+  extends Verifiable(proof),
+    VerifiableCredentialPayload
 
-trait VerifiedCredential extends JWTVerified, W3CVerifiableCredential
+case class JwtVerifiableCredentialPayload(jwt: JWT) extends VerifiableCredentialPayload
+
+//trait VerifiedCredential extends JWTVerified, W3CVerifiableCredential
 
 case class CredentialStatus(
-    id: String,
-    `type`: String
-)
+                             id: String,
+                             `type`: String
+                           )
 
 case class RefreshService(
-    id: String,
-    `type`: String
-)
+                           id: String,
+                           `type`: String
+                         )
 
 case class CredentialSchema(
     id: String,
@@ -95,12 +89,12 @@ sealed trait CredentialPayload(
       maybeJti = maybeJti
     )
 
-  def toW3CCredentialPayload: Validation[String, W3CCredentialPayload] =
+  def toW3CCredentialPayload: Validation[String, W3cCredentialPayload] =
     Validation.validateWith(
       Validation.fromOptionWith("Iss must be defined")(maybeIss),
       Validation.fromOptionWith("Nbf must be defined")(maybeNbf)
     ) { (iss, nbf) =>
-      W3CCredentialPayload(
+      W3cCredentialPayload(
         `@context` = `@context`.distinct,
         maybeId = maybeJti,
         `type` = `type`.distinct,
@@ -153,7 +147,7 @@ case class JwtCredentialPayload(
       credentialSubject = vc.credentialSubject
     )
 
-case class W3CCredentialPayload(
+case class W3cCredentialPayload(
                                  `@context`: IndexedSeq[String],
                                  maybeId: Option[String],
                                  `type`: IndexedSeq[String],
@@ -168,23 +162,23 @@ case class W3CCredentialPayload(
                                  maybeTermsOfUse: Option[Json],
 
                                  /** Not part of W3C Credential but included to preserve in case of conversion from JWT. */
-    aud: IndexedSeq[String] = IndexedSeq.empty
-) extends CredentialPayload(
-      maybeSub = credentialSubject.hcursor.downField("id").as[String].toOption,
-      `@context` = `@context`.distinct,
-      `type` = `type`.distinct,
-      maybeJti = maybeId,
-      maybeNbf = Some(issuanceDate),
-      aud = aud,
-      maybeExp = maybeExpirationDate,
-      maybeIss = Some(issuer.value),
-      maybeConnectionStatus = maybeCredentialStatus,
-      maybeRefreshService = maybeRefreshService,
-      maybeEvidence = maybeEvidence,
-      maybeTermsOfUse = maybeTermsOfUse,
-      maybeCredentialSchema = maybeCredentialSchema,
-      credentialSubject = credentialSubject
-    )
+                                 aud: IndexedSeq[String] = IndexedSeq.empty
+                               ) extends CredentialPayload(
+  maybeSub = credentialSubject.hcursor.downField("id").as[String].toOption,
+  `@context` = `@context`.distinct,
+  `type` = `type`.distinct,
+  maybeJti = maybeId,
+  maybeNbf = Some(issuanceDate),
+  aud = aud,
+  maybeExp = maybeExpirationDate,
+  maybeIss = Some(issuer.value),
+  maybeConnectionStatus = maybeCredentialStatus,
+  maybeRefreshService = maybeRefreshService,
+  maybeEvidence = maybeEvidence,
+  maybeTermsOfUse = maybeTermsOfUse,
+  maybeCredentialSchema = maybeCredentialSchema,
+  credentialSubject = credentialSubject
+)
 
 object VerifiedCredentialJson {
   object Encoders {
@@ -213,8 +207,8 @@ object VerifiedCredentialJson {
               ("type", credentialStatus.`type`.asJson)
             )
 
-      implicit val w3cCredentialPayloadEncoder: Encoder[W3CCredentialPayload] =
-        (w3cCredentialPayload: W3CCredentialPayload) =>
+      implicit val w3cCredentialPayloadEncoder: Encoder[W3cCredentialPayload] =
+        (w3cCredentialPayload: W3cCredentialPayload) =>
           Json
             .obj(
               ("@context", w3cCredentialPayload.`@context`.asJson),
@@ -232,6 +226,23 @@ object VerifiedCredentialJson {
             )
             .deepDropNullValues
             .dropEmptyValues
+
+      implicit val proofEncoder: Encoder[Proof] =
+        (proof: Proof) => proof.other.deepMerge(Map("type" -> proof.`type`).asJson)
+
+      implicit val w3CVerifiableCredentialPayloadEncoder: Encoder[W3cVerifiableCredentialPayload] =
+        (w3cVerifiableCredentialPayload: W3cVerifiableCredentialPayload) =>
+          w3cVerifiableCredentialPayload.payload.asJson
+            .deepMerge(Map("proof" -> w3cVerifiableCredentialPayload.proof).asJson)
+
+      implicit val jwtVerifiableCredentialPayloadEncoder: Encoder[JwtVerifiableCredentialPayload] =
+        (jwtVerifiableCredentialPayload: JwtVerifiableCredentialPayload) =>
+          jwtVerifiableCredentialPayload.jwt.value.asJson
+
+      implicit val verifiableCredentialPayloadEncoder: Encoder[VerifiableCredentialPayload] = {
+        case (w3cVerifiableCredentialPayload: W3cVerifiableCredentialPayload) => w3cVerifiableCredentialPayload.asJson
+        case (jwtVerifiableCredentialPayload: JwtVerifiableCredentialPayload) => jwtVerifiableCredentialPayload.asJson
+      }
 
       implicit val jwtVcEncoder: Encoder[JwtVc] =
         (jwtVc: JwtVc) =>
@@ -295,7 +306,7 @@ object VerifiedCredentialJson {
             CredentialStatus(id = id, `type` = `type`)
           }
 
-      implicit val w3cCredentialPayloadEncoder: Decoder[W3CCredentialPayload] =
+      implicit val w3cCredentialPayloadEncoder: Decoder[W3cCredentialPayload] =
         (c: HCursor) =>
           for {
             `@context` <- c.downField("@context").as[IndexedSeq[String]]
@@ -311,7 +322,7 @@ object VerifiedCredentialJson {
             maybeEvidence <- c.downField("evidence").as[Option[Json]]
             maybeTermsOfUse <- c.downField("termsOfUse").as[Option[Json]]
           } yield {
-            W3CCredentialPayload(
+            W3cCredentialPayload(
               `@context` = `@context`.distinct,
               maybeId = maybeId,
               `type` = `type`.distinct,
@@ -327,6 +338,43 @@ object VerifiedCredentialJson {
               aud = IndexedSeq.empty
             )
           }
+
+      implicit val proofDecoder: Decoder[Proof] =
+        (c: HCursor) =>
+          for {
+            `type` <- c.downField("type").as[String]
+            other <- c.downField("type").delete.up.as[Json]
+          } yield {
+            Proof(
+              `type` = `type`,
+              other = other
+            )
+          }
+
+      implicit val w3cVerifiableCredentialPayloadDecoder: Decoder[W3cVerifiableCredentialPayload] =
+        (c: HCursor) =>
+          for {
+            payload <- c.as[W3cCredentialPayload]
+            proof <- c.downField("proof").as[Proof]
+          } yield {
+            W3cVerifiableCredentialPayload(
+              payload = payload,
+              proof = proof
+            )
+          }
+
+      implicit val jwtVerifiableCredentialPayloadDecoder: Decoder[JwtVerifiableCredentialPayload] =
+        (c: HCursor) =>
+          for {
+            jwt <- c.as[String]
+          } yield {
+            JwtVerifiableCredentialPayload(
+              jwt = JWT(jwt)
+            )
+          }
+
+      implicit val verifiableCredentialPayloadDecoder: Decoder[VerifiableCredentialPayload] =
+        jwtVerifiableCredentialPayloadDecoder.or(w3cVerifiableCredentialPayloadDecoder.asInstanceOf[Decoder[VerifiableCredentialPayload]])
 
       implicit val jwtVcDecoder: Decoder[JwtVc] =
         (c: HCursor) =>
@@ -384,7 +432,7 @@ object JwtVerifiableCredential {
 
   def encodeJwt(payload: JwtCredentialPayload, issuer: Issuer): JWT = issuer.signer.encode(payload.asJson)
 
-  def toEncodedJwt(payload: W3CCredentialPayload, issuer: Issuer): JWT =
+  def toEncodedJwt(payload: W3cCredentialPayload, issuer: Issuer): JWT =
     encodeJwt(payload.toJwtCredentialPayload, issuer)
 
   def decodeJwt(jwt: JWT, publicKey: PublicKey): Try[JwtCredentialPayload] = {

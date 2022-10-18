@@ -39,7 +39,7 @@ import java.time.{Instant, ZonedDateTime}
   println("==================")
   println("Create W3C")
   println("==================")
-  val w3cCredentialPayload = W3CCredentialPayload(
+  val w3cCredentialPayload = W3cCredentialPayload(
     `@context` = Vector("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
     maybeId = Some("http://example.edu/credentials/3732"),
     `type` = Vector("VerifiableCredential", "UniversityDegreeCredential"),
