@@ -2,7 +2,8 @@ package io.iohk.atala.castor.core.model.did
 
 import io.iohk.atala.castor.core.model.ProtoModelHelper
 import io.iohk.atala.prism.crypto.Sha256
-import io.iohk.atala.shared.models.HexStrings.HexString
+import io.iohk.atala.shared.models.Base64UrlStrings.*
+import io.iohk.atala.shared.models.HexStrings.*
 
 enum PrismDIDVersion(val id: Int) {
   case V0 extends PrismDIDVersion(0)
@@ -29,19 +30,37 @@ sealed trait PrismDID {
 
 }
 
-final case class PrismDIDV1 private (suffix: HexString) extends PrismDID {
+final case class PrismDIDV1 private[did] (network: String, suffix: HexString) extends PrismDID {
 
   override val version: PrismDIDVersion = PrismDIDVersion.V1
 
-  override val versionSpecificId: String = suffix.toString
+  override val versionSpecificId: String = s"$network:$suffix"
 
 }
 
 object PrismDIDV1 extends ProtoModelHelper {
-  def fromCreateOperation(op: PublishedDIDOperation.Create): PrismDIDV1 = {
+  def fromCreateOperation(op: PublishedDIDOperation.Create): PrismDIDV1 =
+    LongFormPrismDIDV1.fromCreateOperation(op).toCanonical
+}
+
+final case class LongFormPrismDIDV1 private[did] (network: String, suffix: HexString, encodedState: Base64UrlString)
+    extends PrismDID {
+
+  override val version: PrismDIDVersion = PrismDIDVersion.V1
+
+  override val versionSpecificId: String = s"$network:$suffix:$encodedState"
+
+  def toCanonical: PrismDIDV1 = PrismDIDV1(network, suffix)
+
+}
+
+object LongFormPrismDIDV1 extends ProtoModelHelper {
+  def fromCreateOperation(op: PublishedDIDOperation.Create): LongFormPrismDIDV1 = {
     val createDIDProto = op.toProto
     val initialState = createDIDProto.toByteArray
     val suffix = HexString.fromByteArray(Sha256.compute(initialState).getValue)
-    PrismDIDV1(suffix)
+    val encodedState = Base64UrlString.fromByteArray(initialState)
+    val network = op.storage.ledgerName
+    LongFormPrismDIDV1(network, suffix, encodedState)
   }
 }
