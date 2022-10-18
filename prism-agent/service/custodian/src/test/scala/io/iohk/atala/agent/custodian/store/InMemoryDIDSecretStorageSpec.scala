@@ -1,4 +1,4 @@
-package io.iohk.atala.agent.custodian.keystore
+package io.iohk.atala.agent.custodian.store
 
 import io.iohk.atala.castor.core.model.did.{DIDDocument, DIDStorage, PrismDIDV1, PublishedDIDOperation}
 import io.iohk.atala.agent.custodian.model.*
@@ -8,7 +8,7 @@ import zio.*
 import zio.test.*
 import zio.test.Assertion.*
 
-object InMemoryDIDKeyStorageSpec extends ZIOSpecDefault {
+object InMemoryDIDSecretStorageSpec extends ZIOSpecDefault {
 
   private val didExample = PrismDIDV1.fromCreateOperation(
     PublishedDIDOperation.Create(
@@ -24,17 +24,17 @@ object InMemoryDIDKeyStorageSpec extends ZIOSpecDefault {
     privateKey = ECPrivateKey(ECPoint(ECCoordinate.fromBigInt(privateKey._1), ECCoordinate.fromBigInt(privateKey._2)))
   )
 
-  override def spec = suite("InMemoryDIDKeyStorage")(
+  override def spec = suite("InMemoryDIDSecretStorage")(
     listKeySpec,
     getKeySpec,
     upsertKeySpec,
     removeKeySpec
-  ).provideLayer(InMemoryDIDKeyStorage.layer)
+  ).provideLayer(InMemoryDIDSecretStorage.layer)
 
   private val listKeySpec = suite("listKeys")(
     test("initialize with empty list") {
       val result = for {
-        storage <- ZIO.service[DIDKeyStorage]
+        storage <- ZIO.service[DIDSecretStorage]
         keys <- storage.listKeys(didExample)
       } yield keys
       assertZIO(result)(isEmpty)
@@ -46,7 +46,7 @@ object InMemoryDIDKeyStorageSpec extends ZIOSpecDefault {
         "key-3" -> generateKeyPair(publicKey = (3, 3))
       )
       val result = for {
-        storage <- ZIO.service[DIDKeyStorage]
+        storage <- ZIO.service[DIDSecretStorage]
         _ <- ZIO.foreachDiscard(keyPairs) { case (keyId, keyPair) =>
           storage.upsertKey(didExample, keyId, keyPair)
         }
@@ -60,7 +60,7 @@ object InMemoryDIDKeyStorageSpec extends ZIOSpecDefault {
     test("return stored key if exist") {
       val keyPair = generateKeyPair(publicKey = (1, 1))
       val result = for {
-        storage <- ZIO.service[DIDKeyStorage]
+        storage <- ZIO.service[DIDSecretStorage]
         _ <- storage.upsertKey(didExample, "key-1", keyPair)
         key <- storage.getKey(didExample, "key-1")
       } yield key
@@ -69,7 +69,7 @@ object InMemoryDIDKeyStorageSpec extends ZIOSpecDefault {
     test("return None if stored key doesn't exist") {
       val keyPair = generateKeyPair(publicKey = (1, 1))
       val result = for {
-        storage <- ZIO.service[DIDKeyStorage]
+        storage <- ZIO.service[DIDSecretStorage]
         _ <- storage.upsertKey(didExample, "key-1", keyPair)
         key <- storage.getKey(didExample, "key-2")
       } yield key
@@ -82,7 +82,7 @@ object InMemoryDIDKeyStorageSpec extends ZIOSpecDefault {
       val keyPair1 = generateKeyPair(publicKey = (1, 1))
       val keyPair2 = generateKeyPair(publicKey = (2, 2))
       val result = for {
-        storage <- ZIO.service[DIDKeyStorage]
+        storage <- ZIO.service[DIDSecretStorage]
         _ <- storage.upsertKey(didExample, "key-1", keyPair1)
         _ <- storage.upsertKey(didExample, "key-1", keyPair2)
         key <- storage.getKey(didExample, "key-1")
@@ -95,24 +95,22 @@ object InMemoryDIDKeyStorageSpec extends ZIOSpecDefault {
     test("remove existing key and return removed value") {
       val keyPair = generateKeyPair(publicKey = (1, 1))
       val result = for {
-        storage <- ZIO.service[DIDKeyStorage]
+        storage <- ZIO.service[DIDSecretStorage]
         _ <- storage.upsertKey(didExample, "key-1", keyPair)
-        removedKey <- storage.removeKey(didExample, "key-1")
+        _ <- storage.removeKey(didExample, "key-1")
         keys <- storage.listKeys(didExample)
-      } yield (removedKey, keys)
-      assertZIO(result.map(_._1))(isSome(equalTo(keyPair))) &&
-      assertZIO(result.map(_._2))(isEmpty)
+      } yield keys
+      assertZIO(result)(isEmpty)
     },
     test("remove non-existing key and return None for the removed value") {
       val keyPair = generateKeyPair(publicKey = (1, 1))
       val result = for {
-        storage <- ZIO.service[DIDKeyStorage]
+        storage <- ZIO.service[DIDSecretStorage]
         _ <- storage.upsertKey(didExample, "key-1", keyPair)
-        removedKey <- storage.removeKey(didExample, "key-2")
+        _ <- storage.removeKey(didExample, "key-2")
         keys <- storage.listKeys(didExample)
-      } yield (removedKey, keys)
-      assertZIO(result.map(_._1))(isNone) &&
-      assertZIO(result.map(_._2))(hasSize(equalTo(1)))
+      } yield keys
+      assertZIO(result)(hasSize(equalTo(1)))
     },
     test("remove some of existing keys and keep other keys") {
       val keyPairs = Map(
@@ -121,7 +119,7 @@ object InMemoryDIDKeyStorageSpec extends ZIOSpecDefault {
         "key-3" -> generateKeyPair(publicKey = (3, 3))
       )
       val result = for {
-        storage <- ZIO.service[DIDKeyStorage]
+        storage <- ZIO.service[DIDSecretStorage]
         _ <- ZIO.foreachDiscard(keyPairs) { case (keyId, keyPair) =>
           storage.upsertKey(didExample, keyId, keyPair)
         }
