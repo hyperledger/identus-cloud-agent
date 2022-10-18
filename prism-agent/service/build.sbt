@@ -21,10 +21,10 @@ val commonSettings = Seq(
 lazy val root = project
   .in(file("."))
   .settings(commonSettings)
-  .aggregate(custodian, server)
+  .aggregate(`key-management`, server)
 
-lazy val custodian = project
-  .in(file("custodian"))
+lazy val `key-management` = project
+  .in(file("key-management"))
   .settings(commonSettings)
   .settings(
     name := "prism-agent-custodian",
@@ -52,4 +52,4 @@ lazy val server = project
     dockerBaseImage := "openjdk:11"
   )
   .enablePlugins(OpenApiGeneratorPlugin, JavaAppPackaging, DockerPlugin)
-  .dependsOn(custodian)
+  .dependsOn(`key-management`)
