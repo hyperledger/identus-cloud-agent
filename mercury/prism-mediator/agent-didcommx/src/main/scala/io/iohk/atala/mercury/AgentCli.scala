@@ -11,6 +11,8 @@ import io.iohk.atala.resolvers.CharlieSecretResolver
 import zhttp.service._
 import zhttp.http._
 import io.iohk.atala.QRcode
+import io.iohk.atala.mercury.model.Message
+import io.iohk.atala.mercury.model.DidId
 
 /** AgentCli
   * {{{
@@ -71,13 +73,48 @@ object AgentCli extends ZIOAppDefault {
     } yield ()
   }
 
+  // FIXME create a new MODEL for Login protocol
   def generateLoginInvitation = {
+    import io.iohk.atala.mercury.protocol.outofbandlogin._
+
+    def makeMsg(i: OutOfBandLoginInvitation): Message = Message(
+      piuri = i.`type`,
+      id = i.id,
+      from = Some(i.from): Option[DidId],
+      to = None,
+    )
+
     // InvitationPrograms.createInvitationV2().map(oob => Response.text(serverUrl + oob))
     for {
       didCommService <- ZIO.service[DidComm]
-      serverUrl = s"http://locahost:${8888}?_oob=${didCommService.myDid}"
+      invitation = OutOfBandLoginInvitation(from = didCommService.myDid)
+      invitationSigned <- didCommService.packSigned(makeMsg(invitation))
+      serverUrl = s"http://locahost:${9999}?_oob=${invitationSigned.base64}" // FIXME locahost
       _ <- Console.printLine(QRcode.getQr(serverUrl).toString)
       _ <- Console.printLine(serverUrl)
+      _ <- Console.printLine(invitation.id + " -> " + invitation)
+    } yield ()
+  }
+
+  def loginInvitation = {
+    import io.iohk.atala.mercury.protocol.outofbandlogin._
+
+    def reaOutOfBandLoginInvitation(msg: org.didcommx.didcomm.message.Message): OutOfBandLoginInvitation =
+      // OutOfBandLoginInvitation(`type` = msg.piuri, id = msg.id, from = msg.from.get)
+      OutOfBandLoginInvitation(`type` = msg.getType(), id = msg.getId(), from = DidId(msg.getFrom()))
+
+    // InvitationPrograms.createInvitationV2().map(oob => Response.text(serverUrl + oob))
+    for {
+      didCommService <- ZIO.service[DidComm]
+      _ <- Console.printLine("Read OutOfBand Invitation")
+      data <- Console.readLine.flatMap {
+        case ""  => ZIO.fail(???) // TODO retry
+        case url => ZIO.succeed(Utils.parseLink(url).getOrElse(???)) /// TODO make ERROR
+      }
+      msg <- didCommService.unpack(data)
+      outOfBandLoginInvitation = reaOutOfBandLoginInvitation(msg.getMessage)
+      reply = outOfBandLoginInvitation.reply(didCommService.myDid)
+      _ <- Console.printLine(s"Replying to ${outOfBandLoginInvitation.id} with $reply")
     } yield ()
   }
 
@@ -139,7 +176,7 @@ object AgentCli extends ZIOAppDefault {
         "Ask for Mediation Coordinate" -> askForMediation.provide(didCommLayer),
         "Start a endpoint" -> startEndpoint.provide(didCommLayer),
         "Generate login invitation" -> generateLoginInvitation.provide(didCommLayer),
-        "Login with DID" -> Console.print("TODO"),
+        "Login with DID" -> loginInvitation.provide(didCommLayer),
       )
     ).repeatN(10)
 

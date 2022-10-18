@@ -2,6 +2,7 @@ package io.iohk.atala.mercury.protocol.outofbandlogin
 
 import io.iohk.atala.mercury.model.PIURI
 import io.iohk.atala.mercury.model.DidId
+import io.iohk.atala.mercury.model.Message
 
 /** Out-Of-Band Login Invitation
   * @see
@@ -14,13 +15,14 @@ final case class OutOfBandLoginInvitation(
 ) {
   assert(`type` == "https://atalaprism.io/mercury/outofband-login/1.0/invitation")
 
-  def reply(replier: DidId) = {
-    OutOfBandloginReply(
-      from = replier,
-      to = from,
-      thid = id, // Thread identifier. Uniquely identifies the thread that the message belongs to
-    )
-  }
+  def makeMsg: Message = Message(piuri = `type`, id = id, from = Some(from), to = None)
+
+  def reply(replier: DidId) = OutOfBandloginReply(
+    from = replier,
+    to = from,
+    thid = id, // Thread identifier. Uniquely identifies the thread that the message belongs to
+  )
+
 }
 
 /** Reply to Login Invitation
@@ -36,4 +38,6 @@ final case class OutOfBandloginReply(
     // replyTo: OutOfBandLoginInvitation
 ) {
   assert(`type` == "https://atalaprism.io/mercury/outofband-login/1.0/reply")
+
+  def makeMsg: Message = Message(piuri = `type`, id = id, from = Some(from), to = Some(to), thid = Some(thid))
 }
