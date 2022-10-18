@@ -53,10 +53,11 @@ object Dependencies {
   private lazy val doobieDependencies: Seq[ModuleID] = Seq(doobiePostgres, doobieHikari)
   private lazy val circeDependencies: Seq[ModuleID] =
     Seq(circeCore, circeGeneric, circeParser)
-  private lazy val zioTestDependencies: Seq[ModuleID] = Seq(zioTest, zioTestSbt, zioTestMagnolia)
+  private lazy val zioTestDependencies: Seq[ModuleID] = Seq(zioTest, zioTestSbt, zioTestMagnolia, zioCatsInterop)
 
   // Project Dependencies
-  lazy val coreDependencies: Seq[ModuleID] = baseDependencies ++ grpcDependencies ++ circeDependencies ++ zioTestDependencies
+  lazy val coreDependencies: Seq[ModuleID] =
+    baseDependencies ++ grpcDependencies ++ circeDependencies ++ zioTestDependencies
   lazy val sqlDependencies: Seq[ModuleID] = baseDependencies ++ doobieDependencies ++ Seq(zioCatsInterop)
   lazy val serverDependencies: Seq[ModuleID] = baseDependencies
 }

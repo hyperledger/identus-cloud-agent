@@ -82,10 +82,12 @@ object TransactionMetadata {
       .getOrElse(Array())
   }
 
-  def toTransactionMetadata(
+  def toCardanoTransactionMetadata(
       ledger: Ledger,
       irisBatch: proto.IrisBatch
   ): TransactionMetadata = {
+    // This definition aligns with the rules described here https://developers.cardano.org/docs/transaction-metadata/
+    // After posting that data to the Cardano blockchain, it gets transformed to JSON
     TransactionMetadata(
       Json.obj(
         METADATA_PRISM_INDEX.toString -> Json.obj(
@@ -121,7 +123,26 @@ object TransactionMetadata {
     )
   }
 
+  def toInmemoryTransactionMetadata(
+      ledger: Ledger,
+      irisBatch: proto.IrisBatch
+  ): TransactionMetadata =
+    TransactionMetadata(
+      Json.obj(
+        METADATA_PRISM_INDEX.toString -> Json.obj(
+          VERSION_KEY -> Json.fromInt(2),
+          LEDGER_KEY -> Json.fromString(ledger.name),
+          CONTENT_KEY -> Json.arr(
+            irisBatch.toByteArray
+              .grouped(BYTE_STRING_LIMIT)
+              .map(bytes => Json.fromString(BytesOps.bytesToHex(bytes)))
+              .toSeq: _*
+          )
+        )
+      )
+    )
+
   def estimateTxMetadataSize(ledger: Ledger, irisBatch: proto.IrisBatch): Int = {
-    toTransactionMetadata(ledger, irisBatch).json.noSpaces.length
+    toCardanoTransactionMetadata(ledger, irisBatch).json.noSpaces.length
   }
 }

@@ -9,7 +9,7 @@ import java.time.Instant
 trait ROIrisBatchesRepository[S[_]] {
 
   // Streams batches which are already on the database
-  // Every transaction contains a IrisBatch in its metadata, hence, 
+  // Every transaction contains a IrisBatch in its metadata, hence,
   // there is one to one correspondence between TransactionId and IrisBatch
   def getIrisBatchesStream(lastSeen: Option[TransactionId]): S[ConfirmedIrisBatch]
 }
@@ -20,5 +20,4 @@ trait ROIrisBatchesRepository[S[_]] {
  */
 trait IrisBatchesRepository[F[_], S[_]] extends ROIrisBatchesRepository[S] {
   def saveIrisBatch(irisBatch: ConfirmedIrisBatch): F[Unit]
-
 }
