@@ -11,8 +11,8 @@ import io.iohk.atala.resolvers.CharlieSecretResolver
 import zhttp.service._
 import zhttp.http._
 import io.iohk.atala.QRcode
-import io.iohk.atala.mercury.model.Message
-import io.iohk.atala.mercury.model.DidId
+import io.iohk.atala.mercury.model._
+import io.iohk.atala.mercury.protocol.outofbandlogin._
 
 /** AgentCli
   * {{{
@@ -77,18 +77,11 @@ object AgentCli extends ZIOAppDefault {
   def generateLoginInvitation = {
     import io.iohk.atala.mercury.protocol.outofbandlogin._
 
-    def makeMsg(i: OutOfBandLoginInvitation): Message = Message(
-      piuri = i.`type`,
-      id = i.id,
-      from = Some(i.from): Option[DidId],
-      to = None,
-    )
-
     // InvitationPrograms.createInvitationV2().map(oob => Response.text(serverUrl + oob))
     for {
       didCommService <- ZIO.service[DidComm]
       invitation = OutOfBandLoginInvitation(from = didCommService.myDid)
-      invitationSigned <- didCommService.packSigned(makeMsg(invitation))
+      invitationSigned <- didCommService.packSigned(invitation.makeMsg)
       serverUrl = s"http://locahost:${9999}?_oob=${invitationSigned.base64}" // FIXME locahost
       _ <- Console.printLine(QRcode.getQr(serverUrl).toString)
       _ <- Console.printLine(serverUrl)
@@ -99,9 +92,10 @@ object AgentCli extends ZIOAppDefault {
   def loginInvitation = {
     import io.iohk.atala.mercury.protocol.outofbandlogin._
 
-    def reaOutOfBandLoginInvitation(msg: org.didcommx.didcomm.message.Message): OutOfBandLoginInvitation =
+    def reaOutOfBandLoginInvitation(msg: org.didcommx.didcomm.message.Message): OutOfBandLoginInvitation = {
       // OutOfBandLoginInvitation(`type` = msg.piuri, id = msg.id, from = msg.from.get)
       OutOfBandLoginInvitation(`type` = msg.getType(), id = msg.getId(), from = DidId(msg.getFrom()))
+    }
 
     // InvitationPrograms.createInvitationV2().map(oob => Response.text(serverUrl + oob))
     for {
@@ -115,16 +109,30 @@ object AgentCli extends ZIOAppDefault {
       outOfBandLoginInvitation = reaOutOfBandLoginInvitation(msg.getMessage)
       reply = outOfBandLoginInvitation.reply(didCommService.myDid)
       _ <- Console.printLine(s"Replying to ${outOfBandLoginInvitation.id} with $reply")
+
+      encryptedForwardMessage <- didCommService.packEncrypted(reply.makeMsg, to = reply.to)
+      jsonString = encryptedForwardMessage.string
+      res <- Client
+        .request(
+          url = "http://localhost:8081", // FIXME
+          method = Method.POST,
+          headers = Headers("content-type" -> MediaTypes.contentTypeEncrypted),
+          content = HttpData.fromChunk(Chunk.fromArray(jsonString.getBytes)),
+          // ssl = ClientSSLOptions.DefaultSSL,
+        )
+        .provideSomeLayer(env)
+      data <- res.bodyAsString
+      _ <- Console.printLine(data)
     } yield ()
   }
 
-  def app(port: Int): HttpApp[DidComm, Throwable] = {
+  def webServer(port: Int): HttpApp[DidComm, Throwable] = {
     val header = "content-type" -> MediaTypes.contentTypeEncrypted
     Http.collectZIO[Request] {
       case req @ Method.POST -> !!
           if req.headersAsList.exists(h => h._1.equalsIgnoreCase(header._1) && h._2.equalsIgnoreCase(header._2)) =>
         req.bodyAsString
-          // .flatMap(data => MediatorProgram.program(data))
+          .flatMap(data => webServerProgram(data))
           .map(str => Response.text(str))
       case Method.GET -> !! / "test" => ZIO.succeed(Response.text("Test ok!"))
       case req => ZIO.succeed(Response.text(s"The request must be a POST to root with the Header $header"))
@@ -133,13 +141,13 @@ object AgentCli extends ZIOAppDefault {
 
   def startEndpoint = for {
     _ <- Console.printLine("Setup a endpoint")
-    defualtPort = 8001 // defualt
+    defualtPort = 8081 // defualt
     _ <- Console.printLine(s"Inserte endpoint port ($defualtPort defualt) for (http://localhost:port)")
     port <- Console.readLine.flatMap {
       case ""  => ZIO.succeed(defualtPort)
       case str => ZIO.succeed(str.toIntOption.getOrElse(defualtPort))
     }
-    _ <- Server.start(port, app(port)).fork
+    _ <- Server.start(port, webServer(port)).fork
     _ <- Console.printLine("Endpoint Started")
   } yield ()
 
@@ -173,13 +181,84 @@ object AgentCli extends ZIOAppDefault {
         "Get DID Document" ->
           Console.printLine("DID Document:") *>
           Console.printLine(agentDID.getDIDDocument),
+        "Start WebServer endpoint" -> startEndpoint.provide(didCommLayer),
         "Ask for Mediation Coordinate" -> askForMediation.provide(didCommLayer),
-        "Start a endpoint" -> startEndpoint.provide(didCommLayer),
         "Generate login invitation" -> generateLoginInvitation.provide(didCommLayer),
         "Login with DID" -> loginInvitation.provide(didCommLayer),
       )
     ).repeatN(10)
 
   } yield ()
+
+  def webServerProgram(
+      jsonString: String
+  ): ZIO[DidComm, Nothing, String] = {
+    import io.iohk.atala.mercury.DidComm.*
+    ZIO.logAnnotate("request-id", java.util.UUID.randomUUID.toString()) {
+      for {
+        _ <- ZIO.logInfo("Received new message")
+        _ <- ZIO.logTrace(jsonString)
+        msg <- unpack(jsonString).map(_.getMessage)
+        ret <- {
+          msg.getType match {
+            case s if s == OutOfBandloginReply.piuri =>
+              for {
+                _ <- ZIO.logInfo("OutOfBandloginReply: " + msg)
+              } yield ("OutOfBandloginReply")
+
+            case "https://didcomm.org/routing/2.0/forward" => ???
+            // for {
+            //   _ <- ZIO.logInfo("Mediator Forward Message: " + mediatorMessage.toString)
+            //   _ <- ZIO.logInfo(
+            //     "\n*********************************************************************************************************************************\n"
+            //       + fromJsonObject(toJson(mediatorMessage.toString)).spaces2
+            //       + "\n********************************************************************************************************************************\n"
+            //   )
+            //   msg = mediatorMessage.getAttachments().get(0).getData().toJSONObject().get("json").toString()
+            //   nextRecipient = DidId(
+            //     mediatorMessage.getBody.asScala.get("next").map(e => e.asInstanceOf[String]).get
+            //   )
+            //   _ <- ZIO.log(s"Store Massage for ${nextRecipient}: " + mediatorMessage.getTo.asScala.toList)
+            //   // db <- ZIO.service[ZState[MyDB]]
+            //   _ <- MailStorage.store(nextRecipient, msg)
+            //   _ <- ZIO.log(s"Stored Message for '$nextRecipient'")
+            // } yield ("Message Forwarded")
+
+            case "https://atalaprism.io/mercury/mailbox/1.0/ReadMessages" => ???
+            // for {
+            //   _ <- ZIO.logInfo("Mediator ReadMessages: " + mediatorMessage.toString)
+            //   senderDID = DidId(mediatorMessage.getFrom())
+            //   _ <- ZIO.logInfo(s"Mediator ReadMessages get Messages from: $senderDID")
+            //   seqMsg <- MailStorage.get(senderDID)
+            // } yield (seqMsg.last)
+
+            case "https://didcomm.org/coordinate-mediation/2.0/mediate-request" => ???
+            // for {
+            //   _ <- ZIO.logInfo("Mediator ReadMessages: " + mediatorMessage.toString)
+            //   senderDID = DidId(mediatorMessage.getFrom())
+            //   _ <- ZIO.logInfo(s"Mediator ReadMessages get Messages from: $senderDID")
+            //   mayBeConnection <- ConnectionStorage.get(senderDID)
+            //   _ <- ZIO.logInfo(s"$senderDID state $mayBeConnection")
+            //   // DO some checks before we grant this logic need more thought
+            //   grantedOrDenied <- mayBeConnection
+            //     .map(_ => ZIO.succeed(Denied))
+            //     .getOrElse(ConnectionStorage.store(senderDID, Granted))
+            //   _ <- ZIO.logInfo(s"$senderDID state $grantedOrDenied")
+            //   messagePrepared <- makeMsg(senderDID, grantedOrDenied)
+            //   _ <- ZIO.logInfo("Message Prepared: " + messagePrepared.toString)
+            //   encryptedMsg <- packEncrypted(messagePrepared, to = senderDID)
+            //   _ <- ZIO.logInfo(
+            //     "\n*********************************************************************************************************************************\n"
+            //       + fromJsonObject(encryptedMsg.asJson).spaces2
+            //       + "\n***************************************************************************************************************************************\n"
+            //   )
+
+            // } yield (fromJsonObject(encryptedMsg.asJson).noSpaces)
+            case _ => ZIO.succeed("Unknown Message Type")
+          }
+        }
+      } yield (ret)
+    }
+  }
 
 }

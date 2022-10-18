@@ -9,11 +9,11 @@ import io.iohk.atala.mercury.model.Message
   *   https://atalaprism.io/mercury/outofband-login/1.0/invitation
   */
 final case class OutOfBandLoginInvitation(
-    `type`: PIURI = "https://atalaprism.io/mercury/outofband-login/1.0/invitation",
+    `type`: PIURI = OutOfBandLoginInvitation.piuri,
     id: String = Utils.getNewMsgId,
     from: DidId
 ) {
-  assert(`type` == "https://atalaprism.io/mercury/outofband-login/1.0/invitation")
+  assert(`type` == OutOfBandLoginInvitation.piuri)
 
   def makeMsg: Message = Message(piuri = `type`, id = id, from = Some(from), to = None)
 
@@ -25,19 +25,27 @@ final case class OutOfBandLoginInvitation(
 
 }
 
+object OutOfBandLoginInvitation {
+  def piuri: PIURI = "https://atalaprism.io/mercury/outofband-login/1.0/invitation"
+}
+
 /** Reply to Login Invitation
   * @see
   *   https://atalaprism.io/mercury/outofband-login/1.0/reply
   */
 final case class OutOfBandloginReply(
-    `type`: PIURI = "https://atalaprism.io/mercury/outofband-login/1.0/reply",
+    `type`: PIURI = OutOfBandloginReply.piuri,
     id: String = Utils.getNewMsgId,
     from: DidId,
     to: DidId,
     thid: String,
     // replyTo: OutOfBandLoginInvitation
 ) {
-  assert(`type` == "https://atalaprism.io/mercury/outofband-login/1.0/reply")
+  assert(`type` == OutOfBandloginReply.piuri)
 
   def makeMsg: Message = Message(piuri = `type`, id = id, from = Some(from), to = Some(to), thid = Some(thid))
+}
+
+object OutOfBandloginReply {
+  def piuri: PIURI = "https://atalaprism.io/mercury/outofband-login/1.0/reply"
 }
