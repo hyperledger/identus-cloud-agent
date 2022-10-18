@@ -8,8 +8,18 @@ import akka.http.scaladsl.server.Route
 import doobie.util.transactor.Transactor
 import io.iohk.atala.agent.server.http.{HttpRoutes, HttpServer}
 import io.iohk.atala.castor.core.service.{DIDService, DIDServiceImpl}
-import io.iohk.atala.agent.server.http.marshaller.{DIDApiMarshallerImpl, DIDAuthenticationApiMarshallerImpl, DIDOperationsApiMarshallerImpl, IssueCredentialsApiMarshallerImpl}
-import io.iohk.atala.agent.server.http.service.{DIDApiServiceImpl, DIDAuthenticationApiServiceImpl, DIDOperationsApiServiceImpl, IssueCredentialsApiServiceImpl}
+import io.iohk.atala.agent.server.http.marshaller.{
+  DIDApiMarshallerImpl,
+  DIDAuthenticationApiMarshallerImpl,
+  DIDOperationsApiMarshallerImpl,
+  IssueCredentialsApiMarshallerImpl
+}
+import io.iohk.atala.agent.server.http.service.{
+  DIDApiServiceImpl,
+  DIDAuthenticationApiServiceImpl,
+  DIDOperationsApiServiceImpl,
+  IssueCredentialsApiServiceImpl
+}
 import io.iohk.atala.castor.core.repository.DIDOperationRepository
 import io.iohk.atala.agent.openapi.api.{DIDApi, DIDAuthenticationApi, DIDOperationsApi, IssueCredentialsApi}
 import io.iohk.atala.castor.sql.repository.{JdbcDIDOperationRepository, TransactorLayer}

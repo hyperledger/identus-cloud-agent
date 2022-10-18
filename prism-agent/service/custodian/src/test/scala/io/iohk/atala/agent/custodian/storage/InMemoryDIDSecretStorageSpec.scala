@@ -8,6 +8,8 @@ import zio.*
 import zio.test.*
 import zio.test.Assertion.*
 
+import scala.collection.immutable.ArraySeq
+
 object InMemoryDIDSecretStorageSpec extends ZIOSpecDefault {
 
   private val didExample = PrismDIDV1.fromCreateOperation(
@@ -19,9 +21,9 @@ object InMemoryDIDSecretStorageSpec extends ZIOSpecDefault {
     )
   )
 
-  def generateKeyPair(publicKey: (Int, Int) = (0, 0), privateKey: (Int, Int) = (0, 0)): ECKeyPair = ECKeyPair(
+  def generateKeyPair(publicKey: (Int, Int) = (0, 0), privateKey: ArraySeq[Byte] = ArraySeq(0)): ECKeyPair = ECKeyPair(
     publicKey = ECPublicKey(ECPoint(ECCoordinate.fromBigInt(publicKey._1), ECCoordinate.fromBigInt(publicKey._2))),
-    privateKey = ECPrivateKey(ECPoint(ECCoordinate.fromBigInt(privateKey._1), ECCoordinate.fromBigInt(privateKey._2)))
+    privateKey = ECPrivateKey(privateKey)
   )
 
   override def spec = suite("InMemoryDIDSecretStorage")(
