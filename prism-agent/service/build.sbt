@@ -27,8 +27,8 @@ lazy val `key-management` = project
   .in(file("key-management"))
   .settings(commonSettings)
   .settings(
-    name := "prism-agent-custodian",
-    libraryDependencies ++= custodianDependencies
+    name := "prism-agent-key-management",
+    libraryDependencies ++= keyManagementDependencies
   )
 
 lazy val server = project

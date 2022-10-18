@@ -1,4 +1,4 @@
-package io.iohk.atala.agent.custodian.model
+package io.iohk.atala.agent.keymanagement.model
 
 import io.iohk.atala.castor.core.model.did.{Service, VerificationRelationship}
 

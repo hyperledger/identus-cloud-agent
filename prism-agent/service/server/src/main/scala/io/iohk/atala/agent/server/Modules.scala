@@ -28,8 +28,8 @@ import zio.interop.catz.*
 import cats.effect.std.Dispatcher
 import com.typesafe.config.ConfigFactory
 import io.grpc.ManagedChannelBuilder
-import io.iohk.atala.agent.custodian.model.{DIDPublicKeyTemplate, ManagedDIDTemplate}
-import io.iohk.atala.agent.custodian.service.ManagedDIDService
+import io.iohk.atala.agent.keymanagement.model.{DIDPublicKeyTemplate, ManagedDIDTemplate}
+import io.iohk.atala.agent.keymanagement.service.ManagedDIDService
 import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import io.iohk.atala.castor.core.util.DIDOperationValidator
@@ -69,7 +69,7 @@ object Modules {
         .mapError(_ => new Exception(""))
     } yield ()
 
-    effect.provide(ManagedDIDService.inMemoryStorage)
+    effect.provide(ManagedDIDService.inMemoryStorage(ManagedDIDService.KeyManagementConfig.default))
   }
 
 }

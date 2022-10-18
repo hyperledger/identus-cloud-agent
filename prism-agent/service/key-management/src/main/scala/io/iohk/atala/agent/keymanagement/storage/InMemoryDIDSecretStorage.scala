@@ -1,13 +1,13 @@
-package io.iohk.atala.agent.custodian.storage
+package io.iohk.atala.agent.keymanagement.storage
 
-import io.iohk.atala.agent.custodian.model.{CommitmentPurpose, ECKeyPair}
-import io.iohk.atala.agent.custodian.storage.InMemoryDIDSecretStorage.DIDSecretRecord
+import io.iohk.atala.agent.keymanagement.model.{CommitmentPurpose, ECKeyPair}
+import io.iohk.atala.agent.keymanagement.storage.InMemoryDIDSecretStorage.DIDSecretRecord
 import io.iohk.atala.castor.core.model.did.PrismDID
 import io.iohk.atala.shared.models.HexStrings.HexString
 import zio.{Ref, Task, ULayer, ZLayer}
 
 // TODO: add tests on commitment storage
-private[custodian] class InMemoryDIDSecretStorage private (store: Ref[Map[PrismDID, DIDSecretRecord]])
+private[keymanagement] class InMemoryDIDSecretStorage private (store: Ref[Map[PrismDID, DIDSecretRecord]])
     extends DIDSecretStorage {
   override def listKeys(did: PrismDID): Task[Map[String, ECKeyPair]] =
     store.get.map(_.get(did).map(_.keyPairs).getOrElse(Map.empty))
@@ -71,7 +71,7 @@ private[custodian] class InMemoryDIDSecretStorage private (store: Ref[Map[PrismD
 
 }
 
-private[custodian] object InMemoryDIDSecretStorage {
+private[keymanagement] object InMemoryDIDSecretStorage {
 
   private final case class DIDSecretRecord(
       updateCommitmentRevealValue: Option[HexString] = None,

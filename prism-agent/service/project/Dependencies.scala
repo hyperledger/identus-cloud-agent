@@ -44,6 +44,6 @@ object Dependencies {
   private lazy val bouncyDependencies: Seq[ModuleID] = Seq(bouncyBcpkix, bouncyBcprov)
 
   // Project Dependencies
-  lazy val custodianDependencies: Seq[ModuleID] = baseDependencies ++ castorDependencies ++ bouncyDependencies
+  lazy val keyManagementDependencies: Seq[ModuleID] = baseDependencies ++ castorDependencies ++ bouncyDependencies
   lazy val serverDependencies: Seq[ModuleID] = baseDependencies ++ akkaHttpDependencies ++ castorDependencies ++ polluxDependencies
 }

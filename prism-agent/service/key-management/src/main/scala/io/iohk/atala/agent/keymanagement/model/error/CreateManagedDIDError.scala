@@ -1,4 +1,4 @@
-package io.iohk.atala.agent.custodian.model.error
+package io.iohk.atala.agent.keymanagement.model.error
 
 sealed trait CreateManagedDIDError
 

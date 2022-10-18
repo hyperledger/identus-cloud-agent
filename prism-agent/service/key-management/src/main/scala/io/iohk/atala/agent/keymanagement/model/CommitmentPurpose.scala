@@ -1,4 +1,4 @@
-package io.iohk.atala.agent.custodian.model
+package io.iohk.atala.agent.keymanagement.model
 
 enum CommitmentPurpose {
   case Update extends CommitmentPurpose

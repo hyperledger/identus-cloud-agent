@@ -1,8 +1,8 @@
-package io.iohk.atala.agent.custodian.storage
+package io.iohk.atala.agent.keymanagement.storage
 
 import io.iohk.atala.castor.core.model.did.{DIDDocument, DIDStorage, PrismDIDV1, PublishedDIDOperation}
-import io.iohk.atala.agent.custodian.model.*
-import io.iohk.atala.agent.custodian.model.ECCoordinates.*
+import io.iohk.atala.agent.keymanagement.model.*
+import io.iohk.atala.agent.keymanagement.model.ECCoordinates.*
 import io.iohk.atala.shared.models.HexStrings.HexString
 import zio.*
 import zio.test.*
