@@ -155,6 +155,8 @@ The following is the list of supported scopes:
 * `pistis`
 * `atlas`
 * `agent`
+* `shared`
+* `infra`
 
 ##### Summary
 
@@ -206,6 +208,18 @@ The content of the commit message body should contain:
 
 * information about the SHA of the commit being reverted in the following format: This reverts commit <SHA>,
 * a clear description of the reason for reverting the commit message.
+
+### Local environment: pre-commit hooks
+
+[Conventional pre-commit hook](https://github.com/compilerla/conventional-pre-commit])
+can be used to check that all commits correspond to the Conventional Commits Specification. 
+
+Initialization:
+* Make sure pre-commit is [installed](https://pre-commit.com/#install).
+* Run: `pre-commit install --hook-type commit-msg`
+
+> Please note: even if local `pre-commit` set-up is not in use
+> all violations will be found during CI jobs execution for a PR
 
 [pr_guidelines]: https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request#creating-the-pull-request
 [conventional-commits]: https://www.conventionalcommits.org/en/v1.0.0/#specification
