@@ -1,7 +1,7 @@
-package io.iohk.atala.agent.custodian.store
+package io.iohk.atala.agent.custodian.storage
 
 import io.iohk.atala.agent.custodian.model.{CommitmentPurpose, ECKeyPair}
-import io.iohk.atala.agent.custodian.store.InMemoryDIDSecretStorage.DIDSecretRecord
+import io.iohk.atala.agent.custodian.storage.InMemoryDIDSecretStorage.DIDSecretRecord
 import io.iohk.atala.castor.core.model.did.PrismDID
 import io.iohk.atala.shared.models.HexStrings.HexString
 import zio.{Ref, Task, ULayer, ZLayer}

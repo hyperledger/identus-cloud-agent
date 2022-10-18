@@ -8,6 +8,7 @@ object Dependencies {
     val akkaHttp = "10.2.9"
     val castor = "0.1.0"
     val pollux = "0.1.0"
+    val bouncyCastle = "1.70"
   }
 
   private lazy val zio = "dev.zio" %% "zio" % Versions.zio
@@ -30,13 +31,19 @@ object Dependencies {
   private lazy val polluxCore = "io.iohk.atala" %% "pollux-core" % Versions.pollux
   private lazy val polluxSqlDoobie = "io.iohk.atala" %% "pollux-sql-doobie" % Versions.pollux
 
+  // Added here to make prism-crypto works.
+  // Once migrated to apollo, evaluate if this should be remove.
+  private lazy val bouncyBcpkix = "org.bouncycastle" % "bcpkix-jdk15on" % Versions.bouncyCastle
+  private lazy val bouncyBcprov = "org.bouncycastle" % "bcprov-jdk15on" % Versions.bouncyCastle
+
   // Dependency Modules
   private lazy val baseDependencies: Seq[ModuleID] = Seq(zio, zioTest, zioTestSbt, zioTestMagnolia, zioConfig, zioConfigMagnolia, zioConfigTypesafe)
   private lazy val castorDependencies: Seq[ModuleID] = Seq(castorCore, castorSqlDoobie)
   private lazy val polluxDependencies: Seq[ModuleID] = Seq(polluxCore, polluxSqlDoobie)
   private lazy val akkaHttpDependencies: Seq[ModuleID] = Seq(akkaTyped, akkaStream, akkaHttp, akkaSprayJson).map(_.cross(CrossVersion.for3Use2_13))
+  private lazy val bouncyDependencies: Seq[ModuleID] = Seq(bouncyBcpkix, bouncyBcprov)
 
   // Project Dependencies
-  lazy val custodianDependencies: Seq[ModuleID] = baseDependencies ++ castorDependencies
+  lazy val custodianDependencies: Seq[ModuleID] = baseDependencies ++ castorDependencies ++ bouncyDependencies
   lazy val serverDependencies: Seq[ModuleID] = baseDependencies ++ akkaHttpDependencies ++ castorDependencies ++ polluxDependencies
 }

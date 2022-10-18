@@ -2,7 +2,7 @@ package io.iohk.atala.agent.server.http.service
 
 import akka.http.scaladsl.marshalling.ToEntityMarshaller
 import akka.http.scaladsl.server.Route
-import io.iohk.atala.agent.custodian.service.CustodialDIDService
+import io.iohk.atala.agent.custodian.service.ManagedDIDService
 import zio.*
 import io.iohk.atala.agent.openapi.api.DIDRegistrarApiService
 import io.iohk.atala.agent.openapi.model.{
@@ -15,7 +15,7 @@ import io.iohk.atala.agent.openapi.model.{
 }
 import io.iohk.atala.agent.server.http.model.{OASDomainModelHelper, OASErrorModelHelper}
 
-class DIDRegistrarApiServiceImpl(service: CustodialDIDService)(using runtime: Runtime[Any])
+class DIDRegistrarApiServiceImpl(service: ManagedDIDService)(using runtime: Runtime[Any])
     extends DIDRegistrarApiService,
       AkkaZioSupport,
       OASDomainModelHelper,
@@ -36,10 +36,10 @@ class DIDRegistrarApiServiceImpl(service: CustodialDIDService)(using runtime: Ru
 }
 
 object DIDRegistrarApiServiceImpl {
-  val layer: URLayer[CustodialDIDService, DIDRegistrarApiService] = ZLayer.fromZIO {
+  val layer: URLayer[ManagedDIDService, DIDRegistrarApiService] = ZLayer.fromZIO {
     for {
       rt <- ZIO.runtime[Any]
-      svc <- ZIO.service[CustodialDIDService]
+      svc <- ZIO.service[ManagedDIDService]
     } yield DIDRegistrarApiServiceImpl(svc)(using rt)
   }
 }

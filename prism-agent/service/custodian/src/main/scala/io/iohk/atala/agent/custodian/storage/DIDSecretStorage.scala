@@ -1,4 +1,4 @@
-package io.iohk.atala.agent.custodian.store
+package io.iohk.atala.agent.custodian.storage
 
 import io.iohk.atala.agent.custodian.model.{CommitmentPurpose, ECKeyPair}
 import io.iohk.atala.castor.core.model.did.PrismDID
