@@ -1,5 +1,7 @@
 package io.iohk.atala.mercury
 
+import scala.jdk.CollectionConverters.*
+
 import zio._
 import java.io.IOException
 import io.iohk.atala.resolvers.PeerDidMediatorSecretResolver
@@ -82,7 +84,7 @@ object AgentCli extends ZIOAppDefault {
       didCommService <- ZIO.service[DidComm]
       invitation = OutOfBandLoginInvitation(from = didCommService.myDid)
       invitationSigned <- didCommService.packSigned(invitation.makeMsg)
-      serverUrl = s"http://locahost:${9999}?_oob=${invitationSigned.base64}" // FIXME locahost
+      serverUrl = s"https://didcomm-bootstrap.atalaprism.com?_oob=${invitationSigned.base64}" // FIXME locahost
       _ <- Console.printLine(QRcode.getQr(serverUrl).toString)
       _ <- Console.printLine(serverUrl)
       _ <- Console.printLine(invitation.id + " -> " + invitation)
@@ -97,7 +99,6 @@ object AgentCli extends ZIOAppDefault {
       OutOfBandLoginInvitation(`type` = msg.getType(), id = msg.getId(), from = DidId(msg.getFrom()))
     }
 
-    // InvitationPrograms.createInvitationV2().map(oob => Response.text(serverUrl + oob))
     for {
       didCommService <- ZIO.service[DidComm]
       _ <- Console.printLine("Read OutOfBand Invitation")
@@ -112,9 +113,20 @@ object AgentCli extends ZIOAppDefault {
 
       encryptedForwardMessage <- didCommService.packEncrypted(reply.makeMsg, to = reply.to)
       jsonString = encryptedForwardMessage.string
+
+      serviceEndpoint = UniversalDidResolver
+        .resolve(reply.to.value)
+        .get()
+        .getDidCommServices()
+        .asScala
+        .toSeq
+        .headOption
+        .map(s => s.getServiceEndpoint())
+
+      _ <- Console.printLine("Sending to" + serviceEndpoint)
       res <- Client
         .request(
-          url = "http://localhost:8081", // FIXME
+          url = serviceEndpoint.get, // FIXME make ERROR type
           method = Method.POST,
           headers = Headers("content-type" -> MediaTypes.contentTypeEncrypted),
           content = HttpData.fromChunk(Chunk.fromArray(jsonString.getBytes)),
@@ -141,7 +153,20 @@ object AgentCli extends ZIOAppDefault {
 
   def startEndpoint = for {
     _ <- Console.printLine("Setup a endpoint")
-    defualtPort = 8081 // defualt
+    didCommService <- ZIO.service[DidComm]
+
+    defualtPort = UniversalDidResolver
+      .resolve(didCommService.myDid.value)
+      .get()
+      .getDidCommServices()
+      .asScala
+      .toSeq
+      .headOption
+      .map(s => s.getServiceEndpoint())
+      .flatMap(e => URL.fromString(e).toOption)
+      .flatMap(_.port)
+      .getOrElse(8081) // defualt
+
     _ <- Console.printLine(s"Inserte endpoint port ($defualtPort defualt) for (http://localhost:port)")
     port <- Console.readLine.flatMap {
       case ""  => ZIO.succeed(defualtPort)
@@ -177,6 +202,7 @@ object AgentCli extends ZIOAppDefault {
 
     _ <- options(
       Seq(
+        "none" -> ZIO.unit,
         "Show DID" -> Console.printLine(agentDID),
         "Get DID Document" ->
           Console.printLine("DID Document:") *>
@@ -186,7 +212,7 @@ object AgentCli extends ZIOAppDefault {
         "Generate login invitation" -> generateLoginInvitation.provide(didCommLayer),
         "Login with DID" -> loginInvitation.provide(didCommLayer),
       )
-    ).repeatN(10)
+    ).repeatWhile((_) => true)
 
   } yield ()
 
