@@ -5,6 +5,7 @@ import com.ionspin.kotlin.bignum.integer.util.ConversionUtilsKt
 import io.iohk.atala.agent.keymanagement.model.ECCoordinates.ECCoordinate
 import io.iohk.atala.castor.core.model.did.EllipticCurve
 import io.iohk.atala.prism.crypto as prismcrypto
+import io.iohk.atala.agent.keymanagement.util.Prism14CompatUtil.*
 
 import scala.collection.immutable.ArraySeq
 
@@ -16,8 +17,7 @@ object ECCoordinates {
   opaque type ECCoordinate = prismcrypto.keys.ECCoordinate
 
   object ECCoordinate {
-    def fromBigInt(i: BigInt): ECCoordinate = prismcrypto.keys
-      .ECCoordinate(ConversionUtilsKt.fromTwosComplementByteArray(BigInteger.Companion, i.toByteArray))
+    def fromBigInt(i: BigInt): ECCoordinate = prismcrypto.keys.ECCoordinate(i.toKotlinBigInt)
   }
 
   extension (c: ECCoordinate) {
@@ -37,3 +37,22 @@ final case class ECPublicKey(p: ECPoint) extends AnyVal
 final case class ECPrivateKey(n: ArraySeq[Byte]) extends AnyVal
 
 final case class ECKeyPair(publicKey: ECPublicKey, privateKey: ECPrivateKey)
+
+object ECKeyPair {
+  private[keymanagement] def fromPrism14ECKeyPair(keyPair: io.iohk.atala.prism.crypto.keys.ECKeyPair): ECKeyPair = {
+    val publicKeyPoint = keyPair.getPublicKey.getCurvePoint
+    val privateKey = keyPair.getPrivateKey.getEncoded
+    ECKeyPair(
+      publicKey = ECPublicKey(
+        p = ECPoint(
+          x = ECCoordinate.fromBigInt(publicKeyPoint.getX.getCoordinate.toScalaBigInt),
+          y = ECCoordinate.fromBigInt(publicKeyPoint.getY.getCoordinate.toScalaBigInt)
+        )
+      ),
+      privateKey = ECPrivateKey(
+        n = ArraySeq.from(privateKey)
+      )
+    )
+  }
+
+}

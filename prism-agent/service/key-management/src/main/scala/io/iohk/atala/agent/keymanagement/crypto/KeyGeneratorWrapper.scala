@@ -15,19 +15,7 @@ object KeyGeneratorWrapper {
       case EllipticCurve.SECP256K1 =>
         ZIO.attempt {
           val prism14KeyPair = EC.INSTANCE.generateKeyPair()
-          val publicKeyPoint = prism14KeyPair.getPublicKey.getCurvePoint
-          val privateKey = prism14KeyPair.getPrivateKey.getEncoded
-          ECKeyPair(
-            publicKey = ECPublicKey(
-              p = ECPoint(
-                x = ECCoordinate.fromBigInt(BigInt(publicKeyPoint.getX.getCoordinate.toByteArray)),
-                y = ECCoordinate.fromBigInt(BigInt(publicKeyPoint.getY.getCoordinate.toByteArray))
-              )
-            ),
-            privateKey = ECPrivateKey(
-              n = ArraySeq.from(privateKey)
-            )
-          )
+          ECKeyPair.fromPrism14ECKeyPair(prism14KeyPair)
         }
     }
   }
