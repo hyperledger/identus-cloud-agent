@@ -10,6 +10,7 @@ val apiBaseDirectory = settingKey[File]("The base directory for PrismAgent API s
 ThisBuild / apiBaseDirectory := baseDirectory.value / "../api"
 
 val commonSettings = Seq(
+  testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
   githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN"),
   resolvers += Resolver.githubPackages("input-output-hk", "atala-prism-sdk"),
   // Needed for Kotlin coroutines that support new memory management mode
@@ -20,7 +21,15 @@ val commonSettings = Seq(
 lazy val root = project
   .in(file("."))
   .settings(commonSettings)
-  .aggregate(server)
+  .aggregate(custodian, server)
+
+lazy val custodian = project
+  .in(file("custodian"))
+  .settings(commonSettings)
+  .settings(
+    name := "prism-agent-custodian",
+    libraryDependencies ++= custodianDependencies
+  )
 
 lazy val server = project
   .in(file("server"))
@@ -33,8 +42,8 @@ lazy val server = project
     Compile / sourceGenerators += openApiGenerateClasses,
     openApiGeneratorSpec := apiBaseDirectory.value / "http/prism-agent-openapi-spec.yaml",
     openApiGeneratorConfig := baseDirectory.value / "openapi/generator-config/config.yaml",
-    openApiGeneratorImportMapping := Seq("DidType", "DidOperationType", "DidOperationStatus", "OperationType")
-      .map(model => (model, s"io.iohk.atala.agent.server.http.OASModelPatches.$model"))
+    openApiGeneratorImportMapping := Seq("DidOperationType", "DidOperationStatus")
+      .map(model => (model, s"io.iohk.atala.agent.server.http.model.OASModelPatches.$model"))
       .toMap,
     Docker / maintainer := "atala-coredid@iohk.io",
     Docker / dockerRepository := Some("atala-prism.io"),
@@ -43,3 +52,4 @@ lazy val server = project
     dockerBaseImage := "openjdk:11"
   )
   .enablePlugins(OpenApiGeneratorPlugin, JavaAppPackaging, DockerPlugin)
+  .dependsOn(custodian)

@@ -1,9 +1,9 @@
-package io.iohk.atala.mercury.protocol.invitation
+package io.iohk.atala.mercury.protocol.invitation.v2
 
 import munit.*
 import io.iohk.atala.mercury.protocol.invitation.v2._
 import io.iohk.atala.mercury.model.DidId
-
+import io.iohk.atala.mercury.protocol.invitation.OutOfBand
 class OutOfBandSpec extends FunSuite {
 
   test("out-of-band (_oob URL) messagem parsing into Invitation") {

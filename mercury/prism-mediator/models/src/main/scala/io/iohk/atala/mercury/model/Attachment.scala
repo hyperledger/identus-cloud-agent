@@ -2,6 +2,8 @@ package io.iohk.atala.mercury.model
 
 import io.circe._
 
+//TDOD  Attachment replace this with AttachmentDescriptor
+
 /** https://identity.foundation/didcomm-messaging/spec/#attachments
   *
   * Example:
@@ -17,7 +19,7 @@ import io.circe._
   * }}}
   */
 final case class Attachment(
-    data: AttachmentData,
+    data: AttachData,
     id: String = java.util.UUID.randomUUID.toString(), // id: Option[String], OPTIONAL ?
     // description:Option[String],
     // media_type:Option[String],
@@ -30,4 +32,4 @@ final case class Attachment(
   //   Json.obj("data" -> data, "id" -> Json.fromString(id))
 }
 
-type AttachmentData = JsonObject
+type AttachData = JsonObject

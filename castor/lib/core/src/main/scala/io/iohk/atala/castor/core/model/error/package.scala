@@ -6,8 +6,10 @@ package object error {
   object DIDOperationError {
     final case class DLTProxyError(cause: Throwable) extends DIDOperationError
     final case class InvalidArgument(msg: String) extends DIDOperationError
+    final case class InvalidPrecondition(msg: String) extends DIDOperationError
     final case class TooManyDidPublicKeyAccess(limit: Int, access: Option[Int]) extends DIDOperationError
     final case class TooManyDidServiceAccess(limit: Int, access: Option[Int]) extends DIDOperationError
+    final case class InternalErrorDB(cause: Throwable) extends DIDOperationError
   }
 
 }

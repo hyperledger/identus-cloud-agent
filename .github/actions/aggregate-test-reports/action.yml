@@ -1,0 +1,23 @@
+name: "Aggregate test reports"
+description: "Aggregates all TEST-*.xml reports for all subprojects in one directory"
+inputs:
+  tests-dir:
+    description: "Top-level directory to search for reports. Defaults to current dir."
+    required: false
+    default: "."
+  reports-dir:
+    description: "Name of the directory that contains test reports"
+    required: false
+    default: "test-reports"
+runs:
+  using: "composite"
+  steps:
+    - name: "Aggregate reports"
+      shell: bash
+      run: |
+        for REPORTS in $(find ${{ inputs.tests-dir }} -name ${{ inputs.reports-dir }} ); do
+          PROJECT="${REPORTS%/target/*}"
+          DEST="${{ inputs.tests-dir }}/target/${{ inputs.reports-dir }}/${PROJECT}"
+          mkdir -p ${DEST}
+          cp -r "${REPORTS}" "${DEST}"
+        done
