@@ -17,6 +17,7 @@ echo "--------------------------------------"
 
 cd mercury/prism-mediator && sbt "project mediator; docker:publishLocal" && cd -
 cd prism-agent/service && sbt docker:publishLocal && cd -
+cd iris/service && sbt docker:publishLocal && cd -
 
 echo "--------------------------------------"
 echo "Bringing up stack using docker-compose"
