@@ -1,7 +1,6 @@
 package io.iohk.atala.agent.keymanagement.crypto
 
-import io.iohk.atala.agent.keymanagement.model.ECCoordinates.ECCoordinate
-import io.iohk.atala.agent.keymanagement.model.{ECKeyPair, ECPoint, ECPrivateKey, ECPublicKey}
+import io.iohk.atala.agent.keymanagement.model.ECKeyPair
 import io.iohk.atala.castor.core.model.did.EllipticCurve
 import io.iohk.atala.prism.crypto.EC
 

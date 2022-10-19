@@ -83,7 +83,7 @@ private[keymanagement] object InMemoryDIDSecretStorage {
 
   val layer: ULayer[DIDSecretStorage] = {
     ZLayer.fromZIO(
-      Ref.make(Map.empty[PrismDID, DIDSecretRecord]).map(store => InMemoryDIDSecretStorage(store))
+      Ref.make(Map.empty[PrismDID, DIDSecretRecord]).map(InMemoryDIDSecretStorage(_))
     )
   }
 }

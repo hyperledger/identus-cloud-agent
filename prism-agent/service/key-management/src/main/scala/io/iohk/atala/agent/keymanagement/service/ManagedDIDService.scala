@@ -5,7 +5,12 @@ import io.iohk.atala.agent.keymanagement.model.{CommitmentPurpose, DIDPublicKeyT
 import io.iohk.atala.agent.keymanagement.model.ECCoordinates.*
 import io.iohk.atala.agent.keymanagement.model.error.CreateManagedDIDError
 import io.iohk.atala.agent.keymanagement.service.ManagedDIDService.{CreateDIDSecret, KeyManagementConfig}
-import io.iohk.atala.agent.keymanagement.storage.{DIDSecretStorage, InMemoryDIDSecretStorage}
+import io.iohk.atala.agent.keymanagement.storage.{
+  DIDNonSecretStorage,
+  DIDSecretStorage,
+  InMemoryDIDNonSecretStorage,
+  InMemoryDIDSecretStorage
+}
 import io.iohk.atala.castor.core.model.did.{
   DID,
   DIDDocument,
@@ -32,6 +37,7 @@ final class ManagedDIDService private[keymanagement] (
     didService: DIDService,
     didOpValidator: DIDOperationValidator,
     secretStorage: DIDSecretStorage,
+    nonSecretStorage: DIDNonSecretStorage,
     config: KeyManagementConfig
 ) {
 
@@ -41,18 +47,27 @@ final class ManagedDIDService private[keymanagement] (
       (createOperation, secret) = generated
       longFormDID = LongFormPrismDIDV1.fromCreateOperation(createOperation)
       did = longFormDID.toCanonical
+      _ <- nonSecretStorage.listCreatedDID
+        .mapError(CreateManagedDIDError.WalletStorageError.apply)
+        .filterOrFail(createdDIDs => !createdDIDs.contains(did))(CreateManagedDIDError.DIDAlreadyExists(did))
       _ <- ZIO
         .fromEither(didOpValidator.validate(createOperation))
         .mapError(CreateManagedDIDError.OperationError.apply)
       _ <- secretStorage
         .upsertDIDCommitmentRevealValue(did, CommitmentPurpose.Update, secret.updateCommitmentRevealValue)
-        .mapError(CreateManagedDIDError.SecretStorageError.apply)
+        .mapError(CreateManagedDIDError.WalletStorageError.apply)
       _ <- secretStorage
         .upsertDIDCommitmentRevealValue(did, CommitmentPurpose.Recovery, secret.recoveryCommitmentRevealValue)
-        .mapError(CreateManagedDIDError.SecretStorageError.apply)
+        .mapError(CreateManagedDIDError.WalletStorageError.apply)
       _ <- ZIO
         .foreachDiscard(secret.keyPairs) { case (keyId, keyPair) => secretStorage.upsertKey(did, keyId, keyPair) }
-        .mapError(CreateManagedDIDError.SecretStorageError.apply)
+        .mapError(CreateManagedDIDError.WalletStorageError.apply)
+      // A DID is considered created after it is saved using saveCreatedDID
+      // If some steps above failed, it is not considered created and data that
+      // is persisted along the way may be garbage collected.
+      _ <- nonSecretStorage
+        .saveCreatedDID(did, createOperation)
+        .mapError(CreateManagedDIDError.WalletStorageError.apply)
     } yield longFormDID
   }
 
@@ -118,5 +133,7 @@ object ManagedDIDService {
   }
 
   def inMemoryStorage(config: KeyManagementConfig): URLayer[DIDService & DIDOperationValidator, ManagedDIDService] =
-    InMemoryDIDSecretStorage.layer >>> ZLayer.fromFunction(ManagedDIDService(_, _, _, config))
+    (InMemoryDIDNonSecretStorage.layer ++ InMemoryDIDSecretStorage.layer) >>> ZLayer.fromFunction(
+      ManagedDIDService(_, _, _, _, config)
+    )
 }
