@@ -48,7 +48,7 @@ lazy val server = project
       .map(model => (model, s"io.iohk.atala.agent.server.http.model.OASModelPatches.$model"))
       .toMap,
     Docker / maintainer := "atala-coredid@iohk.io",
-    Docker / dockerRepository := Some("atala-prism.io"),
+    Docker / dockerRepository := Some("registry.atalaprism.io"),
     // Docker / packageName := s"atala-prism/${packageName.value}",
     dockerExposedPorts := Seq(8080),
     dockerBaseImage := "openjdk:11"
