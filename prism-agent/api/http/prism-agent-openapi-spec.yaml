@@ -16,6 +16,8 @@ tags:
     description: DID Operations REST API
   - name: DID Authentication
     description: DID Authentication REST API
+  - name: DID Registrar
+    description: DID Registrar REST API
   # Pollux
   - name: Schema Registry
     description: Schema Registry REST API
@@ -36,8 +38,8 @@ paths:
     post:
       tags: [ "DID" ]
       operationId: createDid
-      summary: Create DID with the associated DID Document with the option to publish to blockchain.
-      description: Create DID with the associated DID Document with the option to publish to blockchain.
+      summary: Publish DID create operation to blockchain.
+      description: Publish DID create operation to blockchain.
       requestBody:
         required: true
         content:
@@ -67,8 +69,8 @@ paths:
     get:
       tags: [ "DID" ]
       operationId: getDid
-      summary: Get DID.
-      description: Get DID.
+      summary: Resolve DID.
+      description: Resolve DID.
       parameters:
         - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
       responses:
@@ -89,8 +91,8 @@ paths:
     post:
       tags: [ "DID" ]
       operationId: updateDid
-      summary: Update DID.
-      description: Update DID.
+      summary: Publish DID update operation to blockchain.
+      description: Publish DID update operation to blockchain.
       parameters:
         - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
       requestBody:
@@ -128,8 +130,8 @@ paths:
     post:
       tags: [ "DID" ]
       operationId: deactivateDID
-      summary: Deactivates either published or unpublished DID.
-      description: Deactivates either published or unpublished DID.
+      summary: Publish DID deactivate operation to blockchain.
+      description: Publish DID deactivate operation to blockchain.
       parameters:
         - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
       requestBody:
@@ -167,8 +169,8 @@ paths:
     post:
       tags: [ "DID" ]
       operationId: recoverDid
-      summary: Recover DID.
-      description: Recover DID.
+      summary: Publish DID recover operation to blockchain.
+      description: Publish DID recover operation to blockchain.
       parameters:
         - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
       requestBody:
@@ -251,6 +253,7 @@ paths:
       tags: [ "DID Authentication" ]
       operationId: createDidAuthenticationChallenge
       summary: Create a new authentication challenge
+      deprecated: true
       description: |
         Create a new authentication challenge that will be later verified
         by Castor for a relying-party.
@@ -279,6 +282,7 @@ paths:
       tags: [ "DID Authentication" ]
       operationId: createDidAuthenticationChallengeSubmission
       summary: Create a verification from challenge
+      deprecated: true
       description: |
         Submit a challenge submission that will be verified by Castor for a relying-party.
       requestBody:
@@ -296,6 +300,54 @@ paths:
                 $ref: "./castor/schemas.yaml#/components/schemas/AuthenticationChallengeSubmissionResponse"
         "400":
           description: ChallengeSubmission is malformed
+          content:
+            application/json:
+              schema:
+                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
+
+  /did-registrar/dids:
+    post:
+      tags: [ "DID Registrar" ]
+      operationId: createCustodialDid
+      summary: Create DID with the DID Document template where keys are managed by PrismAgent.
+      description: Create DID with the DID Document template where keys are managed by PrismAgent.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "./castor/schemas.yaml#/components/schemas/CreateCustodialDidRequest"
+      responses:
+        "200":
+          description: Created unpublished DID.
+          content:
+            application/json:
+              schema:
+                $ref: "./castor/schemas.yaml#/components/schemas/CreateCustodialDIDResponse"
+        "422":
+          description: The DID creation failed.
+          content:
+            application/json:
+              schema:
+                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
+
+  /did-registrar/dids/{didRef}/publications:
+    post:
+      tags: [ "DID Registrar" ]
+      operationId: publishCustodialDid
+      summary: Publish DID stored in PrismAgent wallet to blockchain
+      description: Publish DID stored in PrismAgent wallet to blockchain
+      parameters:
+        - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
+      responses:
+        "202":
+          description: Publishing DID to Blockchain.
+          content:
+            application/json:
+              schema:
+                $ref: "./castor/schemas.yaml#/components/schemas/DIDOperationResponse"
+        "422":
+          description: The DID publication failed.
           content:
             application/json:
               schema:
