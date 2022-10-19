@@ -40,12 +40,12 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 
   // Pollux
   given RootJsonFormat[CreateCredentials201Response] = jsonFormat3(CreateCredentials201Response.apply)
-  given RootJsonFormat[CreateCredentialsRequest] = jsonFormat2(CreateCredentialsRequest.apply)
+  given RootJsonFormat[CreateCredentialsRequest] = jsonFormat1(CreateCredentialsRequest.apply)
   given RootJsonFormat[RevocationStatus] = jsonFormat2(RevocationStatus.apply)
   given RootJsonFormat[W3CCredential] = jsonFormat6(W3CCredential.apply)
-  given RootJsonFormat[W3CCredentialCredentialSubject] = jsonFormat1(W3CCredentialCredentialSubject.apply)
-  given RootJsonFormat[W3CCredentialInput] = jsonFormat3(W3CCredentialInput.apply)
-  given RootJsonFormat[W3CCredentialInputClaims] = jsonFormat1(W3CCredentialInputClaims.apply)
+//  given RootJsonFormat[W3CCredentialCredentialSubject] = jsonFormat1(W3CCredentialCredentialSubject.apply)
+  given RootJsonFormat[W3CCredentialInput] = jsonFormat4(W3CCredentialInput.apply)
+//  given RootJsonFormat[W3CCredentialInputClaims] = jsonFormat1(W3CCredentialInputClaims.apply)
   given RootJsonFormat[W3CCredentialRevocationRequest] = jsonFormat1(W3CCredentialRevocationRequest.apply)
   given RootJsonFormat[W3CCredentialRevocationResponse] = jsonFormat2(W3CCredentialRevocationResponse.apply)
   given RootJsonFormat[W3CCredentialsPaginated] = jsonFormat4(W3CCredentialsPaginated.apply)
