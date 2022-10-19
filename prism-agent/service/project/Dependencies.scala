@@ -25,11 +25,12 @@ object Dependencies {
 
   private lazy val polluxCore = "io.iohk.atala" %% "pollux-core" % Versions.pollux
   private lazy val polluxSqlDoobie = "io.iohk.atala" %% "pollux-sql-doobie" % Versions.pollux
+  private lazy val polluxVcJwt = "io.iohk.atala" %% "pollux-vc-jwt" % "0.1.0-SNAPSHOT" changing()
 
   // Dependency Modules
   private lazy val baseDependencies: Seq[ModuleID] = Seq(zio, zioConfig, zioConfigMagnolia, zioConfigTypesafe)
   private lazy val castorDependencies: Seq[ModuleID] = Seq(castorCore, castorSqlDoobie)
-  private lazy val polluxDependencies: Seq[ModuleID] = Seq(polluxCore, polluxSqlDoobie)
+  private lazy val polluxDependencies: Seq[ModuleID] = Seq(polluxCore, polluxSqlDoobie, polluxVcJwt)
   private lazy val akkaHttpDependencies: Seq[ModuleID] = Seq(akkaTyped, akkaStream, akkaHttp, akkaSprayJson).map(_.cross(CrossVersion.for3Use2_13))
 
   // Project Dependencies
