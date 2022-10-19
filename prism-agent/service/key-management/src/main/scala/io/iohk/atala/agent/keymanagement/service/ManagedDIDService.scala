@@ -17,6 +17,8 @@ import io.iohk.atala.castor.core.model.did.{
   PublicKeyJwk,
   PublishedDIDOperation
 }
+import io.iohk.atala.castor.core.service.DIDService
+import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.prism.crypto.Sha256
 import io.iohk.atala.prism.crypto.util.Random
 import io.iohk.atala.shared.models.Base64UrlStrings.*
@@ -26,15 +28,22 @@ import zio.*
 /** A wrapper around Castor's DIDService providing key-management capability. Analogous to the secretAPI in
   * indy-wallet-sdk.
   */
-final class ManagedDIDService private[keymanagement] (secretStorage: DIDSecretStorage, config: KeyManagementConfig) {
+final class ManagedDIDService private[keymanagement] (
+    didService: DIDService,
+    didOpValidator: DIDOperationValidator,
+    secretStorage: DIDSecretStorage,
+    config: KeyManagementConfig
+) {
 
   def createAndStoreDID(didTemplate: ManagedDIDTemplate): IO[CreateManagedDIDError, PrismDID] = {
     for {
-      _ <- Console.printLine("creating and storing managed DID").ignore
       generated <- generateCreateOperation(didTemplate)
       (createOperation, secret) = generated
       longFormDID = LongFormPrismDIDV1.fromCreateOperation(createOperation)
       did = longFormDID.toCanonical
+      _ <- ZIO
+        .fromEither(didOpValidator.validate(createOperation))
+        .mapError(CreateManagedDIDError.OperationError.apply)
       _ <- secretStorage
         .upsertDIDCommitmentRevealValue(did, CommitmentPurpose.Update, secret.updateCommitmentRevealValue)
         .mapError(CreateManagedDIDError.SecretStorageError.apply)
@@ -44,7 +53,6 @@ final class ManagedDIDService private[keymanagement] (secretStorage: DIDSecretSt
       _ <- ZIO
         .foreachDiscard(secret.keyPairs) { case (keyId, keyPair) => secretStorage.upsertKey(did, keyId, keyPair) }
         .mapError(CreateManagedDIDError.SecretStorageError.apply)
-      _ <- ZIO.die(RuntimeException("DIE!!!"))
     } yield longFormDID
   }
 
@@ -109,6 +117,6 @@ object ManagedDIDService {
     )
   }
 
-  def inMemoryStorage(config: KeyManagementConfig): ULayer[ManagedDIDService] =
-    InMemoryDIDSecretStorage.layer >>> ZLayer.fromFunction(ManagedDIDService(_, config))
+  def inMemoryStorage(config: KeyManagementConfig): URLayer[DIDService & DIDOperationValidator, ManagedDIDService] =
+    InMemoryDIDSecretStorage.layer >>> ZLayer.fromFunction(ManagedDIDService(_, _, _, config))
 }

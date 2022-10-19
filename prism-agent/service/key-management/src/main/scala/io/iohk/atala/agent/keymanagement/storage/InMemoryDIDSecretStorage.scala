@@ -14,18 +14,16 @@ private[keymanagement] class InMemoryDIDSecretStorage private (store: Ref[Map[Pr
 
   override def getKey(did: PrismDID, keyId: String): Task[Option[ECKeyPair]] = listKeys(did).map(_.get(keyId))
 
-  override def upsertKey(did: PrismDID, keyId: String, keyPair: ECKeyPair): Task[Unit] = {
-    Console.printLine(s"upsertKey($did, $keyId, $keyPair)").ignore *>
-      store
-        .update { currentStore =>
-          val currentSecret = currentStore.get(did)
-          val currentKeyPairs = currentSecret.map(_.keyPairs).getOrElse(Map.empty)
-          val updatedKeyPairs = currentKeyPairs.updated(keyId, keyPair)
-          val updatedSecret =
-            currentSecret.fold(DIDSecretRecord(keyPairs = updatedKeyPairs))(_.copy(keyPairs = updatedKeyPairs))
-          currentStore.updated(did, updatedSecret)
-        }
-  }
+  override def upsertKey(did: PrismDID, keyId: String, keyPair: ECKeyPair): Task[Unit] =
+    store
+      .update { currentStore =>
+        val currentSecret = currentStore.get(did)
+        val currentKeyPairs = currentSecret.map(_.keyPairs).getOrElse(Map.empty)
+        val updatedKeyPairs = currentKeyPairs.updated(keyId, keyPair)
+        val updatedSecret =
+          currentSecret.fold(DIDSecretRecord(keyPairs = updatedKeyPairs))(_.copy(keyPairs = updatedKeyPairs))
+        currentStore.updated(did, updatedSecret)
+      }
 
   override def removeKey(did: PrismDID, keyId: String): Task[Unit] = store
     .update { currentStore =>
@@ -53,25 +51,23 @@ private[keymanagement] class InMemoryDIDSecretStorage private (store: Ref[Map[Pr
       did: PrismDID,
       purpose: CommitmentPurpose,
       revealValue: HexString
-  ): Task[Unit] = {
-    Console.printLine(s"upsertDIDCommitmentRevealValue($did, $purpose, $revealValue)").ignore *>
-      store
-        .update { currentStore =>
-          val currentSecret = currentStore.get(did)
-          val updatedSecret: DIDSecretRecord = purpose match {
-            case CommitmentPurpose.Update =>
-              currentSecret.fold(DIDSecretRecord(updateCommitmentRevealValue = Some(revealValue)))(
-                _.copy(updateCommitmentRevealValue = Some(revealValue))
-              )
-            case CommitmentPurpose.Recovery =>
-              currentSecret.fold(DIDSecretRecord(recoveryCommitmentRevealValue = Some(revealValue)))(
-                _.copy(recoveryCommitmentRevealValue = Some(revealValue))
-              )
-          }
-
-          currentStore.updated(did, updatedSecret)
+  ): Task[Unit] =
+    store
+      .update { currentStore =>
+        val currentSecret = currentStore.get(did)
+        val updatedSecret: DIDSecretRecord = purpose match {
+          case CommitmentPurpose.Update =>
+            currentSecret.fold(DIDSecretRecord(updateCommitmentRevealValue = Some(revealValue)))(
+              _.copy(updateCommitmentRevealValue = Some(revealValue))
+            )
+          case CommitmentPurpose.Recovery =>
+            currentSecret.fold(DIDSecretRecord(recoveryCommitmentRevealValue = Some(revealValue)))(
+              _.copy(recoveryCommitmentRevealValue = Some(revealValue))
+            )
         }
-  }
+
+        currentStore.updated(did, updatedSecret)
+      }
 
   override def removeDIDSecret(did: PrismDID): Task[Unit] = store.update(_.removed(did))
 

@@ -69,7 +69,11 @@ object Modules {
         .mapError(_ => new Exception(""))
     } yield ()
 
-    effect.provide(ManagedDIDService.inMemoryStorage(ManagedDIDService.KeyManagementConfig.default))
+    effect.provide(
+      (AppModule.didServiceLayer ++ AppModule.didOpValidatorLayer) >>> ManagedDIDService.inMemoryStorage(
+        ManagedDIDService.KeyManagementConfig.default
+      )
+    )
   }
 
 }
