@@ -411,9 +411,6 @@ paths:
               type: object
               required: ["credentials"]
               properties:
-                batchId:
-                  type: string
-                  description: Batch ID of the credential objects that will be created together
                 credentials:
                   type: array
                   items:
@@ -441,7 +438,7 @@ paths:
                   credentials:
                     type: array
                     items:
-                      $ref: "./pollux/schemas.yaml#/components/schemas/W3CCredential"
+                      $ref: "./pollux/schemas.yaml#/components/schemas/JWTCompactSerialisation"
 
     get:
       tags: ["Issue Credentials"]
