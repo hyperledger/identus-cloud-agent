@@ -8,18 +8,8 @@ import akka.http.scaladsl.server.Route
 import doobie.util.transactor.Transactor
 import io.iohk.atala.agent.server.http.{HttpRoutes, HttpServer}
 import io.iohk.atala.castor.core.service.{DIDService, DIDServiceImpl}
-import io.iohk.atala.agent.server.http.marshaller.{
-  DIDApiMarshallerImpl,
-  DIDAuthenticationApiMarshallerImpl,
-  DIDOperationsApiMarshallerImpl,
-  IssueCredentialsApiMarshallerImpl
-}
-import io.iohk.atala.agent.server.http.service.{
-  DIDApiServiceImpl,
-  DIDAuthenticationApiServiceImpl,
-  DIDOperationsApiServiceImpl,
-  IssueCredentialsApiServiceImpl
-}
+import io.iohk.atala.agent.server.http.marshaller.{DIDApiMarshallerImpl, DIDAuthenticationApiMarshallerImpl, DIDOperationsApiMarshallerImpl, IssueCredentialsApiMarshallerImpl}
+import io.iohk.atala.agent.server.http.service.{DIDApiServiceImpl, DIDAuthenticationApiServiceImpl, DIDOperationsApiServiceImpl, IssueCredentialsApiServiceImpl}
 import io.iohk.atala.castor.core.repository.DIDOperationRepository
 import io.iohk.atala.agent.openapi.api.{DIDApi, DIDAuthenticationApi, DIDOperationsApi, IssueCredentialsApi}
 import io.iohk.atala.castor.sql.repository.{JdbcDIDOperationRepository, TransactorLayer}
@@ -32,6 +22,9 @@ import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
+import io.iohk.atala.pollux.core.repository.CredentialRepository
+import io.iohk.atala.pollux.core.service.CredentialService
+import io.iohk.atala.pollux.sql.repository.JdbcCredentialRepository
 import zio.config.typesafe.TypesafeConfigSource
 import zio.config.{ReadError, read}
 import zio.stream.ZStream
@@ -81,6 +74,9 @@ object AppModule {
   )
   val didServiceLayer: TaskLayer[DIDService] =
     (GrpcModule.layers ++ RepoModule.layers ++ didOpValidatorLayer) >>> DIDServiceImpl.layer
+
+  val credentialServiceLayer: TaskLayer[CredentialService] =
+    (GrpcModule.layers ++ RepoModule.layers) >>> io.iohk.atala.pollux.core.service.MockCredentialService.layer
 }
 
 object GrpcModule {
@@ -121,8 +117,9 @@ object HttpModule {
     (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new DIDAuthenticationApi(_, _))
   }
 
-  val issueCredentialsApiLayer: ULayer[IssueCredentialsApi] = {
-    val apiServiceLayer = IssueCredentialsApiServiceImpl.layer
+  val issueCredentialsApiLayer: TaskLayer[IssueCredentialsApi] = {
+    val serviceLayer = AppModule.credentialServiceLayer
+    val apiServiceLayer = serviceLayer >>> IssueCredentialsApiServiceImpl.layer
     val apiMarshallerLayer = IssueCredentialsApiMarshallerImpl.layer
     (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new IssueCredentialsApi(_, _))
   }
@@ -131,7 +128,7 @@ object HttpModule {
 }
 
 object RepoModule {
-  val transactorLayer: TaskLayer[Transactor[Task]] = {
+  val castorTransactorLayer: TaskLayer[Transactor[Task]] = {
     val transactorLayer = ZLayer.fromZIO {
       ZIO.service[AppConfig].map(_.castor.database).flatMap { config =>
         Dispatcher[Task].allocated.map { case (dispatcher, _) =>
@@ -149,8 +146,30 @@ object RepoModule {
     SystemModule.configLayer >>> transactorLayer
   }
 
-  val didOperationRepoLayer: TaskLayer[DIDOperationRepository[Task]] =
-    transactorLayer >>> JdbcDIDOperationRepository.layer
+  val polluxTransactorLayer: TaskLayer[Transactor[Task]] = {
+    val transactorLayer = ZLayer.fromZIO {
+      ZIO.service[AppConfig].map(_.pollux.database).flatMap { config =>
+        Dispatcher[Task].allocated.map { case (dispatcher, _) =>
+          given Dispatcher[Task] = dispatcher
+          io.iohk.atala.pollux.sql.repository.TransactorLayer.hikari[Task](
+            io.iohk.atala.pollux.sql.repository.TransactorLayer.DbConfig(
+              username = config.username,
+              password = config.password,
+              jdbcUrl = s"jdbc:postgresql://${config.host}:${config.port}/${config.databaseName}"
+            )
+          )
+        }
+      }
+    }.flatten
 
-  val layers = didOperationRepoLayer
+    SystemModule.configLayer >>> transactorLayer
+  }
+
+  val didOperationRepoLayer: TaskLayer[DIDOperationRepository[Task]] =
+    castorTransactorLayer >>> JdbcDIDOperationRepository.layer
+
+  val credentialRepoLayer: TaskLayer[CredentialRepository[Task]] =
+    polluxTransactorLayer >>> JdbcCredentialRepository.layer
+
+  val layers = didOperationRepoLayer ++ credentialRepoLayer
 }

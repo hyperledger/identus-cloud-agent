@@ -8,15 +8,7 @@ import io.iohk.atala.agent.openapi.model.*
 import io.iohk.atala.agent.server.http.marshaller.IssueCredentialsApiMarshallerImpl
 import io.iohk.atala.pollux.vc.jwt.VerifiedCredentialJson.Encoders.Implicits.*
 import io.iohk.atala.pollux.vc.jwt.VerifiedCredentialJson.Decoders.Implicits.*
-import io.iohk.atala.pollux.vc.jwt.{
-  CredentialSchema,
-  CredentialStatus,
-  Issuer,
-  IssuerDID,
-  JwtVerifiableCredential,
-  RefreshService,
-  W3CCredentialPayload
-}
+import io.iohk.atala.pollux.vc.jwt.{CredentialSchema, CredentialStatus, Issuer, IssuerDID, JwtVerifiableCredential, RefreshService, W3CCredentialPayload}
 import zio.*
 
 import java.security.spec.ECGenParameterSpec
@@ -29,9 +21,10 @@ import io.circe.generic.auto.*
 import io.circe.syntax.*
 import io.circe.{Decoder, Encoder, HCursor, Json}
 import io.circe.parser.decode
+import io.iohk.atala.pollux.core.service.CredentialService
 
 // TODO: replace with actual implementation
-class IssueCredentialsApiServiceImpl()(using runtime: Runtime[Any])
+class IssueCredentialsApiServiceImpl(service: CredentialService)(using runtime: Runtime[Any])
     extends IssueCredentialsApiService
     with AkkaZioSupport {
 
@@ -212,9 +205,10 @@ class IssueCredentialsApiServiceImpl()(using runtime: Runtime[Any])
 }
 
 object IssueCredentialsApiServiceImpl {
-  val layer: ZLayer[Any, Nothing, IssueCredentialsApiService] = ZLayer.fromZIO {
+  val layer: URLayer[CredentialService, IssueCredentialsApiService] = ZLayer.fromZIO {
     for {
       rt <- ZIO.runtime[Any]
-    } yield IssueCredentialsApiServiceImpl()(using rt)
+      svc <- ZIO.service[CredentialService]
+    } yield IssueCredentialsApiServiceImpl(svc)(using rt)
   }
 }
