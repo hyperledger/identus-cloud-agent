@@ -13,7 +13,6 @@ See [https://github.com/hyperledger/aries-rfcs/tree/main/features/0453-issue-cre
 
 Version 1.0: `https://didcomm.org/issue-credential/1.0/propose-credential`
 
-
 ### Roles
 
 - Issuer
@@ -22,10 +21,8 @@ Version 1.0: `https://didcomm.org/issue-credential/1.0/propose-credential`
   - Begin with a proposal credential
   - Begin with a request credential
 
-  
-
-
 ### Issuer received credential proposal (Flow Diagram)
+
 ```mermaid
 stateDiagram-v2
   [*] --> Initial
@@ -34,6 +31,7 @@ stateDiagram-v2
   proposal_received --> error:send problem report response
   offer_sent --> [*]:follow credential sent offer flow
 ```
+
 ### Issuer Send offer credential  (Flow Diagram)
 
 ```mermaid
@@ -46,7 +44,6 @@ stateDiagram-v2
   await_response --> error:recieve problem report response
   done --> [*]
 ```
-
 
 ### Holder proposal credential (Flow Diagram)
 
@@ -72,3 +69,48 @@ stateDiagram-v2
   done --> [*]
 ```
 
+### Issuer State Machine
+
+TODO See <https://github.com/hyperledger/aries-rfcs/blob/main/features/0453-issue-credential-v2/README.md>
+
+### Holder State Machine
+
+```mermaid
+stateDiagram-v2
+  state fork_state <<fork>>
+  state if_state_AcceptOffer <<choice>>
+  state if_state_Retry <<choice>>
+
+  [*] --> fork_state
+  fork_state --> Holder_Proposal
+  fork_state --> Issuer_Offer
+  fork_state --> Request_Credential
+
+
+  Holder_Proposal -->RequestCredential
+  state Holder_Proposal {
+    [*] --> Propose_Credential: Send Propose
+    if_state_Retry --> Propose_Credential: Yes
+    Propose_Credential --> Recive_Problem_report: Receive Problem Report
+    Recive_Problem_report --> [*]
+    Propose_Credential --> Issuer_Offer : Recive Offer
+    Issuer_Offer --> [*]
+  }
+
+  state Issuer_Offer {
+    [*] --> Receive_Offer_Credential
+    Receive_Offer_Credential --> if_state_AcceptOffer: Accept Offer?
+    if_state_AcceptOffer --> Request_Credential: Yes
+    if_state_AcceptOffer --> if_state_Retry: No
+    if_state_Retry --> Send_Problem_report: No
+    Send_Problem_report --> [*]
+    Request_Credential --> [*]
+  }
+
+  state Request_Credential {
+    [*] --> RequestCredential
+    RequestCredential --> Receive_issue_credential_&_Store: Send Request Credential
+    Receive_issue_credential_&_Store --> Send_Credential_ack: Get Credential
+    Send_Credential_ack --> [*]: Ack
+  }
+```
