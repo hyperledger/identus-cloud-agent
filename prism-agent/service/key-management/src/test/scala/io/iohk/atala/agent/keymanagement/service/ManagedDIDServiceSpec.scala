@@ -1,8 +1,11 @@
 package io.iohk.atala.agent.keymanagement.service
 
-import io.iohk.atala.agent.keymanagement.model.error.CreateManagedDIDError
+import io.iohk.atala.agent.keymanagement.model.error.{CreateManagedDIDError, PublishManagedDIDError}
 import io.iohk.atala.agent.keymanagement.model.{CommitmentPurpose, DIDPublicKeyTemplate, ManagedDIDTemplate}
 import io.iohk.atala.castor.core.model.did.{
+  DIDDocument,
+  DIDStorage,
+  LongFormPrismDIDV1,
   PrismDIDV1,
   PublishedDIDOperation,
   PublishedDIDOperationOutcome,
@@ -20,7 +23,7 @@ import zio.test.Assertion.*
 object ManagedDIDServiceSpec extends ZIOSpecDefault {
 
   private trait TestDIDService extends DIDService {
-    def getPublishedDIDs: UIO[Seq[PublishedDIDOperation.Create]]
+    def getPublishedOperations: UIO[Seq[PublishedDIDOperation.Create]]
   }
 
   private def testDIDServiceLayer = ZLayer.fromZIO {
@@ -39,14 +42,14 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault {
               )
             )
 
-        override def getPublishedDIDs: UIO[Seq[PublishedDIDOperation.Create]] = store.get
+        override def getPublishedOperations: UIO[Seq[PublishedDIDOperation.Create]] = store.get
       }
     }
   }
 
-  private def managedDIDServiceLayer: ULayer[ManagedDIDService] = {
+  private def managedDIDServiceLayer: ULayer[TestDIDService & ManagedDIDService] = {
     val didValidatorConfig = DIDOperationValidator.Config(50, 50)
-    (DIDOperationValidator.layer(didValidatorConfig) ++ testDIDServiceLayer) >>> ManagedDIDService.inMemoryStorage()
+    (DIDOperationValidator.layer(didValidatorConfig) ++ testDIDServiceLayer) >+> ManagedDIDService.inMemoryStorage()
   }
 
   private def generateDIDTemplate(
@@ -54,7 +57,49 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault {
       services: Seq[Service] = Nil
   ): ManagedDIDTemplate = ManagedDIDTemplate("testnet", publicKeys, services)
 
-  override def spec = suite("ManagedDIDService")(createAndStoreDIDSpec).provideLayer(managedDIDServiceLayer)
+  override def spec =
+    suite("ManagedDIDService")(publishStoredDIDSpec, createAndStoreDIDSpec).provideLayer(managedDIDServiceLayer)
+
+  private val publishStoredDIDSpec =
+    suite("publishStoredDID")(
+      test("publish stored DID if exists") {
+        val template = generateDIDTemplate()
+        for {
+          svc <- ZIO.service[ManagedDIDService]
+          testDIDSvc <- ZIO.service[TestDIDService]
+          did <- svc.createAndStoreDID(template).map(_.toCanonical)
+          createOp <- svc.nonSecretStorage.getCreatedDID(did)
+          opsBefore <- testDIDSvc.getPublishedOperations
+          _ <- svc.publishStoredDID(did)
+          opsAfter <- testDIDSvc.getPublishedOperations
+        } yield assert(opsBefore)(isEmpty) &&
+          assert(opsAfter)(hasSameElements(createOp.toList))
+      },
+      test("fail when publish non-existing DID") {
+        val did = PrismDIDV1.fromCreateOperation(
+          PublishedDIDOperation.Create(
+            updateCommitment = HexString.fromStringUnsafe("00"),
+            recoveryCommitment = HexString.fromStringUnsafe("00"),
+            storage = DIDStorage.Cardano("testnet"),
+            document = DIDDocument(Nil, Nil)
+          )
+        )
+        val result = ZIO.serviceWithZIO[ManagedDIDService](_.publishStoredDID(did))
+        assertZIO(result.exit)(fails(isSubtype[PublishManagedDIDError.DIDNotFound](anything)))
+      },
+      test("publish stored DID when provide long-form DID") {
+        val template = generateDIDTemplate()
+        for {
+          svc <- ZIO.service[ManagedDIDService]
+          testDIDSvc <- ZIO.service[TestDIDService]
+          longFormDID <- svc.createAndStoreDID(template)
+          did = longFormDID.toCanonical
+          createOp <- svc.nonSecretStorage.getCreatedDID(did)
+          _ <- svc.publishStoredDID(longFormDID)
+          opsAfter <- testDIDSvc.getPublishedOperations
+        } yield assert(opsAfter)(hasSameElements(createOp.toList))
+      }
+    )
 
   private val createAndStoreDIDSpec = suite("createAndStoreDID")(
     test("create and store DID list in DIDNonSecretStorage") {
