@@ -1,9 +1,8 @@
 package io.iohk.atala.pollux.core.repository
 
-import io.iohk.atala.pollux.core.model.W3CCredential
+import io.iohk.atala.pollux.core.model.JWTCredential
 import zio.*
-
-// TODO: replace with actual implementation
 trait CredentialRepository[F[_]] {
-  def getCredentials: F[Seq[W3CCredential]]
+  def createCredentials(batchId: String, credentials: Seq[JWTCredential]): F[Unit]
+  def getCredentials(batchId: String): F[Seq[JWTCredential]]
 }
