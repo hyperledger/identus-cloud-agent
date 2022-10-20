@@ -3,7 +3,7 @@ package io.iohk.atala.agent.keymanagement.service
 import io.iohk.atala.agent.keymanagement.crypto.KeyGeneratorWrapper
 import io.iohk.atala.agent.keymanagement.model.{CommitmentPurpose, DIDPublicKeyTemplate, ECKeyPair, ManagedDIDTemplate}
 import io.iohk.atala.agent.keymanagement.model.ECCoordinates.*
-import io.iohk.atala.agent.keymanagement.model.error.CreateManagedDIDError
+import io.iohk.atala.agent.keymanagement.model.error.{CreateManagedDIDError, PublishManagedDIDError}
 import io.iohk.atala.agent.keymanagement.service.ManagedDIDService.{CreateDIDSecret, KeyManagementConfig}
 import io.iohk.atala.agent.keymanagement.storage.{
   DIDNonSecretStorage,
@@ -18,9 +18,11 @@ import io.iohk.atala.castor.core.model.did.{
   EllipticCurve,
   LongFormPrismDIDV1,
   PrismDID,
+  PrismDIDV1,
   PublicKey,
   PublicKeyJwk,
-  PublishedDIDOperation
+  PublishedDIDOperation,
+  PublishedDIDOperationOutcome
 }
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.castor.core.util.DIDOperationValidator
@@ -30,6 +32,7 @@ import io.iohk.atala.shared.models.Base64UrlStrings.*
 import io.iohk.atala.shared.models.HexStrings.*
 import zio.*
 
+// TODO: add tests
 /** A wrapper around Castor's DIDService providing key-management capability. Analogous to the secretAPI in
   * indy-wallet-sdk.
   */
@@ -41,15 +44,33 @@ final class ManagedDIDService private[keymanagement] (
     config: KeyManagementConfig
 ) {
 
+  def publishStoredDID(did: PrismDID): IO[PublishManagedDIDError, PublishedDIDOperationOutcome] = {
+    val canonicalDID = did match {
+      case d: LongFormPrismDIDV1 => d.toCanonical
+      case d                     => d
+    }
+
+    for {
+      createOperation <- nonSecretStorage
+        .getCreatedDID(canonicalDID)
+        .mapError(PublishManagedDIDError.WalletStorageError.apply)
+        .flatMap(op => ZIO.fromOption(op).mapError(_ => PublishManagedDIDError.DIDNotFound(canonicalDID)))
+      outcome <- didService
+        .createPublishedDID(createOperation)
+        .mapError(PublishManagedDIDError.OperationError.apply)
+    } yield outcome
+  }
+
   def createAndStoreDID(didTemplate: ManagedDIDTemplate): IO[CreateManagedDIDError, PrismDID] = {
     for {
       generated <- generateCreateOperation(didTemplate)
       (createOperation, secret) = generated
       longFormDID = LongFormPrismDIDV1.fromCreateOperation(createOperation)
       did = longFormDID.toCanonical
-      _ <- nonSecretStorage.listCreatedDID
+      _ <- nonSecretStorage
+        .getCreatedDID(did)
         .mapError(CreateManagedDIDError.WalletStorageError.apply)
-        .filterOrFail(createdDIDs => !createdDIDs.contains(did))(CreateManagedDIDError.DIDAlreadyExists(did))
+        .filterOrFail(_.isEmpty)(CreateManagedDIDError.DIDAlreadyExists(did))
       _ <- ZIO
         .fromEither(didOpValidator.validate(createOperation))
         .mapError(CreateManagedDIDError.OperationError.apply)
@@ -62,7 +83,7 @@ final class ManagedDIDService private[keymanagement] (
       _ <- ZIO
         .foreachDiscard(secret.keyPairs) { case (keyId, keyPair) => secretStorage.upsertKey(did, keyId, keyPair) }
         .mapError(CreateManagedDIDError.WalletStorageError.apply)
-      // A DID is considered created after it is saved using saveCreatedDID
+      // A DID is considered created after a successful save using saveCreatedDID
       // If some steps above failed, it is not considered created and data that
       // is persisted along the way may be garbage collected.
       _ <- nonSecretStorage

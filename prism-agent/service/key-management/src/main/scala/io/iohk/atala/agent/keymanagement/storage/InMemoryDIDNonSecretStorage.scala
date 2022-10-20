@@ -7,6 +7,8 @@ private[keymanagement] class InMemoryDIDNonSecretStorage private (
     store: Ref[Map[PrismDID, PublishedDIDOperation.Create]]
 ) extends DIDNonSecretStorage {
 
+  override def getCreatedDID(did: PrismDID): Task[Option[PublishedDIDOperation.Create]] = store.get.map(_.get(did))
+
   override def saveCreatedDID(did: PrismDID, createOp: PublishedDIDOperation.Create): Task[Unit] =
     store.update(_.updated(did, createOp))
 
