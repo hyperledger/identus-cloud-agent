@@ -3,11 +3,29 @@ package io.iohk.atala.pollux.core.service
 import io.iohk.atala.pollux.core.model.CredentialError.RepositoryError
 import io.iohk.atala.pollux.core.model.{CredentialError, JWTCredential}
 import io.iohk.atala.pollux.core.repository.CredentialRepository
+import io.iohk.atala.pollux.vc.jwt.{Issuer, IssuerDID}
 import zio.*
 
+import java.security.spec.ECGenParameterSpec
+import java.security.{KeyPairGenerator, SecureRandom}
 import java.util.UUID
 
 trait CredentialService {
+  def createIssuer: Issuer = {
+    val keyGen = KeyPairGenerator.getInstance("EC")
+    val ecSpec = ECGenParameterSpec("secp256r1")
+    keyGen.initialize(ecSpec, SecureRandom())
+    val keyPair = keyGen.generateKeyPair()
+    val privateKey = keyPair.getPrivate
+    val publicKey = keyPair.getPublic
+    // println(Base64.getEncoder.encodeToString(publicKey.getEncoded()))
+    val uuid = UUID.randomUUID().toString
+    Issuer(
+      did = IssuerDID(s"did:prism:$uuid"),
+      signer = io.iohk.atala.pollux.vc.jwt.ES256Signer(privateKey),
+      publicKey = publicKey
+    )
+  }
   def createCredentials(batchId: String, credentials: Seq[JWTCredential]): IO[CredentialError, Unit]
   def getCredentials(batchId: String): IO[CredentialError, Seq[JWTCredential]]
 }

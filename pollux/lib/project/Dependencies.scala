@@ -20,12 +20,13 @@ object Dependencies {
     ExclusionRule(
       organization = "org.bouncycastle"
     )
+  private lazy val polluxVcJwt = "io.iohk.atala" %% "pollux-vc-jwt" % "0.1.0-SNAPSHOT" changing ()
 
   // Dependency Modules
   private lazy val baseDependencies: Seq[ModuleID] = Seq(zio, prismCrypto)
   private lazy val doobieDependencies: Seq[ModuleID] = Seq(doobiePostgres, doobieHikari)
 
   // Project Dependencies
-  lazy val coreDependencies: Seq[ModuleID] = baseDependencies
+  lazy val coreDependencies: Seq[ModuleID] = baseDependencies ++ Seq(polluxVcJwt)
   lazy val sqlDoobieDependencies: Seq[ModuleID] = baseDependencies ++ doobieDependencies ++ Seq(zioCatsInterop)
 }

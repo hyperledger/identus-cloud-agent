@@ -8,7 +8,15 @@ import io.iohk.atala.agent.openapi.model.*
 import io.iohk.atala.agent.server.http.marshaller.IssueCredentialsApiMarshallerImpl
 import io.iohk.atala.pollux.vc.jwt.VerifiedCredentialJson.Encoders.Implicits.*
 import io.iohk.atala.pollux.vc.jwt.VerifiedCredentialJson.Decoders.Implicits.*
-import io.iohk.atala.pollux.vc.jwt.{CredentialSchema, CredentialStatus, Issuer, IssuerDID, JwtVerifiableCredential, RefreshService, W3CCredentialPayload}
+import io.iohk.atala.pollux.vc.jwt.{
+  CredentialSchema,
+  CredentialStatus,
+  Issuer,
+  IssuerDID,
+  JwtVerifiableCredential,
+  RefreshService,
+  W3CCredentialPayload
+}
 import zio.*
 
 import java.security.spec.ECGenParameterSpec
@@ -21,6 +29,7 @@ import io.circe.generic.auto.*
 import io.circe.syntax.*
 import io.circe.{Decoder, Encoder, HCursor, Json}
 import io.circe.parser.decode
+import io.iohk.atala.pollux.core.model.JWTCredential
 import io.iohk.atala.pollux.core.service.CredentialService
 
 // TODO: replace with actual implementation
@@ -28,7 +37,7 @@ class IssueCredentialsApiServiceImpl(service: CredentialService)(using runtime: 
     extends IssueCredentialsApiService
     with AkkaZioSupport {
 
-  private val issuer = createIssuer
+  private val issuer = service.createIssuer
 
   case class Schema(context: String, `type`: String)
   private val defaultSchemas = Vector(
@@ -93,30 +102,14 @@ class IssueCredentialsApiServiceImpl(service: CredentialService)(using runtime: 
     count = Some(1)
   )
 
-  private[this] def createIssuer: Issuer = {
-    val keyGen = KeyPairGenerator.getInstance("EC")
-    val ecSpec = ECGenParameterSpec("secp256r1")
-    keyGen.initialize(ecSpec, SecureRandom())
-    val keyPair = keyGen.generateKeyPair()
-    val privateKey = keyPair.getPrivate
-    val publicKey = keyPair.getPublic
-    // println(Base64.getEncoder.encodeToString(publicKey.getEncoded()))
-    val uuid = UUID.randomUUID().toString
-    Issuer(
-      did = IssuerDID(s"did:prism:$uuid"),
-      signer = io.iohk.atala.pollux.vc.jwt.ES256Signer(privateKey),
-      publicKey = publicKey
-    )
-  }
-
-  private[this] def createPayload(input: W3CCredentialInput, issuer: Issuer): W3CCredentialPayload = {
+  private[this] def createPayload(input: W3CCredentialInput, issuer: Issuer): (UUID, W3CCredentialPayload) = {
     val now = Instant.now()
-    val credentialId = UUID.randomUUID().toString
+    val credentialId = UUID.randomUUID()
     val claims = input.claims.map(kv => kv._1 -> Json.fromString(kv._2))
     val schemas = defaultSchemas ++ input.schemaId.flatMap(mockSchemas.get)
-    W3CCredentialPayload(
+    credentialId -> W3CCredentialPayload(
       `@context` = schemas.map(_.context),
-      maybeId = Some(s"https://atala.io/prism/credentials/$credentialId"),
+      maybeId = Some(s"https://atala.io/prism/credentials/${credentialId.toString}"),
       `type` = schemas.map(_.`type`),
       issuer = issuer.did,
       issuanceDate = now,
@@ -137,11 +130,15 @@ class IssueCredentialsApiServiceImpl(service: CredentialService)(using runtime: 
   ): Route =
     onZioSuccess(ZIO.unit) { _ =>
       val credentials = createCredentialsRequest.credentials.map { input =>
-        val payload = createPayload(input, issuer)
-        JwtVerifiableCredential.toEncodedJwt(payload, issuer).jwt
+        val (uuid, payload) = createPayload(input, issuer)
+        uuid.toString -> JwtVerifiableCredential.toEncodedJwt(payload, issuer).jwt
       }
       val batchId = UUID.randomUUID().toString
-      val resp = CreateCredentials201Response(Some(batchId), Some(credentials.size), Some(credentials))
+      service.createCredentials(
+        batchId,
+        credentials.map { case (id, jwt) => JWTCredential(batchId, id, jwt) }
+      )
+      val resp = CreateCredentials201Response(Some(batchId), Some(credentials.size), Some(credentials.map(_._2)))
       createCredentials201(resp)
     }
 
