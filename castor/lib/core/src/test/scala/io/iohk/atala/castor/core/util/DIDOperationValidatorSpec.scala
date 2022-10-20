@@ -117,6 +117,36 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
             else isLeft(isSubtype[DIDOperationError.TooManyDidServiceAccess](anything))
           assert(DIDOperationValidator(Config(0, serviceLimit)).validate(op))(expect)
         }
+      },
+      test("reject CreateOperation on duplicated DID public key id") {
+        val publicKeys = Seq("key-1", "key-2", "key-1").map(id =>
+          PublicKey.JsonWebKey2020(
+            id = id,
+            purposes = Nil,
+            publicKeyJwk = PublicKeyJwk.ECPublicKeyData(
+              crv = EllipticCurve.SECP256K1,
+              x = Base64UrlString.fromStringUnsafe("00"),
+              y = Base64UrlString.fromStringUnsafe("00")
+            )
+          )
+        )
+        val op = createPublishedDIDOperation(publicKeys = publicKeys)
+        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
+          isLeft(isSubtype[DIDOperationError.InvalidArgument](anything))
+        )
+      },
+      test("reject CreateOperation on duplicated DID service id") {
+        val services = Seq("service-1", "service-2", "service-1").map(id =>
+          Service(
+            id = id,
+            `type` = ServiceType.MediatorService,
+            serviceEndpoint = URI.create("https://example.com")
+          )
+        )
+        val op = createPublishedDIDOperation(services = services)
+        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
+          isLeft(isSubtype[DIDOperationError.InvalidArgument](anything))
+        )
       }
     )
   }

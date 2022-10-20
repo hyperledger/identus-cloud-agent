@@ -19,10 +19,10 @@ object OutOfBand {
     String(decoder.decode(e))
   }
 
-  def parseInvitation(url: String): Option[Invitation] = {
-    parseLink(url).map(e => parse(e).getOrElse(???).as[Invitation].getOrElse(???))
-  }
-
-
+  def parseInvitation(url: String): Either[io.circe.Error | RuntimeException, Invitation] =
+    parseLink(url) match {
+      case Some(e) => parse(e).flatMap(_.as[Invitation])
+      case None    => Left(new RuntimeException("Expeting a url!"))
+    }
 
 }

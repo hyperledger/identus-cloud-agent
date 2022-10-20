@@ -1,13 +1,16 @@
 package io.iohk.atala.castor.core.model.did
 
-sealed trait VerificationRelationship
+enum VerificationRelationship(val name: String) {
+  case Authentication extends VerificationRelationship("authentication")
+  case AssertionMethod extends VerificationRelationship("assertionMethod")
+  case KeyAgreement extends VerificationRelationship("keyAgreement")
+  case CapabilityInvocation extends VerificationRelationship("capabilityInvocation")
+}
 
 object VerificationRelationship {
-  case object Authentication extends VerificationRelationship
 
-  case object AssertionMethod extends VerificationRelationship
+  private val lookup = VerificationRelationship.values.map(i => i.name -> i).toMap
 
-  case object KeyAgreement extends VerificationRelationship
+  def parseString(s: String): Option[VerificationRelationship] = lookup.get(s)
 
-  case object CapabilityInvocation extends VerificationRelationship
 }

@@ -3,8 +3,9 @@ import cats.implicits._
 import io.circe.syntax._
 import io.circe.generic.semiauto._
 import io.circe.{Encoder, Json}
-import io.iohk.atala.mercury.model.PIURI
-import io.iohk.atala.mercury.model.AttachmentDescriptor
+import io.iohk.atala.mercury.model._
+
+import scala.annotation.targetName
 
 /** Out-Of-Band invitation
   * @see
@@ -13,7 +14,7 @@ import io.iohk.atala.mercury.model.AttachmentDescriptor
 final case class Invitation(
     `type`: PIURI,
     id: String,
-    from: String,
+    from: DidId,
     body: Body,
     attachments: Option[AttachmentDescriptor] // TODO
 ) {

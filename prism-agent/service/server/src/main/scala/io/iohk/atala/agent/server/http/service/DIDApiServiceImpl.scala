@@ -1,14 +1,21 @@
 package io.iohk.atala.agent.server.http.service
 
+import akka.http.scaladsl.server.Directives.*
 import akka.http.scaladsl.marshalling.ToEntityMarshaller
 import akka.http.scaladsl.server.Route
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.agent.openapi.api.DIDApiService
 import io.iohk.atala.agent.openapi.model.*
+import io.iohk.atala.agent.server.http.model.{HttpServiceError, OASDomainModelHelper, OASErrorModelHelper}
+import io.iohk.atala.castor.core.model.error.DIDOperationError
 import zio.*
 
 // TODO: replace with actual implementation
-class DIDApiServiceImpl(service: DIDService)(using runtime: Runtime[Any]) extends DIDApiService with AkkaZioSupport {
+class DIDApiServiceImpl(service: DIDService)(using runtime: Runtime[Any])
+    extends DIDApiService,
+      AkkaZioSupport,
+      OASDomainModelHelper,
+      OASErrorModelHelper {
 
   private val mockDID = DID(
     id = "did:prism:1:mainnet:abcdef123456",
@@ -44,24 +51,38 @@ class DIDApiServiceImpl(service: DIDService)(using runtime: Runtime[Any]) extend
 
   private val mockDIDResponse = DIDResponse(
     did = mockDID,
-    `type` = DidTypeWithProof(`type` = "PUBLISHED", proof = None),
     deactivated = false
   )
 
+  private val mockDIDOperationResponse = DIDOperationResponse(
+    scheduledOperation = DidOperationSubmission(
+      id = "0123456789abcdef",
+      didRef = "did:example:123"
+    )
+  )
+
   override def createDid(createDIDRequest: CreateDIDRequest)(implicit
-      toEntityMarshallerDIDResponseWithAsyncOutcome: ToEntityMarshaller[DIDResponseWithAsyncOutcome],
-      toEntityMarshallerDIDResponse: ToEntityMarshaller[DIDResponse],
+      toEntityMarshallerDIDOperationResponse: ToEntityMarshaller[DIDOperationResponse],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
-    onZioSuccess(ZIO.unit) { _ => createDid200(mockDIDResponse) }
+    val result = for {
+      operation <- ZIO.fromEither(createDIDRequest.toDomain).mapError(HttpServiceError.InvalidPayload.apply)
+      outcome <- service
+        .createPublishedDID(operation)
+        .mapError(HttpServiceError.DomainError[DIDOperationError].apply)
+    } yield outcome
+
+    onZioSuccess(result.mapBoth(_.toOAS, _.toOAS).either) {
+      case Left(error)   => complete(error.status -> error)
+      case Right(result) => createDid202(result)
+    }
   }
 
   override def deactivateDID(didRef: String, deactivateDIDRequest: DeactivateDIDRequest)(implicit
-      toEntityMarshallerDIDResponseWithAsyncOutcome: ToEntityMarshaller[DIDResponseWithAsyncOutcome],
-      toEntityMarshallerDIDResponse: ToEntityMarshaller[DIDResponse],
+      toEntityMarshallerDIDOperationResponse: ToEntityMarshaller[DIDOperationResponse],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
-    onZioSuccess(ZIO.unit) { _ => deactivateDID200(mockDIDResponse) }
+    onZioSuccess(ZIO.unit) { _ => deactivateDID202(mockDIDOperationResponse) }
   }
 
   override def getDid(didRef: String)(implicit
@@ -72,19 +93,17 @@ class DIDApiServiceImpl(service: DIDService)(using runtime: Runtime[Any]) extend
   }
 
   override def recoverDid(didRef: String, recoverDIDRequest: RecoverDIDRequest)(implicit
-      toEntityMarshallerDIDResponseWithAsyncOutcome: ToEntityMarshaller[DIDResponseWithAsyncOutcome],
-      toEntityMarshallerDIDResponse: ToEntityMarshaller[DIDResponse],
+      toEntityMarshallerDIDOperationResponse: ToEntityMarshaller[DIDOperationResponse],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
-    onZioSuccess(ZIO.unit) { _ => recoverDid200(mockDIDResponse) }
+    onZioSuccess(ZIO.unit) { _ => recoverDid202(mockDIDOperationResponse) }
   }
 
   override def updateDid(didRef: String, updateDIDRequest: UpdateDIDRequest)(implicit
-      toEntityMarshallerDIDResponseWithAsyncOutcome: ToEntityMarshaller[DIDResponseWithAsyncOutcome],
-      toEntityMarshallerDIDResponse: ToEntityMarshaller[DIDResponse],
+      toEntityMarshallerDIDOperationResponse: ToEntityMarshaller[DIDOperationResponse],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
-    onZioSuccess(ZIO.unit) { _ => updateDid200(mockDIDResponse) }
+    onZioSuccess(ZIO.unit) { _ => updateDid202(mockDIDOperationResponse) }
   }
 
 }

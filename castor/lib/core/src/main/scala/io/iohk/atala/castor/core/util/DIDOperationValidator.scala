@@ -19,6 +19,8 @@ class DIDOperationValidator(config: Config) {
       _ <- validateOperationCommitment(operation)
       _ <- validateMaxPublicKeysAccess(operation)
       _ <- validateMaxServiceAccess(operation)
+      _ <- validateUniquePublicKeyId(operation)
+      _ <- validateUniqueServiceId(operation)
     } yield ()
   }
 
@@ -49,6 +51,24 @@ class DIDOperationValidator(config: Config) {
         val serviceCount = op.document.services.length
         if (serviceCount <= config.serviceLimit) Right(())
         else Left(DIDOperationError.TooManyDidServiceAccess(config.serviceLimit, Some(serviceCount)))
+    }
+  }
+
+  private def validateUniquePublicKeyId(operation: PublishedDIDOperation): Either[DIDOperationError, Unit] = {
+    operation match {
+      case op: PublishedDIDOperation.Create =>
+        val ids = op.document.publicKeys.map(_.id)
+        if (ids.distinct.length == ids.length) Right(())
+        else Left(DIDOperationError.InvalidArgument("id for public-keys is not unique"))
+    }
+  }
+
+  private def validateUniqueServiceId(operation: PublishedDIDOperation): Either[DIDOperationError, Unit] = {
+    operation match {
+      case op: PublishedDIDOperation.Create =>
+        val ids = op.document.services.map(_.id)
+        if (ids.distinct.length == ids.length) Right(())
+        else Left(DIDOperationError.InvalidArgument("id for services is not unique"))
     }
   }
 
