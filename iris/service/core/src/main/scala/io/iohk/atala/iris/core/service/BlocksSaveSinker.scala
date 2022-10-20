@@ -47,7 +47,7 @@ class BlocksSaveSinkerImpl[F[_]: Monad, S[_]](
     ZSink.foreach[Any, Throwable, ConfirmedBlock](updateLastSyncedBlock)
 
   private def updateLastSyncedBlock(block: ConfirmedBlock): Task[Unit] = {
-    val timestampEpochMilli = block.blockTimestamp
+    val timestampEpochMilli = block.blockTimestamp.toEpochMilli
     transactor.runAtomically {
       for {
         _ <- keyValueRepo.set(LAST_SYNCED_BLOCK_NO, Some(block.blockLevel))

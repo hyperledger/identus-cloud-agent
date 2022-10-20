@@ -6,5 +6,5 @@ trait ROKeyValueRepository[F[_]] {
 }
 
 trait KeyValueRepository[F[_]] extends ROKeyValueRepository[F] {
-  def set(key: String, value: Option[Any]): F[Unit]
+  def set(key: String, value: Option[Int | String]): F[Unit]
 }
