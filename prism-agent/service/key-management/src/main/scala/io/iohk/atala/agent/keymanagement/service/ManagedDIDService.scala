@@ -37,11 +37,11 @@ import zio.*
   * indy-wallet-sdk.
   */
 final class ManagedDIDService private[keymanagement] (
+    config: KeyManagementConfig,
     didService: DIDService,
     didOpValidator: DIDOperationValidator,
-    secretStorage: DIDSecretStorage,
-    nonSecretStorage: DIDNonSecretStorage,
-    config: KeyManagementConfig
+    private[keymanagement] val secretStorage: DIDSecretStorage,
+    private[keymanagement] val nonSecretStorage: DIDNonSecretStorage
 ) {
 
   def publishStoredDID(did: PrismDID): IO[PublishManagedDIDError, PublishedDIDOperationOutcome] = {
@@ -61,7 +61,7 @@ final class ManagedDIDService private[keymanagement] (
     } yield outcome
   }
 
-  def createAndStoreDID(didTemplate: ManagedDIDTemplate): IO[CreateManagedDIDError, PrismDID] = {
+  def createAndStoreDID(didTemplate: ManagedDIDTemplate): IO[CreateManagedDIDError, LongFormPrismDIDV1] = {
     for {
       generated <- generateCreateOperation(didTemplate)
       (createOperation, secret) = generated
@@ -85,7 +85,7 @@ final class ManagedDIDService private[keymanagement] (
         .mapError(CreateManagedDIDError.WalletStorageError.apply)
       // A DID is considered created after a successful save using saveCreatedDID
       // If some steps above failed, it is not considered created and data that
-      // is persisted along the way may be garbage collected.
+      // are persisted along the way may be garbage collected.
       _ <- nonSecretStorage
         .saveCreatedDID(did, createOperation)
         .mapError(CreateManagedDIDError.WalletStorageError.apply)
@@ -153,8 +153,10 @@ object ManagedDIDService {
     )
   }
 
-  def inMemoryStorage(config: KeyManagementConfig): URLayer[DIDService & DIDOperationValidator, ManagedDIDService] =
+  def inMemoryStorage(
+      config: KeyManagementConfig = KeyManagementConfig.default
+  ): URLayer[DIDService & DIDOperationValidator, ManagedDIDService] =
     (InMemoryDIDNonSecretStorage.layer ++ InMemoryDIDSecretStorage.layer) >>> ZLayer.fromFunction(
-      ManagedDIDService(_, _, _, _, config)
+      ManagedDIDService(config, _, _, _, _)
     )
 }

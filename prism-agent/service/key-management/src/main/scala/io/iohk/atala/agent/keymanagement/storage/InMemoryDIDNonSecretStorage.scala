@@ -2,7 +2,6 @@ package io.iohk.atala.agent.keymanagement.storage
 import io.iohk.atala.castor.core.model.did.{PrismDID, PublishedDIDOperation}
 import zio.*
 
-// TODO: add tests
 private[keymanagement] class InMemoryDIDNonSecretStorage private (
     store: Ref[Map[PrismDID, PublishedDIDOperation.Create]]
 ) extends DIDNonSecretStorage {

@@ -70,9 +70,7 @@ object Modules {
     } yield ()
 
     effect.provide(
-      (AppModule.didServiceLayer ++ AppModule.didOpValidatorLayer) >>> ManagedDIDService.inMemoryStorage(
-        ManagedDIDService.KeyManagementConfig.default
-      )
+      (AppModule.didServiceLayer ++ AppModule.didOpValidatorLayer) >>> ManagedDIDService.inMemoryStorage()
     )
   }
 

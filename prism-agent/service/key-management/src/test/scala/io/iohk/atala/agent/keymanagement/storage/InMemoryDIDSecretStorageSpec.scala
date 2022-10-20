@@ -21,10 +21,11 @@ object InMemoryDIDSecretStorageSpec extends ZIOSpecDefault {
     )
   )
 
-  def generateKeyPair(publicKey: (Int, Int) = (0, 0), privateKey: ArraySeq[Byte] = ArraySeq(0)): ECKeyPair = ECKeyPair(
-    publicKey = ECPublicKey(ECPoint(ECCoordinate.fromBigInt(publicKey._1), ECCoordinate.fromBigInt(publicKey._2))),
-    privateKey = ECPrivateKey(privateKey)
-  )
+  private def generateKeyPair(publicKey: (Int, Int) = (0, 0), privateKey: ArraySeq[Byte] = ArraySeq(0)): ECKeyPair =
+    ECKeyPair(
+      publicKey = ECPublicKey(ECPoint(ECCoordinate.fromBigInt(publicKey._1), ECCoordinate.fromBigInt(publicKey._2))),
+      privateKey = ECPrivateKey(privateKey)
+    )
 
   override def spec = suite("InMemoryDIDSecretStorage")(
     listKeySpec,
