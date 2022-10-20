@@ -2,9 +2,11 @@ package io.iohk.atala.iris.core.service
 
 import com.google.protobuf.ByteString
 import io.iohk.atala.iris.core.model.ledger.TransactionStatus.{InLedger, InMempool}
-import io.iohk.atala.iris.core.model.ledger.{Funds, TransactionDetails}
+import io.iohk.atala.iris.core.model.ledger.{Funds, Ledger, TransactionDetails}
 import io.iohk.atala.iris.core.service.InmemoryUnderlyingLedgerService.{CardanoBlock, CardanoTransaction}
-import io.iohk.atala.iris.core.service.RandomUtils.*
+import io.iohk.atala.iris.core.testutils.RandomUtils.*
+import io.iohk.atala.iris.core.testutils.PublishThenAdjust.*
+import io.iohk.atala.iris.core.testutils.PublishThenAdjust
 import io.iohk.atala.iris.proto.did_operations.{CreateDid, DocumentDefinition, UpdateDid}
 import io.iohk.atala.iris.proto.dlt as proto
 import zio.*
@@ -12,23 +14,8 @@ import zio.test.*
 import zio.test.Assertion.*
 
 object InmemoryUnderlyingLedgerServiceSpec extends ZIOSpecDefault {
-  val defaultConfig = InmemoryUnderlyingLedgerService.Config(10.seconds, Funds(1000), Funds(1))
+  val defaultConfig = InmemoryUnderlyingLedgerService.Config(10.seconds, Funds(1000), Funds(1), Ledger.Mainnet)
   val inmemoryLedger = InmemoryUnderlyingLedgerService.layer(defaultConfig)
-
-  case class PublishThenAdjust(operations: Seq[proto.IrisOperation], adjust: Duration)
-
-  object PublishThenAdjust {
-    implicit class Then(operations: Seq[proto.IrisOperation]) {
-      def >>(adj: Duration): PublishThenAdjust = PublishThenAdjust(operations, adj)
-    }
-
-    def foreachZIO[R](srv: InmemoryUnderlyingLedgerService)(xs: Iterable[PublishThenAdjust]): ZIO[R, Any, Unit] =
-      ZIO.foreachDiscard[R, Any, PublishThenAdjust](xs) { case PublishThenAdjust(ops, adj) =>
-        srv.publish(ops).flatMap(_ => TestClock.adjust(adj))
-      }
-  }
-
-  import PublishThenAdjust.Then
 
   def spec = suite("InmemoryUnderlyingLedgerServiceSpec")(
     suite("Background worker")(
@@ -48,17 +35,15 @@ object InmemoryUnderlyingLedgerServiceSpec extends ZIOSpecDefault {
             blocks <- srvc.getBlocks
           } yield assertTrue(mempool == List.empty) &&
             assertTrue(
-              blocks == List(
-                CardanoBlock(List()),
-                CardanoBlock(
-                  List(
-                    CardanoTransaction(Seq(op(0))),
-                    CardanoTransaction(Seq(op(1))),
-                    CardanoTransaction(Seq(op(2))),
-                    CardanoTransaction(Seq(op(3)))
-                  )
+              blocks.map(_.txs) == List(
+                List(),
+                List(
+                  CardanoTransaction(Seq(op(0))),
+                  CardanoTransaction(Seq(op(1))),
+                  CardanoTransaction(Seq(op(2))),
+                  CardanoTransaction(Seq(op(3)))
                 ),
-                CardanoBlock(List())
+                List()
               )
             )
         testCase.provideLayer(inmemoryLedger)
@@ -79,20 +64,16 @@ object InmemoryUnderlyingLedgerServiceSpec extends ZIOSpecDefault {
             blocks <- srvc.getBlocks
           } yield assertTrue(mempool == List.empty) &&
             assertTrue(
-              blocks == List(
-                CardanoBlock(List()),
-                CardanoBlock(
-                  List(
-                    CardanoTransaction(Seq(op(0))),
-                    CardanoTransaction(Seq(op(1))),
-                  )
+              blocks.map(_.txs) == List(
+                List(),
+                List(
+                  CardanoTransaction(Seq(op(0))),
+                  CardanoTransaction(Seq(op(1))),
                 ),
-                CardanoBlock(
-                  List(
-                    CardanoTransaction(Seq(op(2))),
-                    CardanoTransaction(Seq(op(3))),
-                  )
-                ),
+                List(
+                  CardanoTransaction(Seq(op(2))),
+                  CardanoTransaction(Seq(op(3))),
+                )
               )
             )
         testCase.provideLayer(inmemoryLedger)
