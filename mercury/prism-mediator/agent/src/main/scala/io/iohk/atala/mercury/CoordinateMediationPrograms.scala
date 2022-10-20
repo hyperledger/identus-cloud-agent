@@ -16,34 +16,37 @@ import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
 
 object CoordinateMediationPrograms {
 
-  def replyToInvitation(from: DidId, invitation: Invitation) = {
+  def replyToInvitation(replier: DidId, invitation: Invitation) = {
     val requestMediation = MediateRequest()
     Message(
-      from = from,
-      to = DidId(invitation.from),
+      from = Some(replier),
+      to = Some(invitation.from),
       id = requestMediation.id,
       piuri = requestMediation.`type`
     )
   }
 
-  def toPrettyJson(parseToJson: String) = {
+  private def toPrettyJson(parseToJson: String) = {
     parse(parseToJson).getOrElse(???).spaces2
   }
 
-  def senderMediationRequestProgram(mediatorURL: String) = {
+  def senderMediationRequestProgram(mediatorURL: String = "http://localhost:8000") = {
 
     for {
       _ <- ZIO.log("#### Send Mediation request  ####")
-      link <- InvitationPrograms.getInvitationProgram(mediatorURL + "/oob_url")
-      planMessage = link.map(to => replyToInvitation(Agent.Charlie.id, to)).get
-      invitationFrom = DidId(link.get.from)
+      link <- InvitationPrograms
+        .getInvitationProgram(mediatorURL + "/oob_url")
+        .map(_.toOption) // FIXME
+      agentService <- ZIO.service[DidComm]
+
+      planMessage = link.map(to => replyToInvitation(agentService.myDid, to)).get
+      invitationFrom = link.get.from
       _ <- ZIO.log(s"Invitation from $invitationFrom")
 
-      charlie <- ZIO.service[DidComm]
-      encryptedMessage <- charlie.packEncrypted(planMessage, to = invitationFrom)
+      encryptedMessage <- agentService.packEncrypted(planMessage, to = invitationFrom)
       _ <- ZIO.log("Sending bytes ...")
       jsonString = encryptedMessage.string
-      _ <- ZIO.log(s"\n\n$jsonString\n\n")
+      _ <- ZIO.log(jsonString)
 
       res <- Client.request(
         url = mediatorURL,
@@ -55,7 +58,7 @@ object CoordinateMediationPrograms {
       data <- res.bodyAsString
       _ <- ZIO.log(data)
 
-      messageReceived <- charlie.unpack(data)
+      messageReceived <- agentService.unpack(data)
       _ <- Console.printLine("Unpacking and decrypting the received message ...")
       _ <- Console.printLine("*" * 100)
       _ <- Console.printLine(toPrettyJson(messageReceived.getMessage.toString))

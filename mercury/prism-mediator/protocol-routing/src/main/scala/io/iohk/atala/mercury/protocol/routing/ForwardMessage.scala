@@ -36,8 +36,8 @@ final case class ForwardMessage(
 
   def asMessage = {
     Message(
-      from = from,
-      to = to,
+      from = Some(from),
+      to = Some(to),
       body = Map("next" -> body.next.value),
       id = id,
       piuri = `type`,

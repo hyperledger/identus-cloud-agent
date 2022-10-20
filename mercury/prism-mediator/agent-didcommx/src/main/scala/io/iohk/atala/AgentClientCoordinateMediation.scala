@@ -40,7 +40,5 @@ import io.iohk.atala.mercury.InvitationPrograms
   val app = CoordinateMediationPrograms
     .senderMediationRequestProgram(mediatorURL)
     .provide(env, AgentService.charlie)
-
   Unsafe.unsafe { Runtime.default.unsafe.run(app).getOrThrowFiberFailure() }
-
 }

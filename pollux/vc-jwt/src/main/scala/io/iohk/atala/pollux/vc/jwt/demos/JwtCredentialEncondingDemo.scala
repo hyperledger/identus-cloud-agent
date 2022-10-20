@@ -6,7 +6,7 @@ import io.circe.generic.auto.*
 import io.circe.parser.decode
 import io.circe.syntax.*
 import io.iohk.atala.pollux.vc.jwt.*
-import io.iohk.atala.pollux.vc.jwt.VerifiedCredentialJson.Encoders.Implicits.*
+import io.iohk.atala.pollux.vc.jwt.CredentialPayload.Implicits.*
 import net.reactivecore.cjs.resolver.Downloader
 import net.reactivecore.cjs.{DocumentValidator, Loader, Result}
 import pdi.jwt.{JwtAlgorithm, JwtCirce, JwtClaim}
@@ -29,7 +29,7 @@ import java.time.{Instant, ZonedDateTime}
   val publicKey = keyPair.getPublic
   val issuer =
     Issuer(
-      did = IssuerDID("did:issuer:MDP8AsFhHzhwUvGNuYkX7T"),
+      did = DID("did:issuer:MDP8AsFhHzhwUvGNuYkX7T"),
       signer = ES256Signer(privateKey),
       publicKey = publicKey
     )
@@ -39,11 +39,11 @@ import java.time.{Instant, ZonedDateTime}
   println("==================")
   println("Create W3C")
   println("==================")
-  val w3cCredentialPayload = W3CCredentialPayload(
+  val w3cCredentialPayload = W3cCredentialPayload(
     `@context` = Vector("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
     maybeId = Some("http://example.edu/credentials/3732"),
     `type` = Vector("VerifiableCredential", "UniversityDegreeCredential"),
-    issuer = IssuerDID(id = "https://example.edu/issuers/565049"),
+    issuer = DID("https://example.edu/issuers/565049"),
     issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
     maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
     maybeCredentialSchema = Some(
@@ -78,21 +78,21 @@ import java.time.{Instant, ZonedDateTime}
   println("==================")
   println("W3C => Encoded JWT")
   println("==================")
-  val encodedJWT = JwtVerifiableCredential.toEncodedJwt(w3cCredentialPayload, issuer)
-  println(encodedJWT.jwt)
+  val encodedJWT = JwtCredential.toEncodedJwt(w3cCredentialPayload, issuer)
+  println(encodedJWT)
 
   println("")
   println("==================")
   println("Validate Encoded JWT")
   println("==================")
-  val valid = JwtVerifiableCredential.validateEncodedJwt(encodedJWT, issuer.publicKey)
+  val valid = JwtCredential.validateEncodedJwt(encodedJWT, issuer.publicKey)
   println(s"Is Valid? $valid")
 
   println("")
   println("==================")
   println("Encoded JWT => Decoded JWT Json")
   println("==================")
-  val decodedJwtCredential = JwtVerifiableCredential.decodeJwt(encodedJWT, issuer.publicKey)
+  val decodedJwtCredential = JwtCredential.decodeJwt(encodedJWT, issuer.publicKey)
   val decodedJwtCredentialAsJson = decodedJwtCredential.toOption.get.asJson.toString()
   println(decodedJwtCredentialAsJson)
 
