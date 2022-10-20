@@ -2,6 +2,7 @@ package io.iohk.atala.mercury.protocol.invitation.v2
 
 import munit.*
 import io.iohk.atala.mercury.protocol.invitation.v2._
+import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.invitation.OutOfBand
 class OutOfBandSpec extends FunSuite {
 
@@ -11,16 +12,19 @@ class OutOfBandSpec extends FunSuite {
 
     val ret = OutOfBand.parseInvitation(link)
 
-    assert(ret.isInstanceOf[Some[Invitation]])
+    assert(ret.isInstanceOf[Right[_, Invitation]])
 
     val expected = Invitation(
       "https://didcomm.org/out-of-band/2.0/invitation",
       "421dbbc8-57ca-4341-aa3a-f5b4215c568f",
-      "did:peer:2.Ez6LSmLmWmTvwjgLSuUaEQHdHSFWPwyibgzomWjFmnC6FhLnU.Vz6MktNgLh4N1u9KNhDiqe8KZ8bsLzLcqsifoNiUtBoSs9jxf.SeyJpZCI6Im5ldy1pZCIsInQiOiJkbSIsInMiOiJodHRwOi8vMTI3LjAuMC4xOjgwMDAiLCJhIjpbImRpZGNvbW0vdjIiXX0",
+      DidId(
+        "did:peer:2.Ez6LSmLmWmTvwjgLSuUaEQHdHSFWPwyibgzomWjFmnC6FhLnU.Vz6MktNgLh4N1u9KNhDiqe8KZ8bsLzLcqsifoNiUtBoSs9jxf.SeyJpZCI6Im5ldy1pZCIsInQiOiJkbSIsInMiOiJodHRwOi8vMTI3LjAuMC4xOjgwMDAiLCJhIjpbImRpZGNvbW0vdjIiXX0"
+      ),
       Body("request-mediate", "RequestMediate", Seq("didcomm/v2", "didcomm/aip2;env=rfc587")),
       None
     )
-    assertEquals(ret, Some(expected))
+
+    assertEquals(ret, Right(expected))
   }
 
 }

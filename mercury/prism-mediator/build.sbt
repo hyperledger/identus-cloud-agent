@@ -4,7 +4,9 @@ val VERSION = "0.1.0-SNAPSHOT"
 inThisBuild(
   Seq(
     organization := "io.iohk.atala",
-    scalaVersion := "3.2.0"
+    scalaVersion := "3.2.0",
+    fork := true,
+    run / connectInput := true,
   )
 )
 
@@ -22,8 +24,9 @@ lazy val V = new {
   val munitZio = "0.1.1"
 
   // https://mvnrepository.com/artifact/dev.zio/zio
-  val zio = "2.0.0"
-  val zioJson = "0.3.0-RC10"
+  val zio = "2.0.0" // "2.0.0" TODO
+  val zioJson = "0.3.0"
+  val zioHttp = "2.0.0-RC10" // "2.0.0-RC11" TODO
 
   // https://mvnrepository.com/artifact/io.circe/circe-core
   val circe = "0.14.2"
@@ -36,6 +39,9 @@ lazy val D = new {
   val zioLog = Def.setting("dev.zio" %% "zio-logging" % V.zio)
   val zioSLF4J = Def.setting("dev.zio" %% "zio-logging-slf4j" % V.zio)
   val zioJson = Def.setting("dev.zio" %% "zio-json" % V.zioJson)
+
+  // val zioHttp = Def.setting("dev.zio" %% "zio-http" % V.zioHttp) // FIXME USE THIS ONE
+  val zioHttp = Def.setting("io.d11" %% "zhttp" % V.zioHttp) // REMOVE (this is the old name)
 
   val circeCore = Def.setting("io.circe" %% "circe-core" % V.circe)
   val circeGeneric = Def.setting("io.circe" %% "circe-generic" % V.circe)
@@ -124,6 +130,15 @@ lazy val protocolMercuryMailbox = project
   .settings(libraryDependencies += D.zio.value)
   .dependsOn(models, protocolInvitation, protocolRouting)
 
+lazy val protocolLogin = project
+  .in(file("protocol-outofband-login"))
+  .settings(name := "mercury-protocol-outofband-login", version := VERSION)
+  .settings(libraryDependencies += D.zio.value)
+  .settings(libraryDependencies += D.zio.value)
+  .settings(libraryDependencies ++= Seq(D.circeCore.value, D.circeGeneric.value, D.circeParser.value))
+  .settings(libraryDependencies += D.munitZio.value)
+  .dependsOn(models)
+
 lazy val protocolReportProblem = project
   .in(file("protocol-report-problem"))
   .settings(name := "protocol-report_problem", version := VERSION)
@@ -162,17 +177,18 @@ lazy val resolver = project // maybe merge into models
 // ##############
 
 lazy val agent = project // maybe merge into models
-  // .in(file("agent-generic"))
-  // .settings(name := "mercury-agent-generic", version := VERSION)
-  .settings(libraryDependencies += "io.d11" %% "zhttp" % "2.0.0-RC10")
-  .settings(libraryDependencies ++= Seq(D.zioLog.value)) // , D.zioSLF4J.value))
+  .in(file("agent"))
+  .settings(name := "mercury-agent-core") // , version := VERSION)
+  .settings(libraryDependencies += "com.google.zxing" % "core" % "3.5.0")
+  .settings(libraryDependencies ++= Seq(D.zioLog.value, D.zioHttp.value)) // , D.zioSLF4J.value))
   .dependsOn(
     models,
     resolver,
     protocolCoordinateMediation,
     protocolInvitation,
     protocolRouting,
-    protocolMercuryMailbox
+    protocolMercuryMailbox,
+    protocolLogin,
   )
 
 /** Demos agents and services implementation with didcommx */

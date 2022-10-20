@@ -6,6 +6,7 @@ import io.iohk.atala.mercury.model._
 import java.util.Base64
 
 trait DidComm {
+  def myDid: DidId // TODO
   def packSigned(msg: Message): UIO[SignedMesage]
   def packEncrypted(msg: Message, to: DidId): UIO[EncryptedMessage]
   def unpack(str: String): UIO[UnpackMesage]

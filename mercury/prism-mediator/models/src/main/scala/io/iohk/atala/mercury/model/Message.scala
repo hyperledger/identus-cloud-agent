@@ -9,8 +9,8 @@ import scala.jdk.CollectionConverters._
 type PIURI = String //type URI or URL?
 case class Message(
     piuri: PIURI,
-    from: DidId,
-    to: DidId,
+    from: Option[DidId],
+    to: Option[DidId],
     body: Map[String, Any] = Map.empty,
     id: String = java.util.UUID.randomUUID.toString(),
     createdTime: Long = LocalDateTime.now().toEpochSecond(ZoneOffset.of("Z")),
