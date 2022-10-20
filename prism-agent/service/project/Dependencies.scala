@@ -4,25 +4,25 @@ object Dependencies {
   object Versions {
     val zio = "2.0.2"
     val zioConfig = "3.0.2"
-    val zioHttp = "2.0.0-RC11"
     val akka = "2.6.20"
     val akkaHttp = "10.2.9"
     val castor = "0.1.0-SNAPSHOT"
     val pollux = "0.1.0-SNAPSHOT"
     val bouncyCastle = "1.70"
     val logback = "1.4.4"
+    val zioJson = "0.3.0"
+    val tapir = "1.1.3"
   }
 
   private lazy val zio = "dev.zio" %% "zio" % Versions.zio
   private lazy val zioConfig = "dev.zio" %% "zio-config" % Versions.zioConfig
   private lazy val zioConfigMagnolia = "dev.zio" %% "zio-config-magnolia" % Versions.zioConfig
   private lazy val zioConfigTypesafe = "dev.zio" %% "zio-config-typesafe" % Versions.zioConfig
+  private lazy val zioJson = "dev.zio" %% "zio-json" % Versions.zioJson
 
   private lazy val zioTest = "dev.zio" %% "zio-test" % Versions.zio % Test
   private lazy val zioTestSbt = "dev.zio" %% "zio-test-sbt" % Versions.zio % Test
   private lazy val zioTestMagnolia = "dev.zio" %% "zio-test-magnolia" % Versions.zio % Test
-
-  private lazy val zioHttp = "io.d11" %% "zhttp" % Versions.zioHttp
 
   private lazy val akkaTyped = "com.typesafe.akka" %% "akka-actor-typed" % Versions.akka
   private lazy val akkaStream = "com.typesafe.akka" %% "akka-stream" % Versions.akka
@@ -33,6 +33,7 @@ object Dependencies {
   private lazy val castorSqlDoobie = "io.iohk.atala" %% "castor-sql-doobie" % Versions.castor
 
   private lazy val polluxCore = "io.iohk.atala" %% "pollux-core" % Versions.pollux
+  private lazy val polluxVcJwt = "io.iohk.atala" %% "pollux-vc-jwt" % Versions.pollux
   private lazy val polluxSqlDoobie = "io.iohk.atala" %% "pollux-sql-doobie" % Versions.pollux
 
   // Added here to make prism-crypto works.
@@ -42,20 +43,35 @@ object Dependencies {
 
   private lazy val logback = "ch.qos.logback" % "logback-classic" % Versions.logback
 
+  private lazy val tapirSwaggerUiBundle = "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % Versions.tapir
+  private lazy val tapirJsonZio = "com.softwaremill.sttp.tapir" %% "tapir-json-zio" % Versions.tapir
+  private lazy val tapirZio = "com.softwaremill.sttp.tapir" %% "tapir-zio" % Versions.tapir
+  private lazy val tapirZioHttpServer = "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server" % Versions.tapir
+  private lazy val tapirRedocBundle = "com.softwaremill.sttp.tapir" %% "tapir-redoc-bundle" % Versions.tapir
+  private lazy val tapirSttpStubServer =
+    "com.softwaremill.sttp.tapir" %% "tapir-sttp-stub-server" % Versions.tapir % Test
+
+
   // Dependency Modules
-  private lazy val baseDependencies: Seq[ModuleID] =
-    Seq(zio, zioTest, zioTestSbt, zioTestMagnolia, zioConfig, zioConfigMagnolia, zioConfigTypesafe)
+  private lazy val baseDependencies: Seq[ModuleID] = Seq(zio, zioTest, zioTestSbt, zioTestMagnolia, zioConfig, zioConfigMagnolia, zioConfigTypesafe, zioJson, logback)
   private lazy val castorDependencies: Seq[ModuleID] = Seq(castorCore, castorSqlDoobie)
-  private lazy val polluxDependencies: Seq[ModuleID] = Seq(polluxCore, polluxSqlDoobie)
-  private lazy val akkaHttpDependencies: Seq[ModuleID] =
-    Seq(akkaTyped, akkaStream, akkaHttp, akkaSprayJson).map(_.cross(CrossVersion.for3Use2_13))
+  private lazy val polluxDependencies: Seq[ModuleID] = Seq(polluxCore, polluxVcJwt, polluxSqlDoobie)
+  private lazy val akkaHttpDependencies: Seq[ModuleID] = Seq(akkaTyped, akkaStream, akkaHttp, akkaSprayJson).map(_.cross(CrossVersion.for3Use2_13))
   private lazy val bouncyDependencies: Seq[ModuleID] = Seq(bouncyBcpkix, bouncyBcprov)
+  private lazy val tapirDependencies: Seq[ModuleID] =
+    Seq(tapirSwaggerUiBundle, tapirJsonZio, tapirRedocBundle, tapirSttpStubServer, tapirZioHttpServer, tapirZio)
+
 
   // Project Dependencies
-  lazy val keyManagementDependencies: Seq[ModuleID] = baseDependencies ++ castorDependencies ++ bouncyDependencies
+  lazy val keyManagementDependencies: Seq[ModuleID] =
+      baseDependencies ++
+      castorDependencies ++
+      bouncyDependencies
+
   lazy val serverDependencies: Seq[ModuleID] =
-    baseDependencies ++ akkaHttpDependencies ++ castorDependencies ++ polluxDependencies ++ Seq(
-      zioHttp,
-      logback
-    )
+      baseDependencies ++
+      akkaHttpDependencies ++
+      castorDependencies ++
+      polluxDependencies ++
+      tapirDependencies
 }

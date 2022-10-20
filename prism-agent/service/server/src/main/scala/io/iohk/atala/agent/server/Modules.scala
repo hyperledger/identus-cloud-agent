@@ -6,7 +6,7 @@ import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.server.Route
 import doobie.util.transactor.Transactor
-import io.iohk.atala.agent.server.http.{HttpRoutes, HttpServer}
+import io.iohk.atala.agent.server.http.{HttpRoutes, HttpServer, ZHttpEndpoints, ZHttpServer}
 import io.iohk.atala.castor.core.service.{DIDService, DIDServiceImpl}
 import io.iohk.atala.agent.server.http.marshaller.{
   DIDApiMarshallerImpl,
@@ -59,8 +59,10 @@ import zio.config.typesafe.TypesafeConfigSource
 import zio.config.{ReadError, read}
 import zio.interop.catz.*
 import zio.stream.ZStream
-import zhttp.http._
+import zhttp.http.*
 import zhttp.service.Server
+import io.iohk.atala.pollux.schema.SchemaRegistryServerEndpoints
+import io.iohk.atala.pollux.service.SchemaRegistryServiceInMemory
 
 import java.util.concurrent.Executors
 
@@ -80,6 +82,18 @@ object Modules {
 
     httpServerApp
       .provideLayer(SystemModule.actorSystemLayer ++ HttpModule.layers)
+      .unit
+  }
+
+  lazy val zioApp = {
+    val zioHttpServerApp = for {
+      allSchemaRegistryEndpoints <- SchemaRegistryServerEndpoints.all
+      allEndpoints = ZHttpEndpoints.withDocumentations(allSchemaRegistryEndpoints)
+      httpServer <- ZHttpServer.start(allEndpoints)
+    } yield httpServer
+
+    zioHttpServerApp
+      .provideLayer(SchemaRegistryServiceInMemory.layer ++ Scope.default)
       .unit
   }
 

@@ -63,6 +63,8 @@ object Main extends ZIOAppDefault {
         .fork
 
       _ <- Modules.app(restServicePort)
+      _ <- Modules.zioApp
+      _ <- ZIO.never
     } yield ()
 
 }

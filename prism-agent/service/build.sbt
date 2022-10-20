@@ -50,7 +50,7 @@ lazy val server = project
     Docker / maintainer := "atala-coredid@iohk.io",
     Docker / dockerRepository := Some("registry.atalaprism.io"),
     // Docker / packageName := s"atala-prism/${packageName.value}",
-    dockerExposedPorts := Seq(8080),
+    dockerExposedPorts := Seq(8080, 8085),
     dockerBaseImage := "openjdk:11"
   )
   .enablePlugins(OpenApiGeneratorPlugin, JavaAppPackaging, DockerPlugin)
