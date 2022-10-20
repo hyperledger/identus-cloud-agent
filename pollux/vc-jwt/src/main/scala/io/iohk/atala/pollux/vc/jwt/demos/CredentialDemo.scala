@@ -11,8 +11,8 @@ import io.iohk.atala.pollux.vc.jwt.VerifiedCredentialJson.Encoders.Implicits.*
 import io.iohk.atala.pollux.vc.jwt.VerifiedCredentialJson.Decoders.Implicits.*
 import cats.implicits.*
 import io.circe.*
-import net.reactivecore.cjs.resolver.Downloader
-import net.reactivecore.cjs.{DocumentValidator, Loader, Result}
+//import net.reactivecore.cjs.resolver.Downloader
+//import net.reactivecore.cjs.{DocumentValidator, Loader, Result}
 import pdi.jwt.{JwtAlgorithm, JwtCirce, JwtClaim}
 import io.circe.generic.auto.*
 import io.circe.syntax.*

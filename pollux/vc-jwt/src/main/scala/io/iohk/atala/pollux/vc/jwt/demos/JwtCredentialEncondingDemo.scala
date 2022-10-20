@@ -7,8 +7,8 @@ import io.circe.parser.decode
 import io.circe.syntax.*
 import io.iohk.atala.pollux.vc.jwt.*
 import io.iohk.atala.pollux.vc.jwt.VerifiedCredentialJson.Encoders.Implicits.*
-import net.reactivecore.cjs.resolver.Downloader
-import net.reactivecore.cjs.{DocumentValidator, Loader, Result}
+//import net.reactivecore.cjs.resolver.Downloader
+//import net.reactivecore.cjs.{DocumentValidator, Loader, Result}
 import pdi.jwt.{JwtAlgorithm, JwtCirce, JwtClaim}
 
 import java.security.*

@@ -11,9 +11,9 @@ import pdi.jwt.{JwtAlgorithm, JwtCirce}
 import java.security.*
 import java.security.spec.*
 import java.time.Instant
-import net.reactivecore.cjs.Loader
-import net.reactivecore.cjs.{DocumentValidator, Loader, Result}
-import net.reactivecore.cjs.resolver.Downloader
+//import net.reactivecore.cjs.Loader
+//import net.reactivecore.cjs.{DocumentValidator, Loader, Result}
+//import net.reactivecore.cjs.resolver.Downloader
 import cats.implicits.*
 import io.circe.Json
 import pdi.jwt.algorithms.JwtECDSAAlgorithm
