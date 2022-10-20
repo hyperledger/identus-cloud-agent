@@ -1,6 +1,8 @@
 syntax = "proto3";
 
 import "scalapb/scalapb.proto";
+import "google/protobuf/timestamp.proto";
+
 import "protocol/did_operations.proto";
 import "protocol/vc_operations.proto";
 import "protocol/dlt.proto";
@@ -37,7 +39,21 @@ message IrisOperationInfo {
   }
 }
 
+message IrisBatchRequest {
+  // Hex representation of transaction id
+  // There is one to one correspondence between transaction and batch in it.
+  string last_seen_transaction_id = 1;
+}
+
+message ConfirmedIrisBatch {
+  int32 block_level = 1;
+  google.protobuf.Timestamp blockTimestamp = 2;
+  string transactionId = 3;
+  IrisBatch batch = 4;
+}
+
 service IrisService {
-    rpc ScheduleOperation(IrisOperation) returns (IrisOperationOutcome) {}
-    rpc GetOperation(IrisOperationId) returns (IrisOperationInfo) {}
+  rpc ScheduleOperation(IrisOperation) returns (IrisOperationOutcome) {}
+  rpc GetOperation(IrisOperationId) returns (IrisOperationInfo) {}
+  rpc GetIrisBatchStream(IrisBatchRequest) returns (stream ConfirmedIrisBatch) {}
 }

@@ -1,4 +1,4 @@
-package io.iohk.atala.iris.core.service
+package io.iohk.atala.iris.core.testutils
 
 import com.google.protobuf.ByteString
 import io.iohk.atala.iris.proto.did_operations.{CreateDid, DocumentDefinition, UpdateDid}
@@ -40,6 +40,7 @@ object RandomUtils {
           previousVersion = prevVers,
           forwardUpdateCommitment = forwUpdComm,
           patches = Seq(),
+          ledger = "mainnet",
           signature = sig
         )
       )

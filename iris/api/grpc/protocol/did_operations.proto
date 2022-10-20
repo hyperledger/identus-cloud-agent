@@ -68,26 +68,29 @@ message UpdateDid {
   }
 
   string did = 1;
-  bytes revealed_update_key = 2;
-  bytes previous_version = 3;
-  bytes forward_update_commitment = 4;
-  repeated Patch patches = 5;
-  bytes signature = 6;
+  string ledger = 2;
+  bytes revealed_update_key = 3;
+  bytes previous_version = 4;
+  bytes forward_update_commitment = 5;
+  repeated Patch patches = 6;
+  bytes signature = 7;
 }
 
 message RecoverDid {
   string did = 1;
-  bytes revealed_recovery_key = 2;
-  bytes previous_version = 3;
-  bytes forward_update_commitment = 4;
-  bytes forward_recovery_commitment = 5;
-  repeated DocumentDefinition document = 6;
-  bytes signature = 7;
+  string ledger = 2;
+  bytes revealed_recovery_key = 3;
+  bytes previous_version = 4;
+  bytes forward_update_commitment = 5;
+  bytes forward_recovery_commitment = 6;
+  repeated DocumentDefinition document = 7;
+  bytes signature = 8;
 }
 
 message DeactivateDid {
   string did = 1;
-  bytes revealed_recovery_key = 2;
-  bytes previous_version = 3;
-  bytes signature = 4;
+  string ledger = 2;
+  bytes revealed_recovery_key = 3;
+  bytes previous_version = 4;
+  bytes signature = 5;
 }

@@ -2,7 +2,7 @@ package io.iohk.atala.iris.sql.repository
 
 import doobie.*
 import doobie.implicits.*
-import io.iohk.atala.iris.core.model as model
+import io.iohk.atala.iris.core.model
 import io.iohk.atala.iris.core.repository.OperationsRepository
 import io.iohk.atala.iris.sql.repository.JdbcOperationsRepository
 import zio.*
