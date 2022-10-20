@@ -13,7 +13,7 @@ object ECCoordinates {
 
   // Uses prism-crypto ECCoordinate under the hood in order to reuse
   // existing padding functionality, but it only supports secp256k1 curve.
-  // When more elliptic-curves support are added, it should be migrated to BigInt.
+  // When more elliptic-curves support are added, it should be migrated to BigInt or Apollo primitive.
   opaque type ECCoordinate = prismcrypto.keys.ECCoordinate
 
   object ECCoordinate {
@@ -37,7 +37,7 @@ final case class ECPublicKey(p: ECPoint) extends AnyVal
 // Internal data should be BigInt and padded according to the private-key byte-size
 // when converting to bytearray. For the time being, this only wraps the
 // secp256k1 private-key bytes created from prism-crypto in order to reuse padding functionality.
-// When more elliptic-curves support are added, it should be migrated to BigInt.
+// When more elliptic-curves support are added, it should be migrated to BigInt or Apollo primitive.
 final case class ECPrivateKey private[keymanagement] (n: ArraySeq[Byte]) extends AnyVal {
   def toPaddedByteArray(curve: EllipticCurve): Array[Byte] = {
     curve match {

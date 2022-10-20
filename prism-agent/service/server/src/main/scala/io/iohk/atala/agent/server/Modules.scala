@@ -28,10 +28,7 @@ import zio.interop.catz.*
 import cats.effect.std.Dispatcher
 import com.typesafe.config.ConfigFactory
 import io.grpc.ManagedChannelBuilder
-import io.iohk.atala.agent.keymanagement.model.{DIDPublicKeyTemplate, ManagedDIDTemplate}
-import io.iohk.atala.agent.keymanagement.service.ManagedDIDService
 import io.iohk.atala.agent.server.config.AppConfig
-import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
@@ -44,34 +41,11 @@ import java.util.concurrent.Executors
 object Modules {
 
   val app: Task[Unit] = {
-//    val httpServerApp = HttpRoutes.routes.flatMap(HttpServer.start(8080, _))
-//
-//    httpServerApp
-//      .provideLayer(SystemModule.actorSystemLayer ++ HttpModule.layers)
-//      .unit
+    val httpServerApp = HttpRoutes.routes.flatMap(HttpServer.start(8080, _))
 
-    // TODO: remove
-    val effect = for {
-      svc <- ZIO.service[ManagedDIDService]
-      _ <- svc
-        .createAndStoreDID(
-          ManagedDIDTemplate(
-            storage = "mainnet",
-            publicKeys = Seq(
-              DIDPublicKeyTemplate(
-                id = "key-1",
-                purpose = VerificationRelationship.Authentication
-              )
-            ),
-            services = Nil
-          )
-        )
-        .mapError(_ => new Exception(""))
-    } yield ()
-
-    effect.provide(
-      (AppModule.didServiceLayer ++ AppModule.didOpValidatorLayer) >>> ManagedDIDService.inMemoryStorage()
-    )
+    httpServerApp
+      .provideLayer(SystemModule.actorSystemLayer ++ HttpModule.layers)
+      .unit
   }
 
 }

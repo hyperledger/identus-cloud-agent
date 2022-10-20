@@ -32,7 +32,6 @@ import io.iohk.atala.shared.models.Base64UrlStrings.*
 import io.iohk.atala.shared.models.HexStrings.*
 import zio.*
 
-// TODO: add tests
 /** A wrapper around Castor's DIDService providing key-management capability. Analogous to the secretAPI in
   * indy-wallet-sdk.
   */
