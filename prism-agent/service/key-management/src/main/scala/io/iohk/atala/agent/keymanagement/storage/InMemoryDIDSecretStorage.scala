@@ -6,7 +6,6 @@ import io.iohk.atala.castor.core.model.did.PrismDID
 import io.iohk.atala.shared.models.HexStrings.HexString
 import zio.*
 
-// TODO: add tests on commitment storage
 private[keymanagement] class InMemoryDIDSecretStorage private (store: Ref[Map[PrismDID, DIDSecretRecord]])
     extends DIDSecretStorage {
   override def listKeys(did: PrismDID): Task[Map[String, ECKeyPair]] =
