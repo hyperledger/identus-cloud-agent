@@ -15,22 +15,22 @@ import scala.util.{Failure, Success, Try}
 sealed trait VerifiablePresentationPayload
 
 case class W3cVerifiablePresentationPayload(payload: W3cPresentationPayload, proof: Proof)
-  extends Verifiable(proof),
-    VerifiablePresentationPayload
+    extends Verifiable(proof),
+      VerifiablePresentationPayload
 
 case class JwtVerifiablePresentationPayload(jwt: JWT) extends VerifiablePresentationPayload
 
 sealed trait PresentationPayload(
-                                  `@context`: IndexedSeq[String],
-                                  `type`: IndexedSeq[String],
-                                  verifiableCredential: IndexedSeq[VerifiableCredentialPayload],
-                                  maybeIss: Option[String],
-                                  maybeNbf: Option[Instant],
-                                  aud: IndexedSeq[String],
-                                  maybeExp: Option[Instant],
-                                  maybeJti: Option[String],
-                                  maybeNonce: Option[String]
-                                ) {
+    `@context`: IndexedSeq[String],
+    `type`: IndexedSeq[String],
+    verifiableCredential: IndexedSeq[VerifiableCredentialPayload],
+    maybeIss: Option[String],
+    maybeNbf: Option[Instant],
+    aud: IndexedSeq[String],
+    maybeExp: Option[Instant],
+    maybeJti: Option[String],
+    maybeNonce: Option[String]
+) {
   def toJwtPresentationPayload: JwtPresentationPayload =
     JwtPresentationPayload(
       maybeIss = maybeIss,
@@ -66,63 +66,61 @@ sealed trait PresentationPayload(
 }
 
 case class W3cPresentationPayload(
-                                   `@context`: IndexedSeq[String],
-                                   maybeId: Option[String],
-                                   `type`: IndexedSeq[String],
-                                   verifiableCredential: IndexedSeq[VerifiableCredentialPayload],
-                                   holder: String,
-                                   verifier: IndexedSeq[String],
-                                   issuanceDate: Instant,
-                                   maybeExpirationDate: Option[Instant],
+    `@context`: IndexedSeq[String],
+    maybeId: Option[String],
+    `type`: IndexedSeq[String],
+    verifiableCredential: IndexedSeq[VerifiableCredentialPayload],
+    holder: String,
+    verifier: IndexedSeq[String],
+    issuanceDate: Instant,
+    maybeExpirationDate: Option[Instant],
 
-                                   /** Not part of W3C Presentation but included to preserve in case of conversion from JWT. */
-                                   maybeNonce: Option[String] = Option.empty
-                                 ) extends PresentationPayload(
-  `@context` = `@context`.distinct,
-  `type` = `type`.distinct,
-  maybeJti = maybeId,
-  verifiableCredential = verifiableCredential,
-  aud = verifier,
-  maybeIss = Some(holder),
-  maybeNbf = Some(issuanceDate),
-  maybeExp = maybeExpirationDate,
-  maybeNonce = maybeNonce
-)
+    /** Not part of W3C Presentation but included to preserve in case of conversion from JWT. */
+    maybeNonce: Option[String] = Option.empty
+) extends PresentationPayload(
+      `@context` = `@context`.distinct,
+      `type` = `type`.distinct,
+      maybeJti = maybeId,
+      verifiableCredential = verifiableCredential,
+      aud = verifier,
+      maybeIss = Some(holder),
+      maybeNbf = Some(issuanceDate),
+      maybeExp = maybeExpirationDate,
+      maybeNonce = maybeNonce
+    )
 
 case class JwtVp(
-                  `@context`: IndexedSeq[String],
-                  `type`: IndexedSeq[String],
-                  verifiableCredential: IndexedSeq[VerifiableCredentialPayload]
-                )
+    `@context`: IndexedSeq[String],
+    `type`: IndexedSeq[String],
+    verifiableCredential: IndexedSeq[VerifiableCredentialPayload]
+)
 
 case class JwtPresentationPayload(
-                                   maybeIss: Option[String],
-                                   vp: JwtVp,
-                                   maybeNbf: Option[Instant],
-                                   aud: IndexedSeq[String],
-                                   maybeExp: Option[Instant],
-                                   maybeJti: Option[String],
-                                   maybeNonce: Option[String]
-                                 ) extends PresentationPayload(
-  maybeIss = maybeIss,
-  `@context` = vp.`@context`,
-  `type` = vp.`type`,
-  verifiableCredential = vp.verifiableCredential,
-  maybeNbf = maybeNbf,
-  aud = aud,
-  maybeExp = maybeExp,
-  maybeJti = maybeJti,
-  maybeNonce = maybeNonce
-)
+    maybeIss: Option[String],
+    vp: JwtVp,
+    maybeNbf: Option[Instant],
+    aud: IndexedSeq[String],
+    maybeExp: Option[Instant],
+    maybeJti: Option[String],
+    maybeNonce: Option[String]
+) extends PresentationPayload(
+      maybeIss = maybeIss,
+      `@context` = vp.`@context`,
+      `type` = vp.`type`,
+      verifiableCredential = vp.verifiableCredential,
+      maybeNbf = maybeNbf,
+      aud = aud,
+      maybeExp = maybeExp,
+      maybeJti = maybeJti,
+      maybeNonce = maybeNonce
+    )
 
 object PresentationPayload {
 
   object Implicits {
 
     import CredentialPayload.Implicits.*
-    import JWT.Implicits.*
     import Proof.Implicits.*
-
 
     implicit val w3cPresentationPayloadEncoder: Encoder[W3cPresentationPayload] =
       (w3cPresentationPayload: W3cPresentationPayload) =>
@@ -156,7 +154,7 @@ object PresentationPayload {
         Json
           .obj(
             ("iss", jwtPresentationPayload.maybeIss.asJson),
-            ("vc", jwtPresentationPayload.vp.asJson),
+            ("vp", jwtPresentationPayload.vp.asJson),
             ("nbf", jwtPresentationPayload.maybeNbf.asJson),
             ("aud", jwtPresentationPayload.aud.asJson),
             ("exp", jwtPresentationPayload.maybeExp.asJson),
@@ -166,7 +164,7 @@ object PresentationPayload {
           .deepDropNullValues
           .dropEmptyValues
 
-    implicit val w3cPresentationPayload: Decoder[W3cPresentationPayload] =
+    implicit val w3cPresentationPayloadDecoder: Decoder[W3cPresentationPayload] =
       (c: HCursor) =>
         for {
           `@context` <- c
@@ -286,3 +284,19 @@ object PresentationPayload {
   }
 }
 
+object JwtPresentation {
+
+  import PresentationPayload.Implicits.*
+
+  def encodeJwt(payload: JwtPresentationPayload, issuer: Issuer): JWT = issuer.signer.encode(payload.asJson)
+
+  def toEncodedJwt(payload: W3cPresentationPayload, issuer: Issuer): JWT =
+    encodeJwt(payload.toJwtPresentationPayload, issuer)
+
+  def decodeJwt(jwt: JWT, publicKey: PublicKey): Try[JwtPresentationPayload] = {
+    JwtCirce.decodeRaw(jwt.value, publicKey).flatMap(decode[JwtPresentationPayload](_).toTry)
+  }
+
+  def validateEncodedJwt(jwt: JWT, publicKey: PublicKey): Boolean =
+    JwtCirce.isValid(jwt.value, publicKey)
+}
