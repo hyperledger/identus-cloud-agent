@@ -130,14 +130,6 @@ lazy val protocolInvitation = project
   )
   .dependsOn(models)
 
-
-lazy val protocolDidExchange = project
-  .in(file("protocol-did-exchange"))
-  .settings(name := "mercury-protocol-did-exchange")
-  .settings(libraryDependencies += D.zio.value)
-  .settings(libraryDependencies ++= Seq(D.circeCore.value, D.circeGeneric.value, D.circeParser.value))
-  .dependsOn(models, protocolInvitation)
-
 lazy val protocolMercuryMailbox = project
   .in(file("protocol-mercury-mailbox"))
   .settings(name := "mercury-protocol-mailbox")
