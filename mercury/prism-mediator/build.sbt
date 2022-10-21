@@ -1,5 +1,6 @@
+import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
+
 val tapirVersion = "1.0.3"
-val VERSION = "0.1.0-SNAPSHOT"
 
 inThisBuild(
   Seq(
@@ -7,6 +8,11 @@ inThisBuild(
     scalaVersion := "3.2.0",
     fork := true,
     run / connectInput := true,
+    releaseUseGlobalVersion := false,
+    versionScheme := Some("semver-spec"),
+    githubOwner := "input-output-hk",
+    githubRepository := "atala-prism-building-blocks",
+    githubTokenSource := TokenSource.Environment("GITHUB_TOKEN")
   )
 )
 
@@ -71,7 +77,7 @@ lazy val D = new {
   */
 lazy val models = project
   .in(file("models"))
-  .settings(name := "mercury-data-models", version := VERSION)
+  .settings(name := "mercury-data-models")
   .settings(
     libraryDependencies ++= Seq(D.zio.value),
     libraryDependencies ++= Seq(
@@ -89,14 +95,14 @@ lazy val models = project
 
 lazy val protocolConnection = project
   .in(file("protocol-connection"))
-  .settings(name := "mercury-protocol-connection", version := VERSION)
+  .settings(name := "mercury-protocol-connection")
   .settings(libraryDependencies += D.zio.value)
   .settings(libraryDependencies ++= Seq(D.circeCore.value, D.circeGeneric.value, D.circeParser.value))
   .dependsOn(models, protocolInvitation)
 
 lazy val protocolCoordinateMediation = project
   .in(file("protocol-coordinate-mediation"))
-  .settings(name := "mercury-protocol-coordinate-mediation", version := VERSION)
+  .settings(name := "mercury-protocol-coordinate-mediation")
   .settings(libraryDependencies += D.zio.value)
   .settings(libraryDependencies ++= Seq(D.circeCore.value, D.circeGeneric.value, D.circeParser.value))
   .settings(libraryDependencies += D.munitZio.value)
@@ -104,7 +110,7 @@ lazy val protocolCoordinateMediation = project
 
 lazy val protocolInvitation = project
   .in(file("protocol-invitation"))
-  .settings(name := "mercury-protocol-invitation", version := VERSION)
+  .settings(name := "mercury-protocol-invitation")
   .settings(libraryDependencies += D.zio.value)
   .settings(
     libraryDependencies ++= Seq(
@@ -119,20 +125,20 @@ lazy val protocolInvitation = project
 
 lazy val protocolDidExchange = project
   .in(file("protocol-did-exchange"))
-  .settings(name := "mercury-protocol-did-exchange", version := VERSION)
+  .settings(name := "mercury-protocol-did-exchange")
   .settings(libraryDependencies += D.zio.value)
   .settings(libraryDependencies ++= Seq(D.circeCore.value, D.circeGeneric.value, D.circeParser.value))
   .dependsOn(models, protocolInvitation)
 
 lazy val protocolMercuryMailbox = project
   .in(file("protocol-mercury-mailbox"))
-  .settings(name := "mercury-protocol-mailbox", version := VERSION)
+  .settings(name := "mercury-protocol-mailbox")
   .settings(libraryDependencies += D.zio.value)
   .dependsOn(models, protocolInvitation, protocolRouting)
 
 lazy val protocolLogin = project
   .in(file("protocol-outofband-login"))
-  .settings(name := "mercury-protocol-outofband-login", version := VERSION)
+  .settings(name := "mercury-protocol-outofband-login")
   .settings(libraryDependencies += D.zio.value)
   .settings(libraryDependencies += D.zio.value)
   .settings(libraryDependencies ++= Seq(D.circeCore.value, D.circeGeneric.value, D.circeParser.value))
@@ -141,12 +147,12 @@ lazy val protocolLogin = project
 
 lazy val protocolReportProblem = project
   .in(file("protocol-report-problem"))
-  .settings(name := "protocol-report_problem", version := VERSION)
+  .settings(name := "protocol-report_problem")
   .dependsOn(models)
 
 lazy val protocolRouting = project
   .in(file("protocol-routing"))
-  .settings(name := "mercury-protocol-routing-2_0", version := VERSION)
+  .settings(name := "mercury-protocol-routing-2_0")
   .settings(libraryDependencies += D.zio.value)
   .dependsOn(models)
 
@@ -157,7 +163,7 @@ lazy val protocolRouting = project
 // TODO move stuff to the models module
 lazy val resolver = project // maybe merge into models
   .in(file("resolver"))
-  .settings(name := "mercury-resolver", version := VERSION)
+  .settings(name := "mercury-resolver")
   .settings(
     libraryDependencies ++= Seq(
       D.didcommx.value,
@@ -178,7 +184,7 @@ lazy val resolver = project // maybe merge into models
 
 lazy val agent = project // maybe merge into models
   .in(file("agent"))
-  .settings(name := "mercury-agent-core") // , version := VERSION)
+  .settings(name := "mercury-agent-core")
   .settings(libraryDependencies += "com.google.zxing" % "core" % "3.5.0")
   .settings(libraryDependencies ++= Seq(D.zioLog.value, D.zioHttp.value)) // , D.zioSLF4J.value))
   .dependsOn(
@@ -194,7 +200,7 @@ lazy val agent = project // maybe merge into models
 /** Demos agents and services implementation with didcommx */
 lazy val agentDidcommx = project
   .in(file("agent-didcommx"))
-  .settings(name := "mercury-agent-didcommx", version := VERSION)
+  .settings(name := "mercury-agent-didcommx")
   .settings(libraryDependencies += D.didcommx.value)
   .dependsOn(agent)
 
@@ -202,7 +208,7 @@ lazy val agentDidcommx = project
 lazy val agentDidScala =
   project
     .in(file("agent-did-scala"))
-    .settings(name := "mercury-agent-didscala", version := VERSION)
+    .settings(name := "mercury-agent-didscala")
     .settings(
       didScalaAUX,
       if (useDidLib) (Compile / sources ++= Seq())
@@ -217,7 +223,7 @@ lazy val agentDidScala =
 /** The mediator service */
 lazy val mediator = project
   .in(file("mediator"))
-  .settings(name := "mercury-mediator", version := VERSION)
+  .settings(name := "mercury-mediator")
   .settings(
     libraryDependencies ++= Seq( // TODO cleanup
       "com.softwaremill.sttp.tapir" %% "tapir-http4s-server-zio" % tapirVersion,
@@ -258,3 +264,13 @@ lazy val mediator = project
     protocolReportProblem,
     protocolRouting,
   )
+
+releaseProcess := Seq[ReleaseStep](
+  checkSnapshotDependencies,
+  inquireVersions,
+  runClean,
+  runTest,
+  setReleaseVersion,
+  publishArtifacts,
+  setNextVersion
+)
