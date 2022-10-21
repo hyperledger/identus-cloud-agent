@@ -38,6 +38,12 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   given RootJsonFormat[VerificationMethod] = jsonFormat4(VerificationMethod.apply)
   given RootJsonFormat[VerificationMethodOrRef] = jsonFormat2(VerificationMethodOrRef.apply)
 
+  // Issue Credential Protocol
+  given RootJsonFormat[CreateIssueCredentialRecordRequest] = jsonFormat4(CreateIssueCredentialRecordRequest.apply)
+  given RootJsonFormat[SendCredentialOfferRequest] = jsonFormat1(SendCredentialOfferRequest.apply)
+  given RootJsonFormat[CreateIssueCredentialRecordResponse] = jsonFormat1(CreateIssueCredentialRecordResponse.apply)
+  //
+
   // Pollux
   given RootJsonFormat[CreateCredentials201Response] = jsonFormat3(CreateCredentials201Response.apply)
   given RootJsonFormat[CreateCredentialsRequest] = jsonFormat1(CreateCredentialsRequest.apply)

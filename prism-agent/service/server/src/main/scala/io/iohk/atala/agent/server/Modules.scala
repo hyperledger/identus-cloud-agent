@@ -5,28 +5,28 @@ import akka.actor.setup.ActorSystemSetup
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.server.Route
-import doobie.util.transactor.Transactor
-import io.iohk.atala.agent.server.http.{HttpRoutes, HttpServer}
-import io.iohk.atala.castor.core.service.{DIDService, DIDServiceImpl}
-import io.iohk.atala.agent.server.http.marshaller.{DIDApiMarshallerImpl, DIDAuthenticationApiMarshallerImpl, DIDOperationsApiMarshallerImpl, IssueCredentialsApiMarshallerImpl}
-import io.iohk.atala.agent.server.http.service.{DIDApiServiceImpl, DIDAuthenticationApiServiceImpl, DIDOperationsApiServiceImpl, IssueCredentialsApiServiceImpl}
-import io.iohk.atala.castor.core.repository.DIDOperationRepository
-import io.iohk.atala.agent.openapi.api.{DIDApi, DIDAuthenticationApi, DIDOperationsApi, IssueCredentialsApi}
-import io.iohk.atala.castor.sql.repository.{JdbcDIDOperationRepository, TransactorLayer}
-import zio.*
-import zio.interop.catz.*
 import cats.effect.std.Dispatcher
 import com.typesafe.config.ConfigFactory
+import doobie.util.transactor.Transactor
 import io.grpc.ManagedChannelBuilder
+import io.iohk.atala.agent.openapi.api.*
 import io.iohk.atala.agent.server.config.AppConfig
+import io.iohk.atala.agent.server.http.marshaller.*
+import io.iohk.atala.agent.server.http.service.*
+import io.iohk.atala.agent.server.http.{HttpRoutes, HttpServer}
+import io.iohk.atala.castor.core.repository.DIDOperationRepository
+import io.iohk.atala.castor.core.service.{DIDService, DIDServiceImpl}
 import io.iohk.atala.castor.core.util.DIDOperationValidator
+import io.iohk.atala.castor.sql.repository.{JdbcDIDOperationRepository, TransactorLayer}
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
 import io.iohk.atala.pollux.core.repository.CredentialRepository
 import io.iohk.atala.pollux.core.service.CredentialService
 import io.iohk.atala.pollux.sql.repository.JdbcCredentialRepository
+import zio.*
 import zio.config.typesafe.TypesafeConfigSource
 import zio.config.{ReadError, read}
+import zio.interop.catz.*
 import zio.stream.ZStream
 
 import java.util.concurrent.Executors
@@ -124,7 +124,15 @@ object HttpModule {
     (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new IssueCredentialsApi(_, _))
   }
 
-  val layers = didApiLayer ++ didOperationsApiLayer ++ didAuthenticationApiLayer ++ issueCredentialsApiLayer
+  val issueCredentialsProtocolApiLayer: TaskLayer[IssueCredentialsProtocolApi] = {
+    val serviceLayer = AppModule.credentialServiceLayer
+    val apiServiceLayer = serviceLayer >>> IssueCredentialsProtocolApiServiceImpl.layer
+    val apiMarshallerLayer = IssueCredentialsProtocolApiMarshallerImpl.layer
+    (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new IssueCredentialsProtocolApi(_, _))
+  }
+
+  val layers =
+    didApiLayer ++ didOperationsApiLayer ++ didAuthenticationApiLayer ++ issueCredentialsApiLayer ++ issueCredentialsProtocolApiLayer
 }
 
 object RepoModule {

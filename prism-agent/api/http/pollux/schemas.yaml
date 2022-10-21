@@ -144,6 +144,54 @@ components:
         count:
           type: integer
 
+# Issue Credential Protocol
+    
+    CreateIssueCredentialRecordRequest:
+      description: A request to create a new "issue credential record"
+      required:
+        - schemaId
+        - subjectId
+        - claims
+      properties:
+        schemaId:
+          type: string
+          description: Identifier of the VC Schema associated with this object
+        subjectId:
+          type: string
+          description: Subject DID of the verifiable credentials object
+          example: did:prism:subjectofverifiablecredentials
+        validityPeriod:
+          type: number
+          description: The validity period in seconds of the verifiable credential
+          example: 3600
+        claims:
+          type: object
+          description: Claims that will be associated with given verifiable credentials
+          additionalProperties:
+            type: string
+
+    IssueCredentialRecord:
+      description: An issue credential record to store the state of the protocol execution
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/CreateIssueCredentialRecordRequest'
+        - type: object
+          required:
+            - state
+          properties:
+            state:
+              type: string
+              enum: ["offer-sent", "offer-received", "request-sent", "request-received", "credential-issued", "credential-received", "done"]
+
+    CreateIssueCredentialRecordResponse:
+      description: blabla
+      type: object
+      properties:
+        result:
+          type: string
+
+#
+
     W3CCredentialInput:
       description: |-
         Credential input object based on which the new instance of the verifiable credentials is created.

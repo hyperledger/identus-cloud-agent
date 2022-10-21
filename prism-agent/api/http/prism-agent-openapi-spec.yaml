@@ -444,6 +444,35 @@ paths:
                 $ref: "./pollux/schemas.yaml#/components/schemas/W3CSchema"
         "404":
           description: Schema is not found by id
+## Issue Credential Protocol
+
+  /issue-credentials/credential-offers:
+    post:
+      tags: ["Issue Credentials Protocol"]
+      operationId: sendCredentialOffer
+      summary: As a VC issuer, create a new credential offer to be sent to a VC holder
+      requestBody:
+        description: CredentialOffer object with schema identifier and claims
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: ["credentials"]
+              properties:
+                credentials:
+                  type: array
+                  items:
+                    $ref: "./pollux/schemas.yaml#/components/schemas/CreateIssueCredentialRecordRequest"
+      responses:
+        "201":
+          description: "Array of created verifiable credentials objects"
+          content:
+            application/json:
+              schema:
+                $ref: "./pollux/schemas.yaml#/components/schemas/CreateIssueCredentialRecordResponse"
+
+##
 
   /issue-credentials/credentials:
     post:
