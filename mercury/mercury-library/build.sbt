@@ -14,10 +14,7 @@ inThisBuild(
   )
 )
 
-// Custom keys
-val apiBaseDirectory = settingKey[File]("The base directory for Castor API specifications")
-ThisBuild / apiBaseDirectory := baseDirectory.value / ".." / "api"
-ThisBuild / resolvers += Resolver.githubPackages("FabioPinheiro", "scala-di")
+ThisBuild / resolvers += Resolver.githubPackages("FabioPinheiro", "scala-did")
 
 val useDidLib = true
 def didScalaAUX =
@@ -224,50 +221,6 @@ lazy val agentDidScala =
       else (Compile / sources := Seq()),
     )
     .dependsOn(agent)
-
-// ################
-// ### Mediator ###
-// ################
-
-/** The mediator service */
-lazy val mediator = project
-  .in(file("mediator"))
-  .settings(name := "mercury-mediator")
-  .settings(
-    libraryDependencies ++= Seq(
-      "org.http4s" %% "http4s-blaze-server" % "0.23.12",
-      "ch.qos.logback" % "logback-classic" % "1.2.11",
-      "com.softwaremill.sttp.tapir" %% "tapir-http4s-server-zio" % V.tapir,
-      "com.softwaremill.sttp.tapir" %% "tapir-http4s-server" % V.tapir,
-      "com.softwaremill.sttp.tapir" %% "tapir-json-circe" % V.tapir,
-      // "com.softwaremill.sttp.tapir" %% "tapir-sttp-stub-server" % V.tapir % Test,
-      // "com.softwaremill.sttp.client3" %% "circe" % "3.7.1" % Test,
-      "com.softwaremill.sttp.tapir" %% "tapir-openapi-docs" % V.tapir,
-      "com.softwaremill.sttp.tapir" %% "tapir-openapi-circe-yaml" % "1.0.0-M9",
-      "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui" % V.tapir,
-      "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-http4s" % "0.19.0-M4",
-      "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % "1.0.3", // This helps with Arrow Functions. But swagger is just a pain!
-      "com.softwaremill.sttp.tapir" %% "tapir-redoc-http4s" % "0.19.0-M4",
-      "com.softwaremill.sttp.apispec" %% "openapi-circe-yaml" % "0.2.1",
-    ),
-    Compile / unmanagedResourceDirectories += apiBaseDirectory.value,
-    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
-    // Docker / maintainer := "atala-coredid@iohk.io",
-    // Docker / dockerRepository := Some("atala-prism.io"),
-    // dockerExposedPorts := Seq(8080),
-    // dockerBaseImage := "openjdk:11"
-  )
-  // .enablePlugins(JavaAppPackaging, DockerPlugin)
-  .dependsOn(agentDidcommx, resolver)
-  .dependsOn(
-    protocolInvitation,
-    protocolConnection,
-    protocolDidExchange,
-    protocolMercuryMailbox,
-    protocolReportProblem,
-    protocolRouting,
-    protocolIssueCredential
-  )
 
 releaseProcess := Seq[ReleaseStep](
   checkSnapshotDependencies,
