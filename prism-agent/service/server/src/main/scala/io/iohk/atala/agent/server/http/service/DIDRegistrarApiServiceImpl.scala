@@ -17,50 +17,24 @@ class DIDRegistrarApiServiceImpl(service: ManagedDIDService)(using runtime: Runt
       OASDomainModelHelper,
       OASErrorModelHelper {
 
-  private val mockDID = DID(
-    id = "did:prism:1:mainnet:abcdef123456",
-    controller = None,
-    verificationMethod = None,
-    authentication = Some(
-      Seq(
-        VerificationMethodOrRef(verificationMethod =
-          Some(
-            VerificationMethod(
-              id = "did:prism:1:mainnet:abcdef123456#key-1",
-              `type` = "JsonWebKey2020",
-              controller = "did:prism:1:mainnet:abcdef123456",
-              jsonWebKey2020 = JsonWebKey2020(
-                publicKeyJwk = PublicKeyJwk(
-                  crv = Some("P-256"),
-                  x = Some("38M1FDts7Oea7urmseiugGW7tWc3mLpJh6rKe7xINZ8"),
-                  y = Some("nDQW6XZ7b_u2Sy9slofYLlG03sOEoug3I0aAPQ0exs4"),
-                  kty = Some("EC"),
-                  kid = Some("_TKzHv2jFIyvdTGF1Dsgwngfdg3SH6TpDv0Ta1aOEkw")
-                )
-              )
-            )
-          )
-        )
-      )
-    ),
-    assertionMethod = None,
-    keyAgreement = None,
-    capabilityInvocation = None,
-    service = None
-  )
-
-  // TODO: implement
   override def createManagedDid(createManagedDidRequest: CreateManagedDidRequest)(implicit
       toEntityMarshallerCreateManagedDIDResponse: ToEntityMarshaller[CreateManagedDIDResponse],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
-    onZioSuccess(ZIO.unit) { _ =>
-      createManagedDid200(
-        CreateManagedDIDResponse(
-          did = mockDID,
-          longFormDid = "did:prism:1:mainnet:abcdef:abcdef"
-        )
-      )
+    val result = for {
+      didTemplate <- ZIO
+        .fromEither(createManagedDidRequest.documentTemplate.toDomain)
+        .mapError(HttpServiceError.InvalidPayload.apply)
+      longFormDID <- service
+        .createAndStoreDID(didTemplate)
+        .mapError(HttpServiceError.DomainError.apply)
+    } yield CreateManagedDIDResponse(
+      longFormDid = longFormDID.toString
+    )
+
+    onZioSuccess(result.mapError(_.toOAS).either) {
+      case Left(error)   => complete(error.status -> error)
+      case Right(result) => createManagedDid200(result)
     }
   }
 

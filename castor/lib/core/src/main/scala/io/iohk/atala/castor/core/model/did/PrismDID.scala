@@ -31,7 +31,7 @@ sealed trait PrismDID {
 }
 
 object PrismDID {
-  // TODO: implement a proper DID parser
+  // TODO: implement a proper DID parser (ATL-2031)
   // For now, just make it work with a simple case of Prism DID V1
   def parse(didRef: String): Either[String, PrismDID] = {
     if (didRef.startsWith("did:prism:1:")) {

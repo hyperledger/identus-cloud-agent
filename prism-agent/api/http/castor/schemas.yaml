@@ -206,24 +206,22 @@ components:
                 type: object
                 required:
                   - id
-                  - purposes
+                  - purpose
                 properties:
                   id:
                     type: string
                     description: Identifier of a verification material in the DID Document
                     example: key-01
-                  purposes:
-                    type: array
-                    items:
-                      type: string
-                      enum:
-                        [
-                          "authentication",
-                          "assertionMethod",
-                          "keyAgreement",
-                          "capabilityInvocation",
-                          "capabilityDelegation",
-                        ]
+                  purpose:
+                    type: string
+                    enum:
+                      [
+                        "authentication",
+                        "assertionMethod",
+                        "keyAgreement",
+                        "capabilityInvocation",
+                        "capabilityDelegation",
+                      ]
                     example: [ "authentication", "assertionMethod" ]
             services:
               type: array
@@ -236,8 +234,6 @@ components:
         - did
         - longFormDid
       properties:
-        did:
-          $ref: "#/components/schemas/DID"
         longFormDid:
           type: string
           description: A long-form DID for the created DID
