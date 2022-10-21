@@ -32,7 +32,7 @@ Then configure `prism-agent` to use the services listed above.
 
 ---
 
-## Custodial key management
+## DID key management
 
 `prism-agent` is a cloud agent that represents the digital identity (is a DID controller)
 of the Issuing / Verification organization. As a DID controller, it needs to perform
@@ -40,7 +40,7 @@ the operation with private and public keys through the Wallet API abstraction le
 The interface for key-mangement is heavily inspired by
 [indy-sdk-java-wrapper](https://github.com/hyperledger/indy-sdk/tree/main/wrappers/java).
 
-There is an `custodian` subproject which is responsible for managing and storing DID key-pairs.
+There is an `key-management` subproject which is responsible for managing and storing DID key-pairs.
 The main goal is to wrap Castor and Pollux libraries which does not handle private-keys
 and ease the usage by providing key-mangement capabilities.
 Similar to [Indy Wallet SDK - secret API](https://github.com/hyperledger/indy-sdk/tree/main/docs/design/003-wallet-storage#secrets-api),

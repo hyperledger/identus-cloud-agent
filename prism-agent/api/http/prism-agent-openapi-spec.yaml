@@ -308,7 +308,7 @@ paths:
   /did-registrar/dids:
     post:
       tags: [ "DID Registrar" ]
-      operationId: createCustodialDid
+      operationId: createManagedDid
       summary: Create DID with the DID Document template where keys are managed by PrismAgent.
       description: Create DID with the DID Document template where keys are managed by PrismAgent.
       requestBody:
@@ -316,14 +316,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "./castor/schemas.yaml#/components/schemas/CreateCustodialDidRequest"
+              $ref: "./castor/schemas.yaml#/components/schemas/CreateManagedDidRequest"
       responses:
         "200":
           description: Created unpublished DID.
           content:
             application/json:
               schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/CreateCustodialDIDResponse"
+                $ref: "./castor/schemas.yaml#/components/schemas/CreateManagedDIDResponse"
         "422":
           description: The DID creation failed.
           content:
@@ -334,7 +334,7 @@ paths:
   /did-registrar/dids/{didRef}/publications:
     post:
       tags: [ "DID Registrar" ]
-      operationId: publishCustodialDid
+      operationId: publishManagedDid
       summary: Publish DID stored in PrismAgent wallet to blockchain
       description: Publish DID stored in PrismAgent wallet to blockchain
       parameters:
