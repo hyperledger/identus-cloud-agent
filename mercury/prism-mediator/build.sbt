@@ -1,4 +1,3 @@
-val tapirVersion = "1.0.3"
 val VERSION = "0.1.0-SNAPSHOT"
 
 inThisBuild(
@@ -32,6 +31,8 @@ lazy val V = new {
 
   // https://mvnrepository.com/artifact/io.circe/circe-core
   val circe = "0.14.2"
+
+  val tapir = "1.0.3"
 }
 
 /** Dependencies */
@@ -220,27 +221,21 @@ lazy val mediator = project
   .in(file("mediator"))
   .settings(name := "mercury-mediator", version := VERSION)
   .settings(
-    libraryDependencies ++= Seq( // TODO cleanup
-      "com.softwaremill.sttp.tapir" %% "tapir-http4s-server-zio" % tapirVersion,
-      "com.softwaremill.sttp.tapir" %% "tapir-http4s-server" % tapirVersion,
+    libraryDependencies ++= Seq(
       "org.http4s" %% "http4s-blaze-server" % "0.23.12",
-      "com.softwaremill.sttp.tapir" %% "tapir-json-circe" % tapirVersion,
       "ch.qos.logback" % "logback-classic" % "1.2.11",
-      // "com.softwaremill.sttp.tapir" %% "tapir-sttp-stub-server" % tapirVersion % Test,
-      // "dev.zio" %% "zio-test" % "2.0.0" % Test,
-      // "dev.zio" %% "zio-test-sbt" % "2.0.0" % Test,
+      "com.softwaremill.sttp.tapir" %% "tapir-http4s-server-zio" % V.tapir,
+      "com.softwaremill.sttp.tapir" %% "tapir-http4s-server" % V.tapir,
+      "com.softwaremill.sttp.tapir" %% "tapir-json-circe" % V.tapir,
+      // "com.softwaremill.sttp.tapir" %% "tapir-sttp-stub-server" % V.tapir % Test,
       // "com.softwaremill.sttp.client3" %% "circe" % "3.7.1" % Test,
-      "com.softwaremill.sttp.tapir" %% "tapir-openapi-docs" % tapirVersion,
+      "com.softwaremill.sttp.tapir" %% "tapir-openapi-docs" % V.tapir,
       "com.softwaremill.sttp.tapir" %% "tapir-openapi-circe-yaml" % "1.0.0-M9",
-      "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui" % tapirVersion,
+      "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui" % V.tapir,
       "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-http4s" % "0.19.0-M4",
       "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % "1.0.3", // This helps with Arrow Functions. But swagger is just a pain!
       "com.softwaremill.sttp.tapir" %% "tapir-redoc-http4s" % "0.19.0-M4",
       "com.softwaremill.sttp.apispec" %% "openapi-circe-yaml" % "0.2.1",
-      // D.didcommx.value,
-      // "org.jetbrains.kotlin" % "kotlin-runtime" % "1.2.71",
-      // "org.jetbrains.kotlin" % "kotlin-stdlib" % "1.7.10",
-      // "com.google.code.gson" % "gson" % "2.9.1"
     ),
     Compile / unmanagedResourceDirectories += apiBaseDirectory.value,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),

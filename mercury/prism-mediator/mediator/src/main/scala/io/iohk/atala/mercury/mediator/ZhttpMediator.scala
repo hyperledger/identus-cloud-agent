@@ -24,7 +24,7 @@ object ZhttpMediator extends ZIOAppDefault {
     case Method.GET -> !! / "api" / "openapi-spec.yaml" =>
       ZIO.succeed(
         Response.text(
-          Source.fromResource("mercury-openapi-spec-auth.yaml").iter.mkString
+          Source.fromResource("mercury-mediator-openapi.yaml").iter.mkString
         )
       )
     case req @ Method.GET -> !! / "oob_url" =>
