@@ -15,6 +15,6 @@ import org.didcommx.didcomm.message.Attachment.Data.Json
   val env = ChannelFactory.auto ++ EventLoopGroup.auto()
   val app = AgentPrograms.senderProgram.provide(env, AgentService.bob)
 
-  Unsafe.unsafe { Runtime.default.unsafe.run(app).getOrThrowFiberFailure() }
+  Unsafe.unsafe { implicit u => Runtime.default.unsafe.run(app).getOrThrowFiberFailure() }
 
 }

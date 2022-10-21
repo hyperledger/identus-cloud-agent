@@ -24,6 +24,6 @@ import io.circe._, io.circe.parser._
   val env = ChannelFactory.auto ++ EventLoopGroup.auto()
   val app = AgentPrograms.pickupMessageProgram.provide(env, AgentService.alice)
 
-  Unsafe.unsafe { Runtime.default.unsafe.run(app).getOrThrowFiberFailure() }
+  Unsafe.unsafe { implicit u => Runtime.default.unsafe.run(app).getOrThrowFiberFailure() }
 
 }

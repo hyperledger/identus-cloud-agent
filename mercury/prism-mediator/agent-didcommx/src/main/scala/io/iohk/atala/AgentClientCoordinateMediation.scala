@@ -19,7 +19,7 @@ import io.iohk.atala.mercury.InvitationPrograms
   val app =
     InvitationPrograms.getInvitationProgram("http://localhost:8000/oob_url").provide(env)
 
-  Unsafe.unsafe { Runtime.default.unsafe.run(app).getOrThrowFiberFailure() }
+  Unsafe.unsafe { implicit u => Runtime.default.unsafe.run(app).getOrThrowFiberFailure() }
 
 }
 
@@ -30,7 +30,7 @@ import io.iohk.atala.mercury.InvitationPrograms
     .senderMediationRequestProgram(mediatorURL)
     .provide(env, AgentService.charlie)
 
-  Unsafe.unsafe { Runtime.default.unsafe.run(app).getOrThrowFiberFailure() }
+  Unsafe.unsafe { implicit u => Runtime.default.unsafe.run(app).getOrThrowFiberFailure() }
 
 }
 
@@ -40,5 +40,5 @@ import io.iohk.atala.mercury.InvitationPrograms
   val app = CoordinateMediationPrograms
     .senderMediationRequestProgram(mediatorURL)
     .provide(env, AgentService.charlie)
-  Unsafe.unsafe { Runtime.default.unsafe.run(app).getOrThrowFiberFailure() }
+  Unsafe.unsafe { implicit u => Runtime.default.unsafe.run(app).getOrThrowFiberFailure() }
 }

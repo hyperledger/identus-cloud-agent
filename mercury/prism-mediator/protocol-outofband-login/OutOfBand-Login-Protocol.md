@@ -1,4 +1,6 @@
-# [WIP] OutOfBand Login Protocol
+# OutOfBand Login Protocol
+
+Its a out-of-band style protocol.
 
 ## PIURI
 
@@ -20,4 +22,46 @@
 flowchart TD
   WebServer --> Client
   Client --> WebServer
+```
+
+### Example of Sequence Diagram
+
+In the following we use 4 participant, but you can view the `DIDWallet` and `Client` as being one and same for `WebServer` and `CloudAgent`.
+
+```mermaid
+sequenceDiagram
+  participant DIDWallet
+  participant Client
+  participant WebServer
+  participant CloudAgent
+
+  Note over Client,WebServer: Communication via HTTPS
+
+  Client->>+WebServer: Ask for a website
+  WebServer-->>-Client: Deliver WebApp
+
+
+  Note over Client,WebServer: Communication via WebSocket Secure (WSS)
+
+  Client->>+WebServer: Open a WWS (create a session)
+  WebServer-->>-Client: WSS stablish
+
+  rect rgb(0, 100, 0)
+    WebServer->>+CloudAgent: Generate Invitation for this session
+    CloudAgent-->>-WebServer: Unique Invitation (Msg signed)
+  end
+  WebServer->>Client: Send Out-of-Band Invitation
+  rect rgb(0, 100, 0)
+    alt Open Invitation in Wallet
+      Client->> DIDWallet: Bootstrap Wallet (by open oob url)
+    else
+      Client->>DIDWallet: QR code Scann
+    end
+    DIDWallet->>+CloudAgent: Resolve Challenge by Reply to Invitation (Msg Encrypted)
+  end
+
+  CloudAgent->>WebServer: Infor of login for invitation id awith DID
+  WebServer->>WebServer: Match unique id invitation with the session and store DID of client
+
+  WebServer->>Client: ...
 ```

@@ -13,8 +13,9 @@ inThisBuild(
 // Custom keys
 val apiBaseDirectory = settingKey[File]("The base directory for Castor API specifications")
 ThisBuild / apiBaseDirectory := baseDirectory.value / ".." / "api"
+ThisBuild / resolvers += Resolver.githubPackages("FabioPinheiro", "scala-di")
 
-val useDidLib = false
+val useDidLib = true
 def didScalaAUX =
   if (useDidLib) (libraryDependencies += D.didScala.value)
   else (libraryDependencies ++= Seq())
@@ -24,7 +25,8 @@ lazy val V = new {
   val munitZio = "0.1.1"
 
   // https://mvnrepository.com/artifact/dev.zio/zio
-  val zio = "2.0.0" // "2.0.0" TODO
+  val zio = "2.0.2"
+  val zioLogging = "2.0.0"
   val zioJson = "0.3.0"
   val zioHttp = "2.0.0-RC10" // "2.0.0-RC11" TODO
 
@@ -36,8 +38,8 @@ lazy val V = new {
 lazy val D = new {
   val zio = Def.setting("dev.zio" %% "zio" % V.zio)
   val zioStreams = Def.setting("dev.zio" %% "zio-streams" % V.zio)
-  val zioLog = Def.setting("dev.zio" %% "zio-logging" % V.zio)
-  val zioSLF4J = Def.setting("dev.zio" %% "zio-logging-slf4j" % V.zio)
+  val zioLog = Def.setting("dev.zio" %% "zio-logging" % V.zioLogging)
+  val zioSLF4J = Def.setting("dev.zio" %% "zio-logging-slf4j" % V.zioLogging)
   val zioJson = Def.setting("dev.zio" %% "zio-json" % V.zioJson)
 
   // val zioHttp = Def.setting("dev.zio" %% "zio-http" % V.zioHttp) // FIXME USE THIS ONE
@@ -50,7 +52,7 @@ lazy val D = new {
   // Test DID comm
   val didcommx = Def.setting("org.didcommx" % "didcomm" % "0.3.1")
   val peerDidcommx = Def.setting("org.didcommx" % "peerdid" % "0.3.0")
-  val didScala = Def.setting("app.fmgp" %% "did" % "0.0.0+74-691ada28+20220902-0934-SNAPSHOT")
+  val didScala = Def.setting("app.fmgp" %% "did" % "0.0.0+113-61efa271-SNAPSHOT")
 
   val jwk = Def.setting("com.nimbusds" % "nimbus-jose-jwt" % "9.25.4")
 
