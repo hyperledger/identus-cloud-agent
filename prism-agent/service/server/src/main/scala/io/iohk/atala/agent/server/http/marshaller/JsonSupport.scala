@@ -17,16 +17,24 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   given RootJsonFormat[CreateAuthenticationChallengeResponse] = jsonFormat2(CreateAuthenticationChallengeResponse.apply)
   given RootJsonFormat[CreateDIDRequest] = jsonFormat4(CreateDIDRequest.apply)
   given RootJsonFormat[CreateDIDRequestDocument] = jsonFormat2(CreateDIDRequestDocument.apply)
+  given RootJsonFormat[CreateManagedDidRequest] = jsonFormat1(CreateManagedDidRequest.apply)
+  given RootJsonFormat[CreateManagedDidRequestDocumentTemplate] = jsonFormat3(
+    CreateManagedDidRequestDocumentTemplate.apply
+  )
+  given RootJsonFormat[CreateManagedDidRequestDocumentTemplatePublicKeysInner] = jsonFormat2(
+    CreateManagedDidRequestDocumentTemplatePublicKeysInner.apply
+  )
+  given RootJsonFormat[CreateManagedDIDResponse] = jsonFormat2(CreateManagedDIDResponse.apply)
   given RootJsonFormat[DeactivateDIDRequest] = jsonFormat4(DeactivateDIDRequest.apply)
   given RootJsonFormat[Delta] = jsonFormat2(Delta.apply)
   given RootJsonFormat[DeltaUpdate] = jsonFormat2(DeltaUpdate.apply)
   given RootJsonFormat[DID] = jsonFormat8(DID.apply)
   given RootJsonFormat[DidOperation] = jsonFormat4(DidOperation.apply)
+  given RootJsonFormat[DIDOperationResponse] = jsonFormat1(DIDOperationResponse.apply)
   given RootJsonFormat[DidOperationStatus] = jsonFormat0(DidOperationStatus.apply)
+  given RootJsonFormat[DidOperationSubmission] = jsonFormat2(DidOperationSubmission.apply)
   given RootJsonFormat[DidOperationType] = jsonFormat0(DidOperationType.apply)
   given RootJsonFormat[DIDResponse] = jsonFormat2(DIDResponse.apply)
-  given RootJsonFormat[DIDOperationResponse] = jsonFormat1(DIDOperationResponse.apply)
-  given RootJsonFormat[DidOperationSubmission] = jsonFormat2(DidOperationSubmission.apply)
   given RootJsonFormat[ErrorResponse] = jsonFormat5(ErrorResponse.apply)
   given RootJsonFormat[JsonWebKey2020] = jsonFormat1(JsonWebKey2020.apply)
   given RootJsonFormat[PublicKey] = jsonFormat5(PublicKey.apply)
