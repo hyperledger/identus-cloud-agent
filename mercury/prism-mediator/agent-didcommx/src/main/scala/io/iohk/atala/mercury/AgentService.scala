@@ -33,7 +33,7 @@ class AgentServiceAny(didComm: DIDComm, val myDid: DidId) extends DidComm {
     ZIO.succeed(didComm.packEncrypted(params))
   }
 
-  override def unpack(data: String): UIO[UnpackMesage] = {
+  override def unpack(data: String): UIO[UnpackMessage] = {
     ZIO.succeed(didComm.unpack(new UnpackParams.Builder(data).build()))
   }
 

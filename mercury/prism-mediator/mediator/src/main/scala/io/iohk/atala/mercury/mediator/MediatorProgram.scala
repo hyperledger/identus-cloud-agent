@@ -62,7 +62,7 @@ object MediatorProgram {
         ret <- // messageProcessing(mediatorMessage)
           {
             // val recipient = DidId(mediatorMessage.getTo.asScala.toList.head) // FIXME unsafe
-            mediatorMessage.getType match {
+            mediatorMessage.`type` match {
               case "https://didcomm.org/routing/2.0/forward" =>
                 for {
                   _ <- ZIO.logInfo("Mediator Forward Message: " + mediatorMessage.toString)
@@ -71,11 +71,15 @@ object MediatorProgram {
                       + fromJsonObject(toJson(mediatorMessage.toString)).spaces2
                       + "\n********************************************************************************************************************************\n"
                   )
-                  msg = mediatorMessage.getAttachments().get(0).getData().toJSONObject().get("json").toString()
+                  msg = mediatorMessage.attachments.map(_.data.toString).head // FIXME Head
+                  // msgxx = mediatorMessage.getAttachments().get(0).getData().toJSONObject().get("json").toString() //FIXME REMOVE
                   nextRecipient = DidId(
-                    mediatorMessage.getBody.asScala.get("next").map(e => e.asInstanceOf[String]).get
+                    mediatorMessage.body // REMOVE mediatorMessage.getBody.asScala
+                      .get("next")
+                      .map(e => e.asInstanceOf[String])
+                      .get
                   )
-                  _ <- ZIO.log(s"Store Massage for ${nextRecipient}: " + mediatorMessage.getTo.asScala.toList)
+                  _ <- ZIO.log(s"Store Massage for ${nextRecipient}: " + mediatorMessage.to)
                   // db <- ZIO.service[ZState[MyDB]]
                   _ <- MailStorage.store(nextRecipient, msg)
                   _ <- ZIO.log(s"Stored Message for '$nextRecipient'")
@@ -84,7 +88,7 @@ object MediatorProgram {
               case "https://atalaprism.io/mercury/mailbox/1.0/ReadMessages" =>
                 for {
                   _ <- ZIO.logInfo("Mediator ReadMessages: " + mediatorMessage.toString)
-                  senderDID = DidId(mediatorMessage.getFrom())
+                  senderDID = mediatorMessage.from.get // FIXME get
                   _ <- ZIO.logInfo(s"Mediator ReadMessages get Messages from: $senderDID")
                   seqMsg <- MailStorage.get(senderDID)
                 } yield (seqMsg.last)
@@ -92,7 +96,7 @@ object MediatorProgram {
               case "https://didcomm.org/coordinate-mediation/2.0/mediate-request" =>
                 for {
                   _ <- ZIO.logInfo("Mediator ReadMessages: " + mediatorMessage.toString)
-                  senderDID = DidId(mediatorMessage.getFrom())
+                  senderDID = mediatorMessage.from.get // FIXME get
                   _ <- ZIO.logInfo(s"Mediator ReadMessages get Messages from: $senderDID")
                   mayBeConnection <- ConnectionStorage.get(senderDID)
                   _ <- ZIO.logInfo(s"$senderDID state $mayBeConnection")

@@ -2,7 +2,6 @@ package io.iohk.atala.mercury.model
 
 import java.time.LocalDateTime
 import java.time.ZoneOffset
-import org.didcommx.didcomm.message.MessageBuilder
 
 import scala.jdk.CollectionConverters._
 
@@ -19,4 +18,6 @@ case class Message(
     thid: Option[String] = None,
     pthid: Option[String] = None,
     ack: Seq[String] = Seq.empty,
-) {}
+) {
+  def `type` = piuri
+}

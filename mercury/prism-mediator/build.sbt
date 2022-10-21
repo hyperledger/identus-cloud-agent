@@ -81,8 +81,7 @@ lazy val models = project
       D.circeGeneric.value,
       D.circeParser.value
     ), // TODO try to remove this from this module
-    libraryDependencies += D.didcommx.value, // FIXME REMOVE almost done
-    didScalaAUX, // D.didScala.value, // Just the data models
+    // libraryDependencies += D.didScala.value
   )
 
 // #################

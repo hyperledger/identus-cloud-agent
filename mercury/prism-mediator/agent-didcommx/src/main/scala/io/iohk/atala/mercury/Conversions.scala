@@ -10,13 +10,10 @@ import io.iohk.atala.mercury.model._
 import java.util.Random
 import io.circe._
 
-// TODO move you another module
 given Conversion[PackEncryptedResult, EncryptedMessage] with {
-  def apply(msg: PackEncryptedResult): EncryptedMessage =
-    EncryptedMessage(msg)
+  def apply(msg: PackEncryptedResult): EncryptedMessage = EncryptedMessageImp(msg)
 }
 
-// TODO move you another module
 given Conversion[Message, org.didcommx.didcomm.message.Message] with {
   def apply(msg: Message): org.didcommx.didcomm.message.Message = {
     val attachments = msg.attachments.map { e => e: XAttachment } // cast
@@ -59,18 +56,10 @@ given Conversion[Attachment, XAttachment] with {
   }
 }
 
-// TODO move you another module
 given Conversion[PackSignedResult, SignedMesage] with {
-  def apply(msg: PackSignedResult): SignedMesage =
-    SignedMesage(msg)
+  def apply(msg: PackSignedResult): SignedMesage = SignedMessageImp(msg)
 }
 
-// TODO move you another module
-given Conversion[UnpackResult, UnpackMesage] with {
-  def apply(msg: UnpackResult): UnpackMesage =
-    UnpackMesage(msg)
+given Conversion[UnpackResult, UnpackMessage] with {
+  def apply(msg: UnpackResult): UnpackMessage = UnpackMessageImp(msg)
 }
-
-// given Conversion[UnpackMesage, UnpackResult] with {
-//   def apply(msg: UnpackMesage): UnpackResult = msg.msg
-// }
