@@ -30,6 +30,30 @@ sealed trait PrismDID {
 
 }
 
+object PrismDID {
+  // TODO: implement a proper DID parser
+  // For now, just make it work with a simple case of Prism DID V1
+  def parse(didRef: String): Either[String, PrismDID] = {
+    if (didRef.startsWith("did:prism:1:")) {
+      val suffix = didRef.drop("did:prism:1:".length)
+      suffix.split(':').toList match {
+        case network :: suffix :: encodedState :: Nil =>
+          Right(
+            LongFormPrismDIDV1(
+              network,
+              HexString.fromStringUnsafe(suffix),
+              Base64UrlString.fromStringUnsafe(encodedState)
+            )
+          )
+        case network :: suffix :: Nil => Right(PrismDIDV1(network, HexString.fromStringUnsafe(suffix)))
+        case _                        => Left("Invalid DID syntax")
+      }
+    } else {
+      Left("DID parsing only supports Prism DID with did:prism:1 prefix")
+    }
+  }
+}
+
 final case class PrismDIDV1 private[did] (network: String, suffix: HexString) extends PrismDID {
 
   override val version: PrismDIDVersion = PrismDIDVersion.V1

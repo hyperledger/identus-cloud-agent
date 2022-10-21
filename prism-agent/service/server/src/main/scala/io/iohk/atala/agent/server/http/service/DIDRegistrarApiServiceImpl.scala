@@ -1,12 +1,15 @@
 package io.iohk.atala.agent.server.http.service
 
 import akka.http.scaladsl.marshalling.ToEntityMarshaller
+import akka.http.scaladsl.server.Directives.*
 import akka.http.scaladsl.server.Route
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import zio.*
 import io.iohk.atala.agent.openapi.api.DIDRegistrarApiService
 import io.iohk.atala.agent.openapi.model.*
-import io.iohk.atala.agent.server.http.model.{OASDomainModelHelper, OASErrorModelHelper}
+import io.iohk.atala.agent.server.http.model.{HttpServiceError, OASDomainModelHelper, OASErrorModelHelper}
+import io.iohk.atala.agent.walletapi.model.error.PublishManagedDIDError
+import io.iohk.atala.castor.core.model.did.PrismDID
 
 class DIDRegistrarApiServiceImpl(service: ManagedDIDService)(using runtime: Runtime[Any])
     extends DIDRegistrarApiService,
@@ -61,11 +64,20 @@ class DIDRegistrarApiServiceImpl(service: ManagedDIDService)(using runtime: Runt
     }
   }
 
-  // TODO: implement
   override def publishManagedDid(didRef: String)(implicit
       toEntityMarshallerDIDOperationResponse: ToEntityMarshaller[DIDOperationResponse],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
-  ): Route = ???
+  ): Route = {
+    val result = for {
+      prismDID <- ZIO.fromEither(PrismDID.parse(didRef)).mapError(HttpServiceError.InvalidPayload.apply)
+      outcome <- service.publishStoredDID(prismDID).mapError(HttpServiceError.DomainError[PublishManagedDIDError].apply)
+    } yield outcome
+
+    onZioSuccess(result.mapBoth(_.toOAS, _.toOAS).either) {
+      case Left(error)   => complete(error.status -> error)
+      case Right(result) => publishManagedDid202(result)
+    }
+  }
 
 }
 
