@@ -9,7 +9,7 @@ class JdbcKeyValueRepositoryIO extends KeyValueRepository[ConnectionIO] {
 
   override def getInt(key: String): ConnectionIO[Option[Int]] = ???
 
-  override def set(key: String, value: Option[Any]): ConnectionIO[Unit] = ???
+  override def set(key: String, value: Option[Int | String]): ConnectionIO[Unit] = ???
 }
 
 object JdbcKeyValueRepositoryIO {
@@ -24,7 +24,7 @@ class JdbcKeyValueRepository(xa: Transactor[Task], ioImpl: KeyValueRepository[Co
 
   override def getInt(key: String): Task[Option[RuntimeFlags]] = ???
 
-  override def set(key: String, value: Option[Any]): Task[Unit] = ???
+  override def set(key: String, value: Option[Int | String]): Task[Unit] = ???
 }
 
 object JdbcKeyValueRepository {
