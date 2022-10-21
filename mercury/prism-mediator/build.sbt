@@ -109,6 +109,13 @@ lazy val protocolCoordinateMediation = project
   .settings(libraryDependencies += D.munitZio.value)
   .dependsOn(models)
 
+lazy val protocolDidExchange = project
+  .in(file("protocol-did-exchange"))
+  .settings(name := "mercury-protocol-did-exchange")
+  .settings(libraryDependencies += D.zio.value)
+  .settings(libraryDependencies ++= Seq(D.circeCore.value, D.circeGeneric.value, D.circeParser.value))
+  .dependsOn(models, protocolInvitation)
+
 lazy val protocolInvitation = project
   .in(file("protocol-invitation"))
   .settings(name := "mercury-protocol-invitation")
@@ -123,13 +130,6 @@ lazy val protocolInvitation = project
     )
   )
   .dependsOn(models)
-
-lazy val protocolDidExchange = project
-  .in(file("protocol-did-exchange"))
-  .settings(name := "mercury-protocol-did-exchange")
-  .settings(libraryDependencies += D.zio.value)
-  .settings(libraryDependencies ++= Seq(D.circeCore.value, D.circeGeneric.value, D.circeParser.value))
-  .dependsOn(models, protocolInvitation)
 
 lazy val protocolMercuryMailbox = project
   .in(file("protocol-mercury-mailbox"))
@@ -148,13 +148,21 @@ lazy val protocolLogin = project
 
 lazy val protocolReportProblem = project
   .in(file("protocol-report-problem"))
-  .settings(name := "protocol-report_problem")
+  .settings(name := "protocol-report-problem")
   .dependsOn(models)
 
 lazy val protocolRouting = project
   .in(file("protocol-routing"))
-  .settings(name := "mercury-protocol-routing-2_0")
+  .settings(name := "mercury-protocol-routing-2-0")
   .settings(libraryDependencies += D.zio.value)
+  .dependsOn(models)
+
+lazy val protocolIssueCredential = project
+  .in(file("protocol-issue-credential"))
+  .settings(name := "mercury-protocol-issue-credential")
+  .settings(libraryDependencies += D.zio.value)
+  .settings(libraryDependencies ++= Seq(D.circeCore.value, D.circeGeneric.value, D.circeParser.value))
+  .settings(libraryDependencies += D.munitZio.value)
   .dependsOn(models)
 
 // ################
@@ -258,6 +266,7 @@ lazy val mediator = project
     protocolMercuryMailbox,
     protocolReportProblem,
     protocolRouting,
+    protocolIssueCredential
   )
 
 releaseProcess := Seq[ReleaseStep](
