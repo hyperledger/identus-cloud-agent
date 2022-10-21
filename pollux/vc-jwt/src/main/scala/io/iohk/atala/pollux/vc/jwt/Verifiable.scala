@@ -8,22 +8,27 @@ import io.circe.syntax.*
 
 trait Verifiable(proof: Proof)
 
-case class Proof(`type`: String, other: Json)
+case class Proof(`type`: String, jwt: JWT)
 
 object Proof {
 
   object Implicits {
     implicit val proofEncoder: Encoder[Proof] =
-      (proof: Proof) => proof.other.deepMerge(Map("type" -> proof.`type`).asJson)
+      (proof: Proof) =>
+        Json
+          .obj(
+            ("type", proof.`type`.asJson),
+            ("jwt", proof.jwt.value.asJson)
+          )
     implicit val proofDecoder: Decoder[Proof] =
       (c: HCursor) =>
         for {
           `type` <- c.downField("type").as[String]
-          other <- c.downField("type").delete.up.as[Json]
+          jwt <- c.downField("jwt").as[String]
         } yield {
           Proof(
             `type` = `type`,
-            other = other
+            jwt = JWT(jwt)
           )
         }
 

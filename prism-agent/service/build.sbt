@@ -21,14 +21,14 @@ val commonSettings = Seq(
 lazy val root = project
   .in(file("."))
   .settings(commonSettings)
-  .aggregate(custodian, server)
+  .aggregate(`wallet-api`, server)
 
-lazy val custodian = project
-  .in(file("custodian"))
+lazy val `wallet-api` = project
+  .in(file("wallet-api"))
   .settings(commonSettings)
   .settings(
-    name := "prism-agent-custodian",
-    libraryDependencies ++= custodianDependencies
+    name := "prism-agent-wallet-api",
+    libraryDependencies ++= keyManagementDependencies
   )
 
 lazy val server = project
@@ -52,4 +52,4 @@ lazy val server = project
     dockerBaseImage := "openjdk:11"
   )
   .enablePlugins(OpenApiGeneratorPlugin, JavaAppPackaging, DockerPlugin)
-  .dependsOn(custodian)
+  .dependsOn(`wallet-api`)

@@ -23,23 +23,17 @@ object JWT {
   extension (jwt: JWT) {
     def value: String = jwt
   }
-
-  object Implicits {
-    implicit val jwtEncoder: Encoder[JWT] =
-      (jwt: JWT) => jwt.value.asJson
-  }
 }
-
 
 case class JWTHeader(typ: String = "JWT", alg: Option[String])
 
 case class JWTPayload(
-                       iss: Option[String],
-                       sub: Option[String],
-                       aud: Vector[String],
-                       iat: Option[Instant],
-                       nbf: Option[Instant],
-                       exp: Option[Instant],
+    iss: Option[String],
+    sub: Option[String],
+    aud: Vector[String],
+    iat: Option[Instant],
+    nbf: Option[Instant],
+    exp: Option[Instant],
     rexp: Option[Instant]
 )
 trait JWTVerified(

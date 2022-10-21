@@ -5,7 +5,7 @@ import io.iohk.atala.shared.{HashValue, HashValueConfig, HashValueFrom}
 
 import scala.collection.immutable.ArraySeq
 
-class TransactionId(bytes: ArraySeq[Byte]) extends HashValue {
+class TransactionId private (bytes: ArraySeq[Byte]) extends HashValue {
   override def value: ArraySeq[Byte] = bytes
 }
 
