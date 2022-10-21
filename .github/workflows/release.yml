@@ -6,7 +6,7 @@ on:
       release-component:
         description: "Release component"
         required: true
-        default: "mercury/mercury-mediator"
+        default: "mercury/mercury-library"
       release-branch:
         description: "Branch to release from"
         required: false
