@@ -26,7 +26,7 @@ env:
 defaults:
   run:
     shell: bash
-    working-directory: "mercury/prism-mediator"
+    working-directory: "mercury/mercury-library"
 
 jobs:
   build-and-test-mercury:
