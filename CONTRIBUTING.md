@@ -5,8 +5,8 @@ As a contributor, here are the guidelines we would like you to follow:
 
  - [Pull Requests](#pr)
  - [Commit Message Guidelines](#commit)
+ - [Release process](#release)
  - Software development lifecycle (TBD)
- - Release process (TBD)
 
 
 ## <a name="pr"></a> Pull Requests
@@ -221,5 +221,58 @@ Initialization:
 > Please note: even if local `pre-commit` set-up is not in use
 > all violations will be found during CI jobs execution for a PR
 
+## <a name="release"></a> Releases
+
+Release process of all Atala PRISM components is automated via [Semantic Release](#semantic-release) tool
+with help of additional `gradle` or `sbt` library specific plugins.
+
+[Semantic Release](#semantic-release) automates the whole package release workflow including: determining the next version number, generating the release notes, and publishing the package.
+
+This removes the immediate connection between human emotions and version numbers, strictly following the Semantic Versioning specification and communicating the impact of changes to consumers.
+
+General release steps for each building block include:
+1. Analyze and filter conventional commits for each component to automatically identify the next semantic version for it
+2. Generate release notes based on changes in the component
+3. Build, test, and publish packages
+4. Update `CHANGELOG.md`
+5. Create tag and release
+
+For more specific details about the release process of each component, please, check `README.md` for each building block in the corresponding directory.
+
+### Prereleases
+
+Special branches named `prerelease/<building-block>` exist to generate pre-releases of libraries.
+
+If a release is triggered from a `prerelease/*` branch, then a special pre-release version of libraries will be published with additional `prerelease/<building-block>` suffix that can be used to test a product before the publication of a main version.
+
+### Triggering a release
+
+Special [release workflow](.github/workflows/release.yml) exists to start release generation for a component / building block.
+
+It has the following parameters:
+* `release-component`: a component to release
+* `release-branch`: branch to release from
+
+By default, `release-branch` is always `main`.
+
+To trigger a new release generation, follow the next steps:
+1. Go to https://github.com/input-output-hk/atala-prism-building-blocks/actions
+2. Choose `Release` workflow on the left panel of all available workflows
+3. Choose `Run workflow` on the pop-up
+4. Specify input parameters - component and branch
+5. Press `Run workflow` green button
+
+If all release conditions are met, then a new release will be published.
+
+> Please note: release won't be published if branch does not correspond to `main` or `prerelease/*`, or if there were no changes for a component since the latest release
+
+To check the next version and dry-run on local environment, use the following commands:
+```shell
+cd <component_dir>
+npm install
+npx semantic-release -e semantic-release-monorepo --dry-run
+```
+
 [pr_guidelines]: https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request#creating-the-pull-request
 [conventional-commits]: https://www.conventionalcommits.org/en/v1.0.0/#specification
+[semantic-release]: https://semantic-release.gitbook.io/semantic-release/

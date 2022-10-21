@@ -10,3 +10,5 @@ target
 **/.DS_Store
 shell.nix
 .envrc
+node_modules/
+package-lock.json
