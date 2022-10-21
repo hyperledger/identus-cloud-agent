@@ -17,5 +17,5 @@ class InMemoryKeyValueRepository(kv: Ref[Map[String, Any]]) extends KeyValueRepo
 
   override def getInt(key: String): Task[Option[Int]] = kv.get.map(_.get(key).map(_.asInstanceOf[Int]))
 
-  override def set(key: String, value: Option[Any]): Task[Unit] = kv.update(_.updatedWith(key)(_ => value))
+  override def set(key: String, value: Option[Int | String]): Task[Unit] = kv.update(_.updatedWith(key)(_ => value))
 }
