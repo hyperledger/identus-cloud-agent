@@ -110,7 +110,7 @@ lazy val protocolCoordinateMediation = project
 
 lazy val protocolDidExchange = project
   .in(file("protocol-did-exchange"))
-  .settings(name := "mercury-protocol-did-exchange", version := VERSION)
+  .settings(name := "mercury-protocol-did-exchange")
   .settings(libraryDependencies += D.zio.value)
   .settings(libraryDependencies ++= Seq(D.circeCore.value, D.circeGeneric.value, D.circeParser.value))
   .dependsOn(models, protocolInvitation)
@@ -166,7 +166,7 @@ lazy val protocolRouting = project
 
 lazy val protocolIssueCredential = project
   .in(file("protocol-issue-credential"))
-  .settings(name := "mercury-protocol-issue-credential", version := VERSION)
+  .settings(name := "mercury-protocol-issue-credential")
   .settings(libraryDependencies += D.zio.value)
   .settings(libraryDependencies ++= Seq(D.circeCore.value, D.circeGeneric.value, D.circeParser.value))
   .settings(libraryDependencies += D.munitZio.value)
