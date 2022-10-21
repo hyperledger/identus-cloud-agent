@@ -30,3 +30,4 @@ jobs:
             agent
             shared
             infra
+            release
