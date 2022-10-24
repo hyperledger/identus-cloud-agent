@@ -66,10 +66,7 @@ lazy val D = new {
 
 }
 
-
-lazy val root = project
-  .in(file("."))
-  .settings(publish / skip := true)
+publish / skip := true
 
 // #########################
 // ### Models & Services ###
