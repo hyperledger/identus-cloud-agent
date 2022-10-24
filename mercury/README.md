@@ -12,7 +12,7 @@ We are following the directory structure defined in [RFC 0013 - Service-Oriented
 - `mercury-library`:
   Is our project implementation of the DID Comm and DID Comm protocols.
 
-- `mercury-cloud-did-agent`:
+- `mercury-cloud-agent`:
   An implementation of a DID Comm Agent on the cloud.
 
 - `mercury-mediator`:

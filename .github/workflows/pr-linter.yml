@@ -23,6 +23,9 @@ jobs:
             castor
             pollux
             mercury
+            mercury-library
+            mercury-mediator
+            mercury-cloud-agent
             pluto
             athena
             pistis
