@@ -4,11 +4,15 @@ import io.iohk.atala.pollux.core.model.CredentialError.RepositoryError
 import io.iohk.atala.pollux.core.model.{CredentialError, JWTCredential}
 import io.iohk.atala.pollux.core.repository.CredentialRepository
 import io.iohk.atala.pollux.vc.jwt.{Issuer, IssuerDID}
+import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
+import io.iohk.atala.prism.crypto.MerkleTreeKt
+import io.iohk.atala.prism.crypto.Sha256
 import zio.*
 
 import java.security.spec.ECGenParameterSpec
 import java.security.{KeyPairGenerator, SecureRandom}
 import java.util.UUID
+import io.iohk.atala.pollux.vc.jwt.JwtVerifiableCredential
 
 trait CredentialService {
   def createIssuer: Issuer = {
@@ -18,7 +22,6 @@ trait CredentialService {
     val keyPair = keyGen.generateKeyPair()
     val privateKey = keyPair.getPrivate
     val publicKey = keyPair.getPublic
-    // println(Base64.getEncoder.encodeToString(publicKey.getEncoded()))
     val uuid = UUID.randomUUID().toString
     Issuer(
       did = IssuerDID(s"did:prism:$uuid"),
@@ -42,15 +45,30 @@ object MockCredentialService {
 }
 
 object CredentialServiceImpl {
-  val layer = ZLayer.fromFunction(CredentialServiceImpl(_))
+  val layer: URLayer[IrisServiceStub & CredentialRepository[Task], CredentialService] =
+    ZLayer.fromFunction(CredentialServiceImpl(_, _))
 }
 
-private class CredentialServiceImpl(credentialRepository: CredentialRepository[Task]) extends CredentialService {
+private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepository: CredentialRepository[Task])
+    extends CredentialService {
   override def getCredentials(batchId: String): IO[CredentialError, Seq[JWTCredential]] = {
     credentialRepository.getCredentials(batchId).mapError(RepositoryError.apply)
   }
 
   override def createCredentials(batchId: String, credentials: Seq[JWTCredential]): IO[CredentialError, Unit] = {
-    credentialRepository.createCredentials(batchId, credentials).mapError(RepositoryError.apply)
+    import collection.JavaConverters.*
+
+    val hashes = credentials.map { c =>
+      val encoded = JwtVerifiableCredential.encodeJwt(c.content, createIssuer).jwt
+      val hash = Sha256.compute(encoded.getBytes)
+      // val subjectDid = c.content.maybeSub
+      hash
+    }.toBuffer.asJava
+    val merkleProofs = MerkleTreeKt.generateProofs(hashes)
+    val root = merkleProofs.component1()
+    val proofs = merkleProofs.component2().asScala
+//    irisClient.s
+    ZIO.unit
+//    credentialRepository.createCredentials(batchId, credentials).mapError(RepositoryError.apply)
   }
 }

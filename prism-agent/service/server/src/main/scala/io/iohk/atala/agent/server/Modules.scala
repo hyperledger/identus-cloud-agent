@@ -19,6 +19,7 @@ import cats.effect.std.Dispatcher
 import com.typesafe.config.ConfigFactory
 import io.grpc.ManagedChannelBuilder
 import io.iohk.atala.agent.server.config.AppConfig
+import io.iohk.atala.pollux.core.service.CredentialServiceImpl
 import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
@@ -76,7 +77,7 @@ object AppModule {
     (GrpcModule.layers ++ RepoModule.layers ++ didOpValidatorLayer) >>> DIDServiceImpl.layer
 
   val credentialServiceLayer: TaskLayer[CredentialService] =
-    (GrpcModule.layers ++ RepoModule.layers) >>> io.iohk.atala.pollux.core.service.MockCredentialService.layer
+    (GrpcModule.layers ++ RepoModule.layers) >>> CredentialServiceImpl.layer
 }
 
 object GrpcModule {
