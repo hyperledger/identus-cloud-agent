@@ -96,6 +96,8 @@ services:
     depends_on:
       db_castor_init:
         condition: service_completed_successfully
+      db_pollux_init:
+        condition: service_completed_successfully
 
   swagger-ui:
     image: swaggerapi/swagger-ui:v4.14.0

@@ -115,7 +115,7 @@ class IssueCredentialsApiServiceImpl(service: CredentialService)(using runtime: 
       issuanceDate = now,
       maybeExpirationDate = input.validityPeriod.map(sec => now.plusSeconds(sec.toLong)),
       maybeCredentialSchema = None,
-      credentialSubject = claims.asJson,
+      credentialSubject = claims.updated("id", Json.fromString(input.subjectId)).asJson,
       maybeCredentialStatus = None,
       maybeRefreshService = None,
       maybeEvidence = None,
@@ -131,14 +131,19 @@ class IssueCredentialsApiServiceImpl(service: CredentialService)(using runtime: 
     onZioSuccess(ZIO.unit) { _ =>
       val credentials = createCredentialsRequest.credentials.map { input =>
         val (uuid, payload) = createPayload(input, issuer)
-        uuid.toString -> JwtVerifiableCredential.toEncodedJwt(payload, issuer).jwt
+        uuid.toString -> payload.toJwtCredentialPayload
       }
       val batchId = UUID.randomUUID().toString
       service.createCredentials(
         batchId,
         credentials.map { case (id, jwt) => JWTCredential(batchId, id, jwt) }
       )
-      val resp = CreateCredentials201Response(Some(batchId), Some(credentials.size), Some(credentials.map(_._2)))
+      val resp = CreateCredentials201Response(
+        Some(batchId),
+        Some(credentials.size),
+        Some(credentials.map(c => JwtVerifiableCredential.encodeJwt(c._2, issuer).jwt))
+      )
+
       createCredentials201(resp)
     }
 

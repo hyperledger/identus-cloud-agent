@@ -15,20 +15,21 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
     ZIO.succeed(())
   }
   override def getCredentials(batchId: String): Task[Seq[JWTCredential]] = {
-    val cxnIO = sql"""
-         | SELECT
-         |   c.batch_id
-         |   c.credential_id
-         |   c.value
-         | FROM public.jwt_credentials AS c
-         | WHERE c.batch_id = $batchId
-         """.stripMargin
-      .query[JWTCredentialRow]
-      .to[Seq]
-
-    cxnIO
-      .transact(xa)
-      .map(_.map(c => JWTCredential(c.batchId, c.credentialId, c.content)))
+    ???
+//    val cxnIO = sql"""
+//         | SELECT
+//         |   c.batch_id
+//         |   c.credential_id
+//         |   c.value
+//         | FROM public.jwt_credentials AS c
+//         | WHERE c.batch_id = $batchId
+//         """.stripMargin
+//      .query[JWTCredentialRow]
+//      .to[Seq]
+//
+//    cxnIO
+//      .transact(xa)
+//      .map(_.map(c => JWTCredential(c.batchId, c.credentialId, c.content)))
   }
 
 }
