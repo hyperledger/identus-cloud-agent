@@ -15,11 +15,13 @@ on:
 jobs:
   release:
     env:
+      GITHUB_ACTOR: ${{ secrets.ATALA_GITHUB_ACTOR }}
       GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
+          token: ${{ secrets.ATALA_GITHUB_TOKEN }}
           ref: ${{ github.event.inputs.release-branch }}
           fetch-depth: 0
       - name: Setup Java and Scala
