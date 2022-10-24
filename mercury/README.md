@@ -9,8 +9,14 @@ We are following the directory structure defined in [RFC 0013 - Service-Oriented
 
   **Warning:** this folder is a dependicy of `prism-mediator`/`build.sbt`'s `apiBaseDirectory` property.
 
-- `prism-mediator`:
-  Is our project implementation of the DID Comm protocols, DID Comm mediator agent and its client agents.
+- `mercury-library`:
+  Is our project implementation of the DID Comm and DID Comm protocols.
+
+- `mercury-cloud-agent`:
+  An implementation of a DID Comm Agent on the cloud.
+
+- `mercury-mediator`:
+  Is our project implementation of the DID Comm mediator agent.
 
   See [Mercury Mediator](./prism-mediator/README.md)
 

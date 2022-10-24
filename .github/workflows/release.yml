@@ -6,7 +6,7 @@ on:
       release-component:
         description: "Release component"
         required: true
-        default: "mercury/prism-mediator"
+        default: "mercury/mercury-library"
       release-branch:
         description: "Branch to release from"
         required: false
@@ -29,7 +29,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 'lts/*'
+          node-version: "lts/*"
       - uses: crazy-max/ghaction-import-gpg@v3
         id: import_gpg
         with:
