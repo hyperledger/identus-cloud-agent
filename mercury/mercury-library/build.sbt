@@ -16,7 +16,7 @@ inThisBuild(
 
 ThisBuild / resolvers += Resolver.githubPackages("FabioPinheiro", "scala-did")
 
-val useDidLib = true
+val useDidLib = false
 def didScalaAUX =
   if (useDidLib) (libraryDependencies += D.didScala.value)
   else (libraryDependencies ++= Seq())
@@ -65,6 +65,11 @@ lazy val D = new {
   val munitZio = Def.setting("com.github.poslegm" %% "munit-zio" % V.munitZio % Test)
 
 }
+
+
+lazy val root = project
+  .in(file("."))
+  .settings(publish / skip := true)
 
 // #########################
 // ### Models & Services ###
@@ -216,12 +221,14 @@ lazy val agentDidScala =
     .in(file("agent-did-scala"))
     .settings(name := "mercury-agent-didscala")
     .settings(
+      skip / publish := true,
       didScalaAUX,
       if (useDidLib) (Compile / sources ++= Seq())
       else (Compile / sources := Seq()),
     )
     .dependsOn(agent)
 
+// ### ReleaseStep ###
 releaseProcess := Seq[ReleaseStep](
   checkSnapshotDependencies,
   inquireVersions,
