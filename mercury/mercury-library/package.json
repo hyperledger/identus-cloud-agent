@@ -22,7 +22,7 @@
         },
         {
           "name": "prerelease/mercury",
-          "prerelease": "true"
+          "prerelease": "snapshot"
         }
       ],
       "plugins": [
@@ -47,7 +47,7 @@
               "version.sbt",
               "CHANGELOG.md"
             ],
-            "message": "chore(release): cut mercury ${nextRelease.version} release [skip ci]\n\n${nextRelease.notes}"
+            "message": "chore(release): cut mercury lib ${nextRelease.version} release [skip ci]\n\n${nextRelease.notes}"
           }
         ]
       ]
