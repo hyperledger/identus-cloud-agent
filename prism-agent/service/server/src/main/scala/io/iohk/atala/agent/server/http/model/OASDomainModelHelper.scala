@@ -12,12 +12,14 @@ import io.iohk.atala.agent.openapi.model.{
 }
 import io.iohk.atala.castor.core.model.did as domain
 import io.iohk.atala.castor.core.model.did.PublishedDIDOperation
+import io.iohk.atala.pollux.core.model as polluxdomain
 import io.iohk.atala.shared.models.HexStrings.*
 import io.iohk.atala.shared.models.Base64UrlStrings.*
 import io.iohk.atala.shared.utils.Traverse.*
 
 import java.net.URI
 import scala.util.Try
+import io.iohk.atala.agent.openapi.model.IssueCredentialRecord
 
 trait OASDomainModelHelper {
 
@@ -101,6 +103,17 @@ trait OASDomainModelHelper {
         id = outcome.operationId.toString,
         didRef = outcome.did.toString
       )
+    )
+  }
+
+  extension (domain: polluxdomain.IssueCredentialRecord) {
+    def toOAS: IssueCredentialRecord = IssueCredentialRecord(
+      recordId = domain.id,
+      subjectId = domain.subjectId,
+      claims = domain.claims,
+      schemaId = domain.schemaId,
+      validityPeriod = domain.validityPeriod,
+      state = domain.state.toString()
     )
   }
 

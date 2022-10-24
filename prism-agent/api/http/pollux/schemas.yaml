@@ -177,18 +177,36 @@ components:
         - $ref: '#/components/schemas/CreateIssueCredentialRecordRequest'
         - type: object
           required:
+            - recordId
             - state
           properties:
+            recordId:
+              type: string
+              format: uuid
             state:
               type: string
-              enum: ["offer-sent", "offer-received", "request-sent", "request-received", "credential-issued", "credential-received", "done"]
-
-    CreateIssueCredentialRecordResponse:
-      description: blabla
-      type: object
+              enum: 
+                - offer-sent
+                - offer-received
+                - request-sent
+                - request-received
+                - credential-issued
+                - credential-received
+                - done
+    
+    IssueCredentialRecordCollection:
+      description: A collection of issue credential records
       properties:
-        result:
-          type: string
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/IssueCredentialRecord"
+        offset:
+          type: integer
+        limit:
+          type: integer
+        count:
+          type: integer
 
 #
 
@@ -507,3 +525,40 @@ components:
                   description: "DID of the subject of the credential"
         proof:
           $ref: "#/components/schemas/W3CProof"
+
+    ErrorResponse:
+      type: object
+      description: An RFC-7807 compliant data structure for reporting errors to the client
+      required:
+        - type
+        - title
+        - status
+        - instance
+      properties:
+        type:
+          type: string
+          description: A URI reference that identifies the problem type.
+          example: https://example.org/doc/#model-MalformedEmail
+        title:
+          type: string
+          example: "Malformed email"
+          description: |-
+            A short, human-readable summary of the problem type. It does not
+            change from occurrence to occurrence of the problem.
+        status:
+          type: integer
+          format: int32
+          example: 400
+          description: |-
+            The HTTP status code for this occurrence of the problem.
+        detail:
+          type: string
+          description: |-
+            A human-readable explanation specific to this occurrence of the problem.
+          example: "The received '{}à!è@!.b}' email does not conform to the email format"
+        instance:
+          type: string
+          example: "/problems/d914e"
+          description: |-
+            A URI reference that identifies the specific occurrence of the problem.
+            It may or may not yield further information if dereferenced.

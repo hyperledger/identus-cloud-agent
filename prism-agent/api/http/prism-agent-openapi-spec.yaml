@@ -449,7 +449,7 @@ paths:
   /issue-credentials/credential-offers:
     post:
       tags: ["Issue Credentials Protocol"]
-      operationId: sendCredentialOffer
+      operationId: createCredentialOffer
       summary: As a VC issuer, create a new credential offer to be sent to a VC holder
       requestBody:
         description: CredentialOffer object with schema identifier and claims
@@ -457,20 +457,76 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required: ["credentials"]
-              properties:
-                credentials:
-                  type: array
-                  items:
-                    $ref: "./pollux/schemas.yaml#/components/schemas/CreateIssueCredentialRecordRequest"
+              $ref: ./pollux/schemas.yaml#/components/schemas/CreateIssueCredentialRecordRequest                    
       responses:
         "201":
-          description: "Array of created verifiable credentials objects"
+          description: The issue credential record
           content:
             application/json:
               schema:
-                $ref: "./pollux/schemas.yaml#/components/schemas/CreateIssueCredentialRecordResponse"
+                $ref: ./pollux/schemas.yaml#/components/schemas/IssueCredentialRecord
+        "422":
+          description: The issue credential record creation failed.
+          content:
+            application/json:
+              schema:
+                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
+  
+  /issue-credentials/records:
+    get:
+      tags: ["Issue Credentials Protocol"]
+      operationId: getCredentialRecords
+      summary: Get credential records
+      responses:
+        "200":
+          description: The issue credential records
+          content:
+            application/json:
+              schema:
+                $ref: ./pollux/schemas.yaml#/components/schemas/IssueCredentialRecordCollection
+
+  /issue-credentials/records/{recordId}:
+    get:
+      tags: ["Issue Credentials Protocol"]
+      operationId: getCredentialRecord
+      summary: Get a credential record by Id
+      parameters:
+        - $ref: ./pollux/parameters.yaml#/components/parameters/issueCredentialRecordIdInPath
+      responses:
+        "200":
+          description: The issue credential record
+          content:
+            application/json:
+              schema:
+                $ref: ./pollux/schemas.yaml#/components/schemas/IssueCredentialRecord
+        "404":
+          description: There is no issue credential record maatching the given 'recordId'.
+          content:
+            application/json:
+              schema:
+                $ref: "./pollux/schemas.yaml#/components/schemas/ErrorResponse"
+  
+  /issue-credentials/records/{recordId}/accept-offer:
+    post:
+      tags: ["Issue Credentials Protocol"]
+      operationId: acceptCredentialOffer
+      summary: As a VC holder, accept a credential offer received from an issuer
+      parameters:
+        - $ref: ./pollux/parameters.yaml#/components/parameters/issueCredentialRecordIdInPath
+      responses:
+        "200":
+          description: The issue credential offer has been accepted
+
+  /issue-credentials/records/{recordId}/issue-credential:
+    post:
+      tags: ["Issue Credentials Protocol"]
+      operationId: issueCredential
+      summary: As a VC issuer, issue the VC for the specified issue credential record
+      parameters:
+        - $ref: ./pollux/parameters.yaml#/components/parameters/issueCredentialRecordIdInPath
+      responses:
+        "200":
+          description: The VC has been issued
 
 ##
 

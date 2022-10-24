@@ -3,6 +3,11 @@ package io.iohk.atala.agent.server.http.marshaller
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import io.iohk.atala.agent.openapi.model.*
 import spray.json.{DefaultJsonProtocol, RootJsonFormat, jsonReader}
+import spray.json.JsonFormat
+import java.util.UUID
+import spray.json.JsString
+import spray.json.JsValue
+import spray.json.DeserializationException
 
 trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 
@@ -39,9 +44,18 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   given RootJsonFormat[VerificationMethodOrRef] = jsonFormat2(VerificationMethodOrRef.apply)
 
   // Issue Credential Protocol
+  implicit object UUIDFormat extends JsonFormat[UUID] {
+    def write(uuid: UUID) = JsString(uuid.toString)
+    def read(value: JsValue) = {
+      value match {
+        case JsString(uuid) => UUID.fromString(uuid)
+        case _              => throw new DeserializationException("Expected hexadecimal UUID string")
+      }
+    }
+  }
   given RootJsonFormat[CreateIssueCredentialRecordRequest] = jsonFormat4(CreateIssueCredentialRecordRequest.apply)
-  given RootJsonFormat[SendCredentialOfferRequest] = jsonFormat1(SendCredentialOfferRequest.apply)
-  given RootJsonFormat[CreateIssueCredentialRecordResponse] = jsonFormat1(CreateIssueCredentialRecordResponse.apply)
+  given RootJsonFormat[IssueCredentialRecord] = jsonFormat6(IssueCredentialRecord.apply)
+  given RootJsonFormat[IssueCredentialRecordCollection] = jsonFormat4(IssueCredentialRecordCollection.apply)
   //
 
   // Pollux
