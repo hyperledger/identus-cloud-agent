@@ -201,6 +201,7 @@ lazy val agent = project // maybe merge into models
     protocolRouting,
     protocolMercuryMailbox,
     protocolLogin,
+    protocolIssueCredential,
   )
 
 /** Demos agents and services implementation with didcommx */

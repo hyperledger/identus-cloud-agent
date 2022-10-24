@@ -3,7 +3,7 @@ package io.iohk.atala.mercury.protocol.issuecredential
 import io.iohk.atala.mercury.model.PIURI
 import io.circe.{Encoder, Decoder}
 import io.circe.generic.semiauto._
-import io.iohk.atala.mercury.model.AttachmentData
+import io.iohk.atala.mercury.model._
 
 /** ALL parameterS are DIDCOMMV2 format and naming conventions and follows the protocol
   * @see
@@ -15,12 +15,14 @@ import io.iohk.atala.mercury.model.AttachmentData
   * @param attachments
   */
 final case class ProposeCredential(
-    id: String,
-    `type`: PIURI,
+    id: String = java.util.UUID.randomUUID.toString(),
+    `type`: PIURI = ProposeCredential.`type`,
     body: ProposeCredential.Body,
-    attachments: AttachmentData
+    attachments: AttachmentDescriptor
 ) {
   assert(`type` == ProposeCredential.`type`)
+
+  def makeMessage(sendTo: DidId): Message = ??? // FIXME
 }
 
 object ProposeCredential {
@@ -34,4 +36,5 @@ object ProposeCredential {
       formats: Seq[CredentialFormat]
   )
 
+  def readFromMessage(message: Message): ProposeCredential = ??? // FIXME
 }
