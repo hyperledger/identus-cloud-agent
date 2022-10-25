@@ -1,3 +1,16 @@
+# [mercury-v0.2.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.1.0...mercury-v0.2.0) (2022-10-25)
+
+
+### Bug Fixes
+
+* **mercury:** use snapshot suffix for prerelease publishing ([#79](https://github.com/input-output-hk/atala-prism-building-blocks/issues/79)) ([a376e59](https://github.com/input-output-hk/atala-prism-building-blocks/commit/a376e59c157f9a27f06021eb5929d161fb28a813))
+
+
+### Features
+
+* **mercury:** Fix release ATL-2030 ([#78](https://github.com/input-output-hk/atala-prism-building-blocks/issues/78)) ([93f9e22](https://github.com/input-output-hk/atala-prism-building-blocks/commit/93f9e228529321a19ba6415304e0e2f460f3dddb))
+* **mercury:** Split Mercury projects ([#73](https://github.com/input-output-hk/atala-prism-building-blocks/issues/73)) ([e88ecd3](https://github.com/input-output-hk/atala-prism-building-blocks/commit/e88ecd3e22649e10f338037b0f3fc2e80a3acb68))
+
 # mercury-v0.1.0 (2022-10-21)
 
 ### Features

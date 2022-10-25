@@ -16,7 +16,7 @@ inThisBuild(
 
 ThisBuild / resolvers += Resolver.githubPackages("FabioPinheiro", "scala-did")
 
-val useDidLib = true
+val useDidLib = false
 def didScalaAUX =
   if (useDidLib) (libraryDependencies += D.didScala.value)
   else (libraryDependencies ++= Seq())
@@ -65,6 +65,8 @@ lazy val D = new {
   val munitZio = Def.setting("com.github.poslegm" %% "munit-zio" % V.munitZio % Test)
 
 }
+
+publish / skip := true
 
 // #########################
 // ### Models & Services ###
@@ -145,7 +147,7 @@ lazy val protocolLogin = project
 
 lazy val protocolReportProblem = project
   .in(file("protocol-report-problem"))
-  .settings(name := "protocol-report-problem")
+  .settings(name := "mercury-protocol-report-problem")
   .dependsOn(models)
 
 lazy val protocolRouting = project
@@ -217,12 +219,14 @@ lazy val agentDidScala =
     .in(file("agent-did-scala"))
     .settings(name := "mercury-agent-didscala")
     .settings(
+      skip / publish := true,
       didScalaAUX,
       if (useDidLib) (Compile / sources ++= Seq())
       else (Compile / sources := Seq()),
     )
     .dependsOn(agent)
 
+// ### ReleaseStep ###
 releaseProcess := Seq[ReleaseStep](
   checkSnapshotDependencies,
   inquireVersions,

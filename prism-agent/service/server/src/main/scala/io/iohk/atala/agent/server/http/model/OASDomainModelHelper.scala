@@ -2,16 +2,19 @@ package io.iohk.atala.agent.server.http.model
 
 import io.iohk.atala.agent.openapi.model.{
   CreateDIDRequest,
+  CreateManagedDidRequestDocumentTemplate,
+  CreateManagedDidRequestDocumentTemplatePublicKeysInner,
   DIDOperationResponse,
   DidOperation,
+  DidOperationSubmission,
   JsonWebKey2020,
   PublicKey,
   PublicKeyJwk,
-  Service,
-  DidOperationSubmission
+  Service
 }
-import io.iohk.atala.castor.core.model.did as domain
+import io.iohk.atala.castor.core.model.did as castorDomain
 import io.iohk.atala.castor.core.model.did.PublishedDIDOperation
+import io.iohk.atala.agent.walletapi.model as walletDomain
 import io.iohk.atala.shared.models.HexStrings.*
 import io.iohk.atala.shared.models.Base64UrlStrings.*
 import io.iohk.atala.shared.utils.Traverse.*
@@ -22,7 +25,7 @@ import scala.util.Try
 trait OASDomainModelHelper {
 
   extension (req: CreateDIDRequest) {
-    def toDomain: Either[String, domain.PublishedDIDOperation.Create] = {
+    def toDomain: Either[String, castorDomain.PublishedDIDOperation.Create] = {
       for {
         updateCommitmentHex <- HexString
           .fromString(req.updateCommitment)
@@ -36,25 +39,25 @@ trait OASDomainModelHelper {
           .map(_ => "unable to convert recoveryCommitment to hex string")
         publicKeys <- req.document.publicKeys.getOrElse(Nil).traverse(_.toDomain)
         services <- req.document.services.getOrElse(Nil).traverse(_.toDomain)
-      } yield domain.PublishedDIDOperation.Create(
+      } yield castorDomain.PublishedDIDOperation.Create(
         updateCommitment = updateCommitmentHex,
         recoveryCommitment = recoveryCommitmentHex,
-        storage = domain.DIDStorage.Cardano(req.storage),
-        document = domain.DIDDocument(publicKeys = publicKeys, services = services)
+        storage = castorDomain.DIDStorage.Cardano(req.storage),
+        document = castorDomain.DIDDocument(publicKeys = publicKeys, services = services)
       )
     }
   }
 
   extension (service: Service) {
-    def toDomain: Either[String, domain.Service] = {
+    def toDomain: Either[String, castorDomain.Service] = {
       for {
         serviceEndpoint <- Try(URI.create(service.serviceEndpoint)).toEither.left.map(_ =>
           s"unable to parse serviceEndpoint ${service.serviceEndpoint} as URI"
         )
-        serviceType <- domain.ServiceType
+        serviceType <- castorDomain.ServiceType
           .parseString(service.`type`)
           .toRight(s"unsupported serviceType ${service.`type`}")
-      } yield domain.Service(
+      } yield castorDomain.Service(
         id = service.id,
         `type` = serviceType,
         serviceEndpoint = serviceEndpoint
@@ -63,24 +66,24 @@ trait OASDomainModelHelper {
   }
 
   extension (key: PublicKey) {
-    def toDomain: Either[String, domain.PublicKey] = {
+    def toDomain: Either[String, castorDomain.PublicKey] = {
       for {
         purposes <- key.purposes.traverse(i =>
-          domain.VerificationRelationship
+          castorDomain.VerificationRelationship
             .parseString(i)
             .toRight(s"unsupported verificationRelationship $i")
         )
         publicKeyJwk <- key.jsonWebKey2020.publicKeyJwk.toDomain
-      } yield domain.PublicKey.JsonWebKey2020(id = key.id, purposes = purposes, publicKeyJwk = publicKeyJwk)
+      } yield castorDomain.PublicKey.JsonWebKey2020(id = key.id, purposes = purposes, publicKeyJwk = publicKeyJwk)
     }
   }
 
   extension (jwk: PublicKeyJwk) {
-    def toDomain: Either[String, domain.PublicKeyJwk] = {
+    def toDomain: Either[String, castorDomain.PublicKeyJwk] = {
       for {
         crv <- jwk.crv
           .toRight("expected crv field in JWK")
-          .flatMap(i => domain.EllipticCurve.parseString(i).toRight(s"unsupported curve $i"))
+          .flatMap(i => castorDomain.EllipticCurve.parseString(i).toRight(s"unsupported curve $i"))
         x <- jwk.x
           .toRight("expected x field in JWK")
           .flatMap(
@@ -91,11 +94,37 @@ trait OASDomainModelHelper {
           .flatMap(
             Base64UrlString.fromString(_).toEither.left.map(_ => "unable to convert y coordinate to base64url string")
           )
-      } yield domain.PublicKeyJwk.ECPublicKeyData(crv = crv, x = x, y = y)
+      } yield castorDomain.PublicKeyJwk.ECPublicKeyData(crv = crv, x = x, y = y)
     }
   }
 
-  extension (outcome: domain.PublishedDIDOperationOutcome) {
+  extension (template: CreateManagedDidRequestDocumentTemplate) {
+    def toDomain: Either[String, walletDomain.ManagedDIDTemplate] = {
+      for {
+        services <- template.services.traverse(_.toDomain)
+        publicKeys <- template.publicKeys.traverse(_.toDomain)
+      } yield walletDomain.ManagedDIDTemplate(
+        storage = template.storage,
+        publicKeys = publicKeys,
+        services = services
+      )
+    }
+  }
+
+  extension (publicKeyTemplate: CreateManagedDidRequestDocumentTemplatePublicKeysInner) {
+    def toDomain: Either[String, walletDomain.DIDPublicKeyTemplate] = {
+      for {
+        purpose <- castorDomain.VerificationRelationship
+          .parseString(publicKeyTemplate.purpose)
+          .toRight(s"unsupported verificationRelationship ${publicKeyTemplate.purpose}")
+      } yield walletDomain.DIDPublicKeyTemplate(
+        id = publicKeyTemplate.id,
+        purpose = purpose
+      )
+    }
+  }
+
+  extension (outcome: castorDomain.PublishedDIDOperationOutcome) {
     def toOAS: DIDOperationResponse = DIDOperationResponse(
       scheduledOperation = DidOperationSubmission(
         id = outcome.operationId.toString,
