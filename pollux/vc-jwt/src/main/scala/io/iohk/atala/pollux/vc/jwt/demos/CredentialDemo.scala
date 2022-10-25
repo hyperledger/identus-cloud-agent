@@ -14,9 +14,9 @@ import java.time.{Instant, ZonedDateTime}
 
 @main def CredentialDemo(): Unit =
   val w3cCredentialPayload = W3cCredentialPayload(
-    `@context` = Vector("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
+    `@context` = Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
     maybeId = Some("http://example.edu/credentials/3732"),
-    `type` = Vector("VerifiableCredential", "UniversityDegreeCredential"),
+    `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
     issuer = DID("https://example.edu/issuers/565049"),
     issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
     maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
@@ -74,7 +74,7 @@ import java.time.{Instant, ZonedDateTime}
   println("==================")
   val jwtAudCredentialPayload =
     jwtCredentialPayload.copy(aud =
-      Vector("did:example:4a57546973436f6f6c4a4a57573", "did:example:s7dfsd86f5sd6fsdf6sfs6d5sdf")
+      Set("did:example:4a57546973436f6f6c4a4a57573", "did:example:s7dfsd86f5sd6fsdf6sfs6d5sdf")
     )
   println(jwtAudCredentialPayload)
 
