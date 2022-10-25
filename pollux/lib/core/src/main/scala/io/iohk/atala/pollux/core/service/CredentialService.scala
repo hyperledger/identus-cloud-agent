@@ -1,8 +1,10 @@
 package io.iohk.atala.pollux.core.service
 
 import cats.data.State
-import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
+import com.google.protobuf.ByteString
 import io.iohk.atala.iris.proto.dlt.IrisOperation
+import io.iohk.atala.iris.proto.service.IrisOperationId
+import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
 import io.iohk.atala.iris.proto.vc_operations.IssueCredentialsBatch
 import io.iohk.atala.pollux.core.model.EncodedJWTCredential
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord
@@ -13,21 +15,20 @@ import io.iohk.atala.pollux.core.model.error.PublishCredentialBatchError
 import io.iohk.atala.pollux.core.repository.CredentialRepository
 import io.iohk.atala.pollux.vc.jwt.Issuer
 import io.iohk.atala.pollux.vc.jwt.IssuerDID
-import io.iohk.atala.pollux.vc.jwt.W3CCredentialPayload
-import io.iohk.atala.prism.crypto.{MerkleTreeKt, MerkleInclusionProof}
-import io.iohk.atala.prism.crypto.Sha256
 import io.iohk.atala.pollux.vc.jwt.JwtCredentialPayload
+import io.iohk.atala.pollux.vc.jwt.JwtVerifiableCredential
+import io.iohk.atala.pollux.vc.jwt.W3CCredentialPayload
+import io.iohk.atala.prism.crypto.MerkleInclusionProof
+import io.iohk.atala.prism.crypto.MerkleTreeKt
+import io.iohk.atala.prism.crypto.Sha256
 import zio.*
 
-import com.google.protobuf.ByteString
-
+import java.rmi.UnexpectedException
 import java.security.KeyPairGenerator
 import java.security.SecureRandom
 import java.security.spec.ECGenParameterSpec
 import java.util.UUID
 import java.{util => ju}
-import io.iohk.atala.pollux.vc.jwt.JwtVerifiableCredential
-import java.rmi.UnexpectedException
 
 trait CredentialService {
 
@@ -247,9 +248,19 @@ private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepos
     )
 
     val credentialsAndProofs = credentials.zip(proofs)
-    irisClient.scheduleOperation(irisOperation)
 
-    ???
+    val result = ZIO
+      .fromFuture(_ => irisClient.scheduleOperation(irisOperation))
+      .mapBoth(
+        PublishCredentialBatchError.IrisError(_),
+        irisOpeRes =>
+          PublishedBatchData(
+            operationId = IrisOperationId(irisOpeRes.operationId),
+            credentialsAnsProofs = credentialsAndProofs
+          )
+      )
+
+    result
   }
 
 }
