@@ -38,7 +38,7 @@ object AgentCli extends ZIOAppDefault {
 
   def options(p: Seq[(String, ZIO[Any, Throwable, Unit])]): ZIO[Any, Throwable, Unit] = {
     for {
-      _ <- Console.printLine("--- Choose an option: ---")
+      _ <- Console.printLine("\n--- Choose an option: ---")
       _ <- ZIO.foreach(p.zipWithIndex)(e => Console.printLine(e._2 + " - " + e._1._1))
       _ <- Console.readLine.flatMap { e => p.map(_._2).toSeq(e.toInt) }
     } yield ()
@@ -138,17 +138,6 @@ object AgentCli extends ZIOAppDefault {
       _ <- Console.printLine(data)
     } yield ()
   }
-
-  // def proposeCredential(
-  //     proposeCredential: ProposeCredential,
-  //     sendTo: DidId
-  // ): zio.ZIO[io.iohk.atala.mercury.DidComm, java.io.IOException, io.iohk.atala.mercury.model.EncryptedMessage] = {
-  //   for {
-  //     didCommService <- ZIO.service[DidComm]
-  //     msg = proposeCredential.makeMessage(sendTo)
-  //     encryptedForwardMessage <- didCommService.packEncrypted(msg, to = sendTo)
-  //   } yield (encryptedForwardMessage)
-  // }
 
   def proposeAndSendCredential = {
     for {
@@ -274,10 +263,11 @@ object AgentCli extends ZIOAppDefault {
     _ <- Console.printLine("Generating a new 'peer' DID!")
     // haveServiceEndpoint <- questionYN("Do you have a serviceEndpoint url? e.g http://localhost:8080/myendpoint")
     // ZIO.when(haveServiceEndpoint)( // )
-    _ <- Console.printLine("Enter the serviceEndpoint URL (defualt None)")
+    _ <- Console.printLine("Enter the serviceEndpoint URL (defualt None) or port for http://localhost:port")
     serviceEndpoint <- Console.readLine.flatMap {
-      case ""  => ZIO.succeed(None) // defualt
-      case str => ZIO.succeed(Some(str))
+      case ""                               => ZIO.succeed(None) // defualt
+      case str if str.toIntOption.isDefined => ZIO.succeed(str.toIntOption.map(port => s"http://localhost:$port"))
+      case str                              => ZIO.succeed(Some(str))
     }
 
     agentDID <- for {
@@ -323,9 +313,14 @@ object AgentCli extends ZIOAppDefault {
                 _ <- ZIO.logInfo("OutOfBandloginReply: " + msg)
               } yield ("OutOfBandloginReply")
 
+            // ########################
+            // ### issue-credential ###
+            // ########################
             case s if s == ProposeCredential.`type` => // Issuer
               for {
-                _ <- ZIO.logInfo("ProposeCredential: " + msg)
+                _ <- ZIO.logInfo("*" * 100)
+                _ <- ZIO.logInfo("As an Issuer in issue-credential:")
+                _ <- ZIO.logInfo("Got ProposeCredential: " + msg)
                 offer = OfferCredential.makeOfferToProposeCredential(msg) // OfferCredential
 
                 didCommService <- ZIO.service[DidComm]
@@ -335,7 +330,9 @@ object AgentCli extends ZIOAppDefault {
 
             case s if s == OfferCredential.`type` => // Holder
               for {
-                _ <- ZIO.logInfo("OfferCredential: " + msg)
+                _ <- ZIO.logInfo("*" * 100)
+                _ <- ZIO.logInfo("As an Holder in issue-credential:")
+                _ <- ZIO.logInfo("Got OfferCredential: " + msg)
                 // store on BD TODO //pc = OfferCredential.readFromMessage(msg)
                 requestCredential = RequestCredential.makeRequestCredentialFromOffer(msg) // RequestCredential
 
@@ -346,7 +343,9 @@ object AgentCli extends ZIOAppDefault {
 
             case s if s == RequestCredential.`type` => // Issuer
               for {
-                _ <- ZIO.logInfo("RequestCredential: " + msg)
+                _ <- ZIO.logInfo("*" * 100)
+                _ <- ZIO.logInfo("As an Issuer in issue-credential:")
+                _ <- ZIO.logInfo("Got RequestCredential: " + msg)
                 issueCredential = IssueCredential.makeIssueCredentialFromRequestCredential(msg) // IssueCredential
 
                 didCommService <- ZIO.service[DidComm]
@@ -356,8 +355,9 @@ object AgentCli extends ZIOAppDefault {
 
             case s if s == IssueCredential.`type` => // Holder
               for {
-                _ <- ZIO.logInfo("IssueCredential: " + msg)
-                // TODO add LOGS!
+                _ <- ZIO.logInfo("*" * 100)
+                _ <- ZIO.logInfo("As an Holder in issue-credential:")
+                _ <- ZIO.logInfo("Got IssueCredential: " + msg)
               } yield ("IssueCredential Received")
 
             case "https://didcomm.org/routing/2.0/forward"                      => ??? // SEE mediator
