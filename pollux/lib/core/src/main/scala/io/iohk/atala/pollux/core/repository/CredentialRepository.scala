@@ -7,7 +7,8 @@ import java.util.UUID
 trait CredentialRepository[F[_]] {
   def createCredentials(batchId: String, credentials: Seq[JWTCredential]): F[Unit]
   def getCredentials(batchId: String): F[Seq[JWTCredential]]
-  def createIssueCredentialRecord(record: IssueCredentialRecord): F[Unit]
+  def createIssueCredentialRecord(record: IssueCredentialRecord): F[Int]
   def getIssueCredentialRecords(): F[Seq[IssueCredentialRecord]]
   def getIssueCredentialRecord(id: UUID): F[Option[IssueCredentialRecord]]
+  def updateCredentialRecordState(id: UUID, state: IssueCredentialRecord.State): F[Int]
 }

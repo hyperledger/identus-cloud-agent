@@ -17,6 +17,7 @@ import java.{util => ju}
 import java.{util => ju}
 import cats.data.State
 import io.iohk.atala.pollux.vc.jwt.JwtVerifiableCredential
+import java.rmi.UnexpectedException
 
 trait CredentialService {
   def createIssuer: Issuer = {
@@ -47,9 +48,9 @@ trait CredentialService {
 
   def getCredentialRecord(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]]
 
-  def acceptCredentialOffer(id: UUID): IO[IssueCredentialError, IssueCredentialRecord]
+  def acceptCredentialOffer(id: UUID): IO[IssueCredentialError, Unit]
 
-  def issueCredential(id: UUID): IO[IssueCredentialError, IssueCredentialRecord]
+  def issueCredential(id: UUID): IO[IssueCredentialError, Unit]
 
 }
 
@@ -77,9 +78,9 @@ object MockCredentialService {
         )
       }
 
-      override def acceptCredentialOffer(id: ju.UUID): IO[IssueCredentialError, IssueCredentialRecord] = ???
+      override def acceptCredentialOffer(id: ju.UUID): IO[IssueCredentialError, Unit] = ???
 
-      override def issueCredential(id: ju.UUID): IO[IssueCredentialError, IssueCredentialRecord] = ???
+      override def issueCredential(id: ju.UUID): IO[IssueCredentialError, Unit] = ???
 
       override def getCredentialRecord(id: ju.UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] = ???
 
@@ -122,7 +123,7 @@ private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepos
 //    credentialRepository.createCredentials(batchId, credentials).mapError(RepositoryError.apply)
   }
 
-  def createCredentialOffer(
+  override def createCredentialOffer(
       subjectId: String,
       schemaId: String,
       claims: Map[String, String],
@@ -136,16 +137,20 @@ private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepos
           subjectId,
           validityPeriod,
           claims,
-          IssueCredentialRecord.State.OfferSent
+          IssueCredentialRecord.State.OfferPending
         )
       )
-      _ <- credentialRepository
+      count <- credentialRepository
         .createIssueCredentialRecord(record)
+        .flatMap {
+          case 1 => ZIO.succeed(())
+          case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
+        }
         .mapError(RepositoryError.apply)
     } yield record
   }
 
-  def getCredentialRecords(): IO[IssueCredentialError, Seq[IssueCredentialRecord]] = {
+  override def getCredentialRecords(): IO[IssueCredentialError, Seq[IssueCredentialRecord]] = {
     for {
       records <- credentialRepository
         .getIssueCredentialRecords()
@@ -153,7 +158,7 @@ private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepos
     } yield records
   }
 
-  def getCredentialRecord(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] = {
+  override def getCredentialRecord(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] = {
     for {
       record <- credentialRepository
         .getIssueCredentialRecord(id)
@@ -161,8 +166,28 @@ private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepos
     } yield record
   }
 
-  def acceptCredentialOffer(id: UUID): IO[IssueCredentialError, IssueCredentialRecord] = ???
+  override def acceptCredentialOffer(id: UUID): IO[IssueCredentialError, Unit] = {
+    for {
+      outcome <- credentialRepository
+        .updateCredentialRecordState(id, IssueCredentialRecord.State.RequestPending)
+        .flatMap {
+          case 1 => ZIO.succeed(())
+          case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
+        }
+        .mapError(RepositoryError.apply)
+    } yield outcome
+  }
 
-  def issueCredential(id: UUID): IO[IssueCredentialError, IssueCredentialRecord] = ???
+  override def issueCredential(id: UUID): IO[IssueCredentialError, Unit] = {
+    for {
+      outcome <- credentialRepository
+        .updateCredentialRecordState(id, IssueCredentialRecord.State.CredentialPending)
+        .flatMap {
+          case 1 => ZIO.succeed(())
+          case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
+        }
+        .mapError(RepositoryError.apply)
+    } yield outcome
+  }
 
 }

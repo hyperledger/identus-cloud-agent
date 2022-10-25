@@ -35,7 +35,7 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
 //      .map(_.map(c => JWTCredential(c.batchId, c.credentialId, c.content)))
   }
 
-  override def createIssueCredentialRecord(record: IssueCredentialRecord): Task[Unit] = {
+  override def createIssueCredentialRecord(record: IssueCredentialRecord): Task[Int] = {
     val cxnIO = sql"""
         | INSERT INTO public.issue_credential_records(
         |   id,
@@ -50,18 +50,18 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   ${record.subjectId},
         |   ${record.validityPeriod},
         |   ${record.claims.asJson.toString},
-        |   ${record.state.ordinal}
+        |   ${record.state.toString}
         | )
         """.stripMargin.update
 
     cxnIO.run
       .transact(xa)
-      .map(_ => ())
   }
 
   given uuidGet: Get[UUID] = Get[String].map(UUID.fromString(_))
-  given stateGet: Get[IssueCredentialRecord.State] = Get[Int].map(IssueCredentialRecord.State.fromOrdinal(_))
-  given claimsGet: Get[Map[String,String]] = Get[String].map(decode[Map[String, String]](_).getOrElse(Map("parsingError" -> "parsingError")))
+  given stateGet: Get[IssueCredentialRecord.State] = Get[String].map(IssueCredentialRecord.State.valueOf(_))
+  given claimsGet: Get[Map[String, String]] =
+    Get[String].map(decode[Map[String, String]](_).getOrElse(Map("parsingError" -> "parsingError")))
 
   override def getIssueCredentialRecords(): Task[Seq[IssueCredentialRecord]] = {
     val cxnIO = sql"""
@@ -97,6 +97,19 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
       .option
 
     cxnIO
+      .transact(xa)
+  }
+
+  override def updateCredentialRecordState(id: UUID, state: IssueCredentialRecord.State): Task[Int] = {
+    val cxnIO = sql"""
+        | UPDATE public.issue_credential_records
+        | SET
+        |   state = ${state.toString}
+        | WHERE
+        |   id = ${id.toString}
+        """.stripMargin.update
+
+    cxnIO.run
       .transact(xa)
   }
 
