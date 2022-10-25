@@ -5,7 +5,10 @@ import io.circe.generic.auto.*
 import io.circe.parser.decode
 import io.circe.syntax.*
 import io.circe.{Decoder, Encoder, HCursor, Json}
+import net.reactivecore.cjs.validator.Violation
+import net.reactivecore.cjs.{DocumentValidator, Loader}
 import pdi.jwt.{Jwt, JwtCirce}
+import zio.NonEmptyChunk
 import zio.prelude.*
 
 import java.security.{KeyPairGenerator, PublicKey}
@@ -49,14 +52,14 @@ case class CredentialSchema(
 
 sealed trait CredentialPayload(
     maybeSub: Option[String],
-    `@context`: IndexedSeq[String],
-    `type`: IndexedSeq[String],
+    `@context`: Set[String],
+    `type`: Set[String],
     maybeJti: Option[String],
     maybeNbf: Option[Instant],
-    aud: IndexedSeq[String],
+    aud: Set[String],
     maybeExp: Option[Instant],
     maybeIss: Option[String],
-    maybeConnectionStatus: Option[CredentialStatus],
+    maybeCredentialStatus: Option[CredentialStatus],
     maybeRefreshService: Option[RefreshService],
     maybeEvidence: Option[Json],
     maybeTermsOfUse: Option[Json],
@@ -72,7 +75,7 @@ sealed trait CredentialPayload(
         `type` = `type`,
         maybeCredentialSchema = maybeCredentialSchema,
         credentialSubject = credentialSubject,
-        maybeCredentialStatus = maybeConnectionStatus,
+        maybeCredentialStatus = maybeCredentialStatus,
         maybeRefreshService = maybeRefreshService,
         maybeEvidence = maybeEvidence,
         maybeTermsOfUse = maybeTermsOfUse
@@ -85,30 +88,173 @@ sealed trait CredentialPayload(
 
   def toW3CCredentialPayload: Validation[String, W3cCredentialPayload] =
     Validation.validateWith(
-      Validation.fromOptionWith("Iss must be defined")(maybeIss),
-      Validation.fromOptionWith("Nbf must be defined")(maybeNbf)
+      CredentialPayloadValidation.validateIssuerDid(this.maybeIss),
+      CredentialPayloadValidation.validateIssuanceDate(this.maybeNbf)
     ) { (iss, nbf) =>
       W3cCredentialPayload(
-        `@context` = `@context`.distinct,
+        `@context` = `@context`,
         maybeId = maybeJti,
-        `type` = `type`.distinct,
+        `type` = `type`,
         issuer = DID(iss),
         issuanceDate = nbf,
         maybeExpirationDate = maybeExp,
         maybeCredentialSchema = maybeCredentialSchema,
         credentialSubject = credentialSubject,
-        maybeCredentialStatus = maybeConnectionStatus,
+        maybeCredentialStatus = maybeCredentialStatus,
         maybeRefreshService = maybeRefreshService,
         maybeEvidence = maybeEvidence,
         maybeTermsOfUse = maybeTermsOfUse,
         aud = aud
       )
     }
+
+  def toValidatedCredentialPayload(
+      credentialSchemaResolver: CredentialSchema => Json
+  ): Validation[String, ValidatedCredentialPayload] =
+    Validation.validateWith(
+      CredentialPayloadValidation.validateIssuanceDate(this.maybeNbf),
+      CredentialPayloadValidation.validateIssuerDid(this.maybeIss),
+      CredentialPayloadValidation.validateContext(this.`@context`),
+      CredentialPayloadValidation.validateVcType(this.`type`),
+      for {
+        maybeDocumentValidator <- CredentialPayloadValidation.validateCredentialSchema(
+          this.maybeCredentialSchema.map(credentialSchemaResolver)
+        )
+        validatedCredentialSubject <- CredentialPayloadValidation
+          .validateCredentialSubject(this.credentialSubject, maybeDocumentValidator)
+      } yield validatedCredentialSubject
+    ) { (nbf, iss, `@context`, `type`, credentialSubject) =>
+      ValidatedCredentialPayload(
+        maybeSub = maybeSub,
+        `@context` = `@context`,
+        `type` = `type`,
+        maybeJti = maybeJti,
+        nbf = nbf,
+        aud = aud,
+        maybeExp = maybeExp,
+        iss = iss,
+        maybeCredentialStatus = maybeCredentialStatus,
+        maybeRefreshService = maybeRefreshService,
+        maybeEvidence = maybeEvidence,
+        maybeTermsOfUse = maybeTermsOfUse,
+        maybeCredentialSchema = maybeCredentialSchema,
+        credentialSubject = credentialSubject
+      )
+    }
+}
+
+case class ValidatedCredentialPayload(
+    maybeSub: Option[String],
+    `@context`: NonEmptySet[String],
+    `type`: NonEmptySet[String],
+    maybeJti: Option[String],
+    nbf: Instant,
+    aud: Set[String],
+    maybeExp: Option[Instant],
+    iss: String,
+    maybeCredentialStatus: Option[CredentialStatus],
+    maybeRefreshService: Option[RefreshService],
+    maybeEvidence: Option[Json],
+    maybeTermsOfUse: Option[Json],
+    maybeCredentialSchema: Option[CredentialSchema],
+    credentialSubject: Json
+) extends CredentialPayload(
+      maybeSub = maybeSub,
+      `@context` = `@context`.toSet,
+      `type` = `type`.toSet,
+      maybeJti = maybeJti,
+      maybeNbf = Some(nbf),
+      aud = aud,
+      maybeExp = maybeExp,
+      maybeIss = Some(iss),
+      maybeCredentialStatus = maybeCredentialStatus,
+      maybeRefreshService = maybeRefreshService,
+      maybeEvidence = maybeEvidence,
+      maybeTermsOfUse = maybeTermsOfUse,
+      maybeCredentialSchema = maybeCredentialSchema,
+      credentialSubject = credentialSubject
+    )
+
+object CredentialPayloadValidation {
+
+  val DEFAULT_VC_TYPE = "VerifiableCredential"
+  val DEFAULT_CONTEXT = "https://www.w3.org/2018/credentials/v1"
+
+  def validateIssuerDid(maybeIssuerDid: Option[String]): Validation[String, String] = {
+    Validation
+      .fromOptionWith("Issuer Did is empty.")(maybeIssuerDid)
+  }
+
+  def validateIssuanceDate(maybeIssuanceDate: Option[Instant]): Validation[String, Instant] = {
+    Validation
+      .fromOptionWith("issuanceDate is empty.")(maybeIssuanceDate)
+  }
+
+  def validateContext(`@context`: Set[String]): Validation[String, NonEmptySet[String]] = {
+    Validation
+      .fromOptionWith("@context is empty.")(`@context`.toNonEmptySet)
+      .flatMap(`nonEmpty@context` =>
+        Validation.fromPredicateWith("Missing default context from @context")(`nonEmpty@context`)(
+          _.contains(DEFAULT_CONTEXT)
+        )
+      )
+  }
+
+  def validateVcType(`type`: Set[String]): Validation[String, NonEmptySet[String]] = {
+    Validation
+      .fromOptionWith("type is empty.")(`type`.toNonEmptySet)
+      .flatMap(nonEmptyType =>
+        Validation.fromPredicateWith("Missing default type from `type`")(nonEmptyType)(
+          _.contains(DEFAULT_VC_TYPE)
+        )
+      )
+  }
+
+  def validateCredentialSchema(maybeCredentialSchema: Option[Json]): Validation[String, Option[DocumentValidator]] = {
+    maybeCredentialSchema.fold(Validation.succeed(Option.empty))(credentialSchema =>
+      Validation.fromEither(Loader.empty.fromJson(credentialSchema).left.map(_.message)).map(Some(_))
+    )
+  }
+
+  def validateCredentialSubjectSchema(
+      credentialSubject: Json,
+      credentialSchemaValidator: DocumentValidator
+  ): Validation[String, Json] =
+    NonEmptyChunk
+      .fromIterableOption(
+        credentialSchemaValidator.validate(credentialSubject.asJson).violations.map(_.toString)
+      )
+      .fold(Validation.succeed(credentialSubject))(Validation.failNonEmptyChunk)
+
+  def validateCredentialSubject(
+      credentialSubject: Json,
+      maybeCredentialSchemaValidator: Option[DocumentValidator]
+  ): Validation[String, Json] = {
+    for {
+      validatedCredentialSubjectNotEmpty <- validateCredentialSubjectNotEmpty(credentialSubject)
+      validatedCredentialSubjectHasId <- validateCredentialSubjectHasId(validatedCredentialSubjectNotEmpty)
+      validatedCredentialSubjectSchema <- maybeCredentialSchemaValidator
+        .map(validateCredentialSubjectSchema(validatedCredentialSubjectHasId, _))
+        .getOrElse(Validation.succeed(validatedCredentialSubjectHasId))
+    } yield validatedCredentialSubjectSchema
+  }
+
+  private def validateCredentialSubjectNotEmpty(credentialSubject: Json): Validation[String, Json] = {
+    Validation
+      .fromPredicateWith("credentialSubject is empty.")(credentialSubject)(_.isObject)
+  }
+
+  private def validateCredentialSubjectHasId(credentialSubject: Json): Validation[String, Json] = {
+    Validation
+      .fromPredicateWith("credentialSubject must contain id.")(credentialSubject)(
+        _.asObject.exists(jsonObject => jsonObject.toMap.contains("id"))
+      )
+  }
 }
 
 case class JwtVc(
-    `@context`: IndexedSeq[String],
-    `type`: IndexedSeq[String],
+    `@context`: Set[String],
+    `type`: Set[String],
     maybeCredentialSchema: Option[CredentialSchema],
     credentialSubject: Json,
     maybeCredentialStatus: Option[CredentialStatus],
@@ -116,24 +262,25 @@ case class JwtVc(
     maybeEvidence: Option[Json],
     maybeTermsOfUse: Option[Json]
 )
+
 case class JwtCredentialPayload(
     maybeIss: Option[String],
     maybeSub: Option[String],
     vc: JwtVc,
     maybeNbf: Option[Instant],
-    aud: IndexedSeq[String],
+    aud: Set[String],
     maybeExp: Option[Instant],
     maybeJti: Option[String]
 ) extends CredentialPayload(
       maybeSub = maybeSub.orElse(vc.credentialSubject.hcursor.downField("id").as[String].toOption),
-      `@context` = vc.`@context`.distinct,
-      `type` = vc.`type`.distinct,
+      `@context` = vc.`@context`,
+      `type` = vc.`type`,
       maybeJti = maybeJti,
       maybeNbf = maybeNbf,
       aud = aud,
       maybeExp = maybeExp,
       maybeIss = maybeIss,
-      maybeConnectionStatus = vc.maybeCredentialStatus,
+      maybeCredentialStatus = vc.maybeCredentialStatus,
       maybeRefreshService = vc.maybeRefreshService,
       maybeEvidence = vc.maybeEvidence,
       maybeTermsOfUse = vc.maybeTermsOfUse,
@@ -142,8 +289,8 @@ case class JwtCredentialPayload(
     )
 
 case class W3cCredentialPayload(
-    `@context`: IndexedSeq[String],
-    `type`: IndexedSeq[String],
+    `@context`: Set[String],
+    `type`: Set[String],
     maybeId: Option[String],
     issuer: DID,
     issuanceDate: Instant,
@@ -156,17 +303,17 @@ case class W3cCredentialPayload(
     maybeTermsOfUse: Option[Json],
 
     /** Not part of W3C Credential but included to preserve in case of conversion from JWT. */
-    aud: IndexedSeq[String] = IndexedSeq.empty
+    aud: Set[String] = Set.empty
 ) extends CredentialPayload(
       maybeSub = credentialSubject.hcursor.downField("id").as[String].toOption,
-      `@context` = `@context`.distinct,
-      `type` = `type`.distinct,
+      `@context` = `@context`,
+      `type` = `type`,
       maybeJti = maybeId,
       maybeNbf = Some(issuanceDate),
       aud = aud,
       maybeExp = maybeExpirationDate,
       maybeIss = Some(issuer.value),
-      maybeConnectionStatus = maybeCredentialStatus,
+      maybeCredentialStatus = maybeCredentialStatus,
       maybeRefreshService = maybeRefreshService,
       maybeEvidence = maybeEvidence,
       maybeTermsOfUse = maybeTermsOfUse,
@@ -176,7 +323,7 @@ case class W3cCredentialPayload(
 
 object CredentialPayload {
   object Implicits {
-    
+
     import Proof.Implicits.*
 
     implicit val didEncoder: Encoder[DID] =
@@ -263,7 +410,8 @@ object CredentialPayload {
           .deepMerge(Map("proof" -> w3cVerifiableCredentialPayload.proof).asJson)
 
     implicit val jwtVerifiableCredentialPayloadEncoder: Encoder[JwtVerifiableCredentialPayload] =
-      (jwtVerifiableCredentialPayload: JwtVerifiableCredentialPayload) => jwtVerifiableCredentialPayload.jwt.value.asJson
+      (jwtVerifiableCredentialPayload: JwtVerifiableCredentialPayload) =>
+        jwtVerifiableCredentialPayload.jwt.value.asJson
 
     implicit val verifiableCredentialPayloadEncoder: Encoder[VerifiableCredentialPayload] = {
       case (w3cVerifiableCredentialPayload: W3cVerifiableCredentialPayload) => w3cVerifiableCredentialPayload.asJson
@@ -302,12 +450,12 @@ object CredentialPayload {
         for {
           `@context` <- c
             .downField("@context")
-            .as[IndexedSeq[String]]
-            .orElse(c.downField("@context").as[String].map(IndexedSeq(_)))
+            .as[Set[String]]
+            .orElse(c.downField("@context").as[String].map(Set(_)))
           `type` <- c
             .downField("type")
-            .as[IndexedSeq[String]]
-            .orElse(c.downField("type").as[String].map(IndexedSeq(_)))
+            .as[Set[String]]
+            .orElse(c.downField("type").as[String].map(Set(_)))
           maybeId <- c.downField("id").as[Option[String]]
           issuer <- c.downField("issuer").as[String]
           issuanceDate <- c.downField("issuanceDate").as[Instant]
@@ -320,8 +468,8 @@ object CredentialPayload {
           maybeTermsOfUse <- c.downField("termsOfUse").as[Option[Json]]
         } yield {
           W3cCredentialPayload(
-            `@context` = `@context`.distinct,
-            `type` = `type`.distinct,
+            `@context` = `@context`,
+            `type` = `type`,
             maybeId = maybeId,
             issuer = DID(issuer),
             issuanceDate = issuanceDate,
@@ -332,7 +480,7 @@ object CredentialPayload {
             maybeRefreshService = maybeRefreshService,
             maybeEvidence = maybeEvidence,
             maybeTermsOfUse = maybeTermsOfUse,
-            aud = IndexedSeq.empty
+            aud = Set.empty
           )
         }
 
@@ -341,12 +489,12 @@ object CredentialPayload {
         for {
           `@context` <- c
             .downField("@context")
-            .as[IndexedSeq[String]]
-            .orElse(c.downField("@context").as[String].map(IndexedSeq(_)))
+            .as[Set[String]]
+            .orElse(c.downField("@context").as[String].map(Set(_)))
           `type` <- c
             .downField("type")
-            .as[IndexedSeq[String]]
-            .orElse(c.downField("type").as[String].map(IndexedSeq(_)))
+            .as[Set[String]]
+            .orElse(c.downField("type").as[String].map(Set(_)))
           maybeCredentialSchema <- c.downField("credentialSchema").as[Option[CredentialSchema]]
           credentialSubject <- c.downField("credentialSubject").as[Json]
           maybeCredentialStatus <- c.downField("credentialStatus").as[Option[CredentialStatus]]
@@ -355,8 +503,8 @@ object CredentialPayload {
           maybeTermsOfUse <- c.downField("termsOfUse").as[Option[Json]]
         } yield {
           JwtVc(
-            `@context` = `@context`.distinct,
-            `type` = `type`.distinct,
+            `@context` = `@context`,
+            `type` = `type`,
             maybeCredentialSchema = maybeCredentialSchema,
             credentialSubject = credentialSubject,
             maybeCredentialStatus = maybeCredentialStatus,
@@ -376,8 +524,8 @@ object CredentialPayload {
           aud <- c
             .downField("aud")
             .as[Option[String]]
-            .map(_.iterator.toIndexedSeq)
-            .orElse(c.downField("aud").as[Option[IndexedSeq[String]]].map(_.iterator.toIndexedSeq.flatten))
+            .map(_.iterator.toSet)
+            .orElse(c.downField("aud").as[Option[Set[String]]].map(_.iterator.toSet.flatten))
           maybeExp <- c.downField("exp").as[Option[Instant]]
           maybeJti <- c.downField("jti").as[Option[String]]
         } yield {
@@ -386,7 +534,7 @@ object CredentialPayload {
             maybeSub = maybeSub,
             vc = vc,
             maybeNbf = maybeNbf,
-            aud = aud.distinct,
+            aud = aud,
             maybeExp = maybeExp,
             maybeJti = maybeJti
           )
