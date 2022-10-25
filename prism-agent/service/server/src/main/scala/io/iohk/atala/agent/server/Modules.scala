@@ -24,6 +24,7 @@ import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
 import io.iohk.atala.pollux.core.repository.CredentialRepository
 import io.iohk.atala.pollux.core.service.CredentialService
 import io.iohk.atala.pollux.sql.repository.JdbcCredentialRepository
+import io.iohk.atala.agent.server.jobs.*
 import zio.*
 import zio.config.typesafe.TypesafeConfigSource
 import zio.config.{ReadError, read}
@@ -40,6 +41,12 @@ object Modules {
     httpServerApp
       .provideLayer(SystemModule.actorSystemLayer ++ HttpModule.layers)
       .unit
+  }
+
+  val didCommExchangesJob: Task[Unit] = {
+    val effect = BackgroundJobs.didCommExchanges
+      .provideLayer(AppModule.credentialServiceLayer)
+    (effect repeat Schedule.spaced(10.seconds)).unit
   }
 
 }

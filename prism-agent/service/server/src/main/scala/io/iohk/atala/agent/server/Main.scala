@@ -19,5 +19,7 @@ object Main extends ZIOAppDefault {
       |██║  ██║╚██████╔╝███████╗██║ ╚████║   ██║
       |╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚═╝  ╚═══╝   ╚═╝
       |""".stripMargin)
-    .ignore *> Modules.app
+    .ignore
+    *> Modules.didCommExchangesJob.fork
+    *> Modules.app
 }
