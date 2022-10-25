@@ -322,7 +322,7 @@ object AgentCli extends ZIOAppDefault {
                 _ <- ZIO.logInfo("OutOfBandloginReply: " + msg)
               } yield ("OutOfBandloginReply")
 
-            case s if s == ProposeCredential.`type` =>
+            case s if s == ProposeCredential.`type` => // Issuer
               for {
                 _ <- ZIO.logInfo("ProposeCredential: " + msg)
                 offer = OfferCredential.makeOfferToProposeCredential(msg) // OfferCredential
@@ -330,9 +330,9 @@ object AgentCli extends ZIOAppDefault {
                 didCommService <- ZIO.service[DidComm]
                 msg = offer.makeMessage(from = didCommService.myDid)
                 _ <- sendMessage(msg)
-              } yield ("OfferCredential Sended")
+              } yield ("OfferCredential Sent")
 
-            case s if s == OfferCredential.`type` =>
+            case s if s == OfferCredential.`type` => // Holder
               for {
                 _ <- ZIO.logInfo("OfferCredential: " + msg)
                 // store on BD TODO //pc = OfferCredential.readFromMessage(msg)
@@ -341,9 +341,9 @@ object AgentCli extends ZIOAppDefault {
                 didCommService <- ZIO.service[DidComm]
                 msg = requestCredential.makeMessage(from = didCommService.myDid)
                 _ <- sendMessage(msg)
-              } yield ("RequestCredential Sended")
+              } yield ("RequestCredential Sent")
 
-            case s if s == RequestCredential.`type` =>
+            case s if s == RequestCredential.`type` => // Issuer
               for {
                 _ <- ZIO.logInfo("RequestCredential: " + msg)
                 issueCredential = IssueCredential.makeIssueCredentialFromRequestCredential(msg) // IssueCredential
@@ -351,9 +351,9 @@ object AgentCli extends ZIOAppDefault {
                 didCommService <- ZIO.service[DidComm]
                 msg = issueCredential.makeMessage(from = didCommService.myDid)
                 _ <- sendMessage(msg)
-              } yield ("IssueCredential Sended")
+              } yield ("IssueCredential Sent")
 
-            case s if s == IssueCredential.`type` =>
+            case s if s == IssueCredential.`type` => // Holder
               for {
                 _ <- ZIO.logInfo("IssueCredential: " + msg)
                 // TODO add LOGS!
