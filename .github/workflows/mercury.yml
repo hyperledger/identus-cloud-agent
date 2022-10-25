@@ -54,13 +54,13 @@ jobs:
         if: always()
         uses: ./.github/actions/aggregate-test-reports
         with:
-          tests-dir: "mercury/prism-mediator"
+          tests-dir: "${{ defaults.working-directory }}"
 
       - name: Publish test results
         # Publish even if the test step fails
         if: always()
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:
-          junit_files: "mercury/prism-mediator/target/test-reports/**/TEST-*.xml"
+          junit_files: "${{ defaults.working-directory }}/target/test-reports/**/TEST-*.xml"
           comment_title: "Mercury Test Results"
           check_name: "Mercury Test Results"
