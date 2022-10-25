@@ -25,9 +25,6 @@ object Credential {
   given Encoder[CredentialFormat] = deriveEncoder[CredentialFormat]
   given Decoder[CredentialFormat] = deriveDecoder[CredentialFormat]
 
-  given Encoder[ProposeCredential.Body] = deriveEncoder[ProposeCredential.Body]
-  given Decoder[ProposeCredential.Body] = deriveDecoder[ProposeCredential.Body]
-
   given Encoder[ProposeCredential] = deriveEncoder[ProposeCredential]
 
   given Decoder[ProposeCredential] = deriveDecoder[ProposeCredential]
