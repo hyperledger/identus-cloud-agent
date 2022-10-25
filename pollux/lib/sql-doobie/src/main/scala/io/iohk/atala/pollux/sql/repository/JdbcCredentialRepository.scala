@@ -99,13 +99,18 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
       .transact(xa)
   }
 
-  override def updateCredentialRecordState(id: UUID, state: IssueCredentialRecord.State): Task[Int] = {
+  override def updateCredentialRecordState(
+      id: UUID,
+      from: IssueCredentialRecord.State,
+      to: IssueCredentialRecord.State
+  ): Task[Int] = {
     val cxnIO = sql"""
         | UPDATE public.issue_credential_records
         | SET
-        |   state = ${state.toString}
+        |   state = ${to.toString}
         | WHERE
         |   id = ${id.toString}
+        |   AND state = ${from.toString}
         """.stripMargin.update
 
     cxnIO.run

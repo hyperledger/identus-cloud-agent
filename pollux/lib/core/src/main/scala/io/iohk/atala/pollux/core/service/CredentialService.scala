@@ -181,18 +181,27 @@ private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepos
   }
 
   override def acceptCredentialOffer(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] =
-    updateCredentialRecordState(id, IssueCredentialRecord.State.RequestPending)
+    updateCredentialRecordState(
+      id,
+      IssueCredentialRecord.State.OfferReceived,
+      IssueCredentialRecord.State.RequestPending
+    )
 
   override def issueCredential(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] =
-    updateCredentialRecordState(id, IssueCredentialRecord.State.CredentialPending)
+    updateCredentialRecordState(
+      id,
+      IssueCredentialRecord.State.RequestReceived,
+      IssueCredentialRecord.State.CredentialPending
+    )
 
   private[this] def updateCredentialRecordState(
       id: UUID,
-      state: IssueCredentialRecord.State
+      from: IssueCredentialRecord.State,
+      to: IssueCredentialRecord.State
   ): IO[IssueCredentialError, Option[IssueCredentialRecord]] = {
     for {
       outcome <- credentialRepository
-        .updateCredentialRecordState(id, state)
+        .updateCredentialRecordState(id, from, to)
         .flatMap {
           case 1 => ZIO.succeed(())
           case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
