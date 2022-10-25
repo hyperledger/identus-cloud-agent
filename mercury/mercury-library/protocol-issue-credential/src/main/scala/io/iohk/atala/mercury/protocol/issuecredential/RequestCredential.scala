@@ -57,6 +57,16 @@ object RequestCredential {
     )
   }
 
-  def readFromMessage(message: Message): RequestCredential = ??? // FIXME
+  def readFromMessage(message: Message): RequestCredential = // FIXME
+    RequestCredential(
+      id = message.id,
+      `type` = message.piuri,
+      body = RequestCredential.Body(
+        goal_code = None, // FIXME TODO
+        comment = None, // FIXME TODO
+        formats = Seq.empty, // FIXME TODO
+      ),
+      attachments = Seq.empty[AttachmentDescriptor] // FIXME TODO
+    )
 
 }
