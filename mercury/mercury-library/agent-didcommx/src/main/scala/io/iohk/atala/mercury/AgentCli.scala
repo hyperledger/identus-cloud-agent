@@ -162,12 +162,16 @@ object AgentCli extends ZIOAppDefault {
 
       attachmentDescriptor =
         AttachmentDescriptor.buildAttachment(id = Some("request-0"), payload = playloadData)
+      attribute1 = Attribute(name = "name", value = "Joe Blog")
+      attribute2 = Attribute(name = "dob", value = "01/10/1947")
+      credentialPreview = CredentialPreview(attributes = Seq(attribute1, attribute2))
 
+      // FIXME
       proposeCredential = ProposeCredential(
         body = ProposeCredential.Body(
           goal_code = Some("goal_code"),
           comment = None,
-          credential_preview = None, // Option[CredentialPreview], // JSON STRinf
+          credential_preview = credentialPreview, // Option[CredentialPreview], // JSON STRinf
           formats = Seq.empty // : Seq[CredentialFormat]
         ),
         attachments = Seq(attachmentDescriptor)

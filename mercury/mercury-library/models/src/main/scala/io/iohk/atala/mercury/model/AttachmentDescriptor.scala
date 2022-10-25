@@ -72,6 +72,9 @@ object AttachmentDescriptor {
       "data" -> a.data.asJson
     )
   }
+
+  given attachmentDescriptorEncoderV2: Encoder[AttachmentDescriptor] = deriveEncoder[AttachmentDescriptor]
+
   given Decoder[AttachmentDescriptor] = deriveDecoder[AttachmentDescriptor]
 
 }

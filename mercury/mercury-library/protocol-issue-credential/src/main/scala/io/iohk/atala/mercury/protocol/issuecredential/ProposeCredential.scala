@@ -4,6 +4,7 @@ import io.iohk.atala.mercury.model.PIURI
 import io.circe.{Encoder, Decoder}
 import io.circe.generic.semiauto._
 import io.iohk.atala.mercury.model._
+import io.circe.{Encoder, Decoder}
 
 /** ALL parameterS are DIDCOMMV2 format and naming conventions and follows the protocol
   * @see
@@ -18,7 +19,7 @@ final case class ProposeCredential(
     id: String = java.util.UUID.randomUUID.toString(),
     `type`: PIURI = ProposeCredential.`type`,
     body: ProposeCredential.Body,
-    attachments: Seq[AttachmentDescriptor]
+    attachments: Seq[AttachmentDescriptor] = Seq.empty[AttachmentDescriptor]
 ) {
   assert(`type` == ProposeCredential.`type`)
 
@@ -36,11 +37,13 @@ object ProposeCredential {
   def `type`: PIURI = "https://didcomm.org/issue-credential/2.0/propose-credential"
 
   final case class Body(
-      goal_code: Option[String],
-      comment: Option[String],
-      credential_preview: Option[CredentialPreview], // JSON STRinf
-      formats: Seq[CredentialFormat]
+      goal_code: Option[String] = None,
+      comment: Option[String] = None,
+      credential_preview: CredentialPreview, // JSON STRinf
+      formats: Seq[CredentialFormat] = Seq.empty[CredentialFormat]
   )
 
   def readFromMessage(message: Message): ProposeCredential = ??? // FIXME
+
+
 }
