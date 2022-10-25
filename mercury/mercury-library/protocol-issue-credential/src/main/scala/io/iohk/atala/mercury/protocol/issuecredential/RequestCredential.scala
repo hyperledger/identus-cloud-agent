@@ -20,8 +20,8 @@ final case class RequestCredential(
     from = Some(from),
     to = replyingTo,
     thid = replyingThid,
-    body = ???, // FIXME
-    attachments = ??? // FIXME Seq(Attachment(attachments.))
+    body = Map.empty, // FIXME TODO
+    attachments = Seq.empty, // FIXME Seq(Attachment(attachments.))
   )
 }
 object RequestCredential {

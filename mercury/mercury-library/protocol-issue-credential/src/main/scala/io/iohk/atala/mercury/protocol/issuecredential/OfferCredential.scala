@@ -31,8 +31,8 @@ final case class OfferCredential(
     from = Some(from),
     to = replyingTo,
     thid = replyingThid,
-    body = ???, // FIXME
-    attachments = ??? // FIXME Seq(Attachment(attachments.))
+    body = Map.empty, // FIXME TODO
+    attachments = Seq.empty, // FIXME Seq(Attachment(attachments.))
   )
 }
 
@@ -41,12 +41,12 @@ object OfferCredential {
   def `type`: PIURI = "https://didcomm.org/issue-credential/2.0/offer-credential"
 
   final case class Body(
-      goal_code: Option[String]=None,
-      comment: Option[String]=None,
-      replacement_id: Option[String]=None,
-      multiple_available: Option[String]=None,
+      goal_code: Option[String] = None,
+      comment: Option[String] = None,
+      replacement_id: Option[String] = None,
+      multiple_available: Option[String] = None,
       credential_preview: CredentialPreview,
-      formats: Seq[CredentialFormat]=Seq.empty[CredentialFormat]
+      formats: Seq[CredentialFormat] = Seq.empty[CredentialFormat]
   )
 
   def makeOfferToProposeCredential(msg: Message): OfferCredential = {
@@ -67,5 +67,16 @@ object OfferCredential {
     )
   }
 
-  def readFromMessage(message: Message): OfferCredential = ??? // FIXME
+  def readFromMessage(message: Message): OfferCredential = // FIXME
+    OfferCredential(
+      id = message.id,
+      `type` = message.piuri,
+      body = OfferCredential.Body(
+        goal_code = None, // FIXME TODO
+        comment = None, // FIXME TODO
+        credential_preview = CredentialPreview(attributes = Seq.empty), // FIXME TODO
+        formats = Seq.empty, // FIXME TODO
+      ),
+      attachments = Seq.empty[AttachmentDescriptor] // FIXME TODO
+    )
 }
