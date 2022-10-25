@@ -15,6 +15,9 @@ val commonSettings = Seq(
 lazy val root = project
   .in(file("."))
   .settings(commonSettings)
+  .settings(
+    name := "pollux-root"
+  )
   .aggregate(core, `sql-doobie`)
 
 lazy val core = project

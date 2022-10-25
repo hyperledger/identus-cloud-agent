@@ -29,8 +29,8 @@ import io.circe.generic.auto.*
 import io.circe.syntax.*
 import io.circe.{Decoder, Encoder, HCursor, Json}
 import io.circe.parser.decode
-import io.iohk.atala.pollux.core.model.JWTCredential
 import io.iohk.atala.pollux.core.service.CredentialService
+import io.iohk.atala.pollux.core.model.EncodedJWTCredential
 
 // TODO: replace with actual implementation
 class IssueCredentialsApiServiceImpl(service: CredentialService)(using runtime: Runtime[Any])
@@ -134,10 +134,10 @@ class IssueCredentialsApiServiceImpl(service: CredentialService)(using runtime: 
         uuid.toString -> payload.toJwtCredentialPayload
       }
       val batchId = UUID.randomUUID().toString
-      service.createCredentials(
-        batchId,
-        credentials.map { case (id, jwt) => JWTCredential(batchId, id, jwt) }
-      )
+      // service.createCredentials(
+      //   batchId,
+      //   credentials.map { case (id, jwt) => EncodedJWTCredential(batchId, id, jwt) }
+      // )
       val resp = CreateCredentials201Response(
         Some(batchId),
         Some(credentials.size),

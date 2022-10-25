@@ -10,7 +10,7 @@ import io.iohk.atala.pollux.core.service.CredentialService
 import io.iohk.atala.agent.openapi.model.*
 import java.util.UUID
 import io.iohk.atala.agent.server.http.model.HttpServiceError
-import io.iohk.atala.pollux.core.model.IssueCredentialError
+import io.iohk.atala.pollux.core.model.error.IssueCredentialError
 import io.iohk.atala.agent.server.http.model.{HttpServiceError, OASDomainModelHelper, OASErrorModelHelper}
 import scala.util.Try
 import io.iohk.atala.agent.server.http.model.HttpServiceError.InvalidPayload

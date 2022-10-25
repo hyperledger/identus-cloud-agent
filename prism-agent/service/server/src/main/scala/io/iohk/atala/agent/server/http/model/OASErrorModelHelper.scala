@@ -3,8 +3,8 @@ package io.iohk.atala.agent.server.http.model
 import akka.http.scaladsl.server.StandardRoute
 import io.iohk.atala.agent.openapi.model.ErrorResponse
 import io.iohk.atala.castor.core.model.error.DIDOperationError
-import io.iohk.atala.pollux.core.model.IssueCredentialError
 import java.util.UUID
+import io.iohk.atala.pollux.core.model.error.IssueCredentialError
 
 trait ToErrorResponse[E] {
   def toErrorResponse(e: E): ErrorResponse
