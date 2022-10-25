@@ -4,6 +4,7 @@ import akka.http.scaladsl.server.StandardRoute
 import io.iohk.atala.agent.openapi.model.ErrorResponse
 import io.iohk.atala.castor.core.model.error.DIDOperationError
 import io.iohk.atala.pollux.core.model.IssueCredentialError
+import java.util.UUID
 
 trait ToErrorResponse[E] {
   def toErrorResponse(e: E): ErrorResponse
@@ -50,5 +51,13 @@ trait OASErrorModelHelper {
       )
     }
   }
+
+  def notFoundErrorResponse(detail: Option[String] = None) = ErrorResponse(
+    `type` = "not-found",
+    title = "Resource not found",
+    status = 404,
+    detail = detail,
+    instance = UUID.randomUUID().toString
+  )
 
 }

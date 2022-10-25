@@ -20,6 +20,7 @@ import io.iohk.atala.shared.utils.Traverse.*
 import java.net.URI
 import scala.util.Try
 import io.iohk.atala.agent.openapi.model.IssueCredentialRecord
+import io.iohk.atala.agent.openapi.model.IssueCredentialRecordCollection
 
 trait OASDomainModelHelper {
 

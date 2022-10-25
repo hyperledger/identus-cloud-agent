@@ -196,6 +196,11 @@ components:
     
     IssueCredentialRecordCollection:
       description: A collection of issue credential records
+      required:
+        - items
+        - offset
+        - limit
+        - count
       properties:
         items:
           type: array

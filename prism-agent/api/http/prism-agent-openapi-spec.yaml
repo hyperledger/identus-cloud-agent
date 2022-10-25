@@ -484,6 +484,12 @@ paths:
             application/json:
               schema:
                 $ref: ./pollux/schemas.yaml#/components/schemas/IssueCredentialRecordCollection
+        "500":
+          description: Retrieving the issue credential records failed for an unexpected reason.
+          content:
+            application/json:
+              schema:
+                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
 
   /issue-credentials/records/{recordId}:
     get:
