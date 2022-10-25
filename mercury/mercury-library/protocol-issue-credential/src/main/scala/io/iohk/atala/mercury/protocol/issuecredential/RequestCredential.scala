@@ -8,7 +8,7 @@ final case class RequestCredential(
     id: String = java.util.UUID.randomUUID.toString(),
     `type`: PIURI = RequestCredential.`type`,
     body: RequestCredential.Body,
-    attachments: AttachmentDescriptor,
+    attachments: Seq[AttachmentDescriptor],
     // extra
     replyingThid: Option[String] = None,
     replyingTo: Option[DidId] = None,

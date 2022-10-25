@@ -17,7 +17,7 @@ final case class IssueCredential(
     id: String = java.util.UUID.randomUUID.toString(),
     `type`: PIURI = IssueCredential.`type`,
     body: IssueCredential.Body,
-    attachments: AttachmentDescriptor,
+    attachments:  Seq[AttachmentDescriptor],
     // extra
     replyingThid: Option[String] = None,
     replyingTo: Option[DidId] = None,

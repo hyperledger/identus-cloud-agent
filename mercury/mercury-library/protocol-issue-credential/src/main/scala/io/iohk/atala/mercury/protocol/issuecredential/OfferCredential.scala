@@ -18,7 +18,7 @@ final case class OfferCredential(
     id: String = java.util.UUID.randomUUID.toString(),
     `type`: PIURI = ProposeCredential.`type`,
     body: OfferCredential.Body,
-    attachments: AttachmentDescriptor,
+    attachments:  Seq[AttachmentDescriptor],
     // extra
     replyingThid: Option[String] = None,
     replyingTo: Option[DidId] = None,

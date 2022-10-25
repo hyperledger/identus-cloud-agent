@@ -163,7 +163,7 @@ object AgentCli extends ZIOAppDefault {
           credential_preview = None, // Option[CredentialPreview], // JSON STRinf
           formats = Seq.empty // : Seq[CredentialFormat]
         ),
-        attachments = attachmentDescriptor
+        attachments = Seq(attachmentDescriptor)
       )
       sendTo = DidId("read data from CLI DID") // FIXME
 

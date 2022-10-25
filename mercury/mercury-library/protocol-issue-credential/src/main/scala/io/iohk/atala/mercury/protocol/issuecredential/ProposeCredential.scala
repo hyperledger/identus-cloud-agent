@@ -18,7 +18,7 @@ final case class ProposeCredential(
     id: String = java.util.UUID.randomUUID.toString(),
     `type`: PIURI = ProposeCredential.`type`,
     body: ProposeCredential.Body,
-    attachments: AttachmentDescriptor
+    attachments: Seq[AttachmentDescriptor]
 ) {
   assert(`type` == ProposeCredential.`type`)
 
