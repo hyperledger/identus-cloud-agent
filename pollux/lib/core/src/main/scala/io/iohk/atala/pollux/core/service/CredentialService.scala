@@ -127,11 +127,39 @@ private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepos
       schemaId: String,
       claims: Map[String, String],
       validityPeriod: Option[Double] = None
-  ): IO[IssueCredentialError, IssueCredentialRecord] = ???
+  ): IO[IssueCredentialError, IssueCredentialRecord] = {
+    for {
+      record <- ZIO.succeed(
+        IssueCredentialRecord(
+          UUID.randomUUID(),
+          schemaId,
+          subjectId,
+          validityPeriod,
+          claims,
+          IssueCredentialRecord.State.OfferSent
+        )
+      )
+      _ <- credentialRepository
+        .createIssueCredentialRecord(record)
+        .mapError(RepositoryError.apply)
+    } yield record
+  }
 
-  def getCredentialRecords(): IO[IssueCredentialError, Seq[IssueCredentialRecord]] = ???
+  def getCredentialRecords(): IO[IssueCredentialError, Seq[IssueCredentialRecord]] = {
+    for {
+      records <- credentialRepository
+        .getIssueCredentialRecords()
+        .mapError(RepositoryError.apply)
+    } yield records
+  }
 
-  def getCredentialRecord(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] = ???
+  def getCredentialRecord(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] = {
+    for {
+      record <- credentialRepository
+        .getIssueCredentialRecord(id)
+        .mapError(RepositoryError.apply)
+    } yield record
+  }
 
   def acceptCredentialOffer(id: UUID): IO[IssueCredentialError, IssueCredentialRecord] = ???
 

@@ -2,11 +2,14 @@ package io.iohk.atala.pollux.sql.repository
 
 import doobie.*
 import doobie.implicits.*
-import io.iohk.atala.pollux.core.model.JWTCredential
+import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.repository.CredentialRepository
 import io.iohk.atala.pollux.sql.model.JWTCredentialRow
 import zio.*
 import zio.interop.catz.*
+import io.circe.syntax._
+import io.circe._, io.circe.parser._
+import java.util.UUID
 
 // TODO: replace with actual implementation
 class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepository[Task] {
@@ -30,6 +33,71 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
 //    cxnIO
 //      .transact(xa)
 //      .map(_.map(c => JWTCredential(c.batchId, c.credentialId, c.content)))
+  }
+
+  override def createIssueCredentialRecord(record: IssueCredentialRecord): Task[Unit] = {
+    val cxnIO = sql"""
+        | INSERT INTO public.issue_credential_records(
+        |   id,
+        |   schema_id,
+        |   subject_id,
+        |   validity_period,
+        |   claims,
+        |   state
+        | ) values (
+        |   ${record.id.toString},
+        |   ${record.schemaId},
+        |   ${record.subjectId},
+        |   ${record.validityPeriod},
+        |   ${record.claims.asJson.toString},
+        |   ${record.state.ordinal}
+        | )
+        """.stripMargin.update
+
+    cxnIO.run
+      .transact(xa)
+      .map(_ => ())
+  }
+
+  given uuidGet: Get[UUID] = Get[String].map(UUID.fromString(_))
+  given stateGet: Get[IssueCredentialRecord.State] = Get[Int].map(IssueCredentialRecord.State.fromOrdinal(_))
+  given claimsGet: Get[Map[String,String]] = Get[String].map(decode[Map[String, String]](_).getOrElse(Map("parsingError" -> "parsingError")))
+
+  override def getIssueCredentialRecords(): Task[Seq[IssueCredentialRecord]] = {
+    val cxnIO = sql"""
+        | SELECT
+        |   id,
+        |   schema_id,
+        |   subject_id,
+        |   validity_period,
+        |   claims,
+        |   state
+        | FROM public.issue_credential_records
+        """.stripMargin
+      .query[IssueCredentialRecord]
+      .to[Seq]
+
+    cxnIO
+      .transact(xa)
+  }
+
+  override def getIssueCredentialRecord(id: UUID): Task[Option[IssueCredentialRecord]] = {
+    val cxnIO = sql"""
+        | SELECT
+        |   id,
+        |   schema_id,
+        |   subject_id,
+        |   validity_period,
+        |   claims,
+        |   state
+        | FROM public.issue_credential_records
+        | WHERE id = ${id.toString}
+        """.stripMargin
+      .query[IssueCredentialRecord]
+      .option
+
+    cxnIO
+      .transact(xa)
   }
 
 }
