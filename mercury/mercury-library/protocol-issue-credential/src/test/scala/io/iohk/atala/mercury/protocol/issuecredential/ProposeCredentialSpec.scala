@@ -9,9 +9,6 @@ import io.iohk.atala.mercury.model.AttachmentDescriptor
 import io.iohk.atala.mercury.model.AttachmentDescriptor.attachmentDescriptorEncoderV2
 import io.iohk.atala.mercury.protocol.issuecredential.*
 import io.iohk.atala.mercury.protocol.issuecredential.Credential._
-//import io.iohk.atala.mercury.protocol.issuecredential.Credential.given_Encoder_CredentialPreview
-//import io.iohk.atala.mercury.protocol.issuecredential.Credential.given_Encoder_ProposeCredential
-//import io.iohk.atala.mercury.protocol.issuecredential.Credential.given_Decoder_ProposeCredential
 import munit.*
 import zio.*
 
