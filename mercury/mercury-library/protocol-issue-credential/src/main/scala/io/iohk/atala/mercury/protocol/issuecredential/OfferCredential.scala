@@ -16,7 +16,7 @@ import io.iohk.atala.mercury.model._
   */
 final case class OfferCredential(
     id: String = java.util.UUID.randomUUID.toString(),
-    `type`: PIURI = ProposeCredential.`type`,
+    `type`: PIURI = OfferCredential.`type`,
     body: OfferCredential.Body,
     attachments: Seq[AttachmentDescriptor],
     // extra
@@ -41,12 +41,12 @@ object OfferCredential {
   def `type`: PIURI = "https://didcomm.org/issue-credential/2.0/offer-credential"
 
   final case class Body(
-      goal_code: Option[String],
-      comment: Option[String],
-      replacement_id: Option[String],
-      multiple_available: Option[String],
+      goal_code: Option[String]=None,
+      comment: Option[String]=None,
+      replacement_id: Option[String]=None,
+      multiple_available: Option[String]=None,
       credential_preview: CredentialPreview,
-      formats: Seq[CredentialFormat]
+      formats: Seq[CredentialFormat]=Seq.empty[CredentialFormat]
   )
 
   def makeOfferToProposeCredential(msg: Message): OfferCredential = {
