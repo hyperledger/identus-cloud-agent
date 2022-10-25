@@ -12,6 +12,7 @@ final case class CredentialPreview(
     `type`: String = "https://didcomm.org/issue-credential/2.0/credential-preview",
     attributes: Seq[Attribute]
 )
+
 final case class CredentialFormat(attach_id: String, format: String)
 
 object Credential {

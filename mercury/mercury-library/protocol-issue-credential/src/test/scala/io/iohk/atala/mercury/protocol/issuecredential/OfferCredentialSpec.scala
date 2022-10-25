@@ -12,7 +12,7 @@ import io.iohk.atala.mercury.protocol.issuecredential.Credential.*
 import munit.*
 import zio.*
 
-class IssuerCredentialSpec extends ZSuite {
+class OfferCredentialSpec extends ZSuite {
 
   test("Issuer OfferCredential") {
 

@@ -17,7 +17,7 @@ final case class IssueCredential(
     id: String = java.util.UUID.randomUUID.toString(),
     `type`: PIURI = IssueCredential.`type`,
     body: IssueCredential.Body,
-    attachments:  Seq[AttachmentDescriptor],
+    attachments: Seq[AttachmentDescriptor],
     // extra
     replyingThid: Option[String] = None,
     replyingTo: Option[DidId] = None,
@@ -40,12 +40,11 @@ object IssueCredential {
   def `type`: PIURI = "https://didcomm.org/issue-credential/2.0/issue-credential"
 
   final case class Body(
-      goal_code: Option[String],
-      comment: Option[String],
-      replacement_id: Option[String],
-      multiple_available: Option[String],
-      credential_preview: Option[CredentialPreview],
-      formats: Seq[CredentialFormat],
+      goal_code: Option[String] = None,
+      comment: Option[String] = None,
+      replacement_id: Option[String] = None,
+      more_available: Option[String] = None,
+      formats: Seq[CredentialFormat] = Seq.empty[CredentialFormat],
   )
 
   def makeIssueCredentialFromRequestCredential(msg: Message): IssueCredential = {
@@ -56,8 +55,7 @@ object IssueCredential {
         goal_code = rc.body.goal_code,
         comment = rc.body.comment,
         replacement_id = None,
-        multiple_available = None,
-        credential_preview = None,
+        more_available = None,
         formats = rc.body.formats,
       ),
       attachments = rc.attachments,

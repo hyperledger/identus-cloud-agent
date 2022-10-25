@@ -29,9 +29,9 @@ object RequestCredential {
   def `type`: PIURI = "https://didcomm.org/issue-credential/2.0/request-credential"
 
   final case class Body(
-      goal_code: Option[String],
-      comment: Option[String],
-      formats: Seq[CredentialFormat]
+      goal_code: Option[String] = None,
+      comment: Option[String] = None,
+      formats: Seq[CredentialFormat] = Seq.empty[CredentialFormat]
   )
 
   def makeRequestCredentialFromOffer(msg: Message): RequestCredential = {
