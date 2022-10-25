@@ -22,7 +22,13 @@ final case class ProposeCredential(
 ) {
   assert(`type` == ProposeCredential.`type`)
 
-  def makeMessage(sendTo: DidId): Message = ??? // FIXME
+  def makeMessage(from: DidId, sendTo: DidId): Message = Message(
+    piuri = this.`type`,
+    from = Some(from),
+    to = Some(sendTo),
+    // body = ??? // FIXME
+    // attachments = ??? // FIXME
+  )
 }
 
 object ProposeCredential {

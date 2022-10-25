@@ -139,24 +139,31 @@ object AgentCli extends ZIOAppDefault {
     } yield ()
   }
 
-  def proposeCredential(
-      proposeCredential: ProposeCredential,
-      sendTo: DidId
-  ): zio.ZIO[io.iohk.atala.mercury.DidComm, java.io.IOException, io.iohk.atala.mercury.model.EncryptedMessage] = {
-    for {
-      didCommService <- ZIO.service[DidComm]
-      msg = proposeCredential.makeMessage(sendTo)
-      encryptedForwardMessage <- didCommService.packEncrypted(msg, to = sendTo)
-    } yield (encryptedForwardMessage)
-  }
+  // def proposeCredential(
+  //     proposeCredential: ProposeCredential,
+  //     sendTo: DidId
+  // ): zio.ZIO[io.iohk.atala.mercury.DidComm, java.io.IOException, io.iohk.atala.mercury.model.EncryptedMessage] = {
+  //   for {
+  //     didCommService <- ZIO.service[DidComm]
+  //     msg = proposeCredential.makeMessage(sendTo)
+  //     encryptedForwardMessage <- didCommService.packEncrypted(msg, to = sendTo)
+  //   } yield (encryptedForwardMessage)
+  // }
 
   def proposeAndSendCredential = {
     for {
-      didCommService <- ZIO.service[DidComm]
+
       _ <- Console.printLine("Propose Credential")
+      _ <- Console.printLine("What is the the Playload")
+      playloadData <- Console.readLine.flatMap {
+        case ""   => ZIO.succeed("playload")
+        case data => ZIO.succeed(data)
+      }
+
       attachmentDescriptor =
-        AttachmentDescriptor.buildAttachment(id = Some("request-0"), payload = "payload") // FIXME
-      pc = ProposeCredential(
+        AttachmentDescriptor.buildAttachment(id = Some("request-0"), payload = playloadData)
+
+      proposeCredential = ProposeCredential(
         body = ProposeCredential.Body(
           goal_code = Some("goal_code"),
           comment = None,
@@ -165,35 +172,27 @@ object AgentCli extends ZIOAppDefault {
         ),
         attachments = Seq(attachmentDescriptor)
       )
-      sendTo = DidId("read data from CLI DID") // FIXME
+      _ <- Console.printLine("What is the the Playload")
+      _ <- Console.printLine(proposeCredential)
 
-      msg <- proposeCredential(pc, sendTo)
+      didCommService <- ZIO.service[DidComm]
+      _ <- Console.printLine(s"Send to (ex: ${didCommService.myDid})")
+      didStr <- Console.readLine.flatMap {
+        case ""  => ZIO.succeed(didCommService.myDid)
+        case did => ZIO.succeed(DidId(did))
+      }
+      sendTo = didStr
+      msg = proposeCredential.makeMessage(from = didCommService.myDid, sendTo = sendTo)
+      _ <- Console.printLine("Sending: " + msg)
 
-      jsonString = msg.string
-      serviceEndpoint = UniversalDidResolver
-        .resolve(sendTo.value)
-        .get()
-        .getDidCommServices()
-        .asScala
-        .toSeq
-        .headOption
-        .map(s => s.getServiceEndpoint())
-        .get // FIXME make ERROR type
-      _ <- Console.printLine("Sending to" + serviceEndpoint)
-      res <- Client
-        .request(
-          url = serviceEndpoint,
-          method = Method.POST,
-          headers = Headers("content-type" -> MediaTypes.contentTypeEncrypted),
-          content = HttpData.fromChunk(Chunk.fromArray(jsonString.getBytes)),
-          // ssl = ClientSSLOptions.DefaultSSL,
-        )
-        .provideSomeLayer(env)
-      data <- res.bodyAsString
-      _ <- Console.printLine(data)
+      _ <- sendMessage(msg)
     } yield ()
   }
 
+  /** Encrypt and send a Message via HTTP
+    *
+    * TODO Move this method to another model
+    */
   def sendMessage(msg: Message) = {
     for {
       didCommService <- ZIO.service[DidComm]
@@ -293,14 +292,12 @@ object AgentCli extends ZIOAppDefault {
       Seq(
         "none" -> ZIO.unit,
         "Show DID" -> Console.printLine(agentDID),
-        "Get DID Document" ->
-          Console.printLine("DID Document:") *>
-          Console.printLine(agentDID.getDIDDocument),
+        "Get DID Document" -> Console.printLine("DID Document:") *> Console.printLine(agentDID.getDIDDocument),
         "Start WebServer endpoint" -> startEndpoint.provide(didCommLayer),
         "Ask for Mediation Coordinate" -> askForMediation.provide(didCommLayer),
         "Generate login invitation" -> generateLoginInvitation.provide(didCommLayer),
         "Login with DID" -> loginInvitation.provide(didCommLayer),
-        "ProposeCredential" -> proposeAndSendCredential.provide(didCommLayer),
+        "Propose Credential" -> proposeAndSendCredential.provide(didCommLayer),
       )
     ).repeatWhile((_) => true)
 
