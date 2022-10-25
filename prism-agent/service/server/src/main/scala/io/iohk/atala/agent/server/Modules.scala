@@ -30,6 +30,8 @@ import zio.config.typesafe.TypesafeConfigSource
 import zio.config.{ReadError, read}
 import zio.interop.catz.*
 import zio.stream.ZStream
+import zhttp.http._
+import zhttp.service.Server
 
 import java.util.concurrent.Executors
 
@@ -41,6 +43,15 @@ object Modules {
     httpServerApp
       .provideLayer(SystemModule.actorSystemLayer ++ HttpModule.layers)
       .unit
+  }
+
+  val didCommServiceEndpoint: Task[Nothing] = {
+    val app: HttpApp[Any, Nothing] =
+      Http.collect[Request] { case Method.POST -> !! / "did-comm-v2" =>
+        // TODO add DIDComm messages parsing logic here! 
+        Response.text("Hello World!").setStatus(Status.Accepted)
+      }
+    Server.start(8090, app)
   }
 
   val didCommExchangesJob: Task[Unit] = {

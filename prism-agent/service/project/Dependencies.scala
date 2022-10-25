@@ -4,6 +4,7 @@ object Dependencies {
   object Versions {
     val zio = "2.0.2"
     val zioConfig = "3.0.2"
+    val zioHttp = "2.0.0-RC11"
     val akka = "2.6.20"
     val akkaHttp = "10.2.9"
     val castor = "0.1.0"
@@ -18,6 +19,8 @@ object Dependencies {
   private lazy val zioTest = "dev.zio" %% "zio-test" % Versions.zio % Test
   private lazy val zioTestSbt = "dev.zio" %% "zio-test-sbt" % Versions.zio % Test
   private lazy val zioTestMagnolia = "dev.zio" %% "zio-test-magnolia" % Versions.zio % Test
+
+  private lazy val zioHttp = "io.d11" %% "zhttp" % Versions.zioHttp
 
   private lazy val akkaTyped = "com.typesafe.akka" %% "akka-actor-typed" % Versions.akka
   private lazy val akkaStream = "com.typesafe.akka" %% "akka-stream" % Versions.akka
@@ -39,5 +42,5 @@ object Dependencies {
 
   // Project Dependencies
   lazy val custodianDependencies: Seq[ModuleID] = baseDependencies ++ castorDependencies
-  lazy val serverDependencies: Seq[ModuleID] = baseDependencies ++ akkaHttpDependencies ++ castorDependencies ++ polluxDependencies
+  lazy val serverDependencies: Seq[ModuleID] = baseDependencies ++ akkaHttpDependencies ++ castorDependencies ++ polluxDependencies ++ Seq(zioHttp)
 }

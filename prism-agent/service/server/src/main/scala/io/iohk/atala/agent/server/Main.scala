@@ -21,5 +21,6 @@ object Main extends ZIOAppDefault {
       |""".stripMargin)
     .ignore
     *> Modules.didCommExchangesJob.fork
+    *> Modules.didCommServiceEndpoint
     *> Modules.app
 }
