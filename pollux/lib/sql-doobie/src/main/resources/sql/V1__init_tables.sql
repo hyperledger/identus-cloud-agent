@@ -19,5 +19,5 @@ CREATE TABLE public.issue_credential_records(
   "subject_id" TEXT NOT NULL,
   "validity_period" INTEGER NOT NULL,
   "claims" TEXT NOT NULL,
-  "state" SMALLINT NOT NULL
+  "state" VARCHAR(50) NOT NULL
 );
