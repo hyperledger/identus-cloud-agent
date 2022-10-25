@@ -43,7 +43,17 @@ object ProposeCredential {
       formats: Seq[CredentialFormat] = Seq.empty[CredentialFormat]
   )
 
-  def readFromMessage(message: Message): ProposeCredential = ??? // FIXME
-
+  def readFromMessage(message: Message): ProposeCredential =
+    ProposeCredential(
+      id = message.id,
+      `type` = message.piuri,
+      body = ProposeCredential.Body(
+        goal_code = None, // FIXME TODO
+        comment = None, // FIXME TODO
+        credential_preview = CredentialPreview(attributes = Seq.empty), // FIXME TODO
+        formats = Seq.empty, // FIXME TODO
+      ),
+      attachments = Seq.empty[AttachmentDescriptor] // FIXME TODO
+    )
 
 }
