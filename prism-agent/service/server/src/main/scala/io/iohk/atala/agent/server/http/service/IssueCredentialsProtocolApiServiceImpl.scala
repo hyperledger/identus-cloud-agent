@@ -92,6 +92,7 @@ class IssueCredentialsProtocolApiServiceImpl(credentialService: CredentialServic
   }
 
   def acceptCredentialOffer(recordId: String)(implicit
+      toEntityMarshallerIssueCredentialRecord: ToEntityMarshaller[IssueCredentialRecord],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
     val result = for {
@@ -100,13 +101,16 @@ class IssueCredentialsProtocolApiServiceImpl(credentialService: CredentialServic
         .acceptCredentialOffer(uuid)
         .mapError(HttpServiceError.DomainError[IssueCredentialError].apply)
     } yield outcome
-    onZioSuccess(result.mapError(_.toOAS).either) {
-      case Left(error) => complete(error.status -> error)
-      case Right(())   => acceptCredentialOffer200
+
+    onZioSuccess(result.mapBoth(_.toOAS, _.map(_.toOAS)).either) {
+      case Left(error)         => complete(error.status -> error)
+      case Right(Some(result)) => acceptCredentialOffer200(result)
+      case Right(None) => getCredentialRecord404(notFoundErrorResponse(Some("Issue credential record not found")))
     }
   }
 
   def issueCredential(recordId: String)(implicit
+      toEntityMarshallerIssueCredentialRecord: ToEntityMarshaller[IssueCredentialRecord],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
     val result = for {
@@ -115,9 +119,11 @@ class IssueCredentialsProtocolApiServiceImpl(credentialService: CredentialServic
         .issueCredential(uuid)
         .mapError(HttpServiceError.DomainError[IssueCredentialError].apply)
     } yield outcome
-    onZioSuccess(result.mapError(_.toOAS).either) {
-      case Left(error) => complete(error.status -> error)
-      case Right(())   => issueCredential200
+
+    onZioSuccess(result.mapBoth(_.toOAS, _.map(_.toOAS)).either) {
+      case Left(error)         => complete(error.status -> error)
+      case Right(Some(result)) => issueCredential200(result)
+      case Right(None) => getCredentialRecord404(notFoundErrorResponse(Some("Issue credential record not found")))
     }
   }
 
