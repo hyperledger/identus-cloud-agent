@@ -522,6 +522,12 @@ paths:
       responses:
         "200":
           description: The issue credential offer has been accepted
+        "404":
+          description: There is no issue credential record maatching the given 'recordId'.
+          content:
+            application/json:
+              schema:
+                $ref: "./pollux/schemas.yaml#/components/schemas/ErrorResponse"      
 
   /issue-credentials/records/{recordId}/issue-credential:
     post:
@@ -533,7 +539,12 @@ paths:
       responses:
         "200":
           description: The VC has been issued
-
+        "404":
+          description: There is no issue credential record maatching the given 'recordId'.
+          content:
+            application/json:
+              schema:
+                $ref: "./pollux/schemas.yaml#/components/schemas/ErrorResponse"      
 ##
 
   /issue-credentials/credentials:

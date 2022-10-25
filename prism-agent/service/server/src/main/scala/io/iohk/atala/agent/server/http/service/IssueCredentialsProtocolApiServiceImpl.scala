@@ -13,6 +13,7 @@ import io.iohk.atala.agent.server.http.model.HttpServiceError
 import io.iohk.atala.pollux.core.model.IssueCredentialError
 import io.iohk.atala.agent.server.http.model.{HttpServiceError, OASDomainModelHelper, OASErrorModelHelper}
 import scala.util.Try
+import io.iohk.atala.agent.server.http.model.HttpServiceError.InvalidPayload
 
 class IssueCredentialsProtocolApiServiceImpl(credentialService: CredentialService)(using runtime: zio.Runtime[Any])
     extends IssueCredentialsProtocolApiService,
@@ -65,14 +66,19 @@ class IssueCredentialsProtocolApiServiceImpl(credentialService: CredentialServic
     }
   }
 
+  extension (str: String) {
+    def toUUID: ZIO[Any, InvalidPayload, UUID] =
+      ZIO
+        .fromTry(Try(UUID.fromString(str)))
+        .mapError(e => HttpServiceError.InvalidPayload(s"Error parsing string as UUID: ${e.getMessage()}"))
+  }
+
   def getCredentialRecord(recordId: String)(implicit
       toEntityMarshallerIssueCredentialRecord: ToEntityMarshaller[IssueCredentialRecord],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
     val result = for {
-      uuid <- ZIO
-        .fromTry(Try(UUID.fromString(recordId)))
-        .mapError(e => HttpServiceError.InvalidPayload(s"Error parsing 'recordId' as UUID: ${e.getMessage()}"))
+      uuid <- recordId.toUUID
       outcome <- credentialService
         .getCredentialRecord(uuid)
         .mapError(HttpServiceError.DomainError[IssueCredentialError].apply)
@@ -85,12 +91,34 @@ class IssueCredentialsProtocolApiServiceImpl(credentialService: CredentialServic
     }
   }
 
-  def acceptCredentialOffer(recordId: String): Route = onZioSuccess(ZIO.unit) { _ =>
-    acceptCredentialOffer200
+  def acceptCredentialOffer(recordId: String)(implicit
+      toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
+  ): Route = {
+    val result = for {
+      uuid <- recordId.toUUID
+      outcome <- credentialService
+        .acceptCredentialOffer(uuid)
+        .mapError(HttpServiceError.DomainError[IssueCredentialError].apply)
+    } yield outcome
+    onZioSuccess(result.mapError(_.toOAS).either) {
+      case Left(error) => complete(error.status -> error)
+      case Right(())   => acceptCredentialOffer200
+    }
   }
 
-  def issueCredential(recordId: String): Route = onZioSuccess(ZIO.unit) { _ =>
-    issueCredential200
+  def issueCredential(recordId: String)(implicit
+      toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
+  ): Route = {
+    val result = for {
+      uuid <- recordId.toUUID
+      outcome <- credentialService
+        .issueCredential(uuid)
+        .mapError(HttpServiceError.DomainError[IssueCredentialError].apply)
+    } yield outcome
+    onZioSuccess(result.mapError(_.toOAS).either) {
+      case Left(error) => complete(error.status -> error)
+      case Right(())   => issueCredential200
+    }
   }
 
 }
