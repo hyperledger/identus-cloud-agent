@@ -1,4 +1,4 @@
-package io.iohk.atala.pollux.core.model
+package io.iohk.atala.pollux.core.model.error
 
 sealed trait IssueCredentialError
 

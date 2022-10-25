@@ -14,25 +14,24 @@ import java.util.UUID
 // TODO: replace with actual implementation
 class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepository[Task] {
 
-  override def createCredentials(batchId: String, credentials: Seq[JWTCredential]): Task[Unit] = {
+  override def createCredentials(batchId: String, credentials: Seq[EncodedJWTCredential]): Task[Unit] = {
     ZIO.succeed(())
   }
-  override def getCredentials(batchId: String): Task[Seq[JWTCredential]] = {
-    ???
-//    val cxnIO = sql"""
-//         | SELECT
-//         |   c.batch_id
-//         |   c.credential_id
-//         |   c.value
-//         | FROM public.jwt_credentials AS c
-//         | WHERE c.batch_id = $batchId
-//         """.stripMargin
-//      .query[JWTCredentialRow]
-//      .to[Seq]
-//
-//    cxnIO
-//      .transact(xa)
-//      .map(_.map(c => JWTCredential(c.batchId, c.credentialId, c.content)))
+  override def getCredentials(batchId: String): Task[Seq[EncodedJWTCredential]] = {
+    val cxnIO = sql"""
+        | SELECT
+        |   c.batch_id
+        |   c.credential_id
+        |   c.value
+        | FROM public.jwt_credentials AS c
+        | WHERE c.batch_id = $batchId
+        """.stripMargin
+      .query[JWTCredentialRow]
+      .to[Seq]
+
+    cxnIO
+      .transact(xa)
+      .map(_.map(c => EncodedJWTCredential(c.batchId, c.credentialId, c.content)))
   }
 
   override def createIssueCredentialRecord(record: IssueCredentialRecord): Task[Unit] = {

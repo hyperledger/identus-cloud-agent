@@ -1,24 +1,46 @@
 package io.iohk.atala.pollux.core.service
 
-import io.iohk.atala.pollux.core.model.IssueCredentialError.RepositoryError
-import io.iohk.atala.pollux.core.model.IssueCredentialRecord
-import io.iohk.atala.pollux.core.model.{IssueCredentialError, JWTCredential}
-import io.iohk.atala.pollux.core.repository.CredentialRepository
-import io.iohk.atala.pollux.vc.jwt.{Issuer, IssuerDID}
+import cats.data.State
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
-import io.iohk.atala.prism.crypto.MerkleTreeKt
+import io.iohk.atala.iris.proto.dlt.IrisOperation
+import io.iohk.atala.iris.proto.vc_operations.IssueCredentialsBatch
+import io.iohk.atala.pollux.core.model.EncodedJWTCredential
+import io.iohk.atala.pollux.core.model.IssueCredentialRecord
+import io.iohk.atala.pollux.core.model.PublishedBatchData
+import io.iohk.atala.pollux.core.model.error.IssueCredentialError
+import io.iohk.atala.pollux.core.model.error.PublishCredentialBatchError
+import io.iohk.atala.pollux.core.repository.CredentialRepository
+import io.iohk.atala.pollux.vc.jwt.Issuer
+import io.iohk.atala.pollux.vc.jwt.IssuerDID
+import io.iohk.atala.pollux.vc.jwt.W3CCredentialPayload
+import io.iohk.atala.prism.crypto.{MerkleTreeKt, MerkleInclusionProof}
 import io.iohk.atala.prism.crypto.Sha256
+import io.iohk.atala.pollux.vc.jwt.JwtCredentialPayload
 import zio.*
 
+import com.google.protobuf.ByteString
+
+import java.security.KeyPairGenerator
+import java.security.SecureRandom
 import java.security.spec.ECGenParameterSpec
-import java.security.{KeyPairGenerator, SecureRandom}
 import java.util.UUID
 import java.{util => ju}
-import java.{util => ju}
-import cats.data.State
 import io.iohk.atala.pollux.vc.jwt.JwtVerifiableCredential
 
 trait CredentialService {
+
+  /** Copy pasted from Castor codebase for now TODO: replace with actual data from castor laster
+    *
+    * @param method
+    * @param methodSpecificId
+    */
+  final case class DID(
+      method: String,
+      methodSpecificId: String
+  ) {
+    override def toString: String = s"did:$method:$methodSpecificId"
+  }
+
   def createIssuer: Issuer = {
     val keyGen = KeyPairGenerator.getInstance("EC")
     val ecSpec = ECGenParameterSpec("secp256r1")
@@ -33,8 +55,8 @@ trait CredentialService {
       publicKey = publicKey
     )
   }
-  def createCredentials(batchId: String, credentials: Seq[JWTCredential]): IO[IssueCredentialError, Unit]
-  def getCredentials(batchId: String): IO[IssueCredentialError, Seq[JWTCredential]]
+  def createCredentials(batchId: String, credentials: Seq[EncodedJWTCredential]): IO[IssueCredentialError, Unit]
+  def getCredentials(batchId: String): IO[IssueCredentialError, Seq[EncodedJWTCredential]]
 
   def createCredentialOffer(
       subjectId: String,
@@ -48,8 +70,6 @@ trait CredentialService {
   def getCredentialRecord(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]]
 
   def acceptCredentialOffer(id: UUID): IO[IssueCredentialError, IssueCredentialRecord]
-
-  def issueCredential(id: UUID): IO[IssueCredentialError, IssueCredentialRecord]
 
 }
 
@@ -79,14 +99,15 @@ object MockCredentialService {
 
       override def acceptCredentialOffer(id: ju.UUID): IO[IssueCredentialError, IssueCredentialRecord] = ???
 
-      override def issueCredential(id: ju.UUID): IO[IssueCredentialError, IssueCredentialRecord] = ???
-
       override def getCredentialRecord(id: ju.UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] = ???
 
-      override def createCredentials(batchId: String, credentials: Seq[JWTCredential]): IO[IssueCredentialError, Unit] =
+      override def createCredentials(
+          batchId: String,
+          credentials: Seq[EncodedJWTCredential]
+      ): IO[IssueCredentialError, Unit] =
         ZIO.succeed(())
 
-      override def getCredentials(did: String): IO[IssueCredentialError, Seq[JWTCredential]] = ZIO.succeed(Nil)
+      override def getCredentials(did: String): IO[IssueCredentialError, Seq[EncodedJWTCredential]] = ZIO.succeed(Nil)
     }
   }
 }
@@ -98,28 +119,16 @@ object CredentialServiceImpl {
 
 private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepository: CredentialRepository[Task])
     extends CredentialService {
-  override def getCredentials(batchId: String): IO[IssueCredentialError, Seq[JWTCredential]] = {
-    credentialRepository.getCredentials(batchId).mapError(RepositoryError.apply)
+  override def getCredentials(batchId: String): IO[IssueCredentialError, Seq[EncodedJWTCredential]] = {
+    credentialRepository.getCredentials(batchId).mapError(IssueCredentialError.RepositoryError.apply)
   }
 
-  override def createCredentials(batchId: String, credentials: Seq[JWTCredential]): IO[IssueCredentialError, Unit] = {
-    import collection.JavaConverters.*
+  override def createCredentials(
+      batchId: String,
+      credentials: Seq[EncodedJWTCredential]
+  ): IO[IssueCredentialError, Unit] = {
 
-    val hashes = credentials
-      .map { c =>
-        val encoded = JwtVerifiableCredential.encodeJwt(c.content, createIssuer).jwt
-        val hash = Sha256.compute(encoded.getBytes)
-        // val subjectDid = c.content.maybeSub
-        hash
-      }
-      .toBuffer
-      .asJava
-    val merkleProofs = MerkleTreeKt.generateProofs(hashes)
-    val root = merkleProofs.component1()
-    val proofs = merkleProofs.component2().asScala
-//    irisClient.s
-    ZIO.unit
-//    credentialRepository.createCredentials(batchId, credentials).mapError(RepositoryError.apply)
+    credentialRepository.createCredentials(batchId, credentials).mapError(IssueCredentialError.RepositoryError.apply)
   }
 
   def createCredentialOffer(
@@ -163,6 +172,45 @@ private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepos
 
   def acceptCredentialOffer(id: UUID): IO[IssueCredentialError, IssueCredentialRecord] = ???
 
-  def issueCredential(id: UUID): IO[IssueCredentialError, IssueCredentialRecord] = ???
+  private def sendCredential(
+      jwtCredential: JwtCredentialPayload,
+      holderDid: DID,
+      inclusionProof: MerkleInclusionProof
+  ): Nothing = ???
+
+  private def publishCredentialBatch(
+      credentials: Seq[W3CCredentialPayload],
+      issuer: Issuer
+  ): IO[PublishCredentialBatchError, PublishedBatchData] = {
+    import collection.JavaConverters.*
+
+    val hashes = credentials
+      .map { c =>
+        val encoded = JwtVerifiableCredential.toEncodedJwt(c, issuer).jwt
+        Sha256.compute(encoded.getBytes)
+      }
+      .toBuffer
+      .asJava
+
+    val merkelRootAndProofs = MerkleTreeKt.generateProofs(hashes)
+    val root = merkelRootAndProofs.component1()
+    val proofs = merkelRootAndProofs.component2().asScala.toSeq
+
+    val irisOperation = IrisOperation(
+      IrisOperation.Operation.IssueCredentialsBatch(
+        IssueCredentialsBatch(
+          issuerDid = issuer.did.id,
+          merkleRoot = ByteString.copyFrom(root.getHash.component1)
+        )
+      )
+    )
+
+    val credentialsAndProofs = credentials.zip(proofs)
+    irisClient.scheduleOperation(irisOperation)
+
+
+
+    ???
+  }
 
 }

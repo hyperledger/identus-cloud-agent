@@ -506,7 +506,7 @@ paths:
               schema:
                 $ref: ./pollux/schemas.yaml#/components/schemas/IssueCredentialRecord
         "404":
-          description: There is no issue credential record maatching the given 'recordId'.
+          description: There is no issue credential record matching the given 'recordId'.
           content:
             application/json:
               schema:
