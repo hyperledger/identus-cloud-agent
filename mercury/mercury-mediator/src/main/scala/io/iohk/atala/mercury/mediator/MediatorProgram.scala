@@ -11,9 +11,16 @@ import io.iohk.atala.mercury.model.Message
 import io.circe.Json.*
 import io.circe.parser.*
 import io.circe.JsonObject
-import io.iohk.atala.mercury.mediator.MediationState.{Denied, Granted, Requested}
+import io.iohk.atala.mercury.mediator.MediationState.{
+  Denied,
+  Granted,
+  Requested
+}
 import io.iohk.atala.mercury.protocol.coordinatemediation.Keylist.Body
-import io.iohk.atala.mercury.protocol.coordinatemediation.{MediateDeny, MediateGrant}
+import io.iohk.atala.mercury.protocol.coordinatemediation.{
+  MediateDeny,
+  MediateGrant
+}
 import io.iohk.atala.mercury.Agent
 object MediatorProgram {
   val port = 8080
@@ -62,7 +69,7 @@ object MediatorProgram {
         ret <- // messageProcessing(mediatorMessage)
           {
             // val recipient = DidId(mediatorMessage.getTo.asScala.toList.head) // FIXME unsafe
-            mediatorMessage.`type` match {
+            mediatorMessage.piuri match {
               case "https://didcomm.org/routing/2.0/forward" =>
                 for {
                   _ <- ZIO.logInfo("Mediator Forward Message: " + mediatorMessage.toString)
@@ -123,22 +130,32 @@ object MediatorProgram {
     }
   }
 
-  def makeMsg(to: DidId, messageState: MediationState): ZIO[DidComm, Nothing, Message] = for {
+  def makeMsg(
+      to: DidId,
+      messageState: MediationState
+  ): ZIO[DidComm, Nothing, Message] = for {
     from <- ZIO.service[DidComm].map(_.myDid)
     message = messageState match
       case Granted =>
         val body = MediateGrant.Body(routing_did = from.value)
         val mediateGrant =
-          MediateGrant(id = java.util.UUID.randomUUID().toString, `type` = MediateGrant.`type`, body = body)
+          MediateGrant(
+            id = java.util.UUID.randomUUID().toString,
+            `type` = MediateGrant.`type`,
+            body = body
+          )
         Message(
           piuri = mediateGrant.`type`,
           from = Some(from),
           to = Some(to),
-          body = Map("routing_did" -> from.value),
+          body = Map("routing_did" -> from.value)
         )
       case _ =>
         val mediateDeny =
-          MediateDeny(id = java.util.UUID.randomUUID().toString, `type` = MediateDeny.`type`)
+          MediateDeny(
+            id = java.util.UUID.randomUUID().toString,
+            `type` = MediateDeny.`type`
+          )
         Message(
           piuri = mediateDeny.`type`,
           from = Some(from),

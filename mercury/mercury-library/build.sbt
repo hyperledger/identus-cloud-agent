@@ -147,7 +147,7 @@ lazy val protocolLogin = project
 
 lazy val protocolReportProblem = project
   .in(file("protocol-report-problem"))
-  .settings(name := "protocol-report-problem")
+  .settings(name := "mercury-protocol-report-problem")
   .dependsOn(models)
 
 lazy val protocolRouting = project
