@@ -7,6 +7,7 @@ import io.iohk.atala.shared.models.Base64UrlStrings.*
 import io.iohk.atala.shared.utils.Traverse.*
 import io.iohk.atala.castor.core.model.did.{
   DIDDocument,
+  DIDStatePatch,
   DIDStorage,
   EllipticCurve,
   PublicKey,
@@ -37,6 +38,34 @@ private[castor] trait ProtoModelHelper {
         initialRecoveryCommitment = operation.recoveryCommitment.toByteArray.toProto,
         ledger = operation.storage.ledgerName,
         document = Some(operation.document.toProto)
+      )
+    }
+  }
+
+  extension (operation: PublishedDIDOperation.Update) {
+    def toProto: iris_proto.did_operations.UpdateDid = {
+      iris_proto.did_operations.UpdateDid(
+        did = operation.did.toString,
+        ledger = operation.did.network,
+        revealedUpdateKey = operation.updateKey.toByteArray.toProto,
+        previousVersion = operation.previousVersion.toByteArray.toProto,
+        forwardUpdateCommitment = operation.delta.updateCommitment.toByteArray.toProto,
+        patches = operation.delta.patches.map(_.toProto),
+        signature = operation.signature.toByteArray.toProto
+      )
+    }
+  }
+
+  extension (patch: DIDStatePatch) {
+    def toProto: iris_proto.did_operations.UpdateDid.Patch = {
+      import iris_proto.did_operations.UpdateDid.Patch.Patch
+      iris_proto.did_operations.UpdateDid.Patch(
+        patch = patch match {
+          case p: DIDStatePatch.AddPublicKey    => Patch.AddPublicKey(p.publicKey.toProto)
+          case p: DIDStatePatch.RemovePublicKey => Patch.RemovePublicKey(p.id)
+          case p: DIDStatePatch.AddService      => Patch.AddService(p.service.toProto)
+          case p: DIDStatePatch.RemoveService   => Patch.RemoveService(p.id)
+        }
       )
     }
   }

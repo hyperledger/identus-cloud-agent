@@ -18,7 +18,8 @@ object PublishedDIDOperation {
       did: PrismDIDV1,
       updateKey: Base64UrlString,
       previousVersion: HexString,
-      delta: UpdateOperationDelta
+      delta: UpdateOperationDelta,
+      signature: Base64UrlString
   ) extends PublishedDIDOperation
 }
 
@@ -30,10 +31,10 @@ final case class UpdateOperationDelta(
 sealed trait DIDStatePatch
 
 object DIDStatePatch {
-  final case class AddPublicKeys(publicKeys: Seq[PublicKey]) extends DIDStatePatch
-  final case class RemovePublicKeys(ids: Seq[String]) extends DIDStatePatch
-  final case class AddServices(services: Seq[Service]) extends DIDStatePatch
-  final case class RemoveServices(ids: Seq[String]) extends DIDStatePatch
+  final case class AddPublicKey(publicKey: PublicKey) extends DIDStatePatch
+  final case class RemovePublicKey(id: String) extends DIDStatePatch
+  final case class AddService(service: Service) extends DIDStatePatch
+  final case class RemoveService(id: String) extends DIDStatePatch
 }
 
 final case class PublishedDIDOperationOutcome(

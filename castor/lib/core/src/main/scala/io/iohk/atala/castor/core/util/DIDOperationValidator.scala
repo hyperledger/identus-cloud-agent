@@ -14,6 +14,7 @@ object DIDOperationValidator {
 
 class DIDOperationValidator(config: Config) {
 
+  // TODO: add UpdateOperation signature validation
   def validate(operation: PublishedDIDOperation): Either[DIDOperationError, Unit] = {
     for {
       _ <- validateOperationCommitment(operation)
@@ -47,8 +48,8 @@ class DIDOperationValidator(config: Config) {
       case op: PublishedDIDOperation.Create => op.document.publicKeys.length
       case op: PublishedDIDOperation.Update =>
         op.delta.patches.collect {
-          case DIDStatePatch.AddPublicKeys(publicKeys) => publicKeys.length
-          case DIDStatePatch.RemovePublicKeys(ids)     => ids.length
+          case _: DIDStatePatch.AddPublicKey    => 1
+          case _: DIDStatePatch.RemovePublicKey => 1
         }.sum
     }
     if (keyAccessCount <= config.publicKeyLimit) Right(())
@@ -60,8 +61,8 @@ class DIDOperationValidator(config: Config) {
       case op: PublishedDIDOperation.Create => op.document.services.length
       case op: PublishedDIDOperation.Update =>
         op.delta.patches.collect {
-          case DIDStatePatch.AddServices(services) => services.length
-          case DIDStatePatch.RemoveServices(ids)   => ids.length
+          case _: DIDStatePatch.AddService    => 1
+          case _: DIDStatePatch.RemoveService => 1
         }.sum
     }
     if (serviceAccessCount <= config.serviceLimit) Right(())
@@ -73,9 +74,9 @@ class DIDOperationValidator(config: Config) {
       case op: PublishedDIDOperation.Create => op.document.publicKeys.map(_.id)
       case op: PublishedDIDOperation.Update =>
         op.delta.patches.collect {
-          case DIDStatePatch.AddPublicKeys(publicKeys) => publicKeys.map(_.id)
-          case DIDStatePatch.RemovePublicKeys(ids)     => ids
-        }.flatten
+          case DIDStatePatch.AddPublicKey(publicKey) => publicKey.id
+          case DIDStatePatch.RemovePublicKey(id)     => id
+        }
     }
     if (ids.distinct.length == ids.length) Right(())
     else Left(DIDOperationError.InvalidArgument("id for public-keys is not unique"))
@@ -86,9 +87,9 @@ class DIDOperationValidator(config: Config) {
       case op: PublishedDIDOperation.Create => op.document.services.map(_.id)
       case op: PublishedDIDOperation.Update =>
         op.delta.patches.collect {
-          case DIDStatePatch.AddServices(services) => services.map(_.id)
-          case DIDStatePatch.RemoveServices(ids)   => ids
-        }.flatten
+          case DIDStatePatch.AddService(service) => service.id
+          case DIDStatePatch.RemoveService(id)   => id
+        }
     }
     if (ids.distinct.length == ids.length) Right(())
     else Left(DIDOperationError.InvalidArgument("id for services is not unique"))

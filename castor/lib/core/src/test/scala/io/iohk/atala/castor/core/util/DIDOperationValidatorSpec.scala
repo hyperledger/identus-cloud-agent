@@ -50,7 +50,8 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
     delta = UpdateOperationDelta(
       patches = patches,
       updateCommitment = updateCommitment
-    )
+    ),
+    signature = Base64UrlString.fromStringUnsafe("0")
   )
 
   private def generatePublicKey(id: String): PublicKey = PublicKey.JsonWebKey2020(
@@ -183,12 +184,9 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         val addKeyGen = Gen.int(0, 30)
         val removeKeyGen = Gen.int(0, 30)
         check(addKeyGen, removeKeyGen) { (addKeyCount, removeKeyCount) =>
-          val addKeyPatch =
-            DIDStatePatch.AddPublicKeys(publicKeys = (1 to addKeyCount).map(i => generatePublicKey(s"key-$i")))
-          val removeKeyPatch = DIDStatePatch.RemovePublicKeys(
-            ids = (1 to removeKeyCount).map(i => s"remove-$i")
-          )
-          val op = generateUpdateDIDOperation(patches = Seq(addKeyPatch, removeKeyPatch))
+          val addKeyPatch = (1 to addKeyCount).map(i => DIDStatePatch.AddPublicKey(generatePublicKey(s"key-$i")))
+          val removeKeyPatch = (1 to removeKeyCount).map(i => DIDStatePatch.RemovePublicKey(s"remove-$i"))
+          val op = generateUpdateDIDOperation(patches = addKeyPatch ++ removeKeyPatch)
           val expect =
             if (addKeyCount + removeKeyCount <= keyLimit) isRight
             else isLeft(isSubtype[DIDOperationError.TooManyDidPublicKeyAccess](anything))
@@ -200,8 +198,8 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         val addServiceGen = Gen.int(0, 30)
         val removeServiceGen = Gen.int(0, 30)
         check(addServiceGen, removeServiceGen) { (addServiceCount, removeServiceCount) =>
-          val addServicePatch = DIDStatePatch.AddServices(
-            services = (1 to addServiceCount).map(i =>
+          val addServicePatch = (1 to addServiceCount).map(i =>
+            DIDStatePatch.AddService(
               Service(
                 id = s"service-$i",
                 `type` = ServiceType.MediatorService,
@@ -209,10 +207,8 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
               )
             )
           )
-          val removeServicePatch = DIDStatePatch.RemoveServices(
-            ids = (1 to removeServiceCount).map(i => s"remove-$i")
-          )
-          val op = generateUpdateDIDOperation(patches = Seq(addServicePatch, removeServicePatch))
+          val removeServicePatch = (1 to removeServiceCount).map(i => DIDStatePatch.RemoveService(s"remove-$i"))
+          val op = generateUpdateDIDOperation(patches = addServicePatch ++ removeServicePatch)
           val expect =
             if (addServiceCount + removeServiceCount <= serviceLimit) isRight
             else isLeft(isSubtype[DIDOperationError.TooManyDidServiceAccess](anything))
@@ -223,9 +219,9 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         val addKeyIdsGen = Gen.listOfBounded(1, 5)(Gen.int(0, 5))
         val removeKeyIdsGen = Gen.listOfBounded(1, 5)(Gen.int(0, 5))
         check(addKeyIdsGen, removeKeyIdsGen) { (addKeyIds, removeKeyIds) =>
-          val addKeyPatch = DIDStatePatch.AddPublicKeys(addKeyIds.map(i => generatePublicKey(s"key-$i")))
-          val removeKeyPatch = DIDStatePatch.RemovePublicKeys(removeKeyIds.map(i => s"key-$i"))
-          val op = generateUpdateDIDOperation(patches = Seq(addKeyPatch, removeKeyPatch))
+          val addKeyPatch = addKeyIds.map(i => DIDStatePatch.AddPublicKey(generatePublicKey(s"key-$i")))
+          val removeKeyPatch = removeKeyIds.map(i => DIDStatePatch.RemovePublicKey(s"key-$i"))
+          val op = generateUpdateDIDOperation(patches = addKeyPatch ++ removeKeyPatch)
           val isUnique = {
             val combined = addKeyIds ++ removeKeyIds
             combined.distinct.length == combined.length
@@ -238,8 +234,8 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         val addServiceIdsGen = Gen.listOfBounded(1, 5)(Gen.int(0, 5))
         val removeServiceIdsGen = Gen.listOfBounded(1, 5)(Gen.int(0, 5))
         check(addServiceIdsGen, removeServiceIdsGen) { (addServiceIds, removeServiceIds) =>
-          val addServicePatch = DIDStatePatch.AddServices(
-            addServiceIds.map(i =>
+          val addServicePatch = addServiceIds.map(i =>
+            DIDStatePatch.AddService(
               Service(
                 id = s"service-$i",
                 `type` = ServiceType.MediatorService,
@@ -247,8 +243,8 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
               )
             )
           )
-          val removeServicePatch = DIDStatePatch.RemoveServices(removeServiceIds.map(i => s"service-$i"))
-          val op = generateUpdateDIDOperation(patches = Seq(addServicePatch, removeServicePatch))
+          val removeServicePatch = removeServiceIds.map(i => DIDStatePatch.RemoveService(s"service-$i"))
+          val op = generateUpdateDIDOperation(patches = addServicePatch ++ removeServicePatch)
           val isUnique = {
             val combined = addServiceIds ++ removeServiceIds
             combined.distinct.length == combined.length

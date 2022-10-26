@@ -80,9 +80,22 @@ private class DIDServiceImpl(
     )
   }
 
-  // TODO: implement
   override def updatePublishedDID(
       operation: PublishedDIDOperation.Update
-  ): IO[DIDOperationError, PublishedDIDOperationOutcome] = ???
+  ): IO[DIDOperationError, PublishedDIDOperationOutcome] = {
+    val irisOpProto = iris_proto.dlt.IrisOperation(
+      operation = iris_proto.dlt.IrisOperation.Operation.UpdateDid(operation.toProto)
+    )
+    for {
+      _ <- ZIO.fromEither(operationValidator.validate(operation))
+      irisOutcome <- ZIO
+        .fromFuture(_ => irisClient.scheduleOperation(irisOpProto))
+        .mapError(DIDOperationError.DLTProxyError.apply)
+    } yield PublishedDIDOperationOutcome(
+      did = operation.did,
+      operation = operation,
+      operationId = HexString.fromByteArray(irisOutcome.operationId.toByteArray)
+    )
+  }
 
 }
