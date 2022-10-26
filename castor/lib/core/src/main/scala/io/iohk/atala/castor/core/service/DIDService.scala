@@ -42,6 +42,7 @@ object DIDServiceImpl {
     ZLayer.fromFunction(DIDServiceImpl(_, _, _))
 }
 
+// TODO: add tests
 private class DIDServiceImpl(
     irisClient: IrisServiceStub,
     operationValidator: DIDOperationValidator,

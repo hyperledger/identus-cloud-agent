@@ -23,17 +23,23 @@ import zio.test.Assertion.*
 object ManagedDIDServiceSpec extends ZIOSpecDefault {
 
   private trait TestDIDService extends DIDService {
-    def getPublishedOperations: UIO[Seq[PublishedDIDOperation.Create]]
+    def getPublishedCreateOperations: UIO[Seq[PublishedDIDOperation.Create]]
   }
 
   private def testDIDServiceLayer = ZLayer.fromZIO {
-    Ref.make(Seq.empty[PublishedDIDOperation.Create]).map { store =>
+
+    final case class InMemoryStorageRecord(
+        createOps: Seq[PublishedDIDOperation.Create],
+        updateOps: Seq[PublishedDIDOperation.Update]
+    )
+
+    Ref.make(InMemoryStorageRecord(Nil, Nil)).map { store =>
       new TestDIDService {
         override def createPublishedDID(
             operation: PublishedDIDOperation.Create
         ): IO[error.DIDOperationError, PublishedDIDOperationOutcome] =
           store
-            .update(_.appended(operation))
+            .update(current => current.copy(createOps = current.createOps.appended(operation)))
             .as(
               PublishedDIDOperationOutcome(
                 PrismDIDV1.fromCreateOperation(operation),
@@ -42,7 +48,16 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault {
               )
             )
 
-        override def getPublishedOperations: UIO[Seq[PublishedDIDOperation.Create]] = store.get
+        override def updatePublishedDID(
+            operation: PublishedDIDOperation.Update
+        ): IO[error.DIDOperationError, PublishedDIDOperationOutcome] =
+          store
+            .update(current => current.copy(updateOps = current.updateOps.appended(operation)))
+            .as(
+              PublishedDIDOperationOutcome(operation.did, operation, HexString.fromStringUnsafe("00"))
+            )
+
+        override def getPublishedCreateOperations: UIO[Seq[PublishedDIDOperation.Create]] = store.get.map(_.createOps)
       }
     }
   }
@@ -69,9 +84,9 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault {
           testDIDSvc <- ZIO.service[TestDIDService]
           did <- svc.createAndStoreDID(template).map(_.toCanonical)
           createOp <- svc.nonSecretStorage.getCreatedDID(did)
-          opsBefore <- testDIDSvc.getPublishedOperations
+          opsBefore <- testDIDSvc.getPublishedCreateOperations
           _ <- svc.publishStoredDID(did)
-          opsAfter <- testDIDSvc.getPublishedOperations
+          opsAfter <- testDIDSvc.getPublishedCreateOperations
         } yield assert(opsBefore)(isEmpty) &&
           assert(opsAfter)(hasSameElements(createOp.toList))
       },
@@ -96,7 +111,7 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault {
           did = longFormDID.toCanonical
           createOp <- svc.nonSecretStorage.getCreatedDID(did)
           _ <- svc.publishStoredDID(longFormDID)
-          opsAfter <- testDIDSvc.getPublishedOperations
+          opsAfter <- testDIDSvc.getPublishedCreateOperations
         } yield assert(opsAfter)(hasSameElements(createOp.toList))
       }
     )
