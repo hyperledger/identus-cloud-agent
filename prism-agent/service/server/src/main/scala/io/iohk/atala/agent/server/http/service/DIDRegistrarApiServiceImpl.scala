@@ -17,6 +17,12 @@ class DIDRegistrarApiServiceImpl(service: ManagedDIDService)(using runtime: Runt
       OASDomainModelHelper,
       OASErrorModelHelper {
 
+  // TODO: implement
+  override def addManagedDidKeyPair(didRef: String, addManagedDidKeyPairRequest: AddManagedDidKeyPairRequest)(implicit
+      toEntityMarshallerDIDOperationResponse: ToEntityMarshaller[DIDOperationResponse],
+      toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
+  ): Route = ???
+
   override def createManagedDid(createManagedDidRequest: CreateManagedDidRequest)(implicit
       toEntityMarshallerCreateManagedDIDResponse: ToEntityMarshaller[CreateManagedDIDResponse],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]

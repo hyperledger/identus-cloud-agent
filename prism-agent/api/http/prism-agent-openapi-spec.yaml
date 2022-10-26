@@ -353,33 +353,33 @@ paths:
               schema:
                 $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
 
-  # /did-registrar/dids/{didRef}/keys:
-  #   post:
-  #     tags: [ "DID Registrar" ]
-  #     operationId: addManagedDidKeyPair
-  #     summary: Add new key-pairs to DID Document and publish operation to blockchain
-  #     description: Add new key-pairs to DID Document and publish operation to blockchain
-  #     parameters:
-  #       - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
-  #     requestBody:
-  #       required: true
-  #       content:
-  #         application/json:
-  #           schema:
-  #             $ref: "./castor/schemas.yaml#/components/schemas/AddManagedDidKeyPairRequest"
-  #     responses:
-  #       "202":
-  #         description: Publish DID update operation to Blockchain.
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "./castor/schemas.yaml#/components/schemas/DIDOperationResponse"
-  #       "422":
-  #         description: The DID update operation failed.
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
+  /did-registrar/dids/{didRef}/keys:
+    post:
+      tags: [ "DID Registrar" ]
+      operationId: addManagedDidKeyPair
+      summary: Add new key-pairs to DID Document and publish operation to blockchain
+      description: Add new key-pairs to DID Document and publish operation to blockchain
+      parameters:
+        - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "./castor/schemas.yaml#/components/schemas/AddManagedDidKeyPairRequest"
+      responses:
+        "202":
+          description: Publish DID update operation to Blockchain.
+          content:
+            application/json:
+              schema:
+                $ref: "./castor/schemas.yaml#/components/schemas/DIDOperationResponse"
+        "422":
+          description: The DID update operation failed.
+          content:
+            application/json:
+              schema:
+                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
 
   # ----------------------------------
   # Pollux
