@@ -15,7 +15,7 @@ object PublishedDIDOperation {
   ) extends PublishedDIDOperation
 
   final case class Update(
-      did: PrismDID,
+      did: PrismDIDV1,
       updateKey: Base64UrlString,
       previousVersion: HexString,
       delta: UpdateOperationDelta

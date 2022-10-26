@@ -21,11 +21,11 @@ class DIDOperationValidator(config: Config) {
       _ <- validateMaxServiceAccess(operation)
       _ <- validateUniquePublicKeyId(operation)
       _ <- validateUniqueServiceId(operation)
+      _ <- validateVersionRef(operation)
     } yield ()
   }
 
   private def validateOperationCommitment(operation: PublishedDIDOperation): Either[DIDOperationError, Unit] = {
-    val isSha256Hex = (s: HexString) => s.toByteArray.length == 32
     operation match {
       case op: PublishedDIDOperation.Create =>
         if (isSha256Hex(op.updateCommitment) && isSha256Hex(op.recoveryCommitment)) Right(())
@@ -93,5 +93,16 @@ class DIDOperationValidator(config: Config) {
     if (ids.distinct.length == ids.length) Right(())
     else Left(DIDOperationError.InvalidArgument("id for services is not unique"))
   }
+
+  private def validateVersionRef(operation: PublishedDIDOperation): Either[DIDOperationError, Unit] = {
+    operation match {
+      case _: PublishedDIDOperation.Create => Right(())
+      case op: PublishedDIDOperation.Update =>
+        if (isSha256Hex(op.previousVersion)) Right(())
+        else Left(DIDOperationError.InvalidArgument("previousVersion reference has unexpected length"))
+    }
+  }
+
+  private def isSha256Hex(s: HexString): Boolean = s.toByteArray.length == 32
 
 }
