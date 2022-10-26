@@ -102,11 +102,11 @@ trait OASDomainModelHelper {
   }
 
   extension (template: CreateManagedDidRequestDocumentTemplate) {
-    def toDomain: Either[String, walletDomain.ManagedDIDTemplate] = {
+    def toDomain: Either[String, walletDomain.ManagedDIDCreateTemplate] = {
       for {
         services <- template.services.traverse(_.toDomain)
         publicKeys <- template.publicKeys.traverse(_.toDomain)
-      } yield walletDomain.ManagedDIDTemplate(
+      } yield walletDomain.ManagedDIDCreateTemplate(
         storage = template.storage,
         publicKeys = publicKeys,
         services = services

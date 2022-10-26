@@ -1,7 +1,7 @@
 package io.iohk.atala.agent.walletapi.service
 
 import io.iohk.atala.agent.walletapi.model.error.{CreateManagedDIDError, PublishManagedDIDError}
-import io.iohk.atala.agent.walletapi.model.{CommitmentPurpose, DIDPublicKeyTemplate, ManagedDIDTemplate}
+import io.iohk.atala.agent.walletapi.model.{CommitmentPurpose, DIDPublicKeyTemplate, ManagedDIDCreateTemplate}
 import io.iohk.atala.castor.core.model.did.{
   DIDDocument,
   DIDStorage,
@@ -70,7 +70,7 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault {
   private def generateDIDTemplate(
       publicKeys: Seq[DIDPublicKeyTemplate] = Nil,
       services: Seq[Service] = Nil
-  ): ManagedDIDTemplate = ManagedDIDTemplate("testnet", publicKeys, services)
+  ): ManagedDIDCreateTemplate = ManagedDIDCreateTemplate("testnet", publicKeys, services)
 
   override def spec =
     suite("ManagedDIDService")(publishStoredDIDSpec, createAndStoreDIDSpec).provideLayer(managedDIDServiceLayer)

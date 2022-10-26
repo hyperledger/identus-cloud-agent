@@ -1,7 +1,13 @@
 package io.iohk.atala.agent.walletapi.service
 
 import io.iohk.atala.agent.walletapi.crypto.KeyGeneratorWrapper
-import io.iohk.atala.agent.walletapi.model.{CommitmentPurpose, DIDPublicKeyTemplate, ECKeyPair, ManagedDIDTemplate}
+import io.iohk.atala.agent.walletapi.model.{
+  CommitmentPurpose,
+  DIDPublicKeyTemplate,
+  ECKeyPair,
+  ManagedDIDCreateTemplate,
+  ManagedDIDUpdateTemplate
+}
 import io.iohk.atala.agent.walletapi.model.ECCoordinates.*
 import io.iohk.atala.agent.walletapi.model.error.{CreateManagedDIDError, PublishManagedDIDError, UpdateManagedDIDError}
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService.{CreateDIDSecret, KeyManagementConfig}
@@ -60,7 +66,7 @@ final class ManagedDIDService private[walletapi] (
     } yield outcome
   }
 
-  def createAndStoreDID(didTemplate: ManagedDIDTemplate): IO[CreateManagedDIDError, LongFormPrismDIDV1] = {
+  def createAndStoreDID(didTemplate: ManagedDIDCreateTemplate): IO[CreateManagedDIDError, LongFormPrismDIDV1] = {
     for {
       generated <- generateCreateOperation(didTemplate)
       (createOperation, secret) = generated
@@ -91,8 +97,12 @@ final class ManagedDIDService private[walletapi] (
     } yield longFormDID
   }
 
+  // TODO: implement
+  def updateDIDAndPublish(template: ManagedDIDUpdateTemplate): IO[UpdateManagedDIDError, PublishedDIDOperationOutcome] =
+    ???
+
   private def generateCreateOperation(
-      didTemplate: ManagedDIDTemplate
+      didTemplate: ManagedDIDCreateTemplate
   ): IO[CreateManagedDIDError, (PublishedDIDOperation.Create, CreateDIDSecret)] = {
     for {
       keys <- ZIO
