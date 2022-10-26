@@ -203,26 +203,7 @@ components:
             publicKeys:
               type: array
               items:
-                type: object
-                required:
-                  - id
-                  - purpose
-                properties:
-                  id:
-                    type: string
-                    description: Identifier of a verification material in the DID Document
-                    example: key-01
-                  purpose:
-                    type: string
-                    enum:
-                      [
-                        "authentication",
-                        "assertionMethod",
-                        "keyAgreement",
-                        "capabilityInvocation",
-                        "capabilityDelegation",
-                      ]
-                    example: [ "authentication", "assertionMethod" ]
+                $ref: "#/components/schemas/PublicKeyTemplate"
             services:
               type: array
               items:
@@ -238,6 +219,38 @@ components:
           type: string
           description: A long-form DID for the created DID
           example: did:prism:1:abc123:abc123
+
+    AddManagedDidKeyPairRequest:
+      type: object
+      required:
+        - publicKeys
+      properties:
+        publicKeys:
+          type: array
+          items:
+            $ref: "#/components/schemas/PublicKeyTemplate"
+
+    PublicKeyTemplate:
+      type: object
+      required:
+        - id
+        - purpose
+      properties:
+        id:
+          type: string
+          description: Identifier of a verification material in the DID Document
+          example: key-01
+        purpose:
+          type: string
+          enum:
+            [
+              "authentication",
+              "assertionMethod",
+              "keyAgreement",
+              "capabilityInvocation",
+              "capabilityDelegation",
+            ]
+          example: [ "authentication", "assertionMethod" ]
 
     Delta:
       type: object

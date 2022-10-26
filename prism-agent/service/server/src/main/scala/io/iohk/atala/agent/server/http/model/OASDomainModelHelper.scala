@@ -3,7 +3,7 @@ package io.iohk.atala.agent.server.http.model
 import io.iohk.atala.agent.openapi.model.{
   CreateDIDRequest,
   CreateManagedDidRequestDocumentTemplate,
-  CreateManagedDidRequestDocumentTemplatePublicKeysInner,
+  PublicKeyTemplate,
   DIDOperationResponse,
   DidOperation,
   DidOperationSubmission,
@@ -114,7 +114,7 @@ trait OASDomainModelHelper {
     }
   }
 
-  extension (publicKeyTemplate: CreateManagedDidRequestDocumentTemplatePublicKeysInner) {
+  extension (publicKeyTemplate: PublicKeyTemplate) {
     def toDomain: Either[String, walletDomain.DIDPublicKeyTemplate] = {
       for {
         purpose <- castorDomain.VerificationRelationship
