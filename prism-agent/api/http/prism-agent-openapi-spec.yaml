@@ -353,10 +353,10 @@ paths:
               schema:
                 $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
 
-  /did-registrar/dids/{didRef}/keys:
+  /did-registrar/dids/{didRef}/updates:
     post:
       tags: [ "DID Registrar" ]
-      operationId: addManagedDidKeyPair
+      operationId: updateManagedDid
       summary: Add new key-pairs to DID Document and publish operation to blockchain
       description: Add new key-pairs to DID Document and publish operation to blockchain
       parameters:
@@ -366,7 +366,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "./castor/schemas.yaml#/components/schemas/AddManagedDidKeyPairRequest"
+              $ref: "./castor/schemas.yaml#/components/schemas/UpdateManagedDidRequest"
       responses:
         "202":
           description: Publish DID update operation to Blockchain.

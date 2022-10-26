@@ -220,15 +220,34 @@ components:
           description: A long-form DID for the created DID
           example: did:prism:1:abc123:abc123
 
-    AddManagedDidKeyPairRequest:
+    UpdateManagedDidRequest:
       type: object
       required:
-        - publicKeys
+        - patches
       properties:
-        publicKeys:
+        patches:
           type: array
           items:
-            $ref: "#/components/schemas/PublicKeyTemplate"
+            $ref: "#/components/schemas/UpdateManagedDIDPatch"
+
+    # TODO: Add missing actions
+    UpdateManagedDIDPatch:
+      type: object
+      description: A high-level DID Document patch
+      required:
+        - action
+      properties:
+        action:
+          type: string
+          enum:
+            - addPublicKey
+            - removePublicKey
+            - addService
+            - removeService
+            - rotateKey
+          example: addPublicKey
+        addPublicKey:
+          $ref: "#/components/schemas/PublicKeyTemplate"
 
     PublicKeyTemplate:
       type: object

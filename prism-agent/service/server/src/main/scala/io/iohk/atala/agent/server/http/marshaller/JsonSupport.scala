@@ -12,7 +12,8 @@ import spray.json.DeserializationException
 trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 
   // Castor
-  given RootJsonFormat[AddManagedDidKeyPairRequest] = jsonFormat1(AddManagedDidKeyPairRequest.apply)
+  given RootJsonFormat[UpdateManagedDidRequest] = jsonFormat1(UpdateManagedDidRequest.apply)
+  given RootJsonFormat[UpdateManagedDIDPatch] = jsonFormat2(UpdateManagedDIDPatch.apply)
   given RootJsonFormat[AuthenticationChallengeSubmissionRequest] = jsonFormat3(
     AuthenticationChallengeSubmissionRequest.apply
   )

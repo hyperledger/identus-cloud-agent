@@ -3,7 +3,7 @@ package io.iohk.atala.agent.walletapi.service
 import io.iohk.atala.agent.walletapi.crypto.KeyGeneratorWrapper
 import io.iohk.atala.agent.walletapi.model.{CommitmentPurpose, DIDPublicKeyTemplate, ECKeyPair, ManagedDIDTemplate}
 import io.iohk.atala.agent.walletapi.model.ECCoordinates.*
-import io.iohk.atala.agent.walletapi.model.error.{CreateManagedDIDError, PublishManagedDIDError}
+import io.iohk.atala.agent.walletapi.model.error.{CreateManagedDIDError, PublishManagedDIDError, UpdateManagedDIDError}
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService.{CreateDIDSecret, KeyManagementConfig}
 import io.iohk.atala.agent.walletapi.storage.{
   DIDNonSecretStorage,

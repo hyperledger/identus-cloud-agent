@@ -4,11 +4,11 @@ import akka.http.scaladsl.marshalling.ToEntityMarshaller
 import akka.http.scaladsl.unmarshalling.FromEntityUnmarshaller
 import io.iohk.atala.agent.openapi.api.DIDRegistrarApiMarshaller
 import io.iohk.atala.agent.openapi.model.{
-  AddManagedDidKeyPairRequest,
   CreateManagedDIDResponse,
   CreateManagedDidRequest,
   DIDOperationResponse,
-  ErrorResponse
+  ErrorResponse,
+  UpdateManagedDidRequest
 }
 import spray.json.RootJsonFormat
 import zio.*
@@ -20,8 +20,8 @@ object DIDRegistrarApiMarshallerImpl extends JsonSupport {
       override implicit def fromEntityUnmarshallerCreateManagedDidRequest
           : FromEntityUnmarshaller[CreateManagedDidRequest] = summon[RootJsonFormat[CreateManagedDidRequest]]
 
-      override implicit def fromEntityUnmarshallerAddManagedDidKeyPairRequest
-          : FromEntityUnmarshaller[AddManagedDidKeyPairRequest] = summon[RootJsonFormat[AddManagedDidKeyPairRequest]]
+      override implicit def fromEntityUnmarshallerUpdateManagedDidRequest
+          : FromEntityUnmarshaller[UpdateManagedDidRequest] = summon[RootJsonFormat[UpdateManagedDidRequest]]
 
       override implicit def toEntityMarshallerDIDOperationResponse: ToEntityMarshaller[DIDOperationResponse] =
         summon[RootJsonFormat[DIDOperationResponse]]
