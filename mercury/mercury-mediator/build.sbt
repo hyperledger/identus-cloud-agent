@@ -1,3 +1,5 @@
+import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
+
 inThisBuild(
   Seq(
     organization := "io.iohk.atala",
@@ -7,7 +9,7 @@ inThisBuild(
     versionScheme := Some("semver-spec"),
     githubOwner := "input-output-hk",
     githubRepository := "atala-prism-building-blocks",
-    githubTokenSource := TokenSource.Environment("GITHUB_TOKEN")
+    githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN")
   )
 )
 
@@ -85,8 +87,22 @@ lazy val mediator = project
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
     // ### Build Docker Image ###
     Docker / maintainer := "atala-coredid@iohk.io",
-    Docker / dockerRepository := Some("atala-prism.io"),
+    Docker / dockerRepository := Some("ghcr.io"),
+    Docker / dockerUsername := Some("input-output-hk"),
+    Docker / githubOwner := "atala-prism-building-blocks",
+    Docker / dockerUpdateLatest := true,
     dockerExposedPorts := Seq(8080),
     dockerBaseImage := "openjdk:11"
   )
   .enablePlugins(JavaAppPackaging, DockerPlugin)
+
+// ### ReleaseStep ###
+releaseProcess := Seq[ReleaseStep](
+  checkSnapshotDependencies,
+  inquireVersions,
+  runClean,
+  runTest,
+  setReleaseVersion,
+  ReleaseStep(releaseStepTask(Docker / publish)),
+  setNextVersion
+)
