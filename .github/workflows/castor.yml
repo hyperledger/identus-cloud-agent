@@ -11,6 +11,7 @@ concurrency:
 defaults:
   run:
     shell: bash
+    working-directory: castor/lib
 
 on:
   # Run with every push to `main` branch
@@ -28,7 +29,6 @@ on:
 
 # Global environment variables for all jobs
 env:
-  ATALA_GITHUB_ACTOR: ${{ secrets.ATALA_GITHUB_ACTOR }}
   ATALA_GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
 
 jobs:
@@ -46,20 +46,12 @@ jobs:
 
       - name: Cache sbt
         uses: coursier/cache-action@v6.3
-
-      # Step to be removed after adding publishing of shared module
-      - name: Build shared module
-        run: cd shared && sbt publishLocal
-
-      # Step to be removed after adding publishing of Iris client
-      - name: Build Iris client
-        run: cd iris/client/scala-client && sbt publishLocal
       
       - name: Run Scala formatter
-        run: cd castor/lib && sbt scalafmtCheckAll
+        run: sbt scalafmtCheckAll
       
       - name: Build and test Castor
-        run: cd castor/lib && sbt test
+        run: sbt test
 
       - name: Aggregate test reports
         if: always()
