@@ -45,7 +45,8 @@ jobs:
         uses: coursier/cache-action@v6.3
 
       - name: Run Scala formatter
-        run: sbt scalafmtCheckAll
+        run: |
+          sbt scalafmtCheckAll
 
       - name: Build and test Mercury
         run: sbt test
@@ -54,13 +55,13 @@ jobs:
         if: always()
         uses: ./.github/actions/aggregate-test-reports
         with:
-          tests-dir: "mercury/prism-mediator"
+          tests-dir: "mercury/mercury-library"
 
       - name: Publish test results
         # Publish even if the test step fails
         if: always()
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:
-          junit_files: "mercury/prism-mediator/target/test-reports/**/TEST-*.xml"
+          junit_files: "mercury/mercury-library/target/test-reports/**/TEST-*.xml"
           comment_title: "Mercury Test Results"
           check_name: "Mercury Test Results"
