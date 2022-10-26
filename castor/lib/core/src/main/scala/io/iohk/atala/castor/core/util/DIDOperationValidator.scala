@@ -70,29 +70,23 @@ class DIDOperationValidator(config: Config) {
   }
 
   private def validateUniquePublicKeyId(operation: PublishedDIDOperation): Either[DIDOperationError, Unit] = {
-    val ids = operation match {
-      case op: PublishedDIDOperation.Create => op.document.publicKeys.map(_.id)
-      case op: PublishedDIDOperation.Update =>
-        op.delta.patches.collect {
-          case DIDStatePatch.AddPublicKey(publicKey) => publicKey.id
-          case DIDStatePatch.RemovePublicKey(id)     => id
-        }
+    operation match {
+      case op: PublishedDIDOperation.Create =>
+        val ids = op.document.publicKeys.map(_.id)
+        if (ids.distinct.length == ids.length) Right(())
+        else Left(DIDOperationError.InvalidArgument("id for public-keys is not unique"))
+      case _: PublishedDIDOperation.Update => Right(())
     }
-    if (ids.distinct.length == ids.length) Right(())
-    else Left(DIDOperationError.InvalidArgument("id for public-keys is not unique"))
   }
 
   private def validateUniqueServiceId(operation: PublishedDIDOperation): Either[DIDOperationError, Unit] = {
-    val ids = operation match {
-      case op: PublishedDIDOperation.Create => op.document.services.map(_.id)
-      case op: PublishedDIDOperation.Update =>
-        op.delta.patches.collect {
-          case DIDStatePatch.AddService(service) => service.id
-          case DIDStatePatch.RemoveService(id)   => id
-        }
+    operation match {
+      case op: PublishedDIDOperation.Create =>
+        val ids = op.document.services.map(_.id)
+        if (ids.distinct.length == ids.length) Right(())
+        else Left(DIDOperationError.InvalidArgument("id for services is not unique"))
+      case _: PublishedDIDOperation.Update => Right(())
     }
-    if (ids.distinct.length == ids.length) Right(())
-    else Left(DIDOperationError.InvalidArgument("id for services is not unique"))
   }
 
   private def validateVersionRef(operation: PublishedDIDOperation): Either[DIDOperationError, Unit] = {

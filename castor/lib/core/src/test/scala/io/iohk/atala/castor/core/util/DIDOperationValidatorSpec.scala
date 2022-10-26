@@ -214,44 +214,6 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
             else isLeft(isSubtype[DIDOperationError.TooManyDidServiceAccess](anything))
           assert(DIDOperationValidator(Config(0, serviceLimit)).validate(op))(expect)
         }
-      },
-      test("reject UpdateOperation on duplicated DID public key id") {
-        val addKeyIdsGen = Gen.listOfBounded(1, 5)(Gen.int(0, 5))
-        val removeKeyIdsGen = Gen.listOfBounded(1, 5)(Gen.int(0, 5))
-        check(addKeyIdsGen, removeKeyIdsGen) { (addKeyIds, removeKeyIds) =>
-          val addKeyPatch = addKeyIds.map(i => DIDStatePatch.AddPublicKey(generatePublicKey(s"key-$i")))
-          val removeKeyPatch = removeKeyIds.map(i => DIDStatePatch.RemovePublicKey(s"key-$i"))
-          val op = generateUpdateDIDOperation(patches = addKeyPatch ++ removeKeyPatch)
-          val isUnique = {
-            val combined = addKeyIds ++ removeKeyIds
-            combined.distinct.length == combined.length
-          }
-          val expect = if (isUnique) isRight else isLeft(isSubtype[DIDOperationError.InvalidArgument](anything))
-          assert(defaultDIDOpValidator.validate(op))(expect)
-        }
-      },
-      test("reject CreateOperation on duplicated DID service id") {
-        val addServiceIdsGen = Gen.listOfBounded(1, 5)(Gen.int(0, 5))
-        val removeServiceIdsGen = Gen.listOfBounded(1, 5)(Gen.int(0, 5))
-        check(addServiceIdsGen, removeServiceIdsGen) { (addServiceIds, removeServiceIds) =>
-          val addServicePatch = addServiceIds.map(i =>
-            DIDStatePatch.AddService(
-              Service(
-                id = s"service-$i",
-                `type` = ServiceType.MediatorService,
-                serviceEndpoint = URI.create("https://example.com")
-              )
-            )
-          )
-          val removeServicePatch = removeServiceIds.map(i => DIDStatePatch.RemoveService(s"service-$i"))
-          val op = generateUpdateDIDOperation(patches = addServicePatch ++ removeServicePatch)
-          val isUnique = {
-            val combined = addServiceIds ++ removeServiceIds
-            combined.distinct.length == combined.length
-          }
-          val expect = if (isUnique) isRight else isLeft(isSubtype[DIDOperationError.InvalidArgument](anything))
-          assert(defaultDIDOpValidator.validate(op))(expect)
-        }
       }
     )
 }
