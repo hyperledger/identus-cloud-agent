@@ -1,8 +1,10 @@
 package io.iohk.atala.mercury.protocol.issuecredential
 
-import io.iohk.atala.mercury.model.PIURI
-import io.circe.{Encoder, Decoder}
+import io.circe._
 import io.circe.generic.semiauto._
+import io.circe.syntax._
+
+import io.iohk.atala.mercury.model.PIURI
 import io.iohk.atala.mercury.model._
 
 /** ALL parameterS are DIDCOMMV2 format and naming conventions and follows the protocol
@@ -31,7 +33,7 @@ final case class OfferCredential(
     from = Some(from),
     to = replyingTo,
     thid = replyingThid,
-    body = Map.empty, // FIXME TODO
+    body = this.body.asJson.asObject.get, // FIXME TODO
     attachments = Seq.empty, // FIXME Seq(Attachment(attachments.))
   )
 }
@@ -48,6 +50,11 @@ object OfferCredential {
       credential_preview: CredentialPreview,
       formats: Seq[CredentialFormat] = Seq.empty[CredentialFormat]
   )
+
+  object Body {
+    given Encoder[Body] = deriveEncoder[Body]
+    given Decoder[Body] = deriveDecoder[Body]
+  }
 
   def makeOfferToProposeCredential(msg: Message): OfferCredential = {
     val pc: ProposeCredential = ProposeCredential.readFromMessage(msg)

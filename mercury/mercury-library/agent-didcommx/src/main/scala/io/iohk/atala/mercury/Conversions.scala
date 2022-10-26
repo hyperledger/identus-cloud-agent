@@ -17,7 +17,12 @@ given Conversion[PackEncryptedResult, EncryptedMessage] with {
 given Conversion[Message, org.didcommx.didcomm.message.Message] with {
   def apply(msg: Message): org.didcommx.didcomm.message.Message = {
     val attachments = msg.attachments.map { e => e: XAttachment } // cast
-    val aux = new MessageBuilder(msg.id, msg.body.asJava, msg.piuri)
+    val aux = new MessageBuilder(
+      msg.id,
+      // msg.body.toMap.asJava,
+      JsonUtilsForDidCommx.fromJsonToJavaMap(msg.body),
+      msg.piuri
+    )
       .createdTime(msg.createdTime)
       .expiresTime(msg.createdTime + msg.expiresTimePlus)
       .attachments(attachments.toList.asJava) // TODO test

@@ -1,5 +1,7 @@
 package io.iohk.atala.mercury.protocol.reportproblem.v2
 
+import io.circe._
+
 import io.iohk.atala.mercury.model.Message
 
 /** ReportProblem
@@ -71,11 +73,11 @@ object ReportProblem {
       piuri = "https://didcomm.org/report-problem/2.0/problem-report",
       from = msg.to,
       to = msg.from,
-      body = Map(
-        "code" -> problem.code.value,
-        "comment" -> problem.comment,
-        "args" -> problem.args,
-        "escalate_to" -> problem.escalate_to,
+      body = JsonObject.fromIterable(
+        Seq(("code", Json.fromString(problem.code.value))) ++
+          problem.comment.map(e => ("comment", Json.fromString(e))) ++
+          problem.args.map(e => ("args", Json.fromValues(e.map(Json.fromString _)))) ++
+          problem.escalate_to.map(e => ("escalate_to", Json.fromString(e)))
       ),
       ack = problem.ack.getOrElse(Seq.empty),
       pthid = Some(problem.pthid)

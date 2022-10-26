@@ -1,7 +1,10 @@
 package io.iohk.atala.mercury.protocol.issuecredential
-import io.iohk.atala.mercury.model.PIURI
-import io.circe.{Encoder, Decoder}
+
+import io.circe._
 import io.circe.generic.semiauto._
+import io.circe.syntax._
+
+import io.iohk.atala.mercury.model.PIURI
 import io.iohk.atala.mercury.model._
 
 final case class RequestCredential(
@@ -20,7 +23,7 @@ final case class RequestCredential(
     from = Some(from),
     to = replyingTo,
     thid = replyingThid,
-    body = Map.empty, // FIXME TODO
+    body = this.body.asJson.asObject.get, // FIXME TODO
     attachments = Seq.empty, // FIXME Seq(Attachment(attachments.))
   )
 }
@@ -33,6 +36,11 @@ object RequestCredential {
       comment: Option[String] = None,
       formats: Seq[CredentialFormat] = Seq.empty[CredentialFormat]
   )
+
+  object Body {
+    given Encoder[Body] = deriveEncoder[Body]
+    given Decoder[Body] = deriveDecoder[Body]
+  }
 
   def makeRequestCredentialFromOffer(msg: Message): RequestCredential = {
     val pc: OfferCredential = OfferCredential.readFromMessage(msg)

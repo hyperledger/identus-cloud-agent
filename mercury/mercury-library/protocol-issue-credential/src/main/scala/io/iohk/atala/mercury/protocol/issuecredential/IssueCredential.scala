@@ -1,7 +1,9 @@
 package io.iohk.atala.mercury.protocol.issuecredential
 
-import io.circe.{Encoder, Decoder}
+import io.circe._
 import io.circe.generic.semiauto._
+import io.circe.syntax._
+
 import io.iohk.atala.mercury.model._
 
 /** ALL parameterS are DIDCOMMV2 format and naming conventions and follows the protocol
@@ -30,7 +32,7 @@ final case class IssueCredential(
     from = Some(from),
     to = replyingTo,
     thid = replyingThid,
-    body = Map.empty, // FIXME TODO
+    body = this.body.asJson.asObject.get,
     attachments = Seq.empty, // FIXME Seq(Attachment(attachments.))
   )
 }
@@ -46,6 +48,10 @@ object IssueCredential {
       more_available: Option[String] = None,
       formats: Seq[CredentialFormat] = Seq.empty[CredentialFormat],
   )
+  object Body {
+    given Encoder[Body] = deriveEncoder[Body]
+    given Decoder[Body] = deriveDecoder[Body]
+  }
 
   def makeIssueCredentialFromRequestCredential(msg: Message): IssueCredential = {
     val rc: RequestCredential = RequestCredential.readFromMessage(msg)
