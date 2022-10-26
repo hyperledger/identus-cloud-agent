@@ -1,34 +1,23 @@
 package io.iohk.atala.pollux.vc.jwt.demos
-import io.iohk.atala.pollux.vc.jwt.{
-  CredentialSchema,
-  CredentialStatus,
-  IssuerDID,
-  JwtCredentialPayload,
-  RefreshService,
-  W3CCredentialPayload
-}
-import io.iohk.atala.pollux.vc.jwt.VerifiedCredentialJson.Encoders.Implicits.*
-import io.iohk.atala.pollux.vc.jwt.VerifiedCredentialJson.Decoders.Implicits.*
-import cats.implicits.*
+
 import io.circe.*
-//import net.reactivecore.cjs.resolver.Downloader
-//import net.reactivecore.cjs.{DocumentValidator, Loader, Result}
-import pdi.jwt.{JwtAlgorithm, JwtCirce, JwtClaim}
 import io.circe.generic.auto.*
-import io.circe.syntax.*
-import io.circe.{Decoder, Encoder, HCursor, Json}
 import io.circe.parser.decode
+import io.circe.syntax.*
+import io.iohk.atala.pollux.vc.jwt.*
+import io.iohk.atala.pollux.vc.jwt.CredentialPayload.Implicits.*
+import pdi.jwt.{JwtAlgorithm, JwtCirce, JwtClaim}
 
 import java.security.*
 import java.security.spec.*
 import java.time.{Instant, ZonedDateTime}
 
 @main def CredentialDemo(): Unit =
-  val w3cCredentialPayload = W3CCredentialPayload(
-    `@context` = Vector("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
+  val w3cCredentialPayload = W3cCredentialPayload(
+    `@context` = Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
     maybeId = Some("http://example.edu/credentials/3732"),
-    `type` = Vector("VerifiableCredential", "UniversityDegreeCredential"),
-    issuer = IssuerDID(id = "https://example.edu/issuers/565049"),
+    `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
+    issuer = DID("https://example.edu/issuers/565049"),
     issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
     maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
     maybeCredentialSchema = Some(
@@ -69,7 +58,7 @@ import java.time.{Instant, ZonedDateTime}
   println("==================")
   println("W3C Json => W3C")
   println("==================")
-  val decodedW3CJson = decode[W3CCredentialPayload](w3cJson).toOption.get
+  val decodedW3CJson = decode[W3cCredentialPayload](w3cJson).toOption.get
   println(decodedW3CJson)
 
   println("")
@@ -85,7 +74,7 @@ import java.time.{Instant, ZonedDateTime}
   println("==================")
   val jwtAudCredentialPayload =
     jwtCredentialPayload.copy(aud =
-      Vector("did:example:4a57546973436f6f6c4a4a57573", "did:example:s7dfsd86f5sd6fsdf6sfs6d5sdf")
+      Set("did:example:4a57546973436f6f6c4a4a57573", "did:example:s7dfsd86f5sd6fsdf6sfs6d5sdf")
     )
   println(jwtAudCredentialPayload)
 

@@ -1,0 +1,33 @@
+name: "Pull request linter"
+
+on:
+  pull_request_target:
+    types:
+      - opened
+      - edited
+      - synchronize
+
+jobs:
+  main:
+    name: Validate PR title
+    runs-on: ubuntu-latest
+    steps:
+      - uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
+        with:
+          # Configure which scopes are allowed.
+          scopes: |
+            iris
+            apollo
+            castor
+            pollux
+            mercury
+            pluto
+            athena
+            pistis
+            atlas
+            agent
+            shared
+            infra
+            release

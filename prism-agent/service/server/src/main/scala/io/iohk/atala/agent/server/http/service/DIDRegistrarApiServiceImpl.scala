@@ -1,45 +1,65 @@
 package io.iohk.atala.agent.server.http.service
 
 import akka.http.scaladsl.marshalling.ToEntityMarshaller
+import akka.http.scaladsl.server.Directives.*
 import akka.http.scaladsl.server.Route
-import io.iohk.atala.agent.custodian.service.CustodialDIDService
+import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import zio.*
 import io.iohk.atala.agent.openapi.api.DIDRegistrarApiService
-import io.iohk.atala.agent.openapi.model.{
-  CreateCustodialDIDResponse,
-  CreateCustodialDidRequest,
-  CreateDIDRequest,
-  DIDOperationResponse,
-  DIDResponse,
-  ErrorResponse
-}
-import io.iohk.atala.agent.server.http.model.{OASDomainModelHelper, OASErrorModelHelper}
+import io.iohk.atala.agent.openapi.model.*
+import io.iohk.atala.agent.server.http.model.{HttpServiceError, OASDomainModelHelper, OASErrorModelHelper}
+import io.iohk.atala.agent.walletapi.model.error.PublishManagedDIDError
+import io.iohk.atala.castor.core.model.did.PrismDID
 
-class DIDRegistrarApiServiceImpl(service: CustodialDIDService)(using runtime: Runtime[Any])
+class DIDRegistrarApiServiceImpl(service: ManagedDIDService)(using runtime: Runtime[Any])
     extends DIDRegistrarApiService,
       AkkaZioSupport,
       OASDomainModelHelper,
       OASErrorModelHelper {
 
-  // TODO: implement
-  override def createCustodialDid(createCustodialDidRequest: CreateCustodialDidRequest)(implicit
-      toEntityMarshallerCreateCustodialDIDResponse: ToEntityMarshaller[CreateCustodialDIDResponse],
+  override def createManagedDid(createManagedDidRequest: CreateManagedDidRequest)(implicit
+      toEntityMarshallerCreateManagedDIDResponse: ToEntityMarshaller[CreateManagedDIDResponse],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
-  ): Route = ???
+  ): Route = {
+    val result = for {
+      didTemplate <- ZIO
+        .fromEither(createManagedDidRequest.documentTemplate.toDomain)
+        .mapError(HttpServiceError.InvalidPayload.apply)
+      longFormDID <- service
+        .createAndStoreDID(didTemplate)
+        .mapError(HttpServiceError.DomainError.apply)
+    } yield CreateManagedDIDResponse(
+      longFormDid = longFormDID.toString
+    )
 
-  // TODO: implement
-  override def publishCustodialDid(didRef: String)(implicit
+    onZioSuccess(result.mapError(_.toOAS).either) {
+      case Left(error)   => complete(error.status -> error)
+      case Right(result) => createManagedDid200(result)
+    }
+  }
+
+  override def publishManagedDid(didRef: String)(implicit
       toEntityMarshallerDIDOperationResponse: ToEntityMarshaller[DIDOperationResponse],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
-  ): Route = ???
+  ): Route = {
+    val result = for {
+      prismDID <- ZIO.fromEither(PrismDID.parse(didRef)).mapError(HttpServiceError.InvalidPayload.apply)
+      outcome <- service.publishStoredDID(prismDID).mapError(HttpServiceError.DomainError[PublishManagedDIDError].apply)
+    } yield outcome
+
+    onZioSuccess(result.mapBoth(_.toOAS, _.toOAS).either) {
+      case Left(error)   => complete(error.status -> error)
+      case Right(result) => publishManagedDid202(result)
+    }
+  }
 
 }
 
 object DIDRegistrarApiServiceImpl {
-  val layer: URLayer[CustodialDIDService, DIDRegistrarApiService] = ZLayer.fromZIO {
+  val layer: URLayer[ManagedDIDService, DIDRegistrarApiService] = ZLayer.fromZIO {
     for {
       rt <- ZIO.runtime[Any]
-      svc <- ZIO.service[CustodialDIDService]
+      svc <- ZIO.service[ManagedDIDService]
     } yield DIDRegistrarApiServiceImpl(svc)(using rt)
   }
 }

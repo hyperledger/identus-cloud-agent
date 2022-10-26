@@ -4,6 +4,7 @@ object Dependencies {
   object Versions {
     val circeVersion = "0.14.3"
     val jwtCirceVersion = "9.1.1"
+    val zioPreludeVersion = "1.0.0-RC15"
   }
 
   private lazy val coreJwtCirce = ("io.circe" %% "circe-core" % Versions.circeVersion)
@@ -16,13 +17,19 @@ object Dependencies {
     ("net.reactivecore" %% "circe-json-schema" % "0.3.0")
 
   private lazy val jwtCirce =
-    ("com.github.jwt-scala" %% "jwt-circe" % Versions.jwtCirceVersion)
+    ("com.github.jwt-scala" %% "jwt-circe" % Versisons.jwtCirceVersion)
+
+  private lazy val zioPrelude = "dev.zio" %% "zio-prelude" % Versions.zioPreludeVersion
+
+  private lazy val zioPrelude = "dev.zio" %% "zio-prelude" % Versions.zioPreludeVersion
 
   private lazy val test = "org.scalameta" %% "munit" % "0.7.29" % Test
 
   // Dependency Modules
+  private lazy val zioDependencies: Seq[ModuleID] = Seq(zioPrelude)
   private lazy val circeDependencies: Seq[ModuleID] = Seq(coreJwtCirce, genericJwtCirce, parserJwtCirce)
-  private lazy val baseDependencies: Seq[ModuleID] = circeDependencies :+ jwtCirce :+ test
+  private lazy val baseDependencies: Seq[ModuleID] =
+    circeDependencies ++ zioDependencies :+ jwtCirce :+ circeJsonSchema :+ test
 
   // Project Dependencies
   lazy val polluxVcJwtDependencies: Seq[ModuleID] = baseDependencies

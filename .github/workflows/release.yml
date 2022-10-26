@@ -1,0 +1,50 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release-component:
+        description: "Release component"
+        required: true
+        default: "mercury/mercury-library"
+      release-branch:
+        description: "Branch to release from"
+        required: false
+        default: "main"
+
+jobs:
+  release:
+    env:
+      GITHUB_ACTOR: ${{ secrets.ATALA_GITHUB_ACTOR }}
+      GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.ATALA_GITHUB_TOKEN }}
+          ref: ${{ github.event.inputs.release-branch }}
+          fetch-depth: 0
+      - name: Setup Java and Scala
+        uses: olafurpg/setup-scala@v13
+        with:
+          java-version: openjdk@1.11
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "lts/*"
+      - uses: crazy-max/ghaction-import-gpg@v3
+        id: import_gpg
+        with:
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          git-user-signingkey: true
+          git-commit-gpgsign: true
+      - name: Release
+        env:
+          GIT_AUTHOR_EMAIL: ${{ steps.import_gpg.outputs.email }}
+          GIT_COMMITTER_EMAIL: ${{ steps.import_gpg.outputs.email }}
+          GIT_AUTHOR_NAME: ${{ steps.import_gpg.outputs.name }}
+          GIT_COMMITTER_NAME: ${{ steps.import_gpg.outputs.name }}
+        run: |
+          cd ${{ github.event.inputs.release-component }}
+          npm install
+          npx semantic-release -e semantic-release-monorepo

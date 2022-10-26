@@ -2,6 +2,7 @@ package io.iohk.atala.agent.server.http.model
 
 import akka.http.scaladsl.server.StandardRoute
 import io.iohk.atala.agent.openapi.model.ErrorResponse
+import io.iohk.atala.agent.walletapi.model.error.{CreateManagedDIDError, PublishManagedDIDError}
 import io.iohk.atala.castor.core.model.error.DIDOperationError
 import java.util.UUID
 import io.iohk.atala.pollux.core.model.error.IssueCredentialError
@@ -29,12 +30,36 @@ trait OASErrorModelHelper {
   }
 
   given ToErrorResponse[DIDOperationError] with {
-    def toErrorResponse(error: DIDOperationError): ErrorResponse = {
+    override def toErrorResponse(e: DIDOperationError): ErrorResponse = {
       ErrorResponse(
         `type` = "error-type",
         title = "error-title",
         status = 500,
-        detail = Some(error.toString),
+        detail = Some(e.toString),
+        instance = "error-instance"
+      )
+    }
+  }
+
+  given ToErrorResponse[PublishManagedDIDError] with {
+    override def toErrorResponse(e: PublishManagedDIDError): ErrorResponse = {
+      ErrorResponse(
+        `type` = "error-type",
+        title = "error-title",
+        status = 500,
+        detail = Some(e.toString),
+        instance = "error-instance"
+      )
+    }
+  }
+
+  given ToErrorResponse[CreateManagedDIDError] with {
+    override def toErrorResponse(e: CreateManagedDIDError): ErrorResponse = {
+      ErrorResponse(
+        `type` = "error-type",
+        title = "error-title",
+        status = 500,
+        detail = Some(e.toString),
         instance = "error-instance"
       )
     }

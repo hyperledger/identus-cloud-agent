@@ -5,12 +5,41 @@ import akka.actor.setup.ActorSystemSetup
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.server.Route
+import doobie.util.transactor.Transactor
+import io.iohk.atala.agent.server.http.{HttpRoutes, HttpServer}
+import io.iohk.atala.castor.core.service.{DIDService, DIDServiceImpl}
+import io.iohk.atala.agent.server.http.marshaller.{
+  DIDApiMarshallerImpl,
+  DIDAuthenticationApiMarshallerImpl,
+  DIDOperationsApiMarshallerImpl,
+  DIDRegistrarApiMarshallerImpl,
+  IssueCredentialsApiMarshallerImpl
+}
+import io.iohk.atala.agent.server.http.service.{
+  DIDApiServiceImpl,
+  DIDAuthenticationApiServiceImpl,
+  DIDOperationsApiServiceImpl,
+  DIDRegistrarApiServiceImpl,
+  IssueCredentialsApiServiceImpl
+}
+import io.iohk.atala.castor.core.repository.DIDOperationRepository
+import io.iohk.atala.agent.openapi.api.{
+  DIDApi,
+  DIDAuthenticationApi,
+  DIDOperationsApi,
+  DIDRegistrarApi,
+  IssueCredentialsApi
+}
+import io.iohk.atala.castor.sql.repository.{JdbcDIDOperationRepository, TransactorLayer}
+import zio.*
+import zio.interop.catz.*
 import cats.effect.std.Dispatcher
 import com.typesafe.config.ConfigFactory
 import doobie.util.transactor.Transactor
 import io.grpc.ManagedChannelBuilder
 import io.iohk.atala.agent.openapi.api.*
 import io.iohk.atala.agent.server.config.AppConfig
+import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.agent.server.http.marshaller.*
 import io.iohk.atala.agent.server.http.service.*
 import io.iohk.atala.agent.server.http.{HttpRoutes, HttpServer}
@@ -91,8 +120,12 @@ object AppModule {
       serviceLimit = 50
     )
   )
+
   val didServiceLayer: TaskLayer[DIDService] =
     (GrpcModule.layers ++ RepoModule.layers ++ didOpValidatorLayer) >>> DIDServiceImpl.layer
+
+  val manageDIDServiceLayer: TaskLayer[ManagedDIDService] =
+    (didOpValidatorLayer ++ didServiceLayer) >>> ManagedDIDService.inMemoryStorage()
 
   val credentialServiceLayer: TaskLayer[CredentialService] =
     (GrpcModule.layers ++ RepoModule.layers) >>> CredentialServiceImpl.layer
@@ -136,6 +169,13 @@ object HttpModule {
     (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new DIDAuthenticationApi(_, _))
   }
 
+  val didRegistrarApiLayer: TaskLayer[DIDRegistrarApi] = {
+    val serviceLayer = AppModule.manageDIDServiceLayer
+    val apiServiceLayer = serviceLayer >>> DIDRegistrarApiServiceImpl.layer
+    val apiMarshallerLayer = DIDRegistrarApiMarshallerImpl.layer
+    (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new DIDRegistrarApi(_, _))
+  }
+
   val issueCredentialsApiLayer: TaskLayer[IssueCredentialsApi] = {
     val serviceLayer = AppModule.credentialServiceLayer
     val apiServiceLayer = serviceLayer >>> IssueCredentialsApiServiceImpl.layer
@@ -151,7 +191,8 @@ object HttpModule {
   }
 
   val layers =
-    didApiLayer ++ didOperationsApiLayer ++ didAuthenticationApiLayer ++ issueCredentialsApiLayer ++ issueCredentialsProtocolApiLayer
+   
+    didApiLayer ++ didOperationsApiLayer ++ didAuthenticationApiLayer ++ didRegistrarApiLayer ++ issueCredentialsApiLayer ++ issueCredentialsProtocolApiLayer
 }
 
 object RepoModule {
