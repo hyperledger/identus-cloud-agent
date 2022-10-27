@@ -8,7 +8,7 @@ import io.circe.parser._
 import org.didcommx.didcomm.message.MessageBuilder
 
 object JsonUtilsForDidCommx {
-  private type JsonValue = Boolean | JsonNumber | String
+  private type JsonValue = Boolean | JsonNumber | String | Json.Null.type
   private type SubJsonFields[F] = Seq[F] | Map[String, F]
   private type JsonRecursiveType[F] = SubJsonFields[F] | JsonValue
   case class FixJson[F[_]](out: F[FixJson[F]])
@@ -19,7 +19,7 @@ object JsonUtilsForDidCommx {
     .map { case (k, v) => (k, fromJsonAux(v)) }
 
   private def fromJsonAux(body: Json): MyJson = body.fold[MyJson](
-    jsonNull = FixJson(null),
+    jsonNull = FixJson(Json.Null),
     jsonBoolean = b => FixJson(b),
     jsonNumber = n => FixJson(n), // FIXME JsonNumber,
     jsonString = s => FixJson(s),
@@ -31,24 +31,27 @@ object JsonUtilsForDidCommx {
 
   private def toJavaMap(json: MyJsonTop): java.util.Map[String, Any] = {
     def myJsonToMap(f: MyJson): Any = f match {
+      case FixJson(Json.Null) => null // FIXME Json.Null ->  An illegal reflective access operation has occurred
       case FixJson(jsonValue: JsonValue)              => jsonValue
       case FixJson(seq: Seq[MyJson] @unchecked)       => seq.map(myJsonToMap(_)).toArray
       case FixJson(m: Map[String, MyJson] @unchecked) => toJavaMap(m)
     }
+
     json.map { case (s, fixJson) => (s, myJsonToMap(fixJson)) }.asJava
   }
 
-  def toMap(json: MyJsonTop): Map[String, Any] = {
-    def myJsonToMap(f: MyJson): Any = f match {
-      case FixJson(jsonValue: JsonValue)              => jsonValue
-      case FixJson(seq: Seq[MyJson] @unchecked)       => seq.map(myJsonToMap(_))
-      case FixJson(m: Map[String, MyJson] @unchecked) => toJavaMap(m)
-    }
-    json.map { case (s, fixJson) => (s, myJsonToMap(fixJson)) }
-  }
+  // def toMap(json: MyJsonTop): Map[String, Any] = {
+  //   def myJsonToMap(f: MyJson): Any = f match {
+  //     case FixJson(jsonValue: JsonValue)              => jsonValue
+  //     case FixJson(seq: Seq[MyJson] @unchecked)       => seq.map(myJsonToMap(_))
+  //     case FixJson(m: Map[String, MyJson] @unchecked) => toJavaMap(m)
+  //   }
+  //   json.map { case (s, fixJson) => (s, myJsonToMap(fixJson)) }
+  // }
 
   def toJson(json: MyJsonTop): JsonObject = {
     def myJsonToJson(f: MyJson): Json = f match {
+      case FixJson(jsonValue: Json.Null.type)   => Json.Null // TEST
       case FixJson(jsonValue: Boolean)          => Json.fromBoolean(jsonValue)
       case FixJson(jsonValue: JsonNumber)       => Json.fromJsonNumber(jsonValue)
       case FixJson(jsonValue: String)           => Json.fromString(jsonValue)
@@ -58,8 +61,7 @@ object JsonUtilsForDidCommx {
           JsonObject.fromMap(m.map { case (s, fixJson) => (s, myJsonToJson(fixJson)) })
         )
     }
-    val aaa: Map[String, Json] = json.map { case (s, fixJson) => (s, myJsonToJson(fixJson)) }
-    JsonObject.fromMap(aaa)
+    JsonObject.fromMap(json.map { case (s, fixJson) => (s, myJsonToJson(fixJson)) })
   }
 
   def fromJavaMapToJsonAux(m: java.util.Map[String, Any]): MyJsonTop = {
@@ -95,8 +97,8 @@ object JsonUtilsForDidCommx {
   val x3 = JsonUtilsForDidCommx.fromJavaMapToJsonAux(x2)
   println(x3)
 
-  val x4 = JsonUtilsForDidCommx.toMap(x3)
-  println(x4)
+  // val x4 = JsonUtilsForDidCommx.toMap(x3)
+  // println(x4)
 
   val x5 = JsonUtilsForDidCommx.toJson(x3)
   println(x5)
