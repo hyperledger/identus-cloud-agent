@@ -6,17 +6,7 @@ import io.circe.*
 import io.iohk.atala.agent.openapi.api.IssueCredentialsApiService
 import io.iohk.atala.agent.openapi.model.*
 import io.iohk.atala.agent.server.http.marshaller.IssueCredentialsApiMarshallerImpl
-import io.iohk.atala.pollux.vc.jwt.VerifiedCredentialJson.Encoders.Implicits.*
-import io.iohk.atala.pollux.vc.jwt.VerifiedCredentialJson.Decoders.Implicits.*
-import io.iohk.atala.pollux.vc.jwt.{
-  CredentialSchema,
-  CredentialStatus,
-  Issuer,
-  IssuerDID,
-  JwtVerifiableCredential,
-  RefreshService,
-  W3CCredentialPayload
-}
+import io.iohk.atala.pollux.vc.jwt.*
 import zio.*
 
 import java.security.spec.ECGenParameterSpec
@@ -40,7 +30,7 @@ class IssueCredentialsApiServiceImpl(service: CredentialService)(using runtime: 
   private val issuer = service.createIssuer
 
   case class Schema(context: String, `type`: String)
-  private val defaultSchemas = Vector(
+  private val defaultSchemas = Set(
     Schema("https://www.w3.org/2018/credentials/v1", "VerifiableCredential")
   )
   private val mockSchemas = Map(
@@ -102,12 +92,12 @@ class IssueCredentialsApiServiceImpl(service: CredentialService)(using runtime: 
     count = Some(1)
   )
 
-  private[this] def createPayload(input: W3CCredentialInput, issuer: Issuer): (UUID, W3CCredentialPayload) = {
+  private[this] def createPayload(input: W3CCredentialInput, issuer: Issuer): (UUID, W3cCredentialPayload) = {
     val now = Instant.now()
     val credentialId = UUID.randomUUID()
     val claims = input.claims.map(kv => kv._1 -> Json.fromString(kv._2))
     val schemas = defaultSchemas ++ input.schemaId.flatMap(mockSchemas.get)
-    credentialId -> W3CCredentialPayload(
+    credentialId -> W3cCredentialPayload(
       `@context` = schemas.map(_.context),
       maybeId = Some(s"https://atala.io/prism/credentials/${credentialId.toString}"),
       `type` = schemas.map(_.`type`),
@@ -141,7 +131,7 @@ class IssueCredentialsApiServiceImpl(service: CredentialService)(using runtime: 
       val resp = CreateCredentials201Response(
         Some(batchId),
         Some(credentials.size),
-        Some(credentials.map(c => JwtVerifiableCredential.encodeJwt(c._2, issuer).jwt))
+        Some(credentials.map(c => JwtCredential.encodeJwt(c._2, issuer).value))
       )
 
       createCredentials201(resp)
