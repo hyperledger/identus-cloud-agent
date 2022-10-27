@@ -4,6 +4,7 @@ import java.util.Base64 as JBase64
 import io.circe.{Decoder, Encoder, HCursor, Json, JsonObject}
 import io.circe.generic.semiauto.*
 import io.circe.syntax.*
+import cats.syntax.functor._
 
 /** @see
   *   data in attachments https://identity.foundation/didcomm-messaging/spec/#attachments
@@ -48,7 +49,11 @@ object AttachmentData {
       case data @ JwsData(_, _) => data.asJson
   }
 
-  given Decoder[AttachmentData] = deriveDecoder[AttachmentData]
+  given Decoder[AttachmentData] = List[Decoder[AttachmentData]](
+    Decoder[JsonData].widen,
+    Decoder[Base64].widen,
+    Decoder[JwsData].widen
+  ).reduceLeft(_ or _)
 }
 
 /** @see
