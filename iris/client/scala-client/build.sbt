@@ -1,8 +1,18 @@
 import Dependencies._
+import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
 
-ThisBuild / version := "0.1.0"
-ThisBuild / scalaVersion := "3.1.3"
-ThisBuild / organization := "io.iohk.atala"
+inThisBuild(
+  Seq(
+    organization := "io.iohk.atala",
+    scalaVersion := "3.2.0",
+    fork := true,
+    run / connectInput := true,
+    versionScheme := Some("semver-spec"),
+    githubOwner := "input-output-hk",
+    githubRepository := "atala-prism-building-blocks",
+    githubTokenSource := TokenSource.Environment("GITHUB_TOKEN")
+  )
+)
 
 // Custom keys
 val apiBaseDirectory = settingKey[File]("The base directory for Iris API specifications")
@@ -17,3 +27,14 @@ lazy val root = project
     Compile / PB.targets := Seq(scalapb.gen() -> (Compile / sourceManaged).value / "scalapb"),
     Compile / PB.protoSources := Seq(apiBaseDirectory.value / "grpc")
   )
+
+// ### ReleaseStep ###
+releaseProcess := Seq[ReleaseStep](
+  checkSnapshotDependencies,
+  inquireVersions,
+  runClean,
+  runTest,
+  setReleaseVersion,
+  publishArtifacts,
+  setNextVersion
+)
