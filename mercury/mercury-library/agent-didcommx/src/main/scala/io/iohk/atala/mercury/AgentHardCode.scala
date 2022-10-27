@@ -24,7 +24,11 @@ object AgentHardCode extends ZIOAppDefault {
   val attribute1 = Attribute(name = "name", value = "Joe Blog")
   val attribute2 = Attribute(name = "dob", value = "01/10/1947")
   val credentialPreview = CredentialPreview(attributes = Seq(attribute1, attribute2))
-  val body = ProposeCredential.Body(goal_code = Some("Propose Credential"), credential_preview = credentialPreview)
+  val body = ProposeCredential.Body(
+    goal_code = Some("Propose Credential"),
+    credential_preview = credentialPreview,
+    formats = Seq.empty
+  )
 
   def test: ZIO[DidComm, IOException, Unit] = {
     for {

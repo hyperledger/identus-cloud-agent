@@ -65,12 +65,24 @@ object JsonUtilsForDidCommx {
   }
 
   def fromJavaMapToJsonAux(m: java.util.Map[String, Any]): MyJsonTop = {
-    def auxMethod(f: Any): MyJson = f match {
-      case a: Array[Any]                            => FixJson(a.toSeq.map(e => auxMethod(e)))
-      case e: java.util.Map[String, Any] @unchecked => FixJson(fromJavaMapToJsonAux(e))
-      case value: JsonValue                         => FixJson(value)
+    // com.nimbusds.jose.shaded.json.JSONArray
+
+    def auxMethod(f: Any): MyJson = {
+      println("*" * 10 + f)
+      println("*" * 5 + f.getClass().getCanonicalName())
+      f match {
+        case a: com.nimbusds.jose.shaded.json.JSONArray =>
+          println("*" * 6 + f.getClass().getCanonicalName())
+          FixJson(a.toArray.toSeq.map(e => auxMethod(e)))
+        case a: Array[Any]                            => FixJson(a.toSeq.map(e => auxMethod(e)))
+        case e: java.util.Map[String, Any] @unchecked => FixJson(fromJavaMapToJsonAux(e))
+        case value: JsonValue                         => FixJson(value)
+      }
     }
-    m.asScala.toMap.map { case (s, any) => (s: String, auxMethod(any): MyJson) }
+    m.asScala.toMap.map { case (s, any) =>
+      println("%" * 10 + s)
+      (s: String, auxMethod(any): MyJson)
+    }
   }
 
   def fromJavaMapToJson(m: java.util.Map[String, Any]): JsonObject =
