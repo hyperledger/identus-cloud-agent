@@ -22,6 +22,14 @@ object CredentialPreview {
   given Decoder[CredentialPreview] = deriveDecoder[CredentialPreview]
 }
 
+/** @param attach_id
+  * @param format
+  *   know Format:
+  *   https://github.com/hyperledger/aries-rfcs/tree/main/features/0453-issue-credential-v2#propose-attachment-registry
+  *   - dif/credential-manifest@v1.0
+  *   - aries/ld-proof-vc-detail@v1.0
+  *   - hlindy/cred-filter@v2.0
+  */
 final case class CredentialFormat(attach_id: String, format: String)
 
 object CredentialFormat {

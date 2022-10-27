@@ -41,6 +41,11 @@ object ProposeCredential {
   given Encoder[ProposeCredential] = deriveEncoder[ProposeCredential]
   given Decoder[ProposeCredential] = deriveDecoder[ProposeCredential]
 
+  /** @param goal_code
+    * @param comment
+    * @param credential_preview
+    * @param formats
+    */
   final case class Body(
       goal_code: Option[String] = None,
       comment: Option[String] = None,

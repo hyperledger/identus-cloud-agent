@@ -14,6 +14,7 @@ import zhttp.service._
 import zhttp.http._
 import io.iohk.atala.QRcode
 import io.iohk.atala.mercury.model._
+import io.iohk.atala.mercury.model.error._
 import io.iohk.atala.mercury.protocol.outofbandlogin._
 import io.iohk.atala.mercury.protocol.issuecredential._
 
@@ -36,7 +37,7 @@ object AgentCli extends ZIOAppDefault {
     } yield (ret)
   }
 
-  def options(p: Seq[(String, ZIO[Any, Throwable, Unit])]): ZIO[Any, Throwable, Unit] = {
+  def options(p: Seq[(String, ZIO[Any, MercuryThrowable, Unit])]): ZIO[Any, MercuryThrowable, Unit] = {
     for {
       _ <- Console.printLine("\n--- Choose an option: ---")
       _ <- ZIO.foreach(p.zipWithIndex)(e => Console.printLine(e._2 + " - " + e._1._1))
@@ -139,7 +140,7 @@ object AgentCli extends ZIOAppDefault {
     } yield ()
   }
 
-  def proposeAndSendCredential = {
+  def proposeAndSendCredential: ZIO[DidComm, MercuryError | IOException, Unit] = {
     for {
 
       _ <- Console.printLine("Propose Credential")
@@ -149,13 +150,11 @@ object AgentCli extends ZIOAppDefault {
         case data => ZIO.succeed(data)
       }
 
-      attachmentDescriptor =
-        AttachmentDescriptor.buildAttachment(id = Some("request-0"), payload = playloadData)
+      attachmentDescriptor = AttachmentDescriptor.buildAttachment(id = Some("request-0"), payload = playloadData)
       attribute1 = Attribute(name = "name", value = "Joe Blog")
       attribute2 = Attribute(name = "dob", value = "01/10/1947")
       credentialPreview = CredentialPreview(attributes = Seq(attribute1, attribute2))
 
-      // FIXME
       proposeCredential = ProposeCredential(
         body = ProposeCredential.Body(
           goal_code = Some("goal_code"),
@@ -186,7 +185,7 @@ object AgentCli extends ZIOAppDefault {
     *
     * TODO Move this method to another model
     */
-  def sendMessage(msg: Message) = {
+  def sendMessage(msg: Message): ZIO[DidComm, MercuryException, Unit] = { // FIXME  Throwable
     for {
       didCommService <- ZIO.service[DidComm]
 
@@ -214,22 +213,31 @@ object AgentCli extends ZIOAppDefault {
           // ssl = ClientSSLOptions.DefaultSSL,
         )
         .provideSomeLayer(env)
+        .catchNonFatalOrDie { ex => ZIO.fail(SendMessage(ex)) }
       data <- res.bodyAsString
+        .catchNonFatalOrDie { ex => ZIO.fail(ParseResponse(ex)) }
       _ <- Console.printLine(data)
     } yield ()
   }
 
   def webServer(port: Int): HttpApp[DidComm, Throwable] = {
     val header = "content-type" -> MediaTypes.contentTypeEncrypted
-    Http.collectZIO[Request] {
-      case req @ Method.POST -> !!
-          if req.headersAsList.exists(h => h._1.equalsIgnoreCase(header._1) && h._2.equalsIgnoreCase(header._2)) =>
-        req.bodyAsString
-          .flatMap(data => webServerProgram(data))
-          .map(str => Response.text(str))
-      case Method.GET -> !! / "test" => ZIO.succeed(Response.text("Test ok!"))
-      case req => ZIO.succeed(Response.text(s"The request must be a POST to root with the Header $header"))
-    }
+    Http
+      .collectZIO[Request] {
+        case req @ Method.POST -> !!
+            if req.headersAsList.exists(h => h._1.equalsIgnoreCase(header._1) && h._2.equalsIgnoreCase(header._2)) =>
+          req.bodyAsString
+            .catchNonFatalOrDie(ex => ZIO.fail(ParseResponse(ex)))
+            .flatMap { data =>
+              webServerProgram(data).catchAll { ex =>
+                ZIO.fail(mercuryErrorAsThrowable(ex))
+              }
+            }
+            .map(str => Response.text(str))
+        case Method.GET -> !! / "test" => ZIO.succeed(Response.text("Test ok!"))
+        case req => ZIO.succeed(Response.text(s"The request must be a POST to root with the Header $header"))
+      }
+
   }
 
   def startEndpoint = for {
@@ -299,7 +307,7 @@ object AgentCli extends ZIOAppDefault {
 
   def webServerProgram(
       jsonString: String
-  ): ZIO[DidComm, Throwable, String] = { // TODO Throwable
+  ): ZIO[DidComm, MercuryThrowable, String] = { // TODO Throwable
     import io.iohk.atala.mercury.DidComm.*
     ZIO.logAnnotate("request-id", java.util.UUID.randomUUID.toString()) {
       for {
