@@ -50,11 +50,7 @@ final class ManagedDIDService private[walletapi] (
   private val CURVE = EllipticCurve.SECP256K1
 
   def publishStoredDID(did: PrismDID): IO[PublishManagedDIDError, PublishedDIDOperationOutcome] = {
-    val canonicalDID = did match {
-      case d: LongFormPrismDIDV1 => d.toCanonical
-      case d                     => d
-    }
-
+    val canonicalDID = canonicalizeDID(did)
     for {
       createOperation <- nonSecretStorage
         .getCreatedDID(canonicalDID)
@@ -63,6 +59,7 @@ final class ManagedDIDService private[walletapi] (
       outcome <- didService
         .createPublishedDID(createOperation)
         .mapError(PublishManagedDIDError.OperationError.apply)
+      _ <- nonSecretStorage.savePublishedDID(canonicalDID).mapError(PublishManagedDIDError.WalletStorageError.apply)
     } yield outcome
   }
 
@@ -102,11 +99,19 @@ final class ManagedDIDService private[walletapi] (
       did: PrismDID,
       template: ManagedDIDUpdateTemplate
   ): IO[UpdateManagedDIDError, PublishedDIDOperationOutcome] = {
-//    for {
-//      op <-
-//    } yield ???
-
-    ???
+    val canonicalDID = canonicalizeDID(did)
+    for {
+      createOperation <- nonSecretStorage
+        .getCreatedDID(did)
+        .mapError(UpdateManagedDIDError.WalletStorageError.apply)
+        .flatMap(op => ZIO.fromOption(op).mapError(_ => UpdateManagedDIDError.DIDNotFound(canonicalDID)))
+      generated <- generateUpdateOperation(template)
+      (updateOperation, secret) = generated
+      // TODO: add persistence & validation logic
+      outcome <- didService
+        .updatePublishedDID(updateOperation)
+        .mapError(UpdateManagedDIDError.OperationError.apply)
+    } yield outcome
   }
 
   private def generateCreateOperation(
@@ -159,6 +164,11 @@ final class ManagedDIDService private[walletapi] (
         )
       )
     } yield (keyPair, publicKey)
+  }
+
+  private def canonicalizeDID(did: PrismDID): PrismDID = did match {
+    case d: LongFormPrismDIDV1 => d.toCanonical
+    case d                     => d
   }
 
 }

@@ -11,4 +11,8 @@ private[walletapi] trait DIDNonSecretStorage {
 
   def listCreatedDID: Task[Seq[PrismDID]]
 
+  def savePublishedDID(did: PrismDID): Task[Unit]
+
+  def listPublishedDID: Task[Seq[PrismDID]]
+
 }
