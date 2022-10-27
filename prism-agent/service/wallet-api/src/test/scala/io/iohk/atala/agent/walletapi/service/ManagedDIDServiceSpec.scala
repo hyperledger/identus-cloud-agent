@@ -137,8 +137,8 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault {
       for {
         svc <- ZIO.service[ManagedDIDService]
         did <- svc.createAndStoreDID(template).map(_.toCanonical)
-        updateCommitment <- svc.secretStorage.getDIDCommitmentRevealValue(did, CommitmentPurpose.Update)
-        recoveryCommitment <- svc.secretStorage.getDIDCommitmentRevealValue(did, CommitmentPurpose.Recovery)
+        updateCommitment <- svc.secretStorage.getDIDCommitmentKey(did, CommitmentPurpose.Update)
+        recoveryCommitment <- svc.secretStorage.getDIDCommitmentKey(did, CommitmentPurpose.Recovery)
         keyPairs <- svc.secretStorage.listKeys(did)
       } yield assert(updateCommitment)(isSome) &&
         assert(recoveryCommitment)(isSome) &&

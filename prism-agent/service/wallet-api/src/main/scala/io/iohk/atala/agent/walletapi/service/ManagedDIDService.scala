@@ -10,7 +10,7 @@ import io.iohk.atala.agent.walletapi.model.{
 }
 import io.iohk.atala.agent.walletapi.model.ECCoordinates.*
 import io.iohk.atala.agent.walletapi.model.error.{CreateManagedDIDError, PublishManagedDIDError, UpdateManagedDIDError}
-import io.iohk.atala.agent.walletapi.service.ManagedDIDService.{CreateDIDSecret, KeyManagementConfig}
+import io.iohk.atala.agent.walletapi.service.ManagedDIDService.{CreateDIDSecret, UpdateDIDSecret}
 import io.iohk.atala.agent.walletapi.storage.{
   DIDNonSecretStorage,
   DIDSecretStorage,
@@ -33,7 +33,6 @@ import io.iohk.atala.castor.core.model.did.{
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.prism.crypto.Sha256
-import io.iohk.atala.prism.crypto.util.Random
 import io.iohk.atala.shared.models.Base64UrlStrings.*
 import io.iohk.atala.shared.models.HexStrings.*
 import zio.*
@@ -42,12 +41,13 @@ import zio.*
   * indy-wallet-sdk.
   */
 final class ManagedDIDService private[walletapi] (
-    config: KeyManagementConfig,
     didService: DIDService,
     didOpValidator: DIDOperationValidator,
     private[walletapi] val secretStorage: DIDSecretStorage,
     private[walletapi] val nonSecretStorage: DIDNonSecretStorage
 ) {
+
+  private val CURVE = EllipticCurve.SECP256K1
 
   def publishStoredDID(did: PrismDID): IO[PublishManagedDIDError, PublishedDIDOperationOutcome] = {
     val canonicalDID = did match {
@@ -80,10 +80,10 @@ final class ManagedDIDService private[walletapi] (
         .fromEither(didOpValidator.validate(createOperation))
         .mapError(CreateManagedDIDError.OperationError.apply)
       _ <- secretStorage
-        .upsertDIDCommitmentRevealValue(did, CommitmentPurpose.Update, secret.updateCommitmentRevealValue)
+        .upsertDIDCommitmentKey(did, CommitmentPurpose.Update, secret.updateCommitmentSecret)
         .mapError(CreateManagedDIDError.WalletStorageError.apply)
       _ <- secretStorage
-        .upsertDIDCommitmentRevealValue(did, CommitmentPurpose.Recovery, secret.recoveryCommitmentRevealValue)
+        .upsertDIDCommitmentKey(did, CommitmentPurpose.Recovery, secret.recoveryCommitmentSecret)
         .mapError(CreateManagedDIDError.WalletStorageError.apply)
       _ <- ZIO
         .foreachDiscard(secret.keyPairs) { case (keyId, keyPair) => secretStorage.upsertKey(did, keyId, keyPair) }
@@ -101,7 +101,13 @@ final class ManagedDIDService private[walletapi] (
   def updateDIDAndPublish(
       did: PrismDID,
       template: ManagedDIDUpdateTemplate
-  ): IO[UpdateManagedDIDError, PublishedDIDOperationOutcome] = ???
+  ): IO[UpdateManagedDIDError, PublishedDIDOperationOutcome] = {
+//    for {
+//      op <-
+//    } yield ???
+
+    ???
+  }
 
   private def generateCreateOperation(
       didTemplate: ManagedDIDCreateTemplate
@@ -110,8 +116,14 @@ final class ManagedDIDService private[walletapi] (
       keys <- ZIO
         .foreach(didTemplate.publicKeys.sortBy(_.id))(generateKeyPairAndPublicKey)
         .mapError(CreateManagedDIDError.KeyGenerationError.apply)
-      updateCommitmentRevealValue = Random.INSTANCE.bytesOfLength(config.updateCommitmentRevealByte)
-      recoveryCommitmentRevealValue = Random.INSTANCE.bytesOfLength(config.recoveryCommitmentRevealByte)
+      updateCommitmentSecret <- KeyGeneratorWrapper
+        .generateECKeyPair(CURVE)
+        .mapError(CreateManagedDIDError.KeyGenerationError.apply)
+      recoveryCommitmentSecret <- KeyGeneratorWrapper
+        .generateECKeyPair(CURVE)
+        .mapError(CreateManagedDIDError.KeyGenerationError.apply)
+      updateCommitmentRevealValue = updateCommitmentSecret.publicKey.toEncoded(CURVE)
+      recoveryCommitmentRevealValue = recoveryCommitmentSecret.publicKey.toEncoded(CURVE)
       operation = PublishedDIDOperation.Create(
         updateCommitment = HexString.fromByteArray(Sha256.compute(updateCommitmentRevealValue).getValue),
         recoveryCommitment = HexString.fromByteArray(Sha256.compute(recoveryCommitmentRevealValue).getValue),
@@ -122,24 +134,28 @@ final class ManagedDIDService private[walletapi] (
         )
       )
       secret = CreateDIDSecret(
-        updateCommitmentRevealValue = HexString.fromByteArray(updateCommitmentRevealValue),
-        recoveryCommitmentRevealValue = HexString.fromByteArray(recoveryCommitmentRevealValue),
+        updateCommitmentSecret = updateCommitmentSecret,
+        recoveryCommitmentSecret = recoveryCommitmentSecret,
         keyPairs = keys.map { case (keyPair, template) => template.id -> keyPair }.toMap
       )
     } yield operation -> secret
   }
 
+  // TODO: implement
+  private def generateUpdateOperation(
+      updateTemplate: ManagedDIDUpdateTemplate
+  ): IO[UpdateManagedDIDError, (PublishedDIDOperation.Update, UpdateDIDSecret)] = ???
+
   private def generateKeyPairAndPublicKey(template: DIDPublicKeyTemplate): Task[(ECKeyPair, PublicKey)] = {
-    val curve = EllipticCurve.SECP256K1
     for {
-      keyPair <- KeyGeneratorWrapper.generateECKeyPair(curve)
+      keyPair <- KeyGeneratorWrapper.generateECKeyPair(CURVE)
       publicKey = PublicKey.JsonWebKey2020(
         id = template.id,
         purposes = Seq(template.purpose),
         publicKeyJwk = PublicKeyJwk.ECPublicKeyData(
-          crv = curve,
-          x = Base64UrlString.fromByteArray(keyPair.publicKey.p.x.toPaddedByteArray(curve)),
-          y = Base64UrlString.fromByteArray(keyPair.publicKey.p.y.toPaddedByteArray(curve))
+          crv = CURVE,
+          x = Base64UrlString.fromByteArray(keyPair.publicKey.p.x.toPaddedByteArray(CURVE)),
+          y = Base64UrlString.fromByteArray(keyPair.publicKey.p.y.toPaddedByteArray(CURVE))
         )
       )
     } yield (keyPair, publicKey)
@@ -150,24 +166,15 @@ final class ManagedDIDService private[walletapi] (
 object ManagedDIDService {
 
   private final case class CreateDIDSecret(
-      updateCommitmentRevealValue: HexString,
-      recoveryCommitmentRevealValue: HexString,
+      updateCommitmentSecret: ECKeyPair,
+      recoveryCommitmentSecret: ECKeyPair,
       keyPairs: Map[String, ECKeyPair]
   )
 
-  final case class KeyManagementConfig(updateCommitmentRevealByte: Int, recoveryCommitmentRevealByte: Int)
+  private final case class UpdateDIDSecret()
 
-  object KeyManagementConfig {
-    val default: KeyManagementConfig = KeyManagementConfig(
-      updateCommitmentRevealByte = 32,
-      recoveryCommitmentRevealByte = 32
-    )
-  }
-
-  def inMemoryStorage(
-      config: KeyManagementConfig = KeyManagementConfig.default
-  ): URLayer[DIDService & DIDOperationValidator, ManagedDIDService] =
+  def inMemoryStorage: URLayer[DIDService & DIDOperationValidator, ManagedDIDService] =
     (InMemoryDIDNonSecretStorage.layer ++ InMemoryDIDSecretStorage.layer) >>> ZLayer.fromFunction(
-      ManagedDIDService(config, _, _, _, _)
+      ManagedDIDService(_, _, _, _)
     )
 }

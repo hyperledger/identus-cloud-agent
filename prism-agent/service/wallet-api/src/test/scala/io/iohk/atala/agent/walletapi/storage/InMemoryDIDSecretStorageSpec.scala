@@ -131,8 +131,8 @@ object InMemoryDIDSecretStorageSpec extends ZIOSpecDefault {
     test("get non-exists commitment reveal value") {
       for {
         storage <- ZIO.service[DIDSecretStorage]
-        updateCommitment <- storage.getDIDCommitmentRevealValue(didExample, CommitmentPurpose.Update)
-        recoveryCommitment <- storage.getDIDCommitmentRevealValue(didExample, CommitmentPurpose.Recovery)
+        updateCommitment <- storage.getDIDCommitmentKey(didExample, CommitmentPurpose.Update)
+        recoveryCommitment <- storage.getDIDCommitmentKey(didExample, CommitmentPurpose.Recovery)
       } yield assert(updateCommitment)(isNone) && assert(recoveryCommitment)(isNone)
     },
     test("get existing commit reveal value") {
@@ -140,10 +140,10 @@ object InMemoryDIDSecretStorageSpec extends ZIOSpecDefault {
       val recoveryHex = HexString.fromStringUnsafe("aabb0011")
       for {
         storage <- ZIO.service[DIDSecretStorage]
-        _ <- storage.upsertDIDCommitmentRevealValue(didExample, CommitmentPurpose.Update, updateHex)
-        _ <- storage.upsertDIDCommitmentRevealValue(didExample, CommitmentPurpose.Recovery, recoveryHex)
-        updateCommitment <- storage.getDIDCommitmentRevealValue(didExample, CommitmentPurpose.Update)
-        recoveryCommitment <- storage.getDIDCommitmentRevealValue(didExample, CommitmentPurpose.Recovery)
+        _ <- storage.upsertDIDCommitmentKey(didExample, CommitmentPurpose.Update, updateHex)
+        _ <- storage.upsertDIDCommitmentKey(didExample, CommitmentPurpose.Recovery, recoveryHex)
+        updateCommitment <- storage.getDIDCommitmentKey(didExample, CommitmentPurpose.Update)
+        recoveryCommitment <- storage.getDIDCommitmentKey(didExample, CommitmentPurpose.Recovery)
       } yield assert(updateCommitment)(isSome(equalTo(updateHex))) && assert(recoveryCommitment)(
         isSome(equalTo(recoveryHex))
       )
@@ -155,9 +155,9 @@ object InMemoryDIDSecretStorageSpec extends ZIOSpecDefault {
       val updateHex = HexString.fromStringUnsafe("0011aabb")
       for {
         storage <- ZIO.service[DIDSecretStorage]
-        before <- storage.getDIDCommitmentRevealValue(didExample, CommitmentPurpose.Update)
-        _ <- storage.upsertDIDCommitmentRevealValue(didExample, CommitmentPurpose.Update, updateHex)
-        after <- storage.getDIDCommitmentRevealValue(didExample, CommitmentPurpose.Update)
+        before <- storage.getDIDCommitmentKey(didExample, CommitmentPurpose.Update)
+        _ <- storage.upsertDIDCommitmentKey(didExample, CommitmentPurpose.Update, updateHex)
+        after <- storage.getDIDCommitmentKey(didExample, CommitmentPurpose.Update)
       } yield assert(before)(isNone) && assert(after)(isSome(equalTo(updateHex)))
     },
     test("update existing commitment reveal value") {
@@ -165,10 +165,10 @@ object InMemoryDIDSecretStorageSpec extends ZIOSpecDefault {
       val updateHex2 = HexString.fromStringUnsafe("aabb0011")
       for {
         storage <- ZIO.service[DIDSecretStorage]
-        _ <- storage.upsertDIDCommitmentRevealValue(didExample, CommitmentPurpose.Update, updateHex1)
-        before <- storage.getDIDCommitmentRevealValue(didExample, CommitmentPurpose.Update)
-        _ <- storage.upsertDIDCommitmentRevealValue(didExample, CommitmentPurpose.Update, updateHex2)
-        after <- storage.getDIDCommitmentRevealValue(didExample, CommitmentPurpose.Update)
+        _ <- storage.upsertDIDCommitmentKey(didExample, CommitmentPurpose.Update, updateHex1)
+        before <- storage.getDIDCommitmentKey(didExample, CommitmentPurpose.Update)
+        _ <- storage.upsertDIDCommitmentKey(didExample, CommitmentPurpose.Update, updateHex2)
+        after <- storage.getDIDCommitmentKey(didExample, CommitmentPurpose.Update)
       } yield assert(before)(isSome(equalTo(updateHex1))) && assert(after)(isSome(equalTo(updateHex2)))
     }
   )

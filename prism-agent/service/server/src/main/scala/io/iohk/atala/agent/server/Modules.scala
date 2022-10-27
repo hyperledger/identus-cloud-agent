@@ -238,7 +238,7 @@ object AppModule {
     (GrpcModule.layers ++ RepoModule.layers ++ didOpValidatorLayer) >>> DIDServiceImpl.layer
 
   val manageDIDServiceLayer: TaskLayer[ManagedDIDService] =
-    (didOpValidatorLayer ++ didServiceLayer) >>> ManagedDIDService.inMemoryStorage()
+    (didOpValidatorLayer ++ didServiceLayer) >>> ManagedDIDService.inMemoryStorage
 
   val credentialServiceLayer: TaskLayer[CredentialService] =
     (GrpcModule.layers ++ RepoModule.layers) >>> CredentialServiceImpl.layer

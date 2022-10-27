@@ -18,9 +18,9 @@ private[walletapi] trait DIDSecretStorage {
   /** Returns the deleted key-pair if exists, otherwise return None */
   def removeKey(did: PrismDID, keyId: String): Task[Unit]
 
-  def getDIDCommitmentRevealValue(did: PrismDID, purpose: CommitmentPurpose): Task[Option[HexString]]
+  def getDIDCommitmentKey(did: PrismDID, purpose: CommitmentPurpose): Task[Option[ECKeyPair]]
 
-  def upsertDIDCommitmentRevealValue(did: PrismDID, purpose: CommitmentPurpose, revealValue: HexString): Task[Unit]
+  def upsertDIDCommitmentKey(did: PrismDID, purpose: CommitmentPurpose, secret: ECKeyPair): Task[Unit]
 
   /** Remove all secrets related to the DID */
   def removeDIDSecret(did: PrismDID): Task[Unit]

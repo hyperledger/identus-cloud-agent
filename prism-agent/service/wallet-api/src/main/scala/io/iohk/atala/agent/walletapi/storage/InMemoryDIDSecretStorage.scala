@@ -36,32 +36,32 @@ private[walletapi] class InMemoryDIDSecretStorage private (store: Ref[Map[PrismD
       }
     }
 
-  override def getDIDCommitmentRevealValue(did: PrismDID, purpose: CommitmentPurpose): Task[Option[HexString]] =
+  override def getDIDCommitmentKey(did: PrismDID, purpose: CommitmentPurpose): Task[Option[ECKeyPair]] =
     store.get.map(
       _.get(did).flatMap(secret =>
         purpose match {
-          case CommitmentPurpose.Update   => secret.updateCommitmentRevealValue
-          case CommitmentPurpose.Recovery => secret.recoveryCommitmentRevealValue
+          case CommitmentPurpose.Update   => secret.updateCommitmentSecret
+          case CommitmentPurpose.Recovery => secret.recoveryCommitmentSecret
         }
       )
     )
 
-  override def upsertDIDCommitmentRevealValue(
+  override def upsertDIDCommitmentKey(
       did: PrismDID,
       purpose: CommitmentPurpose,
-      revealValue: HexString
+      secret: ECKeyPair
   ): Task[Unit] =
     store
       .update { currentStore =>
         val currentSecret = currentStore.get(did)
         val updatedSecret: DIDSecretRecord = purpose match {
           case CommitmentPurpose.Update =>
-            currentSecret.fold(DIDSecretRecord(updateCommitmentRevealValue = Some(revealValue)))(
-              _.copy(updateCommitmentRevealValue = Some(revealValue))
+            currentSecret.fold(DIDSecretRecord(updateCommitmentSecret = Some(secret)))(
+              _.copy(updateCommitmentSecret = Some(secret))
             )
           case CommitmentPurpose.Recovery =>
-            currentSecret.fold(DIDSecretRecord(recoveryCommitmentRevealValue = Some(revealValue)))(
-              _.copy(recoveryCommitmentRevealValue = Some(revealValue))
+            currentSecret.fold(DIDSecretRecord(recoveryCommitmentSecret = Some(secret)))(
+              _.copy(recoveryCommitmentSecret = Some(secret))
             )
         }
 
@@ -75,8 +75,8 @@ private[walletapi] class InMemoryDIDSecretStorage private (store: Ref[Map[PrismD
 private[walletapi] object InMemoryDIDSecretStorage {
 
   private final case class DIDSecretRecord(
-      updateCommitmentRevealValue: Option[HexString] = None,
-      recoveryCommitmentRevealValue: Option[HexString] = None,
+      updateCommitmentSecret: Option[ECKeyPair] = None,
+      recoveryCommitmentSecret: Option[ECKeyPair] = None,
       keyPairs: Map[String, ECKeyPair] = Map.empty
   )
 
