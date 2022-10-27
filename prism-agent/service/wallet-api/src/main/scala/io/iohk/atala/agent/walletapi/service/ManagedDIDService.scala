@@ -50,8 +50,8 @@ final class ManagedDIDService private[walletapi] (
   private val CURVE = EllipticCurve.SECP256K1
 
   def publishStoredDID(did: PrismDID): IO[PublishManagedDIDError, PublishedDIDOperationOutcome] = {
-    val canonicalDID = canonicalizeDID(did)
     for {
+      canonicalDID <- ZIO.fromEither(canonicalizeDID(did)).mapError(PublishManagedDIDError.UnsupportedDIDType.apply)
       createOperation <- nonSecretStorage
         .getCreatedDID(canonicalDID)
         .mapError(PublishManagedDIDError.WalletStorageError.apply)
@@ -99,12 +99,18 @@ final class ManagedDIDService private[walletapi] (
       did: PrismDID,
       template: ManagedDIDUpdateTemplate
   ): IO[UpdateManagedDIDError, PublishedDIDOperationOutcome] = {
-    val canonicalDID = canonicalizeDID(did)
     for {
-      createOperation <- nonSecretStorage
-        .getCreatedDID(did)
+      canonicalDID <- ZIO.fromEither(canonicalizeDID(did)).mapError(UpdateManagedDIDError.UnsupportedDIDType.apply)
+      _ <- nonSecretStorage.listPublishedDID
         .mapError(UpdateManagedDIDError.WalletStorageError.apply)
-        .flatMap(op => ZIO.fromOption(op).mapError(_ => UpdateManagedDIDError.DIDNotFound(canonicalDID)))
+        .filterOrFail(_.contains(canonicalDID))(UpdateManagedDIDError.DIDNotPublished(canonicalDID))
+      // Only support updating from a tip of confirmed DID lineage.
+      // One may invoke multiple update calls, but the first one that gets confirmed
+      // on chain will be chosen. Other keys created but not lives
+      // in the right lineage may be garbage collected.
+      confirmedOps <- didService
+        .getConfirmedOperations(canonicalDID)
+        .mapBoth(UpdateManagedDIDError.OperationError.apply, _.map(_.operation))
       generated <- generateUpdateOperation(template)
       (updateOperation, secret) = generated
       // TODO: add persistence & validation logic
@@ -166,9 +172,9 @@ final class ManagedDIDService private[walletapi] (
     } yield (keyPair, publicKey)
   }
 
-  private def canonicalizeDID(did: PrismDID): PrismDID = did match {
-    case d: LongFormPrismDIDV1 => d.toCanonical
-    case d                     => d
+  private def canonicalizeDID(did: PrismDID): Either[String, PrismDIDV1] = did match {
+    case d: LongFormPrismDIDV1 => Right(d.toCanonical)
+    case _                     => Left(s"only Prism method v1 is currently supported")
   }
 
 }
