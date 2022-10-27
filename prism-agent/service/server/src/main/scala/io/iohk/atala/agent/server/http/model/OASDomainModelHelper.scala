@@ -3,14 +3,16 @@ package io.iohk.atala.agent.server.http.model
 import io.iohk.atala.agent.openapi.model.{
   CreateDIDRequest,
   CreateManagedDidRequestDocumentTemplate,
-  PublicKeyTemplate,
   DIDOperationResponse,
   DidOperation,
   DidOperationSubmission,
   JsonWebKey2020,
   PublicKey,
   PublicKeyJwk,
-  Service
+  PublicKeyTemplate,
+  Service,
+  UpdateManagedDIDPatch,
+  UpdateManagedDidRequest
 }
 import io.iohk.atala.castor.core.model.did as castorDomain
 import io.iohk.atala.castor.core.model.did.PublishedDIDOperation
@@ -111,6 +113,46 @@ trait OASDomainModelHelper {
         publicKeys = publicKeys,
         services = services
       )
+    }
+  }
+
+  extension (request: UpdateManagedDidRequest) {
+    def toDomain: Either[String, walletDomain.ManagedDIDUpdateTemplate] = {
+      for {
+        patches <- request.patches.traverse(_.toDomain)
+      } yield walletDomain.ManagedDIDUpdateTemplate(patches = patches)
+    }
+  }
+
+  extension (patch: UpdateManagedDIDPatch) {
+    def toDomain: Either[String, walletDomain.ManagedDIDUpdatePatch] = {
+      val generateErrorMsg = (action: String) =>
+        s"corresponding update detail is missing from DID update with action $action"
+      patch.action match {
+        case a @ "addPublicKey" =>
+          patch.addPublicKey
+            .toRight(generateErrorMsg(a))
+            .flatMap(_.toDomain)
+            .map(walletDomain.ManagedDIDUpdatePatch.AddPublicKey.apply)
+        case a @ "removePublicKey" =>
+          patch.removePublicKey
+            .toRight(generateErrorMsg(a))
+            .map(walletDomain.ManagedDIDUpdatePatch.RemovePublicKey.apply)
+        case a @ "addService" =>
+          patch.addService
+            .toRight(generateErrorMsg(a))
+            .flatMap(_.toDomain)
+            .map(walletDomain.ManagedDIDUpdatePatch.AddService.apply)
+        case a @ "removeService" =>
+          patch.removeService
+            .toRight(generateErrorMsg(a))
+            .map(walletDomain.ManagedDIDUpdatePatch.RemoveService.apply)
+        case a @ "rotateKey" =>
+          patch.rotateKey
+            .toRight(generateErrorMsg(a))
+            .map(walletDomain.ManagedDIDUpdatePatch.RotateKey.apply)
+        case a => Left(s"unsupported DID update action: $a")
+      }
     }
   }
 

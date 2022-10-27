@@ -17,11 +17,21 @@ class DIDRegistrarApiServiceImpl(service: ManagedDIDService)(using runtime: Runt
       OASDomainModelHelper,
       OASErrorModelHelper {
 
-  // TODO: implement
   override def updateManagedDid(didRef: String, updateManagedDidRequest: UpdateManagedDidRequest)(implicit
       toEntityMarshallerDIDOperationResponse: ToEntityMarshaller[DIDOperationResponse],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
-  ): Route = ???
+  ): Route = {
+    val result = for {
+      prismDID <- ZIO.fromEither(PrismDID.parse(didRef)).mapError(HttpServiceError.InvalidPayload.apply)
+      updateTemplate <- ZIO.fromEither(updateManagedDidRequest.toDomain).mapError(HttpServiceError.InvalidPayload.apply)
+      outcome <- service.updateDIDAndPublish(prismDID, updateTemplate).mapError(HttpServiceError.DomainError.apply)
+    } yield outcome
+
+    onZioSuccess(result.mapBoth(_.toOAS, _.toOAS).either) {
+      case Left(error)   => complete(error.status -> error)
+      case Right(result) => updateManagedDid202(result)
+    }
+  }
 
   override def createManagedDid(createManagedDidRequest: CreateManagedDidRequest)(implicit
       toEntityMarshallerCreateManagedDIDResponse: ToEntityMarshaller[CreateManagedDIDResponse],
@@ -50,7 +60,7 @@ class DIDRegistrarApiServiceImpl(service: ManagedDIDService)(using runtime: Runt
   ): Route = {
     val result = for {
       prismDID <- ZIO.fromEither(PrismDID.parse(didRef)).mapError(HttpServiceError.InvalidPayload.apply)
-      outcome <- service.publishStoredDID(prismDID).mapError(HttpServiceError.DomainError[PublishManagedDIDError].apply)
+      outcome <- service.publishStoredDID(prismDID).mapError(HttpServiceError.DomainError.apply)
     } yield outcome
 
     onZioSuccess(result.mapBoth(_.toOAS, _.toOAS).either) {

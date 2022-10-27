@@ -98,8 +98,10 @@ final class ManagedDIDService private[walletapi] (
   }
 
   // TODO: implement
-  def updateDIDAndPublish(template: ManagedDIDUpdateTemplate): IO[UpdateManagedDIDError, PublishedDIDOperationOutcome] =
-    ???
+  def updateDIDAndPublish(
+      did: PrismDID,
+      template: ManagedDIDUpdateTemplate
+  ): IO[UpdateManagedDIDError, PublishedDIDOperationOutcome] = ???
 
   private def generateCreateOperation(
       didTemplate: ManagedDIDCreateTemplate

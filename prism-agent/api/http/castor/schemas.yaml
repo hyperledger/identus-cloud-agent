@@ -230,7 +230,6 @@ components:
           items:
             $ref: "#/components/schemas/UpdateManagedDIDPatch"
 
-    # TODO: Add missing actions
     UpdateManagedDIDPatch:
       type: object
       description: A high-level DID Document patch
@@ -248,6 +247,17 @@ components:
           example: addPublicKey
         addPublicKey:
           $ref: "#/components/schemas/PublicKeyTemplate"
+        removePublicKey:
+          type: string
+          example: "key-01"
+        addService:
+          $ref: "#/components/schemas/Service"
+        removeService:
+          type: string
+          example: "service-01"
+        rotateKey:
+          type: string
+          example: "key-01"
 
     PublicKeyTemplate:
       type: object

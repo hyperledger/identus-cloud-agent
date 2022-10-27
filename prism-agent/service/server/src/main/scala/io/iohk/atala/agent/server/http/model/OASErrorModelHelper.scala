@@ -2,7 +2,7 @@ package io.iohk.atala.agent.server.http.model
 
 import akka.http.scaladsl.server.StandardRoute
 import io.iohk.atala.agent.openapi.model.ErrorResponse
-import io.iohk.atala.agent.walletapi.model.error.{CreateManagedDIDError, PublishManagedDIDError}
+import io.iohk.atala.agent.walletapi.model.error.{CreateManagedDIDError, PublishManagedDIDError, UpdateManagedDIDError}
 import io.iohk.atala.castor.core.model.error.DIDOperationError
 import java.util.UUID
 import io.iohk.atala.pollux.core.model.error.IssueCredentialError

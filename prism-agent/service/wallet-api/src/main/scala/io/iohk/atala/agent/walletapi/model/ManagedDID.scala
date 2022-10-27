@@ -13,10 +13,7 @@ final case class DIDPublicKeyTemplate(
     purpose: VerificationRelationship
 )
 
-final case class ManagedDIDUpdateTemplate(
-    did: PrismDID,
-    patches: Seq[ManagedDIDUpdatePatch]
-)
+final case class ManagedDIDUpdateTemplate(patches: Seq[ManagedDIDUpdatePatch])
 
 sealed trait ManagedDIDUpdatePatch
 
