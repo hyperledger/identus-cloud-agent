@@ -10,6 +10,7 @@ object Dependencies {
     val castor = "0.1.0"
     val pollux = "0.1.0"
     val bouncyCastle = "1.70"
+    val logback = "1.4.4"
   }
 
   private lazy val zio = "dev.zio" %% "zio" % Versions.zio
@@ -40,6 +41,8 @@ object Dependencies {
   private lazy val bouncyBcpkix = "org.bouncycastle" % "bcpkix-jdk15on" % Versions.bouncyCastle
   private lazy val bouncyBcprov = "org.bouncycastle" % "bcprov-jdk15on" % Versions.bouncyCastle
 
+  private lazy val logback = "ch.qos.logback" % "logback-classic" % Versions.logback
+
   // Dependency Modules
   private lazy val baseDependencies: Seq[ModuleID] = Seq(zio, zioTest, zioTestSbt, zioTestMagnolia, zioConfig, zioConfigMagnolia, zioConfigTypesafe)
   private lazy val castorDependencies: Seq[ModuleID] = Seq(castorCore, castorSqlDoobie)
@@ -49,5 +52,5 @@ object Dependencies {
 
   // Project Dependencies
   lazy val keyManagementDependencies: Seq[ModuleID] = baseDependencies ++ castorDependencies ++ bouncyDependencies
-  lazy val serverDependencies: Seq[ModuleID] = baseDependencies ++ akkaHttpDependencies ++ castorDependencies ++ polluxDependencies ++ Seq(zioHttp)
+  lazy val serverDependencies: Seq[ModuleID] = baseDependencies ++ akkaHttpDependencies ++ castorDependencies ++ polluxDependencies ++ Seq(zioHttp, logback)
 }
