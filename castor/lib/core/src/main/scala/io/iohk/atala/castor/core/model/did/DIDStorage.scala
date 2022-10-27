@@ -6,5 +6,4 @@ sealed abstract class DIDStorage
 
 object DIDStorage {
   final case class Cardano(ledgerName: String) extends DIDStorage
-  final case class SecondaryStorage(uri: URL) extends DIDStorage
 }

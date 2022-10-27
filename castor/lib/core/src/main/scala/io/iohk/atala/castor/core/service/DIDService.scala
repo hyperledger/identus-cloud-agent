@@ -18,13 +18,19 @@ import io.iohk.atala.iris.proto as iris_proto
 
 trait DIDService {
   def createPublishedDID(operation: PublishedDIDOperation.Create): IO[DIDOperationError, PublishedDIDOperationOutcome]
+  def updatePublishedDID(operation: PublishedDIDOperation.Update): IO[DIDOperationError, PublishedDIDOperationOutcome]
 }
 
 object MockDIDService {
   val layer: ULayer[DIDService] = ZLayer.succeed {
     new DIDService {
-      def createPublishedDID(
+      override def createPublishedDID(
           operation: PublishedDIDOperation.Create
+      ): IO[DIDOperationError, PublishedDIDOperationOutcome] =
+        ZIO.fail(DIDOperationError.InvalidArgument("mocked error"))
+
+      override def updatePublishedDID(
+          operation: PublishedDIDOperation.Update
       ): IO[DIDOperationError, PublishedDIDOperationOutcome] =
         ZIO.fail(DIDOperationError.InvalidArgument("mocked error"))
     }
@@ -73,5 +79,10 @@ private class DIDServiceImpl(
       operationId = HexString.fromByteArray(irisOutcome.operationId.toByteArray)
     )
   }
+
+  // TODO: implement
+  override def updatePublishedDID(
+      operation: PublishedDIDOperation.Update
+  ): IO[DIDOperationError, PublishedDIDOperationOutcome] = ???
 
 }
