@@ -15,13 +15,13 @@ object JsonUtilsForDidCommx {
   type MyJson = FixJson[JsonRecursiveType]
   type MyJsonTop = Map[String, MyJson]
 
-  private def fromJson(body: JsonObject): MyJsonTop = body.toMap
-    .map { case (k, v) => (k, fromJsonAux(v)) }
+  private def fromJson(body: JsonObject): MyJsonTop =
+    body.toMap.map { case (k, v) => (k, fromJsonAux(v)) }
 
   private def fromJsonAux(body: Json): MyJson = body.fold[MyJson](
     jsonNull = FixJson(Json.Null),
     jsonBoolean = b => FixJson(b),
-    jsonNumber = n => FixJson(n), // FIXME JsonNumber,
+    jsonNumber = n => FixJson(n), // TODO JsonNumber,
     jsonString = s => FixJson(s),
     jsonArray = v => FixJson(v.toSeq.map(json => fromJsonAux(json))),
     jsonObject = m => FixJson(m.toMap.map { case (k, v) => (k, fromJsonAux(v)) }),
@@ -36,7 +36,6 @@ object JsonUtilsForDidCommx {
       case FixJson(seq: Seq[MyJson] @unchecked)       => seq.map(myJsonToMap(_)).toArray
       case FixJson(m: Map[String, MyJson] @unchecked) => toJavaMap(m)
     }
-
     json.map { case (s, fixJson) => (s, myJsonToMap(fixJson)) }.asJava
   }
 
@@ -65,29 +64,18 @@ object JsonUtilsForDidCommx {
   }
 
   def fromJavaMapToJsonAux(m: java.util.Map[String, Any]): MyJsonTop = {
-    // com.nimbusds.jose.shaded.json.JSONArray
-
-    def auxMethod(f: Any): MyJson = {
-      println("*" * 10 + f)
-      println("*" * 5 + f.getClass().getCanonicalName())
-      f match {
-        case a: com.nimbusds.jose.shaded.json.JSONArray =>
-          println("*" * 6 + f.getClass().getCanonicalName())
-          FixJson(a.toArray.toSeq.map(e => auxMethod(e)))
-        case a: Array[Any]                            => FixJson(a.toSeq.map(e => auxMethod(e)))
-        case e: java.util.Map[String, Any] @unchecked => FixJson(fromJavaMapToJsonAux(e))
-        case value: JsonValue                         => FixJson(value)
-      }
+    def auxMethod(f: Any): MyJson = f match {
+      case a: com.nimbusds.jose.shaded.json.JSONArray => // TODO why do we need this
+        FixJson(a.toArray.toSeq.map(e => auxMethod(e)))
+      case null                                     => FixJson(Json.Null) // Can be remove if we use JsonNull
+      case a: Array[Any]                            => FixJson(a.toSeq.map(e => auxMethod(e)))
+      case e: java.util.Map[String, Any] @unchecked => FixJson(fromJavaMapToJsonAux(e))
+      case value: JsonValue                         => FixJson(value)
     }
-    m.asScala.toMap.map { case (s, any) =>
-      println("%" * 10 + s)
-      (s: String, auxMethod(any): MyJson)
-    }
+    m.asScala.toMap.map { case (s, any) => (s: String, auxMethod(any): MyJson) }
   }
 
-  def fromJavaMapToJson(m: java.util.Map[String, Any]): JsonObject =
-    toJson(fromJavaMapToJsonAux(m))
-
+  def fromJavaMapToJson(m: java.util.Map[String, Any]): JsonObject = toJson(fromJavaMapToJsonAux(m))
 }
 
 @main def JsonUtilsForDidCommxMain() = {
@@ -103,6 +91,7 @@ object JsonUtilsForDidCommx {
 
   val x1 = parse(json).toOption.flatMap(_.asObject).get
   println(x1)
+
   val x2 = JsonUtilsForDidCommx.fromJsonToJavaMap(x1)
   println(x2)
 
