@@ -7,17 +7,17 @@ object Dependencies {
     val zioPreludeVersion = "1.0.0-RC15"
   }
 
-  private lazy val coreJwtCirce = ("io.circe" %% "circe-core" % Versions.circeVersion).cross(CrossVersion.for3Use2_13)
-  private lazy val genericJwtCirce =
-    ("io.circe" %% "circe-generic" % Versions.circeVersion).cross(CrossVersion.for3Use2_13)
-  private lazy val parserJwtCirce =
-    ("io.circe" %% "circe-parser" % Versions.circeVersion).cross(CrossVersion.for3Use2_13)
+  private lazy val coreJwtCirce = "io.circe" %% "circe-core" % Versions.circeVersion
+  private lazy val genericJwtCirce = "io.circe" %% "circe-generic" % Versions.circeVersion
+  private lazy val parserJwtCirce = "io.circe" %% "circe-parser" % Versions.circeVersion
 
-  private lazy val circeJsonSchema =
-    ("net.reactivecore" %% "circe-json-schema" % "0.3.0").cross(CrossVersion.for3Use2_13)
+  private lazy val circeJsonSchema = ("net.reactivecore" %% "circe-json-schema" % "0.3.0")
+    .cross(CrossVersion.for3Use2_13)
+    .exclude("io.circe", "circe-core_2.13")
+    .exclude("io.circe", "circe-generic_2.13")
+    .exclude("io.circe", "circe-parser_2.13")
 
-  private lazy val jwtCirce =
-    ("com.github.jwt-scala" %% "jwt-circe" % Versions.jwtCirceVersion).cross(CrossVersion.for3Use2_13)
+  private lazy val jwtCirce = "com.github.jwt-scala" %% "jwt-circe" % Versions.jwtCirceVersion
 
   private lazy val zioPrelude = "dev.zio" %% "zio-prelude" % Versions.zioPreludeVersion
 
