@@ -8,7 +8,6 @@ import io.circe.syntax.*
 import io.iohk.atala.mercury.model.AttachmentDescriptor
 import io.iohk.atala.mercury.model.AttachmentDescriptor.attachmentDescriptorEncoderV2
 import io.iohk.atala.mercury.protocol.issuecredential.*
-import io.iohk.atala.mercury.protocol.issuecredential.Credential.*
 import munit.*
 import zio.*
 
