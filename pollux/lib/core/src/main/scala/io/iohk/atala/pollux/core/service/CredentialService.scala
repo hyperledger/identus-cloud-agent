@@ -1,6 +1,6 @@
 package io.iohk.atala.pollux.core.service
 
-import cats.data.State
+//import cats.data.State
 import com.google.protobuf.ByteString
 import io.iohk.atala.iris.proto.dlt.IrisOperation
 import io.iohk.atala.iris.proto.service.IrisOperationId
@@ -13,11 +13,7 @@ import io.iohk.atala.pollux.core.model.error.IssueCredentialError
 import io.iohk.atala.pollux.core.model.error.IssueCredentialError._
 import io.iohk.atala.pollux.core.model.error.PublishCredentialBatchError
 import io.iohk.atala.pollux.core.repository.CredentialRepository
-import io.iohk.atala.pollux.vc.jwt.Issuer
-import io.iohk.atala.pollux.vc.jwt.IssuerDID
-import io.iohk.atala.pollux.vc.jwt.JwtCredentialPayload
-import io.iohk.atala.pollux.vc.jwt.JwtVerifiableCredential
-import io.iohk.atala.pollux.vc.jwt.W3CCredentialPayload
+import io.iohk.atala.pollux.vc.jwt.*
 import io.iohk.atala.prism.crypto.MerkleInclusionProof
 import io.iohk.atala.prism.crypto.MerkleTreeKt
 import io.iohk.atala.prism.crypto.Sha256
@@ -53,7 +49,7 @@ trait CredentialService {
     val publicKey = keyPair.getPublic
     val uuid = UUID.randomUUID().toString
     Issuer(
-      did = IssuerDID(s"did:prism:$uuid"),
+      did = io.iohk.atala.pollux.vc.jwt.DID(s"did:prism:$uuid"),
       signer = io.iohk.atala.pollux.vc.jwt.ES256Signer(privateKey),
       publicKey = publicKey
     )
@@ -221,15 +217,15 @@ private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepos
   ): Nothing = ???
 
   private def publishCredentialBatch(
-      credentials: Seq[W3CCredentialPayload],
+      credentials: Seq[W3cCredentialPayload],
       issuer: Issuer
   ): IO[PublishCredentialBatchError, PublishedBatchData] = {
     import collection.JavaConverters.*
 
     val hashes = credentials
       .map { c =>
-        val encoded = JwtVerifiableCredential.toEncodedJwt(c, issuer).jwt
-        Sha256.compute(encoded.getBytes)
+        val encoded = JwtCredential.toEncodedJwt(c, issuer)
+        Sha256.compute(encoded.value.getBytes)
       }
       .toBuffer
       .asJava
@@ -241,7 +237,7 @@ private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepos
     val irisOperation = IrisOperation(
       IrisOperation.Operation.IssueCredentialsBatch(
         IssueCredentialsBatch(
-          issuerDid = issuer.did.id,
+          issuerDid = issuer.did.value,
           merkleRoot = ByteString.copyFrom(root.getHash.component1)
         )
       )
