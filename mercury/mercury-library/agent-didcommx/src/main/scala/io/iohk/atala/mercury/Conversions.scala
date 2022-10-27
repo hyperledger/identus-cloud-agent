@@ -56,7 +56,6 @@ given Conversion[Attachment, XAttachment] with {
 
     val id = attachment.id
     val data = XAttachment.Data.Companion.parse(hack2.asJava)
-    println("%%" * 120)
     new XAttachment.Builder(id, data).build()
   }
 }
