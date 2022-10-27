@@ -2,6 +2,7 @@ package io.iohk.atala.castor.core.service
 
 import io.iohk.atala.castor.core.model.did.{
   DIDDocument,
+  PrismDID,
   PrismDIDV1,
   PublishedDIDOperation,
   PublishedDIDOperationOutcome
@@ -17,6 +18,7 @@ import io.iohk.atala.shared.models.HexStrings.HexString
 import io.iohk.atala.iris.proto as iris_proto
 
 trait DIDService {
+  def getConfirmedOperations(did: PrismDIDV1): IO[DIDOperationError, Seq[PublishedDIDOperation]]
   def createPublishedDID(operation: PublishedDIDOperation.Create): IO[DIDOperationError, PublishedDIDOperationOutcome]
   def updatePublishedDID(operation: PublishedDIDOperation.Update): IO[DIDOperationError, PublishedDIDOperationOutcome]
 }
@@ -24,6 +26,8 @@ trait DIDService {
 object MockDIDService {
   val layer: ULayer[DIDService] = ZLayer.succeed {
     new DIDService {
+      override def getConfirmedOperations(did: PrismDIDV1): IO[DIDOperationError, Seq[PublishedDIDOperation]] =
+        ZIO.fail(DIDOperationError.InvalidArgument("mocked error"))
       override def createPublishedDID(
           operation: PublishedDIDOperation.Create
       ): IO[DIDOperationError, PublishedDIDOperationOutcome] =
@@ -49,6 +53,12 @@ private class DIDServiceImpl(
     didOpRepo: DIDOperationRepository[Task]
 ) extends DIDService,
       ProtoModelHelper {
+
+  override def getConfirmedOperations(did: PrismDIDV1): IO[DIDOperationError, Seq[PublishedDIDOperation]] = {
+    didOpRepo
+      .getConfirmedPublishedDIDOperations(did)
+      .mapBoth(DIDOperationError.InternalErrorDB.apply, _.map(_.operation))
+  }
 
   override def createPublishedDID(
       operation: PublishedDIDOperation.Create
