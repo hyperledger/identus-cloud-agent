@@ -2,26 +2,50 @@ package io.iohk.atala.agent.server.http.service
 
 import akka.http.scaladsl.marshalling.ToEntityMarshaller
 import akka.http.scaladsl.server.Route
+import io.circe.*
 import io.iohk.atala.agent.openapi.api.IssueCredentialsApiService
 import io.iohk.atala.agent.openapi.model.*
 import io.iohk.atala.agent.server.http.marshaller.IssueCredentialsApiMarshallerImpl
+import io.iohk.atala.pollux.vc.jwt.*
 import zio.*
 
+import java.security.spec.ECGenParameterSpec
+import java.security.{KeyPairGenerator, SecureRandom}
+import java.time.{Instant, OffsetDateTime, OffsetTime}
+import java.util.{Base64, UUID}
+import cats.implicits.*
+import io.circe.*
+import io.circe.generic.auto.*
+import io.circe.syntax.*
+import io.circe.{Decoder, Encoder, HCursor, Json}
+import io.circe.parser.decode
+import io.iohk.atala.pollux.core.service.CredentialService
+import io.iohk.atala.pollux.core.model.EncodedJWTCredential
+
 // TODO: replace with actual implementation
-class IssueCredentialsApiServiceImpl()(using runtime: Runtime[Any])
+class IssueCredentialsApiServiceImpl(service: CredentialService)(using runtime: Runtime[Any])
     extends IssueCredentialsApiService
     with AkkaZioSupport {
+
+  private val issuer = service.createIssuer
+
+  case class Schema(context: String, `type`: String)
+  private val defaultSchemas = Set(
+    Schema("https://www.w3.org/2018/credentials/v1", "VerifiableCredential")
+  )
+  private val mockSchemas = Map(
+    "06e126d1-fa44-4882-a243-1e326fbe21db" -> Schema(
+      "https://www.w3.org/2018/credentials/examples/v1",
+      "UniversityDegreeCredential"
+    )
+  )
 
   private val mockW3Credential = W3CCredential(
     id = "fsdf234t523fdf3",
     `type` = "University degree",
     issuer = "University of applied science",
     issuanceDate = "21/09/2022",
-    credentialSubject = Some(
-      W3CCredentialCredentialSubject(
-        id = "University degree for smth"
-      )
-    ),
+    credentialSubject = Map("id" -> "University degree for smth"),
     proof = Some(
       W3CProof(
         `type` = "proof",
@@ -38,7 +62,7 @@ class IssueCredentialsApiServiceImpl()(using runtime: Runtime[Any])
     batchId = Some("1"),
     count = Some(1),
     credentials = Some(
-      Seq(mockW3Credential)
+      Seq("")
     )
   )
 
@@ -68,12 +92,50 @@ class IssueCredentialsApiServiceImpl()(using runtime: Runtime[Any])
     count = Some(1)
   )
 
+  private[this] def createPayload(input: W3CCredentialInput, issuer: Issuer): (UUID, W3cCredentialPayload) = {
+    val now = Instant.now()
+    val credentialId = UUID.randomUUID()
+    val claims = input.claims.map(kv => kv._1 -> Json.fromString(kv._2))
+    val schemas = defaultSchemas ++ input.schemaId.flatMap(mockSchemas.get)
+    credentialId -> W3cCredentialPayload(
+      `@context` = schemas.map(_.context),
+      maybeId = Some(s"https://atala.io/prism/credentials/${credentialId.toString}"),
+      `type` = schemas.map(_.`type`),
+      issuer = issuer.did,
+      issuanceDate = now,
+      maybeExpirationDate = input.validityPeriod.map(sec => now.plusSeconds(sec.toLong)),
+      maybeCredentialSchema = None,
+      credentialSubject = claims.updated("id", Json.fromString(input.subjectId)).asJson,
+      maybeCredentialStatus = None,
+      maybeRefreshService = None,
+      maybeEvidence = None,
+      maybeTermsOfUse = None
+    )
+  }
+
   /** Code: 201, Message: Array of created verifiable credentials objects, DataType: CreateCredentials201Response
     */
   def createCredentials(createCredentialsRequest: CreateCredentialsRequest)(implicit
       toEntityMarshallerCreateCredentials201Response: ToEntityMarshaller[CreateCredentials201Response]
   ): Route =
-    onZioSuccess(ZIO.unit) { _ => createCredentials201(mockCredentialResponse) }
+    onZioSuccess(ZIO.unit) { _ =>
+      val credentials = createCredentialsRequest.credentials.map { input =>
+        val (uuid, payload) = createPayload(input, issuer)
+        uuid.toString -> payload.toJwtCredentialPayload
+      }
+      val batchId = UUID.randomUUID().toString
+      // service.createCredentials(
+      //   batchId,
+      //   credentials.map { case (id, jwt) => EncodedJWTCredential(batchId, id, jwt) }
+      // )
+      val resp = CreateCredentials201Response(
+        Some(batchId),
+        Some(credentials.size),
+        Some(credentials.map(c => JwtCredential.encodeJwt(c._2, issuer).value))
+      )
+
+      createCredentials201(resp)
+    }
 
   /** Code: 204, Message: Credential was deleted
     */
@@ -135,9 +197,10 @@ class IssueCredentialsApiServiceImpl()(using runtime: Runtime[Any])
 }
 
 object IssueCredentialsApiServiceImpl {
-  val layer: ZLayer[Any, Nothing, IssueCredentialsApiService] = ZLayer.fromZIO {
+  val layer: URLayer[CredentialService, IssueCredentialsApiService] = ZLayer.fromZIO {
     for {
       rt <- ZIO.runtime[Any]
-    } yield IssueCredentialsApiServiceImpl()(using rt)
+      svc <- ZIO.service[CredentialService]
+    } yield IssueCredentialsApiServiceImpl(svc)(using rt)
   }
 }

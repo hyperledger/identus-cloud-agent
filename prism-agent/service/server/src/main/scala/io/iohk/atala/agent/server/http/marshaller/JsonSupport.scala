@@ -3,6 +3,11 @@ package io.iohk.atala.agent.server.http.marshaller
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import io.iohk.atala.agent.openapi.model.*
 import spray.json.{DefaultJsonProtocol, RootJsonFormat, jsonReader}
+import spray.json.JsonFormat
+import java.util.UUID
+import spray.json.JsString
+import spray.json.JsValue
+import spray.json.DeserializationException
 
 trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 
@@ -46,14 +51,29 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   given RootJsonFormat[VerificationMethod] = jsonFormat4(VerificationMethod.apply)
   given RootJsonFormat[VerificationMethodOrRef] = jsonFormat2(VerificationMethodOrRef.apply)
 
+  // Issue Credential Protocol
+  implicit object UUIDFormat extends JsonFormat[UUID] {
+    def write(uuid: UUID) = JsString(uuid.toString)
+    def read(value: JsValue) = {
+      value match {
+        case JsString(uuid) => UUID.fromString(uuid)
+        case _              => throw new DeserializationException("Expected hexadecimal UUID string")
+      }
+    }
+  }
+  given RootJsonFormat[CreateIssueCredentialRecordRequest] = jsonFormat4(CreateIssueCredentialRecordRequest.apply)
+  given RootJsonFormat[IssueCredentialRecord] = jsonFormat6(IssueCredentialRecord.apply)
+  given RootJsonFormat[IssueCredentialRecordCollection] = jsonFormat4(IssueCredentialRecordCollection.apply)
+  //
+
   // Pollux
   given RootJsonFormat[CreateCredentials201Response] = jsonFormat3(CreateCredentials201Response.apply)
-  given RootJsonFormat[CreateCredentialsRequest] = jsonFormat2(CreateCredentialsRequest.apply)
+  given RootJsonFormat[CreateCredentialsRequest] = jsonFormat1(CreateCredentialsRequest.apply)
   given RootJsonFormat[RevocationStatus] = jsonFormat2(RevocationStatus.apply)
   given RootJsonFormat[W3CCredential] = jsonFormat6(W3CCredential.apply)
-  given RootJsonFormat[W3CCredentialCredentialSubject] = jsonFormat1(W3CCredentialCredentialSubject.apply)
-  given RootJsonFormat[W3CCredentialInput] = jsonFormat3(W3CCredentialInput.apply)
-  given RootJsonFormat[W3CCredentialInputClaims] = jsonFormat1(W3CCredentialInputClaims.apply)
+//  given RootJsonFormat[W3CCredentialCredentialSubject] = jsonFormat1(W3CCredentialCredentialSubject.apply)
+  given RootJsonFormat[W3CCredentialInput] = jsonFormat4(W3CCredentialInput.apply)
+//  given RootJsonFormat[W3CCredentialInputClaims] = jsonFormat1(W3CCredentialInputClaims.apply)
   given RootJsonFormat[W3CCredentialRevocationRequest] = jsonFormat1(W3CCredentialRevocationRequest.apply)
   given RootJsonFormat[W3CCredentialRevocationResponse] = jsonFormat2(W3CCredentialRevocationResponse.apply)
   given RootJsonFormat[W3CCredentialsPaginated] = jsonFormat4(W3CCredentialsPaginated.apply)

@@ -6,6 +6,7 @@ object Dependencies {
     val doobie = "1.0.0-RC2"
     val zioCatsInterop = "3.3.0"
     val prismSdk = "v1.3.3-snapshot-1657194253-992dd96"
+    val iris = "0.1.0"
   }
 
   private lazy val zio = "dev.zio" %% "zio" % Versions.zio
@@ -20,12 +21,15 @@ object Dependencies {
     ExclusionRule(
       organization = "org.bouncycastle"
     )
+  private lazy val polluxVcJwt = "io.iohk.atala" %% "pollux-vc-jwt" % "0.1.0-SNAPSHOT" changing ()
+
+  private lazy val irisClient = "io.iohk.atala" %% "iris-client" % Versions.iris
 
   // Dependency Modules
   private lazy val baseDependencies: Seq[ModuleID] = Seq(zio, prismCrypto)
   private lazy val doobieDependencies: Seq[ModuleID] = Seq(doobiePostgres, doobieHikari)
 
   // Project Dependencies
-  lazy val coreDependencies: Seq[ModuleID] = baseDependencies
+  lazy val coreDependencies: Seq[ModuleID] = baseDependencies ++ Seq(polluxVcJwt) ++ Seq(irisClient)
   lazy val sqlDoobieDependencies: Seq[ModuleID] = baseDependencies ++ doobieDependencies ++ Seq(zioCatsInterop)
 }

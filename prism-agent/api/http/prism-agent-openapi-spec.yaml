@@ -444,6 +444,116 @@ paths:
                 $ref: "./pollux/schemas.yaml#/components/schemas/W3CSchema"
         "404":
           description: Schema is not found by id
+## Issue Credential Protocol
+
+  /issue-credentials/credential-offers:
+    post:
+      tags: ["Issue Credentials Protocol"]
+      operationId: createCredentialOffer
+      summary: As a VC issuer, create a new credential offer to be sent to a VC holder
+      requestBody:
+        description: CredentialOffer object with schema identifier and claims
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./pollux/schemas.yaml#/components/schemas/CreateIssueCredentialRecordRequest                    
+      responses:
+        "201":
+          description: The issue credential record
+          content:
+            application/json:
+              schema:
+                $ref: ./pollux/schemas.yaml#/components/schemas/IssueCredentialRecord
+        "422":
+          description: The issue credential record creation failed.
+          content:
+            application/json:
+              schema:
+                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
+  
+  /issue-credentials/records:
+    get:
+      tags: ["Issue Credentials Protocol"]
+      operationId: getCredentialRecords
+      summary: Get credential records
+      responses:
+        "200":
+          description: The issue credential records
+          content:
+            application/json:
+              schema:
+                $ref: ./pollux/schemas.yaml#/components/schemas/IssueCredentialRecordCollection
+        "500":
+          description: Retrieving the issue credential records failed for an unexpected reason.
+          content:
+            application/json:
+              schema:
+                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
+
+  /issue-credentials/records/{recordId}:
+    get:
+      tags: ["Issue Credentials Protocol"]
+      operationId: getCredentialRecord
+      summary: Get a credential record by Id
+      parameters:
+        - $ref: ./pollux/parameters.yaml#/components/parameters/issueCredentialRecordIdInPath
+      responses:
+        "200":
+          description: The issue credential record
+          content:
+            application/json:
+              schema:
+                $ref: ./pollux/schemas.yaml#/components/schemas/IssueCredentialRecord
+        "404":
+          description: There is no issue credential record matching the given 'recordId'.
+          content:
+            application/json:
+              schema:
+                $ref: "./pollux/schemas.yaml#/components/schemas/ErrorResponse"
+  
+  /issue-credentials/records/{recordId}/accept-offer:
+    post:
+      tags: ["Issue Credentials Protocol"]
+      operationId: acceptCredentialOffer
+      summary: As a VC holder, accept a credential offer received from an issuer
+      parameters:
+        - $ref: ./pollux/parameters.yaml#/components/parameters/issueCredentialRecordIdInPath
+      responses:
+        "200":
+          description: The issue credential offer has been accepted
+          content:
+            application/json:
+              schema:
+                $ref: ./pollux/schemas.yaml#/components/schemas/IssueCredentialRecord          
+        "404":
+          description: There is no issue credential record maatching the given 'recordId'.
+          content:
+            application/json:
+              schema:
+                $ref: "./pollux/schemas.yaml#/components/schemas/ErrorResponse"      
+
+  /issue-credentials/records/{recordId}/issue-credential:
+    post:
+      tags: ["Issue Credentials Protocol"]
+      operationId: issueCredential
+      summary: As a VC issuer, issue the VC for the specified issue credential record
+      parameters:
+        - $ref: ./pollux/parameters.yaml#/components/parameters/issueCredentialRecordIdInPath
+      responses:
+        "200":
+          description: The VC has been issued
+          content:
+            application/json:
+              schema:
+                $ref: ./pollux/schemas.yaml#/components/schemas/IssueCredentialRecord          
+        "404":
+          description: There is no issue credential record maatching the given 'recordId'.
+          content:
+            application/json:
+              schema:
+                $ref: "./pollux/schemas.yaml#/components/schemas/ErrorResponse"      
+##
 
   /issue-credentials/credentials:
     post:
@@ -463,9 +573,6 @@ paths:
               type: object
               required: ["credentials"]
               properties:
-                batchId:
-                  type: string
-                  description: Batch ID of the credential objects that will be created together
                 credentials:
                   type: array
                   items:
@@ -493,7 +600,7 @@ paths:
                   credentials:
                     type: array
                     items:
-                      $ref: "./pollux/schemas.yaml#/components/schemas/W3CCredential"
+                      $ref: "./pollux/schemas.yaml#/components/schemas/JWTCompactSerialisation"
 
     get:
       tags: ["Issue Credentials"]

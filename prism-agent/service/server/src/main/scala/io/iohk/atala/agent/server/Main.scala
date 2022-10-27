@@ -3,7 +3,7 @@ package io.iohk.atala.agent.server
 import zio.*
 
 object Main extends ZIOAppDefault {
-  override def run = Console
+  override def run: ZIO[Any, Throwable, Unit] = Console
     .printLine("""
       |██████╗ ██████╗ ██╗███████╗███╗   ███╗
       |██╔══██╗██╔══██╗██║██╔════╝████╗ ████║
@@ -19,5 +19,8 @@ object Main extends ZIOAppDefault {
       |██║  ██║╚██████╔╝███████╗██║ ╚████║   ██║
       |╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚═╝  ╚═══╝   ╚═╝
       |""".stripMargin)
-    .ignore *> Modules.app
+    .ignore
+    *> Modules.didCommExchangesJob.fork
+    *> Modules.didCommServiceEndpoint.fork
+    *> Modules.app
 }
