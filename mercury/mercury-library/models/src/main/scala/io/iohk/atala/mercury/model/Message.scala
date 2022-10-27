@@ -15,7 +15,7 @@ case class Message(
     id: String = java.util.UUID.randomUUID.toString(),
     createdTime: Long = LocalDateTime.now().toEpochSecond(ZoneOffset.of("Z")),
     expiresTimePlus: Long = 1000,
-    attachments: Seq[Attachment] = Seq.empty, // id -> data  (data is also a json)
+    attachments: Seq[AttachmentDescriptor] = Seq.empty, // id -> data  (data is also a json)
     thid: Option[String] = None,
     pthid: Option[String] = None,
     ack: Seq[String] = Seq.empty,

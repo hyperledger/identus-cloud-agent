@@ -1,10 +1,9 @@
 package io.iohk.atala.mercury.model
 
-import java.util.{Base64 => JBase64}
-import io.circe.{Encoder, Decoder}
-import io.circe.generic.semiauto._
-import io.circe.syntax._
-import io.circe.Json
+import java.util.Base64 as JBase64
+import io.circe.{Decoder, Encoder, HCursor, Json, JsonObject}
+import io.circe.generic.semiauto.*
+import io.circe.syntax.*
 
 /** @see
   *   data in attachments https://identity.foundation/didcomm-messaging/spec/#attachments
@@ -12,26 +11,44 @@ import io.circe.Json
 sealed trait AttachmentData
 
 final case class Header(kid: String)
+object Header {
+  given Encoder[Header] = deriveEncoder[Header]
 
+  given Decoder[Header] = deriveDecoder[Header]
+}
 final case class Jws(header: Header, `protected`: String, signature: String)
+object Jws {
+  given Encoder[Jws] = deriveEncoder[Jws]
 
+  given Decoder[Jws] = deriveDecoder[Jws]
+}
 final case class JwsData(base64: String, jws: Jws) extends AttachmentData
+object JwsData {
+  given Encoder[JwsData] = deriveEncoder[JwsData]
 
+  given Decoder[JwsData] = deriveDecoder[JwsData]
+}
 final case class Base64(base64: String) extends AttachmentData
-
-object AttachmentData {
+object Base64 {
   given Encoder[Base64] = deriveEncoder[Base64]
   given Decoder[Base64] = deriveDecoder[Base64]
 
-  given Encoder[JwsData] = deriveEncoder[JwsData]
-  given Decoder[JwsData] = deriveDecoder[JwsData]
+}
+final case class JsonData(data: JsonObject) extends AttachmentData
+object JsonData {
+  given Encoder[JsonData] = deriveEncoder[JsonData]
+  given Decoder[JsonData] = deriveDecoder[JsonData]
+}
+object AttachmentData {
+  // given Encoder[AttachmentData] = deriveEncoder[AttachmentData]
+  given Encoder[AttachmentData] = (a: AttachmentData) => {
+    a match
+      case data @ JsonData(_)   => data.asJson
+      case data @ Base64(_)     => data.asJson
+      case data @ JwsData(_, _) => data.asJson
+  }
 
-  given Encoder[Jws] = deriveEncoder[Jws]
-  given Decoder[Jws] = deriveDecoder[Jws]
-
-  given Encoder[Header] = deriveEncoder[Header]
-  given Decoder[Header] = deriveDecoder[Header]
-
+  given Decoder[AttachmentData] = deriveDecoder[AttachmentData]
 }
 
 /** @see
@@ -45,9 +62,9 @@ object AttachmentData {
   * @param description
   */
 final case class AttachmentDescriptor(
-    id: Option[String] = None,
+    id: String,
     media_type: Option[String] = None,
-    data: Base64 = Base64(""),
+    data: AttachmentData = Base64(""),
     filename: Option[String] = None,
     lastmod_time: Option[String] = None,
     byte_count: Option[Int] = None,
@@ -57,7 +74,7 @@ final case class AttachmentDescriptor(
 object AttachmentDescriptor {
 
   def buildAttachment[A: Encoder](
-      id: Option[String] = None,
+      id: String = java.util.UUID.randomUUID.toString,
       payload: A,
       mediaType: Option[String] = Some("application/json")
   ): AttachmentDescriptor = {

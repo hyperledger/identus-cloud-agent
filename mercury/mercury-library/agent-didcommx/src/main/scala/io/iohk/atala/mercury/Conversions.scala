@@ -60,6 +60,26 @@ given Conversion[Attachment, XAttachment] with {
   }
 }
 
+given Conversion[AttachmentDescriptor, XAttachment] with {
+  def apply(attachment: AttachmentDescriptor): XAttachment = {
+    val id = attachment.id
+
+    val data =
+      attachment.data match {
+        case JsonData(d) => {
+          val hack: Map[String, ?] = d.toMap.view.mapValues(json2Map).toMap
+          val hack2 = Map[String, Any]("jws" -> null, "hash" -> null, "json" -> hack.asJava) // OMG
+          val id = attachment.id
+          XAttachment.Data.Companion.parse(hack2.asJava)
+        }
+        case Base64(d) => new XAttachment.Data.Base64(d, null, null)
+        case _         => ??? // FIXME later attachment data of other types
+      }
+
+    new XAttachment.Builder(id, data).build()
+  }
+}
+
 given Conversion[PackSignedResult, SignedMesage] with {
   def apply(msg: PackSignedResult): SignedMesage = SignedMessageImp(msg)
 }

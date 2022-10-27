@@ -4,7 +4,7 @@ import io.circe._
 
 import io.iohk.atala.mercury.model._
 
-type ForwardAttachment = Attachment
+type ForwardAttachment = AttachmentDescriptor
 
 /** Example
   * {{{

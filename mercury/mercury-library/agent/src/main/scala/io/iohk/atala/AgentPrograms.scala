@@ -31,7 +31,7 @@ def makeForwardMessage(from: Agent, mediator: Agent, to: Agent, msg: EncryptedMe
     to = mediator.id,
     expires_time = None,
     body = ForwardBody(next = to.id), // TODO check msg header
-    attachments = Seq(Attachment(data = msg.asJson)),
+    attachments = Seq(AttachmentDescriptor.buildAttachment(payload = msg.asJson)),
   )
 
 object AgentPrograms {

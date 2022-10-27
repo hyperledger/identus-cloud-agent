@@ -33,7 +33,7 @@ final case class IssueCredential(
     to = replyingTo,
     thid = replyingThid,
     body = this.body.asJson.asObject.get,
-    attachments = Seq.empty, // FIXME Seq(Attachment(attachments.))
+    attachments = this.attachments, // FIXME Seq(Attachment(attachments.))
   )
 }
 

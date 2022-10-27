@@ -150,7 +150,8 @@ object AgentCli extends ZIOAppDefault {
         case data => ZIO.succeed(data)
       }
 
-      attachmentDescriptor = AttachmentDescriptor.buildAttachment(id = Some("request-0"), payload = playloadData)
+      attachmentDescriptor =
+        AttachmentDescriptor.buildAttachment(payload = playloadData)
       attribute1 = Attribute(name = "name", value = "Joe Blog")
       attribute2 = Attribute(name = "dob", value = "01/10/1947")
       credentialPreview = CredentialPreview(attributes = Seq(attribute1, attribute2))
