@@ -357,8 +357,8 @@ paths:
     post:
       tags: [ "DID Registrar" ]
       operationId: updateManagedDid
-      summary: Add new key-pairs to DID Document and publish operation to blockchain
-      description: Add new key-pairs to DID Document and publish operation to blockchain
+      summary: Update DID Document and publish operation to blockchain
+      description: Update DID Document and publish operation to blockchain
       parameters:
         - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
       requestBody:
