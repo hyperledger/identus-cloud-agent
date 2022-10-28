@@ -54,7 +54,7 @@ object RequestCredential {
       ),
       attachments = pc.attachments,
       thid = Some(msg.id),
-      from = msg.from.get, // TODO get
+      from = msg.to.get, // TODO get
       to = msg.from.get, // TODO get
     )
   }
