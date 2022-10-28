@@ -5,7 +5,7 @@ object Dependencies {
     val zio = "2.0.2"
     val zioConfig = "3.0.2"
     val zioHttp = "2.0.0-RC11"
-    val akka = "2.6.20"
+    val akka = "2.6.20" // Do not upgrade >= 2.7.x due to commercial license
     val akkaHttp = "10.2.9"
     val castor = "0.1.0-SNAPSHOT"
     val pollux = "0.1.0-SNAPSHOT"

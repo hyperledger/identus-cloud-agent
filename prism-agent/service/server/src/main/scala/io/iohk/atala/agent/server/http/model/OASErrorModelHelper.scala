@@ -66,18 +66,30 @@ trait OASErrorModelHelper {
   }
 
   given ToErrorResponse[IssueCredentialError] with {
-    def toErrorResponse(error: IssueCredentialError): ErrorResponse = {
+    def toErrorResponse(e: IssueCredentialError): ErrorResponse = {
       ErrorResponse(
         `type` = "error-type",
         title = "error-title",
         status = 500,
-        detail = Some(error.toString),
+        detail = Some(e.toString),
         instance = "error-instance"
       )
     }
   }
 
-  def notFoundErrorResponse(detail: Option[String] = None) = ErrorResponse(
+  given ToErrorResponse[UpdateManagedDIDError] with {
+    override def toErrorResponse(e: UpdateManagedDIDError): ErrorResponse = {
+      ErrorResponse(
+        `type` = "error-type",
+        title = "error-title",
+        status = 500,
+        detail = Some(e.toString),
+        instance = "error-instance"
+      )
+    }
+  }
+
+  def notFoundErrorResponse(detail: Option[String] = None): ErrorResponse = ErrorResponse(
     `type` = "not-found",
     title = "Resource not found",
     status = 404,

@@ -108,7 +108,6 @@ object Modules {
               }
             }
             .map(str => Response.text(str))
-
       }
     Server.start(port, app)
   }

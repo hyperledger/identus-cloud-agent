@@ -108,14 +108,14 @@ final class ManagedDIDService private[walletapi] (
       // One may invoke multiple update calls, but the first one that gets confirmed
       // on chain will be chosen. Other keys created but not lives
       // in the right lineage may be garbage collected.
-      confirmedOps <- didService
-        .getConfirmedOperations(canonicalDID)
-        .mapBoth(UpdateManagedDIDError.OperationError.apply, _.map(_.operation))
-      generated <- generateUpdateOperation(template)
-      (updateOperation, secret) = generated
+//      confirmedOps <- didService
+//        .getConfirmedOperations(canonicalDID)
+//        .mapBoth(UpdateManagedDIDError.OperationError.apply, _.map(_.operation))
+//      generated <- generateUpdateOperation(template)
+//      (updateOperation, secret) = generated
       // TODO: add persistence & validation logic
       outcome <- didService
-        .updatePublishedDID(updateOperation)
+        .updatePublishedDID(???)
         .mapError(UpdateManagedDIDError.OperationError.apply)
     } yield outcome
   }
