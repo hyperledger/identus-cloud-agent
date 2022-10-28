@@ -44,6 +44,7 @@ class IssueCredentialSpec extends ZSuite {
       body = body,
       attachments = Seq(attachmentDescriptor),
       to = DidId("did:prism:test123"),
+      from = DidId("did:prism:test123")
     )
 
     val did = DidId("did:prism:test123")

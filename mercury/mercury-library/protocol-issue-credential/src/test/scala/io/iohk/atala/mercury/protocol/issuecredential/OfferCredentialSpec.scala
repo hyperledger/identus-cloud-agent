@@ -10,7 +10,7 @@ import io.iohk.atala.mercury.model.AttachmentDescriptor.attachmentDescriptorEnco
 import io.iohk.atala.mercury.protocol.issuecredential.*
 import munit.*
 import zio.*
-
+import io.iohk.atala.mercury.model._
 class OfferCredentialSpec extends ZSuite {
 
   test("Issuer OfferCredential") {
@@ -58,6 +58,7 @@ class OfferCredentialSpec extends ZSuite {
       body = body,
       attachments = Seq(attachmentDescriptor),
       to = DidId("did:prism:test123"),
+      from = DidId("did:prism:test123")
     )
 
     val result = offerCredential.asJson.deepDropNullValues

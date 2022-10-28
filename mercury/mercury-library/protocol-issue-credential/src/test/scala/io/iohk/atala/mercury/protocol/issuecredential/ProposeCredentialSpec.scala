@@ -10,7 +10,7 @@ import io.iohk.atala.mercury.model.AttachmentDescriptor.attachmentDescriptorEnco
 import io.iohk.atala.mercury.protocol.issuecredential.*
 import munit.*
 import zio.*
-
+import io.iohk.atala.mercury.model._
 class ProposeCredentialSpec extends ZSuite {
 
   test("Holder ProposeCredential") {
@@ -55,7 +55,9 @@ class ProposeCredentialSpec extends ZSuite {
     val proposeCredential = ProposeCredential(
       id = "031bf917-2cbe-460b-8d12-b1a9609505c2",
       body = body,
-      attachments = Seq(attachmentDescriptor)
+      attachments = Seq(attachmentDescriptor),
+        to = DidId("did:prism:test123"),
+      from = DidId("did:prism:test123"),
     )
 
     val result = proposeCredential.asJson.deepDropNullValues

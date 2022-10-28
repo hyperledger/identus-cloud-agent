@@ -10,7 +10,7 @@ import io.iohk.atala.mercury.model.{AttachmentDescriptor, DidId}
 import io.iohk.atala.mercury.protocol.issuecredential.*
 import munit.*
 import zio.*
-
+import io.iohk.atala.mercury.model._
 class RequestCredentialSpec extends ZSuite {
 
   test("Holder RequestCredential") {
@@ -43,6 +43,7 @@ class RequestCredentialSpec extends ZSuite {
       body = body,
       attachments = Seq(attachmentDescriptor),
       to = DidId("did:prism:test123"),
+      from = DidId("did:prism:test123")
     )
 
     val result = requestCredential.asJson.deepDropNullValues
