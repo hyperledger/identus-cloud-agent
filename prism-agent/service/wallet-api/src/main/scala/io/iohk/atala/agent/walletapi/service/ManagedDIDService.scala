@@ -162,7 +162,7 @@ final class ManagedDIDService private[walletapi] (
       secret = CreateDIDSecret(
         updateCommitmentSecret = updateCommitmentSecret,
         recoveryCommitmentSecret = recoveryCommitmentSecret,
-        keyPairs = keys.map { case (keyPair, template) => template.id -> keyPair }.toMap
+        keyPairs = keys.map { case (keyPair, publicKey) => publicKey.id -> keyPair }.toMap
       )
     } yield operation -> secret
   }
@@ -174,19 +174,23 @@ final class ManagedDIDService private[walletapi] (
       updateKeyPair: ECKeyPair,
       previousVersion: HexString
   ): IO[UpdateManagedDIDError, (PublishedDIDOperation.Update, UpdateDIDSecret)] = {
-    val generatedKeys = updateTemplate.patches.map {
-      case ManagedDIDUpdatePatch.AddPublicKey(template) => generateKeyPairAndPublicKey(template).asSome
-      case _: ManagedDIDUpdatePatch.RemovePublicKey     => ZIO.none
-      case _: ManagedDIDUpdatePatch.AddService          => ZIO.none
-      case _: ManagedDIDUpdatePatch.RemoveService       => ZIO.none
-    }
+    def generateKeyAndConvertToDomain(
+        patch: ManagedDIDUpdatePatch
+    ): IO[UpdateManagedDIDError, (DIDStatePatch, Option[(ECKeyPair, PublicKey)])] =
+      patch match {
+        case p: ManagedDIDUpdatePatch.AddPublicKey =>
+          generateKeyPairAndPublicKey(p.template)
+            .mapError(UpdateManagedDIDError.KeyGenerationError.apply)
+            .map { case (keyPair, publicKey) =>
+              DIDStatePatch.AddPublicKey(publicKey) -> Some(keyPair -> publicKey)
+            }
+        case ManagedDIDUpdatePatch.RemovePublicKey(id) => ZIO.succeed(DIDStatePatch.RemovePublicKey(id) -> None)
+        case ManagedDIDUpdatePatch.AddService(service) => ZIO.succeed(DIDStatePatch.AddService(service) -> None)
+        case ManagedDIDUpdatePatch.RemoveService(id)   => ZIO.succeed(DIDStatePatch.RemoveService(id) -> None)
+      }
 
-    // TODO: implement the remaining ???
     for {
-      keys <- ZIO
-        .collectAll(generatedKeys)
-        .map(_.flatten)
-        .mapError(UpdateManagedDIDError.KeyGenerationError.apply)
+      patchAndKeys <- ZIO.foreach(updateTemplate.patches)(generateKeyAndConvertToDomain)
       updateCommitmentSecret <- KeyGeneratorWrapper
         .generateECKeyPair(CURVE)
         .mapError(UpdateManagedDIDError.KeyGenerationError.apply)
@@ -196,18 +200,18 @@ final class ManagedDIDService private[walletapi] (
         updateKey = Base64UrlString.fromByteArray(updateKeyPair.publicKey.toEncoded(CURVE)),
         previousVersion = previousVersion,
         delta = UpdateOperationDelta(
-          patches = updateTemplate.patches.map(???),
+          patches = patchAndKeys.map(_._1),
           updateCommitment = HexString.fromByteArray(Sha256.compute(updateCommitmentRevealValue).getValue)
         ),
-        signature = ???
+        signature = ??? // TODO: generate signature
       )
       secret = UpdateDIDSecret(
         updateCommitmentSecret = updateCommitmentSecret,
         // "addPublicKey" action must overwrite the existing key.
         // Thus only the last key in the same update operation is kept in the secret storage
         // https://identity.foundation/sidetree/spec/#add-public-keys
-        keyPairs = keys
-          .map { case (keyPair, template) => template.id -> keyPair }
+        keyPairs = patchAndKeys
+          .collect { case (_, Some((keyPair, publicKey))) => publicKey.id -> keyPair }
           .distinctBy(_._1, keepFirst = false)
           .toMap
       )
@@ -231,8 +235,10 @@ final class ManagedDIDService private[walletapi] (
 
   private def canonicalizeDID(did: PrismDID): Either[String, PrismDIDV1] = did match {
     case d: LongFormPrismDIDV1 => Right(d.toCanonical)
-    case _                     => Left(s"only Prism method v1 is currently supported")
+    case _                     => Left(s"only Prism method v1 is allow for agent managed keys")
   }
+
+  private def generateUpdateOperationSignature(): Task[Array[Byte]] = ???
 
 }
 
