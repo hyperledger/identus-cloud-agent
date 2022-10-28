@@ -1,4 +1,5 @@
 package io.iohk.atala.pollux.core.model
+import io.iohk.atala.prism.crypto.MerkleInclusionProof
 
 import java.util.UUID
 
@@ -7,6 +8,7 @@ final case class IssueCredentialRecord(
     credentialId: UUID, // Id of the credential that will be created from this record
     schemaId: String,
     //role: IssueCredentialRecord.Role,
+    merkleInclusionProof: Option[MerkleInclusionProof],
     subjectId: String,
     validityPeriod: Option[Double] = None,
     claims: Map[String, String],

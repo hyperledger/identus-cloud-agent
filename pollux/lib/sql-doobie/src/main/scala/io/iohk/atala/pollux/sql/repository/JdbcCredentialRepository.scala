@@ -2,13 +2,16 @@ package io.iohk.atala.pollux.sql.repository
 
 import doobie.*
 import doobie.implicits.*
+import io.circe._
+import io.circe.parser._
+import io.circe.syntax._
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.repository.CredentialRepository
 import io.iohk.atala.pollux.sql.model.JWTCredentialRow
+import io.iohk.atala.prism.crypto.MerkleInclusionProof
 import zio.*
 import zio.interop.catz.*
-import io.circe.syntax._
-import io.circe._, io.circe.parser._
+
 import java.util.UUID
 
 // TODO: replace with actual implementation
@@ -45,6 +48,7 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         | INSERT INTO public.issue_credential_records(
         |   id,
         |   schema_id,
+        |   merkle_inclusion_proof
         |   subject_id,
         |   validity_period,
         |   claims,
@@ -52,6 +56,7 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         | ) values (
         |   ${record.id.toString},
         |   ${record.schemaId},
+        |   ${record.merkleInclusionProof.map(_.encode)},
         |   ${record.subjectId},
         |   ${record.validityPeriod},
         |   ${record.claims.asJson.toString},
@@ -69,6 +74,7 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   id,
         |   credential_id
         |   schema_id,
+        |   merkle_inclusion_proof
         |   subject_id,
         |   validity_period,
         |   claims,
@@ -90,6 +96,7 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   id,
         |   credential_id
         |   schema_id,
+        |   merkle_inclusion_proof
         |   subject_id,
         |   validity_period,
         |   claims,
@@ -110,6 +117,7 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   id,
         |   credential_id
         |   schema_id,
+        |   merkle_inclusion_proof
         |   subject_id,
         |   validity_period,
         |   claims,

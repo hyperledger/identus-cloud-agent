@@ -17,8 +17,9 @@ CREATE TABLE public.issue_credential_records(
   "id" VARCHAR(36) NOT NULL PRIMARY KEY,
   "credential_id" VARCHAR(36) NOT NULL
   "schema_id" VARCHAR(36) NOT NULL,
+  "merkle_inclusion_proof" TEXT 
   "subject_id" TEXT NOT NULL,
-  "validity_period" INTEGER NOT NULL,
+  "validity_period" INTEGER,
   "claims" TEXT NOT NULL,
   "state" VARCHAR(50) NOT NULL
 );

@@ -30,7 +30,7 @@ import java.util.UUID
 
 trait CredentialService {
 
-  /** Copy pasted from Castor codebase for now TODO: replace with actual data from castor laster
+  /** Copy pasted from Castor codebase for now TODO: replace with actual data from castor later
     *
     * @param method
     * @param methodSpecificId
@@ -90,11 +90,19 @@ trait CredentialService {
       issuanceDate: Instant
   ): IO[CreateCredentialPayloadFromRecordError, W3cCredentialPayload]
 
+  def publishCredentialBatch(
+      credentials: Seq[W3cCredentialPayload],
+      issuer: Issuer
+  ): IO[PublishCredentialBatchError, PublishedBatchData]
+
 }
 
 object MockCredentialService {
   val layer: ULayer[CredentialService] = ZLayer.succeed {
     new CredentialService {
+
+
+      override def publishCredentialBatch(credentials: Seq[W3cCredentialPayload], issuer: Issuer): IO[PublishCredentialBatchError, PublishedBatchData] = ???
 
       override def extractIdFromCredential(credential: W3cCredentialPayload): Option[UUID] = ???
 
@@ -121,6 +129,7 @@ object MockCredentialService {
             UUID.randomUUID(),
             UUID.randomUUID(),
             schemaId,
+            None,
             subjectId,
             validityPeriod,
             claims,
@@ -181,6 +190,7 @@ private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepos
           UUID.randomUUID(),
           UUID.randomUUID(),
           schemaId,
+          None,
           subjectId,
           validityPeriod,
           claims,
@@ -267,7 +277,6 @@ private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepos
       issuer: Issuer,
       issuanceDate: Instant
   ): IO[CreateCredentialPayloadFromRecordError, W3cCredentialPayload] = { // This function will get schema from database when it is available, that's why it returns IO
-    val now = Instant.now()
     val claims = record.claims.map(kv => kv._1 -> Json.fromString(kv._2))
     val schemas = Set( // TODO: This information should come from Schema registry by record.schemaId
       "https://www.w3.org/2018/credentials/v1"
@@ -275,12 +284,14 @@ private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepos
     ZIO.succeed(
       W3cCredentialPayload(
         `@context` = schemas,
-        maybeId = Some(s"https://atala.io/prism/credentials/${record.credentialId.toString}"), //TODO: this URL should probably come from env or config
+        maybeId = Some(
+          s"https://atala.io/prism/credentials/${record.credentialId.toString}"
+        ), // TODO: this URL should probably come from env or config
         `type` =
           Set("VerifiableCredential"), // TODO: This information should come from Schema registry by record.schemaId
         issuer = issuer.did,
         issuanceDate = issuanceDate,
-        maybeExpirationDate = record.validityPeriod.map(sec => now.plusSeconds(sec.toLong)),
+        maybeExpirationDate = record.validityPeriod.map(sec => issuanceDate.plusSeconds(sec.toLong)),
         maybeCredentialSchema = None,
         credentialSubject = claims.updated("id", Json.fromString(record.subjectId)).asJson,
         maybeCredentialStatus = None,
@@ -292,7 +303,7 @@ private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepos
 
   }
 
-  private def publishCredentialBatch(
+  def publishCredentialBatch(
       credentials: Seq[W3cCredentialPayload],
       issuer: Issuer
   ): IO[PublishCredentialBatchError, PublishedBatchData] = {
