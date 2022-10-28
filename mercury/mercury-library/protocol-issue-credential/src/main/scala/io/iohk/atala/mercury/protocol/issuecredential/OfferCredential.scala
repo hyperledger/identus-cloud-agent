@@ -15,6 +15,8 @@ import io.iohk.atala.mercury.model._
   * @param `type`
   * @param body
   * @param attachments
+  * @param thid
+  *   needs to be used need replying
   */
 final case class OfferCredential(
     id: String = java.util.UUID.randomUUID.toString(),
@@ -22,8 +24,8 @@ final case class OfferCredential(
     body: OfferCredential.Body,
     attachments: Seq[AttachmentDescriptor],
     // extra
-    replyingThid: Option[String] = None,
-    replyingTo: Option[DidId] = None,
+    thid: Option[String] = None,
+    to: DidId,
 ) {
   assert(`type` == OfferCredential.`type`)
 
@@ -31,10 +33,10 @@ final case class OfferCredential(
     id = this.id,
     piuri = this.`type`,
     from = Some(from),
-    to = replyingTo,
-    thid = replyingThid,
+    to = Some(to),
+    thid = this.thid,
     body = this.body.asJson.asObject.get, // FIXME TODO
-    attachments = Seq.empty, // FIXME Seq(Attachment(attachments.))
+    attachments = this.attachments,
   )
 }
 
@@ -69,8 +71,8 @@ object OfferCredential {
         formats = pc.body.formats,
       ),
       attachments = pc.attachments,
-      replyingThid = Some(msg.id),
-      replyingTo = msg.from,
+      thid = Some(msg.id),
+      to = msg.from.get, // TODO ERROR
     )
   }
 
@@ -84,6 +86,7 @@ object OfferCredential {
         credential_preview = CredentialPreview(attributes = Seq.empty), // FIXME TODO
         formats = Seq.empty, // FIXME TODO
       ),
-      attachments = Seq.empty[AttachmentDescriptor] // FIXME TODO
+      attachments = Seq.empty[AttachmentDescriptor], // FIXME TODO
+      to = message.from.get // TODO ERROR
     )
 }

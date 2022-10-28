@@ -58,10 +58,10 @@ object AgentPrograms {
       url = "http://localhost:8080",
       method = Method.POST,
       headers = Headers("content-type" -> MediaTypes.contentTypeEncrypted),
-      content = HttpData.fromChunk(Chunk.fromArray(jsonString.getBytes)),
+      content = Body.fromChunk(Chunk.fromArray(jsonString.getBytes)),
       // ssl = ClientSSLOptions.DefaultSSL,
     )
-    data <- res.bodyAsString
+    data <- res.body.asString
     _ <- Console.printLine("Receiving the message ..." + data)
     messageReceived <- bob.unpack(data)
     _ <- Console.printLine("Unpacking and decrypting the received message ...")
@@ -105,10 +105,10 @@ object AgentPrograms {
       url = "http://localhost:8080",
       method = Method.POST,
       headers = Headers("content-type" -> MediaTypes.contentTypeEncrypted),
-      content = HttpData.fromChunk(Chunk.fromArray(jsonString.getBytes)),
+      content = Body.fromChunk(Chunk.fromArray(jsonString.getBytes)),
       // ssl = ClientSSLOptions.DefaultSSL,
     )
-    data <- res.bodyAsString
+    data <- res.body.asString
     _ <- Console.printLine(data)
   } yield ()
 

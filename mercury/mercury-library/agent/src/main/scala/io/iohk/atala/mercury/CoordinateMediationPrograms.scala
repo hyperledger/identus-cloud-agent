@@ -52,10 +52,10 @@ object CoordinateMediationPrograms {
         url = mediatorURL,
         method = Method.POST,
         headers = Headers("content-type" -> MediaTypes.contentTypeEncrypted),
-        content = HttpData.fromChunk(Chunk.fromArray(jsonString.getBytes)),
+        content = Body.fromChunk(Chunk.fromArray(jsonString.getBytes)),
         // ssl = ClientSSLOptions.DefaultSSL,
       )
-      data <- res.bodyAsString
+      data <- res.body.asString
       _ <- ZIO.log(data)
 
       messageReceived <- agentService.unpack(data)

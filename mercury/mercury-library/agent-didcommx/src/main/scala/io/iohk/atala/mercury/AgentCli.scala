@@ -131,11 +131,11 @@ object AgentCli extends ZIOAppDefault {
           url = serviceEndpoint.get, // FIXME make ERROR type
           method = Method.POST,
           headers = Headers("content-type" -> MediaTypes.contentTypeEncrypted),
-          content = HttpData.fromChunk(Chunk.fromArray(jsonString.getBytes)),
+          content = Body.fromChunk(Chunk.fromArray(jsonString.getBytes)),
           // ssl = ClientSSLOptions.DefaultSSL,
         )
         .provideSomeLayer(env)
-      data <- res.bodyAsString
+      data <- res.body.asString
       _ <- Console.printLine(data)
     } yield ()
   }
@@ -210,12 +210,12 @@ object AgentCli extends ZIOAppDefault {
           url = serviceEndpoint,
           method = Method.POST,
           headers = Headers("content-type" -> MediaTypes.contentTypeEncrypted),
-          content = HttpData.fromChunk(Chunk.fromArray(jsonString.getBytes)),
+          content = Body.fromChunk(Chunk.fromArray(jsonString.getBytes)),
           // ssl = ClientSSLOptions.DefaultSSL,
         )
         .provideSomeLayer(env)
         .catchNonFatalOrDie { ex => ZIO.fail(SendMessage(ex)) }
-      data <- res.bodyAsString
+      data <- res.body.asString
         .catchNonFatalOrDie { ex => ZIO.fail(ParseResponse(ex)) }
       _ <- Console.printLine(data)
     } yield ()
@@ -227,7 +227,7 @@ object AgentCli extends ZIOAppDefault {
       .collectZIO[Request] {
         case req @ Method.POST -> !!
             if req.headersAsList.exists(h => h._1.equalsIgnoreCase(header._1) && h._2.equalsIgnoreCase(header._2)) =>
-          req.bodyAsString
+          req.body.asString
             .catchNonFatalOrDie(ex => ZIO.fail(ParseResponse(ex)))
             .flatMap { data =>
               webServerProgram(data).catchAll { ex =>
