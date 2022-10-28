@@ -42,6 +42,13 @@ final case class OfferCredential(
 
 object OfferCredential {
 
+  import AttachmentDescriptor.attachmentDescriptorEncoderV2
+
+  given Encoder[OfferCredential] = deriveEncoder[OfferCredential]
+
+  given Decoder[OfferCredential] = deriveDecoder[OfferCredential]
+
+  
   def `type`: PIURI = "https://didcomm.org/issue-credential/2.0/offer-credential"
 
   final case class Body(

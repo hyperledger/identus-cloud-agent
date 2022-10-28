@@ -2,7 +2,7 @@ package io.iohk.atala.mercury.protocol.issuecredential
 
 import cats.implicits.*
 import io.circe.Json
-import io.circe.generic.auto.*
+import io.circe.generic.semiauto.*
 import io.circe.parser.*
 import io.circe.syntax.*
 import io.iohk.atala.mercury.model.AttachmentDescriptor.attachmentDescriptorEncoderV2
@@ -35,12 +35,14 @@ class RequestCredentialSpec extends ZSuite {
          |    [
          |    $attachmentDescriptorJson
          |    ]
+         |    "to" : "did:prism:test123"
          |}""".stripMargin).getOrElse(Json.Null)
 
     val requestCredential = RequestCredential(
       id = "051bf917-2cbe-460b-8d12-b1a9609505c2",
       body = body,
-      attachments = Seq(attachmentDescriptor)
+      attachments = Seq(attachmentDescriptor),
+      to = DidId("did:prism:test123"),
     )
 
     val result = requestCredential.asJson.deepDropNullValues
