@@ -175,7 +175,7 @@ final class ManagedDIDService private[walletapi] (
       _ <- ZIO.fromEither(didOpValidator.validate(updateOperation)).mapError(UpdateManagedDIDError.OperationError.apply)
       _ <- prepareStagingDIDSecret(canonicalDID, secret, updateOperation)
       outcome <- didService
-        .updatePublishedDID(updateOperation)
+        .updatePublishedDID(???)
         .mapError(UpdateManagedDIDError.OperationError.apply)
       _ <- persistUpdateDIDSecret(canonicalDID, secret, updateOperation)
     } yield outcome
