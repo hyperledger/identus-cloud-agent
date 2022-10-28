@@ -49,14 +49,16 @@ class ProposeCredentialSpec extends ZSuite {
                          |    "attachments":
                          |    [
                          |    $attachmentDescriptorJson
-                         |    ]
+                         |    ],
+                         |    "to" : "did:prism:test123",
+                         |    "from" : "did:prism:test123"
                          |}""".stripMargin).getOrElse(Json.Null)
 
     val proposeCredential = ProposeCredential(
       id = "031bf917-2cbe-460b-8d12-b1a9609505c2",
       body = body,
       attachments = Seq(attachmentDescriptor),
-        to = DidId("did:prism:test123"),
+      to = DidId("did:prism:test123"),
       from = DidId("did:prism:test123"),
     )
 

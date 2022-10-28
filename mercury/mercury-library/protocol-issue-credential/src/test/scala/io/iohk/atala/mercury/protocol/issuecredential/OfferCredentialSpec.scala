@@ -50,7 +50,8 @@ class OfferCredentialSpec extends ZSuite {
          |    [
          |    $attachmentDescriptorJson
          |    ],
-         |    "to" : "did:prism:test123"
+         |    "to" : "did:prism:test123",
+         |    "from" : "did:prism:test123"
          |}""".stripMargin).getOrElse(Json.Null)
 
     val offerCredential = OfferCredential(
