@@ -71,8 +71,8 @@ final case class AttachmentDescriptor(
     media_type: Option[String] = None,
     data: AttachmentData = Base64(""),
     filename: Option[String] = None,
-    lastmod_time: Option[String] = None,
-    byte_count: Option[Int] = None,
+    lastmod_time: Option[Long] = None,
+    byte_count: Option[Long] = None,
     description: Option[String] = None
 )
 

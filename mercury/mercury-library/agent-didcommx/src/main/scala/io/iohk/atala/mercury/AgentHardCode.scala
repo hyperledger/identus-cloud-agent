@@ -4,7 +4,7 @@ import zio._
 import io.circe._
 import io.circe.syntax._
 
-import io.iohk.atala.mercury.model._
+import io.iohk.atala.mercury.model.{_, given}
 import io.iohk.atala.mercury.protocol.issuecredential._
 import java.io.IOException
 
@@ -43,6 +43,10 @@ object AgentHardCode extends ZIOAppDefault {
       ttt <- didCommService.packEncrypted(msg, to = didCommService.myDid)
       msg2 <- didCommService.unpack(ttt.string)
       _ <- Console.printLine(msg)
+
+      aaa = msg: org.didcommx.didcomm.message.Message
+      _ <- Console.printLine("aaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+      _ <- Console.printLine(aaa.getAttachments())
     } yield ()
   }
 

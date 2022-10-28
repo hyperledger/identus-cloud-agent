@@ -13,7 +13,7 @@ import io.iohk.atala.resolvers.CharlieSecretResolver
 import zhttp.service._
 import zhttp.http._
 import io.iohk.atala.QRcode
-import io.iohk.atala.mercury.model._
+import io.iohk.atala.mercury.model.{_, given}
 import io.iohk.atala.mercury.model.error._
 import io.iohk.atala.mercury.protocol.outofbandlogin._
 import io.iohk.atala.mercury.protocol.issuecredential._

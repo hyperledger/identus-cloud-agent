@@ -6,7 +6,6 @@ import org.didcommx.didcomm.model._
 import io.circe.JsonObject.apply
 import io.circe.JsonObject
 import io.circe.Json
-import io.iohk.atala.mercury.JsonUtilsForDidCommx
 
 final case class EncryptedMessageImp(private val msg: PackEncryptedResult) extends EncryptedMessage {
   def string: String = msg.getPackedMessage
@@ -17,23 +16,27 @@ final case class SignedMessageImp(private val msg: PackSignedResult) extends Sig
 }
 
 final case class UnpackMessageImp(private val msg: UnpackResult) extends UnpackMessage {
-  def message: Message = { // FIXME TODO
+  def message: Message = {
     val aux = msg.getMessage
-
-    // val aaa: Map[String, Json] = aux.getBody().asScala.toMap.asInstanceOf[Map[String, Json]]
-    // val thisbody = JsonObject.fromMap(aaa)
 
     val thisbody = JsonUtilsForDidCommx.fromJavaMapToJson(aux.getBody)
 
+    val attachments: Seq[AttachmentDescriptor] = Option(aux.getAttachments()).toSeq
+      .flatMap(_.asScala.toSeq)
+      .map(e => e) // using the given Conversion
+
     Message(
       piuri = aux.getType(),
-      from = Some(DidId(aux.getFrom())), // FIXME some ... and none
-      to = aux.getTo().asScala.toSeq.map(e => DidId(e)).headOption, // FIXME to need to be a Seq
+      from = Option(aux.getFrom()).map(DidId(_)),
+      to = Option(aux.getTo()).toSeq
+        .map(_.asScala)
+        .flatMap(_.toSeq.map(e => DidId(e)))
+        .headOption,
       body = thisbody,
       id = aux.getId(),
       createdTime = aux.getCreatedTime(),
       expiresTimePlus = aux.getExpiresTime(),
-      attachments = Seq.empty, // FIXME aux.getAttachments(),
+      attachments = attachments,
       thid = Option(aux.getThid()).filter(!_.isEmpty()),
       pthid = Option(aux.getPthid()).filter(!_.isEmpty()),
       ack = Option(aux.getAck()).toSeq.filter(!_.isEmpty()),
