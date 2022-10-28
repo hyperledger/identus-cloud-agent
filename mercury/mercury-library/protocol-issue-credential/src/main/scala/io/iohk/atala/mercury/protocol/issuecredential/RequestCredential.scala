@@ -13,18 +13,18 @@ final case class RequestCredential(
     body: RequestCredential.Body,
     attachments: Seq[AttachmentDescriptor],
     // extra
-    replyingThid: Option[String] = None,
-    replyingTo: Option[DidId] = None,
+    thid: Option[String] = None,
+    to: DidId,
 ) {
 
   def makeMessage(from: DidId): Message = Message(
     id = this.id,
     piuri = this.`type`,
     from = Some(from),
-    to = replyingTo,
-    thid = replyingThid,
-    body = this.body.asJson.asObject.get, // FIXME TODO
-    attachments = Seq.empty, // FIXME Seq(Attachment(attachments.))
+    to = Some(this.to),
+    thid = this.thid,
+    body = this.body.asJson.asObject.get, // TODO get
+    attachments = this.attachments,
   )
 }
 object RequestCredential {
@@ -44,14 +44,6 @@ object RequestCredential {
 
   def makeRequestCredentialFromOffer(msg: Message): RequestCredential = {
     val pc: OfferCredential = OfferCredential.readFromMessage(msg)
-    makeRequestCredentialFromOffer(pc, Some(msg.id), msg.from)
-  }
-
-  def makeRequestCredentialFromOffer(
-      pc: OfferCredential,
-      replyingThid: Option[String],
-      replyingTo: Option[DidId]
-  ): RequestCredential = {
 
     RequestCredential(
       body = RequestCredential.Body(
@@ -60,8 +52,8 @@ object RequestCredential {
         formats = pc.body.formats,
       ),
       attachments = pc.attachments,
-      replyingThid = replyingThid,
-      replyingTo = replyingTo,
+      thid = Some(msg.id),
+      to = msg.from.get, // TODO get
     )
   }
 
@@ -74,7 +66,9 @@ object RequestCredential {
         comment = None, // FIXME TODO
         formats = Seq.empty, // FIXME TODO
       ),
-      attachments = Seq.empty[AttachmentDescriptor] // FIXME TODO
+      attachments = Seq.empty[AttachmentDescriptor], // FIXME TODO
+      thid = message.thid,
+      to = message.to.get, // TODO get
     )
 
 }

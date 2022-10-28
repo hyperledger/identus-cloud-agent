@@ -186,7 +186,7 @@ object AgentCli extends ZIOAppDefault {
     *
     * TODO Move this method to another model
     */
-  def sendMessage(msg: Message): ZIO[DidComm, MercuryException, Unit] = { // FIXME  Throwable
+  def sendMessage(msg: Message): ZIO[DidComm, MercuryException, Unit] = { // TODO  Throwable
     for {
       didCommService <- ZIO.service[DidComm]
 
@@ -194,14 +194,14 @@ object AgentCli extends ZIOAppDefault {
       jsonString = encryptedForwardMessage.string
 
       serviceEndpoint = UniversalDidResolver
-        .resolve(msg.to.get.value) // FIXME GET
+        .resolve(msg.to.get.value) // TODO GET
         .get()
         .getDidCommServices()
         .asScala
         .toSeq
         .headOption
         .map(s => s.getServiceEndpoint())
-        .get // FIXME make ERROR type
+        .get // TODO make ERROR type
 
       _ <- Console.printLine("Sending to" + serviceEndpoint)
 

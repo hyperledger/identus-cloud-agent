@@ -21,8 +21,8 @@ final case class IssueCredential(
     body: IssueCredential.Body,
     attachments: Seq[AttachmentDescriptor],
     // extra
-    replyingThid: Option[String] = None,
-    replyingTo: Option[DidId] = None,
+    thid: Option[String] = None,
+    to: DidId,
 ) {
   assert(`type` == IssueCredential.`type`)
 
@@ -30,10 +30,10 @@ final case class IssueCredential(
     id = this.id,
     piuri = this.`type`,
     from = Some(from),
-    to = replyingTo,
-    thid = replyingThid,
+    to = Some(this.to),
+    thid = this.thid,
     body = this.body.asJson.asObject.get,
-    attachments = this.attachments, // FIXME Seq(Attachment(attachments.))
+    attachments = this.attachments,
   )
 }
 
@@ -65,8 +65,8 @@ object IssueCredential {
         formats = rc.body.formats,
       ),
       attachments = rc.attachments,
-      replyingThid = Some(msg.id),
-      replyingTo = msg.from,
+      thid = Some(msg.id),
+      to = msg.from.get, // TODO get
     )
   }
 }
