@@ -106,6 +106,8 @@ final class ManagedDIDService private[walletapi] (
 
   // Currently only supports a simple update by replacing a current key-pair with a new one.
   // This implies that when there's a fork or rollback, users can potentially lose control of their DIDs.
+  // This simple key-pair inplace update also introduce another problem when the update
+  // is non-atomic as the keys can be lost if error occur during persistence.
   def updateDIDAndPublish(
       did: PrismDID,
       template: ManagedDIDUpdateTemplate
@@ -127,8 +129,17 @@ final class ManagedDIDService private[walletapi] (
         .absolve
       generated <- generateUpdateOperation(canonicalDID, template, updateKeyPair, previousVersion)
       (updateOperation, secret) = generated
+      currentVersion = DIDOperationHash.fromOperation(updateOperation).toHexString
       _ <- ZIO.fromEither(didOpValidator.validate(updateOperation)).mapError(UpdateManagedDIDError.OperationError.apply)
-      // TODO: persist secret
+      _ <- secretStorage
+        .upsertDIDCommitmentKey(did, CommitmentPurpose.Update, secret.updateCommitmentSecret)
+        .mapError(UpdateManagedDIDError.WalletStorageError.apply)
+      _ <- ZIO
+        .foreachDiscard(secret.keyPairs) { case (keyId, keyPair) => secretStorage.upsertKey(did, keyId, keyPair) }
+        .mapError(UpdateManagedDIDError.WalletStorageError.apply)
+      _ <- nonSecretStorage
+        .upsertDIDVersion(canonicalDID, currentVersion)
+        .mapError(UpdateManagedDIDError.WalletStorageError.apply)
       outcome <- didService
         .updatePublishedDID(updateOperation)
         .mapError(UpdateManagedDIDError.OperationError.apply)
@@ -167,7 +178,6 @@ final class ManagedDIDService private[walletapi] (
     } yield operation -> secret
   }
 
-  // TODO: implement
   private def generateUpdateOperation(
       did: PrismDIDV1,
       updateTemplate: ManagedDIDUpdateTemplate,
@@ -237,8 +247,6 @@ final class ManagedDIDService private[walletapi] (
     case d: LongFormPrismDIDV1 => Right(d.toCanonical)
     case _                     => Left(s"only Prism method v1 is allow for agent managed keys")
   }
-
-  private def generateUpdateOperationSignature(): Task[Array[Byte]] = ???
 
 }
 
