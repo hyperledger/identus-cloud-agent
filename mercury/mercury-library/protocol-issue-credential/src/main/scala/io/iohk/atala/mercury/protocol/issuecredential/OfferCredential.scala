@@ -49,7 +49,6 @@ object OfferCredential {
 
   given Decoder[OfferCredential] = deriveDecoder[OfferCredential]
 
-  
   def `type`: PIURI = "https://didcomm.org/issue-credential/2.0/offer-credential"
 
   final case class Body(
