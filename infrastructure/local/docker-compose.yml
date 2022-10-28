@@ -3,7 +3,7 @@ version: '3.8'
 services:
 
   ##########################
-  # Databases
+  # Castor Database
   ##########################
   db_castor:
     image: postgres:13
@@ -35,6 +35,39 @@ services:
         condition: service_completed_successfully
 
   ##########################
+  # Pollux Database
+  ##########################
+
+  db_pollux:
+    image: postgres:13
+    restart: always
+    environment:
+      POSTGRES_DB: pollux
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - 5433:5432
+    volumes:
+      - pg_data_pollux_db:/var/lib/postgresql/data
+
+  # delay to ensure DB is up before applying migrations
+  db_pollux_init_delay:
+    image: alpine:3
+    command: sleep 5
+    depends_on:
+      db_pollux:
+        condition: service_started
+
+  db_pollux_init:
+    image: flyway/flyway:9.3.0-alpine
+    volumes:
+      - $PWD/pollux/lib/sql-doobie/src/main/resources/sql:/flyway/sql
+    command: -url=jdbc:postgresql://db_pollux:5432/pollux?user=postgres&password=postgres migrate
+    depends_on:
+      db_pollux_init_delay:
+        condition: service_completed_successfully
+
+  ##########################
   # Services
   ##########################
   mercury:
@@ -55,8 +88,15 @@ services:
       CASTOR_DB_NAME: castor
       CASTOR_DB_USER: postgres
       CASTOR_DB_PASSWORD: postgres
+      POLLUX_DB_HOST: db_pollux
+      POLLUX_DB_PORT: 5432
+      POLLUX_DB_NAME: pollux
+      POLLUX_DB_USER: postgres
+      POLLUX_DB_PASSWORD: postgres
     depends_on:
       db_castor_init:
+        condition: service_completed_successfully
+      db_pollux_init:
         condition: service_completed_successfully
 
   swagger-ui:
@@ -81,3 +121,4 @@ services:
 
 volumes:
   pg_data_castor_db:
+  pg_data_pollux_db:

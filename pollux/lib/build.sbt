@@ -1,20 +1,34 @@
 import Dependencies._
+import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
 
-ThisBuild / version := "0.1.0"
-ThisBuild / scalaVersion := "3.1.3"
-ThisBuild / organization := "io.iohk.atala"
+inThisBuild(
+  Seq(
+    organization := "io.iohk.atala",
+    scalaVersion := "3.2.0",
+    fork := true,
+    run / connectInput := true,
+    versionScheme := Some("semver-spec"),
+    githubOwner := "input-output-hk",
+    githubRepository := "atala-prism-building-blocks",
+    githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN")
+  )
+)
 
 val commonSettings = Seq(
   githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN"),
-  resolvers += Resolver.githubPackages("input-output-hk", "atala-prism-sdk"),
+  resolvers += Resolver.githubPackages("input-output-hk"),
   // Needed for Kotlin coroutines that support new memory management mode
-  resolvers += "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven",
+  resolvers += "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven"
 )
 
 // Project definitions
 lazy val root = project
   .in(file("."))
   .settings(commonSettings)
+  .settings(
+    name := "pollux-root",
+    skip / publish := true
+  )
   .aggregate(core, `sql-doobie`)
 
 lazy val core = project
@@ -33,3 +47,14 @@ lazy val `sql-doobie` = project
     libraryDependencies ++= sqlDoobieDependencies
   )
   .dependsOn(core)
+
+// ### ReleaseStep ###
+releaseProcess := Seq[ReleaseStep](
+  checkSnapshotDependencies,
+  inquireVersions,
+  runClean,
+  runTest,
+  setReleaseVersion,
+  publishArtifacts,
+  setNextVersion
+)

@@ -1,0 +1,10 @@
+components:
+  parameters:
+    issueCredentialRecordIdInPath:
+      in: path
+      name: recordId
+      required: true
+      description: The issue credential record Id.
+      schema:
+        type: string
+        format: uuid

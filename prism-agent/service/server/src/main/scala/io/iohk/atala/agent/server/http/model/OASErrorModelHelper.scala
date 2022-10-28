@@ -4,6 +4,8 @@ import akka.http.scaladsl.server.StandardRoute
 import io.iohk.atala.agent.openapi.model.ErrorResponse
 import io.iohk.atala.agent.walletapi.model.error.{CreateManagedDIDError, PublishManagedDIDError}
 import io.iohk.atala.castor.core.model.error.DIDOperationError
+import java.util.UUID
+import io.iohk.atala.pollux.core.model.error.IssueCredentialError
 
 trait ToErrorResponse[E] {
   def toErrorResponse(e: E): ErrorResponse
@@ -62,5 +64,25 @@ trait OASErrorModelHelper {
       )
     }
   }
+
+  given ToErrorResponse[IssueCredentialError] with {
+    def toErrorResponse(error: IssueCredentialError): ErrorResponse = {
+      ErrorResponse(
+        `type` = "error-type",
+        title = "error-title",
+        status = 500,
+        detail = Some(error.toString),
+        instance = "error-instance"
+      )
+    }
+  }
+
+  def notFoundErrorResponse(detail: Option[String] = None) = ErrorResponse(
+    `type` = "not-found",
+    title = "Resource not found",
+    status = 404,
+    detail = detail,
+    instance = UUID.randomUUID().toString
+  )
 
 }
