@@ -22,14 +22,15 @@ final case class IssueCredential(
     attachments: Seq[AttachmentDescriptor],
     // extra
     thid: Option[String] = None,
+    from: DidId,
     to: DidId,
 ) {
   assert(`type` == IssueCredential.`type`)
 
-  def makeMessage(from: DidId): Message = Message(
+  def makeMessage: Message = Message(
     id = this.id,
     piuri = this.`type`,
-    from = Some(from),
+    from = Some(this.from),
     to = Some(this.to),
     thid = this.thid,
     body = this.body.asJson.asObject.get,
@@ -66,6 +67,7 @@ object IssueCredential {
       ),
       attachments = rc.attachments,
       thid = Some(msg.id),
+      from = msg.from.get, // TODO get
       to = msg.from.get, // TODO get
     )
   }

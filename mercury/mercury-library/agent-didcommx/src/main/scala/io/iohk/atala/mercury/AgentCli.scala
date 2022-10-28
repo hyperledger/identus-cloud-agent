@@ -156,6 +156,13 @@ object AgentCli extends ZIOAppDefault {
       attribute2 = Attribute(name = "dob", value = "01/10/1947")
       credentialPreview = CredentialPreview(attributes = Seq(attribute1, attribute2))
 
+      didCommService <- ZIO.service[DidComm]
+      _ <- Console.printLine(s"Send to (ex: ${didCommService.myDid})")
+      sendTo <- Console.readLine.flatMap {
+        case ""  => ZIO.succeed(didCommService.myDid)
+        case did => ZIO.succeed(DidId(did))
+      }
+
       proposeCredential = ProposeCredential(
         body = ProposeCredential.Body(
           goal_code = Some("goal_code"),
@@ -163,19 +170,12 @@ object AgentCli extends ZIOAppDefault {
           credential_preview = credentialPreview, // Option[CredentialPreview], // JSON STRinf
           formats = Seq.empty // : Seq[CredentialFormat]
         ),
-        attachments = Seq(attachmentDescriptor)
+        attachments = Seq(attachmentDescriptor),
+        from = didCommService.myDid,
+        to = sendTo,
       )
-      _ <- Console.printLine("What is the the Playload")
       _ <- Console.printLine(proposeCredential)
-
-      didCommService <- ZIO.service[DidComm]
-      _ <- Console.printLine(s"Send to (ex: ${didCommService.myDid})")
-      didStr <- Console.readLine.flatMap {
-        case ""  => ZIO.succeed(didCommService.myDid)
-        case did => ZIO.succeed(DidId(did))
-      }
-      sendTo = didStr
-      msg = proposeCredential.makeMessage(from = didCommService.myDid, sendTo = sendTo)
+      msg = proposeCredential.makeMessage
       _ <- Console.printLine("Sending: " + msg)
 
       _ <- sendMessage(msg)
@@ -333,7 +333,7 @@ object AgentCli extends ZIOAppDefault {
                 offer = OfferCredential.makeOfferToProposeCredential(msg) // OfferCredential
 
                 didCommService <- ZIO.service[DidComm]
-                msg = offer.makeMessage(from = didCommService.myDid)
+                msg = offer.makeMessage
                 _ <- sendMessage(msg)
               } yield ("OfferCredential Sent")
 
@@ -346,7 +346,7 @@ object AgentCli extends ZIOAppDefault {
                 requestCredential = RequestCredential.makeRequestCredentialFromOffer(msg) // RequestCredential
 
                 didCommService <- ZIO.service[DidComm]
-                msg = requestCredential.makeMessage(from = didCommService.myDid)
+                msg = requestCredential.makeMessage
                 _ <- sendMessage(msg)
               } yield ("RequestCredential Sent")
 
@@ -358,7 +358,7 @@ object AgentCli extends ZIOAppDefault {
                 issueCredential = IssueCredential.makeIssueCredentialFromRequestCredential(msg) // IssueCredential
 
                 didCommService <- ZIO.service[DidComm]
-                msg = issueCredential.makeMessage(from = didCommService.myDid)
+                msg = issueCredential.makeMessage
                 _ <- sendMessage(msg)
               } yield ("IssueCredential Sent")
 

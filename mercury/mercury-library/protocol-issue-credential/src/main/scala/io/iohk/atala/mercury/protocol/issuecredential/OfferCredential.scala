@@ -25,14 +25,15 @@ final case class OfferCredential(
     attachments: Seq[AttachmentDescriptor],
     // extra
     thid: Option[String] = None,
+    from: DidId,
     to: DidId,
 ) {
   assert(`type` == OfferCredential.`type`)
 
-  def makeMessage(from: DidId): Message = Message(
+  def makeMessage: Message = Message(
     id = this.id,
     piuri = this.`type`,
-    from = Some(from),
+    from = Some(this.from),
     to = Some(to),
     thid = this.thid,
     body = this.body.asJson.asObject.get, // TODO get
@@ -58,7 +59,7 @@ object OfferCredential {
     given Decoder[Body] = deriveDecoder[Body]
   }
 
-  def makeOfferToProposeCredential(msg: Message): OfferCredential = {
+  def makeOfferToProposeCredential(msg: Message): OfferCredential = { // TODO change msg: Message to ProposeCredential
     val pc: ProposeCredential = ProposeCredential.readFromMessage(msg)
 
     OfferCredential(
@@ -72,7 +73,8 @@ object OfferCredential {
       ),
       attachments = pc.attachments,
       thid = Some(msg.id),
-      to = msg.from.get, // TODO ERROR
+      from = msg.from.get, // TODO get
+      to = msg.from.get, // TODO get
     )
   }
 
@@ -84,6 +86,7 @@ object OfferCredential {
       body = body,
       attachments = message.attachments,
       thid = message.thid,
+      from = message.from.get, // TODO get
       to = message.to.get, // TODO get
     )
   }
