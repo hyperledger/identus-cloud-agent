@@ -4,7 +4,7 @@ import java.util.Base64 as JBase64
 import io.circe.{Decoder, Encoder, HCursor, Json, JsonObject}
 import io.circe.generic.semiauto.*
 import io.circe.syntax.*
-import cats.syntax.functor._
+import cats.syntax.functor.*
 
 /** @see
   *   data in attachments https://identity.foundation/didcomm-messaging/spec/#attachments
@@ -35,6 +35,14 @@ object Base64 {
   given Decoder[Base64] = deriveDecoder[Base64]
 
 }
+
+final case class LinkData(links: Seq[String], hash: String) extends AttachmentData
+object LinkData {
+  given Encoder[LinkData] = deriveEncoder[LinkData]
+  given Decoder[LinkData] = deriveDecoder[LinkData]
+
+}
+
 final case class JsonData(data: JsonObject) extends AttachmentData
 object JsonData {
   given Encoder[JsonData] = deriveEncoder[JsonData]
@@ -44,15 +52,17 @@ object AttachmentData {
   // given Encoder[AttachmentData] = deriveEncoder[AttachmentData]
   given Encoder[AttachmentData] = (a: AttachmentData) => {
     a match
-      case data @ JsonData(_)   => data.asJson
-      case data @ Base64(_)     => data.asJson
-      case data @ JwsData(_, _) => data.asJson
+      case data @ JsonData(_)    => data.asJson
+      case data @ Base64(_)      => data.asJson
+      case data @ JwsData(_, _)  => data.asJson
+      case data @ LinkData(_, _) => data.asJson
   }
 
   given Decoder[AttachmentData] = List[Decoder[AttachmentData]](
     Decoder[JsonData].widen,
     Decoder[Base64].widen,
-    Decoder[JwsData].widen
+    Decoder[JwsData].widen,
+    Decoder[LinkData].widen
   ).reduceLeft(_ or _)
 }
 

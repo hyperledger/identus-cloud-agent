@@ -1,14 +1,15 @@
 package io.iohk.atala.mercury.model
 
-import org.didcommx.didcomm.model._
+import org.didcommx.didcomm.model.*
 import org.didcommx.didcomm.message.MessageBuilder
-import org.didcommx.didcomm.message.{Attachment => XAttachment}
+import org.didcommx.didcomm.message.Attachment as XAttachment
 
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
+import io.iohk.atala.mercury.model.*
 
-import io.iohk.atala.mercury.model._
 import java.util.Random
-import io.circe._
+import io.circe.*
+import org.didcommx.didcomm.message.Attachment.Data
 
 given Conversion[PackEncryptedResult, EncryptedMessage] with {
   def apply(msg: PackEncryptedResult): EncryptedMessage = EncryptedMessageImp(msg)
@@ -73,8 +74,9 @@ given Conversion[AttachmentDescriptor, XAttachment] with {
           val id = attachment.id
           XAttachment.Data.Companion.parse(hack2.asJava)
         }
-        case Base64(d) => new XAttachment.Data.Base64(d, null, null)
-        case _         => ??? // FIXME later attachment data of other types
+        case LinkData(links, hash) => new XAttachment.Data.Links(links.asJava, hash, null)
+        case Base64(d)             => new XAttachment.Data.Base64(d, null, null)
+        case _                     => ??? // FIXME later attachment data of other types
       }
 
     new XAttachment.Builder(id, data).build()
