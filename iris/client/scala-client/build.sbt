@@ -10,8 +10,13 @@ inThisBuild(
     versionScheme := Some("semver-spec"),
     githubOwner := "input-output-hk",
     githubRepository := "atala-prism-building-blocks",
-    githubTokenSource := TokenSource.Environment("GITHUB_TOKEN")
+    githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN")
   )
+)
+
+val commonSettings = Seq(
+  githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN"),
+  resolvers += Resolver.githubPackages("input-output-hk"),
 )
 
 // Custom keys
@@ -27,6 +32,7 @@ lazy val root = project
     Compile / PB.targets := Seq(scalapb.gen() -> (Compile / sourceManaged).value / "scalapb"),
     Compile / PB.protoSources := Seq(apiBaseDirectory.value / "grpc")
   )
+  .settings(commonSettings)
 
 // ### ReleaseStep ###
 releaseProcess := Seq[ReleaseStep](

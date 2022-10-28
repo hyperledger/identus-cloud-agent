@@ -26,6 +26,9 @@ val commonSettings = Seq(
 lazy val root = project
   .in(file("."))
   .settings(commonSettings)
+  .settings(
+    name := "castor-root",
+  )
   .aggregate(core, `sql-doobie`)
 
 lazy val core = project

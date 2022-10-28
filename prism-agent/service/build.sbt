@@ -1,8 +1,8 @@
 import Dependencies._
 import sbtghpackages.GitHubPackagesPlugin.autoImport._
 
-ThisBuild / version := "0.1.0-SNAPSHOT"
-ThisBuild / scalaVersion := "3.1.3"
+ThisBuild / version := "0.1.0"
+ThisBuild / scalaVersion := "3.2.0"
 ThisBuild / organization := "io.iohk.atala"
 
 // Custom keys
@@ -47,7 +47,7 @@ lazy val server = project
       .toMap,
     Docker / maintainer := "atala-coredid@iohk.io",
     Docker / dockerRepository := Some("atala-prism.io"),
-    // Docker / packageName := s"atala-prism/${packageName.value}",
+    Docker / dockerUsername := Some("input-output-hk"),
     dockerExposedPorts := Seq(8080),
     dockerBaseImage := "openjdk:11"
   )

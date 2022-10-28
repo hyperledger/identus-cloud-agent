@@ -20,4 +20,12 @@ object BackgroundJobs {
     Console.printLine(s"Running action with record => $record")
   }
 
+  val publishCredentialsToDlt = {
+    for {
+      credentialService <- ZIO.service[CredentialService]
+      _ <- Console.printLine("calling publishCredentialsToDlt job")
+    } yield ()
+
+  }
+
 }

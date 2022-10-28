@@ -71,15 +71,15 @@ services:
   # Services
   ##########################
   mercury:
-    image: atala-prism.io/mercury-mediator:0.1.0-SNAPSHOT
+    image: atala-prism.io/input-output-hk/mercury-mediator:0.1.0
 
   iris:
-    image: atala-prism.io/iris-server:0.1.0-SNAPSHOT
+    image: atala-prism.io/input-output-hk/iris-server:0.1.0
     ports:
       - 8081:8081
 
   prism-agent:
-    image: atala-prism.io/prism-agent-server:0.1.0-SNAPSHOT
+    image: atala-prism.io/input-output-hk/prism-agent-server:0.1.0
     environment:
       IRIS_HOST: iris
       IRIS_PORT: 8081

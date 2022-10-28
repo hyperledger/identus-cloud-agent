@@ -22,5 +22,6 @@ object Main extends ZIOAppDefault {
     .ignore
     *> Modules.didCommExchangesJob.fork
     *> Modules.didCommServiceEndpoint.fork
+    *> Modules.publishCredentialsToDltJob.fork
     *> Modules.app
 }

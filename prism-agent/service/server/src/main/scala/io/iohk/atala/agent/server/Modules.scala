@@ -77,7 +77,7 @@ object Modules {
   val didCommServiceEndpoint: Task[Nothing] = {
     val app: HttpApp[Any, Nothing] =
       Http.collect[Request] { case Method.POST -> !! / "did-comm-v2" =>
-        // TODO add DIDComm messages parsing logic here! 
+        // TODO add DIDComm messages parsing logic here!
         Response.text("Hello World!").setStatus(Status.Accepted)
       }
     Server.start(8090, app)
@@ -87,6 +87,12 @@ object Modules {
     val effect = BackgroundJobs.didCommExchanges
       .provideLayer(AppModule.credentialServiceLayer)
     (effect repeat Schedule.spaced(10.seconds)).unit
+  }
+
+  val publishCredentialsToDltJob: Task[Unit] = {
+    val effect = BackgroundJobs.publishCredentialsToDlt
+      .provideLayer(AppModule.credentialServiceLayer)
+    (effect repeat Schedule.spaced(1.seconds)).unit
   }
 
 }
@@ -191,7 +197,6 @@ object HttpModule {
   }
 
   val layers =
-   
     didApiLayer ++ didOperationsApiLayer ++ didAuthenticationApiLayer ++ didRegistrarApiLayer ++ issueCredentialsApiLayer ++ issueCredentialsProtocolApiLayer
 }
 

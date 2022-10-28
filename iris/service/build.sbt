@@ -8,9 +8,9 @@ ThisBuild / apiBaseDirectory := baseDirectory.value / "../api"
 
 def commonProject(project: Project): Project =
   project.settings(
-    version := "0.1.0-SNAPSHOT",
+    version := "0.1.0",
     organization := "io.iohk.atala",
-    scalaVersion := "3.1.3",
+    scalaVersion := "3.2.0",
     githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN"),
     resolvers += Resolver
       .githubPackages("input-output-hk", "atala-prism-sdk"),
@@ -50,6 +50,7 @@ lazy val server = commonProject(project)
     libraryDependencies ++= serverDependencies,
     Docker / maintainer := "atala-coredid@iohk.io",
     Docker / dockerRepository := Some("atala-prism.io"),
+    Docker / dockerUsername := Some("input-output-hk"),
     // Docker / packageName := s"atala-prism/${packageName.value}",
     dockerExposedPorts := Seq(8081),
     dockerBaseImage := "openjdk:11"
