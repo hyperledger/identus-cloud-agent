@@ -49,19 +49,6 @@ def json2Map(json: Json): Any = json match {
   case e if e.isString  => e.asString.get
 }
 
-//REMOVE
-// given Conversion[Attachment, XAttachment] with {
-//   def apply(attachment: Attachment): XAttachment = {
-
-//     val hack: Map[String, ?] = attachment.data.toMap.mapValues(json2Map).toMap
-//     val hack2 = Map[String, Any]("jws" -> null, "hash" -> null, "json" -> hack.asJava) // OMG
-
-//     val id = attachment.id
-//     val data = XAttachment.Data.Companion.parse(hack2.asJava)
-//     new XAttachment.Builder(id, data).build()
-//   }
-// }
-
 given Conversion[AttachmentDescriptor, XAttachment] with {
   def apply(attachment: AttachmentDescriptor): XAttachment = {
     val id = attachment.id

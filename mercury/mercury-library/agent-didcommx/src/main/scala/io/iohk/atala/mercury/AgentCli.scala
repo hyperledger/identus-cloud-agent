@@ -128,7 +128,7 @@ object AgentCli extends ZIOAppDefault {
       _ <- Console.printLine("Sending to" + serviceEndpoint)
       res <- Client
         .request(
-          url = serviceEndpoint.get, // FIXME make ERROR type
+          url = serviceEndpoint.get, // TODO make ERROR type
           method = Method.POST,
           headers = Headers("content-type" -> MediaTypes.contentTypeEncrypted),
           content = Body.fromChunk(Chunk.fromArray(jsonString.getBytes)),
