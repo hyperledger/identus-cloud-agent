@@ -29,7 +29,7 @@ lazy val V = new {
   val zio = "2.0.2"
   val zioLogging = "2.0.0"
   val zioJson = "0.3.0"
-  val zioHttp = "2.0.0-RC10" // "2.0.0-RC11" TODO
+  val zioHttp = "2.0.0-RC11"
 
   // https://mvnrepository.com/artifact/io.circe/circe-core
   val circe = "0.14.2"
@@ -203,6 +203,7 @@ lazy val agent = project // maybe merge into models
     protocolRouting,
     protocolMercuryMailbox,
     protocolLogin,
+    protocolIssueCredential,
   )
 
 /** Demos agents and services implementation with didcommx */

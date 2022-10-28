@@ -1,8 +1,10 @@
 package io.iohk.atala.mercury.protocol.routing
 
+import io.circe._
+
 import io.iohk.atala.mercury.model._
 
-type ForwardAttachment = Attachment
+type ForwardAttachment = AttachmentDescriptor
 
 /** Example
   * {{{
@@ -38,7 +40,7 @@ final case class ForwardMessage(
     Message(
       from = Some(from),
       to = Some(to),
-      body = Map("next" -> body.next.value),
+      body = JsonObject(("next", Json.fromString(body.next.value))),
       id = id,
       piuri = `type`,
       attachments = attachments

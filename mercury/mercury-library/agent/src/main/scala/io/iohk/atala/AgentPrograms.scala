@@ -4,6 +4,7 @@ import zio._
 import zhttp.service.Client
 import zhttp.http._
 
+import io.circe._
 import io.circe.Json._
 import io.circe.parser._
 import io.circe.JsonObject
@@ -16,10 +17,12 @@ def makeMsg(from: Agent, to: Agent) = Message(
   piuri = "http://atalaprism.io/lets_connect/proposal",
   from = Some(from.id),
   to = Some(to.id),
-  body = Map(
-    "connectionId" -> "8fb9ea21-d094-4506-86b6-c7c1627d753a",
-    "msg" -> "Hello Bob"
-  ),
+  body = JsonObject.fromIterable(
+    Seq(
+      "connectionId" -> Json.fromString("8fb9ea21-d094-4506-86b6-c7c1627d753a"),
+      "msg" -> Json.fromString("Hello Bob")
+    )
+  )
 )
 
 def makeForwardMessage(from: Agent, mediator: Agent, to: Agent, msg: EncryptedMessage) =
@@ -28,7 +31,7 @@ def makeForwardMessage(from: Agent, mediator: Agent, to: Agent, msg: EncryptedMe
     to = mediator.id,
     expires_time = None,
     body = ForwardBody(next = to.id), // TODO check msg header
-    attachments = Seq(Attachment(data = msg.asJson)),
+    attachments = Seq(AttachmentDescriptor.buildAttachment(payload = msg.asJson)),
   )
 
 object AgentPrograms {
@@ -55,10 +58,10 @@ object AgentPrograms {
       url = "http://localhost:8080",
       method = Method.POST,
       headers = Headers("content-type" -> MediaTypes.contentTypeEncrypted),
-      content = HttpData.fromChunk(Chunk.fromArray(jsonString.getBytes)),
+      content = Body.fromChunk(Chunk.fromArray(jsonString.getBytes)),
       // ssl = ClientSSLOptions.DefaultSSL,
     )
-    data <- res.bodyAsString
+    data <- res.body.asString
     _ <- Console.printLine("Receiving the message ..." + data)
     messageReceived <- bob.unpack(data)
     _ <- Console.printLine("Unpacking and decrypting the received message ...")
@@ -102,10 +105,10 @@ object AgentPrograms {
       url = "http://localhost:8080",
       method = Method.POST,
       headers = Headers("content-type" -> MediaTypes.contentTypeEncrypted),
-      content = HttpData.fromChunk(Chunk.fromArray(jsonString.getBytes)),
+      content = Body.fromChunk(Chunk.fromArray(jsonString.getBytes)),
       // ssl = ClientSSLOptions.DefaultSSL,
     )
-    data <- res.bodyAsString
+    data <- res.body.asString
     _ <- Console.printLine(data)
   } yield ()
 
