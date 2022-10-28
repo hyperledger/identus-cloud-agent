@@ -76,17 +76,15 @@ object OfferCredential {
     )
   }
 
-  def readFromMessage(message: Message): OfferCredential = // FIXME
+  def readFromMessage(message: Message): OfferCredential = {
+    val body = message.body.asJson.as[OfferCredential.Body].toOption.get // TODO get
     OfferCredential(
       id = message.id,
       `type` = message.piuri,
-      body = OfferCredential.Body(
-        goal_code = None, // FIXME TODO
-        comment = None, // FIXME TODO
-        credential_preview = CredentialPreview(attributes = Seq.empty), // FIXME TODO
-        formats = Seq.empty, // FIXME TODO
-      ),
-      attachments = Seq.empty[AttachmentDescriptor], // FIXME TODO
-      to = message.from.get // TODO ERROR
+      body = body,
+      attachments = message.attachments,
+      thid = message.thid,
+      to = message.to.get, // TODO get
     )
+  }
 }

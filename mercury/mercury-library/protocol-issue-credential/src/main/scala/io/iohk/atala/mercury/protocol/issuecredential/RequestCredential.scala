@@ -57,16 +57,14 @@ object RequestCredential {
     )
   }
 
-  def readFromMessage(message: Message): RequestCredential = // FIXME
+  def readFromMessage(message: Message): RequestCredential =
+    val body = message.body.asJson.as[RequestCredential.Body].toOption.get // TODO get
+
     RequestCredential(
       id = message.id,
       `type` = message.piuri,
-      body = RequestCredential.Body(
-        goal_code = None, // FIXME TODO
-        comment = None, // FIXME TODO
-        formats = Seq.empty, // FIXME TODO
-      ),
-      attachments = Seq.empty[AttachmentDescriptor], // FIXME TODO
+      body = body,
+      attachments = message.attachments,
       thid = message.thid,
       to = message.to.get, // TODO get
     )
