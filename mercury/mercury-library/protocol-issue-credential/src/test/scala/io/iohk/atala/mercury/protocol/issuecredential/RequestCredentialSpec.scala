@@ -34,7 +34,8 @@ class RequestCredentialSpec extends ZSuite {
          |    "attachments":
          |    [
          |    $attachmentDescriptorJson
-         |    ]
+         |    ],
+         |    "from": "did:prism:test123",
          |    "to" : "did:prism:test123"
          |}""".stripMargin).getOrElse(Json.Null)
 
