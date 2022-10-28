@@ -1,12 +1,39 @@
 package io.iohk.atala.castor.core.model.did
 
+import io.iohk.atala.castor.core.model.ProtoModelHelper
+import io.iohk.atala.prism.crypto.Sha256
 import io.iohk.atala.shared.models.Base64UrlStrings.*
 import io.iohk.atala.shared.models.HexStrings.*
+
+import scala.collection.immutable.ArraySeq
+
+object DIDOperationHashes {
+
+  opaque type DIDOperationHash = ArraySeq[Byte]
+
+  object DIDOperationHash {
+    def fromByteArray(bytes: Array[Byte]): DIDOperationHash = ArraySeq.from(bytes)
+
+    def fromOperation(op: PublishedDIDOperation): DIDOperationHash = {
+      import ProtoModelHelper.*
+      val bytes = op match {
+        case op: PublishedDIDOperation.Create => op.toProto.toByteArray
+        case op: PublishedDIDOperation.Update => op.toProto.toByteArray
+      }
+      fromByteArray(Sha256.compute(bytes).getValue)
+    }
+  }
+
+  extension (h: DIDOperationHash) {
+    def toByteArray: Array[Byte] = h.toArray
+    def toHexString: HexString = HexString.fromByteArray(toByteArray)
+  }
+
+}
 
 sealed trait PublishedDIDOperation
 
 object PublishedDIDOperation {
-
   final case class Create(
       updateCommitment: HexString,
       recoveryCommitment: HexString,

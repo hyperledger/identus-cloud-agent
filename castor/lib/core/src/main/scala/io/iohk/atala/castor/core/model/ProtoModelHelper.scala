@@ -25,6 +25,8 @@ import io.iohk.atala.iris.proto.did_operations.PublicKeyJwk.{Curve, Key}
 
 import scala.util.Try
 
+private[castor] object ProtoModelHelper extends ProtoModelHelper
+
 private[castor] trait ProtoModelHelper {
 
   extension (bytes: Array[Byte]) {
