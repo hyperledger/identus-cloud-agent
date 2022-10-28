@@ -3,7 +3,7 @@ package io.iohk.atala.agent.walletapi.util
 import com.ionspin.kotlin.bignum.integer.BigInteger
 import com.ionspin.kotlin.bignum.integer.util.ConversionUtilsKt
 
-object Prism14CompatUtil {
+object Prism14CompatUtils {
 
   extension (n: BigInteger) {
     def toScalaBigInt: BigInt = BigInt(ConversionUtilsKt.toTwosComplementByteArray(n))

@@ -5,7 +5,7 @@ import com.ionspin.kotlin.bignum.integer.util.ConversionUtilsKt
 import io.iohk.atala.agent.walletapi.model.ECCoordinates.ECCoordinate
 import io.iohk.atala.castor.core.model.did.EllipticCurve
 import io.iohk.atala.prism.crypto as prismcrypto
-import io.iohk.atala.agent.walletapi.util.Prism14CompatUtil.*
+import io.iohk.atala.agent.walletapi.util.Prism14CompatUtils.*
 
 import scala.collection.immutable.ArraySeq
 

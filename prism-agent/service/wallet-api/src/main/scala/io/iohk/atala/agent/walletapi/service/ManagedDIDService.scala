@@ -6,8 +6,10 @@ import io.iohk.atala.agent.walletapi.model.{
   DIDPublicKeyTemplate,
   ECKeyPair,
   ManagedDIDCreateTemplate,
+  ManagedDIDUpdatePatch,
   ManagedDIDUpdateTemplate
 }
+import io.iohk.atala.agent.walletapi.util.SeqExtensions.*
 import io.iohk.atala.agent.walletapi.model.ECCoordinates.*
 import io.iohk.atala.agent.walletapi.model.error.{CreateManagedDIDError, PublishManagedDIDError, UpdateManagedDIDError}
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService.{CreateDIDSecret, UpdateDIDSecret}
@@ -17,9 +19,11 @@ import io.iohk.atala.agent.walletapi.storage.{
   InMemoryDIDNonSecretStorage,
   InMemoryDIDSecretStorage
 }
+import io.iohk.atala.castor.core.model.did.DIDOperationHashes.DIDOperationHash
 import io.iohk.atala.castor.core.model.did.{
   DID,
   DIDDocument,
+  DIDStatePatch,
   DIDStorage,
   EllipticCurve,
   LongFormPrismDIDV1,
@@ -28,7 +32,8 @@ import io.iohk.atala.castor.core.model.did.{
   PublicKey,
   PublicKeyJwk,
   PublishedDIDOperation,
-  PublishedDIDOperationOutcome
+  PublishedDIDOperationOutcome,
+  UpdateOperationDelta
 }
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.castor.core.util.DIDOperationValidator
@@ -55,7 +60,8 @@ final class ManagedDIDService private[walletapi] (
       createOperation <- nonSecretStorage
         .getCreatedDID(canonicalDID)
         .mapError(PublishManagedDIDError.WalletStorageError.apply)
-        .flatMap(op => ZIO.fromOption(op).mapError(_ => PublishManagedDIDError.DIDNotFound(canonicalDID)))
+        .map(_.toRight(PublishManagedDIDError.DIDNotFound(canonicalDID)))
+        .absolve
       outcome <- didService
         .createPublishedDID(createOperation)
         .mapError(PublishManagedDIDError.OperationError.apply)
@@ -69,6 +75,7 @@ final class ManagedDIDService private[walletapi] (
       (createOperation, secret) = generated
       longFormDID = LongFormPrismDIDV1.fromCreateOperation(createOperation)
       did = longFormDID.toCanonical
+      operationHash = DIDOperationHash.fromOperation(createOperation)
       _ <- nonSecretStorage
         .getCreatedDID(did)
         .mapError(CreateManagedDIDError.WalletStorageError.apply)
@@ -85,6 +92,9 @@ final class ManagedDIDService private[walletapi] (
       _ <- ZIO
         .foreachDiscard(secret.keyPairs) { case (keyId, keyPair) => secretStorage.upsertKey(did, keyId, keyPair) }
         .mapError(CreateManagedDIDError.WalletStorageError.apply)
+      _ <- nonSecretStorage
+        .upsertDIDVersion(did, operationHash.toHexString)
+        .mapError(CreateManagedDIDError.WalletStorageError.apply)
       // A DID is considered created after a successful save using saveCreatedDID
       // If some steps above failed, it is not considered created and data that
       // are persisted along the way may be garbage collected.
@@ -94,7 +104,8 @@ final class ManagedDIDService private[walletapi] (
     } yield longFormDID
   }
 
-  // TODO: implement
+  // Currently only supports a simple update by replacing a current key-pair with a new one.
+  // This implies that when there's a fork or rollback, users can potentially lose control of their DIDs.
   def updateDIDAndPublish(
       did: PrismDID,
       template: ManagedDIDUpdateTemplate
@@ -104,18 +115,22 @@ final class ManagedDIDService private[walletapi] (
       _ <- nonSecretStorage.listPublishedDID
         .mapError(UpdateManagedDIDError.WalletStorageError.apply)
         .filterOrFail(_.contains(canonicalDID))(UpdateManagedDIDError.DIDNotPublished(canonicalDID))
-      // Only support updating from a tip of confirmed DID lineage.
-      // One may invoke multiple update calls, but the first one that gets confirmed
-      // on chain will be chosen. Other keys created but not lives
-      // in the right lineage may be garbage collected.
-//      confirmedOps <- didService
-//        .getConfirmedOperations(canonicalDID)
-//        .mapBoth(UpdateManagedDIDError.OperationError.apply, _.map(_.operation))
-//      generated <- generateUpdateOperation(template)
-//      (updateOperation, secret) = generated
-      // TODO: add persistence & validation logic
+      previousVersion <- nonSecretStorage
+        .getDIDVersion(canonicalDID)
+        .mapError(UpdateManagedDIDError.WalletStorageError.apply)
+        .map(_.toRight(UpdateManagedDIDError.DIDNotFound(canonicalDID)))
+        .absolve
+      updateKeyPair <- secretStorage
+        .getDIDCommitmentKey(canonicalDID, CommitmentPurpose.Update)
+        .mapError(UpdateManagedDIDError.WalletStorageError.apply)
+        .map(_.toRight(UpdateManagedDIDError.DIDNotFound(canonicalDID)))
+        .absolve
+      generated <- generateUpdateOperation(canonicalDID, template, updateKeyPair, previousVersion)
+      (updateOperation, secret) = generated
+      _ <- ZIO.fromEither(didOpValidator.validate(updateOperation)).mapError(UpdateManagedDIDError.OperationError.apply)
+      // TODO: persist secret
       outcome <- didService
-        .updatePublishedDID(???)
+        .updatePublishedDID(updateOperation)
         .mapError(UpdateManagedDIDError.OperationError.apply)
     } yield outcome
   }
@@ -154,8 +169,50 @@ final class ManagedDIDService private[walletapi] (
 
   // TODO: implement
   private def generateUpdateOperation(
-      updateTemplate: ManagedDIDUpdateTemplate
-  ): IO[UpdateManagedDIDError, (PublishedDIDOperation.Update, UpdateDIDSecret)] = ???
+      did: PrismDIDV1,
+      updateTemplate: ManagedDIDUpdateTemplate,
+      updateKeyPair: ECKeyPair,
+      previousVersion: HexString
+  ): IO[UpdateManagedDIDError, (PublishedDIDOperation.Update, UpdateDIDSecret)] = {
+    val generatedKeys = updateTemplate.patches.map {
+      case ManagedDIDUpdatePatch.AddPublicKey(template) => generateKeyPairAndPublicKey(template).asSome
+      case _: ManagedDIDUpdatePatch.RemovePublicKey     => ZIO.none
+      case _: ManagedDIDUpdatePatch.AddService          => ZIO.none
+      case _: ManagedDIDUpdatePatch.RemoveService       => ZIO.none
+    }
+
+    // TODO: implement the remaining ???
+    for {
+      keys <- ZIO
+        .collectAll(generatedKeys)
+        .map(_.flatten)
+        .mapError(UpdateManagedDIDError.KeyGenerationError.apply)
+      updateCommitmentSecret <- KeyGeneratorWrapper
+        .generateECKeyPair(CURVE)
+        .mapError(UpdateManagedDIDError.KeyGenerationError.apply)
+      updateCommitmentRevealValue = updateCommitmentSecret.publicKey.toEncoded(CURVE)
+      operation = PublishedDIDOperation.Update(
+        did = did,
+        updateKey = Base64UrlString.fromByteArray(updateKeyPair.publicKey.toEncoded(CURVE)),
+        previousVersion = previousVersion,
+        delta = UpdateOperationDelta(
+          patches = updateTemplate.patches.map(???),
+          updateCommitment = HexString.fromByteArray(Sha256.compute(updateCommitmentRevealValue).getValue)
+        ),
+        signature = ???
+      )
+      secret = UpdateDIDSecret(
+        updateCommitmentSecret = updateCommitmentSecret,
+        // "addPublicKey" action must overwrite the existing key.
+        // Thus only the last key in the same update operation is kept in the secret storage
+        // https://identity.foundation/sidetree/spec/#add-public-keys
+        keyPairs = keys
+          .map { case (keyPair, template) => template.id -> keyPair }
+          .distinctBy(_._1, keepFirst = false)
+          .toMap
+      )
+    } yield operation -> secret
+  }
 
   private def generateKeyPairAndPublicKey(template: DIDPublicKeyTemplate): Task[(ECKeyPair, PublicKey)] = {
     for {
@@ -187,7 +244,7 @@ object ManagedDIDService {
       keyPairs: Map[String, ECKeyPair]
   )
 
-  private final case class UpdateDIDSecret()
+  private final case class UpdateDIDSecret(updateCommitmentSecret: ECKeyPair, keyPairs: Map[String, ECKeyPair])
 
   def inMemoryStorage: URLayer[DIDService & DIDOperationValidator, ManagedDIDService] =
     (InMemoryDIDNonSecretStorage.layer ++ InMemoryDIDSecretStorage.layer) >>> ZLayer.fromFunction(

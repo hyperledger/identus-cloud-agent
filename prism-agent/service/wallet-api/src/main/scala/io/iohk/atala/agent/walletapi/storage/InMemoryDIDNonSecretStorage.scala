@@ -1,10 +1,12 @@
 package io.iohk.atala.agent.walletapi.storage
 import io.iohk.atala.castor.core.model.did.{PrismDID, PublishedDIDOperation}
+import io.iohk.atala.shared.models.HexStrings.HexString
 import zio.*
 
 private[walletapi] class InMemoryDIDNonSecretStorage private (
     createdDIDStore: Ref[Map[PrismDID, PublishedDIDOperation.Create]],
-    publishedDIDStore: Ref[Set[PrismDID]]
+    publishedDIDStore: Ref[Set[PrismDID]],
+    didVersionStore: Ref[Map[PrismDID, HexString]]
 ) extends DIDNonSecretStorage {
 
   override def getCreatedDID(did: PrismDID): Task[Option[PublishedDIDOperation.Create]] =
@@ -19,6 +21,11 @@ private[walletapi] class InMemoryDIDNonSecretStorage private (
 
   override def listPublishedDID: Task[Seq[PrismDID]] = publishedDIDStore.get.map(_.toSeq)
 
+  override def upsertDIDVersion(did: PrismDID, version: HexString): Task[Unit] =
+    didVersionStore.update(_.updated(did, version))
+
+  override def getDIDVersion(did: PrismDID): Task[Option[HexString]] = didVersionStore.get.map(_.get(did))
+
 }
 
 private[walletapi] object InMemoryDIDNonSecretStorage {
@@ -27,8 +34,9 @@ private[walletapi] object InMemoryDIDNonSecretStorage {
     ZLayer.fromZIO(
       for {
         createdDIDStore <- Ref.make(Map.empty[PrismDID, PublishedDIDOperation.Create])
-        publishedDIDStore <- Ref.make(Set.empty)
-      } yield InMemoryDIDNonSecretStorage(createdDIDStore, publishedDIDStore)
+        publishedDIDStore <- Ref.make(Set.empty[PrismDID])
+        didVersionStore <- Ref.make(Map.empty[PrismDID, HexString])
+      } yield InMemoryDIDNonSecretStorage(createdDIDStore, publishedDIDStore, didVersionStore)
     )
   }
 
