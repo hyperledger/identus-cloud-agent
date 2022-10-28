@@ -28,8 +28,8 @@ final case class ProposeCredential(
     piuri = this.`type`,
     from = Some(from),
     to = Some(sendTo),
-    body = this.body.asJson.asObject.get // FIXME
-    // attachments = ??? // FIXME
+    body = this.body.asJson.asObject.get, // TODO get
+    attachments = this.attachments
   )
 }
 
@@ -65,7 +65,7 @@ object ProposeCredential {
       id = message.id,
       `type` = message.piuri,
       body = body,
-      attachments = Seq.empty[AttachmentDescriptor] // FIXME TODO
+      attachments = message.attachments
     )
   }
 

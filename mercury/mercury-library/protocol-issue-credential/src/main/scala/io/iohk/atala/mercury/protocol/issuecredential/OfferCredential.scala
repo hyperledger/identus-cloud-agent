@@ -35,7 +35,7 @@ final case class OfferCredential(
     from = Some(from),
     to = Some(to),
     thid = this.thid,
-    body = this.body.asJson.asObject.get, // FIXME TODO
+    body = this.body.asJson.asObject.get, // TODO get
     attachments = this.attachments,
   )
 }
