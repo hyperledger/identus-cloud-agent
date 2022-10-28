@@ -1,8 +1,8 @@
 package io.iohk.atala.mercury.protocol.issuecredential
 
-import cats.implicits.*
+//import cats.implicits.*
 import io.circe.Json
-import io.circe.generic.semiauto.*
+//import io.circe.generic.semiauto.*
 import io.circe.parser.*
 import io.circe.syntax.*
 import io.iohk.atala.mercury.model.AttachmentDescriptor
