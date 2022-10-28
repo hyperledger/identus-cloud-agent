@@ -80,6 +80,25 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
       .transact(xa)
   }
 
+  override def getIssueCredentialRecordsByState(state: IssueCredentialRecord.State): Task[Seq[IssueCredentialRecord]] = {
+    val cxnIO = sql"""
+        | SELECT
+        |   id,
+        |   schema_id,
+        |   subject_id,
+        |   validity_period,
+        |   claims,
+        |   state
+        | FROM public.issue_credential_records
+        | WHERE state = ${state.toString}
+        """.stripMargin
+      .query[IssueCredentialRecord]
+      .to[Seq]
+
+    cxnIO
+      .transact(xa)
+  }
+
   override def getIssueCredentialRecord(id: UUID): Task[Option[IssueCredentialRecord]] = {
     val cxnIO = sql"""
         | SELECT

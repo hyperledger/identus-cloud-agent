@@ -23,9 +23,19 @@ object BackgroundJobs {
   val publishCredentialsToDlt = {
     for {
       credentialService <- ZIO.service[CredentialService]
-      _ <- Console.printLine("calling publishCredentialsToDlt job")
+      _ <- performPublishCredentialsToDlt(credentialService)
     } yield ()
 
+  }
+
+  private[this] def performPublishCredentialsToDlt(credentialService: CredentialService) = {
+
+    val credentials = for {
+      records <- credentialService.getCredentialRecordsByState(IssueCredentialRecord.State.CredentialPending)
+    } yield records
+
+
+    ZIO.unit
   }
 
 }

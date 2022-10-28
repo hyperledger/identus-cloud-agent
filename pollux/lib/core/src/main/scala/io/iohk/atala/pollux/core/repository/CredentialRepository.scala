@@ -9,6 +9,7 @@ trait CredentialRepository[F[_]] {
   def getCredentials(batchId: String): F[Seq[EncodedJWTCredential]]
   def createIssueCredentialRecord(record: IssueCredentialRecord): F[Int]
   def getIssueCredentialRecords(): F[Seq[IssueCredentialRecord]]
+  def getIssueCredentialRecordsByState(state: IssueCredentialRecord.State): F[Seq[IssueCredentialRecord]]
   def getIssueCredentialRecord(id: UUID): F[Option[IssueCredentialRecord]]
   def updateCredentialRecordState(id: UUID, from: IssueCredentialRecord.State, to: IssueCredentialRecord.State): F[Int]
 }

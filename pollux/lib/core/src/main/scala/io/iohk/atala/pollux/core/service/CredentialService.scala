@@ -40,6 +40,8 @@ trait CredentialService {
     override def toString: String = s"did:$method:$methodSpecificId"
   }
 
+  // FIXME: this function is used by prism agent as a temporary replacement
+  // eventually, prism-agent should use castor library to get the issuer (issuance key and did)
   def createIssuer: Issuer = {
     val keyGen = KeyPairGenerator.getInstance("EC")
     val ecSpec = ECGenParameterSpec("secp256r1")
@@ -66,6 +68,10 @@ trait CredentialService {
 
   def getCredentialRecords(): IO[IssueCredentialError, Seq[IssueCredentialRecord]]
 
+  def getCredentialRecordsByState(
+      state: IssueCredentialRecord.State
+  ): IO[IssueCredentialError, Seq[IssueCredentialRecord]]
+
   def getCredentialRecord(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]]
 
   def acceptCredentialOffer(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]]
@@ -77,6 +83,8 @@ trait CredentialService {
 object MockCredentialService {
   val layer: ULayer[CredentialService] = ZLayer.succeed {
     new CredentialService {
+
+      override def getCredentialRecordsByState(state: IssueCredentialRecord.State): IO[IssueCredentialError, Seq[IssueCredentialRecord]] = ???
 
       override def getCredentialRecords(): IO[IssueCredentialError, Seq[IssueCredentialRecord]] = ???
 
@@ -122,6 +130,7 @@ object CredentialServiceImpl {
 
 private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepository: CredentialRepository[Task])
     extends CredentialService {
+
   override def getCredentials(batchId: String): IO[IssueCredentialError, Seq[EncodedJWTCredential]] = {
     credentialRepository.getCredentials(batchId).mapError(IssueCredentialError.RepositoryError.apply)
   }
@@ -165,6 +174,14 @@ private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepos
     for {
       records <- credentialRepository
         .getIssueCredentialRecords()
+        .mapError(RepositoryError.apply)
+    } yield records
+  }
+
+  override def getCredentialRecordsByState(state: IssueCredentialRecord.State): IO[IssueCredentialError, Seq[IssueCredentialRecord]] = {
+    for {
+      records <- credentialRepository
+        .getIssueCredentialRecordsByState(state)
         .mapError(RepositoryError.apply)
     } yield records
   }
