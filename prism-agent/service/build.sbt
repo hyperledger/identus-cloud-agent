@@ -2,19 +2,20 @@ import Dependencies._
 import sbtghpackages.GitHubPackagesPlugin.autoImport._
 
 ThisBuild / version := "0.1.0-SNAPSHOT"
-ThisBuild / scalaVersion := "3.1.3"
+ThisBuild / scalaVersion := "3.2.0"
 ThisBuild / organization := "io.iohk.atala"
 
 // Custom keys
 val apiBaseDirectory = settingKey[File]("The base directory for PrismAgent API specifications")
 ThisBuild / apiBaseDirectory := baseDirectory.value / "../api"
+ThisBuild / resolvers += Resolver.githubPackages("input-output-hk", "atala-prism-building-blocks")
 
 val commonSettings = Seq(
   testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
   githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN"),
   resolvers += Resolver.githubPackages("input-output-hk", "atala-prism-sdk"),
   // Needed for Kotlin coroutines that support new memory management mode
-  resolvers += "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven",
+  resolvers += "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven"
 )
 
 // Project definitions
@@ -36,6 +37,7 @@ lazy val server = project
   .settings(commonSettings)
   .settings(
     name := "prism-agent-server",
+    fork := true,
     libraryDependencies ++= serverDependencies,
     // OpenAPI settings
     Compile / unmanagedResourceDirectories += apiBaseDirectory.value,

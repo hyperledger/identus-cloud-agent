@@ -2,16 +2,21 @@ import sbt._
 
 object Dependencies {
   object Versions {
+    val mercury = "0.2.0-SNAPSHOT"
     val zio = "2.0.2"
     val zioConfig = "3.0.2"
     val zioHttp = "2.0.0-RC11"
     val akka = "2.6.20"
     val akkaHttp = "10.2.9"
-    val castor = "0.1.0"
-    val pollux = "0.1.0"
+    val castor = "0.1.0-SNAPSHOT"
+    val pollux = "0.1.0-SNAPSHOT"
     val bouncyCastle = "1.70"
     val logback = "1.4.4"
   }
+
+  private lazy val mercuryModels = "io.iohk.atala" %% "mercury-data-models" % Versions.mercury
+  private lazy val mercuryAgent = "io.iohk.atala" %% "mercury-agent-didcommx" % Versions.mercury
+  private lazy val mercuryResolver = "io.iohk.atala" %% "mercury-resolver" % Versions.mercury
 
   private lazy val zio = "dev.zio" %% "zio" % Versions.zio
   private lazy val zioConfig = "dev.zio" %% "zio-config" % Versions.zioConfig
@@ -43,13 +48,20 @@ object Dependencies {
   private lazy val logback = "ch.qos.logback" % "logback-classic" % Versions.logback
 
   // Dependency Modules
-  private lazy val baseDependencies: Seq[ModuleID] = Seq(zio, zioTest, zioTestSbt, zioTestMagnolia, zioConfig, zioConfigMagnolia, zioConfigTypesafe)
+  private lazy val baseDependencies: Seq[ModuleID] =
+    Seq(zio, zioTest, zioTestSbt, zioTestMagnolia, zioConfig, zioConfigMagnolia, zioConfigTypesafe)
   private lazy val castorDependencies: Seq[ModuleID] = Seq(castorCore, castorSqlDoobie)
   private lazy val polluxDependencies: Seq[ModuleID] = Seq(polluxCore, polluxSqlDoobie)
-  private lazy val akkaHttpDependencies: Seq[ModuleID] = Seq(akkaTyped, akkaStream, akkaHttp, akkaSprayJson).map(_.cross(CrossVersion.for3Use2_13))
+  private lazy val akkaHttpDependencies: Seq[ModuleID] =
+    Seq(akkaTyped, akkaStream, akkaHttp, akkaSprayJson).map(_.cross(CrossVersion.for3Use2_13))
   private lazy val bouncyDependencies: Seq[ModuleID] = Seq(bouncyBcpkix, bouncyBcprov)
+  private lazy val mercuryDependencies: Seq[ModuleID] = Seq(mercuryModels, mercuryAgent, mercuryResolver)
 
   // Project Dependencies
   lazy val keyManagementDependencies: Seq[ModuleID] = baseDependencies ++ castorDependencies ++ bouncyDependencies
-  lazy val serverDependencies: Seq[ModuleID] = baseDependencies ++ akkaHttpDependencies ++ castorDependencies ++ polluxDependencies ++ Seq(zioHttp, logback)
+  lazy val serverDependencies: Seq[ModuleID] =
+    baseDependencies ++ akkaHttpDependencies ++ castorDependencies ++ polluxDependencies ++ Seq(
+      zioHttp,
+      logback
+    ) ++ mercuryDependencies
 }
