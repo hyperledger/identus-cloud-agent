@@ -49,6 +49,7 @@ object BackgroundJobs {
       }
       // FIXME: issuer here should come from castor not from credential service, this needs to be done before going to prod
       publishedBatchData <- credentialService.publishCredentialBatch(credentials, credentialService.createIssuer)
+      
     } yield credentials
 
     ZIO.unit

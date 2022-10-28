@@ -9,6 +9,7 @@ import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.repository.CredentialRepository
 import io.iohk.atala.pollux.sql.model.JWTCredentialRow
 import io.iohk.atala.prism.crypto.MerkleInclusionProof
+import io.iohk.atala.shared.utils.BytesOps
 import zio.*
 import zio.interop.catz.*
 
@@ -21,7 +22,18 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
   given stateGet: Get[IssueCredentialRecord.State] = Get[String].map(IssueCredentialRecord.State.valueOf(_))
   given claimsGet: Get[Map[String, String]] =
     Get[String].map(decode[Map[String, String]](_).getOrElse(Map("parsingError" -> "parsingError")))
-    
+  given inclusionProofGet: Get[MerkleInclusionProof] = Get[String].map(deserializeInclusionProof)
+
+  // serializes into hex string
+  private def serializeInclusionProof(proof: MerkleInclusionProof): String = BytesOps.bytesToHex(proof.encode.getBytes)
+
+  // deserializes from the hex string
+  private def deserializeInclusionProof(proof: String): MerkleInclusionProof =
+    MerkleInclusionProof.decode(
+      String(
+        BytesOps.hexToBytes(proof)
+      )
+    )
 
   override def createCredentials(batchId: String, credentials: Seq[EncodedJWTCredential]): Task[Unit] = {
     ZIO.succeed(())
@@ -56,7 +68,7 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         | ) values (
         |   ${record.id.toString},
         |   ${record.schemaId},
-        |   ${record.merkleInclusionProof.map(_.encode)},
+        |   ${record.merkleInclusionProof.map(serializeInclusionProof)},
         |   ${record.subjectId},
         |   ${record.validityPeriod},
         |   ${record.claims.asJson.toString},
