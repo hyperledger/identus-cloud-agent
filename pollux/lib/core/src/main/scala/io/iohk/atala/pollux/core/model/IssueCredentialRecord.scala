@@ -4,6 +4,7 @@ import java.util.UUID
 
 final case class IssueCredentialRecord(
     id: UUID,
+    credentialId: UUID, // Id of the credential that will be created from this record
     schemaId: String,
     //role: IssueCredentialRecord.Role,
     subjectId: String,

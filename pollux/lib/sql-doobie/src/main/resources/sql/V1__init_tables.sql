@@ -15,6 +15,7 @@ CREATE TABLE public.jwt_credentials(
 
 CREATE TABLE public.issue_credential_records(
   "id" VARCHAR(36) NOT NULL PRIMARY KEY,
+  "credential_id" VARCHAR(36) NOT NULL
   "schema_id" VARCHAR(36) NOT NULL,
   "subject_id" TEXT NOT NULL,
   "validity_period" INTEGER NOT NULL,

@@ -14,6 +14,12 @@ import java.util.UUID
 // TODO: replace with actual implementation
 class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepository[Task] {
 
+  given uuidGet: Get[UUID] = Get[String].map(UUID.fromString(_))
+  given stateGet: Get[IssueCredentialRecord.State] = Get[String].map(IssueCredentialRecord.State.valueOf(_))
+  given claimsGet: Get[Map[String, String]] =
+    Get[String].map(decode[Map[String, String]](_).getOrElse(Map("parsingError" -> "parsingError")))
+    
+
   override def createCredentials(batchId: String, credentials: Seq[EncodedJWTCredential]): Task[Unit] = {
     ZIO.succeed(())
   }
@@ -57,15 +63,11 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
       .transact(xa)
   }
 
-  given uuidGet: Get[UUID] = Get[String].map(UUID.fromString(_))
-  given stateGet: Get[IssueCredentialRecord.State] = Get[String].map(IssueCredentialRecord.State.valueOf(_))
-  given claimsGet: Get[Map[String, String]] =
-    Get[String].map(decode[Map[String, String]](_).getOrElse(Map("parsingError" -> "parsingError")))
-
   override def getIssueCredentialRecords(): Task[Seq[IssueCredentialRecord]] = {
     val cxnIO = sql"""
         | SELECT
         |   id,
+        |   credential_id
         |   schema_id,
         |   subject_id,
         |   validity_period,
@@ -80,10 +82,13 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
       .transact(xa)
   }
 
-  override def getIssueCredentialRecordsByState(state: IssueCredentialRecord.State): Task[Seq[IssueCredentialRecord]] = {
+  override def getIssueCredentialRecordsByState(
+      state: IssueCredentialRecord.State
+  ): Task[Seq[IssueCredentialRecord]] = {
     val cxnIO = sql"""
         | SELECT
         |   id,
+        |   credential_id
         |   schema_id,
         |   subject_id,
         |   validity_period,
@@ -103,6 +108,7 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
     val cxnIO = sql"""
         | SELECT
         |   id,
+        |   credential_id
         |   schema_id,
         |   subject_id,
         |   validity_period,
