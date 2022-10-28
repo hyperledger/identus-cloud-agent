@@ -1,8 +1,13 @@
 package io.iohk.atala.agent.server.jobs
 
-import zio.*
-import io.iohk.atala.pollux.core.service.CredentialService
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord
+import io.iohk.atala.pollux.core.model.error.CreateCredentialPayloadFromRecordError
+import io.iohk.atala.pollux.core.model.error.IssueCredentialError
+import io.iohk.atala.pollux.core.service.CredentialService
+import io.iohk.atala.pollux.vc.jwt.W3cCredentialPayload
+import zio.*
+
+import java.time.Instant
 
 object BackgroundJobs {
 
@@ -30,9 +35,13 @@ object BackgroundJobs {
 
   private[this] def performPublishCredentialsToDlt(credentialService: CredentialService) = {
 
-    val credentials = for {
+
+    val res: ZIO[Any, IssueCredentialError | CreateCredentialPayloadFromRecordError, Seq[W3cCredentialPayload]] = for {
       records <- credentialService.getCredentialRecordsByState(IssueCredentialRecord.State.CredentialPending)
-    } yield records
+      credentials <- ZIO.foreach(records) {
+        record => credentialService.createCredentialPayloadFromRecord(record, credentialService.createIssuer, Instant.now())
+      }
+    } yield credentials
 
 
     ZIO.unit
