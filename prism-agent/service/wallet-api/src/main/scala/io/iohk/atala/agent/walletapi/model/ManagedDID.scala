@@ -22,5 +22,4 @@ object ManagedDIDUpdatePatch {
   final case class RemovePublicKey(id: String) extends ManagedDIDUpdatePatch
   final case class AddService(service: Service) extends ManagedDIDUpdatePatch
   final case class RemoveService(id: String) extends ManagedDIDUpdatePatch
-  final case class RotateKey(id: String) extends ManagedDIDUpdatePatch
 }

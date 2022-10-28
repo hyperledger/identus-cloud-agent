@@ -243,7 +243,6 @@ components:
             - removePublicKey
             - addService
             - removeService
-            - rotateKey
           example: addPublicKey
         addPublicKey:
           $ref: "#/components/schemas/PublicKeyTemplate"
@@ -255,9 +254,6 @@ components:
         removeService:
           type: string
           example: "service-01"
-        rotateKey:
-          type: string
-          example: "key-01"
 
     PublicKeyTemplate:
       type: object

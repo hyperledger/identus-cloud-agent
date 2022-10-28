@@ -147,10 +147,6 @@ trait OASDomainModelHelper {
           patch.removeService
             .toRight(generateErrorMsg(a))
             .map(walletDomain.ManagedDIDUpdatePatch.RemoveService.apply)
-        case a @ "rotateKey" =>
-          patch.rotateKey
-            .toRight(generateErrorMsg(a))
-            .map(walletDomain.ManagedDIDUpdatePatch.RotateKey.apply)
         case a => Left(s"unsupported DID update action: $a")
       }
     }
