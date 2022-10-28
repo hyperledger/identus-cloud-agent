@@ -20,16 +20,19 @@ final case class ProposeCredential(
     id: String = java.util.UUID.randomUUID.toString(),
     `type`: PIURI = ProposeCredential.`type`,
     body: ProposeCredential.Body,
-    attachments: Seq[AttachmentDescriptor] = Seq.empty[AttachmentDescriptor]
+    attachments: Seq[AttachmentDescriptor] = Seq.empty[AttachmentDescriptor],
+    // extra
+    from: DidId,
+    to: DidId,
 ) {
   assert(`type` == ProposeCredential.`type`)
 
-  def makeMessage(from: DidId, sendTo: DidId): Message = Message(
+  def makeMessage: Message = Message(
     piuri = this.`type`,
-    from = Some(from),
-    to = Some(sendTo),
-    body = this.body.asJson.asObject.get // FIXME
-    // attachments = ??? // FIXME
+    from = Some(this.from),
+    to = Some(this.to),
+    body = this.body.asJson.asObject.get, // TODO get
+    attachments = this.attachments
   )
 }
 
@@ -65,7 +68,9 @@ object ProposeCredential {
       id = message.id,
       `type` = message.piuri,
       body = body,
-      attachments = Seq.empty[AttachmentDescriptor] // FIXME TODO
+      attachments = message.attachments,
+      from = message.from.get, // TODO get
+      to = message.to.get, // TODO get
     )
   }
 

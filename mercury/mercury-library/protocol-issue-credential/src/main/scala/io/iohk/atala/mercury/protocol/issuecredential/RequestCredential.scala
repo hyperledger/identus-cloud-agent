@@ -14,13 +14,14 @@ final case class RequestCredential(
     attachments: Seq[AttachmentDescriptor],
     // extra
     thid: Option[String] = None,
+    from: DidId,
     to: DidId,
 ) {
 
-  def makeMessage(from: DidId): Message = Message(
+  def makeMessage: Message = Message(
     id = this.id,
     piuri = this.`type`,
-    from = Some(from),
+    from = Some(this.from),
     to = Some(this.to),
     thid = this.thid,
     body = this.body.asJson.asObject.get, // TODO get
@@ -48,7 +49,7 @@ object RequestCredential {
     given Decoder[Body] = deriveDecoder[Body]
   }
 
-  def makeRequestCredentialFromOffer(msg: Message): RequestCredential = {
+  def makeRequestCredentialFromOffer(msg: Message): RequestCredential = { // TODO change msg: Message to RequestCredential
     val pc: OfferCredential = OfferCredential.readFromMessage(msg)
 
     RequestCredential(
@@ -59,6 +60,7 @@ object RequestCredential {
       ),
       attachments = pc.attachments,
       thid = Some(msg.id),
+      from = msg.to.get, // TODO get
       to = msg.from.get, // TODO get
     )
   }
@@ -72,6 +74,7 @@ object RequestCredential {
       body = body,
       attachments = message.attachments,
       thid = message.thid,
+      from = message.from.get, // TODO get
       to = message.to.get, // TODO get
     )
 
