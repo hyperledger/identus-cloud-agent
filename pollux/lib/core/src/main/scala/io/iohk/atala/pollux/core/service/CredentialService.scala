@@ -11,6 +11,7 @@ import io.iohk.atala.pollux.core.model.EncodedJWTCredential
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord
 import io.iohk.atala.pollux.core.model.PublishedBatchData
 import io.iohk.atala.pollux.core.model.error.CreateCredentialPayloadFromRecordError
+import io.iohk.atala.pollux.core.model.error.MarkCredentialRecordsAsPublishQueuedError
 import io.iohk.atala.pollux.core.model.error.IssueCredentialError
 import io.iohk.atala.pollux.core.model.error.IssueCredentialError._
 import io.iohk.atala.pollux.core.model.error.PublishCredentialBatchError
@@ -95,14 +96,24 @@ trait CredentialService {
       issuer: Issuer
   ): IO[PublishCredentialBatchError, PublishedBatchData]
 
+  def markCredentialRecordsAsPublishQueued(
+      credentialsAndProofs: Seq[(W3cCredentialPayload, MerkleInclusionProof)]
+  ): IO[MarkCredentialRecordsAsPublishQueuedError, Int]
+
 }
 
 object MockCredentialService {
   val layer: ULayer[CredentialService] = ZLayer.succeed {
     new CredentialService {
 
+      override def markCredentialRecordsAsPublishQueued(
+          credentialsAndProofs: Seq[(W3cCredentialPayload, MerkleInclusionProof)]
+      ): IO[MarkCredentialRecordsAsPublishQueuedError, Int] = ???
 
-      override def publishCredentialBatch(credentials: Seq[W3cCredentialPayload], issuer: Issuer): IO[PublishCredentialBatchError, PublishedBatchData] = ???
+      override def publishCredentialBatch(
+          credentials: Seq[W3cCredentialPayload],
+          issuer: Issuer
+      ): IO[PublishCredentialBatchError, PublishedBatchData] = ???
 
       override def extractIdFromCredential(credential: W3cCredentialPayload): Option[UUID] = ???
 
@@ -276,7 +287,8 @@ private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepos
       record: IssueCredentialRecord,
       issuer: Issuer,
       issuanceDate: Instant
-  ): IO[CreateCredentialPayloadFromRecordError, W3cCredentialPayload] = { // This function will get schema from database when it is available, that's why it returns IO
+  // This function will get schema from database when it is available
+  ): IO[CreateCredentialPayloadFromRecordError, W3cCredentialPayload] = {
     val claims = record.claims.map(kv => kv._1 -> Json.fromString(kv._2))
     val schemas = Set( // TODO: This information should come from Schema registry by record.schemaId
       "https://www.w3.org/2018/credentials/v1"
@@ -284,9 +296,11 @@ private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepos
     ZIO.succeed(
       W3cCredentialPayload(
         `@context` = schemas,
+        // credential ID is optional id W3 spec but in PRISM use-case they have an ID always
+        // NOTE: We should support PrismCredential data type where all required fields for our use-case are not optional
         maybeId = Some(
           s"https://atala.io/prism/credentials/${record.credentialId.toString}"
-        ), // TODO: this URL should probably come from env or config
+        ), // TODO: this URL prefix should come from env or config
         `type` =
           Set("VerifiableCredential"), // TODO: This information should come from Schema registry by record.schemaId
         issuer = issuer.did,
@@ -344,6 +358,36 @@ private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepos
       )
 
     result
+  }
+
+  override def markCredentialRecordsAsPublishQueued(
+      credentialsAndProofs: Seq[(W3cCredentialPayload, MerkleInclusionProof)]
+  ): IO[MarkCredentialRecordsAsPublishQueuedError, Int] = {
+
+    /*
+     * Since id of the credential is optional according to W3 spec,
+     * it is of a type Option in W3cCredentialPayload since it is a generic W3 credential payload
+     * but for our use-case, credentials must have an id, so if for some reason at least one
+     * credential does not have an id, we return an error
+     *
+     */
+    val maybeUndefinedId = credentialsAndProofs.find(x => extractIdFromCredential(x._1).isEmpty)
+
+    if (maybeUndefinedId.isDefined) then
+      ZIO.fail(MarkCredentialRecordsAsPublishQueuedError.CredentialIdNotDefined(maybeUndefinedId.get._1))
+    else
+      val idStateAndProof = credentialsAndProofs.map { credentialAndProof =>
+        (
+          extractIdFromCredential(credentialAndProof._1).get, // won't fail because of checks above
+          IssueCredentialRecord.State.CredentialPublishQueued,
+          credentialAndProof._2
+        )
+      }
+
+      credentialRepository
+        .updateCredentialRecordStateAndProofByCredentialIdBulk(idStateAndProof)
+        .mapError(MarkCredentialRecordsAsPublishQueuedError.RepositoryError(_))
+
   }
 
 }

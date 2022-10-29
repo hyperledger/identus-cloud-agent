@@ -162,6 +162,10 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
       .transact(xa)
   }
 
+  override def updateCredentialRecordStateAndProofByCredentialIdBulk(
+      idsStatesAndProofs: Seq[(UUID, IssueCredentialRecord.State, MerkleInclusionProof)]
+  ): Task[Int] = ???
+
 }
 
 object JdbcCredentialRepository {
