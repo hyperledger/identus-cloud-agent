@@ -22,4 +22,16 @@ private[walletapi] trait DIDSecretStorage {
   /** Remove all secrets related to the DID */
   def removeDIDSecret(did: PrismDID): Task[Unit]
 
+  /** Set staging secret for UpdateOperation. Only 1 staging secret per DID may be present at a time. If staging secret
+    * already exists, no change is applied.
+    *
+    * @return
+    *   true if operation success. false if staging secret already exists
+    */
+  def addStagingDIDUpdateSecret(did: PrismDID, secret: StagingDIDUpdateSecret): Task[Boolean]
+
+  def getStagingDIDUpdateSecret(did: PrismDID): Task[Option[StagingDIDUpdateSecret]]
+
+  def removeStagingDIDUpdateSecret(did: PrismDID): Task[Unit]
+
 }

@@ -1,6 +1,6 @@
 package io.iohk.atala.agent.walletapi.storage
 
-import io.iohk.atala.agent.walletapi.model.{CommitmentPurpose, ECKeyPair}
+import io.iohk.atala.agent.walletapi.model.{CommitmentPurpose, ECKeyPair, StagingDIDUpdateSecret}
 import io.iohk.atala.agent.walletapi.storage.InMemoryDIDSecretStorage.DIDSecretRecord
 import io.iohk.atala.castor.core.model.did.PrismDID
 import io.iohk.atala.shared.models.HexStrings.HexString
@@ -58,6 +58,26 @@ private[walletapi] class InMemoryDIDSecretStorage private (store: Ref[Map[PrismD
 
   override def removeDIDSecret(did: PrismDID): Task[Unit] = store.update(_.removed(did))
 
+  override def addStagingDIDUpdateSecret(did: PrismDID, secret: StagingDIDUpdateSecret): Task[Boolean] =
+    store.modify { currentStore =>
+      val currentSecret = currentStore.get(did)
+      val updatedSecret =
+        currentSecret.fold(DIDSecretRecord(stagingSecret = Some(secret)))(_.copy(stagingSecret = Some(secret)))
+      val hasNoExistingStagingSecret = currentSecret.flatMap(_.stagingSecret).fold(true)(_ => false)
+      val updatedStore =
+        if (hasNoExistingStagingSecret) currentStore.updated(did, updatedSecret)
+        else currentStore
+      hasNoExistingStagingSecret -> updatedStore
+    }
+
+  override def getStagingDIDUpdateSecret(did: PrismDID): Task[Option[StagingDIDUpdateSecret]] =
+    store.get.map(_.get(did).flatMap(_.stagingSecret))
+
+  override def removeStagingDIDUpdateSecret(did: PrismDID): Task[Unit] = store.update { currentStore =>
+    val currentSecret = currentStore.get(did)
+    currentSecret.fold(currentStore)(i => currentStore.updated(did, i.copy(stagingSecret = None)))
+  }
+
 }
 
 private[walletapi] object InMemoryDIDSecretStorage {
@@ -65,7 +85,8 @@ private[walletapi] object InMemoryDIDSecretStorage {
   private final case class DIDSecretRecord(
       updateCommitmentSecret: Option[ECKeyPair] = None,
       recoveryCommitmentSecret: Option[ECKeyPair] = None,
-      keyPairs: Map[String, ECKeyPair] = Map.empty
+      keyPairs: Map[String, ECKeyPair] = Map.empty,
+      stagingSecret: Option[StagingDIDUpdateSecret] = None
   )
 
   val layer: ULayer[DIDSecretStorage] = {

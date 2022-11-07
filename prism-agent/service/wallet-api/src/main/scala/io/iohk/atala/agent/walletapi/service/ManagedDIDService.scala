@@ -7,7 +7,8 @@ import io.iohk.atala.agent.walletapi.model.{
   ECKeyPair,
   ManagedDIDCreateTemplate,
   ManagedDIDUpdatePatch,
-  ManagedDIDUpdateTemplate
+  ManagedDIDUpdateTemplate,
+  StagingDIDUpdateSecret
 }
 import io.iohk.atala.agent.walletapi.util.SeqExtensions.*
 import io.iohk.atala.agent.walletapi.model.ECCoordinates.*
@@ -106,14 +107,53 @@ final class ManagedDIDService private[walletapi] (
     } yield longFormDID
   }
 
-  // Currently only supports a simple update by replacing a current key-pair with a new one.
-  // This implies that when there's a fork or rollback, users can potentially lose control of their DIDs.
-  // This simple key-pair inplace update also introduce another problem when the update
-  // is non-atomic as the keys can be lost if error occur during persistence.
   def updateDIDAndPublish(
       did: PrismDID,
       template: ManagedDIDUpdateTemplate
   ): IO[UpdateManagedDIDError, PublishedDIDOperationOutcome] = {
+    def prepareStagingDIDSecret(
+        canonicalDID: PrismDIDV1,
+        secret: UpdateDIDSecret,
+        updateOperation: PublishedDIDOperation.Update
+    ): IO[UpdateManagedDIDError, Unit] = {
+      val stagingUpdateSecret = StagingDIDUpdateSecret(
+        operation = updateOperation,
+        updateCommitmentSecret = secret.updateCommitmentSecret,
+        keyPairs = secret.keyPairs
+      )
+      secretStorage
+        .addStagingDIDUpdateSecret(canonicalDID, stagingUpdateSecret)
+        .mapError(UpdateManagedDIDError.WalletStorageError.apply)
+        .filterOrFail(identity)(UpdateManagedDIDError.PendingStagingUpdate(canonicalDID))
+        .unit
+    }
+
+    def persistUpdateDIDSecret(
+        canonicalDID: PrismDIDV1,
+        secret: UpdateDIDSecret,
+        updateOperation: PublishedDIDOperation.Update
+    ): IO[UpdateManagedDIDError, Unit] =
+      for {
+        _ <- secretStorage
+          .upsertDIDCommitmentKey(canonicalDID, CommitmentPurpose.Update, secret.updateCommitmentSecret)
+          .mapError(UpdateManagedDIDError.WalletStorageError.apply)
+        _ <- ZIO
+          .foreachDiscard(secret.keyPairs) { case (keyId, keyPair) =>
+            secretStorage.upsertKey(canonicalDID, keyId, keyPair)
+          }
+          .mapError(UpdateManagedDIDError.WalletStorageError.apply)
+        newVersion = DIDOperationHash.fromOperation(updateOperation).toHexString
+        _ <- nonSecretStorage
+          .upsertDIDVersion(canonicalDID, newVersion)
+          .mapError(UpdateManagedDIDError.WalletStorageError.apply)
+        // A DID is considered updated after a successful removeStagingDIDUpdateSecret
+        // If some steps above failed, it is not considered updated and
+        // may eventually be retried / reconciled
+        _ <- secretStorage
+          .removeStagingDIDUpdateSecret(canonicalDID)
+          .mapError(UpdateManagedDIDError.WalletStorageError.apply)
+      } yield ()
+
     for {
       canonicalDID <- ZIO.fromEither(canonicalizeDID(did)).mapError(UpdateManagedDIDError.UnsupportedDIDType.apply)
       _ <- nonSecretStorage.listPublishedDID
@@ -131,20 +171,12 @@ final class ManagedDIDService private[walletapi] (
         .absolve
       generated <- generateUpdateOperation(canonicalDID, template, updateKeyPair, previousVersion)
       (updateOperation, secret) = generated
-      currentVersion = DIDOperationHash.fromOperation(updateOperation).toHexString
       _ <- ZIO.fromEither(didOpValidator.validate(updateOperation)).mapError(UpdateManagedDIDError.OperationError.apply)
-      _ <- secretStorage
-        .upsertDIDCommitmentKey(did, CommitmentPurpose.Update, secret.updateCommitmentSecret)
-        .mapError(UpdateManagedDIDError.WalletStorageError.apply)
-      _ <- ZIO
-        .foreachDiscard(secret.keyPairs) { case (keyId, keyPair) => secretStorage.upsertKey(did, keyId, keyPair) }
-        .mapError(UpdateManagedDIDError.WalletStorageError.apply)
-      _ <- nonSecretStorage
-        .upsertDIDVersion(canonicalDID, currentVersion)
-        .mapError(UpdateManagedDIDError.WalletStorageError.apply)
+      _ <- prepareStagingDIDSecret(canonicalDID, secret, updateOperation)
       outcome <- didService
         .updatePublishedDID(updateOperation)
         .mapError(UpdateManagedDIDError.OperationError.apply)
+      _ <- persistUpdateDIDSecret(canonicalDID, secret, updateOperation)
     } yield outcome
   }
 
@@ -221,8 +253,8 @@ final class ManagedDIDService private[walletapi] (
         updateKey = unsignedOperation.updateKey,
         previousVersion = unsignedOperation.previousVersion,
         delta = unsignedOperation.delta,
-        // TODO: confirm with finalised Prism method spec with signature creation
-        // For now we use protobuf definition itself with empty signature byte to create a signature.
+        // TODO: confirm with finalised Prism method spec about signature creation
+        // For now we use protobuf definition itself with empty signature bytes for signing.
         signature = Base64UrlString.fromByteArray(
           ECWrapper.signBytesECDSA(unsignedOperation.toByteArrayForSigning, updateKeyPair.privateKey).toByteArray
         )
