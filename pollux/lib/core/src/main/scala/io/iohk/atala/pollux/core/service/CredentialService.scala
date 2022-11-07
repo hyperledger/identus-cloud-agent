@@ -90,6 +90,7 @@ object MockCredentialService {
           IssueCredentialRecord(
             UUID.randomUUID(),
             schemaId,
+            IssueCredentialRecord.Role.Issuer,
             subjectId,
             validityPeriod,
             claims,
@@ -145,6 +146,7 @@ private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepos
         IssueCredentialRecord(
           UUID.randomUUID(),
           schemaId,
+          IssueCredentialRecord.Role.Issuer,
           subjectId,
           validityPeriod,
           claims,
