@@ -2,7 +2,6 @@ import sbt._
 
 object Dependencies {
   object Versions {
-    val mercury = "0.2.0-SNAPSHOT"
     val zio = "2.0.2"
     val zioConfig = "3.0.2"
     val zioHttp = "2.0.0-RC11"
@@ -13,10 +12,6 @@ object Dependencies {
     val bouncyCastle = "1.70"
     val logback = "1.4.4"
   }
-
-  private lazy val mercuryModels = "io.iohk.atala" %% "mercury-data-models" % Versions.mercury
-  private lazy val mercuryAgent = "io.iohk.atala" %% "mercury-agent-didcommx" % Versions.mercury
-  private lazy val mercuryResolver = "io.iohk.atala" %% "mercury-resolver" % Versions.mercury
 
   private lazy val zio = "dev.zio" %% "zio" % Versions.zio
   private lazy val zioConfig = "dev.zio" %% "zio-config" % Versions.zioConfig
@@ -55,7 +50,6 @@ object Dependencies {
   private lazy val akkaHttpDependencies: Seq[ModuleID] =
     Seq(akkaTyped, akkaStream, akkaHttp, akkaSprayJson).map(_.cross(CrossVersion.for3Use2_13))
   private lazy val bouncyDependencies: Seq[ModuleID] = Seq(bouncyBcpkix, bouncyBcprov)
-  private lazy val mercuryDependencies: Seq[ModuleID] = Seq(mercuryModels, mercuryAgent, mercuryResolver)
 
   // Project Dependencies
   lazy val keyManagementDependencies: Seq[ModuleID] = baseDependencies ++ castorDependencies ++ bouncyDependencies
@@ -63,5 +57,5 @@ object Dependencies {
     baseDependencies ++ akkaHttpDependencies ++ castorDependencies ++ polluxDependencies ++ Seq(
       zioHttp,
       logback
-    ) ++ mercuryDependencies
+    )
 }
