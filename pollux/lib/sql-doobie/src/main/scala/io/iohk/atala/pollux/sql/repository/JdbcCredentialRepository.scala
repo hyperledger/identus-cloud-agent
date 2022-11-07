@@ -39,16 +39,16 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         | INSERT INTO public.issue_credential_records(
         |   id,
         |   schema_id,
-        |   subject_id,
         |   role,
+        |   subject_id,
         |   validity_period,
         |   claims,
         |   state
         | ) values (
         |   ${record.id.toString},
         |   ${record.schemaId},
-        |   ${record.subjectId},
         |   ${record.role.toString},
+        |   ${record.subjectId},
         |   ${record.validityPeriod},
         |   ${record.claims.asJson.toString},
         |   ${record.state.toString}
@@ -70,8 +70,8 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         | SELECT
         |   id,
         |   schema_id,
-        |   subject_id,
         |   role,
+        |   subject_id,
         |   validity_period,
         |   claims,
         |   state
@@ -89,8 +89,8 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         | SELECT
         |   id,
         |   schema_id,
-        |   subject_id,
         |   role,
+        |   subject_id,
         |   validity_period,
         |   claims,
         |   state
