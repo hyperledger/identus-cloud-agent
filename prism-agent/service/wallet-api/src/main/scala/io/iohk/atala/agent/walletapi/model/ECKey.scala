@@ -88,3 +88,17 @@ object ECKeyPair {
   }
 
 }
+
+object ECSignatures {
+
+  opaque type ECSignature = prismcrypto.signature.ECSignature
+
+  object ECSignature {
+    def fromPrism14Signature(signature: io.iohk.atala.prism.crypto.signature.ECSignature): ECSignature = signature
+  }
+
+  extension (s: ECSignature) {
+    def toByteArray: Array[Byte] = s.getData
+  }
+
+}

@@ -69,3 +69,28 @@ final case class PublishedDIDOperationOutcome(
     operation: PublishedDIDOperation,
     operationId: HexString
 )
+
+/** Temp object for creating bytes for signing */
+final case class UnsignedUpdateDIDOperation(
+    did: PrismDIDV1,
+    updateKey: Base64UrlString,
+    previousVersion: HexString,
+    delta: UpdateOperationDelta
+) {
+
+  // TODO: confirm with model in finalised Prism method spec what is used for creating signature
+  def toByteArrayForSigning: Array[Byte] = {
+    import ProtoModelHelper.*
+    PublishedDIDOperation
+      .Update(
+        did = did,
+        updateKey = updateKey,
+        previousVersion = previousVersion,
+        delta = delta,
+        signature = Base64UrlString.fromByteArray(Array())
+      )
+      .toProto
+      .toByteArray
+  }
+
+}

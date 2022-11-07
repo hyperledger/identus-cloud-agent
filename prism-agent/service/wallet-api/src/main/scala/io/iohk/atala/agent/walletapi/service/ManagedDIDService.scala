@@ -1,6 +1,6 @@
 package io.iohk.atala.agent.walletapi.service
 
-import io.iohk.atala.agent.walletapi.crypto.KeyGeneratorWrapper
+import io.iohk.atala.agent.walletapi.crypto.{ECWrapper, KeyGeneratorWrapper}
 import io.iohk.atala.agent.walletapi.model.{
   CommitmentPurpose,
   DIDPublicKeyTemplate,
@@ -11,6 +11,7 @@ import io.iohk.atala.agent.walletapi.model.{
 }
 import io.iohk.atala.agent.walletapi.util.SeqExtensions.*
 import io.iohk.atala.agent.walletapi.model.ECCoordinates.*
+import io.iohk.atala.agent.walletapi.model.ECSignatures.*
 import io.iohk.atala.agent.walletapi.model.error.{CreateManagedDIDError, PublishManagedDIDError, UpdateManagedDIDError}
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService.{CreateDIDSecret, UpdateDIDSecret}
 import io.iohk.atala.agent.walletapi.storage.{
@@ -33,6 +34,7 @@ import io.iohk.atala.castor.core.model.did.{
   PublicKeyJwk,
   PublishedDIDOperation,
   PublishedDIDOperationOutcome,
+  UnsignedUpdateDIDOperation,
   UpdateOperationDelta
 }
 import io.iohk.atala.castor.core.service.DIDService
@@ -201,31 +203,41 @@ final class ManagedDIDService private[walletapi] (
 
     for {
       patchAndKeys <- ZIO.foreach(updateTemplate.patches)(generateKeyAndConvertToDomain)
-      updateCommitmentSecret <- KeyGeneratorWrapper
+      newUpdateCommitmentSecret <- KeyGeneratorWrapper
         .generateECKeyPair(CURVE)
         .mapError(UpdateManagedDIDError.KeyGenerationError.apply)
-      updateCommitmentRevealValue = updateCommitmentSecret.publicKey.toEncoded(CURVE)
-      operation = PublishedDIDOperation.Update(
+      newUpdateCommitmentRevealValue = newUpdateCommitmentSecret.publicKey.toEncoded(CURVE)
+      unsignedOperation = UnsignedUpdateDIDOperation(
         did = did,
         updateKey = Base64UrlString.fromByteArray(updateKeyPair.publicKey.toEncoded(CURVE)),
         previousVersion = previousVersion,
         delta = UpdateOperationDelta(
           patches = patchAndKeys.map(_._1),
-          updateCommitment = HexString.fromByteArray(Sha256.compute(updateCommitmentRevealValue).getValue)
-        ),
-        signature = ??? // TODO: generate signature
+          updateCommitment = HexString.fromByteArray(Sha256.compute(newUpdateCommitmentRevealValue).getValue)
+        )
+      )
+      signedOperation = PublishedDIDOperation.Update(
+        did = unsignedOperation.did,
+        updateKey = unsignedOperation.updateKey,
+        previousVersion = unsignedOperation.previousVersion,
+        delta = unsignedOperation.delta,
+        // TODO: confirm with finalised Prism method spec with signature creation
+        // For now we use protobuf definition itself with empty signature byte to create a signature.
+        signature = Base64UrlString.fromByteArray(
+          ECWrapper.signBytesECDSA(unsignedOperation.toProtoBytes, updateKeyPair.privateKey).toByteArray
+        )
       )
       secret = UpdateDIDSecret(
-        updateCommitmentSecret = updateCommitmentSecret,
+        updateCommitmentSecret = newUpdateCommitmentSecret,
         // "addPublicKey" action must overwrite the existing key.
-        // Thus only the last key in the same update operation is kept in the secret storage
+        // Therefore only the last key in the same update operation is kept in the secret storage
         // https://identity.foundation/sidetree/spec/#add-public-keys
         keyPairs = patchAndKeys
           .collect { case (_, Some((keyPair, publicKey))) => publicKey.id -> keyPair }
           .distinctBy(_._1, keepFirst = false)
           .toMap
       )
-    } yield operation -> secret
+    } yield signedOperation -> secret
   }
 
   private def generateKeyPairAndPublicKey(template: DIDPublicKeyTemplate): Task[(ECKeyPair, PublicKey)] = {
