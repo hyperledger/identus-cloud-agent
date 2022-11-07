@@ -24,18 +24,6 @@ private[walletapi] class InMemoryDIDSecretStorage private (store: Ref[Map[PrismD
         currentStore.updated(did, updatedSecret)
       }
 
-  override def removeKey(did: PrismDID, keyId: String): Task[Unit] = store
-    .update { currentStore =>
-      currentStore.get(did) match {
-        case Some(secret) =>
-          val currentKeyPairs = secret.keyPairs
-          val updatedKeyPairs = currentKeyPairs.removed(keyId)
-          val updatedSecret = secret.copy(keyPairs = updatedKeyPairs)
-          currentStore.updated(did, updatedSecret)
-        case None => currentStore
-      }
-    }
-
   override def getDIDCommitmentKey(did: PrismDID, purpose: CommitmentPurpose): Task[Option[ECKeyPair]] =
     store.get.map(
       _.get(did).flatMap(secret =>

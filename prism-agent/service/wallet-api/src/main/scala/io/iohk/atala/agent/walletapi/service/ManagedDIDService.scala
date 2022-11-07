@@ -224,7 +224,7 @@ final class ManagedDIDService private[walletapi] (
         // TODO: confirm with finalised Prism method spec with signature creation
         // For now we use protobuf definition itself with empty signature byte to create a signature.
         signature = Base64UrlString.fromByteArray(
-          ECWrapper.signBytesECDSA(unsignedOperation.toProtoBytes, updateKeyPair.privateKey).toByteArray
+          ECWrapper.signBytesECDSA(unsignedOperation.toByteArrayForSigning, updateKeyPair.privateKey).toByteArray
         )
       )
       secret = UpdateDIDSecret(

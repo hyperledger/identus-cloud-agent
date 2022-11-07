@@ -1,6 +1,6 @@
 package io.iohk.atala.agent.walletapi.storage
 
-import io.iohk.atala.agent.walletapi.model.{CommitmentPurpose, ECKeyPair}
+import io.iohk.atala.agent.walletapi.model.{CommitmentPurpose, ECKeyPair, StagingDIDUpdateSecret}
 import io.iohk.atala.castor.core.model.did.PrismDID
 import io.iohk.atala.shared.models.HexStrings.HexString
 import zio.*
@@ -14,9 +14,6 @@ private[walletapi] trait DIDSecretStorage {
   def getKey(did: PrismDID, keyId: String): Task[Option[ECKeyPair]]
 
   def upsertKey(did: PrismDID, keyId: String, keyPair: ECKeyPair): Task[Unit]
-
-  /** Returns the deleted key-pair if exists, otherwise return None */
-  def removeKey(did: PrismDID, keyId: String): Task[Unit]
 
   def getDIDCommitmentKey(did: PrismDID, purpose: CommitmentPurpose): Task[Option[ECKeyPair]]
 
