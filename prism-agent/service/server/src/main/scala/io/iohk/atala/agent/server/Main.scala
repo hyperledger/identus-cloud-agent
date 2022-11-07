@@ -41,18 +41,23 @@ object Main extends ZIOAppDefault {
 
       didCommLayer = AgentCli.agentLayer(agentDID)
 
-      _ <- Modules.didCommExchangesJob
+      didCommExchangesFiber <- Modules.didCommExchangesJob
         .provide(
           didCommLayer
         )
         .fork
-      _ <- Modules
+
+      _ <- didCommExchangesFiber.join
+
+      didCommServiceFiber <- Modules
         .didCommServiceEndpoint(serviceEndpointPort)
         .provide(
           didCommLayer,
           AppModule.credentialServiceLayer
         )
         .fork
+      _ <- didCommServiceFiber.join
+
       _ <- Modules.app
     } yield ()
 
