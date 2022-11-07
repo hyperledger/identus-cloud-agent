@@ -49,9 +49,10 @@ object BackgroundJobs {
             offer = OfferCredential( // TODO
               body = body,
               attachments = Seq(attachmentDescriptor),
-              to = DidId(subjectId)
+              to = DidId(subjectId),
+              from = didComm.myDid
             )
-            msg = offer.makeMessage(from = didComm.myDid)
+            msg = offer.makeMessage
 
             _ <- AgentCli.sendMessage(msg)
             _ <- ZIO.log(s"IssueCredentialRecord: OfferPending (END)")

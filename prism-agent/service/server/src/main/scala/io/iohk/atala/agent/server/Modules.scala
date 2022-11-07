@@ -140,7 +140,7 @@ object Modules {
                 // store on BD TODO //pc = OfferCredential.readFromMessage(msg)
                 requestCredential = RequestCredential.makeRequestCredentialFromOffer(msg) // RequestCredential
                 didCommService <- ZIO.service[DidComm]
-                msg = requestCredential.makeMessage(from = didCommService.myDid)
+                msg = requestCredential.makeMessage
                 _ <- sendMessage(msg)
               } yield ("RequestCredential Sent")
 
@@ -153,7 +153,7 @@ object Modules {
 
                 issueCredential = IssueCredential.makeIssueCredentialFromRequestCredential(msg) // IssueCredential
                 didCommService <- ZIO.service[DidComm]
-                msg = issueCredential.makeMessage(from = didCommService.myDid)
+                msg = issueCredential.makeMessage
                 _ <- sendMessage(msg)
               } yield ("IssueCredential Sent")
 
