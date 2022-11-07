@@ -25,15 +25,15 @@ object Main extends ZIOAppDefault {
       |""".stripMargin)
         .ignore
 
-      _ <- Console.printLine("PORT")
-      // port <- Console.readLine.map {
-      //   case s if s.toIntOption.isDefined => s.toInt
-      //   case _                            => 8090
-      // }
-      port = 8090
+      serviceEndpointPort <- System.env("DIDCOMM_ENDPOINT_PORT").map {
+        case Some(s) if s.toIntOption.isDefined => s.toInt
+        case _                                  => 8090
+      }
+
+      _ <- Console.printLine(s"DIDComm Service Endpoint port => $serviceEndpointPort")
 
       agentDID <- for {
-        peer <- ZIO.succeed(PeerDID.makePeerDid(serviceEndpoint = Some(s"http://localhost:$port")))
+        peer <- ZIO.succeed(PeerDID.makePeerDid(serviceEndpoint = Some(s"http://localhost:$serviceEndpointPort")))
         _ <- Console.printLine(s"New DID: ${peer.did}") *>
           Console.printLine(s"JWK for KeyAgreement: ${peer.jwkForKeyAgreement.toJSONString}") *>
           Console.printLine(s"JWK for KeyAuthentication: ${peer.jwkForKeyAuthentication.toJSONString}")
@@ -47,7 +47,7 @@ object Main extends ZIOAppDefault {
         )
         .fork
       _ <- Modules
-        .didCommServiceEndpoint(port)
+        .didCommServiceEndpoint(serviceEndpointPort)
         .provide(
           didCommLayer,
           AppModule.credentialServiceLayer
