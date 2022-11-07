@@ -10,7 +10,7 @@ def commonProject(project: Project): Project =
   project.settings(
     version := "0.1.0-SNAPSHOT",
     organization := "io.iohk.atala",
-    scalaVersion := "3.1.3",
+    scalaVersion := "3.2.0",
     githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN"),
     resolvers += Resolver
       .githubPackages("input-output-hk", "atala-prism-sdk"),
