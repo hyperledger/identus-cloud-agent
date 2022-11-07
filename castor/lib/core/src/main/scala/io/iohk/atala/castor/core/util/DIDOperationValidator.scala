@@ -14,7 +14,6 @@ object DIDOperationValidator {
 
 class DIDOperationValidator(config: Config) {
 
-  // TODO: add UpdateOperation signature validation
   def validate(operation: PublishedDIDOperation): Either[DIDOperationError, Unit] = {
     for {
       _ <- validateOperationCommitment(operation)

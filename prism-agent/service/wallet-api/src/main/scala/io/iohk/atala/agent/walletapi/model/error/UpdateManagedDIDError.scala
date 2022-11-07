@@ -6,7 +6,6 @@ import io.iohk.atala.castor.core.model.error.DIDOperationError
 sealed trait UpdateManagedDIDError
 
 object UpdateManagedDIDError {
-  final case class UnsupportedDIDType(msg: String) extends UpdateManagedDIDError
   final case class DIDNotFound(did: PrismDID) extends UpdateManagedDIDError
   final case class DIDNotPublished(did: PrismDID) extends UpdateManagedDIDError
   final case class PendingStagingUpdate(did: PrismDID) extends UpdateManagedDIDError

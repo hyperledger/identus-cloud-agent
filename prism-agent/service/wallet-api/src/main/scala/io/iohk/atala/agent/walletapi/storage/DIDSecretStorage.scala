@@ -26,9 +26,10 @@ private[walletapi] trait DIDSecretStorage {
     * already exists, no change is applied.
     *
     * @return
-    *   true if operation success. false if staging secret already exists
+    *   true if no existing staging secret and change is applied. false if staging secret already exists and no change
+    *   is applied.
     */
-  def addStagingDIDUpdateSecret(did: PrismDID, secret: StagingDIDUpdateSecret): Task[Boolean]
+  def setStagingDIDUpdateSecret(did: PrismDID, secret: StagingDIDUpdateSecret): Task[Boolean]
 
   def getStagingDIDUpdateSecret(did: PrismDID): Task[Option[StagingDIDUpdateSecret]]
 

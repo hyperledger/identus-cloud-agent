@@ -42,11 +42,12 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
 
   private def generateUpdateDIDOperation(
       updateCommitment: HexString = HexString.fromStringUnsafe("0" * 64),
-      patches: Seq[DIDStatePatch] = Nil
+      patches: Seq[DIDStatePatch] = Nil,
+      previousVersion: HexString = HexString.fromStringUnsafe("0" * 64)
   ) = PublishedDIDOperation.Update(
     did = PrismDIDV1.fromCreateOperation(generateCreateDIDOperation()),
     updateKey = Base64UrlString.fromStringUnsafe("0"),
-    previousVersion = HexString.fromStringUnsafe("0" * 64),
+    previousVersion = previousVersion,
     delta = UpdateOperationDelta(
       patches = patches,
       updateCommitment = updateCommitment
@@ -193,7 +194,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
           assert(DIDOperationValidator(Config(keyLimit, 0)).validate(op))(expect)
         }
       },
-      test("reject CreateOperation on too many DID service access") {
+      test("reject UpdateOperation on too many DID service access") {
         val serviceLimit = 30
         val addServiceGen = Gen.int(0, 30)
         val removeServiceGen = Gen.int(0, 30)
@@ -214,6 +215,10 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
             else isLeft(isSubtype[DIDOperationError.TooManyDidServiceAccess](anything))
           assert(DIDOperationValidator(Config(0, serviceLimit)).validate(op))(expect)
         }
+      },
+      test("reject UpdateOperation on invalid version reference") {
+        val op = generateUpdateDIDOperation(previousVersion = HexString.fromStringUnsafe("0000"))
+        assert(defaultDIDOpValidator.validate(op))(isLeft(isSubtype[DIDOperationError.InvalidArgument](anything)))
       }
     )
 }

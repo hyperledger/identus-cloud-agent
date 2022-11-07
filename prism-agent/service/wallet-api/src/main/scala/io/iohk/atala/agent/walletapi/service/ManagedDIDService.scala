@@ -59,7 +59,7 @@ final class ManagedDIDService private[walletapi] (
 
   def publishStoredDID(did: PrismDID): IO[PublishManagedDIDError, PublishedDIDOperationOutcome] = {
     for {
-      canonicalDID <- ZIO.fromEither(canonicalizeDID(did)).mapError(PublishManagedDIDError.UnsupportedDIDType.apply)
+      canonicalDID <- ZIO.succeed(canonicalizeDID(did))
       createOperation <- nonSecretStorage
         .getCreatedDID(canonicalDID)
         .mapError(PublishManagedDIDError.WalletStorageError.apply)
@@ -123,7 +123,7 @@ final class ManagedDIDService private[walletapi] (
         keyPairs = secret.keyPairs
       )
       secretStorage
-        .addStagingDIDUpdateSecret(canonicalDID, stagingUpdateSecret)
+        .setStagingDIDUpdateSecret(canonicalDID, stagingUpdateSecret)
         .mapError(UpdateManagedDIDError.WalletStorageError.apply)
         .filterOrFail(identity)(UpdateManagedDIDError.PendingStagingUpdate(canonicalDID))
         .unit
@@ -156,7 +156,7 @@ final class ManagedDIDService private[walletapi] (
       } yield ()
 
     for {
-      canonicalDID <- ZIO.fromEither(canonicalizeDID(did)).mapError(UpdateManagedDIDError.UnsupportedDIDType.apply)
+      canonicalDID <- ZIO.succeed(canonicalizeDID(did))
       _ <- nonSecretStorage.listPublishedDID
         .mapError(UpdateManagedDIDError.WalletStorageError.apply)
         .filterOrFail(_.contains(canonicalDID))(UpdateManagedDIDError.DIDNotPublished(canonicalDID))
@@ -263,7 +263,7 @@ final class ManagedDIDService private[walletapi] (
       secret = UpdateDIDSecret(
         updateCommitmentSecret = newUpdateCommitmentSecret,
         // "addPublicKey" action must overwrite the existing key.
-        // Therefore only the last key in the same update operation is kept in the secret storage
+        // Therefore only the last patch of the same key is kept in the secret storage
         // https://identity.foundation/sidetree/spec/#add-public-keys
         keyPairs = patchAndKeys
           .collect { case (_, Some((keyPair, publicKey))) => publicKey.id -> keyPair }
@@ -288,9 +288,9 @@ final class ManagedDIDService private[walletapi] (
     } yield (keyPair, publicKey)
   }
 
-  private def canonicalizeDID(did: PrismDID): Either[String, PrismDIDV1] = did match {
-    case d: LongFormPrismDIDV1 => Right(d.toCanonical)
-    case d: PrismDIDV1         => Right(d)
+  private def canonicalizeDID(did: PrismDID): PrismDIDV1 = did match {
+    case d: LongFormPrismDIDV1 => d.toCanonical
+    case d: PrismDIDV1         => d
   }
 
 }

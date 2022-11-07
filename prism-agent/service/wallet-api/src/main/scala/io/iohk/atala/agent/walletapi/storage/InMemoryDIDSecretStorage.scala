@@ -58,7 +58,7 @@ private[walletapi] class InMemoryDIDSecretStorage private (store: Ref[Map[PrismD
 
   override def removeDIDSecret(did: PrismDID): Task[Unit] = store.update(_.removed(did))
 
-  override def addStagingDIDUpdateSecret(did: PrismDID, secret: StagingDIDUpdateSecret): Task[Boolean] =
+  override def setStagingDIDUpdateSecret(did: PrismDID, secret: StagingDIDUpdateSecret): Task[Boolean] =
     store.modify { currentStore =>
       val currentSecret = currentStore.get(did)
       val updatedSecret =

@@ -22,28 +22,11 @@ trait DIDService {
   def updatePublishedDID(operation: PublishedDIDOperation.Update): IO[DIDOperationError, PublishedDIDOperationOutcome]
 }
 
-object MockDIDService {
-  val layer: ULayer[DIDService] = ZLayer.succeed {
-    new DIDService {
-      override def createPublishedDID(
-          operation: PublishedDIDOperation.Create
-      ): IO[DIDOperationError, PublishedDIDOperationOutcome] =
-        ZIO.fail(DIDOperationError.InvalidArgument("mocked error"))
-
-      override def updatePublishedDID(
-          operation: PublishedDIDOperation.Update
-      ): IO[DIDOperationError, PublishedDIDOperationOutcome] =
-        ZIO.fail(DIDOperationError.InvalidArgument("mocked error"))
-    }
-  }
-}
-
 object DIDServiceImpl {
   val layer: URLayer[IrisServiceStub & DIDOperationValidator & DIDOperationRepository[Task], DIDService] =
     ZLayer.fromFunction(DIDServiceImpl(_, _, _))
 }
 
-// TODO: add tests
 private class DIDServiceImpl(
     irisClient: IrisServiceStub,
     operationValidator: DIDOperationValidator,
