@@ -107,6 +107,7 @@ final class ManagedDIDService private[walletapi] (
     } yield longFormDID
   }
 
+  // TODO: add tests
   def updateDIDAndPublish(
       did: PrismDID,
       template: ManagedDIDUpdateTemplate
@@ -289,7 +290,7 @@ final class ManagedDIDService private[walletapi] (
 
   private def canonicalizeDID(did: PrismDID): Either[String, PrismDIDV1] = did match {
     case d: LongFormPrismDIDV1 => Right(d.toCanonical)
-    case _                     => Left(s"only Prism method v1 is allow for agent managed keys")
+    case d: PrismDIDV1         => Right(d)
   }
 
 }

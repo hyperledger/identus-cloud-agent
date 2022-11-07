@@ -1,6 +1,7 @@
 package io.iohk.atala.agent.walletapi.storage
 
-import io.iohk.atala.castor.core.model.did.{DIDDocument, DIDStorage, PrismDIDV1, PublishedDIDOperation}
+import io.iohk.atala.agent.walletapi.crypto.KeyGeneratorWrapper
+import io.iohk.atala.castor.core.model.did.{DIDDocument, DIDStorage, PrismDIDV1, PublishedDIDOperation, EllipticCurve}
 import io.iohk.atala.agent.walletapi.model.*
 import io.iohk.atala.agent.walletapi.model.ECCoordinates.*
 import io.iohk.atala.shared.models.HexStrings.HexString
@@ -31,7 +32,6 @@ object InMemoryDIDSecretStorageSpec extends ZIOSpecDefault {
     listKeySpec,
     getKeySpec,
     upsertKeySpec,
-    removeKeySpec,
     getDIDCommitmentSpec,
     upsertDIDCommitmentRevealValue
   ).provideLayer(InMemoryDIDSecretStorage.layer)
@@ -91,42 +91,6 @@ object InMemoryDIDSecretStorageSpec extends ZIOSpecDefault {
     }
   )
 
-  private val removeKeySpec = suite("removeKey")(
-    test("remove existing key and return removed value") {
-      val keyPair = generateKeyPair(publicKey = (1, 1))
-      for {
-        storage <- ZIO.service[DIDSecretStorage]
-        _ <- storage.upsertKey(didExample, "key-1", keyPair)
-        _ <- storage.removeKey(didExample, "key-1")
-        keys <- storage.listKeys(didExample)
-      } yield assert(keys)(isEmpty)
-    },
-    test("remove non-existing key and return None for the removed value") {
-      val keyPair = generateKeyPair(publicKey = (1, 1))
-      for {
-        storage <- ZIO.service[DIDSecretStorage]
-        _ <- storage.upsertKey(didExample, "key-1", keyPair)
-        _ <- storage.removeKey(didExample, "key-2")
-        keys <- storage.listKeys(didExample)
-      } yield assert(keys)(hasSize(equalTo(1)))
-    },
-    test("remove some of existing keys and keep other keys") {
-      val keyPairs = Map(
-        "key-1" -> generateKeyPair(publicKey = (1, 1)),
-        "key-2" -> generateKeyPair(publicKey = (2, 2)),
-        "key-3" -> generateKeyPair(publicKey = (3, 3))
-      )
-      for {
-        storage <- ZIO.service[DIDSecretStorage]
-        _ <- ZIO.foreachDiscard(keyPairs) { case (keyId, keyPair) =>
-          storage.upsertKey(didExample, keyId, keyPair)
-        }
-        _ <- storage.removeKey(didExample, "key-1")
-        keys <- storage.listKeys(didExample)
-      } yield assert(keys.keys)(hasSameElements(Seq("key-2", "key-3")))
-    }
-  )
-
   private val getDIDCommitmentSpec = suite("getDIDCommitmentRevealValue")(
     test("get non-exists commitment reveal value") {
       for {
@@ -136,40 +100,40 @@ object InMemoryDIDSecretStorageSpec extends ZIOSpecDefault {
       } yield assert(updateCommitment)(isNone) && assert(recoveryCommitment)(isNone)
     },
     test("get existing commit reveal value") {
-      val updateHex = HexString.fromStringUnsafe("0011aabb")
-      val recoveryHex = HexString.fromStringUnsafe("aabb0011")
       for {
+        updateKeyPair <- KeyGeneratorWrapper.generateECKeyPair(EllipticCurve.SECP256K1)
+        recoveryKeyPair <- KeyGeneratorWrapper.generateECKeyPair(EllipticCurve.SECP256K1)
         storage <- ZIO.service[DIDSecretStorage]
-        _ <- storage.upsertDIDCommitmentKey(didExample, CommitmentPurpose.Update, updateHex)
-        _ <- storage.upsertDIDCommitmentKey(didExample, CommitmentPurpose.Recovery, recoveryHex)
+        _ <- storage.upsertDIDCommitmentKey(didExample, CommitmentPurpose.Update, updateKeyPair)
+        _ <- storage.upsertDIDCommitmentKey(didExample, CommitmentPurpose.Recovery, recoveryKeyPair)
         updateCommitment <- storage.getDIDCommitmentKey(didExample, CommitmentPurpose.Update)
         recoveryCommitment <- storage.getDIDCommitmentKey(didExample, CommitmentPurpose.Recovery)
-      } yield assert(updateCommitment)(isSome(equalTo(updateHex))) && assert(recoveryCommitment)(
-        isSome(equalTo(recoveryHex))
+      } yield assert(updateCommitment)(isSome(equalTo(updateKeyPair))) && assert(recoveryCommitment)(
+        isSome(equalTo(recoveryKeyPair))
       )
     }
   )
 
   private val upsertDIDCommitmentRevealValue = suite("upsertDIDCommitmentRevealValue")(
     test("insert non-existing commitment reveal value") {
-      val updateHex = HexString.fromStringUnsafe("0011aabb")
       for {
+        updateKeyPair <- KeyGeneratorWrapper.generateECKeyPair(EllipticCurve.SECP256K1)
         storage <- ZIO.service[DIDSecretStorage]
         before <- storage.getDIDCommitmentKey(didExample, CommitmentPurpose.Update)
-        _ <- storage.upsertDIDCommitmentKey(didExample, CommitmentPurpose.Update, updateHex)
+        _ <- storage.upsertDIDCommitmentKey(didExample, CommitmentPurpose.Update, updateKeyPair)
         after <- storage.getDIDCommitmentKey(didExample, CommitmentPurpose.Update)
-      } yield assert(before)(isNone) && assert(after)(isSome(equalTo(updateHex)))
+      } yield assert(before)(isNone) && assert(after)(isSome(equalTo(updateKeyPair)))
     },
     test("update existing commitment reveal value") {
-      val updateHex1 = HexString.fromStringUnsafe("0011aabb")
-      val updateHex2 = HexString.fromStringUnsafe("aabb0011")
       for {
+        updateKeyPair1 <- KeyGeneratorWrapper.generateECKeyPair(EllipticCurve.SECP256K1)
+        updateKeyPair2 <- KeyGeneratorWrapper.generateECKeyPair(EllipticCurve.SECP256K1)
         storage <- ZIO.service[DIDSecretStorage]
-        _ <- storage.upsertDIDCommitmentKey(didExample, CommitmentPurpose.Update, updateHex1)
+        _ <- storage.upsertDIDCommitmentKey(didExample, CommitmentPurpose.Update, updateKeyPair1)
         before <- storage.getDIDCommitmentKey(didExample, CommitmentPurpose.Update)
-        _ <- storage.upsertDIDCommitmentKey(didExample, CommitmentPurpose.Update, updateHex2)
+        _ <- storage.upsertDIDCommitmentKey(didExample, CommitmentPurpose.Update, updateKeyPair2)
         after <- storage.getDIDCommitmentKey(didExample, CommitmentPurpose.Update)
-      } yield assert(before)(isSome(equalTo(updateHex1))) && assert(after)(isSome(equalTo(updateHex2)))
+      } yield assert(before)(isSome(equalTo(updateKeyPair1))) && assert(after)(isSome(equalTo(updateKeyPair2)))
     }
   )
 

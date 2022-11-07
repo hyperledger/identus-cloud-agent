@@ -64,7 +64,7 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault {
 
   private def managedDIDServiceLayer: ULayer[TestDIDService & ManagedDIDService] = {
     val didValidatorConfig = DIDOperationValidator.Config(50, 50)
-    (DIDOperationValidator.layer(didValidatorConfig) ++ testDIDServiceLayer) >+> ManagedDIDService.inMemoryStorage()
+    (DIDOperationValidator.layer(didValidatorConfig) ++ testDIDServiceLayer) >+> ManagedDIDService.inMemoryStorage
   }
 
   private def generateDIDTemplate(
