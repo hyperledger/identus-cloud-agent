@@ -40,6 +40,7 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   id,
         |   schema_id,
         |   subject_id,
+        |   role,
         |   validity_period,
         |   claims,
         |   state
@@ -47,6 +48,7 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   ${record.id.toString},
         |   ${record.schemaId},
         |   ${record.subjectId},
+        |   ${record.role.toString},
         |   ${record.validityPeriod},
         |   ${record.claims.asJson.toString},
         |   ${record.state.toString}
@@ -61,6 +63,7 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
   given stateGet: Get[IssueCredentialRecord.State] = Get[String].map(IssueCredentialRecord.State.valueOf(_))
   given claimsGet: Get[Map[String, String]] =
     Get[String].map(decode[Map[String, String]](_).getOrElse(Map("parsingError" -> "parsingError")))
+  given roleGet: Get[IssueCredentialRecord.Role] = Get[String].map(IssueCredentialRecord.Role.valueOf(_))
 
   override def getIssueCredentialRecords(): Task[Seq[IssueCredentialRecord]] = {
     val cxnIO = sql"""
@@ -68,6 +71,7 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   id,
         |   schema_id,
         |   subject_id,
+        |   role,
         |   validity_period,
         |   claims,
         |   state
@@ -86,6 +90,7 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   id,
         |   schema_id,
         |   subject_id,
+        |   role,
         |   validity_period,
         |   claims,
         |   state
