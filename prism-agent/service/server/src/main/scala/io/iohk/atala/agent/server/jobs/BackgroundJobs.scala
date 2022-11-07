@@ -35,7 +35,7 @@ object BackgroundJobs {
       _ <- Console.printLine(s"Running action with record => $record")
 
       _ <- record match {
-        case IssueCredentialRecord(_, _, subjectId, _, _, OfferPending) =>
+        case IssueCredentialRecord(_, _, _, subjectId, _, _, OfferPending) =>
           val attribute1 = Attribute(name = "name", value = "Joe Blog")
           val attribute2 = Attribute(name = "dob", value = "01/10/1947")
           val credentialPreview = CredentialPreview(attributes = Seq(attribute1, attribute2))
@@ -58,10 +58,10 @@ object BackgroundJobs {
             // TODO UPDATE STATE
           } yield ()
 
-        case IssueCredentialRecord(_, _, subjectId, _, _, RequestPending)       => ???
-        case IssueCredentialRecord(_, _, subjectId, _, _, ProblemReportPending) => ???
-        case IssueCredentialRecord(_, _, subjectId, _, _, CredentialPending)    => ???
-        case IssueCredentialRecord(_, _, _, _, _, _)                            => ZIO.unit
+        case IssueCredentialRecord(_, _, _, subjectId, _, _, RequestPending)       => ???
+        case IssueCredentialRecord(_, _, _, subjectId, _, _, ProblemReportPending) => ???
+        case IssueCredentialRecord(_, _, _, subjectId, _, _, CredentialPending)    => ???
+        case IssueCredentialRecord(_, _, _, _, _, _, _)                            => ZIO.unit
       }
     } yield ()
 
