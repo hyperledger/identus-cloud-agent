@@ -25,6 +25,9 @@ import java.security.SecureRandom
 import java.security.spec.ECGenParameterSpec
 import java.util.UUID
 import java.{util => ju}
+import io.iohk.atala.mercury.protocol.issuecredential.OfferCredential
+import io.iohk.atala.mercury.protocol.issuecredential.RequestCredential
+import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
 
 trait CredentialService {
 
@@ -68,15 +71,33 @@ trait CredentialService {
 
   def getCredentialRecord(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]]
 
+  def receiveCredentialOffer(offer: OfferCredential): IO[IssueCredentialError, Option[IssueCredentialRecord]]
+
   def acceptCredentialOffer(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]]
 
+  def receiveCredentialRequest(request: RequestCredential): IO[IssueCredentialError, Option[IssueCredentialRecord]]
+
   def issueCredential(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]]
+
+  def receiveCredentialIssue(issue: IssueCredential): IO[IssueCredentialError, Option[IssueCredentialRecord]]
 
 }
 
 object MockCredentialService {
   val layer: ULayer[CredentialService] = ZLayer.succeed {
     new CredentialService {
+
+      override def receiveCredentialOffer(
+          offer: OfferCredential
+      ): IO[IssueCredentialError, Option[IssueCredentialRecord]] = ???
+
+      override def receiveCredentialRequest(
+          request: RequestCredential
+      ): IO[IssueCredentialError, Option[IssueCredentialRecord]] = ???
+
+      override def receiveCredentialIssue(
+          issue: IssueCredential
+      ): IO[IssueCredentialError, Option[IssueCredentialRecord]] = ???
 
       override def getCredentialRecords(): IO[IssueCredentialError, Seq[IssueCredentialRecord]] = ???
 
@@ -123,6 +144,7 @@ object CredentialServiceImpl {
 
 private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepository: CredentialRepository[Task])
     extends CredentialService {
+
   override def getCredentials(batchId: String): IO[IssueCredentialError, Seq[EncodedJWTCredential]] = {
     credentialRepository.getCredentials(batchId).mapError(IssueCredentialError.RepositoryError.apply)
   }
@@ -179,6 +201,32 @@ private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepos
     } yield record
   }
 
+  override def receiveCredentialOffer(
+      offer: OfferCredential
+  ): IO[IssueCredentialError, Option[IssueCredentialRecord]] = {
+    // for {
+    //   record <- ZIO.succeed(
+    //     IssueCredentialRecord(
+    //       UUID.randomUUID(),
+    //       None,
+    //       IssueCredentialRecord.Role.Holder,
+    //       offer.to.value,
+    //       None,
+    //       Map.empty,
+    //       IssueCredentialRecord.State.OfferReceived
+    //     )
+    //   )
+    //   count <- credentialRepository
+    //     .createIssueCredentialRecord(record)
+    //     .flatMap {
+    //       case 1 => ZIO.succeed(())
+    //       case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
+    //     }
+    //     .mapError(RepositoryError.apply)
+    // } yield record
+    ???
+  }
+
   override def acceptCredentialOffer(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] =
     updateCredentialRecordState(
       id,
@@ -186,12 +234,22 @@ private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepos
       IssueCredentialRecord.State.RequestPending
     )
 
+  override def receiveCredentialRequest(
+      request: RequestCredential
+  ): IO[IssueCredentialError, Option[IssueCredentialRecord]] = ???
+
   override def issueCredential(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] =
     updateCredentialRecordState(
       id,
       IssueCredentialRecord.State.RequestReceived,
       IssueCredentialRecord.State.CredentialPending
     )
+
+  override def receiveCredentialIssue(
+      issue: IssueCredential
+  ): IO[IssueCredentialError, Option[IssueCredentialRecord]] = {
+    ???
+  }
 
   private[this] def updateCredentialRecordState(
       id: UUID,
