@@ -238,7 +238,7 @@ private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepos
       request: RequestCredential
   ): IO[IssueCredentialError, Option[IssueCredentialRecord]] = {
     for {
-      id <- ZIO.succeed(UUID.fromString(request.id))
+      thid <- ZIO.succeed(UUID.fromString(request.thid.get)) // FIXME get
       _ <- credentialRepository
         .updateWithRequestCredential(request)
         .flatMap {
@@ -247,7 +247,7 @@ private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepos
         }
         .mapError(RepositoryError.apply)
       record <- credentialRepository
-        .getIssueCredentialRecord(id)
+        .getIssueCredentialRecord(thid)
         .mapError(RepositoryError.apply)
     } yield record
   }
@@ -263,7 +263,7 @@ private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepos
       issue: IssueCredential
   ): IO[IssueCredentialError, Option[IssueCredentialRecord]] = {
     for {
-      id <- ZIO.succeed(UUID.fromString(issue.id))
+      thid <- ZIO.succeed(UUID.fromString(issue.thid.get)) // FIXME get
       _ <- credentialRepository
         .updateWithIssueCredential(issue)
         .flatMap {
@@ -272,7 +272,7 @@ private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepos
         }
         .mapError(RepositoryError.apply)
       record <- credentialRepository
-        .getIssueCredentialRecord(id)
+        .getIssueCredentialRecordByThreadId(thid)
         .mapError(RepositoryError.apply)
     } yield record
   }

@@ -128,6 +128,30 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
       .transact(xa)
   }
 
+    override def getIssueCredentialRecordByThreadId(thid: UUID): Task[Option[IssueCredentialRecord]] = {
+    val cxnIO = sql"""
+        | SELECT
+        |   id,
+        |   thid,
+        |   schema_id,
+        |   role,
+        |   subject_id,
+        |   validity_period,
+        |   claims,
+        |   state,
+        |   offer_credential_data,
+        |   request_credential_data,
+        |   issue_credential_data
+        | FROM public.issue_credential_records
+        | WHERE thid = ${thid.toString}
+        """.stripMargin
+      .query[IssueCredentialRecord]
+      .option
+
+    cxnIO
+      .transact(xa)
+  }
+
   override def updateCredentialRecordState(
       id: UUID,
       from: IssueCredentialRecord.State,
@@ -150,7 +174,8 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
     val cxnIO = sql"""
         | UPDATE public.issue_credential_records
         | SET
-        |   request_credential_data = ${request}
+        |   request_credential_data = ${request},
+        |   state = ${IssueCredentialRecord.State.RequestReceived.toString}
         | WHERE
         |   thid = ${request.thid.get}
         """.stripMargin.update
@@ -163,7 +188,8 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
     val cxnIO = sql"""
         | UPDATE public.issue_credential_records
         | SET
-        |   issue-credential_data = ${issue}
+        |   issue_credential_data = ${issue},
+        |   state = ${IssueCredentialRecord.State.CredentialReceived.toString}
         | WHERE
         |   thid = ${issue.thid.get}
         """.stripMargin.update
