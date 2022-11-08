@@ -30,13 +30,15 @@ object BackgroundJobs {
     } yield ()
   }
 
-  private[this] def performExchange(record: IssueCredentialRecord): ZIO[DidComm, Throwable, Unit] = {
+  private[this] def performExchange(
+      record: IssueCredentialRecord
+  ): ZIO[DidComm & CredentialService, Throwable, Unit] = {
     import IssueCredentialRecord.State._
     val aux = for {
       _ <- Console.printLine(s"Running action with record => $record")
 
       _ <- record match {
-        case IssueCredentialRecord(id, _, _, subjectId, _, claims, OfferPending, _, _) =>
+        case IssueCredentialRecord(id, _, _, subjectId, _, claims, OfferPending, _, _, _) =>
           val attributes = claims.map { case (k, v) => Attribute(k, v) }
           val credentialPreview = CredentialPreview(attributes = attributes.toSeq)
           val body = OfferCredential.Body(goal_code = Some("Offer Credential"), credential_preview = credentialPreview)
@@ -60,7 +62,7 @@ object BackgroundJobs {
             _ <- ZIO.log(s"IssueCredentialRecord: OfferPending (END)")
           } yield ()
 
-        case IssueCredentialRecord(id, _, _, subjectId, _, _, RequestPending, Some(offerData), _) =>
+        case IssueCredentialRecord(id, _, _, subjectId, _, _, RequestPending, Some(offerData), _, _) =>
           for {
             didCommService <- ZIO.service[DidComm]
             requestCredential = RequestCredential(
@@ -81,8 +83,8 @@ object BackgroundJobs {
             _ <- ZIO.log(s"IssueCredentialRecord: RequestPending id='$id' (END)")
           } yield ()
 
-        case IssueCredentialRecord(_, _, _, subjectId, _, _, ProblemReportPending, _, _) => ???
-        case IssueCredentialRecord(id, _, _, subjectId, _, _, CredentialPending, _, Some(requestCredentialData)) =>
+        case IssueCredentialRecord(_, _, _, subjectId, _, _, ProblemReportPending, _, _, _) => ???
+        case IssueCredentialRecord(id, _, _, subjectId, _, _, CredentialPending, _, Some(requestCredentialData), _) =>
           val issueCredential = IssueCredential(
             body = IssueCredential.Body(
               goal_code = requestCredentialData.body.goal_code,
@@ -104,7 +106,7 @@ object BackgroundJobs {
             _ <- credentialService.markCredentialSent(id)
             _ <- ZIO.log(s"IssueCredentialRecord: RequestPending id='$id' (END)")
           } yield ()
-        case IssueCredentialRecord(_, _, _, _, _, _, _, _, _) => ZIO.unit
+        case IssueCredentialRecord(_, _, _, _, _, _, _, _, _, _) => ZIO.unit
       }
     } yield ()
 

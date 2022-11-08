@@ -7,7 +7,7 @@ object Dependencies {
     val zioCatsInterop = "3.3.0"
     val prismSdk = "v1.3.3-snapshot-1657194253-992dd96"
     val iris = "0.1.0"
-    val mercury = "0.3.0"
+    val mercury = "0.3.0-SNAPSHOT"
   }
 
   private lazy val zio = "dev.zio" %% "zio" % Versions.zio
@@ -36,6 +36,7 @@ object Dependencies {
   private lazy val mercuryDependencies: Seq[ModuleID] = Seq(mercuryModels, mercuryAgent, mercuryResolver)
 
   // Project Dependencies
-  lazy val coreDependencies: Seq[ModuleID] = baseDependencies ++ Seq(polluxVcJwt) ++ Seq(irisClient) ++ mercuryDependencies
+  lazy val coreDependencies: Seq[ModuleID] =
+    baseDependencies ++ Seq(polluxVcJwt) ++ Seq(irisClient) ++ mercuryDependencies
   lazy val sqlDoobieDependencies: Seq[ModuleID] = baseDependencies ++ doobieDependencies ++ Seq(zioCatsInterop)
 }

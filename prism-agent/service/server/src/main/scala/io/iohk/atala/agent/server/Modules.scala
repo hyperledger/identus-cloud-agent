@@ -69,6 +69,9 @@ import io.iohk.atala.mercury.AgentCli.sendMessage //TODO REMOVE
 import io.iohk.atala.mercury.model._
 import io.iohk.atala.mercury.model.error._
 import io.iohk.atala.mercury.protocol.issuecredential._
+import io.iohk.atala.pollux.core.model.error.IssueCredentialError
+import io.iohk.atala.pollux.core.model.error.IssueCredentialError.RepositoryError
+import java.io.IOException
 
 object Modules {
 
@@ -155,7 +158,12 @@ object Modules {
                 credentialService <- ZIO.service[CredentialService]
                 todoTestOption <- credentialService
                   .receiveCredentialRequest(requestCredential)
-                  .catchAll(s => ???) // FIXME
+                  .catchSome { case RepositoryError(cause) =>
+                    ZIO.logError(cause.getMessage()) *>
+                      ZIO.fail(cause)
+                  }
+                  .catchAll { case ex: IOException => ZIO.fail(ex) }
+
                 // TODO todoTestOption if none
               } yield ("RequestCredential received")
 
@@ -165,9 +173,8 @@ object Modules {
                 _ <- ZIO.logInfo("As an Holder in issue-credential:")
                 issueCredential = IssueCredential.readFromMessage(msg)
                 _ <- ZIO.logInfo("Got IssueCredential: " + issueCredential)
-                // STORE
                 credentialService <- ZIO.service[CredentialService]
-                a = credentialService.receiveCredentialIssue(issueCredential)
+                _ = credentialService.receiveCredentialIssue(issueCredential)
               } yield ("IssueCredential Received")
 
             case _ => ZIO.succeed("Unknown Message Type")
