@@ -3,7 +3,7 @@ package io.iohk.atala
 import zio._
 
 import zhttp.service.{ChannelFactory, Client, EventLoopGroup}
-import zhttp.http.{Method, Headers, HttpData}
+import zhttp.http.{Method, Headers}
 
 import io.iohk.atala.mercury.Agent
 import io.iohk.atala.mercury.AgentService
