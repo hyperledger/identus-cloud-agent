@@ -154,7 +154,7 @@ The following is the list of supported scopes:
 * `athena`
 * `pistis`
 * `atlas`
-* `agent`
+* `prism-agent`
 * `shared`
 * `infra`
 
@@ -212,7 +212,7 @@ The content of the commit message body should contain:
 ### Local environment: pre-commit hooks
 
 [Conventional pre-commit hook](https://github.com/compilerla/conventional-pre-commit])
-can be used to check that all commits correspond to the Conventional Commits Specification. 
+can be used to check that all commits correspond to the Conventional Commits Specification.
 
 Initialization:
 * Make sure pre-commit is [installed](https://pre-commit.com/#install).
