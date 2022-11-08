@@ -25,18 +25,23 @@ object Main extends ZIOAppDefault {
       |""".stripMargin)
         .ignore
 
-      serviceEndpointPort <- System.env("DIDCOMM_ENDPOINT_PORT").map {
+      restServicePort <- System.env("REST_SERVICE_PORT").map {
+        case Some(s) if s.toIntOption.isDefined => s.toInt
+        case _                                  => 8080
+      }
+      _ <- ZIO.logInfo(s"REST Service port => $restServicePort")
+
+      didCommServicePort <- System.env("DIDCOMM_SERVICE_PORT").map {
         case Some(s) if s.toIntOption.isDefined => s.toInt
         case _                                  => 8090
       }
-
-      _ <- Console.printLine(s"DIDComm Service Endpoint port => $serviceEndpointPort")
+      _ <- ZIO.logInfo(s"DIDComm Service port => $didCommServicePort")
 
       agentDID <- for {
-        peer <- ZIO.succeed(PeerDID.makePeerDid(serviceEndpoint = Some(s"http://localhost:$serviceEndpointPort")))
-        _ <- Console.printLine(s"New DID: ${peer.did}") *>
-          Console.printLine(s"JWK for KeyAgreement: ${peer.jwkForKeyAgreement.toJSONString}") *>
-          Console.printLine(s"JWK for KeyAuthentication: ${peer.jwkForKeyAuthentication.toJSONString}")
+        peer <- ZIO.succeed(PeerDID.makePeerDid(serviceEndpoint = Some(s"http://localhost:$didCommServicePort")))
+        _ <- ZIO.logInfo(s"New DID: ${peer.did}") *>
+          ZIO.logInfo(s"JWK for KeyAgreement: ${peer.jwkForKeyAgreement.toJSONString}") *>
+          ZIO.logInfo(s"JWK for KeyAuthentication: ${peer.jwkForKeyAuthentication.toJSONString}")
       } yield (peer)
 
       didCommLayer = AgentCli.agentLayer(agentDID)
@@ -45,20 +50,19 @@ object Main extends ZIOAppDefault {
         .provide(
           didCommLayer
         )
+        .debug
         .fork
 
-      _ <- didCommExchangesFiber.join
-
       didCommServiceFiber <- Modules
-        .didCommServiceEndpoint(serviceEndpointPort)
+        .didCommServiceEndpoint(didCommServicePort)
         .provide(
           didCommLayer,
           AppModule.credentialServiceLayer
         )
+        .debug
         .fork
-      _ <- didCommServiceFiber.join
 
-      _ <- Modules.app
+      _ <- Modules.app(restServicePort)
     } yield ()
 
 }

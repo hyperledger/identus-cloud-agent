@@ -72,8 +72,8 @@ import io.iohk.atala.mercury.protocol.issuecredential._
 
 object Modules {
 
-  val app: Task[Unit] = {
-    val httpServerApp = HttpRoutes.routes.flatMap(HttpServer.start(8080, _))
+  def app(port: Int): Task[Unit] = {
+    val httpServerApp = HttpRoutes.routes.flatMap(HttpServer.start(port, _))
 
     httpServerApp
       .provideLayer(SystemModule.actorSystemLayer ++ HttpModule.layers)
