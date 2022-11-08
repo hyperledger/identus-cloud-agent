@@ -1,8 +1,8 @@
 package io.iohk.atala.mercury
 
 import scala.jdk.CollectionConverters.*
-import zio.*
 
+import zio._
 import java.io.IOException
 import io.iohk.atala.resolvers.PeerDidMediatorSecretResolver
 import zhttp.service.ChannelFactory
@@ -10,14 +10,13 @@ import zhttp.service.EventLoopGroup
 import org.didcommx.didcomm.DIDComm
 import io.iohk.atala.resolvers.UniversalDidResolver
 import io.iohk.atala.resolvers.CharlieSecretResolver
-import zhttp.service.*
-import zhttp.http.*
+import zhttp.service._
+import zhttp.http._
 import io.iohk.atala.QRcode
-import io.iohk.atala.mercury.model.{*, given}
-import io.iohk.atala.mercury.model.error.*
-import io.iohk.atala.mercury.protocol.outofbandlogin.*
-import io.iohk.atala.mercury.protocol.issuecredential.*
-import io.iohk.atala.mercury.protocol.presentproof
+import io.iohk.atala.mercury.model.{_, given}
+import io.iohk.atala.mercury.model.error._
+import io.iohk.atala.mercury.protocol.outofbandlogin._
+import io.iohk.atala.mercury.protocol.issuecredential._
 
 /** AgentCli
   * {{{
@@ -153,9 +152,9 @@ object AgentCli extends ZIOAppDefault {
 
       attachmentDescriptor =
         AttachmentDescriptor.buildAttachment(payload = playloadData)
-      attribute1 = presentproof.Attribute(name = "name", value = "Joe Blog")
-      attribute2 = presentproof.Attribute(name = "dob", value = "01/10/1947")
-      credentialPreview = presentproof.CredentialPreview(attributes = Seq(attribute1, attribute2))
+      attribute1 = Attribute(name = "name", value = "Joe Blog")
+      attribute2 = Attribute(name = "dob", value = "01/10/1947")
+      credentialPreview = CredentialPreview(attributes = Seq(attribute1, attribute2))
 
       didCommService <- ZIO.service[DidComm]
       _ <- Console.printLine(s"Send to (ex: ${didCommService.myDid})")
@@ -164,8 +163,8 @@ object AgentCli extends ZIOAppDefault {
         case did => ZIO.succeed(DidId(did))
       }
 
-      proposeCredential = presentproof.ProposePresentation(
-        body = presentproof.ProposePresentation.Body(
+      proposeCredential = ProposeCredential(
+        body = ProposeCredential.Body(
           goal_code = Some("goal_code"),
           comment = None,
           credential_preview = credentialPreview, // Option[CredentialPreview], // JSON STRinf
@@ -326,44 +325,44 @@ object AgentCli extends ZIOAppDefault {
             // ########################
             // ### issue-credential ###
             // ########################
-            case s if s == presentproof.ProposePresentation.`type` => // Issuer
+            case s if s == ProposeCredential.`type` => // Issuer
               for {
                 _ <- ZIO.logInfo("*" * 100)
                 _ <- ZIO.logInfo("As an Issuer in issue-credential:")
                 _ <- ZIO.logInfo("Got ProposeCredential: " + msg)
-                offer = presentproof.OfferCredential.makeOfferToProposeCredential(msg) // OfferCredential
+                offer = OfferCredential.makeOfferToProposeCredential(msg) // OfferCredential
 
                 didCommService <- ZIO.service[DidComm]
                 msg = offer.makeMessage
                 _ <- sendMessage(msg)
               } yield ("OfferCredential Sent")
 
-            case s if s == presentproof.OfferCredential.`type` => // Holder
+            case s if s == OfferCredential.`type` => // Holder
               for {
                 _ <- ZIO.logInfo("*" * 100)
                 _ <- ZIO.logInfo("As an Holder in issue-credential:")
                 _ <- ZIO.logInfo("Got OfferCredential: " + msg)
                 // store on BD TODO //pc = OfferCredential.readFromMessage(msg)
-                requestCredential = presentproof.RequestPresentation.makeRequestCredentialFromOffer(msg) // RequestCredential
+                requestCredential = RequestCredential.makeRequestCredentialFromOffer(msg) // RequestCredential
 
                 didCommService <- ZIO.service[DidComm]
                 msg = requestCredential.makeMessage
                 _ <- sendMessage(msg)
               } yield ("RequestCredential Sent")
 
-            case s if s == presentproof.RequestPresentation.`type` => // Issuer
+            case s if s == RequestCredential.`type` => // Issuer
               for {
                 _ <- ZIO.logInfo("*" * 100)
                 _ <- ZIO.logInfo("As an Issuer in issue-credential:")
                 _ <- ZIO.logInfo("Got RequestCredential: " + msg)
-                issueCredential = presentproof.IssueCredential.makeIssueCredentialFromRequestCredential(msg) // IssueCredential
+                issueCredential = IssueCredential.makeIssueCredentialFromRequestCredential(msg) // IssueCredential
 
                 didCommService <- ZIO.service[DidComm]
                 msg = issueCredential.makeMessage
                 _ <- sendMessage(msg)
               } yield ("IssueCredential Sent")
 
-            case s if s == presentproof.IssueCredential.`type` => // Holder
+            case s if s == IssueCredential.`type` => // Holder
               for {
                 _ <- ZIO.logInfo("*" * 100)
                 _ <- ZIO.logInfo("As an Holder in issue-credential:")

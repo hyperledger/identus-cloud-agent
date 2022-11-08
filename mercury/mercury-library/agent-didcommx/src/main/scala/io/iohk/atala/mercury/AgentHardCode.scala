@@ -1,12 +1,11 @@
 package io.iohk.atala.mercury
 
-import zio.*
-import io.circe.*
-import io.circe.syntax.*
-import io.iohk.atala.mercury.model.{*, given}
-import io.iohk.atala.mercury.protocol.issuecredential.*
-import io.iohk.atala.mercury.protocol.presentproof
+import zio._
+import io.circe._
+import io.circe.syntax._
 
+import io.iohk.atala.mercury.model.{_, given}
+import io.iohk.atala.mercury.protocol.issuecredential._
 import java.io.IOException
 
 object AgentHardCode extends ZIOAppDefault {
@@ -22,10 +21,10 @@ object AgentHardCode extends ZIOAppDefault {
     _ <- test.provide(didCommLayer)
   } yield ()
 
-  val attribute1 = presentproof.Attribute(name = "name", value = "Joe Blog")
-  val attribute2 = presentproof.Attribute(name = "dob", value = "01/10/1947")
-  val credentialPreview = presentproof.CredentialPreview(attributes = Seq(attribute1, attribute2))
-  val body = presentproof.ProposePresentation.Body(
+  val attribute1 = Attribute(name = "name", value = "Joe Blog")
+  val attribute2 = Attribute(name = "dob", value = "01/10/1947")
+  val credentialPreview = CredentialPreview(attributes = Seq(attribute1, attribute2))
+  val body = ProposeCredential.Body(
     goal_code = Some("Propose Credential"),
     credential_preview = credentialPreview,
     formats = Seq.empty

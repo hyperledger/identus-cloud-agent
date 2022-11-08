@@ -110,6 +110,7 @@ object AttachmentDescriptor {
     val encoded = JBase64.getUrlEncoder.encodeToString(payload.asJson.noSpaces.getBytes)
     AttachmentDescriptor(id, mediaType, Base64(encoded))
   }
+  
 
   given attachmentDescriptorEncoderV1: Encoder[AttachmentDescriptor] = (a: AttachmentDescriptor) => {
     Json.obj(
