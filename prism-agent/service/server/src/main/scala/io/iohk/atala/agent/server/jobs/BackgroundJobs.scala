@@ -58,7 +58,7 @@ object BackgroundJobs {
 
             _ <- AgentCli.sendMessage(msg)
             credentialService <- ZIO.service[CredentialService]
-            _ <- credentialService.markRequestSent(id)
+            _ <- credentialService.markOfferSent(id)
             _ <- ZIO.log(s"IssueCredentialRecord: OfferPending (END)")
           } yield ()
 
