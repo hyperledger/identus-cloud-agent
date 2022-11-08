@@ -12,6 +12,7 @@ import io.circe._, io.circe.parser._
 import java.util.UUID
 import io.iohk.atala.mercury.protocol.issuecredential.RequestCredential
 import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
+import io.iohk.atala.mercury.protocol.issuecredential.OfferCredential
 
 // TODO: replace with actual implementation
 class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepository[Task] {
@@ -45,7 +46,8 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   subject_id,
         |   validity_period,
         |   claims,
-        |   state
+        |   state,
+        |   offer_credential_data
         | ) values (
         |   ${record.id.toString},
         |   ${record.schemaId},
@@ -53,7 +55,8 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   ${record.subjectId},
         |   ${record.validityPeriod},
         |   ${record.claims.asJson.toString},
-        |   ${record.state.toString}
+        |   ${record.state.toString},
+        |   ${record.offerCredentialData}
         | )
         """.stripMargin.update
 
@@ -67,6 +70,15 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
     Get[String].map(decode[Map[String, String]](_).getOrElse(Map("parsingError" -> "parsingError")))
   given roleGet: Get[IssueCredentialRecord.Role] = Get[String].map(IssueCredentialRecord.Role.valueOf(_))
 
+  given offerCredentialGet: Get[OfferCredential] = Get[String].map(decode[OfferCredential](_).getOrElse(???))
+  given offerCredentialPut: Put[OfferCredential] = Put[String].contramap(_.asJson.toString)
+
+  given requestCredentialGet: Get[RequestCredential] = Get[String].map(decode[RequestCredential](_).getOrElse(???))
+  given requestCredentialPut: Put[RequestCredential] = Put[String].contramap(_.asJson.toString)
+
+  given issueCredentialGet: Get[IssueCredential] = Get[String].map(decode[IssueCredential](_).getOrElse(???))
+  given issueCredentialPut: Put[IssueCredential] = Put[String].contramap(_.asJson.toString)
+
   override def getIssueCredentialRecords(): Task[Seq[IssueCredentialRecord]] = {
     val cxnIO = sql"""
         | SELECT
@@ -76,7 +88,10 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   subject_id,
         |   validity_period,
         |   claims,
-        |   state
+        |   state,
+        |   offer_credential_data,
+        |   request_credential_data,
+        |   issue_credential_data
         | FROM public.issue_credential_records
         """.stripMargin
       .query[IssueCredentialRecord]
@@ -95,7 +110,10 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   subject_id,
         |   validity_period,
         |   claims,
-        |   state
+        |   state,
+        |   offer_credential_data,
+        |   request_credential_data,
+        |   issue_credential_data
         | FROM public.issue_credential_records
         | WHERE id = ${id.toString}
         """.stripMargin
