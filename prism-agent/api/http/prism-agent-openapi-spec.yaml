@@ -38,8 +38,8 @@ paths:
     post:
       tags: [ "DID" ]
       operationId: createDid
-      summary: Publish DID create operation to blockchain.
-      description: Publish DID create operation to blockchain.
+      summary: Publish DID create operation to the VDR.
+      description: Publish DID create operation to the VDR.
       requestBody:
         required: true
         content:
@@ -48,7 +48,7 @@ paths:
               $ref: "./castor/schemas.yaml#/components/schemas/CreateDIDRequest"
       responses:
         "202":
-          description: Created DID. Publishing DID or Proof to Blockchain.
+          description: Created DID. Publishing DID or Proof to the VDR.
           content:
             application/json:
               schema:
@@ -69,8 +69,8 @@ paths:
     get:
       tags: [ "DID" ]
       operationId: getDid
-      summary: Resolve DID.
-      description: Resolve DID.
+      summary: Retrieves the DID document of the DID.
+      description: Retrieves the DID document of the DID.
       parameters:
         - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
       responses:
@@ -91,8 +91,8 @@ paths:
     post:
       tags: [ "DID" ]
       operationId: updateDid
-      summary: Publish DID update operation to blockchain.
-      description: Publish DID update operation to blockchain.
+      summary: Publish DID update operation to VDR.
+      description: Publish DID update operation to VDR.
       parameters:
         - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
       requestBody:
@@ -103,7 +103,7 @@ paths:
               $ref: "./castor/schemas.yaml#/components/schemas/UpdateDIDRequest"
       responses:
         "202":
-          description: Updated DID. Publishing Updated DID or Update Proof to Blockchain.
+          description: Updated DID. Publishing Updated DID or Update Proof to the VDR.
           content:
             application/json:
               schema:
@@ -181,7 +181,7 @@ paths:
               $ref: "./castor/schemas.yaml#/components/schemas/RecoverDIDRequest"
       responses:
         "202":
-          description: Recovered DID. Publishing Recovered DID or Recovery Proof to Blockchain.
+          description: Recovered DID. Publishing Recovered DID or Recovery Proof to the VDR.
           content:
             application/json:
               schema:
@@ -335,13 +335,13 @@ paths:
     post:
       tags: [ "DID Registrar" ]
       operationId: publishManagedDid
-      summary: Publish DID stored in PrismAgent wallet to blockchain
-      description: Publish DID stored in PrismAgent wallet to blockchain
+      summary: Publish DID stored in PrismAgent wallet to the VDR
+      description: Publish DID stored in PrismAgent wallet to the VDR
       parameters:
         - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
       responses:
         "202":
-          description: Publishing DID to Blockchain.
+          description: Publishing DID to the VDR.
           content:
             application/json:
               schema:
@@ -548,7 +548,7 @@ paths:
               schema:
                 $ref: ./pollux/schemas.yaml#/components/schemas/IssueCredentialRecord          
         "404":
-          description: There is no issue credential record maatching the given 'recordId'.
+          description: There is no issue credential record matching the given 'recordId'.
           content:
             application/json:
               schema:
