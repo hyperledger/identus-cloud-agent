@@ -50,18 +50,18 @@ object RequestCredential {
   }
 
   def makeRequestCredentialFromOffer(msg: Message): RequestCredential = { // TODO change msg: Message to RequestCredential
-    val pc: OfferCredential = OfferCredential.readFromMessage(msg)
+    val oc: OfferCredential = OfferCredential.readFromMessage(msg)
 
     RequestCredential(
       body = RequestCredential.Body(
-        goal_code = pc.body.goal_code,
-        comment = pc.body.comment,
-        formats = pc.body.formats,
+        goal_code = oc.body.goal_code,
+        comment = oc.body.comment,
+        formats = oc.body.formats,
       ),
-      attachments = pc.attachments,
-      thid = Some(msg.id),
-      from = msg.to.get, // TODO get
-      to = msg.from.get, // TODO get
+      attachments = oc.attachments,
+      thid = Some(oc.id),
+      from = oc.to,
+      to = oc.from,
     )
   }
 

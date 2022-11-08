@@ -78,9 +78,9 @@ object OfferCredential {
         formats = pc.body.formats,
       ),
       attachments = pc.attachments,
-      thid = Some(msg.id),
-      from = msg.to.get, // TODO get
-      to = msg.from.get, // TODO get
+      thid = Some(pc.id),
+      from = pc.to,
+      to = pc.from,
     )
   }
 
