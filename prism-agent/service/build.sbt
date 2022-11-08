@@ -2,7 +2,7 @@ import Dependencies._
 import sbtghpackages.GitHubPackagesPlugin.autoImport._
 
 ThisBuild / version := "0.1.0-SNAPSHOT"
-ThisBuild / scalaVersion := "3.2.0"
+ThisBuild / scalaVersion := "3.1.3"
 ThisBuild / organization := "io.iohk.atala"
 
 // Custom keys
