@@ -16,6 +16,7 @@ import io.iohk.atala.resolvers.UniversalDidResolver
 import zhttp.service._
 import zhttp.http._
 import io.iohk.atala.mercury.MediaTypes
+import io.iohk.atala.mercury.AgentCli._
 
 object BackgroundJobs {
 
@@ -35,7 +36,7 @@ object BackgroundJobs {
       _ <- Console.printLine(s"Running action with record => $record")
 
       _ <- record match {
-        case IssueCredentialRecord(_, _, _, subjectId, _, claims, OfferPending) =>
+        case IssueCredentialRecord(id, _, _, subjectId, _, claims, OfferPending, _, _) =>
           val attributes = claims.map { case (k, v) => Attribute(k, v) }
           val credentialPreview = CredentialPreview(attributes = attributes.toSeq)
           val body = OfferCredential.Body(goal_code = Some("Offer Credential"), credential_preview = credentialPreview)
@@ -54,14 +55,56 @@ object BackgroundJobs {
             msg = offer.makeMessage
 
             _ <- AgentCli.sendMessage(msg)
+            credentialService <- ZIO.service[CredentialService]
+            _ <- credentialService.markRequestSent(id)
             _ <- ZIO.log(s"IssueCredentialRecord: OfferPending (END)")
-            // TODO UPDATE STATE
           } yield ()
 
-        case IssueCredentialRecord(_, _, _, subjectId, _, _, RequestPending)       => ???
-        case IssueCredentialRecord(_, _, _, subjectId, _, _, ProblemReportPending) => ???
-        case IssueCredentialRecord(_, _, _, subjectId, _, _, CredentialPending)    => ???
-        case IssueCredentialRecord(_, _, _, _, _, _, _)                            => ZIO.unit
+        case IssueCredentialRecord(id, _, _, subjectId, _, _, RequestPending, Some(offerData), _) =>
+          for {
+            didCommService <- ZIO.service[DidComm]
+            requestCredential = RequestCredential(
+              body = RequestCredential.Body(
+                goal_code = offerData.body.goal_code,
+                comment = offerData.body.comment,
+                formats = offerData.body.formats
+              ),
+              attachments = offerData.attachments,
+              thid = offerData.thid,
+              from = offerData.to,
+              to = offerData.from
+            )
+            msg = requestCredential.makeMessage
+            _ <- sendMessage(msg)
+            credentialService <- ZIO.service[CredentialService]
+            _ <- credentialService.markRequestSent(id)
+            _ <- ZIO.log(s"IssueCredentialRecord: RequestPending id='$id' (END)")
+          } yield ()
+
+        case IssueCredentialRecord(_, _, _, subjectId, _, _, ProblemReportPending, _, _) => ???
+        case IssueCredentialRecord(id, _, _, subjectId, _, _, CredentialPending, _, Some(requestCredentialData)) =>
+          val issueCredential = IssueCredential(
+            body = IssueCredential.Body(
+              goal_code = requestCredentialData.body.goal_code,
+              comment = requestCredentialData.body.comment,
+              replacement_id = None,
+              more_available = None,
+              formats = requestCredentialData.body.formats
+            ),
+            attachments = requestCredentialData.attachments,
+            thid = requestCredentialData.thid,
+            from = requestCredentialData.to,
+            to = requestCredentialData.from
+          )
+
+          for {
+            didCommService <- ZIO.service[DidComm]
+            _ <- sendMessage(issueCredential.makeMessage)
+            credentialService <- ZIO.service[CredentialService]
+            _ <- credentialService.markCredentialSent(id)
+            _ <- ZIO.log(s"IssueCredentialRecord: RequestPending id='$id' (END)")
+          } yield ()
+        case IssueCredentialRecord(_, _, _, _, _, _, _, _, _) => ZIO.unit
       }
     } yield ()
 

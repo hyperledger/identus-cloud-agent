@@ -82,7 +82,7 @@ trait CredentialService {
   def receiveCredentialIssue(issue: IssueCredential): IO[IssueCredentialError, Option[IssueCredentialRecord]]
 
   def markOfferSent(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]]
-  
+
   def markRequestSent(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]]
 
   def markCredentialSent(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]]
@@ -100,7 +100,6 @@ object CredentialServiceImpl {
 
 private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepository: CredentialRepository[Task])
     extends CredentialService {
-
 
   override def markCredentialSent(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] = ???
 
@@ -139,7 +138,9 @@ private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepos
           subjectId,
           validityPeriod,
           claims,
-          IssueCredentialRecord.State.OfferPending
+          IssueCredentialRecord.State.OfferPending,
+          offerData = None,
+          requestCredentialData = None
         )
       )
       count <- credentialRepository
@@ -180,7 +181,9 @@ private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepos
           offer.to.value,
           None,
           Map.empty,
-          IssueCredentialRecord.State.OfferReceived
+          IssueCredentialRecord.State.OfferReceived,
+          offerData = Some(offer),
+          requestCredentialData = None
         )
       )
       count <- credentialRepository
@@ -202,7 +205,7 @@ private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepos
 
   override def receiveCredentialRequest(
       request: RequestCredential
-  ): IO[IssueCredentialError, Option[IssueCredentialRecord]] = ???
+  ): IO[IssueCredentialError, Option[IssueCredentialRecord]] = ??? // FIXME
 
   override def issueCredential(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] =
     updateCredentialRecordState(

@@ -130,6 +130,7 @@ object Modules {
                 _ <- ZIO.logInfo("Got ProposeCredential: " + msg)
                 credentialService <- ZIO.service[CredentialService]
 
+                // TODO
               } yield ("OfferCredential Sent")
 
             case s if s == OfferCredential.`type` => // Holder
@@ -137,31 +138,36 @@ object Modules {
                 _ <- ZIO.logInfo("*" * 100)
                 _ <- ZIO.logInfo("As an Holder in issue-credential:")
                 _ <- ZIO.logInfo("Got OfferCredential: " + msg)
-                // store on BD TODO //pc = OfferCredential.readFromMessage(msg)
-                requestCredential = RequestCredential.makeRequestCredentialFromOffer(msg) // RequestCredential
-                didCommService <- ZIO.service[DidComm]
-                msg = requestCredential.makeMessage
-                _ <- sendMessage(msg)
-              } yield ("RequestCredential Sent")
+                credentialService <- ZIO.service[CredentialService]
+                offerFromIssuer = OfferCredential.readFromMessage(msg)
+                _ <- credentialService
+                  .receiveCredentialOffer(offerFromIssuer)
+                  .catchAll(s => ???) // FIXME
+
+              } yield ("Offer received")
 
             case s if s == RequestCredential.`type` => // Issuer
               for {
                 _ <- ZIO.logInfo("*" * 100)
                 _ <- ZIO.logInfo("As an Issuer in issue-credential:")
-                _ <- ZIO.logInfo("Got RequestCredential: " + msg)
+                requestCredential = RequestCredential.readFromMessage(msg)
+                _ <- ZIO.logInfo("Got RequestCredential: " + requestCredential)
                 credentialService <- ZIO.service[CredentialService]
-
-                issueCredential = IssueCredential.makeIssueCredentialFromRequestCredential(msg) // IssueCredential
-                didCommService <- ZIO.service[DidComm]
-                msg = issueCredential.makeMessage
-                _ <- sendMessage(msg)
-              } yield ("IssueCredential Sent")
+                todoTestOption <- credentialService
+                  .receiveCredentialRequest(requestCredential)
+                  .catchAll(s => ???) // FIXME
+                // TODO todoTestOption if none
+              } yield ("RequestCredential received")
 
             case s if s == IssueCredential.`type` => // Holder
               for {
                 _ <- ZIO.logInfo("*" * 100)
                 _ <- ZIO.logInfo("As an Holder in issue-credential:")
-                _ <- ZIO.logInfo("Got IssueCredential: " + msg)
+                issueCredential = IssueCredential.readFromMessage(msg)
+                _ <- ZIO.logInfo("Got IssueCredential: " + issueCredential)
+                // STORE
+                credentialService <- ZIO.service[CredentialService]
+                a = credentialService.receiveCredentialIssue(issueCredential)
               } yield ("IssueCredential Received")
 
             case _ => ZIO.succeed("Unknown Message Type")
