@@ -87,17 +87,24 @@ object Modules {
     val header = "content-type" -> MediaTypes.contentTypeEncrypted
     val app: HttpApp[DidComm with CredentialService, Throwable] =
       Http.collectZIO[Request] {
-        // case Method.POST -> !! / "did-comm-v2" =>
         //   // TODO add DIDComm messages parsing logic here!
         //   Response.text("Hello World!").setStatus(Status.Accepted)
+        // case Method.POST -> !! / "did-comm-v2" =>
+        case Method.GET -> !! / "did" =>
+          for {
+            didCommService <- ZIO.service[DidComm]
+            str = didCommService.myDid.value
+          } yield (Response.text(str))
 
         case req @ Method.POST -> !!
             if req.headersAsList.exists(h => h._1.equalsIgnoreCase(header._1) && h._2.equalsIgnoreCase(header._2)) =>
           req.body.asString
             // .catchNonFatalOrDie(ex => ZIO.fail(ParseResponse(ex)))
             .flatMap { data =>
-              webServerProgram(data).catchAll { ex =>
-                ZIO.fail(mercuryErrorAsThrowable(ex))
+              webServerProgram(data).catchAll { case ex =>
+                val error = mercuryErrorAsThrowable(ex)
+                ZIO.logErrorCause("Fail to POST form webServerProgram", Cause.fail(error)) *>
+                  ZIO.fail(error)
               }
             }
             .map(str => Response.text(str))
@@ -145,7 +152,11 @@ object Modules {
                 offerFromIssuer = OfferCredential.readFromMessage(msg)
                 _ <- credentialService
                   .receiveCredentialOffer(offerFromIssuer)
-                  .catchAll(s => ???) // FIXME
+                  .catchSome { case RepositoryError(cause) =>
+                    ZIO.logError(cause.getMessage()) *>
+                      ZIO.fail(cause)
+                  }
+                  .catchAll { case ex: IOException => ZIO.fail(ex) }
 
               } yield ("Offer received")
 
@@ -175,7 +186,7 @@ object Modules {
                 _ <- ZIO.logInfo("Got IssueCredential: " + issueCredential)
                 credentialService <- ZIO.service[CredentialService]
                 _ = credentialService.receiveCredentialIssue(issueCredential)
-              } yield ("IssueCredential Received")
+              } yield ("IssueCredential received")
 
             case _ => ZIO.succeed("Unknown Message Type")
           }
