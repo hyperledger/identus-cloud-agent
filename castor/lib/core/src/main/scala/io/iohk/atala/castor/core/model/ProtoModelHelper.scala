@@ -10,6 +10,9 @@ import io.iohk.atala.castor.core.model.did.{
   DIDStatePatch,
   DIDStorage,
   EllipticCurve,
+  LongFormPrismDIDV1,
+  PrismDID,
+  PrismDIDV1,
   PublicKey,
   PublicKeyJwk,
   PublishedDIDOperation,
@@ -161,6 +164,23 @@ private[castor] trait ProtoModelHelper {
         storage = DIDStorage.Cardano(op.ledger),
         document = document
       )
+  }
+
+  extension (op: iris_proto.did_operations.UpdateDid) {
+    def toDomain: Either[String, PublishedDIDOperation.Update] = {
+      for {
+        did <- PrismDID.parse(op.did).map {
+          case d: PrismDIDV1         => d
+          case d: LongFormPrismDIDV1 => d.toCanonical
+        }
+      } yield PublishedDIDOperation.Update(
+        did = did,
+        updateKey = Base64UrlString.fromByteArray(op.revealedUpdateKey.toByteArray),
+        previousVersion = HexString.fromByteArray(op.previousVersion.toByteArray),
+        delta = ???, // TODO: implement
+        signature = Base64UrlString.fromByteArray(op.signature.toByteArray)
+      )
+    }
   }
 
   extension (doc: iris_proto.did_operations.DocumentDefinition) {
