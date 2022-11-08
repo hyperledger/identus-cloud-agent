@@ -78,7 +78,7 @@ object OfferCredential {
         formats = pc.body.formats,
       ),
       attachments = pc.attachments,
-      thid = Some(pc.id),
+      thid = msg.thid.orElse(Some(pc.id)),
       from = pc.to,
       to = pc.from,
     )

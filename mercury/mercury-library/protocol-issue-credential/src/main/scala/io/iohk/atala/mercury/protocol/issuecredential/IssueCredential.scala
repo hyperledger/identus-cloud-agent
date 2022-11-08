@@ -72,7 +72,7 @@ object IssueCredential {
         formats = rc.body.formats,
       ),
       attachments = rc.attachments,
-      thid = Some(rc.id),
+      thid = msg.thid.orElse(Some(rc.id)),
       from = rc.to,
       to = rc.from,
     )

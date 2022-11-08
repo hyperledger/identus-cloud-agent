@@ -59,7 +59,7 @@ object RequestCredential {
         formats = oc.body.formats,
       ),
       attachments = oc.attachments,
-      thid = Some(oc.id),
+      thid = msg.thid.orElse(Some(oc.id)),
       from = oc.to,
       to = oc.from,
     )

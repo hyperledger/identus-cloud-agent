@@ -28,6 +28,7 @@ class IssueCredentialsProtocolApiServiceImpl(credentialService: CredentialServic
     val result = for {
       outcome <- credentialService
         .createCredentialOffer(
+          thid = UUID.randomUUID(),
           request.subjectId,
           request.schemaId,
           request.claims,
