@@ -107,7 +107,6 @@ final class ManagedDIDService private[walletapi] (
     } yield longFormDID
   }
 
-  // TODO: add tests
   def updateDIDAndPublish(
       did: PrismDID,
       template: ManagedDIDUpdateTemplate
