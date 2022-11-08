@@ -7,7 +7,6 @@ import io.circe.parser.*
 import io.circe.syntax.*
 import io.iohk.atala.mercury.model.AttachmentDescriptor.attachmentDescriptorEncoderV2
 import io.iohk.atala.mercury.model.{AttachmentDescriptor, DidId}
-import io.iohk.atala.mercury.protocol.issuecredential.*
 import munit.*
 import zio.*
 import io.iohk.atala.mercury.model._
