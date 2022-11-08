@@ -35,10 +35,9 @@ object BackgroundJobs {
       _ <- Console.printLine(s"Running action with record => $record")
 
       _ <- record match {
-        case IssueCredentialRecord(_, _, _, subjectId, _, _, OfferPending) =>
-          val attribute1 = Attribute(name = "name", value = "Joe Blog")
-          val attribute2 = Attribute(name = "dob", value = "01/10/1947")
-          val credentialPreview = CredentialPreview(attributes = Seq(attribute1, attribute2))
+        case IssueCredentialRecord(_, _, _, subjectId, _, claims, OfferPending) =>
+          val attributes = claims.map { case (k, v) => Attribute(k, v) }
+          val credentialPreview = CredentialPreview(attributes = attributes.toSeq)
           val body = OfferCredential.Body(goal_code = Some("Offer Credential"), credential_preview = credentialPreview)
           val attachmentDescriptor =
             AttachmentDescriptor.buildAttachment[CredentialPreview](payload = credentialPreview)
