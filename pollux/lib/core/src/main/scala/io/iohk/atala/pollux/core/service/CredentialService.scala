@@ -61,6 +61,7 @@ trait CredentialService {
   def getCredentials(batchId: String): IO[IssueCredentialError, Seq[EncodedJWTCredential]]
 
   def createCredentialOffer(
+      thid: UUID,
       subjectId: String,
       schemaId: Option[String],
       claims: Map[String, String],
@@ -149,6 +150,7 @@ private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepos
   }
 
   override def createCredentialOffer(
+      thid: UUID,
       subjectId: String,
       schemaId: Option[String],
       claims: Map[String, String],
@@ -158,6 +160,7 @@ private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepos
       record <- ZIO.succeed(
         IssueCredentialRecord(
           UUID.randomUUID(),
+          thid,
           schemaId,
           IssueCredentialRecord.Role.Issuer,
           subjectId,
@@ -202,6 +205,7 @@ private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepos
       record <- ZIO.succeed(
         IssueCredentialRecord(
           UUID.randomUUID(),
+          UUID.fromString(offer.thid.get), // FIXME get
           None,
           IssueCredentialRecord.Role.Holder,
           offer.to.value,
@@ -236,7 +240,7 @@ private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepos
     for {
       id <- ZIO.succeed(UUID.fromString(request.id))
       _ <- credentialRepository
-        .updateWithRequestCredential(id, request)
+        .updateWithRequestCredential(request)
         .flatMap {
           case 1 => ZIO.succeed(())
           case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
@@ -261,7 +265,7 @@ private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepos
     for {
       id <- ZIO.succeed(UUID.fromString(issue.id))
       _ <- credentialRepository
-        .updateWithIssueCredential(id, issue)
+        .updateWithIssueCredential(issue)
         .flatMap {
           case 1 => ZIO.succeed(())
           case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))

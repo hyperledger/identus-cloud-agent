@@ -41,6 +41,7 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
     val cxnIO = sql"""
         | INSERT INTO public.issue_credential_records(
         |   id,
+        |   thid,
         |   schema_id,
         |   role,
         |   subject_id,
@@ -50,6 +51,7 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   offer_credential_data
         | ) values (
         |   ${record.id.toString},
+        |   ${record.thid.toString},
         |   ${record.schemaId},
         |   ${record.role.toString},
         |   ${record.subjectId},
@@ -83,6 +85,7 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
     val cxnIO = sql"""
         | SELECT
         |   id,
+        |   thid,
         |   schema_id,
         |   role,
         |   subject_id,
@@ -105,6 +108,7 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
     val cxnIO = sql"""
         | SELECT
         |   id,
+        |   thid,
         |   schema_id,
         |   role,
         |   subject_id,
@@ -142,26 +146,26 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
       .transact(xa)
   }
 
-  override def updateWithRequestCredential(id: UUID, request: RequestCredential): Task[Int] = {
+  override def updateWithRequestCredential(request: RequestCredential): Task[Int] = {
     val cxnIO = sql"""
         | UPDATE public.issue_credential_records
         | SET
-        |   requestCredentialData = ${request}
+        |   request_credential_data = ${request}
         | WHERE
-        |   id = ${id.toString}
+        |   thid = ${request.thid.get}
         """.stripMargin.update
 
     cxnIO.run
       .transact(xa)
   }
 
-  override def updateWithIssueCredential(id: UUID, issue: IssueCredential): Task[Int] = {
+  override def updateWithIssueCredential(issue: IssueCredential): Task[Int] = {
     val cxnIO = sql"""
         | UPDATE public.issue_credential_records
         | SET
-        |   issueCredentialData = ${issue}
+        |   issue-credential_data = ${issue}
         | WHERE
-        |   id = ${id.toString}
+        |   thid = ${issue.thid.get}
         """.stripMargin.update
 
     cxnIO.run

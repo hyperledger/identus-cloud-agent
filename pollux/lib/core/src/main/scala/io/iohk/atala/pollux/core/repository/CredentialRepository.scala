@@ -13,6 +13,6 @@ trait CredentialRepository[F[_]] {
   def getIssueCredentialRecords(): F[Seq[IssueCredentialRecord]]
   def getIssueCredentialRecord(id: UUID): F[Option[IssueCredentialRecord]]
   def updateCredentialRecordState(id: UUID, from: IssueCredentialRecord.State, to: IssueCredentialRecord.State): F[Int]
-  def updateWithRequestCredential(id: UUID, request: RequestCredential): F[Int]
-  def updateWithIssueCredential(id: UUID, issue: IssueCredential): F[Int]
+  def updateWithRequestCredential(request: RequestCredential): F[Int]
+  def updateWithIssueCredential(issue: IssueCredential): F[Int]
 }

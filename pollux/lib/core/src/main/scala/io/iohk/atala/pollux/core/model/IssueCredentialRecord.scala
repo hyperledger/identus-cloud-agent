@@ -7,6 +7,7 @@ import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
 
 final case class IssueCredentialRecord(
     id: UUID,
+    thid: UUID,
     schemaId: Option[String],
     role: IssueCredentialRecord.Role,
     subjectId: String,
