@@ -89,11 +89,12 @@ object Modules {
     val zioHttpServerApp = for {
       allSchemaRegistryEndpoints <- SchemaRegistryServerEndpoints.all
       allEndpoints = ZHttpEndpoints.withDocumentations(allSchemaRegistryEndpoints)
-      httpServer <- ZHttpServer.start(allEndpoints)
+      appConfig <- ZIO.service[AppConfig]
+      httpServer <- ZHttpServer.start(allEndpoints, port = appConfig.agent.httpEndpoint.http.port)
     } yield httpServer
 
     zioHttpServerApp
-      .provideLayer(SchemaRegistryServiceInMemory.layer ++ Scope.default)
+      .provideLayer(SchemaRegistryServiceInMemory.layer ++ Scope.default ++ SystemModule.configLayer)
       .unit
   }
 
