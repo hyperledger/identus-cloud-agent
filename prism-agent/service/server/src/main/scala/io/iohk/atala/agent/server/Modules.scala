@@ -185,8 +185,15 @@ object Modules {
                 issueCredential = IssueCredential.readFromMessage(msg)
                 _ <- ZIO.logInfo("Got IssueCredential: " + issueCredential)
                 credentialService <- ZIO.service[CredentialService]
-                _ = credentialService.receiveCredentialIssue(issueCredential)
-              } yield ("IssueCredential received")
+                _ <- credentialService
+                  .receiveCredentialIssue(issueCredential)
+                  .catchSome { case RepositoryError(cause) =>
+                    ZIO.logError(cause.getMessage()) *>
+                      ZIO.fail(cause)
+                  }
+                  .catchAll { case ex: IOException => ZIO.fail(ex) }
+
+              } yield ("IssueCredential Received")
 
             case _ => ZIO.succeed("Unknown Message Type")
           }

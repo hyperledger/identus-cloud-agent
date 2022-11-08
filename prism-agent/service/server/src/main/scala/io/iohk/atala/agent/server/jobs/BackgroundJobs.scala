@@ -35,7 +35,7 @@ object BackgroundJobs {
   ): ZIO[DidComm & CredentialService, Throwable, Unit] = {
     import IssueCredentialRecord.State._
     val aux = for {
-      _ <- Console.printLine(s"Running action with record => $record")
+      _ <- ZIO.logDebug(s"Running action with records => $record")
 
       _ <- record match {
         case IssueCredentialRecord(id, thid, _, _, subjectId, _, claims, OfferPending, _, _, _) =>
