@@ -15,10 +15,13 @@ CREATE TABLE public.jwt_credentials(
 
 CREATE TABLE public.issue_credential_records(
   "id" VARCHAR(36) NOT NULL PRIMARY KEY,
-  "schema_id" VARCHAR(36) NOT NULL,
+  "schema_id" VARCHAR(36),
   "subject_id" TEXT NOT NULL,
   "role"  VARCHAR(50) NOT NULL,
-  "validity_period" INTEGER NOT NULL,
+  "validity_period" INTEGER,
   "claims" TEXT NOT NULL,
-  "state" VARCHAR(50) NOT NULL
+  "state" VARCHAR(50) NOT NULL,
+  "offer_credential_data" TEXT,
+  "request_credential_data" TEXT,
+  "issue_credential_data" TEXT
 );

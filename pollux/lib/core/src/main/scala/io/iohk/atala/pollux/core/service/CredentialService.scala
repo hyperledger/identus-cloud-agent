@@ -101,15 +101,40 @@ object CredentialServiceImpl {
 private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepository: CredentialRepository[Task])
     extends CredentialService {
 
-  override def markCredentialSent(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] = ???
+  override def markOfferSent(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] =
+    updateCredentialRecordState(
+      id,
+      IssueCredentialRecord.State.OfferPending,
+      IssueCredentialRecord.State.OfferSent
+    )
 
-  override def markCredentialPublicationQueued(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] = ???
+  override def markRequestSent(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] =
+    updateCredentialRecordState(
+      id,
+      IssueCredentialRecord.State.RequestPending,
+      IssueCredentialRecord.State.RequestSent
+    )
 
-  override def markRequestSent(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] = ???
+  override def markCredentialSent(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] =
+    updateCredentialRecordState(
+      id,
+      IssueCredentialRecord.State.CredentialPending,
+      IssueCredentialRecord.State.CredentialSent
+    )
 
-  override def markCredentialPublished(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] = ???
+  override def markCredentialPublicationQueued(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] =
+    updateCredentialRecordState(
+      id,
+      IssueCredentialRecord.State.CredentialPending,
+      IssueCredentialRecord.State.CredentialPublishQueued
+    )
 
-  override def markOfferSent(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] = ???
+  override def markCredentialPublished(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] =
+    updateCredentialRecordState(
+      id,
+      IssueCredentialRecord.State.CredentialPublishQueued,
+      IssueCredentialRecord.State.CredentialPublished
+    )
 
   override def getCredentials(batchId: String): IO[IssueCredentialError, Seq[EncodedJWTCredential]] = {
     credentialRepository.getCredentials(batchId).mapError(IssueCredentialError.RepositoryError.apply)
@@ -139,8 +164,9 @@ private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepos
           validityPeriod,
           claims,
           IssueCredentialRecord.State.OfferPending,
-          offerData = None,
-          requestCredentialData = None
+          offerCredentialData = None,
+          requestCredentialData = None,
+          issueCredentialData = None
         )
       )
       count <- credentialRepository
@@ -182,8 +208,9 @@ private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepos
           None,
           Map.empty,
           IssueCredentialRecord.State.OfferReceived,
-          offerData = Some(offer),
-          requestCredentialData = None
+          offerCredentialData = Some(offer),
+          requestCredentialData = None,
+          issueCredentialData = None
         )
       )
       count <- credentialRepository
@@ -205,7 +232,21 @@ private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepos
 
   override def receiveCredentialRequest(
       request: RequestCredential
-  ): IO[IssueCredentialError, Option[IssueCredentialRecord]] = ??? // FIXME
+  ): IO[IssueCredentialError, Option[IssueCredentialRecord]] = {
+    for {
+      id <- ZIO.succeed(UUID.fromString(request.id))
+      _ <- credentialRepository
+        .updateWithRequestCredential(id, request)
+        .flatMap {
+          case 1 => ZIO.succeed(())
+          case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
+        }
+        .mapError(RepositoryError.apply)
+      record <- credentialRepository
+        .getIssueCredentialRecord(id)
+        .mapError(RepositoryError.apply)
+    } yield record
+  }
 
   override def issueCredential(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] =
     updateCredentialRecordState(
@@ -217,7 +258,19 @@ private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepos
   override def receiveCredentialIssue(
       issue: IssueCredential
   ): IO[IssueCredentialError, Option[IssueCredentialRecord]] = {
-    ???
+    for {
+      id <- ZIO.succeed(UUID.fromString(issue.id))
+      _ <- credentialRepository
+        .updateWithIssueCredential(id, issue)
+        .flatMap {
+          case 1 => ZIO.succeed(())
+          case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
+        }
+        .mapError(RepositoryError.apply)
+      record <- credentialRepository
+        .getIssueCredentialRecord(id)
+        .mapError(RepositoryError.apply)
+    } yield record
   }
 
   private[this] def updateCredentialRecordState(

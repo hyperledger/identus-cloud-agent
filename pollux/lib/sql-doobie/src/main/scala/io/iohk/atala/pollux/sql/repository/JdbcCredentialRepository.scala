@@ -10,6 +10,8 @@ import zio.interop.catz.*
 import io.circe.syntax._
 import io.circe._, io.circe.parser._
 import java.util.UUID
+import io.iohk.atala.mercury.protocol.issuecredential.RequestCredential
+import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
 
 // TODO: replace with actual implementation
 class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepository[Task] {
@@ -116,6 +118,32 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         | WHERE
         |   id = ${id.toString}
         |   AND state = ${from.toString}
+        """.stripMargin.update
+
+    cxnIO.run
+      .transact(xa)
+  }
+
+  override def updateWithRequestCredential(id: UUID, request: RequestCredential): Task[Int] = {
+    val cxnIO = sql"""
+        | UPDATE public.issue_credential_records
+        | SET
+        |   requestCredentialData = ${request}
+        | WHERE
+        |   id = ${id.toString}
+        """.stripMargin.update
+
+    cxnIO.run
+      .transact(xa)
+  }
+
+  override def updateWithIssueCredential(id: UUID, issue: IssueCredential): Task[Int] = {
+    val cxnIO = sql"""
+        | UPDATE public.issue_credential_records
+        | SET
+        |   issueCredentialData = ${issue}
+        | WHERE
+        |   id = ${id.toString}
         """.stripMargin.update
 
     cxnIO.run

@@ -3,6 +3,7 @@ package io.iohk.atala.pollux.core.model
 import java.util.UUID
 import io.iohk.atala.mercury.protocol.issuecredential.OfferCredential
 import io.iohk.atala.mercury.protocol.issuecredential.RequestCredential
+import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
 
 final case class IssueCredentialRecord(
     id: UUID,
@@ -12,8 +13,9 @@ final case class IssueCredentialRecord(
     validityPeriod: Option[Double] = None,
     claims: Map[String, String],
     state: IssueCredentialRecord.State,
-    offerData: Option[OfferCredential],
-    requestCredentialData: Option[RequestCredential]
+    offerCredentialData: Option[OfferCredential],
+    requestCredentialData: Option[RequestCredential],
+    issueCredentialData: Option[IssueCredential]
 )
 
 object IssueCredentialRecord {
