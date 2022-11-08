@@ -113,6 +113,15 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault {
           _ <- svc.publishStoredDID(longFormDID)
           opsAfter <- testDIDSvc.getPublishedCreateOperations
         } yield assert(opsAfter)(hasSameElements(createOp.toList))
+      },
+      test("flag DID as published") {
+        val template = generateDIDTemplate()
+        for {
+          svc <- ZIO.service[ManagedDIDService]
+          did <- svc.createAndStoreDID(template).map(_.toCanonical)
+          _ <- svc.publishStoredDID(did)
+          publishedDIDs <- svc.nonSecretStorage.listPublishedDID
+        } yield assert(publishedDIDs)(contains(did))
       }
     )
 

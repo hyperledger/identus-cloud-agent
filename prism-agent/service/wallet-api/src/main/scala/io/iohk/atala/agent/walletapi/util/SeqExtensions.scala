@@ -4,7 +4,6 @@ object SeqExtensions {
 
   extension [A](s: Seq[A]) {
 
-    // TODO: add test
     /** Selects all the elements of this $coll ignoring the duplicates as determined by `==` after applying the
       * transforming function `f`.
       *
