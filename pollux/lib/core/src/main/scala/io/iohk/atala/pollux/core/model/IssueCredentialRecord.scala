@@ -4,7 +4,7 @@ import java.util.UUID
 
 final case class IssueCredentialRecord(
     id: UUID,
-    schemaId: String,
+    schemaId: Option[String],
     role: IssueCredentialRecord.Role,
     subjectId: String,
     validityPeriod: Option[Double] = None,

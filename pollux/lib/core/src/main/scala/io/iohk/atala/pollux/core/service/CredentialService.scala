@@ -62,7 +62,7 @@ trait CredentialService {
 
   def createCredentialOffer(
       subjectId: String,
-      schemaId: String,
+      schemaId: Option[String],
       claims: Map[String, String],
       validityPeriod: Option[Double] = None
   ): IO[IssueCredentialError, IssueCredentialRecord]
@@ -71,7 +71,7 @@ trait CredentialService {
 
   def getCredentialRecord(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]]
 
-  def receiveCredentialOffer(offer: OfferCredential): IO[IssueCredentialError, Option[IssueCredentialRecord]]
+  def receiveCredentialOffer(offer: OfferCredential): IO[IssueCredentialError, IssueCredentialRecord]
 
   def acceptCredentialOffer(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]]
 
@@ -81,60 +81,16 @@ trait CredentialService {
 
   def receiveCredentialIssue(issue: IssueCredential): IO[IssueCredentialError, Option[IssueCredentialRecord]]
 
-}
+  def markOfferSent(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]]
+  
+  def markRequestSent(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]]
 
-object MockCredentialService {
-  val layer: ULayer[CredentialService] = ZLayer.succeed {
-    new CredentialService {
+  def markCredentialSent(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]]
 
-      override def receiveCredentialOffer(
-          offer: OfferCredential
-      ): IO[IssueCredentialError, Option[IssueCredentialRecord]] = ???
+  def markCredentialPublicationQueued(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]]
 
-      override def receiveCredentialRequest(
-          request: RequestCredential
-      ): IO[IssueCredentialError, Option[IssueCredentialRecord]] = ???
+  def markCredentialPublished(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]]
 
-      override def receiveCredentialIssue(
-          issue: IssueCredential
-      ): IO[IssueCredentialError, Option[IssueCredentialRecord]] = ???
-
-      override def getCredentialRecords(): IO[IssueCredentialError, Seq[IssueCredentialRecord]] = ???
-
-      override def createCredentialOffer(
-          subjectId: String,
-          schemaId: String,
-          claims: Map[String, String],
-          validityPeriod: Option[Double]
-      ): IO[IssueCredentialError, IssueCredentialRecord] = {
-        ZIO.succeed(
-          IssueCredentialRecord(
-            UUID.randomUUID(),
-            schemaId,
-            IssueCredentialRecord.Role.Issuer,
-            subjectId,
-            validityPeriod,
-            claims,
-            IssueCredentialRecord.State.OfferSent
-          )
-        )
-      }
-
-      override def acceptCredentialOffer(id: ju.UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] = ???
-
-      override def issueCredential(id: ju.UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] = ???
-
-      override def getCredentialRecord(id: ju.UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] = ???
-
-      override def createCredentials(
-          batchId: String,
-          credentials: Seq[EncodedJWTCredential]
-      ): IO[IssueCredentialError, Unit] =
-        ZIO.succeed(())
-
-      override def getCredentials(did: String): IO[IssueCredentialError, Seq[EncodedJWTCredential]] = ZIO.succeed(Nil)
-    }
-  }
 }
 
 object CredentialServiceImpl {
@@ -144,6 +100,17 @@ object CredentialServiceImpl {
 
 private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepository: CredentialRepository[Task])
     extends CredentialService {
+
+
+  override def markCredentialSent(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] = ???
+
+  override def markCredentialPublicationQueued(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] = ???
+
+  override def markRequestSent(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] = ???
+
+  override def markCredentialPublished(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] = ???
+
+  override def markOfferSent(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] = ???
 
   override def getCredentials(batchId: String): IO[IssueCredentialError, Seq[EncodedJWTCredential]] = {
     credentialRepository.getCredentials(batchId).mapError(IssueCredentialError.RepositoryError.apply)
@@ -159,7 +126,7 @@ private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepos
 
   override def createCredentialOffer(
       subjectId: String,
-      schemaId: String,
+      schemaId: Option[String],
       claims: Map[String, String],
       validityPeriod: Option[Double] = None
   ): IO[IssueCredentialError, IssueCredentialRecord] = {
@@ -203,28 +170,27 @@ private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepos
 
   override def receiveCredentialOffer(
       offer: OfferCredential
-  ): IO[IssueCredentialError, Option[IssueCredentialRecord]] = {
-    // for {
-    //   record <- ZIO.succeed(
-    //     IssueCredentialRecord(
-    //       UUID.randomUUID(),
-    //       None,
-    //       IssueCredentialRecord.Role.Holder,
-    //       offer.to.value,
-    //       None,
-    //       Map.empty,
-    //       IssueCredentialRecord.State.OfferReceived
-    //     )
-    //   )
-    //   count <- credentialRepository
-    //     .createIssueCredentialRecord(record)
-    //     .flatMap {
-    //       case 1 => ZIO.succeed(())
-    //       case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
-    //     }
-    //     .mapError(RepositoryError.apply)
-    // } yield record
-    ???
+  ): IO[IssueCredentialError, IssueCredentialRecord] = {
+    for {
+      record <- ZIO.succeed(
+        IssueCredentialRecord(
+          UUID.randomUUID(),
+          None,
+          IssueCredentialRecord.Role.Holder,
+          offer.to.value,
+          None,
+          Map.empty,
+          IssueCredentialRecord.State.OfferReceived
+        )
+      )
+      count <- credentialRepository
+        .createIssueCredentialRecord(record)
+        .flatMap {
+          case 1 => ZIO.succeed(())
+          case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
+        }
+        .mapError(RepositoryError.apply)
+    } yield record
   }
 
   override def acceptCredentialOffer(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] =
