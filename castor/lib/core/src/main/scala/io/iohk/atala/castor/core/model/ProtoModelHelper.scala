@@ -19,12 +19,14 @@ import io.iohk.atala.castor.core.model.did.{
   PublishedDIDOperationOutcome,
   Service,
   ServiceType,
+  UpdateOperationDelta,
   VerificationRelationship
 }
 import io.iohk.atala.iris.proto as iris_proto
 import io.iohk.atala.iris.proto.did_operations.DocumentDefinition.PublicKey.Purpose
 import io.iohk.atala.iris.proto.did_operations.DocumentDefinition.Service.Type
 import io.iohk.atala.iris.proto.did_operations.PublicKeyJwk.{Curve, Key}
+import io.iohk.atala.iris.proto.did_operations.UpdateDid.Patch.Patch
 
 import scala.util.Try
 
@@ -173,11 +175,15 @@ private[castor] trait ProtoModelHelper {
           case d: PrismDIDV1         => d
           case d: LongFormPrismDIDV1 => d.toCanonical
         }
+        patches <- op.patches.traverse(_.patch.toDomain)
       } yield PublishedDIDOperation.Update(
         did = did,
         updateKey = Base64UrlString.fromByteArray(op.revealedUpdateKey.toByteArray),
         previousVersion = HexString.fromByteArray(op.previousVersion.toByteArray),
-        delta = ???, // TODO: implement
+        delta = UpdateOperationDelta(
+          patches = patches,
+          updateCommitment = HexString.fromByteArray(op.forwardUpdateCommitment.toByteArray)
+        ),
         signature = Base64UrlString.fromByteArray(op.signature.toByteArray)
       )
     }
@@ -265,6 +271,18 @@ private[castor] trait ProtoModelHelper {
     def toDomain: Either[String, EllipticCurve] = curve match {
       case Curve.SECP256K1           => Right(EllipticCurve.SECP256K1)
       case Curve.Unrecognized(value) => Left(s"unrecognized elliptic-curve value $value")
+    }
+  }
+
+  extension (patch: iris_proto.did_operations.UpdateDid.Patch.Patch) {
+    def toDomain: Either[String, DIDStatePatch] = {
+      patch match {
+        case Patch.Empty                  => Left(s"DID update patch cannot be empty")
+        case Patch.AddPublicKey(value)    => value.toDomain.map(DIDStatePatch.AddPublicKey.apply)
+        case Patch.RemovePublicKey(value) => Right(DIDStatePatch.RemovePublicKey(value))
+        case Patch.AddService(value)      => value.toDomain.map(DIDStatePatch.AddService.apply)
+        case Patch.RemoveService(value)   => Right(DIDStatePatch.RemoveService(value))
+      }
     }
   }
 
