@@ -21,7 +21,7 @@ on:
       - "iris/client/**"
 
 env:
-  GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
+  ATALA_GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
 
 defaults:
   run:
