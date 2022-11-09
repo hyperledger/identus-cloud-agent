@@ -10,7 +10,7 @@ inThisBuild(
     versionScheme := Some("semver-spec"),
     githubOwner := "input-output-hk",
     githubRepository := "atala-prism-building-blocks",
-    githubTokenSource := TokenSource.Environment("GITHUB_TOKEN")
+    githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN")
   )
 )
 

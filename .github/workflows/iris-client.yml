@@ -1,0 +1,68 @@
+name: Iris client testing workflow
+
+# Cancel previously running workflows if new commit pushed to the branch
+# this will help to push fixes earlier and stop previous workflows
+concurrency:
+  group: ${{ github.head_ref }}${{ github.ref }}-iris-client
+  cancel-in-progress: true
+
+on:
+  # Run with every push to `main` branch
+  # Run with each PR opened vs Mercury
+  pull_request:
+    paths:
+      - ".github/workflows/iris-client.yml"
+      - "iris/client/**"
+  push:
+    branches:
+      - "main"
+    paths:
+      - ".github/workflows/iris-client.yml"
+      - "iris/client/**"
+
+env:
+  GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
+  ATALA_GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
+
+defaults:
+  run:
+    shell: bash
+    working-directory: "iris/client/scala-client"
+
+jobs:
+  build-and-test-iris-client:
+    name: "Build and test Iris client"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Java and Scala
+        uses: olafurpg/setup-scala@v13
+        with:
+          java-version: openjdk@1.11
+
+      - name: Cache sbt
+        uses: coursier/cache-action@v6.3
+
+      - name: Run Scala formatter
+        run: |
+          sbt scalafmtCheckAll
+
+      - name: Build and test Iris client
+        run: sbt test
+
+      - name: Aggregate test reports
+        if: always()
+        uses: ./.github/actions/aggregate-test-reports
+        with:
+          tests-dir: "iris/client/scala-client"
+
+      - name: Publish test results
+        # Publish even if the test step fails
+        if: always()
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          junit_files: "iris/client/scala-client/target/test-reports/**/TEST-*.xml"
+          comment_title: "Iris Client Test Results"
+          check_name: "Iris Client Test Results"
