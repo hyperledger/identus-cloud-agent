@@ -49,26 +49,6 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
   given issueCredentialGet: Get[IssueCredential] = Get[String].map(decode[IssueCredential](_).getOrElse(???))
   given issueCredentialPut: Put[IssueCredential] = Put[String].contramap(_.asJson.toString)
 
-  override def createCredentials(batchId: String, credentials: Seq[EncodedJWTCredential]): Task[Unit] = {
-    ZIO.succeed(())
-  }
-  override def getCredentials(batchId: String): Task[Seq[EncodedJWTCredential]] = {
-    val cxnIO = sql"""
-        | SELECT
-        |   c.batch_id
-        |   c.credential_id
-        |   c.value
-        | FROM public.jwt_credentials AS c
-        | WHERE c.batch_id = $batchId
-        """.stripMargin
-      .query[JWTCredentialRow]
-      .to[Seq]
-
-    cxnIO
-      .transact(xa)
-      .map(_.map(c => EncodedJWTCredential(c.batchId, c.credentialId, c.content)))
-  }
-
   override def createIssueCredentialRecord(record: IssueCredentialRecord): Task[Int] = {
     val cxnIO = sql"""
         | INSERT INTO public.issue_credential_records(

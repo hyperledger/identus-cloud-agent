@@ -57,8 +57,6 @@ trait CredentialService {
       publicKey = publicKey
     )
   }
-  def createCredentials(batchId: String, credentials: Seq[EncodedJWTCredential]): IO[IssueCredentialError, Unit]
-  def getCredentials(batchId: String): IO[IssueCredentialError, Seq[EncodedJWTCredential]]
 
   def createCredentialOffer(
       thid: UUID,
@@ -126,11 +124,11 @@ private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepos
     )
 
   override def markCredentialPublicationPending(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] =
-  updateCredentialRecordPublicationState(
-    id,
-    None,
-    Some(IssueCredentialRecord.PublicationState.PublicationPending)
-  )
+    updateCredentialRecordPublicationState(
+      id,
+      None,
+      Some(IssueCredentialRecord.PublicationState.PublicationPending)
+    )
 
   override def markCredentialPublicationQueued(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] =
     updateCredentialRecordPublicationState(
@@ -145,18 +143,6 @@ private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepos
       Some(IssueCredentialRecord.PublicationState.PublicationQueued),
       Some(IssueCredentialRecord.PublicationState.Published)
     )
-
-  override def getCredentials(batchId: String): IO[IssueCredentialError, Seq[EncodedJWTCredential]] = {
-    credentialRepository.getCredentials(batchId).mapError(IssueCredentialError.RepositoryError.apply)
-  }
-
-  override def createCredentials(
-      batchId: String,
-      credentials: Seq[EncodedJWTCredential]
-  ): IO[IssueCredentialError, Unit] = {
-
-    credentialRepository.createCredentials(batchId, credentials).mapError(IssueCredentialError.RepositoryError.apply)
-  }
 
   override def createCredentialOffer(
       thid: UUID,

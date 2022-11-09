@@ -7,10 +7,6 @@ import java.util.UUID
 import io.iohk.atala.mercury.protocol.issuecredential.RequestCredential
 import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
 trait CredentialRepository[F[_]] {
-  def createCredentials(batchId: String, credentials: Seq[EncodedJWTCredential]): F[Unit]
-  
-  def getCredentials(batchId: String): F[Seq[EncodedJWTCredential]]
-  
   def createIssueCredentialRecord(record: IssueCredentialRecord): F[Int]
   
   def getIssueCredentialRecords(): F[Seq[IssueCredentialRecord]]
