@@ -21,7 +21,8 @@ CREATE TABLE public.issue_credential_records(
   "role"  VARCHAR(50) NOT NULL,
   "validity_period" INTEGER,
   "claims" TEXT NOT NULL,
-  "state" VARCHAR(50) NOT NULL,
+  "protocol_state" VARCHAR(50) NOT NULL,
+  "publication_state" VARCHAR(50),
   "offer_credential_data" TEXT,
   "request_credential_data" TEXT,
   "issue_credential_data" TEXT
