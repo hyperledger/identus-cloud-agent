@@ -30,7 +30,7 @@ class IrisServiceGrpcImpl(service: PublishingScheduler, batchRepo: ROIrisBatches
       document = Some(DocumentDefinition(publicKeys = Seq(), services = Seq()))
     )
   )
-  
+
   override def scheduleOperation(request: proto.IrisOperation): Future[IrisOperationOutcome] = Unsafe.unsafe {
     implicit unsafe =>
       runtime.unsafe.runToFuture(ZIO.succeed(IrisOperationOutcome(mockOperationId)))

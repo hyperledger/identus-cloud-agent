@@ -77,8 +77,8 @@ lazy val server = commonProject(project)
 releaseProcess := Seq[ReleaseStep](
   checkSnapshotDependencies,
   inquireVersions,
-  //runClean,
-  //runTest,
+  runClean,
+  runTest,
   setReleaseVersion,
   ReleaseStep(releaseStepTask(server / Docker / publish)),
   setNextVersion
