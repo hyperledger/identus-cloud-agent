@@ -7,7 +7,7 @@ object Dependencies {
     val zioCatsInterop = "3.3.0"
     val prismSdk = "v1.3.3-snapshot-1657194253-992dd96"
     val iris = "0.1.0"
-    val mercury = "0.3.0-SNAPSHOT"
+    val mercury = "0.4.0"
   }
 
   private lazy val zio = "dev.zio" %% "zio" % Versions.zio
