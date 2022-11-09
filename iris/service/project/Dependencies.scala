@@ -9,7 +9,7 @@ object Dependencies {
     val akka = "2.6.19"
     val doobie = "1.0.0-RC2"
     val zioCatsInterop = "3.3.0"
-    val prismSdk = "v1.3.3-snapshot-1657194253-992dd96"
+    val prismSdk = "v1.4.1"
     val shared = "0.1.0"
     val enumeratum = "1.7.0"
     val zioTest = "2.0.2"
