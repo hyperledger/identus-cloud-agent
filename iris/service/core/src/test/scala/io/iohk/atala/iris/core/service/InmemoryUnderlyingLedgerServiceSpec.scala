@@ -11,6 +11,7 @@ import io.iohk.atala.iris.proto.did_operations.{CreateDid, DocumentDefinition, U
 import io.iohk.atala.iris.proto.dlt as proto
 import zio.*
 import zio.test.*
+import zio.test.TestAspect.flaky
 import zio.test.Assertion.*
 
 object InmemoryUnderlyingLedgerServiceSpec extends ZIOSpecDefault {
@@ -19,65 +20,65 @@ object InmemoryUnderlyingLedgerServiceSpec extends ZIOSpecDefault {
 
   def spec = suite("InmemoryUnderlyingLedgerServiceSpec")(
     suite("Background worker")(
-//      test("All the operations in the one block within 4 different transactions") {
-//        val testCase =
-//          for {
-//            op <- ZIO.replicateZIO(4)(genOperation()).map(_.toList)
-//            srvc <- ZIO.service[InmemoryUnderlyingLedgerService]
-//            scenario = List(
-//              Seq(op(0)) >> 1.seconds,
-//              Seq(op(1)) >> 1.seconds,
-//              Seq(op(2)) >> 0.seconds,
-//              Seq(op(3)) >> 20.seconds
-//            )
-//            _ <- PublishThenAdjust.foreachZIO(srvc)(scenario)
-//            mempool <- srvc.getMempool
-//            blocks <- srvc.getBlocks
-//          } yield assertTrue(mempool == List.empty) &&
-//            assertTrue(
-//              blocks.map(_.txs) == List(
-//                List(),
-//                List(
-//                  CardanoTransaction(Seq(op(0))),
-//                  CardanoTransaction(Seq(op(1))),
-//                  CardanoTransaction(Seq(op(2))),
-//                  CardanoTransaction(Seq(op(3)))
-//                ),
-//                List()
-//              )
-//            )
-//        testCase.provideLayer(inmemoryLedger)
-//      },
-//      test("Operations distributed between 2 blocks") {
-//        val testCase =
-//          for {
-//            op <- ZIO.replicateZIO(4)(genOperation()).map(_.toList)
-//            srvc <- ZIO.service[InmemoryUnderlyingLedgerService]
-//            scenario = List(
-//              Seq(op(0)) >> 1.seconds,
-//              Seq(op(1)) >> 10.seconds,
-//              Seq(op(2)) >> 0.seconds,
-//              Seq(op(3)) >> 10.seconds
-//            )
-//            _ <- PublishThenAdjust.foreachZIO(srvc)(scenario)
-//            mempool <- srvc.getMempool
-//            blocks <- srvc.getBlocks
-//          } yield assertTrue(mempool == List.empty) &&
-//            assertTrue(
-//              blocks.map(_.txs) == List(
-//                List(),
-//                List(
-//                  CardanoTransaction(Seq(op(0))),
-//                  CardanoTransaction(Seq(op(1))),
-//                ),
-//                List(
-//                  CardanoTransaction(Seq(op(2))),
-//                  CardanoTransaction(Seq(op(3))),
-//                )
-//              )
-//            )
-//        testCase.provideLayer(inmemoryLedger)
-//      }
+      test("All the operations in the one block within 4 different transactions") {
+        val testCase =
+          for {
+            op <- ZIO.replicateZIO(4)(genOperation()).map(_.toList)
+            srvc <- ZIO.service[InmemoryUnderlyingLedgerService]
+            scenario = List(
+              Seq(op(0)) >> 1.seconds,
+              Seq(op(1)) >> 1.seconds,
+              Seq(op(2)) >> 0.seconds,
+              Seq(op(3)) >> 20.seconds
+            )
+            _ <- PublishThenAdjust.foreachZIO(srvc)(scenario)
+            mempool <- srvc.getMempool
+            blocks <- srvc.getBlocks
+          } yield assertTrue(mempool == List.empty) &&
+            assertTrue(
+              blocks.map(_.txs) == List(
+                List(),
+                List(
+                  CardanoTransaction(Seq(op(0))),
+                  CardanoTransaction(Seq(op(1))),
+                  CardanoTransaction(Seq(op(2))),
+                  CardanoTransaction(Seq(op(3)))
+                ),
+                List()
+              )
+            )
+        testCase.provideLayer(inmemoryLedger)
+      } @@ TestAspect.flaky(2),
+      test("Operations distributed between 2 blocks") {
+        val testCase =
+          for {
+            op <- ZIO.replicateZIO(4)(genOperation()).map(_.toList)
+            srvc <- ZIO.service[InmemoryUnderlyingLedgerService]
+            scenario = List(
+              Seq(op(0)) >> 1.seconds,
+              Seq(op(1)) >> 10.seconds,
+              Seq(op(2)) >> 0.seconds,
+              Seq(op(3)) >> 10.seconds
+            )
+            _ <- PublishThenAdjust.foreachZIO(srvc)(scenario)
+            mempool <- srvc.getMempool
+            blocks <- srvc.getBlocks
+          } yield assertTrue(mempool == List.empty) &&
+            assertTrue(
+              blocks.map(_.txs) == List(
+                List(),
+                List(
+                  CardanoTransaction(Seq(op(0))),
+                  CardanoTransaction(Seq(op(1))),
+                ),
+                List(
+                  CardanoTransaction(Seq(op(2))),
+                  CardanoTransaction(Seq(op(3))),
+                )
+              )
+            )
+        testCase.provideLayer(inmemoryLedger)
+      } @@ TestAspect.flaky(2)
     ),
     suite("getTransactionDetails")(
       test("Find unconfirmed transaction") {
