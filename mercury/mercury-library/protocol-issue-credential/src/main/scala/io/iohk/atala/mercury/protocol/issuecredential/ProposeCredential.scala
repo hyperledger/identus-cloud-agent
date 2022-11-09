@@ -22,6 +22,7 @@ final case class ProposeCredential(
     body: ProposeCredential.Body,
     attachments: Seq[AttachmentDescriptor] = Seq.empty[AttachmentDescriptor],
     // extra
+    thid: Option[String] = None,
     from: DidId,
     to: DidId,
 ) {

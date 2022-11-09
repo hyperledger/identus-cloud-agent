@@ -72,9 +72,22 @@ object IssueCredential {
         formats = rc.body.formats,
       ),
       attachments = rc.attachments,
-      thid = Some(msg.id),
-      from = msg.to.get, // TODO get
-      to = msg.from.get, // TODO get
+      thid = msg.thid.orElse(Some(rc.id)),
+      from = rc.to,
+      to = rc.from,
+    )
+  }
+
+  def readFromMessage(message: Message): IssueCredential = {
+    val body = message.body.asJson.as[IssueCredential.Body].toOption.get // TODO get
+    IssueCredential(
+      id = message.id,
+      `type` = message.piuri,
+      body = body,
+      attachments = message.attachments,
+      thid = message.thid,
+      from = message.from.get, // TODO get
+      to = message.to.get, // TODO get
     )
   }
 }

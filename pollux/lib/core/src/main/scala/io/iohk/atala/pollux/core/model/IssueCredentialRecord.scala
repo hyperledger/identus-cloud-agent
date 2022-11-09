@@ -1,15 +1,23 @@
 package io.iohk.atala.pollux.core.model
 
 import java.util.UUID
-
+import io.iohk.atala.mercury.protocol.issuecredential.OfferCredential
+import io.iohk.atala.mercury.protocol.issuecredential.RequestCredential
+import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
+import IssueCredentialRecord._
 final case class IssueCredentialRecord(
     id: UUID,
-    schemaId: String,
-    //role: IssueCredentialRecord.Role,
+    thid: UUID,
+    schemaId: Option[String],
+    role: Role,
     subjectId: String,
     validityPeriod: Option[Double] = None,
     claims: Map[String, String],
-    state: IssueCredentialRecord.State
+    protocolState: ProtocolState,
+    publicationState: Option[PublicationState],
+    offerCredentialData: Option[OfferCredential],
+    requestCredentialData: Option[RequestCredential],
+    issueCredentialData: Option[IssueCredential]
 )
 
 object IssueCredentialRecord {
@@ -18,36 +26,40 @@ object IssueCredentialRecord {
     case Issuer extends Role
     case Holder extends Role
 
-  enum State:
+  enum ProtocolState:
     // Issuer has created an offer in a database, but it has not been sent yet (in Issuer DB)
-    case OfferPending extends State
+    case OfferPending extends ProtocolState
     // Issuer has sent an offer to a holder (in Issuer DB)
-    case OfferSent extends State
+    case OfferSent extends ProtocolState
     // Holder has received an offer (In Holder DB)
-    case OfferReceived extends State
+    case OfferReceived extends ProtocolState
 
     // Holder has reviewed and approved the offer (in Holder DB)
-    case RequestPending extends State
+    case RequestPending extends ProtocolState
     // Holder has sent a request to a an Issuer (in Holder DB)
-    case RequestSent extends State
+    case RequestSent extends ProtocolState
     // Issuer has received a request from the holder (In Issuer DB)
-    case RequestReceived extends State
+    case RequestReceived extends ProtocolState
 
     // Holder declined the offer sent by Issuer (Holder DB) or Issuer declined the proposal sent by Holder (Issuer DB)
-    case ProblemReportPending extends State
+    case ProblemReportPending extends ProtocolState
     // Holder has sent problem report to Issuer (Holder DB) or Issuer has sent problem report to Holder (Issuer DB)
-    case ProblemReportSent extends State
+    case ProblemReportSent extends ProtocolState
     // Holder has received problem resport from Issuer (Holder DB) or Issuer has received problem report from Holder (Issuer DB)
-    case ProblemReportReceived extends State
+    case ProblemReportReceived extends ProtocolState
 
     // Issuer has "accepted" a credential request received from a Holder (Issuer DB)
-    case CredentialPending extends State
-    // The Issuer has issued (signed) a credential and sent it to Iris. Iris has not confirmed that is has been published on DLT yet (In Issuer DB)
-    case CredentialPublishQueued extends State
+    case CredentialPending extends ProtocolState
     // The credential has been sent to the holder (In Issuer DB)
-    case CredentialSent extends State
-    // Iris has notified the Issuer that a credential that it has queued before has been published on DLT (In Issuer DB)
-    case CredentialPublished extends State
+    case CredentialSent extends ProtocolState
     // Holder has received the credential (In Holder DB)
-    case CredentialReceived extends State
+    case CredentialReceived extends ProtocolState
+
+  enum PublicationState:
+    // The credential requires on-chain publication and should therefore be included in the next Merkle Tree computation/publication
+    case PublicationPending extends PublicationState
+    // The credential publication operation has been successfuly sent to Iris and is pending publication
+    case PublicationQueued extends PublicationState
+    // The credential publication has been confirmed by Iris
+    case Published extends PublicationState
 }
