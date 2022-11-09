@@ -1,3 +1,10 @@
+# [mercury-v0.4.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.3.0...mercury-v0.4.0) (2022-11-09)
+
+
+### Features
+
+* **prism-agent; mercury; pollux:** Integrate Mercury into prism-agent ATL-2077; ATL-2076 ([#93](https://github.com/input-output-hk/atala-prism-building-blocks/issues/93)) ([db4b21a](https://github.com/input-output-hk/atala-prism-building-blocks/commit/db4b21ac1d6a2c48af502597779acb82f5e03ac0))
+
 # [mercury-v0.3.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.2.0...mercury-v0.3.0) (2022-10-28)
 
 
