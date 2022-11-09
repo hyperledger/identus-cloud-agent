@@ -50,6 +50,8 @@ object IssueCredentialRecord {
 
     // Issuer has "accepted" a credential request received from a Holder (Issuer DB)
     case CredentialPending extends ProtocolState
+    // Issuer has generated (signed) the credential and is now ready to send it to the Holder (Issuer DB)
+    case CredentialGenerated extends ProtocolState
     // The credential has been sent to the holder (In Issuer DB)
     case CredentialSent extends ProtocolState
     // Holder has received the credential (In Holder DB)

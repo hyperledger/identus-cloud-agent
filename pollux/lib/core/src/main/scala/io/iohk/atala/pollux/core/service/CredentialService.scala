@@ -84,6 +84,8 @@ trait CredentialService {
 
   def markRequestSent(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]]
 
+  def markCredentialGenerated(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]]
+
   def markCredentialSent(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]]
 
   def markCredentialPublicationPending(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]]
@@ -116,10 +118,17 @@ private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepos
       IssueCredentialRecord.ProtocolState.RequestSent
     )
 
-  override def markCredentialSent(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] =
+  override def markCredentialGenerated(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] =
     updateCredentialRecordProtocolState(
       id,
       IssueCredentialRecord.ProtocolState.CredentialPending,
+      IssueCredentialRecord.ProtocolState.CredentialGenerated
+    )
+
+  override def markCredentialSent(id: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] =
+    updateCredentialRecordProtocolState(
+      id,
+      IssueCredentialRecord.ProtocolState.CredentialGenerated,
       IssueCredentialRecord.ProtocolState.CredentialSent
     )
 
