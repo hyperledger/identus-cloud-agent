@@ -1,7 +1,7 @@
 import Dependencies._
 import sbtghpackages.GitHubPackagesPlugin.autoImport._
+import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
 
-ThisBuild / version := "0.1.0-SNAPSHOT"
 ThisBuild / scalaVersion := "3.2.0"
 ThisBuild / organization := "io.iohk.atala"
 
@@ -49,9 +49,18 @@ lazy val server = project
       .toMap,
     Docker / maintainer := "atala-coredid@iohk.io",
     Docker / dockerRepository := Some("atala-prism.io"),
-    // Docker / packageName := s"atala-prism/${packageName.value}",
     dockerExposedPorts := Seq(8080),
     dockerBaseImage := "openjdk:11"
   )
   .enablePlugins(OpenApiGeneratorPlugin, JavaAppPackaging, DockerPlugin)
   .dependsOn(`wallet-api`)
+
+releaseProcess := Seq[ReleaseStep](
+  checkSnapshotDependencies,
+  inquireVersions,
+  runClean,
+  runTest,
+  setReleaseVersion,
+  ReleaseStep(releaseStepTask(server / Docker / publish)),
+  setNextVersion
+)
