@@ -143,7 +143,7 @@ trait OASDomainModelHelper {
       claims = domain.claims,
       schemaId = domain.schemaId,
       validityPeriod = domain.validityPeriod,
-      state = domain.state.toString()
+      state = domain.protocolState.toString()
     )
   }
 
