@@ -201,7 +201,7 @@ private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepos
       record <- ZIO.succeed(
         IssueCredentialRecord(
           UUID.randomUUID(),
-          UUID.fromString(offer.thid.get), // FIXME get
+          UUID.fromString(offer.thid.getOrElse(offer.id)),
           None,
           IssueCredentialRecord.Role.Holder,
           offer.to.value,
@@ -235,7 +235,7 @@ private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepos
       request: RequestCredential
   ): IO[IssueCredentialError, Option[IssueCredentialRecord]] = {
     for {
-      thid <- ZIO.succeed(UUID.fromString(request.thid.get)) // FIXME get
+      thid <- ZIO.succeed(UUID.fromString(request.thid.getOrElse(request.id)))
       _ <- credentialRepository
         .updateWithRequestCredential(request)
         .flatMap {
@@ -260,7 +260,7 @@ private class CredentialServiceImpl(irisClient: IrisServiceStub, credentialRepos
       issue: IssueCredential
   ): IO[IssueCredentialError, Option[IssueCredentialRecord]] = {
     for {
-      thid <- ZIO.succeed(UUID.fromString(issue.thid.get)) // FIXME get
+      thid <- ZIO.succeed(UUID.fromString(issue.thid.getOrElse(issue.id)))
       _ <- credentialRepository
         .updateWithIssueCredential(issue)
         .flatMap {
