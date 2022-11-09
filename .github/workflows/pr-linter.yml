@@ -27,7 +27,7 @@ jobs:
             athena
             pistis
             atlas
-            agent
+            prism-agent
             shared
             infra
             release

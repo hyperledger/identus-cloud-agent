@@ -113,11 +113,11 @@ object Modules {
     Server.start(port, app)
   }
 
-  val didCommExchangesJob: RIO[DidComm, Unit] = {
-    val effect = BackgroundJobs.didCommExchanges
+  val didCommExchangesJob: RIO[DidComm, Unit] =
+    BackgroundJobs.didCommExchanges
+      .repeat(Schedule.spaced(10.seconds))
+      .unit
       .provideSomeLayer(AppModule.credentialServiceLayer)
-    (effect repeat Schedule.spaced(10.seconds)).unit
-  }
 
   def webServerProgram(
       jsonString: String
