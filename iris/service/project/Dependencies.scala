@@ -52,7 +52,8 @@ object Dependencies {
   private lazy val zioTestMagnolia = "dev.zio" %% "zio-test-magnolia" % "2.0.2" % Test
 
   // Dependency Modules
-  private lazy val baseDependencies: Seq[ModuleID] = Seq(zio, zioConfig, zioConfigMagnolia, zioConfigTypesafe, zioStream, prismCrypto, shared, enumeratum)
+  private lazy val baseDependencies: Seq[ModuleID] =
+    Seq(zio, zioConfig, zioConfigMagnolia, zioConfigTypesafe, zioStream, prismCrypto, shared, enumeratum)
   private lazy val grpcDependencies: Seq[ModuleID] = Seq(grpcNetty, grpcServices, scalaPbProto, scalaPbGrpc)
   private lazy val doobieDependencies: Seq[ModuleID] = Seq(doobiePostgres, doobieHikari)
   private lazy val circeDependencies: Seq[ModuleID] =
