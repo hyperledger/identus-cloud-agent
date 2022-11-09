@@ -305,7 +305,7 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault {
         did <- svc.createAndStoreDID(createTemplate).map(_.toCanonical)
         _ <- svc.publishStoredDID(did)
         _ <- svc.updateDIDAndPublish(did, updateTemplate1)
-        // inject operation to staging secret to make next update fail
+        // inject operation to staging secret to make the next update fail
         operation <- testDIDSvc.getPublishedUpdateOperations.map(_.head)
         keyPair <- KeyGeneratorWrapper.generateECKeyPair(EllipticCurve.SECP256K1)
         _ <- svc.secretStorage.setStagingDIDUpdateSecret(
@@ -319,7 +319,7 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault {
         _ <- svc.updateDIDAndPublish(did, updateTemplate2)
       } yield ()
       assertZIO(effect.exit)(fails(isSubtype[UpdateManagedDIDError.PendingStagingUpdate](anything)))
-    } @@ TestAspect.tag("dev"),
+    },
     test("reject update if DID is not published") {
       val did = PrismDIDV1.fromCreateOperation(
         PublishedDIDOperation.Create(

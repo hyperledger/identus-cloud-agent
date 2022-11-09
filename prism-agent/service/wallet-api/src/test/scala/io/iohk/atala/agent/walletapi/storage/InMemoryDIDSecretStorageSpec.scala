@@ -1,10 +1,21 @@
 package io.iohk.atala.agent.walletapi.storage
 
 import io.iohk.atala.agent.walletapi.crypto.KeyGeneratorWrapper
-import io.iohk.atala.castor.core.model.did.{DIDDocument, DIDStorage, PrismDIDV1, PublishedDIDOperation, EllipticCurve}
+import io.iohk.atala.castor.core.model.did.{
+  DIDDocument,
+  DIDStatePatch,
+  DIDStorage,
+  EllipticCurve,
+  PrismDIDV1,
+  PublicKey,
+  PublishedDIDOperation,
+  Service,
+  UpdateOperationDelta
+}
 import io.iohk.atala.agent.walletapi.model.*
 import io.iohk.atala.agent.walletapi.model.ECCoordinates.*
-import io.iohk.atala.shared.models.HexStrings.HexString
+import io.iohk.atala.shared.models.Base64UrlStrings.*
+import io.iohk.atala.shared.models.HexStrings.*
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
@@ -22,6 +33,37 @@ object InMemoryDIDSecretStorageSpec extends ZIOSpecDefault {
     )
   )
 
+  private def generateCreateDIDOperation(
+      updateCommitment: HexString = HexString.fromStringUnsafe("0" * 64),
+      recoveryCommitment: HexString = HexString.fromStringUnsafe("0" * 64),
+      publicKeys: Seq[PublicKey] = Nil,
+      services: Seq[Service] = Nil
+  ) =
+    PublishedDIDOperation.Create(
+      updateCommitment = updateCommitment,
+      recoveryCommitment = recoveryCommitment,
+      storage = DIDStorage.Cardano("testnet"),
+      document = DIDDocument(
+        publicKeys = publicKeys,
+        services = services
+      )
+    )
+
+  private def generateUpdateDIDOperation(
+      updateCommitment: HexString = HexString.fromStringUnsafe("0" * 64),
+      patches: Seq[DIDStatePatch] = Nil,
+      previousVersion: HexString = HexString.fromStringUnsafe("0" * 64)
+  ) = PublishedDIDOperation.Update(
+    did = PrismDIDV1.fromCreateOperation(generateCreateDIDOperation()),
+    updateKey = Base64UrlString.fromStringUnsafe("0"),
+    previousVersion = previousVersion,
+    delta = UpdateOperationDelta(
+      patches = patches,
+      updateCommitment = updateCommitment
+    ),
+    signature = Base64UrlString.fromStringUnsafe("0")
+  )
+
   private def generateKeyPair(publicKey: (Int, Int) = (0, 0), privateKey: ArraySeq[Byte] = ArraySeq(0)): ECKeyPair =
     ECKeyPair(
       publicKey = ECPublicKey(ECPoint(ECCoordinate.fromBigInt(publicKey._1), ECCoordinate.fromBigInt(publicKey._2))),
@@ -33,7 +75,8 @@ object InMemoryDIDSecretStorageSpec extends ZIOSpecDefault {
     getKeySpec,
     upsertKeySpec,
     getDIDCommitmentSpec,
-    upsertDIDCommitmentRevealValue
+    upsertDIDCommitmentKeySpec,
+    setStagingDIDUpdateSecretSpec
   ).provideLayer(InMemoryDIDSecretStorage.layer)
 
   private val listKeySpec = suite("listKeys")(
@@ -114,7 +157,7 @@ object InMemoryDIDSecretStorageSpec extends ZIOSpecDefault {
     }
   )
 
-  private val upsertDIDCommitmentRevealValue = suite("upsertDIDCommitmentRevealValue")(
+  private val upsertDIDCommitmentKeySpec = suite("upsertDIDCommitmentKey")(
     test("insert non-existing commitment reveal value") {
       for {
         updateKeyPair <- KeyGeneratorWrapper.generateECKeyPair(EllipticCurve.SECP256K1)
@@ -134,6 +177,37 @@ object InMemoryDIDSecretStorageSpec extends ZIOSpecDefault {
         _ <- storage.upsertDIDCommitmentKey(didExample, CommitmentPurpose.Update, updateKeyPair2)
         after <- storage.getDIDCommitmentKey(didExample, CommitmentPurpose.Update)
       } yield assert(before)(isSome(equalTo(updateKeyPair1))) && assert(after)(isSome(equalTo(updateKeyPair2)))
+    }
+  )
+
+  private val setStagingDIDUpdateSecretSpec = suite("setStagingDIDUpdateSecret")(
+    test("succeeds when set staging secret") {
+      val did = PrismDIDV1.fromCreateOperation(generateCreateDIDOperation())
+      val stagingSecret = StagingDIDUpdateSecret(
+        operation = generateUpdateDIDOperation(),
+        updateCommitmentSecret = generateKeyPair(),
+        keyPairs = Map.empty
+      )
+      for {
+        storage <- ZIO.service[DIDSecretStorage]
+        result <- storage.setStagingDIDUpdateSecret(did, stagingSecret)
+        secret <- storage.getStagingDIDUpdateSecret(did)
+      } yield assertTrue(result) && assert(secret)(isSome(equalTo(stagingSecret)))
+    },
+    test("fails when staging already exists and does not apply change") {
+      val did = PrismDIDV1.fromCreateOperation(generateCreateDIDOperation())
+      val stagingSecret1 = StagingDIDUpdateSecret(
+        operation = generateUpdateDIDOperation(),
+        updateCommitmentSecret = generateKeyPair(),
+        keyPairs = Map.empty
+      )
+      val stagingSecret2 = stagingSecret1.copy(keyPairs = Map("key-1" -> generateKeyPair()))
+      for {
+        storage <- ZIO.service[DIDSecretStorage]
+        result1 <- storage.setStagingDIDUpdateSecret(did, stagingSecret1)
+        result2 <- storage.setStagingDIDUpdateSecret(did, stagingSecret2)
+        secret <- storage.getStagingDIDUpdateSecret(did)
+      } yield assertTrue(result1) && assert(result2)(isFalse) && assert(secret)(isSome(equalTo(stagingSecret1)))
     }
   )
 
