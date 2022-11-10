@@ -17,6 +17,7 @@ import io.iohk.atala.mercury.model.{_, given}
 import io.iohk.atala.mercury.model.error._
 import io.iohk.atala.mercury.protocol.outofbandlogin._
 import io.iohk.atala.mercury.protocol.issuecredential._
+import io.iohk.atala.mercury.protocol.presentproof._
 
 /** AgentCli
   * {{{
@@ -182,6 +183,36 @@ object AgentCli extends ZIOAppDefault {
     } yield ()
   }
 
+  def presentProof: ZIO[DidComm, MercuryError | IOException, Unit] = {
+    for {
+      _ <- Console.printLine("Present Proof")
+      didCommService <- ZIO.service[DidComm]
+
+      _ <- Console.printLine(s"Request proof from did (ex: ${didCommService.myDid})")
+      requestTo <- Console.readLine.flatMap {
+        case ""  => ZIO.succeed(didCommService.myDid)
+        case did => ZIO.succeed(DidId(did))
+      }
+
+      // Make a Request
+      body = RequestPresentation.Body(goal_code = Some("Propose Presentation"))
+      attachmentDescriptor = AttachmentDescriptor(
+        "1",
+        Some("application/json"),
+        LinkData(links = Seq("http://test"), hash = "1234")
+      )
+      requestPresentation = RequestPresentation(
+        body = body,
+        attachments = Seq(attachmentDescriptor),
+        to = requestTo,
+        from = didCommService.myDid,
+      )
+      msg = requestPresentation.makeMessage
+      _ <- Console.printLine("Sending: " + msg)
+      _ <- sendMessage(msg)
+    } yield ()
+  }
+
   /** Encrypt and send a Message via HTTP
     *
     * TODO Move this method to another model
@@ -262,7 +293,7 @@ object AgentCli extends ZIOAppDefault {
       case ""  => ZIO.succeed(defualtPort)
       case str => ZIO.succeed(str.toIntOption.getOrElse(defualtPort))
     }
-    _ <- Server.start(port, webServer(port)).fork
+    _ <- Server.start(port, webServer(port)).debug.fork
     _ <- Console.printLine("Endpoint Started")
   } yield ()
 
@@ -301,6 +332,7 @@ object AgentCli extends ZIOAppDefault {
         "Generate login invitation" -> generateLoginInvitation.provide(didCommLayer),
         "Login with DID" -> loginInvitation.provide(didCommLayer),
         "Propose Credential" -> proposeAndSendCredential.provide(didCommLayer),
+        "Present Proof" -> presentProof.provide(didCommLayer),
       )
     ).repeatWhile((_) => true)
 
@@ -333,8 +365,8 @@ object AgentCli extends ZIOAppDefault {
                 offer = OfferCredential.makeOfferToProposeCredential(msg) // OfferCredential
 
                 didCommService <- ZIO.service[DidComm]
-                msg = offer.makeMessage
-                _ <- sendMessage(msg)
+                msgToSend = offer.makeMessage
+                _ <- sendMessage(msgToSend)
               } yield ("OfferCredential Sent")
 
             case s if s == OfferCredential.`type` => // Holder
@@ -346,8 +378,8 @@ object AgentCli extends ZIOAppDefault {
                 requestCredential = RequestCredential.makeRequestCredentialFromOffer(msg) // RequestCredential
 
                 didCommService <- ZIO.service[DidComm]
-                msg = requestCredential.makeMessage
-                _ <- sendMessage(msg)
+                msgToSend = requestCredential.makeMessage
+                _ <- sendMessage(msgToSend)
               } yield ("RequestCredential Sent")
 
             case s if s == RequestCredential.`type` => // Issuer
@@ -358,8 +390,8 @@ object AgentCli extends ZIOAppDefault {
                 issueCredential = IssueCredential.makeIssueCredentialFromRequestCredential(msg) // IssueCredential
 
                 didCommService <- ZIO.service[DidComm]
-                msg = issueCredential.makeMessage
-                _ <- sendMessage(msg)
+                msgToSend = issueCredential.makeMessage
+                _ <- sendMessage(msgToSend)
               } yield ("IssueCredential Sent")
 
             case s if s == IssueCredential.`type` => // Holder
@@ -368,7 +400,25 @@ object AgentCli extends ZIOAppDefault {
                 _ <- ZIO.logInfo("As an Holder in issue-credential:")
                 _ <- ZIO.logInfo("Got IssueCredential: " + msg)
               } yield ("IssueCredential Received")
-
+            // ######################################################################
+            case s if s == RequestPresentation.`type` => // Prover
+              for {
+                _ <- ZIO.logInfo("*" * 100)
+                _ <- ZIO.logInfo("As an Prover in Present-Proof:")
+                requestPresentation = RequestPresentation.readFromMessage(msg)
+                _ <- ZIO.logInfo("Got RequestPresentation: " + requestPresentation)
+                presentation = Presentation.makePresentationFromRequest(msg)
+                didCommService <- ZIO.service[DidComm]
+                msgToSend = presentation.makeMessage
+                _ <- sendMessage(msgToSend)
+              } yield ("Presentation Sent")
+            case s if s == Presentation.`type` => // Verifier
+              for {
+                _ <- ZIO.logInfo("*" * 100)
+                _ <- ZIO.logInfo("As an Verifier in Present-Proof:")
+                presentation = Presentation.readFromMessage(msg)
+                _ <- ZIO.logInfo("Got Presentation: " + presentation)
+              } yield ("Presentation Recived")
             case "https://didcomm.org/routing/2.0/forward"                      => ??? // SEE mediator
             case "https://atalaprism.io/mercury/mailbox/1.0/ReadMessages"       => ??? // SEE mediator
             case "https://didcomm.org/coordinate-mediation/2.0/mediate-request" => ??? // SEE mediator
