@@ -38,77 +38,31 @@ object BackgroundJobs {
       _ <- ZIO.logDebug(s"Running action with records => $record")
 
       _ <- record match {
-        case IssueCredentialRecord(id, thid, _, _, subjectId, _, claims, OfferPending, _, _, _, _) =>
-          val attributes = claims.map { case (k, v) => Attribute(k, v) }
-          val credentialPreview = CredentialPreview(attributes = attributes.toSeq)
-          val body = OfferCredential.Body(goal_code = Some("Offer Credential"), credential_preview = credentialPreview)
-          val attachmentDescriptor =
-            AttachmentDescriptor.buildAttachment[CredentialPreview](payload = credentialPreview)
-
+        case IssueCredentialRecord(id, _, _, _, _, _, _, OfferPending, _, Some(offer), _, _) =>
           for {
-            _ <- ZIO.log(s"IssueCredentialRecord: OfferPending (START)")
-            didComm <- ZIO.service[DidComm]
-            offer = OfferCredential( // TODO
-              body = body,
-              attachments = Seq(attachmentDescriptor),
-              to = DidId(subjectId),
-              from = didComm.myDid,
-              thid = Some(thid.toString())
-            )
-            msg = offer.makeMessage
-
-            _ <- AgentCli.sendMessage(msg)
+            _ <- AgentCli.sendMessage(offer.makeMessage)
             credentialService <- ZIO.service[CredentialService]
             _ <- credentialService.markOfferSent(id)
-            _ <- ZIO.log(s"IssueCredentialRecord: OfferPending (END)")
           } yield ()
 
-        case IssueCredentialRecord(id, thid, _, _, subjectId, _, _, RequestPending, _, Some(offerData), _, _) =>
+        case IssueCredentialRecord(id, _, _, _, _, _, _, RequestPending, _, _, Some(request), _) =>
           for {
-            didCommService <- ZIO.service[DidComm]
-            requestCredential = RequestCredential(
-              body = RequestCredential.Body(
-                goal_code = offerData.body.goal_code,
-                comment = offerData.body.comment,
-                formats = offerData.body.formats
-              ),
-              attachments = offerData.attachments,
-              thid = offerData.thid.orElse(Some(offerData.id)),
-              from = offerData.to,
-              to = offerData.from
-            )
-            msg = requestCredential.makeMessage
-            _ <- sendMessage(msg)
+            _ <- sendMessage(request.makeMessage)
             credentialService <- ZIO.service[CredentialService]
             _ <- credentialService.markRequestSent(id)
-            _ <- ZIO.log(s"IssueCredentialRecord: RequestPending id='$id' (END)")
           } yield ()
 
-        case IssueCredentialRecord(id, thid, _, _, subjectId, _, _, ProblemReportPending, _, _, _, _) => ???
-        case IssueCredentialRecord(id, thid, _, _, subjectId, _, _, CredentialPending, _, _, Some(rc), _) =>
-          val issueCredential = IssueCredential(
-            body = IssueCredential.Body(
-              goal_code = rc.body.goal_code,
-              comment = rc.body.comment,
-              replacement_id = None,
-              more_available = None,
-              formats = rc.body.formats
-            ),
-            attachments = rc.attachments,
-            thid = rc.thid.orElse(Some(rc.id)),
-            from = rc.to,
-            to = rc.from
-          )
-
+        case IssueCredentialRecord(id, _, _, _, _, _, _, CredentialPending, _, _, _, Some(issue)) =>
           for {
-            didCommService <- ZIO.service[DidComm]
-            _ <- sendMessage(issueCredential.makeMessage)
+            // TODO: decide when to send and to publish the credential !!!
+            _ <- sendMessage(issue.makeMessage)
             credentialService <- ZIO.service[CredentialService]
             _ <- credentialService.markCredentialSent(id)
             _ <- credentialService.markCredentialPublicationPending(id)
-            _ <- ZIO.log(s"IssueCredentialRecord: RequestPending id='$id' (END)")
           } yield ()
-        case IssueCredentialRecord(id, thid, _, _, _, _, _, _, _, _, _, _) => ZIO.unit
+
+        case IssueCredentialRecord(id, _, _, _, _, _, _, ProblemReportPending, _, _, _, _) => ???
+        case IssueCredentialRecord(id, _, _, _, _, _, _, _, _, _, _, _)                    => ZIO.unit
       }
     } yield ()
 
