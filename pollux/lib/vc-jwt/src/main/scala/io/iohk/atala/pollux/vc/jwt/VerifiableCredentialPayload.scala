@@ -5,6 +5,7 @@ import io.circe.generic.auto.*
 import io.circe.parser.decode
 import io.circe.syntax.*
 import io.circe.{Decoder, Encoder, HCursor, Json}
+import io.iohk.atala.pollux.vc.jwt.schema.SchemaValidator
 import net.reactivecore.cjs.validator.Violation
 import net.reactivecore.cjs.{DocumentValidator, Loader}
 import pdi.jwt.{Jwt, JwtCirce}
@@ -108,8 +109,8 @@ sealed trait CredentialPayload(
       )
     }
 
-  def toValidatedCredentialPayload(
-      credentialSchemaResolver: CredentialSchema => Json
+  def toValidatedCredentialPayload(credentialSchemaResolver: CredentialSchema => Json)(
+      schemaToValidator: Json => Either[String, SchemaValidator]
   ): Validation[String, ValidatedCredentialPayload] =
     Validation.validateWith(
       CredentialPayloadValidation.validateIssuanceDate(this.maybeNbf),
@@ -119,7 +120,7 @@ sealed trait CredentialPayload(
       for {
         maybeDocumentValidator <- CredentialPayloadValidation.validateCredentialSchema(
           this.maybeCredentialSchema.map(credentialSchemaResolver)
-        )
+        )(schemaToValidator)
         validatedCredentialSubject <- CredentialPayloadValidation
           .validateCredentialSubject(this.credentialSubject, maybeDocumentValidator)
       } yield validatedCredentialSubject
@@ -182,17 +183,17 @@ object CredentialPayloadValidation {
 
   def validateIssuerDid(maybeIssuerDid: Option[String]): Validation[String, String] = {
     Validation
-      .fromOptionWith("Issuer Did is empty.")(maybeIssuerDid)
+      .fromOptionWith("Issuer Did is empty")(maybeIssuerDid)
   }
 
   def validateIssuanceDate(maybeIssuanceDate: Option[Instant]): Validation[String, Instant] = {
     Validation
-      .fromOptionWith("issuanceDate is empty.")(maybeIssuanceDate)
+      .fromOptionWith("Issuance Date is empty")(maybeIssuanceDate)
   }
 
   def validateContext(`@context`: Set[String]): Validation[String, NonEmptySet[String]] = {
     Validation
-      .fromOptionWith("@context is empty.")(`@context`.toNonEmptySet)
+      .fromOptionWith("@context is empty")(`@context`.toNonEmptySet)
       .flatMap(`nonEmpty@context` =>
         Validation.fromPredicateWith("Missing default context from @context")(`nonEmpty@context`)(
           _.contains(DEFAULT_CONTEXT)
@@ -202,7 +203,7 @@ object CredentialPayloadValidation {
 
   def validateVcType(`type`: Set[String]): Validation[String, NonEmptySet[String]] = {
     Validation
-      .fromOptionWith("type is empty.")(`type`.toNonEmptySet)
+      .fromOptionWith("Type is empty")(`type`.toNonEmptySet)
       .flatMap(nonEmptyType =>
         Validation.fromPredicateWith("Missing default type from `type`")(nonEmptyType)(
           _.contains(DEFAULT_VC_TYPE)
@@ -210,25 +211,23 @@ object CredentialPayloadValidation {
       )
   }
 
-  def validateCredentialSchema(maybeCredentialSchema: Option[Json]): Validation[String, Option[DocumentValidator]] = {
-    maybeCredentialSchema.fold(Validation.succeed(Option.empty))(credentialSchema =>
-      Validation.fromEither(Loader.empty.fromJson(credentialSchema).left.map(_.message)).map(Some(_))
-    )
+  def validateCredentialSchema(
+      maybeCredentialSchema: Option[Json]
+  )(schemaToValidator: Json => Either[String, SchemaValidator]): Validation[String, Option[SchemaValidator]] = {
+    maybeCredentialSchema.fold(Validation.succeed(Option.empty))(credentialSchema => {
+      Validation.fromEither(schemaToValidator(credentialSchema)).map(Some(_))
+    })
   }
 
   def validateCredentialSubjectSchema(
       credentialSubject: Json,
-      credentialSchemaValidator: DocumentValidator
+      credentialSchemaValidator: SchemaValidator
   ): Validation[String, Json] =
-    NonEmptyChunk
-      .fromIterableOption(
-        credentialSchemaValidator.validate(credentialSubject.asJson).violations.map(_.toString)
-      )
-      .fold(Validation.succeed(credentialSubject))(Validation.failNonEmptyChunk)
+    credentialSchemaValidator.validate(credentialSubject)
 
   def validateCredentialSubject(
       credentialSubject: Json,
-      maybeCredentialSchemaValidator: Option[DocumentValidator]
+      maybeCredentialSchemaValidator: Option[SchemaValidator]
   ): Validation[String, Json] = {
     for {
       validatedCredentialSubjectNotEmpty <- validateCredentialSubjectNotEmpty(credentialSubject)
