@@ -149,7 +149,6 @@ components:
     CreateIssueCredentialRecordRequest:
       description: A request to create a new "issue credential record"
       required:
-        - schemaId
         - subjectId
         - claims
       properties:

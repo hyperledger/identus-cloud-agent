@@ -13,8 +13,10 @@ import io.iohk.atala.resolvers.CharlieSecretResolver
 import zhttp.service._
 import zhttp.http._
 import io.iohk.atala.QRcode
-import io.iohk.atala.mercury.model._
+import io.iohk.atala.mercury.model.{_, given}
+import io.iohk.atala.mercury.model.error._
 import io.iohk.atala.mercury.protocol.outofbandlogin._
+import io.iohk.atala.mercury.protocol.issuecredential._
 
 /** AgentCli
   * {{{
@@ -35,9 +37,9 @@ object AgentCli extends ZIOAppDefault {
     } yield (ret)
   }
 
-  def options(p: Seq[(String, ZIO[Any, Throwable, Unit])]): ZIO[Any, Throwable, Unit] = {
+  def options(p: Seq[(String, ZIO[Any, MercuryThrowable, Unit])]): ZIO[Any, MercuryThrowable, Unit] = {
     for {
-      _ <- Console.printLine("--- Choose an option: ---")
+      _ <- Console.printLine("\n--- Choose an option: ---")
       _ <- ZIO.foreach(p.zipWithIndex)(e => Console.printLine(e._2 + " - " + e._1._1))
       _ <- Console.readLine.flatMap { e => p.map(_._2).toSeq(e.toInt) }
     } yield ()
@@ -126,29 +128,117 @@ object AgentCli extends ZIOAppDefault {
       _ <- Console.printLine("Sending to" + serviceEndpoint)
       res <- Client
         .request(
-          url = serviceEndpoint.get, // FIXME make ERROR type
+          url = serviceEndpoint.get, // TODO make ERROR type
           method = Method.POST,
           headers = Headers("content-type" -> MediaTypes.contentTypeEncrypted),
-          content = HttpData.fromChunk(Chunk.fromArray(jsonString.getBytes)),
+          content = Body.fromChunk(Chunk.fromArray(jsonString.getBytes)),
           // ssl = ClientSSLOptions.DefaultSSL,
         )
         .provideSomeLayer(env)
-      data <- res.bodyAsString
+      data <- res.body.asString
+      _ <- Console.printLine(data)
+    } yield ()
+  }
+
+  def proposeAndSendCredential: ZIO[DidComm, MercuryError | IOException, Unit] = {
+    for {
+
+      _ <- Console.printLine("Propose Credential")
+      _ <- Console.printLine("What is the the Playload")
+      playloadData <- Console.readLine.flatMap {
+        case ""   => ZIO.succeed("playload")
+        case data => ZIO.succeed(data)
+      }
+
+      attachmentDescriptor =
+        AttachmentDescriptor.buildAttachment(payload = playloadData)
+      attribute1 = Attribute(name = "name", value = "Joe Blog")
+      attribute2 = Attribute(name = "dob", value = "01/10/1947")
+      credentialPreview = CredentialPreview(attributes = Seq(attribute1, attribute2))
+
+      didCommService <- ZIO.service[DidComm]
+      _ <- Console.printLine(s"Send to (ex: ${didCommService.myDid})")
+      sendTo <- Console.readLine.flatMap {
+        case ""  => ZIO.succeed(didCommService.myDid)
+        case did => ZIO.succeed(DidId(did))
+      }
+
+      proposeCredential = ProposeCredential(
+        body = ProposeCredential.Body(
+          goal_code = Some("goal_code"),
+          comment = None,
+          credential_preview = credentialPreview, // Option[CredentialPreview], // JSON STRinf
+          formats = Seq.empty // : Seq[CredentialFormat]
+        ),
+        attachments = Seq(attachmentDescriptor),
+        from = didCommService.myDid,
+        to = sendTo,
+      )
+      _ <- Console.printLine(proposeCredential)
+      msg = proposeCredential.makeMessage
+      _ <- Console.printLine("Sending: " + msg)
+
+      _ <- sendMessage(msg)
+    } yield ()
+  }
+
+  /** Encrypt and send a Message via HTTP
+    *
+    * TODO Move this method to another model
+    */
+  def sendMessage(msg: Message): ZIO[DidComm, MercuryException, Unit] = { // TODO  Throwable
+    for {
+      didCommService <- ZIO.service[DidComm]
+
+      encryptedForwardMessage <- didCommService.packEncrypted(msg, to = msg.to.get)
+      jsonString = encryptedForwardMessage.string
+
+      serviceEndpoint = UniversalDidResolver
+        .resolve(msg.to.get.value) // TODO GET
+        .get()
+        .getDidCommServices()
+        .asScala
+        .toSeq
+        .headOption
+        .map(s => s.getServiceEndpoint())
+        .get // TODO make ERROR type
+
+      _ <- Console.printLine("Sending to" + serviceEndpoint)
+
+      res <- Client
+        .request(
+          url = serviceEndpoint,
+          method = Method.POST,
+          headers = Headers("content-type" -> MediaTypes.contentTypeEncrypted),
+          content = Body.fromChunk(Chunk.fromArray(jsonString.getBytes)),
+          // ssl = ClientSSLOptions.DefaultSSL,
+        )
+        .provideSomeLayer(env)
+        .catchNonFatalOrDie { ex => ZIO.fail(SendMessage(ex)) }
+      data <- res.body.asString
+        .catchNonFatalOrDie { ex => ZIO.fail(ParseResponse(ex)) }
       _ <- Console.printLine(data)
     } yield ()
   }
 
   def webServer(port: Int): HttpApp[DidComm, Throwable] = {
     val header = "content-type" -> MediaTypes.contentTypeEncrypted
-    Http.collectZIO[Request] {
-      case req @ Method.POST -> !!
-          if req.headersAsList.exists(h => h._1.equalsIgnoreCase(header._1) && h._2.equalsIgnoreCase(header._2)) =>
-        req.bodyAsString
-          .flatMap(data => webServerProgram(data))
-          .map(str => Response.text(str))
-      case Method.GET -> !! / "test" => ZIO.succeed(Response.text("Test ok!"))
-      case req => ZIO.succeed(Response.text(s"The request must be a POST to root with the Header $header"))
-    }
+    Http
+      .collectZIO[Request] {
+        case req @ Method.POST -> !!
+            if req.headersAsList.exists(h => h._1.equalsIgnoreCase(header._1) && h._2.equalsIgnoreCase(header._2)) =>
+          req.body.asString
+            .catchNonFatalOrDie(ex => ZIO.fail(ParseResponse(ex)))
+            .flatMap { data =>
+              webServerProgram(data).catchAll { ex =>
+                ZIO.fail(mercuryErrorAsThrowable(ex))
+              }
+            }
+            .map(str => Response.text(str))
+        case Method.GET -> !! / "test" => ZIO.succeed(Response.text("Test ok!"))
+        case req => ZIO.succeed(Response.text(s"The request must be a POST to root with the Header $header"))
+      }
+
   }
 
   def startEndpoint = for {
@@ -182,10 +272,11 @@ object AgentCli extends ZIOAppDefault {
     _ <- Console.printLine("Generating a new 'peer' DID!")
     // haveServiceEndpoint <- questionYN("Do you have a serviceEndpoint url? e.g http://localhost:8080/myendpoint")
     // ZIO.when(haveServiceEndpoint)( // )
-    _ <- Console.printLine("Enter the serviceEndpoint URL (defualt None)")
+    _ <- Console.printLine("Enter the serviceEndpoint URL (defualt None) or port for http://localhost:port")
     serviceEndpoint <- Console.readLine.flatMap {
-      case ""  => ZIO.succeed(None) // defualt
-      case str => ZIO.succeed(Some(str))
+      case ""                               => ZIO.succeed(None) // defualt
+      case str if str.toIntOption.isDefined => ZIO.succeed(str.toIntOption.map(port => s"http://localhost:$port"))
+      case str                              => ZIO.succeed(Some(str))
     }
 
     agentDID <- for {
@@ -204,13 +295,12 @@ object AgentCli extends ZIOAppDefault {
       Seq(
         "none" -> ZIO.unit,
         "Show DID" -> Console.printLine(agentDID),
-        "Get DID Document" ->
-          Console.printLine("DID Document:") *>
-          Console.printLine(agentDID.getDIDDocument),
+        "Get DID Document" -> Console.printLine("DID Document:") *> Console.printLine(agentDID.getDIDDocument),
         "Start WebServer endpoint" -> startEndpoint.provide(didCommLayer),
         "Ask for Mediation Coordinate" -> askForMediation.provide(didCommLayer),
         "Generate login invitation" -> generateLoginInvitation.provide(didCommLayer),
         "Login with DID" -> loginInvitation.provide(didCommLayer),
+        "Propose Credential" -> proposeAndSendCredential.provide(didCommLayer),
       )
     ).repeatWhile((_) => true)
 
@@ -218,7 +308,7 @@ object AgentCli extends ZIOAppDefault {
 
   def webServerProgram(
       jsonString: String
-  ): ZIO[DidComm, Nothing, String] = {
+  ): ZIO[DidComm, MercuryThrowable, String] = { // TODO Throwable
     import io.iohk.atala.mercury.DidComm.*
     ZIO.logAnnotate("request-id", java.util.UUID.randomUUID.toString()) {
       for {
@@ -232,55 +322,57 @@ object AgentCli extends ZIOAppDefault {
                 _ <- ZIO.logInfo("OutOfBandloginReply: " + msg)
               } yield ("OutOfBandloginReply")
 
-            case "https://didcomm.org/routing/2.0/forward" => ???
-            // for {
-            //   _ <- ZIO.logInfo("Mediator Forward Message: " + mediatorMessage.toString)
-            //   _ <- ZIO.logInfo(
-            //     "\n*********************************************************************************************************************************\n"
-            //       + fromJsonObject(toJson(mediatorMessage.toString)).spaces2
-            //       + "\n********************************************************************************************************************************\n"
-            //   )
-            //   msg = mediatorMessage.getAttachments().get(0).getData().toJSONObject().get("json").toString()
-            //   nextRecipient = DidId(
-            //     mediatorMessage.getBody.asScala.get("next").map(e => e.asInstanceOf[String]).get
-            //   )
-            //   _ <- ZIO.log(s"Store Massage for ${nextRecipient}: " + mediatorMessage.getTo.asScala.toList)
-            //   // db <- ZIO.service[ZState[MyDB]]
-            //   _ <- MailStorage.store(nextRecipient, msg)
-            //   _ <- ZIO.log(s"Stored Message for '$nextRecipient'")
-            // } yield ("Message Forwarded")
+            // ########################
+            // ### issue-credential ###
+            // ########################
+            case s if s == ProposeCredential.`type` => // Issuer
+              for {
+                _ <- ZIO.logInfo("*" * 100)
+                _ <- ZIO.logInfo("As an Issuer in issue-credential:")
+                _ <- ZIO.logInfo("Got ProposeCredential: " + msg)
+                offer = OfferCredential.makeOfferToProposeCredential(msg) // OfferCredential
 
-            case "https://atalaprism.io/mercury/mailbox/1.0/ReadMessages" => ???
-            // for {
-            //   _ <- ZIO.logInfo("Mediator ReadMessages: " + mediatorMessage.toString)
-            //   senderDID = DidId(mediatorMessage.getFrom())
-            //   _ <- ZIO.logInfo(s"Mediator ReadMessages get Messages from: $senderDID")
-            //   seqMsg <- MailStorage.get(senderDID)
-            // } yield (seqMsg.last)
+                didCommService <- ZIO.service[DidComm]
+                msg = offer.makeMessage
+                _ <- sendMessage(msg)
+              } yield ("OfferCredential Sent")
 
-            case "https://didcomm.org/coordinate-mediation/2.0/mediate-request" => ???
-            // for {
-            //   _ <- ZIO.logInfo("Mediator ReadMessages: " + mediatorMessage.toString)
-            //   senderDID = DidId(mediatorMessage.getFrom())
-            //   _ <- ZIO.logInfo(s"Mediator ReadMessages get Messages from: $senderDID")
-            //   mayBeConnection <- ConnectionStorage.get(senderDID)
-            //   _ <- ZIO.logInfo(s"$senderDID state $mayBeConnection")
-            //   // DO some checks before we grant this logic need more thought
-            //   grantedOrDenied <- mayBeConnection
-            //     .map(_ => ZIO.succeed(Denied))
-            //     .getOrElse(ConnectionStorage.store(senderDID, Granted))
-            //   _ <- ZIO.logInfo(s"$senderDID state $grantedOrDenied")
-            //   messagePrepared <- makeMsg(senderDID, grantedOrDenied)
-            //   _ <- ZIO.logInfo("Message Prepared: " + messagePrepared.toString)
-            //   encryptedMsg <- packEncrypted(messagePrepared, to = senderDID)
-            //   _ <- ZIO.logInfo(
-            //     "\n*********************************************************************************************************************************\n"
-            //       + fromJsonObject(encryptedMsg.asJson).spaces2
-            //       + "\n***************************************************************************************************************************************\n"
-            //   )
+            case s if s == OfferCredential.`type` => // Holder
+              for {
+                _ <- ZIO.logInfo("*" * 100)
+                _ <- ZIO.logInfo("As an Holder in issue-credential:")
+                _ <- ZIO.logInfo("Got OfferCredential: " + msg)
+                // store on BD TODO //pc = OfferCredential.readFromMessage(msg)
+                requestCredential = RequestCredential.makeRequestCredentialFromOffer(msg) // RequestCredential
 
-            // } yield (fromJsonObject(encryptedMsg.asJson).noSpaces)
-            case _ => ZIO.succeed("Unknown Message Type")
+                didCommService <- ZIO.service[DidComm]
+                msg = requestCredential.makeMessage
+                _ <- sendMessage(msg)
+              } yield ("RequestCredential Sent")
+
+            case s if s == RequestCredential.`type` => // Issuer
+              for {
+                _ <- ZIO.logInfo("*" * 100)
+                _ <- ZIO.logInfo("As an Issuer in issue-credential:")
+                _ <- ZIO.logInfo("Got RequestCredential: " + msg)
+                issueCredential = IssueCredential.makeIssueCredentialFromRequestCredential(msg) // IssueCredential
+
+                didCommService <- ZIO.service[DidComm]
+                msg = issueCredential.makeMessage
+                _ <- sendMessage(msg)
+              } yield ("IssueCredential Sent")
+
+            case s if s == IssueCredential.`type` => // Holder
+              for {
+                _ <- ZIO.logInfo("*" * 100)
+                _ <- ZIO.logInfo("As an Holder in issue-credential:")
+                _ <- ZIO.logInfo("Got IssueCredential: " + msg)
+              } yield ("IssueCredential Received")
+
+            case "https://didcomm.org/routing/2.0/forward"                      => ??? // SEE mediator
+            case "https://atalaprism.io/mercury/mailbox/1.0/ReadMessages"       => ??? // SEE mediator
+            case "https://didcomm.org/coordinate-mediation/2.0/mediate-request" => ??? // SEE mediator
+            case _                                                              => ZIO.succeed("Unknown Message Type")
           }
         }
       } yield (ret)

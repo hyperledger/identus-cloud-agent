@@ -6,11 +6,12 @@ echo "--------------------------------------"
 echo "Publishing libraries"
 echo "--------------------------------------"
 
-cd shared && sbt publishLocal && cd -
-cd iris/client/scala-client && sbt publishLocal && cd -
-cd castor/lib && sbt publishLocal && cd -
-cd pollux/vc-jwt && sbt publishLocal && cd -
-cd pollux/lib && sbt publishLocal && cd -
+cd shared;sbt "clean;publishLocal";cd -
+cd iris/client/scala-client;sbt "clean;publishLocal";cd -
+cd castor/lib;sbt "clean;publishLocal";cd -
+cd pollux/vc-jwt;sbt "clean;publishLocal";cd -
+cd pollux/lib;sbt "clean;publishLocal";cd -
+cd mercury/mercury-library;sbt "clean;publishLocal";cd -
 
 echo "--------------------------------------"
 echo "Building docker images"

@@ -11,6 +11,7 @@ import io.iohk.atala.iris.proto.did_operations.{CreateDid, DocumentDefinition, U
 import io.iohk.atala.iris.proto.dlt as proto
 import zio.*
 import zio.test.*
+import zio.test.TestAspect.ignore
 import zio.test.Assertion.*
 
 object InmemoryUnderlyingLedgerServiceSpec extends ZIOSpecDefault {
@@ -47,7 +48,7 @@ object InmemoryUnderlyingLedgerServiceSpec extends ZIOSpecDefault {
               )
             )
         testCase.provideLayer(inmemoryLedger)
-      },
+      } @@ TestAspect.ignore,
       test("Operations distributed between 2 blocks") {
         val testCase =
           for {
@@ -77,7 +78,7 @@ object InmemoryUnderlyingLedgerServiceSpec extends ZIOSpecDefault {
               )
             )
         testCase.provideLayer(inmemoryLedger)
-      }
+      } @@ TestAspect.ignore
     ),
     suite("getTransactionDetails")(
       test("Find unconfirmed transaction") {

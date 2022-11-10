@@ -64,29 +64,142 @@ import zhttp.service.Server
 
 import java.util.concurrent.Executors
 
+import io.iohk.atala.mercury._
+import io.iohk.atala.mercury.AgentCli.sendMessage //TODO REMOVE
+import io.iohk.atala.mercury.model._
+import io.iohk.atala.mercury.model.error._
+import io.iohk.atala.mercury.protocol.issuecredential._
+import io.iohk.atala.pollux.core.model.error.IssueCredentialError
+import io.iohk.atala.pollux.core.model.error.IssueCredentialError.RepositoryError
+import java.io.IOException
+
 object Modules {
 
-  val app: Task[Unit] = {
-    val httpServerApp = HttpRoutes.routes.flatMap(HttpServer.start(8080, _))
+  def app(port: Int): Task[Unit] = {
+    val httpServerApp = HttpRoutes.routes.flatMap(HttpServer.start(port, _))
 
     httpServerApp
       .provideLayer(SystemModule.actorSystemLayer ++ HttpModule.layers)
       .unit
   }
 
-  val didCommServiceEndpoint: Task[Nothing] = {
-    val app: HttpApp[Any, Nothing] =
-      Http.collect[Request] { case Method.POST -> !! / "did-comm-v2" =>
-        // TODO add DIDComm messages parsing logic here!
-        Response.text("Hello World!").setStatus(Status.Accepted)
+  def didCommServiceEndpoint(port: Int) = {
+    val header = "content-type" -> MediaTypes.contentTypeEncrypted
+    val app: HttpApp[DidComm with CredentialService, Throwable] =
+      Http.collectZIO[Request] {
+        //   // TODO add DIDComm messages parsing logic here!
+        //   Response.text("Hello World!").setStatus(Status.Accepted)
+        // case Method.POST -> !! / "did-comm-v2" =>
+        case Method.GET -> !! / "did" =>
+          for {
+            didCommService <- ZIO.service[DidComm]
+            str = didCommService.myDid.value
+          } yield (Response.text(str))
+
+        case req @ Method.POST -> !!
+            if req.headersAsList.exists(h => h._1.equalsIgnoreCase(header._1) && h._2.equalsIgnoreCase(header._2)) =>
+          req.body.asString
+            // .catchNonFatalOrDie(ex => ZIO.fail(ParseResponse(ex)))
+            .flatMap { data =>
+              webServerProgram(data).catchAll { case ex =>
+                val error = mercuryErrorAsThrowable(ex)
+                ZIO.logErrorCause("Fail to POST form webServerProgram", Cause.fail(error)) *>
+                  ZIO.fail(error)
+              }
+            }
+            .map(str => Response.text(str))
+
       }
-    Server.start(8090, app)
+    Server.start(port, app)
   }
 
-  val didCommExchangesJob: Task[Unit] = {
-    val effect = BackgroundJobs.didCommExchanges
-      .provideLayer(AppModule.credentialServiceLayer)
-    (effect repeat Schedule.spaced(10.seconds)).unit
+  val didCommExchangesJob: RIO[DidComm, Unit] =
+    BackgroundJobs.didCommExchanges
+      .repeat(Schedule.spaced(10.seconds))
+      .unit
+      .provideSomeLayer(AppModule.credentialServiceLayer)
+
+  def webServerProgram(
+      jsonString: String
+  ): ZIO[DidComm with CredentialService, MercuryThrowable, String] = {
+    import io.iohk.atala.mercury.DidComm.*
+    ZIO.logAnnotate("request-id", java.util.UUID.randomUUID.toString()) {
+      for {
+        _ <- ZIO.logInfo("Received new message")
+        _ <- ZIO.logTrace(jsonString)
+        msg <- unpack(jsonString).map(_.getMessage)
+        ret <- {
+          msg.piuri match {
+            // ########################
+            // ### issue-credential ###
+            // ########################
+            case s if s == ProposeCredential.`type` => // Issuer
+              for {
+                _ <- ZIO.logInfo("*" * 100)
+                _ <- ZIO.logInfo("As an Issuer in issue-credential:")
+                _ <- ZIO.logInfo("Got ProposeCredential: " + msg)
+                credentialService <- ZIO.service[CredentialService]
+
+                // TODO
+              } yield ("OfferCredential Sent")
+
+            case s if s == OfferCredential.`type` => // Holder
+              for {
+                _ <- ZIO.logInfo("*" * 100)
+                _ <- ZIO.logInfo("As an Holder in issue-credential:")
+                _ <- ZIO.logInfo("Got OfferCredential: " + msg)
+                credentialService <- ZIO.service[CredentialService]
+                offerFromIssuer = OfferCredential.readFromMessage(msg)
+                _ <- credentialService
+                  .receiveCredentialOffer(offerFromIssuer)
+                  .catchSome { case RepositoryError(cause) =>
+                    ZIO.logError(cause.getMessage()) *>
+                      ZIO.fail(cause)
+                  }
+                  .catchAll { case ex: IOException => ZIO.fail(ex) }
+
+              } yield ("Offer received")
+
+            case s if s == RequestCredential.`type` => // Issuer
+              for {
+                _ <- ZIO.logInfo("*" * 100)
+                _ <- ZIO.logInfo("As an Issuer in issue-credential:")
+                requestCredential = RequestCredential.readFromMessage(msg)
+                _ <- ZIO.logInfo("Got RequestCredential: " + requestCredential)
+                credentialService <- ZIO.service[CredentialService]
+                todoTestOption <- credentialService
+                  .receiveCredentialRequest(requestCredential)
+                  .catchSome { case RepositoryError(cause) =>
+                    ZIO.logError(cause.getMessage()) *>
+                      ZIO.fail(cause)
+                  }
+                  .catchAll { case ex: IOException => ZIO.fail(ex) }
+
+                // TODO todoTestOption if none
+              } yield ("RequestCredential received")
+
+            case s if s == IssueCredential.`type` => // Holder
+              for {
+                _ <- ZIO.logInfo("*" * 100)
+                _ <- ZIO.logInfo("As an Holder in issue-credential:")
+                issueCredential = IssueCredential.readFromMessage(msg)
+                _ <- ZIO.logInfo("Got IssueCredential: " + issueCredential)
+                credentialService <- ZIO.service[CredentialService]
+                _ <- credentialService
+                  .receiveCredentialIssue(issueCredential)
+                  .catchSome { case RepositoryError(cause) =>
+                    ZIO.logError(cause.getMessage()) *>
+                      ZIO.fail(cause)
+                  }
+                  .catchAll { case ex: IOException => ZIO.fail(ex) }
+
+              } yield ("IssueCredential Received")
+
+            case _ => ZIO.succeed("Unknown Message Type")
+          }
+        }
+      } yield (ret)
+    }
   }
 
   val publishCredentialsToDltJob: Task[Unit] = {

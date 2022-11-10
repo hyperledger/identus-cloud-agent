@@ -5,12 +5,12 @@ import zio.*
 import cats.implicits._
 import io.circe.syntax._
 import io.circe.Json
-import io.circe.generic.auto._
+import io.circe.generic.semiauto._
 import io.circe.parser._
-
 import io.iohk.atala.mercury.protocol.invitation._
 import io.iohk.atala.mercury.protocol.invitation.InvitationCodec._
 import io.iohk.atala.mercury.model.AttachmentDescriptor
+import io.iohk.atala.mercury.model.AttachmentDescriptor.attachmentDescriptorEncoderV1
 
 class InvitationV1Spec extends ZSuite {
 
@@ -53,7 +53,7 @@ class InvitationV1Spec extends ZSuite {
     val accepts = Seq("didcomm/aip2;env=rfc587", "didcomm/aip2;env=rfc19")
     val handshakeProtocols = Seq("https://didcomm.org/didexchange/1.0", "https://didcomm.org/connections/1.0")
 
-    val attachmentDescriptor = AttachmentDescriptor.buildAttachment(id = Some("request-0"), payload = payload)
+    val attachmentDescriptor = AttachmentDescriptor.buildAttachment(id = "request-0", payload = payload)
 
     val invitation = Invitation(
       `@id` = "f3375429-b116-4224-b55f-563d7ef461f1",
@@ -66,6 +66,8 @@ class InvitationV1Spec extends ZSuite {
       services = Seq(did)
     )
     val result = invitation.asJson.deepDropNullValues
+
+    println(result)
     assertEquals(result, expectedJson)
   }
 }

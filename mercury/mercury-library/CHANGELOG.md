@@ -1,3 +1,19 @@
+# [mercury-v0.4.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.3.0...mercury-v0.4.0) (2022-11-09)
+
+
+### Features
+
+* **prism-agent; mercury; pollux:** Integrate Mercury into prism-agent ATL-2077; ATL-2076 ([#93](https://github.com/input-output-hk/atala-prism-building-blocks/issues/93)) ([db4b21a](https://github.com/input-output-hk/atala-prism-building-blocks/commit/db4b21ac1d6a2c48af502597779acb82f5e03ac0))
+
+# [mercury-v0.3.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.2.0...mercury-v0.3.0) (2022-10-28)
+
+
+### Features
+
+* **agent:** [ATL-2005] implement REST API for credential issuance ([#86](https://github.com/input-output-hk/atala-prism-building-blocks/issues/86)) ([7c1f50a](https://github.com/input-output-hk/atala-prism-building-blocks/commit/7c1f50ab99879beed74c5e0bd03aa51709051527))
+* **mercury:** AgentCLI for Issue Credential ATL-1740 ([#82](https://github.com/input-output-hk/atala-prism-building-blocks/issues/82)) ([c4068c6](https://github.com/input-output-hk/atala-prism-building-blocks/commit/c4068c62023ef817d80d81a56f90bb7bcb2e7fb3))
+* **mercury:** Fix project mercury-mediator ATL-2030 ([#84](https://github.com/input-output-hk/atala-prism-building-blocks/issues/84)) ([1450c30](https://github.com/input-output-hk/atala-prism-building-blocks/commit/1450c30f8f23ec87cd868dbf41e71213e0b4dfbe))
+
 # [mercury-v0.2.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.1.0...mercury-v0.2.0) (2022-10-25)
 
 

@@ -16,7 +16,8 @@ import akka.http.scaladsl.server.Route
 object HttpRoutes {
 
   def routes: URIO[
-    DIDApi & DIDOperationsApi & DIDAuthenticationApi & DIDRegistrarApi & IssueCredentialsApi & IssueCredentialsProtocolApi,
+    DIDApi & DIDOperationsApi & DIDAuthenticationApi & DIDRegistrarApi & IssueCredentialsApi &
+      IssueCredentialsProtocolApi,
     Route
   ] =
     for {

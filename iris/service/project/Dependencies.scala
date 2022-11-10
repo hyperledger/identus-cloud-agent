@@ -3,18 +3,22 @@ import sbt._
 object Dependencies {
   object Versions {
     val zio = "2.0.2"
+    val zioConfig = "3.0.2"
     val circe = "0.14.1"
     val circeOptics = "0.14.1"
     val akka = "2.6.19"
     val doobie = "1.0.0-RC2"
     val zioCatsInterop = "3.3.0"
-    val prismSdk = "v1.3.3-snapshot-1657194253-992dd96"
+    val prismSdk = "v1.4.1"
     val shared = "0.1.0"
     val enumeratum = "1.7.0"
     val zioTest = "2.0.2"
   }
 
   private lazy val zio = "dev.zio" %% "zio" % Versions.zio
+  private lazy val zioConfig = "dev.zio" %% "zio-config" % Versions.zioConfig
+  private lazy val zioConfigMagnolia = "dev.zio" %% "zio-config-magnolia" % Versions.zioConfig
+  private lazy val zioConfigTypesafe = "dev.zio" %% "zio-config-typesafe" % Versions.zioConfig
   private lazy val zioStream = "dev.zio" %% "zio-streams" % Versions.zio
   private lazy val zioCatsInterop = "dev.zio" %% "zio-interop-cats" % Versions.zioCatsInterop
   // We have to exclude bouncycastle since for some reason bitcoinj depends on bouncycastle jdk15to18
@@ -48,7 +52,8 @@ object Dependencies {
   private lazy val zioTestMagnolia = "dev.zio" %% "zio-test-magnolia" % "2.0.2" % Test
 
   // Dependency Modules
-  private lazy val baseDependencies: Seq[ModuleID] = Seq(zio, zioStream, prismCrypto, shared, enumeratum)
+  private lazy val baseDependencies: Seq[ModuleID] =
+    Seq(zio, zioConfig, zioConfigMagnolia, zioConfigTypesafe, zioStream, prismCrypto, shared, enumeratum)
   private lazy val grpcDependencies: Seq[ModuleID] = Seq(grpcNetty, grpcServices, scalaPbProto, scalaPbGrpc)
   private lazy val doobieDependencies: Seq[ModuleID] = Seq(doobiePostgres, doobieHikari)
   private lazy val circeDependencies: Seq[ModuleID] =

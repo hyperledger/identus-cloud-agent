@@ -23,6 +23,6 @@ class InMemoryIrisBatchesRepository(list: Ref[Vector[ConfirmedIrisBatch]])
 
   override def getIrisBatchesStream(lastSeen: Option[TransactionId]): StreamZIO[ConfirmedIrisBatch] =
     ZStream.fromIterableZIO(list.get)
-    
+
   def getConfirmedBatches: Task[Vector[ConfirmedIrisBatch]] = list.get
 }
