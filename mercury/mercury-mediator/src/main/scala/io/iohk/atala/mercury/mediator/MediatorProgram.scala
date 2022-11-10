@@ -11,17 +11,12 @@ import io.iohk.atala.mercury.model.Message
 import io.circe.Json.*
 import io.circe.parser.*
 import io.circe.JsonObject
-import io.iohk.atala.mercury.mediator.MediationState.{
-  Denied,
-  Granted,
-  Requested
-}
+import io.circe.syntax._
+import io.iohk.atala.mercury.mediator.MediationState.{Denied, Granted, Requested}
 import io.iohk.atala.mercury.protocol.coordinatemediation.Keylist.Body
-import io.iohk.atala.mercury.protocol.coordinatemediation.{
-  MediateDeny,
-  MediateGrant
-}
+import io.iohk.atala.mercury.protocol.coordinatemediation.{MediateDeny, MediateGrant}
 import io.iohk.atala.mercury.Agent
+import io.circe.JsonNumber
 object MediatorProgram {
   val port = 8080
 
@@ -81,10 +76,10 @@ object MediatorProgram {
                   msg = mediatorMessage.attachments.map(_.data.toString).head // FIXME Head
                   // msgxx = mediatorMessage.getAttachments().get(0).getData().toJSONObject().get("json").toString() //FIXME REMOVE
                   nextRecipient = DidId(
-                    mediatorMessage.body // REMOVE mediatorMessage.getBody.asScala
-                      .get("next")
-                      .map(e => e.asInstanceOf[String])
-                      .get
+                    mediatorMessage
+                      .body("next")
+                      .flatMap(e => e.asString)
+                      .get // TODO remove get
                   )
                   _ <- ZIO.log(s"Store Massage for ${nextRecipient}: " + mediatorMessage.to)
                   // db <- ZIO.service[ZState[MyDB]]
@@ -148,7 +143,7 @@ object MediatorProgram {
           piuri = mediateGrant.`type`,
           from = Some(from),
           to = Some(to),
-          body = Map("routing_did" -> from.value)
+          body = JsonObject("routing_did" -> from.value.asJson)
         )
       case _ =>
         val mediateDeny =
