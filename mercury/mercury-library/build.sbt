@@ -164,6 +164,15 @@ lazy val protocolIssueCredential = project
   .settings(libraryDependencies += D.munitZio.value)
   .dependsOn(models)
 
+
+lazy val protocolPresentProof = project
+  .in(file("protocol-present-proof"))
+  .settings(name := "mercury-protocol-present-proof")
+  .settings(libraryDependencies += D.zio.value)
+  .settings(libraryDependencies ++= Seq(D.circeCore.value, D.circeGeneric.value, D.circeParser.value))
+  .settings(libraryDependencies += D.munitZio.value)
+  .dependsOn(models)
+
 // ################
 // ### Resolver ###
 // ################
@@ -204,6 +213,7 @@ lazy val agent = project // maybe merge into models
     protocolMercuryMailbox,
     protocolLogin,
     protocolIssueCredential,
+    protocolPresentProof,
   )
 
 /** Demos agents and services implementation with didcommx */

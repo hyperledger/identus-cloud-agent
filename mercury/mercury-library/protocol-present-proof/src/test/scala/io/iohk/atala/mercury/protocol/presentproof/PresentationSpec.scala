@@ -1,4 +1,4 @@
-package io.iohk.atala.mercury.protocol.issuecredential
+package io.iohk.atala.mercury.protocol.presentproof
 
 import io.circe.Json
 import io.circe.parser.*
@@ -9,23 +9,23 @@ import munit.*
 import io.iohk.atala.mercury.model._
 import zio.*
 
-class IssueCredentialSpec extends ZSuite {
+class PresentationSpec extends ZSuite {
 
-  test("Issuer IssueCredential") {
+  test("Verifier Presentation") {
 
-    val attribute1 = Attribute(name = "name", value = "Joe Blog")
-    val attribute2 = Attribute(name = "dob", value = "01/10/1947")
-    val credentialPreview = CredentialPreview(attributes = Seq(attribute1, attribute2))
-    val body = IssueCredential.Body(goal_code = Some("Issued Credential"))
-    val attachmentDescriptor = AttachmentDescriptor.buildAttachment[CredentialPreview](payload = credentialPreview)
+    val presentationFormat = PresentationFormat(attach_id = "1", "format1")
+    val body = Presentation.Body(goal_code = Some("Presentation"))
+    val attachmentDescriptor =
+      AttachmentDescriptor("1", Some("application/json"), LinkData(links = Seq("http://test"), hash = "1234"))
     val attachmentDescriptorJson = attachmentDescriptor.asJson.deepDropNullValues.noSpaces
 
     val expectedProposalJson = parse(s"""{
                          |    "id": "061bf917-2cbe-460b-8d12-b1a9609505c2",
-                         |    "type": "https://didcomm.org/issue-credential/2.0/issue-credential",
+                         |    "type": "https://didcomm.org/present-proof/2.0/presentation",
                          |    "body":
                          |    {
-                         |        "goal_code": "Issued Credential",
+                         |        "goal_code": "Presentation",
+                         |         "last_presentation" : true,
                          |        "formats":
                          |        []
                          |    },
@@ -37,7 +37,7 @@ class IssueCredentialSpec extends ZSuite {
                          |    "from" : "did:prism:test123"
                          |}""".stripMargin).getOrElse(Json.Null)
 
-    val issueCredential = IssueCredential(
+    val presentation = Presentation(
       id = "061bf917-2cbe-460b-8d12-b1a9609505c2",
       body = body,
       attachments = Seq(attachmentDescriptor),
@@ -50,7 +50,7 @@ class IssueCredentialSpec extends ZSuite {
     println(did.asJson.noSpaces)
     println("************************")
 
-    val result = issueCredential.asJson.deepDropNullValues
+    val result = presentation.asJson.deepDropNullValues
     assertEquals(result, expectedProposalJson)
   }
 }
