@@ -18,8 +18,9 @@ import java.util.UUID
 
 // TODO: replace with actual implementation
 class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepository[Task] {
-
-  given logHandler: LogHandler = LogHandler.jdkLogHandler
+  
+  // Uncomment to have Doobie LogHandler in scope and automatically output SQL statements in logs 
+  // given logHandler: LogHandler = LogHandler.jdkLogHandler
 
   import IssueCredentialRecord._
   given uuidGet: Get[UUID] = Get[String].map(UUID.fromString)
