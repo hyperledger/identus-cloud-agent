@@ -1,5 +1,6 @@
 package io.iohk.atala.pollux.sql.repository
 
+import cats.instances.seq
 import doobie.*
 import doobie.implicits.*
 import io.circe._
@@ -164,7 +165,28 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
 
   override def updateCredentialRecordStateAndProofByCredentialIdBulk(
       idsStatesAndProofs: Seq[(UUID, IssueCredentialRecord.State, MerkleInclusionProof)]
-  ): Task[Int] = ???
+  ): Task[Int] = {
+
+    if (idsStatesAndProofs.isEmpty) ZIO.succeed(0)
+    else
+      val values = idsStatesAndProofs.map { idStateAndProof =>
+        val (id, state, proof) = idStateAndProof
+        s"(${id.toString}, '${state.toString}', '${serializeInclusionProof(proof)}')"
+      }
+
+      val cxnIO = sql"""
+          | UPDATE public.issue_credential_records as icr
+          | SET 
+          |   state = idsStatesAndProofs.state,
+          |   merkle_inclusion_proof = idsStatesAndProofs.serializedProof
+          | FROM (values ${values.mkString(",")}) as idsStatesAndProofs(id, state, serializedProof)
+          | WHERE icr.id = idsStatesAndProofs.id
+          |""".stripMargin.update
+
+      cxnIO.run
+        .transact(xa)
+
+  }
 
 }
 

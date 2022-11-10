@@ -21,5 +21,5 @@ CREATE TABLE public.issue_credential_records(
   "subject_id" TEXT NOT NULL,
   "validity_period" INTEGER,
   "claims" TEXT NOT NULL,
-  "state" VARCHAR(50) NOT NULL
+  "state" VARCHAR(50) NOT NULL /* TODO: Change to enum */
 );
