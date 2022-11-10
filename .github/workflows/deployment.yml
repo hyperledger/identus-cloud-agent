@@ -1,0 +1,22 @@
+name: Deployment
+
+# Trigger deployment when a new tag is pushed
+# to a service component
+on:
+  push:
+    tags:
+      - prism-agent-*
+      - iris-service-*
+      - mercury-mediator-*
+
+jobs:
+  trigger-deployment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger deployment
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.ATALA_GITHUB_TOKEN }}
+          repository: input-output-hk/atala-prism-dev-deployments
+          event-type: trigger-deployment
+          client-payload: '{"component-tag": "${{ github.ref_name}}"}'
