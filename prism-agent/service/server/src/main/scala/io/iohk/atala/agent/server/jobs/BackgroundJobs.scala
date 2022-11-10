@@ -24,7 +24,7 @@ object BackgroundJobs {
     for {
       credentialService <- ZIO.service[CredentialService]
       records <- credentialService
-        .getCredentialRecords()
+        .getIssueCredentialRecords()
         .mapError(err => Throwable(s"Error occured while getting issue credential records: $err"))
       _ <- ZIO.foreach(records)(performExchange)
     } yield ()
