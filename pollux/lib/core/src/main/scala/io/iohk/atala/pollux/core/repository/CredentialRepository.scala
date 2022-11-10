@@ -12,11 +12,10 @@ import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
 trait CredentialRepository[F[_]] {
   def createIssueCredentialRecord(record: IssueCredentialRecord): F[Int]
   def getIssueCredentialRecords(): F[Seq[IssueCredentialRecord]]
-  def getIssueCredentialRecordsByState(state: IssueCredentialRecord.State): F[Seq[IssueCredentialRecord]]
+  def getIssueCredentialRecordsByState(state: IssueCredentialRecord.ProtocolState): F[Seq[IssueCredentialRecord]]
   def getIssueCredentialRecord(id: UUID): F[Option[IssueCredentialRecord]]
-  def updateCredentialRecordState(id: UUID, from: IssueCredentialRecord.State, to: IssueCredentialRecord.State): F[Int]
   def updateCredentialRecordStateAndProofByCredentialIdBulk(
-      idsStatesAndProofs: Seq[(UUID, IssueCredentialRecord.State, MerkleInclusionProof)]
+      idsStatesAndProofs: Seq[(UUID, IssueCredentialRecord.PublicationState, MerkleInclusionProof)]
   ): F[Int]
   def getIssueCredentialRecordByThreadId(id: UUID): F[Option[IssueCredentialRecord]]
   def updateCredentialRecordProtocolState(

@@ -18,10 +18,13 @@ import zio.*
 import zio.interop.catz.*
 
 import java.util.UUID
+import io.iohk.atala.pollux.core.model.IssueCredentialRecord.ProtocolState
+import java.{util => ju}
 
 // TODO: replace with actual implementation
 class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepository[Task] {
   // serializes into hex string
+
   private def serializeInclusionProof(proof: MerkleInclusionProof): String = BytesOps.bytesToHex(proof.encode.getBytes)
 
   // deserializes from the hex string
@@ -31,25 +34,6 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         BytesOps.hexToBytes(proof)
       )
     )
-
-  override def createCredentials(batchId: String, credentials: Seq[EncodedJWTCredential]): Task[Unit] = {
-    ZIO.succeed(())
-  }
-  override def getCredentials(batchId: String): Task[Seq[EncodedJWTCredential]] = {
-    val cxnIO = sql"""
-        | SELECT
-        |   c.batch_id
-        |   c.credential_id
-        |   c.value
-        | FROM public.jwt_credentials AS c
-        | WHERE c.batch_id = $batchId
-        """.stripMargin
-      .query[JWTCredentialRow]
-      .to[Seq]
-
-    cxnIO
-      .transact(xa)
-  }
 
   given logHandler: LogHandler = LogHandler.jdkLogHandler
 
@@ -143,7 +127,7 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
   }
 
   override def getIssueCredentialRecordsByState(
-      state: IssueCredentialRecord.State
+      state: IssueCredentialRecord.ProtocolState
   ): Task[Seq[IssueCredentialRecord]] = {
     val cxnIO = sql"""
         | SELECT
@@ -156,7 +140,7 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   claims,
         |   state
         | FROM public.issue_credential_records
-        | WHERE state = ${state.toString}
+        | WHERE protocol_state = ${state.toString}
         """.stripMargin
       .query[IssueCredentialRecord]
       .to[Seq]
@@ -238,7 +222,7 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
   }
 
   override def updateCredentialRecordStateAndProofByCredentialIdBulk(
-      idsStatesAndProofs: Seq[(UUID, IssueCredentialRecord.State, MerkleInclusionProof)]
+      idsStatesAndProofs: Seq[(UUID, IssueCredentialRecord.PublicationState, MerkleInclusionProof)]
   ): Task[Int] = {
 
     if (idsStatesAndProofs.isEmpty) ZIO.succeed(0)
@@ -251,9 +235,9 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
       val cxnIO = sql"""
           | UPDATE public.issue_credential_records as icr
           | SET 
-          |   state = idsStatesAndProofs.state,
+          |   publication_state = idsStatesAndProofs.publication_state,
           |   merkle_inclusion_proof = idsStatesAndProofs.serializedProof
-          | FROM (values ${values.mkString(",")}) as idsStatesAndProofs(id, state, serializedProof)
+          | FROM (values ${values.mkString(",")}) as idsStatesAndProofs(id, publication_state, serializedProof)
           | WHERE icr.id = idsStatesAndProofs.id
           |""".stripMargin.update
 
