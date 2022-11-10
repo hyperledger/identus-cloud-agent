@@ -90,7 +90,7 @@ trait CredentialService {
 
   def markRequestSent(recordId: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]]
 
-  def markCredentialGenerated(recordId: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]]
+  // def markCredentialGenerated(recordId: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]]
 
   def markCredentialSent(recordId: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]]
 
@@ -194,10 +194,7 @@ private class CredentialServiceImpl(
     } yield record
   }
 
-  override def acceptCredentialOffer(
-      recordId: UUID
-  ): IO[IssueCredentialError, Option[IssueCredentialRecord]] = {
-    // Set the state to RequestPending
+  override def acceptCredentialOffer(recordId: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] = {
     for {
       maybeRecord <- credentialRepository
         .getIssueCredentialRecord(recordId)
@@ -219,7 +216,6 @@ private class CredentialServiceImpl(
         .getIssueCredentialRecord(record.id)
         .mapError(RepositoryError.apply)
     } yield record
-
   }
 
   override def receiveCredentialRequest(
@@ -240,13 +236,30 @@ private class CredentialServiceImpl(
     } yield record
   }
 
-  override def acceptCredentialRequest(recordId: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] =
-    // TODO:  Generate the JWT credential or do it in background job??
-    updateCredentialRecordProtocolState(
-      recordId,
-      ProtocolState.RequestReceived,
-      ProtocolState.CredentialPending
-    )
+  override def acceptCredentialRequest(recordId: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] = {
+    for {
+      maybeRecord <- credentialRepository
+        .getIssueCredentialRecord(recordId)
+        .mapError(RepositoryError.apply)
+      record <- ZIO
+        .fromOption(maybeRecord)
+        .mapError(_ => RecordIdNotFound(recordId))
+      request <- ZIO
+        .fromOption(record.requestCredentialData)
+        .mapError(_ => InvalidFlowStateError(s"No request found for this record: $recordId"))
+      // TODO: Generate the JWT credential and use it to create the IssueCredential object
+      issue = createDidCommIssueCredential(request)
+      count <- credentialRepository
+        .updateWithIssueCredential(recordId, issue, ProtocolState.CredentialPending)
+        .mapError(RepositoryError.apply)
+      _ <- count match
+        case 1 => ZIO.succeed(())
+        case n => ZIO.fail(RecordIdNotFound(recordId))
+      record <- credentialRepository
+        .getIssueCredentialRecord(record.id)
+        .mapError(RepositoryError.apply)
+    } yield record
+  }
 
   override def receiveCredentialIssue(
       issue: IssueCredential
@@ -280,17 +293,17 @@ private class CredentialServiceImpl(
       IssueCredentialRecord.ProtocolState.RequestSent
     )
 
-  override def markCredentialGenerated(recordId: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] =
-    updateCredentialRecordProtocolState(
-      recordId,
-      IssueCredentialRecord.ProtocolState.CredentialPending,
-      IssueCredentialRecord.ProtocolState.CredentialGenerated
-    )
+  // override def markCredentialGenerated(recordId: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] =
+  //   updateCredentialRecordProtocolState(
+  //     recordId,
+  //     IssueCredentialRecord.ProtocolState.CredentialPending,
+  //     IssueCredentialRecord.ProtocolState.CredentialGenerated
+  //   )
 
   override def markCredentialSent(recordId: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] =
     updateCredentialRecordProtocolState(
       recordId,
-      IssueCredentialRecord.ProtocolState.CredentialGenerated,
+      IssueCredentialRecord.ProtocolState.CredentialPending,
       IssueCredentialRecord.ProtocolState.CredentialSent
     )
 
