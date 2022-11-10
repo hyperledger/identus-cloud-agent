@@ -18,8 +18,8 @@ import java.util.UUID
 
 // TODO: replace with actual implementation
 class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepository[Task] {
-  
-  // Uncomment to have Doobie LogHandler in scope and automatically output SQL statements in logs 
+
+  // Uncomment to have Doobie LogHandler in scope and automatically output SQL statements in logs
   // given logHandler: LogHandler = LogHandler.jdkLogHandler
 
   import IssueCredentialRecord._
@@ -105,7 +105,7 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
       .transact(xa)
   }
 
-  override def getIssueCredentialRecord(id: UUID): Task[Option[IssueCredentialRecord]] = {
+  override def getIssueCredentialRecord(recordId: UUID): Task[Option[IssueCredentialRecord]] = {
     val cxnIO = sql"""
         | SELECT
         |   id,
@@ -121,7 +121,7 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   request_credential_data,
         |   issue_credential_data
         | FROM public.issue_credential_records
-        | WHERE id = $id
+        | WHERE id = $recordId
         """.stripMargin
       .query[IssueCredentialRecord]
       .option
@@ -156,7 +156,7 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
   }
 
   override def updateCredentialRecordProtocolState(
-      id: UUID,
+      recordId: UUID,
       from: IssueCredentialRecord.ProtocolState,
       to: IssueCredentialRecord.ProtocolState
   ): Task[Int] = {
@@ -165,7 +165,7 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         | SET
         |   protocol_state = $to
         | WHERE
-        |   id = $id
+        |   id = $recordId
         |   AND protocol_state = $from
         """.stripMargin.update
 
@@ -174,7 +174,7 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
   }
 
   override def updateCredentialRecordPublicationState(
-      id: UUID,
+      recordId: UUID,
       from: Option[IssueCredentialRecord.PublicationState],
       to: Option[IssueCredentialRecord.PublicationState]
   ): Task[Int] = {
@@ -187,7 +187,7 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         | SET
         |   publication_state = $to
         | WHERE
-        |   id = $id
+        |   id = $recordId
         |   AND $pubStateFragment
         """.stripMargin.update
 
@@ -195,40 +195,32 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
       .transact(xa)
   }
 
-  override def updateWithRequestCredential(request: RequestCredential): Task[Int] = {
-    request.thid match
-      case None =>
-        ZIO.succeed(0)
-      case Some(value) =>
-        val cxnIO = sql"""
-            | UPDATE public.issue_credential_records
-            | SET
-            |   request_credential_data = $request,
-            |   protocol_state = ${IssueCredentialRecord.ProtocolState.RequestReceived}
-            | WHERE
-            |   thid = $value
-            """.stripMargin.update
+  override def updateWithRequestCredential(recordId: UUID, request: RequestCredential, protocolState: ProtocolState): Task[Int] = {
+    val cxnIO = sql"""
+        | UPDATE public.issue_credential_records
+        | SET
+        |   request_credential_data = $request,
+        |   protocol_state = $protocolState
+        | WHERE
+        |   id = $recordId
+        """.stripMargin.update
 
-        cxnIO.run
-          .transact(xa)
+    cxnIO.run
+      .transact(xa)
   }
 
-  override def updateWithIssueCredential(issue: IssueCredential): Task[Int] = {
-    issue.thid match
-      case None =>
-        ZIO.succeed(0)
-      case Some(value) =>
-        val cxnIO = sql"""
-            | UPDATE public.issue_credential_records
-            | SET
-            |   issue_credential_data = $issue,
-            |   protocol_state = ${IssueCredentialRecord.ProtocolState.CredentialReceived}
-            | WHERE
-            |   thid = $value
-            """.stripMargin.update
+  override def updateWithIssueCredential(recordId: UUID, issue: IssueCredential, protocolState: ProtocolState): Task[Int] = {
+    val cxnIO = sql"""
+        | UPDATE public.issue_credential_records
+        | SET
+        |   issue_credential_data = $issue,
+        |   protocol_state = $protocolState
+        | WHERE
+        |   id = $recordId
+        """.stripMargin.update
 
-        cxnIO.run
-          .transact(xa)
+    cxnIO.run
+      .transact(xa)
   }
 
 }
