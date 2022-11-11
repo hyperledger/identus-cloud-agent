@@ -1,6 +1,7 @@
 import sbt._
 
-object Dependencies {
+//TODO REMOVE THIS
+object Dependencies_VC_JWT {
   object Versions {
     val circeVersion = "0.14.3"
     val jwtCirceVersion = "9.1.1"
