@@ -45,7 +45,7 @@ lazy val server = project
   .in(file("server"))
   .settings(commonSettings)
   .settings(
-    name := "prism-agent-server",
+    name := "prism-agent",
     fork := true,
     libraryDependencies ++= serverDependencies,
     // OpenAPI settings
@@ -57,6 +57,8 @@ lazy val server = project
       .map(model => (model, s"io.iohk.atala.agent.server.http.model.OASModelPatches.$model"))
       .toMap,
     Docker / maintainer := "atala-coredid@iohk.io",
+    Docker / dockerUsername := Some("input-output-hk"),
+    Docker / githubOwner := "atala-prism-building-blocks",
     Docker / dockerRepository := Some("ghcr.io"),
     dockerExposedPorts := Seq(8080),
     dockerBaseImage := "openjdk:11"
