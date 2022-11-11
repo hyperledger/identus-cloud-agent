@@ -8,6 +8,7 @@ object Dependencies {
     val iris = "0.1.0"
     val prismSdk = "v1.4.1"
     val shared = "0.1.0"
+    val flyway = "9.7.0"
   }
 
   private lazy val zio = "dev.zio" %% "zio" % Versions.zio
@@ -19,6 +20,8 @@ object Dependencies {
 
   private lazy val doobiePostgres = "org.tpolecat" %% "doobie-postgres" % Versions.doobie
   private lazy val doobieHikari = "org.tpolecat" %% "doobie-hikari" % Versions.doobie
+
+  private lazy val flyway = "org.flywaydb" % "flyway-core" % Versions.flyway
 
   private lazy val shared = "io.iohk.atala" % "shared" % Versions.shared
   private lazy val irisClient = "io.iohk.atala" %% "iris-client" % Versions.iris
@@ -32,7 +35,7 @@ object Dependencies {
 
   // Dependency Modules
   private lazy val baseDependencies: Seq[ModuleID] = Seq(zio, zioTest, zioTestSbt, zioTestMagnolia, shared, prismCrypto, irisClient)
-  private lazy val doobieDependencies: Seq[ModuleID] = Seq(doobiePostgres, doobieHikari)
+  private lazy val doobieDependencies: Seq[ModuleID] = Seq(doobiePostgres, doobieHikari, flyway)
 
   // Project Dependencies
   lazy val coreDependencies: Seq[ModuleID] = baseDependencies
