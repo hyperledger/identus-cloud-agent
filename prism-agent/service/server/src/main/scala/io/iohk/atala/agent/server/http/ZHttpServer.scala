@@ -15,8 +15,6 @@ import io.iohk.atala.pollux.schema.SchemaRegistryServerEndpoints
 object ZHttpServer {
   val log = LoggerFactory.getLogger(ZioHttpInterpreter.getClass.getName)
 
-  val defaultPort = sys.env.get("http.port").map(_.toInt).getOrElse(8085)
-
   val defaultServerOptions: ZioHttpServerOptions[Any] =
     ZioHttpServerOptions.customiseInterceptors
       .serverLog(
@@ -32,7 +30,7 @@ object ZHttpServer {
 
   def start(
       endpoints: List[ZServerEndpoint[Any, Any]],
-      port: Int = defaultPort,
+      port: Int,
       serverOptions: ZioHttpServerOptions[Any] = defaultServerOptions
   ): ZIO[Scope, Throwable, Any] =
     val app: HttpApp[Any, Throwable] = ZioHttpInterpreter(serverOptions).toHttp(endpoints)
