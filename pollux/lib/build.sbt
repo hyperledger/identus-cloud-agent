@@ -28,9 +28,9 @@ lazy val root = project
   .settings(commonSettings)
   .settings(
     name := "pollux-root",
-    skip / publish := true
+    skip / publish := false
   )
-  .aggregate(core, `sql-doobie`)
+  .aggregate(core, `sql-doobie`, vcJWT)
 
 lazy val vcJWT = project
   .in(file("vc-jwt"))
