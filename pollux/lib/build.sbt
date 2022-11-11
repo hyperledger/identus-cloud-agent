@@ -26,11 +26,9 @@ val commonSettings = Seq(
 lazy val root = project
   .in(file("."))
   .settings(commonSettings)
-  .settings(
-    name := "pollux-root",
-    skip / publish := false
-  )
+  .settings(name := "pollux-root")
   .aggregate(core, `sql-doobie`, vcJWT)
+publish / skip := true //Do not publish the root
 
 lazy val vcJWT = project
   .in(file("vc-jwt"))
