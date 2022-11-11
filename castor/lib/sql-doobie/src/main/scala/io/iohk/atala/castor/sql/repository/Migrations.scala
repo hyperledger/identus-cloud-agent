@@ -9,7 +9,7 @@ final case class Migrations(config: DbConfig) {
 
   val migrationScriptsLocation: String = "sql/castor"
 
-  def migrate: Task[Unit] = 
+  def migrate: Task[Unit] =
     ZIO.logInfo("Applying database migrations")
     for {
       _ <- ZIO.attempt {
