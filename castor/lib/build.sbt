@@ -25,10 +25,7 @@ val commonSettings = Seq(
 // Project definitions
 lazy val root = project
   .in(file("."))
-  .settings(
-    skip / publish := true,
-    commonSettings
-  )
+  .settings(publish / skip := true)
   .aggregate(core, `sql-doobie`)
 
 lazy val core = project
