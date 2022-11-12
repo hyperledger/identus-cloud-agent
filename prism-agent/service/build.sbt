@@ -1,19 +1,28 @@
 import Dependencies._
 import sbtghpackages.GitHubPackagesPlugin.autoImport._
-
-ThisBuild / version := "0.1.0"
-ThisBuild / scalaVersion := "3.2.0"
-ThisBuild / organization := "io.iohk.atala"
+import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
 
 // Custom keys
 val apiBaseDirectory = settingKey[File]("The base directory for PrismAgent API specifications")
-ThisBuild / apiBaseDirectory := baseDirectory.value / "../api"
-ThisBuild / resolvers += Resolver.githubPackages("input-output-hk", "atala-prism-building-blocks")
+
+inThisBuild(
+  Seq(
+    organization := "io.iohk.atala",
+    scalaVersion := "3.2.0",
+    apiBaseDirectory := baseDirectory.value / "../api",
+    fork := true,
+    run / connectInput := true,
+    versionScheme := Some("semver-spec"),
+    githubOwner := "input-output-hk",
+    githubRepository := "atala-prism-building-blocks",
+    githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN")
+  )
+)
 
 val commonSettings = Seq(
   testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
   githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN"),
-  resolvers += Resolver.githubPackages("input-output-hk", "atala-prism-sdk"),
+  resolvers += Resolver.githubPackages("input-output-hk"),
   // Needed for Kotlin coroutines that support new memory management mode
   resolvers += "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven"
 )
@@ -36,7 +45,7 @@ lazy val server = project
   .in(file("server"))
   .settings(commonSettings)
   .settings(
-    name := "prism-agent-server",
+    name := "prism-agent",
     fork := true,
     libraryDependencies ++= serverDependencies,
     // OpenAPI settings
@@ -48,10 +57,21 @@ lazy val server = project
       .map(model => (model, s"io.iohk.atala.agent.server.http.model.OASModelPatches.$model"))
       .toMap,
     Docker / maintainer := "atala-coredid@iohk.io",
-    Docker / dockerRepository := Some("atala-prism.io"),
     Docker / dockerUsername := Some("input-output-hk"),
+    Docker / githubOwner := "atala-prism-building-blocks",
+    Docker / dockerRepository := Some("ghcr.io"),
     dockerExposedPorts := Seq(8080),
     dockerBaseImage := "openjdk:11"
   )
   .enablePlugins(OpenApiGeneratorPlugin, JavaAppPackaging, DockerPlugin)
   .dependsOn(`wallet-api`)
+
+releaseProcess := Seq[ReleaseStep](
+  checkSnapshotDependencies,
+  inquireVersions,
+  runClean,
+  runTest,
+  setReleaseVersion,
+  ReleaseStep(releaseStepTask(server / Docker / publish)),
+  setNextVersion
+)

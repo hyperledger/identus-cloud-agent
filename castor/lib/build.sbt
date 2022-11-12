@@ -29,6 +29,7 @@ lazy val root = project
   .settings(
     name := "castor-root",
   )
+  .settings(publish / skip := true)
   .aggregate(core, `sql-doobie`)
 
 lazy val core = project

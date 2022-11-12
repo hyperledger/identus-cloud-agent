@@ -1,3 +1,11 @@
+# [mercury-v0.5.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.4.0...mercury-v0.5.0) (2022-11-10)
+
+
+### Features
+
+* **mercury:** [WIP] ATL-1741-Present-Proof-Protocol ([#98](https://github.com/input-output-hk/atala-prism-building-blocks/issues/98)) ([b37b762](https://github.com/input-output-hk/atala-prism-building-blocks/commit/b37b7627377d0e0d6ead496dc537cbf757c875ca))
+* **mercury:** Use present-proof protocol in AgentCli ([#112](https://github.com/input-output-hk/atala-prism-building-blocks/issues/112)) ([5546190](https://github.com/input-output-hk/atala-prism-building-blocks/commit/55461904f7939fb21cdc0aa17b3d4d179800dba6))
+
 # [mercury-v0.4.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.3.0...mercury-v0.4.0) (2022-11-09)
 
 

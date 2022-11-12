@@ -82,8 +82,9 @@ given Conversion[XAttachment, AttachmentDescriptor] with {
         Base64(tmp)
       case e if e contains ("links") =>
         val aux = e("links")
-        println(aux.getClass().getCanonicalName()) // TODO
-        ???
+        val list = aux.asInstanceOf[java.util.AbstractList[String]]
+        val linksSeq = list.iterator().asScala.toSeq
+        LinkData(linksSeq, hash = attachment.getData().getHash())
       case e if e contains ("jws") =>
         val aux = e("jws")
         println(aux.getClass().getCanonicalName()) // TODO
