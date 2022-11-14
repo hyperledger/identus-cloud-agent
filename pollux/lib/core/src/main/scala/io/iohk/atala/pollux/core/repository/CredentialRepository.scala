@@ -8,13 +8,13 @@ import io.iohk.atala.mercury.protocol.issuecredential.RequestCredential
 import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
 trait CredentialRepository[F[_]] {
   def createIssueCredentialRecord(record: IssueCredentialRecord): F[Int]
-  
+
   def getIssueCredentialRecords(): F[Seq[IssueCredentialRecord]]
-  
+
   def getIssueCredentialRecord(id: UUID): F[Option[IssueCredentialRecord]]
-  
+
   def getIssueCredentialRecordByThreadId(id: UUID): F[Option[IssueCredentialRecord]]
-  
+
   def updateCredentialRecordProtocolState(
       id: UUID,
       from: IssueCredentialRecord.ProtocolState,
@@ -25,8 +25,8 @@ trait CredentialRepository[F[_]] {
       from: Option[IssueCredentialRecord.PublicationState],
       to: Option[IssueCredentialRecord.PublicationState]
   ): F[Int]
-  
+
   def updateWithRequestCredential(request: RequestCredential): F[Int]
-  
+
   def updateWithIssueCredential(issue: IssueCredential): F[Int]
 }
