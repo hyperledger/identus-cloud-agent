@@ -35,34 +35,35 @@ object Main extends ZIOAppDefault {
         case Some(s) if s.toIntOption.isDefined => s.toInt
         case _                                  => 8090
       }
-      _ <- ZIO.logInfo(s"DIDComm Service port => $didCommServicePort")
+      _ <- ZIO.logInfo(s"DIDComm Service port => $didCommServicePort") 
+      
+//      COMMENTED IN ORDER TO RUN THE AGENT LOCALLY
+//      agentDID <- for {
+//        peer <- ZIO.succeed(PeerDID.makePeerDid(serviceEndpoint = Some(s"http://localhost:$didCommServicePort")))
+//        _ <- ZIO.logInfo(s"New DID: ${peer.did}") *>
+//          ZIO.logInfo(s"JWK for KeyAgreement: ${peer.jwkForKeyAgreement.toJSONString}") *>
+//          ZIO.logInfo(s"JWK for KeyAuthentication: ${peer.jwkForKeyAuthentication.toJSONString}")
+//      } yield (peer)
+//
+//      didCommLayer = AgentCli.agentLayer(agentDID)
+//
+//      didCommExchangesFiber <- Modules.didCommExchangesJob
+//        .provide(
+//          didCommLayer
+//        )
+//        .debug
+//        .fork
+//
+//      didCommServiceFiber <- Modules
+//        .didCommServiceEndpoint(didCommServicePort)
+//        .provide(
+//          didCommLayer,
+//          AppModule.credentialServiceLayer
+//        )
+//        .debug
+//        .fork
 
-      agentDID <- for {
-        peer <- ZIO.succeed(PeerDID.makePeerDid(serviceEndpoint = Some(s"http://localhost:$didCommServicePort")))
-        _ <- ZIO.logInfo(s"New DID: ${peer.did}") *>
-          ZIO.logInfo(s"JWK for KeyAgreement: ${peer.jwkForKeyAgreement.toJSONString}") *>
-          ZIO.logInfo(s"JWK for KeyAuthentication: ${peer.jwkForKeyAuthentication.toJSONString}")
-      } yield (peer)
-
-      didCommLayer = AgentCli.agentLayer(agentDID)
-
-      didCommExchangesFiber <- Modules.didCommExchangesJob
-        .provide(
-          didCommLayer
-        )
-        .debug
-        .fork
-
-      didCommServiceFiber <- Modules
-        .didCommServiceEndpoint(didCommServicePort)
-        .provide(
-          didCommLayer,
-          AppModule.credentialServiceLayer
-        )
-        .debug
-        .fork
-
-      _ <- Modules.app(restServicePort)
+      _ <- Modules.app(restServicePort).fork
       _ <- Modules.zioApp
       _ <- ZIO.never
     } yield ()
