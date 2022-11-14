@@ -25,15 +25,6 @@ services:
       db_castor:
         condition: service_started
 
-  db_castor_init:
-    image: flyway/flyway:9.3.0-alpine
-    volumes:
-      - $PWD/castor/lib/sql-doobie/src/main/resources/sql:/flyway/sql
-    command: -url=jdbc:postgresql://db_castor:5432/castor?user=postgres&password=postgres migrate
-    depends_on:
-      db_castor_init_delay:
-        condition: service_completed_successfully
-
   ##########################
   # Pollux Database
   ##########################
@@ -57,15 +48,6 @@ services:
     depends_on:
       db_pollux:
         condition: service_started
-
-  db_pollux_init:
-    image: flyway/flyway:9.3.0-alpine
-    volumes:
-      - $PWD/pollux/lib/sql-doobie/src/main/resources/sql:/flyway/sql
-    command: -url=jdbc:postgresql://db_pollux:5432/pollux?user=postgres&password=postgres migrate
-    depends_on:
-      db_pollux_init_delay:
-        condition: service_completed_successfully
 
   ##########################
   # Services
@@ -93,12 +75,7 @@ services:
       POLLUX_DB_NAME: pollux
       POLLUX_DB_USER: postgres
       POLLUX_DB_PASSWORD: postgres
-    depends_on:
-      db_castor_init:
-        condition: service_completed_successfully
-      db_pollux_init:
-        condition: service_completed_successfully
-
+      
   swagger-ui:
     image: swaggerapi/swagger-ui:v4.14.0
     environment:
