@@ -332,7 +332,7 @@ object RepoModule {
         Dispatcher[Task].allocated.map { case (dispatcher, _) =>
           given Dispatcher[Task] = dispatcher
           io.iohk.atala.pollux.sql.repository.TransactorLayer.hikari[Task](
-            io.iohk.atala.pollux.sql.repository.TransactorLayer.DbConfig(
+            io.iohk.atala.pollux.sql.repository.DbConfig(
               username = config.username,
               password = config.password,
               jdbcUrl = s"jdbc:postgresql://${config.host}:${config.port}/${config.databaseName}"
