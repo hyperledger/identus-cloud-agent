@@ -3,21 +3,17 @@ package io.iohk.atala
 import zio._
 import zhttp.service.{ChannelFactory, Client, EventLoopGroup}
 import zhttp.http.{Headers, Method}
-import io.iohk.atala.mercury.Agent
-import io.iohk.atala.mercury.AgentService
-import io.iohk.atala.mercury.MediaTypes
+import io.iohk.atala.mercury._
 import io.iohk.atala.mercury.model.UnpackMessage
 import io.iohk.atala.mercury.protocol.mailbox.Mailbox.ReadMessage
+import io.iohk.atala.mercury.protocol.coordinatemediation._
 import org.didcommx.didcomm.message.Attachment.Data.Json
 
-import io.iohk.atala.mercury.protocol.coordinatemediation._
-import io.iohk.atala.mercury.CoordinateMediationPrograms
-import io.iohk.atala.mercury.InvitationPrograms
-
 @main def AgentClientGetInvitation() = {
-  val env = ChannelFactory.auto ++ EventLoopGroup.auto()
   val app =
-    InvitationPrograms.getInvitationProgram("http://localhost:8000/oob_url").provide(env)
+    InvitationPrograms
+      .getInvitationProgram("http://localhost:8000/oob_url")
+      .provide(HttpClientZhttp.layer)
 
   Unsafe.unsafe { implicit u => Runtime.default.unsafe.run(app).getOrThrowFiberFailure() }
 
@@ -28,7 +24,7 @@ import io.iohk.atala.mercury.InvitationPrograms
   val mediatorURL = "http://localhost:8000"
   val app = CoordinateMediationPrograms
     .senderMediationRequestProgram(mediatorURL)
-    .provide(env, AgentService.charlie)
+    .provide(AgentService.charlie, HttpClientZhttp.layer)
 
   Unsafe.unsafe { implicit u => Runtime.default.unsafe.run(app).getOrThrowFiberFailure() }
 
@@ -39,6 +35,6 @@ import io.iohk.atala.mercury.InvitationPrograms
   val mediatorURL = "http://localhost:8080"
   val app = CoordinateMediationPrograms
     .senderMediationRequestProgram(mediatorURL)
-    .provide(env, AgentService.charlie)
+    .provide(AgentService.charlie, HttpClientZhttp.layer)
   Unsafe.unsafe { implicit u => Runtime.default.unsafe.run(app).getOrThrowFiberFailure() }
 }

@@ -216,7 +216,7 @@ lazy val agent = project // maybe merge into models
     protocolPresentProof,
   )
 
-/** agents and services implementation with didcommx */
+/** agents implementation with didcommx */
 lazy val agentDidcommx = project
   .in(file("agent-didcommx"))
   .settings(name := "mercury-agent-didcommx")
@@ -228,7 +228,6 @@ lazy val agentCliDidcommx = project
   .in(file("agent-cli-didcommx"))
   .settings(name := "mercury-agent-cli-didcommx")
   .settings(libraryDependencies += D.zioHttp.value)
-  .dependsOn(agent)
   .dependsOn(agentDidcommx)
 
 ///** TODO Demos agents and services implementation with did-scala */
