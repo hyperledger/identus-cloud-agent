@@ -1,8 +1,9 @@
+/*
 package io.iohk.atala
 
 import zio._
-import zhttp.service.Client
-import zhttp.http._
+// import zhttp.service.Client
+// import zhttp.http._
 
 import io.circe._
 import io.circe.Json._
@@ -113,3 +114,4 @@ object AgentPrograms {
   } yield ()
 
 }
+ */

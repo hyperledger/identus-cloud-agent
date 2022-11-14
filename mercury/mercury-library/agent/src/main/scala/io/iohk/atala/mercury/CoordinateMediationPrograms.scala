@@ -2,8 +2,8 @@ package io.iohk.atala.mercury
 
 import scala.util.chaining._
 import zio._
-import zhttp.service.Client
-import zhttp.http._
+// import zhttp.service.Client
+// import zhttp.http._
 import io.circe.Json._
 import io.circe.syntax._
 import io.circe.parser._
@@ -48,17 +48,11 @@ object CoordinateMediationPrograms {
       jsonString = encryptedMessage.string
       _ <- ZIO.log(jsonString)
 
-      res <- Client.request(
-        url = mediatorURL,
-        method = Method.POST,
-        headers = Headers("content-type" -> MediaTypes.contentTypeEncrypted),
-        content = Body.fromChunk(Chunk.fromArray(jsonString.getBytes)),
-        // ssl = ClientSSLOptions.DefaultSSL,
-      )
-      data <- res.body.asString
-      _ <- ZIO.log(data)
+      client <- ZIO.service[HttpClient]
+      res <- client.postDIDComm(mediatorURL, jsonString)
+      _ <- ZIO.log(res.bodyAsString)
 
-      messageReceived <- agentService.unpack(data)
+      messageReceived <- agentService.unpack(res.bodyAsString)
       _ <- Console.printLine("Unpacking and decrypting the received message ...")
       _ <- Console.printLine("*" * 100)
       _ <- Console.printLine(toPrettyJson(messageReceived.getMessage.toString))
