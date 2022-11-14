@@ -1,0 +1,41 @@
+name: Deployment
+
+# Trigger deployment when a new tag is pushed
+# to a service component
+on:
+  push:
+    tags:
+      - prism-agent-*
+      - iris-service-*
+      - mercury-mediator-*
+  workflow_dispatch:
+    inputs:
+      component-tag:
+        description: "Tag of a component to trigger the update, e.g. iris-service-v0.5.0"
+        required: true
+      env:
+        description: "Environment to trigger update on"
+        required: false
+        default: "dev"
+
+jobs:
+  trigger-deployment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Parse input parameters
+        id: parse-params
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "COMPONENT_TAG=${{ github.event.inputs.component-tag }}" >> $GITHUB_OUTPUT
+            echo "ENV=${{ github.event.inputs.env }}" >> $GITHUB_OUTPUT
+          else
+            echo "COMPONENT_TAG=${{ github.ref_name}}" >> $GITHUB_OUTPUT
+            echo "ENV=dev" >> $GITHUB_OUTPUT
+          fi
+      - name: Trigger deployment
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.ATALA_GITHUB_TOKEN }}
+          repository: input-output-hk/atala-prism-dev-deployments
+          event-type: trigger-deployment
+          client-payload: '{"component-tag": "${{ steps.parse-params.outputs.COMPONENT_TAG }}", "env": "${{ steps.parse-params.outputs.ENV }}"}'

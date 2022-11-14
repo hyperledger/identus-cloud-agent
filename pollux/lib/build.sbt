@@ -1,4 +1,5 @@
 import Dependencies._
+import Dependencies_VC_JWT._ //TODO REMOVE
 import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
 
 inThisBuild(
@@ -25,11 +26,16 @@ val commonSettings = Seq(
 lazy val root = project
   .in(file("."))
   .settings(commonSettings)
+  .settings(name := "pollux-root")
+  .aggregate(core, `sql-doobie`, vcJWT)
+publish / skip := true //Do not publish the root
+
+lazy val vcJWT = project
+  .in(file("vc-jwt"))
   .settings(
-    name := "pollux-root",
-    skip / publish := true
+    name := "pollux-vc-jwt",
+    libraryDependencies ++= polluxVcJwtDependencies
   )
-  .aggregate(core, `sql-doobie`)
 
 lazy val core = project
   .in(file("core"))
@@ -38,6 +44,7 @@ lazy val core = project
     name := "pollux-core",
     libraryDependencies ++= coreDependencies
   )
+  .dependsOn(vcJWT)
 
 lazy val `sql-doobie` = project
   .in(file("sql-doobie"))

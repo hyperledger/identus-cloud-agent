@@ -22,7 +22,7 @@ object Dependencies {
     ExclusionRule(
       organization = "org.bouncycastle"
     )
-  private lazy val polluxVcJwt = "io.iohk.atala" %% "pollux-vc-jwt" % "0.1.0-SNAPSHOT" changing ()
+  //REMOVE private lazy val polluxVcJwt = "io.iohk.atala" %% "pollux-vc-jwt" % "0.1.0-SNAPSHOT" changing ()
 
   private lazy val irisClient = "io.iohk.atala" %% "iris-client" % Versions.iris
 
@@ -37,6 +37,6 @@ object Dependencies {
 
   // Project Dependencies
   lazy val coreDependencies: Seq[ModuleID] =
-    baseDependencies ++ Seq(polluxVcJwt) ++ Seq(irisClient) ++ mercuryDependencies
+    baseDependencies ++ Seq(irisClient) ++ mercuryDependencies
   lazy val sqlDoobieDependencies: Seq[ModuleID] = baseDependencies ++ doobieDependencies ++ Seq(zioCatsInterop)
 }
