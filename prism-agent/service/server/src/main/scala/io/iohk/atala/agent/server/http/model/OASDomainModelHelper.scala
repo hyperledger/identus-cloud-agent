@@ -139,11 +139,16 @@ trait OASDomainModelHelper {
   extension (domain: polluxdomain.IssueCredentialRecord) {
     def toOAS: IssueCredentialRecord = IssueCredentialRecord(
       recordId = domain.id,
+      role = domain.role.toString,
       subjectId = domain.subjectId,
-      claims = domain.claims,
+      claims = domain.offerCredentialData
+        .map(offer => offer.body.credential_preview.attributes.map(attr => (attr.name -> attr.value)).toMap)
+        .getOrElse(Map.empty),
       schemaId = domain.schemaId,
       validityPeriod = domain.validityPeriod,
-      state = domain.protocolState.toString()
+      protocolState = domain.protocolState.toString(),
+      publicationState = domain.publicationState.map(_.toString),
+      jwtCredential = domain.issueCredentialData.map(issueCredential => "TODO: JWT credential with MT inclusion proof")
     )
   }
 
