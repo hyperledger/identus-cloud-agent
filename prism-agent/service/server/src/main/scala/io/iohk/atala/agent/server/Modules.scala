@@ -75,7 +75,7 @@ import java.io.IOException
 
 object Modules {
 
-  def app(port: Int): Task[Unit] = {
+  def app(port: Int): RIO[DidComm, Unit] = {
     val httpServerApp = HttpRoutes.routes.flatMap(HttpServer.start(port, _))
 
     httpServerApp
@@ -246,7 +246,7 @@ object AppModule {
   val manageDIDServiceLayer: TaskLayer[ManagedDIDService] =
     (didOpValidatorLayer ++ didServiceLayer) >>> ManagedDIDService.inMemoryStorage()
 
-  val credentialServiceLayer: TaskLayer[CredentialService] =
+  val credentialServiceLayer: RLayer[DidComm, CredentialService] =
     (GrpcModule.layers ++ RepoModule.layers) >>> CredentialServiceImpl.layer
 }
 
@@ -295,14 +295,14 @@ object HttpModule {
     (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new DIDRegistrarApi(_, _))
   }
 
-  val issueCredentialsApiLayer: TaskLayer[IssueCredentialsApi] = {
+  val issueCredentialsApiLayer: RLayer[DidComm, IssueCredentialsApi] = {
     val serviceLayer = AppModule.credentialServiceLayer
     val apiServiceLayer = serviceLayer >>> IssueCredentialsApiServiceImpl.layer
     val apiMarshallerLayer = IssueCredentialsApiMarshallerImpl.layer
     (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new IssueCredentialsApi(_, _))
   }
 
-  val issueCredentialsProtocolApiLayer: TaskLayer[IssueCredentialsProtocolApi] = {
+  val issueCredentialsProtocolApiLayer: RLayer[DidComm, IssueCredentialsProtocolApi] = {
     val serviceLayer = AppModule.credentialServiceLayer
     val apiServiceLayer = serviceLayer >>> IssueCredentialsProtocolApiServiceImpl.layer
     val apiMarshallerLayer = IssueCredentialsProtocolApiMarshallerImpl.layer

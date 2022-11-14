@@ -62,7 +62,7 @@ object Main extends ZIOAppDefault {
         .debug
         .fork
 
-      _ <- Modules.app(restServicePort)
+      _ <- Modules.app(restServicePort).provide(didCommLayer)
     } yield ()
 
 }
