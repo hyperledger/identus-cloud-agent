@@ -1,0 +1,70 @@
+name: Pollux testing workflow
+
+# Cancel previously running workflows if new commit pushed to the branch
+# this will help to push fixes earlier and stop previous workflows
+concurrency:
+  group: ${{ github.head_ref }}${{ github.ref }}-pollux
+  cancel-in-progress: true
+
+# Default shell is `sh`
+# which is old, use bourne-again version instead
+defaults:
+  run:
+    shell: bash
+    working-directory: pollux/lib
+
+on:
+  # Run with every push to `main` branch
+  # Run with each PR opened vs Pollux
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/pollux.yml"
+      - "pollux/**"
+  pull_request:
+    paths:
+      - ".github/workflows/pollux.yml"
+      - "pollux/**"
+
+# Global environment variables for all jobs
+env:
+  GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
+  ATALA_GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
+
+jobs:
+  build-and-test-pollux:
+    name: "Build and test Pollux"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Java and Scala
+        uses: olafurpg/setup-scala@v13
+        with:
+          java-version: openjdk@1.11
+
+      - name: Cache sbt
+        uses: coursier/cache-action@v6.3
+
+      - name: Run Scala formatter
+        run: sbt scalafmtCheckAll
+
+      - name: Build and test Pollux
+        run: sbt test
+
+      - name: Aggregate test reports
+        if: always()
+        uses: ./.github/actions/aggregate-test-reports
+        with:
+          tests-dir: "pollux/lib"
+
+      - name: Publish test results
+        # Publish even if the previous test step fails
+        if: always()
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          junit_files: "pollux/lib/target/test-reports/**/TEST-*.xml"
+          comment_title: "Pollux Test Results"
+          check_name: "Pollux Test Results"
