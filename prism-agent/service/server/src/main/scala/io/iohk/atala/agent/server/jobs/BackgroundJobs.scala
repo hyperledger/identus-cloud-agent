@@ -42,6 +42,7 @@ object BackgroundJobs {
       record: IssueCredentialRecord
   ): ZIO[DidComm & CredentialService, Throwable, Unit] = {
     import IssueCredentialRecord.ProtocolState._
+    import IssueCredentialRecord.PublicationState._
     val aux = for {
       _ <- ZIO.logDebug(s"Running action with records => $record")
       _ <- record match {
@@ -60,12 +61,35 @@ object BackgroundJobs {
           } yield ()
 
         case IssueCredentialRecord(id, _, _, _, _, _, _, _, _, CredentialPending, _, _, _, Some(issue)) =>
+          // Generate the JWT Credential and store it in DB as an attacment to IssueCredentialData
+          // Set ProtocolState to CredentialGenerated
+          // Set PublicationState to PublicationPending
+          ???
+
+        case IssueCredentialRecord(
+              id,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              CredentialGenerated,
+              Some(PublicationQueued),
+              _,
+              _,
+              Some(issue)
+            ) =>
+          // Send the IssueCredentialRequest to the holder (it contains the MT Inclusion Proof)
+          // Set ProtocolState to CredentialSent
           for {
             // TODO: decide when to send and to publish the credential !!!
             _ <- sendMessage(issue.makeMessage)
             credentialService <- ZIO.service[CredentialService]
             _ <- credentialService.markCredentialSent(id)
-            _ <- credentialService.markCredentialPublicationPending(id)
+            // _ <- credentialService.markCredentialPublicationPending(id)
           } yield ()
 
         case IssueCredentialRecord(id, _, _, _, _, _, _, _, _, ProblemReportPending, _, _, _, _) => ???
