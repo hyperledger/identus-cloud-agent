@@ -202,7 +202,7 @@ object Modules {
     }
   }
 
-  val publishCredentialsToDltJob: Task[Unit] = {
+  val publishCredentialsToDltJob:  RIO[DidComm, Unit] = {
     val effect = BackgroundJobs.publishCredentialsToDlt
       .provideLayer(AppModule.credentialServiceLayer)
     (effect repeat Schedule.spaced(1.seconds)).unit

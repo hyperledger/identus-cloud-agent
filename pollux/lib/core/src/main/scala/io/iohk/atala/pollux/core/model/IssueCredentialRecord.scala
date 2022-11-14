@@ -63,7 +63,7 @@ object IssueCredentialRecord {
   enum PublicationState:
     // The credential requires on-chain publication and should therefore be included in the next Merkle Tree computation/publication
     case PublicationPending extends PublicationState
-    // The credential publication operation has been successfuly sent to Iris and is pending publication
+    // The credential publication operation has been successfully sent to Iris and is pending publication
     case PublicationQueued extends PublicationState
     // The credential publication has been confirmed by Iris
     case Published extends PublicationState
