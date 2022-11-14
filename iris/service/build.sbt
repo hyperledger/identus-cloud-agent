@@ -61,7 +61,7 @@ lazy val sql = commonProject(project)
 lazy val server = commonProject(project)
   .in(file("server"))
   .settings(
-    name := "iris-server",
+    name := "iris-service",
     libraryDependencies ++= serverDependencies,
     Docker / maintainer := "atala-coredid@iohk.io",
     Docker / dockerUsername := Some("input-output-hk"),
@@ -77,8 +77,8 @@ lazy val server = commonProject(project)
 releaseProcess := Seq[ReleaseStep](
   checkSnapshotDependencies,
   inquireVersions,
-  //runClean,
-  //runTest,
+  runClean,
+  runTest,
   setReleaseVersion,
   ReleaseStep(releaseStepTask(server / Docker / publish)),
   setNextVersion

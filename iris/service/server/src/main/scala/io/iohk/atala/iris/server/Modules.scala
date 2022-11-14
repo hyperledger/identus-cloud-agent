@@ -74,7 +74,7 @@ object BlockchainModule {
 object RepoModule {
   val transactorLayer: TaskLayer[Transactor[Task]] = {
     val layerWithConfig = ZLayer.fromZIO {
-      ZIO.service[AppConfig].map(_.iris.database).flatMap { config => 
+      ZIO.service[AppConfig].map(_.iris.database).flatMap { config =>
         Dispatcher[Task].allocated.map { case (dispatcher, _) =>
           given Dispatcher[Task] = dispatcher
           TransactorLayer.hikari[Task](

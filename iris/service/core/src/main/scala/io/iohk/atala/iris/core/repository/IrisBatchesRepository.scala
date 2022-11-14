@@ -14,10 +14,11 @@ trait ROIrisBatchesRepository[S[_]] {
   def getIrisBatchesStream(lastSeen: Option[TransactionId]): S[ConfirmedIrisBatch]
 }
 
-/**
- * @tparam F represents a monad where CRUD requests are executed
- * @tparam S represents a monad for streaming of data
- */
+/** @tparam F
+  *   represents a monad where CRUD requests are executed
+  * @tparam S
+  *   represents a monad for streaming of data
+  */
 trait IrisBatchesRepository[F[_], S[_]] extends ROIrisBatchesRepository[S] {
   def saveIrisBatch(irisBatch: ConfirmedIrisBatch): F[Unit]
 }
