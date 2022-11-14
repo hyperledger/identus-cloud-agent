@@ -9,14 +9,14 @@ import zio.interop.catz.*
 import zio.*
 import cats.effect.std.Dispatcher
 
-object TransactorLayer {
+case class DbConfig(
+    username: String,
+    password: String,
+    jdbcUrl: String,
+    awaitConnectionThreads: Int = 8
+)
 
-  case class DbConfig(
-      username: String,
-      password: String,
-      jdbcUrl: String,
-      awaitConnectionThreads: Int = 8
-  )
+object TransactorLayer {
 
   def hikari[A[_]: Async: Dispatcher](config: DbConfig)(using tag: Tag[Transactor[A]]): TaskLayer[Transactor[A]] = {
     val transactorLayerZio = ZIO

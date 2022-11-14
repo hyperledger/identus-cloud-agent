@@ -9,7 +9,7 @@ import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord.ProtocolState
 trait CredentialRepository[F[_]] {
   def createIssueCredentialRecord(record: IssueCredentialRecord): F[Int]
-  
+
   def getIssueCredentialRecords(): F[Seq[IssueCredentialRecord]]
   
   def getIssueCredentialRecord(recordId: UUID): F[Option[IssueCredentialRecord]]
