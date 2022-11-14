@@ -50,18 +50,48 @@ services:
         condition: service_started
 
   ##########################
+  # Iris Database
+  ##########################
+
+  db_iris:
+    image: postgres:13
+    restart: always
+    environment:
+      POSTGRES_DB: iris
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - 5434:5432
+    volumes:
+      - pg_data_iris_db:/var/lib/postgresql/data
+
+  # delay to ensure DB is up before applying migrations
+  db_iris_init_delay:
+    image: alpine:3
+    command: sleep 5
+    depends_on:
+      db_iris:
+        condition: service_started
+
+
+  ##########################
   # Services
   ##########################
-  mercury:
-    image: atala-prism.io/mercury-mediator:0.1.0-SNAPSHOT
+  mediator:
+    image: ghcr.io/input-output-hk/mercury-mediator:0.1.0-SNAPSHOT
 
   iris:
-    image: atala-prism.io/iris-server:0.1.0-SNAPSHOT
+    image: ghcr.io/input-output-hk/iris-service:0.1.0-SNAPSHOT
     ports:
       - 8081:8081
+    environment:
+      IRIS_DB_HOST: db_iris
+      IRIS_DB_PORT: 5432
+      IRIS_DB_NAME: iris
+      IRIS_DB_USER: postgres
 
   prism-agent:
-    image: atala-prism.io/prism-agent-server:0.1.0-SNAPSHOT
+    image: ghcr.io/input-output-hk/prism-agent:0.1.0-SNAPSHOT
     environment:
       IRIS_HOST: iris
       IRIS_PORT: 8081
@@ -81,7 +111,7 @@ services:
     environment:
       - 'URLS=[
           { name: "PrismAgent", url: "/prism-agent/api/openapi-spec.yaml" },
-          { name: "Mercury", url: "/mercury/api/openapi-spec.yaml" }
+          { name: "Mediator", url: "/mediator/api/openapi-spec.yaml" }
         ]'
       - BASE_URL=/apidocs
 
@@ -90,7 +120,7 @@ services:
     ports:
       - "80:80"   # Http
     depends_on:
-      - mercury
+      - mediator
       - prism-agent
       - swagger-ui
     volumes:
@@ -99,3 +129,4 @@ services:
 volumes:
   pg_data_castor_db:
   pg_data_pollux_db:
+  pg_data_iris_db:
