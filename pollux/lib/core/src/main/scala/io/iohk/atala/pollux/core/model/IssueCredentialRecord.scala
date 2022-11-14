@@ -12,7 +12,6 @@ final case class IssueCredentialRecord(
     role: Role,
     subjectId: String,
     validityPeriod: Option[Double] = None,
-    claims: Map[String, String],
     protocolState: ProtocolState,
     publicationState: Option[PublicationState],
     offerCredentialData: Option[OfferCredential],
