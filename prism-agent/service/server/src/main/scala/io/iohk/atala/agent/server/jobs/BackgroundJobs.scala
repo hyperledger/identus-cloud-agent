@@ -34,6 +34,7 @@ object BackgroundJobs {
       record: IssueCredentialRecord
   ): ZIO[DidComm & CredentialService, Throwable, Unit] = {
     import IssueCredentialRecord.ProtocolState._
+    import IssueCredentialRecord.PublicationState._
     val aux = for {
       _ <- ZIO.logDebug(s"Running action with records => $record")
 
