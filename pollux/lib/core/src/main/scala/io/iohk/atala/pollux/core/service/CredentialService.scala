@@ -176,7 +176,7 @@ private class CredentialServiceImpl(
           Role.Holder,
           offer.to.value,
           None,
-          Map.empty,
+          offer.body.credential_preview.attributes.map(attr => (attr.name -> attr.value)).toMap,
           ProtocolState.OfferReceived,
           None,
           offerCredentialData = Some(offer),
