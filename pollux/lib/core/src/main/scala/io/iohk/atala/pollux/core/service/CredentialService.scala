@@ -90,7 +90,7 @@ trait CredentialService {
 
   def markRequestSent(recordId: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]]
 
-  // def markCredentialGenerated(recordId: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]]
+  def markCredentialGenerated(recordId: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]]
 
   def markCredentialSent(recordId: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]]
 
@@ -291,17 +291,17 @@ private class CredentialServiceImpl(
       IssueCredentialRecord.ProtocolState.RequestSent
     )
 
-  // override def markCredentialGenerated(recordId: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] =
-  //   updateCredentialRecordProtocolState(
-  //     recordId,
-  //     IssueCredentialRecord.ProtocolState.CredentialPending,
-  //     IssueCredentialRecord.ProtocolState.CredentialGenerated
-  //   )
+  override def markCredentialGenerated(recordId: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] =
+    updateCredentialRecordProtocolState(
+      recordId,
+      IssueCredentialRecord.ProtocolState.CredentialPending,
+      IssueCredentialRecord.ProtocolState.CredentialGenerated
+    )
 
   override def markCredentialSent(recordId: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] =
     updateCredentialRecordProtocolState(
       recordId,
-      IssueCredentialRecord.ProtocolState.CredentialPending,
+      IssueCredentialRecord.ProtocolState.CredentialGenerated,
       IssueCredentialRecord.ProtocolState.CredentialSent
     )
 
