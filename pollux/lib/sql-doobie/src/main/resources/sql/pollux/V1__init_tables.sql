@@ -20,6 +20,7 @@ CREATE TABLE public.issue_credential_records(
   "subject_id" TEXT NOT NULL,
   "role"  VARCHAR(50) NOT NULL,
   "validity_period" INTEGER,
+  "automatic_issuance" BOOLEAN,
   "protocol_state" VARCHAR(50) NOT NULL,
   "publication_state" VARCHAR(50),
   "offer_credential_data" TEXT,
