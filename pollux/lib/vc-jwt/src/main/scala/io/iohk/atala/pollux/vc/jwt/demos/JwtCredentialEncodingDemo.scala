@@ -39,39 +39,40 @@ import java.time.{Instant, ZonedDateTime}
   println("==================")
   println("Create W3C")
   println("==================")
-  val w3cCredentialPayload = W3cCredentialPayload(
-    `@context` = Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
-    maybeId = Some("http://example.edu/credentials/3732"),
-    `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
-    issuer = DID("https://example.edu/issuers/565049"),
-    issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
-    maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
-    maybeCredentialSchema = Some(
-      CredentialSchema(
-        id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
-        `type` = "JsonSchemaValidator2018"
-      )
-    ),
-    credentialSubject = Json.obj(
-      "userName" -> Json.fromString("Bob"),
-      "age" -> Json.fromInt(42),
-      "email" -> Json.fromString("email")
-    ),
-    maybeCredentialStatus = Some(
-      CredentialStatus(
-        id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
-        `type` = "CredentialStatusList2017"
-      )
-    ),
-    maybeRefreshService = Some(
-      RefreshService(
-        id = "https://example.edu/refresh/3732",
-        `type` = "ManualRefreshService2018"
-      )
-    ),
-    maybeEvidence = Option.empty,
-    maybeTermsOfUse = Option.empty
-  )
+  val w3cCredentialPayload =
+    W3cCredentialPayload(
+      `@context` = Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
+      maybeId = Some("http://example.edu/credentials/3732"),
+      `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
+      issuer = DID("https://example.edu/issuers/565049"),
+      issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
+      maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
+      maybeCredentialSchema = Some(
+        CredentialSchema(
+          id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
+          `type` = "JsonSchemaValidator2018"
+        )
+      ),
+      credentialSubject = Json.obj(
+        "userName" -> Json.fromString("Bob"),
+        "age" -> Json.fromInt(42),
+        "email" -> Json.fromString("email")
+      ),
+      maybeCredentialStatus = Some(
+        CredentialStatus(
+          id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
+          `type` = "CredentialStatusList2017"
+        )
+      ),
+      maybeRefreshService = Some(
+        RefreshService(
+          id = "https://example.edu/refresh/3732",
+          `type` = "ManualRefreshService2018"
+        )
+      ),
+      maybeEvidence = Option.empty,
+      maybeTermsOfUse = Option.empty
+    )
   println(w3cCredentialPayload.asJson.toString())
 
   println("")
@@ -83,14 +84,14 @@ import java.time.{Instant, ZonedDateTime}
 
   println("")
   println("==================")
-  println("Validate Encoded JWT")
+  println("Validate: Encoded JWT")
   println("==================")
   val valid = JwtCredential.validateEncodedJwt(encodedJWT, issuer.publicKey)
   println(s"Is Valid? $valid")
 
   println("")
   println("==================")
-  println("Encoded JWT => Decoded JWT Json")
+  println("Encoded JWT -> Decoded JWT")
   println("==================")
   val decodedJwtCredential = JwtCredential.decodeJwt(encodedJWT, issuer.publicKey)
   val decodedJwtCredentialAsJson = decodedJwtCredential.toOption.get.asJson.toString()
@@ -98,7 +99,7 @@ import java.time.{Instant, ZonedDateTime}
 
   println("")
   println("==================")
-  println("W3C => JWT Json")
+  println("W3C -> JWT")
   println("==================")
   val jwtCredentialPayload = w3cCredentialPayload.toJwtCredentialPayload
   val jwtCredentialPayloadAsJson = jwtCredentialPayload.asJson.toString()
@@ -106,6 +107,6 @@ import java.time.{Instant, ZonedDateTime}
 
   println("")
   println("==================")
-  println("JWT Json = Decoded JWT Json")
+  println("JWT Json = Decoded JWT (W3C -> Decoded JWT -> Encoded JWT -> Decoded JWT )")
   println("==================")
   println(s"Are equal? ${jwtCredentialPayloadAsJson == decodedJwtCredentialAsJson}")

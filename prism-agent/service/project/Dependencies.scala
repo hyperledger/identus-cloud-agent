@@ -7,10 +7,11 @@ object Dependencies {
     val zioHttp = "2.0.0-RC10"
     val akka = "2.6.20"
     val akkaHttp = "10.2.9"
-    val castor = "0.1.0"
-    val pollux = "0.1.0"
+    val castor = "0.2.0"
+    val pollux = "0.2.0"
     val bouncyCastle = "1.70"
     val logback = "1.4.4"
+    val mercury = "0.5.0"
     val zioJson = "0.3.0"
     val tapir = "1.2.0"
   }
@@ -35,9 +36,10 @@ object Dependencies {
   private lazy val castorCore = "io.iohk.atala" %% "castor-core" % Versions.castor
   private lazy val castorSqlDoobie = "io.iohk.atala" %% "castor-sql-doobie" % Versions.castor
 
-  private lazy val polluxCore = "io.iohk.atala" %% "pollux-core" % Versions.pollux exclude("io.d11", "zhttp")
-  private lazy val polluxVcJwt = "io.iohk.atala" %% "pollux-vc-jwt" % Versions.pollux
-  private lazy val polluxSqlDoobie = "io.iohk.atala" %% "pollux-sql-doobie" % Versions.pollux exclude("io.d11", "zhttp")
+  private lazy val polluxCore = "io.iohk.atala" %% "pollux-core" % Versions.pollux
+  private lazy val polluxSqlDoobie = "io.iohk.atala" %% "pollux-sql-doobie" % Versions.pollux
+
+  private lazy val mercuryAgent = "io.iohk.atala" %% "mercury-agent-didcommx" % Versions.mercury
 
   // Added here to make prism-crypto works.
   // Once migrated to apollo, re-evaluate if this should be removed.
@@ -58,8 +60,10 @@ object Dependencies {
   // Dependency Modules
   private lazy val baseDependencies: Seq[ModuleID] = Seq(zio, zioTest, zioTestSbt, zioTestMagnolia, zioConfig, zioConfigMagnolia, zioConfigTypesafe, zioJson, logback, zioHttp)
   private lazy val castorDependencies: Seq[ModuleID] = Seq(castorCore, castorSqlDoobie)
-  private lazy val polluxDependencies: Seq[ModuleID] = Seq(polluxCore, polluxVcJwt, polluxSqlDoobie)
-  private lazy val akkaHttpDependencies: Seq[ModuleID] = Seq(akkaTyped, akkaStream, akkaHttp, akkaSprayJson).map(_.cross(CrossVersion.for3Use2_13))
+  private lazy val polluxDependencies: Seq[ModuleID] = Seq(polluxCore, polluxSqlDoobie)
+  private lazy val mercuryDependencies: Seq[ModuleID] = Seq(mercuryAgent)
+  private lazy val akkaHttpDependencies: Seq[ModuleID] =
+    Seq(akkaTyped, akkaStream, akkaHttp, akkaSprayJson).map(_.cross(CrossVersion.for3Use2_13))
   private lazy val bouncyDependencies: Seq[ModuleID] = Seq(bouncyBcpkix, bouncyBcprov)
   private lazy val tapirDependencies: Seq[ModuleID] =
     Seq(tapirSwaggerUiBundle, tapirJsonZio, tapirRedocBundle, tapirSttpStubServer, tapirZioHttpServer, tapirZio)
@@ -76,5 +80,10 @@ object Dependencies {
       akkaHttpDependencies ++
       castorDependencies ++
       polluxDependencies ++
-      tapirDependencies
+      mercuryDependencies ++
+      tapirDependencies ++
+        Seq(
+          zioHttp,
+          logback
+        )
 }

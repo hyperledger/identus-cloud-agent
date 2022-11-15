@@ -48,11 +48,13 @@ import io.iohk.atala.castor.core.service.{DIDService, DIDServiceImpl}
 import io.iohk.atala.pollux.core.service.CredentialServiceImpl
 import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.castor.sql.repository.{JdbcDIDOperationRepository, TransactorLayer}
+import io.iohk.atala.castor.sql.repository.{DbConfig => CastorDbConfig}
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
 import io.iohk.atala.pollux.core.repository.CredentialRepository
 import io.iohk.atala.pollux.core.service.CredentialService
 import io.iohk.atala.pollux.sql.repository.JdbcCredentialRepository
+import io.iohk.atala.pollux.sql.repository.{DbConfig => PolluxDbConfig}
 import io.iohk.atala.agent.server.jobs.*
 import zio.*
 import zio.config.typesafe.TypesafeConfigSource
@@ -323,41 +325,55 @@ object HttpModule {
 }
 
 object RepoModule {
+
+  val castorDbConfigLayer: TaskLayer[CastorDbConfig] = {
+    val dbConfigLayer = ZLayer.fromZIO {
+      ZIO.service[AppConfig].map(_.castor.database) map { config =>
+        CastorDbConfig(
+          username = config.username,
+          password = config.password,
+          jdbcUrl = s"jdbc:postgresql://${config.host}:${config.port}/${config.databaseName}"
+        )
+      }
+    }
+    SystemModule.configLayer >>> dbConfigLayer
+  }
+
   val castorTransactorLayer: TaskLayer[Transactor[Task]] = {
     val transactorLayer = ZLayer.fromZIO {
-      ZIO.service[AppConfig].map(_.castor.database).flatMap { config =>
+      ZIO.service[CastorDbConfig].flatMap { config =>
         Dispatcher[Task].allocated.map { case (dispatcher, _) =>
           given Dispatcher[Task] = dispatcher
-          TransactorLayer.hikari[Task](
-            TransactorLayer.DbConfig(
-              username = config.username,
-              password = config.password,
-              jdbcUrl = s"jdbc:postgresql://${config.host}:${config.port}/${config.databaseName}"
-            )
-          )
+          TransactorLayer.hikari[Task](config)
         }
       }
     }.flatten
-    SystemModule.configLayer >>> transactorLayer
+    castorDbConfigLayer >>> transactorLayer
+  }
+
+  val polluxDbConfigLayer: TaskLayer[PolluxDbConfig] = {
+    val dbConfigLayer = ZLayer.fromZIO {
+      ZIO.service[AppConfig].map(_.pollux.database) map { config =>
+        PolluxDbConfig(
+          username = config.username,
+          password = config.password,
+          jdbcUrl = s"jdbc:postgresql://${config.host}:${config.port}/${config.databaseName}"
+        )
+      }
+    }
+    SystemModule.configLayer >>> dbConfigLayer
   }
 
   val polluxTransactorLayer: TaskLayer[Transactor[Task]] = {
     val transactorLayer = ZLayer.fromZIO {
-      ZIO.service[AppConfig].map(_.pollux.database).flatMap { config =>
+      ZIO.service[PolluxDbConfig].flatMap { config =>
         Dispatcher[Task].allocated.map { case (dispatcher, _) =>
           given Dispatcher[Task] = dispatcher
-          io.iohk.atala.pollux.sql.repository.TransactorLayer.hikari[Task](
-            io.iohk.atala.pollux.sql.repository.TransactorLayer.DbConfig(
-              username = config.username,
-              password = config.password,
-              jdbcUrl = s"jdbc:postgresql://${config.host}:${config.port}/${config.databaseName}"
-            )
-          )
+          io.iohk.atala.pollux.sql.repository.TransactorLayer.hikari[Task](config)
         }
       }
     }.flatten
-
-    SystemModule.configLayer >>> transactorLayer
+    polluxDbConfigLayer >>> transactorLayer
   }
 
   val didOperationRepoLayer: TaskLayer[DIDOperationRepository[Task]] =
