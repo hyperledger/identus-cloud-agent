@@ -38,6 +38,12 @@ tags:
     description: Verifiable Credentials revocation REST API
   - name: Present Proof
     description: Present Proof REST API
+  # Connect
+  - name: Connection Process
+    description: API for driving connection process.
+  - name: Connections Management
+    description: State management for all existing connections, both established and pending.
+
 
 paths:
   # ----------------------------------
@@ -925,3 +931,90 @@ paths:
             application/json:
               schema:
                 $ref: "./pollux/schemas.yaml#/components/schemas/W3CPresentation"
+
+  # ----------------------------------
+  # Connect
+  # ----------------------------------
+  /connections:
+    post:
+      tags: ["Connection Process"]
+      operationId: createConnection
+      summary: Creates new connection and returns an invitation.
+      description: Returns new invitation object and creates new connection state record in `pending` state. Content of invitation depends on DIDComm protocol used, here is an example of how it would look like for `AIP 1.0 connection/v1` protocol. Once connection invitation is accepted, Agent should filter all additional attempts to accept it. We consider mult-party connections as out of scope for now.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              properties:
+                label:
+                  type: string
+                  example: "Bob from Bank ABC"
+
+      responses:
+        "200":
+          description: List of connection state objects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "./connect/schemas.yaml#/components/schemas/ConnectionInvitationResponse"
+    get:
+      tags: ["Connections Management"]
+      operationId: getConnections
+      summary: Returns a list of connections.
+      responses:
+        "200":
+          description: List of connection state objects
+          content:
+            application/json:
+              schema:
+                $ref: "./connect/schemas.yaml#/components/schemas/ConnectionStateCollection"
+  /connections/{connectionId}:
+    get:
+      tags: ["Connections Management"]
+      parameters:
+        - $ref: "./connect/schemas.yaml#/components/parameters/connectionId"
+      operationId: getConnection
+      summary: Returns an existing connection record by id.
+      responses:
+        "200":
+          description: Connection state record
+          content:
+            application/json:
+              schema:
+                $ref: "./connect/schemas.yaml#/components/schemas/ConnectionState"
+        "404":
+          description: Connection state record not found for given `connectionId`
+    delete:
+      tags: ["Connections Management"]
+      parameters:
+        - $ref: "./connect/schemas.yaml#/components/parameters/connectionId"
+      operationId: deleteConnection
+      summary: Deletes existing connection record.
+      description: Just deletes connection state in the Agent, it does not include notifing other party that connection is deleted. We should consider this feature for the future. If additional action is attempted over deleted connection, it should thow error (no matter which side deleted connection).
+      responses:
+        "200":
+          description: Successful delete
+        "404":
+          description: Connection state record not found for given `connectionId`
+  /connections/accept:
+    post:
+      tags: ["Connections Process"]
+      operationId: receiveConnectionInvitation
+      summary:  Accepts externally received invitation.
+      description: Creates new connection state record in `pending` state. It is assumed that application would first decode and validate the invitation. When it is accepted in the application side, it should be submitted in raw format to this API.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "./connect/schemas.yaml#/components/schemas/ConnectionInvitation"
+      responses:
+        "200":
+          description: Invitation successfully accepted.
+          content:
+            application/json:
+              schema:
+                $ref: "./connect/schemas.yaml#/components/schemas/ConnectionState"
