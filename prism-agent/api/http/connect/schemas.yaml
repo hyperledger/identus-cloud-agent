@@ -1,0 +1,107 @@
+components:
+  parameters:
+    connectionId:
+      in: path
+      name: connectionId
+      required: true
+      description: Id of connection state record.
+      schema:
+        type: string
+  schemas:
+    ConnectionState:
+      type: object
+      required:
+        - self
+        - kind
+        - connectionId
+        - state
+        - createdAt
+      properties:
+        self:
+          type: string
+          example: https://atala-prism-products.io/connections/ABCD-1234
+        kind:
+          type: string
+          example: ConnectionState
+        connectionId:
+          type: string
+          example: "12345-9876"
+        label:
+          type: string
+          example: "Peter"
+        myDid:
+          type: string
+          example: "did:prism:12345"
+        theirDid:
+          type: string
+          example: "did:peer:12345"
+        state:
+          type: string
+          enum: ["pending", "success", "failed"]
+        createdAt:
+          type: string
+          format: date-time
+          example: 2021-10-31T09:22:23Z
+        updatedAt:
+          type: string
+          format: date-time
+          example: 2021-12-31T13:59:60Z
+    ConnectionStateCollection:
+      type: object
+      properties:
+        self:
+          type: string
+          example: https://atala-prism-products.io/connections
+        kind:
+          type: string
+          example: Collection
+        contents:
+          type: array
+          items:
+            $ref: "#/components/schemas/ConnectionState"
+    ConnectionInvitation:
+      type: object
+      required:
+        - "@id"
+        - "@type"
+      properties:
+        "@id":
+          type: string
+          example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+        "@type":
+          type: string
+          example: "https://didcomm.org/connections/1.0/invitation"
+        did:
+          type: string
+          description: not required if serviceEndpoint is present
+          example: "did:prism:1234457"
+        label:
+          type: string
+          example: "Bob from Bank ABC"
+        recipientKeys:
+          type: array
+          items:
+            type: string
+          example: ["abcd123"]
+        routingKeys:
+          type: array
+          items:
+            type: string
+          example: ["abcd123"]
+        serviceEndpoint:
+          type: string
+          example: "http://localhost:8020"
+    ConnectionInvitationResponse:
+      type: object
+      required:
+        - connectionId
+        - invitationUrl
+      properties:
+        connectionId:
+          type: string
+          example: "12345-9876"
+        invitation:
+          $ref: "#/components/schemas/ConnectionInvitation"
+        invitationUrl:
+          type: string
+          example: http://localhost:8020/invite?c_i=eyJAaWQiOiIzZmE4NWY2NC01NzE3LTQ1NjItYjNmYy0yYzk2M2Y2NmFmYTYiLCJAdHlwZSI6Imh0dHBzOi8vZGlkY29tbS5vcmcvbXktZmFtaWx5LzEuMC9teS1tZXNzYWdlLXR5cGUiLCJkaWQiOiJXZ1d4cXp0ck5vb0c5MlJYdnhTVFd2IiwiaW1hZ2VVcmwiOiJodHRwOi8vMTkyLjE2OC41Ni4xMDEvaW1nL2xvZ28uanBnIiwibGFiZWwiOiJCb2IiLCJyZWNpcGllbnRLZXlzIjpbIkgzQzJBVnZMTXY2Z21NTmFtM3VWQWpacGZrY0pDd0R3blpuNnozd1htcVBWIl0sInJvdXRpbmdLZXlzIjpbIkgzQzJBVnZMTXY2Z21NTmFtM3VWQWpacGZrY0pDd0R3blpuNnozd1htcVBWIl0sInNlcnZpY2VFbmRwb2ludCI6Imh0dHA6Ly8xOTIuMTY4LjU2LjEwMTo4MDIwIn0=
