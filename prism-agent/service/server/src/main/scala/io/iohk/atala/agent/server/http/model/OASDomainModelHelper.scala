@@ -146,6 +146,7 @@ trait OASDomainModelHelper {
         .getOrElse(Map.empty),
       schemaId = domain.schemaId,
       validityPeriod = domain.validityPeriod,
+      automaticIssuance = domain.automaticIssuance,
       protocolState = domain.protocolState.toString(),
       publicationState = domain.publicationState.map(_.toString),
       jwtCredential = domain.issueCredentialData.map(issueCredential => "TODO: JWT credential with MT inclusion proof")

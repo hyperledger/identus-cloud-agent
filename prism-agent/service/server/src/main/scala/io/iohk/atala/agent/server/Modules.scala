@@ -335,7 +335,8 @@ object RepoModule {
             io.iohk.atala.pollux.sql.repository.DbConfig(
               username = config.username,
               password = config.password,
-              jdbcUrl = s"jdbc:postgresql://${config.host}:${config.port}/${config.databaseName}"
+              jdbcUrl = s"jdbc:postgresql://${config.host}:${config.port}/${config.databaseName}",
+              awaitConnectionThreads = 2
             )
           )
         }

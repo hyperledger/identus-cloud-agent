@@ -39,21 +39,27 @@ object BackgroundJobs {
       _ <- ZIO.logDebug(s"Running action with records => $record")
 
       _ <- record match {
-        case IssueCredentialRecord(id, _, _, _, _, _, OfferPending, _, Some(offer), _, _) =>
+        case IssueCredentialRecord(id, _, _, _, _, _, _, OfferPending, _, Some(offer), _, _) =>
           for {
             _ <- AgentCli.sendMessage(offer.makeMessage)
             credentialService <- ZIO.service[CredentialService]
             _ <- credentialService.markOfferSent(id)
           } yield ()
 
-        case IssueCredentialRecord(id, _, _, _, _, _, RequestPending, _, _, Some(request), _) =>
+        case IssueCredentialRecord(id, _, _, _, _, _, _, RequestPending, _, _, Some(request), _) =>
           for {
             _ <- sendMessage(request.makeMessage)
             credentialService <- ZIO.service[CredentialService]
             _ <- credentialService.markRequestSent(id)
           } yield ()
+        
+        case IssueCredentialRecord(id, _, _, _, _, _, Some(true), RequestReceived, _, _, _, _) =>
+          for {
+            credentialService <- ZIO.service[CredentialService]
+            _ <- credentialService.acceptCredentialRequest(id)
+          } yield ()
 
-        case IssueCredentialRecord(id, _, _, _, _, _, CredentialPending, _, _, _, Some(issue)) =>
+        case IssueCredentialRecord(id, _, _, _, _, _, _, CredentialPending, _, _, _, Some(issue)) =>
           // Generate the JWT Credential and store it in DB as an attacment to IssueCredentialData
           // Set ProtocolState to CredentialGenerated
           // Set PublicationState to PublicationPending
@@ -63,7 +69,7 @@ object BackgroundJobs {
             _ <- credentialService.markCredentialPublicationPending(id)
           } yield ()
 
-        case IssueCredentialRecord(id, _, _, _, _, _, CredentialGenerated, Some(PublicationPending), _, _, Some(issue)) =>
+        case IssueCredentialRecord(id, _, _, _, _, _, _, CredentialGenerated, Some(PublicationPending), _, _, Some(issue)) =>
           // TODO: change pattern matching to PublicationState.Published once publication is integrated
           // Send the IssueCredentialRequest to the holder (it contains the MT Inclusion Proof)
           // Set ProtocolState to CredentialSent
@@ -73,8 +79,8 @@ object BackgroundJobs {
             _ <- credentialService.markCredentialSent(id)
           } yield ()
 
-        case IssueCredentialRecord(id, _, _, _, _, _, ProblemReportPending, _, _, _, _) => ???
-        case IssueCredentialRecord(id, _, _, _, _, _, _, _, _, _, _)                    => ZIO.unit
+        case IssueCredentialRecord(id, _, _, _, _, _, _, ProblemReportPending, _, _, _, _) => ???
+        case IssueCredentialRecord(id, _, _, _, _, _, _, _, _, _, _, _)                    => ZIO.unit
       }
     } yield ()
 

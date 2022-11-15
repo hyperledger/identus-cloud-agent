@@ -168,6 +168,9 @@ components:
           description: Claims that will be associated with given verifiable credentials
           additionalProperties:
             type: string
+        automaticIssuance:
+          type: boolean
+          default: true
 
     IssueCredentialRecord:
       description: An issue credential record to store the state of the protocol execution
