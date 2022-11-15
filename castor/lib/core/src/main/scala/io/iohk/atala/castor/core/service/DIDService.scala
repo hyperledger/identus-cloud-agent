@@ -1,76 +1,79 @@
 package io.iohk.atala.castor.core.service
 
-import io.iohk.atala.castor.core.model.did.{
-  DIDDocument,
-  PrismDIDV1,
-  PublishedDIDOperation,
-  PublishedDIDOperationOutcome
-}
+import io.iohk.atala.castor.core.model.did.{PrismDID, PublishedDIDOperationOutcome, SignedPrismDIDOperation}
 import zio.*
 import io.iohk.atala.castor.core.model.ProtoModelHelper
 import io.iohk.atala.castor.core.model.error.DIDOperationError
-import io.iohk.atala.castor.core.repository.DIDOperationRepository
-import io.iohk.atala.castor.core.util.DIDOperationValidator
-import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
 import io.iohk.atala.prism.crypto.Sha256
-import io.iohk.atala.shared.models.HexStrings.HexString
-import io.iohk.atala.iris.proto as iris_proto
+import io.iohk.atala.shared.models.HexStrings.*
+import io.iohk.atala.prism.protos.{node_api, node_models}
+import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc.NodeServiceStub
+import io.iohk.atala.prism.protos.node_models.OperationOutput.{OperationMaybe, Result}
+
+import scala.collection.immutable.{AbstractSeq, ArraySeq, LinearSeq}
 
 trait DIDService {
-  def createPublishedDID(operation: PublishedDIDOperation.Create): IO[DIDOperationError, PublishedDIDOperationOutcome]
-}
-
-object MockDIDService {
-  val layer: ULayer[DIDService] = ZLayer.succeed {
-    new DIDService {
-      def createPublishedDID(
-          operation: PublishedDIDOperation.Create
-      ): IO[DIDOperationError, PublishedDIDOperationOutcome] =
-        ZIO.fail(DIDOperationError.InvalidArgument("mocked error"))
-    }
-  }
+  def createPublishedDID(operation: SignedPrismDIDOperation.Create): IO[DIDOperationError, PublishedDIDOperationOutcome]
 }
 
 object DIDServiceImpl {
-  val layer: URLayer[IrisServiceStub & DIDOperationValidator & DIDOperationRepository[Task], DIDService] =
-    ZLayer.fromFunction(DIDServiceImpl(_, _, _))
+  val layer: URLayer[NodeServiceStub, DIDService] =
+    ZLayer.fromFunction(DIDServiceImpl(_))
 }
 
-private class DIDServiceImpl(
-    irisClient: IrisServiceStub,
-    operationValidator: DIDOperationValidator,
-    didOpRepo: DIDOperationRepository[Task]
-) extends DIDService,
-      ProtoModelHelper {
+private class DIDServiceImpl(nodeClient: NodeServiceStub) extends DIDService, ProtoModelHelper {
 
   override def createPublishedDID(
-      operation: PublishedDIDOperation.Create
+      signedOperation: SignedPrismDIDOperation.Create
   ): IO[DIDOperationError, PublishedDIDOperationOutcome] = {
-    val prismDID = PrismDIDV1.fromCreateOperation(operation)
-    val irisOpProto = iris_proto.dlt.IrisOperation(
-      operation = iris_proto.dlt.IrisOperation.Operation.CreateDid(operation.toProto)
+    val operationRequest = node_api.ScheduleOperationsRequest(
+      signedOperations = Seq(
+        node_models.SignedAtalaOperation(
+          signedWith = signedOperation.signedWithKey,
+          signature = signedOperation.signature.toArray.toProto,
+          operation = Some(node_models.AtalaOperation(signedOperation.operation.toProto))
+        )
+      )
     )
     for {
-      _ <- ZIO.fromEither(operationValidator.validate(operation))
-      confirmedOps <- didOpRepo
-        .getConfirmedPublishedDIDOperations(prismDID)
-        .mapError(DIDOperationError.InternalErrorDB.apply)
-      _ <- confirmedOps
-        .map(_.operation)
-        .collectFirst { case op: PublishedDIDOperation.Create => op }
-        .fold(ZIO.unit)(_ =>
-          ZIO.fail(
+      operationOutput <- ZIO
+        .fromFuture(_ => nodeClient.scheduleOperations(operationRequest))
+        .mapBoth(DIDOperationError.DLTProxyError.apply, _.outputs)
+        .map {
+          case output :: Nil => Right(output)
+          case _ => Left(DIDOperationError.UnexpectedDLTResult("createDID operation result must have exactly 1 output"))
+        }
+        .absolve
+      operationId <- ZIO.fromEither {
+        operationOutput.operationMaybe match {
+          case OperationMaybe.OperationId(id) => Right(id.toByteArray)
+          case OperationMaybe.Empty =>
+            Left(DIDOperationError.UnexpectedDLTResult("createDID operation result does not contain operation detail"))
+          case OperationMaybe.Error(e) =>
+            Left(DIDOperationError.UnexpectedDLTResult(s"createDID operation result was not successful: $e"))
+        }
+      }
+      suffix <- ZIO.fromEither {
+        operationOutput.result match {
+          case Result.CreateDidOutput(createDIDOutput) => Right(createDIDOutput.didSuffix)
+          case _ =>
+            Left(
+              DIDOperationError.UnexpectedDLTResult("createDID operation result must have a type of CreateDIDOutput")
+            )
+        }
+      }
+      did <- ZIO
+        .fromTry(HexString.fromString(suffix))
+        .mapBoth(
+          _ =>
             DIDOperationError
-              .InvalidPrecondition(s"PublishedDID with suffix ${prismDID.did} has already been created and confirmed")
-          )
+              .UnexpectedDLTResult(s"createDID operation result must have suffix formatted in hex string: $suffix"),
+          suffix => PrismDID.buildCanonical(suffix.toByteArray)
         )
-      irisOutcome <- ZIO
-        .fromFuture(_ => irisClient.scheduleOperation(irisOpProto))
-        .mapError(DIDOperationError.DLTProxyError.apply)
     } yield PublishedDIDOperationOutcome(
-      did = prismDID,
-      operation = operation,
-      operationId = HexString.fromByteArray(irisOutcome.operationId.toByteArray)
+      did = did,
+      operation = signedOperation.operation,
+      operationId = ArraySeq.from(operationId)
     )
   }
 

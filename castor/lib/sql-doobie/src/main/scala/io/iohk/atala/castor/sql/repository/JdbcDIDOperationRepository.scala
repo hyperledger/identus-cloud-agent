@@ -2,7 +2,7 @@ package io.iohk.atala.castor.sql.repository
 
 import doobie.*
 import doobie.implicits.*
-import io.iohk.atala.castor.core.model.did.{ConfirmedPublishedDIDOperation, PrismDIDV1}
+import io.iohk.atala.castor.core.model.did.{ConfirmedPublishedDIDOperation, PrismDID}
 import io.iohk.atala.castor.core.repository.DIDOperationRepository
 import io.iohk.atala.castor.sql.model.SqlModelHelper
 import io.iohk.atala.castor.sql.repository.Utils.connectionIOSafe
@@ -14,8 +14,8 @@ import zio.interop.catz.*
 
 class JdbcDIDOperationRepository(xa: Transactor[Task]) extends DIDOperationRepository[Task], SqlModelHelper {
 
-  override def getConfirmedPublishedDIDOperations(did: PrismDIDV1): Task[Seq[ConfirmedPublishedDIDOperation]] = {
-    val query = DIDOperationDAO.getConfirmedPublishedDIDOperation(did.suffix)
+  override def getConfirmedPublishedDIDOperations(did: PrismDID): Task[Seq[ConfirmedPublishedDIDOperation]] = {
+    val query = DIDOperationDAO.getConfirmedPublishedDIDOperation(did.asCanonical.suffix.value)
     connectionIOSafe(query)
       .transact(xa)
       .absolve

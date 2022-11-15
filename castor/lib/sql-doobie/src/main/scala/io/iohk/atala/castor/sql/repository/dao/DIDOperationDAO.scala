@@ -10,7 +10,7 @@ import java.time.Instant
 
 private[sql] object DIDOperationDAO {
 
-  def getConfirmedPublishedDIDOperation(didSuffix: HexString): ConnectionIO[Seq[ConfirmedPublishedDIDOperationRow]] = {
+  def getConfirmedPublishedDIDOperation(didSuffix: String): ConnectionIO[Seq[ConfirmedPublishedDIDOperationRow]] = {
     sql"""
        | SELECT
        |   o.ledger_name,

@@ -9,11 +9,11 @@ object PrismDIDSpec extends ZIOSpecDefault {
 
   override def spec = suite("PrismDID")(prismDIDV1Suite, longFormPrismDIDV1Suite) @@ TestAspect.samples(20)
 
-  private val createOpDummy = PublishedDIDOperation.Create(
+  private val createOpDummy = PrismDIDOperation.Create(
     updateCommitment = HexString.fromStringUnsafe("00"),
     recoveryCommitment = HexString.fromStringUnsafe("00"),
     storage = DIDStorage.Cardano("testnet"),
-    document = DIDDocument(
+    document = DIDData(
       publicKeys = Nil,
       services = Nil
     )
