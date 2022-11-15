@@ -45,7 +45,8 @@ lazy val D = new {
   val zioSLF4J = Def.setting("dev.zio" %% "zio-logging-slf4j" % V.zioLogging)
   val zioJson = Def.setting("dev.zio" %% "zio-json" % V.zioJson)
 
-  // val zioHttp = Def.setting("dev.zio" %% "zio-http" % V.zioHttp) // FIXME USE THIS ONE
+  // TODO waiting for https://github.com/zio/zio-http/pull/1774 to use zio-http
+  // val zioHttp = Def.setting("dev.zio" %% "zio-http" % "0.0.1") // FIXME USE THIS ONE
   val zioHttp = Def.setting("io.d11" %% "zhttp" % V.zioHttp) // REMOVE (this is the old name)
 
   val circeCore = Def.setting("io.circe" %% "circe-core" % V.circe)
@@ -164,7 +165,6 @@ lazy val protocolIssueCredential = project
   .settings(libraryDependencies += D.munitZio.value)
   .dependsOn(models)
 
-
 lazy val protocolPresentProof = project
   .in(file("protocol-present-proof"))
   .settings(name := "mercury-protocol-present-proof")
@@ -203,7 +203,7 @@ lazy val agent = project // maybe merge into models
   .in(file("agent"))
   .settings(name := "mercury-agent-core")
   .settings(libraryDependencies += "com.google.zxing" % "core" % "3.5.0")
-  .settings(libraryDependencies ++= Seq(D.zioLog.value, D.zioHttp.value)) // , D.zioSLF4J.value))
+  .settings(libraryDependencies ++= Seq(D.zioLog.value)) // , D.zioSLF4J.value))
   .dependsOn(
     models,
     resolver,
@@ -216,12 +216,19 @@ lazy val agent = project // maybe merge into models
     protocolPresentProof,
   )
 
-/** Demos agents and services implementation with didcommx */
+/** agents implementation with didcommx */
 lazy val agentDidcommx = project
   .in(file("agent-didcommx"))
   .settings(name := "mercury-agent-didcommx")
   .settings(libraryDependencies += D.didcommx.value)
   .dependsOn(agent)
+
+/** Demos agents and services implementation with didcommx */
+lazy val agentCliDidcommx = project
+  .in(file("agent-cli-didcommx"))
+  .settings(name := "mercury-agent-cli-didcommx")
+  .settings(libraryDependencies += D.zioHttp.value)
+  .dependsOn(agentDidcommx)
 
 ///** TODO Demos agents and services implementation with did-scala */
 lazy val agentDidScala =

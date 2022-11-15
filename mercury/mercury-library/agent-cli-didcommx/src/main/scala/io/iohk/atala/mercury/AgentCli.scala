@@ -321,6 +321,7 @@ object AgentCli extends ZIOAppDefault {
     } yield (peer)
 
     didCommLayer = agentLayer(agentDID)
+    layers: ZLayer[Any, Nothing, AgentServiceAny & HttpClient] = didCommLayer ++ HttpClientZhttp.layer
 
     _ <- options(
       Seq(
@@ -328,7 +329,7 @@ object AgentCli extends ZIOAppDefault {
         "Show DID" -> Console.printLine(agentDID),
         "Get DID Document" -> Console.printLine("DID Document:") *> Console.printLine(agentDID.getDIDDocument),
         "Start WebServer endpoint" -> startEndpoint.provide(didCommLayer),
-        "Ask for Mediation Coordinate" -> askForMediation.provide(didCommLayer),
+        "Ask for Mediation Coordinate" -> askForMediation.provide(layers),
         "Generate login invitation" -> generateLoginInvitation.provide(didCommLayer),
         "Login with DID" -> loginInvitation.provide(didCommLayer),
         "Propose Credential" -> proposeAndSendCredential.provide(didCommLayer),
