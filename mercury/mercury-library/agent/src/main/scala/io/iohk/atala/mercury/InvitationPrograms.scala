@@ -1,7 +1,6 @@
 package io.iohk.atala.mercury
 
 import zio.*
-// import zhttp.service.Client
 import io.circe.Json.*
 import io.circe.parser.*
 import io.circe.JsonObject

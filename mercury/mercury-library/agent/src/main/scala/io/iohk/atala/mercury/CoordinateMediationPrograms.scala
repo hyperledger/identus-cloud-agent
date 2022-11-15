@@ -2,8 +2,6 @@ package io.iohk.atala.mercury
 
 import scala.util.chaining._
 import zio._
-// import zhttp.service.Client
-// import zhttp.http._
 import io.circe.Json._
 import io.circe.syntax._
 import io.circe.parser._
