@@ -3,7 +3,7 @@ name: Prism node client testing workflow
 # Cancel previously running workflows if new commit pushed to the branch
 # this will help to push fixes earlier and stop previous workflows
 concurrency:
-  group: ${{ github.head_ref }}${{ github.ref }}-prism-node
+  group: ${{ github.head_ref }}${{ github.ref }}-prism-node-client
   cancel-in-progress: true
 
 on:
@@ -11,13 +11,13 @@ on:
   # Run with each PR opened vs Mercury
   pull_request:
     paths:
-      - ".github/workflows/prism-node.yml"
+      - ".github/workflows/prism-node-client.yml"
       - "prism-node/client/**"
   push:
     branches:
       - "main"
     paths:
-      - ".github/workflows/prism-node.yml"
+      - ".github/workflows/prism-node-client.yml"
       - "prism-node/client/**"
 
 env:
@@ -31,7 +31,7 @@ defaults:
 
 jobs:
   build-and-test-prism-node-client:
-    name: "Build and test Iris client"
+    name: "Build and test Prism node client"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
