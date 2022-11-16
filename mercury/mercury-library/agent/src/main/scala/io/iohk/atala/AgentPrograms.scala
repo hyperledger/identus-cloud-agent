@@ -1,8 +1,6 @@
 package io.iohk.atala
 
 import zio._
-import zhttp.service.Client
-import zhttp.http._
 
 import io.circe._
 import io.circe.Json._
@@ -54,16 +52,13 @@ object AgentPrograms {
     _ <- Console.printLine("Sending bytes ...")
     jsonString = encryptedMsg.string
     // HTTP
-    res <- Client.request(
+    httpClient <- ZIO.service[HttpClient]
+    res <- httpClient.postDIDComm(
       url = "http://localhost:8080",
-      method = Method.POST,
-      headers = Headers("content-type" -> MediaTypes.contentTypeEncrypted),
-      content = Body.fromChunk(Chunk.fromArray(jsonString.getBytes)),
-      // ssl = ClientSSLOptions.DefaultSSL,
+      data = jsonString
     )
-    data <- res.body.asString
-    _ <- Console.printLine("Receiving the message ..." + data)
-    messageReceived <- bob.unpack(data)
+    _ <- Console.printLine("Receiving the message ..." + res.bodyAsString)
+    messageReceived <- bob.unpack(res.bodyAsString)
     _ <- Console.printLine("Unpacking and decrypting the received message ...")
     _ <- Console.printLine(
       "\n*********************************************************************************************************************************\n"
@@ -101,15 +96,12 @@ object AgentPrograms {
     // HTTP
 
     alice <- ZIO.service[DidComm]
-    res <- Client.request(
+    httpClient <- ZIO.service[HttpClient]
+    res <- httpClient.postDIDComm(
       url = "http://localhost:8080",
-      method = Method.POST,
-      headers = Headers("content-type" -> MediaTypes.contentTypeEncrypted),
-      content = Body.fromChunk(Chunk.fromArray(jsonString.getBytes)),
-      // ssl = ClientSSLOptions.DefaultSSL,
+      data = jsonString
     )
-    data <- res.body.asString
-    _ <- Console.printLine(data)
+    _ <- Console.printLine(res.bodyAsString)
   } yield ()
 
 }

@@ -7,7 +7,16 @@ info:
     name: Core DID
     email: atala-coredid@iohk.io
 servers:
-  - url: "http://localhost/prism-agent"
+  - url: "https://k8s-dev.atalaprism.io/prism-agent/"
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: apikey
+security:
+  - ApiKeyAuth: []
 tags:
   # Castor
   - name: DID
