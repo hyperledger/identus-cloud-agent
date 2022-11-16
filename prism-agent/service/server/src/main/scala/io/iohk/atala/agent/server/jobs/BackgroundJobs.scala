@@ -48,7 +48,7 @@ object BackgroundJobs {
       _ <- ZIO.logDebug(s"Running action with records => $record")
       _ <- record match {
         // Offer should be sent from Issuer to Holder
-        case IssueCredentialRecord(id, _, _, _, _, _, Role.Issuer, _, _, _, _, OfferPending, _, Some(offer), _, _) =>
+        case IssueCredentialRecord(id, _, _, _, _, Role.Issuer, _, _, _, _, OfferPending, _, Some(offer), _, _) =>
           for {
             _ <- AgentCli.sendMessage(offer.makeMessage)
             credentialService <- ZIO.service[CredentialService]
@@ -64,7 +64,7 @@ object BackgroundJobs {
           } yield ()
 
         // 'automaticIssuance' is TRUE. Issuer automatically accepts the Request
-        case IssueCredentialRecord(id, _, _, Role.Issuer, _, _, Some(true), _, RequestReceived, _, _, _, _) =>
+        case IssueCredentialRecord(id, _, _, _, _, Role.Issuer, _, _, Some(true), _, RequestReceived, _, _, _, _) =>
           for {
             credentialService <- ZIO.service[CredentialService]
             _ <- credentialService.acceptCredentialRequest(id)
@@ -100,6 +100,8 @@ object BackgroundJobs {
         // Credential has been generated and can be sent directly to the Holder
         case IssueCredentialRecord(
               id,
+              _,
+              _,
               _,
               _,
               Role.Issuer,
