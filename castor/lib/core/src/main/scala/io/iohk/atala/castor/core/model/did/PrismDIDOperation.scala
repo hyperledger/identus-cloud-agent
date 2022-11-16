@@ -15,7 +15,7 @@ object SignedPrismDIDOperation {
       extends SignedPrismDIDOperation
 }
 
-final case class PublishedDIDOperationOutcome(
+final case class ScheduleDIDOperationOutcome(
     did: PrismDID,
     operation: PrismDIDOperation,
     operationId: ArraySeq[Byte]

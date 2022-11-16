@@ -1,6 +1,6 @@
 package io.iohk.atala.castor.core.service
 
-import io.iohk.atala.castor.core.model.did.{PrismDID, PublishedDIDOperationOutcome, SignedPrismDIDOperation}
+import io.iohk.atala.castor.core.model.did.{PrismDID, ScheduleDIDOperationOutcome, SignedPrismDIDOperation}
 import zio.*
 import io.iohk.atala.castor.core.model.ProtoModelHelper
 import io.iohk.atala.castor.core.model.error.DIDOperationError
@@ -13,7 +13,7 @@ import io.iohk.atala.prism.protos.node_models.OperationOutput.{OperationMaybe, R
 import scala.collection.immutable.{AbstractSeq, ArraySeq, LinearSeq}
 
 trait DIDService {
-  def createPublishedDID(operation: SignedPrismDIDOperation.Create): IO[DIDOperationError, PublishedDIDOperationOutcome]
+  def createPublishedDID(operation: SignedPrismDIDOperation.Create): IO[DIDOperationError, ScheduleDIDOperationOutcome]
 }
 
 object DIDServiceImpl {
@@ -25,7 +25,7 @@ private class DIDServiceImpl(nodeClient: NodeServiceStub) extends DIDService, Pr
 
   override def createPublishedDID(
       signedOperation: SignedPrismDIDOperation.Create
-  ): IO[DIDOperationError, PublishedDIDOperationOutcome] = {
+  ): IO[DIDOperationError, ScheduleDIDOperationOutcome] = {
     val operationRequest = node_api.ScheduleOperationsRequest(
       signedOperations = Seq(
         node_models.SignedAtalaOperation(
@@ -70,7 +70,7 @@ private class DIDServiceImpl(nodeClient: NodeServiceStub) extends DIDService, Pr
               .UnexpectedDLTResult(s"createDID operation result must have suffix formatted in hex string: $suffix"),
           suffix => PrismDID.buildCanonical(suffix.toByteArray)
         )
-    } yield PublishedDIDOperationOutcome(
+    } yield ScheduleDIDOperationOutcome(
       did = did,
       operation = signedOperation.operation,
       operationId = ArraySeq.from(operationId)
