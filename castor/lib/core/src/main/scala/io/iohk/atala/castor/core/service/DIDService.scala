@@ -64,12 +64,19 @@ private class DIDServiceImpl(nodeClient: NodeServiceStub) extends DIDService, Pr
       }
       did <- ZIO
         .fromTry(HexString.fromString(suffix))
-        .mapBoth(
-          _ =>
-            DIDOperationError
-              .UnexpectedDLTResult(s"createDID operation result must have suffix formatted in hex string: $suffix"),
-          suffix => PrismDID.buildCanonical(suffix.toByteArray)
+        .mapError(_ =>
+          DIDOperationError
+            .UnexpectedDLTResult(s"createDID operation result must have suffix formatted in hex string: $suffix")
         )
+        .map(suffix =>
+          PrismDID
+            .buildCanonical(suffix.toByteArray)
+            .left
+            .map(e =>
+              DIDOperationError.UnexpectedDLTResult(s"createDID operation result must have a valid DID suffix: $e")
+            )
+        )
+        .absolve
     } yield ScheduleDIDOperationOutcome(
       did = did,
       operation = signedOperation.operation,
