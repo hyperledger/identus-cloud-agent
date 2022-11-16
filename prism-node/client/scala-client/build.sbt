@@ -7,11 +7,14 @@ inThisBuild(
     scalaVersion := "3.2.0",
     fork := true,
     run / connectInput := true,
-    versionScheme := Some("semver-spec"),
-    githubOwner := "input-output-hk",
-    githubRepository := "atala-prism-building-blocks",
-    githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN")
+    versionScheme := Some("semver-spec")
   )
+)
+
+val commonSettings = Seq(
+  githubOwner := "input-output-hk",
+  githubRepository := "atala-prism-building-blocks",
+  githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN")
 )
 
 // Custom keys
@@ -20,6 +23,7 @@ ThisBuild / apiBaseDirectory := baseDirectory.value / "../../api"
 
 lazy val root = project
   .in(file("."))
+  .settings(commonSettings)
   .settings(
     name := "prism-node-client",
     libraryDependencies ++= rootDependencies,
