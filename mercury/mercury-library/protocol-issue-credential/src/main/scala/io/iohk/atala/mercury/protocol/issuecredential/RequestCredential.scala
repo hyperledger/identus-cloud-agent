@@ -16,7 +16,7 @@ final case class RequestCredential(
     thid: Option[String] = None,
     from: DidId,
     to: DidId,
-) {
+) extends ReadAttachmentsUtils {
 
   def makeMessage: Message = Message(
     id = this.id,
@@ -31,18 +31,36 @@ final case class RequestCredential(
 object RequestCredential {
 
   import AttachmentDescriptor.attachmentDescriptorEncoderV2
-
   given Encoder[RequestCredential] = deriveEncoder[RequestCredential]
-
   given Decoder[RequestCredential] = deriveDecoder[RequestCredential]
 
   def `type`: PIURI = "https://didcomm.org/issue-credential/2.0/request-credential"
+
+  def build[A](
+      fromDID: DidId,
+      toDID: DidId,
+      thid: Option[String] = None,
+      credentials: Map[String, A] = Map.empty,
+  )(using Encoder[A]): RequestCredential = {
+    val aux = credentials.map { case (formatName, singleCredential) =>
+      val attachment = AttachmentDescriptor.buildAttachment(payload = singleCredential)
+      val credentialFormat: CredentialFormat = CredentialFormat(attachment.id, formatName)
+      (credentialFormat, attachment)
+    }
+    RequestCredential(
+      thid = thid,
+      from = fromDID,
+      to = toDID,
+      body = Body(formats = aux.keys.toSeq),
+      attachments = aux.values.toSeq
+    )
+  }
 
   final case class Body(
       goal_code: Option[String] = None,
       comment: Option[String] = None,
       formats: Seq[CredentialFormat] = Seq.empty[CredentialFormat]
-  )
+  ) extends BodyUtils
 
   object Body {
     given Encoder[Body] = deriveEncoder[Body]
