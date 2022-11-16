@@ -221,6 +221,7 @@ lazy val agentDidcommx = project
   .in(file("agent-didcommx"))
   .settings(name := "mercury-agent-didcommx")
   .settings(libraryDependencies += D.didcommx.value)
+  .settings(libraryDependencies += D.munitZio.value)
   .dependsOn(agent)
 
 /** Demos agents and services implementation with didcommx */
