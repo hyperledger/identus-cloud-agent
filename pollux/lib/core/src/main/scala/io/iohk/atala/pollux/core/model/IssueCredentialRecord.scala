@@ -13,6 +13,7 @@ final case class IssueCredentialRecord(
     subjectId: String,
     validityPeriod: Option[Double] = None,
     automaticIssuance: Option[Boolean],
+    awaitConfirmation: Option[Boolean],
     protocolState: ProtocolState,
     publicationState: Option[PublicationState],
     offerCredentialData: Option[OfferCredential],

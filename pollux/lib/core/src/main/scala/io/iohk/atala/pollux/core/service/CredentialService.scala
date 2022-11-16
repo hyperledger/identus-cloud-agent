@@ -70,7 +70,8 @@ trait CredentialService {
       schemaId: Option[String],
       claims: Map[String, String],
       validityPeriod: Option[Double] = None,
-      automaticIssuance: Option[Boolean]
+      automaticIssuance: Option[Boolean],
+      awaitConfirmation: Option[Boolean]
   ): IO[IssueCredentialError, IssueCredentialRecord]
 
   def getIssueCredentialRecords(): IO[IssueCredentialError, Seq[IssueCredentialRecord]]
@@ -138,7 +139,8 @@ private class CredentialServiceImpl(
       schemaId: Option[String],
       claims: Map[String, String],
       validityPeriod: Option[Double],
-      automaticIssuance: Option[Boolean]
+      automaticIssuance: Option[Boolean],
+      awaitConfirmation: Option[Boolean]
   ): IO[IssueCredentialError, IssueCredentialRecord] = {
     for {
       offer <- ZIO.succeed(createDidCommOfferCredential(claims, thid, subjectId))
@@ -151,6 +153,7 @@ private class CredentialServiceImpl(
           subjectId,
           validityPeriod,
           automaticIssuance,
+          awaitConfirmation,
           IssueCredentialRecord.ProtocolState.OfferPending,
           None,
           offerCredentialData = Some(offer),
@@ -179,6 +182,7 @@ private class CredentialServiceImpl(
           offer.to.value,
           None,
           automaticIssuance = None,
+          awaitConfirmation = None,
           ProtocolState.OfferReceived,
           None,
           offerCredentialData = Some(offer),
