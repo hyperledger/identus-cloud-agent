@@ -19,22 +19,22 @@ import org.didcommx.didcomm.message.Attachment.Data.Json
 
 }
 
-@main def AgentClientCoordinateMediationWithRootsId() = {
-  val env = ChannelFactory.auto ++ EventLoopGroup.auto()
-  val mediatorURL = "http://localhost:8000"
-  val app = CoordinateMediationPrograms
-    .senderMediationRequestProgram(mediatorURL)
-    .provide(AgentService.charlie, HttpClientZhttp.layer)
+// @main def AgentClientCoordinateMediationWithRootsId() = {
+//   val env = ChannelFactory.auto ++ EventLoopGroup.auto()
+//   val mediatorURL = "http://localhost:8000"
+//   val app = CoordinateMediationPrograms
+//     .senderMediationRequestProgram(mediatorURL)
+//     .provide(AgentService.charlie, HttpClientZhttp.layer)
 
-  Unsafe.unsafe { implicit u => Runtime.default.unsafe.run(app).getOrThrowFiberFailure() }
+//   Unsafe.unsafe { implicit u => Runtime.default.unsafe.run(app).getOrThrowFiberFailure() }
 
-}
+// }
 
-@main def AgentClientCoordinateMediation() = {
-  val env = ChannelFactory.auto ++ EventLoopGroup.auto()
-  val mediatorURL = "http://localhost:8080"
-  val app = CoordinateMediationPrograms
-    .senderMediationRequestProgram(mediatorURL)
-    .provide(AgentService.charlie, HttpClientZhttp.layer)
-  Unsafe.unsafe { implicit u => Runtime.default.unsafe.run(app).getOrThrowFiberFailure() }
-}
+// @main def AgentClientCoordinateMediation() = {
+//   val env = ChannelFactory.auto ++ EventLoopGroup.auto()
+//   val mediatorURL = "http://localhost:8080"
+//   val app = CoordinateMediationPrograms
+//     .senderMediationRequestProgram(mediatorURL)
+//     .provide(AgentService.charlie, HttpClientZhttp.layer)
+//   Unsafe.unsafe { implicit u => Runtime.default.unsafe.run(app).getOrThrowFiberFailure() }
+// }

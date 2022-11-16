@@ -18,11 +18,12 @@ import io.iohk.atala.mercury.model.DidId
 
 final case class PeerDID(
     did: DidId,
-    keyAgreement: VerificationMaterialPeerDID[VerificationMethodTypeAgreement],
     jwkForKeyAgreement: OctetKeyPair,
-    keyAuthentication: VerificationMaterialPeerDID[VerificationMethodTypeAuthentication],
     jwkForKeyAuthentication: OctetKeyPair,
 ) {
+  def keyAgreement = PeerDID.keyAgreemenFromPublicJWK(jwkForKeyAgreement)
+  def keyAuthentication = PeerDID.keyAuthenticationFromPublicJWK(jwkForKeyAuthentication)
+
   def getSecretResolverInMemory: SecretResolverInMemory = {
     val keyIdAgreement = PeerDIDUtils.createMultibaseEncnumbasis(keyAgreement).drop(1)
     val keyIdAuthentication = PeerDIDUtils.createMultibaseEncnumbasis(keyAuthentication).drop(1)
@@ -79,39 +80,32 @@ object PeerDID {
 
   def makeNewJwkKeyEd25519: OctetKeyPair = new OctetKeyPairGenerator(Curve.Ed25519).generate()
 
+  def keyAgreemenFromPublicJWK(key: OctetKeyPair) = VerificationMaterialPeerDID[VerificationMethodTypeAgreement](
+    VerificationMaterialFormatPeerDID.JWK,
+    key.toPublicJWK,
+    VerificationMethodTypeAgreement.JSON_WEB_KEY_2020.INSTANCE
+  )
+
+  def keyAuthenticationFromPublicJWK(key: OctetKeyPair) =
+    VerificationMaterialPeerDID[VerificationMethodTypeAuthentication](
+      VerificationMaterialFormatPeerDID.JWK,
+      key.toPublicJWK,
+      VerificationMethodTypeAuthentication.JSON_WEB_KEY_2020.INSTANCE
+    )
+
   def makePeerDid(
       jwkForKeyAgreement: OctetKeyPair = makeNewJwkKeyX25519,
       jwkForKeyAuthentication: OctetKeyPair = makeNewJwkKeyEd25519,
       serviceEndpoint: Option[String] = None
   ): PeerDID = {
-
-    val keyAgreement = VerificationMaterialPeerDID[VerificationMethodTypeAgreement](
-      VerificationMaterialFormatPeerDID.JWK,
-      jwkForKeyAgreement.toPublicJWK,
-      VerificationMethodTypeAgreement.JSON_WEB_KEY_2020.INSTANCE
-    )
-
-    def keyAuthentication = VerificationMaterialPeerDID[VerificationMethodTypeAuthentication](
-      VerificationMaterialFormatPeerDID.JWK,
-      jwkForKeyAuthentication.toPublicJWK,
-      VerificationMethodTypeAuthentication.JSON_WEB_KEY_2020.INSTANCE
-    )
-
     val did = org.didcommx.peerdid.PeerDIDCreator.createPeerDIDNumalgo2(
-      List(keyAgreement).asJava,
-      List(keyAuthentication).asJava,
+      List(keyAgreemenFromPublicJWK(jwkForKeyAgreement)).asJava,
+      List(keyAuthenticationFromPublicJWK(jwkForKeyAuthentication)).asJava,
       serviceEndpoint match {
         case Some(endpoint) => Service(endpoint).asJson.noSpaces
         case None           => null
       }
     )
-
-    PeerDID(
-      DidId(did),
-      keyAgreement,
-      jwkForKeyAgreement,
-      keyAuthentication,
-      jwkForKeyAuthentication,
-    )
+    PeerDID(DidId(did), jwkForKeyAgreement, jwkForKeyAuthentication)
   }
 }
