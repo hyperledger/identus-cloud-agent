@@ -7,8 +7,6 @@ concurrency:
   cancel-in-progress: true
 
 on:
-  # Run with every push to `main` branch
-  # Run with each PR opened vs Mercury
   pull_request:
     paths:
       - ".github/workflows/prism-node-client.yml"
@@ -49,20 +47,5 @@ jobs:
         run: |
           sbt scalafmtCheckAll
 
-      - name: Build and test Prism node client
-        run: sbt test
-
-      - name: Aggregate test reports
-        if: always()
-        uses: ./.github/actions/aggregate-test-reports
-        with:
-          tests-dir: "prism-node/client/scala-client"
-
-      - name: Publish test results
-        # Publish even if the test step fails
-        if: always()
-        uses: EnricoMi/publish-unit-test-result-action@v2
-        with:
-          junit_files: "prism-node/client/scala-client/target/test-reports/**/TEST-*.xml"
-          comment_title: "Prism Node Client Test Results"
-          check_name: "Prism Node Client Test Results"
+      - name: Build Prism node client
+        run: sbt compile
