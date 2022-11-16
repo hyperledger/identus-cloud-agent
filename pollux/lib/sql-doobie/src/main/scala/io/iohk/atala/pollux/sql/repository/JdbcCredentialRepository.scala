@@ -48,12 +48,6 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
   given publicationStateGet: Get[PublicationState] = Get[String].map(PublicationState.valueOf)
   given publicationStatePut: Put[PublicationState] = Put[String].contramap(_.toString)
 
-  given claimsGet: Get[Map[String, String]] = Get[String].map(
-    decode[Map[String, String]](_)
-      .getOrElse(Map("parsingError" -> "parsingError"))
-  )
-  given claimsPut: Put[Map[String, String]] = Put[String].contramap(_.asJson.toString)
-
   given roleGet: Get[Role] = Get[String].map(Role.valueOf)
   given rolePut: Put[Role] = Put[String].contramap(_.toString)
 
@@ -78,7 +72,8 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   role,
         |   subject_id,
         |   validity_period,
-        |   claims,
+        |   automatic_issuance,
+        |   await_confirmation,
         |   protocol_state,
         |   publication_state,
         |   offer_credential_data
@@ -90,7 +85,8 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   ${record.role},
         |   ${record.subjectId},
         |   ${record.validityPeriod},
-        |   ${record.claims},
+        |   ${record.automaticIssuance},
+        |   ${record.awaitConfirmation},
         |   ${record.protocolState},
         |   ${record.publicationState},
         |   ${record.offerCredentialData}
@@ -112,7 +108,8 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   role,
         |   subject_id,
         |   validity_period,
-        |   claims,
+        |   automatic_issuance,
+        |   await_confirmation,
         |   protocol_state,
         |   publication_state,
         |   offer_credential_data,
@@ -161,7 +158,8 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   role,
         |   subject_id,
         |   validity_period,
-        |   claims,
+        |   automatic_issuance,
+        |   await_confirmation,
         |   protocol_state,
         |   publication_state,
         |   offer_credential_data,
@@ -188,7 +186,8 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   role,
         |   subject_id,
         |   validity_period,
-        |   claims,
+        |   automatic_issuance,
+        |   await_confirmation,
         |   protocol_state,
         |   publication_state,
         |   offer_credential_data,

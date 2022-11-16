@@ -1,7 +1,6 @@
 package io.iohk.atala.mercury
 
 import zio.*
-import zhttp.service.Client
 import io.circe.Json.*
 import io.circe.parser.*
 import io.circe.JsonObject
@@ -20,9 +19,9 @@ object InvitationPrograms {
 
   def getInvitationProgram(url: String) = for {
     _ <- ZIO.log("#### Get Invitation  ####")
-    res <- Client.request(url = url)
-    data <- res.body.asString
-    message = OutOfBand.parseInvitation(data)
+    client <- ZIO.service[HttpClient]
+    res <- client.get(url = url)
+    message = OutOfBand.parseInvitation(res.bodyAsString)
     _ <- ZIO.log(s"*******OutOfBand********${message.toString}")
   } yield (message)
 

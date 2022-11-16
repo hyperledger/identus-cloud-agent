@@ -1,3 +1,10 @@
+# [prism-agent-v0.2.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.1.0...prism-agent-v0.2.0) (2022-11-15)
+
+
+### Features
+
+* **prism-agent:** implement Flyway migrations from castor and pollux library and call on agent startup ([#117](https://github.com/input-output-hk/atala-prism-building-blocks/issues/117)) ([67bd340](https://github.com/input-output-hk/atala-prism-building-blocks/commit/67bd340e25e4a44118398746268ee25f5cf09477))
+
 # [prism-agent-v0.1.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.0.1...prism-agent-v0.1.0) (2022-11-11)
 
 

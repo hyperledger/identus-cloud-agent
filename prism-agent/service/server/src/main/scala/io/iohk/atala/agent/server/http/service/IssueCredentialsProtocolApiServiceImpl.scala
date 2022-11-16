@@ -32,7 +32,9 @@ class IssueCredentialsProtocolApiServiceImpl(credentialService: CredentialServic
           request.subjectId,
           request.schemaId,
           request.claims,
-          request.validityPeriod
+          request.validityPeriod,
+          request.automaticIssuance.orElse(Some(true)),
+          request.awaitConfirmation.orElse(Some(false))
         )
         .mapError(HttpServiceError.DomainError[IssueCredentialError].apply)
     } yield outcome

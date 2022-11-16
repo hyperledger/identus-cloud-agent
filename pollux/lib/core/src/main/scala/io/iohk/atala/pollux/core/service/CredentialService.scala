@@ -78,7 +78,9 @@ trait CredentialService {
       subjectId: String,
       schemaId: Option[String],
       claims: Map[String, String],
-      validityPeriod: Option[Double] = None
+      validityPeriod: Option[Double] = None,
+      automaticIssuance: Option[Boolean],
+      awaitConfirmation: Option[Boolean]
   ): IO[IssueCredentialError, IssueCredentialRecord]
 
   def getIssueCredentialRecords(): IO[IssueCredentialError, Seq[IssueCredentialRecord]]
@@ -120,7 +122,7 @@ trait CredentialService {
 
   def markRequestSent(recordId: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]]
 
-  // def markCredentialGenerated(recordId: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]]
+  def markCredentialGenerated(recordId: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]]
 
   def markCredentialSent(recordId: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]]
 
@@ -169,7 +171,9 @@ private class CredentialServiceImpl(
       subjectId: String,
       schemaId: Option[String],
       claims: Map[String, String],
-      validityPeriod: Option[Double] = None
+      validityPeriod: Option[Double],
+      automaticIssuance: Option[Boolean],
+      awaitConfirmation: Option[Boolean]
   ): IO[IssueCredentialError, IssueCredentialRecord] = {
     for {
       offer <- ZIO.succeed(createDidCommOfferCredential(claims, thid, subjectId))
@@ -183,10 +187,11 @@ private class CredentialServiceImpl(
           role = IssueCredentialRecord.Role.Issuer,
           subjectId = subjectId,
           validityPeriod = validityPeriod,
-          claims = claims,
+          automaticIssuance = automaticIssuance,
+          awaitConfirmation = awaitConfirmation,
           protocolState = IssueCredentialRecord.ProtocolState.OfferPending,
           publicationState = None,
-          offerCredentialData = None,
+          offerCredentialData = Some(offer),
           requestCredentialData = None,
           issueCredentialData = None
         )
@@ -226,7 +231,8 @@ private class CredentialServiceImpl(
           role = IssueCredentialRecord.Role.Holder,
           subjectId = offer.to.value,
           validityPeriod = None,
-          claims = Map.empty,
+          automaticIssuance = None,
+          awaitConfirmation = None,
           protocolState = IssueCredentialRecord.ProtocolState.OfferReceived,
           publicationState = None,
           offerCredentialData = Some(offer),
@@ -343,17 +349,17 @@ private class CredentialServiceImpl(
       IssueCredentialRecord.ProtocolState.RequestSent
     )
 
-  // override def markCredentialGenerated(recordId: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] =
-  //   updateCredentialRecordProtocolState(
-  //     recordId,
-  //     IssueCredentialRecord.ProtocolState.CredentialPending,
-  //     IssueCredentialRecord.ProtocolState.CredentialGenerated
-  //   )
+  override def markCredentialGenerated(recordId: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] =
+    updateCredentialRecordProtocolState(
+      recordId,
+      IssueCredentialRecord.ProtocolState.CredentialPending,
+      IssueCredentialRecord.ProtocolState.CredentialGenerated
+    )
 
   override def markCredentialSent(recordId: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] =
     updateCredentialRecordProtocolState(
       recordId,
-      IssueCredentialRecord.ProtocolState.CredentialPending,
+      IssueCredentialRecord.ProtocolState.CredentialGenerated,
       IssueCredentialRecord.ProtocolState.CredentialSent
     )
 
@@ -498,7 +504,7 @@ private class CredentialServiceImpl(
       issuanceDate: Instant
       // This function will get schema from database when it is available
   ): IO[CreateCredentialPayloadFromRecordError, W3cCredentialPayload] = {
-    val claims = record.claims.map(kv => kv._1 -> Json.fromString(kv._2))
+    // val claims = record.claims.map(kv => kv._1 -> Json.fromString(kv._2))
     val schemas = Set( // TODO: This information should come from Schema registry by record.schemaId
       "https://www.w3.org/2018/credentials/v1"
     )
@@ -516,7 +522,8 @@ private class CredentialServiceImpl(
         issuanceDate = issuanceDate,
         maybeExpirationDate = record.validityPeriod.map(sec => issuanceDate.plusSeconds(sec.toLong)),
         maybeCredentialSchema = None,
-        credentialSubject = claims.updated("id", Json.fromString(record.subjectId)).asJson,
+        // credentialSubject = claims.updated("id", Json.fromString(record.subjectId)).asJson,
+        credentialSubject = "???".asJson,
         maybeCredentialStatus = None,
         maybeRefreshService = None,
         maybeEvidence = None,

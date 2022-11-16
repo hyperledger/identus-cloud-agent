@@ -61,8 +61,8 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
       }
     }
   }
-  given RootJsonFormat[CreateIssueCredentialRecordRequest] = jsonFormat4(CreateIssueCredentialRecordRequest.apply)
-  given RootJsonFormat[IssueCredentialRecord] = jsonFormat6(IssueCredentialRecord.apply)
+  given RootJsonFormat[CreateIssueCredentialRecordRequest] = jsonFormat6(CreateIssueCredentialRecordRequest.apply)
+  given RootJsonFormat[IssueCredentialRecord] = jsonFormat11(IssueCredentialRecord.apply)
   given RootJsonFormat[IssueCredentialRecordCollection] = jsonFormat4(IssueCredentialRecordCollection.apply)
   //
 

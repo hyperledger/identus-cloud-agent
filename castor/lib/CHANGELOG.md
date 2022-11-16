@@ -1,3 +1,10 @@
+# [castor-v0.2.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/castor-v0.1.0...castor-v0.2.0) (2022-11-14)
+
+
+### Features
+
+* **shared:** add Flyway Migrations and expose in ZIO Layer to be used in consuming service ([#115](https://github.com/input-output-hk/atala-prism-building-blocks/issues/115)) ([cd11493](https://github.com/input-output-hk/atala-prism-building-blocks/commit/cd11493aa01494f599fce369918d35edfcd2ce17))
+
 # [castor-v0.1.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/castor-v0.0.1...castor-v0.1.0) (2022-11-11)
 
 

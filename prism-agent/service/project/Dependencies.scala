@@ -7,10 +7,11 @@ object Dependencies {
     val zioHttp = "2.0.0-RC11"
     val akka = "2.6.20"
     val akkaHttp = "10.2.9"
-    val castor = "0.1.0"
-    val pollux = "0.1.0"
+    val castor = "0.2.0"
+    val pollux = "0.3.0-SNAPSHOT"
     val bouncyCastle = "1.70"
     val logback = "1.4.4"
+    val mercury = "0.5.0"
   }
 
   private lazy val zio = "dev.zio" %% "zio" % Versions.zio
@@ -35,6 +36,8 @@ object Dependencies {
   private lazy val polluxCore = "io.iohk.atala" %% "pollux-core" % Versions.pollux
   private lazy val polluxSqlDoobie = "io.iohk.atala" %% "pollux-sql-doobie" % Versions.pollux
 
+  private lazy val mercuryAgent = "io.iohk.atala" %% "mercury-agent-didcommx" % Versions.mercury
+
   // Added here to make prism-crypto works.
   // Once migrated to apollo, re-evaluate if this should be removed.
   private lazy val bouncyBcpkix = "org.bouncycastle" % "bcpkix-jdk15on" % Versions.bouncyCastle
@@ -47,6 +50,7 @@ object Dependencies {
     Seq(zio, zioTest, zioTestSbt, zioTestMagnolia, zioConfig, zioConfigMagnolia, zioConfigTypesafe)
   private lazy val castorDependencies: Seq[ModuleID] = Seq(castorCore, castorSqlDoobie)
   private lazy val polluxDependencies: Seq[ModuleID] = Seq(polluxCore, polluxSqlDoobie)
+  private lazy val mercuryDependencies: Seq[ModuleID] = Seq(mercuryAgent)
   private lazy val akkaHttpDependencies: Seq[ModuleID] =
     Seq(akkaTyped, akkaStream, akkaHttp, akkaSprayJson).map(_.cross(CrossVersion.for3Use2_13))
   private lazy val bouncyDependencies: Seq[ModuleID] = Seq(bouncyBcpkix, bouncyBcprov)
@@ -54,8 +58,13 @@ object Dependencies {
   // Project Dependencies
   lazy val keyManagementDependencies: Seq[ModuleID] = baseDependencies ++ castorDependencies ++ bouncyDependencies
   lazy val serverDependencies: Seq[ModuleID] =
-    baseDependencies ++ akkaHttpDependencies ++ castorDependencies ++ polluxDependencies ++ Seq(
-      zioHttp,
-      logback
-    )
+    baseDependencies ++
+      akkaHttpDependencies ++
+      castorDependencies ++
+      polluxDependencies ++
+      mercuryDependencies ++
+      Seq(
+        zioHttp,
+        logback
+      )
 }

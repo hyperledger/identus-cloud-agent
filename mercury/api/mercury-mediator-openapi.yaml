@@ -8,7 +8,7 @@ info:
     email: atala-coredid@iohk.io
 
 servers:
-  - url: http://localhost/mercury
+  - url: "https://k8s-dev.atalaprism.io/mediator/"
 
 tags:
   - name: Mailbox Mediator
@@ -44,8 +44,14 @@ paths:
                 $ref: "#/components/schemas/SignedMessage"
         "405":
           description: Invalid input
-
+security:
+  - ApiKeyAuth: []
 components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: apikey
   schemas:
     EncryptedMessage:
       type: object

@@ -25,15 +25,6 @@ services:
       db_castor:
         condition: service_started
 
-  db_castor_init:
-    image: flyway/flyway:9.3.0-alpine
-    volumes:
-      - $PWD/castor/lib/sql-doobie/src/main/resources/sql:/flyway/sql
-    command: -url=jdbc:postgresql://db_castor:5432/castor?user=postgres&password=postgres migrate
-    depends_on:
-      db_castor_init_delay:
-        condition: service_completed_successfully
-
   ##########################
   # Pollux Database
   ##########################
@@ -58,28 +49,49 @@ services:
       db_pollux:
         condition: service_started
 
-  db_pollux_init:
-    image: flyway/flyway:9.3.0-alpine
+  ##########################
+  # Iris Database
+  ##########################
+
+  db_iris:
+    image: postgres:13
+    restart: always
+    environment:
+      POSTGRES_DB: iris
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - 5434:5432
     volumes:
-      - $PWD/pollux/lib/sql-doobie/src/main/resources/sql:/flyway/sql
-    command: -url=jdbc:postgresql://db_pollux:5432/pollux?user=postgres&password=postgres migrate
+      - pg_data_iris_db:/var/lib/postgresql/data
+
+  # delay to ensure DB is up before applying migrations
+  db_iris_init_delay:
+    image: alpine:3
+    command: sleep 5
     depends_on:
-      db_pollux_init_delay:
-        condition: service_completed_successfully
+      db_iris:
+        condition: service_started
+
 
   ##########################
   # Services
   ##########################
-  mercury:
-    image: atala-prism.io/input-output-hk/mercury-mediator:0.1.0
+  mediator:
+    image: ghcr.io/input-output-hk/mercury-mediator:0.1.0-SNAPSHOT
 
   iris:
-    image: atala-prism.io/input-output-hk/iris-server:0.1.0
+    image: ghcr.io/input-output-hk/iris-service:0.1.0-SNAPSHOT
     ports:
       - 8081:8081
+    environment:
+      IRIS_DB_HOST: db_iris
+      IRIS_DB_PORT: 5432
+      IRIS_DB_NAME: iris
+      IRIS_DB_USER: postgres
 
   prism-agent:
-    image: atala-prism.io/input-output-hk/prism-agent-server:0.1.0
+    image: ghcr.io/input-output-hk/prism-agent:0.2.0-SNAPSHOT
     environment:
       IRIS_HOST: iris
       IRIS_PORT: 8081
@@ -93,18 +105,13 @@ services:
       POLLUX_DB_NAME: pollux
       POLLUX_DB_USER: postgres
       POLLUX_DB_PASSWORD: postgres
-    depends_on:
-      db_castor_init:
-        condition: service_completed_successfully
-      db_pollux_init:
-        condition: service_completed_successfully
-
+      
   swagger-ui:
     image: swaggerapi/swagger-ui:v4.14.0
     environment:
       - 'URLS=[
           { name: "PrismAgent", url: "/prism-agent/api/openapi-spec.yaml" },
-          { name: "Mercury", url: "/mercury/api/openapi-spec.yaml" }
+          { name: "Mediator", url: "/mediator/api/openapi-spec.yaml" }
         ]'
       - BASE_URL=/apidocs
 
@@ -113,7 +120,7 @@ services:
     ports:
       - "80:80"   # Http
     depends_on:
-      - mercury
+      - mediator
       - prism-agent
       - swagger-ui
     volumes:
@@ -122,3 +129,4 @@ services:
 volumes:
   pg_data_castor_db:
   pg_data_pollux_db:
+  pg_data_iris_db:
