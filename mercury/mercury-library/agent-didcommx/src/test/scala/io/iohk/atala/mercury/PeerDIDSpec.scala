@@ -1,9 +1,5 @@
 package io.iohk.atala.mercury
 
-import io.circe.Json
-import io.circe.parser.*
-import io.circe.syntax.*
-import io.iohk.atala.mercury.model.AttachmentDescriptor
 import munit.*
 import zio.*
 import io.iohk.atala.mercury.model.DidId
