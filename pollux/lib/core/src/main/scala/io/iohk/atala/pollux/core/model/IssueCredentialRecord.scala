@@ -11,7 +11,7 @@ final case class IssueCredentialRecord(
     credentialId: UUID, // Id of the credential that will be created from this record
     merkleInclusionProof: Option[MerkleInclusionProof],
     thid: UUID,
-    schemaId: Option[String], //NOTE: schema id optional? 
+    schemaId: Option[String],
     role: Role,
     subjectId: String,
     validityPeriod: Option[Double] = None,

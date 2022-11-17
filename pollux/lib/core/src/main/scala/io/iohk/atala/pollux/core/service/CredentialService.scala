@@ -70,9 +70,6 @@ trait CredentialService {
     )
   }
 
-
-  def extractIdFromCredential(credential: W3cCredentialPayload): Option[UUID]
-
   def createIssueCredentialRecord(
       thid: UUID,
       subjectId: String,
@@ -85,11 +82,9 @@ trait CredentialService {
 
   def getIssueCredentialRecords(): IO[IssueCredentialError, Seq[IssueCredentialRecord]]
 
-
   def getCredentialRecordsByState(
       state: IssueCredentialRecord.ProtocolState
   ): IO[IssueCredentialError, Seq[IssueCredentialRecord]]
-
 
   def getIssueCredentialRecord(recordId: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]]
 
@@ -147,9 +142,6 @@ private class CredentialServiceImpl(
 
   import IssueCredentialRecord._
 
-  override def extractIdFromCredential(credential: W3cCredentialPayload): Option[UUID] =
-    credential.maybeId.map(_.split("/").last).map(UUID.fromString)
-
   override def getIssueCredentialRecords(): IO[IssueCredentialError, Seq[IssueCredentialRecord]] = {
     for {
       records <- credentialRepository
@@ -205,7 +197,6 @@ private class CredentialServiceImpl(
         .mapError(RepositoryError.apply)
     } yield record
   }
-
 
   override def getCredentialRecordsByState(
       state: IssueCredentialRecord.ProtocolState
@@ -502,34 +493,42 @@ private class CredentialServiceImpl(
       record: IssueCredentialRecord,
       issuer: Issuer,
       issuanceDate: Instant
-      // This function will get schema from database when it is available
   ): IO[CreateCredentialPayloadFromRecordError, W3cCredentialPayload] = {
-    // val claims = record.claims.map(kv => kv._1 -> Json.fromString(kv._2))
-    val schemas = Set( // TODO: This information should come from Schema registry by record.schemaId
-      "https://www.w3.org/2018/credentials/v1"
-    )
-    ZIO.succeed(
-      W3cCredentialPayload(
-        `@context` = schemas,
-        // credential ID is optional id W3 spec but in PRISM use-case they have an ID always
-        // NOTE: We should support PrismCredential data type where all required fields for our use-case are not optional
-        maybeId = Some(
-          s"https://atala.io/prism/credentials/${record.credentialId.toString}"
-        ), // TODO: this URL prefix should come from env or config
-        `type` =
-          Set("VerifiableCredential"), // TODO: This information should come from Schema registry by record.schemaId
+
+    val claims = for {
+      requestCredential <- record.requestCredentialData
+      preview <- requestCredential.getCredential[CredentialPreview]("credential-preview")
+      claims <- Some(preview.attributes.map(attr => attr.name -> attr.value).toMap)
+    } yield claims
+
+    val credential = for {
+      claims <- ZIO.fromEither(
+        Either.cond(
+          claims.isDefined,
+          claims.get,
+          CreateCredentialPayloadFromRecordError.CouldNotExtractClaimsError(
+            new Throwable("Could not extract claims from \"requestCredential\" Didcome message")
+          )
+        )
+      )
+      // TODO: get schema when schema registry is available if schema ID is provided
+      credential = W3cCredentialPayload(
+        `@context` = Set.empty, // TODO: his information should come from Schema registry by record.schemaId
+        maybeId = None,
+        `type` = Set.empty, // TODO: This information should come from Schema registry by record.schemaId
         issuer = issuer.did,
         issuanceDate = issuanceDate,
         maybeExpirationDate = record.validityPeriod.map(sec => issuanceDate.plusSeconds(sec.toLong)),
         maybeCredentialSchema = None,
-        // credentialSubject = claims.updated("id", Json.fromString(record.subjectId)).asJson,
-        credentialSubject = "???".asJson,
+        credentialSubject = claims.updated("id", record.subjectId).asJson,
         maybeCredentialStatus = None,
         maybeRefreshService = None,
         maybeEvidence = None,
         maybeTermsOfUse = None
       )
-    )
+    } yield credential
+
+    credential
 
   }
 
