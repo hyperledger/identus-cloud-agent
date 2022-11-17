@@ -46,6 +46,9 @@ class PresentationSpec extends ZSuite {
     )
 
     val did = DidId("did:prism:test123")
+    println("************************")
+    println(did.asJson.noSpaces)
+    println("************************")
 
     val result = presentation.asJson.deepDropNullValues
     assertEquals(result, expectedProposalJson)

@@ -49,6 +49,10 @@ class IssueCredentialSpec extends ZSuite {
     )
 
     val did = DidId("did:prism:test123")
+    println("************************")
+    println(did.asJson.noSpaces)
+    println("************************")
+
     val result = issueCredential.asJson.deepDropNullValues
     assertEquals(result, expectedProposalJson)
   }
