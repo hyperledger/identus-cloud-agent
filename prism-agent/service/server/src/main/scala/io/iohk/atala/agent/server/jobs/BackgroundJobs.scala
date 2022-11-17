@@ -100,6 +100,14 @@ object BackgroundJobs {
               _,
               Some(issue)
             ) =>
+          for {
+            credentialService <- ZIO.service[CredentialService]
+            w3Credential <- credentialService.createCredentialPayloadFromRecord(
+              record,
+              credentialService.createIssuer,
+              Instant.now()
+            )
+          } yield ()
           // Generate the JWT Credential and store it in DB as an attacment to IssueCredentialData
           // Set ProtocolState to CredentialGenerated
           // Set PublicationState to PublicationPending
