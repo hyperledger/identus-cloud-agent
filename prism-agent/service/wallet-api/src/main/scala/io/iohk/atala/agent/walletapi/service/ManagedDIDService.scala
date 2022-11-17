@@ -4,18 +4,19 @@ import io.iohk.atala.agent.walletapi.crypto.KeyGeneratorWrapper
 import io.iohk.atala.agent.walletapi.model.{DIDPublicKeyTemplate, ECKeyPair, ManagedDIDTemplate}
 import io.iohk.atala.agent.walletapi.model.ECCoordinates.*
 import io.iohk.atala.agent.walletapi.model.error.{CreateManagedDIDError, PublishManagedDIDError}
-import io.iohk.atala.agent.walletapi.service.ManagedDIDService.CreateDIDSecret
+import io.iohk.atala.agent.walletapi.service.ManagedDIDService.{CreateDIDSecret, DEFAULT_MASTER_KEY_ID}
 import io.iohk.atala.agent.walletapi.storage.{
   DIDNonSecretStorage,
   DIDSecretStorage,
   InMemoryDIDNonSecretStorage,
   InMemoryDIDSecretStorage
 }
+import io.iohk.atala.agent.walletapi.util.ManagedDIDTemplateValidator
 import io.iohk.atala.castor.core.model.did.{
   DID,
   EllipticCurve,
-  InternalPublicKey,
   InternalKeyPurpose,
+  InternalPublicKey,
   LongFormPrismDID,
   PrismDID,
   PrismDIDOperation,
@@ -40,13 +41,12 @@ final class ManagedDIDService private[walletapi] (
     private[walletapi] val nonSecretStorage: DIDNonSecretStorage
 ) {
 
-  private val DEFAULT_MASTER_KEY_ID = "master0"
   private val CURVE = EllipticCurve.SECP256K1
 
   def publishStoredDID(did: PrismDID): IO[PublishManagedDIDError, ScheduleDIDOperationOutcome] = {
     val canonicalDID = did.asCanonical
     for {
-      createOperation <- nonSecretStorage
+      operation <- nonSecretStorage
         .getCreatedDID(canonicalDID)
         .mapError(PublishManagedDIDError.WalletStorageError.apply)
         .flatMap(op => ZIO.fromOption(op).mapError(_ => PublishManagedDIDError.DIDNotFound(canonicalDID)))
@@ -58,6 +58,9 @@ final class ManagedDIDService private[walletapi] (
 
   def createAndStoreDID(didTemplate: ManagedDIDTemplate): IO[CreateManagedDIDError, LongFormPrismDID] = {
     for {
+      _ <- ZIO
+        .fromEither(ManagedDIDTemplateValidator.validate(didTemplate))
+        .mapError(CreateManagedDIDError.InvalidArgument.apply)
       generated <- generateCreateOperation(didTemplate)
       (createOperation, secret) = generated
       longFormDID = PrismDID.buildLongFormFromOperation(createOperation)
@@ -125,6 +128,10 @@ final class ManagedDIDService private[walletapi] (
 }
 
 object ManagedDIDService {
+
+  val DEFAULT_MASTER_KEY_ID: String = "master0"
+
+  val reservedKeyIds: Set[String] = Set(DEFAULT_MASTER_KEY_ID)
 
   private final case class CreateDIDSecret(
       keyPairs: Map[String, ECKeyPair],

@@ -1,9 +1,9 @@
 package io.iohk.atala.agent.walletapi.storage
 
-import io.iohk.atala.castor.core.model.did.{DIDDocument, DIDStorage, PrismDIDV1, PublishedDIDOperation}
+import io.iohk.atala.castor.core.model.did.{PrismDID, PrismDIDOperation}
 import io.iohk.atala.agent.walletapi.model.*
 import io.iohk.atala.agent.walletapi.model.ECCoordinates.*
-import io.iohk.atala.shared.models.HexStrings.HexString
+import io.iohk.atala.shared.models.HexStrings.*
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
@@ -12,14 +12,7 @@ import scala.collection.immutable.ArraySeq
 
 object InMemoryDIDSecretStorageSpec extends ZIOSpecDefault {
 
-  private val didExample = PrismDIDV1.fromCreateOperation(
-    PublishedDIDOperation.Create(
-      updateCommitment = HexString.fromStringUnsafe("00"),
-      recoveryCommitment = HexString.fromStringUnsafe("00"),
-      storage = DIDStorage.Cardano("testnet"),
-      document = DIDDocument(publicKeys = Nil, services = Nil)
-    )
-  )
+  private val didExample = PrismDID.buildLongFormFromOperation(PrismDIDOperation.Create(Nil, Nil))
 
   private def generateKeyPair(publicKey: (Int, Int) = (0, 0), privateKey: ArraySeq[Byte] = ArraySeq(0)): ECKeyPair =
     ECKeyPair(
@@ -31,9 +24,7 @@ object InMemoryDIDSecretStorageSpec extends ZIOSpecDefault {
     listKeySpec,
     getKeySpec,
     upsertKeySpec,
-    removeKeySpec,
-    getDIDCommitmentSpec,
-    upsertDIDCommitmentRevealValue
+    removeKeySpec
   ).provideLayer(InMemoryDIDSecretStorage.layer)
 
   private val listKeySpec = suite("listKeys")(
@@ -126,51 +117,4 @@ object InMemoryDIDSecretStorageSpec extends ZIOSpecDefault {
       } yield assert(keys.keys)(hasSameElements(Seq("key-2", "key-3")))
     }
   )
-
-  private val getDIDCommitmentSpec = suite("getDIDCommitmentRevealValue")(
-    test("get non-exists commitment reveal value") {
-      for {
-        storage <- ZIO.service[DIDSecretStorage]
-        updateCommitment <- storage.getDIDCommitmentRevealValue(didExample, CommitmentPurpose.Update)
-        recoveryCommitment <- storage.getDIDCommitmentRevealValue(didExample, CommitmentPurpose.Recovery)
-      } yield assert(updateCommitment)(isNone) && assert(recoveryCommitment)(isNone)
-    },
-    test("get existing commit reveal value") {
-      val updateHex = HexString.fromStringUnsafe("0011aabb")
-      val recoveryHex = HexString.fromStringUnsafe("aabb0011")
-      for {
-        storage <- ZIO.service[DIDSecretStorage]
-        _ <- storage.upsertDIDCommitmentRevealValue(didExample, CommitmentPurpose.Update, updateHex)
-        _ <- storage.upsertDIDCommitmentRevealValue(didExample, CommitmentPurpose.Recovery, recoveryHex)
-        updateCommitment <- storage.getDIDCommitmentRevealValue(didExample, CommitmentPurpose.Update)
-        recoveryCommitment <- storage.getDIDCommitmentRevealValue(didExample, CommitmentPurpose.Recovery)
-      } yield assert(updateCommitment)(isSome(equalTo(updateHex))) && assert(recoveryCommitment)(
-        isSome(equalTo(recoveryHex))
-      )
-    }
-  )
-
-  private val upsertDIDCommitmentRevealValue = suite("upsertDIDCommitmentRevealValue")(
-    test("insert non-existing commitment reveal value") {
-      val updateHex = HexString.fromStringUnsafe("0011aabb")
-      for {
-        storage <- ZIO.service[DIDSecretStorage]
-        before <- storage.getDIDCommitmentRevealValue(didExample, CommitmentPurpose.Update)
-        _ <- storage.upsertDIDCommitmentRevealValue(didExample, CommitmentPurpose.Update, updateHex)
-        after <- storage.getDIDCommitmentRevealValue(didExample, CommitmentPurpose.Update)
-      } yield assert(before)(isNone) && assert(after)(isSome(equalTo(updateHex)))
-    },
-    test("update existing commitment reveal value") {
-      val updateHex1 = HexString.fromStringUnsafe("0011aabb")
-      val updateHex2 = HexString.fromStringUnsafe("aabb0011")
-      for {
-        storage <- ZIO.service[DIDSecretStorage]
-        _ <- storage.upsertDIDCommitmentRevealValue(didExample, CommitmentPurpose.Update, updateHex1)
-        before <- storage.getDIDCommitmentRevealValue(didExample, CommitmentPurpose.Update)
-        _ <- storage.upsertDIDCommitmentRevealValue(didExample, CommitmentPurpose.Update, updateHex2)
-        after <- storage.getDIDCommitmentRevealValue(didExample, CommitmentPurpose.Update)
-      } yield assert(before)(isSome(equalTo(updateHex1))) && assert(after)(isSome(equalTo(updateHex2)))
-    }
-  )
-
 }

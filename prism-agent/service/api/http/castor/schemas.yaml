@@ -197,9 +197,6 @@ components:
             - publicKeys
             - services
           properties:
-            storage:
-              type: string
-              example: "mainnet"
             publicKeys:
               type: array
               items:

@@ -60,7 +60,6 @@ trait OASDomainModelHelper {
         services <- template.services.traverse(_.toDomain)
         publicKeys <- template.publicKeys.traverse(_.toDomain)
       } yield walletDomain.ManagedDIDTemplate(
-        storage = template.storage,
         publicKeys = publicKeys,
         services = services
       )
