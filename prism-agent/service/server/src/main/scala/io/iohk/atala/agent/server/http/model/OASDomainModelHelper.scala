@@ -141,7 +141,8 @@ trait OASDomainModelHelper {
   extension (domain: polluxdomain.IssueCredentialRecord) {
     def toOAS: IssueCredentialRecord = IssueCredentialRecord(
       recordId = domain.id,
-      creationDateTime = domain.creationDateTime.atOffset(ZoneOffset.UTC),
+      createdAt = domain.createdAt.atOffset(ZoneOffset.UTC),
+      updatedAt = domain.updatedAt.map(_.atOffset(ZoneOffset.UTC)),
       role = domain.role.toString,
       subjectId = domain.subjectId,
       claims = domain.offerCredentialData

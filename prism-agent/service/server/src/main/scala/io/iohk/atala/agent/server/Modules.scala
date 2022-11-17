@@ -143,7 +143,7 @@ object Modules {
                 credentialService <- ZIO.service[CredentialService]
 
                 // TODO
-              } yield ("OfferCredential Sent")
+              } yield ("ProposeCredential received")
 
             case s if s == OfferCredential.`type` => // Holder
               for {
@@ -160,7 +160,7 @@ object Modules {
                   }
                   .catchAll { case ex: IOException => ZIO.fail(ex) }
 
-              } yield ("Offer received")
+              } yield ("OfferCredential received")
 
             case s if s == RequestCredential.`type` => // Issuer
               for {
@@ -195,7 +195,7 @@ object Modules {
                   }
                   .catchAll { case ex: IOException => ZIO.fail(ex) }
 
-              } yield ("IssueCredential Received")
+              } yield ("IssueCredential received")
 
             case _ => ZIO.succeed("Unknown Message Type")
           }

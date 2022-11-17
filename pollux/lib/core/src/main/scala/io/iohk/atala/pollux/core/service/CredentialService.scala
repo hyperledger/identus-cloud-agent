@@ -149,6 +149,7 @@ private class CredentialServiceImpl(
         IssueCredentialRecord(
           UUID.randomUUID(),
           Instant.now,
+          None,
           thid,
           schemaId,
           IssueCredentialRecord.Role.Issuer,
@@ -179,6 +180,7 @@ private class CredentialServiceImpl(
         IssueCredentialRecord(
           UUID.randomUUID(),
           Instant.now,
+          None,
           UUID.fromString(offer.thid.getOrElse(offer.id)),
           None,
           Role.Holder,

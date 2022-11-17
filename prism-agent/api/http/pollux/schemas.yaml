@@ -183,14 +183,17 @@ components:
         - type: object
           required:
             - recordId
-            - creationDateTime
+            - createdAt
             - role
             - protocolState
           properties:
             recordId:
               type: string
               format: uuid
-            creationDateTime:
+            createdAt:
+              type: string
+              format: date-time
+            updatedAt:
               type: string
               format: date-time
             role:

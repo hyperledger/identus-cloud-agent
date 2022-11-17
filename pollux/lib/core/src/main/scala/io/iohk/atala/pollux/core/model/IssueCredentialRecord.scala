@@ -8,7 +8,8 @@ import IssueCredentialRecord._
 import java.time.Instant
 final case class IssueCredentialRecord(
     id: UUID,
-    creationDateTime: Instant,
+    createdAt: Instant,
+    updatedAt: Option[Instant],
     thid: UUID,
     schemaId: Option[String],
     role: Role,

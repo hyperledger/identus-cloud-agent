@@ -52,7 +52,8 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
     val cxnIO = sql"""
         | INSERT INTO public.issue_credential_records(
         |   id,
-        |   creation_date_time,
+        |   created_at,
+        |   updated_at,
         |   thid,
         |   schema_id,
         |   role,
@@ -65,7 +66,8 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   offer_credential_data
         | ) values (
         |   ${record.id},
-        |   ${record.creationDateTime},
+        |   ${record.createdAt},
+        |   ${record.updatedAt},
         |   ${record.thid},
         |   ${record.schemaId},
         |   ${record.role},
@@ -87,7 +89,8 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
     val cxnIO = sql"""
         | SELECT
         |   id,
-        |   creation_date_time,
+        |   created_at,
+        |   updated_at,
         |   thid,
         |   schema_id,
         |   role,
@@ -113,7 +116,8 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
     val cxnIO = sql"""
         | SELECT
         |   id,
-        |   creation_date_time,
+        |   created_at,
+        |   updated_at,
         |   thid,
         |   schema_id,
         |   role,
@@ -140,7 +144,8 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
     val cxnIO = sql"""
         | SELECT
         |   id,
-        |   creation_date_time,
+        |   created_at,
+        |   updated_at,
         |   thid,
         |   schema_id,
         |   role,
@@ -171,7 +176,8 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
     val cxnIO = sql"""
         | UPDATE public.issue_credential_records
         | SET
-        |   protocol_state = $to
+        |   protocol_state = $to,
+        |   updated_at = ${Instant.now}
         | WHERE
         |   id = $recordId
         |   AND protocol_state = $from
@@ -193,7 +199,8 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
     val cxnIO = sql"""
         | UPDATE public.issue_credential_records
         | SET
-        |   publication_state = $to
+        |   publication_state = $to,
+        |   updated_at = ${Instant.now}
         | WHERE
         |   id = $recordId
         |   AND $pubStateFragment
@@ -208,7 +215,8 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         | UPDATE public.issue_credential_records
         | SET
         |   request_credential_data = $request,
-        |   protocol_state = $protocolState
+        |   protocol_state = $protocolState,
+        |   updated_at = ${Instant.now}
         | WHERE
         |   id = $recordId
         """.stripMargin.update
@@ -222,7 +230,8 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         | UPDATE public.issue_credential_records
         | SET
         |   issue_credential_data = $issue,
-        |   protocol_state = $protocolState
+        |   protocol_state = $protocolState,
+        |   updated_at = ${Instant.now}
         | WHERE
         |   id = $recordId
         """.stripMargin.update
