@@ -1,16 +1,18 @@
-import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
+val SCALA_VERSION = sys.env.get("SBT_SCOVERAGE") match {
+  case None    => "3.2.1"
+  case Some(_) => "3.2.2-RC1-bin-20221026-a210b7f-NIGHTLY" // Needed for sbt-scoverage
+}
 
 inThisBuild(
   Seq(
     organization := "io.iohk.atala",
-    scalaVersion := "3.2.0",
+    scalaVersion := SCALA_VERSION,
     fork := true,
     run / connectInput := true,
     releaseUseGlobalVersion := false,
     versionScheme := Some("semver-spec"),
     githubOwner := "input-output-hk",
-    githubRepository := "atala-prism-building-blocks",
-    githubTokenSource := TokenSource.Environment("GITHUB_TOKEN")
+    githubRepository := "atala-prism-building-blocks"
   )
 )
 
@@ -68,6 +70,8 @@ lazy val D = new {
 }
 
 publish / skip := true
+
+coverageDataDir := target.value / "coverage"
 
 // #########################
 // ### Models & Services ###
@@ -245,12 +249,20 @@ lazy val agentDidScala =
     .dependsOn(agent)
 
 // ### ReleaseStep ###
-releaseProcess := Seq[ReleaseStep](
-  checkSnapshotDependencies,
-  inquireVersions,
-  runClean,
-  runTest,
-  setReleaseVersion,
-  publishArtifacts,
-  setNextVersion
-)
+sys.env
+  .get("SBT_SCOVERAGE") // SEE also plugin.sbt
+  .map { _ =>
+    println("### Config sbt-scoverage (releaseProcess) ###")
+  import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
+
+  releaseProcess := Seq[ReleaseStep](
+    checkSnapshotDependencies,
+    inquireVersions,
+    runClean,
+    runTest,
+    setReleaseVersion,
+    publishArtifacts,
+    setNextVersion
+  )
+  }
+  .toSeq
