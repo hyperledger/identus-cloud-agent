@@ -70,6 +70,8 @@ trait CredentialService {
     )
   }
 
+  def extractIdFromCredential(credential: W3cCredentialPayload): Option[UUID]
+
   def createIssueCredentialRecord(
       thid: UUID,
       subjectId: String,
@@ -141,6 +143,9 @@ private class CredentialServiceImpl(
 ) extends CredentialService {
 
   import IssueCredentialRecord._
+
+  override def extractIdFromCredential(credential: W3cCredentialPayload): Option[UUID] =
+    credential.maybeId.map(_.split("/").last).map(UUID.fromString)
 
   override def getIssueCredentialRecords(): IO[IssueCredentialError, Seq[IssueCredentialRecord]] = {
     for {
