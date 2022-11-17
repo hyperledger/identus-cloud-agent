@@ -183,12 +183,16 @@ components:
         - type: object
           required:
             - recordId
+            - creationDateTime
             - role
             - protocolState
           properties:
             recordId:
               type: string
               format: uuid
+            creationDateTime:
+              type: string
+              format: date-time
             role:
               type: string
               enum:

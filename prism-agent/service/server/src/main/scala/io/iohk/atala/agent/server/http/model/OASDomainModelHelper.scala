@@ -24,6 +24,8 @@ import java.net.URI
 import scala.util.Try
 import io.iohk.atala.agent.openapi.model.IssueCredentialRecord
 import io.iohk.atala.agent.openapi.model.IssueCredentialRecordCollection
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 
 trait OASDomainModelHelper {
 
@@ -139,6 +141,7 @@ trait OASDomainModelHelper {
   extension (domain: polluxdomain.IssueCredentialRecord) {
     def toOAS: IssueCredentialRecord = IssueCredentialRecord(
       recordId = domain.id,
+      creationDateTime = domain.creationDateTime.atOffset(ZoneOffset.UTC),
       role = domain.role.toString,
       subjectId = domain.subjectId,
       claims = domain.offerCredentialData

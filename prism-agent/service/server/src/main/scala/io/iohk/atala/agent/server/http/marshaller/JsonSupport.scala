@@ -8,6 +8,7 @@ import java.util.UUID
 import spray.json.JsString
 import spray.json.JsValue
 import spray.json.DeserializationException
+import java.time.OffsetDateTime
 
 trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 
@@ -61,8 +62,17 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
       }
     }
   }
+  implicit object OffsetDateTimeFormat extends JsonFormat[OffsetDateTime] {
+    def write(dt: OffsetDateTime) = JsString(dt.toString)
+    def read(value: JsValue) = {
+      value match {
+        case JsString(dt) => OffsetDateTime.parse(dt)
+        case _            => throw new DeserializationException("Expected hexadecimal OffsetDateTime string")
+      }
+    }
+  }
   given RootJsonFormat[CreateIssueCredentialRecordRequest] = jsonFormat6(CreateIssueCredentialRecordRequest.apply)
-  given RootJsonFormat[IssueCredentialRecord] = jsonFormat11(IssueCredentialRecord.apply)
+  given RootJsonFormat[IssueCredentialRecord] = jsonFormat12(IssueCredentialRecord.apply)
   given RootJsonFormat[IssueCredentialRecordCollection] = jsonFormat4(IssueCredentialRecordCollection.apply)
   //
 
