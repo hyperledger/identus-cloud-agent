@@ -71,10 +71,6 @@ lazy val D = new {
 
 publish / skip := true
 
-lazy val root = project
-  .in(file("root"))
-  .aggregate(models)
-
 // #########################
 // ### Models & Services ###
 // #########################
