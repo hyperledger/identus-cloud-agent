@@ -31,7 +31,7 @@ private class DIDServiceImpl(nodeClient: NodeServiceStub) extends DIDService, Pr
         node_models.SignedAtalaOperation(
           signedWith = signedOperation.signedWithKey,
           signature = signedOperation.signature.toArray.toProto,
-          operation = Some(node_models.AtalaOperation(signedOperation.operation.toProto))
+          operation = Some(signedOperation.operation.toAtalaOperation)
         )
       )
     )
