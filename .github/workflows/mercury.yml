@@ -65,7 +65,7 @@ jobs:
         with:
           path: "mercury/mercury-library/target/coverage/coverage-report/cobertura.xml"
           report_name: "Mercury Code Coverage"
-          minimum_coverage: 10
+          minimum_coverage: 1
 
       - name: Artifact coverage HTML
         uses: actions/upload-artifact@v2
