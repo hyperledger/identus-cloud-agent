@@ -9,4 +9,5 @@ object PublishManagedDIDError {
   final case class DIDNotFound(did: PrismDID) extends PublishManagedDIDError
   final case class WalletStorageError(cause: Throwable) extends PublishManagedDIDError
   final case class OperationError(cause: DIDOperationError) extends PublishManagedDIDError
+  final case class CryptographicError(cause: Throwable) extends PublishManagedDIDError
 }

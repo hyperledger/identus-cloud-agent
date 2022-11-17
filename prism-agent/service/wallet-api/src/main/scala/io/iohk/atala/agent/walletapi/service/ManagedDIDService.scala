@@ -1,6 +1,6 @@
 package io.iohk.atala.agent.walletapi.service
 
-import io.iohk.atala.agent.walletapi.crypto.KeyGeneratorWrapper
+import io.iohk.atala.agent.walletapi.crypto.{ECWrapper, KeyGeneratorWrapper}
 import io.iohk.atala.agent.walletapi.model.{DIDPublicKeyTemplate, ECKeyPair, ManagedDIDTemplate}
 import io.iohk.atala.agent.walletapi.model.ECCoordinates.*
 import io.iohk.atala.agent.walletapi.model.error.{CreateManagedDIDError, PublishManagedDIDError}
@@ -32,6 +32,8 @@ import io.iohk.atala.shared.models.Base64UrlStrings.*
 import io.iohk.atala.shared.models.HexStrings.*
 import zio.*
 
+import scala.collection.immutable.ArraySeq
+
 /** A wrapper around Castor's DIDService providing key-management capability. Analogous to the secretAPI in
   * indy-wallet-sdk.
   */
@@ -50,8 +52,31 @@ final class ManagedDIDService private[walletapi] (
         .getCreatedDID(canonicalDID)
         .mapError(PublishManagedDIDError.WalletStorageError.apply)
         .flatMap(op => ZIO.fromOption(op).mapError(_ => PublishManagedDIDError.DIDNotFound(canonicalDID)))
+      masterKeyPair <-
+        secretStorage
+          .getKey(canonicalDID, DEFAULT_MASTER_KEY_ID)
+          .mapError(PublishManagedDIDError.WalletStorageError.apply)
+          .flatMap(maybeKey =>
+            ZIO
+              .fromOption(maybeKey)
+              .orDieWith(_ =>
+                new Exception("master-key must exists in the wallet for create DID publication signature")
+              )
+          )
+      signedAtalaOperation <- ZIO
+        .fromTry(
+          ECWrapper.signBytes(CURVE, operation.toAtalaOperation.toByteArray, masterKeyPair.privateKey)
+        )
+        .mapError(PublishManagedDIDError.CryptographicError.apply)
+        .map(signature =>
+          SignedPrismDIDOperation.Create(
+            operation = operation,
+            signature = ArraySeq.from(signature),
+            signedWithKey = DEFAULT_MASTER_KEY_ID
+          )
+        )
       outcome <- didService
-        .createPublishedDID(???) // TODO: sign CreateDID operation
+        .createPublishedDID(signedAtalaOperation)
         .mapError(PublishManagedDIDError.OperationError.apply)
     } yield outcome
   }
