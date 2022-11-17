@@ -4,7 +4,6 @@ import io.circe.Json
 import io.circe.parser.*
 import io.circe.syntax.*
 import io.iohk.atala.mercury.model.AttachmentDescriptor
-import io.iohk.atala.mercury.model.AttachmentDescriptor.attachmentDescriptorEncoderV2
 import munit.*
 import io.iohk.atala.mercury.model._
 import zio.*
@@ -18,7 +17,11 @@ class IssueCredentialSpec extends ZSuite {
     val credentialPreview = CredentialPreview(attributes = Seq(attribute1, attribute2))
     val body = IssueCredential.Body(goal_code = Some("Issued Credential"))
     val attachmentDescriptor = AttachmentDescriptor.buildAttachment[CredentialPreview](payload = credentialPreview)
-    val attachmentDescriptorJson = attachmentDescriptor.asJson.deepDropNullValues.noSpaces
+    val attachmentDescriptorJson =
+      attachmentDescriptor
+        .asJson(AttachmentDescriptor.attachmentDescriptorEncoderV2)
+        .deepDropNullValues
+        .noSpaces
 
     val expectedProposalJson = parse(s"""{
                          |    "id": "061bf917-2cbe-460b-8d12-b1a9609505c2",

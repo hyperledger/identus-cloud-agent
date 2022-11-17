@@ -7,7 +7,7 @@ enum Agent(val id: DidId):
   case Alice extends Agent(DidId("did:example:alice"))
   case Bob extends Agent(DidId("did:example:bob"))
   case Mediator extends Agent(DidId("did:example:mediator"))
-  case Charlie extends Agent(DidId(charlie))
+  // case Charlie extends Agent(DidId(charlie))
   case Charlie2
       extends Agent(DidId({
         val S =
@@ -22,39 +22,39 @@ enum Agent(val id: DidId):
           ".S" + S
       }))
 
-import org.didcommx.peerdid._
-import scala.jdk.CollectionConverters._
+// import org.didcommx.peerdid._
+// import scala.jdk.CollectionConverters._
 
-val keyAgreement = VerificationMaterialPeerDID[VerificationMethodTypeAgreement](
-  VerificationMaterialFormatPeerDID.JWK,
-  """{"kty":"OKP","crv":"X25519","x":"avH0O2Y4tqLAq8y9zpianr8ajii5m4F_mICrzNlatXs"}""",
-  VerificationMethodTypeAgreement.JSON_WEB_KEY_2020.INSTANCE
-)
-val keyAgreement2 = VerificationMaterialPeerDID[VerificationMethodTypeAgreement](
-  VerificationMaterialFormatPeerDID.JWK,
-  """{"kty":"EC","crv":"P-256","x":"2syLh57B-dGpa0F8p1JrO6JU7UUSF6j7qL-vfk1eOoY","y":"BgsGtI7UPsObMRjdElxLOrgAO9JggNMjOcfzEPox18w"}""",
-  VerificationMethodTypeAgreement.JSON_WEB_KEY_2020.INSTANCE
-)
-val keyAuthentication = VerificationMaterialPeerDID[VerificationMethodTypeAuthentication](
-  VerificationMaterialFormatPeerDID.JWK,
-  """{"kty":"OKP","crv":"Ed25519","x":"G-boxFB6vOZBu-wXkm-9Lh79I8nf9Z50cILaOgKKGww"}""",
-  VerificationMethodTypeAuthentication.JSON_WEB_KEY_2020.INSTANCE
-)
-val service =
-  """[{
-      |  "type": "DIDCommMessaging",
-      |  "serviceEndpoint": "http://localhost:8000/",
-      |  "routingKeys": ["did:example:somemediator#somekey"]
-      |},
-      |{
-      |  "type": "DIDCommMessaging",
-      |  "serviceEndpoint": "http://localhost:8000/",
-      |  "routingKeys": ["did:example:somemediator#somekey2"],
-      |  "accept": ["didcomm/v2", "didcomm/aip2;env=rfc587"]
-      |}]""".stripMargin
+// val keyAgreement = VerificationMaterialPeerDID[VerificationMethodTypeAgreement](
+//   VerificationMaterialFormatPeerDID.JWK,
+//   """{"kty":"OKP","crv":"X25519","x":"avH0O2Y4tqLAq8y9zpianr8ajii5m4F_mICrzNlatXs"}""",
+//   VerificationMethodTypeAgreement.JSON_WEB_KEY_2020.INSTANCE
+// )
+// val keyAgreement2 = VerificationMaterialPeerDID[VerificationMethodTypeAgreement](
+//   VerificationMaterialFormatPeerDID.JWK,
+//   """{"kty":"EC","crv":"P-256","x":"2syLh57B-dGpa0F8p1JrO6JU7UUSF6j7qL-vfk1eOoY","y":"BgsGtI7UPsObMRjdElxLOrgAO9JggNMjOcfzEPox18w"}""",
+//   VerificationMethodTypeAgreement.JSON_WEB_KEY_2020.INSTANCE
+// )
+// val keyAuthentication = VerificationMaterialPeerDID[VerificationMethodTypeAuthentication](
+//   VerificationMaterialFormatPeerDID.JWK,
+//   """{"kty":"OKP","crv":"Ed25519","x":"G-boxFB6vOZBu-wXkm-9Lh79I8nf9Z50cILaOgKKGww"}""",
+//   VerificationMethodTypeAuthentication.JSON_WEB_KEY_2020.INSTANCE
+// )
+// val service =
+//   """[{
+//       |  "type": "DIDCommMessaging",
+//       |  "serviceEndpoint": "http://localhost:8000/",
+//       |  "routingKeys": ["did:example:somemediator#somekey"]
+//       |},
+//       |{
+//       |  "type": "DIDCommMessaging",
+//       |  "serviceEndpoint": "http://localhost:8000/",
+//       |  "routingKeys": ["did:example:somemediator#somekey2"],
+//       |  "accept": ["didcomm/v2", "didcomm/aip2;env=rfc587"]
+//       |}]""".stripMargin
 
-def charlie = org.didcommx.peerdid.PeerDIDCreator.createPeerDIDNumalgo2(
-  List(keyAgreement).asJava,
-  List(keyAuthentication).asJava,
-  null, // service
-)
+// def charlie = org.didcommx.peerdid.PeerDIDCreator.createPeerDIDNumalgo2(
+//   List(keyAgreement).asJava,
+//   List(keyAuthentication).asJava,
+//   null, // service
+// )

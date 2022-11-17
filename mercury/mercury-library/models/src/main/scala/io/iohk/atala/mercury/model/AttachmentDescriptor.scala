@@ -102,13 +102,13 @@ final case class AttachmentDescriptor(
 
 object AttachmentDescriptor {
 
-  def buildAttachment[A: Encoder](
+  def buildAttachment[A](
       id: String = java.util.UUID.randomUUID.toString,
       payload: A,
       mediaType: Option[String] = Some("application/json")
-  ): AttachmentDescriptor = {
+  )(using Encoder[A]): AttachmentDescriptor = {
     val encoded = JBase64.getUrlEncoder.encodeToString(payload.asJson.noSpaces.getBytes)
-    AttachmentDescriptor(id, mediaType, Base64(encoded))
+    AttachmentDescriptor(id, mediaType, Base64(encoded)) // use JsonData or Base64 by default?
   }
 
   given attachmentDescriptorEncoderV1: Encoder[AttachmentDescriptor] = (a: AttachmentDescriptor) => {

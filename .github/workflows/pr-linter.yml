@@ -28,6 +28,7 @@ jobs:
             pistis
             atlas
             prism-agent
+            prism-node
             shared
             infra
             release
