@@ -15,9 +15,7 @@ Others:
 
 ## PIURI
 
-Version 2.0: `https://didcomm.org/issue-credential/2.0/propose-credential`
-
-TODO Version 3.0: [https://github.com/decentralized-identity/waci-didcomm/tree/main/issue_credential]
+Version 1.0: `https://didcomm.org/issue-credential/1.0/propose-credential`
 
 
 ### Roles
