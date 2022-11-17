@@ -5,8 +5,10 @@ import io.iohk.atala.mercury.protocol.issuecredential.OfferCredential
 import io.iohk.atala.mercury.protocol.issuecredential.RequestCredential
 import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
 import IssueCredentialRecord._
+import java.time.Instant
 final case class IssueCredentialRecord(
     id: UUID,
+    creationDateTime: Instant,
     thid: UUID,
     schemaId: Option[String],
     role: Role,

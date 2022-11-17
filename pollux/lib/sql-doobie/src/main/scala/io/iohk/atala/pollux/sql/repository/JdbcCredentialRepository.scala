@@ -15,6 +15,7 @@ import zio.*
 import zio.interop.catz.*
 
 import java.util.UUID
+import java.time.Instant
 
 // TODO: replace with actual implementation
 class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepository[Task] {
@@ -25,6 +26,9 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
   import IssueCredentialRecord._
   given uuidGet: Get[UUID] = Get[String].map(UUID.fromString)
   given uuidPut: Put[UUID] = Put[String].contramap(_.toString())
+
+  given instantGet: Get[Instant] = Get[Long].map(Instant.ofEpochSecond)
+  given instantPut: Put[Instant] = Put[Long].contramap(_.getEpochSecond())
 
   given protocolStateGet: Get[ProtocolState] = Get[String].map(ProtocolState.valueOf)
   given protocolStatePut: Put[ProtocolState] = Put[String].contramap(_.toString)
@@ -48,6 +52,7 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
     val cxnIO = sql"""
         | INSERT INTO public.issue_credential_records(
         |   id,
+        |   creation_date_time,
         |   thid,
         |   schema_id,
         |   role,
@@ -60,6 +65,7 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   offer_credential_data
         | ) values (
         |   ${record.id},
+        |   ${record.creationDateTime},
         |   ${record.thid},
         |   ${record.schemaId},
         |   ${record.role},
@@ -81,6 +87,7 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
     val cxnIO = sql"""
         | SELECT
         |   id,
+        |   creation_date_time,
         |   thid,
         |   schema_id,
         |   role,
@@ -106,6 +113,7 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
     val cxnIO = sql"""
         | SELECT
         |   id,
+        |   creation_date_time,
         |   thid,
         |   schema_id,
         |   role,
@@ -132,6 +140,7 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
     val cxnIO = sql"""
         | SELECT
         |   id,
+        |   creation_date_time,
         |   thid,
         |   schema_id,
         |   role,
