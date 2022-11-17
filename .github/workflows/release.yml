@@ -19,7 +19,7 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
       ATALA_GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
       SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-      SBT_PACKAGER: "enable" # to enable the packaget plugin on Mercury
+      SBT_PACKAGER: "enable" # To enable the packager plugin on Mercury
 
     runs-on: ubuntu-latest
     steps:
