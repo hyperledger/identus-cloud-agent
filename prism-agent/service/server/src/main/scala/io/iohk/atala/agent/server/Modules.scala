@@ -67,7 +67,6 @@ import zhttp.service.Server
 import java.util.concurrent.Executors
 
 import io.iohk.atala.mercury._
-import io.iohk.atala.mercury.AgentCli.sendMessage //TODO REMOVE
 import io.iohk.atala.mercury.model._
 import io.iohk.atala.mercury.model.error._
 import io.iohk.atala.mercury.protocol.issuecredential._

@@ -15,16 +15,16 @@ import zio.*
 import java.time.Instant
 
 import io.iohk.atala.mercury.DidComm
+import io.iohk.atala.mercury.MediaTypes
 import io.iohk.atala.mercury.model._
 import io.iohk.atala.mercury.model.error._
 import io.iohk.atala.mercury.protocol.issuecredential._
-import io.iohk.atala.mercury.AgentCli
-import java.io.IOException
 import io.iohk.atala.resolvers.UniversalDidResolver
+import io.iohk.atala.agent.server.jobs.MercuryUtils.sendMessage
+import java.io.IOException
+
 import zhttp.service._
 import zhttp.http._
-import io.iohk.atala.mercury.MediaTypes
-import io.iohk.atala.mercury.AgentCli._
 
 object BackgroundJobs {
 
@@ -50,7 +50,19 @@ object BackgroundJobs {
         // Offer should be sent from Issuer to Holder
         case IssueCredentialRecord(id, _, _, _, _, Role.Issuer, _, _, _, _, OfferPending, _, Some(offer), _, _) =>
           for {
-            _ <- AgentCli.sendMessage(offer.makeMessage)
+            _ <- ZIO.log(s"IssueCredentialRecord: OfferPending (START)")
+            didComm <- ZIO.service[DidComm]
+            // offer = OfferCredential.build( // TODO
+            //   // body = body FIXME
+            //   // attachments = Seq(attachmentDescriptor),
+            //   to = offer2.fromDID,
+            //   from = didComm.myDid,
+            //   thid = Some(offer.thid),
+            //   credential_preview = ??? // FXOME
+            // )
+            // msg = offer.makeMessage
+            // _ <- sendMessage(msg)
+            _ <- sendMessage(offer.makeMessage)
             credentialService <- ZIO.service[CredentialService]
             _ <- credentialService.markOfferSent(id)
           } yield ()
