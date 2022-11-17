@@ -12,7 +12,7 @@ inThisBuild(
     releaseUseGlobalVersion := false,
     versionScheme := Some("semver-spec"),
     githubOwner := "input-output-hk",
-    githubRepository := "atala-prism-building-blocks",
+    githubRepository := "atala-prism-building-blocks"
   )
 )
 
@@ -70,6 +70,8 @@ lazy val D = new {
 }
 
 publish / skip := true
+
+coverageDataDir := target.value / "coverage"
 
 // #########################
 // ### Models & Services ###
