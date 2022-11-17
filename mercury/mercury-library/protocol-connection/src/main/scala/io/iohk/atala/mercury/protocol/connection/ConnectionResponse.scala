@@ -3,7 +3,6 @@ package io.iohk.atala.mercury.protocol.connection
 import io.circe.{Decoder, Encoder}
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.iohk.atala.mercury.model.{DidId, Message, PIURI}
-import io.iohk.atala.mercury.protocol.connection.ConnectionRequest.Body
 import io.circe.syntax.*
 
 object ConnectionResponse {
@@ -20,8 +19,23 @@ object ConnectionResponse {
     given Decoder[Body] = deriveDecoder[Body]
   }
 
+  def makeResponseFromRequest(msg: Message): ConnectionResponse = {
+    val cr: ConnectionRequest = ConnectionRequest.readFromMessage(msg)
+
+    ConnectionResponse(
+      body = ConnectionResponse.Body(
+        goal_code = cr.body.goal_code,
+        goal = cr.body.goal,
+        accept = cr.body.accept,
+      ),
+      thid = msg.thid.orElse(Some(cr.id)),
+      from = msg.to.get, // TODO  need new PeerDid
+      to = msg.from.get, // TODO get
+    )
+  }
+
   def readFromMessage(message: Message): ConnectionResponse = {
-    val body = message.body.asJson.as[ConnectionRequest.Body].toOption.get // TODO get
+    val body = message.body.asJson.as[ConnectionResponse.Body].toOption.get // TODO get
     ConnectionResponse(
       id = message.id,
       `type` = message.piuri,
@@ -35,12 +49,12 @@ object ConnectionResponse {
 }
 
 final case class ConnectionResponse(
-    `type`: PIURI,
+    `type`: PIURI = ConnectionResponse.`type`,
     id: String = java.util.UUID.randomUUID().toString,
     from: DidId,
     to: DidId,
     thid: Option[String],
-    body: Body,
+    body: ConnectionResponse.Body,
 ) {
   assert(`type` == "https://atalaprism.io/mercury/connections/1.0/response")
 

@@ -15,13 +15,12 @@ class OutOfBandSpec extends FunSuite {
     assert(ret.isInstanceOf[Right[_, Invitation]])
 
     val expected = Invitation(
-      "https://didcomm.org/out-of-band/2.0/invitation",
       "421dbbc8-57ca-4341-aa3a-f5b4215c568f",
+      "https://didcomm.org/out-of-band/2.0/invitation",
       DidId(
         "did:peer:2.Ez6LSmLmWmTvwjgLSuUaEQHdHSFWPwyibgzomWjFmnC6FhLnU.Vz6MktNgLh4N1u9KNhDiqe8KZ8bsLzLcqsifoNiUtBoSs9jxf.SeyJpZCI6Im5ldy1pZCIsInQiOiJkbSIsInMiOiJodHRwOi8vMTI3LjAuMC4xOjgwMDAiLCJhIjpbImRpZGNvbW0vdjIiXX0"
       ),
       Body("request-mediate", "RequestMediate", Seq("didcomm/v2", "didcomm/aip2;env=rfc587")),
-      None
     )
 
     assertEquals(ret, Right(expected))

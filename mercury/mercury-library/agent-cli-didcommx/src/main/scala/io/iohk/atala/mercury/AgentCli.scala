@@ -1,22 +1,24 @@
 package io.iohk.atala.mercury
 
 import scala.jdk.CollectionConverters.*
+import zio.*
 
-import zio._
 import java.io.IOException
 import io.iohk.atala.resolvers.PeerDidMediatorSecretResolver
 import zhttp.service.ChannelFactory
 import zhttp.service.EventLoopGroup
 import org.didcommx.didcomm.DIDComm
 import io.iohk.atala.resolvers.UniversalDidResolver
-import zhttp.service._
-import zhttp.http._
+import zhttp.service.*
+import zhttp.http.*
 import io.iohk.atala.QRcode
-import io.iohk.atala.mercury.model.{_, given}
-import io.iohk.atala.mercury.model.error._
-import io.iohk.atala.mercury.protocol.outofbandlogin._
-import io.iohk.atala.mercury.protocol.issuecredential._
-import io.iohk.atala.mercury.protocol.presentproof._
+import io.iohk.atala.mercury.model.{*, given}
+import io.iohk.atala.mercury.model.error.*
+import io.iohk.atala.mercury.protocol.outofbandlogin.*
+import io.iohk.atala.mercury.protocol.issuecredential.*
+import io.iohk.atala.mercury.protocol.presentproof.*
+import io.iohk.atala.mercury.protocol.connection.*
+import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
 
 /** AgentCli
   * {{{
@@ -46,14 +48,14 @@ object AgentCli extends ZIOAppDefault {
   }
 
   val startLogo = Console.printLine("""
-    |   ███╗   ███╗███████╗██████╗  ██████╗██╗   ██╗██████╗ ██╗   ██╗       ██████╗██╗     ██╗
-    |   ████╗ ████║██╔════╝██╔══██╗██╔════╝██║   ██║██╔══██╗╚██╗ ██╔╝      ██╔════╝██║     ██║
-    |   ██╔████╔██║█████╗  ██████╔╝██║     ██║   ██║██████╔╝ ╚████╔╝ █████╗██║     ██║     ██║
-    |   ██║╚██╔╝██║██╔══╝  ██╔══██╗██║     ██║   ██║██╔══██╗  ╚██╔╝  ╚════╝██║     ██║     ██║
-    |   ██║ ╚═╝ ██║███████╗██║  ██║╚██████╗╚██████╔╝██║  ██║   ██║         ╚██████╗███████╗██║
-    |   ╚═╝     ╚═╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═════╝ ╚═╝  ╚═╝   ╚═╝          ╚═════╝╚══════╝╚═╝
-    |DID Comm V2 Agent - CLI tool for debugging - Build by Atala (IOHK)
-    |""".stripMargin)
+      |   ███╗   ███╗███████╗██████╗  ██████╗██╗   ██╗██████╗ ██╗   ██╗       ██████╗██╗     ██╗
+      |   ████╗ ████║██╔════╝██╔══██╗██╔════╝██║   ██║██╔══██╗╚██╗ ██╔╝      ██╔════╝██║     ██║
+      |   ██╔████╔██║█████╗  ██████╔╝██║     ██║   ██║██████╔╝ ╚████╔╝ █████╗██║     ██║     ██║
+      |   ██║╚██╔╝██║██╔══╝  ██╔══██╗██║     ██║   ██║██╔══██╗  ╚██╔╝  ╚════╝██║     ██║     ██║
+      |   ██║ ╚═╝ ██║███████╗██║  ██║╚██████╗╚██████╔╝██║  ██║   ██║         ╚██████╗███████╗██║
+      |   ╚═╝     ╚═╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═════╝ ╚═╝  ╚═╝   ╚═╝          ╚═════╝╚══════╝╚═╝
+      |DID Comm V2 Agent - CLI tool for debugging - Build by Atala (IOHK)
+      |""".stripMargin)
 
   val env = ChannelFactory.auto ++ EventLoopGroup.auto()
 
@@ -88,6 +90,17 @@ object AgentCli extends ZIOAppDefault {
       invitationSigned <- didCommService.packSigned(invitation.makeMsg)
       serverUrl = s"https://didcomm-bootstrap.atalaprism.com?_oob=${invitationSigned.base64}" // FIXME locahost
       _ <- Console.printLine(QRcode.getQr(serverUrl).toString)
+      _ <- Console.printLine(serverUrl)
+      _ <- Console.printLine(invitation.id + " -> " + invitation)
+    } yield ()
+  }
+
+  def generateConnectionInvitation = {
+    import io.iohk.atala.mercury.protocol.invitation._
+    for {
+      didCommService <- ZIO.service[DidComm]
+      invitation = OutOfBandConnection.createInvitation(from = didCommService.myDid)
+      serverUrl = s"https://didcomm-bootstrap.atalaprism.com?_oob=${invitation.toBase64}"
       _ <- Console.printLine(serverUrl)
       _ <- Console.printLine(invitation.id + " -> " + invitation)
     } yield ()
@@ -212,6 +225,35 @@ object AgentCli extends ZIOAppDefault {
     } yield ()
   }
 
+  def connect: ZIO[DidComm, MercuryError | IOException, Unit] = {
+
+    import io.iohk.atala.mercury.protocol.invitation.OutOfBand
+    import io.circe._, io.circe.parser._
+    import io.iohk.atala.mercury.protocol.invitation.InvitationCodec._
+    for {
+      didCommService <- ZIO.service[DidComm]
+      _ <- Console.printLine("Read OutOfBand Invitation")
+      data <- Console.readLine.flatMap {
+        case ""  => ZIO.fail(???) // TODO retry
+        case url => ZIO.succeed(OutOfBand.parseLink(url).getOrElse(???)) /// TODO make ERROR
+      }
+      _ <- Console.printLine(s"Decoded Invitation = $data")
+      parseResult = parse(data).getOrElse(null)
+      connectionInvitation = parseResult.as[Invitation].getOrElse(???)
+      _ <- Console.printLine(s"Invitation to ${connectionInvitation.id} with $connectionInvitation")
+      connectionRequest = ConnectionRequest(
+        from = didCommService.myDid,
+        to = connectionInvitation.from,
+        thid = Some(connectionInvitation.id), // TODO if this is coorect
+        body = ConnectionRequest.Body(goal_code = Some("connect"), goal = Some("Establish Connection"))
+      )
+      msg = connectionRequest.makeMessage
+      _ <- Console.printLine("Sending: " + msg)
+      _ <- sendMessage(msg)
+
+    } yield ()
+  }
+
   /** Encrypt and send a Message via HTTP
     *
     * TODO Move this method to another model
@@ -333,6 +375,8 @@ object AgentCli extends ZIOAppDefault {
         "Login with DID" -> loginInvitation.provide(didCommLayer),
         "Propose Credential" -> proposeAndSendCredential.provide(didCommLayer),
         "Present Proof" -> presentProof.provide(didCommLayer),
+        "Generate Connection invitation" -> generateConnectionInvitation.provide(didCommLayer),
+        "Connect" -> connect.provide(didCommLayer),
       )
     ).repeatWhile((_) => true)
 
@@ -419,6 +463,28 @@ object AgentCli extends ZIOAppDefault {
                 presentation = Presentation.readFromMessage(msg)
                 _ <- ZIO.logInfo("Got Presentation: " + presentation)
               } yield ("Presentation Recived")
+            // ########################Comnnect##############################################
+            case s if s == ConnectionRequest.`type` => // Inviter
+              for {
+                _ <- ZIO.logInfo("*" * 100)
+                _ <- ZIO.logInfo("As Inviter in Connect:")
+                connectionRequest = ConnectionRequest.readFromMessage(msg)
+                _ <- ZIO.logInfo("Got ConnectionRequest: " + connectionRequest)
+                _ <- ZIO.logInfo("Creating New PeerDID...")
+//                peer <- ZIO.succeed(PeerDID.makePeerDid(serviceEndpoint = serviceEndpoint)) TODO
+//                _ <- ZIO.logInfo(s"My new DID => $peer")
+                connectionResponse = ConnectionResponse.makeResponseFromRequest(msg)
+                msgToSend = connectionResponse.makeMessage
+                _ <- sendMessage(msgToSend)
+              } yield ("Connection Request Sent")
+            case s if s == ConnectionResponse.`type` => // Invitee
+              for {
+                _ <- ZIO.logInfo("*" * 100)
+                _ <- ZIO.logInfo("As Invitee in Connect:")
+                connectionResponse = ConnectionResponse.readFromMessage(msg)
+                _ <- ZIO.logInfo("Got Connection Response: " + connectionResponse)
+              } yield ("Connection established")
+
             case "https://didcomm.org/routing/2.0/forward"                      => ??? // SEE mediator
             case "https://atalaprism.io/mercury/mailbox/1.0/ReadMessages"       => ??? // SEE mediator
             case "https://didcomm.org/coordinate-mediation/2.0/mediate-request" => ??? // SEE mediator

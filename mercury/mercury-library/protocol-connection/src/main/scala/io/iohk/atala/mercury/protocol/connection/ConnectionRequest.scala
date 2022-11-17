@@ -39,7 +39,7 @@ object ConnectionRequest {
 }
 
 final case class ConnectionRequest(
-    `type`: PIURI,
+    `type`: PIURI = ConnectionRequest.`type`,
     id: String = java.util.UUID.randomUUID().toString,
     from: DidId,
     to: DidId,

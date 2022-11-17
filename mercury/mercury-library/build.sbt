@@ -214,6 +214,7 @@ lazy val agent = project // maybe merge into models
     protocolLogin,
     protocolIssueCredential,
     protocolPresentProof,
+    protocolConnection,
   )
 
 /** agents implementation with didcommx */
