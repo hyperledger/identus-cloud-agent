@@ -35,7 +35,7 @@ object PrismDID extends ProtoModelHelper {
       .map(_.getMessage)
       .map(_ => CanonicalPrismDID(HexString.fromByteArray(stateHash)))
 
-  def buildLongFormFromOperation(createOperation: PrismDIDOperation.Create): PrismDID = {
+  def buildLongFormFromOperation(createOperation: PrismDIDOperation.Create): LongFormPrismDID = {
     val createDIDOperation = createOperation.toProto
     val atalaOperation = node_models.AtalaOperation(createDIDOperation)
     buildLongFormFromAtalaOperation(atalaOperation).toOption.get
@@ -99,18 +99,18 @@ object PrismDID extends ProtoModelHelper {
 }
 
 final case class CanonicalPrismDID private[did] (stateHash: HexString) extends PrismDID {
-  override def suffix: DIDMethodSpecificId = DIDMethodSpecificId.fromString(stateHash.toString).get
+  override val suffix: DIDMethodSpecificId = DIDMethodSpecificId.fromString(stateHash.toString).get
 }
 
 // TODO: change encodedState to AtalaOperation?
 final case class LongFormPrismDID private[did] (atalaOperation: node_models.AtalaOperation) extends PrismDID {
-  override def suffix: DIDMethodSpecificId = {
-    val encodedState = Base64UrlString.fromByteArray(atalaOperation.toByteArray).noPadding
-    DIDMethodSpecificId.fromString(s"${stateHash.toString}:${encodedState.toString}").get
-  }
-
-  override def stateHash: HexString = {
+  override val stateHash: HexString = {
     val encodedState = atalaOperation.toByteArray
     HexString.fromByteArray(Sha256.compute(encodedState).getValue)
+  }
+
+  override val suffix: DIDMethodSpecificId = {
+    val encodedState = Base64UrlString.fromByteArray(atalaOperation.toByteArray).noPadding
+    DIDMethodSpecificId.fromString(s"${stateHash.toString}:${encodedState.toString}").get
   }
 }
