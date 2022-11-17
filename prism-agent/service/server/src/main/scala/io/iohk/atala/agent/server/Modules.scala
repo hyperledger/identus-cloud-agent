@@ -49,9 +49,8 @@ import io.iohk.atala.agent.server.http.{HttpRoutes, HttpServer}
 import io.iohk.atala.castor.core.repository.DIDOperationRepository
 import io.iohk.atala.castor.core.service.{DIDService, DIDServiceImpl}
 import io.iohk.atala.pollux.core.service.CredentialServiceImpl
-import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.castor.sql.repository.{JdbcDIDOperationRepository, TransactorLayer}
-import io.iohk.atala.castor.sql.repository.{DbConfig => CastorDbConfig}
+import io.iohk.atala.castor.sql.repository.DbConfig as CastorDbConfig
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
 import io.iohk.atala.pollux.core.repository.CredentialRepository
@@ -65,17 +64,19 @@ import zio.config.typesafe.TypesafeConfigSource
 import zio.config.{ReadError, read}
 import zio.interop.catz.*
 import zio.stream.ZStream
-import zhttp.http._
+import zhttp.http.*
 import zhttp.service.Server
 
 import java.util.concurrent.Executors
-
-import io.iohk.atala.mercury._
-import io.iohk.atala.mercury.model._
-import io.iohk.atala.mercury.model.error._
-import io.iohk.atala.mercury.protocol.issuecredential._
+import io.iohk.atala.mercury.*
+import io.iohk.atala.mercury.AgentCli.sendMessage
+import io.iohk.atala.mercury.model.*
+import io.iohk.atala.mercury.model.error.*
+import io.iohk.atala.mercury.protocol.issuecredential.*
 import io.iohk.atala.pollux.core.model.error.IssueCredentialError
 import io.iohk.atala.pollux.core.model.error.IssueCredentialError.RepositoryError
+import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc
+
 import java.io.IOException
 import cats.implicits.*
 import io.iohk.atala.pollux.schema.SchemaRegistryServerEndpoints
@@ -141,11 +142,12 @@ object Modules {
     Server.start(port, app)
   }
 
-  val didCommExchangesJob: RIO[DidComm, Unit] =
-    BackgroundJobs.didCommExchanges
-      .repeat(Schedule.spaced(10.seconds))
-      .unit
-      .provideSomeLayer(AppModule.credentialServiceLayer)
+  // TODO: revert to normal
+  val didCommExchangesJob: RIO[DidComm, Unit] = ZIO.unit
+//    BackgroundJobs.didCommExchanges
+//      .repeat(Schedule.spaced(10.seconds))
+//      .unit
+//      .provideSomeLayer(AppModule.credentialServiceLayer)
 
   val connectDidCommExchangesJob: RIO[DidComm, Unit] =
     ConnectBackgroundJobs.didCommExchanges
@@ -306,18 +308,9 @@ object SystemModule {
 }
 
 object AppModule {
-  val didOpValidatorLayer: ULayer[DIDOperationValidator] = DIDOperationValidator.layer(
-    DIDOperationValidator.Config(
-      publicKeyLimit = 50,
-      serviceLimit = 50
-    )
-  )
+  val didServiceLayer: TaskLayer[DIDService] = GrpcModule.layers >>> DIDServiceImpl.layer
 
-  val didServiceLayer: TaskLayer[DIDService] =
-    (GrpcModule.layers ++ RepoModule.layers ++ didOpValidatorLayer) >>> DIDServiceImpl.layer
-
-  val manageDIDServiceLayer: TaskLayer[ManagedDIDService] =
-    (didOpValidatorLayer ++ didServiceLayer) >>> ManagedDIDService.inMemoryStorage()
+  val manageDIDServiceLayer: TaskLayer[ManagedDIDService] = didServiceLayer >>> ManagedDIDService.inMemoryStorage
 
   val credentialServiceLayer: RLayer[DidComm, CredentialService] =
     (GrpcModule.layers ++ RepoModule.layers) >>> CredentialServiceImpl.layer
@@ -327,6 +320,7 @@ object AppModule {
 }
 
 object GrpcModule {
+  // TODO: once Castor + Pollux has migrated to use Node 2.0 stubs, this should be removed.
   val irisStubLayer: TaskLayer[IrisServiceStub] = {
     val stubLayer = ZLayer.fromZIO(
       ZIO
@@ -341,7 +335,21 @@ object GrpcModule {
     SystemModule.configLayer >>> stubLayer
   }
 
-  val layers = irisStubLayer
+  val prismNodeStubLayer: TaskLayer[NodeServiceGrpc.NodeServiceStub] = {
+    val stubLayer = ZLayer.fromZIO(
+      ZIO
+        .service[AppConfig]
+        .map(_.prismNode.service)
+        .flatMap(config =>
+          ZIO.attempt(
+            NodeServiceGrpc.stub(ManagedChannelBuilder.forAddress(config.host, config.port).usePlaintext.build)
+          )
+        )
+    )
+    SystemModule.configLayer >>> stubLayer
+  }
+
+  val layers = irisStubLayer ++ prismNodeStubLayer
 }
 
 object HttpModule {

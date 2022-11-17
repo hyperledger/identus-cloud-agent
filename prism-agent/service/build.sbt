@@ -20,6 +20,7 @@ inThisBuild(
 )
 
 val commonSettings = Seq(
+  maxErrors := 5,
   testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
   githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN"),
   resolvers += Resolver.githubPackages("input-output-hk"),

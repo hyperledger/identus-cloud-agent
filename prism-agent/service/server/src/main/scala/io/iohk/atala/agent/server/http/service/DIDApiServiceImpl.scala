@@ -65,17 +65,7 @@ class DIDApiServiceImpl(service: DIDService)(using runtime: Runtime[Any])
       toEntityMarshallerDIDOperationResponse: ToEntityMarshaller[DIDOperationResponse],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
-    val result = for {
-      operation <- ZIO.fromEither(createDIDRequest.toDomain).mapError(HttpServiceError.InvalidPayload.apply)
-      outcome <- service
-        .createPublishedDID(operation)
-        .mapError(HttpServiceError.DomainError[DIDOperationError].apply)
-    } yield outcome
-
-    onZioSuccess(result.mapBoth(_.toOAS, _.toOAS).either) {
-      case Left(error)   => complete(error.status -> error)
-      case Right(result) => createDid202(result)
-    }
+    onZioSuccess(ZIO.unit) { _ => createDid202(mockDIDOperationResponse) }
   }
 
   override def deactivateDID(didRef: String, deactivateDIDRequest: DeactivateDIDRequest)(implicit
