@@ -13,14 +13,16 @@ import io.iohk.atala.agent.server.http.marshaller.{
   DIDAuthenticationApiMarshallerImpl,
   DIDOperationsApiMarshallerImpl,
   DIDRegistrarApiMarshallerImpl,
-  IssueCredentialsApiMarshallerImpl
+  IssueCredentialsApiMarshallerImpl,
+  ConnectionsManagementApiMarshallerImpl
 }
 import io.iohk.atala.agent.server.http.service.{
   DIDApiServiceImpl,
   DIDAuthenticationApiServiceImpl,
   DIDOperationsApiServiceImpl,
   DIDRegistrarApiServiceImpl,
-  IssueCredentialsApiServiceImpl
+  IssueCredentialsApiServiceImpl,
+  ConnectionsManagementApiServiceImpl
 }
 import io.iohk.atala.castor.core.repository.DIDOperationRepository
 import io.iohk.atala.agent.openapi.api.{
@@ -28,7 +30,8 @@ import io.iohk.atala.agent.openapi.api.{
   DIDAuthenticationApi,
   DIDOperationsApi,
   DIDRegistrarApi,
-  IssueCredentialsApi
+  IssueCredentialsApi,
+  ConnectionsManagementApi
 }
 import io.iohk.atala.castor.sql.repository.{JdbcDIDOperationRepository, TransactorLayer}
 import zio.*
@@ -305,8 +308,14 @@ object HttpModule {
     (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new IssueCredentialsProtocolApi(_, _))
   }
 
+  val connectionsManagementApiLayer: TaskLayer[ConnectionsManagementApi] = {
+    val apiServiceLayer = ConnectionsManagementApiServiceImpl.layer
+    val apiMarshallerLayer = ConnectionsManagementApiMarshallerImpl.layer
+    (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new ConnectionsManagementApi(_, _))
+  }
+
   val layers =
-    didApiLayer ++ didOperationsApiLayer ++ didAuthenticationApiLayer ++ didRegistrarApiLayer ++ issueCredentialsApiLayer ++ issueCredentialsProtocolApiLayer
+    didApiLayer ++ didOperationsApiLayer ++ didAuthenticationApiLayer ++ didRegistrarApiLayer ++ issueCredentialsApiLayer ++ issueCredentialsProtocolApiLayer ++ connectionsManagementApiLayer
 }
 
 object RepoModule {

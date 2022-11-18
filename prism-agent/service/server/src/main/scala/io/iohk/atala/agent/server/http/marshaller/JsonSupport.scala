@@ -8,6 +8,7 @@ import java.util.UUID
 import spray.json.JsString
 import spray.json.JsValue
 import spray.json.DeserializationException
+import java.time.OffsetDateTime
 
 trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 
@@ -61,6 +62,15 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
       }
     }
   }
+  implicit object OffsetDateTimeFormat extends JsonFormat[OffsetDateTime] {
+    def write(dt: OffsetDateTime) = JsString(dt.toString)
+    def read(value: JsValue) = {
+      value match {
+        case JsString(dt) => OffsetDateTime.parse(dt)
+        case _            => throw new DeserializationException("Expected hexadecimal OffsetDateTime string")
+      }
+    }
+  }
   given RootJsonFormat[CreateIssueCredentialRecordRequest] = jsonFormat4(CreateIssueCredentialRecordRequest.apply)
   given RootJsonFormat[IssueCredentialRecord] = jsonFormat6(IssueCredentialRecord.apply)
   given RootJsonFormat[IssueCredentialRecordCollection] = jsonFormat4(IssueCredentialRecordCollection.apply)
@@ -92,5 +102,12 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   given RootJsonFormat[W3CSchemaInput] = jsonFormat4(W3CSchemaInput.apply)
   given RootJsonFormat[W3CSchemaMeta] = jsonFormat6(W3CSchemaMeta.apply)
   given RootJsonFormat[W3CSchemaPaginated] = jsonFormat4(W3CSchemaPaginated.apply)
+
+  // Connections Management
+  given RootJsonFormat[CreateConnectionRequest] = jsonFormat1(CreateConnectionRequest.apply)
+  given RootJsonFormat[ReceiveConnectionInvitationRequest] = jsonFormat1(ReceiveConnectionInvitationRequest.apply)
+  given RootJsonFormat[ConnectionCollection] = jsonFormat3(ConnectionCollection.apply)
+  given RootJsonFormat[Connection] = jsonFormat10(Connection.apply)
+  given RootJsonFormat[ConnectionInvitation] = jsonFormat8(ConnectionInvitation.apply)
 
 }
