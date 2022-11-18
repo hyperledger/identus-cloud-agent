@@ -25,6 +25,7 @@ import java.io.IOException
 
 import zhttp.service._
 import zhttp.http._
+import io.iohk.atala.pollux.vc.jwt.JwtCredential
 
 object BackgroundJobs {
 
@@ -48,27 +49,17 @@ object BackgroundJobs {
       _ <- ZIO.logDebug(s"Running action with records => $record")
       _ <- record match {
         // Offer should be sent from Issuer to Holder
-        case IssueCredentialRecord(id, _, _, _, _, Role.Issuer, _, _, _, _, OfferPending, _, Some(offer), _, _) =>
+        case IssueCredentialRecord(id, _, _, Role.Issuer, _, _, _, _, OfferPending, _, Some(offer), _, _) =>
           for {
             _ <- ZIO.log(s"IssueCredentialRecord: OfferPending (START)")
             didComm <- ZIO.service[DidComm]
-            // offer = OfferCredential.build( // TODO
-            //   // body = body FIXME
-            //   // attachments = Seq(attachmentDescriptor),
-            //   to = offer2.fromDID,
-            //   from = didComm.myDid,
-            //   thid = Some(offer.thid),
-            //   credential_preview = ??? // FXOME
-            // )
-            // msg = offer.makeMessage
-            // _ <- sendMessage(msg)
             _ <- sendMessage(offer.makeMessage)
             credentialService <- ZIO.service[CredentialService]
             _ <- credentialService.markOfferSent(id)
           } yield ()
 
         // Request should be sent from Holder to Issuer
-        case IssueCredentialRecord(id, _, _, _, _, Role.Holder, _, _, _, _, RequestPending, _, _, Some(request), _) =>
+        case IssueCredentialRecord(id, _, _, Role.Holder, _, _, _, _, RequestPending, _, _, Some(request), _) =>
           for {
             _ <- sendMessage(request.makeMessage)
             credentialService <- ZIO.service[CredentialService]
@@ -76,7 +67,7 @@ object BackgroundJobs {
           } yield ()
 
         // 'automaticIssuance' is TRUE. Issuer automatically accepts the Request
-        case IssueCredentialRecord(id, _, _, _, _, Role.Issuer, _, _, Some(true), _, RequestReceived, _, _, _, _) =>
+        case IssueCredentialRecord(id, _, _, Role.Issuer, _, _, Some(true), _, RequestReceived, _, _, _, _) =>
           for {
             credentialService <- ZIO.service[CredentialService]
             _ <- credentialService.acceptCredentialRequest(id)
@@ -87,8 +78,6 @@ object BackgroundJobs {
               id,
               _,
               _,
-              _,
-              _,
               Role.Issuer,
               _,
               _,
@@ -96,32 +85,30 @@ object BackgroundJobs {
               Some(awaitConfirmation),
               CredentialPending,
               _,
-              _,
+              Some(offer),
               _,
               Some(issue)
             ) =>
           for {
             credentialService <- ZIO.service[CredentialService]
+            issuer = credentialService.createIssuer
             w3Credential <- credentialService.createCredentialPayloadFromRecord(
               record,
-              credentialService.createIssuer,
+              issuer,
               Instant.now()
             )
+            signedJwtCredential = JwtCredential.toEncodedJwt(w3Credential, issuer)
+            issueCredential = IssueCredential.build(
+              fromDID = issue.from,
+              toDID = issue.to,
+              thid = issue.thid,
+              credentials = Map("prims/jwt" -> signedJwtCredential.value)
+            )
+            _ <- credentialService.markCredentialGenerated(id, issueCredential)
           } yield ()
-          // Generate the JWT Credential and store it in DB as an attacment to IssueCredentialData
-          // Set ProtocolState to CredentialGenerated
-          // Set PublicationState to PublicationPending
-          for {
-            credentialService <- ZIO.service[CredentialService]
-            _ <- credentialService.markCredentialGenerated(id)
-            _ <- if (awaitConfirmation) credentialService.markCredentialPublicationPending(id) else ZIO.succeed(())
-          } yield ()
-
         // Credential has been generated and can be sent directly to the Holder
         case IssueCredentialRecord(
               id,
-              _,
-              _,
               _,
               _,
               Role.Issuer,
@@ -146,8 +133,6 @@ object BackgroundJobs {
               id,
               _,
               _,
-              _,
-              _,
               Role.Issuer,
               _,
               _,
@@ -165,8 +150,8 @@ object BackgroundJobs {
             _ <- credentialService.markCredentialSent(id)
           } yield ()
 
-        case IssueCredentialRecord(id, _, _, _, _, _, _, _, _, _, ProblemReportPending, _, _, _, _) => ???
-        case IssueCredentialRecord(id, _, _, _, _, _, _, _, _, _, _, _, _, _, _)                    => ZIO.unit
+        case IssueCredentialRecord(id, _, _, _, _, _, _, _, ProblemReportPending, _, _, _, _) => ???
+        case IssueCredentialRecord(id, _, _, _, _, _, _, _, _, _, _, _, _)                    => ZIO.unit
       }
     } yield ()
 

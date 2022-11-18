@@ -108,7 +108,7 @@ object Modules {
                   ZIO.fail(error)
               }
             }
-            .map(str => Response.text(str))
+            .map(str => Response.ok)
 
       }
     Server.start(port, app)
@@ -122,7 +122,7 @@ object Modules {
 
   def webServerProgram(
       jsonString: String
-  ): ZIO[DidComm with CredentialService, MercuryThrowable, String] = {
+  ): ZIO[DidComm with CredentialService, MercuryThrowable, Unit] = {
     import io.iohk.atala.mercury.DidComm.*
     ZIO.logAnnotate("request-id", java.util.UUID.randomUUID.toString()) {
       for {
@@ -142,7 +142,7 @@ object Modules {
                 credentialService <- ZIO.service[CredentialService]
 
                 // TODO
-              } yield ("OfferCredential Sent")
+              } yield ()
 
             case s if s == OfferCredential.`type` => // Holder
               for {
@@ -159,7 +159,7 @@ object Modules {
                   }
                   .catchAll { case ex: IOException => ZIO.fail(ex) }
 
-              } yield ("Offer received")
+              } yield ()
 
             case s if s == RequestCredential.`type` => // Issuer
               for {
@@ -177,7 +177,7 @@ object Modules {
                   .catchAll { case ex: IOException => ZIO.fail(ex) }
 
                 // TODO todoTestOption if none
-              } yield ("RequestCredential received")
+              } yield ()
 
             case s if s == IssueCredential.`type` => // Holder
               for {
@@ -193,8 +193,7 @@ object Modules {
                       ZIO.fail(cause)
                   }
                   .catchAll { case ex: IOException => ZIO.fail(ex) }
-
-              } yield ("IssueCredential Received")
+              } yield ()
 
             case _ => ZIO.succeed("Unknown Message Type")
           }
