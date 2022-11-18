@@ -59,9 +59,9 @@ object PrismDIDSpec extends ZIOSpecDefault {
         )
       )
       val encodedState = mockAtalaOperation.toByteArray
-      val encodedStateBase64 = Base64UrlString.fromByteArray(encodedState).noPadding
+      val encodedStateBase64 = Base64UrlString.fromByteArray(encodedState).toStringNoPadding
       val stateHash = Sha256.compute(encodedState).getHexValue
-      val didString = s"did:prism:${stateHash}:${encodedStateBase64.toString}"
+      val didString = s"did:prism:$stateHash:$encodedStateBase64"
       val unsafeDID = PrismDID.fromString(didString)
       assert(unsafeDID)(isLeft(containsString("CreateDid Atala operation expected")))
     }

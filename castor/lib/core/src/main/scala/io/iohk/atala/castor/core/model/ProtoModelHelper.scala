@@ -44,9 +44,9 @@ private[castor] trait ProtoModelHelper {
         id = publicKey.id,
         // TODO: define the corresponding KeyUsage in Prism DID (ATL-2213)
         usage = publicKey.purpose match {
-          case VerificationRelationship.Authentication  => node_models.KeyUsage.AUTHENTICATION_KEY
-          case VerificationRelationship.AssertionMethod => node_models.KeyUsage.ISSUING_KEY
-          case VerificationRelationship.KeyAgreement    => node_models.KeyUsage.COMMUNICATION_KEY
+          case VerificationRelationship.Authentication       => node_models.KeyUsage.AUTHENTICATION_KEY
+          case VerificationRelationship.AssertionMethod      => node_models.KeyUsage.ISSUING_KEY
+          case VerificationRelationship.KeyAgreement         => node_models.KeyUsage.COMMUNICATION_KEY
           case VerificationRelationship.CapabilityInvocation => ???
         },
         addedOn = None,

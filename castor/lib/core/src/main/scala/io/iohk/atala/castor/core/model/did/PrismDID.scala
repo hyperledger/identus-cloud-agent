@@ -109,7 +109,7 @@ final case class LongFormPrismDID private[did] (atalaOperation: node_models.Atal
   }
 
   override val suffix: DIDMethodSpecificId = {
-    val encodedState = Base64UrlString.fromByteArray(atalaOperation.toByteArray).noPadding
-    DIDMethodSpecificId.fromString(s"${stateHash.toString}:${encodedState.toString}").get
+    val encodedState = Base64UrlString.fromByteArray(atalaOperation.toByteArray).toStringNoPadding
+    DIDMethodSpecificId.fromString(s"${stateHash.toString}:${encodedState}").get
   }
 }
