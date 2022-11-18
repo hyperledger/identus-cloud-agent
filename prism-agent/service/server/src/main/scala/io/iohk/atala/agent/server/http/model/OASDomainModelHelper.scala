@@ -82,7 +82,7 @@ trait OASDomainModelHelper {
   extension (outcome: castorDomain.ScheduleDIDOperationOutcome) {
     def toOAS: DIDOperationResponse = DIDOperationResponse(
       scheduledOperation = DidOperationSubmission(
-        id = outcome.operationId.toString,
+        id = HexString.fromByteArray(outcome.operationId.toArray).toString,
         didRef = outcome.did.toString
       )
     )
