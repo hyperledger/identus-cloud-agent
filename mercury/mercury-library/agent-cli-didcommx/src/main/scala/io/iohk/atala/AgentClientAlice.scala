@@ -2,9 +2,6 @@ package io.iohk.atala
 
 import zio._
 
-import zhttp.service.{ChannelFactory, Client, EventLoopGroup}
-import zhttp.http.{Method, Headers}
-
 import io.iohk.atala.mercury._
 import io.iohk.atala.mercury.{given}
 import io.circe.Printer
@@ -20,7 +17,7 @@ import io.circe._, io.circe.parser._
 @main def AgentClientAlice() = {
 
   val app = AgentPrograms.pickupMessageProgram
-    .provide(AgentService.alice, HttpClientZhttp.layer)
+    .provide(AgentService.alice, ZioHttpClient.layer)
 
   Unsafe.unsafe { implicit u => Runtime.default.unsafe.run(app).getOrThrowFiberFailure() }
 
