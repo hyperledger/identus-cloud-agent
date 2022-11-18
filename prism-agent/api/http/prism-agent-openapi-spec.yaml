@@ -39,10 +39,8 @@ tags:
   - name: Present Proof
     description: Present Proof REST API
   # Connect
-  - name: Connection Process
-    description: API for driving connection process.
   - name: Connections Management
-    description: State management for all existing connections, both established and pending.
+    description: API for driving connection process.
 
 
 paths:
@@ -937,12 +935,16 @@ paths:
   # ----------------------------------
   /connections:
     post:
-      tags: ["Connection Process"]
+      tags: ["Connections Management"]
       operationId: createConnection
       summary: Creates new connection and returns an invitation.
-      description: Returns new invitation object and creates new connection state record in `pending` state. Content of invitation depends on DIDComm protocol used, here is an example of how it would look like for `AIP 1.0 connection/v1` protocol. Once connection invitation is accepted, Agent should filter all additional attempts to accept it. We consider mult-party connections as out of scope for now.
+      description: |-
+        Returns new invitation object and creates new connection state record in `pending` state. 
+        Content of invitation depends on DIDComm protocol used, here is an example of how it would look like for `AIP 1.0 connection/v1` protocol. 
+        Once connection invitation is accepted, Agent should filter all additional attempts to accept it. 
+        We consider mult-party connections as out of scope for now.
       requestBody:
-        required: false
+        required: true
         content:
           application/json:
             schema:
@@ -957,9 +959,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "./connect/schemas.yaml#/components/schemas/ConnectionInvitationResponse"
+                $ref: "./connect/schemas.yaml#/components/schemas/Connection"
     get:
       tags: ["Connections Management"]
       operationId: getConnections
@@ -970,7 +970,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "./connect/schemas.yaml#/components/schemas/ConnectionStateCollection"
+                $ref: "./connect/schemas.yaml#/components/schemas/ConnectionCollection"
   /connections/{connectionId}:
     get:
       tags: ["Connections Management"]
@@ -984,7 +984,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "./connect/schemas.yaml#/components/schemas/ConnectionState"
+                $ref: "./connect/schemas.yaml#/components/schemas/Connection"
         "404":
           description: Connection state record not found for given `connectionId`
     delete:
@@ -1001,7 +1001,7 @@ paths:
           description: Connection state record not found for given `connectionId`
   /connections/accept:
     post:
-      tags: ["Connections Process"]
+      tags: ["Connections Management"]
       operationId: receiveConnectionInvitation
       summary:  Accepts externally received invitation.
       description: Creates new connection state record in `pending` state. It is assumed that application would first decode and validate the invitation. When it is accepted in the application side, it should be submitted in raw format to this API.
@@ -1010,11 +1010,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "./connect/schemas.yaml#/components/schemas/ConnectionInvitation"
+              properties:
+                invitation:
+                  type: string
+                  example: eyJAaWQiOiIzZmE4NWY2NC01NzE3LTQ1NjItYjNmYy0yYzk2M2Y2NmFmYTYiLCJAdHlwZSI6Imh0dHBzOi8vZGlkY29tbS5vcmcvbXktZmFtaWx5LzEuMC9teS1tZXNzYWdlLXR5cGUiLCJkaWQiOiJXZ1d4cXp0ck5vb0c5MlJYdnhTVFd2IiwiaW1hZ2VVcmwiOiJodHRwOi8vMTkyLjE2OC41Ni4xMDEvaW1nL2xvZ28uanBnIiwibGFiZWwiOiJCb2IiLCJyZWNpcGllbnRLZXlzIjpbIkgzQzJBVnZMTXY2Z21NTmFtM3VWQWpacGZrY0pDd0R3blpuNnozd1htcVBWIl0sInJvdXRpbmdLZXlzIjpbIkgzQzJBVnZMTXY2Z21NTmFtM3VWQWpacGZrY0pDd0R3blpuNnozd1htcVBWIl0sInNlcnZpY2VFbmRwb2ludCI6Imh0dHA6Ly8xOTIuMTY4LjU2LjEwMTo4MDIwIn0=
       responses:
         "200":
           description: Invitation successfully accepted.
           content:
             application/json:
               schema:
-                $ref: "./connect/schemas.yaml#/components/schemas/ConnectionState"
+                $ref: "./connect/schemas.yaml#/components/schemas/Connection"
