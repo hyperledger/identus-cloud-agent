@@ -66,7 +66,7 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault {
           svc <- ZIO.service[ManagedDIDService]
           testDIDSvc <- ZIO.service[TestDIDService]
           did <- svc.createAndStoreDID(template).map(_.asCanonical)
-          createOp <- svc.nonSecretStorage.getCreatedDID(did)
+          createOp <- svc.nonSecretStorage.getManagedDIDState(did)
           opsBefore <- testDIDSvc.getPublishedOperations
           _ <- svc.publishStoredDID(did)
           opsAfter <- testDIDSvc.getPublishedOperations
@@ -85,7 +85,7 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault {
           testDIDSvc <- ZIO.service[TestDIDService]
           longFormDID <- svc.createAndStoreDID(template)
           did = longFormDID.asCanonical
-          createOp <- svc.nonSecretStorage.getCreatedDID(did)
+          createOp <- svc.nonSecretStorage.getManagedDIDState(did)
           _ <- svc.publishStoredDID(longFormDID)
           opsAfter <- testDIDSvc.getPublishedOperations
         } yield assert(opsAfter.map(_.operation))(hasSameElements(createOp.toList))
@@ -127,7 +127,7 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault {
       for {
         svc <- ZIO.service[ManagedDIDService]
         did <- svc.createAndStoreDID(template).map(_.asCanonical)
-        createOperation <- svc.nonSecretStorage.getCreatedDID(did)
+        createOperation <- svc.nonSecretStorage.getManagedDIDState(did)
         publicKeys <- ZIO.fromOption(createOperation).map(_.publicKeys)
       } yield assert(publicKeys.map(i => i.id -> i.purpose))(
         hasSameElements(

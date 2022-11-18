@@ -1,7 +1,7 @@
 package io.iohk.atala.agent.walletapi.service
 
 import io.iohk.atala.agent.walletapi.crypto.{ECWrapper, KeyGeneratorWrapper}
-import io.iohk.atala.agent.walletapi.model.{DIDPublicKeyTemplate, ECKeyPair, ManagedDIDTemplate}
+import io.iohk.atala.agent.walletapi.model.{DIDPublicKeyTemplate, ECKeyPair, ManagedDIDState, ManagedDIDTemplate}
 import io.iohk.atala.agent.walletapi.model.ECCoordinates.*
 import io.iohk.atala.agent.walletapi.model.error.{CreateManagedDIDError, PublishManagedDIDError}
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService.{CreateDIDSecret, DEFAULT_MASTER_KEY_ID}
@@ -13,6 +13,7 @@ import io.iohk.atala.agent.walletapi.storage.{
 }
 import io.iohk.atala.agent.walletapi.util.ManagedDIDTemplateValidator
 import io.iohk.atala.castor.core.model.did.{
+  CanonicalPrismDID,
   DID,
   EllipticCurve,
   InternalKeyPurpose,
@@ -47,16 +48,22 @@ final class ManagedDIDService private[walletapi] (
 
   private val CURVE = EllipticCurve.SECP256K1
 
-  def publishStoredDID(did: PrismDID): IO[PublishManagedDIDError, ScheduleDIDOperationOutcome] = {
-    val canonicalDID = did.asCanonical
+  def publishStoredDID(did: CanonicalPrismDID): IO[PublishManagedDIDError, ScheduleDIDOperationOutcome] = {
     for {
       operation <- nonSecretStorage
-        .getCreatedDID(canonicalDID)
+        .getManagedDIDState(did)
         .mapError(PublishManagedDIDError.WalletStorageError.apply)
-        .flatMap(op => ZIO.fromOption(op).mapError(_ => PublishManagedDIDError.DIDNotFound(canonicalDID)))
+        .flatMap(op => ZIO.fromOption(op).mapError(_ => PublishManagedDIDError.DIDNotFound(did)))
+        .map {
+          case ManagedDIDState.Created(operation) => Right(operation)
+          case ManagedDIDState.PublicationAttempted(_, operationId) =>
+            Left(PublishManagedDIDError.AwaitingPublication(operationId))
+          case ManagedDIDState.Published(operationId) => Left(PublishManagedDIDError.AlreadyPublished(operationId))
+        }
+        .absolve
       masterKeyPair <-
         secretStorage
-          .getKey(canonicalDID, DEFAULT_MASTER_KEY_ID)
+          .getKey(did, DEFAULT_MASTER_KEY_ID)
           .mapError(PublishManagedDIDError.WalletStorageError.apply)
           .flatMap(maybeKey =>
             ZIO
@@ -80,6 +87,9 @@ final class ManagedDIDService private[walletapi] (
       outcome <- didService
         .createPublishedDID(signedAtalaOperation)
         .mapError(PublishManagedDIDError.OperationError.apply)
+      _ <- nonSecretStorage
+        .setManagedDIDState(did, ManagedDIDState.PublicationAttempted(operation, outcome.operationId))
+        .mapError(PublishManagedDIDError.WalletStorageError.apply)
     } yield outcome
   }
 
@@ -94,7 +104,7 @@ final class ManagedDIDService private[walletapi] (
       did = longFormDID.asCanonical
       _ <- ZIO.fromEither(didOpValidator.validate(createOperation)).mapError(CreateManagedDIDError.OperationError.apply)
       _ <- nonSecretStorage
-        .getCreatedDID(did)
+        .getManagedDIDState(did)
         .mapError(CreateManagedDIDError.WalletStorageError.apply)
         .filterOrFail(_.isEmpty)(CreateManagedDIDError.DIDAlreadyExists(did))
       _ <- ZIO
@@ -106,7 +116,7 @@ final class ManagedDIDService private[walletapi] (
       // If some steps above failed, it is not considered created and data that
       // are persisted along the way may be garbage collected.
       _ <- nonSecretStorage
-        .saveCreatedDID(did, createOperation)
+        .setManagedDIDState(did, ManagedDIDState.Created(createOperation))
         .mapError(CreateManagedDIDError.WalletStorageError.apply)
     } yield longFormDID
   }

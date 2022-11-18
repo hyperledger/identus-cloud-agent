@@ -44,7 +44,9 @@ class DIDRegistrarApiServiceImpl(service: ManagedDIDService)(using runtime: Runt
   ): Route = {
     val result = for {
       prismDID <- ZIO.fromEither(PrismDID.fromString(didRef)).mapError(HttpServiceError.InvalidPayload.apply)
-      outcome <- service.publishStoredDID(prismDID).mapError(HttpServiceError.DomainError[PublishManagedDIDError].apply)
+      outcome <- service
+        .publishStoredDID(prismDID.asCanonical)
+        .mapError(HttpServiceError.DomainError[PublishManagedDIDError].apply)
     } yield outcome
 
     onZioSuccess(result.mapBoth(_.toOAS, _.toOAS).either) {
