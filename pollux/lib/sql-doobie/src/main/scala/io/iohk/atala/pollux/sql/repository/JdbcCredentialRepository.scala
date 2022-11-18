@@ -68,7 +68,6 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   id,
         |   thid,
         |   schema_id,
-        |   merkle_inclusion_proof
         |   role,
         |   subject_id,
         |   validity_period,
@@ -81,7 +80,6 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   ${record.id},
         |   ${record.thid},
         |   ${record.schemaId},
-        |   ${record.merkleInclusionProof.map(serializeInclusionProof)},
         |   ${record.role},
         |   ${record.subjectId},
         |   ${record.validityPeriod},
@@ -101,8 +99,6 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
     val cxnIO = sql"""
         | SELECT
         |   id,
-        |   credential_id
-        |   merkle_inclusion_proof
         |   thid,
         |   schema_id,
         |   role,
@@ -130,13 +126,18 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
     val cxnIO = sql"""
         | SELECT
         |   id,
-        |   credential_id
+        |   thid,
         |   schema_id,
-        |   merkle_inclusion_proof
+        |   role,
         |   subject_id,
         |   validity_period,
-        |   claims,
-        |   state
+        |   automatic_issuance,
+        |   await_confirmation,
+        |   protocol_state,
+        |   publication_state,
+        |   offer_credential_data,
+        |   request_credential_data,
+        |   issue_credential_data
         | FROM public.issue_credential_records
         | WHERE protocol_state = ${state.toString}
         """.stripMargin
@@ -151,10 +152,8 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
     val cxnIO = sql"""
         | SELECT
         |   id,
-        |   credential_id
-        |   schema_id,
-        |   merkle_inclusion_proof
         |   thid,
+        |   schema_id,
         |   role,
         |   subject_id,
         |   validity_period,
@@ -179,10 +178,8 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
     val cxnIO = sql"""
         | SELECT
         |   id,
-        |   credential_id
-        |   schema_id,
-        |   merkle_inclusion_proof
         |   thid,
+        |   schema_id,
         |   role,
         |   subject_id,
         |   validity_period,
@@ -221,6 +218,7 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
       .transact(xa)
   }
 
+  //TODO: refactor to work with issueCredential form mercury
   override def updateCredentialRecordStateAndProofByCredentialIdBulk(
       idsStatesAndProofs: Seq[(UUID, IssueCredentialRecord.PublicationState, MerkleInclusionProof)]
   ): Task[Int] = {
@@ -267,7 +265,11 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
       .transact(xa)
   }
 
-  override def updateWithRequestCredential(recordId: UUID, request: RequestCredential, protocolState: ProtocolState): Task[Int] = {
+  override def updateWithRequestCredential(
+      recordId: UUID,
+      request: RequestCredential,
+      protocolState: ProtocolState
+  ): Task[Int] = {
     val cxnIO = sql"""
         | UPDATE public.issue_credential_records
         | SET
@@ -281,7 +283,11 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
       .transact(xa)
   }
 
-  override def updateWithIssueCredential(recordId: UUID, issue: IssueCredential, protocolState: ProtocolState): Task[Int] = {
+  override def updateWithIssueCredential(
+      recordId: UUID,
+      issue: IssueCredential,
+      protocolState: ProtocolState
+  ): Task[Int] = {
     val cxnIO = sql"""
         | UPDATE public.issue_credential_records
         | SET

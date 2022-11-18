@@ -8,8 +8,6 @@ import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
 import IssueCredentialRecord._
 final case class IssueCredentialRecord(
     id: UUID,
-    credentialId: UUID, // Id of the credential that will be created from this record
-    merkleInclusionProof: Option[MerkleInclusionProof],
     thid: UUID,
     schemaId: Option[String],
     role: Role,

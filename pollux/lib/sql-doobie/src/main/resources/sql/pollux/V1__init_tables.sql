@@ -16,11 +16,9 @@
 CREATE TABLE public.issue_credential_records(
   "id" VARCHAR(36) NOT NULL PRIMARY KEY,
   "thid" VARCHAR(36) NOT NULL,
-  "merkle_inclusion_proof" TEXT 
-  "credential_id" VARCHAR(36) NOT NULL
   "schema_id" VARCHAR(36),
-  "subject_id" TEXT NOT NULL,
   "role"  VARCHAR(50) NOT NULL,
+  "subject_id" TEXT NOT NULL,
   "validity_period" INTEGER,
   "automatic_issuance" BOOLEAN,
   "await_confirmation" BOOLEAN,

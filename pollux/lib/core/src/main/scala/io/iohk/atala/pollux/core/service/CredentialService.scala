@@ -119,7 +119,10 @@ trait CredentialService {
 
   def markRequestSent(recordId: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]]
 
-  def markCredentialGenerated(recordId: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]]
+  def markCredentialGenerated(
+      recordId: UUID,
+      issueCredential: IssueCredential
+  ): IO[IssueCredentialError, Option[IssueCredentialRecord]]
 
   def markCredentialSent(recordId: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]]
 
@@ -177,8 +180,6 @@ private class CredentialServiceImpl(
       record <- ZIO.succeed(
         IssueCredentialRecord(
           id = UUID.randomUUID(),
-          credentialId = UUID.randomUUID(),
-          merkleInclusionProof = None,
           thid = thid,
           schemaId = schemaId,
           role = IssueCredentialRecord.Role.Issuer,
@@ -220,8 +221,6 @@ private class CredentialServiceImpl(
       record <- ZIO.succeed(
         IssueCredentialRecord(
           id = UUID.randomUUID(),
-          credentialId = UUID.randomUUID(),
-          merkleInclusionProof = None,
           thid = UUID.fromString(offer.thid.getOrElse(offer.id)),
           schemaId = None,
           role = IssueCredentialRecord.Role.Holder,
@@ -345,12 +344,26 @@ private class CredentialServiceImpl(
       IssueCredentialRecord.ProtocolState.RequestSent
     )
 
-  override def markCredentialGenerated(recordId: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] =
-    updateCredentialRecordProtocolState(
-      recordId,
-      IssueCredentialRecord.ProtocolState.CredentialPending,
-      IssueCredentialRecord.ProtocolState.CredentialGenerated
-    )
+  override def markCredentialGenerated(
+      recordId: UUID,
+      issueCredential: IssueCredential
+  ): IO[IssueCredentialError, Option[IssueCredentialRecord]] = {
+    for {
+      count <- credentialRepository
+        .updateWithIssueCredential(
+          recordId,
+          issueCredential,
+          IssueCredentialRecord.ProtocolState.CredentialGenerated
+        )
+        .mapError(RepositoryError.apply)
+      _ <- count match
+        case 1 => ZIO.succeed(())
+        case n => ZIO.fail(RecordIdNotFound(recordId))
+      record <- credentialRepository
+        .getIssueCredentialRecord(recordId)
+        .mapError(RepositoryError.apply)
+    } yield record
+  }
 
   override def markCredentialSent(recordId: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] =
     updateCredentialRecordProtocolState(
@@ -409,13 +422,12 @@ private class CredentialServiceImpl(
     val attributes = claims.map { case (k, v) => Attribute(k, v) }
     val credentialPreview = CredentialPreview(attributes = attributes.toSeq)
     val body = OfferCredential.Body(goal_code = Some("Offer Credential"), credential_preview = credentialPreview)
-    val attachmentDescriptor = AttachmentDescriptor.buildAttachment[CredentialPreview](payload = credentialPreview)
 
     OfferCredential(
       body = body,
-      attachments = Seq(attachmentDescriptor),
-      to = DidId(subjectId),
+      attachments = Seq(),
       from = didComm.myDid,
+      to = DidId(subjectId),
       thid = Some(thid.toString())
     )
   }
@@ -501,9 +513,9 @@ private class CredentialServiceImpl(
   ): IO[CreateCredentialPayloadFromRecordError, W3cCredentialPayload] = {
 
     val claims = for {
-      requestCredential <- record.requestCredentialData
-      preview <- requestCredential.getCredential[CredentialPreview]("credential-preview")
-      claims <- Some(preview.attributes.map(attr => attr.name -> attr.value).toMap)
+      offerCredentialData <- record.offerCredentialData
+      preview = offerCredentialData.body.credential_preview
+      claims = preview.attributes.map(attr => attr.name -> attr.value).toMap
     } yield claims
 
     val credential = for {
