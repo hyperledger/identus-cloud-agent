@@ -42,12 +42,12 @@ private[castor] trait ProtoModelHelper {
     def toProto: node_models.PublicKey = {
       node_models.PublicKey(
         id = publicKey.id,
+        // TODO: define the corresponding KeyUsage in Prism DID (ATL-2213)
         usage = publicKey.purpose match {
           case VerificationRelationship.Authentication  => node_models.KeyUsage.AUTHENTICATION_KEY
           case VerificationRelationship.AssertionMethod => node_models.KeyUsage.ISSUING_KEY
           case VerificationRelationship.KeyAgreement    => node_models.KeyUsage.COMMUNICATION_KEY
-          case VerificationRelationship.CapabilityInvocation =>
-            ??? // TODO: define the corresponding KeyUsage in Prism DID
+          case VerificationRelationship.CapabilityInvocation => ???
         },
         addedOn = None,
         revokedOn = None,

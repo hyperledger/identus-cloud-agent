@@ -102,7 +102,6 @@ final case class CanonicalPrismDID private[did] (stateHash: HexString) extends P
   override val suffix: DIDMethodSpecificId = DIDMethodSpecificId.fromString(stateHash.toString).get
 }
 
-// TODO: change encodedState to AtalaOperation?
 final case class LongFormPrismDID private[did] (atalaOperation: node_models.AtalaOperation) extends PrismDID {
   override val stateHash: HexString = {
     val encodedState = atalaOperation.toByteArray
