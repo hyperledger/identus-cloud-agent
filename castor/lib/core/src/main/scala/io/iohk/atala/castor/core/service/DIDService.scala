@@ -4,6 +4,7 @@ import io.iohk.atala.castor.core.model.did.{PrismDID, ScheduleDIDOperationOutcom
 import zio.*
 import io.iohk.atala.castor.core.model.ProtoModelHelper
 import io.iohk.atala.castor.core.model.error.DIDOperationError
+import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.prism.crypto.Sha256
 import io.iohk.atala.shared.models.HexStrings.*
 import io.iohk.atala.prism.protos.{node_api, node_models}
@@ -17,11 +18,13 @@ trait DIDService {
 }
 
 object DIDServiceImpl {
-  val layer: URLayer[NodeServiceStub, DIDService] =
-    ZLayer.fromFunction(DIDServiceImpl(_))
+  val layer: URLayer[NodeServiceStub & DIDOperationValidator, DIDService] =
+    ZLayer.fromFunction(DIDServiceImpl(_, _))
 }
 
-private class DIDServiceImpl(nodeClient: NodeServiceStub) extends DIDService, ProtoModelHelper {
+private class DIDServiceImpl(didOpValidator: DIDOperationValidator, nodeClient: NodeServiceStub)
+    extends DIDService,
+      ProtoModelHelper {
 
   override def createPublishedDID(
       signedOperation: SignedPrismDIDOperation.Create
@@ -36,6 +39,7 @@ private class DIDServiceImpl(nodeClient: NodeServiceStub) extends DIDService, Pr
       )
     )
     for {
+      _ <- ZIO.fromEither(didOpValidator.validate(signedOperation.operation))
       operationOutput <- ZIO
         .fromFuture(_ => nodeClient.scheduleOperations(operationRequest))
         .mapBoth(DIDOperationError.DLTProxyError.apply, _.outputs.toList)
