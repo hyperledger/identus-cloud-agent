@@ -95,7 +95,9 @@ final class ManagedDIDService private[walletapi] (
         .mapError(CreateManagedDIDError.WalletStorageError.apply)
         .filterOrFail(_.isEmpty)(CreateManagedDIDError.DIDAlreadyExists(did))
       _ <- ZIO
-        .foreachDiscard(secret.keyPairs) { case (keyId, keyPair) => secretStorage.upsertKey(did, keyId, keyPair) }
+        .foreachDiscard(secret.keyPairs ++ secret.internalKeyPairs) { case (keyId, keyPair) =>
+          secretStorage.upsertKey(did, keyId, keyPair)
+        }
         .mapError(CreateManagedDIDError.WalletStorageError.apply)
       // A DID is considered created after a successful save using saveCreatedDID
       // If some steps above failed, it is not considered created and data that

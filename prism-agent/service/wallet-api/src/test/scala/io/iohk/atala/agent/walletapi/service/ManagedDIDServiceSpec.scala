@@ -70,7 +70,7 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault {
           _ <- svc.publishStoredDID(did)
           opsAfter <- testDIDSvc.getPublishedOperations
         } yield assert(opsBefore)(isEmpty) &&
-          assert(opsAfter)(hasSameElements(createOp.toList))
+          assert(opsAfter.map(_.operation))(hasSameElements(createOp.toList))
       },
       test("fail when publish non-existing DID") {
         val did = PrismDID.buildLongFormFromOperation(PrismDIDOperation.Create(Nil, Nil))
@@ -87,9 +87,9 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault {
           createOp <- svc.nonSecretStorage.getCreatedDID(did)
           _ <- svc.publishStoredDID(longFormDID)
           opsAfter <- testDIDSvc.getPublishedOperations
-        } yield assert(opsAfter)(hasSameElements(createOp.toList))
+        } yield assert(opsAfter.map(_.operation))(hasSameElements(createOp.toList))
       }
-    ) @@ TestAspect.ignore // TODO: un-ignore
+    )
 
   private val createAndStoreDIDSpec = suite("createAndStoreDID")(
     test("create and store DID list in DIDNonSecretStorage") {
@@ -100,7 +100,7 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault {
         did <- svc.createAndStoreDID(template).map(_.asCanonical)
         didsAfter <- svc.nonSecretStorage.listCreatedDID
       } yield assert(didsBefore)(isEmpty) &&
-        assert(didsAfter)(hasSameElements(Seq(did)))
+        assert(didsAfter.map(_.asCanonical))(hasSameElements(Seq(did)))
     },
     test("create and store DID secret in DIDSecretStorage") {
       val template = generateDIDTemplate(
@@ -113,7 +113,7 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault {
         svc <- ZIO.service[ManagedDIDService]
         did <- svc.createAndStoreDID(template).map(_.asCanonical)
         keyPairs <- svc.secretStorage.listKeys(did)
-      } yield assert(keyPairs.keys)(hasSameElements(Seq("key-1", "key-2")))
+      } yield assert(keyPairs.keys)(hasSameElements(Seq("key-1", "key-2", ManagedDIDService.DEFAULT_MASTER_KEY_ID)))
     },
     test("created DID have corresponding public keys in CreateOperation") {
       val template = generateDIDTemplate(
