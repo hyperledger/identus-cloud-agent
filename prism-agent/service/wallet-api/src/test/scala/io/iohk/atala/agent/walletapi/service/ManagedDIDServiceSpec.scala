@@ -1,7 +1,7 @@
 package io.iohk.atala.agent.walletapi.service
 
 import io.iohk.atala.agent.walletapi.model.error.{CreateManagedDIDError, PublishManagedDIDError}
-import io.iohk.atala.agent.walletapi.model.{DIDPublicKeyTemplate, ManagedDIDTemplate}
+import io.iohk.atala.agent.walletapi.model.{DIDPublicKeyTemplate, ManagedDIDState, ManagedDIDTemplate}
 import io.iohk.atala.castor.core.model.did.{
   PrismDID,
   PrismDIDOperation,
@@ -66,29 +66,19 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault {
           svc <- ZIO.service[ManagedDIDService]
           testDIDSvc <- ZIO.service[TestDIDService]
           did <- svc.createAndStoreDID(template).map(_.asCanonical)
-          createOp <- svc.nonSecretStorage.getManagedDIDState(did)
+          createOp <- svc.nonSecretStorage.getManagedDIDState(did).collect(()) {
+            case Some(ManagedDIDState.Created(op)) => op
+          }
           opsBefore <- testDIDSvc.getPublishedOperations
           _ <- svc.publishStoredDID(did)
           opsAfter <- testDIDSvc.getPublishedOperations
         } yield assert(opsBefore)(isEmpty) &&
-          assert(opsAfter.map(_.operation))(hasSameElements(createOp.toList))
+          assert(opsAfter.map(_.operation))(hasSameElements(Seq(createOp)))
       },
       test("fail when publish non-existing DID") {
-        val did = PrismDID.buildLongFormFromOperation(PrismDIDOperation.Create(Nil, Nil))
+        val did = PrismDID.buildLongFormFromOperation(PrismDIDOperation.Create(Nil, Nil)).asCanonical
         val result = ZIO.serviceWithZIO[ManagedDIDService](_.publishStoredDID(did))
         assertZIO(result.exit)(fails(isSubtype[PublishManagedDIDError.DIDNotFound](anything)))
-      },
-      test("publish stored DID when provide long-form DID") {
-        val template = generateDIDTemplate()
-        for {
-          svc <- ZIO.service[ManagedDIDService]
-          testDIDSvc <- ZIO.service[TestDIDService]
-          longFormDID <- svc.createAndStoreDID(template)
-          did = longFormDID.asCanonical
-          createOp <- svc.nonSecretStorage.getManagedDIDState(did)
-          _ <- svc.publishStoredDID(longFormDID)
-          opsAfter <- testDIDSvc.getPublishedOperations
-        } yield assert(opsAfter.map(_.operation))(hasSameElements(createOp.toList))
       }
     )
 
@@ -97,11 +87,11 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault {
       val template = generateDIDTemplate()
       for {
         svc <- ZIO.service[ManagedDIDService]
-        didsBefore <- svc.nonSecretStorage.listCreatedDID
+        didsBefore <- svc.nonSecretStorage.listManagedDID
         did <- svc.createAndStoreDID(template).map(_.asCanonical)
-        didsAfter <- svc.nonSecretStorage.listCreatedDID
+        didsAfter <- svc.nonSecretStorage.listManagedDID
       } yield assert(didsBefore)(isEmpty) &&
-        assert(didsAfter.map(_.asCanonical))(hasSameElements(Seq(did)))
+        assert(didsAfter.keySet)(hasSameElements(Seq(did)))
     },
     test("create and store DID secret in DIDSecretStorage") {
       val template = generateDIDTemplate(
@@ -128,7 +118,9 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault {
         svc <- ZIO.service[ManagedDIDService]
         did <- svc.createAndStoreDID(template).map(_.asCanonical)
         createOperation <- svc.nonSecretStorage.getManagedDIDState(did)
-        publicKeys <- ZIO.fromOption(createOperation).map(_.publicKeys)
+        publicKeys <- ZIO.fromOption(createOperation.collect { case ManagedDIDState.Created(operation) =>
+          operation.publicKeys
+        })
       } yield assert(publicKeys.map(i => i.id -> i.purpose))(
         hasSameElements(
           Seq(

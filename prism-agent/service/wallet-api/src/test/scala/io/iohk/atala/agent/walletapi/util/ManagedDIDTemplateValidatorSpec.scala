@@ -44,7 +44,6 @@ object ManagedDIDTemplateValidatorSpec extends ZIOSpecDefault {
         ),
         services = Nil
       )
-      println(ManagedDIDTemplateValidator.validate(template))
       assert(ManagedDIDTemplateValidator.validate(template))(isLeft)
     }
   )
