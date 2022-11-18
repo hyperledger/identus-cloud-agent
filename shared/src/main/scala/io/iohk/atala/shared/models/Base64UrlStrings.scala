@@ -15,6 +15,7 @@ object Base64UrlStrings {
   }
 
   extension (s: Base64UrlString) {
+    def toStringNoPadding: String = s.takeWhile(_ != '=')
     def toByteArray: Array[Byte] = Base64Utils.decodeURL(s)
     def toString: String = s
   }
