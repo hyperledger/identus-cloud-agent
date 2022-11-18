@@ -53,21 +53,46 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
           )
         )
         val op = createPrismDIDOperation(publicKeys = publicKeys, internalKeys = internalKeys)
-        println(DIDOperationValidator(Config(15)).validate(op))
         assert(DIDOperationValidator(Config(15)).validate(op))(
           isLeft(isSubtype[DIDOperationError.TooManyDidPublicKeyAccess](anything))
         )
       },
       test("reject CreateOperation on duplicated DID public key id") {
-        val publicKeys = Seq("key-1", "key-2", "key-1").map(id =>
+        val publicKeyData = PublicKeyData.ECKeyData(
+          crv = EllipticCurve.SECP256K1,
+          x = Base64UrlString.fromStringUnsafe("00"),
+          y = Base64UrlString.fromStringUnsafe("00")
+        )
+        val publicKeys = (1 to 10).map(i =>
           PublicKey(
-            id = id,
+            id = s"key$i",
             purpose = VerificationRelationship.Authentication,
-            publicKeyData = PublicKeyData.ECKeyData(
-              crv = EllipticCurve.SECP256K1,
-              x = Base64UrlString.fromStringUnsafe("00"),
-              y = Base64UrlString.fromStringUnsafe("00")
-            )
+            publicKeyData = publicKeyData
+          )
+        )
+        val internalKeys = Seq(
+          InternalPublicKey(
+            id = s"key1",
+            purpose = InternalKeyPurpose.Master,
+            publicKeyData = publicKeyData
+          )
+        )
+        val op = createPrismDIDOperation(publicKeys = publicKeys, internalKeys = internalKeys)
+        assert(DIDOperationValidator(Config(50)).validate(op))(
+          isLeft(isSubtype[DIDOperationError.InvalidArgument](anything))
+        )
+      },
+      test("reject CreateOperation on invalid key-id") {
+        val publicKeyData = PublicKeyData.ECKeyData(
+          crv = EllipticCurve.SECP256K1,
+          x = Base64UrlString.fromStringUnsafe("00"),
+          y = Base64UrlString.fromStringUnsafe("00")
+        )
+        val publicKeys = Seq(
+          PublicKey(
+            id = "key-01",
+            purpose = VerificationRelationship.Authentication,
+            publicKeyData = publicKeyData
           )
         )
         val op = createPrismDIDOperation(publicKeys = publicKeys)

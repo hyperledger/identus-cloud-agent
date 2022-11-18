@@ -1,7 +1,7 @@
 package io.iohk.atala.castor.core.util
 
 import io.iohk.atala.shared.models.HexStrings.*
-import io.iohk.atala.castor.core.model.did.PrismDIDOperation
+import io.iohk.atala.castor.core.model.did.{PrismDIDOperation, SignedPrismDIDOperation}
 import io.iohk.atala.castor.core.model.error.DIDOperationError
 import io.iohk.atala.castor.core.util.DIDOperationValidator.Config
 import zio.*
@@ -19,13 +19,15 @@ object DIDOperationValidator {
 
 class DIDOperationValidator(config: Config) {
 
-  // TODO: add key regex check
+  private val KEY_ID_RE = "^\\w+$".r
+
   def validate(operation: PrismDIDOperation): Either[DIDOperationError, Unit] = {
     for {
       _ <- validateMaxPublicKeysAccess(operation)
       _ <- validateMaxServiceAccess(operation)
       _ <- validateUniquePublicKeyId(operation)
       _ <- validateUniqueServiceId(operation)
+      _ <- validateKeyIdRegex(operation)
     } yield ()
   }
 
@@ -67,6 +69,17 @@ class DIDOperationValidator(config: Config) {
 //        else Left(DIDOperationError.InvalidArgument("id for services is not unique"))
 //    }
     Right(())
+  }
+
+  private def validateKeyIdRegex(operation: PrismDIDOperation): Either[DIDOperationError, Unit] = {
+    operation match {
+      case PrismDIDOperation.Create(publicKeys, internalKeys) =>
+        val ids = publicKeys.map(_.id) ++ internalKeys.map(_.id)
+        val invalidIds = ids.filterNot(id => KEY_ID_RE.pattern.matcher(id).matches())
+        if (invalidIds.isEmpty) Right(())
+        else
+          Left(DIDOperationError.InvalidArgument(s"public key id is invalid: ${invalidIds.mkString("[", ", ", "]")}"))
+    }
   }
 
 }
