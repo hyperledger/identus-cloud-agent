@@ -234,7 +234,7 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
       .transact(xa)
   }
 
-  //TODO: refactor to work with issueCredential form mercury
+  // TODO: refactor to work with issueCredential form mercury
   override def updateCredentialRecordStateAndProofByCredentialIdBulk(
       idsStatesAndProofs: Seq[(UUID, IssueCredentialRecord.PublicationState, MerkleInclusionProof)]
   ): Task[Int] = {
