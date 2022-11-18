@@ -8,7 +8,7 @@ object ManagedDIDTemplateValidator {
   def validate(template: ManagedDIDTemplate): Either[String, Unit] = {
     for {
       _ <- validateReservedKeyId(template)
-      _ <- validateUniqueKeyId(template) // TODO: add test for this
+      _ <- validateUniqueKeyId(template)
     } yield ()
   }
 
