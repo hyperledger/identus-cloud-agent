@@ -142,12 +142,11 @@ object Modules {
     Server.start(port, app)
   }
 
-  // TODO: revert to normal
-  val didCommExchangesJob: RIO[DidComm, Unit] = ZIO.unit
-//    BackgroundJobs.didCommExchanges
-//      .repeat(Schedule.spaced(10.seconds))
-//      .unit
-//      .provideSomeLayer(AppModule.credentialServiceLayer)
+  val didCommExchangesJob: RIO[DidComm, Unit] =
+    BackgroundJobs.didCommExchanges
+      .repeat(Schedule.spaced(10.seconds))
+      .unit
+      .provideSomeLayer(AppModule.credentialServiceLayer)
 
   val connectDidCommExchangesJob: RIO[DidComm, Unit] =
     ConnectBackgroundJobs.didCommExchanges
