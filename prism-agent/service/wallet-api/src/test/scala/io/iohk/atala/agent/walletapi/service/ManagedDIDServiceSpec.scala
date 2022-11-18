@@ -12,6 +12,7 @@ import io.iohk.atala.castor.core.model.did.{
 }
 import io.iohk.atala.castor.core.model.error
 import io.iohk.atala.castor.core.service.DIDService
+import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.shared.models.HexStrings.HexString
 import zio.*
 import zio.test.*
@@ -47,7 +48,7 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault {
   }
 
   private def managedDIDServiceLayer: ULayer[TestDIDService & ManagedDIDService] =
-    testDIDServiceLayer >+> ManagedDIDService.inMemoryStorage
+    (DIDOperationValidator.layer() ++ testDIDServiceLayer) >+> ManagedDIDService.inMemoryStorage
 
   private def generateDIDTemplate(
       publicKeys: Seq[DIDPublicKeyTemplate] = Nil,
@@ -105,22 +106,22 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault {
     test("create and store DID secret in DIDSecretStorage") {
       val template = generateDIDTemplate(
         publicKeys = Seq(
-          DIDPublicKeyTemplate("key-1", VerificationRelationship.Authentication),
-          DIDPublicKeyTemplate("key-2", VerificationRelationship.KeyAgreement)
+          DIDPublicKeyTemplate("key1", VerificationRelationship.Authentication),
+          DIDPublicKeyTemplate("key2", VerificationRelationship.KeyAgreement)
         )
       )
       for {
         svc <- ZIO.service[ManagedDIDService]
         did <- svc.createAndStoreDID(template).map(_.asCanonical)
         keyPairs <- svc.secretStorage.listKeys(did)
-      } yield assert(keyPairs.keys)(hasSameElements(Seq("key-1", "key-2", ManagedDIDService.DEFAULT_MASTER_KEY_ID)))
+      } yield assert(keyPairs.keys)(hasSameElements(Seq("key1", "key2", ManagedDIDService.DEFAULT_MASTER_KEY_ID)))
     },
     test("created DID have corresponding public keys in CreateOperation") {
       val template = generateDIDTemplate(
         publicKeys = Seq(
-          DIDPublicKeyTemplate("key-1", VerificationRelationship.Authentication),
-          DIDPublicKeyTemplate("key-2", VerificationRelationship.KeyAgreement),
-          DIDPublicKeyTemplate("key-3", VerificationRelationship.AssertionMethod)
+          DIDPublicKeyTemplate("key1", VerificationRelationship.Authentication),
+          DIDPublicKeyTemplate("key2", VerificationRelationship.KeyAgreement),
+          DIDPublicKeyTemplate("key3", VerificationRelationship.AssertionMethod)
         )
       )
       for {
@@ -131,9 +132,9 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault {
       } yield assert(publicKeys.map(i => i.id -> i.purpose))(
         hasSameElements(
           Seq(
-            "key-1" -> VerificationRelationship.Authentication,
-            "key-2" -> VerificationRelationship.KeyAgreement,
-            "key-3" -> VerificationRelationship.AssertionMethod
+            "key1" -> VerificationRelationship.Authentication,
+            "key2" -> VerificationRelationship.KeyAgreement,
+            "key3" -> VerificationRelationship.AssertionMethod
           )
         )
       )

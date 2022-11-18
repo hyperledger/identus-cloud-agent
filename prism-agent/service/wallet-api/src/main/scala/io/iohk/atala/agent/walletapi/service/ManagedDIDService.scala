@@ -26,6 +26,7 @@ import io.iohk.atala.castor.core.model.did.{
   SignedPrismDIDOperation
 }
 import io.iohk.atala.castor.core.service.DIDService
+import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.prism.crypto.Sha256
 import io.iohk.atala.prism.crypto.util.Random
 import io.iohk.atala.shared.models.Base64UrlStrings.*
@@ -39,6 +40,7 @@ import scala.collection.immutable.ArraySeq
   */
 final class ManagedDIDService private[walletapi] (
     didService: DIDService,
+    didOpValidator: DIDOperationValidator,
     private[walletapi] val secretStorage: DIDSecretStorage,
     private[walletapi] val nonSecretStorage: DIDNonSecretStorage
 ) {
@@ -90,6 +92,7 @@ final class ManagedDIDService private[walletapi] (
       (createOperation, secret) = generated
       longFormDID = PrismDID.buildLongFormFromOperation(createOperation)
       did = longFormDID.asCanonical
+      _ <- ZIO.fromEither(didOpValidator.validate(createOperation)).mapError(CreateManagedDIDError.OperationError.apply)
       _ <- nonSecretStorage
         .getCreatedDID(did)
         .mapError(CreateManagedDIDError.WalletStorageError.apply)
@@ -165,8 +168,8 @@ object ManagedDIDService {
       internalKeyPairs: Map[String, ECKeyPair]
   )
 
-  def inMemoryStorage: URLayer[DIDService, ManagedDIDService] =
+  def inMemoryStorage: URLayer[DIDOperationValidator & DIDService, ManagedDIDService] =
     (InMemoryDIDNonSecretStorage.layer ++ InMemoryDIDSecretStorage.layer) >>> ZLayer.fromFunction(
-      ManagedDIDService(_, _, _)
+      ManagedDIDService(_, _, _, _)
     )
 }

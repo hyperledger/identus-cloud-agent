@@ -8,6 +8,7 @@ import akka.http.scaladsl.server.Route
 import doobie.util.transactor.Transactor
 import io.iohk.atala.agent.server.http.{HttpRoutes, HttpServer, ZHttp4sBlazeServer, ZHttpEndpoints}
 import io.iohk.atala.castor.core.service.{DIDService, DIDServiceImpl}
+import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.agent.server.http.marshaller.{
   DIDApiMarshallerImpl,
   DIDAuthenticationApiMarshallerImpl,
@@ -307,9 +308,13 @@ object SystemModule {
 }
 
 object AppModule {
-  val didServiceLayer: TaskLayer[DIDService] = GrpcModule.layers >>> DIDServiceImpl.layer
+  val didOperationValidatorLayer: ULayer[DIDOperationValidator] = DIDOperationValidator.layer()
 
-  val manageDIDServiceLayer: TaskLayer[ManagedDIDService] = didServiceLayer >>> ManagedDIDService.inMemoryStorage
+  val didServiceLayer: TaskLayer[DIDService] =
+    (didOperationValidatorLayer ++ GrpcModule.layers) >>> DIDServiceImpl.layer
+
+  val manageDIDServiceLayer: TaskLayer[ManagedDIDService] =
+    (didOperationValidatorLayer ++ didServiceLayer) >>> ManagedDIDService.inMemoryStorage
 
   val credentialServiceLayer: RLayer[DidComm, CredentialService] =
     (GrpcModule.layers ++ RepoModule.layers) >>> CredentialServiceImpl.layer
