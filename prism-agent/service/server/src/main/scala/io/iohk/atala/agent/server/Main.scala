@@ -50,9 +50,6 @@ object Main extends ZIOAppDefault {
 
       // Execute migrations from Castor and Pollux libraries using Flyway
       _ <- ZIO
-        .serviceWithZIO[CastorMigrations](_.migrate)
-        .provide(RepoModule.castorDbConfigLayer >>> CastorMigrations.layer)
-      _ <- ZIO
         .serviceWithZIO[PolluxMigrations](_.migrate)
         .provide(RepoModule.polluxDbConfigLayer >>> PolluxMigrations.layer)
       _ <- ZIO

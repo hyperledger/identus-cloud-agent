@@ -410,31 +410,6 @@ object HttpModule {
 
 object RepoModule {
 
-  val castorDbConfigLayer: TaskLayer[CastorDbConfig] = {
-    val dbConfigLayer = ZLayer.fromZIO {
-      ZIO.service[AppConfig].map(_.castor.database) map { config =>
-        CastorDbConfig(
-          username = config.username,
-          password = config.password,
-          jdbcUrl = s"jdbc:postgresql://${config.host}:${config.port}/${config.databaseName}"
-        )
-      }
-    }
-    SystemModule.configLayer >>> dbConfigLayer
-  }
-
-  val castorTransactorLayer: TaskLayer[Transactor[Task]] = {
-    val transactorLayer = ZLayer.fromZIO {
-      ZIO.service[CastorDbConfig].flatMap { config =>
-        Dispatcher[Task].allocated.map { case (dispatcher, _) =>
-          given Dispatcher[Task] = dispatcher
-          TransactorLayer.hikari[Task](config)
-        }
-      }
-    }.flatten
-    castorDbConfigLayer >>> transactorLayer
-  }
-
   val polluxDbConfigLayer: TaskLayer[PolluxDbConfig] = {
     val dbConfigLayer = ZLayer.fromZIO {
       ZIO.service[AppConfig].map(_.pollux.database) map { config =>
