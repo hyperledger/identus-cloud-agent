@@ -1,3 +1,11 @@
+# [mercury-v0.6.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.5.0...mercury-v0.6.0) (2022-11-16)
+
+
+### Features
+
+* **mercury:** add utils methods on issue-credential-protocol ([#131](https://github.com/input-output-hk/atala-prism-building-blocks/issues/131)) ([5a3e2fd](https://github.com/input-output-hk/atala-prism-building-blocks/commit/5a3e2fd411b278f1672777a115233c1f9a408f02))
+* **mercury:** Simplify PeerDID ([#132](https://github.com/input-output-hk/atala-prism-building-blocks/issues/132)) ([6d377d8](https://github.com/input-output-hk/atala-prism-building-blocks/commit/6d377d8595c1cdf710625775c06453953a2189a7))
+
 # [mercury-v0.5.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.4.0...mercury-v0.5.0) (2022-11-10)
 
 

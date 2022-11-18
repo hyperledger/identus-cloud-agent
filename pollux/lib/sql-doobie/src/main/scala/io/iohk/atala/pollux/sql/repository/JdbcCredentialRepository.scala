@@ -9,6 +9,7 @@ import io.circe.syntax._
 import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
 import io.iohk.atala.mercury.protocol.issuecredential.OfferCredential
 import io.iohk.atala.mercury.protocol.issuecredential.RequestCredential
+import io.iohk.atala.pollux.core.model.IssueCredentialRecord.ProtocolState
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.repository.CredentialRepository
 import io.iohk.atala.pollux.sql.model.JWTCredentialRow
@@ -17,9 +18,8 @@ import io.iohk.atala.shared.utils.BytesOps
 import zio.*
 import zio.interop.catz.*
 
+import java.time.Instant
 import java.util.UUID
-import io.iohk.atala.pollux.core.model.IssueCredentialRecord.ProtocolState
-import java.{util => ju}
 
 // TODO: replace with actual implementation
 class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepository[Task] {
@@ -41,6 +41,9 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
   import IssueCredentialRecord._
   given uuidGet: Get[UUID] = Get[String].map(UUID.fromString)
   given uuidPut: Put[UUID] = Put[String].contramap(_.toString())
+
+  given instantGet: Get[Instant] = Get[Long].map(Instant.ofEpochSecond)
+  given instantPut: Put[Instant] = Put[Long].contramap(_.getEpochSecond())
 
   given protocolStateGet: Get[ProtocolState] = Get[String].map(ProtocolState.valueOf)
   given protocolStatePut: Put[ProtocolState] = Put[String].contramap(_.toString)
@@ -66,6 +69,8 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
     val cxnIO = sql"""
         | INSERT INTO public.issue_credential_records(
         |   id,
+        |   created_at,
+        |   updated_at,
         |   thid,
         |   schema_id,
         |   role,
@@ -78,6 +83,8 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   offer_credential_data
         | ) values (
         |   ${record.id},
+        |   ${record.createdAt},
+        |   ${record.updatedAt},
         |   ${record.thid},
         |   ${record.schemaId},
         |   ${record.role},
@@ -99,6 +106,8 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
     val cxnIO = sql"""
         | SELECT
         |   id,
+        |   created_at,
+        |   updated_at,
         |   thid,
         |   schema_id,
         |   role,
@@ -126,6 +135,8 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
     val cxnIO = sql"""
         | SELECT
         |   id,
+        |   created_at,
+        |   updated_at,
         |   thid,
         |   schema_id,
         |   role,
@@ -152,6 +163,8 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
     val cxnIO = sql"""
         | SELECT
         |   id,
+        |   created_at,
+        |   updated_at,
         |   thid,
         |   schema_id,
         |   role,
@@ -178,6 +191,8 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
     val cxnIO = sql"""
         | SELECT
         |   id,
+        |   created_at,
+        |   updated_at,
         |   thid,
         |   schema_id,
         |   role,
@@ -208,7 +223,8 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
     val cxnIO = sql"""
         | UPDATE public.issue_credential_records
         | SET
-        |   protocol_state = $to
+        |   protocol_state = $to,
+        |   updated_at = ${Instant.now}
         | WHERE
         |   id = $recordId
         |   AND protocol_state = $from
@@ -255,7 +271,8 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
     val cxnIO = sql"""
         | UPDATE public.issue_credential_records
         | SET
-        |   publication_state = $to
+        |   publication_state = $to,
+        |   updated_at = ${Instant.now}
         | WHERE
         |   id = $recordId
         |   AND $pubStateFragment
@@ -274,7 +291,8 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         | UPDATE public.issue_credential_records
         | SET
         |   request_credential_data = $request,
-        |   protocol_state = $protocolState
+        |   protocol_state = $protocolState,
+        |   updated_at = ${Instant.now}
         | WHERE
         |   id = $recordId
         """.stripMargin.update
@@ -292,7 +310,8 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         | UPDATE public.issue_credential_records
         | SET
         |   issue_credential_data = $issue,
-        |   protocol_state = $protocolState
+        |   protocol_state = $protocolState,
+        |   updated_at = ${Instant.now}
         | WHERE
         |   id = $recordId
         """.stripMargin.update

@@ -15,6 +15,8 @@
 
 CREATE TABLE public.issue_credential_records(
   "id" VARCHAR(36) NOT NULL PRIMARY KEY,
+  "created_at" BIGINT NOT NULL,
+  "updated_at" BIGINT,
   "thid" VARCHAR(36) NOT NULL,
   "schema_id" VARCHAR(36),
   "role"  VARCHAR(50) NOT NULL,

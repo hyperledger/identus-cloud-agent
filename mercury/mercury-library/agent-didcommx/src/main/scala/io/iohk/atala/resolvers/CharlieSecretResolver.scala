@@ -1,3 +1,4 @@
+/*
 package io.iohk.atala.resolvers
 
 import org.didcommx.didcomm.common.{VerificationMaterial, VerificationMaterialFormat, VerificationMethodType}
@@ -58,3 +59,4 @@ object CharlieSecretResolver {
   }
 
 }
+ */

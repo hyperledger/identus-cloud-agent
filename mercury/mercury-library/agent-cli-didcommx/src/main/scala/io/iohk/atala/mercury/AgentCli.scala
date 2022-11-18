@@ -9,7 +9,6 @@ import zhttp.service.ChannelFactory
 import zhttp.service.EventLoopGroup
 import org.didcommx.didcomm.DIDComm
 import io.iohk.atala.resolvers.UniversalDidResolver
-import io.iohk.atala.resolvers.CharlieSecretResolver
 import zhttp.service._
 import zhttp.http._
 import io.iohk.atala.QRcode

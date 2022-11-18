@@ -1,0 +1,10 @@
+{
+  "name": "@input-output-hk/atala-prism-protos",
+  "version": "VERSION",
+  "description": "raw proto files for Atala PRISM project",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/input-output-hk/atala-prism-sdk.git"
+  },
+  "author": "input-output-hk"
+}

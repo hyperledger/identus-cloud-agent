@@ -38,6 +38,7 @@ import io.iohk.atala.mercury.model.AttachmentDescriptor
 import io.iohk.atala.mercury.DidComm
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.model.Message
+import java.time.Instant
 
 trait CredentialService {
 
@@ -180,6 +181,8 @@ private class CredentialServiceImpl(
       record <- ZIO.succeed(
         IssueCredentialRecord(
           id = UUID.randomUUID(),
+          createdAt = Instant.now,
+          updatedAt = None,
           thid = thid,
           schemaId = schemaId,
           role = IssueCredentialRecord.Role.Issuer,
@@ -221,9 +224,11 @@ private class CredentialServiceImpl(
       record <- ZIO.succeed(
         IssueCredentialRecord(
           id = UUID.randomUUID(),
+          createdAt = Instant.now,
+          updatedAt = None,
           thid = UUID.fromString(offer.thid.getOrElse(offer.id)),
           schemaId = None,
-          role = IssueCredentialRecord.Role.Holder,
+          role = Role.Holder,
           subjectId = offer.to.value,
           validityPeriod = None,
           automaticIssuance = None,
