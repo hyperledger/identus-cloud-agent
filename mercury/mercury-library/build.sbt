@@ -45,9 +45,7 @@ lazy val D = new {
   val zioSLF4J = Def.setting("dev.zio" %% "zio-logging-slf4j" % V.zioLogging)
   val zioJson = Def.setting("dev.zio" %% "zio-json" % V.zioJson)
 
-  // TODO waiting for https://github.com/zio/zio-http/pull/1774 to use zio-http
-  val zioHttp = Def.setting("dev.zio" %% "zio-http" % "0.0.3") // FIXME USE THIS ONE
-  // val zioHttp = Def.setting("io.d11" %% "zhttp" % V.zioHttp) // REMOVE (this is the old name)
+  val zioHttp = Def.setting("dev.zio" %% "zio-http" % "0.0.3")
 
   val circeCore = Def.setting("io.circe" %% "circe-core" % V.circe)
   val circeGeneric = Def.setting("io.circe" %% "circe-generic" % V.circe)
