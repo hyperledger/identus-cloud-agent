@@ -38,7 +38,7 @@ private class DIDServiceImpl(nodeClient: NodeServiceStub) extends DIDService, Pr
     for {
       operationOutput <- ZIO
         .fromFuture(_ => nodeClient.scheduleOperations(operationRequest))
-        .mapBoth(DIDOperationError.DLTProxyError.apply, _.outputs)
+        .mapBoth(DIDOperationError.DLTProxyError.apply, _.outputs.toList)
         .map {
           case output :: Nil => Right(output)
           case _ => Left(DIDOperationError.UnexpectedDLTResult("createDID operation result must have exactly 1 output"))
