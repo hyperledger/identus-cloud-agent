@@ -1,0 +1,51 @@
+name: Prism node client testing workflow
+
+# Cancel previously running workflows if new commit pushed to the branch
+# this will help to push fixes earlier and stop previous workflows
+concurrency:
+  group: ${{ github.head_ref }}${{ github.ref }}-prism-node-client
+  cancel-in-progress: true
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/prism-node-client.yml"
+      - "prism-node/client/**"
+  push:
+    branches:
+      - "main"
+    paths:
+      - ".github/workflows/prism-node-client.yml"
+      - "prism-node/client/**"
+
+env:
+  GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
+  ATALA_GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
+
+defaults:
+  run:
+    shell: bash
+    working-directory: "prism-node/client/scala-client"
+
+jobs:
+  build-and-test-prism-node-client:
+    name: "Build and test Prism node client"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Java and Scala
+        uses: olafurpg/setup-scala@v13
+        with:
+          java-version: openjdk@1.11
+
+      - name: Cache sbt
+        uses: coursier/cache-action@v6.3
+
+      - name: Run Scala formatter
+        run: |
+          sbt scalafmtCheckAll
+
+      - name: Build Prism node client
+        run: sbt compile

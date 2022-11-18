@@ -27,7 +27,7 @@ final case class OfferCredential(
     thid: Option[String] = None,
     from: DidId,
     to: DidId,
-) {
+) extends ReadAttachmentsUtils {
   assert(`type` == OfferCredential.`type`)
 
   def makeMessage: Message = Message(
@@ -51,6 +51,27 @@ object OfferCredential {
 
   def `type`: PIURI = "https://didcomm.org/issue-credential/2.0/offer-credential"
 
+  def build[A](
+      fromDID: DidId,
+      toDID: DidId,
+      thid: Option[String] = None,
+      credential_preview: CredentialPreview,
+      credentials: Map[String, A],
+  )(using Encoder[A]): OfferCredential = {
+    val aux = credentials.map { case (formatName, singleCredential) =>
+      val attachment = AttachmentDescriptor.buildAttachment(payload = singleCredential)
+      val credentialFormat: CredentialFormat = CredentialFormat(attachment.id, formatName)
+      (credentialFormat, attachment)
+    }
+    OfferCredential(
+      thid = thid,
+      from = fromDID,
+      to = toDID,
+      body = Body(credential_preview = credential_preview, formats = aux.keys.toSeq),
+      attachments = aux.values.toSeq
+    )
+  }
+
   final case class Body(
       goal_code: Option[String] = None,
       comment: Option[String] = None,
@@ -58,7 +79,7 @@ object OfferCredential {
       multiple_available: Option[String] = None,
       credential_preview: CredentialPreview,
       formats: Seq[CredentialFormat] = Seq.empty[CredentialFormat]
-  )
+  ) extends BodyUtils
 
   object Body {
     given Encoder[Body] = deriveEncoder[Body]

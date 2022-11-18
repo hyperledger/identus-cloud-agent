@@ -22,6 +22,8 @@ on:
 
 env:
   GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
+  SBT_PACKAGER: "enable" #just to test it loads
+  SBT_SCOVERAGE: "enable"
 
 defaults:
   run:
@@ -49,13 +51,29 @@ jobs:
           sbt scalafmtCheckAll
 
       - name: Build and test Mercury
-        run: sbt test
+        run: SBT_SCOVERAGE=enable sbt clean coverage test coverageAggregate
 
       - name: Aggregate test reports
         if: always()
         uses: ./.github/actions/aggregate-test-reports
         with:
           tests-dir: "mercury/mercury-library"
+
+      - name: Code coverage report
+        if: always()
+        uses: 5monkeys/cobertura-action@master
+        with:
+          path: "mercury/mercury-library/target/coverage/coverage-report/cobertura.xml"
+          report_name: "Mercury Code Coverage"
+          minimum_coverage: 10
+          fail_below_threshold: false
+
+      - name: Artifact coverage HTML
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: code-coverage-report-mercury
+          path: "mercury/mercury-library/target/coverage/scoverage-report"
 
       - name: Publish test results
         # Publish even if the test step fails
