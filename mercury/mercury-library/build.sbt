@@ -69,8 +69,6 @@ lazy val D = new {
 
 publish / skip := true
 
-coverageDataDir := target.value / "coverage"
-
 // #########################
 // ### Models & Services ###
 // #########################
@@ -246,11 +244,21 @@ lazy val agentDidScala =
     )
     .dependsOn(agent)
 
+// ### Test coverage ###
+sys.env
+  .get("SBT_SCOVERAGE")
+  .map { _ =>
+    lazy val coverageDataDir: SettingKey[File] =
+      settingKey[File]("directory where the measurements and report files will be stored")
+    coverageDataDir := target.value / "coverage"
+  }
+  .toSeq
+
 // ### ReleaseStep ###
 sys.env
-  .get("SBT_SCOVERAGE") // SEE also plugin.sbt
+  .get("SBT_PACKAGER") // SEE also plugin.sbt
   .map { _ =>
-    println("### Config sbt-scoverage (releaseProcess) ###")
+    println("### Config SBT_PACKAGER (releaseProcess) ###")
   import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
 
   releaseProcess := Seq[ReleaseStep](
