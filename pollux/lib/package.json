@@ -22,6 +22,9 @@
           "name": "main"
         },
         {
+          "name" : "ATL-2075-add-publish-credentials-job"
+        },
+        {
           "name": "prerelease/pollux",
           "prerelease": "snapshot"
         }
