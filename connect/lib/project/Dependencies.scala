@@ -18,25 +18,16 @@ object Dependencies {
 
   private lazy val flyway = "org.flywaydb" % "flyway-core" % Versions.flyway
 
-  // We have to exclude bouncycastle since for some reason bitcoinj depends on bouncycastle jdk15to18
-  // (i.e. JDK 1.5 to 1.8), but we are using JDK 11
-  private lazy val prismCrypto = "io.iohk.atala" % "prism-crypto-jvm" % Versions.prismSdk excludeAll
-    ExclusionRule(
-      organization = "org.bouncycastle"
-    )
-  // REMOVE private lazy val polluxVcJwt = "io.iohk.atala" %% "pollux-vc-jwt" % "0.1.0-SNAPSHOT" changing ()
-
-  private lazy val irisClient = "io.iohk.atala" %% "iris-client" % Versions.iris
 
   private lazy val mercuryProtocolIssueCredential =
     "io.iohk.atala" %% "mercury-protocol-connection" % Versions.mercury
 
   // Dependency Modules
-  private lazy val baseDependencies: Seq[ModuleID] = Seq(zio, prismCrypto)
+  private lazy val baseDependencies: Seq[ModuleID] = Seq(zio)
   private lazy val doobieDependencies: Seq[ModuleID] = Seq(doobiePostgres, doobieHikari, flyway)
 
   // Project Dependencies
   lazy val coreDependencies: Seq[ModuleID] =
-    baseDependencies ++ Seq(irisClient) ++ Seq(mercuryProtocolIssueCredential)
+    baseDependencies ++ Seq(mercuryProtocolIssueCredential)
   lazy val sqlDoobieDependencies: Seq[ModuleID] = baseDependencies ++ doobieDependencies ++ Seq(zioCatsInterop)
 }
