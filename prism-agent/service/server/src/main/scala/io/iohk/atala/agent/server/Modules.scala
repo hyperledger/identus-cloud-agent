@@ -25,7 +25,6 @@ import io.iohk.atala.agent.server.http.service.{
   IssueCredentialsApiServiceImpl,
   ConnectionsManagementApiServiceImpl
 }
-import io.iohk.atala.castor.core.repository.DIDOperationRepository
 import io.iohk.atala.agent.openapi.api.{
   DIDApi,
   DIDAuthenticationApi,
@@ -34,9 +33,6 @@ import io.iohk.atala.agent.openapi.api.{
   IssueCredentialsApi,
   ConnectionsManagementApi
 }
-import io.iohk.atala.castor.sql.repository.{JdbcDIDOperationRepository, TransactorLayer}
-import zio.*
-import zio.interop.catz.*
 import cats.effect.std.Dispatcher
 import com.typesafe.config.ConfigFactory
 import doobie.util.transactor.Transactor
@@ -47,11 +43,7 @@ import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.agent.server.http.marshaller.*
 import io.iohk.atala.agent.server.http.service.*
 import io.iohk.atala.agent.server.http.{HttpRoutes, HttpServer}
-import io.iohk.atala.castor.core.repository.DIDOperationRepository
-import io.iohk.atala.castor.core.service.{DIDService, DIDServiceImpl}
 import io.iohk.atala.pollux.core.service.CredentialServiceImpl
-import io.iohk.atala.castor.sql.repository.{JdbcDIDOperationRepository, TransactorLayer}
-import io.iohk.atala.castor.sql.repository.DbConfig as CastorDbConfig
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
 import io.iohk.atala.pollux.core.repository.CredentialRepository
@@ -308,13 +300,13 @@ object SystemModule {
 }
 
 object AppModule {
-  val didOperationValidatorLayer: ULayer[DIDOperationValidator] = DIDOperationValidator.layer()
+  val didOpValidatorLayer: ULayer[DIDOperationValidator] = DIDOperationValidator.layer()
 
   val didServiceLayer: TaskLayer[DIDService] =
-    (didOperationValidatorLayer ++ GrpcModule.layers) >>> DIDServiceImpl.layer
+    (didOpValidatorLayer ++ GrpcModule.layers) >>> DIDServiceImpl.layer
 
   val manageDIDServiceLayer: TaskLayer[ManagedDIDService] =
-    (didOperationValidatorLayer ++ didServiceLayer) >>> ManagedDIDService.inMemoryStorage
+    (didOpValidatorLayer ++ didServiceLayer) >>> ManagedDIDService.inMemoryStorage
 
   val credentialServiceLayer: RLayer[DidComm, CredentialService] =
     (GrpcModule.layers ++ RepoModule.layers) >>> CredentialServiceImpl.layer

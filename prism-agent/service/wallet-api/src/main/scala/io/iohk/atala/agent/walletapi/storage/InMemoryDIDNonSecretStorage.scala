@@ -12,7 +12,7 @@ private[walletapi] class InMemoryDIDNonSecretStorage private (
   override def setManagedDIDState(did: PrismDID, state: ManagedDIDState): Task[Unit] =
     store.update(_.updated(did, state))
 
-  def listManagedDID: Task[Map[PrismDID, ManagedDIDState]] = store.get
+  override def listManagedDID: Task[Map[PrismDID, ManagedDIDState]] = store.get
 
 }
 

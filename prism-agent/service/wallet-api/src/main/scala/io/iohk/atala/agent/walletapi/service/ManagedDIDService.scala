@@ -51,11 +51,11 @@ final class ManagedDIDService private[walletapi] (
   private val CURVE = EllipticCurve.SECP256K1
 
   def publishStoredDID(did: CanonicalPrismDID): IO[PublishManagedDIDError, ScheduleDIDOperationOutcome] = {
-    def syncStateAndPersist =
+    def syncDLTStateAndPersist =
       nonSecretStorage
         .getManagedDIDState(did)
         .mapError(PublishManagedDIDError.WalletStorageError.apply)
-        .flatMap(op => ZIO.fromOption(op).mapError(_ => PublishManagedDIDError.DIDNotFound(did)))
+        .flatMap(state => ZIO.fromOption(state).mapError(_ => PublishManagedDIDError.DIDNotFound(did)))
         .flatMap(state => syncDIDStateFromDLT(state).mapError(PublishManagedDIDError.OperationError.apply))
         .tap(state =>
           nonSecretStorage.setManagedDIDState(did, state).mapError(PublishManagedDIDError.WalletStorageError.apply)
@@ -71,14 +71,14 @@ final class ManagedDIDService private[walletapi] (
               ZIO
                 .fromOption(maybeKey)
                 .orDieWith(_ =>
-                  new Exception("master-key must exists in the wallet for create DID publication signature")
+                  new Exception("master-key must exists in the wallet for DID publication operation signature")
                 )
             )
         signedAtalaOperation <- ZIO
           .fromTry(
             ECWrapper.signBytes(CURVE, operation.toAtalaOperation.toByteArray, masterKeyPair.privateKey)
           )
-          .mapError(PublishManagedDIDError.CryptographicError.apply)
+          .mapError(PublishManagedDIDError.CryptographyError.apply)
           .map(signature =>
             SignedPrismDIDOperation.Create(
               operation = operation,
@@ -95,7 +95,7 @@ final class ManagedDIDService private[walletapi] (
       } yield outcome
 
     for {
-      didState <- syncStateAndPersist
+      didState <- syncDLTStateAndPersist
       outcome <- didState match {
         case ManagedDIDState.Created(operation) => submitOperation(operation)
         case ManagedDIDState.PublicationPending(operation, operationId) =>
