@@ -422,17 +422,67 @@ components:
             - completed
             - failed
 
-    W3CPresentationInput:
-      description: Verifiable Presentation input
+    ProofRequestAux:
       properties:
-        schemas:
-          type: string # TODO: Define the schema for Presentation Input
+        credentialSchema:
+          description: Ex ID card or driving licence
+          type: string
+        trustIssuers:
+          description: Issuer that the verifier trust trust
+          type: array
+          items:
+            type: string
 
-    W3CPresentation:
-      description: Verifiable Presentation object
+    RequestPresentationInput:
+      description: Request Presentation Input
       properties:
-        schemas:
-          type: string # TODO: define the exactly schema for Presentation
+        connectionId:
+          type: string
+        proofs:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProofRequestAux"
+    RequestPresentationOutput:
+      description: Request Presentation Output
+      properties:
+        presentationId:
+          description: Ref to the id on the presentation (db ref)
+          type: string
+    PresentationStatus:
+      description: Presentation Status
+      properties:
+        presentationId:
+          type: string
+        status:
+          type: string
+        proofs:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProofRequestAux"
+        connectionId:
+          type: string
+    SendPresentationInput:
+      description: Start the send presentation Status Input
+      properties:
+        presentationId:
+          type: string
+        proofId:
+          description: This is to choose what VCs to use
+          type: array
+          items:
+            type: string
+
+    # W3CPresentationInput:
+    #   description: Verifiable Presentation input
+    #   properties:
+    #     schemas:
+    #       type: string # TODO: Define the schema for Presentation Input
+
+    # W3CPresentation:
+    #   description: Verifiable Presentation object
+    #   properties:
+    #     schemas:
+    #       type: string # TODO: define the exactly schema for Presentation
 
     W3CPresentationPaginated:
       description: "Paginated response that contains an array of the presentation objects"
@@ -549,7 +599,7 @@ components:
             credentialSubject:
               type: object
               additionalProperties: true
-              required: [ "id" ]
+              required: ["id"]
               description: "Credentials subject DID and claims according to the schema object"
               example:
                 id: "did:prism:subject12345"

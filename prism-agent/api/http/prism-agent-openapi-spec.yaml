@@ -851,77 +851,120 @@ paths:
               schema:
                 $ref: "./pollux/schemas.yaml#/components/schemas/RevocationStatus"
 
-  /present-proof/verifiable-presentations:
+  /present-proof/presentations:
     post:
       tags: ["Present Proof"]
-      operationId: createVerifiablePresentation
-      summary: Create new instance of VerifiablePresentation
-      description: Verifier creates the instance of Verifiable Presentation object to be used in present proof communication protocol with Prover
+      operationId: requestPresentation
       requestBody:
-        description: PresentationInput object with the schema references and claims
+        description: Request presentation of some type of Proof or Proofs (VC)
         required: true
         content:
           application/json:
             schema:
-              $ref: "./pollux/schemas.yaml#/components/schemas/W3CPresentationInput"
+              $ref: "./pollux/schemas.yaml#/components/schemas/RequestPresentationInput"
       responses:
         "201":
           description: The new presentation is created
           content:
             application/json:
               schema:
-                $ref: "./pollux/schemas.yaml#/components/schemas/W3CPresentation"
-        # TODO: Add other corner cases and error responses
+                $ref: "./pollux/schemas.yaml#/components/schemas/RequestPresentationOutput"
+    get:
+      tags: ["Present Proof"]
+      operationId: getAllPresentation
+      responses:
+        "200":
+          description: List of presentations and status
+          content:
+            application/json:
+              schema:
+                $ref: "./pollux/schemas.yaml#/components/schemas/PresentationStatus"
 
-    get:
+  /present-proof/presentations/{id}/send:
+    post:
       tags: ["Present Proof"]
-      operationId: fetchPresentationByQuery
-      summary: Fetch presentation by query
-      description: Fetch presentation by query
-      parameters: # TODO: Define the parameters for the presentation lookup
-        - in: query
-          name: name
-          description: Fetch presentation by the name
-          example: TemplateName
-          schema:
-            type: string
-        - in: query
-          name: offset
-          description: Pagination offset
-          example: 15
-          schema:
-            type: integer
-        - in: query
-          name: limit
-          description: Pagination limit
-          example: 100
-          schema:
-            type: integer
+      operationId: sendPresentation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "./pollux/schemas.yaml#/components/schemas/SendPresentationInput"
       responses:
         "200":
-          description: Presentations are fetched by the query
-          content:
-            application/json:
-              schema:
-                $ref: "./pollux/schemas.yaml#/components/schemas/W3CPresentationPaginated"
-  /present-proof/verifiable-presentations/{id}:
-    get:
-      tags: ["Present Proof"]
-      operationId: getPresentationById
-      summary: Fetch the presentation from the collection by id
-      description: Fetch the presentation from the collection by id
-      parameters:
-        - in: path
-          name: id
-          schema:
-            type: string
-          required: true
-          description: Unique identifier of the presentation
-          example: "06e126d1-fa44-4882-a243-1e326fbe21db"
-      responses:
-        "200":
-          description: Successful response, the presentation is returned
-          content:
-            application/json:
-              schema:
-                $ref: "./pollux/schemas.yaml#/components/schemas/W3CPresentation"
+          description: http code or errors
+
+  # /present-proof/verifiable-presentations:
+  #   post:
+  #     tags: ["Present Proof"]
+  #     operationId: createVerifiablePresentation
+  #     summary: Create new instance of VerifiablePresentation
+  #     description: Verifier creates the instance of Verifiable Presentation object to be used in present proof communication protocol with Prover
+  #     requestBody:
+  #       description: PresentationInput object with the schema references and claims
+  #       required: true
+  #       content:
+  #         application/json:
+  #           schema:
+  #             $ref: "./pollux/schemas.yaml#/components/schemas/W3CPresentationInput"
+  #     responses:
+  #       "201":
+  #         description: The new presentation is created
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: "./pollux/schemas.yaml#/components/schemas/W3CPresentation"
+  #       # TODO: Add other corner cases and error responses
+
+  #   get:
+  #     tags: ["Present Proof"]
+  #     operationId: fetchPresentationByQuery
+  #     summary: Fetch presentation by query
+  #     description: Fetch presentation by query
+  #     parameters: # TODO: Define the parameters for the presentation lookup
+  #       - in: query
+  #         name: name
+  #         description: Fetch presentation by the name
+  #         example: TemplateName
+  #         schema:
+  #           type: string
+  #       - in: query
+  #         name: offset
+  #         description: Pagination offset
+  #         example: 15
+  #         schema:
+  #           type: integer
+  #       - in: query
+  #         name: limit
+  #         description: Pagination limit
+  #         example: 100
+  #         schema:
+  #           type: integer
+  #     responses:
+  #       "200":
+  #         description: Presentations are fetched by the query
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: "./pollux/schemas.yaml#/components/schemas/W3CPresentationPaginated"
+  # /present-proof/verifiable-presentations/{id}:
+  #   get:
+  #     tags: ["Present Proof"]
+  #     operationId: getPresentationById
+  #     summary: Fetch the presentation from the collection by id
+  #     description: Fetch the presentation from the collection by id
+  #     parameters:
+  #       - in: path
+  #         name: id
+  #         schema:
+  #           type: string
+  #         required: true
+  #         description: Unique identifier of the presentation
+  #         example: "06e126d1-fa44-4882-a243-1e326fbe21db"
+  #     responses:
+  #       "200":
+  #         description: Successful response, the presentation is returned
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: "./pollux/schemas.yaml#/components/schemas/W3CPresentation"
