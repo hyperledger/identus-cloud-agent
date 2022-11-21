@@ -229,7 +229,6 @@ object AgentCli extends ZIOAppDefault {
 
     import io.iohk.atala.mercury.protocol.invitation.OutOfBand
     import io.circe._, io.circe.parser._
-    import io.iohk.atala.mercury.protocol.invitation.InvitationCodec._
     for {
       didCommService <- ZIO.service[DidComm]
       _ <- Console.printLine("Read OutOfBand Invitation")
