@@ -1,5 +1,3 @@
-
-
 CREATE TABLE public.connection_records(
   "id" VARCHAR(36) NOT NULL PRIMARY KEY,
   "thid" VARCHAR(36) NOT NULL,
