@@ -32,6 +32,7 @@ publish / skip := true //Do not publish the root
 
 lazy val vcJWT = project
   .in(file("vc-jwt"))
+  .settings(commonSettings)
   .settings(
     name := "pollux-vc-jwt",
     libraryDependencies ++= polluxVcJwtDependencies

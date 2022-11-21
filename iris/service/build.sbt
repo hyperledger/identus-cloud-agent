@@ -22,6 +22,9 @@ inThisBuild(
 
 def commonProject(project: Project): Project =
   project.settings(
+    version := "0.1.0",
+    organization := "io.iohk.atala",
+    scalaVersion := "3.2.0",
     githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN"),
     versionScheme := Some("semver-spec"),
     resolvers += Resolver
