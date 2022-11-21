@@ -26,6 +26,8 @@ import io.iohk.atala.agent.openapi.model.IssueCredentialRecord
 import io.iohk.atala.agent.openapi.model.IssueCredentialRecordCollection
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import io.iohk.atala.mercury.model.AttachmentDescriptor
+import io.iohk.atala.mercury.model.Base64
 
 trait OASDomainModelHelper {
 
@@ -154,7 +156,11 @@ trait OASDomainModelHelper {
       awaitConfirmation = domain.awaitConfirmation,
       protocolState = domain.protocolState.toString(),
       publicationState = domain.publicationState.map(_.toString),
-      jwtCredential = domain.issueCredentialData.map(issueCredential => "TODO: JWT credential with MT inclusion proof")
+      jwtCredential = domain.issueCredentialData.flatMap(issueCredential => {
+        issueCredential.attachments.collectFirst {
+          case AttachmentDescriptor(_, _, Base64(jwt), _, _, _, _) => jwt
+        }
+      })
     )
   }
 
