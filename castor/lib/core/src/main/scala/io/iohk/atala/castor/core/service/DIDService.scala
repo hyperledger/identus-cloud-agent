@@ -1,6 +1,11 @@
 package io.iohk.atala.castor.core.service
 
-import io.iohk.atala.castor.core.model.did.{PrismDID, ScheduleDIDOperationOutcome, SignedPrismDIDOperation}
+import io.iohk.atala.castor.core.model.did.{
+  PrismDID,
+  ScheduleDIDOperationOutcome,
+  ScheduledDIDOperationDetail,
+  SignedPrismDIDOperation
+}
 import zio.*
 import io.iohk.atala.castor.core.model.ProtoModelHelper
 import io.iohk.atala.castor.core.model.error.DIDOperationError
@@ -15,6 +20,9 @@ import scala.collection.immutable.{AbstractSeq, ArraySeq, LinearSeq}
 
 trait DIDService {
   def createPublishedDID(operation: SignedPrismDIDOperation.Create): IO[DIDOperationError, ScheduleDIDOperationOutcome]
+  def getScheduledDIDOperationDetail(
+      operationId: Array[Byte]
+  ): IO[DIDOperationError, Option[ScheduledDIDOperationDetail]]
 }
 
 object DIDServiceImpl {
@@ -86,6 +94,19 @@ private class DIDServiceImpl(didOpValidator: DIDOperationValidator, nodeClient: 
       operation = signedOperation.operation,
       operationId = ArraySeq.from(operationId)
     )
+  }
+
+  override def getScheduledDIDOperationDetail(
+      operationId: Array[Byte]
+  ): IO[DIDOperationError, Option[ScheduledDIDOperationDetail]] = {
+    for {
+      result <- ZIO
+        .fromFuture(_ => nodeClient.getOperationInfo(node_api.GetOperationInfoRequest(operationId.toProto)))
+        .mapError(DIDOperationError.DLTProxyError.apply)
+      detail <- ZIO
+        .fromEither(result.toDomain)
+        .mapError(DIDOperationError.UnexpectedDLTResult.apply)
+    } yield detail
   }
 
 }

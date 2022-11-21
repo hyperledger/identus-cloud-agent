@@ -28,3 +28,14 @@ final case class ScheduleDIDOperationOutcome(
     operation: PrismDIDOperation,
     operationId: ArraySeq[Byte]
 )
+
+enum ScheduledDIDOperationStatus {
+  case Pending extends ScheduledDIDOperationStatus
+  case AwaitingConfirmation extends ScheduledDIDOperationStatus
+  case Confirmed extends ScheduledDIDOperationStatus
+  case Rejected extends ScheduledDIDOperationStatus
+}
+
+final case class ScheduledDIDOperationDetail(
+    status: ScheduledDIDOperationStatus
+)
