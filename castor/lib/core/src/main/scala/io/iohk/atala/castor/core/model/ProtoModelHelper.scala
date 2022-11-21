@@ -3,6 +3,7 @@ package io.iohk.atala.castor.core.model
 import java.net.URI
 import com.google.protobuf.ByteString
 import io.iohk.atala.castor.core.model.did.{
+  InternalKeyPurpose,
   InternalPublicKey,
   PrismDIDOperation,
   PublicKey,
@@ -15,7 +16,7 @@ import io.iohk.atala.prism.protos.common_models.OperationStatus
 import io.iohk.atala.shared.models.HexStrings.*
 import io.iohk.atala.shared.models.Base64UrlStrings.*
 import io.iohk.atala.shared.utils.Traverse.*
-import io.iohk.atala.prism.protos.{common_models, node_api, node_models}
+import io.iohk.atala.prism.protos.{KeyUsage, common_models, node_api, node_models}
 
 import scala.util.Try
 
@@ -63,7 +64,10 @@ private[castor] trait ProtoModelHelper {
     def toProto: node_models.PublicKey = {
       node_models.PublicKey(
         id = internalPublicKey.id,
-        usage = node_models.KeyUsage.MASTER_KEY,
+        usage = internalPublicKey.purpose match {
+          case InternalKeyPurpose.Master     => node_models.KeyUsage.MASTER_KEY
+          case InternalKeyPurpose.Revocation => node_models.KeyUsage.REVOCATION_KEY
+        },
         addedOn = None,
         revokedOn = None,
         keyData = internalPublicKey.publicKeyData.toProto
