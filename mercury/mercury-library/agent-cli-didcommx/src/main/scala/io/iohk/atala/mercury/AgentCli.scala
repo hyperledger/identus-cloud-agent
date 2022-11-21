@@ -18,6 +18,7 @@ import io.iohk.atala.resolvers.PeerDidMediatorSecretResolver
 import io.iohk.atala.resolvers.UniversalDidResolver
 import io.iohk.atala.mercury.protocol.connection.*
 import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
+
 /** AgentCli
   * {{{
   *   gentDidcommx/runMain io.iohk.atala.mercury.AgentCli
