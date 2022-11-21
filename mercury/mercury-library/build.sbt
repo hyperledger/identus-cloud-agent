@@ -47,9 +47,7 @@ lazy val D = new {
   val zioSLF4J = Def.setting("dev.zio" %% "zio-logging-slf4j" % V.zioLogging)
   val zioJson = Def.setting("dev.zio" %% "zio-json" % V.zioJson)
 
-  // TODO waiting for https://github.com/zio/zio-http/pull/1774 to use zio-http
-  // val zioHttp = Def.setting("dev.zio" %% "zio-http" % "0.0.1") // FIXME USE THIS ONE
-  val zioHttp = Def.setting("io.d11" %% "zhttp" % V.zioHttp) // REMOVE (this is the old name)
+  val zioHttp = Def.setting("dev.zio" %% "zio-http" % "0.0.3")
 
   val circeCore = Def.setting("io.circe" %% "circe-core" % V.circe)
   val circeGeneric = Def.setting("io.circe" %% "circe-generic" % V.circe)
@@ -70,8 +68,6 @@ lazy val D = new {
 }
 
 publish / skip := true
-
-coverageDataDir := target.value / "coverage"
 
 // #########################
 // ### Models & Services ###
@@ -218,6 +214,7 @@ lazy val agent = project // maybe merge into models
     protocolLogin,
     protocolIssueCredential,
     protocolPresentProof,
+    protocolConnection,
   )
 
 /** agents implementation with didcommx */
@@ -248,11 +245,21 @@ lazy val agentDidScala =
     )
     .dependsOn(agent)
 
+// ### Test coverage ###
+sys.env
+  .get("SBT_SCOVERAGE")
+  .map { _ =>
+    lazy val coverageDataDir: SettingKey[File] =
+      settingKey[File]("directory where the measurements and report files will be stored")
+    coverageDataDir := target.value / "coverage"
+  }
+  .toSeq
+
 // ### ReleaseStep ###
 sys.env
-  .get("SBT_SCOVERAGE") // SEE also plugin.sbt
+  .get("SBT_PACKAGER") // SEE also plugin.sbt
   .map { _ =>
-    println("### Config sbt-scoverage (releaseProcess) ###")
+    println("### Config SBT_PACKAGER (releaseProcess) ###")
   import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
 
   releaseProcess := Seq[ReleaseStep](

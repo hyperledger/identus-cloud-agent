@@ -1,27 +1,27 @@
 package io.iohk.atala.mercury
 
 import zio._
-import zhttp.service._
-import zhttp.http._
+import zio.http._
+import zio.http.model._
+import zio.http.service._
 import io.iohk.atala.mercury._
 
-object HttpClientZhttp {
-  val layer = ZLayer.succeed(new HttpClientZhttp())
+object ZioHttpClient {
+  val layer = ZLayer.succeed(new ZioHttpClient())
 }
 
-class HttpClientZhttp extends HttpClient {
-
-  val env = ChannelFactory.auto ++ EventLoopGroup.auto()
+class ZioHttpClient extends HttpClient {
 
   override def get(url: String): Task[HttpResponseBody] =
-    Client
+    zio.http.Client
       .request(url)
-      .provideSomeLayer(env)
+      .provideSomeLayer(zio.http.Client.default)
+      .provideSomeLayer(zio.Scope.default)
       .flatMap(_.body.asString)
       .map(e => HttpResponseBody(e))
 
   def postDIDComm(url: String, data: String): Task[HttpResponseBody] =
-    Client
+    zio.http.Client
       .request(
         url = url, // TODO make ERROR type
         method = Method.POST,
@@ -30,7 +30,8 @@ class HttpClientZhttp extends HttpClient {
         content = Body.fromChunk(Chunk.fromArray(data.getBytes)),
         // ssl = ClientSSLOptions.DefaultSSL,
       )
-      .provideSomeLayer(env)
+      .provideSomeLayer(zio.http.Client.default)
+      .provideSomeLayer(zio.Scope.default)
       .flatMap(_.body.asString)
       .map(e => HttpResponseBody(e))
 }

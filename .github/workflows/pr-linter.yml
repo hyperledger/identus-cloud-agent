@@ -25,6 +25,7 @@ jobs:
             mercury
             pluto
             athena
+            connect
             pistis
             atlas
             prism-agent
