@@ -7,20 +7,6 @@ import io.circe.{Decoder, Encoder, HCursor, Json}
 
 sealed trait ServiceType
 
-object ServiceType {
-
-  given Encoder[ServiceType] = (a: ServiceType) => {
-    a match
-      case data @ Did(_)                 => data.did.asJson
-      case data @ Service(_, _, _, _, _) => data.asJson
-  }
-
-  given Decoder[ServiceType] = List[Decoder[ServiceType]](
-    Decoder[Did].widen,
-    Decoder[Service].widen,
-  ).reduceLeft(_ or _)
-}
-
 /** Service block
   * @see
   *   https://github.com/hyperledger/aries-rfcs/tree/main/features/0434-outofband
@@ -38,14 +24,4 @@ case class Service(
     serviceEndpoint: String,
 ) extends ServiceType
 
-object Service {
-  given Encoder[Service] = deriveEncoder[Service]
-  given Decoder[Service] = deriveDecoder[Service]
-}
-
 case class Did(did: String) extends ServiceType
-
-object Did {
-  given Encoder[Did] = deriveEncoder[Did]
-  given Decoder[Did] = deriveDecoder[Did]
-}
