@@ -1,3 +1,12 @@
+# [mercury-v0.7.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.6.0...mercury-v0.7.0) (2022-11-21)
+
+
+### Features
+
+* **mercury:** Add plugin sbt-scoverage ([#133](https://github.com/input-output-hk/atala-prism-building-blocks/issues/133)) ([fcaaeda](https://github.com/input-output-hk/atala-prism-building-blocks/commit/fcaaeda1f8b2b06ae0cc2cf964228686186f6a15))
+* **mercury:** ATL-2287 Connection Protocol ([#140](https://github.com/input-output-hk/atala-prism-building-blocks/issues/140)) ([402248b](https://github.com/input-output-hk/atala-prism-building-blocks/commit/402248b3b8553ab7869d70f54ca194510a676e6f))
+* **mercury:** Replace zhttp with zio-http ([#137](https://github.com/input-output-hk/atala-prism-building-blocks/issues/137)) ([be6afb3](https://github.com/input-output-hk/atala-prism-building-blocks/commit/be6afb3d8c4f00a1ee0a6429a35c5873302d1cb6))
+
 # [mercury-v0.6.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.5.0...mercury-v0.6.0) (2022-11-16)
 
 
