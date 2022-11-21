@@ -91,7 +91,7 @@ services:
       IRIS_DB_USER: postgres
 
   prism-agent:
-    image: ghcr.io/input-output-hk/prism-agent:0.1.0-SNAPSHOT
+    image: ghcr.io/input-output-hk/prism-agent:0.2.0-SNAPSHOT
     environment:
       IRIS_HOST: iris
       IRIS_PORT: 8081

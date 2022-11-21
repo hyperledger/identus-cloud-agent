@@ -46,6 +46,9 @@ object ConnectionResponse {
     )
   }
 
+  given Encoder[ConnectionResponse] = deriveEncoder[ConnectionResponse]
+
+  given Decoder[ConnectionResponse] = deriveDecoder[ConnectionResponse]
 }
 
 final case class ConnectionResponse(

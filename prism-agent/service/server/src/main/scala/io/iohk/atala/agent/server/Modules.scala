@@ -70,7 +70,6 @@ import zhttp.service.Server
 import java.util.concurrent.Executors
 
 import io.iohk.atala.mercury._
-import io.iohk.atala.mercury.AgentCli.sendMessage //TODO REMOVE
 import io.iohk.atala.mercury.model._
 import io.iohk.atala.mercury.model.error._
 import io.iohk.atala.mercury.protocol.issuecredential._
@@ -80,7 +79,7 @@ import java.io.IOException
 
 object Modules {
 
-  def app(port: Int): Task[Unit] = {
+  def app(port: Int): RIO[DidComm, Unit] = {
     val httpServerApp = HttpRoutes.routes.flatMap(HttpServer.start(port, _))
 
     httpServerApp
@@ -112,7 +111,7 @@ object Modules {
                   ZIO.fail(error)
               }
             }
-            .map(str => Response.text(str))
+            .map(str => Response.ok)
 
       }
     Server.start(port, app)
@@ -126,7 +125,7 @@ object Modules {
 
   def webServerProgram(
       jsonString: String
-  ): ZIO[DidComm with CredentialService, MercuryThrowable, String] = {
+  ): ZIO[DidComm with CredentialService, MercuryThrowable, Unit] = {
     import io.iohk.atala.mercury.DidComm.*
     ZIO.logAnnotate("request-id", java.util.UUID.randomUUID.toString()) {
       for {
@@ -146,7 +145,7 @@ object Modules {
                 credentialService <- ZIO.service[CredentialService]
 
                 // TODO
-              } yield ("OfferCredential Sent")
+              } yield ()
 
             case s if s == OfferCredential.`type` => // Holder
               for {
@@ -163,7 +162,7 @@ object Modules {
                   }
                   .catchAll { case ex: IOException => ZIO.fail(ex) }
 
-              } yield ("Offer received")
+              } yield ()
 
             case s if s == RequestCredential.`type` => // Issuer
               for {
@@ -181,7 +180,7 @@ object Modules {
                   .catchAll { case ex: IOException => ZIO.fail(ex) }
 
                 // TODO todoTestOption if none
-              } yield ("RequestCredential received")
+              } yield ()
 
             case s if s == IssueCredential.`type` => // Holder
               for {
@@ -197,14 +196,19 @@ object Modules {
                       ZIO.fail(cause)
                   }
                   .catchAll { case ex: IOException => ZIO.fail(ex) }
-
-              } yield ("IssueCredential Received")
+              } yield ()
 
             case _ => ZIO.succeed("Unknown Message Type")
           }
         }
       } yield (ret)
     }
+  }
+
+  val publishCredentialsToDltJob: RIO[DidComm, Unit] = {
+    val effect = BackgroundJobs.publishCredentialsToDlt
+      .provideLayer(AppModule.credentialServiceLayer)
+    (effect repeat Schedule.spaced(1.seconds)).unit
   }
 
 }
@@ -245,7 +249,7 @@ object AppModule {
   val manageDIDServiceLayer: TaskLayer[ManagedDIDService] =
     (didOpValidatorLayer ++ didServiceLayer) >>> ManagedDIDService.inMemoryStorage()
 
-  val credentialServiceLayer: TaskLayer[CredentialService] =
+  val credentialServiceLayer: RLayer[DidComm, CredentialService] =
     (GrpcModule.layers ++ RepoModule.layers) >>> CredentialServiceImpl.layer
 }
 
@@ -294,14 +298,14 @@ object HttpModule {
     (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new DIDRegistrarApi(_, _))
   }
 
-  val issueCredentialsApiLayer: TaskLayer[IssueCredentialsApi] = {
+  val issueCredentialsApiLayer: RLayer[DidComm, IssueCredentialsApi] = {
     val serviceLayer = AppModule.credentialServiceLayer
     val apiServiceLayer = serviceLayer >>> IssueCredentialsApiServiceImpl.layer
     val apiMarshallerLayer = IssueCredentialsApiMarshallerImpl.layer
     (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new IssueCredentialsApi(_, _))
   }
 
-  val issueCredentialsProtocolApiLayer: TaskLayer[IssueCredentialsProtocolApi] = {
+  val issueCredentialsProtocolApiLayer: RLayer[DidComm, IssueCredentialsProtocolApi] = {
     val serviceLayer = AppModule.credentialServiceLayer
     val apiServiceLayer = serviceLayer >>> IssueCredentialsProtocolApiServiceImpl.layer
     val apiMarshallerLayer = IssueCredentialsProtocolApiMarshallerImpl.layer
@@ -351,7 +355,8 @@ object RepoModule {
         PolluxDbConfig(
           username = config.username,
           password = config.password,
-          jdbcUrl = s"jdbc:postgresql://${config.host}:${config.port}/${config.databaseName}"
+          jdbcUrl = s"jdbc:postgresql://${config.host}:${config.port}/${config.databaseName}",
+          awaitConnectionThreads = 2
         )
       }
     }

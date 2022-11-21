@@ -8,7 +8,7 @@ import io.iohk.atala.mercury.{*, given}
 import io.iohk.atala.mercury.model.*
 import io.iohk.atala.mercury.protocol.invitation.*
 import io.iohk.atala.mercury.protocol.invitation.v2.*
-import io.iohk.atala.mercury.protocol.invitation.InvitationCodec.*
+import io.iohk.atala.mercury.protocol.invitation.v2.Invitation.Body
 import cats.implicits.*
 import io.circe.syntax.*
 import io.circe.Json

@@ -25,6 +25,10 @@ val commonSettings = Seq(
 // Project definitions
 lazy val root = project
   .in(file("."))
+  .settings(commonSettings)
+  .settings(
+    name := "castor-root",
+  )
   .settings(publish / skip := true)
   .aggregate(core, `sql-doobie`)
 

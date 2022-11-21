@@ -1,3 +1,10 @@
+# [pollux-v0.3.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.2.0...pollux-v0.3.0) (2022-11-21)
+
+
+### Features
+
+* **pollux:** implement Issue Credential v2 Protocol ([#144](https://github.com/input-output-hk/atala-prism-building-blocks/issues/144)) ([a80702f](https://github.com/input-output-hk/atala-prism-building-blocks/commit/a80702f5b255d8079085a6ec27c87baa6a23ac59)), closes [#92](https://github.com/input-output-hk/atala-prism-building-blocks/issues/92)
+
 # [pollux-v0.2.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.1.0...pollux-v0.2.0) (2022-11-14)
 
 

@@ -2,8 +2,8 @@ package io.iohk.atala.mercury.protocol.connection
 
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
-import io.iohk.atala.mercury.protocol.invitation.v2.Body
-import io.iohk.atala.mercury.protocol.invitation.InvitationCodec._
+import io.iohk.atala.mercury.protocol.invitation.v2.Invitation.Body
+
 object OutOfBandConnection {
 
   def createInvitation(from: DidId): Invitation = {

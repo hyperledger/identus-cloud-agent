@@ -3,7 +3,6 @@ package io.iohk.atala.mercury.protocol.invitation
 import java.net.URL
 import java.{util => ju}
 import io.iohk.atala.mercury.protocol.invitation.v2._
-import io.iohk.atala.mercury.protocol.invitation.InvitationCodec._
 import io.circe._
 import io.circe.parser._
 import io.iohk.atala.mercury

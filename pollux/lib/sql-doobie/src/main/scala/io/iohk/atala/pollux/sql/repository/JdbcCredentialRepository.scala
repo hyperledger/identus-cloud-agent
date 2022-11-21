@@ -1,5 +1,6 @@
 package io.iohk.atala.pollux.sql.repository
 
+import cats.instances.seq
 import doobie.*
 import doobie.implicits.*
 import io.circe._
@@ -8,34 +9,47 @@ import io.circe.syntax._
 import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
 import io.iohk.atala.mercury.protocol.issuecredential.OfferCredential
 import io.iohk.atala.mercury.protocol.issuecredential.RequestCredential
+import io.iohk.atala.pollux.core.model.IssueCredentialRecord.ProtocolState
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.repository.CredentialRepository
 import io.iohk.atala.pollux.sql.model.JWTCredentialRow
+import io.iohk.atala.prism.crypto.MerkleInclusionProof
+import io.iohk.atala.shared.utils.BytesOps
 import zio.*
 import zio.interop.catz.*
 
+import java.time.Instant
 import java.util.UUID
 
 // TODO: replace with actual implementation
 class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepository[Task] {
+  // serializes into hex string
 
-  given logHandler: LogHandler = LogHandler.jdkLogHandler
+  private def serializeInclusionProof(proof: MerkleInclusionProof): String = BytesOps.bytesToHex(proof.encode.getBytes)
+
+  // deserializes from the hex string
+  private def deserializeInclusionProof(proof: String): MerkleInclusionProof =
+    MerkleInclusionProof.decode(
+      String(
+        BytesOps.hexToBytes(proof)
+      )
+    )
+
+  // Uncomment to have Doobie LogHandler in scope and automatically output SQL statements in logs
+  // given logHandler: LogHandler = LogHandler.jdkLogHandler
 
   import IssueCredentialRecord._
   given uuidGet: Get[UUID] = Get[String].map(UUID.fromString)
   given uuidPut: Put[UUID] = Put[String].contramap(_.toString())
+
+  given instantGet: Get[Instant] = Get[Long].map(Instant.ofEpochSecond)
+  given instantPut: Put[Instant] = Put[Long].contramap(_.getEpochSecond())
 
   given protocolStateGet: Get[ProtocolState] = Get[String].map(ProtocolState.valueOf)
   given protocolStatePut: Put[ProtocolState] = Put[String].contramap(_.toString)
 
   given publicationStateGet: Get[PublicationState] = Get[String].map(PublicationState.valueOf)
   given publicationStatePut: Put[PublicationState] = Put[String].contramap(_.toString)
-
-  given claimsGet: Get[Map[String, String]] = Get[String].map(
-    decode[Map[String, String]](_)
-      .getOrElse(Map("parsingError" -> "parsingError"))
-  )
-  given claimsPut: Put[Map[String, String]] = Put[String].contramap(_.asJson.toString)
 
   given roleGet: Get[Role] = Get[String].map(Role.valueOf)
   given rolePut: Put[Role] = Put[String].contramap(_.toString)
@@ -49,27 +63,35 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
   given issueCredentialGet: Get[IssueCredential] = Get[String].map(decode[IssueCredential](_).getOrElse(???))
   given issueCredentialPut: Put[IssueCredential] = Put[String].contramap(_.asJson.toString)
 
+  given inclusionProofGet: Get[MerkleInclusionProof] = Get[String].map(deserializeInclusionProof)
+
   override def createIssueCredentialRecord(record: IssueCredentialRecord): Task[Int] = {
     val cxnIO = sql"""
         | INSERT INTO public.issue_credential_records(
         |   id,
+        |   created_at,
+        |   updated_at,
         |   thid,
         |   schema_id,
         |   role,
         |   subject_id,
         |   validity_period,
-        |   claims,
+        |   automatic_issuance,
+        |   await_confirmation,
         |   protocol_state,
         |   publication_state,
         |   offer_credential_data
         | ) values (
         |   ${record.id},
+        |   ${record.createdAt},
+        |   ${record.updatedAt},
         |   ${record.thid},
         |   ${record.schemaId},
         |   ${record.role},
         |   ${record.subjectId},
         |   ${record.validityPeriod},
-        |   ${record.claims},
+        |   ${record.automaticIssuance},
+        |   ${record.awaitConfirmation},
         |   ${record.protocolState},
         |   ${record.publicationState},
         |   ${record.offerCredentialData}
@@ -84,12 +106,15 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
     val cxnIO = sql"""
         | SELECT
         |   id,
+        |   created_at,
+        |   updated_at,
         |   thid,
         |   schema_id,
         |   role,
         |   subject_id,
         |   validity_period,
-        |   claims,
+        |   automatic_issuance,
+        |   await_confirmation,
         |   protocol_state,
         |   publication_state,
         |   offer_credential_data,
@@ -104,23 +129,56 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
       .transact(xa)
   }
 
-  override def getIssueCredentialRecord(id: UUID): Task[Option[IssueCredentialRecord]] = {
+  override def getIssueCredentialRecordsByState(
+      state: IssueCredentialRecord.ProtocolState
+  ): Task[Seq[IssueCredentialRecord]] = {
     val cxnIO = sql"""
         | SELECT
         |   id,
+        |   created_at,
+        |   updated_at,
         |   thid,
         |   schema_id,
         |   role,
         |   subject_id,
         |   validity_period,
-        |   claims,
+        |   automatic_issuance,
+        |   await_confirmation,
         |   protocol_state,
         |   publication_state,
         |   offer_credential_data,
         |   request_credential_data,
         |   issue_credential_data
         | FROM public.issue_credential_records
-        | WHERE id = $id
+        | WHERE protocol_state = ${state.toString}
+        """.stripMargin
+      .query[IssueCredentialRecord]
+      .to[Seq]
+
+    cxnIO
+      .transact(xa)
+  }
+
+  override def getIssueCredentialRecord(recordId: UUID): Task[Option[IssueCredentialRecord]] = {
+    val cxnIO = sql"""
+        | SELECT
+        |   id,
+        |   created_at,
+        |   updated_at,
+        |   thid,
+        |   schema_id,
+        |   role,
+        |   subject_id,
+        |   validity_period,
+        |   automatic_issuance,
+        |   await_confirmation,
+        |   protocol_state,
+        |   publication_state,
+        |   offer_credential_data,
+        |   request_credential_data,
+        |   issue_credential_data
+        | FROM public.issue_credential_records
+        | WHERE id = $recordId
         """.stripMargin
       .query[IssueCredentialRecord]
       .option
@@ -133,12 +191,15 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
     val cxnIO = sql"""
         | SELECT
         |   id,
+        |   created_at,
+        |   updated_at,
         |   thid,
         |   schema_id,
         |   role,
         |   subject_id,
         |   validity_period,
-        |   claims,
+        |   automatic_issuance,
+        |   await_confirmation,
         |   protocol_state,
         |   publication_state,
         |   offer_credential_data,
@@ -155,16 +216,17 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
   }
 
   override def updateCredentialRecordProtocolState(
-      id: UUID,
+      recordId: UUID,
       from: IssueCredentialRecord.ProtocolState,
       to: IssueCredentialRecord.ProtocolState
   ): Task[Int] = {
     val cxnIO = sql"""
         | UPDATE public.issue_credential_records
         | SET
-        |   protocol_state = $to
+        |   protocol_state = $to,
+        |   updated_at = ${Instant.now}
         | WHERE
-        |   id = $id
+        |   id = $recordId
         |   AND protocol_state = $from
         """.stripMargin.update
 
@@ -172,8 +234,33 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
       .transact(xa)
   }
 
+  // TODO: refactor to work with issueCredential form mercury
+  override def updateCredentialRecordStateAndProofByCredentialIdBulk(
+      idsStatesAndProofs: Seq[(UUID, IssueCredentialRecord.PublicationState, MerkleInclusionProof)]
+  ): Task[Int] = {
+
+    if (idsStatesAndProofs.isEmpty) ZIO.succeed(0)
+    else
+      val values = idsStatesAndProofs.map { idStateAndProof =>
+        val (id, state, proof) = idStateAndProof
+        s"(${id.toString}, '${state.toString}', '${serializeInclusionProof(proof)}')"
+      }
+
+      val cxnIO = sql"""
+          | UPDATE public.issue_credential_records as icr
+          | SET 
+          |   publication_state = idsStatesAndProofs.publication_state,
+          |   merkle_inclusion_proof = idsStatesAndProofs.serializedProof
+          | FROM (values ${values.mkString(",")}) as idsStatesAndProofs(id, publication_state, serializedProof)
+          | WHERE icr.id = idsStatesAndProofs.id
+          |""".stripMargin.update
+
+      cxnIO.run
+        .transact(xa)
+  }
+
   override def updateCredentialRecordPublicationState(
-      id: UUID,
+      recordId: UUID,
       from: Option[IssueCredentialRecord.PublicationState],
       to: Option[IssueCredentialRecord.PublicationState]
   ): Task[Int] = {
@@ -184,9 +271,10 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
     val cxnIO = sql"""
         | UPDATE public.issue_credential_records
         | SET
-        |   publication_state = $to
+        |   publication_state = $to,
+        |   updated_at = ${Instant.now}
         | WHERE
-        |   id = $id
+        |   id = $recordId
         |   AND $pubStateFragment
         """.stripMargin.update
 
@@ -194,40 +282,42 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
       .transact(xa)
   }
 
-  override def updateWithRequestCredential(request: RequestCredential): Task[Int] = {
-    request.thid match
-      case None =>
-        ZIO.succeed(0)
-      case Some(value) =>
-        val cxnIO = sql"""
-            | UPDATE public.issue_credential_records
-            | SET
-            |   request_credential_data = $request,
-            |   protocol_state = ${IssueCredentialRecord.ProtocolState.RequestReceived}
-            | WHERE
-            |   thid = $value
-            """.stripMargin.update
+  override def updateWithRequestCredential(
+      recordId: UUID,
+      request: RequestCredential,
+      protocolState: ProtocolState
+  ): Task[Int] = {
+    val cxnIO = sql"""
+        | UPDATE public.issue_credential_records
+        | SET
+        |   request_credential_data = $request,
+        |   protocol_state = $protocolState,
+        |   updated_at = ${Instant.now}
+        | WHERE
+        |   id = $recordId
+        """.stripMargin.update
 
-        cxnIO.run
-          .transact(xa)
+    cxnIO.run
+      .transact(xa)
   }
 
-  override def updateWithIssueCredential(issue: IssueCredential): Task[Int] = {
-    issue.thid match
-      case None =>
-        ZIO.succeed(0)
-      case Some(value) =>
-        val cxnIO = sql"""
-            | UPDATE public.issue_credential_records
-            | SET
-            |   issue_credential_data = $issue,
-            |   protocol_state = ${IssueCredentialRecord.ProtocolState.CredentialReceived}
-            | WHERE
-            |   thid = $value
-            """.stripMargin.update
+  override def updateWithIssueCredential(
+      recordId: UUID,
+      issue: IssueCredential,
+      protocolState: ProtocolState
+  ): Task[Int] = {
+    val cxnIO = sql"""
+        | UPDATE public.issue_credential_records
+        | SET
+        |   issue_credential_data = $issue,
+        |   protocol_state = $protocolState,
+        |   updated_at = ${Instant.now}
+        | WHERE
+        |   id = $recordId
+        """.stripMargin.update
 
-        cxnIO.run
-          .transact(xa)
+    cxnIO.run
+      .transact(xa)
   }
 
 }

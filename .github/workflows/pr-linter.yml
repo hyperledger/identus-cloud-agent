@@ -24,7 +24,9 @@ jobs:
             pollux
             mercury
             pluto
+            connect
             athena
+            connect
             pistis
             atlas
             prism-agent
