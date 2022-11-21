@@ -7,7 +7,7 @@ object Dependencies {
     val zioCatsInterop = "3.3.0"
     val prismSdk = "v1.3.3-snapshot-1657194253-992dd96"
     val iris = "0.1.0"
-    val mercury = "0.5.0"
+    val mercury = "0.6.0-SNAPSHOT"
     val flyway = "9.7.0"
   }
 
@@ -30,7 +30,7 @@ object Dependencies {
   private lazy val irisClient = "io.iohk.atala" %% "iris-client" % Versions.iris
 
   private lazy val mercuryProtocolIssueCredential =
-    "io.iohk.atala" %% "mercury-protocol-issue-credential" % Versions.mercury
+    "io.iohk.atala" %% "mercury-protocol-connection" % Versions.mercury
 
   // Dependency Modules
   private lazy val baseDependencies: Seq[ModuleID] = Seq(zio, prismCrypto)

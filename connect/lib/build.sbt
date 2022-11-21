@@ -41,7 +41,7 @@ lazy val `sql-doobie` = project
   .in(file("sql-doobie"))
   .settings(commonSettings)
   .settings(
-    name := "pollux-sql-doobie",
+    name := "connect-sql-doobie",
     libraryDependencies ++= sqlDoobieDependencies
   )
   .dependsOn(core)

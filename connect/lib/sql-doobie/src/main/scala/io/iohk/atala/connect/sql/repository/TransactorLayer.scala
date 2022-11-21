@@ -1,4 +1,4 @@
-package io.iohk.atala.pollux.sql.repository
+package io.iohk.atala.connect.sql.repository
 
 import cats.effect.{Async, Resource}
 import doobie.util.transactor.Transactor

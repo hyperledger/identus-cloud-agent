@@ -1,31 +1,36 @@
 package io.iohk.atala.connect.core.repository
 
+import io.iohk.atala.connect.core.model.ConnectionRecord.ProtocolState
+import io.iohk.atala.connect.core.model.ConnectionRecord.ProtocolState.{ConnectionRequestPending, ConnectionRequestSent}
 import zio.*
+
 import java.util.UUID
-import io.iohk.atala.mercury.protocol.issuecredential.RequestCredential
-import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
-io.iohk.atala.connect.core.model.ConnectionsRecord
+import io.iohk.atala.mercury.protocol.invitation
+import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
+import io.iohk.atala.mercury.protocol.connection.*
+import io.iohk.atala.connect.core.model.ConnectionRecord
+
 trait ConnectionsRepository[F[_]] {
-  def createInvitationRecord(record: ConnectionsRecord): F[Int]
+  def createConnectionRecord(record: ConnectionRecord): F[Int]
 
-  def getIInvitationRecords(): F[Seq[ConnectionsRecord]]
+  def getConnectionRecords: F[Seq[ConnectionRecord]]
 
-  def getIssueCredentialRecord(id: UUID): F[Option[ConnectionsRecord]]
+  def getConnectionRecord(id: UUID): F[Option[ConnectionRecord]]
 
-  def getIssueCredentialRecordByThreadId(id: UUID): F[Option[ConnectionsRecord]]
+  def deleteConnectionRecord(id: UUID): F[Int]
 
-  def updateCredentialRecordProtocolState(
+  def deleteConnectionRecordByThreadId(id: UUID): F[Int]
+
+  def getConnectionRecordByThreadId(id: UUID): F[Option[ConnectionRecord]]
+
+  def updateWithConnectionRequest(request: ConnectionRequest): F[Int]
+
+  def updateWithConnectionResponse(request: ConnectionResponse): F[Int]
+
+  def updateConnectionProtocolState(
       id: UUID,
-      from: IssueCredentialRecord.ProtocolState,
-      to: IssueCredentialRecord.ProtocolState
-  ): F[Int]
-  def updateCredentialRecordPublicationState(
-      id: UUID,
-      from: Option[IssueCredentialRecord.PublicationState],
-      to: Option[IssueCredentialRecord.PublicationState]
+      from: ConnectionRecord.ProtocolState,
+      to: ConnectionRecord.ProtocolState
   ): F[Int]
 
-  def updateWithRequestCredential(request: RequestCredential): F[Int]
-
-  def updateWithIssueCredential(issue: IssueCredential): F[Int]
 }

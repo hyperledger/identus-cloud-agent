@@ -1,4 +1,4 @@
-package io.iohk.atala.pollux.sql.repository
+package io.iohk.atala.connect.sql.repository
 
 import org.flywaydb.core.Flyway
 import zio.*
