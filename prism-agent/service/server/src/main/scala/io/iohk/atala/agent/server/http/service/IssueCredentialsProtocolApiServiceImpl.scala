@@ -27,14 +27,12 @@ class IssueCredentialsProtocolApiServiceImpl(credentialService: CredentialServic
   ): Route = {
     val result = for {
       outcome <- credentialService
-        .createIssueCredentialRecord(
+        .createCredentialOffer(
           thid = UUID.randomUUID(),
           request.subjectId,
           request.schemaId,
           request.claims,
-          request.validityPeriod,
-          request.automaticIssuance.orElse(Some(true)),
-          request.awaitConfirmation.orElse(Some(false))
+          request.validityPeriod
         )
         .mapError(HttpServiceError.DomainError[IssueCredentialError].apply)
     } yield outcome
@@ -51,7 +49,7 @@ class IssueCredentialsProtocolApiServiceImpl(credentialService: CredentialServic
   ): Route = {
     val result = for {
       outcome <- credentialService
-        .getIssueCredentialRecords()
+        .getCredentialRecords()
         .mapError(HttpServiceError.DomainError[IssueCredentialError].apply)
     } yield outcome
 
@@ -83,7 +81,7 @@ class IssueCredentialsProtocolApiServiceImpl(credentialService: CredentialServic
     val result = for {
       uuid <- recordId.toUUID
       outcome <- credentialService
-        .getIssueCredentialRecord(uuid)
+        .getCredentialRecord(uuid)
         .mapError(HttpServiceError.DomainError[IssueCredentialError].apply)
     } yield outcome
 
@@ -119,7 +117,7 @@ class IssueCredentialsProtocolApiServiceImpl(credentialService: CredentialServic
     val result = for {
       uuid <- recordId.toUUID
       outcome <- credentialService
-        .acceptCredentialRequest(uuid)
+        .issueCredential(uuid)
         .mapError(HttpServiceError.DomainError[IssueCredentialError].apply)
     } yield outcome
 

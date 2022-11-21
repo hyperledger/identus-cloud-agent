@@ -168,12 +168,6 @@ components:
           description: Claims that will be associated with given verifiable credentials
           additionalProperties:
             type: string
-        automaticIssuance:
-          type: boolean
-          default: true
-        awaitConfirmation:
-          type: boolean
-          default: true
 
     IssueCredentialRecord:
       description: An issue credential record to store the state of the protocol execution
@@ -183,47 +177,21 @@ components:
         - type: object
           required:
             - recordId
-            - createdAt
-            - role
-            - protocolState
+            - state
           properties:
             recordId:
               type: string
               format: uuid
-            createdAt:
+            state:
               type: string
-              format: date-time
-            updatedAt:
-              type: string
-              format: date-time
-            role:
-              type: string
-              enum:
-                - Issuer
-                - Holder
-            protocolState:
-              type: string
-              enum:
-                - OfferPending
-                - OfferSent
-                - OfferReceived
-                - RequestPending
-                - RequestSent
-                - RequestReceived
-                - ProblemReportPending
-                - ProblemReportSent
-                - ProblemReportReceived
-                - CredentialPending
-                - CredentialSent
-                - CredentialReceived
-            publicationState:
-              type: string
-              enum:
-                - PublicationPending
-                - PublicationQueued
-                - Published
-            jwtCredential:
-              type: string
+              enum: 
+                - offer-sent
+                - offer-received
+                - request-sent
+                - request-received
+                - credential-issued
+                - credential-received
+                - done
     
     IssueCredentialRecordCollection:
       description: A collection of issue credential records
