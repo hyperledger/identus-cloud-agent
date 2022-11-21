@@ -1,22 +1,31 @@
 package io.iohk.atala.agent.server.jobs
 
 import scala.jdk.CollectionConverters.*
-
 import zio.*
 import io.iohk.atala.pollux.core.service.CredentialService
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord
+import io.iohk.atala.pollux.core.model.error.CreateCredentialPayloadFromRecordError
+import io.iohk.atala.pollux.core.model.error.IssueCredentialError
+import io.iohk.atala.pollux.core.model.error.MarkCredentialRecordsAsPublishQueuedError
+import io.iohk.atala.pollux.core.model.error.PublishCredentialBatchError
+import io.iohk.atala.pollux.core.service.CredentialService
+import io.iohk.atala.pollux.vc.jwt.W3cCredentialPayload
+import zio.*
+
+import java.time.Instant
 
 import io.iohk.atala.mercury.DidComm
+import io.iohk.atala.mercury.MediaTypes
 import io.iohk.atala.mercury.model._
 import io.iohk.atala.mercury.model.error._
 import io.iohk.atala.mercury.protocol.issuecredential._
-import io.iohk.atala.mercury.AgentCli
-import java.io.IOException
 import io.iohk.atala.resolvers.UniversalDidResolver
+import io.iohk.atala.agent.server.jobs.MercuryUtils.sendMessage
+import java.io.IOException
+
 import zhttp.service._
 import zhttp.http._
-import io.iohk.atala.mercury.MediaTypes
-import io.iohk.atala.mercury.AgentCli._
+import io.iohk.atala.pollux.vc.jwt.JwtCredential
 
 object BackgroundJobs {
 
@@ -24,7 +33,7 @@ object BackgroundJobs {
     for {
       credentialService <- ZIO.service[CredentialService]
       records <- credentialService
-        .getCredentialRecords()
+        .getIssueCredentialRecords()
         .mapError(err => Throwable(s"Error occured while getting issue credential records: $err"))
       _ <- ZIO.foreach(records)(performExchange)
     } yield ()
@@ -33,82 +42,126 @@ object BackgroundJobs {
   private[this] def performExchange(
       record: IssueCredentialRecord
   ): ZIO[DidComm & CredentialService, Throwable, Unit] = {
+    import IssueCredentialRecord._
     import IssueCredentialRecord.ProtocolState._
+    import IssueCredentialRecord.PublicationState._
     val aux = for {
       _ <- ZIO.logDebug(s"Running action with records => $record")
-
       _ <- record match {
-        case IssueCredentialRecord(id, thid, _, _, subjectId, _, claims, OfferPending, _, _, _, _) =>
-          val attributes = claims.map { case (k, v) => Attribute(k, v) }
-          val credentialPreview = CredentialPreview(attributes = attributes.toSeq)
-          val body = OfferCredential.Body(goal_code = Some("Offer Credential"), credential_preview = credentialPreview)
-          val attachmentDescriptor =
-            AttachmentDescriptor.buildAttachment[CredentialPreview](payload = credentialPreview)
-
+        // Offer should be sent from Issuer to Holder
+        case IssueCredentialRecord(id, _, _, _, _, Role.Issuer, _, _, _, _, OfferPending, _, Some(offer), _, _) =>
           for {
             _ <- ZIO.log(s"IssueCredentialRecord: OfferPending (START)")
             didComm <- ZIO.service[DidComm]
-            offer = OfferCredential( // TODO
-              body = body,
-              attachments = Seq(attachmentDescriptor),
-              to = DidId(subjectId),
-              from = didComm.myDid,
-              thid = Some(thid.toString())
-            )
-            msg = offer.makeMessage
-
-            _ <- AgentCli.sendMessage(msg)
+            _ <- sendMessage(offer.makeMessage)
             credentialService <- ZIO.service[CredentialService]
             _ <- credentialService.markOfferSent(id)
-            _ <- ZIO.log(s"IssueCredentialRecord: OfferPending (END)")
           } yield ()
 
-        case IssueCredentialRecord(id, thid, _, _, subjectId, _, _, RequestPending, _, Some(offerData), _, _) =>
+        // Request should be sent from Holder to Issuer
+        case IssueCredentialRecord(id, _, _, _, _, Role.Holder, _, _, _, _, RequestPending, _, _, Some(request), _) =>
           for {
-            didCommService <- ZIO.service[DidComm]
-            requestCredential = RequestCredential(
-              body = RequestCredential.Body(
-                goal_code = offerData.body.goal_code,
-                comment = offerData.body.comment,
-                formats = offerData.body.formats
-              ),
-              attachments = offerData.attachments,
-              thid = offerData.thid.orElse(Some(offerData.id)),
-              from = offerData.to,
-              to = offerData.from
-            )
-            msg = requestCredential.makeMessage
-            _ <- sendMessage(msg)
+            _ <- sendMessage(request.makeMessage)
             credentialService <- ZIO.service[CredentialService]
             _ <- credentialService.markRequestSent(id)
-            _ <- ZIO.log(s"IssueCredentialRecord: RequestPending id='$id' (END)")
           } yield ()
 
-        case IssueCredentialRecord(id, thid, _, _, subjectId, _, _, ProblemReportPending, _, _, _, _) => ???
-        case IssueCredentialRecord(id, thid, _, _, subjectId, _, _, CredentialPending, _, _, Some(rc), _) =>
-          val issueCredential = IssueCredential(
-            body = IssueCredential.Body(
-              goal_code = rc.body.goal_code,
-              comment = rc.body.comment,
-              replacement_id = None,
-              more_available = None,
-              formats = rc.body.formats
-            ),
-            attachments = rc.attachments,
-            thid = rc.thid.orElse(Some(rc.id)),
-            from = rc.to,
-            to = rc.from
-          )
-
+        // 'automaticIssuance' is TRUE. Issuer automatically accepts the Request
+        case IssueCredentialRecord(id, _, _, _, _, Role.Issuer, _, _, Some(true), _, RequestReceived, _, _, _, _) =>
           for {
-            didCommService <- ZIO.service[DidComm]
-            _ <- sendMessage(issueCredential.makeMessage)
+            credentialService <- ZIO.service[CredentialService]
+            _ <- credentialService.acceptCredentialRequest(id)
+          } yield ()
+
+        // Credential is pending, can be generated by Issuer and optionally published on-chain
+        case IssueCredentialRecord(
+              id,
+              _,
+              _,
+              _,
+              _,
+              Role.Issuer,
+              _,
+              _,
+              _,
+              Some(awaitConfirmation),
+              CredentialPending,
+              _,
+              _,
+              _,
+              Some(issue)
+            ) =>
+          // Generate the JWT Credential and store it in DB as an attacment to IssueCredentialData
+          // Set ProtocolState to CredentialGenerated
+          // Set PublicationState to PublicationPending
+          for {
+            credentialService <- ZIO.service[CredentialService]
+            issuer = credentialService.createIssuer
+            w3Credential <- credentialService.createCredentialPayloadFromRecord(
+              record,
+              issuer,
+              Instant.now()
+            )
+            signedJwtCredential = JwtCredential.toEncodedJwt(w3Credential, issuer)
+            issueCredential = IssueCredential.build(
+              fromDID = issue.from,
+              toDID = issue.to,
+              thid = issue.thid,
+              credentials = Map("prims/jwt" -> signedJwtCredential.value)
+            )
+            _ <- credentialService.markCredentialGenerated(id, issueCredential)
+          } yield ()
+
+        // Credential has been generated and can be sent directly to the Holder
+        case IssueCredentialRecord(
+              id,
+              _,
+              _,
+              _,
+              _,
+              Role.Issuer,
+              _,
+              _,
+              _,
+              Some(false),
+              CredentialGenerated,
+              None,
+              _,
+              _,
+              Some(issue)
+            ) =>
+          for {
+            _ <- sendMessage(issue.makeMessage)
             credentialService <- ZIO.service[CredentialService]
             _ <- credentialService.markCredentialSent(id)
-            _ <- credentialService.markCredentialPublicationPending(id)
-            _ <- ZIO.log(s"IssueCredentialRecord: RequestPending id='$id' (END)")
           } yield ()
-        case IssueCredentialRecord(id, thid, _, _, _, _, _, _, _, _, _, _) => ZIO.unit
+
+        // Credential has been generated, published, and can now be sent to the Holder
+        case IssueCredentialRecord(
+              id,
+              _,
+              _,
+              _,
+              _,
+              Role.Issuer,
+              _,
+              _,
+              _,
+              Some(true),
+              CredentialGenerated,
+              Some(Published),
+              _,
+              _,
+              Some(issue)
+            ) =>
+          for {
+            _ <- sendMessage(issue.makeMessage)
+            credentialService <- ZIO.service[CredentialService]
+            _ <- credentialService.markCredentialSent(id)
+          } yield ()
+
+        case IssueCredentialRecord(id, _, _, _, _, _, _, _, _, _, ProblemReportPending, _, _, _, _) => ???
+        case IssueCredentialRecord(id, _, _, _, _, _, _, _, _, _, _, _, _, _, _)                    => ZIO.unit
       }
     } yield ()
 
@@ -119,6 +172,35 @@ object BackgroundJobs {
           ZIO.fail(mercuryErrorAsThrowable(ex))
       case ex: IOException => ZIO.fail(ex)
     }
+  }
+
+  val publishCredentialsToDlt = {
+    for {
+      credentialService <- ZIO.service[CredentialService]
+      _ <- performPublishCredentialsToDlt(credentialService)
+    } yield ()
+
+  }
+
+  private[this] def performPublishCredentialsToDlt(credentialService: CredentialService) = {
+    type PublishToDltError = IssueCredentialError | CreateCredentialPayloadFromRecordError |
+      PublishCredentialBatchError | MarkCredentialRecordsAsPublishQueuedError
+
+    val res: ZIO[Any, PublishToDltError, Unit] = for {
+      records <- credentialService.getCredentialRecordsByState(IssueCredentialRecord.ProtocolState.CredentialPending)
+      // NOTE: the line below is a potentially slow operation, because <createCredentialPayloadFromRecord> makes a database SELECT call,
+      // so calling this function n times will make n database SELECT calls, while it can be optimized to get
+      // all data in one query, this function here has to be refactored as well. Consider doing this if this job is too slow
+      credentials <- ZIO.foreach(records) { record =>
+        credentialService.createCredentialPayloadFromRecord(record, credentialService.createIssuer, Instant.now())
+      }
+      // FIXME: issuer here should come from castor not from credential service, this needs to be done before going to prod
+      publishedBatchData <- credentialService.publishCredentialBatch(credentials, credentialService.createIssuer)
+      _ <- credentialService.markCredentialRecordsAsPublishQueued(publishedBatchData.credentialsAnsProofs)
+      // publishedBatchData gives back irisOperationId, which should be persisted to track the status
+    } yield ()
+
+    ZIO.unit
   }
 
 }
