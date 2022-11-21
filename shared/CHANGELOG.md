@@ -1,3 +1,10 @@
+# [shared-v0.2.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/shared-v0.1.0...shared-v0.2.0) (2022-11-21)
+
+
+### Features
+
+* **shared:** add base64 helper function ([#135](https://github.com/input-output-hk/atala-prism-building-blocks/issues/135)) ([70555c9](https://github.com/input-output-hk/atala-prism-building-blocks/commit/70555c906121a7bc26e30c15dbf8f9d7721a100a))
+
 # shared-v1.0.0 (2022-11-21)
 
 
