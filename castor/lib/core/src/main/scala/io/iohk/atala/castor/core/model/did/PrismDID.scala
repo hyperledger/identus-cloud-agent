@@ -99,7 +99,7 @@ object PrismDID extends ProtoModelHelper {
 }
 
 final case class CanonicalPrismDID private[did] (stateHash: HexString) extends PrismDID {
-  override def suffix: DIDMethodSpecificId = DIDMethodSpecificId.fromString(stateHash.toString).get
+  override val suffix: DIDMethodSpecificId = DIDMethodSpecificId.fromString(stateHash.toString).get
 }
 
 final case class LongFormPrismDID private[did] (atalaOperation: node_models.AtalaOperation) extends PrismDID {
