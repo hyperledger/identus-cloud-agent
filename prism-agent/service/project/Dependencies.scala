@@ -46,6 +46,7 @@ object Dependencies {
   private lazy val connectSqlDoobie = "io.iohk.atala" %% "connect-sql-doobie" % Versions.connect
 
   private lazy val mercuryAgent = "io.iohk.atala" %% "mercury-agent-didcommx" % Versions.mercury
+  private lazy val mercuryPresentProof = "io.iohk.atala" %% "mercury-protocol-present-proof" % Versions.mercury
 
   // Added here to make prism-crypto works.
   // Once migrated to apollo, re-evaluate if this should be removed.

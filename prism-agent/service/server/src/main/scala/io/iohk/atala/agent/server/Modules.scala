@@ -57,6 +57,16 @@ import io.iohk.atala.mercury.protocol.issuecredential.*
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError.RepositoryError
 import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc
 
+<<<<<<< HEAD
+=======
+import io.iohk.atala.mercury._
+import io.iohk.atala.mercury.model._
+import io.iohk.atala.mercury.model.error._
+import io.iohk.atala.mercury.protocol.issuecredential._
+import io.iohk.atala.mercury.protocol.presentproof._
+import io.iohk.atala.pollux.core.model.error.IssueCredentialError
+import io.iohk.atala.pollux.core.model.error.IssueCredentialError.RepositoryError
+>>>>>>> 34686bac (WIP)
 import java.io.IOException
 import cats.implicits.*
 import io.iohk.atala.pollux.schema.SchemaRegistryServerEndpoints
@@ -151,9 +161,13 @@ object Modules {
         _ <- ZIO.logInfo("Received new message")
         _ <- ZIO.logTrace(jsonString)
         msg <- unpack(jsonString).map(_.getMessage)
+<<<<<<< HEAD
         credentialService <- ZIO.service[CredentialService]
         connectionService <- ZIO.service[ConnectionService]
         ret <- {
+=======
+        _ <- {
+>>>>>>> 34686bac (WIP)
           msg.piuri match {
             // ########################
             // ### issue-credential ###
@@ -218,6 +232,7 @@ object Modules {
                   .catchAll { case ex: IOException => ZIO.fail(ex) }
               } yield ()
 
+<<<<<<< HEAD
             case s if s == ConnectionRequest.`type` =>
               for {
                 _ <- ZIO.logInfo("*" * 100)
@@ -257,6 +272,15 @@ object Modules {
                   }
                   .catchAll { case ex: IOException => ZIO.fail(ex) }
               } yield ()
+=======
+            // #####################
+            // ### present-proof ###
+            // #####################
+
+            case s if s == Presentation.`type`        => ???
+            case s if s == ProposePresentation.`type` => ???
+            case s if s == RequestPresentation.`type` => ???
+>>>>>>> 34686bac (WIP)
 
             case _ => ZIO.succeed("Unknown Message Type")
           }
