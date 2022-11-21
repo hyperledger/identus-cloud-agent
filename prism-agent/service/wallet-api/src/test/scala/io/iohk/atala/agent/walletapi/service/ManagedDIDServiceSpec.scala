@@ -6,6 +6,8 @@ import io.iohk.atala.castor.core.model.did.{
   PrismDID,
   PrismDIDOperation,
   ScheduleDIDOperationOutcome,
+  ScheduledDIDOperationStatus,
+  ScheduledDIDOperationDetail,
   Service,
   SignedPrismDIDOperation,
   VerificationRelationship
@@ -41,6 +43,11 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault {
                 ArraySeq.empty
               )
             )
+
+        override def getScheduledDIDOperationDetail(
+            operationId: Array[Byte]
+        ): IO[error.DIDOperationError, Option[ScheduledDIDOperationDetail]] =
+          ZIO.some(ScheduledDIDOperationDetail(ScheduledDIDOperationStatus.Pending))
 
         override def getPublishedOperations: UIO[Seq[SignedPrismDIDOperation.Create]] = store.get
       }

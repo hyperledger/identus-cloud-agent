@@ -24,8 +24,10 @@ import io.iohk.atala.castor.core.model.did.{
   PublicKey,
   PublicKeyData,
   ScheduleDIDOperationOutcome,
+  ScheduledDIDOperationStatus,
   SignedPrismDIDOperation
 }
+import io.iohk.atala.castor.core.model.error.DIDOperationError
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.prism.crypto.Sha256
@@ -49,47 +51,58 @@ final class ManagedDIDService private[walletapi] (
   private val CURVE = EllipticCurve.SECP256K1
 
   def publishStoredDID(did: CanonicalPrismDID): IO[PublishManagedDIDError, ScheduleDIDOperationOutcome] = {
-    for {
-      operation <- nonSecretStorage
+    def syncStateAndPersist =
+      nonSecretStorage
         .getManagedDIDState(did)
         .mapError(PublishManagedDIDError.WalletStorageError.apply)
         .flatMap(op => ZIO.fromOption(op).mapError(_ => PublishManagedDIDError.DIDNotFound(did)))
-        .map {
-          case ManagedDIDState.Created(operation) => Right(operation)
-          case ManagedDIDState.PublicationAttempted(_, operationId) =>
-            Left(PublishManagedDIDError.AwaitingPublication(operationId))
-          case ManagedDIDState.Published(operationId) => Left(PublishManagedDIDError.AlreadyPublished(operationId))
-        }
-        .absolve
-      masterKeyPair <-
-        secretStorage
-          .getKey(did, DEFAULT_MASTER_KEY_ID)
+        .flatMap(state => syncDIDStateFromDLT(state).mapError(PublishManagedDIDError.OperationError.apply))
+        .tap(state =>
+          nonSecretStorage.setManagedDIDState(did, state).mapError(PublishManagedDIDError.WalletStorageError.apply)
+        )
+
+    def submitOperation(operation: PrismDIDOperation.Create) =
+      for {
+        masterKeyPair <-
+          secretStorage
+            .getKey(did, DEFAULT_MASTER_KEY_ID)
+            .mapError(PublishManagedDIDError.WalletStorageError.apply)
+            .flatMap(maybeKey =>
+              ZIO
+                .fromOption(maybeKey)
+                .orDieWith(_ =>
+                  new Exception("master-key must exists in the wallet for create DID publication signature")
+                )
+            )
+        signedAtalaOperation <- ZIO
+          .fromTry(
+            ECWrapper.signBytes(CURVE, operation.toAtalaOperation.toByteArray, masterKeyPair.privateKey)
+          )
+          .mapError(PublishManagedDIDError.CryptographicError.apply)
+          .map(signature =>
+            SignedPrismDIDOperation.Create(
+              operation = operation,
+              signature = ArraySeq.from(signature),
+              signedWithKey = DEFAULT_MASTER_KEY_ID
+            )
+          )
+        outcome <- didService
+          .createPublishedDID(signedAtalaOperation)
+          .mapError(PublishManagedDIDError.OperationError.apply)
+        _ <- nonSecretStorage
+          .setManagedDIDState(did, ManagedDIDState.PublicationPending(operation, outcome.operationId))
           .mapError(PublishManagedDIDError.WalletStorageError.apply)
-          .flatMap(maybeKey =>
-            ZIO
-              .fromOption(maybeKey)
-              .orDieWith(_ =>
-                new Exception("master-key must exists in the wallet for create DID publication signature")
-              )
-          )
-      signedAtalaOperation <- ZIO
-        .fromTry(
-          ECWrapper.signBytes(CURVE, operation.toAtalaOperation.toByteArray, masterKeyPair.privateKey)
-        )
-        .mapError(PublishManagedDIDError.CryptographicError.apply)
-        .map(signature =>
-          SignedPrismDIDOperation.Create(
-            operation = operation,
-            signature = ArraySeq.from(signature),
-            signedWithKey = DEFAULT_MASTER_KEY_ID
-          )
-        )
-      outcome <- didService
-        .createPublishedDID(signedAtalaOperation)
-        .mapError(PublishManagedDIDError.OperationError.apply)
-      _ <- nonSecretStorage
-        .setManagedDIDState(did, ManagedDIDState.PublicationAttempted(operation, outcome.operationId))
-        .mapError(PublishManagedDIDError.WalletStorageError.apply)
+      } yield outcome
+
+    for {
+      didState <- syncStateAndPersist
+      outcome <- didState match {
+        case ManagedDIDState.Created(operation) => submitOperation(operation)
+        case ManagedDIDState.PublicationPending(operation, operationId) =>
+          ZIO.succeed(ScheduleDIDOperationOutcome(did, operation, operationId))
+        case ManagedDIDState.Published(operation, operationId) =>
+          ZIO.succeed(ScheduleDIDOperationOutcome(did, operation, operationId))
+      }
     } yield outcome
   }
 
@@ -164,6 +177,26 @@ final class ManagedDIDService private[walletapi] (
     x = Base64UrlString.fromByteArray(keyPair.publicKey.p.x.toPaddedByteArray(CURVE)),
     y = Base64UrlString.fromByteArray(keyPair.publicKey.p.y.toPaddedByteArray(CURVE))
   )
+
+  /** Reconcile state with DLT and return a correct status */
+  private def syncDIDStateFromDLT(state: ManagedDIDState): IO[DIDOperationError, ManagedDIDState] = {
+    state match {
+      case s @ ManagedDIDState.PublicationPending(operation, operationId) =>
+        didService
+          .getScheduledDIDOperationDetail(operationId.toArray)
+          .map {
+            case Some(result) =>
+              result.status match {
+                case ScheduledDIDOperationStatus.Pending              => s
+                case ScheduledDIDOperationStatus.AwaitingConfirmation => s
+                case ScheduledDIDOperationStatus.Confirmed => ManagedDIDState.Published(operation, operationId)
+                case ScheduledDIDOperationStatus.Rejected  => ManagedDIDState.Created(operation)
+              }
+            case None => ManagedDIDState.Created(operation)
+          }
+      case s => ZIO.succeed(s)
+    }
+  }
 
 }
 
