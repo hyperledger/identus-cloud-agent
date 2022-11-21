@@ -1,12 +1,20 @@
 package io.iohk.atala.agent.server
 
 import zio.*
-import io.iohk.atala.mercury.PeerDID
-import io.iohk.atala.mercury.AgentCli
+import io.iohk.atala.mercury._
+import org.didcommx.didcomm.DIDComm
+import io.iohk.atala.resolvers.UniversalDidResolver
 import io.iohk.atala.castor.sql.repository.{Migrations => CastorMigrations}
 import io.iohk.atala.pollux.sql.repository.{Migrations => PolluxMigrations}
 
 object Main extends ZIOAppDefault {
+  def agentLayer(peer: PeerDID): ZLayer[Any, Nothing, AgentServiceAny] = ZLayer.succeed(
+    io.iohk.atala.mercury.AgentServiceAny(
+      new DIDComm(UniversalDidResolver, peer.getSecretResolverInMemory),
+      peer.did
+    )
+  )
+
   override def run: ZIO[Any, Throwable, Unit] =
     for {
       _ <- Console
@@ -54,21 +62,16 @@ object Main extends ZIOAppDefault {
           ZIO.logInfo(s"JWK for KeyAuthentication: ${peer.jwkForKeyAuthentication.toJSONString}")
       } yield (peer)
 
-      didCommLayer = AgentCli.agentLayer(agentDID)
+      didCommLayer = agentLayer(agentDID)
 
       didCommExchangesFiber <- Modules.didCommExchangesJob
-        .provide(
-          didCommLayer
-        )
+        .provide(didCommLayer)
         .debug
         .fork
 
       didCommServiceFiber <- Modules
         .didCommServiceEndpoint(didCommServicePort)
-        .provide(
-          didCommLayer,
-          AppModule.credentialServiceLayer
-        )
+        .provide(didCommLayer, AppModule.credentialServiceLayer)
         .debug
         .fork
 

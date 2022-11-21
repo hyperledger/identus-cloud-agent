@@ -1,5 +1,6 @@
 package io.iohk.atala.pollux.sql.repository
 
+import cats.instances.seq
 import doobie.*
 import doobie.implicits.*
 import io.circe._
@@ -8,17 +9,31 @@ import io.circe.syntax._
 import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
 import io.iohk.atala.mercury.protocol.issuecredential.OfferCredential
 import io.iohk.atala.mercury.protocol.issuecredential.RequestCredential
+import io.iohk.atala.pollux.core.model.IssueCredentialRecord.ProtocolState
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.repository.CredentialRepository
 import io.iohk.atala.pollux.sql.model.JWTCredentialRow
+import io.iohk.atala.prism.crypto.MerkleInclusionProof
+import io.iohk.atala.shared.utils.BytesOps
 import zio.*
 import zio.interop.catz.*
 
-import java.util.UUID
 import java.time.Instant
+import java.util.UUID
 
 // TODO: replace with actual implementation
 class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepository[Task] {
+  // serializes into hex string
+
+  private def serializeInclusionProof(proof: MerkleInclusionProof): String = BytesOps.bytesToHex(proof.encode.getBytes)
+
+  // deserializes from the hex string
+  private def deserializeInclusionProof(proof: String): MerkleInclusionProof =
+    MerkleInclusionProof.decode(
+      String(
+        BytesOps.hexToBytes(proof)
+      )
+    )
 
   // Uncomment to have Doobie LogHandler in scope and automatically output SQL statements in logs
   // given logHandler: LogHandler = LogHandler.jdkLogHandler
@@ -47,6 +62,8 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
 
   given issueCredentialGet: Get[IssueCredential] = Get[String].map(decode[IssueCredential](_).getOrElse(???))
   given issueCredentialPut: Put[IssueCredential] = Put[String].contramap(_.asJson.toString)
+
+  given inclusionProofGet: Get[MerkleInclusionProof] = Get[String].map(deserializeInclusionProof)
 
   override def createIssueCredentialRecord(record: IssueCredentialRecord): Task[Int] = {
     val cxnIO = sql"""
@@ -104,6 +121,36 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   request_credential_data,
         |   issue_credential_data
         | FROM public.issue_credential_records
+        """.stripMargin
+      .query[IssueCredentialRecord]
+      .to[Seq]
+
+    cxnIO
+      .transact(xa)
+  }
+
+  override def getIssueCredentialRecordsByState(
+      state: IssueCredentialRecord.ProtocolState
+  ): Task[Seq[IssueCredentialRecord]] = {
+    val cxnIO = sql"""
+        | SELECT
+        |   id,
+        |   created_at,
+        |   updated_at,
+        |   thid,
+        |   schema_id,
+        |   role,
+        |   subject_id,
+        |   validity_period,
+        |   automatic_issuance,
+        |   await_confirmation,
+        |   protocol_state,
+        |   publication_state,
+        |   offer_credential_data,
+        |   request_credential_data,
+        |   issue_credential_data
+        | FROM public.issue_credential_records
+        | WHERE protocol_state = ${state.toString}
         """.stripMargin
       .query[IssueCredentialRecord]
       .to[Seq]
@@ -187,6 +234,31 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
       .transact(xa)
   }
 
+  // TODO: refactor to work with issueCredential form mercury
+  override def updateCredentialRecordStateAndProofByCredentialIdBulk(
+      idsStatesAndProofs: Seq[(UUID, IssueCredentialRecord.PublicationState, MerkleInclusionProof)]
+  ): Task[Int] = {
+
+    if (idsStatesAndProofs.isEmpty) ZIO.succeed(0)
+    else
+      val values = idsStatesAndProofs.map { idStateAndProof =>
+        val (id, state, proof) = idStateAndProof
+        s"(${id.toString}, '${state.toString}', '${serializeInclusionProof(proof)}')"
+      }
+
+      val cxnIO = sql"""
+          | UPDATE public.issue_credential_records as icr
+          | SET 
+          |   publication_state = idsStatesAndProofs.publication_state,
+          |   merkle_inclusion_proof = idsStatesAndProofs.serializedProof
+          | FROM (values ${values.mkString(",")}) as idsStatesAndProofs(id, publication_state, serializedProof)
+          | WHERE icr.id = idsStatesAndProofs.id
+          |""".stripMargin.update
+
+      cxnIO.run
+        .transact(xa)
+  }
+
   override def updateCredentialRecordPublicationState(
       recordId: UUID,
       from: Option[IssueCredentialRecord.PublicationState],
@@ -210,7 +282,11 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
       .transact(xa)
   }
 
-  override def updateWithRequestCredential(recordId: UUID, request: RequestCredential, protocolState: ProtocolState): Task[Int] = {
+  override def updateWithRequestCredential(
+      recordId: UUID,
+      request: RequestCredential,
+      protocolState: ProtocolState
+  ): Task[Int] = {
     val cxnIO = sql"""
         | UPDATE public.issue_credential_records
         | SET
@@ -225,7 +301,11 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
       .transact(xa)
   }
 
-  override def updateWithIssueCredential(recordId: UUID, issue: IssueCredential, protocolState: ProtocolState): Task[Int] = {
+  override def updateWithIssueCredential(
+      recordId: UUID,
+      issue: IssueCredential,
+      protocolState: ProtocolState
+  ): Task[Int] = {
     val cxnIO = sql"""
         | UPDATE public.issue_credential_records
         | SET
