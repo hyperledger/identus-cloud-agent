@@ -1,3 +1,10 @@
+# [prism-agent-v0.3.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.2.0...prism-agent-v0.3.0) (2022-11-21)
+
+
+### Features
+
+* **prism-agent:** implement Issue Credential v2 protocol ([#146](https://github.com/input-output-hk/atala-prism-building-blocks/issues/146)) ([f3cb60e](https://github.com/input-output-hk/atala-prism-building-blocks/commit/f3cb60eb0d4dce73025326d64a012e580f581a7c)), closes [#92](https://github.com/input-output-hk/atala-prism-building-blocks/issues/92)
+
 # [prism-agent-v0.2.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.1.0...prism-agent-v0.2.0) (2022-11-15)
 
 
