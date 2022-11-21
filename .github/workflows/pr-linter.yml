@@ -24,6 +24,7 @@ jobs:
             pollux
             mercury
             pluto
+            connect
             athena
             connect
             pistis
