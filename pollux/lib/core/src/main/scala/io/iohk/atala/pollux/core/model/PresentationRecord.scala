@@ -46,7 +46,7 @@ object PresentationRecord {
     case ProblemReportPending extends ProtocolState
     // Prover/Verifier has sent problem report to Verifier/Prover (Verifier/Prover DB)
     case ProblemReportSent extends ProtocolState
-    // Prover/Verifier has received problem resport from Verifier/Prover (DB) 
+    // Prover/Verifier has received problem resport from Verifier/Prover (DB)
     case ProblemReportReceived extends ProtocolState
 
     // Prover has "accepted" a Presentation request received from a Verifier (Prover DB)

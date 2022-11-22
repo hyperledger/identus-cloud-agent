@@ -46,17 +46,18 @@ class JdbcPresentationRepository(xa: Transactor[Task]) extends PresentationRepos
   given protocolStateGet: Get[ProtocolState] = Get[String].map(ProtocolState.valueOf)
   given protocolStatePut: Put[ProtocolState] = Put[String].contramap(_.toString)
 
-
   given roleGet: Get[Role] = Get[String].map(Role.valueOf)
   given rolePut: Put[Role] = Put[String].contramap(_.toString)
 
   given presentationGet: Get[Presentation] = Get[String].map(decode[Presentation](_).getOrElse(???))
   given presentationPut: Put[Presentation] = Put[String].contramap(_.asJson.toString)
 
-  given requestPresentationGet: Get[RequestPresentation] = Get[String].map(decode[RequestPresentation](_).getOrElse(???))
+  given requestPresentationGet: Get[RequestPresentation] =
+    Get[String].map(decode[RequestPresentation](_).getOrElse(???))
   given requestPresentationPut: Put[RequestPresentation] = Put[String].contramap(_.asJson.toString)
 
-  given proposePresentationGet: Get[ProposePresentation] = Get[String].map(decode[ProposePresentation](_).getOrElse(???))
+  given proposePresentationGet: Get[ProposePresentation] =
+    Get[String].map(decode[ProposePresentation](_).getOrElse(???))
   given proposePresentationPut: Put[ProposePresentation] = Put[String].contramap(_.asJson.toString)
 
   given inclusionProofGet: Get[MerkleInclusionProof] = Get[String].map(deserializeInclusionProof)

@@ -34,13 +34,13 @@ import io.iohk.atala.mercury.protocol.presentproof.RequestPresentation
 
 trait PresentationService {
 
-  def extractIdFromCredential(credential: W3cCredentialPayload): Option[UUID] 
+  def extractIdFromCredential(credential: W3cCredentialPayload): Option[UUID]
 
   def createPresentationRecord(
       thid: UUID,
       subjectId: String,
       schemaId: Option[String],
-      presentation:String, //TODO
+      presentation: String, // TODO
       validityPeriod: Option[Double] = None,
       automaticIssuance: Option[Boolean],
       awaitConfirmation: Option[Boolean]
@@ -63,7 +63,6 @@ trait PresentationService {
   def acceptProposePresentation(recordId: UUID): IO[PresentationError, Option[PresentationRecord]]
 
   def receivePresentation(presentation: Presentation): IO[PresentationError, Option[PresentationRecord]]
-
 
   def markRequestPresentationSent(recordId: UUID): IO[PresentationError, Option[PresentationRecord]]
 
@@ -114,7 +113,7 @@ private class PresentationServiceImpl(
       thid: UUID,
       subjectId: String,
       schemaId: Option[String],
-      presentation:String, //TODO
+      presentation: String, // TODO
       validityPeriod: Option[Double],
       automaticIssuance: Option[Boolean],
       awaitConfirmation: Option[Boolean]
@@ -312,7 +311,6 @@ private class PresentationServiceImpl(
       PresentationRecord.ProtocolState.PresentationSent
     )
 
-
   private[this] def getRecordFromThreadId(
       thid: Option[String]
   ): IO[PresentationError, PresentationRecord] = {
@@ -331,7 +329,7 @@ private class PresentationServiceImpl(
   }
 
   private[this] def createDidCommRequestPresentation(
-      presentation: String, //FIX ME
+      presentation: String, // FIX ME
       thid: UUID,
       subjectId: String
   ): RequestPresentation = {
@@ -346,8 +344,8 @@ private class PresentationServiceImpl(
     )
   }
 
-    private[this] def createDidCommRequestPresentation(proposePresentation: ProposePresentation): RequestPresentation = {
-      //TODO to review what is needed
+  private[this] def createDidCommRequestPresentation(proposePresentation: ProposePresentation): RequestPresentation = {
+    // TODO to review what is needed
     val body = RequestPresentation.Body(goal_code = proposePresentation.body.goal_code)
 
     RequestPresentation(
@@ -406,14 +404,10 @@ private class PresentationServiceImpl(
     } yield record
   }
 
-
-
   private def sendCredential(
       jwtCredential: JwtCredentialPayload,
       holderDid: DID,
       inclusionProof: MerkleInclusionProof
   ): Nothing = ???
-
-
 
 }

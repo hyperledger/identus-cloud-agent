@@ -22,7 +22,6 @@ trait PresentationRepository[F[_]] {
       to: PresentationRecord.ProtocolState
   ): F[Int]
 
-
   def updateWithRequestPresentation(recordId: UUID, request: RequestPresentation, protocolState: ProtocolState): F[Int]
   def updateWithProposePresentation(recordId: UUID, request: ProposePresentation, protocolState: ProtocolState): F[Int]
   def updateWithPresentation(recordId: UUID, presentation: Presentation, protocolState: ProtocolState): F[Int]
