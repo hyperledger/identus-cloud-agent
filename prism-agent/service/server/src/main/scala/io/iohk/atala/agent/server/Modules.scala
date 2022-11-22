@@ -58,6 +58,7 @@ import io.iohk.atala.pollux.core.repository.CredentialRepository
 import io.iohk.atala.pollux.core.service.CredentialService
 import io.iohk.atala.pollux.sql.repository.JdbcCredentialRepository
 import io.iohk.atala.pollux.sql.repository.{DbConfig => PolluxDbConfig}
+import io.iohk.atala.connect.sql.repository.{DbConfig => ConnectDbConfig}
 import io.iohk.atala.agent.server.jobs.*
 import zio.*
 import zio.config.typesafe.TypesafeConfigSource
@@ -76,6 +77,10 @@ import io.iohk.atala.mercury.protocol.issuecredential._
 import io.iohk.atala.pollux.core.model.error.IssueCredentialError
 import io.iohk.atala.pollux.core.model.error.IssueCredentialError.RepositoryError
 import java.io.IOException
+import io.iohk.atala.connect.core.service.ConnectionService
+import io.iohk.atala.connect.core.service.ConnectionServiceImpl
+import io.iohk.atala.connect.core.repository.ConnectionRepository
+import io.iohk.atala.connect.sql.repository.JdbcConnectionRepository
 
 object Modules {
 
@@ -251,6 +256,9 @@ object AppModule {
 
   val credentialServiceLayer: RLayer[DidComm, CredentialService] =
     (GrpcModule.layers ++ RepoModule.layers) >>> CredentialServiceImpl.layer
+
+  val connectionServiceLayer: RLayer[DidComm, ConnectionService] =
+    (GrpcModule.layers ++ RepoModule.layers) >>> ConnectionServiceImpl.layer
 }
 
 object GrpcModule {
@@ -312,8 +320,9 @@ object HttpModule {
     (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new IssueCredentialsProtocolApi(_, _))
   }
 
-  val connectionsManagementApiLayer: TaskLayer[ConnectionsManagementApi] = {
-    val apiServiceLayer = ConnectionsManagementApiServiceImpl.layer
+  val connectionsManagementApiLayer: RLayer[DidComm, ConnectionsManagementApi] = {
+    val serviceLayer = AppModule.connectionServiceLayer
+    val apiServiceLayer = serviceLayer >>> ConnectionsManagementApiServiceImpl.layer
     val apiMarshallerLayer = ConnectionsManagementApiMarshallerImpl.layer
     (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new ConnectionsManagementApi(_, _))
   }
@@ -375,11 +384,40 @@ object RepoModule {
     polluxDbConfigLayer >>> transactorLayer
   }
 
+  val connectDbConfigLayer: TaskLayer[ConnectDbConfig] = {
+    val dbConfigLayer = ZLayer.fromZIO {
+      ZIO.service[AppConfig].map(_.connect.database) map { config =>
+        ConnectDbConfig(
+          username = config.username,
+          password = config.password,
+          jdbcUrl = s"jdbc:postgresql://${config.host}:${config.port}/${config.databaseName}",
+          awaitConnectionThreads = 2
+        )
+      }
+    }
+    SystemModule.configLayer >>> dbConfigLayer
+  }
+
+  val connectTransactorLayer: TaskLayer[Transactor[Task]] = {
+    val transactorLayer = ZLayer.fromZIO {
+      ZIO.service[ConnectDbConfig].flatMap { config =>
+        Dispatcher[Task].allocated.map { case (dispatcher, _) =>
+          given Dispatcher[Task] = dispatcher
+          io.iohk.atala.connect.sql.repository.TransactorLayer.hikari[Task](config)
+        }
+      }
+    }.flatten
+    connectDbConfigLayer >>> transactorLayer
+  }
+
   val didOperationRepoLayer: TaskLayer[DIDOperationRepository[Task]] =
     castorTransactorLayer >>> JdbcDIDOperationRepository.layer
 
   val credentialRepoLayer: TaskLayer[CredentialRepository[Task]] =
     polluxTransactorLayer >>> JdbcCredentialRepository.layer
 
-  val layers = didOperationRepoLayer ++ credentialRepoLayer
+  val connectionRepoLayer: TaskLayer[ConnectionRepository[Task]] =
+    connectTransactorLayer >>> JdbcConnectionRepository.layer
+
+  val layers = didOperationRepoLayer ++ credentialRepoLayer ++ connectionRepoLayer
 }

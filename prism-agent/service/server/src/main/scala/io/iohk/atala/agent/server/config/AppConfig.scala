@@ -6,7 +6,8 @@ import zio.config.magnolia.Descriptor
 final case class AppConfig(
     iris: IrisConfig,
     castor: CastorConfig,
-    pollux: PolluxConfig
+    pollux: PolluxConfig,
+    connect: ConnectConfig
 )
 
 object AppConfig {
@@ -17,6 +18,7 @@ final case class IrisConfig(service: GrpcServiceConfig)
 
 final case class CastorConfig(database: DatabaseConfig)
 final case class PolluxConfig(database: DatabaseConfig)
+final case class ConnectConfig(database: DatabaseConfig)
 
 final case class GrpcServiceConfig(host: String, port: Int)
 
