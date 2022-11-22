@@ -206,7 +206,7 @@ object Modules {
             case _ => ZIO.succeed("Unknown Message Type")
           }
         }
-      } yield (ret)
+      } yield ()
     }
   }
 
