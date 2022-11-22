@@ -62,7 +62,6 @@ import zhttp.service.Server
 
 import java.util.concurrent.Executors
 import io.iohk.atala.mercury.*
-import io.iohk.atala.mercury.AgentCli.sendMessage
 import io.iohk.atala.mercury.model.*
 import io.iohk.atala.mercury.model.error.*
 import io.iohk.atala.mercury.protocol.issuecredential.*
