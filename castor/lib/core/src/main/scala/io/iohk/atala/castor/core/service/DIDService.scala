@@ -1,6 +1,8 @@
 package io.iohk.atala.castor.core.service
 
 import io.iohk.atala.castor.core.model.did.{
+  CanonicalPrismDID,
+  DIDData,
   PrismDID,
   ScheduleDIDOperationOutcome,
   ScheduledDIDOperationDetail,
@@ -8,10 +10,11 @@ import io.iohk.atala.castor.core.model.did.{
 }
 import zio.*
 import io.iohk.atala.castor.core.model.ProtoModelHelper
-import io.iohk.atala.castor.core.model.error.DIDOperationError
+import io.iohk.atala.castor.core.model.error.{DIDOperationError, DIDResolutionError}
 import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.prism.crypto.Sha256
 import io.iohk.atala.shared.models.HexStrings.*
+import io.iohk.atala.shared.utils.Traverse.*
 import io.iohk.atala.prism.protos.{node_api, node_models}
 import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc.NodeServiceStub
 import io.iohk.atala.prism.protos.node_models.OperationOutput.{OperationMaybe, Result}
@@ -23,6 +26,7 @@ trait DIDService {
   def getScheduledDIDOperationDetail(
       operationId: Array[Byte]
   ): IO[DIDOperationError, Option[ScheduledDIDOperationDetail]]
+  def resolveDID(did: CanonicalPrismDID): IO[DIDResolutionError, Option[DIDData]]
 }
 
 object DIDServiceImpl {
@@ -107,6 +111,18 @@ private class DIDServiceImpl(didOpValidator: DIDOperationValidator, nodeClient: 
         .fromEither(result.toDomain)
         .mapError(DIDOperationError.UnexpectedDLTResult.apply)
     } yield detail
+  }
+
+  // TODO: handle revoked keys and deactivated DIDs
+  override def resolveDID(did: CanonicalPrismDID): IO[DIDResolutionError, Option[DIDData]] = {
+    for {
+      result <- ZIO
+        .fromFuture(_ => nodeClient.getDidDocument(node_api.GetDidDocumentRequest(did = did.toString)))
+        .mapError(DIDResolutionError.DLTProxyError.apply)
+      didData <- ZIO
+        .fromEither(result.document.map(_.toDomain).toSeq.sequence.map(_.headOption))
+        .mapError(DIDResolutionError.UnexpectedDLTResult.apply)
+    } yield didData
   }
 
 }

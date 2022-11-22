@@ -3,8 +3,13 @@ package io.iohk.atala.castor.core.model
 import java.net.URI
 import com.google.protobuf.ByteString
 import io.iohk.atala.castor.core.model.did.{
+  CanonicalPrismDID,
+  EllipticCurve,
+  DIDData,
   InternalKeyPurpose,
   InternalPublicKey,
+  LongFormPrismDID,
+  PrismDID,
   PrismDIDOperation,
   PublicKey,
   PublicKeyData,
@@ -13,10 +18,12 @@ import io.iohk.atala.castor.core.model.did.{
   VerificationRelationship
 }
 import io.iohk.atala.prism.protos.common_models.OperationStatus
+import io.iohk.atala.prism.protos.node_models.KeyUsage
+import io.iohk.atala.prism.protos.node_models.PublicKey.KeyData
 import io.iohk.atala.shared.models.HexStrings.*
 import io.iohk.atala.shared.models.Base64UrlStrings.*
 import io.iohk.atala.shared.utils.Traverse.*
-import io.iohk.atala.prism.protos.{KeyUsage, common_models, node_api, node_models}
+import io.iohk.atala.prism.protos.{common_models, node_api, node_models}
 
 import scala.util.Try
 
@@ -102,6 +109,77 @@ private[castor] trait ProtoModelHelper {
           Left(s"unrecognized status of GetOperationInfoResponse: $unrecognizedValue")
       }
       status.map(s => s.map(ScheduledDIDOperationDetail.apply))
+    }
+  }
+
+  extension (didData: node_models.DIDData) {
+    def toDomain: Either[String, DIDData] = {
+      for {
+        canonicalDID <- PrismDID.fromString(didData.id).flatMap {
+          case d: CanonicalPrismDID => Right(d)
+          case _                    => Left(s"id on DIDData must be in canonical form: ${didData.id}")
+        }
+        allKeys <- didData.publicKeys.traverse(_.toDomain)
+      } yield DIDData(
+        id = canonicalDID,
+        publicKeys = allKeys.collect { case key: PublicKey => key },
+        services = Nil, // TODO: add Service when it is added to Prism DID method spec (ATL-2203)
+        internalKeys = allKeys.collect { case key: InternalPublicKey => key }
+      )
+    }
+  }
+
+  extension (publicKey: node_models.PublicKey) {
+    def toDomain: Either[String, PublicKey | InternalPublicKey] = {
+      val purpose: Either[String, VerificationRelationship | InternalKeyPurpose] = publicKey.usage match {
+        case node_models.KeyUsage.UNKNOWN_KEY => Left(s"unsupported use of KeyUsage.UNKNOWN_KEY on key ${publicKey.id}")
+        case node_models.KeyUsage.MASTER_KEY  => Right(InternalKeyPurpose.Master)
+        case node_models.KeyUsage.ISSUING_KEY => Right(VerificationRelationship.AssertionMethod)
+        case node_models.KeyUsage.COMMUNICATION_KEY  => Right(VerificationRelationship.KeyAgreement)
+        case node_models.KeyUsage.AUTHENTICATION_KEY => Right(VerificationRelationship.Authentication)
+        case node_models.KeyUsage.REVOCATION_KEY =>
+          ??? // TODO: define the corresponding KeyUsage in Prism DID (ATL-2213)
+        case node_models.KeyUsage.Unrecognized(unrecognizedValue) =>
+          Left(s"unrecognized KeyUsage: $unrecognizedValue on key ${publicKey.id}")
+      }
+
+      for {
+        purpose <- purpose
+        keyData <- publicKey.keyData.toDomain
+      } yield purpose match {
+        case purpose: VerificationRelationship =>
+          PublicKey(
+            id = publicKey.id,
+            purpose = purpose,
+            publicKeyData = keyData
+          )
+        case purpose: InternalKeyPurpose =>
+          publicKey.keyData.ecKeyData
+          InternalPublicKey(
+            id = publicKey.id,
+            purpose = purpose,
+            publicKeyData = keyData
+          )
+      }
+    }
+  }
+
+  extension (publicKeyData: node_models.PublicKey.KeyData) {
+    def toDomain: Either[String, PublicKeyData] = {
+      publicKeyData match {
+        case KeyData.Empty => Left(s"unable to convert KeyData.Emtpy to PublicKeyData")
+        case KeyData.EcKeyData(ecKeyData) =>
+          for {
+            curve <- EllipticCurve
+              .parseString(ecKeyData.curve)
+              .toRight(s"unsupported elliptic curve ${ecKeyData.curve}")
+          } yield PublicKeyData.ECKeyData(
+            crv = curve,
+            x = Base64UrlString.fromByteArray(ecKeyData.x.toByteArray),
+            y = Base64UrlString.fromByteArray(ecKeyData.y.toByteArray)
+          )
+        case KeyData.CompressedEcKeyData(_) => Left(s"conversion from CompressedECKeyData is not yet supported")
+      }
     }
   }
 
