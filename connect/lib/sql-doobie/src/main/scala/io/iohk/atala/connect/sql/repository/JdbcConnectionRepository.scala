@@ -198,7 +198,7 @@ class JdbcConnectionRepository(xa: Transactor[Task]) extends ConnectionRepositor
 
 }
 
-object JdbcConnectionsRepository {
+object JdbcConnectionRepository {
   val layer: URLayer[Transactor[Task], ConnectionRepository[Task]] =
     ZLayer.fromFunction(new JdbcConnectionRepository(_))
 }
