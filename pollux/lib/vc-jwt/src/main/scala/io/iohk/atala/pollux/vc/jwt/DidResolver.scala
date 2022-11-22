@@ -1,38 +1,46 @@
 package io.iohk.atala.pollux.vc.jwt
 
+import zio.IO
+
 import java.time.Instant
 
-trait DIDResolutionResult(
-    `@context`: Vector[String] = Vector("https://w3id.org/did-resolution/v1")
-)
-trait DIDResolutionFailed(
+trait DidResolver {
+  def resolve(didUrl: String): IO[Throwable, DIDResolutionResult]
+}
+
+trait DIDResolutionResult()
+
+sealed case class DIDResolutionFailed(
     error: DIDResolutionError
 ) extends DIDResolutionResult
-trait DIDResolutionSucceeded(
+
+sealed case class DIDResolutionSucceeded(
     didDocument: DIDDocument,
     contentType: String,
     didDocumentMetadata: DIDDocumentMetadata
 ) extends DIDResolutionResult
 
-trait DIDResolutionError(error: String, message: String) {
+sealed trait DIDResolutionError(error: String, message: String) {
   class InvalidDid(message: String) extends DIDResolutionError("invalidDid", message)
+
   class NotFound(message: String) extends DIDResolutionError("notFound", message)
+
   class RepresentationNotSupported(message: String) extends DIDResolutionError("RepresentationNotSupported", message)
   class UnsupportedDidMethod(message: String) extends DIDResolutionError("unsupportedDidMethod", message)
   class Error(error: String, message: String) extends DIDResolutionError(error, message)
 }
-trait DIDDocumentMetadata(
-    created: Option[Instant],
-    updated: Option[Instant],
-    deactivated: Option[Boolean],
-    versionId: Option[Instant],
-    nextUpdate: Option[Instant],
-    nextVersionId: Option[Instant],
-    equivalentId: Option[Instant],
-    canonicalId: Option[Instant]
+case class DIDDocumentMetadata(
+    created: Option[Instant] = Option.empty,
+    updated: Option[Instant] = Option.empty,
+    deactivated: Option[Boolean] = Option.empty,
+    versionId: Option[Instant] = Option.empty,
+    nextUpdate: Option[Instant] = Option.empty,
+    nextVersionId: Option[Instant] = Option.empty,
+    equivalentId: Option[Instant] = Option.empty,
+    canonicalId: Option[Instant] = Option.empty
 )
 
-trait DIDDocument(
+case class DIDDocument(
     `@context`: Vector[String] = Vector("https://www.w3.org/ns/did/v1"),
     id: String,
     alsoKnowAs: Vector[String],
@@ -40,30 +48,31 @@ trait DIDDocument(
     verificationMethod: Vector[VerificationMethod],
     service: Vector[Service]
 )
-trait VerificationMethod(
+case class VerificationMethod(
     id: String,
     `type`: String,
     controller: String,
-    publicKeyBase58: Option[String],
-    publicKeyBase64: Option[String],
-    publicKeyJwk: Option[JsonWebKey],
-    publicKeyHex: Option[String],
-    publicKeyMultibase: Option[String],
-    blockchainAccountId: Option[String],
-    ethereumAddress: Option[String]
+    publicKeyBase58: Option[String] = Option.empty,
+    publicKeyBase64: Option[String] = Option.empty,
+    publicKeyJwk: Option[JsonWebKey] = Option.empty,
+    publicKeyHex: Option[String] = Option.empty,
+    publicKeyMultibase: Option[String] = Option.empty,
+    blockchainAccountId: Option[String] = Option.empty,
+    ethereumAddress: Option[String] = Option.empty
 )
-trait JsonWebKey(
-    alg: Option[String],
-    crv: Option[String],
-    e: Option[String],
-    ext: Option[Boolean],
-    key_ops: Vector[String],
-    kid: Option[String],
+case class JsonWebKey(
+    alg: Option[String] = Option.empty,
+    crv: Option[String] = Option.empty,
+    e: Option[String] = Option.empty,
+    d: Option[String] = Option.empty,
+    ext: Option[Boolean] = Option.empty,
+    key_ops: Vector[String] = Vector.empty,
+    kid: Option[String] = Option.empty,
     kty: String,
-    n: Option[String],
-    use: Option[String],
-    x: Option[String],
-    y: Option[String]
+    n: Option[String] = Option.empty,
+    use: Option[String] = Option.empty,
+    x: Option[String] = Option.empty,
+    y: Option[String] = Option.empty
 )
-trait Service(id: String, `type`: String, serviceEndpoint: Vector[ServiceEndpoint])
-trait ServiceEndpoint(id: String, `type`: String)
+case class Service(id: String, `type`: String, serviceEndpoint: Vector[ServiceEndpoint])
+case class ServiceEndpoint(id: String, `type`: String)
