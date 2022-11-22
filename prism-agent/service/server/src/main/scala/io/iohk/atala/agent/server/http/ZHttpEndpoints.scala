@@ -16,7 +16,7 @@ object ZHttpEndpoints {
 
   def redocEndpoints[F[_]](apiEndpoints: List[ServerEndpoint[Any, F]]): List[ServerEndpoint[Any, F]] =
     RedocInterpreter(redocUIOptions = RedocUIOptions.default.copy(pathPrefix = List("redoc")))
-      .fromServerEndpoints[F](apiEndpoints, title="Prism Agent", version="1.0.0")
+      .fromServerEndpoints[F](apiEndpoints, title = "Prism Agent", version = "1.0.0")
 
   def withDocumentations[F[_]](apiEndpoints: List[ServerEndpoint[Any, F]]): List[ServerEndpoint[Any, F]] = {
     apiEndpoints ++ swaggerEndpoints[F](apiEndpoints) ++ redocEndpoints[F](apiEndpoints)

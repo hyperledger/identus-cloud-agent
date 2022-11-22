@@ -77,7 +77,6 @@ import cats.implicits.*
 import io.iohk.atala.pollux.schema.SchemaRegistryServerEndpoints
 import io.iohk.atala.pollux.service.SchemaRegistryServiceInMemory
 
-
 object Modules {
 
   def app(port: Int): RIO[DidComm, Unit] = {
