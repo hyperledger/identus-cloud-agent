@@ -10,7 +10,7 @@ import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
 import io.iohk.atala.mercury.protocol.connection.*
 import io.iohk.atala.connect.core.model.ConnectionRecord
 
-trait ConnectionsRepository[F[_]] {
+trait ConnectionRepository[F[_]] {
   def createConnectionRecord(record: ConnectionRecord): F[Int]
 
   def getConnectionRecords: F[Seq[ConnectionRecord]]

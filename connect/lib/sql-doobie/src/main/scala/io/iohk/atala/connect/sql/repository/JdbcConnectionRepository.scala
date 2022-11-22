@@ -6,7 +6,6 @@ import io.circe._
 import io.circe.parser._
 import io.circe.syntax._
 import io.iohk.atala.connect.core.model.*
-import io.iohk.atala.connect.core.repository.ConnectionsRepository
 import zio.*
 import zio.interop.catz.*
 import io.iohk.atala.mercury.protocol.connection.*
@@ -15,8 +14,9 @@ import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
 import java.util.UUID
 import io.iohk.atala.connect.core.model.ConnectionRecord.Role
 import io.iohk.atala.connect.core.model.ConnectionRecord.ProtocolState
+import io.iohk.atala.connect.core.repository.ConnectionRepository
 
-class JdbcConnectionsRepository(xa: Transactor[Task]) extends ConnectionsRepository[Task] {
+class JdbcConnectionRepository(xa: Transactor[Task]) extends ConnectionRepository[Task] {
 
   given logHandler: LogHandler = LogHandler.jdkLogHandler
 
@@ -199,6 +199,6 @@ class JdbcConnectionsRepository(xa: Transactor[Task]) extends ConnectionsReposit
 }
 
 object JdbcConnectionsRepository {
-  val layer: URLayer[Transactor[Task], ConnectionsRepository[Task]] =
-    ZLayer.fromFunction(new JdbcConnectionsRepository(_))
+  val layer: URLayer[Transactor[Task], ConnectionRepository[Task]] =
+    ZLayer.fromFunction(new JdbcConnectionRepository(_))
 }
