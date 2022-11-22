@@ -1,19 +1,9 @@
 package io.iohk.atala.pollux.schema
 
-import io.iohk.atala.api.http.{FailureResponse, NotFoundResponse}
+import io.iohk.atala.api.http.{BadRequest, FailureResponse, InternalServerError, NotFoundResponse}
 import sttp.tapir.EndpointIO.Info
 import sttp.tapir.json.zio.jsonBody
-import sttp.tapir.{
-  Endpoint,
-  EndpointInfo,
-  PublicEndpoint,
-  endpoint,
-  oneOf,
-  oneOfDefaultVariant,
-  oneOfVariant,
-  path,
-  stringToPath
-}
+import sttp.tapir.{Endpoint, EndpointInfo, PublicEndpoint, endpoint, oneOf, oneOfDefaultVariant, oneOfVariant, path, stringToPath}
 import sttp.tapir.generic.auto.*
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder}
 import sttp.model.StatusCode
@@ -23,7 +13,7 @@ import java.util.UUID
 
 object SchemaRegistryEndpoints {
 
-  val createSchemaEndpoint: PublicEndpoint[VerifiableCredentialsSchemaInput, Unit, VerifiableCredentialsSchema, Any] =
+  val createSchemaEndpoint: PublicEndpoint[VerifiableCredentialsSchemaInput, FailureResponse, VerifiableCredentialsSchema, Any] =
     endpoint.post
       .in("schema-registry" / "schemas")
       .in(
@@ -32,6 +22,11 @@ object SchemaRegistryEndpoints {
       )
       .out(statusCode(StatusCode.Created))
       .out(jsonBody[VerifiableCredentialsSchema])
+      .errorOut(
+        oneOf[FailureResponse](
+          oneOfVariant(StatusCode.InternalServerError, jsonBody[InternalServerError])
+        )
+      )
       .name("createSchema")
       .summary("Publish new schema to the schema registry")
       .description(

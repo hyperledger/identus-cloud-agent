@@ -5,6 +5,7 @@ object Dependencies {
     val zio = "2.0.2"
     val zioConfig = "3.0.2"
     val zioHttp = "2.0.0-RC11"
+    val zioInteropCats = "3.3.0"
     val akka = "2.6.20"
     val akkaHttp = "10.2.9"
     val castor = "0.2.0"
@@ -13,7 +14,7 @@ object Dependencies {
     val logback = "1.4.4"
     val mercury = "0.6.0"
     val zioJson = "0.3.0"
-    val tapir = "1.2.0"
+    val tapir = "1.2.2"
   }
 
   private lazy val zio = "dev.zio" %% "zio" % Versions.zio
@@ -21,6 +22,7 @@ object Dependencies {
   private lazy val zioConfigMagnolia = "dev.zio" %% "zio-config-magnolia" % Versions.zioConfig
   private lazy val zioConfigTypesafe = "dev.zio" %% "zio-config-typesafe" % Versions.zioConfig
   private lazy val zioJson = "dev.zio" %% "zio-json" % Versions.zioJson
+  private lazy val zioInteropCats = "dev.zio" %% "zio-interop-cats" % Versions.zioInteropCats
 
   private lazy val zioTest = "dev.zio" %% "zio-test" % Versions.zio % Test
   private lazy val zioTestSbt = "dev.zio" %% "zio-test-sbt" % Versions.zio % Test
@@ -50,11 +52,13 @@ object Dependencies {
 
   private lazy val tapirSwaggerUiBundle = "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % Versions.tapir
   private lazy val tapirJsonZio = "com.softwaremill.sttp.tapir" %% "tapir-json-zio" % Versions.tapir
-  private lazy val tapirZio = "com.softwaremill.sttp.tapir" %% "tapir-zio" % Versions.tapir
+
   private lazy val tapirZioHttpServer = "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server" % Versions.tapir
+  private lazy val tapirHttp4sServerZio = "com.softwaremill.sttp.tapir" %% "tapir-http4s-server-zio" % Versions.tapir
+  private lazy val http4sBlazeServer = "org.http4s" %% "http4s-blaze-server" % "0.23.12"
+
   private lazy val tapirRedocBundle = "com.softwaremill.sttp.tapir" %% "tapir-redoc-bundle" % Versions.tapir
-  private lazy val tapirSttpStubServer =
-    "com.softwaremill.sttp.tapir" %% "tapir-sttp-stub-server" % Versions.tapir % Test
+  private lazy val tapirSttpStubServer = "com.softwaremill.sttp.tapir" %% "tapir-sttp-stub-server" % Versions.tapir % Test
 
 
   // Dependency Modules
@@ -66,7 +70,14 @@ object Dependencies {
     Seq(akkaTyped, akkaStream, akkaHttp, akkaSprayJson).map(_.cross(CrossVersion.for3Use2_13))
   private lazy val bouncyDependencies: Seq[ModuleID] = Seq(bouncyBcpkix, bouncyBcprov)
   private lazy val tapirDependencies: Seq[ModuleID] =
-    Seq(tapirSwaggerUiBundle, tapirJsonZio, tapirRedocBundle, tapirSttpStubServer, tapirZioHttpServer, tapirZio)
+    Seq(
+      tapirSwaggerUiBundle,
+      tapirJsonZio,
+      tapirRedocBundle,
+      tapirSttpStubServer,
+      tapirZioHttpServer,
+      tapirHttp4sServerZio,
+      http4sBlazeServer)
 
 
   // Project Dependencies

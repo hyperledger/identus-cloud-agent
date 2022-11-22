@@ -1,44 +1,45 @@
 package io.iohk.atala.agent.server.http
 
+import cats.implicits.*
+import io.iohk.atala.agent.server.http.ZHttpEndpoints
+import io.iohk.atala.pollux.schema.SchemaRegistryServerEndpoints
+import io.iohk.atala.pollux.service.{SchemaRegistryService, SchemaRegistryServiceInMemory}
+import org.http4s.*
+import org.http4s.blaze.server.BlazeServerBuilder
+import org.http4s.server.Router
 import org.slf4j.LoggerFactory
+import sttp.model.StatusCode
+import sttp.tapir.server.ServerEndpoint
+import sttp.tapir.server.http4s.ztapir.ZHttp4sServerInterpreter
 import sttp.tapir.server.interceptor.log.DefaultServerLog
-import sttp.tapir.server.ziohttp.{ZioHttpInterpreter, ZioHttpServerOptions}
+import sttp.tapir.ztapir.ZServerEndpoint
 import zhttp.http.HttpApp
 import zhttp.service.server.ServerChannelFactory
 import zhttp.service.{EventLoopGroup, Server}
-import zio.{Console, RIO, Scope, Task, ZIO, ZIOAppArgs, ZIOAppDefault, ZLayer}
-import sttp.tapir.ztapir.ZServerEndpoint
-import io.iohk.atala.agent.server.http.ZHttpEndpoints
-import io.iohk.atala.pollux.service.{SchemaRegistryService, SchemaRegistryServiceInMemory}
-import io.iohk.atala.pollux.schema.SchemaRegistryServerEndpoints
+import zio.interop.catz.*
+import zio.*
 
-object ZHttpServer {
-  val log = LoggerFactory.getLogger(ZioHttpInterpreter.getClass.getName)
+import scala.concurrent.ExecutionContext.Implicits.global
 
-  val defaultServerOptions: ZioHttpServerOptions[Any] =
-    ZioHttpServerOptions.customiseInterceptors
-      .serverLog(
-        DefaultServerLog[Task](
-          doLogWhenReceived = msg => ZIO.succeed(log.debug(msg)),
-          doLogWhenHandled = (msg, error) => ZIO.succeed(error.fold(log.debug(msg))(err => log.debug(msg, err))),
-          doLogAllDecodeFailures = (msg, error) => ZIO.succeed(error.fold(log.debug(msg))(err => log.debug(msg, err))),
-          doLogExceptions = (msg: String, ex: Throwable) => ZIO.succeed(log.debug(msg, ex)),
-          noLog = ZIO.unit
-        )
-      )
-      .options
-
+object ZHttp4sBlazeServer {
   def start(
       endpoints: List[ZServerEndpoint[Any, Any]],
-      port: Int,
-      serverOptions: ZioHttpServerOptions[Any] = defaultServerOptions
-  ): ZIO[Scope, Throwable, Any] =
-    val app: HttpApp[Any, Throwable] = ZioHttpInterpreter(serverOptions).toHttp(endpoints)
+      port: Int
+  ): Task[ExitCode] = {
+    val http4sEndpoints: HttpRoutes[Task] =
+      ZHttp4sServerInterpreter().from(endpoints).toRoutes
 
-    (for {
-      _ <- Server(app).withPort(port).make
-      _ <- Console.printLine(s"Go to http://localhost:$port/docs to open SwaggerUI")
-      _ <- ZIO.never
-    } yield ())
-      .provideSomeLayer(EventLoopGroup.auto(0) ++ ServerChannelFactory.auto ++ Scope.default)
+    val serve: Task[Unit] =
+      ZIO.executor.flatMap(executor =>
+        BlazeServerBuilder[Task]
+          .withExecutionContext(executor.asExecutionContext)
+          .bindHttp(port, "0.0.0.0")
+          .withHttpApp(Router("/" -> http4sEndpoints).orNotFound)
+          .serve
+          .compile
+          .drain
+      )
+
+    serve.exitCode
+  }
 }

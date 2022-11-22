@@ -6,7 +6,7 @@ import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.server.Route
 import doobie.util.transactor.Transactor
-import io.iohk.atala.agent.server.http.{HttpRoutes, HttpServer, ZHttpEndpoints, ZHttpServer}
+import io.iohk.atala.agent.server.http.{HttpRoutes, HttpServer, ZHttp4sBlazeServer, ZHttpEndpoints}
 import io.iohk.atala.castor.core.service.{DIDService, DIDServiceImpl}
 import io.iohk.atala.agent.server.http.marshaller.{
   DIDApiMarshallerImpl,
@@ -61,10 +61,8 @@ import zio.config.typesafe.TypesafeConfigSource
 import zio.config.{ReadError, read}
 import zio.interop.catz.*
 import zio.stream.ZStream
-import zhttp.http.*
+import zhttp.http._
 import zhttp.service.Server
-import io.iohk.atala.pollux.schema.SchemaRegistryServerEndpoints
-import io.iohk.atala.pollux.service.SchemaRegistryServiceInMemory
 
 import java.util.concurrent.Executors
 
@@ -75,6 +73,10 @@ import io.iohk.atala.mercury.protocol.issuecredential._
 import io.iohk.atala.pollux.core.model.error.IssueCredentialError
 import io.iohk.atala.pollux.core.model.error.IssueCredentialError.RepositoryError
 import java.io.IOException
+import cats.implicits.*
+import io.iohk.atala.pollux.schema.SchemaRegistryServerEndpoints
+import io.iohk.atala.pollux.service.SchemaRegistryServiceInMemory
+
 
 object Modules {
 
@@ -89,13 +91,13 @@ object Modules {
   lazy val zioApp = {
     val zioHttpServerApp = for {
       allSchemaRegistryEndpoints <- SchemaRegistryServerEndpoints.all
-      allEndpoints = ZHttpEndpoints.withDocumentations(allSchemaRegistryEndpoints)
+      allEndpoints = ZHttpEndpoints.withDocumentations[Task](allSchemaRegistryEndpoints)
       appConfig <- ZIO.service[AppConfig]
-      httpServer <- ZHttpServer.start(allEndpoints, port = appConfig.agent.httpEndpoint.http.port)
+      httpServer <- ZHttp4sBlazeServer.start(allEndpoints, port = appConfig.agent.httpEndpoint.http.port)
     } yield httpServer
 
     zioHttpServerApp
-      .provideLayer(SchemaRegistryServiceInMemory.layer ++ Scope.default ++ SystemModule.configLayer)
+      .provideLayer(SchemaRegistryServiceInMemory.layer ++ SystemModule.configLayer)
       .unit
   }
 
@@ -224,7 +226,6 @@ object Modules {
   }
 
 }
-
 object SystemModule {
   val actorSystemLayer: TaskLayer[ActorSystem[Nothing]] = ZLayer.scoped(
     ZIO.acquireRelease(
