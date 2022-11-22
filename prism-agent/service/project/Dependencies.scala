@@ -4,14 +4,14 @@ object Dependencies {
   object Versions {
     val zio = "2.0.2"
     val zioConfig = "3.0.2"
-    val zioHttp = "2.0.0-RC10"
+    val zioHttp = "2.0.0-RC11"
     val akka = "2.6.20"
     val akkaHttp = "10.2.9"
     val castor = "0.2.0"
-    val pollux = "0.2.0"
+    val pollux = "0.3.0"
     val bouncyCastle = "1.70"
     val logback = "1.4.4"
-    val mercury = "0.5.0"
+    val mercury = "0.6.0"
     val zioJson = "0.3.0"
     val tapir = "1.2.0"
   }
@@ -81,9 +81,5 @@ object Dependencies {
       castorDependencies ++
       polluxDependencies ++
       mercuryDependencies ++
-      tapirDependencies ++
-        Seq(
-          zioHttp,
-          logback
-        )
+      tapirDependencies
 }

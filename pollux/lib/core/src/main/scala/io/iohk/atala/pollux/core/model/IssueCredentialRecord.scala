@@ -1,18 +1,23 @@
 package io.iohk.atala.pollux.core.model
+import io.iohk.atala.prism.crypto.MerkleInclusionProof
 
 import java.util.UUID
 import io.iohk.atala.mercury.protocol.issuecredential.OfferCredential
 import io.iohk.atala.mercury.protocol.issuecredential.RequestCredential
 import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
 import IssueCredentialRecord._
+import java.time.Instant
 final case class IssueCredentialRecord(
     id: UUID,
+    createdAt: Instant,
+    updatedAt: Option[Instant],
     thid: UUID,
     schemaId: Option[String],
     role: Role,
     subjectId: String,
     validityPeriod: Option[Double] = None,
-    claims: Map[String, String],
+    automaticIssuance: Option[Boolean],
+    awaitConfirmation: Option[Boolean],
     protocolState: ProtocolState,
     publicationState: Option[PublicationState],
     offerCredentialData: Option[OfferCredential],
@@ -50,6 +55,8 @@ object IssueCredentialRecord {
 
     // Issuer has "accepted" a credential request received from a Holder (Issuer DB)
     case CredentialPending extends ProtocolState
+    // Issuer has generated (signed) the credential and is now ready to send it to the Holder (Issuer DB)
+    case CredentialGenerated extends ProtocolState
     // The credential has been sent to the holder (In Issuer DB)
     case CredentialSent extends ProtocolState
     // Holder has received the credential (In Holder DB)
@@ -58,7 +65,7 @@ object IssueCredentialRecord {
   enum PublicationState:
     // The credential requires on-chain publication and should therefore be included in the next Merkle Tree computation/publication
     case PublicationPending extends PublicationState
-    // The credential publication operation has been successfuly sent to Iris and is pending publication
+    // The credential publication operation has been successfully sent to Iris and is pending publication
     case PublicationQueued extends PublicationState
     // The credential publication has been confirmed by Iris
     case Published extends PublicationState

@@ -85,9 +85,10 @@ lazy val mediator = project
     libraryDependencies ++= Seq(D.mercuryModels.value, D.mercuryAgent.value),
     Compile / unmanagedResourceDirectories += apiBaseDirectory.value,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+    githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN"),
     // ### Build Docker Image ###
     Docker / maintainer := "atala-coredid@iohk.io",
-    Docker / dockerRepository := Some("ghcr.io"),
+    Docker / dockerRepository := Some("atala-prism.io"),
     Docker / dockerUsername := Some("input-output-hk"),
     Docker / githubOwner := "atala-prism-building-blocks",
     Docker / dockerUpdateLatest := true,
