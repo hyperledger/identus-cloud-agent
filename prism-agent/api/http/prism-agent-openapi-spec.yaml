@@ -954,8 +954,8 @@ paths:
                   example: "Bob from Bank ABC"
 
       responses:
-        "200":
-          description: List of connection state objects
+        "201":
+          description: The connection record
           content:
             application/json:
               schema:
