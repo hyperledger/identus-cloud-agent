@@ -60,7 +60,7 @@ lazy val server = project
     Docker / dockerUsername := Some("input-output-hk"),
     Docker / githubOwner := "atala-prism-building-blocks",
     Docker / dockerRepository := Some("ghcr.io"),
-    dockerExposedPorts := Seq(8080),
+    dockerExposedPorts := Seq(8080, 8085),
     dockerBaseImage := "openjdk:11"
   )
   .enablePlugins(OpenApiGeneratorPlugin, JavaAppPackaging, DockerPlugin)

@@ -6,7 +6,7 @@ import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.server.Route
 import doobie.util.transactor.Transactor
-import io.iohk.atala.agent.server.http.{HttpRoutes, HttpServer}
+import io.iohk.atala.agent.server.http.{HttpRoutes, HttpServer, ZHttp4sBlazeServer, ZHttpEndpoints}
 import io.iohk.atala.castor.core.service.{DIDService, DIDServiceImpl}
 import io.iohk.atala.agent.server.http.marshaller.{
   DIDApiMarshallerImpl,
@@ -73,6 +73,9 @@ import io.iohk.atala.mercury.protocol.issuecredential._
 import io.iohk.atala.pollux.core.model.error.IssueCredentialError
 import io.iohk.atala.pollux.core.model.error.IssueCredentialError.RepositoryError
 import java.io.IOException
+import cats.implicits.*
+import io.iohk.atala.pollux.schema.SchemaRegistryServerEndpoints
+import io.iohk.atala.pollux.service.SchemaRegistryServiceInMemory
 
 object Modules {
 
@@ -81,6 +84,19 @@ object Modules {
 
     httpServerApp
       .provideLayer(SystemModule.actorSystemLayer ++ HttpModule.layers)
+      .unit
+  }
+
+  lazy val zioApp = {
+    val zioHttpServerApp = for {
+      allSchemaRegistryEndpoints <- SchemaRegistryServerEndpoints.all
+      allEndpoints = ZHttpEndpoints.withDocumentations[Task](allSchemaRegistryEndpoints)
+      appConfig <- ZIO.service[AppConfig]
+      httpServer <- ZHttp4sBlazeServer.start(allEndpoints, port = appConfig.agent.httpEndpoint.http.port)
+    } yield httpServer
+
+    zioHttpServerApp
+      .provideLayer(SchemaRegistryServiceInMemory.layer ++ SystemModule.configLayer)
       .unit
   }
 
@@ -209,7 +225,6 @@ object Modules {
   }
 
 }
-
 object SystemModule {
   val actorSystemLayer: TaskLayer[ActorSystem[Nothing]] = ZLayer.scoped(
     ZIO.acquireRelease(
