@@ -18,9 +18,7 @@ object Dependencies {
 
   private lazy val flyway = "org.flywaydb" % "flyway-core" % Versions.flyway
 
-
-  private lazy val mercuryProtocolConnection =
-    "io.iohk.atala" %% "mercury-protocol-connection" % Versions.mercury
+  private lazy val mercuryProtocolConnection = "io.iohk.atala" %% "mercury-protocol-connection" % Versions.mercury
 
   // Dependency Modules
   private lazy val baseDependencies: Seq[ModuleID] = Seq(zio)

@@ -13,24 +13,18 @@ import io.iohk.atala.connect.core.model.ConnectionRecord
 trait ConnectionRepository[F[_]] {
   def createConnectionRecord(record: ConnectionRecord): F[Int]
 
-  def getConnectionRecords: F[Seq[ConnectionRecord]]
+  def getConnectionRecords(): F[Seq[ConnectionRecord]]
 
-  def getConnectionRecord(id: UUID): F[Option[ConnectionRecord]]
+  def getConnectionRecord(recordId: UUID): F[Option[ConnectionRecord]]
 
-  def deleteConnectionRecord(id: UUID): F[Int]
+  def deleteConnectionRecord(recordId: UUID): F[Int]
 
-  def deleteConnectionRecordByThreadId(id: UUID): F[Int]
+  def getConnectionRecordByThreadId(thid: UUID): F[Option[ConnectionRecord]]
 
-  def getConnectionRecordByThreadId(id: UUID): F[Option[ConnectionRecord]]
+  def updateWithConnectionRequest(recordId: UUID, request: ConnectionRequest, state: ProtocolState): F[Int]
 
-  def updateWithConnectionRequest(request: ConnectionRequest): F[Int]
+  def updateWithConnectionResponse(recordId: UUID, request: ConnectionResponse, state: ProtocolState): F[Int]
 
-  def updateWithConnectionResponse(request: ConnectionResponse): F[Int]
-
-  def updateConnectionProtocolState(
-      id: UUID,
-      from: ConnectionRecord.ProtocolState,
-      to: ConnectionRecord.ProtocolState
-  ): F[Int]
+  def updateConnectionProtocolState(recordId: UUID, from: ProtocolState, to: ProtocolState): F[Int]
 
 }
