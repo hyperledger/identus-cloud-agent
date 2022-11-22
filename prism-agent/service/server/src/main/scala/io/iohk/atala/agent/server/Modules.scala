@@ -70,6 +70,7 @@ import io.iohk.atala.mercury._
 import io.iohk.atala.mercury.model._
 import io.iohk.atala.mercury.model.error._
 import io.iohk.atala.mercury.protocol.issuecredential._
+import io.iohk.atala.mercury.protocol.presentproof._
 import io.iohk.atala.pollux.core.model.error.IssueCredentialError
 import io.iohk.atala.pollux.core.model.error.IssueCredentialError.RepositoryError
 import java.io.IOException
@@ -129,7 +130,7 @@ object Modules {
         _ <- ZIO.logInfo("Received new message")
         _ <- ZIO.logTrace(jsonString)
         msg <- unpack(jsonString).map(_.getMessage)
-        ret <- {
+        _ <- {
           msg.piuri match {
             // ########################
             // ### issue-credential ###
@@ -195,10 +196,18 @@ object Modules {
                   .catchAll { case ex: IOException => ZIO.fail(ex) }
               } yield ()
 
+            // #####################
+            // ### present-proof ###
+            // #####################
+
+            case s if s == Presentation.`type`        => ???
+            case s if s == ProposePresentation.`type` => ???
+            case s if s == RequestPresentation.`type` => ???
+
             case _ => ZIO.succeed("Unknown Message Type")
           }
         }
-      } yield (ret)
+      } yield ()
     }
   }
 

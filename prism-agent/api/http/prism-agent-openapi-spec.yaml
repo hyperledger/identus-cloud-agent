@@ -45,7 +45,7 @@ paths:
   # ----------------------------------
   /dids:
     post:
-      tags: [ "DID" ]
+      tags: ["DID"]
       operationId: createDid
       summary: Publish DID create operation to blockchain.
       description: Publish DID create operation to blockchain.
@@ -76,7 +76,7 @@ paths:
 
   /dids/{didRef}:
     get:
-      tags: [ "DID" ]
+      tags: ["DID"]
       operationId: getDid
       summary: Resolve DID.
       description: Resolve DID.
@@ -98,7 +98,7 @@ paths:
 
   /dids/{didRef}/updates:
     post:
-      tags: [ "DID" ]
+      tags: ["DID"]
       operationId: updateDid
       summary: Publish DID update operation to blockchain.
       description: Publish DID update operation to blockchain.
@@ -137,7 +137,7 @@ paths:
 
   /dids/{didRef}/deactivations:
     post:
-      tags: [ "DID" ]
+      tags: ["DID"]
       operationId: deactivateDID
       summary: Publish DID deactivate operation to blockchain.
       description: Publish DID deactivate operation to blockchain.
@@ -176,7 +176,7 @@ paths:
 
   /dids/{didRef}/recoveries:
     post:
-      tags: [ "DID" ]
+      tags: ["DID"]
       operationId: recoverDid
       summary: Publish DID recover operation to blockchain.
       description: Publish DID recover operation to blockchain.
@@ -215,7 +215,7 @@ paths:
 
   /did-operations/{didOperationRef}:
     get:
-      tags: [ "DID Operations" ]
+      tags: ["DID Operations"]
       operationId: getDidOperation
       summary: Get Did Operation.
       description: Get Did Operation.
@@ -237,7 +237,7 @@ paths:
 
   /dids/{didRef}/operations:
     get:
-      tags: [ "DID Operations" ]
+      tags: ["DID Operations"]
       operationId: getDidOperationsByDidRef
       summary: Get All DID Operations for given DID.
       description: Get All DID Operations for given DID.
@@ -259,7 +259,7 @@ paths:
 
   /authentication/challenges:
     post:
-      tags: [ "DID Authentication" ]
+      tags: ["DID Authentication"]
       operationId: createDidAuthenticationChallenge
       summary: Create a new authentication challenge
       deprecated: true
@@ -288,7 +288,7 @@ paths:
 
   /authentication/challenge-submissions:
     post:
-      tags: [ "DID Authentication" ]
+      tags: ["DID Authentication"]
       operationId: createDidAuthenticationChallengeSubmission
       summary: Create a verification from challenge
       deprecated: true
@@ -316,7 +316,7 @@ paths:
 
   /did-registrar/dids:
     post:
-      tags: [ "DID Registrar" ]
+      tags: ["DID Registrar"]
       operationId: createManagedDid
       summary: Create DID with the DID Document template where keys are managed by PrismAgent.
       description: Create DID with the DID Document template where keys are managed by PrismAgent.
@@ -342,7 +342,7 @@ paths:
 
   /did-registrar/dids/{didRef}/publications:
     post:
-      tags: [ "DID Registrar" ]
+      tags: ["DID Registrar"]
       operationId: publishManagedDid
       summary: Publish DID stored in PrismAgent wallet to blockchain
       description: Publish DID stored in PrismAgent wallet to blockchain
@@ -453,7 +453,7 @@ paths:
                 $ref: "./pollux/schemas.yaml#/components/schemas/W3CSchema"
         "404":
           description: Schema is not found by id
-## Issue Credential Protocol
+  ## Issue Credential Protocol
 
   /issue-credentials/credential-offers:
     post:
@@ -466,7 +466,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: ./pollux/schemas.yaml#/components/schemas/CreateIssueCredentialRecordRequest                    
+              $ref: ./pollux/schemas.yaml#/components/schemas/CreateIssueCredentialRecordRequest
       responses:
         "201":
           description: The issue credential record
@@ -480,7 +480,7 @@ paths:
             application/json:
               schema:
                 $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
-  
+
   /issue-credentials/records:
     get:
       tags: ["Issue Credentials Protocol"]
@@ -520,7 +520,7 @@ paths:
             application/json:
               schema:
                 $ref: "./pollux/schemas.yaml#/components/schemas/ErrorResponse"
-  
+
   /issue-credentials/records/{recordId}/accept-offer:
     post:
       tags: ["Issue Credentials Protocol"]
@@ -534,13 +534,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: ./pollux/schemas.yaml#/components/schemas/IssueCredentialRecord          
+                $ref: ./pollux/schemas.yaml#/components/schemas/IssueCredentialRecord
         "404":
           description: There is no issue credential record maatching the given 'recordId'.
           content:
             application/json:
               schema:
-                $ref: "./pollux/schemas.yaml#/components/schemas/ErrorResponse"      
+                $ref: "./pollux/schemas.yaml#/components/schemas/ErrorResponse"
 
   /issue-credentials/records/{recordId}/issue-credential:
     post:
@@ -555,14 +555,14 @@ paths:
           content:
             application/json:
               schema:
-                $ref: ./pollux/schemas.yaml#/components/schemas/IssueCredentialRecord          
+                $ref: ./pollux/schemas.yaml#/components/schemas/IssueCredentialRecord
         "404":
           description: There is no issue credential record maatching the given 'recordId'.
           content:
             application/json:
               schema:
-                $ref: "./pollux/schemas.yaml#/components/schemas/ErrorResponse"      
-##
+                $ref: "./pollux/schemas.yaml#/components/schemas/ErrorResponse"
+  ##
 
   /issue-credentials/credentials:
     post:
@@ -884,6 +884,14 @@ paths:
     post:
       tags: ["Present Proof"]
       operationId: sendPresentation
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Unique identifier of the presentation
+          example: "06e126d1-fa44-4882-a243-1e326fbe21db"
       requestBody:
         required: true
         content:
