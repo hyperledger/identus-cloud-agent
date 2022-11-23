@@ -329,7 +329,7 @@ private class PresentationServiceImpl(
   }
 
   private[this] def createDidCommRequestPresentation(
-      presentation: String, // FIX ME
+      presentation: String,
       thid: UUID,
       subjectId: String
   ): RequestPresentation = {
