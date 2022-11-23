@@ -21,6 +21,8 @@ trait ConnectionService {
 
   def receiveConnectionRequest(request: ConnectionRequest): IO[ConnectionError, Option[ConnectionRecord]]
 
+  def acceptConnectionRequest(recordId: UUID): IO[ConnectionError, Option[ConnectionRecord]]
+
   def markConnectionResponseSent(recordId: UUID): IO[ConnectionError, Option[ConnectionRecord]]
 
   def receiveConnectionResponse(response: ConnectionResponse): IO[ConnectionError, Option[ConnectionRecord]]

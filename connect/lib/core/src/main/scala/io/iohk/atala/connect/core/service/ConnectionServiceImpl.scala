@@ -31,7 +31,7 @@ private class ConnectionServiceImpl(
           id = recordId,
           createdAt = Instant.now,
           updatedAt = None,
-          thid = None,
+          thid = Some(recordId),
           label = label,
           role = ConnectionRecord.Role.Inviter,
           protocolState = ConnectionRecord.ProtocolState.InvitationGenerated,
@@ -77,7 +77,9 @@ private class ConnectionServiceImpl(
           id = UUID.randomUUID(),
           createdAt = Instant.now,
           updatedAt = None,
-          thid = None,
+          thid = Some(
+            UUID.fromString(invitation.id)
+          ), // TODO: According to the standard, we should rather use 'pthid' and not 'thid'
           label = None,
           role = ConnectionRecord.Role.Invitee,
           protocolState = ConnectionRecord.ProtocolState.InvitationReceived,
@@ -103,7 +105,7 @@ private class ConnectionServiceImpl(
       record <- ZIO
         .fromOption(maybeRecord)
         .mapError(_ => RecordIdNotFound(recordId))
-      request = createDidCommConnectionRequest(record.invitation)
+      request = createDidCommConnectionRequest(record)
       count <- connectionRepository
         .updateWithConnectionRequest(recordId, request, ProtocolState.ConnectionRequestPending)
         .mapError(RepositoryError.apply)
@@ -132,6 +134,26 @@ private class ConnectionServiceImpl(
           case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
         }
         .mapError(RepositoryError.apply)
+      record <- connectionRepository
+        .getConnectionRecord(record.id)
+        .mapError(RepositoryError.apply)
+    } yield record
+
+  override def acceptConnectionRequest(recordId: UUID): IO[ConnectionError, Option[ConnectionRecord]] =
+    for {
+      maybeRecord <- connectionRepository
+        .getConnectionRecord(recordId)
+        .mapError(RepositoryError.apply)
+      record <- ZIO
+        .fromOption(maybeRecord)
+        .mapError(_ => RecordIdNotFound(recordId))
+      response = createDidCommConnectionResponse(record)
+      count <- connectionRepository
+        .updateWithConnectionResponse(recordId, response, ProtocolState.ConnectionResponsePending)
+        .mapError(RepositoryError.apply)
+      _ <- count match
+        case 1 => ZIO.succeed(())
+        case n => ZIO.fail(RecordIdNotFound(recordId))
       record <- connectionRepository
         .getConnectionRecord(record.id)
         .mapError(RepositoryError.apply)
@@ -167,14 +189,17 @@ private class ConnectionServiceImpl(
     )
   }
 
-  private[this] def createDidCommConnectionRequest(invitation: Invitation): ConnectionRequest = {
+  private[this] def createDidCommConnectionRequest(record: ConnectionRecord): ConnectionRequest = {
     ConnectionRequest(
       from = didComm.myDid,
-      to = invitation.from,
-      thid = Some(invitation.id),
+      to = record.invitation.from,
+      thid = record.thid.map(_.toString),
       body = ConnectionRequest.Body(goal_code = Some("Connect"))
     )
   }
+
+  private[this] def createDidCommConnectionResponse(record: ConnectionRecord): ConnectionResponse =
+    ConnectionResponse.makeResponseFromRequest(record.connectionRequest.get.makeMessage) // TODO: get
 
   private[this] def updateConnectionProtocolState(
       recordId: UUID,
