@@ -7,9 +7,7 @@ import zio.*
 
 package object w3c {
 
-  extension (didData: DIDData) {
-    def repr: DIDDocumentRepr = ???
-  }
+  import W3CModelHelper.*
 
   def makeW3CResolver(service: DIDService)(did: String): UIO[DIDResolutionRepr] = {
     val didData = for {
@@ -27,7 +25,7 @@ package object w3c {
           _.toRight(DIDResolutionErrorRepr.NotFound)
         )
         .absolve
-    } yield didData.repr
+    } yield didData.toW3C
 
     didData
       .foldZIO(
@@ -36,7 +34,8 @@ package object w3c {
           ZIO.succeed(
             DIDResolutionRepr(
               didDocument = Some(didDocument),
-              didDocumentMetadata = Some(DIDDocumentMetadataRepr(deactivated = Some(false))) // TODO: handle deactivated DIDs
+              didDocumentMetadata =
+                Some(DIDDocumentMetadataRepr(deactivated = Some(false))) // TODO: handle deactivated DIDs
             )
           )
       )
