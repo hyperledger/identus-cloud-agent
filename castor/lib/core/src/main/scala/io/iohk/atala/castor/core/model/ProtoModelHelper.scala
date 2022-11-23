@@ -115,10 +115,7 @@ private[castor] trait ProtoModelHelper {
   extension (didData: node_models.DIDData) {
     def toDomain: Either[String, DIDData] = {
       for {
-        canonicalDID <- PrismDID.buildCanonicalFromSuffix(didData.id).flatMap {
-          case d: CanonicalPrismDID => Right(d)
-          case _                    => Left(s"id on DIDData must be in canonical form: ${didData.id}")
-        }
+        canonicalDID <- PrismDID.buildCanonicalFromSuffix(didData.id)
         allKeys <- didData.publicKeys.traverse(_.toDomain)
       } yield DIDData(
         id = canonicalDID,
