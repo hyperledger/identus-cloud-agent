@@ -128,6 +128,12 @@ object Modules {
       .unit
       .provideSomeLayer(AppModule.credentialServiceLayer)
 
+  val connectDidCommExchangesJob: RIO[DidComm, Unit] =
+    ConnectBackgroundJobs.didCommExchanges
+      .repeat(Schedule.spaced(10.seconds))
+      .unit
+      .provideSomeLayer(AppModule.connectionServiceLayer)
+
   def webServerProgram(
       jsonString: String
   ): ZIO[DidComm with CredentialService, MercuryThrowable, Unit] = {

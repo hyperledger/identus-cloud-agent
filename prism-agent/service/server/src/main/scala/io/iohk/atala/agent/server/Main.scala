@@ -73,9 +73,14 @@ object Main extends ZIOAppDefault {
         .debug
         .fork
 
+      connectDidCommExchangesFiber <- Modules.connectDidCommExchangesJob
+        .provide(didCommLayer)
+        .debug
+        .fork
+
       didCommServiceFiber <- Modules
         .didCommServiceEndpoint(didCommServicePort)
-        .provide(didCommLayer, AppModule.credentialServiceLayer)
+        .provide(didCommLayer, AppModule.credentialServiceLayer, AppModule.connectionServiceLayer)
         .debug
         .fork
 
