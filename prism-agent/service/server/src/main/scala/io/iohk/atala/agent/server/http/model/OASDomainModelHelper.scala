@@ -34,6 +34,7 @@ import io.iohk.atala.agent.openapi.model.ConnectionInvitation
 import zio.ZIO
 import io.iohk.atala.agent.server.http.model.HttpServiceError.InvalidPayload
 import java.util.UUID
+import io.iohk.atala.connect.core.model.ConnectionRecord.Role
 
 trait OASDomainModelHelper {
 
@@ -175,8 +176,18 @@ trait OASDomainModelHelper {
       self = "Connection",
       kind = s"/connections/${domain.id.toString}",
       connectionId = domain.id,
-      myDid = None,
-      theirDid = None,
+      myDid = domain.role match
+        case Role.Inviter =>
+          domain.connectionResponse.map(_.from).orElse(domain.connectionRequest.map(_.to)).map(_.value)
+        case Role.Invitee =>
+          domain.connectionResponse.map(_.to).orElse(domain.connectionRequest.map(_.from)).map(_.value)
+      ,
+      theirDid = domain.role match
+        case Role.Inviter =>
+          domain.connectionResponse.map(_.to).orElse(domain.connectionRequest.map(_.from)).map(_.value)
+        case Role.Invitee =>
+          domain.connectionResponse.map(_.from).orElse(domain.connectionRequest.map(_.to)).map(_.value)
+      ,
       state = domain.protocolState.toString,
       createdAt = domain.createdAt.atOffset(ZoneOffset.UTC),
       updatedAt = domain.updatedAt.map(_.atOffset(ZoneOffset.UTC)),
