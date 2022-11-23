@@ -80,7 +80,7 @@ class DIDOperationValidator(config: Config) {
 
   private def validateKeyIdRegex(operation: PrismDIDOperation): Either[DIDOperationError, Unit] = {
     operation match {
-      case PrismDIDOperation.Create(publicKeys, internalKeys) =>
+      case PrismDIDOperation.Create(publicKeys, internalKeys, _) =>
         val ids = publicKeys.map(_.id) ++ internalKeys.map(_.id)
         val invalidIds = ids.filterNot(id => KEY_ID_RE.pattern.matcher(id).matches())
         if (invalidIds.isEmpty) Right(())
