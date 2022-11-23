@@ -9,6 +9,7 @@ info:
 
 servers:
   - url: "https://k8s-dev.atalaprism.io/mediator/"
+  - url: "http://localhost/mediator/"
 
 tags:
   - name: Mailbox Mediator

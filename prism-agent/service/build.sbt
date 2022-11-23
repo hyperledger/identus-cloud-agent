@@ -9,7 +9,7 @@ inThisBuild(
   Seq(
     organization := "io.iohk.atala",
     scalaVersion := "3.2.0",
-    apiBaseDirectory := baseDirectory.value / "../api",
+    apiBaseDirectory := baseDirectory.value / "api",
     fork := true,
     run / connectInput := true,
     versionScheme := Some("semver-spec"),
