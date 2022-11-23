@@ -58,7 +58,7 @@ lazy val D = new {
   val peerDidcommx = Def.setting("org.didcommx" % "peerdid" % "0.3.0")
   val didScala = Def.setting("app.fmgp" %% "did" % "0.0.0+113-61efa271-SNAPSHOT")
 
-  val jwk = Def.setting("com.nimbusds" % "nimbus-jose-jwt" % "9.25.4")
+  val jwk = Def.setting("com.nimbusds" % "nimbus-jose-jwt" % "9.25.6")
 
   // For munit https://scalameta.org/munit/docs/getting-started.html#scalajs-setup
   val munit = Def.setting("org.scalameta" %% "munit" % V.munit % Test)
