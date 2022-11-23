@@ -7,10 +7,10 @@ import io.iohk.atala.castor.core.util.DIDOperationValidator.Config
 import zio.*
 
 object DIDOperationValidator {
-  final case class Config(publicKeyLimit: Int)
+  final case class Config(publicKeyLimit: Int, serviceLimit: Int)
 
   object Config {
-    val default: Config = Config(publicKeyLimit = 50)
+    val default: Config = Config(publicKeyLimit = 50, serviceLimit = 50)
   }
 
   def layer(config: Config = Config.default): ULayer[DIDOperationValidator] =
@@ -40,15 +40,13 @@ class DIDOperationValidator(config: Config) {
     }
   }
 
-  // TODO: bring back when service endpoint is added in Node
   private def validateMaxServiceAccess(operation: PrismDIDOperation): Either[DIDOperationError, Unit] = {
-//    operation match {
-//      case op: PrismDIDOperation.Create =>
-//        val serviceCount = op.document.services.length
-//        if (serviceCount <= config.serviceLimit) Right(())
-//        else Left(DIDOperationError.TooManyDidServiceAccess(config.serviceLimit, Some(serviceCount)))
-//    }
-    Right(())
+    operation match {
+      case op: PrismDIDOperation.Create =>
+        val serviceCount = op.services.length
+        if (serviceCount <= config.serviceLimit) Right(())
+        else Left(DIDOperationError.TooManyDidServiceAccess(config.serviceLimit, Some(serviceCount)))
+    }
   }
 
   private def validateUniquePublicKeyId(operation: PrismDIDOperation): Either[DIDOperationError, Unit] = {
@@ -60,20 +58,18 @@ class DIDOperationValidator(config: Config) {
     }
   }
 
-  // TODO: bring back when service endpoint is added in Node
   private def validateUniqueServiceId(operation: PrismDIDOperation): Either[DIDOperationError, Unit] = {
-//    operation match {
-//      case op: PrismDIDOperation.Create =>
-//        val ids = op.document.services.map(_.id)
-//        if (ids.distinct.length == ids.length) Right(())
-//        else Left(DIDOperationError.InvalidArgument("id for services is not unique"))
-//    }
-    Right(())
+    operation match {
+      case op: PrismDIDOperation.Create =>
+        val ids = op.services.map(_.id)
+        if (ids.distinct.length == ids.length) Right(())
+        else Left(DIDOperationError.InvalidArgument("id for services is not unique"))
+    }
   }
 
   private def validateKeyIdRegex(operation: PrismDIDOperation): Either[DIDOperationError, Unit] = {
     operation match {
-      case PrismDIDOperation.Create(publicKeys, internalKeys) =>
+      case PrismDIDOperation.Create(publicKeys, internalKeys, _) =>
         val ids = publicKeys.map(_.id) ++ internalKeys.map(_.id)
         val invalidIds = ids.filterNot(id => KEY_ID_RE.pattern.matcher(id).matches())
         if (invalidIds.isEmpty) Right(())

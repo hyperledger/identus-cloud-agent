@@ -1,16 +1,18 @@
 package io.iohk.atala.castor.core.util
 
-import java.net.URI
+import java.net.{URI, URL}
 import io.iohk.atala.shared.models.HexStrings.*
 import io.iohk.atala.shared.models.Base64UrlStrings.*
 import io.iohk.atala.castor.core.model.did.{
-  InternalKeyPurpose,
-  VerificationRelationship,
   EllipticCurve,
+  InternalKeyPurpose,
   InternalPublicKey,
   PrismDIDOperation,
   PublicKey,
-  PublicKeyData
+  PublicKeyData,
+  Service,
+  ServiceType,
+  VerificationRelationship
 }
 import io.iohk.atala.castor.core.model.error.DIDOperationError
 import io.iohk.atala.castor.core.util.DIDOperationValidator.Config
@@ -24,13 +26,17 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
     suite("DIDOperationValidator")(prismDIDValidationSpec) @@ TestAspect.samples(20)
 
   private val prismDIDValidationSpec = {
-    def createPrismDIDOperation(publicKeys: Seq[PublicKey] = Nil, internalKeys: Seq[InternalPublicKey] = Nil) =
-      PrismDIDOperation.Create(publicKeys = publicKeys, internalKeys = internalKeys)
+    def createPrismDIDOperation(
+        publicKeys: Seq[PublicKey] = Nil,
+        internalKeys: Seq[InternalPublicKey] = Nil,
+        services: Seq[Service] = Nil
+    ) =
+      PrismDIDOperation.Create(publicKeys = publicKeys, internalKeys = internalKeys, services = services)
 
     suite("PrismDID validation")(
       test("accept valid CreateOperation") {
         val op = createPrismDIDOperation()
-        assert(DIDOperationValidator(Config(50)).validate(op))(isRight)
+        assert(DIDOperationValidator(Config(50, 50)).validate(op))(isRight)
       },
       test("reject CreateOperation on too many DID publicKey access") {
         val publicKeyData = PublicKeyData.ECKeyData(
@@ -53,7 +59,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
           )
         )
         val op = createPrismDIDOperation(publicKeys = publicKeys, internalKeys = internalKeys)
-        assert(DIDOperationValidator(Config(15)).validate(op))(
+        assert(DIDOperationValidator(Config(15, 15)).validate(op))(
           isLeft(isSubtype[DIDOperationError.TooManyDidPublicKeyAccess](anything))
         )
       },
@@ -78,7 +84,33 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
           )
         )
         val op = createPrismDIDOperation(publicKeys = publicKeys, internalKeys = internalKeys)
-        assert(DIDOperationValidator(Config(50)).validate(op))(
+        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
+          isLeft(isSubtype[DIDOperationError.InvalidArgument](anything))
+        )
+      },
+      test("reject CreateOperation on too many service access") {
+        val services = (1 to 20).map(i =>
+          Service(
+            id = s"service$i",
+            `type` = ServiceType.MediatorService,
+            serviceEndpoint = URI.create("http://example.com")
+          )
+        )
+        val op = createPrismDIDOperation(services = services)
+        assert(DIDOperationValidator(Config(15, 15)).validate(op))(
+          isLeft(isSubtype[DIDOperationError.TooManyDidServiceAccess](anything))
+        )
+      },
+      test("reject CreateOperation on duplicated service id") {
+        val services = (1 to 3).map(i =>
+          Service(
+            id = s"service0",
+            `type` = ServiceType.MediatorService,
+            serviceEndpoint = URI.create("http://example.com")
+          )
+        )
+        val op = createPrismDIDOperation(services = services)
+        assert(DIDOperationValidator(Config(15, 15)).validate(op))(
           isLeft(isSubtype[DIDOperationError.InvalidArgument](anything))
         )
       },
@@ -96,7 +128,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
           )
         )
         val op = createPrismDIDOperation(publicKeys = publicKeys)
-        assert(DIDOperationValidator(Config(50)).validate(op))(
+        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
           isLeft(isSubtype[DIDOperationError.InvalidArgument](anything))
         )
       }
