@@ -2,12 +2,13 @@ openapi: 3.0.1
 info:
   title: PrismAgent OpenAPI specification
   description: OpenAPI specification for Decentralized Identifiers (DID) Operations
-  version: 1.0.0
+  version: 0.1.0
   contact:
     name: Core DID
     email: atala-coredid@iohk.io
 servers:
   - url: "https://k8s-dev.atalaprism.io/prism-agent/"
+  - url: "http://localhost/prism-agent"
 
 components:
   securitySchemes:
