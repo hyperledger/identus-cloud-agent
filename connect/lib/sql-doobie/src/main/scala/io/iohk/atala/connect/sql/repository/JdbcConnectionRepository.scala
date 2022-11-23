@@ -19,7 +19,7 @@ import java.time.Instant
 
 class JdbcConnectionRepository(xa: Transactor[Task]) extends ConnectionRepository[Task] {
 
-  given logHandler: LogHandler = LogHandler.jdkLogHandler
+  // given logHandler: LogHandler = LogHandler.jdkLogHandler
 
   given uuidGet: Get[UUID] = Get[String].map(UUID.fromString)
   given uuidPut: Put[UUID] = Put[String].contramap(_.toString())
