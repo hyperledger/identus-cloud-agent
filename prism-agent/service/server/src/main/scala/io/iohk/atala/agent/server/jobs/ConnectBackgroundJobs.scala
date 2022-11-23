@@ -28,19 +28,10 @@ object ConnectBackgroundJobs {
   private[this] def performExchange(
       record: ConnectionRecord
   ): ZIO[DidComm & ConnectionService, Throwable, Unit] = {
+    import Role._
+    import ProtocolState._
     val exchange = record match {
-      case ConnectionRecord(
-            id,
-            _,
-            _,
-            _,
-            _,
-            Role.Invitee,
-            ProtocolState.ConnectionRequestPending,
-            _,
-            Some(request),
-            _
-          ) =>
+      case ConnectionRecord(id, _, _, _, _, Invitee, ConnectionRequestPending, _, Some(request), _) =>
         for {
           didComm <- ZIO.service[DidComm]
           _ <- sendMessage(request.makeMessage)
@@ -48,18 +39,7 @@ object ConnectBackgroundJobs {
           _ <- connectionService.markConnectionRequestSent(id)
         } yield ()
 
-      case ConnectionRecord(
-            id,
-            _,
-            _,
-            _,
-            _,
-            Role.Inviter,
-            ProtocolState.ConnectionResponsePending,
-            _,
-            _,
-            Some(response)
-          ) =>
+      case ConnectionRecord(id, _, _, _, _, Inviter, ConnectionResponsePending, _, _, Some(response)) =>
         for {
           didComm <- ZIO.service[DidComm]
           _ <- sendMessage(response.makeMessage)
