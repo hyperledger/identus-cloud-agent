@@ -54,7 +54,7 @@ lazy val D = new {
   val circeParser = Def.setting("io.circe" %% "circe-parser" % V.circe)
 
   // Test DID comm
-  val didcommx = Def.setting("org.didcommx" % "didcomm" % "0.3.1")
+  val didcommx = Def.setting("org.didcommx" % "didcomm" % "0.3.2")
   val peerDidcommx = Def.setting("org.didcommx" % "peerdid" % "0.3.0")
   val didScala = Def.setting("app.fmgp" %% "did" % "0.0.0+113-61efa271-SNAPSHOT")
 
