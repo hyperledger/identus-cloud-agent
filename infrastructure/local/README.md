@@ -1,11 +1,25 @@
-# How-to
+# Running locally
 
-Set `ATALA_GITHUB_TOKEN` environment variable that has Github `read:packages` permission.
+This folder contains scripts to run the Atala `building-block` stack for end-user usage - without building any local components.
 
-Use the `run.sh` provided 
+All images will be pulled from a remote repository and the `.env` file controls the versions of these images.
 
-From root of project
+> If you want to run the `building-block` stack for development purposes - please see the `infrastructure/dev`  folder. 
 
-```bash
-./infrastructure/local/run.sh
-```
+**Running using the scripts in this directory does not create a production-ready or secure environment. It is designed to allow easy development and should not be used to run a production instance**
+
+Please ensure you have set the `ATALA_GITHUB_TOKEN` environment variable. 
+
+The value of this variable must be a Github token generated with the  `read:packages` permission set on the `building-block` repository.
+
+## Example usage
+
+To run the Atala `building-block` stack - execute the `run.sh` script. This can be run from within the directory or at the root of the source code project:
+
+`./infrastructure/local/run.sh` 
+
+## Scripts
+
+| Name   | Purpose                              | Notes                                                                    |
+| ------ | ------------------------------------ | ------------------------------------------------------------------------ |
+| run.sh | Run the Atala `building-block` stack | Runs using docker-compose and versions are controlled by the `.env` file |

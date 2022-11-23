@@ -2,6 +2,12 @@
 
 set -e
 
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
+# Set working directory
+cd ${SCRIPT_DIR}
+cd ../../
+
 echo "--------------------------------------"
 echo "Publishing libraries"
 echo "--------------------------------------"
@@ -19,3 +25,5 @@ echo "--------------------------------------"
 cd mercury/mercury-mediator && sbt "project mediator; docker:publishLocal" && cd -
 cd prism-agent/service && sbt docker:publishLocal && cd -
 cd iris/service && sbt docker:publishLocal && cd -
+
+cd ${SCRIPT_DIR}

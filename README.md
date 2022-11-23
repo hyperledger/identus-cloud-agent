@@ -21,6 +21,14 @@
 
 * [OpenAPI docs](openapi)
 
+## Running Locally
+
+Instructions for running the `building-block` stack locally can be found here: [Running locally](infrastructure/local/README.md)
+
+## Developing
+
+Instructions for running the `building-block` stack for development purposes can be found here: [Developing locally](infrastructure/local/README.md)
+
 ## Contributing
 
 Read through our [contributing guidelines][contributing] to learn about our submission process, coding rules and more.
