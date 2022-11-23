@@ -88,7 +88,7 @@ lazy val mediator = project
     githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN"),
     // ### Build Docker Image ###
     Docker / maintainer := "atala-coredid@iohk.io",
-    Docker / dockerRepository := Some("atala-prism.io"),
+    Docker / dockerRepository := Some("ghcr.io"),
     Docker / dockerUsername := Some("input-output-hk"),
     Docker / githubOwner := "atala-prism-building-blocks",
     Docker / dockerUpdateLatest := true,
