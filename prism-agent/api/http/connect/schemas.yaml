@@ -15,17 +15,27 @@ components:
           type: string
           example: "Peter"
 
+    AcceptConnectionInvitationRequest:
+      type: object
+      required:
+        - invitation
+      properties:
+        invitation:
+          type: string
+          example: "eyJAaWQiOiIzZmE4NWY2NC01NzE3LTQ1NjItYjNmYy0yYzk2M2Y2NmFmYTYiLCJAdHlwZSI6Imh0dHBzOi8vZGlkY29tbS5vcmcvbXktZmFtaWx5LzEuMC9teS1tZXNzYWdlLXR5cGUiLCJkaWQiOiJXZ1d4cXp0ck5vb0c5MlJYdnhTVFd2IiwiaW1hZ2VVcmwiOiJodHRwOi8vMTkyLjE2OC41Ni4xMDEvaW1nL2xvZ28uanBnIiwibGFiZWwiOiJCb2IiLCJyZWNpcGllbnRLZXlzIjpbIkgzQzJBVnZMTXY2Z21NTmFtM3VWQWpacGZrY0pDd0R3blpuNnozd1htcVBWIl0sInJvdXRpbmdLZXlzIjpbIkgzQzJBVnZMTXY2Z21NTmFtM3VWQWpacGZrY0pDd0R3blpuNnozd1htcVBWIl0sInNlcnZpY2VFbmRwb2ludCI6Imh0dHA6Ly8xOTIuMTY4LjU2LjEwMTo4MDIwIn0="
+
     Connection:
       type: object
       allOf:
-        - $ref: '#/components/schemas/CreateConnectionRequest'
-        - type: object        
+        - $ref: "#/components/schemas/CreateConnectionRequest"
+        - type: object
           required:
             - self
             - kind
             - connectionId
             - state
             - createdAt
+            - invitation
           properties:
             self:
               type: string
@@ -35,6 +45,7 @@ components:
               example: ConnectionState
             connectionId:
               type: string
+              format: uuid
               example: "12345-9876"
             myDid:
               type: string
@@ -54,10 +65,14 @@ components:
               format: date-time
               example: 2021-12-31T13:59:60Z
             invitation:
-              $ref: '#/components/schemas/ConnectionInvitation'
-    
+              $ref: "#/components/schemas/ConnectionInvitation"
+
     ConnectionCollection:
       type: object
+      required:
+        - self
+        - kind
+        - contents
       properties:
         self:
           type: string
@@ -69,39 +84,66 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Connection"
-            
+
     ConnectionInvitation:
       type: object
       required:
-        - "@id"
-        - "@type"
+        - id
+        - type
+        - from
+        - invitationUrl
       properties:
-        "@id":
+        id:
           type: string
+          format: uuid
+          description: The invitation identifier used as parent thread ID (pthid) for the response message that follows.
           example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
-        "@type":
+        type:
           type: string
-          example: "https://didcomm.org/connections/1.0/invitation"
-        did:
+          description: The DIDComm Message Type URI (MTURI) the invitation message coplies with.
+          example: "https://didcomm.org/out-of-band/2.0/invitation"
+        from:
           type: string
-          description: not required if serviceEndpoint is present
+          description: The DID representing the sender to be used by recipients for future interactions.
           example: "did:prism:1234457"
-        label:
-          type: string
-          example: "Bob from Bank ABC"
-        recipientKeys:
-          type: array
-          items:
-            type: string
-          example: ["abcd123"]
-        routingKeys:
-          type: array
-          items:
-            type: string
-          example: ["abcd123"]
-        serviceEndpoint:
-          type: string
-          example: "http://localhost:8020"
         invitationUrl:
           type: string
-          example: http://localhost:8020/invite?c_i=eyJAaWQiOiIzZmE4NWY2NC01NzE3LTQ1NjItYjNmYy0yYzk2M2Y2NmFmYTYiLCJAdHlwZSI6Imh0dHBzOi8vZGlkY29tbS5vcmcvbXktZmFtaWx5LzEuMC9teS1tZXNzYWdlLXR5cGUiLCJkaWQiOiJXZ1d4cXp0ck5vb0c5MlJYdnhTVFd2IiwiaW1hZ2VVcmwiOiJodHRwOi8vMTkyLjE2OC41Ni4xMDEvaW1nL2xvZ28uanBnIiwibGFiZWwiOiJCb2IiLCJyZWNpcGllbnRLZXlzIjpbIkgzQzJBVnZMTXY2Z21NTmFtM3VWQWpacGZrY0pDd0R3blpuNnozd1htcVBWIl0sInJvdXRpbmdLZXlzIjpbIkgzQzJBVnZMTXY2Z21NTmFtM3VWQWpacGZrY0pDd0R3blpuNnozd1htcVBWIl0sInNlcnZpY2VFbmRwb2ludCI6Imh0dHA6Ly8xOTIuMTY4LjU2LjEwMTo4MDIwIn0=
+          description: The invitation message encoded as a URL.
+          example: https://domain.com/path?_oob=eyJAaWQiOiIzZmE4NWY2NC01NzE3LTQ1NjItYjNmYy0yYzk2M2Y2NmFmYTYiLCJAdHlwZSI6Imh0dHBzOi8vZGlkY29tbS5vcmcvbXktZmFtaWx5LzEuMC9teS1tZXNzYWdlLXR5cGUiLCJkaWQiOiJXZ1d4cXp0ck5vb0c5MlJYdnhTVFd2IiwiaW1hZ2VVcmwiOiJodHRwOi8vMTkyLjE2OC41Ni4xMDEvaW1nL2xvZ28uanBnIiwibGFiZWwiOiJCb2IiLCJyZWNpcGllbnRLZXlzIjpbIkgzQzJBVnZMTXY2Z21NTmFtM3VWQWpacGZrY0pDd0R3blpuNnozd1htcVBWIl0sInJvdXRpbmdLZXlzIjpbIkgzQzJBVnZMTXY2Z21NTmFtM3VWQWpacGZrY0pDd0R3blpuNnozd1htcVBWIl0sInNlcnZpY2VFbmRwb2ludCI6Imh0dHA6Ly8xOTIuMTY4LjU2LjEwMTo4MDIwIn0=
+
+    ErrorResponse:
+      type: object
+      description: An RFC-7807 compliant data structure for reporting errors to the client
+      required:
+        - type
+        - title
+        - status
+        - instance
+      properties:
+        type:
+          type: string
+          description: A URI reference that identifies the problem type.
+          example: https://example.org/doc/#model-MalformedEmail
+        title:
+          type: string
+          example: "Malformed email"
+          description: |-
+            A short, human-readable summary of the problem type. It does not
+            change from occurrence to occurrence of the problem.
+        status:
+          type: integer
+          format: int32
+          example: 400
+          description: |-
+            The HTTP status code for this occurrence of the problem.
+        detail:
+          type: string
+          description: |-
+            A human-readable explanation specific to this occurrence of the problem.
+          example: "The received '{}à!è@!.b}' email does not conform to the email format"
+        instance:
+          type: string
+          example: "/problems/d914e"
+          description: |-
+            A URI reference that identifies the specific occurrence of the problem.
+            It may or may not yield further information if dereferenced.

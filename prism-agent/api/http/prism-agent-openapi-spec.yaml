@@ -948,10 +948,7 @@ paths:
         content:
           application/json:
             schema:
-              properties:
-                label:
-                  type: string
-                  example: "Bob from Bank ABC"
+              $ref: "./connect/schemas.yaml#/components/schemas/CreateConnectionRequest"
 
       responses:
         "201":
@@ -960,6 +957,13 @@ paths:
             application/json:
               schema:
                 $ref: "./connect/schemas.yaml#/components/schemas/Connection"
+        "422":
+          description: The connection record creation failed.
+          content:
+            application/json:
+              schema:
+                $ref: "./connect/schemas.yaml#/components/schemas/ErrorResponse"
+
     get:
       tags: ["Connections Management"]
       operationId: getConnections
@@ -971,6 +975,13 @@ paths:
             application/json:
               schema:
                 $ref: "./connect/schemas.yaml#/components/schemas/ConnectionCollection"
+        "500":
+          description: Retrieving the connection records failed for an unexpected reason.
+          content:
+            application/json:
+              schema:
+                $ref: "./connect/schemas.yaml#/components/schemas/ErrorResponse"       
+                
   /connections/{connectionId}:
     get:
       tags: ["Connections Management"]
@@ -986,7 +997,11 @@ paths:
               schema:
                 $ref: "./connect/schemas.yaml#/components/schemas/Connection"
         "404":
-          description: Connection state record not found for given `connectionId`
+          description: There is no issue credential record matching the given 'recordId'.
+          content:
+            application/json:
+              schema:
+                $ref: "./connect/schemas.yaml#/components/schemas/ErrorResponse"
     delete:
       tags: ["Connections Management"]
       parameters:
@@ -999,10 +1014,11 @@ paths:
           description: Successful delete
         "404":
           description: Connection state record not found for given `connectionId`
-  /connections/accept:
+
+  /connection-invitations:
     post:
       tags: ["Connections Management"]
-      operationId: receiveConnectionInvitation
+      operationId: acceptConnectionInvitation
       summary:  Accepts externally received invitation.
       description: Creates new connection state record in `pending` state. It is assumed that application would first decode and validate the invitation. When it is accepted in the application side, it should be submitted in raw format to this API.
       requestBody:
@@ -1010,10 +1026,8 @@ paths:
         content:
           application/json:
             schema:
-              properties:
-                invitation:
-                  type: string
-                  example: eyJAaWQiOiIzZmE4NWY2NC01NzE3LTQ1NjItYjNmYy0yYzk2M2Y2NmFmYTYiLCJAdHlwZSI6Imh0dHBzOi8vZGlkY29tbS5vcmcvbXktZmFtaWx5LzEuMC9teS1tZXNzYWdlLXR5cGUiLCJkaWQiOiJXZ1d4cXp0ck5vb0c5MlJYdnhTVFd2IiwiaW1hZ2VVcmwiOiJodHRwOi8vMTkyLjE2OC41Ni4xMDEvaW1nL2xvZ28uanBnIiwibGFiZWwiOiJCb2IiLCJyZWNpcGllbnRLZXlzIjpbIkgzQzJBVnZMTXY2Z21NTmFtM3VWQWpacGZrY0pDd0R3blpuNnozd1htcVBWIl0sInJvdXRpbmdLZXlzIjpbIkgzQzJBVnZMTXY2Z21NTmFtM3VWQWpacGZrY0pDd0R3blpuNnozd1htcVBWIl0sInNlcnZpY2VFbmRwb2ludCI6Imh0dHA6Ly8xOTIuMTY4LjU2LjEwMTo4MDIwIn0=
+              $ref: "./connect/schemas.yaml#/components/schemas/AcceptConnectionInvitationRequest"
+
       responses:
         "200":
           description: Invitation successfully accepted.
@@ -1021,3 +1035,9 @@ paths:
             application/json:
               schema:
                 $ref: "./connect/schemas.yaml#/components/schemas/Connection"
+        "500":
+          description: Storing the connection invitation failed for an unexpected reason.
+          content:
+            application/json:
+              schema:
+                $ref: "./connect/schemas.yaml#/components/schemas/ErrorResponse"       
