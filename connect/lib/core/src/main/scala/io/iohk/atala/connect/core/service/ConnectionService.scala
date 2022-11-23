@@ -13,7 +13,7 @@ trait ConnectionService {
 
   def createConnectionInvitation(label: Option[String]): IO[ConnectionError, ConnectionRecord]
 
-  def receiveConnectionInvitation(invitation: Invitation): IO[ConnectionError, ConnectionRecord]
+  def receiveConnectionInvitation(invitation: String): IO[ConnectionError, ConnectionRecord]
 
   def acceptConnectionInvitation(recordId: UUID): IO[ConnectionError, Option[ConnectionRecord]]
 

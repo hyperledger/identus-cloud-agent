@@ -15,6 +15,7 @@ import java.time.Instant
 import java.rmi.UnexpectedException
 import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
 import io.iohk.atala.mercury.protocol.connection.ConnectionResponse
+import io.iohk.atala.shared.utils.Base64Utils
 
 private class ConnectionServiceImpl(
     connectionRepository: ConnectionRepository[Task],
@@ -66,8 +67,11 @@ private class ConnectionServiceImpl(
 
   override def deleteConnectionRecord(recordId: UUID): IO[ConnectionError, Int] = ???
 
-  override def receiveConnectionInvitation(invitation: Invitation): IO[ConnectionError, ConnectionRecord] =
+  override def receiveConnectionInvitation(invitation: String): IO[ConnectionError, ConnectionRecord] =
     for {
+      invitation <- ZIO
+        .fromEither(io.circe.parser.decode[Invitation](Base64Utils.decodeUrlToString(invitation)))
+        .mapError(err => InvitationParsingError(err))
       record <- ZIO.succeed(
         ConnectionRecord(
           id = UUID.randomUUID(),

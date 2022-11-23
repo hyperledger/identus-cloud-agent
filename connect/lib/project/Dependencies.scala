@@ -8,6 +8,7 @@ object Dependencies {
     val iris = "0.1.0"
     val mercury = "0.7.0"
     val flyway = "9.7.0"
+    val shared = "0.2.0"
   }
 
   private lazy val zio = "dev.zio" %% "zio" % Versions.zio
@@ -20,8 +21,10 @@ object Dependencies {
 
   private lazy val mercuryProtocolConnection = "io.iohk.atala" %% "mercury-protocol-connection" % Versions.mercury
 
+  private lazy val shared = "io.iohk.atala" % "shared" % Versions.shared
+
   // Dependency Modules
-  private lazy val baseDependencies: Seq[ModuleID] = Seq(zio)
+  private lazy val baseDependencies: Seq[ModuleID] = Seq(zio, shared)
   private lazy val doobieDependencies: Seq[ModuleID] = Seq(doobiePostgres, doobieHikari, flyway)
 
   // Project Dependencies
