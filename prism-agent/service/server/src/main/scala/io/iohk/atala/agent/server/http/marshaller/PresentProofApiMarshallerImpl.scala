@@ -12,7 +12,13 @@ object PresentProofApiMarshallerImpl extends JsonSupport {
   val layer: ULayer[PresentProofApiMarshaller] = ZLayer.succeed {
     new PresentProofApiMarshaller {
 
-      implicit def fromEntityUnmarshallerRequestPresentationOutput: FromEntityUnmarshaller[RequestPresentationOutput] =
+      implicit def fromEntityUnmarshallerRequestPresentationInput: FromEntityUnmarshaller[RequestPresentationInput] =
+        summon[RootJsonFormat[RequestPresentationInput]]
+      implicit def fromEntityUnmarshallerSendPresentationInput: FromEntityUnmarshaller[SendPresentationInput] =
+        summon[RootJsonFormat[SendPresentationInput]]
+      implicit def toEntityMarshallerPresentationStatus: ToEntityMarshaller[PresentationStatus] =
+        summon[RootJsonFormat[PresentationStatus]]
+      implicit def toEntityMarshallerRequestPresentationOutput: ToEntityMarshaller[RequestPresentationOutput] =
         summon[RootJsonFormat[RequestPresentationOutput]]
 
     }
