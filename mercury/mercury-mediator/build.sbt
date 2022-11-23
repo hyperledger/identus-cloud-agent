@@ -16,7 +16,7 @@ inThisBuild(
 // Custom keys
 val apiBaseDirectory =
   settingKey[File]("The base directory for Castor API specifications")
-ThisBuild / apiBaseDirectory := baseDirectory.value / ".." / "api"
+ThisBuild / apiBaseDirectory := baseDirectory.value / "api"
 ThisBuild / resolvers += Resolver.githubPackages("input-output-hk", "atala-prism-building-blocks")
 
 lazy val V = new {
