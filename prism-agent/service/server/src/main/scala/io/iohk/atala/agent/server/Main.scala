@@ -6,6 +6,7 @@ import org.didcommx.didcomm.DIDComm
 import io.iohk.atala.resolvers.UniversalDidResolver
 import io.iohk.atala.castor.sql.repository.{Migrations => CastorMigrations}
 import io.iohk.atala.pollux.sql.repository.{Migrations => PolluxMigrations}
+import io.iohk.atala.connect.sql.repository.{Migrations => ConnectMigrations}
 
 object Main extends ZIOAppDefault {
   def agentLayer(peer: PeerDID): ZLayer[Any, Nothing, AgentServiceAny] = ZLayer.succeed(
@@ -54,6 +55,9 @@ object Main extends ZIOAppDefault {
       _ <- ZIO
         .serviceWithZIO[PolluxMigrations](_.migrate)
         .provide(RepoModule.polluxDbConfigLayer >>> PolluxMigrations.layer)
+      _ <- ZIO
+        .serviceWithZIO[ConnectMigrations](_.migrate)
+        .provide(RepoModule.connectDbConfigLayer >>> ConnectMigrations.layer)
 
       agentDID <- for {
         peer <- ZIO.succeed(PeerDID.makePeerDid(serviceEndpoint = Some(s"http://localhost:$didCommServicePort")))
