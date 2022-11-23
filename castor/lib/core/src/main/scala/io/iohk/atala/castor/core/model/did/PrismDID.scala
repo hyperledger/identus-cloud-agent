@@ -35,6 +35,14 @@ object PrismDID extends ProtoModelHelper {
       .map(_.getMessage)
       .map(_ => CanonicalPrismDID(HexString.fromByteArray(stateHash)))
 
+  def buildCanonicalFromSuffix(suffix: String): Either[String, CanonicalPrismDID] =
+    HexString
+      .fromString(suffix)
+      .toEither
+      .left
+      .map(e => s"unable to parse suffix as hex string: ${e.getMessage}")
+      .flatMap(suffix => buildCanonical(suffix.toByteArray))
+
   def buildLongFormFromOperation(createOperation: PrismDIDOperation.Create): LongFormPrismDID = {
     val createDIDOperation = createOperation.toProto
     val atalaOperation = node_models.AtalaOperation(createDIDOperation)

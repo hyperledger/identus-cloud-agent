@@ -115,9 +115,10 @@ private class DIDServiceImpl(didOpValidator: DIDOperationValidator, nodeClient: 
 
   // TODO: handle revoked keys and deactivated DIDs
   override def resolveDID(did: CanonicalPrismDID): IO[DIDResolutionError, Option[DIDData]] = {
+    val request = node_api.GetDidDocumentRequest(did = did.toString)
     for {
       result <- ZIO
-        .fromFuture(_ => nodeClient.getDidDocument(node_api.GetDidDocumentRequest(did = did.toString)))
+        .fromFuture(_ => nodeClient.getDidDocument(request))
         .mapError(DIDResolutionError.DLTProxyError.apply)
       didData <- ZIO
         .fromEither(result.document.map(_.toDomain).toSeq.sequence.map(_.headOption))
