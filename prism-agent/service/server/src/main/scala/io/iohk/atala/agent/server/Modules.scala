@@ -81,6 +81,9 @@ import io.iohk.atala.connect.core.service.ConnectionService
 import io.iohk.atala.connect.core.service.ConnectionServiceImpl
 import io.iohk.atala.connect.core.repository.ConnectionRepository
 import io.iohk.atala.connect.sql.repository.JdbcConnectionRepository
+import io.iohk.atala.mercury.protocol.connection.ConnectionRequest
+import io.iohk.atala.mercury.protocol.connection.ConnectionResponse
+import io.iohk.atala.connect.core.model.error.ConnectionError
 
 object Modules {
 
@@ -94,7 +97,7 @@ object Modules {
 
   def didCommServiceEndpoint(port: Int) = {
     val header = "content-type" -> MediaTypes.contentTypeEncrypted
-    val app: HttpApp[DidComm with CredentialService, Throwable] =
+    val app: HttpApp[DidComm & CredentialService & ConnectionService, Throwable] =
       Http.collectZIO[Request] {
         //   // TODO add DIDComm messages parsing logic here!
         //   Response.text("Hello World!").setStatus(Status.Accepted)
@@ -136,13 +139,15 @@ object Modules {
 
   def webServerProgram(
       jsonString: String
-  ): ZIO[DidComm with CredentialService, MercuryThrowable, Unit] = {
+  ): ZIO[DidComm & CredentialService & ConnectionService, MercuryThrowable, Unit] = {
     import io.iohk.atala.mercury.DidComm.*
     ZIO.logAnnotate("request-id", java.util.UUID.randomUUID.toString()) {
       for {
         _ <- ZIO.logInfo("Received new message")
         _ <- ZIO.logTrace(jsonString)
         msg <- unpack(jsonString).map(_.getMessage)
+        credentialService <- ZIO.service[CredentialService]
+        connectionService <- ZIO.service[ConnectionService]
         ret <- {
           msg.piuri match {
             // ########################
@@ -163,7 +168,6 @@ object Modules {
                 _ <- ZIO.logInfo("*" * 100)
                 _ <- ZIO.logInfo("As an Holder in issue-credential:")
                 _ <- ZIO.logInfo("Got OfferCredential: " + msg)
-                credentialService <- ZIO.service[CredentialService]
                 offerFromIssuer = OfferCredential.readFromMessage(msg)
                 _ <- credentialService
                   .receiveCredentialOffer(offerFromIssuer)
@@ -203,6 +207,46 @@ object Modules {
                 _ <- credentialService
                   .receiveCredentialIssue(issueCredential)
                   .catchSome { case RepositoryError(cause) =>
+                    ZIO.logError(cause.getMessage()) *>
+                      ZIO.fail(cause)
+                  }
+                  .catchAll { case ex: IOException => ZIO.fail(ex) }
+              } yield ()
+
+            case s if s == ConnectionRequest.`type` =>
+              for {
+                _ <- ZIO.logInfo("*" * 100)
+                _ <- ZIO.logInfo("As an Inviter in connect:")
+                connectionRequest = ConnectionRequest.readFromMessage(msg)
+                _ <- ZIO.logInfo("Got ConnectionRequest: " + connectionRequest)
+                // Receive and store ConnectionRequest
+                maybeRecord <- connectionService
+                  .receiveConnectionRequest(connectionRequest)
+                  .catchSome { case ConnectionError.RepositoryError(cause) =>
+                    ZIO.logError(cause.getMessage()) *>
+                      ZIO.fail(cause)
+                  }
+                  .catchAll { case ex: IOException => ZIO.fail(ex) }
+                // Accept the ConnectionRequest
+                _ <- connectionService
+                  .acceptConnectionRequest(maybeRecord.get.id) // TODO: get
+                  .catchSome { case ConnectionError.RepositoryError(cause) =>
+                    ZIO.logError(cause.getMessage()) *>
+                      ZIO.fail(cause)
+                  }
+                  .catchAll { case ex: IOException => ZIO.fail(ex) }
+              } yield ()
+
+            // As an Invitee, I received a ConnectionResponse from an Inviter who replied to my ConnectionRequest.
+            case s if s == ConnectionResponse.`type` =>
+              for {
+                _ <- ZIO.logInfo("*" * 100)
+                _ <- ZIO.logInfo("As an Invitee in connect:")
+                connectionResponse = ConnectionResponse.readFromMessage(msg)
+                _ <- ZIO.logInfo("Got ConnectionResponse: " + connectionResponse)
+                _ <- connectionService
+                  .receiveConnectionResponse(connectionResponse)
+                  .catchSome { case ConnectionError.RepositoryError(cause) =>
                     ZIO.logError(cause.getMessage()) *>
                       ZIO.fail(cause)
                   }
