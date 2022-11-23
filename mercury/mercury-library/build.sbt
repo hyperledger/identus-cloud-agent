@@ -189,7 +189,7 @@ lazy val resolver = project // maybe merge into models
       D.munitZio.value,
       D.jwk.value,
       "org.jetbrains.kotlin" % "kotlin-runtime" % "1.2.71",
-      "org.jetbrains.kotlin" % "kotlin-stdlib" % "1.7.10",
+      "org.jetbrains.kotlin" % "kotlin-stdlib" % "1.7.21",
     ),
     testFrameworks += new TestFramework("munit.Framework")
   )
