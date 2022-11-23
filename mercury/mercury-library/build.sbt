@@ -202,7 +202,7 @@ lazy val resolver = project // maybe merge into models
 lazy val agent = project // maybe merge into models
   .in(file("agent"))
   .settings(name := "mercury-agent-core")
-  .settings(libraryDependencies += "com.google.zxing" % "core" % "3.5.0")
+  .settings(libraryDependencies += "com.google.zxing" % "core" % "3.5.1")
   .settings(libraryDependencies ++= Seq(D.zioLog.value)) // , D.zioSLF4J.value))
   .dependsOn(
     models,
