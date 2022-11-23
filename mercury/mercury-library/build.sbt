@@ -34,7 +34,7 @@ lazy val V = new {
   val zioHttp = "2.0.0-RC11"
 
   // https://mvnrepository.com/artifact/io.circe/circe-core
-  val circe = "0.14.2"
+  val circe = "0.14.3"
 
   val tapir = "1.0.3"
 }
