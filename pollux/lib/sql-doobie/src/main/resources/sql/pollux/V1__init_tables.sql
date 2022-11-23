@@ -30,3 +30,18 @@ CREATE TABLE public.issue_credential_records(
   "request_credential_data" TEXT,
   "issue_credential_data" TEXT
 );
+
+CREATE TABLE public.presentation_records(
+  "id" VARCHAR(36) NOT NULL PRIMARY KEY,
+  "created_at" BIGINT NOT NULL,
+  "updated_at" BIGINT,
+  "thid" VARCHAR(36) NOT NULL,
+  "schema_id" VARCHAR(36),
+  "role"  VARCHAR(50) NOT NULL,
+  "subject_id" TEXT NOT NULL,
+  "validity_period" INTEGER,
+  "protocol_state" VARCHAR(50) NOT NULL,
+  "request_presentation_data" TEXT,
+  "propose_presentation_data" TEXT,
+  "presentation_data" TEXT
+);
