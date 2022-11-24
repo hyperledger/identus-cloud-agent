@@ -1,3 +1,10 @@
+# [prism-agent-v0.4.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.3.0...prism-agent-v0.4.0) (2022-11-24)
+
+
+### Features
+
+* **apollo:** add schema registry to the agent using Tapir library. ATL-1334  ([#94](https://github.com/input-output-hk/atala-prism-building-blocks/issues/94)) ([b3cf828](https://github.com/input-output-hk/atala-prism-building-blocks/commit/b3cf828d001f7499c414e9dc559f5152997445e6))
+
 # [prism-agent-v0.3.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.2.0...prism-agent-v0.3.0) (2022-11-21)
 
 
