@@ -5,9 +5,9 @@ object Dependencies {
     val zio = "2.0.2"
     val doobie = "1.0.0-RC2"
     val zioCatsInterop = "3.3.0"
-    val prismSdk = "v1.3.3-snapshot-1657194253-992dd96"
+    val prismSdk = "v1.4.1"
     val iris = "0.1.0"
-    val shared = "0.1.0"
+    val shared = "0.2.0"
     val mercury = "0.6.0"
     val flyway = "9.7.0"
   }
@@ -32,13 +32,14 @@ object Dependencies {
 
   private lazy val mercuryProtocolIssueCredential =
     "io.iohk.atala" %% "mercury-protocol-issue-credential" % Versions.mercury
-
+  private lazy val mercuryProtocolPresentProof =
+    "io.iohk.atala" %% "mercury-protocol-present-proof" % Versions.mercury
   // Dependency Modules
   private lazy val baseDependencies: Seq[ModuleID] = Seq(zio, prismCrypto, shared)
   private lazy val doobieDependencies: Seq[ModuleID] = Seq(doobiePostgres, doobieHikari, flyway)
 
   // Project Dependencies
   lazy val coreDependencies: Seq[ModuleID] =
-    baseDependencies ++ Seq(irisClient) ++ Seq(mercuryProtocolIssueCredential)
+    baseDependencies ++ Seq(irisClient) ++ Seq(mercuryProtocolIssueCredential,mercuryProtocolPresentProof)
   lazy val sqlDoobieDependencies: Seq[ModuleID] = baseDependencies ++ doobieDependencies ++ Seq(zioCatsInterop)
 }
