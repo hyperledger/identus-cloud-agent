@@ -9,36 +9,79 @@ import akka.http.scaladsl.server.Route
 import zio._
 import scala.concurrent.Future
 import io.iohk.atala.agent.server.http.model.HttpServiceError
+import io.iohk.atala.pollux.core.service.PresentationService
+import io.iohk.atala.mercury.model.DidId
+import io.iohk.atala.mercury.protocol.presentproof._
+import java.util.UUID
+import io.iohk.atala.pollux.core.model.error.PresentationError
+import io.iohk.atala.mercury.DidComm
+import io.iohk.atala.agent.server.http.model.OASDomainModelHelper
+import io.iohk.atala.agent.server.http.model.OASErrorModelHelper
 
-class PresentationService {
-  def getAllPresentationRecord: UIO[PresentationStatus] = ??? // TODO FIXME
+class ConnectionService {
+  // def getConnection(connectionId: String): UIO[DidId] = ???
+  def getEstablishedConnection(connectionId: String): UIO[DidId] = ???
 }
 
-sealed trait PresentationError
-
-object PresentationError {
-  final case class UnexpectedError(msg: String) extends PresentationError
-}
-
-class PresentProofApiServiceImpl(using runtime: Runtime[Any]) extends PresentProofApiService with AkkaZioSupport {
+class PresentProofApiServiceImpl(
+    presentationService: PresentationService,
+    connectionService: ConnectionService,
+    didCommService: DidComm
+)(using runtime: Runtime[Any])
+    extends PresentProofApiService
+    with AkkaZioSupport
+    with OASDomainModelHelper
+    with OASErrorModelHelper {
   def getAllPresentation()(implicit
       toEntityMarshallerPresentationStatus: ToEntityMarshaller[PresentationStatus]
   ): Route = {
-    val presentationService: PresentationService = ??? // TODO FIXME
+    // val presentationService: PresentationService = ??? // TODO FIXME
 
-    val result = for {
-      outcome <- presentationService.getAllPresentationRecord
-      // .mapError(HttpServiceError.DomainError[PresentationError.UnexpectedError].apply)
-    } yield outcome
+    // val result = for {
+    //   outcome <- presentationService.getPresentationRecords()
+    //   // .mapError(HttpServiceError.DomainError[PresentationError.UnexpectedError].apply)
+    // } yield outcome
 
-    onZioSuccess(result) { e =>
-      getAllPresentation200(e)
-    }
+    // onZioSuccess(result) { e =>
+    //   getAllPresentation200(e)
+    // }
+    ??? // FIXME
   }
 
   def requestPresentation(requestPresentationInput: RequestPresentationInput)(implicit
       toEntityMarshallerRequestPresentationOutput: ToEntityMarshaller[RequestPresentationOutput]
-  ): Route = ???
+  ): Route = {
+
+    val result = for {
+      toDID <- connectionService.getEstablishedConnection(requestPresentationInput.connectionId)
+
+      record <- presentationService
+        .createPresentationRecord(
+          thid = UUID.randomUUID(),
+          subjectDid = toDID,
+          schemaId = None
+        )
+        .mapError(HttpServiceError.DomainError[PresentationError.RepositoryError].apply)
+      result: RequestPresentationOutput = RequestPresentationOutput(record.id.toString)
+    } yield result
+
+    onZioSuccess(result.mapBoth(_.toOAS, _.map(_.toOAS)).either) {
+      case Left(error) => complete(error.status -> error)
+      case Right(result) =>
+        getCredentialRecords200(
+          IssueCredentialRecordCollection(
+            items = result,
+            offset = 0,
+            limit = 0,
+            count = result.size
+          )
+        )
+    }
+
+    onZioSuccess(result) { e =>
+      requestPresentation201(e)
+    }
+  }
 
   def sendPresentation(
       id: String,
