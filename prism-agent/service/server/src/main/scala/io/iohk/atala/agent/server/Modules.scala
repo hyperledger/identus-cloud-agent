@@ -335,7 +335,7 @@ object HttpModule {
 
   val presentProofProtocolApiLayer: RLayer[DidComm, PresentProofApi] = {
     // val serviceLayer = AppModule.credentialServiceLayer
-    val apiServiceLayer = // serviceLayer >>>
+    val apiServiceLayer = // serviceLayer >>> //FIXME
       PresentProofApiServiceImpl.layer
     val apiMarshallerLayer = PresentProofApiMarshallerImpl.layer
     (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new PresentProofApi(_, _))

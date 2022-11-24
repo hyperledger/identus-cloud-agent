@@ -8,8 +8,8 @@ object Dependencies {
     val zioInteropCats = "3.3.0"
     val akka = "2.6.20"
     val akkaHttp = "10.2.9"
-    val castor = "0.2.0"
-    val pollux = "0.3.0"
+    val castor = "0.2.0-SNAPSHOT"
+    val pollux = "0.3.0-SNAPSHOT"
     val bouncyCastle = "1.70"
     val logback = "1.4.4"
     val mercury = "0.6.0"
@@ -59,11 +59,22 @@ object Dependencies {
   private lazy val http4sBlazeServer = "org.http4s" %% "http4s-blaze-server" % "0.23.12"
 
   private lazy val tapirRedocBundle = "com.softwaremill.sttp.tapir" %% "tapir-redoc-bundle" % Versions.tapir
-  private lazy val tapirSttpStubServer = "com.softwaremill.sttp.tapir" %% "tapir-sttp-stub-server" % Versions.tapir % Test
-
+  private lazy val tapirSttpStubServer =
+    "com.softwaremill.sttp.tapir" %% "tapir-sttp-stub-server" % Versions.tapir % Test
 
   // Dependency Modules
-  private lazy val baseDependencies: Seq[ModuleID] = Seq(zio, zioTest, zioTestSbt, zioTestMagnolia, zioConfig, zioConfigMagnolia, zioConfigTypesafe, zioJson, logback, zioHttp)
+  private lazy val baseDependencies: Seq[ModuleID] = Seq(
+    zio,
+    zioTest,
+    zioTestSbt,
+    zioTestMagnolia,
+    zioConfig,
+    zioConfigMagnolia,
+    zioConfigTypesafe,
+    zioJson,
+    logback,
+    zioHttp
+  )
   private lazy val castorDependencies: Seq[ModuleID] = Seq(castorCore, castorSqlDoobie)
   private lazy val polluxDependencies: Seq[ModuleID] = Seq(polluxCore, polluxSqlDoobie)
   private lazy val mercuryDependencies: Seq[ModuleID] = Seq(mercuryAgent)
@@ -78,17 +89,17 @@ object Dependencies {
       tapirSttpStubServer,
       tapirZioHttpServer,
       tapirHttp4sServerZio,
-      http4sBlazeServer)
-
+      http4sBlazeServer
+    )
 
   // Project Dependencies
   lazy val keyManagementDependencies: Seq[ModuleID] =
-      baseDependencies ++
+    baseDependencies ++
       castorDependencies ++
       bouncyDependencies
 
   lazy val serverDependencies: Seq[ModuleID] =
-      baseDependencies ++
+    baseDependencies ++
       akkaHttpDependencies ++
       castorDependencies ++
       polluxDependencies ++
