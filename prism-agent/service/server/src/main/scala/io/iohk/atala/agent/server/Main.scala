@@ -8,12 +8,13 @@ import io.iohk.atala.castor.sql.repository.{Migrations => CastorMigrations}
 import io.iohk.atala.pollux.sql.repository.{Migrations => PolluxMigrations}
 
 object Main extends ZIOAppDefault {
-  def agentLayer(peer: PeerDID): ZLayer[Any, Nothing, AgentServiceAny] = ZLayer.succeed(
-    io.iohk.atala.mercury.AgentServiceAny(
-      new DIDComm(UniversalDidResolver, peer.getSecretResolverInMemory),
-      peer.did
+  def agentLayer(peer: PeerDID): ZLayer[Any, Nothing, AgentServiceAny] =
+    ZLayer.succeed(
+      io.iohk.atala.mercury.AgentServiceAny(
+        new DIDComm(UniversalDidResolver, peer.getSecretResolverInMemory),
+        peer.did
+      )
     )
-  )
 
   override def run: ZIO[Any, Throwable, Unit] =
     for {

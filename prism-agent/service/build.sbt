@@ -3,7 +3,8 @@ import sbtghpackages.GitHubPackagesPlugin.autoImport._
 import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
 
 // Custom keys
-val apiBaseDirectory = settingKey[File]("The base directory for PrismAgent API specifications")
+val apiBaseDirectory =
+  settingKey[File]("The base directory for PrismAgent API specifications")
 
 inThisBuild(
   Seq(
@@ -53,8 +54,13 @@ lazy val server = project
     Compile / sourceGenerators += openApiGenerateClasses,
     openApiGeneratorSpec := apiBaseDirectory.value / "http/prism-agent-openapi-spec.yaml",
     openApiGeneratorConfig := baseDirectory.value / "openapi/generator-config/config.yaml",
-    openApiGeneratorImportMapping := Seq("DidOperationType", "DidOperationStatus")
-      .map(model => (model, s"io.iohk.atala.agent.server.http.model.OASModelPatches.$model"))
+    openApiGeneratorImportMapping := Seq(
+      "DidOperationType",
+      "DidOperationStatus"
+    )
+      .map(model =>
+        (model, s"io.iohk.atala.agent.server.http.model.OASModelPatches.$model")
+      )
       .toMap,
     Docker / maintainer := "atala-coredid@iohk.io",
     Docker / dockerUsername := Some("input-output-hk"),
