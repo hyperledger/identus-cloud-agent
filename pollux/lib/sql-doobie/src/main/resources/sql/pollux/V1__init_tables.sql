@@ -39,7 +39,6 @@ CREATE TABLE public.presentation_records(
   "schema_id" VARCHAR(36),
   "role"  VARCHAR(50) NOT NULL,
   "subject_id" TEXT NOT NULL,
-  "validity_period" INTEGER,
   "protocol_state" VARCHAR(50) NOT NULL,
   "request_presentation_data" TEXT,
   "propose_presentation_data" TEXT,
