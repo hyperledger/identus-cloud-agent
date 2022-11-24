@@ -5,7 +5,7 @@ import java.util.UUID
 import io.iohk.atala.mercury.protocol.presentproof.ProposePresentation
 import io.iohk.atala.mercury.protocol.presentproof.RequestPresentation
 import io.iohk.atala.mercury.protocol.presentproof.Presentation
-
+import io.iohk.atala.mercury.model.DidId
 import java.time.Instant
 final case class PresentationRecord(
     id: UUID,
@@ -14,7 +14,7 @@ final case class PresentationRecord(
     thid: UUID,
     schemaId: Option[String],
     role: PresentationRecord.Role,
-    subjectId: String,
+    subjectId: DidId,
     protocolState: PresentationRecord.ProtocolState,
     requestPresentationData: Option[RequestPresentation],
     proposePresentationData: Option[ProposePresentation],

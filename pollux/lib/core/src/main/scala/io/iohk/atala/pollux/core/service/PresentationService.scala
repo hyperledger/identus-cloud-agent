@@ -38,12 +38,8 @@ trait PresentationService {
 
   def createPresentationRecord(
       thid: UUID,
-      subjectId: String,
-      schemaId: Option[String],
-      presentation: String, // TODO
-      validityPeriod: Option[Double] = None,
-      automaticIssuance: Option[Boolean],
-      awaitConfirmation: Option[Boolean]
+      subjectDid: DidId,
+      schemaId: Option[String]
   ): IO[PresentationError, PresentationRecord]
 
   def getPresentationRecords(): IO[PresentationError, Seq[PresentationRecord]]
@@ -111,15 +107,11 @@ private class PresentationServiceImpl(
 
   override def createPresentationRecord(
       thid: UUID,
-      subjectId: String,
-      schemaId: Option[String],
-      presentation: String, // TODO
-      validityPeriod: Option[Double],
-      automaticIssuance: Option[Boolean],
-      awaitConfirmation: Option[Boolean]
+      subjectId: DidId,
+      schemaId: Option[String]
   ): IO[PresentationError, PresentationRecord] = {
     for {
-      request <- ZIO.succeed(createDidCommRequestPresentation(presentation, thid, subjectId))
+      request <- ZIO.succeed(createDidCommRequestPresentation(schemaId, thid, subjectId))
       record <- ZIO.succeed(
         PresentationRecord(
           id = UUID.randomUUID(),
@@ -167,7 +159,7 @@ private class PresentationServiceImpl(
           thid = UUID.fromString(request.thid.getOrElse(request.id)),
           schemaId = None,
           role = Role.Prover,
-          subjectId = request.to.value,
+          subjectId = request.to,
           protocolState = PresentationRecord.ProtocolState.RequestReceived,
           requestPresentationData = Some(request),
           proposePresentationData = None,
@@ -329,17 +321,17 @@ private class PresentationServiceImpl(
   }
 
   private[this] def createDidCommRequestPresentation(
-      presentation: String,
+      schemaId: Option[String], // TODO Presentation Formats
       thid: UUID,
-      subjectId: String
+      subjectDId: DidId
   ): RequestPresentation = {
     val body = RequestPresentation.Body(goal_code = Some("request"))
 
     RequestPresentation(
       body = body,
-      attachments = Seq(AttachmentDescriptor.buildAttachment(payload = presentation)),
+      attachments = Seq(AttachmentDescriptor.buildAttachment(payload = schemaId)),
       from = didComm.myDid,
-      to = DidId(subjectId),
+      to = subjectDId,
       thid = Some(thid.toString())
     )
   }
