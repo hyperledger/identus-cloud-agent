@@ -163,5 +163,4 @@ trait OASDomainModelHelper {
       })
     )
   }
-
 }
