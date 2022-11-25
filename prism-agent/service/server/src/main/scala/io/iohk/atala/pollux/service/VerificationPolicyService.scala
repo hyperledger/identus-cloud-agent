@@ -1,11 +1,7 @@
 package io.iohk.atala.pollux.service
 
 import io.iohk.atala.api.http.model.{Order, Pagination}
-import io.iohk.atala.pollux.schema.model.{
-  VerificationPolicy,
-  VerificationPolicyInput,
-  VerificationPolicyPage
-}
+import io.iohk.atala.pollux.schema.model.{VerificationPolicy, VerificationPolicyInput, VerificationPolicyPage}
 import zio.{Task, ZIO, ZLayer}
 
 import java.util.UUID
