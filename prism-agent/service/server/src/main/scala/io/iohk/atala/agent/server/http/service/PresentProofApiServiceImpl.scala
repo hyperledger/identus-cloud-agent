@@ -61,13 +61,37 @@ class PresentProofApiServiceImpl(
       toEntityMarshallerPresentationStatus: ToEntityMarshaller[PresentationStatus],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
-    ???
+
+    val result = for {
+      record <- presentationService
+        .getPresentationRecords()
+        .mapError(HttpServiceError.DomainError[PresentationError].apply)
+    } yield record
+
+    onZioSuccess(result.mapBoth(_.toOAS, record => record).either) {
+      case Left(error) => complete(error.status -> error)
+      case Right(result) => {
+        // TODO map this correctly Presentation Model
+        getAllPresentation200(PresentationStatus("111", "DD", Seq.empty, None))
+      }
+    }
   }
 
   override def updatePresentation(id: String, updatePresentationRequest: UpdatePresentationRequest)(implicit
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
-    ???
+    val result = for {
+      // action accept , decline
+      // if accept
+      record <- presentationService
+        .acceptRequestPresentation(UUID.fromString(id))
+        .mapError(HttpServiceError.DomainError[PresentationError].apply)
+    } yield record
+
+    onZioSuccess(result.mapBoth(_.toOAS, record => record).either) {
+      case Left(error)   => complete(error.status -> error)
+      case Right(result) => updatePresentation200
+    }
   }
 }
 
