@@ -11,11 +11,11 @@ See [https://github.com/hyperledger/aries-rfcs/tree/main/features/0454-present-p
 
 ## PIURI
 
-Version 2.0: `https://didcomm.org/present-proof/2.0/propose-presentation`
+Version 2.0: `https://didcomm.org/present-proof/3.0/propose-presentation`
 
-Version 2.0: `https://didcomm.org/present-proof/2.0/request-presentation`
+Version .0: `https://didcomm.org/present-proof/3.0/request-presentation`
 
-Version 2.0: `https://didcomm.org/present-proof/2.0/presentation`
+Version 3.0: `https://didcomm.org/present-proof/3.0/presentation`
 
 ### Roles
 
