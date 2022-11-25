@@ -16,6 +16,7 @@ import io.iohk.atala.castor.core.model.did as castorDomain
 import io.iohk.atala.castor.core.model.did.PublishedDIDOperation
 import io.iohk.atala.agent.walletapi.model as walletDomain
 import io.iohk.atala.pollux.core.model as polluxdomain
+import io.iohk.atala.connect.core.model as connectdomain
 import io.iohk.atala.shared.models.HexStrings.*
 import io.iohk.atala.shared.models.Base64UrlStrings.*
 import io.iohk.atala.shared.utils.Traverse.*
@@ -28,6 +29,12 @@ import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import io.iohk.atala.mercury.model.AttachmentDescriptor
 import io.iohk.atala.mercury.model.Base64
+import io.iohk.atala.agent.openapi.model.Connection
+import io.iohk.atala.agent.openapi.model.ConnectionInvitation
+import zio.ZIO
+import io.iohk.atala.agent.server.http.model.HttpServiceError.InvalidPayload
+import java.util.UUID
+import io.iohk.atala.connect.core.model.ConnectionRecord.Role
 
 trait OASDomainModelHelper {
 
@@ -162,6 +169,42 @@ trait OASDomainModelHelper {
         }
       })
     )
+  }
+  extension (domain: connectdomain.ConnectionRecord) {
+    def toOAS: Connection = Connection(
+      label = domain.label,
+      self = "Connection",
+      kind = s"/connections/${domain.id.toString}",
+      connectionId = domain.id,
+      myDid = domain.role match
+        case Role.Inviter =>
+          domain.connectionResponse.map(_.from).orElse(domain.connectionRequest.map(_.to)).map(_.value)
+        case Role.Invitee =>
+          domain.connectionResponse.map(_.to).orElse(domain.connectionRequest.map(_.from)).map(_.value)
+      ,
+      theirDid = domain.role match
+        case Role.Inviter =>
+          domain.connectionResponse.map(_.to).orElse(domain.connectionRequest.map(_.from)).map(_.value)
+        case Role.Invitee =>
+          domain.connectionResponse.map(_.from).orElse(domain.connectionRequest.map(_.to)).map(_.value)
+      ,
+      state = domain.protocolState.toString,
+      createdAt = domain.createdAt.atOffset(ZoneOffset.UTC),
+      updatedAt = domain.updatedAt.map(_.atOffset(ZoneOffset.UTC)),
+      invitation = ConnectionInvitation(
+        id = UUID.fromString(domain.invitation.id),
+        `type` = domain.invitation.`type`,
+        from = domain.invitation.from.value,
+        invitationUrl = s"https://domain.com/path?_oob=${domain.invitation.toBase64}"
+      )
+    )
+  }
+
+  extension (str: String) {
+    def toUUID: ZIO[Any, InvalidPayload, UUID] =
+      ZIO
+        .fromTry(Try(UUID.fromString(str)))
+        .mapError(e => HttpServiceError.InvalidPayload(s"Error parsing string as UUID: ${e.getMessage()}"))
   }
 
 }

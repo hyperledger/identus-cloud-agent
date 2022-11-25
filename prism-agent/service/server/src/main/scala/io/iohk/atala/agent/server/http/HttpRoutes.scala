@@ -7,7 +7,8 @@ import io.iohk.atala.agent.openapi.api.{
   DIDAuthenticationApi,
   DIDOperationsApi,
   DIDRegistrarApi,
-  IssueCredentialsApi
+  IssueCredentialsApi,
+  ConnectionsManagementApi
 }
 import zio.*
 import io.iohk.atala.agent.openapi.api.IssueCredentialsProtocolApi
@@ -17,7 +18,7 @@ object HttpRoutes {
 
   def routes: URIO[
     DIDApi & DIDOperationsApi & DIDAuthenticationApi & DIDRegistrarApi & IssueCredentialsApi &
-      IssueCredentialsProtocolApi,
+      IssueCredentialsProtocolApi & ConnectionsManagementApi,
     Route
   ] =
     for {
@@ -27,7 +28,8 @@ object HttpRoutes {
       disRegistrarApi <- ZIO.service[DIDRegistrarApi]
       issueCredentialApi <- ZIO.service[IssueCredentialsApi]
       issueCredentialsProtocolApi <- ZIO.service[IssueCredentialsProtocolApi]
-    } yield didApi.route ~ didOperationsApi.route ~ didAuthApi.route ~ disRegistrarApi.route ~ issueCredentialApi.route ~ issueCredentialsProtocolApi.route ~ additionalRoute
+      connectionsManagementApi <- ZIO.service[ConnectionsManagementApi]
+    } yield didApi.route ~ didOperationsApi.route ~ didAuthApi.route ~ disRegistrarApi.route ~ issueCredentialApi.route ~ issueCredentialsProtocolApi.route ~ connectionsManagementApi.route ~ additionalRoute
 
   private def additionalRoute: Route = {
     // swagger-ui expects this particular header when resolving relative $ref
