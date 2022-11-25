@@ -48,34 +48,34 @@ import io.iohk.atala.castor.core.service.{DIDService, DIDServiceImpl}
 import io.iohk.atala.pollux.core.service.CredentialServiceImpl
 import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.castor.sql.repository.{JdbcDIDOperationRepository, TransactorLayer}
-import io.iohk.atala.castor.sql.repository.{DbConfig => CastorDbConfig}
+import io.iohk.atala.castor.sql.repository.DbConfig as CastorDbConfig
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
 import io.iohk.atala.pollux.core.repository.CredentialRepository
 import io.iohk.atala.pollux.core.service.CredentialService
 import io.iohk.atala.pollux.sql.repository.JdbcCredentialRepository
-import io.iohk.atala.pollux.sql.repository.{DbConfig => PolluxDbConfig}
+import io.iohk.atala.pollux.sql.repository.DbConfig as PolluxDbConfig
 import io.iohk.atala.agent.server.jobs.*
 import zio.*
 import zio.config.typesafe.TypesafeConfigSource
 import zio.config.{ReadError, read}
 import zio.interop.catz.*
 import zio.stream.ZStream
-import zhttp.http._
+import zhttp.http.*
 import zhttp.service.Server
 
 import java.util.concurrent.Executors
-
-import io.iohk.atala.mercury._
-import io.iohk.atala.mercury.model._
-import io.iohk.atala.mercury.model.error._
-import io.iohk.atala.mercury.protocol.issuecredential._
+import io.iohk.atala.mercury.*
+import io.iohk.atala.mercury.model.*
+import io.iohk.atala.mercury.model.error.*
+import io.iohk.atala.mercury.protocol.issuecredential.*
 import io.iohk.atala.pollux.core.model.error.IssueCredentialError
 import io.iohk.atala.pollux.core.model.error.IssueCredentialError.RepositoryError
+
 import java.io.IOException
 import cats.implicits.*
-import io.iohk.atala.pollux.schema.SchemaRegistryServerEndpoints
-import io.iohk.atala.pollux.service.SchemaRegistryServiceInMemory
+import io.iohk.atala.pollux.schema.{SchemaRegistryServerEndpoints, VerificationPolicyServerEndpoints}
+import io.iohk.atala.pollux.service.{SchemaRegistryServiceInMemory, VerificationPolicyServiceInMemory}
 
 object Modules {
 
@@ -90,13 +90,18 @@ object Modules {
   lazy val zioApp = {
     val zioHttpServerApp = for {
       allSchemaRegistryEndpoints <- SchemaRegistryServerEndpoints.all
-      allEndpoints = ZHttpEndpoints.withDocumentations[Task](allSchemaRegistryEndpoints)
+      allVerificationPolicyEndpoints <- VerificationPolicyServerEndpoints.all
+      allEndpoints = ZHttpEndpoints.withDocumentations[Task](
+        allSchemaRegistryEndpoints ++ allVerificationPolicyEndpoints
+      )
       appConfig <- ZIO.service[AppConfig]
       httpServer <- ZHttp4sBlazeServer.start(allEndpoints, port = appConfig.agent.httpEndpoint.http.port)
     } yield httpServer
 
     zioHttpServerApp
-      .provideLayer(SchemaRegistryServiceInMemory.layer ++ SystemModule.configLayer)
+      .provideLayer(
+        SchemaRegistryServiceInMemory.layer ++ VerificationPolicyServiceInMemory.layer ++ SystemModule.configLayer
+      )
       .unit
   }
 

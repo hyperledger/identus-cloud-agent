@@ -31,7 +31,7 @@ class SchemaRegistryServiceInMemory(
     } yield schema
   }
 
-  //TODO: this is naive implementation for demo purposes, sorting doesn't work
+  // TODO: this is naive implementation for demo purposes, sorting doesn't work
   override def lookupSchemas(
       filter: VerifiableCredentialSchema.Filter,
       pagination: Pagination,

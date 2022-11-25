@@ -1,11 +1,7 @@
 package io.iohk.atala.pollux.schema
 
 import io.iohk.atala.api.http.model.{Order, Pagination}
-import io.iohk.atala.api.http.{
-  FailureResponse,
-  InternalServerError,
-  NotFoundResponse
-}
+import io.iohk.atala.api.http.{FailureResponse, InternalServerError, NotFoundResponse}
 import io.iohk.atala.pollux.schema.SchemaRegistryEndpoints.{
   createSchemaEndpoint,
   getSchemaByIdEndpoint,
@@ -13,11 +9,7 @@ import io.iohk.atala.pollux.schema.SchemaRegistryEndpoints.{
 }
 import io.iohk.atala.pollux.schema.model.VerifiableCredentialSchema
 import io.iohk.atala.pollux.service.SchemaRegistryService
-import io.iohk.atala.pollux.service.SchemaRegistryService.{
-  createSchema,
-  getSchemaById,
-  lookupSchemas
-}
+import io.iohk.atala.pollux.service.SchemaRegistryService.{createSchema, getSchemaById, lookupSchemas}
 import sttp.tapir.redoc.RedocUIOptions
 import sttp.tapir.redoc.bundle.RedocInterpreter
 import sttp.tapir.server.ServerEndpoint

@@ -72,7 +72,6 @@ object VerifiableCredentialSchema {
         tags.map(_.split(',')).forall(vcs.tags.intersect(_).nonEmpty)
   }
 
-  @encodedName(name = "VerifiableCredentialSchema.Page")
   case class Page(
       self: String,
       kind: String,

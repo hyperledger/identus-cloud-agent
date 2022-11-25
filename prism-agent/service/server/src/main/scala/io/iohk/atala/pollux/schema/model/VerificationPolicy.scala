@@ -1,0 +1,138 @@
+package io.iohk.atala.pollux.schema.model
+
+import sttp.tapir.Schema
+import sttp.tapir.Schema.annotations.{description, encodedName}
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder}
+
+import java.time.ZonedDateTime
+import java.util.UUID
+
+case class VerificationPolicy(
+    self: String,
+    kind: String,
+    id: String,
+    name: String,
+    attributes: List[String],
+    issuerDIDs: List[String],
+    credentialTypes: List[String],
+    createdAt: ZonedDateTime,
+    updatedAt: ZonedDateTime
+) {
+  def update(in: VerificationPolicyInput): VerificationPolicy = {
+    copy(
+      name = in.name,
+      attributes = in.attributes,
+      issuerDIDs = in.issuerDIDs,
+      credentialTypes = in.credentialTypes,
+      updatedAt = ZonedDateTime.now()
+    )
+  }
+}
+
+object VerificationPolicy {
+  def apply(in: VerificationPolicyInput): VerificationPolicy =
+    VerificationPolicy(
+      self = "to be defined",
+      kind = "VerificationPolicy",
+      id = in.id.getOrElse(UUID.randomUUID().toString),
+      name = in.name,
+      attributes = in.attributes,
+      issuerDIDs = in.issuerDIDs,
+      credentialTypes = in.credentialTypes,
+      createdAt = ZonedDateTime.now(),
+      updatedAt = ZonedDateTime.now()
+    )
+
+  given encoder: zio.json.JsonEncoder[VerificationPolicy] = DeriveJsonEncoder.gen[VerificationPolicy]
+  given decoder: zio.json.JsonDecoder[VerificationPolicy] = DeriveJsonDecoder.gen[VerificationPolicy]
+  given schema: Schema[VerificationPolicy] = Schema.derived
+
+  case class Filter(
+      name: Option[String],
+      attributes: Option[String],
+      issuerDIDs: Option[String],
+      credentialTypes: Option[String]
+  ) {
+    def predicate(vp: VerificationPolicy): Boolean = {
+      name.forall(vp.name == _) &&
+      attributes.map(_.split(',')).forall(vp.attributes.intersect(_).nonEmpty) &&
+      issuerDIDs.map(_.split(',')).forall(vp.issuerDIDs.intersect(_).nonEmpty) &&
+      credentialTypes.map(_.split(',')).forall(vp.credentialTypes.intersect(_).nonEmpty)
+    }
+  }
+}
+
+case class VerificationPolicyPage(
+    self: String,
+    kind: String,
+    pageOf: String,
+    next: Option[String],
+    previous: Option[String],
+    contents: List[VerificationPolicy]
+)
+
+object VerificationPolicyPage {
+  given encoder: zio.json.JsonEncoder[VerificationPolicyPage] =
+    DeriveJsonEncoder.gen[VerificationPolicyPage]
+
+  given decoder: zio.json.JsonDecoder[VerificationPolicyPage] =
+    DeriveJsonDecoder.gen[VerificationPolicyPage]
+
+  given schema: Schema[VerificationPolicyPage] =
+    Schema.derived
+}
+
+case class VerificationPolicyInput(
+    id: Option[String],
+    kind: String,
+    name: String,
+    attributes: List[String],
+    issuerDIDs: List[String],
+    credentialTypes: List[String]
+)
+
+object VerificationPolicyInput {
+  given encoder: zio.json.JsonEncoder[VerificationPolicyInput] =
+    DeriveJsonEncoder.gen[VerificationPolicyInput]
+
+  given decoder: zio.json.JsonDecoder[VerificationPolicyInput] =
+    DeriveJsonDecoder.gen[VerificationPolicyInput]
+
+  given schema: Schema[VerificationPolicyInput] = Schema.derived
+}
+
+//TODO: cleanup this later
+//VerificationPolicy:
+//      type: object
+//      properties:
+//        self:
+//          type: string
+//          example: https://atala-prism-products.io/verification-policies/1232-asd1-1233-41as
+//        kind:
+//          type: string
+//          example: VerificationPolicy
+//        id:
+//          type: string
+//          example: 1232-asd1-1233-41as
+//        name:
+//          type: string
+//          example: Driver's License
+//        attributes:
+//          type: array
+//          items:
+//            type: string
+//          example: ["full_name", "date_of_birth", "class", "valid_until"]
+//        issuerDids:
+//          items:
+//            type: string
+//          example: ["did:example:gov1"]
+//        credentialTypes:
+//          items:
+//            type: string
+//          example: ["DriversLicense"]
+//        createdAt:
+//          type: string
+//          example: "13/10/22T01:00:00Z"
+//        updatedAt:
+//          type: string
+//          example: "14/10/22T01:00:00Z"
