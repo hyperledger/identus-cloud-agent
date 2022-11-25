@@ -100,39 +100,3 @@ object VerificationPolicyInput {
 
   given schema: Schema[VerificationPolicyInput] = Schema.derived
 }
-
-//TODO: cleanup this later
-//VerificationPolicy:
-//      type: object
-//      properties:
-//        self:
-//          type: string
-//          example: https://atala-prism-products.io/verification-policies/1232-asd1-1233-41as
-//        kind:
-//          type: string
-//          example: VerificationPolicy
-//        id:
-//          type: string
-//          example: 1232-asd1-1233-41as
-//        name:
-//          type: string
-//          example: Driver's License
-//        attributes:
-//          type: array
-//          items:
-//            type: string
-//          example: ["full_name", "date_of_birth", "class", "valid_until"]
-//        issuerDids:
-//          items:
-//            type: string
-//          example: ["did:example:gov1"]
-//        credentialTypes:
-//          items:
-//            type: string
-//          example: ["DriversLicense"]
-//        createdAt:
-//          type: string
-//          example: "13/10/22T01:00:00Z"
-//        updatedAt:
-//          type: string
-//          example: "14/10/22T01:00:00Z"
