@@ -37,6 +37,7 @@ CREATE TABLE public.presentation_records(
   "updated_at" BIGINT,
   "thid" VARCHAR(36) NOT NULL,
   "schema_id" VARCHAR(36),
+  "connection_id" VARCHAR(36),
   "role"  VARCHAR(50) NOT NULL,
   "subject_id" TEXT NOT NULL,
   "protocol_state" VARCHAR(50) NOT NULL,

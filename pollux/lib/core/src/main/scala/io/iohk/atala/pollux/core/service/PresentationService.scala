@@ -39,6 +39,7 @@ trait PresentationService {
   def createPresentationRecord(
       thid: UUID,
       subjectDid: DidId,
+      connectionId: Option[String],
       schemaId: Option[String]
   ): IO[PresentationError, PresentationRecord]
 
@@ -50,7 +51,10 @@ trait PresentationService {
 
   def getPresentationRecord(recordId: UUID): IO[PresentationError, Option[PresentationRecord]]
 
-  def receiveRequestPresentation(request: RequestPresentation): IO[PresentationError, PresentationRecord]
+  def receiveRequestPresentation(
+      connectionId: Option[String],
+      request: RequestPresentation
+  ): IO[PresentationError, PresentationRecord]
 
   def acceptRequestPresentation(recordId: UUID): IO[PresentationError, Option[PresentationRecord]]
 
@@ -108,6 +112,7 @@ private class PresentationServiceImpl(
   override def createPresentationRecord(
       thid: UUID,
       subjectId: DidId,
+      connectionId: Option[String],
       schemaId: Option[String]
   ): IO[PresentationError, PresentationRecord] = {
     for {
@@ -118,6 +123,7 @@ private class PresentationServiceImpl(
           createdAt = Instant.now,
           updatedAt = None,
           thid = thid,
+          connectionId = connectionId,
           schemaId = schemaId,
           role = PresentationRecord.Role.Verifier,
           subjectId = subjectId,
@@ -148,6 +154,7 @@ private class PresentationServiceImpl(
   }
 
   override def receiveRequestPresentation(
+      connectionId: Option[String],
       request: RequestPresentation
   ): IO[PresentationError, PresentationRecord] = {
     for {
@@ -157,6 +164,7 @@ private class PresentationServiceImpl(
           createdAt = Instant.now,
           updatedAt = None,
           thid = UUID.fromString(request.thid.getOrElse(request.id)),
+          connectionId = connectionId,
           schemaId = None,
           role = Role.Prover,
           subjectId = request.to,

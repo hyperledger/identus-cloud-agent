@@ -13,6 +13,7 @@ final case class PresentationRecord(
     updatedAt: Option[Instant],
     thid: UUID,
     schemaId: Option[String],
+    connectionId: Option[String],
     role: PresentationRecord.Role,
     subjectId: DidId,
     protocolState: PresentationRecord.ProtocolState,
