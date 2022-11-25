@@ -63,16 +63,21 @@ class PresentProofApiServiceImpl(
   ): Route = {
 
     val result = for {
-      record <- presentationService
+      records <- presentationService
         .getPresentationRecords()
         .mapError(HttpServiceError.DomainError[PresentationError].apply)
-    } yield record
 
-    onZioSuccess(result.mapBoth(_.toOAS, record => record).either) {
+      presentationStatus = records.map { record =>
+        val connectionId = None // record.subjectId // TODO
+        PresentationStatus(record.id.toString, record.protocolState.toString, Seq.empty, connectionId)
+      }
+    } yield presentationStatus
+
+    onZioSuccess(result.mapError(_.toOAS).either) {
       case Left(error) => complete(error.status -> error)
-      case Right(result) => {
-        // TODO map this correctly Presentation Model
-        getAllPresentation200(Seq(PresentationStatus("111", "DD", Seq.empty, None)))
+      case Right(results) => {
+
+        getAllPresentation200(results)
       }
     }
   }
