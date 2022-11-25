@@ -7,8 +7,8 @@ object Dependencies {
     val zioCatsInterop = "3.3.0"
     val prismSdk = "v1.4.1"
     val iris = "0.1.0"
-    val shared = "0.1.0"
-    val mercury = "0.7.0"
+    val shared = "0.2.0"
+    val mercury = "0.6.0"
     val flyway = "9.7.0"
   }
 

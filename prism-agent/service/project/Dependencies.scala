@@ -9,11 +9,10 @@ object Dependencies {
     val akka = "2.6.20"
     val akkaHttp = "10.2.9"
     val castor = "0.2.0"
-    val pollux = "0.4.0-SNAPSHOT"
-    val connect = "0.1.0-SNAPSHOT"
+    val pollux = "0.3.0"
     val bouncyCastle = "1.70"
     val logback = "1.4.4"
-    val mercury = "0.7.0"
+    val mercury = "0.6.0"
     val zioJson = "0.3.0"
     val tapir = "1.2.2"
   }
@@ -42,9 +41,6 @@ object Dependencies {
   private lazy val polluxCore = "io.iohk.atala" %% "pollux-core" % Versions.pollux
   private lazy val polluxSqlDoobie = "io.iohk.atala" %% "pollux-sql-doobie" % Versions.pollux
 
-  private lazy val connectCore = "io.iohk.atala" %% "connect-core" % Versions.connect
-  private lazy val connectSqlDoobie = "io.iohk.atala" %% "connect-sql-doobie" % Versions.connect
-
   private lazy val mercuryAgent = "io.iohk.atala" %% "mercury-agent-didcommx" % Versions.mercury
 
   // Added here to make prism-crypto works.
@@ -70,7 +66,6 @@ object Dependencies {
   private lazy val castorDependencies: Seq[ModuleID] = Seq(castorCore, castorSqlDoobie)
   private lazy val polluxDependencies: Seq[ModuleID] = Seq(polluxCore, polluxSqlDoobie)
   private lazy val mercuryDependencies: Seq[ModuleID] = Seq(mercuryAgent)
-  private lazy val connectDependencies: Seq[ModuleID] = Seq(connectCore, connectSqlDoobie)
   private lazy val akkaHttpDependencies: Seq[ModuleID] =
     Seq(akkaTyped, akkaStream, akkaHttp, akkaSprayJson).map(_.cross(CrossVersion.for3Use2_13))
   private lazy val bouncyDependencies: Seq[ModuleID] = Seq(bouncyBcpkix, bouncyBcprov)
@@ -97,6 +92,5 @@ object Dependencies {
       castorDependencies ++
       polluxDependencies ++
       mercuryDependencies ++
-      connectDependencies ++
       tapirDependencies
 }
