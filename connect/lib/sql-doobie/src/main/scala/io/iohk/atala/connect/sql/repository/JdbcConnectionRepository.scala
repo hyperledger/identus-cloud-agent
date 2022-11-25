@@ -6,7 +6,6 @@ import io.circe._
 import io.circe.parser._
 import io.circe.syntax._
 import io.iohk.atala.connect.core.model.*
-import io.iohk.atala.connect.core.repository.ConnectionsRepository
 import zio.*
 import zio.interop.catz.*
 import io.iohk.atala.mercury.protocol.connection.*
@@ -15,13 +14,18 @@ import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
 import java.util.UUID
 import io.iohk.atala.connect.core.model.ConnectionRecord.Role
 import io.iohk.atala.connect.core.model.ConnectionRecord.ProtocolState
+import io.iohk.atala.connect.core.repository.ConnectionRepository
+import java.time.Instant
 
-class JdbcConnectionsRepository(xa: Transactor[Task]) extends ConnectionsRepository[Task] {
+class JdbcConnectionRepository(xa: Transactor[Task]) extends ConnectionRepository[Task] {
 
-  given logHandler: LogHandler = LogHandler.jdkLogHandler
+  // given logHandler: LogHandler = LogHandler.jdkLogHandler
 
   given uuidGet: Get[UUID] = Get[String].map(UUID.fromString)
   given uuidPut: Put[UUID] = Put[String].contramap(_.toString())
+
+  given instantGet: Get[Instant] = Get[Long].map(Instant.ofEpochSecond)
+  given instantPut: Put[Instant] = Put[Long].contramap(_.getEpochSecond())
 
   given protocolStateGet: Get[ProtocolState] = Get[String].map(ProtocolState.valueOf)
   given protocolStatePut: Put[ProtocolState] = Put[String].contramap(_.toString)
@@ -40,15 +44,21 @@ class JdbcConnectionsRepository(xa: Transactor[Task]) extends ConnectionsReposit
 
   override def createConnectionRecord(record: ConnectionRecord): Task[Int] = {
     val cxnIO = sql"""
-        | INSERT INTO public.issue_credential_records(
+        | INSERT INTO public.connection_records(
         |   id,
+        |   created_at,
+        |   updated_at,
         |   thid,
+        |   label,
         |   role,
         |   protocol_state,
         |   invitation
         | ) values (
         |   ${record.id},
+        |   ${record.createdAt},
+        |   ${record.updatedAt},
         |   ${record.thid},
+        |   ${record.label},
         |   ${record.role},
         |   ${record.protocolState},
         |   ${record.invitation}
@@ -59,11 +69,14 @@ class JdbcConnectionsRepository(xa: Transactor[Task]) extends ConnectionsReposit
       .transact(xa)
   }
 
-  override def getConnectionRecords: Task[Seq[ConnectionRecord]] = {
+  override def getConnectionRecords(): Task[Seq[ConnectionRecord]] = {
     val cxnIO = sql"""
         | SELECT
         |   id,
+        |   created_at,
+        |   updated_at,
         |   thid,
+        |   label,
         |   role,
         |   protocol_state,
         |   invitation,
@@ -78,18 +91,21 @@ class JdbcConnectionsRepository(xa: Transactor[Task]) extends ConnectionsReposit
       .transact(xa)
   }
 
-  override def getConnectionRecord(id: UUID): Task[Option[ConnectionRecord]] = {
+  override def getConnectionRecord(recordId: UUID): Task[Option[ConnectionRecord]] = {
     val cxnIO = sql"""
         | SELECT
         |   id,
+        |   created_at,
+        |   updated_at,
         |   thid,
+        |   label,
         |   role,
         |   protocol_state,
         |   invitation,
         |   connection_request,
         |   connection_response
         | FROM public.connection_records
-        | WHERE id = $id
+        | WHERE id = $recordId
         """.stripMargin
       .query[ConnectionRecord]
       .option
@@ -98,25 +114,12 @@ class JdbcConnectionsRepository(xa: Transactor[Task]) extends ConnectionsReposit
       .transact(xa)
   }
 
-  override def deleteConnectionRecord(id: UUID): Task[Int] = {
+  override def deleteConnectionRecord(recordId: UUID): Task[Int] = {
     val cxnIO = sql"""
       | DELETE
       | FROM public.connection_records
-      | WHERE id = $id
-      """.stripMargin
-    .update
-
-    cxnIO.run
-      .transact(xa)
-  }
-  
-  override def deleteConnectionRecordByThreadId(thid: UUID): Task[Int] = {
-    val cxnIO = sql"""
-      | DELETE
-      | FROM public.connection_records
-      | WHERE thid = $thid
-      """.stripMargin
-    .update
+      | WHERE id = $recordId
+      """.stripMargin.update
 
     cxnIO.run
       .transact(xa)
@@ -126,13 +129,16 @@ class JdbcConnectionsRepository(xa: Transactor[Task]) extends ConnectionsReposit
     val cxnIO = sql"""
         | SELECT
         |   id,
+        |   created_at,
+        |   updated_at,
         |   thid,
+        |   label,
         |   role,
         |   protocol_state,
         |   invitation,
         |   connection_request,
         |   connection_response
-        | FROM public.issue_connection_records
+        | FROM public.connection_records
         | WHERE thid = $thid
         """.stripMargin
       .query[ConnectionRecord]
@@ -148,7 +154,7 @@ class JdbcConnectionsRepository(xa: Transactor[Task]) extends ConnectionsReposit
       to: ConnectionRecord.ProtocolState
   ): Task[Int] = {
     val cxnIO = sql"""
-        | UPDATE public.issue_credential_records
+        | UPDATE public.connection_records
         | SET
         |   protocol_state = $to
         | WHERE
@@ -160,45 +166,45 @@ class JdbcConnectionsRepository(xa: Transactor[Task]) extends ConnectionsReposit
       .transact(xa)
   }
 
-  override def updateWithConnectionRequest(request: ConnectionRequest): Task[Int] = {
-    request.thid match
-      case None =>
-        ZIO.succeed(0)
-      case Some(value) =>
-        val cxnIO = sql"""
-            | UPDATE public.connection_records
-            | SET
-            |   connection_request = $request,
-            |   protocol_state = ${ConnectionRecord.ProtocolState.ConnectionRequestReceived}
-            | WHERE
-            |   thid = $value
-            """.stripMargin.update
+  override def updateWithConnectionRequest(
+      recordId: UUID,
+      request: ConnectionRequest,
+      state: ProtocolState
+  ): Task[Int] = {
+    val cxnIO = sql"""
+        | UPDATE public.connection_records
+        | SET
+        |   connection_request = $request,
+        |   protocol_state = $state
+        | WHERE
+        |   id = $recordId
+        """.stripMargin.update
 
-        cxnIO.run
-          .transact(xa)
+    cxnIO.run
+      .transact(xa)
   }
 
-  override def updateWithConnectionResponse(response: ConnectionResponse): Task[Int] = {
-    response.thid match
-      case None =>
-        ZIO.succeed(0)
-      case Some(value) =>
-        val cxnIO = sql"""
-            | UPDATE public.connection_records
-            | SET
-            |   connection_response = $response,
-            |   protocol_state = ${ConnectionRecord.ProtocolState.ConnectionResponseReceived}
-            | WHERE
-            |   thid = $value
-            """.stripMargin.update
+  override def updateWithConnectionResponse(
+      recordId: UUID,
+      response: ConnectionResponse,
+      state: ProtocolState
+  ): Task[Int] = {
+    val cxnIO = sql"""
+        | UPDATE public.connection_records
+        | SET
+        |   connection_response = $response,
+        |   protocol_state = $state
+        | WHERE
+        |   id = $recordId
+        """.stripMargin.update
 
-        cxnIO.run
-          .transact(xa)
+    cxnIO.run
+      .transact(xa)
   }
 
 }
 
-object JdbcConnectionsRepository {
-  val layer: URLayer[Transactor[Task], ConnectionsRepository[Task]] =
-    ZLayer.fromFunction(new JdbcConnectionsRepository(_))
+object JdbcConnectionRepository {
+  val layer: URLayer[Transactor[Task], ConnectionRepository[Task]] =
+    ZLayer.fromFunction(new JdbcConnectionRepository(_))
 }
