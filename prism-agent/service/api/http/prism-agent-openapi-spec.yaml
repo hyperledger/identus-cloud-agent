@@ -885,7 +885,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "./pollux/schemas.yaml#/components/schemas/PresentationStatus"
+                type: array
+                items:
+                  $ref: "./pollux/schemas.yaml#/components/schemas/PresentationStatus"
         "404":
           description: There is no presentations record
           content:

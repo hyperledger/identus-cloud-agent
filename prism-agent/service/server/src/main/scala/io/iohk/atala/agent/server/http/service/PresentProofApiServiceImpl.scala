@@ -58,7 +58,7 @@ class PresentProofApiServiceImpl(
   }
 
   override def getAllPresentation()(implicit
-      toEntityMarshallerPresentationStatus: ToEntityMarshaller[PresentationStatus],
+      toEntityMarshallerPresentationStatusarray: ToEntityMarshaller[Seq[PresentationStatus]],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
 
@@ -72,7 +72,7 @@ class PresentProofApiServiceImpl(
       case Left(error) => complete(error.status -> error)
       case Right(result) => {
         // TODO map this correctly Presentation Model
-        getAllPresentation200(PresentationStatus("111", "DD", Seq.empty, None))
+        getAllPresentation200(Seq(PresentationStatus("111", "DD", Seq.empty, None)))
       }
     }
   }
