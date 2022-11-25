@@ -62,25 +62,14 @@ class PresentProofApiServiceImpl(
           schemaId = None
         )
         .mapError(HttpServiceError.DomainError[PresentationError].apply)
-      result: RequestPresentationOutput = RequestPresentationOutput(record.id.toString)
-    } yield result
+    } yield record
 
-    onZioSuccess(result.mapBoth(_.toOAS, _.map(_.toOAS)).either) {
+    onZioSuccess(result.mapBoth(_.toOAS, record => RequestPresentationOutput(record.id.toString)).either) {
       case Left(error) => complete(error.status -> error)
       case Right(result) =>
-        requestPresentation201(
-          IssueCredentialRecordCollection(
-            items = result,
-            offset = 0,
-            limit = 0,
-            count = result.size
-          )
-        )
+        requestPresentation201(result)
     }
 
-    onZioSuccess(result) { e =>
-      requestPresentation201(e)
-    }
   }
 
   def sendPresentation(
