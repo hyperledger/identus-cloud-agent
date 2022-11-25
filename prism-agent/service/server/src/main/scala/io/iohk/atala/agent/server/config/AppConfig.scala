@@ -7,6 +7,7 @@ final case class AppConfig(
     iris: IrisConfig,
     castor: CastorConfig,
     pollux: PolluxConfig,
+    agent: AgentConfig,
     connect: ConnectConfig
 )
 
@@ -23,3 +24,9 @@ final case class ConnectConfig(database: DatabaseConfig)
 final case class GrpcServiceConfig(host: String, port: Int)
 
 final case class DatabaseConfig(host: String, port: Int, databaseName: String, username: String, password: String)
+
+final case class AgentConfig(httpEndpoint: HttpEndpointConfig)
+
+final case class HttpEndpointConfig(http: HttpConfig)
+
+final case class HttpConfig(port: Int)

@@ -5,6 +5,7 @@ object Dependencies {
     val zio = "2.0.2"
     val zioConfig = "3.0.2"
     val zioHttp = "2.0.0-RC11"
+    val zioInteropCats = "3.3.0"
     val akka = "2.6.20"
     val akkaHttp = "10.2.9"
     val castor = "0.2.0"
@@ -13,12 +14,16 @@ object Dependencies {
     val bouncyCastle = "1.70"
     val logback = "1.4.4"
     val mercury = "0.7.0"
+    val zioJson = "0.3.0"
+    val tapir = "1.2.2"
   }
 
   private lazy val zio = "dev.zio" %% "zio" % Versions.zio
   private lazy val zioConfig = "dev.zio" %% "zio-config" % Versions.zioConfig
   private lazy val zioConfigMagnolia = "dev.zio" %% "zio-config-magnolia" % Versions.zioConfig
   private lazy val zioConfigTypesafe = "dev.zio" %% "zio-config-typesafe" % Versions.zioConfig
+  private lazy val zioJson = "dev.zio" %% "zio-json" % Versions.zioJson
+  private lazy val zioInteropCats = "dev.zio" %% "zio-interop-cats" % Versions.zioInteropCats
 
   private lazy val zioTest = "dev.zio" %% "zio-test" % Versions.zio % Test
   private lazy val zioTestSbt = "dev.zio" %% "zio-test-sbt" % Versions.zio % Test
@@ -49,9 +54,19 @@ object Dependencies {
 
   private lazy val logback = "ch.qos.logback" % "logback-classic" % Versions.logback
 
+  private lazy val tapirSwaggerUiBundle = "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % Versions.tapir
+  private lazy val tapirJsonZio = "com.softwaremill.sttp.tapir" %% "tapir-json-zio" % Versions.tapir
+
+  private lazy val tapirZioHttpServer = "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server" % Versions.tapir
+  private lazy val tapirHttp4sServerZio = "com.softwaremill.sttp.tapir" %% "tapir-http4s-server-zio" % Versions.tapir
+  private lazy val http4sBlazeServer = "org.http4s" %% "http4s-blaze-server" % "0.23.12"
+
+  private lazy val tapirRedocBundle = "com.softwaremill.sttp.tapir" %% "tapir-redoc-bundle" % Versions.tapir
+  private lazy val tapirSttpStubServer = "com.softwaremill.sttp.tapir" %% "tapir-sttp-stub-server" % Versions.tapir % Test
+
+
   // Dependency Modules
-  private lazy val baseDependencies: Seq[ModuleID] =
-    Seq(zio, zioTest, zioTestSbt, zioTestMagnolia, zioConfig, zioConfigMagnolia, zioConfigTypesafe)
+  private lazy val baseDependencies: Seq[ModuleID] = Seq(zio, zioTest, zioTestSbt, zioTestMagnolia, zioConfig, zioConfigMagnolia, zioConfigTypesafe, zioJson, logback, zioHttp)
   private lazy val castorDependencies: Seq[ModuleID] = Seq(castorCore, castorSqlDoobie)
   private lazy val polluxDependencies: Seq[ModuleID] = Seq(polluxCore, polluxSqlDoobie)
   private lazy val mercuryDependencies: Seq[ModuleID] = Seq(mercuryAgent)
@@ -59,18 +74,28 @@ object Dependencies {
   private lazy val akkaHttpDependencies: Seq[ModuleID] =
     Seq(akkaTyped, akkaStream, akkaHttp, akkaSprayJson).map(_.cross(CrossVersion.for3Use2_13))
   private lazy val bouncyDependencies: Seq[ModuleID] = Seq(bouncyBcpkix, bouncyBcprov)
+  private lazy val tapirDependencies: Seq[ModuleID] =
+    Seq(
+      tapirSwaggerUiBundle,
+      tapirJsonZio,
+      tapirRedocBundle,
+      tapirSttpStubServer,
+      tapirZioHttpServer,
+      tapirHttp4sServerZio,
+      http4sBlazeServer)
+
 
   // Project Dependencies
-  lazy val keyManagementDependencies: Seq[ModuleID] = baseDependencies ++ castorDependencies ++ bouncyDependencies
+  lazy val keyManagementDependencies: Seq[ModuleID] =
+      baseDependencies ++
+      castorDependencies ++
+      bouncyDependencies
+
   lazy val serverDependencies: Seq[ModuleID] =
-    baseDependencies ++
+      baseDependencies ++
       akkaHttpDependencies ++
       castorDependencies ++
       polluxDependencies ++
       mercuryDependencies ++
-      connectDependencies ++
-      Seq(
-        zioHttp,
-        logback
-      )
+      tapirDependencies
 }

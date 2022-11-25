@@ -84,7 +84,13 @@ object Main extends ZIOAppDefault {
         .debug
         .fork
 
-      _ <- Modules.app(restServicePort).provide(didCommLayer)
+      _ <- Modules
+        .app(restServicePort)
+        .provide(didCommLayer)
+        .fork
+
+      _ <- Modules.zioApp.fork
+      _ <- ZIO.never
     } yield ()
 
 }

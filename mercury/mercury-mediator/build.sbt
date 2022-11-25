@@ -16,7 +16,7 @@ inThisBuild(
 // Custom keys
 val apiBaseDirectory =
   settingKey[File]("The base directory for Castor API specifications")
-ThisBuild / apiBaseDirectory := baseDirectory.value / ".." / "api"
+ThisBuild / apiBaseDirectory := baseDirectory.value / "api"
 ThisBuild / resolvers += Resolver.githubPackages("input-output-hk", "atala-prism-building-blocks")
 
 lazy val V = new {
@@ -88,7 +88,7 @@ lazy val mediator = project
     githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN"),
     // ### Build Docker Image ###
     Docker / maintainer := "atala-coredid@iohk.io",
-    Docker / dockerRepository := Some("atala-prism.io"),
+    Docker / dockerRepository := Some("ghcr.io"),
     Docker / dockerUsername := Some("input-output-hk"),
     Docker / githubOwner := "atala-prism-building-blocks",
     Docker / dockerUpdateLatest := true,
