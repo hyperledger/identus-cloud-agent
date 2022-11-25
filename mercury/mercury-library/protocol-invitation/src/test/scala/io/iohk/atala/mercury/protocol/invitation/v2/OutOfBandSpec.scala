@@ -22,7 +22,6 @@ class OutOfBandSpec extends FunSuite {
         "did:peer:2.Ez6LSmLmWmTvwjgLSuUaEQHdHSFWPwyibgzomWjFmnC6FhLnU.Vz6MktNgLh4N1u9KNhDiqe8KZ8bsLzLcqsifoNiUtBoSs9jxf.SeyJpZCI6Im5ldy1pZCIsInQiOiJkbSIsInMiOiJodHRwOi8vMTI3LjAuMC4xOjgwMDAiLCJhIjpbImRpZGNvbW0vdjIiXX0"
       ),
       Body("request-mediate", "RequestMediate", Seq("didcomm/v2", "didcomm/aip2;env=rfc587")),
-      None
     )
 
     assertEquals(ret, Right(expected))
