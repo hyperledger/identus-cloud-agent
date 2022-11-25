@@ -5,17 +5,13 @@ import io.iohk.atala.mercury.protocol.connection.{ConnectionRequest, ConnectionR
 import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
 
 import java.util.UUID
-import java.time.Instant
 
 case class ConnectionRecord(
     id: UUID,
-    createdAt: Instant,
-    updatedAt: Option[Instant],
-    thid: Option[UUID],
-    label: Option[String],
+    thid: UUID,
     role: Role,
     protocolState: ProtocolState,
-    invitation: Invitation,
+    invitation: Option[Invitation],
     connectionRequest: Option[ConnectionRequest],
     connectionResponse: Option[ConnectionResponse]
 )
@@ -27,7 +23,7 @@ object ConnectionRecord {
 
   enum ProtocolState:
     // Inviter has created an Invitation in a database
-    case InvitationGenerated extends ProtocolState
+    case InvitationSent extends ProtocolState
 
     // Invitee has received an offer (In Holder DB)
     case InvitationReceived extends ProtocolState
