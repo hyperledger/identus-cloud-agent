@@ -97,5 +97,6 @@ object Dependencies {
       castorDependencies ++
       polluxDependencies ++
       mercuryDependencies ++
+      connectDependencies ++
       tapirDependencies
 }
