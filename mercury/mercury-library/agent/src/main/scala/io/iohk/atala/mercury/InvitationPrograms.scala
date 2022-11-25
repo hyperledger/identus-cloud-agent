@@ -33,7 +33,8 @@ object InvitationPrograms {
         "https://didcomm.org/out-of-band/2.0/invitation",
         getNewMsgId,
         merdiator.myDid,
-        Body("request-mediate", "RequestMediate", Seq("didcomm/v2", "didcomm/aip2;env=rfc587"))
+        Body("request-mediate", "RequestMediate", Seq("didcomm/v2", "didcomm/aip2;env=rfc587")),
+        None
       )
       _ <- ZIO.log(s"createInvitationV2 from '${merdiator.myDid}'")
       result = invitation.asJson.deepDropNullValues
