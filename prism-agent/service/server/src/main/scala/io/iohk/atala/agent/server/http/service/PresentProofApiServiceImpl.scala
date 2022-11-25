@@ -32,24 +32,10 @@ class PresentProofApiServiceImpl(
     with AkkaZioSupport
     with OASDomainModelHelper
     with OASErrorModelHelper {
-  def getAllPresentation()(implicit
-      toEntityMarshallerPresentationStatus: ToEntityMarshaller[PresentationStatus]
-  ): Route = {
-    // val presentationService: PresentationService = ??? // TODO FIXME
 
-    // val result = for {
-    //   outcome <- presentationService.getPresentationRecords()
-    //   // .mapError(HttpServiceError.DomainError[PresentationError.UnexpectedError].apply)
-    // } yield outcome
-
-    // onZioSuccess(result) { e =>
-    //   getAllPresentation200(e)
-    // }
-    ??? // FIXME
-  }
-
-  def requestPresentation(requestPresentationInput: RequestPresentationInput)(implicit
-      toEntityMarshallerRequestPresentationOutput: ToEntityMarshaller[RequestPresentationOutput]
+  override def requestPresentation(requestPresentationInput: RequestPresentationInput)(implicit
+      toEntityMarshallerRequestPresentationOutput: ToEntityMarshaller[RequestPresentationOutput],
+      toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
 
     val result = for {
@@ -65,24 +51,34 @@ class PresentProofApiServiceImpl(
     } yield record
 
     onZioSuccess(result.mapBoth(_.toOAS, record => RequestPresentationOutput(record.id.toString)).either) {
-      case Left(error) => complete(error.status -> error)
-      case Right(result) =>
-        requestPresentation201(result)
+      case Left(error)   => complete(error.status -> error)
+      case Right(result) => requestPresentation201(result)
     }
 
   }
 
-  def sendPresentation(
-      id: String,
-      sendPresentationInput: SendPresentationInput
-  ): Route = ???
+  override def getAllPresentation()(implicit
+      toEntityMarshallerPresentationStatus: ToEntityMarshaller[PresentationStatus],
+      toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
+  ): Route = {
+    ???
+  }
+
+  override def updatePresentation(id: String, updatePresentationRequest: UpdatePresentationRequest)(implicit
+      toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
+  ): Route = {
+    ???
+  }
 }
 
 object PresentProofApiServiceImpl {
-  val layer: URLayer[Any, PresentProofApiService] = ZLayer.fromZIO {
+  val layer: URLayer[PresentationService & ConnectionService & DidComm, PresentProofApiService] = ZLayer.fromZIO {
+
     for {
       rt <- ZIO.runtime[Any]
-      // svc <- ZIO.service[PresentationService]
-    } yield PresentProofApiServiceImpl /*(svc)*/ (using rt)
+      presentationService <- ZIO.service[PresentationService]
+      connectionService <- ZIO.service[ConnectionService]
+      didCommService <- ZIO.service[DidComm]
+    } yield PresentProofApiServiceImpl(presentationService, connectionService, didCommService)(using rt)
   }
 }

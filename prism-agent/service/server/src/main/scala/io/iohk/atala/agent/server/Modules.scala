@@ -334,9 +334,12 @@ object HttpModule {
   }
 
   val presentProofProtocolApiLayer: RLayer[DidComm, PresentProofApi] = {
-    // val serviceLayer = AppModule.credentialServiceLayer
-    val apiServiceLayer = // serviceLayer >>> //FIXME
-      PresentProofApiServiceImpl.layer
+    val presentationServiceLayer: TaskLayer[io.iohk.atala.pollux.core.service.PresentationService] = ??? // FIXME
+    val connectionServiceLayer: TaskLayer[ConnectionService] = ??? // FIXME
+    val didCommServiceLayer: TaskLayer[DidComm] = ??? // FIXME
+    val serviceLayer = presentationServiceLayer ++ connectionServiceLayer ++ didCommServiceLayer
+
+    val apiServiceLayer = serviceLayer >>> PresentProofApiServiceImpl.layer
     val apiMarshallerLayer = PresentProofApiMarshallerImpl.layer
     (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new PresentProofApi(_, _))
   }
