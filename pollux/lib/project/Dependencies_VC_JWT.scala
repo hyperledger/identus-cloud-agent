@@ -3,6 +3,7 @@ import sbt._
 //TODO REMOVE THIS
 object Dependencies_VC_JWT {
   object Versions {
+    val zio = "2.0.2"
     val circeVersion = "0.14.3"
     val jwtCirceVersion = "9.1.1"
     val zioPreludeVersion = "1.0.0-RC15"
@@ -20,15 +21,18 @@ object Dependencies_VC_JWT {
 
   private lazy val jwtCirce = "com.github.jwt-scala" %% "jwt-circe" % Versions.jwtCirceVersion
 
+  private lazy val zio = "dev.zio" %% "zio" % Versions.zio
   private lazy val zioPrelude = "dev.zio" %% "zio-prelude" % Versions.zioPreludeVersion
+
+  private lazy val nimbusJoseJwt = "com.nimbusds" % "nimbus-jose-jwt" % "9.25.6"
 
   private lazy val test = "org.scalameta" %% "munit" % "0.7.29" % Test
 
   // Dependency Modules
-  private lazy val zioDependencies: Seq[ModuleID] = Seq(zioPrelude)
+  private lazy val zioDependencies: Seq[ModuleID] = Seq(zio, zioPrelude)
   private lazy val circeDependencies: Seq[ModuleID] = Seq(coreJwtCirce, genericJwtCirce, parserJwtCirce)
   private lazy val baseDependencies: Seq[ModuleID] =
-    circeDependencies ++ zioDependencies :+ jwtCirce :+ circeJsonSchema :+ test
+    circeDependencies ++ zioDependencies :+ jwtCirce :+ circeJsonSchema :+ nimbusJoseJwt :+ test
 
   // Project Dependencies
   lazy val polluxVcJwtDependencies: Seq[ModuleID] = baseDependencies

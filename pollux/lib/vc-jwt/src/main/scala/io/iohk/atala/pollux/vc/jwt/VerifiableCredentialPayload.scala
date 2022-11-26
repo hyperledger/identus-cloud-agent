@@ -1,5 +1,8 @@
 package io.iohk.atala.pollux.vc.jwt
 
+import com.nimbusds.jose.jwk.*
+import com.nimbusds.jose.jwk.gen.*
+import com.nimbusds.jose.util.Base64URL
 import io.circe
 import io.circe.generic.auto.*
 import io.circe.parser.decode
@@ -8,10 +11,11 @@ import io.circe.{Decoder, Encoder, HCursor, Json}
 import io.iohk.atala.pollux.vc.jwt.schema.SchemaValidator
 import net.reactivecore.cjs.validator.Violation
 import net.reactivecore.cjs.{DocumentValidator, Loader}
-import pdi.jwt.{Jwt, JwtCirce}
-import zio.NonEmptyChunk
+import pdi.jwt.*
 import zio.prelude.*
+import zio.{IO, NonEmptyChunk, Task, ZIO}
 
+import java.security.spec.{ECParameterSpec, ECPublicKeySpec}
 import java.security.{KeyPairGenerator, PublicKey}
 import java.time.{Instant, ZonedDateTime}
 import scala.util.{Failure, Success, Try}
@@ -582,4 +586,104 @@ object JwtCredential {
 
   def validateEncodedJwt(jwt: JWT, publicKey: PublicKey): Boolean =
     JwtCirce.isValid(jwt.value, publicKey)
+
+  def validateEncodedJWT(jwt: JWT, verificationMethods: Vector[VerificationMethod]): Boolean = {
+    verificationMethods.exists(verificationMethod =>
+      toPublicKey(verificationMethod).exists(publicKey => validateEncodedJwt(jwt, publicKey))
+    )
+  }
+
+  // Review Self Issuance
+  def validateEncodedJWT(jwt: JWT)(didResolver: DidResolver)(credentialSchemaResolver: CredentialSchema => Json)(
+      schemaToValidator: Json => Either[String, SchemaValidator]
+  ): IO[Throwable, Validation[String, IO[Throwable, Validation[String, Boolean]]]] = {
+    val decodedJwtIO: IO[Throwable, (String, String, String)] =
+      ZIO.fromTry(JwtCirce.decodeRawAll(jwt.value, JwtOptions(false, false, false)))
+
+    val validatedJwtAlgorithmIO: IO[Throwable, Validation[String, JwtAlgorithm]] =
+      decodedJwtIO.map((header, _, _) =>
+        Validation.fromOptionWith("An algorithm must be specified in the header")(
+          JwtCirce.parseHeader(header).algorithm
+        )
+      )
+
+    val validatedIssuerDidIO: IO[Throwable, Validation[String, String]] =
+      decodedJwtIO
+        .map((_, claim, _) => claim)
+        .map(claim => Validation.fromTry(decode[JwtCredentialPayload](claim).toTry).mapError(_.getMessage))
+        .map(_.flatMap(b => b.toValidatedCredentialPayload(credentialSchemaResolver)(schemaToValidator).map(_.iss)))
+
+    def resolveDidDocument(
+        issuerDid: _root_.java.lang.String
+    ): IO[Throwable, Validation[String, DIDDocument]] = {
+      for {
+        didResolutionResult <- didResolver.resolve(issuerDid)
+      } yield didResolutionResult match
+        case (didResolutionSucceeded: DIDResolutionSucceeded) =>
+          Validation.succeed(didResolutionSucceeded.didDocument)
+        case (didResolutionFailed: DIDResolutionFailed) => Validation.fail(didResolutionFailed.error.toString)
+    }
+
+    def validatedVerificationMethods(didDocument: DIDDocument, jwtAlgorithm: JwtAlgorithm) = {
+      Validation.fromPredicateWith("No PublicKey to validate against found")(
+        didDocument.verificationMethod.filter(verification => verification.`type` == jwtAlgorithm.name)
+      )(_.nonEmpty)
+    }
+
+    for {
+      validatedIssuerDid <- validatedIssuerDidIO
+    } yield for {
+      issuerDid <- validatedIssuerDid
+    } yield for {
+      validatedJwtAlgorithm <- validatedJwtAlgorithmIO
+      validatedDidDocument <- resolveDidDocument(issuerDid)
+    } yield for {
+      jwtAlgorithm <- validatedJwtAlgorithm
+      didDocument <- validatedDidDocument
+      verificationMethods <- validatedVerificationMethods(didDocument, jwtAlgorithm)
+    } yield validateEncodedJWT(jwt, verificationMethods)
+  }
+
+  // TODO Review DID self-issuance
+  def verify(
+      payload: ValidatedCredentialPayload,
+      jwt: JWT,
+      verificationAlgorithm: JwtAlgorithm,
+      didResolver: DidResolver
+  ): IO[Throwable, Validation[String, Boolean]] = {
+
+    val did = payload.iss
+    val validatedDidDocumentIO =
+      for {
+        didResolutionResult <- didResolver.resolve(did)
+      } yield didResolutionResult match
+        case (didResolutionSucceeded: DIDResolutionSucceeded) => Validation.succeed(didResolutionSucceeded.didDocument)
+        case (didResolutionFailed: DIDResolutionFailed)       => Validation.fail(didResolutionFailed.error.toString)
+
+    val validatedVerificationMethodsIO =
+      for {
+        validatedDidDocument <- validatedDidDocumentIO
+      } yield for {
+        didDocument <- validatedDidDocument
+        verificationMethods <- Validation.fromPredicateWith("No PublicKey to validate against found")(
+          didDocument.verificationMethod.filter(verification => verification.`type` == verificationAlgorithm.name)
+        )(_.nonEmpty)
+      } yield verificationMethods.exists(verificationMethod =>
+        toPublicKey(verificationMethod).exists(publicKey => validateEncodedJwt(jwt, publicKey))
+      )
+
+    validatedVerificationMethodsIO
+  }
+
+  // TODO Implement other key types
+  def toPublicKey(verificationMethod: VerificationMethod): Option[PublicKey] = {
+    for {
+      publicKeyJwk <- verificationMethod.publicKeyJwk
+      curve <- publicKeyJwk.crv
+      x <- publicKeyJwk.x.map(Base64URL.from)
+      y <- publicKeyJwk.y.map(Base64URL.from)
+      d <- publicKeyJwk.d.map(Base64URL.from)
+    } yield new ECKey.Builder(Curve.parse(curve), x, y).d(d).build().toPublicKey
+  }
+
 }
