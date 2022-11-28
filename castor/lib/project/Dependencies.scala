@@ -5,7 +5,7 @@ object Dependencies {
     val zio = "2.0.2"
     val doobie = "1.0.0-RC2"
     val zioCatsInterop = "3.3.0"
-    val iris = "0.1.0"
+    val prismNodeClient = "0.1.0"
     val prismSdk = "v1.4.1"
     val shared = "0.2.0"
     val flyway = "9.7.0"
@@ -24,7 +24,7 @@ object Dependencies {
   private lazy val flyway = "org.flywaydb" % "flyway-core" % Versions.flyway
 
   private lazy val shared = "io.iohk.atala" % "shared" % Versions.shared
-  private lazy val irisClient = "io.iohk.atala" %% "iris-client" % Versions.iris
+  private lazy val prismNodeClient = "io.iohk.atala" %% "prism-node-client" % Versions.prismNodeClient
 
   // We have to exclude bouncycastle since for some reason bitcoinj depends on bouncycastle jdk15to18
   // (i.e. JDK 1.5 to 1.8), but we are using JDK 11
@@ -32,9 +32,10 @@ object Dependencies {
     ExclusionRule(
       organization = "org.bouncycastle"
     )
+  private lazy val prismIdentity = "io.iohk.atala" % "prism-identity-jvm" % Versions.prismSdk
 
   // Dependency Modules
-  private lazy val baseDependencies: Seq[ModuleID] = Seq(zio, zioTest, zioTestSbt, zioTestMagnolia, shared, prismCrypto, irisClient)
+  private lazy val baseDependencies: Seq[ModuleID] = Seq(zio, zioTest, zioTestSbt, zioTestMagnolia, shared, prismCrypto, prismIdentity, prismNodeClient)
   private lazy val doobieDependencies: Seq[ModuleID] = Seq(doobiePostgres, doobieHikari, flyway)
 
   // Project Dependencies
