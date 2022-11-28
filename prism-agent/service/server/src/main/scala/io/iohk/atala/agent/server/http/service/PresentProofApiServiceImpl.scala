@@ -17,6 +17,7 @@ import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.mercury.DidComm
 import io.iohk.atala.agent.server.http.model.OASDomainModelHelper
 import io.iohk.atala.agent.server.http.model.OASErrorModelHelper
+import io.iohk.atala.agent.server.http.model.InvalidState
 
 class ConnectionService {
   // def getConnection(connectionId: String): UIO[DidId] = ???
@@ -86,13 +87,20 @@ class PresentProofApiServiceImpl(
   override def updatePresentation(id: String, updatePresentationRequest: UpdatePresentationRequest)(implicit
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
-    val result = for {
-      // action accept , decline
-      // if accept
-      record <- presentationService
-        .acceptRequestPresentation(UUID.fromString(id))
-        .mapError(HttpServiceError.DomainError[PresentationError].apply)
-    } yield record
+    val result = updatePresentationRequest.action match {
+      case "accept" =>
+        for {
+          record <- presentationService
+            .acceptRequestPresentation(UUID.fromString(id))
+            .mapError(HttpServiceError.DomainError[PresentationError].apply)
+        } yield record
+      case "reject" => ??? // TODO FIXME
+      case s        => throw InvalidState(s"Error: updatePresentation's State must be 'accept' or 'reject' but is $s")
+    }
+
+    // action accept , decline
+    // if acceptz
+    // FIXME MORE LOGIC based on the action
 
     onZioSuccess(result.mapBoth(_.toOAS, record => record).either) {
       case Left(error)   => complete(error.status -> error)

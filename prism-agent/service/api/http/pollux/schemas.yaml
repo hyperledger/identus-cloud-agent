@@ -467,17 +467,29 @@ components:
             $ref: "#/components/schemas/ProofRequestAux"
         connectionId:
           type: string
-    SendPresentationInput:
-      description: Start the send presentation Status Input
-      required: [presentationId, proofId]
+    RequestPresentationActionAccept:
+      description: Actions on presetations (to update)
+      required: [action, proofId]
       properties:
-        presentationId:
+        action:
           type: string
+          enum:
+            - accept
+            #- reject
         proofId:
           description: This is to choose what VCs to use
           type: array
           items:
             type: string
+    RequestPresentationActionReject:
+      description: Actions on presetations (to update)
+      required: [action]
+      properties:
+        action:
+          type: string
+          enum:
+            #- accept
+            - reject
 
     # W3CPresentationInput:
     #   description: Verifiable Presentation input

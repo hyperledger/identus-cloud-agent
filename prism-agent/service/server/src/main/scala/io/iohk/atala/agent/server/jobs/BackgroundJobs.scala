@@ -30,8 +30,8 @@ import io.iohk.atala.pollux.core.model.PresentationRecord
 import io.iohk.atala.mercury.protocol.presentproof.RequestPresentation
 import io.iohk.atala.pollux.core.service.PresentationService
 import io.iohk.atala.pollux.core.model.error.PresentationError
+import io.iohk.atala.agent.server.http.model.InvalidState
 
-case class InvalidState(cause: String) extends RuntimeException(cause)
 object BackgroundJobs {
 
   val didCommExchanges = {
@@ -209,16 +209,15 @@ object BackgroundJobs {
         case PresentationRecord(id, _, _, _, _, _, _, _, ProposalReceived, _, _, _) => ZIO.unit // NotImplemented
         case PresentationRecord(id, _, _, _, _, _, _, _, RequestPending, oRecord, _, _) => // Verifier
           oRecord match
-            case None => ZIO.fail(InvalidState("PresentationRecord with no Record"))
+            case None => ZIO.fail(InvalidState("PresentationRecord 'RequestPending' with no Record"))
             case Some(record) =>
               for {
                 _ <- ZIO.log(s"PresentationRecord: RequestPending (Send Massage)")
                 didComm <- ZIO.service[DidComm]
-
                 _ <- sendMessage(record.makeMessage)
                 service <- ZIO.service[PresentationService]
                 _ <- service.markRequestPresentationSent(id).catchAll { case ex: PresentationError =>
-                  ZIO.logError(s"Fail to mark the RequestPresentation '$id' as Sended: $ex") *>
+                  ZIO.logError(s"Fail to mark the RequestPresentation '$id' as Verifier: $ex") *>
                     ZIO.unit
                 }
               } yield ()
@@ -226,15 +225,32 @@ object BackgroundJobs {
         case PresentationRecord(id, _, _, _, _, _, _, _, RequestSent, _, _, _) => // Verifier
           ZIO.logDebug("PresentationRecord: RequestSent") *> ZIO.unit
         case PresentationRecord(id, _, _, _, _, _, _, _, RequestReceived, _, _, _) => // Prover
-          ???
-        case PresentationRecord(id, _, _, _, _, _, _, _, ProblemReportPending, _, _, _)  => ???
-        case PresentationRecord(id, _, _, _, _, _, _, _, ProblemReportSent, _, _, _)     => ???
-        case PresentationRecord(id, _, _, _, _, _, _, _, ProblemReportReceived, _, _, _) => ???
-        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationPending, _, _, _)   => ???
-        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationGenerated, _, _, _) => ???
-        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationSent, _, _, _)      => ???
-        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationReceived, _, _, _)  => ???
-        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationVerified, _, _, _)  => ???
+          ZIO.logDebug("PresentationRecord: RequestReceived") *> ZIO.unit
+        case PresentationRecord(id, _, _, _, _, _, _, _, ProblemReportPending, _, _, _)  => ??? // TODO NotImplemented
+        case PresentationRecord(id, _, _, _, _, _, _, _, ProblemReportSent, _, _, _)     => ??? // TODO NotImplemented
+        case PresentationRecord(id, _, _, _, _, _, _, _, ProblemReportReceived, _, _, _) => ??? // TODO NotImplemented
+        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationPending, _, _, presentation) => // Prover
+          presentation match
+            case None => ZIO.fail(InvalidState("PresentationRecord in 'PresentationPending' with no Presentation"))
+            case Some(p) =>
+              for {
+                _ <- ZIO.log(s"PresentationRecord: PresentationPending (Send Massage)")
+                didComm <- ZIO.service[DidComm]
+                _ <- sendMessage(p.makeMessage)
+                service <- ZIO.service[PresentationService]
+                _ <- service.markPresentationSent(id).catchAll { case ex: PresentationError =>
+                  ZIO.logError(s"Fail to mark the PresentationSent '$id' as Prover: $ex") *>
+                    ZIO.unit
+                }
+              } yield ()
+        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationGenerated, _, _, _) => ??? // TODO NotImplemented
+        // We are jumping this PresentationGenerated state
+        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationSent, _, _, _) =>
+          ZIO.logDebug("PresentationRecord: PresentationSent") *> ZIO.unit
+        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationReceived, _, _, _) =>
+          ZIO.logDebug("PresentationRecord: PresentationReceived") *> ZIO.unit
+        // TODO move the state to PresentationVerified
+        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationVerified, _, _, _) => ??? // TODO NotImplemented
       }
     } yield ()
 
