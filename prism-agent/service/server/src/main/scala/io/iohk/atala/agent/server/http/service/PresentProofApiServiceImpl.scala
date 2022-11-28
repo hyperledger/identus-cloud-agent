@@ -45,6 +45,7 @@ class PresentProofApiServiceImpl(
         .createPresentationRecord(
           thid = UUID.randomUUID(),
           subjectDid = toDID,
+          connectionId = None,
           schemaId = None
         )
         .mapError(HttpServiceError.DomainError[PresentationError].apply)

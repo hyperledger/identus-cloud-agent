@@ -26,7 +26,12 @@ import java.io.IOException
 import zhttp.service._
 import zhttp.http._
 import io.iohk.atala.pollux.vc.jwt.JwtCredential
+import io.iohk.atala.pollux.core.model.PresentationRecord
+import io.iohk.atala.mercury.protocol.presentproof.RequestPresentation
+import io.iohk.atala.pollux.core.service.PresentationService
+import io.iohk.atala.pollux.core.model.error.PresentationError
 
+case class InvalidState(cause: String) extends RuntimeException(cause)
 object BackgroundJobs {
 
   val didCommExchanges = {
@@ -166,11 +171,80 @@ object BackgroundJobs {
     } yield ()
 
     aux.catchAll {
+      case ex: IssueCredentialError => ZIO.fail(new RuntimeException(ex.toString)) // TODO FIXME
       case ex: TransportError => // : io.iohk.atala.mercury.model.error.MercuryError | java.io.IOException =>
         ex.printStackTrace()
         ZIO.logError(ex.getMessage()) *>
           ZIO.fail(mercuryErrorAsThrowable(ex))
       case ex: IOException => ZIO.fail(ex)
+    }
+  }
+
+  private[this] def performPresentation(
+      record: PresentationRecord
+  ): ZIO[DidComm & PresentationService, Throwable, Unit] = {
+    import io.iohk.atala.pollux.core.model.PresentationRecord.ProtocolState._
+
+    val aux: ZIO[DidComm & PresentationService, MercuryException | InvalidState, Unit] = for {
+      _ <- ZIO.logDebug(s"Running action with records => $record")
+      _ <- record match {
+        // ##########################
+        // ### PresentationRecord ###
+        // ##########################
+        //  id: UUID,
+        //  createdAt: Instant,
+        //  updatedAt: Option[Instant],
+        //  thid: UUID,
+        //  schemaId: Option[String],
+        //  connectionId: Option[String],
+        //  role: PresentationRecord.Role,
+        //  subjectId: DidId,
+        //  protocolState: PresentationRecord.ProtocolState,
+        //  requestPresentationData: Option[RequestPresentation],
+        //  proposePresentationData: Option[ProposePresentation],
+        //  presentationData: Option[Presentation]
+
+        case PresentationRecord(id, _, _, _, _, _, _, _, ProposalPending, _, _, _)  => ZIO.unit // NotImplemented
+        case PresentationRecord(id, _, _, _, _, _, _, _, ProposalSent, _, _, _)     => ZIO.unit // NotImplemented
+        case PresentationRecord(id, _, _, _, _, _, _, _, ProposalReceived, _, _, _) => ZIO.unit // NotImplemented
+        case PresentationRecord(id, _, _, _, _, _, _, _, RequestPending, oRecord, _, _) => // Verifier
+          oRecord match
+            case None => ZIO.fail(InvalidState("PresentationRecord with no Record"))
+            case Some(record) =>
+              for {
+                _ <- ZIO.log(s"PresentationRecord: RequestPending (Send Massage)")
+                didComm <- ZIO.service[DidComm]
+
+                _ <- sendMessage(record.makeMessage)
+                service <- ZIO.service[PresentationService]
+                _ <- service.markRequestPresentationSent(id).catchAll { case ex: PresentationError =>
+                  ZIO.logError(s"Fail to mark the RequestPresentation '$id' as Sended: $ex") *>
+                    ZIO.unit
+                }
+              } yield ()
+
+        case PresentationRecord(id, _, _, _, _, _, _, _, RequestSent, _, _, _) => // Verifier
+          ZIO.logDebug("PresentationRecord: RequestSent") *> ZIO.unit
+        case PresentationRecord(id, _, _, _, _, _, _, _, RequestReceived, _, _, _) => // Prover
+          ???
+        case PresentationRecord(id, _, _, _, _, _, _, _, ProblemReportPending, _, _, _)  => ???
+        case PresentationRecord(id, _, _, _, _, _, _, _, ProblemReportSent, _, _, _)     => ???
+        case PresentationRecord(id, _, _, _, _, _, _, _, ProblemReportReceived, _, _, _) => ???
+        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationPending, _, _, _)   => ???
+        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationGenerated, _, _, _) => ???
+        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationSent, _, _, _)      => ???
+        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationReceived, _, _, _)  => ???
+        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationVerified, _, _, _)  => ???
+      }
+    } yield ()
+
+    aux.catchAll {
+      case ex: TransportError => // : io.iohk.atala.mercury.model.error.MercuryError | java.io.IOException =>
+        ex.printStackTrace()
+        ZIO.logError(ex.getMessage()) *>
+          ZIO.fail(mercuryErrorAsThrowable(ex))
+      case ex: IOException  => ZIO.fail(ex)
+      case ex: InvalidState => ZIO.fail(ex)
     }
   }
 
