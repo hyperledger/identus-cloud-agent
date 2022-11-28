@@ -44,14 +44,13 @@ private[castor] trait W3CModelHelper {
       controller = controller.toString,
       publicKeyJwk = publicKey.publicKeyData match {
         case PublicKeyData.ECKeyData(crv, x, y) =>
-          Some(
-            PublicKeyJwk(
-              kty = "EC",
-              crv = crv.name,
-              x = x.toString,
-              y = y.toString
-            )
+          PublicKeyJwk(
+            kty = "EC",
+            crv = crv.name,
+            x = x.toString,
+            y = y.toString
           )
+
       }
     )
   }

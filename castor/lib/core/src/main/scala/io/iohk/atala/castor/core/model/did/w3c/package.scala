@@ -9,7 +9,9 @@ package object w3c {
 
   import W3CModelHelper.*
 
-  def makeW3CResolver(service: DIDService)(did: String): UIO[DIDResolutionRepr] = {
+  def makeW3CResolver(
+      service: DIDService
+  )(did: String): IO[DIDResolutionErrorRepr, (DIDDocumentRepr, DIDDocumentMetadataRepr)] = {
     val didData = for {
       prismDID <- ZIO
         .fromEither(PrismDID.fromString(did))
@@ -28,16 +30,8 @@ package object w3c {
     } yield didData.toW3C
 
     didData
-      .foldZIO(
-        error => ZIO.succeed(DIDResolutionRepr(didResolutionMetadata = DIDResolutionMetadataRepr(error = Some(error)))),
-        didDocument =>
-          ZIO.succeed(
-            DIDResolutionRepr(
-              didDocument = Some(didDocument),
-              didDocumentMetadata =
-                Some(DIDDocumentMetadataRepr(deactivated = Some(false))) // TODO: handle deactivated DIDs
-            )
-          )
+      .map(didDocument =>
+        didDocument -> DIDDocumentMetadataRepr(deactivated = Some(false)) // TODO: handle did deactivation
       )
   }
 

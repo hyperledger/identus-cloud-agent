@@ -2,18 +2,6 @@ package io.iohk.atala.castor.core.model.did.w3c
 
 import java.time.Instant
 
-/** A representation of resolution result in W3C format */
-final case class DIDResolutionRepr(
-    didResolutionMetadata: DIDResolutionMetadataRepr = DIDResolutionMetadataRepr(),
-    didDocument: Option[DIDDocumentRepr] = None,
-    didDocumentMetadata: Option[DIDDocumentMetadataRepr] = None
-)
-
-final case class DIDResolutionMetadataRepr(
-    contentType: "application/did+ld+json" = "application/did+ld+json",
-    error: Option[DIDResolutionErrorRepr] = None
-)
-
 enum DIDResolutionErrorRepr(val value: String) {
   case InvalidDID extends DIDResolutionErrorRepr("invalidDid")
   case InvalidDIDUrl extends DIDResolutionErrorRepr("invalidDidUrl")
