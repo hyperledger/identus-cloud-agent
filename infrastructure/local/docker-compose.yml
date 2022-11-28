@@ -105,7 +105,10 @@ services:
       POLLUX_DB_NAME: pollux
       POLLUX_DB_USER: postgres
       POLLUX_DB_PASSWORD: postgres
-      
+    ports:
+      - "8085:8085"
+      - "8080:8080"
+
   swagger-ui:
     image: swaggerapi/swagger-ui:v4.14.0
     environment:

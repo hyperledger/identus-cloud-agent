@@ -1,3 +1,11 @@
+# [castor-v0.3.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/castor-v0.2.0...castor-v0.3.0) (2022-11-28)
+
+
+### Features
+
+* **castor:** update castor to use prism-node protobuf ([#136](https://github.com/input-output-hk/atala-prism-building-blocks/issues/136)) ([5e3445f](https://github.com/input-output-hk/atala-prism-building-blocks/commit/5e3445ff0c93e4fdeead6f74e27c5eb8abb48dcc))
+* **pollux:** implement Issue Credential v2 Protocol ([#144](https://github.com/input-output-hk/atala-prism-building-blocks/issues/144)) ([a80702f](https://github.com/input-output-hk/atala-prism-building-blocks/commit/a80702f5b255d8079085a6ec27c87baa6a23ac59)), closes [#92](https://github.com/input-output-hk/atala-prism-building-blocks/issues/92)
+
 # [castor-v0.2.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/castor-v0.1.0...castor-v0.2.0) (2022-11-14)
 
 

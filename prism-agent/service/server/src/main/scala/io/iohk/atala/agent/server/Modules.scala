@@ -80,6 +80,8 @@ import io.iohk.atala.connect.sql.repository.JdbcConnectionRepository
 import io.iohk.atala.mercury.protocol.connection.ConnectionRequest
 import io.iohk.atala.mercury.protocol.connection.ConnectionResponse
 import io.iohk.atala.connect.core.model.error.ConnectionError
+import io.iohk.atala.pollux.schema.{SchemaRegistryServerEndpoints, VerificationPolicyServerEndpoints}
+import io.iohk.atala.pollux.service.{SchemaRegistryServiceInMemory, VerificationPolicyServiceInMemory}
 
 object Modules {
 
@@ -94,13 +96,18 @@ object Modules {
   lazy val zioApp = {
     val zioHttpServerApp = for {
       allSchemaRegistryEndpoints <- SchemaRegistryServerEndpoints.all
-      allEndpoints = ZHttpEndpoints.withDocumentations[Task](allSchemaRegistryEndpoints)
+      allVerificationPolicyEndpoints <- VerificationPolicyServerEndpoints.all
+      allEndpoints = ZHttpEndpoints.withDocumentations[Task](
+        allSchemaRegistryEndpoints ++ allVerificationPolicyEndpoints
+      )
       appConfig <- ZIO.service[AppConfig]
       httpServer <- ZHttp4sBlazeServer.start(allEndpoints, port = appConfig.agent.httpEndpoint.http.port)
     } yield httpServer
 
     zioHttpServerApp
-      .provideLayer(SchemaRegistryServiceInMemory.layer ++ SystemModule.configLayer)
+      .provideLayer(
+        SchemaRegistryServiceInMemory.layer ++ VerificationPolicyServiceInMemory.layer ++ SystemModule.configLayer
+      )
       .unit
   }
 
