@@ -4,6 +4,9 @@ import akka.http.scaladsl.server.Directives.*
 import akka.http.scaladsl.marshalling.ToEntityMarshaller
 import akka.http.scaladsl.server.Route
 import io.iohk.atala.castor.core.service.DIDService
+import io.iohk.atala.castor.core.model.did.PrismDID
+import io.iohk.atala.castor.core.model.did.w3c.W3CModelHelper.*
+import io.iohk.atala.castor.core.model.did.w3c.makeW3CResolver
 import io.iohk.atala.agent.openapi.api.DIDApiService
 import io.iohk.atala.agent.openapi.model.*
 import io.iohk.atala.agent.server.http.model.{HttpServiceError, OASDomainModelHelper, OASErrorModelHelper}
@@ -29,14 +32,12 @@ class DIDApiServiceImpl(service: DIDService)(using runtime: Runtime[Any])
               id = "did:prism:1:mainnet:abcdef123456#key-1",
               `type` = "JsonWebKey2020",
               controller = "did:prism:1:mainnet:abcdef123456",
-              jsonWebKey2020 = JsonWebKey2020(
-                publicKeyJwk = PublicKeyJwk(
-                  crv = Some("P-256"),
-                  x = Some("38M1FDts7Oea7urmseiugGW7tWc3mLpJh6rKe7xINZ8"),
-                  y = Some("nDQW6XZ7b_u2Sy9slofYLlG03sOEoug3I0aAPQ0exs4"),
-                  kty = Some("EC"),
-                  kid = Some("_TKzHv2jFIyvdTGF1Dsgwngfdg3SH6TpDv0Ta1aOEkw")
-                )
+              publicKeyJwk = PublicKeyJwk(
+                crv = Some("P-256"),
+                x = Some("38M1FDts7Oea7urmseiugGW7tWc3mLpJh6rKe7xINZ8"),
+                y = Some("nDQW6XZ7b_u2Sy9slofYLlG03sOEoug3I0aAPQ0exs4"),
+                kty = "EC",
+                kid = Some("_TKzHv2jFIyvdTGF1Dsgwngfdg3SH6TpDv0Ta1aOEkw")
               )
             )
           )
@@ -51,7 +52,7 @@ class DIDApiServiceImpl(service: DIDService)(using runtime: Runtime[Any])
 
   private val mockDIDResponse = DIDResponse(
     did = mockDID,
-    deactivated = false
+    metadata = DIDDocumentMetadata(deactivated = false)
   )
 
   private val mockDIDOperationResponse = DIDOperationResponse(
@@ -79,7 +80,11 @@ class DIDApiServiceImpl(service: DIDService)(using runtime: Runtime[Any])
       toEntityMarshallerDIDResponse: ToEntityMarshaller[DIDResponse],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
-    onZioSuccess(ZIO.unit) { _ => getDid200(mockDIDResponse) }
+    val result = makeW3CResolver(service)(didRef).mapError(HttpServiceError.DomainError.apply)
+    onZioSuccess(result.mapBoth(_.toOAS, _.toOAS).either) {
+      case Left(error)     => complete(error.status -> error)
+      case Right(response) => getDid200(response)
+    }
   }
 
   override def recoverDid(didRef: String, recoverDIDRequest: RecoverDIDRequest)(implicit

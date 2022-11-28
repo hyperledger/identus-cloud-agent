@@ -1,16 +1,24 @@
 package io.iohk.atala.agent.server.http.model
 
 import io.iohk.atala.agent.openapi.model.{
+  Connection,
+  ConnectionInvitation,
   CreateDIDRequest,
   CreateManagedDidRequestDocumentTemplate,
   CreateManagedDidRequestDocumentTemplatePublicKeysInner,
+  DID,
+  DIDDocumentMetadata,
   DIDOperationResponse,
+  DIDResponse,
   DidOperation,
   DidOperationSubmission,
-  JsonWebKey2020,
+  IssueCredentialRecord,
+  IssueCredentialRecordCollection,
   PublicKey,
   PublicKeyJwk,
-  Service
+  Service,
+  VerificationMethod,
+  VerificationMethodOrRef
 }
 import io.iohk.atala.castor.core.model.did as castorDomain
 import io.iohk.atala.agent.walletapi.model as walletDomain
@@ -22,16 +30,13 @@ import io.iohk.atala.shared.utils.Traverse.*
 
 import java.net.URI
 import scala.util.Try
-import io.iohk.atala.agent.openapi.model.IssueCredentialRecord
-import io.iohk.atala.agent.openapi.model.IssueCredentialRecordCollection
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import io.iohk.atala.mercury.model.AttachmentDescriptor
 import io.iohk.atala.mercury.model.Base64
-import io.iohk.atala.agent.openapi.model.Connection
-import io.iohk.atala.agent.openapi.model.ConnectionInvitation
 import zio.ZIO
 import io.iohk.atala.agent.server.http.model.HttpServiceError.InvalidPayload
+
 import java.util.UUID
 import io.iohk.atala.connect.core.model.ConnectionRecord.Role
 
@@ -146,6 +151,62 @@ trait OASDomainModelHelper {
       ZIO
         .fromTry(Try(UUID.fromString(str)))
         .mapError(e => HttpServiceError.InvalidPayload(s"Error parsing string as UUID: ${e.getMessage()}"))
+  }
+
+  extension (didDoc: (castorDomain.w3c.DIDDocumentRepr, castorDomain.w3c.DIDDocumentMetadataRepr)) {
+    def toOAS: DIDResponse = DIDResponse(
+      did = DID(
+        id = didDoc._1.id,
+        controller = Some(didDoc._1.controller),
+        verificationMethod = Some(didDoc._1.verificationMethod.map(_.toOAS)),
+        authentication = Some(didDoc._1.authentication.map(_.toOAS)),
+        assertionMethod = Some(didDoc._1.assertionMethod.map(_.toOAS)),
+        keyAgreement = Some(didDoc._1.keyAgreement.map(_.toOAS)),
+        capabilityInvocation = Some(didDoc._1.capabilityInvocation.map(_.toOAS)),
+        service = Some(didDoc._1.service.map(_.toOAS))
+      ),
+      metadata = DIDDocumentMetadata(
+        deactivated = didDoc._2.deactivated.getOrElse(false)
+      )
+    )
+  }
+
+  extension (publicKeyRepr: castorDomain.w3c.PublicKeyRepr) {
+    def toOAS: VerificationMethod = {
+      VerificationMethod(
+        id = publicKeyRepr.id,
+        `type` = publicKeyRepr.`type`,
+        controller = publicKeyRepr.controller,
+        publicKeyJwk = publicKeyRepr.publicKeyJwk.toOAS
+      )
+    }
+  }
+
+  extension (publicKeyJwk: castorDomain.w3c.PublicKeyJwk) {
+    def toOAS: PublicKeyJwk = {
+      PublicKeyJwk(
+        crv = Some(publicKeyJwk.crv),
+        x = Some(publicKeyJwk.x),
+        y = Some(publicKeyJwk.y),
+        kty = publicKeyJwk.kty,
+        kid = None
+      )
+    }
+  }
+
+  extension (service: castorDomain.w3c.ServiceRepr) {
+    def toOAS: Service = Service(
+      id = service.id,
+      `type` = service.`type`,
+      serviceEndpoint = service.serviceEndpoint
+    )
+  }
+
+  given Conversion[VerificationMethod, VerificationMethodOrRef] with {
+    override def apply(x: VerificationMethod): VerificationMethodOrRef = VerificationMethodOrRef(
+      ref = None,
+      verificationMethod = Some(x)
+    )
   }
 
 }

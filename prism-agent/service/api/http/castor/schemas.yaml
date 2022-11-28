@@ -4,13 +4,12 @@ components:
       type: object
       required:
         - did
-        - type
-        - deactivated
+        - metadata
       properties:
         did:
           $ref: "#/components/schemas/DID"
-        deactivated:
-          type: boolean
+        metadata:
+          $ref: "#/components/schemas/DIDDocumentMetadata"
 
     DIDOperationResponse:
       type: object
@@ -56,6 +55,15 @@ components:
           items:
             $ref: "#/components/schemas/Service"
 
+    DIDDocumentMetadata:
+      type: object
+      required:
+      - deactivated
+      properties:
+        deactivated:
+          type: boolean
+          description: If a DID has been deactivated, DID document metadata MUST include this property with the boolean value true. If a DID has not been deactivated, this property is OPTIONAL, but if included, MUST have the boolean value false.
+
     VerificationMethodOrRef:
       description: |
         A reference to VerificationMethod or VerificationMethod object.
@@ -74,19 +82,19 @@ components:
         - id
         - type
         - controller
-        - jsonWebKey2020
+        - publicKeyJwk
       properties:
         id:
           type: string
           example: "did:prism:123#key-1"
         type:
           type: string
-          example: "JsonWebKey2020"
+          example: "EcdsaSecp256k1VerificationKey2019"
         controller:
           type: string
           example: "did:prism:456"
-        jsonWebKey2020:
-          $ref: "#/components/schemas/JsonWebKey2020"
+        publicKeyJwk:
+          $ref: "#/components/schemas/PublicKeyJwk"
 
     CreateDIDRequest:
       type: object
@@ -267,14 +275,14 @@ components:
         - type
         - controller
         - purposes
-        - jsonWebKey2020
+        - publicKeyJwk
       properties:
         id:
           type: string
           example: "key-1"
         type:
           type: string
-          example: "JsonWebKey2020"
+          example: "EcdsaSecp256k1VerificationKey2019"
         controller:
           type: string
           example: "did:prism:456"
@@ -291,19 +299,13 @@ components:
                 "capabilityDelegation",
               ]
           example: [ "authentication", "assertionMethod" ]
-        jsonWebKey2020:
-          $ref: "#/components/schemas/JsonWebKey2020"
-
-    JsonWebKey2020:
-      type: object
-      required:
-        - publicKeyJwk
-      properties:
         publicKeyJwk:
           $ref: "#/components/schemas/PublicKeyJwk"
 
     PublicKeyJwk:
       type: object
+      required:
+        - kty
       properties:
         crv:
           type: string

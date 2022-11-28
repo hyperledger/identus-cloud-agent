@@ -3,11 +3,13 @@ package io.iohk.atala.agent.walletapi.service
 import io.iohk.atala.agent.walletapi.model.error.{CreateManagedDIDError, PublishManagedDIDError}
 import io.iohk.atala.agent.walletapi.model.{DIDPublicKeyTemplate, ManagedDIDState, ManagedDIDTemplate}
 import io.iohk.atala.castor.core.model.did.{
+  CanonicalPrismDID,
+  DIDData,
   PrismDID,
   PrismDIDOperation,
   ScheduleDIDOperationOutcome,
-  ScheduledDIDOperationStatus,
   ScheduledDIDOperationDetail,
+  ScheduledDIDOperationStatus,
   Service,
   SignedPrismDIDOperation,
   VerificationRelationship
@@ -43,6 +45,8 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault {
                 ArraySeq.empty
               )
             )
+
+        override def resolveDID(did: CanonicalPrismDID): IO[error.DIDResolutionError, Option[DIDData]] = ZIO.none
 
         override def getScheduledDIDOperationDetail(
             operationId: Array[Byte]
