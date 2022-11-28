@@ -84,10 +84,10 @@ class PresentProofApiServiceImpl(
     }
   }
 
-  override def updatePresentation(id: String, updatePresentationRequest: UpdatePresentationRequest)(implicit
+  override def updatePresentation(id: String, requestPresentationAction: RequestPresentationAction)(implicit
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
-    val result = updatePresentationRequest.action match {
+    val result = requestPresentationAction.action match {
       case "accept" =>
         for {
           record <- presentationService

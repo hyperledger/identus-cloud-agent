@@ -191,19 +191,6 @@ object BackgroundJobs {
         // ##########################
         // ### PresentationRecord ###
         // ##########################
-        //  id: UUID,
-        //  createdAt: Instant,
-        //  updatedAt: Option[Instant],
-        //  thid: UUID,
-        //  schemaId: Option[String],
-        //  connectionId: Option[String],
-        //  role: PresentationRecord.Role,
-        //  subjectId: DidId,
-        //  protocolState: PresentationRecord.ProtocolState,
-        //  requestPresentationData: Option[RequestPresentation],
-        //  proposePresentationData: Option[ProposePresentation],
-        //  presentationData: Option[Presentation]
-
         case PresentationRecord(id, _, _, _, _, _, _, _, ProposalPending, _, _, _)  => ZIO.unit // NotImplemented
         case PresentationRecord(id, _, _, _, _, _, _, _, ProposalSent, _, _, _)     => ZIO.unit // NotImplemented
         case PresentationRecord(id, _, _, _, _, _, _, _, ProposalReceived, _, _, _) => ZIO.unit // NotImplemented

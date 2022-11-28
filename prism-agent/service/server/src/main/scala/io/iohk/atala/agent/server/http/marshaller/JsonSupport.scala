@@ -107,6 +107,6 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   given RootJsonFormat[RequestPresentationInput] = jsonFormat2(RequestPresentationInput.apply)
   given RootJsonFormat[RequestPresentationOutput] = jsonFormat1(RequestPresentationOutput.apply)
   given RootJsonFormat[PresentationStatus] = jsonFormat4(PresentationStatus.apply)
-  given RootJsonFormat[UpdatePresentationRequest] = jsonFormat2(UpdatePresentationRequest.apply)
+  given RootJsonFormat[RequestPresentationAction] = jsonFormat2(RequestPresentationAction.apply)
 
 }

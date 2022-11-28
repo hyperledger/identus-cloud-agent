@@ -911,9 +911,10 @@ paths:
         content:
           application/json:
             schema:
-              oneOf:
-                - $ref: "./pollux/schemas.yaml#/components/schemas/RequestPresentationActionAccept"
-                - $ref: "./pollux/schemas.yaml#/components/schemas/RequestPresentationActionReject"
+              $ref: "./pollux/schemas.yaml#/components/schemas/RequestPresentationAction"
+              # oneOf:
+              #  - $ref: "./pollux/schemas.yaml#/components/schemas/RequestPresentationActionAccept"
+              #  - $ref: "./pollux/schemas.yaml#/components/schemas/RequestPresentationActionReject"
       responses:
         "200":
           description: Update the presentation record
