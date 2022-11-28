@@ -9,7 +9,7 @@ import io.circe.parser.decode
 import io.circe.syntax.*
 import io.iohk.atala.pollux.vc.jwt.*
 import io.iohk.atala.pollux.vc.jwt.CredentialPayload.Implicits.*
-import io.iohk.atala.pollux.vc.jwt.schema.{PlaceholderSchemaValidator, ReactiveCoreSchemaValidator}
+import io.iohk.atala.pollux.vc.jwt.schema.{PlaceholderSchemaValidator, ReactiveCoreSchemaValidator, SchemaResolver}
 import net.reactivecore.cjs.resolver.Downloader
 import net.reactivecore.cjs.{DocumentValidator, Loader, Result}
 import pdi.jwt.{JwtAlgorithm, JwtCirce, JwtClaim}
@@ -84,7 +84,7 @@ object JwtCredentialDIDDocumentValidationDemo extends ZIOAppDefault {
     println("==================")
     val jwtCredentialPayload =
       JwtCredentialPayload(
-        maybeIss = Some("https://example.edu/issuers/565049"), // ISSUER DID
+        iss = "https://example.edu/issuers/565049", // ISSUER DID
         maybeSub = Some("1"), // SUBJECT DID
         vc = JwtVc(
           `@context` = Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
@@ -116,50 +116,53 @@ object JwtCredentialDIDDocumentValidationDemo extends ZIOAppDefault {
           maybeEvidence = Option.empty,
           maybeTermsOfUse = Option.empty
         ),
-        maybeNbf = Some(Instant.parse("2010-01-01T00:00:00Z")), // ISSUANCE DATE
+        nbf = Instant.parse("2010-01-01T00:00:00Z"), // ISSUANCE DATE
         aud = Set.empty,
         maybeExp = Some(Instant.parse("2010-01-12T00:00:00Z")), // EXPIRATION DATE
         maybeJti = Some("http://example.edu/credentials/3732") // CREDENTIAL ID
       )
 
-    def credentialSchemaResolver(credentialSchema: CredentialSchema): Json = {
-      val resolvedSchema =
-        """
-          |{
-          |  "type": "object",
-          |  "properties": {
-          |    "userName": {
-          |      "$ref": "#/$defs/user"
-          |    },
-          |    "age": {
-          |      "$ref": "#/$defs/age"
-          |    },
-          |    "email": {
-          |      "$ref": "#/$defs/email"
-          |    }
-          |  },
-          |  "required": ["userName", "age", "email"],
-          |  "$defs": {
-          |    "user": {
-          |       "type": "string",
-          |       "minLength": 3
-          |     },
-          |     "age": {
-          |       "type": "number"
-          |     },
-          |     "email": {
-          |       "type": "string",
-          |       "format": "email"
-          |     }
-          |  }
-          |}
-          |""".stripMargin
-      io.circe.parser.parse(resolvedSchema).toOption.get
+    val schemaResolved = new SchemaResolver {
+      override def resolve(credentialSchema: CredentialSchema): IO[String, Json] = {
+        println("Resolving Schema")
+        val resolvedSchema =
+          """
+            |{
+            |  "type": "object",
+            |  "properties": {
+            |    "userName": {
+            |      "$ref": "#/$defs/user"
+            |    },
+            |    "age": {
+            |      "$ref": "#/$defs/age"
+            |    },
+            |    "email": {
+            |      "$ref": "#/$defs/email"
+            |    }
+            |  },
+            |  "required": ["userName", "age", "email"],
+            |  "$defs": {
+            |    "user": {
+            |       "type": "string",
+            |       "minLength": 3
+            |     },
+            |     "age": {
+            |       "type": "number"
+            |     },
+            |     "email": {
+            |       "type": "string",
+            |       "format": "email"
+            |     }
+            |  }
+            |}
+            |""".stripMargin
+        ZIO.succeed(io.circe.parser.parse(resolvedSchema).toOption.get)
+      }
     }
 
     class DidResolverTest() extends DidResolver {
 
-      override def resolve(didUrl: String): IO[Throwable, DIDResolutionResult] = {
+      override def resolve(didUrl: String): IO[String, DIDResolutionResult] = {
         val Issuer1Key =
           VerificationMethod(
             id = "Issuer1Key",
@@ -191,8 +194,7 @@ object JwtCredentialDIDDocumentValidationDemo extends ZIOAppDefault {
           controller = Vector.empty,
           verificationMethod = Vector(
             Issuer1Key, // <------ ISSUER PUBLIC-KEY 1
-            issuer2Key, // <------ ISSUER PUBLIC-KEY 2
-            issuer3Key // <------ ISSUER PUBLIC-KEY 2
+            issuer2Key // <------ ISSUER PUBLIC-KEY 2
           ),
           service = Vector.empty
         )
@@ -210,21 +212,20 @@ object JwtCredentialDIDDocumentValidationDemo extends ZIOAppDefault {
     println("==================")
     println("Encode JWT Credential")
     println("==================")
-    val encodedJwt = JwtCredential.encodeJwt(jwtCredentialPayload, issuer = issuer3)
+    val encodedJwt = JwtCredential.encodeJwt(jwtCredentialPayload, issuer = issuer2)
 
     println("")
     println("==================")
     println("Validate JWT Credential Using DID Document of the Issuer of the Credential")
     println("==================")
     val validator =
-      JwtCredential.validateEncodedJWT(encodedJwt)(DidResolverTest())(credentialSchemaResolver)(
+      JwtCredential.validateEncodedJWT(encodedJwt)(DidResolverTest())(schemaResolved)(
         PlaceholderSchemaValidator.fromSchema
       )
 
     for {
       _ <- printLine("DEMO TIME! ")
       result <- validator
-      result2 <- result.toOption.get
-      _ <- printLine(s"IS VALID?: ${result2.toOption.get}")
+      _ <- printLine(s"IS VALID?: $result")
     } yield ()
 }
