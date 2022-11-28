@@ -8,7 +8,7 @@ object Dependencies {
     val iris = "0.1.0"
     val mercury = "0.7.0"
     val flyway = "9.7.0"
-    val shared = "0.1.0"
+    val shared = "0.2.0"
   }
 
   private lazy val zio = "dev.zio" %% "zio" % Versions.zio
