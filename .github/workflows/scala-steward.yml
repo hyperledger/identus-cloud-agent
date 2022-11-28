@@ -1,0 +1,33 @@
+name: Scala Steward Workflow
+
+# This workflow will launch at 00:00 every Sunday
+on:
+  schedule:
+    - cron: '0 0 * * 0'
+  workflow_dispatch:
+
+jobs:
+  scala-steward:
+    runs-on: ubuntu-latest
+    name: Launch Scala Steward
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v3
+
+      - uses: crazy-max/ghaction-import-gpg@v3
+        id: import_gpg
+        with:
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          git-user-signingkey: true
+          git-commit-gpgsign: true
+
+      - name: Launch Scala Steward
+        uses: scala-steward-org/scala-steward-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
+        with:
+          github-token: ${{ secrets.ATALA_GITHUB_TOKEN }}
+          sign-commits: true
+          author-email: ${{ steps.import_gpg.outputs.email }}
+          author-name: ${{ steps.import_gpg.outputs.name }}
+          branches: main
