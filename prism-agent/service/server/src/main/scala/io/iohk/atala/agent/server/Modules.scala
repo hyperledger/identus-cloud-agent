@@ -77,6 +77,8 @@ import java.io.IOException
 import cats.implicits.*
 import io.iohk.atala.pollux.schema.SchemaRegistryServerEndpoints
 import io.iohk.atala.pollux.service.SchemaRegistryServiceInMemory
+import io.iohk.atala.pollux.core.service.PresentationService
+import io.iohk.atala.pollux.core.service.PresentationServiceImpl
 
 object Modules {
 
@@ -103,7 +105,7 @@ object Modules {
 
   def didCommServiceEndpoint(port: Int) = {
     val header = "content-type" -> MediaTypes.contentTypeEncrypted
-    val app: HttpApp[DidComm with CredentialService, Throwable] =
+    val app: HttpApp[DidComm with CredentialService with PresentationService, Throwable] =
       Http.collectZIO[Request] {
         //   // TODO add DIDComm messages parsing logic here!
         //   Response.text("Hello World!").setStatus(Status.Accepted)
@@ -139,7 +141,7 @@ object Modules {
 
   def webServerProgram(
       jsonString: String
-  ): ZIO[DidComm with CredentialService, MercuryThrowable, Unit] = {
+  ): ZIO[DidComm with CredentialService with PresentationService, MercuryThrowable, Unit] = {
     import io.iohk.atala.mercury.DidComm.*
     ZIO.logAnnotate("request-id", java.util.UUID.randomUUID.toString()) {
       for {
@@ -216,9 +218,24 @@ object Modules {
             // ### present-proof ###
             // #####################
 
-            case s if s == Presentation.`type`        => ???
+            case s if s == Presentation.`type` => ???
+            case s if s == RequestPresentation.`type` =>
+              for {
+                _ <- ZIO.unit
+                request = RequestPresentation.readFromMessage(msg)
+                _ <- ZIO.logInfo("As an Prover in  present-proof: Got RequestCredential: " + request)
+                service <- ZIO.service[PresentationService]
+                _ <- service
+                  .receiveRequestPresentation(None, request)
+                  .catchSome { case RepositoryError(cause) =>
+                    ZIO.logError(cause.getMessage()) *>
+                      ZIO.fail(cause)
+                  }
+                  .catchAll { case ex: IOException => ZIO.fail(ex) }
+
+                // TODO todoTestOption if none
+              } yield ()
             case s if s == ProposePresentation.`type` => ???
-            case s if s == RequestPresentation.`type` => ???
 
             case _ => ZIO.succeed("Unknown Message Type")
           }
@@ -272,6 +289,8 @@ object AppModule {
 
   val credentialServiceLayer: RLayer[DidComm, CredentialService] =
     (GrpcModule.layers ++ RepoModule.layers) >>> CredentialServiceImpl.layer
+
+  def presentationServiceLayer = PresentationServiceImpl.layer
 }
 
 object GrpcModule {
