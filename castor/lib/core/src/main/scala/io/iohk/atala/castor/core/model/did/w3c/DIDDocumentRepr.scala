@@ -18,7 +18,7 @@ final case class PublicKeyRepr(
     id: String,
     `type`: "EcdsaSecp256k1VerificationKey2019",
     controller: String,
-    publicKeyBase58: Option[String]
+    publicKeyJwk: Option[PublicKeyJwk]
 )
 
 final case class ServiceRepr(
@@ -26,3 +26,5 @@ final case class ServiceRepr(
     `type`: String,
     serviceEndpoint: String
 )
+
+final case class PublicKeyJwk(kty: "EC", crv: String, x: String, y: String)

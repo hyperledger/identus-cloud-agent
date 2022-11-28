@@ -1,6 +1,13 @@
 package io.iohk.atala.castor.core.model.did.w3c
 
-import io.iohk.atala.castor.core.model.did.{CanonicalPrismDID, DIDData, PublicKey, Service, VerificationRelationship}
+import io.iohk.atala.castor.core.model.did.{
+  CanonicalPrismDID,
+  DIDData,
+  PublicKey,
+  PublicKeyData,
+  Service,
+  VerificationRelationship
+}
 
 object W3CModelHelper extends W3CModelHelper
 
@@ -35,7 +42,17 @@ private[castor] trait W3CModelHelper {
       id = publicKey.id,
       `type` = "EcdsaSecp256k1VerificationKey2019",
       controller = controller.toString,
-      publicKeyBase58 = Some("TODO: encode publickey") // TODO: encode to base58
+      publicKeyJwk = publicKey.publicKeyData match {
+        case PublicKeyData.ECKeyData(crv, x, y) =>
+          Some(
+            PublicKeyJwk(
+              kty = "EC",
+              crv = crv.name,
+              x = x.toString,
+              y = y.toString
+            )
+          )
+      }
     )
   }
 
