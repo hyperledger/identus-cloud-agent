@@ -146,7 +146,8 @@ final class ManagedDIDService private[walletapi] (
       )
       operation = PrismDIDOperation.Create(
         publicKeys = keys.map(_._2),
-        internalKeys = Seq(masterKey._2)
+        internalKeys = Seq(masterKey._2),
+        services = didTemplate.services
       )
       secret = CreateDIDSecret(
         keyPairs = keys.map { case (keyPair, template) => template.id -> keyPair }.toMap,

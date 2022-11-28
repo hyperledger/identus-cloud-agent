@@ -453,14 +453,11 @@ object RepoModule {
     connectDbConfigLayer >>> transactorLayer
   }
 
-  val didOperationRepoLayer: TaskLayer[DIDOperationRepository[Task]] =
-    castorTransactorLayer >>> JdbcDIDOperationRepository.layer
-
   val credentialRepoLayer: TaskLayer[CredentialRepository[Task]] =
     polluxTransactorLayer >>> JdbcCredentialRepository.layer
 
   val connectionRepoLayer: TaskLayer[ConnectionRepository[Task]] =
     connectTransactorLayer >>> JdbcConnectionRepository.layer
 
-  val layers = didOperationRepoLayer ++ credentialRepoLayer ++ connectionRepoLayer
+  val layers = credentialRepoLayer ++ connectionRepoLayer
 }

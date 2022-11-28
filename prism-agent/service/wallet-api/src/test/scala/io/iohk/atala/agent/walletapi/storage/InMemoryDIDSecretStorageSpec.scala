@@ -12,7 +12,7 @@ import scala.collection.immutable.ArraySeq
 
 object InMemoryDIDSecretStorageSpec extends ZIOSpecDefault {
 
-  private val didExample = PrismDID.buildLongFormFromOperation(PrismDIDOperation.Create(Nil, Nil))
+  private val didExample = PrismDID.buildLongFormFromOperation(PrismDIDOperation.Create(Nil, Nil, Nil))
 
   private def generateKeyPair(publicKey: (Int, Int) = (0, 0), privateKey: ArraySeq[Byte] = ArraySeq(0)): ECKeyPair =
     ECKeyPair(

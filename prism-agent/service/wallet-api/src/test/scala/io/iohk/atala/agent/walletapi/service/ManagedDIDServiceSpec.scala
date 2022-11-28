@@ -83,7 +83,7 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault {
           assert(opsAfter.map(_.operation))(hasSameElements(Seq(createOp)))
       },
       test("fail when publish non-existing DID") {
-        val did = PrismDID.buildLongFormFromOperation(PrismDIDOperation.Create(Nil, Nil)).asCanonical
+        val did = PrismDID.buildLongFormFromOperation(PrismDIDOperation.Create(Nil, Nil, Nil)).asCanonical
         val result = ZIO.serviceWithZIO[ManagedDIDService](_.publishStoredDID(did))
         assertZIO(result.exit)(fails(isSubtype[PublishManagedDIDError.DIDNotFound](anything)))
       }
