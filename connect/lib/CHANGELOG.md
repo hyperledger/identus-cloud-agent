@@ -1,3 +1,10 @@
+# [connect-v0.2.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/connect-v0.1.0...connect-v0.2.0) (2022-11-28)
+
+
+### Features
+
+* **connect:** bump up shared version to use 0.2.0 ([56cc1c3](https://github.com/input-output-hk/atala-prism-building-blocks/commit/56cc1c38caa313846c61253527accb456ccc476a))
+
 # [connect-v0.1.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/connect-v0.0.1...connect-v0.1.0) (2022-11-25)
 
 
