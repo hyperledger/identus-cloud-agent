@@ -3,18 +3,12 @@ package io.iohk.atala.pollux.core.service
 import com.google.protobuf.ByteString
 import io.circe.Json
 import io.circe.syntax.*
-import io.iohk.atala.iris.proto.dlt.IrisOperation
-import io.iohk.atala.iris.proto.service.IrisOperationId
-import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
 import io.iohk.atala.pollux.core.model.EncodedJWTCredential
 import io.iohk.atala.pollux.core.model.PresentationRecord
 import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.model.error.PresentationError._
 import io.iohk.atala.pollux.core.repository.PresentationRepository
 import io.iohk.atala.pollux.vc.jwt.*
-import io.iohk.atala.prism.crypto.MerkleInclusionProof
-import io.iohk.atala.prism.crypto.MerkleTreeKt
-import io.iohk.atala.prism.crypto.Sha256
 import zio.*
 import io.iohk.atala.mercury.model.AttachmentDescriptor
 import java.rmi.UnexpectedException
@@ -23,7 +17,6 @@ import java.security.SecureRandom
 import java.security.spec.ECGenParameterSpec
 import java.time.Instant
 import java.util.UUID
-
 import io.iohk.atala.mercury.protocol.presentproof._
 import io.iohk.atala.mercury.model.AttachmentDescriptor
 import io.iohk.atala.mercury.DidComm
@@ -78,13 +71,12 @@ trait PresentationService {
 }
 
 object PresentationServiceImpl {
-  val layer: URLayer[IrisServiceStub & PresentationRepository[Task] & DidComm, PresentationService] =
-    ZLayer.fromFunction(PresentationServiceImpl(_, _, _))
+  val layer: URLayer[PresentationRepository[Task] & DidComm, PresentationService] =
+    ZLayer.fromFunction(PresentationServiceImpl(_, _))
 }
 
 private class PresentationServiceImpl(
-    irisClient: IrisServiceStub,
-    PresentationRepository: PresentationRepository[Task],
+    presentationRepository: PresentationRepository[Task],
     didComm: DidComm
 ) extends PresentationService {
 
@@ -95,7 +87,7 @@ private class PresentationServiceImpl(
 
   override def getPresentationRecords(): IO[PresentationError, Seq[PresentationRecord]] = {
     for {
-      records <- PresentationRepository
+      records <- presentationRepository
         .getPresentationRecords()
         .mapError(RepositoryError.apply)
     } yield records
@@ -103,7 +95,7 @@ private class PresentationServiceImpl(
 
   override def getPresentationRecord(recordId: UUID): IO[PresentationError, Option[PresentationRecord]] = {
     for {
-      record <- PresentationRepository
+      record <- presentationRepository
         .getPresentationRecord(recordId)
         .mapError(RepositoryError.apply)
     } yield record
@@ -133,7 +125,7 @@ private class PresentationServiceImpl(
           presentationData = None
         )
       )
-      count <- PresentationRepository
+      count <- presentationRepository
         .createPresentationRecord(record)
         .flatMap {
           case 1 => ZIO.succeed(())
@@ -147,7 +139,7 @@ private class PresentationServiceImpl(
       state: PresentationRecord.ProtocolState
   ): IO[PresentationError, Seq[PresentationRecord]] = {
     for {
-      records <- PresentationRepository
+      records <- presentationRepository
         .getPresentationRecordsByState(state)
         .mapError(RepositoryError.apply)
     } yield records
@@ -174,7 +166,7 @@ private class PresentationServiceImpl(
           presentationData = None
         )
       )
-      count <- PresentationRepository
+      count <- presentationRepository
         .createPresentationRecord(record)
         .flatMap {
           case 1 => ZIO.succeed(())
@@ -186,7 +178,7 @@ private class PresentationServiceImpl(
 
   override def acceptRequestPresentation(recordId: UUID): IO[PresentationError, Option[PresentationRecord]] = {
     for {
-      maybeRecord <- PresentationRepository
+      maybeRecord <- presentationRepository
         .getPresentationRecord(recordId)
         .mapError(RepositoryError.apply)
       record <- ZIO
@@ -196,13 +188,13 @@ private class PresentationServiceImpl(
         .fromOption(record.requestPresentationData)
         .mapError(_ => InvalidFlowStateError(s"No request found for this record: $recordId"))
       request = createDidCommPresentation(presentationRequest)
-      count <- PresentationRepository
+      count <- presentationRepository
         .updateWithPresentation(recordId, request, ProtocolState.PresentationPending)
         .mapError(RepositoryError.apply)
       _ <- count match
         case 1 => ZIO.succeed(())
         case n => ZIO.fail(RecordIdNotFound(recordId))
-      record <- PresentationRepository
+      record <- presentationRepository
         .getPresentationRecord(record.id)
         .mapError(RepositoryError.apply)
     } yield record
@@ -213,14 +205,14 @@ private class PresentationServiceImpl(
   ): IO[PresentationError, Option[PresentationRecord]] = {
     for {
       record <- getRecordFromThreadId(presentation.thid)
-      _ <- PresentationRepository
+      _ <- presentationRepository
         .updateWithPresentation(record.id, presentation, ProtocolState.PresentationReceived)
         .flatMap {
           case 1 => ZIO.succeed(())
           case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
         }
         .mapError(RepositoryError.apply)
-      record <- PresentationRepository
+      record <- presentationRepository
         .getPresentationRecord(record.id)
         .mapError(RepositoryError.apply)
     } yield record
@@ -228,7 +220,7 @@ private class PresentationServiceImpl(
 
   override def acceptProposePresentation(recordId: UUID): IO[PresentationError, Option[PresentationRecord]] = {
     for {
-      maybeRecord <- PresentationRepository
+      maybeRecord <- presentationRepository
         .getPresentationRecord(recordId)
         .mapError(RepositoryError.apply)
       record <- ZIO
@@ -239,13 +231,13 @@ private class PresentationServiceImpl(
         .mapError(_ => InvalidFlowStateError(s"No request found for this record: $recordId"))
       // TODO: Generate the JWT credential and use it to create the Presentation object
       requestPresentation = createDidCommRequestPresentation(request)
-      count <- PresentationRepository
+      count <- presentationRepository
         .updateWithRequestPresentation(recordId, requestPresentation, ProtocolState.PresentationPending)
         .mapError(RepositoryError.apply)
       _ <- count match
         case 1 => ZIO.succeed(())
         case n => ZIO.fail(RecordIdNotFound(recordId))
-      record <- PresentationRepository
+      record <- presentationRepository
         .getPresentationRecord(record.id)
         .mapError(RepositoryError.apply)
     } yield record
@@ -256,14 +248,14 @@ private class PresentationServiceImpl(
   ): IO[PresentationError, Option[PresentationRecord]] = {
     for {
       record <- getRecordFromThreadId(proposePresentation.thid)
-      _ <- PresentationRepository
+      _ <- presentationRepository
         .updateWithProposePresentation(record.id, proposePresentation, ProtocolState.ProposalReceived)
         .flatMap {
           case 1 => ZIO.succeed(())
           case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
         }
         .mapError(RepositoryError.apply)
-      record <- PresentationRepository
+      record <- presentationRepository
         .getPresentationRecord(record.id)
         .mapError(RepositoryError.apply)
     } yield record
@@ -288,7 +280,7 @@ private class PresentationServiceImpl(
       presentation: Presentation
   ): IO[PresentationError, Option[PresentationRecord]] = {
     for {
-      count <- PresentationRepository
+      count <- presentationRepository
         .updateWithPresentation(
           recordId,
           presentation,
@@ -298,7 +290,7 @@ private class PresentationServiceImpl(
       _ <- count match
         case 1 => ZIO.succeed(())
         case n => ZIO.fail(RecordIdNotFound(recordId))
-      record <- PresentationRepository
+      record <- presentationRepository
         .getPresentationRecord(recordId)
         .mapError(RepositoryError.apply)
     } yield record
@@ -319,7 +311,7 @@ private class PresentationServiceImpl(
         .fromOption(thid)
         .mapError(_ => UnexpectedError("No `thid` found in credential request"))
         .map(UUID.fromString)
-      maybeRecord <- PresentationRepository
+      maybeRecord <- presentationRepository
         .getPresentationRecordByThreadId(thid)
         .mapError(RepositoryError.apply)
       record <- ZIO
@@ -391,23 +383,17 @@ private class PresentationServiceImpl(
       to: PresentationRecord.ProtocolState
   ): IO[PresentationError, Option[PresentationRecord]] = {
     for {
-      outcome <- PresentationRepository
+      outcome <- presentationRepository
         .updatePresentationRecordProtocolState(id, from, to)
         .flatMap {
           case 1 => ZIO.succeed(())
           case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
         }
         .mapError(RepositoryError.apply)
-      record <- PresentationRepository
+      record <- presentationRepository
         .getPresentationRecord(id)
         .mapError(RepositoryError.apply)
     } yield record
   }
-
-  private def sendCredential(
-      jwtCredential: JwtCredentialPayload,
-      holderDid: DID,
-      inclusionProof: MerkleInclusionProof
-  ): Nothing = ???
 
 }
