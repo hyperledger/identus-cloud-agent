@@ -85,8 +85,8 @@ import io.iohk.atala.pollux.core.service.PresentationServiceImpl
 import io.iohk.atala.pollux.core.repository.PresentationRepository
 import io.iohk.atala.pollux.sql.repository.JdbcPresentationRepository
 import io.iohk.atala.pollux.core.model.error.PresentationError
-import io.iohk.atala.connect.core.service.ConnectionService
-import io.iohk.atala.connect.core.service.ConnectionServiceImpl
+import io.iohk.atala.connect.core.service.{ConnectionService => CS_Connect}
+import io.iohk.atala.connect.core.service.{ConnectionServiceImpl => CSImpl_Connect}
 import io.iohk.atala.connect.core.repository.ConnectionRepository
 import io.iohk.atala.connect.sql.repository.JdbcConnectionRepository
 import io.iohk.atala.mercury.protocol.connection.ConnectionRequest
@@ -386,8 +386,8 @@ object AppModule {
 
   def presentationServiceLayer = RepoModule.presentationRepoLayer >>> PresentationServiceImpl.layer
 
-  val connectionServiceLayer: RLayer[DidComm, ConnectionService] =
-    (GrpcModule.layers ++ RepoModule.layers) >>> ConnectionServiceImpl.layer
+  val connectionServiceLayer: RLayer[DidComm, CS_Connect] =
+    (GrpcModule.layers ++ RepoModule.layers) >>> CSImpl_Connect.layer
 }
 
 object GrpcModule {
@@ -451,14 +451,20 @@ object HttpModule {
 
   val presentProofProtocolApiLayer: RLayer[DidComm, PresentProofApi] = {
     val presentationServiceLayer: TaskLayer[io.iohk.atala.pollux.core.service.PresentationService] = ??? // FIXME
-    val connectionServiceLayer: TaskLayer[ConnectionService] = ??? // FIXME
-    val didCommServiceLayer: TaskLayer[DidComm] = ??? // FIXME
-    val serviceLayer = presentationServiceLayer ++ connectionServiceLayer ++ didCommServiceLayer
+    val connectionServiceLayer: TaskLayer[io.iohk.atala.connect.core.service.ConnectionService] = ??? // FIXME
+    val serviceLayer = presentationServiceLayer ++ connectionServiceLayer // ++ didCommServiceLayer
 
-    val apiServiceLayer = serviceLayer >>> PresentProofApiServiceImpl.layer
+    val apiServiceLayer: ZLayer[DidComm, Throwable, PresentProofApiService] =
+      (connectionServiceLayer ++ serviceLayer) >>> PresentProofApiServiceImpl.layer
+
     val apiMarshallerLayer = PresentProofApiMarshallerImpl.layer
-    (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new PresentProofApi(_, _))
+    val aaa = (apiServiceLayer ++ apiMarshallerLayer) >>>
+      ZLayer.fromFunction(new PresentProofApi(_, _))
+    aaa
   }
+
+//  Found: zio.ZLayer[ConnectionService & DidComm, Throwable, PresentProofApi]
+//  Required: zio.RLayer[DidComm, PresentProofApi]
 
   val connectionsManagementApiLayer: RLayer[DidComm, ConnectionsManagementApi] = {
     val serviceLayer = AppModule.connectionServiceLayer
