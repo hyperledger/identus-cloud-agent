@@ -39,6 +39,9 @@ tags:
     description: Verifiable Credentials revocation REST API
   - name: Present Proof
     description: Present Proof REST API
+  # Connect
+  - name: Connections Management
+    description: API for driving connection process.
 
 paths:
   # ----------------------------------
@@ -999,3 +1002,115 @@ paths:
   #           application/json:
   #             schema:
   #               $ref: "./pollux/schemas.yaml#/components/schemas/W3CPresentation"
+
+  # ----------------------------------
+  # Connect
+  # ----------------------------------
+  /connections:
+    post:
+      tags: ["Connections Management"]
+      operationId: createConnection
+      summary: Creates new connection and returns an invitation.
+      description: |-
+        Returns new invitation object and creates new connection state record in `pending` state. 
+        Content of invitation depends on DIDComm protocol used, here is an example of how it would look like for `AIP 1.0 connection/v1` protocol. 
+        Once connection invitation is accepted, Agent should filter all additional attempts to accept it. 
+        We consider mult-party connections as out of scope for now.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "./connect/schemas.yaml#/components/schemas/CreateConnectionRequest"
+
+      responses:
+        "201":
+          description: The connection record
+          content:
+            application/json:
+              schema:
+                $ref: "./connect/schemas.yaml#/components/schemas/Connection"
+        "422":
+          description: The connection record creation failed.
+          content:
+            application/json:
+              schema:
+                $ref: "./connect/schemas.yaml#/components/schemas/ErrorResponse"
+
+    get:
+      tags: ["Connections Management"]
+      operationId: getConnections
+      summary: Returns a list of connections.
+      responses:
+        "200":
+          description: List of connection state objects
+          content:
+            application/json:
+              schema:
+                $ref: "./connect/schemas.yaml#/components/schemas/ConnectionCollection"
+        "500":
+          description: Retrieving the connection records failed for an unexpected reason.
+          content:
+            application/json:
+              schema:
+                $ref: "./connect/schemas.yaml#/components/schemas/ErrorResponse"
+
+  /connections/{connectionId}:
+    get:
+      tags: ["Connections Management"]
+      parameters:
+        - $ref: "./connect/schemas.yaml#/components/parameters/connectionId"
+      operationId: getConnection
+      summary: Returns an existing connection record by id.
+      responses:
+        "200":
+          description: Connection state record
+          content:
+            application/json:
+              schema:
+                $ref: "./connect/schemas.yaml#/components/schemas/Connection"
+        "404":
+          description: There is no issue credential record matching the given 'recordId'.
+          content:
+            application/json:
+              schema:
+                $ref: "./connect/schemas.yaml#/components/schemas/ErrorResponse"
+    delete:
+      tags: ["Connections Management"]
+      parameters:
+        - $ref: "./connect/schemas.yaml#/components/parameters/connectionId"
+      operationId: deleteConnection
+      summary: Deletes existing connection record.
+      description: Just deletes connection state in the Agent, it does not include notifing other party that connection is deleted. We should consider this feature for the future. If additional action is attempted over deleted connection, it should thow error (no matter which side deleted connection).
+      responses:
+        "200":
+          description: Successful delete
+        "404":
+          description: Connection state record not found for given `connectionId`
+
+  /connection-invitations:
+    post:
+      tags: ["Connections Management"]
+      operationId: acceptConnectionInvitation
+      summary: Accepts externally received invitation.
+      description: Creates new connection state record in `pending` state. It is assumed that application would first decode and validate the invitation. When it is accepted in the application side, it should be submitted in raw format to this API.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "./connect/schemas.yaml#/components/schemas/AcceptConnectionInvitationRequest"
+
+      responses:
+        "200":
+          description: Invitation successfully accepted.
+          content:
+            application/json:
+              schema:
+                $ref: "./connect/schemas.yaml#/components/schemas/Connection"
+        "500":
+          description: Storing the connection invitation failed for an unexpected reason.
+          content:
+            application/json:
+              schema:
+                $ref: "./connect/schemas.yaml#/components/schemas/ErrorResponse"

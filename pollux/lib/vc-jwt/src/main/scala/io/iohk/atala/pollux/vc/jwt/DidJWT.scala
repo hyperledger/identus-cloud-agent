@@ -9,6 +9,7 @@ import net.reactivecore.cjs.resolver.Downloader
 import net.reactivecore.cjs.{DocumentValidator, Loader, Result}
 import pdi.jwt.algorithms.JwtECDSAAlgorithm
 import pdi.jwt.{JwtAlgorithm, JwtCirce, JwtClaim}
+import zio.IO
 
 import java.security.*
 import java.security.spec.*
@@ -49,8 +50,9 @@ trait JWTVerified(
 case class JWTVerifyPolicies(
     now: Option[Boolean],
     nbf: Option[Boolean],
+    iat: Option[Boolean],
     exp: Option[Boolean],
-    aud: Vector[Boolean]
+    aud: Option[Boolean]
 )
 
 trait Signer {

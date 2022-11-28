@@ -1,17 +1,21 @@
 package io.iohk.atala.pollux.vc.jwt
 
+import com.nimbusds.jose.jwk.*
+import com.nimbusds.jose.jwk.gen.*
+import com.nimbusds.jose.util.Base64URL
 import io.circe
 import io.circe.generic.auto.*
 import io.circe.parser.decode
 import io.circe.syntax.*
 import io.circe.{Decoder, Encoder, HCursor, Json}
-import io.iohk.atala.pollux.vc.jwt.schema.SchemaValidator
+import io.iohk.atala.pollux.vc.jwt.schema.{SchemaResolver, SchemaValidator}
 import net.reactivecore.cjs.validator.Violation
 import net.reactivecore.cjs.{DocumentValidator, Loader}
-import pdi.jwt.{Jwt, JwtCirce}
-import zio.NonEmptyChunk
+import pdi.jwt.*
 import zio.prelude.*
+import zio.{IO, NonEmptyChunk, Task, ZIO}
 
+import java.security.spec.{ECParameterSpec, ECPublicKeySpec}
 import java.security.{KeyPairGenerator, PublicKey}
 import java.time.{Instant, ZonedDateTime}
 import scala.util.{Failure, Success, Try}
@@ -52,24 +56,24 @@ case class CredentialSchema(
 )
 
 sealed trait CredentialPayload(
-    maybeSub: Option[String],
-    `@context`: Set[String],
-    `type`: Set[String],
-    maybeJti: Option[String],
-    maybeNbf: Option[Instant],
-    aud: Set[String],
-    maybeExp: Option[Instant],
-    maybeIss: Option[String],
-    maybeCredentialStatus: Option[CredentialStatus],
-    maybeRefreshService: Option[RefreshService],
-    maybeEvidence: Option[Json],
-    maybeTermsOfUse: Option[Json],
-    maybeCredentialSchema: Option[CredentialSchema],
-    credentialSubject: Json
+    val maybeSub: Option[String],
+    val `@context`: Set[String],
+    val `type`: Set[String],
+    val maybeJti: Option[String],
+    val nbf: Instant,
+    val aud: Set[String],
+    val maybeExp: Option[Instant],
+    val iss: String,
+    val maybeCredentialStatus: Option[CredentialStatus],
+    val maybeRefreshService: Option[RefreshService],
+    val maybeEvidence: Option[Json],
+    val maybeTermsOfUse: Option[Json],
+    val maybeCredentialSchema: Option[CredentialSchema],
+    val credentialSubject: Json
 ) {
   def toJwtCredentialPayload: JwtCredentialPayload =
     JwtCredentialPayload(
-      maybeIss = maybeIss,
+      iss = iss,
       maybeSub = maybeSub,
       vc = JwtVc(
         `@context` = `@context`,
@@ -81,100 +85,29 @@ sealed trait CredentialPayload(
         maybeEvidence = maybeEvidence,
         maybeTermsOfUse = maybeTermsOfUse
       ),
-      maybeNbf = maybeNbf,
+      nbf = nbf,
       aud = aud,
       maybeExp = maybeExp,
       maybeJti = maybeJti
     )
 
-  def toW3CCredentialPayload: Validation[String, W3cCredentialPayload] =
-    Validation.validateWith(
-      CredentialPayloadValidation.validateIssuerDid(this.maybeIss),
-      CredentialPayloadValidation.validateIssuanceDate(this.maybeNbf)
-    ) { (iss, nbf) =>
-      W3cCredentialPayload(
-        `@context` = `@context`,
-        maybeId = maybeJti,
-        `type` = `type`,
-        issuer = DID(iss),
-        issuanceDate = nbf,
-        maybeExpirationDate = maybeExp,
-        maybeCredentialSchema = maybeCredentialSchema,
-        credentialSubject = credentialSubject,
-        maybeCredentialStatus = maybeCredentialStatus,
-        maybeRefreshService = maybeRefreshService,
-        maybeEvidence = maybeEvidence,
-        maybeTermsOfUse = maybeTermsOfUse,
-        aud = aud
-      )
-    }
-
-  def toValidatedCredentialPayload(credentialSchemaResolver: CredentialSchema => Json)(
-      schemaToValidator: Json => Either[String, SchemaValidator]
-  ): Validation[String, ValidatedCredentialPayload] =
-    Validation.validateWith(
-      CredentialPayloadValidation.validateIssuanceDate(this.maybeNbf),
-      CredentialPayloadValidation.validateIssuerDid(this.maybeIss),
-      CredentialPayloadValidation.validateContext(this.`@context`),
-      CredentialPayloadValidation.validateVcType(this.`type`),
-      for {
-        maybeDocumentValidator <- CredentialPayloadValidation.validateCredentialSchema(
-          this.maybeCredentialSchema.map(credentialSchemaResolver)
-        )(schemaToValidator)
-        validatedCredentialSubject <- CredentialPayloadValidation
-          .validateCredentialSubject(this.credentialSubject, maybeDocumentValidator)
-      } yield validatedCredentialSubject
-    ) { (nbf, iss, `@context`, `type`, credentialSubject) =>
-      ValidatedCredentialPayload(
-        maybeSub = maybeSub,
-        `@context` = `@context`,
-        `type` = `type`,
-        maybeJti = maybeJti,
-        nbf = nbf,
-        aud = aud,
-        maybeExp = maybeExp,
-        iss = iss,
-        maybeCredentialStatus = maybeCredentialStatus,
-        maybeRefreshService = maybeRefreshService,
-        maybeEvidence = maybeEvidence,
-        maybeTermsOfUse = maybeTermsOfUse,
-        maybeCredentialSchema = maybeCredentialSchema,
-        credentialSubject = credentialSubject
-      )
-    }
-}
-
-case class ValidatedCredentialPayload(
-    maybeSub: Option[String],
-    `@context`: NonEmptySet[String],
-    `type`: NonEmptySet[String],
-    maybeJti: Option[String],
-    nbf: Instant,
-    aud: Set[String],
-    maybeExp: Option[Instant],
-    iss: String,
-    maybeCredentialStatus: Option[CredentialStatus],
-    maybeRefreshService: Option[RefreshService],
-    maybeEvidence: Option[Json],
-    maybeTermsOfUse: Option[Json],
-    maybeCredentialSchema: Option[CredentialSchema],
-    credentialSubject: Json
-) extends CredentialPayload(
-      maybeSub = maybeSub,
-      `@context` = `@context`.toSet,
-      `type` = `type`.toSet,
-      maybeJti = maybeJti,
-      maybeNbf = Some(nbf),
-      aud = aud,
-      maybeExp = maybeExp,
-      maybeIss = Some(iss),
+  def toW3CCredentialPayload: W3cCredentialPayload =
+    W3cCredentialPayload(
+      `@context` = `@context`,
+      maybeId = maybeJti,
+      `type` = `type`,
+      issuer = DID(iss),
+      issuanceDate = nbf,
+      maybeExpirationDate = maybeExp,
+      maybeCredentialSchema = maybeCredentialSchema,
+      credentialSubject = credentialSubject,
       maybeCredentialStatus = maybeCredentialStatus,
       maybeRefreshService = maybeRefreshService,
       maybeEvidence = maybeEvidence,
       maybeTermsOfUse = maybeTermsOfUse,
-      maybeCredentialSchema = maybeCredentialSchema,
-      credentialSubject = credentialSubject
+      aud = aud
     )
+}
 
 object CredentialPayloadValidation {
 
@@ -238,6 +171,30 @@ object CredentialPayloadValidation {
     } yield validatedCredentialSubjectSchema
   }
 
+  def validate[C <: CredentialPayload](credentialPayload: C): Validation[String, C] =
+    Validation.validateWith(
+      CredentialPayloadValidation.validateContext(credentialPayload.`@context`),
+      CredentialPayloadValidation.validateVcType(credentialPayload.`type`)
+    ) { (`@context`, `type`) => credentialPayload }
+
+  def validateSchema[C <: CredentialPayload](credentialPayload: C)(schemaResolver: SchemaResolver)(
+      schemaToValidator: Json => Either[String, SchemaValidator]
+  ): IO[String, C] =
+    val validation =
+      for {
+        resolvedSchema <- ZIO.foreach(credentialPayload.maybeCredentialSchema)(schemaResolver.resolve)
+        maybeDocumentValidator <- CredentialPayloadValidation
+          .validateCredentialSchema(resolvedSchema)(schemaToValidator)
+          .toZIO
+        maybeValidatedCredentialSubject <- CredentialPayloadValidation
+          .validateCredentialSubject(
+            credentialPayload.credentialSubject,
+            maybeDocumentValidator
+          )
+          .toZIO
+      } yield maybeValidatedCredentialSubject
+    validation.map(_ => credentialPayload)
+
   private def validateCredentialSubjectNotEmpty(credentialSubject: Json): Validation[String, Json] = {
     Validation
       .fromPredicateWith("credentialSubject is empty.")(credentialSubject)(_.isObject)
@@ -263,22 +220,22 @@ case class JwtVc(
 )
 
 case class JwtCredentialPayload(
-    maybeIss: Option[String],
-    maybeSub: Option[String],
-    vc: JwtVc,
-    maybeNbf: Option[Instant],
-    aud: Set[String],
-    maybeExp: Option[Instant],
-    maybeJti: Option[String]
+    override val iss: String,
+    override val maybeSub: Option[String],
+    val vc: JwtVc,
+    override val nbf: Instant,
+    override val aud: Set[String],
+    override val maybeExp: Option[Instant],
+    override val maybeJti: Option[String]
 ) extends CredentialPayload(
       maybeSub = maybeSub.orElse(vc.credentialSubject.hcursor.downField("id").as[String].toOption),
       `@context` = vc.`@context`,
       `type` = vc.`type`,
       maybeJti = maybeJti,
-      maybeNbf = maybeNbf,
+      nbf = nbf,
       aud = aud,
       maybeExp = maybeExp,
-      maybeIss = maybeIss,
+      iss = iss,
       maybeCredentialStatus = vc.maybeCredentialStatus,
       maybeRefreshService = vc.maybeRefreshService,
       maybeEvidence = vc.maybeEvidence,
@@ -288,30 +245,30 @@ case class JwtCredentialPayload(
     )
 
 case class W3cCredentialPayload(
-    `@context`: Set[String],
-    `type`: Set[String],
-    maybeId: Option[String],
-    issuer: DID,
-    issuanceDate: Instant,
-    maybeExpirationDate: Option[Instant],
-    maybeCredentialSchema: Option[CredentialSchema],
-    credentialSubject: Json,
-    maybeCredentialStatus: Option[CredentialStatus],
-    maybeRefreshService: Option[RefreshService],
-    maybeEvidence: Option[Json],
-    maybeTermsOfUse: Option[Json],
+    override val `@context`: Set[String],
+    override val `type`: Set[String],
+    val maybeId: Option[String],
+    val issuer: DID,
+    val issuanceDate: Instant,
+    val maybeExpirationDate: Option[Instant],
+    override val maybeCredentialSchema: Option[CredentialSchema],
+    override val credentialSubject: Json,
+    override val maybeCredentialStatus: Option[CredentialStatus],
+    override val maybeRefreshService: Option[RefreshService],
+    override val maybeEvidence: Option[Json],
+    override val maybeTermsOfUse: Option[Json],
 
     /** Not part of W3C Credential but included to preserve in case of conversion from JWT. */
-    aud: Set[String] = Set.empty
+    override val aud: Set[String] = Set.empty
 ) extends CredentialPayload(
       maybeSub = credentialSubject.hcursor.downField("id").as[String].toOption,
       `@context` = `@context`,
       `type` = `type`,
       maybeJti = maybeId,
-      maybeNbf = Some(issuanceDate),
+      nbf = issuanceDate,
       aud = aud,
       maybeExp = maybeExpirationDate,
-      maybeIss = Some(issuer.value),
+      iss = issuer.value,
       maybeCredentialStatus = maybeCredentialStatus,
       maybeRefreshService = maybeRefreshService,
       maybeEvidence = maybeEvidence,
@@ -392,10 +349,10 @@ object CredentialPayload {
       (jwtCredentialPayload: JwtCredentialPayload) =>
         Json
           .obj(
-            ("iss", jwtCredentialPayload.maybeIss.asJson),
+            ("iss", jwtCredentialPayload.iss.asJson),
             ("sub", jwtCredentialPayload.maybeSub.asJson),
             ("vc", jwtCredentialPayload.vc.asJson),
-            ("nbf", jwtCredentialPayload.maybeNbf.asJson),
+            ("nbf", jwtCredentialPayload.nbf.asJson),
             ("aud", jwtCredentialPayload.aud.asJson),
             ("exp", jwtCredentialPayload.maybeExp.asJson),
             ("jti", jwtCredentialPayload.maybeJti.asJson)
@@ -516,10 +473,10 @@ object CredentialPayload {
     implicit val jwtCredentialPayloadDecoder: Decoder[JwtCredentialPayload] =
       (c: HCursor) =>
         for {
-          maybeIss <- c.downField("iss").as[Option[String]]
+          iss <- c.downField("iss").as[String]
           maybeSub <- c.downField("sub").as[Option[String]]
           vc <- c.downField("vc").as[JwtVc]
-          maybeNbf <- c.downField("nbf").as[Option[Instant]]
+          nbf <- c.downField("nbf").as[Instant]
           aud <- c
             .downField("aud")
             .as[Option[String]]
@@ -529,10 +486,10 @@ object CredentialPayload {
           maybeJti <- c.downField("jti").as[Option[String]]
         } yield {
           JwtCredentialPayload(
-            maybeIss = maybeIss,
+            iss = iss,
             maybeSub = maybeSub,
             vc = vc,
-            maybeNbf = maybeNbf,
+            nbf = nbf,
             aud = aud,
             maybeExp = maybeExp,
             maybeJti = maybeJti
@@ -582,4 +539,122 @@ object JwtCredential {
 
   def validateEncodedJwt(jwt: JWT, publicKey: PublicKey): Boolean =
     JwtCirce.isValid(jwt.value, publicKey)
+
+  def validateEncodedJWT(jwt: JWT, verificationMethods: IndexedSeq[VerificationMethod]): Boolean = {
+    verificationMethods.exists(verificationMethod =>
+      toPublicKey(verificationMethod).exists(publicKey => validateEncodedJwt(jwt, publicKey))
+    )
+  }
+  def validateEncodedJWT(
+      jwt: JWT
+  )(didResolver: DidResolver): IO[String, Boolean] = {
+    val decodeJWT = ZIO
+      .fromTry(JwtCirce.decodeRawAll(jwt.value, JwtOptions(false, false, false)))
+      .mapError(_.getMessage)
+
+    val extractAlgorithm =
+      for {
+        decodedJwtTask <- decodeJWT
+        (header, _, _) = decodedJwtTask
+        algorithm <- Validation
+          .fromOptionWith("An algorithm must be specified in the header")(JwtCirce.parseHeader(header).algorithm)
+          .toZIO
+      } yield algorithm
+
+    val loadDidDocument =
+      for {
+        decodedJwtTask <- decodeJWT
+        (_, claim, _) = decodedJwtTask
+        decodedClaim <- ZIO.fromEither(decode[JwtCredentialPayload](claim).left.map(_.toString))
+        extractIssuerDid = decodedClaim.iss
+        resolvedDidDocument <- resolve(extractIssuerDid)(didResolver)
+      } yield resolvedDidDocument
+
+    for {
+      results <- loadDidDocument validatePar extractAlgorithm
+      (didDocument, algorithm) = results
+      verificationMethods <- extractVerificationMethods(didDocument, algorithm)
+    } yield validateEncodedJWT(jwt, verificationMethods)
+  }
+
+  def validateEncodedJWT(
+      jwt: JWT
+  )(didResolver: DidResolver)(schemaResolver: SchemaResolver)(
+      schemaToValidator: Json => Either[String, SchemaValidator]
+  ): IO[String, Boolean] = {
+    val decodeJWT = ZIO
+      .fromTry(JwtCirce.decodeRawAll(jwt.value, JwtOptions(false, false, false)))
+      .mapError(_.getMessage)
+
+    val extractAlgorithm =
+      for {
+        decodedJwtTask <- decodeJWT
+        (header, _, _) = decodedJwtTask
+        algorithm <- Validation
+          .fromOptionWith("An algorithm must be specified in the header")(JwtCirce.parseHeader(header).algorithm)
+          .toZIO
+      } yield algorithm
+
+    val decodeClaim =
+      for {
+        decodedJwtTask <- decodeJWT
+        (_, claim, _) = decodedJwtTask
+        decodedClaim <- ZIO.fromEither(decode[JwtCredentialPayload](claim).left.map(_.toString))
+      } yield decodedClaim
+
+    val loadDidDocument =
+      for {
+        decodedClaim <- decodeClaim
+        extractIssuerDid = decodedClaim.iss
+        resolvedDidDocument <- resolve(extractIssuerDid)(didResolver)
+      } yield resolvedDidDocument
+
+    val validateCredentialSubject =
+      for {
+        decodedClaim <- decodeClaim
+        validatedCredential <- CredentialPayloadValidation.validateSchema(decodedClaim)(schemaResolver)(
+          schemaToValidator
+        )
+      } yield validatedCredential
+
+    for {
+      results <- loadDidDocument validate extractAlgorithm validate validateCredentialSubject
+      (didDocument, algorithm, _) = results
+      verificationMethods <- extractVerificationMethods(didDocument, algorithm)
+    } yield validateEncodedJWT(jwt, verificationMethods)
+  }
+
+  // TODO Implement other key types
+  def toPublicKey(verificationMethod: VerificationMethod): Option[PublicKey] = {
+    for {
+      publicKeyJwk <- verificationMethod.publicKeyJwk
+      curve <- publicKeyJwk.crv
+      x <- publicKeyJwk.x.map(Base64URL.from)
+      y <- publicKeyJwk.y.map(Base64URL.from)
+      d <- publicKeyJwk.d.map(Base64URL.from)
+    } yield new ECKey.Builder(Curve.parse(curve), x, y).d(d).build().toPublicKey
+  }
+
+  private def resolve(issuerDid: String)(didResolver: DidResolver): IO[String, DIDDocument] = {
+    didResolver
+      .resolve(issuerDid)
+      .flatMap(
+        _ match
+          case (didResolutionSucceeded: DIDResolutionSucceeded) =>
+            ZIO.succeed(didResolutionSucceeded.didDocument)
+          case (didResolutionFailed: DIDResolutionFailed) => ZIO.fail(didResolutionFailed.error.toString)
+      )
+  }
+
+  private def extractVerificationMethods(
+      didDocument: DIDDocument,
+      jwtAlgorithm: JwtAlgorithm
+  ): IO[String, IndexedSeq[VerificationMethod]] = {
+    Validation
+      .fromPredicateWith("No PublicKey to validate against found")(
+        didDocument.verificationMethod.filter(verification => verification.`type` == jwtAlgorithm.name)
+      )(_.nonEmpty)
+      .toZIO
+  }
+
 }

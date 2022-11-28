@@ -1,17 +1,18 @@
 package io.iohk.atala.castor.core.util
 
-import java.net.URI
+import java.net.{URI, URL}
 import io.iohk.atala.shared.models.HexStrings.*
 import io.iohk.atala.shared.models.Base64UrlStrings.*
 import io.iohk.atala.castor.core.model.did.{
-  DIDDocument,
   EllipticCurve,
+  InternalKeyPurpose,
+  InternalPublicKey,
+  PrismDIDOperation,
   PublicKey,
-  PublicKeyJwk,
-  PublishedDIDOperation,
-  DIDStorage,
+  PublicKeyData,
   Service,
-  ServiceType
+  ServiceType,
+  VerificationRelationship
 }
 import io.iohk.atala.castor.core.model.error.DIDOperationError
 import io.iohk.atala.castor.core.util.DIDOperationValidator.Config
@@ -22,128 +23,111 @@ import zio.test.Assertion.*
 object DIDOperationValidatorSpec extends ZIOSpecDefault {
 
   override def spec =
-    suite("DIDOperationValidator")(publishedDIDSuite) @@ TestAspect.samples(20)
+    suite("DIDOperationValidator")(prismDIDValidationSpec) @@ TestAspect.samples(20)
 
-  private val publishedDIDSuite = {
-    def createPublishedDIDOperation(
-        updateCommitment: HexString = HexString.fromStringUnsafe("0" * 64),
-        recoveryCommitment: HexString = HexString.fromStringUnsafe("0" * 64),
+  private val prismDIDValidationSpec = {
+    def createPrismDIDOperation(
         publicKeys: Seq[PublicKey] = Nil,
+        internalKeys: Seq[InternalPublicKey] = Nil,
         services: Seq[Service] = Nil
     ) =
-      PublishedDIDOperation.Create(
-        updateCommitment = updateCommitment,
-        recoveryCommitment = recoveryCommitment,
-        storage = DIDStorage.Cardano("testnet"),
-        document = DIDDocument(
-          publicKeys = publicKeys,
-          services = services
-        )
-      )
+      PrismDIDOperation.Create(publicKeys = publicKeys, internalKeys = internalKeys, services = services)
 
-    suite("PublishedDID validation")(
+    suite("PrismDID validation")(
       test("accept valid CreateOperation") {
-        val op = createPublishedDIDOperation()
+        val op = createPrismDIDOperation()
         assert(DIDOperationValidator(Config(50, 50)).validate(op))(isRight)
       },
-      test("reject CreateOperation on invalid updateCommitment length") {
-        val updateCommitmentGen = Gen
-          .stringBounded(0, 100)(Gen.hexCharLower)
-          .filter(_.length % 2 == 0)
-          .filter(_.length != 64)
-        val recoveryCommitmentGen = Gen.stringN(64)(Gen.hexCharLower)
-        check(updateCommitmentGen, recoveryCommitmentGen) { (u, r) =>
-          val op = createPublishedDIDOperation(
-            updateCommitment = HexString.fromStringUnsafe(u),
-            recoveryCommitment = HexString.fromStringUnsafe(r)
-          )
-          assert(DIDOperationValidator(Config(50, 50)).validate(op))(
-            isLeft(isSubtype[DIDOperationError.InvalidArgument](anything))
-          )
-        }
-      },
-      test("reject CreateOperation on invalid recoveryCommitment length") {
-        val updateCommitmentGen = Gen.stringN(64)(Gen.hexCharLower)
-        val recoveryCommitmentGen = Gen
-          .stringBounded(0, 100)(Gen.hexCharLower)
-          .filter(_.length % 2 == 0)
-          .filter(_.length != 64)
-        check(updateCommitmentGen, recoveryCommitmentGen) { (u, r) =>
-          val op = createPublishedDIDOperation(
-            updateCommitment = HexString.fromStringUnsafe(u),
-            recoveryCommitment = HexString.fromStringUnsafe(r)
-          )
-          assert(DIDOperationValidator(Config(50, 50)).validate(op))(
-            isLeft(isSubtype[DIDOperationError.InvalidArgument](anything))
-          )
-        }
-      },
       test("reject CreateOperation on too many DID publicKey access") {
-        val keyLimitGen = Gen.int(0, 30)
-        val keyCountGen = Gen.int(0, 30)
-        check(keyLimitGen, keyCountGen) { (keyLimit, keyCount) =>
-          val publicKeys = (1 to keyCount).map(i =>
-            PublicKey.JsonWebKey2020(
-              id = s"did:example:123#key-$i",
-              purposes = Nil,
-              publicKeyJwk = PublicKeyJwk.ECPublicKeyData(
-                crv = EllipticCurve.SECP256K1,
-                x = Base64UrlString.fromStringUnsafe("00"),
-                y = Base64UrlString.fromStringUnsafe("00")
-              )
-            )
-          )
-          val op = createPublishedDIDOperation(publicKeys = publicKeys)
-          val expect =
-            if (keyCount <= keyLimit) isRight
-            else isLeft(isSubtype[DIDOperationError.TooManyDidPublicKeyAccess](anything))
-          assert(DIDOperationValidator(Config(keyLimit, 0)).validate(op))(expect)
-        }
-      },
-      test("reject CreateOperation on too many DID service access") {
-        val serviceLimitGen = Gen.int(0, 30)
-        val serviceCountGen = Gen.int(0, 30)
-        check(serviceLimitGen, serviceCountGen) { (serviceLimit, serviceCount) =>
-          val services = (1 to serviceCount).map(i =>
-            Service(
-              id = s"did:example:123#service-$i",
-              `type` = ServiceType.MediatorService,
-              serviceEndpoint = URI.create("https://example.com")
-            )
-          )
-          val op = createPublishedDIDOperation(services = services)
-          val expect =
-            if (serviceCount <= serviceLimit) isRight
-            else isLeft(isSubtype[DIDOperationError.TooManyDidServiceAccess](anything))
-          assert(DIDOperationValidator(Config(0, serviceLimit)).validate(op))(expect)
-        }
-      },
-      test("reject CreateOperation on duplicated DID public key id") {
-        val publicKeys = Seq("key-1", "key-2", "key-1").map(id =>
-          PublicKey.JsonWebKey2020(
-            id = id,
-            purposes = Nil,
-            publicKeyJwk = PublicKeyJwk.ECPublicKeyData(
-              crv = EllipticCurve.SECP256K1,
-              x = Base64UrlString.fromStringUnsafe("00"),
-              y = Base64UrlString.fromStringUnsafe("00")
-            )
+        val publicKeyData = PublicKeyData.ECKeyData(
+          crv = EllipticCurve.SECP256K1,
+          x = Base64UrlString.fromStringUnsafe("00"),
+          y = Base64UrlString.fromStringUnsafe("00")
+        )
+        val publicKeys = (1 to 10).map(i =>
+          PublicKey(
+            id = s"key$i",
+            purpose = VerificationRelationship.Authentication,
+            publicKeyData = publicKeyData
           )
         )
-        val op = createPublishedDIDOperation(publicKeys = publicKeys)
+        val internalKeys = (1 to 10).map(i =>
+          InternalPublicKey(
+            id = s"master$i",
+            purpose = InternalKeyPurpose.Master,
+            publicKeyData = publicKeyData
+          )
+        )
+        val op = createPrismDIDOperation(publicKeys = publicKeys, internalKeys = internalKeys)
+        assert(DIDOperationValidator(Config(15, 15)).validate(op))(
+          isLeft(isSubtype[DIDOperationError.TooManyDidPublicKeyAccess](anything))
+        )
+      },
+      test("reject CreateOperation on duplicated DID public key id") {
+        val publicKeyData = PublicKeyData.ECKeyData(
+          crv = EllipticCurve.SECP256K1,
+          x = Base64UrlString.fromStringUnsafe("00"),
+          y = Base64UrlString.fromStringUnsafe("00")
+        )
+        val publicKeys = (1 to 10).map(i =>
+          PublicKey(
+            id = s"key$i",
+            purpose = VerificationRelationship.Authentication,
+            publicKeyData = publicKeyData
+          )
+        )
+        val internalKeys = Seq(
+          InternalPublicKey(
+            id = s"key1",
+            purpose = InternalKeyPurpose.Master,
+            publicKeyData = publicKeyData
+          )
+        )
+        val op = createPrismDIDOperation(publicKeys = publicKeys, internalKeys = internalKeys)
         assert(DIDOperationValidator(Config(50, 50)).validate(op))(
           isLeft(isSubtype[DIDOperationError.InvalidArgument](anything))
         )
       },
-      test("reject CreateOperation on duplicated DID service id") {
-        val services = Seq("service-1", "service-2", "service-1").map(id =>
+      test("reject CreateOperation on too many service access") {
+        val services = (1 to 20).map(i =>
           Service(
-            id = id,
+            id = s"service$i",
             `type` = ServiceType.MediatorService,
-            serviceEndpoint = URI.create("https://example.com")
+            serviceEndpoint = URI.create("http://example.com")
           )
         )
-        val op = createPublishedDIDOperation(services = services)
+        val op = createPrismDIDOperation(services = services)
+        assert(DIDOperationValidator(Config(15, 15)).validate(op))(
+          isLeft(isSubtype[DIDOperationError.TooManyDidServiceAccess](anything))
+        )
+      },
+      test("reject CreateOperation on duplicated service id") {
+        val services = (1 to 3).map(i =>
+          Service(
+            id = s"service0",
+            `type` = ServiceType.MediatorService,
+            serviceEndpoint = URI.create("http://example.com")
+          )
+        )
+        val op = createPrismDIDOperation(services = services)
+        assert(DIDOperationValidator(Config(15, 15)).validate(op))(
+          isLeft(isSubtype[DIDOperationError.InvalidArgument](anything))
+        )
+      },
+      test("reject CreateOperation on invalid key-id") {
+        val publicKeyData = PublicKeyData.ECKeyData(
+          crv = EllipticCurve.SECP256K1,
+          x = Base64UrlString.fromStringUnsafe("00"),
+          y = Base64UrlString.fromStringUnsafe("00")
+        )
+        val publicKeys = Seq(
+          PublicKey(
+            id = "key-01",
+            purpose = VerificationRelationship.Authentication,
+            publicKeyData = publicKeyData
+          )
+        )
+        val op = createPrismDIDOperation(publicKeys = publicKeys)
         assert(DIDOperationValidator(Config(50, 50)).validate(op))(
           isLeft(isSubtype[DIDOperationError.InvalidArgument](anything))
         )

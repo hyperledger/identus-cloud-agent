@@ -97,11 +97,11 @@ import java.time.{Instant, ZonedDateTime}
   println("JWT+AUD => W3C")
   println("==================")
   val convertedJwtAudToW3CCredential = decodedJwtAudCredentialPayload.toW3CCredentialPayload
-  println(convertedJwtAudToW3CCredential.toOption.get.asJson.toString())
+  println(convertedJwtAudToW3CCredential.asJson.toString())
 
   println("")
   println("==================")
   println("W3C => JWT+AUD")
   println("==================")
-  val convertedW3CToJwtAudCredential = convertedJwtAudToW3CCredential.toOption.get.toJwtCredentialPayload
+  val convertedW3CToJwtAudCredential = convertedJwtAudToW3CCredential.toJwtCredentialPayload
   println(convertedW3CToJwtAudCredential.asJson.toString())

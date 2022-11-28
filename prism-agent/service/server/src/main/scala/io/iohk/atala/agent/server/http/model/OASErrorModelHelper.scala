@@ -6,6 +6,7 @@ import io.iohk.atala.agent.walletapi.model.error.{CreateManagedDIDError, Publish
 import io.iohk.atala.castor.core.model.error.DIDOperationError
 import java.util.UUID
 import io.iohk.atala.pollux.core.model.error.IssueCredentialError
+import io.iohk.atala.connect.core.model.error.ConnectionError
 import io.iohk.atala.pollux.core.model.error.PresentationError
 
 trait ToErrorResponse[E] {
@@ -68,6 +69,18 @@ trait OASErrorModelHelper {
 
   given ToErrorResponse[IssueCredentialError] with {
     def toErrorResponse(error: IssueCredentialError): ErrorResponse = {
+      ErrorResponse(
+        `type` = "error-type",
+        title = "error-title",
+        status = 500,
+        detail = Some(error.toString),
+        instance = "error-instance"
+      )
+    }
+  }
+
+  given ToErrorResponse[ConnectionError] with {
+    def toErrorResponse(error: ConnectionError): ErrorResponse = {
       ErrorResponse(
         `type` = "error-type",
         title = "error-title",

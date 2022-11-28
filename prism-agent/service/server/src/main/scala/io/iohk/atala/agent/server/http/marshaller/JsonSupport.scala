@@ -103,10 +103,18 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   given RootJsonFormat[W3CSchemaMeta] = jsonFormat6(W3CSchemaMeta.apply)
   given RootJsonFormat[W3CSchemaPaginated] = jsonFormat4(W3CSchemaPaginated.apply)
 
+  // Presentation
   given RootJsonFormat[ProofRequestAux] = jsonFormat2(ProofRequestAux.apply)
   given RootJsonFormat[RequestPresentationInput] = jsonFormat2(RequestPresentationInput.apply)
   given RootJsonFormat[RequestPresentationOutput] = jsonFormat1(RequestPresentationOutput.apply)
   given RootJsonFormat[PresentationStatus] = jsonFormat4(PresentationStatus.apply)
   given RootJsonFormat[RequestPresentationAction] = jsonFormat2(RequestPresentationAction.apply)
+
+  // Connections Management
+  given RootJsonFormat[CreateConnectionRequest] = jsonFormat1(CreateConnectionRequest.apply)
+  given RootJsonFormat[AcceptConnectionInvitationRequest] = jsonFormat1(AcceptConnectionInvitationRequest.apply)
+  given RootJsonFormat[ConnectionCollection] = jsonFormat3(ConnectionCollection.apply)
+  given RootJsonFormat[Connection] = jsonFormat10(Connection.apply)
+  given RootJsonFormat[ConnectionInvitation] = jsonFormat4(ConnectionInvitation.apply)
 
 }

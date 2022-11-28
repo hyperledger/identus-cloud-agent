@@ -1,3 +1,18 @@
+# [pollux-v0.5.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.4.0...pollux-v0.5.0) (2022-11-28)
+
+
+### Features
+
+* **pollux:** fix shared version to 0.2.0 ([4809414](https://github.com/input-output-hk/atala-prism-building-blocks/commit/48094148f26b79ed76a044cb65e6e4aaf00aebb1))
+
+# [pollux-v0.4.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.3.0...pollux-v0.4.0) (2022-11-25)
+
+
+### Features
+
+* **pollux:** minor changes related to connect implementation ([#171](https://github.com/input-output-hk/atala-prism-building-blocks/issues/171)) ([4573ef8](https://github.com/input-output-hk/atala-prism-building-blocks/commit/4573ef8122a9b0d2539f9e186a156982480a5d89))
+* **pollux:** Verify PresentProof Protocol ([#149](https://github.com/input-output-hk/atala-prism-building-blocks/issues/149)) ([7f0f412](https://github.com/input-output-hk/atala-prism-building-blocks/commit/7f0f412580b1111338015ac8bb16b525e946fed4))
+
 # [pollux-v0.3.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.2.0...pollux-v0.3.0) (2022-11-21)
 
 

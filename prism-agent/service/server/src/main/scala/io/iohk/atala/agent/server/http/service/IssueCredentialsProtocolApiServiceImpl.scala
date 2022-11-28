@@ -69,13 +69,6 @@ class IssueCredentialsProtocolApiServiceImpl(credentialService: CredentialServic
     }
   }
 
-  extension (str: String) {
-    def toUUID: ZIO[Any, InvalidPayload, UUID] =
-      ZIO
-        .fromTry(Try(UUID.fromString(str)))
-        .mapError(e => HttpServiceError.InvalidPayload(s"Error parsing string as UUID: ${e.getMessage()}"))
-  }
-
   def getCredentialRecord(recordId: String)(implicit
       toEntityMarshallerIssueCredentialRecord: ToEntityMarshaller[IssueCredentialRecord],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]

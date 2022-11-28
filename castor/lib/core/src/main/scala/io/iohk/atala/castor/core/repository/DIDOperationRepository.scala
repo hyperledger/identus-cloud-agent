@@ -1,8 +1,8 @@
 package io.iohk.atala.castor.core.repository
 
-import io.iohk.atala.castor.core.model.did.{ConfirmedPublishedDIDOperation, PrismDIDV1}
+import io.iohk.atala.castor.core.model.did.PrismDID
 import zio.*
 
 trait DIDOperationRepository[F[_]] {
-  def getConfirmedPublishedDIDOperations(did: PrismDIDV1): F[Seq[ConfirmedPublishedDIDOperation]]
+  def getConfirmedPublishedDIDOperations(did: PrismDID): F[Unit]
 }

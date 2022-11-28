@@ -13,14 +13,16 @@ import io.iohk.atala.agent.server.http.marshaller.{
   DIDAuthenticationApiMarshallerImpl,
   DIDOperationsApiMarshallerImpl,
   DIDRegistrarApiMarshallerImpl,
-  IssueCredentialsApiMarshallerImpl
+  IssueCredentialsApiMarshallerImpl,
+  ConnectionsManagementApiMarshallerImpl
 }
 import io.iohk.atala.agent.server.http.service.{
   DIDApiServiceImpl,
   DIDAuthenticationApiServiceImpl,
   DIDOperationsApiServiceImpl,
   DIDRegistrarApiServiceImpl,
-  IssueCredentialsApiServiceImpl
+  IssueCredentialsApiServiceImpl,
+  ConnectionsManagementApiServiceImpl
 }
 import io.iohk.atala.castor.core.repository.DIDOperationRepository
 import io.iohk.atala.agent.openapi.api.{
@@ -28,7 +30,8 @@ import io.iohk.atala.agent.openapi.api.{
   DIDAuthenticationApi,
   DIDOperationsApi,
   DIDRegistrarApi,
-  IssueCredentialsApi
+  IssueCredentialsApi,
+  ConnectionsManagementApi
 }
 import io.iohk.atala.castor.sql.repository.{JdbcDIDOperationRepository, TransactorLayer}
 import zio.*
@@ -48,30 +51,31 @@ import io.iohk.atala.castor.core.service.{DIDService, DIDServiceImpl}
 import io.iohk.atala.pollux.core.service.CredentialServiceImpl
 import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.castor.sql.repository.{JdbcDIDOperationRepository, TransactorLayer}
-import io.iohk.atala.castor.sql.repository.{DbConfig => CastorDbConfig}
+import io.iohk.atala.castor.sql.repository.DbConfig as CastorDbConfig
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
 import io.iohk.atala.pollux.core.repository.CredentialRepository
 import io.iohk.atala.pollux.core.service.CredentialService
 import io.iohk.atala.pollux.sql.repository.JdbcCredentialRepository
 import io.iohk.atala.pollux.sql.repository.{DbConfig => PolluxDbConfig}
+import io.iohk.atala.connect.sql.repository.{DbConfig => ConnectDbConfig}
 import io.iohk.atala.agent.server.jobs.*
 import zio.*
 import zio.config.typesafe.TypesafeConfigSource
 import zio.config.{ReadError, read}
 import zio.interop.catz.*
 import zio.stream.ZStream
-import zhttp.http._
+import zhttp.http.*
 import zhttp.service.Server
 
 import java.util.concurrent.Executors
-
-import io.iohk.atala.mercury._
-import io.iohk.atala.mercury.model._
-import io.iohk.atala.mercury.model.error._
-import io.iohk.atala.mercury.protocol.issuecredential._
+import io.iohk.atala.mercury.*
+import io.iohk.atala.mercury.model.*
+import io.iohk.atala.mercury.model.error.*
+import io.iohk.atala.mercury.protocol.issuecredential.*
 import io.iohk.atala.mercury.protocol.presentproof._
 import io.iohk.atala.pollux.core.model.error.IssueCredentialError
+
 import java.io.IOException
 import cats.implicits.*
 import io.iohk.atala.pollux.schema.SchemaRegistryServerEndpoints
@@ -81,6 +85,15 @@ import io.iohk.atala.pollux.core.service.PresentationServiceImpl
 import io.iohk.atala.pollux.core.repository.PresentationRepository
 import io.iohk.atala.pollux.sql.repository.JdbcPresentationRepository
 import io.iohk.atala.pollux.core.model.error.PresentationError
+import io.iohk.atala.connect.core.service.ConnectionService
+import io.iohk.atala.connect.core.service.ConnectionServiceImpl
+import io.iohk.atala.connect.core.repository.ConnectionRepository
+import io.iohk.atala.connect.sql.repository.JdbcConnectionRepository
+import io.iohk.atala.mercury.protocol.connection.ConnectionRequest
+import io.iohk.atala.mercury.protocol.connection.ConnectionResponse
+import io.iohk.atala.connect.core.model.error.ConnectionError
+import io.iohk.atala.pollux.schema.{SchemaRegistryServerEndpoints, VerificationPolicyServerEndpoints}
+import io.iohk.atala.pollux.service.{SchemaRegistryServiceInMemory, VerificationPolicyServiceInMemory}
 
 object Modules {
 
@@ -95,19 +108,24 @@ object Modules {
   lazy val zioApp = {
     val zioHttpServerApp = for {
       allSchemaRegistryEndpoints <- SchemaRegistryServerEndpoints.all
-      allEndpoints = ZHttpEndpoints.withDocumentations[Task](allSchemaRegistryEndpoints)
+      allVerificationPolicyEndpoints <- VerificationPolicyServerEndpoints.all
+      allEndpoints = ZHttpEndpoints.withDocumentations[Task](
+        allSchemaRegistryEndpoints ++ allVerificationPolicyEndpoints
+      )
       appConfig <- ZIO.service[AppConfig]
       httpServer <- ZHttp4sBlazeServer.start(allEndpoints, port = appConfig.agent.httpEndpoint.http.port)
     } yield httpServer
 
     zioHttpServerApp
-      .provideLayer(SchemaRegistryServiceInMemory.layer ++ SystemModule.configLayer)
+      .provideLayer(
+        SchemaRegistryServiceInMemory.layer ++ VerificationPolicyServiceInMemory.layer ++ SystemModule.configLayer
+      )
       .unit
   }
 
   def didCommServiceEndpoint(port: Int) = {
     val header = "content-type" -> MediaTypes.contentTypeEncrypted
-    val app: HttpApp[DidComm with CredentialService with PresentationService, Throwable] =
+    val app: HttpApp[DidComm & CredentialService with PresentationService & ConnectionService, Throwable] =
       Http.collectZIO[Request] {
         //   // TODO add DIDComm messages parsing logic here!
         //   Response.text("Hello World!").setStatus(Status.Accepted)
@@ -141,15 +159,23 @@ object Modules {
       .unit
       .provideSomeLayer(AppModule.credentialServiceLayer)
 
+  val connectDidCommExchangesJob: RIO[DidComm, Unit] =
+    ConnectBackgroundJobs.didCommExchanges
+      .repeat(Schedule.spaced(10.seconds))
+      .unit
+      .provideSomeLayer(AppModule.connectionServiceLayer)
+
   def webServerProgram(
       jsonString: String
-  ): ZIO[DidComm with CredentialService with PresentationService, MercuryThrowable, Unit] = {
+  ): ZIO[DidComm & CredentialService with PresentationService & ConnectionService, MercuryThrowable, Unit] = {
     import io.iohk.atala.mercury.DidComm.*
     ZIO.logAnnotate("request-id", java.util.UUID.randomUUID.toString()) {
       for {
         _ <- ZIO.logInfo("Received new message")
         _ <- ZIO.logTrace(jsonString)
         msg <- unpack(jsonString).map(_.getMessage)
+        credentialService <- ZIO.service[CredentialService]
+        connectionService <- ZIO.service[ConnectionService]
         _ <- {
           msg.piuri match {
             // ########################
@@ -170,7 +196,6 @@ object Modules {
                 _ <- ZIO.logInfo("*" * 100)
                 _ <- ZIO.logInfo("As an Holder in issue-credential:")
                 _ <- ZIO.logInfo("Got OfferCredential: " + msg)
-                credentialService <- ZIO.service[CredentialService]
                 offerFromIssuer = OfferCredential.readFromMessage(msg)
                 _ <- credentialService
                   .receiveCredentialOffer(offerFromIssuer)
@@ -266,6 +291,46 @@ object Modules {
                   .catchAll { case ex: IOException => ZIO.fail(ex) }
               } yield ()
 
+            case s if s == ConnectionRequest.`type` =>
+              for {
+                _ <- ZIO.logInfo("*" * 100)
+                _ <- ZIO.logInfo("As an Inviter in connect:")
+                connectionRequest = ConnectionRequest.readFromMessage(msg)
+                _ <- ZIO.logInfo("Got ConnectionRequest: " + connectionRequest)
+                // Receive and store ConnectionRequest
+                maybeRecord <- connectionService
+                  .receiveConnectionRequest(connectionRequest)
+                  .catchSome { case ConnectionError.RepositoryError(cause) =>
+                    ZIO.logError(cause.getMessage()) *>
+                      ZIO.fail(cause)
+                  }
+                  .catchAll { case ex: IOException => ZIO.fail(ex) }
+                // Accept the ConnectionRequest
+                _ <- connectionService
+                  .acceptConnectionRequest(maybeRecord.get.id) // TODO: get
+                  .catchSome { case ConnectionError.RepositoryError(cause) =>
+                    ZIO.logError(cause.getMessage()) *>
+                      ZIO.fail(cause)
+                  }
+                  .catchAll { case ex: IOException => ZIO.fail(ex) }
+              } yield ()
+
+            // As an Invitee, I received a ConnectionResponse from an Inviter who replied to my ConnectionRequest.
+            case s if s == ConnectionResponse.`type` =>
+              for {
+                _ <- ZIO.logInfo("*" * 100)
+                _ <- ZIO.logInfo("As an Invitee in connect:")
+                connectionResponse = ConnectionResponse.readFromMessage(msg)
+                _ <- ZIO.logInfo("Got ConnectionResponse: " + connectionResponse)
+                _ <- connectionService
+                  .receiveConnectionResponse(connectionResponse)
+                  .catchSome { case ConnectionError.RepositoryError(cause) =>
+                    ZIO.logError(cause.getMessage()) *>
+                      ZIO.fail(cause)
+                  }
+                  .catchAll { case ex: IOException => ZIO.fail(ex) }
+              } yield ()
+
             case _ => ZIO.succeed("Unknown Message Type")
           }
         }
@@ -320,6 +385,9 @@ object AppModule {
     (GrpcModule.layers ++ RepoModule.layers) >>> CredentialServiceImpl.layer
 
   def presentationServiceLayer = RepoModule.presentationRepoLayer >>> PresentationServiceImpl.layer
+
+  val connectionServiceLayer: RLayer[DidComm, ConnectionService] =
+    (GrpcModule.layers ++ RepoModule.layers) >>> ConnectionServiceImpl.layer
 }
 
 object GrpcModule {
@@ -392,8 +460,15 @@ object HttpModule {
     (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new PresentProofApi(_, _))
   }
 
+  val connectionsManagementApiLayer: RLayer[DidComm, ConnectionsManagementApi] = {
+    val serviceLayer = AppModule.connectionServiceLayer
+    val apiServiceLayer = serviceLayer >>> ConnectionsManagementApiServiceImpl.layer
+    val apiMarshallerLayer = ConnectionsManagementApiMarshallerImpl.layer
+    (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new ConnectionsManagementApi(_, _))
+  }
+
   val layers =
-    didApiLayer ++ didOperationsApiLayer ++ didAuthenticationApiLayer ++ didRegistrarApiLayer ++ issueCredentialsApiLayer ++ issueCredentialsProtocolApiLayer
+    didApiLayer ++ didOperationsApiLayer ++ didAuthenticationApiLayer ++ didRegistrarApiLayer ++ issueCredentialsApiLayer ++ issueCredentialsProtocolApiLayer ++ connectionsManagementApiLayer
 }
 
 object RepoModule {
@@ -449,6 +524,32 @@ object RepoModule {
     polluxDbConfigLayer >>> transactorLayer
   }
 
+  val connectDbConfigLayer: TaskLayer[ConnectDbConfig] = {
+    val dbConfigLayer = ZLayer.fromZIO {
+      ZIO.service[AppConfig].map(_.connect.database) map { config =>
+        ConnectDbConfig(
+          username = config.username,
+          password = config.password,
+          jdbcUrl = s"jdbc:postgresql://${config.host}:${config.port}/${config.databaseName}",
+          awaitConnectionThreads = 2
+        )
+      }
+    }
+    SystemModule.configLayer >>> dbConfigLayer
+  }
+
+  val connectTransactorLayer: TaskLayer[Transactor[Task]] = {
+    val transactorLayer = ZLayer.fromZIO {
+      ZIO.service[ConnectDbConfig].flatMap { config =>
+        Dispatcher[Task].allocated.map { case (dispatcher, _) =>
+          given Dispatcher[Task] = dispatcher
+          io.iohk.atala.connect.sql.repository.TransactorLayer.hikari[Task](config)
+        }
+      }
+    }.flatten
+    connectDbConfigLayer >>> transactorLayer
+  }
+
   val didOperationRepoLayer: TaskLayer[DIDOperationRepository[Task]] =
     castorTransactorLayer >>> JdbcDIDOperationRepository.layer
 
@@ -458,5 +559,8 @@ object RepoModule {
   val presentationRepoLayer: TaskLayer[PresentationRepository[Task]] =
     polluxTransactorLayer >>> JdbcPresentationRepository.layer
 
-  val layers = didOperationRepoLayer ++ credentialRepoLayer
+  val connectionRepoLayer: TaskLayer[ConnectionRepository[Task]] =
+    connectTransactorLayer >>> JdbcConnectionRepository.layer
+
+  val layers = didOperationRepoLayer ++ credentialRepoLayer ++ connectionRepoLayer
 }
