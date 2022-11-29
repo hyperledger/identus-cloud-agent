@@ -47,10 +47,9 @@ private[castor] trait W3CModelHelper {
           PublicKeyJwk(
             kty = "EC",
             crv = crv.name,
-            x = x.toString,
-            y = y.toString
+            x = x.toStringNoPadding,
+            y = y.toStringNoPadding
           )
-
       }
     )
   }
