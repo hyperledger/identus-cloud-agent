@@ -125,7 +125,7 @@ object Modules {
 
   def didCommServiceEndpoint(port: Int) = {
     val header = "content-type" -> MediaTypes.contentTypeEncrypted
-    val app: HttpApp[DidComm & CredentialService with PresentationService & ConnectionService, Throwable] =
+    val app: HttpApp[DidComm with CredentialService with PresentationService with CS_Connect, Throwable] =
       Http.collectZIO[Request] {
         //   // TODO add DIDComm messages parsing logic here!
         //   Response.text("Hello World!").setStatus(Status.Accepted)
@@ -167,7 +167,7 @@ object Modules {
 
   def webServerProgram(
       jsonString: String
-  ): ZIO[DidComm & CredentialService with PresentationService & ConnectionService, MercuryThrowable, Unit] = {
+  ): ZIO[DidComm & CredentialService with PresentationService with CS_Connect, MercuryThrowable, Unit] = {
     import io.iohk.atala.mercury.DidComm.*
     ZIO.logAnnotate("request-id", java.util.UUID.randomUUID.toString()) {
       for {
@@ -175,7 +175,7 @@ object Modules {
         _ <- ZIO.logTrace(jsonString)
         msg <- unpack(jsonString).map(_.getMessage)
         credentialService <- ZIO.service[CredentialService]
-        connectionService <- ZIO.service[ConnectionService]
+        connectionService <- ZIO.service[CS_Connect]
         _ <- {
           msg.piuri match {
             // ########################

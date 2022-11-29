@@ -18,12 +18,10 @@ import io.iohk.atala.mercury.DidComm
 import io.iohk.atala.agent.server.http.model.OASDomainModelHelper
 import io.iohk.atala.agent.server.http.model.OASErrorModelHelper
 import io.iohk.atala.agent.server.http.model.InvalidState
-
-class ConnectionService {
-  // def getConnection(connectionId: String): UIO[DidId] = ???
-  def getEstablishedConnection(connectionId: String): UIO[DidId] = ???
-}
-
+import io.iohk.atala.connect.core.service.ConnectionService
+import io.iohk.atala.connect.core.model.error.ConnectionError
+import io.iohk.atala.agent.server.http.model.HttpServiceError.DomainError
+import io.iohk.atala.pollux.core.model.PresentationRecord
 class PresentProofApiServiceImpl(
     presentationService: PresentationService,
     connectionService: ConnectionService,
@@ -40,19 +38,23 @@ class PresentProofApiServiceImpl(
   ): Route = {
 
     val result = for {
-      toDID <- connectionService.getEstablishedConnection(requestPresentationInput.connectionId)
+      toDID <- connectionService
+        .getConnectionRecord(UUID.fromString(requestPresentationInput.connectionId))
+        .mapError(HttpServiceError.DomainError[ConnectionError].apply)
+        .mapError(_.toOAS)
 
       record <- presentationService
         .createPresentationRecord(
           thid = UUID.randomUUID(),
-          subjectDid = toDID,
+          subjectDid = toDID.flatMap(_.connectionRequest).map(_.from).get, // TODO get
           connectionId = None,
           schemaId = None
         )
         .mapError(HttpServiceError.DomainError[PresentationError].apply)
-    } yield record
+        .mapError(_.toOAS)
+    } yield RequestPresentationOutput(record.id.toString)
 
-    onZioSuccess(result.mapBoth(_.toOAS, record => RequestPresentationOutput(record.id.toString)).either) {
+    onZioSuccess(result.either) {
       case Left(error)   => complete(error.status -> error)
       case Right(result) => requestPresentation201(result)
     }
