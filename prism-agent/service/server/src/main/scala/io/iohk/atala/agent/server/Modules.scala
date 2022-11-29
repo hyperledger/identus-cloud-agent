@@ -13,7 +13,6 @@ import io.iohk.atala.agent.server.http.marshaller.{
   DIDAuthenticationApiMarshallerImpl,
   DIDOperationsApiMarshallerImpl,
   DIDRegistrarApiMarshallerImpl,
-  IssueCredentialsApiMarshallerImpl,
   ConnectionsManagementApiMarshallerImpl
 }
 import io.iohk.atala.agent.server.http.service.{
@@ -21,7 +20,6 @@ import io.iohk.atala.agent.server.http.service.{
   DIDAuthenticationApiServiceImpl,
   DIDOperationsApiServiceImpl,
   DIDRegistrarApiServiceImpl,
-  IssueCredentialsApiServiceImpl,
   ConnectionsManagementApiServiceImpl
 }
 import io.iohk.atala.castor.core.repository.DIDOperationRepository
@@ -30,7 +28,6 @@ import io.iohk.atala.agent.openapi.api.{
   DIDAuthenticationApi,
   DIDOperationsApi,
   DIDRegistrarApi,
-  IssueCredentialsApi,
   ConnectionsManagementApi
 }
 import io.iohk.atala.castor.sql.repository.{JdbcDIDOperationRepository, TransactorLayer}
@@ -378,13 +375,6 @@ object HttpModule {
     (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new DIDRegistrarApi(_, _))
   }
 
-  val issueCredentialsApiLayer: RLayer[DidComm, IssueCredentialsApi] = {
-    val serviceLayer = AppModule.credentialServiceLayer
-    val apiServiceLayer = serviceLayer >>> IssueCredentialsApiServiceImpl.layer
-    val apiMarshallerLayer = IssueCredentialsApiMarshallerImpl.layer
-    (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new IssueCredentialsApi(_, _))
-  }
-
   val issueCredentialsProtocolApiLayer: RLayer[DidComm, IssueCredentialsProtocolApi] = {
     val serviceLayer = AppModule.credentialServiceLayer
     val apiServiceLayer = serviceLayer >>> IssueCredentialsProtocolApiServiceImpl.layer
@@ -400,7 +390,8 @@ object HttpModule {
   }
 
   val layers =
-    didApiLayer ++ didOperationsApiLayer ++ didAuthenticationApiLayer ++ didRegistrarApiLayer ++ issueCredentialsApiLayer ++ issueCredentialsProtocolApiLayer ++ connectionsManagementApiLayer
+    didApiLayer ++ didOperationsApiLayer ++ didAuthenticationApiLayer ++ didRegistrarApiLayer ++
+      issueCredentialsProtocolApiLayer ++ connectionsManagementApiLayer
 }
 
 object RepoModule {
