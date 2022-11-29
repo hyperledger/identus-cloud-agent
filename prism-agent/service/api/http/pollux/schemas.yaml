@@ -431,7 +431,12 @@ components:
           example: "https://schema.org/Person"
         trustIssuers:
           description: Issuer that the verifier trust trust
-          example: "['did:web:atalaprism.io/users/testUser', 'did.prism:123', 'did:prism:...']"
+          example:
+            [
+              "did:web:atalaprism.io/users/testUser",
+              "did.prism:123",
+              "did:prism:...",
+            ]
           type: array
           items:
             type: string
