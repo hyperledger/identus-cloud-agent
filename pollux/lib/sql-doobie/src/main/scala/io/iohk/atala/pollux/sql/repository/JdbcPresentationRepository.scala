@@ -80,6 +80,7 @@ class JdbcPresentationRepository(xa: Transactor[Task]) extends PresentationRepos
         |   ${record.createdAt},
         |   ${record.updatedAt},
         |   ${record.thid},
+        |   ${record.connectionId},
         |   ${record.schemaId},
         |   ${record.role},
         |   ${record.subjectId},
