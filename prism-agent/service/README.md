@@ -47,7 +47,14 @@ Similar to [Indy Wallet SDK - secret API](https://github.com/hyperledger/indy-sd
 *it does not expose a private-key* for external use, instead it provide functions to perform cryptographic actions using internally stored private-keys.
 
 ---
+## Connect flow
+Basic documentation on how to execute the Connect flow from command line can be found [here](./connect.md).
 
+---
+## Issue flow
+Basic documentation on how to execute the Issue flow from the command line can be found [here](./issue.md).
+
+---
 ## Known limitations
 
 ### Castor `worker` process embedded inside `prism-agent` runnable
