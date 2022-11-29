@@ -7,6 +7,7 @@ import io.iohk.atala.pollux.schema.model.VerifiableCredentialSchema
 import java.util.UUID
 
 trait SchemaRegistryService {
+  private val i = 10
   def createSchema(
       in: VerifiableCredentialSchema.Input
   ): Task[VerifiableCredentialSchema]
