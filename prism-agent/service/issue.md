@@ -1,4 +1,5 @@
 ### Running multiple instances of Prism Agent
+---
 
 #### Starting an instance for `Issuer` on port `8080`
 
@@ -15,6 +16,7 @@ PORT=8090 docker-compose -p holder -f infrastructure/local/docker-compose.yml up
 ```
 
 ### Executing the `Issue` flow
+---
 
 - **Issuer** - Initiate a new issue credential flow
 
