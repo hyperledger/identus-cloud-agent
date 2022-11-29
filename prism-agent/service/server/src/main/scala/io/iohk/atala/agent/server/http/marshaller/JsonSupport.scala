@@ -50,7 +50,6 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   given RootJsonFormat[UpdateDIDRequest] = jsonFormat4(UpdateDIDRequest.apply)
   given RootJsonFormat[UpdatePatch] = jsonFormat2(UpdatePatch.apply)
   given RootJsonFormat[VerificationMethod] = jsonFormat4(VerificationMethod.apply)
-  given RootJsonFormat[VerificationMethodOrRef] = jsonFormat2(VerificationMethodOrRef.apply)
 
   // Issue Credential Protocol
   implicit object UUIDFormat extends JsonFormat[UUID] {

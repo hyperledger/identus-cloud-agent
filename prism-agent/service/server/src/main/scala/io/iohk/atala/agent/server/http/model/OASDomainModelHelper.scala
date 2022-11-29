@@ -17,8 +17,7 @@ import io.iohk.atala.agent.openapi.model.{
   PublicKey,
   PublicKeyJwk,
   Service,
-  VerificationMethod,
-  VerificationMethodOrRef
+  VerificationMethod
 }
 import io.iohk.atala.castor.core.model.did as castorDomain
 import io.iohk.atala.agent.walletapi.model as walletDomain
@@ -199,13 +198,6 @@ trait OASDomainModelHelper {
       id = service.id,
       `type` = service.`type`,
       serviceEndpoint = service.serviceEndpoint
-    )
-  }
-
-  given Conversion[VerificationMethod, VerificationMethodOrRef] with {
-    override def apply(x: VerificationMethod): VerificationMethodOrRef = VerificationMethodOrRef(
-      ref = None,
-      verificationMethod = Some(x)
     )
   }
 

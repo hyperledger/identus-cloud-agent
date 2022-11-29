@@ -26,20 +26,16 @@ class DIDApiServiceImpl(service: DIDService)(using runtime: Runtime[Any])
     verificationMethod = None,
     authentication = Some(
       Seq(
-        VerificationMethodOrRef(verificationMethod =
-          Some(
-            VerificationMethod(
-              id = "did:prism:1:mainnet:abcdef123456#key-1",
-              `type` = "JsonWebKey2020",
-              controller = "did:prism:1:mainnet:abcdef123456",
-              publicKeyJwk = PublicKeyJwk(
-                crv = Some("P-256"),
-                x = Some("38M1FDts7Oea7urmseiugGW7tWc3mLpJh6rKe7xINZ8"),
-                y = Some("nDQW6XZ7b_u2Sy9slofYLlG03sOEoug3I0aAPQ0exs4"),
-                kty = "EC",
-                kid = Some("_TKzHv2jFIyvdTGF1Dsgwngfdg3SH6TpDv0Ta1aOEkw")
-              )
-            )
+        VerificationMethod(
+          id = "did:prism:1:mainnet:abcdef123456#key-1",
+          `type` = "JsonWebKey2020",
+          controller = "did:prism:1:mainnet:abcdef123456",
+          publicKeyJwk = PublicKeyJwk(
+            crv = Some("P-256"),
+            x = Some("38M1FDts7Oea7urmseiugGW7tWc3mLpJh6rKe7xINZ8"),
+            y = Some("nDQW6XZ7b_u2Sy9slofYLlG03sOEoug3I0aAPQ0exs4"),
+            kty = "EC",
+            kid = Some("_TKzHv2jFIyvdTGF1Dsgwngfdg3SH6TpDv0Ta1aOEkw")
           )
         )
       )
