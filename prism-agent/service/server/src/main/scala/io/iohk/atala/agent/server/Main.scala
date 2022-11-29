@@ -67,7 +67,7 @@ object Main extends ZIOAppDefault {
         .provide(RepoModule.connectDbConfigLayer >>> ConnectMigrations.layer)
 
       agentDID <- for {
-        peer <- ZIO.succeed(PeerDID.makePeerDid(serviceEndpoint = Some(s"$didCommServiceUrl:$didCommServicePort")))
+        peer <- ZIO.succeed(PeerDID.makePeerDid(serviceEndpoint = Some(didCommServiceUrl)))
         _ <- ZIO.logInfo(s"New DID: ${peer.did}") *>
           ZIO.logInfo(s"JWK for KeyAgreement: ${peer.jwkForKeyAgreement.toJSONString}") *>
           ZIO.logInfo(s"JWK for KeyAuthentication: ${peer.jwkForKeyAuthentication.toJSONString}")
