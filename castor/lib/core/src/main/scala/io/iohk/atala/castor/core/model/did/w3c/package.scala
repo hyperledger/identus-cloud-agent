@@ -16,7 +16,6 @@ package object w3c {
       prismDID <- ZIO
         .fromEither(PrismDID.fromString(did))
         .mapError(_ => DIDResolutionErrorRepr.InvalidDID)
-        .map(_.asCanonical)
       didData <- service
         .resolveDID(prismDID)
         .mapBoth(
