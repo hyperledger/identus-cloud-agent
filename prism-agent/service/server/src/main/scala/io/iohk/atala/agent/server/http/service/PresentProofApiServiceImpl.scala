@@ -36,11 +36,11 @@ class PresentProofApiServiceImpl(
       toEntityMarshallerRequestPresentationOutput: ToEntityMarshaller[RequestPresentationOutput],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
-    val dd = "^did.*".r
+    val didRegex = "^did.*".r
 
     val result = for {
       didId <- requestPresentationInput.connectionId match {
-        case dd() => ZIO.succeed(DidId(requestPresentationInput.connectionId))
+        case didRegex() => ZIO.succeed(DidId(requestPresentationInput.connectionId))
         case _ =>
           connectionService
             .getConnectionRecord(UUID.fromString(requestPresentationInput.connectionId))
@@ -48,6 +48,7 @@ class PresentProofApiServiceImpl(
             .mapError(HttpServiceError.DomainError[ConnectionError].apply)
             .mapError(_.toOAS)
       }
+
       record <- presentationService
         .createPresentationRecord(
           thid = UUID.randomUUID(),
