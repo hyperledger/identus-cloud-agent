@@ -3,7 +3,6 @@ package io.iohk.atala.agent.server.http.service
 import akka.http.scaladsl.server.Directives.*
 import akka.http.scaladsl.marshalling.ToEntityMarshaller
 import akka.http.scaladsl.server.Route
-import io.iohk.atala.agent.openapi.api.IssueCredentialsApi
 import io.iohk.atala.agent.openapi.api.IssueCredentialsProtocolApiService
 import zio.*
 import io.iohk.atala.pollux.core.service.CredentialService
