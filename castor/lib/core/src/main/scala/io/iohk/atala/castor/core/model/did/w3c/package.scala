@@ -23,6 +23,7 @@ package object w3c {
           {
             case DIDResolutionError.DLTProxyError(_)       => DIDResolutionErrorRepr.InternalError
             case DIDResolutionError.UnexpectedDLTResult(_) => DIDResolutionErrorRepr.InternalError
+            case DIDResolutionError.InvalidEncodedState(_) => DIDResolutionErrorRepr.InvalidDID
           },
           _.toRight(DIDResolutionErrorRepr.NotFound)
         )

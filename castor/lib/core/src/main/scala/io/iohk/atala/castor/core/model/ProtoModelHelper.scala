@@ -4,8 +4,8 @@ import java.net.URI
 import com.google.protobuf.ByteString
 import io.iohk.atala.castor.core.model.did.{
   CanonicalPrismDID,
-  EllipticCurve,
   DIDData,
+  EllipticCurve,
   InternalKeyPurpose,
   InternalPublicKey,
   LongFormPrismDID,
@@ -17,6 +17,7 @@ import io.iohk.atala.castor.core.model.did.{
   ScheduledDIDOperationStatus,
   VerificationRelationship
 }
+import io.iohk.atala.prism.crypto.EC
 import io.iohk.atala.prism.protos.common_models.OperationStatus
 import io.iohk.atala.prism.protos.node_models.KeyUsage
 import io.iohk.atala.prism.protos.node_models.PublicKey.KeyData
@@ -41,6 +42,7 @@ private[castor] trait ProtoModelHelper {
         value = node_models.CreateDIDOperation(
           didData = Some(
             node_models.CreateDIDOperation.DIDCreationData(
+              // TODO: add Service when it is added to Prism DID method spec (ATL-2203)
               publicKeys = createDIDOp.publicKeys.map(_.toProto) ++ createDIDOp.internalKeys.map(_.toProto)
             )
           )
@@ -126,6 +128,18 @@ private[castor] trait ProtoModelHelper {
     }
   }
 
+  extension (operation: node_models.CreateDIDOperation) {
+    def toDomain: Either[String, PrismDIDOperation.Create] = {
+      for {
+        allKeys <- operation.didData.map(_.publicKeys.traverse(_.toDomain)).getOrElse(Right(Nil))
+      } yield PrismDIDOperation.Create(
+        publicKeys = allKeys.collect { case key: PublicKey => key },
+        internalKeys = allKeys.collect { case key: InternalPublicKey => key },
+        services = Nil // TODO: add Service when it is added to Prism DID method spec (ATL-2203)
+      )
+    }
+  }
+
   extension (publicKey: node_models.PublicKey) {
     def toDomain: Either[String, PublicKey | InternalPublicKey] = {
       val purpose: Either[String, VerificationRelationship | InternalKeyPurpose] = publicKey.usage match {
@@ -175,7 +189,17 @@ private[castor] trait ProtoModelHelper {
             x = Base64UrlString.fromByteArray(ecKeyData.x.toByteArray),
             y = Base64UrlString.fromByteArray(ecKeyData.y.toByteArray)
           )
-        case KeyData.CompressedEcKeyData(_) => Left(s"conversion from CompressedECKeyData is not yet supported")
+        case KeyData.CompressedEcKeyData(ecKeyData) =>
+          val ecPublicKey = EC.INSTANCE.toPublicKeyFromCompressed(ecKeyData.data.toByteArray)
+          for {
+            curve <- EllipticCurve
+              .parseString(ecKeyData.curve)
+              .toRight(s"unsupported elliptic curve ${ecKeyData.curve}")
+          } yield PublicKeyData.ECKeyData(
+            crv = curve,
+            x = Base64UrlString.fromByteArray(ecPublicKey.getCurvePoint.getX.bytes()),
+            y = Base64UrlString.fromByteArray(ecPublicKey.getCurvePoint.getY.bytes())
+          )
       }
     }
   }

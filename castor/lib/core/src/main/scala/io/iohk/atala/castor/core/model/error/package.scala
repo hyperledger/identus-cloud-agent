@@ -17,6 +17,7 @@ package object error {
   object DIDResolutionError {
     final case class DLTProxyError(cause: Throwable) extends DIDResolutionError
     final case class UnexpectedDLTResult(msg: String) extends DIDResolutionError
+    final case class InvalidEncodedState(msg: String) extends DIDResolutionError
   }
 
 }

@@ -43,15 +43,13 @@ object PrismDID extends ProtoModelHelper {
       .map(e => s"unable to parse suffix as hex string: ${e.getMessage}")
       .flatMap(suffix => buildCanonical(suffix.toByteArray))
 
-  def buildLongFormFromOperation(createOperation: PrismDIDOperation.Create): LongFormPrismDID = {
-    val createDIDOperation = createOperation.toProto
-    val atalaOperation = node_models.AtalaOperation(createDIDOperation)
-    buildLongFormFromAtalaOperation(atalaOperation).toOption.get
-  }
+  def buildLongFormFromOperation(createOperation: PrismDIDOperation.Create): LongFormPrismDID = LongFormPrismDID(
+    createOperation
+  )
 
   def buildLongFormFromAtalaOperation(atalaOperation: node_models.AtalaOperation): Either[String, LongFormPrismDID] =
     atalaOperation.operation match {
-      case Operation.CreateDid(_) => Right(LongFormPrismDID(atalaOperation))
+      case Operation.CreateDid(op) => op.toDomain.map(LongFormPrismDID.apply)
       case operation =>
         Left(s"Provided initial state of long form Prism DID is ${operation.value}, CreateDid Atala operation expected")
     }
@@ -110,7 +108,8 @@ final case class CanonicalPrismDID private[did] (stateHash: HexString) extends P
   override val suffix: DIDMethodSpecificId = DIDMethodSpecificId.fromString(stateHash.toString).get
 }
 
-final case class LongFormPrismDID private[did] (atalaOperation: node_models.AtalaOperation) extends PrismDID {
+final case class LongFormPrismDID private[did] (createOperation: PrismDIDOperation.Create) extends PrismDID {
+
   override val stateHash: HexString = {
     val encodedState = atalaOperation.toByteArray
     HexString.fromByteArray(Sha256.compute(encodedState).getValue)
@@ -119,5 +118,22 @@ final case class LongFormPrismDID private[did] (atalaOperation: node_models.Atal
   override val suffix: DIDMethodSpecificId = {
     val encodedState = Base64UrlString.fromByteArray(atalaOperation.toByteArray).toStringNoPadding
     DIDMethodSpecificId.fromString(s"${stateHash.toString}:${encodedState}").get
+  }
+
+  def atalaOperation: node_models.AtalaOperation = createOperation.toAtalaOperation
+
+  def toDIDDataProto: Either[String, node_models.DIDData] = {
+    val initialState = atalaOperation.operation
+    initialState match {
+      case Operation.CreateDid(createOperation) =>
+        Right(
+          node_models.DIDData(
+            id = suffix.toString,
+            publicKeys = createOperation.didData.fold(Nil)(_.publicKeys)
+          )
+        )
+      case operation =>
+        Left(s"Provided initial state of long form Prism DID is ${operation.value}, CreateDid Atala operation expected")
+    }
   }
 }

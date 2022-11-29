@@ -22,10 +22,20 @@ object PrismDIDSpec extends ZIOSpecDefault {
   private val encodedStateUsedBase64 =
     "Cj8KPRI7CgdtYXN0ZXIwEAFKLgoJc2VjcDI1NmsxEiEDHpf-yhIns-LP3tLvA8icC5FJ1ZlBwbllPtIdNZ3q0jU"
 
-  private val short = PrismDID.buildCanonical(canonicalSuffix.getValue).toOption.get
-  private val long = LongFormPrismDID(
-    node_models.AtalaOperation.parseFrom(Base64UrlString.fromStringUnsafe(encodedStateUsedBase64).toByteArray)
+  println(
+    PrismDID
+      .buildLongFormFromAtalaOperation(
+        node_models.AtalaOperation.parseFrom(Base64UrlString.fromStringUnsafe(encodedStateUsedBase64).toByteArray)
+      )
   )
+
+  private val short = PrismDID.buildCanonical(canonicalSuffix.getValue).toOption.get
+  private val long = PrismDID
+    .buildLongFormFromAtalaOperation(
+      node_models.AtalaOperation.parseFrom(Base64UrlString.fromStringUnsafe(encodedStateUsedBase64).toByteArray)
+    )
+    .toOption
+    .get
   override def spec = suite("PrismDID")(didParserSpec)
 
   private val didParserSpec = suite("PrismDID.fromString")(

@@ -3,6 +3,7 @@ package io.iohk.atala.castor.core.service
 import io.iohk.atala.castor.core.model.did.{
   CanonicalPrismDID,
   DIDData,
+  LongFormPrismDID,
   PrismDID,
   ScheduleDIDOperationOutcome,
   ScheduledDIDOperationDetail,
@@ -26,7 +27,7 @@ trait DIDService {
   def getScheduledDIDOperationDetail(
       operationId: Array[Byte]
   ): IO[DIDOperationError, Option[ScheduledDIDOperationDetail]]
-  def resolveDID(did: CanonicalPrismDID): IO[DIDResolutionError, Option[DIDData]]
+  def resolveDID(did: PrismDID): IO[DIDResolutionError, Option[DIDData]]
 }
 
 object DIDServiceImpl {
@@ -114,16 +115,30 @@ private class DIDServiceImpl(didOpValidator: DIDOperationValidator, nodeClient: 
   }
 
   // TODO: handle revoked keys and deactivated DIDs
-  override def resolveDID(did: CanonicalPrismDID): IO[DIDResolutionError, Option[DIDData]] = {
-    val request = node_api.GetDidDocumentRequest(did = did.toString)
+  override def resolveDID(did: PrismDID): IO[DIDResolutionError, Option[DIDData]] = {
+    val canonicalDID = did.asCanonical
+    val createOperation = did match {
+      case LongFormPrismDID(createOperation) => Some(createOperation)
+      case _: CanonicalPrismDID              => None
+    }
+    val unpublishedDidData = createOperation.map(op =>
+      DIDData(
+        id = canonicalDID,
+        publicKeys = op.publicKeys,
+        services = op.services,
+        internalKeys = op.internalKeys
+      )
+    )
+
+    val request = node_api.GetDidDocumentRequest(did = canonicalDID.toString)
     for {
       result <- ZIO
         .fromFuture(_ => nodeClient.getDidDocument(request))
         .mapError(DIDResolutionError.DLTProxyError.apply)
-      didData <- ZIO
+      publishedDidData <- ZIO
         .fromEither(result.document.map(_.toDomain).toSeq.sequence.map(_.headOption))
         .mapError(DIDResolutionError.UnexpectedDLTResult.apply)
-    } yield didData
+    } yield publishedDidData.orElse(unpublishedDidData)
   }
 
 }
