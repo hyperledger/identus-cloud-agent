@@ -12,8 +12,6 @@ services:
       POSTGRES_DB: castor
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-    ports:
-      - 5432:5432
     volumes:
       - pg_data_castor_db:/var/lib/postgresql/data
 
@@ -36,8 +34,6 @@ services:
       POSTGRES_DB: pollux
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-    ports:
-      - 5433:5432
     volumes:
       - pg_data_pollux_db:/var/lib/postgresql/data
 
@@ -47,6 +43,28 @@ services:
     command: sleep 5
     depends_on:
       db_pollux:
+        condition: service_started
+
+  ##########################
+  # Connect Database
+  ##########################
+
+  db_connect:
+    image: postgres:13
+    restart: always
+    environment:
+      POSTGRES_DB: connect
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - pg_data_connect_db:/var/lib/postgresql/data
+
+  # delay to ensure DB is up before applying migrations
+  db_connect_init_delay:
+    image: alpine:3
+    command: sleep 5
+    depends_on:
+      db_connect:
         condition: service_started
 
   ##########################
@@ -60,8 +78,6 @@ services:
       POSTGRES_DB: iris
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-    ports:
-      - 5434:5432
     volumes:
       - pg_data_iris_db:/var/lib/postgresql/data
 
@@ -78,12 +94,10 @@ services:
   # Services
   ##########################
   mediator:
-    image: ghcr.io/input-output-hk/mercury-mediator:0.1.0-SNAPSHOT
+    image: ghcr.io/input-output-hk/mercury-mediator:0.2.0
 
   iris:
-    image: ghcr.io/input-output-hk/iris-service:0.1.0-SNAPSHOT
-    ports:
-      - 8081:8081
+    image: ghcr.io/input-output-hk/iris-service:0.1.0
     environment:
       IRIS_DB_HOST: db_iris
       IRIS_DB_PORT: 5432
@@ -91,7 +105,7 @@ services:
       IRIS_DB_USER: postgres
 
   prism-agent:
-    image: ghcr.io/input-output-hk/prism-agent:0.2.0-SNAPSHOT
+    image: ghcr.io/input-output-hk/prism-agent:0.6.0-SNAPSHOT
     environment:
       IRIS_HOST: iris
       IRIS_PORT: 8081
@@ -105,9 +119,12 @@ services:
       POLLUX_DB_NAME: pollux
       POLLUX_DB_USER: postgres
       POLLUX_DB_PASSWORD: postgres
-    ports:
-      - "8085:8085"
-      - "8080:8080"
+      CONNECT_DB_HOST: db_connect
+      CONNECT_DB_PORT: 5432
+      CONNECT_DB_NAME: connect
+      CONNECT_DB_USER: postgres
+      CONNECT_DB_PASSWORD: postgres
+      DIDCOMM_SERVICE_URL: http://host.docker.internal:${PORT}/didcomm/
 
   swagger-ui:
     image: swaggerapi/swagger-ui:v4.14.0
@@ -121,7 +138,7 @@ services:
   haproxy:
     image: haproxy:2.6.5
     ports:
-      - "80:80"   # Http
+      - "${PORT}:80"   # Http
     depends_on:
       - mediator
       - prism-agent
@@ -132,4 +149,5 @@ services:
 volumes:
   pg_data_castor_db:
   pg_data_pollux_db:
+  pg_data_connect_db:
   pg_data_iris_db:
