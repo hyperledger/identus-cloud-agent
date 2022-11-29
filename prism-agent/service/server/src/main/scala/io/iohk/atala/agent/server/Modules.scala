@@ -441,13 +441,9 @@ object HttpModule {
 
   val presentProofProtocolApiLayer: RLayer[DidComm, PresentProofApi] = {
     val serviceLayer = AppModule.presentationServiceLayer ++ AppModule.connectionServiceLayer // ++ didCommServiceLayer
-
     val apiServiceLayer = serviceLayer >>> PresentProofApiServiceImpl.layer
-
     val apiMarshallerLayer = PresentProofApiMarshallerImpl.layer
-    val aaa = (apiServiceLayer ++ apiMarshallerLayer) >>>
-      ZLayer.fromFunction(new PresentProofApi(_, _))
-    aaa
+    (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new PresentProofApi(_, _))
   }
 
 //  Found: zio.ZLayer[ConnectionService & DidComm, Throwable, PresentProofApi]
@@ -462,7 +458,7 @@ object HttpModule {
 
   val layers =
     didApiLayer ++ didOperationsApiLayer ++ didAuthenticationApiLayer ++ didRegistrarApiLayer ++
-      issueCredentialsProtocolApiLayer ++ connectionsManagementApiLayer
+      issueCredentialsProtocolApiLayer ++ connectionsManagementApiLayer ++ presentProofProtocolApiLayer
 }
 
 object RepoModule {
