@@ -17,7 +17,7 @@ components:
       in: header
       name: apikey
 security:
-  - ApiKeyAuth: []
+  - ApiKeyAuth: [ ]
 tags:
   # Castor
   - name: DID
@@ -31,12 +31,6 @@ tags:
   # Pollux
   - name: Schema Registry
     description: Schema Registry REST API
-  - name: Issue Credentials
-    description: Verifiable Credentials creation and issuance REST API
-  - name: Verify Credentials
-    description: Verifiable Credentials verification REST API
-  - name: Revocation
-    description: Verifiable Credentials revocation REST API
   - name: Present Proof
     description: Present Proof REST API
   # Connect
@@ -372,7 +366,7 @@ paths:
   # ----------------------------------
   /schema-registry/schemas:
     post:
-      tags: ["Schema Registry"]
+      tags: [ "Schema Registry" ]
       operationId: createSchema
       summary: Publish new schema to the schema registry
       description: |-
@@ -397,7 +391,7 @@ paths:
         "401":
           description: Client is unauthorized to call the API
     get:
-      tags: ["Schema Registry"]
+      tags: [ "Schema Registry" ]
       operationId: fetchSchemasByQuery
       summary: Fetch schemas by query
       description: |-
@@ -436,7 +430,7 @@ paths:
                 $ref: "./pollux/schemas.yaml#/components/schemas/W3CSchemaPaginated"
   /schema-registry/schemas/{id}:
     get:
-      tags: ["Schema Registry"]
+      tags: [ "Schema Registry" ]
       operationId: getSchemaById
       summary: Fetch the schema from the registry by id
       description: |-
@@ -458,11 +452,11 @@ paths:
                 $ref: "./pollux/schemas.yaml#/components/schemas/W3CSchema"
         "404":
           description: Schema is not found by id
-## Issue Credential Protocol
+  ## Issue Credential Protocol
 
   /issue-credentials/credential-offers:
     post:
-      tags: ["Issue Credentials Protocol"]
+      tags: [ "Issue Credentials Protocol" ]
       operationId: createCredentialOffer
       summary: As a VC issuer, create a new credential offer to be sent to a VC holder
       requestBody:
@@ -471,7 +465,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: ./pollux/schemas.yaml#/components/schemas/CreateIssueCredentialRecordRequest                    
+              $ref: ./pollux/schemas.yaml#/components/schemas/CreateIssueCredentialRecordRequest
       responses:
         "201":
           description: The issue credential record
@@ -488,7 +482,7 @@ paths:
   
   /issue-credentials/records:
     get:
-      tags: ["Issue Credentials Protocol"]
+      tags: [ "Issue Credentials Protocol" ]
       operationId: getCredentialRecords
       summary: Get credential records
       responses:
@@ -507,7 +501,7 @@ paths:
 
   /issue-credentials/records/{recordId}:
     get:
-      tags: ["Issue Credentials Protocol"]
+      tags: [ "Issue Credentials Protocol" ]
       operationId: getCredentialRecord
       summary: Get a credential record by Id
       parameters:
@@ -528,7 +522,7 @@ paths:
   
   /issue-credentials/records/{recordId}/accept-offer:
     post:
-      tags: ["Issue Credentials Protocol"]
+      tags: [ "Issue Credentials Protocol" ]
       operationId: acceptCredentialOffer
       summary: As a VC holder, accept a credential offer received from an issuer
       parameters:
@@ -539,17 +533,17 @@ paths:
           content:
             application/json:
               schema:
-                $ref: ./pollux/schemas.yaml#/components/schemas/IssueCredentialRecord          
+                $ref: ./pollux/schemas.yaml#/components/schemas/IssueCredentialRecord
         "404":
           description: There is no issue credential record maatching the given 'recordId'.
           content:
             application/json:
               schema:
-                $ref: "./pollux/schemas.yaml#/components/schemas/ErrorResponse"      
+                $ref: "./pollux/schemas.yaml#/components/schemas/ErrorResponse"
 
   /issue-credentials/records/{recordId}/issue-credential:
     post:
-      tags: ["Issue Credentials Protocol"]
+      tags: [ "Issue Credentials Protocol" ]
       operationId: issueCredential
       summary: As a VC issuer, issue the VC for the specified issue credential record
       parameters:
@@ -560,239 +554,17 @@ paths:
           content:
             application/json:
               schema:
-                $ref: ./pollux/schemas.yaml#/components/schemas/IssueCredentialRecord          
+                $ref: ./pollux/schemas.yaml#/components/schemas/IssueCredentialRecord
         "404":
           description: There is no issue credential record maatching the given 'recordId'.
           content:
             application/json:
               schema:
-                $ref: "./pollux/schemas.yaml#/components/schemas/ErrorResponse"      
-##
-
-  /issue-credentials/credentials:
-    post:
-      tags: ["Issue Credentials"]
-      operationId: createCredentials
-      summary: Create a new instances of Verifiable Credentials objects
-      description: |-
-        New credentials are created and stored by Pollux backend in the database
-        Credentials can be fetched either by issuance batchId or credential id
-        Any other manipulations and the issuance protocols execution can be performed on this object
-      requestBody:
-        description: CredentialInput object with the metadata and claims
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: ["credentials"]
-              properties:
-                credentials:
-                  type: array
-                  items:
-                    $ref: "./pollux/schemas.yaml#/components/schemas/W3CCredentialInput"
-                  example:
-                    - subjectId: "did:prism:subject123"
-                      schemaId: "unique schema id"
-                      claims:
-                        alumni_of: "University"
-                        degree: "Master"
-      responses:
-        "201":
-          description: "Array of created verifiable credentials objects"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  batchId:
-                    type: string
-                    description: "BatchId of the current set of credentials"
-                  count:
-                    type: integer
-                    description: "Total count of the credential object in a given batch"
-                  credentials:
-                    type: array
-                    items:
-                      $ref: "./pollux/schemas.yaml#/components/schemas/JWTCompactSerialisation"
-
-    get:
-      tags: ["Issue Credentials"]
-      operationId: getCredentialsByBatchId
-      summary: Returns the list of the credentials associated with the given batchId
-      description: Returns the list of the credentials associated with the given batchId
-      parameters:
-        - in: query
-          name: batchId
-          description: "Issuance batchId associated with the set of credentials"
-          required: true
-          schema:
-            type: string
-        - in: query
-          name: offset
-          description: "Offset pagination parameter"
-          required: false
-          schema:
-            type: integer
-        - in: query
-          name: limit
-          description: "Limit pagination parameter"
-          required: false
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: "Paginated response of the verifiable credentials objects"
-          content:
-            application/json:
-              schema:
-                $ref: "./pollux/schemas.yaml#/components/schemas/W3CCredentialsPaginated"
-  /issue-credentials/credentials/{id}:
-    get:
-      tags: ["Issue Credentials"]
-      operationId: getCredentialById
-      summary: Fetch the credential by id
-      description: |-
-        Fetch the credential by id
-      parameters:
-        - in: path
-          name: id
-          schema:
-            type: string
-          required: true
-          description: Identifier of the credential
-          example: "06e126d1-fa44-4882-a243-1e326fbe21db"
-      responses:
-        "200":
-          description: Successful response, instance of Verifiable Credential is returned
-          content:
-            application/json:
-              schema:
-                $ref: "./pollux/schemas.yaml#/components/schemas/W3CCredential"
-        "404":
-          description: Schema is not found by id
-    put:
-      tags: ["Issue Credentials"]
-      operationId: updateCredentialById
-      summary: Update the credential by id
-      description: Update the credential by id
-      parameters:
-        - in: path
-          name: id
-          schema:
-            type: string
-          required: true
-          description: Identifier of the credential
-          example: "06e126d1-fa44-4882-a243-1e326fbe21db"
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "./pollux/schemas.yaml#/components/schemas/W3CCredentialInput"
-        required: true
-      responses:
-        "200":
-          description: "Credential was updated successfully"
-          content:
-            application/json:
-              schema:
-                $ref: "./pollux/schemas.yaml#/components/schemas/W3CCredential"
-    delete:
-      tags: ["Issue Credentials"]
-      operationId: deleteCredentialById
-      summary: Delete the credential by id
-      description: Delete the credential by id
-      parameters:
-        - in: path
-          name: id
-          schema:
-            type: string
-          required: true
-          description: Identifier of the credential
-          example: "06e126d1-fa44-4882-a243-1e326fbe21db"
-      responses:
-        "204":
-          description: "Credential was deleted"
-  /issue-credentials/issuance-batches:
-    get:
-      tags: ["Issue Credentials"]
-      operationId: getIssuanceBatches
-      summary: Fetch the available list of issuance-batches
-      description: Fetch the list of issuance-batches
-      parameters:
-        - in: query
-          name: limit
-          schema:
-            type: integer
-        - in: query
-          name: offset
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: Returns the paginated list of issuance-batch objects
-          content:
-            application/json:
-              schema:
-                $ref: "./pollux/schemas.yaml#/components/schemas/W3CIssuanceBatchPaginated"
-  /issue-credentials/issuance-batches/{batchId}/actions:
-    post:
-      tags: ["Issue Credentials"]
-      summary: "Submit the list of actions performed on the credentials associated with the issuance-batch"
-      operationId: "submitIssuanceBatchActions"
-      description: |-
-        List of action is submitted, actions are scheduled and IDs are returned for tracking the status
-        Each action is executed asynchronously in the sequential order according to the state of the issuance batch
-        Sign -> Issue -> Send
-      parameters:
-        - in: path
-          name: batchId
-          description: "The batchId of the issuance-batch object"
-          schema:
-            type: string
-          required: true
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                $ref: "./pollux/schemas.yaml#/components/schemas/W3CIssuanceBatchAction"
-        required: true
-      responses:
-        "200":
-          description: "Returns the set of actions performed on the issuance-batch"
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "./pollux/schemas.yaml#/components/schemas/W3CIssuanceBatchAction"
-    get:
-      tags: ["Issue Credentials"]
-      operationId: "getIssuanceBatchActions"
-      summary: "Fetch the actions performed on the issuance-batch"
-      description: "Fetch the actions performed on the issuance-batch"
-      parameters:
-        - in: path
-          name: batchId
-          description: "The batchId of the issuance-batch object"
-          schema:
-            type: string
-          required: true
-      responses:
-        "200":
-          description: "Returns the set of actions performed on the issuance-batch"
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "./pollux/schemas.yaml#/components/schemas/W3CIssuanceBatchAction"
+                $ref: "./pollux/schemas.yaml#/components/schemas/ErrorResponse"
 
   /revocation-registry/credential-status/{id}:
     get:
-      tags: ["Revocation Registry"]
+      tags: [ "Revocation Registry" ]
       operationId: getCredentialRevocationStatusById
       summary: Get credentials revocation status by credential id
       description: Get credentials revocation status by credential id
@@ -813,7 +585,7 @@ paths:
                 $ref: "./pollux/schemas.yaml#/components/schemas/W3CCredentialStatus"
   /revocation-registry/revoke:
     post:
-      tags: ["Revocation Registry"]
+      tags: [ "Revocation Registry" ]
       operationId: revokeCredentialById
       summary: Revoke credential by id
       description: Revoke credential by id
@@ -838,7 +610,7 @@ paths:
 
   /revocation-registry/operations/{id}:
     get:
-      tags: ["Revocation Registry"]
+      tags: [ "Revocation Registry" ]
       operationId: getRevocationOperationStatusById
       summary: Get revocation operation status by id
       description: Get revocation operation status by id
@@ -858,7 +630,7 @@ paths:
 
   /present-proof/verifiable-presentations:
     post:
-      tags: ["Present Proof"]
+      tags: [ "Present Proof" ]
       operationId: createVerifiablePresentation
       summary: Create new instance of VerifiablePresentation
       description: Verifier creates the instance of Verifiable Presentation object to be used in present proof communication protocol with Prover
@@ -879,7 +651,7 @@ paths:
         # TODO: Add other corner cases and error responses
 
     get:
-      tags: ["Present Proof"]
+      tags: [ "Present Proof" ]
       operationId: fetchPresentationByQuery
       summary: Fetch presentation by query
       description: Fetch presentation by query
@@ -911,7 +683,7 @@ paths:
                 $ref: "./pollux/schemas.yaml#/components/schemas/W3CPresentationPaginated"
   /present-proof/verifiable-presentations/{id}:
     get:
-      tags: ["Present Proof"]
+      tags: [ "Present Proof" ]
       operationId: getPresentationById
       summary: Fetch the presentation from the collection by id
       description: Fetch the presentation from the collection by id
@@ -936,7 +708,7 @@ paths:
   # ----------------------------------
   /connections:
     post:
-      tags: ["Connections Management"]
+      tags: [ "Connections Management" ]
       operationId: createConnection
       summary: Creates new connection and returns an invitation.
       description: |-
@@ -966,7 +738,7 @@ paths:
                 $ref: "./connect/schemas.yaml#/components/schemas/ErrorResponse"
 
     get:
-      tags: ["Connections Management"]
+      tags: [ "Connections Management" ]
       operationId: getConnections
       summary: Returns a list of connections.
       responses:
@@ -981,11 +753,11 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "./connect/schemas.yaml#/components/schemas/ErrorResponse"       
-                
+                $ref: "./connect/schemas.yaml#/components/schemas/ErrorResponse"
+
   /connections/{connectionId}:
     get:
-      tags: ["Connections Management"]
+      tags: [ "Connections Management" ]
       parameters:
         - $ref: "./connect/schemas.yaml#/components/parameters/connectionId"
       operationId: getConnection
@@ -1004,7 +776,7 @@ paths:
               schema:
                 $ref: "./connect/schemas.yaml#/components/schemas/ErrorResponse"
     delete:
-      tags: ["Connections Management"]
+      tags: [ "Connections Management" ]
       parameters:
         - $ref: "./connect/schemas.yaml#/components/parameters/connectionId"
       operationId: deleteConnection
@@ -1018,9 +790,9 @@ paths:
 
   /connection-invitations:
     post:
-      tags: ["Connections Management"]
+      tags: [ "Connections Management" ]
       operationId: acceptConnectionInvitation
-      summary:  Accepts externally received invitation.
+      summary: Accepts externally received invitation.
       description: Creates new connection state record in `pending` state. It is assumed that application would first decode and validate the invitation. When it is accepted in the application side, it should be submitted in raw format to this API.
       requestBody:
         required: true
