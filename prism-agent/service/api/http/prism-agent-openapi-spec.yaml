@@ -540,7 +540,6 @@ paths:
             application/json:
               schema:
                 $ref: "./pollux/schemas.yaml#/components/schemas/ErrorResponse"
-                $ref: "./pollux/schemas.yaml#/components/schemas/ErrorResponse"
 
   /issue-credentials/records/{recordId}/issue-credential:
     post:
@@ -561,8 +560,6 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "./pollux/schemas.yaml#/components/schemas/ErrorResponse"
-  ##
                 $ref: "./pollux/schemas.yaml#/components/schemas/ErrorResponse"
 
   /revocation-registry/credential-status/{id}:
@@ -633,7 +630,7 @@ paths:
 
   /present-proof/presentations:
     post:
-      tags: [ "Present Proof" ]
+      tags: ["Present Proof"]
       operationId: requestPresentation
       requestBody:
         description: Request presentation of some type of Proof or Proofs (VC)
@@ -656,7 +653,7 @@ paths:
               schema:
                 $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
     get:
-      tags: [ "Present Proof" ]
+      tags: ["Present Proof"]
       operationId: getAllPresentation
       responses:
         "200":
@@ -675,7 +672,7 @@ paths:
                 $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
   /present-proof/presentations/{id}:
     patch:
-      tags: [ "Present Proof" ]
+      tags: ["Present Proof"]
       operationId: updatePresentation
       parameters:
         - in: path
@@ -831,8 +828,6 @@ paths:
               schema:
                 $ref: "./connect/schemas.yaml#/components/schemas/ErrorResponse"
 
-                $ref: "./connect/schemas.yaml#/components/schemas/ErrorResponse"
-
   /connections/{connectionId}:
     get:
       tags: ["Connections Management"]
@@ -870,7 +865,6 @@ paths:
     post:
       tags: ["Connections Management"]
       operationId: acceptConnectionInvitation
-      summary: Accepts externally received invitation.
       summary: Accepts externally received invitation.
       description: Creates new connection state record in `pending` state. It is assumed that application would first decode and validate the invitation. When it is accepted in the application side, it should be submitted in raw format to this API.
       requestBody:
