@@ -1,11 +1,11 @@
 package io.iohk.atala.pollux.vc.jwt
 
-import zio.IO
+import zio.{IO, Task}
 
 import java.time.Instant
 
 trait DidResolver {
-  def resolve(didUrl: String): IO[Throwable, DIDResolutionResult]
+  def resolve(didUrl: String): IO[String, DIDResolutionResult]
 }
 
 trait DIDResolutionResult()

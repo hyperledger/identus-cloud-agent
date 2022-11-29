@@ -1,3 +1,12 @@
+# [prism-agent-v0.5.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.4.0...prism-agent-v0.5.0) (2022-11-28)
+
+
+### Features
+
+* **pollux:** schema registry lookup and verification policies REST API ATL-1334 ([#168](https://github.com/input-output-hk/atala-prism-building-blocks/issues/168)) ([d75b36b](https://github.com/input-output-hk/atala-prism-building-blocks/commit/d75b36bd472c1cc2f15d775596a2675cda469754))
+* **prism-agent:** implement Connect flow ([#130](https://github.com/input-output-hk/atala-prism-building-blocks/issues/130)) ([f7cba3b](https://github.com/input-output-hk/atala-prism-building-blocks/commit/f7cba3b18b1e03cd51db144519412fbbbe1585d0))
+* **prism-agent:** make didcomm service url configurable ([#173](https://github.com/input-output-hk/atala-prism-building-blocks/issues/173)) ([b162172](https://github.com/input-output-hk/atala-prism-building-blocks/commit/b16217271e38c30cf680e193121baa7122fff67f))
+
 # [prism-agent-v0.4.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.3.0...prism-agent-v0.4.0) (2022-11-24)
 
 
