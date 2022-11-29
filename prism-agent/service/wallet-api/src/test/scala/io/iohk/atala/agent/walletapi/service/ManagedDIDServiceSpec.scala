@@ -46,7 +46,7 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault {
               )
             )
 
-        override def resolveDID(did: CanonicalPrismDID): IO[error.DIDResolutionError, Option[DIDData]] = ZIO.none
+        override def resolveDID(did: PrismDID): IO[error.DIDResolutionError, Option[DIDData]] = ZIO.none
 
         override def getScheduledDIDOperationDetail(
             operationId: Array[Byte]
