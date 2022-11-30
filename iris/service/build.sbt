@@ -10,7 +10,7 @@ ThisBuild / apiBaseDirectory := baseDirectory.value / "../api"
 inThisBuild(
   Seq(
     organization := "io.iohk.atala",
-    scalaVersion := "3.2.0",
+    scalaVersion := "3.2.1",
     fork := true,
     run / connectInput := true,
     versionScheme := Some("semver-spec"),
@@ -24,7 +24,7 @@ def commonProject(project: Project): Project =
   project.settings(
     version := "0.1.0",
     organization := "io.iohk.atala",
-    scalaVersion := "3.2.0",
+    scalaVersion := "3.2.1",
     githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN"),
     versionScheme := Some("semver-spec"),
     resolvers += Resolver

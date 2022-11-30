@@ -9,7 +9,7 @@ val apiBaseDirectory =
 inThisBuild(
   Seq(
     organization := "io.iohk.atala",
-    scalaVersion := "3.2.0",
+    scalaVersion := "3.2.1",
     apiBaseDirectory := baseDirectory.value / "api",
     fork := true,
     run / connectInput := true,
