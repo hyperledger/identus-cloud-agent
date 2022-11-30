@@ -8,6 +8,7 @@ import akka.http.scaladsl.server.Route
 import doobie.util.transactor.Transactor
 import io.iohk.atala.agent.server.http.{HttpRoutes, HttpServer, ZHttp4sBlazeServer, ZHttpEndpoints}
 import io.iohk.atala.castor.core.service.{DIDService, DIDServiceImpl}
+import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.agent.server.http.marshaller.{
   DIDApiMarshallerImpl,
   DIDAuthenticationApiMarshallerImpl,
@@ -22,7 +23,6 @@ import io.iohk.atala.agent.server.http.service.{
   DIDRegistrarApiServiceImpl,
   ConnectionsManagementApiServiceImpl
 }
-import io.iohk.atala.castor.core.repository.DIDOperationRepository
 import io.iohk.atala.agent.openapi.api.{
   DIDApi,
   DIDAuthenticationApi,
@@ -30,9 +30,6 @@ import io.iohk.atala.agent.openapi.api.{
   DIDRegistrarApi,
   ConnectionsManagementApi
 }
-import io.iohk.atala.castor.sql.repository.{JdbcDIDOperationRepository, TransactorLayer}
-import zio.*
-import zio.interop.catz.*
 import cats.effect.std.Dispatcher
 import com.typesafe.config.ConfigFactory
 import doobie.util.transactor.Transactor
@@ -43,12 +40,7 @@ import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.agent.server.http.marshaller.*
 import io.iohk.atala.agent.server.http.service.*
 import io.iohk.atala.agent.server.http.{HttpRoutes, HttpServer}
-import io.iohk.atala.castor.core.repository.DIDOperationRepository
-import io.iohk.atala.castor.core.service.{DIDService, DIDServiceImpl}
 import io.iohk.atala.pollux.core.service.CredentialServiceImpl
-import io.iohk.atala.castor.core.util.DIDOperationValidator
-import io.iohk.atala.castor.sql.repository.{JdbcDIDOperationRepository, TransactorLayer}
-import io.iohk.atala.castor.sql.repository.DbConfig as CastorDbConfig
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
 import io.iohk.atala.pollux.core.repository.CredentialRepository
@@ -72,6 +64,7 @@ import io.iohk.atala.mercury.model.error.*
 import io.iohk.atala.mercury.protocol.issuecredential.*
 import io.iohk.atala.pollux.core.model.error.IssueCredentialError
 import io.iohk.atala.pollux.core.model.error.IssueCredentialError.RepositoryError
+import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc
 
 import java.io.IOException
 import cats.implicits.*
@@ -310,18 +303,13 @@ object SystemModule {
 }
 
 object AppModule {
-  val didOpValidatorLayer: ULayer[DIDOperationValidator] = DIDOperationValidator.layer(
-    DIDOperationValidator.Config(
-      publicKeyLimit = 50,
-      serviceLimit = 50
-    )
-  )
+  val didOpValidatorLayer: ULayer[DIDOperationValidator] = DIDOperationValidator.layer()
 
   val didServiceLayer: TaskLayer[DIDService] =
-    (GrpcModule.layers ++ RepoModule.layers ++ didOpValidatorLayer) >>> DIDServiceImpl.layer
+    (didOpValidatorLayer ++ GrpcModule.layers) >>> DIDServiceImpl.layer
 
   val manageDIDServiceLayer: TaskLayer[ManagedDIDService] =
-    (didOpValidatorLayer ++ didServiceLayer) >>> ManagedDIDService.inMemoryStorage()
+    (didOpValidatorLayer ++ didServiceLayer) >>> ManagedDIDService.inMemoryStorage
 
   val credentialServiceLayer: RLayer[DidComm, CredentialService] =
     (GrpcModule.layers ++ RepoModule.layers) >>> CredentialServiceImpl.layer
@@ -331,6 +319,7 @@ object AppModule {
 }
 
 object GrpcModule {
+  // TODO: once Castor + Pollux has migrated to use Node 2.0 stubs, this should be removed.
   val irisStubLayer: TaskLayer[IrisServiceStub] = {
     val stubLayer = ZLayer.fromZIO(
       ZIO
@@ -345,7 +334,21 @@ object GrpcModule {
     SystemModule.configLayer >>> stubLayer
   }
 
-  val layers = irisStubLayer
+  val prismNodeStubLayer: TaskLayer[NodeServiceGrpc.NodeServiceStub] = {
+    val stubLayer = ZLayer.fromZIO(
+      ZIO
+        .service[AppConfig]
+        .map(_.prismNode.service)
+        .flatMap(config =>
+          ZIO.attempt(
+            NodeServiceGrpc.stub(ManagedChannelBuilder.forAddress(config.host, config.port).usePlaintext.build)
+          )
+        )
+    )
+    SystemModule.configLayer >>> stubLayer
+  }
+
+  val layers = irisStubLayer ++ prismNodeStubLayer
 }
 
 object HttpModule {
@@ -395,31 +398,6 @@ object HttpModule {
 }
 
 object RepoModule {
-
-  val castorDbConfigLayer: TaskLayer[CastorDbConfig] = {
-    val dbConfigLayer = ZLayer.fromZIO {
-      ZIO.service[AppConfig].map(_.castor.database) map { config =>
-        CastorDbConfig(
-          username = config.username,
-          password = config.password,
-          jdbcUrl = s"jdbc:postgresql://${config.host}:${config.port}/${config.databaseName}"
-        )
-      }
-    }
-    SystemModule.configLayer >>> dbConfigLayer
-  }
-
-  val castorTransactorLayer: TaskLayer[Transactor[Task]] = {
-    val transactorLayer = ZLayer.fromZIO {
-      ZIO.service[CastorDbConfig].flatMap { config =>
-        Dispatcher[Task].allocated.map { case (dispatcher, _) =>
-          given Dispatcher[Task] = dispatcher
-          TransactorLayer.hikari[Task](config)
-        }
-      }
-    }.flatten
-    castorDbConfigLayer >>> transactorLayer
-  }
 
   val polluxDbConfigLayer: TaskLayer[PolluxDbConfig] = {
     val dbConfigLayer = ZLayer.fromZIO {
@@ -473,14 +451,11 @@ object RepoModule {
     connectDbConfigLayer >>> transactorLayer
   }
 
-  val didOperationRepoLayer: TaskLayer[DIDOperationRepository[Task]] =
-    castorTransactorLayer >>> JdbcDIDOperationRepository.layer
-
   val credentialRepoLayer: TaskLayer[CredentialRepository[Task]] =
     polluxTransactorLayer >>> JdbcCredentialRepository.layer
 
   val connectionRepoLayer: TaskLayer[ConnectionRepository[Task]] =
     connectTransactorLayer >>> JdbcConnectionRepository.layer
 
-  val layers = didOperationRepoLayer ++ credentialRepoLayer ++ connectionRepoLayer
+  val layers = credentialRepoLayer ++ connectionRepoLayer
 }

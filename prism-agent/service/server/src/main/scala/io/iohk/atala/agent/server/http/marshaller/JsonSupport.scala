@@ -24,7 +24,7 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   given RootJsonFormat[CreateDIDRequest] = jsonFormat4(CreateDIDRequest.apply)
   given RootJsonFormat[CreateDIDRequestDocument] = jsonFormat2(CreateDIDRequestDocument.apply)
   given RootJsonFormat[CreateManagedDidRequest] = jsonFormat1(CreateManagedDidRequest.apply)
-  given RootJsonFormat[CreateManagedDidRequestDocumentTemplate] = jsonFormat3(
+  given RootJsonFormat[CreateManagedDidRequestDocumentTemplate] = jsonFormat2(
     CreateManagedDidRequestDocumentTemplate.apply
   )
   given RootJsonFormat[CreateManagedDidRequestDocumentTemplatePublicKeysInner] = jsonFormat2(
