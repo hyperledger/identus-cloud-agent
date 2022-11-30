@@ -7,45 +7,29 @@ concurrency:
   cancel-in-progress: true
 
 on:
-  pull_request:
-    paths:
-      - ".github/workflows/prism-node-client.yml"
-      - "prism-node/client/**"
   push:
     branches:
       - "main"
     paths:
       - ".github/workflows/prism-node-client.yml"
+      - ".github/workflows/scala-unit-tests.yml"
       - "prism-node/client/**"
-
-env:
-  GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
-  ATALA_GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
-
-defaults:
-  run:
-    shell: bash
-    working-directory: "prism-node/client/scala-client"
+  pull_request:
+    paths:
+      - ".github/workflows/prism-node-client.yml"
+      - ".github/workflows/scala-unit-tests.yml"
+      - "prism-node/client/**"
 
 jobs:
   build-and-test-prism-node-client:
-    name: "Build and test Prism node client"
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Setup Java and Scala
-        uses: olafurpg/setup-scala@v13
-        with:
-          java-version: openjdk@1.11
-
-      - name: Cache sbt
-        uses: coursier/cache-action@v6.3
-
-      - name: Run Scala formatter
-        run: |
-          sbt scalafmtCheckAll
-
-      - name: Build Prism node client
-        run: sbt compile
+    uses: ./.github/workflows/scala-unit-tests.yml
+    with:
+      component-name: "PRISM Node Client"
+      component-dir: "prism-node/client/scala-client"
+    secrets: inherit
+  release:
+    if: github.event_name == 'push'
+    uses: ./.github/workflows/release.yml
+    with:
+      release-component: "prism-node/client/scala-client"
+    secrets: inherit
