@@ -11,12 +11,12 @@ on:
     branches:
       - "main"
     paths:
-      - ".github/workflows/mercury.yml"
+      - ".github/workflows/mercury-mediator.yml"
       - ".github/workflows/scala-unit-tests.yml"
       - "mercury-mediator/**"
   pull_request:
     paths:
-      - ".github/workflows/mercury.yml"
+      - ".github/workflows/mercury-mediator.yml"
       - ".github/workflows/scala-unit-tests.yml"
       - "mercury-mediator/**"
 
@@ -24,7 +24,7 @@ jobs:
   build-and-test-mercury-mediator:
     uses: ./.github/workflows/scala-unit-tests.yml
     with:
-      component-name: "Mercury Lib"
+      component-name: "Mercury Mediator"
       component-dir: "mercury/mercury-mediator"
     secrets: inherit
   release:
