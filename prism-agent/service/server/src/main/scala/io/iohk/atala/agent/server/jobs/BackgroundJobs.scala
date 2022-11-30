@@ -253,6 +253,8 @@ object BackgroundJobs {
         // TODO move the state to PresentationVerified
         case PresentationRecord(id, _, _, _, _, _, _, _, PresentationVerified, _, _, _) =>
           ZIO.logDebug("PresentationRecord: PresentationVerified") *> ZIO.unit
+        // case PresentationRecord(id, _, _, _, _, _, _, _, PresentationVerifiedAccepted, _, _, _) => //TODO
+        //   ZIO.logDebug("PresentationRecord: PresentationVerifiedAccepted") *> ZIO.unit
         case PresentationRecord(id, _, _, _, _, _, _, _, PresentationRejected, _, _, _) =>
           ZIO.logDebug("PresentationRecord: PresentationRejected") *> ZIO.unit
       }
