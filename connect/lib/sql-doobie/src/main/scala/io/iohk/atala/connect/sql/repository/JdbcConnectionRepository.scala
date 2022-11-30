@@ -156,7 +156,8 @@ class JdbcConnectionRepository(xa: Transactor[Task]) extends ConnectionRepositor
     val cxnIO = sql"""
         | UPDATE public.connection_records
         | SET
-        |   protocol_state = $to
+        |   protocol_state = $to,
+        |   updated_at = ${Instant.now}
         | WHERE
         |   id = $id
         |   AND protocol_state = $from
@@ -175,7 +176,8 @@ class JdbcConnectionRepository(xa: Transactor[Task]) extends ConnectionRepositor
         | UPDATE public.connection_records
         | SET
         |   connection_request = $request,
-        |   protocol_state = $state
+        |   protocol_state = $state,
+        |   updated_at = ${Instant.now}
         | WHERE
         |   id = $recordId
         """.stripMargin.update
@@ -193,7 +195,8 @@ class JdbcConnectionRepository(xa: Transactor[Task]) extends ConnectionRepositor
         | UPDATE public.connection_records
         | SET
         |   connection_response = $response,
-        |   protocol_state = $state
+        |   protocol_state = $state,
+        |   updated_at = ${Instant.now}
         | WHERE
         |   id = $recordId
         """.stripMargin.update
