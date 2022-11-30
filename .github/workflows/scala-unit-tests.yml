@@ -61,7 +61,7 @@ jobs:
           check_name: "${{ inputs.component-name }} Test Results"
 
       - name: Code coverage report
-        if: ${{ inputs.component-dir == mercury/mercury-library }}
+        if: inputs.component-dir == 'mercury/mercury-library'
         uses: 5monkeys/cobertura-action@master
         with:
           path: "{{ inputs.component-dir }}/target/coverage/coverage-report/cobertura.xml"
@@ -71,7 +71,7 @@ jobs:
 
       - name: Artifact coverage HTML
         uses: actions/upload-artifact@v2
-        if: ${{ inputs.component-dir == mercury/mercury-library }}
+        if: inputs.component-dir == 'mercury/mercury-library'
         with:
           name: code-coverage-report-mercury
           path: "{{ inputs.component-dir }}/target/coverage/scoverage-report"
