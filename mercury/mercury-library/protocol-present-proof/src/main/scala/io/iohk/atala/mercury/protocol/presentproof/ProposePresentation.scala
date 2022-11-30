@@ -54,7 +54,7 @@ object ProposePresentation {
       goal_code: Option[String] = None,
       comment: Option[String] = None,
       // AtalaPrism Extension!
-      proof_types: Option[Seq[ProofType]] = None
+      proof_types: Seq[ProofType] = Seq.empty
   )
 
   object Body {
