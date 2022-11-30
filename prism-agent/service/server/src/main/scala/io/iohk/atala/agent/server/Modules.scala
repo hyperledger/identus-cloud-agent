@@ -156,6 +156,12 @@ object Modules {
       .unit
       .provideSomeLayer(AppModule.credentialServiceLayer)
 
+  val presentProofExchangeJob: RIO[DidComm, Unit] =
+    BackgroundJobs.presentProofExchanges
+      .repeat(Schedule.spaced(10.seconds))
+      .unit
+      .provideSomeLayer(AppModule.presentationServiceLayer)
+
   val connectDidCommExchangesJob: RIO[DidComm, Unit] =
     ConnectBackgroundJobs.didCommExchanges
       .repeat(Schedule.spaced(10.seconds))

@@ -57,6 +57,8 @@ trait PresentationService {
 
   def receivePresentation(presentation: Presentation): IO[PresentationError, Option[PresentationRecord]]
 
+  def acceptPresentation(recordId: UUID): IO[PresentationError, Option[PresentationRecord]]
+
   def markRequestPresentationSent(recordId: UUID): IO[PresentationError, Option[PresentationRecord]]
 
   def markProposePresentationSent(recordId: UUID): IO[PresentationError, Option[PresentationRecord]]
@@ -67,6 +69,8 @@ trait PresentationService {
   ): IO[PresentationError, Option[PresentationRecord]]
 
   def markPresentationSent(recordId: UUID): IO[PresentationError, Option[PresentationRecord]]
+
+  def markPresentationVerified(recordId: UUID): IO[PresentationError, Option[PresentationRecord]]
 
 }
 
@@ -184,10 +188,14 @@ private class PresentationServiceImpl(
       record <- ZIO
         .fromOption(maybeRecord)
         .mapError(_ => RecordIdNotFound(recordId))
+      _ <- ZIO.log(record.toString())
+
       presentationRequest <- ZIO
         .fromOption(record.requestPresentationData)
         .mapError(_ => InvalidFlowStateError(s"No request found for this record: $recordId"))
+
       request = createDidCommPresentation(presentationRequest)
+
       count <- presentationRepository
         .updateWithPresentation(recordId, request, ProtocolState.PresentationPending)
         .mapError(RepositoryError.apply)
@@ -200,6 +208,25 @@ private class PresentationServiceImpl(
     } yield record
   }
 
+  override def acceptPresentation(recordId: UUID): IO[PresentationError, Option[PresentationRecord]] = {
+    for {
+      maybeRecord <- presentationRepository
+        .getPresentationRecord(recordId)
+        .mapError(RepositoryError.apply)
+      record <- ZIO
+        .fromOption(maybeRecord)
+        .mapError(_ => RecordIdNotFound(recordId))
+      _ <- ZIO.log(record.toString())
+
+      presentationRequest <- ZIO
+        .fromOption(record.presentationData)
+        .mapError(_ => InvalidFlowStateError(s"No request found for this record: $recordId"))
+      _ <- ZIO.log(s"************presentationRequest*************$presentationRequest")
+      _ <- verifyPresentation(presentationRequest) // TODO
+      recordUpdated <- markPresentationVerified(record.id)
+
+    } yield recordUpdated
+  }
   override def receivePresentation(
       presentation: Presentation
   ): IO[PresentationError, Option[PresentationRecord]] = {
@@ -230,7 +257,7 @@ private class PresentationServiceImpl(
         .fromOption(record.proposePresentationData)
         .mapError(_ => InvalidFlowStateError(s"No request found for this record: $recordId"))
       // TODO: Generate the JWT credential and use it to create the Presentation object
-      requestPresentation = createDidCommRequestPresentation(request)
+      requestPresentation = createDidCommRequestPresentationFromProposal(request)
       count <- presentationRepository
         .updateWithRequestPresentation(recordId, requestPresentation, ProtocolState.PresentationPending)
         .mapError(RepositoryError.apply)
@@ -274,6 +301,12 @@ private class PresentationServiceImpl(
       PresentationRecord.ProtocolState.ProposalPending,
       PresentationRecord.ProtocolState.ProposalSent
     )
+  override def markPresentationVerified(recordId: UUID): IO[PresentationError, Option[PresentationRecord]] =
+    updatePresentationRecordProtocolState(
+      recordId,
+      PresentationRecord.ProtocolState.PresentationReceived,
+      PresentationRecord.ProtocolState.PresentationVerified
+    )
 
   override def markPresentationGenerated(
       recordId: UUID,
@@ -299,7 +332,7 @@ private class PresentationServiceImpl(
   override def markPresentationSent(recordId: UUID): IO[PresentationError, Option[PresentationRecord]] =
     updatePresentationRecordProtocolState(
       recordId,
-      PresentationRecord.ProtocolState.PresentationGenerated,
+      PresentationRecord.ProtocolState.PresentationPending,
       PresentationRecord.ProtocolState.PresentationSent
     )
 
@@ -309,7 +342,7 @@ private class PresentationServiceImpl(
     for {
       thid <- ZIO
         .fromOption(thid)
-        .mapError(_ => UnexpectedError("No `thid` found in credential request"))
+        .mapError(_ => UnexpectedError("No `thid` found in Presentation request"))
         .map(UUID.fromString)
       maybeRecord <- presentationRepository
         .getPresentationRecordByThreadId(thid)
@@ -318,6 +351,14 @@ private class PresentationServiceImpl(
         .fromOption(maybeRecord)
         .mapError(_ => ThreadIdNotFound(thid))
     } yield record
+  }
+
+  private[this] def verifyPresentation(
+      presentation: Presentation
+  ) = {
+    for {
+      _ <- ZIO.log(s"************Verify Presentation Not Implemented*************")
+    } yield ()
   }
 
   private[this] def createDidCommRequestPresentation(
@@ -336,7 +377,9 @@ private class PresentationServiceImpl(
     )
   }
 
-  private[this] def createDidCommRequestPresentation(proposePresentation: ProposePresentation): RequestPresentation = {
+  private[this] def createDidCommRequestPresentationFromProposal(
+      proposePresentation: ProposePresentation
+  ): RequestPresentation = {
     // TODO to review what is needed
     val body = RequestPresentation.Body(goal_code = proposePresentation.body.goal_code)
 

@@ -44,7 +44,7 @@ class PresentProofApiServiceImpl(
         case _ =>
           connectionService
             .getConnectionRecord(UUID.fromString(requestPresentationInput.connectionId))
-            .map(_.flatMap(_.connectionRequest).map(_.from).get)
+            .map(_.flatMap(_.connectionRequest).map(_.from).get) // TODO GET
             .mapError(HttpServiceError.DomainError[ConnectionError].apply)
             .mapError(_.toOAS)
       }
@@ -52,7 +52,7 @@ class PresentProofApiServiceImpl(
       record <- presentationService
         .createPresentationRecord(
           thid = UUID.randomUUID(),
-          subjectDid = didId, // TODO get
+          subjectDid = didId,
           connectionId = None,
           schemaId = None
         )

@@ -80,6 +80,11 @@ object Main extends ZIOAppDefault {
         .debug
         .fork
 
+      presentProofDidCommExchangesFiber <- Modules.presentProofExchangeJob
+        .provide(didCommLayer)
+        .debug
+        .fork
+
       connectDidCommExchangesFiber <- Modules.connectDidCommExchangesJob
         .provide(didCommLayer)
         .debug

@@ -10,10 +10,10 @@ object Dependencies {
     val akkaHttp = "10.2.9"
     val castor = "0.2.0-SNAPSHOT"
     val pollux = "0.5.0-SNAPSHOT"
-    val connect = "0.2.0"
+    val connect = "0.2.0-SNAPSHOT"
     val bouncyCastle = "1.70"
     val logback = "1.4.4"
-    val mercury = "0.7.0"
+    val mercury = "0.7.0-SNAPSHOT"
     val zioJson = "0.3.0"
     val tapir = "1.2.2"
   }

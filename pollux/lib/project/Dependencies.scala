@@ -8,7 +8,7 @@ object Dependencies {
     val prismSdk = "v1.4.1"
     val iris = "0.1.0"
     val shared = "0.2.0"
-    val mercury = "0.7.0"
+    val mercury = "0.7.0-SNAPSHOT"
     val flyway = "9.7.0"
   }
 
@@ -40,6 +40,6 @@ object Dependencies {
 
   // Project Dependencies
   lazy val coreDependencies: Seq[ModuleID] =
-    baseDependencies ++ Seq(irisClient) ++ Seq(mercuryProtocolIssueCredential,mercuryProtocolPresentProof)
+    baseDependencies ++ Seq(irisClient) ++ Seq(mercuryProtocolIssueCredential, mercuryProtocolPresentProof)
   lazy val sqlDoobieDependencies: Seq[ModuleID] = baseDependencies ++ doobieDependencies ++ Seq(zioCatsInterop)
 }

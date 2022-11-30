@@ -43,6 +43,15 @@ object BackgroundJobs {
       _ <- ZIO.foreach(records)(performExchange)
     } yield ()
   }
+  val presentProofExchanges = {
+    for {
+      presentationService <- ZIO.service[PresentationService]
+      records <- presentationService
+        .getPresentationRecords()
+        .mapError(err => Throwable(s"Error occured while getting issue credential records: $err"))
+      _ <- ZIO.foreach(records)(performPresentation)
+    } yield ()
+  }
 
   private[this] def performExchange(
       record: IssueCredentialRecord
@@ -230,7 +239,7 @@ object BackgroundJobs {
                     ZIO.unit
                 }
               } yield ()
-        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationGenerated, _, _, _) => ??? // TODO NotImplemented
+        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationGenerated, _, _, _) => ??? // FIXME Not Required
         // We are jumping this PresentationGenerated state
         case PresentationRecord(id, _, _, _, _, _, _, _, PresentationSent, _, _, _) =>
           ZIO.logDebug("PresentationRecord: PresentationSent") *> ZIO.unit
