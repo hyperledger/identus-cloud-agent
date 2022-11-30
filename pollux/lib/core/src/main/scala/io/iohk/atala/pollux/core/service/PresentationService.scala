@@ -418,7 +418,7 @@ private class PresentationServiceImpl(
     RequestPresentation(
       body = RequestPresentation.Body(
         goal_code = Some("request"),
-        proof_types = Some(proofTypes) // TODO remove the type option
+        proof_types = proofTypes
       ),
       attachments = Seq.empty,
       from = didComm.myDid,
