@@ -7,17 +7,17 @@ concurrency:
   cancel-in-progress: true
 
 on:
-  # Run with every push to `main` branch
-  # Run with each PR opened vs Castor
   push:
     branches:
-      - main
+      - "main"
     paths:
       - ".github/workflows/castor.yml"
+      - ".github/workflows/scala-unit-tests.yml"
       - "castor/**"
   pull_request:
     paths:
       - ".github/workflows/castor.yml"
+      - ".github/workflows/scala-unit-tests.yml"
       - "castor/**"
 
 jobs:
