@@ -11,7 +11,6 @@ package object error {
     final case class InvalidArgument(msg: String) extends DIDOperationError
   }
 
-  // errors are based on https://www.w3.org/TR/did-spec-registries/#error
   sealed trait DIDResolutionError
 
   object DIDResolutionError {

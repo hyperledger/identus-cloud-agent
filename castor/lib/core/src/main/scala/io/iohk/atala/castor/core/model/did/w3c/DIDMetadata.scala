@@ -2,6 +2,7 @@ package io.iohk.atala.castor.core.model.did.w3c
 
 import java.time.Instant
 
+// errors are based on https://www.w3.org/TR/did-spec-registries/#error
 enum DIDResolutionErrorRepr(val value: String) {
   case InvalidDID extends DIDResolutionErrorRepr("invalidDid")
   case InvalidDIDUrl extends DIDResolutionErrorRepr("invalidDidUrl")
