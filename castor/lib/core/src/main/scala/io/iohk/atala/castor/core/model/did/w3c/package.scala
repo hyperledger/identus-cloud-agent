@@ -10,6 +10,7 @@ package object w3c {
 
   import W3CModelHelper.*
 
+  /** A wrapper for DID resolution in W3C format */
   def makeW3CResolver(
       service: DIDService
   )(did: String): IO[DIDResolutionErrorRepr, (DIDDocumentMetadataRepr, DIDDocumentRepr)] = {
@@ -23,7 +24,6 @@ package object w3c {
           {
             case DIDResolutionError.DLTProxyError(_)       => DIDResolutionErrorRepr.InternalError
             case DIDResolutionError.UnexpectedDLTResult(_) => DIDResolutionErrorRepr.InternalError
-            case DIDResolutionError.InvalidEncodedState(_) => DIDResolutionErrorRepr.InvalidDID
           },
           _.toRight(DIDResolutionErrorRepr.NotFound)
         )

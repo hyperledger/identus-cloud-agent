@@ -2,8 +2,6 @@ package io.iohk.atala.castor.core.model.did
 
 import io.iohk.atala.shared.models.Base64UrlStrings.Base64UrlString
 
-import java.time.Instant
-
 final case class PublicKey(
     id: String,
     purpose: VerificationRelationship,
