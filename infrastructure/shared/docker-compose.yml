@@ -98,8 +98,6 @@ services:
 
   iris:
     image: ghcr.io/input-output-hk/iris-service:${IRIS_SERVICE_VERSION}
-    ports:
-      - 8081:8081
     environment:
       IRIS_DB_HOST: db_iris
       IRIS_DB_PORT: 5432
