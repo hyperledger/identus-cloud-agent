@@ -46,6 +46,7 @@ final case class Presentation(
     piuri = this.`type`,
     from = Some(this.from),
     to = Some(this.to),
+    thid = this.thid,
     body = this.body.asJson.asObject.get, // TODO get
     attachments = this.attachments
   )

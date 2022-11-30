@@ -8,11 +8,12 @@ on:
       - synchronize
 
 jobs:
-  main:
+  validate-pr:
     name: Validate PR title
     runs-on: ubuntu-latest
     steps:
-      - uses: amannn/action-semantic-pull-request@v5
+      - name: Semantic commits
+        uses: amannn/action-semantic-pull-request@v5
         env:
           GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
         with:
@@ -34,3 +35,22 @@ jobs:
             shared
             infra
             release
+
+  check-version-files:
+    name: Check version files changes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Prevent file change
+        uses: xalvarez/prevent-file-change-action@v1
+        with:
+          githubToken: ${{ secrets.ATALA_GITHUB_TOKEN }}
+          pattern: version.sbt
+      - name: Fail PR if any version.sbt changed
+        uses: mshick/add-pr-comment@v1
+        if: failure()
+        env:
+          GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
+        with:
+          message: |
+            ERROR: `version.sbt` file(s) was changed: ${{ steps.changed-files-specific.outputs.all_changed_files }}
+            Please, revert any changes in `version.sbt` files. They must be updated automatically.
