@@ -152,21 +152,19 @@ trait OASDomainModelHelper {
         .mapError(e => HttpServiceError.InvalidPayload(s"Error parsing string as UUID: ${e.getMessage()}"))
   }
 
-  extension (didDoc: (castorDomain.w3c.DIDDocumentRepr, castorDomain.w3c.DIDDocumentMetadataRepr)) {
+  extension (didDoc: (castorDomain.w3c.DIDDocumentMetadataRepr, castorDomain.w3c.DIDDocumentRepr)) {
     def toOAS: DIDResponse = DIDResponse(
       did = DID(
-        id = didDoc._1.id,
-        controller = Some(didDoc._1.controller),
-        verificationMethod = Some(didDoc._1.verificationMethod.map(_.toOAS)),
-        authentication = Some(didDoc._1.authentication.map(_.toOAS)),
-        assertionMethod = Some(didDoc._1.assertionMethod.map(_.toOAS)),
-        keyAgreement = Some(didDoc._1.keyAgreement.map(_.toOAS)),
-        capabilityInvocation = Some(didDoc._1.capabilityInvocation.map(_.toOAS)),
-        service = Some(didDoc._1.service.map(_.toOAS))
+        id = didDoc._2.id,
+        controller = Some(didDoc._2.controller),
+        verificationMethod = Some(didDoc._2.verificationMethod.map(_.toOAS)),
+        authentication = Some(didDoc._2.authentication.map(_.toOAS)),
+        assertionMethod = Some(didDoc._2.assertionMethod.map(_.toOAS)),
+        keyAgreement = Some(didDoc._2.keyAgreement.map(_.toOAS)),
+        capabilityInvocation = Some(didDoc._2.capabilityInvocation.map(_.toOAS)),
+        service = Some(didDoc._2.service.map(_.toOAS))
       ),
-      metadata = DIDDocumentMetadata(
-        deactivated = didDoc._2.deactivated.getOrElse(false)
-      )
+      metadata = DIDDocumentMetadata(deactivated = didDoc._1.deactivated)
     )
   }
 

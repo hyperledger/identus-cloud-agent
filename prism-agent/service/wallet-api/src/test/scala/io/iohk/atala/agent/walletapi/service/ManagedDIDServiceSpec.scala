@@ -5,6 +5,7 @@ import io.iohk.atala.agent.walletapi.model.{DIDPublicKeyTemplate, ManagedDIDStat
 import io.iohk.atala.castor.core.model.did.{
   CanonicalPrismDID,
   DIDData,
+  DIDMetadata,
   PrismDID,
   PrismDIDOperation,
   ScheduleDIDOperationOutcome,
@@ -46,7 +47,7 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault {
               )
             )
 
-        override def resolveDID(did: PrismDID): IO[error.DIDResolutionError, Option[DIDData]] = ZIO.none
+        override def resolveDID(did: PrismDID): IO[error.DIDResolutionError, Option[(DIDMetadata, DIDData)]] = ZIO.none
 
         override def getScheduledDIDOperationDetail(
             operationId: Array[Byte]
