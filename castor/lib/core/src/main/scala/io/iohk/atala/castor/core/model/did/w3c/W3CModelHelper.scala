@@ -3,6 +3,7 @@ package io.iohk.atala.castor.core.model.did.w3c
 import io.iohk.atala.castor.core.model.did.{
   CanonicalPrismDID,
   DIDData,
+  DIDMetadata,
   PublicKey,
   PublicKeyData,
   Service,
@@ -12,6 +13,14 @@ import io.iohk.atala.castor.core.model.did.{
 object W3CModelHelper extends W3CModelHelper
 
 private[castor] trait W3CModelHelper {
+
+  extension (didMetadata: DIDMetadata) {
+    def toW3C: DIDDocumentMetadataRepr = {
+      DIDDocumentMetadataRepr(
+        deactivated = false // TODO: handle deactivate DID
+      )
+    }
+  }
 
   extension (didData: DIDData) {
     def toW3C: DIDDocumentRepr = {

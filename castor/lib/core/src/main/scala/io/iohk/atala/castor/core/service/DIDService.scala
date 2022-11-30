@@ -3,6 +3,7 @@ package io.iohk.atala.castor.core.service
 import io.iohk.atala.castor.core.model.did.{
   CanonicalPrismDID,
   DIDData,
+  DIDMetadata,
   LongFormPrismDID,
   PrismDID,
   ScheduleDIDOperationOutcome,
@@ -20,14 +21,14 @@ import io.iohk.atala.prism.protos.{node_api, node_models}
 import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc.NodeServiceStub
 import io.iohk.atala.prism.protos.node_models.OperationOutput.{OperationMaybe, Result}
 
-import scala.collection.immutable.{AbstractSeq, ArraySeq, LinearSeq}
+import scala.collection.immutable.ArraySeq
 
 trait DIDService {
   def createPublishedDID(operation: SignedPrismDIDOperation.Create): IO[DIDOperationError, ScheduleDIDOperationOutcome]
   def getScheduledDIDOperationDetail(
       operationId: Array[Byte]
   ): IO[DIDOperationError, Option[ScheduledDIDOperationDetail]]
-  def resolveDID(did: PrismDID): IO[DIDResolutionError, Option[DIDData]]
+  def resolveDID(did: PrismDID): IO[DIDResolutionError, Option[(DIDMetadata, DIDData)]]
 }
 
 object DIDServiceImpl {
@@ -115,29 +116,34 @@ private class DIDServiceImpl(didOpValidator: DIDOperationValidator, nodeClient: 
   }
 
   // TODO: handle revoked keys and deactivated DIDs
-  override def resolveDID(did: PrismDID): IO[DIDResolutionError, Option[DIDData]] = {
+  override def resolveDID(did: PrismDID): IO[DIDResolutionError, Option[(DIDMetadata, DIDData)]] = {
     val canonicalDID = did.asCanonical
     val createOperation = did match {
       case LongFormPrismDID(createOperation) => Some(createOperation)
       case _: CanonicalPrismDID              => None
     }
-    val unpublishedDidData = createOperation.map(op =>
-      DIDData(
+
+    val unpublishedDidData = createOperation.map { op =>
+      val metadata =
+        DIDMetadata(lastOperationHash = ArraySeq.from(PrismDID.buildLongFormFromOperation(op).stateHash.toByteArray))
+      val didData = DIDData(
         id = canonicalDID,
         publicKeys = op.publicKeys,
         services = op.services,
         internalKeys = op.internalKeys
       )
-    )
+      metadata -> didData
+    }
 
     val request = node_api.GetDidDocumentRequest(did = canonicalDID.toString)
     for {
       result <- ZIO
         .fromFuture(_ => nodeClient.getDidDocument(request))
         .mapError(DIDResolutionError.DLTProxyError.apply)
+      publishedDidMetadata = DIDMetadata(lastOperationHash = ArraySeq.from(result.lastUpdateOperation.toByteArray))
       publishedDidData <- ZIO
         .fromEither(result.document.map(_.toDomain).toSeq.sequence.map(_.headOption))
-        .mapError(DIDResolutionError.UnexpectedDLTResult.apply)
+        .mapBoth(DIDResolutionError.UnexpectedDLTResult.apply, _.map(didData => publishedDidMetadata -> didData))
     } yield publishedDidData.orElse(unpublishedDidData)
   }
 
