@@ -27,3 +27,9 @@ jobs:
       component-name: "Iris Service"
       component-dir: "iris/service"
     secrets: inherit
+  release:
+    if: github.event_name == 'push'
+    uses: ./.github/workflows/release.yml
+    with:
+      release-component: "iris/service"
+    secrets: inherit

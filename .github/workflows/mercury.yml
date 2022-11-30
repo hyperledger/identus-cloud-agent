@@ -27,3 +27,9 @@ jobs:
       component-name: "Mercury Lib"
       component-dir: "mercury/mercury-library"
     secrets: inherit
+  release:
+    if: github.event_name == 'push'
+    uses: ./.github/workflows/release.yml
+    with:
+      release-component: "mercury/mercury-library"
+    secrets: inherit

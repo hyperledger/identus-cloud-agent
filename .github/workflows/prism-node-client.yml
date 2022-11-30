@@ -27,3 +27,9 @@ jobs:
       component-name: "PRISM Node Client"
       component-dir: "prism-node/client/scala-client"
     secrets: inherit
+  release:
+    if: github.event_name == 'push'
+    uses: ./.github/workflows/release.yml
+    with:
+      release-component: "prism-node/client/scala-client"
+    secrets: inherit

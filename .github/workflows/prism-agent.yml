@@ -27,3 +27,9 @@ jobs:
       component-name: "PRISM Agent"
       component-dir: "prism-agent/service"
     secrets: inherit
+  release:
+    if: github.event_name == 'push'
+    uses: ./.github/workflows/release.yml
+    with:
+      release-component: "prism-agent/service"
+    secrets: inherit
