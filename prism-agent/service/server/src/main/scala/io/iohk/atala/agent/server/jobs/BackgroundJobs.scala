@@ -226,7 +226,8 @@ object BackgroundJobs {
           ZIO.logDebug("PresentationRecord: RequestReceived") *> ZIO.unit
         case PresentationRecord(id, _, _, _, _, _, _, _, RequestRejected, _, _, _) => // Prover
           ZIO.logDebug("PresentationRecord: RequestRejected") *> ZIO.unit
-        case PresentationRecord(id, _, _, _, _, _, _, _, ProblemReportPending, _, _, _)  => ??? // TODO NotImplemented
+        case PresentationRecord(id, _, _, _, _, _, _, _, ProblemReportPending, _, _, _) => ???
+        // TODO NotImplemented
         case PresentationRecord(id, _, _, _, _, _, _, _, ProblemReportSent, _, _, _)     => ??? // TODO NotImplemented
         case PresentationRecord(id, _, _, _, _, _, _, _, ProblemReportReceived, _, _, _) => ??? // TODO NotImplemented
         case PresentationRecord(id, _, _, _, _, _, _, _, PresentationPending, _, _, presentation) => // Prover

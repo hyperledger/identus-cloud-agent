@@ -54,7 +54,13 @@ class PresentProofApiServiceImpl(
           thid = UUID.randomUUID(),
           subjectDid = didId,
           connectionId = None,
-          schemaId = None
+          proofTypes = requestPresentationInput.proofs.map { e =>
+            ProofType(
+              schema = e.schemaId, // TODO rename field to schemaId
+              requiredFields = None,
+              trustIssuers = Some(e.trustIssuers.map(DidId(_)))
+            )
+          }
         )
         .mapError(HttpServiceError.DomainError[PresentationError].apply)
         .mapError(_.toOAS)

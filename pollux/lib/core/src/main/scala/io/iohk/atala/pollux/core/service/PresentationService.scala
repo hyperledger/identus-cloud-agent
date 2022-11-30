@@ -24,6 +24,8 @@ import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.model.Message
 import java.time.Instant
 import io.iohk.atala.mercury.protocol.presentproof.RequestPresentation
+import io.iohk.atala.pollux.core.model.IssueCredentialRecord
+import io.iohk.atala.pollux.core.repository.CredentialRepository
 
 trait PresentationService {
 
@@ -33,7 +35,7 @@ trait PresentationService {
       thid: UUID,
       subjectDid: DidId,
       connectionId: Option[String],
-      schemaId: Option[String]
+      proofTypes: Seq[ProofType]
   ): IO[PresentationError, PresentationRecord]
 
   def getPresentationRecords(): IO[PresentationError, Seq[PresentationRecord]]
@@ -49,7 +51,10 @@ trait PresentationService {
       request: RequestPresentation
   ): IO[PresentationError, PresentationRecord]
 
-  def acceptRequestPresentation(recordId: UUID): IO[PresentationError, Option[PresentationRecord]]
+  def acceptRequestPresentation(
+      recordId: UUID,
+      crecentialsToUse: Seq[String]
+  ): IO[PresentationError, Option[PresentationRecord]]
 
   def rejectRequestPresentation(recordId: UUID): IO[PresentationError, Option[PresentationRecord]]
 
@@ -83,12 +88,13 @@ trait PresentationService {
 }
 
 object PresentationServiceImpl {
-  val layer: URLayer[PresentationRepository[Task] & DidComm, PresentationService] =
-    ZLayer.fromFunction(PresentationServiceImpl(_, _))
+  val layer: URLayer[PresentationRepository[Task] & CredentialRepository[Task] & DidComm, PresentationService] =
+    ZLayer.fromFunction(PresentationServiceImpl(_, _, _))
 }
 
 private class PresentationServiceImpl(
     presentationRepository: PresentationRepository[Task],
+    credentialRepository: CredentialRepository[Task],
     didComm: DidComm
 ) extends PresentationService {
 
@@ -124,10 +130,10 @@ private class PresentationServiceImpl(
       thid: UUID,
       subjectId: DidId,
       connectionId: Option[String],
-      schemaId: Option[String]
+      proofTypes: Seq[ProofType]
   ): IO[PresentationError, PresentationRecord] = {
     for {
-      request <- ZIO.succeed(createDidCommRequestPresentation(schemaId, thid, subjectId))
+      request <- ZIO.succeed(createDidCommRequestPresentation(proofTypes, thid, subjectId))
       record <- ZIO.succeed(
         PresentationRecord(
           id = UUID.randomUUID(),
@@ -135,7 +141,7 @@ private class PresentationServiceImpl(
           updatedAt = None,
           thid = thid,
           connectionId = connectionId,
-          schemaId = schemaId,
+          schemaId = None, // TODO REMOVE from DB
           role = PresentationRecord.Role.Verifier,
           subjectId = subjectId,
           protocolState = PresentationRecord.ProtocolState.RequestPending,
@@ -195,8 +201,12 @@ private class PresentationServiceImpl(
     } yield record
   }
 
-  override def acceptRequestPresentation(recordId: UUID): IO[PresentationError, Option[PresentationRecord]] = {
+  override def acceptRequestPresentation(
+      recordId: UUID,
+      crecentialsToUse: Seq[String]
+  ): IO[PresentationError, Option[PresentationRecord]] = {
     for {
+      // crecentialsToUse
       maybeRecord <- presentationRepository
         .getPresentationRecord(recordId)
         .mapError(RepositoryError.apply)
@@ -209,7 +219,17 @@ private class PresentationServiceImpl(
         .fromOption(record.requestPresentationData)
         .mapError(_ => InvalidFlowStateError(s"No request found for this record: $recordId"))
 
-      request = createDidCommPresentation(presentationRequest)
+      credentialsToSend: Seq[JwtCredentialPayload] <- ??? // FIXME type CredentialPayload
+      // // credentialRepository.getValidCredential(by seq of records ids) //TODO FIXME
+      // credentialRepository
+      //   .getIssueCredentialRecords()
+      //   .map { e =>
+      //     e.filter(_.protocolState == IssueCredentialRecord.ProtocolState.CredentialReceived)
+      //       .filter(c => crecentialsToUse.contains(c.id.toString))
+      //       .map(_.issueCredentialData.map(_.))
+      //   }
+      //   .mapError(RepositoryError.apply)
+      request = createDidCommPresentation(presentationRequest, credentialsToSend)
 
       count <- presentationRepository
         .updateWithPresentation(recordId, request, ProtocolState.PresentationPending)
@@ -391,18 +411,19 @@ private class PresentationServiceImpl(
   }
 
   private[this] def createDidCommRequestPresentation(
-      schemaId: Option[String], // TODO Presentation Formats
+      proofTypes: Seq[ProofType],
       thid: UUID,
       subjectDId: DidId
   ): RequestPresentation = {
-    val body = RequestPresentation.Body(goal_code = Some("request"))
-
     RequestPresentation(
-      body = body,
-      attachments = Seq(AttachmentDescriptor.buildAttachment(payload = schemaId)),
+      body = RequestPresentation.Body(
+        goal_code = Some("request"),
+        proof_types = Some(proofTypes) // TODO remove the type option
+      ),
+      attachments = Seq.empty,
       from = didComm.myDid,
       to = subjectDId,
-      thid = Some(thid.toString())
+      thid = Some(thid.toString)
     )
   }
 
@@ -425,8 +446,7 @@ private class PresentationServiceImpl(
     ProposePresentation(
       body = ProposePresentation.Body(
         goal_code = request.body.goal_code,
-        comment = request.body.comment,
-        formats = request.body.formats
+        comment = request.body.comment
       ),
       attachments = request.attachments,
       thid = request.thid.orElse(Some(request.id)),
@@ -435,14 +455,22 @@ private class PresentationServiceImpl(
     )
   }
 
-  private[this] def createDidCommPresentation(request: RequestPresentation): Presentation = {
+  import io.iohk.atala.pollux.vc.jwt.CredentialPayload.Implicits._
+
+  private[this] def createDidCommPresentation(
+      request: RequestPresentation,
+      credentialsToSend: Seq[JwtCredentialPayload] // Seq[CredentialPayload]
+  ): Presentation = {
+
     Presentation(
       body = Presentation.Body(
         goal_code = request.body.goal_code,
-        comment = request.body.comment,
-        formats = request.body.formats
+        comment = request.body.comment
       ),
-      attachments = request.attachments,
+      attachments = credentialsToSend.map { credential =>
+        AttachmentDescriptor
+          .buildAttachment(payload = credential)
+      },
       thid = request.thid.orElse(Some(request.id)),
       from = request.to,
       to = request.from

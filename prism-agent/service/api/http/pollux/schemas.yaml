@@ -423,9 +423,9 @@ components:
             - failed
 
     ProofRequestAux:
-      required: [credentialSchema, trustIssuers]
+      required: [schemaId, trustIssuers]
       properties:
-        credentialSchema:
+        schemaId:
           description: Ex ID card or driving licence
           type: string
           example: "https://schema.org/Person"
