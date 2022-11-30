@@ -252,12 +252,7 @@ private class CredentialServiceImpl(
 
   override def acceptCredentialOffer(recordId: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] = {
     for {
-      maybeRecord <- credentialRepository
-        .getIssueCredentialRecord(recordId)
-        .mapError(RepositoryError.apply)
-      record <- ZIO
-        .fromOption(maybeRecord)
-        .mapError(_ => RecordIdNotFound(recordId))
+      record <- getRecordWithState(recordId, ProtocolState.OfferReceived)
       offer <- ZIO
         .fromOption(record.offerCredentialData)
         .mapError(_ => InvalidFlowStateError(s"No offer found for this record: $recordId"))
@@ -278,7 +273,7 @@ private class CredentialServiceImpl(
       request: RequestCredential
   ): IO[IssueCredentialError, Option[IssueCredentialRecord]] = {
     for {
-      record <- getRecordFromThreadId(request.thid)
+      record <- getRecordFromThreadIdWithState(request.thid, ProtocolState.OfferSent)
       _ <- credentialRepository
         .updateWithRequestCredential(record.id, request, ProtocolState.RequestReceived)
         .flatMap {
@@ -294,16 +289,10 @@ private class CredentialServiceImpl(
 
   override def acceptCredentialRequest(recordId: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] = {
     for {
-      maybeRecord <- credentialRepository
-        .getIssueCredentialRecord(recordId)
-        .mapError(RepositoryError.apply)
-      record <- ZIO
-        .fromOption(maybeRecord)
-        .mapError(_ => RecordIdNotFound(recordId))
+      record <- getRecordWithState(recordId, ProtocolState.RequestReceived)
       request <- ZIO
         .fromOption(record.requestCredentialData)
         .mapError(_ => InvalidFlowStateError(s"No request found for this record: $recordId"))
-      // TODO: Generate the JWT credential and use it to create the IssueCredential object
       issue = createDidCommIssueCredential(request)
       count <- credentialRepository
         .updateWithIssueCredential(recordId, issue, ProtocolState.CredentialPending)
@@ -321,7 +310,7 @@ private class CredentialServiceImpl(
       issue: IssueCredential
   ): IO[IssueCredentialError, Option[IssueCredentialRecord]] = {
     for {
-      record <- getRecordFromThreadId(issue.thid)
+      record <- getRecordFromThreadIdWithState(issue.thid, ProtocolState.RequestSent)
       _ <- credentialRepository
         .updateWithIssueCredential(record.id, issue, ProtocolState.CredentialReceived)
         .flatMap {
@@ -354,6 +343,7 @@ private class CredentialServiceImpl(
       issueCredential: IssueCredential
   ): IO[IssueCredentialError, Option[IssueCredentialRecord]] = {
     for {
+      record <- getRecordWithState(recordId, ProtocolState.CredentialPending)
       count <- credentialRepository
         .updateWithIssueCredential(
           recordId,
@@ -402,8 +392,27 @@ private class CredentialServiceImpl(
       Some(IssueCredentialRecord.PublicationState.Published)
     )
 
-  private[this] def getRecordFromThreadId(
-      thid: Option[String]
+  private[this] def getRecordWithState(
+      recordId: UUID,
+      state: ProtocolState
+  ): IO[IssueCredentialError, IssueCredentialRecord] = {
+    for {
+      maybeRecord <- credentialRepository
+        .getIssueCredentialRecord(recordId)
+        .mapError(RepositoryError.apply)
+      record <- ZIO
+        .fromOption(maybeRecord)
+        .mapError(_ => RecordIdNotFound(recordId))
+      _ <- record.protocolState match {
+        case s if s == state => ZIO.unit
+        case state           => ZIO.fail(InvalidFlowStateError(s"Invalid protocol state for operation: $state"))
+      }
+    } yield record
+  }
+
+  private[this] def getRecordFromThreadIdWithState(
+      thid: Option[String],
+      state: ProtocolState
   ): IO[IssueCredentialError, IssueCredentialRecord] = {
     for {
       thid <- ZIO
@@ -416,6 +425,10 @@ private class CredentialServiceImpl(
       record <- ZIO
         .fromOption(maybeRecord)
         .mapError(_ => ThreadIdNotFound(thid))
+      _ <- record.protocolState match {
+        case s if s == state => ZIO.unit
+        case state           => ZIO.fail(InvalidFlowStateError(s"Invalid protocol state for operation: $state"))
+      }
     } yield record
   }
 
