@@ -3,7 +3,7 @@ import sbt._
 //TODO REMOVE THIS
 object Dependencies_VC_JWT {
   object Versions {
-    val zio = "2.0.2"
+    val zio = "2.0.4"
     val circeVersion = "0.14.3"
     val jwtCirceVersion = "9.1.2"
     val zioPreludeVersion = "1.0.0-RC15"
