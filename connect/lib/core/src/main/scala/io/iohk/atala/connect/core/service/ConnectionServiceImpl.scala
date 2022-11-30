@@ -72,6 +72,13 @@ private class ConnectionServiceImpl(
       invitation <- ZIO
         .fromEither(io.circe.parser.decode[Invitation](Base64Utils.decodeUrlToString(invitation)))
         .mapError(err => InvitationParsingError(err))
+      _ <- connectionRepository
+        .getConnectionRecordByThreadId(UUID.fromString(invitation.id))
+        .mapError(RepositoryError.apply)
+        .flatMap {
+          case None    => ZIO.unit
+          case Some(_) => ZIO.fail(InvitationAlreadyReceived(invitation.id))
+        }
       record <- ZIO.succeed(
         ConnectionRecord(
           id = UUID.randomUUID(),
@@ -99,12 +106,7 @@ private class ConnectionServiceImpl(
 
   override def acceptConnectionInvitation(recordId: UUID): IO[ConnectionError, Option[ConnectionRecord]] =
     for {
-      maybeRecord <- connectionRepository
-        .getConnectionRecord(recordId)
-        .mapError(RepositoryError.apply)
-      record <- ZIO
-        .fromOption(maybeRecord)
-        .mapError(_ => RecordIdNotFound(recordId))
+      record <- getRecordWithState(recordId, ProtocolState.InvitationReceived)
       request = createDidCommConnectionRequest(record)
       count <- connectionRepository
         .updateWithConnectionRequest(recordId, request, ProtocolState.ConnectionRequestPending)
@@ -126,7 +128,7 @@ private class ConnectionServiceImpl(
 
   override def receiveConnectionRequest(request: ConnectionRequest): IO[ConnectionError, Option[ConnectionRecord]] =
     for {
-      record <- getRecordFromThreadId(request.thid)
+      record <- getRecordFromThreadIdAndState(request.thid, ProtocolState.InvitationGenerated)
       _ <- connectionRepository
         .updateWithConnectionRequest(record.id, request, ProtocolState.ConnectionRequestReceived)
         .flatMap {
@@ -141,12 +143,7 @@ private class ConnectionServiceImpl(
 
   override def acceptConnectionRequest(recordId: UUID): IO[ConnectionError, Option[ConnectionRecord]] =
     for {
-      maybeRecord <- connectionRepository
-        .getConnectionRecord(recordId)
-        .mapError(RepositoryError.apply)
-      record <- ZIO
-        .fromOption(maybeRecord)
-        .mapError(_ => RecordIdNotFound(recordId))
+      record <- getRecordWithState(recordId, ProtocolState.ConnectionRequestReceived)
       response = createDidCommConnectionResponse(record)
       count <- connectionRepository
         .updateWithConnectionResponse(recordId, response, ProtocolState.ConnectionResponsePending)
@@ -168,7 +165,7 @@ private class ConnectionServiceImpl(
 
   override def receiveConnectionResponse(response: ConnectionResponse): IO[ConnectionError, Option[ConnectionRecord]] =
     for {
-      record <- getRecordFromThreadId(response.thid)
+      record <- getRecordFromThreadIdAndState(response.thid, ProtocolState.ConnectionRequestSent)
       _ <- connectionRepository
         .updateWithConnectionResponse(record.id, response, ProtocolState.ConnectionResponseReceived)
         .flatMap {
@@ -180,6 +177,24 @@ private class ConnectionServiceImpl(
         .getConnectionRecord(record.id)
         .mapError(RepositoryError.apply)
     } yield record
+
+  private[this] def getRecordWithState(
+      recordId: UUID,
+      state: ProtocolState
+  ): IO[ConnectionError, ConnectionRecord] = {
+    for {
+      maybeRecord <- connectionRepository
+        .getConnectionRecord(recordId)
+        .mapError(RepositoryError.apply)
+      record <- ZIO
+        .fromOption(maybeRecord)
+        .mapError(_ => RecordIdNotFound(recordId))
+      _ <- record.protocolState match {
+        case s if s == state => ZIO.unit
+        case state           => ZIO.fail(InvalidFlowStateError(s"Invalid protocol state for operation: $state"))
+      }
+    } yield record
+  }
 
   private[this] def createDidCommInvitation(thid: UUID, from: DidId): Invitation = {
     Invitation(
@@ -220,8 +235,9 @@ private class ConnectionServiceImpl(
     } yield record
   }
 
-  private[this] def getRecordFromThreadId(
-      thid: Option[String]
+  private[this] def getRecordFromThreadIdAndState(
+      thid: Option[String],
+      state: ProtocolState
   ): IO[ConnectionError, ConnectionRecord] = {
     for {
       thid <- ZIO
@@ -234,6 +250,10 @@ private class ConnectionServiceImpl(
       record <- ZIO
         .fromOption(maybeRecord)
         .mapError(_ => ThreadIdNotFound(thid))
+      _ <- record.protocolState match {
+        case s if s == state => ZIO.unit
+        case state           => ZIO.fail(InvalidFlowStateError(s"Invalid protocol state for operation: $state"))
+      }
     } yield record
   }
 

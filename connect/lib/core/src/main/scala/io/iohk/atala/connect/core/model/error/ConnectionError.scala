@@ -10,4 +10,6 @@ object ConnectionError {
   final case class ThreadIdNotFound(thid: UUID) extends ConnectionError
   final case class InvitationParsingError(cause: Throwable) extends ConnectionError
   final case class UnexpectedError(msg: String) extends ConnectionError
+  final case class InvalidFlowStateError(msg: String) extends ConnectionError
+  final case class InvitationAlreadyReceived(msg: String) extends ConnectionError
 }
