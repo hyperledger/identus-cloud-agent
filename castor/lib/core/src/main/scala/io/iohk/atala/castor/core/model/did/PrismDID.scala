@@ -121,19 +121,4 @@ final case class LongFormPrismDID private[did] (createOperation: PrismDIDOperati
   }
 
   def atalaOperation: node_models.AtalaOperation = createOperation.toAtalaOperation
-
-  def toDIDDataProto: Either[String, node_models.DIDData] = {
-    val initialState = atalaOperation.operation
-    initialState match {
-      case Operation.CreateDid(createOperation) =>
-        Right(
-          node_models.DIDData(
-            id = suffix.toString,
-            publicKeys = createOperation.didData.fold(Nil)(_.publicKeys)
-          )
-        )
-      case operation =>
-        Left(s"Provided initial state of long form Prism DID is ${operation.value}, CreateDid Atala operation expected")
-    }
-  }
 }
