@@ -39,7 +39,7 @@ jobs:
 
       - name: Run Unit Tests
         run: |
-          if [[ {{ inputs.component-dir }} == mercury/mercury-library ]]; then
+          if [[ ${{ inputs.component-dir }} == mercury/mercury-library ]]; then
             SBT_SCOVERAGE=enable sbt clean coverage test coverageAggregate
           else
             sbt test
