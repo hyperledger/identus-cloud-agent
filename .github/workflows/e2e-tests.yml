@@ -1,0 +1,69 @@
+name: End-to-end tests
+
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  pull_request:
+    paths:
+      - ".github/workflows/e2e-tests.yml"
+      - "tests/e2e-tests/**"
+  push:
+    branches:
+      - "main"
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+    working-directory: "tests/e2e-tests"
+
+jobs:
+  run-e2e-tests:
+    name: "Run e2e tests"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Java and Scala
+        uses: olafurpg/setup-scala@v13
+        with:
+          java-version: openjdk@1.11
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ secrets.ATALA_GITHUB_ACTOR }}
+          password: ${{ secrets.ATALA_GITHUB_TOKEN }}
+
+      - name: Install Compose
+        uses: ndeloof/install-compose-action@v0.0.1
+        with:
+          version: v2.12.2 # defaults to 'latest'
+          legacy: true    # will also install in PATH as `docker-compose`
+
+      - name: Start services
+        uses: isbang/compose-action@v1.4.1
+        with:
+          compose-file: "./infrastructure/ci/docker-compose-multiple-actors.yml"
+          up-flags: "--wait"
+
+      - name: Run e2e tests
+        run: |
+          ./gradlew test --info
+
+      - uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: e2e-tests-result
+          path: tests/e2e-tests/target/site/reports
+
+      - name: Publish e2e test Results
+        if: always()
+        id: publish-unit-tests
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          junit_files: "tests/e2e-tests/target/site/reports/SERENITY-JUNIT-*.xml"
+          comment_title: "E2E Test Results"
+          check_name: "E2E Test Results"

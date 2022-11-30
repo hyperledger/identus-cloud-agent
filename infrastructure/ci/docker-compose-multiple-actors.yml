@@ -1,0 +1,194 @@
+version: '3.8'
+
+services:
+
+  ##########################
+  # Castor Databases
+  ##########################
+  db_castor_issuer:
+    image: postgres:13
+    restart: always
+    environment:
+      POSTGRES_DB: castor_issuer
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - 5432:5432
+    volumes:
+      - pg_data_castor_db_issuer:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "castor_issuer"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  db_castor_holder:
+    image: postgres:13
+    restart: always
+    environment:
+      POSTGRES_DB: castor_holder
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - 5433:5432
+    volumes:
+      - pg_data_castor_db_holder:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "postgres", "-d", "castor_holder" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ##########################
+  # Pollux Databases
+  ##########################
+
+  db_pollux_issuer:
+    image: postgres:13
+    restart: always
+    environment:
+      POSTGRES_DB: pollux_issuer
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - 5435:5432
+    volumes:
+      - pg_data_pollux_db_issuer:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "pollux_issuer"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  db_pollux_holder:
+    image: postgres:13
+    restart: always
+    environment:
+      POSTGRES_DB: pollux_holder
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - 5436:5432
+    volumes:
+      - pg_data_pollux_db_holder:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "postgres", "-d", "pollux_holder" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ##########################
+  # Connect Databases
+  ##########################
+
+  db_connect_issuer:
+    image: postgres:13
+    restart: always
+    environment:
+      POSTGRES_DB: connect_issuer
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - 5437:5432
+    volumes:
+      - pg_data_connect_db_issuer:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "postgres", "-d", "connect_issuer" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  db_connect_holder:
+    image: postgres:13
+    restart: always
+    environment:
+      POSTGRES_DB: connect_holder
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - 5438:5432
+    volumes:
+      - pg_data_connect_db_holder:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "postgres", "-d", "connect_holder" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ##########################
+  # Services
+  ##########################c
+
+  prism-agent-issuer:
+    image: ghcr.io/input-output-hk/prism-agent:0.5.0
+    environment:
+      REST_SERVICE_PORT: 8080
+      DIDCOMM_SERVICE_PORT: 8081
+      CASTOR_DB_HOST: db_castor_issuer
+      CASTOR_DB_PORT: 5432
+      CASTOR_DB_NAME: castor_issuer
+      CASTOR_DB_USER: postgres
+      CASTOR_DB_PASSWORD: postgres
+      POLLUX_DB_HOST: db_pollux_issuer
+      POLLUX_DB_PORT: 5432
+      POLLUX_DB_NAME: pollux_issuer
+      POLLUX_DB_USER: postgres
+      POLLUX_DB_PASSWORD: postgres
+      CONNECT_DB_HOST: db_connect_issuer
+      CONNECT_DB_PORT: 5432
+      CONNECT_DB_NAME: connect_issuer
+      CONNECT_DB_USER: postgres
+      CONNECT_DB_PASSWORD: postgres
+      DIDCOMM_SERVICE_URL: "http://prism-agent-issuer"
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+    depends_on:
+      - db_castor_issuer
+      - db_pollux_issuer
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://prism-agent-issuer:8080/dids/xyz" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  prism-agent-holder:
+    image: ghcr.io/input-output-hk/prism-agent:0.5.0
+    environment:
+      REST_SERVICE_PORT: 8090
+      DIDCOMM_SERVICE_PORT: 8091
+      CASTOR_DB_HOST: db_castor_holder
+      CASTOR_DB_PORT: 5432
+      CASTOR_DB_NAME: castor_holder
+      CASTOR_DB_USER: postgres
+      CASTOR_DB_PASSWORD: postgres
+      POLLUX_DB_HOST: db_pollux_holder
+      POLLUX_DB_PORT: 5432
+      POLLUX_DB_NAME: pollux_holder
+      POLLUX_DB_USER: postgres
+      POLLUX_DB_PASSWORD: postgres
+      CONNECT_DB_HOST: db_connect_holder
+      CONNECT_DB_PORT: 5432
+      CONNECT_DB_NAME: connect_holder
+      CONNECT_DB_USER: postgres
+      CONNECT_DB_PASSWORD: postgres
+      DIDCOMM_SERVICE_URL: "http://prism-agent-holder"
+    ports:
+      - "8090:8090"
+      - "8091:8091"
+    depends_on:
+      - db_castor_holder
+      - db_pollux_holder
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://prism-agent-holder:8090/dids/xyz" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  pg_data_castor_db_issuer:
+  pg_data_pollux_db_issuer:
+  pg_data_castor_db_holder:
+  pg_data_pollux_db_holder:
+  pg_data_connect_db_issuer:
+  pg_data_connect_db_holder:
