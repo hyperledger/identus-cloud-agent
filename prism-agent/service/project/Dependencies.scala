@@ -15,7 +15,7 @@ object Dependencies {
     val logback = "1.4.5"
     val mercury = "0.7.0"
     val zioJson = "0.3.0"
-    val tapir = "1.2.2"
+    val tapir = "1.2.3"
   }
 
   private lazy val zio = "dev.zio" %% "zio" % Versions.zio
