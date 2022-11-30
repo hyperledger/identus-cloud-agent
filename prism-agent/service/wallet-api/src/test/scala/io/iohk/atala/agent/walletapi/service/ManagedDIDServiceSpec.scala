@@ -3,7 +3,6 @@ package io.iohk.atala.agent.walletapi.service
 import io.iohk.atala.agent.walletapi.model.error.{CreateManagedDIDError, PublishManagedDIDError}
 import io.iohk.atala.agent.walletapi.model.{DIDPublicKeyTemplate, ManagedDIDState, ManagedDIDTemplate}
 import io.iohk.atala.castor.core.model.did.{
-  CanonicalPrismDID,
   DIDData,
   DIDMetadata,
   PrismDID,

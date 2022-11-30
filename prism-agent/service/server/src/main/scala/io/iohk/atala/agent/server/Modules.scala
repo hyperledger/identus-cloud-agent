@@ -401,7 +401,7 @@ object RepoModule {
 
   val polluxDbConfigLayer: TaskLayer[PolluxDbConfig] = {
     val dbConfigLayer = ZLayer.fromZIO {
-      ZIO.service[AppConfig].map(_.pollux.database).debug("pollux db config") map { config =>
+      ZIO.service[AppConfig].map(_.pollux.database) map { config =>
         PolluxDbConfig(
           username = config.username,
           password = config.password,
@@ -427,7 +427,7 @@ object RepoModule {
 
   val connectDbConfigLayer: TaskLayer[ConnectDbConfig] = {
     val dbConfigLayer = ZLayer.fromZIO {
-      ZIO.service[AppConfig].map(_.connect.database).debug("connect db config") map { config =>
+      ZIO.service[AppConfig].map(_.connect.database) map { config =>
         ConnectDbConfig(
           username = config.username,
           password = config.password,
