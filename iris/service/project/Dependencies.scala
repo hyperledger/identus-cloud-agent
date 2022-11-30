@@ -48,7 +48,7 @@ object Dependencies {
 
   // Tests
   private lazy val zioTest = "dev.zio" %% "zio-test" % "2.0.4" % Test
-  private lazy val zioTestSbt = "dev.zio" %% "zio-test-sbt" % "2.0.2" % Test
+  private lazy val zioTestSbt = "dev.zio" %% "zio-test-sbt" % "2.0.4" % Test
   private lazy val zioTestMagnolia = "dev.zio" %% "zio-test-magnolia" % "2.0.4" % Test
 
   // Dependency Modules
