@@ -39,6 +39,7 @@ import io.iohk.atala.mercury.DidComm
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.model.Message
 import java.time.Instant
+import io.iohk.atala.resolvers.DidValidator
 
 trait CredentialService {
 
@@ -177,6 +178,7 @@ private class CredentialServiceImpl(
       awaitConfirmation: Option[Boolean]
   ): IO[IssueCredentialError, IssueCredentialRecord] = {
     for {
+      _ <- if (DidValidator.supportedDid(subjectId)) ZIO.unit else ZIO.fail(UnsupportedDidFormat(subjectId))
       offer <- ZIO.succeed(createDidCommOfferCredential(claims, thid, subjectId))
       record <- ZIO.succeed(
         IssueCredentialRecord(

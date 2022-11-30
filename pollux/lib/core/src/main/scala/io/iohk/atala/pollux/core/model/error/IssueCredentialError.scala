@@ -10,4 +10,5 @@ object IssueCredentialError {
   final case class ThreadIdNotFound(thid: UUID) extends IssueCredentialError
   final case class InvalidFlowStateError(msg: String) extends IssueCredentialError
   final case class UnexpectedError(msg: String) extends IssueCredentialError
+  final case class UnsupportedDidFormat(did: String) extends IssueCredentialError
 }
