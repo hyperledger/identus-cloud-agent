@@ -20,6 +20,7 @@ package object w3c {
         .mapError(_ => DIDResolutionErrorRepr.InvalidDID)
       didData <- service
         .resolveDID(prismDID)
+        .tap(i => Console.printLine(i.map(_._1.lastOperationHash.toArray).map(HexString.fromByteArray)))
         .mapBoth(
           {
             case DIDResolutionError.DLTProxyError(_)       => DIDResolutionErrorRepr.InternalError
