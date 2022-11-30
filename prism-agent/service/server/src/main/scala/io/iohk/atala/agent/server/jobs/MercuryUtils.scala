@@ -47,8 +47,12 @@ object MercuryUtils {
         )
         .provideSomeLayer(env)
         .catchNonFatalOrDie { ex => ZIO.fail(SendMessage(ex)) }
-      data <- res.body.asString
-        .catchNonFatalOrDie { ex => ZIO.fail(ParseResponse(ex)) }
+      data <-
+        if (res.status.isSuccess)
+          res.body.asString
+            .catchNonFatalOrDie { ex => ZIO.fail(ParseResponse(ex)) }
+        else
+          ZIO.fail(ParseResponse(RuntimeException(s"Received non-success HTTP response status from peer agent: ${res.status}")))
       _ <- Console.printLine(data)
     } yield ()
   }
