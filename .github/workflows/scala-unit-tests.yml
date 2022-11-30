@@ -1,0 +1,51 @@
+name: Scala build and unit tests
+
+on:
+  workflow_call:
+    inputs:
+      component-name:
+        required: true
+        type: string
+      component-dir:
+        required: true
+        type: string
+
+jobs:
+  build-and-unit-tests:
+    name: "Build and unit tests for ${{ inputs.component-name }}"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ inputs.component-dir }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Java and Scala
+        uses: olafurpg/setup-scala@v13
+        with:
+          java-version: openjdk@1.11
+
+      - name: Cache sbt
+        uses: coursier/cache-action@v6.3
+
+      - name: Run Scala formatter
+        run: sbt scalafmtCheckAll
+
+      - name: Run Unit Tests
+        run: sbt test
+
+      - name: Aggregate test reports
+        if: always()
+        uses: ./.github/actions/aggregate-test-reports
+        with:
+          tests-dir: ${{ inputs.component-dir }}
+
+      - name: Publish test results
+        # Publish even if the previous test step fails
+        if: always()
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          junit_files: "${{ inputs.component-dir }}/target/test-reports/**/TEST-*.xml"
+          comment_title: "${{ inputs.component-name }} Test Results"
+          check_name: "${{ inputs.component-name }} Test Results"
