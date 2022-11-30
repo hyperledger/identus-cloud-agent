@@ -5,7 +5,7 @@ object Dependencies {
     val zio = "2.0.4"
     val doobie = "1.0.0-RC2"
     val zioCatsInterop = "3.3.0"
-    val prismSdk = "v1.4.1"
+    val prismSdk = "1.4.1"
     val iris = "0.1.0"
     val shared = "0.2.0"
     val mercury = "0.7.0"
