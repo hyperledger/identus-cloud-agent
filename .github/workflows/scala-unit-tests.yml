@@ -65,7 +65,7 @@ jobs:
         uses: 5monkeys/cobertura-action@master
         with:
           path: "${{ inputs.component-dir }}/target/coverage/coverage-report/cobertura.xml"
-          report_name: "{{ inputs.component-name }} Code Coverage"
+          report_name: "${{ inputs.component-name }} Code Coverage"
           minimum_coverage: 10
           fail_below_threshold: false
 
