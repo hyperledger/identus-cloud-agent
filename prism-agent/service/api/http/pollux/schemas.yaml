@@ -480,8 +480,10 @@ components:
         action:
           type: string
           enum:
-            - accept
-            - reject
+            - request-accept
+            - request-reject
+            - presentation-accept
+            - presentation-reject
         proofId:
           description: This is to choose what VCs to use
           type: array

@@ -203,6 +203,8 @@ object BackgroundJobs {
         case PresentationRecord(id, _, _, _, _, _, _, _, ProposalPending, _, _, _)  => ZIO.unit // NotImplemented
         case PresentationRecord(id, _, _, _, _, _, _, _, ProposalSent, _, _, _)     => ZIO.unit // NotImplemented
         case PresentationRecord(id, _, _, _, _, _, _, _, ProposalReceived, _, _, _) => ZIO.unit // NotImplemented
+        case PresentationRecord(id, _, _, _, _, _, _, _, ProposalRejected, _, _, _) => ZIO.unit // NotImplemented
+
         case PresentationRecord(id, _, _, _, _, _, _, _, RequestPending, oRecord, _, _) => // Verifier
           oRecord match
             case None => ZIO.fail(InvalidState("PresentationRecord 'RequestPending' with no Record"))
@@ -222,6 +224,8 @@ object BackgroundJobs {
           ZIO.logDebug("PresentationRecord: RequestSent") *> ZIO.unit
         case PresentationRecord(id, _, _, _, _, _, _, _, RequestReceived, _, _, _) => // Prover
           ZIO.logDebug("PresentationRecord: RequestReceived") *> ZIO.unit
+        case PresentationRecord(id, _, _, _, _, _, _, _, RequestRejected, _, _, _) => // Prover
+          ZIO.logDebug("PresentationRecord: RequestRejected") *> ZIO.unit
         case PresentationRecord(id, _, _, _, _, _, _, _, ProblemReportPending, _, _, _)  => ??? // TODO NotImplemented
         case PresentationRecord(id, _, _, _, _, _, _, _, ProblemReportSent, _, _, _)     => ??? // TODO NotImplemented
         case PresentationRecord(id, _, _, _, _, _, _, _, ProblemReportReceived, _, _, _) => ??? // TODO NotImplemented
@@ -246,7 +250,10 @@ object BackgroundJobs {
         case PresentationRecord(id, _, _, _, _, _, _, _, PresentationReceived, _, _, _) =>
           ZIO.logDebug("PresentationRecord: PresentationReceived") *> ZIO.unit
         // TODO move the state to PresentationVerified
-        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationVerified, _, _, _) => ??? // TODO NotImplemented
+        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationVerified, _, _, _) =>
+          ZIO.logDebug("PresentationRecord: PresentationVerified") *> ZIO.unit
+        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationRejected, _, _, _) =>
+          ZIO.logDebug("PresentationRecord: PresentationRejected") *> ZIO.unit
       }
     } yield ()
 

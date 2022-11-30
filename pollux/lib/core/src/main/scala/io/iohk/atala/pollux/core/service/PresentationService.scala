@@ -51,6 +51,8 @@ trait PresentationService {
 
   def acceptRequestPresentation(recordId: UUID): IO[PresentationError, Option[PresentationRecord]]
 
+  def rejectRequestPresentation(recordId: UUID): IO[PresentationError, Option[PresentationRecord]]
+
   def receiveProposePresentation(request: ProposePresentation): IO[PresentationError, Option[PresentationRecord]]
 
   def acceptProposePresentation(recordId: UUID): IO[PresentationError, Option[PresentationRecord]]
@@ -59,7 +61,11 @@ trait PresentationService {
 
   def acceptPresentation(recordId: UUID): IO[PresentationError, Option[PresentationRecord]]
 
+  def rejectPresentation(recordId: UUID): IO[PresentationError, Option[PresentationRecord]]
+
   def markRequestPresentationSent(recordId: UUID): IO[PresentationError, Option[PresentationRecord]]
+
+  def markRequestPresentationRejected(recordId: UUID): IO[PresentationError, Option[PresentationRecord]]
 
   def markProposePresentationSent(recordId: UUID): IO[PresentationError, Option[PresentationRecord]]
 
@@ -71,6 +77,8 @@ trait PresentationService {
   def markPresentationSent(recordId: UUID): IO[PresentationError, Option[PresentationRecord]]
 
   def markPresentationVerified(recordId: UUID): IO[PresentationError, Option[PresentationRecord]]
+
+  def markPresentationRejected(recordId: UUID): IO[PresentationError, Option[PresentationRecord]]
 
 }
 
@@ -103,6 +111,13 @@ private class PresentationServiceImpl(
         .getPresentationRecord(recordId)
         .mapError(RepositoryError.apply)
     } yield record
+  }
+
+  override def rejectRequestPresentation(recordId: UUID): IO[PresentationError, Option[PresentationRecord]] = {
+    markRequestPresentationRejected(recordId)
+  }
+  def rejectPresentation(recordId: UUID): IO[PresentationError, Option[PresentationRecord]] = {
+    markPresentationRejected(recordId)
   }
 
   override def createPresentationRecord(
@@ -334,6 +349,20 @@ private class PresentationServiceImpl(
       recordId,
       PresentationRecord.ProtocolState.PresentationPending,
       PresentationRecord.ProtocolState.PresentationSent
+    )
+
+  override def markPresentationRejected(recordId: UUID): IO[PresentationError, Option[PresentationRecord]] =
+    updatePresentationRecordProtocolState(
+      recordId,
+      PresentationRecord.ProtocolState.PresentationReceived,
+      PresentationRecord.ProtocolState.PresentationRejected
+    )
+
+  override def markRequestPresentationRejected(recordId: UUID): IO[PresentationError, Option[PresentationRecord]] =
+    updatePresentationRecordProtocolState(
+      recordId,
+      PresentationRecord.ProtocolState.RequestReceived,
+      PresentationRecord.ProtocolState.RequestRejected
     )
 
   private[this] def getRecordFromThreadId(

@@ -96,14 +96,37 @@ class PresentProofApiServiceImpl(
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
     val result = requestPresentationAction.action match {
-      case "accept" =>
+
+      case "request-accept" =>
         for {
           record <- presentationService
             .acceptRequestPresentation(UUID.fromString(id))
             .mapError(HttpServiceError.DomainError[PresentationError].apply)
         } yield record
-      case "reject" => ??? // TODO FIXME
-      case s        => throw InvalidState(s"Error: updatePresentation's State must be 'accept' or 'reject' but is $s")
+      case "request-reject" => {
+        for {
+          record <- presentationService
+            .rejectRequestPresentation(UUID.fromString(id))
+            .mapError(HttpServiceError.DomainError[PresentationError].apply)
+        } yield record
+      }
+      case "presentation-accept" =>
+        for {
+          record <- presentationService
+            .acceptPresentation(UUID.fromString(id))
+            .mapError(HttpServiceError.DomainError[PresentationError].apply)
+        } yield record // TODO FIXME
+      case "presentation-reject" => {
+        for {
+          record <- presentationService
+            .rejectPresentation(UUID.fromString(id))
+            .mapError(HttpServiceError.DomainError[PresentationError].apply)
+        } yield record
+      }
+      case s =>
+        throw InvalidState(
+          s"Error: updatePresentation's State must be 'request-accept','request-reject', 'presentation-accept' or 'presentation-reject' but is $s"
+        )
     }
 
     // action accept , decline
