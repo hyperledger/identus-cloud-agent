@@ -14,6 +14,9 @@ jobs:
   build-and-unit-tests:
     name: "Build and unit tests for ${{ inputs.component-name }}"
     runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
+      ATALA_GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
     defaults:
       run:
         working-directory: ${{ inputs.component-dir }}

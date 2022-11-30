@@ -20,11 +20,6 @@ on:
       - ".github/workflows/castor.yml"
       - "castor/**"
 
-# Global environment variables for all jobs
-env:
-  GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
-  ATALA_GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
-
 jobs:
   build-and-test-castor:
     uses: ./.github/workflows/scala-unit-tests.yml
