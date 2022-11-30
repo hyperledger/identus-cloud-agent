@@ -20,4 +20,3 @@ The value of this variable must be a Github token generated with the  `read:pack
 | run.sh   | Retrieves versions from local components and brings up a docker-compose stack using built components | Does not build images or libraries                                                         |
 | clean.sh | Clean local build cache                                                                              | Runs sbt clean;cleanFiles to clear local cache / state from build directories              |
 | full.sh  | Runs `build.sh` followed by `run.sh`                                                                 | Use this to build and run the stack. Sometimes quite slow if not rebuilding all components |
-
