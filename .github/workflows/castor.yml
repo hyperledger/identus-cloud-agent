@@ -27,9 +27,3 @@ jobs:
       component-name: "Castor"
       component-dir: "castor/lib"
     secrets: inherit
-  release:
-    if: github.event_name == 'push'
-    uses: ./.github/workflows/release.yml
-    with:
-      release-component: "castor/lib""
-    secrets: inherit

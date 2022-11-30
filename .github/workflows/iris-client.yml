@@ -27,9 +27,3 @@ jobs:
       component-name: "Iris Client"
       component-dir: "iris/client/scala-client"
     secrets: inherit
-  release:
-    if: github.event_name == 'push'
-    uses: ./.github/workflows/release.yml
-    with:
-      release-component: "iris/client/scala-client"
-    secrets: inherit
