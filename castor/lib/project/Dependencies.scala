@@ -8,7 +8,7 @@ object Dependencies {
     val prismNodeClient = "0.1.0"
     val prismSdk = "1.4.1"
     val shared = "0.2.0"
-    val flyway = "9.7.0"
+    val flyway = "9.8.3"
   }
 
   private lazy val zio = "dev.zio" %% "zio" % Versions.zio
