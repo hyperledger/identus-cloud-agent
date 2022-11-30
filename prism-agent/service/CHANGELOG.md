@@ -1,3 +1,10 @@
+# [prism-agent-v0.6.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.5.0...prism-agent-v0.6.0) (2022-11-29)
+
+
+### Features
+
+* **prism-agent:** add connect/issue doc + allow local execution of multiple Prism Agent instances ([#178](https://github.com/input-output-hk/atala-prism-building-blocks/issues/178)) ([dc8d86b](https://github.com/input-output-hk/atala-prism-building-blocks/commit/dc8d86b1ba87d747c5ac0089573ddd8c2ab62f5e))
+
 # [prism-agent-v0.5.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.4.0...prism-agent-v0.5.0) (2022-11-28)
 
 
