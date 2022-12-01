@@ -1,3 +1,6 @@
+plugins:
+  - name: proxy-rewrite
+
 routes:
     - uri: /prism-agent/*
       upstream_id: 2
