@@ -47,7 +47,8 @@ The `run.sh` script allows you to run multiple `building-block` stacks locally. 
 Example - Run an instance named `inviter` on port 8080 and an instance named `invitee` on port 8090
 
 > These examples show running in `background mode` using the `-b` flag. This means that docker-compose is passed the `daemon -d` flag.
-> If you wish to run them in the foreground to view logs - please make sure each line is executed in a different terminal and the `-b` flag is removed
+> If you wish to run them in the foreground to view logs - please make sure each line is executed in a different terminal and the `-b` flag is removed.
+> After running in either mode (foreground or background) - you can remove the local state of volumes by using the `stop.sh` script with the `-d` argument. 
 
 Starting the instances:
 
@@ -61,4 +62,13 @@ Stopping the instances:
 ```
 ./stop.sh -n inviter 
 ./stop.sh -n invitee
+```
+
+OR
+
+Specify the `-d` argument when stopping the instances to remove state:
+
+```
+./stop.sh -n inviter -d
+./stop.sh -n invitee -d
 ```

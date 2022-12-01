@@ -24,7 +24,10 @@ POSITIONAL_ARGS=()
 while [[ $# -gt 0 ]]; do
   case $1 in
     -d|--destroy-volumes)
-      VOLUMES="-v"
+      # Note: In this script we set this to -d to pass to other scripts
+      # In local/dev - this is set to -v as it's passed directly to docker and
+      # the flag is different
+      VOLUMES="-d"
       shift # past argument
       ;;
     -h|--help)
@@ -65,6 +68,6 @@ echo "--------------------------------------"
 echo "Stopping stack using docker-compose"
 echo "--------------------------------------"
 
-../local/stop.sh -n issuer
-../local/stop.sh -n holder
-../local/stop.sh -n verifier
+../local/stop.sh -n issuer ${VOLUMES}
+../local/stop.sh -n holder ${VOLUMES}
+../local/stop.sh -n verifier ${VOLUMES}

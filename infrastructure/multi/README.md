@@ -44,6 +44,8 @@ To run the Atala `building-block` stack - execute the `run.sh` script. This can 
 
 `./infrastructure/multi/run.sh` 
 
+> This script always executes in background mode - you can remove the local state of volumes by using the `stop.sh` script with the `-d` argument.
+
 ## Scripts
 
 | Name    | Purpose                                                  | Notes                                                                                          |
