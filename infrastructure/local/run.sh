@@ -65,7 +65,7 @@ fi
 
 if [ -z ${NAME+x} ];
 then
-    NAME="dev"
+    NAME="local"
 fi
 
 if [ -z ${PORT+x} ];
