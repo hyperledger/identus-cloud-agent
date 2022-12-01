@@ -7,19 +7,26 @@ import io.iohk.atala.iris.proto.dlt.IrisOperation
 import io.iohk.atala.iris.proto.service.IrisOperationId
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
 import io.iohk.atala.iris.proto.vc_operations.IssueCredentialsBatch
+import io.iohk.atala.mercury.DidComm
+import io.iohk.atala.mercury.model.AttachmentDescriptor
+import io.iohk.atala.mercury.model.DidId
+import io.iohk.atala.mercury.model.Message
+import io.iohk.atala.mercury.protocol.issuecredential.Attribute
+import io.iohk.atala.mercury.protocol.issuecredential.CredentialPreview
+import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
+import io.iohk.atala.mercury.protocol.issuecredential.OfferCredential
+import io.iohk.atala.mercury.protocol.issuecredential.RequestCredential
 import io.iohk.atala.pollux.core.model.EncodedJWTCredential
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord
 import io.iohk.atala.pollux.core.model.PublishedBatchData
-import io.iohk.atala.pollux.core.model.error.CreateCredentialPayloadFromRecordError
-import io.iohk.atala.pollux.core.model.error.MarkCredentialRecordsAsPublishQueuedError
 import io.iohk.atala.pollux.core.model.error.IssueCredentialError
 import io.iohk.atala.pollux.core.model.error.IssueCredentialError._
-import io.iohk.atala.pollux.core.model.error.PublishCredentialBatchError
 import io.iohk.atala.pollux.core.repository.CredentialRepository
 import io.iohk.atala.pollux.vc.jwt.*
 import io.iohk.atala.prism.crypto.MerkleInclusionProof
 import io.iohk.atala.prism.crypto.MerkleTreeKt
 import io.iohk.atala.prism.crypto.Sha256
+import io.iohk.atala.resolvers.DidValidator
 import zio.*
 
 import java.rmi.UnexpectedException
@@ -28,18 +35,6 @@ import java.security.SecureRandom
 import java.security.spec.ECGenParameterSpec
 import java.time.Instant
 import java.util.UUID
-
-import io.iohk.atala.mercury.protocol.issuecredential.OfferCredential
-import io.iohk.atala.mercury.protocol.issuecredential.RequestCredential
-import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
-import io.iohk.atala.mercury.protocol.issuecredential.Attribute
-import io.iohk.atala.mercury.protocol.issuecredential.CredentialPreview
-import io.iohk.atala.mercury.model.AttachmentDescriptor
-import io.iohk.atala.mercury.DidComm
-import io.iohk.atala.mercury.model.DidId
-import io.iohk.atala.mercury.model.Message
-import java.time.Instant
-import io.iohk.atala.resolvers.DidValidator
 
 trait CredentialService {
 
@@ -109,11 +104,11 @@ trait CredentialService {
   def publishCredentialBatch(
       credentials: Seq[W3cCredentialPayload],
       issuer: Issuer
-  ): IO[PublishCredentialBatchError, PublishedBatchData]
+  ): IO[IssueCredentialError, PublishedBatchData]
 
   def markCredentialRecordsAsPublishQueued(
       credentialsAndProofs: Seq[(W3cCredentialPayload, MerkleInclusionProof)]
-  ): IO[MarkCredentialRecordsAsPublishQueuedError, Int]
+  ): IO[IssueCredentialError, Int]
 
   def receiveCredentialIssue(issue: IssueCredential): IO[IssueCredentialError, Option[IssueCredentialRecord]]
 
@@ -543,7 +538,7 @@ private class CredentialServiceImpl(
         Either.cond(
           claims.isDefined,
           claims.get,
-          CreateCredentialPayloadFromRecordError.CouldNotExtractClaimsError(
+          IssueCredentialError.CreateCredentialPayloadFromRecordError(
             new Throwable("Could not extract claims from \"requestCredential\" Didcome message")
           )
         )
@@ -572,7 +567,7 @@ private class CredentialServiceImpl(
   def publishCredentialBatch(
       credentials: Seq[W3cCredentialPayload],
       issuer: Issuer
-  ): IO[PublishCredentialBatchError, PublishedBatchData] = {
+  ): IO[IssueCredentialError, PublishedBatchData] = {
     import collection.JavaConverters.*
 
     val hashes = credentials
@@ -601,7 +596,7 @@ private class CredentialServiceImpl(
     val result = ZIO
       .fromFuture(_ => irisClient.scheduleOperation(irisOperation))
       .mapBoth(
-        PublishCredentialBatchError.IrisError(_),
+        IrisError(_),
         irisOpeRes =>
           PublishedBatchData(
             operationId = IrisOperationId(irisOpeRes.operationId),
@@ -614,7 +609,7 @@ private class CredentialServiceImpl(
 
   override def markCredentialRecordsAsPublishQueued(
       credentialsAndProofs: Seq[(W3cCredentialPayload, MerkleInclusionProof)]
-  ): IO[MarkCredentialRecordsAsPublishQueuedError, Int] = {
+  ): IO[IssueCredentialError, Int] = {
 
     /*
      * Since id of the credential is optional according to W3 spec,
@@ -625,8 +620,7 @@ private class CredentialServiceImpl(
      */
     val maybeUndefinedId = credentialsAndProofs.find(x => extractIdFromCredential(x._1).isEmpty)
 
-    if (maybeUndefinedId.isDefined) then
-      ZIO.fail(MarkCredentialRecordsAsPublishQueuedError.CredentialIdNotDefined(maybeUndefinedId.get._1))
+    if (maybeUndefinedId.isDefined) then ZIO.fail(CredentialIdNotDefined(maybeUndefinedId.get._1))
     else
       val idStateAndProof = credentialsAndProofs.map { credentialAndProof =>
         (
@@ -638,7 +632,7 @@ private class CredentialServiceImpl(
 
       credentialRepository
         .updateCredentialRecordStateAndProofByCredentialIdBulk(idStateAndProof)
-        .mapError(MarkCredentialRecordsAsPublishQueuedError.RepositoryError(_))
+        .mapError(RepositoryError(_))
 
   }
 
