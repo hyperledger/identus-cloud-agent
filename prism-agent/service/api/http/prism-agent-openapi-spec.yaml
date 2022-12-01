@@ -316,6 +316,25 @@ paths:
                 $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
 
   /did-registrar/dids:
+    get:
+      tags: [ "DID Registrar" ]
+      operationId: listManagedDid
+      summary: List all DIDs managed by PrismAgent.
+      description: List all DIDs managed by PrismAgent.
+      responses:
+        "200":
+          description: List managed DIDs
+          content:
+            application/json:
+              schema:
+                $ref: "./castor/schemas.yaml#/components/schemas/ListManagedDIDResponse"
+        "422":
+          description: The DID creation failed.
+          content:
+            application/json:
+              schema:
+                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
+
     post:
       tags: [ "DID Registrar" ]
       operationId: createManagedDid
@@ -745,7 +764,7 @@ paths:
             application/json:
               schema:
                 $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
-  
+
   /issue-credentials/records:
     get:
       tags: [ "Issue Credentials Protocol" ]
@@ -785,7 +804,7 @@ paths:
             application/json:
               schema:
                 $ref: "./pollux/schemas.yaml#/components/schemas/ErrorResponse"
-  
+
   /issue-credentials/records/{recordId}/accept-offer:
     post:
       tags: [ "Issue Credentials Protocol" ]
@@ -978,9 +997,9 @@ paths:
       operationId: createConnection
       summary: Creates new connection and returns an invitation.
       description: |-
-        Returns new invitation object and creates new connection state record in `pending` state. 
-        Content of invitation depends on DIDComm protocol used, here is an example of how it would look like for `AIP 1.0 connection/v1` protocol. 
-        Once connection invitation is accepted, Agent should filter all additional attempts to accept it. 
+        Returns new invitation object and creates new connection state record in `pending` state.
+        Content of invitation depends on DIDComm protocol used, here is an example of how it would look like for `AIP 1.0 connection/v1` protocol.
+        Once connection invitation is accepted, Agent should filter all additional attempts to accept it.
         We consider mult-party connections as out of scope for now.
       requestBody:
         required: true
@@ -1079,4 +1098,4 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "./connect/schemas.yaml#/components/schemas/ErrorResponse"       
+                $ref: "./connect/schemas.yaml#/components/schemas/ErrorResponse"

@@ -1,7 +1,13 @@
 package io.iohk.atala.agent.walletapi.service
 
 import io.iohk.atala.agent.walletapi.crypto.{ECWrapper, KeyGeneratorWrapper}
-import io.iohk.atala.agent.walletapi.model.{DIDPublicKeyTemplate, ECKeyPair, ManagedDIDState, ManagedDIDTemplate}
+import io.iohk.atala.agent.walletapi.model.{
+  DIDPublicKeyTemplate,
+  ECKeyPair,
+  ManagedDIDDetail,
+  ManagedDIDState,
+  ManagedDIDTemplate
+}
 import io.iohk.atala.agent.walletapi.model.ECCoordinates.*
 import io.iohk.atala.agent.walletapi.model.error.{CreateManagedDIDError, PublishManagedDIDError}
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService.{CreateDIDSecret, DEFAULT_MASTER_KEY_ID}
@@ -49,6 +55,11 @@ final class ManagedDIDService private[walletapi] (
 ) {
 
   private val CURVE = EllipticCurve.SECP256K1
+
+  def listManagedDID: Task[Seq[ManagedDIDDetail]] = nonSecretStorage.listManagedDID
+    .map(_.toSeq.map { case (did, state) =>
+      ManagedDIDDetail(did = did.asCanonical, state = state)
+    })
 
   def publishStoredDID(did: CanonicalPrismDID): IO[PublishManagedDIDError, ScheduleDIDOperationOutcome] = {
     def syncDLTStateAndPersist =

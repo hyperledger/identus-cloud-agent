@@ -14,6 +14,7 @@ import io.iohk.atala.agent.openapi.model.{
   DidOperationSubmission,
   IssueCredentialRecord,
   IssueCredentialRecordCollection,
+  ListManagedDIDResponseInner,
   PublicKey,
   PublicKeyJwk,
   Service,
@@ -35,6 +36,8 @@ import io.iohk.atala.mercury.model.AttachmentDescriptor
 import io.iohk.atala.mercury.model.Base64
 import zio.ZIO
 import io.iohk.atala.agent.server.http.model.HttpServiceError.InvalidPayload
+import io.iohk.atala.agent.walletapi.model.ManagedDIDState
+import io.iohk.atala.castor.core.model.did.{LongFormPrismDID, PrismDID}
 
 import java.util.UUID
 import io.iohk.atala.connect.core.model.ConnectionRecord.Role
@@ -200,6 +203,22 @@ trait OASDomainModelHelper {
       `type` = service.`type`,
       serviceEndpoint = service.serviceEndpoint
     )
+  }
+
+  extension (didDetail: walletDomain.ManagedDIDDetail) {
+    def toOAS: ListManagedDIDResponseInner = {
+      val (longFormDID, status) = didDetail.state match {
+        case ManagedDIDState.Created(operation) => Some(PrismDID.buildLongFormFromOperation(operation)) -> "CREATED"
+        case ManagedDIDState.PublicationPending(operation, _) =>
+          Some(PrismDID.buildLongFormFromOperation(operation)) -> "PUBLICATION_PENDING"
+        case ManagedDIDState.Published(_, _) => None -> "PUBLISHED"
+      }
+      ListManagedDIDResponseInner(
+        did = didDetail.did.toString,
+        longFormDid = longFormDID.map(_.toString),
+        status = status
+      )
+    }
   }
 
 }
