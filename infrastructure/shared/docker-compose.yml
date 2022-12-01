@@ -135,16 +135,18 @@ services:
         ]'
       - BASE_URL=/apidocs
 
-  haproxy:
-    image: haproxy:2.6.5
+  apisix:
+    image: apache/apisix:2.15.0-alpine
+    restart: always
+    volumes:
+      - ./apisix/conf:/usr/local/apisix/conf:ro
     ports:
-      - "${PORT}:80"   # Http
+      - "${PORT}:9080/tcp"
+      - "9092:9092/tcp"
     depends_on:
       - mediator
       - prism-agent
       - swagger-ui
-    volumes:
-      - ./haproxy:/usr/local/etc/haproxy:ro
 
 volumes:
   pg_data_castor_db:

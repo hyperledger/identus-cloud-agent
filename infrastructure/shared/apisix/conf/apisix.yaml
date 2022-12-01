@@ -1,0 +1,54 @@
+routes:
+    - uri: /prism-agent/*
+      upstream_id: 2
+      plugins:
+        proxy-rewrite:
+          regex_uri: ["^/prism-agent/(.*)","/$1"]
+    - uri: /prism-agent/schema-registry/*
+      upstream_id: 4
+      plugins:
+        proxy-rewrite:
+          regex_uri: ["^/prism-agent/schema-registry/(.*)","/schema-registry/$1"]
+    - uri: /mediator/*
+      upstream_id: 1
+      plugins:
+        proxy-rewrite:
+          regex_uri: ["^/mediator/(.*)","/$1"]
+    - uri: /apidocs*
+      upstream_id: 5
+      plugins:
+        proxy-rewrite:
+          regex_uri: ["^/apidocs/(.*)","/$1"]
+    - uri: /docs/mediator/api/*
+      upstream_id: 1
+      plugins:
+        proxy-rewrite:
+          regex_uri: ["^/docs/mediator/api/(.*)","/api/$1"]
+    - uri: /docs/prism-agent/api/*
+      upstream_id: 2
+      plugins:
+        proxy-rewrite:
+          regex_uri: ["^/docs/prism-agent/api/(.*)","/api/$1"]
+
+upstreams:
+    - id: 1
+      nodes:
+        "mediator:8080": 1
+      type: roundrobin
+    - id: 2
+      nodes:
+        "prism-agent:8080": 1 #api
+      type: roundrobin
+    - id: 3
+      nodes:
+        "prism-agent:8090": 1 #didcom
+      type: roundrobin
+    - id: 4
+      nodes:
+        "prism-agent:8085": 1 #tapir
+      type: roundrobin
+    - id: 5
+      nodes:
+        "swagger-ui:8080": 1
+      type: roundrobin
+#END
