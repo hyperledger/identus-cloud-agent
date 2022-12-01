@@ -7,6 +7,8 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 # Set working directory
 cd ${SCRIPT_DIR}
 
+source get-versions.sh
+
 Help()
 {
    # Display Help
@@ -86,4 +88,4 @@ echo "--------------------------------------"
 echo "Bringing up stack using docker-compose"
 echo "--------------------------------------"
 
-PORT=${PORT} docker-compose -p ${NAME} -f ../shared/docker-compose.yml --env-file ${SCRIPT_DIR}/.env up ${BACKGROUND}
+PORT=${PORT} docker-compose -p ${NAME} -f ../shared/docker-compose.yml -f pgadmin-docker-compose.yml up ${BACKGROUND}

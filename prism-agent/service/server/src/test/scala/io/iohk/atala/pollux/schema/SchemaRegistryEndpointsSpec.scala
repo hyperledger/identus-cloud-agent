@@ -12,7 +12,7 @@ import zio.ZIO
 import zio.test.Assertion.*
 import zio.test.{Assertion, ZIOSpecDefault, assertZIO}
 import io.iohk.atala.pollux.schema.*
-import io.iohk.atala.pollux.schema.model.VerifiableCredentialSchema
+import io.iohk.atala.pollux.schema.model.{VerifiableCredentialSchema, VerificationCredentialSchemaInput}
 import io.iohk.atala.pollux.service.SchemaRegistryServiceInMemory
 import sttp.model.StatusCode
 import zio.ZLayer
@@ -25,7 +25,7 @@ object SchemaRegistryEndpointsSpec extends ZIOSpecDefault:
 
   private val schemaId = UUID.randomUUID()
 
-  private val schemaInput = VerifiableCredentialSchema.Input(
+  private val schemaInput = VerificationCredentialSchemaInput(
     Option(schemaId),
     name = "test schema",
     version = "1.0",

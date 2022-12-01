@@ -12,11 +12,10 @@ Help()
    # Display Help
    echo "Run an instance of the ATALA `bulding-block` stack locally"
    echo
-   echo "Syntax: run.sh [-n/--name NAME|-p/--port PORT|-b/--background|-h/--help]"
+   echo "Syntax: run.sh [-n/--name NAME|-p/--port PORT|-h/--help]"
    echo "options:"
    echo "-n/--name          Name of this instance - defaults to dev."
    echo "-p/--port          Port to run this instance on - defaults to 80."
-   echo "-b/--background    Run in docker-compose daemon mode in the background."
    echo "-h/--help          Print this help text."
    echo
 }
@@ -34,10 +33,6 @@ while [[ $# -gt 0 ]]; do
       PORT="$2"
       shift # past argument
       shift # past value
-      ;;
-    -b|--background)
-      BACKGROUND="-d"
-      shift # past argument
       ;;
     -h|--help)
       Help
@@ -78,12 +73,13 @@ then
     BACKGROUND=""
 fi
 
-
 echo "NAME            = ${NAME}"
 echo "PORT            = ${PORT}"
 
 echo "--------------------------------------"
-echo "Bringing up stack using docker-compose"
+echo "Stopping stack using docker-compose"
 echo "--------------------------------------"
 
-PORT=${PORT} docker-compose -p ${NAME} -f ../shared/docker-compose.yml --env-file ${SCRIPT_DIR}/.env up ${BACKGROUND}
+../local/stop.sh -n issuer
+../local/stop.sh -n holder
+../local/stop.sh -n verifier

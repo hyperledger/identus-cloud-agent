@@ -1,7 +1,11 @@
 package io.iohk.atala.pollux.service
 
 import io.iohk.atala.api.http.model.{Order, Pagination}
-import io.iohk.atala.pollux.schema.model.VerifiableCredentialSchema
+import io.iohk.atala.pollux.schema.model.{
+  VerifiableCredentialSchema,
+  VerificationCredentialSchemaInput,
+  VerifiableCredentialSchemaPage
+}
 import zio.{Ref, Task, UIO, ZIO, ZLayer}
 
 import java.util.UUID
@@ -14,7 +18,7 @@ class SchemaRegistryServiceInMemory(
   // TODO: Figure out what is the logic for trying to overwrite the schema with the same id (409 Conflict)
   // TODO: Other validations (same [schema_name, version], list of the attributes is not empty, etc)
   override def createSchema(
-      in: VerifiableCredentialSchema.Input
+      in: VerificationCredentialSchemaInput
   ): Task[VerifiableCredentialSchema] = {
     val schema = VerifiableCredentialSchema(in)
     for {
@@ -36,7 +40,7 @@ class SchemaRegistryServiceInMemory(
       filter: VerifiableCredentialSchema.Filter,
       pagination: Pagination,
       order: Option[Order]
-  ): Task[VerifiableCredentialSchema.Page] = {
+  ): Task[VerifiableCredentialSchemaPage] = {
     for {
       storage: Map[UUID, VerifiableCredentialSchema] <- ref.get
       filtered = storage.values.filter(filter.predicate)
@@ -45,7 +49,7 @@ class SchemaRegistryServiceInMemory(
           pagination.offset.getOrElse(0),
           pagination.offset.getOrElse(0) + pagination.limit.getOrElse(10)
         )
-    } yield VerifiableCredentialSchema.Page(
+    } yield VerifiableCredentialSchemaPage(
       self = "sss",
       kind = "VerifiableCredentialSchema",
       pageOf = "ppp",
