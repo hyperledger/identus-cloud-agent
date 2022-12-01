@@ -142,7 +142,6 @@ services:
       - ./apisix/conf/config.yaml:/usr/local/apisix/conf/config.yaml:ro
     ports:
       - "${PORT}:9080/tcp"
-      - "9092:9092/tcp"
     depends_on:
       - mediator
       - prism-agent
