@@ -17,7 +17,7 @@ routes:
       plugins:
         proxy-rewrite:
           regex_uri: ["^/mediator/(.*)","/$1"]
-    - uri: /apidocs*
+    - uri: /apidocs/*
       upstream_id: 5
       plugins:
         proxy-rewrite:
