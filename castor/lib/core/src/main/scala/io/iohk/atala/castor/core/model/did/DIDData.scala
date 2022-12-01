@@ -2,7 +2,7 @@ package io.iohk.atala.castor.core.model.did
 
 import io.iohk.atala.castor.core.model.did.w3c.DIDDocumentRepr
 
-import scala.collection.compat.immutable.ArraySeq
+import scala.collection.immutable.ArraySeq
 
 final case class DIDData(
     id: CanonicalPrismDID,

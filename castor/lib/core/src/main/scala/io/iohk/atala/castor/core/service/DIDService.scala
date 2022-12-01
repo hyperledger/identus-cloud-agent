@@ -142,8 +142,15 @@ private class DIDServiceImpl(didOpValidator: DIDOperationValidator, nodeClient: 
         .mapError(DIDResolutionError.DLTProxyError.apply)
       publishedDidMetadata = DIDMetadata(lastOperationHash = ArraySeq.from(result.lastUpdateOperation.toByteArray))
       publishedDidData <- ZIO
-        .fromEither(result.document.map(_.toDomain).toSeq.sequence.map(_.headOption))
-        .mapBoth(DIDResolutionError.UnexpectedDLTResult.apply, _.map(didData => publishedDidMetadata -> didData))
+        .fromOption(result.document)
+        .foldZIO(
+          _ => ZIO.none,
+          didData =>
+            ZIO
+              .fromEither(didData.toDomain)
+              .mapBoth(DIDResolutionError.UnexpectedDLTResult.apply, publishedDidMetadata -> _)
+              .asSome
+        )
     } yield publishedDidData.orElse(unpublishedDidData)
   }
 

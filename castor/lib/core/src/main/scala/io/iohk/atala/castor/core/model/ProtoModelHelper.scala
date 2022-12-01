@@ -1,6 +1,7 @@
 package io.iohk.atala.castor.core.model
 
 import java.net.URI
+import java.time.Instant
 import com.google.protobuf.ByteString
 import io.iohk.atala.castor.core.model.did.{
   CanonicalPrismDID,
@@ -25,6 +26,7 @@ import io.iohk.atala.shared.models.HexStrings.*
 import io.iohk.atala.shared.models.Base64UrlStrings.*
 import io.iohk.atala.shared.utils.Traverse.*
 import io.iohk.atala.prism.protos.{common_models, node_api, node_models}
+import zio.*
 
 import scala.util.Try
 
@@ -125,6 +127,21 @@ private[castor] trait ProtoModelHelper {
         services = Nil, // TODO: add Service when it is added to Prism DID method spec (ATL-2203)
         internalKeys = allKeys.collect { case key: InternalPublicKey => key }
       )
+    }
+
+    /** Return DIDData with keys and services removed by checking revocation time against current time */
+    def filterRevokedKeysAndServices: UIO[node_models.DIDData] = {
+      // TODO: filter Service when it is added to Prism DID method spec (ATL-2203)
+      Clock.instant.map { now =>
+        didData
+          .withPublicKeys(didData.publicKeys.filter { publicKey =>
+            val maybeRevokeTime = publicKey.revokedOn
+              .flatMap(_.timestampInfo)
+              .flatMap(_.blockTimestamp)
+              .map(ts => Instant.ofEpochSecond(ts.seconds).plusNanos(ts.nanos))
+            maybeRevokeTime.forall(revokeTime => revokeTime isBefore now)
+          })
+      }
     }
   }
 

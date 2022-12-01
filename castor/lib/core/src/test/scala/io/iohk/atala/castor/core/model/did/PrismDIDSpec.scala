@@ -11,12 +11,6 @@ import zio.test.Assertion.*
 
 object PrismDIDSpec extends ZIOSpecDefault {
 
-  private def generateCreateDIDOperation() = PrismDIDOperation.Create(
-    publicKeys = Nil,
-    internalKeys = Nil,
-    services = Nil
-  )
-
   private val canonicalSuffixHex = "9b5118411248d9663b6ab15128fba8106511230ff654e7514cdcc4ce919bde9b"
   private val canonicalSuffix = Sha256Digest.fromHex(canonicalSuffixHex)
   private val encodedStateUsedBase64 =
