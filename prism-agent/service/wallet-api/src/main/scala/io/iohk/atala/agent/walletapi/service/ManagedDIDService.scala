@@ -9,7 +9,7 @@ import io.iohk.atala.agent.walletapi.model.{
   ManagedDIDTemplate
 }
 import io.iohk.atala.agent.walletapi.model.ECCoordinates.*
-import io.iohk.atala.agent.walletapi.model.error.{CreateManagedDIDError, PublishManagedDIDError}
+import io.iohk.atala.agent.walletapi.model.error.{CreateManagedDIDError, ListManagedDIDError, PublishManagedDIDError}
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService.{CreateDIDSecret, DEFAULT_MASTER_KEY_ID}
 import io.iohk.atala.agent.walletapi.storage.{
   DIDNonSecretStorage,
@@ -56,10 +56,27 @@ final class ManagedDIDService private[walletapi] (
 
   private val CURVE = EllipticCurve.SECP256K1
 
-  def listManagedDID: Task[Seq[ManagedDIDDetail]] = nonSecretStorage.listManagedDID
-    .map(_.toSeq.map { case (did, state) =>
-      ManagedDIDDetail(did = did.asCanonical, state = state)
-    })
+  def listManagedDID: IO[ListManagedDIDError, Seq[ManagedDIDDetail]] = nonSecretStorage.listManagedDID
+    .mapBoth(
+      ListManagedDIDError.WalletStorageError.apply,
+      _.toSeq.map { case (did, state) =>
+        ManagedDIDDetail(did = did.asCanonical, state = state)
+      }
+    )
+    .flatMap { dids =>
+      ZIO.foreach(dids) { didDetail =>
+        // state in wallet maybe stale, update it from DLT
+        syncDIDStateFromDLT(didDetail.state)
+          .mapError(ListManagedDIDError.OperationError.apply)
+          .tap(state =>
+            nonSecretStorage
+              .setManagedDIDState(didDetail.did, state)
+              .mapError(ListManagedDIDError.WalletStorageError.apply)
+          )
+          .map(didDetail -> _)
+      }
+    }
+    .map(_.map { case (didDetail, newState) => didDetail.copy(state = newState) })
 
   def publishStoredDID(did: CanonicalPrismDID): IO[PublishManagedDIDError, ScheduleDIDOperationOutcome] = {
     def syncDLTStateAndPersist =
