@@ -21,6 +21,19 @@
 
 * [OpenAPI docs](openapi)
 
+## Running a single instance locally
+
+Instructions for running the `building-block` stack locally can be found here: [Running locally](infrastructure/local/README.md)
+
+## Running multiple instances locally
+
+Instructions for running multiple instances of the `building-block` stack locally can be found here: [Running multiple locally](infrastructure/multi/README.md)
+
+## Developing
+
+Instructions for running the `building-block` stack for development purposes can be found here: [Developing locally](infrastructure/local/README.md)
+
+
 ## Contributing
 
 Read through our [contributing guidelines][contributing] to learn about our submission process, coding rules and more.

@@ -94,10 +94,10 @@ services:
   # Services
   ##########################
   mediator:
-    image: ghcr.io/input-output-hk/mercury-mediator:0.2.0
+    image: ghcr.io/input-output-hk/mercury-mediator:${MERCURY_MEDIATOR_VERSION}
 
   iris:
-    image: ghcr.io/input-output-hk/iris-service:0.1.0
+    image: ghcr.io/input-output-hk/iris-service:${IRIS_SERVICE_VERSION}
     environment:
       IRIS_DB_HOST: db_iris
       IRIS_DB_PORT: 5432
@@ -105,7 +105,7 @@ services:
       IRIS_DB_USER: postgres
 
   prism-agent:
-    image: ghcr.io/input-output-hk/prism-agent:0.6.0
+    image: ghcr.io/input-output-hk/prism-agent:${PRISM_AGENT_VERSION}
     environment:
       IRIS_HOST: iris
       IRIS_PORT: 8081
@@ -130,7 +130,7 @@ services:
     image: swaggerapi/swagger-ui:v4.14.0
     environment:
       - 'URLS=[
-          { name: "PrismAgent", url: "/prism-agent/api/openapi-spec.yaml" },
+          { name: "Prism Agent", url: "/prism-agent/api/openapi-spec.yaml" },
           { name: "Mediator", url: "/mediator/api/openapi-spec.yaml" }
         ]'
       - BASE_URL=/apidocs
@@ -151,3 +151,4 @@ volumes:
   pg_data_pollux_db:
   pg_data_connect_db:
   pg_data_iris_db:
+  pgadmin:
