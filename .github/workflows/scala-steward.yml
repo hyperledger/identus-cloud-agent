@@ -25,6 +25,7 @@ jobs:
         uses: scala-steward-org/scala-steward-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
+          ATALA_GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
         with:
           github-token: ${{ secrets.ATALA_GITHUB_TOKEN }}
           sign-commits: true

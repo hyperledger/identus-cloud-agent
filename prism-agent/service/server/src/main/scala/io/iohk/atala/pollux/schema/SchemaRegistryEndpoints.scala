@@ -2,8 +2,11 @@ package io.iohk.atala.pollux.schema
 
 import io.iohk.atala.api.http.model.{Order, Pagination}
 import io.iohk.atala.api.http.{BadRequest, FailureResponse, InternalServerError, NotFoundResponse}
-import io.iohk.atala.pollux.schema.model.VerifiableCredentialSchema
-import io.iohk.atala.pollux.schema.model.VerifiableCredentialSchema.{Input, Page}
+import io.iohk.atala.pollux.schema.model.{
+  VerifiableCredentialSchema,
+  VerificationCredentialSchemaInput,
+  VerifiableCredentialSchemaPage
+}
 import io.iohk.atala.api.http.codec.OrderCodec._
 import sttp.tapir.EndpointIO.Info
 import sttp.tapir.json.zio.jsonBody
@@ -28,7 +31,7 @@ import java.util.UUID
 object SchemaRegistryEndpoints {
 
   val createSchemaEndpoint: PublicEndpoint[
-    VerifiableCredentialSchema.Input,
+    VerificationCredentialSchemaInput,
     FailureResponse,
     VerifiableCredentialSchema,
     Any
@@ -36,7 +39,7 @@ object SchemaRegistryEndpoints {
     endpoint.post
       .in("schema-registry" / "schemas")
       .in(
-        jsonBody[VerifiableCredentialSchema.Input]
+        jsonBody[VerificationCredentialSchemaInput]
           .copy(info =
             Info.empty.description(
               "Create schema input object with the metadata and attributes"
@@ -87,7 +90,7 @@ object SchemaRegistryEndpoints {
   val lookupSchemasByQueryEndpoint: PublicEndpoint[
     (VerifiableCredentialSchema.Filter, Pagination, Option[Order]),
     FailureResponse,
-    VerifiableCredentialSchema.Page,
+    VerifiableCredentialSchemaPage,
     Any
   ] =
     endpoint.get
@@ -108,7 +111,7 @@ object SchemaRegistryEndpoints {
           .mapTo[Pagination]
       )
       .in(query[Option[Order]]("order"))
-      .out(jsonBody[VerifiableCredentialSchema.Page])
+      .out(jsonBody[VerifiableCredentialSchemaPage])
       .errorOut(
         oneOf[FailureResponse](
           oneOfVariant(

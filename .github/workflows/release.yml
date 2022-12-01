@@ -4,6 +4,15 @@ concurrency:
   group: release
 
 on:
+  workflow_call:
+    inputs:
+      release-component:
+        required: true
+        type: string
+      release-branch:
+        required: false
+        type: string
+        default: "main"
   workflow_dispatch:
     inputs:
       release-component:
@@ -23,7 +32,6 @@ jobs:
       ATALA_GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
       SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
       SBT_PACKAGER: "enable" # To enable the packager plugin on Mercury
-
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -58,6 +66,6 @@ jobs:
           GIT_AUTHOR_NAME: ${{ steps.import_gpg.outputs.name }}
           GIT_COMMITTER_NAME: ${{ steps.import_gpg.outputs.name }}
         run: |
-          cd ${{ github.event.inputs.release-component }}
+          cd ${{ inputs.release-component }}
           npm install
           npx semantic-release -e semantic-release-monorepo
