@@ -3,7 +3,11 @@ package io.iohk.atala.pollux.schema
 import io.iohk.atala.api.http.codec.OrderCodec.*
 import io.iohk.atala.api.http.model.{Order, Pagination}
 import io.iohk.atala.api.http.{BadRequest, FailureResponse, InternalServerError, NotFoundResponse}
-import io.iohk.atala.pollux.schema.model.VerifiableCredentialSchema.{Input, Page}
+import io.iohk.atala.pollux.schema.model.{
+  VerifiableCredentialSchema,
+  VerificationCredentialSchemaInput,
+  VerifiableCredentialSchemaPage
+}
 import io.iohk.atala.pollux.schema.model.{
   VerifiableCredentialSchema,
   VerificationPolicy,
