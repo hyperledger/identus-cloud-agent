@@ -10,7 +10,7 @@ cd ${SCRIPT_DIR}
 Help()
 {
    # Display Help
-   echo "Run an instance of the ATALA `bulding-block` stack locally"
+   echo "Run an instance of the ATALA bulding-block stack locally"
    echo
    echo "Syntax: run.sh [-n/--name NAME|-d/--destroy-volumes|-h/--help]"
    echo "options:"
