@@ -139,7 +139,8 @@ services:
     image: apache/apisix:2.15.0-alpine
     restart: always
     volumes:
-      - ./apisix/conf:/usr/local/apisix/conf:ro
+      - ./apisix/conf/apisix.yaml:/usr/local/apisix/conf/apisix.yaml:ro
+      - ./apisix/conf/config.yaml:/usr/local/apisix/conf/config.yaml:ro
     ports:
       - "${PORT}:9080/tcp"
       - "9092:9092/tcp"
