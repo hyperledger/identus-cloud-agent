@@ -12,11 +12,11 @@ Help()
    # Display Help
    echo "Run an instance of the ATALA `bulding-block` stack locally"
    echo
-   echo "Syntax: run.sh [-n/--name NAME|-p/--port PORT|-h/--help]"
+   echo "Syntax: run.sh [-n/--name NAME|-d/--destroy-volumes|-h/--help]"
    echo "options:"
-   echo "-n/--name          Name of this instance - defaults to dev."
-   echo "-p/--port          Port to run this instance on - defaults to 80."
-   echo "-h/--help          Print this help text."
+   echo "-n/--name              Name of this instance - defaults to dev."
+   echo "-d/--destroy-volumes   Instruct docker-compose to tear down volumes."
+   echo "-h/--help              Print this help text."
    echo
 }
 
@@ -29,14 +29,13 @@ while [[ $# -gt 0 ]]; do
       shift # past argument
       shift # past value
       ;;
-    -p|--port)
-      PORT="$2"
-      shift # past argument
-      shift # past value
-      ;;
     -h|--help)
       Help
       exit
+      ;;
+    -d|--destroy-volumes)
+      VOLUMES="-v"
+      shift # past argument
       ;;
     -*|--*)
       echo "Unknown option $1"
@@ -63,21 +62,15 @@ then
     NAME="local"
 fi
 
-if [ -z ${PORT+x} ];
+if [ -z ${VOLUMES+x} ];
 then
-    PORT="80"
-fi
-
-if [ -z ${BACKGROUND+x} ];
-then
-    BACKGROUND=""
+    VOLUMES=""
 fi
 
 echo "NAME            = ${NAME}"
-echo "PORT            = ${PORT}"
 
 echo "--------------------------------------"
 echo "Stopping stack using docker-compose"
 echo "--------------------------------------"
 
-PORT=${PORT} docker-compose -p ${NAME} -f ../shared/docker-compose.yml --env-file ${SCRIPT_DIR}/.env down
+PORT=${PORT} docker-compose -p ${NAME} -f ../shared/docker-compose.yml --env-file ${SCRIPT_DIR}/.env down ${VOLUMES}

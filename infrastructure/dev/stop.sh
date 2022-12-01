@@ -12,11 +12,11 @@ Help()
    # Display Help
    echo "Run an instance of the ATALA `bulding-block` stack locally"
    echo
-   echo "Syntax: run.sh [-n/--name NAME|-p/--port PORT|-h/--help]"
+   echo "Syntax: run.sh [-n/--name NAME|-d/--destroy-volumes|-h/--help]"
    echo "options:"
-   echo "-n/--name          Name of this instance - defaults to dev."
-   echo "-p/--port          Port to run this instance on - defaults to 80."
-   echo "-h/--help          Print this help text."
+   echo "-n/--name              Name of this instance - defaults to dev."
+   echo "-d/--destroy-volumes   Instruct docker-compose to tear down volumes."
+   echo "-h/--help              Print this help text."
    echo
 }
 
@@ -29,10 +29,9 @@ while [[ $# -gt 0 ]]; do
       shift # past argument
       shift # past value
       ;;
-    -p|--port)
-      PORT="$2"
+    -d|--destroy-volumes)
+      VOLUMES="-v"
       shift # past argument
-      shift # past value
       ;;
     -h|--help)
       Help
@@ -65,12 +64,14 @@ fi
 
 if [ -z ${PORT+x} ];
 then
+    # set a default port as may be required to ensure docker-compose is valud
+    # if not set in env
     PORT="80"
 fi
 
-if [ -z ${BACKGROUND+x} ];
+if [ -z ${VOLUMES+x} ];
 then
-    BACKGROUND=""
+    VOLUMES=""
 fi
 
 echo "NAME            = ${NAME}"
@@ -80,4 +81,4 @@ echo "--------------------------------------"
 echo "Stopping up stack using docker-compose"
 echo "--------------------------------------"
 
-PORT=${PORT} docker-compose -p ${NAME} -f ../shared/docker-compose.yml -f pgadmin-docker-compose.yml --env-file ${SCRIPT_DIR}/.env down
+PORT=${PORT} docker-compose -p ${NAME} -f ../shared/docker-compose.yml -f pgadmin-docker-compose.yml --env-file ${SCRIPT_DIR}/.env down ${VOLUMES}
