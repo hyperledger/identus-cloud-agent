@@ -19,8 +19,8 @@ import io.iohk.atala.mercury.protocol.issuecredential.RequestCredential
 import io.iohk.atala.pollux.core.model.EncodedJWTCredential
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord
 import io.iohk.atala.pollux.core.model.PublishedBatchData
-import io.iohk.atala.pollux.core.model.error.IssueCredentialError
-import io.iohk.atala.pollux.core.model.error.IssueCredentialError._
+import io.iohk.atala.pollux.core.model.error.CredentialServiceError
+import io.iohk.atala.pollux.core.model.error.CredentialServiceError._
 import io.iohk.atala.pollux.core.repository.CredentialRepository
 import io.iohk.atala.pollux.vc.jwt.*
 import io.iohk.atala.prism.crypto.MerkleInclusionProof
@@ -77,23 +77,23 @@ trait CredentialService {
       validityPeriod: Option[Double] = None,
       automaticIssuance: Option[Boolean],
       awaitConfirmation: Option[Boolean]
-  ): IO[IssueCredentialError, IssueCredentialRecord]
+  ): IO[CredentialServiceError, IssueCredentialRecord]
 
-  def getIssueCredentialRecords(): IO[IssueCredentialError, Seq[IssueCredentialRecord]]
+  def getIssueCredentialRecords(): IO[CredentialServiceError, Seq[IssueCredentialRecord]]
 
   def getCredentialRecordsByState(
       state: IssueCredentialRecord.ProtocolState
-  ): IO[IssueCredentialError, Seq[IssueCredentialRecord]]
+  ): IO[CredentialServiceError, Seq[IssueCredentialRecord]]
 
-  def getIssueCredentialRecord(recordId: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]]
+  def getIssueCredentialRecord(recordId: UUID): IO[CredentialServiceError, Option[IssueCredentialRecord]]
 
-  def receiveCredentialOffer(offer: OfferCredential): IO[IssueCredentialError, IssueCredentialRecord]
+  def receiveCredentialOffer(offer: OfferCredential): IO[CredentialServiceError, IssueCredentialRecord]
 
-  def acceptCredentialOffer(recordId: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]]
+  def acceptCredentialOffer(recordId: UUID): IO[CredentialServiceError, Option[IssueCredentialRecord]]
 
-  def receiveCredentialRequest(request: RequestCredential): IO[IssueCredentialError, Option[IssueCredentialRecord]]
+  def receiveCredentialRequest(request: RequestCredential): IO[CredentialServiceError, Option[IssueCredentialRecord]]
 
-  def acceptCredentialRequest(recordId: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]]
+  def acceptCredentialRequest(recordId: UUID): IO[CredentialServiceError, Option[IssueCredentialRecord]]
 
   def createCredentialPayloadFromRecord(
       record: IssueCredentialRecord,
@@ -104,30 +104,30 @@ trait CredentialService {
   def publishCredentialBatch(
       credentials: Seq[W3cCredentialPayload],
       issuer: Issuer
-  ): IO[IssueCredentialError, PublishedBatchData]
+  ): IO[CredentialServiceError, PublishedBatchData]
 
   def markCredentialRecordsAsPublishQueued(
       credentialsAndProofs: Seq[(W3cCredentialPayload, MerkleInclusionProof)]
-  ): IO[IssueCredentialError, Int]
+  ): IO[CredentialServiceError, Int]
 
-  def receiveCredentialIssue(issue: IssueCredential): IO[IssueCredentialError, Option[IssueCredentialRecord]]
+  def receiveCredentialIssue(issue: IssueCredential): IO[CredentialServiceError, Option[IssueCredentialRecord]]
 
-  def markOfferSent(recordId: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]]
+  def markOfferSent(recordId: UUID): IO[CredentialServiceError, Option[IssueCredentialRecord]]
 
-  def markRequestSent(recordId: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]]
+  def markRequestSent(recordId: UUID): IO[CredentialServiceError, Option[IssueCredentialRecord]]
 
   def markCredentialGenerated(
       recordId: UUID,
       issueCredential: IssueCredential
-  ): IO[IssueCredentialError, Option[IssueCredentialRecord]]
+  ): IO[CredentialServiceError, Option[IssueCredentialRecord]]
 
-  def markCredentialSent(recordId: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]]
+  def markCredentialSent(recordId: UUID): IO[CredentialServiceError, Option[IssueCredentialRecord]]
 
-  def markCredentialPublicationPending(recordId: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]]
+  def markCredentialPublicationPending(recordId: UUID): IO[CredentialServiceError, Option[IssueCredentialRecord]]
 
-  def markCredentialPublicationQueued(recordId: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]]
+  def markCredentialPublicationQueued(recordId: UUID): IO[CredentialServiceError, Option[IssueCredentialRecord]]
 
-  def markCredentialPublished(recordId: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]]
+  def markCredentialPublished(recordId: UUID): IO[CredentialServiceError, Option[IssueCredentialRecord]]
 
 }
 
@@ -147,7 +147,7 @@ private class CredentialServiceImpl(
   override def extractIdFromCredential(credential: W3cCredentialPayload): Option[UUID] =
     credential.maybeId.map(_.split("/").last).map(UUID.fromString)
 
-  override def getIssueCredentialRecords(): IO[IssueCredentialError, Seq[IssueCredentialRecord]] = {
+  override def getIssueCredentialRecords(): IO[CredentialServiceError, Seq[IssueCredentialRecord]] = {
     for {
       records <- credentialRepository
         .getIssueCredentialRecords()
@@ -155,7 +155,7 @@ private class CredentialServiceImpl(
     } yield records
   }
 
-  override def getIssueCredentialRecord(recordId: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] = {
+  override def getIssueCredentialRecord(recordId: UUID): IO[CredentialServiceError, Option[IssueCredentialRecord]] = {
     for {
       record <- credentialRepository
         .getIssueCredentialRecord(recordId)
@@ -171,7 +171,7 @@ private class CredentialServiceImpl(
       validityPeriod: Option[Double],
       automaticIssuance: Option[Boolean],
       awaitConfirmation: Option[Boolean]
-  ): IO[IssueCredentialError, IssueCredentialRecord] = {
+  ): IO[CredentialServiceError, IssueCredentialRecord] = {
     for {
       _ <- if (DidValidator.supportedDid(subjectId)) ZIO.unit else ZIO.fail(UnsupportedDidFormat(subjectId))
       offer <- ZIO.succeed(createDidCommOfferCredential(claims, thid, subjectId))
@@ -206,7 +206,7 @@ private class CredentialServiceImpl(
 
   override def getCredentialRecordsByState(
       state: IssueCredentialRecord.ProtocolState
-  ): IO[IssueCredentialError, Seq[IssueCredentialRecord]] = {
+  ): IO[CredentialServiceError, Seq[IssueCredentialRecord]] = {
     for {
       records <- credentialRepository
         .getIssueCredentialRecordsByState(state)
@@ -216,7 +216,7 @@ private class CredentialServiceImpl(
 
   override def receiveCredentialOffer(
       offer: OfferCredential
-  ): IO[IssueCredentialError, IssueCredentialRecord] = {
+  ): IO[CredentialServiceError, IssueCredentialRecord] = {
     for {
       record <- ZIO.succeed(
         IssueCredentialRecord(
@@ -247,7 +247,7 @@ private class CredentialServiceImpl(
     } yield record
   }
 
-  override def acceptCredentialOffer(recordId: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] = {
+  override def acceptCredentialOffer(recordId: UUID): IO[CredentialServiceError, Option[IssueCredentialRecord]] = {
     for {
       record <- getRecordWithState(recordId, ProtocolState.OfferReceived)
       offer <- ZIO
@@ -268,7 +268,7 @@ private class CredentialServiceImpl(
 
   override def receiveCredentialRequest(
       request: RequestCredential
-  ): IO[IssueCredentialError, Option[IssueCredentialRecord]] = {
+  ): IO[CredentialServiceError, Option[IssueCredentialRecord]] = {
     for {
       record <- getRecordFromThreadIdWithState(request.thid, ProtocolState.OfferSent)
       _ <- credentialRepository
@@ -284,7 +284,7 @@ private class CredentialServiceImpl(
     } yield record
   }
 
-  override def acceptCredentialRequest(recordId: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] = {
+  override def acceptCredentialRequest(recordId: UUID): IO[CredentialServiceError, Option[IssueCredentialRecord]] = {
     for {
       record <- getRecordWithState(recordId, ProtocolState.RequestReceived)
       request <- ZIO
@@ -305,7 +305,7 @@ private class CredentialServiceImpl(
 
   override def receiveCredentialIssue(
       issue: IssueCredential
-  ): IO[IssueCredentialError, Option[IssueCredentialRecord]] = {
+  ): IO[CredentialServiceError, Option[IssueCredentialRecord]] = {
     for {
       record <- getRecordFromThreadIdWithState(issue.thid, ProtocolState.RequestSent)
       _ <- credentialRepository
@@ -321,14 +321,14 @@ private class CredentialServiceImpl(
     } yield record
   }
 
-  override def markOfferSent(recordId: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] =
+  override def markOfferSent(recordId: UUID): IO[CredentialServiceError, Option[IssueCredentialRecord]] =
     updateCredentialRecordProtocolState(
       recordId,
       IssueCredentialRecord.ProtocolState.OfferPending,
       IssueCredentialRecord.ProtocolState.OfferSent
     )
 
-  override def markRequestSent(recordId: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] =
+  override def markRequestSent(recordId: UUID): IO[CredentialServiceError, Option[IssueCredentialRecord]] =
     updateCredentialRecordProtocolState(
       recordId,
       IssueCredentialRecord.ProtocolState.RequestPending,
@@ -338,7 +338,7 @@ private class CredentialServiceImpl(
   override def markCredentialGenerated(
       recordId: UUID,
       issueCredential: IssueCredential
-  ): IO[IssueCredentialError, Option[IssueCredentialRecord]] = {
+  ): IO[CredentialServiceError, Option[IssueCredentialRecord]] = {
     for {
       record <- getRecordWithState(recordId, ProtocolState.CredentialPending)
       count <- credentialRepository
@@ -357,7 +357,7 @@ private class CredentialServiceImpl(
     } yield record
   }
 
-  override def markCredentialSent(recordId: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] =
+  override def markCredentialSent(recordId: UUID): IO[CredentialServiceError, Option[IssueCredentialRecord]] =
     updateCredentialRecordProtocolState(
       recordId,
       IssueCredentialRecord.ProtocolState.CredentialGenerated,
@@ -366,7 +366,7 @@ private class CredentialServiceImpl(
 
   override def markCredentialPublicationPending(
       recordId: UUID
-  ): IO[IssueCredentialError, Option[IssueCredentialRecord]] =
+  ): IO[CredentialServiceError, Option[IssueCredentialRecord]] =
     updateCredentialRecordPublicationState(
       recordId,
       None,
@@ -375,14 +375,14 @@ private class CredentialServiceImpl(
 
   override def markCredentialPublicationQueued(
       recordId: UUID
-  ): IO[IssueCredentialError, Option[IssueCredentialRecord]] =
+  ): IO[CredentialServiceError, Option[IssueCredentialRecord]] =
     updateCredentialRecordPublicationState(
       recordId,
       Some(IssueCredentialRecord.PublicationState.PublicationPending),
       Some(IssueCredentialRecord.PublicationState.PublicationQueued)
     )
 
-  override def markCredentialPublished(recordId: UUID): IO[IssueCredentialError, Option[IssueCredentialRecord]] =
+  override def markCredentialPublished(recordId: UUID): IO[CredentialServiceError, Option[IssueCredentialRecord]] =
     updateCredentialRecordPublicationState(
       recordId,
       Some(IssueCredentialRecord.PublicationState.PublicationQueued),
@@ -392,7 +392,7 @@ private class CredentialServiceImpl(
   private[this] def getRecordWithState(
       recordId: UUID,
       state: ProtocolState
-  ): IO[IssueCredentialError, IssueCredentialRecord] = {
+  ): IO[CredentialServiceError, IssueCredentialRecord] = {
     for {
       maybeRecord <- credentialRepository
         .getIssueCredentialRecord(recordId)
@@ -410,7 +410,7 @@ private class CredentialServiceImpl(
   private[this] def getRecordFromThreadIdWithState(
       thid: Option[String],
       state: ProtocolState
-  ): IO[IssueCredentialError, IssueCredentialRecord] = {
+  ): IO[CredentialServiceError, IssueCredentialRecord] = {
     for {
       thid <- ZIO
         .fromOption(thid)
@@ -481,7 +481,7 @@ private class CredentialServiceImpl(
       id: UUID,
       from: IssueCredentialRecord.ProtocolState,
       to: IssueCredentialRecord.ProtocolState
-  ): IO[IssueCredentialError, Option[IssueCredentialRecord]] = {
+  ): IO[CredentialServiceError, Option[IssueCredentialRecord]] = {
     for {
       outcome <- credentialRepository
         .updateCredentialRecordProtocolState(id, from, to)
@@ -500,7 +500,7 @@ private class CredentialServiceImpl(
       id: UUID,
       from: Option[IssueCredentialRecord.PublicationState],
       to: Option[IssueCredentialRecord.PublicationState]
-  ): IO[IssueCredentialError, Option[IssueCredentialRecord]] = {
+  ): IO[CredentialServiceError, Option[IssueCredentialRecord]] = {
     for {
       outcome <- credentialRepository
         .updateCredentialRecordPublicationState(id, from, to)
@@ -538,7 +538,7 @@ private class CredentialServiceImpl(
         Either.cond(
           claims.isDefined,
           claims.get,
-          IssueCredentialError.CreateCredentialPayloadFromRecordError(
+          CredentialServiceError.CreateCredentialPayloadFromRecordError(
             new Throwable("Could not extract claims from \"requestCredential\" Didcome message")
           )
         )
@@ -567,7 +567,7 @@ private class CredentialServiceImpl(
   def publishCredentialBatch(
       credentials: Seq[W3cCredentialPayload],
       issuer: Issuer
-  ): IO[IssueCredentialError, PublishedBatchData] = {
+  ): IO[CredentialServiceError, PublishedBatchData] = {
     import collection.JavaConverters.*
 
     val hashes = credentials
@@ -609,7 +609,7 @@ private class CredentialServiceImpl(
 
   override def markCredentialRecordsAsPublishQueued(
       credentialsAndProofs: Seq[(W3cCredentialPayload, MerkleInclusionProof)]
-  ): IO[IssueCredentialError, Int] = {
+  ): IO[CredentialServiceError, Int] = {
 
     /*
      * Since id of the credential is optional according to W3 spec,
