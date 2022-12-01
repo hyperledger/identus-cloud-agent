@@ -42,10 +42,12 @@ class DIDRegistrarApiServiceImpl(service: ManagedDIDService)(using runtime: Runt
       toEntityMarshallerListManagedDIDResponseInnerarray: ToEntityMarshaller[Seq[ListManagedDIDResponseInner]],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
-    val result = service.listManagedDID.map(_.map(_.toOAS))
+    val result = service.listManagedDID
+      .map(_.map(_.toOAS))
+      .mapError(HttpServiceError.DomainError.apply)
 
-    onZioSuccess(result.either) {
-      case Left(error)   => ??? // TODO: implement error handling
+    onZioSuccess(result.mapError(_.toOAS).either) {
+      case Left(error)   => complete(error.status -> error)
       case Right(result) => listManagedDid200(result)
     }
   }
