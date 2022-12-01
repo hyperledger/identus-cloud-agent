@@ -115,7 +115,6 @@ private class DIDServiceImpl(didOpValidator: DIDOperationValidator, nodeClient: 
     } yield detail
   }
 
-  // TODO: handle revoked keys and deactivated DIDs
   override def resolveDID(did: PrismDID): IO[DIDResolutionError, Option[(DIDMetadata, DIDData)]] = {
     val canonicalDID = did.asCanonical
     val createOperation = did match {
@@ -125,7 +124,10 @@ private class DIDServiceImpl(didOpValidator: DIDOperationValidator, nodeClient: 
 
     val unpublishedDidData = createOperation.map { op =>
       val metadata =
-        DIDMetadata(lastOperationHash = ArraySeq.from(PrismDID.buildLongFormFromOperation(op).stateHash.toByteArray))
+        DIDMetadata(
+          lastOperationHash = ArraySeq.from(PrismDID.buildLongFormFromOperation(op).stateHash.toByteArray),
+          deactivated = false // unpublished DID cannot be deactivated
+        )
       val didData = DIDData(
         id = canonicalDID,
         publicKeys = op.publicKeys,
@@ -140,15 +142,21 @@ private class DIDServiceImpl(didOpValidator: DIDOperationValidator, nodeClient: 
       result <- ZIO
         .fromFuture(_ => nodeClient.getDidDocument(request))
         .mapError(DIDResolutionError.DLTProxyError.apply)
-      publishedDidMetadata = DIDMetadata(lastOperationHash = ArraySeq.from(result.lastUpdateOperation.toByteArray))
       publishedDidData <- ZIO
         .fromOption(result.document)
         .foldZIO(
           _ => ZIO.none,
-          didData =>
-            ZIO
-              .fromEither(didData.toDomain)
-              .mapBoth(DIDResolutionError.UnexpectedDLTResult.apply, publishedDidMetadata -> _)
+          didDataProto =>
+            didDataProto.filterRevokedKeysAndServices
+              .flatMap(didData => ZIO.fromEither(didData.toDomain))
+              .mapError(DIDResolutionError.UnexpectedDLTResult.apply)
+              .map { didData =>
+                val metadata = DIDMetadata(
+                  lastOperationHash = ArraySeq.from(result.lastUpdateOperation.toByteArray),
+                  deactivated = didData.internalKeys.isEmpty && didData.publicKeys.isEmpty
+                )
+                metadata -> didData
+              }
               .asSome
         )
     } yield publishedDidData.orElse(unpublishedDidData)

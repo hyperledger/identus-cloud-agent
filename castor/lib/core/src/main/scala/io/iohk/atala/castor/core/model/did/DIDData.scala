@@ -12,5 +12,6 @@ final case class DIDData(
 )
 
 final case class DIDMetadata(
-    lastOperationHash: ArraySeq[Byte]
+    lastOperationHash: ArraySeq[Byte],
+    deactivated: Boolean
 )

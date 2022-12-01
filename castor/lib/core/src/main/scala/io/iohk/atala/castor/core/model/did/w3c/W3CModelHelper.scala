@@ -15,11 +15,7 @@ object W3CModelHelper extends W3CModelHelper
 private[castor] trait W3CModelHelper {
 
   extension (didMetadata: DIDMetadata) {
-    def toW3C: DIDDocumentMetadataRepr = {
-      DIDDocumentMetadataRepr(
-        deactivated = false // TODO: handle deactivate DID
-      )
-    }
+    def toW3C: DIDDocumentMetadataRepr = DIDDocumentMetadataRepr(deactivated = didMetadata.deactivated)
   }
 
   extension (didData: DIDData) {
