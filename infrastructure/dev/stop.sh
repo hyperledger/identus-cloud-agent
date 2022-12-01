@@ -62,12 +62,8 @@ then
     NAME="dev"
 fi
 
-if [ -z ${PORT+x} ];
-then
-    # set a default port as may be required to ensure docker-compose is valud
-    # if not set in env
-    PORT="80"
-fi
+# set a default port as required to ensure docker-compose is valid if not set in env
+PORT="80"
 
 if [ -z ${VOLUMES+x} ];
 then
@@ -75,7 +71,6 @@ then
 fi
 
 echo "NAME            = ${NAME}"
-echo "PORT            = ${PORT}"
 
 echo "--------------------------------------"
 echo "Stopping up stack using docker-compose"

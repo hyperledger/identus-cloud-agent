@@ -56,8 +56,10 @@ then
     VOLUMES=""
 fi
 
+# set a default port as required to ensure docker-compose is valid if not set in env
+PORT="80"
+
 echo "NAME            = ${NAME}"
-echo "PORT            = ${PORT}"
 
 echo "--------------------------------------"
 echo "Stopping stack using docker-compose"
