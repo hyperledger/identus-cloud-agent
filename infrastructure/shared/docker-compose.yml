@@ -133,18 +133,19 @@ services:
           { name: "Prism Agent", url: "/prism-agent/api/openapi-spec.yaml" },
           { name: "Mediator", url: "/mediator/api/openapi-spec.yaml" }
         ]'
-      - BASE_URL=/apidocs
 
-  haproxy:
-    image: haproxy:2.6.5
+  apisix:
+    image: apache/apisix:2.15.0-alpine
+    restart: always
+    volumes:
+      - ./apisix/conf/apisix.yaml:/usr/local/apisix/conf/apisix.yaml:ro
+      - ./apisix/conf/config.yaml:/usr/local/apisix/conf/config.yaml:ro
     ports:
-      - "${PORT}:80"   # Http
+      - "${PORT}:9080/tcp"
     depends_on:
       - mediator
       - prism-agent
       - swagger-ui
-    volumes:
-      - ./haproxy:/usr/local/etc/haproxy:ro
 
 volumes:
   pg_data_castor_db:

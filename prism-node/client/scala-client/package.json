@@ -32,7 +32,7 @@
         [
           "@semantic-release/exec",
           {
-            "prepareCmd": "sbt \"release release-version ${nextRelease.version} next-version ${nextRelease.version}-SNAPSHOT with-defaults\""
+            "publishCmd": "sbt \"release release-version ${nextRelease.version} next-version ${nextRelease.version}-SNAPSHOT with-defaults\""
           }
         ],
         [
