@@ -27,16 +27,11 @@ class RequestCredentialSpec extends ZSuite {
          |    {
          |        "goal_code": "Propose Presentation",
          |        "will_confirm" : false,
-         |        "present_multiple" : false,
-         |        "formats":
-         |        []
+         |        "proof_types":[]
          |    },
-         |    "attachments":
-         |    [
-         |    $attachmentDescriptorJson
-         |    ],
-         |    "to" : "did:prism:test123",
-         |    "from" : "did:prism:test123"
+         |    "attachments": [$attachmentDescriptorJson],
+         |    "from" : "did:prism:test123",
+         |    "to" : "did:prism:test123"
          |}""".stripMargin).getOrElse(Json.Null)
 
     val requestPresentation = RequestPresentation(
