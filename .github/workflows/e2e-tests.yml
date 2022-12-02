@@ -45,7 +45,7 @@ jobs:
 
       - name: Start services for issuer
         env:
-          PORT=8080
+          PORT: 8080
         uses: isbang/compose-action@v1.4.1
         with:
           compose-file: "./infrastructure/shared/docker-compose.yml"
@@ -54,7 +54,7 @@ jobs:
 
       - name: Start services for holder
         env:
-          PORT=8090
+          PORT: 8090
         uses: isbang/compose-action@v1.4.1
         with:
           compose-file: "./infrastructure/shared/docker-compose.yml"
@@ -63,6 +63,7 @@ jobs:
 
       - name: Run e2e tests
         run: |
+          docker ps
           ./gradlew test --tests "E2eTestsRunner"
 
       - uses: actions/upload-artifact@v2
