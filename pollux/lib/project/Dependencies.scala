@@ -8,7 +8,7 @@ object Dependencies {
     val prismSdk = "v1.4.1"
     val iris = "0.1.0"
     val shared = "0.2.0"
-    val mercury = "0.7.0"
+    val mercury = "0.8.0"
     val flyway = "9.7.0"
   }
 
@@ -34,12 +34,13 @@ object Dependencies {
     "io.iohk.atala" %% "mercury-protocol-issue-credential" % Versions.mercury
   private lazy val mercuryProtocolPresentProof =
     "io.iohk.atala" %% "mercury-protocol-present-proof" % Versions.mercury
+  private lazy val mercuryResolver = "io.iohk.atala" %% "mercury-resolver" % Versions.mercury
   // Dependency Modules
   private lazy val baseDependencies: Seq[ModuleID] = Seq(zio, prismCrypto, shared)
   private lazy val doobieDependencies: Seq[ModuleID] = Seq(doobiePostgres, doobieHikari, flyway)
 
   // Project Dependencies
   lazy val coreDependencies: Seq[ModuleID] =
-    baseDependencies ++ Seq(irisClient) ++ Seq(mercuryProtocolIssueCredential,mercuryProtocolPresentProof)
+    baseDependencies ++ Seq(irisClient) ++ Seq(mercuryProtocolIssueCredential, mercuryProtocolPresentProof, mercuryResolver)
   lazy val sqlDoobieDependencies: Seq[ModuleID] = baseDependencies ++ doobieDependencies ++ Seq(zioCatsInterop)
 }
