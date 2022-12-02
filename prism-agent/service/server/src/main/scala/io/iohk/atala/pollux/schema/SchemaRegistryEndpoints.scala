@@ -1,14 +1,15 @@
 package io.iohk.atala.pollux.schema
 
-import io.iohk.atala.api.http.model.{Order, Pagination}
-import io.iohk.atala.api.http.{BadRequest, FailureResponse, InternalServerError, NotFoundResponse}
+import io.iohk.atala.api.http.model.{Order, PaginationInput}
+import io.iohk.atala.api.http.{BadRequest, FailureResponse, InternalServerError, NotFoundResponse, RequestContext}
 import io.iohk.atala.pollux.schema.model.{
   VerifiableCredentialSchema,
-  VerificationCredentialSchemaInput,
-  VerifiableCredentialSchemaPage
+  VerifiableCredentialSchemaPage,
+  VerifiableCredentialSchemaInput
 }
-import io.iohk.atala.api.http.codec.OrderCodec._
+import io.iohk.atala.api.http.codec.OrderCodec.*
 import sttp.tapir.EndpointIO.Info
+import sttp.tapir.extractFromRequest
 import sttp.tapir.json.zio.jsonBody
 import sttp.tapir.{
   Endpoint,
@@ -31,15 +32,16 @@ import java.util.UUID
 object SchemaRegistryEndpoints {
 
   val createSchemaEndpoint: PublicEndpoint[
-    VerificationCredentialSchemaInput,
+    (RequestContext, VerifiableCredentialSchemaInput),
     FailureResponse,
     VerifiableCredentialSchema,
     Any
   ] =
     endpoint.post
+      .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in("schema-registry" / "schemas")
       .in(
-        jsonBody[VerificationCredentialSchemaInput]
+        jsonBody[VerifiableCredentialSchemaInput]
           .copy(info =
             Info.empty.description(
               "Create schema input object with the metadata and attributes"
@@ -64,12 +66,13 @@ object SchemaRegistryEndpoints {
       .tag("Schema Registry")
 
   val getSchemaByIdEndpoint: PublicEndpoint[
-    UUID,
+    (RequestContext, UUID),
     FailureResponse,
     VerifiableCredentialSchema,
     Any
   ] =
     endpoint.get
+      .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
         "schema-registry" / "schemas" / path[UUID]("id")
           .copy(info = Info.empty.description("Get the schema by id"))
@@ -88,12 +91,18 @@ object SchemaRegistryEndpoints {
       .tag("Schema Registry")
 
   val lookupSchemasByQueryEndpoint: PublicEndpoint[
-    (VerifiableCredentialSchema.Filter, Pagination, Option[Order]),
+    (
+        RequestContext,
+        VerifiableCredentialSchema.Filter,
+        PaginationInput,
+        Option[Order]
+    ),
     FailureResponse,
     VerifiableCredentialSchemaPage,
     Any
   ] =
     endpoint.get
+      .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in("schema-registry" / "schemas".description("Lookup schemas by query"))
       .in(
         query[Option[String]]("author")
@@ -108,7 +117,7 @@ object SchemaRegistryEndpoints {
       .in(
         query[Option[Int]]("offset")
           .and(query[Option[Int]]("limit"))
-          .mapTo[Pagination]
+          .mapTo[PaginationInput]
       )
       .in(query[Option[Order]]("order"))
       .out(jsonBody[VerifiableCredentialSchemaPage])
@@ -126,4 +135,25 @@ object SchemaRegistryEndpoints {
         "Lookup schemas by `author`, `name`, `tags` parameters and control the pagination by `offset` and `limit` parameters "
       )
       .tag("Schema Registry")
+
+  val testEndpoint: PublicEndpoint[
+    RequestContext,
+    Unit,
+    String,
+    Any
+  ] =
+    endpoint.get
+      .in(
+        "schema-registry" / "test"
+          .copy(info = Info.empty.description("Debug endpoint"))
+      )
+      .in(extractFromRequest[RequestContext](RequestContext.apply))
+      .out(jsonBody[String])
+      .name("test")
+      .summary("Trace the request input from the point of view of the server")
+      .description(
+        "Trace the request input from the point of view of the server"
+      )
+      .tag("Schema Registry")
+
 }

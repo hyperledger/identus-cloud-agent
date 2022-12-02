@@ -1,6 +1,6 @@
 package io.iohk.atala.pollux.schema
 
-import io.iohk.atala.api.http.model.{Order, Pagination}
+import io.iohk.atala.api.http.model.{Order, PaginationInput}
 import io.iohk.atala.api.http.{FailureResponse, InternalServerError, NotFoundResponse}
 import io.iohk.atala.pollux.schema.VerificationPolicyEndpoints.*
 import io.iohk.atala.pollux.schema.model.{VerificationPolicy, VerificationPolicyInput}
@@ -81,7 +81,7 @@ class VerificationPolicyServerEndpoints(
     lookupVerificationPoliciesByQueryEndpoint.zServerLogic {
       case (
             filter: VerificationPolicy.Filter,
-            page: Pagination,
+            page: PaginationInput,
             order: Option[Order]
           ) =>
         service
