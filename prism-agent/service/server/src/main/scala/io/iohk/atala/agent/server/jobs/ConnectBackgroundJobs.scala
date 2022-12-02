@@ -12,6 +12,7 @@ import io.iohk.atala.mercury.model._
 import io.iohk.atala.mercury.model.error._
 import io.iohk.atala.mercury.protocol.issuecredential._
 import java.io.IOException
+import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 
 object ConnectBackgroundJobs {
 
@@ -27,36 +28,39 @@ object ConnectBackgroundJobs {
 
   private[this] def performExchange(
       record: ConnectionRecord
-  ): ZIO[DidComm & ConnectionService, Throwable, Unit] = {
+  ): URIO[DidComm & ConnectionService, Unit] = {
     import Role._
     import ProtocolState._
     val exchange = record match {
       case ConnectionRecord(id, _, _, _, _, Invitee, ConnectionRequestPending, _, Some(request), _) =>
-        for {
+        (for {
           didComm <- ZIO.service[DidComm]
           _ <- sendMessage(request.makeMessage)
           connectionService <- ZIO.service[ConnectionService]
           _ <- connectionService.markConnectionRequestSent(id)
-        } yield ()
+        } yield ()): ZIO[DidComm & ConnectionService, ConnectionServiceError | MercuryException, Unit]
 
       case ConnectionRecord(id, _, _, _, _, Inviter, ConnectionResponsePending, _, _, Some(response)) =>
-        for {
+        (for {
           didComm <- ZIO.service[DidComm]
           _ <- sendMessage(response.makeMessage)
           connectionService <- ZIO.service[ConnectionService]
           _ <- connectionService.markConnectionResponseSent(id)
-        } yield ()
+        } yield ()): ZIO[DidComm & ConnectionService, ConnectionServiceError | MercuryException, Unit]
 
       case _ => ZIO.unit
     }
 
-    exchange.catchAll {
-      case ex: TransportError => // : io.iohk.atala.mercury.model.error.MercuryError | java.io.IOException =>
-        ex.printStackTrace()
-        ZIO.logError(ex.getMessage()) *>
-          ZIO.fail(mercuryErrorAsThrowable(ex))
-      case ex: IOException => ZIO.fail(ex)
-    }
+    exchange
+      .catchAll {
+        case ex: MercuryException =>
+          ZIO.logErrorCause(s"DIDComm communication error processing record: ${record.id}", Cause.fail(ex))
+        case ex: ConnectionServiceError =>
+          ZIO.logErrorCause(s"Connection service error processing record: ${record.id} ", Cause.fail(ex))
+      }
+      .catchAllDefect { case throwable =>
+        ZIO.logErrorCause(s"Conection protocol defect processing record: ${record.id}", Cause.fail(throwable))
+      }
   }
 
 }
