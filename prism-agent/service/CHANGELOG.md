@@ -1,3 +1,10 @@
+# [prism-agent-v0.10.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.9.0...prism-agent-v0.10.0) (2022-12-02)
+
+
+### Features
+
+* **prism-agent:** fix prism-agent major issues ([#199](https://github.com/input-output-hk/atala-prism-building-blocks/issues/199)) ([1dc7339](https://github.com/input-output-hk/atala-prism-building-blocks/commit/1dc733909374ba31f4655003dafcf4479fddc70b))
+
 # [prism-agent-v0.9.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.8.0...prism-agent-v0.9.0) (2022-12-02)
 
 
