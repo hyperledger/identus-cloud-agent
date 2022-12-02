@@ -1,11 +1,11 @@
 package io.iohk.atala.pollux.schema
 
 import io.iohk.atala.api.http.codec.OrderCodec.*
-import io.iohk.atala.api.http.model.{Order, Pagination}
+import io.iohk.atala.api.http.model.{Order, PaginationInput}
 import io.iohk.atala.api.http.{BadRequest, FailureResponse, InternalServerError, NotFoundResponse}
 import io.iohk.atala.pollux.schema.model.{
   VerifiableCredentialSchema,
-  VerificationCredentialSchemaInput,
+  VerifiableCredentialSchemaInput,
   VerifiableCredentialSchemaPage
 }
 import io.iohk.atala.pollux.schema.model.{
@@ -143,7 +143,7 @@ object VerificationPolicyEndpoints {
       .tag("Verification")
 
   val lookupVerificationPoliciesByQueryEndpoint: PublicEndpoint[
-    (VerificationPolicy.Filter, Pagination, Option[Order]),
+    (VerificationPolicy.Filter, PaginationInput, Option[Order]),
     FailureResponse,
     VerificationPolicyPage,
     Any
@@ -169,7 +169,7 @@ object VerificationPolicyEndpoints {
       .in(
         query[Option[Int]]("offset")
           .and(query[Option[Int]]("limit"))
-          .mapTo[Pagination]
+          .mapTo[PaginationInput]
       )
       .in(query[Option[Order]]("order"))
       .out(jsonBody[VerificationPolicyPage])

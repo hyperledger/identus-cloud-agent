@@ -1,18 +1,18 @@
 package io.iohk.atala.pollux.service
 
-import io.iohk.atala.api.http.model.{Order, Pagination}
+import io.iohk.atala.api.http.model.{CollectionStats, Order, PaginationInput, Pagination}
 import zio.{Task, ZIO, ZLayer}
 import io.iohk.atala.pollux.schema.model.{
   VerifiableCredentialSchema,
-  VerifiableCredentialSchemaPage,
-  VerificationCredentialSchemaInput
+  VerifiableCredentialSchemaInput,
+  VerifiableCredentialSchemaPage
 }
 
 import java.util.UUID
 
 trait SchemaRegistryService {
   def createSchema(
-      in: VerificationCredentialSchemaInput
+      in: VerifiableCredentialSchemaInput
   ): Task[VerifiableCredentialSchema]
   def getSchemaById(id: UUID): Task[Option[VerifiableCredentialSchema]]
 
@@ -20,12 +20,12 @@ trait SchemaRegistryService {
       filter: VerifiableCredentialSchema.Filter,
       pagination: Pagination,
       order: Option[Order]
-  ): Task[VerifiableCredentialSchemaPage]
+  ): Task[(VerifiableCredentialSchemaPage, CollectionStats)]
 }
 
 object SchemaRegistryService {
   def createSchema(
-      in: VerificationCredentialSchemaInput
+      in: VerifiableCredentialSchemaInput
   ): ZIO[SchemaRegistryService, Throwable, VerifiableCredentialSchema] =
     ZIO.serviceWithZIO[SchemaRegistryService](_.createSchema(in))
 
@@ -41,7 +41,7 @@ object SchemaRegistryService {
   ): ZIO[
     SchemaRegistryService,
     Throwable,
-    VerifiableCredentialSchemaPage
+    (VerifiableCredentialSchemaPage, CollectionStats)
   ] =
     ZIO.serviceWithZIO[SchemaRegistryService](
       _.lookupSchemas(filter, pagination, order)

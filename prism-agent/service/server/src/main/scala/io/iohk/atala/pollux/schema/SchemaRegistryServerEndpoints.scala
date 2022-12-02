@@ -1,13 +1,18 @@
 package io.iohk.atala.pollux.schema
 
-import io.iohk.atala.api.http.model.{Order, Pagination}
-import io.iohk.atala.api.http.{FailureResponse, InternalServerError, NotFoundResponse}
+import io.iohk.atala.api.http.model.{CollectionStats, Order, Pagination, PaginationInput}
+import io.iohk.atala.api.http.{FailureResponse, InternalServerError, NotFoundResponse, RequestContext}
 import io.iohk.atala.pollux.schema.SchemaRegistryEndpoints.{
   createSchemaEndpoint,
   getSchemaByIdEndpoint,
-  lookupSchemasByQueryEndpoint
+  lookupSchemasByQueryEndpoint,
+  testEndpoint
 }
-import io.iohk.atala.pollux.schema.model.VerifiableCredentialSchema
+import io.iohk.atala.pollux.schema.model.{
+  VerifiableCredentialSchema,
+  VerifiableCredentialSchemaInput,
+  VerifiableCredentialSchemaPage
+}
 import io.iohk.atala.pollux.service.SchemaRegistryService
 import io.iohk.atala.pollux.service.SchemaRegistryService.{createSchema, getSchemaById, lookupSchemas}
 import sttp.tapir.redoc.RedocUIOptions
@@ -16,6 +21,7 @@ import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.swagger.bundle.SwaggerInterpreter
 import sttp.tapir.ztapir.*
 import zio.{Task, URIO, ZIO, ZLayer}
+import io.iohk.atala.pollux.schema.controller.SchemaRegistryController
 
 import java.util.UUID
 
@@ -27,48 +33,77 @@ class SchemaRegistryServerEndpoints(
 
   // TODO: make the endpoint typed ZServerEndpoint[SchemaRegistryService, Any]
   val createSchemaServerEndpoint: ZServerEndpoint[Any, Any] =
-    createSchemaEndpoint.zServerLogic(schemaInput =>
-      schemaRegistryService
-        .createSchema(schemaInput)
-        .foldZIO(throwableToInternalServerError, schema => ZIO.succeed(schema))
-    )
+    createSchemaEndpoint.zServerLogic {
+      case (
+            ctx: RequestContext,
+            schemaInput: VerifiableCredentialSchemaInput
+          ) =>
+        schemaRegistryService
+          .createSchema(schemaInput)
+          .foldZIO(
+            throwableToInternalServerError,
+            schema =>
+              ZIO.succeed(
+                schema.withBaseUri(ctx.request.uri)
+              )
+          )
+    }
 
   val getSchemaByIdServerEndpoint: ZServerEndpoint[Any, Any] =
-    getSchemaByIdEndpoint.zServerLogic(id =>
+    getSchemaByIdEndpoint.zServerLogic { case (ctx: RequestContext, id: UUID) =>
       schemaRegistryService
         .getSchemaById(id)
         .foldZIO(
           throwableToInternalServerError,
           {
-            case Some(schema) => ZIO.succeed(schema)
+            case Some(schema) =>
+              ZIO.succeed(schema.withSelf(ctx.request.uri.toString))
             case None =>
               ZIO.fail[FailureResponse](
                 NotFoundResponse(s"Schema is not found by $id")
               )
           }
         )
-    )
+    }
 
   val lookupSchemasByQueryServerEndpoint: ZServerEndpoint[Any, Any] =
     lookupSchemasByQueryEndpoint.zServerLogic {
       case (
+            ctx: RequestContext,
             filter: VerifiableCredentialSchema.Filter,
-            page: Pagination,
+            paginationInput: PaginationInput,
             order: Option[Order]
           ) =>
         schemaRegistryService
-          .lookupSchemas(filter, page, order)
+          .lookupSchemas(filter, paginationInput.toPagination, order)
           .foldZIO(
             throwableToInternalServerError,
-            pageOfVCS => ZIO.succeed(pageOfVCS)
+            {
+              case (
+                    page: VerifiableCredentialSchemaPage,
+                    stats: CollectionStats
+                  ) =>
+                ZIO.succeed(
+                  SchemaRegistryController(
+                    ctx,
+                    paginationInput.toPagination,
+                    page,
+                    stats
+                  ).result
+                )
+            }
           )
     }
+
+  val testServerEndpoint: ZServerEndpoint[Any, Any] =
+    testEndpoint.zServerLogic(requestContext => ZIO.succeed(requestContext.request.toString))
 
   val all: List[ZServerEndpoint[Any, Any]] =
     List(
       createSchemaServerEndpoint,
       getSchemaByIdServerEndpoint,
-      lookupSchemasByQueryServerEndpoint
+      lookupSchemasByQueryServerEndpoint,
+      testServerEndpoint
     )
 }
 
