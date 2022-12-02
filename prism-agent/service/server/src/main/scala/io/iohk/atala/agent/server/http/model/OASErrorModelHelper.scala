@@ -3,7 +3,9 @@ package io.iohk.atala.agent.server.http.model
 import akka.http.scaladsl.server.StandardRoute
 import io.iohk.atala.agent.openapi.model.ErrorResponse
 import io.iohk.atala.agent.walletapi.model.error.{CreateManagedDIDError, PublishManagedDIDError}
-import io.iohk.atala.castor.core.model.error.DIDOperationError
+import io.iohk.atala.castor.core.model.did.w3c.DIDResolutionErrorRepr
+import io.iohk.atala.castor.core.model.error.{DIDOperationError, DIDResolutionError}
+
 import java.util.UUID
 import io.iohk.atala.pollux.core.model.error.IssueCredentialError
 import io.iohk.atala.connect.core.model.error.ConnectionError
@@ -60,6 +62,29 @@ trait OASErrorModelHelper {
         `type` = "error-type",
         title = "error-title",
         status = 500,
+        detail = Some(e.toString),
+        instance = "error-instance"
+      )
+    }
+  }
+
+  given ToErrorResponse[DIDResolutionErrorRepr] with {
+    override def toErrorResponse(e: DIDResolutionErrorRepr): ErrorResponse = {
+      import DIDResolutionErrorRepr.*
+      val status = e match {
+        case InvalidDID                 => 422
+        case InvalidDIDUrl              => 422
+        case NotFound                   => 404
+        case RepresentationNotSupported => 422
+        case InternalError              => 500
+        case InvalidPublicKeyLength     => 422
+        case InvalidPublicKeyType       => 422
+        case UnsupportedPublicKeyType   => 422
+      }
+      ErrorResponse(
+        `type` = "error-type",
+        title = e.value,
+        status = status,
         detail = Some(e.toString),
         instance = "error-instance"
       )
