@@ -30,6 +30,12 @@
         "@semantic-release/commit-analyzer",
         "@semantic-release/release-notes-generator",
         [
+          "@semantic-release/exec",
+          {
+            "publishCmd": "sbt \"release release-version ${nextRelease.version} next-version ${nextRelease.version}-SNAPSHOT with-defaults\""
+          }
+        ],
+        [
           "@semantic-release/changelog",
           {
             "changelogFile": "CHANGELOG.md"
