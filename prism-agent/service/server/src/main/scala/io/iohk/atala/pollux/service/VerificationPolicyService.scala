@@ -1,6 +1,6 @@
 package io.iohk.atala.pollux.service
 
-import io.iohk.atala.api.http.model.{Order, Pagination}
+import io.iohk.atala.api.http.model.{Order, PaginationInput}
 import io.iohk.atala.pollux.schema.model.{VerificationPolicy, VerificationPolicyInput, VerificationPolicyPage}
 import zio.{Task, ZIO, ZLayer}
 
@@ -22,7 +22,7 @@ trait VerificationPolicyService {
 
   def lookupVerificationPolicies(
       filter: VerificationPolicy.Filter,
-      pagination: Pagination,
+      pagination: PaginationInput,
       order: Option[Order]
   ): Task[VerificationPolicyPage]
 }

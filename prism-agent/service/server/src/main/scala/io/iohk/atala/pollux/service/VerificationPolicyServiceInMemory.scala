@@ -1,6 +1,6 @@
 package io.iohk.atala.pollux.service
 
-import io.iohk.atala.api.http.model.{Order, Pagination}
+import io.iohk.atala.api.http.model.{Order, PaginationInput}
 import io.iohk.atala.pollux.schema.model.{VerificationPolicy, VerificationPolicyInput, VerificationPolicyPage}
 import zio.{Ref, Task, UIO, ZIO, ZLayer}
 
@@ -59,7 +59,7 @@ class VerificationPolicyServiceInMemory(
   // TODO: this is naive implementation for demo purposes, sorting doesn't work
   override def lookupVerificationPolicies(
       filter: VerificationPolicy.Filter,
-      pagination: Pagination,
+      pagination: PaginationInput,
       order: Option[Order]
   ): Task[VerificationPolicyPage] = {
     for {
