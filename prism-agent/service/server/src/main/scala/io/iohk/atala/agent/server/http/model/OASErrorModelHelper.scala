@@ -2,13 +2,15 @@ package io.iohk.atala.agent.server.http.model
 
 import akka.http.scaladsl.server.StandardRoute
 import io.iohk.atala.agent.openapi.model.ErrorResponse
-import io.iohk.atala.agent.walletapi.model.error.{CreateManagedDIDError, PublishManagedDIDError}
+import io.iohk.atala.agent.walletapi.model.error.CreateManagedDIDError
+import io.iohk.atala.agent.walletapi.model.error.PublishManagedDIDError
 import io.iohk.atala.castor.core.model.did.w3c.DIDResolutionErrorRepr
-import io.iohk.atala.castor.core.model.error.{DIDOperationError, DIDResolutionError}
+import io.iohk.atala.castor.core.model.error.DIDOperationError
+import io.iohk.atala.castor.core.model.error.DIDResolutionError
+import io.iohk.atala.connect.core.model.error.ConnectionServiceError
+import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 
 import java.util.UUID
-import io.iohk.atala.pollux.core.model.error.IssueCredentialError
-import io.iohk.atala.connect.core.model.error.ConnectionError
 
 trait ToErrorResponse[E] {
   def toErrorResponse(e: E): ErrorResponse
@@ -91,8 +93,8 @@ trait OASErrorModelHelper {
     }
   }
 
-  given ToErrorResponse[IssueCredentialError] with {
-    def toErrorResponse(error: IssueCredentialError): ErrorResponse = {
+  given ToErrorResponse[CredentialServiceError] with {
+    def toErrorResponse(error: CredentialServiceError): ErrorResponse = {
       ErrorResponse(
         `type` = "error-type",
         title = "error-title",
@@ -103,8 +105,8 @@ trait OASErrorModelHelper {
     }
   }
 
-  given ToErrorResponse[ConnectionError] with {
-    def toErrorResponse(error: ConnectionError): ErrorResponse = {
+  given ToErrorResponse[ConnectionServiceError] with {
+    def toErrorResponse(error: ConnectionServiceError): ErrorResponse = {
       ErrorResponse(
         `type` = "error-type",
         title = "error-title",

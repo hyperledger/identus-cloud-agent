@@ -4,10 +4,7 @@ import scala.jdk.CollectionConverters.*
 import zio.*
 import io.iohk.atala.pollux.core.service.CredentialService
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord
-import io.iohk.atala.pollux.core.model.error.CreateCredentialPayloadFromRecordError
-import io.iohk.atala.pollux.core.model.error.IssueCredentialError
-import io.iohk.atala.pollux.core.model.error.MarkCredentialRecordsAsPublishQueuedError
-import io.iohk.atala.pollux.core.model.error.PublishCredentialBatchError
+import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.core.service.CredentialService
 import io.iohk.atala.pollux.vc.jwt.W3cCredentialPayload
 import zio.*
@@ -183,10 +180,7 @@ object BackgroundJobs {
   }
 
   private[this] def performPublishCredentialsToDlt(credentialService: CredentialService) = {
-    type PublishToDltError = IssueCredentialError | CreateCredentialPayloadFromRecordError |
-      PublishCredentialBatchError | MarkCredentialRecordsAsPublishQueuedError
-
-    val res: ZIO[Any, PublishToDltError, Unit] = for {
+    val res: ZIO[Any, CredentialServiceError, Unit] = for {
       records <- credentialService.getCredentialRecordsByState(IssueCredentialRecord.ProtocolState.CredentialPending)
       // NOTE: the line below is a potentially slow operation, because <createCredentialPayloadFromRecord> makes a database SELECT call,
       // so calling this function n times will make n database SELECT calls, while it can be optimized to get

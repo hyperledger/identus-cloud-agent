@@ -62,8 +62,7 @@ import io.iohk.atala.mercury.*
 import io.iohk.atala.mercury.model.*
 import io.iohk.atala.mercury.model.error.*
 import io.iohk.atala.mercury.protocol.issuecredential.*
-import io.iohk.atala.pollux.core.model.error.IssueCredentialError
-import io.iohk.atala.pollux.core.model.error.IssueCredentialError.RepositoryError
+import io.iohk.atala.pollux.core.model.error.CredentialServiceError.RepositoryError
 import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc
 
 import java.io.IOException
@@ -76,9 +75,10 @@ import io.iohk.atala.connect.core.repository.ConnectionRepository
 import io.iohk.atala.connect.sql.repository.JdbcConnectionRepository
 import io.iohk.atala.mercury.protocol.connection.ConnectionRequest
 import io.iohk.atala.mercury.protocol.connection.ConnectionResponse
-import io.iohk.atala.connect.core.model.error.ConnectionError
+import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.pollux.schema.{SchemaRegistryServerEndpoints, VerificationPolicyServerEndpoints}
 import io.iohk.atala.pollux.service.{SchemaRegistryServiceInMemory, VerificationPolicyServiceInMemory}
+import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 
 object Modules {
 
@@ -235,7 +235,7 @@ object Modules {
                 // Receive and store ConnectionRequest
                 maybeRecord <- connectionService
                   .receiveConnectionRequest(connectionRequest)
-                  .catchSome { case ConnectionError.RepositoryError(cause) =>
+                  .catchSome { case ConnectionServiceError.RepositoryError(cause) =>
                     ZIO.logError(cause.getMessage()) *>
                       ZIO.fail(cause)
                   }
@@ -243,7 +243,7 @@ object Modules {
                 // Accept the ConnectionRequest
                 _ <- connectionService
                   .acceptConnectionRequest(maybeRecord.get.id) // TODO: get
-                  .catchSome { case ConnectionError.RepositoryError(cause) =>
+                  .catchSome { case ConnectionServiceError.RepositoryError(cause) =>
                     ZIO.logError(cause.getMessage()) *>
                       ZIO.fail(cause)
                   }
@@ -259,7 +259,7 @@ object Modules {
                 _ <- ZIO.logInfo("Got ConnectionResponse: " + connectionResponse)
                 _ <- connectionService
                   .receiveConnectionResponse(connectionResponse)
-                  .catchSome { case ConnectionError.RepositoryError(cause) =>
+                  .catchSome { case ConnectionServiceError.RepositoryError(cause) =>
                     ZIO.logError(cause.getMessage()) *>
                       ZIO.fail(cause)
                   }
