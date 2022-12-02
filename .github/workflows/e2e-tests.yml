@@ -43,27 +43,39 @@ jobs:
           version: v2.12.2 # defaults to 'latest'
           legacy: true    # will also install in PATH as `docker-compose`
 
-      - name: Start services
+      - name: Start services for issuer
+        env:
+          PORT=8080
         uses: isbang/compose-action@v1.4.1
         with:
-          compose-file: "./infrastructure/ci/docker-compose-multiple-actors.yml"
-          up-flags: "--wait"
+          compose-file: "./infrastructure/shared/docker-compose.yml"
+          compose-flags: "--env-file ./infrastructure/local/.env -p issuer"
+          down-flags: "--volumes"
+
+      - name: Start services for holder
+        env:
+          PORT=8090
+        uses: isbang/compose-action@v1.4.1
+        with:
+          compose-file: "./infrastructure/shared/docker-compose.yml"
+          compose-flags: "--env-file ./infrastructure/local/.env -p holder"
+          down-flags: "--volumes"
 
       - name: Run e2e tests
         run: |
-          ./gradlew test --info
+          ./gradlew test --tests "E2eTestsRunner"
 
       - uses: actions/upload-artifact@v2
         if: always()
         with:
           name: e2e-tests-result
-          path: tests/e2e-tests/target/site/reports
+          path: tests/e2e-tests/target/site/serenity
 
       - name: Publish e2e test Results
         if: always()
         id: publish-unit-tests
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:
-          junit_files: "tests/e2e-tests/target/site/reports/SERENITY-JUNIT-*.xml"
+          junit_files: "tests/e2e-tests/target/site/serenity/SERENITY-JUNIT-*.xml"
           comment_title: "E2E Test Results"
           check_name: "E2E Test Results"
