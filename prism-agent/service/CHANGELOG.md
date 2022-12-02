@@ -1,3 +1,10 @@
+# [prism-agent-v0.8.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.7.0...prism-agent-v0.8.0) (2022-12-02)
+
+
+### Features
+
+* **prism-agent:** implement DID resolution endpoint ([#184](https://github.com/input-output-hk/atala-prism-building-blocks/issues/184)) ([7fba9b0](https://github.com/input-output-hk/atala-prism-building-blocks/commit/7fba9b0bd4eac3c5b524a6db0590abcd97839afc))
+
 # [prism-agent-v0.7.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.6.0...prism-agent-v0.7.0) (2022-12-01)
 
 
