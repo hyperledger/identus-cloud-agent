@@ -12,7 +12,7 @@ source get-versions.sh
 Help()
 {
    # Display Help
-   echo "Run an instance of the ATALA `bulding-block` stack locally"
+   echo "Run an instance of the ATALA bulding-block stack locally"
    echo
    echo "Syntax: run.sh [-n/--name NAME|-p/--port PORT|-b/--background|-h/--help]"
    echo "options:"
