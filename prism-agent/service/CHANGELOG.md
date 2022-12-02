@@ -1,3 +1,10 @@
+# [prism-agent-v0.9.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.8.0...prism-agent-v0.9.0) (2022-12-02)
+
+
+### Features
+
+* **prism-agent:** implement pagination with navigation for schema-registry ([#195](https://github.com/input-output-hk/atala-prism-building-blocks/issues/195)) ([726e2d9](https://github.com/input-output-hk/atala-prism-building-blocks/commit/726e2d95ae879867d0932d93ac51e75b177bcb6c))
+
 # [prism-agent-v0.8.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.7.0...prism-agent-v0.8.0) (2022-12-02)
 
 
