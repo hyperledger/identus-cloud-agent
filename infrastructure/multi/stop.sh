@@ -10,13 +10,12 @@ cd ${SCRIPT_DIR}
 Help()
 {
    # Display Help
-   echo "Run an instance of the ATALA `bulding-block` stack locally"
+   echo "Run an instance of the ATALA bulding-block stack locally"
    echo
-   echo "Syntax: run.sh [-n/--name NAME|-p/--port PORT|-h/--help]"
+   echo "Syntax: run.sh [-d/--destroy-volumes|-h/--help]"
    echo "options:"
-   echo "-n/--name          Name of this instance - defaults to dev."
-   echo "-p/--port          Port to run this instance on - defaults to 80."
-   echo "-h/--help          Print this help text."
+   echo "-d/--destroy-volumes   Instruct docker-compose to tear down volumes."
+   echo "-h/--help              Print this help text."
    echo
 }
 
@@ -24,15 +23,12 @@ POSITIONAL_ARGS=()
 
 while [[ $# -gt 0 ]]; do
   case $1 in
-    -n|--name)
-      NAME="$2"
+    -d|--destroy-volumes)
+      # Note: In this script we set this to -d to pass to other scripts
+      # In local/dev - this is set to -v as it's passed directly to docker and
+      # the flag is different
+      VOLUMES="-d"
       shift # past argument
-      shift # past value
-      ;;
-    -p|--port)
-      PORT="$2"
-      shift # past argument
-      shift # past value
       ;;
     -h|--help)
       Help
@@ -58,28 +54,20 @@ if [[ -n $1 ]]; then
     tail -1 "$1"
 fi
 
-if [ -z ${NAME+x} ];
+if [ -z ${VOLUMES+x} ];
 then
-    NAME="dev"
+    VOLUMES=""
 fi
 
-if [ -z ${PORT+x} ];
-then
-    PORT="80"
-fi
-
-if [ -z ${BACKGROUND+x} ];
-then
-    BACKGROUND=""
-fi
+# set a default port as required to ensure docker-compose is valid if not set in env
+PORT="80"
 
 echo "NAME            = ${NAME}"
-echo "PORT            = ${PORT}"
 
 echo "--------------------------------------"
 echo "Stopping stack using docker-compose"
 echo "--------------------------------------"
 
-../local/stop.sh -n issuer
-../local/stop.sh -n holder
-../local/stop.sh -n verifier
+../local/stop.sh -n issuer ${VOLUMES}
+../local/stop.sh -n holder ${VOLUMES}
+../local/stop.sh -n verifier ${VOLUMES}
