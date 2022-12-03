@@ -39,8 +39,8 @@ import java.time.*
   println("==================")
   println("Create JWT Credential")
   println("==================")
-  val nbf = Instant.parse("2010-01-01T00:00:00Z")
-  val exp = Instant.parse("2010-01-12T00:00:00Z")
+  val nbf = Instant.parse("2010-01-01T00:00:00Z") // ISSUANCE DATE
+  val exp = Instant.parse("2010-01-12T00:00:00Z") // EXPIRATION DATE
   val jwtCredentialPayload =
     JwtCredentialPayload(
       iss = "https://example.edu/issuers/565049", // ISSUER DID
@@ -91,61 +91,64 @@ import java.time.*
 
   println("")
   println("==================")
-  println("Validate JWT between nbf and exp")
+  println("Validate JWT between ISSUANCE DATE and EXPIRATION DATE")
   println("==================")
   val clockWithCurrentTime = Clock.fixed(nbf.plus(Duration.ofDays(1)), ZoneId.systemDefault)
   val validAtCurrentTime =
-    JwtCredential.validateEncodedJWT(jwt = encodedJWT, leeway = Duration.ZERO)(clock = clockWithCurrentTime)
+    JwtCredential.verifyDates(jwt = encodedJWT, leeway = Duration.ZERO)(clock = clockWithCurrentTime)
   println(s"Is Valid at current time? $validAtCurrentTime")
 
   println("")
   println("==================")
-  println("Validate JWT on NBF")
+  println("Validate JWT on ISSUANCE DATE")
   println("==================")
   val clockWithFixedTimeAtNbf = Clock.fixed(nbf, ZoneId.systemDefault)
   val validAtNbf =
-    JwtCredential.validateEncodedJWT(jwt = encodedJWT, leeway = Duration.ZERO)(clock = clockWithFixedTimeAtNbf)
-  println(s"Is Valid at NBF time? $validAtNbf")
+    JwtCredential.verifyDates(jwt = encodedJWT, leeway = Duration.ZERO)(clock = clockWithFixedTimeAtNbf)
+  println(s"Is Valid at ISSUANCE DATE? $validAtNbf")
 
   println("")
   println("==================")
-  println("Validate JWT on EXP")
+  println("Validate JWT on EXPIRATION DATE")
   println("==================")
   val clockWithFixedTimeAtExp = Clock.fixed(exp, ZoneId.systemDefault)
   val validAtExp =
-    JwtCredential.validateEncodedJWT(jwt = encodedJWT, leeway = Duration.ZERO)(clock = clockWithFixedTimeAtExp)
-  println(s"Is Valid at Exp time? $validAtExp")
+    JwtCredential.verifyDates(jwt = encodedJWT, leeway = Duration.ZERO)(clock = clockWithFixedTimeAtExp)
+  println(s"Is Valid at EXPIRATION DATE? $validAtExp")
 
   println("")
   println("==================")
-  println("Validate JWT before NBF")
+  println("Validate JWT before ISSUANCE DATE")
   println("==================")
   val clockWithFixedTimeBeforeNbf = Clock.fixed(nbf.minus(Duration.ofDays(1)), ZoneId.systemDefault)
   val validBeforeNbf =
-    JwtCredential.validateEncodedJWT(jwt = encodedJWT, leeway = Duration.ZERO)(clock = clockWithFixedTimeBeforeNbf)
-  println(s"Is Valid before NBF time? $validBeforeNbf")
+    JwtCredential.verifyDates(jwt = encodedJWT, leeway = Duration.ZERO)(clock = clockWithFixedTimeBeforeNbf)
+  println(s"Is Valid before ISSUANCE DATE? $validBeforeNbf")
 
   println("")
   println("==================")
-  println("Validate JWT after EXP")
+  println("Validate JWT after EXPIRATION DATE")
   println("==================")
   val clockWithFixedTimeAfterExp = Clock.fixed(exp.plus(Duration.ofDays(1)), ZoneId.systemDefault)
   val validAfterExp =
-    JwtCredential.validateEncodedJWT(jwt = encodedJWT, leeway = Duration.ZERO)(clock = clockWithFixedTimeAfterExp)
-  println(s"Is Valid after EXP time? $validAfterExp")
+    JwtCredential.verifyDates(jwt = encodedJWT, leeway = Duration.ZERO)(clock = clockWithFixedTimeAfterExp)
+  println(s"Is Valid after EXPIRATION DATE? $validAfterExp")
 
   println("")
   println("==================")
-  println("Validate JWT before NBF with 1 Day Leeway")
+  println("Validate JWT before ISSUANCE DATE with 1 Day Leeway")
   println("==================")
+  val leeway = Duration.ofDays(1)
   val validBeforeNbfWithLeeway =
-    JwtCredential.validateEncodedJWT(jwt = encodedJWT, leeway = Duration.ofDays(1))(clock = clockWithFixedTimeBeforeNbf)
-  println(s"Is Valid before NBF time with 1 Day Leeway? $validBeforeNbfWithLeeway")
+    JwtCredential.verifyDates(jwt = encodedJWT, leeway = leeway)(clock = clockWithFixedTimeBeforeNbf)
+  println(
+    s"Is Valid before ISSUANCE DATE with 1 Day Leeway? $validBeforeNbfWithLeeway with leeway:$leeway"
+  )
 
   println("")
   println("==================")
-  println("Validate JWT after EXP with 1 Day Leeway")
+  println("Validate JWT after EXPIRATION DATE with 1 Day Leeway")
   println("==================")
   val validAfterExpWithLeeway =
-    JwtCredential.validateEncodedJWT(jwt = encodedJWT, leeway = Duration.ofDays(1))(clock = clockWithFixedTimeAfterExp)
-  println(s"Is Valid after EXP time with 1 Day Leeway? $validAfterExpWithLeeway")
+    JwtCredential.verifyDates(jwt = encodedJWT, leeway = leeway)(clock = clockWithFixedTimeAfterExp)
+  println(s"Is Valid after EXPIRATION DATE with 1 Day Leeway? $validAfterExpWithLeeway with leeway:$leeway")
