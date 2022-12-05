@@ -9,11 +9,9 @@ import akka.http.scaladsl.server.Route
 import zio._
 import scala.concurrent.Future
 import io.iohk.atala.agent.server.http.model.HttpServiceError
-import io.iohk.atala.pollux.core.service.PresentationService
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.presentproof._
 import java.util.UUID
-import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.mercury.DidComm
 import io.iohk.atala.agent.server.http.model.OASDomainModelHelper
 import io.iohk.atala.agent.server.http.model.OASErrorModelHelper
@@ -21,7 +19,12 @@ import io.iohk.atala.agent.server.http.model.InvalidState
 import io.iohk.atala.connect.core.service.ConnectionService
 import io.iohk.atala.connect.core.model.error.ConnectionError
 import io.iohk.atala.agent.server.http.model.HttpServiceError.DomainError
+
+import io.iohk.atala.pollux.vc.jwt.Issuer
+import io.iohk.atala.pollux.core.service.PresentationService
+import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.model.PresentationRecord
+
 class PresentProofApiServiceImpl(
     presentationService: PresentationService,
     connectionService: ConnectionService,
@@ -104,9 +107,34 @@ class PresentProofApiServiceImpl(
     val result = requestPresentationAction.action match {
 
       case "request-accept" =>
+        // FIXME: this function is used as a temporary replacement
+        // eventually, prism-agent should use castor library to get the issuer (issuance key and did)
+        def createHolder: Issuer = {
+          import java.security.KeyPairGenerator
+          import java.security.spec.ECGenParameterSpec
+          import java.security.KeyPairGenerator
+          import java.security.SecureRandom
+          val keyGen = KeyPairGenerator.getInstance("EC")
+          val ecSpec = ECGenParameterSpec("secp256r1")
+          keyGen.initialize(ecSpec, SecureRandom())
+          val keyPair = keyGen.generateKeyPair()
+          val privateKey = keyPair.getPrivate
+          val publicKey = keyPair.getPublic
+          val uuid = UUID.randomUUID().toString
+          Issuer(
+            did = io.iohk.atala.pollux.vc.jwt.DID(s"did:prism:$uuid"),
+            signer = io.iohk.atala.pollux.vc.jwt.ES256Signer(privateKey),
+            publicKey = publicKey
+          )
+        }
+
         for {
           record <- presentationService
-            .acceptRequestPresentation(UUID.fromString(id))
+            .acceptRequestPresentation(
+              recordId = UUID.fromString(id),
+              crecentialsToUse = Seq.empty,
+              prover = createHolder
+            )
             .mapError(HttpServiceError.DomainError[PresentationError].apply)
         } yield record
       case "request-reject" => {

@@ -387,7 +387,8 @@ object AppModule {
   val credentialServiceLayer: RLayer[DidComm, CredentialService] =
     (GrpcModule.layers ++ RepoModule.layers) >>> CredentialServiceImpl.layer
 
-  def presentationServiceLayer = RepoModule.presentationRepoLayer >>> PresentationServiceImpl.layer
+  def presentationServiceLayer =
+    (RepoModule.presentationRepoLayer ++ RepoModule.credentialRepoLayer) >>> PresentationServiceImpl.layer
 
   val connectionServiceLayer: RLayer[DidComm, CS_Connect] =
     (GrpcModule.layers ++ RepoModule.layers) >>> CSImpl_Connect.layer
