@@ -65,9 +65,11 @@ jobs:
 
       - name: Run e2e tests
         run: |
-          ./gradlew test --tests "E2eTestsRunner" || true
-          docker logs issuer-prism-agent-1
-          docker logs holder-prism-agent-1
+          ./gradlew test --tests "E2eTestsRunner"
+
+      - name: Setup upterm session
+        if: always()
+        uses: lhotari/action-upterm@v1
 
       - uses: actions/upload-artifact@v2
         if: always()
