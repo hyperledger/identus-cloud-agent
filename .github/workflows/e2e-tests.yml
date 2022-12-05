@@ -45,11 +45,11 @@ jobs:
 
       - name: Start services for issuer
         run: |
-          ./infrastructure/local/run.sh -n issuer -p 8080 -w
+          ../../infrastructure/local/run.sh -n issuer -p 8080 -w
 
       - name: Start services for holder
         run: |
-          ./infrastructure/local/run.sh -n holder -p 8090 -w
+          ../../infrastructure/local/run.sh -n holder -p 8090 -w
 
       - name: Run e2e tests
         run: |
