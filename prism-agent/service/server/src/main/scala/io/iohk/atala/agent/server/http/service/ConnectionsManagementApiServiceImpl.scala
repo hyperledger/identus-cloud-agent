@@ -1,18 +1,18 @@
 package io.iohk.atala.agent.server.http.service
 
+import akka.http.scaladsl.marshalling.ToEntityMarshaller
+import akka.http.scaladsl.server.Directives.*
+import akka.http.scaladsl.server.Route
 import io.iohk.atala.agent.openapi.api._
 import io.iohk.atala.agent.openapi.model._
-import akka.http.scaladsl.server.Directives.*
-import akka.http.scaladsl.marshalling.ToEntityMarshaller
-import akka.http.scaladsl.server.Route
-import zio._
-import io.iohk.atala.connect.core.service.ConnectionService
+import io.iohk.atala.agent.server.http.model.HttpServiceError
 import io.iohk.atala.agent.server.http.model.OASDomainModelHelper
 import io.iohk.atala.agent.server.http.model.OASErrorModelHelper
-import io.iohk.atala.agent.server.http.model.HttpServiceError
-import io.iohk.atala.connect.core.model.error.ConnectionError
+import io.iohk.atala.connect.core.model.error.ConnectionServiceError
+import io.iohk.atala.connect.core.service.ConnectionService
 import io.iohk.atala.mercury.PeerDID
 import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
+import zio._
 
 class ConnectionsManagementApiServiceImpl(connectionService: ConnectionService)(using runtime: zio.Runtime[Any])
     extends ConnectionsManagementApiService,
@@ -27,7 +27,7 @@ class ConnectionsManagementApiServiceImpl(connectionService: ConnectionService)(
     val result = for {
       record <- connectionService
         .createConnectionInvitation(request.label)
-        .mapError(HttpServiceError.DomainError[ConnectionError].apply)
+        .mapError(HttpServiceError.DomainError[ConnectionServiceError].apply)
     } yield record
 
     onZioSuccess(result.mapBoth(_.toOAS, _.toOAS).either) {
@@ -43,7 +43,7 @@ class ConnectionsManagementApiServiceImpl(connectionService: ConnectionService)(
     val result = for {
       outcome <- connectionService
         .getConnectionRecords()
-        .mapError(HttpServiceError.DomainError[ConnectionError].apply)
+        .mapError(HttpServiceError.DomainError[ConnectionServiceError].apply)
     } yield outcome
 
     onZioSuccess(result.mapBoth(_.toOAS, _.map(_.toOAS)).either) {
@@ -67,7 +67,7 @@ class ConnectionsManagementApiServiceImpl(connectionService: ConnectionService)(
       recordId <- connectionId.toUUID
       outcome <- connectionService
         .getConnectionRecord(recordId)
-        .mapError(HttpServiceError.DomainError[ConnectionError].apply)
+        .mapError(HttpServiceError.DomainError[ConnectionServiceError].apply)
     } yield outcome
 
     onZioSuccess(result.mapBoth(_.toOAS, _.map(_.toOAS)).either) {
@@ -84,10 +84,10 @@ class ConnectionsManagementApiServiceImpl(connectionService: ConnectionService)(
     val result = for {
       record <- connectionService
         .receiveConnectionInvitation(request.invitation)
-        .mapError(HttpServiceError.DomainError[ConnectionError].apply)
+        .mapError(HttpServiceError.DomainError[ConnectionServiceError].apply)
       record <- connectionService
         .acceptConnectionInvitation(record.id)
-        .mapError(HttpServiceError.DomainError[ConnectionError].apply)
+        .mapError(HttpServiceError.DomainError[ConnectionServiceError].apply)
     } yield record
 
     onZioSuccess(result.mapBoth(_.toOAS, _.map(_.toOAS)).either) {

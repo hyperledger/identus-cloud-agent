@@ -1,6 +1,6 @@
 package io.iohk.atala.agent.walletapi.storage
 
-import io.iohk.atala.agent.walletapi.model.{CommitmentPurpose, ECKeyPair}
+import io.iohk.atala.agent.walletapi.model.ECKeyPair
 import io.iohk.atala.agent.walletapi.storage.InMemoryDIDSecretStorage.DIDSecretRecord
 import io.iohk.atala.castor.core.model.did.PrismDID
 import io.iohk.atala.shared.models.HexStrings.HexString
@@ -35,38 +35,6 @@ private[walletapi] class InMemoryDIDSecretStorage private (store: Ref[Map[PrismD
         case None => currentStore
       }
     }
-
-  override def getDIDCommitmentRevealValue(did: PrismDID, purpose: CommitmentPurpose): Task[Option[HexString]] =
-    store.get.map(
-      _.get(did).flatMap(secret =>
-        purpose match {
-          case CommitmentPurpose.Update   => secret.updateCommitmentRevealValue
-          case CommitmentPurpose.Recovery => secret.recoveryCommitmentRevealValue
-        }
-      )
-    )
-
-  override def upsertDIDCommitmentRevealValue(
-      did: PrismDID,
-      purpose: CommitmentPurpose,
-      revealValue: HexString
-  ): Task[Unit] =
-    store
-      .update { currentStore =>
-        val currentSecret = currentStore.get(did)
-        val updatedSecret: DIDSecretRecord = purpose match {
-          case CommitmentPurpose.Update =>
-            currentSecret.fold(DIDSecretRecord(updateCommitmentRevealValue = Some(revealValue)))(
-              _.copy(updateCommitmentRevealValue = Some(revealValue))
-            )
-          case CommitmentPurpose.Recovery =>
-            currentSecret.fold(DIDSecretRecord(recoveryCommitmentRevealValue = Some(revealValue)))(
-              _.copy(recoveryCommitmentRevealValue = Some(revealValue))
-            )
-        }
-
-        currentStore.updated(did, updatedSecret)
-      }
 
   override def removeDIDSecret(did: PrismDID): Task[Unit] = store.update(_.removed(did))
 

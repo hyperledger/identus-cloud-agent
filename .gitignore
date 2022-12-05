@@ -14,3 +14,4 @@ node_modules/
 package-lock.json
 .dotty-ide-disabled
 **/.docker-volumes/*
+target/

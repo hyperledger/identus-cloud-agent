@@ -9,7 +9,7 @@ A protocol supporting a general purpose verifiable presentation exchange regardl
 
 More Info:
 - See [https://didcomm.org/present-proof/3.0/]
-- Its base on **DIDComm Messaging Specandification** - [https://identity.foundation/didcomm-messaging/spec]
+- Its base on **DIDComm Messaging Specification** - [https://identity.foundation/didcomm-messaging/spec]
 - Its similar to **00454-present-proof-v2** - [Hyperledger present-proof-v2](https://github.com/hyperledger/aries-rfcs/tree/main/features/0454-present-proof-v2) also see
 [Hyperledger 0453-issue-credential-v2](https://github.com/hyperledger/aries-rfcs/blob/main/features/0453-issue-credential-v2/README.md)
 

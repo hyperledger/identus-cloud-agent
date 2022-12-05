@@ -8,6 +8,7 @@ import akka.http.scaladsl.server.Route
 import doobie.util.transactor.Transactor
 import io.iohk.atala.agent.server.http.{HttpRoutes, HttpServer, ZHttp4sBlazeServer, ZHttpEndpoints}
 import io.iohk.atala.castor.core.service.{DIDService, DIDServiceImpl}
+import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.agent.server.http.marshaller.{
   DIDApiMarshallerImpl,
   DIDAuthenticationApiMarshallerImpl,
@@ -22,7 +23,6 @@ import io.iohk.atala.agent.server.http.service.{
   DIDRegistrarApiServiceImpl,
   ConnectionsManagementApiServiceImpl
 }
-import io.iohk.atala.castor.core.repository.DIDOperationRepository
 import io.iohk.atala.agent.openapi.api.{
   DIDApi,
   DIDAuthenticationApi,
@@ -30,9 +30,6 @@ import io.iohk.atala.agent.openapi.api.{
   DIDRegistrarApi,
   ConnectionsManagementApi
 }
-import io.iohk.atala.castor.sql.repository.{JdbcDIDOperationRepository, TransactorLayer}
-import zio.*
-import zio.interop.catz.*
 import cats.effect.std.Dispatcher
 import com.typesafe.config.ConfigFactory
 import doobie.util.transactor.Transactor
@@ -43,12 +40,7 @@ import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.agent.server.http.marshaller.*
 import io.iohk.atala.agent.server.http.service.*
 import io.iohk.atala.agent.server.http.{HttpRoutes, HttpServer}
-import io.iohk.atala.castor.core.repository.DIDOperationRepository
-import io.iohk.atala.castor.core.service.{DIDService, DIDServiceImpl}
 import io.iohk.atala.pollux.core.service.CredentialServiceImpl
-import io.iohk.atala.castor.core.util.DIDOperationValidator
-import io.iohk.atala.castor.sql.repository.{JdbcDIDOperationRepository, TransactorLayer}
-import io.iohk.atala.castor.sql.repository.DbConfig as CastorDbConfig
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
 import io.iohk.atala.pollux.core.repository.CredentialRepository
@@ -70,8 +62,8 @@ import io.iohk.atala.mercury.*
 import io.iohk.atala.mercury.model.*
 import io.iohk.atala.mercury.model.error.*
 import io.iohk.atala.mercury.protocol.issuecredential.*
-import io.iohk.atala.mercury.protocol.presentproof._
-import io.iohk.atala.pollux.core.model.error.IssueCredentialError
+import io.iohk.atala.pollux.core.model.error.CredentialServiceError.RepositoryError
+import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc
 
 import java.io.IOException
 import cats.implicits.*
@@ -82,15 +74,18 @@ import io.iohk.atala.pollux.core.service.PresentationServiceImpl
 import io.iohk.atala.pollux.core.repository.PresentationRepository
 import io.iohk.atala.pollux.sql.repository.JdbcPresentationRepository
 import io.iohk.atala.pollux.core.model.error.PresentationError
+import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.connect.core.service.{ConnectionService => CS_Connect}
 import io.iohk.atala.connect.core.service.{ConnectionServiceImpl => CSImpl_Connect}
 import io.iohk.atala.connect.core.repository.ConnectionRepository
 import io.iohk.atala.connect.sql.repository.JdbcConnectionRepository
 import io.iohk.atala.mercury.protocol.connection.ConnectionRequest
 import io.iohk.atala.mercury.protocol.connection.ConnectionResponse
-import io.iohk.atala.connect.core.model.error.ConnectionError
+import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.pollux.schema.{SchemaRegistryServerEndpoints, VerificationPolicyServerEndpoints}
 import io.iohk.atala.pollux.service.{SchemaRegistryServiceInMemory, VerificationPolicyServiceInMemory}
+import io.iohk.atala.connect.core.model.error.ConnectionServiceError
+import io.iohk.atala.mercury.protocol.presentproof._
 
 object Modules {
 
@@ -202,7 +197,7 @@ object Modules {
                 offerFromIssuer = OfferCredential.readFromMessage(msg)
                 _ <- credentialService
                   .receiveCredentialOffer(offerFromIssuer)
-                  .catchSome { case IssueCredentialError.RepositoryError(cause) =>
+                  .catchSome { case CredentialServiceError.RepositoryError(cause) =>
                     ZIO.logError(cause.getMessage()) *>
                       ZIO.fail(cause)
                   }
@@ -219,7 +214,7 @@ object Modules {
                 credentialService <- ZIO.service[CredentialService]
                 todoTestOption <- credentialService
                   .receiveCredentialRequest(requestCredential)
-                  .catchSome { case IssueCredentialError.RepositoryError(cause) =>
+                  .catchSome { case CredentialServiceError.RepositoryError(cause) =>
                     ZIO.logError(cause.getMessage()) *>
                       ZIO.fail(cause)
                   }
@@ -237,7 +232,7 @@ object Modules {
                 credentialService <- ZIO.service[CredentialService]
                 _ <- credentialService
                   .receiveCredentialIssue(issueCredential)
-                  .catchSome { case IssueCredentialError.RepositoryError(cause) =>
+                  .catchSome { case CredentialServiceError.RepositoryError(cause) =>
                     ZIO.logError(cause.getMessage()) *>
                       ZIO.fail(cause)
                   }
@@ -303,7 +298,7 @@ object Modules {
                 // Receive and store ConnectionRequest
                 maybeRecord <- connectionService
                   .receiveConnectionRequest(connectionRequest)
-                  .catchSome { case ConnectionError.RepositoryError(cause) =>
+                  .catchSome { case ConnectionServiceError.RepositoryError(cause) =>
                     ZIO.logError(cause.getMessage()) *>
                       ZIO.fail(cause)
                   }
@@ -311,7 +306,7 @@ object Modules {
                 // Accept the ConnectionRequest
                 _ <- connectionService
                   .acceptConnectionRequest(maybeRecord.get.id) // TODO: get
-                  .catchSome { case ConnectionError.RepositoryError(cause) =>
+                  .catchSome { case ConnectionServiceError.RepositoryError(cause) =>
                     ZIO.logError(cause.getMessage()) *>
                       ZIO.fail(cause)
                   }
@@ -327,7 +322,7 @@ object Modules {
                 _ <- ZIO.logInfo("Got ConnectionResponse: " + connectionResponse)
                 _ <- connectionService
                   .receiveConnectionResponse(connectionResponse)
-                  .catchSome { case ConnectionError.RepositoryError(cause) =>
+                  .catchSome { case ConnectionServiceError.RepositoryError(cause) =>
                     ZIO.logError(cause.getMessage()) *>
                       ZIO.fail(cause)
                   }
@@ -371,18 +366,13 @@ object SystemModule {
 }
 
 object AppModule {
-  val didOpValidatorLayer: ULayer[DIDOperationValidator] = DIDOperationValidator.layer(
-    DIDOperationValidator.Config(
-      publicKeyLimit = 50,
-      serviceLimit = 50
-    )
-  )
+  val didOpValidatorLayer: ULayer[DIDOperationValidator] = DIDOperationValidator.layer()
 
   val didServiceLayer: TaskLayer[DIDService] =
-    (GrpcModule.layers ++ RepoModule.layers ++ didOpValidatorLayer) >>> DIDServiceImpl.layer
+    (didOpValidatorLayer ++ GrpcModule.layers) >>> DIDServiceImpl.layer
 
   val manageDIDServiceLayer: TaskLayer[ManagedDIDService] =
-    (didOpValidatorLayer ++ didServiceLayer) >>> ManagedDIDService.inMemoryStorage()
+    (didOpValidatorLayer ++ didServiceLayer) >>> ManagedDIDService.inMemoryStorage
 
   val credentialServiceLayer: RLayer[DidComm, CredentialService] =
     (GrpcModule.layers ++ RepoModule.layers) >>> CredentialServiceImpl.layer
@@ -395,6 +385,7 @@ object AppModule {
 }
 
 object GrpcModule {
+  // TODO: once Castor + Pollux has migrated to use Node 2.0 stubs, this should be removed.
   val irisStubLayer: TaskLayer[IrisServiceStub] = {
     val stubLayer = ZLayer.fromZIO(
       ZIO
@@ -409,7 +400,21 @@ object GrpcModule {
     SystemModule.configLayer >>> stubLayer
   }
 
-  val layers = irisStubLayer
+  val prismNodeStubLayer: TaskLayer[NodeServiceGrpc.NodeServiceStub] = {
+    val stubLayer = ZLayer.fromZIO(
+      ZIO
+        .service[AppConfig]
+        .map(_.prismNode.service)
+        .flatMap(config =>
+          ZIO.attempt(
+            NodeServiceGrpc.stub(ManagedChannelBuilder.forAddress(config.host, config.port).usePlaintext.build)
+          )
+        )
+    )
+    SystemModule.configLayer >>> stubLayer
+  }
+
+  val layers = irisStubLayer ++ prismNodeStubLayer
 }
 
 object HttpModule {
@@ -470,31 +475,6 @@ object HttpModule {
 
 object RepoModule {
 
-  val castorDbConfigLayer: TaskLayer[CastorDbConfig] = {
-    val dbConfigLayer = ZLayer.fromZIO {
-      ZIO.service[AppConfig].map(_.castor.database) map { config =>
-        CastorDbConfig(
-          username = config.username,
-          password = config.password,
-          jdbcUrl = s"jdbc:postgresql://${config.host}:${config.port}/${config.databaseName}"
-        )
-      }
-    }
-    SystemModule.configLayer >>> dbConfigLayer
-  }
-
-  val castorTransactorLayer: TaskLayer[Transactor[Task]] = {
-    val transactorLayer = ZLayer.fromZIO {
-      ZIO.service[CastorDbConfig].flatMap { config =>
-        Dispatcher[Task].allocated.map { case (dispatcher, _) =>
-          given Dispatcher[Task] = dispatcher
-          TransactorLayer.hikari[Task](config)
-        }
-      }
-    }.flatten
-    castorDbConfigLayer >>> transactorLayer
-  }
-
   val polluxDbConfigLayer: TaskLayer[PolluxDbConfig] = {
     val dbConfigLayer = ZLayer.fromZIO {
       ZIO.service[AppConfig].map(_.pollux.database) map { config =>
@@ -547,9 +527,6 @@ object RepoModule {
     connectDbConfigLayer >>> transactorLayer
   }
 
-  val didOperationRepoLayer: TaskLayer[DIDOperationRepository[Task]] =
-    castorTransactorLayer >>> JdbcDIDOperationRepository.layer
-
   val credentialRepoLayer: TaskLayer[CredentialRepository[Task]] =
     polluxTransactorLayer >>> JdbcCredentialRepository.layer
 
@@ -559,5 +536,5 @@ object RepoModule {
   val connectionRepoLayer: TaskLayer[ConnectionRepository[Task]] =
     connectTransactorLayer >>> JdbcConnectionRepository.layer
 
-  val layers = didOperationRepoLayer ++ credentialRepoLayer ++ connectionRepoLayer
+  val layers = credentialRepoLayer ++ connectionRepoLayer
 }

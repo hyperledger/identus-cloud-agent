@@ -21,18 +21,9 @@ class PresentationSpec extends ZSuite {
 
     val expectedProposalJson = parse(s"""{
                          |    "id": "061bf917-2cbe-460b-8d12-b1a9609505c2",
-                         |    "type": "https://didcomm.org/present-proof/2.0/presentation",
-                         |    "body":
-                         |    {
-                         |        "goal_code": "Presentation",
-                         |         "last_presentation" : true,
-                         |        "formats":
-                         |        []
-                         |    },
-                         |    "attachments":
-                         |    [
-                         |    $attachmentDescriptorJson
-                         |    ],
+                         |    "type": "https://didcomm.atalaprism.io/present-proof/3.0/presentation",
+                         |    "body": {"goal_code": "Presentation"},
+                         |    "attachments": [$attachmentDescriptorJson],
                          |    "to" : "did:prism:test123",
                          |    "from" : "did:prism:test123"
                          |}""".stripMargin).getOrElse(Json.Null)
@@ -46,9 +37,6 @@ class PresentationSpec extends ZSuite {
     )
 
     val did = DidId("did:prism:test123")
-    println("************************")
-    println(did.asJson.noSpaces)
-    println("************************")
 
     val result = presentation.asJson.deepDropNullValues
     assertEquals(result, expectedProposalJson)

@@ -17,7 +17,7 @@ import io.iohk.atala.agent.server.http.model.OASDomainModelHelper
 import io.iohk.atala.agent.server.http.model.OASErrorModelHelper
 import io.iohk.atala.agent.server.http.model.InvalidState
 import io.iohk.atala.connect.core.service.ConnectionService
-import io.iohk.atala.connect.core.model.error.ConnectionError
+import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.agent.server.http.model.HttpServiceError.DomainError
 
 import io.iohk.atala.pollux.vc.jwt.Issuer
@@ -48,7 +48,7 @@ class PresentProofApiServiceImpl(
           connectionService
             .getConnectionRecord(UUID.fromString(requestPresentationInput.connectionId))
             .map(_.flatMap(_.connectionRequest).map(_.from).get) // TODO GET
-            .mapError(HttpServiceError.DomainError[ConnectionError].apply)
+            .mapError(HttpServiceError.DomainError[ConnectionServiceError].apply)
             .mapError(_.toOAS)
       }
 

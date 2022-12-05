@@ -1,3 +1,34 @@
+# [prism-agent-v0.10.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.9.0...prism-agent-v0.10.0) (2022-12-02)
+
+
+### Features
+
+* **prism-agent:** fix prism-agent major issues ([#199](https://github.com/input-output-hk/atala-prism-building-blocks/issues/199)) ([1dc7339](https://github.com/input-output-hk/atala-prism-building-blocks/commit/1dc733909374ba31f4655003dafcf4479fddc70b))
+
+# [prism-agent-v0.9.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.8.0...prism-agent-v0.9.0) (2022-12-02)
+
+
+### Features
+
+* **prism-agent:** implement pagination with navigation for schema-registry ([#195](https://github.com/input-output-hk/atala-prism-building-blocks/issues/195)) ([726e2d9](https://github.com/input-output-hk/atala-prism-building-blocks/commit/726e2d95ae879867d0932d93ac51e75b177bcb6c))
+
+# [prism-agent-v0.8.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.7.0...prism-agent-v0.8.0) (2022-12-02)
+
+
+### Features
+
+* **prism-agent:** implement DID resolution endpoint ([#184](https://github.com/input-output-hk/atala-prism-building-blocks/issues/184)) ([7fba9b0](https://github.com/input-output-hk/atala-prism-building-blocks/commit/7fba9b0bd4eac3c5b524a6db0590abcd97839afc))
+
+# [prism-agent-v0.7.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.6.0...prism-agent-v0.7.0) (2022-12-01)
+
+
+### Features
+
+* **pollux:** alight the OAS for schema registry ([#189](https://github.com/input-output-hk/atala-prism-building-blocks/issues/189)) ([4528c57](https://github.com/input-output-hk/atala-prism-building-blocks/commit/4528c573fc89b9af60f6bc014e7f34433a181cb8))
+* **pollux:** cleanup the code of IssueCredentialApi ([16d5fdb](https://github.com/input-output-hk/atala-prism-building-blocks/commit/16d5fdbadf20c1597bf42b4e366f71623804dfc4))
+* **pollux:** cleanup the OAS from Issue Credentials and other unused tags ([79170f8](https://github.com/input-output-hk/atala-prism-building-blocks/commit/79170f8722053de9e477118f3f9443c97f27c512))
+* **prism-agent:** upgrade castor on prism-agent ([#141](https://github.com/input-output-hk/atala-prism-building-blocks/issues/141)) ([e85e7c0](https://github.com/input-output-hk/atala-prism-building-blocks/commit/e85e7c09019f3e1d55f36b73fa081f42c19d4218))
+
 # [prism-agent-v0.6.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.5.0...prism-agent-v0.6.0) (2022-11-29)
 
 

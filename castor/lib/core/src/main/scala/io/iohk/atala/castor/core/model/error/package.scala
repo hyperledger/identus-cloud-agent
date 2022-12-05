@@ -11,4 +11,11 @@ package object error {
     final case class InvalidArgument(msg: String) extends DIDOperationError
   }
 
+  sealed trait DIDResolutionError
+
+  object DIDResolutionError {
+    final case class DLTProxyError(cause: Throwable) extends DIDResolutionError
+    final case class UnexpectedDLTResult(msg: String) extends DIDResolutionError
+  }
+
 }
