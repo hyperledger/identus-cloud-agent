@@ -5,8 +5,10 @@ import io.circe.Json
 import io.circe.syntax.*
 import io.iohk.atala.pollux.core.model.EncodedJWTCredential
 import io.iohk.atala.pollux.core.model.PresentationRecord
+import io.iohk.atala.pollux.core.model.error.CreatePresentationPayloadError
 import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.model.error.PresentationError._
+import io.iohk.atala.pollux.core.model.IssuedCredentialRaw
 import io.iohk.atala.pollux.core.repository.PresentationRepository
 import io.iohk.atala.pollux.vc.jwt.*
 import zio.*
@@ -24,6 +26,8 @@ import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.model.Message
 import java.time.Instant
 import io.iohk.atala.mercury.protocol.presentproof.RequestPresentation
+import java.security.PublicKey
+import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord
 import io.iohk.atala.pollux.core.repository.CredentialRepository
 
@@ -53,7 +57,8 @@ trait PresentationService {
 
   def acceptRequestPresentation(
       recordId: UUID,
-      crecentialsToUse: Seq[String]
+      crecentialsToUse: Seq[String],
+      prover: Issuer // FIXME @Bassam
   ): IO[PresentationError, Option[PresentationRecord]]
 
   def rejectRequestPresentation(recordId: UUID): IO[PresentationError, Option[PresentationRecord]]
@@ -201,10 +206,37 @@ private class PresentationServiceImpl(
     } yield record
   }
 
+  private def createPresentationPayloadFromCredential(
+      issuedCredentials: Seq[IssuedCredentialRaw],
+      prover: Issuer // FIXME @Bassam
+  ): IO[CreatePresentationPayloadError, JWT] = {
+
+    val verifiableCredentials = issuedCredentials.map { issuedCredential =>
+      JwtVerifiableCredentialPayload(JWT(issuedCredential.signedCredential))
+    }.toVector
+    val w3cPresentationPayload =
+      W3cPresentationPayload(
+        `@context` = IndexedSeq.empty,
+        maybeId = None,
+        `type` = Vector("VerifiablePresentation"),
+        verifiableCredential = verifiableCredentials,
+        holder = prover.did.value,
+        verifier = Vector("https://example.edu/issuers/565049"), // TODO Fix this
+        issuanceDate = Instant.parse("2010-01-01T00:00:00Z"), // TODO Fix this
+        maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z"))
+      )
+
+    val encodedJWT = JwtPresentation.toEncodedJwt(w3cPresentationPayload, prover)
+
+    ZIO.succeed(encodedJWT)
+  }
+
   override def acceptRequestPresentation(
       recordId: UUID,
-      crecentialsToUse: Seq[String]
+      crecentialsToUse: Seq[String],
+      prover: Issuer
   ): IO[PresentationError, Option[PresentationRecord]] = {
+
     for {
       // crecentialsToUse
       maybeRecord <- presentationRepository
@@ -219,7 +251,24 @@ private class PresentationServiceImpl(
         .fromOption(record.requestPresentationData)
         .mapError(_ => InvalidFlowStateError(s"No request found for this record: $recordId"))
 
-      credentialsToSend: Seq[JwtCredentialPayload] <- ??? // FIXME type CredentialPayload
+      issuedValidCredentials <- credentialRepository
+        .getValidIssuedCredentials(crecentialsToUse.map(UUID.fromString))
+        .mapError(RepositoryError.apply)
+
+      issuedRawCredentials = issuedValidCredentials.map(_.issuedCredentialRaw.map(IssuedCredentialRaw(_))).flatten
+      x = List(1)
+      issuedCredentials <- ZIO.fromEither(
+        Either.cond(
+          x.nonEmpty,
+          x,
+          CreatePresentationPayloadError.IssuedCredentialNotFoundError(
+            new Throwable("No matching issued credentials foound in prover db")
+          )
+        )
+      )
+
+      credentialsToSend <- createPresentationPayloadFromCredential(issuedCredentials, prover)
+      // FIXME type CredentialPayload
       // // credentialRepository.getValidCredential(by seq of records ids) //TODO FIXME
       // credentialRepository
       //   .getIssueCredentialRecords()
@@ -459,7 +508,7 @@ private class PresentationServiceImpl(
 
   private[this] def createDidCommPresentation(
       request: RequestPresentation,
-      credentialsToSend: Seq[JwtCredentialPayload] // Seq[CredentialPayload]
+      jwtPresentation: JWT // Seq[CredentialPayload] FIXME to support other types
   ): Presentation = {
 
     Presentation(
@@ -467,10 +516,10 @@ private class PresentationServiceImpl(
         goal_code = request.body.goal_code,
         comment = request.body.comment
       ),
-      attachments = credentialsToSend.map { credential =>
+      attachments = Seq(
         AttachmentDescriptor
-          .buildAttachment(payload = credential)
-      },
+          .buildAttachment(payload = jwtPresentation.value, mediaType = Some(""))
+      ),
       thid = request.thid.orElse(Some(request.id)),
       from = request.to,
       to = request.from

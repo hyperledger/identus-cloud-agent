@@ -124,6 +124,7 @@ object BackgroundJobs {
               credentials = Map("prims/jwt" -> signedJwtCredential.value)
             )
             _ <- credentialService.markCredentialGenerated(id, issueCredential)
+
           } yield ()
 
         // Credential has been generated and can be sent directly to the Holder

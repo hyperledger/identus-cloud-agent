@@ -39,6 +39,8 @@ import io.iohk.atala.mercury.DidComm
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.model.Message
 import java.time.Instant
+import java.{util => ju}
+import io.iohk.atala.mercury.model.Base64
 
 trait CredentialService {
 
@@ -194,7 +196,8 @@ private class CredentialServiceImpl(
           publicationState = None,
           offerCredentialData = Some(offer),
           requestCredentialData = None,
-          issueCredentialData = None
+          issueCredentialData = None,
+          issuedCredentialRaw = None
         )
       )
       count <- credentialRepository
@@ -237,7 +240,8 @@ private class CredentialServiceImpl(
           publicationState = None,
           offerCredentialData = Some(offer),
           requestCredentialData = None,
-          issueCredentialData = None
+          issueCredentialData = None,
+          issuedCredentialRaw = None
         )
       )
       count <- credentialRepository
@@ -320,10 +324,11 @@ private class CredentialServiceImpl(
   override def receiveCredentialIssue(
       issue: IssueCredential
   ): IO[IssueCredentialError, Option[IssueCredentialRecord]] = {
+    val rawIssuedCredential = issue.attachments.map(_.data.asJson.noSpaces).headOption.getOrElse("???") // TODO
     for {
       record <- getRecordFromThreadId(issue.thid)
       _ <- credentialRepository
-        .updateWithIssueCredential(record.id, issue, ProtocolState.CredentialReceived)
+        .updateWithIssuedRawCredential(record.id, issue, rawIssuedCredential, ProtocolState.CredentialReceived)
         .flatMap {
           case 1 => ZIO.succeed(())
           case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
