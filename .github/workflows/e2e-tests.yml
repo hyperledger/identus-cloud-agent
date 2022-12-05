@@ -65,7 +65,9 @@ jobs:
 
       - name: Run e2e tests
         run: |
-          ./gradlew test --tests "E2eTestsRunner"
+          ./gradlew test --tests "E2eTestsRunner" || true
+          docker logs issuer-prism-agent-1
+          docker logs holder-prism-agent-1
 
       - uses: actions/upload-artifact@v2
         if: always()
