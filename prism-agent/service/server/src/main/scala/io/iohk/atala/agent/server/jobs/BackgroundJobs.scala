@@ -23,11 +23,6 @@ import java.io.IOException
 import zhttp.service._
 import zhttp.http._
 import io.iohk.atala.pollux.vc.jwt.JwtCredential
-import io.iohk.atala.pollux.core.model.PresentationRecord
-import io.iohk.atala.mercury.protocol.presentproof.RequestPresentation
-import io.iohk.atala.pollux.core.service.PresentationService
-import io.iohk.atala.pollux.core.model.error.PresentationError
-import io.iohk.atala.agent.server.http.model.InvalidState
 
 object BackgroundJobs {
 
@@ -38,15 +33,6 @@ object BackgroundJobs {
         .getIssueCredentialRecords()
         .mapError(err => Throwable(s"Error occured while getting issue credential records: $err"))
       _ <- ZIO.foreach(records)(performExchange)
-    } yield ()
-  }
-  val presentProofExchanges = {
-    for {
-      presentationService <- ZIO.service[PresentationService]
-      records <- presentationService
-        .getPresentationRecords()
-        .mapError(err => Throwable(s"Error occured while getting issue credential records: $err"))
-      _ <- ZIO.foreach(records)(performPresentation)
     } yield ()
   }
 
@@ -60,7 +46,7 @@ object BackgroundJobs {
       _ <- ZIO.logDebug(s"Running action with records => $record")
       _ <- record match {
         // Offer should be sent from Issuer to Holder
-        case IssueCredentialRecord(id, _, _, _, _, Role.Issuer, _, _, _, _, OfferPending, _, Some(offer), _, _, _) =>
+        case IssueCredentialRecord(id, _, _, _, _, Role.Issuer, _, _, _, _, OfferPending, _, Some(offer), _, _) =>
           (for {
             _ <- ZIO.log(s"IssueCredentialRecord: OfferPending (START)")
             didComm <- ZIO.service[DidComm]
@@ -70,24 +56,7 @@ object BackgroundJobs {
           } yield ()): ZIO[DidComm & CredentialService, CredentialServiceError | MercuryException, Unit]
 
         // Request should be sent from Holder to Issuer
-        case IssueCredentialRecord(
-              id,
-              _,
-              _,
-              _,
-              _,
-              Role.Holder,
-              _,
-              _,
-              _,
-              _,
-              RequestPending,
-              _,
-              _,
-              Some(request),
-              _,
-              _,
-            ) =>
+        case IssueCredentialRecord(id, _, _, _, _, Role.Holder, _, _, _, _, RequestPending, _, _, Some(request), _) =>
           (for {
             _ <- sendMessage(request.makeMessage)
             credentialService <- ZIO.service[CredentialService]
@@ -95,7 +64,7 @@ object BackgroundJobs {
           } yield ()): ZIO[DidComm & CredentialService, CredentialServiceError | MercuryException, Unit]
 
         // 'automaticIssuance' is TRUE. Issuer automatically accepts the Request
-        case IssueCredentialRecord(id, _, _, _, _, Role.Issuer, _, _, Some(true), _, RequestReceived, _, _, _, _, _) =>
+        case IssueCredentialRecord(id, _, _, _, _, Role.Issuer, _, _, Some(true), _, RequestReceived, _, _, _, _) =>
           for {
             credentialService <- ZIO.service[CredentialService]
             _ <- credentialService.acceptCredentialRequest(id)
@@ -117,8 +86,7 @@ object BackgroundJobs {
               _,
               _,
               _,
-              Some(issue),
-              _,
+              Some(issue)
             ) =>
           // Generate the JWT Credential and store it in DB as an attacment to IssueCredentialData
           // Set ProtocolState to CredentialGenerated
@@ -139,7 +107,6 @@ object BackgroundJobs {
               credentials = Map("prims/jwt" -> signedJwtCredential.value)
             )
             _ <- credentialService.markCredentialGenerated(id, issueCredential)
-
           } yield ()
 
         // Credential has been generated and can be sent directly to the Holder
@@ -158,8 +125,7 @@ object BackgroundJobs {
               None,
               _,
               _,
-              Some(issue),
-              _,
+              Some(issue)
             ) =>
           (for {
             _ <- sendMessage(issue.makeMessage)
@@ -183,8 +149,7 @@ object BackgroundJobs {
               Some(Published),
               _,
               _,
-              Some(issue),
-              _,
+              Some(issue)
             ) =>
           (for {
             _ <- sendMessage(issue.makeMessage)
@@ -192,8 +157,8 @@ object BackgroundJobs {
             _ <- credentialService.markCredentialSent(id)
           } yield ()): ZIO[DidComm & CredentialService, CredentialServiceError | MercuryException, Unit]
 
-        case IssueCredentialRecord(id, _, _, _, _, _, _, _, _, _, ProblemReportPending, _, _, _, _, _) => ???
-        case IssueCredentialRecord(id, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)                    => ZIO.unit
+        case IssueCredentialRecord(id, _, _, _, _, _, _, _, _, _, ProblemReportPending, _, _, _, _) => ???
+        case IssueCredentialRecord(id, _, _, _, _, _, _, _, _, _, _, _, _, _, _)                    => ZIO.unit
       }
     } yield ()
 
@@ -207,87 +172,6 @@ object BackgroundJobs {
       .catchAllDefect { case throwable =>
         ZIO.logErrorCause(s"Issue Credential protocol defect processing record: ${record.id}", Cause.fail(throwable))
       }
-  }
-
-  private[this] def performPresentation(
-      record: PresentationRecord
-  ): ZIO[DidComm & PresentationService, Throwable, Unit] = {
-    import io.iohk.atala.pollux.core.model.PresentationRecord.ProtocolState._
-
-    val aux: ZIO[DidComm & PresentationService, MercuryException | InvalidState, Unit] = for {
-      _ <- ZIO.logDebug(s"Running action with records => $record")
-      _ <- record match {
-        // ##########################
-        // ### PresentationRecord ###
-        // ##########################
-        case PresentationRecord(id, _, _, _, _, _, _, _, ProposalPending, _, _, _)  => ZIO.unit // NotImplemented
-        case PresentationRecord(id, _, _, _, _, _, _, _, ProposalSent, _, _, _)     => ZIO.unit // NotImplemented
-        case PresentationRecord(id, _, _, _, _, _, _, _, ProposalReceived, _, _, _) => ZIO.unit // NotImplemented
-        case PresentationRecord(id, _, _, _, _, _, _, _, ProposalRejected, _, _, _) => ZIO.unit // NotImplemented
-
-        case PresentationRecord(id, _, _, _, _, _, _, _, RequestPending, oRecord, _, _) => // Verifier
-          oRecord match
-            case None => ZIO.fail(InvalidState("PresentationRecord 'RequestPending' with no Record"))
-            case Some(record) =>
-              for {
-                _ <- ZIO.log(s"PresentationRecord: RequestPending (Send Massage)")
-                didComm <- ZIO.service[DidComm]
-                _ <- sendMessage(record.makeMessage)
-                service <- ZIO.service[PresentationService]
-                _ <- service.markRequestPresentationSent(id).catchAll { case ex: PresentationError =>
-                  ZIO.logError(s"Fail to mark the RequestPresentation '$id' as Verifier: $ex") *>
-                    ZIO.unit
-                }
-              } yield ()
-
-        case PresentationRecord(id, _, _, _, _, _, _, _, RequestSent, _, _, _) => // Verifier
-          ZIO.logDebug("PresentationRecord: RequestSent") *> ZIO.unit
-        case PresentationRecord(id, _, _, _, _, _, _, _, RequestReceived, _, _, _) => // Prover
-          ZIO.logDebug("PresentationRecord: RequestReceived") *> ZIO.unit
-        case PresentationRecord(id, _, _, _, _, _, _, _, RequestRejected, _, _, _) => // Prover
-          ZIO.logDebug("PresentationRecord: RequestRejected") *> ZIO.unit
-        case PresentationRecord(id, _, _, _, _, _, _, _, ProblemReportPending, _, _, _) => ???
-        // TODO NotImplemented
-        case PresentationRecord(id, _, _, _, _, _, _, _, ProblemReportSent, _, _, _)     => ??? // TODO NotImplemented
-        case PresentationRecord(id, _, _, _, _, _, _, _, ProblemReportReceived, _, _, _) => ??? // TODO NotImplemented
-        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationPending, _, _, presentation) => // Prover
-          presentation match
-            case None => ZIO.fail(InvalidState("PresentationRecord in 'PresentationPending' with no Presentation"))
-            case Some(p) =>
-              for {
-                _ <- ZIO.log(s"PresentationRecord: PresentationPending (Send Massage)")
-                didComm <- ZIO.service[DidComm]
-                _ <- sendMessage(p.makeMessage)
-                service <- ZIO.service[PresentationService]
-                _ <- service.markPresentationSent(id).catchAll { case ex: PresentationError =>
-                  ZIO.logError(s"Fail to mark the PresentationSent '$id' as Prover: $ex") *>
-                    ZIO.unit
-                }
-              } yield ()
-        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationGenerated, _, _, _) => ??? // FIXME Not Required
-        // We are jumping this PresentationGenerated state
-        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationSent, _, _, _) =>
-          ZIO.logDebug("PresentationRecord: PresentationSent") *> ZIO.unit
-        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationReceived, _, _, _) =>
-          ZIO.logDebug("PresentationRecord: PresentationReceived") *> ZIO.unit
-        // TODO move the state to PresentationVerified
-        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationVerified, _, _, _) =>
-          ZIO.logDebug("PresentationRecord: PresentationVerified") *> ZIO.unit
-        // case PresentationRecord(id, _, _, _, _, _, _, _, PresentationVerifiedAccepted, _, _, _) => //TODO
-        //   ZIO.logDebug("PresentationRecord: PresentationVerifiedAccepted") *> ZIO.unit
-        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationRejected, _, _, _) =>
-          ZIO.logDebug("PresentationRecord: PresentationRejected") *> ZIO.unit
-      }
-    } yield ()
-
-    aux.catchAll {
-      case ex: TransportError => // : io.iohk.atala.mercury.model.error.MercuryError | java.io.IOException =>
-        ex.printStackTrace()
-        ZIO.logError(ex.getMessage()) *>
-          ZIO.fail(mercuryErrorAsThrowable(ex))
-      case ex: IOException  => ZIO.fail(ex)
-      case ex: InvalidState => ZIO.fail(ex)
-    }
   }
 
   val publishCredentialsToDlt = {

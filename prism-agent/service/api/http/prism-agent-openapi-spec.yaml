@@ -17,7 +17,7 @@ components:
       in: header
       name: apikey
 security:
-  - ApiKeyAuth: []
+  - ApiKeyAuth: [ ]
 tags:
   # Castor
   - name: DID
@@ -37,13 +37,14 @@ tags:
   - name: Connections Management
     description: API for driving connection process.
 
+
 paths:
   # ----------------------------------
   # Castor
   # ----------------------------------
   /dids:
     post:
-      tags: ["DID"]
+      tags: [ "DID" ]
       operationId: createDid
       summary: Publish DID create operation to blockchain.
       description: Publish DID create operation to blockchain.
@@ -74,7 +75,7 @@ paths:
 
   /dids/{didRef}:
     get:
-      tags: ["DID"]
+      tags: [ "DID" ]
       operationId: getDid
       summary: Resolve DID.
       description: Resolve DID.
@@ -96,7 +97,7 @@ paths:
 
   /dids/{didRef}/updates:
     post:
-      tags: ["DID"]
+      tags: [ "DID" ]
       operationId: updateDid
       summary: Publish DID update operation to blockchain.
       description: Publish DID update operation to blockchain.
@@ -135,7 +136,7 @@ paths:
 
   /dids/{didRef}/deactivations:
     post:
-      tags: ["DID"]
+      tags: [ "DID" ]
       operationId: deactivateDID
       summary: Publish DID deactivate operation to blockchain.
       description: Publish DID deactivate operation to blockchain.
@@ -174,7 +175,7 @@ paths:
 
   /dids/{didRef}/recoveries:
     post:
-      tags: ["DID"]
+      tags: [ "DID" ]
       operationId: recoverDid
       summary: Publish DID recover operation to blockchain.
       description: Publish DID recover operation to blockchain.
@@ -213,7 +214,7 @@ paths:
 
   /did-operations/{didOperationRef}:
     get:
-      tags: ["DID Operations"]
+      tags: [ "DID Operations" ]
       operationId: getDidOperation
       summary: Get Did Operation.
       description: Get Did Operation.
@@ -235,7 +236,7 @@ paths:
 
   /dids/{didRef}/operations:
     get:
-      tags: ["DID Operations"]
+      tags: [ "DID Operations" ]
       operationId: getDidOperationsByDidRef
       summary: Get All DID Operations for given DID.
       description: Get All DID Operations for given DID.
@@ -257,7 +258,7 @@ paths:
 
   /authentication/challenges:
     post:
-      tags: ["DID Authentication"]
+      tags: [ "DID Authentication" ]
       operationId: createDidAuthenticationChallenge
       summary: Create a new authentication challenge
       deprecated: true
@@ -286,7 +287,7 @@ paths:
 
   /authentication/challenge-submissions:
     post:
-      tags: ["DID Authentication"]
+      tags: [ "DID Authentication" ]
       operationId: createDidAuthenticationChallengeSubmission
       summary: Create a verification from challenge
       deprecated: true
@@ -314,7 +315,7 @@ paths:
 
   /did-registrar/dids:
     post:
-      tags: ["DID Registrar"]
+      tags: [ "DID Registrar" ]
       operationId: createManagedDid
       summary: Create DID with the DID Document template where keys are managed by PrismAgent.
       description: Create DID with the DID Document template where keys are managed by PrismAgent.
@@ -340,7 +341,7 @@ paths:
 
   /did-registrar/dids/{didRef}/publications:
     post:
-      tags: ["DID Registrar"]
+      tags: [ "DID Registrar" ]
       operationId: publishManagedDid
       summary: Publish DID stored in PrismAgent wallet to blockchain
       description: Publish DID stored in PrismAgent wallet to blockchain
@@ -368,9 +369,8 @@ paths:
       tags:
         - Schema Registry
       summary: Lookup schemas by indexed fields
-      description:
-        "Lookup schemas by `author`, `name`, `tags` parameters and control
-        the pagination by `offset` and `limit` parameters "
+      description: 'Lookup schemas by `author`, `name`, `tags` parameters and control
+        the pagination by `offset` and `limit` parameters '
       operationId: lookupSchemasByQuery
       parameters:
         - name: author
@@ -406,24 +406,23 @@ paths:
           schema:
             type: string
       responses:
-        "200":
-          description: ""
+        '200':
+          description: ''
           content:
             application/json:
               schema:
                 $ref: ./pollux/schemas.yaml#/components/schemas/VerifiableCredentialSchemaPage
-        "400":
-          description:
-            "Invalid value for: query parameter author, Invalid value for:
+        '400':
+          description: 'Invalid value for: query parameter author, Invalid value for:
             query parameter name, Invalid value for: query parameter tags, Invalid
             value for: query parameter offset, Invalid value for: query parameter
-            limit, Invalid value for: query parameter order"
+            limit, Invalid value for: query parameter order'
           content:
             text/plain:
               schema:
                 type: string
-        "500":
-          description: ""
+        '500':
+          description: ''
           content:
             application/json:
               schema:
@@ -432,8 +431,7 @@ paths:
       tags:
         - Schema Registry
       summary: Publish new schema to the schema registry
-      description:
-        Publish the new schema with attributes to the schema registry on
+      description: Publish the new schema with attributes to the schema registry on
         behalf of Cloud Agent. Schema will be signed by the keys of Cloud Agent and
         issued by the DID that corresponds to it
       operationId: createSchema
@@ -445,20 +443,20 @@ paths:
               $ref: ./pollux/schemas.yaml#/components/schemas/VerificationCredentialSchemaInput
         required: true
       responses:
-        "201":
-          description: ""
+        '201':
+          description: ''
           content:
             application/json:
               schema:
                 $ref: ./pollux/schemas.yaml#/components/schemas/VerifiableCredentialSchema
-        "400":
-          description: "Invalid value for: body"
+        '400':
+          description: 'Invalid value for: body'
           content:
             text/plain:
               schema:
                 type: string
-        "500":
-          description: ""
+        '500':
+          description: ''
           content:
             application/json:
               schema:
@@ -468,8 +466,7 @@ paths:
       tags:
         - Schema Registry
       summary: Fetch the schema from the registry by id
-      description:
-        Fetch the schema by the unique identifier. Verifiable Credential
+      description: Fetch the schema by the unique identifier. Verifiable Credential
         Schema in json format is returned.
       operationId: getSchemaById
       parameters:
@@ -481,30 +478,31 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
-          description: ""
+        '200':
+          description: ''
           content:
             application/json:
               schema:
                 $ref: ./pollux/schemas.yaml#/components/schemas/VerifiableCredentialSchema
-        "400":
-          description: "Invalid value for: path parameter id"
+        '400':
+          description: 'Invalid value for: path parameter id'
           content:
             text/plain:
               schema:
                 type: string
-        "404":
-          description: ""
+        '404':
+          description: ''
           content:
             application/json:
               schema:
                 $ref: ./pollux/schemas.yaml#/components/schemas/NotFoundResponse
 
+
   ## Issue Credential Protocol
 
   /issue-credentials/credential-offers:
     post:
-      tags: ["Issue Credentials Protocol"]
+      tags: [ "Issue Credentials Protocol" ]
       operationId: createCredentialOffer
       summary: As a VC issuer, create a new credential offer to be sent to a VC holder
       requestBody:
@@ -527,10 +525,10 @@ paths:
             application/json:
               schema:
                 $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
-
+  
   /issue-credentials/records:
     get:
-      tags: ["Issue Credentials Protocol"]
+      tags: [ "Issue Credentials Protocol" ]
       operationId: getCredentialRecords
       summary: Get credential records
       responses:
@@ -549,7 +547,7 @@ paths:
 
   /issue-credentials/records/{recordId}:
     get:
-      tags: ["Issue Credentials Protocol"]
+      tags: [ "Issue Credentials Protocol" ]
       operationId: getCredentialRecord
       summary: Get a credential record by Id
       parameters:
@@ -567,10 +565,10 @@ paths:
             application/json:
               schema:
                 $ref: "./pollux/schemas.yaml#/components/schemas/ErrorResponse"
-
+  
   /issue-credentials/records/{recordId}/accept-offer:
     post:
-      tags: ["Issue Credentials Protocol"]
+      tags: [ "Issue Credentials Protocol" ]
       operationId: acceptCredentialOffer
       summary: As a VC holder, accept a credential offer received from an issuer
       parameters:
@@ -591,7 +589,7 @@ paths:
 
   /issue-credentials/records/{recordId}/issue-credential:
     post:
-      tags: ["Issue Credentials Protocol"]
+      tags: [ "Issue Credentials Protocol" ]
       operationId: issueCredential
       summary: As a VC issuer, issue the VC for the specified issue credential record
       parameters:
@@ -612,7 +610,7 @@ paths:
 
   /revocation-registry/credential-status/{id}:
     get:
-      tags: ["Revocation Registry"]
+      tags: [ "Revocation Registry" ]
       operationId: getCredentialRevocationStatusById
       summary: Get credentials revocation status by credential id
       description: Get credentials revocation status by credential id
@@ -633,7 +631,7 @@ paths:
                 $ref: "./pollux/schemas.yaml#/components/schemas/W3CCredentialStatus"
   /revocation-registry/revoke:
     post:
-      tags: ["Revocation Registry"]
+      tags: [ "Revocation Registry" ]
       operationId: revokeCredentialById
       summary: Revoke credential by id
       description: Revoke credential by id
@@ -658,7 +656,7 @@ paths:
 
   /revocation-registry/operations/{id}:
     get:
-      tags: ["Revocation Registry"]
+      tags: [ "Revocation Registry" ]
       operationId: getRevocationOperationStatusById
       summary: Get revocation operation status by id
       description: Get revocation operation status by id
@@ -676,52 +674,65 @@ paths:
               schema:
                 $ref: "./pollux/schemas.yaml#/components/schemas/RevocationStatus"
 
-  /present-proof/presentations:
+  /present-proof/verifiable-presentations:
     post:
-      tags: ["Present Proof"]
-      operationId: requestPresentation
+      tags: [ "Present Proof" ]
+      operationId: createVerifiablePresentation
+      summary: Create new instance of VerifiablePresentation
+      description: Verifier creates the instance of Verifiable Presentation object to be used in present proof communication protocol with Prover
       requestBody:
-        description: Request presentation of some type of Proof or Proofs (VC)
+        description: PresentationInput object with the schema references and claims
         required: true
         content:
           application/json:
             schema:
-              $ref: "./pollux/schemas.yaml#/components/schemas/RequestPresentationInput"
+              $ref: "./pollux/schemas.yaml#/components/schemas/W3CPresentationInput"
       responses:
         "201":
           description: The new presentation is created
           content:
             application/json:
               schema:
-                $ref: "./pollux/schemas.yaml#/components/schemas/RequestPresentationOutput"
-        "422":
-          description: Failed to create a presentation request.
-          content:
-            application/json:
-              schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
+                $ref: "./pollux/schemas.yaml#/components/schemas/W3CPresentation"
+        # TODO: Add other corner cases and error responses
+
     get:
-      tags: ["Present Proof"]
-      operationId: getAllPresentation
+      tags: [ "Present Proof" ]
+      operationId: fetchPresentationByQuery
+      summary: Fetch presentation by query
+      description: Fetch presentation by query
+      parameters: # TODO: Define the parameters for the presentation lookup
+        - in: query
+          name: name
+          description: Fetch presentation by the name
+          example: TemplateName
+          schema:
+            type: string
+        - in: query
+          name: offset
+          description: Pagination offset
+          example: 15
+          schema:
+            type: integer
+        - in: query
+          name: limit
+          description: Pagination limit
+          example: 100
+          schema:
+            type: integer
       responses:
         "200":
-          description: List of presentations and status
+          description: Presentations are fetched by the query
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "./pollux/schemas.yaml#/components/schemas/PresentationStatus"
-        "404":
-          description: There is no presentations record
-          content:
-            application/json:
-              schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
-  /present-proof/presentations/{id}:
-    patch:
-      tags: ["Present Proof"]
-      operationId: updatePresentation
+                $ref: "./pollux/schemas.yaml#/components/schemas/W3CPresentationPaginated"
+  /present-proof/verifiable-presentations/{id}:
+    get:
+      tags: [ "Present Proof" ]
+      operationId: getPresentationById
+      summary: Fetch the presentation from the collection by id
+      description: Fetch the presentation from the collection by id
       parameters:
         - in: path
           name: id
@@ -730,106 +741,20 @@ paths:
           required: true
           description: Unique identifier of the presentation
           example: "06e126d1-fa44-4882-a243-1e326fbe21db"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "./pollux/schemas.yaml#/components/schemas/RequestPresentationAction"
-              # oneOf:
-              #  - $ref: "./pollux/schemas.yaml#/components/schemas/RequestPresentationActionAccept"
-              #  - $ref: "./pollux/schemas.yaml#/components/schemas/RequestPresentationActionReject"
       responses:
         "200":
-          description: Update the presentation record
-        "404":
-          description: There is no presentation record existing with the 'id'
+          description: Successful response, the presentation is returned
           content:
             application/json:
               schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
-
-  # /present-proof/verifiable-presentations:
-  #   post:
-  #     tags: ["Present Proof"]
-  #     operationId: createVerifiablePresentation
-  #     summary: Create new instance of VerifiablePresentation
-  #     description: Verifier creates the instance of Verifiable Presentation object to be used in present proof communication protocol with Prover
-  #     requestBody:
-  #       description: PresentationInput object with the schema references and claims
-  #       required: true
-  #       content:
-  #         application/json:
-  #           schema:
-  #             $ref: "./pollux/schemas.yaml#/components/schemas/W3CPresentationInput"
-  #     responses:
-  #       "201":
-  #         description: The new presentation is created
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "./pollux/schemas.yaml#/components/schemas/W3CPresentation"
-  #       # TODO: Add other corner cases and error responses
-
-  #   get:
-  #     tags: ["Present Proof"]
-  #     operationId: fetchPresentationByQuery
-  #     summary: Fetch presentation by query
-  #     description: Fetch presentation by query
-  #     parameters: # TODO: Define the parameters for the presentation lookup
-  #       - in: query
-  #         name: name
-  #         description: Fetch presentation by the name
-  #         example: TemplateName
-  #         schema:
-  #           type: string
-  #       - in: query
-  #         name: offset
-  #         description: Pagination offset
-  #         example: 15
-  #         schema:
-  #           type: integer
-  #       - in: query
-  #         name: limit
-  #         description: Pagination limit
-  #         example: 100
-  #         schema:
-  #           type: integer
-  #     responses:
-  #       "200":
-  #         description: Presentations are fetched by the query
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "./pollux/schemas.yaml#/components/schemas/W3CPresentationPaginated"
-  # /present-proof/verifiable-presentations/{id}:
-  #   get:
-  #     tags: ["Present Proof"]
-  #     operationId: getPresentationById
-  #     summary: Fetch the presentation from the collection by id
-  #     description: Fetch the presentation from the collection by id
-  #     parameters:
-  #       - in: path
-  #         name: id
-  #         schema:
-  #           type: string
-  #         required: true
-  #         description: Unique identifier of the presentation
-  #         example: "06e126d1-fa44-4882-a243-1e326fbe21db"
-  #     responses:
-  #       "200":
-  #         description: Successful response, the presentation is returned
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "./pollux/schemas.yaml#/components/schemas/W3CPresentation"
+                $ref: "./pollux/schemas.yaml#/components/schemas/W3CPresentation"
 
   # ----------------------------------
   # Connect
   # ----------------------------------
   /connections:
     post:
-      tags: ["Connections Management"]
+      tags: [ "Connections Management" ]
       operationId: createConnection
       summary: Creates new connection and returns an invitation.
       description: |-
@@ -859,7 +784,7 @@ paths:
                 $ref: "./connect/schemas.yaml#/components/schemas/ErrorResponse"
 
     get:
-      tags: ["Connections Management"]
+      tags: [ "Connections Management" ]
       operationId: getConnections
       summary: Returns a list of connections.
       responses:
@@ -878,7 +803,7 @@ paths:
 
   /connections/{connectionId}:
     get:
-      tags: ["Connections Management"]
+      tags: [ "Connections Management" ]
       parameters:
         - $ref: "./connect/schemas.yaml#/components/parameters/connectionId"
       operationId: getConnection
@@ -897,7 +822,7 @@ paths:
               schema:
                 $ref: "./connect/schemas.yaml#/components/schemas/ErrorResponse"
     delete:
-      tags: ["Connections Management"]
+      tags: [ "Connections Management" ]
       parameters:
         - $ref: "./connect/schemas.yaml#/components/parameters/connectionId"
       operationId: deleteConnection
@@ -911,7 +836,7 @@ paths:
 
   /connection-invitations:
     post:
-      tags: ["Connections Management"]
+      tags: [ "Connections Management" ]
       operationId: acceptConnectionInvitation
       summary: Accepts externally received invitation.
       description: Creates new connection state record in `pending` state. It is assumed that application would first decode and validate the invitation. When it is accepted in the application side, it should be submitted in raw format to this API.
@@ -934,4 +859,4 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "./connect/schemas.yaml#/components/schemas/ErrorResponse"
+                $ref: "./connect/schemas.yaml#/components/schemas/ErrorResponse"       
