@@ -43,6 +43,10 @@ jobs:
           version: v2.12.2 # defaults to 'latest'
           legacy: true    # will also install in PATH as `docker-compose`
 
+      # - name: Update container versions
+      #   run: |
+      #     ../../infrastructure/local/update-env.sh
+
       - name: Start services for issuer
         env:
           PORT: 8080
@@ -66,10 +70,6 @@ jobs:
       - name: Run e2e tests
         run: |
           ./gradlew test --tests "E2eTestsRunner"
-
-      - name: Setup upterm session
-        if: always()
-        uses: lhotari/action-upterm@v1
 
       - uses: actions/upload-artifact@v2
         if: always()
