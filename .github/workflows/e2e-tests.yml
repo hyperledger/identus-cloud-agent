@@ -50,6 +50,7 @@ jobs:
         with:
           compose-file: "./infrastructure/shared/docker-compose.yml"
           compose-flags: "--env-file ./infrastructure/local/.env -p issuer"
+          up-flags: "--wait"
           down-flags: "--volumes"
 
       - name: Start services for holder
@@ -59,12 +60,11 @@ jobs:
         with:
           compose-file: "./infrastructure/shared/docker-compose.yml"
           compose-flags: "--env-file ./infrastructure/local/.env -p holder"
+          up-flags: "--wait"
           down-flags: "--volumes"
 
       - name: Run e2e tests
         run: |
-          # remove sleep after healthchecks
-          sleep 60
           docker ps
           ./gradlew test --tests "E2eTestsRunner"
 
