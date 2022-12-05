@@ -1,21 +1,17 @@
 package features.did
 
 import extentions.WithAgents
-import io.cucumber.java.Before
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
-import net.serenitybdd.screenplay.Actor
-import net.serenitybdd.screenplay.rest.abilities.CallAnApi
 import net.serenitybdd.screenplay.rest.interactions.Get
 import net.serenitybdd.screenplay.rest.questions.ResponseConsequence
-import net.thucydides.core.util.EnvironmentVariables
 
 class ResolveDidSteps: WithAgents() {
 
     @When("I resolve existing DID by DID reference")
     fun iResolveExistingDIDByDIDReference() {
         acme.attemptsTo(
-            Get.resource("/dids/did:prism:123")
+            Get.resource("/connections")
         )
     }
 
