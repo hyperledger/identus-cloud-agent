@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "1.7.20"
+    kotlin("jvm") version "1.8.0-Beta"
     idea
     jacoco
     id("net.serenity-bdd.serenity-gradle-plugin") version "3.4.2"
