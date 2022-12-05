@@ -13,7 +13,7 @@ object Dependencies {
     val connect = "0.3.0-SNAPSHOT"
     val bouncyCastle = "1.70"
     val logback = "1.4.4"
-    val mercury = "0.8.0-SNAPSHOT"
+    val mercury = "0.8.0"
     val zioJson = "0.3.0"
     val tapir = "1.2.2"
   }
