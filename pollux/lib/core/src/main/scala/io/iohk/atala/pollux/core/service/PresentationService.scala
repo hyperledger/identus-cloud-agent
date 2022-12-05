@@ -497,7 +497,7 @@ private class PresentationServiceImpl(
 
   private[this] def createDidCommPresentation(
       request: RequestPresentation,
-      jwtPresentation: JWT // Seq[CredentialPayload] FIXME to support other types
+      jwtPresentation: JWT
   ): Presentation = {
 
     Presentation(
@@ -507,7 +507,7 @@ private class PresentationServiceImpl(
       ),
       attachments = Seq(
         AttachmentDescriptor
-          .buildAttachment(payload = jwtPresentation.value, mediaType = Some(""))
+          .buildAttachment(payload = jwtPresentation.value, mediaType = Some("prism/jwt"))
       ),
       thid = request.thid.orElse(Some(request.id)),
       from = request.to,
