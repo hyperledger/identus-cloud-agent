@@ -116,7 +116,7 @@ services:
       - db_castor
       - db_pollux
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://prism-agent:${PORT}/connections" ]
+      test: [ "CMD", "curl", "-f", "http://prism-agent:8080/connections" ]
       interval: 30s
       timeout: 10s
       retries: 5
