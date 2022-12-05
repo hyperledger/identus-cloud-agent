@@ -1,7 +1,7 @@
 package io.iohk.atala.pollux.schema
 
 import io.iohk.atala.api.http.model.{Order, PaginationInput}
-import io.iohk.atala.api.http.{FailureResponse, InternalServerError, NotFoundResponse}
+import io.iohk.atala.api.http.{FailureResponse, InternalServerError, NotFound}
 import io.iohk.atala.pollux.schema.VerificationPolicyEndpoints.*
 import io.iohk.atala.pollux.schema.model.{VerificationPolicy, VerificationPolicyInput}
 import io.iohk.atala.pollux.service.VerificationPolicyService
@@ -38,7 +38,7 @@ class VerificationPolicyServerEndpoints(
             case Some(pv) => ZIO.succeed(pv)
             case None =>
               ZIO.fail[FailureResponse](
-                NotFoundResponse(s"Verification policy is not found by $id")
+                NotFound(s"Verification policy is not found by $id")
               )
           }
         )
@@ -55,7 +55,7 @@ class VerificationPolicyServerEndpoints(
             case Some(pv) => ZIO.succeed(pv)
             case None =>
               ZIO.fail[FailureResponse](
-                NotFoundResponse(s"Verification policy is not found by $id")
+                NotFound(s"Verification policy is not found by $id")
               )
           }
         )
@@ -71,7 +71,7 @@ class VerificationPolicyServerEndpoints(
             case Some(_) => ZIO.succeed(())
             case None =>
               ZIO.fail[FailureResponse](
-                NotFoundResponse(s"Verification policy is not found by $id")
+                NotFound(s"Verification policy is not found by $id")
               )
           }
         )
