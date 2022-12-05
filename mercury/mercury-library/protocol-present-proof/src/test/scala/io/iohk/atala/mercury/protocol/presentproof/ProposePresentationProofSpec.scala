@@ -22,17 +22,12 @@ class ProposePresentationSpec extends ZSuite {
 
     val expectedProposalJson = parse(s"""{
          |    "id": "061bf917-2cbe-460b-8d12-b1a9609505c2",
-         |    "type": "https://didcomm.org/present-proof/2.0/propose-presentation",
-         |    "body":
-         |    {
+         |    "type": "https://didcomm.atalaprism.io/present-proof/3.0/propose-presentation",
+         |    "body": {
          |        "goal_code": "Propose Presentation",
-         |        "formats":
-         |        []
+         |        "proof_types": []
          |    },
-         |    "attachments":
-         |    [
-         |    $attachmentDescriptorJson
-         |    ],
+         |    "attachments":[$attachmentDescriptorJson],
          |    "to" : "did:prism:test123",
          |    "from" : "did:prism:test123"
          |}""".stripMargin).getOrElse(Json.Null)

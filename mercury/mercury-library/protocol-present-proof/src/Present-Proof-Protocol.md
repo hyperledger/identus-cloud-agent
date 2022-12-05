@@ -1,21 +1,26 @@
 # Present Proof Protocol
 
-This Protocol is part of the **DIDComm Messaging Specification** but also **00454-present-proof-v2**
+This Protocol is part of the **WACI-DIDComm Interop Profile v1.0**
+- See [https://github.com/decentralized-identity/waci-didcomm/blob/main/present_proof/present-proof-v3.md]
 
 Its a Present Proof protocol based on DIDCOMMv2 message format.
 
 A protocol supporting a general purpose verifiable presentation exchange regardless of the specifics of the underlying verifiable presentation request and verifiable presentation format
 
-See [https://identity.foundation/didcomm-messaging/spec]
-See [https://github.com/hyperledger/aries-rfcs/tree/main/features/0454-present-proof-v2]
+More Info:
+- See [https://didcomm.org/present-proof/3.0/]
+- Its base on **DIDComm Messaging Specification** - [https://identity.foundation/didcomm-messaging/spec]
+- Its similar to **00454-present-proof-v2** - [Hyperledger present-proof-v2](https://github.com/hyperledger/aries-rfcs/tree/main/features/0454-present-proof-v2) also see
+[Hyperledger 0453-issue-credential-v2](https://github.com/hyperledger/aries-rfcs/blob/main/features/0453-issue-credential-v2/README.md)
 
 ## PIURI
 
-Version 2.0: `https://didcomm.org/present-proof/3.0/propose-presentation`
+Version 3.0:
+- `https://didcomm.atalaprism.io/present-proof/3.0/propose-presentation`
+- `https://didcomm.atalaprism.io/present-proof/3.0/request-presentation`
+- `https://didcomm.atalaprism.io/present-proof/3.0/presentation`
 
-Version .0: `https://didcomm.org/present-proof/3.0/request-presentation`
-
-Version 3.0: `https://didcomm.org/present-proof/3.0/presentation`
+Note: `https://didcomm.atalaprism.io/present-proof/3.0` is equivalent to `https://didcomm.org/present-proof/3.0` with the different of how to specific types of proofs.
 
 ### Roles
 
@@ -28,32 +33,44 @@ Version 3.0: `https://didcomm.org/present-proof/3.0/presentation`
 
 ```mermaid
 stateDiagram-v2
-  [*] --> Initial
-  Initial --> request_presentation_received:Presentation request received as DIDCOMMV2 message
-  request_presentation_received --> proposal_sent: Presentation Proposal as DIDCOMMV2 message
-  request_presentation_received --> signed_presentation_proof_sent:Presentation proof sent as DIDCOMMV2 message
-  signed_presentation_proof_sent --> [*]
+  [*] --> request_received: Presentation request received
+  [*] --> proposal_sent: Send presentation Proposal
+  proposal_sent --> request_received: Presentation request received
+  proposal_sent --> abandoned: Send problem
+  proposal_sent --> abandoned: Receive problem
+  request_received --> proposal_sent: Send presentation Proposal
+  request_received --> presentation_sent:Presentation proof sent
+  request_received --> abandoned: Send problem
+  request_received --> abandoned: Receive problem
+  presentation_sent --> done
+  presentation_sent --> abandoned: Receive problem
+  abandoned --> [*]
+  done --> [*]
 ```
 
 ### Verifier request presentation sent  (Flow Diagram)
 
+
 ```mermaid
 stateDiagram-v2
-  [*] --> Initial
-  Initial --> await_response:request_presentation_sent DIDCOMMV2 message
-  await_response --> signed_presentation_proof_received:received DIDCOMMV2  signed proof received
-  await_response --> propose_presentation_received:received DIDCOMMV2 presentation proposal received
-  propose_presentation_received --> await_response:request_presentation_sent  DIDCOMMV2 request presentation proof
-  signed_presentation_proof_received --> done
-  await_response --> error:recieve problem report response
+  [*] --> request_sent: Send request presentation
+  [*] --> proposal_received: Receive proposal presentation
+  proposal_received --> request_sent: Resend request
+  proposal_received --> abandoned: Send problem
+  proposal_received --> abandoned: Receive problem
+  request_sent --> request_sent: Resend request
+  request_sent --> proposal_received: Receive proposal presentation
+  request_sent --> presentation_received: Receive presentation
+  request_sent --> done: Receive presentation
+  request_sent --> abandoned: Receive problem
+  presentation_received --> done: Send ACK
+  presentation_received --> abandoned: Send problem
+  presentation_received --> abandoned: Receive problem
+  abandoned --> [*]
   done --> [*]
 ```
 
-
-
-TODO See <https://github.com/hyperledger/aries-rfcs/blob/main/features/0453-issue-credential-v2/README.md>
-
-### Holder State Machine
+### Holder State Machine (TODO update this)
 
 ```mermaid
 stateDiagram-v2

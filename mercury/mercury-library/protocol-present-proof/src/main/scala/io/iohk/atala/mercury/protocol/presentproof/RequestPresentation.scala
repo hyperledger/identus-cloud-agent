@@ -36,14 +36,15 @@ object RequestPresentation {
 
   given Decoder[RequestPresentation] = deriveDecoder[RequestPresentation]
 
-  def `type`: PIURI = "https://didcomm.org/present-proof/2.0/request-presentation"
+  // def `type`: PIURI = "https://didcomm.org/present-proof/3.0/request-presentation"
+  def `type`: PIURI = "https://didcomm.atalaprism.io/present-proof/3.0/request-presentation"
 
   final case class Body(
       goal_code: Option[String] = None,
       comment: Option[String] = None,
-      will_confirm: Option[Boolean] = Some(false),
-      present_multiple: Option[Boolean] = Some(false),
-      formats: Seq[PresentationFormat] = Seq.empty[PresentationFormat]
+      will_confirm: Option[Boolean] = Some(false), // Will send a ack message after the presentation
+      // AtalaPrism Extension!
+      proof_types: Seq[ProofType] = Seq.empty
   )
 
   object Body {
@@ -58,7 +59,6 @@ object RequestPresentation {
       body = RequestPresentation.Body(
         goal_code = pp.body.goal_code,
         comment = pp.body.comment,
-        formats = pp.body.formats,
       ),
       attachments = pp.attachments,
       thid = Some(msg.id),

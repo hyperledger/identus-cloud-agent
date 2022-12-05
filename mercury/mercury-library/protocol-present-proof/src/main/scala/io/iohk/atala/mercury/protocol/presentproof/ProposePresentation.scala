@@ -39,8 +39,8 @@ final case class ProposePresentation(
 }
 
 object ProposePresentation {
-  // TODD will this be version RCF Issue Credential 2.0  as we use didcomm2 message format
-  def `type`: PIURI = "https://didcomm.org/present-proof/2.0/propose-presentation"
+  // def `type`: PIURI = "https://didcomm.org/present-proof/3.0/propose-presentation"
+  def `type`: PIURI = "https://didcomm.atalaprism.io/present-proof/3.0/propose-presentation"
 
   import AttachmentDescriptor.attachmentDescriptorEncoderV2
   given Encoder[ProposePresentation] = deriveEncoder[ProposePresentation]
@@ -53,7 +53,8 @@ object ProposePresentation {
   final case class Body(
       goal_code: Option[String] = None,
       comment: Option[String] = None,
-      formats: Seq[PresentationFormat] = Seq.empty[PresentationFormat]
+      // AtalaPrism Extension!
+      proof_types: Seq[ProofType] = Seq.empty
   )
 
   object Body {
@@ -68,7 +69,6 @@ object ProposePresentation {
       body = ProposePresentation.Body(
         goal_code = rp.body.goal_code,
         comment = rp.body.comment,
-        formats = rp.body.formats,
       ),
       attachments = rp.attachments,
       thid = rp.thid,
