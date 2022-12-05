@@ -5,7 +5,6 @@ import io.circe.Json
 import io.circe.syntax.*
 import io.iohk.atala.pollux.core.model.EncodedJWTCredential
 import io.iohk.atala.pollux.core.model.PresentationRecord
-import io.iohk.atala.pollux.core.model.error.CreatePresentationPayloadError
 import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.model.error.PresentationError._
 import io.iohk.atala.pollux.core.model.IssuedCredentialRaw
@@ -209,7 +208,7 @@ private class PresentationServiceImpl(
   private def createPresentationPayloadFromCredential(
       issuedCredentials: Seq[IssuedCredentialRaw],
       prover: Issuer // FIXME @Bassam
-  ): IO[CreatePresentationPayloadError, JWT] = {
+  ): IO[PresentationError, JWT] = {
 
     val verifiableCredentials = issuedCredentials.map { issuedCredential =>
       JwtVerifiableCredentialPayload(JWT(issuedCredential.signedCredential))
@@ -259,25 +258,15 @@ private class PresentationServiceImpl(
       x = List(1)
       issuedCredentials <- ZIO.fromEither(
         Either.cond(
-          x.nonEmpty,
-          x,
-          CreatePresentationPayloadError.IssuedCredentialNotFoundError(
+          issuedRawCredentials.nonEmpty,
+          issuedRawCredentials,
+          PresentationError.IssuedCredentialNotFoundError(
             new Throwable("No matching issued credentials foound in prover db")
           )
         )
       )
 
       credentialsToSend <- createPresentationPayloadFromCredential(issuedCredentials, prover)
-      // FIXME type CredentialPayload
-      // // credentialRepository.getValidCredential(by seq of records ids) //TODO FIXME
-      // credentialRepository
-      //   .getIssueCredentialRecords()
-      //   .map { e =>
-      //     e.filter(_.protocolState == IssueCredentialRecord.ProtocolState.CredentialReceived)
-      //       .filter(c => crecentialsToUse.contains(c.id.toString))
-      //       .map(_.issueCredentialData.map(_.))
-      //   }
-      //   .mapError(RepositoryError.apply)
       request = createDidCommPresentation(presentationRequest, credentialsToSend)
 
       count <- presentationRepository
