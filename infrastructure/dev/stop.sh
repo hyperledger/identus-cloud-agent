@@ -76,4 +76,4 @@ echo "--------------------------------------"
 echo "Stopping up stack using docker-compose"
 echo "--------------------------------------"
 
-PORT=${PORT} docker-compose -p ${NAME} -f ../shared/docker-compose.yml -f pgadmin-docker-compose.yml --env-file ${SCRIPT_DIR}/.env down ${VOLUMES}
+PORT=${PORT} docker-compose -p ${NAME} -f ../shared/docker-compose.yml down ${VOLUMES}

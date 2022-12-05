@@ -15,6 +15,7 @@ Help()
    echo "-p/--port              Port to run this instance on - defaults to 80."
    echo "-b/--background        Run in docker-compose daemon mode in the background."
    echo "-w/--wait              Wait until all containers are healthy (only in the background)."
+   echo "--debug                Run additional services for debug using docker-compose debug profile."
    echo "-h/--help              Print this help text."
    echo
 }
@@ -39,6 +40,8 @@ while [[ $# -gt 0 ]]; do
       ;;
     -w|--wait)
       WAIT="--wait"
+    --debug)
+      DEBUG="--profile debug"
       shift # past argument
       ;;
     -h|--help)
@@ -67,6 +70,16 @@ fi
 NAME="${NAME:=local}"
 PORT="${PORT:=80}"
 
+if [ -z ${DEBUG+x} ];
+then
+    DEBUG=""
+fi
+
+if [ -z ${DEBUG+x} ];
+then
+    DEBUG=""
+fi
+
 echo "NAME            = ${NAME}"
 echo "PORT            = ${PORT}"
 
@@ -77,4 +90,4 @@ echo "--------------------------------------"
 PORT=${PORT} docker-compose \
   -p ${NAME} \
   -f ${SCRIPT_DIR}/../shared/docker-compose.yml \
-  --env-file ${SCRIPT_DIR}/.env up ${BACKGROUND} ${WAIT}
+  --env-file ${SCRIPT_DIR}/.env ${DEBUG} up ${BACKGROUND} ${WAIT}

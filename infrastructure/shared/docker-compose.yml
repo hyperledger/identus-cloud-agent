@@ -3,79 +3,39 @@ version: '3.8'
 services:
 
   ##########################
-  # Castor Database
+  # Database
   ##########################
-  db_castor:
+  db:
     image: postgres:13
     restart: always
     environment:
-      POSTGRES_DB: castor
+      POSTGRES_MULTIPLE_DATABASES: "castor,pollux,connect,iris"
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     volumes:
-      - pg_data_castor_db:/var/lib/postgresql/data
+      - pg_data_db:/var/lib/postgresql/data
+      - ./postgres/init-script.sh:/docker-entrypoint-initdb.d/init-script.sh
+      - ./postgres/max_conns.sql:/docker-entrypoint-initdb.d/max_conns.sql
     healthcheck:
-      test: [ "CMD", "pg_isready", "-U", "postgres", "-d", "castor" ]
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "iris"]
       interval: 10s
       timeout: 5s
       retries: 5
-
-  ##########################
-  # Pollux Database
-  ##########################
-
-  db_pollux:
-    image: postgres:13
-    restart: always
+  
+  pgadmin:
+    image: dpage/pgadmin4
     environment:
-      POSTGRES_DB: pollux
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
     volumes:
-      - pg_data_pollux_db:/var/lib/postgresql/data
-    healthcheck:
-      test: [ "CMD", "pg_isready", "-U", "postgres", "-d", "pollux" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  ##########################
-  # Connect Database
-  ##########################
-
-  db_connect:
-    image: postgres:13
-    restart: always
-    environment:
-      POSTGRES_DB: connect
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    volumes:
-      - pg_data_connect_db:/var/lib/postgresql/data
-    healthcheck:
-      test: [ "CMD", "pg_isready", "-U", "postgres", "-d", "connect" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  ##########################
-  # Iris Database
-  ##########################
-
-  db_iris:
-    image: postgres:13
-    restart: always
-    environment:
-      POSTGRES_DB: iris
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    volumes:
-      - pg_data_iris_db:/var/lib/postgresql/data
-    healthcheck:
-      test: [ "CMD", "pg_isready", "-U", "postgres", "-d", "iris" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+       - pgadmin:/var/lib/pgadmin
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    depends_on:
+      - db
+    profiles:
+      - debug
 
   ##########################
   # Services
@@ -86,7 +46,7 @@ services:
   iris:
     image: ghcr.io/input-output-hk/iris-service:${IRIS_SERVICE_VERSION}
     environment:
-      IRIS_DB_HOST: db_iris
+      IRIS_DB_HOST: db
       IRIS_DB_PORT: 5432
       IRIS_DB_NAME: iris
       IRIS_DB_USER: postgres
@@ -96,17 +56,17 @@ services:
     environment:
       IRIS_HOST: iris
       IRIS_PORT: 8081
-      CASTOR_DB_HOST: db_castor
+      CASTOR_DB_HOST: db
       CASTOR_DB_PORT: 5432
       CASTOR_DB_NAME: castor
       CASTOR_DB_USER: postgres
       CASTOR_DB_PASSWORD: postgres
-      POLLUX_DB_HOST: db_pollux
+      POLLUX_DB_HOST: db
       POLLUX_DB_PORT: 5432
       POLLUX_DB_NAME: pollux
       POLLUX_DB_USER: postgres
       POLLUX_DB_PASSWORD: postgres
-      CONNECT_DB_HOST: db_connect
+      CONNECT_DB_HOST: db
       CONNECT_DB_PORT: 5432
       CONNECT_DB_NAME: connect
       CONNECT_DB_USER: postgres
@@ -145,8 +105,5 @@ services:
       - swagger-ui
 
 volumes:
-  pg_data_castor_db:
-  pg_data_pollux_db:
-  pg_data_connect_db:
-  pg_data_iris_db:
+  pg_data_db:
   pgadmin:
