@@ -14,16 +14,13 @@ import java.time.Duration
 
 open class WithAgents {
 
-    private lateinit var environmentVariables: EnvironmentVariables
     protected lateinit var acme: Actor
     protected lateinit var bob: Actor
 
     @BeforeScenario
     fun acmeAndBobAgents() {
-        val theRestApiBaseUrlIssuer = environmentVariables.optionalProperty("restapi.baseurl.issuer")
-            .orElse("http://localhost:8080/prism-agent")
-        val theRestApiBaseUrlHolder = environmentVariables.optionalProperty("restapi.baseurl.holder")
-            .orElse("http://localhost:8090/prism-agent")
+        val theRestApiBaseUrlIssuer = System.getenv("RESTAPI_URL_ISSUER") ?: "http://localhost:8080/prism-agent"
+        val theRestApiBaseUrlHolder = System.getenv("RESTAPI_URL_HOLDER") ?: "http://localhost:8090/prism-agent"
         acme = Actor.named("Acme").whoCan(CallAnApi.at(theRestApiBaseUrlIssuer))
         bob = Actor.named("Bob").whoCan(CallAnApi.at(theRestApiBaseUrlHolder))
     }
