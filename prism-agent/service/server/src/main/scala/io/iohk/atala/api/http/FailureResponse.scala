@@ -6,20 +6,23 @@ import sttp.tapir.Schema
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder}
+import sttp.tapir.server.model.ValuedEndpointOutput
 
 sealed trait FailureResponse
 
-case class NotFoundResponse(msg: String) extends FailureResponse
+case class NotFound(msg: String) extends FailureResponse
 
-object NotFoundResponse {
-  given encoder: zio.json.JsonEncoder[NotFoundResponse] = DeriveJsonEncoder.gen[NotFoundResponse]
-  given decoder: zio.json.JsonDecoder[NotFoundResponse] = DeriveJsonDecoder.gen[NotFoundResponse]
-  given schema: Schema[NotFoundResponse] = Schema.derived
+object NotFound {
+  given encoder: zio.json.JsonEncoder[NotFound] = DeriveJsonEncoder.gen[NotFound]
+  given decoder: zio.json.JsonDecoder[NotFound] = DeriveJsonDecoder.gen[NotFound]
+  given schema: Schema[NotFound] = Schema.derived
 }
 
 case class BadRequest(msg: String, errors: List[String] = List.empty) extends FailureResponse
 
 object BadRequest {
+  def failureResponseHandler(msg: String): ValuedEndpointOutput[_] =
+    ValuedEndpointOutput(jsonBody[BadRequest], BadRequest(msg))
   given encoder: zio.json.JsonEncoder[BadRequest] = DeriveJsonEncoder.gen[BadRequest]
   given decoder: zio.json.JsonDecoder[BadRequest] = DeriveJsonDecoder.gen[BadRequest]
   given schema: Schema[BadRequest] = Schema.derived

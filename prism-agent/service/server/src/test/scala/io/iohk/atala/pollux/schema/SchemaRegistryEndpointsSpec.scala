@@ -1,6 +1,7 @@
 package io.iohk.atala.pollux.schema
 
-import io.iohk.atala.api.http.NotFoundResponse
+import io.iohk.atala.agent.server.http.ZHttp4sBlazeServer
+import io.iohk.atala.api.http.{BadRequest, NotFound}
 import io.iohk.atala.pollux.service.SchemaRegistryService
 import sttp.client3.testing.SttpBackendStub
 import sttp.client3.ziojson.*
@@ -9,8 +10,8 @@ import sttp.tapir.server.interceptor.RequestResult.Response
 import sttp.tapir.server.stub.TapirStubInterpreter
 import sttp.tapir.ztapir.RIOMonadError
 import zio.ZIO
-import zio.test.Assertion.*
-import zio.test.{Assertion, Gen, Sized, ZIOSpecDefault, assert, assertZIO, defaultTestRunner, *}
+import zio.test.Assertion.{isRight, *}
+import zio.test.*
 import io.iohk.atala.pollux.schema.*
 import io.iohk.atala.pollux.schema.SchemaRegistryEndpointsSpec.schemaReqistrySchemasUri
 import io.iohk.atala.pollux.schema.model.{
@@ -19,6 +20,8 @@ import io.iohk.atala.pollux.schema.model.{
   VerifiableCredentialSchemaPage
 }
 import io.iohk.atala.pollux.service.SchemaRegistryServiceInMemory
+import sttp.monad.MonadError
+import sttp.tapir.server.interceptor.CustomiseInterceptors
 //import sttp.client3.quick.backend
 import sttp.model.{StatusCode, Uri}
 import zio.ZLayer
@@ -66,6 +69,7 @@ object Generators {
 
 object SchemaRegistryEndpointsSpec extends ZIOSpecDefault:
 
+  type SchemaBadRequestResponse = sttp.client3.Response[Either[DeserializationException[String], BadRequest]]
   type SchemaResponse = sttp.client3.Response[Either[DeserializationException[String], VerifiableCredentialSchema]]
   type SchemaPageResponse =
     sttp.client3.Response[Either[DeserializationException[String], VerifiableCredentialSchemaPage]]
@@ -85,16 +89,24 @@ object SchemaRegistryEndpointsSpec extends ZIOSpecDefault:
   private val schemaReqistrySchemasUri = uri"http://test.com/schema-registry/schemas"
   private val schema = VerifiableCredentialSchema(schemaInput).withBaseUri(schemaReqistrySchemasUri)
 
+  def bootstrapOptions[F[_]](monadError: MonadError[F]) = {
+    new CustomiseInterceptors[F, Any](_ => ())
+      .defaultHandlers(BadRequest.failureResponseHandler)
+  }
+
   def httpBackend(schemaRegistryService: SchemaRegistryService) = {
+
     val schemaRegistryEndpoints = SchemaRegistryServerEndpoints(schemaRegistryService)
-    val backend = TapirStubInterpreter(SttpBackendStub(new RIOMonadError[Any]))
-      .whenServerEndpoint(schemaRegistryEndpoints.createSchemaServerEndpoint)
-      .thenRunLogic()
-      .whenServerEndpoint(schemaRegistryEndpoints.getSchemaByIdServerEndpoint)
-      .thenRunLogic()
-      .whenServerEndpoint(schemaRegistryEndpoints.lookupSchemasByQueryServerEndpoint)
-      .thenRunLogic()
-      .backend()
+
+    val backend =
+      TapirStubInterpreter(bootstrapOptions(new RIOMonadError[Any]), SttpBackendStub(new RIOMonadError[Any]))
+        .whenServerEndpoint(schemaRegistryEndpoints.createSchemaServerEndpoint)
+        .thenRunLogic()
+        .whenServerEndpoint(schemaRegistryEndpoints.getSchemaByIdServerEndpoint)
+        .thenRunLogic()
+        .whenServerEndpoint(schemaRegistryEndpoints.lookupSchemasByQueryServerEndpoint)
+        .thenRunLogic()
+        .backend()
     backend
   }
 
@@ -148,7 +160,8 @@ object SchemaRegistryEndpointsSpec extends ZIOSpecDefault:
 
   def spec = suite("schema-registy endpoints spec")(
     schemaCreateAndGetOperationsSpec,
-    schemaPaginationSpec
+    schemaPaginationSpec,
+    schemaBadRequestAsJsonSpec
   ).provideLayer(SchemaRegistryServiceInMemory.layer)
 
   private val schemaCreateAndGetOperationsSpec = suite("schema-registy create and get by ID operations logic")(
@@ -198,7 +211,7 @@ object SchemaRegistryEndpointsSpec extends ZIOSpecDefault:
 
         response = basicRequest
           .get(schemaReqistrySchemasUri.addPath(uuid.toString))
-          .response(asJsonAlways[NotFoundResponse])
+          .response(asJsonAlways[NotFound])
           .send(backend)
 
         assertion <- assertZIO(response.map(_.code))(equalTo(StatusCode.NotFound))
@@ -255,5 +268,22 @@ object SchemaRegistryEndpointsSpec extends ZIOSpecDefault:
         assert(allPagesWithLimit1.length)(equalTo(100)) &&
         assert(allPagesWithLimit10.length)(equalTo(10)) &&
         assert(allPagesWithLimit15.length)(equalTo(7))
+    }
+  )
+
+  private val schemaBadRequestAsJsonSpec = suite("schema-registry BadRequest as json logic")(
+    test("create the schema with wrong json body returns BadRequest as json") {
+      for {
+        schemaRegistryService <- ZIO.service[SchemaRegistryService]
+        backend = httpBackend(schemaRegistryService)
+        response: SchemaBadRequestResponse <- basicRequest
+          .post(schemaReqistrySchemasUri)
+          .body("""{"invalid":true}""")
+          .response(asJsonAlways[BadRequest])
+          .send(backend)
+
+        itIsABadRequestStatusCode = assert(response.code)(equalTo(StatusCode.BadRequest))
+        theBodyWasParsedFromJsonAsBadRequest = assert(response.body)(isRight(isSubtype[BadRequest](Assertion.anything)))
+      } yield itIsABadRequestStatusCode && theBodyWasParsedFromJsonAsBadRequest
     }
   )

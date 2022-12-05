@@ -2,12 +2,14 @@ package io.iohk.atala.pollux.schema
 
 import io.iohk.atala.api.http.codec.OrderCodec.*
 import io.iohk.atala.api.http.model.{Order, PaginationInput}
-import io.iohk.atala.api.http.{BadRequest, FailureResponse, InternalServerError, NotFoundResponse}
+import io.iohk.atala.api.http.{BadRequest, FailureResponse, InternalServerError, NotFound}
 import io.iohk.atala.pollux.schema.model.{
   VerifiableCredentialSchema,
   VerifiableCredentialSchemaInput,
   VerifiableCredentialSchemaPage
 }
+import io.iohk.atala.api.http.EndpointOutputs._
+
 import io.iohk.atala.pollux.schema.model.{
   VerifiableCredentialSchema,
   VerificationPolicy,
@@ -51,14 +53,7 @@ object VerificationPolicyEndpoints {
       )
       .out(statusCode(StatusCode.Created))
       .out(jsonBody[VerificationPolicy])
-      .errorOut(
-        oneOf[FailureResponse](
-          oneOfVariant(
-            StatusCode.InternalServerError,
-            jsonBody[InternalServerError]
-          )
-        )
-      )
+      .errorOut(basicFailures)
       .name("createVerificationPolicy")
       .summary("Create the new verification policy")
       .description("Create the new verification policy")
@@ -79,14 +74,7 @@ object VerificationPolicyEndpoints {
       )
       .out(statusCode(StatusCode.Ok))
       .out(jsonBody[VerificationPolicy])
-      .errorOut(
-        oneOf[FailureResponse](
-          oneOfVariant(
-            StatusCode.InternalServerError,
-            jsonBody[InternalServerError]
-          )
-        )
-      )
+      .errorOut(basicFailuresAndNotFound)
       .name("updateVerificationPolicy")
       .summary("Update the verification policy object by id")
       .description(
@@ -106,11 +94,7 @@ object VerificationPolicyEndpoints {
           .description("Get the verification policy by id")
       )
       .out(jsonBody[VerificationPolicy])
-      .errorOut(
-        oneOf[FailureResponse](
-          oneOfVariant(StatusCode.NotFound, jsonBody[NotFoundResponse])
-        )
-      )
+      .errorOut(basicFailuresAndNotFound)
       .name("getVerificationPolicyById")
       .summary("Fetch the verification policy by id")
       .description(
@@ -130,11 +114,7 @@ object VerificationPolicyEndpoints {
           .description("Delete the verification policy by id")
       )
       .out(statusCode(StatusCode.Ok))
-      .errorOut(
-        oneOf[FailureResponse](
-          oneOfVariant(StatusCode.NotFound, jsonBody[NotFoundResponse])
-        )
-      )
+      .errorOut(basicFailuresAndNotFound)
       .name("deleteVerificationPolicyById")
       .summary("Deleted the verification policy by id")
       .description(
@@ -173,14 +153,7 @@ object VerificationPolicyEndpoints {
       )
       .in(query[Option[Order]]("order"))
       .out(jsonBody[VerificationPolicyPage])
-      .errorOut(
-        oneOf[FailureResponse](
-          oneOfVariant(
-            StatusCode.InternalServerError,
-            jsonBody[InternalServerError]
-          )
-        )
-      )
+      .errorOut(basicFailures)
       .name("lookupVerificationPoliciesByQuery")
       .summary("Lookup verification policies by query")
       .description(
