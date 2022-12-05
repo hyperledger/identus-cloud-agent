@@ -1,6 +1,6 @@
 Feature: Issue Credentials
 
-   @RFC0453 @AcceptanceTest
+    @RFC0453 @AcceptanceTest
     Scenario: Issue a credential with the Issuer beginning with an offer
       Given Acme and Bob have an existing connection
       When Acme offers a credential

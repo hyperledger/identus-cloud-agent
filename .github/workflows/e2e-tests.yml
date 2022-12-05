@@ -44,28 +44,15 @@ jobs:
           legacy: true    # will also install in PATH as `docker-compose`
 
       - name: Start services for issuer
-        env:
-          PORT: 8080
-        uses: isbang/compose-action@v1.4.1
-        with:
-          compose-file: "./infrastructure/shared/docker-compose.yml"
-          compose-flags: "--env-file ./infrastructure/local/.env -p issuer"
-          up-flags: "--wait"
-          down-flags: "--volumes"
+        run: |
+          ./infrastructure/local/run.sh -n issuer -p 8080 -w
 
       - name: Start services for holder
-        env:
-          PORT: 8090
-        uses: isbang/compose-action@v1.4.1
-        with:
-          compose-file: "./infrastructure/shared/docker-compose.yml"
-          compose-flags: "--env-file ./infrastructure/local/.env -p holder"
-          up-flags: "--wait"
-          down-flags: "--volumes"
+        run: |
+          ./infrastructure/local/run.sh -n holder -p 8090 -w
 
       - name: Run e2e tests
         run: |
-          docker ps
           ./gradlew test --tests "E2eTestsRunner"
 
       - uses: actions/upload-artifact@v2

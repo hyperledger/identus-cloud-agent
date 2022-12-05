@@ -39,6 +39,10 @@ while [[ $# -gt 0 ]]; do
       BACKGROUND="-d"
       shift # past argument
       ;;
+    -w|--wait)
+      WAIT="--wait"
+      shift # past argument
+      ;;
     -h|--help)
       Help
       exit
@@ -78,6 +82,11 @@ then
     BACKGROUND=""
 fi
 
+if [ -z ${WAIT+x} ];
+then
+    WAIT=""
+fi
+
 echo "NAME            = ${NAME}"
 echo "PORT            = ${PORT}"
 
@@ -85,4 +94,4 @@ echo "--------------------------------------"
 echo "Bringing up stack using docker-compose"
 echo "--------------------------------------"
 
-PORT=${PORT} docker-compose -p ${NAME} -f ../shared/docker-compose.yml --env-file ${SCRIPT_DIR}/.env up ${BACKGROUND}
+PORT=${PORT} docker-compose -p ${NAME} -f ../shared/docker-compose.yml --env-file ${SCRIPT_DIR}/.env up ${BACKGROUND} ${WAIT}
