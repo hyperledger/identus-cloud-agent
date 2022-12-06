@@ -109,7 +109,7 @@ import java.time.{Instant, ZonedDateTime}
       verifiableCredential = Vector(w3cVerifiableCredentialPayload, jwtVerifiableCredentialPayload),
       holder = "https://example.edu/holder/565049",
       verifier = Vector("https://example.edu/issuers/565049"),
-      issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
+      maybeIssuanceDate = Some(Instant.parse("2010-01-01T00:00:00Z")),
       maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z"))
     )
   println(w3cPresentationPayload.asJson.toString())

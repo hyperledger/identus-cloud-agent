@@ -14,14 +14,11 @@ services:
       POSTGRES_PASSWORD: postgres
     volumes:
       - pg_data_castor_db:/var/lib/postgresql/data
-
-  # delay to ensure DB is up before applying migrations
-  db_castor_init_delay:
-    image: alpine:3
-    command: sleep 5
-    depends_on:
-      db_castor:
-        condition: service_started
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "postgres", "-d", "castor" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   ##########################
   # Pollux Database
@@ -36,14 +33,11 @@ services:
       POSTGRES_PASSWORD: postgres
     volumes:
       - pg_data_pollux_db:/var/lib/postgresql/data
-
-  # delay to ensure DB is up before applying migrations
-  db_pollux_init_delay:
-    image: alpine:3
-    command: sleep 5
-    depends_on:
-      db_pollux:
-        condition: service_started
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "postgres", "-d", "pollux" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   ##########################
   # Connect Database
@@ -58,14 +52,11 @@ services:
       POSTGRES_PASSWORD: postgres
     volumes:
       - pg_data_connect_db:/var/lib/postgresql/data
-
-  # delay to ensure DB is up before applying migrations
-  db_connect_init_delay:
-    image: alpine:3
-    command: sleep 5
-    depends_on:
-      db_connect:
-        condition: service_started
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "postgres", "-d", "connect" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   ##########################
   # Iris Database
@@ -80,15 +71,11 @@ services:
       POSTGRES_PASSWORD: postgres
     volumes:
       - pg_data_iris_db:/var/lib/postgresql/data
-
-  # delay to ensure DB is up before applying migrations
-  db_iris_init_delay:
-    image: alpine:3
-    command: sleep 5
-    depends_on:
-      db_iris:
-        condition: service_started
-
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "postgres", "-d", "iris" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   ##########################
   # Services
@@ -125,6 +112,16 @@ services:
       CONNECT_DB_USER: postgres
       CONNECT_DB_PASSWORD: postgres
       DIDCOMM_SERVICE_URL: http://host.docker.internal:${PORT}/didcomm/
+    depends_on:
+      - db_castor
+      - db_pollux
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://prism-agent:8080/connections" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   swagger-ui:
     image: swaggerapi/swagger-ui:v4.14.0

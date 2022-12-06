@@ -5,11 +5,12 @@ import io.circe.*
 import io.circe.generic.auto.*
 import io.circe.parser.decode
 import io.circe.syntax.*
-import pdi.jwt.{Jwt, JwtCirce}
+import pdi.jwt.{Jwt, JwtCirce, JwtOptions}
 import zio.prelude.*
 
 import java.security.{KeyPairGenerator, PublicKey}
-import java.time.{Instant, ZonedDateTime}
+import java.time.temporal.TemporalAmount
+import java.time.{Clock, Instant, ZonedDateTime}
 import scala.util.{Failure, Success, Try}
 
 sealed trait VerifiablePresentationPayload
@@ -26,7 +27,7 @@ sealed trait PresentationPayload(
     `@context`: IndexedSeq[String],
     `type`: IndexedSeq[String],
     verifiableCredential: IndexedSeq[VerifiableCredentialPayload],
-    maybeIss: Option[String],
+    iss: String,
     maybeNbf: Option[Instant],
     aud: IndexedSeq[String],
     maybeExp: Option[Instant],
@@ -35,7 +36,7 @@ sealed trait PresentationPayload(
 ) {
   def toJwtPresentationPayload: JwtPresentationPayload =
     JwtPresentationPayload(
-      maybeIss = maybeIss,
+      iss = iss,
       vp = JwtVp(
         `@context` = `@context`,
         `type` = `type`,
@@ -48,23 +49,18 @@ sealed trait PresentationPayload(
       maybeNonce = maybeNonce
     )
 
-  def toW3CPresentationPayload: Validation[String, W3cPresentationPayload] =
-    Validation.validateWith(
-      Validation.fromOptionWith("Iss must be defined")(maybeIss),
-      Validation.fromOptionWith("Nbf must be defined")(maybeNbf)
-    ) { (iss, nbf) =>
-      W3cPresentationPayload(
-        `@context` = `@context`.distinct,
-        maybeId = maybeJti,
-        `type` = `type`.distinct,
-        verifiableCredential = verifiableCredential,
-        holder = iss,
-        verifier = aud,
-        issuanceDate = nbf,
-        maybeExpirationDate = maybeExp,
-        maybeNonce = maybeNonce
-      )
-    }
+  def toW3CPresentationPayload: W3cPresentationPayload =
+    W3cPresentationPayload(
+      `@context` = `@context`.distinct,
+      maybeId = maybeJti,
+      `type` = `type`.distinct,
+      verifiableCredential = verifiableCredential,
+      holder = iss,
+      verifier = aud,
+      maybeIssuanceDate = maybeNbf,
+      maybeExpirationDate = maybeExp,
+      maybeNonce = maybeNonce
+    )
 }
 
 case class W3cPresentationPayload(
@@ -74,7 +70,7 @@ case class W3cPresentationPayload(
     verifiableCredential: IndexedSeq[VerifiableCredentialPayload],
     holder: String,
     verifier: IndexedSeq[String],
-    issuanceDate: Instant,
+    maybeIssuanceDate: Option[Instant],
     maybeExpirationDate: Option[Instant],
 
     /** Not part of W3C Presentation but included to preserve in case of conversion from JWT. */
@@ -85,8 +81,8 @@ case class W3cPresentationPayload(
       maybeJti = maybeId,
       verifiableCredential = verifiableCredential,
       aud = verifier,
-      maybeIss = Some(holder),
-      maybeNbf = Some(issuanceDate),
+      iss = holder,
+      maybeNbf = maybeIssuanceDate,
       maybeExp = maybeExpirationDate,
       maybeNonce = maybeNonce
     )
@@ -98,7 +94,7 @@ case class JwtVp(
 )
 
 case class JwtPresentationPayload(
-    maybeIss: Option[String],
+    iss: String,
     vp: JwtVp,
     maybeNbf: Option[Instant],
     aud: IndexedSeq[String],
@@ -106,7 +102,7 @@ case class JwtPresentationPayload(
     maybeJti: Option[String],
     maybeNonce: Option[String]
 ) extends PresentationPayload(
-      maybeIss = maybeIss,
+      iss = iss,
       `@context` = vp.`@context`,
       `type` = vp.`type`,
       verifiableCredential = vp.verifiableCredential,
@@ -134,7 +130,7 @@ object PresentationPayload {
             ("verifiableCredential", w3cPresentationPayload.verifiableCredential.asJson),
             ("holder", w3cPresentationPayload.holder.asJson),
             ("verifier", w3cPresentationPayload.verifier.asJson),
-            ("issuanceDate", w3cPresentationPayload.issuanceDate.asJson),
+            ("issuanceDate", w3cPresentationPayload.maybeIssuanceDate.asJson),
             ("expirationDate", w3cPresentationPayload.maybeExpirationDate.asJson)
           )
           .deepDropNullValues
@@ -155,7 +151,7 @@ object PresentationPayload {
       (jwtPresentationPayload: JwtPresentationPayload) =>
         Json
           .obj(
-            ("iss", jwtPresentationPayload.maybeIss.asJson),
+            ("iss", jwtPresentationPayload.iss.asJson),
             ("vp", jwtPresentationPayload.vp.asJson),
             ("nbf", jwtPresentationPayload.maybeNbf.asJson),
             ("aud", jwtPresentationPayload.aud.asJson),
@@ -193,7 +189,7 @@ object PresentationPayload {
             .as[Option[String]]
             .map(_.iterator.toIndexedSeq)
             .orElse(c.downField("verifier").as[Option[IndexedSeq[String]]].map(_.iterator.toIndexedSeq.flatten))
-          issuanceDate <- c.downField("issuanceDate").as[Instant]
+          maybeIssuanceDate <- c.downField("issuanceDate").as[Option[Instant]]
           maybeExpirationDate <- c.downField("expirationDate").as[Option[Instant]]
         } yield {
           W3cPresentationPayload(
@@ -203,7 +199,7 @@ object PresentationPayload {
             verifiableCredential = verifiableCredential.distinct,
             holder = holder,
             verifier = verifier.distinct,
-            issuanceDate = issuanceDate,
+            maybeIssuanceDate = maybeIssuanceDate,
             maybeExpirationDate = maybeExpirationDate,
             maybeNonce = Option.empty
           )
@@ -234,7 +230,7 @@ object PresentationPayload {
     implicit val JwtPresentationPayloadDecoder: Decoder[JwtPresentationPayload] =
       (c: HCursor) =>
         for {
-          maybeIss <- c.downField("iss").as[Option[String]]
+          iss <- c.downField("iss").as[String]
           vp <- c.downField("vp").as[JwtVp]
           maybeNbf <- c.downField("nbf").as[Option[Instant]]
           aud <- c
@@ -247,7 +243,7 @@ object PresentationPayload {
           maybeNonce <- c.downField("nonce").as[Option[String]]
         } yield {
           JwtPresentationPayload(
-            maybeIss = maybeIss,
+            iss = iss,
             vp = vp,
             maybeNbf = maybeNbf,
             aud = aud.distinct,
@@ -301,4 +297,56 @@ object JwtPresentation {
 
   def validateEncodedJwt(jwt: JWT, publicKey: PublicKey): Boolean =
     JwtCirce.isValid(jwt.value, publicKey)
+
+  def verifyDates(jwt: JWT, leeway: TemporalAmount)(implicit clock: Clock): Validation[String, Unit] = {
+    val now = clock.instant()
+
+    val decodeJWT =
+      Validation.fromTry(JwtCirce.decodeRaw(jwt.value, options = JwtOptions(signature = false))).mapError(_.getMessage)
+
+    def validateNbfNotAfterExp(maybeNbf: Option[Instant], maybeExp: Option[Instant]): Validation[String, Unit] = {
+      val maybeResult =
+        for {
+          nbf <- maybeNbf
+          exp <- maybeExp
+        } yield {
+          if (nbf.isAfter(exp))
+            Validation.fail(s"Credential cannot expire before being in effect. nbf=$nbf exp=$exp")
+          else Validation.unit
+        }
+      maybeResult.getOrElse(Validation.unit)
+    }
+
+    def validateNbf(maybeNbf: Option[Instant]): Validation[String, Unit] = {
+      maybeNbf
+        .map(nbf =>
+          if (now.isBefore(nbf.minus(leeway)))
+            Validation.fail(s"Credential is not yet in effect. now=$now nbf=$nbf leeway=$leeway")
+          else Validation.unit
+        )
+        .getOrElse(Validation.unit)
+    }
+
+    def validateExp(maybeExp: Option[Instant]): Validation[String, Unit] = {
+      maybeExp
+        .map(exp =>
+          if (now.isAfter(exp.plus(leeway)))
+            Validation.fail(s"Credential has expired. now=$now exp=$exp leeway=$leeway")
+          else Validation.unit
+        )
+        .getOrElse(Validation.unit)
+    }
+
+    for {
+      decodedJWT <- decodeJWT
+      jwtCredentialPayload <- Validation.fromEither(decode[JwtPresentationPayload](decodedJWT)).mapError(_.getMessage)
+      maybeNbf = jwtCredentialPayload.maybeNbf
+      maybeExp = jwtCredentialPayload.maybeExp
+      result <- Validation.validateWith(
+        validateNbfNotAfterExp(maybeNbf, maybeExp),
+        validateNbf(maybeNbf),
+        validateExp(maybeExp)
+      )((l, _, _) => l)
+    } yield result
+  }
 }

@@ -1,7 +1,7 @@
 package io.iohk.atala.pollux.schema
 
 import io.iohk.atala.api.http.model.{Order, PaginationInput}
-import io.iohk.atala.api.http.{BadRequest, FailureResponse, InternalServerError, NotFoundResponse, RequestContext}
+import io.iohk.atala.api.http.{BadRequest, FailureResponse, InternalServerError, NotFound, RequestContext}
 import io.iohk.atala.pollux.schema.model.{
   VerifiableCredentialSchema,
   VerifiableCredentialSchemaPage,
@@ -26,6 +26,7 @@ import sttp.tapir.{
 }
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder}
 import sttp.model.StatusCode
+import io.iohk.atala.api.http.EndpointOutputs._
 
 import java.util.UUID
 
@@ -42,22 +43,13 @@ object SchemaRegistryEndpoints {
       .in("schema-registry" / "schemas")
       .in(
         jsonBody[VerifiableCredentialSchemaInput]
-          .copy(info =
-            Info.empty.description(
-              "Create schema input object with the metadata and attributes"
-            )
+          .description(
+            "Create schema input object with the metadata and attributes"
           )
       )
       .out(statusCode(StatusCode.Created))
       .out(jsonBody[VerifiableCredentialSchema])
-      .errorOut(
-        oneOf[FailureResponse](
-          oneOfVariant(
-            StatusCode.InternalServerError,
-            jsonBody[InternalServerError]
-          )
-        )
-      )
+      .errorOut(basicFailures)
       .name("createSchema")
       .summary("Publish new schema to the schema registry")
       .description(
@@ -74,15 +66,12 @@ object SchemaRegistryEndpoints {
     endpoint.get
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
-        "schema-registry" / "schemas" / path[UUID]("id")
-          .copy(info = Info.empty.description("Get the schema by id"))
-      )
-      .out(jsonBody[VerifiableCredentialSchema])
-      .errorOut(
-        oneOf[FailureResponse](
-          oneOfVariant(StatusCode.NotFound, jsonBody[NotFoundResponse])
+        "schema-registry" / "schemas" / path[UUID]("id").description(
+          "Get the schema by id"
         )
       )
+      .out(jsonBody[VerifiableCredentialSchema])
+      .errorOut(basicFailuresAndNotFound)
       .name("getSchemaById")
       .summary("Fetch the schema from the registry by id")
       .description(
@@ -121,14 +110,7 @@ object SchemaRegistryEndpoints {
       )
       .in(query[Option[Order]]("order"))
       .out(jsonBody[VerifiableCredentialSchemaPage])
-      .errorOut(
-        oneOf[FailureResponse](
-          oneOfVariant(
-            StatusCode.InternalServerError,
-            jsonBody[InternalServerError]
-          )
-        )
-      )
+      .errorOut(basicFailures)
       .name("lookupSchemasByQuery")
       .summary("Lookup schemas by indexed fields")
       .description(
@@ -145,7 +127,7 @@ object SchemaRegistryEndpoints {
     endpoint.get
       .in(
         "schema-registry" / "test"
-          .copy(info = Info.empty.description("Debug endpoint"))
+          .description("Debug endpoint")
       )
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .out(jsonBody[String])

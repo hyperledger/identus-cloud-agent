@@ -1,7 +1,7 @@
 package io.iohk.atala.pollux.schema
 
 import io.iohk.atala.api.http.model.{CollectionStats, Order, Pagination, PaginationInput}
-import io.iohk.atala.api.http.{FailureResponse, InternalServerError, NotFoundResponse, RequestContext}
+import io.iohk.atala.api.http.{FailureResponse, InternalServerError, NotFound, RequestContext}
 import io.iohk.atala.pollux.schema.SchemaRegistryEndpoints.{
   createSchemaEndpoint,
   getSchemaByIdEndpoint,
@@ -60,7 +60,7 @@ class SchemaRegistryServerEndpoints(
               ZIO.succeed(schema.withSelf(ctx.request.uri.toString))
             case None =>
               ZIO.fail[FailureResponse](
-                NotFoundResponse(s"Schema is not found by $id")
+                NotFound(s"Schema is not found by $id")
               )
           }
         )

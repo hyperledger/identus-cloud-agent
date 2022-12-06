@@ -31,6 +31,8 @@ tags:
   # Pollux
   - name: Schema Registry
     description: Schema Registry REST API
+  - name: Verification
+    description: Verification Policies REST API
   - name: Present Proof
     description: Present Proof REST API
   # Connect
@@ -313,6 +315,26 @@ paths:
                 $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
 
   /did-registrar/dids:
+
+    get:
+      tags: [ "DID Registrar" ]
+      operationId: listManagedDid
+      summary: List all DIDs managed by PrismAgent.
+      description: List all DIDs managed by PrismAgent.
+      responses:
+        "200":
+          description: List managed DIDs
+          content:
+            application/json:
+              schema:
+                $ref: "./castor/schemas.yaml#/components/schemas/ListManagedDIDResponse"
+        "422":
+          description: The DID creation failed.
+          content:
+            application/json:
+              schema:
+                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
+
     post:
       tags: ["DID Registrar"]
       operationId: createManagedDid
@@ -498,7 +520,445 @@ paths:
           content:
             application/json:
               schema:
-                $ref: ./pollux/schemas.yaml#/components/schemas/NotFoundResponse
+                $ref: ./pollux/schemas.yaml#/components/schemas/NotFound
+
+  # ----------------------------------
+  # Verification Policies
+  # ----------------------------------
+  /verification/policies:
+    get:
+      tags:
+        - Verification
+      summary: Lookup verification policies by query
+      description: Lookup verification policies by `name`, `attributes`, `issuerDIDs`,
+        and `credentialTypes` and control the pagination by `offset` and `limit` parameters
+      operationId: lookupVerificationPoliciesByQuery
+      parameters:
+        - name: name
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: attributes
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: issuerDIDs
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: credentialTypes
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: order
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/VerificationPolicyPage'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/BadRequest'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/InternalServerError'
+    post:
+      tags:
+        - Verification
+      summary: Create the new verification policy
+      description: Create the new verification policy
+      operationId: createVerificationPolicy
+      requestBody:
+        description: Create verification policy object
+        content:
+          application/json:
+            schema:
+              $ref: './pollux/schemas.yaml#/components/schemas/VerificationPolicyInput'
+        required: true
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/VerificationPolicy'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/BadRequest'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/InternalServerError'
+  /verification/policies/{id}:
+    get:
+      tags:
+        - Verification
+      summary: Fetch the verification policy by id
+      description: Get the verification policy by id
+      operationId: getVerificationPolicyById
+      parameters:
+        - name: id
+          in: path
+          description: Get the verification policy by id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/VerificationPolicy'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/BadRequest'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/NotFound'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/InternalServerError'
+    put:
+      tags:
+        - Verification
+      summary: Update the verification policy object by id
+      description: 'Update the fields of the verification policy entry: `attributes`,
+        `issuerDIDs`, `name`, `credentialTypes`, '
+      operationId: updateVerificationPolicy
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Update verification policy object
+        content:
+          application/json:
+            schema:
+              $ref: './pollux/schemas.yaml#/components/schemas/VerificationPolicyInput'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/VerificationPolicy'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/BadRequest'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/NotFound'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/InternalServerError'
+    delete:
+      tags:
+        - Verification
+      summary: Delete the verification policy by id
+      description: Delete the verification policy by id
+      operationId: deleteVerificationPolicyById
+      parameters:
+        - name: id
+          in: path
+          description: Delete the verification policy by id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/BadRequest'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/NotFound'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/InternalServerError'
+
+  # ----------------------------------
+  # Verification Policies
+  # ----------------------------------
+  /verification/policies:
+    get:
+      tags:
+        - Verification
+      summary: Lookup verification policies by query
+      description: Lookup verification policies by `name`, `attributes`, `issuerDIDs`,
+        and `credentialTypes` and control the pagination by `offset` and `limit` parameters
+      operationId: lookupVerificationPoliciesByQuery
+      parameters:
+        - name: name
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: attributes
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: issuerDIDs
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: credentialTypes
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: order
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/VerificationPolicyPage'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/BadRequest'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/InternalServerError'
+    post:
+      tags:
+        - Verification
+      summary: Create the new verification policy
+      description: Create the new verification policy
+      operationId: createVerificationPolicy
+      requestBody:
+        description: Create verification policy object
+        content:
+          application/json:
+            schema:
+              $ref: './pollux/schemas.yaml#/components/schemas/VerificationPolicyInput'
+        required: true
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/VerificationPolicy'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/BadRequest'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/InternalServerError'
+  /verification/policies/{id}:
+    get:
+      tags:
+        - Verification
+      summary: Fetch the verification policy by id
+      description: Get the verification policy by id
+      operationId: getVerificationPolicyById
+      parameters:
+        - name: id
+          in: path
+          description: Get the verification policy by id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/VerificationPolicy'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/BadRequest'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/NotFound'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/InternalServerError'
+    put:
+      tags:
+        - Verification
+      summary: Update the verification policy object by id
+      description: 'Update the fields of the verification policy entry: `attributes`,
+        `issuerDIDs`, `name`, `credentialTypes`, '
+      operationId: updateVerificationPolicy
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Update verification policy object
+        content:
+          application/json:
+            schema:
+              $ref: './pollux/schemas.yaml#/components/schemas/VerificationPolicyInput'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/VerificationPolicy'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/BadRequest'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/NotFound'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/InternalServerError'
+    delete:
+      tags:
+        - Verification
+      summary: Delete the verification policy by id
+      description: Delete the verification policy by id
+      operationId: deleteVerificationPolicyById
+      parameters:
+        - name: id
+          in: path
+          description: Delete the verification policy by id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/BadRequest'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/NotFound'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/InternalServerError'
 
   ## Issue Credential Protocol
 
@@ -833,9 +1293,9 @@ paths:
       operationId: createConnection
       summary: Creates new connection and returns an invitation.
       description: |-
-        Returns new invitation object and creates new connection state record in `pending` state. 
-        Content of invitation depends on DIDComm protocol used, here is an example of how it would look like for `AIP 1.0 connection/v1` protocol. 
-        Once connection invitation is accepted, Agent should filter all additional attempts to accept it. 
+        Returns new invitation object and creates new connection state record in `pending` state.
+        Content of invitation depends on DIDComm protocol used, here is an example of how it would look like for `AIP 1.0 connection/v1` protocol.
+        Once connection invitation is accepted, Agent should filter all additional attempts to accept it.
         We consider mult-party connections as out of scope for now.
       requestBody:
         required: true

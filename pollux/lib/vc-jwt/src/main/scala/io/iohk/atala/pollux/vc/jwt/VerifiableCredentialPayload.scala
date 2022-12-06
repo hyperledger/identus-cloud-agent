@@ -223,7 +223,7 @@ case class JwtVc(
 case class JwtCredentialPayload(
     override val iss: String,
     override val maybeSub: Option[String],
-    val vc: JwtVc,
+    vc: JwtVc,
     override val nbf: Instant,
     override val aud: Set[String],
     override val maybeExp: Option[Instant],
@@ -658,7 +658,7 @@ object JwtCredential {
       .toZIO
   }
 
-  def validateEncodedJWT(jwt: JWT, leeway: TemporalAmount)(implicit clock: Clock): Validation[String, Unit] = {
+  def verifyDates(jwt: JWT, leeway: TemporalAmount)(implicit clock: Clock): Validation[String, Unit] = {
     val now = clock.instant()
 
     val decodeJWT =
@@ -667,7 +667,7 @@ object JwtCredential {
     def validateNbfNotAfterExp(nbf: Instant, maybeExp: Option[Instant]): Validation[String, Unit] = {
       maybeExp
         .map(exp =>
-          if (nbf.isAfter(exp.plus(leeway)))
+          if (nbf.isAfter(exp))
             Validation.fail(s"Credential cannot expire before being in effect. nbf=$nbf exp=$exp")
           else Validation.unit
         )

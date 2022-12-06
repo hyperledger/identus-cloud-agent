@@ -1,6 +1,6 @@
 components:
   schemas:
-# Common
+    # Common
     InternalServerError:
       required:
         - msg
@@ -9,15 +9,27 @@ components:
         msg:
           type: string
 
-    NotFoundResponse:
+    NotFound:
       required:
         - msg
       type: object
       properties:
         msg:
           type: string
-    
-# Schema Registry
+
+    BadRequest:
+      required:
+        - msg
+      type: object
+      properties:
+        msg:
+          type: string
+        errors:
+          type: array
+          items:
+            type: string
+
+    # Schema Registry
 
     Proof:
       required:
@@ -74,7 +86,7 @@ components:
           type: string
           format: date-time
         proof:
-          $ref: '#/components/schemas/Proof'
+          $ref: "#/components/schemas/Proof"
 
     VerifiableCredentialSchemaPage:
       required:
@@ -96,7 +108,7 @@ components:
         contents:
           type: array
           items:
-            $ref: '#/components/schemas/VerifiableCredentialSchema'
+            $ref: "#/components/schemas/VerifiableCredentialSchema"
 
     VerificationCredentialSchemaInput:
       required:
@@ -124,6 +136,93 @@ components:
           type: array
           items:
             type: string
+
+    VerificationPolicy:
+      required:
+        - self
+        - kind
+        - id
+        - name
+        - createdAt
+        - updatedAt
+      type: object
+      properties:
+        self:
+          type: string
+        kind:
+          type: string
+        id:
+          type: string
+        name:
+          type: string
+        attributes:
+          type: array
+          items:
+            type: string
+        issuerDIDs:
+          type: array
+          items:
+            type: string
+        credentialTypes:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    VerificationPolicyInput:
+      required:
+        - name
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        attributes:
+          type: array
+          items:
+            type: string
+        issuerDIDs:
+          type: array
+          items:
+            type: string
+        credentialTypes:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    VerificationPolicyPage:
+      required:
+        - self
+        - kind
+        - pageOf
+      type: object
+      properties:
+        self:
+          type: string
+        kind:
+          type: string
+        pageOf:
+          type: string
+        next:
+          type: string
+        previous:
+          type: string
+        contents:
+          type: array
+          items:
+            $ref: "#/components/schemas/VerificationPolicy"
 
     # Issue Credential Protocol
 
@@ -618,7 +717,7 @@ components:
                   type: string
                   description: "DID of the subject of the credential"
         proof:
-          $ref: "#/components/schemas/W3CProof"
+          $ref: "#/components/schemas/Proof"
 
     ErrorResponse:
       type: object

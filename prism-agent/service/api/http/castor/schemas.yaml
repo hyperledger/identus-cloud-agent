@@ -125,7 +125,7 @@ components:
       properties:
         did:
           type: string
-          example: did:prism:unpublished:7a3a5cd1beab57a65c18c584848029c513ca27c8edfb69ceb2c7aef3d659bf44?instance=https://offchain-storage.com"
+          example: did:prism:7a3a5cd1beab57a65c18c584848029c513ca27c8edfb69ceb2c7aef3d659bf44?instance=https://offchain-storage.com"
         updatePublicKey:
           type: string
           example: "EiBkRSeixqX-PhOij6PIpuGfPld5Nif5MxcrgtGCw-t6LA"
@@ -231,6 +231,28 @@ components:
           type: string
           description: A long-form DID for the created DID
           example: did:prism:1:abc123:abc123
+
+    ListManagedDIDResponse:
+      type: array
+      items:
+        type: object
+        required:
+          - did
+          - status
+        properties:
+          did:
+            type: string
+            example: did:prism:abc
+          longFormDid:
+            type: string
+            description: A long-form DID. Mandatory when status is not PUBLISHED and optional when status is PUBLISHED
+            example: did:prism:abc:123
+          status:
+            type: string
+            enum:
+            - CREATED
+            - PUBLICATION_PENDING
+            - PUBLISHED
 
     Delta:
       type: object

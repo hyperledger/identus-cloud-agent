@@ -1,3 +1,17 @@
+# [prism-agent-v0.12.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.11.0...prism-agent-v0.12.0) (2022-12-06)
+
+
+### Features
+
+* **prism-agent:** implement get DIDs endpoint ([#198](https://github.com/input-output-hk/atala-prism-building-blocks/issues/198)) ([d5e08ab](https://github.com/input-output-hk/atala-prism-building-blocks/commit/d5e08ab16aa629805264a726c2cb9a5803226703))
+
+# [prism-agent-v0.11.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.10.0...prism-agent-v0.11.0) (2022-12-06)
+
+
+### Features
+
+* **prism-agent:** verification policies pagination. ATL-1334 ([#205](https://github.com/input-output-hk/atala-prism-building-blocks/issues/205)) ([403eb38](https://github.com/input-output-hk/atala-prism-building-blocks/commit/403eb3821daab718d97f0760ba2d71e065258665))
+
 # [prism-agent-v0.10.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.9.0...prism-agent-v0.10.0) (2022-12-02)
 
 

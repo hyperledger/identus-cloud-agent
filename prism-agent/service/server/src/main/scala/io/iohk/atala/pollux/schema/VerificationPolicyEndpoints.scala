@@ -2,12 +2,13 @@ package io.iohk.atala.pollux.schema
 
 import io.iohk.atala.api.http.codec.OrderCodec.*
 import io.iohk.atala.api.http.model.{Order, PaginationInput}
-import io.iohk.atala.api.http.{BadRequest, FailureResponse, InternalServerError, NotFoundResponse}
+import io.iohk.atala.api.http.{BadRequest, FailureResponse, InternalServerError, NotFound, RequestContext}
 import io.iohk.atala.pollux.schema.model.{
   VerifiableCredentialSchema,
   VerifiableCredentialSchemaInput,
   VerifiableCredentialSchemaPage
 }
+import io.iohk.atala.api.http.EndpointOutputs.*
 import io.iohk.atala.pollux.schema.model.{
   VerifiableCredentialSchema,
   VerificationPolicy,
@@ -22,6 +23,7 @@ import sttp.tapir.{
   EndpointInfo,
   PublicEndpoint,
   endpoint,
+  extractFromRequest,
   oneOf,
   oneOfDefaultVariant,
   oneOfVariant,
@@ -37,12 +39,13 @@ import java.util.UUID
 object VerificationPolicyEndpoints {
 
   val createVerificationPolicyEndpoint: PublicEndpoint[
-    VerificationPolicyInput,
+    (RequestContext, VerificationPolicyInput),
     FailureResponse,
     VerificationPolicy,
     Any
   ] =
     endpoint.post
+      .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in("verification" / "policies")
       .in(
         jsonBody[VerificationPolicyInput].description(
@@ -51,26 +54,20 @@ object VerificationPolicyEndpoints {
       )
       .out(statusCode(StatusCode.Created))
       .out(jsonBody[VerificationPolicy])
-      .errorOut(
-        oneOf[FailureResponse](
-          oneOfVariant(
-            StatusCode.InternalServerError,
-            jsonBody[InternalServerError]
-          )
-        )
-      )
+      .errorOut(basicFailures)
       .name("createVerificationPolicy")
       .summary("Create the new verification policy")
       .description("Create the new verification policy")
       .tag("Verification")
 
   val updateVerificationPolicyEndpoint: PublicEndpoint[
-    (String, VerificationPolicyInput),
+    (RequestContext, String, VerificationPolicyInput),
     FailureResponse,
     VerificationPolicy,
     Any
   ] =
     endpoint.put
+      .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in("verification" / "policies" / path[String]("id"))
       .in(
         jsonBody[VerificationPolicyInput].description(
@@ -79,14 +76,7 @@ object VerificationPolicyEndpoints {
       )
       .out(statusCode(StatusCode.Ok))
       .out(jsonBody[VerificationPolicy])
-      .errorOut(
-        oneOf[FailureResponse](
-          oneOfVariant(
-            StatusCode.InternalServerError,
-            jsonBody[InternalServerError]
-          )
-        )
-      )
+      .errorOut(basicFailuresAndNotFound)
       .name("updateVerificationPolicy")
       .summary("Update the verification policy object by id")
       .description(
@@ -95,22 +85,19 @@ object VerificationPolicyEndpoints {
       .tag("Verification")
 
   val getVerificationPolicyByIdEndpoint: PublicEndpoint[
-    String,
+    (RequestContext, String),
     FailureResponse,
     VerificationPolicy,
     Any
   ] =
     endpoint.get
+      .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
         "verification" / "policies" / path[String]("id")
           .description("Get the verification policy by id")
       )
       .out(jsonBody[VerificationPolicy])
-      .errorOut(
-        oneOf[FailureResponse](
-          oneOfVariant(StatusCode.NotFound, jsonBody[NotFoundResponse])
-        )
-      )
+      .errorOut(basicFailuresAndNotFound)
       .name("getVerificationPolicyById")
       .summary("Fetch the verification policy by id")
       .description(
@@ -119,22 +106,19 @@ object VerificationPolicyEndpoints {
       .tag("Verification")
 
   val deleteVerificationPolicyByIdEndpoint: PublicEndpoint[
-    String,
+    (RequestContext, String),
     FailureResponse,
     Unit,
     Any
   ] =
     endpoint.delete
+      .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
         "verification" / "policies" / path[String]("id")
           .description("Delete the verification policy by id")
       )
       .out(statusCode(StatusCode.Ok))
-      .errorOut(
-        oneOf[FailureResponse](
-          oneOfVariant(StatusCode.NotFound, jsonBody[NotFoundResponse])
-        )
-      )
+      .errorOut(basicFailuresAndNotFound)
       .name("deleteVerificationPolicyById")
       .summary("Deleted the verification policy by id")
       .description(
@@ -143,12 +127,13 @@ object VerificationPolicyEndpoints {
       .tag("Verification")
 
   val lookupVerificationPoliciesByQueryEndpoint: PublicEndpoint[
-    (VerificationPolicy.Filter, PaginationInput, Option[Order]),
+    (RequestContext, VerificationPolicy.Filter, PaginationInput, Option[Order]),
     FailureResponse,
     VerificationPolicyPage,
     Any
   ] =
     endpoint.get
+      .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
         "verification" / "policies"
           .description("Lookup verification policy by query")
@@ -173,14 +158,7 @@ object VerificationPolicyEndpoints {
       )
       .in(query[Option[Order]]("order"))
       .out(jsonBody[VerificationPolicyPage])
-      .errorOut(
-        oneOf[FailureResponse](
-          oneOfVariant(
-            StatusCode.InternalServerError,
-            jsonBody[InternalServerError]
-          )
-        )
-      )
+      .errorOut(basicFailures)
       .name("lookupVerificationPoliciesByQuery")
       .summary("Lookup verification policies by query")
       .description(
