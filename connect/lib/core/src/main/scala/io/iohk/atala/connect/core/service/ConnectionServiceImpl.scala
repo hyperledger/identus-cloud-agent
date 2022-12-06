@@ -18,14 +18,16 @@ import io.iohk.atala.mercury.protocol.connection.ConnectionResponse
 import io.iohk.atala.shared.utils.Base64Utils
 
 private class ConnectionServiceImpl(
-    connectionRepository: ConnectionRepository[Task],
-    didComm: DidComm
+    connectionRepository: ConnectionRepository[Task]
 ) extends ConnectionService {
 
-  override def createConnectionInvitation(label: Option[String]): IO[ConnectionServiceError, ConnectionRecord] =
+  override def createConnectionInvitation(
+      label: Option[String],
+      pairwiseDID: DidId
+  ): IO[ConnectionServiceError, ConnectionRecord] =
     for {
       recordId <- ZIO.succeed(UUID.randomUUID)
-      invitation <- ZIO.succeed(createDidCommInvitation(recordId, didComm.myDid))
+      invitation <- ZIO.succeed(createDidCommInvitation(recordId, pairwiseDID))
       record <- ZIO.succeed(
         ConnectionRecord(
           id = recordId,
@@ -104,10 +106,13 @@ private class ConnectionServiceImpl(
         .mapError(RepositoryError.apply)
     } yield record
 
-  override def acceptConnectionInvitation(recordId: UUID): IO[ConnectionServiceError, Option[ConnectionRecord]] =
+  override def acceptConnectionInvitation(
+      recordId: UUID,
+      pairwiseDid: DidId
+  ): IO[ConnectionServiceError, Option[ConnectionRecord]] =
     for {
       record <- getRecordWithState(recordId, ProtocolState.InvitationReceived)
-      request = createDidCommConnectionRequest(record)
+      request = createDidCommConnectionRequest(record, pairwiseDid)
       count <- connectionRepository
         .updateWithConnectionRequest(recordId, request, ProtocolState.ConnectionRequestPending)
         .mapError(RepositoryError.apply)
@@ -126,7 +131,9 @@ private class ConnectionServiceImpl(
       ProtocolState.ConnectionRequestSent
     )
 
-  override def receiveConnectionRequest(request: ConnectionRequest): IO[ConnectionServiceError, Option[ConnectionRecord]] =
+  override def receiveConnectionRequest(
+      request: ConnectionRequest
+  ): IO[ConnectionServiceError, Option[ConnectionRecord]] =
     for {
       record <- getRecordFromThreadIdAndState(request.thid, ProtocolState.InvitationGenerated)
       _ <- connectionRepository
@@ -163,7 +170,9 @@ private class ConnectionServiceImpl(
       ProtocolState.ConnectionResponseSent
     )
 
-  override def receiveConnectionResponse(response: ConnectionResponse): IO[ConnectionServiceError, Option[ConnectionRecord]] =
+  override def receiveConnectionResponse(
+      response: ConnectionResponse
+  ): IO[ConnectionServiceError, Option[ConnectionRecord]] =
     for {
       record <- getRecordFromThreadIdAndState(response.thid, ProtocolState.ConnectionRequestSent)
       _ <- connectionRepository
@@ -204,9 +213,9 @@ private class ConnectionServiceImpl(
     )
   }
 
-  private[this] def createDidCommConnectionRequest(record: ConnectionRecord): ConnectionRequest = {
+  private[this] def createDidCommConnectionRequest(record: ConnectionRecord, pairwiseDid: DidId): ConnectionRequest = {
     ConnectionRequest(
-      from = didComm.myDid,
+      from = pairwiseDid,
       to = record.invitation.from,
       thid = record.thid.map(_.toString),
       body = ConnectionRequest.Body(goal_code = Some("Connect"))
@@ -260,6 +269,6 @@ private class ConnectionServiceImpl(
 }
 
 object ConnectionServiceImpl {
-  val layer: URLayer[ConnectionRepository[Task] & DidComm, ConnectionService] =
-    ZLayer.fromFunction(ConnectionServiceImpl(_, _))
+  val layer: URLayer[ConnectionRepository[Task], ConnectionService] =
+    ZLayer.fromFunction(ConnectionServiceImpl(_))
 }
