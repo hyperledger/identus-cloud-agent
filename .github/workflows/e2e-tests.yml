@@ -70,7 +70,7 @@ jobs:
 
       - name: Run e2e tests
         run: |
-          ../../infrastructure/local/update-env.sh
+          ../../infrastructure/local/update_env.sh
           cat ../../infrastructure/local/.env
           ./gradlew test --tests "E2eTestsRunner"
 
