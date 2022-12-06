@@ -20,6 +20,7 @@ import zio.interop.catz.*
 
 import java.time.Instant
 import java.util.UUID
+import java.{util => ju}
 
 // TODO: replace with actual implementation
 class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepository[Task] {
@@ -320,6 +321,43 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
       .transact(xa)
   }
 
+  override def getValidIssuedCredentials(recordId: Seq[UUID]): Task[Seq[ValidIssuedCredentialRecord]] = {
+    val cxnIO = sql"""
+        | SELECT
+        |   id,
+        |   issue_raw_credential
+        | FROM public.issue_credential_records
+        | WHERE
+        |   id IN (${recordId.mkString(",")})
+        """.stripMargin
+      .query[ValidIssuedCredentialRecord]
+      .to[Seq]
+
+    cxnIO
+      .transact(xa)
+
+  }
+
+  override def updateWithIssuedRawCredential(
+      recordId: ju.UUID,
+      issue: IssueCredential,
+      issuedRawCredential: String,
+      protocolState: ProtocolState
+  ): Task[Int] = {
+    val cxnIO = sql"""
+        | UPDATE public.issue_credential_records
+        | SET
+        |   issue_credential_data = $issue,
+        |   issued_raw_credential = $issuedRawCredential,
+        |   protocol_state = $protocolState,
+        |   updated_at = ${Instant.now}
+        | WHERE
+        |   id = $recordId
+        """.stripMargin.update
+
+    cxnIO.run
+      .transact(xa)
+  }
 }
 
 object JdbcCredentialRepository {

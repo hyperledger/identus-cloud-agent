@@ -14,6 +14,8 @@ import scala.util.{Failure, Success, Try}
 
 sealed trait VerifiablePresentationPayload
 
+case class Prover(did: DID, signer: Signer, publicKey: PublicKey)
+
 case class W3cVerifiablePresentationPayload(payload: W3cPresentationPayload, proof: Proof)
     extends Verifiable(proof),
       VerifiablePresentationPayload
