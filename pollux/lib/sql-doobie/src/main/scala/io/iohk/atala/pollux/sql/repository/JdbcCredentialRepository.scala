@@ -325,7 +325,7 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
     val cxnIO = sql"""
         | SELECT
         |   id,
-        |   issue_raw_credential
+        |   issued_credential_raw
         | FROM public.issue_credential_records
         | WHERE
         |   id IN (${recordId.mkString(",")})
@@ -348,7 +348,7 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         | UPDATE public.issue_credential_records
         | SET
         |   issue_credential_data = $issue,
-        |   issued_raw_credential = $issuedRawCredential,
+        |   issued_credential_raw = $issuedRawCredential,
         |   protocol_state = $protocolState,
         |   updated_at = ${Instant.now}
         | WHERE
