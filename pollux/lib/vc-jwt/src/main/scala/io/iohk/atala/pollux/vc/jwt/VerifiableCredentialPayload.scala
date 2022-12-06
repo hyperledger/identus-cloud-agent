@@ -667,7 +667,7 @@ object JwtCredential {
     def validateNbfNotAfterExp(nbf: Instant, maybeExp: Option[Instant]): Validation[String, Unit] = {
       maybeExp
         .map(exp =>
-          if (nbf.isAfter(exp.plus(leeway)))
+          if (nbf.isAfter(exp))
             Validation.fail(s"Credential cannot expire before being in effect. nbf=$nbf exp=$exp")
           else Validation.unit
         )
