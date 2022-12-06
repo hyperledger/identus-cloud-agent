@@ -1,3 +1,10 @@
+# [mercury-v0.10.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.9.0...mercury-v0.10.0) (2022-12-06)
+
+
+### Features
+
+* **mercury:** clean unwanted dependencies ([#206](https://github.com/input-output-hk/atala-prism-building-blocks/issues/206)) ([1749e9d](https://github.com/input-output-hk/atala-prism-building-blocks/commit/1749e9d3aa54a912a997fd4b5bcc131cc3d23bce))
+
 # [mercury-v0.9.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.8.0...mercury-v0.9.0) (2022-12-05)
 
 
