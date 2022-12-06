@@ -221,6 +221,7 @@ private class PresentationServiceImpl(
         verifiableCredential = verifiableCredentials,
         holder = prover.did.value,
         verifier = Vector("https://example.edu/issuers/565049"), // TODO Fix this
+        maybeIssuanceDate = None,
         maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z"))
       )
 
