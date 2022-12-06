@@ -82,6 +82,9 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   protocol_state,
         |   publication_state,
         |   offer_credential_data
+        |   request_credential_data,
+        |   issue_credential_data,
+        |   issued_credential_raw
         | ) values (
         |   ${record.id},
         |   ${record.createdAt},
@@ -96,6 +99,9 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   ${record.protocolState},
         |   ${record.publicationState},
         |   ${record.offerCredentialData}
+        |   ${record.request_credential_data}
+        |   ${record.issue_credential_data}
+        |   ${record.issued_credential_raw}
         | )
         """.stripMargin.update
 
@@ -120,7 +126,8 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   publication_state,
         |   offer_credential_data,
         |   request_credential_data,
-        |   issue_credential_data
+        |   issue_credential_data,
+        |   issued_credential_raw
         | FROM public.issue_credential_records
         """.stripMargin
       .query[IssueCredentialRecord]
@@ -149,7 +156,8 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   publication_state,
         |   offer_credential_data,
         |   request_credential_data,
-        |   issue_credential_data
+        |   issue_credential_data,
+        |   issued_credential_raw
         | FROM public.issue_credential_records
         | WHERE protocol_state = ${state.toString}
         """.stripMargin
@@ -177,7 +185,8 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   publication_state,
         |   offer_credential_data,
         |   request_credential_data,
-        |   issue_credential_data
+        |   issue_credential_data,
+        |   issued_credential_raw
         | FROM public.issue_credential_records
         | WHERE id = $recordId
         """.stripMargin
@@ -205,7 +214,8 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   publication_state,
         |   offer_credential_data,
         |   request_credential_data,
-        |   issue_credential_data
+        |   issue_credential_data,
+        |   issued_credential_raw
         | FROM public.issue_credential_records
         | WHERE thid = $thid
         """.stripMargin
