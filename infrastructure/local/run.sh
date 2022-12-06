@@ -9,7 +9,7 @@ Help()
    # Display Help
    echo "Run an instance of the ATALA bulding-block stack locally"
    echo
-   echo "Syntax: run.sh [-n/--name NAME|-p/--port PORT|-b/--background|-h/--help]"
+   echo "Syntax: run.sh [-n/--name NAME|-p/--port PORT|-b/--background|-w/--wait|-h/--help]"
    echo "options:"
    echo "-n/--name              Name of this instance - defaults to dev."
    echo "-p/--port              Port to run this instance on - defaults to 80."
@@ -40,6 +40,8 @@ while [[ $# -gt 0 ]]; do
       ;;
     -w|--wait)
       WAIT="--wait"
+      shift # past argument
+      ;;
     --debug)
       DEBUG="--profile debug"
       shift # past argument
@@ -69,16 +71,6 @@ fi
 
 NAME="${NAME:=local}"
 PORT="${PORT:=80}"
-
-if [ -z ${DEBUG+x} ];
-then
-    DEBUG=""
-fi
-
-if [ -z ${DEBUG+x} ];
-then
-    DEBUG=""
-fi
 
 echo "NAME            = ${NAME}"
 echo "PORT            = ${PORT}"
