@@ -85,6 +85,6 @@ echo "--------------------------------------"
 echo "Bringing up stack using docker-compose"
 echo "--------------------------------------"
 
-PORT=${PORT} docker-compose \
+PORT=${PORT} docker compose \
   -p ${NAME} \
   -f ${SCRIPT_DIR}/../shared/docker-compose.yml ${DEBUG} up ${BACKGROUND} ${WAIT}

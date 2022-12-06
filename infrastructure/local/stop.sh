@@ -63,7 +63,7 @@ echo "--------------------------------------"
 echo "Stopping stack using docker-compose"
 echo "--------------------------------------"
 
-PORT=${PORT} docker-compose \
+PORT=${PORT} docker compose \
   -p ${NAME} \
   -f ${SCRIPT_DIR}/../shared/docker-compose.yml \
   --env-file ${SCRIPT_DIR}/.env down ${VOLUMES}

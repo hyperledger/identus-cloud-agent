@@ -73,8 +73,7 @@ services:
       CONNECT_DB_PASSWORD: postgres
       DIDCOMM_SERVICE_URL: http://host.docker.internal:${PORT}/didcomm/
     depends_on:
-      - db_castor
-      - db_pollux
+      - db
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://prism-agent:8080/connections" ]
       interval: 30s
