@@ -8,7 +8,7 @@ import org.junit.runner.RunWith
     features = [
         "src/test/resources/features"
     ],
-    glue = ["features"],
+    glue = ["features", "extentions"],
     snippets = CucumberOptions.SnippetType.CAMELCASE,
     plugin = [
         "pretty",

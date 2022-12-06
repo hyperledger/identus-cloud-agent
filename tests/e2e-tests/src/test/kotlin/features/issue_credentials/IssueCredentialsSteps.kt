@@ -8,22 +8,24 @@ import net.serenitybdd.screenplay.rest.interactions.Post
 import net.serenitybdd.screenplay.rest.questions.ResponseConsequence
 import api_models.Connection
 import api_models.Credential
-import extentions.WithAgents
+import common.Utils.lastResponse
+import common.Utils.wait
+import extentions.Agents.agents
 
-class IssueCredentialsSteps : WithAgents() {
+class IssueCredentialsSteps {
 
-    @Given("Acme and Bob have an existing connection")
-    fun acmeAndBobHaveAnExistingConnection() {
+    @Given("{string} and {string} have an existing connection")
+    fun acmeAndBobHaveAnExistingConnection(issuer: String, holder: String) {
         // Acme(Issuer) initiates a connection
         // and sends it to Bob(Holder) out-of-band, e.g. using QR-code
-        acme.attemptsTo(
+        agents[issuer]!!.attemptsTo(
             Post.to("/connections")
                 .with {
                     it.header("Content-Type", "application/json")
-                    it.body("""{"label": "Connect with ${bob.name}"}""")
+                    it.body("""{"label": "Connect with ${agents[holder]!!.name}"}""")
                 }
         )
-        acme.should(
+        agents[issuer]!!.should(
             ResponseConsequence.seeThatResponse("Creates connection request") {
                 it.statusCode(201)
             }
@@ -33,17 +35,17 @@ class IssueCredentialsSteps : WithAgents() {
         // Here out of band transfer of connection QR code is happening
         // and Bob (Holder) gets an invitation URL
         // they're accepting connection invitation by POST request specifying achieved invitation
-        bob.remember("invitationUrl", acmeConnection.invitation.invitationUrl.split("=")[1])
+        agents[holder]!!.remember("invitationUrl", acmeConnection.invitation.invitationUrl.split("=")[1])
 
         // Bob accepts connection using achieved out-of-band invitation
-        bob.attemptsTo(
+        agents[holder]!!.attemptsTo(
             Post.to("/connection-invitations")
                 .with {
                     it.header("Content-Type", "application/json")
-                    it.body("""{"invitation": "${bob.recall<String>("invitationUrl")}"}""")
+                    it.body("""{"invitation": "${agents[holder]!!.recall<String>("invitationUrl")}"}""")
                 }
         )
-        bob.should(
+        agents[holder]!!.should(
             ResponseConsequence.seeThatResponse("Accepts connection request") {
                 it.statusCode(200)
             }
@@ -54,10 +56,10 @@ class IssueCredentialsSteps : WithAgents() {
         // and sends final connection response
         wait(
             {
-                acme.attemptsTo(
+                agents[issuer]!!.attemptsTo(
                     Get.resource("/connections/${acmeConnection.connectionId}"),
                 )
-                acme.should(
+                agents[issuer]!!.should(
                     ResponseConsequence.seeThatResponse("Get issuer connections") {
                         it.statusCode(200)
                     }
@@ -67,16 +69,16 @@ class IssueCredentialsSteps : WithAgents() {
             },
             "Issuer did not sent final connection confirmation! Connection didn't reach ConnectionResponseSent state."
         )
-        acme.remember("did", lastResponse().getObject("", Connection::class.java).myDid)
-        acme.remember("holderDid", lastResponse().getObject("", Connection::class.java).theirDid)
+        agents[issuer]!!.remember("did", lastResponse().getObject("", Connection::class.java).myDid)
+        agents[issuer]!!.remember("holderDid", lastResponse().getObject("", Connection::class.java).theirDid)
 
         // Bob (Holder) receives final connection response
         wait(
             {
-                bob.attemptsTo(
+                agents[holder]!!.attemptsTo(
                     Get.resource("/connections/${bobConnection.connectionId}")
                 )
-                bob.should(
+                agents[holder]!!.should(
                     ResponseConsequence.seeThatResponse("Get holder connections") {
                         it.statusCode(200)
                     }
@@ -86,16 +88,16 @@ class IssueCredentialsSteps : WithAgents() {
             "Holder did not receive final connection confirmation! Connection didn't reach ConnectionResponseReceived state."
         )
 
-        bob.remember("did", lastResponse().getObject("", Connection::class.java).myDid)
-        bob.remember("issuerDid", lastResponse().getObject("", Connection::class.java).theirDid)
+        agents[holder]!!.remember("did", lastResponse().getObject("", Connection::class.java).myDid)
+        agents[holder]!!.remember("issuerDid", lastResponse().getObject("", Connection::class.java).theirDid)
         // Connection established. Both parties exchanged their DIDs with each other
     }
 
-    @Given("Acme offers a credential")
-    fun acmeOffersACredential() {
+    @Given("{string} offers a credential")
+    fun acmeOffersACredential(issuer: String) {
         val newCredential = Credential(
             schemaId = "schema:1234",
-            subjectId = acme.recall("holderDid"),
+            subjectId = agents[issuer]!!.recall("holderDid"),
             validityPeriod = 3600,
             automaticIssuance = false,
             awaitConfirmation = false,
@@ -105,14 +107,14 @@ class IssueCredentialsSteps : WithAgents() {
             )
         )
 
-        acme.attemptsTo(
+        agents[issuer]!!.attemptsTo(
             Post.to("/issue-credentials/credential-offers")
                 .with {
                     it.header("Content-Type", "application/json")
                     it.body(newCredential)
                 }
         )
-        acme.should(
+        agents[issuer]!!.should(
             ResponseConsequence.seeThatResponse("The issue credential offer created") {
                 it.statusCode(201)
             }
@@ -121,14 +123,14 @@ class IssueCredentialsSteps : WithAgents() {
         // TODO: add check that newCredential object corresponds to the output of restapi call here
     }
 
-    @When("Bob requests the credential")
-    fun bobRequestsTheCredential() {
+    @When("{string} requests the credential")
+    fun bobRequestsTheCredential(holder: String) {
         wait(
             {
-                bob.attemptsTo(
+                agents[holder]!!.attemptsTo(
                     Get.resource("/issue-credentials/records")
                 )
-                bob.should(
+                agents[holder]!!.should(
                     ResponseConsequence.seeThatResponse("Credential records") {
                         it.statusCode(200)
                     }
@@ -140,26 +142,26 @@ class IssueCredentialsSteps : WithAgents() {
 
         val recordId = lastResponse().getList("items", Credential::class.java)
             .findLast { it.protocolState == "OfferReceived" }!!.recordId
-        bob.remember("recordId", recordId)
+        agents[holder]!!.remember("recordId", recordId)
 
-        bob.attemptsTo(
+        agents[holder]!!.attemptsTo(
             Post.to("/issue-credentials/records/${recordId}/accept-offer")
         )
-        bob.should(
+        agents[holder]!!.should(
             ResponseConsequence.seeThatResponse("Accept offer") {
                 it.statusCode(200)
             }
         )
     }
 
-    @When("Acme issues the credential")
-    fun acmeIssuesTheCredential() {
+    @When("{string} issues the credential")
+    fun acmeIssuesTheCredential(issuer: String) {
         wait(
             {
-                acme.attemptsTo(
+                agents[issuer]!!.attemptsTo(
                     Get.resource("/issue-credentials/records")
                 )
-                acme.should(
+                agents[issuer]!!.should(
                     ResponseConsequence.seeThatResponse("Credential records") {
                         it.statusCode(200)
                     }
@@ -171,10 +173,10 @@ class IssueCredentialsSteps : WithAgents() {
         )
         val recordId = lastResponse().getList("items", Credential::class.java)
             .findLast { it.protocolState == "RequestReceived" }!!.recordId
-        acme.attemptsTo(
+        agents[issuer]!!.attemptsTo(
             Post.to("/issue-credentials/records/${recordId}/issue-credential")
         )
-        acme.should(
+        agents[issuer]!!.should(
             ResponseConsequence.seeThatResponse("Issue credential") {
                 it.statusCode(200)
             }
@@ -182,10 +184,10 @@ class IssueCredentialsSteps : WithAgents() {
 
         wait(
             {
-                acme.attemptsTo(
+                agents[issuer]!!.attemptsTo(
                     Get.resource("/issue-credentials/records/${recordId}")
                 )
-                acme.should(
+                agents[issuer]!!.should(
                     ResponseConsequence.seeThatResponse("Credential records") {
                         it.statusCode(200)
                     }
@@ -196,14 +198,14 @@ class IssueCredentialsSteps : WithAgents() {
         )
     }
 
-    @Then("Bob has the credential issued")
-    fun bobHasTheCredentialIssued() {
+    @Then("{string} has the credential issued")
+    fun bobHasTheCredentialIssued(holder: String) {
         wait(
             {
-                bob.attemptsTo(
-                    Get.resource("/issue-credentials/records/${bob.recall<String>("recordId")}")
+                agents[holder]!!.attemptsTo(
+                    Get.resource("/issue-credentials/records/${agents[holder]!!.recall<String>("recordId")}")
                 )
-                bob.should(
+                agents[holder]!!.should(
                     ResponseConsequence.seeThatResponse("Credential records") {
                         it.statusCode(200)
                     }

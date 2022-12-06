@@ -1,23 +1,24 @@
 package features.did
 
-import extentions.WithAgents
+import extentions.Agents.agents
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import net.serenitybdd.screenplay.rest.interactions.Get
 import net.serenitybdd.screenplay.rest.questions.ResponseConsequence
 
-class ResolveDidSteps: WithAgents() {
+class ResolveDidSteps {
 
     @When("I resolve existing DID by DID reference")
     fun iResolveExistingDIDByDIDReference() {
-        acme.attemptsTo(
+        println(agents)
+        agents["Acme"]!!.attemptsTo(
             Get.resource("/connections")
         )
     }
 
     @Then("Response code is 200")
     fun responseCodeIs() {
-        acme.should(
+        agents["Acme"]!!.should(
             ResponseConsequence.seeThatResponse("DID has required fields") {
                 it.statusCode(200)
             }
