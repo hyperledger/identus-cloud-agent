@@ -30,6 +30,11 @@ jobs:
         with:
           java-version: openjdk@1.11
 
+      - name: Install Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
         with:
@@ -42,10 +47,6 @@ jobs:
         with:
           version: v2.12.2 # defaults to 'latest'
           legacy: true    # will also install in PATH as `docker-compose`
-
-      # - name: Update container versions
-      #   run: |
-      #     ../../infrastructure/local/update-env.sh
 
       - name: Start services for issuer
         env:
@@ -69,6 +70,8 @@ jobs:
 
       - name: Run e2e tests
         run: |
+          ../../infrastructure/local/update-env.sh
+          cat ../../infrastructure/local/.env
           ./gradlew test --tests "E2eTestsRunner"
 
       - uses: actions/upload-artifact@v2

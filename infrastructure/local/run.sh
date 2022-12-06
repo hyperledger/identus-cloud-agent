@@ -71,11 +71,6 @@ echo "NAME            = ${NAME}"
 echo "PORT            = ${PORT}"
 
 echo "--------------------------------------"
-echo "Update .env file with latest versions "
-echo "--------------------------------------"
-${SCRIPT_DIR}/update_env.sh
-
-echo "--------------------------------------"
 echo "Bringing up stack using docker-compose"
 echo "--------------------------------------"
 
