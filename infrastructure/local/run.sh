@@ -4,9 +4,6 @@ set -e
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
-# Set working directory
-cd ${SCRIPT_DIR}
-
 Help()
 {
    # Display Help
@@ -17,6 +14,7 @@ Help()
    echo "-n/--name              Name of this instance - defaults to dev."
    echo "-p/--port              Port to run this instance on - defaults to 80."
    echo "-b/--background        Run in docker-compose daemon mode in the background."
+   echo "-w/--wait              Wait until all containers are healthy (only in the background)."
    echo "-h/--help              Print this help text."
    echo
 }
@@ -39,6 +37,10 @@ while [[ $# -gt 0 ]]; do
       BACKGROUND="-d"
       shift # past argument
       ;;
+    -w|--wait)
+      WAIT="--wait"
+      shift # past argument
+      ;;
     -h|--help)
       Help
       exit
@@ -57,26 +59,13 @@ done
 
 set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
 
-
 if [[ -n $1 ]]; then
     echo "Last line of file specified as non-opt/last argument:"
     tail -1 "$1"
 fi
 
-if [ -z ${NAME+x} ];
-then
-    NAME="local"
-fi
-
-if [ -z ${PORT+x} ];
-then
-    PORT="80"
-fi
-
-if [ -z ${BACKGROUND+x} ];
-then
-    BACKGROUND=""
-fi
+NAME="${NAME:=local}"
+PORT="${PORT:=80}"
 
 echo "NAME            = ${NAME}"
 echo "PORT            = ${PORT}"
@@ -85,4 +74,7 @@ echo "--------------------------------------"
 echo "Bringing up stack using docker-compose"
 echo "--------------------------------------"
 
-PORT=${PORT} docker-compose -p ${NAME} -f ../shared/docker-compose.yml --env-file ${SCRIPT_DIR}/.env up ${BACKGROUND}
+PORT=${PORT} docker-compose \
+  -p ${NAME} \
+  -f ${SCRIPT_DIR}/../shared/docker-compose.yml \
+  --env-file ${SCRIPT_DIR}/.env up ${BACKGROUND} ${WAIT}
