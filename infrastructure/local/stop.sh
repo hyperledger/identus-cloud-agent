@@ -60,7 +60,7 @@ PORT="${PORT:=80}"
 echo "NAME            = ${NAME}"
 
 echo "--------------------------------------"
-echo "Stopping stack using docker-compose"
+echo "Stopping stack using docker compose"
 echo "--------------------------------------"
 
 PORT=${PORT} docker compose \

@@ -82,7 +82,7 @@ echo "NAME            = ${NAME}"
 echo "PORT            = ${PORT}"
 
 echo "--------------------------------------"
-echo "Bringing up stack using docker-compose"
+echo "Starting stack using docker compose"
 echo "--------------------------------------"
 
 PORT=${PORT} docker compose \
