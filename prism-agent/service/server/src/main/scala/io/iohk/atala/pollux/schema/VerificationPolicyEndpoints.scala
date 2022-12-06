@@ -2,14 +2,13 @@ package io.iohk.atala.pollux.schema
 
 import io.iohk.atala.api.http.codec.OrderCodec.*
 import io.iohk.atala.api.http.model.{Order, PaginationInput}
-import io.iohk.atala.api.http.{BadRequest, FailureResponse, InternalServerError, NotFound}
+import io.iohk.atala.api.http.{BadRequest, FailureResponse, InternalServerError, NotFound, RequestContext}
 import io.iohk.atala.pollux.schema.model.{
   VerifiableCredentialSchema,
   VerifiableCredentialSchemaInput,
   VerifiableCredentialSchemaPage
 }
-import io.iohk.atala.api.http.EndpointOutputs._
-
+import io.iohk.atala.api.http.EndpointOutputs.*
 import io.iohk.atala.pollux.schema.model.{
   VerifiableCredentialSchema,
   VerificationPolicy,
@@ -24,6 +23,7 @@ import sttp.tapir.{
   EndpointInfo,
   PublicEndpoint,
   endpoint,
+  extractFromRequest,
   oneOf,
   oneOfDefaultVariant,
   oneOfVariant,
@@ -39,12 +39,13 @@ import java.util.UUID
 object VerificationPolicyEndpoints {
 
   val createVerificationPolicyEndpoint: PublicEndpoint[
-    VerificationPolicyInput,
+    (RequestContext, VerificationPolicyInput),
     FailureResponse,
     VerificationPolicy,
     Any
   ] =
     endpoint.post
+      .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in("verification" / "policies")
       .in(
         jsonBody[VerificationPolicyInput].description(
@@ -60,12 +61,13 @@ object VerificationPolicyEndpoints {
       .tag("Verification")
 
   val updateVerificationPolicyEndpoint: PublicEndpoint[
-    (String, VerificationPolicyInput),
+    (RequestContext, String, VerificationPolicyInput),
     FailureResponse,
     VerificationPolicy,
     Any
   ] =
     endpoint.put
+      .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in("verification" / "policies" / path[String]("id"))
       .in(
         jsonBody[VerificationPolicyInput].description(
@@ -83,12 +85,13 @@ object VerificationPolicyEndpoints {
       .tag("Verification")
 
   val getVerificationPolicyByIdEndpoint: PublicEndpoint[
-    String,
+    (RequestContext, String),
     FailureResponse,
     VerificationPolicy,
     Any
   ] =
     endpoint.get
+      .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
         "verification" / "policies" / path[String]("id")
           .description("Get the verification policy by id")
@@ -103,12 +106,13 @@ object VerificationPolicyEndpoints {
       .tag("Verification")
 
   val deleteVerificationPolicyByIdEndpoint: PublicEndpoint[
-    String,
+    (RequestContext, String),
     FailureResponse,
     Unit,
     Any
   ] =
     endpoint.delete
+      .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
         "verification" / "policies" / path[String]("id")
           .description("Delete the verification policy by id")
@@ -123,12 +127,13 @@ object VerificationPolicyEndpoints {
       .tag("Verification")
 
   val lookupVerificationPoliciesByQueryEndpoint: PublicEndpoint[
-    (VerificationPolicy.Filter, PaginationInput, Option[Order]),
+    (RequestContext, VerificationPolicy.Filter, PaginationInput, Option[Order]),
     FailureResponse,
     VerificationPolicyPage,
     Any
   ] =
     endpoint.get
+      .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
         "verification" / "policies"
           .description("Lookup verification policy by query")

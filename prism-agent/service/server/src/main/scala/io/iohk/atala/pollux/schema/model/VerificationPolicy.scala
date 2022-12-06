@@ -1,5 +1,6 @@
 package io.iohk.atala.pollux.schema.model
 
+import sttp.model.Uri
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedName}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder}
@@ -27,6 +28,12 @@ case class VerificationPolicy(
       updatedAt = ZonedDateTime.now()
     )
   }
+
+  def withBaseUri(base: Uri) = withSelf(base.addPath(id).toString)
+
+  def withUri(uri: Uri) = withSelf(uri.toString)
+
+  def withSelf(self: String) = copy(self = self)
 }
 
 object VerificationPolicy {
@@ -39,8 +46,8 @@ object VerificationPolicy {
       attributes = in.attributes,
       issuerDIDs = in.issuerDIDs,
       credentialTypes = in.credentialTypes,
-      createdAt = ZonedDateTime.now(),
-      updatedAt = ZonedDateTime.now()
+      createdAt = in.createdAt.getOrElse(ZonedDateTime.now()),
+      updatedAt = in.updatedAt.getOrElse(ZonedDateTime.now())
     )
 
   given encoder: zio.json.JsonEncoder[VerificationPolicy] = DeriveJsonEncoder.gen[VerificationPolicy]
@@ -84,11 +91,12 @@ object VerificationPolicyPage {
 
 case class VerificationPolicyInput(
     id: Option[String],
-    kind: String,
     name: String,
     attributes: List[String],
     issuerDIDs: List[String],
-    credentialTypes: List[String]
+    credentialTypes: List[String],
+    createdAt: Option[ZonedDateTime] = None,
+    updatedAt: Option[ZonedDateTime] = None
 )
 
 object VerificationPolicyInput {

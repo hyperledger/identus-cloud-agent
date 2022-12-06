@@ -1,41 +1,37 @@
-package io.iohk.atala.pollux.schema
+package io.iohk.atala.pollux
 
 import io.iohk.atala.agent.server.http.ZHttp4sBlazeServer
 import io.iohk.atala.api.http.{BadRequest, NotFound}
-import io.iohk.atala.pollux.service.SchemaRegistryService
-import sttp.client3.testing.SttpBackendStub
-import sttp.client3.ziojson.*
-import sttp.client3.{DeserializationException, ResponseException, SttpBackend, UriContext, basicRequest}
-import sttp.tapir.server.interceptor.RequestResult.Response
-import sttp.tapir.server.stub.TapirStubInterpreter
-import sttp.tapir.ztapir.RIOMonadError
-import zio.ZIO
-import zio.test.Assertion.{isRight, *}
-import zio.test.*
-import io.iohk.atala.pollux.schema.*
-import io.iohk.atala.pollux.schema.SchemaRegistryEndpointsSpec.schemaReqistrySchemasUri
+import io.iohk.atala.pollux.SchemaRegistryEndpointsSpec.schemaReqistrySchemasUri
 import io.iohk.atala.pollux.schema.model.{
   VerifiableCredentialSchema,
   VerifiableCredentialSchemaInput,
   VerifiableCredentialSchemaPage
 }
-import io.iohk.atala.pollux.service.SchemaRegistryServiceInMemory
+import io.iohk.atala.pollux.schema.*
+import io.iohk.atala.pollux.service.{SchemaRegistryService, SchemaRegistryServiceInMemory}
+import sttp.client3.testing.SttpBackendStub
+import sttp.client3.ziojson.*
+import sttp.client3.{DeserializationException, ResponseException, SttpBackend, UriContext, basicRequest}
 import sttp.monad.MonadError
 import sttp.tapir.server.interceptor.CustomiseInterceptors
-//import sttp.client3.quick.backend
+import sttp.tapir.server.interceptor.RequestResult.Response
+import sttp.tapir.server.stub.TapirStubInterpreter
+import sttp.tapir.ztapir.RIOMonadError
+import zio.ZIO
+import zio.test.*
+import zio.test.Assertion.*
 import sttp.model.{StatusCode, Uri}
-import zio.ZLayer
 import zio.json.{DecoderOps, EncoderOps, JsonDecoder}
+import zio.stream.ZSink
+import zio.stream.ZSink.*
 import zio.stream.ZStream.unfold
+import zio.test.Assertion.*
+import zio.test.Gen.*
+import zio.{Random, ZLayer, *}
 
 import java.time.ZonedDateTime
 import java.util.UUID
-import zio.Random
-import zio.stream.ZSink
-import zio.test.Gen.*
-import zio.stream.ZSink.*
-import zio.*
-import zio.test.Assertion.*
 
 object Generators {
   val schemaId = Gen.uuid
@@ -87,7 +83,8 @@ object SchemaRegistryEndpointsSpec extends ZIOSpecDefault:
   )
 
   private val schemaReqistrySchemasUri = uri"http://test.com/schema-registry/schemas"
-  private val schema = VerifiableCredentialSchema(schemaInput).withBaseUri(schemaReqistrySchemasUri)
+  private val schema = VerifiableCredentialSchema(schemaInput)
+    .withBaseUri(schemaReqistrySchemasUri)
 
   def bootstrapOptions[F[_]](monadError: MonadError[F]) = {
     new CustomiseInterceptors[F, Any](_ => ())
