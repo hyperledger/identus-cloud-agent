@@ -81,7 +81,7 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   await_confirmation,
         |   protocol_state,
         |   publication_state,
-        |   offer_credential_data
+        |   offer_credential_data,
         |   request_credential_data,
         |   issue_credential_data,
         |   issued_credential_raw
