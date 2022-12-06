@@ -98,9 +98,9 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   ${record.awaitConfirmation},
         |   ${record.protocolState},
         |   ${record.publicationState},
-        |   ${record.offerCredentialData}
-        |   ${record.requestCredentialData}
-        |   ${record.issueCredentialData}
+        |   ${record.offerCredentialData},
+        |   ${record.requestCredentialData},
+        |   ${record.issueCredentialData},
         |   ${record.issuedCredentialRaw}
         | )
         """.stripMargin.update
