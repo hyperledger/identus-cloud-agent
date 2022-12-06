@@ -1,3 +1,18 @@
+# [mercury-v0.9.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.8.0...mercury-v0.9.0) (2022-12-05)
+
+
+### Features
+
+* **mercury:** Update protocol-present-proof to v3 & add our extensions ([#192](https://github.com/input-output-hk/atala-prism-building-blocks/issues/192)) ([28b083a](https://github.com/input-output-hk/atala-prism-building-blocks/commit/28b083a73205413557b59e8756c6b33e354c3c39))
+
+# [mercury-v0.8.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.7.0...mercury-v0.8.0) (2022-12-02)
+
+
+### Features
+
+* **mercury:** New DidValidator ([#180](https://github.com/input-output-hk/atala-prism-building-blocks/issues/180)) ([e5d1810](https://github.com/input-output-hk/atala-prism-building-blocks/commit/e5d1810a157db7036490a0721404c7af0b825266))
+* **pollux:** minor changes related to connect implementation ([#171](https://github.com/input-output-hk/atala-prism-building-blocks/issues/171)) ([4573ef8](https://github.com/input-output-hk/atala-prism-building-blocks/commit/4573ef8122a9b0d2539f9e186a156982480a5d89))
+
 # [mercury-v0.7.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.6.0...mercury-v0.7.0) (2022-11-21)
 
 

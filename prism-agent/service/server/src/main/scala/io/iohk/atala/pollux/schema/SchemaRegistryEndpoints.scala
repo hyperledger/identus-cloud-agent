@@ -1,11 +1,15 @@
 package io.iohk.atala.pollux.schema
 
-import io.iohk.atala.api.http.model.{Order, Pagination}
-import io.iohk.atala.api.http.{BadRequest, FailureResponse, InternalServerError, NotFoundResponse}
-import io.iohk.atala.pollux.schema.model.VerifiableCredentialSchema
-import io.iohk.atala.pollux.schema.model.VerifiableCredentialSchema.{Input, Page}
-import io.iohk.atala.api.http.codec.OrderCodec._
+import io.iohk.atala.api.http.model.{Order, PaginationInput}
+import io.iohk.atala.api.http.{BadRequest, FailureResponse, InternalServerError, NotFound, RequestContext}
+import io.iohk.atala.pollux.schema.model.{
+  VerifiableCredentialSchema,
+  VerifiableCredentialSchemaPage,
+  VerifiableCredentialSchemaInput
+}
+import io.iohk.atala.api.http.codec.OrderCodec.*
 import sttp.tapir.EndpointIO.Info
+import sttp.tapir.extractFromRequest
 import sttp.tapir.json.zio.jsonBody
 import sttp.tapir.{
   Endpoint,
@@ -22,37 +26,30 @@ import sttp.tapir.{
 }
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder}
 import sttp.model.StatusCode
+import io.iohk.atala.api.http.EndpointOutputs._
 
 import java.util.UUID
 
 object SchemaRegistryEndpoints {
 
   val createSchemaEndpoint: PublicEndpoint[
-    VerifiableCredentialSchema.Input,
+    (RequestContext, VerifiableCredentialSchemaInput),
     FailureResponse,
     VerifiableCredentialSchema,
     Any
   ] =
     endpoint.post
+      .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in("schema-registry" / "schemas")
       .in(
-        jsonBody[VerifiableCredentialSchema.Input]
-          .copy(info =
-            Info.empty.description(
-              "Create schema input object with the metadata and attributes"
-            )
+        jsonBody[VerifiableCredentialSchemaInput]
+          .description(
+            "Create schema input object with the metadata and attributes"
           )
       )
       .out(statusCode(StatusCode.Created))
       .out(jsonBody[VerifiableCredentialSchema])
-      .errorOut(
-        oneOf[FailureResponse](
-          oneOfVariant(
-            StatusCode.InternalServerError,
-            jsonBody[InternalServerError]
-          )
-        )
-      )
+      .errorOut(basicFailures)
       .name("createSchema")
       .summary("Publish new schema to the schema registry")
       .description(
@@ -61,22 +58,20 @@ object SchemaRegistryEndpoints {
       .tag("Schema Registry")
 
   val getSchemaByIdEndpoint: PublicEndpoint[
-    UUID,
+    (RequestContext, UUID),
     FailureResponse,
     VerifiableCredentialSchema,
     Any
   ] =
     endpoint.get
+      .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
-        "schema-registry" / "schemas" / path[UUID]("id")
-          .copy(info = Info.empty.description("Get the schema by id"))
-      )
-      .out(jsonBody[VerifiableCredentialSchema])
-      .errorOut(
-        oneOf[FailureResponse](
-          oneOfVariant(StatusCode.NotFound, jsonBody[NotFoundResponse])
+        "schema-registry" / "schemas" / path[UUID]("id").description(
+          "Get the schema by id"
         )
       )
+      .out(jsonBody[VerifiableCredentialSchema])
+      .errorOut(basicFailuresAndNotFound)
       .name("getSchemaById")
       .summary("Fetch the schema from the registry by id")
       .description(
@@ -85,12 +80,18 @@ object SchemaRegistryEndpoints {
       .tag("Schema Registry")
 
   val lookupSchemasByQueryEndpoint: PublicEndpoint[
-    (VerifiableCredentialSchema.Filter, Pagination, Option[Order]),
+    (
+        RequestContext,
+        VerifiableCredentialSchema.Filter,
+        PaginationInput,
+        Option[Order]
+    ),
     FailureResponse,
-    VerifiableCredentialSchema.Page,
+    VerifiableCredentialSchemaPage,
     Any
   ] =
     endpoint.get
+      .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in("schema-registry" / "schemas".description("Lookup schemas by query"))
       .in(
         query[Option[String]]("author")
@@ -105,22 +106,36 @@ object SchemaRegistryEndpoints {
       .in(
         query[Option[Int]]("offset")
           .and(query[Option[Int]]("limit"))
-          .mapTo[Pagination]
+          .mapTo[PaginationInput]
       )
       .in(query[Option[Order]]("order"))
-      .out(jsonBody[VerifiableCredentialSchema.Page])
-      .errorOut(
-        oneOf[FailureResponse](
-          oneOfVariant(
-            StatusCode.InternalServerError,
-            jsonBody[InternalServerError]
-          )
-        )
-      )
+      .out(jsonBody[VerifiableCredentialSchemaPage])
+      .errorOut(basicFailures)
       .name("lookupSchemasByQuery")
       .summary("Lookup schemas by indexed fields")
       .description(
         "Lookup schemas by `author`, `name`, `tags` parameters and control the pagination by `offset` and `limit` parameters "
       )
       .tag("Schema Registry")
+
+  val testEndpoint: PublicEndpoint[
+    RequestContext,
+    Unit,
+    String,
+    Any
+  ] =
+    endpoint.get
+      .in(
+        "schema-registry" / "test"
+          .description("Debug endpoint")
+      )
+      .in(extractFromRequest[RequestContext](RequestContext.apply))
+      .out(jsonBody[String])
+      .name("test")
+      .summary("Trace the request input from the point of view of the server")
+      .description(
+        "Trace the request input from the point of view of the server"
+      )
+      .tag("Schema Registry")
+
 }

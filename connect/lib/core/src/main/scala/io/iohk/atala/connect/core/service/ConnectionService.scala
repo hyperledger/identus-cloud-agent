@@ -1,7 +1,7 @@
 package io.iohk.atala.connect.core.service
 
 import io.iohk.atala.connect.core.model.ConnectionRecord
-import io.iohk.atala.connect.core.model.error.ConnectionError
+import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import zio._
 import java.util.UUID
 import io.iohk.atala.mercury.model.DidId
@@ -11,26 +11,26 @@ import io.iohk.atala.mercury.protocol.connection.ConnectionResponse
 
 trait ConnectionService {
 
-  def createConnectionInvitation(label: Option[String]): IO[ConnectionError, ConnectionRecord]
+  def createConnectionInvitation(label: Option[String]): IO[ConnectionServiceError, ConnectionRecord]
 
-  def receiveConnectionInvitation(invitation: String): IO[ConnectionError, ConnectionRecord]
+  def receiveConnectionInvitation(invitation: String): IO[ConnectionServiceError, ConnectionRecord]
 
-  def acceptConnectionInvitation(recordId: UUID): IO[ConnectionError, Option[ConnectionRecord]]
+  def acceptConnectionInvitation(recordId: UUID): IO[ConnectionServiceError, Option[ConnectionRecord]]
 
-  def markConnectionRequestSent(recordId: UUID): IO[ConnectionError, Option[ConnectionRecord]]
+  def markConnectionRequestSent(recordId: UUID): IO[ConnectionServiceError, Option[ConnectionRecord]]
 
-  def receiveConnectionRequest(request: ConnectionRequest): IO[ConnectionError, Option[ConnectionRecord]]
+  def receiveConnectionRequest(request: ConnectionRequest): IO[ConnectionServiceError, Option[ConnectionRecord]]
 
-  def acceptConnectionRequest(recordId: UUID): IO[ConnectionError, Option[ConnectionRecord]]
+  def acceptConnectionRequest(recordId: UUID): IO[ConnectionServiceError, Option[ConnectionRecord]]
 
-  def markConnectionResponseSent(recordId: UUID): IO[ConnectionError, Option[ConnectionRecord]]
+  def markConnectionResponseSent(recordId: UUID): IO[ConnectionServiceError, Option[ConnectionRecord]]
 
-  def receiveConnectionResponse(response: ConnectionResponse): IO[ConnectionError, Option[ConnectionRecord]]
+  def receiveConnectionResponse(response: ConnectionResponse): IO[ConnectionServiceError, Option[ConnectionRecord]]
 
-  def getConnectionRecords(): IO[ConnectionError, Seq[ConnectionRecord]]
+  def getConnectionRecords(): IO[ConnectionServiceError, Seq[ConnectionRecord]]
 
-  def getConnectionRecord(recordId: UUID): IO[ConnectionError, Option[ConnectionRecord]]
+  def getConnectionRecord(recordId: UUID): IO[ConnectionServiceError, Option[ConnectionRecord]]
 
-  def deleteConnectionRecord(recordId: UUID): IO[ConnectionError, Int]
+  def deleteConnectionRecord(recordId: UUID): IO[ConnectionServiceError, Int]
 
 }

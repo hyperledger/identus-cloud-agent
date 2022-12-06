@@ -1,3 +1,10 @@
+# [pollux-v0.6.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.5.0...pollux-v0.6.0) (2022-12-02)
+
+
+### Features
+
+* **pollux:** validate the current record state on each protocol action received ([#193](https://github.com/input-output-hk/atala-prism-building-blocks/issues/193)) ([6fffde2](https://github.com/input-output-hk/atala-prism-building-blocks/commit/6fffde28bee50b130a0f1f8b5f4dae80ec488498))
+
 # [pollux-v0.5.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.4.0...pollux-v0.5.0) (2022-11-28)
 
 

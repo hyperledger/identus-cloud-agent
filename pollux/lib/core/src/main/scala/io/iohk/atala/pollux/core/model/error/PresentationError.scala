@@ -10,4 +10,5 @@ object PresentationError {
   final case class ThreadIdNotFound(thid: UUID) extends PresentationError
   final case class InvalidFlowStateError(msg: String) extends PresentationError
   final case class UnexpectedError(msg: String) extends PresentationError
+  final case class IssuedCredentialNotFoundError(cause: Throwable) extends PresentationError
 }

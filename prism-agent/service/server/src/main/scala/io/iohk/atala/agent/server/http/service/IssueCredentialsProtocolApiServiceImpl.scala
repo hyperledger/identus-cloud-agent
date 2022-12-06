@@ -1,18 +1,20 @@
 package io.iohk.atala.agent.server.http.service
 
-import akka.http.scaladsl.server.Directives.*
 import akka.http.scaladsl.marshalling.ToEntityMarshaller
+import akka.http.scaladsl.server.Directives.*
 import akka.http.scaladsl.server.Route
 import io.iohk.atala.agent.openapi.api.IssueCredentialsProtocolApiService
-import zio.*
-import io.iohk.atala.pollux.core.service.CredentialService
 import io.iohk.atala.agent.openapi.model.*
-import java.util.UUID
 import io.iohk.atala.agent.server.http.model.HttpServiceError
-import io.iohk.atala.pollux.core.model.error.IssueCredentialError
-import io.iohk.atala.agent.server.http.model.{HttpServiceError, OASDomainModelHelper, OASErrorModelHelper}
-import scala.util.Try
 import io.iohk.atala.agent.server.http.model.HttpServiceError.InvalidPayload
+import io.iohk.atala.agent.server.http.model.OASDomainModelHelper
+import io.iohk.atala.agent.server.http.model.OASErrorModelHelper
+import io.iohk.atala.pollux.core.model.error.CredentialServiceError
+import io.iohk.atala.pollux.core.service.CredentialService
+import zio.*
+
+import java.util.UUID
+import scala.util.Try
 
 class IssueCredentialsProtocolApiServiceImpl(credentialService: CredentialService)(using runtime: zio.Runtime[Any])
     extends IssueCredentialsProtocolApiService,
@@ -35,7 +37,7 @@ class IssueCredentialsProtocolApiServiceImpl(credentialService: CredentialServic
           request.automaticIssuance.orElse(Some(true)),
           request.awaitConfirmation.orElse(Some(false))
         )
-        .mapError(HttpServiceError.DomainError[IssueCredentialError].apply)
+        .mapError(HttpServiceError.DomainError[CredentialServiceError].apply)
     } yield outcome
 
     onZioSuccess(result.mapBoth(_.toOAS, _.toOAS).either) {
@@ -51,7 +53,7 @@ class IssueCredentialsProtocolApiServiceImpl(credentialService: CredentialServic
     val result = for {
       outcome <- credentialService
         .getIssueCredentialRecords()
-        .mapError(HttpServiceError.DomainError[IssueCredentialError].apply)
+        .mapError(HttpServiceError.DomainError[CredentialServiceError].apply)
     } yield outcome
 
     onZioSuccess(result.mapBoth(_.toOAS, _.map(_.toOAS)).either) {
@@ -76,7 +78,7 @@ class IssueCredentialsProtocolApiServiceImpl(credentialService: CredentialServic
       uuid <- recordId.toUUID
       outcome <- credentialService
         .getIssueCredentialRecord(uuid)
-        .mapError(HttpServiceError.DomainError[IssueCredentialError].apply)
+        .mapError(HttpServiceError.DomainError[CredentialServiceError].apply)
     } yield outcome
 
     onZioSuccess(result.mapBoth(_.toOAS, _.map(_.toOAS)).either) {
@@ -94,7 +96,7 @@ class IssueCredentialsProtocolApiServiceImpl(credentialService: CredentialServic
       uuid <- recordId.toUUID
       outcome <- credentialService
         .acceptCredentialOffer(uuid)
-        .mapError(HttpServiceError.DomainError[IssueCredentialError].apply)
+        .mapError(HttpServiceError.DomainError[CredentialServiceError].apply)
     } yield outcome
 
     onZioSuccess(result.mapBoth(_.toOAS, _.map(_.toOAS)).either) {
@@ -112,7 +114,7 @@ class IssueCredentialsProtocolApiServiceImpl(credentialService: CredentialServic
       uuid <- recordId.toUUID
       outcome <- credentialService
         .acceptCredentialRequest(uuid)
-        .mapError(HttpServiceError.DomainError[IssueCredentialError].apply)
+        .mapError(HttpServiceError.DomainError[CredentialServiceError].apply)
     } yield outcome
 
     onZioSuccess(result.mapBoth(_.toOAS, _.map(_.toOAS)).either) {

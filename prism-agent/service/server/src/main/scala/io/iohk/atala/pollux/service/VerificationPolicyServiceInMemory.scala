@@ -1,6 +1,6 @@
 package io.iohk.atala.pollux.service
 
-import io.iohk.atala.api.http.model.{Order, Pagination}
+import io.iohk.atala.api.http.model.{CollectionStats, Order, Pagination, PaginationInput}
 import io.iohk.atala.pollux.schema.model.{VerificationPolicy, VerificationPolicyInput, VerificationPolicyPage}
 import zio.{Ref, Task, UIO, ZIO, ZLayer}
 
@@ -61,22 +61,27 @@ class VerificationPolicyServiceInMemory(
       filter: VerificationPolicy.Filter,
       pagination: Pagination,
       order: Option[Order]
-  ): Task[VerificationPolicyPage] = {
+  ): Task[(VerificationPolicyPage, CollectionStats)] = {
     for {
       storage: Map[String, VerificationPolicy] <- ref.get
-      filtered = storage.values.filter(filter.predicate)
-      paginated = filtered.toList
+      totalCount = storage.count(_ => true)
+      filtered = storage.values.filter(filter.predicate).toList
+      filteredCount = filtered.length
+      paginated = filtered
         .slice(
-          pagination.offset.getOrElse(0),
-          pagination.offset.getOrElse(0) + pagination.limit.getOrElse(10)
+          pagination.offset,
+          pagination.offset + pagination.limit
         )
-    } yield VerificationPolicyPage(
-      self = "to be defined",
-      kind = "VerifiableCredentialSchema",
-      pageOf = "to be defined",
-      next = None,
-      previous = None,
-      contents = paginated
+    } yield (
+      VerificationPolicyPage(
+        self = "to be defined",
+        kind = "VerificationPolicyPage",
+        pageOf = "to be defined",
+        next = None,
+        previous = None,
+        contents = paginated
+      ),
+      CollectionStats(totalCount, filteredCount)
     )
   }
 }

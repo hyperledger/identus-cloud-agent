@@ -14,6 +14,8 @@ import scala.util.{Failure, Success, Try}
 
 sealed trait VerifiablePresentationPayload
 
+case class Prover(did: DID, signer: Signer, publicKey: PublicKey)
+
 case class W3cVerifiablePresentationPayload(payload: W3cPresentationPayload, proof: Proof)
     extends Verifiable(proof),
       VerifiablePresentationPayload
@@ -24,7 +26,7 @@ sealed trait PresentationPayload(
     `@context`: IndexedSeq[String],
     `type`: IndexedSeq[String],
     verifiableCredential: IndexedSeq[VerifiableCredentialPayload],
-    maybeIss: Option[String],
+    iss: String,
     maybeNbf: Option[Instant],
     aud: IndexedSeq[String],
     maybeExp: Option[Instant],
@@ -33,7 +35,7 @@ sealed trait PresentationPayload(
 ) {
   def toJwtPresentationPayload: JwtPresentationPayload =
     JwtPresentationPayload(
-      maybeIss = maybeIss,
+      iss = iss,
       vp = JwtVp(
         `@context` = `@context`,
         `type` = `type`,
@@ -46,23 +48,18 @@ sealed trait PresentationPayload(
       maybeNonce = maybeNonce
     )
 
-  def toW3CPresentationPayload: Validation[String, W3cPresentationPayload] =
-    Validation.validateWith(
-      Validation.fromOptionWith("Iss must be defined")(maybeIss),
-      Validation.fromOptionWith("Nbf must be defined")(maybeNbf)
-    ) { (iss, nbf) =>
-      W3cPresentationPayload(
-        `@context` = `@context`.distinct,
-        maybeId = maybeJti,
-        `type` = `type`.distinct,
-        verifiableCredential = verifiableCredential,
-        holder = iss,
-        verifier = aud,
-        issuanceDate = nbf,
-        maybeExpirationDate = maybeExp,
-        maybeNonce = maybeNonce
-      )
-    }
+  def toW3CPresentationPayload: W3cPresentationPayload =
+    W3cPresentationPayload(
+      `@context` = `@context`.distinct,
+      maybeId = maybeJti,
+      `type` = `type`.distinct,
+      verifiableCredential = verifiableCredential,
+      holder = iss,
+      verifier = aud,
+      maybeIssuanceDate = maybeNbf,
+      maybeExpirationDate = maybeExp,
+      maybeNonce = maybeNonce
+    )
 }
 
 case class W3cPresentationPayload(
@@ -72,7 +69,7 @@ case class W3cPresentationPayload(
     verifiableCredential: IndexedSeq[VerifiableCredentialPayload],
     holder: String,
     verifier: IndexedSeq[String],
-    issuanceDate: Instant,
+    maybeIssuanceDate: Option[Instant],
     maybeExpirationDate: Option[Instant],
 
     /** Not part of W3C Presentation but included to preserve in case of conversion from JWT. */
@@ -83,8 +80,8 @@ case class W3cPresentationPayload(
       maybeJti = maybeId,
       verifiableCredential = verifiableCredential,
       aud = verifier,
-      maybeIss = Some(holder),
-      maybeNbf = Some(issuanceDate),
+      iss = holder,
+      maybeNbf = maybeIssuanceDate,
       maybeExp = maybeExpirationDate,
       maybeNonce = maybeNonce
     )
@@ -96,7 +93,7 @@ case class JwtVp(
 )
 
 case class JwtPresentationPayload(
-    maybeIss: Option[String],
+    iss: String,
     vp: JwtVp,
     maybeNbf: Option[Instant],
     aud: IndexedSeq[String],
@@ -104,7 +101,7 @@ case class JwtPresentationPayload(
     maybeJti: Option[String],
     maybeNonce: Option[String]
 ) extends PresentationPayload(
-      maybeIss = maybeIss,
+      iss = iss,
       `@context` = vp.`@context`,
       `type` = vp.`type`,
       verifiableCredential = vp.verifiableCredential,
@@ -132,7 +129,7 @@ object PresentationPayload {
             ("verifiableCredential", w3cPresentationPayload.verifiableCredential.asJson),
             ("holder", w3cPresentationPayload.holder.asJson),
             ("verifier", w3cPresentationPayload.verifier.asJson),
-            ("issuanceDate", w3cPresentationPayload.issuanceDate.asJson),
+            ("issuanceDate", w3cPresentationPayload.maybeIssuanceDate.asJson),
             ("expirationDate", w3cPresentationPayload.maybeExpirationDate.asJson)
           )
           .deepDropNullValues
@@ -153,7 +150,7 @@ object PresentationPayload {
       (jwtPresentationPayload: JwtPresentationPayload) =>
         Json
           .obj(
-            ("iss", jwtPresentationPayload.maybeIss.asJson),
+            ("iss", jwtPresentationPayload.iss.asJson),
             ("vp", jwtPresentationPayload.vp.asJson),
             ("nbf", jwtPresentationPayload.maybeNbf.asJson),
             ("aud", jwtPresentationPayload.aud.asJson),
@@ -191,7 +188,7 @@ object PresentationPayload {
             .as[Option[String]]
             .map(_.iterator.toIndexedSeq)
             .orElse(c.downField("verifier").as[Option[IndexedSeq[String]]].map(_.iterator.toIndexedSeq.flatten))
-          issuanceDate <- c.downField("issuanceDate").as[Instant]
+          maybeIssuanceDate <- c.downField("issuanceDate").as[Option[Instant]]
           maybeExpirationDate <- c.downField("expirationDate").as[Option[Instant]]
         } yield {
           W3cPresentationPayload(
@@ -201,7 +198,7 @@ object PresentationPayload {
             verifiableCredential = verifiableCredential.distinct,
             holder = holder,
             verifier = verifier.distinct,
-            issuanceDate = issuanceDate,
+            maybeIssuanceDate = maybeIssuanceDate,
             maybeExpirationDate = maybeExpirationDate,
             maybeNonce = Option.empty
           )
@@ -232,7 +229,7 @@ object PresentationPayload {
     implicit val JwtPresentationPayloadDecoder: Decoder[JwtPresentationPayload] =
       (c: HCursor) =>
         for {
-          maybeIss <- c.downField("iss").as[Option[String]]
+          iss <- c.downField("iss").as[String]
           vp <- c.downField("vp").as[JwtVp]
           maybeNbf <- c.downField("nbf").as[Option[Instant]]
           aud <- c
@@ -245,7 +242,7 @@ object PresentationPayload {
           maybeNonce <- c.downField("nonce").as[Option[String]]
         } yield {
           JwtPresentationPayload(
-            maybeIss = maybeIss,
+            iss = iss,
             vp = vp,
             maybeNbf = maybeNbf,
             aud = aud.distinct,

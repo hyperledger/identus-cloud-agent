@@ -1,3 +1,10 @@
+# [castor-v0.4.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/castor-v0.3.0...castor-v0.4.0) (2022-12-02)
+
+
+### Features
+
+* **castor:** implement translation of Node DidData to W3C DidDocument ([#182](https://github.com/input-output-hk/atala-prism-building-blocks/issues/182)) ([d72159f](https://github.com/input-output-hk/atala-prism-building-blocks/commit/d72159fdd2ae1797c33bd425443dc632b9e8ebac))
+
 # [castor-v0.3.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/castor-v0.2.0...castor-v0.3.0) (2022-11-28)
 
 

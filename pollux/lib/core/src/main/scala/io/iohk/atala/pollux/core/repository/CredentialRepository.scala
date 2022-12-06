@@ -1,7 +1,7 @@
 package io.iohk.atala.pollux.core.repository
 
 import io.iohk.atala.pollux.core.model.EncodedJWTCredential
-import io.iohk.atala.pollux.core.model.IssueCredentialRecord
+import io.iohk.atala.pollux.core.model._
 import io.iohk.atala.prism.crypto.MerkleInclusionProof
 import zio.*
 
@@ -34,5 +34,19 @@ trait CredentialRepository[F[_]] {
 
   def updateWithRequestCredential(recordId: UUID, request: RequestCredential, protocolState: ProtocolState): F[Int]
 
-  def updateWithIssueCredential(recordId: UUID, issue: IssueCredential, protocolState: ProtocolState): F[Int]
+  def updateWithIssueCredential(
+      recordId: UUID,
+      issue: IssueCredential,
+      protocolState: ProtocolState
+  ): F[Int]
+
+  def updateWithIssuedRawCredential(
+      recordId: UUID,
+      issue: IssueCredential,
+      issuedRawCredential: String,
+      protocolState: ProtocolState
+  ): F[Int]
+
+  def getValidIssuedCredentials(recordId: Seq[UUID]): F[Seq[ValidIssuedCredentialRecord]]
+
 }

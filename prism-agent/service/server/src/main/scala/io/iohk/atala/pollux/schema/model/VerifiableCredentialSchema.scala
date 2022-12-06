@@ -1,5 +1,7 @@
 package io.iohk.atala.pollux.schema.model
 
+import sttp.model.Uri._
+import sttp.model.Uri
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedName}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder}
@@ -16,11 +18,16 @@ case class VerifiableCredentialSchema(
     attributes: List[String],
     author: String,
     authored: ZonedDateTime,
-    proof: Option[Proof]
-)
+    proof: Option[Proof],
+    kind: String = "VerifiableCredentialSchema",
+    self: String = ""
+) {
+  def withBaseUri(base: Uri) = withSelf(base.addPath(id.toString).toString)
+  def withSelf(self: String) = copy(self = self)
+}
 
 object VerifiableCredentialSchema {
-  def apply(in: VerifiableCredentialSchema.Input): VerifiableCredentialSchema =
+  def apply(in: VerifiableCredentialSchemaInput): VerifiableCredentialSchema =
     VerifiableCredentialSchema(
       id = in.id.getOrElse(UUID.randomUUID()),
       name = in.name,
@@ -35,31 +42,9 @@ object VerifiableCredentialSchema {
 
   given encoder: zio.json.JsonEncoder[VerifiableCredentialSchema] =
     DeriveJsonEncoder.gen[VerifiableCredentialSchema]
-
   given decoder: zio.json.JsonDecoder[VerifiableCredentialSchema] =
     DeriveJsonDecoder.gen[VerifiableCredentialSchema]
-
   given schema: Schema[VerifiableCredentialSchema] = Schema.derived
-
-  case class Input(
-      id: Option[UUID],
-      name: String,
-      version: String,
-      description: Option[String],
-      attributes: List[String],
-      authored: Option[ZonedDateTime],
-      tags: List[String]
-  )
-
-  object Input {
-    given encoder: zio.json.JsonEncoder[Input] =
-      DeriveJsonEncoder.gen[Input]
-
-    given decoder: zio.json.JsonDecoder[Input] =
-      DeriveJsonDecoder.gen[Input]
-
-    given schema: Schema[Input] = Schema.derived
-  }
 
   case class Filter(
       author: Option[String],
@@ -71,19 +56,41 @@ object VerifiableCredentialSchema {
         author.forall(_ == vcs.author) &&
         tags.map(_.split(',')).forall(vcs.tags.intersect(_).nonEmpty)
   }
+}
 
-  case class Page(
-      self: String,
-      kind: String,
-      pageOf: String,
-      next: Option[String],
-      previous: Option[String],
-      contents: List[VerifiableCredentialSchema]
-  )
+case class VerifiableCredentialSchemaInput(
+    id: Option[UUID],
+    name: String,
+    version: String,
+    description: Option[String],
+    attributes: List[String],
+    authored: Option[ZonedDateTime],
+    tags: List[String]
+)
 
-  object Page {
-    given encoder: zio.json.JsonEncoder[Page] = DeriveJsonEncoder.gen[Page]
-    given decoder: zio.json.JsonDecoder[Page] = DeriveJsonDecoder.gen[Page]
-    given schema: sttp.tapir.Schema[Page] = Schema.derived
-  }
+object VerifiableCredentialSchemaInput {
+  given encoder: zio.json.JsonEncoder[VerifiableCredentialSchemaInput] =
+    DeriveJsonEncoder.gen[VerifiableCredentialSchemaInput]
+  given decoder: zio.json.JsonDecoder[VerifiableCredentialSchemaInput] =
+    DeriveJsonDecoder.gen[VerifiableCredentialSchemaInput]
+  given schema: Schema[VerifiableCredentialSchemaInput] = Schema.derived
+}
+
+case class VerifiableCredentialSchemaPage(
+    contents: List[VerifiableCredentialSchema],
+    kind: String = "VerifiableCredentialSchemaPage",
+    self: String = "",
+    pageOf: String = "",
+    next: Option[String] = None,
+    previous: Option[String] = None
+) {
+  def withSelf(self: String) = copy(self = self)
+}
+
+object VerifiableCredentialSchemaPage {
+  given encoder: zio.json.JsonEncoder[VerifiableCredentialSchemaPage] =
+    DeriveJsonEncoder.gen[VerifiableCredentialSchemaPage]
+  given decoder: zio.json.JsonDecoder[VerifiableCredentialSchemaPage] =
+    DeriveJsonDecoder.gen[VerifiableCredentialSchemaPage]
+  given schema: sttp.tapir.Schema[VerifiableCredentialSchemaPage] = Schema.derived
 }

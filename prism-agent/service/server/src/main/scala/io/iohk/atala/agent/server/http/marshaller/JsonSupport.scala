@@ -35,6 +35,7 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   given RootJsonFormat[Delta] = jsonFormat2(Delta.apply)
   given RootJsonFormat[DeltaUpdate] = jsonFormat2(DeltaUpdate.apply)
   given RootJsonFormat[DID] = jsonFormat8(DID.apply)
+  given RootJsonFormat[DIDDocumentMetadata] = jsonFormat1(DIDDocumentMetadata.apply)
   given RootJsonFormat[DidOperation] = jsonFormat4(DidOperation.apply)
   given RootJsonFormat[DIDOperationResponse] = jsonFormat1(DIDOperationResponse.apply)
   given RootJsonFormat[DidOperationStatus] = jsonFormat0(DidOperationStatus.apply)
@@ -42,7 +43,6 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   given RootJsonFormat[DidOperationType] = jsonFormat0(DidOperationType.apply)
   given RootJsonFormat[DIDResponse] = jsonFormat2(DIDResponse.apply)
   given RootJsonFormat[ErrorResponse] = jsonFormat5(ErrorResponse.apply)
-  given RootJsonFormat[JsonWebKey2020] = jsonFormat1(JsonWebKey2020.apply)
   given RootJsonFormat[PublicKey] = jsonFormat5(PublicKey.apply)
   given RootJsonFormat[PublicKeyJwk] = jsonFormat5(PublicKeyJwk.apply)
   given RootJsonFormat[RecoverDIDRequest] = jsonFormat5(RecoverDIDRequest.apply)
@@ -50,7 +50,6 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   given RootJsonFormat[UpdateDIDRequest] = jsonFormat4(UpdateDIDRequest.apply)
   given RootJsonFormat[UpdatePatch] = jsonFormat2(UpdatePatch.apply)
   given RootJsonFormat[VerificationMethod] = jsonFormat4(VerificationMethod.apply)
-  given RootJsonFormat[VerificationMethodOrRef] = jsonFormat2(VerificationMethodOrRef.apply)
 
   // Issue Credential Protocol
   implicit object UUIDFormat extends JsonFormat[UUID] {
@@ -84,14 +83,6 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   given RootJsonFormat[W3CPresentation] = jsonFormat1(W3CPresentation.apply)
   given RootJsonFormat[W3CPresentationInput] = jsonFormat1(W3CPresentationInput.apply)
   given RootJsonFormat[W3CPresentationPaginated] = jsonFormat4(W3CPresentationPaginated.apply)
-  given RootJsonFormat[W3CProof] = jsonFormat6(W3CProof.apply)
-  given RootJsonFormat[W3CSchema] = jsonFormat8(W3CSchema.apply)
-  given RootJsonFormat[W3CSchemaAllOf] = jsonFormat2(W3CSchemaAllOf.apply)
-  given RootJsonFormat[W3CSchemaClaims] = jsonFormat7(W3CSchemaClaims.apply)
-  given RootJsonFormat[W3CSchemaClaimsProperties] = jsonFormat1(W3CSchemaClaimsProperties.apply)
-  given RootJsonFormat[W3CSchemaInput] = jsonFormat4(W3CSchemaInput.apply)
-  given RootJsonFormat[W3CSchemaMeta] = jsonFormat6(W3CSchemaMeta.apply)
-  given RootJsonFormat[W3CSchemaPaginated] = jsonFormat4(W3CSchemaPaginated.apply)
 
   // Connections Management
   given RootJsonFormat[CreateConnectionRequest] = jsonFormat1(CreateConnectionRequest.apply)

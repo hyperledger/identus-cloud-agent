@@ -4,10 +4,7 @@ import scala.jdk.CollectionConverters.*
 import zio.*
 import io.iohk.atala.pollux.core.service.CredentialService
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord
-import io.iohk.atala.pollux.core.model.error.CreateCredentialPayloadFromRecordError
-import io.iohk.atala.pollux.core.model.error.IssueCredentialError
-import io.iohk.atala.pollux.core.model.error.MarkCredentialRecordsAsPublishQueuedError
-import io.iohk.atala.pollux.core.model.error.PublishCredentialBatchError
+import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.core.service.CredentialService
 import io.iohk.atala.pollux.vc.jwt.W3cCredentialPayload
 import zio.*
@@ -41,7 +38,7 @@ object BackgroundJobs {
 
   private[this] def performExchange(
       record: IssueCredentialRecord
-  ): ZIO[DidComm & CredentialService, Throwable, Unit] = {
+  ): URIO[DidComm & CredentialService, Unit] = {
     import IssueCredentialRecord._
     import IssueCredentialRecord.ProtocolState._
     import IssueCredentialRecord.PublicationState._
@@ -50,21 +47,21 @@ object BackgroundJobs {
       _ <- record match {
         // Offer should be sent from Issuer to Holder
         case IssueCredentialRecord(id, _, _, _, _, Role.Issuer, _, _, _, _, OfferPending, _, Some(offer), _, _) =>
-          for {
+          (for {
             _ <- ZIO.log(s"IssueCredentialRecord: OfferPending (START)")
             didComm <- ZIO.service[DidComm]
             _ <- sendMessage(offer.makeMessage)
             credentialService <- ZIO.service[CredentialService]
             _ <- credentialService.markOfferSent(id)
-          } yield ()
+          } yield ()): ZIO[DidComm & CredentialService, CredentialServiceError | MercuryException, Unit]
 
         // Request should be sent from Holder to Issuer
         case IssueCredentialRecord(id, _, _, _, _, Role.Holder, _, _, _, _, RequestPending, _, _, Some(request), _) =>
-          for {
+          (for {
             _ <- sendMessage(request.makeMessage)
             credentialService <- ZIO.service[CredentialService]
             _ <- credentialService.markRequestSent(id)
-          } yield ()
+          } yield ()): ZIO[DidComm & CredentialService, CredentialServiceError | MercuryException, Unit]
 
         // 'automaticIssuance' is TRUE. Issuer automatically accepts the Request
         case IssueCredentialRecord(id, _, _, _, _, Role.Issuer, _, _, Some(true), _, RequestReceived, _, _, _, _) =>
@@ -130,11 +127,11 @@ object BackgroundJobs {
               _,
               Some(issue)
             ) =>
-          for {
+          (for {
             _ <- sendMessage(issue.makeMessage)
             credentialService <- ZIO.service[CredentialService]
             _ <- credentialService.markCredentialSent(id)
-          } yield ()
+          } yield ()): ZIO[DidComm & CredentialService, CredentialServiceError | MercuryException, Unit]
 
         // Credential has been generated, published, and can now be sent to the Holder
         case IssueCredentialRecord(
@@ -154,24 +151,27 @@ object BackgroundJobs {
               _,
               Some(issue)
             ) =>
-          for {
+          (for {
             _ <- sendMessage(issue.makeMessage)
             credentialService <- ZIO.service[CredentialService]
             _ <- credentialService.markCredentialSent(id)
-          } yield ()
+          } yield ()): ZIO[DidComm & CredentialService, CredentialServiceError | MercuryException, Unit]
 
         case IssueCredentialRecord(id, _, _, _, _, _, _, _, _, _, ProblemReportPending, _, _, _, _) => ???
         case IssueCredentialRecord(id, _, _, _, _, _, _, _, _, _, _, _, _, _, _)                    => ZIO.unit
       }
     } yield ()
 
-    aux.catchAll {
-      case ex: TransportError => // : io.iohk.atala.mercury.model.error.MercuryError | java.io.IOException =>
-        ex.printStackTrace()
-        ZIO.logError(ex.getMessage()) *>
-          ZIO.fail(mercuryErrorAsThrowable(ex))
-      case ex: IOException => ZIO.fail(ex)
-    }
+    aux
+      .catchAll {
+        case ex: MercuryException =>
+          ZIO.logErrorCause(s"DIDComm communication error processing record: ${record.id}", Cause.fail(ex))
+        case ex: CredentialServiceError =>
+          ZIO.logErrorCause(s"Credential service error processing record: ${record.id} ", Cause.fail(ex))
+      }
+      .catchAllDefect { case throwable =>
+        ZIO.logErrorCause(s"Issue Credential protocol defect processing record: ${record.id}", Cause.fail(throwable))
+      }
   }
 
   val publishCredentialsToDlt = {
@@ -183,10 +183,7 @@ object BackgroundJobs {
   }
 
   private[this] def performPublishCredentialsToDlt(credentialService: CredentialService) = {
-    type PublishToDltError = IssueCredentialError | CreateCredentialPayloadFromRecordError |
-      PublishCredentialBatchError | MarkCredentialRecordsAsPublishQueuedError
-
-    val res: ZIO[Any, PublishToDltError, Unit] = for {
+    val res: ZIO[Any, CredentialServiceError, Unit] = for {
       records <- credentialService.getCredentialRecordsByState(IssueCredentialRecord.ProtocolState.CredentialPending)
       // NOTE: the line below is a potentially slow operation, because <createCredentialPayloadFromRecord> makes a database SELECT call,
       // so calling this function n times will make n database SELECT calls, while it can be optimized to get

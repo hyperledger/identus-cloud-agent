@@ -31,6 +31,8 @@ tags:
   # Pollux
   - name: Schema Registry
     description: Schema Registry REST API
+  - name: Verification
+    description: Verification Policies REST API
   - name: Present Proof
     description: Present Proof REST API
   # Connect
@@ -365,93 +367,357 @@ paths:
   # Pollux
   # ----------------------------------
   /schema-registry/schemas:
+    get:
+      tags:
+        - Schema Registry
+      summary: Lookup schemas by indexed fields
+      description: 'Lookup schemas by `author`, `name`, `tags` parameters and control
+        the pagination by `offset` and `limit` parameters '
+      operationId: lookupSchemasByQuery
+      parameters:
+        - name: author
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: name
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: tags
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: order
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: ./pollux/schemas.yaml#/components/schemas/VerifiableCredentialSchemaPage
+        '400':
+          description: 'Invalid value for: query parameter author, Invalid value for:
+            query parameter name, Invalid value for: query parameter tags, Invalid
+            value for: query parameter offset, Invalid value for: query parameter
+            limit, Invalid value for: query parameter order'
+          content:
+            text/plain:
+              schema:
+                type: string
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: ./pollux/schemas.yaml#/components/schemas/InternalServerError
     post:
-      tags: [ "Schema Registry" ]
-      operationId: createSchema
+      tags:
+        - Schema Registry
       summary: Publish new schema to the schema registry
-      description: |-
-        Publish the new schema with claims to the schema registry on behalf of Cloud Agent
-        Schema will be signed by the keys of Cloud Agent and issued by the DID that corresponds to it
+      description: Publish the new schema with attributes to the schema registry on
+        behalf of Cloud Agent. Schema will be signed by the keys of Cloud Agent and
+        issued by the DID that corresponds to it
+      operationId: createSchema
       requestBody:
-        description: SchemaInput object with the metadata and claims
-        required: true
+        description: Create schema input object with the metadata and attributes
         content:
           application/json:
             schema:
-              $ref: "./pollux/schemas.yaml#/components/schemas/W3CSchemaInput"
+              $ref: ./pollux/schemas.yaml#/components/schemas/VerificationCredentialSchemaInput
+        required: true
       responses:
-        "201":
-          description: The new schema is created
+        '201':
+          description: ''
           content:
             application/json:
               schema:
-                $ref: "./pollux/schemas.yaml#/components/schemas/W3CSchema"
-        "400":
-          description: Schema input document cannot be used for the schema creation
-        "401":
-          description: Client is unauthorized to call the API
-    get:
-      tags: [ "Schema Registry" ]
-      operationId: fetchSchemasByQuery
-      summary: Fetch schemas by query
-      description: |-
-        Lookup the schemas in the registry to query by the author, version, name
-      parameters:
-        - in: query
-          name: author
-          description: Fetch schemas by the author (issuer) DID
-          example: "did:prism:abcdefg"
-          schema:
-            type: string
-        - in: query
-          name: name
-          description: Fetch schemas by the name
-          example: UniversityDegree
-          schema:
-            type: string
-        - in: query
-          name: offset
-          description: Pagination offset
-          example: 15
-          schema:
-            type: integer
-        - in: query
-          name: limit
-          description: Pagination limit
-          example: 100
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: Schemas are fetched by the query
+                $ref: ./pollux/schemas.yaml#/components/schemas/VerifiableCredentialSchema
+        '400':
+          description: 'Invalid value for: body'
+          content:
+            text/plain:
+              schema:
+                type: string
+        '500':
+          description: ''
           content:
             application/json:
               schema:
-                $ref: "./pollux/schemas.yaml#/components/schemas/W3CSchemaPaginated"
+                $ref: ./pollux/schemas.yaml#/components/schemas/InternalServerError
   /schema-registry/schemas/{id}:
     get:
-      tags: [ "Schema Registry" ]
-      operationId: getSchemaById
+      tags:
+        - Schema Registry
       summary: Fetch the schema from the registry by id
-      description: |-
-        Fetch the schema by the unique identifier. Verifiable Credential Schema in json format is returned
+      description: Fetch the schema by the unique identifier. Verifiable Credential
+        Schema in json format is returned.
+      operationId: getSchemaById
       parameters:
-        - in: path
-          name: id
+        - name: id
+          in: path
+          description: Get the schema by id
+          required: true
           schema:
             type: string
-          required: true
-          description: Unique identifier of the schema published in the registry
-          example: "did:example:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0"
+            format: uuid
       responses:
-        "200":
-          description: Successful response, W3C compliant schema is returned
+        '200':
+          description: ''
           content:
             application/json:
               schema:
-                $ref: "./pollux/schemas.yaml#/components/schemas/W3CSchema"
-        "404":
-          description: Schema is not found by id
+                $ref: ./pollux/schemas.yaml#/components/schemas/VerifiableCredentialSchema
+        '400':
+          description: 'Invalid value for: path parameter id'
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: ./pollux/schemas.yaml#/components/schemas/NotFound
+
+  # ----------------------------------
+  # Verification Policies
+  # ----------------------------------
+  /verification/policies:
+    get:
+      tags:
+        - Verification
+      summary: Lookup verification policies by query
+      description: Lookup verification policies by `name`, `attributes`, `issuerDIDs`,
+        and `credentialTypes` and control the pagination by `offset` and `limit` parameters
+      operationId: lookupVerificationPoliciesByQuery
+      parameters:
+        - name: name
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: attributes
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: issuerDIDs
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: credentialTypes
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: order
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/VerificationPolicyPage'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/BadRequest'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/InternalServerError'
+    post:
+      tags:
+        - Verification
+      summary: Create the new verification policy
+      description: Create the new verification policy
+      operationId: createVerificationPolicy
+      requestBody:
+        description: Create verification policy object
+        content:
+          application/json:
+            schema:
+              $ref: './pollux/schemas.yaml#/components/schemas/VerificationPolicyInput'
+        required: true
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/VerificationPolicy'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/BadRequest'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/InternalServerError'
+  /verification/policies/{id}:
+    get:
+      tags:
+        - Verification
+      summary: Fetch the verification policy by id
+      description: Get the verification policy by id
+      operationId: getVerificationPolicyById
+      parameters:
+        - name: id
+          in: path
+          description: Get the verification policy by id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/VerificationPolicy'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/BadRequest'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/NotFound'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/InternalServerError'
+    put:
+      tags:
+        - Verification
+      summary: Update the verification policy object by id
+      description: 'Update the fields of the verification policy entry: `attributes`,
+        `issuerDIDs`, `name`, `credentialTypes`, '
+      operationId: updateVerificationPolicy
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Update verification policy object
+        content:
+          application/json:
+            schema:
+              $ref: './pollux/schemas.yaml#/components/schemas/VerificationPolicyInput'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/VerificationPolicy'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/BadRequest'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/NotFound'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/InternalServerError'
+    delete:
+      tags:
+        - Verification
+      summary: Delete the verification policy by id
+      description: Delete the verification policy by id
+      operationId: deleteVerificationPolicyById
+      parameters:
+        - name: id
+          in: path
+          description: Delete the verification policy by id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/BadRequest'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/NotFound'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: './pollux/schemas.yaml#/components/schemas/InternalServerError'
+
   ## Issue Credential Protocol
 
   /issue-credentials/credential-offers:
