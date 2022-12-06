@@ -188,8 +188,6 @@ lazy val resolver = project // maybe merge into models
       D.munit.value,
       D.munitZio.value,
       D.jwk.value,
-      "org.jetbrains.kotlin" % "kotlin-runtime" % "1.2.71",
-      "org.jetbrains.kotlin" % "kotlin-stdlib" % "1.7.10",
     ),
     testFrameworks += new TestFramework("munit.Framework")
   )
@@ -202,7 +200,6 @@ lazy val resolver = project // maybe merge into models
 lazy val agent = project // maybe merge into models
   .in(file("agent"))
   .settings(name := "mercury-agent-core")
-  .settings(libraryDependencies += "com.google.zxing" % "core" % "3.5.0")
   .settings(libraryDependencies ++= Seq(D.zioLog.value)) // , D.zioSLF4J.value))
   .dependsOn(
     models,
@@ -229,6 +226,7 @@ lazy val agentDidcommx = project
 lazy val agentCliDidcommx = project
   .in(file("agent-cli-didcommx"))
   .settings(name := "mercury-agent-cli-didcommx")
+  .settings(libraryDependencies += "com.google.zxing" % "core" % "3.5.0")
   .settings(libraryDependencies += D.zioHttp.value)
   .dependsOn(agentDidcommx)
 
