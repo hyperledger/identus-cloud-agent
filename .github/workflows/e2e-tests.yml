@@ -69,6 +69,8 @@ jobs:
           down-flags: "--volumes"
 
       - name: Run e2e tests
+        env:
+          ATALA_GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
         run: |
           ../../infrastructure/local/update_env.sh
           cat ../../infrastructure/local/.env
