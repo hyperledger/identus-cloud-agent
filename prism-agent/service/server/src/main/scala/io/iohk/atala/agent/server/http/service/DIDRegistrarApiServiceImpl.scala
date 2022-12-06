@@ -38,6 +38,20 @@ class DIDRegistrarApiServiceImpl(service: ManagedDIDService)(using runtime: Runt
     }
   }
 
+  override def listManagedDid()(implicit
+      toEntityMarshallerListManagedDIDResponseInnerarray: ToEntityMarshaller[Seq[ListManagedDIDResponseInner]],
+      toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
+  ): Route = {
+    val result = service.listManagedDID
+      .map(_.map(_.toOAS))
+      .mapError(HttpServiceError.DomainError.apply)
+
+    onZioSuccess(result.mapError(_.toOAS).either) {
+      case Left(error)   => complete(error.status -> error)
+      case Right(result) => listManagedDid200(result)
+    }
+  }
+
   override def publishManagedDid(didRef: String)(implicit
       toEntityMarshallerDIDOperationResponse: ToEntityMarshaller[DIDOperationResponse],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
