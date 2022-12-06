@@ -28,7 +28,7 @@ CREATE TABLE public.issue_credential_records(
   "publication_state" VARCHAR(50),
   "offer_credential_data" TEXT,
   "request_credential_data" TEXT,
-  "issue_credential_data" TEXT.
+  "issue_credential_data" TEXT,
   "issued_credential_raw" TEXT  
 );
 
