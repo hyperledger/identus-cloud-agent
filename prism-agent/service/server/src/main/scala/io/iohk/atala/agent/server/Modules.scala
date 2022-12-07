@@ -79,10 +79,11 @@ import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.pollux.schema.{SchemaRegistryServerEndpoints, VerificationPolicyServerEndpoints}
 import io.iohk.atala.pollux.service.{SchemaRegistryServiceInMemory, VerificationPolicyServiceInMemory}
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
+import io.iohk.atala.agent.server.config.AgentConfig
 
 object Modules {
 
-  def app(port: Int): RIO[DidComm, Unit] = {
+  def app(port: Int): RIO[DidComm & ManagedDIDService & AppConfig, Unit] = {
     val httpServerApp = HttpRoutes.routes.flatMap(HttpServer.start(port, _))
 
     httpServerApp
@@ -385,7 +386,7 @@ object HttpModule {
     (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new IssueCredentialsProtocolApi(_, _))
   }
 
-  val connectionsManagementApiLayer: RLayer[DidComm, ConnectionsManagementApi] = {
+  val connectionsManagementApiLayer: RLayer[DidComm & ManagedDIDService & AppConfig, ConnectionsManagementApi] = {
     val serviceLayer = AppModule.connectionServiceLayer
     val apiServiceLayer = serviceLayer >>> ConnectionsManagementApiServiceImpl.layer
     val apiMarshallerLayer = ConnectionsManagementApiMarshallerImpl.layer

@@ -90,7 +90,7 @@ object Main extends ZIOAppDefault {
 
       _ <- Modules
         .app(restServicePort)
-        .provide(didCommLayer)
+        .provide(didCommLayer, AppModule.manageDIDServiceLayer, SystemModule.configLayer)
         .fork
 
       _ <- Modules.zioApp.fork

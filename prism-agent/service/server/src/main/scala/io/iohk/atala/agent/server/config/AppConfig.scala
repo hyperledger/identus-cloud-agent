@@ -28,7 +28,7 @@ final case class GrpcServiceConfig(host: String, port: Int)
 
 final case class DatabaseConfig(host: String, port: Int, databaseName: String, username: String, password: String)
 
-final case class AgentConfig(httpEndpoint: HttpEndpointConfig)
+final case class AgentConfig(httpEndpoint: HttpEndpointConfig, didCommServiceEndpointUrl: String)
 
 final case class HttpEndpointConfig(http: HttpConfig)
 

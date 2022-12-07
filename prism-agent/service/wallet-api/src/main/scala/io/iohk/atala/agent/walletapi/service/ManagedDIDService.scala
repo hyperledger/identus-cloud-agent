@@ -37,6 +37,7 @@ import io.iohk.atala.shared.models.HexStrings.*
 import zio.*
 
 import scala.collection.immutable.ArraySeq
+import io.iohk.atala.mercury.PeerDID
 
 /** A wrapper around Castor's DIDService providing key-management capability. Analogous to the secretAPI in
   * indy-wallet-sdk.
@@ -198,6 +199,15 @@ final class ManagedDIDService private[walletapi] (
       case s => ZIO.succeed(s)
     }
   }
+
+  /** PeerDID related methods
+    */
+
+  def createAndStorePeerDID(serviceEndpoint: String): IO[CreateManagedDIDError, PeerDID] =
+    for {
+      peerDID <- ZIO.succeed(PeerDID.makePeerDid(serviceEndpoint = Some(serviceEndpoint)))
+      //_ <- secretStorage.upsertKey()
+    } yield peerDID
 
 }
 

@@ -10,7 +10,7 @@ object Dependencies {
     val akkaHttp = "10.2.9"
     val castor = "0.4.0"
     val pollux = "0.6.0"
-    val connect = "0.3.0"
+    val connect = "0.3.0-SNAPSHOT"
     val bouncyCastle = "1.70"
     val logback = "1.4.4"
     val mercury = "0.8.0"
@@ -91,6 +91,7 @@ object Dependencies {
   lazy val keyManagementDependencies: Seq[ModuleID] =
       baseDependencies ++
       castorDependencies ++
+      mercuryDependencies ++ 
       bouncyDependencies
 
   lazy val serverDependencies: Seq[ModuleID] =
