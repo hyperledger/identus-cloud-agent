@@ -93,7 +93,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
           Service(
             id = s"service$i",
             `type` = ServiceType.MediatorService,
-            serviceEndpoint = URI.create("http://example.com")
+            serviceEndpoint = Seq(URI.create("http://example.com"))
           )
         )
         val op = createPrismDIDOperation(services = services)
@@ -106,7 +106,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
           Service(
             id = s"service0",
             `type` = ServiceType.MediatorService,
-            serviceEndpoint = URI.create("http://example.com")
+            serviceEndpoint = Seq(URI.create("http://example.com"))
           )
         )
         val op = createPrismDIDOperation(services = services)

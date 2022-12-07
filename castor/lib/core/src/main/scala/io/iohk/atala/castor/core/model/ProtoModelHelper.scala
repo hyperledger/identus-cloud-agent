@@ -16,6 +16,8 @@ import io.iohk.atala.castor.core.model.did.{
   PublicKeyData,
   ScheduledDIDOperationDetail,
   ScheduledDIDOperationStatus,
+  Service,
+  ServiceType,
   VerificationRelationship
 }
 import io.iohk.atala.prism.crypto.EC
@@ -44,8 +46,8 @@ private[castor] trait ProtoModelHelper {
         value = node_models.CreateDIDOperation(
           didData = Some(
             node_models.CreateDIDOperation.DIDCreationData(
-              // TODO: add Service when it is added to Prism DID method spec (ATL-2203)
-              publicKeys = createDIDOp.publicKeys.map(_.toProto) ++ createDIDOp.internalKeys.map(_.toProto)
+              publicKeys = createDIDOp.publicKeys.map(_.toProto) ++ createDIDOp.internalKeys.map(_.toProto),
+              services = createDIDOp.services.map(_.toProto)
             )
           )
         )
@@ -101,6 +103,16 @@ private[castor] trait ProtoModelHelper {
     }
   }
 
+  extension (service: Service) {
+    def toProto: node_models.Service = node_models.Service(
+      id = service.id,
+      `type` = service.`type`.name,
+      serviceEndpoint = service.serviceEndpoint.map(_.toString),
+      addedOn = None,
+      deletedOn = None
+    )
+  }
+
   extension (resp: node_api.GetOperationInfoResponse) {
     def toDomain: Either[String, Option[ScheduledDIDOperationDetail]] = {
       val status = resp.operationStatus match {
@@ -121,11 +133,12 @@ private[castor] trait ProtoModelHelper {
       for {
         canonicalDID <- PrismDID.buildCanonicalFromSuffix(didData.id)
         allKeys <- didData.publicKeys.traverse(_.toDomain)
+        services <- didData.services.traverse(_.toDomain)
       } yield DIDData(
         id = canonicalDID,
         publicKeys = allKeys.collect { case key: PublicKey => key },
-        services = Nil, // TODO: add Service when it is added to Prism DID method spec (ATL-2203)
-        internalKeys = allKeys.collect { case key: InternalPublicKey => key }
+        internalKeys = allKeys.collect { case key: InternalPublicKey => key },
+        services = services
       )
     }
 
@@ -149,10 +162,28 @@ private[castor] trait ProtoModelHelper {
     def toDomain: Either[String, PrismDIDOperation.Create] = {
       for {
         allKeys <- operation.didData.map(_.publicKeys.traverse(_.toDomain)).getOrElse(Right(Nil))
+        services <- operation.didData.map(_.services.traverse(_.toDomain)).getOrElse(Right(Nil))
       } yield PrismDIDOperation.Create(
         publicKeys = allKeys.collect { case key: PublicKey => key },
         internalKeys = allKeys.collect { case key: InternalPublicKey => key },
-        services = Nil // TODO: add Service when it is added to Prism DID method spec (ATL-2203)
+        services = services
+      )
+    }
+  }
+
+  extension (service: node_models.Service) {
+    def toDomain: Either[String, Service] = {
+      for {
+        uris <- service.serviceEndpoint.traverse(s =>
+          Try(URI.create(s)).toEither.left.map(_ => s"unable to parse serviceEndpoint $s as URI")
+        )
+        serviceType <- ServiceType
+          .parseString(service.`type`)
+          .toRight(s"unable to parse ${service.`type`} as service type")
+      } yield Service(
+        id = service.id,
+        `type` = serviceType,
+        serviceEndpoint = uris
       )
     }
   }
