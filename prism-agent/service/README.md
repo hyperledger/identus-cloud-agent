@@ -55,6 +55,11 @@ Basic documentation on how to execute the Connect flow from command line can be 
 Basic documentation on how to execute the Issue flow from the command line can be found [here](./issue.md).
 
 ---
+## Presnt Proof flow
+Basic documentation on how to execute the Present Proof flow from the command line can be found [here](./present-proof.md).
+
+
+---
 ## Known limitations
 
 ### Castor `worker` process embedded inside `prism-agent` runnable
