@@ -12,24 +12,16 @@ import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.agent.server.http.marshaller.{
   DIDApiMarshallerImpl,
   DIDAuthenticationApiMarshallerImpl,
-  DIDOperationsApiMarshallerImpl,
   DIDRegistrarApiMarshallerImpl,
   ConnectionsManagementApiMarshallerImpl
 }
 import io.iohk.atala.agent.server.http.service.{
   DIDApiServiceImpl,
   DIDAuthenticationApiServiceImpl,
-  DIDOperationsApiServiceImpl,
   DIDRegistrarApiServiceImpl,
   ConnectionsManagementApiServiceImpl
 }
-import io.iohk.atala.agent.openapi.api.{
-  DIDApi,
-  DIDAuthenticationApi,
-  DIDOperationsApi,
-  DIDRegistrarApi,
-  ConnectionsManagementApi
-}
+import io.iohk.atala.agent.openapi.api.{DIDApi, DIDAuthenticationApi, DIDRegistrarApi, ConnectionsManagementApi}
 import cats.effect.std.Dispatcher
 import com.typesafe.config.ConfigFactory
 import doobie.util.transactor.Transactor
@@ -359,12 +351,6 @@ object HttpModule {
     (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new DIDApi(_, _))
   }
 
-  val didOperationsApiLayer: ULayer[DIDOperationsApi] = {
-    val apiServiceLayer = DIDOperationsApiServiceImpl.layer
-    val apiMarshallerLayer = DIDOperationsApiMarshallerImpl.layer
-    (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new DIDOperationsApi(_, _))
-  }
-
   val didAuthenticationApiLayer: ULayer[DIDAuthenticationApi] = {
     val apiServiceLayer = DIDAuthenticationApiServiceImpl.layer
     val apiMarshallerLayer = DIDAuthenticationApiMarshallerImpl.layer
@@ -393,7 +379,7 @@ object HttpModule {
   }
 
   val layers =
-    didApiLayer ++ didOperationsApiLayer ++ didAuthenticationApiLayer ++ didRegistrarApiLayer ++
+    didApiLayer ++ didAuthenticationApiLayer ++ didRegistrarApiLayer ++
       issueCredentialsProtocolApiLayer ++ connectionsManagementApiLayer
 }
 
