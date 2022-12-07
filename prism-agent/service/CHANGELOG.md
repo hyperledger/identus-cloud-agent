@@ -1,3 +1,10 @@
+# [prism-agent-v0.14.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.13.0...prism-agent-v0.14.0) (2022-12-07)
+
+
+### Features
+
+* **infra:** switch to single instance of postgres for running locally ([#203](https://github.com/input-output-hk/atala-prism-building-blocks/issues/203)) ([32e33f1](https://github.com/input-output-hk/atala-prism-building-blocks/commit/32e33f109f834386cfda5168a00e8407ca136e2e))
+
 # [prism-agent-v0.13.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.12.0...prism-agent-v0.13.0) (2022-12-07)
 
 
