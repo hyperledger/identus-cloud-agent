@@ -5,6 +5,7 @@ enum VerificationRelationship(val name: String) {
   case AssertionMethod extends VerificationRelationship("assertionMethod")
   case KeyAgreement extends VerificationRelationship("keyAgreement")
   case CapabilityInvocation extends VerificationRelationship("capabilityInvocation")
+  case CapabilityDelegation extends VerificationRelationship("capabilityDelegation")
 }
 
 object VerificationRelationship {

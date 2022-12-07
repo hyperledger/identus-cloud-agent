@@ -65,6 +65,7 @@ private[castor] trait ProtoModelHelper {
           case VerificationRelationship.AssertionMethod      => node_models.KeyUsage.ISSUING_KEY
           case VerificationRelationship.KeyAgreement         => node_models.KeyUsage.COMMUNICATION_KEY
           case VerificationRelationship.CapabilityInvocation => ???
+          case VerificationRelationship.CapabilityDelegation => ???
         },
         addedOn = None,
         revokedOn = None,
@@ -142,20 +143,24 @@ private[castor] trait ProtoModelHelper {
       )
     }
 
-    /** Return DIDData with keys and services removed by checking revocation time against current time */
+    /** Return DIDData with keys and services removed by checking revocation time against the current time */
     def filterRevokedKeysAndServices: UIO[node_models.DIDData] = {
-      // TODO: filter Service when it is added to Prism DID method spec (ATL-2203)
       Clock.instant.map { now =>
         didData
           .withPublicKeys(didData.publicKeys.filter { publicKey =>
-            val maybeRevokeTime = publicKey.revokedOn
-              .flatMap(_.timestampInfo)
-              .flatMap(_.blockTimestamp)
-              .map(ts => Instant.ofEpochSecond(ts.seconds).plusNanos(ts.nanos))
-            maybeRevokeTime.forall(revokeTime => revokeTime isBefore now)
+            publicKey.revokedOn.flatMap(_.toInstant).forall(revokeTime => revokeTime isBefore now)
+          })
+          .withServices(didData.services.filter { service =>
+            service.deletedOn.flatMap(_.toInstant).forall(revokeTime => revokeTime isBefore now)
           })
       }
     }
+  }
+
+  extension (ledgerData: node_models.LedgerData) {
+    def toInstant: Option[Instant] = ledgerData.timestampInfo
+      .flatMap(_.blockTimestamp)
+      .map(ts => Instant.ofEpochSecond(ts.seconds).plusNanos(ts.nanos))
   }
 
   extension (operation: node_models.CreateDIDOperation) {
