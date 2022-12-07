@@ -8,6 +8,7 @@ val apiBaseDirectory =
 
 inThisBuild(
   Seq(
+    maxErrors := 5,
     organization := "io.iohk.atala",
     scalaVersion := "3.2.1",
     apiBaseDirectory := baseDirectory.value / "api",

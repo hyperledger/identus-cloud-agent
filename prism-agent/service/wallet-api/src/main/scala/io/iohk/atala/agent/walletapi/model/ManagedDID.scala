@@ -1,8 +1,10 @@
 package io.iohk.atala.agent.walletapi.model
 
-import io.iohk.atala.castor.core.model.did.PrismDIDOperation
+import io.iohk.atala.castor.core.model.did.{CanonicalPrismDID, PrismDIDOperation}
 
 import scala.collection.immutable.ArraySeq
+
+final case class ManagedDIDDetail(did: CanonicalPrismDID, state: ManagedDIDState)
 
 sealed trait ManagedDIDState
 

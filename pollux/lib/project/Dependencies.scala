@@ -8,7 +8,7 @@ object Dependencies {
     val prismSdk = "v1.4.1" // scala-steward:off
     val iris = "0.1.0"
     val shared = "0.2.0"
-    val mercury = "0.9.0"
+    val mercury = "0.10.0"
     val flyway = "9.8.3"
   }
 

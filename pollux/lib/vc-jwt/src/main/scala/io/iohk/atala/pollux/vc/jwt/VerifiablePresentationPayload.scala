@@ -5,11 +5,12 @@ import io.circe.*
 import io.circe.generic.auto.*
 import io.circe.parser.decode
 import io.circe.syntax.*
-import pdi.jwt.{Jwt, JwtCirce}
+import pdi.jwt.{Jwt, JwtCirce, JwtOptions}
 import zio.prelude.*
 
 import java.security.{KeyPairGenerator, PublicKey}
-import java.time.{Instant, ZonedDateTime}
+import java.time.temporal.TemporalAmount
+import java.time.{Clock, Instant, ZonedDateTime}
 import scala.util.{Failure, Success, Try}
 
 sealed trait VerifiablePresentationPayload
@@ -296,4 +297,56 @@ object JwtPresentation {
 
   def validateEncodedJwt(jwt: JWT, publicKey: PublicKey): Boolean =
     JwtCirce.isValid(jwt.value, publicKey)
+
+  def verifyDates(jwt: JWT, leeway: TemporalAmount)(implicit clock: Clock): Validation[String, Unit] = {
+    val now = clock.instant()
+
+    val decodeJWT =
+      Validation.fromTry(JwtCirce.decodeRaw(jwt.value, options = JwtOptions(signature = false))).mapError(_.getMessage)
+
+    def validateNbfNotAfterExp(maybeNbf: Option[Instant], maybeExp: Option[Instant]): Validation[String, Unit] = {
+      val maybeResult =
+        for {
+          nbf <- maybeNbf
+          exp <- maybeExp
+        } yield {
+          if (nbf.isAfter(exp))
+            Validation.fail(s"Credential cannot expire before being in effect. nbf=$nbf exp=$exp")
+          else Validation.unit
+        }
+      maybeResult.getOrElse(Validation.unit)
+    }
+
+    def validateNbf(maybeNbf: Option[Instant]): Validation[String, Unit] = {
+      maybeNbf
+        .map(nbf =>
+          if (now.isBefore(nbf.minus(leeway)))
+            Validation.fail(s"Credential is not yet in effect. now=$now nbf=$nbf leeway=$leeway")
+          else Validation.unit
+        )
+        .getOrElse(Validation.unit)
+    }
+
+    def validateExp(maybeExp: Option[Instant]): Validation[String, Unit] = {
+      maybeExp
+        .map(exp =>
+          if (now.isAfter(exp.plus(leeway)))
+            Validation.fail(s"Credential has expired. now=$now exp=$exp leeway=$leeway")
+          else Validation.unit
+        )
+        .getOrElse(Validation.unit)
+    }
+
+    for {
+      decodedJWT <- decodeJWT
+      jwtCredentialPayload <- Validation.fromEither(decode[JwtPresentationPayload](decodedJWT)).mapError(_.getMessage)
+      maybeNbf = jwtCredentialPayload.maybeNbf
+      maybeExp = jwtCredentialPayload.maybeExp
+      result <- Validation.validateWith(
+        validateNbfNotAfterExp(maybeNbf, maybeExp),
+        validateNbf(maybeNbf),
+        validateExp(maybeExp)
+      )((l, _, _) => l)
+    } yield result
+  }
 }

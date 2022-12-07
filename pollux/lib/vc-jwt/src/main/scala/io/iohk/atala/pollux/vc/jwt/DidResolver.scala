@@ -8,7 +8,7 @@ trait DidResolver {
   def resolve(didUrl: String): IO[String, DIDResolutionResult]
 }
 
-trait DIDResolutionResult()
+trait DIDResolutionResult
 
 sealed case class DIDResolutionFailed(
     error: DIDResolutionError
