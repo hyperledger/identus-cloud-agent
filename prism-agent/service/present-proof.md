@@ -9,7 +9,7 @@ Basic documentation on how to execute the Issue flow from the command line can b
 ---
 
 #### Starting an instance for `Verifier` on port `8070`
-### You can stop the issuer if you are running out of resources locally
+### You can stop the `Issuer` if you are running out of resources locally
 
 ```bash
 # From the root directory
@@ -21,7 +21,7 @@ PORT=8070 docker-compose -p verifier -f infrastructure/local/docker-compose.yml 
 connectionId is the holder (connectionId or did)
 Replace `{CONNECTION_ID}` with the DID of the holder displayed at startup in the his Prism Agent console logs
 
-- **Verifier** - Initiate a Proof Request
+- **Verifier** - Initiates a Proof Request
 
 ```shell
 curl -X 'POST' \
@@ -32,24 +32,20 @@ curl -X 'POST' \
   "connectionId": "{CONNECTION_ID}", "trustIssuers":[]}]
 }'
 ```
-
 - **Holder** - Retrieving the list of presentation records
-
 
 ```shell
 curl -X 'GET' 'http://localhost:8090/prism-agent/present-proof/presentations' -H 'accept: application/json' | jq
 ```
 
-choose the presentationId
-
-- **Holder** - Retrieving the list of credentials records choose the credential with status CredentialRecieved 
+- **Holder** - Retrieving the list of credentials records choose the `{RECORD_ID}` for credential with status CredentialRecieved 
 
 ```shell
 curl -X 'GET' 'http://localhost:8090/prism-agent/issue-credentials/records' -H 'accept: application/json' | jq
 ```
 
 - **Holder** - Accepting the Presentation Request 
-Replace `{PRESENTATION_ID}` with the UUID of the record from the presentation record  list
+Replace `{PRESENTATION_ID}` with the UUID of the record from the presentation records list
 Replace `{RECORD_ID}` with the UUID of the record from the credential records list
 
 
@@ -74,9 +70,11 @@ curl -X 'GET' 'http://localhost:8090/prism-agent/present-proof/presentations' -H
 curl -X 'GET' 'http://localhost:8070/prism-agent/present-proof/presentations' -H 'accept: application/json' | jq
 ```
 - **Verifier** - Accept PresentationReceived 
+Replace `{PRESENTATION_ID}` with the UUID of the record from the presentation records list with state PresentationReceived
+
 ```shell
 curl -X 'PATCH' \
-  'http://localhost:8070/prism-agent/present-proof/presentations/10c632fc-a8b5-4138-9a7e-b94f06b9663f' \
+  'http://localhost:8070/prism-agent/present-proof/presentations/{PRESENTATION_ID}' \
   -H 'Content-Type: application/json' \
   -d '{"action": "presentation-accept"}' | jq
 ```
