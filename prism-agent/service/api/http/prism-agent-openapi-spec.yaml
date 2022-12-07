@@ -21,11 +21,11 @@ security:
 tags:
   # Castor
   - name: DID
-    description: DID REST API
+    description: Generic DID Endpoints
   - name: DID Authentication
     description: DID Authentication REST API
   - name: DID Registrar
-    description: DID Registrar REST API
+    description: DID Endpoints where keys are managed by PrismAgent
   # Pollux
   - name: Schema Registry
     description: Schema Registry REST API
@@ -46,8 +46,8 @@ paths:
     get:
       tags: [ "DID" ]
       operationId: getDid
-      summary: Resolve DID.
-      description: Resolve DID.
+      summary: Resolve Prism DID
+      description: Resolve Prism DID
       parameters:
         - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
       responses:
@@ -125,8 +125,8 @@ paths:
     get:
       tags: [ "DID Registrar" ]
       operationId: listManagedDid
-      summary: List all DIDs managed by PrismAgent.
-      description: List all DIDs managed by PrismAgent.
+      summary: List all DIDs stored in PrismAgent's wallet
+      description: List all DIDs stored in PrismAgent's wallet
       responses:
         "200":
           description: List managed DIDs
@@ -134,8 +134,8 @@ paths:
             application/json:
               schema:
                 $ref: "./castor/schemas.yaml#/components/schemas/ListManagedDIDResponse"
-        "422":
-          description: The DID creation failed.
+        "500":
+          description: Internal Error.
           content:
             application/json:
               schema:
@@ -144,8 +144,10 @@ paths:
     post:
       tags: [ "DID Registrar" ]
       operationId: createManagedDid
-      summary: Create DID with the DID Document template where keys are managed by PrismAgent.
-      description: Create DID with the DID Document template where keys are managed by PrismAgent.
+      summary: Create unpublished DID and store it in PrismAgent's wallet
+      description: |
+        Create unpublished DID and store it inside PrismAgent's wallet. The private keys of the DID is
+        managed by PrismAgent. The DID can later be published to blockchain using publications endpoint.
       requestBody:
         required: true
         content:
@@ -170,8 +172,9 @@ paths:
     post:
       tags: [ "DID Registrar" ]
       operationId: publishManagedDid
-      summary: Publish DID stored in PrismAgent wallet to blockchain
-      description: Publish DID stored in PrismAgent wallet to blockchain
+      summary: Publish the DID stored in PrismAgent's wallet to the blockchain
+      description: |
+        Publish the DID stored in PrismAgent's wallet to the blockchain.
       parameters:
         - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
       responses:
