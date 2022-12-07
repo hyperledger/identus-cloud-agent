@@ -304,10 +304,10 @@ object AppModule {
     (didOpValidatorLayer ++ didServiceLayer) >>> ManagedDIDService.inMemoryStorage
 
   val credentialServiceLayer: RLayer[DidComm, CredentialService] =
-    (GrpcModule.layers ++ RepoModule.layers) >>> CredentialServiceImpl.layer
+    (GrpcModule.layers ++ RepoModule.credentialRepoLayer) >>> CredentialServiceImpl.layer
 
   val connectionServiceLayer: RLayer[DidComm, ConnectionService] =
-    (GrpcModule.layers ++ RepoModule.layers) >>> ConnectionServiceImpl.layer
+    (GrpcModule.layers ++ RepoModule.connectionRepoLayer) >>> ConnectionServiceImpl.layer
 }
 
 object GrpcModule {
@@ -438,10 +438,9 @@ object RepoModule {
   }
 
   val credentialRepoLayer: TaskLayer[CredentialRepository[Task]] =
-    polluxTransactorLayer >>> JdbcCredentialRepository.layer
+    RepoModule.polluxTransactorLayer >>> JdbcCredentialRepository.layer
 
   val connectionRepoLayer: TaskLayer[ConnectionRepository[Task]] =
-    connectTransactorLayer >>> JdbcConnectionRepository.layer
+    RepoModule.connectTransactorLayer >>> JdbcConnectionRepository.layer
 
-  val layers = credentialRepoLayer ++ connectionRepoLayer
 }
