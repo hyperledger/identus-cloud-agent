@@ -14,7 +14,7 @@ import io.iohk.atala.mercury.protocol.routing._
 def makeMsg(from: Agent, to: Agent) = Message(
   piuri = "http://atalaprism.io/lets_connect/proposal",
   from = Some(from.id),
-  to = Some(to.id),
+  to = Seq(to.id),
   body = JsonObject.fromIterable(
     Seq(
       "connectionId" -> Json.fromString("8fb9ea21-d094-4506-86b6-c7c1627d753a"),
