@@ -29,7 +29,7 @@ type ForwardAttachment = AttachmentDescriptor
 final case class ForwardMessage(
     id: String = java.util.UUID.randomUUID.toString(),
     from: DidId,
-    to: DidId, // ?? Set[DidId], // The mediator
+    to: DidId, // The mediator's did
     expires_time: Option[Long],
     body: ForwardBody,
     attachments: Seq[ForwardAttachment],
@@ -39,7 +39,7 @@ final case class ForwardMessage(
   def asMessage = {
     Message(
       from = Some(from),
-      to = Some(to),
+      to = Seq(to),
       body = JsonObject(("next", Json.fromString(body.next.value))),
       id = id,
       piuri = `type`,
