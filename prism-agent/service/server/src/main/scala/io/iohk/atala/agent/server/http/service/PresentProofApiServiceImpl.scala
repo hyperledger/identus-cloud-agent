@@ -132,7 +132,7 @@ class PresentProofApiServiceImpl(
           record <- presentationService
             .acceptRequestPresentation(
               recordId = UUID.fromString(id),
-              crecentialsToUse = Seq.empty,
+              crecentialsToUse = requestPresentationAction.proofId.getOrElse(Seq.empty),
               prover = createHolder
             )
             .mapError(HttpServiceError.DomainError[PresentationError].apply)
