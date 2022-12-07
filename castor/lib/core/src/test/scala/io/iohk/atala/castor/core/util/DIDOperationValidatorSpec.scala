@@ -131,6 +131,19 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         assert(DIDOperationValidator(Config(50, 50)).validate(op))(
           isLeft(isSubtype[DIDOperationError.InvalidArgument](anything))
         )
+      },
+      test("reject CreateOperation on non-unique serviceEndpoint URI") {
+        val services = Seq(
+          Service(
+            id = s"service0",
+            `type` = ServiceType.MediatorService,
+            serviceEndpoint = Seq(URI.create("http://example.com"), URI.create("http://example.com"))
+          )
+        )
+        val op = createPrismDIDOperation(services = services)
+        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
+          isLeft(isSubtype[DIDOperationError.InvalidArgument](anything))
+        )
       }
     )
   }

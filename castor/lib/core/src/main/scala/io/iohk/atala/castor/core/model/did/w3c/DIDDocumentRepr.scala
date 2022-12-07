@@ -24,7 +24,7 @@ final case class PublicKeyRepr(
 final case class ServiceRepr(
     id: String,
     `type`: String,
-    serviceEndpoint: String
+    serviceEndpoint: Seq[String]
 )
 
 final case class PublicKeyJwk(kty: "EC", crv: String, x: String, y: String)
