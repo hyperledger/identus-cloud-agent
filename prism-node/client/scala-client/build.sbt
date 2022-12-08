@@ -19,7 +19,7 @@ val commonSettings = Seq(
 
 // Custom keys
 val apiBaseDirectory = settingKey[File]("The base directory for Node 2 API specifications")
-ThisBuild / apiBaseDirectory := baseDirectory.value / "../../api"
+ThisBuild / apiBaseDirectory := baseDirectory.value / "./api"
 
 lazy val root = project
   .in(file("."))
