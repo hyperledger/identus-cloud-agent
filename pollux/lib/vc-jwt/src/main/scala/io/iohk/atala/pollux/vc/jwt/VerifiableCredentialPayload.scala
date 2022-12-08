@@ -531,6 +531,16 @@ object JwtCredential {
 
   def encodeJwt(payload: JwtCredentialPayload, issuer: Issuer): JWT = issuer.signer.encode(payload.asJson)
 
+  def encodeW3C(payload: W3cCredentialPayload, issuer: Issuer): W3cVerifiableCredentialPayload = {
+    W3cVerifiableCredentialPayload(
+      payload = payload,
+      proof = Proof(
+        `type` = "JwtProof2020",
+        jwt = issuer.signer.encode(payload.asJson)
+      )
+    )
+  }
+
   def toEncodedJwt(payload: W3cCredentialPayload, issuer: Issuer): JWT =
     encodeJwt(payload.toJwtCredentialPayload, issuer)
 
@@ -547,6 +557,14 @@ object JwtCredential {
     JWTVerification.validateEncodedJwt(jwt)(didResolver: DidResolver)(claim =>
       ZIO.fromEither(decode[JwtCredentialPayload](claim).left.map(_.toString))
     )(_.iss)
+  }
+
+  def validateW3C(
+      payload: W3cVerifiableCredentialPayload
+  )(didResolver: DidResolver): IO[String, Boolean] = {
+    JWTVerification.validateEncodedJwt(payload.proof.jwt)(didResolver: DidResolver)(claim =>
+      ZIO.fromEither(decode[W3cCredentialPayload](claim).left.map(_.toString))
+    )(_.issuer.value)
   }
 
   def validateJwtSchema(
