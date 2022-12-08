@@ -29,7 +29,7 @@ curl -X 'POST' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
-  "connectionId": "", "proofs":[]
+  "connectionId": "{CONNECTION_ID}", "proofs":[]
 }'
 ```
 - **Holder** - Retrieving the list of presentation records
