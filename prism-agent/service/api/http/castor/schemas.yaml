@@ -252,8 +252,10 @@ components:
             - MediatorService
           example: MediatorService
         serviceEndpoint:
-          type: string
-          example: "https://bar.example.com"
+          type: array
+          items:
+            type: string
+            example: "https://bar.example.com"
 
     UpdatePatch:
       type: object
