@@ -7,7 +7,6 @@ import net.serenitybdd.screenplay.rest.interactions.Get
 import net.serenitybdd.screenplay.rest.questions.ResponseConsequence
 
 class ResolveDidSteps {
-
     @When("I resolve existing DID by DID reference")
     fun iResolveExistingDIDByDIDReference() {
         Acme.attemptsTo(

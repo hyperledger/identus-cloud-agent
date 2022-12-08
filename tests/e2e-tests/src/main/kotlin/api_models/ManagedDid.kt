@@ -1,7 +1,6 @@
 package api_models
 
-
-data class ManagedDid(
+enum class ManagedDid(
     var did: String = "",
     var longFormDid: String = "",
     var status: String = ""
