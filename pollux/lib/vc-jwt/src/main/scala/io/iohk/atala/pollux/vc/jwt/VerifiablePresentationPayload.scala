@@ -6,6 +6,7 @@ import io.circe.generic.auto.*
 import io.circe.parser.decode
 import io.circe.syntax.*
 import pdi.jwt.{Jwt, JwtCirce, JwtOptions}
+import zio.{IO, ZIO}
 import zio.prelude.*
 
 import java.security.{KeyPairGenerator, PublicKey}
@@ -296,7 +297,15 @@ object JwtPresentation {
   }
 
   def validateEncodedJwt(jwt: JWT, publicKey: PublicKey): Boolean =
-    JwtCirce.isValid(jwt.value, publicKey)
+    JWTVerification.validateEncodedJwt(jwt, publicKey)
+
+  def validateEncodedJWT(
+      jwt: JWT
+  )(didResolver: DidResolver): IO[String, Boolean] = {
+    JWTVerification.validateEncodedJwt(jwt)(didResolver: DidResolver)(claim =>
+      ZIO.fromEither(decode[JwtPresentationPayload](claim).left.map(_.toString))
+    )(_.iss)
+  }
 
   def verifyDates(jwt: JWT, leeway: TemporalAmount)(implicit clock: Clock): Validation[String, Unit] = {
     val now = clock.instant()
