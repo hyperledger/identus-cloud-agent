@@ -21,5 +21,6 @@ class PlaceholderSchemaValidator extends SchemaValidator {
 }
 
 object PlaceholderSchemaValidator {
-  def fromSchema(schema: Json): Either[String, PlaceholderSchemaValidator] = Right(PlaceholderSchemaValidator())
+  def fromSchema(schema: Json): Validation[String, PlaceholderSchemaValidator] =
+    Validation.succeed(PlaceholderSchemaValidator())
 }

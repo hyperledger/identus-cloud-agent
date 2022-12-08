@@ -7,10 +7,12 @@ import io.circe.generic.auto.*
 import io.circe.parser.decode
 import io.circe.syntax.*
 import io.circe.{Decoder, Encoder, HCursor, Json}
+import io.iohk.atala.pollux.vc.jwt.JWTVerification.{extractPublicKey, validateEncodedJwt}
 import io.iohk.atala.pollux.vc.jwt.schema.{SchemaResolver, SchemaValidator}
 import net.reactivecore.cjs.validator.Violation
 import net.reactivecore.cjs.{DocumentValidator, Loader}
 import pdi.jwt.*
+import zio.ZIO.none
 import zio.prelude.*
 import zio.{IO, NonEmptyChunk, Task, ZIO}
 
@@ -24,75 +26,94 @@ import scala.util.{Failure, Success, Try}
 object JWTVerification {
   def validateEncodedJwt[T](jwt: JWT)(
       didResolver: DidResolver
-  )(decoder: String => IO[String, T])(issuerDidExtractor: T => String): IO[String, Boolean] = {
-    val decodeJWT = ZIO
+  )(decoder: String => Validation[String, T])(issuerDidExtractor: T => String): IO[String, Validation[String, Unit]] = {
+    val decodeJWT = Validation
       .fromTry(JwtCirce.decodeRawAll(jwt.value, JwtOptions(false, false, false)))
       .mapError(_.getMessage)
 
-    val extractAlgorithm =
+    val extractAlgorithm: Validation[String, JwtAlgorithm] =
       for {
         decodedJwtTask <- decodeJWT
         (header, _, _) = decodedJwtTask
         algorithm <- Validation
           .fromOptionWith("An algorithm must be specified in the header")(JwtCirce.parseHeader(header).algorithm)
-          .toZIO
       } yield algorithm
 
-    val loadDidDocument =
+    val validatedIssuerDid: Validation[String, String] =
       for {
         decodedJwtTask <- decodeJWT
         (_, claim, _) = decodedJwtTask
         decodedClaim <- decoder(claim)
         extractIssuerDid = issuerDidExtractor(decodedClaim)
-        resolvedDidDocument <- resolve(extractIssuerDid)(didResolver)
-      } yield resolvedDidDocument
+      } yield extractIssuerDid
 
-    for {
-      results <- loadDidDocument validatePar extractAlgorithm
-      (didDocument, algorithm) = results
-      verificationMethods <- extractVerificationMethods(didDocument, algorithm)
-    } yield validateEncodedJwt(jwt, verificationMethods)
+    val loadDidDocument =
+      ValidationUtils
+        .foreach(
+          validatedIssuerDid
+            .map(validIssuerDid => resolve(validIssuerDid)(didResolver))
+        )(identity)
+        .map(b => b.flatten)
+
+    loadDidDocument
+      .map(validatedDidDocument => {
+        for {
+          results <- Validation.validateWith(validatedDidDocument, extractAlgorithm)((didDocument, algorithm) =>
+            (didDocument, algorithm)
+          )
+          (didDocument, algorithm) = results
+          verificationMethods <- extractVerificationMethods(didDocument, algorithm)
+          validatedJwt <- validateEncodedJwt(jwt, verificationMethods)
+        } yield validatedJwt
+      })
   }
 
-  def validateEncodedJwt(jwt: JWT, publicKey: PublicKey): Boolean =
-    JwtCirce.isValid(jwt.value, publicKey)
+  def validateEncodedJwt(jwt: JWT, publicKey: PublicKey): Validation[String, Unit] =
+    if JwtCirce.isValid(jwt.value, publicKey) then Validation.unit
+    else Validation.fail(s"Jwt[$jwt] not singed by $publicKey")
 
-  def validateEncodedJwt(jwt: JWT, verificationMethods: IndexedSeq[VerificationMethod]): Boolean = {
-    verificationMethods.exists(verificationMethod =>
-      toPublicKey(verificationMethod).exists(publicKey => validateEncodedJwt(jwt, publicKey))
-    )
+  def validateEncodedJwt(jwt: JWT, verificationMethods: IndexedSeq[VerificationMethod]): Validation[String, Unit] = {
+    verificationMethods
+      .map(verificationMethod => {
+        for {
+          publicKey <- extractPublicKey(verificationMethod)
+          signatureValidation <- validateEncodedJwt(jwt, publicKey)
+        } yield signatureValidation
+      })
+      .reduce((v1, v2) => v1.orElse(v2))
   }
 
-  private def resolve(issuerDid: String)(didResolver: DidResolver): IO[String, DIDDocument] = {
+  private def resolve(issuerDid: String)(didResolver: DidResolver): IO[String, Validation[String, DIDDocument]] = {
     didResolver
       .resolve(issuerDid)
-      .flatMap(
+      .map(
         _ match
           case (didResolutionSucceeded: DIDResolutionSucceeded) =>
-            ZIO.succeed(didResolutionSucceeded.didDocument)
-          case (didResolutionFailed: DIDResolutionFailed) => ZIO.fail(didResolutionFailed.error.toString)
+            Validation.succeed(didResolutionSucceeded.didDocument)
+          case (didResolutionFailed: DIDResolutionFailed) => Validation.fail(didResolutionFailed.error.toString)
       )
   }
 
   private def extractVerificationMethods(
       didDocument: DIDDocument,
       jwtAlgorithm: JwtAlgorithm
-  ): IO[String, IndexedSeq[VerificationMethod]] = {
+  ): Validation[String, IndexedSeq[VerificationMethod]] = {
     Validation
       .fromPredicateWith("No PublicKey to validate against found")(
         didDocument.verificationMethod.filter(verification => verification.`type` == jwtAlgorithm.name)
       )(_.nonEmpty)
-      .toZIO
   }
 
   // TODO Implement other key types
-  def toPublicKey(verificationMethod: VerificationMethod): Option[PublicKey] = {
-    for {
-      publicKeyJwk <- verificationMethod.publicKeyJwk
-      curve <- publicKeyJwk.crv
-      x <- publicKeyJwk.x.map(Base64URL.from)
-      y <- publicKeyJwk.y.map(Base64URL.from)
-      d <- publicKeyJwk.d.map(Base64URL.from)
-    } yield new ECKey.Builder(Curve.parse(curve), x, y).d(d).build().toPublicKey
+  def extractPublicKey(verificationMethod: VerificationMethod): Validation[String, PublicKey] = {
+    val maybePublicKey =
+      for {
+        publicKeyJwk <- verificationMethod.publicKeyJwk
+        curve <- publicKeyJwk.crv
+        x <- publicKeyJwk.x.map(Base64URL.from)
+        y <- publicKeyJwk.y.map(Base64URL.from)
+        d <- publicKeyJwk.d.map(Base64URL.from)
+      } yield new ECKey.Builder(Curve.parse(curve), x, y).d(d).build().toPublicKey
+    Validation.fromOptionWith("Unable to parse Public Key")(maybePublicKey)
   }
 }
