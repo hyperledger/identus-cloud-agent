@@ -21,7 +21,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-  
+
   pgadmin:
     image: dpage/pgadmin4
     environment:
@@ -73,7 +73,8 @@ services:
       CONNECT_DB_PASSWORD: postgres
       DIDCOMM_SERVICE_URL: http://host.docker.internal:${PORT}/didcomm/
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://prism-agent:8080/connections" ]
       interval: 30s
