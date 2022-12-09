@@ -16,8 +16,8 @@ import akka.http.scaladsl.server.Route
 object HttpRoutes {
 
   def routes: URIO[
-    DIDApi & DIDOperationsApi & DIDAuthenticationApi & DIDRegistrarApi & IssueCredentialsProtocolApi &
-      ConnectionsManagementApi & PresentProofApi,
+    DIDApi & DIDAuthenticationApi & DIDRegistrarApi & IssueCredentialsProtocolApi & ConnectionsManagementApi &
+      PresentProofApi,
     Route
   ] =
     for {
@@ -28,7 +28,6 @@ object HttpRoutes {
       connectionsManagementApi <- ZIO.service[ConnectionsManagementApi]
       presentProofApi <- ZIO.service[PresentProofApi]
     } yield didApi.route ~
-      didOperationsApi.route ~
       didAuthApi.route ~
       disRegistrarApi.route ~
       issueCredentialsProtocolApi.route ~

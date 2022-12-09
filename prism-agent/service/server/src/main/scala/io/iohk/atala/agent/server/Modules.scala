@@ -456,7 +456,7 @@ object HttpModule {
   }
 
   val layers =
-    didApiLayer ++ didOperationsApiLayer ++ didAuthenticationApiLayer ++ didRegistrarApiLayer ++
+    didApiLayer ++ didAuthenticationApiLayer ++ didRegistrarApiLayer ++
       issueCredentialsProtocolApiLayer ++ connectionsManagementApiLayer ++ presentProofProtocolApiLayer
 }
 
