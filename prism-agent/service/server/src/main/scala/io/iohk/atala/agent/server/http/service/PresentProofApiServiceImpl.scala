@@ -87,7 +87,7 @@ class PresentProofApiServiceImpl(
         .mapError(HttpServiceError.DomainError[PresentationError].apply)
 
       presentationStatus = records.map { record =>
-        val connectionId = None // record.subjectId // TODO
+        val connectionId = record.connectionId
         PresentationStatus(record.id.toString, record.protocolState.toString, Seq.empty, connectionId)
       }
     } yield presentationStatus

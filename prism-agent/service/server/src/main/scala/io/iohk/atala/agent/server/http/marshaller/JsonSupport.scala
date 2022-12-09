@@ -69,9 +69,6 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   given RootJsonFormat[W3CCredentialRevocationRequest] = jsonFormat1(W3CCredentialRevocationRequest.apply)
   given RootJsonFormat[W3CCredentialRevocationResponse] = jsonFormat2(W3CCredentialRevocationResponse.apply)
   given RootJsonFormat[W3CCredentialStatus] = jsonFormat2(W3CCredentialStatus.apply)
-  // given RootJsonFormat[W3CPresentation] = jsonFormat1(W3CPresentation.apply)
-  // given RootJsonFormat[W3CPresentationInput] = jsonFormat1(W3CPresentationInput.apply)
-  // given RootJsonFormat[W3CPresentationPaginated] = jsonFormat4(W3CPresentationPaginated.apply)
 
   // Presentation
   given RootJsonFormat[ProofRequestAux] = jsonFormat2(ProofRequestAux.apply)
