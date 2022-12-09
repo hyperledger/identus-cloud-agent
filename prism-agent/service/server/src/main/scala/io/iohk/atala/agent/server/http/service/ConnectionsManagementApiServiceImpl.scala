@@ -36,7 +36,6 @@ class ConnectionsManagementApiServiceImpl(
     val result = for {
       pairwiseDid <- managedDIDService
         .createAndStorePeerDID(agentConfig.didCommServiceEndpointUrl)
-        .mapError(HttpServiceError.DomainError[CreateManagedDIDError].apply(_).toOAS)
       record <- connectionService
         .createConnectionInvitation(request.label, pairwiseDid.did)
         .mapError(HttpServiceError.DomainError[ConnectionServiceError].apply(_).toOAS)
@@ -99,7 +98,6 @@ class ConnectionsManagementApiServiceImpl(
         .mapError(HttpServiceError.DomainError[ConnectionServiceError].apply(_).toOAS)
       pairwiseDid <- managedDIDService
         .createAndStorePeerDID(agentConfig.didCommServiceEndpointUrl)
-        .mapError(HttpServiceError.DomainError[CreateManagedDIDError].apply(_).toOAS)
       record <- connectionService
         .acceptConnectionInvitation(record.id, pairwiseDid.did)
         .mapError(HttpServiceError.DomainError[ConnectionServiceError].apply(_).toOAS)
