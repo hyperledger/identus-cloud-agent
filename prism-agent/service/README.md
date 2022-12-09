@@ -31,7 +31,11 @@ Basic documentation on how to execute the Connect flow from command line can be 
 Basic documentation on how to execute the Issue flow from the command line can be found [here](./issue.md).
 
 ---
-## DID lifecycle flow
-Basic documentation on how to execute the basic DID lifecycle from command line can be found [here](./did.md)
+## Presnt Proof flow
+Basic documentation on how to execute the Present Proof flow from the command line can be found [here](./present-proof.md).
+
+
+---
+## Known limitations
 
 ---
