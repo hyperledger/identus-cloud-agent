@@ -2,7 +2,6 @@ package features.did
 
 import api_models.*
 import common.Agents.Acme
-import common.Utils
 import common.Utils.lastResponse
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
@@ -39,9 +38,11 @@ class ManageDidSteps {
 
     @When("I publish the recently created DID")
     fun iPublishTheRecentlyCreatedDid() {
-        Acme.attemptsTo(
-            Post.to("/did-registrar/dids/$ref/publications")
-        )
+        // FIXME: Node is not released
+//        val ref = Acme.recall<String>("createdDid")
+//        Acme.attemptsTo(
+//            Post.to("/did-registrar/dids/$ref/publications")
+//        )
     }
 
     @Then("it should be created successfully")
@@ -50,17 +51,22 @@ class ManageDidSteps {
             it.statusCode(SC_OK)
             it.body("longFormDid", not(emptyString()))
         })
-        Acme.remember("generatedDid", lastResponse().getString("longFormDid"))
+        Acme.remember("createdDid", lastResponse().getString("longFormDid"))
     }
 
     @Then("it should contain the recently created DID")
     fun itShouldContainTheRecentlyCreatedDid() {
-        val managedDidList = Utils.lastResponse().getList<ManagedDid>("")
+        val managedDidList = lastResponse().getList<ManagedDid>("")
         Assertions.assertThat(managedDidList)
             .filteredOn {
-                it.longFormDid == Acme.recall("generatedDid")
+                it.longFormDid == Acme.recall("createdDid")
                         && it.status == "CREATED"
             }
             .hasSize(1)
+    }
+
+    @Then("it should be published")
+    fun itShouldBePublished() {
+        // FIXME: check if the DID status has changed
     }
 }
