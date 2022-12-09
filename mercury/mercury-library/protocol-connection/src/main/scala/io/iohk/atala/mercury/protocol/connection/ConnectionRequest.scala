@@ -11,7 +11,7 @@ object ConnectionRequest {
   case class Body(
       goal_code: Option[String] = None,
       goal: Option[String] = None,
-      accept: Seq[String] = Seq.empty
+      accept: Option[Seq[String]] = None
   )
 
   object Body {
