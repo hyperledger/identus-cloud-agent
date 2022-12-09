@@ -1,3 +1,10 @@
+# [mercury-v0.10.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.10.0...mercury-v0.10.1) (2022-12-09)
+
+
+### Bug Fixes
+
+* **mercury:** simple commit to increase the version of mercury library ([5ffb0cc](https://github.com/input-output-hk/atala-prism-building-blocks/commit/5ffb0cc9e7ca8e63feacc6e915ab026681a30f24))
+
 # [mercury-v0.10.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.9.0...mercury-v0.10.0) (2022-12-06)
 
 
