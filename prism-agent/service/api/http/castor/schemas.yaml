@@ -107,7 +107,7 @@ components:
                   id:
                     type: string
                     description: Identifier of a verification material in the DID Document
-                    example: key-01
+                    example: key1
                   purpose:
                     type: string
                     enum:
@@ -118,7 +118,7 @@ components:
                         "capabilityInvocation",
                         "capabilityDelegation",
                       ]
-                    example: [ "authentication", "assertionMethod" ]
+                    example: "authentication"
             services:
               type: array
               items:
@@ -245,7 +245,7 @@ components:
       properties:
         id:
           type: string
-          example: "did:prism:123#edv"
+          example: "service1"
         type:
           type: string
           enum:
