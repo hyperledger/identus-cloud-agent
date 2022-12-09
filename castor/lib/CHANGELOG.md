@@ -1,3 +1,10 @@
+# [castor-v0.4.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/castor-v0.4.0...castor-v0.4.1) (2022-12-09)
+
+
+### Bug Fixes
+
+* **castor:** README.md is added to increase the version of the castor library ([cdd4772](https://github.com/input-output-hk/atala-prism-building-blocks/commit/cdd47728c17f7c99d36f868e46c75cc7cf4afa92))
+
 # [castor-v0.4.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/castor-v0.3.0...castor-v0.4.0) (2022-12-02)
 
 
