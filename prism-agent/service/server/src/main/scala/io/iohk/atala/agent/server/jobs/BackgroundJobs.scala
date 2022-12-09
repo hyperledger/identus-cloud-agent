@@ -264,17 +264,24 @@ object BackgroundJobs {
                     ZIO.unit
                 }
               } yield ()
-        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationGenerated, _, _, _) => ??? // FIXME Not Required
-        // We are jumping this PresentationGenerated state
         case PresentationRecord(id, _, _, _, _, _, _, _, PresentationSent, _, _, _) =>
           ZIO.logDebug("PresentationRecord: PresentationSent") *> ZIO.unit
         case PresentationRecord(id, _, _, _, _, _, _, _, PresentationReceived, _, _, _) =>
           ZIO.logDebug("PresentationRecord: PresentationReceived") *> ZIO.unit
+          for {
+            _ <- ZIO.log(s"PresentationRecord: PresentationPending (Send Massage)")
+            //TODO Verify  https://input-output.atlassian.net/browse/ATL-2702
+            service <- ZIO.service[PresentationService]
+            _ <- service.markPresentationVerified(id).catchAll { case ex: PresentationError =>
+              ZIO.logError(s"Fail to mark the PresentationVerified '$id' as Prover: $ex") *>
+                ZIO.unit
+            }
+          } yield ()
         // TODO move the state to PresentationVerified
         case PresentationRecord(id, _, _, _, _, _, _, _, PresentationVerified, _, _, _) =>
           ZIO.logDebug("PresentationRecord: PresentationVerified") *> ZIO.unit
-        // case PresentationRecord(id, _, _, _, _, _, _, _, PresentationVerifiedAccepted, _, _, _) => //TODO
-        //   ZIO.logDebug("PresentationRecord: PresentationVerifiedAccepted") *> ZIO.unit
+        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationAccepted, _, _, _) =>
+          ZIO.logDebug("PresentationRecord: PresentationVerifiedAccepted") *> ZIO.unit
         case PresentationRecord(id, _, _, _, _, _, _, _, PresentationRejected, _, _, _) =>
           ZIO.logDebug("PresentationRecord: PresentationRejected") *> ZIO.unit
       }
