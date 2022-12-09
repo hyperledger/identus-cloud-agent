@@ -27,6 +27,7 @@ class DIDOperationValidator(config: Config) {
       _ <- validateMaxServiceAccess(operation)
       _ <- validateUniquePublicKeyId(operation)
       _ <- validateUniqueServiceId(operation)
+      _ <- validateUniqueServiceUri(operation)
       _ <- validateKeyIdRegex(operation)
     } yield ()
   }
@@ -75,6 +76,20 @@ class DIDOperationValidator(config: Config) {
         if (invalidIds.isEmpty) Right(())
         else
           Left(DIDOperationError.InvalidArgument(s"public key id is invalid: ${invalidIds.mkString("[", ", ", "]")}"))
+    }
+  }
+
+  private def validateUniqueServiceUri(operation: PrismDIDOperation): Either[DIDOperationError, Unit] = {
+    operation match {
+      case PrismDIDOperation.Create(_, _, services) =>
+        services
+          .find { service =>
+            val uris = service.serviceEndpoint.map(_.toString)
+            uris.length != uris.distinct.length
+          }
+          .toLeft(())
+          .left
+          .map(s => DIDOperationError.InvalidArgument(s"service ${s.id} does not have unique serviceEndpoint URIs"))
     }
   }
 
