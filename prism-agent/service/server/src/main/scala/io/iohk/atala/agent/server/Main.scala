@@ -7,6 +7,7 @@ import io.iohk.atala.resolvers.UniversalDidResolver
 import io.iohk.atala.castor.sql.repository.{Migrations => CastorMigrations}
 import io.iohk.atala.pollux.sql.repository.{Migrations => PolluxMigrations}
 import io.iohk.atala.connect.sql.repository.{Migrations => ConnectMigrations}
+import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 
 object Main extends ZIOAppDefault {
   def agentLayer(peer: PeerDID): ZLayer[Any, Nothing, AgentServiceAny] =
@@ -84,7 +85,7 @@ object Main extends ZIOAppDefault {
 
       didCommServiceFiber <- Modules
         .didCommServiceEndpoint(didCommServicePort)
-        .provide(didCommLayer, AppModule.credentialServiceLayer, AppModule.connectionServiceLayer)
+        .provide(didCommLayer, AppModule.credentialServiceLayer, AppModule.connectionServiceLayer, AppModule.manageDIDServiceLayer)
         .debug
         .fork
 
