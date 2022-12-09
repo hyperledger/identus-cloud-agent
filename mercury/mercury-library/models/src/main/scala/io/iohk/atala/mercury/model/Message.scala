@@ -10,7 +10,7 @@ type PIURI = String //type URI or URL?
 case class Message(
     piuri: PIURI,
     from: Option[DidId],
-    to: Option[DidId], // TODO to need to be a Seq
+    to: Seq[DidId],
     body: JsonObject = JsonObject.empty,
     id: String = java.util.UUID.randomUUID.toString(),
     createdTime: Long = LocalDateTime.now().toEpochSecond(ZoneOffset.of("Z")),
