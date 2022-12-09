@@ -107,7 +107,8 @@ class PresentProofApiServiceImpl(
     val result = requestPresentationAction.action match {
 
       case "request-accept" =>
-        // FIXME: this function is used as a temporary replacement
+        // TODO IMPORTANT: ATL-2702
+        // this function is used as a temporary replacement
         // eventually, prism-agent should use castor library to get the issuer (issuance key and did)
         def createHolder: Issuer = {
           import java.security.KeyPairGenerator
@@ -162,10 +163,6 @@ class PresentProofApiServiceImpl(
           s"Error: updatePresentation's State must be 'request-accept','request-reject', 'presentation-accept' or 'presentation-reject' but is $s"
         )
     }
-
-    // action accept , decline
-    // if acceptz
-    // FIXME MORE LOGIC based on the action
 
     onZioSuccess(result.mapBoth(_.toOAS, record => record).either) {
       case Left(error)   => complete(error.status -> error)
