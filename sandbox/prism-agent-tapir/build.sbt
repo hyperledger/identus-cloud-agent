@@ -5,7 +5,7 @@ lazy val rootProject = (project in file(".")).settings(
     name := "pollux",
     version := "0.1.0-SNAPSHOT",
     organization := "iohk",
-    scalaVersion := "3.2.0",
+    scalaVersion := "3.2.1",
     libraryDependencies ++= Seq(
       "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server" % tapirVersion,
       "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % tapirVersion,
@@ -15,7 +15,7 @@ lazy val rootProject = (project in file(".")).settings(
       "com.softwaremill.sttp.tapir" %% "tapir-sttp-stub-server" % tapirVersion % Test,
       "dev.zio" %% "zio-test" % "2.0.0" % Test,
       "dev.zio" %% "zio-test-sbt" % "2.0.0" % Test,
-      "com.softwaremill.sttp.client3" %% "zio-json" % "3.8.0" % Test
+      "com.softwaremill.sttp.client3" %% "zio-json" % "3.8.3" % Test
     ),
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )

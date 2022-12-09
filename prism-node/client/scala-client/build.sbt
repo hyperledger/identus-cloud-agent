@@ -4,7 +4,7 @@ import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
 inThisBuild(
   Seq(
     organization := "io.iohk.atala",
-    scalaVersion := "3.2.0",
+    scalaVersion := "3.2.1",
     fork := true,
     run / connectInput := true,
     versionScheme := Some("semver-spec")
@@ -19,7 +19,7 @@ val commonSettings = Seq(
 
 // Custom keys
 val apiBaseDirectory = settingKey[File]("The base directory for Node 2 API specifications")
-ThisBuild / apiBaseDirectory := baseDirectory.value / "../../api"
+ThisBuild / apiBaseDirectory := baseDirectory.value / "./api"
 
 lazy val root = project
   .in(file("."))

@@ -1,5 +1,9 @@
 name: End-to-end tests
 
+concurrency:
+  group: ${{ github.head_ref }}${{ github.ref }}-e2e-tests
+  cancel-in-progress: true
+
 on:
   schedule:
     - cron: "0 3 * * *"

@@ -25,17 +25,6 @@ import scala.collection.immutable.Set
 
 object JwtCredentialDIDDocumentValidationDemo extends ZIOAppDefault {
   def run =
-
-    def toJWKFormat(holderJwk: ECKey): JsonWebKey = {
-      JsonWebKey(
-        kty = "EC",
-        crv = Some(holderJwk.getCurve.getName),
-        x = Some(holderJwk.getX.toJSONString),
-        y = Some(holderJwk.getY.toJSONString),
-        d = Some(holderJwk.getD.toJSONString)
-      )
-    }
-
     def createUser(did: DID) = {
       val keyGen = KeyPairGenerator.getInstance("EC")
       keyGen.initialize(Curve.P_256.toECParameterSpec)
@@ -72,7 +61,7 @@ object JwtCredentialDIDDocumentValidationDemo extends ZIOAppDefault {
 
     println("")
     println("==================")
-    println("Create Issuer2")
+    println("Create Issuer3")
     println("==================")
     val (issuer3, issuer3Jwk) =
       createUser(DID("did:issuer3:MDP8AsFhHzhwUvGNuYkX7T"))
@@ -219,7 +208,7 @@ object JwtCredentialDIDDocumentValidationDemo extends ZIOAppDefault {
     println("Validate JWT Credential Using DID Document of the Issuer of the Credential")
     println("==================")
     val validator =
-      JwtCredential.validateEncodedJWT(encodedJwt)(DidResolverTest())(schemaResolved)(
+      JwtCredential.validateSchemaAndSignature(encodedJwt)(DidResolverTest())(schemaResolved)(
         PlaceholderSchemaValidator.fromSchema
       )
 

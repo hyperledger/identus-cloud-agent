@@ -2,14 +2,14 @@ import sbt._
 
 object Dependencies {
   object Versions {
-    val zio = "2.0.2"
+    val zio = "2.0.4"
     val doobie = "1.0.0-RC2"
     val zioCatsInterop = "3.3.0"
-    val prismSdk = "v1.4.1"
+    val prismSdk = "v1.4.1" // scala-steward:off
     val iris = "0.1.0"
     val shared = "0.2.0"
-    val mercury = "0.10.0"
-    val flyway = "9.7.0"
+    val mercury = "0.10.1"
+    val flyway = "9.8.3"
   }
 
   private lazy val zio = "dev.zio" %% "zio" % Versions.zio

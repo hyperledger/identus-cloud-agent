@@ -1,3 +1,22 @@
+# [castor-v0.5.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/castor-v0.4.1...castor-v0.5.0) (2022-12-09)
+
+
+### Bug Fixes
+
+* **pollux:** upgrade mercury lib to 1.10.1 ([ee27755](https://github.com/input-output-hk/atala-prism-building-blocks/commit/ee2775534f6207a6fed6332c938e6249d62168df))
+
+
+### Features
+
+* **castor:** upgrade castor with service in protobuf definition ([#224](https://github.com/input-output-hk/atala-prism-building-blocks/issues/224)) ([8223740](https://github.com/input-output-hk/atala-prism-building-blocks/commit/82237403a2f53942ebcc7ed14091f0de9b970553))
+
+# [castor-v0.4.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/castor-v0.4.0...castor-v0.4.1) (2022-12-09)
+
+
+### Bug Fixes
+
+* **castor:** README.md is added to increase the version of the castor library ([cdd4772](https://github.com/input-output-hk/atala-prism-building-blocks/commit/cdd47728c17f7c99d36f868e46c75cc7cf4afa92))
+
 # [castor-v0.4.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/castor-v0.3.0...castor-v0.4.0) (2022-12-02)
 
 

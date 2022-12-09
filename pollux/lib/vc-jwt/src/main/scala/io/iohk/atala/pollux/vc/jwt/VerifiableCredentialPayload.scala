@@ -531,6 +531,16 @@ object JwtCredential {
 
   def encodeJwt(payload: JwtCredentialPayload, issuer: Issuer): JWT = issuer.signer.encode(payload.asJson)
 
+  def encodeW3C(payload: W3cCredentialPayload, issuer: Issuer): W3cVerifiableCredentialPayload = {
+    W3cVerifiableCredentialPayload(
+      payload = payload,
+      proof = Proof(
+        `type` = "JwtProof2020",
+        jwt = issuer.signer.encode(payload.asJson)
+      )
+    )
+  }
+
   def toEncodedJwt(payload: W3cCredentialPayload, issuer: Issuer): JWT =
     encodeJwt(payload.toJwtCredentialPayload, issuer)
 
@@ -541,121 +551,50 @@ object JwtCredential {
   def validateEncodedJwt(jwt: JWT, publicKey: PublicKey): Boolean =
     JwtCirce.isValid(jwt.value, publicKey)
 
-  def validateEncodedJWT(jwt: JWT, verificationMethods: IndexedSeq[VerificationMethod]): Boolean = {
-    verificationMethods.exists(verificationMethod =>
-      toPublicKey(verificationMethod).exists(publicKey => validateEncodedJwt(jwt, publicKey))
-    )
-  }
   def validateEncodedJWT(
       jwt: JWT
   )(didResolver: DidResolver): IO[String, Boolean] = {
-    val decodeJWT = ZIO
-      .fromTry(JwtCirce.decodeRawAll(jwt.value, JwtOptions(false, false, false)))
-      .mapError(_.getMessage)
-
-    val extractAlgorithm =
-      for {
-        decodedJwtTask <- decodeJWT
-        (header, _, _) = decodedJwtTask
-        algorithm <- Validation
-          .fromOptionWith("An algorithm must be specified in the header")(JwtCirce.parseHeader(header).algorithm)
-          .toZIO
-      } yield algorithm
-
-    val loadDidDocument =
-      for {
-        decodedJwtTask <- decodeJWT
-        (_, claim, _) = decodedJwtTask
-        decodedClaim <- ZIO.fromEither(decode[JwtCredentialPayload](claim).left.map(_.toString))
-        extractIssuerDid = decodedClaim.iss
-        resolvedDidDocument <- resolve(extractIssuerDid)(didResolver)
-      } yield resolvedDidDocument
-
-    for {
-      results <- loadDidDocument validatePar extractAlgorithm
-      (didDocument, algorithm) = results
-      verificationMethods <- extractVerificationMethods(didDocument, algorithm)
-    } yield validateEncodedJWT(jwt, verificationMethods)
+    JWTVerification.validateEncodedJwt(jwt)(didResolver: DidResolver)(claim =>
+      ZIO.fromEither(decode[JwtCredentialPayload](claim).left.map(_.toString))
+    )(_.iss)
   }
 
-  def validateEncodedJWT(
+  def validateW3C(
+      payload: W3cVerifiableCredentialPayload
+  )(didResolver: DidResolver): IO[String, Boolean] = {
+    JWTVerification.validateEncodedJwt(payload.proof.jwt)(didResolver: DidResolver)(claim =>
+      ZIO.fromEither(decode[W3cCredentialPayload](claim).left.map(_.toString))
+    )(_.issuer.value)
+  }
+
+  def validateJwtSchema(
       jwt: JWT
-  )(didResolver: DidResolver)(schemaResolver: SchemaResolver)(
+  )(schemaResolver: SchemaResolver)(
       schemaToValidator: Json => Either[String, SchemaValidator]
   ): IO[String, Boolean] = {
     val decodeJWT = ZIO
       .fromTry(JwtCirce.decodeRawAll(jwt.value, JwtOptions(false, false, false)))
       .mapError(_.getMessage)
 
-    val extractAlgorithm =
-      for {
-        decodedJwtTask <- decodeJWT
-        (header, _, _) = decodedJwtTask
-        algorithm <- Validation
-          .fromOptionWith("An algorithm must be specified in the header")(JwtCirce.parseHeader(header).algorithm)
-          .toZIO
-      } yield algorithm
-
-    val decodeClaim =
-      for {
-        decodedJwtTask <- decodeJWT
-        (_, claim, _) = decodedJwtTask
-        decodedClaim <- ZIO.fromEither(decode[JwtCredentialPayload](claim).left.map(_.toString))
-      } yield decodedClaim
-
-    val loadDidDocument =
-      for {
-        decodedClaim <- decodeClaim
-        extractIssuerDid = decodedClaim.iss
-        resolvedDidDocument <- resolve(extractIssuerDid)(didResolver)
-      } yield resolvedDidDocument
-
-    val validateCredentialSubject =
-      for {
-        decodedClaim <- decodeClaim
-        validatedCredential <- CredentialPayloadValidation.validateSchema(decodedClaim)(schemaResolver)(
-          schemaToValidator
-        )
-      } yield validatedCredential
-
     for {
-      results <- loadDidDocument validate extractAlgorithm validate validateCredentialSubject
-      (didDocument, algorithm, _) = results
-      verificationMethods <- extractVerificationMethods(didDocument, algorithm)
-    } yield validateEncodedJWT(jwt, verificationMethods)
-  }
-
-  // TODO Implement other key types
-  def toPublicKey(verificationMethod: VerificationMethod): Option[PublicKey] = {
-    for {
-      publicKeyJwk <- verificationMethod.publicKeyJwk
-      curve <- publicKeyJwk.crv
-      x <- publicKeyJwk.x.map(Base64URL.from)
-      y <- publicKeyJwk.y.map(Base64URL.from)
-      d <- publicKeyJwk.d.map(Base64URL.from)
-    } yield new ECKey.Builder(Curve.parse(curve), x, y).d(d).build().toPublicKey
-  }
-
-  private def resolve(issuerDid: String)(didResolver: DidResolver): IO[String, DIDDocument] = {
-    didResolver
-      .resolve(issuerDid)
-      .flatMap(
-        _ match
-          case (didResolutionSucceeded: DIDResolutionSucceeded) =>
-            ZIO.succeed(didResolutionSucceeded.didDocument)
-          case (didResolutionFailed: DIDResolutionFailed) => ZIO.fail(didResolutionFailed.error.toString)
+      decodedJwtTask <- decodeJWT
+      (_, claim, _) = decodedJwtTask
+      decodedClaim <- ZIO.fromEither(decode[JwtCredentialPayload](claim).left.map(_.toString))
+      validatedCredential <- CredentialPayloadValidation.validateSchema(decodedClaim)(schemaResolver)(
+        schemaToValidator
       )
+    } yield true
   }
 
-  private def extractVerificationMethods(
-      didDocument: DIDDocument,
-      jwtAlgorithm: JwtAlgorithm
-  ): IO[String, IndexedSeq[VerificationMethod]] = {
-    Validation
-      .fromPredicateWith("No PublicKey to validate against found")(
-        didDocument.verificationMethod.filter(verification => verification.`type` == jwtAlgorithm.name)
-      )(_.nonEmpty)
-      .toZIO
+  def validateSchemaAndSignature(
+      jwt: JWT
+  )(didResolver: DidResolver)(schemaResolver: SchemaResolver)(
+      schemaToValidator: Json => Either[String, SchemaValidator]
+  ): IO[String, Boolean] = {
+    for {
+      validatedJwtSchema <- validateJwtSchema(jwt)(schemaResolver)(schemaToValidator)
+      validateJwtSignature <- validateEncodedJWT(jwt)(didResolver)
+    } yield validatedJwtSchema && validateJwtSignature
   }
 
   def verifyDates(jwt: JWT, leeway: TemporalAmount)(implicit clock: Clock): Validation[String, Unit] = {

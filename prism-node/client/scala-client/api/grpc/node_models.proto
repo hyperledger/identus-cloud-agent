@@ -83,16 +83,18 @@ message PublicKey {
 message DIDData {
     string id = 1; // The DID suffix, where DID is in form did:prism:[DID suffix]
     repeated PublicKey public_keys = 2; // The keys that belong to this DID Document.
+    repeated Service services = 3; // The list of services that belong to this DID Document.
 }
 
 // The operation to create a public DID.
 message CreateDIDOperation {
-    DIDCreationData did_data = 1; // DIDCreationData with public keys
+    DIDCreationData did_data = 1; // DIDCreationData with public keys and services
 
     // The data necessary to create a DID.
     message DIDCreationData {
         reserved 1; // Removed DID id field which is empty on creation
         repeated PublicKey public_keys = 2; // The keys that belong to this DID Document.
+        repeated Service services = 3; // The list of services that belong to this DID Document.
     }
 }
 
@@ -106,6 +108,21 @@ message RemoveKeyAction {
     string keyId = 1; // the key id to remove
 }
 
+message AddServiceAction {
+    Service service = 1;
+}
+
+message RemoveServiceAction {
+    string serviceId = 1;
+}
+
+message UpdateServiceAction {
+    string serviceId = 1; // scoped to the did, unique per did
+    string type = 2; // new type if provided
+    // Will replace all existing service endpoints of the service with provided ones
+    repeated string service_endpoints = 3;
+}
+
 // The potential details that can be updated in a DID.
 message UpdateDIDAction {
 
@@ -113,6 +130,9 @@ message UpdateDIDAction {
     oneof action {
         AddKeyAction add_key = 1; // Used to add a new key to the DID.
         RemoveKeyAction remove_key = 2; // Used to remove a key from the DID.
+        AddServiceAction add_service = 3; // Used to add a new service to a DID,
+        RemoveServiceAction remove_service = 4; // Used to remove an existing service from a DID,
+        UpdateServiceAction update_service = 5; // Used to Update a list of service endpoints of a given service on a given DID.
     }
 }
 
@@ -245,3 +265,12 @@ message UpdateDIDOutput {}
 message RevokeCredentialsOutput {}
 message ProtocolVersionUpdateOutput {}
 message DeactivateDIDOutput {}
+
+message Service {
+    string id = 1;
+    string type = 2;
+
+    repeated string service_endpoint = 3;
+    LedgerData added_on = 4; // (when present) The ledger details related to the event that added the service.
+    LedgerData deleted_on = 5; // (when present) The ledger details related to the event that revoked the service.
+}

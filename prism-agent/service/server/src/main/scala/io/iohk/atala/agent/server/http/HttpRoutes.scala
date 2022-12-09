@@ -6,7 +6,6 @@ import io.iohk.atala.agent.openapi.api.{
   PresentProofApi,
   DIDApi,
   DIDAuthenticationApi,
-  DIDOperationsApi,
   DIDRegistrarApi,
   IssueCredentialsProtocolApi,
   ConnectionsManagementApi
@@ -23,7 +22,6 @@ object HttpRoutes {
   ] =
     for {
       didApi <- ZIO.service[DIDApi]
-      didOperationsApi <- ZIO.service[DIDOperationsApi]
       didAuthApi <- ZIO.service[DIDAuthenticationApi]
       disRegistrarApi <- ZIO.service[DIDRegistrarApi]
       issueCredentialsProtocolApi <- ZIO.service[IssueCredentialsProtocolApi]

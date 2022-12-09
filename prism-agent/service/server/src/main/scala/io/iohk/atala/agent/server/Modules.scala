@@ -12,24 +12,16 @@ import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.agent.server.http.marshaller.{
   DIDApiMarshallerImpl,
   DIDAuthenticationApiMarshallerImpl,
-  DIDOperationsApiMarshallerImpl,
   DIDRegistrarApiMarshallerImpl,
   ConnectionsManagementApiMarshallerImpl
 }
 import io.iohk.atala.agent.server.http.service.{
   DIDApiServiceImpl,
   DIDAuthenticationApiServiceImpl,
-  DIDOperationsApiServiceImpl,
   DIDRegistrarApiServiceImpl,
   ConnectionsManagementApiServiceImpl
 }
-import io.iohk.atala.agent.openapi.api.{
-  DIDApi,
-  DIDAuthenticationApi,
-  DIDOperationsApi,
-  DIDRegistrarApi,
-  ConnectionsManagementApi
-}
+import io.iohk.atala.agent.openapi.api.{DIDApi, DIDAuthenticationApi, DIDRegistrarApi, ConnectionsManagementApi}
 import cats.effect.std.Dispatcher
 import com.typesafe.config.ConfigFactory
 import doobie.util.transactor.Transactor
@@ -375,13 +367,14 @@ object AppModule {
     (didOpValidatorLayer ++ didServiceLayer) >>> ManagedDIDService.inMemoryStorage
 
   val credentialServiceLayer: RLayer[DidComm, CredentialService] =
-    (GrpcModule.layers ++ RepoModule.layers) >>> CredentialServiceImpl.layer
+    (GrpcModule.layers ++ RepoModule.credentialRepoLayer) >>> CredentialServiceImpl.layer
 
   def presentationServiceLayer =
     (RepoModule.presentationRepoLayer ++ RepoModule.credentialRepoLayer) >>> PresentationServiceImpl.layer
 
   val connectionServiceLayer: RLayer[DidComm, CS_Connect] =
-    (GrpcModule.layers ++ RepoModule.layers) >>> CSImpl_Connect.layer
+    (GrpcModule.layers ++ RepoModule.connectionRepoLayer) >>> CSImpl_Connect.layer
+
 }
 
 object GrpcModule {
@@ -423,12 +416,6 @@ object HttpModule {
     val apiServiceLayer = serviceLayer >>> DIDApiServiceImpl.layer
     val apiMarshallerLayer = DIDApiMarshallerImpl.layer
     (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new DIDApi(_, _))
-  }
-
-  val didOperationsApiLayer: ULayer[DIDOperationsApi] = {
-    val apiServiceLayer = DIDOperationsApiServiceImpl.layer
-    val apiMarshallerLayer = DIDOperationsApiMarshallerImpl.layer
-    (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new DIDOperationsApi(_, _))
   }
 
   val didAuthenticationApiLayer: ULayer[DIDAuthenticationApi] = {
@@ -528,13 +515,12 @@ object RepoModule {
   }
 
   val credentialRepoLayer: TaskLayer[CredentialRepository[Task]] =
-    polluxTransactorLayer >>> JdbcCredentialRepository.layer
+    RepoModule.polluxTransactorLayer >>> JdbcCredentialRepository.layer
 
   val presentationRepoLayer: TaskLayer[PresentationRepository[Task]] =
     polluxTransactorLayer >>> JdbcPresentationRepository.layer
 
   val connectionRepoLayer: TaskLayer[ConnectionRepository[Task]] =
-    connectTransactorLayer >>> JdbcConnectionRepository.layer
+    RepoModule.connectTransactorLayer >>> JdbcConnectionRepository.layer
 
-  val layers = credentialRepoLayer ++ connectionRepoLayer
 }

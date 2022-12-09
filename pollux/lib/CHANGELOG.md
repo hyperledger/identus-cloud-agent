@@ -1,3 +1,20 @@
+# [pollux-v0.7.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.6.0...pollux-v0.7.0) (2022-12-09)
+
+
+### Bug Fixes
+
+* **pollux:** upgrade mercury lib to 1.10.1 ([ee27755](https://github.com/input-output-hk/atala-prism-building-blocks/commit/ee2775534f6207a6fed6332c938e6249d62168df))
+
+
+### Features
+
+* **pollux:** [ATL-2235] Verfiable Prensentation Adjustments ([#201](https://github.com/input-output-hk/atala-prism-building-blocks/issues/201)) ([42d23fb](https://github.com/input-output-hk/atala-prism-building-blocks/commit/42d23fbee6a778786f8f083a193e1a0603c68717))
+* **pollux:** [ATL-2639] JWT Presentation Temporal Verification ([#204](https://github.com/input-output-hk/atala-prism-building-blocks/issues/204)) ([4ff51b6](https://github.com/input-output-hk/atala-prism-building-blocks/commit/4ff51b65a8738086f4fa6599288ff0903509ac97))
+* **pollux:** [ATL-2640] JWT Presentation Signature Verification Using DidResolver ([#212](https://github.com/input-output-hk/atala-prism-building-blocks/issues/212)) ([258c6c0](https://github.com/input-output-hk/atala-prism-building-blocks/commit/258c6c0d6a1e2ed63947fbdaa688c928b099749d))
+* **pollux:** [ATL-2643] Verify All JWT Presentation Enclosed Credentials ([#221](https://github.com/input-output-hk/atala-prism-building-blocks/issues/221)) ([202f565](https://github.com/input-output-hk/atala-prism-building-blocks/commit/202f56558eafbab58e3bfa1e087eb6e58b7388f1))
+* **pollux:** Pollux part for the Verification Flow - ATL-2117 ([#202](https://github.com/input-output-hk/atala-prism-building-blocks/issues/202)) ([2c967f1](https://github.com/input-output-hk/atala-prism-building-blocks/commit/2c967f130eee455a0d596cc23e430da369b2e297))
+* **pollux:** remove issuanceDate to fix the main branch ([#207](https://github.com/input-output-hk/atala-prism-building-blocks/issues/207)) ([713e659](https://github.com/input-output-hk/atala-prism-building-blocks/commit/713e6595e9fbf12224b57c2fadd2c5c371a2ec67))
+
 # [pollux-v0.6.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.5.0...pollux-v0.6.0) (2022-12-02)
 
 

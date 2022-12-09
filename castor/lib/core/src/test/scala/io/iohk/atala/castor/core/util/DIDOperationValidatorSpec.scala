@@ -93,7 +93,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
           Service(
             id = s"service$i",
             `type` = ServiceType.MediatorService,
-            serviceEndpoint = URI.create("http://example.com")
+            serviceEndpoint = Seq(URI.create("http://example.com"))
           )
         )
         val op = createPrismDIDOperation(services = services)
@@ -106,7 +106,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
           Service(
             id = s"service0",
             `type` = ServiceType.MediatorService,
-            serviceEndpoint = URI.create("http://example.com")
+            serviceEndpoint = Seq(URI.create("http://example.com"))
           )
         )
         val op = createPrismDIDOperation(services = services)
@@ -128,6 +128,19 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
           )
         )
         val op = createPrismDIDOperation(publicKeys = publicKeys)
+        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
+          isLeft(isSubtype[DIDOperationError.InvalidArgument](anything))
+        )
+      },
+      test("reject CreateOperation on non-unique serviceEndpoint URI") {
+        val services = Seq(
+          Service(
+            id = s"service0",
+            `type` = ServiceType.MediatorService,
+            serviceEndpoint = Seq(URI.create("http://example.com"), URI.create("http://example.com"))
+          )
+        )
+        val op = createPrismDIDOperation(services = services)
         assert(DIDOperationValidator(Config(50, 50)).validate(op))(
           isLeft(isSubtype[DIDOperationError.InvalidArgument](anything))
         )

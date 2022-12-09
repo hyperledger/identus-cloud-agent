@@ -20,7 +20,7 @@ private[castor] trait W3CModelHelper {
 
   extension (didData: DIDData) {
     def toW3C: DIDDocumentRepr = {
-      val keyWithPurpose = didData.publicKeys.map(k => k.purpose -> k.toW3C(didData.id))
+      val keyWithPurpose = didData.publicKeys.map(k => k.purpose -> k.toW3C(didData.id, didData.id))
       DIDDocumentRepr(
         id = didData.id.toString,
         controller = didData.id.toString,
@@ -29,22 +29,22 @@ private[castor] trait W3CModelHelper {
         assertionMethod = keyWithPurpose.collect { case (VerificationRelationship.AssertionMethod, k) => k },
         keyAgreement = keyWithPurpose.collect { case (VerificationRelationship.KeyAgreement, k) => k },
         capabilityInvocation = keyWithPurpose.collect { case (VerificationRelationship.CapabilityInvocation, k) => k },
-        service = didData.services.map(_.toW3C)
+        service = didData.services.map(_.toW3C(didData.id))
       )
     }
   }
 
   extension (service: Service) {
-    def toW3C: ServiceRepr = ServiceRepr(
-      id = service.id,
+    def toW3C(did: CanonicalPrismDID): ServiceRepr = ServiceRepr(
+      id = s"${did.toString}#${service.id}",
       `type` = service.`type`.name,
-      serviceEndpoint = service.serviceEndpoint.toString
+      serviceEndpoint = service.serviceEndpoint.map(_.toString)
     )
   }
 
   extension (publicKey: PublicKey) {
-    def toW3C(controller: CanonicalPrismDID): PublicKeyRepr = PublicKeyRepr(
-      id = publicKey.id,
+    def toW3C(did: CanonicalPrismDID, controller: CanonicalPrismDID): PublicKeyRepr = PublicKeyRepr(
+      id = s"${did.toString}#${publicKey.id}",
       `type` = "EcdsaSecp256k1VerificationKey2019",
       controller = controller.toString,
       publicKeyJwk = publicKey.publicKeyData match {
