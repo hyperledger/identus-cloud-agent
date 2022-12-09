@@ -1,3 +1,10 @@
+# [mercury-v0.11.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.10.1...mercury-v0.11.0) (2022-12-09)
+
+
+### Features
+
+* **mercury:** Message field 'to' must be an Array ([#215](https://github.com/input-output-hk/atala-prism-building-blocks/issues/215)) ([d4e2c57](https://github.com/input-output-hk/atala-prism-building-blocks/commit/d4e2c57822c081f572fcde95fd1f2b7e2af7a946))
+
 # [mercury-v0.10.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.10.0...mercury-v0.10.1) (2022-12-09)
 
 
