@@ -1,4 +1,4 @@
-Feature: Register DID
+Feature: Manage DID
 
   Scenario: Successfully create managed DID
     When I create a managed DID
