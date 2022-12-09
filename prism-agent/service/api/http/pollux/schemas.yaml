@@ -86,7 +86,7 @@ components:
           type: string
           format: date-time
         proof:
-          $ref: "#/components/schemas/Proof"
+          $ref: '#/components/schemas/Proof'
 
     VerifiableCredentialSchemaPage:
       required:
@@ -108,7 +108,7 @@ components:
         contents:
           type: array
           items:
-            $ref: "#/components/schemas/VerifiableCredentialSchema"
+            $ref: '#/components/schemas/VerifiableCredentialSchema'
 
     VerificationCredentialSchemaInput:
       required:
@@ -222,7 +222,7 @@ components:
         contents:
           type: array
           items:
-            $ref: "#/components/schemas/VerificationPolicy"
+            $ref: '#/components/schemas/VerificationPolicy'
 
     # Issue Credential Protocol
 
@@ -259,7 +259,7 @@ components:
       description: An issue credential record to store the state of the protocol execution
       type: object
       allOf:
-        - $ref: "#/components/schemas/CreateIssueCredentialRecordRequest"
+        - $ref: '#/components/schemas/CreateIssueCredentialRecordRequest'
         - type: object
           required:
             - recordId
@@ -569,27 +569,6 @@ components:
           type: array
           items:
             type: string
-    # RequestPresentationActionReject:
-    #   description: Actions on presetations (to update)
-    #   required: [action]
-    #   properties:
-    #     action:
-    #       type: string
-    #       enum:
-    #         #- accept
-    #         - reject
-
-    # W3CPresentationInput:
-    #   description: Verifiable Presentation input
-    #   properties:
-    #     schemas:
-    #       type: string # TODO: Define the schema for Presentation Input
-
-    # W3CPresentation:
-    #   description: Verifiable Presentation object
-    #   properties:
-    #     schemas:
-    #       type: string # TODO: define the exactly schema for Presentation
 
     W3CPresentationPaginated:
       description: "Paginated response that contains an array of the presentation objects"
@@ -656,7 +635,7 @@ components:
       description: "Verifiable Credential Object according to JWT specification"
       externalDocs:
         url: "https://w3c.github.io/vc-jwt/"
-      required: ["exp", "iss", "nbf", "jti", "sub"]
+      required: [ "exp", "iss", "nbf", "jti", "sub" ]
       properties:
         exp:
           type: string
@@ -706,7 +685,7 @@ components:
             credentialSubject:
               type: object
               additionalProperties: true
-              required: ["id"]
+              required: [ "id" ]
               description: "Credentials subject DID and claims according to the schema object"
               example:
                 id: "did:prism:subject12345"
