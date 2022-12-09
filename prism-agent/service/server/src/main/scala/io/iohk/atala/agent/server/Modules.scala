@@ -37,6 +37,7 @@ import io.grpc.ManagedChannelBuilder
 import io.iohk.atala.agent.openapi.api.*
 import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
+import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError
 import io.iohk.atala.agent.server.http.marshaller.*
 import io.iohk.atala.agent.server.http.service.*
 import io.iohk.atala.agent.server.http.{HttpRoutes, HttpServer}
@@ -80,6 +81,15 @@ import io.iohk.atala.pollux.schema.{SchemaRegistryServerEndpoints, VerificationP
 import io.iohk.atala.pollux.service.{SchemaRegistryServiceInMemory, VerificationPolicyServiceInMemory}
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.agent.server.config.AgentConfig
+import org.didcommx.didcomm.DIDComm
+import io.iohk.atala.resolvers.UniversalDidResolver
+import org.didcommx.didcomm.secret.SecretResolver
+import org.didcommx.didcomm.model.UnpackParams
+import org.didcommx.didcomm.secret.Secret
+import java.{util => ju}
+import java.{util => ju}
+import io.circe.ParsingFailure
+import io.circe.DecodingFailure
 
 object Modules {
 
@@ -111,7 +121,7 @@ object Modules {
 
   def didCommServiceEndpoint(port: Int) = {
     val header = "content-type" -> MediaTypes.contentTypeEncrypted
-    val app: HttpApp[DidComm & CredentialService & ConnectionService, Throwable] =
+    val app: HttpApp[DidComm & CredentialService & ConnectionService & ManagedDIDService, Throwable] =
       Http.collectZIO[Request] {
         //   // TODO add DIDComm messages parsing logic here!
         //   Response.text("Hello World!").setStatus(Status.Accepted)
@@ -124,17 +134,19 @@ object Modules {
 
         case req @ Method.POST -> !!
             if req.headersAsList.exists(h => h._1.equalsIgnoreCase(header._1) && h._2.equalsIgnoreCase(header._2)) =>
-          req.body.asString
-            // .catchNonFatalOrDie(ex => ZIO.fail(ParseResponse(ex)))
-            .flatMap { data =>
-              webServerProgram(data).catchAll { case ex =>
-                val error = mercuryErrorAsThrowable(ex)
-                ZIO.logErrorCause("Fail to POST form webServerProgram", Cause.fail(error)) *>
-                  ZIO.fail(error)
-              }
-            }
-            .map(str => Response.ok)
+          val result = for {
+            data <- req.body.asString
+            _ <- webServerProgram(data)
+          } yield Response.ok
 
+          result
+            .tapError { error =>
+              ZIO.logErrorCause("Fail to POST form webServerProgram", Cause.fail(error))
+            }
+            .mapError {
+              case ex: DIDSecretStorageError => ex
+              case ex: MercuryThrowable      => mercuryErrorAsThrowable(ex)
+            }
       }
     Server.start(port, app)
   }
@@ -149,17 +161,42 @@ object Modules {
     ConnectBackgroundJobs.didCommExchanges
       .repeat(Schedule.spaced(10.seconds))
       .unit
-      .provideSomeLayer(AppModule.connectionServiceLayer)
+      .provideSomeLayer(AppModule.connectionServiceLayer ++ AppModule.manageDIDServiceLayer)
+
+  private[this] def extractFirstRecipientDid(jsonMessage: String): IO[ParsingFailure | DecodingFailure, String] = {
+    import io.circe._, io.circe.parser._
+    val doc = parse(jsonMessage).getOrElse(Json.Null)
+    val cursor = doc.hcursor
+    ZIO.fromEither(
+      cursor.downField("recipients").downArray.downField("header").downField("kid").as[String].map(_.split("#")(0))
+    )
+  }
+
+  private[this] def unpackMessage(
+      jsonString: String
+  ): ZIO[ManagedDIDService, ParseResponse | DIDSecretStorageError, Message] = {
+    // Needed for implicit conversion from didcommx UnpackResuilt to mercury UnpackMessage
+    import io.iohk.atala.mercury.model.given
+    for {
+      recipientDid <- extractFirstRecipientDid(jsonString).mapError(err => ParseResponse(err))
+      _ <- ZIO.logInfo(s"Extracted recipient Did => $recipientDid")
+      managedDIDService <- ZIO.service[ManagedDIDService]
+      peerDID <- managedDIDService.getPeerDID(DidId(recipientDid))
+      msg: UnpackMessage = new DIDComm(UniversalDidResolver, peerDID.getSecretResolverInMemory).unpack(
+        new UnpackParams.Builder(jsonString).build()
+      )
+    } yield msg.message
+  }
 
   def webServerProgram(
       jsonString: String
-  ): ZIO[DidComm & CredentialService & ConnectionService, MercuryThrowable, Unit] = {
+  ): ZIO[CredentialService & ConnectionService & ManagedDIDService, MercuryThrowable | DIDSecretStorageError, Unit] = {
     import io.iohk.atala.mercury.DidComm.*
     ZIO.logAnnotate("request-id", java.util.UUID.randomUUID.toString()) {
       for {
         _ <- ZIO.logInfo("Received new message")
         _ <- ZIO.logTrace(jsonString)
-        msg <- unpack(jsonString).map(_.getMessage)
+        msg <- unpackMessage(jsonString)
         credentialService <- ZIO.service[CredentialService]
         connectionService <- ZIO.service[ConnectionService]
         ret <- {
