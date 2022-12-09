@@ -53,7 +53,7 @@ trait OASDomainModelHelper {
       } yield castorDomain.Service(
         id = service.id,
         `type` = serviceType,
-        serviceEndpoint = Seq(serviceEndpoint)
+        serviceEndpoint = serviceEndpoint
       )
     }
   }
@@ -198,7 +198,7 @@ trait OASDomainModelHelper {
     def toOAS: Service = Service(
       id = service.id,
       `type` = service.`type`,
-      serviceEndpoint = service.serviceEndpoint.head // FIXME @pat
+      serviceEndpoint = service.serviceEndpoint
     )
   }
 

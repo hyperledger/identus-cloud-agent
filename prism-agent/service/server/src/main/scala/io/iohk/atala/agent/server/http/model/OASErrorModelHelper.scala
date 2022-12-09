@@ -8,7 +8,6 @@ import io.iohk.atala.castor.core.model.error.DIDOperationError
 import io.iohk.atala.castor.core.model.error.DIDResolutionError
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
-import io.iohk.atala.pollux.core.model.error.PresentationError
 
 import java.util.UUID
 
@@ -119,18 +118,6 @@ trait OASErrorModelHelper {
 
   given ToErrorResponse[ConnectionServiceError] with {
     def toErrorResponse(error: ConnectionServiceError): ErrorResponse = {
-      ErrorResponse(
-        `type` = "error-type",
-        title = "error-title",
-        status = 500,
-        detail = Some(error.toString),
-        instance = "error-instance"
-      )
-    }
-  }
-
-  given ToErrorResponse[PresentationError] with {
-    def toErrorResponse(error: PresentationError): ErrorResponse = {
       ErrorResponse(
         `type` = "error-type",
         title = "error-title",

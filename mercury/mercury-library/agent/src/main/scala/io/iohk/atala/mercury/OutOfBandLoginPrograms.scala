@@ -10,7 +10,7 @@ object OutOfBandLoginPrograms {
     Message(
       piuri = invitation.`type`,
       from = Some(invitation.from),
-      to = None,
+      to = Seq.empty,
       id = invitation.id,
     )
   }

@@ -263,11 +263,11 @@ object AgentCli extends ZIOAppDefault {
     for {
       didCommService <- ZIO.service[DidComm]
 
-      encryptedForwardMessage <- didCommService.packEncrypted(msg, to = msg.to.get)
+      encryptedForwardMessage <- didCommService.packEncrypted(msg, to = msg.to.head) // TODO head
       jsonString = encryptedForwardMessage.string
 
       serviceEndpoint = UniversalDidResolver
-        .resolve(msg.to.get.value) // TODO GET
+        .resolve(msg.to.head.value) // TODO head
         .get()
         .getDidCommServices()
         .asScala

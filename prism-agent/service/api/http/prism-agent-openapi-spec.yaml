@@ -722,52 +722,65 @@ paths:
               schema:
                 $ref: "./pollux/schemas.yaml#/components/schemas/RevocationStatus"
 
-  /present-proof/presentations:
+  /present-proof/verifiable-presentations:
     post:
-      tags: ["Present Proof"]
-      operationId: requestPresentation
+      tags: [ "Present Proof" ]
+      operationId: createVerifiablePresentation
+      summary: Create new instance of VerifiablePresentation
+      description: Verifier creates the instance of Verifiable Presentation object to be used in present proof communication protocol with Prover
       requestBody:
-        description: Request presentation of some type of Proof or Proofs (VC)
+        description: PresentationInput object with the schema references and claims
         required: true
         content:
           application/json:
             schema:
-              $ref: "./pollux/schemas.yaml#/components/schemas/RequestPresentationInput"
+              $ref: "./pollux/schemas.yaml#/components/schemas/W3CPresentationInput"
       responses:
         "201":
           description: The new presentation is created
           content:
             application/json:
               schema:
-                $ref: "./pollux/schemas.yaml#/components/schemas/RequestPresentationOutput"
-        "422":
-          description: Failed to create a presentation request.
-          content:
-            application/json:
-              schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
+                $ref: "./pollux/schemas.yaml#/components/schemas/W3CPresentation"
+        # TODO: Add other corner cases and error responses
+
     get:
-      tags: ["Present Proof"]
-      operationId: getAllPresentation
+      tags: [ "Present Proof" ]
+      operationId: fetchPresentationByQuery
+      summary: Fetch presentation by query
+      description: Fetch presentation by query
+      parameters: # TODO: Define the parameters for the presentation lookup
+        - in: query
+          name: name
+          description: Fetch presentation by the name
+          example: TemplateName
+          schema:
+            type: string
+        - in: query
+          name: offset
+          description: Pagination offset
+          example: 15
+          schema:
+            type: integer
+        - in: query
+          name: limit
+          description: Pagination limit
+          example: 100
+          schema:
+            type: integer
       responses:
         "200":
-          description: List of presentations and status
+          description: Presentations are fetched by the query
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "./pollux/schemas.yaml#/components/schemas/PresentationStatus"
-        "404":
-          description: There is no presentations record
-          content:
-            application/json:
-              schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
-  /present-proof/presentations/{id}:
-    patch:
-      tags: ["Present Proof"]
-      operationId: updatePresentation
+                $ref: "./pollux/schemas.yaml#/components/schemas/W3CPresentationPaginated"
+  /present-proof/verifiable-presentations/{id}:
+    get:
+      tags: [ "Present Proof" ]
+      operationId: getPresentationById
+      summary: Fetch the presentation from the collection by id
+      description: Fetch the presentation from the collection by id
       parameters:
         - in: path
           name: id
@@ -776,24 +789,13 @@ paths:
           required: true
           description: Unique identifier of the presentation
           example: "06e126d1-fa44-4882-a243-1e326fbe21db"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "./pollux/schemas.yaml#/components/schemas/RequestPresentationAction"
-              # oneOf:
-              #  - $ref: "./pollux/schemas.yaml#/components/schemas/RequestPresentationActionAccept"
-              #  - $ref: "./pollux/schemas.yaml#/components/schemas/RequestPresentationActionReject"
       responses:
         "200":
-          description: Update the presentation record
-        "404":
-          description: There is no presentation record existing with the 'id'
+          description: Successful response, the presentation is returned
           content:
             application/json:
               schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
+                $ref: "./pollux/schemas.yaml#/components/schemas/W3CPresentation"
 
   # ----------------------------------
   # Connect

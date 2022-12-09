@@ -36,7 +36,7 @@ object AgentHardCode extends ZIOAppDefault {
       msg = Message(
         piuri = "TEST",
         from = Some(didCommService.myDid),
-        to = None,
+        to = Seq.empty,
         body = body.asJson.asObject.get
       )
       // signed <- didCommService.packSigned(msg)
