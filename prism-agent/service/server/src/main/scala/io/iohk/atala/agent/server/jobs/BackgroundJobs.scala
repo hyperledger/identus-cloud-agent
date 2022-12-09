@@ -27,7 +27,7 @@ import io.iohk.atala.pollux.core.model.PresentationRecord
 import io.iohk.atala.mercury.protocol.presentproof.RequestPresentation
 import io.iohk.atala.pollux.core.service.PresentationService
 import io.iohk.atala.pollux.core.model.error.PresentationError
-import io.iohk.atala.agent.server.http.model.InvalidState
+import io.iohk.atala.agent.server.http.model.{InvalidState, NotImplemented}
 
 object BackgroundJobs {
 
@@ -214,16 +214,16 @@ object BackgroundJobs {
   ): ZIO[DidComm & PresentationService, Throwable, Unit] = {
     import io.iohk.atala.pollux.core.model.PresentationRecord.ProtocolState._
 
-    val aux: ZIO[DidComm & PresentationService, MercuryException | InvalidState, Unit] = for {
+    val aux: ZIO[DidComm & PresentationService, MercuryException | InvalidState | NotImplemented.type, Unit] = for {
       _ <- ZIO.logDebug(s"Running action with records => $record")
       _ <- record match {
         // ##########################
         // ### PresentationRecord ###
         // ##########################
-        case PresentationRecord(id, _, _, _, _, _, _, _, ProposalPending, _, _, _)  => ZIO.unit // NotImplemented
-        case PresentationRecord(id, _, _, _, _, _, _, _, ProposalSent, _, _, _)     => ZIO.unit // NotImplemented
-        case PresentationRecord(id, _, _, _, _, _, _, _, ProposalReceived, _, _, _) => ZIO.unit // NotImplemented
-        case PresentationRecord(id, _, _, _, _, _, _, _, ProposalRejected, _, _, _) => ZIO.unit // NotImplemented
+        case PresentationRecord(id, _, _, _, _, _, _, _, ProposalPending, _, _, _)  => ZIO.fail(NotImplemented)
+        case PresentationRecord(id, _, _, _, _, _, _, _, ProposalSent, _, _, _)     => ZIO.fail(NotImplemented)
+        case PresentationRecord(id, _, _, _, _, _, _, _, ProposalReceived, _, _, _) => ZIO.fail(NotImplemented)
+        case PresentationRecord(id, _, _, _, _, _, _, _, ProposalRejected, _, _, _) => ZIO.fail(NotImplemented)
 
         case PresentationRecord(id, _, _, _, _, _, _, _, RequestPending, oRecord, _, _) => // Verifier
           oRecord match
@@ -246,10 +246,9 @@ object BackgroundJobs {
           ZIO.logDebug("PresentationRecord: RequestReceived") *> ZIO.unit
         case PresentationRecord(id, _, _, _, _, _, _, _, RequestRejected, _, _, _) => // Prover
           ZIO.logDebug("PresentationRecord: RequestRejected") *> ZIO.unit
-        case PresentationRecord(id, _, _, _, _, _, _, _, ProblemReportPending, _, _, _) => ???
-        // TODO NotImplemented
-        case PresentationRecord(id, _, _, _, _, _, _, _, ProblemReportSent, _, _, _)     => ??? // TODO NotImplemented
-        case PresentationRecord(id, _, _, _, _, _, _, _, ProblemReportReceived, _, _, _) => ??? // TODO NotImplemented
+        case PresentationRecord(id, _, _, _, _, _, _, _, ProblemReportPending, _, _, _)  => ZIO.fail(NotImplemented)
+        case PresentationRecord(id, _, _, _, _, _, _, _, ProblemReportSent, _, _, _)     => ZIO.fail(NotImplemented)
+        case PresentationRecord(id, _, _, _, _, _, _, _, ProblemReportReceived, _, _, _) => ZIO.fail(NotImplemented)
         case PresentationRecord(id, _, _, _, _, _, _, _, PresentationPending, _, _, presentation) => // Prover
           presentation match
             case None => ZIO.fail(InvalidState("PresentationRecord in 'PresentationPending' with no Presentation"))
@@ -289,11 +288,11 @@ object BackgroundJobs {
 
     aux.catchAll {
       case ex: TransportError => // : io.iohk.atala.mercury.model.error.MercuryError | java.io.IOException =>
-        ex.printStackTrace()
         ZIO.logError(ex.getMessage()) *>
           ZIO.fail(mercuryErrorAsThrowable(ex))
-      case ex: IOException  => ZIO.fail(ex)
-      case ex: InvalidState => ZIO.fail(ex)
+      case ex: IOException         => ZIO.fail(ex)
+      case ex: InvalidState        => ZIO.fail(ex)
+      case ex: NotImplemented.type => ZIO.fail(ex)
     }
   }
 

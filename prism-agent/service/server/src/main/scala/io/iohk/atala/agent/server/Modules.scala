@@ -253,19 +253,14 @@ object Modules {
               for {
                 _ <- ZIO.unit
                 request = RequestPresentation.readFromMessage(msg)
-                _ <- ZIO.logInfo("As a Prover in  present-proof got RequestPresentation: " + request)
+                _ <- ZIO.logInfo("As a Prover in present-proof got RequestPresentation: " + request)
                 service <- ZIO.service[PresentationService]
                 _ <- service
                   .receiveRequestPresentation(None, request)
                   .catchSome { case PresentationError.RepositoryError(cause) =>
                     ZIO.logError(cause.getMessage()) *> ZIO.fail(cause)
-                  // case ex: PresentationError =>
-                  //   val errorMsg = s"ERROR PresentationError: $ex"
-                  //   ZIO.logError(errorMsg) *> ZIO.fail(new RuntimeException(errorMsg))
                   }
                   .catchAll { case ex: IOException => ZIO.fail(ex) }
-
-                // TODO todoTestOption if none
               } yield ()
             case s if s == Presentation.`type` =>
               for {
@@ -444,9 +439,6 @@ object HttpModule {
     val apiMarshallerLayer = PresentProofApiMarshallerImpl.layer
     (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new PresentProofApi(_, _))
   }
-
-//  Found: zio.ZLayer[ConnectionService & DidComm, Throwable, PresentProofApi]
-//  Required: zio.RLayer[DidComm, PresentProofApi]
 
   val connectionsManagementApiLayer: RLayer[DidComm, ConnectionsManagementApi] = {
     val serviceLayer = AppModule.connectionServiceLayer
