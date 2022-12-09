@@ -56,7 +56,7 @@ class ManageDidSteps {
 
     @Then("it should contain the recently created DID")
     fun itShouldContainTheRecentlyCreatedDid() {
-        val managedDidList = lastResponse().getList<ManagedDid>("")
+        val managedDidList = lastResponse().getList("", ManagedDid::class.java)
         Assertions.assertThat(managedDidList)
             .filteredOn {
                 it.longFormDid == Acme.recall("createdDid")
