@@ -23,6 +23,8 @@ dependencies {
     implementation("net.serenity-bdd:serenity-screenplay-rest:3.4.3")
     // Beautify exceptions handling assertions
     testImplementation("org.assertj:assertj-core:3.23.1")
+    // Navigate through Json with xpath
+    testImplementation("com.jayway.jsonpath:json-path:2.7.0")
 }
 
 /**

@@ -4,7 +4,7 @@ import api_models.Connection
 import api_models.Invitation
 import common.Agents.Acme
 import common.Agents.Bob
-import common.Utils.lastResponse
+import common.Utils.lastResponseObject
 import common.Utils.wait
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
@@ -41,21 +41,18 @@ class ConnectionSteps {
         // Acme remembers invitation URL to send it out of band to Bob
         Acme.remember(
             "invitationUrl",
-            lastResponse()
-                .getObject("", Connection::class.java)
+            lastResponseObject("", Connection::class)
                 .invitation.invitationUrl.split("=")[1]
         )
         Acme.remember(
             "invitation",
-            lastResponse()
-                .getObject("invitation", Invitation::class.java)
+            lastResponseObject("invitation", Invitation::class)
         )
 
         // Acme remembers its connection ID for further use
         Acme.remember(
             "connectionId",
-            lastResponse()
-                .getObject("", Connection::class.java)
+            lastResponseObject("", Connection::class)
                 .connectionId
         )
     }
@@ -94,7 +91,7 @@ class ConnectionSteps {
                 response.body("state", containsString("ConnectionRequestPending"))
             }
         )
-        Bob.remember("connectionId", lastResponse().getObject("", Connection::class.java).connectionId)
+        Bob.remember("connectionId", lastResponseObject("", Connection::class).connectionId)
     }
 
     @When("Acme receives the connection request")
@@ -109,8 +106,7 @@ class ConnectionSteps {
                         it.statusCode(200)
                     }
                 )
-                lastResponse()
-                    .getObject("", Connection::class.java).state == "ConnectionResponsePending"
+                lastResponseObject("", Connection::class).state == "ConnectionResponsePending"
             },
             "Issuer connection didn't reach ConnectionResponsePending state."
         )
@@ -130,8 +126,7 @@ class ConnectionSteps {
                         it.statusCode(200)
                     }
                 )
-                lastResponse()
-                    .getObject("", Connection::class.java).state == "ConnectionResponseSent"
+                lastResponseObject("", Connection::class).state == "ConnectionResponseSent"
             },
             "Issuer connection didn't reach ConnectionResponseSent state."
         )
@@ -150,7 +145,7 @@ class ConnectionSteps {
                         it.statusCode(200)
                     }
                 )
-                lastResponse().getObject("", Connection::class.java).state == "ConnectionResponseReceived"
+                lastResponseObject("", Connection::class).state == "ConnectionResponseReceived"
             },
             "Holder connection didn't reach ConnectionResponseReceived state."
         )
@@ -167,7 +162,7 @@ class ConnectionSteps {
                 it.statusCode(200)
             }
         )
-        Acme.remember("connection", lastResponse().getObject("", Connection::class.java))
+        Acme.remember("connection", lastResponseObject("", Connection::class))
 
         Bob.attemptsTo(
             Get.resource("/connections/${Bob.recall<String>("connectionId")}")
@@ -177,7 +172,7 @@ class ConnectionSteps {
                 it.statusCode(200)
             }
         )
-        Bob.remember("connection", lastResponse().getObject("", Connection::class.java))
+        Bob.remember("connection", lastResponseObject("", Connection::class))
 
         assertThat(Acme.recall<Connection>("connection").myDid)
             .isEqualTo(Bob.recall<Connection>("connection").theirDid)
