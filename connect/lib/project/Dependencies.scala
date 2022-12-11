@@ -7,7 +7,7 @@ object Dependencies {
     val zioCatsInterop = "22.0.0.0"
     val iris = "0.1.0"
     val mercury = "0.11.0"
-    val flyway = "9.8.3"
+    val flyway = "9.10.0"
     val shared = "0.2.0"
   }
 
