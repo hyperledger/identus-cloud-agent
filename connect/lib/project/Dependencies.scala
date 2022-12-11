@@ -4,7 +4,7 @@ object Dependencies {
   object Versions {
     val zio = "2.0.5"
     val doobie = "1.0.0-RC2"
-    val zioCatsInterop = "3.3.0"
+    val zioCatsInterop = "22.0.0.0"
     val iris = "0.1.0"
     val mercury = "0.10.1"
     val flyway = "9.8.3"
