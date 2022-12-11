@@ -63,7 +63,7 @@ object Dependencies {
 
   private lazy val tapirRedocBundle = "com.softwaremill.sttp.tapir" %% "tapir-redoc-bundle" % Versions.tapir
   private lazy val tapirSttpStubServer = "com.softwaremill.sttp.tapir" %% "tapir-sttp-stub-server" % Versions.tapir % Test
-  private lazy val sttpClient3ZioJson = "com.softwaremill.sttp.client3" %% "zio-json" % "3.8.3" % Test
+  private lazy val sttpClient3ZioJson = "com.softwaremill.sttp.client3" %% "zio-json" % "3.8.5" % Test
 
 
   // Dependency Modules
