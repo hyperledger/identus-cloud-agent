@@ -44,8 +44,8 @@ trait OASDomainModelHelper {
   extension (service: Service) {
     def toDomain: Either[String, castorDomain.Service] = {
       for {
-        serviceEndpoint <- Try(URI.create(service.serviceEndpoint)).toEither.left.map(_ =>
-          s"unable to parse serviceEndpoint ${service.serviceEndpoint} as URI"
+        serviceEndpoint <- service.serviceEndpoint.traverse(s =>
+          Try(URI.create(s)).toEither.left.map(_ => s"unable to parse serviceEndpoint $s as URI")
         )
         serviceType <- castorDomain.ServiceType
           .parseString(service.`type`)

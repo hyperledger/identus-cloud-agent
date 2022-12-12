@@ -71,8 +71,11 @@ object ReportProblem {
     assert(problem.pthid == msg.id) // This is a reply!
     Message(
       piuri = "https://didcomm.org/report-problem/2.0/problem-report",
-      from = msg.to,
-      to = msg.from,
+      from = {
+        assert(msg.to.length <= 0, "The recipient is ambiguous. Need to have no more that 1 recipient") // TODO
+        msg.to.headOption
+      },
+      to = msg.from.toSeq,
       body = JsonObject.fromIterable(
         Seq(("code", Json.fromString(problem.code.value))) ++
           problem.comment.map(e => ("comment", Json.fromString(e))) ++

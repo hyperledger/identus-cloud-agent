@@ -30,8 +30,7 @@ final case class UnpackMessageImp(private val msg: UnpackResult) extends UnpackM
       from = Option(aux.getFrom()).map(DidId(_)),
       to = Option(aux.getTo()).toSeq
         .map(_.asScala)
-        .flatMap(_.toSeq.map(e => DidId(e)))
-        .headOption,
+        .flatMap(_.toSeq.map(e => DidId(e))),
       body = thisbody,
       id = aux.getId(),
       createdTime = aux.getCreatedTime(),

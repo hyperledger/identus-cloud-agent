@@ -18,7 +18,7 @@ object CoordinateMediationPrograms {
     val requestMediation = MediateRequest()
     Message(
       from = Some(replier),
-      to = Some(invitation.from),
+      to = Seq(invitation.from),
       id = requestMediation.id,
       piuri = requestMediation.`type`
     )

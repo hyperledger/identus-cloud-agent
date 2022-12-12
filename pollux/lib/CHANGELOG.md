@@ -1,3 +1,10 @@
+# [pollux-v0.8.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.7.0...pollux-v0.8.0) (2022-12-09)
+
+
+### Features
+
+* **pollux:** Added a new column to the table to store the issued credential ([cd416bf](https://github.com/input-output-hk/atala-prism-building-blocks/commit/cd416bf2ddbb0a7f24826316aa590747b33d2a38))
+
 # [pollux-v0.7.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.6.0...pollux-v0.7.0) (2022-12-09)
 
 

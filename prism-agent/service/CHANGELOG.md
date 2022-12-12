@@ -1,3 +1,10 @@
+# [prism-agent-v0.16.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.15.0...prism-agent-v0.16.0) (2022-12-12)
+
+
+### Features
+
+* **prism-agent:** upgrade castor version with DID serviceEndpoint ([#229](https://github.com/input-output-hk/atala-prism-building-blocks/issues/229)) ([0ba3b89](https://github.com/input-output-hk/atala-prism-building-blocks/commit/0ba3b892b25e66c081c931b99c43e60d3c51af2a))
+
 # [prism-agent-v0.15.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.14.0...prism-agent-v0.15.0) (2022-12-09)
 
 

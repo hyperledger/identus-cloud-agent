@@ -7,11 +7,11 @@ routes:
       plugins:
         proxy-rewrite:
           regex_uri: ["^/prism-agent/(.*)","/$1"]
-    - uri: /didcomm/*
+    - uri: /didcomm
       upstream_id: 3
       plugins:
         proxy-rewrite:
-          regex_uri: ["^/didcomm/(.*)","/$1"]
+          uri: "/"
     - uri: /prism-agent/schema-registry/*
       upstream_id: 4
       plugins:
