@@ -12,7 +12,7 @@ import io.iohk.atala.mercury.protocol.mailbox.Mailbox.ReadMessage
 import io.iohk.atala.mercury.protocol.routing._
 
 def makeMsg(from: Agent, to: Agent) = Message(
-  piuri = "http://atalaprism.io/lets_connect/proposal",
+  `type` = "http://atalaprism.io/lets_connect/proposal",
   from = Some(from.id),
   to = Seq(to.id),
   body = JsonObject.fromIterable(

@@ -90,6 +90,14 @@ lazy val models = project
     // libraryDependencies += D.didScala.value
   )
 
+/* TODO move code from agentDidcommx to here
+models implementation for didcommx () */
+// lazy val modelsDidcommx = project
+//   .in(file("models-didcommx"))
+//   .settings(name := "mercury-models-didcommx")
+//   .settings(libraryDependencies += D.didcommx.value)
+//   .dependsOn(models)
+
 // #################
 // ### Protocols ###
 // #################
@@ -99,6 +107,7 @@ lazy val protocolConnection = project
   .settings(name := "mercury-protocol-connection")
   .settings(libraryDependencies += D.zio.value)
   .settings(libraryDependencies ++= Seq(D.circeCore.value, D.circeGeneric.value, D.circeParser.value))
+  .settings(libraryDependencies += D.munitZio.value)
   .dependsOn(models, protocolInvitation)
 
 lazy val protocolCoordinateMediation = project
@@ -220,7 +229,7 @@ lazy val agentDidcommx = project
   .settings(name := "mercury-agent-didcommx")
   .settings(libraryDependencies += D.didcommx.value)
   .settings(libraryDependencies += D.munitZio.value)
-  .dependsOn(agent)
+  .dependsOn(agent) //modelsDidcommx
 
 /** Demos agents and services implementation with didcommx */
 lazy val agentCliDidcommx = project

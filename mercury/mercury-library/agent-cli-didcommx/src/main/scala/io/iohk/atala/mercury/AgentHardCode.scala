@@ -34,7 +34,7 @@ object AgentHardCode extends ZIOAppDefault {
     for {
       didCommService <- ZIO.service[DidComm]
       msg = Message(
-        piuri = "TEST",
+        `type` = "TEST",
         from = Some(didCommService.myDid),
         to = Seq.empty,
         body = body.asJson.asObject.get

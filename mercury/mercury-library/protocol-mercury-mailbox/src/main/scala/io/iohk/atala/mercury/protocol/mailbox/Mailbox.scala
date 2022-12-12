@@ -20,7 +20,7 @@ object Mailbox {
         to = Seq(to),
         body = JsonObject.empty,
         id = id,
-        piuri = `type`
+        `type` = `type`
       )
     }
   }

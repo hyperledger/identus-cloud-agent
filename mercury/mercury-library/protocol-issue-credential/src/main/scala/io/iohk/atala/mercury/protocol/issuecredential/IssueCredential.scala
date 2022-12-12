@@ -29,12 +29,12 @@ final case class IssueCredential(
 
   def makeMessage: Message = Message(
     id = this.id,
-    piuri = this.`type`,
+    `type` = this.`type`,
     from = Some(this.from),
     to = Seq(this.to),
     thid = this.thid,
     body = this.body.asJson.asObject.get,
-    attachments = this.attachments,
+    attachments = Some(this.attachments),
   )
 }
 
@@ -101,7 +101,7 @@ object IssueCredential {
       id = message.id,
       `type` = message.piuri,
       body = body,
-      attachments = message.attachments,
+      attachments = message.attachments.getOrElse(Seq.empty),
       thid = message.thid,
       from = message.from.get, // TODO get
       to = {

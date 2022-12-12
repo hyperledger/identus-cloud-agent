@@ -11,7 +11,7 @@ object ConnectionRequest {
   case class Body(
       goal_code: Option[String] = None,
       goal: Option[String] = None,
-      accept: Seq[String] = Seq.empty
+      accept: Option[Seq[String]] = None
   )
 
   object Body {
@@ -56,7 +56,7 @@ final case class ConnectionRequest(
 
   def makeMessage: Message = Message(
     id = this.id,
-    piuri = this.`type`,
+    `type` = this.`type`,
     from = Some(this.from),
     to = Seq(this.to),
     thid = this.thid,

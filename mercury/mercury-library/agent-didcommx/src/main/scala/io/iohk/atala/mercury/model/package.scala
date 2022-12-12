@@ -26,19 +26,19 @@ final case class UnpackMessageImp(private val msg: UnpackResult) extends UnpackM
       .map(e => e) // using the given Conversion
 
     Message(
-      piuri = aux.getType(),
+      `type` = aux.getType(),
       from = Option(aux.getFrom()).map(DidId(_)),
       to = Option(aux.getTo()).toSeq
         .map(_.asScala)
         .flatMap(_.toSeq.map(e => DidId(e))),
       body = thisbody,
       id = aux.getId(),
-      createdTime = aux.getCreatedTime(),
-      expiresTimePlus = aux.getExpiresTime(),
-      attachments = attachments,
+      createdTime = Option(aux.getCreatedTime()),
+      expiresTimePlus = Option(aux.getExpiresTime()),
+      attachments = Option(attachments),
       thid = Option(aux.getThid()).filter(!_.isEmpty()),
       pthid = Option(aux.getPthid()).filter(!_.isEmpty()),
-      ack = Option(aux.getAck()).toSeq.filter(!_.isEmpty()),
+      ack = Option(aux.getAck()).map(Seq(_)),
     )
   }
 }

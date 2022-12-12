@@ -17,22 +17,28 @@ given Conversion[PackEncryptedResult, EncryptedMessage] with {
 
 given Conversion[Message, org.didcommx.didcomm.message.Message] with {
   def apply(msg: Message): org.didcommx.didcomm.message.Message = {
-    val attachments = msg.attachments.map { e => e: XAttachment } // cast
+    val attachmentsAux = msg.attachments.toSeq.flatten.map { e => e: XAttachment } // cast
     val aux = new MessageBuilder(
       msg.id,
       // msg.body.toMap.asJava,
       JsonUtilsForDidCommx.fromJsonToJavaMap(msg.body),
       msg.piuri
     )
-      .createdTime(msg.createdTime)
-      .expiresTime(msg.createdTime + msg.expiresTimePlus)
-      .attachments(attachments.toList.asJava) // TODO test
+
+    msg.createdTime.foreach(e => aux.createdTime(e))
+
+    (msg.createdTime, msg.expiresTimePlus) match {
+      case (Some(t), Some(delta)) => aux.expiresTime(t + delta)
+      case _                      => // nothing
+    }
+    aux.attachments(attachmentsAux.toList.asJava)
+
     // .customHeader("return_route", "all")
 
     msg.from.foreach(did => aux.from(did.value))
     msg.to.foreach(did => aux.to(Seq(did.value).asJava))
 
-    msg.ack.foreach(str => aux.ack(str))
+    msg.ack.flatMap(_.headOption).foreach(str => aux.ack(str)) // NOTE: headOption becuase DidCommx only support one ack
     msg.thid.foreach(str => aux.thid(str))
     msg.pthid.foreach(str => aux.pthid(str))
     aux.build()
