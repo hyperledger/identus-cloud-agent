@@ -376,7 +376,6 @@ private class PresentationServiceImpl(
       PresentationRecord.ProtocolState.PresentationVerified
     )
 
-
   override def markPresentationAccepted(recordId: UUID): IO[PresentationError, Option[PresentationRecord]] =
     updatePresentationRecordProtocolState(
       recordId,
