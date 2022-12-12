@@ -82,7 +82,7 @@ object ReportProblem {
           problem.args.map(e => ("args", Json.fromValues(e.map(Json.fromString _)))) ++
           problem.escalate_to.map(e => ("escalate_to", Json.fromString(e)))
       ),
-      ack = problem.ack.getOrElse(Seq.empty),
+      ack = problem.ack,
       pthid = Some(problem.pthid)
     )
   }

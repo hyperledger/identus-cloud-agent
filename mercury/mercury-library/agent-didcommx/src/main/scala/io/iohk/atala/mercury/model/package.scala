@@ -33,12 +33,12 @@ final case class UnpackMessageImp(private val msg: UnpackResult) extends UnpackM
         .flatMap(_.toSeq.map(e => DidId(e))),
       body = thisbody,
       id = aux.getId(),
-      createdTime = aux.getCreatedTime(),
-      expiresTimePlus = aux.getExpiresTime(),
-      attachments = attachments,
+      createdTime = Option(aux.getCreatedTime()),
+      expiresTimePlus = Option(aux.getExpiresTime()),
+      attachments = Option(attachments),
       thid = Option(aux.getThid()).filter(!_.isEmpty()),
       pthid = Option(aux.getPthid()).filter(!_.isEmpty()),
-      ack = Option(aux.getAck()).toSeq.filter(!_.isEmpty()),
+      ack = Option(aux.getAck()).map(Seq(_)),
     )
   }
 }

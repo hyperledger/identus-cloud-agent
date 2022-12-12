@@ -48,7 +48,7 @@ final case class Presentation(
     to = Seq(this.to),
     thid = this.thid,
     body = this.body.asJson.asObject.get, // TODO get
-    attachments = this.attachments
+    attachments = Some(this.attachments)
   )
 }
 
@@ -98,7 +98,7 @@ object Presentation {
       id = message.id,
       `type` = message.piuri,
       body = body,
-      attachments = message.attachments,
+      attachments = message.attachments.getOrElse(Seq.empty),
       thid = message.thid,
       from = message.from.get, // TODO get
       to = {

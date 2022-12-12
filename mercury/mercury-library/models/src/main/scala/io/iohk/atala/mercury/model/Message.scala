@@ -4,7 +4,8 @@ import java.time.LocalDateTime
 import java.time.ZoneOffset
 
 import scala.jdk.CollectionConverters._
-import io.circe.JsonObject
+import io.circe._
+import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 
 type PIURI = String //type URI or URL?
 case class Message(
@@ -13,12 +14,20 @@ case class Message(
     to: Seq[DidId],
     body: JsonObject = JsonObject.empty,
     id: String = java.util.UUID.randomUUID.toString(),
-    createdTime: Long = LocalDateTime.now().toEpochSecond(ZoneOffset.of("Z")),
-    expiresTimePlus: Long = 1000,
-    attachments: Seq[AttachmentDescriptor] = Seq.empty, // id -> data  (data is also a json)
+    createdTime: Option[Long] = Some(LocalDateTime.now().toEpochSecond(ZoneOffset.of("Z"))),
+    expiresTimePlus: Option[Long] = Some(1000),
+    attachments: Option[Seq[AttachmentDescriptor]] = None, // id -> data  (data is also a json)
     thid: Option[String] = None,
     pthid: Option[String] = None,
-    ack: Seq[String] = Seq.empty,
+    ack: Option[Seq[String]] = None,
 ) {
   def `type` = piuri
+}
+
+object Message {
+  given Encoder[Message] = {
+    import AttachmentDescriptor.attachmentDescriptorEncoderV2
+    deriveEncoder[Message]
+  }
+  given Decoder[Message] = deriveDecoder[Message]
 }
