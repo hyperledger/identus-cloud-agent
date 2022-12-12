@@ -21,8 +21,6 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   )
   given RootJsonFormat[CreateAuthenticationChallengeRequest] = jsonFormat3(CreateAuthenticationChallengeRequest.apply)
   given RootJsonFormat[CreateAuthenticationChallengeResponse] = jsonFormat2(CreateAuthenticationChallengeResponse.apply)
-  given RootJsonFormat[CreateDIDRequest] = jsonFormat4(CreateDIDRequest.apply)
-  given RootJsonFormat[CreateDIDRequestDocument] = jsonFormat2(CreateDIDRequestDocument.apply)
   given RootJsonFormat[CreateManagedDidRequest] = jsonFormat1(CreateManagedDidRequest.apply)
   given RootJsonFormat[CreateManagedDidRequestDocumentTemplate] = jsonFormat2(
     CreateManagedDidRequestDocumentTemplate.apply
@@ -31,24 +29,15 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
     CreateManagedDidRequestDocumentTemplatePublicKeysInner.apply
   )
   given RootJsonFormat[CreateManagedDIDResponse] = jsonFormat1(CreateManagedDIDResponse.apply)
-  given RootJsonFormat[DeactivateDIDRequest] = jsonFormat4(DeactivateDIDRequest.apply)
-  given RootJsonFormat[Delta] = jsonFormat2(Delta.apply)
-  given RootJsonFormat[DeltaUpdate] = jsonFormat2(DeltaUpdate.apply)
   given RootJsonFormat[DID] = jsonFormat8(DID.apply)
   given RootJsonFormat[DIDDocumentMetadata] = jsonFormat1(DIDDocumentMetadata.apply)
-  given RootJsonFormat[DidOperation] = jsonFormat4(DidOperation.apply)
   given RootJsonFormat[DIDOperationResponse] = jsonFormat1(DIDOperationResponse.apply)
-  given RootJsonFormat[DidOperationStatus] = jsonFormat0(DidOperationStatus.apply)
   given RootJsonFormat[DidOperationSubmission] = jsonFormat2(DidOperationSubmission.apply)
-  given RootJsonFormat[DidOperationType] = jsonFormat0(DidOperationType.apply)
   given RootJsonFormat[DIDResponse] = jsonFormat2(DIDResponse.apply)
   given RootJsonFormat[ErrorResponse] = jsonFormat5(ErrorResponse.apply)
-  given RootJsonFormat[PublicKey] = jsonFormat5(PublicKey.apply)
+  given RootJsonFormat[ListManagedDIDResponseInner] = jsonFormat3(ListManagedDIDResponseInner.apply)
   given RootJsonFormat[PublicKeyJwk] = jsonFormat5(PublicKeyJwk.apply)
-  given RootJsonFormat[RecoverDIDRequest] = jsonFormat5(RecoverDIDRequest.apply)
   given RootJsonFormat[Service] = jsonFormat3(Service.apply)
-  given RootJsonFormat[UpdateDIDRequest] = jsonFormat4(UpdateDIDRequest.apply)
-  given RootJsonFormat[UpdatePatch] = jsonFormat2(UpdatePatch.apply)
   given RootJsonFormat[VerificationMethod] = jsonFormat4(VerificationMethod.apply)
 
   // Issue Credential Protocol
@@ -80,9 +69,13 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   given RootJsonFormat[W3CCredentialRevocationRequest] = jsonFormat1(W3CCredentialRevocationRequest.apply)
   given RootJsonFormat[W3CCredentialRevocationResponse] = jsonFormat2(W3CCredentialRevocationResponse.apply)
   given RootJsonFormat[W3CCredentialStatus] = jsonFormat2(W3CCredentialStatus.apply)
-  given RootJsonFormat[W3CPresentation] = jsonFormat1(W3CPresentation.apply)
-  given RootJsonFormat[W3CPresentationInput] = jsonFormat1(W3CPresentationInput.apply)
-  given RootJsonFormat[W3CPresentationPaginated] = jsonFormat4(W3CPresentationPaginated.apply)
+
+  // Presentation
+  given RootJsonFormat[ProofRequestAux] = jsonFormat2(ProofRequestAux.apply)
+  given RootJsonFormat[RequestPresentationInput] = jsonFormat2(RequestPresentationInput.apply)
+  given RootJsonFormat[RequestPresentationOutput] = jsonFormat1(RequestPresentationOutput.apply)
+  given RootJsonFormat[PresentationStatus] = jsonFormat4(PresentationStatus.apply)
+  given RootJsonFormat[RequestPresentationAction] = jsonFormat2(RequestPresentationAction.apply)
 
   // Connections Management
   given RootJsonFormat[CreateConnectionRequest] = jsonFormat1(CreateConnectionRequest.apply)

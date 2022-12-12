@@ -4,9 +4,6 @@ set -e
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
-# Set working directory
-cd ${SCRIPT_DIR}
-
 Help()
 {
    # Display Help
@@ -57,23 +54,16 @@ if [[ -n $1 ]]; then
     tail -1 "$1"
 fi
 
-if [ -z ${NAME+x} ];
-then
-    NAME="local"
-fi
-
-if [ -z ${VOLUMES+x} ];
-then
-    VOLUMES=""
-fi
-
-# set a default port as required to ensure docker-compose is valid if not set in env
-PORT="80"
+NAME="${NAME:=local}"
+PORT="${PORT:=80}"
 
 echo "NAME            = ${NAME}"
 
 echo "--------------------------------------"
-echo "Stopping stack using docker-compose"
+echo "Stopping stack using docker compose"
 echo "--------------------------------------"
 
-PORT=${PORT} docker-compose -p ${NAME} -f ../shared/docker-compose.yml --env-file ${SCRIPT_DIR}/.env down ${VOLUMES}
+PORT=${PORT} docker compose \
+  -p ${NAME} \
+  -f ${SCRIPT_DIR}/../shared/docker-compose.yml \
+  --env-file ${SCRIPT_DIR}/.env down ${VOLUMES}

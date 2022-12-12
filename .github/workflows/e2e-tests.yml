@@ -1,5 +1,9 @@
 name: End-to-end tests
 
+concurrency:
+  group: ${{ github.head_ref }}${{ github.ref }}-e2e-tests
+  cancel-in-progress: true
+
 on:
   schedule:
     - cron: "0 3 * * *"
@@ -30,6 +34,11 @@ jobs:
         with:
           java-version: openjdk@1.11
 
+      - name: Install Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
         with:
@@ -43,27 +52,45 @@ jobs:
           version: v2.12.2 # defaults to 'latest'
           legacy: true    # will also install in PATH as `docker-compose`
 
-      - name: Start services
+      - name: Start services for issuer
+        env:
+          PORT: 8080
         uses: isbang/compose-action@v1.4.1
         with:
-          compose-file: "./infrastructure/ci/docker-compose-multiple-actors.yml"
+          compose-file: "./infrastructure/shared/docker-compose.yml"
+          compose-flags: "--env-file ./infrastructure/local/.env -p issuer"
           up-flags: "--wait"
+          down-flags: "--volumes"
+
+      - name: Start services for holder
+        env:
+          PORT: 8090
+        uses: isbang/compose-action@v1.4.1
+        with:
+          compose-file: "./infrastructure/shared/docker-compose.yml"
+          compose-flags: "--env-file ./infrastructure/local/.env -p holder"
+          up-flags: "--wait"
+          down-flags: "--volumes"
 
       - name: Run e2e tests
+        env:
+          ATALA_GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
         run: |
-          ./gradlew test --info
+          ../../infrastructure/local/update_env.sh
+          cat ../../infrastructure/local/.env
+          ./gradlew test --tests "E2eTestsRunner"
 
       - uses: actions/upload-artifact@v2
         if: always()
         with:
           name: e2e-tests-result
-          path: tests/e2e-tests/target/site/reports
+          path: tests/e2e-tests/target/site/serenity
 
       - name: Publish e2e test Results
         if: always()
         id: publish-unit-tests
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:
-          junit_files: "tests/e2e-tests/target/site/reports/SERENITY-JUNIT-*.xml"
+          junit_files: "tests/e2e-tests/target/site/serenity/SERENITY-JUNIT-*.xml"
           comment_title: "E2E Test Results"
           check_name: "E2E Test Results"

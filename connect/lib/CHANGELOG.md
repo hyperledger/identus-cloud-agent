@@ -1,3 +1,11 @@
+# [connect-v0.3.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/connect-v0.3.0...connect-v0.3.1) (2022-12-09)
+
+
+### Bug Fixes
+
+* **connect:** bump mercury version to 1.10.1 and touch README.md ([e13a1bd](https://github.com/input-output-hk/atala-prism-building-blocks/commit/e13a1bdcf2eec2c6059d8e9b4f4a587ff6aa15a6))
+* **pollux:** upgrade mercury lib to 1.10.1 ([ee27755](https://github.com/input-output-hk/atala-prism-building-blocks/commit/ee2775534f6207a6fed6332c938e6249d62168df))
+
 # [connect-v0.3.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/connect-v0.2.0...connect-v0.3.0) (2022-12-02)
 
 

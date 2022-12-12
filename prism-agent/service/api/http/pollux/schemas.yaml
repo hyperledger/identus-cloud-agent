@@ -1,6 +1,6 @@
 components:
   schemas:
-# Common
+    # Common
     InternalServerError:
       required:
         - msg
@@ -9,15 +9,27 @@ components:
         msg:
           type: string
 
-    NotFoundResponse:
+    NotFound:
       required:
         - msg
       type: object
       properties:
         msg:
           type: string
-    
-# Schema Registry
+
+    BadRequest:
+      required:
+        - msg
+      type: object
+      properties:
+        msg:
+          type: string
+        errors:
+          type: array
+          items:
+            type: string
+
+    # Schema Registry
 
     Proof:
       required:
@@ -125,8 +137,95 @@ components:
           items:
             type: string
 
-# Issue Credential Protocol
-    
+    VerificationPolicy:
+      required:
+        - self
+        - kind
+        - id
+        - name
+        - createdAt
+        - updatedAt
+      type: object
+      properties:
+        self:
+          type: string
+        kind:
+          type: string
+        id:
+          type: string
+        name:
+          type: string
+        attributes:
+          type: array
+          items:
+            type: string
+        issuerDIDs:
+          type: array
+          items:
+            type: string
+        credentialTypes:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    VerificationPolicyInput:
+      required:
+        - name
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        attributes:
+          type: array
+          items:
+            type: string
+        issuerDIDs:
+          type: array
+          items:
+            type: string
+        credentialTypes:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    VerificationPolicyPage:
+      required:
+        - self
+        - kind
+        - pageOf
+      type: object
+      properties:
+        self:
+          type: string
+        kind:
+          type: string
+        pageOf:
+          type: string
+        next:
+          type: string
+        previous:
+          type: string
+        contents:
+          type: array
+          items:
+            $ref: '#/components/schemas/VerificationPolicy'
+
+    # Issue Credential Protocol
+
     CreateIssueCredentialRecordRequest:
       description: A request to create a new "issue credential record"
       required:
@@ -205,7 +304,7 @@ components:
                 - Published
             jwtCredential:
               type: string
-    
+
     IssueCredentialRecordCollection:
       description: A collection of issue credential records
       required:
@@ -218,6 +317,126 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/IssueCredentialRecord"
+        offset:
+          type: integer
+        limit:
+          type: integer
+        count:
+          type: integer
+
+    #
+
+    W3CCredentialInput:
+      description: |-
+        Credential input object based on which the new instance of the verifiable credentials is created.
+        Object contains the minimal set of the fields required to create the credentials for the given subject.
+        All other required fields of the verifiable credential depend on the context of the cloud agent
+      required:
+        - subjectId
+        - claims
+      properties:
+        schemaId:
+          type: string
+          description: "Identity of the Verifiable Credentials Schema associated with this object"
+          example: "did:example:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0"
+        subjectId:
+          type: string
+          description: "Subject DID of the verifiable credentials object"
+          example: "did:prism:subjectofverifiablecredentials"
+        validityPeriod:
+          type: number
+          description: "The validity period in seconds of the verifiable credential"
+          example: 3600
+        claims:
+          type: object
+          additionalProperties:
+            type: string
+          description: "Clams associated with given credentials object (for now it's just a key/value, later should be more complex"
+
+    W3CCredential:
+      description: "Verifiable Credential Object according to W3C specification"
+      required: ["id", "type", "issuer", "issuanceDate", "credentialSubject"]
+      properties:
+        id:
+          type: string
+          description: "Credential id or url that can be used to get the status of revoke the credential"
+          example: "http://example.edu/credentials/1872"
+        type:
+          type: string
+          description: "Credential type according to W3C specification. Must include VerifiableCredentials and type of concrete credentials"
+          example: '["VerifiableCredential", "AlumniCredential"]'
+        issuer:
+          type: string
+          description: "Issuer DID"
+          example: "did:prism:issuerdid"
+        issuanceDate:
+          type: string
+          description: "Datetime in ISO format that corresponds to the date of issuance"
+          example: "2010-01-01T19:23:24Z"
+        credentialSubject:
+          type: object
+          description: "Credentials subject DID and claims according to the schema object"
+          additionalProperties:
+            type: string
+          example:
+            id: "did:prism:subject12345"
+            alumni_of: "University"
+            degree: "master of openapi specification"
+        proof:
+          $ref: "#/components/schemas/W3CProof"
+
+    W3CCredentialsPaginated:
+      description: "Paginated response that contains an array of the credential objects"
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/W3CCredential"
+        offset:
+          type: integer
+        limit:
+          type: integer
+        count:
+          type: integer
+
+    W3CIssuanceBatch:
+      description: "An issuance batch object that is associated with thelist of verifiable credentials"
+      properties:
+        id:
+          type: string
+          description: "Issuance batch id"
+        count:
+          type: integer
+          description: "Count of the verifiable credentials object in the batch"
+        actions:
+          type: array
+          items:
+            $ref: "#/components/schemas/W3CIssuanceBatchAction"
+
+    W3CIssuanceBatchAction:
+      description: "Action performed on the list of credentials associated with the issuance batch"
+      properties:
+        action:
+          description: "Action name"
+          type: string
+          enum: ["sign", "issue", "send"]
+          example: "issue"
+        id:
+          description: "Action id for tracking"
+          type: string
+          example: "uid"
+        status:
+          description: "Action status"
+          type: string
+          enum: ["scheduled", "pending", "completed", "failed"]
+
+    W3CIssuanceBatchPaginated:
+      description: "Paginated response that contains an array of the issuance-batch objects"
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/W3CIssuanceBatch"
         offset:
           type: integer
         limit:
@@ -283,17 +502,73 @@ components:
             - completed
             - failed
 
-    W3CPresentationInput:
-      description: Verifiable Presentation input
+    ProofRequestAux:
+      required: [schemaId, trustIssuers]
       properties:
-        schemas:
-          type: string # TODO: Define the schema for Presentation Input
+        schemaId:
+          description: Ex ID card or driving licence
+          type: string
+          example: "https://schema.org/Person"
+        trustIssuers:
+          description: Issuer that the verifier trust trust
+          example:
+            [
+              "did:web:atalaprism.io/users/testUser",
+              "did.prism:123",
+              "did:prism:...",
+            ]
+          type: array
+          items:
+            type: string
 
-    W3CPresentation:
-      description: Verifiable Presentation object
+    RequestPresentationInput:
+      description: Request Presentation Input
+      required: [connectionId, proofs]
       properties:
-        schemas:
-          type: string # TODO: define the exactly schema for Presentation
+        connectionId:
+          type: string
+        proofs:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProofRequestAux"
+    RequestPresentationOutput:
+      description: Request Presentation Output
+      required: [presentationId]
+      properties:
+        presentationId:
+          description: Ref to the id on the presentation (db ref)
+          type: string
+    PresentationStatus:
+      description: Presentation Status
+      required: [presentationId, status, proofs]
+      properties:
+        presentationId:
+          type: string
+        status:
+          type: string
+        proofs:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProofRequestAux"
+        connectionId:
+          type: string
+    RequestPresentationAction:
+      # RequestPresentationActionAccept:
+      description: Actions on presetations (to update)
+      required: [action]
+      properties:
+        action:
+          type: string
+          enum:
+            - request-accept
+            - request-reject
+            - presentation-accept
+            - presentation-reject
+        proofId:
+          description: This is to choose what VCs to use
+          type: array
+          items:
+            type: string
 
     W3CPresentationPaginated:
       description: "Paginated response that contains an array of the presentation objects"
@@ -421,7 +696,7 @@ components:
                   type: string
                   description: "DID of the subject of the credential"
         proof:
-          $ref: "#/components/schemas/W3CProof"
+          $ref: "#/components/schemas/Proof"
 
     ErrorResponse:
       type: object

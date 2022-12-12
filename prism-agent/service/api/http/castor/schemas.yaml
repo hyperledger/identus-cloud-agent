@@ -84,103 +84,6 @@ components:
         publicKeyJwk:
           $ref: "#/components/schemas/PublicKeyJwk"
 
-    CreateDIDRequest:
-      type: object
-      required:
-        - updateCommitment
-        - recoveryCommitment
-        - storage
-        - document
-      properties:
-        updateCommitment:
-          type: string
-          example: "e0f10749ef6d7ea351cf9e23ef505a933e8386123413a044d11945fd45bad3ba"
-          description: Forward reference to next update key which is SHA256 of update public key
-        recoveryCommitment:
-          type: string
-          example: "62b4b7f16bdc50dcf3d4c8fb1edb62d73e72d2707b35f468e4e523b3c63d290a"
-          description: Forward reference to next recovery key which is SHA256 of recovery public key
-        storage:
-          type: string
-          example: "mainnet"
-        document:
-          type: object
-          properties:
-            publicKeys:
-              type: array
-              items:
-                $ref: "#/components/schemas/PublicKey"
-            services:
-              type: array
-              items:
-                $ref: "#/components/schemas/Service"
-
-    UpdateDIDRequest:
-      type: object
-      required:
-        - did
-        - updatePublicKey
-        - previousVersion
-        - delta
-      properties:
-        did:
-          type: string
-          example: did:prism:unpublished:7a3a5cd1beab57a65c18c584848029c513ca27c8edfb69ceb2c7aef3d659bf44?instance=https://offchain-storage.com"
-        updatePublicKey:
-          type: string
-          example: "EiBkRSeixqX-PhOij6PIpuGfPld5Nif5MxcrgtGCw-t6LA"
-          description: "Base64 of update public key"
-        previousVersion:
-          type: string
-          example: "a56d8c8cee25d810840c6f77b0797af36f2cb7247101a59f4607f9542c8f7aee"
-          description: SHA256 of the previous operation
-        delta:
-          $ref: "#/components/schemas/DeltaUpdate"
-
-    DeactivateDIDRequest:
-      type: object
-      required:
-        - did
-        - recoveryPublicKey
-        - previousVersion
-        - signature
-      properties:
-        did:
-          type: string
-          example: "did:prism:mainnet:7a3a5cd1beab57a65c18c584848029c513ca27c8edfb69ceb2c7aef3d659bf44"
-        recoveryPublicKey:
-          type: string
-          example: "EiBkRSeixqX-PhOij6PIpuGfPld5Nif5MxcrgtGCw-t6LA"
-          description: "Base64 of recovery public key"
-        previousVersion:
-          type: string
-          example: "a56d8c8cee25d810840c6f77b0797af36f2cb7247101a59f4607f9542c8f7aee"
-          description: "SHA256 of last DID operation"
-        signature:
-          type: string
-          example: "eyJhbGciOiJFUzI1NksifQ.eyJ1cGRhdGVLZXkiOnsia3R5IjoiRUMiLCJjcnYiOiJzZWNwMjU2azEiLCJ4Ijoid2Z3UUNKM09ScVZkbkhYa1Q4UC1MZ19HdHhCRWhYM3R5OU5VbnduSHJtdyIsInkiOiJ1aWU4cUxfVnVBblJEZHVwaFp1eExPNnFUOWtQcDNLUkdFSVJsVHBXcmZVIn0sImRlbHRhSGFzaCI6IkVpQ3BqTjQ3ZjBNcTZ4RE5VS240aFNlZ01FcW9EU19ycFEyOVd5MVY3M1ZEYncifQ.RwZK1DG5zcr4EsrRImzStb0VX5j2ZqApXZnuoAkA3IoRdErUscNG8RuxNZ0FjlJtjMJ0a-kn-_MdtR0wwvWVgg"
-          description: "Base64 of signature of data in the request"
-
-    RecoverDIDRequest:
-      type: object
-      properties:
-        did:
-          type: string
-          example: "did:prism:mainnet:7a3a5cd1beab57a65c18c584848029c513ca27c8edfb69ceb2c7aef3d659bf44"
-        recoveryPublicKey:
-          type: string
-          example: "EiBkRSeixqX-PhOij6PIpuGfPld5Nif5MxcrgtGCw-t6LA"
-        previousVersion:
-          type: string
-          example: "a56d8c8cee25d810840c6f77b0797af36f2cb7247101a59f4607f9542c8f7aee"
-          description: "SHA256 of last DID operation"
-        delta:
-          $ref: "#/components/schemas/Delta"
-        signature:
-          type: string
-          example: "eyJhbGciOiJFUzI1NksifQ.eyJ1cGRhdGVLZXkiOnsia3R5IjoiRUMiLCJjcnYiOiJzZWNwMjU2azEiLCJ4Ijoid2Z3UUNKM09ScVZkbkhYa1Q4UC1MZ19HdHhCRWhYM3R5OU5VbnduSHJtdyIsInkiOiJ1aWU4cUxfVnVBblJEZHVwaFp1eExPNnFUOWtQcDNLUkdFSVJsVHBXcmZVIn0sImRlbHRhSGFzaCI6IkVpQ3BqTjQ3ZjBNcTZ4RE5VS240aFNlZ01FcW9EU19ycFEyOVd5MVY3M1ZEYncifQ.RwZK1DG5zcr4EsrRImzStb0VX5j2ZqApXZnuoAkA3IoRdErUscNG8RuxNZ0FjlJtjMJ0a-kn-_MdtR0wwvWVgg"
-          description: "Base64 of signature of data in the request"
-
     CreateManagedDidRequest:
       type: object
       required:
@@ -204,7 +107,7 @@ components:
                   id:
                     type: string
                     description: Identifier of a verification material in the DID Document
-                    example: key-01
+                    example: key1
                   purpose:
                     type: string
                     enum:
@@ -215,7 +118,7 @@ components:
                         "capabilityInvocation",
                         "capabilityDelegation",
                       ]
-                    example: [ "authentication", "assertionMethod" ]
+                    example: "authentication"
             services:
               type: array
               items:
@@ -231,6 +134,28 @@ components:
           type: string
           description: A long-form DID for the created DID
           example: did:prism:1:abc123:abc123
+
+    ListManagedDIDResponse:
+      type: array
+      items:
+        type: object
+        required:
+          - did
+          - status
+        properties:
+          did:
+            type: string
+            example: did:prism:abc
+          longFormDid:
+            type: string
+            description: A long-form DID. Mandatory when status is not PUBLISHED and optional when status is PUBLISHED
+            example: did:prism:abc:123
+          status:
+            type: string
+            enum:
+            - CREATED
+            - PUBLICATION_PENDING
+            - PUBLISHED
 
     Delta:
       type: object
@@ -320,15 +245,17 @@ components:
       properties:
         id:
           type: string
-          example: "did:prism:123#edv"
+          example: "service1"
         type:
           type: string
           enum:
             - MediatorService
           example: MediatorService
         serviceEndpoint:
-          type: string
-          example: "https://bar.example.com"
+          type: array
+          items:
+            type: string
+            example: "https://bar.example.com"
 
     UpdatePatch:
       type: object

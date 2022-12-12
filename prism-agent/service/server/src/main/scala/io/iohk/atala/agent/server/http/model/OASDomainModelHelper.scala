@@ -3,18 +3,16 @@ package io.iohk.atala.agent.server.http.model
 import io.iohk.atala.agent.openapi.model.{
   Connection,
   ConnectionInvitation,
-  CreateDIDRequest,
   CreateManagedDidRequestDocumentTemplate,
   CreateManagedDidRequestDocumentTemplatePublicKeysInner,
   DID,
   DIDDocumentMetadata,
   DIDOperationResponse,
   DIDResponse,
-  DidOperation,
   DidOperationSubmission,
   IssueCredentialRecord,
   IssueCredentialRecordCollection,
-  PublicKey,
+  ListManagedDIDResponseInner,
   PublicKeyJwk,
   Service,
   VerificationMethod
@@ -35,6 +33,8 @@ import io.iohk.atala.mercury.model.AttachmentDescriptor
 import io.iohk.atala.mercury.model.Base64
 import zio.ZIO
 import io.iohk.atala.agent.server.http.model.HttpServiceError.InvalidPayload
+import io.iohk.atala.agent.walletapi.model.ManagedDIDState
+import io.iohk.atala.castor.core.model.did.{LongFormPrismDID, PrismDID}
 
 import java.util.UUID
 import io.iohk.atala.connect.core.model.ConnectionRecord.Role
@@ -44,8 +44,8 @@ trait OASDomainModelHelper {
   extension (service: Service) {
     def toDomain: Either[String, castorDomain.Service] = {
       for {
-        serviceEndpoint <- Try(URI.create(service.serviceEndpoint)).toEither.left.map(_ =>
-          s"unable to parse serviceEndpoint ${service.serviceEndpoint} as URI"
+        serviceEndpoint <- service.serviceEndpoint.traverse(s =>
+          Try(URI.create(s)).toEither.left.map(_ => s"unable to parse serviceEndpoint $s as URI")
         )
         serviceType <- castorDomain.ServiceType
           .parseString(service.`type`)
@@ -198,8 +198,24 @@ trait OASDomainModelHelper {
     def toOAS: Service = Service(
       id = service.id,
       `type` = service.`type`,
-      serviceEndpoint = service.serviceEndpoint
+      serviceEndpoint = service.serviceEndpoint // FIXME @pat
     )
+  }
+
+  extension (didDetail: walletDomain.ManagedDIDDetail) {
+    def toOAS: ListManagedDIDResponseInner = {
+      val (longFormDID, status) = didDetail.state match {
+        case ManagedDIDState.Created(operation) => Some(PrismDID.buildLongFormFromOperation(operation)) -> "CREATED"
+        case ManagedDIDState.PublicationPending(operation, _) =>
+          Some(PrismDID.buildLongFormFromOperation(operation)) -> "PUBLICATION_PENDING"
+        case ManagedDIDState.Published(_, _) => None -> "PUBLISHED"
+      }
+      ListManagedDIDResponseInner(
+        did = didDetail.did.toString,
+        longFormDid = longFormDID.map(_.toString),
+        status = status
+      )
+    }
   }
 
 }

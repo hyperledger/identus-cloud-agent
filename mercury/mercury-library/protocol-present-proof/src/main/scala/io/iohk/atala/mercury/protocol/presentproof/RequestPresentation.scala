@@ -20,12 +20,12 @@ final case class RequestPresentation(
 
   def makeMessage: Message = Message(
     id = this.id,
-    piuri = this.`type`,
+    `type` = this.`type`,
     from = Some(this.from),
-    to = Some(this.to),
+    to = Seq(this.to),
     thid = this.thid,
     body = this.body.asJson.asObject.get, // TODO get
-    attachments = this.attachments,
+    attachments = Some(this.attachments),
   )
 }
 object RequestPresentation {
@@ -62,7 +62,10 @@ object RequestPresentation {
       ),
       attachments = pp.attachments,
       thid = Some(msg.id),
-      from = msg.to.get, // TODO get
+      from = {
+        assert(msg.to.length == 1, "The recipient is ambiguous. Need to have only 1 recipient") // TODO return error
+        msg.to.head
+      },
       to = msg.from.get, // TODO get
     )
   }
@@ -74,10 +77,13 @@ object RequestPresentation {
       id = message.id,
       `type` = message.piuri,
       body = body,
-      attachments = message.attachments,
+      attachments = message.attachments.getOrElse(Seq.empty),
       thid = message.thid,
       from = message.from.get, // TODO get
-      to = message.to.get, // TODO get
+      to = {
+        assert(message.to.length == 1, "The recipient is ambiguous. Need to have only 1 recipient") // TODO return error
+        message.to.head
+      },
     )
 
 }

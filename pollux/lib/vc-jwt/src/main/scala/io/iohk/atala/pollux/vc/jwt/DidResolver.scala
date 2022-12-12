@@ -8,7 +8,7 @@ trait DidResolver {
   def resolve(didUrl: String): IO[String, DIDResolutionResult]
 }
 
-trait DIDResolutionResult()
+trait DIDResolutionResult
 
 sealed case class DIDResolutionFailed(
     error: DIDResolutionError
@@ -20,15 +20,13 @@ sealed case class DIDResolutionSucceeded(
     didDocumentMetadata: DIDDocumentMetadata
 ) extends DIDResolutionResult
 
-sealed trait DIDResolutionError(error: String, message: String) {
-  class InvalidDid(message: String) extends DIDResolutionError("invalidDid", message)
+sealed trait DIDResolutionError(error: String, message: String)
+case class InvalidDid(message: String) extends DIDResolutionError("invalidDid", message)
+case class NotFound(message: String) extends DIDResolutionError("notFound", message)
+case class RepresentationNotSupported(message: String) extends DIDResolutionError("RepresentationNotSupported", message)
+case class UnsupportedDidMethod(message: String) extends DIDResolutionError("unsupportedDidMethod", message)
+case class Error(error: String, message: String) extends DIDResolutionError(error, message)
 
-  class NotFound(message: String) extends DIDResolutionError("notFound", message)
-
-  class RepresentationNotSupported(message: String) extends DIDResolutionError("RepresentationNotSupported", message)
-  class UnsupportedDidMethod(message: String) extends DIDResolutionError("unsupportedDidMethod", message)
-  class Error(error: String, message: String) extends DIDResolutionError(error, message)
-}
 case class DIDDocumentMetadata(
     created: Option[Instant] = Option.empty,
     updated: Option[Instant] = Option.empty,

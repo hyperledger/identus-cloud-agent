@@ -32,12 +32,12 @@ final case class OfferCredential(
 
   def makeMessage: Message = Message(
     id = this.id,
-    piuri = this.`type`,
+    `type` = this.`type`,
     from = Some(this.from),
-    to = Some(to),
+    to = Seq(to),
     thid = this.thid,
     body = this.body.asJson.asObject.get, // TODO get
-    attachments = this.attachments,
+    attachments = Some(this.attachments),
   )
 }
 
@@ -111,10 +111,13 @@ object OfferCredential {
       id = message.id,
       `type` = message.piuri,
       body = body,
-      attachments = message.attachments,
+      attachments = message.attachments.getOrElse(Seq.empty),
       thid = message.thid,
       from = message.from.get, // TODO get
-      to = message.to.get, // TODO get
+      to = {
+        assert(message.to.length == 1, "The recipient is ambiguous. Need to have only 1 recipient") // TODO return error
+        message.to.head
+      },
     )
   }
 }

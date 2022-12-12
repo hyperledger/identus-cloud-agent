@@ -11,7 +11,7 @@ object ConnectionRequest {
   case class Body(
       goal_code: Option[String] = None,
       goal: Option[String] = None,
-      accept: Seq[String] = Seq.empty
+      accept: Option[Seq[String]] = None
   )
 
   object Body {
@@ -32,7 +32,13 @@ object ConnectionRequest {
       body = body,
       thid = message.thid,
       from = message.from.get, // TODO get
-      to = message.to.get, // TODO get
+      to = {
+        assert(
+          message.to.length == 1,
+          "The recipient is ambiguous. Need to have only 1 recipient"
+        ) // TODO return error return error
+        message.to.head
+      },
     )
   }
 
@@ -50,9 +56,9 @@ final case class ConnectionRequest(
 
   def makeMessage: Message = Message(
     id = this.id,
-    piuri = this.`type`,
+    `type` = this.`type`,
     from = Some(this.from),
-    to = Some(this.to),
+    to = Seq(this.to),
     thid = this.thid,
     body = this.body.asJson.asObject.get,
   )

@@ -1,5 +1,6 @@
 package io.iohk.atala.pollux.vc.jwt
 
+import com.nimbusds.jose.jwk.ECKey
 import io.circe
 import io.circe.*
 import io.circe.generic.auto.*
@@ -65,4 +66,14 @@ class ES256Signer(privateKey: PrivateKey) extends Signer {
   override def encode(claim: Json): JWT = {
     return JWT(JwtCirce.encode(claim, privateKey, algorithm))
   }
+}
+
+def toJWKFormat(holderJwk: ECKey): JsonWebKey = {
+  JsonWebKey(
+    kty = "EC",
+    crv = Some(holderJwk.getCurve.getName),
+    x = Some(holderJwk.getX.toJSONString),
+    y = Some(holderJwk.getY.toJSONString),
+    d = Some(holderJwk.getD.toJSONString)
+  )
 }

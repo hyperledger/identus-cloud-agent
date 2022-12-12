@@ -1,6 +1,6 @@
 # Use Cases
 
-## Age Verification (Flow Diagram) - Login like use case
+## Age Verification (Flow Diagram) - Login use case
 
 ```mermaid
 sequenceDiagram

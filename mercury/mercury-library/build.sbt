@@ -28,7 +28,7 @@ lazy val V = new {
   val munitZio = "0.1.1"
 
   // https://mvnrepository.com/artifact/dev.zio/zio
-  val zio = "2.0.2"
+  val zio = "2.0.4"
   val zioLogging = "2.0.0"
   val zioJson = "0.3.0"
   val zioHttp = "2.0.0-RC11"
@@ -90,6 +90,14 @@ lazy val models = project
     // libraryDependencies += D.didScala.value
   )
 
+/* TODO move code from agentDidcommx to here
+models implementation for didcommx () */
+// lazy val modelsDidcommx = project
+//   .in(file("models-didcommx"))
+//   .settings(name := "mercury-models-didcommx")
+//   .settings(libraryDependencies += D.didcommx.value)
+//   .dependsOn(models)
+
 // #################
 // ### Protocols ###
 // #################
@@ -99,6 +107,7 @@ lazy val protocolConnection = project
   .settings(name := "mercury-protocol-connection")
   .settings(libraryDependencies += D.zio.value)
   .settings(libraryDependencies ++= Seq(D.circeCore.value, D.circeGeneric.value, D.circeParser.value))
+  .settings(libraryDependencies += D.munitZio.value)
   .dependsOn(models, protocolInvitation)
 
 lazy val protocolCoordinateMediation = project
@@ -188,8 +197,6 @@ lazy val resolver = project // maybe merge into models
       D.munit.value,
       D.munitZio.value,
       D.jwk.value,
-      "org.jetbrains.kotlin" % "kotlin-runtime" % "1.2.71",
-      "org.jetbrains.kotlin" % "kotlin-stdlib" % "1.7.10",
     ),
     testFrameworks += new TestFramework("munit.Framework")
   )
@@ -202,7 +209,6 @@ lazy val resolver = project // maybe merge into models
 lazy val agent = project // maybe merge into models
   .in(file("agent"))
   .settings(name := "mercury-agent-core")
-  .settings(libraryDependencies += "com.google.zxing" % "core" % "3.5.0")
   .settings(libraryDependencies ++= Seq(D.zioLog.value)) // , D.zioSLF4J.value))
   .dependsOn(
     models,
@@ -223,12 +229,13 @@ lazy val agentDidcommx = project
   .settings(name := "mercury-agent-didcommx")
   .settings(libraryDependencies += D.didcommx.value)
   .settings(libraryDependencies += D.munitZio.value)
-  .dependsOn(agent)
+  .dependsOn(agent) //modelsDidcommx
 
 /** Demos agents and services implementation with didcommx */
 lazy val agentCliDidcommx = project
   .in(file("agent-cli-didcommx"))
   .settings(name := "mercury-agent-cli-didcommx")
+  .settings(libraryDependencies += "com.google.zxing" % "core" % "3.5.0")
   .settings(libraryDependencies += D.zioHttp.value)
   .dependsOn(agentDidcommx)
 

@@ -5,14 +5,18 @@ import io.circe.*
 import io.circe.generic.auto.*
 import io.circe.parser.decode
 import io.circe.syntax.*
-import pdi.jwt.{Jwt, JwtCirce}
+import pdi.jwt.{Jwt, JwtCirce, JwtOptions}
+import zio._
 import zio.prelude.*
 
 import java.security.{KeyPairGenerator, PublicKey}
-import java.time.{Instant, ZonedDateTime}
+import java.time.temporal.TemporalAmount
+import java.time.{Clock, Instant, ZonedDateTime}
 import scala.util.{Failure, Success, Try}
 
 sealed trait VerifiablePresentationPayload
+
+case class Prover(did: DID, signer: Signer, publicKey: PublicKey)
 
 case class W3cVerifiablePresentationPayload(payload: W3cPresentationPayload, proof: Proof)
     extends Verifiable(proof),
@@ -171,7 +175,7 @@ object PresentationPayload {
             .downField("type")
             .as[IndexedSeq[String]]
             .orElse(c.downField("type").as[String].map(IndexedSeq(_)))
-          holder <- c.downField("issuer").as[String]
+          holder <- c.downField("holder").as[String]
           verifiableCredential <- c
             .downField("verifiableCredential")
             .as[Option[VerifiableCredentialPayload]]
@@ -285,13 +289,125 @@ object JwtPresentation {
 
   def encodeJwt(payload: JwtPresentationPayload, issuer: Issuer): JWT = issuer.signer.encode(payload.asJson)
 
+  def toEncodeW3C(payload: W3cPresentationPayload, issuer: Issuer): W3cVerifiablePresentationPayload = {
+    W3cVerifiablePresentationPayload(
+      payload = payload,
+      proof = Proof(
+        `type` = "JwtProof2020",
+        jwt = issuer.signer.encode(payload.asJson)
+      )
+    )
+  }
+
   def toEncodedJwt(payload: W3cPresentationPayload, issuer: Issuer): JWT =
     encodeJwt(payload.toJwtPresentationPayload, issuer)
+
+  def decodeJwt(jwt: JWT): Try[JwtPresentationPayload] = {
+    JwtCirce
+      .decodeRaw(jwt.value, JwtOptions(signature = false, expiration = false, notBefore = false))
+      .flatMap(decode[JwtPresentationPayload](_).toTry)
+  }
 
   def decodeJwt(jwt: JWT, publicKey: PublicKey): Try[JwtPresentationPayload] = {
     JwtCirce.decodeRaw(jwt.value, publicKey).flatMap(decode[JwtPresentationPayload](_).toTry)
   }
 
-  def validateEncodedJwt(jwt: JWT, publicKey: PublicKey): Boolean =
-    JwtCirce.isValid(jwt.value, publicKey)
+  def validateEncodedJwt(jwt: JWT, publicKey: PublicKey): Validation[String, Unit] =
+    JWTVerification.validateEncodedJwt(jwt, publicKey)
+
+  def validateEncodedJWT(
+      jwt: JWT
+  )(didResolver: DidResolver): IO[String, Validation[String, Unit]] = {
+    JWTVerification.validateEncodedJwt(jwt)(didResolver: DidResolver)(claim =>
+      Validation.fromEither(decode[JwtPresentationPayload](claim).left.map(_.toString))
+    )(_.iss)
+  }
+
+  def validateEncodedW3C(
+      jwt: JWT
+  )(didResolver: DidResolver): IO[String, Validation[String, Unit]] = {
+    JWTVerification.validateEncodedJwt(jwt)(didResolver: DidResolver)(claim =>
+      Validation.fromEither(decode[W3cPresentationPayload](claim).left.map(_.toString))
+    )(_.holder)
+  }
+
+  def validateEnclosedCredentials(
+      jwt: JWT
+  )(didResolver: DidResolver): IO[List[String], Validation[String, Unit]] = {
+    val validateJwtPresentation = Validation.fromTry(decodeJwt(jwt)).mapError(_.toString)
+
+    val credentialValidationZIO =
+      ValidationUtils.foreach(
+        validateJwtPresentation
+          .map(validJwtPresentation => validateCredentials(validJwtPresentation)(didResolver))
+      )(identity)
+
+    credentialValidationZIO.map(validCredentialValidations => {
+      for {
+        credentialValidations <- validCredentialValidations
+        _ <- Validation.validateAll(credentialValidations)
+        success <- Validation.unit
+      } yield success
+    })
+  }
+
+  def validateCredentials(
+      decodedJwtPresentation: JwtPresentationPayload
+  )(didResolver: DidResolver): ZIO[Any, List[String], IndexedSeq[Validation[String, Unit]]] = {
+    ZIO.validatePar(decodedJwtPresentation.vp.verifiableCredential) { a =>
+      JwtCredential.validateCredential(a)(didResolver)
+    }
+  }
+
+  def verifyDates(jwt: JWT, leeway: TemporalAmount)(implicit clock: Clock): Validation[String, Unit] = {
+    val now = clock.instant()
+
+    val decodeJWT =
+      Validation.fromTry(JwtCirce.decodeRaw(jwt.value, options = JwtOptions(signature = false))).mapError(_.getMessage)
+
+    def validateNbfNotAfterExp(maybeNbf: Option[Instant], maybeExp: Option[Instant]): Validation[String, Unit] = {
+      val maybeResult =
+        for {
+          nbf <- maybeNbf
+          exp <- maybeExp
+        } yield {
+          if (nbf.isAfter(exp))
+            Validation.fail(s"Credential cannot expire before being in effect. nbf=$nbf exp=$exp")
+          else Validation.unit
+        }
+      maybeResult.getOrElse(Validation.unit)
+    }
+
+    def validateNbf(maybeNbf: Option[Instant]): Validation[String, Unit] = {
+      maybeNbf
+        .map(nbf =>
+          if (now.isBefore(nbf.minus(leeway)))
+            Validation.fail(s"Credential is not yet in effect. now=$now nbf=$nbf leeway=$leeway")
+          else Validation.unit
+        )
+        .getOrElse(Validation.unit)
+    }
+
+    def validateExp(maybeExp: Option[Instant]): Validation[String, Unit] = {
+      maybeExp
+        .map(exp =>
+          if (now.isAfter(exp.plus(leeway)))
+            Validation.fail(s"Credential has expired. now=$now exp=$exp leeway=$leeway")
+          else Validation.unit
+        )
+        .getOrElse(Validation.unit)
+    }
+
+    for {
+      decodedJWT <- decodeJWT
+      jwtCredentialPayload <- Validation.fromEither(decode[JwtPresentationPayload](decodedJWT)).mapError(_.getMessage)
+      maybeNbf = jwtCredentialPayload.maybeNbf
+      maybeExp = jwtCredentialPayload.maybeExp
+      result <- Validation.validateWith(
+        validateNbfNotAfterExp(maybeNbf, maybeExp),
+        validateNbf(maybeNbf),
+        validateExp(maybeExp)
+      )((l, _, _) => l)
+    } yield result
+  }
 }

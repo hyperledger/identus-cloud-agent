@@ -29,11 +29,11 @@ final case class ProposeCredential(
   assert(`type` == ProposeCredential.`type`)
 
   def makeMessage: Message = Message(
-    piuri = this.`type`,
+    `type` = this.`type`,
     from = Some(this.from),
-    to = Some(this.to),
+    to = Seq(this.to),
     body = this.body.asJson.asObject.get, // TODO get
-    attachments = this.attachments
+    attachments = Some(this.attachments)
   )
 }
 
@@ -90,9 +90,12 @@ object ProposeCredential {
       id = message.id,
       `type` = message.piuri,
       body = body,
-      attachments = message.attachments,
+      attachments = message.attachments.getOrElse(Seq.empty),
       from = message.from.get, // TODO get
-      to = message.to.get, // TODO get
+      to = {
+        assert(message.to.length == 1, "The recipient is ambiguous. Need to have only 1 recipient") // TODO return error
+        message.to.head
+      },
     )
   }
 

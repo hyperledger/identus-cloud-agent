@@ -1,3 +1,59 @@
+# [prism-agent-v0.17.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.16.1...prism-agent-v0.17.0) (2022-12-12)
+
+
+### Features
+
+* **prism-agent:** Integrate Verification Flow - ATL-2117 ([#147](https://github.com/input-output-hk/atala-prism-building-blocks/issues/147)) ([cabda08](https://github.com/input-output-hk/atala-prism-building-blocks/commit/cabda08f215d911772440853ec153a22ac6adaad))
+
+# [prism-agent-v0.16.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.16.0...prism-agent-v0.16.1) (2022-12-12)
+
+
+### Bug Fixes
+
+* **prism-agent:** didcomm endpoint now exposed in docker file and with correct path ([#241](https://github.com/input-output-hk/atala-prism-building-blocks/issues/241)) ([405f367](https://github.com/input-output-hk/atala-prism-building-blocks/commit/405f3672d48dd47559f10f89db5cd7051a0c9eeb))
+
+# [prism-agent-v0.16.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.15.0...prism-agent-v0.16.0) (2022-12-12)
+
+
+### Features
+
+* **prism-agent:** upgrade castor version with DID serviceEndpoint ([#229](https://github.com/input-output-hk/atala-prism-building-blocks/issues/229)) ([0ba3b89](https://github.com/input-output-hk/atala-prism-building-blocks/commit/0ba3b892b25e66c081c931b99c43e60d3c51af2a))
+
+# [prism-agent-v0.15.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.14.0...prism-agent-v0.15.0) (2022-12-09)
+
+
+### Features
+
+* **prism-agent:** bump dependencies version ([#228](https://github.com/input-output-hk/atala-prism-building-blocks/issues/228)) ([8a6bad5](https://github.com/input-output-hk/atala-prism-building-blocks/commit/8a6bad539334775d25ef9b5cf0eb042832ecd272))
+
+# [prism-agent-v0.14.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.13.0...prism-agent-v0.14.0) (2022-12-07)
+
+
+### Features
+
+* **infra:** switch to single instance of postgres for running locally ([#203](https://github.com/input-output-hk/atala-prism-building-blocks/issues/203)) ([32e33f1](https://github.com/input-output-hk/atala-prism-building-blocks/commit/32e33f109f834386cfda5168a00e8407ca136e2e))
+
+# [prism-agent-v0.13.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.12.0...prism-agent-v0.13.0) (2022-12-07)
+
+
+### Features
+
+* **prism-agent:** remove unused / deprecated DID endpoints ([#213](https://github.com/input-output-hk/atala-prism-building-blocks/issues/213)) ([0308b4f](https://github.com/input-output-hk/atala-prism-building-blocks/commit/0308b4fdc6da78643354391234a6139d79cd8e90))
+
+# [prism-agent-v0.12.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.11.0...prism-agent-v0.12.0) (2022-12-06)
+
+
+### Features
+
+* **prism-agent:** implement get DIDs endpoint ([#198](https://github.com/input-output-hk/atala-prism-building-blocks/issues/198)) ([d5e08ab](https://github.com/input-output-hk/atala-prism-building-blocks/commit/d5e08ab16aa629805264a726c2cb9a5803226703))
+
+# [prism-agent-v0.11.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.10.0...prism-agent-v0.11.0) (2022-12-06)
+
+
+### Features
+
+* **prism-agent:** verification policies pagination. ATL-1334 ([#205](https://github.com/input-output-hk/atala-prism-building-blocks/issues/205)) ([403eb38](https://github.com/input-output-hk/atala-prism-building-blocks/commit/403eb3821daab718d97f0760ba2d71e065258665))
+
 # [prism-agent-v0.10.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.9.0...prism-agent-v0.10.0) (2022-12-02)
 
 

@@ -1,3 +1,24 @@
+# [mercury-v0.11.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.10.1...mercury-v0.11.0) (2022-12-09)
+
+
+### Features
+
+* **mercury:** Message field 'to' must be an Array ([#215](https://github.com/input-output-hk/atala-prism-building-blocks/issues/215)) ([d4e2c57](https://github.com/input-output-hk/atala-prism-building-blocks/commit/d4e2c57822c081f572fcde95fd1f2b7e2af7a946))
+
+# [mercury-v0.10.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.10.0...mercury-v0.10.1) (2022-12-09)
+
+
+### Bug Fixes
+
+* **mercury:** simple commit to increase the version of mercury library ([5ffb0cc](https://github.com/input-output-hk/atala-prism-building-blocks/commit/5ffb0cc9e7ca8e63feacc6e915ab026681a30f24))
+
+# [mercury-v0.10.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.9.0...mercury-v0.10.0) (2022-12-06)
+
+
+### Features
+
+* **mercury:** clean unwanted dependencies ([#206](https://github.com/input-output-hk/atala-prism-building-blocks/issues/206)) ([1749e9d](https://github.com/input-output-hk/atala-prism-building-blocks/commit/1749e9d3aa54a912a997fd4b5bcc131cc3d23bce))
+
 # [mercury-v0.9.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.8.0...mercury-v0.9.0) (2022-12-05)
 
 
