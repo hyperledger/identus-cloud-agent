@@ -312,51 +312,51 @@ object JwtPresentation {
     JwtCirce.decodeRaw(jwt.value, publicKey).flatMap(decode[JwtPresentationPayload](_).toTry)
   }
 
-  def validateEncodedJwt(jwt: JWT, publicKey: PublicKey): Boolean =
+  def validateEncodedJwt(jwt: JWT, publicKey: PublicKey): Validation[String, Unit] =
     JWTVerification.validateEncodedJwt(jwt, publicKey)
 
   def validateEncodedJWT(
       jwt: JWT
-  )(didResolver: DidResolver): IO[String, Boolean] = {
+  )(didResolver: DidResolver): IO[String, Validation[String, Unit]] = {
     JWTVerification.validateEncodedJwt(jwt)(didResolver: DidResolver)(claim =>
-      ZIO.fromEither(decode[JwtPresentationPayload](claim).left.map(_.toString))
+      Validation.fromEither(decode[JwtPresentationPayload](claim).left.map(_.toString))
     )(_.iss)
   }
 
   def validateEncodedW3C(
       jwt: JWT
-  )(didResolver: DidResolver): IO[String, Boolean] = {
+  )(didResolver: DidResolver): IO[String, Validation[String, Unit]] = {
     JWTVerification.validateEncodedJwt(jwt)(didResolver: DidResolver)(claim =>
-      ZIO.fromEither(decode[W3cPresentationPayload](claim).left.map(_.toString))
+      Validation.fromEither(decode[W3cPresentationPayload](claim).left.map(_.toString))
     )(_.holder)
   }
 
   def validateEnclosedCredentials(
       jwt: JWT
-  )(didResolver: DidResolver): IO[List[String], Boolean] = {
-    def validateCredential(a: VerifiableCredentialPayload): IO[String, Boolean] = {
-      a match {
-        case (w3cVerifiableCredentialPayload: W3cVerifiableCredentialPayload) =>
-          JwtCredential.validateW3C(w3cVerifiableCredentialPayload)(didResolver)
-        case (jwtVerifiableCredentialPayload: JwtVerifiableCredentialPayload) =>
-          JwtCredential.validateEncodedJWT(jwtVerifiableCredentialPayload.jwt)(didResolver)
-      }
-    }
-    def validateCredentials(
-        decodedJwtPresentation: JwtPresentationPayload
-    ): ZIO[Any, List[String], IndexedSeq[Boolean]] = {
-      ZIO.validatePar(decodedJwtPresentation.vp.verifiableCredential) { a =>
-        validateCredential(a)
-      }
-    }
+  )(didResolver: DidResolver): IO[List[String], Validation[String, Unit]] = {
+    val validateJwtPresentation = Validation.fromTry(decodeJwt(jwt)).mapError(_.toString)
 
-    val validatedCredentials =
+    val credentialValidationZIO =
+      ValidationUtils.foreach(
+        validateJwtPresentation
+          .map(validJwtPresentation => validateCredentials(validJwtPresentation)(didResolver))
+      )(identity)
+
+    credentialValidationZIO.map(validCredentialValidations => {
       for {
-        decodedJwtPresentation <- ZIO.fromTry(decodeJwt(jwt)).mapError(error => error.toString :: Nil)
-        validatedCredentials <- validateCredentials(decodedJwtPresentation)
-      } yield validatedCredentials.forall(identity)
+        credentialValidations <- validCredentialValidations
+        _ <- Validation.validateAll(credentialValidations)
+        success <- Validation.unit
+      } yield success
+    })
+  }
 
-    validatedCredentials
+  def validateCredentials(
+      decodedJwtPresentation: JwtPresentationPayload
+  )(didResolver: DidResolver): ZIO[Any, List[String], IndexedSeq[Validation[String, Unit]]] = {
+    ZIO.validatePar(decodedJwtPresentation.vp.verifiableCredential) { a =>
+      JwtCredential.validateCredential(a)(didResolver)
+    }
   }
 
   def verifyDates(jwt: JWT, leeway: TemporalAmount)(implicit clock: Clock): Validation[String, Unit] = {

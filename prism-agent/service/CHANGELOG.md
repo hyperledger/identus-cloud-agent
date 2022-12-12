@@ -1,3 +1,10 @@
+# [prism-agent-v0.16.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.16.0...prism-agent-v0.16.1) (2022-12-12)
+
+
+### Bug Fixes
+
+* **prism-agent:** didcomm endpoint now exposed in docker file and with correct path ([#241](https://github.com/input-output-hk/atala-prism-building-blocks/issues/241)) ([405f367](https://github.com/input-output-hk/atala-prism-building-blocks/commit/405f3672d48dd47559f10f89db5cd7051a0c9eeb))
+
 # [prism-agent-v0.16.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.15.0...prism-agent-v0.16.0) (2022-12-12)
 
 

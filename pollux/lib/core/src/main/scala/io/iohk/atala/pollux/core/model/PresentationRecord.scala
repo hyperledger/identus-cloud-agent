@@ -57,8 +57,8 @@ object PresentationRecord {
     // Prover has "accepted" a Presentation request received from a Verifier (Prover DB)
     case PresentationPending extends ProtocolState
     // Prover has generated (signed) the VC  and is now ready to send it to the Verifier (Prover DB)
-    
-    //Prover has sent the Presentation (Prover DB)
+
+    // Prover has sent the Presentation (Prover DB)
     case PresentationSent extends ProtocolState
     // Verifier has received the presentation (Verifier DB)
     case PresentationReceived extends ProtocolState

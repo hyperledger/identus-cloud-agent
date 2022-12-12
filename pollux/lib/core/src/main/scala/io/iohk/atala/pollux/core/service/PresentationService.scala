@@ -290,7 +290,7 @@ private class PresentationServiceImpl(
       presentationRequest <- ZIO
         .fromOption(record.presentationData)
         .mapError(_ => InvalidFlowStateError(s"No request found for this record: $recordId"))
-        
+
       recordUpdated <- markPresentationAccepted(record.id)
 
     } yield recordUpdated
@@ -376,13 +376,13 @@ private class PresentationServiceImpl(
       PresentationRecord.ProtocolState.PresentationVerified
     )
 
-   override def markPresentationAccepted(recordId: UUID): IO[PresentationError, Option[PresentationRecord]] =
+
+  override def markPresentationAccepted(recordId: UUID): IO[PresentationError, Option[PresentationRecord]] =
     updatePresentationRecordProtocolState(
       recordId,
       PresentationRecord.ProtocolState.PresentationVerified,
       PresentationRecord.ProtocolState.PresentationAccepted
     )
-
 
   override def markPresentationSent(recordId: UUID): IO[PresentationError, Option[PresentationRecord]] =
     updatePresentationRecordProtocolState(
