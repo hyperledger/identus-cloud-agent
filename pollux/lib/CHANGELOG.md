@@ -1,3 +1,10 @@
+# [pollux-v0.9.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.8.0...pollux-v0.9.0) (2022-12-12)
+
+
+### Features
+
+* **pollux:** Added new state ([#234](https://github.com/input-output-hk/atala-prism-building-blocks/issues/234)) ([b704abc](https://github.com/input-output-hk/atala-prism-building-blocks/commit/b704abca020fc0d6f03f625aead2d206dba1818c))
+
 # [pollux-v0.8.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.7.0...pollux-v0.8.0) (2022-12-09)
 
 
