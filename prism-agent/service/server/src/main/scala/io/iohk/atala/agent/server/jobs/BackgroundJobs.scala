@@ -269,7 +269,7 @@ object BackgroundJobs {
           ZIO.logDebug("PresentationRecord: PresentationReceived") *> ZIO.unit
           for {
             _ <- ZIO.log(s"PresentationRecord: PresentationPending (Send Massage)")
-            //TODO Verify  https://input-output.atlassian.net/browse/ATL-2702
+            // TODO Verify  https://input-output.atlassian.net/browse/ATL-2702
             service <- ZIO.service[PresentationService]
             _ <- service.markPresentationVerified(id).catchAll { case ex: PresentationError =>
               ZIO.logError(s"Fail to mark the PresentationVerified '$id' as Prover: $ex") *>
