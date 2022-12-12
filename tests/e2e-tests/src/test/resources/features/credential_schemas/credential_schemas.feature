@@ -2,38 +2,34 @@ Feature: Credential schemas
 
   Scenario: Successful schema creation
     When Acme creates a new credential schema
-    Then New credential schema is available
+    Then He sees new credential schema is available
 
-  Scenario: Multiple schema creation
-    When Acme creates 6 schemas
-    Then All 6 schemas can be accessed with pagination 2
+  Scenario Outline: Multiple schema creation
+    When Acme creates <schemas> new schemas
+    Then He can access all of them one by one
+    Examples:
+      | schemas |
+      | 4       |
 
-  Scenario: Schema creation failure with empty id
-    When Acme creates a new schema with empty id
-    Then New schema creation is failed with empty id error
+  Scenario: Schema creation with identical id should fail
+    When Acme creates a new schema with some id
+    And Acme tries to create a new schema with identical id
+    Then He sees the request failure with identical id error
 
-#  # Not working for now (can be successfully created)
-#  Scenario: Schema creation with 2 same IDs fails
-#      When Acme creates a new schema with fixed id
-#      And Acme tries to create a new schema with same id
-#      Then Id duplicate error is thrown
+  Scenario Outline: Wrong specified fields for schema generation requests should fail
+    When Acme tries to create a new schema with <value> in field <field>
+    Then He sees the request with status <status>
+    Examples:
+      | field      | value | status |
+      | id         | -1    | 400    |
+      | attributes | null  | 400    |
 
-#  # Not working for now (can be created with "" list)
-#  Scenario: Schema creation failure with zero attributes
-#      When Acme creates a new schema with zero attributes
-#      Then New schema creation is failed with zero attributes error
-
-#  # Not working for now (returns empty result with success)
-#  Scenario: Get schemas with negative limit
-#    When Acme tries to get schemas with negative limit
-#    Then Negative limit error is thrown in response
-
-#  # Not working for now (returns empty result with success)
-#  Scenario: Get schemas with negative offset
-#    When Acme tries to get schemas with negative offset
-#    Then Wrong offset error is thrown in response
-#
-#  # Not working for now (returns empty result with success)
-#  Scenario: Get schemas with offset greater than amount of schemas
-#    When Acme tries to get schemas with offset greater than amount of schemas
-#    Then Wrong offset error is thrown in response
+  Scenario Outline: Wrong specified filter parameters for schema generation requests should fail
+    When Acme tries to get schemas with <value> in parameter <parameter>
+    Then He sees the request with status <status>
+    Examples:
+      | parameter | value   | status |
+      | limit     | 1       | 200    |
+      | limit     | -1      | 400    |
+      | offset    | -1      | 400    |
+      | offset    | 1000000 | 400    |

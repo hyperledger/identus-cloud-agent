@@ -8,32 +8,31 @@ import net.serenitybdd.screenplay.rest.interactions.Post
 import net.serenitybdd.screenplay.rest.questions.ResponseConsequence
 import api_models.Connection
 import api_models.Credential
-import common.Agents.Acme
-import common.Agents.Bob
 import common.Utils.lastResponseList
 import common.Utils.lastResponseObject
 import common.Utils.wait
 import features.connection.ConnectionSteps
+import net.serenitybdd.screenplay.Actor
 
 class IssueCredentialsSteps {
 
-    @Given("Acme and Bob have an existing connection")
-    fun acmeAndBobHaveAnExistingConnection() {
+    @Given("{actor} and {actor} have an existing connection")
+    fun acmeAndBobHaveAnExistingConnection(issuer: Actor, holder: Actor) {
         val connectionSteps = ConnectionSteps()
-        connectionSteps.inviterGeneratesAConnectionInvitation()
-        connectionSteps.inviteeReceivesTheConnectionInvitation()
-        connectionSteps.inviteeSendsAConnectionRequestToInviter()
-        connectionSteps.inviterReceivesTheConnectionRequest()
-        connectionSteps.inviterSendsAConnectionResponseToInvitee()
-        connectionSteps.inviteeReceivesTheConnectionResponse()
-        connectionSteps.inviterAndInviteeHaveAConnection()
+        connectionSteps.inviterGeneratesAConnectionInvitation(issuer)
+        connectionSteps.inviteeReceivesTheConnectionInvitation(holder, issuer)
+        connectionSteps.inviteeSendsAConnectionRequestToInviter(holder, issuer)
+        connectionSteps.inviterReceivesTheConnectionRequest(issuer)
+        connectionSteps.inviterSendsAConnectionResponseToInvitee(issuer, holder)
+        connectionSteps.inviteeReceivesTheConnectionResponse(holder)
+        connectionSteps.inviterAndInviteeHaveAConnection(issuer, holder)
     }
 
-    @Given("Acme offers a credential")
-    fun acmeOffersACredential() {
+    @Given("{actor} offers a credential")
+    fun acmeOffersACredential(issuer: Actor) {
         val newCredential = Credential(
             schemaId = "schema:1234",
-            subjectId = Acme.recall<Connection>("connection").theirDid,
+            subjectId = issuer.recall<Connection>("connection").theirDid,
             validityPeriod = 3600,
             automaticIssuance = false,
             awaitConfirmation = false,
@@ -43,14 +42,14 @@ class IssueCredentialsSteps {
             )
         )
 
-        Acme.attemptsTo(
+        issuer.attemptsTo(
             Post.to("/issue-credentials/credential-offers")
                 .with {
                     it.header("Content-Type", "application/json")
                     it.body(newCredential)
                 }
         )
-        Acme.should(
+        issuer.should(
             ResponseConsequence.seeThatResponse("The issue credential offer created") {
                 it.statusCode(201)
             }
@@ -59,14 +58,14 @@ class IssueCredentialsSteps {
         // TODO: add check that newCredential object corresponds to the output of restapi call here
     }
 
-    @When("Bob requests the credential")
-    fun bobRequestsTheCredential() {
+    @When("{actor} requests the credential")
+    fun bobRequestsTheCredential(holder: Actor) {
         wait(
             {
-                Bob.attemptsTo(
+                holder.attemptsTo(
                     Get.resource("/issue-credentials/records")
                 )
-                Bob.should(
+                holder.should(
                     ResponseConsequence.seeThatResponse("Credential records") {
                         it.statusCode(200)
                     }
@@ -78,26 +77,26 @@ class IssueCredentialsSteps {
 
         val recordId = lastResponseList("items", Credential::class)
             .findLast { it.protocolState == "OfferReceived" }!!.recordId
-        Bob.remember("recordId", recordId)
+        holder.remember("recordId", recordId)
 
-        Bob.attemptsTo(
+        holder.attemptsTo(
             Post.to("/issue-credentials/records/${recordId}/accept-offer")
         )
-        Bob.should(
+        holder.should(
             ResponseConsequence.seeThatResponse("Accept offer") {
                 it.statusCode(200)
             }
         )
     }
 
-    @When("Acme issues the credential")
-    fun acmeIssuesTheCredential() {
+    @When("{actor} issues the credential")
+    fun acmeIssuesTheCredential(issuer: Actor) {
         wait(
             {
-                Acme.attemptsTo(
+                issuer.attemptsTo(
                     Get.resource("/issue-credentials/records")
                 )
-                Acme.should(
+                issuer.should(
                     ResponseConsequence.seeThatResponse("Credential records") {
                         it.statusCode(200)
                     }
@@ -109,10 +108,10 @@ class IssueCredentialsSteps {
         )
         val recordId = lastResponseList("items", Credential::class)
             .findLast { it.protocolState == "RequestReceived" }!!.recordId
-        Acme.attemptsTo(
+        issuer.attemptsTo(
             Post.to("/issue-credentials/records/${recordId}/issue-credential")
         )
-        Acme.should(
+        issuer.should(
             ResponseConsequence.seeThatResponse("Issue credential") {
                 it.statusCode(200)
             }
@@ -120,10 +119,10 @@ class IssueCredentialsSteps {
 
         wait(
             {
-                Acme.attemptsTo(
+                issuer.attemptsTo(
                     Get.resource("/issue-credentials/records/${recordId}")
                 )
-                Acme.should(
+                issuer.should(
                     ResponseConsequence.seeThatResponse("Credential records") {
                         it.statusCode(200)
                     }
@@ -134,14 +133,14 @@ class IssueCredentialsSteps {
         )
     }
 
-    @Then("Bob has the credential issued")
-    fun bobHasTheCredentialIssued() {
+    @Then("{actor} has the credential issued")
+    fun bobHasTheCredentialIssued(holder: Actor) {
         wait(
             {
-                Bob.attemptsTo(
-                    Get.resource("/issue-credentials/records/${Bob.recall<String>("recordId")}")
+                holder.attemptsTo(
+                    Get.resource("/issue-credentials/records/${holder.recall<String>("recordId")}")
                 )
-                Bob.should(
+                holder.should(
                     ResponseConsequence.seeThatResponse("Credential records") {
                         it.statusCode(200)
                     }

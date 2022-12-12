@@ -1,11 +1,15 @@
 package common
 
 import api_models.CredentialSchema
-import java.util.*
+import java.util.UUID
 
 object TestConstants {
+    val CREDENTIAL_SCHEMAS = CredentialSchemas
+    val RANDOM_CONSTAND_UUID = UUID.randomUUID().toString()
+}
 
-    val CREDENTIAL_SCHEMA = CredentialSchema(
+object CredentialSchemas {
+    val STUDENT_SCHEMA = CredentialSchema(
         author = "University",
         name = "Student schema",
         description = "Simple student credentials schema",
@@ -13,6 +17,4 @@ object TestConstants {
         tags = listOf("school", "students"),
         version = "1.0"
     )
-
-    val RANDOM_UUID = UUID.randomUUID().toString()
 }
