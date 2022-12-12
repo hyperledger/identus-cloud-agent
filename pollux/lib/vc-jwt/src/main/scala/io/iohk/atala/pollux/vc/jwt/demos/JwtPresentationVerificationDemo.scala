@@ -218,7 +218,7 @@ object JwtPresentationVerificationDemo extends ZIOAppDefault {
             id = did,
             alsoKnowAs = Vector.empty,
             controller = Vector.empty,
-            verificationMethod = Vector(verificationMethod),
+            assertionMethod = Vector(verificationMethod),
             service = Vector.empty
           )
       }.toMap

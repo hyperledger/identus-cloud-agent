@@ -94,13 +94,14 @@ object JWTVerification {
       )
   }
 
+  // TODO: Implement other verification relationship for JWT verification
   private def extractVerificationMethods(
       didDocument: DIDDocument,
       jwtAlgorithm: JwtAlgorithm
   ): Validation[String, IndexedSeq[VerificationMethod]] = {
     Validation
       .fromPredicateWith("No PublicKey to validate against found")(
-        didDocument.verificationMethod.filter(verification => verification.`type` == jwtAlgorithm.name)
+        didDocument.assertionMethod.find(verification => verification.id == keyId)
       )(_.nonEmpty)
   }
 
