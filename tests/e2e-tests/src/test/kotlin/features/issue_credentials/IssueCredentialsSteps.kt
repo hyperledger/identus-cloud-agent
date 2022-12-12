@@ -10,7 +10,8 @@ import api_models.Connection
 import api_models.Credential
 import common.Agents.Acme
 import common.Agents.Bob
-import common.Utils.lastResponse
+import common.Utils.lastResponseList
+import common.Utils.lastResponseObject
 import common.Utils.wait
 import features.connection.ConnectionSteps
 
@@ -70,12 +71,12 @@ class IssueCredentialsSteps {
                         it.statusCode(200)
                     }
                 )
-                lastResponse().getList("items", Credential::class.java).findLast { it.protocolState == "OfferReceived" } != null
+                lastResponseList("items", Credential::class).findLast { it.protocolState == "OfferReceived" } != null
             },
             "Holder was unable to receive the credential offer from Issuer! Protocol state did not achieve OfferReceived state."
         )
 
-        val recordId = lastResponse().getList("items", Credential::class.java)
+        val recordId = lastResponseList("items", Credential::class)
             .findLast { it.protocolState == "OfferReceived" }!!.recordId
         Bob.remember("recordId", recordId)
 
@@ -101,12 +102,12 @@ class IssueCredentialsSteps {
                         it.statusCode(200)
                     }
                 )
-                lastResponse().getList("items", Credential::class.java)
+                lastResponseList("items", Credential::class)
                     .findLast { it.protocolState == "RequestReceived" } != null
             },
             "Issuer was unable to receive the credential request from Holder! Protocol state did not achieve RequestReceived state."
         )
-        val recordId = lastResponse().getList("items", Credential::class.java)
+        val recordId = lastResponseList("items", Credential::class)
             .findLast { it.protocolState == "RequestReceived" }!!.recordId
         Acme.attemptsTo(
             Post.to("/issue-credentials/records/${recordId}/issue-credential")
@@ -127,7 +128,7 @@ class IssueCredentialsSteps {
                         it.statusCode(200)
                     }
                 )
-                lastResponse().getObject("", Credential::class.java).protocolState == "CredentialSent"
+                lastResponseObject("", Credential::class).protocolState == "CredentialSent"
             },
             "Issuer was unable to issue the credential! Protocol state did not achieve CredentialSent state."
         )
@@ -145,11 +146,11 @@ class IssueCredentialsSteps {
                         it.statusCode(200)
                     }
                 )
-                lastResponse().getObject("", Credential::class.java).protocolState == "CredentialReceived"
+                lastResponseObject("", Credential::class).protocolState == "CredentialReceived"
             },
             "Holder was unable to receive the credential from Issuer! Protocol state did not achieve CredentialReceived state."
         )
-        val achievedCredential = lastResponse().getObject("", Credential::class.java)
+        val achievedCredential = lastResponseObject("", Credential::class)
         println(achievedCredential)
     }
 }
