@@ -4,6 +4,7 @@ import api_models.Connection
 import api_models.Invitation
 import common.Agents.Acme
 import common.Agents.Bob
+import common.Utils.attachAuthHeaderIfRequired
 import common.Utils.lastResponse
 import common.Utils.wait
 import io.cucumber.java.en.Then
@@ -26,6 +27,7 @@ class ConnectionSteps {
                 .with {
                     it.header("Content-Type", "application/json")
                     it.body("""{"label": "$connectionLabel"}""")
+                    attachAuthHeaderIfRequired(it)
                 }
         )
         Acme.should(
@@ -77,6 +79,7 @@ class ConnectionSteps {
                 .with {
                     it.header("Content-Type", "application/json")
                     it.body("""{"invitation": "${Bob.recall<String>("invitationUrl")}"}""")
+                    attachAuthHeaderIfRequired(it)
                 }
         )
         val acmeInvitation = Acme.recall<Invitation>("invitation")
@@ -102,7 +105,7 @@ class ConnectionSteps {
         wait(
             {
                 Acme.attemptsTo(
-                    Get.resource("/connections/${Acme.recall<String>("connectionId")}"),
+                    Get.resource("/connections/${Acme.recall<String>("connectionId")}").with { attachAuthHeaderIfRequired(it) }
                 )
                 Acme.should(
                     ResponseConsequence.seeThatResponse("Get connection ${Acme.recall<String>("connectionId")}") {
@@ -123,7 +126,7 @@ class ConnectionSteps {
         wait(
             {
                 Acme.attemptsTo(
-                    Get.resource("/connections/${Acme.recall<String>("connectionId")}"),
+                    Get.resource("/connections/${Acme.recall<String>("connectionId")}").with { attachAuthHeaderIfRequired(it) },
                 )
                 Acme.should(
                     ResponseConsequence.seeThatResponse("Get connection ${Acme.recall<String>("connectionId")}") {
@@ -143,7 +146,7 @@ class ConnectionSteps {
         wait(
             {
                 Bob.attemptsTo(
-                    Get.resource("/connections/${Bob.recall<String>("connectionId")}")
+                    Get.resource("/connections/${Bob.recall<String>("connectionId")}").with { attachAuthHeaderIfRequired(it) }
                 )
                 Bob.should(
                     ResponseConsequence.seeThatResponse("Get connection ${Bob.recall<String>("connectionId")}") {
@@ -160,7 +163,7 @@ class ConnectionSteps {
     fun inviterAndInviteeHaveAConnection() {
         // Connection established. Both parties exchanged their DIDs with each other
         Acme.attemptsTo(
-            Get.resource("/connections/${Acme.recall<String>("connectionId")}"),
+            Get.resource("/connections/${Acme.recall<String>("connectionId")}").with { attachAuthHeaderIfRequired(it) },
         )
         Acme.should(
             ResponseConsequence.seeThatResponse("Get connection ${Acme.recall<String>("connectionId")}") {
@@ -170,7 +173,7 @@ class ConnectionSteps {
         Acme.remember("connection", lastResponse().getObject("", Connection::class.java))
 
         Bob.attemptsTo(
-            Get.resource("/connections/${Bob.recall<String>("connectionId")}")
+            Get.resource("/connections/${Bob.recall<String>("connectionId")}").with { attachAuthHeaderIfRequired(it) }
         )
         Bob.should(
             ResponseConsequence.seeThatResponse("Get connection ${Bob.recall<String>("connectionId")}") {

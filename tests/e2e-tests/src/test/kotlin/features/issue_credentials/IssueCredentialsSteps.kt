@@ -10,6 +10,8 @@ import api_models.Connection
 import api_models.Credential
 import common.Agents.Acme
 import common.Agents.Bob
+import common.Utils
+import common.Utils.attachAuthHeaderIfRequired
 import common.Utils.lastResponse
 import common.Utils.wait
 import features.connection.ConnectionSteps
@@ -47,6 +49,7 @@ class IssueCredentialsSteps {
                 .with {
                     it.header("Content-Type", "application/json")
                     it.body(newCredential)
+                    attachAuthHeaderIfRequired(it)
                 }
         )
         Acme.should(
@@ -63,7 +66,7 @@ class IssueCredentialsSteps {
         wait(
             {
                 Bob.attemptsTo(
-                    Get.resource("/issue-credentials/records")
+                    Get.resource("/issue-credentials/records").with { attachAuthHeaderIfRequired(it) }
                 )
                 Bob.should(
                     ResponseConsequence.seeThatResponse("Credential records") {
@@ -80,7 +83,7 @@ class IssueCredentialsSteps {
         Bob.remember("recordId", recordId)
 
         Bob.attemptsTo(
-            Post.to("/issue-credentials/records/${recordId}/accept-offer")
+            Post.to("/issue-credentials/records/${recordId}/accept-offer").with { attachAuthHeaderIfRequired(it) }
         )
         Bob.should(
             ResponseConsequence.seeThatResponse("Accept offer") {
@@ -94,7 +97,7 @@ class IssueCredentialsSteps {
         wait(
             {
                 Acme.attemptsTo(
-                    Get.resource("/issue-credentials/records")
+                    Get.resource("/issue-credentials/records").with { attachAuthHeaderIfRequired(it) }
                 )
                 Acme.should(
                     ResponseConsequence.seeThatResponse("Credential records") {
@@ -109,7 +112,7 @@ class IssueCredentialsSteps {
         val recordId = lastResponse().getList("items", Credential::class.java)
             .findLast { it.protocolState == "RequestReceived" }!!.recordId
         Acme.attemptsTo(
-            Post.to("/issue-credentials/records/${recordId}/issue-credential")
+            Post.to("/issue-credentials/records/${recordId}/issue-credential").with { attachAuthHeaderIfRequired(it) }
         )
         Acme.should(
             ResponseConsequence.seeThatResponse("Issue credential") {
@@ -120,7 +123,7 @@ class IssueCredentialsSteps {
         wait(
             {
                 Acme.attemptsTo(
-                    Get.resource("/issue-credentials/records/${recordId}")
+                    Get.resource("/issue-credentials/records/${recordId}").with { attachAuthHeaderIfRequired(it) }
                 )
                 Acme.should(
                     ResponseConsequence.seeThatResponse("Credential records") {
@@ -138,7 +141,7 @@ class IssueCredentialsSteps {
         wait(
             {
                 Bob.attemptsTo(
-                    Get.resource("/issue-credentials/records/${Bob.recall<String>("recordId")}")
+                    Get.resource("/issue-credentials/records/${Bob.recall<String>("recordId")}").with { attachAuthHeaderIfRequired(it) }
                 )
                 Bob.should(
                     ResponseConsequence.seeThatResponse("Credential records") {

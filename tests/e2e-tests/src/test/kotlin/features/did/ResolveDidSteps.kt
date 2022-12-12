@@ -5,13 +5,14 @@ import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import net.serenitybdd.screenplay.rest.interactions.Get
 import net.serenitybdd.screenplay.rest.questions.ResponseConsequence
+import common.Utils.attachAuthHeaderIfRequired
 
 class ResolveDidSteps {
 
     @When("I resolve existing DID by DID reference")
     fun iResolveExistingDIDByDIDReference() {
         Acme.attemptsTo(
-            Get.resource("/connections")
+            Get.resource("/connections").with { attachAuthHeaderIfRequired(it) }
         )
     }
 
