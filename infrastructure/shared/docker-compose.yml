@@ -33,7 +33,8 @@ services:
     ports:
       - "${PGADMIN_PORT:-5050}:80"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     profiles:
       - debug
 
@@ -42,6 +43,9 @@ services:
   ##########################
   mediator:
     image: ghcr.io/input-output-hk/mercury-mediator:${MERCURY_MEDIATOR_VERSION}
+    depends_on:
+      db:
+        condition: service_healthy
 
   iris:
     image: ghcr.io/input-output-hk/iris-service:${IRIS_SERVICE_VERSION}
@@ -50,6 +54,9 @@ services:
       IRIS_DB_PORT: 5432
       IRIS_DB_NAME: iris
       IRIS_DB_USER: postgres
+    depends_on:
+      db:
+        condition: service_healthy
 
   prism-agent:
     image: ghcr.io/input-output-hk/prism-agent:${PRISM_AGENT_VERSION}
@@ -71,7 +78,7 @@ services:
       CONNECT_DB_NAME: connect
       CONNECT_DB_USER: postgres
       CONNECT_DB_PASSWORD: postgres
-      DIDCOMM_SERVICE_URL: http://host.docker.internal:${PORT}/didcomm/
+      DIDCOMM_SERVICE_URL: http://host.docker.internal:${PORT}/didcomm
     depends_on:
       db:
         condition: service_healthy
