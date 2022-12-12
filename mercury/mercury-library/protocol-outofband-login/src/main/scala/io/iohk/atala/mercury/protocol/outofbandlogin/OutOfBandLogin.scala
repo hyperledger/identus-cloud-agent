@@ -15,7 +15,7 @@ final case class OutOfBandLoginInvitation(
 ) {
   assert(`type` == OutOfBandLoginInvitation.piuri)
 
-  def makeMsg: Message = Message(piuri = `type`, id = id, from = Some(from), to = Seq.empty)
+  def makeMsg: Message = Message(`type` = `type`, id = id, from = Some(from), to = Seq.empty)
 
   def reply(replier: DidId) = OutOfBandloginReply(
     from = replier,
@@ -43,7 +43,7 @@ final case class OutOfBandloginReply(
 ) {
   assert(`type` == OutOfBandloginReply.piuri)
 
-  def makeMsg: Message = Message(piuri = `type`, id = id, from = Some(from), to = Seq(to), thid = Some(thid))
+  def makeMsg: Message = Message(`type` = `type`, id = id, from = Some(from), to = Seq(to), thid = Some(thid))
 }
 
 object OutOfBandloginReply {

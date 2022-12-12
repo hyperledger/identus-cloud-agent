@@ -42,7 +42,7 @@ final case class ForwardMessage(
       to = Seq(to),
       body = JsonObject(("next", Json.fromString(body.next.value))),
       id = id,
-      piuri = `type`,
+      `type` = `type`,
       attachments = Some(attachments)
     )
   }

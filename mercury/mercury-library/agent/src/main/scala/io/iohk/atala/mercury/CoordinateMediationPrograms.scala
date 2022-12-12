@@ -20,7 +20,7 @@ object CoordinateMediationPrograms {
       from = Some(replier),
       to = Seq(invitation.from),
       id = requestMediation.id,
-      piuri = requestMediation.`type`
+      `type` = requestMediation.`type`
     )
   }
 

@@ -32,7 +32,7 @@ final case class OfferCredential(
 
   def makeMessage: Message = Message(
     id = this.id,
-    piuri = this.`type`,
+    `type` = this.`type`,
     from = Some(this.from),
     to = Seq(to),
     thid = this.thid,

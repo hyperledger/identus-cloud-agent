@@ -29,7 +29,7 @@ final case class ProposePresentation(
   assert(`type` == ProposePresentation.`type`)
 
   def makeMessage: Message = Message(
-    piuri = this.`type`,
+    `type` = this.`type`,
     from = Some(this.from),
     to = Seq(this.to),
     thid = this.thid,

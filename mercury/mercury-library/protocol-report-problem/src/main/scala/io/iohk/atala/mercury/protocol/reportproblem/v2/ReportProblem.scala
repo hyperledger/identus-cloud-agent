@@ -70,7 +70,7 @@ object ReportProblem {
   def reportProblemToMessagem(problem: ReportProblem, msg: Message): Message = {
     assert(problem.pthid == msg.id) // This is a reply!
     Message(
-      piuri = "https://didcomm.org/report-problem/2.0/problem-report",
+      `type` = "https://didcomm.org/report-problem/2.0/problem-report",
       from = {
         assert(msg.to.length <= 0, "The recipient is ambiguous. Need to have no more that 1 recipient") // TODO
         msg.to.headOption

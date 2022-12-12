@@ -29,7 +29,7 @@ final case class ProposeCredential(
   assert(`type` == ProposeCredential.`type`)
 
   def makeMessage: Message = Message(
-    piuri = this.`type`,
+    `type` = this.`type`,
     from = Some(this.from),
     to = Seq(this.to),
     body = this.body.asJson.asObject.get, // TODO get

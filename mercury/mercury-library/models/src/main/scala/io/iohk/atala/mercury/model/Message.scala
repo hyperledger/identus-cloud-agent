@@ -9,7 +9,7 @@ import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 
 type PIURI = String //type URI or URL?
 case class Message(
-    piuri: PIURI,
+    `type`: PIURI,
     from: Option[DidId],
     to: Seq[DidId],
     body: JsonObject = JsonObject.empty,
@@ -21,7 +21,7 @@ case class Message(
     pthid: Option[String] = None,
     ack: Option[Seq[String]] = None,
 ) {
-  def `type` = piuri
+  def piuri = `type`
 }
 
 object Message {

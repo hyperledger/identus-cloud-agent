@@ -20,7 +20,7 @@ final case class RequestCredential(
 
   def makeMessage: Message = Message(
     id = this.id,
-    piuri = this.`type`,
+    `type` = this.`type`,
     from = Some(this.from),
     to = Seq(this.to),
     thid = this.thid,

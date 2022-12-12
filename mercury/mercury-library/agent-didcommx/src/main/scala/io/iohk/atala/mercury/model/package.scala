@@ -26,7 +26,7 @@ final case class UnpackMessageImp(private val msg: UnpackResult) extends UnpackM
       .map(e => e) // using the given Conversion
 
     Message(
-      piuri = aux.getType(),
+      `type` = aux.getType(),
       from = Option(aux.getFrom()).map(DidId(_)),
       to = Option(aux.getTo()).toSeq
         .map(_.asScala)
