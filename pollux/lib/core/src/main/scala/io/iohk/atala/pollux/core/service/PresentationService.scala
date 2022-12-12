@@ -78,16 +78,13 @@ trait PresentationService {
 
   def markProposePresentationSent(recordId: UUID): IO[PresentationError, Option[PresentationRecord]]
 
-  def markPresentationGenerated(
-      recordId: UUID,
-      presentation: Presentation
-  ): IO[PresentationError, Option[PresentationRecord]]
-
   def markPresentationSent(recordId: UUID): IO[PresentationError, Option[PresentationRecord]]
 
   def markPresentationVerified(recordId: UUID): IO[PresentationError, Option[PresentationRecord]]
 
   def markPresentationRejected(recordId: UUID): IO[PresentationError, Option[PresentationRecord]]
+
+  def markPresentationAccepted(recordId: UUID): IO[PresentationError, Option[PresentationRecord]]
 
 }
 
@@ -237,7 +234,7 @@ private class PresentationServiceImpl(
   ): IO[PresentationError, Option[PresentationRecord]] = {
 
     for {
-      // crecentialsToUse
+
       maybeRecord <- presentationRepository
         .getPresentationRecord(recordId)
         .mapError(RepositoryError.apply)
@@ -255,7 +252,6 @@ private class PresentationServiceImpl(
         .mapError(RepositoryError.apply)
 
       issuedRawCredentials = issuedValidCredentials.map(_.issuedCredentialRaw.map(IssuedCredentialRaw(_))).flatten
-      x = List(1)
       issuedCredentials <- ZIO.fromEither(
         Either.cond(
           issuedRawCredentials.nonEmpty,
@@ -294,9 +290,8 @@ private class PresentationServiceImpl(
       presentationRequest <- ZIO
         .fromOption(record.presentationData)
         .mapError(_ => InvalidFlowStateError(s"No request found for this record: $recordId"))
-      _ <- ZIO.log(s"************presentationRequest*************$presentationRequest")
-      _ <- verifyPresentation(presentationRequest) // TODO
-      recordUpdated <- markPresentationVerified(record.id)
+
+      recordUpdated <- markPresentationAccepted(record.id)
 
     } yield recordUpdated
   }
@@ -381,26 +376,12 @@ private class PresentationServiceImpl(
       PresentationRecord.ProtocolState.PresentationVerified
     )
 
-  override def markPresentationGenerated(
-      recordId: UUID,
-      presentation: Presentation
-  ): IO[PresentationError, Option[PresentationRecord]] = {
-    for {
-      count <- presentationRepository
-        .updateWithPresentation(
-          recordId,
-          presentation,
-          PresentationRecord.ProtocolState.PresentationGenerated
-        )
-        .mapError(RepositoryError.apply)
-      _ <- count match
-        case 1 => ZIO.succeed(())
-        case n => ZIO.fail(RecordIdNotFound(recordId))
-      record <- presentationRepository
-        .getPresentationRecord(recordId)
-        .mapError(RepositoryError.apply)
-    } yield record
-  }
+  override def markPresentationAccepted(recordId: UUID): IO[PresentationError, Option[PresentationRecord]] =
+    updatePresentationRecordProtocolState(
+      recordId,
+      PresentationRecord.ProtocolState.PresentationVerified,
+      PresentationRecord.ProtocolState.PresentationAccepted
+    )
 
   override def markPresentationSent(recordId: UUID): IO[PresentationError, Option[PresentationRecord]] =
     updatePresentationRecordProtocolState(
