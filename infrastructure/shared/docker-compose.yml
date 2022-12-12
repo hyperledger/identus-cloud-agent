@@ -89,6 +89,29 @@ services:
       db_iris:
         condition: service_started
 
+  ##########################
+  # Prism Agent Database
+  ##########################
+
+  db_agent:
+    image: postgres:13
+    restart: always
+    environment:
+      POSTGRES_DB: agent
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - pg_data_agent_db:/var/lib/postgresql/data
+    ports:
+      - "5435:5432"
+
+  # delay to ensure DB is up before applying migrations
+  db_agent_init_delay:
+    image: alpine:3
+    command: sleep 5
+    depends_on:
+      db_agent:
+        condition: service_started
 
   ##########################
   # Services
@@ -124,6 +147,11 @@ services:
       CONNECT_DB_NAME: connect
       CONNECT_DB_USER: postgres
       CONNECT_DB_PASSWORD: postgres
+      AGENT_DB_HOST: db_agent
+      AGENT_DB_PORT: 5432
+      AGENT_DB_NAME: agent
+      AGENT_DB_USER: postgres
+      AGENT_DB_PASSWORD: postgres
       DIDCOMM_SERVICE_URL: http://host.docker.internal:${PORT}/didcomm/
 
   swagger-ui:
@@ -152,4 +180,5 @@ volumes:
   pg_data_pollux_db:
   pg_data_connect_db:
   pg_data_iris_db:
+  pg_data_agent_db:
   pgadmin:
