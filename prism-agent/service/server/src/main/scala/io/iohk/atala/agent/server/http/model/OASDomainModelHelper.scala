@@ -198,7 +198,7 @@ trait OASDomainModelHelper {
     def toOAS: Service = Service(
       id = service.id,
       `type` = service.`type`,
-      serviceEndpoint = service.serviceEndpoint
+      serviceEndpoint = service.serviceEndpoint // FIXME @pat
     )
   }
 

@@ -61,8 +61,14 @@ import java.io.IOException
 import cats.implicits.*
 import io.iohk.atala.pollux.schema.SchemaRegistryServerEndpoints
 import io.iohk.atala.pollux.service.SchemaRegistryServiceInMemory
-import io.iohk.atala.connect.core.service.ConnectionService
-import io.iohk.atala.connect.core.service.ConnectionServiceImpl
+import io.iohk.atala.pollux.core.service.PresentationService
+import io.iohk.atala.pollux.core.service.PresentationServiceImpl
+import io.iohk.atala.pollux.core.repository.PresentationRepository
+import io.iohk.atala.pollux.sql.repository.JdbcPresentationRepository
+import io.iohk.atala.pollux.core.model.error.PresentationError
+import io.iohk.atala.pollux.core.model.error.CredentialServiceError
+import io.iohk.atala.connect.core.service.{ConnectionService => CS_Connect}
+import io.iohk.atala.connect.core.service.{ConnectionServiceImpl => CSImpl_Connect}
 import io.iohk.atala.connect.core.repository.ConnectionRepository
 import io.iohk.atala.connect.sql.repository.JdbcConnectionRepository
 import io.iohk.atala.mercury.protocol.connection.ConnectionRequest
@@ -71,6 +77,7 @@ import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.pollux.schema.{SchemaRegistryServerEndpoints, VerificationPolicyServerEndpoints}
 import io.iohk.atala.pollux.service.{SchemaRegistryServiceInMemory, VerificationPolicyServiceInMemory}
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
+import io.iohk.atala.mercury.protocol.presentproof._
 
 object Modules {
 
@@ -102,7 +109,7 @@ object Modules {
 
   def didCommServiceEndpoint(port: Int) = {
     val header = "content-type" -> MediaTypes.contentTypeEncrypted
-    val app: HttpApp[DidComm & CredentialService & ConnectionService, Throwable] =
+    val app: HttpApp[DidComm with CredentialService with PresentationService with CS_Connect, Throwable] =
       Http.collectZIO[Request] {
         //   // TODO add DIDComm messages parsing logic here!
         //   Response.text("Hello World!").setStatus(Status.Accepted)
@@ -136,6 +143,12 @@ object Modules {
       .unit
       .provideSomeLayer(AppModule.credentialServiceLayer)
 
+  val presentProofExchangeJob: RIO[DidComm, Unit] =
+    BackgroundJobs.presentProofExchanges
+      .repeat(Schedule.spaced(10.seconds))
+      .unit
+      .provideSomeLayer(AppModule.presentationServiceLayer)
+
   val connectDidCommExchangesJob: RIO[DidComm, Unit] =
     ConnectBackgroundJobs.didCommExchanges
       .repeat(Schedule.spaced(10.seconds))
@@ -144,7 +157,7 @@ object Modules {
 
   def webServerProgram(
       jsonString: String
-  ): ZIO[DidComm & CredentialService & ConnectionService, MercuryThrowable, Unit] = {
+  ): ZIO[DidComm & CredentialService with PresentationService with CS_Connect, MercuryThrowable, Unit] = {
     import io.iohk.atala.mercury.DidComm.*
     ZIO.logAnnotate("request-id", java.util.UUID.randomUUID.toString()) {
       for {
@@ -152,8 +165,8 @@ object Modules {
         _ <- ZIO.logTrace(jsonString)
         msg <- unpack(jsonString).map(_.getMessage)
         credentialService <- ZIO.service[CredentialService]
-        connectionService <- ZIO.service[ConnectionService]
-        ret <- {
+        connectionService <- ZIO.service[CS_Connect]
+        _ <- {
           msg.piuri match {
             // ########################
             // ### issue-credential ###
@@ -176,7 +189,7 @@ object Modules {
                 offerFromIssuer = OfferCredential.readFromMessage(msg)
                 _ <- credentialService
                   .receiveCredentialOffer(offerFromIssuer)
-                  .catchSome { case RepositoryError(cause) =>
+                  .catchSome { case CredentialServiceError.RepositoryError(cause) =>
                     ZIO.logError(cause.getMessage()) *>
                       ZIO.fail(cause)
                   }
@@ -193,7 +206,7 @@ object Modules {
                 credentialService <- ZIO.service[CredentialService]
                 todoTestOption <- credentialService
                   .receiveCredentialRequest(requestCredential)
-                  .catchSome { case RepositoryError(cause) =>
+                  .catchSome { case CredentialServiceError.RepositoryError(cause) =>
                     ZIO.logError(cause.getMessage()) *>
                       ZIO.fail(cause)
                   }
@@ -211,9 +224,54 @@ object Modules {
                 credentialService <- ZIO.service[CredentialService]
                 _ <- credentialService
                   .receiveCredentialIssue(issueCredential)
-                  .catchSome { case RepositoryError(cause) =>
+                  .catchSome { case CredentialServiceError.RepositoryError(cause) =>
                     ZIO.logError(cause.getMessage()) *>
                       ZIO.fail(cause)
+                  }
+                  .catchAll { case ex: IOException => ZIO.fail(ex) }
+              } yield ()
+
+            // #####################
+            // ### present-proof ###
+            // #####################
+
+            case s if s == ProposePresentation.`type` =>
+              for {
+                _ <- ZIO.unit
+                request = ProposePresentation.readFromMessage(msg)
+                _ <- ZIO.logInfo("As a Verifier in  present-proof got ProposePresentation: " + request)
+                service <- ZIO.service[PresentationService]
+                _ <- service
+                  .receiveProposePresentation(request)
+                  .catchSome { case PresentationError.RepositoryError(cause) =>
+                    ZIO.logError(cause.getMessage()) *> ZIO.fail(cause)
+                  }
+                  .catchAll { case ex: IOException => ZIO.fail(ex) }
+              } yield ()
+
+            case s if s == RequestPresentation.`type` =>
+              for {
+                _ <- ZIO.unit
+                request = RequestPresentation.readFromMessage(msg)
+                _ <- ZIO.logInfo("As a Prover in present-proof got RequestPresentation: " + request)
+                service <- ZIO.service[PresentationService]
+                _ <- service
+                  .receiveRequestPresentation(None, request)
+                  .catchSome { case PresentationError.RepositoryError(cause) =>
+                    ZIO.logError(cause.getMessage()) *> ZIO.fail(cause)
+                  }
+                  .catchAll { case ex: IOException => ZIO.fail(ex) }
+              } yield ()
+            case s if s == Presentation.`type` =>
+              for {
+                _ <- ZIO.unit
+                request = Presentation.readFromMessage(msg)
+                _ <- ZIO.logInfo("As a Verifier in present-proof got Presentation: " + request)
+                service <- ZIO.service[PresentationService]
+                _ <- service
+                  .receivePresentation(request)
+                  .catchSome { case PresentationError.RepositoryError(cause) =>
+                    ZIO.logError(cause.getMessage()) *> ZIO.fail(cause)
                   }
                   .catchAll { case ex: IOException => ZIO.fail(ex) }
               } yield ()
@@ -306,8 +364,12 @@ object AppModule {
   val credentialServiceLayer: RLayer[DidComm, CredentialService] =
     (GrpcModule.layers ++ RepoModule.credentialRepoLayer) >>> CredentialServiceImpl.layer
 
-  val connectionServiceLayer: RLayer[DidComm, ConnectionService] =
-    (GrpcModule.layers ++ RepoModule.connectionRepoLayer) >>> ConnectionServiceImpl.layer
+  def presentationServiceLayer =
+    (RepoModule.presentationRepoLayer ++ RepoModule.credentialRepoLayer) >>> PresentationServiceImpl.layer
+
+  val connectionServiceLayer: RLayer[DidComm, CS_Connect] =
+    (GrpcModule.layers ++ RepoModule.connectionRepoLayer) >>> CSImpl_Connect.layer
+
 }
 
 object GrpcModule {
@@ -371,6 +433,13 @@ object HttpModule {
     (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new IssueCredentialsProtocolApi(_, _))
   }
 
+  val presentProofProtocolApiLayer: RLayer[DidComm, PresentProofApi] = {
+    val serviceLayer = AppModule.presentationServiceLayer ++ AppModule.connectionServiceLayer // ++ didCommServiceLayer
+    val apiServiceLayer = serviceLayer >>> PresentProofApiServiceImpl.layer
+    val apiMarshallerLayer = PresentProofApiMarshallerImpl.layer
+    (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new PresentProofApi(_, _))
+  }
+
   val connectionsManagementApiLayer: RLayer[DidComm, ConnectionsManagementApi] = {
     val serviceLayer = AppModule.connectionServiceLayer
     val apiServiceLayer = serviceLayer >>> ConnectionsManagementApiServiceImpl.layer
@@ -380,7 +449,7 @@ object HttpModule {
 
   val layers =
     didApiLayer ++ didAuthenticationApiLayer ++ didRegistrarApiLayer ++
-      issueCredentialsProtocolApiLayer ++ connectionsManagementApiLayer
+      issueCredentialsProtocolApiLayer ++ connectionsManagementApiLayer ++ presentProofProtocolApiLayer
 }
 
 object RepoModule {
@@ -439,6 +508,9 @@ object RepoModule {
 
   val credentialRepoLayer: TaskLayer[CredentialRepository[Task]] =
     RepoModule.polluxTransactorLayer >>> JdbcCredentialRepository.layer
+
+  val presentationRepoLayer: TaskLayer[PresentationRepository[Task]] =
+    polluxTransactorLayer >>> JdbcPresentationRepository.layer
 
   val connectionRepoLayer: TaskLayer[ConnectionRepository[Task]] =
     RepoModule.connectTransactorLayer >>> JdbcConnectionRepository.layer
