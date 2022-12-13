@@ -1,33 +1,29 @@
 package io.iohk.atala.pollux
 
+import io.iohk.atala.api.http.{BadRequest, NotFound}
 import io.iohk.atala.pollux.schema.VerificationPolicyServerEndpoints
 import io.iohk.atala.pollux.schema.model.{VerificationPolicy, VerificationPolicyInput, VerificationPolicyPage}
 import io.iohk.atala.pollux.service.{VerificationPolicyService, VerificationPolicyServiceInMemory}
-import sttp.client3.DeserializationException
 import sttp.client3.Response.ExampleGet.uri
-import io.iohk.atala.api.http.{BadRequest, NotFound}
-import zio.test.ZIOSpecDefault
 import sttp.client3.testing.SttpBackendStub
 import sttp.client3.ziojson.*
 import sttp.client3.{DeserializationException, ResponseException, SttpBackend, UriContext, basicRequest}
+import sttp.model.{StatusCode, Uri}
 import sttp.monad.MonadError
 import sttp.tapir.server.interceptor.CustomiseInterceptors
 import sttp.tapir.server.interceptor.RequestResult.Response
 import sttp.tapir.server.stub.TapirStubInterpreter
 import sttp.tapir.ztapir.RIOMonadError
-import zio.ZIO
-import zio.test.*
-import zio.test.Assertion.*
-import sttp.model.{StatusCode, Uri}
 import zio.json.{DecoderOps, EncoderOps, JsonDecoder}
 import zio.stream.ZSink
 import zio.stream.ZSink.*
 import zio.stream.ZStream.unfold
+import zio.test.*
 import zio.test.Assertion.*
 import zio.test.Gen.*
-import zio.{Random, ZLayer, *}
+import zio.{Random, ZIO, ZLayer, *}
 
-import java.time.ZonedDateTime
+import java.time.{OffsetDateTime, ZoneOffset, ZonedDateTime}
 import java.util.UUID
 
 object VerificationPolicyEndpointsSpec extends ZIOSpecDefault:
@@ -45,8 +41,8 @@ object VerificationPolicyEndpointsSpec extends ZIOSpecDefault:
     attributes = List("first_name", "dob"),
     issuerDIDs = List("did:prism:abc", "did:prism:xyz"),
     credentialTypes = List("DrivingLicence", "ID"),
-    createdAt = Some(ZonedDateTime.now()),
-    updatedAt = Some(ZonedDateTime.now())
+    createdAt = Some(OffsetDateTime.now(ZoneOffset.UTC)),
+    updatedAt = Some(OffsetDateTime.now(ZoneOffset.UTC))
   )
 
   private val verificationPoliciesUri = uri"http://test.com/verification/policies"

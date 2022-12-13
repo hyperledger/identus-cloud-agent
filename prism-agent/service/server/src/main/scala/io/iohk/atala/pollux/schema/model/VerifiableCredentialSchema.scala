@@ -1,12 +1,12 @@
 package io.iohk.atala.pollux.schema.model
 
-import sttp.model.Uri._
 import sttp.model.Uri
+import sttp.model.Uri.*
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedName}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder}
 
-import java.time.ZonedDateTime
+import java.time.{OffsetDateTime, ZoneOffset}
 import java.util.UUID
 
 case class VerifiableCredentialSchema(
@@ -17,7 +17,7 @@ case class VerifiableCredentialSchema(
     description: Option[String],
     attributes: List[String],
     author: String,
-    authored: ZonedDateTime,
+    authored: OffsetDateTime,
     proof: Option[Proof],
     kind: String = "VerifiableCredentialSchema",
     self: String = ""
@@ -36,7 +36,7 @@ object VerifiableCredentialSchema {
       description = in.description,
       attributes = in.attributes,
       author = "Prism Agent",
-      authored = in.authored.getOrElse(ZonedDateTime.now()),
+      authored = in.authored.getOrElse(OffsetDateTime.now(ZoneOffset.UTC)),
       proof = None
     )
 
@@ -64,7 +64,7 @@ case class VerifiableCredentialSchemaInput(
     version: String,
     description: Option[String],
     attributes: List[String],
-    authored: Option[ZonedDateTime],
+    authored: Option[OffsetDateTime],
     tags: List[String]
 )
 
