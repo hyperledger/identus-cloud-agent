@@ -3,34 +3,32 @@ package io.iohk.atala.pollux
 import io.iohk.atala.agent.server.http.ZHttp4sBlazeServer
 import io.iohk.atala.api.http.{BadRequest, NotFound}
 import io.iohk.atala.pollux.SchemaRegistryEndpointsSpec.schemaReqistrySchemasUri
+import io.iohk.atala.pollux.schema.*
 import io.iohk.atala.pollux.schema.model.{
   VerifiableCredentialSchema,
   VerifiableCredentialSchemaInput,
   VerifiableCredentialSchemaPage
 }
-import io.iohk.atala.pollux.schema.*
 import io.iohk.atala.pollux.service.{SchemaRegistryService, SchemaRegistryServiceInMemory}
 import sttp.client3.testing.SttpBackendStub
 import sttp.client3.ziojson.*
 import sttp.client3.{DeserializationException, ResponseException, SttpBackend, UriContext, basicRequest}
+import sttp.model.{StatusCode, Uri}
 import sttp.monad.MonadError
 import sttp.tapir.server.interceptor.CustomiseInterceptors
 import sttp.tapir.server.interceptor.RequestResult.Response
 import sttp.tapir.server.stub.TapirStubInterpreter
 import sttp.tapir.ztapir.RIOMonadError
-import zio.ZIO
-import zio.test.*
-import zio.test.Assertion.*
-import sttp.model.{StatusCode, Uri}
 import zio.json.{DecoderOps, EncoderOps, JsonDecoder}
 import zio.stream.ZSink
 import zio.stream.ZSink.*
 import zio.stream.ZStream.unfold
+import zio.test.*
 import zio.test.Assertion.*
 import zio.test.Gen.*
-import zio.{Random, ZLayer, *}
+import zio.{Random, ZIO, ZLayer, *}
 
-import java.time.ZonedDateTime
+import java.time.{OffsetDateTime, ZoneOffset}
 import java.util.UUID
 
 object Generators {
@@ -40,7 +38,7 @@ object Generators {
   val schemaDescription = Gen.alphaNumericStringBounded(5, 30)
   val schemaAttribute = Gen.alphaNumericStringBounded(3, 9)
   val schemaAttributes = Gen.setOfBounded(1, 4)(schemaAttribute).map(_.toList)
-  val schemaAuthored = Gen.zonedDateTime(min = ZonedDateTime.now().minusMonths(6), max = ZonedDateTime.now())
+  val schemaAuthored = Gen.offsetDateTime(min = OffsetDateTime.now().minusMonths(6), max = OffsetDateTime.now())
   val schemaTag: Gen[Any, String] = Gen.alphaNumericStringBounded(3, 5)
   val schemaTags: Gen[Any, List[String]] = Gen.setOfBounded(0, 3)(schemaTag).map(_.toList)
 
@@ -78,7 +76,7 @@ object SchemaRegistryEndpointsSpec extends ZIOSpecDefault:
     version = "1.0",
     description = Option("schema description"),
     attributes = List("first_name", "dob"),
-    authored = Option(ZonedDateTime.now()),
+    authored = Option(OffsetDateTime.now(ZoneOffset.UTC)),
     tags = List("test")
   )
 

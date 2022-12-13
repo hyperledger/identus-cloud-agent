@@ -5,7 +5,7 @@ import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedName}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder}
 
-import java.time.ZonedDateTime
+import java.time.{OffsetDateTime, ZoneOffset}
 import java.util.UUID
 
 case class VerificationPolicy(
@@ -16,8 +16,8 @@ case class VerificationPolicy(
     attributes: List[String],
     issuerDIDs: List[String],
     credentialTypes: List[String],
-    createdAt: ZonedDateTime,
-    updatedAt: ZonedDateTime
+    createdAt: OffsetDateTime,
+    updatedAt: OffsetDateTime
 ) {
   def update(in: VerificationPolicyInput): VerificationPolicy = {
     copy(
@@ -25,7 +25,7 @@ case class VerificationPolicy(
       attributes = in.attributes,
       issuerDIDs = in.issuerDIDs,
       credentialTypes = in.credentialTypes,
-      updatedAt = ZonedDateTime.now()
+      updatedAt = OffsetDateTime.now(ZoneOffset.UTC)
     )
   }
 
@@ -46,8 +46,8 @@ object VerificationPolicy {
       attributes = in.attributes,
       issuerDIDs = in.issuerDIDs,
       credentialTypes = in.credentialTypes,
-      createdAt = in.createdAt.getOrElse(ZonedDateTime.now()),
-      updatedAt = in.updatedAt.getOrElse(ZonedDateTime.now())
+      createdAt = in.createdAt.getOrElse(OffsetDateTime.now(ZoneOffset.UTC)),
+      updatedAt = in.updatedAt.getOrElse(OffsetDateTime.now(ZoneOffset.UTC))
     )
 
   given encoder: zio.json.JsonEncoder[VerificationPolicy] = DeriveJsonEncoder.gen[VerificationPolicy]
@@ -95,8 +95,8 @@ case class VerificationPolicyInput(
     attributes: List[String],
     issuerDIDs: List[String],
     credentialTypes: List[String],
-    createdAt: Option[ZonedDateTime] = None,
-    updatedAt: Option[ZonedDateTime] = None
+    createdAt: Option[OffsetDateTime] = None,
+    updatedAt: Option[OffsetDateTime] = None
 )
 
 object VerificationPolicyInput {
