@@ -88,13 +88,13 @@ jobs:
           down-flags: "--volumes"
 
       - name: Run e2e tests
+        continue-on-error: true
         env:
           ATALA_GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
         run: |
-          ./gradlew test --tests "E2eTestsRunner"
+          ./gradlew test reports --tests "E2eTestsRunner"
 
       - uses: actions/upload-artifact@v2
-        if: always()
         with:
           name: e2e-tests-result
           path: ${{ env.REPORTS_DIR }}
@@ -145,7 +145,11 @@ jobs:
         env:
           SLACK_CHANNEL: atala-qa-results
           SLACK_COLOR: ${{ steps.analyze_test_results.outputs.conclusion }}
-          SLACK_MESSAGE: "Total: ${{ steps.analyze_test_results.outputs.tests }}\nFailures: ${{ steps.analyze_test_results.outputs.failures }}"
+          SLACK_MESSAGE: |
+            Total: ${{ steps.analyze_test_results.outputs.tests }}
+            Failed: ${{ steps.analyze_test_results.outputs.failures }}
+            Errors in tests: ${{ steps.analyze_test_results.outputs.errors }}
+            Skipped (known bugs): ${{ steps.analyze_test_results.outputs.skipped }}
           SLACK_TITLE: "Atala PRISM V2 E2E tests: ${{ steps.analyze_test_results.outputs.conclusion }}"
           SLACK_USERNAME: circleci
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
