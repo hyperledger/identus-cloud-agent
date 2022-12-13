@@ -19,6 +19,14 @@ object Main extends ZIOAppDefault {
       )
     )
 
+  private def createAndStorePeerDID(serviceEndpoint: String): RIO[ManagedDIDService, PeerDID] = {
+    for {
+      managedDIDService <- ZIO.service[ManagedDIDService]
+      peerDID <- managedDIDService.createAndStorePeerDID(serviceEndpoint)
+      _ <- ZIO.logInfo(s"New DID: ${peerDID.did}")
+    } yield peerDID
+  }
+
   override def run: ZIO[Any, Throwable, Unit] =
     for {
       _ <- Console
@@ -68,14 +76,10 @@ object Main extends ZIOAppDefault {
         .serviceWithZIO[AgentMigrations](_.migrate)
         .provide(RepoModule.agentDbConfigLayer >>> AgentMigrations.layer)
 
-      agentDID <- for {
-        peer <- ZIO.succeed(PeerDID.makePeerDid(serviceEndpoint = Some(didCommServiceUrl)))
-        _ <- ZIO.logInfo(s"New DID: ${peer.did}") *>
-          ZIO.logInfo(s"JWK for KeyAgreement: ${peer.jwkForKeyAgreement.toJSONString}") *>
-          ZIO.logInfo(s"JWK for KeyAuthentication: ${peer.jwkForKeyAuthentication.toJSONString}")
-      } yield (peer)
+      peerDID <- createAndStorePeerDID(didCommServiceUrl)
+        .provide(AppModule.manageDIDServiceLayer)
 
-      didCommLayer = agentLayer(agentDID)
+      didCommLayer = agentLayer(peerDID)
 
       didCommExchangesFiber <- Modules.didCommExchangesJob
         .provide(didCommLayer)
