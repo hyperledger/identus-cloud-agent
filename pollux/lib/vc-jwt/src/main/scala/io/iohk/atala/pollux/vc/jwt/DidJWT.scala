@@ -1,6 +1,9 @@
 package io.iohk.atala.pollux.vc.jwt
 
+import com.nimbusds.jose.{JWSAlgorithm, JWSHeader}
+import com.nimbusds.jose.crypto.ECDSASigner
 import com.nimbusds.jose.jwk.ECKey
+import com.nimbusds.jwt.{JWTClaimsSet, SignedJWT}
 import io.circe
 import io.circe.*
 import io.circe.generic.auto.*
@@ -63,9 +66,22 @@ trait Signer {
 class ES256Signer(privateKey: PrivateKey) extends Signer {
   val algorithm: JwtECDSAAlgorithm = JwtAlgorithm.ES256
 
+  override def encode(claim: Json): JWT = JWT(JwtCirce.encode(claim, privateKey, algorithm))
+}
+
+class ES256KSigner(ecKey: ECKey) extends Signer {
+
   override def encode(claim: Json): JWT = {
-    return JWT(JwtCirce.encode(claim, privateKey, algorithm))
+    val claimSet = JWTClaimsSet.parse(claim.noSpaces)
+    val signer = ECDSASigner(ecKey)
+    val signedJwt = SignedJWT(
+      new JWSHeader.Builder(JWSAlgorithm.ES256K).build(),
+      claimSet
+    )
+    signedJwt.sign(signer)
+    JWT(signedJwt.serialize())
   }
+
 }
 
 def toJWKFormat(holderJwk: ECKey): JsonWebKey = {
