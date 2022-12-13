@@ -52,8 +52,13 @@ case class DIDDocument(
     id: String,
     alsoKnowAs: Vector[String],
     controller: Vector[String],
-    assertionMethod: Vector[VerificationMethod],
-    service: Vector[Service]
+    verificationMethod: Vector[VerificationMethod] = Vector.empty,
+    authentication: Vector[VerificationMethod] = Vector.empty,
+    assertionMethod: Vector[VerificationMethod] = Vector.empty,
+    keyAgreement: Vector[VerificationMethod] = Vector.empty,
+    capabilityInvocation: Vector[VerificationMethod] = Vector.empty,
+    capabilityDelegation: Vector[VerificationMethod] = Vector.empty,
+    service: Vector[Service] = Vector.empty
 )
 case class VerificationMethod(
     id: String,
@@ -110,7 +115,7 @@ class PrismDidResolver(didService: DIDService) extends DidResolver {
               id = didDocument.id,
               alsoKnowAs = Vector.empty,
               controller = Vector(didDocument.controller),
-              assertionMethod = didDocument.assertionMethod.map(toPolluxVerificationMethodModel).toVector,
+              verificationMethod = didDocument.verificationMethod.map(toPolluxVerificationMethodModel).toVector,
               service = didDocument.service.map(toPolluxServiceModel).toVector
             ),
             didDocumentMetadata = DIDDocumentMetadata(

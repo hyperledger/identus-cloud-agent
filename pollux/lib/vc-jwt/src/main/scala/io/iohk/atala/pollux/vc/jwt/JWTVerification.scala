@@ -7,6 +7,7 @@ import io.circe.generic.auto.*
 import io.circe.parser.decode
 import io.circe.syntax.*
 import io.circe.{Decoder, Encoder, HCursor, Json}
+import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import io.iohk.atala.pollux.vc.jwt.JWTVerification.{extractPublicKey, validateEncodedJwt}
 import io.iohk.atala.pollux.vc.jwt.schema.{SchemaResolver, SchemaValidator}
 import net.reactivecore.cjs.validator.Violation
@@ -24,7 +25,13 @@ import java.util
 import scala.util.{Failure, Success, Try}
 
 object JWTVerification {
-  def validateEncodedJwt[T](jwt: JWT)(
+  // JWT algo <-> publicKey type mapping reference
+  // https://github.com/decentralized-identity/did-jwt/blob/8b3655097a1382934cabdf774d580e6731a636b1/src/JWT.ts#L146
+  val SUPPORT_PUBLIC_KEY_TYPES: Map[JwtAlgorithm, Set[String]] = Map(
+    JwtAlgorithm.ES256 -> Set("EcdsaSecp256k1VerificationKey2019")
+  )
+
+  def validateEncodedJwt[T](jwt: JWT, proofPurpose: Option[VerificationRelationship] = None)(
       didResolver: DidResolver
   )(decoder: String => Validation[String, T])(issuerDidExtractor: T => String): IO[String, Validation[String, Unit]] = {
     val decodeJWT = Validation
@@ -62,7 +69,7 @@ object JWTVerification {
             (didDocument, algorithm)
           )
           (didDocument, algorithm) = results
-          verificationMethods <- extractVerificationMethods(didDocument, algorithm)
+          verificationMethods <- extractVerificationMethods(didDocument, algorithm, proofPurpose)
           validatedJwt <- validateEncodedJwt(jwt, verificationMethods)
         } yield validatedJwt
       })
@@ -94,14 +101,21 @@ object JWTVerification {
       )
   }
 
-  // TODO: Implement other verification relationship for JWT verification
   private def extractVerificationMethods(
       didDocument: DIDDocument,
-      jwtAlgorithm: JwtAlgorithm
+      jwtAlgorithm: JwtAlgorithm,
+      proofPurpose: Option[VerificationRelationship]
   ): Validation[String, IndexedSeq[VerificationMethod]] = {
+    val publicKeysToCheck = proofPurpose.fold(didDocument.verificationMethod) {
+      case VerificationRelationship.Authentication       => didDocument.authentication
+      case VerificationRelationship.AssertionMethod      => didDocument.assertionMethod
+      case VerificationRelationship.KeyAgreement         => didDocument.keyAgreement
+      case VerificationRelationship.CapabilityInvocation => didDocument.capabilityInvocation
+      case VerificationRelationship.CapabilityDelegation => didDocument.capabilityDelegation
+    }
     Validation
       .fromPredicateWith("No PublicKey to validate against found")(
-        didDocument.assertionMethod.filter(verification => verification.`type` == jwtAlgorithm.name)
+        publicKeysToCheck.filter(verification => verification.`type` == jwtAlgorithm.name)
       )(_.nonEmpty)
   }
 

@@ -181,7 +181,7 @@ object JwtCredentialDIDDocumentValidationDemo extends ZIOAppDefault {
           id = "Test",
           alsoKnowAs = Vector.empty,
           controller = Vector.empty,
-          assertionMethod = Vector(
+          verificationMethod = Vector(
             Issuer1Key, // <------ ISSUER PUBLIC-KEY 1
             issuer2Key // <------ ISSUER PUBLIC-KEY 2
           ),
