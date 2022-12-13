@@ -25,7 +25,6 @@ class ConnectionSteps {
         inviter.attemptsTo(
             Post.to("/connections")
                 .with {
-                    it.header("Content-Type", "application/json")
                     it.body("""{"label": "$connectionLabel"}""")
                 }
         )
@@ -73,7 +72,6 @@ class ConnectionSteps {
         invitee.attemptsTo(
             Post.to("/connection-invitations")
                 .with {
-                    it.header("Content-Type", "application/json")
                     it.body("""{"invitation": "${invitee.recall<String>("invitationUrl")}"}""")
                 }
         )

@@ -24,7 +24,6 @@ class CredentialSchemasSteps {
         actor.attemptsTo(
             Post.to("/schema-registry/schemas")
                 .with {
-                    it.header("Content-Type", "application/json")
                     it.body(TestConstants.CREDENTIAL_SCHEMAS.STUDENT_SCHEMA)
                 }
         )
@@ -58,7 +57,6 @@ class CredentialSchemasSteps {
             actor.attemptsTo(
                 Post.to("/schema-registry/schemas")
                     .with {
-                        it.header("Content-Type", "application/json")
                         it.body(TestConstants.CREDENTIAL_SCHEMAS.STUDENT_SCHEMA)
                     }
             )
@@ -93,7 +91,6 @@ class CredentialSchemasSteps {
         actor.attemptsTo(
             Post.to("/schema-registry/schemas")
                 .with {
-                    it.header("Content-Type", "application/json")
                     it.body(wrongSchema)
                 }
         )
@@ -111,7 +108,6 @@ class CredentialSchemasSteps {
         actor.attemptsTo(
             Post.to("/schema-registry/schemas")
                 .with {
-                    it.header("Content-Type", "application/json")
                     it.body(wrongSchema)
                 }
         )

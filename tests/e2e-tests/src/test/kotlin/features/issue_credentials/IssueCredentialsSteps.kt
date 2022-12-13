@@ -45,7 +45,6 @@ class IssueCredentialsSteps {
         issuer.attemptsTo(
             Post.to("/issue-credentials/credential-offers")
                 .with {
-                    it.header("Content-Type", "application/json")
                     it.body(newCredential)
                 }
         )
