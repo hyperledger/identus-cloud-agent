@@ -92,7 +92,8 @@ jobs:
         env:
           ATALA_GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
         run: |
-          ./gradlew test reports --tests "E2eTestsRunner"
+          ./gradlew test --tests "E2eTestsRunner"
+          ./gradlew reports
 
       - uses: actions/upload-artifact@v2
         with:
