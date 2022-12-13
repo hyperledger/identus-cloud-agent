@@ -2,7 +2,7 @@ package io.iohk.atala.pollux.vc.jwt
 
 import com.nimbusds.jose.{JWSAlgorithm, JWSHeader}
 import com.nimbusds.jose.crypto.ECDSASigner
-import com.nimbusds.jose.jwk.ECKey
+import com.nimbusds.jose.jwk.{Curve, ECKey}
 import com.nimbusds.jwt.{JWTClaimsSet, SignedJWT}
 import io.circe
 import io.circe.*
@@ -69,11 +69,11 @@ class ES256Signer(privateKey: PrivateKey) extends Signer {
   override def encode(claim: Json): JWT = JWT(JwtCirce.encode(claim, privateKey, algorithm))
 }
 
-class ES256KSigner(ecKey: ECKey) extends Signer {
-
+// works with java 7, 8, 11 & bouncycastle provider
+class ES256KSigner(privateKey: PrivateKey) extends Signer {
   override def encode(claim: Json): JWT = {
     val claimSet = JWTClaimsSet.parse(claim.noSpaces)
-    val signer = ECDSASigner(ecKey)
+    val signer = ECDSASigner(privateKey, Curve.SECP256K1)
     val signedJwt = SignedJWT(
       new JWSHeader.Builder(JWSAlgorithm.ES256K).build(),
       claimSet
@@ -81,7 +81,6 @@ class ES256KSigner(ecKey: ECKey) extends Signer {
     signedJwt.sign(signer)
     JWT(signedJwt.serialize())
   }
-
 }
 
 def toJWKFormat(holderJwk: ECKey): JsonWebKey = {
