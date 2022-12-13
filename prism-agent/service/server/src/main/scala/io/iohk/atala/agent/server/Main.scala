@@ -7,6 +7,7 @@ import io.iohk.atala.resolvers.UniversalDidResolver
 import io.iohk.atala.castor.sql.repository.{Migrations => CastorMigrations}
 import io.iohk.atala.pollux.sql.repository.{Migrations => PolluxMigrations}
 import io.iohk.atala.connect.sql.repository.{Migrations => ConnectMigrations}
+import io.iohk.atala.agent.server.sql.{Migrations => AgentMigrations}
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 
 object Main extends ZIOAppDefault {
@@ -63,6 +64,9 @@ object Main extends ZIOAppDefault {
       _ <- ZIO
         .serviceWithZIO[ConnectMigrations](_.migrate)
         .provide(RepoModule.connectDbConfigLayer >>> ConnectMigrations.layer)
+      _ <- ZIO
+        .serviceWithZIO[AgentMigrations](_.migrate)
+        .provide(RepoModule.agentDbConfigLayer >>> AgentMigrations.layer)
 
       agentDID <- for {
         peer <- ZIO.succeed(PeerDID.makePeerDid(serviceEndpoint = Some(didCommServiceUrl)))

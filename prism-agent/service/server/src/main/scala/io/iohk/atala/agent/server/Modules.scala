@@ -41,6 +41,7 @@ import io.iohk.atala.pollux.core.service.CredentialService
 import io.iohk.atala.pollux.sql.repository.JdbcCredentialRepository
 import io.iohk.atala.pollux.sql.repository.{DbConfig => PolluxDbConfig}
 import io.iohk.atala.connect.sql.repository.{DbConfig => ConnectDbConfig}
+import io.iohk.atala.agent.server.sql.{DbConfig => AgentDbConfig}
 import io.iohk.atala.agent.server.jobs.*
 import zio.*
 import zio.config.typesafe.TypesafeConfigSource
@@ -540,6 +541,32 @@ object RepoModule {
       }
     }.flatten
     connectDbConfigLayer >>> transactorLayer
+  }
+
+  val agentDbConfigLayer: TaskLayer[AgentDbConfig] = {
+    val dbConfigLayer = ZLayer.fromZIO {
+      ZIO.service[AppConfig].map(_.agent.database) map { config =>
+        AgentDbConfig(
+          username = config.username,
+          password = config.password,
+          jdbcUrl = s"jdbc:postgresql://${config.host}:${config.port}/${config.databaseName}",
+          awaitConnectionThreads = 2
+        )
+      }
+    }
+    SystemModule.configLayer >>> dbConfigLayer
+  }
+
+  val agentTransactorLayer: TaskLayer[Transactor[Task]] = {
+    val transactorLayer = ZLayer.fromZIO {
+      ZIO.service[AgentDbConfig].flatMap { config =>
+        Dispatcher[Task].allocated.map { case (dispatcher, _) =>
+          given Dispatcher[Task] = dispatcher
+          io.iohk.atala.agent.server.sql.TransactorLayer.hikari[Task](config)
+        }
+      }
+    }.flatten
+    agentDbConfigLayer >>> transactorLayer
   }
 
   val credentialRepoLayer: TaskLayer[CredentialRepository[Task]] =
