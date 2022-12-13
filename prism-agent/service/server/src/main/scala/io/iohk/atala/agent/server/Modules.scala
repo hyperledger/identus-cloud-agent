@@ -69,8 +69,8 @@ import io.iohk.atala.pollux.core.repository.PresentationRepository
 import io.iohk.atala.pollux.sql.repository.JdbcPresentationRepository
 import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
-import io.iohk.atala.connect.core.service.{ConnectionService => CS_Connect}
-import io.iohk.atala.connect.core.service.{ConnectionServiceImpl => CSImpl_Connect}
+import io.iohk.atala.connect.core.service.ConnectionService
+import io.iohk.atala.connect.core.service.ConnectionServiceImpl
 import io.iohk.atala.connect.core.repository.ConnectionRepository
 import io.iohk.atala.connect.sql.repository.JdbcConnectionRepository
 import io.iohk.atala.mercury.protocol.connection.ConnectionRequest
@@ -120,7 +120,7 @@ object Modules {
 
   def didCommServiceEndpoint(port: Int) = {
     val header = "content-type" -> MediaTypes.contentTypeEncrypted
-    val app: HttpApp[DidComm with CredentialService with PresentationService with CS_Connect & ManagedDIDService, Throwable] =
+    val app: HttpApp[DidComm with CredentialService with PresentationService with ConnectionService & ManagedDIDService, Throwable] =
       Http.collectZIO[Request] {
         //   // TODO add DIDComm messages parsing logic here!
         //   Response.text("Hello World!").setStatus(Status.Accepted)
@@ -195,7 +195,7 @@ object Modules {
 
   def webServerProgram(
       jsonString: String
-  ): ZIO[CredentialService with PresentationService with CS_Connect & ManagedDIDService, MercuryThrowable | DIDSecretStorageError, Unit] = {
+  ): ZIO[CredentialService with PresentationService with ConnectionService & ManagedDIDService, MercuryThrowable | DIDSecretStorageError, Unit] = {
     import io.iohk.atala.mercury.DidComm.*
     ZIO.logAnnotate("request-id", java.util.UUID.randomUUID.toString()) {
       for {
@@ -203,7 +203,7 @@ object Modules {
         _ <- ZIO.logTrace(jsonString)
         msg <- unpackMessage(jsonString)
         credentialService <- ZIO.service[CredentialService]
-        connectionService <- ZIO.service[CS_Connect]
+        connectionService <- ZIO.service[ConnectionService]
         _ <- {
           msg.piuri match {
             // ########################
@@ -405,8 +405,8 @@ object AppModule {
   def presentationServiceLayer =
     (RepoModule.presentationRepoLayer ++ RepoModule.credentialRepoLayer) >>> PresentationServiceImpl.layer
 
-  val connectionServiceLayer: RLayer[DidComm, CS_Connect] =
-    (GrpcModule.layers ++ RepoModule.connectionRepoLayer) >>> CSImpl_Connect.layer
+  val connectionServiceLayer: RLayer[DidComm, ConnectionService] =
+    (GrpcModule.layers ++ RepoModule.connectionRepoLayer) >>> ConnectionServiceImpl.layer
 
 }
 

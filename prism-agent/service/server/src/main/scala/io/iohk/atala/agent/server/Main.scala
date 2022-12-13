@@ -98,8 +98,9 @@ object Main extends ZIOAppDefault {
           didCommLayer,
           AppModule.credentialServiceLayer,
           AppModule.presentationServiceLayer,
-          AppModule.connectionServiceLayer
-        , AppModule.manageDIDServiceLayer)
+          AppModule.connectionServiceLayer,
+          AppModule.manageDIDServiceLayer
+        )
         .debug
         .fork
 
