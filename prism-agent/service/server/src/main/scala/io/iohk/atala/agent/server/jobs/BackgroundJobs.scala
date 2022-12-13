@@ -28,6 +28,10 @@ import io.iohk.atala.mercury.protocol.presentproof.RequestPresentation
 import io.iohk.atala.pollux.core.service.PresentationService
 import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.agent.server.http.model.{InvalidState, NotImplemented}
+import io.iohk.atala.agent.walletapi.service.ManagedDIDService
+import io.iohk.atala.mercury.AgentServiceAny
+import org.didcommx.didcomm.DIDComm
+import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError
 
 object BackgroundJobs {
 
@@ -52,7 +56,7 @@ object BackgroundJobs {
 
   private[this] def performExchange(
       record: IssueCredentialRecord
-  ): URIO[DidComm & CredentialService, Unit] = {
+  ): URIO[CredentialService & ManagedDIDService, Unit] = {
     import IssueCredentialRecord._
     import IssueCredentialRecord.ProtocolState._
     import IssueCredentialRecord.PublicationState._
@@ -63,11 +67,15 @@ object BackgroundJobs {
         case IssueCredentialRecord(id, _, _, _, _, Role.Issuer, _, _, _, _, OfferPending, _, Some(offer), _, _, _) =>
           (for {
             _ <- ZIO.log(s"IssueCredentialRecord: OfferPending (START)")
-            didComm <- ZIO.service[DidComm]
-            _ <- sendMessage(offer.makeMessage)
+            didCommAgent <- buildDIDCommAgent(offer.from)
+            _ <- sendMessage(offer.makeMessage).provide(didCommAgent)
             credentialService <- ZIO.service[CredentialService]
             _ <- credentialService.markOfferSent(id)
-          } yield ()): ZIO[DidComm & CredentialService, CredentialServiceError | MercuryException, Unit]
+          } yield ()): ZIO[
+            CredentialService & ManagedDIDService,
+            CredentialServiceError | MercuryException | DIDSecretStorageError,
+            Unit
+          ]
 
         // Request should be sent from Holder to Issuer
         case IssueCredentialRecord(
@@ -89,10 +97,15 @@ object BackgroundJobs {
               _,
             ) =>
           (for {
-            _ <- sendMessage(request.makeMessage)
+            didCommAgent <- buildDIDCommAgent(request.from)
+            _ <- sendMessage(request.makeMessage).provide(didCommAgent)
             credentialService <- ZIO.service[CredentialService]
             _ <- credentialService.markRequestSent(id)
-          } yield ()): ZIO[DidComm & CredentialService, CredentialServiceError | MercuryException, Unit]
+          } yield ()): ZIO[
+            CredentialService & ManagedDIDService,
+            CredentialServiceError | MercuryException | DIDSecretStorageError,
+            Unit
+          ]
 
         // 'automaticIssuance' is TRUE. Issuer automatically accepts the Request
         case IssueCredentialRecord(id, _, _, _, _, Role.Issuer, _, _, Some(true), _, RequestReceived, _, _, _, _, _) =>
@@ -162,10 +175,15 @@ object BackgroundJobs {
               _,
             ) =>
           (for {
-            _ <- sendMessage(issue.makeMessage)
+            didCommAgent <- buildDIDCommAgent(issue.from)
+            _ <- sendMessage(issue.makeMessage).provide(didCommAgent)
             credentialService <- ZIO.service[CredentialService]
             _ <- credentialService.markCredentialSent(id)
-          } yield ()): ZIO[DidComm & CredentialService, CredentialServiceError | MercuryException, Unit]
+          } yield ()): ZIO[
+            CredentialService & ManagedDIDService,
+            CredentialServiceError | MercuryException | DIDSecretStorageError,
+            Unit
+          ]
 
         // Credential has been generated, published, and can now be sent to the Holder
         case IssueCredentialRecord(
@@ -187,10 +205,15 @@ object BackgroundJobs {
               _,
             ) =>
           (for {
-            _ <- sendMessage(issue.makeMessage)
+            didCommAgent <- buildDIDCommAgent(issue.from)
+            _ <- sendMessage(issue.makeMessage).provide(didCommAgent)
             credentialService <- ZIO.service[CredentialService]
             _ <- credentialService.markCredentialSent(id)
-          } yield ()): ZIO[DidComm & CredentialService, CredentialServiceError | MercuryException, Unit]
+          } yield ()): ZIO[
+            CredentialService & ManagedDIDService,
+            CredentialServiceError | MercuryException | DIDSecretStorageError,
+            Unit
+          ]
 
         case IssueCredentialRecord(id, _, _, _, _, _, _, _, _, _, ProblemReportPending, _, _, _, _, _) => ???
         case IssueCredentialRecord(id, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)                    => ZIO.unit
@@ -203,6 +226,8 @@ object BackgroundJobs {
           ZIO.logErrorCause(s"DIDComm communication error processing record: ${record.id}", Cause.fail(ex))
         case ex: CredentialServiceError =>
           ZIO.logErrorCause(s"Credential service error processing record: ${record.id} ", Cause.fail(ex))
+        case ex: DIDSecretStorageError =>
+          ZIO.logErrorCause(s"DID secret storage error processing record: ${record.id} ", Cause.fail(ex))
       }
       .catchAllDefect { case throwable =>
         ZIO.logErrorCause(s"Issue Credential protocol defect processing record: ${record.id}", Cause.fail(throwable))
@@ -294,6 +319,19 @@ object BackgroundJobs {
       case ex: InvalidState        => ZIO.fail(ex)
       case ex: NotImplemented.type => ZIO.fail(ex)
     }
+  }
+
+  private[this] def buildDIDCommAgent(myDid: DidId) = {
+    for {
+      managedDidService <- ZIO.service[ManagedDIDService]
+      peerDID <- managedDidService.getPeerDID(myDid)
+      didCommAgent = ZLayer.succeed(
+        AgentServiceAny(
+          new DIDComm(UniversalDidResolver, peerDID.getSecretResolverInMemory),
+          peerDID.did
+        )
+      )
+    } yield didCommAgent
   }
 
   val publishCredentialsToDlt = {

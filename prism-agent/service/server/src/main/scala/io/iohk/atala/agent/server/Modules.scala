@@ -120,7 +120,10 @@ object Modules {
 
   def didCommServiceEndpoint(port: Int) = {
     val header = "content-type" -> MediaTypes.contentTypeEncrypted
-    val app: HttpApp[DidComm with CredentialService with PresentationService with ConnectionService & ManagedDIDService, Throwable] =
+    val app: HttpApp[
+      DidComm with CredentialService with PresentationService with ConnectionService & ManagedDIDService,
+      Throwable
+    ] =
       Http.collectZIO[Request] {
         //   // TODO add DIDComm messages parsing logic here!
         //   Response.text("Hello World!").setStatus(Status.Accepted)
@@ -154,7 +157,7 @@ object Modules {
     BackgroundJobs.didCommExchanges
       .repeat(Schedule.spaced(10.seconds))
       .unit
-      .provideSomeLayer(AppModule.credentialServiceLayer)
+      .provideSomeLayer(AppModule.credentialServiceLayer ++ AppModule.manageDIDServiceLayer)
 
   val presentProofExchangeJob: RIO[DidComm, Unit] =
     BackgroundJobs.presentProofExchanges
@@ -195,7 +198,11 @@ object Modules {
 
   def webServerProgram(
       jsonString: String
-  ): ZIO[CredentialService with PresentationService with ConnectionService & ManagedDIDService, MercuryThrowable | DIDSecretStorageError, Unit] = {
+  ): ZIO[
+    CredentialService with PresentationService with ConnectionService & ManagedDIDService,
+    MercuryThrowable | DIDSecretStorageError,
+    Unit
+  ] = {
     import io.iohk.atala.mercury.DidComm.*
     ZIO.logAnnotate("request-id", java.util.UUID.randomUUID.toString()) {
       for {
@@ -464,7 +471,7 @@ object HttpModule {
     (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new DIDRegistrarApi(_, _))
   }
 
-  val issueCredentialsProtocolApiLayer: RLayer[DidComm, IssueCredentialsProtocolApi] = {
+  val issueCredentialsProtocolApiLayer: RLayer[DidComm & ManagedDIDService & AppConfig, IssueCredentialsProtocolApi] = {
     val serviceLayer = AppModule.credentialServiceLayer
     val apiServiceLayer = serviceLayer >>> IssueCredentialsProtocolApiServiceImpl.layer
     val apiMarshallerLayer = IssueCredentialsProtocolApiMarshallerImpl.layer
