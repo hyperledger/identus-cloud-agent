@@ -15,8 +15,15 @@ import zio.*
 
 import java.util.UUID
 import scala.util.Try
+import io.iohk.atala.agent.walletapi.service.ManagedDIDService
+import io.iohk.atala.agent.server.config.AgentConfig
+import io.iohk.atala.agent.server.config.AppConfig
 
-class IssueCredentialsProtocolApiServiceImpl(credentialService: CredentialService)(using runtime: zio.Runtime[Any])
+class IssueCredentialsProtocolApiServiceImpl(
+    credentialService: CredentialService,
+    managedDIDService: ManagedDIDService,
+    agentConfig: AgentConfig
+)(using runtime: zio.Runtime[Any])
     extends IssueCredentialsProtocolApiService,
       AkkaZioSupport,
       OASDomainModelHelper,
@@ -27,8 +34,10 @@ class IssueCredentialsProtocolApiServiceImpl(credentialService: CredentialServic
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
     val result = for {
+      pairwiseDID <- managedDIDService.createAndStorePeerDID(agentConfig.didCommServiceEndpointUrl)
       outcome <- credentialService
         .createIssueCredentialRecord(
+          pairwiseDID = pairwiseDID.did,
           thid = UUID.randomUUID(),
           request.subjectId,
           request.schemaId,
@@ -127,10 +136,13 @@ class IssueCredentialsProtocolApiServiceImpl(credentialService: CredentialServic
 }
 
 object IssueCredentialsProtocolApiServiceImpl {
-  val layer: URLayer[CredentialService, IssueCredentialsProtocolApiService] = ZLayer.fromZIO {
-    for {
-      rt <- ZIO.runtime[Any]
-      svc <- ZIO.service[CredentialService]
-    } yield IssueCredentialsProtocolApiServiceImpl(svc)(using rt)
-  }
+  val layer: URLayer[CredentialService & ManagedDIDService & AppConfig, IssueCredentialsProtocolApiService] =
+    ZLayer.fromZIO {
+      for {
+        rt <- ZIO.runtime[Any]
+        credentialService <- ZIO.service[CredentialService]
+        managedDIDService <- ZIO.service[ManagedDIDService]
+        appConfig <- ZIO.service[AppConfig]
+      } yield IssueCredentialsProtocolApiServiceImpl(credentialService, managedDIDService, appConfig.agent)(using rt)
+    }
 }
