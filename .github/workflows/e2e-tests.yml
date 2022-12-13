@@ -113,7 +113,7 @@ jobs:
         id: analyze_test_results
         # if: github.ref_name == 'master'
         run: |
-          JSON_RESULTS="${{ env.REPORTS_DIR }}/serenity-summary.json"
+          JSON_RESULTS="target/site/serenity/serenity-summary.json"
           CONCLUSION=failure
           TOTAL_TESTS=0
           FAILED_TESTS=0
