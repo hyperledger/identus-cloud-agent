@@ -8,6 +8,7 @@ import common.Utils.lastResponseObject
 import common.Utils.wait
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
+import net.serenitybdd.screenplay.Actor
 import net.serenitybdd.screenplay.rest.interactions.Get
 import net.serenitybdd.screenplay.rest.interactions.Post
 import net.serenitybdd.screenplay.rest.questions.ResponseConsequence
@@ -16,19 +17,18 @@ import org.hamcrest.CoreMatchers.*
 
 class ConnectionSteps {
 
-    @When("Acme generates a connection invitation")
-    fun inviterGeneratesAConnectionInvitation() {
+    @When("{actor} generates a connection invitation")
+    fun inviterGeneratesAConnectionInvitation(inviter: Actor) {
         // Acme(Issuer) initiates a connection
         // and sends it to Bob(Holder) out-of-band, e.g. using QR-code
-        val connectionLabel = "Connection with ${Bob.name}"
-        Acme.attemptsTo(
+        val connectionLabel = "New Connection"
+        inviter.attemptsTo(
             Post.to("/connections")
                 .with {
-                    it.header("Content-Type", "application/json")
                     it.body("""{"label": "$connectionLabel"}""")
                 }
         )
-        Acme.should(
+        inviter.should(
             ResponseConsequence.seeThatResponse("Generates connection request") { response ->
                 response.statusCode(201)
                 response.body("connectionId", notNullValue())
@@ -39,45 +39,44 @@ class ConnectionSteps {
             }
         )
         // Acme remembers invitation URL to send it out of band to Bob
-        Acme.remember(
+        inviter.remember(
             "invitationUrl",
             lastResponseObject("", Connection::class)
                 .invitation.invitationUrl.split("=")[1]
         )
-        Acme.remember(
+        inviter.remember(
             "invitation",
             lastResponseObject("invitation", Invitation::class)
         )
 
         // Acme remembers its connection ID for further use
-        Acme.remember(
+        inviter.remember(
             "connectionId",
             lastResponseObject("", Connection::class)
                 .connectionId
         )
     }
 
-    @When("Bob receives the connection invitation")
-    fun inviteeReceivesTheConnectionInvitation() {
+    @When("{actor} receives the connection invitation from {actor}")
+    fun inviteeReceivesTheConnectionInvitation(invitee: Actor, inviter: Actor) {
         // Here out of band transfer of connection QR code is happening
         // and Bob (Holder) gets an invitation URL
         // they're accepting connection invitation by POST request specifying achieved invitation
         // we demonstrate it by Bob remembering invitationUrl that Acme recalls
-        Bob.remember("invitationUrl", Acme.recall<String>("invitationUrl"))
+        invitee.remember("invitationUrl", inviter.recall<String>("invitationUrl"))
     }
 
-    @When("Bob sends a connection request to Acme")
-    fun inviteeSendsAConnectionRequestToInviter() {
+    @When("{actor} sends a connection request to {actor}")
+    fun inviteeSendsAConnectionRequestToInviter(invitee: Actor, inviter: Actor) {
         // Bob accepts connection using achieved out-of-band invitation
-        Bob.attemptsTo(
+        invitee.attemptsTo(
             Post.to("/connection-invitations")
                 .with {
-                    it.header("Content-Type", "application/json")
-                    it.body("""{"invitation": "${Bob.recall<String>("invitationUrl")}"}""")
+                    it.body("""{"invitation": "${invitee.recall<String>("invitationUrl")}"}""")
                 }
         )
-        val acmeInvitation = Acme.recall<Invitation>("invitation")
-        Bob.should(
+        val acmeInvitation = inviter.recall<Invitation>("invitation")
+        invitee.should(
             ResponseConsequence.seeThatResponse("Accepts connection request") { response ->
                 response.statusCode(200)
                 response.body("connectionId", notNullValue())
@@ -91,18 +90,18 @@ class ConnectionSteps {
                 response.body("state", containsString("ConnectionRequestPending"))
             }
         )
-        Bob.remember("connectionId", lastResponseObject("", Connection::class).connectionId)
+        invitee.remember("connectionId", lastResponseObject("", Connection::class).connectionId)
     }
 
-    @When("Acme receives the connection request")
-    fun inviterReceivesTheConnectionRequest() {
+    @When("{actor} receives the connection request")
+    fun inviterReceivesTheConnectionRequest(inviter: Actor) {
         wait(
             {
-                Acme.attemptsTo(
-                    Get.resource("/connections/${Acme.recall<String>("connectionId")}"),
+                inviter.attemptsTo(
+                    Get.resource("/connections/${inviter.recall<String>("connectionId")}"),
                 )
-                Acme.should(
-                    ResponseConsequence.seeThatResponse("Get connection ${Acme.recall<String>("connectionId")}") {
+                inviter.should(
+                    ResponseConsequence.seeThatResponse("Get connection ${inviter.recall<String>("connectionId")}") {
                         it.statusCode(200)
                     }
                 )
@@ -112,17 +111,17 @@ class ConnectionSteps {
         )
     }
 
-    @When("Acme sends a connection response to Bob")
-    fun inviterSendsAConnectionResponseToInvitee() {
+    @When("{actor} sends a connection response to {actor}")
+    fun inviterSendsAConnectionResponseToInvitee(inviter: Actor, invitee: Actor) {
         // Acme(Issuer) checks their connections to check if invitation was accepted by Bob(Holder)
         // and sends final connection response
         wait(
             {
-                Acme.attemptsTo(
-                    Get.resource("/connections/${Acme.recall<String>("connectionId")}"),
+                inviter.attemptsTo(
+                    Get.resource("/connections/${inviter.recall<String>("connectionId")}"),
                 )
-                Acme.should(
-                    ResponseConsequence.seeThatResponse("Get connection ${Acme.recall<String>("connectionId")}") {
+                inviter.should(
+                    ResponseConsequence.seeThatResponse("Get connection ${inviter.recall<String>("connectionId")}") {
                         it.statusCode(200)
                     }
                 )
@@ -132,16 +131,16 @@ class ConnectionSteps {
         )
     }
 
-    @When("Bob receives the connection response")
-    fun inviteeReceivesTheConnectionResponse() {
+    @When("{actor} receives the connection response")
+    fun inviteeReceivesTheConnectionResponse(invitee: Actor) {
         // Bob (Holder) receives final connection response
         wait(
             {
-                Bob.attemptsTo(
-                    Get.resource("/connections/${Bob.recall<String>("connectionId")}")
+                invitee.attemptsTo(
+                    Get.resource("/connections/${invitee.recall<String>("connectionId")}")
                 )
-                Bob.should(
-                    ResponseConsequence.seeThatResponse("Get connection ${Bob.recall<String>("connectionId")}") {
+                invitee.should(
+                    ResponseConsequence.seeThatResponse("Get connection ${invitee.recall<String>("connectionId")}") {
                         it.statusCode(200)
                     }
                 )
@@ -151,36 +150,36 @@ class ConnectionSteps {
         )
     }
 
-    @Then("Acme and Bob have a connection")
-    fun inviterAndInviteeHaveAConnection() {
+    @Then("{actor} and {actor} have a connection")
+    fun inviterAndInviteeHaveAConnection(inviter: Actor, invitee: Actor) {
         // Connection established. Both parties exchanged their DIDs with each other
-        Acme.attemptsTo(
-            Get.resource("/connections/${Acme.recall<String>("connectionId")}"),
+        inviter.attemptsTo(
+            Get.resource("/connections/${inviter.recall<String>("connectionId")}"),
         )
-        Acme.should(
-            ResponseConsequence.seeThatResponse("Get connection ${Acme.recall<String>("connectionId")}") {
+        inviter.should(
+            ResponseConsequence.seeThatResponse("Get connection ${inviter.recall<String>("connectionId")}") {
                 it.statusCode(200)
             }
         )
-        Acme.remember("connection", lastResponseObject("", Connection::class))
+        inviter.remember("connection", lastResponseObject("", Connection::class))
 
-        Bob.attemptsTo(
-            Get.resource("/connections/${Bob.recall<String>("connectionId")}")
+        invitee.attemptsTo(
+            Get.resource("/connections/${invitee.recall<String>("connectionId")}")
         )
-        Bob.should(
-            ResponseConsequence.seeThatResponse("Get connection ${Bob.recall<String>("connectionId")}") {
+        invitee.should(
+            ResponseConsequence.seeThatResponse("Get connection ${invitee.recall<String>("connectionId")}") {
                 it.statusCode(200)
             }
         )
-        Bob.remember("connection", lastResponseObject("", Connection::class))
+        invitee.remember("connection", lastResponseObject("", Connection::class))
 
-        assertThat(Acme.recall<Connection>("connection").myDid)
-            .isEqualTo(Bob.recall<Connection>("connection").theirDid)
-        assertThat(Acme.recall<Connection>("connection").theirDid)
-            .isEqualTo(Bob.recall<Connection>("connection").myDid)
-        assertThat(Acme.recall<Connection>("connection").state)
+        assertThat(inviter.recall<Connection>("connection").myDid)
+            .isEqualTo(invitee.recall<Connection>("connection").theirDid)
+        assertThat(inviter.recall<Connection>("connection").theirDid)
+            .isEqualTo(invitee.recall<Connection>("connection").myDid)
+        assertThat(inviter.recall<Connection>("connection").state)
             .isEqualTo("ConnectionResponseSent")
-        assertThat(Bob.recall<Connection>("connection").state)
+        assertThat(invitee.recall<Connection>("connection").state)
             .isEqualTo("ConnectionResponseReceived")
     }
 }
