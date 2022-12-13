@@ -114,6 +114,11 @@ jobs:
         # if: github.ref_name == 'master'
         run: |
           JSON_RESULTS="${{ env.REPORTS_DIR }}/serenity-summary.json"
+          CONCLUSION=failure
+          TOTAL_TESTS=0
+          FAILED_TESTS=0
+          SKIPPED_TESTS=0
+          TESTS_WITH_ERRORS=0
           if [ -f "${JSON_RESULTS}" ]; then
             TOTAL_TESTS="$(cat ${JSON_RESULTS} | jq '.results.counts.total')"
             SUCCESS_TESTS="$(cat ${JSON_RESULTS} | jq '.results.counts.success')"
@@ -122,15 +127,9 @@ jobs:
             IGNORED_TESTS="$(cat ${JSON_RESULTS} | jq '.results.counts.ignored')"
             FAILED_TESTS="$(cat ${JSON_RESULTS} | jq '.results.counts.failure')"
             TESTS_WITH_ERRORS="$(cat ${JSON_RESULTS} | jq '.results.counts.error')"
-            if [[ ${FAILED_TESTS} > 0 || ${TESTS_WITH_ERRORS} > 0 ]] ; then
-              CONCLUSION=failure
-            else
+            if [[ ${FAILED_TESTS} == 0 || ${TESTS_WITH_ERRORS} == 0 ]] ; then
               CONCLUSION=success
             fi
-          else
-            CONCLUSION=failure
-            TOTAL_TESTS=0
-            FAILED_TESTS=0
           fi
           echo "conclusion=${CONCLUSION}" >> $GITHUB_OUTPUT
           echo "tests=${TOTAL_TESTS}" >> $GITHUB_OUTPUT
