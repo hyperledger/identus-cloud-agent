@@ -19,6 +19,7 @@ import io.iohk.atala.resolvers.PeerDidMediatorSecretResolver
 import io.iohk.atala.resolvers.UniversalDidResolver
 import io.iohk.atala.mercury.protocol.connection.*
 import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
+import io.iohk.atala.resolvers.DIDResolver
 
 /** AgentCli
   * {{{
@@ -127,35 +128,12 @@ object AgentCli extends ZIOAppDefault {
       reply = outOfBandLoginInvitation.reply(didCommService.myDid)
       _ <- Console.printLine(s"Replying to ${outOfBandLoginInvitation.id} with $reply")
 
-      encryptedForwardMessage <- didCommService.packEncrypted(reply.makeMsg, to = reply.to)
-      jsonString = encryptedForwardMessage.string
-
-      serviceEndpoint = UniversalDidResolver
-        .resolve(reply.to.value)
-        .get()
-        .getDidCommServices()
-        .asScala
-        .toSeq
-        .headOption
-        .map(s => s.getServiceEndpoint())
-
-      _ <- Console.printLine("Sending to" + serviceEndpoint)
-      res <- Client
-        .request(
-          url = serviceEndpoint.get, // TODO make ERROR type
-          method = Method.POST,
-          headers = Headers("content-type" -> MediaTypes.contentTypeEncrypted),
-          content = Body.fromChunk(Chunk.fromArray(jsonString.getBytes)),
-          // ssl = ClientSSLOptions.DefaultSSL,
-        )
-        .provideSomeLayer(zio.http.Client.default)
-        .provideSomeLayer(zio.Scope.default)
-      data <- res.body.asString
-      _ <- Console.printLine(data)
+      res <- MessagingService.send(reply.makeMsg)
+      _ <- Console.printLine(res.bodyAsString)
     } yield ()
   }
 
-  def proposeAndSendCredential: ZIO[DidComm, MercuryError | IOException, Unit] = {
+  def proposeAndSendCredential: ZIO[DidComm & DIDResolver & HttpClient, MercuryError | IOException, Unit] = {
     for {
 
       _ <- Console.printLine("Propose Credential")
@@ -193,11 +171,11 @@ object AgentCli extends ZIOAppDefault {
       msg = proposeCredential.makeMessage
       _ <- Console.printLine("Sending: " + msg)
 
-      _ <- sendMessage(msg)
+      _ <- MessagingService.send(msg)
     } yield ()
   }
 
-  def presentProof: ZIO[DidComm, MercuryError | IOException, Unit] = {
+  def presentProof: ZIO[DidComm & DIDResolver & HttpClient, MercuryError | IOException, Unit] = {
     for {
       _ <- Console.printLine("Present Proof")
       didCommService <- ZIO.service[DidComm]
@@ -223,11 +201,11 @@ object AgentCli extends ZIOAppDefault {
       )
       msg = requestPresentation.makeMessage
       _ <- Console.printLine("Sending: " + msg)
-      _ <- sendMessage(msg)
+      _ <- MessagingService.send(msg)
     } yield ()
   }
 
-  def connect: ZIO[DidComm, MercuryError | IOException, Unit] = {
+  def connect: ZIO[DidComm & DIDResolver & HttpClient, MercuryError | IOException, Unit] = {
 
     import io.iohk.atala.mercury.protocol.invitation.OutOfBand
     import io.circe._, io.circe.parser._
@@ -250,52 +228,12 @@ object AgentCli extends ZIOAppDefault {
       )
       msg = connectionRequest.makeMessage
       _ <- Console.printLine("Sending: " + msg)
-      _ <- sendMessage(msg)
+      _ <- MessagingService.send(msg)
 
     } yield ()
   }
 
-  /** Encrypt and send a Message via HTTP
-    *
-    * TODO Move this method to another model
-    */
-  def sendMessage(msg: Message): ZIO[DidComm, MercuryException, Unit] = { // TODO  Throwable
-    for {
-      didCommService <- ZIO.service[DidComm]
-
-      encryptedForwardMessage <- didCommService.packEncrypted(msg, to = msg.to.head) // TODO head
-      jsonString = encryptedForwardMessage.string
-
-      serviceEndpoint = UniversalDidResolver
-        .resolve(msg.to.head.value) // TODO head
-        .get()
-        .getDidCommServices()
-        .asScala
-        .toSeq
-        .headOption
-        .map(s => s.getServiceEndpoint())
-        .get // TODO make ERROR type
-
-      _ <- Console.printLine("Sending to" + serviceEndpoint)
-
-      res <- Client
-        .request(
-          url = serviceEndpoint,
-          method = Method.POST,
-          headers = Headers("content-type" -> MediaTypes.contentTypeEncrypted),
-          content = Body.fromChunk(Chunk.fromArray(jsonString.getBytes)),
-          // ssl = ClientSSLOptions.DefaultSSL,
-        )
-        .provideSomeLayer(zio.http.Client.default)
-        .provideSomeLayer(zio.Scope.default)
-        .catchNonFatalOrDie { ex => ZIO.fail(SendMessage(ex)) }
-      data <- res.body.asString
-        .catchNonFatalOrDie { ex => ZIO.fail(ParseResponse(ex)) }
-      _ <- Console.printLine(data)
-    } yield ()
-  }
-
-  def webServer(port: Int): HttpApp[DidComm, Throwable] = {
+  def webServer(port: Int): HttpApp[DidComm & DIDResolver & HttpClient, Throwable] = {
     val header = "content-type" -> MediaTypes.contentTypeEncrypted
     Http
       .collectZIO[Request] {
@@ -337,7 +275,12 @@ object AgentCli extends ZIOAppDefault {
       case ""  => ZIO.succeed(defualtPort)
       case str => ZIO.succeed(str.toIntOption.getOrElse(defualtPort))
     }
-    _ <- Server.serve(webServer(port)).debug.fork
+    _ <- (Server
+      .serve(webServer(port))
+      .debug
+      .flatMap(e => Console.printLine("Endpoint stop"))
+      .catchAll { case ex => Console.printLine(s"Endpoint FAIL ${ex.getMessage()}") })
+      .fork
     _ <- Console.printLine("Endpoint Started")
   } yield ()
 
@@ -365,21 +308,22 @@ object AgentCli extends ZIOAppDefault {
     } yield (peer)
 
     didCommLayer = agentLayer(agentDID)
-    layers: ZLayer[Any, Nothing, AgentServiceAny & HttpClient] = didCommLayer ++ ZioHttpClient.layer
+    layers: ZLayer[Any, Nothing, AgentServiceAny & DIDResolver & HttpClient] =
+      didCommLayer ++ DIDResolver.layer ++ ZioHttpClient.layer
 
     _ <- options(
       Seq(
         "none" -> ZIO.unit,
         "Show DID" -> Console.printLine(agentDID),
         "Get DID Document" -> Console.printLine("DID Document:") *> Console.printLine(agentDID.getDIDDocument),
-        "Start WebServer endpoint" -> startEndpoint.provide(zio.http.Server.default, didCommLayer),
+        "Start WebServer endpoint" -> startEndpoint.provide(zio.http.Server.default, layers),
         "Ask for Mediation Coordinate" -> askForMediation.provide(layers),
         "Generate login invitation" -> generateLoginInvitation.provide(didCommLayer),
-        "Login with DID" -> loginInvitation.provide(didCommLayer),
-        "Propose Credential" -> proposeAndSendCredential.provide(didCommLayer),
-        "Present Proof" -> presentProof.provide(didCommLayer),
+        "Login with DID" -> loginInvitation.provide(layers),
+        "Propose Credential" -> proposeAndSendCredential.provide(layers),
+        "Present Proof" -> presentProof.provide(layers),
         "Generate Connection invitation" -> generateConnectionInvitation.provide(didCommLayer),
-        "Connect" -> connect.provide(didCommLayer),
+        "Connect" -> connect.provide(layers),
       )
     ).repeatWhile((_) => true)
 
@@ -387,7 +331,7 @@ object AgentCli extends ZIOAppDefault {
 
   def webServerProgram(
       jsonString: String
-  ): ZIO[DidComm, MercuryThrowable, String] = { // TODO Throwable
+  ): ZIO[DidComm & DIDResolver & HttpClient, MercuryThrowable, String] = { // TODO Throwable
     import io.iohk.atala.mercury.DidComm.*
     ZIO.logAnnotate("request-id", java.util.UUID.randomUUID.toString()) {
       for {
@@ -413,7 +357,7 @@ object AgentCli extends ZIOAppDefault {
 
                 didCommService <- ZIO.service[DidComm]
                 msgToSend = offer.makeMessage
-                _ <- sendMessage(msgToSend)
+                _ <- MessagingService.send(msgToSend)
               } yield ("OfferCredential Sent")
 
             case s if s == OfferCredential.`type` => // Holder
@@ -426,7 +370,7 @@ object AgentCli extends ZIOAppDefault {
 
                 didCommService <- ZIO.service[DidComm]
                 msgToSend = requestCredential.makeMessage
-                _ <- sendMessage(msgToSend)
+                _ <- MessagingService.send(msgToSend)
               } yield ("RequestCredential Sent")
 
             case s if s == RequestCredential.`type` => // Issuer
@@ -438,7 +382,7 @@ object AgentCli extends ZIOAppDefault {
 
                 didCommService <- ZIO.service[DidComm]
                 msgToSend = issueCredential.makeMessage
-                _ <- sendMessage(msgToSend)
+                _ <- MessagingService.send(msgToSend)
               } yield ("IssueCredential Sent")
 
             case s if s == IssueCredential.`type` => // Holder
@@ -457,7 +401,7 @@ object AgentCli extends ZIOAppDefault {
                 presentation = Presentation.makePresentationFromRequest(msg)
                 didCommService <- ZIO.service[DidComm]
                 msgToSend = presentation.makeMessage
-                _ <- sendMessage(msgToSend)
+                _ <- MessagingService.send(msgToSend)
               } yield ("Presentation Sent")
             case s if s == Presentation.`type` => // Verifier
               for {
@@ -478,7 +422,7 @@ object AgentCli extends ZIOAppDefault {
 //                _ <- ZIO.logInfo(s"My new DID => $peer")
                 connectionResponse = ConnectionResponse.makeResponseFromRequest(msg)
                 msgToSend = connectionResponse.makeMessage
-                _ <- sendMessage(msgToSend)
+                _ <- MessagingService.send(msgToSend)
               } yield ("Connection Request Sent")
             case s if s == ConnectionResponse.`type` => // Invitee
               for {
