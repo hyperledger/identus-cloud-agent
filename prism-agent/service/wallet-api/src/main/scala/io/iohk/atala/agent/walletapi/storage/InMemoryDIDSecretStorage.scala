@@ -18,7 +18,7 @@ private[walletapi] class InMemoryDIDSecretStorage private (
 
   override def getKey(did: PrismDID, keyId: String): Task[Option[ECKeyPair]] = listKeys(did).map(_.get(keyId))
 
-  override def upsertKey(did: PrismDID, keyId: String, keyPair: ECKeyPair): Task[Unit] =
+  override def upsertKey(did: PrismDID, keyId: String, keyPair: ECKeyPair): Task[Int] =
     store
       .update { currentStore =>
         val currentSecret = currentStore.get(did)
@@ -27,9 +27,9 @@ private[walletapi] class InMemoryDIDSecretStorage private (
         val updatedSecret =
           currentSecret.fold(DIDSecretRecord(keyPairs = updatedKeyPairs))(_.copy(keyPairs = updatedKeyPairs))
         currentStore.updated(did, updatedSecret)
-      }
+      }.map(_ => 1)
 
-  override def removeKey(did: PrismDID, keyId: String): Task[Unit] = store
+  override def removeKey(did: PrismDID, keyId: String): Task[Int] = store
     .update { currentStore =>
       currentStore.get(did) match {
         case Some(secret) =>
@@ -39,9 +39,9 @@ private[walletapi] class InMemoryDIDSecretStorage private (
           currentStore.updated(did, updatedSecret)
         case None => currentStore
       }
-    }
+    }.map( _ => 1)
 
-  override def removeDIDSecret(did: PrismDID): Task[Unit] = store.update(_.removed(did))
+  override def removeDIDSecret(did: PrismDID): Task[Int] = store.update(_.removed(did)).map(_ => 1)
 
   override def insertKey(did: DidId, keyId: String, keyPair: OctetKeyPair): Task[Int] = {
     for {

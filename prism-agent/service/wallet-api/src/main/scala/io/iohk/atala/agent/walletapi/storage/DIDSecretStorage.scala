@@ -18,13 +18,13 @@ private[walletapi] trait DIDSecretStorage {
 
   def getKey(did: PrismDID, keyId: String): Task[Option[ECKeyPair]]
 
-  def upsertKey(did: PrismDID, keyId: String, keyPair: ECKeyPair): Task[Unit]
+  def upsertKey(did: PrismDID, keyId: String, keyPair: ECKeyPair): Task[Int]
 
   /** Returns the deleted key-pair if exists, otherwise return None */
-  def removeKey(did: PrismDID, keyId: String): Task[Unit]
+  def removeKey(did: PrismDID, keyId: String): Task[Int]
 
   /** Remove all secrets related to the DID */
-  def removeDIDSecret(did: PrismDID): Task[Unit]
+  def removeDIDSecret(did: PrismDID): Task[Int]
 
   /** PeerDID related methods. TODO: Refactor to abstract over PrismDID & PeerDID and merge methods
     */
