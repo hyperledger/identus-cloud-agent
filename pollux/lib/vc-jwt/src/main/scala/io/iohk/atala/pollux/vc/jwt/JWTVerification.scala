@@ -1,7 +1,10 @@
 package io.iohk.atala.pollux.vc.jwt
+import com.nimbusds.jose.crypto.ECDSAVerifier
 import com.nimbusds.jose.jwk.*
 import com.nimbusds.jose.jwk.gen.*
 import com.nimbusds.jose.util.Base64URL
+import com.nimbusds.jose.JWSVerifier
+import com.nimbusds.jwt.SignedJWT
 import io.circe
 import io.circe.generic.auto.*
 import io.circe.parser.decode
@@ -17,6 +20,7 @@ import zio.ZIO.none
 import zio.prelude.*
 import zio.{IO, NonEmptyChunk, Task, ZIO}
 
+import java.security.interfaces.ECPublicKey
 import java.security.spec.{ECParameterSpec, ECPublicKeySpec}
 import java.security.{KeyPairGenerator, PublicKey}
 import java.time.temporal.{Temporal, TemporalAmount, TemporalUnit}
@@ -75,9 +79,21 @@ object JWTVerification {
       })
   }
 
-  def validateEncodedJwt(jwt: JWT, publicKey: PublicKey): Validation[String, Unit] =
-    if JwtCirce.isValid(jwt.value, publicKey, JwtOptions(expiration = false, notBefore = false)) then Validation.unit
-    else Validation.fail(s"Jwt[$jwt] not signed by $publicKey")
+  def validateEncodedJwt(jwt: JWT, publicKey: PublicKey): Validation[String, Unit] = {
+    Try {
+      val parsedJwt = SignedJWT.parse(jwt.value)
+      // TODO Implement other key types
+      val verifier: JWSVerifier = publicKey match {
+        case key: ECPublicKey => ECDSAVerifier(key)
+        case key              => throw Exception(s"unsupported public-key type: ${key.getClass.getCanonicalName}")
+      }
+      parsedJwt.verify(verifier)
+    } match {
+      case Failure(exception) => Validation.fail(s"Jwt[$jwt] verification pre-process failed: ${exception.getMessage}")
+      case Success(isValid) =>
+        if isValid then Validation.unit else Validation.fail(s"Jwt[$jwt] not singed by $publicKey")
+    }
+  }
 
   def validateEncodedJwt(jwt: JWT, verificationMethods: IndexedSeq[VerificationMethod]): Validation[String, Unit] = {
     verificationMethods
