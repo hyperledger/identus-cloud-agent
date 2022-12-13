@@ -111,7 +111,7 @@ jobs:
 
       - name: Extract test results
         id: analyze_test_results
-        # if: github.ref_name == 'master'
+        if: github.ref_name == 'master'
         run: |
           JSON_RESULTS="target/site/serenity/serenity-summary.json"
           CONCLUSION=failure
@@ -140,7 +140,7 @@ jobs:
           echo "ignored=${IGNORED_TESTS}" >> $GITHUB_OUTPUT
 
       - name: Slack Notification
-        # if: github.ref_name == 'master'
+        if: github.ref_name == 'master'
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_CHANNEL: atala-qa-results
