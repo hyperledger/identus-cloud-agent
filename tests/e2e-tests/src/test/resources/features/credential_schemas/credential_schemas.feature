@@ -4,6 +4,7 @@ Feature: Credential schemas
     When Acme creates a new credential schema
     Then He sees new credential schema is available
 
+  @skip
   Scenario Outline: Multiple schema creation
     When Acme creates <schemas> new schemas
     Then He can access all of them one by one
