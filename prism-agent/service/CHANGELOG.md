@@ -1,3 +1,10 @@
+# [prism-agent-v0.17.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.17.0...prism-agent-v0.17.1) (2022-12-13)
+
+
+### Bug Fixes
+
+* **prism-agent:** switch datetime format to offsetdatetime. ATL-2723 ([#243](https://github.com/input-output-hk/atala-prism-building-blocks/issues/243)) ([6903afa](https://github.com/input-output-hk/atala-prism-building-blocks/commit/6903afa8d3ba226f02b1dce7665cf5adf3fc09e6))
+
 # [prism-agent-v0.17.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.16.1...prism-agent-v0.17.0) (2022-12-12)
 
 
