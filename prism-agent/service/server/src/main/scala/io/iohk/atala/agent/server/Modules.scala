@@ -88,6 +88,7 @@ import org.didcommx.didcomm.model.UnpackParams
 import org.didcommx.didcomm.secret.Secret
 import io.circe.ParsingFailure
 import io.circe.DecodingFailure
+import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
 
 object Modules {
 
@@ -396,7 +397,7 @@ object AppModule {
     (didOpValidatorLayer ++ GrpcModule.layers) >>> DIDServiceImpl.layer
 
   val manageDIDServiceLayer: TaskLayer[ManagedDIDService] =
-    (didOpValidatorLayer ++ didServiceLayer) >>> ManagedDIDService.inMemoryStorage
+    (didOpValidatorLayer ++ didServiceLayer ++ (RepoModule.agentTransactorLayer >>> JdbcDIDSecretStorage.layer)) >>> ManagedDIDService.layer
 
   val credentialServiceLayer: RLayer[DidComm, CredentialService] =
     (GrpcModule.layers ++ RepoModule.credentialRepoLayer) >>> CredentialServiceImpl.layer
