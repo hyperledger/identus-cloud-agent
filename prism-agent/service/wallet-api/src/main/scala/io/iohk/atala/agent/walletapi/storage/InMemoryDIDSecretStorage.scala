@@ -43,7 +43,7 @@ private[walletapi] class InMemoryDIDSecretStorage private (
 
   override def removeDIDSecret(did: PrismDID): Task[Unit] = store.update(_.removed(did))
 
-  override def insertKey(did: DidId, keyId: String, keyPair: OctetKeyPair): UIO[Unit] = {
+  override def insertKey(did: DidId, keyId: String, keyPair: OctetKeyPair): Task[Int] = {
     for {
       _ <- peerDIDStore
         .update { currentStore =>
@@ -56,16 +56,16 @@ private[walletapi] class InMemoryDIDSecretStorage private (
         }
       storage <- peerDIDStore.get
       _ <- ZIO.logInfo(s"Peer DID Store content after insert: ${storage.size}")
-    } yield ()
+    } yield 1
   }
 
-  override def getKey(did: DidId, keyId: String): IO[KeyNotFoundError, OctetKeyPair] =
+  override def getKey(did: DidId, keyId: String): Task[Option[OctetKeyPair]] =
     for {
       storage <- peerDIDStore.get
       _ <- ZIO.logInfo(s"Peer DID Store content before get: ${storage.size}")
       maybeKeyPair <- peerDIDStore.get.map(_.get(did).map(_.keyPairs).flatMap(_.get(keyId)))
       keyPair <- ZIO.fromOption(maybeKeyPair).mapError(_ => KeyNotFoundError(did, keyId))
-    } yield keyPair
+    } yield Some(keyPair)
 
 }
 

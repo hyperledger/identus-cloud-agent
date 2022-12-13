@@ -9,7 +9,12 @@ import io.iohk.atala.agent.walletapi.model.{
   ManagedDIDTemplate
 }
 import io.iohk.atala.agent.walletapi.model.ECCoordinates.*
-import io.iohk.atala.agent.walletapi.model.error.{CreateManagedDIDError, ListManagedDIDError, PublishManagedDIDError, DIDSecretStorageError}
+import io.iohk.atala.agent.walletapi.model.error.{
+  CreateManagedDIDError,
+  ListManagedDIDError,
+  PublishManagedDIDError,
+  DIDSecretStorageError
+}
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService.{CreateDIDSecret, DEFAULT_MASTER_KEY_ID}
 import io.iohk.atala.agent.walletapi.storage.{
   DIDNonSecretStorage,
@@ -45,6 +50,7 @@ import zio.*
 import scala.collection.immutable.ArraySeq
 import io.iohk.atala.mercury.PeerDID
 import io.iohk.atala.mercury.model.DidId
+import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
 
 /** A wrapper around Castor's DIDService providing key-management capability. Analogous to the secretAPI in
   * indy-wallet-sdk.
@@ -57,6 +63,8 @@ final class ManagedDIDService private[walletapi] (
 ) {
 
   private val CURVE = EllipticCurve.SECP256K1
+  private val AGREEMENT_KEY_ID = "agreement"
+  private val AUTHENTICATION_KEY_ID = "authentication"
 
   def listManagedDID: IO[ListManagedDIDError, Seq[ManagedDIDDetail]] = nonSecretStorage.listManagedDID
     .mapBoth(
@@ -234,14 +242,20 @@ final class ManagedDIDService private[walletapi] (
   def createAndStorePeerDID(serviceEndpoint: String): UIO[PeerDID] =
     for {
       peerDID <- ZIO.succeed(PeerDID.makePeerDid(serviceEndpoint = Some(serviceEndpoint)))
-      _ <- secretStorage.insertKey(peerDID.did, "agreement", peerDID.jwkForKeyAgreement)
-      _ <- secretStorage.insertKey(peerDID.did, "authentication", peerDID.jwkForKeyAuthentication)
+      _ <- secretStorage.insertKey(peerDID.did, AGREEMENT_KEY_ID, peerDID.jwkForKeyAgreement).orDie
+      _ <- secretStorage.insertKey(peerDID.did, AUTHENTICATION_KEY_ID, peerDID.jwkForKeyAuthentication).orDie
     } yield peerDID
 
   def getPeerDID(didId: DidId): IO[DIDSecretStorageError.KeyNotFoundError, PeerDID] =
     for {
-      jwkForAgreement <- secretStorage.getKey(didId, "agreement")
-      jwkForAuthentication <- secretStorage.getKey(didId, "authentication")
+      maybeJwkForAgreement <- secretStorage.getKey(didId, AGREEMENT_KEY_ID).orDie
+      jwkForAgreement <- ZIO
+        .fromOption(maybeJwkForAgreement)
+        .mapError(_ => DIDSecretStorageError.KeyNotFoundError(didId, AGREEMENT_KEY_ID))
+      maybeJwkForAuthentication <- secretStorage.getKey(didId, AUTHENTICATION_KEY_ID).orDie
+      jwkForAuthentication <- ZIO
+        .fromOption(maybeJwkForAuthentication)
+        .mapError(_ => DIDSecretStorageError.KeyNotFoundError(didId, AUTHENTICATION_KEY_ID))
       peerDID <- ZIO.succeed(PeerDID(didId, jwkForAgreement, jwkForAuthentication))
     } yield peerDID
 
@@ -262,4 +276,8 @@ object ManagedDIDService {
     (InMemoryDIDNonSecretStorage.layer ++ InMemoryDIDSecretStorage.layer) >>> ZLayer.fromFunction(
       ManagedDIDService(_, _, _, _)
     )
+
+  val layer: URLayer[DIDOperationValidator & DIDService & DIDSecretStorage, ManagedDIDService] =
+    InMemoryDIDNonSecretStorage.layer >>> ZLayer.fromFunction(ManagedDIDService(_, _, _, _))
+
 }

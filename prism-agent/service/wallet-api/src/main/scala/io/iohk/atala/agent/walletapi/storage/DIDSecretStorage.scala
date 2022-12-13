@@ -28,8 +28,8 @@ private[walletapi] trait DIDSecretStorage {
 
   /** PeerDID related methods. TODO: Refactor to abstract over PrismDID & PeerDID and merge methods
     */
-  def insertKey(did: DidId, keyId: String, keyPair: OctetKeyPair): UIO[Unit]
+  def insertKey(did: DidId, keyId: String, keyPair: OctetKeyPair): Task[Int]
 
-  def getKey(did: DidId, keyId: String): IO[KeyNotFoundError, OctetKeyPair]
+  def getKey(did: DidId, keyId: String): Task[Option[OctetKeyPair]]
 
 }
