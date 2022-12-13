@@ -101,7 +101,7 @@ object JWTVerification {
   ): Validation[String, IndexedSeq[VerificationMethod]] = {
     Validation
       .fromPredicateWith("No PublicKey to validate against found")(
-        didDocument.assertionMethod.find(verification => verification.id == keyId)
+        didDocument.assertionMethod.filter(verification => verification.`type` == jwtAlgorithm.name)
       )(_.nonEmpty)
   }
 
