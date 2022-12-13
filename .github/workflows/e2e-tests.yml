@@ -127,7 +127,7 @@ jobs:
             IGNORED_TESTS="$(cat ${JSON_RESULTS} | jq '.results.counts.ignored')"
             FAILED_TESTS="$(cat ${JSON_RESULTS} | jq '.results.counts.failure')"
             TESTS_WITH_ERRORS="$(cat ${JSON_RESULTS} | jq '.results.counts.error')"
-            if [[ ${FAILED_TESTS} == 0 || ${TESTS_WITH_ERRORS} == 0 ]] ; then
+            if [[ ${FAILED_TESTS} == 0 && ${TESTS_WITH_ERRORS} == 0 ]] ; then
               CONCLUSION=success
             fi
           fi
