@@ -41,14 +41,7 @@ object ConnectBackgroundJobs {
     val exchange = record match {
       case ConnectionRecord(id, _, _, _, _, Invitee, ConnectionRequestPending, _, Some(request), _) =>
         (for {
-          managedDidService <- ZIO.service[ManagedDIDService]
-          peerDID <- managedDidService.getPeerDID(request.from)
-          didCommAgent = ZLayer.succeed(
-            AgentServiceAny(
-              new DIDComm(UniversalDidResolver, peerDID.getSecretResolverInMemory),
-              peerDID.did
-            )
-          )
+          didCommAgent <- buildDIDCommAgent(request.from)
           _ <- sendMessage(request.makeMessage).provide(didCommAgent)
           connectionService <- ZIO.service[ConnectionService]
           _ <- connectionService.markConnectionRequestSent(id)
@@ -60,14 +53,7 @@ object ConnectBackgroundJobs {
 
       case ConnectionRecord(id, _, _, _, _, Inviter, ConnectionResponsePending, _, _, Some(response)) =>
         (for {
-          managedDidService <- ZIO.service[ManagedDIDService]
-          peerDID <- managedDidService.getPeerDID(response.from)
-          didCommAgent = ZLayer.succeed(
-            AgentServiceAny(
-              new DIDComm(UniversalDidResolver, peerDID.getSecretResolverInMemory),
-              peerDID.did
-            )
-          )
+          didCommAgent <- buildDIDCommAgent(response.from)
           _ <- sendMessage(response.makeMessage).provide(didCommAgent)
           connectionService <- ZIO.service[ConnectionService]
           _ <- connectionService.markConnectionResponseSent(id)
@@ -87,11 +73,24 @@ object ConnectBackgroundJobs {
         case ex: ConnectionServiceError =>
           ZIO.logErrorCause(s"Connection service error processing record: ${record.id} ", Cause.fail(ex))
         case ex: DIDSecretStorageError =>
-          ZIO.logErrorCause(s"DID secret storafe error processing record: ${record.id} ", Cause.fail(ex))
+          ZIO.logErrorCause(s"DID secret storage error processing record: ${record.id} ", Cause.fail(ex))
       }
       .catchAllDefect { case throwable =>
         ZIO.logErrorCause(s"Connection protocol defect processing record: ${record.id}", Cause.fail(throwable))
       }
+  }
+
+  private[this] def buildDIDCommAgent(myDid: DidId) = {
+    for {
+      managedDidService <- ZIO.service[ManagedDIDService]
+      peerDID <- managedDidService.getPeerDID(myDid)
+      didCommAgent = ZLayer.succeed(
+        AgentServiceAny(
+          new DIDComm(UniversalDidResolver, peerDID.getSecretResolverInMemory),
+          peerDID.did
+        )
+      )
+    } yield didCommAgent
   }
 
 }
