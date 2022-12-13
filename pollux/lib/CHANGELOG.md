@@ -1,3 +1,11 @@
+# [pollux-v0.10.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.9.0...pollux-v0.10.0) (2022-12-13)
+
+
+### Features
+
+* **pollux:** [ATL-2679] Improve Error Hanlding and Verification ([#239](https://github.com/input-output-hk/atala-prism-building-blocks/issues/239)) ([6348e13](https://github.com/input-output-hk/atala-prism-building-blocks/commit/6348e1339b1c8f8b6b1646c8730c526eac99cf4a))
+* **pollux:** updated  the version for mercury ([#245](https://github.com/input-output-hk/atala-prism-building-blocks/issues/245)) ([a2af672](https://github.com/input-output-hk/atala-prism-building-blocks/commit/a2af6726264613247b008429e42c8470aa58c034))
+
 # [pollux-v0.9.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.8.0...pollux-v0.9.0) (2022-12-12)
 
 
