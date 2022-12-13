@@ -13,18 +13,20 @@ import java.time.Instant
 
 import io.iohk.atala.mercury.DidComm
 import io.iohk.atala.mercury.MediaTypes
+import io.iohk.atala.mercury.MessagingService
+import io.iohk.atala.mercury.HttpClient
 import io.iohk.atala.mercury.model._
 import io.iohk.atala.mercury.model.error._
 import io.iohk.atala.mercury.protocol.issuecredential._
+import io.iohk.atala.mercury.protocol.presentproof.RequestPresentation
+import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.resolvers.UniversalDidResolver
-import io.iohk.atala.agent.server.jobs.MercuryUtils.sendMessage
 import java.io.IOException
 
 import zhttp.service._
 import zhttp.http._
 import io.iohk.atala.pollux.vc.jwt.JwtCredential
 import io.iohk.atala.pollux.core.model.PresentationRecord
-import io.iohk.atala.mercury.protocol.presentproof.RequestPresentation
 import io.iohk.atala.pollux.core.service.PresentationService
 import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.agent.server.http.model.{InvalidState, NotImplemented}
@@ -52,7 +54,7 @@ object BackgroundJobs {
 
   private[this] def performExchange(
       record: IssueCredentialRecord
-  ): URIO[DidComm & CredentialService, Unit] = {
+  ): URIO[DidComm & DIDResolver & HttpClient & CredentialService, Unit] = {
     import IssueCredentialRecord._
     import IssueCredentialRecord.ProtocolState._
     import IssueCredentialRecord.PublicationState._
@@ -64,10 +66,10 @@ object BackgroundJobs {
           (for {
             _ <- ZIO.log(s"IssueCredentialRecord: OfferPending (START)")
             didComm <- ZIO.service[DidComm]
-            _ <- sendMessage(offer.makeMessage)
+            _ <- MessagingService.send(offer.makeMessage)
             credentialService <- ZIO.service[CredentialService]
             _ <- credentialService.markOfferSent(id)
-          } yield ()): ZIO[DidComm & CredentialService, CredentialServiceError | MercuryException, Unit]
+          } yield ())
 
         // Request should be sent from Holder to Issuer
         case IssueCredentialRecord(
@@ -89,10 +91,10 @@ object BackgroundJobs {
               _,
             ) =>
           (for {
-            _ <- sendMessage(request.makeMessage)
+            _ <- MessagingService.send(request.makeMessage)
             credentialService <- ZIO.service[CredentialService]
             _ <- credentialService.markRequestSent(id)
-          } yield ()): ZIO[DidComm & CredentialService, CredentialServiceError | MercuryException, Unit]
+          } yield ())
 
         // 'automaticIssuance' is TRUE. Issuer automatically accepts the Request
         case IssueCredentialRecord(id, _, _, _, _, Role.Issuer, _, _, Some(true), _, RequestReceived, _, _, _, _, _) =>
@@ -162,10 +164,10 @@ object BackgroundJobs {
               _,
             ) =>
           (for {
-            _ <- sendMessage(issue.makeMessage)
+            _ <- MessagingService.send(issue.makeMessage)
             credentialService <- ZIO.service[CredentialService]
             _ <- credentialService.markCredentialSent(id)
-          } yield ()): ZIO[DidComm & CredentialService, CredentialServiceError | MercuryException, Unit]
+          } yield ())
 
         // Credential has been generated, published, and can now be sent to the Holder
         case IssueCredentialRecord(
@@ -187,10 +189,10 @@ object BackgroundJobs {
               _,
             ) =>
           (for {
-            _ <- sendMessage(issue.makeMessage)
+            _ <- MessagingService.send(issue.makeMessage)
             credentialService <- ZIO.service[CredentialService]
             _ <- credentialService.markCredentialSent(id)
-          } yield ()): ZIO[DidComm & CredentialService, CredentialServiceError | MercuryException, Unit]
+          } yield ())
 
         case IssueCredentialRecord(id, _, _, _, _, _, _, _, _, _, ProblemReportPending, _, _, _, _, _) => ???
         case IssueCredentialRecord(id, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)                    => ZIO.unit
@@ -211,10 +213,14 @@ object BackgroundJobs {
 
   private[this] def performPresentation(
       record: PresentationRecord
-  ): ZIO[DidComm & PresentationService, Throwable, Unit] = {
+  ): ZIO[DidComm & DIDResolver & HttpClient & PresentationService, Throwable, Unit] = {
     import io.iohk.atala.pollux.core.model.PresentationRecord.ProtocolState._
 
-    val aux: ZIO[DidComm & PresentationService, MercuryException | InvalidState | NotImplemented.type, Unit] = for {
+    val aux: ZIO[
+      DidComm & DIDResolver & HttpClient & PresentationService,
+      MercuryException | InvalidState | NotImplemented.type | SendMessageError,
+      Unit
+    ] = for {
       _ <- ZIO.logDebug(s"Running action with records => $record")
       _ <- record match {
         // ##########################
@@ -232,7 +238,7 @@ object BackgroundJobs {
               for {
                 _ <- ZIO.log(s"PresentationRecord: RequestPending (Send Massage)")
                 didComm <- ZIO.service[DidComm]
-                _ <- sendMessage(record.makeMessage)
+                _ <- MessagingService.send(record.makeMessage)
                 service <- ZIO.service[PresentationService]
                 _ <- service.markRequestPresentationSent(id).catchAll { case ex: PresentationError =>
                   ZIO.logError(s"Fail to mark the RequestPresentation '$id' as Verifier: $ex") *>
@@ -256,7 +262,7 @@ object BackgroundJobs {
               for {
                 _ <- ZIO.log(s"PresentationRecord: PresentationPending (Send Massage)")
                 didComm <- ZIO.service[DidComm]
-                _ <- sendMessage(p.makeMessage)
+                _ <- MessagingService.send(p.makeMessage)
                 service <- ZIO.service[PresentationService]
                 _ <- service.markPresentationSent(id).catchAll { case ex: PresentationError =>
                   ZIO.logError(s"Fail to mark the PresentationSent '$id' as Prover: $ex") *>
@@ -290,9 +296,10 @@ object BackgroundJobs {
       case ex: TransportError => // : io.iohk.atala.mercury.model.error.MercuryError | java.io.IOException =>
         ZIO.logError(ex.getMessage()) *>
           ZIO.fail(mercuryErrorAsThrowable(ex))
-      case ex: IOException         => ZIO.fail(ex)
-      case ex: InvalidState        => ZIO.fail(ex)
-      case ex: NotImplemented.type => ZIO.fail(ex)
+      case ex: IOException           => ZIO.fail(ex)
+      case ex: InvalidState          => ZIO.fail(ex)
+      case ex: NotImplemented.type   => ZIO.fail(ex)
+      case ex @ SendMessageError(aa) => ZIO.fail(aa) // FIXME!!!!!!!!!!!!!!!!!!!!!!!!!!
     }
   }
 

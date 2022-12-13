@@ -78,6 +78,7 @@ import io.iohk.atala.pollux.schema.{SchemaRegistryServerEndpoints, VerificationP
 import io.iohk.atala.pollux.service.{SchemaRegistryServiceInMemory, VerificationPolicyServiceInMemory}
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.mercury.protocol.presentproof._
+import io.iohk.atala.resolvers.DIDResolver
 
 object Modules {
 
@@ -137,19 +138,19 @@ object Modules {
     Server.start(port, app)
   }
 
-  val didCommExchangesJob: RIO[DidComm, Unit] =
+  val didCommExchangesJob: RIO[DidComm & DIDResolver & HttpClient, Unit] =
     BackgroundJobs.didCommExchanges
       .repeat(Schedule.spaced(10.seconds))
       .unit
       .provideSomeLayer(AppModule.credentialServiceLayer)
 
-  val presentProofExchangeJob: RIO[DidComm, Unit] =
+  val presentProofExchangeJob: RIO[DidComm & DIDResolver & HttpClient, Unit] =
     BackgroundJobs.presentProofExchanges
       .repeat(Schedule.spaced(10.seconds))
       .unit
       .provideSomeLayer(AppModule.presentationServiceLayer)
 
-  val connectDidCommExchangesJob: RIO[DidComm, Unit] =
+  val connectDidCommExchangesJob: RIO[DidComm & DIDResolver & HttpClient, Unit] =
     ConnectBackgroundJobs.didCommExchanges
       .repeat(Schedule.spaced(10.seconds))
       .unit
