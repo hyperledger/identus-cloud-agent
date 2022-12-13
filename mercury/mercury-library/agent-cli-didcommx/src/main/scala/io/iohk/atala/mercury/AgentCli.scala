@@ -233,7 +233,7 @@ object AgentCli extends ZIOAppDefault {
     } yield ()
   }
 
-  def webServer(port: Int): HttpApp[DidComm & DIDResolver & HttpClient, Throwable] = {
+  def webServer: HttpApp[DidComm & DIDResolver & HttpClient, Throwable] = {
     val header = "content-type" -> MediaTypes.contentTypeEncrypted
     Http
       .collectZIO[Request] {
@@ -249,12 +249,14 @@ object AgentCli extends ZIOAppDefault {
             }
             .map(str => Response.text(str))
         case Method.GET -> !! / "test" => ZIO.succeed(Response.text("Test ok!"))
-        case req => ZIO.succeed(Response.text(s"The request must be a POST to root with the Header $header"))
+        case req =>
+          ZIO.logWarning(s"Recive a not DID Comm v2 messagem: ${req}") *>
+            ZIO.succeed(Response.text(s"The request must be a POST to root with the Header $header"))
       }
 
   }
 
-  def startEndpoint = for {
+  def startEndpoint: ZIO[DidComm & DIDResolver & HttpClient, IOException, Unit] = for {
     _ <- Console.printLine("Setup a endpoint")
     didCommService <- ZIO.service[DidComm]
 
@@ -275,13 +277,18 @@ object AgentCli extends ZIOAppDefault {
       case ""  => ZIO.succeed(defualtPort)
       case str => ZIO.succeed(str.toIntOption.getOrElse(defualtPort))
     }
-    _ <- (Server
-      .serve(webServer(port))
+    server = {
+      val config = ServerConfig(address = new java.net.InetSocketAddress(port))
+      ServerConfig.live(config)(using Trace.empty) >>> Server.live
+    }
+    _ <- Server
+      .serve(webServer)
+      .provideSomeLayer(server)
       .debug
       .flatMap(e => Console.printLine("Endpoint stop"))
-      .catchAll { case ex => Console.printLine(s"Endpoint FAIL ${ex.getMessage()}") })
+      .catchAll { case ex => Console.printLine(s"Endpoint FAIL ${ex.getMessage()}") }
       .fork
-    _ <- Console.printLine("Endpoint Started")
+    _ <- Console.printLine(s"Endpoint Started of port '$port'")
   } yield ()
 
   def run = for {
@@ -316,7 +323,7 @@ object AgentCli extends ZIOAppDefault {
         "none" -> ZIO.unit,
         "Show DID" -> Console.printLine(agentDID),
         "Get DID Document" -> Console.printLine("DID Document:") *> Console.printLine(agentDID.getDIDDocument),
-        "Start WebServer endpoint" -> startEndpoint.provide(zio.http.Server.default, layers),
+        "Start WebServer endpoint" -> startEndpoint.provide(layers),
         "Ask for Mediation Coordinate" -> askForMediation.provide(layers),
         "Generate login invitation" -> generateLoginInvitation.provide(didCommLayer),
         "Login with DID" -> loginInvitation.provide(layers),
