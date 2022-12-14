@@ -69,8 +69,8 @@ object JWTVerification {
   }
 
   def validateEncodedJwt(jwt: JWT, publicKey: PublicKey): Validation[String, Unit] =
-    if JwtCirce.isValid(jwt.value, publicKey) then Validation.unit
-    else Validation.fail(s"Jwt[$jwt] not singed by $publicKey")
+    if JwtCirce.isValid(jwt.value, publicKey, JwtOptions(expiration = false, notBefore = false)) then Validation.unit
+    else Validation.fail(s"Jwt[$jwt] not signed by $publicKey")
 
   def validateEncodedJwt(jwt: JWT, verificationMethods: IndexedSeq[VerificationMethod]): Validation[String, Unit] = {
     verificationMethods

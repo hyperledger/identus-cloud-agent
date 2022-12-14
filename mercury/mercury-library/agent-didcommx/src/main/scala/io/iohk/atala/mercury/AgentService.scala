@@ -12,6 +12,7 @@ import io.iohk.atala.mercury.DidComm
 
 case class AgentService[A <: Agent](didComm: DIDComm, did: A) extends AgentServiceAny(didComm, did.id)
 
+//TODO FIX THE NAME !!!
 class AgentServiceAny(didComm: DIDComm, val myDid: DidId) extends DidComm {
 
   override def packSigned(msg: Message): UIO[SignedMesage] = {
@@ -20,16 +21,22 @@ class AgentServiceAny(didComm: DIDComm, val myDid: DidId) extends DidComm {
   }
 
   override def packEncrypted(msg: Message, to: DidId): UIO[EncryptedMessage] = {
-
     assert(msg.from == Some(myDid), s"ERROR in packEncrypted: ${msg.from} must be == to ${myDid}")
-
     val params = new PackEncryptedParams.Builder(msg, to.value)
       .from(myDid.value)
       .forward(false)
       .build()
-
     didComm.packEncrypted(params)
+    ZIO.succeed(didComm.packEncrypted(params))
+  }
 
+  override def packEncryptedForward(msg: Message, to: DidId): UIO[EncryptedMessage] = {
+    assert(msg.from == Some(myDid), s"ERROR in packEncrypted: ${msg.from} must be == to ${myDid}")
+    val params = new PackEncryptedParams.Builder(msg, to.value)
+      .from(myDid.value)
+      .forward(true)
+      .build()
+    didComm.packEncrypted(params)
     ZIO.succeed(didComm.packEncrypted(params))
   }
 

@@ -1,3 +1,12 @@
+# [mercury-v0.12.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.11.0...mercury-v0.12.0) (2022-12-13)
+
+
+### Features
+
+* **mercury:** Make Message class and protocol-connection more robust ([#235](https://github.com/input-output-hk/atala-prism-building-blocks/issues/235)) ([ca8a638](https://github.com/input-output-hk/atala-prism-building-blocks/commit/ca8a638ef1640045202b713727467a428ab18a2c))
+* **mercury:** New Messaging Service with support for forward messaging ([#244](https://github.com/input-output-hk/atala-prism-building-blocks/issues/244)) ([7f511e0](https://github.com/input-output-hk/atala-prism-building-blocks/commit/7f511e00980c24aa0ce8be25b8dedf9ecf524790))
+* **prism-agent:** Integrate Verification Flow - ATL-2117 ([#147](https://github.com/input-output-hk/atala-prism-building-blocks/issues/147)) ([cabda08](https://github.com/input-output-hk/atala-prism-building-blocks/commit/cabda08f215d911772440853ec153a22ac6adaad))
+
 # [mercury-v0.11.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.10.1...mercury-v0.11.0) (2022-12-09)
 
 
