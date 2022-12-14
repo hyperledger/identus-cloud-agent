@@ -1,3 +1,10 @@
+# [castor-v0.5.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/castor-v0.5.0...castor-v0.5.1) (2022-12-14)
+
+
+### Bug Fixes
+
+* **castor:** add missing did document field ([#251](https://github.com/input-output-hk/atala-prism-building-blocks/issues/251)) ([27370ab](https://github.com/input-output-hk/atala-prism-building-blocks/commit/27370abae1a26e0441d81ac10619539a7bc60aaf))
+
 # [castor-v0.5.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/castor-v0.4.1...castor-v0.5.0) (2022-12-09)
 
 
