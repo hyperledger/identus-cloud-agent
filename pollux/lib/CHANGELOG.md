@@ -1,3 +1,11 @@
+# [pollux-v0.11.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.10.0...pollux-v0.11.0) (2022-12-14)
+
+
+### Features
+
+* **pollux:** [ATL-2733] Allow for dates in seconds for exp, iss and iat ([#249](https://github.com/input-output-hk/atala-prism-building-blocks/issues/249)) ([01af7c8](https://github.com/input-output-hk/atala-prism-building-blocks/commit/01af7c8bde32d95743957e564868d1f250f6ed3e))
+* **pollux:** use dedicated pairwise PeerDIDs instead of a global one ([#252](https://github.com/input-output-hk/atala-prism-building-blocks/issues/252)) ([38a9b95](https://github.com/input-output-hk/atala-prism-building-blocks/commit/38a9b95a254e53483c15d7ee381f82a1d7556a18))
+
 # [pollux-v0.10.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.9.0...pollux-v0.10.0) (2022-12-13)
 
 
