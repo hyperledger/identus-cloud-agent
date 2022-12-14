@@ -7,7 +7,6 @@ import io.iohk.atala.iris.proto.dlt.IrisOperation
 import io.iohk.atala.iris.proto.service.IrisOperationId
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
 import io.iohk.atala.iris.proto.vc_operations.IssueCredentialsBatch
-import io.iohk.atala.mercury.DidComm
 import io.iohk.atala.mercury.model.AttachmentDescriptor
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.model.Message
@@ -36,7 +35,6 @@ import java.security.spec.ECGenParameterSpec
 import java.time.Instant
 import java.util.UUID
 
-import io.iohk.atala.mercury.DidComm
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.model.Message
 import java.time.Instant
@@ -77,6 +75,7 @@ trait CredentialService {
   def extractIdFromCredential(credential: W3cCredentialPayload): Option[UUID]
 
   def createIssueCredentialRecord(
+      pairwiseDID: DidId,
       thid: UUID,
       subjectId: String,
       schemaId: Option[String],
@@ -139,14 +138,13 @@ trait CredentialService {
 }
 
 object CredentialServiceImpl {
-  val layer: URLayer[IrisServiceStub & CredentialRepository[Task] & DidComm, CredentialService] =
-    ZLayer.fromFunction(CredentialServiceImpl(_, _, _))
+  val layer: URLayer[IrisServiceStub & CredentialRepository[Task], CredentialService] =
+    ZLayer.fromFunction(CredentialServiceImpl(_, _))
 }
 
 private class CredentialServiceImpl(
     irisClient: IrisServiceStub,
-    credentialRepository: CredentialRepository[Task],
-    didComm: DidComm
+    credentialRepository: CredentialRepository[Task]
 ) extends CredentialService {
 
   import IssueCredentialRecord._
@@ -171,6 +169,7 @@ private class CredentialServiceImpl(
   }
 
   override def createIssueCredentialRecord(
+      pairwiseDID: DidId,
       thid: UUID,
       subjectId: String,
       schemaId: Option[String],
@@ -181,7 +180,7 @@ private class CredentialServiceImpl(
   ): IO[CredentialServiceError, IssueCredentialRecord] = {
     for {
       _ <- if (DidValidator.supportedDid(subjectId)) ZIO.unit else ZIO.fail(UnsupportedDidFormat(subjectId))
-      offer <- ZIO.succeed(createDidCommOfferCredential(claims, thid, subjectId))
+      offer <- ZIO.succeed(createDidCommOfferCredential(pairwiseDID, claims, thid, subjectId))
       record <- ZIO.succeed(
         IssueCredentialRecord(
           id = UUID.randomUUID(),
@@ -440,6 +439,7 @@ private class CredentialServiceImpl(
   }
 
   private[this] def createDidCommOfferCredential(
+      pairwiseDID: DidId,
       claims: Map[String, String],
       thid: UUID,
       subjectId: String
@@ -451,7 +451,7 @@ private class CredentialServiceImpl(
     OfferCredential(
       body = body,
       attachments = Seq(),
-      from = didComm.myDid,
+      from = pairwiseDID,
       to = DidId(subjectId),
       thid = Some(thid.toString())
     )
