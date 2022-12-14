@@ -93,15 +93,17 @@ import io.iohk.atala.resolvers.DIDResolver
 
 object Modules {
 
-  def app(port: Int): RIO[DidComm & ManagedDIDService & AppConfig, Unit] = {
+  def app(port: Int): RIO[
+    DidComm & ManagedDIDService & AppConfig & DIDRegistrarApi & IssueCredentialsProtocolApi & ConnectionsManagementApi &
+      DIDApi & DIDAuthenticationApi & PresentProofApi & ActorSystem[Nothing],
+    Unit
+  ] = {
     val httpServerApp = HttpRoutes.routes.flatMap(HttpServer.start(port, _))
 
-    httpServerApp
-      .provideLayer(SystemModule.actorSystemLayer ++ HttpModule.layers)
-      .unit
+    httpServerApp.unit
   }
 
-  lazy val zioApp = {
+  lazy val zioApp: RIO[SchemaRegistryServiceInMemory & VerificationPolicyServiceInMemory & AppConfig, Unit] = {
     val zioHttpServerApp = for {
       allSchemaRegistryEndpoints <- SchemaRegistryServerEndpoints.all
       allVerificationPolicyEndpoints <- VerificationPolicyServerEndpoints.all
@@ -112,11 +114,7 @@ object Modules {
       httpServer <- ZHttp4sBlazeServer.start(allEndpoints, port = appConfig.agent.httpEndpoint.http.port)
     } yield httpServer
 
-    zioHttpServerApp
-      .provideLayer(
-        SchemaRegistryServiceInMemory.layer ++ VerificationPolicyServiceInMemory.layer ++ SystemModule.configLayer
-      )
-      .unit
+    zioHttpServerApp.unit
   }
 
   def didCommServiceEndpoint(port: Int) = {
@@ -154,23 +152,21 @@ object Modules {
     Server.start(port, app)
   }
 
-  val didCommExchangesJob: RIO[DidComm & DIDResolver & HttpClient, Unit] =
+  val didCommExchangesJob: RIO[DidComm & DIDResolver & HttpClient & CredentialService & ManagedDIDService, Unit] =
     BackgroundJobs.didCommExchanges
       .repeat(Schedule.spaced(10.seconds))
       .unit
-      .provideSomeLayer(AppModule.credentialServiceLayer ++ AppModule.manageDIDServiceLayer)
 
-  val presentProofExchangeJob: RIO[DidComm & DIDResolver & HttpClient, Unit] =
+  val presentProofExchangeJob: RIO[DidComm & DIDResolver & HttpClient & PresentationService, Unit] =
     BackgroundJobs.presentProofExchanges
       .repeat(Schedule.spaced(10.seconds))
       .unit
-      .provideSomeLayer(AppModule.presentationServiceLayer)
 
-  val connectDidCommExchangesJob: RIO[DidComm & DIDResolver & HttpClient, Unit] =
+  val connectDidCommExchangesJob
+      : RIO[DidComm & DIDResolver & HttpClient & ConnectionService & ManagedDIDService, Unit] =
     ConnectBackgroundJobs.didCommExchanges
       .repeat(Schedule.spaced(10.seconds))
       .unit
-      .provideSomeLayer(AppModule.connectionServiceLayer ++ AppModule.manageDIDServiceLayer)
 
   private[this] def extractFirstRecipientDid(jsonMessage: String): IO[ParsingFailure | DecodingFailure, String] = {
     import io.circe._, io.circe.parser._
@@ -369,9 +365,8 @@ object Modules {
     }
   }
 
-  val publishCredentialsToDltJob: RIO[DidComm, Unit] = {
+  val publishCredentialsToDltJob: RIO[DidComm & CredentialService, Unit] = {
     val effect = BackgroundJobs.publishCredentialsToDlt
-      .provideLayer(AppModule.credentialServiceLayer)
     (effect repeat Schedule.spaced(1.seconds)).unit
   }
 

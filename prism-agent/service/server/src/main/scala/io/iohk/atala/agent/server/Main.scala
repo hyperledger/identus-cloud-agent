@@ -11,26 +11,41 @@ import io.iohk.atala.agent.server.sql.{Migrations => AgentMigrations}
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.agent.server.http.ZioHttpClient
+import org.flywaydb.core.extensibility.AppliedMigration
+import io.iohk.atala.pollux.service.SchemaRegistryServiceInMemory
+import io.iohk.atala.pollux.service.VerificationPolicyServiceInMemory
 
 object Main extends ZIOAppDefault {
-  def agentLayer(peer: PeerDID): ZLayer[Any, Nothing, AgentServiceAny] =
-    ZLayer.succeed(
-      io.iohk.atala.mercury.AgentServiceAny(
-        new DIDComm(UniversalDidResolver, peer.getSecretResolverInMemory),
-        peer.did
-      )
-    )
 
-  private def createAndStorePeerDID(serviceEndpoint: String): RIO[ManagedDIDService, PeerDID] = {
+  def didCommAgentLayer(didCommServiceUrl: String) = ZLayer(
     for {
       managedDIDService <- ZIO.service[ManagedDIDService]
-      peerDID <- managedDIDService.createAndStorePeerDID(serviceEndpoint)
+      peerDID <- managedDIDService.createAndStorePeerDID(didCommServiceUrl)
       _ <- ZIO.logInfo(s"New DID: ${peerDID.did}")
-    } yield peerDID
-  }
+    } yield io.iohk.atala.mercury.AgentServiceAny(
+      new DIDComm(UniversalDidResolver, peerDID.getSecretResolverInMemory),
+      peerDID.did
+    )
+  )
 
-  override def run: ZIO[Any, Throwable, Unit] =
-    for {
+  val migrations = for {
+    _ <- ZIO.serviceWithZIO[PolluxMigrations](_.migrate)
+    _ <- ZIO.serviceWithZIO[ConnectMigrations](_.migrate)
+    _ <- ZIO.serviceWithZIO[AgentMigrations](_.migrate)
+  } yield ()
+
+  def appComponents(didCommServicePort: Int, restServicePort: Int) = for {
+    _ <- Modules.didCommExchangesJob.debug.fork
+    _ <- Modules.presentProofExchangeJob.debug.fork
+    _ <- Modules.connectDidCommExchangesJob.debug.fork
+    _ <- Modules.didCommServiceEndpoint(didCommServicePort).debug.fork
+    _ <- Modules.app(restServicePort).fork
+    _ <- Modules.zioApp.fork
+    _ <- ZIO.never
+  } yield ()
+
+  override def run: ZIO[Any, Throwable, Unit] = {
+    val app = for {
       _ <- Console
         .printLine("""
       |██████╗ ██████╗ ██╗███████╗███╗   ███╗
@@ -67,56 +82,29 @@ object Main extends ZIOAppDefault {
       }
       _ <- ZIO.logInfo(s"DIDComm Service port => $didCommServicePort")
 
-      // Execute migrations from Castor and Pollux libraries using Flyway
-      _ <- ZIO
-        .serviceWithZIO[PolluxMigrations](_.migrate)
-        .provide(RepoModule.polluxDbConfigLayer >>> PolluxMigrations.layer)
-      _ <- ZIO
-        .serviceWithZIO[ConnectMigrations](_.migrate)
-        .provide(RepoModule.connectDbConfigLayer >>> ConnectMigrations.layer)
-      _ <- ZIO
-        .serviceWithZIO[AgentMigrations](_.migrate)
-        .provide(RepoModule.agentDbConfigLayer >>> AgentMigrations.layer)
+      _ <- migrations
 
-      peerDID <- createAndStorePeerDID(didCommServiceUrl)
-        .provide(AppModule.manageDIDServiceLayer)
+      app <- appComponents(didCommServicePort, restServicePort).provide(
+        didCommAgentLayer(didCommServiceUrl),
+        DIDResolver.layer,
+        ZioHttpClient.layer,
+        AppModule.credentialServiceLayer,
+        AppModule.presentationServiceLayer,
+        AppModule.connectionServiceLayer,
+        SystemModule.configLayer,
+        SystemModule.actorSystemLayer,
+        HttpModule.layers,
+        SchemaRegistryServiceInMemory.layer,
+        VerificationPolicyServiceInMemory.layer,
+        AppModule.manageDIDServiceLayer
+      )
+    } yield app
 
-      didCommLayer = agentLayer(peerDID)
-
-      didCommExchangesFiber <- Modules.didCommExchangesJob
-        .provide(didCommLayer, DIDResolver.layer, ZioHttpClient.layer)
-        .debug
-        .fork
-
-      presentProofDidCommExchangesFiber <- Modules.presentProofExchangeJob
-        .provide(didCommLayer, DIDResolver.layer, ZioHttpClient.layer)
-        .debug
-        .fork
-
-      connectDidCommExchangesFiber <- Modules.connectDidCommExchangesJob
-        .provide(didCommLayer, DIDResolver.layer, ZioHttpClient.layer)
-        .debug
-        .fork
-
-      didCommServiceFiber <- Modules
-        .didCommServiceEndpoint(didCommServicePort)
-        .provide(
-          didCommLayer,
-          AppModule.credentialServiceLayer,
-          AppModule.presentationServiceLayer,
-          AppModule.connectionServiceLayer,
-          AppModule.manageDIDServiceLayer
-        )
-        .debug
-        .fork
-
-      _ <- Modules
-        .app(restServicePort)
-        .provide(didCommLayer, AppModule.manageDIDServiceLayer, SystemModule.configLayer)
-        .fork
-
-      _ <- Modules.zioApp.fork
-      _ <- ZIO.never
-    } yield ()
+    app.provide(
+      RepoModule.polluxDbConfigLayer >>> PolluxMigrations.layer,
+      RepoModule.connectDbConfigLayer >>> ConnectMigrations.layer,
+      RepoModule.agentDbConfigLayer >>> AgentMigrations.layer,
+    )
+  }
 
 }
