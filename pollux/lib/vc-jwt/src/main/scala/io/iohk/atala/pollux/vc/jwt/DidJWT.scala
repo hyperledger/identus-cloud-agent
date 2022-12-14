@@ -1,6 +1,9 @@
 package io.iohk.atala.pollux.vc.jwt
 
-import com.nimbusds.jose.jwk.ECKey
+import com.nimbusds.jose.{JWSAlgorithm, JWSHeader}
+import com.nimbusds.jose.crypto.ECDSASigner
+import com.nimbusds.jose.jwk.{Curve, ECKey}
+import com.nimbusds.jwt.{JWTClaimsSet, SignedJWT}
 import io.circe
 import io.circe.*
 import io.circe.generic.auto.*
@@ -63,8 +66,21 @@ trait Signer {
 class ES256Signer(privateKey: PrivateKey) extends Signer {
   val algorithm: JwtECDSAAlgorithm = JwtAlgorithm.ES256
 
+  override def encode(claim: Json): JWT = JWT(JwtCirce.encode(claim, privateKey, algorithm))
+}
+
+// works with java 7, 8, 11 & bouncycastle provider
+// https://connect2id.com/products/nimbus-jose-jwt/jca-algorithm-support#alg-support-table
+class ES256KSigner(privateKey: PrivateKey) extends Signer {
   override def encode(claim: Json): JWT = {
-    return JWT(JwtCirce.encode(claim, privateKey, algorithm))
+    val claimSet = JWTClaimsSet.parse(claim.noSpaces)
+    val signer = ECDSASigner(privateKey, Curve.SECP256K1)
+    val signedJwt = SignedJWT(
+      new JWSHeader.Builder(JWSAlgorithm.ES256K).build(),
+      claimSet
+    )
+    signedJwt.sign(signer)
+    JWT(signedJwt.serialize())
   }
 }
 

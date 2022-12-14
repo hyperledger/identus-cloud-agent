@@ -14,7 +14,7 @@ import net.reactivecore.cjs.resolver.Downloader
 import net.reactivecore.cjs.{DocumentValidator, Loader, Result}
 import pdi.jwt.{JwtAlgorithm, JwtCirce, JwtClaim}
 import zio.Console.printLine
-import zio.{IO, ZIO, ZIOAppDefault}
+import zio.{UIO, ZIO, ZIOAppDefault}
 
 import java.security.*
 import java.security.interfaces.{ECPrivateKey, ECPublicKey}
@@ -223,7 +223,7 @@ object JwtPresentationVerificationDemo extends ZIOAppDefault {
           )
       }.toMap
 
-      override def resolve(didUrl: String): IO[String, DIDResolutionResult] =
+      override def resolve(didUrl: String): UIO[DIDResolutionResult] =
         resolverLookup
           .get(didUrl)
           .fold(
@@ -232,7 +232,6 @@ object JwtPresentationVerificationDemo extends ZIOAppDefault {
             ZIO.succeed(
               DIDResolutionSucceeded(
                 didDocument,
-                "",
                 DIDDocumentMetadata()
               )
             )

@@ -1,12 +1,16 @@
 package io.iohk.atala.pollux.vc.jwt
+import com.nimbusds.jose.crypto.ECDSAVerifier
 import com.nimbusds.jose.jwk.*
 import com.nimbusds.jose.jwk.gen.*
 import com.nimbusds.jose.util.Base64URL
+import com.nimbusds.jose.JWSVerifier
+import com.nimbusds.jwt.SignedJWT
 import io.circe
 import io.circe.generic.auto.*
 import io.circe.parser.decode
 import io.circe.syntax.*
 import io.circe.{Decoder, Encoder, HCursor, Json}
+import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import io.iohk.atala.pollux.vc.jwt.JWTVerification.{extractPublicKey, validateEncodedJwt}
 import io.iohk.atala.pollux.vc.jwt.schema.{SchemaResolver, SchemaValidator}
 import net.reactivecore.cjs.validator.Violation
@@ -16,6 +20,7 @@ import zio.ZIO.none
 import zio.prelude.*
 import zio.{IO, NonEmptyChunk, Task, ZIO}
 
+import java.security.interfaces.ECPublicKey
 import java.security.spec.{ECParameterSpec, ECPublicKeySpec}
 import java.security.{KeyPairGenerator, PublicKey}
 import java.time.temporal.{Temporal, TemporalAmount, TemporalUnit}
@@ -24,7 +29,14 @@ import java.util
 import scala.util.{Failure, Success, Try}
 
 object JWTVerification {
-  def validateEncodedJwt[T](jwt: JWT)(
+  // JWT algo <-> publicKey type mapping reference
+  // https://github.com/decentralized-identity/did-jwt/blob/8b3655097a1382934cabdf774d580e6731a636b1/src/JWT.ts#L146
+  val SUPPORT_PUBLIC_KEY_TYPES: Map[String, Set[String]] = Map(
+    "ES256K" -> Set("EcdsaSecp256k1VerificationKey2019"),
+    "ES256" -> Set("ES256") // TODO: Only use valid type (added just for compatibility in the Demo code)
+  )
+
+  def validateEncodedJwt[T](jwt: JWT, proofPurpose: Option[VerificationRelationship] = None)(
       didResolver: DidResolver
   )(decoder: String => Validation[String, T])(issuerDidExtractor: T => String): IO[String, Validation[String, Unit]] = {
     val decodeJWT = Validation
@@ -62,15 +74,27 @@ object JWTVerification {
             (didDocument, algorithm)
           )
           (didDocument, algorithm) = results
-          verificationMethods <- extractVerificationMethods(didDocument, algorithm)
+          verificationMethods <- extractVerificationMethods(didDocument, algorithm, proofPurpose)
           validatedJwt <- validateEncodedJwt(jwt, verificationMethods)
         } yield validatedJwt
       })
   }
 
-  def validateEncodedJwt(jwt: JWT, publicKey: PublicKey): Validation[String, Unit] =
-    if JwtCirce.isValid(jwt.value, publicKey, JwtOptions(expiration = false, notBefore = false)) then Validation.unit
-    else Validation.fail(s"Jwt[$jwt] not signed by $publicKey")
+  def validateEncodedJwt(jwt: JWT, publicKey: PublicKey): Validation[String, Unit] = {
+    Try {
+      val parsedJwt = SignedJWT.parse(jwt.value)
+      // TODO Implement other key types
+      val verifier: JWSVerifier = publicKey match {
+        case key: ECPublicKey => ECDSAVerifier(key)
+        case key              => throw Exception(s"unsupported public-key type: ${key.getClass.getCanonicalName}")
+      }
+      parsedJwt.verify(verifier)
+    } match {
+      case Failure(exception) => Validation.fail(s"Jwt[$jwt] verification pre-process failed: ${exception.getMessage}")
+      case Success(isValid) =>
+        if isValid then Validation.unit else Validation.fail(s"Jwt[$jwt] not singed by $publicKey")
+    }
+  }
 
   def validateEncodedJwt(jwt: JWT, verificationMethods: IndexedSeq[VerificationMethod]): Validation[String, Unit] = {
     verificationMethods
@@ -96,11 +120,22 @@ object JWTVerification {
 
   private def extractVerificationMethods(
       didDocument: DIDDocument,
-      jwtAlgorithm: JwtAlgorithm
+      jwtAlgorithm: JwtAlgorithm,
+      proofPurpose: Option[VerificationRelationship]
   ): Validation[String, IndexedSeq[VerificationMethod]] = {
+    val publicKeysToCheck = proofPurpose.fold(didDocument.verificationMethod) {
+      case VerificationRelationship.Authentication       => didDocument.authentication
+      case VerificationRelationship.AssertionMethod      => didDocument.assertionMethod
+      case VerificationRelationship.KeyAgreement         => didDocument.keyAgreement
+      case VerificationRelationship.CapabilityInvocation => didDocument.capabilityInvocation
+      case VerificationRelationship.CapabilityDelegation => didDocument.capabilityDelegation
+    }
     Validation
       .fromPredicateWith("No PublicKey to validate against found")(
-        didDocument.verificationMethod.filter(verification => verification.`type` == jwtAlgorithm.name)
+        publicKeysToCheck.filter { verification =>
+          val supportPublicKeys = SUPPORT_PUBLIC_KEY_TYPES.getOrElse(jwtAlgorithm.name, Set.empty)
+          supportPublicKeys.contains(verification.`type`)
+        }
       )(_.nonEmpty)
   }
 

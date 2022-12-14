@@ -1,11 +1,20 @@
 package io.iohk.atala.pollux.vc.jwt
 
-import zio.{IO, Task}
+import io.iohk.atala.castor.core.model.did.w3c.{
+  DIDDocumentRepr,
+  DIDResolutionErrorRepr,
+  PublicKeyJwk,
+  PublicKeyRepr,
+  ServiceRepr,
+  makeW3CResolver
+}
+import io.iohk.atala.castor.core.service.DIDService
+import zio.{Task, UIO}
 
 import java.time.Instant
 
 trait DidResolver {
-  def resolve(didUrl: String): IO[String, DIDResolutionResult]
+  def resolve(didUrl: String): UIO[DIDResolutionResult]
 }
 
 trait DIDResolutionResult
@@ -16,7 +25,6 @@ sealed case class DIDResolutionFailed(
 
 sealed case class DIDResolutionSucceeded(
     didDocument: DIDDocument,
-    contentType: String,
     didDocumentMetadata: DIDDocumentMetadata
 ) extends DIDResolutionResult
 
@@ -25,6 +33,9 @@ case class InvalidDid(message: String) extends DIDResolutionError("invalidDid", 
 case class NotFound(message: String) extends DIDResolutionError("notFound", message)
 case class RepresentationNotSupported(message: String) extends DIDResolutionError("RepresentationNotSupported", message)
 case class UnsupportedDidMethod(message: String) extends DIDResolutionError("unsupportedDidMethod", message)
+case class InvalidPublicKeyLength(message: String) extends DIDResolutionError("invalidPublicKeyLength", message)
+case class InvalidPublicKeyType(message: String) extends DIDResolutionError("invalidPublicKeyType", message)
+case class UnsupportedPublicKeyType(message: String) extends DIDResolutionError("unsupportedPublicKeyType", message)
 case class Error(error: String, message: String) extends DIDResolutionError(error, message)
 
 case class DIDDocumentMetadata(
@@ -39,12 +50,16 @@ case class DIDDocumentMetadata(
 )
 
 case class DIDDocument(
-    `@context`: Vector[String] = Vector("https://www.w3.org/ns/did/v1"),
     id: String,
     alsoKnowAs: Vector[String],
     controller: Vector[String],
-    verificationMethod: Vector[VerificationMethod],
-    service: Vector[Service]
+    verificationMethod: Vector[VerificationMethod] = Vector.empty,
+    authentication: Vector[VerificationMethod] = Vector.empty,
+    assertionMethod: Vector[VerificationMethod] = Vector.empty,
+    keyAgreement: Vector[VerificationMethod] = Vector.empty,
+    capabilityInvocation: Vector[VerificationMethod] = Vector.empty,
+    capabilityDelegation: Vector[VerificationMethod] = Vector.empty,
+    service: Vector[Service] = Vector.empty
 )
 case class VerificationMethod(
     id: String,
@@ -72,5 +87,81 @@ case class JsonWebKey(
     x: Option[String] = Option.empty,
     y: Option[String] = Option.empty
 )
-case class Service(id: String, `type`: String, serviceEndpoint: Vector[ServiceEndpoint])
-case class ServiceEndpoint(id: String, `type`: String)
+case class Service(id: String, `type`: String, serviceEndpoint: Vector[String])
+
+/** An adapter for translating Castor resolver to resolver defined in JWT library */
+class PrismDidResolver(didService: DIDService) extends DidResolver {
+
+  private val w3cResolver = makeW3CResolver(didService)
+
+  override def resolve(didUrl: String): UIO[DIDResolutionResult] = {
+    w3cResolver(didUrl)
+      .fold(
+        toPolluxResolutionErrorModel,
+        { case (didDocumentMetadata, didDocument) =>
+          DIDResolutionSucceeded(
+            didDocument = toPolluxDIDDocumentModel(didDocument),
+            didDocumentMetadata = DIDDocumentMetadata(
+              deactivated = Some(didDocumentMetadata.deactivated)
+            )
+          )
+        }
+      )
+  }
+
+  private def toPolluxDIDDocumentModel(didDocument: DIDDocumentRepr): DIDDocument = {
+    DIDDocument(
+      id = didDocument.id,
+      alsoKnowAs = Vector.empty,
+      controller = Vector(didDocument.controller),
+      verificationMethod = didDocument.verificationMethod.map(toPolluxVerificationMethodModel).toVector,
+      authentication = didDocument.authentication.map(toPolluxVerificationMethodModel).toVector,
+      assertionMethod = didDocument.assertionMethod.map(toPolluxVerificationMethodModel).toVector,
+      keyAgreement = didDocument.keyAgreement.map(toPolluxVerificationMethodModel).toVector,
+      capabilityInvocation = didDocument.capabilityInvocation.map(toPolluxVerificationMethodModel).toVector,
+      capabilityDelegation = didDocument.capabilityDelegation.map(toPolluxVerificationMethodModel).toVector,
+      service = didDocument.service.map(toPolluxServiceModel).toVector
+    )
+  }
+
+  private def toPolluxResolutionErrorModel(error: DIDResolutionErrorRepr): DIDResolutionFailed = {
+    val e = error match {
+      case DIDResolutionErrorRepr.InvalidDID                 => InvalidDid(error.value)
+      case DIDResolutionErrorRepr.InvalidDIDUrl              => InvalidDid(error.value)
+      case DIDResolutionErrorRepr.NotFound                   => NotFound(error.value)
+      case DIDResolutionErrorRepr.RepresentationNotSupported => RepresentationNotSupported(error.value)
+      case DIDResolutionErrorRepr.InternalError              => Error(error.value, error.value)
+      case DIDResolutionErrorRepr.InvalidPublicKeyLength     => InvalidPublicKeyLength(error.value)
+      case DIDResolutionErrorRepr.InvalidPublicKeyType       => InvalidPublicKeyType(error.value)
+      case DIDResolutionErrorRepr.UnsupportedPublicKeyType   => UnsupportedPublicKeyType(error.value)
+    }
+    DIDResolutionFailed(e)
+  }
+
+  private def toPolluxServiceModel(service: ServiceRepr): Service = {
+    Service(
+      id = service.id,
+      `type` = service.`type`,
+      serviceEndpoint = service.serviceEndpoint.toVector
+    )
+  }
+
+  private def toPolluxVerificationMethodModel(verificationMethod: PublicKeyRepr): VerificationMethod = {
+    VerificationMethod(
+      id = verificationMethod.id,
+      `type` = verificationMethod.`type`,
+      controller = verificationMethod.controller,
+      publicKeyJwk = Some(toPolluxJwtModel(verificationMethod.publicKeyJwk))
+    )
+  }
+
+  private def toPolluxJwtModel(jwk: PublicKeyJwk): JsonWebKey = {
+    JsonWebKey(
+      crv = Some(jwk.crv),
+      kty = jwk.kty,
+      x = Some(jwk.x),
+      y = Some(jwk.y)
+    )
+  }
+
+}

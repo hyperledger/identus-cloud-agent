@@ -151,7 +151,7 @@ object JwtCredentialDIDDocumentValidationDemo extends ZIOAppDefault {
 
     class DidResolverTest() extends DidResolver {
 
-      override def resolve(didUrl: String): IO[String, DIDResolutionResult] = {
+      override def resolve(didUrl: String): UIO[DIDResolutionResult] = {
         val Issuer1Key =
           VerificationMethod(
             id = "Issuer1Key",
@@ -190,7 +190,6 @@ object JwtCredentialDIDDocumentValidationDemo extends ZIOAppDefault {
         ZIO.succeed(
           DIDResolutionSucceeded(
             didDocument, // <------ DID DOCUMENT
-            "",
             DIDDocumentMetadata()
           )
         )

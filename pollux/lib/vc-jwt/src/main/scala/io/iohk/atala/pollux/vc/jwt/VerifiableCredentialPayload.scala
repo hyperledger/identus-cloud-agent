@@ -8,6 +8,7 @@ import io.circe.generic.auto.*
 import io.circe.parser.decode
 import io.circe.syntax.*
 import io.circe.{Decoder, Encoder, HCursor, Json}
+import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import io.iohk.atala.pollux.vc.jwt.schema.{SchemaResolver, SchemaValidator}
 import net.reactivecore.cjs.validator.Violation
 import net.reactivecore.cjs.{DocumentValidator, Loader}
@@ -555,9 +556,10 @@ object JwtCredential {
     JwtCirce.isValid(jwt.value, publicKey, JwtOptions(expiration = false, notBefore = false))
 
   def validateEncodedJWT(
-      jwt: JWT
+      jwt: JWT,
+      proofPurpose: Option[VerificationRelationship] = None
   )(didResolver: DidResolver): IO[String, Validation[String, Unit]] = {
-    JWTVerification.validateEncodedJwt(jwt)(didResolver: DidResolver)(claim =>
+    JWTVerification.validateEncodedJwt(jwt, proofPurpose)(didResolver: DidResolver)(claim =>
       Validation.fromEither(decode[JwtCredentialPayload](claim).left.map(_.toString))
     )(_.iss)
   }
