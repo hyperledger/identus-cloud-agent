@@ -31,8 +31,9 @@ import scala.util.{Failure, Success, Try}
 object JWTVerification {
   // JWT algo <-> publicKey type mapping reference
   // https://github.com/decentralized-identity/did-jwt/blob/8b3655097a1382934cabdf774d580e6731a636b1/src/JWT.ts#L146
-  val SUPPORT_PUBLIC_KEY_TYPES: Map[JwtAlgorithm, Set[String]] = Map(
-    JwtAlgorithm.ES256 -> Set("EcdsaSecp256k1VerificationKey2019")
+  val SUPPORT_PUBLIC_KEY_TYPES: Map[String, Set[String]] = Map(
+    "ES256K" -> Set("EcdsaSecp256k1VerificationKey2019"),
+    "ES256" -> Set("ES256") // TODO: Only use valid type (added just for compatibility in the Demo code)
   )
 
   def validateEncodedJwt[T](jwt: JWT, proofPurpose: Option[VerificationRelationship] = None)(
@@ -131,7 +132,10 @@ object JWTVerification {
     }
     Validation
       .fromPredicateWith("No PublicKey to validate against found")(
-        publicKeysToCheck.filter(verification => verification.`type` == jwtAlgorithm.name)
+        publicKeysToCheck.filter { verification =>
+          val supportPublicKeys = SUPPORT_PUBLIC_KEY_TYPES.getOrElse(jwtAlgorithm.name, Set.empty)
+          supportPublicKeys.contains(verification.`type`)
+        }
       )(_.nonEmpty)
   }
 
