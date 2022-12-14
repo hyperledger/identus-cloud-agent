@@ -27,7 +27,8 @@ private[walletapi] class InMemoryDIDSecretStorage private (
         val updatedSecret =
           currentSecret.fold(DIDSecretRecord(keyPairs = updatedKeyPairs))(_.copy(keyPairs = updatedKeyPairs))
         currentStore.updated(did, updatedSecret)
-      }.map(_ => 1)
+      }
+      .map(_ => 1)
 
   override def removeKey(did: PrismDID, keyId: String): Task[Int] = store
     .update { currentStore =>
@@ -39,7 +40,8 @@ private[walletapi] class InMemoryDIDSecretStorage private (
           currentStore.updated(did, updatedSecret)
         case None => currentStore
       }
-    }.map( _ => 1)
+    }
+    .map(_ => 1)
 
   override def removeDIDSecret(did: PrismDID): Task[Int] = store.update(_.removed(did)).map(_ => 1)
 
