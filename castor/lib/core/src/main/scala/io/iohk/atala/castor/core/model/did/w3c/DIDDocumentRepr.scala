@@ -11,6 +11,7 @@ final case class DIDDocumentRepr(
     assertionMethod: Seq[PublicKeyRepr],
     keyAgreement: Seq[PublicKeyRepr],
     capabilityInvocation: Seq[PublicKeyRepr],
+    capabilityDelegation: Seq[PublicKeyRepr],
     service: Seq[ServiceRepr]
 )
 
