@@ -7,6 +7,8 @@ import io.iohk.atala.resolvers.UniversalDidResolver
 import io.iohk.atala.castor.sql.repository.{Migrations => CastorMigrations}
 import io.iohk.atala.pollux.sql.repository.{Migrations => PolluxMigrations}
 import io.iohk.atala.connect.sql.repository.{Migrations => ConnectMigrations}
+import io.iohk.atala.agent.server.sql.{Migrations => AgentMigrations}
+import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.agent.server.http.ZioHttpClient
 
@@ -18,6 +20,14 @@ object Main extends ZIOAppDefault {
         peer.did
       )
     )
+
+  private def createAndStorePeerDID(serviceEndpoint: String): RIO[ManagedDIDService, PeerDID] = {
+    for {
+      managedDIDService <- ZIO.service[ManagedDIDService]
+      peerDID <- managedDIDService.createAndStorePeerDID(serviceEndpoint)
+      _ <- ZIO.logInfo(s"New DID: ${peerDID.did}")
+    } yield peerDID
+  }
 
   override def run: ZIO[Any, Throwable, Unit] =
     for {
@@ -64,15 +74,14 @@ object Main extends ZIOAppDefault {
       _ <- ZIO
         .serviceWithZIO[ConnectMigrations](_.migrate)
         .provide(RepoModule.connectDbConfigLayer >>> ConnectMigrations.layer)
+      _ <- ZIO
+        .serviceWithZIO[AgentMigrations](_.migrate)
+        .provide(RepoModule.agentDbConfigLayer >>> AgentMigrations.layer)
 
-      agentDID <- for {
-        peer <- ZIO.succeed(PeerDID.makePeerDid(serviceEndpoint = Some(didCommServiceUrl)))
-        _ <- ZIO.logInfo(s"New DID: ${peer.did}") *>
-          ZIO.logInfo(s"JWK for KeyAgreement: ${peer.jwkForKeyAgreement.toJSONString}") *>
-          ZIO.logInfo(s"JWK for KeyAuthentication: ${peer.jwkForKeyAuthentication.toJSONString}")
-      } yield (peer)
+      peerDID <- createAndStorePeerDID(didCommServiceUrl)
+        .provide(AppModule.manageDIDServiceLayer)
 
-      didCommLayer = agentLayer(agentDID)
+      didCommLayer = agentLayer(peerDID)
 
       didCommExchangesFiber <- Modules.didCommExchangesJob
         .provide(didCommLayer, DIDResolver.layer, ZioHttpClient.layer)
@@ -95,14 +104,15 @@ object Main extends ZIOAppDefault {
           didCommLayer,
           AppModule.credentialServiceLayer,
           AppModule.presentationServiceLayer,
-          AppModule.connectionServiceLayer
+          AppModule.connectionServiceLayer,
+          AppModule.manageDIDServiceLayer
         )
         .debug
         .fork
 
       _ <- Modules
         .app(restServicePort)
-        .provide(didCommLayer)
+        .provide(didCommLayer, AppModule.manageDIDServiceLayer, SystemModule.configLayer)
         .fork
 
       _ <- Modules.zioApp.fork

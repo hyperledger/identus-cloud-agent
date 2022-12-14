@@ -13,9 +13,18 @@ import io.iohk.atala.connect.core.service.ConnectionService
 import io.iohk.atala.mercury.PeerDID
 import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
 import zio._
+import io.iohk.atala.agent.walletapi.service.ManagedDIDService
+import io.iohk.atala.agent.walletapi.model.error.CreateManagedDIDError
+import io.iohk.atala.agent.server.config.AgentConfig
+import io.iohk.atala.agent.server.config.AppConfig
 
-class ConnectionsManagementApiServiceImpl(connectionService: ConnectionService)(using runtime: zio.Runtime[Any])
-    extends ConnectionsManagementApiService,
+class ConnectionsManagementApiServiceImpl(
+    connectionService: ConnectionService,
+    managedDIDService: ManagedDIDService,
+    agentConfig: AgentConfig
+)(using
+    runtime: zio.Runtime[Any]
+) extends ConnectionsManagementApiService,
       AkkaZioSupport,
       OASDomainModelHelper,
       OASErrorModelHelper {
@@ -25,12 +34,14 @@ class ConnectionsManagementApiServiceImpl(connectionService: ConnectionService)(
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
     val result = for {
+      pairwiseDid <- managedDIDService
+        .createAndStorePeerDID(agentConfig.didCommServiceEndpointUrl)
       record <- connectionService
-        .createConnectionInvitation(request.label)
-        .mapError(HttpServiceError.DomainError[ConnectionServiceError].apply)
+        .createConnectionInvitation(request.label, pairwiseDid.did)
+        .mapError(HttpServiceError.DomainError[ConnectionServiceError].apply(_).toOAS)
     } yield record
 
-    onZioSuccess(result.mapBoth(_.toOAS, _.toOAS).either) {
+    onZioSuccess(result.map(_.toOAS).either) {
       case Left(error)   => complete(error.status -> error)
       case Right(result) => createConnection201(result)
     }
@@ -84,13 +95,15 @@ class ConnectionsManagementApiServiceImpl(connectionService: ConnectionService)(
     val result = for {
       record <- connectionService
         .receiveConnectionInvitation(request.invitation)
-        .mapError(HttpServiceError.DomainError[ConnectionServiceError].apply)
+        .mapError(HttpServiceError.DomainError[ConnectionServiceError].apply(_).toOAS)
+      pairwiseDid <- managedDIDService
+        .createAndStorePeerDID(agentConfig.didCommServiceEndpointUrl)
       record <- connectionService
-        .acceptConnectionInvitation(record.id)
-        .mapError(HttpServiceError.DomainError[ConnectionServiceError].apply)
+        .acceptConnectionInvitation(record.id, pairwiseDid.did)
+        .mapError(HttpServiceError.DomainError[ConnectionServiceError].apply(_).toOAS)
     } yield record
 
-    onZioSuccess(result.mapBoth(_.toOAS, _.map(_.toOAS)).either) {
+    onZioSuccess(result.map(_.map(_.toOAS)).either) {
       case Left(error)         => complete(error.status -> error)
       case Right(Some(result)) => acceptConnectionInvitation200(result)
       case Right(None) => acceptConnectionInvitation500(notFoundErrorResponse(Some("Connection record not found")))
@@ -101,10 +114,13 @@ class ConnectionsManagementApiServiceImpl(connectionService: ConnectionService)(
 }
 
 object ConnectionsManagementApiServiceImpl {
-  val layer: URLayer[ConnectionService, ConnectionsManagementApiService] = ZLayer.fromZIO {
-    for {
-      rt <- ZIO.runtime[Any]
-      svc <- ZIO.service[ConnectionService]
-    } yield ConnectionsManagementApiServiceImpl(svc)(using rt)
-  }
+  val layer: URLayer[ConnectionService & ManagedDIDService & AppConfig, ConnectionsManagementApiService] =
+    ZLayer.fromZIO {
+      for {
+        rt <- ZIO.runtime[Any]
+        svc <- ZIO.service[ConnectionService]
+        managedDIDService <- ZIO.service[ManagedDIDService]
+        appConfig <- ZIO.service[AppConfig]
+      } yield ConnectionsManagementApiServiceImpl(svc, managedDIDService, appConfig.agent)(using rt)
+    }
 }

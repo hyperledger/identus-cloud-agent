@@ -29,6 +29,7 @@ import io.grpc.ManagedChannelBuilder
 import io.iohk.atala.agent.openapi.api.*
 import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
+import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError
 import io.iohk.atala.agent.server.http.marshaller.*
 import io.iohk.atala.agent.server.http.service.*
 import io.iohk.atala.agent.server.http.{HttpRoutes, HttpServer}
@@ -40,6 +41,7 @@ import io.iohk.atala.pollux.core.service.CredentialService
 import io.iohk.atala.pollux.sql.repository.JdbcCredentialRepository
 import io.iohk.atala.pollux.sql.repository.{DbConfig => PolluxDbConfig}
 import io.iohk.atala.connect.sql.repository.{DbConfig => ConnectDbConfig}
+import io.iohk.atala.agent.server.sql.{DbConfig => AgentDbConfig}
 import io.iohk.atala.agent.server.jobs.*
 import zio.*
 import zio.config.typesafe.TypesafeConfigSource
@@ -67,8 +69,8 @@ import io.iohk.atala.pollux.core.repository.PresentationRepository
 import io.iohk.atala.pollux.sql.repository.JdbcPresentationRepository
 import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
-import io.iohk.atala.connect.core.service.{ConnectionService => CS_Connect}
-import io.iohk.atala.connect.core.service.{ConnectionServiceImpl => CSImpl_Connect}
+import io.iohk.atala.connect.core.service.ConnectionService
+import io.iohk.atala.connect.core.service.ConnectionServiceImpl
 import io.iohk.atala.connect.core.repository.ConnectionRepository
 import io.iohk.atala.connect.sql.repository.JdbcConnectionRepository
 import io.iohk.atala.mercury.protocol.connection.ConnectionRequest
@@ -78,11 +80,20 @@ import io.iohk.atala.pollux.schema.{SchemaRegistryServerEndpoints, VerificationP
 import io.iohk.atala.pollux.service.{SchemaRegistryServiceInMemory, VerificationPolicyServiceInMemory}
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.mercury.protocol.presentproof._
+import io.iohk.atala.agent.server.config.AgentConfig
+import org.didcommx.didcomm.DIDComm
+import io.iohk.atala.resolvers.UniversalDidResolver
+import org.didcommx.didcomm.secret.SecretResolver
+import org.didcommx.didcomm.model.UnpackParams
+import org.didcommx.didcomm.secret.Secret
+import io.circe.ParsingFailure
+import io.circe.DecodingFailure
+import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
 import io.iohk.atala.resolvers.DIDResolver
 
 object Modules {
 
-  def app(port: Int): RIO[DidComm, Unit] = {
+  def app(port: Int): RIO[DidComm & ManagedDIDService & AppConfig, Unit] = {
     val httpServerApp = HttpRoutes.routes.flatMap(HttpServer.start(port, _))
 
     httpServerApp
@@ -110,7 +121,10 @@ object Modules {
 
   def didCommServiceEndpoint(port: Int) = {
     val header = "content-type" -> MediaTypes.contentTypeEncrypted
-    val app: HttpApp[DidComm with CredentialService with PresentationService with CS_Connect, Throwable] =
+    val app: HttpApp[
+      DidComm with CredentialService with PresentationService with ConnectionService & ManagedDIDService,
+      Throwable
+    ] =
       Http.collectZIO[Request] {
         //   // TODO add DIDComm messages parsing logic here!
         //   Response.text("Hello World!").setStatus(Status.Accepted)
@@ -123,17 +137,19 @@ object Modules {
 
         case req @ Method.POST -> !!
             if req.headersAsList.exists(h => h._1.equalsIgnoreCase(header._1) && h._2.equalsIgnoreCase(header._2)) =>
-          req.body.asString
-            // .catchNonFatalOrDie(ex => ZIO.fail(ParseResponse(ex)))
-            .flatMap { data =>
-              webServerProgram(data).catchAll { case ex =>
-                val error = mercuryErrorAsThrowable(ex)
-                ZIO.logErrorCause("Fail to POST form webServerProgram", Cause.fail(error)) *>
-                  ZIO.fail(error)
-              }
-            }
-            .map(str => Response.ok)
+          val result = for {
+            data <- req.body.asString
+            _ <- webServerProgram(data)
+          } yield Response.ok
 
+          result
+            .tapError { error =>
+              ZIO.logErrorCause("Fail to POST form webServerProgram", Cause.fail(error))
+            }
+            .mapError {
+              case ex: DIDSecretStorageError => ex
+              case ex: MercuryThrowable      => mercuryErrorAsThrowable(ex)
+            }
       }
     Server.start(port, app)
   }
@@ -142,7 +158,7 @@ object Modules {
     BackgroundJobs.didCommExchanges
       .repeat(Schedule.spaced(10.seconds))
       .unit
-      .provideSomeLayer(AppModule.credentialServiceLayer)
+      .provideSomeLayer(AppModule.credentialServiceLayer ++ AppModule.manageDIDServiceLayer)
 
   val presentProofExchangeJob: RIO[DidComm & DIDResolver & HttpClient, Unit] =
     BackgroundJobs.presentProofExchanges
@@ -154,19 +170,48 @@ object Modules {
     ConnectBackgroundJobs.didCommExchanges
       .repeat(Schedule.spaced(10.seconds))
       .unit
-      .provideSomeLayer(AppModule.connectionServiceLayer)
+      .provideSomeLayer(AppModule.connectionServiceLayer ++ AppModule.manageDIDServiceLayer)
+
+  private[this] def extractFirstRecipientDid(jsonMessage: String): IO[ParsingFailure | DecodingFailure, String] = {
+    import io.circe._, io.circe.parser._
+    val doc = parse(jsonMessage).getOrElse(Json.Null)
+    val cursor = doc.hcursor
+    ZIO.fromEither(
+      cursor.downField("recipients").downArray.downField("header").downField("kid").as[String].map(_.split("#")(0))
+    )
+  }
+
+  private[this] def unpackMessage(
+      jsonString: String
+  ): ZIO[ManagedDIDService, ParseResponse | DIDSecretStorageError, Message] = {
+    // Needed for implicit conversion from didcommx UnpackResuilt to mercury UnpackMessage
+    import io.iohk.atala.mercury.model.given
+    for {
+      recipientDid <- extractFirstRecipientDid(jsonString).mapError(err => ParseResponse(err))
+      _ <- ZIO.logInfo(s"Extracted recipient Did => $recipientDid")
+      managedDIDService <- ZIO.service[ManagedDIDService]
+      peerDID <- managedDIDService.getPeerDID(DidId(recipientDid))
+      msg: UnpackMessage = new DIDComm(UniversalDidResolver, peerDID.getSecretResolverInMemory).unpack(
+        new UnpackParams.Builder(jsonString).build()
+      )
+    } yield msg.message
+  }
 
   def webServerProgram(
       jsonString: String
-  ): ZIO[DidComm & CredentialService with PresentationService with CS_Connect, MercuryThrowable, Unit] = {
+  ): ZIO[
+    CredentialService with PresentationService with ConnectionService & ManagedDIDService,
+    MercuryThrowable | DIDSecretStorageError,
+    Unit
+  ] = {
     import io.iohk.atala.mercury.DidComm.*
     ZIO.logAnnotate("request-id", java.util.UUID.randomUUID.toString()) {
       for {
         _ <- ZIO.logInfo("Received new message")
         _ <- ZIO.logTrace(jsonString)
-        msg <- unpack(jsonString).map(_.getMessage)
+        msg <- unpackMessage(jsonString)
         credentialService <- ZIO.service[CredentialService]
-        connectionService <- ZIO.service[CS_Connect]
+        connectionService <- ZIO.service[ConnectionService]
         _ <- {
           msg.piuri match {
             // ########################
@@ -360,7 +405,7 @@ object AppModule {
     (didOpValidatorLayer ++ GrpcModule.layers) >>> DIDServiceImpl.layer
 
   val manageDIDServiceLayer: TaskLayer[ManagedDIDService] =
-    (didOpValidatorLayer ++ didServiceLayer) >>> ManagedDIDService.inMemoryStorage
+    (didOpValidatorLayer ++ didServiceLayer ++ (RepoModule.agentTransactorLayer >>> JdbcDIDSecretStorage.layer)) >>> ManagedDIDService.layer
 
   val credentialServiceLayer: RLayer[DidComm, CredentialService] =
     (GrpcModule.layers ++ RepoModule.credentialRepoLayer) >>> CredentialServiceImpl.layer
@@ -368,8 +413,8 @@ object AppModule {
   def presentationServiceLayer =
     (RepoModule.presentationRepoLayer ++ RepoModule.credentialRepoLayer) >>> PresentationServiceImpl.layer
 
-  val connectionServiceLayer: RLayer[DidComm, CS_Connect] =
-    (GrpcModule.layers ++ RepoModule.connectionRepoLayer) >>> CSImpl_Connect.layer
+  val connectionServiceLayer: RLayer[DidComm, ConnectionService] =
+    (GrpcModule.layers ++ RepoModule.connectionRepoLayer) >>> ConnectionServiceImpl.layer
 
 }
 
@@ -427,7 +472,7 @@ object HttpModule {
     (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new DIDRegistrarApi(_, _))
   }
 
-  val issueCredentialsProtocolApiLayer: RLayer[DidComm, IssueCredentialsProtocolApi] = {
+  val issueCredentialsProtocolApiLayer: RLayer[DidComm & ManagedDIDService & AppConfig, IssueCredentialsProtocolApi] = {
     val serviceLayer = AppModule.credentialServiceLayer
     val apiServiceLayer = serviceLayer >>> IssueCredentialsProtocolApiServiceImpl.layer
     val apiMarshallerLayer = IssueCredentialsProtocolApiMarshallerImpl.layer
@@ -441,7 +486,7 @@ object HttpModule {
     (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new PresentProofApi(_, _))
   }
 
-  val connectionsManagementApiLayer: RLayer[DidComm, ConnectionsManagementApi] = {
+  val connectionsManagementApiLayer: RLayer[DidComm & ManagedDIDService & AppConfig, ConnectionsManagementApi] = {
     val serviceLayer = AppModule.connectionServiceLayer
     val apiServiceLayer = serviceLayer >>> ConnectionsManagementApiServiceImpl.layer
     val apiMarshallerLayer = ConnectionsManagementApiMarshallerImpl.layer
@@ -505,6 +550,32 @@ object RepoModule {
       }
     }.flatten
     connectDbConfigLayer >>> transactorLayer
+  }
+
+  val agentDbConfigLayer: TaskLayer[AgentDbConfig] = {
+    val dbConfigLayer = ZLayer.fromZIO {
+      ZIO.service[AppConfig].map(_.agent.database) map { config =>
+        AgentDbConfig(
+          username = config.username,
+          password = config.password,
+          jdbcUrl = s"jdbc:postgresql://${config.host}:${config.port}/${config.databaseName}",
+          awaitConnectionThreads = 2
+        )
+      }
+    }
+    SystemModule.configLayer >>> dbConfigLayer
+  }
+
+  val agentTransactorLayer: TaskLayer[Transactor[Task]] = {
+    val transactorLayer = ZLayer.fromZIO {
+      ZIO.service[AgentDbConfig].flatMap { config =>
+        Dispatcher[Task].allocated.map { case (dispatcher, _) =>
+          given Dispatcher[Task] = dispatcher
+          io.iohk.atala.agent.server.sql.TransactorLayer.hikari[Task](config)
+        }
+      }
+    }.flatten
+    agentDbConfigLayer >>> transactorLayer
   }
 
   val credentialRepoLayer: TaskLayer[CredentialRepository[Task]] =

@@ -9,7 +9,7 @@ services:
     image: postgres:13
     restart: always
     environment:
-      POSTGRES_MULTIPLE_DATABASES: "castor,pollux,connect,iris"
+      POSTGRES_MULTIPLE_DATABASES: "castor,pollux,connect,iris, agent"
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     volumes:
@@ -78,6 +78,11 @@ services:
       CONNECT_DB_NAME: connect
       CONNECT_DB_USER: postgres
       CONNECT_DB_PASSWORD: postgres
+      AGENT_DB_HOST: db
+      AGENT_DB_PORT: 5432
+      AGENT_DB_NAME: agent
+      AGENT_DB_USER: postgres
+      AGENT_DB_PASSWORD: postgres
       DIDCOMM_SERVICE_URL: http://host.docker.internal:${PORT}/didcomm
     depends_on:
       db:
