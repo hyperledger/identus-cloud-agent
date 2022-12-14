@@ -7,6 +7,8 @@ import io.iohk.atala.resolvers.UniversalDidResolver
 import io.iohk.atala.castor.sql.repository.{Migrations => CastorMigrations}
 import io.iohk.atala.pollux.sql.repository.{Migrations => PolluxMigrations}
 import io.iohk.atala.connect.sql.repository.{Migrations => ConnectMigrations}
+import io.iohk.atala.resolvers.DIDResolver
+import io.iohk.atala.agent.server.http.ZioHttpClient
 
 object Main extends ZIOAppDefault {
   def agentLayer(peer: PeerDID): ZLayer[Any, Nothing, AgentServiceAny] =
@@ -73,17 +75,17 @@ object Main extends ZIOAppDefault {
       didCommLayer = agentLayer(agentDID)
 
       didCommExchangesFiber <- Modules.didCommExchangesJob
-        .provide(didCommLayer)
+        .provide(didCommLayer, DIDResolver.layer, ZioHttpClient.layer)
         .debug
         .fork
 
       presentProofDidCommExchangesFiber <- Modules.presentProofExchangeJob
-        .provide(didCommLayer)
+        .provide(didCommLayer, DIDResolver.layer, ZioHttpClient.layer)
         .debug
         .fork
 
       connectDidCommExchangesFiber <- Modules.connectDidCommExchangesJob
-        .provide(didCommLayer)
+        .provide(didCommLayer, DIDResolver.layer, ZioHttpClient.layer)
         .debug
         .fork
 
