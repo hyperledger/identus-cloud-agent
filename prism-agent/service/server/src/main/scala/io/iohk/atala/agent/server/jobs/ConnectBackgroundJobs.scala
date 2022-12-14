@@ -3,14 +3,15 @@ package io.iohk.atala.agent.server.jobs
 import zio._
 import io.iohk.atala.connect.core.service.ConnectionService
 import io.iohk.atala.connect.core.model.ConnectionRecord
-import io.iohk.atala.mercury.DidComm
 import io.iohk.atala.connect.core.model.ConnectionRecord._
-import io.iohk.atala.agent.server.jobs.MercuryUtils.sendMessage
 import io.iohk.atala.mercury.DidComm
 import io.iohk.atala.mercury.MediaTypes
+import io.iohk.atala.mercury.MessagingService
+import io.iohk.atala.mercury.HttpClient
 import io.iohk.atala.mercury.model._
 import io.iohk.atala.mercury.model.error._
 import io.iohk.atala.mercury.protocol.issuecredential._
+import io.iohk.atala.resolvers.DIDResolver
 import java.io.IOException
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.mercury.AgentServiceAny
@@ -35,14 +36,14 @@ object ConnectBackgroundJobs {
 
   private[this] def performExchange(
       record: ConnectionRecord
-  ): URIO[ConnectionService & ManagedDIDService, Unit] = {
+  ): URIO[DIDResolver & HttpClient & ConnectionService & ManagedDIDService, Unit] = {
     import Role._
     import ProtocolState._
     val exchange = record match {
       case ConnectionRecord(id, _, _, _, _, Invitee, ConnectionRequestPending, _, Some(request), _) =>
         (for {
           didCommAgent <- buildDIDCommAgent(request.from)
-          _ <- sendMessage(request.makeMessage).provide(didCommAgent)
+          _ <- MessagingService.send(request.makeMessage).provide(didCommAgent)
           connectionService <- ZIO.service[ConnectionService]
           _ <- connectionService.markConnectionRequestSent(id)
         } yield ()): ZIO[
@@ -54,7 +55,7 @@ object ConnectBackgroundJobs {
       case ConnectionRecord(id, _, _, _, _, Inviter, ConnectionResponsePending, _, _, Some(response)) =>
         (for {
           didCommAgent <- buildDIDCommAgent(response.from)
-          _ <- sendMessage(response.makeMessage).provide(didCommAgent)
+          _ <- MessagingService.send(response.makeMessage).provide(didCommAgent)
           connectionService <- ZIO.service[ConnectionService]
           _ <- connectionService.markConnectionResponseSent(id)
         } yield ()): ZIO[

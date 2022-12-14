@@ -89,6 +89,7 @@ import org.didcommx.didcomm.secret.Secret
 import io.circe.ParsingFailure
 import io.circe.DecodingFailure
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
+import io.iohk.atala.resolvers.DIDResolver
 
 object Modules {
 
@@ -153,19 +154,19 @@ object Modules {
     Server.start(port, app)
   }
 
-  val didCommExchangesJob: RIO[DidComm, Unit] =
+  val didCommExchangesJob: RIO[DidComm & DIDResolver & HttpClient, Unit] =
     BackgroundJobs.didCommExchanges
       .repeat(Schedule.spaced(10.seconds))
       .unit
       .provideSomeLayer(AppModule.credentialServiceLayer ++ AppModule.manageDIDServiceLayer)
 
-  val presentProofExchangeJob: RIO[DidComm, Unit] =
+  val presentProofExchangeJob: RIO[DidComm & DIDResolver & HttpClient, Unit] =
     BackgroundJobs.presentProofExchanges
       .repeat(Schedule.spaced(10.seconds))
       .unit
       .provideSomeLayer(AppModule.presentationServiceLayer)
 
-  val connectDidCommExchangesJob: RIO[DidComm, Unit] =
+  val connectDidCommExchangesJob: RIO[DidComm & DIDResolver & HttpClient, Unit] =
     ConnectBackgroundJobs.didCommExchanges
       .repeat(Schedule.spaced(10.seconds))
       .unit

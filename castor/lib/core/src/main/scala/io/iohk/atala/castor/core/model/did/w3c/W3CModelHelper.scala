@@ -29,6 +29,7 @@ private[castor] trait W3CModelHelper {
         assertionMethod = keyWithPurpose.collect { case (VerificationRelationship.AssertionMethod, k) => k },
         keyAgreement = keyWithPurpose.collect { case (VerificationRelationship.KeyAgreement, k) => k },
         capabilityInvocation = keyWithPurpose.collect { case (VerificationRelationship.CapabilityInvocation, k) => k },
+        capabilityDelegation = keyWithPurpose.collect { case (VerificationRelationship.CapabilityDelegation, k) => k },
         service = didData.services.map(_.toW3C(didData.id))
       )
     }
