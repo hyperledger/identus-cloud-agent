@@ -1,3 +1,10 @@
+# [connect-v0.5.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/connect-v0.4.0...connect-v0.5.0) (2022-12-14)
+
+
+### Features
+
+* **pollux:** use dedicated pairwise PeerDIDs instead of a global one ([#252](https://github.com/input-output-hk/atala-prism-building-blocks/issues/252)) ([38a9b95](https://github.com/input-output-hk/atala-prism-building-blocks/commit/38a9b95a254e53483c15d7ee381f82a1d7556a18))
+
 # [connect-v0.4.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/connect-v0.3.1...connect-v0.4.0) (2022-12-13)
 
 
