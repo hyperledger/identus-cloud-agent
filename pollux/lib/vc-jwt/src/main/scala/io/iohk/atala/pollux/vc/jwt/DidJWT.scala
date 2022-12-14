@@ -70,6 +70,7 @@ class ES256Signer(privateKey: PrivateKey) extends Signer {
 }
 
 // works with java 7, 8, 11 & bouncycastle provider
+// https://connect2id.com/products/nimbus-jose-jwt/jca-algorithm-support#alg-support-table
 class ES256KSigner(privateKey: PrivateKey) extends Signer {
   override def encode(claim: Json): JWT = {
     val claimSet = JWTClaimsSet.parse(claim.noSpaces)

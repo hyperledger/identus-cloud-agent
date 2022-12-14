@@ -1,6 +1,7 @@
 package io.iohk.atala.pollux.vc.jwt
 
 import io.iohk.atala.castor.core.model.did.w3c.{
+  DIDDocumentRepr,
   DIDResolutionErrorRepr,
   PublicKeyJwk,
   PublicKeyRepr,
@@ -96,34 +97,45 @@ class PrismDidResolver(didService: DIDService) extends DidResolver {
   override def resolve(didUrl: String): UIO[DIDResolutionResult] = {
     w3cResolver(didUrl)
       .fold(
-        { error =>
-          val polluxError = error match {
-            case e @ DIDResolutionErrorRepr.InvalidDID                 => InvalidDid(e.value)
-            case e @ DIDResolutionErrorRepr.InvalidDIDUrl              => InvalidDid(e.value)
-            case e @ DIDResolutionErrorRepr.NotFound                   => NotFound(e.value)
-            case e @ DIDResolutionErrorRepr.RepresentationNotSupported => RepresentationNotSupported(e.value)
-            case e @ DIDResolutionErrorRepr.InternalError              => Error(e.value, e.value)
-            case e @ DIDResolutionErrorRepr.InvalidPublicKeyLength     => InvalidPublicKeyLength(e.value)
-            case e @ DIDResolutionErrorRepr.InvalidPublicKeyType       => InvalidPublicKeyType(e.value)
-            case e @ DIDResolutionErrorRepr.UnsupportedPublicKeyType   => UnsupportedPublicKeyType(e.value)
-          }
-          DIDResolutionFailed(polluxError)
-        },
+        toPolluxResolutionErrorModel,
         { case (didDocumentMetadata, didDocument) =>
           DIDResolutionSucceeded(
-            didDocument = DIDDocument(
-              id = didDocument.id,
-              alsoKnowAs = Vector.empty,
-              controller = Vector(didDocument.controller),
-              verificationMethod = didDocument.verificationMethod.map(toPolluxVerificationMethodModel).toVector,
-              service = didDocument.service.map(toPolluxServiceModel).toVector
-            ),
+            didDocument = toPolluxDIDDocumentModel(didDocument),
             didDocumentMetadata = DIDDocumentMetadata(
               deactivated = Some(didDocumentMetadata.deactivated)
             )
           )
         }
       )
+  }
+
+  private def toPolluxDIDDocumentModel(didDocument: DIDDocumentRepr): DIDDocument = {
+    DIDDocument(
+      id = didDocument.id,
+      alsoKnowAs = Vector.empty,
+      controller = Vector(didDocument.controller),
+      verificationMethod = didDocument.verificationMethod.map(toPolluxVerificationMethodModel).toVector,
+      authentication = didDocument.authentication.map(toPolluxVerificationMethodModel).toVector,
+      assertionMethod = didDocument.assertionMethod.map(toPolluxVerificationMethodModel).toVector,
+      keyAgreement = didDocument.keyAgreement.map(toPolluxVerificationMethodModel).toVector,
+      capabilityInvocation = didDocument.capabilityInvocation.map(toPolluxVerificationMethodModel).toVector,
+      capabilityDelegation = didDocument.capabilityDelegation.map(toPolluxVerificationMethodModel).toVector,
+      service = didDocument.service.map(toPolluxServiceModel).toVector
+    )
+  }
+
+  private def toPolluxResolutionErrorModel(error: DIDResolutionErrorRepr): DIDResolutionFailed = {
+    val e = error match {
+      case DIDResolutionErrorRepr.InvalidDID                 => InvalidDid(error.value)
+      case DIDResolutionErrorRepr.InvalidDIDUrl              => InvalidDid(error.value)
+      case DIDResolutionErrorRepr.NotFound                   => NotFound(error.value)
+      case DIDResolutionErrorRepr.RepresentationNotSupported => RepresentationNotSupported(error.value)
+      case DIDResolutionErrorRepr.InternalError              => Error(error.value, error.value)
+      case DIDResolutionErrorRepr.InvalidPublicKeyLength     => InvalidPublicKeyLength(error.value)
+      case DIDResolutionErrorRepr.InvalidPublicKeyType       => InvalidPublicKeyType(error.value)
+      case DIDResolutionErrorRepr.UnsupportedPublicKeyType   => UnsupportedPublicKeyType(error.value)
+    }
+    DIDResolutionFailed(e)
   }
 
   private def toPolluxServiceModel(service: ServiceRepr): Service = {
