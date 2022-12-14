@@ -1,3 +1,10 @@
+# [prism-agent-v0.19.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.18.0...prism-agent-v0.19.0) (2022-12-14)
+
+
+### Features
+
+* **prism-agent:** Use pairwise PeerDIDs in connect and issue ([#253](https://github.com/input-output-hk/atala-prism-building-blocks/issues/253)) ([01519ff](https://github.com/input-output-hk/atala-prism-building-blocks/commit/01519ffc7d608c3d17ffa06242bf7324681c31d1))
+
 # [prism-agent-v0.18.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.17.1...prism-agent-v0.18.0) (2022-12-14)
 
 
