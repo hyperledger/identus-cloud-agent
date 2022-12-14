@@ -41,28 +41,20 @@ object ConnectBackgroundJobs {
     import ProtocolState._
     val exchange = record match {
       case ConnectionRecord(id, _, _, _, _, Invitee, ConnectionRequestPending, _, Some(request), _) =>
-        (for {
+        for {
           didCommAgent <- buildDIDCommAgent(request.from)
-          _ <- MessagingService.send(request.makeMessage).provide(didCommAgent)
+          _ <- MessagingService.send(request.makeMessage).provideSomeLayer(didCommAgent)
           connectionService <- ZIO.service[ConnectionService]
           _ <- connectionService.markConnectionRequestSent(id)
-        } yield ()): ZIO[
-          ConnectionService & ManagedDIDService,
-          ConnectionServiceError | MercuryException | DIDSecretStorageError,
-          Unit
-        ]
+        } yield ()
 
       case ConnectionRecord(id, _, _, _, _, Inviter, ConnectionResponsePending, _, _, Some(response)) =>
-        (for {
+        for {
           didCommAgent <- buildDIDCommAgent(response.from)
-          _ <- MessagingService.send(response.makeMessage).provide(didCommAgent)
+          _ <- MessagingService.send(response.makeMessage).provideSomeLayer(didCommAgent)
           connectionService <- ZIO.service[ConnectionService]
           _ <- connectionService.markConnectionResponseSent(id)
-        } yield ()): ZIO[
-          ConnectionService & ManagedDIDService,
-          ConnectionServiceError | MercuryException | DIDSecretStorageError,
-          Unit
-        ]
+        } yield ()
 
       case _ => ZIO.unit
     }

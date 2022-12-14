@@ -67,17 +67,13 @@ object BackgroundJobs {
       _ <- record match {
         // Offer should be sent from Issuer to Holder
         case IssueCredentialRecord(id, _, _, _, _, Role.Issuer, _, _, _, _, OfferPending, _, Some(offer), _, _, _) =>
-          (for {
+          for {
             _ <- ZIO.log(s"IssueCredentialRecord: OfferPending (START)")
             didCommAgent <- buildDIDCommAgent(offer.from)
-            _ <- MessagingService.send(offer.makeMessage).provide(didCommAgent)
+            _ <- MessagingService.send(offer.makeMessage).provideSomeLayer(didCommAgent)
             credentialService <- ZIO.service[CredentialService]
             _ <- credentialService.markOfferSent(id)
-          } yield ()): ZIO[
-            CredentialService & ManagedDIDService,
-            CredentialServiceError | MercuryException | DIDSecretStorageError,
-            Unit
-          ]
+          } yield ()
 
         // Request should be sent from Holder to Issuer
         case IssueCredentialRecord(
@@ -98,16 +94,12 @@ object BackgroundJobs {
               _,
               _,
             ) =>
-          (for {
+          for {
             didCommAgent <- buildDIDCommAgent(request.from)
-            _ <- MessagingService.send(request.makeMessage).provide(didCommAgent)
+            _ <- MessagingService.send(request.makeMessage).provideSomeLayer(didCommAgent)
             credentialService <- ZIO.service[CredentialService]
             _ <- credentialService.markRequestSent(id)
-          } yield ()): ZIO[
-            CredentialService & ManagedDIDService,
-            CredentialServiceError | MercuryException | DIDSecretStorageError,
-            Unit
-          ]
+          } yield ()
 
         // 'automaticIssuance' is TRUE. Issuer automatically accepts the Request
         case IssueCredentialRecord(id, _, _, _, _, Role.Issuer, _, _, Some(true), _, RequestReceived, _, _, _, _, _) =>
@@ -176,16 +168,12 @@ object BackgroundJobs {
               Some(issue),
               _,
             ) =>
-          (for {
+          for {
             didCommAgent <- buildDIDCommAgent(issue.from)
-            _ <- MessagingService.send(issue.makeMessage).provide(didCommAgent)
+            _ <- MessagingService.send(issue.makeMessage).provideSomeLayer(didCommAgent)
             credentialService <- ZIO.service[CredentialService]
             _ <- credentialService.markCredentialSent(id)
-          } yield ()): ZIO[
-            CredentialService & ManagedDIDService,
-            CredentialServiceError | MercuryException | DIDSecretStorageError,
-            Unit
-          ]
+          } yield ()
 
         // Credential has been generated, published, and can now be sent to the Holder
         case IssueCredentialRecord(
@@ -206,16 +194,12 @@ object BackgroundJobs {
               Some(issue),
               _,
             ) =>
-          (for {
+          for {
             didCommAgent <- buildDIDCommAgent(issue.from)
-            _ <- MessagingService.send(issue.makeMessage).provide(didCommAgent)
+            _ <- MessagingService.send(issue.makeMessage).provideSomeLayer(didCommAgent)
             credentialService <- ZIO.service[CredentialService]
             _ <- credentialService.markCredentialSent(id)
-          } yield ()): ZIO[
-            CredentialService & ManagedDIDService,
-            CredentialServiceError | MercuryException | DIDSecretStorageError,
-            Unit
-          ]
+          } yield ()
 
         case IssueCredentialRecord(id, _, _, _, _, _, _, _, _, _, ProblemReportPending, _, _, _, _, _) => ???
         case IssueCredentialRecord(id, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)                    => ZIO.unit
