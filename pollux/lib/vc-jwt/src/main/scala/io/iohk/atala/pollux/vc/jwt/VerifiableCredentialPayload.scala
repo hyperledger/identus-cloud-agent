@@ -282,6 +282,7 @@ object CredentialPayload {
   object Implicits {
 
     import Proof.Implicits.*
+    import InstantDecoderEncoder.*
 
     implicit val didEncoder: Encoder[DID] =
       (did: DID) => did.value.asJson
@@ -545,11 +546,13 @@ object JwtCredential {
     encodeJwt(payload.toJwtCredentialPayload, issuer)
 
   def decodeJwt(jwt: JWT, publicKey: PublicKey): Try[JwtCredentialPayload] = {
-    JwtCirce.decodeRaw(jwt.value, publicKey).flatMap(decode[JwtCredentialPayload](_).toTry)
+    JwtCirce
+      .decodeRaw(jwt.value, publicKey, options = JwtOptions(expiration = false, notBefore = false))
+      .flatMap(decode[JwtCredentialPayload](_).toTry)
   }
 
   def validateEncodedJwt(jwt: JWT, publicKey: PublicKey): Boolean =
-    JwtCirce.isValid(jwt.value, publicKey)
+    JwtCirce.isValid(jwt.value, publicKey, JwtOptions(expiration = false, notBefore = false))
 
   def validateEncodedJWT(
       jwt: JWT
@@ -617,7 +620,9 @@ object JwtCredential {
     val now = clock.instant()
 
     val decodeJWT =
-      Validation.fromTry(JwtCirce.decodeRaw(jwt.value, options = JwtOptions(signature = false))).mapError(_.getMessage)
+      Validation
+        .fromTry(JwtCirce.decodeRaw(jwt.value, options = JwtOptions(false, false, false)))
+        .mapError(_.getMessage)
 
     def validateNbfNotAfterExp(nbf: Instant, maybeExp: Option[Instant]): Validation[String, Unit] = {
       maybeExp

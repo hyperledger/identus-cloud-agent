@@ -6,7 +6,7 @@ import io.circe.generic.auto.*
 import io.circe.parser.decode
 import io.circe.syntax.*
 import pdi.jwt.{Jwt, JwtCirce, JwtOptions}
-import zio._
+import zio.*
 import zio.prelude.*
 
 import java.security.{KeyPairGenerator, PublicKey}
@@ -119,6 +119,7 @@ object PresentationPayload {
   object Implicits {
 
     import CredentialPayload.Implicits.*
+    import InstantDecoderEncoder.*
     import Proof.Implicits.*
 
     implicit val w3cPresentationPayloadEncoder: Encoder[W3cPresentationPayload] =
@@ -309,7 +310,9 @@ object JwtPresentation {
   }
 
   def decodeJwt(jwt: JWT, publicKey: PublicKey): Try[JwtPresentationPayload] = {
-    JwtCirce.decodeRaw(jwt.value, publicKey).flatMap(decode[JwtPresentationPayload](_).toTry)
+    JwtCirce
+      .decodeRaw(jwt.value, publicKey, JwtOptions(expiration = false, notBefore = false))
+      .flatMap(decode[JwtPresentationPayload](_).toTry)
   }
 
   def validateEncodedJwt(jwt: JWT, publicKey: PublicKey): Validation[String, Unit] =
@@ -363,7 +366,9 @@ object JwtPresentation {
     val now = clock.instant()
 
     val decodeJWT =
-      Validation.fromTry(JwtCirce.decodeRaw(jwt.value, options = JwtOptions(signature = false))).mapError(_.getMessage)
+      Validation
+        .fromTry(JwtCirce.decodeRaw(jwt.value, options = JwtOptions(false, false, false)))
+        .mapError(_.getMessage)
 
     def validateNbfNotAfterExp(maybeNbf: Option[Instant], maybeExp: Option[Instant]): Validation[String, Unit] = {
       val maybeResult =
