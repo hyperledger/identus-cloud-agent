@@ -1,3 +1,10 @@
+# [prism-agent-v0.20.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.19.0...prism-agent-v0.20.0) (2022-12-14)
+
+
+### Features
+
+* **prism-agent:** fix DB connection pool duplication issue by providing ZLayer globally ([#256](https://github.com/input-output-hk/atala-prism-building-blocks/issues/256)) ([4424de1](https://github.com/input-output-hk/atala-prism-building-blocks/commit/4424de14917988cc6f8e406624bf7cf20db27455))
+
 # [prism-agent-v0.19.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.18.0...prism-agent-v0.19.0) (2022-12-14)
 
 
