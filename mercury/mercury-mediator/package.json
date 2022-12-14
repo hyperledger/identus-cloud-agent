@@ -57,7 +57,7 @@
           "notifyOnSuccess": true,
           "notifyOnFail": true,
           "onSuccessTemplate": {
-            "text": "A new version of Atala PRISM `$package_name` successfully released!\nVersion: `$npm_package_version`\nTag: $repo_url/releases/tag/$npm_package_version\nRelease notes:\n\n${nextRelease.notes}"
+            "text": "A new version of Atala PRISM `$package_name` successfully released!\nVersion: `$npm_package_version`\nTag: $repo_url/releases/tag/$npm_package_version\n\nRelease notes:\n$release_notes"
           }
         }
       ]
