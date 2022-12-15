@@ -25,7 +25,7 @@ import java.io.IOException
 
 import zhttp.service._
 import zhttp.http._
-import io.iohk.atala.pollux.vc.jwt.JwtCredential
+import io.iohk.atala.pollux.vc.jwt.W3CCredential
 import io.iohk.atala.pollux.core.model.PresentationRecord
 import io.iohk.atala.pollux.core.service.PresentationService
 import io.iohk.atala.pollux.core.model.error.PresentationError
@@ -138,7 +138,7 @@ object BackgroundJobs {
               issuer,
               Instant.now()
             )
-            signedJwtCredential = JwtCredential.toEncodedJwt(w3Credential, issuer)
+            signedJwtCredential = W3CCredential.toEncodedJwt(w3Credential, issuer)
             issueCredential = IssueCredential.build(
               fromDID = issue.from,
               toDID = issue.to,
