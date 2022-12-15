@@ -1,3 +1,11 @@
+# [pollux-v0.12.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.11.0...pollux-v0.12.0) (2022-12-15)
+
+
+### Features
+
+* **pollux:** [ATL-2706] Universal Verification Method ([#258](https://github.com/input-output-hk/atala-prism-building-blocks/issues/258)) ([d0c36f4](https://github.com/input-output-hk/atala-prism-building-blocks/commit/d0c36f44a2b5dff427aef54d745b3b4e19f3f766))
+* **pollux:** integrate castor resolver to pollux-jwt-vc library ([#250](https://github.com/input-output-hk/atala-prism-building-blocks/issues/250)) ([ea10db5](https://github.com/input-output-hk/atala-prism-building-blocks/commit/ea10db5f693758f8cbff5be839d691806f161158))
+
 # [pollux-v0.11.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.10.0...pollux-v0.11.0) (2022-12-14)
 
 
