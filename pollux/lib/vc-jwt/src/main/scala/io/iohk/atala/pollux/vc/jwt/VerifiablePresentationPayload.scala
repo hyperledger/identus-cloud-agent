@@ -335,14 +335,15 @@ object JwtPresentation {
   }
 
   def validateEnclosedCredentials(
-      jwt: JWT
-  )(didResolver: DidResolver): IO[List[String], Validation[String, Unit]] = {
+      jwt: JWT,
+      options: CredentialVerification.CredentialVerificationOptions
+  )(didResolver: DidResolver)(implicit clock: Clock): IO[List[String], Validation[String, Unit]] = {
     val validateJwtPresentation = Validation.fromTry(decodeJwt(jwt)).mapError(_.toString)
 
     val credentialValidationZIO =
       ValidationUtils.foreach(
         validateJwtPresentation
-          .map(validJwtPresentation => validateCredentials(validJwtPresentation)(didResolver))
+          .map(validJwtPresentation => validateCredentials(validJwtPresentation, options)(didResolver)(clock))
       )(identity)
 
     credentialValidationZIO.map(validCredentialValidations => {
@@ -355,10 +356,11 @@ object JwtPresentation {
   }
 
   def validateCredentials(
-      decodedJwtPresentation: JwtPresentationPayload
-  )(didResolver: DidResolver): ZIO[Any, List[String], IndexedSeq[Validation[String, Unit]]] = {
+      decodedJwtPresentation: JwtPresentationPayload,
+      options: CredentialVerification.CredentialVerificationOptions
+  )(didResolver: DidResolver)(implicit clock: Clock): ZIO[Any, List[String], IndexedSeq[Validation[String, Unit]]] = {
     ZIO.validatePar(decodedJwtPresentation.vp.verifiableCredential) { a =>
-      JwtCredential.validateCredential(a)(didResolver)
+      CredentialVerification.verify(a, options)(didResolver)(clock)
     }
   }
 
@@ -397,7 +399,7 @@ object JwtPresentation {
       maybeExp
         .map(exp =>
           if (now.isAfter(exp.plus(leeway)))
-            Validation.fail(s"Credential has expired. now=$now exp=$exp leeway=$leeway")
+            Validation.fail(s"Verifiable Presentation has expired. now=$now exp=$exp leeway=$leeway")
           else Validation.unit
         )
         .getOrElse(Validation.unit)
@@ -414,5 +416,29 @@ object JwtPresentation {
         validateExp(maybeExp)
       )((l, _, _) => l)
     } yield result
+  }
+
+  case class PresentationVerificationOptions(
+      verifySignature: Boolean = true,
+      verifyDates: Boolean = false,
+      leeway: TemporalAmount = Duration.Zero,
+      maybeCredentialOptions: Option[CredentialVerification.CredentialVerificationOptions] = None
+  )
+
+  def verify(jwt: JWT, options: PresentationVerificationOptions)(
+      didResolver: DidResolver
+  )(implicit clock: Clock): IO[List[String], Validation[String, Unit]] = {
+    for {
+      signatureValidation <-
+        if (options.verifySignature) then validateEncodedJWT(jwt)(didResolver).mapError(List(_))
+        else ZIO.succeed(Validation.unit)
+      dateVerification <- ZIO.succeed(
+        if (options.verifyDates) then verifyDates(jwt, options.leeway)(clock) else Validation.unit
+      )
+      credentialVerification <-
+        options.maybeCredentialOptions
+          .map(credentialOptions => validateEnclosedCredentials(jwt, credentialOptions)(didResolver)(clock))
+          .getOrElse(ZIO.succeed(Validation.unit))
+    } yield Validation.validateWith(signatureValidation, dateVerification, credentialVerification)((a, _, _) => a)
   }
 }

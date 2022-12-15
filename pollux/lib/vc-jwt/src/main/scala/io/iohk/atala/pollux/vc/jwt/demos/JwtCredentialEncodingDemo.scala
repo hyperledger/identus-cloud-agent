@@ -79,7 +79,7 @@ import java.time.{Instant, ZonedDateTime}
   println("==================")
   println("W3C => Encoded JWT")
   println("==================")
-  val encodedJWT = JwtCredential.toEncodedJwt(w3cCredentialPayload, issuer)
+  val encodedJWT = W3CCredential.toEncodedJwt(w3cCredentialPayload, issuer)
   println(encodedJWT)
 
   println("")

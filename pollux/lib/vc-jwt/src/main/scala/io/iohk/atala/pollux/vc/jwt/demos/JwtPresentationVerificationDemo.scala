@@ -7,7 +7,6 @@ import io.circe.generic.auto.*
 import io.circe.parser.decode
 import io.circe.syntax.*
 import io.iohk.atala.pollux.vc.jwt.*
-import io.iohk.atala.pollux.vc.jwt.NotFound
 import io.iohk.atala.pollux.vc.jwt.CredentialPayload.Implicits.*
 import io.iohk.atala.pollux.vc.jwt.PresentationPayload.Implicits.*
 import net.reactivecore.cjs.resolver.Downloader
@@ -171,7 +170,7 @@ object JwtPresentationVerificationDemo extends ZIOAppDefault {
         maybeJti = Some("http://example.edu/credentials/3732") // CREDENTIAL ID
       )
 
-    val jwtIssuerSignedCredential = issuer2.issuer.signer.encode(jwtCredentialPayload.asJson)
+    val jwtIssuerSignedCredential = issuer1.issuer.signer.encode(jwtCredentialPayload.asJson)
     val jwtVerifiableCredentialPayload = JwtVerifiableCredentialPayload(jwtIssuerSignedCredential)
 
     val jwtPresentationNbf = Instant.parse("2010-01-01T00:00:00Z") // ISSUANCE DATE
@@ -202,7 +201,7 @@ object JwtPresentationVerificationDemo extends ZIOAppDefault {
 
     class DidResolverTest() extends DidResolver {
 
-      private val resolverLookup: Map[String, DIDDocument] = Seq(holder1, holder2, holder3, issuer1, issuer2).map {
+      private val resolverLookup: Map[String, DIDDocument] = Seq(holder1, holder2, holder3, /*issuer1,*/ issuer2).map {
         issuerWithKey =>
           val did = issuerWithKey.issuer.did.value
           val verificationMethod =
@@ -243,19 +242,28 @@ object JwtPresentationVerificationDemo extends ZIOAppDefault {
     println("==================")
     println("Validate JWT Presentation Using DID Document of the issuer of the presentation")
     println("==================")
-    val encodedJWTPresentation = JwtPresentation.encodeJwt(payload = jwtPresentationPayload, issuer = holder1.issuer)
+    val encodedJWTPresentation = JwtPresentation.encodeJwt(payload = jwtPresentationPayload, issuer = holder2.issuer)
     val encodedW3CPresentation =
       JwtPresentation.toEncodeW3C(payload = jwtPresentationPayload.toW3CPresentationPayload, issuer = holder1.issuer)
-
+    val clock = Clock.system(ZoneId.systemDefault)
     for {
       _ <- printLine("DEMO TIME! ")
       w3cSignatureValidationResult <- JwtPresentation.validateEncodedW3C(encodedW3CPresentation.proof.jwt)(
         DidResolverTest()
       )
       jwtSignatureValidationResult <- JwtPresentation.validateEncodedJWT(encodedJWTPresentation)(DidResolverTest())
-      enclosedCredentialsValidationResult <- JwtPresentation.validateEnclosedCredentials(encodedJWTPresentation)(
-        DidResolverTest()
-      )
+      enclosedCredentialsValidationResult <-
+        JwtPresentation.verify(
+          encodedJWTPresentation,
+          JwtPresentation.PresentationVerificationOptions(
+            verifySignature = true,
+            verifyDates = true,
+            leeway = Duration.ZERO,
+            Some(CredentialVerification.CredentialVerificationOptions(verifySignature = true, verifyDates = true))
+          )
+        )(
+          DidResolverTest()
+        )(clock)
       _ <- printLine(s"W3C IS VALID?: $w3cSignatureValidationResult")
       _ <- printLine(s"JWT IS VALID?: $jwtSignatureValidationResult")
       _ <- printLine(s"Enclosed Credentials are VALID?: $enclosedCredentialsValidationResult")
