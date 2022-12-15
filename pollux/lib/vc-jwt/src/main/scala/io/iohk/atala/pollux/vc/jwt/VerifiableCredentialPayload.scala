@@ -581,16 +581,38 @@ object CredentialVerification {
     )((l, _, _) => l)
   }
 
+  /** Defines what to verify in the jwt credentials.
+    *
+    * @param verifySignature
+    *   verifies signature using the resolved did.
+    * @param verifyDates
+    *   verifies issuance and expiration dates.
+    * @param leeway
+    *   defines the duration we should subtract from issuance date and add to expiration dates.
+    * @param maybeProofPurpose
+    *   specifies the which type of public key to use in the resolved DidDocument. If empty, we will validate against
+    *   all public key.
+    */
   case class CredentialVerificationOptions(
       verifySignature: Boolean = true,
       verifyDates: Boolean = false,
-      leeway: TemporalAmount = Duration.Zero
+      leeway: TemporalAmount = Duration.Zero,
+      maybeProofPurpose: Option[VerificationRelationship] = None
   )
 
-  def verify(jwt: JWT, options: CredentialVerificationOptions)(didResolver: DidResolver)(implicit
-      clock: Clock
-  ): IO[String, Validation[String, Unit]] = verify(jwt, options)(didResolver)(clock)
-
+  /** Verifies a jwt credential.
+    *
+    * @param jwt
+    *   credential to verify.
+    * @param options
+    *   defines what to verify.
+    * @param didResolver
+    *   is used to resolve the did.
+    * @param clock
+    *   is used to get current time.
+    * @return
+    *   the result of the validation.
+    */
   def verify(verifiableCredentialPayload: VerifiableCredentialPayload, options: CredentialVerificationOptions)(
       didResolver: DidResolver
   )(implicit clock: Clock): IO[String, Validation[String, Unit]] = {
@@ -692,7 +714,7 @@ object JwtCredential {
   )(implicit clock: Clock): IO[String, Validation[String, Unit]] = {
     for {
       signatureValidation <-
-        if (options.verifySignature) then validateEncodedJWT(jwt)(didResolver)
+        if (options.verifySignature) then validateEncodedJWT(jwt, options.maybeProofPurpose)(didResolver)
         else ZIO.succeed(Validation.unit)
       dateVerification <- ZIO.succeed(
         if (options.verifyDates) then verifyDates(jwt, options.leeway) else Validation.unit
@@ -740,7 +762,7 @@ object W3CCredential {
   )(implicit clock: Clock): IO[String, Validation[String, Unit]] = {
     for {
       signatureValidation <-
-        if (options.verifySignature) then validateW3C(w3cPayload)(didResolver)
+        if (options.verifySignature) then validateW3C(w3cPayload, options.maybeProofPurpose)(didResolver)
         else ZIO.succeed(Validation.unit)
       dateVerification <- ZIO.succeed(
         if (options.verifyDates) then verifyDates(w3cPayload, options.leeway) else Validation.unit
