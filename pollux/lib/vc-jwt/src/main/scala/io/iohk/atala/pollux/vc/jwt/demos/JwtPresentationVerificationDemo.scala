@@ -7,7 +7,6 @@ import io.circe.generic.auto.*
 import io.circe.parser.decode
 import io.circe.syntax.*
 import io.iohk.atala.pollux.vc.jwt.*
-import io.iohk.atala.pollux.vc.jwt.NotFound
 import io.iohk.atala.pollux.vc.jwt.CredentialPayload.Implicits.*
 import io.iohk.atala.pollux.vc.jwt.PresentationPayload.Implicits.*
 import net.reactivecore.cjs.resolver.Downloader
@@ -246,16 +245,27 @@ object JwtPresentationVerificationDemo extends ZIOAppDefault {
     val encodedJWTPresentation = JwtPresentation.encodeJwt(payload = jwtPresentationPayload, issuer = holder1.issuer)
     val encodedW3CPresentation =
       JwtPresentation.toEncodeW3C(payload = jwtPresentationPayload.toW3CPresentationPayload, issuer = holder1.issuer)
-
+    val clock = Clock.system(ZoneId.systemDefault)
     for {
       _ <- printLine("DEMO TIME! ")
-      w3cSignatureValidationResult <- JwtPresentation.validateEncodedW3C(encodedW3CPresentation.proof.jwt)(
+      w3cSignatureValidationResult <- JwtPresentation.validateEncodedW3C(encodedW3CPresentation.proof.jwt, None)(
         DidResolverTest()
       )
-      jwtSignatureValidationResult <- JwtPresentation.validateEncodedJWT(encodedJWTPresentation)(DidResolverTest())
-      enclosedCredentialsValidationResult <- JwtPresentation.validateEnclosedCredentials(encodedJWTPresentation)(
+      jwtSignatureValidationResult <- JwtPresentation.validateEncodedJWT(encodedJWTPresentation, None)(
         DidResolverTest()
       )
+      enclosedCredentialsValidationResult <-
+        JwtPresentation.verify(
+          encodedJWTPresentation,
+          JwtPresentation.PresentationVerificationOptions(
+            verifySignature = true,
+            verifyDates = true,
+            leeway = Duration.ZERO,
+            Some(CredentialVerification.CredentialVerificationOptions(verifySignature = true, verifyDates = true))
+          )
+        )(
+          DidResolverTest()
+        )(clock)
       _ <- printLine(s"W3C IS VALID?: $w3cSignatureValidationResult")
       _ <- printLine(s"JWT IS VALID?: $jwtSignatureValidationResult")
       _ <- printLine(s"Enclosed Credentials are VALID?: $enclosedCredentialsValidationResult")

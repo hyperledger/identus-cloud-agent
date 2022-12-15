@@ -14,7 +14,7 @@ import net.reactivecore.cjs.validator.Violation
 import net.reactivecore.cjs.{DocumentValidator, Loader}
 import pdi.jwt.*
 import zio.prelude.*
-import zio.{IO, NonEmptyChunk, Task, ZIO}
+import zio.{Duration, IO, NonEmptyChunk, Task, ZIO}
 
 import java.security.spec.{ECParameterSpec, ECPublicKeySpec}
 import java.security.{KeyPairGenerator, PublicKey}
@@ -282,8 +282,8 @@ case class W3cCredentialPayload(
 object CredentialPayload {
   object Implicits {
 
-    import Proof.Implicits.*
     import InstantDecoderEncoder.*
+    import Proof.Implicits.*
 
     implicit val didEncoder: Encoder[DID] =
       (did: DID) => did.value.asJson
@@ -528,23 +528,108 @@ object CredentialPayload {
   }
 }
 
+object CredentialVerification {
+
+  import CredentialPayload.Implicits.*
+
+  def validateCredential(
+      verifiableCredentialPayload: VerifiableCredentialPayload
+  )(didResolver: DidResolver): IO[String, Validation[String, Unit]] = {
+    verifiableCredentialPayload match {
+      case (w3cVerifiableCredentialPayload: W3cVerifiableCredentialPayload) =>
+        W3CCredential.validateW3C(w3cVerifiableCredentialPayload)(didResolver)
+      case (jwtVerifiableCredentialPayload: JwtVerifiableCredentialPayload) =>
+        JwtCredential.validateEncodedJWT(jwtVerifiableCredentialPayload.jwt)(didResolver)
+    }
+  }
+
+  def verifyDates(issuanceDate: Instant, maybeExpirationDate: Option[Instant], leeway: TemporalAmount)(implicit
+      clock: Clock
+  ): Validation[String, Unit] = {
+    val now = clock.instant()
+
+    def validateNbfNotAfterExp(nbf: Instant, maybeExp: Option[Instant]): Validation[String, Unit] = {
+      maybeExp
+        .map(exp =>
+          if (nbf.isAfter(exp))
+            Validation.fail(s"Credential cannot expire before being in effect. nbf=$nbf exp=$exp")
+          else Validation.unit
+        )
+        .getOrElse(Validation.unit)
+    }
+
+    def validateNbf(nbf: Instant): Validation[String, Unit] = {
+      if (now.isBefore(nbf.minus(leeway)))
+        Validation.fail(s"Credential is not yet in effect. now=$now nbf=$nbf leeway=$leeway")
+      else Validation.unit
+    }
+
+    def validateExp(maybeExp: Option[Instant]): Validation[String, Unit] = {
+      maybeExp
+        .map(exp =>
+          if (now.isAfter(exp.plus(leeway)))
+            Validation.fail(s"Credential has expired. now=$now exp=$exp leeway=$leeway")
+          else Validation.unit
+        )
+        .getOrElse(Validation.unit)
+    }
+
+    Validation.validateWith(
+      validateNbfNotAfterExp(issuanceDate, maybeExpirationDate),
+      validateNbf(issuanceDate),
+      validateExp(maybeExpirationDate)
+    )((l, _, _) => l)
+  }
+
+  /** Defines what to verify in the jwt credentials.
+    *
+    * @param verifySignature
+    *   verifies signature using the resolved did.
+    * @param verifyDates
+    *   verifies issuance and expiration dates.
+    * @param leeway
+    *   defines the duration we should subtract from issuance date and add to expiration dates.
+    * @param maybeProofPurpose
+    *   specifies the which type of public key to use in the resolved DidDocument. If empty, we will validate against
+    *   all public key.
+    */
+  case class CredentialVerificationOptions(
+      verifySignature: Boolean = true,
+      verifyDates: Boolean = false,
+      leeway: TemporalAmount = Duration.Zero,
+      maybeProofPurpose: Option[VerificationRelationship] = None
+  )
+
+  /** Verifies a jwt credential.
+    *
+    * @param jwt
+    *   credential to verify.
+    * @param options
+    *   defines what to verify.
+    * @param didResolver
+    *   is used to resolve the did.
+    * @param clock
+    *   is used to get current time.
+    * @return
+    *   the result of the validation.
+    */
+  def verify(verifiableCredentialPayload: VerifiableCredentialPayload, options: CredentialVerificationOptions)(
+      didResolver: DidResolver
+  )(implicit clock: Clock): IO[String, Validation[String, Unit]] = {
+    verifiableCredentialPayload match {
+      case (w3cVerifiableCredentialPayload: W3cVerifiableCredentialPayload) =>
+        W3CCredential.verify(w3cVerifiableCredentialPayload, options)(didResolver)
+      case (jwtVerifiableCredentialPayload: JwtVerifiableCredentialPayload) =>
+        JwtCredential.verify(jwtVerifiableCredentialPayload, options)(didResolver)
+    }
+  }
+}
+
 object JwtCredential {
+
   import CredentialPayload.Implicits.*
 
   def encodeJwt(payload: JwtCredentialPayload, issuer: Issuer): JWT = issuer.signer.encode(payload.asJson)
-
-  def encodeW3C(payload: W3cCredentialPayload, issuer: Issuer): W3cVerifiableCredentialPayload = {
-    W3cVerifiableCredentialPayload(
-      payload = payload,
-      proof = Proof(
-        `type` = "JwtProof2020",
-        jwt = issuer.signer.encode(payload.asJson)
-      )
-    )
-  }
-
-  def toEncodedJwt(payload: W3cCredentialPayload, issuer: Issuer): JWT =
-    encodeJwt(payload.toJwtCredentialPayload, issuer)
 
   def decodeJwt(jwt: JWT, publicKey: PublicKey): Try[JwtCredentialPayload] = {
     JwtCirce
@@ -562,25 +647,6 @@ object JwtCredential {
     JWTVerification.validateEncodedJwt(jwt, proofPurpose)(didResolver: DidResolver)(claim =>
       Validation.fromEither(decode[JwtCredentialPayload](claim).left.map(_.toString))
     )(_.iss)
-  }
-
-  def validateW3C(
-      payload: W3cVerifiableCredentialPayload
-  )(didResolver: DidResolver): IO[String, Validation[String, Unit]] = {
-    JWTVerification.validateEncodedJwt(payload.proof.jwt)(didResolver: DidResolver)(claim =>
-      Validation.fromEither(decode[W3cCredentialPayload](claim).left.map(_.toString))
-    )(_.issuer.value)
-  }
-
-  def validateCredential(
-      verifiableCredentialPayload: VerifiableCredentialPayload
-  )(didResolver: DidResolver): IO[String, Validation[String, Unit]] = {
-    verifiableCredentialPayload match {
-      case (w3cVerifiableCredentialPayload: W3cVerifiableCredentialPayload) =>
-        JwtCredential.validateW3C(w3cVerifiableCredentialPayload)(didResolver)
-      case (jwtVerifiableCredentialPayload: JwtVerifiableCredentialPayload) =>
-        JwtCredential.validateEncodedJWT(jwtVerifiableCredentialPayload.jwt)(didResolver)
-    }
   }
 
   def validateJwtSchema(
@@ -618,48 +684,89 @@ object JwtCredential {
     }
   }
 
-  def verifyDates(jwt: JWT, leeway: TemporalAmount)(implicit clock: Clock): Validation[String, Unit] = {
-    val now = clock.instant()
+  def verifyDates(jwtPayload: JwtVerifiableCredentialPayload, leeway: TemporalAmount)(implicit
+      clock: Clock
+  ): Validation[String, Unit] = {
+    verifyDates(jwtPayload.jwt, leeway)(clock)
+  }
 
+  def verifyDates(jwt: JWT, leeway: TemporalAmount)(implicit clock: Clock): Validation[String, Unit] = {
     val decodeJWT =
       Validation
         .fromTry(JwtCirce.decodeRaw(jwt.value, options = JwtOptions(false, false, false)))
         .mapError(_.getMessage)
-
-    def validateNbfNotAfterExp(nbf: Instant, maybeExp: Option[Instant]): Validation[String, Unit] = {
-      maybeExp
-        .map(exp =>
-          if (nbf.isAfter(exp))
-            Validation.fail(s"Credential cannot expire before being in effect. nbf=$nbf exp=$exp")
-          else Validation.unit
-        )
-        .getOrElse(Validation.unit)
-    }
-
-    def validateNbf(nbf: Instant): Validation[String, Unit] = {
-      if (now.isBefore(nbf.minus(leeway)))
-        Validation.fail(s"Credential is not yet in effect. now=$now nbf=$nbf leeway=$leeway")
-      else Validation.unit
-    }
-
-    def validateExp(maybeExp: Option[Instant]): Validation[String, Unit] = {
-      maybeExp
-        .map(exp =>
-          if (now.isAfter(exp.plus(leeway)))
-            Validation.fail(s"Credential has expired. now=$now exp=$exp leeway=$leeway")
-          else Validation.unit
-        )
-        .getOrElse(Validation.unit)
-    }
 
     for {
       decodedJWT <- decodeJWT
       jwtCredentialPayload <- Validation.fromEither(decode[JwtCredentialPayload](decodedJWT)).mapError(_.getMessage)
       nbf = jwtCredentialPayload.nbf
       maybeExp = jwtCredentialPayload.maybeExp
-      result <- Validation.validateWith(validateNbfNotAfterExp(nbf, maybeExp), validateNbf(nbf), validateExp(maybeExp))(
-        (l, _, _) => l
-      )
+      result <- CredentialVerification.verifyDates(nbf, maybeExp, leeway)(clock)
     } yield result
+  }
+
+  def verify(jwt: JwtVerifiableCredentialPayload, options: CredentialVerification.CredentialVerificationOptions)(
+      didResolver: DidResolver
+  )(implicit clock: Clock): IO[String, Validation[String, Unit]] = verify(jwt.jwt, options)(didResolver)(clock)
+
+  def verify(jwt: JWT, options: CredentialVerification.CredentialVerificationOptions)(
+      didResolver: DidResolver
+  )(implicit clock: Clock): IO[String, Validation[String, Unit]] = {
+    for {
+      signatureValidation <-
+        if (options.verifySignature) then validateEncodedJWT(jwt, options.maybeProofPurpose)(didResolver)
+        else ZIO.succeed(Validation.unit)
+      dateVerification <- ZIO.succeed(
+        if (options.verifyDates) then verifyDates(jwt, options.leeway) else Validation.unit
+      )
+    } yield Validation.validateWith(signatureValidation, dateVerification)((a, _) => a)
+  }
+}
+
+object W3CCredential {
+
+  import CredentialPayload.Implicits.*
+
+  def encodeW3C(payload: W3cCredentialPayload, issuer: Issuer): W3cVerifiableCredentialPayload = {
+    W3cVerifiableCredentialPayload(
+      payload = payload,
+      proof = Proof(
+        `type` = "JwtProof2020",
+        jwt = issuer.signer.encode(payload.asJson)
+      )
+    )
+  }
+
+  def toEncodedJwt(payload: W3cCredentialPayload, issuer: Issuer): JWT =
+    JwtCredential.encodeJwt(payload.toJwtCredentialPayload, issuer)
+
+  def validateW3C(
+      payload: W3cVerifiableCredentialPayload,
+      proofPurpose: Option[VerificationRelationship] = None
+  )(didResolver: DidResolver): IO[String, Validation[String, Unit]] = {
+    JWTVerification.validateEncodedJwt(payload.proof.jwt, proofPurpose)(didResolver: DidResolver)(claim =>
+      Validation.fromEither(decode[W3cCredentialPayload](claim).left.map(_.toString))
+    )(_.issuer.value)
+  }
+
+  def verifyDates(w3cPayload: W3cVerifiableCredentialPayload, leeway: TemporalAmount)(implicit
+      clock: Clock
+  ): Validation[String, Unit] = {
+    CredentialVerification.verifyDates(w3cPayload.payload.issuanceDate, w3cPayload.payload.maybeExpirationDate, leeway)(
+      clock
+    )
+  }
+
+  def verify(w3cPayload: W3cVerifiableCredentialPayload, options: CredentialVerification.CredentialVerificationOptions)(
+      didResolver: DidResolver
+  )(implicit clock: Clock): IO[String, Validation[String, Unit]] = {
+    for {
+      signatureValidation <-
+        if (options.verifySignature) then validateW3C(w3cPayload, options.maybeProofPurpose)(didResolver)
+        else ZIO.succeed(Validation.unit)
+      dateVerification <- ZIO.succeed(
+        if (options.verifyDates) then verifyDates(w3cPayload, options.leeway) else Validation.unit
+      )
+    } yield Validation.validateWith(signatureValidation, dateVerification)((a, _) => a)
   }
 }

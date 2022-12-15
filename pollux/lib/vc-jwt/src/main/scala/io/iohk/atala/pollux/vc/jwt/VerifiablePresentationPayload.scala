@@ -5,6 +5,7 @@ import io.circe.*
 import io.circe.generic.auto.*
 import io.circe.parser.decode
 import io.circe.syntax.*
+import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import pdi.jwt.{Jwt, JwtCirce, JwtOptions}
 import zio.*
 import zio.prelude.*
@@ -319,30 +320,33 @@ object JwtPresentation {
     JWTVerification.validateEncodedJwt(jwt, publicKey)
 
   def validateEncodedJWT(
-      jwt: JWT
+      jwt: JWT,
+      proofPurpose: Option[VerificationRelationship]
   )(didResolver: DidResolver): IO[String, Validation[String, Unit]] = {
-    JWTVerification.validateEncodedJwt(jwt)(didResolver: DidResolver)(claim =>
+    JWTVerification.validateEncodedJwt(jwt, proofPurpose)(didResolver: DidResolver)(claim =>
       Validation.fromEither(decode[JwtPresentationPayload](claim).left.map(_.toString))
     )(_.iss)
   }
 
   def validateEncodedW3C(
-      jwt: JWT
+      jwt: JWT,
+      proofPurpose: Option[VerificationRelationship]
   )(didResolver: DidResolver): IO[String, Validation[String, Unit]] = {
-    JWTVerification.validateEncodedJwt(jwt)(didResolver: DidResolver)(claim =>
+    JWTVerification.validateEncodedJwt(jwt, proofPurpose)(didResolver: DidResolver)(claim =>
       Validation.fromEither(decode[W3cPresentationPayload](claim).left.map(_.toString))
     )(_.holder)
   }
 
   def validateEnclosedCredentials(
-      jwt: JWT
-  )(didResolver: DidResolver): IO[List[String], Validation[String, Unit]] = {
+      jwt: JWT,
+      options: CredentialVerification.CredentialVerificationOptions
+  )(didResolver: DidResolver)(implicit clock: Clock): IO[List[String], Validation[String, Unit]] = {
     val validateJwtPresentation = Validation.fromTry(decodeJwt(jwt)).mapError(_.toString)
 
     val credentialValidationZIO =
       ValidationUtils.foreach(
         validateJwtPresentation
-          .map(validJwtPresentation => validateCredentials(validJwtPresentation)(didResolver))
+          .map(validJwtPresentation => validateCredentials(validJwtPresentation, options)(didResolver)(clock))
       )(identity)
 
     credentialValidationZIO.map(validCredentialValidations => {
@@ -355,10 +359,11 @@ object JwtPresentation {
   }
 
   def validateCredentials(
-      decodedJwtPresentation: JwtPresentationPayload
-  )(didResolver: DidResolver): ZIO[Any, List[String], IndexedSeq[Validation[String, Unit]]] = {
+      decodedJwtPresentation: JwtPresentationPayload,
+      options: CredentialVerification.CredentialVerificationOptions
+  )(didResolver: DidResolver)(implicit clock: Clock): ZIO[Any, List[String], IndexedSeq[Validation[String, Unit]]] = {
     ZIO.validatePar(decodedJwtPresentation.vp.verifiableCredential) { a =>
-      JwtCredential.validateCredential(a)(didResolver)
+      CredentialVerification.verify(a, options)(didResolver)(clock)
     }
   }
 
@@ -397,7 +402,7 @@ object JwtPresentation {
       maybeExp
         .map(exp =>
           if (now.isAfter(exp.plus(leeway)))
-            Validation.fail(s"Credential has expired. now=$now exp=$exp leeway=$leeway")
+            Validation.fail(s"Verifiable Presentation has expired. now=$now exp=$exp leeway=$leeway")
           else Validation.unit
         )
         .getOrElse(Validation.unit)
@@ -414,5 +419,56 @@ object JwtPresentation {
         validateExp(maybeExp)
       )((l, _, _) => l)
     } yield result
+  }
+
+  /** Defines what to verify in a jwt presentation
+    * @param verifySignature
+    *   verifies signature using the resolved did.
+    * @param verifyDates
+    *   verifies issuance and expiration dates.
+    * @param leeway
+    *   defines the duration we should subtract from issuance date and add to expiration dates.
+    * @param maybeCredentialOptions
+    *   defines what to verify in the jwt credentials. If empty, credentials verification will be ignored.
+    * @param maybeProofPurpose
+    *   specifies the which type of public key to use in the resolved DidDocument. If empty, we will validate against
+    *   all public key.
+    */
+  case class PresentationVerificationOptions(
+      verifySignature: Boolean = true,
+      verifyDates: Boolean = false,
+      leeway: TemporalAmount = Duration.Zero,
+      maybeCredentialOptions: Option[CredentialVerification.CredentialVerificationOptions] = None,
+      maybeProofPurpose: Option[VerificationRelationship] = None
+  )
+
+  /** Verifies a jwt presentation.
+    * @param jwt
+    *   presentation to verify.
+    * @param options
+    *   defines what to verify.
+    * @param didResolver
+    *   is used to resolve the did.
+    * @param clock
+    *   is used to get current time.
+    * @return
+    *   the result of the validation.
+    */
+  def verify(jwt: JWT, options: PresentationVerificationOptions)(
+      didResolver: DidResolver
+  )(implicit clock: Clock): IO[List[String], Validation[String, Unit]] = {
+    for {
+      signatureValidation <-
+        if (options.verifySignature) then
+          validateEncodedJWT(jwt, options.maybeProofPurpose)(didResolver).mapError(List(_))
+        else ZIO.succeed(Validation.unit)
+      dateVerification <- ZIO.succeed(
+        if (options.verifyDates) then verifyDates(jwt, options.leeway)(clock) else Validation.unit
+      )
+      credentialVerification <-
+        options.maybeCredentialOptions
+          .map(credentialOptions => validateEnclosedCredentials(jwt, credentialOptions)(didResolver)(clock))
+          .getOrElse(ZIO.succeed(Validation.unit))
+    } yield Validation.validateWith(signatureValidation, dateVerification, credentialVerification)((a, _, _) => a)
   }
 }

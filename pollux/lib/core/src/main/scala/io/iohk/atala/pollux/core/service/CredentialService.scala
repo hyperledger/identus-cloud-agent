@@ -582,7 +582,7 @@ private class CredentialServiceImpl(
 
     val hashes = credentials
       .map { c =>
-        val encoded = JwtCredential.toEncodedJwt(c, issuer)
+        val encoded = W3CCredential.toEncodedJwt(c, issuer)
         Sha256.compute(encoded.value.getBytes)
       }
       .toBuffer
