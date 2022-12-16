@@ -23,7 +23,7 @@ trait ConnectionRepository[F[_]] {
 
   def updateWithConnectionRequest(recordId: UUID, request: ConnectionRequest, state: ProtocolState): F[Int]
 
-  def updateWithConnectionResponse(recordId: UUID, request: ConnectionResponse, state: ProtocolState): F[Int]
+  def updateWithConnectionResponse(recordId: UUID, response: ConnectionResponse, state: ProtocolState): F[Int]
 
   def updateConnectionProtocolState(recordId: UUID, from: ProtocolState, to: ProtocolState): F[Int]
 

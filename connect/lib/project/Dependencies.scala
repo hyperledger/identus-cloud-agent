@@ -14,6 +14,10 @@ object Dependencies {
   private lazy val zio = "dev.zio" %% "zio" % Versions.zio
   private lazy val zioCatsInterop = "dev.zio" %% "zio-interop-cats" % Versions.zioCatsInterop
 
+  private lazy val zioTest = "dev.zio" %% "zio-test" % Versions.zio % Test
+  private lazy val zioTestSbt = "dev.zio" %% "zio-test-sbt" % Versions.zio % Test
+  private lazy val zioTestMagnolia = "dev.zio" %% "zio-test-magnolia" % Versions.zio % Test
+
   private lazy val doobiePostgres = "org.tpolecat" %% "doobie-postgres" % Versions.doobie
   private lazy val doobieHikari = "org.tpolecat" %% "doobie-hikari" % Versions.doobie
 
@@ -24,7 +28,7 @@ object Dependencies {
   private lazy val shared = "io.iohk.atala" % "shared" % Versions.shared
 
   // Dependency Modules
-  private lazy val baseDependencies: Seq[ModuleID] = Seq(zio, shared)
+  private lazy val baseDependencies: Seq[ModuleID] = Seq(zio, zioTest, zioTestSbt, zioTestMagnolia, shared)
   private lazy val doobieDependencies: Seq[ModuleID] = Seq(doobiePostgres, doobieHikari, flyway)
 
   // Project Dependencies
