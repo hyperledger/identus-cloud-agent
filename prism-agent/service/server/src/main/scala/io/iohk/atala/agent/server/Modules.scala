@@ -152,18 +152,18 @@ object Modules {
     Server.start(port, app)
   }
 
-  val didCommExchangesJob: RIO[DidComm & DIDResolver & HttpClient & CredentialService & ManagedDIDService, Unit] =
+  val didCommExchangesJob: RIO[DIDResolver & HttpClient & CredentialService & ManagedDIDService, Unit] =
     BackgroundJobs.didCommExchanges
       .repeat(Schedule.spaced(10.seconds))
       .unit
 
-  val presentProofExchangeJob: RIO[DidComm & DIDResolver & HttpClient & PresentationService, Unit] =
+  val presentProofExchangeJob: RIO[DIDResolver & HttpClient & PresentationService & ManagedDIDService, Unit] =
     BackgroundJobs.presentProofExchanges
       .repeat(Schedule.spaced(10.seconds))
       .unit
 
   val connectDidCommExchangesJob
-      : RIO[DidComm & DIDResolver & HttpClient & ConnectionService & ManagedDIDService, Unit] =
+      : RIO[DIDResolver & HttpClient & ConnectionService & ManagedDIDService, Unit] =
     ConnectBackgroundJobs.didCommExchanges
       .repeat(Schedule.spaced(10.seconds))
       .unit
