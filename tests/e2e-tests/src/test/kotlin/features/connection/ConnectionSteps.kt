@@ -17,11 +17,11 @@ import org.hamcrest.CoreMatchers.*
 
 class ConnectionSteps {
 
-    @When("{actor} generates a connection invitation")
-    fun inviterGeneratesAConnectionInvitation(inviter: Actor) {
+    @When("{actor} generates a connection invitation to {actor}")
+    fun inviterGeneratesAConnectionInvitation(inviter: Actor, invitee: Actor) {
         // Acme(Issuer) initiates a connection
         // and sends it to Bob(Holder) out-of-band, e.g. using QR-code
-        val connectionLabel = "New Connection"
+        val connectionLabel = "Connection with ${invitee.name}"
         inviter.attemptsTo(
             Post.to("/connections")
                 .with {
@@ -161,7 +161,7 @@ class ConnectionSteps {
                 it.statusCode(200)
             }
         )
-        inviter.remember("connection", lastResponseObject("", Connection::class))
+        inviter.remember("connection-with-${invitee.name}", lastResponseObject("", Connection::class))
 
         invitee.attemptsTo(
             Get.resource("/connections/${invitee.recall<String>("connectionId")}")
@@ -171,15 +171,15 @@ class ConnectionSteps {
                 it.statusCode(200)
             }
         )
-        invitee.remember("connection", lastResponseObject("", Connection::class))
+        invitee.remember("connection-with-${inviter.name}", lastResponseObject("", Connection::class))
 
-        assertThat(inviter.recall<Connection>("connection").myDid)
-            .isEqualTo(invitee.recall<Connection>("connection").theirDid)
-        assertThat(inviter.recall<Connection>("connection").theirDid)
-            .isEqualTo(invitee.recall<Connection>("connection").myDid)
-        assertThat(inviter.recall<Connection>("connection").state)
+        assertThat(inviter.recall<Connection>("connection-with-${invitee.name}").myDid)
+            .isEqualTo(invitee.recall<Connection>("connection-with-${inviter.name}").theirDid)
+        assertThat(inviter.recall<Connection>("connection-with-${invitee.name}").theirDid)
+            .isEqualTo(invitee.recall<Connection>("connection-with-${inviter.name}").myDid)
+        assertThat(inviter.recall<Connection>("connection-with-${invitee.name}").state)
             .isEqualTo("ConnectionResponseSent")
-        assertThat(invitee.recall<Connection>("connection").state)
+        assertThat(invitee.recall<Connection>("connection-with-${inviter.name}").state)
             .isEqualTo("ConnectionResponseReceived")
     }
 }

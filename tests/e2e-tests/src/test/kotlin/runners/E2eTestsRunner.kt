@@ -6,14 +6,14 @@ import org.junit.runner.RunWith
 
 @CucumberOptions(
     features = [
-        "src/test/resources/features"
+        "src/test/resources/features/present_proof"
     ],
     glue = ["features", "extentions"],
     snippets = CucumberOptions.SnippetType.CAMELCASE,
     plugin = [
         "pretty",
         "json:target/serenity-reports/cucumber_report.json"
-    ],
+    ]
 )
 @RunWith(CucumberWithSerenity::class)
 class E2eTestsRunner
