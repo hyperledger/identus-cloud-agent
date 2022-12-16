@@ -162,8 +162,7 @@ object Modules {
       .repeat(Schedule.spaced(10.seconds))
       .unit
 
-  val connectDidCommExchangesJob
-      : RIO[DIDResolver & HttpClient & ConnectionService & ManagedDIDService, Unit] =
+  val connectDidCommExchangesJob: RIO[DIDResolver & HttpClient & ConnectionService & ManagedDIDService, Unit] =
     ConnectBackgroundJobs.didCommExchanges
       .repeat(Schedule.spaced(10.seconds))
       .unit
