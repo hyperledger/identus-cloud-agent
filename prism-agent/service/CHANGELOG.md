@@ -1,3 +1,17 @@
+# [prism-agent-v0.22.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.21.0...prism-agent-v0.22.0) (2022-12-16)
+
+
+### Features
+
+* **prism-agent:** use pairwise DID in proof presentation flow ([#260](https://github.com/input-output-hk/atala-prism-building-blocks/issues/260)) ([bb04ca4](https://github.com/input-output-hk/atala-prism-building-blocks/commit/bb04ca4c4d2a2c18e8be7f2932c0546888ffce05))
+
+# [prism-agent-v0.21.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.20.0...prism-agent-v0.21.0) (2022-12-15)
+
+
+### Features
+
+* **prism-agent:** integrate latest pollux version ([#259](https://github.com/input-output-hk/atala-prism-building-blocks/issues/259)) ([d199f0d](https://github.com/input-output-hk/atala-prism-building-blocks/commit/d199f0db0c40683bfafdeec4726b517172f8a769))
+
 # [prism-agent-v0.20.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.19.0...prism-agent-v0.20.0) (2022-12-14)
 
 
