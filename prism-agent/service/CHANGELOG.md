@@ -1,3 +1,10 @@
+# [prism-agent-v0.21.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.20.0...prism-agent-v0.21.0) (2022-12-15)
+
+
+### Features
+
+* **prism-agent:** integrate latest pollux version ([#259](https://github.com/input-output-hk/atala-prism-building-blocks/issues/259)) ([d199f0d](https://github.com/input-output-hk/atala-prism-building-blocks/commit/d199f0db0c40683bfafdeec4726b517172f8a769))
+
 # [prism-agent-v0.20.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.19.0...prism-agent-v0.20.0) (2022-12-14)
 
 
