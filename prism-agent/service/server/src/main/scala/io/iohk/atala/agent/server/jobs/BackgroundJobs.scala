@@ -222,14 +222,10 @@ object BackgroundJobs {
 
   private[this] def performPresentation(
       record: PresentationRecord
-  ): ZIO[DidComm & DIDResolver & HttpClient & PresentationService, Throwable, Unit] = {
+  ): URIO[DIDResolver & HttpClient & PresentationService & ManagedDIDService, Unit] = {
     import io.iohk.atala.pollux.core.model.PresentationRecord.ProtocolState._
 
-    val aux: ZIO[
-      DidComm & DIDResolver & HttpClient & PresentationService,
-      MercuryException | InvalidState | NotImplemented.type | SendMessageError,
-      Unit
-    ] = for {
+    val aux = for {
       _ <- ZIO.logDebug(s"Running action with records => $record")
       _ <- record match {
         // ##########################
@@ -246,13 +242,10 @@ object BackgroundJobs {
             case Some(record) =>
               for {
                 _ <- ZIO.log(s"PresentationRecord: RequestPending (Send Massage)")
-                didComm <- ZIO.service[DidComm]
-                _ <- MessagingService.send(record.makeMessage)
+                didCommAgent <- buildDIDCommAgent(record.from)
+                _ <- MessagingService.send(record.makeMessage).provideSomeLayer(didCommAgent)
                 service <- ZIO.service[PresentationService]
-                _ <- service.markRequestPresentationSent(id).catchAll { case ex: PresentationError =>
-                  ZIO.logError(s"Fail to mark the RequestPresentation '$id' as Verifier: $ex") *>
-                    ZIO.unit
-                }
+                _ <- service.markRequestPresentationSent(id)
               } yield ()
 
         case PresentationRecord(id, _, _, _, _, _, _, _, RequestSent, _, _, _) => // Verifier
@@ -270,13 +263,10 @@ object BackgroundJobs {
             case Some(p) =>
               for {
                 _ <- ZIO.log(s"PresentationRecord: PresentationPending (Send Massage)")
-                didComm <- ZIO.service[DidComm]
-                _ <- MessagingService.send(p.makeMessage)
+                didCommAgent <- buildDIDCommAgent(p.from)
+                _ <- MessagingService.send(p.makeMessage).provideSomeLayer(didCommAgent)
                 service <- ZIO.service[PresentationService]
-                _ <- service.markPresentationSent(id).catchAll { case ex: PresentationError =>
-                  ZIO.logError(s"Fail to mark the PresentationSent '$id' as Prover: $ex") *>
-                    ZIO.unit
-                }
+                _ <- service.markPresentationSent(id)
               } yield ()
         case PresentationRecord(id, _, _, _, _, _, _, _, PresentationSent, _, _, _) =>
           ZIO.logDebug("PresentationRecord: PresentationSent") *> ZIO.unit
@@ -286,10 +276,7 @@ object BackgroundJobs {
             _ <- ZIO.log(s"PresentationRecord: PresentationPending (Send Massage)")
             // TODO Verify  https://input-output.atlassian.net/browse/ATL-2702
             service <- ZIO.service[PresentationService]
-            _ <- service.markPresentationVerified(id).catchAll { case ex: PresentationError =>
-              ZIO.logError(s"Fail to mark the PresentationVerified '$id' as Prover: $ex") *>
-                ZIO.unit
-            }
+            _ <- service.markPresentationVerified(id)
           } yield ()
         // TODO move the state to PresentationVerified
         case PresentationRecord(id, _, _, _, _, _, _, _, PresentationVerified, _, _, _) =>
@@ -301,15 +288,18 @@ object BackgroundJobs {
       }
     } yield ()
 
-    aux.catchAll {
-      case ex: TransportError => // : io.iohk.atala.mercury.model.error.MercuryError | java.io.IOException =>
-        ZIO.logError(ex.getMessage()) *>
-          ZIO.fail(mercuryErrorAsThrowable(ex))
-      case ex: IOException           => ZIO.fail(ex)
-      case ex: InvalidState          => ZIO.fail(ex)
-      case ex: NotImplemented.type   => ZIO.fail(ex)
-      case ex @ SendMessageError(aa) => ZIO.fail(aa) // FIXME!!!!!!!!!!!!!!!!!!!!!!!!!!
-    }
+    aux
+      .catchAll {
+        case ex: MercuryException =>
+          ZIO.logErrorCause(s"DIDComm communication error processing record: ${record.id}", Cause.fail(ex))
+        case ex: PresentationError =>
+          ZIO.logErrorCause(s"Presentation service error processing record: ${record.id} ", Cause.fail(ex))
+        case ex: DIDSecretStorageError =>
+          ZIO.logErrorCause(s"DID secret storage error processing record: ${record.id} ", Cause.fail(ex))
+      }
+      .catchAllDefect { case throwable =>
+        ZIO.logErrorCause(s"Proof Presentation protocol defect processing record: ${record.id}", Cause.fail(throwable))
+      }
   }
 
   private[this] def buildDIDCommAgent(myDid: DidId) = {
