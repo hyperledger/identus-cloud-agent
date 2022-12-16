@@ -83,7 +83,7 @@ services:
       AGENT_DB_NAME: agent
       AGENT_DB_USER: postgres
       AGENT_DB_PASSWORD: postgres
-      DIDCOMM_SERVICE_URL: http://host.docker.internal:${PORT}/didcomm
+      DIDCOMM_SERVICE_URL: ${DIDCOMM_SERVICE_ENDPOINT}
     depends_on:
       db:
         condition: service_healthy

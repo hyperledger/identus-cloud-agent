@@ -1,6 +1,5 @@
 plugins:
   - name: proxy-rewrite
-  - name: ip-restriction
 
 routes:
     - uri: /prism-agent/*
@@ -8,10 +7,6 @@ routes:
       plugins:
         proxy-rewrite:
           regex_uri: ["^/prism-agent/(.*)","/$1"]
-        ip-restriction:
-          whitelist: [
-            "127.0.0.1"
-          ]
     - uri: /didcomm
       upstream_id: 3
       plugins:
@@ -22,46 +17,26 @@ routes:
       plugins:
         proxy-rewrite:
           regex_uri: ["^/prism-agent/schema-registry/(.*)","/schema-registry/$1"]
-        ip-restriction:
-          whitelist: [
-            "127.0.0.1"
-          ]
     - uri: /mediator/*
       upstream_id: 1
       plugins:
         proxy-rewrite:
           regex_uri: ["^/mediator/(.*)","/$1"]
-        ip-restriction:
-          whitelist: [
-            "127.0.0.1"
-          ]
     - uri: /apidocs/*
       upstream_id: 5
       plugins:
         proxy-rewrite:
           regex_uri: ["^/apidocs/(.*)","/$1"]
-        ip-restriction:
-          whitelist: [
-            "127.0.0.1"
-          ]
     - uri: /docs/mediator/api/*
       upstream_id: 1
       plugins:
         proxy-rewrite:
           regex_uri: ["^/docs/mediator/api/(.*)","/api/$1"]
-        ip-restriction:
-          whitelist: [
-            "127.0.0.1"
-          ]
     - uri: /docs/prism-agent/api/*
       upstream_id: 2
       plugins:
         proxy-rewrite:
           regex_uri: ["^/docs/prism-agent/api/(.*)","/api/$1"]
-        ip-restriction:
-          whitelist: [
-            "127.0.0.1"
-          ]
 
 upstreams:
     - id: 1
