@@ -12,6 +12,8 @@ import common.Utils.lastResponseList
 import common.Utils.lastResponseObject
 import common.Utils.wait
 import net.serenitybdd.screenplay.Actor
+import org.apache.http.HttpStatus.SC_CREATED
+import org.apache.http.HttpStatus.SC_OK
 
 class IssueCredentialsSteps {
     @Given("{actor} offers a credential to {actor}")
@@ -36,7 +38,7 @@ class IssueCredentialsSteps {
         )
         issuer.should(
             ResponseConsequence.seeThatResponse("The issue credential offer created") {
-                it.statusCode(201)
+                it.statusCode(SC_CREATED)
             }
         )
 
@@ -52,7 +54,7 @@ class IssueCredentialsSteps {
                 )
                 holder.should(
                     ResponseConsequence.seeThatResponse("Credential records") {
-                        it.statusCode(200)
+                        it.statusCode(SC_OK)
                     }
                 )
                 lastResponseList("items", Credential::class).findLast { it.protocolState == "OfferReceived" } != null
@@ -69,7 +71,7 @@ class IssueCredentialsSteps {
         )
         holder.should(
             ResponseConsequence.seeThatResponse("Accept offer") {
-                it.statusCode(200)
+                it.statusCode(SC_OK)
             }
         )
     }
@@ -83,7 +85,7 @@ class IssueCredentialsSteps {
                 )
                 issuer.should(
                     ResponseConsequence.seeThatResponse("Credential records") {
-                        it.statusCode(200)
+                        it.statusCode(SC_OK)
                     }
                 )
                 lastResponseList("items", Credential::class)
@@ -98,7 +100,7 @@ class IssueCredentialsSteps {
         )
         issuer.should(
             ResponseConsequence.seeThatResponse("Issue credential") {
-                it.statusCode(200)
+                it.statusCode(SC_OK)
             }
         )
 
@@ -109,7 +111,7 @@ class IssueCredentialsSteps {
                 )
                 issuer.should(
                     ResponseConsequence.seeThatResponse("Credential records") {
-                        it.statusCode(200)
+                        it.statusCode(SC_OK)
                     }
                 )
                 lastResponseObject("", Credential::class).protocolState == "CredentialSent"
@@ -127,7 +129,7 @@ class IssueCredentialsSteps {
                 )
                 holder.should(
                     ResponseConsequence.seeThatResponse("Credential records") {
-                        it.statusCode(200)
+                        it.statusCode(SC_OK)
                     }
                 )
                 lastResponseObject("", Credential::class).protocolState == "CredentialReceived"
