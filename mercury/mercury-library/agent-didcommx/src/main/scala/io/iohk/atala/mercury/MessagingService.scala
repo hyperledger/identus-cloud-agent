@@ -18,7 +18,7 @@ object MessagingService {
     *
     * TODO Move this method to another model
     */
-  def send(msg: Message): ZIO[DidComm & DIDResolver & HttpClient, SendMessageError, HttpResponseBody] = { // TODO create error for Throwable
+  def send(msg: Message): ZIO[DidComm & DIDResolver & HttpClient, SendMessageError, HttpResponseBody] = {
     for {
       didCommService <- ZIO.service[DidComm]
       resolver <- ZIO.service[DIDResolver]
@@ -57,13 +57,15 @@ object MessagingService {
                 )
               )
         }
+      serviceEndpoint <-
+        if (didCommService.uri.startsWith("did:"))
+          resolver
+            .didCommServices(DidId(didCommService.uri))
+            .map(_.toSeq.head.getServiceEndpoint()) // TODO this is not safe and also need to be recursive
+        else ZIO.succeed(didCommService.uri)
 
-      serviceEndpoint = didCommService.uri // TODO this is not safe
-
-      _ <- Console.printLine("Sending to" + serviceEndpoint)
-
+      _ <- Console.printLine("Sending to " + serviceEndpoint)
       res <- HttpClient.postDIDComm(serviceEndpoint, jsonString)
-
     } yield (res)
   }.catchAll { case ex =>
     ZIO.fail(SendMessageError(ex))
