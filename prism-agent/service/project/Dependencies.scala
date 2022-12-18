@@ -60,7 +60,7 @@ object Dependencies {
 
   private lazy val tapirZioHttpServer = "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server" % Versions.tapir
   private lazy val tapirHttp4sServerZio = "com.softwaremill.sttp.tapir" %% "tapir-http4s-server-zio" % Versions.tapir
-  private lazy val http4sBlazeServer = "org.http4s" %% "http4s-blaze-server" % "0.23.12"
+  private lazy val http4sBlazeServer = "org.http4s" %% "http4s-blaze-server" % "0.23.13"
 
   private lazy val tapirRedocBundle = "com.softwaremill.sttp.tapir" %% "tapir-redoc-bundle" % Versions.tapir
 
