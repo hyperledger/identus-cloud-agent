@@ -2,7 +2,7 @@ import sbt._
 
 object Dependencies {
   object Versions {
-    val zio = "2.0.4"
+    val zio = "2.0.5"
     val zioConfig = "3.0.2"
     val circe = "0.14.1"
     val circeOptics = "0.14.1"
@@ -12,7 +12,7 @@ object Dependencies {
     val prismSdk = "v1.4.1" // scala-steward:off
     val shared = "0.1.0"
     val enumeratum = "1.7.2"
-    val zioTest = "2.0.4"
+    val zioTest = "2.0.5"
   }
 
   private lazy val zio = "dev.zio" %% "zio" % Versions.zio
