@@ -1,3 +1,10 @@
+# [prism-agent-v0.23.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.22.0...prism-agent-v0.23.0) (2022-12-19)
+
+
+### Features
+
+* **prism-agent:** bump mercury, pollux and connect versions ([#273](https://github.com/input-output-hk/atala-prism-building-blocks/issues/273)) ([ce4758b](https://github.com/input-output-hk/atala-prism-building-blocks/commit/ce4758bf0e1a34b0953c05eea63ae06a389fc532))
+
 # [prism-agent-v0.22.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.21.0...prism-agent-v0.22.0) (2022-12-16)
 
 
