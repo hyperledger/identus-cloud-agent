@@ -11,28 +11,16 @@ import api_models.Credential
 import common.Utils.lastResponseList
 import common.Utils.lastResponseObject
 import common.Utils.wait
-import features.connection.ConnectionSteps
 import net.serenitybdd.screenplay.Actor
+import org.apache.http.HttpStatus.SC_CREATED
+import org.apache.http.HttpStatus.SC_OK
 
 class IssueCredentialsSteps {
-
-    @Given("{actor} and {actor} have an existing connection")
-    fun acmeAndBobHaveAnExistingConnection(issuer: Actor, holder: Actor) {
-        val connectionSteps = ConnectionSteps()
-        connectionSteps.inviterGeneratesAConnectionInvitation(issuer)
-        connectionSteps.inviteeReceivesTheConnectionInvitation(holder, issuer)
-        connectionSteps.inviteeSendsAConnectionRequestToInviter(holder, issuer)
-        connectionSteps.inviterReceivesTheConnectionRequest(issuer)
-        connectionSteps.inviterSendsAConnectionResponseToInvitee(issuer, holder)
-        connectionSteps.inviteeReceivesTheConnectionResponse(holder)
-        connectionSteps.inviterAndInviteeHaveAConnection(issuer, holder)
-    }
-
-    @Given("{actor} offers a credential")
-    fun acmeOffersACredential(issuer: Actor) {
+    @Given("{actor} offers a credential to {actor}")
+    fun acmeOffersACredential(issuer: Actor, holder: Actor) {
         val newCredential = Credential(
             schemaId = "schema:1234",
-            subjectId = issuer.recall<Connection>("connection").theirDid,
+            subjectId = issuer.recall<Connection>("connection-with-${holder.name}").theirDid,
             validityPeriod = 3600,
             automaticIssuance = false,
             awaitConfirmation = false,
@@ -50,7 +38,7 @@ class IssueCredentialsSteps {
         )
         issuer.should(
             ResponseConsequence.seeThatResponse("The issue credential offer created") {
-                it.statusCode(201)
+                it.statusCode(SC_CREATED)
             }
         )
 
@@ -66,7 +54,7 @@ class IssueCredentialsSteps {
                 )
                 holder.should(
                     ResponseConsequence.seeThatResponse("Credential records") {
-                        it.statusCode(200)
+                        it.statusCode(SC_OK)
                     }
                 )
                 lastResponseList("items", Credential::class).findLast { it.protocolState == "OfferReceived" } != null
@@ -83,7 +71,7 @@ class IssueCredentialsSteps {
         )
         holder.should(
             ResponseConsequence.seeThatResponse("Accept offer") {
-                it.statusCode(200)
+                it.statusCode(SC_OK)
             }
         )
     }
@@ -97,7 +85,7 @@ class IssueCredentialsSteps {
                 )
                 issuer.should(
                     ResponseConsequence.seeThatResponse("Credential records") {
-                        it.statusCode(200)
+                        it.statusCode(SC_OK)
                     }
                 )
                 lastResponseList("items", Credential::class)
@@ -112,7 +100,7 @@ class IssueCredentialsSteps {
         )
         issuer.should(
             ResponseConsequence.seeThatResponse("Issue credential") {
-                it.statusCode(200)
+                it.statusCode(SC_OK)
             }
         )
 
@@ -123,7 +111,7 @@ class IssueCredentialsSteps {
                 )
                 issuer.should(
                     ResponseConsequence.seeThatResponse("Credential records") {
-                        it.statusCode(200)
+                        it.statusCode(SC_OK)
                     }
                 )
                 lastResponseObject("", Credential::class).protocolState == "CredentialSent"
@@ -141,14 +129,13 @@ class IssueCredentialsSteps {
                 )
                 holder.should(
                     ResponseConsequence.seeThatResponse("Credential records") {
-                        it.statusCode(200)
+                        it.statusCode(SC_OK)
                     }
                 )
                 lastResponseObject("", Credential::class).protocolState == "CredentialReceived"
             },
             "Holder was unable to receive the credential from Issuer! Protocol state did not achieve CredentialReceived state."
         )
-        val achievedCredential = lastResponseObject("", Credential::class)
-        println(achievedCredential)
+        holder.remember("issuedCredential", lastResponseObject("", Credential::class))
     }
 }
