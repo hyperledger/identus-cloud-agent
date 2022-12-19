@@ -2,8 +2,6 @@ package features.connection
 
 import api_models.Connection
 import api_models.Invitation
-import common.Agents.Acme
-import common.Agents.Bob
 import common.Utils.lastResponseObject
 import common.Utils.wait
 import io.cucumber.java.en.Then
