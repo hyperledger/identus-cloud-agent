@@ -90,6 +90,7 @@ import io.circe.ParsingFailure
 import io.circe.DecodingFailure
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
 import io.iohk.atala.resolvers.DIDResolver
+import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
 
 object Modules {
 
@@ -152,7 +153,7 @@ object Modules {
     Server.start(port, app)
   }
 
-  val didCommExchangesJob: RIO[DIDResolver & HttpClient & CredentialService & ManagedDIDService, Unit] =
+  val didCommExchangesJob: RIO[DIDResolver & HttpClient & CredentialService & ManagedDIDService & DIDSecretStorage, Unit] =
     BackgroundJobs.didCommExchanges
       .repeat(Schedule.spaced(10.seconds))
       .unit

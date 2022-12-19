@@ -34,6 +34,25 @@ import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.mercury.AgentServiceAny
 import org.didcommx.didcomm.DIDComm
 import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError
+import io.iohk.atala.agent.walletapi.model.ManagedDIDTemplate
+import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
+import io.iohk.atala.pollux.vc.jwt.ES256KSigner
+import io.iohk.atala.castor.core.model.did.EllipticCurve
+import java.security.KeyFactory
+import java.security.spec.EncodedKeySpec
+import java.security.spec.ECPrivateKeySpec
+import org.bouncycastle.jce.spec.ECNamedCurveSpec
+import org.bouncycastle.jce.ECNamedCurveTable
+import com.ionspin.kotlin.bignum.integer.BigInteger
+import com.ionspin.kotlin.bignum.integer.Sign
+import io.iohk.atala.pollux.vc.jwt.Issuer
+import java.security.spec.ECPublicKeySpec
+import java.security.spec.ECPoint
+import org.bouncycastle.jce.provider.BouncyCastleProvider
+import io.circe.Json
+import io.circe.syntax._
+import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
+import io.iohk.atala.agent.walletapi.model.error.CreateManagedDIDError
 
 object BackgroundJobs {
 
@@ -58,7 +77,7 @@ object BackgroundJobs {
 
   private[this] def performExchange(
       record: IssueCredentialRecord
-  ): URIO[DIDResolver & HttpClient & CredentialService & ManagedDIDService, Unit] = {
+  ): URIO[DIDResolver & HttpClient & CredentialService & ManagedDIDService & DIDSecretStorage, Unit] = {
     import IssueCredentialRecord._
     import IssueCredentialRecord.ProtocolState._
     import IssueCredentialRecord.PublicationState._
@@ -132,7 +151,8 @@ object BackgroundJobs {
           // Set PublicationState to PublicationPending
           for {
             credentialService <- ZIO.service[CredentialService]
-            issuer = credentialService.createIssuer
+            // issuer = credentialService.createIssuer
+            issuer <- createPrismDIDIssuer()
             w3Credential <- credentialService.createCredentialPayloadFromRecord(
               record,
               issuer,
@@ -218,6 +238,48 @@ object BackgroundJobs {
       .catchAllDefect { case throwable =>
         ZIO.logErrorCause(s"Issue Credential protocol defect processing record: ${record.id}", Cause.fail(throwable))
       }
+  }
+
+  // TODO: Improvements needed here:
+  // - A single PrismDID genrated at agent startup should be used.
+  // - For now, we include the long form in the JWT credential to facilitate validation on client-side, but resolution should be used instead.
+  // - There should be a way to retrieve the 'default' PrismDID from ManagedDIDService (use of an alias in DB record?)
+  // - Simplify convertion of ECKeyPair to JDK security classes
+  // - ECPrivateKey should probably remain 'private' and signing operation occur in ManagedDIDService
+  private[this] def createPrismDIDIssuer(): ZIO[ManagedDIDService & DIDSecretStorage, Throwable, Issuer] = {
+    for {
+      managedDIDService <- ZIO.service[ManagedDIDService]
+      longFormPrismDID <- managedDIDService.createAndStoreDID(ManagedDIDTemplate(Nil, Nil))
+      didSecretStorage <- ZIO.service[DIDSecretStorage]
+      maybeECKeyPair <- didSecretStorage.getKey(longFormPrismDID.asCanonical, "master0")
+      _ <- ZIO.logInfo(s"ECKeyPair => $maybeECKeyPair")
+      maybeIssuer <- ZIO.succeed(maybeECKeyPair.map(ecKeyPair => {
+        val ba = ecKeyPair.privateKey.toPaddedByteArray(EllipticCurve.SECP256K1)
+        val keyFactory = KeyFactory.getInstance("EC", new BouncyCastleProvider())
+        val ecParameterSpec = ECNamedCurveTable.getParameterSpec("secp256k1")
+        val ecNamedCurveSpec = ECNamedCurveSpec(
+          ecParameterSpec.getName(),
+          ecParameterSpec.getCurve(),
+          ecParameterSpec.getG(),
+          ecParameterSpec.getN()
+        )
+        val ecPrivateKeySpec = ECPrivateKeySpec(java.math.BigInteger(1, ba), ecNamedCurveSpec)
+        val privateKey = keyFactory.generatePrivate(ecPrivateKeySpec)
+        val bcECPoint = ecParameterSpec
+          .getG()
+          .multiply(privateKey.asInstanceOf[org.bouncycastle.jce.interfaces.ECPrivateKey].getD())
+        val ecPublicKeySpec = ECPublicKeySpec(
+          new ECPoint(
+            bcECPoint.normalize().getAffineXCoord().toBigInteger(),
+            bcECPoint.normalize().getAffineYCoord().toBigInteger()
+          ),
+          ecNamedCurveSpec
+        )
+        val publicKey = keyFactory.generatePublic(ecPublicKeySpec)
+        Issuer(io.iohk.atala.pollux.vc.jwt.DID(longFormPrismDID.toString), ES256KSigner(privateKey), publicKey)
+      }))
+      issuer = maybeIssuer.get
+    } yield issuer
   }
 
   private[this] def performPresentation(

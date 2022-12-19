@@ -11,7 +11,7 @@ import com.nimbusds.jose.jwk.OctetKeyPair
 import io.iohk.atala.mercury.model.DidId
 
 /** A simple single-user DID key storage */
-private[walletapi] trait DIDSecretStorage {
+trait DIDSecretStorage {
 
   /** Returns a mapping of key-id to key-pair */
   def listKeys(did: PrismDID): Task[Map[String, ECKeyPair]]

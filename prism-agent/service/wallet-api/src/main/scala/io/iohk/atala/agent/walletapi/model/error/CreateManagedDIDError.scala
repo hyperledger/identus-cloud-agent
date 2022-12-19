@@ -3,7 +3,7 @@ package io.iohk.atala.agent.walletapi.model.error
 import io.iohk.atala.castor.core.model.did.PrismDID
 import io.iohk.atala.castor.core.model.error.DIDOperationError
 
-sealed trait CreateManagedDIDError
+sealed trait CreateManagedDIDError extends Throwable
 
 object CreateManagedDIDError {
   final case class InvalidArgument(msg: String) extends CreateManagedDIDError
