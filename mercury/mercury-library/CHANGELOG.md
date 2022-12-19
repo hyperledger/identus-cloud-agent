@@ -1,3 +1,10 @@
+# [mercury-v0.13.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.12.0...mercury-v0.13.0) (2022-12-16)
+
+
+### Features
+
+* **mercury:** Support a mediator in service uri field ([#263](https://github.com/input-output-hk/atala-prism-building-blocks/issues/263)) ([88ad415](https://github.com/input-output-hk/atala-prism-building-blocks/commit/88ad415a3770abb4a5f40ff6fe5e4e1ebf1ab996))
+
 # [mercury-v0.12.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.11.0...mercury-v0.12.0) (2022-12-13)
 
 
