@@ -153,7 +153,8 @@ object Modules {
     Server.start(port, app)
   }
 
-  val didCommExchangesJob: RIO[DIDResolver & HttpClient & CredentialService & ManagedDIDService & DIDSecretStorage, Unit] =
+  val didCommExchangesJob
+      : RIO[DIDResolver & HttpClient & CredentialService & ManagedDIDService & DIDSecretStorage, Unit] =
     BackgroundJobs.didCommExchanges
       .repeat(Schedule.spaced(10.seconds))
       .unit
