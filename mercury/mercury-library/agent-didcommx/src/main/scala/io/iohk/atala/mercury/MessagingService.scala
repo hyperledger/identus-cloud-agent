@@ -26,8 +26,9 @@ object MessagingService {
     message: Message, 
     encrypted: EncryptedMessage): ZIO[Any, Throwable, EncryptedMessage] = {
   if (didCommServiceEndpoint.uri.startsWith("did:")) {
-    Console.printLine("RoutingDID:" + DidId(didCommServiceEndpoint.uri))
-    didCommService.packEncrypted(
+for { 
+    _ <- Console.printLine("RoutingDID:" + DidId(didCommServiceEndpoint.uri))
+    forwardMessage <- didCommService.packEncrypted(
         ForwardMessage(
           from = message.from.get,
           to = DidId(didCommServiceEndpoint.uri),
@@ -37,6 +38,7 @@ object MessagingService {
         ).asMessage,
         to = DidId(didCommServiceEndpoint.uri)
       )
+} yield forwardMesage
   } else {
     ZIO.succeed(encrypted)
   }
