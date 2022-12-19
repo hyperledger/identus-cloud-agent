@@ -111,6 +111,15 @@ object AttachmentDescriptor {
     AttachmentDescriptor(id, mediaType, Base64(encoded)) // use JsonData or Base64 by default?
   }
 
+  def buildJsonAttachment[A](
+      id: String = java.util.UUID.randomUUID.toString,
+      payload: A,
+      mediaType: Option[String] = Some("application/json")
+  )(using Encoder[A]): AttachmentDescriptor = {
+    val jsonObject = payload.asJson.asObject.getOrElse(JsonObject.empty)
+    AttachmentDescriptor(id, mediaType, JsonData(jsonObject)) // use JsonData or Base64 by default?
+  }
+
   given attachmentDescriptorEncoderV1: Encoder[AttachmentDescriptor] = (a: AttachmentDescriptor) => {
     Json.obj(
       "@id" -> a.id.asJson,

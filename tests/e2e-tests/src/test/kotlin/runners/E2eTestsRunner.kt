@@ -13,7 +13,7 @@ import org.junit.runner.RunWith
     plugin = [
         "pretty",
         "json:target/serenity-reports/cucumber_report.json"
-    ],
+    ]
 )
 @RunWith(CucumberWithSerenity::class)
 class E2eTestsRunner
