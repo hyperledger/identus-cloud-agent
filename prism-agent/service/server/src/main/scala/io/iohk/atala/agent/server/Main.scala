@@ -14,6 +14,7 @@ import io.iohk.atala.agent.server.http.ZioHttpClient
 import org.flywaydb.core.extensibility.AppliedMigration
 import io.iohk.atala.pollux.service.SchemaRegistryServiceInMemory
 import io.iohk.atala.pollux.service.VerificationPolicyServiceInMemory
+import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
 
 object Main extends ZIOAppDefault {
 
@@ -96,7 +97,9 @@ object Main extends ZIOAppDefault {
         HttpModule.layers,
         SchemaRegistryServiceInMemory.layer,
         VerificationPolicyServiceInMemory.layer,
-        AppModule.manageDIDServiceLayer
+        AppModule.manageDIDServiceLayer,
+        JdbcDIDSecretStorage.layer,
+        RepoModule.agentTransactorLayer
       )
     } yield app
 
