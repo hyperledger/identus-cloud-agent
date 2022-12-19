@@ -92,7 +92,7 @@ jobs:
         env:
           ATALA_GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
         run: |
-          sleep 180
+          sleep 300
           ./gradlew test --tests "E2eTestsRunner" || true
           ./gradlew reports
           docker logs issuer-prism-node-1
