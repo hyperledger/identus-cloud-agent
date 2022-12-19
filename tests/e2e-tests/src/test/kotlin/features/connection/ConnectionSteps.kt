@@ -106,7 +106,8 @@ class ConnectionSteps {
                         it.statusCode(SC_OK)
                     }
                 )
-                lastResponseObject("", Connection::class).state == "ConnectionResponsePending"
+                lastResponseObject("", Connection::class).state == "ConnectionResponsePending" ||
+                        lastResponseObject("", Connection::class).state == "ConnectionResponseSent"
             },
             "Inviter connection didn't reach ConnectionResponsePending state: " +
                     "connection state = ${lastResponseObject("", Connection::class).state}"
