@@ -38,7 +38,7 @@ for {
         ).asMessage,
         to = DidId(didCommServiceEndpoint.uri)
       )
-} yield forwardMesage
+} yield forwardMessage
   } else {
     ZIO.succeed(encrypted)
   }
