@@ -9,7 +9,7 @@ services:
     image: postgres:13
     restart: always
     environment:
-      POSTGRES_MULTIPLE_DATABASES: "castor,pollux,connect,iris, agent"
+      POSTGRES_MULTIPLE_DATABASES: "castor,pollux,connect,iris,agent,node_db"
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     volumes:
@@ -58,6 +58,11 @@ services:
       db:
         condition: service_healthy
 
+  prism-node:
+    image: ghcr.io/input-output-hk/prism-node:${PRISM_NODE_VERSION}
+    environment:
+      NODE_PSQL_HOST: db:5432
+
   prism-agent:
     image: ghcr.io/input-output-hk/prism-agent:${PRISM_AGENT_VERSION}
     environment:
@@ -84,9 +89,13 @@ services:
       AGENT_DB_USER: postgres
       AGENT_DB_PASSWORD: postgres
       DIDCOMM_SERVICE_URL: http://host.docker.internal:${PORT}/didcomm
+      PRISM_NODE_HOST: prism-node
+      PRISM_NODE_PORT: 50053
     depends_on:
       db:
         condition: service_healthy
+      prism-node:
+        condition: service_started
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://prism-agent:8080/connections" ]
       interval: 30s
