@@ -12,6 +12,8 @@ import java.util.UUID
 
 object ConnectionServiceImplSpec extends ZIOSpecDefault {
 
+  val connectionServiceLayer = ConnectionRepositoryInMemory.layer >>> ConnectionServiceImpl.layer
+
   override def spec = {
     suite("ConnectionServiceImpl")(
       test("createConnectionInvitation creates a valid connection record") {
@@ -67,13 +69,45 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
           }
         }
       }, {
-        test("receiveConnectionInvitation ???") {
+        test("scoped layers do not mix data") {
           for {
-            svc <- ZIO.service[ConnectionService]
-          } yield ???
+            inviterSvc <- ZIO.service[ConnectionService].provideLayer(connectionServiceLayer)
+            inviteeSvc <- ZIO.service[ConnectionService].provideLayer(connectionServiceLayer)
+            inviterRecord <- inviterSvc.createConnectionInvitation(
+              Some("Inviter"),
+              DidId("did:peer:ABCDEF")
+            )
+            inviteeRecord <- inviteeSvc.createConnectionInvitation(
+              Some("Invitee"),
+              DidId("did:peer:ABCDEF")
+            )
+            allInviterRecords <- inviterSvc.getConnectionRecords()
+            allInviteeRecords <- inviteeSvc.getConnectionRecords()
+          } yield {
+            assertTrue(allInviterRecords.size == 1) &&
+            assertTrue(allInviterRecords.head == inviterRecord) &&
+            assertTrue(allInviteeRecords.size == 1) &&
+            assertTrue(allInviteeRecords.head == inviteeRecord)
+          }
+        }
+      }, {
+        test("receiveConnectionInvitation should correctly create a new record") {
+          for {
+            inviterSvc <- ZIO.service[ConnectionService].provideLayer(connectionServiceLayer)
+            inviteeSvc <- ZIO.service[ConnectionService].provideLayer(connectionServiceLayer)
+            inviterRecord <- inviterSvc.createConnectionInvitation(
+              Some("Test connection invitation"),
+              DidId("did:peer:ABCDEF")
+            )
+            inviteeRecord <- inviteeSvc.receiveConnectionInvitation(inviterRecord.invitation.toBase64)
+            allInviteeRecords <- inviteeSvc.getConnectionRecords()
+          } yield {
+            assertTrue(inviterRecord.invitation == inviteeRecord.invitation) &&
+            assertTrue(allInviteeRecords.head == inviteeRecord)
+          }
         }
       }
-    ).provideLayer(ConnectionRepositoryInMemory.layer >>> ConnectionServiceImpl.layer)
+    ).provideLayer(connectionServiceLayer)
   }
 
 }
