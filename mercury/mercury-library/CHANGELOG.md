@@ -1,3 +1,10 @@
+# [mercury-v0.14.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.13.0...mercury-v0.14.0) (2022-12-19)
+
+
+### Features
+
+* **mercury:** forward messaging to mediator ([#264](https://github.com/input-output-hk/atala-prism-building-blocks/issues/264)) ([1170e2f](https://github.com/input-output-hk/atala-prism-building-blocks/commit/1170e2f093ec2a2f70a56eda22d3721c6063ddc4))
+
 # [mercury-v0.13.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.12.0...mercury-v0.13.0) (2022-12-16)
 
 
