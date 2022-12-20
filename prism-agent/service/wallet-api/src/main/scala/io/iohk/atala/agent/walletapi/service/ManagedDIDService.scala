@@ -277,7 +277,7 @@ object ManagedDIDService {
       ManagedDIDService(_, _, _, _)
     )
 
-  val layer: URLayer[DIDOperationValidator & DIDService & DIDSecretStorage, ManagedDIDService] =
-    InMemoryDIDNonSecretStorage.layer >>> ZLayer.fromFunction(ManagedDIDService(_, _, _, _))
+  val layer: URLayer[DIDOperationValidator & DIDService & DIDSecretStorage & DIDNonSecretStorage, ManagedDIDService] =
+    ZLayer.fromFunction(ManagedDIDService(_, _, _, _))
 
 }

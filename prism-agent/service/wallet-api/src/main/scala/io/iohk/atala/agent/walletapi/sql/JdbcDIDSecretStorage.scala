@@ -36,8 +36,6 @@ class JdbcDIDSecretStorage(xa: Transactor[Task]) extends DIDSecretStorage {
   given instantGet: Get[Instant] = Get[Long].map(Instant.ofEpochSecond)
   given instantPut: Put[Instant] = Put[Long].contramap(_.getEpochSecond())
 
-  given prismDIDGet: Get[PrismDID] = Get[String].map(PrismDID.fromString(_).getOrElse(???))
-  given prismDIDPut: Put[PrismDID] = Put[String].contramap(_.toString)
   given ecKeyPairPairGet: Get[ECKeyPair] = Get[String].map { b64 =>
     val bytes = Base64Utils.decodeURL(b64)
     val privateKey = EC.INSTANCE.toPrivateKeyFromBytes(bytes)
@@ -57,7 +55,7 @@ class JdbcDIDSecretStorage(xa: Transactor[Task]) extends DIDSecretStorage {
     val cxnIO = sql"""
         | DELETE
         | FROM public.did_secret_storage
-        | WHERE 
+        | WHERE
         |   did = $did
         """.stripMargin.update
 
@@ -70,7 +68,7 @@ class JdbcDIDSecretStorage(xa: Transactor[Task]) extends DIDSecretStorage {
         | SELECT
         |   key_pair
         | FROM public.did_secret_storage
-        | WHERE 
+        | WHERE
         |   did = $did
         |   AND key_id = $keyId
         """.stripMargin
@@ -105,7 +103,7 @@ class JdbcDIDSecretStorage(xa: Transactor[Task]) extends DIDSecretStorage {
         |   key_id,
         |   key_pair
         | FROM public.did_secret_storage
-        | WHERE 
+        | WHERE
         |   did = $did
         """.stripMargin
       .query[(String, ECKeyPair)]
@@ -118,7 +116,7 @@ class JdbcDIDSecretStorage(xa: Transactor[Task]) extends DIDSecretStorage {
     val cxnIO = sql"""
         | DELETE
         | FROM public.did_secret_storage
-        | WHERE 
+        | WHERE
         |   did = $did
         |   AND key_id = $keyId
         """.stripMargin.update
@@ -132,7 +130,7 @@ class JdbcDIDSecretStorage(xa: Transactor[Task]) extends DIDSecretStorage {
         | SELECT
         |   key_pair
         | FROM public.did_secret_storage
-        | WHERE 
+        | WHERE
         |   did = $did
         |   AND key_id = $keyId
         """.stripMargin
