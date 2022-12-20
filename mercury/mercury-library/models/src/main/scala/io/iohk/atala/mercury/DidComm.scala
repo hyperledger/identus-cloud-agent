@@ -9,7 +9,7 @@ trait DidComm {
   def myDid: DidId // TODO
   def packSigned(msg: Message): UIO[SignedMesage]
   def packEncrypted(msg: Message, to: DidId): UIO[EncryptedMessage]
-  // def packEncryptedForward(msg: Message, to: DidId): UIO[EncryptedMessage]
+  def packEncryptedAnon(msg: Message, to: DidId): UIO[EncryptedMessage]
   def unpack(str: String): UIO[UnpackMessage]
   def unpackBase64(dataBase64: String): UIO[UnpackMessage] = {
     val data = new String(Base64.getUrlDecoder.decode(dataBase64))
@@ -26,8 +26,8 @@ object DidComm {
   def packEncrypted(msg: Message, to: DidId): URIO[DidComm, EncryptedMessage] =
     ZIO.serviceWithZIO(_.packEncrypted(msg, to))
 
-  // def packEncryptedForward(msg: Message, to: DidId): URIO[DidComm, EncryptedMessage] =
-  //   ZIO.serviceWithZIO(_.packEncrypted(msg, to))
+  def packEncryptedAnon(msg: Message, to: DidId): URIO[DidComm, EncryptedMessage] =
+    ZIO.serviceWithZIO(_.packEncrypted(msg, to))
 
   def unpack(str: String): URIO[DidComm, UnpackMessage] =
     ZIO.serviceWithZIO(_.unpack(str))

@@ -30,15 +30,14 @@ class AgentServiceAny(didComm: DIDComm, val myDid: DidId) extends DidComm {
     ZIO.succeed(didComm.packEncrypted(params))
   }
 
-  // override def packEncryptedForward(msg: Message, to: DidId): UIO[EncryptedMessage] = {
-  //   assert(msg.from == Some(myDid), s"ERROR in packEncrypted: ${msg.from} must be == to ${myDid}")
-  //   val params = new PackEncryptedParams.Builder(msg, to.value)
-  //     .from(myDid.value)
-  //     .forward(true)
-  //     .build()
-  //   didComm.packEncrypted(params)
-  //   ZIO.succeed(didComm.packEncrypted(params))
-  // }
+  override def packEncryptedAnon(msg: Message, to: DidId): UIO[EncryptedMessage] = {
+    val params = new PackEncryptedParams.Builder(msg, to.value)
+      // .from(myDid.value)
+      .forward(true)
+      .build()
+    didComm.packEncrypted(params)
+    ZIO.succeed(didComm.packEncrypted(params))
+  }
 
   override def unpack(data: String): UIO[UnpackMessage] = {
     ZIO.succeed(didComm.unpack(new UnpackParams.Builder(data).build()))

@@ -28,17 +28,16 @@ type ForwardAttachment = AttachmentDescriptor
   */
 final case class ForwardMessage(
     id: String = java.util.UUID.randomUUID.toString(),
-    from: DidId,
     to: DidId, // The mediator's did
     expires_time: Option[Long],
     body: ForwardBody,
     attachments: Seq[ForwardAttachment],
 ) {
-  def `type`: PIURI = "https://didcomm.org/routing/2.0/forward"
+  def `type`: PIURI = ForwardMessage.PIURI
 
   def asMessage = {
     Message(
-      from = Some(from),
+      from = None,
       to = Seq(to),
       body = JsonObject(("next", Json.fromString(body.next.value))),
       id = id,
@@ -46,6 +45,10 @@ final case class ForwardMessage(
       attachments = Some(attachments)
     )
   }
+}
+
+object ForwardMessage {
+  def PIURI: PIURI = "https://didcomm.org/routing/2.0/forward"
 }
 
 /** @param next
