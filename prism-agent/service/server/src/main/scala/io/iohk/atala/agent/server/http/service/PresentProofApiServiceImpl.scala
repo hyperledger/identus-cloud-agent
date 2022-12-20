@@ -5,7 +5,6 @@ import io.iohk.atala.agent.openapi.model.*
 import akka.http.scaladsl.server.Directives.*
 import akka.http.scaladsl.marshalling.ToEntityMarshaller
 import akka.http.scaladsl.server.Route
-
 import zio._
 import scala.concurrent.Future
 import io.iohk.atala.agent.server.http.model.HttpServiceError
@@ -24,6 +23,7 @@ import io.iohk.atala.pollux.vc.jwt.Issuer
 import io.iohk.atala.pollux.core.service.PresentationService
 import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.model.PresentationRecord
+import io.iohk.atala.mercury.model.Base64
 
 class PresentProofApiServiceImpl(
     presentationService: PresentationService,
@@ -88,7 +88,18 @@ class PresentProofApiServiceImpl(
 
       presentationStatus = records.map { record =>
         val connectionId = record.connectionId
-        PresentationStatus(record.id.toString, record.protocolState.toString, Seq.empty, connectionId)
+        val data = record.presentationData match
+          case Some(p) =>
+            p.attachments.head.data match {
+              case Base64(data) =>
+                val base64Decoded = new String(java.util.Base64.getDecoder().decode(data)).drop(1).dropRight(1)
+                println(s"Base64decode:\n\n ${base64Decoded} \n\n")
+                Seq(base64Decoded)
+              case any => ???
+            }
+          case None => Seq.empty
+
+        PresentationStatus(record.id.toString, record.protocolState.toString, Seq.empty, data, connectionId)
       }
     } yield presentationStatus
 

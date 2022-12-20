@@ -91,6 +91,9 @@ import io.circe.DecodingFailure
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
 import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
+import io.iohk.atala.pollux.vc.jwt.{DidResolver => JwtDidResolver}
+import io.iohk.atala.castor.core.model.error.DIDOperationError.TooManyDidServiceAccess
+import io.iohk.atala.pollux.vc.jwt.PrismDidResolver
 
 object Modules {
 
@@ -153,13 +156,16 @@ object Modules {
     Server.start(port, app)
   }
 
-  val didCommExchangesJob
-      : RIO[DIDResolver & HttpClient & CredentialService & ManagedDIDService & DIDSecretStorage, Unit] =
+  val didCommExchangesJob: RIO[
+    DIDResolver & JwtDidResolver & HttpClient & CredentialService & ManagedDIDService & DIDSecretStorage,
+    Unit
+  ] =
     BackgroundJobs.didCommExchanges
       .repeat(Schedule.spaced(10.seconds))
       .unit
 
-  val presentProofExchangeJob: RIO[DIDResolver & HttpClient & PresentationService & ManagedDIDService, Unit] =
+  val presentProofExchangeJob
+      : RIO[DIDResolver & JwtDidResolver & HttpClient & PresentationService & ManagedDIDService, Unit] =
     BackgroundJobs.presentProofExchanges
       .repeat(Schedule.spaced(10.seconds))
       .unit
@@ -396,6 +402,9 @@ object SystemModule {
 
 object AppModule {
   val didOpValidatorLayer: ULayer[DIDOperationValidator] = DIDOperationValidator.layer()
+
+  val didJwtResolverlayer: URLayer[DIDService, JwtDidResolver] =
+    ZLayer.fromFunction(PrismDidResolver(_))
 
   val didServiceLayer: TaskLayer[DIDService] =
     (didOpValidatorLayer ++ GrpcModule.layers) >>> DIDServiceImpl.layer
