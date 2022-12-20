@@ -794,6 +794,31 @@ paths:
             application/json:
               schema:
                 $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
+    get:
+      tags: [ "Present Proof" ]
+      operationId: getPresentation
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Unique identifier of the presentation
+          example: "06e126d1-fa44-4882-a243-1e326fbe21db"
+      summary: Returns an existing presentation record by id.
+      responses:
+        "200":
+          description: Presentation state record
+          content:
+            application/json:
+              schema:
+                $ref: "./pollux/schemas.yaml#/components/schemas/PresentationStatus"
+        "404":
+          description: There is no presentation record matching the given 'id'.
+          content:
+            application/json:
+              schema:
+                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
 
   # ----------------------------------
   # Connect

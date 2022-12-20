@@ -85,30 +85,32 @@ class PresentProofApiServiceImpl(
       records <- presentationService
         .getPresentationRecords()
         .mapError(HttpServiceError.DomainError[PresentationError].apply)
+    } yield records
 
-      presentationStatus = records.map { record =>
-        val connectionId = record.connectionId
-        val data = record.presentationData match
-          case Some(p) =>
-            p.attachments.head.data match {
-              case Base64(data) =>
-                val base64Decoded = new String(java.util.Base64.getDecoder().decode(data)).drop(1).dropRight(1)
-                println(s"Base64decode:\n\n ${base64Decoded} \n\n")
-                Seq(base64Decoded)
-              case any => ???
-            }
-          case None => Seq.empty
-
-        PresentationStatus(record.id.toString, record.protocolState.toString, Seq.empty, data, connectionId)
-      }
-    } yield presentationStatus
-
-    onZioSuccess(result.mapError(_.toOAS).either) {
+    onZioSuccess(result.mapBoth(_.toOAS, _.map(_.toOAS)).either) {
       case Left(error) => complete(error.status -> error)
       case Right(results) => {
 
         getAllPresentation200(results)
       }
+    }
+  }
+
+  def getPresentation(id: String)(implicit
+      toEntityMarshallerPresentationStatus: ToEntityMarshaller[PresentationStatus],
+      toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
+  ): Route = {
+    val result = for {
+      presentationId <- id.toUUID
+      outcome <- presentationService
+        .getPresentationRecord(presentationId)
+        .mapError(HttpServiceError.DomainError[PresentationError].apply)
+    } yield outcome
+
+    onZioSuccess(result.mapBoth(_.toOAS, _.map(_.toOAS)).either) {
+      case Left(error)         => complete(error.status -> error)
+      case Right(Some(result)) => getPresentation200(result)
+      case Right(None)         => getPresentation404(notFoundErrorResponse(Some("Presentation record not found")))
     }
   }
 

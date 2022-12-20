@@ -38,6 +38,7 @@ import io.iohk.atala.castor.core.model.did.{LongFormPrismDID, PrismDID}
 
 import java.util.UUID
 import io.iohk.atala.connect.core.model.ConnectionRecord.Role
+import io.iohk.atala.agent.openapi.model.PresentationStatus
 
 trait OASDomainModelHelper {
 
@@ -143,6 +144,29 @@ trait OASDomainModelHelper {
         invitationUrl = s"https://domain.com/path?_oob=${domain.invitation.toBase64}"
       )
     )
+  }
+
+  extension (domain: polluxdomain.PresentationRecord) {
+    def toOAS: PresentationStatus = {
+      val connectionId = domain.connectionId
+      val data = domain.presentationData match
+        case Some(p) =>
+          p.attachments.head.data match {
+            case Base64(data) =>
+              val base64Decoded = new String(java.util.Base64.getDecoder().decode(data)).drop(1).dropRight(1)
+              println(s"Base64decode:\n\n ${base64Decoded} \n\n")
+              Seq(base64Decoded)
+            case any => ???
+          }
+        case None => Seq.empty
+      PresentationStatus(
+        presentationId = domain.id.toString,
+        status = domain.protocolState.toString,
+        proofs = Seq.empty,
+        data = data,
+        connectionId = connectionId
+      )
+    }
   }
 
   extension (str: String) {

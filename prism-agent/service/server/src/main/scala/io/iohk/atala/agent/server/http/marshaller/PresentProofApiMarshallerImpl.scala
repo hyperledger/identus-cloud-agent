@@ -15,6 +15,9 @@ object PresentProofApiMarshallerImpl extends JsonSupport {
       implicit def fromEntityUnmarshallerRequestPresentationInput: FromEntityUnmarshaller[RequestPresentationInput] =
         summon[RootJsonFormat[RequestPresentationInput]]
 
+      implicit def toEntityMarshallerPresentationStatus: ToEntityMarshaller[PresentationStatus] =
+        summon[RootJsonFormat[PresentationStatus]]
+
       implicit def toEntityMarshallerPresentationStatusarray: ToEntityMarshaller[Seq[PresentationStatus]] =
         summon[RootJsonFormat[Seq[PresentationStatus]]]
       implicit def toEntityMarshallerRequestPresentationOutput: ToEntityMarshaller[RequestPresentationOutput] =
