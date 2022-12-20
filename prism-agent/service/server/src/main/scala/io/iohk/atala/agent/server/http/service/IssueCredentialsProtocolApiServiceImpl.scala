@@ -144,7 +144,7 @@ class IssueCredentialsProtocolApiServiceImpl(
   }
 
   private[this] def getPairwiseDIDs(subjectId: String): ZIO[Any, ErrorResponse, DidIdPair] = {
-    val didRegex = "^did.*".r
+    val didRegex = "^did:.*".r
     subjectId match {
       case didRegex() =>
         for {
