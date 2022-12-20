@@ -18,10 +18,17 @@ import scala.util.Try
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.agent.server.config.AgentConfig
 import io.iohk.atala.agent.server.config.AppConfig
+import io.iohk.atala.mercury.model.DidId
+import io.iohk.atala.connect.core.service.ConnectionService
+import io.iohk.atala.connect.core.model.error.ConnectionServiceError
+import io.iohk.atala.connect.core.model.ConnectionRecord
+import io.iohk.atala.connect.core.model.ConnectionRecord.Role
+import io.iohk.atala.connect.core.model.ConnectionRecord.ProtocolState
 
 class IssueCredentialsProtocolApiServiceImpl(
     credentialService: CredentialService,
     managedDIDService: ManagedDIDService,
+    connectionService: ConnectionService,
     agentConfig: AgentConfig
 )(using runtime: zio.Runtime[Any])
     extends IssueCredentialsProtocolApiService,
@@ -29,17 +36,19 @@ class IssueCredentialsProtocolApiServiceImpl(
       OASDomainModelHelper,
       OASErrorModelHelper {
 
+  private[this] case class DidIdPair(myDID: DidId, theirDid: DidId)
+
   override def createCredentialOffer(request: CreateIssueCredentialRecordRequest)(implicit
       toEntityMarshallerCreateIssueCredentialRecordResponse: ToEntityMarshaller[IssueCredentialRecord],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
     val result = for {
-      pairwiseDID <- managedDIDService.createAndStorePeerDID(agentConfig.didCommServiceEndpointUrl)
+      didIdPair <- getPairwiseDIDs(request.subjectId)
       outcome <- credentialService
         .createIssueCredentialRecord(
-          pairwiseDID = pairwiseDID.did,
+          pairwiseDID = didIdPair.myDID,
           thid = UUID.randomUUID(),
-          request.subjectId,
+          didIdPair.theirDid.value,
           request.schemaId,
           request.claims,
           request.validityPeriod,
@@ -47,9 +56,10 @@ class IssueCredentialsProtocolApiServiceImpl(
           request.awaitConfirmation.orElse(Some(false))
         )
         .mapError(HttpServiceError.DomainError[CredentialServiceError].apply)
+        .mapError(_.toOAS)
     } yield outcome
 
-    onZioSuccess(result.mapBoth(_.toOAS, _.toOAS).either) {
+    onZioSuccess(result.map(_.toOAS).either) {
       case Left(error)   => complete(error.status -> error)
       case Right(result) => createCredentialOffer201(result)
     }
@@ -79,7 +89,7 @@ class IssueCredentialsProtocolApiServiceImpl(
     }
   }
 
-  def getCredentialRecord(recordId: String)(implicit
+  override def getCredentialRecord(recordId: String)(implicit
       toEntityMarshallerIssueCredentialRecord: ToEntityMarshaller[IssueCredentialRecord],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
@@ -97,7 +107,7 @@ class IssueCredentialsProtocolApiServiceImpl(
     }
   }
 
-  def acceptCredentialOffer(recordId: String)(implicit
+  override def acceptCredentialOffer(recordId: String)(implicit
       toEntityMarshallerIssueCredentialRecord: ToEntityMarshaller[IssueCredentialRecord],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
@@ -115,7 +125,7 @@ class IssueCredentialsProtocolApiServiceImpl(
     }
   }
 
-  def issueCredential(recordId: String)(implicit
+  override def issueCredential(recordId: String)(implicit
       toEntityMarshallerIssueCredentialRecord: ToEntityMarshaller[IssueCredentialRecord],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
@@ -133,16 +143,77 @@ class IssueCredentialsProtocolApiServiceImpl(
     }
   }
 
+  private[this] def getPairwiseDIDs(subjectId: String): ZIO[Any, ErrorResponse, DidIdPair] = {
+    val didRegex = "^did.*".r
+    subjectId match {
+      case didRegex() =>
+        for {
+          pairwiseDID <- managedDIDService.createAndStorePeerDID(agentConfig.didCommServiceEndpointUrl)
+        } yield DidIdPair(pairwiseDID.did, DidId(subjectId))
+      case _ =>
+        for {
+          maybeConnection <- connectionService
+            .getConnectionRecord(UUID.fromString(subjectId))
+            .mapError(HttpServiceError.DomainError[ConnectionServiceError].apply)
+            .mapError(_.toOAS)
+          connection <- ZIO
+            .fromOption(maybeConnection)
+            .mapError(_ => notFoundErrorResponse(Some("Connection not found")))
+          connectionResponse <- ZIO
+            .fromOption(connection.connectionResponse)
+            .mapError(_ => notFoundErrorResponse(Some("ConnectionResponse not found in record")))
+          didIdPair <- connection match
+            case ConnectionRecord(
+                  _,
+                  _,
+                  _,
+                  _,
+                  _,
+                  Role.Inviter,
+                  ProtocolState.ConnectionResponseSent,
+                  _,
+                  _,
+                  Some(resp)
+                ) =>
+              ZIO.succeed(DidIdPair(resp.from, resp.to))
+            case ConnectionRecord(
+                  _,
+                  _,
+                  _,
+                  _,
+                  _,
+                  Role.Invitee,
+                  ProtocolState.ConnectionResponseReceived,
+                  _,
+                  _,
+                  Some(resp)
+                ) =>
+              ZIO.succeed(DidIdPair(resp.to, resp.from))
+            case _ =>
+              ZIO.fail(badRequestErrorResponse(Some("Invalid connection record state for operation")))
+        } yield didIdPair
+    }
+  }
+
 }
 
 object IssueCredentialsProtocolApiServiceImpl {
-  val layer: URLayer[CredentialService & ManagedDIDService & AppConfig, IssueCredentialsProtocolApiService] =
+  val layer: URLayer[
+    CredentialService & ManagedDIDService & ConnectionService & AppConfig,
+    IssueCredentialsProtocolApiService
+  ] =
     ZLayer.fromZIO {
       for {
         rt <- ZIO.runtime[Any]
         credentialService <- ZIO.service[CredentialService]
         managedDIDService <- ZIO.service[ManagedDIDService]
+        connectionService <- ZIO.service[ConnectionService]
         appConfig <- ZIO.service[AppConfig]
-      } yield IssueCredentialsProtocolApiServiceImpl(credentialService, managedDIDService, appConfig.agent)(using rt)
+      } yield IssueCredentialsProtocolApiServiceImpl(
+        credentialService,
+        managedDIDService,
+        connectionService,
+        appConfig.agent
+      )(using rt)
     }
 }

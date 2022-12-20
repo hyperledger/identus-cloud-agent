@@ -149,4 +149,12 @@ trait OASErrorModelHelper {
     instance = UUID.randomUUID().toString
   )
 
+  def badRequestErrorResponse(detail: Option[String] = None) = ErrorResponse(
+    `type` = "bad-request",
+    title = "Bad request",
+    status = 400,
+    detail = detail,
+    instance = UUID.randomUUID().toString
+  )
+
 }

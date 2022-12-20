@@ -468,7 +468,8 @@ object HttpModule {
     (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new DIDRegistrarApi(_, _))
   }
 
-  val issueCredentialsProtocolApiLayer: RLayer[DidComm & ManagedDIDService & AppConfig, IssueCredentialsProtocolApi] = {
+  val issueCredentialsProtocolApiLayer
+      : RLayer[DidComm & ManagedDIDService & ConnectionService & AppConfig, IssueCredentialsProtocolApi] = {
     val serviceLayer = AppModule.credentialServiceLayer
     val apiServiceLayer = serviceLayer >>> IssueCredentialsProtocolApiServiceImpl.layer
     val apiMarshallerLayer = IssueCredentialsProtocolApiMarshallerImpl.layer
