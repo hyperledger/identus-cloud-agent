@@ -12,7 +12,7 @@ data class W3cCompatibleDid(
     var controller: String? = null,
     var id: String? = null,
     var keyAgreement: List<String>? = null,
-    var service: List<String>? = null,
+    var service: List<DidDocumentService>? = null,
     var verificationMethod: List<String>? = null
 )
 
@@ -32,4 +32,10 @@ data class PublicKeyJwk(
 
 data class DidDocumentMetadata(
     var deactivated: String? = null
+)
+
+data class DidDocumentService(
+    var id: String? = null,
+    var serviceEndpoint: List<String>? = null,
+    var type: String? = null,
 )
