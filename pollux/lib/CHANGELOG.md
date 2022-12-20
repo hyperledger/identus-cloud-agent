@@ -1,3 +1,10 @@
+# [pollux-v0.14.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.13.0...pollux-v0.14.0) (2022-12-20)
+
+
+### Features
+
+* **pollux:** Added JWT verfication ([#280](https://github.com/input-output-hk/atala-prism-building-blocks/issues/280)) ([a87dc17](https://github.com/input-output-hk/atala-prism-building-blocks/commit/a87dc1718734fb4022afaaacaea13853bfff7ff8))
+
 # [pollux-v0.13.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.12.0...pollux-v0.13.0) (2022-12-19)
 
 
