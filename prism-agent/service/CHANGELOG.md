@@ -1,3 +1,10 @@
+# [prism-agent-v0.25.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.24.0...prism-agent-v0.25.0) (2022-12-20)
+
+
+### Features
+
+* **prism-agnet:** Verifiable Credential ([#281](https://github.com/input-output-hk/atala-prism-building-blocks/issues/281)) ([ae74e20](https://github.com/input-output-hk/atala-prism-building-blocks/commit/ae74e20080cfcac7263c7540c8ed5b82070428e1))
+
 # [prism-agent-v0.24.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.23.0...prism-agent-v0.24.0) (2022-12-20)
 
 
