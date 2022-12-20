@@ -57,13 +57,6 @@ jobs:
           version: v2.12.2 # defaults to 'latest'
           legacy: true    # will also install in PATH as `docker-compose`
 
-      - name: Clean up previous artifacts
-        run: |
-          cd ../../infrastructure/local
-          ./stop.sh -n issuer -d
-          ./stop.sh -n holder -d
-          ./stop.sh -n verifier -d
-
       - name: Start services for issuer
         env:
           PORT: 8080
@@ -99,6 +92,7 @@ jobs:
         env:
           ATALA_GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
         run: |
+          docker logs issuer-db-1
           docker logs issuer-prism-node-1
           ./gradlew test --tests "E2eTestsRunner" || true
           ./gradlew reports
