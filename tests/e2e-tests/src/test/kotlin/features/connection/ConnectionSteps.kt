@@ -145,7 +145,8 @@ class ConnectionSteps {
                         it.statusCode(SC_OK)
                     }
                 )
-                lastResponseObject("", Connection::class).state == "ConnectionResponseReceived"
+                lastResponseObject("", Connection::class).state == "ConnectionResponseReceived" ||
+                        lastResponseObject("", Connection::class).state == "ConnectionResponseSent"
             },
             "Invitee connection didn't reach ConnectionResponseReceived state: state is ${lastResponseObject("", Connection::class).state}"
         )
