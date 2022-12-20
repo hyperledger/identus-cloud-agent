@@ -1,3 +1,10 @@
+# [prism-agent-v0.24.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.23.0...prism-agent-v0.24.0) (2022-12-20)
+
+
+### Features
+
+* **prism-agent:** allow connection reuse when creating credential offer ([#276](https://github.com/input-output-hk/atala-prism-building-blocks/issues/276)) ([eff3918](https://github.com/input-output-hk/atala-prism-building-blocks/commit/eff3918c98ca3f2edc708688edd2ece63f7f5aa9))
+
 # [prism-agent-v0.23.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.22.0...prism-agent-v0.23.0) (2022-12-19)
 
 
