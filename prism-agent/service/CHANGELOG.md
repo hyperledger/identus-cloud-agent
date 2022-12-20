@@ -1,3 +1,10 @@
+# [prism-agent-v0.26.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.25.0...prism-agent-v0.26.0) (2022-12-20)
+
+
+### Features
+
+* **prism-agent:** add 'GET /present-proof/presentations/{id}' endpoint ([#282](https://github.com/input-output-hk/atala-prism-building-blocks/issues/282)) ([030a257](https://github.com/input-output-hk/atala-prism-building-blocks/commit/030a257efa89f5fc473549dc17657160fda0b26b))
+
 # [prism-agent-v0.25.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.24.0...prism-agent-v0.25.0) (2022-12-20)
 
 
