@@ -140,7 +140,7 @@ class ConnectionSteps {
         invitee.attemptsTo(
             Get.resource("/connections")
         )
-        println(lastResponseList("", Connection::class))
+        println(lastResponseList("contents", Connection::class))
 
         wait(
             {
