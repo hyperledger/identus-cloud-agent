@@ -2,6 +2,7 @@ package features.connection
 
 import api_models.Connection
 import api_models.Invitation
+import common.Utils.lastResponseList
 import common.Utils.lastResponseObject
 import common.Utils.wait
 import io.cucumber.java.en.Then
@@ -135,6 +136,12 @@ class ConnectionSteps {
     @When("{actor} receives the connection response")
     fun inviteeReceivesTheConnectionResponse(invitee: Actor) {
         // Bob (Holder) receives final connection response
+
+        invitee.attemptsTo(
+            Get.resource("/connections")
+        )
+        println(lastResponseList("", Connection::class))
+
         wait(
             {
                 invitee.attemptsTo(
@@ -145,6 +152,7 @@ class ConnectionSteps {
                         it.statusCode(SC_OK)
                     }
                 )
+                println(lastResponseObject("", Connection::class).state)
                 lastResponseObject("", Connection::class).state == "ConnectionResponseReceived" ||
                         lastResponseObject("", Connection::class).state == "ConnectionResponseSent"
             },
