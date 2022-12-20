@@ -147,7 +147,7 @@ class ConnectionSteps {
                 )
                 lastResponseObject("", Connection::class).state == "ConnectionResponseReceived"
             },
-            "Invitee connection didn't reach ConnectionResponseReceived state."
+            "Invitee connection didn't reach ConnectionResponseReceived state: state is ${lastResponseObject("", Connection::class).state}"
         )
     }
 
