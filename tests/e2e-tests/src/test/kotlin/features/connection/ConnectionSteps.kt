@@ -7,6 +7,7 @@ import common.Utils.lastResponseObject
 import common.Utils.wait
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
+import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
 import net.serenitybdd.screenplay.rest.interactions.Get
 import net.serenitybdd.screenplay.rest.interactions.Post
@@ -136,12 +137,10 @@ class ConnectionSteps {
     @When("{actor} receives the connection response")
     fun inviteeReceivesTheConnectionResponse(invitee: Actor) {
         // Bob (Holder) receives final connection response
-
         invitee.attemptsTo(
             Get.resource("/connections")
         )
-        println(lastResponseList("contents", Connection::class))
-
+        println(SerenityRest.lastResponse().prettyPrint())
         wait(
             {
                 invitee.attemptsTo(
