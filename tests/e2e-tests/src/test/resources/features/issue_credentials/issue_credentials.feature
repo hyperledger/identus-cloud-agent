@@ -1,5 +1,5 @@
 @RFC0453 @AIP20
-Feature: RFC0453 Issue Credentials Protocol
+Feature: Issue Credentials Protocol
 
   Scenario: Issue a credential with the Issuer beginning with an offer
     Given Acme and Bob have an existing connection
