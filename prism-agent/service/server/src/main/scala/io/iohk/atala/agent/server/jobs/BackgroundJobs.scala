@@ -10,21 +10,20 @@ import io.iohk.atala.pollux.vc.jwt.W3cCredentialPayload
 import zio.*
 
 import java.time.Instant
-
 import io.iohk.atala.mercury.DidComm
 import io.iohk.atala.mercury.MediaTypes
 import io.iohk.atala.mercury.MessagingService
 import io.iohk.atala.mercury.HttpClient
-import io.iohk.atala.mercury.model._
-import io.iohk.atala.mercury.model.error._
-import io.iohk.atala.mercury.protocol.issuecredential._
+import io.iohk.atala.mercury.model.*
+import io.iohk.atala.mercury.model.error.*
+import io.iohk.atala.mercury.protocol.issuecredential.*
 import io.iohk.atala.mercury.protocol.presentproof.RequestPresentation
 import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.resolvers.UniversalDidResolver
-import java.io.IOException
 
-import zhttp.service._
-import zhttp.http._
+import java.io.IOException
+import zhttp.service.*
+import zhttp.http.*
 import io.iohk.atala.pollux.vc.jwt.W3CCredential
 import io.iohk.atala.pollux.core.model.PresentationRecord
 import io.iohk.atala.pollux.core.service.PresentationService
@@ -34,10 +33,11 @@ import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.mercury.AgentServiceAny
 import org.didcommx.didcomm.DIDComm
 import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError
-import io.iohk.atala.agent.walletapi.model.ManagedDIDTemplate
+import io.iohk.atala.agent.walletapi.model.{DIDPublicKeyTemplate, ManagedDIDTemplate}
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
 import io.iohk.atala.pollux.vc.jwt.ES256KSigner
-import io.iohk.atala.castor.core.model.did.EllipticCurve
+import io.iohk.atala.castor.core.model.did.{EllipticCurve, VerificationRelationship}
+
 import java.security.KeyFactory
 import java.security.spec.EncodedKeySpec
 import java.security.spec.ECPrivateKeySpec
@@ -46,11 +46,12 @@ import org.bouncycastle.jce.ECNamedCurveTable
 import com.ionspin.kotlin.bignum.integer.BigInteger
 import com.ionspin.kotlin.bignum.integer.Sign
 import io.iohk.atala.pollux.vc.jwt.Issuer
+
 import java.security.spec.ECPublicKeySpec
 import java.security.spec.ECPoint
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import io.circe.Json
-import io.circe.syntax._
+import io.circe.syntax.*
 import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
 import io.iohk.atala.agent.walletapi.model.error.CreateManagedDIDError
 
@@ -247,11 +248,16 @@ object BackgroundJobs {
   // - Simplify convertion of ECKeyPair to JDK security classes
   // - ECPrivateKey should probably remain 'private' and signing operation occur in ManagedDIDService
   private[this] def createPrismDIDIssuer(): ZIO[ManagedDIDService & DIDSecretStorage, Throwable, Issuer] = {
+    val ISSUING_KEY_ID = "issuing0"
+    val issuerDidTemplate = ManagedDIDTemplate(
+      Seq(DIDPublicKeyTemplate(ISSUING_KEY_ID, VerificationRelationship.AssertionMethod)),
+      Nil
+    )
     for {
       managedDIDService <- ZIO.service[ManagedDIDService]
-      longFormPrismDID <- managedDIDService.createAndStoreDID(ManagedDIDTemplate(Nil, Nil))
+      longFormPrismDID <- managedDIDService.createAndStoreDID(issuerDidTemplate)
       didSecretStorage <- ZIO.service[DIDSecretStorage]
-      maybeECKeyPair <- didSecretStorage.getKey(longFormPrismDID.asCanonical, "master0")
+      maybeECKeyPair <- didSecretStorage.getKey(longFormPrismDID.asCanonical, ISSUING_KEY_ID)
       _ <- ZIO.logInfo(s"ECKeyPair => $maybeECKeyPair")
       maybeIssuer <- ZIO.succeed(maybeECKeyPair.map(ecKeyPair => {
         val ba = ecKeyPair.privateKey.toPaddedByteArray(EllipticCurve.SECP256K1)
