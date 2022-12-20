@@ -555,9 +555,12 @@ private class CredentialServiceImpl(
       )
       // TODO: get schema when schema registry is available if schema ID is provided
       credential = W3cCredentialPayload(
-        `@context` = Set.empty, // TODO: his information should come from Schema registry by record.schemaId
+        `@context` = Set(
+          "https://www.w3.org/2018/credentials/v1"
+        ), // TODO: his information should come from Schema registry by record.schemaId
         maybeId = None,
-        `type` = Set.empty, // TODO: This information should come from Schema registry by record.schemaId
+        `type` =
+          Set("VerifiableCredential"), // TODO: This information should come from Schema registry by record.schemaId
         issuer = issuer.did,
         issuanceDate = issuanceDate,
         maybeExpirationDate = record.validityPeriod.map(sec => issuanceDate.plusSeconds(sec.toLong)),

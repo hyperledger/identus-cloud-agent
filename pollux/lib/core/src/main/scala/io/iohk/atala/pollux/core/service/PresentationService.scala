@@ -2,7 +2,9 @@ package io.iohk.atala.pollux.core.service
 
 import com.google.protobuf.ByteString
 import io.circe.Json
+import io.circe.parser._
 import io.circe.syntax.*
+import io.circe._
 import io.iohk.atala.pollux.core.model.EncodedJWTCredential
 import io.iohk.atala.pollux.core.model.PresentationRecord
 import io.iohk.atala.pollux.core.model.error.PresentationError
@@ -29,6 +31,7 @@ import java.security.PublicKey
 import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord
 import io.iohk.atala.pollux.core.repository.CredentialRepository
+import org.didcommx.didcomm.message.Attachment.Data.Base64
 
 trait PresentationService {
 
@@ -208,18 +211,23 @@ private class PresentationServiceImpl(
   ): IO[PresentationError, JWT] = {
 
     val verifiableCredentials = issuedCredentials.map { issuedCredential =>
-      JwtVerifiableCredentialPayload(JWT(issuedCredential.signedCredential))
+      decode[io.iohk.atala.mercury.model.Base64](issuedCredential.signedCredential)
+        .map(x => new String(java.util.Base64.getDecoder().decode(x.base64)))
+        .map(_.drop(1).dropRight(1))
+        .map(x => JwtVerifiableCredentialPayload(JWT(x)))
+        .getOrElse(???)
     }.toVector
+
     val w3cPresentationPayload =
       W3cPresentationPayload(
-        `@context` = IndexedSeq.empty,
+        `@context` = Vector("https://www.w3.org/2018/presentations/v1"),
         maybeId = None,
         `type` = Vector("VerifiablePresentation"),
         verifiableCredential = verifiableCredentials,
         holder = prover.did.value,
         verifier = Vector("https://example.edu/issuers/565049"), // TODO Fix this
         maybeIssuanceDate = None,
-        maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z"))
+        maybeExpirationDate = None
       )
 
     val encodedJWT = JwtPresentation.toEncodedJwt(w3cPresentationPayload, prover)
@@ -310,6 +318,7 @@ private class PresentationServiceImpl(
       record <- presentationRepository
         .getPresentationRecord(record.id)
         .mapError(RepositoryError.apply)
+
     } yield record
   }
 
@@ -419,14 +428,6 @@ private class PresentationServiceImpl(
         .fromOption(maybeRecord)
         .mapError(_ => ThreadIdNotFound(thid))
     } yield record
-  }
-
-  private[this] def verifyPresentation(
-      presentation: Presentation
-  ) = {
-    for {
-      _ <- ZIO.log(s"************Verify Presentation Not Implemented*************")
-    } yield ()
   }
 
   private[this] def createDidCommRequestPresentation(
