@@ -15,6 +15,7 @@ import net.serenitybdd.screenplay.rest.questions.ResponseConsequence
 import org.apache.http.HttpStatus.*
 import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.Matchers.*
+import java.time.Duration
 
 class PublishDidSteps {
 
@@ -76,7 +77,8 @@ class PublishDidSteps {
                 )
                 SerenityRest.lastResponse().statusCode == SC_OK
             },
-            "ERROR: DID was not published to ledger!"
+            "ERROR: DID was not published to ledger!",
+            timeout = Duration.ofSeconds(300L)
         )
         acme.should(
             ResponseConsequence.seeThatResponse {
