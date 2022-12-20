@@ -78,7 +78,7 @@ class PublishDidSteps {
                 SerenityRest.lastResponse().statusCode == SC_OK
             },
             "ERROR: DID was not published to ledger!",
-            timeout = Duration.ofSeconds(300L)
+            timeout = Duration.ofSeconds(600L)
         )
         acme.should(
             ResponseConsequence.seeThatResponse {

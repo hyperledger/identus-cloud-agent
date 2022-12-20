@@ -182,5 +182,8 @@ class ConnectionSteps {
             .isEqualTo("ConnectionResponseSent")
         assertThat(invitee.recall<Connection>("connection-with-${inviter.name}").state)
             .isEqualTo("ConnectionResponseReceived")
+
+        invitee.forget<String>("connectionId")
+        inviter.forget<String>("connectionId")
     }
 }
