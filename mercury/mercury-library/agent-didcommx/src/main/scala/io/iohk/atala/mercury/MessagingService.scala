@@ -16,58 +16,55 @@ import org.didcommx.didcomm.common.VerificationMaterialFormat
 
 type HttpOrDID = String //TODO
 case class ServiceEndpoint(uri: HttpOrDID, accept: Option[Seq[String]], routingKeys: Option[Seq[String]])
+case class MessageAndAddress(msg: Message, url: String)
 
 object MessagingService {
 
-  def isForwardMessage[Service <: DidComm, Resolver <: DIDResolver](
-    didCommService:  Service,
-    resolver: Resolver,
-    didCommServiceEndpoint: ServiceEndpoint,
-    message: Message, 
-    encrypted: EncryptedMessage): ZIO[Any, Throwable, EncryptedMessage] = {
-  if (didCommServiceEndpoint.uri.startsWith("did:")) {
-for { 
-    _ <- Console.printLine("RoutingDID:" + DidId(didCommServiceEndpoint.uri))
-    forwardMessage <- didCommService.packEncrypted(
-        ForwardMessage(
-          from = message.from.get,
-          to = DidId(didCommServiceEndpoint.uri),
-          expires_time = None,
-          body = ForwardBody(next = message.to.head), // TODO check msg header
-          attachments = Seq(AttachmentDescriptor.buildJsonAttachment(payload = encrypted.asJson)),
-        ).asMessage,
-        to = DidId(didCommServiceEndpoint.uri)
+  /** Encrypted payload (message) and make the Forward Message */
+  def makeForwardMessage(message: Message, mediator: DidId): URIO[DidComm, ForwardMessage] =
+    for {
+      didCommService <- ZIO.service[DidComm]
+      encrypted <- didCommService.packEncrypted(message, to = message.to.head) // TODO head
+      msg = ForwardMessage(
+        to = mediator,
+        expires_time = None,
+        body = ForwardBody(next = message.to.head), // TODO check msg head
+        attachments = Seq(AttachmentDescriptor.buildJsonAttachment(payload = encrypted.asJson)),
       )
-} yield forwardMessage
-  } else {
-    ZIO.succeed(encrypted)
-  }
-}
+    } yield (msg)
 
-  /** Encrypt and send a Message via HTTP
-    *
-    * TODO Move this method to another model
-    */
-  def send(msg: Message): ZIO[DidComm & DIDResolver & HttpClient, SendMessageError, HttpResponseBody] = {
+  /** Create a Message and any Forward Message as needed */
+  def makeMessage(msg: Message): ZIO[DidComm & DIDResolver & HttpClient, SendMessageError, MessageAndAddress] =
     for {
       didCommService <- ZIO.service[DidComm]
       resolver <- ZIO.service[DIDResolver]
       sendToDID <- msg.to match {
         case Seq() => // TODO support for anonymous message
-          ZIO.fail(new RuntimeException("Missing the destination DID - TODO support for anonymous message"))
+          ZIO.fail(
+            SendMessageError(
+              new RuntimeException("Missing the destination DID - TODO support for anonymous message")
+            )
+          )
         case Seq(value) =>
           ZIO.succeed(value)
         case head +: tail => // TODO support for multiple destinations
-          ZIO.fail(new RuntimeException("TODO multiple destinations"))
+          ZIO.fail(
+            SendMessageError(
+              new RuntimeException("TODO multiple destinations")
+            )
+          )
       }
-      _ <- Console.printLine("Encrypted Message")
-      encryptedMessage <- didCommService.packEncrypted(msg, to = msg.to.head) // TODO head
 
-      didCommServiceUrl <- resolver
+      serviceEndpoint <- resolver
         .didCommServices(sendToDID) /* Seq[DIDCommService] */
+        .catchAll { case ex => ZIO.fail(SendMessageError(ex)) }
         .flatMap {
           case Seq() =>
-            ZIO.fail(new RuntimeException("To send a Message you need a destination")) // TODO ERROR
+            ZIO.fail(
+              SendMessageError(
+                new RuntimeException("To send a Message you need a destination") // TODO ERROR
+              )
+            )
           case Seq(v) =>
             ZIO.succeed(
               ServiceEndpoint(
@@ -86,24 +83,52 @@ for {
                 )
               )
         }
-       _ <- Console.printLine("Forward message")
-      sendMsg = isForwardMessage(didCommService, resolver, didCommServiceUrl, msg, encryptedMessage)
-      jsonString <- sendMsg.map(_.string)
 
-      serviceEndpoint <- if (didCommServiceUrl.uri.startsWith("did:"))
-           resolver
-             .didCommServices(DidId(didCommServiceUrl.uri))
-             .map(_.toSeq.head.getServiceEndpoint()) // TODO this is not safe and also need to be recursive
-         else ZIO.succeed(didCommServiceUrl.uri)
+      msgToSend <- serviceEndpoint match {
+        case ServiceEndpoint(url, _, None) if url.startsWith("http") =>
+          ZIO.log(s"No Forward Message needed. (send to $url)") *>
+            ZIO.succeed(MessageAndAddress(msg, url))
+        case ServiceEndpoint(url, _, Some(Seq())) if url.startsWith("http") =>
+          ZIO.log(s"No Forward Message needed. (send to $url)") *>
+            ZIO.succeed(MessageAndAddress(msg, url))
+        case ServiceEndpoint(did, _, _) if did.startsWith("did:") =>
+          for {
+            _ <- ZIO.log(s"Make Forward Message for Mediator '$did'")
+            mediator = DidId(did)
+            forwardMessage <- makeForwardMessage(message = msg, mediator = mediator)
+            finalMessage <- makeMessage(forwardMessage.asMessage) // Maybe it needs a double warping
+          } yield finalMessage
+        case ServiceEndpoint(uri, _, Some(routingKeys)) =>
+          ZIO.log(s"RoutingDID: $routingKeys") *> ??? // ZIO.fail(???) // FIXME no support for routingKeys
+        case s @ ServiceEndpoint(_, _, None) =>
+          ZIO.logError(s"Unxpected ServiceEndpoint $s") *> ZIO.fail(
+            SendMessageError(new RuntimeException(s"Unxpected ServiceEndpoint $s"))
+          )
+      }
+    } yield (msgToSend)
 
-      _ <- Console.printLine("Sending to" + serviceEndpoint)
+    /** Encrypt and send a Message via HTTP
+      *
+      * TODO Move this method to another model
+      */
+  def send(msg: Message): ZIO[DidComm & DIDResolver & HttpClient, SendMessageError, HttpResponseBody] =
+    for {
+      auxFinalMessage <- makeMessage(msg)
+      MessageAndAddress(finalMessage, serviceEndpoint) = auxFinalMessage
+      didCommService <- ZIO.service[DidComm]
+      encryptedMessage <-
+        if (finalMessage.`type` == ForwardMessage.PIURI)
+          didCommService.packEncryptedAnon(msg = finalMessage, to = finalMessage.to.head) // TODO Head
+        else
+          didCommService.packEncrypted(msg = finalMessage, to = finalMessage.to.head) // TODO Head
 
-      res <- HttpClient.postDIDComm(serviceEndpoint, jsonString)
+      _ <- ZIO.log(s"Sending to Message to '$serviceEndpoint'")
+      res <- HttpClient
+        .postDIDComm(url = serviceEndpoint, data = encryptedMessage.string)
+        .catchAll { case ex => ZIO.fail(SendMessageError(ex, Some(encryptedMessage.string))) }
     } yield (res)
-  }.catchAll { case ex =>
-    ZIO.fail(SendMessageError(ex))
-  }
 
+}
 // WIP do not delete!
 //   /** Encrypt and send a Message via HTTP
 //     *
@@ -191,4 +216,3 @@ for {
 //       res <- postDIDComm(serviceEndpoint)
 //     } yield (res)
 //   }
-}

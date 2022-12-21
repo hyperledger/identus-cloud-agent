@@ -23,9 +23,8 @@ def makeMsg(from: Agent, to: Agent) = Message(
   )
 )
 
-def makeForwardMessage(from: Agent, mediator: Agent, to: Agent, msg: EncryptedMessage) =
+def makeForwardMessage(mediator: Agent, to: Agent, msg: EncryptedMessage) =
   ForwardMessage(
-    from = from.id,
     to = mediator.id,
     expires_time = None,
     body = ForwardBody(next = to.id), // TODO check msg header
@@ -86,7 +85,7 @@ object AgentPrograms {
         + fromJsonObject(encryptedMsg.asJson).spaces2
         + "\n********************************************************************************************************************************\n"
     )
-    forwardMessage = makeForwardMessage(Agent.Alice, Agent.Mediator, Agent.Bob, encryptedMsg).asMessage
+    forwardMessage = makeForwardMessage(Agent.Mediator, Agent.Bob, encryptedMsg).asMessage
 
     encryptedForwardMessage <- alice.packEncrypted(forwardMessage, to = Agent.Mediator.id)
     _ <- Console.printLine("Sending bytes ...")
