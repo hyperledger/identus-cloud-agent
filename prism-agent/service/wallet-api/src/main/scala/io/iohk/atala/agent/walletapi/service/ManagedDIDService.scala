@@ -9,12 +9,7 @@ import io.iohk.atala.agent.walletapi.model.{
   ManagedDIDTemplate
 }
 import io.iohk.atala.agent.walletapi.model.ECCoordinates.*
-import io.iohk.atala.agent.walletapi.model.error.{
-  CreateManagedDIDError,
-  ListManagedDIDError,
-  PublishManagedDIDError,
-  DIDSecretStorageError
-}
+import io.iohk.atala.agent.walletapi.model.error.{given, *}
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService.{CreateDIDSecret, DEFAULT_MASTER_KEY_ID}
 import io.iohk.atala.agent.walletapi.storage.{
   DIDNonSecretStorage,
@@ -66,51 +61,34 @@ final class ManagedDIDService private[walletapi] (
   private val AGREEMENT_KEY_ID = "agreement"
   private val AUTHENTICATION_KEY_ID = "authentication"
 
-  def listManagedDID: IO[ListManagedDIDError, Seq[ManagedDIDDetail]] = nonSecretStorage.listManagedDID
-    .mapBoth(
-      ListManagedDIDError.WalletStorageError.apply,
-      _.toSeq.map { case (did, state) =>
-        ManagedDIDDetail(did = did.asCanonical, state = state)
-      }
-    )
-    .flatMap { dids =>
-      ZIO.foreach(dids) { didDetail =>
-        // state in wallet maybe stale, update it from DLT
-        syncDIDStateFromDLT(didDetail.state)
-          .mapError(ListManagedDIDError.OperationError.apply)
-          .tap(state =>
-            nonSecretStorage
-              .setManagedDIDState(didDetail.did, state)
-              .mapError(ListManagedDIDError.WalletStorageError.apply)
-          )
-          .map(didDetail -> _)
-      }
+  def syncManagedDIDState: IO[GetManagedDIDError, Unit] = nonSecretStorage.listManagedDID
+    .mapError(GetManagedDIDError.WalletStorageError.apply)
+    .flatMap { kv =>
+      ZIO.foreach(kv.keys.map(_.asCanonical))(computeNewDIDStateFromDLTAndPersist[GetManagedDIDError])
     }
-    .map(_.map { case (didDetail, newState) => didDetail.copy(state = newState) })
+    .unit
+
+  def listManagedDID: IO[GetManagedDIDError, Seq[ManagedDIDDetail]] =
+    // state in wallet maybe stale, update it from DLT before getting DIDs
+    syncManagedDIDState
+      .flatMap(_ =>
+        nonSecretStorage.listManagedDID.mapBoth(
+          GetManagedDIDError.WalletStorageError.apply,
+          _.toSeq.map { case (did, state) =>
+            ManagedDIDDetail(did = did.asCanonical, state = state)
+          }
+        )
+      )
 
   def publishStoredDID(did: CanonicalPrismDID): IO[PublishManagedDIDError, ScheduleDIDOperationOutcome] = {
-    def syncDLTStateAndPersist =
-      nonSecretStorage
-        .getManagedDIDState(did)
-        .mapError(PublishManagedDIDError.WalletStorageError.apply)
-        .flatMap(state => ZIO.fromOption(state).mapError(_ => PublishManagedDIDError.DIDNotFound(did)))
-        .flatMap(state => syncDIDStateFromDLT(state).mapError(PublishManagedDIDError.OperationError.apply))
-        .tap(state =>
-          nonSecretStorage.setManagedDIDState(did, state).mapError(PublishManagedDIDError.WalletStorageError.apply)
-        )
-
     def submitOperation(operation: PrismDIDOperation.Create) =
       for {
         masterKeyPair <-
           secretStorage
             .getKey(did, DEFAULT_MASTER_KEY_ID)
             .mapError(PublishManagedDIDError.WalletStorageError.apply)
-            .flatMap(maybeKey =>
-              ZIO
-                .fromOption(maybeKey)
-                .orDieWith(_ =>
-                  new Exception("master-key must exists in the wallet for DID publication operation signature")
-                )
+            .someOrElseZIO(
+              ZIO.die(Exception("master-key must exists in the wallet for DID publication operation signature"))
             )
         signedAtalaOperation <- ZIO
           .fromTry(
@@ -133,7 +111,11 @@ final class ManagedDIDService private[walletapi] (
       } yield outcome
 
     for {
-      didState <- syncDLTStateAndPersist
+      _ <- computeNewDIDStateFromDLTAndPersist[PublishManagedDIDError](did)
+      didState <- nonSecretStorage
+        .getManagedDIDState(did)
+        .mapError(PublishManagedDIDError.WalletStorageError.apply)
+        .someOrFail(PublishManagedDIDError.DIDNotFound(did))
       outcome <- didState match {
         case ManagedDIDState.Created(operation) => submitOperation(operation)
         case ManagedDIDState.PublicationPending(operation, operationId) =>
@@ -217,8 +199,25 @@ final class ManagedDIDService private[walletapi] (
     y = Base64UrlString.fromByteArray(keyPair.publicKey.p.y.toPaddedByteArray(CURVE))
   )
 
-  /** Reconcile state with DLT and return a correct status */
-  private def syncDIDStateFromDLT(state: ManagedDIDState): IO[DIDOperationError, ManagedDIDState] = {
+  /** Reconcile state with DLT and write new state to the storage */
+  private def computeNewDIDStateFromDLTAndPersist[E](
+      did: CanonicalPrismDID
+  )(using
+      c1: Conversion[CommonWalletStorageError, E],
+      c2: Conversion[DIDOperationError, E]
+  ): IO[E, Unit] = {
+    nonSecretStorage
+      .getManagedDIDState(did)
+      .mapError[E](CommonWalletStorageError.apply)
+      .flatMap(maybeState => ZIO.foreach(maybeState)(computeNewDIDStateFromDLT(_).mapError[E](e => e)))
+      .flatMap(maybeState =>
+        ZIO.foreach(maybeState)(nonSecretStorage.setManagedDIDState(did, _)).mapError[E](CommonWalletStorageError.apply)
+      )
+      .unit
+  }
+
+  /** Reconcile state with DLT and return an updated state */
+  private def computeNewDIDStateFromDLT(state: ManagedDIDState): IO[DIDOperationError, ManagedDIDState] = {
     state match {
       case s @ ManagedDIDState.PublicationPending(operation, operationId) =>
         didService
