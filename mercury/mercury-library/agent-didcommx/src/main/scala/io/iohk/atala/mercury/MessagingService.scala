@@ -21,16 +21,17 @@ case class MessageAndAddress(msg: Message, url: String)
 object MessagingService {
 
   /** Encrypted payload (message) and make the Forward Message */
-  def makeForwardMessage(message: Message, mediator: DidId): URIO[DidComm, ForwardMessage] = for {
-    didCommService <- ZIO.service[DidComm]
-    encrypted <- didCommService.packEncrypted(message, to = message.to.head) // TODO head
-    msg = ForwardMessage(
-      to = mediator,
-      expires_time = None,
-      body = ForwardBody(next = message.to.head), // TODO check msg head
-      attachments = Seq(AttachmentDescriptor.buildJsonAttachment(payload = encrypted.asJson)),
-    )
-  } yield (msg)
+  def makeForwardMessage(message: Message, mediator: DidId): URIO[DidComm, ForwardMessage] =
+    for {
+      didCommService <- ZIO.service[DidComm]
+      encrypted <- didCommService.packEncrypted(message, to = message.to.head) // TODO head
+      msg = ForwardMessage(
+        to = mediator,
+        expires_time = None,
+        body = ForwardBody(next = message.to.head), // TODO check msg head
+        attachments = Seq(AttachmentDescriptor.buildJsonAttachment(payload = encrypted.asJson)),
+      )
+    } yield (msg)
 
   /** Create a Message and any Forward Message as needed */
   def makeMessage(msg: Message): ZIO[DidComm & DIDResolver & HttpClient, SendMessageError, MessageAndAddress] =
