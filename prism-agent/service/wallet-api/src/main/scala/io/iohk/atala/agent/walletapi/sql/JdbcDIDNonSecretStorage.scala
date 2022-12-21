@@ -18,7 +18,7 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
         | SELECT
         |   did,
         |   publication_status,
-        |   create_operation,
+        |   atala_operation_content,
         |   publish_operation_id
         | FROM public.did_publication_state
         | WHERE did = $did
@@ -37,18 +37,18 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
         | INSERT INTO public.did_publication_state(
         |   did,
         |   publication_status,
-        |   create_operation,
+        |   atala_operation_content,
         |   publish_operation_id
         | )
         | VALUES (
         |   ${row.did},
         |   ${row.publicationStatus},
-        |   ${row.createOperation},
+        |   ${row.atalaOperationContent},
         |   ${row.publishOperationId}
         | )
         | ON CONFLICT (did) DO UPDATE SET
         |   publication_status = EXCLUDED.publication_status,
-        |   create_operation = EXCLUDED.create_operation,
+        |   atala_operation_content = EXCLUDED.atala_operation_content,
         |   publish_operation_id = EXCLUDED.publish_operation_id
         """.stripMargin.update
 
@@ -61,7 +61,7 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
            | SELECT
            |   did,
            |   publication_status,
-           |   create_operation,
+           |   atala_operation_content,
            |   publish_operation_id
            | FROM public.did_publication_state
     """.stripMargin

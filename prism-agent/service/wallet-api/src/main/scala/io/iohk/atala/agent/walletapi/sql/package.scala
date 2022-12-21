@@ -42,7 +42,7 @@ package object sql {
   final case class DIDPublicationStateRow(
       did: PrismDID,
       publicationStatus: DIDPublicationStatusType,
-      createOperation: Array[Byte],
+      atalaOperationContent: Array[Byte],
       publishOperationId: Option[Array[Byte]]
   ) {
     def toDomain: Try[ManagedDIDState] = {
@@ -66,7 +66,7 @@ package object sql {
     }
 
     private def createDIDOperation: Try[PrismDIDOperation.Create] = {
-      Try(node_models.AtalaOperation.parseFrom(createOperation))
+      Try(node_models.AtalaOperation.parseFrom(atalaOperationContent))
         .flatMap { atalaOperation =>
           atalaOperation.operation.createDid
             .toRight(
@@ -92,7 +92,7 @@ package object sql {
       DIDPublicationStateRow(
         did = did,
         publicationStatus = status,
-        createOperation = createOperation.toAtalaOperation.toByteArray,
+        atalaOperationContent = createOperation.toAtalaOperation.toByteArray,
         publishOperationId = publishedOperationId.map(_.toArray)
       )
     }
