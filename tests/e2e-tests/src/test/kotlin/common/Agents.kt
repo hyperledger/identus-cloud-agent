@@ -12,6 +12,8 @@ object Agents {
         private set
     lateinit var Mallory: Actor
         private set
+    lateinit var Faber: Actor
+        private set
 
     init {
         if (Environments.AGENT_AUTH_REQUIRED) {
@@ -28,5 +30,6 @@ object Agents {
         Acme = Actor.named("Acme").whoCan(CallAnApi.at(Environments.ACME_AGENT_URL))
         Bob = Actor.named("Bob").whoCan(CallAnApi.at(Environments.BOB_AGENT_URL))
         Mallory = Actor.named("Mallory").whoCan(CallAnApi.at(Environments.MALLORY_AGENT_URL))
+        Faber = Actor.named("Faber").whoCan(CallAnApi.at(Environments.FABER_AGENT_URL))
     }
 }

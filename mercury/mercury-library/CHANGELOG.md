@@ -1,3 +1,24 @@
+# [mercury-v0.15.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.14.0...mercury-v0.15.0) (2022-12-19)
+
+
+### Features
+
+* **mercury:** dumb release commit ([#270](https://github.com/input-output-hk/atala-prism-building-blocks/issues/270)) ([8a1e5c3](https://github.com/input-output-hk/atala-prism-building-blocks/commit/8a1e5c3d3e58a7e29c9c3f4692798270fd58a5ff))
+
+# [mercury-v0.14.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.13.0...mercury-v0.14.0) (2022-12-19)
+
+
+### Features
+
+* **mercury:** forward messaging to mediator ([#264](https://github.com/input-output-hk/atala-prism-building-blocks/issues/264)) ([1170e2f](https://github.com/input-output-hk/atala-prism-building-blocks/commit/1170e2f093ec2a2f70a56eda22d3721c6063ddc4))
+
+# [mercury-v0.13.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.12.0...mercury-v0.13.0) (2022-12-16)
+
+
+### Features
+
+* **mercury:** Support a mediator in service uri field ([#263](https://github.com/input-output-hk/atala-prism-building-blocks/issues/263)) ([88ad415](https://github.com/input-output-hk/atala-prism-building-blocks/commit/88ad415a3770abb4a5f40ff6fe5e4e1ebf1ab996))
+
 # [mercury-v0.12.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.11.0...mercury-v0.12.0) (2022-12-13)
 
 

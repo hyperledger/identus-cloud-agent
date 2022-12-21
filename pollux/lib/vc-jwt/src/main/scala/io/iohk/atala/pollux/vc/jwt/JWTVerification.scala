@@ -147,8 +147,7 @@ object JWTVerification {
         curve <- publicKeyJwk.crv
         x <- publicKeyJwk.x.map(Base64URL.from)
         y <- publicKeyJwk.y.map(Base64URL.from)
-        d <- publicKeyJwk.d.map(Base64URL.from)
-      } yield new ECKey.Builder(Curve.parse(curve), x, y).d(d).build().toPublicKey
+      } yield new ECKey.Builder(Curve.parse(curve), x, y).build().toPublicKey
     Validation.fromOptionWith("Unable to parse Public Key")(maybePublicKey)
   }
 }

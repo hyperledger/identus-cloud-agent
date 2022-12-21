@@ -3,8 +3,13 @@ package io.iohk.atala.mercury
 import scala.jdk.CollectionConverters.*
 import zio._
 
+import io.circe._
+import io.circe.Json._
+import io.circe.parser._
+import io.circe.JsonObject
 import io.iohk.atala.mercury.model._
 import io.iohk.atala.mercury.model.error._
+import io.iohk.atala.mercury.protocol.routing._
 import io.iohk.atala.resolvers.DIDResolver
 import org.didcommx.didcomm.common.VerificationMethodType
 import org.didcommx.didcomm.common.VerificationMaterialFormat
@@ -14,11 +19,36 @@ case class ServiceEndpoint(uri: HttpOrDID, accept: Option[Seq[String]], routingK
 
 object MessagingService {
 
+  def isForwardMessage[Service <: DidComm, Resolver <: DIDResolver](
+    didCommService:  Service,
+    resolver: Resolver,
+    didCommServiceEndpoint: ServiceEndpoint,
+    message: Message, 
+    encrypted: EncryptedMessage): ZIO[Any, Throwable, EncryptedMessage] = {
+  if (didCommServiceEndpoint.uri.startsWith("did:")) {
+for { 
+    _ <- Console.printLine("RoutingDID:" + DidId(didCommServiceEndpoint.uri))
+    forwardMessage <- didCommService.packEncrypted(
+        ForwardMessage(
+          from = message.from.get,
+          to = DidId(didCommServiceEndpoint.uri),
+          expires_time = None,
+          body = ForwardBody(next = message.to.head), // TODO check msg header
+          attachments = Seq(AttachmentDescriptor.buildJsonAttachment(payload = encrypted.asJson)),
+        ).asMessage,
+        to = DidId(didCommServiceEndpoint.uri)
+      )
+} yield forwardMessage
+  } else {
+    ZIO.succeed(encrypted)
+  }
+}
+
   /** Encrypt and send a Message via HTTP
     *
     * TODO Move this method to another model
     */
-  def send(msg: Message): ZIO[DidComm & DIDResolver & HttpClient, SendMessageError, HttpResponseBody] = { // TODO create error for Throwable
+  def send(msg: Message): ZIO[DidComm & DIDResolver & HttpClient, SendMessageError, HttpResponseBody] = {
     for {
       didCommService <- ZIO.service[DidComm]
       resolver <- ZIO.service[DIDResolver]
@@ -30,11 +60,10 @@ object MessagingService {
         case head +: tail => // TODO support for multiple destinations
           ZIO.fail(new RuntimeException("TODO multiple destinations"))
       }
+      _ <- Console.printLine("Encrypted Message")
+      encryptedMessage <- didCommService.packEncrypted(msg, to = msg.to.head) // TODO head
 
-      encryptedForwardMessage <- didCommService.packEncryptedForward(msg, to = msg.to.head) // TODO head
-      jsonString = encryptedForwardMessage.string
-
-      didCommService <- resolver
+      didCommServiceUrl <- resolver
         .didCommServices(sendToDID) /* Seq[DIDCommService] */
         .flatMap {
           case Seq() =>
@@ -57,13 +86,19 @@ object MessagingService {
                 )
               )
         }
+       _ <- Console.printLine("Forward message")
+      sendMsg = isForwardMessage(didCommService, resolver, didCommServiceUrl, msg, encryptedMessage)
+      jsonString <- sendMsg.map(_.string)
 
-      serviceEndpoint = didCommService.uri // TODO this is not safe
+      serviceEndpoint <- if (didCommServiceUrl.uri.startsWith("did:"))
+           resolver
+             .didCommServices(DidId(didCommServiceUrl.uri))
+             .map(_.toSeq.head.getServiceEndpoint()) // TODO this is not safe and also need to be recursive
+         else ZIO.succeed(didCommServiceUrl.uri)
 
       _ <- Console.printLine("Sending to" + serviceEndpoint)
 
       res <- HttpClient.postDIDComm(serviceEndpoint, jsonString)
-
     } yield (res)
   }.catchAll { case ex =>
     ZIO.fail(SendMessageError(ex))

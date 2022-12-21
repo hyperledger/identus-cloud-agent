@@ -1,3 +1,31 @@
+# [prism-agent-v0.26.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.25.0...prism-agent-v0.26.0) (2022-12-20)
+
+
+### Features
+
+* **prism-agent:** add 'GET /present-proof/presentations/{id}' endpoint ([#282](https://github.com/input-output-hk/atala-prism-building-blocks/issues/282)) ([030a257](https://github.com/input-output-hk/atala-prism-building-blocks/commit/030a257efa89f5fc473549dc17657160fda0b26b))
+
+# [prism-agent-v0.25.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.24.0...prism-agent-v0.25.0) (2022-12-20)
+
+
+### Features
+
+* **prism-agnet:** Verifiable Credential ([#281](https://github.com/input-output-hk/atala-prism-building-blocks/issues/281)) ([ae74e20](https://github.com/input-output-hk/atala-prism-building-blocks/commit/ae74e20080cfcac7263c7540c8ed5b82070428e1))
+
+# [prism-agent-v0.24.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.23.0...prism-agent-v0.24.0) (2022-12-20)
+
+
+### Features
+
+* **prism-agent:** allow connection reuse when creating credential offer ([#276](https://github.com/input-output-hk/atala-prism-building-blocks/issues/276)) ([eff3918](https://github.com/input-output-hk/atala-prism-building-blocks/commit/eff3918c98ca3f2edc708688edd2ece63f7f5aa9))
+
+# [prism-agent-v0.23.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.22.0...prism-agent-v0.23.0) (2022-12-19)
+
+
+### Features
+
+* **prism-agent:** bump mercury, pollux and connect versions ([#273](https://github.com/input-output-hk/atala-prism-building-blocks/issues/273)) ([ce4758b](https://github.com/input-output-hk/atala-prism-building-blocks/commit/ce4758bf0e1a34b0953c05eea63ae06a389fc532))
+
 # [prism-agent-v0.22.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.21.0...prism-agent-v0.22.0) (2022-12-16)
 
 
