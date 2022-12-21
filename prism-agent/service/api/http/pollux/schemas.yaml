@@ -540,16 +540,20 @@ components:
           type: string
     PresentationStatus:
       description: Presentation Status
-      required: [presentationId, status, proofs]
+      required: [presentationId, status, proofs, data]
       properties:
         presentationId:
           type: string
         status:
           type: string
         proofs:
-          type: array
+          type: array 
           items:
             $ref: "#/components/schemas/ProofRequestAux"
+        data:
+          type: array
+          items: 
+            type: string     
         connectionId:
           type: string
     RequestPresentationAction:

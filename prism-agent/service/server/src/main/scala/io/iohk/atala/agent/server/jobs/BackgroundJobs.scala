@@ -7,10 +7,10 @@ import io.iohk.atala.pollux.core.model.IssueCredentialRecord
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.core.service.CredentialService
 import io.iohk.atala.pollux.vc.jwt.W3cCredentialPayload
-import zio.*
-
+import zio.Duration
 import java.time.Instant
-
+import java.time.Clock
+import java.time.ZoneId
 import io.iohk.atala.mercury.DidComm
 import io.iohk.atala.mercury.MediaTypes
 import io.iohk.atala.mercury.MessagingService
@@ -22,7 +22,7 @@ import io.iohk.atala.mercury.protocol.presentproof.RequestPresentation
 import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.resolvers.UniversalDidResolver
 import java.io.IOException
-
+import io.iohk.atala.pollux.vc.jwt._
 import zhttp.service._
 import zhttp.http._
 import io.iohk.atala.pollux.vc.jwt.W3CCredential
@@ -37,7 +37,7 @@ import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError
 import io.iohk.atala.agent.walletapi.model.ManagedDIDTemplate
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
 import io.iohk.atala.pollux.vc.jwt.ES256KSigner
-import io.iohk.atala.castor.core.model.did.EllipticCurve
+import io.iohk.atala.castor.core.model.did._
 import java.security.KeyFactory
 import java.security.spec.EncodedKeySpec
 import java.security.spec.ECPrivateKeySpec
@@ -53,6 +53,9 @@ import io.circe.Json
 import io.circe.syntax._
 import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
 import io.iohk.atala.agent.walletapi.model.error.CreateManagedDIDError
+import io.iohk.atala.pollux.vc.jwt.JWT
+import io.iohk.atala.pollux.vc.jwt.{DidResolver => JwtDidResolver}
+import io.iohk.atala.agent.walletapi.model._
 
 object BackgroundJobs {
 
@@ -77,7 +80,10 @@ object BackgroundJobs {
 
   private[this] def performExchange(
       record: IssueCredentialRecord
-  ): URIO[DIDResolver & HttpClient & CredentialService & ManagedDIDService & DIDSecretStorage, Unit] = {
+  ): URIO[
+    DIDResolver & JwtDidResolver & HttpClient & CredentialService & ManagedDIDService & DIDSecretStorage,
+    Unit
+  ] = {
     import IssueCredentialRecord._
     import IssueCredentialRecord.ProtocolState._
     import IssueCredentialRecord.PublicationState._
@@ -249,9 +255,16 @@ object BackgroundJobs {
   private[this] def createPrismDIDIssuer(): ZIO[ManagedDIDService & DIDSecretStorage, Throwable, Issuer] = {
     for {
       managedDIDService <- ZIO.service[ManagedDIDService]
-      longFormPrismDID <- managedDIDService.createAndStoreDID(ManagedDIDTemplate(Nil, Nil))
+      longFormPrismDID <- managedDIDService.createAndStoreDID(
+        ManagedDIDTemplate(
+          Seq(
+            DIDPublicKeyTemplate("issuing", VerificationRelationship.Authentication)
+          ),
+          Nil
+        )
+      )
       didSecretStorage <- ZIO.service[DIDSecretStorage]
-      maybeECKeyPair <- didSecretStorage.getKey(longFormPrismDID.asCanonical, "master0")
+      maybeECKeyPair <- didSecretStorage.getKey(longFormPrismDID.asCanonical, "issuing")
       _ <- ZIO.logInfo(s"ECKeyPair => $maybeECKeyPair")
       maybeIssuer <- ZIO.succeed(maybeECKeyPair.map(ecKeyPair => {
         val ba = ecKeyPair.privateKey.toPaddedByteArray(EllipticCurve.SECP256K1)
@@ -284,7 +297,7 @@ object BackgroundJobs {
 
   private[this] def performPresentation(
       record: PresentationRecord
-  ): URIO[DIDResolver & HttpClient & PresentationService & ManagedDIDService, Unit] = {
+  ): URIO[DIDResolver & JwtDidResolver & HttpClient & PresentationService & ManagedDIDService, Unit] = {
     import io.iohk.atala.pollux.core.model.PresentationRecord.ProtocolState._
 
     val aux = for {
@@ -332,14 +345,43 @@ object BackgroundJobs {
               } yield ()
         case PresentationRecord(id, _, _, _, _, _, _, _, PresentationSent, _, _, _) =>
           ZIO.logDebug("PresentationRecord: PresentationSent") *> ZIO.unit
-        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationReceived, _, _, _) =>
+        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationReceived, _, _, presentation) => // Verifier
           ZIO.logDebug("PresentationRecord: PresentationReceived") *> ZIO.unit
-          for {
-            _ <- ZIO.log(s"PresentationRecord: PresentationPending (Send Massage)")
-            // TODO Verify  https://input-output.atlassian.net/browse/ATL-2702
-            service <- ZIO.service[PresentationService]
-            _ <- service.markPresentationVerified(id)
-          } yield ()
+          val clock = java.time.Clock.system(ZoneId.systemDefault)
+          presentation match
+            case None => ZIO.fail(InvalidState("PresentationRecord in 'PresentationReceived' with no Presentation"))
+            case Some(p) =>
+              for {
+                _ <- ZIO.log(s"PresentationRecord: 'PresentationReceived' ")
+                didResolverService <- ZIO.service[JwtDidResolver]
+                credentialsValidationResult <- p.attachments.head.data match {
+                  case Base64(data) =>
+                    val base64Decoded = new String(java.util.Base64.getDecoder().decode(data)).drop(1).dropRight(1)
+
+                    println(s"Base64decode:\n\n ${base64Decoded} \n\n")
+                    JwtPresentation.verify(
+                      JWT(base64Decoded),
+                      JwtPresentation.PresentationVerificationOptions(
+                        maybeProofPurpose = Some(VerificationRelationship.Authentication),
+                        verifySignature = false,
+                        verifyDates = true,
+                        leeway = Duration.Zero,
+                        maybeCredentialOptions = Some(
+                          CredentialVerification.CredentialVerificationOptions(
+                            verifySignature = true,
+                            verifyDates = false,
+                            leeway = Duration.Zero,
+                            maybeProofPurpose = Some(VerificationRelationship.Authentication)
+                          )
+                        )
+                      )
+                    )(didResolverService)(clock)
+                  case any => ZIO.fail(NotImplemented)
+                }
+                _ <- ZIO.log(s"CredentialsValidationResult: $credentialsValidationResult")
+                service <- ZIO.service[PresentationService]
+                _ <- service.markPresentationVerified(id)
+              } yield ()
         // TODO move the state to PresentationVerified
         case PresentationRecord(id, _, _, _, _, _, _, _, PresentationVerified, _, _, _) =>
           ZIO.logDebug("PresentationRecord: PresentationVerified") *> ZIO.unit

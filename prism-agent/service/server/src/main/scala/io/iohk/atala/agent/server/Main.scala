@@ -87,6 +87,8 @@ object Main extends ZIOAppDefault {
 
       app <- appComponents(didCommServicePort, restServicePort).provide(
         didCommAgentLayer(didCommServiceUrl),
+        AppModule.didJwtResolverlayer,
+        AppModule.didServiceLayer,
         DIDResolver.layer,
         ZioHttpClient.layer,
         AppModule.credentialServiceLayer,
