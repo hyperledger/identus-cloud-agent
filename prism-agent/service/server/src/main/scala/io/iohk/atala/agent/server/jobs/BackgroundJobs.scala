@@ -445,4 +445,6 @@ object BackgroundJobs {
     ZIO.unit
   }
 
+  val syncDIDPublicationStateFromDlt = ZIO.serviceWithZIO[ManagedDIDService](_.syncManagedDIDState)
+
 }
