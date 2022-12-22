@@ -1,3 +1,10 @@
+# [prism-agent-v0.27.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.26.0...prism-agent-v0.27.0) (2022-12-22)
+
+
+### Features
+
+* **prism-agent:** implement JDBC did nonsecret storage ([#284](https://github.com/input-output-hk/atala-prism-building-blocks/issues/284)) ([7e116a3](https://github.com/input-output-hk/atala-prism-building-blocks/commit/7e116a38b44408b3d0c875bc79415ea6d0579ffa))
+
 # [prism-agent-v0.26.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.25.0...prism-agent-v0.26.0) (2022-12-20)
 
 

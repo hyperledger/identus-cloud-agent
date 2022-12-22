@@ -10,18 +10,18 @@ import io.iohk.atala.agent.server.http.{HttpRoutes, HttpServer, ZHttp4sBlazeServ
 import io.iohk.atala.castor.core.service.{DIDService, DIDServiceImpl}
 import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.agent.server.http.marshaller.{
+  ConnectionsManagementApiMarshallerImpl,
   DIDApiMarshallerImpl,
   DIDAuthenticationApiMarshallerImpl,
-  DIDRegistrarApiMarshallerImpl,
-  ConnectionsManagementApiMarshallerImpl
+  DIDRegistrarApiMarshallerImpl
 }
 import io.iohk.atala.agent.server.http.service.{
+  ConnectionsManagementApiServiceImpl,
   DIDApiServiceImpl,
   DIDAuthenticationApiServiceImpl,
-  DIDRegistrarApiServiceImpl,
-  ConnectionsManagementApiServiceImpl
+  DIDRegistrarApiServiceImpl
 }
-import io.iohk.atala.agent.openapi.api.{DIDApi, DIDAuthenticationApi, DIDRegistrarApi, ConnectionsManagementApi}
+import io.iohk.atala.agent.openapi.api.{ConnectionsManagementApi, DIDApi, DIDAuthenticationApi, DIDRegistrarApi}
 import cats.effect.std.Dispatcher
 import com.typesafe.config.ConfigFactory
 import doobie.util.transactor.Transactor
@@ -39,9 +39,9 @@ import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
 import io.iohk.atala.pollux.core.repository.CredentialRepository
 import io.iohk.atala.pollux.core.service.CredentialService
 import io.iohk.atala.pollux.sql.repository.JdbcCredentialRepository
-import io.iohk.atala.pollux.sql.repository.{DbConfig => PolluxDbConfig}
-import io.iohk.atala.connect.sql.repository.{DbConfig => ConnectDbConfig}
-import io.iohk.atala.agent.server.sql.{DbConfig => AgentDbConfig}
+import io.iohk.atala.pollux.sql.repository.DbConfig as PolluxDbConfig
+import io.iohk.atala.connect.sql.repository.DbConfig as ConnectDbConfig
+import io.iohk.atala.agent.server.sql.DbConfig as AgentDbConfig
 import io.iohk.atala.agent.server.jobs.*
 import zio.*
 import zio.config.typesafe.TypesafeConfigSource
@@ -79,7 +79,7 @@ import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.pollux.schema.{SchemaRegistryServerEndpoints, VerificationPolicyServerEndpoints}
 import io.iohk.atala.pollux.service.{SchemaRegistryServiceInMemory, VerificationPolicyServiceInMemory}
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
-import io.iohk.atala.mercury.protocol.presentproof._
+import io.iohk.atala.mercury.protocol.presentproof.*
 import io.iohk.atala.agent.server.config.AgentConfig
 import org.didcommx.didcomm.DIDComm
 import io.iohk.atala.resolvers.UniversalDidResolver
@@ -88,7 +88,7 @@ import org.didcommx.didcomm.model.UnpackParams
 import org.didcommx.didcomm.secret.Secret
 import io.circe.ParsingFailure
 import io.circe.DecodingFailure
-import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
+import io.iohk.atala.agent.walletapi.sql.{JdbcDIDNonSecretStorage, JdbcDIDSecretStorage}
 import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
 import io.iohk.atala.pollux.vc.jwt.{DidResolver => JwtDidResolver}
@@ -172,6 +172,12 @@ object Modules {
 
   val connectDidCommExchangesJob: RIO[DIDResolver & HttpClient & ConnectionService & ManagedDIDService, Unit] =
     ConnectBackgroundJobs.didCommExchanges
+      .repeat(Schedule.spaced(10.seconds))
+      .unit
+
+  val syncDIDPublicationStateFromDltJob: URIO[ManagedDIDService, Unit] =
+    BackgroundJobs.syncDIDPublicationStateFromDlt
+      .catchAll(e => ZIO.logError(s"error while syncing DID publication state: $e"))
       .repeat(Schedule.spaced(10.seconds))
       .unit
 
@@ -409,8 +415,11 @@ object AppModule {
   val didServiceLayer: TaskLayer[DIDService] =
     (didOpValidatorLayer ++ GrpcModule.layers) >>> DIDServiceImpl.layer
 
-  val manageDIDServiceLayer: TaskLayer[ManagedDIDService] =
-    (didOpValidatorLayer ++ didServiceLayer ++ (RepoModule.agentTransactorLayer >>> JdbcDIDSecretStorage.layer)) >>> ManagedDIDService.layer
+  val manageDIDServiceLayer: TaskLayer[ManagedDIDService] = {
+    val secretStorageLayer = RepoModule.agentTransactorLayer >>> JdbcDIDSecretStorage.layer
+    val nonSecretStorageLayer = RepoModule.agentTransactorLayer >>> JdbcDIDNonSecretStorage.layer
+    (didOpValidatorLayer ++ didServiceLayer ++ secretStorageLayer ++ nonSecretStorageLayer) >>> ManagedDIDService.layer
+  }
 
   val credentialServiceLayer: RLayer[DidComm, CredentialService] =
     (GrpcModule.layers ++ RepoModule.credentialRepoLayer) >>> CredentialServiceImpl.layer
