@@ -69,16 +69,10 @@ final class ManagedDIDService private[walletapi] (
     .unit
 
   def listManagedDID: IO[GetManagedDIDError, Seq[ManagedDIDDetail]] =
-    // state in wallet maybe stale, update it from DLT before getting DIDs
-    syncManagedDIDState
-      .flatMap(_ =>
-        nonSecretStorage.listManagedDID.mapBoth(
-          GetManagedDIDError.WalletStorageError.apply,
-          _.toSeq.map { case (did, state) =>
-            ManagedDIDDetail(did = did.asCanonical, state = state)
-          }
-        )
-      )
+    for {
+      _ <- syncManagedDIDState // state in wallet maybe stale, update it from DLT
+      dids <- nonSecretStorage.listManagedDID.mapError(GetManagedDIDError.WalletStorageError.apply)
+    } yield dids.toSeq.map { case (did, state) => ManagedDIDDetail(did.asCanonical, state) }
 
   def publishStoredDID(did: CanonicalPrismDID): IO[PublishManagedDIDError, ScheduleDIDOperationOutcome] = {
     def submitOperation(operation: PrismDIDOperation.Create) =

@@ -40,6 +40,7 @@ object Main extends ZIOAppDefault {
     _ <- Modules.presentProofExchangeJob.debug.fork
     _ <- Modules.connectDidCommExchangesJob.debug.fork
     _ <- Modules.didCommServiceEndpoint(didCommServicePort).debug.fork
+    _ <- Modules.syncDIDPublicationStateFromDltJob.fork
     _ <- Modules.app(restServicePort).fork
     _ <- Modules.zioApp.fork
     _ <- ZIO.never

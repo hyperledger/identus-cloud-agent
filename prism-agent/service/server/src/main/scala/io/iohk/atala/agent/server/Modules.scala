@@ -175,6 +175,12 @@ object Modules {
       .repeat(Schedule.spaced(10.seconds))
       .unit
 
+  val syncDIDPublicationStateFromDltJob: URIO[ManagedDIDService, Unit] =
+    BackgroundJobs.syncDIDPublicationStateFromDlt
+      .catchAll(e => ZIO.logError(s"error while syncing DID publication state: $e"))
+      .repeat(Schedule.spaced(10.seconds))
+      .unit
+
   private[this] def extractFirstRecipientDid(jsonMessage: String): IO[ParsingFailure | DecodingFailure, String] = {
     import io.circe._, io.circe.parser._
     val doc = parse(jsonMessage).getOrElse(Json.Null)
