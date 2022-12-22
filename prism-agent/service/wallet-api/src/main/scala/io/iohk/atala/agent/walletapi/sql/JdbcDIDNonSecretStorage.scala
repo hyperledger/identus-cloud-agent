@@ -64,7 +64,7 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
            |   atala_operation_content,
            |   publish_operation_id
            | FROM public.did_publication_state
-    """.stripMargin
+           """.stripMargin
         .query[DIDPublicationStateRow]
         .to[List]
 
