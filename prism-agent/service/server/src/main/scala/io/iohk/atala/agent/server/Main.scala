@@ -14,6 +14,7 @@ import io.iohk.atala.agent.server.http.ZioHttpClient
 import org.flywaydb.core.extensibility.AppliedMigration
 import io.iohk.atala.pollux.service.SchemaRegistryServiceInMemory
 import io.iohk.atala.pollux.service.VerificationPolicyServiceInMemory
+import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
 
 object Main extends ZIOAppDefault {
 
@@ -39,6 +40,7 @@ object Main extends ZIOAppDefault {
     _ <- Modules.presentProofExchangeJob.debug.fork
     _ <- Modules.connectDidCommExchangesJob.debug.fork
     _ <- Modules.didCommServiceEndpoint(didCommServicePort).debug.fork
+    _ <- Modules.syncDIDPublicationStateFromDltJob.fork
     _ <- Modules.app(restServicePort).fork
     _ <- Modules.zioApp.fork
     _ <- ZIO.never
@@ -86,6 +88,8 @@ object Main extends ZIOAppDefault {
 
       app <- appComponents(didCommServicePort, restServicePort).provide(
         didCommAgentLayer(didCommServiceUrl),
+        AppModule.didJwtResolverlayer,
+        AppModule.didServiceLayer,
         DIDResolver.layer,
         ZioHttpClient.layer,
         AppModule.credentialServiceLayer,
@@ -96,7 +100,9 @@ object Main extends ZIOAppDefault {
         HttpModule.layers,
         SchemaRegistryServiceInMemory.layer,
         VerificationPolicyServiceInMemory.layer,
-        AppModule.manageDIDServiceLayer
+        AppModule.manageDIDServiceLayer,
+        JdbcDIDSecretStorage.layer,
+        RepoModule.agentTransactorLayer
       )
     } yield app
 

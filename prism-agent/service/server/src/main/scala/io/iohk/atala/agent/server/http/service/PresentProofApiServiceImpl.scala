@@ -5,7 +5,6 @@ import io.iohk.atala.agent.openapi.model.*
 import akka.http.scaladsl.server.Directives.*
 import akka.http.scaladsl.marshalling.ToEntityMarshaller
 import akka.http.scaladsl.server.Route
-
 import zio._
 import scala.concurrent.Future
 import io.iohk.atala.agent.server.http.model.HttpServiceError
@@ -24,6 +23,7 @@ import io.iohk.atala.pollux.vc.jwt.Issuer
 import io.iohk.atala.pollux.core.service.PresentationService
 import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.model.PresentationRecord
+import io.iohk.atala.mercury.model.Base64
 
 class PresentProofApiServiceImpl(
     presentationService: PresentationService,
@@ -85,19 +85,32 @@ class PresentProofApiServiceImpl(
       records <- presentationService
         .getPresentationRecords()
         .mapError(HttpServiceError.DomainError[PresentationError].apply)
+    } yield records
 
-      presentationStatus = records.map { record =>
-        val connectionId = record.connectionId
-        PresentationStatus(record.id.toString, record.protocolState.toString, Seq.empty, connectionId)
-      }
-    } yield presentationStatus
-
-    onZioSuccess(result.mapError(_.toOAS).either) {
+    onZioSuccess(result.mapBoth(_.toOAS, _.map(_.toOAS)).either) {
       case Left(error) => complete(error.status -> error)
       case Right(results) => {
 
         getAllPresentation200(results)
       }
+    }
+  }
+
+  def getPresentation(id: String)(implicit
+      toEntityMarshallerPresentationStatus: ToEntityMarshaller[PresentationStatus],
+      toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
+  ): Route = {
+    val result = for {
+      presentationId <- id.toUUID
+      outcome <- presentationService
+        .getPresentationRecord(presentationId)
+        .mapError(HttpServiceError.DomainError[PresentationError].apply)
+    } yield outcome
+
+    onZioSuccess(result.mapBoth(_.toOAS, _.map(_.toOAS)).either) {
+      case Left(error)         => complete(error.status -> error)
+      case Right(Some(result)) => getPresentation200(result)
+      case Right(None)         => getPresentation404(notFoundErrorResponse(Some("Presentation record not found")))
     }
   }
 

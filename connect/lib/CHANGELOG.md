@@ -1,3 +1,10 @@
+# [connect-v0.6.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/connect-v0.5.0...connect-v0.6.0) (2022-12-19)
+
+
+### Features
+
+* **connect:** bump mercury version ([#272](https://github.com/input-output-hk/atala-prism-building-blocks/issues/272)) ([70f878c](https://github.com/input-output-hk/atala-prism-building-blocks/commit/70f878c81bbffd73228d2a40b55295b74c918ba9))
+
 # [connect-v0.5.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/connect-v0.4.0...connect-v0.5.0) (2022-12-14)
 
 
