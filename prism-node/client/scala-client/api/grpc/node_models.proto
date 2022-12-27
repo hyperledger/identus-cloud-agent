@@ -30,9 +30,9 @@ enum KeyUsage {
     // to avoid malicious credentials being issued.
     ISSUING_KEY = 2;
 
-    // This key-type is used for end-to-end encrypted communication, whoever wants to send a message should
+    // This key-type is used to establish a shared symmetric key for secure end-to end communication
     // use this key-type to encrypt the content.
-    COMMUNICATION_KEY = 3;
+    KEY_AGREEMENT_KEY = 3;
 
     // This key-type is used to authenticate requests or logging into services.
     AUTHENTICATION_KEY = 4;
@@ -40,6 +40,14 @@ enum KeyUsage {
     // This key-type is used for revoking credentials only, it should be kept in a safe place
     // to avoid malicious credentials being issued.
     REVOCATION_KEY = 5;
+
+    // This key-type is used to specify a verification method that might be used by the DID subject to invoke a cryptographic capability,
+    // such as the authorization to update the DID Document.
+    CAPABILITY_INVOCATION_KEY = 6;
+
+    // This is used to specify a mechanism that might be used by the DID subject to delegate a cryptographic capability to another party,
+    // such as delegating the authority to access a specific HTTP API to a subordinate.
+    CAPABILITY_DELEGATION_KEY = 7;
 }
 
 /**
