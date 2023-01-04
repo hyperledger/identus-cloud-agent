@@ -18,6 +18,7 @@ import io.iohk.atala.castor.core.model.did.{
   ScheduledDIDOperationStatus,
   Service,
   ServiceType,
+  UpdateDIDAction,
   VerificationRelationship
 }
 import io.iohk.atala.prism.crypto.EC
@@ -40,18 +41,56 @@ private[castor] trait ProtoModelHelper {
     def toProto: ByteString = ByteString.copyFrom(bytes)
   }
 
-  extension (createDIDOp: PrismDIDOperation.Create) {
+  extension (operation: PrismDIDOperation.Create) {
     def toProto: node_models.AtalaOperation.Operation.CreateDid = {
       node_models.AtalaOperation.Operation.CreateDid(
         value = node_models.CreateDIDOperation(
           didData = Some(
             node_models.CreateDIDOperation.DIDCreationData(
-              publicKeys = createDIDOp.publicKeys.map(_.toProto) ++ createDIDOp.internalKeys.map(_.toProto),
-              services = createDIDOp.services.map(_.toProto)
+              publicKeys = operation.publicKeys.map(_.toProto) ++ operation.internalKeys.map(_.toProto),
+              services = operation.services.map(_.toProto)
             )
           )
         )
       )
+    }
+  }
+
+  extension (operation: PrismDIDOperation.Update) {
+    def toProto: node_models.AtalaOperation.Operation.UpdateDid = {
+      node_models.AtalaOperation.Operation.UpdateDid(
+        value = node_models.UpdateDIDOperation(
+          previousOperationHash = operation.previousOperationHash.toArray.toProto,
+          id = operation.did.suffix.toString,
+          actions = operation.actions.map(_.toProto)
+        )
+      )
+    }
+  }
+
+  extension (action: UpdateDIDAction) {
+    def toProto: node_models.UpdateDIDAction = {
+      val a = action match {
+        case UpdateDIDAction.AddKey(publicKey) =>
+          node_models.UpdateDIDAction.Action.AddKey(node_models.AddKeyAction(Some(publicKey.toProto)))
+        case UpdateDIDAction.AddInternalKey(publicKey) =>
+          node_models.UpdateDIDAction.Action.AddKey(node_models.AddKeyAction(Some(publicKey.toProto)))
+        case UpdateDIDAction.RemoveKey(id) =>
+          node_models.UpdateDIDAction.Action.RemoveKey(node_models.RemoveKeyAction(id))
+        case UpdateDIDAction.AddService(service) =>
+          node_models.UpdateDIDAction.Action.AddService(node_models.AddServiceAction(Some(service.toProto)))
+        case UpdateDIDAction.RemoveService(id) =>
+          node_models.UpdateDIDAction.Action.RemoveService(node_models.RemoveServiceAction(id))
+        case UpdateDIDAction.UpdateService(serviceId, serviceType, endpoints) =>
+          node_models.UpdateDIDAction.Action.UpdateService(
+            node_models.UpdateServiceAction(
+              serviceId = serviceId,
+              `type` = serviceType.name,
+              serviceEndpoints = endpoints.map(_.toString)
+            )
+          )
+      }
+      node_models.UpdateDIDAction(action = a)
     }
   }
 
