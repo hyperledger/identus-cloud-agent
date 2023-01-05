@@ -164,8 +164,10 @@ object Modules {
       .repeat(Schedule.spaced(10.seconds))
       .unit
 
-  val presentProofExchangeJob
-      : RIO[DIDResolver & JwtDidResolver & HttpClient & PresentationService & ManagedDIDService, Unit] =
+  val presentProofExchangeJob: RIO[
+    DIDResolver & JwtDidResolver & HttpClient & PresentationService & ManagedDIDService & DIDSecretStorage,
+    Unit
+  ] =
     BackgroundJobs.presentProofExchanges
       .repeat(Schedule.spaced(10.seconds))
       .unit
