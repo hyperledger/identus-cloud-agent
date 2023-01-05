@@ -1,3 +1,10 @@
+# [prism-node-client-v0.3.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-node-client-v0.2.0...prism-node-client-v0.3.0) (2023-01-05)
+
+
+### Features
+
+* **prism-node:** align Prism DID protobuf key type ([#286](https://github.com/input-output-hk/atala-prism-building-blocks/issues/286)) ([a533507](https://github.com/input-output-hk/atala-prism-building-blocks/commit/a5335075be287f6d5582deba849255d2156d9542))
+
 # [prism-node-client-v0.2.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-node-client-v0.1.0...prism-node-client-v0.2.0) (2022-12-08)
 
 
