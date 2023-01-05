@@ -25,4 +25,10 @@ trait PresentationRepository[F[_]] {
   def updateWithRequestPresentation(recordId: UUID, request: RequestPresentation, protocolState: ProtocolState): F[Int]
   def updateWithProposePresentation(recordId: UUID, request: ProposePresentation, protocolState: ProtocolState): F[Int]
   def updateWithPresentation(recordId: UUID, presentation: Presentation, protocolState: ProtocolState): F[Int]
+  def updatePresentationWithCredentialsToUse(
+      recordId: UUID,
+      credentialsToUse: Option[Seq[String]],
+      protocolState: ProtocolState
+  ): F[Int]
+
 }
