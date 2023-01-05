@@ -69,6 +69,15 @@ class DIDRegistrarApiServiceImpl(service: ManagedDIDService)(using runtime: Runt
     }
   }
 
+  // TODO: implement
+  def updateManagedDid(didRef: String, updateManagedDIDRequest: UpdateManagedDIDRequest)(implicit
+      toEntityMarshallerDIDOperationResponse: ToEntityMarshaller[DIDOperationResponse]
+  ): Route = {
+    onZioSuccess(ZIO.unit) { _ =>
+      updateManagedDid202(DIDOperationResponse(DidOperationSubmission(id = "abc", didRef = didRef)))
+    }
+  }
+
 }
 
 object DIDRegistrarApiServiceImpl {

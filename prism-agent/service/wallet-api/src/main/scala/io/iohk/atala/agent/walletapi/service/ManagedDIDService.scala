@@ -6,10 +6,11 @@ import io.iohk.atala.agent.walletapi.model.{
   ECKeyPair,
   ManagedDIDDetail,
   ManagedDIDState,
-  ManagedDIDTemplate
+  ManagedDIDTemplate,
+  UpdateManagedDIDAction
 }
 import io.iohk.atala.agent.walletapi.model.ECCoordinates.*
-import io.iohk.atala.agent.walletapi.model.error.{given, *}
+import io.iohk.atala.agent.walletapi.model.error.{*, given}
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService.{CreateDIDSecret, DEFAULT_MASTER_KEY_ID}
 import io.iohk.atala.agent.walletapi.storage.{
   DIDNonSecretStorage,
@@ -147,6 +148,12 @@ final class ManagedDIDService private[walletapi] (
         .mapError(CreateManagedDIDError.WalletStorageError.apply)
     } yield longFormDID
   }
+
+  // TODO: implement
+  def updateManagedDID(
+      did: CanonicalPrismDID,
+      actions: Seq[UpdateManagedDIDAction]
+  ): IO[Any, ScheduleDIDOperationOutcome] = ???
 
   private def generateCreateOperation(
       didTemplate: ManagedDIDTemplate

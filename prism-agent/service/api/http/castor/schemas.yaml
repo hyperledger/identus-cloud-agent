@@ -99,7 +99,7 @@ components:
             publicKeys:
               type: array
               items:
-                $ref: "#/components/schemas/ManagedDIDAddKeyAction"
+                $ref: "#/components/schemas/ManagedDIDKeyTemplate"
             services:
               type: array
               items:
@@ -119,12 +119,8 @@ components:
     UpdateManagedDIDRequest:
       type: object
       required:
-      - did
       - actions
       properties:
-        did:
-          type: string
-          example: did:prism:abcdef
         actions:
           type: array
           items:
@@ -143,7 +139,7 @@ components:
                 - UPDATE_SERVICE
                 example: ADD_KEY
               addKey:
-                $ref: "#/components/schemas/ManagedDIDAddKeyAction"
+                $ref: "#/components/schemas/ManagedDIDKeyTemplate"
               removeKey:
                 type: object
                 required:
@@ -231,26 +227,7 @@ components:
             type: string
             example: "https://bar.example.com"
 
-    # ----------------------------------
-    # ASYNC OPERATIONS
-    # ----------------------------------
-    DidOperationSubmission:
-      type: object
-      required:
-        - id
-        - didRef
-      properties:
-        id:
-          type: string
-          example: "123"
-        didRef:
-          type: string
-          example: "did:prism:123"
-
-    # ----------------------------------
-    # UPDATE ACTIONS
-    # ----------------------------------
-    ManagedDIDAddKeyAction:
+    ManagedDIDKeyTemplate:
       type: object
       description: key-pair template to add to DID document.
       required:
@@ -272,6 +249,22 @@ components:
               "capabilityDelegation",
             ]
           example: "authentication"
+
+    # ----------------------------------
+    # ASYNC OPERATIONS
+    # ----------------------------------
+    DidOperationSubmission:
+      type: object
+      required:
+        - id
+        - didRef
+      properties:
+        id:
+          type: string
+          example: "123"
+        didRef:
+          type: string
+          example: "did:prism:123"
 
     # ----------------------------------
     # AUTHENTICATION

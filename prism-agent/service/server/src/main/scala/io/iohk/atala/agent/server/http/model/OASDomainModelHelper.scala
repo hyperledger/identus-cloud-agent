@@ -4,7 +4,6 @@ import io.iohk.atala.agent.openapi.model.{
   Connection,
   ConnectionInvitation,
   CreateManagedDidRequestDocumentTemplate,
-  CreateManagedDidRequestDocumentTemplatePublicKeysInner,
   DID,
   DIDDocumentMetadata,
   DIDOperationResponse,
@@ -13,6 +12,8 @@ import io.iohk.atala.agent.openapi.model.{
   IssueCredentialRecord,
   IssueCredentialRecordCollection,
   ListManagedDIDResponseInner,
+  ManagedDIDKeyTemplate,
+  PresentationStatus,
   PublicKeyJwk,
   Service,
   VerificationMethod
@@ -38,7 +39,6 @@ import io.iohk.atala.castor.core.model.did.{LongFormPrismDID, PrismDID}
 
 import java.util.UUID
 import io.iohk.atala.connect.core.model.ConnectionRecord.Role
-import io.iohk.atala.agent.openapi.model.PresentationStatus
 
 trait OASDomainModelHelper {
 
@@ -71,7 +71,7 @@ trait OASDomainModelHelper {
     }
   }
 
-  extension (publicKeyTemplate: CreateManagedDidRequestDocumentTemplatePublicKeysInner) {
+  extension (publicKeyTemplate: ManagedDIDKeyTemplate) {
     def toDomain: Either[String, walletDomain.DIDPublicKeyTemplate] = {
       for {
         purpose <- castorDomain.VerificationRelationship
