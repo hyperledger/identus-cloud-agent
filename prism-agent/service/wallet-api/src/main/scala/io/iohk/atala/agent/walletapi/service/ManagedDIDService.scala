@@ -90,14 +90,14 @@ final class ManagedDIDService private[walletapi] (
           )
           .mapError(PublishManagedDIDError.CryptographyError.apply)
           .map(signature =>
-            SignedPrismDIDOperation.Create(
+            SignedPrismDIDOperation(
               operation = operation,
               signature = ArraySeq.from(signature),
               signedWithKey = DEFAULT_MASTER_KEY_ID
             )
           )
         outcome <- didService
-          .createPublishedDID(signedAtalaOperation)
+          .scheduleOperation(signedAtalaOperation)
           .mapError(PublishManagedDIDError.OperationError.apply)
         _ <- nonSecretStorage
           .setManagedDIDState(did, ManagedDIDState.PublicationPending(operation, outcome.operationId))
