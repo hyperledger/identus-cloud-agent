@@ -135,6 +135,13 @@ components:
           description: A long-form DID for the created DID
           example: did:prism:1:abc123:abc123
 
+    # UpdateManagedDidRequest:
+    #   type: object
+    #   properties:
+    #     foo:
+    #       type: string
+    #       example: bar
+
     ListManagedDIDResponse:
       type: array
       items:
@@ -156,64 +163,6 @@ components:
             - CREATED
             - PUBLICATION_PENDING
             - PUBLISHED
-
-    Delta:
-      type: object
-      required:
-        - deltaUpdate
-        - recoveryCommitment
-      properties:
-        deltaUpdate:
-          $ref: "#/components/schemas/DeltaUpdate"
-        recoveryCommitment:
-          type: string
-          example: "42d8267c184d06898e80878a1b2f187fbf907c3055560867"
-          description: "SHA256 of recovery public key"
-
-    DeltaUpdate:
-      type: object
-      properties:
-        updateCommitment:
-          type: string
-          example: "42d8267c184d06898e80878a1b2f187fbf907c3055560867"
-        patches:
-          type: array
-          items:
-            $ref: "#/components/schemas/UpdatePatch"
-
-    PublicKey:
-      type: object
-      required:
-        - id
-        - type
-        - controller
-        - purposes
-        - publicKeyJwk
-      properties:
-        id:
-          type: string
-          example: "key-1"
-        type:
-          type: string
-          example: "EcdsaSecp256k1VerificationKey2019"
-        controller:
-          type: string
-          example: "did:prism:456"
-        purposes:
-          type: array
-          items:
-            type: string
-            enum:
-              [
-                "authentication",
-                "assertionMethod",
-                "keyAgreement",
-                "capabilityInvocation",
-                "capabilityDelegation",
-              ]
-          example: [ "authentication", "assertionMethod" ]
-        publicKeyJwk:
-          $ref: "#/components/schemas/PublicKeyJwk"
 
     PublicKeyJwk:
       type: object
@@ -257,52 +206,9 @@ components:
             type: string
             example: "https://bar.example.com"
 
-    UpdatePatch:
-      type: object
-      required:
-        - action
-      properties:
-        action:
-          type: string
-          enum:
-            [
-              "add-public-keys",
-              "remove-public-keys",
-              "add-services",
-              "remove-services",
-              "ietf-json-patch",
-            ]
-          example: "add-public-keys"
-        publicKeys:
-          $ref: "#/components/schemas/PublicKey"
-
     # ----------------------------------
     # ASYNC OPERATIONS
     # ----------------------------------
-    GetDIDOperationsByDIDRefResponse:
-      type: array
-      items:
-        $ref: "#/components/schemas/DidOperation"
-
-    DidOperation:
-      type: object
-      required:
-        - id
-        - didRef
-        - type
-        - status
-      properties:
-        id:
-          type: string
-          example: "123"
-        didRef:
-          type: string
-          example: "did:prism:123"
-        type:
-          $ref: "#/components/schemas/DidOperationType"
-        status:
-          $ref: "#/components/schemas/DidOperationStatus"
-
     DidOperationSubmission:
       type: object
       required:
@@ -315,20 +221,6 @@ components:
         didRef:
           type: string
           example: "did:prism:123"
-
-    DidOperationStatus:
-      type: string
-      enum:
-        - EXECUTED
-        - EXECUTING
-
-    DidOperationType:
-      type: string
-      enum:
-        - CREATE
-        - UPDATE
-        - DEACTIVATE
-        - RECOVER
 
     # ----------------------------------
     # AUTHENTICATION
