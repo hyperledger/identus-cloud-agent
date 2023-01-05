@@ -148,10 +148,6 @@ private class PresentationServiceImpl(
         .fromOption(maybeRecord)
         .mapError(_ => RecordIdNotFound(recordId))
       _ <- ZIO.log(record.toString())
-
-      // presentationRequest <- ZIO
-      //   .fromOption(record.requestPresentationData)
-      //   .mapError(_ => InvalidFlowStateError(s"No request found for this record: $recordId"))
       credentialsToUse <- ZIO
         .fromOption(record.credentialsToUse)
         .mapError(_ => InvalidFlowStateError(s"No request found for this record: $recordId"))
@@ -280,7 +276,7 @@ private class PresentationServiceImpl(
 
   private def createPresentationPayloadFromCredential(
       issuedCredentials: Seq[IssuedCredentialRaw],
-      prover: Issuer // FIXME @Bassam
+      prover: Issuer
   ): IO[PresentationError, W3cPresentationPayload] = {
 
     val verifiableCredentials = issuedCredentials.map { issuedCredential =>
@@ -302,9 +298,6 @@ private class PresentationServiceImpl(
         maybeIssuanceDate = None,
         maybeExpirationDate = None
       )
-
-    // val encodedJWT = JwtPresentation.toEncodedJwt(w3cPresentationPayload, prover)
-
     ZIO.succeed(w3cPresentationPayload)
   }
 
