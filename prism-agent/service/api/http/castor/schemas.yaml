@@ -99,26 +99,7 @@ components:
             publicKeys:
               type: array
               items:
-                type: object
-                required:
-                  - id
-                  - purpose
-                properties:
-                  id:
-                    type: string
-                    description: Identifier of a verification material in the DID Document
-                    example: key1
-                  purpose:
-                    type: string
-                    enum:
-                      [
-                        "authentication",
-                        "assertionMethod",
-                        "keyAgreement",
-                        "capabilityInvocation",
-                        "capabilityDelegation",
-                      ]
-                    example: "authentication"
+                $ref: "#/components/schemas/ManagedDIDAddKeyAction"
             services:
               type: array
               items:
@@ -135,12 +116,56 @@ components:
           description: A long-form DID for the created DID
           example: did:prism:1:abc123:abc123
 
-    # UpdateManagedDidRequest:
-    #   type: object
-    #   properties:
-    #     foo:
-    #       type: string
-    #       example: bar
+    UpdateManagedDIDRequest:
+      type: object
+      required:
+      - did
+      - actions
+      properties:
+        did:
+          type: string
+          example: did:prism:abcdef
+        actions:
+          type: array
+          items:
+            type: object
+            description: Detail of DID update action. Only property matching actionType can be present.
+            required:
+            - actionType
+            properties:
+              actionType:
+                type: string
+                enum:
+                - ADD_KEY
+                - REMOVE_KEY
+                - ADD_SERVICE
+                - REMOVE_SERVICE
+                - UPDATE_SERVICE
+                example: ADD_KEY
+              addKey:
+                $ref: "#/components/schemas/ManagedDIDAddKeyAction"
+              removeKey:
+                type: object
+                required:
+                  - id
+                properties:
+                  id:
+                    type: string
+                    description: ID of key to remove from DID document
+                    example: key1
+              addService:
+                $ref: "#/components/schemas/Service"
+              removeService:
+                type: object
+                required:
+                  - id
+                properties:
+                  id:
+                    type: string
+                    description: ID of service to remove from DID document
+                    example: service1
+              updateService:
+                $ref: "#/components/schemas/Service"
 
     ListManagedDIDResponse:
       type: array
@@ -221,6 +246,32 @@ components:
         didRef:
           type: string
           example: "did:prism:123"
+
+    # ----------------------------------
+    # UPDATE ACTIONS
+    # ----------------------------------
+    ManagedDIDAddKeyAction:
+      type: object
+      description: key-pair template to add to DID document.
+      required:
+        - id
+        - purpose
+      properties:
+        id:
+          type: string
+          description: Identifier of a verification material in the DID Document
+          example: key1
+        purpose:
+          type: string
+          enum:
+            [
+              "authentication",
+              "assertionMethod",
+              "keyAgreement",
+              "capabilityInvocation",
+              "capabilityDelegation",
+            ]
+          example: "authentication"
 
     # ----------------------------------
     # AUTHENTICATION

@@ -191,28 +191,28 @@ paths:
               schema:
                 $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
 
-  # /did-registrar/dids/{didRef}/updates:
-  #   post:
-  #     tags: [ "DID Registrar" ]
-  #     operationId: updateManagedDid
-  #     summary: Update DID in PrismAgent's wallet and post update operation to blockchain
-  #     description: |
-  #       Update DID in PrismAgent's wallet and post update operation to blockchain.
-  #     requestBody:
-  #       required: true
-  #       content:
-  #         application/json:
-  #           schema:
-  #             $ref: "./castor/schemas.yaml#/components/schemas/UpdateManagedDidRequest"
-  #     parameters:
-  #       - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
-  #     responses:
-  #       "202":
-  #         description: Publishing DID to Blockchain.
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "./castor/schemas.yaml#/components/schemas/DIDOperationResponse"
+  /did-registrar/dids/{didRef}/updates:
+    post:
+      tags: [ "DID Registrar" ]
+      operationId: updateManagedDid
+      summary: Update DID in PrismAgent's wallet and post update operation to blockchain
+      description: |
+        Update DID in PrismAgent's wallet and post update operation to blockchain.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "./castor/schemas.yaml#/components/schemas/UpdateManagedDIDRequest"
+      parameters:
+        - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
+      responses:
+        "202":
+          description: Publishing DID to Blockchain.
+          content:
+            application/json:
+              schema:
+                $ref: "./castor/schemas.yaml#/components/schemas/DIDOperationResponse"
 
   # ----------------------------------
   # Pollux
