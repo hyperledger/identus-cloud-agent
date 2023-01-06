@@ -37,7 +37,13 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
   private val createOperationValidationSpec = {
     def createPrismDIDOperation(
         publicKeys: Seq[PublicKey] = Nil,
-        internalKeys: Seq[InternalPublicKey] = Nil,
+        internalKeys: Seq[InternalPublicKey] = Seq(
+          InternalPublicKey(
+            id = "master0",
+            purpose = InternalKeyPurpose.Master,
+            publicKeyData = publicKeyData
+          )
+        ),
         services: Seq[Service] = Nil
     ) =
       PrismDIDOperation.Create(publicKeys = publicKeys, internalKeys = internalKeys, services = services)
@@ -84,7 +90,11 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         )
         val op = createPrismDIDOperation(publicKeys = publicKeys, internalKeys = internalKeys)
         assert(DIDOperationValidator(Config(50, 50)).validate(op))(
-          isLeft(isSubtype[DIDOperationError.InvalidArgument](anything))
+          isLeft(
+            isSubtype[DIDOperationError.InvalidArgument](
+              hasField("msg", _.msg, containsString("id for public-keys is not unique"))
+            )
+          )
         )
       },
       test("reject CreateOperation on too many service access") {
@@ -110,7 +120,11 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         )
         val op = createPrismDIDOperation(services = services)
         assert(DIDOperationValidator(Config(15, 15)).validate(op))(
-          isLeft(isSubtype[DIDOperationError.InvalidArgument](anything))
+          isLeft(
+            isSubtype[DIDOperationError.InvalidArgument](
+              hasField("msg", _.msg, containsString("id for services is not unique"))
+            )
+          )
         )
       },
       test("reject CreateOperation on invalid key-id") {
@@ -123,20 +137,21 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         )
         val op = createPrismDIDOperation(publicKeys = publicKeys)
         assert(DIDOperationValidator(Config(50, 50)).validate(op))(
-          isLeft(isSubtype[DIDOperationError.InvalidArgument](anything))
-        )
-      },
-      test("reject CreateOperation on non-unique serviceEndpoint URI") {
-        val services = Seq(
-          Service(
-            id = s"service0",
-            `type` = ServiceType.MediatorService,
-            serviceEndpoint = Seq(URI.create("http://example.com"), URI.create("http://example.com"))
+          isLeft(
+            isSubtype[DIDOperationError.InvalidArgument](
+              hasField("msg", _.msg, containsString("public key id is invalid"))
+            )
           )
         )
-        val op = createPrismDIDOperation(services = services)
+      },
+      test("reject CreateOperation when master does not exist") {
+        val op = createPrismDIDOperation(internalKeys = Nil)
         assert(DIDOperationValidator(Config(50, 50)).validate(op))(
-          isLeft(isSubtype[DIDOperationError.InvalidArgument](anything))
+          isLeft(
+            isSubtype[DIDOperationError.InvalidArgument](
+              hasField("msg", _.msg, containsString("operation must contain at least 1 master key"))
+            )
+          )
         )
       }
     )
@@ -150,7 +165,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
 
     suite("UpdateOperation validation")(
       test("accept valid UpdateOperation") {
-        val op = updatePrismDIDOperation()
+        val op = updatePrismDIDOperation(Seq(UpdateDIDAction.RemoveKey("key0")))
         assert(DIDOperationValidator(Config(50, 50)).validate(op))(isRight)
       },
       test("reject UpdateOperation on too many DID publicKey access") {
@@ -207,22 +222,21 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         )
         val op = updatePrismDIDOperation(Seq(action))
         assert(DIDOperationValidator(Config(50, 50)).validate(op))(
-          isLeft(isSubtype[DIDOperationError.InvalidArgument](anything))
-        )
-      },
-      test("reject UpdateOperation on non-unique serviceEndpoint URI") {
-        val actions = Seq(
-          UpdateDIDAction.AddService(
-            Service(
-              id = s"service0",
-              `type` = ServiceType.MediatorService,
-              serviceEndpoint = Seq(URI.create("http://example.com"), URI.create("http://example.com"))
+          isLeft(
+            isSubtype[DIDOperationError.InvalidArgument](
+              hasField("msg", _.msg, containsString("public key id is invalid"))
             )
           )
         )
-        val op = updatePrismDIDOperation(actions)
+      },
+      test("reject UpdateOperation on empty update action") {
+        val op = updatePrismDIDOperation(Nil)
         assert(DIDOperationValidator(Config(50, 50)).validate(op))(
-          isLeft(isSubtype[DIDOperationError.InvalidArgument](anything))
+          isLeft(
+            isSubtype[DIDOperationError.InvalidArgument](
+              hasField("msg", _.msg, containsString("operation must contain at least 1 update action"))
+            )
+          )
         )
       }
     )

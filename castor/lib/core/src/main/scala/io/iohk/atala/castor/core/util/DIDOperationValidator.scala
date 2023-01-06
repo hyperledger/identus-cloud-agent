@@ -1,7 +1,12 @@
 package io.iohk.atala.castor.core.util
 
 import io.iohk.atala.shared.models.HexStrings.*
-import io.iohk.atala.castor.core.model.did.{PrismDIDOperation, SignedPrismDIDOperation, UpdateDIDAction}
+import io.iohk.atala.castor.core.model.did.{
+  PrismDIDOperation,
+  SignedPrismDIDOperation,
+  UpdateDIDAction,
+  InternalKeyPurpose
+}
 import io.iohk.atala.castor.core.model.error.DIDOperationError
 import io.iohk.atala.castor.core.util.DIDOperationValidator.Config
 import zio.*
@@ -21,7 +26,10 @@ object DIDOperationValidator {
 
 class DIDOperationValidator(config: Config) {
 
+  // For now we only use same regex as Node.
+  // Prism DID spec might support full URI fragment syntax in the future.
   private val KEY_ID_RE = "^\\w+$".r
+  private val SERVICE_ID_RE = "^\\w+$".r
 
   extension [T](xs: Seq[T]) {
     def isUnique: Boolean = xs.length == xs.distinct.length
@@ -33,8 +41,10 @@ class DIDOperationValidator(config: Config) {
       _ <- validateMaxServiceAccess(operation)
       _ <- validateUniquePublicKeyId(operation)
       _ <- validateUniqueServiceId(operation)
-      _ <- validateUniqueServiceUri(operation)
       _ <- validateKeyIdRegex(operation)
+      _ <- validateServiceIdRegex(operation)
+      _ <- validateMasterKeyExists(operation)
+      _ <- validateNonEmptyUpdateOperation(operation)
     } yield ()
   }
 
@@ -104,22 +114,39 @@ class DIDOperationValidator(config: Config) {
       Left(DIDOperationError.InvalidArgument(s"public key id is invalid: ${invalidIds.mkString("[", ", ", "]")}"))
   }
 
-  private def validateUniqueServiceUri(operation: PrismDIDOperation): Either[DIDOperationError, Unit] = {
-    val endpoints: Seq[(String, Seq[URI])] = operation match {
-      case PrismDIDOperation.Create(_, _, services) => services.map(s => s.id -> s.serviceEndpoint)
+  private def validateServiceIdRegex(operation: PrismDIDOperation): Either[DIDOperationError, Unit] = {
+    val serviceIds = operation match {
+      case op: PrismDIDOperation.Create => op.services.map(_.id)
       case op: PrismDIDOperation.Update =>
         op.actions.collect {
-          case UpdateDIDAction.AddService(service)             => service.id -> service.serviceEndpoint
-          case UpdateDIDAction.UpdateService(id, _, endpoints) => id -> endpoints
+          case UpdateDIDAction.AddService(service)     => service.id
+          case UpdateDIDAction.RemoveService(id)       => id
+          case UpdateDIDAction.UpdateService(id, _, _) => id
         }
     }
-    endpoints
-      .find { case (_, endpoints) => !endpoints.isUnique }
-      .toLeft(())
-      .left
-      .map { case (id, _) =>
-        DIDOperationError.InvalidArgument(s"service $id does not have unique serviceEndpoint URIs")
-      }
+    val invalidIds = serviceIds.filterNot(id => SERVICE_ID_RE.pattern.matcher(id).matches())
+    if (invalidIds.isEmpty) Right(())
+    else
+      Left(DIDOperationError.InvalidArgument(s"service id is invalid: ${invalidIds.mkString("[", ", ", "]")}"))
+  }
+
+  private def validateMasterKeyExists(operation: PrismDIDOperation): Either[DIDOperationError, Unit] = {
+    operation match {
+      case op: PrismDIDOperation.Create =>
+        val masterKeys = op.internalKeys.filter(_.purpose == InternalKeyPurpose.Master)
+        if (masterKeys.nonEmpty) Right(())
+        else Left(DIDOperationError.InvalidArgument("create operation must contain at least 1 master key"))
+      case _ => Right(())
+    }
+  }
+
+  private def validateNonEmptyUpdateOperation(operation: PrismDIDOperation): Either[DIDOperationError, Unit] = {
+    operation match {
+      case op: PrismDIDOperation.Update =>
+        if (op.actions.nonEmpty) Right(())
+        else Left(DIDOperationError.InvalidArgument("update operation must contain at least 1 update action"))
+      case _ => Right(())
+    }
   }
 
 }
