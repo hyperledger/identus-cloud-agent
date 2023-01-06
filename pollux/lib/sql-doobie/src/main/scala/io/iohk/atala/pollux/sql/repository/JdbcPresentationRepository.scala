@@ -3,8 +3,6 @@ package io.iohk.atala.pollux.sql.repository
 import cats.instances.seq
 import doobie.*
 import doobie.implicits.*
-import doobie.postgres._
-import doobie.postgres.implicits._
 import io.circe._
 import io.circe.parser._
 import io.circe.syntax._
@@ -20,30 +18,10 @@ import zio.interop.catz.*
 
 import java.time.Instant
 import java.util.UUID
-import java.{util => ju}
 
 // TODO: replace with actual implementation
 class JdbcPresentationRepository(xa: Transactor[Task]) extends PresentationRepository[Task] {
   // serializes into hex string
-
-  override def updatePresentationWithCredentialsToUse(
-      recordId: ju.UUID,
-      credentialsToUse: Option[Seq[String]],
-      protocolState: ProtocolState
-  ): Task[Int] = {
-    val cxnIO = sql"""
-        | UPDATE public.presentation_records
-        | SET
-        |   credentials_to_use = ${credentialsToUse.map(_.toList)},
-        |   protocol_state = $protocolState,
-        |   updated_at = ${Instant.now}
-        | WHERE
-        |   id = $recordId
-        """.stripMargin.update
-
-    cxnIO.run
-      .transact(xa)
-  }
 
   private def serializeInclusionProof(proof: MerkleInclusionProof): String = BytesOps.bytesToHex(proof.encode.getBytes)
 
@@ -96,8 +74,7 @@ class JdbcPresentationRepository(xa: Transactor[Task]) extends PresentationRepos
         |   role,
         |   subject_id,
         |   protocol_state,
-        |   request_presentation_data,
-        |   credentials_to_use 
+        |   request_presentation_data
         | ) values (
         |   ${record.id},
         |   ${record.createdAt},
@@ -108,8 +85,7 @@ class JdbcPresentationRepository(xa: Transactor[Task]) extends PresentationRepos
         |   ${record.role},
         |   ${record.subjectId},
         |   ${record.protocolState},
-        |   ${record.requestPresentationData},
-        |   ${record.credentialsToUse.map(_.toList)}
+        |   ${record.requestPresentationData}
         | )
         """.stripMargin.update
 
@@ -131,8 +107,7 @@ class JdbcPresentationRepository(xa: Transactor[Task]) extends PresentationRepos
         |   protocol_state,
         |   request_presentation_data,
         |   propose_presentation_data,
-        |   presentation_data,
-        |   credentials_to_use
+        |   presentation_data
         | FROM public.presentation_records
         """.stripMargin
       .query[PresentationRecord]
@@ -158,8 +133,7 @@ class JdbcPresentationRepository(xa: Transactor[Task]) extends PresentationRepos
         |   protocol_state,
         |   request_presentation_data,
         |   propose_presentation_data,
-        |   presentation_data,
-        |   credentials_to_use
+        |   presentation_data
         | FROM public.presentation_records
         | WHERE protocol_state = ${state.toString}
         """.stripMargin
@@ -184,8 +158,7 @@ class JdbcPresentationRepository(xa: Transactor[Task]) extends PresentationRepos
         |   protocol_state,
         |   request_presentation_data,
         |   propose_presentation_data,
-        |   presentation_data,
-        |   credentials_to_use
+        |   presentation_data
         | FROM public.presentation_records
         | WHERE id = $recordId
         """.stripMargin
@@ -210,8 +183,7 @@ class JdbcPresentationRepository(xa: Transactor[Task]) extends PresentationRepos
         |   protocol_state,
         |   request_presentation_data,
         |   propose_presentation_data,
-        |   presentation_data,
-        |   credentials_to_use
+        |   presentation_data
         | FROM public.presentation_records
         | WHERE thid = $thid
         """.stripMargin

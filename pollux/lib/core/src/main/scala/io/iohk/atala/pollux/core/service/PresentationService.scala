@@ -32,7 +32,6 @@ import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord
 import io.iohk.atala.pollux.core.repository.CredentialRepository
 import org.didcommx.didcomm.message.Attachment.Data.Base64
-import java.{util => ju}
 
 trait PresentationService {
 
@@ -47,12 +46,6 @@ trait PresentationService {
 
   def getPresentationRecords(): IO[PresentationError, Seq[PresentationRecord]]
 
-  def createPresentationPayloadFromRecord(
-      record: UUID,
-      issuer: Issuer,
-      issuanceDate: Instant
-  ): IO[PresentationError, W3cPresentationPayload]
-
   def getCredentialRecordsByState(
       state: PresentationRecord.ProtocolState
   ): IO[PresentationError, Seq[PresentationRecord]]
@@ -66,7 +59,8 @@ trait PresentationService {
 
   def acceptRequestPresentation(
       recordId: UUID,
-      crecentialsToUse: Seq[String]
+      crecentialsToUse: Seq[String],
+      prover: Issuer // FIXME @Bassam
   ): IO[PresentationError, Option[PresentationRecord]]
 
   def rejectRequestPresentation(recordId: UUID): IO[PresentationError, Option[PresentationRecord]]
@@ -89,11 +83,6 @@ trait PresentationService {
 
   def markPresentationSent(recordId: UUID): IO[PresentationError, Option[PresentationRecord]]
 
-  def markPresentationGenerated(
-      recordId: UUID,
-      presentation: Presentation
-  ): IO[PresentationError, Option[PresentationRecord]]
-
   def markPresentationVerified(recordId: UUID): IO[PresentationError, Option[PresentationRecord]]
 
   def markPresentationRejected(recordId: UUID): IO[PresentationError, Option[PresentationRecord]]
@@ -114,62 +103,6 @@ private class PresentationServiceImpl(
 ) extends PresentationService {
 
   import PresentationRecord._
-
-  override def markPresentationGenerated(
-      recordId: UUID,
-      presentation: Presentation
-  ): IO[PresentationError, Option[PresentationRecord]] = {
-    for {
-      record <- getRecordWithState(recordId, ProtocolState.PresentationPending)
-      count <- presentationRepository
-        .updateWithPresentation(recordId, presentation, ProtocolState.PresentationGenerated)
-        .mapError(RepositoryError.apply)
-      _ <- count match
-        case 1 => ZIO.succeed(())
-        case n => ZIO.fail(RecordIdNotFound(recordId))
-      record <- presentationRepository
-        .getPresentationRecord(recordId)
-        .mapError(RepositoryError.apply)
-
-    } yield record
-  }
-
-  override def createPresentationPayloadFromRecord(
-      recordId: UUID,
-      prover: Issuer,
-      issuanceDate: Instant
-  ): IO[PresentationError, W3cPresentationPayload] = {
-
-    for {
-      maybeRecord <- presentationRepository
-        .getPresentationRecord(recordId)
-        .mapError(RepositoryError.apply)
-      record <- ZIO
-        .fromOption(maybeRecord)
-        .mapError(_ => RecordIdNotFound(recordId))
-      _ <- ZIO.log(record.toString())
-      credentialsToUse <- ZIO
-        .fromOption(record.credentialsToUse)
-        .mapError(_ => InvalidFlowStateError(s"No request found for this record: $recordId"))
-
-      issuedValidCredentials <- credentialRepository
-        .getValidIssuedCredentials(credentialsToUse.map(UUID.fromString))
-        .mapError(RepositoryError.apply)
-
-      issuedRawCredentials = issuedValidCredentials.map(_.issuedCredentialRaw.map(IssuedCredentialRaw(_))).flatten
-      issuedCredentials <- ZIO.fromEither(
-        Either.cond(
-          issuedRawCredentials.nonEmpty,
-          issuedRawCredentials,
-          PresentationError.IssuedCredentialNotFoundError(
-            new Throwable("No matching issued credentials foound in prover db")
-          )
-        )
-      )
-
-      w3cPresentationPayload <- createPresentationPayloadFromCredential(issuedCredentials, prover)
-    } yield w3cPresentationPayload
-  }
 
   override def extractIdFromCredential(credential: W3cCredentialPayload): Option[UUID] =
     credential.maybeId.map(_.split("/").last).map(UUID.fromString)
@@ -218,8 +151,7 @@ private class PresentationServiceImpl(
           protocolState = PresentationRecord.ProtocolState.RequestPending,
           requestPresentationData = Some(request),
           proposePresentationData = None,
-          presentationData = None,
-          credentialsToUse = None
+          presentationData = None
         )
       )
       count <- presentationRepository
@@ -260,8 +192,7 @@ private class PresentationServiceImpl(
           protocolState = PresentationRecord.ProtocolState.RequestReceived,
           requestPresentationData = Some(request),
           proposePresentationData = None,
-          presentationData = None,
-          credentialsToUse = None
+          presentationData = None
         )
       )
       count <- presentationRepository
@@ -276,8 +207,8 @@ private class PresentationServiceImpl(
 
   private def createPresentationPayloadFromCredential(
       issuedCredentials: Seq[IssuedCredentialRaw],
-      prover: Issuer
-  ): IO[PresentationError, W3cPresentationPayload] = {
+      prover: Issuer // FIXME @Bassam
+  ): IO[PresentationError, JWT] = {
 
     val verifiableCredentials = issuedCredentials.map { issuedCredential =>
       decode[io.iohk.atala.mercury.model.Base64](issuedCredential.signedCredential)
@@ -298,24 +229,58 @@ private class PresentationServiceImpl(
         maybeIssuanceDate = None,
         maybeExpirationDate = None
       )
-    ZIO.succeed(w3cPresentationPayload)
+
+    val encodedJWT = JwtPresentation.toEncodedJwt(w3cPresentationPayload, prover)
+
+    ZIO.succeed(encodedJWT)
   }
 
   override def acceptRequestPresentation(
       recordId: UUID,
-      credentialsToUse: Seq[String]
+      crecentialsToUse: Seq[String],
+      prover: Issuer
   ): IO[PresentationError, Option[PresentationRecord]] = {
 
     for {
-      record <- getRecordWithState(recordId, ProtocolState.RequestReceived)
+
+      maybeRecord <- presentationRepository
+        .getPresentationRecord(recordId)
+        .mapError(RepositoryError.apply)
+      record <- ZIO
+        .fromOption(maybeRecord)
+        .mapError(_ => RecordIdNotFound(recordId))
+      _ <- ZIO.log(record.toString())
+
+      presentationRequest <- ZIO
+        .fromOption(record.requestPresentationData)
+        .mapError(_ => InvalidFlowStateError(s"No request found for this record: $recordId"))
+
+      issuedValidCredentials <- credentialRepository
+        .getValidIssuedCredentials(crecentialsToUse.map(UUID.fromString))
+        .mapError(RepositoryError.apply)
+
+      issuedRawCredentials = issuedValidCredentials.map(_.issuedCredentialRaw.map(IssuedCredentialRaw(_))).flatten
+      issuedCredentials <- ZIO.fromEither(
+        Either.cond(
+          issuedRawCredentials.nonEmpty,
+          issuedRawCredentials,
+          PresentationError.IssuedCredentialNotFoundError(
+            new Throwable("No matching issued credentials foound in prover db")
+          )
+        )
+      )
+
+      credentialsToSend <- createPresentationPayloadFromCredential(issuedCredentials, prover)
+      request = createDidCommPresentation(presentationRequest, credentialsToSend)
+
       count <- presentationRepository
-        .updatePresentationWithCredentialsToUse(recordId, Option(credentialsToUse), ProtocolState.PresentationPending)
+        .updateWithPresentation(recordId, request, ProtocolState.PresentationPending)
         .mapError(RepositoryError.apply)
       _ <- count match
         case 1 => ZIO.succeed(())
         case n => ZIO.fail(RecordIdNotFound(recordId))
       record <- presentationRepository
-        .getPresentationRecord(recordId)
+        .getPresentationRecord(record.id)
         .mapError(RepositoryError.apply)
     } yield record
   }
@@ -400,24 +365,6 @@ private class PresentationServiceImpl(
     } yield record
   }
 
-  private[this] def getRecordWithState(
-      recordId: UUID,
-      state: ProtocolState
-  ): IO[PresentationError, PresentationRecord] = {
-    for {
-      maybeRecord <- presentationRepository
-        .getPresentationRecord(recordId)
-        .mapError(RepositoryError.apply)
-      record <- ZIO
-        .fromOption(maybeRecord)
-        .mapError(_ => RecordIdNotFound(recordId))
-      _ <- record.protocolState match {
-        case s if s == state => ZIO.unit
-        case state           => ZIO.fail(InvalidFlowStateError(s"Invalid protocol state for operation: $state"))
-      }
-    } yield record
-  }
-
   override def markRequestPresentationSent(recordId: UUID): IO[PresentationError, Option[PresentationRecord]] =
     updatePresentationRecordProtocolState(
       recordId,
@@ -448,7 +395,7 @@ private class PresentationServiceImpl(
   override def markPresentationSent(recordId: UUID): IO[PresentationError, Option[PresentationRecord]] =
     updatePresentationRecordProtocolState(
       recordId,
-      PresentationRecord.ProtocolState.PresentationGenerated,
+      PresentationRecord.ProtocolState.PresentationPending,
       PresentationRecord.ProtocolState.PresentationSent
     )
 

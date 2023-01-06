@@ -19,8 +19,7 @@ final case class PresentationRecord(
     protocolState: PresentationRecord.ProtocolState,
     requestPresentationData: Option[RequestPresentation],
     proposePresentationData: Option[ProposePresentation],
-    presentationData: Option[Presentation],
-    credentialsToUse: Option[List[String]]
+    presentationData: Option[Presentation]
 )
 
 object PresentationRecord {
@@ -58,7 +57,7 @@ object PresentationRecord {
     // Prover has "accepted" a Presentation request received from a Verifier (Prover DB)
     case PresentationPending extends ProtocolState
     // Prover has generated (signed) the VC  and is now ready to send it to the Verifier (Prover DB)
-    case PresentationGenerated extends ProtocolState
+
     // Prover has sent the Presentation (Prover DB)
     case PresentationSent extends ProtocolState
     // Verifier has received the presentation (Verifier DB)
