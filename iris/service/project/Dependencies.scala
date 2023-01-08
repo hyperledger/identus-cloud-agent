@@ -2,7 +2,7 @@ import sbt._
 
 object Dependencies {
   object Versions {
-    val zio = "2.0.4"
+    val zio = "2.0.5"
     val zioConfig = "3.0.2"
     val circe = "0.14.1"
     val circeOptics = "0.14.1"
