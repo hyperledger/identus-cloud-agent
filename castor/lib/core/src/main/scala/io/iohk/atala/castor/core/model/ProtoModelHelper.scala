@@ -59,13 +59,12 @@ private[castor] trait ProtoModelHelper {
     def toProto: node_models.PublicKey = {
       node_models.PublicKey(
         id = publicKey.id,
-        // TODO: define the corresponding KeyUsage in Prism DID (ATL-2213)
         usage = publicKey.purpose match {
           case VerificationRelationship.Authentication       => node_models.KeyUsage.AUTHENTICATION_KEY
           case VerificationRelationship.AssertionMethod      => node_models.KeyUsage.ISSUING_KEY
-          case VerificationRelationship.KeyAgreement         => node_models.KeyUsage.COMMUNICATION_KEY
-          case VerificationRelationship.CapabilityInvocation => ???
-          case VerificationRelationship.CapabilityDelegation => ???
+          case VerificationRelationship.KeyAgreement         => node_models.KeyUsage.KEY_AGREEMENT_KEY
+          case VerificationRelationship.CapabilityInvocation => node_models.KeyUsage.CAPABILITY_INVOCATION_KEY
+          case VerificationRelationship.CapabilityDelegation => node_models.KeyUsage.CAPABILITY_DELEGATION_KEY
         },
         addedOn = None,
         revokedOn = None,
@@ -199,10 +198,11 @@ private[castor] trait ProtoModelHelper {
         case node_models.KeyUsage.UNKNOWN_KEY => Left(s"unsupported use of KeyUsage.UNKNOWN_KEY on key ${publicKey.id}")
         case node_models.KeyUsage.MASTER_KEY  => Right(InternalKeyPurpose.Master)
         case node_models.KeyUsage.ISSUING_KEY => Right(VerificationRelationship.AssertionMethod)
-        case node_models.KeyUsage.COMMUNICATION_KEY  => Right(VerificationRelationship.KeyAgreement)
-        case node_models.KeyUsage.AUTHENTICATION_KEY => Right(VerificationRelationship.Authentication)
-        case node_models.KeyUsage.REVOCATION_KEY =>
-          ??? // TODO: define the corresponding KeyUsage in Prism DID (ATL-2213)
+        case node_models.KeyUsage.KEY_AGREEMENT_KEY         => Right(VerificationRelationship.KeyAgreement)
+        case node_models.KeyUsage.AUTHENTICATION_KEY        => Right(VerificationRelationship.Authentication)
+        case node_models.KeyUsage.CAPABILITY_INVOCATION_KEY => Right(VerificationRelationship.CapabilityInvocation)
+        case node_models.KeyUsage.CAPABILITY_DELEGATION_KEY => Right(VerificationRelationship.CapabilityDelegation)
+        case node_models.KeyUsage.REVOCATION_KEY            => Right(InternalKeyPurpose.Revocation)
         case node_models.KeyUsage.Unrecognized(unrecognizedValue) =>
           Left(s"unrecognized KeyUsage: $unrecognizedValue on key ${publicKey.id}")
       }
