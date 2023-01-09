@@ -120,34 +120,11 @@ class PresentProofApiServiceImpl(
     val result = requestPresentationAction.action match {
 
       case "request-accept" =>
-        // TODO IMPORTANT: ATL-2702
-        // this function is used as a temporary replacement
-        // eventually, prism-agent should use castor library to get the issuer (issuance key and did)
-        def createHolder: Issuer = {
-          import java.security.KeyPairGenerator
-          import java.security.spec.ECGenParameterSpec
-          import java.security.KeyPairGenerator
-          import java.security.SecureRandom
-          val keyGen = KeyPairGenerator.getInstance("EC")
-          val ecSpec = ECGenParameterSpec("secp256r1")
-          keyGen.initialize(ecSpec, SecureRandom())
-          val keyPair = keyGen.generateKeyPair()
-          val privateKey = keyPair.getPrivate
-          val publicKey = keyPair.getPublic
-          val uuid = UUID.randomUUID().toString
-          Issuer(
-            did = io.iohk.atala.pollux.vc.jwt.DID(s"did:prism:$uuid"),
-            signer = io.iohk.atala.pollux.vc.jwt.ES256Signer(privateKey),
-            publicKey = publicKey
-          )
-        }
-
         for {
           record <- presentationService
             .acceptRequestPresentation(
               recordId = UUID.fromString(id),
-              crecentialsToUse = requestPresentationAction.proofId.getOrElse(Seq.empty),
-              prover = createHolder
+              crecentialsToUse = requestPresentationAction.proofId.getOrElse(Seq.empty)
             )
             .mapError(HttpServiceError.DomainError[PresentationError].apply)
         } yield record
