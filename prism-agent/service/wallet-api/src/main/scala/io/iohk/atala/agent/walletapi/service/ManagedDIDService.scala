@@ -11,14 +11,18 @@ import io.iohk.atala.agent.walletapi.model.{
 }
 import io.iohk.atala.agent.walletapi.model.ECCoordinates.*
 import io.iohk.atala.agent.walletapi.model.error.{*, given}
-import io.iohk.atala.agent.walletapi.service.ManagedDIDService.{CreateDIDSecret, DEFAULT_MASTER_KEY_ID}
+import io.iohk.atala.agent.walletapi.service.ManagedDIDService.DEFAULT_MASTER_KEY_ID
 import io.iohk.atala.agent.walletapi.storage.{
   DIDNonSecretStorage,
   DIDSecretStorage,
   InMemoryDIDNonSecretStorage,
   InMemoryDIDSecretStorage
 }
-import io.iohk.atala.agent.walletapi.util.ManagedDIDTemplateValidator
+import io.iohk.atala.agent.walletapi.util.{
+  UpdateManagedDIDActionValidator,
+  ManagedDIDTemplateValidator,
+  OperationFactory
+}
 import io.iohk.atala.castor.core.model.did.{
   CanonicalPrismDID,
   DID,
@@ -62,6 +66,12 @@ final class ManagedDIDService private[walletapi] (
   private val AGREEMENT_KEY_ID = "agreement"
   private val AUTHENTICATION_KEY_ID = "authentication"
 
+  private val generateCreateOperation = OperationFactory.makeCreateOperation(
+    ManagedDIDService.DEFAULT_MASTER_KEY_ID,
+    CURVE,
+    () => KeyGeneratorWrapper.generateECKeyPair(CURVE)
+  )
+
   def syncManagedDIDState: IO[GetManagedDIDError, Unit] = nonSecretStorage.listManagedDID
     .mapError(GetManagedDIDError.WalletStorageError.apply)
     .flatMap { kv =>
@@ -76,34 +86,14 @@ final class ManagedDIDService private[walletapi] (
     } yield dids.toSeq.map { case (did, state) => ManagedDIDDetail(did.asCanonical, state) }
 
   def publishStoredDID(did: CanonicalPrismDID): IO[PublishManagedDIDError, ScheduleDIDOperationOutcome] = {
-    def submitOperation(operation: PrismDIDOperation.Create) =
+    def doPublish(operation: PrismDIDOperation.Create) = {
       for {
-        masterKeyPair <-
-          secretStorage
-            .getKey(did, DEFAULT_MASTER_KEY_ID)
-            .mapError(PublishManagedDIDError.WalletStorageError.apply)
-            .someOrElseZIO(
-              ZIO.die(Exception("master-key must exists in the wallet for DID publication operation signature"))
-            )
-        signedAtalaOperation <- ZIO
-          .fromTry(
-            ECWrapper.signBytes(CURVE, operation.toAtalaOperation.toByteArray, masterKeyPair.privateKey)
-          )
-          .mapError(PublishManagedDIDError.CryptographyError.apply)
-          .map(signature =>
-            SignedPrismDIDOperation(
-              operation = operation,
-              signature = ArraySeq.from(signature),
-              signedWithKey = DEFAULT_MASTER_KEY_ID
-            )
-          )
-        outcome <- didService
-          .scheduleOperation(signedAtalaOperation)
-          .mapError(PublishManagedDIDError.OperationError.apply)
+        outcome <- signAndSubmitOperation[PublishManagedDIDError](operation)
         _ <- nonSecretStorage
           .setManagedDIDState(did, ManagedDIDState.PublicationPending(operation, outcome.operationId))
           .mapError(PublishManagedDIDError.WalletStorageError.apply)
       } yield outcome
+    }
 
     for {
       _ <- computeNewDIDStateFromDLTAndPersist[PublishManagedDIDError](did)
@@ -112,7 +102,7 @@ final class ManagedDIDService private[walletapi] (
         .mapError(PublishManagedDIDError.WalletStorageError.apply)
         .someOrFail(PublishManagedDIDError.DIDNotFound(did))
       outcome <- didState match {
-        case ManagedDIDState.Created(operation) => submitOperation(operation)
+        case ManagedDIDState.Created(operation) => doPublish(operation)
         case ManagedDIDState.PublicationPending(operation, operationId) =>
           ZIO.succeed(ScheduleDIDOperationOutcome(did, operation, operationId))
         case ManagedDIDState.Published(operation, operationId) =>
@@ -153,52 +143,52 @@ final class ManagedDIDService private[walletapi] (
   def updateManagedDID(
       did: CanonicalPrismDID,
       actions: Seq[UpdateManagedDIDAction]
-  ): IO[Any, ScheduleDIDOperationOutcome] = ???
-
-  private def generateCreateOperation(
-      didTemplate: ManagedDIDTemplate
-  ): IO[CreateManagedDIDError, (PrismDIDOperation.Create, CreateDIDSecret)] = {
+  ): IO[UpdateManagedDIDError, ScheduleDIDOperationOutcome] = {
     for {
-      keys <- ZIO
-        .foreach(didTemplate.publicKeys.sortBy(_.id))(generateKeyPairAndPublicKey)
-        .mapError(CreateManagedDIDError.KeyGenerationError.apply)
-      masterKey <- generateKeyPairAndInternalPublicKey(DEFAULT_MASTER_KEY_ID, InternalKeyPurpose.Master).mapError(
-        CreateManagedDIDError.KeyGenerationError.apply
-      )
-      operation = PrismDIDOperation.Create(
-        publicKeys = keys.map(_._2),
-        internalKeys = Seq(masterKey._2),
-        services = didTemplate.services
-      )
-      secret = CreateDIDSecret(
-        keyPairs = keys.map { case (keyPair, template) => template.id -> keyPair }.toMap,
-        internalKeyPairs = Map(masterKey._2.id -> masterKey._1)
-      )
-    } yield operation -> secret
+      _ <- ZIO
+        .fromEither(UpdateManagedDIDActionValidator.validate(actions))
+        .mapError(UpdateManagedDIDError.InvalidArgument.apply)
+      _ <- computeNewDIDStateFromDLTAndPersist[UpdateManagedDIDError](did)
+      didState <- nonSecretStorage
+        .getManagedDIDState(did)
+        .mapError(UpdateManagedDIDError.WalletStorageError.apply)
+        .someOrFail(UpdateManagedDIDError.DIDNotFound(did))
+    } yield ???
+
+    ???
   }
 
-  private def generateKeyPairAndPublicKey(template: DIDPublicKeyTemplate): Task[(ECKeyPair, PublicKey)] = {
+  private def signAndSubmitOperation[E](operation: PrismDIDOperation)(using
+      c1: Conversion[CommonWalletStorageError, E],
+      c2: Conversion[DIDOperationError, E],
+      c3: Conversion[CommonCryptographyError, E]
+  ): IO[E, ScheduleDIDOperationOutcome] = {
+    val did = operation.did
     for {
-      keyPair <- KeyGeneratorWrapper.generateECKeyPair(CURVE)
-      publicKey = PublicKey(template.id, template.purpose, publicKeyData = toPublicKeyData(keyPair))
-    } yield (keyPair, publicKey)
+      masterKeyPair <-
+        secretStorage
+          .getKey(did, DEFAULT_MASTER_KEY_ID)
+          .mapError[E](CommonWalletStorageError.apply)
+          .someOrElseZIO(
+            ZIO.die(Exception("master-key must exists in the wallet for signing DID operation and submit to Node"))
+          )
+      signedAtalaOperation <- ZIO
+        .fromTry(
+          ECWrapper.signBytes(CURVE, operation.toAtalaOperation.toByteArray, masterKeyPair.privateKey)
+        )
+        .mapError[E](CommonCryptographyError.apply)
+        .map(signature =>
+          SignedPrismDIDOperation(
+            operation = operation,
+            signature = ArraySeq.from(signature),
+            signedWithKey = DEFAULT_MASTER_KEY_ID
+          )
+        )
+      outcome <- didService
+        .scheduleOperation(signedAtalaOperation)
+        .mapError[E](e => e)
+    } yield outcome
   }
-
-  private def generateKeyPairAndInternalPublicKey(
-      id: String,
-      purpose: InternalKeyPurpose
-  ): Task[(ECKeyPair, InternalPublicKey)] = {
-    for {
-      keyPair <- KeyGeneratorWrapper.generateECKeyPair(CURVE)
-      internalPublicKey = InternalPublicKey(id, purpose, toPublicKeyData(keyPair))
-    } yield (keyPair, internalPublicKey)
-  }
-
-  private def toPublicKeyData(keyPair: ECKeyPair): PublicKeyData = PublicKeyData.ECKeyData(
-    crv = CURVE,
-    x = Base64UrlString.fromByteArray(keyPair.publicKey.p.x.toPaddedByteArray(CURVE)),
-    y = Base64UrlString.fromByteArray(keyPair.publicKey.p.y.toPaddedByteArray(CURVE))
-  )
 
   /** Reconcile state with DLT and write new state to the storage */
   private def computeNewDIDStateFromDLTAndPersist[E](
@@ -266,11 +256,6 @@ object ManagedDIDService {
   val DEFAULT_MASTER_KEY_ID: String = "master0"
 
   val reservedKeyIds: Set[String] = Set(DEFAULT_MASTER_KEY_ID)
-
-  private final case class CreateDIDSecret(
-      keyPairs: Map[String, ECKeyPair],
-      internalKeyPairs: Map[String, ECKeyPair]
-  )
 
   def inMemoryStorage: URLayer[DIDOperationValidator & DIDService, ManagedDIDService] =
     (InMemoryDIDNonSecretStorage.layer ++ InMemoryDIDSecretStorage.layer) >>> ZLayer.fromFunction(
