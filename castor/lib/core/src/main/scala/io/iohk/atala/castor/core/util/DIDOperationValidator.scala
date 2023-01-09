@@ -49,31 +49,13 @@ class DIDOperationValidator(config: Config) {
   }
 
   private def validateMaxPublicKeysAccess(operation: PrismDIDOperation): Either[DIDOperationError, Unit] = {
-    val keyCount = operation match {
-      case op: PrismDIDOperation.Create => op.publicKeys.length + op.internalKeys.length
-      case op: PrismDIDOperation.Update =>
-        op.actions.count {
-          case UpdateDIDAction.AddKey(_)         => true
-          case UpdateDIDAction.AddInternalKey(_) => true
-          case UpdateDIDAction.RemoveKey(_)      => true
-          case _                                 => false
-        }
-    }
+    val keyCount = extractKeyIds(operation).length
     if (keyCount <= config.publicKeyLimit) Right(())
     else Left(DIDOperationError.TooManyDidPublicKeyAccess(config.publicKeyLimit, Some(keyCount)))
   }
 
   private def validateMaxServiceAccess(operation: PrismDIDOperation): Either[DIDOperationError, Unit] = {
-    val serviceCount = operation match {
-      case op: PrismDIDOperation.Create => op.services.length
-      case op: PrismDIDOperation.Update =>
-        op.actions.count {
-          case UpdateDIDAction.AddService(_)          => true
-          case UpdateDIDAction.RemoveService(_)       => true
-          case UpdateDIDAction.UpdateService(_, _, _) => true
-          case _                                      => false
-        }
-    }
+    val serviceCount = extractServiceIds(operation).length
     if (serviceCount <= config.serviceLimit) Right(())
     else Left(DIDOperationError.TooManyDidServiceAccess(config.serviceLimit, Some(serviceCount)))
   }
@@ -81,7 +63,7 @@ class DIDOperationValidator(config: Config) {
   private def validateUniquePublicKeyId(operation: PrismDIDOperation): Either[DIDOperationError, Unit] = {
     operation match {
       case op: PrismDIDOperation.Create =>
-        val ids = op.publicKeys.map(_.id) ++ op.internalKeys.map(_.id)
+        val ids = extractKeyIds(op)
         if (ids.isUnique) Right(())
         else Left(DIDOperationError.InvalidArgument("id for public-keys is not unique"))
       case _: PrismDIDOperation.Update => Right(())
@@ -91,7 +73,7 @@ class DIDOperationValidator(config: Config) {
   private def validateUniqueServiceId(operation: PrismDIDOperation): Either[DIDOperationError, Unit] = {
     operation match {
       case op: PrismDIDOperation.Create =>
-        val ids = op.services.map(_.id)
+        val ids = extractServiceIds(operation)
         if (ids.isUnique) Right(())
         else Left(DIDOperationError.InvalidArgument("id for services is not unique"))
       case _: PrismDIDOperation.Update => Right(())
@@ -99,15 +81,7 @@ class DIDOperationValidator(config: Config) {
   }
 
   private def validateKeyIdRegex(operation: PrismDIDOperation): Either[DIDOperationError, Unit] = {
-    val keyIds = operation match {
-      case PrismDIDOperation.Create(publicKeys, internalKeys, _) => publicKeys.map(_.id) ++ internalKeys.map(_.id)
-      case op: PrismDIDOperation.Update =>
-        op.actions.collect {
-          case UpdateDIDAction.AddKey(publicKey)         => publicKey.id
-          case UpdateDIDAction.AddInternalKey(publicKey) => publicKey.id
-          case UpdateDIDAction.RemoveKey(id)             => id
-        }
-    }
+    val keyIds = extractKeyIds(operation)
     val invalidIds = keyIds.filterNot(id => KEY_ID_RE.pattern.matcher(id).matches())
     if (invalidIds.isEmpty) Right(())
     else
@@ -115,15 +89,7 @@ class DIDOperationValidator(config: Config) {
   }
 
   private def validateServiceIdRegex(operation: PrismDIDOperation): Either[DIDOperationError, Unit] = {
-    val serviceIds = operation match {
-      case op: PrismDIDOperation.Create => op.services.map(_.id)
-      case op: PrismDIDOperation.Update =>
-        op.actions.collect {
-          case UpdateDIDAction.AddService(service)     => service.id
-          case UpdateDIDAction.RemoveService(id)       => id
-          case UpdateDIDAction.UpdateService(id, _, _) => id
-        }
-    }
+    val serviceIds = extractServiceIds(operation)
     val invalidIds = serviceIds.filterNot(id => SERVICE_ID_RE.pattern.matcher(id).matches())
     if (invalidIds.isEmpty) Right(())
     else
@@ -146,6 +112,36 @@ class DIDOperationValidator(config: Config) {
         if (op.actions.nonEmpty) Right(())
         else Left(DIDOperationError.InvalidArgument("update operation must contain at least 1 update action"))
       case _ => Right(())
+    }
+  }
+
+  private def extractKeyIds(operation: PrismDIDOperation): Seq[String] = {
+    operation match {
+      case op: PrismDIDOperation.Create => op.publicKeys.map(_.id) ++ op.internalKeys.map(_.id)
+      case PrismDIDOperation.Update(_, _, actions) =>
+        actions.flatMap {
+          case UpdateDIDAction.AddKey(publicKey)         => Some(publicKey.id)
+          case UpdateDIDAction.AddInternalKey(publicKey) => Some(publicKey.id)
+          case UpdateDIDAction.RemoveKey(id)             => Some(id)
+          case _: UpdateDIDAction.AddService             => None
+          case _: UpdateDIDAction.RemoveService          => None
+          case _: UpdateDIDAction.UpdateService          => None
+        }
+    }
+  }
+
+  private def extractServiceIds(operation: PrismDIDOperation): Seq[String] = {
+    operation match {
+      case op: PrismDIDOperation.Create => op.services.map(_.id)
+      case PrismDIDOperation.Update(_, _, actions) =>
+        actions.flatMap {
+          case _: UpdateDIDAction.AddKey               => None
+          case _: UpdateDIDAction.AddInternalKey       => None
+          case _: UpdateDIDAction.RemoveKey            => None
+          case UpdateDIDAction.AddService(service)     => Some(service.id)
+          case UpdateDIDAction.RemoveService(id)       => Some(id)
+          case UpdateDIDAction.UpdateService(id, _, _) => Some(id)
+        }
     }
   }
 
