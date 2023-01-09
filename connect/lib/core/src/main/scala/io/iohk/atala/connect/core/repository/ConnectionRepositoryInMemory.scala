@@ -6,6 +6,7 @@ import io.iohk.atala.mercury.protocol.connection.ConnectionResponse
 import io.iohk.atala.connect.core.model.ConnectionRecord
 import io.iohk.atala.connect.core.model.ConnectionRecord.ProtocolState
 import java.util.UUID
+import java.time.Instant
 
 class ConnectionRepositoryInMemory(storeRef: Ref[Map[UUID, ConnectionRecord]]) extends ConnectionRepository[Task] {
 
@@ -19,7 +20,11 @@ class ConnectionRepositoryInMemory(storeRef: Ref[Map[UUID, ConnectionRecord]]) e
       count <- maybeRecord
         .map(record =>
           for {
-            _ <- storeRef.update(r => r.updated(recordId, record.copy(connectionResponse = Some(response))))
+            _ <- storeRef.update(r => r.updated(recordId, record.copy(
+              updatedAt = Some(Instant.now),
+              connectionResponse = Some(response),
+              protocolState = state
+              )))
           } yield 1
         )
         .getOrElse(ZIO.succeed(1))
@@ -65,7 +70,16 @@ class ConnectionRepositoryInMemory(storeRef: Ref[Map[UUID, ConnectionRecord]]) e
       count <- maybeRecord
         .map(record =>
           for {
-            _ <- storeRef.update(r => r.updated(recordId, record.copy(connectionRequest = Some(request))))
+            _ <- storeRef.update(r =>
+              r.updated(
+                recordId,
+                record.copy(
+                  updatedAt = Some(Instant.now),
+                  connectionRequest = Some(request),
+                  protocolState = state
+                )
+              )
+            )
           } yield 1
         )
         .getOrElse(ZIO.succeed(1))
