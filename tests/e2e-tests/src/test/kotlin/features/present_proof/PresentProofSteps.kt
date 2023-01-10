@@ -84,11 +84,10 @@ class PresentProofSteps {
                 val presentation = lastResponseList("", PresentationProof::class).find {
                     it.presentationId == faber.recall<String>("presentationId")
                 }
-                presentation!= null &&
-                        (presentation.status == "PresentationReceived"|| presentation.status == "PresentationVerified")
+                presentation != null &&
+                        (presentation.status == "PresentationReceived" || presentation.status == "PresentationVerified")
             },
-            "ERROR: Faber did not receive presentation from Bob!",
-            timeout = Duration.ofSeconds(300L)
+            "ERROR: Faber did not receive presentation from Bob!"
         )
 
     }

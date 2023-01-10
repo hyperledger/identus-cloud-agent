@@ -137,10 +137,6 @@ class ConnectionSteps {
     @When("{actor} receives the connection response")
     fun inviteeReceivesTheConnectionResponse(invitee: Actor) {
         // Bob (Holder) receives final connection response
-        invitee.attemptsTo(
-            Get.resource("/connections")
-        )
-        println(SerenityRest.lastResponse().prettyPrint())
         wait(
             {
                 invitee.attemptsTo(
@@ -151,9 +147,7 @@ class ConnectionSteps {
                         it.statusCode(SC_OK)
                     }
                 )
-                println(lastResponseObject("", Connection::class).state)
-                lastResponseObject("", Connection::class).state == "ConnectionResponseReceived" ||
-                        lastResponseObject("", Connection::class).state == "ConnectionResponseSent"
+                lastResponseObject("", Connection::class).state == "ConnectionResponseReceived"
             },
             "Invitee connection didn't reach ConnectionResponseReceived state: state is ${lastResponseObject("", Connection::class).state}"
         )
