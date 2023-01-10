@@ -1,15 +1,16 @@
 package io.iohk.atala.agent.walletapi.util
 
 import io.iohk.atala.agent.walletapi.crypto.KeyGeneratorWrapper
-import io.iohk.atala.agent.walletapi.model.{DIDPublicKeyTemplate, ECKeyPair, ManagedDIDTemplate}
-import io.iohk.atala.agent.walletapi.model.error.CreateManagedDIDError
+import io.iohk.atala.agent.walletapi.model.{DIDPublicKeyTemplate, ECKeyPair, ManagedDIDTemplate, UpdateManagedDIDAction}
+import io.iohk.atala.agent.walletapi.model.error.{CreateManagedDIDError, UpdateManagedDIDError}
 import io.iohk.atala.castor.core.model.did.{
+  CanonicalPrismDID,
+  EllipticCurve,
   InternalKeyPurpose,
   InternalPublicKey,
   PrismDIDOperation,
   PublicKey,
-  PublicKeyData,
-  EllipticCurve
+  PublicKeyData
 }
 import io.iohk.atala.shared.models.Base64UrlStrings.*
 import io.iohk.atala.shared.models.HexStrings.*
@@ -19,6 +20,8 @@ private[walletapi] final case class CreateDIDSecret(
     keyPairs: Map[String, ECKeyPair],
     internalKeyPairs: Map[String, ECKeyPair]
 )
+
+private[walletapi] final case class UpdateDIDSecret(newKeyPairs: Map[String, ECKeyPair])
 
 object OperationFactory {
 
@@ -31,7 +34,7 @@ object OperationFactory {
   ): IO[CreateManagedDIDError, (PrismDIDOperation.Create, CreateDIDSecret)] = {
     for {
       keys <- ZIO
-        .foreach(didTemplate.publicKeys.sortBy(_.id))(generateKeyPairAndPublicKey(curve, keyGenerator))
+        .foreach(didTemplate.publicKeys)(generateKeyPairAndPublicKey(curve, keyGenerator))
         .mapError(CreateManagedDIDError.KeyGenerationError.apply)
       masterKey <- generateKeyPairAndInternalPublicKey(curve, keyGenerator)(masterKeyId, InternalKeyPurpose.Master)
         .mapError(
@@ -47,6 +50,24 @@ object OperationFactory {
         internalKeyPairs = Map(masterKey._2.id -> masterKey._1)
       )
     } yield operation -> secret
+  }
+
+  def makeUpdateOperation(
+      curve: EllipticCurve,
+      keyGenerator: () => Task[ECKeyPair]
+  )(
+      did: CanonicalPrismDID,
+      previousOperationHash: Array[Byte],
+      actions: Seq[UpdateManagedDIDAction]
+  ): IO[UpdateManagedDIDError, (PrismDIDOperation.Update)] = {
+    val keyTemplates = actions.collect { case UpdateManagedDIDAction.AddKey(template) => template }
+    for {
+      keys <- ZIO
+        .foreach(keyTemplates)(generateKeyPairAndPublicKey(curve, keyGenerator))
+        .mapError(UpdateManagedDIDError.KeyGenerationError.apply)
+    } yield ()
+
+    ???
   }
 
   private def generateKeyPairAndPublicKey(curve: EllipticCurve, keyGenerator: () => Task[ECKeyPair])(

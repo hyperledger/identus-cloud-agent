@@ -61,7 +61,7 @@ package object sql {
             operationId <- publishOperationId
               .toRight(RuntimeException(s"DID publication operation id does not exists for PUBLISHED status"))
               .toTry
-          } yield ManagedDIDState.Published(createDIDOperation, ArraySeq.from(operationId))
+          } yield ManagedDIDState.Published(createDIDOperation, ArraySeq.from(operationId), ???, ???) // TODO: implement
       }
     }
 
@@ -87,7 +87,8 @@ package object sql {
         case ManagedDIDState.Created(operation) => (CREATED, operation, None)
         case ManagedDIDState.PublicationPending(operation, operationId) =>
           (PUBLICATION_PENDING, operation, Some(operationId))
-        case ManagedDIDState.Published(operation, operationId) => (PUBLISHED, operation, Some(operationId))
+        case ManagedDIDState.Published(operation, operationId, _, _) =>
+          (PUBLISHED, operation, Some(operationId)) // TODO: implement
       }
       DIDPublicationStateRow(
         did = did,

@@ -103,10 +103,10 @@ final class ManagedDIDService private[walletapi] (
         .someOrFail(PublishManagedDIDError.DIDNotFound(did))
       outcome <- didState match {
         case ManagedDIDState.Created(operation) => doPublish(operation)
-        case ManagedDIDState.PublicationPending(operation, operationId) =>
-          ZIO.succeed(ScheduleDIDOperationOutcome(did, operation, operationId))
-        case ManagedDIDState.Published(operation, operationId) =>
-          ZIO.succeed(ScheduleDIDOperationOutcome(did, operation, operationId))
+        case ManagedDIDState.PublicationPending(operation, publishOperationId) =>
+          ZIO.succeed(ScheduleDIDOperationOutcome(did, operation, publishOperationId))
+        case ManagedDIDState.Published(operation, publishOperationId, _, _) =>
+          ZIO.succeed(ScheduleDIDOperationOutcome(did, operation, publishOperationId))
       }
     } yield outcome
   }
@@ -153,6 +153,11 @@ final class ManagedDIDService private[walletapi] (
         .getManagedDIDState(did)
         .mapError(UpdateManagedDIDError.WalletStorageError.apply)
         .someOrFail(UpdateManagedDIDError.DIDNotFound(did))
+      _ <- didState match {
+        case ManagedDIDState.Published(_, _, lastConfirmedOperationId, lastUnconfirmedOperationId) =>
+          ???
+        case _ => ZIO.fail(UpdateManagedDIDError.DIDNotPublished(did))
+      }
     } yield ???
 
     ???
@@ -172,7 +177,7 @@ final class ManagedDIDService private[walletapi] (
           .someOrElseZIO(
             ZIO.die(Exception("master-key must exists in the wallet for signing DID operation and submit to Node"))
           )
-      signedAtalaOperation <- ZIO
+      signOperation <- ZIO
         .fromTry(
           ECWrapper.signBytes(CURVE, operation.toAtalaOperation.toByteArray, masterKeyPair.privateKey)
         )
@@ -185,7 +190,7 @@ final class ManagedDIDService private[walletapi] (
           )
         )
       outcome <- didService
-        .scheduleOperation(signedAtalaOperation)
+        .scheduleOperation(signOperation)
         .mapError[E](e => e)
     } yield outcome
   }
@@ -210,16 +215,17 @@ final class ManagedDIDService private[walletapi] (
   /** Reconcile state with DLT and return an updated state */
   private def computeNewDIDStateFromDLT(state: ManagedDIDState): IO[DIDOperationError, ManagedDIDState] = {
     state match {
-      case s @ ManagedDIDState.PublicationPending(operation, operationId) =>
+      case s @ ManagedDIDState.PublicationPending(operation, publishOperationId) =>
         didService
-          .getScheduledDIDOperationDetail(operationId.toArray)
+          .getScheduledDIDOperationDetail(publishOperationId.toArray)
           .map {
             case Some(result) =>
               result.status match {
                 case ScheduledDIDOperationStatus.Pending              => s
                 case ScheduledDIDOperationStatus.AwaitingConfirmation => s
-                case ScheduledDIDOperationStatus.Confirmed => ManagedDIDState.Published(operation, operationId)
-                case ScheduledDIDOperationStatus.Rejected  => ManagedDIDState.Created(operation)
+                case ScheduledDIDOperationStatus.Confirmed =>
+                  ManagedDIDState.Published(operation, publishOperationId, publishOperationId, None)
+                case ScheduledDIDOperationStatus.Rejected => ManagedDIDState.Created(operation)
               }
             case None => ManagedDIDState.Created(operation)
           }

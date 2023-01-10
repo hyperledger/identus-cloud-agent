@@ -7,7 +7,9 @@ sealed trait UpdateManagedDIDError
 
 object UpdateManagedDIDError {
   final case class DIDNotFound(did: CanonicalPrismDID) extends UpdateManagedDIDError
+  final case class DIDNotPublished(did: CanonicalPrismDID) extends UpdateManagedDIDError
   final case class InvalidArgument(msg: String) extends UpdateManagedDIDError
+  final case class KeyGenerationError(cause: Throwable) extends UpdateManagedDIDError
   final case class WalletStorageError(cause: Throwable) extends UpdateManagedDIDError
   final case class OperationError(cause: DIDOperationError) extends UpdateManagedDIDError
 }
