@@ -18,6 +18,7 @@ import io.iohk.atala.castor.core.model.did.{
   ScheduledDIDOperationStatus,
   Service,
   ServiceType,
+  SignedPrismDIDOperation,
   UpdateDIDAction,
   VerificationRelationship
 }
@@ -39,6 +40,15 @@ private[castor] trait ProtoModelHelper {
 
   extension (bytes: Array[Byte]) {
     def toProto: ByteString = ByteString.copyFrom(bytes)
+  }
+
+  extension (signedOperation: SignedPrismDIDOperation) {
+    def toProto: node_models.SignedAtalaOperation =
+      node_models.SignedAtalaOperation(
+        signedWith = signedOperation.signedWithKey,
+        signature = signedOperation.signature.toArray.toProto,
+        operation = Some(signedOperation.operation.toAtalaOperation)
+      )
   }
 
   extension (operation: PrismDIDOperation.Create) {

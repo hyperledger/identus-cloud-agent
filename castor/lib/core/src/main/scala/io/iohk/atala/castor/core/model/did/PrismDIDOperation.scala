@@ -4,7 +4,6 @@ import io.iohk.atala.castor.core.model.ProtoModelHelper
 
 import scala.collection.compat.immutable.ArraySeq
 import io.iohk.atala.prism.protos.node_models
-import io.iohk.atala.prism.protos.node_models.AtalaOperation
 import io.iohk.atala.shared.models.HexStrings.HexString
 
 import java.net.URI
@@ -17,13 +16,13 @@ sealed trait PrismDIDOperation {
 object PrismDIDOperation extends ProtoModelHelper {
   final case class Create(publicKeys: Seq[PublicKey], internalKeys: Seq[InternalPublicKey], services: Seq[Service])
       extends PrismDIDOperation {
-    override def toAtalaOperation: AtalaOperation = node_models.AtalaOperation(this.toProto)
+    override def toAtalaOperation: node_models.AtalaOperation = node_models.AtalaOperation(this.toProto)
     override def did: CanonicalPrismDID = PrismDID.buildLongFormFromOperation(this).asCanonical
   }
 
   final case class Update(did: CanonicalPrismDID, previousOperationHash: ArraySeq[Byte], actions: Seq[UpdateDIDAction])
       extends PrismDIDOperation {
-    override def toAtalaOperation: AtalaOperation = node_models.AtalaOperation(this.toProto)
+    override def toAtalaOperation: node_models.AtalaOperation = node_models.AtalaOperation(this.toProto)
   }
 }
 
@@ -31,7 +30,12 @@ final case class SignedPrismDIDOperation(
     operation: PrismDIDOperation,
     signature: ArraySeq[Byte],
     signedWithKey: String
-)
+) {
+  def toSignedAtalaOperation: node_models.SignedAtalaOperation = {
+    import ProtoModelHelper.*
+    this.toProto
+  }
+}
 
 final case class ScheduleDIDOperationOutcome(
     did: PrismDID,

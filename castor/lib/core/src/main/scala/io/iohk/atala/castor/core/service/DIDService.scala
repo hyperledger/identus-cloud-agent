@@ -45,13 +45,7 @@ private class DIDServiceImpl(didOpValidator: DIDOperationValidator, nodeClient: 
       signedOperation: SignedPrismDIDOperation
   ): IO[DIDOperationError, ScheduleDIDOperationOutcome] = {
     val operationRequest = node_api.ScheduleOperationsRequest(
-      signedOperations = Seq(
-        node_models.SignedAtalaOperation(
-          signedWith = signedOperation.signedWithKey,
-          signature = signedOperation.signature.toArray.toProto,
-          operation = Some(signedOperation.operation.toAtalaOperation)
-        )
-      )
+      signedOperations = Seq(signedOperation.toProto)
     )
     for {
       _ <- ZIO.fromEither(didOpValidator.validate(signedOperation.operation))
