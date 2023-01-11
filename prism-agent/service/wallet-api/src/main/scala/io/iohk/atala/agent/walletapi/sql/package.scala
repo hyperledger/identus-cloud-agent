@@ -8,6 +8,7 @@ import io.iohk.atala.agent.walletapi.model.ManagedDIDState
 import io.iohk.atala.castor.core.model.did.{PrismDID, PrismDIDOperation}
 import io.iohk.atala.castor.core.model.ProtoModelHelper.*
 import io.iohk.atala.prism.protos.node_models
+import java.time.Instant
 
 import scala.util.Try
 import scala.collection.immutable.ArraySeq
@@ -43,7 +44,9 @@ package object sql {
       did: PrismDID,
       publicationStatus: DIDPublicationStatusType,
       atalaOperationContent: Array[Byte],
-      publishOperationId: Option[Array[Byte]]
+      publishOperationId: Option[Array[Byte]],
+      createdAt: Instant,
+      updatedAt: Instant
   ) {
     def toDomain: Try[ManagedDIDState] = {
       publicationStatus match {
@@ -61,7 +64,7 @@ package object sql {
             operationId <- publishOperationId
               .toRight(RuntimeException(s"DID publication operation id does not exists for PUBLISHED status"))
               .toTry
-          } yield ManagedDIDState.Published(createDIDOperation, ArraySeq.from(operationId), ???, ???) // TODO: implement
+          } yield ManagedDIDState.Published(createDIDOperation, ArraySeq.from(operationId))
       }
     }
 
@@ -81,20 +84,21 @@ package object sql {
   }
 
   object DIDPublicationStateRow {
-    def from(did: PrismDID, state: ManagedDIDState): DIDPublicationStateRow = {
+    def from(did: PrismDID, state: ManagedDIDState, now: Instant): DIDPublicationStateRow = {
       import DIDPublicationStatusType.*
       val (status, createOperation, publishedOperationId) = state match {
         case ManagedDIDState.Created(operation) => (CREATED, operation, None)
         case ManagedDIDState.PublicationPending(operation, operationId) =>
           (PUBLICATION_PENDING, operation, Some(operationId))
-        case ManagedDIDState.Published(operation, operationId, _, _) =>
-          (PUBLISHED, operation, Some(operationId)) // TODO: implement
+        case ManagedDIDState.Published(operation, operationId) => (PUBLISHED, operation, Some(operationId))
       }
       DIDPublicationStateRow(
         did = did,
         publicationStatus = status,
         atalaOperationContent = createOperation.toAtalaOperation.toByteArray,
-        publishOperationId = publishedOperationId.map(_.toArray)
+        publishOperationId = publishedOperationId.map(_.toArray),
+        createdAt = now,
+        updatedAt = now
       )
     }
   }

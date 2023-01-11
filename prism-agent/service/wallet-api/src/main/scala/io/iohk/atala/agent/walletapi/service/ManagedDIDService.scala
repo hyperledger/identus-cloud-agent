@@ -105,7 +105,7 @@ final class ManagedDIDService private[walletapi] (
         case ManagedDIDState.Created(operation) => doPublish(operation)
         case ManagedDIDState.PublicationPending(operation, publishOperationId) =>
           ZIO.succeed(ScheduleDIDOperationOutcome(did, operation, publishOperationId))
-        case ManagedDIDState.Published(operation, publishOperationId, _, _) =>
+        case ManagedDIDState.Published(operation, publishOperationId) =>
           ZIO.succeed(ScheduleDIDOperationOutcome(did, operation, publishOperationId))
       }
     } yield outcome
@@ -130,6 +130,7 @@ final class ManagedDIDService private[walletapi] (
           secretStorage.upsertKey(did, keyId, keyPair)
         }
         .mapError(CreateManagedDIDError.WalletStorageError.apply)
+        .tapErrorCause(e => ZIO.logErrorCause(e)) // TODO: remove
       // A DID is considered created after a successful save using saveCreatedDID
       // If some steps above failed, it is not considered created and data that
       // are persisted along the way may be garbage collected.
@@ -154,9 +155,8 @@ final class ManagedDIDService private[walletapi] (
         .mapError(UpdateManagedDIDError.WalletStorageError.apply)
         .someOrFail(UpdateManagedDIDError.DIDNotFound(did))
       _ <- didState match {
-        case ManagedDIDState.Published(_, _, lastConfirmedOperationId, lastUnconfirmedOperationId) =>
-          ???
-        case _ => ZIO.fail(UpdateManagedDIDError.DIDNotPublished(did))
+        case ManagedDIDState.Published(_, _) => ???
+        case _                               => ZIO.fail(UpdateManagedDIDError.DIDNotPublished(did))
       }
     } yield ???
 
@@ -223,9 +223,8 @@ final class ManagedDIDService private[walletapi] (
               result.status match {
                 case ScheduledDIDOperationStatus.Pending              => s
                 case ScheduledDIDOperationStatus.AwaitingConfirmation => s
-                case ScheduledDIDOperationStatus.Confirmed =>
-                  ManagedDIDState.Published(operation, publishOperationId, publishOperationId, None)
-                case ScheduledDIDOperationStatus.Rejected => ManagedDIDState.Created(operation)
+                case ScheduledDIDOperationStatus.Confirmed => ManagedDIDState.Published(operation, publishOperationId)
+                case ScheduledDIDOperationStatus.Rejected  => ManagedDIDState.Created(operation)
               }
             case None => ManagedDIDState.Created(operation)
           }

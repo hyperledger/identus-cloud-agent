@@ -5,6 +5,7 @@ import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
 import cats.instances.seq
 import doobie.*
 import doobie.implicits.*
+import doobie.postgres.implicits.*
 import io.circe._
 import io.circe.parser._
 import io.circe.syntax._
@@ -24,8 +25,9 @@ import io.iohk.atala.castor.core.model.did.EllipticCurve
 import io.iohk.atala.prism.crypto.EC
 import io.iohk.atala.shared.utils.Base64Utils
 
-// TODO: replace with actual implementation
 class JdbcDIDSecretStorage(xa: Transactor[Task]) extends DIDSecretStorage {
+
+  case class InstantAsBigInt(value: Instant)
 
   // Uncomment to have Doobie LogHandler in scope and automatically output SQL statements in logs
   // given logHandler: LogHandler = LogHandler.jdkLogHandler
@@ -33,8 +35,8 @@ class JdbcDIDSecretStorage(xa: Transactor[Task]) extends DIDSecretStorage {
   given uuidGet: Get[UUID] = Get[String].map(UUID.fromString)
   given uuidPut: Put[UUID] = Put[String].contramap(_.toString())
 
-  given instantGet: Get[Instant] = Get[Long].map(Instant.ofEpochSecond)
-  given instantPut: Put[Instant] = Put[Long].contramap(_.getEpochSecond())
+  given instantGet: Get[InstantAsBigInt] = Get[Long].map(Instant.ofEpochSecond).map(InstantAsBigInt.apply)
+  given instantPut: Put[InstantAsBigInt] = Put[Long].contramap(_.value.getEpochSecond())
 
   given ecKeyPairPairGet: Get[ECKeyPair] = Get[String].map { b64 =>
     val bytes = Base64Utils.decodeURL(b64)
@@ -54,7 +56,7 @@ class JdbcDIDSecretStorage(xa: Transactor[Task]) extends DIDSecretStorage {
   override def removeDIDSecret(did: PrismDID): Task[Int] = {
     val cxnIO = sql"""
         | DELETE
-        | FROM public.did_secret_storage
+        | FROM public.prism_did_secret_storage
         | WHERE
         |   did = $did
         """.stripMargin.update
@@ -67,7 +69,7 @@ class JdbcDIDSecretStorage(xa: Transactor[Task]) extends DIDSecretStorage {
     val cxnIO = sql"""
         | SELECT
         |   key_pair
-        | FROM public.did_secret_storage
+        | FROM public.prism_did_secret_storage
         | WHERE
         |   did = $did
         |   AND key_id = $keyId
@@ -79,22 +81,21 @@ class JdbcDIDSecretStorage(xa: Transactor[Task]) extends DIDSecretStorage {
   }
 
   override def upsertKey(did: PrismDID, keyId: String, keyPair: ECKeyPair): Task[Int] = {
-    val cxnIO = sql"""
-        | INSERT INTO public.did_secret_storage(
+    val cxnIO = (now: Instant) => sql"""
+        | INSERT INTO public.prism_did_secret_storage(
         |   did,
         |   created_at,
         |   key_id,
         |   key_pair
         | ) values (
         |   ${did},
-        |   ${Instant.now()},
+        |   ${now},
         |   ${keyId},
         |   ${keyPair}
         | )
         """.stripMargin.update
 
-    cxnIO.run
-      .transact(xa)
+    Clock.instant.flatMap(cxnIO(_).run.transact(xa)).tapErrorCause(e => ZIO.logErrorCause(e)) // TODO: remove
   }
 
   override def listKeys(did: PrismDID): Task[Map[String, ECKeyPair]] = {
@@ -102,7 +103,7 @@ class JdbcDIDSecretStorage(xa: Transactor[Task]) extends DIDSecretStorage {
         | SELECT
         |   key_id,
         |   key_pair
-        | FROM public.did_secret_storage
+        | FROM public.prism_did_secret_storage
         | WHERE
         |   did = $did
         """.stripMargin
@@ -115,7 +116,7 @@ class JdbcDIDSecretStorage(xa: Transactor[Task]) extends DIDSecretStorage {
   override def removeKey(did: PrismDID, keyId: String): Task[Int] = {
     val cxnIO = sql"""
         | DELETE
-        | FROM public.did_secret_storage
+        | FROM public.prism_did_secret_storage
         | WHERE
         |   did = $did
         |   AND key_id = $keyId
@@ -141,7 +142,7 @@ class JdbcDIDSecretStorage(xa: Transactor[Task]) extends DIDSecretStorage {
   }
 
   override def insertKey(did: DidId, keyId: String, keyPair: OctetKeyPair): Task[Int] = {
-    val cxnIO = sql"""
+    val cxnIO = (now: InstantAsBigInt) => sql"""
         | INSERT INTO public.did_secret_storage(
         |   did,
         |   created_at,
@@ -149,14 +150,13 @@ class JdbcDIDSecretStorage(xa: Transactor[Task]) extends DIDSecretStorage {
         |   key_pair
         | ) values (
         |   ${did},
-        |   ${Instant.now()},
+        |   ${now},
         |   ${keyId},
         |   ${keyPair}
         | )
         """.stripMargin.update
 
-    cxnIO.run
-      .transact(xa)
+    Clock.instant.flatMap(i => cxnIO(InstantAsBigInt(i)).run.transact(xa))
   }
 
 }

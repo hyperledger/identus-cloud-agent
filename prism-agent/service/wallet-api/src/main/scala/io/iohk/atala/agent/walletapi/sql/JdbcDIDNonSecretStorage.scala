@@ -20,7 +20,7 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
         |   publication_status,
         |   atala_operation_content,
         |   publish_operation_id
-        | FROM public.did_publication_state
+        | FROM public.prism_did_wallet_state
         | WHERE did = $did
         """.stripMargin
         .query[DIDPublicationStateRow]
@@ -32,19 +32,20 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
   }
 
   override def setManagedDIDState(did: PrismDID, state: ManagedDIDState): Task[Unit] = {
-    val row = DIDPublicationStateRow.from(did, state)
-    val cxnIO = sql"""
-        | INSERT INTO public.did_publication_state(
+    val cxnIO = (row: DIDPublicationStateRow) => sql"""
+        | INSERT INTO public.prism_did_wallet_state(
         |   did,
         |   publication_status,
         |   atala_operation_content,
-        |   publish_operation_id
+        |   publish_operation_id,
+        |   created_at
         | )
         | VALUES (
         |   ${row.did},
         |   ${row.publicationStatus},
         |   ${row.atalaOperationContent},
-        |   ${row.publishOperationId}
+        |   ${row.publishOperationId},
+        |   ${row.createdAt}
         | )
         | ON CONFLICT (did) DO UPDATE SET
         |   publication_status = EXCLUDED.publication_status,
@@ -52,7 +53,11 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
         |   publish_operation_id = EXCLUDED.publish_operation_id
         """.stripMargin.update
 
-    cxnIO.run.transact(xa).unit
+    for {
+      now <- Clock.instant
+      row = DIDPublicationStateRow.from(did, state, now)
+      _ <- cxnIO(row).run.transact(xa).unit
+    } yield ()
   }
 
   override def listManagedDID: Task[Map[PrismDID, ManagedDIDState]] = {
@@ -63,7 +68,7 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
            |   publication_status,
            |   atala_operation_content,
            |   publish_operation_id
-           | FROM public.did_publication_state
+           | FROM public.prism_did_wallet_state
            """.stripMargin
         .query[DIDPublicationStateRow]
         .to[List]

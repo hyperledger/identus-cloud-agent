@@ -232,7 +232,7 @@ trait OASDomainModelHelper {
         case ManagedDIDState.Created(operation) => Some(PrismDID.buildLongFormFromOperation(operation)) -> "CREATED"
         case ManagedDIDState.PublicationPending(operation, _) =>
           Some(PrismDID.buildLongFormFromOperation(operation)) -> "PUBLICATION_PENDING"
-        case ManagedDIDState.Published(_, _, _, _) => None -> "PUBLISHED"
+        case ManagedDIDState.Published(_, _) => None -> "PUBLISHED"
       }
       ListManagedDIDResponseInner(
         did = didDetail.did.toString,

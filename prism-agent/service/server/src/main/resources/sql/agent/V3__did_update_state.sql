@@ -6,14 +6,18 @@ ALTER TABLE public.did_publication_state
 
 -- add "created_at" column with default value for existing records
 ALTER TABLE public.prism_did_wallet_state
-ADD COLUMN "created_at" TIMESTAMPTZ;
+ADD COLUMN "created_at" TIMESTAMPTZ,
+  ADD COLUMN "updated_at" TIMESTAMPTZ;
 
 UPDATE public.prism_did_wallet_state
-SET "created_at" = '1970-01-01 00:00:00.000+0000'
+SET "created_at" = '1970-01-01 00:00:00.000+0000',
+  "updated_at" = '1970-01-01 00:00:00.000+0000'
 WHERE "created_at" IS NULL;
 
 ALTER TABLE public.prism_did_wallet_state
 ALTER COLUMN "created_at"
+SET NOT NULL,
+  ALTER COLUMN "updated_at"
 SET NOT NULL;
 
 CREATE TYPE public.prism_did_operation_status AS ENUM(
@@ -23,13 +27,14 @@ CREATE TYPE public.prism_did_operation_status AS ENUM(
   'CONFIRMED_AND_REJECTED'
 );
 
-CREATE TABLE public.prism_did_update_state(
+CREATE TABLE public.prism_did_lineage(
   "did" TEXT NOT NULL,
   "created_at" TIMESTAMPTZ NOT NULL,
   "operation_id" BYTEA NOT NULL,
   "operation_hash" BYTEA NOT NULL,
   "previous_operation_hash" BYTEA NOT NULL,
   "status" prism_did_operation_status NOT NULL,
+  "transaction_id" TEXT,
   PRIMARY KEY("did", "operation_hash"),
   UNIQUE("operation_id"),
   CONSTRAINT fk_did FOREIGN KEY("did") REFERENCES public.prism_did_wallet_state("did")
