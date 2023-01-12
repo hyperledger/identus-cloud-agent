@@ -39,6 +39,7 @@ flowchart
         connect --> prism-agent
 
         castor --> iris
+        castor --> pollux
         castor --> prism-agent
 
 
@@ -66,6 +67,7 @@ test
 ```
 
 **Note:**
-The **Mercury Libraries** is the collection of dependencies with the single cross version.
+- The **Mercury Libraries** are the collection of dependencies with the single cross version.
 We will represent as a single box here. But the real dependencies can of a subset of the Mercury Libraries.
 For more information about the Mercury Modules Interdependencies see [HERE](./mercury/mercury-library/README.md).
+- The **Pollux Libraries** are the collection of dependencies with the single cross version.
