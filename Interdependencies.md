@@ -42,6 +42,8 @@ flowchart
         castor --> pollux
         castor --> prism-agent
 
+        pollux --> prism-agent
+
 
         infrastructure
         test
