@@ -9,6 +9,7 @@ object Dependencies {
     val mercury = "0.15.0"
     val flyway = "9.8.3"
     val shared = "0.2.0"
+    val embeddedPostgres = "1.0.0"
   }
 
   private lazy val zio = "dev.zio" %% "zio" % Versions.zio
@@ -27,8 +28,10 @@ object Dependencies {
 
   private lazy val shared = "io.iohk.atala" % "shared" % Versions.shared
 
+  private lazy val embeddedPostgres = "com.opentable.components" % "otj-pg-embedded" % Versions.embeddedPostgres % Test
+
   // Dependency Modules
-  private lazy val baseDependencies: Seq[ModuleID] = Seq(zio, zioTest, zioTestSbt, zioTestMagnolia, shared)
+  private lazy val baseDependencies: Seq[ModuleID] = Seq(zio, zioTest, zioTestSbt, zioTestMagnolia, shared, embeddedPostgres)
   private lazy val doobieDependencies: Seq[ModuleID] = Seq(doobiePostgres, doobieHikari, flyway)
 
   // Project Dependencies
