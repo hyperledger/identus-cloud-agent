@@ -33,8 +33,8 @@ CREATE TABLE public.proof
 
 
 CREATE INDEX type_index ON public.proof (type);
-CREATE INDEX verificationMethod_index ON public.proof (verification_method);
-CREATE INDEX proofPurpose_index ON public.proof (proof_purpose)
+CREATE INDEX verification_method_index ON public.proof (verification_method);
+CREATE INDEX proof_purpose_index ON public.proof (proof_purpose)
 
 
 
