@@ -22,19 +22,20 @@ flowchart
 
       OR1 --> mercury
 
+      OR2 ---> iris
       OR2 --> castor
-      OR2 ----> iris
 
       subgraph REPO [BB Repository]
         prism-node -.???\nMAYBE in the future.-> pollux
         prism-node --> castor
 
+        iris -.IRIS client\nMAYBE in the future.-> castor
         iris -.IRIS client\nMAYBE in the future.-> prism-agent
         iris --> iris-server
 
+        shared --> prism-agent
         shared --> pollux
         shared --> castor
-        shared --> prism-agent
         shared --> connect
         shared --> iris
         
@@ -47,7 +48,7 @@ flowchart
 
         castor --> pollux
         castor --> prism-agent
-        castor --> iris
+        %%castor --> iris
 
         pollux --> prism-agent
 
