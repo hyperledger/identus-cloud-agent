@@ -19,7 +19,9 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
         |   did,
         |   publication_status,
         |   atala_operation_content,
-        |   publish_operation_id
+        |   publish_operation_id,
+        |   created_at,
+        |   updated_at
         | FROM public.prism_did_wallet_state
         | WHERE did = $did
         """.stripMargin
@@ -38,25 +40,28 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
         |   publication_status,
         |   atala_operation_content,
         |   publish_operation_id,
-        |   created_at
+        |   created_at,
+        |   updated_at
         | )
         | VALUES (
         |   ${row.did},
         |   ${row.publicationStatus},
         |   ${row.atalaOperationContent},
         |   ${row.publishOperationId},
-        |   ${row.createdAt}
+        |   ${row.createdAt},
+        |   ${row.updatedAt}
         | )
         | ON CONFLICT (did) DO UPDATE SET
         |   publication_status = EXCLUDED.publication_status,
         |   atala_operation_content = EXCLUDED.atala_operation_content,
-        |   publish_operation_id = EXCLUDED.publish_operation_id
+        |   publish_operation_id = EXCLUDED.publish_operation_id,
+        |   updated_at = EXCLUDED.updated_at
         """.stripMargin.update
 
     for {
       now <- Clock.instant
       row = DIDPublicationStateRow.from(did, state, now)
-      _ <- cxnIO(row).run.transact(xa).unit
+      _ <- cxnIO(row).run.transact(xa).unit.tapErrorCause(e => ZIO.logErrorCause(e)) // TODO: remove
     } yield ()
   }
 
@@ -67,7 +72,9 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
            |   did,
            |   publication_status,
            |   atala_operation_content,
-           |   publish_operation_id
+           |   publish_operation_id,
+           |   created_at,
+           |   updated_at
            | FROM public.prism_did_wallet_state
            """.stripMargin
         .query[DIDPublicationStateRow]

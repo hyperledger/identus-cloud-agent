@@ -23,7 +23,7 @@ package object sql {
   }
 
   given didPublicationStatusMeta: Meta[DIDPublicationStatusType] = pgEnumString(
-    "DID_PUBLICATION_STATUS",
+    "PRISM_DID_WALLET_STATUS",
     {
       case "CREATED"             => DIDPublicationStatusType.CREATED
       case "PUBLICATION_PENDING" => DIDPublicationStatusType.PUBLICATION_PENDING

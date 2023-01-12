@@ -27,27 +27,12 @@ CREATE TYPE public.prism_did_operation_status AS ENUM(
   'CONFIRMED_AND_REJECTED'
 );
 
-CREATE TABLE public.prism_did_lineage(
-  "did" TEXT NOT NULL,
-  "created_at" TIMESTAMPTZ NOT NULL,
-  "operation_id" BYTEA NOT NULL,
-  "operation_hash" BYTEA NOT NULL,
-  "previous_operation_hash" BYTEA NOT NULL,
-  "status" prism_did_operation_status NOT NULL,
-  "transaction_id" TEXT,
-  PRIMARY KEY("did", "operation_hash"),
-  UNIQUE("operation_id"),
-  CONSTRAINT fk_did FOREIGN KEY("did") REFERENCES public.prism_did_wallet_state("did")
-);
-
 CREATE TABLE public.prism_did_secret_storage(
   "did" TEXT NOT NULL,
   "created_at" TIMESTAMPTZ NOT NULL,
   "key_id" TEXT NOT NULL,
   "key_pair" TEXT NOT NULL,
-  "operation_hash" BYTEA NOT NULL,
-  PRIMARY KEY("did", "key_id", "operation_hash"),
-  CONSTRAINT fk_did FOREIGN KEY("did") REFERENCES public.prism_did_wallet_state("did") ON DELETE RESTRICT
+  PRIMARY KEY("did", "key_id")
 );
 
 -- move did:prism keys to a new table instead of sharing with did:peer
@@ -55,14 +40,12 @@ INSERT INTO public.prism_did_secret_storage(
     "did",
     "created_at",
     "key_id",
-    "key_pair",
-    "operation_hash"
+    "key_pair"
   )
 SELECT sc."did",
   to_timestamp(sc."created_at"),
   sc."key_id",
-  sc."key_pair",
-  sha256(ps."atala_operation_content")
+  sc."key_pair"
 FROM public.did_secret_storage sc
   LEFT JOIN public.prism_did_wallet_state ps ON sc."did" = ps."did"
 WHERE sc."did" LIKE 'did:prism:%';

@@ -78,6 +78,7 @@ final class ManagedDIDService private[walletapi] (
       ZIO.foreach(kv.keys.map(_.asCanonical))(computeNewDIDStateFromDLTAndPersist[GetManagedDIDError])
     }
     .unit
+    .tapErrorCause(e => ZIO.logErrorCause(e)) // TODO: remove
 
   def listManagedDID: IO[GetManagedDIDError, Seq[ManagedDIDDetail]] =
     for {
@@ -88,10 +89,11 @@ final class ManagedDIDService private[walletapi] (
   def publishStoredDID(did: CanonicalPrismDID): IO[PublishManagedDIDError, ScheduleDIDOperationOutcome] = {
     def doPublish(operation: PrismDIDOperation.Create) = {
       for {
-        outcome <- signAndSubmitOperation[PublishManagedDIDError](operation)
+        outcome <- signAndSubmitOperation[PublishManagedDIDError](operation).tapErrorCause(e => ZIO.logErrorCause(e)) // TODO: remove
         _ <- nonSecretStorage
           .setManagedDIDState(did, ManagedDIDState.PublicationPending(operation, outcome.operationId))
           .mapError(PublishManagedDIDError.WalletStorageError.apply)
+          .tapErrorCause(e => ZIO.logErrorCause(e)) // TODO: remove
       } yield outcome
     }
 
@@ -101,6 +103,7 @@ final class ManagedDIDService private[walletapi] (
         .getManagedDIDState(did)
         .mapError(PublishManagedDIDError.WalletStorageError.apply)
         .someOrFail(PublishManagedDIDError.DIDNotFound(did))
+        .tapErrorCause(e => ZIO.logErrorCause(e)) // TODO: remove
       outcome <- didState match {
         case ManagedDIDState.Created(operation) => doPublish(operation)
         case ManagedDIDState.PublicationPending(operation, publishOperationId) =>
@@ -131,12 +134,13 @@ final class ManagedDIDService private[walletapi] (
         }
         .mapError(CreateManagedDIDError.WalletStorageError.apply)
         .tapErrorCause(e => ZIO.logErrorCause(e)) // TODO: remove
-      // A DID is considered created after a successful save using saveCreatedDID
+      // A DID is considered created after a successful setState
       // If some steps above failed, it is not considered created and data that
       // are persisted along the way may be garbage collected.
       _ <- nonSecretStorage
         .setManagedDIDState(did, ManagedDIDState.Created(createOperation))
         .mapError(CreateManagedDIDError.WalletStorageError.apply)
+        .tapErrorCause(e => ZIO.logErrorCause(e)) // TODO: remove
     } yield longFormDID
   }
 
