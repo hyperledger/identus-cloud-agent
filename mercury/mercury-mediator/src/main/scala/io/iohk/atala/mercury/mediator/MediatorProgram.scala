@@ -73,7 +73,7 @@ object MediatorProgram {
                       + fromJsonObject(toJson(mediatorMessage.toString)).spaces2
                       + "\n********************************************************************************************************************************\n"
                   )
-                  msg = mediatorMessage.attachments.map(_.data.toString).head // FIXME Head
+                  msg = mediatorMessage.attachments.toSeq.flatten.map(e => e.data.toString).head // FIXME Head
                   // msgxx = mediatorMessage.getAttachments().get(0).getData().toJSONObject().get("json").toString() //FIXME REMOVE
                   nextRecipient = DidId(
                     mediatorMessage
@@ -140,9 +140,9 @@ object MediatorProgram {
             body = body
           )
         Message(
-          piuri = mediateGrant.`type`,
+          `type` = mediateGrant.`type`,
           from = Some(from),
-          to = Some(to),
+          to = Seq(to),
           body = JsonObject("routing_did" -> from.value.asJson)
         )
       case _ =>
@@ -152,9 +152,9 @@ object MediatorProgram {
             `type` = MediateDeny.`type`
           )
         Message(
-          piuri = mediateDeny.`type`,
+          `type` = mediateDeny.`type`,
           from = Some(from),
-          to = Some(to)
+          to = Seq(to)
         )
   } yield (message)
 
