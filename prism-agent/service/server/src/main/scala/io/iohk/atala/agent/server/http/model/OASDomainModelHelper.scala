@@ -16,6 +16,7 @@ import io.iohk.atala.agent.openapi.model.{
   PresentationStatus,
   PublicKeyJwk,
   Service,
+  UpdateManagedDIDRequestActionsInner,
   VerificationMethod
 }
 import io.iohk.atala.castor.core.model.did as castorDomain
@@ -68,6 +69,37 @@ trait OASDomainModelHelper {
         publicKeys = publicKeys,
         services = services
       )
+    }
+  }
+
+  extension (action: UpdateManagedDIDRequestActionsInner) {
+    def toDomain: Either[String, walletDomain.UpdateManagedDIDAction] = {
+      import walletDomain.UpdateManagedDIDAction.*
+      action.actionType match {
+        case "ADD_KEY" =>
+          action.addKey
+            .toRight("addKey property is missing from action type ADD_KEY")
+            .flatMap(_.toDomain)
+            .map(template => AddKey(template))
+        case "REMOVE_KEY" =>
+          action.removeKey
+            .toRight("removeKey property is missing from action type REMOVE_KEY")
+            .map(i => RemoveKey(i.id))
+        case "ADD_SERVICE" =>
+          action.addService
+            .toRight("addservice property is missing from action type ADD_SERVICE")
+            .flatMap(_.toDomain)
+            .map(s => AddService(s))
+        case "REMOVE_SERVICE" =>
+          action.removeService
+            .toRight("removeService property is missing from action type REMOVE_SERVICE")
+            .map(i => RemoveService(i.id))
+        case "UPDATE_SERVICE" =>
+          action.updateService
+            .toRight("updateService property is missing from action type UPDATE_SERVICE")
+            .flatMap(_.toDomain)
+            .map(s => UpdateService(s))
+      }
     }
   }
 

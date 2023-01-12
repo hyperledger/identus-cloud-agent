@@ -213,6 +213,12 @@ paths:
             application/json:
               schema:
                 $ref: "./castor/schemas.yaml#/components/schemas/DIDOperationResponse"
+        "422":
+          description: The DID update failed.
+          content:
+            application/json:
+              schema:
+                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
 
   # ----------------------------------
   # Pollux

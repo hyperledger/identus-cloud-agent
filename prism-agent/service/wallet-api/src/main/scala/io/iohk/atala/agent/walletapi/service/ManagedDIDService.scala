@@ -163,8 +163,6 @@ final class ManagedDIDService private[walletapi] (
         case _                               => ZIO.fail(UpdateManagedDIDError.DIDNotPublished(did))
       }
     } yield ???
-
-    ???
   }
 
   private def signAndSubmitOperation[E](operation: PrismDIDOperation)(using
