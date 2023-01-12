@@ -15,8 +15,7 @@ flowchart
     prism-node-1.4 -.copy proto files.-> prism-node
 
     subgraph BB[Building Blocks Interdependencies]
-      prism-node -.???\nMAYBE in the future.-> castor
-      prism-node -.???\nMAYBE in the future.-> pollux
+
 
       pluto -.WIP.-> OR2{OR}
       pluto --> PLUTO-didcomm
@@ -24,12 +23,20 @@ flowchart
       OR1 --> mercury
 
       OR2 --> castor
+      OR2 ----> iris
 
       subgraph REPO [BB Repository]
-        shared --> castor
+        prism-node -.???\nMAYBE in the future.-> pollux
+        prism-node --> castor
+
+        iris -.IRIS client\nMAYBE in the future.-> prism-agent
+        iris --> iris-server
+
         shared --> pollux
+        shared --> castor
         shared --> prism-agent
         shared --> connect
+        shared --> iris
         
         mercury --> pollux
         mercury --> connect
@@ -38,12 +45,11 @@ flowchart
 
         connect --> prism-agent
 
-        castor --> iris
         castor --> pollux
         castor --> prism-agent
+        castor --> iris
 
         pollux --> prism-agent
-
 
         infrastructure
         test
@@ -58,6 +64,7 @@ castor[Castor]
 connect
 infrastructure
 iris[IRIS]
+iris-server((IRIS-server))
 mercury[MERCURY]
 mediator((Mercury\nMediator))
 pluto[PLUTO extrenal repo]
