@@ -4,22 +4,31 @@ import io.iohk.atala.connect.core.model.ConnectionRecord
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import zio._
 import java.util.UUID
-import io.iohk.atala.mercury.model.DidId
-import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
-import io.iohk.atala.mercury.protocol.connection.ConnectionRequest
-import io.iohk.atala.mercury.protocol.connection.ConnectionResponse
-
+// import io.iohk.atala.mercury.model.DidId
+// import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
+// import io.iohk.atala.mercury.protocol.connection.ConnectionRequest
+// import io.iohk.atala.mercury.protocol.connection.ConnectionResponse
+import io.iohk.atala.connect.core.model._
 trait ConnectionService {
 
-  def createConnectionInvitation(label: Option[String], pairwiseDID: DidId): IO[ConnectionServiceError, ConnectionRecord]
+  def createConnectionInvitation(
+      label: Option[String],
+      pairwiseDID: DidId
+  ): IO[ConnectionServiceError, ConnectionRecord]
 
   def receiveConnectionInvitation(invitation: String): IO[ConnectionServiceError, ConnectionRecord]
 
-  def acceptConnectionInvitation(recordId: UUID, pairwiseDid: DidId): IO[ConnectionServiceError, Option[ConnectionRecord]]
+  def acceptConnectionInvitation(
+      recordId: UUID,
+      pairwiseDid: DidId
+  ): IO[ConnectionServiceError, Option[ConnectionRecord]]
 
   def markConnectionRequestSent(recordId: UUID): IO[ConnectionServiceError, Option[ConnectionRecord]]
 
-  def receiveConnectionRequest(request: ConnectionRequest): IO[ConnectionServiceError, Option[ConnectionRecord]]
+  def receiveConnectionRequest(
+      thid: Option[String], // from ConnectionRequest
+      request: ConnectionRequest
+  ): IO[ConnectionServiceError, Option[ConnectionRecord]]
 
   def acceptConnectionRequest(recordId: UUID): IO[ConnectionServiceError, Option[ConnectionRecord]]
 

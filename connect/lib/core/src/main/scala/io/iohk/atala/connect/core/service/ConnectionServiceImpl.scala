@@ -1,21 +1,16 @@
 package io.iohk.atala.connect.core.service
 
 import io.iohk.atala.connect.core.repository.ConnectionRepository
-import io.iohk.atala.mercury.DidComm
 import zio._
+import io.iohk.atala.connect.core.model._
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError._
-import io.iohk.atala.connect.core.model.ConnectionRecord
 import io.iohk.atala.connect.core.model.ConnectionRecord._
-import io.iohk.atala.mercury.protocol.connection.ConnectionRequest
 import java.util.UUID
-import io.iohk.atala.mercury._
-import io.iohk.atala.mercury.model.DidId
 import java.time.Instant
 import java.rmi.UnexpectedException
-import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
-import io.iohk.atala.mercury.protocol.connection.ConnectionResponse
 import io.iohk.atala.shared.utils.Base64Utils
+import reflect.Selectable.reflectiveSelectable //But this will use Java Reflection
 
 private class ConnectionServiceImpl(
     connectionRepository: ConnectionRepository[Task]

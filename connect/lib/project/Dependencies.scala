@@ -6,7 +6,6 @@ object Dependencies {
     val doobie = "1.0.0-RC2"
     val zioCatsInterop = "3.3.0"
     val iris = "0.1.0"
-    val mercury = "0.15.0"
     val flyway = "9.8.3"
     val shared = "0.2.0"
   }
@@ -19,8 +18,6 @@ object Dependencies {
 
   private lazy val flyway = "org.flywaydb" % "flyway-core" % Versions.flyway
 
-  private lazy val mercuryProtocolConnection = "io.iohk.atala" %% "mercury-protocol-connection" % Versions.mercury
-
   private lazy val shared = "io.iohk.atala" % "shared" % Versions.shared
 
   // Dependency Modules
@@ -28,7 +25,6 @@ object Dependencies {
   private lazy val doobieDependencies: Seq[ModuleID] = Seq(doobiePostgres, doobieHikari, flyway)
 
   // Project Dependencies
-  lazy val coreDependencies: Seq[ModuleID] =
-    baseDependencies ++ Seq(mercuryProtocolConnection)
+  lazy val coreDependencies: Seq[ModuleID] = baseDependencies
   lazy val sqlDoobieDependencies: Seq[ModuleID] = baseDependencies ++ doobieDependencies ++ Seq(zioCatsInterop)
 }

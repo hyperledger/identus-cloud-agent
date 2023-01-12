@@ -1,8 +1,6 @@
 package io.iohk.atala.connect.core.model
 
 import io.iohk.atala.connect.core.model.ConnectionRecord.{ProtocolState, Role}
-import io.iohk.atala.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
-import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
 
 import java.util.UUID
 import java.time.Instant
