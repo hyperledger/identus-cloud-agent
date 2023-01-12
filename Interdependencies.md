@@ -6,7 +6,7 @@ This document describes the interdependencies between the different Building Blo
 
 ```mermaid
 flowchart
-  PLUTO-didcomm --> OR1{OR} 
+  PLUTO-didcomm -.WIP.-> OR1{OR} 
   didcommx --external dependency--> OR1{OR} 
 
   subgraph PRISM
@@ -18,7 +18,7 @@ flowchart
       prism-node -.???\nMAYBE in the future.-> castor
       prism-node -.???\nMAYBE in the future.-> pollux
 
-      pluto --> OR2{OR}
+      pluto -.WIP.-> OR2{OR}
       pluto --> PLUTO-didcomm
 
       OR1 --> mercury
