@@ -88,7 +88,7 @@ object VerifiableCredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault {
 
     private val unique = mutable.Set.empty[String]
     val schemaUnique = for {
-      _ <- schema  // drain the value to evade the Gen from producing the same over and over again
+      _ <- schema // drain the value to evade the Gen from producing the same over and over again
       s <- schema if !unique.contains(s.uniqueConstraintKey)
       _ = unique += s.uniqueConstraintKey
     } yield s

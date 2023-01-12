@@ -79,22 +79,17 @@ object VerifiableCredentialSchema {
         limitOpt: Option[Int] = Some(100)
     ) = {
       val quotedQuery = limitOpt
-        .fold(
-          quote(query[VerifiableCredentialSchema]))(limit =>
+        .fold(quote(query[VerifiableCredentialSchema]))(limit =>
           quote(query[VerifiableCredentialSchema].take(lift(limit)))
         )
 
       val dynamicQuery = quotedQuery.dynamic
         .filterOpt(authorOpt)((vcs, author) => quote(vcs.author.like(author)))
         .filterOpt(nameOpt)((vcs, name) => quote(vcs.name.like(name)))
-        .filterOpt(versionOpt)((vcs, version) =>
-          quote(vcs.version.like(version))
-        )
+        .filterOpt(versionOpt)((vcs, version) => quote(vcs.version.like(version)))
         .filter(vcs =>
           attributeOpt
-            .fold(quote(true))(attr =>
-              quote(vcs.attributes.contains(lift(attr)))
-            )
+            .fold(quote(true))(attr => quote(vcs.attributes.contains(lift(attr))))
         )
         .filter(vcs =>
           tagOpt
@@ -102,7 +97,6 @@ object VerifiableCredentialSchema {
         )
         .dropOpt(offsetOpt)
         .sortBy(vcs => vcs.id)
-      //.takeOpt(limitOpt) //This line pollutes the stdout
 
       dynamicQuery
     }
