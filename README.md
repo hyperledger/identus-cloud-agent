@@ -19,7 +19,9 @@
 
 ## Documentation
 
-* [OpenAPI docs](openapi)
+<!-- FIXME * [OpenAPI docs](openapi) -->
+
+* [Interdependencies](./Interdependencies.md)
 
 ## Running a single instance locally
 
