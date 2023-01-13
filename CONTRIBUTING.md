@@ -45,7 +45,13 @@ All pull requests will be subject to the following checks and actions:
 |-----------------------|--------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Linter                | Check  | Powered by megalinter - any changed source will be checked against configured linting rules (configured in .mega-linter.yml at root of repository). No automatic fixes will be generated. If the check fails, the author of the pull request must fix issues and update pull request. |
 | Pull request labeller | Action | Pull Request will be labelled based upon directory structure                                                                                                                                                                                                                          |
+Linting is also available as part of the pre-commit hooks, this will follow the same rules as the CI checks in that it will not automatically fix linting issues.
 
+> You must run `pre-commit install` to install these hooks once you have cloned the repository. Instructions can be found [here](https://pre-commit.com/#usage)
+
+In order to automatically fix linting issues, you must install and run the megalinter tool yourself. Instructions for running locally can be found [here](https://megalinter.io/latest/mega-linter-runner/)
+
+Use `npx mega-linter-runner --fix` after installation to fix any detected local issues
 
 ### Pull Request review
 
