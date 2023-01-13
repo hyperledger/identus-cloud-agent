@@ -51,15 +51,15 @@ object OfferCredential {
 
   def `type`: PIURI = "https://didcomm.org/issue-credential/2.0/offer-credential"
 
-  def build[A](
+  def build(
       fromDID: DidId,
       toDID: DidId,
       thid: Option[String] = None,
       credential_preview: CredentialPreview,
-      credentials: Map[String, A],
-  )(using Encoder[A]): OfferCredential = {
+      credentials: Map[String, Array[Byte]],
+  ): OfferCredential = {
     val aux = credentials.map { case (formatName, singleCredential) =>
-      val attachment = AttachmentDescriptor.buildAttachment(payload = singleCredential)
+      val attachment = AttachmentDescriptor.buildBase64Attachment(payload = singleCredential)
       val credentialFormat: CredentialFormat = CredentialFormat(attachment.id, formatName)
       (credentialFormat, attachment)
     }
