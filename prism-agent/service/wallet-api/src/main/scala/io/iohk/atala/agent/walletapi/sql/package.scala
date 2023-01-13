@@ -57,6 +57,9 @@ package object sql {
   given prismDIDGet: Get[PrismDID] = Get[String].map(PrismDID.fromString(_).left.map(Exception(_)).toTry.get)
   given prismDIDPut: Put[PrismDID] = Put[String].contramap(_.asCanonical.toString)
 
+  given arraySeqByteGet: Get[ArraySeq[Byte]] = Get[Array[Byte]].map(ArraySeq.from)
+  given arraySeqBytePut: Put[ArraySeq[Byte]] = Put[Array[Byte]].contramap(_.toArray)
+
   final case class DIDPublicationStateRow(
       did: PrismDID,
       publicationStatus: DIDWalletStatusType,

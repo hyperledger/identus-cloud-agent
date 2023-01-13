@@ -89,7 +89,24 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
 
   override def insertUpdateLineage(did: PrismDID, updateLineage: DIDUpdateLineage): Task[Unit] = ???
 
-  override def listUpdateLineage(did: PrismDID): Task[Seq[DIDUpdateLineage]] = ???
+  override def listUpdateLineage(did: PrismDID): Task[Seq[DIDUpdateLineage]] = {
+    val cxnIO =
+      sql"""
+          | SELECT
+          |   operation_id,
+          |   operation_hash,
+          |   previous_operation_hash,
+          |   status,
+          |   created_at,
+          |   updated_at
+          | FROM public.prism_did_update_lineage
+          | WHERE did = $did
+        """.stripMargin
+        .query[DIDUpdateLineage]
+        .to[List]
+
+    cxnIO.transact(xa)
+  }
 
   override def setUpdateLineageStatus(operationHash: Array[Byte], status: ScheduledDIDOperationStatus): Task[Unit] = ???
 

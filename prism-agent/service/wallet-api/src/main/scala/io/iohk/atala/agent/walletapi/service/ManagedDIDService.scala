@@ -165,11 +165,19 @@ final class ManagedDIDService private[walletapi] (
         .getManagedDIDState(did)
         .mapError(UpdateManagedDIDError.WalletStorageError.apply)
         .someOrFail(UpdateManagedDIDError.DIDNotFound(did))
-      previousOperation: Array[Byte] = ???
-      generated <- didState match {
-        case ManagedDIDState.Published(_, _) => generateUpdateOperation(did, ???, actions)
-        case _                               => ZIO.fail(UpdateManagedDIDError.DIDNotPublished(did))
-      }
+        .flatMap {
+          case s: ManagedDIDState.Published => ZIO.succeed(s) // only DID in published state can be updated
+          case _                            => ZIO.fail(UpdateManagedDIDError.DIDNotPublished(did))
+        }
+      previousOperation <- nonSecretStorage
+        .listUpdateLineage(did)
+        .mapError(UpdateManagedDIDError.WalletStorageError.apply)
+        .map { lineage =>
+          val lastConfirmedUpdate =
+            lineage.filter(_.status == ScheduledDIDOperationStatus.Confirmed).maxByOption(_.createdAt)
+          lastConfirmedUpdate.fold(didState.createOperation.toAtalaOperationHash)(_.operationHash.toArray)
+        }
+      generated <- generateUpdateOperation(did, ???, actions)
     } yield ???
   }
 
