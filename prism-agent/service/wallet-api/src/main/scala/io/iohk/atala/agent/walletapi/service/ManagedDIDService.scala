@@ -165,8 +165,9 @@ final class ManagedDIDService private[walletapi] (
         .getManagedDIDState(did)
         .mapError(UpdateManagedDIDError.WalletStorageError.apply)
         .someOrFail(UpdateManagedDIDError.DIDNotFound(did))
-      _ <- didState match {
-        case ManagedDIDState.Published(_, _) => ???
+      previousOperation: Array[Byte] = ???
+      generated <- didState match {
+        case ManagedDIDState.Published(_, _) => generateUpdateOperation(did, ???, actions)
         case _                               => ZIO.fail(UpdateManagedDIDError.DIDNotPublished(did))
       }
     } yield ???

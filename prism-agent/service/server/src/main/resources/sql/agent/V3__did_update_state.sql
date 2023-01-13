@@ -35,6 +35,17 @@ CREATE TABLE public.prism_did_secret_storage(
   PRIMARY KEY("did", "key_id")
 );
 
+CREATE TABLE public.prism_did_update_lineage(
+  "did" TEXT NOT NULL,
+  "operation_hash" BYTEA NOT NULL PRIMARY KEY,
+  "previous_operation_hash" BYTEA NOT NULL,
+  "status" prism_did_operation_status NOT NULL,
+  "operation_id" BYTEA NOT NULL,
+  "created_at" TIMESTAMPTZ NOT NULL,
+  "updated_at" TIMESTAMPTZ NOT NULL,
+  CONSTRAINT fk_did FOREIGN KEY("did") REFERENCES public.prism_did_wallet_state("did") ON DELETE RESTRICT
+);
+
 -- move did:prism keys to a new table instead of sharing with did:peer
 INSERT INTO public.prism_did_secret_storage(
     "did",
