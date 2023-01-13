@@ -37,6 +37,16 @@ All Pull Requests will get a checklist that everyone is expected to follow, fail
 
 Check the [PR checklist](.github/PULL_REQUEST_TEMPLATE.md) for more info.
 
+### Pull request CI checks
+
+All pull requests will be subject to the following checks and actions:
+
+| Name                  | Type   | Description                                                                                                                                                                                                                                                                           |
+| --------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Linter                | Check  | Powered by megalinter - any changed source will be checked against configured linting rules (configured in .mega-linter.yml at root of repository). No automatic fixes will be generated. If the check fails, the author of the pull request must fix issues and update pull request. |
+| Pull request labeller | Action | Pull Request will be labelled based upon directory structure                                                                                                                                                                                                                          |
+
+
 ### Pull Request review
 
 The team `input-output-hk/atala` will be automatically set as reviewer when the PR is created, so that 2 reviewers from the team get assigned.
