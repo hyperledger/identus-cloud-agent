@@ -122,7 +122,7 @@ The `footer` is optional. The [Commit Message Footer](#commit-message-footer) fo
 
 #### Commit Message Header
 
-```
+```text
 <type>(<scope>): <short summary>
   │       │             │
   │       │             └─⫸ Summary in present tense. Not capitalized. No period at the end.
@@ -187,7 +187,7 @@ Explain the motivation for the change in the commit message body. This commit me
 
 The footer can contain information about breaking changes and deprecations and is also the place to reference GitHub issues, Jira tickets, and other PRs that this commit closes or is related to. For example:
 
-```
+```text
 BREAKING CHANGE: <breaking change summary>
 <BLANK LINE>
 <breaking change description + migration instructions>
@@ -198,7 +198,7 @@ Fixes ATL-<ticket number>
 
 or
 
-```
+```text
 DEPRECATED: <what is deprecated>
 <BLANK LINE>
 <deprecation description + recommended update path>
