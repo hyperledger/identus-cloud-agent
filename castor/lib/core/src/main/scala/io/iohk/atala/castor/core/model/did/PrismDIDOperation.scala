@@ -1,6 +1,7 @@
 package io.iohk.atala.castor.core.model.did
 
 import io.iohk.atala.castor.core.model.ProtoModelHelper
+import io.iohk.atala.prism.crypto.Sha256
 
 import scala.collection.compat.immutable.ArraySeq
 import io.iohk.atala.prism.protos.node_models
@@ -9,8 +10,9 @@ import io.iohk.atala.shared.models.HexStrings.HexString
 import java.net.URI
 
 sealed trait PrismDIDOperation {
-  def toAtalaOperation: node_models.AtalaOperation
   def did: CanonicalPrismDID
+  def toAtalaOperation: node_models.AtalaOperation
+  def toAtalaOperationHash: Array[Byte] = Sha256.compute(toAtalaOperation.toByteArray).getValue
 }
 
 object PrismDIDOperation extends ProtoModelHelper {
