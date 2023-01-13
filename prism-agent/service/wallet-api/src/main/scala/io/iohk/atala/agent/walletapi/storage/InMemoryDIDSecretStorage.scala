@@ -18,7 +18,7 @@ private[walletapi] class InMemoryDIDSecretStorage private (
 
   override def getKey(did: PrismDID, keyId: String): Task[Option[ECKeyPair]] = listKeys(did).map(_.get(keyId))
 
-  override def upsertKey(did: PrismDID, keyId: String, keyPair: ECKeyPair): Task[Int] =
+  override def insertKey(did: PrismDID, keyId: String, keyPair: ECKeyPair): Task[Int] =
     store
       .update { currentStore =>
         val currentSecret = currentStore.get(did)

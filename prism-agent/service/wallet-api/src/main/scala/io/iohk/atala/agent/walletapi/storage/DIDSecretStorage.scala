@@ -18,7 +18,7 @@ trait DIDSecretStorage {
 
   def getKey(did: PrismDID, keyId: String): Task[Option[ECKeyPair]]
 
-  def upsertKey(did: PrismDID, keyId: String, keyPair: ECKeyPair): Task[Int]
+  def insertKey(did: PrismDID, keyId: String, keyPair: ECKeyPair): Task[Int]
 
   /** Returns the deleted key-pair if exists, otherwise return None */
   def removeKey(did: PrismDID, keyId: String): Task[Int]

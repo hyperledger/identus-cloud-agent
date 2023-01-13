@@ -72,6 +72,11 @@ final class ManagedDIDService private[walletapi] (
     () => KeyGeneratorWrapper.generateECKeyPair(CURVE)
   )
 
+  private val generateUpdateOperation = OperationFactory.makeUpdateOperation(
+    CURVE,
+    () => KeyGeneratorWrapper.generateECKeyPair(CURVE)
+  )
+
   def syncManagedDIDState: IO[GetManagedDIDError, Unit] = nonSecretStorage.listManagedDID
     .mapError(GetManagedDIDError.WalletStorageError.apply)
     .flatMap { kv =>
@@ -89,7 +94,9 @@ final class ManagedDIDService private[walletapi] (
   def publishStoredDID(did: CanonicalPrismDID): IO[PublishManagedDIDError, ScheduleDIDOperationOutcome] = {
     def doPublish(operation: PrismDIDOperation.Create) = {
       for {
-        outcome <- signAndSubmitOperation[PublishManagedDIDError](operation).tapErrorCause(e => ZIO.logErrorCause(e)) // TODO: remove
+        outcome <- signAndSubmitOperation[PublishManagedDIDError](operation).tapErrorCause(e =>
+          ZIO.logErrorCause(e)
+        ) // TODO: remove
         _ <- nonSecretStorage
           .setManagedDIDState(did, ManagedDIDState.PublicationPending(operation, outcome.operationId))
           .mapError(PublishManagedDIDError.WalletStorageError.apply)
@@ -130,7 +137,7 @@ final class ManagedDIDService private[walletapi] (
         .filterOrFail(_.isEmpty)(CreateManagedDIDError.DIDAlreadyExists(did))
       _ <- ZIO
         .foreachDiscard(secret.keyPairs ++ secret.internalKeyPairs) { case (keyId, keyPair) =>
-          secretStorage.upsertKey(did, keyId, keyPair)
+          secretStorage.insertKey(did, keyId, keyPair)
         }
         .mapError(CreateManagedDIDError.WalletStorageError.apply)
         .tapErrorCause(e => ZIO.logErrorCause(e)) // TODO: remove

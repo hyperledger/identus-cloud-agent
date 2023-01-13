@@ -43,7 +43,7 @@ object InMemoryDIDSecretStorageSpec extends ZIOSpecDefault {
       for {
         storage <- ZIO.service[DIDSecretStorage]
         _ <- ZIO.foreachDiscard(keyPairs) { case (keyId, keyPair) =>
-          storage.upsertKey(didExample, keyId, keyPair)
+          storage.insertKey(didExample, keyId, keyPair)
         }
         keys <- storage.listKeys(didExample)
       } yield assert(keys)(hasSameElements(keyPairs))
@@ -55,7 +55,7 @@ object InMemoryDIDSecretStorageSpec extends ZIOSpecDefault {
       val keyPair = generateKeyPair(publicKey = (1, 1))
       for {
         storage <- ZIO.service[DIDSecretStorage]
-        _ <- storage.upsertKey(didExample, "key-1", keyPair)
+        _ <- storage.insertKey(didExample, "key-1", keyPair)
         key <- storage.getKey(didExample, "key-1")
       } yield assert(key)(isSome(equalTo(keyPair)))
     },
@@ -63,7 +63,7 @@ object InMemoryDIDSecretStorageSpec extends ZIOSpecDefault {
       val keyPair = generateKeyPair(publicKey = (1, 1))
       for {
         storage <- ZIO.service[DIDSecretStorage]
-        _ <- storage.upsertKey(didExample, "key-1", keyPair)
+        _ <- storage.insertKey(didExample, "key-1", keyPair)
         key <- storage.getKey(didExample, "key-2")
       } yield assert(key)(isNone)
     }
@@ -75,8 +75,8 @@ object InMemoryDIDSecretStorageSpec extends ZIOSpecDefault {
       val keyPair2 = generateKeyPair(publicKey = (2, 2))
       for {
         storage <- ZIO.service[DIDSecretStorage]
-        _ <- storage.upsertKey(didExample, "key-1", keyPair1)
-        _ <- storage.upsertKey(didExample, "key-1", keyPair2)
+        _ <- storage.insertKey(didExample, "key-1", keyPair1)
+        _ <- storage.insertKey(didExample, "key-1", keyPair2)
         key <- storage.getKey(didExample, "key-1")
       } yield assert(key)(isSome(equalTo(keyPair2)))
     }
@@ -87,7 +87,7 @@ object InMemoryDIDSecretStorageSpec extends ZIOSpecDefault {
       val keyPair = generateKeyPair(publicKey = (1, 1))
       for {
         storage <- ZIO.service[DIDSecretStorage]
-        _ <- storage.upsertKey(didExample, "key-1", keyPair)
+        _ <- storage.insertKey(didExample, "key-1", keyPair)
         _ <- storage.removeKey(didExample, "key-1")
         keys <- storage.listKeys(didExample)
       } yield assert(keys)(isEmpty)
@@ -96,7 +96,7 @@ object InMemoryDIDSecretStorageSpec extends ZIOSpecDefault {
       val keyPair = generateKeyPair(publicKey = (1, 1))
       for {
         storage <- ZIO.service[DIDSecretStorage]
-        _ <- storage.upsertKey(didExample, "key-1", keyPair)
+        _ <- storage.insertKey(didExample, "key-1", keyPair)
         _ <- storage.removeKey(didExample, "key-2")
         keys <- storage.listKeys(didExample)
       } yield assert(keys)(hasSize(equalTo(1)))
@@ -110,7 +110,7 @@ object InMemoryDIDSecretStorageSpec extends ZIOSpecDefault {
       for {
         storage <- ZIO.service[DIDSecretStorage]
         _ <- ZIO.foreachDiscard(keyPairs) { case (keyId, keyPair) =>
-          storage.upsertKey(didExample, keyId, keyPair)
+          storage.insertKey(didExample, keyId, keyPair)
         }
         _ <- storage.removeKey(didExample, "key-1")
         keys <- storage.listKeys(didExample)
