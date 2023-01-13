@@ -9,6 +9,7 @@ import io.iohk.atala.resolvers._
 import io.iohk.atala.mercury.model.{_, given}
 import java.util.Base64
 import io.iohk.atala.mercury.DidComm
+import scala.annotation.nowarn
 
 case class AgentService[A <: Agent](didComm: DIDComm, did: A) extends AgentServiceAny(didComm, did.id)
 
