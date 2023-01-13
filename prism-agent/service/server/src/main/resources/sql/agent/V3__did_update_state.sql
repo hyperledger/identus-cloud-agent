@@ -32,6 +32,7 @@ CREATE TABLE public.prism_did_secret_storage(
   "created_at" TIMESTAMPTZ NOT NULL,
   "key_id" TEXT NOT NULL,
   "key_pair" TEXT NOT NULL,
+  "operation_hash" BYTEA NOT NULL,
   PRIMARY KEY("did", "key_id")
 );
 
@@ -51,12 +52,14 @@ INSERT INTO public.prism_did_secret_storage(
     "did",
     "created_at",
     "key_id",
-    "key_pair"
+    "key_pair",
+    "operation_hash"
   )
 SELECT sc."did",
   to_timestamp(sc."created_at"),
   sc."key_id",
-  sc."key_pair"
+  sc."key_pair",
+  sha256(ps."atala_operation_content")
 FROM public.did_secret_storage sc
   LEFT JOIN public.prism_did_wallet_state ps ON sc."did" = ps."did"
 WHERE sc."did" LIKE 'did:prism:%';

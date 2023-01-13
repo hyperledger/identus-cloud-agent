@@ -3,13 +3,13 @@ package io.iohk.atala.agent.walletapi.sql
 import doobie.*
 import doobie.implicits.*
 import doobie.postgres.implicits.*
-
-import io.iohk.atala.agent.walletapi.model.ManagedDIDState
+import io.iohk.atala.agent.walletapi.model.{DIDUpdateLineage, ManagedDIDState}
 import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
-import io.iohk.atala.castor.core.model.did.PrismDID
+import io.iohk.atala.castor.core.model.did.{PrismDID, ScheduledDIDOperationStatus}
 import zio.*
 import zio.interop.catz.*
 
+// TODO: implement missing members
 class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage {
 
   override def getManagedDIDState(did: PrismDID): Task[Option[ManagedDIDState]] = {
@@ -86,6 +86,12 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
       .flatMap(ls => ZIO.foreach(ls)(ZIO.fromTry[(PrismDID, ManagedDIDState)](_)))
       .map(_.toMap)
   }
+
+  override def insertUpdateLineage(did: PrismDID, updateLineage: DIDUpdateLineage): Task[Unit] = ???
+
+  override def listUpdateLineage(did: PrismDID): Task[Seq[DIDUpdateLineage]] = ???
+
+  override def setUpdateLineageStatus(operationHash: Array[Byte], status: ScheduledDIDOperationStatus): Task[Unit] = ???
 
 }
 

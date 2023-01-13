@@ -1,8 +1,9 @@
 package io.iohk.atala.agent.walletapi.storage
-import io.iohk.atala.agent.walletapi.model.ManagedDIDState
-import io.iohk.atala.castor.core.model.did.{PrismDID, PrismDIDOperation}
+import io.iohk.atala.agent.walletapi.model.{DIDUpdateLineage, ManagedDIDState}
+import io.iohk.atala.castor.core.model.did.{PrismDID, PrismDIDOperation, ScheduledDIDOperationStatus}
 import zio.*
 
+// TODO: implement missing members
 private[walletapi] class InMemoryDIDNonSecretStorage private (
     store: Ref[Map[PrismDID, ManagedDIDState]]
 ) extends DIDNonSecretStorage {
@@ -13,6 +14,12 @@ private[walletapi] class InMemoryDIDNonSecretStorage private (
     store.update(_.updated(did, state))
 
   override def listManagedDID: Task[Map[PrismDID, ManagedDIDState]] = store.get
+
+  override def insertUpdateLineage(did: PrismDID, updateLineage: DIDUpdateLineage): Task[Unit] = ???
+
+  override def listUpdateLineage(did: PrismDID): Task[Seq[DIDUpdateLineage]] = ???
+
+  override def setUpdateLineageStatus(operationHash: Array[Byte], status: ScheduledDIDOperationStatus): Task[Unit] = ???
 
 }
 

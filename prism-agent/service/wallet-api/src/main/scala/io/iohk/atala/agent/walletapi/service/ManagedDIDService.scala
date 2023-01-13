@@ -137,7 +137,7 @@ final class ManagedDIDService private[walletapi] (
         .filterOrFail(_.isEmpty)(CreateManagedDIDError.DIDAlreadyExists(did))
       _ <- ZIO
         .foreachDiscard(secret.keyPairs ++ secret.internalKeyPairs) { case (keyId, keyPair) =>
-          secretStorage.insertKey(did, keyId, keyPair)
+          secretStorage.insertKey(did, keyId, keyPair, createOperation.toAtalaOperationHash)
         }
         .mapError(CreateManagedDIDError.WalletStorageError.apply)
         .tapErrorCause(e => ZIO.logErrorCause(e)) // TODO: remove

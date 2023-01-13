@@ -80,18 +80,20 @@ class JdbcDIDSecretStorage(xa: Transactor[Task]) extends DIDSecretStorage {
     cxnIO.transact(xa)
   }
 
-  override def insertKey(did: PrismDID, keyId: String, keyPair: ECKeyPair): Task[Int] = {
+  override def insertKey(did: PrismDID, keyId: String, keyPair: ECKeyPair, operationHash: Array[Byte]): Task[Int] = {
     val cxnIO = (now: Instant) => sql"""
         | INSERT INTO public.prism_did_secret_storage(
         |   did,
         |   created_at,
         |   key_id,
-        |   key_pair
+        |   key_pair,
+        |   operation_hash
         | ) values (
         |   ${did},
         |   ${now},
         |   ${keyId},
-        |   ${keyPair}
+        |   ${keyPair},
+        |   ${operationHash}
         | )
         """.stripMargin.update
 
