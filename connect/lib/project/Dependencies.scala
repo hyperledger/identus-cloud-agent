@@ -9,7 +9,8 @@ object Dependencies {
     val mercury = "0.15.0"
     val flyway = "9.8.3"
     val shared = "0.2.0"
-    val embeddedPostgres = "1.0.0"
+    val testContainersScalaPostgresql = "0.40.11"
+    val logback = "1.4.5"
   }
 
   private lazy val zio = "dev.zio" %% "zio" % Versions.zio
@@ -18,6 +19,8 @@ object Dependencies {
   private lazy val zioTest = "dev.zio" %% "zio-test" % Versions.zio % Test
   private lazy val zioTestSbt = "dev.zio" %% "zio-test-sbt" % Versions.zio % Test
   private lazy val zioTestMagnolia = "dev.zio" %% "zio-test-magnolia" % Versions.zio % Test
+
+  private lazy val logback = "ch.qos.logback" % "logback-classic" % Versions.logback % Test
 
   private lazy val doobiePostgres = "org.tpolecat" %% "doobie-postgres" % Versions.doobie
   private lazy val doobieHikari = "org.tpolecat" %% "doobie-hikari" % Versions.doobie
@@ -28,10 +31,12 @@ object Dependencies {
 
   private lazy val shared = "io.iohk.atala" % "shared" % Versions.shared
 
-  private lazy val embeddedPostgres = "com.opentable.components" % "otj-pg-embedded" % Versions.embeddedPostgres % Test
+  private lazy val testcontainers =
+    "com.dimafeng" %% "testcontainers-scala-postgresql" % Versions.testContainersScalaPostgresql % Test
 
   // Dependency Modules
-  private lazy val baseDependencies: Seq[ModuleID] = Seq(zio, zioTest, zioTestSbt, zioTestMagnolia, shared, embeddedPostgres)
+  private lazy val baseDependencies: Seq[ModuleID] =
+    Seq(zio, zioTest, zioTestSbt, zioTestMagnolia, shared, testcontainers, logback)
   private lazy val doobieDependencies: Seq[ModuleID] = Seq(doobiePostgres, doobieHikari, flyway)
 
   // Project Dependencies
