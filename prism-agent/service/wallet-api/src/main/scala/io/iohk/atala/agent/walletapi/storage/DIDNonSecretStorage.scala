@@ -12,7 +12,7 @@ private[walletapi] trait DIDNonSecretStorage {
 
   def listManagedDID: Task[Map[PrismDID, ManagedDIDState]]
 
-  def insertUpdateLineage(did: PrismDID, updateLineage: DIDUpdateLineage): Task[Unit]
+  def insertDIDUpdateLineage(did: PrismDID, updateLineage: DIDUpdateLineage): Task[Unit]
 
   def listUpdateLineage(did: PrismDID): Task[Seq[DIDUpdateLineage]]
 

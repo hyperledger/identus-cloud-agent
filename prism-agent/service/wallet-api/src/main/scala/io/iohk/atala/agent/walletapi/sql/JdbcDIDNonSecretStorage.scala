@@ -87,7 +87,7 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
       .map(_.toMap)
   }
 
-  override def insertUpdateLineage(did: PrismDID, updateLineage: DIDUpdateLineage): Task[Unit] = ???
+  override def insertDIDUpdateLineage(did: PrismDID, updateLineage: DIDUpdateLineage): Task[Unit] = ???
 
   override def listUpdateLineage(did: PrismDID): Task[Seq[DIDUpdateLineage]] = {
     val cxnIO =

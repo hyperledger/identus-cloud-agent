@@ -18,5 +18,7 @@ package object error {
 
   given Conversion[CommonWalletStorageError, UpdateManagedDIDError] = e =>
     UpdateManagedDIDError.WalletStorageError(e.cause)
+  given Conversion[CommonCryptographyError, UpdateManagedDIDError] = e =>
+    UpdateManagedDIDError.CryptographyError(e.cause)
   given Conversion[DIDOperationError, UpdateManagedDIDError] = UpdateManagedDIDError.OperationError(_)
 }

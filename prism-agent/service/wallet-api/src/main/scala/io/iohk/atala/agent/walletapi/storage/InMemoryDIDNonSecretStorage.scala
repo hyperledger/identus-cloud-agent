@@ -15,7 +15,7 @@ private[walletapi] class InMemoryDIDNonSecretStorage private (
 
   override def listManagedDID: Task[Map[PrismDID, ManagedDIDState]] = store.get
 
-  override def insertUpdateLineage(did: PrismDID, updateLineage: DIDUpdateLineage): Task[Unit] = ???
+  override def insertDIDUpdateLineage(did: PrismDID, updateLineage: DIDUpdateLineage): Task[Unit] = ???
 
   override def listUpdateLineage(did: PrismDID): Task[Seq[DIDUpdateLineage]] = ???
 

@@ -156,6 +156,14 @@ final class ManagedDIDService private[walletapi] (
       did: CanonicalPrismDID,
       actions: Seq[UpdateManagedDIDAction]
   ): IO[UpdateManagedDIDError, ScheduleDIDOperationOutcome] = {
+    def doUpdate(operation: PrismDIDOperation.Update) = {
+      for {
+        outcome <- signAndSubmitOperation[UpdateManagedDIDError](operation)
+        // TODO: add update lineage
+        // TODO: save new keys
+      } yield outcome
+    }
+
     for {
       _ <- ZIO
         .fromEither(UpdateManagedDIDActionValidator.validate(actions))
@@ -169,7 +177,7 @@ final class ManagedDIDService private[walletapi] (
           case s: ManagedDIDState.Published => ZIO.succeed(s) // only DID in published state can be updated
           case _                            => ZIO.fail(UpdateManagedDIDError.DIDNotPublished(did))
         }
-      previousOperation <- nonSecretStorage
+      previousOperationHash <- nonSecretStorage
         .listUpdateLineage(did)
         .mapError(UpdateManagedDIDError.WalletStorageError.apply)
         .map { lineage =>
@@ -177,8 +185,12 @@ final class ManagedDIDService private[walletapi] (
             lineage.filter(_.status == ScheduledDIDOperationStatus.Confirmed).maxByOption(_.createdAt)
           lastConfirmedUpdate.fold(didState.createOperation.toAtalaOperationHash)(_.operationHash.toArray)
         }
-      generated <- generateUpdateOperation(did, ???, actions)
-    } yield ???
+      generated <- generateUpdateOperation(did, previousOperationHash, actions)
+      (updateOperation, secret) = generated
+      _ <- ZIO.fromEither(didOpValidator.validate(updateOperation)).mapError(UpdateManagedDIDError.OperationError.apply)
+      _ <- ZIO.debug(updateOperation) // TODO: remove
+      outcome <- doUpdate(updateOperation)
+    } yield outcome
   }
 
   private def signAndSubmitOperation[E](operation: PrismDIDOperation)(using
