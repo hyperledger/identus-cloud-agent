@@ -18,10 +18,9 @@ import zio.interop.catz.*
 import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError
 import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError.KeyNotFoundError
 import io.iohk.atala.mercury.model.DidId
-import io.iohk.atala.castor.core.model.did.PrismDID
+import io.iohk.atala.castor.core.model.did.{PrismDID, EllipticCurve, ScheduledDIDOperationStatus}
 import io.iohk.atala.agent.walletapi.model.ECKeyPair
 import com.nimbusds.jose.jwk.OctetKeyPair
-import io.iohk.atala.castor.core.model.did.EllipticCurve
 import io.iohk.atala.prism.crypto.EC
 import io.iohk.atala.shared.utils.Base64Utils
 
@@ -66,13 +65,17 @@ class JdbcDIDSecretStorage(xa: Transactor[Task]) extends DIDSecretStorage {
   }
 
   override def getKey(did: PrismDID, keyId: String): Task[Option[ECKeyPair]] = {
+    val status: ScheduledDIDOperationStatus = ScheduledDIDOperationStatus.Confirmed
     val cxnIO = sql"""
         | SELECT
-        |   key_pair
-        | FROM public.prism_did_secret_storage
+        |   sc.key_pair
+        | FROM public.prism_did_secret_storage sc
+        |   LEFT JOIN public.prism_did_update_lineage ul ON sc.operation_hash = ul.operation_hash
+        |   LEFT JOIN public.prism_did_wallet_state ws ON sc.did = ws.did
         | WHERE
-        |   did = $did
-        |   AND key_id = $keyId
+        |   sc.did = $did
+        |   AND sc.key_id = $keyId
+        |   AND (ul.status = ${status} OR sc.operation_hash = sha256(ws.atala_operation_content))
         """.stripMargin
       .query[ECKeyPair]
       .option
