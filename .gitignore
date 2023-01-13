@@ -1,6 +1,6 @@
 .idea
 report
-megalinter-reports
+megalinter-reports/
 .vscode
 .bloop
 .bsp
