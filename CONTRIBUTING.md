@@ -3,19 +3,19 @@
 We would love for you to contribute to Atala PRISM and help make it even better than it is today!
 As a contributor, here are the guidelines we would like you to follow:
 
- - [Pull Requests](#pr)
- - [Commit Message Guidelines](#commit)
- - [Release process](#release)
- - Software development lifecycle (TBD)
+- [Pull Requests](#pull-requests)
+- [Commit Message Guidelines](#commits)
+- [Release process](#releases)
+- Software development lifecycle (TBD)
 
 
-## <a name="pr"></a> Pull Requests
+## Pull Requests
 
-### <a name="submit-pr"></a> Submitting a Pull Request
+### Submitting a Pull Request
 
 **All code changes to the `main` branch must go through Pull Requests (PRs)**
 
-To create a Pull Request, follow the [official GitHub PR guidelines](#pr_guidelines).
+To create a Pull Request, follow the [Official GitHub PR guidelines](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request)
 
 > Use `Create draft pull Request` option to create work-in-progress (WIP) PRs.
 > Remove draft state when PR is ready for review.
@@ -29,13 +29,30 @@ Otherwise, break the PR into several ones.
 
 Pull Requests are expected to be named like `[ATL-XXXX]: short description` (ticket id as prefix with a short but understandable description).
 
-> Please note, PR title should not be a part of the `main` branch commit history. All commits in `main` should correspond to the [Commit Message Guidelines](#commit).
+> Please note, PR title should not be a part of the `main` branch commit history. All commits in `main` should correspond to the [Commit Message Guidelines](#commits).
 
 ### Pull Request checklist
 
 All Pull Requests will get a checklist that everyone is expected to follow, failing to do so might delay people getting to review it.
 
 Check the [PR checklist](.github/PULL_REQUEST_TEMPLATE.md) for more info.
+
+### Pull request CI checks
+
+All pull requests will be subject to the following checks and actions:
+
+| Name                  | Type   | Description                                                                                                                                                                                                                                                                           |
+|-----------------------|--------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Linter                | Check  | Powered by megalinter - any changed source will be checked against configured linting rules (configured in .mega-linter.yml at root of repository). No automatic fixes will be generated. If the check fails, the author of the pull request must fix issues and update pull request. |
+| Pull request labeller | Action | Pull Request will be labelled based upon directory structure |
+
+Linting is also available as part of the pre-commit hooks, this will follow the same rules as the CI checks in that it will not automatically fix linting issues.
+
+> You must run `pre-commit install` to install these hooks once you have cloned the repository. Instructions can be found [here](https://pre-commit.com/#usage)
+
+In order to automatically fix linting issues, you must install and run the megalinter tool yourself. Instructions for running locally can be found [here](https://megalinter.io/latest/mega-linter-runner/)
+
+Use `npx mega-linter-runner --fix` after installation to fix any detected local issues
 
 ### Pull Request review
 
@@ -63,7 +80,7 @@ Once the Pull Request is ready to be merged, you will have 2 options:
 
 `Squash and Merge` feature from Github combines all the PR commits into a single one.
 
-You are expected to review the auto-generated message and update it as necessary to get a decent commit message that fully corresponds to the [Commit Message Guidelines](#commit).
+You are expected to review the auto-generated message and update it as necessary to get a decent commit message that fully corresponds to the [Commit Message Guidelines](#commits).
 
 Use this option when all commits you made in the PR can be combined into one.
 
@@ -73,11 +90,11 @@ If this is not the case, use `Rebase and Merge` option.
 
 `Rebase and Merge` feature from Github attached all commits from the PR branch on top of the base branch.
 
-You are expected to make sure that **all the commits** in the PR are corresponding to the [Commit Message Guidelines](#commit).
+You are expected to make sure that **all the commits** in the PR are corresponding to the [Commit Message Guidelines](#commits).
 
 Use this option when the update you're working on contains several commits that should be merged to the `main` branch of the repository.
 
-## <a name="commit"></a> Commits
+## Commits
 
 The following general rules are applied to all commits:
 
@@ -91,11 +108,11 @@ The following general rules are applied to all commits:
 We have very precise rules over how our Git commit messages must be formatted.
 This format leads to **easier to read commit history**.
 
-This format is based on the [Conventional Commits Specification](conventional-commits).
+This format is based on the [Conventional Commits Specification](https://www.conventionalcommits.org/en/v1.0.0/#summary).
 
 Each commit message consists of a mandatory **header**, an optional **body**, and an optional **footer**.
 
-```
+```text
 <header>
 <BLANK LINE>
 <body>
@@ -103,16 +120,16 @@ Each commit message consists of a mandatory **header**, an optional **body**, an
 <footer>
 ```
 
-The `header` is mandatory and must conform to the [Commit Message Header](#commit-header) format.
+The `header` is mandatory and must conform to the [Commit Message Header](#commit-message-header) format.
 
 The `body` is optional.
-When the body is present it must be at least 20 characters long and must conform to the [Commit Message Body](#commit-body) format.
+When the body is present it must be at least 20 characters long and must conform to the [Commit Message Body](#commit-message-body) format.
 
-The `footer` is optional. The [Commit Message Footer](#commit-footer) format describes what the footer is used for and the structure it must have.
+The `footer` is optional. The [Commit Message Footer](#commit-message-footer) format describes what the footer is used for and the structure it must have.
 
-#### <a name="commit-header"></a>Commit Message Header
+#### Commit Message Header
 
-```
+```text
 <type>(<scope>): <short summary>
   │       │             │
   │       │             └─⫸ Summary in present tense. Not capitalized. No period at the end.
@@ -167,17 +184,17 @@ Use the summary field to provide a succinct description of the change:
 * don't capitalize the first letter
 * no dot (.) at the end
 
-#### <a name="commit-body"></a>Commit Message Body
+#### Commit Message Body
 
 Just as in the summary, use the imperative, present tense: "fix" not "fixed" nor "fixes".
 
 Explain the motivation for the change in the commit message body. This commit message should explain why you are making the change. You can include a comparison of the previous behavior with the new behavior in order to illustrate the impact of the change.
 
-#### <a name="commit-footer"></a>Commit Message Footer
+#### Commit Message Footer
 
 The footer can contain information about breaking changes and deprecations and is also the place to reference GitHub issues, Jira tickets, and other PRs that this commit closes or is related to. For example:
 
-```
+```text
 BREAKING CHANGE: <breaking change summary>
 <BLANK LINE>
 <breaking change description + migration instructions>
@@ -188,7 +205,7 @@ Fixes ATL-<ticket number>
 
 or
 
-```
+```text
 DEPRECATED: <what is deprecated>
 <BLANK LINE>
 <deprecation description + recommended update path>
@@ -203,7 +220,7 @@ Similarly, a Deprecation section should start with "DEPRECATED: " followed by a 
 
 ### Revert commits
 
-If the commit reverts a previous commit, it should begin with `revert: `, followed by the header of the reverted commit.
+If the commit reverts a previous commit, it should begin with `revert:`, followed by the header of the reverted commit.
 
 The content of the commit message body should contain:
 
@@ -212,7 +229,7 @@ The content of the commit message body should contain:
 
 ### Local environment: pre-commit hooks
 
-[Conventional pre-commit hook](https://github.com/compilerla/conventional-pre-commit])
+[Conventional pre-commit hook](https://github.com/compilerla/conventional-pre-commit)
 can be used to check that all commits correspond to the Conventional Commits Specification.
 
 Initialization:
@@ -222,12 +239,12 @@ Initialization:
 > Please note: even if local `pre-commit` set-up is not in use
 > all violations will be found during CI jobs execution for a PR
 
-## <a name="release"></a> Releases
+## Releases
 
-Release process of all Atala PRISM components is automated via [Semantic Release](#semantic-release) tool
+Release process of all Atala PRISM components is automated via [Semantic Release](https://github.com/semantic-release/semantic-release) tool
 with help of additional `gradle` or `sbt` library specific plugins.
 
-[Semantic Release](#semantic-release) automates the whole package release workflow including: determining the next version number, generating the release notes, and publishing the package.
+[Semantic Release](https://github.com/semantic-release/semantic-release) automates the whole package release workflow including: determining the next version number, generating the release notes, and publishing the package.
 
 This removes the immediate connection between human emotions and version numbers, strictly following the Semantic Versioning specification and communicating the impact of changes to consumers.
 
@@ -257,7 +274,7 @@ It has the following parameters:
 By default, `release-branch` is always `main`.
 
 To trigger a new release generation, follow the next steps:
-1. Go to https://github.com/input-output-hk/atala-prism-building-blocks/actions
+1. Go to `Actions` tab in Github for `atala-prism-building-block` repository
 2. Choose `Release` workflow on the left panel of all available workflows
 3. Choose `Run workflow` on the pop-up
 4. Specify input parameters - component and branch
@@ -273,7 +290,3 @@ cd <component_dir>
 npm install
 npx semantic-release -e semantic-release-monorepo --dry-run
 ```
-
-[pr_guidelines]: https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request#creating-the-pull-request
-[conventional-commits]: https://www.conventionalcommits.org/en/v1.0.0/#specification
-[semantic-release]: https://semantic-release.gitbook.io/semantic-release/

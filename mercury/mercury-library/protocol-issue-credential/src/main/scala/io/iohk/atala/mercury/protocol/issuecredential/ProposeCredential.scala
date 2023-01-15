@@ -41,15 +41,15 @@ object ProposeCredential {
   // TODD will this be version RCF Issue Credential 2.0  as we use didcomm2 message format
   def `type`: PIURI = "https://didcomm.org/issue-credential/2.0/propose-credential"
 
-  def build[A](
+  def build(
       fromDID: DidId,
       toDID: DidId,
       thid: Option[String] = None,
       credential_preview: CredentialPreview,
-      credentials: Map[String, A] = Map.empty,
-  )(using Encoder[A]): ProposeCredential = {
+      credentials: Map[String, Array[Byte]] = Map.empty,
+  ): ProposeCredential = {
     val aux = credentials.map { case (formatName, singleCredential) =>
-      val attachment = AttachmentDescriptor.buildAttachment(payload = singleCredential)
+      val attachment = AttachmentDescriptor.buildBase64Attachment(payload = singleCredential)
       val credentialFormat: CredentialFormat = CredentialFormat(attachment.id, formatName)
       (credentialFormat, attachment)
     }

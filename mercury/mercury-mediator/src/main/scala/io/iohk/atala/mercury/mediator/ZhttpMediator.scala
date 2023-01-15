@@ -1,8 +1,10 @@
 package io.iohk.atala.mercury.mediator
 
-import zhttp.http._
-import zhttp.service.Server
 import zio._
+import zio.http._
+import zio.http.model._
+import zio.http.service._
+
 import java.nio.charset.StandardCharsets
 
 import io.iohk.atala.mercury.model.DidId
@@ -17,8 +19,7 @@ object ZhttpMediator extends ZIOAppDefault {
 
   // Create HTTP route
   val app: HttpApp[DidComm & MailStorage & ConnectionStorage, Throwable] = Http.collectZIO[Request] {
-    case req @ Method.POST -> !!
-        if req.headersAsList.exists(h => h._1.equalsIgnoreCase(header._1) && h._2.equalsIgnoreCase(header._2)) =>
+    case req @ Method.POST -> !! if req.headersAsList.exists(h => (h.key == header._1) && h.value == header._2) =>
       req.body.asString
         .flatMap(data => MediatorProgram.program(data))
         .map(str => Response.text(str))
@@ -95,6 +96,11 @@ object ZhttpMediator extends ZIOAppDefault {
       )
   }
 
-  override val run = { MediatorProgram.startLogo *> Server.start(MediatorProgram.port, app) }
-    .provide(MediatorDidComm.peerDidMediator ++ MailStorage.layer ++ ConnectionStorage.layer)
+  val server = {
+    val config = ServerConfig(address = new java.net.InetSocketAddress(8080))
+    ServerConfig.live(config)(using Trace.empty) >>> Server.live
+  }
+
+  override val run = { MediatorProgram.startLogo *> Server.serve(app) }
+    .provide(server ++ MediatorDidComm.peerDidMediator ++ MailStorage.layer ++ ConnectionStorage.layer)
 }

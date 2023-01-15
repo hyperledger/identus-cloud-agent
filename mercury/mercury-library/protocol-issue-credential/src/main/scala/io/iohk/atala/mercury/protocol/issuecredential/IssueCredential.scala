@@ -46,14 +46,14 @@ object IssueCredential {
 
   def `type`: PIURI = "https://didcomm.org/issue-credential/2.0/issue-credential"
 
-  def build[A](
+  def build(
       fromDID: DidId,
       toDID: DidId,
       thid: Option[String] = None,
-      credentials: Map[String, A],
-  )(using Encoder[A]): IssueCredential = {
+      credentials: Map[String, Array[Byte]],
+  ): IssueCredential = {
     val aux = credentials.map { case (formatName, singleCredential) =>
-      val attachment = AttachmentDescriptor.buildAttachment(payload = singleCredential)
+      val attachment = AttachmentDescriptor.buildBase64Attachment(payload = singleCredential)
       val credentialFormat: CredentialFormat = CredentialFormat(attachment.id, formatName)
       (credentialFormat, attachment)
     }
