@@ -2,7 +2,7 @@ import sbt._
 
 object Dependencies {
   object Versions {
-    val zio = "2.0.4"
+    val zio = "2.0.5"
     val doobie = "1.0.0-RC2"
     val zioCatsInterop = "3.3.0"
     val prismNodeClient = "0.3.0"
