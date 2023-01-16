@@ -7,7 +7,7 @@ import io.circe.syntax._
 import io.circe.parser._
 import io.circe.JsonObject
 
-import io.iohk.atala.mercury.{_, given}
+import io.iohk.atala.mercury.{given, _}
 import io.iohk.atala.mercury.model._
 import io.iohk.atala.mercury.protocol.coordinatemediation._
 import io.iohk.atala.mercury.protocol.invitation.v2.Invitation

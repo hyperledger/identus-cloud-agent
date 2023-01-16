@@ -10,7 +10,7 @@ import zio.http.service._
 import java.io.IOException
 import org.didcommx.didcomm.DIDComm
 import io.iohk.atala.QRcode
-import io.iohk.atala.mercury.model.{_, given}
+import io.iohk.atala.mercury.model.{given, _}
 import io.iohk.atala.mercury.model.error._
 import io.iohk.atala.mercury.protocol.outofbandlogin._
 import io.iohk.atala.mercury.protocol.issuecredential._
