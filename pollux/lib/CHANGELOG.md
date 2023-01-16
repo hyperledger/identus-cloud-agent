@@ -1,3 +1,10 @@
+# [pollux-v0.16.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.15.0...pollux-v0.16.0) (2023-01-16)
+
+
+### Features
+
+* **pollux:** add dal for the credential schema ATL-1342 ([#298](https://github.com/input-output-hk/atala-prism-building-blocks/issues/298)) ([f43320f](https://github.com/input-output-hk/atala-prism-building-blocks/commit/f43320fa4ad375551496f511fb68b37778c79a77))
+
 # [pollux-v0.15.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.14.0...pollux-v0.15.0) (2023-01-06)
 
 
