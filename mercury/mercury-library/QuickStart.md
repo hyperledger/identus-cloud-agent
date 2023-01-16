@@ -23,7 +23,7 @@ sbt mediator/run # run the application (Main)
 ## open api docs explorer
 
 ```shell
- http://localhost:8080/docs 
+ http://localhost:8080/docs
  currently the above url defaults to swagger petstore was not able to fix in mean while follow bellow step.
  once you open above docs url in browser insert in the explorer input box `/docs/docs.yaml`
 ```

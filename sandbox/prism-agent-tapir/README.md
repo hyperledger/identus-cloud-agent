@@ -12,7 +12,7 @@ sbt test # run the tests
 sbt run # run the application (Main)
 ```
 
-## Links:
+## Links
 
 * [tapir documentation](https://tapir.softwaremill.com/en/latest/)
 * [tapir github](https://github.com/softwaremill/tapir)

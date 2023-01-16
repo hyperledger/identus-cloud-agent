@@ -97,7 +97,7 @@ class JdbcPresentationRepository(xa: Transactor[Task]) extends PresentationRepos
         |   subject_id,
         |   protocol_state,
         |   request_presentation_data,
-        |   credentials_to_use 
+        |   credentials_to_use
         | ) values (
         |   ${record.id},
         |   ${record.createdAt},

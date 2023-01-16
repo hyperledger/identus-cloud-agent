@@ -38,13 +38,13 @@ curl -X 'POST' \
 curl -X 'GET' 'http://localhost:8090/prism-agent/present-proof/presentations' -H 'accept: application/json' | jq
 ```
 
-- **Holder** - Retrieving the list of credentials records choose the `{RECORD_ID}` for credential with status CredentialRecieved 
+- **Holder** - Retrieving the list of credentials records choose the `{RECORD_ID}` for credential with status CredentialRecieved
 
 ```shell
 curl -X 'GET' 'http://localhost:8090/prism-agent/issue-credentials/records' -H 'accept: application/json' | jq
 ```
 
-- **Holder** - Accepting the Presentation Request 
+- **Holder** - Accepting the Presentation Request
 Replace `{PRESENTATION_ID}` with the UUID of the record from the presentation records list
 Replace `{RECORD_ID}` with the UUID of the record from the credential records list
 
@@ -58,18 +58,18 @@ curl -X 'PATCH' \
   "proofId": ["{RECORD_ID}"]
 }'
 ```
-- **Holder** - check Presentation state  PresentationSent 
-# check PresentationSent !
+- **Holder** - check Presentation state  PresentationSent
+# check PresentationSent
 ```shell
 curl -X 'GET' 'http://localhost:8090/prism-agent/present-proof/presentations' -H 'accept: application/json' | jq
 ```
 
-- **Verifier** - check Presentation state  PresentationReceived 
-# check PresentationReceived !
+- **Verifier** - check Presentation state  PresentationReceived
+# check PresentationReceived
 ```shell
 curl -X 'GET' 'http://localhost:8070/prism-agent/present-proof/presentations' -H 'accept: application/json' | jq
 ```
-- **Verifier** - Accept PresentationReceived 
+- **Verifier** - Accept PresentationReceived
 Replace `{PRESENTATION_ID}` with the UUID of the record from the presentation records list with state PresentationReceived
 
 ```shell
@@ -79,8 +79,8 @@ curl -X 'PATCH' \
   -d '{"action": "presentation-accept"}' | jq
 ```
 
-- **Verifier** - check Presentation state  PresentationVerified 
-# check PresentationVerified !
+- **Verifier** - check Presentation state  PresentationVerified
+# check PresentationVerified
 
 ```shell
 curl -X 'GET' 'http://localhost:8070/prism-agent/present-proof/presentations' -H 'accept: application/json' | jq

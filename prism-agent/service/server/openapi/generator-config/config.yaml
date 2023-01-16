@@ -12,6 +12,5 @@ modelPackage: "io.iohk.atala.agent.openapi.model"
 
 # The generator to use
 generatorName: "scala-akka-http-server"
-
 # Use handwritten classes for the types below. This is useful to customize the (de)serialization
 #importMappings:

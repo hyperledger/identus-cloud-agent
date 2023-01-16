@@ -9,7 +9,7 @@ option (scalapb.options) = {
 
 message PublicKeyJwk {
   enum Curve {
-    SECP256K1 = 0;
+    CURVE_SECP256K1_UNSPECIFIED = 0;
   }
   message ECKeyData {
     Curve curve = 1; // The curve name, like secp256k1.
@@ -29,10 +29,10 @@ message DocumentDefinition {
     PublicKeyJwk jwk = 2;
 
     enum Purpose {
-      AUTHENTICATION = 0;
-      KEY_AGREEMENT = 1;
-      ASSERTION_METHOD = 2;
-      CAPABILITY_INVOCATION = 3;
+      PURPOSE_AUTHENTICATION_UNSPECIFIED = 0;
+      PURPOSE_KEY_AGREEMENT = 1;
+      PURPOSE_ASSERTION_METHOD = 2;
+      PURPOSE_CAPABILITY_INVOCATION = 3;
     }
     repeated Purpose purposes = 3;
   }
@@ -40,7 +40,7 @@ message DocumentDefinition {
   message Service {
     string id = 1;
     enum Type {
-      MEDIATOR_SERVICE = 0;
+      TYPE_MEDIATOR_SERVICE_UNSPECIFIED = 0;
     }
     Type type = 2;
     string service_endpoint = 3;
@@ -60,10 +60,10 @@ message CreateDid {
 message UpdateDid {
   message Patch {
     oneof patch {
-        DocumentDefinition.PublicKey add_public_key = 1;
-        string remove_public_key = 2;
-        DocumentDefinition.Service add_service = 3;
-        string remove_service = 4;
+      DocumentDefinition.PublicKey add_public_key = 1;
+      string remove_public_key = 2;
+      DocumentDefinition.Service add_service = 3;
+      string remove_service = 4;
     }
   }
 
@@ -83,7 +83,7 @@ message RecoverDid {
   bytes previous_version = 4;
   bytes forward_update_commitment = 5;
   bytes forward_recovery_commitment = 6;
-  repeated DocumentDefinition document = 7;
+  repeated DocumentDefinition documents = 7;
   bytes signature = 8;
 }
 

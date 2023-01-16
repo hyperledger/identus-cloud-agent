@@ -1,34 +1,34 @@
 syntax = "proto3";
 
-option java_multiple_files = true;
-option java_package = "io.iohk.atala.prism.protos";
-
 package io.iohk.atala.prism.protos;
 
 import "common_models.proto";
 import "google/protobuf/timestamp.proto";
 
+option java_multiple_files = true;
+option java_package = "io.iohk.atala.prism.protos";
+
 /**
  * Indicates the status of the contact's connection.
  */
 enum ContactConnectionStatus {
-  STATUS_MISSING = 0; // Default value, represents the lack of status.
+  CONTACT_CONNECTION_STATUS_STATUS_MISSING_UNSPECIFIED = 0; // Default value, represents the lack of status.
   // @exclude TODO remove after removing console functionality from connector
-  STATUS_INVITATION_MISSING = 1; // No connection token is generated yet, kept for compatibility with connector as the console backend generates the tokens while creating contacts.
-  STATUS_CONNECTION_MISSING = 2; // The contact has been invited and the connection token has been generated.
-  STATUS_CONNECTION_ACCEPTED = 3; // The contact accepted the connection.
-  STATUS_CONNECTION_REVOKED = 4; // The contact rejected the connection.
+  CONTACT_CONNECTION_STATUS_STATUS_INVITATION_MISSING = 1; // No connection token is generated yet, kept for compatibility with connector as the console backend generates the tokens while creating contacts.
+  CONTACT_CONNECTION_STATUS_STATUS_CONNECTION_MISSING = 2; // The contact has been invited and the connection token has been generated.
+  CONTACT_CONNECTION_STATUS_STATUS_CONNECTION_ACCEPTED = 3; // The contact accepted the connection.
+  CONTACT_CONNECTION_STATUS_STATUS_CONNECTION_REVOKED = 4; // The contact rejected the connection.
 }
 
 /**
  * Indicates the state of credential.
  */
 enum CredentialStatus {
-  CREDENTIAL_STATUS_MISSING = 0; // Default value, represents the lack of status.
-  CREDENTIAL_DRAFT = 1;
-  CREDENTIAL_SIGNED = 2;
-  CREDENTIAL_SENT = 3;
-  CREDENTIAL_REVOKED = 4;
+  CREDENTIAL_STATUS_MISSING_UNSPECIFIED = 0; // Default value, represents the lack of status.
+  CREDENTIAL_STATUS_CREDENTIAL_DRAFT = 1;
+  CREDENTIAL_STATUS_CREDENTIAL_SIGNED = 2;
+  CREDENTIAL_STATUS_CREDENTIAL_SENT = 3;
+  CREDENTIAL_STATUS_CREDENTIAL_REVOKED = 4;
 }
 
 /**
@@ -61,30 +61,30 @@ message CredentialIssuanceContact {
  * Indicates the state of the credential type.
  */
 enum CredentialTypeState {
-  CREDENTIAL_TYPE_UNKNOWN = 0; // Invalid value, should not happen.
-  CREDENTIAL_TYPE_DRAFT = 1; // The credential type is still being defined and is not final, it cannot be used to create a new credential.
-  CREDENTIAL_TYPE_READY = 2; // The credential type is ready to use, it can be used to create a new credential.
-  CREDENTIAL_TYPE_ARCHIVED = 3; // The credential type is archived, it cannot be used to create a new credential.
+  CREDENTIAL_TYPE_STATE_CREDENTIAL_TYPE_UNKNOWN_UNSPECIFIED = 0; // Invalid value, should not happen.
+  CREDENTIAL_TYPE_STATE_CREDENTIAL_TYPE_DRAFT = 1; // The credential type is still being defined and is not final, it cannot be used to create a new credential.
+  CREDENTIAL_TYPE_STATE_CREDENTIAL_TYPE_READY = 2; // The credential type is ready to use, it can be used to create a new credential.
+  CREDENTIAL_TYPE_STATE_CREDENTIAL_TYPE_ARCHIVED = 3; // The credential type is archived, it cannot be used to create a new credential.
 }
 
 /**
  * Indicates the state of the credential type category.
  */
 enum CredentialTypeCategoryState {
-  CREDENTIAL_TYPE_CATEGORY_DRAFT = 0; // The credential type category is still being defined and is not final, it cannot be used to create a new credential.
-  CREDENTIAL_TYPE_CATEGORY_READY = 1; // The credential type category is ready to use, it can be used to create a new credential.
-  CREDENTIAL_TYPE_CATEGORY_ARCHIVED = 2; // The credential type category is archived, it cannot be used to create a new credential.
+  CREDENTIAL_TYPE_CATEGORY_STATE_CREDENTIAL_TYPE_CATEGORY_DRAFT_UNSPECIFIED = 0; // The credential type category is still being defined and is not final, it cannot be used to create a new credential.
+  CREDENTIAL_TYPE_CATEGORY_STATE_CREDENTIAL_TYPE_CATEGORY_READY = 1; // The credential type category is ready to use, it can be used to create a new credential.
+  CREDENTIAL_TYPE_CATEGORY_STATE_CREDENTIAL_TYPE_CATEGORY_ARCHIVED = 2; // The credential type category is archived, it cannot be used to create a new credential.
 }
 
 /**
  * Indicates the data type of a field in the credential.
  */
 enum CredentialTypeFieldType {
-  CREDENTIAL_TYPE_FIELD_UNKNOWN = 0; // Invalid value, should not happen.
-  CREDENTIAL_TYPE_FIELD_STRING = 1; // Any string.
-  CREDENTIAL_TYPE_FIELD_INT = 2; // Positive and negative integer numbers.
-  CREDENTIAL_TYPE_FIELD_BOOLEAN = 3; // True/False only.
-  CREDENTIAL_TYPE_FIELD_DATE = 4; // The date as string in DD/MM/YY or DD/MM/YYYY format.
+  CREDENTIAL_TYPE_FIELD_TYPE_CREDENTIAL_TYPE_FIELD_UNKNOWN_UNSPECIFIED = 0; // Invalid value, should not happen.
+  CREDENTIAL_TYPE_FIELD_TYPE_CREDENTIAL_TYPE_FIELD_STRING = 1; // Any string.
+  CREDENTIAL_TYPE_FIELD_TYPE_CREDENTIAL_TYPE_FIELD_INT = 2; // Positive and negative integer numbers.
+  CREDENTIAL_TYPE_FIELD_TYPE_CREDENTIAL_TYPE_FIELD_BOOLEAN = 3; // True/False only.
+  CREDENTIAL_TYPE_FIELD_TYPE_CREDENTIAL_TYPE_FIELD_DATE = 4; // The date as string in DD/MM/YY or DD/MM/YYYY format.
 }
 
 /**

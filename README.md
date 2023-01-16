@@ -42,5 +42,4 @@ Read through our [contributing guidelines][contributing] to learn about our subm
 
 **Love Atala PRISM? Give our repo a star :star: :arrow_up:.**
 
-[openapi]: docs/README.md
 [contributing]: CONTRIBUTING.md

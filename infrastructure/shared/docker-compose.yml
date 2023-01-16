@@ -1,7 +1,6 @@
-version: '3.8'
+version: "3.8"
 
 services:
-
   ##########################
   # Database
   ##########################
@@ -27,9 +26,9 @@ services:
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
-      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_CONFIG_SERVER_MODE: "False"
     volumes:
-       - pgadmin:/var/lib/pgadmin
+      - pgadmin:/var/lib/pgadmin
     ports:
       - "${PGADMIN_PORT:-5050}:80"
     depends_on:
@@ -97,7 +96,7 @@ services:
       prism-node:
         condition: service_started
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://prism-agent:8080/connections" ]
+      test: ["CMD", "curl", "-f", "http://prism-agent:8080/connections"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -108,8 +107,8 @@ services:
     image: swaggerapi/swagger-ui:v4.14.0
     environment:
       - 'URLS=[
-          { name: "Prism Agent", url: "/prism-agent/api/openapi-spec.yaml" },
-          { name: "Mediator", url: "/mediator/api/openapi-spec.yaml" }
+        { name: "Prism Agent", url: "/prism-agent/api/openapi-spec.yaml" },
+        { name: "Mediator", url: "/mediator/api/openapi-spec.yaml" }
         ]'
 
   apisix:

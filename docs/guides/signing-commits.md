@@ -1,6 +1,6 @@
 # Setting up PGP
 
-Every commit must be signed with a PGP key associated with your company email address, that is `firstname.lastname@iohk.io`. For IOHK employees it **must** be the same key you use to encrypt IOHK emails, it can not be your personal PGP key or any other one. 
+Every commit must be signed with a PGP key associated with your company email address, that is `firstname.lastname@iohk.io`. For IOHK employees it **must** be the same key you use to encrypt IOHK emails, it can not be your personal PGP key or any other one.
 
 ## Install gnupg
 
@@ -38,7 +38,7 @@ will list all the keys you have available. copy the id of the key associated wit
 
 configure git to use this key to sign every commit automatically
 ```bash
-git config user.signingkey <your key id here> && 
+git config user.signingkey <your key id here> &&
 git config commit.gpgsign true
 # in case you prefer to use another tool for pgp, like gpg2, you need to specify it here, otherwise ignore it.
 git config gpg.program gpg2

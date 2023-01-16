@@ -20,7 +20,7 @@ sequenceDiagram
     note right of Alice: Alice accepts the invitation and register for a mailbox.
     Alice->>+Mediator: Register (HTTP)
     Mediator->>+DID Resolver: Ask for Alice DID document
-    DID Resolver-->>-Mediator: DID document 
+    DID Resolver-->>-Mediator: DID document
     note over Mediator: Confirm the identity
     Mediator-->>-Alice: Registration done
     note over Alice: Alice updates his DID document (adding serviceEndpoint)
@@ -80,8 +80,8 @@ TODO: the last diagram is maybe its on protocol.
 stateDiagram-v2
 [*] --> messages_requested                          :Requested pending messages pickup
 messages_requested --> message_replyed              :Recived message solve the Challenge
-message_replyed -->  recieve_messages               :recived the messages 
+message_replyed -->  recieve_messages               :recived the messages
 message_replyed --> messages_requested              :Retry with new challenge
-recieve_messages --> messages_requested             :Request more messages 
+recieve_messages --> messages_requested             :Request more messages
 recieve_messages --> [*]
 ```

@@ -1,5 +1,5 @@
 project:
-  name: atala-prism-building-blocks 
+  name: atala-prism-building-blocks
   tz: Europe/London
   adrFolder: ./docs/decisions
   packages: []

@@ -29,7 +29,7 @@ CREATE TABLE public.issue_credential_records(
   "offer_credential_data" TEXT,
   "request_credential_data" TEXT,
   "issue_credential_data" TEXT,
-  "issued_credential_raw" TEXT  
+  "issued_credential_raw" TEXT
 );
 
 CREATE TABLE public.presentation_records(

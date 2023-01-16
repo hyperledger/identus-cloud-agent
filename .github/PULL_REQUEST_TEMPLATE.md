@@ -5,13 +5,13 @@ Fixes ATL-xxxx
 
 ## Checklist
 
-### My PR contains...
+### My PR contains
 * [ ] No code changes (changes to documentation, CI, metadata, etc.)
 * [ ] Bug fixes (non-breaking change which fixes an issue)
 * [ ] Improvements (misc. changes to existing features)
 * [ ] Features (non-breaking change which adds functionality)
 
-### My changes...
+### My changes
 * [ ] are breaking changes
 * [ ] are not breaking changes
 * [ ] If yes to above: I have updated the documentation accordingly

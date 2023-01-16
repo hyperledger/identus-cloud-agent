@@ -1,4 +1,4 @@
-version: '3.9'
+version: "3.9"
 
 services:
   mongo:
@@ -32,8 +32,7 @@ services:
       - ./notebooks:/home/jovyan
     depends_on:
       - "rootsid-mediator"
-
-# GET invitation with 
+# GET invitation with
 # docker logs roots-id-mediator-rootsid-mediator-1
 
 # RUN

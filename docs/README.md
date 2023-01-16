@@ -1,6 +1,6 @@
 # Atala v2 Documentation
 
-This is the landing page for the Atala v2 technical documentation set.  
+This is the landing page for the Atala v2 technical documentation set.
 
 ## Architecture diagrams
 
@@ -10,7 +10,7 @@ The diagrams are based on the [C4 model](https://c4model.com) to describe the ar
 3. ***Components***: zooms into an individual container, showing the components inside it.
 4. ***Code***: optional, can be used to zoom into an individual component, showing how that component is implemented.
 
-We use the [Diagrams as code](https://diagrams-as-code.com) approach, coding using the [Structurizr DSL](https://structurizr.com).  
+We use the [Diagrams as code](https://diagrams-as-code.com) approach, coding using the [Structurizr DSL](https://structurizr.com).
 
 ### Source files
 
@@ -18,9 +18,9 @@ Source code for the different diagrams can be found in the DSL files located [he
 
 ### Visualisation
 
-A visual and interactive representation of the diagrams can be rendered using [Structurizr Lite](https://structurizr.com/help/lite).  
+A visual and interactive representation of the diagrams can be rendered using [Structurizr Lite](https://structurizr.com/help/lite).
 
-The following [Dockerfile](./architecture/Dockerfile) is provided to create a custom Docker image of Structurizr Lite that embeds the Atala DSL files.  
+The following [Dockerfile](./architecture/Dockerfile) is provided to create a custom Docker image of Structurizr Lite that embeds the Atala DSL files.
 To build the custom image, execute the following command from the repo's root folder:
 ```bash
 docker build -t atala-structurizr-lite docs/architecture
@@ -49,8 +49,3 @@ docker-compose -f docs/docker-compose.yml up
 ```
 - Architecture diagrams doc is available on *localhost:8080*
 - OpenAPI specifications doc is available *localhost:8081*
-
-
-
-
-

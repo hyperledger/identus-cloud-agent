@@ -7,7 +7,6 @@ import common.Utils.toJsonPath
 import io.cucumber.java.en.Given
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
-import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.rest.SerenityRest.lastResponse
 import net.serenitybdd.screenplay.Actor
 import net.serenitybdd.screenplay.rest.interactions.Get
@@ -16,7 +15,6 @@ import net.serenitybdd.screenplay.rest.questions.ResponseConsequence
 import org.apache.http.HttpStatus.SC_OK
 import org.assertj.core.api.Assertions
 import org.hamcrest.Matchers.*
-import java.util.UUID
 
 class ManageDidSteps {
 
@@ -36,7 +34,7 @@ class ManageDidSteps {
             Post.to("/did-registrar/dids")
                 .with {
                     it.body(createDidRequest)
-                }
+                },
         )
         var createdDids = actor.recall<MutableList<String>>("createdDids")
         if (createdDids == null) {
@@ -54,7 +52,7 @@ class ManageDidSteps {
             Post.to("/did-registrar/dids")
                 .with {
                     it.body(requestBody)
-                }
+                },
         )
     }
 
@@ -66,23 +64,25 @@ class ManageDidSteps {
             Post.to("/did-registrar/dids")
                 .with {
                     it.body(requestBody)
-                }
+                },
         )
     }
 
     @When("{actor} lists all the managed DIDs")
     fun iListManagedDids(actor: Actor) {
         actor.attemptsTo(
-            Get.resource("/did-registrar/dids")
+            Get.resource("/did-registrar/dids"),
         )
     }
 
     @Then("{actor} sees the managed DID was created successfully")
     fun theDidShouldBeRegisteredSuccessfully(actor: Actor) {
-        actor.should(ResponseConsequence.seeThatResponse {
-            it.statusCode(SC_OK)
-            it.body("longFormDid", not(emptyString()))
-        })
+        actor.should(
+            ResponseConsequence.seeThatResponse {
+                it.statusCode(SC_OK)
+                it.body("longFormDid", not(emptyString()))
+            },
+        )
     }
 
     @Then("{actor} sees the request has failed with error status {int}")

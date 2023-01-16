@@ -10,5 +10,5 @@ data class CredentialSchema(
     var kind: String? = null,
     var self: String? = null,
     var attributes: List<String>? = listOf(""),
-    var tags: List<String>? = listOf("")
+    var tags: List<String>? = listOf(""),
 )

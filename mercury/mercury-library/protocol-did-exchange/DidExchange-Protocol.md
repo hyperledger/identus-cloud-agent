@@ -16,11 +16,11 @@ See [https://github.com/hyperledger/aries-rfcs/tree/main/features/0023-did-excha
 ### Roles
 
 - Requester(Is the receiver in out-of-band protocol)
-  - Will initiate the did-exchange 
+  - Will initiate the did-exchange
 - Responder (Is the invitation sender in out-of-band protocol)
   - Will respond to did exchange
 
-  
+
 
 ### Requester request did-exchange
 step1-->step2-->step3 Is a happy path flow

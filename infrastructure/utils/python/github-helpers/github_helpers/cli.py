@@ -133,7 +133,7 @@ def get_latest_package_version(ctx, package, package_type):
         sys.exit(Errors.EMPTY_VERSIONS_LIST)
     else:
         try:
-            if package_type == 'container':
+            if package_type == "container":
                 print(versions[0].get("metadata").get("container").get("tags")[0])
             else:
                 print(versions[0].get("name", "NOT EXIST"))

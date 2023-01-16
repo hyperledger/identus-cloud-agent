@@ -9,6 +9,6 @@ object CredentialSchemas {
         description = "Simple student credentials schema",
         attributes = listOf("name", "age"),
         tags = listOf("school", "students"),
-        version = "1.0"
+        version = "1.0",
     )
 }

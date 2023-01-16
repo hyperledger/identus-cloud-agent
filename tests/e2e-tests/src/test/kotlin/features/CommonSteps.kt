@@ -24,7 +24,7 @@ class CommonSteps {
     @Before
     fun setStage() {
         createAgents()
-        val cast = object: Cast() {
+        val cast = object : Cast() {
             override fun getActors(): MutableList<Actor> {
                 return mutableListOf(Acme, Bob, Mallory, Faber)
             }
@@ -34,18 +34,18 @@ class CommonSteps {
 
     @ParameterType(".*")
     fun actor(actorName: String): Actor {
-        return OnStage.theActorCalled(actorName);
+        return OnStage.theActorCalled(actorName)
     }
 
     @Given("{actor} has an issued credential from {actor}")
     fun holderHasIssuedCredentialFromIssuer(holder: Actor, issuer: Actor) {
         holder.attemptsTo(
-            Get.resource("/issue-credentials/records")
+            Get.resource("/issue-credentials/records"),
         )
         holder.should(
             ResponseConsequence.seeThatResponse("Credential records") {
                 it.statusCode(SC_OK)
-            }
+            },
         )
         val receivedCredential = lastResponseList("items", Credential::class).findLast { credential ->
             credential.protocolState == "CredentialReceived"
@@ -66,27 +66,27 @@ class CommonSteps {
     @Given("{actor} and {actor} have an existing connection")
     fun actorsHaveExistingConnection(inviter: Actor, invitee: Actor) {
         inviter.attemptsTo(
-            Get.resource("/connections")
+            Get.resource("/connections"),
         )
         inviter.should(
             ResponseConsequence.seeThatResponse("Get connections") {
                 it.statusCode(200)
-            }
+            },
         )
         val inviterConnection = lastResponseList("contents", Connection::class).firstOrNull {
             it.label == "Connection with ${invitee.name}" &&
-                    (it.state == "ConnectionResponseSent" || it.state == "ConnectionResponseReceived")
+                (it.state == "ConnectionResponseSent" || it.state == "ConnectionResponseReceived")
         }
 
         var inviteeConnection: Connection? = null
         if (inviterConnection != null) {
             invitee.attemptsTo(
-                Get.resource("/connections")
+                Get.resource("/connections"),
             )
             invitee.should(
                 ResponseConsequence.seeThatResponse("Get connections") {
                     it.statusCode(SC_OK)
-                }
+                },
             )
             inviteeConnection = lastResponseList("contents", Connection::class).firstOrNull {
                 it.theirDid == inviterConnection.myDid

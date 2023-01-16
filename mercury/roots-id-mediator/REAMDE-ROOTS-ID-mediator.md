@@ -60,7 +60,7 @@ docker-compose up # -d
 ```
 
 - Find the out-of-band invitation link.
-  
+
   This inforamation is print on the logs of the container instance.
 
   We can get the _oob message in:

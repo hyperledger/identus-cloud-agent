@@ -15,5 +15,5 @@ message IssueCredentialsBatch {
 message RevokeCredentials {
   string revoker_did = 1;
   bytes issuance_batch_digest = 2;
-  repeated bytes credentials_to_revoke = 3;
+  repeated bytes credentials_to_revokes = 3;
 }

@@ -1,67 +1,67 @@
 {
-    "name": "mercury",
-    "devDependencies": {
-      "@commitlint/cli": "^17.0.3",
-      "@commitlint/config-conventional": "^17.0.3",
-      "@semantic-release/changelog": "^6.0.1",
-      "@semantic-release/exec": "^6.0.3",
-      "@semantic-release/git": "^10.0.1",
-      "conventional-changelog-conventionalcommits": "^5.0.0",
-      "gradle-semantic-release-plugin": "1.7.3",
-      "husky": "^8.0.1",
-      "pinst": "^3.0.0",
-      "prettier": "^2.7.1",
-      "semantic-release": "^19.0.3",
-      "semantic-release-monorepo": "^7.0.5",
-      "semantic-release-slack-bot": "^3.5.3"
-    },
-    "extends": "semantic-release-monorepo",
-    "release": {
-      "branches": [
+  "name": "mercury",
+  "devDependencies": {
+    "@commitlint/cli": "^17.0.3",
+    "@commitlint/config-conventional": "^17.0.3",
+    "@semantic-release/changelog": "^6.0.1",
+    "@semantic-release/exec": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
+    "conventional-changelog-conventionalcommits": "^5.0.0",
+    "gradle-semantic-release-plugin": "1.7.3",
+    "husky": "^8.0.1",
+    "pinst": "^3.0.0",
+    "prettier": "^2.7.1",
+    "semantic-release": "^19.0.3",
+    "semantic-release-monorepo": "^7.0.5",
+    "semantic-release-slack-bot": "^3.5.3"
+  },
+  "extends": "semantic-release-monorepo",
+  "release": {
+    "branches": [
+      {
+        "name": "main"
+      },
+      {
+        "name": "prerelease/mercury",
+        "prerelease": "snapshot"
+      }
+    ],
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/release-notes-generator",
+      [
+        "@semantic-release/exec",
         {
-          "name": "main"
-        },
-        {
-          "name": "prerelease/mercury",
-          "prerelease": "snapshot"
+          "publishCmd": "sbt \"release release-version ${nextRelease.version} next-version ${nextRelease.version}-SNAPSHOT with-defaults\""
         }
       ],
-      "plugins": [
-        "@semantic-release/commit-analyzer",
-        "@semantic-release/release-notes-generator",
-        [
-          "@semantic-release/exec",
-          {
-            "publishCmd": "sbt \"release release-version ${nextRelease.version} next-version ${nextRelease.version}-SNAPSHOT with-defaults\""
+      [
+        "@semantic-release/changelog",
+        {
+          "changelogFile": "CHANGELOG.md"
+        }
+      ],
+      [
+        "@semantic-release/git",
+        {
+          "assets": [
+            "version.sbt",
+            "CHANGELOG.md"
+          ],
+          "message": "chore(release): cut mercury lib ${nextRelease.version} release [skip ci]\n\n${nextRelease.notes}"
+        }
+      ],
+      [
+        "semantic-release-slack-bot",
+        {
+          "notifyOnSuccess": true,
+          "notifyOnFail": true,
+          "markdownReleaseNotes": true,
+          "onSuccessTemplate": {
+            "text": "A new version of Atala PRISM `$package_name` successfully released!\nVersion: `$npm_package_version`\nTag: $repo_url/releases/tag/$npm_package_version\n\nRelease notes:\n$release_notes"
           }
-        ],
-        [
-          "@semantic-release/changelog",
-          {
-            "changelogFile": "CHANGELOG.md"
-          }
-        ],
-        [
-          "@semantic-release/git",
-          {
-            "assets": [
-              "version.sbt",
-              "CHANGELOG.md"
-            ],
-            "message": "chore(release): cut mercury lib ${nextRelease.version} release [skip ci]\n\n${nextRelease.notes}"
-          }
-        ],
-        [
-          "semantic-release-slack-bot",
-          {
-            "notifyOnSuccess": true,
-            "notifyOnFail": true,
-            "markdownReleaseNotes": true,
-            "onSuccessTemplate": {
-              "text": "A new version of Atala PRISM `$package_name` successfully released!\nVersion: `$npm_package_version`\nTag: $repo_url/releases/tag/$npm_package_version\n\nRelease notes:\n$release_notes"
-            }
-          }
-        ]
+        }
       ]
-    }
+    ]
   }
+}

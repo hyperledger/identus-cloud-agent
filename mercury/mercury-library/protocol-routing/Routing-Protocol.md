@@ -52,7 +52,7 @@ stateDiagram-v2
   P1 --> Sending
   Sending --> Sending: retry error
   Sending --> Idle: msg sent
-  Sending --> Idle: give up error 
+  Sending --> Idle: give up error
   Idle --> [*]
 ```
 

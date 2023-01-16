@@ -259,7 +259,7 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
 
       val cxnIO = sql"""
           | UPDATE public.issue_credential_records as icr
-          | SET 
+          | SET
           |   publication_state = idsStatesAndProofs.publication_state,
           |   merkle_inclusion_proof = idsStatesAndProofs.serializedProof
           | FROM (values ${values.mkString(",")}) as idsStatesAndProofs(id, publication_state, serializedProof)

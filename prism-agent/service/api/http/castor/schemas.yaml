@@ -58,7 +58,7 @@ components:
     DIDDocumentMetadata:
       type: object
       required:
-      - deactivated
+        - deactivated
       properties:
         deactivated:
           type: boolean
@@ -153,9 +153,9 @@ components:
           status:
             type: string
             enum:
-            - CREATED
-            - PUBLICATION_PENDING
-            - PUBLISHED
+              - CREATED
+              - PUBLICATION_PENDING
+              - PUBLISHED
 
     Delta:
       type: object
@@ -211,7 +211,7 @@ components:
                 "capabilityInvocation",
                 "capabilityDelegation",
               ]
-          example: [ "authentication", "assertionMethod" ]
+          example: ["authentication", "assertionMethod"]
         publicKeyJwk:
           $ref: "#/components/schemas/PublicKeyJwk"
 

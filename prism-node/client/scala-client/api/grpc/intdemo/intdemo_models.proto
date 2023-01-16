@@ -3,15 +3,15 @@ syntax = "proto3";
 package io.iohk.atala.prism.intdemo.protos;
 
 message Date {
-    int32 year = 1; // positive value
-    int32 month = 2; // value in the [1, 12] interval
-    int32 day = 3; // value in the [1, 31] interval (depending on the month, the max value might be 28
+  int32 year = 1; // positive value
+  int32 month = 2; // value in the [1, 12] interval
+  int32 day = 3; // value in the [1, 31] interval (depending on the month, the max value might be 28
 }
 
 enum SubjectStatus {
-    UNCONNECTED = 0;
-    CONNECTED = 1;
-    CREDENTIAL_AVAILABLE = 2;
-    CREDENTIAL_SENT = 3;
-    CREDENTIAL_RECEIVED = 4;
+  SUBJECT_STATUS_UNCONNECTED_UNSPECIFIED = 0;
+  SUBJECT_STATUS_CONNECTED = 1;
+  SUBJECT_STATUS_CREDENTIAL_AVAILABLE = 2;
+  SUBJECT_STATUS_CREDENTIAL_SENT = 3;
+  SUBJECT_STATUS_CREDENTIAL_RECEIVED = 4;
 }

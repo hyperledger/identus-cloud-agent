@@ -21,7 +21,7 @@ object Utils {
         return SerenityRest.lastResponse().jsonPath().getList(path, clazz.java)
     }
 
-    fun toJsonPath(any: Any) : DocumentContext {
+    fun toJsonPath(any: Any): DocumentContext {
         val json = ObjectMapper().writeValueAsString(any)
         return JsonPath.parse(json)
     }
@@ -30,7 +30,7 @@ object Utils {
         blockToWait: () -> Boolean,
         errorMessage: String,
         poolInterval: FixedPollInterval = FixedPollInterval(Duration.ofSeconds(7L)),
-        timeout: Duration = Duration.ofSeconds(60L)
+        timeout: Duration = Duration.ofSeconds(60L),
     ) {
         try {
             Awaitility.await().withPollInterval(poolInterval)
@@ -41,7 +41,7 @@ object Utils {
                 }
         } catch (err: ConditionTimeoutException) {
             throw ConditionTimeoutException(
-                errorMessage
+                errorMessage,
             )
         }
     }

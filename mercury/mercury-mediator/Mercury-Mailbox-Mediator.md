@@ -14,7 +14,7 @@ sequenceDiagram
     note right of Alice: Alice accepts the invitation and register for a mailbox.
     Alice->>+Mediator: Register (HTTP)
     Mediator->>+DID Resolver: Ask for Alice DID document
-    DID Resolver-->>-Mediator: DID document 
+    DID Resolver-->>-Mediator: DID document
     note over Mediator: Confirm the identity
     Mediator-->>-Alice: Registration done
     note over Alice: Alice updates his DID document (adding serviceEndpoint)

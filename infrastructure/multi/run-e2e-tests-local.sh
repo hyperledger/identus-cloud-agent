@@ -2,7 +2,7 @@
 
 set -e
 
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
 echo "--------------------------------------"
 echo "Starting issuer using local/run.sh"
@@ -26,4 +26,7 @@ echo "--------------------------------------"
 echo "Run e2e tests"
 echo "--------------------------------------"
 
-(cd ${SCRIPT_DIR}/../../tests/e2e-tests/; ./gradlew test reports)
+(
+	cd ${SCRIPT_DIR}/../../tests/e2e-tests/
+	./gradlew test reports
+)

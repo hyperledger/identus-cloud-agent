@@ -20,8 +20,9 @@ object Agents {
             SerenityRest.setDefaultRequestSpecification(
                 RequestSpecBuilder().addHeader(
                     Environments.AGENT_AUTH_HEADER,
-                    Environments.AGENT_AUTH_KEY)
-                    .build()
+                    Environments.AGENT_AUTH_KEY,
+                )
+                    .build(),
             )
         }
     }

@@ -2,13 +2,13 @@
 
 This folder contains scripts and a docker-compose file to run the Atala `building-block` stack for development purposes.
 
-All components are built at the current repository version and published locally. 
+All components are built at the current repository version and published locally.
 
-> If you want to run a local instance without compilation - for end-user use - please see the `infrastructure/local` folder. 
+> If you want to run a local instance without compilation - for end-user use - please see the `infrastructure/local` folder.
 
 **Running using the scripts in this directory does not create a production-ready or secure environment. It is designed to allow easy development and should not be used to run a production instance**
 
-Please ensure you have set the `ATALA_GITHUB_TOKEN` and `GITHUB_TOKEN` environment variable. These both need to be set to the same value. 
+Please ensure you have set the `ATALA_GITHUB_TOKEN` and `GITHUB_TOKEN` environment variable. These both need to be set to the same value.
 
 The value of this variable must be a Github token generated with the  `read:packages` permission set on the `building-block` repository.
 
@@ -30,7 +30,7 @@ echo $GITHUB_TOKEN | docker login ghcr.io -u YOUR_USERNAME_HERE} --password-stdi
 ## Scripts
 
 | Name     | Purpose                                                                                              | Notes                                                                                                                                                                                                                                  |
-| -------- | ---------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|----------|------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | build.sh | Compile and Publish libraries and docker images locally                                              | Requires sbt and Docker installed                                                                                                                                                                                                      |
 | run.sh   | Retrieves versions from local components and brings up a docker-compose stack using built components | Does not build images or libraries. Can be used to run multiple instances with command line paramaters [see below]                                                                                                                     |
 | stop.sh  | Stops a running instance                                                                             | Used to stop a running instance if you've executed `run.sh` with the `-b/--background` option. Please note - you must supply the same `-n/--name` parameter to this script if you have used a non-default value in the `run.sh` script |
@@ -45,7 +45,7 @@ Example - Run an instance named `inviter` on port 8080 and an instance named `in
 
 > These examples show running in `background mode` using the `-b` flag. This means that docker-compose is passed the `daemon -d` flag.
 > If you wish to run them in the foreground to view logs - please make sure each line is executed in a different terminal and the `-b` flag is removed.
-> After running in either mode (foreground or background) - you can remove the local state of volumes by using the `stop.sh` script with the `-d` argument. 
+> After running in either mode (foreground or background) - you can remove the local state of volumes by using the `stop.sh` script with the `-d` argument.
 
 Starting the instances:
 
@@ -57,7 +57,7 @@ Starting the instances:
 Stopping the instances:
 
 ```
-./stop.sh -n inviter 
+./stop.sh -n inviter
 ./stop.sh -n invitee
 ```
 

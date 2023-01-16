@@ -37,7 +37,7 @@ curl -X 'POST' \
         "lastname": "Wonderland",
         "birthdate": "01/01/2000"
       }
-	}' | jq
+ }' | jq
 ```
 
 - **Holder** - Retrieving the list of issue records
@@ -45,7 +45,7 @@ curl -X 'POST' \
 curl -X 'GET' 'http://localhost:8090/prism-agent/issue-credentials/records' | jq
 ```
 
-- **Holder** - Accepting the credential offer 
+- **Holder** - Accepting the credential offer
 
 Replace `{RECORD_ID}` with the UUID of the record from the previous list
 ```bash

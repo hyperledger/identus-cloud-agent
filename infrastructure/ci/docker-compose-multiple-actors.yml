@@ -1,7 +1,6 @@
-version: '3.8'
+version: "3.8"
 
 services:
-
   ##########################
   # Castor Databases
   ##########################
@@ -34,7 +33,7 @@ services:
     volumes:
       - pg_data_castor_db_holder:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD", "pg_isready", "-U", "postgres", "-d", "castor_holder" ]
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "castor_holder"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -72,7 +71,7 @@ services:
     volumes:
       - pg_data_pollux_db_holder:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD", "pg_isready", "-U", "postgres", "-d", "pollux_holder" ]
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "pollux_holder"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -93,7 +92,7 @@ services:
     volumes:
       - pg_data_connect_db_issuer:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD", "pg_isready", "-U", "postgres", "-d", "connect_issuer" ]
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "connect_issuer"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -110,7 +109,7 @@ services:
     volumes:
       - pg_data_connect_db_holder:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD", "pg_isready", "-U", "postgres", "-d", "connect_holder" ]
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "connect_holder"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -147,7 +146,7 @@ services:
       - db_castor_issuer
       - db_pollux_issuer
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://prism-agent-issuer:8080/dids/xyz" ]
+      test: ["CMD", "curl", "-f", "http://prism-agent-issuer:8080/dids/xyz"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -180,7 +179,7 @@ services:
       - db_castor_holder
       - db_pollux_holder
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://prism-agent-holder:8090/dids/xyz" ]
+      test: ["CMD", "curl", "-f", "http://prism-agent-holder:8090/dids/xyz"]
       interval: 30s
       timeout: 10s
       retries: 5

@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-import "scalapb/scalapb.proto";
-import "protocol/vc_operations.proto";
 import "protocol/did_operations.proto";
+import "protocol/vc_operations.proto";
+import "scalapb/scalapb.proto";
 
 option (scalapb.options) = {
   no_default_values_in_constructor: true

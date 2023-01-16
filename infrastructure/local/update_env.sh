@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 ENV_FILE="${SCRIPT_DIR}/.env"
 
-pip install ${SCRIPT_DIR}/../utils/python/github-helpers > /dev/null 2>&1
+pip install ${SCRIPT_DIR}/../utils/python/github-helpers >/dev/null 2>&1
 
 MERCURY_MEDIATOR_VERSION=$(github get-latest-package-version --package mercury-mediator --package-type container)
 IRIS_SERVICE_VERSION=$(github get-latest-package-version --package iris-service --package-type container)

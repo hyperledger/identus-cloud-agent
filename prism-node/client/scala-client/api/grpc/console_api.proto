@@ -1,15 +1,15 @@
 syntax = "proto3";
 
-option java_multiple_files = true;
-option java_package = "io.iohk.atala.prism.protos";
-
 package io.iohk.atala.prism.protos;
 
-import "console_models.proto";
 import "common_models.proto";
-import "node_models.proto";
 import "connector_api.proto";
+import "console_models.proto";
 import "google/protobuf/timestamp.proto";
+import "node_models.proto";
+
+option java_multiple_files = true;
+option java_package = "io.iohk.atala.prism.protos";
 
 /**
  * The Management Console API.
@@ -562,13 +562,15 @@ message RegisterConsoleDIDRequest {
 /**
  * Confirmation of DID registration.
  */
-message RegisterConsoleDIDResponse {}
+message RegisterConsoleDIDResponse {
+}
 
 /**
  * Request to get the authenticated user details.
  * See ConsoleService.GetCurrentUser for more information.
  */
-message GetConsoleCurrentUserRequest {}
+message GetConsoleCurrentUserRequest {
+}
 
 /**
  * The authenticated user details.
@@ -719,10 +721,10 @@ message GetContactsRequest {
      * The possible fields to sort the results by.
      */
     enum Field {
-      UNKNOWN = 0; // If the value is missing, we take the default one, CREATED_AT
-      CREATED_AT = 1; // The createdAt field.
-      NAME = 2; // The name field.
-      EXTERNAL_ID = 3; // The externalId field.
+      FIELD_UNKNOWN_UNSPECIFIED = 0; // If the value is missing, we take the default one, CREATED_AT
+      FIELD_CREATED_AT = 1; // The createdAt field.
+      FIELD_NAME = 2; // The name field.
+      FIELD_EXTERNAL_ID = 3; // The externalId field.
     }
   }
 }
@@ -780,7 +782,8 @@ message UpdateContactRequest {
 /**
  * Response after updating the contact.
  */
-message UpdateContactResponse {}
+message UpdateContactResponse {
+}
 
 /**
  * Request to delete a contact from the authenticated issuer.
@@ -801,7 +804,8 @@ message DeleteContactRequest {
 /**
  * Response for the deleted contact.
  */
-message DeleteContactResponse {}
+message DeleteContactResponse {
+}
 
 /**
  * Request to generate a connection token for the given contact on the authenticated issuer.
@@ -884,7 +888,8 @@ message GetCredentialIssuanceResponse {
 /**
  * Request to get a list of all credential types on the authenticated issuer.
  */
-message GetCredentialTypesRequest {}
+message GetCredentialTypesRequest {
+}
 
 /**
  * Response with the retrieved credential types.
@@ -931,7 +936,8 @@ message UpdateCredentialTypeRequest {
 /**
  * Empty response after credential type update.
  */
-message UpdateCredentialTypeResponse {}
+message UpdateCredentialTypeResponse {
+}
 
 /**
  * Request to change credential type state to ready on the authenticated issuer.
@@ -943,7 +949,8 @@ message MarkAsReadyCredentialTypeRequest {
 /**
  * Empty response after state update.
  */
-message MarkAsReadyCredentialTypeResponse {}
+message MarkAsReadyCredentialTypeResponse {
+}
 
 /**
  * Request to change state to archived in credential type on the authenticated issuer.
@@ -955,13 +962,14 @@ message MarkAsArchivedCredentialTypeRequest {
 /**
  * Empty response after state update.
  */
-message MarkAsArchivedCredentialTypeResponse {}
-
+message MarkAsArchivedCredentialTypeResponse {
+}
 
 /**
  * Request to get a list of all credential type categories on the authenticated issuer.
  */
-message GetCredentialTypeCategoriesRequest {}
+message GetCredentialTypeCategoriesRequest {
+}
 
 /**
  * Response with the retrieved credential type categories.
@@ -1011,7 +1019,6 @@ message UnArchiveCredentialTypeCategoryRequest {
 message UnArchiveCredentialTypeCategoryResponse {
   CredentialTypeCategory credential_type_category = 1;
 }
-
 
 /**
  * Request to create a group on the authenticated issuer.
@@ -1070,10 +1077,10 @@ message GetGroupsRequest {
      * The possible fields to sort the results by.
      */
     enum Field {
-      UNKNOWN = 0; // If the value is missing, we take the default one: NAME.
-      NAME = 1; // The name field.
-      CREATED_AT = 2; // The createdAt field.
-      NUMBER_OF_CONTACTS = 3; // Number of contacts.
+      FIELD_UNKNOWN_UNSPECIFIED = 0; // If the value is missing, we take the default one: NAME.
+      FIELD_NAME = 1; // The name field.
+      FIELD_CREATED_AT = 2; // The createdAt field.
+      FIELD_NUMBER_OF_CONTACTS = 3; // Number of contacts.
     }
   }
 }
@@ -1099,8 +1106,8 @@ message GetGroupsResponse {
  */
 message UpdateGroupRequest {
   string group_id = 1; // The ID of the existing group.
-  repeated string contact_ids_to_add = 2; // The list of contact IDs to be added to the specified group.
-  repeated string contact_ids_to_remove = 3; // The list of contact IDs to be removed from the specified group.
+  repeated string contact_ids_to_adds = 2; // The list of contact IDs to be added to the specified group.
+  repeated string contact_ids_to_removes = 3; // The list of contact IDs to be removed from the specified group.
   string name = 4; // The new name for the group.
 }
 
@@ -1108,7 +1115,8 @@ message UpdateGroupRequest {
  * Response after updating a group.
  * See GroupsService.UpdateGroup to see possible errors.
  */
-message UpdateGroupResponse {}
+message UpdateGroupResponse {
+}
 
 /**
  * Request to copy a group.
@@ -1137,7 +1145,8 @@ message DeleteGroupRequest {
  * Response after deleting a group.
  * See GroupsService.DeleteGroup to see possible errors.
  */
-message DeleteGroupResponse {}
+message DeleteGroupResponse {
+}
 
 /**
  * Request to create a credential on the authenticated issuer.
@@ -1211,10 +1220,10 @@ message GetGenericCredentialsRequest {
     string credential_type = 1; // If provided, it returns the credentials containing the given type.
     Date created_after = 2; // If provided, it returns credentials created at the given date or after.
     Date created_before = 3; // If provided, it returns credentials created before or at the given date.
-    CredentialStatus credentialStatus = 4; // If provided credentials being in the status are returned
-    ContactConnectionStatus contactConnectionStatus = 5; // If provided credentials belonging to a contact with the status are returned
-    string contactExternalId = 6; // If provided credentials belonging to a contact with the external id are returned
-    string contactName = 7; // If provided credentials belonging to contact with a name containing the specified substring
+    CredentialStatus credential_status = 4; // If provided credentials being in the status are returned
+    ContactConnectionStatus contact_connection_status = 5; // If provided credentials belonging to a contact with the status are returned
+    string contact_external_id = 6; // If provided credentials belonging to a contact with the external id are returned
+    string contact_name = 7; // If provided credentials belonging to contact with a name containing the specified substring
   }
 
   /**
@@ -1228,11 +1237,11 @@ message GetGenericCredentialsRequest {
      * The possible fields to sort the results by.
      */
     enum Field {
-      UNKNOWN = 0; // If the value is missing, we take the default one: NAME.
-      CREDENTIAL_TYPE = 1; // The credential type field.
-      CREATED_ON = 2; // The createdOn field.
-      EXTERNAL_ID = 3; // The external_id field.
-      CREDENTIAL_STATUS = 4; // The credential status. https://github.com/input-output-hk/atala-prism-management-console-web/blob/e23cfa606036ac718660730ac5dd38cd0028bf02/src/APIs/helpers/credentialHelpers.js#L22
+      FIELD_UNKNOWN_UNSPECIFIED = 0; // If the value is missing, we take the default one: NAME.
+      FIELD_CREDENTIAL_TYPE = 1; // The credential type field.
+      FIELD_CREATED_ON = 2; // The createdOn field.
+      FIELD_EXTERNAL_ID = 3; // The external_id field.
+      FIELD_CREDENTIAL_STATUS = 4; // The credential status. https://github.com/input-output-hk/atala-prism-management-console-web/blob/e23cfa606036ac718660730ac5dd38cd0028bf02/src/APIs/helpers/credentialHelpers.js#L22
     }
   }
 }
@@ -1242,7 +1251,7 @@ message GetGenericCredentialsRequest {
  */
 message GetGenericCredentialsResponse {
   repeated CManagerGenericCredential credentials = 1; // The retrieved credentials.
-  int32 totalCount = 2; // Total number of credentials retrievable ignoring pagination.
+  int32 total_count = 2; // Total number of credentials retrievable ignoring pagination.
 }
 
 // @exclude TODO: Consider renaming this to MarkCredentialAsSent.
@@ -1257,7 +1266,8 @@ message ShareCredentialRequest {
 /**
  * Response after sharing a credential.
  */
-message ShareCredentialResponse {}
+message ShareCredentialResponse {
+}
 
 /**
  * Request to share many credentials, which sends credentials through the connector and marks them as sent.
@@ -1285,7 +1295,8 @@ message ShareCredentialsRequest {
 /**
  * Response after sharing a credential.
  */
-message ShareCredentialsResponse {}
+message ShareCredentialsResponse {
+}
 
 /**
  * Request to get the credentials for the given contact.
@@ -1301,7 +1312,7 @@ message GetContactCredentialsRequest {
  */
 message GetContactCredentialsResponse {
   repeated CManagerGenericCredential generic_credentials = 1; // The credentials found.
-  int32 totalCount = 2; // Total number of credentials found.
+  int32 total_count = 2; // Total number of credentials found.
 }
 
 /**
@@ -1333,7 +1344,8 @@ message StoreCredentialRequest {
 /**
  * Response after storing a received credential.
  */
-message StoreCredentialResponse {}
+message StoreCredentialResponse {
+}
 
 /**
  * Request to find the received credentials.
@@ -1349,13 +1361,14 @@ message GetStoredCredentialsForRequest {
  */
 message GetStoredCredentialsForResponse {
   repeated StoredSignedCredential credentials = 1; // The received credentials.
-  int32 totalCount = 2; // Total number of received credentials.
+  int32 total_count = 2; // Total number of received credentials.
 }
 
 /**
  * Request to find the latest credentialExternalId.
  */
-message GetLatestCredentialExternalIdRequest {}
+message GetLatestCredentialExternalIdRequest {
+}
 
 /**
  * Response with the latest credentialExternalId.
@@ -1398,7 +1411,8 @@ message StorePublishedCredentialRequest {
 /**
  * Response after publishing a credential.
  */
-message StorePublishedCredentialResponse {}
+message StorePublishedCredentialResponse {
+}
 
 /**
  * Request to revoke a published credential.
@@ -1438,7 +1452,8 @@ message DeleteCredentialsRequest {
 /**
  * Confirmation of credential deletion.
  */
-message DeleteCredentialsResponse {}
+message DeleteCredentialsResponse {
+}
 
 /**
  * Requests ledger data for a specific batch and credential recorded by the node.
@@ -1478,4 +1493,5 @@ message ConsoleUpdateProfileRequest {
  * Confirmation of participant's profile updated.
  * See ConsoleService.UpdateParticipantProfile for more information.
  */
-message ConsoleUpdateProfileResponse {}
+message ConsoleUpdateProfileResponse {
+}

@@ -42,7 +42,7 @@ jobs:
       - name: Install Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.8'
+          python-version: "3.8"
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
@@ -55,7 +55,7 @@ jobs:
         uses: ndeloof/install-compose-action@v0.0.1
         with:
           version: v2.12.2 # defaults to 'latest'
-          legacy: true    # will also install in PATH as `docker-compose`
+          legacy: true # will also install in PATH as `docker-compose`
 
       - name: Start services for issuer
         env:

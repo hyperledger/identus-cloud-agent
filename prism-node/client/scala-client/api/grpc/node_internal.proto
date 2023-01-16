@@ -1,11 +1,11 @@
 syntax = "proto3";
 
-option java_multiple_files = true;
-option java_package = "io.iohk.atala.prism.protos";
+package io.iohk.atala.prism.protos;
 
 import "node_models.proto";
 
-package io.iohk.atala.prism.protos;
+option java_multiple_files = true;
+option java_package = "io.iohk.atala.prism.protos";
 
 /**
  * Represent a block that holds operations.

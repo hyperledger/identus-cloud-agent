@@ -16,7 +16,7 @@
 #
 
 apisix:
-  node_listen: 9080              # APISIX listening port
+  node_listen: 9080 # APISIX listening port
   enable_ipv6: false
   enable_admin: false
   config_center: yaml

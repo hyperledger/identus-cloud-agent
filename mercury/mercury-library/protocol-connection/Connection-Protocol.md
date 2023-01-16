@@ -1,6 +1,6 @@
 # Connection Protocol
 
-This Protocol is for DID base connection 
+This Protocol is for DID base connection
 
 
 The protocol is used when you wish to create a connection with another agent.

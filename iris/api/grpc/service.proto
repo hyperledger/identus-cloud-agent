@@ -1,11 +1,11 @@
 syntax = "proto3";
 
-import "scalapb/scalapb.proto";
 import "google/protobuf/timestamp.proto";
+import "scalapb/scalapb.proto";
 
 import "protocol/did_operations.proto";
-import "protocol/vc_operations.proto";
 import "protocol/dlt.proto";
+import "protocol/vc_operations.proto";
 
 option (scalapb.options) = {
   no_default_values_in_constructor: true
@@ -21,14 +21,14 @@ message IrisOperationOutcome {
 }
 
 enum IrisOperationStatus {
-  PENDING = 0;
-  SUBMITTED = 1;
-  ROLLED_BACK = 2;
-  CONFIRMED = 3;
+  IRIS_OPERATION_STATUS_PENDING_UNSPECIFIED = 0;
+  IRIS_OPERATION_STATUS_SUBMITTED = 1;
+  IRIS_OPERATION_STATUS_ROLLED_BACK = 2;
+  IRIS_OPERATION_STATUS_CONFIRMED = 3;
 };
 
 message IrisOperationInfo {
-  bytes operationId = 1;
+  bytes operation_id = 1;
   oneof operation {
     CreateDid create_did = 2;
     UpdateDid update_did = 3;
@@ -47,8 +47,8 @@ message IrisBatchRequest {
 
 message ConfirmedIrisBatch {
   int32 block_level = 1;
-  google.protobuf.Timestamp blockTimestamp = 2;
-  string transactionId = 3;
+  google.protobuf.Timestamp block_timestamp = 2;
+  string transaction_id = 3;
   IrisBatch batch = 4;
 }
 

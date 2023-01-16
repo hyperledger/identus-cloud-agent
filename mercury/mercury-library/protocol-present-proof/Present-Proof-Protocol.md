@@ -82,7 +82,7 @@ stateDiagram-v2
 
   state Verifier_Request_Proof {
 
-    [*] --> Send_Presentation_Request: Send Presentation Proof Request 
+    [*] --> Send_Presentation_Request: Send Presentation Proof Request
     Send_Presentation_Request --> Recive_Presentation_Proof : Receive Presentation Proof
     Send_Presentation_Request --> Recive_Presentation_Proposal : Receive Presentation Proposal
     Send_Presentation_Request --> verfier_problem_report: Receive Problem Report
@@ -90,7 +90,7 @@ stateDiagram-v2
     if_state_Proposal --> Send_Presentation_Request: Yes
     if_state_Proposal --> verfier_problem_report: No, Sent problem report
     verfier_problem_report --> [*]
-    
+
     Recive_Presentation_Proof --> Presentation_Received
     Presentation_Received --> if_state_Presentation : Is presentation valid
     if_state_Presentation --> Send_Ack_Presentation_Proof: Yes valid
@@ -100,10 +100,10 @@ stateDiagram-v2
     Send_Ack_Presentation_Proof --> [*]
     verfier_problem_report --> [*]
   }
-    
-  state Prover_Proposal_Proof {     
+
+  state Prover_Proposal_Proof {
    [*] --> Receive_Presentation_Request: Receive Presentation Proof Request
-    Receive_Presentation_Request --> if_reveal_data:Do you want to reveal data? 
+    Receive_Presentation_Request --> if_reveal_data:Do you want to reveal data?
     if_reveal_data --> if_continue : No Do you want to continue?
     if_continue --> send_presentation_proposal :  Yes
     if_continue --> Problem_report : No,Sent problem report

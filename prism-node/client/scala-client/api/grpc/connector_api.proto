@@ -1,13 +1,13 @@
 syntax = "proto3";
 
-option java_multiple_files = true;
-option java_package = "io.iohk.atala.prism.protos";
+package io.iohk.atala.prism.protos;
 
 import "common_models.proto";
 import "connector_models.proto";
 import "node_models.proto";
 
-package io.iohk.atala.prism.protos;
+option java_multiple_files = true;
+option java_package = "io.iohk.atala.prism.protos";
 
 /**
  * The Connector API.
@@ -213,7 +213,7 @@ message GetConnectionByTokenRequest {
 }
 // The response while finding a connection by token.
 message GetConnectionByTokenResponse {
-	io.iohk.atala.prism.protos.Connection connection = 1;
+  io.iohk.atala.prism.protos.Connection connection = 1;
 }
 
 // Finds a connection by the given id.
@@ -350,7 +350,7 @@ message SendMessageResponse {
 // Request to send multiple messages.
 message SendMessagesRequest {
   // Messages to send. It can be empty, in which case no messages will be sent.
-  repeated MessageToSendByConnectionToken messages_by_connection_token = 1;
+  repeated MessageToSendByConnectionToken messages_by_connection_tokens = 1;
 }
 
 // Confirmation of messages sending.
@@ -380,13 +380,14 @@ message RegisterDIDRequest {
   bytes logo = 4;
 
   enum Role {
-    issuer = 0;
-    verifier = 1;
+    ROLE_ISSUER_UNSPECIFIED = 0;
+    ROLE_VERIFIER = 1;
   }
 }
 
 // Request to get the authenticated user details.
-message GetCurrentUserRequest {}
+message GetCurrentUserRequest {
+}
 
 // The authenticated user details.
 message GetCurrentUserResponse {
@@ -395,8 +396,8 @@ message GetCurrentUserResponse {
   bytes logo = 3;
 
   enum Role {
-    issuer = 0;
-    verifier = 1;
+    ROLE_ISSUER_UNSPECIFIED = 0;
+    ROLE_VERIFIER = 1;
   }
 }
 
@@ -410,7 +411,8 @@ message RegisterDIDResponse {
 }
 
 // Request to get information about this service.
-message GetBuildInfoRequest {}
+message GetBuildInfoRequest {
+}
 
 // The actual service's information.
 message GetBuildInfoResponse {
@@ -440,4 +442,5 @@ message UpdateProfileRequest {
 }
 
 // Confirmation of participants profile updated.
-message UpdateProfileResponse {}
+message UpdateProfileResponse {
+}
