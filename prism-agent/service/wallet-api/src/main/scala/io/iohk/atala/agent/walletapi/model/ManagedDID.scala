@@ -1,6 +1,7 @@
 package io.iohk.atala.agent.walletapi.model
 
 import io.iohk.atala.castor.core.model.did.{CanonicalPrismDID, PrismDIDOperation, ScheduledDIDOperationStatus}
+import zio.*
 
 import java.time.Instant
 import scala.collection.immutable.ArraySeq

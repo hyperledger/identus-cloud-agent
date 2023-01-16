@@ -87,7 +87,31 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
       .map(_.toMap)
   }
 
-  override def insertDIDUpdateLineage(did: PrismDID, updateLineage: DIDUpdateLineage): Task[Unit] = ???
+  override def insertDIDUpdateLineage(did: PrismDID, updateLineage: DIDUpdateLineage): Task[Unit] = {
+    val cxnIO =
+      sql"""
+           | INSERT INTO public.prism_did_update_lineage(
+           |   did,
+           |   operation_hash,
+           |   previous_operation_hash,
+           |   status,
+           |   operation_id,
+           |   created_at,
+           |   updated_at
+           | )
+           | VALUES (
+           |   $did,
+           |   ${updateLineage.operationHash},
+           |   ${updateLineage.previousOperationHash},
+           |   ${updateLineage.status},
+           |   ${updateLineage.operationId},
+           |   ${updateLineage.createdAt},
+           |   ${updateLineage.updatedAt}
+           | )
+           """.stripMargin.update
+
+    cxnIO.run.transact(xa).unit
+  }
 
   override def listUpdateLineage(did: PrismDID): Task[Seq[DIDUpdateLineage]] = {
     val cxnIO =
@@ -108,7 +132,9 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
     cxnIO.transact(xa)
   }
 
-  override def setUpdateLineageStatus(operationHash: Array[Byte], status: ScheduledDIDOperationStatus): Task[Unit] = ???
+  // TODO: implement
+  override def setDIDUpdateLineageStatus(operationHash: Array[Byte], status: ScheduledDIDOperationStatus): Task[Unit] =
+    ???
 
 }
 

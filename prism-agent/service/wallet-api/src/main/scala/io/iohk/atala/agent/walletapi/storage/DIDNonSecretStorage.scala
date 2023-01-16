@@ -16,6 +16,6 @@ private[walletapi] trait DIDNonSecretStorage {
 
   def listUpdateLineage(did: PrismDID): Task[Seq[DIDUpdateLineage]]
 
-  def setUpdateLineageStatus(operationHash: Array[Byte], status: ScheduledDIDOperationStatus): Task[Unit]
+  def setDIDUpdateLineageStatus(operationHash: Array[Byte], status: ScheduledDIDOperationStatus): Task[Unit]
 
 }

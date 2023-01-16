@@ -33,7 +33,7 @@ CREATE TABLE public.prism_did_secret_storage(
   "key_id" TEXT NOT NULL,
   "key_pair" TEXT NOT NULL,
   "operation_hash" BYTEA NOT NULL,
-  PRIMARY KEY("did", "key_id")
+  PRIMARY KEY("did", "key_id", "operation_hash")
 );
 
 CREATE TABLE public.prism_did_update_lineage(
