@@ -44,36 +44,4 @@ object PostgresTestContainer {
       }.orDie)(container => attemptBlockingIO(container.stop()).orDie)
     }
 
-  private def hikariConfig(container: PostgreSQLContainer): HikariConfig = {
-    val config = HikariConfig()
-    config.setJdbcUrl(container.jdbcUrl)
-    config.setUsername(container.username)
-    config.setPassword(container.password)
-    config
-  }
-
-  lazy val hikariConfigLayer: ZLayer[PostgreSQLContainer, Nothing, HikariConfig] =
-    ZLayer.fromZIO {
-      for {
-        container <- ZIO.service[PostgreSQLContainer]
-      } yield hikariConfig(container)
-    }
-
-  def transactor: ZLayer[HikariConfig, Throwable, Transactor[Task]] = ZLayer.fromZIO {
-    val hikariTransactorLayerZIO = for {
-      config <- ZIO.service[HikariConfig]
-      htxResource: Resource[Task, HikariTransactor[Task]] = for {
-        ec <- ExecutionContexts.cachedThreadPool[Task]
-        xa <- HikariTransactor.fromHikariConfig[Task](config, ec)
-      } yield xa
-      layer <- Dispatcher[Task].allocated.map {
-        case (dispatcher, _) => {
-          given Dispatcher[Task] = dispatcher
-          htxResource.toManaged.toLayer[Transactor[Task]]
-        }
-      }
-    } yield layer
-    hikariTransactorLayerZIO
-  }.flatten
-
 }

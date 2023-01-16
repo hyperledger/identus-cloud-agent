@@ -20,18 +20,26 @@ import com.dimafeng.testcontainers.PostgreSQLContainer
 import org.postgresql.util.PSQLState
 import io.iohk.atala.mercury.protocol.connection.ConnectionRequest
 import io.iohk.atala.mercury.protocol.connection.ConnectionResponse
+import cats.effect.std.Dispatcher
 
 object JdbcConnectionRepositorySpec extends ZIOSpecDefault {
 
   private val pgLayer = postgresLayer(verbose = false)
-  private val transactorLayer = pgLayer >>> hikariConfigLayer >>> transactor
   private val dbConfig = ZLayer.fromZIO(
     for {
       postgres <- ZIO.service[PostgreSQLContainer]
     } yield DbConfig(postgres.username, postgres.password, postgres.jdbcUrl)
   )
+  private val transactorLayer = ZLayer.fromZIO {
+    ZIO.service[DbConfig].flatMap { config =>
+      Dispatcher[Task].allocated.map { case (dispatcher, _) =>
+        given Dispatcher[Task] = dispatcher
+        TransactorLayer.hikari[Task](config)
+      }
+    }
+  }.flatten
   private val testEnvironmentLayer = zio.test.testEnvironment ++ pgLayer ++
-    (transactorLayer >>> JdbcConnectionRepository.layer) ++
+    (pgLayer >>> dbConfig >>> transactorLayer >>> JdbcConnectionRepository.layer) ++
     (pgLayer >>> dbConfig >>> Migrations.layer)
 
   override def spec: Spec[TestEnvironment with Scope, Any] =
