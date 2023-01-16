@@ -11,11 +11,17 @@ import io.iohk.atala.mercury.protocol.connection.ConnectionResponse
 
 trait ConnectionService {
 
-  def createConnectionInvitation(label: Option[String], pairwiseDID: DidId): IO[ConnectionServiceError, ConnectionRecord]
+  def createConnectionInvitation(
+      label: Option[String],
+      pairwiseDID: DidId
+  ): IO[ConnectionServiceError, ConnectionRecord]
 
   def receiveConnectionInvitation(invitation: String): IO[ConnectionServiceError, ConnectionRecord]
 
-  def acceptConnectionInvitation(recordId: UUID, pairwiseDid: DidId): IO[ConnectionServiceError, Option[ConnectionRecord]]
+  def acceptConnectionInvitation(
+      recordId: UUID,
+      pairwiseDid: DidId
+  ): IO[ConnectionServiceError, Option[ConnectionRecord]]
 
   def markConnectionRequestSent(recordId: UUID): IO[ConnectionServiceError, Option[ConnectionRecord]]
 

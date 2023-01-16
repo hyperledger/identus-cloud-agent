@@ -20,11 +20,16 @@ class ConnectionRepositoryInMemory(storeRef: Ref[Map[UUID, ConnectionRecord]]) e
       count <- maybeRecord
         .map(record =>
           for {
-            _ <- storeRef.update(r => r.updated(recordId, record.copy(
-              updatedAt = Some(Instant.now),
-              connectionResponse = Some(response),
-              protocolState = state
-              )))
+            _ <- storeRef.update(r =>
+              r.updated(
+                recordId,
+                record.copy(
+                  updatedAt = Some(Instant.now),
+                  connectionResponse = Some(response),
+                  protocolState = state
+                )
+              )
+            )
           } yield 1
         )
         .getOrElse(ZIO.succeed(1))
