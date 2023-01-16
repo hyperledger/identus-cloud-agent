@@ -17,7 +17,10 @@ private[walletapi] class InMemoryDIDNonSecretStorage private (
 
   override def insertDIDUpdateLineage(did: PrismDID, updateLineage: DIDUpdateLineage): Task[Unit] = ???
 
-  override def listUpdateLineage(did: PrismDID): Task[Seq[DIDUpdateLineage]] = ???
+  override def listUpdateLineage(
+      did: Option[PrismDID],
+      status: Option[ScheduledDIDOperationStatus]
+  ): Task[Seq[DIDUpdateLineage]] = ???
 
   override def setDIDUpdateLineageStatus(operationHash: Array[Byte], status: ScheduledDIDOperationStatus): Task[Unit] =
     ???

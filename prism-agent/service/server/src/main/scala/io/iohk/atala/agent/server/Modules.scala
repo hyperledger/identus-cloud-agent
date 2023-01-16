@@ -179,6 +179,7 @@ object Modules {
 
   val syncDIDPublicationStateFromDltJob: URIO[ManagedDIDService, Unit] =
     BackgroundJobs.syncDIDPublicationStateFromDlt
+      .debug("syncDIDPublicationStateFromDlt")
       .catchAll(e => ZIO.logError(s"error while syncing DID publication state: $e"))
       .repeat(Schedule.spaced(10.seconds))
       .unit

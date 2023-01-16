@@ -107,34 +107,51 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
            |   ${updateLineage.operationId},
            |   ${updateLineage.createdAt},
            |   ${updateLineage.updatedAt}
-           | )
+           | ) ON CONFLICT (operation_hash) DO NOTHING
            """.stripMargin.update
 
     cxnIO.run.transact(xa).unit
   }
 
-  override def listUpdateLineage(did: PrismDID): Task[Seq[DIDUpdateLineage]] = {
-    val cxnIO =
+  override def listUpdateLineage(
+      did: Option[PrismDID],
+      status: Option[ScheduledDIDOperationStatus]
+  ): Task[Seq[DIDUpdateLineage]] = {
+    val didFilter = did.map(d => fr"did = $d")
+    val statusFilter = status.map(s => fr"status = $s")
+    val whereFr = Fragments.whereAndOpt(didFilter, statusFilter)
+    val baseFr =
       sql"""
-          | SELECT
-          |   operation_id,
-          |   operation_hash,
-          |   previous_operation_hash,
-          |   status,
-          |   created_at,
-          |   updated_at
-          | FROM public.prism_did_update_lineage
-          | WHERE did = $did
-        """.stripMargin
-        .query[DIDUpdateLineage]
-        .to[List]
+           | SELECT
+           |   operation_id,
+           |   operation_hash,
+           |   previous_operation_hash,
+           |   status,
+           |   created_at,
+           |   updated_at
+           | FROM public.prism_did_update_lineage
+      """.stripMargin
+    val cxnIO = (baseFr ++ whereFr)
+      .query[DIDUpdateLineage]
+      .to[List]
 
     cxnIO.transact(xa)
   }
 
   // TODO: implement
-  override def setDIDUpdateLineageStatus(operationHash: Array[Byte], status: ScheduledDIDOperationStatus): Task[Unit] =
-    ???
+  override def setDIDUpdateLineageStatus(
+      operationHash: Array[Byte],
+      status: ScheduledDIDOperationStatus
+  ): Task[Unit] = {
+    val cxnIO =
+      sql"""
+            | UPDATE public.prism_did_update_lineage
+            | SET status = $status
+            | WHERE operation_hash = $operationHash
+        """.stripMargin.update
+
+    cxnIO.run.transact(xa).unit
+  }
 
 }
 
