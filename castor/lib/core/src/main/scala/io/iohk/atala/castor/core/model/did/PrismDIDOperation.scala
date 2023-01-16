@@ -37,6 +37,7 @@ final case class SignedPrismDIDOperation(
     import ProtoModelHelper.*
     this.toProto
   }
+  def toAtalaOperationId: Array[Byte] = Sha256.compute(toSignedAtalaOperation.toByteArray).getValue
 }
 
 final case class ScheduleDIDOperationOutcome(
