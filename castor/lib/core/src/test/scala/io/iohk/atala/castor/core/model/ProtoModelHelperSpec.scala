@@ -35,7 +35,7 @@ object ProtoModelHelperSpec extends ZIOSpecDefault {
     test("not filter keys if revokedOn timestamp has not passed") {
       for {
         now <- Clock.instant
-        revokeTime = now.minusSeconds(5)
+        revokeTime = now.plusSeconds(5)
         ledgerData = node_models.LedgerData(timestampInfo =
           Some(node_models.TimestampInfo(blockTimestamp = Some(revokeTime.toTimestamp)))
         )
@@ -53,7 +53,7 @@ object ProtoModelHelperSpec extends ZIOSpecDefault {
     test("filter keys if revokedOn timestamp has passed") {
       for {
         now <- Clock.instant
-        revokeTime = now.plusSeconds(5)
+        revokeTime = now.minusSeconds(5)
         ledgerData = node_models.LedgerData(timestampInfo =
           Some(node_models.TimestampInfo(blockTimestamp = Some(revokeTime.toTimestamp)))
         )
@@ -97,7 +97,7 @@ object ProtoModelHelperSpec extends ZIOSpecDefault {
     test("not filter services if deletedOn timestamp has not passed") {
       for {
         now <- Clock.instant
-        revokeTime = now.minusSeconds(5)
+        revokeTime = now.plusSeconds(5)
         ledgerData = node_models.LedgerData(timestampInfo =
           Some(node_models.TimestampInfo(blockTimestamp = Some(revokeTime.toTimestamp)))
         )
@@ -115,7 +115,7 @@ object ProtoModelHelperSpec extends ZIOSpecDefault {
     test("filter services if deletedOn timestamp has passed") {
       for {
         now <- Clock.instant
-        revokeTime = now.plusSeconds(5)
+        revokeTime = now.minusSeconds(5)
         ledgerData = node_models.LedgerData(timestampInfo =
           Some(node_models.TimestampInfo(blockTimestamp = Some(revokeTime.toTimestamp)))
         )

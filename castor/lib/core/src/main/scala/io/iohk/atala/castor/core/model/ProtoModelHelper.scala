@@ -196,10 +196,10 @@ private[castor] trait ProtoModelHelper {
       Clock.instant.map { now =>
         didData
           .withPublicKeys(didData.publicKeys.filter { publicKey =>
-            publicKey.revokedOn.flatMap(_.toInstant).forall(revokeTime => revokeTime isBefore now)
+            publicKey.revokedOn.flatMap(_.toInstant).forall(revokeTime => revokeTime isAfter now)
           })
           .withServices(didData.services.filter { service =>
-            service.deletedOn.flatMap(_.toInstant).forall(revokeTime => revokeTime isBefore now)
+            service.deletedOn.flatMap(_.toInstant).forall(revokeTime => revokeTime isAfter now)
           })
       }
     }
