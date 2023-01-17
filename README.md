@@ -13,7 +13,7 @@
   <br>
 </p>
 <p align="center">
-  <a href="CONTRIBUTING.md">Contributing Guidelines</a> · <a href="https://blog.atalaprism.io/">Blog</a>
+  <a href="CONTRIBUTING.md">Contributing Guidelines</a>
 </p>
 <hr>
 
