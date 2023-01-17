@@ -22,6 +22,7 @@
 <!-- FIXME * [OpenAPI docs](openapi) -->
 
 * [Interdependencies](./Interdependencies.md)
+* [repositories and relationships](./RepositoriesRrelationships.md)
 
 ## Running a single instance locally
 
