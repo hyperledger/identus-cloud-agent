@@ -11,7 +11,7 @@ And there are dependencies with the Atala PRISM V1.
 So here we have a simplified view of all Atala repositories and how are they related together:
 
 ```mermaid
-graph
+flowchart
   subgraph doc
     atala-prism-docs
     atala-prism-interactive-demo-web
