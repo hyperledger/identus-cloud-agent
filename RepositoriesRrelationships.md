@@ -25,7 +25,8 @@ flowchart
     atala-prism
   
     subgraph SDK_PRISM_1_4
-      atala-prism-sdk
+      direction TB
+      atala-prism-sdk --> 
       atala-prism-sdk-scalajs
     end
 
@@ -48,8 +49,8 @@ flowchart
       atala-prism-vault-sdk
       atala-cocoapods-specs
     end
-    atala-prism-connect -->|wannabe| atala-prism
-    atala-prism-vault-sdk -->|wannabe| atala-prism
+    atala-prism-connect --->|wannabe| atala-prism
+    atala-prism-vault-sdk --->|wannabe| atala-prism
   end
 
   subgraph coding-challanges-for-candidates
@@ -58,7 +59,7 @@ flowchart
 
   subgraph PRISM_2
     
-    atala-prism-building-blocks ---> |currently uses node| atala-prism
+    atala-prism-building-blocks ----> |currently uses node| atala-prism
     atala-prism-building-blocks --> |currently uses crypto| SDK_PRISM_1_4
     atala-prism-apollo
     atala-prism-didcomm-kmm
@@ -74,7 +75,7 @@ flowchart
 
   %% infra 
   atala-infra --wannabe-->  atala-prism-infra
-  atala-prism-infra --->|infra for| PRISM_1_4
+  atala-prism-infra -->|infra for| PRISM_1_4
   atala-prism-dev-deployments -->|helm charts and environments managed by| atala-prism-v2-infra
   atala-prism-terraform-modules -->|modules used in| atala-prism-v2-infra 
   atala-prism-v2-infra ---->|infrastructure as code definition for aws| PRISM_2
