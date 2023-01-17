@@ -14,7 +14,7 @@ repos:
       - id: conventional-pre-commit
         stages: [commit-msg]
   - repo: https://github.com/oxsecurity/megalinter
-    rev: v6.8.0 # Git tag specifying the hook, not mega-linter-runner, version
+    rev: v6.18.0 # Git tag specifying the hook, not mega-linter-runner, version
     hooks:
       - id: megalinter-incremental # Faster, less thorough
         stages:
