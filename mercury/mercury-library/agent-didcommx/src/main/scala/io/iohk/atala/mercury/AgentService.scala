@@ -6,7 +6,7 @@ import zio._
 import org.didcommx.didcomm.model._
 
 import io.iohk.atala.resolvers._
-import io.iohk.atala.mercury.model.{_, given}
+import io.iohk.atala.mercury.model.{given, _}
 import java.util.Base64
 import io.iohk.atala.mercury.DidComm
 

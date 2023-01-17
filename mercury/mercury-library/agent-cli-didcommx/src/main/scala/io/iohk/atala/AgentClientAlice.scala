@@ -3,7 +3,7 @@ package io.iohk.atala
 import zio._
 
 import io.iohk.atala.mercury._
-import io.iohk.atala.mercury.{given}
+import io.iohk.atala.mercury.given
 import io.circe.Printer
 import io.circe.syntax._
 import io.circe.Json._
