@@ -58,7 +58,6 @@ flowchart
   end
 
   subgraph PRISM_2
-    
     atala-prism-building-blocks ----> |currently uses node| atala-prism
     atala-prism-building-blocks --> |currently uses crypto| SDK_PRISM_1_4
     atala-prism-apollo
@@ -70,7 +69,10 @@ flowchart
     atala-prism-crypto-sdk-sp -->|1.4 Crypto SDK to be replaced by apollo| atala-prism-wallet-sdk-swift
     atala-prism-didcomm-swift -->|Didcomm rust to be replaced by our didcomm-kmm| atala-prism-wallet-sdk-swift
     atala-prism-didcomm-kmm --> atala-prism-wallet-sdk-kmm
+    atala-prism-apollo -..->|will replace| atala-prism-crypto-sdk-sp
+    atala-prism-didcomm-kmm -..->|will replace| atala-prism-didcomm-swift
     atala-prism-apollo --> atala-prism-wallet-sdk-kmm
+    atala-prism-wallet-sdk-kmm -..->|will replace| atala-prism-wallet-sdk-swift
   end
 
   %% infra 
@@ -80,6 +82,8 @@ flowchart
   atala-prism-terraform-modules -->|modules used in| atala-prism-v2-infra 
   atala-prism-v2-infra ---->|infrastructure as code definition for aws| PRISM_2
   atala-prism-v2-infra --> doc
+
+  PRISM_2 ------->|still have some\n dependencies| PRISM_1_4
 
 
 
