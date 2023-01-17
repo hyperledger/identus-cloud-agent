@@ -65,17 +65,20 @@ class JdbcDIDSecretStorage(xa: Transactor[Task]) extends DIDSecretStorage {
   }
 
   override def getKey(did: PrismDID, keyId: String): Task[Option[ECKeyPair]] = {
+    // By specification, it is possible to have multiple unconfirmed operation_id with
+    // the same operation_hash (same content different signature).
+    // However, there can be only 1 confirmed operation_id per operation_hash.
     val status: ScheduledDIDOperationStatus = ScheduledDIDOperationStatus.Confirmed
     val cxnIO = sql"""
         | SELECT
         |   sc.key_pair
         | FROM public.prism_did_secret_storage sc
-        |   LEFT JOIN public.prism_did_update_lineage ul ON sc.operation_hash = ul.operation_hash
-        |   LEFT JOIN public.prism_did_wallet_state ws ON sc.did = ws.did
+        |   JOIN public.prism_did_update_lineage ul ON sc.operation_hash = ul.operation_hash
+        |   JOIN public.prism_did_wallet_state ws ON sc.did = ws.did
         | WHERE
         |   sc.did = $did
         |   AND sc.key_id = $keyId
-        |   AND (ul.status = ${status} OR sc.operation_hash = sha256(ws.atala_operation_content))
+        |   AND (ul.status = $status OR sc.operation_hash = sha256(ws.atala_operation_content))
         """.stripMargin
       .query[ECKeyPair]
       .option

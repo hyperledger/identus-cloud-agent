@@ -38,12 +38,13 @@ CREATE TABLE public.prism_did_secret_storage(
 
 CREATE TABLE public.prism_did_update_lineage(
   "did" TEXT NOT NULL,
-  "operation_hash" BYTEA NOT NULL PRIMARY KEY,
+  "operation_hash" BYTEA NOT NULL,
   "previous_operation_hash" BYTEA NOT NULL,
   "status" prism_did_operation_status NOT NULL,
   "operation_id" BYTEA NOT NULL,
   "created_at" TIMESTAMPTZ NOT NULL,
   "updated_at" TIMESTAMPTZ NOT NULL,
+  PRIMARY KEY ("operation_id"),
   CONSTRAINT fk_did FOREIGN KEY("did") REFERENCES public.prism_did_wallet_state("did") ON DELETE RESTRICT
 );
 

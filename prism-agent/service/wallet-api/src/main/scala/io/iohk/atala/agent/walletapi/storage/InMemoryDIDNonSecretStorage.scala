@@ -22,7 +22,7 @@ private[walletapi] class InMemoryDIDNonSecretStorage private (
       status: Option[ScheduledDIDOperationStatus]
   ): Task[Seq[DIDUpdateLineage]] = ???
 
-  override def setDIDUpdateLineageStatus(operationHash: Array[Byte], status: ScheduledDIDOperationStatus): Task[Unit] =
+  override def setDIDUpdateLineageStatus(operationId: Array[Byte], status: ScheduledDIDOperationStatus): Task[Unit] =
     ???
 
 }

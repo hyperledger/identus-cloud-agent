@@ -193,7 +193,6 @@ final class ManagedDIDService private[walletapi] (
             secretStorage.insertKey(did, keyId, keyPair, operationHash)
           }
           .mapError(UpdateManagedDIDError.WalletStorageError.apply)
-        // TODO: MUST not continue if operation_hash already exists. Need to check and act based on the number of affected row
         _ <- nonSecretStorage
           .insertDIDUpdateLineage(did, updateLineage)
           .mapError(UpdateManagedDIDError.WalletStorageError.apply)
@@ -283,7 +282,7 @@ final class ManagedDIDService private[walletapi] (
       newStatus = maybeOperationDetail.fold(ScheduledDIDOperationStatus.Rejected)(_.status)
       _ <- ZIO.logInfo("calling setDIDUpdateLineageStatus")
       _ <- nonSecretStorage
-        .setDIDUpdateLineageStatus(updateLineage.operationHash.toArray, newStatus)
+        .setDIDUpdateLineageStatus(updateLineage.operationId.toArray, newStatus)
         .mapError[E](CommonWalletStorageError.apply)
     } yield ()
   }

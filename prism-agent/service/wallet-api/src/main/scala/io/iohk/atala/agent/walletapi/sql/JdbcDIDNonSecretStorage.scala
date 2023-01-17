@@ -9,6 +9,8 @@ import io.iohk.atala.castor.core.model.did.{PrismDID, ScheduledDIDOperationStatu
 import zio.*
 import zio.interop.catz.*
 
+import java.time.Instant
+
 // TODO: implement missing members
 class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage {
 
@@ -107,7 +109,7 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
            |   ${updateLineage.operationId},
            |   ${updateLineage.createdAt},
            |   ${updateLineage.updatedAt}
-           | ) ON CONFLICT (operation_hash) DO NOTHING
+           | )
            """.stripMargin.update
 
     cxnIO.run.transact(xa).unit
@@ -140,17 +142,18 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
 
   // TODO: implement
   override def setDIDUpdateLineageStatus(
-      operationHash: Array[Byte],
+      operationId: Array[Byte],
       status: ScheduledDIDOperationStatus
   ): Task[Unit] = {
-    val cxnIO =
-      sql"""
+    val cxnIO = (now: Instant) => sql"""
             | UPDATE public.prism_did_update_lineage
-            | SET status = $status
-            | WHERE operation_hash = $operationHash
+            | SET
+            |   status = $status,
+            |   updated_at = $now
+            | WHERE operation_id = $operationId
         """.stripMargin.update
 
-    cxnIO.run.transact(xa).unit
+    Clock.instant.flatMap(now => cxnIO(now).run.transact(xa)).unit
   }
 
 }
