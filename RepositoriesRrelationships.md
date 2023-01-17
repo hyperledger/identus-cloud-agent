@@ -40,7 +40,7 @@ graph LR
         atala-prism-browser-extension-wallet
       end
     end
-    
+
     subgraph empty
       atala-style_-guide[atala-style-guide]
       atala-prism-connect
@@ -71,8 +71,6 @@ graph LR
     atala-prism-apollo --> atala-prism-wallet-sdk-kmm
   end
 
-
-
   subgraph Infra
     atala-infra --wannabe-->  atala-prism-infra
     atala-prism-infra --->|infra for| PRISM_1_4
@@ -82,45 +80,44 @@ graph LR
     atala-prism-v2-infra --> doc
   end
 
-  
 
 
-click atala-prism-wallet-sdk-kmm href "https://github.com/input-output-hk/atala-prism-wallet-sdk-kmm"
-click atala-prism href "https://github.com/input-output-hk/atala-prism"
-click atala-prism-docs href "https://github.com/input-output-hk/atala-prism-docs"
-click atala-prism-v2-infra href "https://github.com/input-output-hk/atala-prism-v2-infra"
-click atala-prism-building-blocks href "https://github.com/input-output-hk/atala-prism-building-blocks"
-click atala-prism-products href "https://github.com/input-output-hk/atala-prism-products"
-click atala-prism-credentials-verification-portal href "https://github.com/input-output-hk/atala-prism-credentials-verification-portal"
-click atala-prism-terraform-modules href "https://github.com/input-output-hk/atala-prism-terraform-modules"
-click atala-prism-interactive-demo-web href "https://github.com/input-output-hk/atala-prism-interactive-demo-web"
-click atala-prism-dev-deployments href "https://github.com/input-output-hk/atala-prism-dev-deployments"
-click atala-prism-esdk href "https://github.com/input-output-hk/atala-prism-esdk"
-click atala-prism-sdk href "https://github.com/input-output-hk/atala-prism-sdk"
-click atala-qa-automation href "https://github.com/input-output-hk/atala-qa-automation"
-click atala-prism-apollo href "https://github.com/input-output-hk/atala-prism-apollo"
-click atala-prism-didcomm-kmm href "https://github.com/input-output-hk/atala-prism-didcomm-kmm"
-click atala-prism-crypto-sdk-sp href "https://github.com/input-output-hk/atala-prism-crypto-sdk-sp"
-click atala-prism-didcomm-swift href "https://github.com/input-output-hk/atala-prism-didcomm-swift"
-click atala-prism-infra href "https://github.com/input-output-hk/atala-prism-infra"
-click atala-prism-android-app href "https://github.com/input-output-hk/atala-prism-android-app"
-click atala-prism-manage href "https://github.com/input-output-hk/atala-prism-manage"
-click atala-web-app-template href "https://github.com/input-output-hk/atala-web-app-template"
-click atala-prism-connect href "https://github.com/input-output-hk/atala-prism-connect"
-click atala-prism-sdk-ios href "https://github.com/input-output-hk/atala-prism-sdk-ios"
-click atala-prism-management-console-web href "https://github.com/input-output-hk/atala-prism-management-console-web"
-click atala-prism-sdk-ios-sp href "https://github.com/input-output-hk/atala-prism-sdk-ios-sp"
-click atala-mirror href "https://github.com/input-output-hk/atala-mirror"
-click atala-prism-ios-app href "https://github.com/input-output-hk/atala-prism-ios-app"
-click atala-prism-browser-extension-wallet href "https://github.com/input-output-hk/atala-prism-browser-extension-wallet"
-click atala-prism-sdk-scalajs href "https://github.com/input-output-hk/atala-prism-sdk-scalajs"
-click atala-prism-spec href "https://github.com/input-output-hk/atala-prism-spec"
-click atala-prism-vault-sdk href "https://github.com/input-output-hk/atala-prism-vault-sdk"
-click atala-infra href "https://github.com/input-output-hk/atala-infra"
-click atala-legacy href "https://github.com/input-output-hk/atala-legacy"
-click atala-swetest href "https://github.com/input-output-hk/atala-swetest"
-click atala-cocoapods-specs href "https://github.com/input-output-hk/atala-cocoapods-specs"
-click atala-style_-guide href "https://github.com/input-output-hk/atala-style-guide"
-
-style PRISM_2 fill:#f969
+%% click atala-prism-wallet-sdk-kmm href "https://github.com/input-output-hk/atala-prism-wallet-sdk-kmm"
+%% click atala-prism href "https://github.com/input-output-hk/atala-prism"
+%% click atala-prism-docs href "https://github.com/input-output-hk/atala-prism-docs"
+%% click atala-prism-v2-infra href "https://github.com/input-output-hk/atala-prism-v2-infra"
+%% click atala-prism-building-blocks href "https://github.com/input-output-hk/atala-prism-building-blocks"
+%% click atala-prism-products href "https://github.com/input-output-hk/atala-prism-products"
+%% click atala-prism-credentials-verification-portal href "https://github.com/input-output-hk/atala-prism-credentials-verification-portal"
+%% click atala-prism-terraform-modules href "https://github.com/input-output-hk/atala-prism-terraform-modules"
+%% click atala-prism-interactive-demo-web href "https://github.com/input-output-hk/atala-prism-interactive-demo-web"
+%% click atala-prism-dev-deployments href "https://github.com/input-output-hk/atala-prism-dev-deployments"
+%% click atala-prism-esdk href "https://github.com/input-output-hk/atala-prism-esdk"
+%% click atala-prism-sdk href "https://github.com/input-output-hk/atala-prism-sdk"
+%% click atala-qa-automation href "https://github.com/input-output-hk/atala-qa-automation"
+%% click atala-prism-apollo href "https://github.com/input-output-hk/atala-prism-apollo"
+%% click atala-prism-didcomm-kmm href "https://github.com/input-output-hk/atala-prism-didcomm-kmm"
+%% click atala-prism-crypto-sdk-sp href "https://github.com/input-output-hk/atala-prism-crypto-sdk-sp"
+%% click atala-prism-didcomm-swift href "https://github.com/input-output-hk/atala-prism-didcomm-swift"
+%% click atala-prism-infra href "https://github.com/input-output-hk/atala-prism-infra"
+%% click atala-prism-android-app href "https://github.com/input-output-hk/atala-prism-android-app"
+%% click atala-prism-manage href "https://github.com/input-output-hk/atala-prism-manage"
+%% click atala-web-app-template href "https://github.com/input-output-hk/atala-web-app-template"
+%% click atala-prism-connect href "https://github.com/input-output-hk/atala-prism-connect"
+%% click atala-prism-sdk-ios href "https://github.com/input-output-hk/atala-prism-sdk-ios"
+%% click atala-prism-management-console-web href "https://github.com/input-output-hk/atala-prism-management-console-web"
+%% click atala-prism-sdk-ios-sp href "https://github.com/input-output-hk/atala-prism-sdk-ios-sp"
+%% click atala-mirror href "https://github.com/input-output-hk/atala-mirror"
+%% click atala-prism-ios-app href "https://github.com/input-output-hk/atala-prism-ios-app"
+%% click atala-prism-browser-extension-wallet href "https://github.com/input-output-hk/atala-prism-browser-extension-wallet"
+%% click atala-prism-sdk-scalajs href "https://github.com/input-output-hk/atala-prism-sdk-scalajs"
+%% click atala-prism-spec href "https://github.com/input-output-hk/atala-prism-spec"
+%% click atala-prism-vault-sdk href "https://github.com/input-output-hk/atala-prism-vault-sdk"
+%% click atala-infra href "https://github.com/input-output-hk/atala-infra"
+%% click atala-legacy href "https://github.com/input-output-hk/atala-legacy"
+%% click atala-swetest href "https://github.com/input-output-hk/atala-swetest"
+%% click atala-cocoapods-specs href "https://github.com/input-output-hk/atala-cocoapods-specs"
+%% click atala-style_-guide href "https://github.com/input-output-hk/atala-style-guide"
+%% 
+%% style PRISM_2 fill:#f969
 ```
