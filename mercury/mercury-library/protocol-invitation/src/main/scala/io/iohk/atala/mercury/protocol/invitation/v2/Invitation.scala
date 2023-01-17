@@ -40,4 +40,11 @@ object Invitation {
   given Encoder[Invitation] = deriveEncoder[Invitation]
   given Decoder[Invitation] = deriveDecoder[Invitation]
 
+  // Utils methods
+  def invitation2Connect(from: DidId): Invitation = {
+    Invitation(
+      from = from,
+      body = Invitation.Body(goal_code = "connect", goal = "Establish a trust connection between two peers", Nil)
+    )
+  }
 }
