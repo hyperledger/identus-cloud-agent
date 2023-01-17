@@ -11,11 +11,12 @@ And there are dependencies with the Atala PRISM V1.
 So here we have a simplified view of all Atala repositories and how are they related together:
 
 ```mermaid
-graph LR
+graph
   subgraph doc
     atala-prism-docs
     atala-prism-interactive-demo-web
   end
+
   subgraph PRISM_1_4
     atala-prism-spec -->|spec for| atala-prism
     atala-mirror 
@@ -71,14 +72,14 @@ graph LR
     atala-prism-apollo --> atala-prism-wallet-sdk-kmm
   end
 
-  subgraph Infra
-    atala-infra --wannabe-->  atala-prism-infra
-    atala-prism-infra --->|infra for| PRISM_1_4
-    atala-prism-dev-deployments -->|helm charts and environments managed by| atala-prism-v2-infra
-    atala-prism-terraform-modules -->|modules used in| atala-prism-v2-infra 
-    atala-prism-v2-infra ---->|infrastructure as code definition for aws| PRISM_2
-    atala-prism-v2-infra --> doc
-  end
+  %% infra 
+  atala-infra --wannabe-->  atala-prism-infra
+  atala-prism-infra --->|infra for| PRISM_1_4
+  atala-prism-dev-deployments -->|helm charts and environments managed by| atala-prism-v2-infra
+  atala-prism-terraform-modules -->|modules used in| atala-prism-v2-infra 
+  atala-prism-v2-infra ---->|infrastructure as code definition for aws| PRISM_2
+  atala-prism-v2-infra --> doc
+
 
 
 
