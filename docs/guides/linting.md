@@ -81,6 +81,50 @@ Insert suggestion / description of what it did well, what it didn't do well and 
 
 ### Open Feedback
 
+---
+
+#### SQL_SQL_LINT_ARGUMENTS
+
+Date Added: 2023-01-18
+
+Author: Pat Losoponkul
+
+Date Actioned: 2023-01-18
+
+Linter - Current Status: Enabled
+
+Linter - Suggested Change:  Customise
+
+*Change detail*
+
+`sql-lint` postgres ALTER grammar is still quite limited as observed
+in [postgres alter grammar](https://github.com/joereynolds/sql-lint/blob/0908c5b19e5275be9de339e2d26d3057526687f1/src/lexer/statements/postgres/alter.ts#L8).
+Suggest we ignore this check for now as we use some ALTER TYPE in migration script.
+
+```yaml
+SQL_SQL_LINT_ARGUMENTS: -d postgres --ignore-errors=postgres-invalid-alter-option
+```
+
+---
+
+#### SQL_TSQLLINT
+
+Date Added: 2023-01-18
+
+Author: Pat Losoponkul
+
+Date Actioned: 2023-01-18
+
+Linter - Current Status: Enabled
+
+Linter - Suggested Change:  Disable
+
+*Change detail*
+
+As we use Postgres as our main database, this linter should be configured to skip `.sql` files
+intended for postgres or disabled entirely if we are not using T-SQL.
+
+
 ### Closed Feedback
 
 ---
