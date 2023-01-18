@@ -15,13 +15,8 @@ import cats.Functor
 import cats.effect.std.Dispatcher
 import cats.effect.{Async, Resource}
 import cats.syntax.functor.*
-//import io.iohk.atala.pollux.dal.VerifiableCredentialSchema as VCS
-//import io.iohk.atala.pollux.dal.VerifiableCredentialSchema.sql
-//import io.iohk.atala.pollux.dal.VerifiableCredentialSchema.sql.*
-//import io.iohk.atala.pollux.dal.VerifiableCredentialSchema.sql.idiom.*
 import io.iohk.atala.pollux.sql.model.VerifiableCredentialSchema as VCS
-import io.iohk.atala.pollux.sql.model.VerifiableCredentialSchema.sql
-import io.iohk.atala.pollux.sql.model.VerifiableCredentialSchema.sql.*
+import io.iohk.atala.pollux.service.SchemaRegistryService
 
 import io.getquill.*
 import io.getquill.idiom.*
@@ -31,6 +26,8 @@ import scala.util.Try
 
 class JdbcSchemaRegistryService(tx: Transactor[Task]) extends SchemaRegistryService {
 
+  import io.iohk.atala.pollux.sql.model.VerifiableCredentialSchema.sql
+  import io.iohk.atala.pollux.sql.model.VerifiableCredentialSchema.sql.*
   import JdbcSchemaRegistryService.given_Conversion_VerifiableCredentialSchema_VCS
   import JdbcSchemaRegistryService.given_Conversion_VCS_VerifiableCredentialSchema
   override def createSchema(in: VerifiableCredentialSchemaInput): Task[VerifiableCredentialSchema] = {
@@ -62,12 +59,19 @@ class JdbcSchemaRegistryService(tx: Transactor[Task]) extends SchemaRegistryServ
       offsetOpt = Some(pagination.offset),
       limitOpt = Some(pagination.limit)
     )
-    val lookupQueryCount = lookupQuery.size
+    val lookupQueryCount = sql.lookupCount(
+      authorOpt = filter.author,
+      nameOpt = filter.name,
+      versionOpt = filter.version,
+      attributeOpt = filter.attribute,
+      tagOpt = filter.tags
+    )
+
     val totalCountQuery = sql.totalCount
 
     for {
-      dtoList <- sql.run(lookupQuery).transact(tx)
-      count <- sql.run(lookupQueryCount).transact(tx)
+      dtoList <- lookupQuery.transact(tx)
+      count <- lookupQueryCount.transact(tx)
       totalCount <- totalCountQuery.transact(tx)
       vcsList = dtoList.map[VerifiableCredentialSchema](dto => dto.convert)
     } yield (VerifiableCredentialSchemaPage(contents = vcsList), CollectionStats(totalCount, count))
@@ -89,7 +93,7 @@ object JdbcSchemaRegistryService {
       description = vcs.description,
       attributes = vcs.attributes,
       author = vcs.author,
-      authored = vcs.authored.toOffsetDateTime // TODO: Fix after merge
+      authored = vcs.authored
     )
 
   given scala.Conversion[VCS, VerifiableCredentialSchema] = vcs =>
@@ -101,7 +105,7 @@ object JdbcSchemaRegistryService {
       description = vcs.description,
       attributes = vcs.attributes,
       author = vcs.author,
-      authored = vcs.authored.toZonedDateTime, // TODO: Fix after merge
+      authored = vcs.authored,
       proof = None
     )
 

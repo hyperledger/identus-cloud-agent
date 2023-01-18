@@ -1,19 +1,18 @@
 package io.iohk.atala.agent.server
 
 import zio.*
-import io.iohk.atala.mercury._
+import io.iohk.atala.mercury.*
 import org.didcommx.didcomm.DIDComm
 import io.iohk.atala.resolvers.UniversalDidResolver
-import io.iohk.atala.castor.sql.repository.{Migrations => CastorMigrations}
-import io.iohk.atala.pollux.sql.repository.{Migrations => PolluxMigrations}
-import io.iohk.atala.connect.sql.repository.{Migrations => ConnectMigrations}
-import io.iohk.atala.agent.server.sql.{Migrations => AgentMigrations}
+import io.iohk.atala.castor.sql.repository.Migrations as CastorMigrations
+import io.iohk.atala.pollux.sql.repository.Migrations as PolluxMigrations
+import io.iohk.atala.connect.sql.repository.Migrations as ConnectMigrations
+import io.iohk.atala.agent.server.sql.Migrations as AgentMigrations
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.agent.server.http.ZioHttpClient
 import org.flywaydb.core.extensibility.AppliedMigration
-import io.iohk.atala.pollux.service.SchemaRegistryServiceInMemory
-import io.iohk.atala.pollux.service.VerificationPolicyServiceInMemory
+import io.iohk.atala.pollux.service.{JdbcSchemaRegistryService, SchemaRegistryServiceInMemory, VerificationPolicyServiceInMemory}
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
 
 object Main extends ZIOAppDefault {
@@ -98,7 +97,7 @@ object Main extends ZIOAppDefault {
         SystemModule.configLayer,
         SystemModule.actorSystemLayer,
         HttpModule.layers,
-        SchemaRegistryServiceInMemory.layer,
+        RepoModule.credentialSchemaServiceLayer,
         VerificationPolicyServiceInMemory.layer,
         AppModule.manageDIDServiceLayer,
         JdbcDIDSecretStorage.layer,
