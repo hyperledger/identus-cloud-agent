@@ -58,7 +58,7 @@ components:
     DIDDocumentMetadata:
       type: object
       required:
-      - deactivated
+        - deactivated
       properties:
         deactivated:
           type: boolean
@@ -119,7 +119,7 @@ components:
     UpdateManagedDIDRequest:
       type: object
       required:
-      - actions
+        - actions
       properties:
         actions:
           type: array
@@ -127,16 +127,16 @@ components:
             type: object
             description: Detail of DID update action. Only property matching actionType can be present.
             required:
-            - actionType
+              - actionType
             properties:
               actionType:
                 type: string
                 enum:
-                - ADD_KEY
-                - REMOVE_KEY
-                - ADD_SERVICE
-                - REMOVE_SERVICE
-                - UPDATE_SERVICE
+                  - ADD_KEY
+                  - REMOVE_KEY
+                  - ADD_SERVICE
+                  - REMOVE_SERVICE
+                  - UPDATE_SERVICE
                 example: ADD_KEY
               addKey:
                 $ref: "#/components/schemas/ManagedDIDKeyTemplate"
@@ -181,9 +181,9 @@ components:
           status:
             type: string
             enum:
-            - CREATED
-            - PUBLICATION_PENDING
-            - PUBLISHED
+              - CREATED
+              - PUBLICATION_PENDING
+              - PUBLISHED
 
     PublicKeyJwk:
       type: object
