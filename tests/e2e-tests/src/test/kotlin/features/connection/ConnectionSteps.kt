@@ -2,10 +2,12 @@ package features.connection
 
 import api_models.Connection
 import api_models.Invitation
+import common.Utils.lastResponseList
 import common.Utils.lastResponseObject
 import common.Utils.wait
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
+import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
 import net.serenitybdd.screenplay.rest.interactions.Get
 import net.serenitybdd.screenplay.rest.interactions.Post
@@ -147,7 +149,7 @@ class ConnectionSteps {
                 )
                 lastResponseObject("", Connection::class).state == "ConnectionResponseReceived"
             },
-            "Invitee connection didn't reach ConnectionResponseReceived state."
+            "Invitee connection didn't reach ConnectionResponseReceived state: state is ${lastResponseObject("", Connection::class).state}"
         )
     }
 
@@ -182,5 +184,8 @@ class ConnectionSteps {
             .isEqualTo("ConnectionResponseSent")
         assertThat(invitee.recall<Connection>("connection-with-${inviter.name}").state)
             .isEqualTo("ConnectionResponseReceived")
+
+        invitee.forget<String>("connectionId")
+        inviter.forget<String>("connectionId")
     }
 }

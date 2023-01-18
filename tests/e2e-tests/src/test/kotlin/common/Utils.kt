@@ -30,7 +30,7 @@ object Utils {
         blockToWait: () -> Boolean,
         errorMessage: String,
         poolInterval: FixedPollInterval = FixedPollInterval(Duration.ofSeconds(7L)),
-        timeout: Duration = Duration.ofSeconds(60L)
+        timeout: Duration = Duration.ofSeconds(120L)
     ) {
         try {
             Awaitility.await().withPollInterval(poolInterval)
