@@ -1,5 +1,5 @@
 @RFC0160 @AIP10
-Feature: RFC 0160 Agent connection functions
+Feature: Agents connection
 
   Scenario: Establish a connection between two agents
     When Acme generates a connection invitation to Bob

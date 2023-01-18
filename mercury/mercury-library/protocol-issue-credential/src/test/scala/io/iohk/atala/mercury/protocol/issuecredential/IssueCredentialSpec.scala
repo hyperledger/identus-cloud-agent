@@ -16,7 +16,7 @@ class IssueCredentialSpec extends ZSuite {
     val attribute2 = Attribute(name = "dob", value = "01/10/1947")
     val credentialPreview = CredentialPreview(attributes = Seq(attribute1, attribute2))
     val body = IssueCredential.Body(goal_code = Some("Issued Credential"))
-    val attachmentDescriptor = AttachmentDescriptor.buildAttachment[CredentialPreview](payload = credentialPreview)
+    val attachmentDescriptor = AttachmentDescriptor.buildJsonAttachment[CredentialPreview](payload = credentialPreview)
     val attachmentDescriptorJson =
       attachmentDescriptor
         .asJson(AttachmentDescriptor.attachmentDescriptorEncoderV2)

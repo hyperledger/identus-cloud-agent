@@ -4,7 +4,7 @@ import zio._
 import io.circe._
 import io.circe.syntax._
 
-import io.iohk.atala.mercury.model.{_, given}
+import io.iohk.atala.mercury.model.{given, _}
 import io.iohk.atala.mercury.protocol.issuecredential._
 import java.io.IOException
 

@@ -1,14 +1,24 @@
+---
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v3.2.0
     hooks:
-    - id: trailing-whitespace
-    - id: end-of-file-fixer
-    - id: check-added-large-files
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-added-large-files
   - repo: https://github.com/compilerla/conventional-pre-commit
     rev: v1.4.0
     hooks:
-    - id: conventional-pre-commit
-      stages: [commit-msg]
+      - id: conventional-pre-commit
+        stages: [commit-msg]
+  - repo: https://github.com/oxsecurity/megalinter
+    rev: v6.18.0 # Git tag specifying the hook, not mega-linter-runner, version
+    hooks:
+      - id: megalinter-incremental # Faster, less thorough
+        stages:
+          - commit
+      - id: megalinter-full # Slower, more thorough
+        stages:
+          - push

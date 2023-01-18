@@ -16,6 +16,21 @@ inThisBuild(
   )
 )
 
+inThisBuild(
+  Seq(
+    scalacOptions ++= Seq(
+      "-encoding",
+      "UTF-8",
+      "-deprecation",
+      "-unchecked",
+      // TODO "-feature",
+      // TODO "-Xfatal-warnings",
+      // TODO "-Yexplicit-nulls",
+      "-Ysafe-init",
+    )
+  )
+)
+
 ThisBuild / resolvers += Resolver.githubPackages("FabioPinheiro", "scala-did")
 
 val useDidLib = false

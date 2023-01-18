@@ -15,6 +15,7 @@ import net.serenitybdd.screenplay.rest.interactions.Post
 import net.serenitybdd.screenplay.rest.questions.ResponseConsequence
 import org.apache.http.HttpStatus.SC_CREATED
 import org.apache.http.HttpStatus.SC_OK
+import java.time.Duration
 
 class PresentProofSteps {
     @When("{actor} sends a request for proof presentation to {actor}")
@@ -83,8 +84,8 @@ class PresentProofSteps {
                 val presentation = lastResponseList("", PresentationProof::class).find {
                     it.presentationId == faber.recall<String>("presentationId")
                 }
-                presentation!= null &&
-                        (presentation.status == "PresentationReceived"|| presentation.status == "PresentationVerified")
+                presentation != null &&
+                        (presentation.status == "PresentationReceived" || presentation.status == "PresentationVerified")
             },
             "ERROR: Faber did not receive presentation from Bob!"
         )

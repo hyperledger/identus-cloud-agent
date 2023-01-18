@@ -1,6 +1,6 @@
 .idea
 report
-megalinter-reports
+megalinter-reports/
 .vscode
 .bloop
 .bsp
@@ -16,3 +16,4 @@ package-lock.json
 **/.docker-volumes/*
 target/
 **.env.*
+project
