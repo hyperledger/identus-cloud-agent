@@ -13,12 +13,12 @@ on:
     paths:
       - ".github/workflows/mercury.yml"
       - ".github/workflows/scala-unit-tests.yml"
-      - "mercury-library/**"
+      - "mercury/mercury-library/**"
   pull_request:
     paths:
       - ".github/workflows/mercury.yml"
       - ".github/workflows/scala-unit-tests.yml"
-      - "mercury-library/**"
+      - "mercury/mercury-library/**"
 
 jobs:
   build-and-test-mercury:

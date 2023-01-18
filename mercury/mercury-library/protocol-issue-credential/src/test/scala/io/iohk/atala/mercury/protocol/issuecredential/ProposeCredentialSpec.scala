@@ -18,7 +18,7 @@ class ProposeCredentialSpec extends ZSuite {
     val attribute2 = Attribute(name = "dob", value = "01/10/1947")
     val credentialPreview = CredentialPreview(attributes = Seq(attribute1, attribute2))
     val body = ProposeCredential.Body(goal_code = Some("Propose Credential"), credential_preview = credentialPreview)
-    val attachmentDescriptor = AttachmentDescriptor.buildAttachment[CredentialPreview](payload = credentialPreview)
+    val attachmentDescriptor = AttachmentDescriptor.buildJsonAttachment[CredentialPreview](payload = credentialPreview)
     val attachmentDescriptorJson = attachmentDescriptor.asJson.deepDropNullValues.noSpaces
 
     val expectedProposalJson = parse(s"""{

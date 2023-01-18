@@ -14,7 +14,7 @@ This means that megalinter will behave differently when run locally as part of t
 
 **Linting is currently in an early adoption phase and due to adoption of Scala 3, it only runs in a mode which does not fail PR checks if errors are found for various linters.**
 
-> At the end of this markdown document is a section for Linting feedback, please leave feedback in this section so that we can enable and refine the linting configuration over time
+> At the end of this markdown document is a section for changelog, please leave feedback in this section so that we can enable and refine the linting configuration over time
 
 ### Base
 
@@ -50,11 +50,11 @@ This means that megalinter will behave differently when run locally as part of t
 
 ## Linting Feedback
 
-Please add any feedback on the linting rules in the below table. This allows us to capture potential improvements on what what linters to enable/disable and refined configuration for each linter.
+Please add any changes made to the linting rules in the below changelog section. This allows us to capture changes to linters over time which allows us to understand the good and the bad with respect to linting.
 
 The objective with this feedback is to strike the balance of linting being useful for improving quality but not at the cost of developer velocity [it should not cause pain]
 
-The initial configuration has been created by disabling linters which were previously disabled and then changing linters which seem incompatible with our current work to "Enabled but pas even with error"
+The initial configuration has been created by disabling linters which were previously disabled and then changing linters which seem incompatible with our current work to "Enabled but pass even with error"
 
 Please use the following format
 
@@ -79,9 +79,50 @@ Insert suggestion / description of what it did well, what it didn't do well and 
 
 ```
 
-### Open Feedback
+## Changelog
 
-### Closed Feedback
+---
+
+#### SQL_SQL_LINT_ARGUMENTS
+
+Date Added: 2023-01-18
+
+Author: Pat Losoponkul
+
+Date Actioned: 2023-01-18
+
+Linter - Current Status: Enabled
+
+Linter - Suggested Change:  Customise
+
+*Change detail*
+
+`sql-lint` postgres ALTER grammar is still quite limited as observed
+in [postgres alter grammar](https://github.com/joereynolds/sql-lint/blob/0908c5b19e5275be9de339e2d26d3057526687f1/src/lexer/statements/postgres/alter.ts#L8).
+Suggest we ignore this check for now as we use some ALTER TYPE in migration script.
+
+```yaml
+SQL_SQL_LINT_ARGUMENTS: -d postgres --ignore-errors=postgres-invalid-alter-option
+```
+
+---
+
+#### SQL_TSQLLINT
+
+Date Added: 2023-01-18
+
+Author: Pat Losoponkul
+
+Date Actioned: 2023-01-18
+
+Linter - Current Status: Enabled
+
+Linter - Suggested Change:  Disable
+
+*Change detail*
+
+As we use Postgres as our main database, this linter should be configured to skip `.sql` files
+intended for postgres or disabled entirely if we are not using T-SQL.
 
 ---
 

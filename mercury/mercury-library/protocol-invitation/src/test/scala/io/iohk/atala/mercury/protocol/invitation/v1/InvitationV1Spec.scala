@@ -35,7 +35,6 @@ class InvitationV1Spec extends ZSuite {
                                 |  "requests~attach": [
                                 |    {
                                 |      "@id": "request-0",
-                                |      "mime-type": "application/json",
                                 |      "data": {"base64" : "$payloadBase64"}
                                 |    }
                                 |  ],
