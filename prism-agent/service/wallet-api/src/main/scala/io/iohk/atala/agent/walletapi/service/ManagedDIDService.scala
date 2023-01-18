@@ -294,14 +294,18 @@ final class ManagedDIDService private[walletapi] (
       c1: Conversion[CommonWalletStorageError, E],
       c2: Conversion[DIDOperationError, E]
   ): IO[E, Unit] = {
-    nonSecretStorage
-      .getManagedDIDState(did)
-      .mapError[E](CommonWalletStorageError.apply)
-      .flatMap(maybeState => ZIO.foreach(maybeState)(computeNewDIDStateFromDLT(_).mapError[E](e => e)))
-      .flatMap(maybeState =>
-        ZIO.foreach(maybeState)(nonSecretStorage.setManagedDIDState(did, _)).mapError[E](CommonWalletStorageError.apply)
-      )
-      .unit
+    for {
+      maybeCurrentState <- nonSecretStorage
+        .getManagedDIDState(did)
+        .mapError[E](CommonWalletStorageError.apply)
+      maybeNewState <- ZIO.foreach(maybeCurrentState)(computeNewDIDStateFromDLT(_).mapError[E](e => e))
+      _ <- ZIO.foreach(maybeCurrentState zip maybeNewState) { case (currentState, newState) =>
+        nonSecretStorage
+          .setManagedDIDState(did, newState)
+          .mapError[E](CommonWalletStorageError.apply)
+          .when(currentState != newState)
+      }
+    } yield ()
   }
 
   /** Reconcile state with DLT and return an updated state */
