@@ -35,7 +35,8 @@ lazy val core = project
   .settings(commonSettings)
   .settings(
     name := "connect-core",
-    libraryDependencies ++= coreDependencies
+    libraryDependencies ++= coreDependencies,
+    Test / publishArtifact := true
   )
 
 lazy val `sql-doobie` = project
@@ -45,7 +46,7 @@ lazy val `sql-doobie` = project
     name := "connect-sql-doobie",
     libraryDependencies ++= sqlDoobieDependencies
   )
-  .dependsOn(core)
+  .dependsOn(core % "compile->compile;test->test")
 
 // ### ReleaseStep ###
 releaseProcess := Seq[ReleaseStep](
