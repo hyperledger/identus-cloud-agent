@@ -1,3 +1,10 @@
+# [pollux-v0.17.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.16.0...pollux-v0.17.0) (2023-01-19)
+
+
+### Features
+
+* **pollux:** fix the lookup count in the credential schema DAL ([#315](https://github.com/input-output-hk/atala-prism-building-blocks/issues/315)) ([e0831e8](https://github.com/input-output-hk/atala-prism-building-blocks/commit/e0831e884d4edee131d9e3999ab0edb5144a5d04))
+
 # [pollux-v0.16.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.15.0...pollux-v0.16.0) (2023-01-16)
 
 
