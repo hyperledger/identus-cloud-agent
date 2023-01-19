@@ -128,9 +128,9 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         )
       },
       test("reject CreateOperation on invalid key-id") {
-        val publicKeys = Seq(
+        val publicKeys = (1 to 2).map(i =>
           PublicKey(
-            id = "key-01",
+            id = s"key $i",
             purpose = VerificationRelationship.Authentication,
             publicKeyData = publicKeyData
           )
@@ -139,7 +139,24 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         assert(DIDOperationValidator(Config(50, 50)).validate(op))(
           isLeft(
             isSubtype[DIDOperationError.InvalidArgument](
-              hasField("msg", _.msg, containsString("public key id is invalid"))
+              hasField("msg", _.msg, containsString("public key id is invalid: [key 1, key 2]"))
+            )
+          )
+        )
+      },
+      test("reject CreateOperation on invalid service-id") {
+        val services = (1 to 2).map(i =>
+          Service(
+            id = s"service $i",
+            `type` = ServiceType.MediatorService,
+            serviceEndpoint = Seq(URI.create("http://example.com"))
+          )
+        )
+        val op = createPrismDIDOperation(services = services)
+        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
+          isLeft(
+            isSubtype[DIDOperationError.InvalidArgument](
+              hasField("msg", _.msg, containsString("service id is invalid: [service 1, service 2]"))
             )
           )
         )
@@ -165,7 +182,24 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
 
     suite("UpdateOperation validation")(
       test("accept valid UpdateOperation") {
-        val op = updatePrismDIDOperation(Seq(UpdateDIDAction.RemoveKey("key0")))
+        val op = updatePrismDIDOperation(
+          Seq(
+            UpdateDIDAction.AddKey(PublicKey("key0", VerificationRelationship.Authentication, publicKeyData)),
+            UpdateDIDAction.AddInternalKey(InternalPublicKey("master0", InternalKeyPurpose.Master, publicKeyData)),
+            UpdateDIDAction.RemoveKey("key0"),
+            UpdateDIDAction.AddService(
+              Service("service0", ServiceType.MediatorService, Seq(URI.create("http://example.com")))
+            ),
+            UpdateDIDAction.RemoveService("service0"),
+            UpdateDIDAction.UpdateService("service0", Some(ServiceType.MediatorService), Nil),
+            UpdateDIDAction.UpdateService("service0", None, Seq(URI.create("http://example.com"))),
+            UpdateDIDAction.UpdateService(
+              "service0",
+              Some(ServiceType.MediatorService),
+              Seq(URI.create("http://example.com"))
+            )
+          )
+        )
         assert(DIDOperationValidator(Config(50, 50)).validate(op))(isRight)
       },
       test("reject UpdateOperation on too many DID publicKey access") {
@@ -205,7 +239,11 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         )
         val removeServiceActions = (1 to 10).map(i => UpdateDIDAction.RemoveService(s"remove$i"))
         val updateServiceActions = (1 to 10).map(i =>
-          UpdateDIDAction.UpdateService(s"update$i", ServiceType.MediatorService, Seq(URI.create("http://example.com")))
+          UpdateDIDAction.UpdateService(
+            s"update$i",
+            Some(ServiceType.MediatorService),
+            Seq(URI.create("http://example.com"))
+          )
         )
         val op = updatePrismDIDOperation(addServiceActions ++ removeServiceActions ++ updateServiceActions)
         assert(DIDOperationValidator(Config(25, 25)).validate(op))(
@@ -213,18 +251,37 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         )
       },
       test("reject UpdateOperation on invalid key-id") {
-        val action = UpdateDIDAction.AddKey(
+        val action1 = UpdateDIDAction.AddKey(
           PublicKey(
-            id = "key-01",
+            id = "key 1",
             purpose = VerificationRelationship.Authentication,
             publicKeyData = publicKeyData
           )
         )
-        val op = updatePrismDIDOperation(Seq(action))
+        val action2 = UpdateDIDAction.RemoveKey(id = "key 2")
+        val op = updatePrismDIDOperation(Seq(action1, action2))
         assert(DIDOperationValidator(Config(50, 50)).validate(op))(
           isLeft(
             isSubtype[DIDOperationError.InvalidArgument](
-              hasField("msg", _.msg, containsString("public key id is invalid"))
+              hasField("msg", _.msg, containsString("public key id is invalid: [key 1, key 2]"))
+            )
+          )
+        )
+      },
+      test("reject UpdateOperation on invalid service-id") {
+        val action1 = UpdateDIDAction.AddService(
+          Service(
+            id = "service 1",
+            `type` = ServiceType.MediatorService,
+            serviceEndpoint = Seq(URI.create("http://example.com"))
+          )
+        )
+        val action2 = UpdateDIDAction.RemoveService(id = "service 2")
+        val op = updatePrismDIDOperation(Seq(action1, action2))
+        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
+          isLeft(
+            isSubtype[DIDOperationError.InvalidArgument](
+              hasField("msg", _.msg, containsString("service id is invalid: [service 1, service 2]"))
             )
           )
         )
@@ -235,6 +292,16 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
           isLeft(
             isSubtype[DIDOperationError.InvalidArgument](
               hasField("msg", _.msg, containsString("operation must contain at least 1 update action"))
+            )
+          )
+        )
+      },
+      test("reject UpdateOperation on UpdateService action empty") {
+        val op = updatePrismDIDOperation(Seq(UpdateDIDAction.UpdateService("service0", None, Nil)))
+        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
+          isLeft(
+            isSubtype[DIDOperationError.InvalidArgument](
+              hasField("msg", _.msg, containsString("must not have both 'type' and 'serviceEndpoints' empty"))
             )
           )
         )

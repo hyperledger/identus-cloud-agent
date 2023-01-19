@@ -95,7 +95,7 @@ private[castor] trait ProtoModelHelper {
           node_models.UpdateDIDAction.Action.UpdateService(
             node_models.UpdateServiceAction(
               serviceId = serviceId,
-              `type` = serviceType.name,
+              `type` = serviceType.fold("")(_.name),
               serviceEndpoints = endpoints.map(_.toString)
             )
           )

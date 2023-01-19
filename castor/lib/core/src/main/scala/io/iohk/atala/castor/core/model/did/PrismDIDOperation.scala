@@ -66,5 +66,6 @@ object UpdateDIDAction {
   final case class RemoveKey(id: String) extends UpdateDIDAction
   final case class AddService(service: Service) extends UpdateDIDAction
   final case class RemoveService(id: String) extends UpdateDIDAction
-  final case class UpdateService(id: String, `type`: ServiceType, endpoints: Seq[URI]) extends UpdateDIDAction
+  final case class UpdateService(id: String, `type`: Option[ServiceType] = None, endpoints: Seq[URI] = Nil)
+      extends UpdateDIDAction
 }
