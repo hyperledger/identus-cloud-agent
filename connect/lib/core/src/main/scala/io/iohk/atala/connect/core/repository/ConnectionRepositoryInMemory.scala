@@ -1,12 +1,14 @@
 package io.iohk.atala.connect.core.repository
 
-import zio._
+import io.iohk.atala.connect.core.model.ConnectionRecord
+import io.iohk.atala.connect.core.model.error.ConnectionRepositoryError._
+import io.iohk.atala.connect.core.model.ConnectionRecord.ProtocolState
 import io.iohk.atala.mercury.protocol.connection.ConnectionRequest
 import io.iohk.atala.mercury.protocol.connection.ConnectionResponse
-import io.iohk.atala.connect.core.model.ConnectionRecord
-import io.iohk.atala.connect.core.model.ConnectionRecord.ProtocolState
-import java.util.UUID
+import zio._
+
 import java.time.Instant
+import java.util.UUID
 
 class ConnectionRepositoryInMemory(storeRef: Ref[Map[UUID, ConnectionRecord]]) extends ConnectionRepository[Task] {
 
@@ -105,6 +107,16 @@ class ConnectionRepositoryInMemory(storeRef: Ref[Map[UUID, ConnectionRecord]]) e
 
   override def createConnectionRecord(record: ConnectionRecord): Task[Int] = {
     for {
+      _ <- record.thid match
+        case None => ZIO.unit
+        case Some(value) =>
+          for {
+            store <- storeRef.get
+            maybeRecord <- ZIO.succeed(store.values.find(_.thid == record.thid))
+            _ <- maybeRecord match
+              case None        => ZIO.unit
+              case Some(value) => ZIO.fail(UniqueConstraintViolation("Unique Constraint Violation on 'thid'"))
+          } yield ()
       _ <- storeRef.update(r => r + (record.id -> record))
     } yield 1
   }
