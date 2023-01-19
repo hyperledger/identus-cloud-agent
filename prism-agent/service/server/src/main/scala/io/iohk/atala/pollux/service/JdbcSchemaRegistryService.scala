@@ -1,7 +1,11 @@
 package io.iohk.atala.pollux.service
 import doobie.util.transactor.Transactor
 import io.iohk.atala.api.http.model.{CollectionStats, Order, Pagination}
-import io.iohk.atala.pollux.schema.model.{VerifiableCredentialSchema, VerifiableCredentialSchemaInput, VerifiableCredentialSchemaPage}
+import io.iohk.atala.pollux.schema.model.{
+  VerifiableCredentialSchema,
+  VerifiableCredentialSchemaInput,
+  VerifiableCredentialSchemaPage
+}
 import zio.Task
 import zio.*
 import zio.interop.catz.*

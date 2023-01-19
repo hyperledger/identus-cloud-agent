@@ -12,7 +12,11 @@ import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.agent.server.http.ZioHttpClient
 import org.flywaydb.core.extensibility.AppliedMigration
-import io.iohk.atala.pollux.service.{JdbcSchemaRegistryService, SchemaRegistryServiceInMemory, VerificationPolicyServiceInMemory}
+import io.iohk.atala.pollux.service.{
+  JdbcSchemaRegistryService,
+  SchemaRegistryServiceInMemory,
+  VerificationPolicyServiceInMemory
+}
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
 
 object Main extends ZIOAppDefault {

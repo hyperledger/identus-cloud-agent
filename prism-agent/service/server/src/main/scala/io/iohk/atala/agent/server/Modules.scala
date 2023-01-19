@@ -9,8 +9,18 @@ import doobie.util.transactor.Transactor
 import io.iohk.atala.agent.server.http.{HttpRoutes, HttpServer, ZHttp4sBlazeServer, ZHttpEndpoints}
 import io.iohk.atala.castor.core.service.{DIDService, DIDServiceImpl}
 import io.iohk.atala.castor.core.util.DIDOperationValidator
-import io.iohk.atala.agent.server.http.marshaller.{ConnectionsManagementApiMarshallerImpl, DIDApiMarshallerImpl, DIDAuthenticationApiMarshallerImpl, DIDRegistrarApiMarshallerImpl}
-import io.iohk.atala.agent.server.http.service.{ConnectionsManagementApiServiceImpl, DIDApiServiceImpl, DIDAuthenticationApiServiceImpl, DIDRegistrarApiServiceImpl}
+import io.iohk.atala.agent.server.http.marshaller.{
+  ConnectionsManagementApiMarshallerImpl,
+  DIDApiMarshallerImpl,
+  DIDAuthenticationApiMarshallerImpl,
+  DIDRegistrarApiMarshallerImpl
+}
+import io.iohk.atala.agent.server.http.service.{
+  ConnectionsManagementApiServiceImpl,
+  DIDApiServiceImpl,
+  DIDAuthenticationApiServiceImpl,
+  DIDRegistrarApiServiceImpl
+}
 import io.iohk.atala.agent.openapi.api.{ConnectionsManagementApi, DIDApi, DIDAuthenticationApi, DIDRegistrarApi}
 import cats.effect.std.Dispatcher
 import com.typesafe.config.ConfigFactory
@@ -52,7 +62,12 @@ import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc
 import java.io.IOException
 import cats.implicits.*
 import io.iohk.atala.pollux.schema.SchemaRegistryServerEndpoints
-import io.iohk.atala.pollux.service.{JdbcSchemaRegistryService, SchemaRegistryService, SchemaRegistryServiceInMemory, VerificationPolicyServiceInMemory}
+import io.iohk.atala.pollux.service.{
+  JdbcSchemaRegistryService,
+  SchemaRegistryService,
+  SchemaRegistryServiceInMemory,
+  VerificationPolicyServiceInMemory
+}
 import io.iohk.atala.pollux.core.service.PresentationService
 import io.iohk.atala.pollux.core.service.PresentationServiceImpl
 import io.iohk.atala.pollux.core.repository.PresentationRepository
@@ -592,7 +607,7 @@ object RepoModule {
 
   val connectionRepoLayer: TaskLayer[ConnectionRepository[Task]] =
     RepoModule.connectTransactorLayer >>> JdbcConnectionRepository.layer
-    
+
   val credentialSchemaServiceLayer: TaskLayer[SchemaRegistryService] =
     RepoModule.polluxTransactorLayer >>> JdbcSchemaRegistryService.layer
 
