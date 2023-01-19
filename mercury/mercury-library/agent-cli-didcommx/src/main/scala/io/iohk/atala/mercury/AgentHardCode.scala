@@ -17,7 +17,7 @@ object AgentHardCode extends ZIOAppDefault {
         Console.printLine(s"JWK for KeyAgreement: ${peer.jwkForKeyAgreement.toJSONString}") *>
         Console.printLine(s"JWK for KeyAuthentication: ${peer.jwkForKeyAuthentication.toJSONString}")
     } yield (peer)
-    _ <- test.provide(AgentCli.didCommXLayer(agentDID))
+    _ <- test.provide(DidCommX.makeLayer(agentDID))
   } yield ()
 
   val attribute1 = Attribute(name = "name", value = "Joe Blog")

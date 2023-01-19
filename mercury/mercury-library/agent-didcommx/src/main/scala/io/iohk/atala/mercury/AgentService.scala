@@ -9,9 +9,55 @@ import io.iohk.atala.resolvers._
 import io.iohk.atala.mercury.model.{given, _}
 import java.util.Base64
 import scala.annotation.nowarn
+import com.nimbusds.jose.jwk.OctetKeyPair
 import org.didcommx.didcomm.diddoc.DIDDoc
+import org.didcommx.peerdid.core.PeerDIDUtils
+import org.didcommx.didcomm.common._
+import org.didcommx.didcomm.secret._
+import scala.jdk.CollectionConverters.*
 
-case class AgentService(val id: DidId) extends DidAgent
+case class AgentPeerService(
+    val id: DidId,
+    val jwkForKeyAgreement: Seq[OctetKeyPair],
+    val jwkForKeyAuthentication: Seq[OctetKeyPair],
+) extends DidAgent {
+
+  def keyAgreement = PeerDID.keyAgreemenFromPublicJWK(jwkForKeyAgreement.head) // TODO Fix head
+  def keyAuthentication = PeerDID.keyAuthenticationFromPublicJWK(jwkForKeyAuthentication.head) // TODO Fix head
+
+  def getSecretResolverInMemory: SecretResolverInMemory = {
+    val keyIdAgreement = PeerDIDUtils.createMultibaseEncnumbasis(keyAgreement).drop(1)
+    val keyIdAuthentication = PeerDIDUtils.createMultibaseEncnumbasis(keyAuthentication).drop(1)
+
+    val secretKeyAgreement = new Secret(
+      s"${id.value}#$keyIdAgreement",
+      VerificationMethodType.JSON_WEB_KEY_2020,
+      new VerificationMaterial(VerificationMaterialFormat.JWK, jwkForKeyAgreement.head.toJSONString)
+    )
+    val secretKeyAuthentication = new Secret(
+      s"${id.value}#$keyIdAuthentication",
+      VerificationMethodType.JSON_WEB_KEY_2020,
+      new VerificationMaterial(VerificationMaterialFormat.JWK, jwkForKeyAuthentication.head.toJSONString)
+    )
+
+    new SecretResolverInMemory(
+      Map(
+        s"${id.value}#$keyIdAgreement" -> secretKeyAgreement,
+        s"${id.value}#$keyIdAuthentication" -> secretKeyAuthentication,
+      ).asJava
+    )
+  }
+}
+
+object AgentPeerService {
+  def makeLayer(peer: PeerDID): ZLayer[Any, Nothing, DidAgent] = ZLayer.succeed(
+    AgentPeerService(
+      did = peer.did,
+      jwkForKeyAgreement = Seq(peer.jwkForKeyAgreement),
+      jwkForKeyAuthentication = Seq(peer.jwkForKeyAuthentication),
+    )
+  )
+}
 
 object DidCommX {
   def makeLayer(peer: PeerDID): ZLayer[Any, Nothing, DidOps & DidAgent] = ZLayer.succeed(

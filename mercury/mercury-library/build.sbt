@@ -68,11 +68,12 @@ lazy val D = new {
   val circeGeneric = Def.setting("io.circe" %% "circe-generic" % V.circe)
   val circeParser = Def.setting("io.circe" %% "circe-parser" % V.circe)
 
-  // Test DID comm
+  // https://mvnrepository.com/artifact/org.didcommx/didcomm/0.3.2
   val didcommx = Def.setting("org.didcommx" % "didcomm" % "0.3.1")
   val peerDidcommx = Def.setting("org.didcommx" % "peerdid" % "0.3.0")
   val didScala = Def.setting("app.fmgp" %% "did" % "0.0.0+113-61efa271-SNAPSHOT")
 
+  // https://mvnrepository.com/artifact/com.nimbusds/nimbus-jose-jwt/9.16-preview.1
   val jwk = Def.setting("com.nimbusds" % "nimbus-jose-jwt" % "9.25.4")
 
   // For munit https://scalameta.org/munit/docs/getting-started.html#scalajs-setup
@@ -104,6 +105,7 @@ lazy val models = project
     ), // TODO try to remove this from this module
     // libraryDependencies += D.didScala.value
   )
+  .settings(libraryDependencies += D.jwk.value) //FIXME just for the DidAgent
 
 /* TODO move code from agentDidcommx to here
 models implementation for didcommx () */

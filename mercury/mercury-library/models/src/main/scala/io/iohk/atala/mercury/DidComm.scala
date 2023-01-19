@@ -8,8 +8,12 @@ import scala.util.Try
 import scala.util.Failure
 import scala.util.Success
 
+import com.nimbusds.jose.jwk.*
+
 trait DidAgent {
   def id: DidId
+  def jwkForKeyAgreement: Seq[OctetKeyPair]
+  def jwkForKeyAuthentication: Seq[OctetKeyPair]
 }
 
 trait DidOps {
