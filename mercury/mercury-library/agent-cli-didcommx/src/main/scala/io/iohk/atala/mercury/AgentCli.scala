@@ -60,13 +60,6 @@ object AgentCli extends ZIOAppDefault {
 
   // val env = zio.http.Client.default ++ zio.Scope.default
 
-  // def agentLayer(peer: PeerDID): ZLayer[Any, Nothing, DidAgent] =
-  //   ZLayer.succeed(new DidAgent { val id = peer.did })
-
-  def didCommXLayer(peer: PeerDID): ZLayer[Any, Nothing, DidOps & DidAgent] = ZLayer.succeed(
-    DidCommX(new DIDComm(UniversalDidResolver, peer.getSecretResolverInMemory), peer.did)
-  )
-
   def askForMediation = {
     for {
       _ <- Console.printLine("Enter the Mediator URL (defualt is 'http://localhost:8000')")
@@ -135,8 +128,7 @@ object AgentCli extends ZIOAppDefault {
     } yield ()
   }
 
-  def proposeAndSendCredential
-      : ZIO[DidOps & DidAgent & DIDResolver & HttpClient, MercuryError | IOException, Unit] = {
+  def proposeAndSendCredential: ZIO[DidOps & DidAgent & DIDResolver & HttpClient, MercuryError | IOException, Unit] = {
     for {
 
       _ <- Console.printLine("Propose Credential")
@@ -317,7 +309,7 @@ object AgentCli extends ZIOAppDefault {
     } yield (peer)
 
     layers: ZLayer[Any, Nothing, DidOps & DidAgent & DIDResolver & HttpClient] =
-      didCommXLayer(agentDID) /*++ agentLayer(agentDID)*/ ++ DIDResolver.layer ++ ZioHttpClient.layer
+      DidCommX.makeLayer(agentDID) /*++ agentLayer(agentDID)*/ ++ DIDResolver.layer ++ ZioHttpClient.layer
 
     _ <- options(
       Seq(
@@ -326,11 +318,11 @@ object AgentCli extends ZIOAppDefault {
         "Get DID Document" -> Console.printLine("DID Document:") *> Console.printLine(agentDID.getDIDDocument),
         "Start WebServer endpoint" -> startEndpoint.provide(layers),
         "Ask for Mediation Coordinate" -> askForMediation.provide(layers),
-        "Generate login invitation" -> generateLoginInvitation.provide(didCommXLayer(agentDID)),
+        "Generate login invitation" -> generateLoginInvitation.provide(DidCommX.makeLayer(agentDID)),
         "Login with DID" -> loginInvitation.provide(layers),
         "Propose Credential" -> proposeAndSendCredential.provide(layers),
         "Present Proof" -> presentProof.provide(layers),
-        "Generate Connection invitation" -> generateConnectionInvitation.provide(didCommXLayer(agentDID)),
+        "Generate Connection invitation" -> generateConnectionInvitation.provide(DidCommX.makeLayer(agentDID)),
         "Connect" -> connect.provide(layers),
       )
     ).repeatWhile((_) => true)

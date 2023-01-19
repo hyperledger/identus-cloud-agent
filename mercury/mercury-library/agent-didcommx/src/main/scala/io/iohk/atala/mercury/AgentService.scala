@@ -13,6 +13,11 @@ import org.didcommx.didcomm.diddoc.DIDDoc
 
 case class AgentService(val id: DidId) extends DidAgent
 
+object DidCommX {
+  def makeLayer(peer: PeerDID): ZLayer[Any, Nothing, DidOps & DidAgent] = ZLayer.succeed(
+    DidCommX(new DIDComm(UniversalDidResolver, peer.getSecretResolverInMemory), peer.did)
+  )
+}
 class DidCommX(didComm: DIDComm, fixme: DidId) extends DidOps with DidAgent /* with DIDResolver */ {
 
   override def id: DidId = fixme // FIXME the Secret is on org.didcommx.didcomm.model.DIDComm ...
