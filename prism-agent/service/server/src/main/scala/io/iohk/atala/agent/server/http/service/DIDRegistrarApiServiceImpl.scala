@@ -70,7 +70,6 @@ class DIDRegistrarApiServiceImpl(service: ManagedDIDService)(using runtime: Runt
     }
   }
 
-  // TODO: implement
   def updateManagedDid(didRef: String, updateManagedDIDRequest: UpdateManagedDIDRequest)(implicit
       toEntityMarshallerDIDOperationResponse: ToEntityMarshaller[DIDOperationResponse],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]

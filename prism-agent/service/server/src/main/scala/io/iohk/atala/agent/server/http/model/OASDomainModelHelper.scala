@@ -99,6 +99,7 @@ trait OASDomainModelHelper {
             .toRight("updateService property is missing from action type UPDATE_SERVICE")
             .flatMap(_.toDomain)
             .map(s => UpdateService(s))
+        case s => Left(s"unsupported update DID action type: $s")
       }
     }
   }

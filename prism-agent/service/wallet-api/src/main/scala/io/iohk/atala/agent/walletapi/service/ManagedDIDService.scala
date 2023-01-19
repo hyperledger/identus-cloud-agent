@@ -85,19 +85,15 @@ final class ManagedDIDService private[walletapi] (
       ZIO.foreach(kv.keys.map(_.asCanonical))(computeNewDIDStateFromDLTAndPersist[GetManagedDIDError])
     }
     .unit
-    .tapErrorCause(e => ZIO.logErrorCause(e)) // TODO: remove
 
   def syncUnconfirmedUpdateOperations: IO[GetManagedDIDError, Unit] = {
     for {
       awaitingConfirmationOps <- nonSecretStorage
         .listUpdateLineage(did = None, status = Some(ScheduledDIDOperationStatus.AwaitingConfirmation))
         .mapError(GetManagedDIDError.WalletStorageError.apply)
-        .debug("awaitingOps")
       pendingOps <- nonSecretStorage
         .listUpdateLineage(did = None, status = Some(ScheduledDIDOperationStatus.Pending))
         .mapError(GetManagedDIDError.WalletStorageError.apply)
-        .debug("pendingOps")
-      _ <- ZIO.logInfo(s"syncing unconfirmed ${(awaitingConfirmationOps ++ pendingOps).length} operations")
       _ <- ZIO.foreach(awaitingConfirmationOps ++ pendingOps)(computeNewDIDLineageStatusAndPersist[GetManagedDIDError])
     } yield ()
   }
@@ -111,14 +107,11 @@ final class ManagedDIDService private[walletapi] (
   def publishStoredDID(did: CanonicalPrismDID): IO[PublishManagedDIDError, ScheduleDIDOperationOutcome] = {
     def doPublish(operation: PrismDIDOperation.Create) = {
       for {
-        signedOperation <- signOperationWithMasterKey[PublishManagedDIDError](operation).tapErrorCause(e =>
-          ZIO.logErrorCause(e)
-        ) // TODO: remove
+        signedOperation <- signOperationWithMasterKey[PublishManagedDIDError](operation)
         outcome <- submitSignedOperation[PublishManagedDIDError](signedOperation)
         _ <- nonSecretStorage
           .setManagedDIDState(did, ManagedDIDState.PublicationPending(operation, outcome.operationId))
           .mapError(PublishManagedDIDError.WalletStorageError.apply)
-          .tapErrorCause(e => ZIO.logErrorCause(e)) // TODO: remove
       } yield outcome
     }
 
@@ -128,7 +121,6 @@ final class ManagedDIDService private[walletapi] (
         .getManagedDIDState(did)
         .mapError(PublishManagedDIDError.WalletStorageError.apply)
         .someOrFail(PublishManagedDIDError.DIDNotFound(did))
-        .tapErrorCause(e => ZIO.logErrorCause(e)) // TODO: remove
       outcome <- didState match {
         case ManagedDIDState.Created(operation) => doPublish(operation)
         case ManagedDIDState.PublicationPending(operation, publishOperationId) =>
@@ -158,14 +150,12 @@ final class ManagedDIDService private[walletapi] (
           secretStorage.insertKey(did, keyId, keyPair, createOperation.toAtalaOperationHash)
         }
         .mapError(CreateManagedDIDError.WalletStorageError.apply)
-        .tapErrorCause(e => ZIO.logErrorCause(e)) // TODO: remove
       // A DID is considered created after a successful setState
       // If some steps above failed, it is not considered created and data that
       // are persisted along the way may be garbage collected.
       _ <- nonSecretStorage
         .setManagedDIDState(did, ManagedDIDState.Created(createOperation))
         .mapError(CreateManagedDIDError.WalletStorageError.apply)
-        .tapErrorCause(e => ZIO.logErrorCause(e)) // TODO: remove
     } yield longFormDID
   }
 
@@ -176,7 +166,6 @@ final class ManagedDIDService private[walletapi] (
     def doUpdate(operation: PrismDIDOperation.Update, secret: UpdateDIDSecret) = {
       val operationHash = operation.toAtalaOperationHash
       for {
-        _ <- ZIO.debug(operation) // TODO: remove
         signedOperation <- signOperationWithMasterKey[UpdateManagedDIDError](operation)
         updateLineage <- Clock.instant.map { now =>
           DIDUpdateLineage(
@@ -254,7 +243,6 @@ final class ManagedDIDService private[walletapi] (
           ECWrapper.signBytes(CURVE, operation.toAtalaOperation.toByteArray, masterKeyPair.privateKey)
         )
         .mapError[E](CommonCryptographyError.apply)
-        .tap(s => ZIO.debug(s"operationHash: ${operation.toAtalaOperationHash.toList}"))
         .map(signature =>
           SignedPrismDIDOperation(
             operation = operation,
@@ -278,12 +266,12 @@ final class ManagedDIDService private[walletapi] (
       maybeOperationDetail <- didService
         .getScheduledDIDOperationDetail(updateLineage.operationId.toArray)
         .mapError[E](e => e)
-        .tapErrorCause(e => ZIO.logErrorCause(e)) // TODO: remove
       newStatus = maybeOperationDetail.fold(ScheduledDIDOperationStatus.Rejected)(_.status)
       _ <- ZIO.logInfo("calling setDIDUpdateLineageStatus")
       _ <- nonSecretStorage
         .setDIDUpdateLineageStatus(updateLineage.operationId.toArray, newStatus)
         .mapError[E](CommonWalletStorageError.apply)
+        .when(updateLineage.status != newStatus)
     } yield ()
   }
 

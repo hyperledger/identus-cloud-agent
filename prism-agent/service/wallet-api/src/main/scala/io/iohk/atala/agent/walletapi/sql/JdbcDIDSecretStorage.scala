@@ -73,12 +73,12 @@ class JdbcDIDSecretStorage(xa: Transactor[Task]) extends DIDSecretStorage {
         | SELECT
         |   sc.key_pair
         | FROM public.prism_did_secret_storage sc
-        |   JOIN public.prism_did_update_lineage ul ON sc.operation_hash = ul.operation_hash
-        |   JOIN public.prism_did_wallet_state ws ON sc.did = ws.did
+        |   LEFT JOIN public.prism_did_wallet_state ws ON sc.did = ws.did
+        |   LEFT JOIN public.prism_did_update_lineage ul ON sc.operation_hash = ul.operation_hash
         | WHERE
         |   sc.did = $did
         |   AND sc.key_id = $keyId
-        |   AND (ul.status = $status OR sc.operation_hash = sha256(ws.atala_operation_content))
+        |   AND (ul.status = $status OR (ul.status IS NULL AND sc.operation_hash = sha256(ws.atala_operation_content)))
         """.stripMargin
       .query[ECKeyPair]
       .option
@@ -103,7 +103,7 @@ class JdbcDIDSecretStorage(xa: Transactor[Task]) extends DIDSecretStorage {
         | )
         """.stripMargin.update
 
-    Clock.instant.flatMap(cxnIO(_).run.transact(xa)).tapErrorCause(e => ZIO.logErrorCause(e)) // TODO: remove
+    Clock.instant.flatMap(cxnIO(_).run.transact(xa))
   }
 
   override def listKeys(did: PrismDID): Task[Map[String, ECKeyPair]] = {
