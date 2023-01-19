@@ -165,7 +165,16 @@ object VerifiableCredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault {
 
         schemaCreated = assert(firstActual)(equalTo(firstExpected.get))
 
-      } yield allSchemasHaveUniqueId && allSchemasHaveUniqueConstraint && schemaCreated
+        totalCount <- sql.totalCount.transact(tx)
+        lookupCount <- sql.lookupCount().transact(tx)
+
+        totalCountIsN = assert(totalCount)(equalTo(generatedSchemas.length))
+        lookupCountIsN = assert(lookupCount)(equalTo(generatedSchemas.length))
+
+      } yield allSchemasHaveUniqueId &&
+        allSchemasHaveUniqueConstraint &&
+        schemaCreated &&
+        totalCountIsN && lookupCountIsN
     }
   ) @@ nondeterministic @@ sequential @@ timed
 
@@ -209,15 +218,23 @@ object VerifiableCredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault {
         // prepare and run samples
         testResultTasks = lookupSamples
           .map(lookupDataSample =>
-            sql
-              .run(lookupDataSample.lookupQuery)
+            lookupDataSample.lookupQuery
               .transact(tx)
               .map(expected => lookupDataSample.assertion(expected))
           )
 
+        testResultCountTasks = lookupSamples
+          .map(lookupDataSample =>
+            lookupDataSample.lookupCountQuery
+              .transact(tx)
+              .map(actualCount => assert(actualCount)(equalTo(lookupDataSample.expectedCount) ?? s"$this"))
+          )
+
         // compose the results
         testResults <- ZIO.collectAll(testResultTasks)
-        testResult = testResults.reduce(_ && _)
+        testResultCounts <- ZIO.collectAll(testResultCountTasks)
+
+        testResult = (testResults ++ testResultCounts).reduce(_ && _)
       } yield testResult
     }
 }
@@ -231,7 +248,7 @@ case class LookupDataSample(
     offsetOpt: Option[Int],
     limitOpt: Option[Int],
     expected: List[VerifiableCredentialSchema],
-    expectedCount: Int
+    expectedCount: Long
 ) {
 
   import model.VerifiableCredentialSchema.sql
@@ -246,6 +263,9 @@ case class LookupDataSample(
       offsetOpt,
       limitOpt
     )
+
+  lazy val lookupCountQuery =
+    sql.lookupCount(authorOpt, nameOpt, versionOpt, attributeOpt, tagOpt)
 
   def assertion(actual: List[VerifiableCredentialSchema]) = {
     assert(actual)(equalTo(expected) ?? s"$this")
