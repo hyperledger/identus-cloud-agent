@@ -43,7 +43,7 @@ object AgentPrograms {
   val senderProgram = for {
     _ <- Console.printLine("\n#### Bob Sending type Readmessages ####")
     messageCreated <- ZIO.succeed(makeReadMessage(Agent.Bob, Agent.Mediator))
-    bob <- ZIO.service[DidComm] // AgentService[Agent.Bob.type]]
+    bob <- ZIO.service[DidOps] // AgentService[Agent.Bob.type]]
 
     // ##########################################
     encryptedMsg <- bob.packEncrypted(messageCreated.asMessage, to = Agent.Mediator.id)
@@ -70,7 +70,7 @@ object AgentPrograms {
   val pickupMessageProgram = for {
     _ <- Console.printLine("\n#### Program 4 ####")
     messageCreated <- ZIO.succeed(makeMsg(Agent.Alice, Agent.Bob))
-    alice <- ZIO.service[DidComm] // AgentService[Agent.Alice.type]]
+    alice <- ZIO.service[DidOps] // AgentService[Agent.Alice.type]]
     _ <- Console.printLine("Send Message")
     _ <- Console.printLine(
       "\n*********************************************************************************************************************************\n"
@@ -94,7 +94,7 @@ object AgentPrograms {
 
     // HTTP
 
-    alice <- ZIO.service[DidComm]
+    alice <- ZIO.service[DidOps]
     httpClient <- ZIO.service[HttpClient]
     res <- httpClient.postDIDComm(
       url = "http://localhost:8080",

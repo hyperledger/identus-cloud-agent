@@ -21,9 +21,9 @@ case class MessageAndAddress(msg: Message, url: String)
 object MessagingService {
 
   /** Encrypted payload (message) and make the Forward Message */
-  def makeForwardMessage(message: Message, mediator: DidId): URIO[DidComm, ForwardMessage] =
+  def makeForwardMessage(message: Message, mediator: DidId): URIO[DidOps & DidAgent, ForwardMessage] =
     for {
-      didCommService <- ZIO.service[DidComm]
+      didCommService <- ZIO.service[DidOps]
       encrypted <- didCommService.packEncrypted(message, to = message.to.head) // TODO head
       msg = ForwardMessage(
         to = mediator,
@@ -34,9 +34,13 @@ object MessagingService {
     } yield (msg)
 
   /** Create a Message and any Forward Message as needed */
-  def makeMessage(msg: Message): ZIO[DidComm & DIDResolver & HttpClient, SendMessageError, MessageAndAddress] =
+  def makeMessage(msg: Message): ZIO[
+    DidOps & DidAgent & DIDResolver & HttpClient,
+    SendMessageError,
+    MessageAndAddress
+  ] =
     for {
-      didCommService <- ZIO.service[DidComm]
+      didCommService <- ZIO.service[DidOps]
       resolver <- ZIO.service[DIDResolver]
       sendToDID <- msg.to match {
         case Seq() => // TODO support for anonymous message
@@ -111,11 +115,11 @@ object MessagingService {
       *
       * TODO Move this method to another model
       */
-  def send(msg: Message): ZIO[DidComm & DIDResolver & HttpClient, SendMessageError, HttpResponseBody] =
+  def send(msg: Message): ZIO[DidOps & DidAgent & DIDResolver & HttpClient, SendMessageError, HttpResponseBody] =
     for {
       auxFinalMessage <- makeMessage(msg)
       MessageAndAddress(finalMessage, serviceEndpoint) = auxFinalMessage
-      didCommService <- ZIO.service[DidComm]
+      didCommService <- ZIO.service[DidOps]
       encryptedMessage <-
         if (finalMessage.`type` == ForwardMessage.PIURI)
           didCommService.packEncryptedAnon(msg = finalMessage, to = finalMessage.to.head) // TODO Head

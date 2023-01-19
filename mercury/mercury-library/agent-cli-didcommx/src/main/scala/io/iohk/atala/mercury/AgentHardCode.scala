@@ -17,8 +17,7 @@ object AgentHardCode extends ZIOAppDefault {
         Console.printLine(s"JWK for KeyAgreement: ${peer.jwkForKeyAgreement.toJSONString}") *>
         Console.printLine(s"JWK for KeyAuthentication: ${peer.jwkForKeyAuthentication.toJSONString}")
     } yield (peer)
-    didCommLayer = AgentCli.agentLayer(agentDID)
-    _ <- test.provide(didCommLayer)
+    _ <- test.provide(AgentCli.didCommXLayer(agentDID))
   } yield ()
 
   val attribute1 = Attribute(name = "name", value = "Joe Blog")
@@ -30,18 +29,19 @@ object AgentHardCode extends ZIOAppDefault {
     formats = Seq.empty
   )
 
-  def test: ZIO[DidComm, IOException, Unit] = {
+  def test: ZIO[DidOps & DidAgent, IOException, Unit] = {
     for {
-      didCommService <- ZIO.service[DidComm]
+      agentService <- ZIO.service[DidAgent]
+      opsService <- ZIO.service[DidOps]
       msg = Message(
         `type` = "TEST",
-        from = Some(didCommService.myDid),
+        from = Some(agentService.id),
         to = Seq.empty,
         body = body.asJson.asObject.get
       )
       // signed <- didCommService.packSigned(msg)
-      ttt <- didCommService.packEncrypted(msg, to = didCommService.myDid)
-      msg2 <- didCommService.unpack(ttt.string)
+      ttt <- opsService.packEncrypted(msg, to = agentService.id)
+      msg2 <- opsService.unpack(ttt.string)
       _ <- Console.printLine(msg)
 
       aaa = msg: org.didcommx.didcomm.message.Message

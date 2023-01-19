@@ -8,13 +8,16 @@ import scala.util.Try
 import scala.util.Failure
 import scala.util.Success
 
-trait DidComm {
-  def myDid: DidId // TODO
-  def packSigned(msg: Message): UIO[SignedMesage]
-  def packEncrypted(msg: Message, to: DidId): UIO[EncryptedMessage]
+trait DidAgent {
+  def id: DidId
+}
+
+trait DidOps {
+  def packSigned(msg: Message): URIO[DidAgent, SignedMesage]
+  def packEncrypted(msg: Message, to: DidId): URIO[DidAgent, EncryptedMessage]
   def packEncryptedAnon(msg: Message, to: DidId): UIO[EncryptedMessage]
-  def unpack(str: String): UIO[UnpackMessage]
-  def unpackBase64(dataBase64: String): Task[UnpackMessage] = {
+  def unpack(str: String): URIO[DidAgent, UnpackMessage]
+  def unpackBase64(dataBase64: String): RIO[DidAgent, UnpackMessage] = {
     val mDecoder = Option(Base64.getUrlDecoder) // can be null
     Try(mDecoder.map(_.decode(dataBase64))) match
       case Failure(ex: IllegalArgumentException) => ZIO.fail(ex)
@@ -24,21 +27,25 @@ trait DidComm {
   }
 }
 
-object DidComm {
+object DidOps {
 
-  def packSigned(msg: Message): URIO[DidComm, SignedMesage] =
-    ZIO.serviceWithZIO(_.packSigned(msg))
+  def packSigned(msg: Message): URIO[DidOps & DidAgent, SignedMesage] =
+    ZIO.service[DidOps].flatMap(_.packSigned(msg))
+    // ZIO.serviceWithZIO(_.packSigned(msg))
 
-  def packEncrypted(msg: Message, to: DidId): URIO[DidComm, EncryptedMessage] =
-    ZIO.serviceWithZIO(_.packEncrypted(msg, to))
+  def packEncrypted(msg: Message, to: DidId): URIO[DidOps & DidAgent, EncryptedMessage] =
+    ZIO.service[DidOps].flatMap(_.packEncrypted(msg, to))
+    // ZIO.serviceWithZIO(_.packEncrypted(msg, to))
 
-  def packEncryptedAnon(msg: Message, to: DidId): URIO[DidComm, EncryptedMessage] =
-    ZIO.serviceWithZIO(_.packEncrypted(msg, to))
+  def packEncryptedAnon(msg: Message, to: DidId): URIO[DidOps, EncryptedMessage] =
+    ZIO.serviceWithZIO(_.packEncryptedAnon(msg, to))
 
-  def unpack(str: String): URIO[DidComm, UnpackMessage] =
-    ZIO.serviceWithZIO(_.unpack(str))
+  def unpack(str: String): URIO[DidOps & DidAgent, UnpackMessage] =
+    ZIO.service[DidOps].flatMap(_.unpack(str))
+    // ZIO.serviceWithZIO(_.unpack(str))
 
-  def unpackBase64(base64str: String): RIO[DidComm, UnpackMessage] =
-    ZIO.serviceWithZIO(_.unpackBase64(base64str))
+  def unpackBase64(base64str: String): RIO[DidOps & DidAgent, UnpackMessage] =
+    ZIO.service[DidOps].flatMap(_.unpackBase64(base64str))
+  // ZIO.serviceWithZIO(_.unpackBase64(base64str))
 
 }
