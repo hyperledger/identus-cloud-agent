@@ -1,3 +1,11 @@
+# [pollux-v0.18.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.17.0...pollux-v0.18.0) (2023-01-20)
+
+
+### Features
+
+* **pollux:** upgrade castor to 0.6.0 ([#320](https://github.com/input-output-hk/atala-prism-building-blocks/issues/320)) ([c97624d](https://github.com/input-output-hk/atala-prism-building-blocks/commit/c97624d9b5542999db91bec96fcc8dff3177cca1))
+* **prism-agent:** implement DAL for the credential schema. ATL-1334 ([3d0c642](https://github.com/input-output-hk/atala-prism-building-blocks/commit/3d0c6426cc7fddbce41de16a1c85f4242e046c6a))
+
 # [pollux-v0.17.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.16.0...pollux-v0.17.0) (2023-01-19)
 
 
