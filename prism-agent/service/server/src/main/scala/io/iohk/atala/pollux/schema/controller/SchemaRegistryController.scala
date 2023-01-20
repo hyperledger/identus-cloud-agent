@@ -49,8 +49,9 @@ case class SchemaRegistryController(
   }
 
   def dropQueryParam(seq: Seq[QuerySegment], keysToDrop: Set[String]) =
-    seq.filterNot { case KeyValue(k, _, _, _) =>
-      keysToDrop(k)
+    seq.filterNot {
+      case KeyValue(k, _, _, _) => keysToDrop(k)
+      case _                    => false
     }
 
   def result: VerifiableCredentialSchemaPage = {

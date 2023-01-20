@@ -98,7 +98,13 @@ object SchemaRegistryEndpoints {
           .and(
             query[Option[String]]("name")
               .and(
-                query[Option[String]]("tags")
+                query[Option[String]]("version")
+                  .and(
+                    query[Option[String]]("tags")
+                      .and(
+                        query[Option[String]]("attributes")
+                      )
+                  )
               )
           )
           .mapTo[VerifiableCredentialSchema.Filter]
