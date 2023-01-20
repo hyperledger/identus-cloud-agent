@@ -1,6 +1,8 @@
 package io.iohk.atala.agent.walletapi.model
 
-import io.iohk.atala.castor.core.model.did.{Service, VerificationRelationship}
+import io.iohk.atala.castor.core.model.did.{Service, VerificationRelationship, ServiceType}
+
+import java.net.URI
 
 final case class ManagedDIDTemplate(
     publicKeys: Seq[DIDPublicKeyTemplate],
@@ -19,5 +21,7 @@ object UpdateManagedDIDAction {
   final case class RemoveKey(id: String) extends UpdateManagedDIDAction
   final case class AddService(service: Service) extends UpdateManagedDIDAction
   final case class RemoveService(id: String) extends UpdateManagedDIDAction
-  final case class UpdateService(service: Service) extends UpdateManagedDIDAction
+  final case class UpdateService(patch: UpdateServicePatch) extends UpdateManagedDIDAction
 }
+
+final case class UpdateServicePatch(id: String, serviceType: Option[ServiceType], serviceEndpoints: Seq[URI])

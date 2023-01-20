@@ -17,6 +17,7 @@ import io.iohk.atala.agent.openapi.model.{
   PublicKeyJwk,
   Service,
   UpdateManagedDIDRequestActionsInner,
+  UpdateManagedDIDRequestActionsInnerUpdateService,
   VerificationMethod
 }
 import io.iohk.atala.castor.core.model.did as castorDomain
@@ -36,7 +37,7 @@ import io.iohk.atala.mercury.model.Base64
 import zio.ZIO
 import io.iohk.atala.agent.server.http.model.HttpServiceError.InvalidPayload
 import io.iohk.atala.agent.walletapi.model.ManagedDIDState
-import io.iohk.atala.castor.core.model.did.{LongFormPrismDID, PrismDID}
+import io.iohk.atala.castor.core.model.did.{LongFormPrismDID, PrismDID, ServiceType}
 
 import java.util.UUID
 import io.iohk.atala.connect.core.model.ConnectionRecord.Role
@@ -102,6 +103,22 @@ trait OASDomainModelHelper {
         case s => Left(s"unsupported update DID action type: $s")
       }
     }
+  }
+
+  extension (servicePatch: UpdateManagedDIDRequestActionsInnerUpdateService) {
+    def toDomain: Either[String, walletDomain.UpdateServicePatch] =
+      for {
+        serviceEndpoint <- servicePatch.serviceEndpoint
+          .getOrElse(Nil)
+          .traverse(s => Try(URI.create(s)).toEither.left.map(_ => s"unable to parse serviceEndpoint $s as URI"))
+        serviceType <- servicePatch.`type`.fold[Either[String, Option[ServiceType]]](Right(None))(s =>
+          castorDomain.ServiceType.parseString(s).toRight(s"unsupported serviceType $s").map(Some(_))
+        )
+      } yield walletDomain.UpdateServicePatch(
+        id = servicePatch.id,
+        serviceType = serviceType,
+        serviceEndpoints = serviceEndpoint
+      )
   }
 
   extension (publicKeyTemplate: ManagedDIDKeyTemplate) {

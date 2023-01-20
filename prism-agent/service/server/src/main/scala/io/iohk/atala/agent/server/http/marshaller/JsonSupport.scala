@@ -2,12 +2,18 @@ package io.iohk.atala.agent.server.http.marshaller
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import io.iohk.atala.agent.openapi.model.*
-import spray.json.{DefaultJsonProtocol, RootJsonFormat, jsonReader}
-import spray.json.JsonFormat
+import spray.json.{
+  DefaultJsonProtocol,
+  DeserializationException,
+  JsString,
+  JsValue,
+  JsonFormat,
+  RootJsonFormat,
+  jsonReader,
+  jsonWriter
+}
+
 import java.util.UUID
-import spray.json.JsString
-import spray.json.JsValue
-import spray.json.DeserializationException
 import java.time.OffsetDateTime
 
 trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
@@ -43,6 +49,9 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   )
   given RootJsonFormat[UpdateManagedDIDRequestActionsInnerRemoveService] = jsonFormat1(
     UpdateManagedDIDRequestActionsInnerRemoveService.apply
+  )
+  given RootJsonFormat[UpdateManagedDIDRequestActionsInnerUpdateService] = jsonFormat3(
+    UpdateManagedDIDRequestActionsInnerUpdateService.apply
   )
   given RootJsonFormat[VerificationMethod] = jsonFormat4(VerificationMethod.apply)
 

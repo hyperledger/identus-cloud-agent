@@ -161,7 +161,25 @@ components:
                     description: ID of service to remove from DID document
                     example: service1
               updateService:
-                $ref: "#/components/schemas/Service"
+                type: object
+                description: A patch to existing Service. 'type' and 'serviceEndpoint' must not be both empty.
+                required:
+                  - id
+                properties:
+                  id:
+                    type: string
+                    description: ID of service to remove from DID document
+                    example: service1
+                  type:
+                    type: string
+                    enum:
+                      - MediatorService
+                    example: MediatorService
+                  serviceEndpoint:
+                    type: array
+                    items:
+                      type: string
+                      example: "https://bar.example.com"
 
     ListManagedDIDResponse:
       type: array

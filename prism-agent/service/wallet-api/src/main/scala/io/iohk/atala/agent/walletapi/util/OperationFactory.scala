@@ -106,8 +106,8 @@ object OperationFactory {
       case UpdateManagedDIDAction.RemoveKey(id)       => ZIO.succeed(UpdateDIDAction.RemoveKey(id))
       case UpdateManagedDIDAction.AddService(service) => ZIO.succeed(UpdateDIDAction.AddService(service))
       case UpdateManagedDIDAction.RemoveService(id)   => ZIO.succeed(UpdateDIDAction.RemoveService(id))
-      case UpdateManagedDIDAction.UpdateService(service) =>
-        ZIO.succeed(UpdateDIDAction.UpdateService(service.id, service.`type`, service.serviceEndpoint))
+      case UpdateManagedDIDAction.UpdateService(patch) =>
+        ZIO.succeed(UpdateDIDAction.UpdateService(patch.id, patch.serviceType, patch.serviceEndpoints))
     }
   }
 
