@@ -69,7 +69,7 @@ final class ManagedDIDService private[walletapi] (
   private val AUTHENTICATION_KEY_ID = "authentication"
 
   private val generateCreateOperation = OperationFactory.makeCreateOperation(
-    ManagedDIDService.DEFAULT_MASTER_KEY_ID,
+    DEFAULT_MASTER_KEY_ID,
     CURVE,
     () => KeyGeneratorWrapper.generateECKeyPair(CURVE)
   )
@@ -216,7 +216,7 @@ final class ManagedDIDService private[walletapi] (
       .listUpdateLineage(did = Some(did), status = Some(ScheduledDIDOperationStatus.Confirmed))
       .mapError[E](CommonWalletStorageError.apply)
       .map { lineage =>
-        // Perfect correlation between local timestamp and confirmed operation order on-chain is assumed.
+        // Correlation between local timestamp and confirmed operation order on-chain is assumed.
         // We may want to improve previous operation detection by using resolution metadata from Node in the future.
         // We may also want to allow updating from unconfirmed operation to allow multiple updates
         // without waiting for confirmation.
@@ -238,7 +238,7 @@ final class ManagedDIDService private[walletapi] (
           .someOrElseZIO(
             ZIO.die(Exception("master-key must exists in the wallet for signing DID operation and submit to Node"))
           )
-      signOperation <- ZIO
+      signedOperation <- ZIO
         .fromTry(
           ECWrapper.signBytes(CURVE, operation.toAtalaOperation.toByteArray, masterKeyPair.privateKey)
         )
@@ -250,7 +250,7 @@ final class ManagedDIDService private[walletapi] (
             signedWithKey = DEFAULT_MASTER_KEY_ID
           )
         )
-    } yield signOperation
+    } yield signedOperation
   }
 
   private def submitSignedOperation[E](
@@ -262,12 +262,10 @@ final class ManagedDIDService private[walletapi] (
       updateLineage: DIDUpdateLineage
   )(using c1: Conversion[DIDOperationError, E], c2: Conversion[CommonWalletStorageError, E]): IO[E, Unit] = {
     for {
-      _ <- ZIO.logInfo("calling getScheduledDIDOperationDetail")
       maybeOperationDetail <- didService
         .getScheduledDIDOperationDetail(updateLineage.operationId.toArray)
         .mapError[E](e => e)
       newStatus = maybeOperationDetail.fold(ScheduledDIDOperationStatus.Rejected)(_.status)
-      _ <- ZIO.logInfo("calling setDIDUpdateLineageStatus")
       _ <- nonSecretStorage
         .setDIDUpdateLineageStatus(updateLineage.operationId.toArray, newStatus)
         .mapError[E](CommonWalletStorageError.apply)

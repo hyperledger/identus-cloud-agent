@@ -11,7 +11,6 @@ import zio.interop.catz.*
 
 import java.time.Instant
 
-// TODO: implement missing members
 class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage {
 
   override def getManagedDIDState(did: PrismDID): Task[Option[ManagedDIDState]] = {
@@ -63,7 +62,7 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
     for {
       now <- Clock.instant
       row = DIDPublicationStateRow.from(did, state, now)
-      _ <- cxnIO(row).run.transact(xa).unit.tapErrorCause(e => ZIO.logErrorCause(e)) // TODO: remove
+      _ <- cxnIO(row).run.transact(xa)
     } yield ()
   }
 
@@ -140,7 +139,6 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
     cxnIO.transact(xa)
   }
 
-  // TODO: implement
   override def setDIDUpdateLineageStatus(
       operationId: Array[Byte],
       status: ScheduledDIDOperationStatus
