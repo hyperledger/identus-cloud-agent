@@ -24,15 +24,15 @@ lazy val V = new {
   val munitZio = "0.1.1"
 
   // https://mvnrepository.com/artifact/dev.zio/zio
-  val zio = "2.0.5"
+  val zio = "2.0.4"
   val zioLogging = "2.0.0"
-  val zioJson = "0.4.2"
+  val zioJson = "0.3.0"
   val zioHttp = "0.0.3" // "2.0.0-RC10" // "2.0.0-RC11" TODO
 
   // https://mvnrepository.com/artifact/io.circe/circe-core
   val circe = "0.14.2"
 
-  val mercury = "0.15.0"
+  val mercury = "0.12.0"
 }
 
 /** Dependencies */
