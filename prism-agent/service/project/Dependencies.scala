@@ -8,7 +8,7 @@ object Dependencies {
     val zioInteropCats = "3.3.0" // scala-steward:off
     val akka = "2.6.20"
     val akkaHttp = "10.2.9"
-    val castor = "0.5.1"
+    val castor = "0.6.0"
     val pollux = "0.17.0"
     val connect = "0.6.0"
     val bouncyCastle = "1.70"
