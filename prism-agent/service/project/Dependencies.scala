@@ -69,7 +69,7 @@ object Dependencies {
 
   private lazy val tapirSttpStubServer =
     "com.softwaremill.sttp.tapir" %% "tapir-sttp-stub-server" % Versions.tapir % Test
-  private lazy val sttpClient3ZioJson = "com.softwaremill.sttp.client3" %% "zio-json" % "3.8.3" % Test
+  private lazy val sttpClient3ZioJson = "com.softwaremill.sttp.client3" %% "zio-json" % "3.8.8" % Test
 
   private lazy val quillDoobie = "io.getquill" %% "quill-doobie" % Versions.quill exclude("org.scala-lang.modules", "scala-java8-compat_3")
   private lazy val postgresql = "org.postgresql" % "postgresql" % "42.2.8"
