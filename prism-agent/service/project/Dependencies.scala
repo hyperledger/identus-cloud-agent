@@ -14,7 +14,7 @@ object Dependencies {
     val bouncyCastle = "1.70"
     val logback = "1.4.5"
     val mercury = "0.15.0"
-    val zioJson = "0.3.0"
+    val zioJson = "0.4.2"
     val tapir = "1.2.6"
     val flyway = "9.8.3"
     val testContainersScalaPostgresql = "0.40.12"
