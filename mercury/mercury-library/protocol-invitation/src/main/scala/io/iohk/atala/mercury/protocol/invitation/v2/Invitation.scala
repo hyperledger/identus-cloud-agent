@@ -1,7 +1,7 @@
 package io.iohk.atala.mercury.protocol.invitation.v2
 import cats.implicits.*
 import io.circe.syntax.*
-import io.circe.{Encoder, Decoder, Json}
+import io.circe.{Decoder, Encoder, Json}
 import io.iohk.atala.mercury.model.*
 import AttachmentDescriptor.attachmentDescriptorEncoderV2
 import io.circe.generic.semiauto._
@@ -40,4 +40,11 @@ object Invitation {
   given Encoder[Invitation] = deriveEncoder[Invitation]
   given Decoder[Invitation] = deriveDecoder[Invitation]
 
+  // Utils methods
+  def invitation2Connect(from: DidId): Invitation = {
+    Invitation(
+      from = from,
+      body = Invitation.Body(goal_code = "connect", goal = "Establish a trust connection between two peers", Nil)
+    )
+  }
 }

@@ -35,7 +35,7 @@ class UtilsCredentialSpec extends ZSuite {
     goal_code = Some("Offer Credential"),
     credential_preview = credentialPreview
   )
-  val attachmentDescriptor = AttachmentDescriptor.buildAttachment(payload = credential)
+  val attachmentDescriptor = AttachmentDescriptor.buildJsonAttachment(payload = credential)
 
   test("IssueCredential encode and decode any type of Credential into the attachments") {
 
@@ -43,7 +43,7 @@ class UtilsCredentialSpec extends ZSuite {
       .build(
         fromDID = DidId("did:prism:test123from"),
         toDID = DidId("did:prism:test123to"),
-        credentials = Map(nameCredentialType -> credential),
+        credentials = Map(nameCredentialType -> credential.asJson.noSpaces.getBytes()),
       )
       .makeMessage
 
@@ -61,7 +61,7 @@ class UtilsCredentialSpec extends ZSuite {
         fromDID = DidId("did:prism:test123from"),
         toDID = DidId("did:prism:test123to"),
         credential_preview = credentialPreview,
-        credentials = Map(nameCredentialType -> credential),
+        credentials = Map(nameCredentialType -> credential.asJson.noSpaces.getBytes()),
       )
       .makeMessage
 
@@ -79,7 +79,7 @@ class UtilsCredentialSpec extends ZSuite {
         fromDID = DidId("did:prism:test123from"),
         toDID = DidId("did:prism:test123to"),
         credential_preview = credentialPreview,
-        credentials = Map(nameCredentialType -> credential),
+        credentials = Map(nameCredentialType -> credential.asJson.noSpaces.getBytes()),
       )
       .makeMessage
 
@@ -96,7 +96,7 @@ class UtilsCredentialSpec extends ZSuite {
       .build(
         fromDID = DidId("did:prism:test123from"),
         toDID = DidId("did:prism:test123to"),
-        credentials = Map(nameCredentialType -> credential),
+        credentials = Map(nameCredentialType -> credential.asJson.noSpaces.getBytes()),
       )
       .makeMessage
 

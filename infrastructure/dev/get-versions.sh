@@ -13,3 +13,6 @@ echo "mercury-mediator version: ${MERCURY_MEDIATOR_VERSION}"
 
 export IRIS_SERVICE_VERSION=$(cd ../../iris/service && sbt "project server" -Dsbt.supershell=false -error "print version")
 echo "iris server version: ${IRIS_SERVICE_VERSION}"
+
+export PRISM_NODE_VERSION=v2.0.0
+echo "prism node version: ${PRISM_NODE_VERSION}"

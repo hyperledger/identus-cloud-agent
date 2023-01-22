@@ -10,7 +10,7 @@ import zio.http.service._
 import java.io.IOException
 import org.didcommx.didcomm.DIDComm
 import io.iohk.atala.QRcode
-import io.iohk.atala.mercury.model.{_, given}
+import io.iohk.atala.mercury.model.{given, _}
 import io.iohk.atala.mercury.model.error._
 import io.iohk.atala.mercury.protocol.outofbandlogin._
 import io.iohk.atala.mercury.protocol.issuecredential._
@@ -43,7 +43,7 @@ object AgentCli extends ZIOAppDefault {
   def options(p: Seq[(String, ZIO[Any, MercuryThrowable, Unit])]): ZIO[Any, MercuryThrowable, Unit] = {
     for {
       _ <- Console.printLine("\n--- Choose an option: ---")
-      _ <- ZIO.foreach(p.zipWithIndex)(e => Console.printLine(e._2 + " - " + e._1._1))
+      _ <- ZIO.foreach(p.zipWithIndex)(e => Console.printLine(s"${e._2} - ${e._1._1}"))
       _ <- Console.readLine.flatMap { e => p.map(_._2).toSeq(e.toInt) }
     } yield ()
   }
@@ -144,7 +144,7 @@ object AgentCli extends ZIOAppDefault {
       }
 
       attachmentDescriptor =
-        AttachmentDescriptor.buildAttachment(payload = playloadData)
+        AttachmentDescriptor.buildJsonAttachment(payload = playloadData)
       attribute1 = Attribute(name = "name", value = "Joe Blog")
       attribute2 = Attribute(name = "dob", value = "01/10/1947")
       credentialPreview = CredentialPreview(attributes = Seq(attribute1, attribute2))

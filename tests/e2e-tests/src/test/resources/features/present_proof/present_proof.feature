@@ -1,5 +1,5 @@
 @RFC0037
-Feature: RFC 0037 Aries agent present proof
+Feature: Present Proof Protocol
 
   @AIP20
   Scenario: Holder presents credential proof to verifier
