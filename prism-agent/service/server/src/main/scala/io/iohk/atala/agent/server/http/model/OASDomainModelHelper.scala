@@ -4,7 +4,6 @@ import io.iohk.atala.agent.openapi.model.{
   Connection,
   ConnectionInvitation,
   CreateManagedDidRequestDocumentTemplate,
-  CreateManagedDidRequestDocumentTemplatePublicKeysInner,
   DID,
   DIDDocumentMetadata,
   DIDOperationResponse,
@@ -13,8 +12,12 @@ import io.iohk.atala.agent.openapi.model.{
   IssueCredentialRecord,
   IssueCredentialRecordCollection,
   ListManagedDIDResponseInner,
+  ManagedDIDKeyTemplate,
+  PresentationStatus,
   PublicKeyJwk,
   Service,
+  UpdateManagedDIDRequestActionsInner,
+  UpdateManagedDIDRequestActionsInnerUpdateService,
   VerificationMethod
 }
 import io.iohk.atala.castor.core.model.did as castorDomain
@@ -34,11 +37,10 @@ import io.iohk.atala.mercury.model.Base64
 import zio.ZIO
 import io.iohk.atala.agent.server.http.model.HttpServiceError.InvalidPayload
 import io.iohk.atala.agent.walletapi.model.ManagedDIDState
-import io.iohk.atala.castor.core.model.did.{LongFormPrismDID, PrismDID}
+import io.iohk.atala.castor.core.model.did.{LongFormPrismDID, PrismDID, ServiceType}
 
 import java.util.UUID
 import io.iohk.atala.connect.core.model.ConnectionRecord.Role
-import io.iohk.atala.agent.openapi.model.PresentationStatus
 
 trait OASDomainModelHelper {
 
@@ -71,7 +73,55 @@ trait OASDomainModelHelper {
     }
   }
 
-  extension (publicKeyTemplate: CreateManagedDidRequestDocumentTemplatePublicKeysInner) {
+  extension (action: UpdateManagedDIDRequestActionsInner) {
+    def toDomain: Either[String, walletDomain.UpdateManagedDIDAction] = {
+      import walletDomain.UpdateManagedDIDAction.*
+      action.actionType match {
+        case "ADD_KEY" =>
+          action.addKey
+            .toRight("addKey property is missing from action type ADD_KEY")
+            .flatMap(_.toDomain)
+            .map(template => AddKey(template))
+        case "REMOVE_KEY" =>
+          action.removeKey
+            .toRight("removeKey property is missing from action type REMOVE_KEY")
+            .map(i => RemoveKey(i.id))
+        case "ADD_SERVICE" =>
+          action.addService
+            .toRight("addservice property is missing from action type ADD_SERVICE")
+            .flatMap(_.toDomain)
+            .map(s => AddService(s))
+        case "REMOVE_SERVICE" =>
+          action.removeService
+            .toRight("removeService property is missing from action type REMOVE_SERVICE")
+            .map(i => RemoveService(i.id))
+        case "UPDATE_SERVICE" =>
+          action.updateService
+            .toRight("updateService property is missing from action type UPDATE_SERVICE")
+            .flatMap(_.toDomain)
+            .map(s => UpdateService(s))
+        case s => Left(s"unsupported update DID action type: $s")
+      }
+    }
+  }
+
+  extension (servicePatch: UpdateManagedDIDRequestActionsInnerUpdateService) {
+    def toDomain: Either[String, walletDomain.UpdateServicePatch] =
+      for {
+        serviceEndpoint <- servicePatch.serviceEndpoint
+          .getOrElse(Nil)
+          .traverse(s => Try(URI.create(s)).toEither.left.map(_ => s"unable to parse serviceEndpoint $s as URI"))
+        serviceType <- servicePatch.`type`.fold[Either[String, Option[ServiceType]]](Right(None))(s =>
+          castorDomain.ServiceType.parseString(s).toRight(s"unsupported serviceType $s").map(Some(_))
+        )
+      } yield walletDomain.UpdateServicePatch(
+        id = servicePatch.id,
+        serviceType = serviceType,
+        serviceEndpoints = serviceEndpoint
+      )
+  }
+
+  extension (publicKeyTemplate: ManagedDIDKeyTemplate) {
     def toDomain: Either[String, walletDomain.DIDPublicKeyTemplate] = {
       for {
         purpose <- castorDomain.VerificationRelationship

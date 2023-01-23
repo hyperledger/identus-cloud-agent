@@ -27,24 +27,19 @@ import scala.collection.immutable.ArraySeq
 object ManagedDIDServiceSpec extends ZIOSpecDefault {
 
   private trait TestDIDService extends DIDService {
-    def getPublishedOperations: UIO[Seq[SignedPrismDIDOperation.Create]]
+    def getPublishedOperations: UIO[Seq[SignedPrismDIDOperation]]
   }
 
   private def testDIDServiceLayer = ZLayer.fromZIO {
-    Ref.make(Seq.empty[SignedPrismDIDOperation.Create]).map { store =>
+    Ref.make(Seq.empty[SignedPrismDIDOperation]).map { store =>
       new TestDIDService {
-        override def createPublishedDID(
-            signOperation: SignedPrismDIDOperation.Create
-        ): IO[error.DIDOperationError, ScheduleDIDOperationOutcome] =
+        override def scheduleOperation(
+            signOperation: SignedPrismDIDOperation
+        ): IO[error.DIDOperationError, ScheduleDIDOperationOutcome] = {
           store
             .update(_.appended(signOperation))
-            .as(
-              ScheduleDIDOperationOutcome(
-                PrismDID.buildLongFormFromOperation(signOperation.operation).asCanonical,
-                signOperation.operation,
-                ArraySeq.empty
-              )
-            )
+            .as(ScheduleDIDOperationOutcome(signOperation.operation.did, signOperation.operation, ArraySeq.empty))
+        }
 
         override def resolveDID(did: PrismDID): IO[error.DIDResolutionError, Option[(DIDMetadata, DIDData)]] = ZIO.none
 
@@ -53,7 +48,7 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault {
         ): IO[error.DIDOperationError, Option[ScheduledDIDOperationDetail]] =
           ZIO.some(ScheduledDIDOperationDetail(ScheduledDIDOperationStatus.Pending))
 
-        override def getPublishedOperations: UIO[Seq[SignedPrismDIDOperation.Create]] = store.get
+        override def getPublishedOperations: UIO[Seq[SignedPrismDIDOperation]] = store.get
       }
     }
   }
