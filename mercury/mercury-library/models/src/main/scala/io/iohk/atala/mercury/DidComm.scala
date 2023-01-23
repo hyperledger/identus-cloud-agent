@@ -19,7 +19,8 @@ trait DidAgent {
 trait DidOps {
   def packSigned(msg: Message): URIO[DidAgent, SignedMesage]
   def packEncrypted(msg: Message, to: DidId): URIO[DidAgent, EncryptedMessage]
-  def packEncryptedAnon(msg: Message, to: DidId): UIO[EncryptedMessage]
+  // FIXME theoretically DidAgent is not needed for packEncryptedAnon
+  def packEncryptedAnon(msg: Message, to: DidId): URIO[DidAgent, EncryptedMessage]
   def unpack(str: String): URIO[DidAgent, UnpackMessage]
   def unpackBase64(dataBase64: String): RIO[DidAgent, UnpackMessage] = {
     val mDecoder = Option(Base64.getUrlDecoder) // can be null
@@ -41,8 +42,9 @@ object DidOps {
     ZIO.service[DidOps].flatMap(_.packEncrypted(msg, to))
     // ZIO.serviceWithZIO(_.packEncrypted(msg, to))
 
-  def packEncryptedAnon(msg: Message, to: DidId): URIO[DidOps, EncryptedMessage] =
-    ZIO.serviceWithZIO(_.packEncryptedAnon(msg, to))
+  def packEncryptedAnon(msg: Message, to: DidId): URIO[DidOps & DidAgent, EncryptedMessage] =
+    ZIO.service[DidOps].flatMap(_.packEncryptedAnon(msg, to))
+  // ZIO.serviceWithZIO(_.packEncryptedAnon(msg, to))
 
   def unpack(str: String): URIO[DidOps & DidAgent, UnpackMessage] =
     ZIO.service[DidOps].flatMap(_.unpack(str))

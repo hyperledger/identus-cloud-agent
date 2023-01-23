@@ -8,16 +8,17 @@ import io.iohk.atala.mercury.model.{given, _}
 import io.iohk.atala.mercury.protocol.issuecredential._
 import java.io.IOException
 
+import io.iohk.atala.mercury.DidCommX
 object AgentHardCode extends ZIOAppDefault {
 
   def run = for {
-    agentDID <- for {
+    didPeer <- for {
       peer <- ZIO.succeed(PeerDID.makePeerDid()) // (serviceEndpoint = serviceEndpoint))
       _ <- Console.printLine(s"New DID: ${peer.did}") *>
         Console.printLine(s"JWK for KeyAgreement: ${peer.jwkForKeyAgreement.toJSONString}") *>
         Console.printLine(s"JWK for KeyAuthentication: ${peer.jwkForKeyAuthentication.toJSONString}")
     } yield (peer)
-    _ <- test.provide(DidCommX.makeLayer(agentDID))
+    _ <- test.provide(DidCommX.liveLayer, AgentPeerService.makeLayer(didPeer))
   } yield ()
 
   val attribute1 = Attribute(name = "name", value = "Joe Blog")

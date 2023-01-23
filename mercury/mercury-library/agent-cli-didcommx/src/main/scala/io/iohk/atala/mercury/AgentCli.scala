@@ -15,11 +15,12 @@ import io.iohk.atala.mercury.model.error._
 import io.iohk.atala.mercury.protocol.outofbandlogin._
 import io.iohk.atala.mercury.protocol.issuecredential._
 import io.iohk.atala.mercury.protocol.presentproof._
-import io.iohk.atala.resolvers.PeerDidMediatorSecretResolver
 import io.iohk.atala.resolvers.UniversalDidResolver
 import io.iohk.atala.mercury.protocol.connection.*
 import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
 import io.iohk.atala.resolvers.DIDResolver
+
+import io.iohk.atala.mercury.DidCommX
 
 /** AgentCli
   * {{{
@@ -298,7 +299,7 @@ object AgentCli extends ZIOAppDefault {
       case str                              => ZIO.succeed(Some(str))
     }
 
-    agentDID <- for {
+    didPeer <- for {
       peer <- ZIO.succeed(PeerDID.makePeerDid(serviceEndpoint = serviceEndpoint))
       // jwkForKeyAgreement <- ZIO.succeed(PeerDID.makeNewJwkKeyX25519)
       // jwkForKeyAuthentication <- ZIO.succeed(PeerDID.makeNewJwkKeyEd25519)
@@ -308,21 +309,23 @@ object AgentCli extends ZIOAppDefault {
         Console.printLine(s"JWK for KeyAuthentication: ${peer.jwkForKeyAuthentication.toJSONString}")
     } yield (peer)
 
+    agentService = AgentPeerService.makeLayer(didPeer)
+
     layers: ZLayer[Any, Nothing, DidOps & DidAgent & DIDResolver & HttpClient] =
-      DidCommX.makeLayer(agentDID) /*++ agentLayer(agentDID)*/ ++ DIDResolver.layer ++ ZioHttpClient.layer
+      DidCommX.liveLayer ++ agentService ++ DIDResolver.layer ++ ZioHttpClient.layer
 
     _ <- options(
       Seq(
         "none" -> ZIO.unit,
-        "Show DID" -> Console.printLine(agentDID),
-        "Get DID Document" -> Console.printLine("DID Document:") *> Console.printLine(agentDID.getDIDDocument),
+        "Show DID" -> Console.printLine(didPeer),
+        "Get DID Document" -> Console.printLine("DID Document:") *> Console.printLine(didPeer.getDIDDocument),
         "Start WebServer endpoint" -> startEndpoint.provide(layers),
         "Ask for Mediation Coordinate" -> askForMediation.provide(layers),
-        "Generate login invitation" -> generateLoginInvitation.provide(DidCommX.makeLayer(agentDID)),
+        "Generate login invitation" -> generateLoginInvitation.provide(DidCommX.liveLayer ++ agentService),
         "Login with DID" -> loginInvitation.provide(layers),
         "Propose Credential" -> proposeAndSendCredential.provide(layers),
         "Present Proof" -> presentProof.provide(layers),
-        "Generate Connection invitation" -> generateConnectionInvitation.provide(DidCommX.makeLayer(agentDID)),
+        "Generate Connection invitation" -> generateConnectionInvitation.provide(DidCommX.liveLayer ++ agentService),
         "Connect" -> connect.provide(layers),
       )
     ).repeatWhile((_) => true)
