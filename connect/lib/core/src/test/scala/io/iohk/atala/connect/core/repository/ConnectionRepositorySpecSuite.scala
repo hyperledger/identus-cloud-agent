@@ -166,11 +166,11 @@ object ConnectionRepositorySpecSuite {
         updatedRecord <- repo.getConnectionRecord(aRecord.id)
       } yield {
         assertTrue(count == 1) &&
-        assertTrue(record.get.protocolState == ProtocolState.InvitationGenerated)
+        assertTrue(record.get.protocolState == ProtocolState.InvitationGenerated) &&
         assertTrue(updatedRecord.get.protocolState == ProtocolState.ConnectionRequestReceived)
       }
     },
-    test("updateConnectionProtocolState updates the record") {
+    test("updateConnectionProtocolState doesn't update the record for invalid states") {
       for {
         repo <- ZIO.service[ConnectionRepository[Task]]
         aRecord = connectionRecord
@@ -184,7 +184,7 @@ object ConnectionRepositorySpecSuite {
         updatedRecord <- repo.getConnectionRecord(aRecord.id)
       } yield {
         assertTrue(count == 0) &&
-        assertTrue(record.get.protocolState == ProtocolState.InvitationGenerated)
+        assertTrue(record.get.protocolState == ProtocolState.InvitationGenerated) &&
         assertTrue(updatedRecord.get.protocolState == ProtocolState.InvitationGenerated)
       }
     },
@@ -203,7 +203,7 @@ object ConnectionRepositorySpecSuite {
         updatedRecord <- repo.getConnectionRecord(aRecord.id)
       } yield {
         assertTrue(count == 1) &&
-        assertTrue(record.get.connectionRequest.isEmpty)
+        assertTrue(record.get.connectionRequest.isEmpty) &&
         assertTrue(updatedRecord.get.connectionRequest.contains(request))
       }
     },
@@ -222,7 +222,7 @@ object ConnectionRepositorySpecSuite {
         updatedRecord <- repo.getConnectionRecord(aRecord.id)
       } yield {
         assertTrue(count == 1) &&
-        assertTrue(record.get.connectionResponse.isEmpty)
+        assertTrue(record.get.connectionResponse.isEmpty) &&
         assertTrue(updatedRecord.get.connectionResponse.contains(response))
       }
     }

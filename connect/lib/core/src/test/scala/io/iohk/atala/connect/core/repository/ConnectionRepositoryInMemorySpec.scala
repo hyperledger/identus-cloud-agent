@@ -16,7 +16,7 @@ import java.sql.SQLException
 import java.time.Instant
 import java.util.UUID
 
-object JdbcConnectionRepositorySpec extends ZIOSpecDefault {
+object ConnectionRepositoryInMemorySpec extends ZIOSpecDefault {
 
   override def spec: Spec[TestEnvironment with Scope, Any] =
     suite("In Memory Connection Repository test suite")(ConnectionRepositorySpecSuite.testSuite).provide(
