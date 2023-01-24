@@ -97,6 +97,7 @@ class CredentialRepositoryInMemory(storeRef: Ref[Map[UUID, IssueCredentialRecord
                 recordId,
                 record.copy(
                   updatedAt = Some(Instant.now),
+                  issueCredentialData = Some(issue),
                   issuedCredentialRaw = Some(issuedRawCredential),
                   protocolState = protocolState
                 )
@@ -115,6 +116,19 @@ class CredentialRepositoryInMemory(storeRef: Ref[Map[UUID, IssueCredentialRecord
       .filter(rec => recordId.contains(rec.id) && rec.issuedCredentialRaw.isDefined)
       .map(rec => ValidIssuedCredentialRecord(rec.id, rec.issuedCredentialRaw))
       .toSeq
+  }
+
+  override def deleteIssueCredentialRecord(recordId: UUID): Task[Int] = {
+    for {
+      maybeRecord <- getIssueCredentialRecord(recordId)
+      count <- maybeRecord
+        .map(record =>
+          for {
+            _ <- storeRef.update(r => r.removed(recordId))
+          } yield 1
+        )
+        .getOrElse(ZIO.succeed(0))
+    } yield count
   }
 
   override def updateWithIssueCredential(
@@ -152,7 +166,7 @@ class CredentialRepositoryInMemory(storeRef: Ref[Map[UUID, IssueCredentialRecord
   override def getIssueCredentialRecordByThreadId(thid: UUID): Task[Option[IssueCredentialRecord]] = {
     for {
       store <- storeRef.get
-    } yield store.values.find(_.thid == Some(thid))
+    } yield store.values.find(_.thid == thid)
   }
 
   override def updateWithRequestCredential(
