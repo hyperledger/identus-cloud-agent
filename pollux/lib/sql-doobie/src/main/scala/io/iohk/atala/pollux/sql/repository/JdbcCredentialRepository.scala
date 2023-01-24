@@ -20,7 +20,6 @@ import zio.interop.catz.*
 
 import java.time.Instant
 import java.util.UUID
-import java.{util => ju}
 
 // TODO: replace with actual implementation
 class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepository[Task] {
@@ -348,8 +347,19 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
 
   }
 
+  override def deleteIssueCredentialRecord(recordId: UUID): Task[Int] = {
+    val cxnIO = sql"""
+      | DELETE
+      | FROM public.issue_credential_records
+      | WHERE id = $recordId
+      """.stripMargin.update
+
+    cxnIO.run
+      .transact(xa)
+  }
+
   override def updateWithIssuedRawCredential(
-      recordId: ju.UUID,
+      recordId: UUID,
       issue: IssueCredential,
       issuedRawCredential: String,
       protocolState: ProtocolState
