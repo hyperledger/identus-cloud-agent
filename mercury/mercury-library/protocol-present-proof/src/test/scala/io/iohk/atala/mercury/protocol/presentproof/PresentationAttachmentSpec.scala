@@ -134,6 +134,7 @@ class PresentationAttachmentSpec extends ZSuite {
     val presentationAttachment =
       PresentationAttachment(presentation_definition = presentationDefinition, options = Some(options))
     val resultPresentationAttachment = presentationAttachment.asJson.deepDropNullValues
+    println(resultPresentationAttachment)
     assertEquals(resultPresentationAttachment, expectedPresentationAttachmentJson)
 
   }

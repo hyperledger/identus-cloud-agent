@@ -194,10 +194,10 @@ object AgentCli extends ZIOAppDefault {
       presentationAttachment = PresentationAttachment.build(
         Some(Options(challenge = "somechallenge", domain = "somedomain"))
       )
-      attachmentDescriptor = AttachmentDescriptor.buildBase64Attachment(payload =
-        presentationAttachment.asJson.noSpaces.getBytes()
-      )
-
+      // attachmentDescriptor = AttachmentDescriptor.buildBase64Attachment(payload =
+      //   presentationAttachment.asJson.noSpaces.getBytes()
+      // )
+      attachmentDescriptor = AttachmentDescriptor.buildJsonAttachment(payload = presentationAttachment)
       requestPresentation = RequestPresentation(
         body = body,
         attachments = Seq(attachmentDescriptor),
