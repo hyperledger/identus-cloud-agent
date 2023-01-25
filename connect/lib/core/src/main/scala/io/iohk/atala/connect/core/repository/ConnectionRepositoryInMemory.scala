@@ -41,9 +41,9 @@ class ConnectionRepositoryInMemory(storeRef: Ref[Map[UUID, ConnectionRecord]]) e
   override def updateConnectionProtocolState(recordId: UUID, from: ProtocolState, to: ProtocolState): Task[Int] = {
     for {
       store <- storeRef.get
-      maybeRecord <- ZIO.succeed(
-        store.find((uuid, record) => uuid == recordId && record.protocolState == from).map(_._2)
-      )
+      maybeRecord = store
+          .find((uuid, record) => uuid == recordId && record.protocolState == from)
+          .map(_._2)
       count <- maybeRecord
         .map(record =>
           for {
