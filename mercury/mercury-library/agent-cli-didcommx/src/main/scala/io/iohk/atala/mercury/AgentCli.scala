@@ -20,6 +20,9 @@ import io.iohk.atala.resolvers.UniversalDidResolver
 import io.iohk.atala.mercury.protocol.connection.*
 import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
 import io.iohk.atala.resolvers.DIDResolver
+import io.circe.Json
+import io.circe.parser.*
+import io.circe.syntax.*
 
 /** AgentCli
   * {{{
@@ -187,12 +190,14 @@ object AgentCli extends ZIOAppDefault {
       }
 
       // Make a Request
-      body = RequestPresentation.Body(goal_code = Some("Propose Presentation"))
-      attachmentDescriptor = AttachmentDescriptor(
-        "1",
-        Some("application/json"),
-        LinkData(links = Seq("http://test"), hash = "1234")
+      body = RequestPresentation.Body(goal_code = Some("Presentation Request"))
+      presentationAttachment = PresentationAttachment.build(
+        Some(Options(challenge = "somechallenge", domain = "somedomain"))
       )
+      // attachmentDescriptor = AttachmentDescriptor.buildBase64Attachment(payload =
+      //   presentationAttachment.asJson.noSpaces.getBytes()
+      // )
+      attachmentDescriptor = AttachmentDescriptor.buildJsonAttachment(payload = presentationAttachment)
       requestPresentation = RequestPresentation(
         body = body,
         attachments = Seq(attachmentDescriptor),

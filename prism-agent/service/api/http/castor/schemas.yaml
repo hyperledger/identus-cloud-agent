@@ -58,7 +58,7 @@ components:
     DIDDocumentMetadata:
       type: object
       required:
-      - deactivated
+        - deactivated
       properties:
         deactivated:
           type: boolean
@@ -99,26 +99,7 @@ components:
             publicKeys:
               type: array
               items:
-                type: object
-                required:
-                  - id
-                  - purpose
-                properties:
-                  id:
-                    type: string
-                    description: Identifier of a verification material in the DID Document
-                    example: key1
-                  purpose:
-                    type: string
-                    enum:
-                      [
-                        "authentication",
-                        "assertionMethod",
-                        "keyAgreement",
-                        "capabilityInvocation",
-                        "capabilityDelegation",
-                      ]
-                    example: "authentication"
+                $ref: "#/components/schemas/ManagedDIDKeyTemplate"
             services:
               type: array
               items:
@@ -134,6 +115,71 @@ components:
           type: string
           description: A long-form DID for the created DID
           example: did:prism:1:abc123:abc123
+
+    UpdateManagedDIDRequest:
+      type: object
+      required:
+        - actions
+      properties:
+        actions:
+          type: array
+          items:
+            type: object
+            description: Detail of DID update action. Only property matching actionType can be present.
+            required:
+              - actionType
+            properties:
+              actionType:
+                type: string
+                enum:
+                  - ADD_KEY
+                  - REMOVE_KEY
+                  - ADD_SERVICE
+                  - REMOVE_SERVICE
+                  - UPDATE_SERVICE
+                example: ADD_KEY
+              addKey:
+                $ref: "#/components/schemas/ManagedDIDKeyTemplate"
+              removeKey:
+                type: object
+                required:
+                  - id
+                properties:
+                  id:
+                    type: string
+                    description: ID of key to remove from DID document
+                    example: key1
+              addService:
+                $ref: "#/components/schemas/Service"
+              removeService:
+                type: object
+                required:
+                  - id
+                properties:
+                  id:
+                    type: string
+                    description: ID of service to remove from DID document
+                    example: service1
+              updateService:
+                type: object
+                description: A patch to existing Service. 'type' and 'serviceEndpoint' must not be both empty.
+                required:
+                  - id
+                properties:
+                  id:
+                    type: string
+                    description: ID of service to remove from DID document
+                    example: service1
+                  type:
+                    type: string
+                    enum:
+                      - MediatorService
+                    example: MediatorService
+                  serviceEndpoint:
+                    type: array
+                    items:
+                      type: string
+                      example: "https://bar.example.com"
 
     ListManagedDIDResponse:
       type: array
@@ -153,67 +199,9 @@ components:
           status:
             type: string
             enum:
-            - CREATED
-            - PUBLICATION_PENDING
-            - PUBLISHED
-
-    Delta:
-      type: object
-      required:
-        - deltaUpdate
-        - recoveryCommitment
-      properties:
-        deltaUpdate:
-          $ref: "#/components/schemas/DeltaUpdate"
-        recoveryCommitment:
-          type: string
-          example: "42d8267c184d06898e80878a1b2f187fbf907c3055560867"
-          description: "SHA256 of recovery public key"
-
-    DeltaUpdate:
-      type: object
-      properties:
-        updateCommitment:
-          type: string
-          example: "42d8267c184d06898e80878a1b2f187fbf907c3055560867"
-        patches:
-          type: array
-          items:
-            $ref: "#/components/schemas/UpdatePatch"
-
-    PublicKey:
-      type: object
-      required:
-        - id
-        - type
-        - controller
-        - purposes
-        - publicKeyJwk
-      properties:
-        id:
-          type: string
-          example: "key-1"
-        type:
-          type: string
-          example: "EcdsaSecp256k1VerificationKey2019"
-        controller:
-          type: string
-          example: "did:prism:456"
-        purposes:
-          type: array
-          items:
-            type: string
-            enum:
-              [
-                "authentication",
-                "assertionMethod",
-                "keyAgreement",
-                "capabilityInvocation",
-                "capabilityDelegation",
-              ]
-          example: [ "authentication", "assertionMethod" ]
-        publicKeyJwk:
-          $ref: "#/components/schemas/PublicKeyJwk"
+              - CREATED
+              - PUBLICATION_PENDING
+              - PUBLISHED
 
     PublicKeyJwk:
       type: object
@@ -257,52 +245,32 @@ components:
             type: string
             example: "https://bar.example.com"
 
-    UpdatePatch:
+    ManagedDIDKeyTemplate:
       type: object
+      description: key-pair template to add to DID document.
       required:
-        - action
+        - id
+        - purpose
       properties:
-        action:
+        id:
+          type: string
+          description: Identifier of a verification material in the DID Document
+          example: key1
+        purpose:
           type: string
           enum:
             [
-              "add-public-keys",
-              "remove-public-keys",
-              "add-services",
-              "remove-services",
-              "ietf-json-patch",
+              "authentication",
+              "assertionMethod",
+              "keyAgreement",
+              "capabilityInvocation",
+              "capabilityDelegation",
             ]
-          example: "add-public-keys"
-        publicKeys:
-          $ref: "#/components/schemas/PublicKey"
+          example: "authentication"
 
     # ----------------------------------
     # ASYNC OPERATIONS
     # ----------------------------------
-    GetDIDOperationsByDIDRefResponse:
-      type: array
-      items:
-        $ref: "#/components/schemas/DidOperation"
-
-    DidOperation:
-      type: object
-      required:
-        - id
-        - didRef
-        - type
-        - status
-      properties:
-        id:
-          type: string
-          example: "123"
-        didRef:
-          type: string
-          example: "did:prism:123"
-        type:
-          $ref: "#/components/schemas/DidOperationType"
-        status:
-          $ref: "#/components/schemas/DidOperationStatus"
-
     DidOperationSubmission:
       type: object
       required:
@@ -315,20 +283,6 @@ components:
         didRef:
           type: string
           example: "did:prism:123"
-
-    DidOperationStatus:
-      type: string
-      enum:
-        - EXECUTED
-        - EXECUTING
-
-    DidOperationType:
-      type: string
-      enum:
-        - CREATE
-        - UPDATE
-        - DEACTIVATE
-        - RECOVER
 
     # ----------------------------------
     # AUTHENTICATION

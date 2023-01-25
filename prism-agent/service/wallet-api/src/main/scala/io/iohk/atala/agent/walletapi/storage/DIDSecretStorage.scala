@@ -16,9 +16,10 @@ trait DIDSecretStorage {
   /** Returns a mapping of key-id to key-pair */
   def listKeys(did: PrismDID): Task[Map[String, ECKeyPair]]
 
+  /** Returns the key of confirmed operation */
   def getKey(did: PrismDID, keyId: String): Task[Option[ECKeyPair]]
 
-  def upsertKey(did: PrismDID, keyId: String, keyPair: ECKeyPair): Task[Int]
+  def insertKey(did: PrismDID, keyId: String, keyPair: ECKeyPair, operationHash: Array[Byte]): Task[Int]
 
   /** Returns the deleted key-pair if exists, otherwise return None */
   def removeKey(did: PrismDID, keyId: String): Task[Int]

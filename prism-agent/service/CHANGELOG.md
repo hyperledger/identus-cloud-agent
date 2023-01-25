@@ -1,3 +1,17 @@
+# [prism-agent-v0.30.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.29.0...prism-agent-v0.30.0) (2023-01-23)
+
+
+### Features
+
+* **prism-agent:** enable update DID operation on prism-agent ([#307](https://github.com/input-output-hk/atala-prism-building-blocks/issues/307)) ([a57365f](https://github.com/input-output-hk/atala-prism-building-blocks/commit/a57365f8c063958e7a41e01fde71653843dafe24))
+
+# [prism-agent-v0.29.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.28.0...prism-agent-v0.29.0) (2023-01-20)
+
+
+### Features
+
+* **prism-agent:** implement DAL for the credential schema. ATL-1334 ([3d0c642](https://github.com/input-output-hk/atala-prism-building-blocks/commit/3d0c6426cc7fddbce41de16a1c85f4242e046c6a))
+
 # [prism-agent-v0.28.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.27.0...prism-agent-v0.28.0) (2023-01-06)
 
 

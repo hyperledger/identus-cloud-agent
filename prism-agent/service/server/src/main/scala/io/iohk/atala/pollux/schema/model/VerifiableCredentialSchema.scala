@@ -47,9 +47,11 @@ object VerifiableCredentialSchema {
   given schema: Schema[VerifiableCredentialSchema] = Schema.derived
 
   case class Filter(
-      author: Option[String],
-      name: Option[String],
-      tags: Option[String]
+      author: Option[String] = None,
+      name: Option[String] = None,
+      version: Option[String] = None,
+      tags: Option[String] = None,
+      attribute: Option[String] = None
   ) {
     def predicate(vcs: VerifiableCredentialSchema): Boolean =
       name.forall(_ == vcs.name) &&
