@@ -26,6 +26,10 @@ object PrismDIDOperation extends ProtoModelHelper {
       extends PrismDIDOperation {
     override def toAtalaOperation: node_models.AtalaOperation = node_models.AtalaOperation(this.toProto)
   }
+
+  final case class Deactivate(did: CanonicalPrismDID, previousOperationHash: ArraySeq[Byte]) extends PrismDIDOperation {
+    override def toAtalaOperation: node_models.AtalaOperation = node_models.AtalaOperation(this.toProto)
+  }
 }
 
 final case class SignedPrismDIDOperation(
