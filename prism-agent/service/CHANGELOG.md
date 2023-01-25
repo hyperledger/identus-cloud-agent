@@ -1,3 +1,10 @@
+# [prism-agent-v0.31.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.30.0...prism-agent-v0.31.0) (2023-01-25)
+
+
+### Features
+
+* **prism-agent:** remove connection deletion enpoint from OAS spec ([#323](https://github.com/input-output-hk/atala-prism-building-blocks/issues/323)) ([cb17acf](https://github.com/input-output-hk/atala-prism-building-blocks/commit/cb17acf782500c0885c077570392423deee9a2f2))
+
 # [prism-agent-v0.30.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.29.0...prism-agent-v0.30.0) (2023-01-23)
 
 
