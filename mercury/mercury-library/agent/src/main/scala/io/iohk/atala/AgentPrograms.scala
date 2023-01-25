@@ -1,22 +1,20 @@
 package io.iohk.atala
 
 import zio._
-import zhttp.service.Client
-import zhttp.http._
 
 import io.circe._
 import io.circe.Json._
 import io.circe.parser._
 import io.circe.JsonObject
-import io.iohk.atala.mercury.{_, given}
+import io.iohk.atala.mercury.{given, _}
 import io.iohk.atala.mercury.model._
 import io.iohk.atala.mercury.protocol.mailbox.Mailbox.ReadMessage
 import io.iohk.atala.mercury.protocol.routing._
 
 def makeMsg(from: Agent, to: Agent) = Message(
-  piuri = "http://atalaprism.io/lets_connect/proposal",
+  `type` = "http://atalaprism.io/lets_connect/proposal",
   from = Some(from.id),
-  to = Some(to.id),
+  to = Seq(to.id),
   body = JsonObject.fromIterable(
     Seq(
       "connectionId" -> Json.fromString("8fb9ea21-d094-4506-86b6-c7c1627d753a"),
@@ -25,13 +23,12 @@ def makeMsg(from: Agent, to: Agent) = Message(
   )
 )
 
-def makeForwardMessage(from: Agent, mediator: Agent, to: Agent, msg: EncryptedMessage) =
+def makeForwardMessage(mediator: Agent, to: Agent, msg: EncryptedMessage) =
   ForwardMessage(
-    from = from.id,
     to = mediator.id,
     expires_time = None,
     body = ForwardBody(next = to.id), // TODO check msg header
-    attachments = Seq(AttachmentDescriptor.buildAttachment(payload = msg.asJson)),
+    attachments = Seq(AttachmentDescriptor.buildJsonAttachment(payload = msg.asJson)),
   )
 
 object AgentPrograms {
@@ -54,16 +51,13 @@ object AgentPrograms {
     _ <- Console.printLine("Sending bytes ...")
     jsonString = encryptedMsg.string
     // HTTP
-    res <- Client.request(
+    httpClient <- ZIO.service[HttpClient]
+    res <- httpClient.postDIDComm(
       url = "http://localhost:8080",
-      method = Method.POST,
-      headers = Headers("content-type" -> MediaTypes.contentTypeEncrypted),
-      content = Body.fromChunk(Chunk.fromArray(jsonString.getBytes)),
-      // ssl = ClientSSLOptions.DefaultSSL,
+      data = jsonString
     )
-    data <- res.body.asString
-    _ <- Console.printLine("Receiving the message ..." + data)
-    messageReceived <- bob.unpack(data)
+    _ <- Console.printLine("Receiving the message ..." + res.bodyAsString)
+    messageReceived <- bob.unpack(res.bodyAsString)
     _ <- Console.printLine("Unpacking and decrypting the received message ...")
     _ <- Console.printLine(
       "\n*********************************************************************************************************************************\n"
@@ -91,7 +85,7 @@ object AgentPrograms {
         + fromJsonObject(encryptedMsg.asJson).spaces2
         + "\n********************************************************************************************************************************\n"
     )
-    forwardMessage = makeForwardMessage(Agent.Alice, Agent.Mediator, Agent.Bob, encryptedMsg).asMessage
+    forwardMessage = makeForwardMessage(Agent.Mediator, Agent.Bob, encryptedMsg).asMessage
 
     encryptedForwardMessage <- alice.packEncrypted(forwardMessage, to = Agent.Mediator.id)
     _ <- Console.printLine("Sending bytes ...")
@@ -101,15 +95,12 @@ object AgentPrograms {
     // HTTP
 
     alice <- ZIO.service[DidComm]
-    res <- Client.request(
+    httpClient <- ZIO.service[HttpClient]
+    res <- httpClient.postDIDComm(
       url = "http://localhost:8080",
-      method = Method.POST,
-      headers = Headers("content-type" -> MediaTypes.contentTypeEncrypted),
-      content = Body.fromChunk(Chunk.fromArray(jsonString.getBytes)),
-      // ssl = ClientSSLOptions.DefaultSSL,
+      data = jsonString
     )
-    data <- res.body.asString
-    _ <- Console.printLine(data)
+    _ <- Console.printLine(res.bodyAsString)
   } yield ()
 
 }

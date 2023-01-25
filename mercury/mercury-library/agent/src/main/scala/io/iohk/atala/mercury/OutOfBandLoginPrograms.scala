@@ -8,9 +8,9 @@ object OutOfBandLoginPrograms {
   def generateLoginInvitation(did: DidId) = {
     val invitation = OutOfBandLoginInvitation(from = did)
     Message(
-      piuri = invitation.`type`,
+      `type` = invitation.`type`,
       from = Some(invitation.from),
-      to = None,
+      to = Seq.empty,
       id = invitation.id,
     )
   }

@@ -52,7 +52,7 @@ object ReportProblem {
       to = ???,
       body = ???,
       id = obj.`@id`.getOrElse(java.util.UUID.randomUUID.toString()),
-      piuri = obj.`@type`,
+      `type` = obj.`@type`,
     )
   }
   def fromMessage(msg: Message): ReportProblem = ??? // TODO FIXME

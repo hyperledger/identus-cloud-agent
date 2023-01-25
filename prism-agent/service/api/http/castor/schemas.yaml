@@ -1,0 +1,398 @@
+components:
+  schemas:
+    DIDResponse:
+      type: object
+      required:
+        - did
+        - metadata
+      properties:
+        did:
+          $ref: "#/components/schemas/DID"
+        metadata:
+          $ref: "#/components/schemas/DIDDocumentMetadata"
+
+    DIDOperationResponse:
+      type: object
+      required:
+        - scheduledOperation
+      properties:
+        scheduledOperation:
+          $ref: "#/components/schemas/DidOperationSubmission"
+
+    DID:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          example: "did:prism:mainnet:123"
+        controller:
+          type: string
+          example: "did:prism:mainnet:456"
+        verificationMethod:
+          type: array
+          items:
+            $ref: "#/components/schemas/VerificationMethod"
+        authentication:
+          type: array
+          items:
+            $ref: "#/components/schemas/VerificationMethod"
+        assertionMethod:
+          type: array
+          items:
+            $ref: "#/components/schemas/VerificationMethod"
+        keyAgreement:
+          type: array
+          items:
+            $ref: "#/components/schemas/VerificationMethod"
+        capabilityInvocation:
+          type: array
+          items:
+            $ref: "#/components/schemas/VerificationMethod"
+        service:
+          type: array
+          items:
+            $ref: "#/components/schemas/Service"
+
+    DIDDocumentMetadata:
+      type: object
+      required:
+        - deactivated
+      properties:
+        deactivated:
+          type: boolean
+          description: If a DID has been deactivated, DID document metadata MUST include this property with the boolean value true. If a DID has not been deactivated, this property is OPTIONAL, but if included, MUST have the boolean value false.
+
+    VerificationMethod:
+      type: object
+      required:
+        - id
+        - type
+        - controller
+        - publicKeyJwk
+      properties:
+        id:
+          type: string
+          example: "did:prism:123#key-1"
+        type:
+          type: string
+          example: "EcdsaSecp256k1VerificationKey2019"
+        controller:
+          type: string
+          example: "did:prism:456"
+        publicKeyJwk:
+          $ref: "#/components/schemas/PublicKeyJwk"
+
+    CreateManagedDidRequest:
+      type: object
+      required:
+        - documentTemplate
+      properties:
+        documentTemplate:
+          type: object
+          required:
+            - storage
+            - publicKeys
+            - services
+          properties:
+            publicKeys:
+              type: array
+              items:
+                $ref: "#/components/schemas/ManagedDIDKeyTemplate"
+            services:
+              type: array
+              items:
+                $ref: "#/components/schemas/Service"
+
+    CreateManagedDIDResponse:
+      type: object
+      required:
+        - did
+        - longFormDid
+      properties:
+        longFormDid:
+          type: string
+          description: A long-form DID for the created DID
+          example: did:prism:1:abc123:abc123
+
+    UpdateManagedDIDRequest:
+      type: object
+      required:
+        - actions
+      properties:
+        actions:
+          type: array
+          items:
+            type: object
+            description: Detail of DID update action. Only property matching actionType can be present.
+            required:
+              - actionType
+            properties:
+              actionType:
+                type: string
+                enum:
+                  - ADD_KEY
+                  - REMOVE_KEY
+                  - ADD_SERVICE
+                  - REMOVE_SERVICE
+                  - UPDATE_SERVICE
+                example: ADD_KEY
+              addKey:
+                $ref: "#/components/schemas/ManagedDIDKeyTemplate"
+              removeKey:
+                type: object
+                required:
+                  - id
+                properties:
+                  id:
+                    type: string
+                    description: ID of key to remove from DID document
+                    example: key1
+              addService:
+                $ref: "#/components/schemas/Service"
+              removeService:
+                type: object
+                required:
+                  - id
+                properties:
+                  id:
+                    type: string
+                    description: ID of service to remove from DID document
+                    example: service1
+              updateService:
+                type: object
+                description: A patch to existing Service. 'type' and 'serviceEndpoint' must not be both empty.
+                required:
+                  - id
+                properties:
+                  id:
+                    type: string
+                    description: ID of service to remove from DID document
+                    example: service1
+                  type:
+                    type: string
+                    enum:
+                      - MediatorService
+                    example: MediatorService
+                  serviceEndpoint:
+                    type: array
+                    items:
+                      type: string
+                      example: "https://bar.example.com"
+
+    ListManagedDIDResponse:
+      type: array
+      items:
+        type: object
+        required:
+          - did
+          - status
+        properties:
+          did:
+            type: string
+            example: did:prism:abc
+          longFormDid:
+            type: string
+            description: A long-form DID. Mandatory when status is not PUBLISHED and optional when status is PUBLISHED
+            example: did:prism:abc:123
+          status:
+            type: string
+            enum:
+              - CREATED
+              - PUBLICATION_PENDING
+              - PUBLISHED
+
+    PublicKeyJwk:
+      type: object
+      required:
+        - kty
+      properties:
+        crv:
+          type: string
+          example: "secp256k1"
+        x:
+          type: string
+          example: "38M1FDts7Oea7urmseiugGW7tWc3mLpJh6rKe7xINZ8"
+        y:
+          type: string
+          example: "nDQW6XZ7b_u2Sy9slofYLlG03sOEoug3I0aAPQ0exs4"
+        kty:
+          type: string
+          example: "EC"
+        kid:
+          type: string
+          example: "_TKzHv2jFIyvdTGF1Dsgwngfdg3SH6TpDv0Ta1aOEkw"
+
+    Service:
+      type: object
+      required:
+        - id
+        - type
+        - serviceEndpoint
+      properties:
+        id:
+          type: string
+          example: "service1"
+        type:
+          type: string
+          enum:
+            - MediatorService
+          example: MediatorService
+        serviceEndpoint:
+          type: array
+          items:
+            type: string
+            example: "https://bar.example.com"
+
+    ManagedDIDKeyTemplate:
+      type: object
+      description: key-pair template to add to DID document.
+      required:
+        - id
+        - purpose
+      properties:
+        id:
+          type: string
+          description: Identifier of a verification material in the DID Document
+          example: key1
+        purpose:
+          type: string
+          enum:
+            [
+              "authentication",
+              "assertionMethod",
+              "keyAgreement",
+              "capabilityInvocation",
+              "capabilityDelegation",
+            ]
+          example: "authentication"
+
+    # ----------------------------------
+    # ASYNC OPERATIONS
+    # ----------------------------------
+    DidOperationSubmission:
+      type: object
+      required:
+        - id
+        - didRef
+      properties:
+        id:
+          type: string
+          example: "123"
+        didRef:
+          type: string
+          example: "did:prism:123"
+
+    # ----------------------------------
+    # AUTHENTICATION
+    # ----------------------------------
+    CreateAuthenticationChallengeRequest:
+      type: object
+      required:
+        - ttl
+      properties:
+        ttl:
+          type: number
+          description: A number of seconds that challenge will be considered valid.
+          example: 900
+        state:
+          type: string
+          description: |
+            An opaque string provided by a relying-party indicating the purpose of
+            this challenge in order to avoid repurposing the challenge submission.
+          example: qrcode#123
+        subject:
+          $ref: "#/components/schemas/AuthenticationChallengeSubject"
+
+    CreateAuthenticationChallengeResponse:
+      type: object
+      required:
+        - challenge
+      properties:
+        challenge:
+          $ref: "#/components/schemas/AuthenticationChallengeJwt"
+        subject:
+          $ref: "#/components/schemas/AuthenticationChallengeSubject"
+
+    AuthenticationChallengeSubmissionRequest:
+      type: object
+      required:
+        - subject
+        - challenge
+        - signature
+      properties:
+        challenge:
+          $ref: "#/components/schemas/AuthenticationChallengeJwt"
+        subject:
+          $ref: "#/components/schemas/AuthenticationChallengeSubject"
+        signature:
+          type: string
+          example: 243b9ed6561ab3...5d497f609b8cd04
+
+    AuthenticationChallengeSubmissionResponse:
+      type: object
+      required:
+        - success
+      properties:
+        success:
+          type: boolean
+          example: true
+        state:
+          type: string
+          description: |
+            An opaque string provided by a relying-party indicating the purpose of
+            this challenge in order to avoid repurposing the challenge submission.
+          example: qrcode#123
+
+    AuthenticationChallengeSubject:
+      description: |
+        A challenged subject that must complete the challenge.
+        May refer to DID or VerificationMethod inside a DID. If VerificationMethod
+        is used, it must be inside the authentication verification relationship.
+      type: string
+      example: "did:example:123456789abcdefghi"
+
+    AuthenticationChallengeJwt:
+      type: string
+      description: |
+        A JWT challenge that a user must provide to Castor SDK to create a ChallengeSubmission.
+        JWT payload contains nonce, state, expiration, issuer
+      example: eyJhbGciOiJIUzI1NiIsInR5c...0eu8Ri_WSPSsBTlCes2YMpuB1mHU
+
+    ErrorResponse:
+      type: object
+      description: An RFC-7807 compliant data structure for reporting errors to the client
+      required:
+        - type
+        - title
+        - status
+        - instance
+      properties:
+        type:
+          type: string
+          description: A URI reference that identifies the problem type.
+          example: https://example.org/doc/#model-MalformedEmail
+        title:
+          type: string
+          example: "Malformed email"
+          description: |-
+            A short, human-readable summary of the problem type. It does not
+            change from occurrence to occurrence of the problem.
+        status:
+          type: integer
+          format: int32
+          example: 400
+          description: |-
+            The HTTP status code for this occurrence of the problem.
+        detail:
+          type: string
+          description: |-
+            A human-readable explanation specific to this occurrence of the problem.
+          example: "The received '{}à!è@!.b}' email does not conform to the email format"
+        instance:
+          type: string
+          example: "/problems/d914e"
+          description: |-
+            A URI reference that identifies the specific occurrence of the problem.
+            It may or may not yield further information if dereferenced.

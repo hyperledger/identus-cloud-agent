@@ -13,6 +13,10 @@ import io.iohk.atala.iris.sql.repository.*
 import zio.*
 import zio.interop.catz.*
 import zio.stream.ZStream
+import com.typesafe.config.ConfigFactory
+import io.iohk.atala.iris.server.config.AppConfig
+import zio.config.typesafe.TypesafeConfigSource
+import zio.config.{ReadError, read}
 
 object Modules {
   val app: Task[Unit] = {
@@ -29,6 +33,16 @@ object Modules {
 object AppModule {
   val publishingServiceLayer: ULayer[PublishingService] = MockPublishingService.layer
   val publishingSchedulerLayer: ULayer[PublishingScheduler] = MockPublishingScheduler.layer
+
+  val configLayer: Layer[ReadError[String], AppConfig] = ZLayer.fromZIO {
+    read(
+      AppConfig.descriptor.from(
+        TypesafeConfigSource.fromTypesafeConfig(
+          ZIO.attempt(ConfigFactory.load())
+        )
+      )
+    )
+  }
 }
 
 object GrpcModule {
@@ -58,19 +72,23 @@ object BlockchainModule {
 }
 
 object RepoModule {
-  val transactorLayer: TaskLayer[Transactor[Task]] =
-    ZLayer.fromZIO {
-      Dispatcher[Task].allocated.map { case (dispatcher, _) =>
-        given Dispatcher[Task] = dispatcher
-        TransactorLayer.hikari[Task](
-          TransactorLayer.DbConfig(
-            username = "postgres",
-            password = "postgres",
-            jdbcUrl = "jdbc:postgresql://localhost:5432/iris"
+  val transactorLayer: TaskLayer[Transactor[Task]] = {
+    val layerWithConfig = ZLayer.fromZIO {
+      ZIO.service[AppConfig].map(_.iris.database).flatMap { config =>
+        Dispatcher[Task].allocated.map { case (dispatcher, _) =>
+          given Dispatcher[Task] = dispatcher
+          TransactorLayer.hikari[Task](
+            TransactorLayer.DbConfig(
+              username = config.username,
+              password = config.password,
+              jdbcUrl = s"jdbc:postgresql://${config.host}:${config.port}/${config.databaseName}"
+            )
           )
-        )
+        }
       }
     }.flatten
+    AppModule.configLayer >>> layerWithConfig
+  }
 
   val dbRepositoryTransactor: TaskLayer[JdbcDbRepositoryTransactorIO] =
     transactorLayer >>> JdbcDbRepositoryTransactorIO.layer

@@ -7,7 +7,6 @@ import io.circe.parser.*
 import io.circe.syntax.*
 import io.iohk.atala.mercury.model.AttachmentDescriptor.attachmentDescriptorEncoderV2
 import io.iohk.atala.mercury.model.{AttachmentDescriptor, DidId}
-import io.iohk.atala.mercury.protocol.issuecredential.*
 import munit.*
 import zio.*
 import io.iohk.atala.mercury.model._
@@ -19,7 +18,7 @@ class RequestCredentialSpec extends ZSuite {
     val attribute2 = Attribute(name = "dob", value = "01/10/1947")
     val credentialPreview = CredentialPreview(attributes = Seq(attribute1, attribute2))
     val body = RequestCredential.Body(goal_code = Some("Request Credential"))
-    val attachmentDescriptor = AttachmentDescriptor.buildAttachment[CredentialPreview](payload = credentialPreview)
+    val attachmentDescriptor = AttachmentDescriptor.buildJsonAttachment[CredentialPreview](payload = credentialPreview)
     val attachmentDescriptorJson = attachmentDescriptor.asJson.deepDropNullValues.noSpaces
 
     val expectedRequestedCredentialJson = parse(s"""{

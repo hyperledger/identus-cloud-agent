@@ -16,33 +16,51 @@ final case class RequestCredential(
     thid: Option[String] = None,
     from: DidId,
     to: DidId,
-) {
+) extends ReadAttachmentsUtils {
 
   def makeMessage: Message = Message(
     id = this.id,
-    piuri = this.`type`,
+    `type` = this.`type`,
     from = Some(this.from),
-    to = Some(this.to),
+    to = Seq(this.to),
     thid = this.thid,
     body = this.body.asJson.asObject.get, // TODO get
-    attachments = this.attachments,
+    attachments = Some(this.attachments),
   )
 }
 object RequestCredential {
 
   import AttachmentDescriptor.attachmentDescriptorEncoderV2
-
   given Encoder[RequestCredential] = deriveEncoder[RequestCredential]
-
   given Decoder[RequestCredential] = deriveDecoder[RequestCredential]
 
   def `type`: PIURI = "https://didcomm.org/issue-credential/2.0/request-credential"
+
+  def build(
+      fromDID: DidId,
+      toDID: DidId,
+      thid: Option[String] = None,
+      credentials: Map[String, Array[Byte]] = Map.empty,
+  ): RequestCredential = {
+    val aux = credentials.map { case (formatName, singleCredential) =>
+      val attachment = AttachmentDescriptor.buildBase64Attachment(payload = singleCredential)
+      val credentialFormat: CredentialFormat = CredentialFormat(attachment.id, formatName)
+      (credentialFormat, attachment)
+    }
+    RequestCredential(
+      thid = thid,
+      from = fromDID,
+      to = toDID,
+      body = Body(formats = aux.keys.toSeq),
+      attachments = aux.values.toSeq
+    )
+  }
 
   final case class Body(
       goal_code: Option[String] = None,
       comment: Option[String] = None,
       formats: Seq[CredentialFormat] = Seq.empty[CredentialFormat]
-  )
+  ) extends BodyUtils
 
   object Body {
     given Encoder[Body] = deriveEncoder[Body]
@@ -50,18 +68,18 @@ object RequestCredential {
   }
 
   def makeRequestCredentialFromOffer(msg: Message): RequestCredential = { // TODO change msg: Message to RequestCredential
-    val pc: OfferCredential = OfferCredential.readFromMessage(msg)
+    val oc: OfferCredential = OfferCredential.readFromMessage(msg)
 
     RequestCredential(
       body = RequestCredential.Body(
-        goal_code = pc.body.goal_code,
-        comment = pc.body.comment,
-        formats = pc.body.formats,
+        goal_code = oc.body.goal_code,
+        comment = oc.body.comment,
+        formats = oc.body.formats,
       ),
-      attachments = pc.attachments,
-      thid = Some(msg.id),
-      from = msg.to.get, // TODO get
-      to = msg.from.get, // TODO get
+      attachments = oc.attachments,
+      thid = msg.thid.orElse(Some(oc.id)),
+      from = oc.to,
+      to = oc.from,
     )
   }
 
@@ -72,10 +90,13 @@ object RequestCredential {
       id = message.id,
       `type` = message.piuri,
       body = body,
-      attachments = message.attachments,
+      attachments = message.attachments.getOrElse(Seq.empty),
       thid = message.thid,
       from = message.from.get, // TODO get
-      to = message.to.get, // TODO get
+      to = {
+        assert(message.to.length == 1, "The recipient is ambiguous. Need to have only 1 recipient") // TODO return error
+        message.to.head
+      },
     )
 
 }

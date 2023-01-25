@@ -1,67 +1,68 @@
 package io.iohk.atala.castor.core.model.did
 
-import io.iohk.atala.shared.models.HexStrings.HexString
+import com.google.protobuf.ByteString
+import io.iohk.atala.prism.crypto.{Sha256, Sha256Digest}
+import io.iohk.atala.prism.protos.node_models
+import io.iohk.atala.shared.models.Base64UrlStrings.*
+import io.iohk.atala.shared.models.HexStrings.*
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
 
 object PrismDIDSpec extends ZIOSpecDefault {
 
-  override def spec = suite("PrismDID")(prismDIDV1Suite, longFormPrismDIDV1Suite) @@ TestAspect.samples(20)
+  private val canonicalSuffixHex = "9b5118411248d9663b6ab15128fba8106511230ff654e7514cdcc4ce919bde9b"
+  private val canonicalSuffix = Sha256Digest.fromHex(canonicalSuffixHex)
+  private val encodedStateUsedBase64 =
+    "Cj8KPRI7CgdtYXN0ZXIwEAFKLgoJc2VjcDI1NmsxEiEDHpf-yhIns-LP3tLvA8icC5FJ1ZlBwbllPtIdNZ3q0jU"
 
-  private val createOpDummy = PublishedDIDOperation.Create(
-    updateCommitment = HexString.fromStringUnsafe("00"),
-    recoveryCommitment = HexString.fromStringUnsafe("00"),
-    storage = DIDStorage.Cardano("testnet"),
-    document = DIDDocument(
-      publicKeys = Nil,
-      services = Nil
+  private val short = PrismDID.buildCanonical(canonicalSuffix.getValue).toOption.get
+  private val long = PrismDID
+    .buildLongFormFromAtalaOperation(
+      node_models.AtalaOperation.parseFrom(Base64UrlString.fromStringUnsafe(encodedStateUsedBase64).toByteArray)
     )
-  )
+    .toOption
+    .get
+  override def spec = suite("PrismDID")(didParserSpec)
 
-  private val prismDIDV1Suite =
-    suite("PrismDIDV1")(
-      test("render correct DID syntax") {
-        val prismDID = PrismDIDV1.fromCreateOperation(createOpDummy)
-        assert(prismDID.toString)(
-          equalTo("did:prism:1:testnet:3511ffa95ef4f0d9b289329dd2a2276c4ecd9034ab2d79ec72abaef950bfe553")
-        )
-      },
-      test("DID syntax is the same when converted to standard DID") {
-        val ledgerNameGen = Gen.stringN(8)(Gen.asciiChar)
-        check(ledgerNameGen) { ledgerName =>
-          val op = createOpDummy.copy(storage = DIDStorage.Cardano(ledgerName))
-          val prismDID = PrismDIDV1.fromCreateOperation(op)
-          assert(prismDID.toString)(equalTo(prismDID.did.toString))
-        }
-      }
-    )
-
-  private val longFormPrismDIDV1Suite =
-    suite("LongFormPrismDIDV1")(
-      test("render correct DID syntax") {
-        val longFormPrismDID = LongFormPrismDIDV1.fromCreateOperation(createOpDummy)
-        assert(longFormPrismDID.toString)(
-          equalTo(
-            "did:prism:1:testnet:3511ffa95ef4f0d9b289329dd2a2276c4ecd9034ab2d79ec72abaef950bfe553:CgEAEgEAGgd0ZXN0bmV0IgA="
+  private val didParserSpec = suite("PrismDID.fromString")(
+    test("success for valid DID") {
+      val stateHash = Sha256.compute(Array()).getValue
+      val validDID = PrismDID.buildCanonical(stateHash).toOption.get
+      val unsafeDID = PrismDID.fromString(validDID.toString)
+      assert(unsafeDID)(isRight(equalTo(validDID)))
+    },
+    test("success for long form string") {
+      val longAsString = long.toString
+      val unsafeDID = PrismDID.fromString(longAsString)
+      assert(unsafeDID)(isRight(equalTo(long)))
+    },
+    test("success for canonical form string") {
+      val canonicalAsString = short.toString
+      val unsafeDID = PrismDID.fromString(canonicalAsString)
+      assert(unsafeDID)(isRight(equalTo(short)))
+    },
+    test("fail for invalid DID") {
+      val unsafeDID = PrismDID.fromString("invalid-did")
+      assert(unsafeDID)(isLeft)
+    },
+    test("fail for long form initial state is not CreateDID") {
+      val mockAtalaOperation = node_models.AtalaOperation(
+        node_models.AtalaOperation.Operation.UpdateDid(
+          node_models.UpdateDIDOperation(
+            previousOperationHash = ByteString.EMPTY,
+            id = "update0",
+            actions = Nil
           )
         )
-      },
-      test("convert to canonical PrismDIDV1") {
-        val longFormPrismDID = LongFormPrismDIDV1.fromCreateOperation(createOpDummy)
-        val prismDID = longFormPrismDID.toCanonical
-        assert(prismDID.toString)(
-          equalTo("did:prism:1:testnet:3511ffa95ef4f0d9b289329dd2a2276c4ecd9034ab2d79ec72abaef950bfe553")
-        )
-      },
-      test("DID syntax is the same when converted to standard DID") {
-        val ledgerNameGen = Gen.stringN(8)(Gen.asciiChar)
-        check(ledgerNameGen) { ledgerName =>
-          val op = createOpDummy.copy(storage = DIDStorage.Cardano(ledgerName))
-          val longFormPrismDID = LongFormPrismDIDV1.fromCreateOperation(op)
-          assert(longFormPrismDID.toString)(equalTo(longFormPrismDID.did.toString))
-        }
-      }
-    )
+      )
+      val encodedState = mockAtalaOperation.toByteArray
+      val encodedStateBase64 = Base64UrlString.fromByteArray(encodedState).toStringNoPadding
+      val stateHash = Sha256.compute(encodedState).getHexValue
+      val didString = s"did:prism:$stateHash:$encodedStateBase64"
+      val unsafeDID = PrismDID.fromString(didString)
+      assert(unsafeDID)(isLeft(containsString("CreateDid Atala operation expected")))
+    }
+  )
 
 }

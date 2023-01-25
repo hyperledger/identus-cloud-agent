@@ -1,0 +1,133 @@
+openapi: 3.0.3
+info:
+  title: Mailbox Mediator API
+  description: OpenAPI for the Mailbox Mediator
+  version: 0.1.0
+  contact:
+    name: Core DID
+    email: atala-coredid@iohk.io
+
+servers:
+  - url: "https://k8s-dev.atalaprism.io/mediator/"
+  - url: "http://localhost/mediator/"
+
+tags:
+  - name: Mailbox Mediator
+    description: OpenAPI for the Mailbox Mediator
+
+paths:
+  /:
+    post:
+      tags:
+        - Mailbox Mediator
+      operationId: postMessage
+      summary: DID Comm
+      description: Mediator accepts DID Comm message
+      requestBody:
+        description: DID Comm Message
+        content:
+          application/didcomm-encrypted+json:
+            schema:
+              $ref: "#/components/schemas/EncryptedMessage"
+          application/didcomm-signed+json:
+            schema:
+              $ref: "#/components/schemas/SignedMessage"
+        required: true
+      responses:
+        "202":
+          description: Acknowledge that the message has been received (by mediator)
+          content:
+            application/didcomm-encrypted+json:
+              schema:
+                $ref: "#/components/schemas/EncryptedMessage"
+            application/didcomm-signed+json:
+              schema:
+                $ref: "#/components/schemas/SignedMessage"
+        "405":
+          description: Invalid input
+security:
+  - ApiKeyAuth: []
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: apikey
+  schemas:
+    EncryptedMessage:
+      type: object
+      properties:
+        ciphertext:
+          type: string
+          format: Base64URL
+          example: "KWS7gJU7TbyJlcT9dPkCw-ohNigGaHSukR9MUqFM0THbCTCNkY-g5tahBFyszlKIKXs7qOtqzYyWbPou2q77XlAeYs93IhF6NvaIjyNqYklvj-OtJt9W2Pj5CLOMdsR0C30wchGoXd6wEQZY4ttbzpxYznqPmJ0b9KW6ZP-l4_DSRYe9B-1oSWMNmqMPwluKbtguC-riy356Xbu2C9ShfWmpmjz1HyJWQhZfczuwkWWlE63g26FMskIZZd_jGpEhPFHKUXCFwbuiw_Iy3R0BIzmXXdK_w7PZMMPbaxssl2UeJmLQgCAP8j8TukxV96EKa6rGgULvlo7qibjJqsS5j03bnbxkuxwbfyu3OxwgVzFWlyHbUH6p"
+        protected:
+          type: string
+          format: Base64URL
+          example: "eyJlcGsiOnsia3R5IjoiT0tQIiwiY3J2IjoiWDI1NTE5IiwieCI6IkpIanNtSVJaQWFCMHpSR193TlhMVjJyUGdnRjAwaGRIYlc1cmo4ZzBJMjQifSwiYXB2IjoiTmNzdUFuclJmUEs2OUEtcmtaMEw5WFdVRzRqTXZOQzNaZzc0QlB6NTNQQSIsInR5cCI6ImFwcGxpY2F0aW9uL2RpZGNvbW0tZW5jcnlwdGVkK2pzb24iLCJlbmMiOiJYQzIwUCIsImFsZyI6IkVDREgtRVMrQTI1NktXIn0"
+        recipients:
+          type: array
+          items:
+            $ref: "#/components/schemas/Recipient"
+          example:
+            - encrypted_key: "3n1olyBR3nY7ZGAprOx-b7wYAKza6cvOYjNwVg3miTnbLwPP_FmE1A"
+              header:
+                kid: "did:example:bob#key-x25519-1"
+            - encrypted_key: "j5eSzn3kCrIkhQAWPnEwrFPMW6hG0zF_y37gUvvc5gvlzsuNX4hXrQ"
+              header:
+                kid: "did:example:bob#key-x25519-2"
+            - encrypted_key: "TEWlqlq-ao7Lbynf0oZYhxs7ZB39SUWBCK4qjqQqfeItfwmNyDm73A"
+              header:
+                kid: "did:example:bob#key-x25519-3"
+        tag:
+          type: string
+          format: Base64URL
+          example: "6ylC_iAs4JvDQzXeY6MuYQ"
+        iv:
+          type: string
+          format: Base64URL
+          example: "ESpmcyGiZpRjc5urDela21TOOTW8Wqd1"
+
+    Recipient:
+      type: object
+      properties:
+        encrypted_key:
+          type: string
+          format: Base64URL
+          example: "3n1olyBR3nY7ZGAprOx-b7wYAKza6cvOYjNwVg3miTnbLwPP_FmE1A"
+        header:
+          $ref: "#/components/schemas/Header"
+      example:
+        encrypted_key: "3n1olyBR3nY7ZGAprOx-b7wYAKza6cvOYjNwVg3miTnbLwPP_FmE1A"
+        header:
+          kid: "did:example:bob#key-x25519-1"
+
+    Header:
+      type: object
+      properties:
+        kid:
+          type: string
+          example: did:example:bob#key-x25519-1
+
+    SignedMessage:
+      type: object
+      properties:
+        payload:
+          type: string
+          example: "eyJpZCI6IjEyMzQ1Njc4OTAiLCJ0eXAiOiJhcHBsaWNhdGlvbi9kaWRjb21tLXBsYWluK2pzb24iLCJ0eXBlIjoiaHR0cDovL2V4YW1wbGUuY29tL3Byb3RvY29scy9sZXRzX2RvX2x1bmNoLzEuMC9wcm9wb3NhbCIsImZyb20iOiJkaWQ6ZXhhbXBsZTphbGljZSIsInRvIjpbImRpZDpleGFtcGxlOmJvYiJdLCJjcmVhdGVkX3RpbWUiOjE1MTYyNjkwMjIsImV4cGlyZXNfdGltZSI6MTUxNjM4NTkzMSwiYm9keSI6eyJtZXNzYWdlc3BlY2lmaWNhdHRyaWJ1dGUiOiJhbmQgaXRzIHZhbHVlIn19"
+          format: Base64URL
+        signatures:
+          $ref: "#/components/schemas/JWMSignature"
+
+    JWMSignature:
+      type: object
+      properties:
+        protected:
+          type: string
+          format: Base64URL
+          example: "eyJ0eXAiOiJhcHBsaWNhdGlvbi9kaWRjb21tLXNpZ25lZCtqc29uIiwiYWxnIjoiRWREU0EifQ"
+        signature:
+          type: string
+          example: "FW33NnvOHV0Ted9-F7GZbkia-vYAfBKtH4oBxbrttWAhBZ6UFJMxcGjL3lwOl4YohI3kyyd08LHPWNMgP2EVCQ"
+        header:
+          $ref: "#/components/schemas/Header"

@@ -1,14 +1,30 @@
 package io.iohk.atala.castor.core.model.did
 
-sealed abstract class PublicKey {
-  val id: String
-  val purposes: Seq[VerificationRelationship]
+import io.iohk.atala.shared.models.Base64UrlStrings.Base64UrlString
+
+final case class PublicKey(
+    id: String,
+    purpose: VerificationRelationship,
+    publicKeyData: PublicKeyData
+)
+
+enum InternalKeyPurpose {
+  case Master extends InternalKeyPurpose
+  case Revocation extends InternalKeyPurpose
 }
 
-object PublicKey {
-  final case class JsonWebKey2020(
-      id: String,
-      purposes: Seq[VerificationRelationship],
-      publicKeyJwk: PublicKeyJwk
-  ) extends PublicKey
+final case class InternalPublicKey(
+    id: String,
+    purpose: InternalKeyPurpose,
+    publicKeyData: PublicKeyData
+)
+
+sealed trait PublicKeyData
+
+object PublicKeyData {
+  final case class ECKeyData(
+      crv: EllipticCurve,
+      x: Base64UrlString,
+      y: Base64UrlString
+  ) extends PublicKeyData
 }

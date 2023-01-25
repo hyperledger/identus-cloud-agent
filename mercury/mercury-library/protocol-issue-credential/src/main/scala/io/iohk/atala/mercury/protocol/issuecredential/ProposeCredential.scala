@@ -22,23 +22,45 @@ final case class ProposeCredential(
     body: ProposeCredential.Body,
     attachments: Seq[AttachmentDescriptor] = Seq.empty[AttachmentDescriptor],
     // extra
+    thid: Option[String] = None,
     from: DidId,
     to: DidId,
-) {
+) extends ReadAttachmentsUtils {
   assert(`type` == ProposeCredential.`type`)
 
   def makeMessage: Message = Message(
-    piuri = this.`type`,
+    `type` = this.`type`,
     from = Some(this.from),
-    to = Some(this.to),
+    to = Seq(this.to),
     body = this.body.asJson.asObject.get, // TODO get
-    attachments = this.attachments
+    attachments = Some(this.attachments)
   )
 }
 
 object ProposeCredential {
   // TODD will this be version RCF Issue Credential 2.0  as we use didcomm2 message format
   def `type`: PIURI = "https://didcomm.org/issue-credential/2.0/propose-credential"
+
+  def build(
+      fromDID: DidId,
+      toDID: DidId,
+      thid: Option[String] = None,
+      credential_preview: CredentialPreview,
+      credentials: Map[String, Array[Byte]] = Map.empty,
+  ): ProposeCredential = {
+    val aux = credentials.map { case (formatName, singleCredential) =>
+      val attachment = AttachmentDescriptor.buildBase64Attachment(payload = singleCredential)
+      val credentialFormat: CredentialFormat = CredentialFormat(attachment.id, formatName)
+      (credentialFormat, attachment)
+    }
+    ProposeCredential(
+      thid = thid,
+      from = fromDID,
+      to = toDID,
+      body = Body(credential_preview = credential_preview, formats = aux.keys.toSeq),
+      attachments = aux.values.toSeq
+    )
+  }
 
   import AttachmentDescriptor.attachmentDescriptorEncoderV2
   given Encoder[ProposeCredential] = deriveEncoder[ProposeCredential]
@@ -54,7 +76,7 @@ object ProposeCredential {
       comment: Option[String] = None,
       credential_preview: CredentialPreview, // JSON STRinf
       formats: Seq[CredentialFormat] = Seq.empty[CredentialFormat]
-  )
+  ) extends BodyUtils
 
   object Body {
     given Encoder[Body] = deriveEncoder[Body]
@@ -68,9 +90,12 @@ object ProposeCredential {
       id = message.id,
       `type` = message.piuri,
       body = body,
-      attachments = message.attachments,
+      attachments = message.attachments.getOrElse(Seq.empty),
       from = message.from.get, // TODO get
-      to = message.to.get, // TODO get
+      to = {
+        assert(message.to.length == 1, "The recipient is ambiguous. Need to have only 1 recipient") // TODO return error
+        message.to.head
+      },
     )
   }
 

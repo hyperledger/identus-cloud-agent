@@ -1,0 +1,77 @@
+name: Scala build and unit tests
+
+on:
+  workflow_call:
+    inputs:
+      component-name:
+        required: true
+        type: string
+      component-dir:
+        required: true
+        type: string
+
+jobs:
+  build-and-unit-tests:
+    name: "Build and unit tests for ${{ inputs.component-name }}"
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
+      ATALA_GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
+      SBT_PACKAGER: "enable"
+      SBT_SCOVERAGE: "enable"
+    defaults:
+      run:
+        working-directory: ${{ inputs.component-dir }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Java and Scala
+        uses: olafurpg/setup-scala@v13
+        with:
+          java-version: openjdk@1.11
+
+      - name: Cache sbt
+        uses: coursier/cache-action@v6.3
+
+      - name: Run Scala formatter
+        run: sbt scalafmtCheckAll
+
+      - name: Run Unit Tests
+        run: |
+          if [[ ${{ inputs.component-dir }} == mercury/mercury-library ]]; then
+            SBT_SCOVERAGE=enable sbt clean coverage test coverageAggregate
+          else
+            sbt test
+          fi
+
+      - name: Aggregate test reports
+        if: always()
+        uses: ./.github/actions/aggregate-test-reports
+        with:
+          tests-dir: ${{ inputs.component-dir }}
+
+      - name: Publish test results
+        # Publish even if the previous test step fails
+        if: always()
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          junit_files: "${{ inputs.component-dir }}/target/test-reports/**/TEST-*.xml"
+          comment_title: "${{ inputs.component-name }} Test Results"
+          check_name: "${{ inputs.component-name }} Test Results"
+
+      - name: Code coverage report
+        if: inputs.component-dir == 'mercury/mercury-library'
+        uses: 5monkeys/cobertura-action@master
+        with:
+          path: "${{ inputs.component-dir }}/target/coverage/coverage-report/cobertura.xml"
+          report_name: "${{ inputs.component-name }} Code Coverage"
+          minimum_coverage: 10
+          fail_below_threshold: false
+
+      - name: Artifact coverage HTML
+        uses: actions/upload-artifact@v2
+        if: inputs.component-dir == 'mercury/mercury-library'
+        with:
+          name: code-coverage-report-mercury
+          path: "${{ inputs.component-dir }}/target/coverage/scoverage-report"

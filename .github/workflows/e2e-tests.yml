@@ -1,0 +1,155 @@
+name: End-to-end tests
+
+concurrency:
+  group: ${{ github.head_ref }}${{ github.ref }}-e2e-tests
+  cancel-in-progress: true
+
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  pull_request:
+    paths:
+      - ".github/workflows/e2e-tests.yml"
+      - "tests/e2e-tests/**"
+  push:
+    branches:
+      - "main"
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+    working-directory: "tests/e2e-tests"
+
+jobs:
+  run-e2e-tests:
+    name: "Run e2e tests"
+    runs-on: ubuntu-latest
+    env:
+      REPORTS_DIR: "tests/e2e-tests/target/site/serenity"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Java and Scala
+        uses: olafurpg/setup-scala@v13
+        with:
+          java-version: openjdk@1.11
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+
+      - name: Install Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ secrets.ATALA_GITHUB_ACTOR }}
+          password: ${{ secrets.ATALA_GITHUB_TOKEN }}
+
+      - name: Install Compose
+        uses: ndeloof/install-compose-action@v0.0.1
+        with:
+          version: v2.12.2 # defaults to 'latest'
+          legacy: true    # will also install in PATH as `docker-compose`
+
+      - name: Start services for issuer
+        env:
+          PORT: 8080
+        uses: isbang/compose-action@v1.4.1
+        with:
+          compose-file: "./infrastructure/shared/docker-compose.yml"
+          compose-flags: "--env-file ./infrastructure/local/.env -p issuer"
+          up-flags: "--wait"
+          down-flags: "--volumes"
+
+      - name: Start services for holder
+        env:
+          PORT: 8090
+        uses: isbang/compose-action@v1.4.1
+        with:
+          compose-file: "./infrastructure/shared/docker-compose.yml"
+          compose-flags: "--env-file ./infrastructure/local/.env -p holder"
+          up-flags: "--wait"
+          down-flags: "--volumes"
+
+      - name: Start services for verifier
+        env:
+          PORT: 8070
+        uses: isbang/compose-action@v1.4.1
+        with:
+          compose-file: "./infrastructure/shared/docker-compose.yml"
+          compose-flags: "--env-file ./infrastructure/local/.env -p verifier"
+          up-flags: "--wait"
+          down-flags: "--volumes"
+
+      - name: Run e2e tests
+        continue-on-error: true
+        env:
+          ATALA_GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
+        run: |
+          ./gradlew test --tests "E2eTestsRunner" || true
+          ./gradlew reports
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: e2e-tests-result
+          path: ${{ env.REPORTS_DIR }}
+
+      - name: Publish e2e test Results
+        if: always()
+        id: publish-unit-tests
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          junit_files: "${{ env.REPORTS_DIR }}/SERENITY-JUNIT-*.xml"
+          comment_title: "E2E Test Results"
+          check_name: "E2E Test Results"
+
+      - name: Extract test results
+        id: analyze_test_results
+        if: github.ref_name == 'master'
+        run: |
+          JSON_RESULTS="target/site/serenity/serenity-summary.json"
+          CONCLUSION=failure
+          TOTAL_TESTS=0
+          FAILED_TESTS=0
+          SKIPPED_TESTS=0
+          TESTS_WITH_ERRORS=0
+          if [ -f "${JSON_RESULTS}" ]; then
+            TOTAL_TESTS="$(cat ${JSON_RESULTS} | jq '.results.counts.total')"
+            SUCCESS_TESTS="$(cat ${JSON_RESULTS} | jq '.results.counts.success')"
+            PENDING_TESTS="$(cat ${JSON_RESULTS} | jq '.results.counts.pending')"
+            SKIPPED_TESTS="$(cat ${JSON_RESULTS} | jq '.results.counts.skipped')"
+            IGNORED_TESTS="$(cat ${JSON_RESULTS} | jq '.results.counts.ignored')"
+            FAILED_TESTS="$(cat ${JSON_RESULTS} | jq '.results.counts.failure')"
+            TESTS_WITH_ERRORS="$(cat ${JSON_RESULTS} | jq '.results.counts.error')"
+            if [[ ${FAILED_TESTS} == 0 && ${TESTS_WITH_ERRORS} == 0 ]] ; then
+              CONCLUSION=success
+            fi
+          fi
+          echo "conclusion=${CONCLUSION}" >> $GITHUB_OUTPUT
+          echo "tests=${TOTAL_TESTS}" >> $GITHUB_OUTPUT
+          echo "failures=${FAILED_TESTS}" >> $GITHUB_OUTPUT
+          echo "errors=${TESTS_WITH_ERRORS}" >> $GITHUB_OUTPUT
+          echo "pending=${PENDING_TESTS}" >> $GITHUB_OUTPUT
+          echo "skipped=${SKIPPED_TESTS}" >> $GITHUB_OUTPUT
+          echo "ignored=${IGNORED_TESTS}" >> $GITHUB_OUTPUT
+
+      - name: Slack Notification
+        if: github.ref_name == 'master'
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_CHANNEL: atala-qa-results
+          SLACK_COLOR: ${{ steps.analyze_test_results.outputs.conclusion }}
+          SLACK_MESSAGE: |
+            Total: ${{ steps.analyze_test_results.outputs.tests }}
+            Failed: ${{ steps.analyze_test_results.outputs.failures }}
+            Errors in tests: ${{ steps.analyze_test_results.outputs.errors }}
+            Skipped (known bugs): ${{ steps.analyze_test_results.outputs.skipped }}
+          SLACK_TITLE: "Atala PRISM V2 E2E tests: ${{ steps.analyze_test_results.outputs.conclusion }}"
+          SLACK_USERNAME: circleci
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}

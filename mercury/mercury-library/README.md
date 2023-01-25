@@ -48,6 +48,7 @@ flowchart BT
       alice
       bob
       mediator
+      agent-cli-didcommx
     end
 
     resolver --> models
@@ -75,9 +76,13 @@ flowchart BT
     agent-didcommx --> agent
     agent-didcommx -.-> didcommx
 
+    agent-cli-didcommx -.-> http
+    agent-cli-didcommx --> agent-didcommx
+
     agent-didscala --> agent
     agent-didscala -.-> did-scala
   end
+
 
 
 

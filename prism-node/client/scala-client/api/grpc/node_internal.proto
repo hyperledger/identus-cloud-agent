@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "io.iohk.atala.prism.protos";
+
+import "node_models.proto";
+
+package io.iohk.atala.prism.protos;
+
+/**
+ * Represent a block that holds operations.
+ * @exclude Intended for internal usage inside. Not publicly accessible from gRPC.
+ */
+message AtalaBlock {
+  reserved 1; // Represents the version of the block. Deprecated
+  repeated SignedAtalaOperation operations = 2; // A signed operation, necessary to post anything on the blockchain.
+}
+
+/**
+ * Wraps an AtalaBlock and its metadata.
+ * @exclude Intended for internal usage inside. Not publicly accessible from gRPC.
+ */
+message AtalaObject {
+  reserved 1; // Removed block_hash field.
+  reserved "block_hash";
+
+  int32 block_operation_count = 2; // Number of operations in the block.
+  int32 block_byte_length = 3; // Byte length of the block.
+  AtalaBlock block_content = 4; // The block content.
+}

@@ -24,37 +24,54 @@ final case class IssueCredential(
     thid: Option[String] = None,
     from: DidId,
     to: DidId,
-) {
+) extends ReadAttachmentsUtils {
   assert(`type` == IssueCredential.`type`)
 
   def makeMessage: Message = Message(
     id = this.id,
-    piuri = this.`type`,
+    `type` = this.`type`,
     from = Some(this.from),
-    to = Some(this.to),
+    to = Seq(this.to),
     thid = this.thid,
     body = this.body.asJson.asObject.get,
-    attachments = this.attachments,
+    attachments = Some(this.attachments),
   )
 }
 
 object IssueCredential {
 
   import AttachmentDescriptor.attachmentDescriptorEncoderV2
-
   given Encoder[IssueCredential] = deriveEncoder[IssueCredential]
-
   given Decoder[IssueCredential] = deriveDecoder[IssueCredential]
 
   def `type`: PIURI = "https://didcomm.org/issue-credential/2.0/issue-credential"
 
+  def build(
+      fromDID: DidId,
+      toDID: DidId,
+      thid: Option[String] = None,
+      credentials: Map[String, Array[Byte]],
+  ): IssueCredential = {
+    val aux = credentials.map { case (formatName, singleCredential) =>
+      val attachment = AttachmentDescriptor.buildBase64Attachment(payload = singleCredential)
+      val credentialFormat: CredentialFormat = CredentialFormat(attachment.id, formatName)
+      (credentialFormat, attachment)
+    }
+    IssueCredential(
+      thid = thid,
+      from = fromDID,
+      to = toDID,
+      body = Body(formats = aux.keys.toSeq),
+      attachments = aux.values.toSeq
+    )
+  }
   final case class Body(
       goal_code: Option[String] = None,
       comment: Option[String] = None,
       replacement_id: Option[String] = None,
       more_available: Option[String] = None,
       formats: Seq[CredentialFormat] = Seq.empty[CredentialFormat],
-  )
+  ) extends BodyUtils
   object Body {
     given Encoder[Body] = deriveEncoder[Body]
     given Decoder[Body] = deriveDecoder[Body]
@@ -72,9 +89,25 @@ object IssueCredential {
         formats = rc.body.formats,
       ),
       attachments = rc.attachments,
-      thid = Some(msg.id),
-      from = msg.to.get, // TODO get
-      to = msg.from.get, // TODO get
+      thid = msg.thid.orElse(Some(rc.id)),
+      from = rc.to,
+      to = rc.from,
+    )
+  }
+
+  def readFromMessage(message: Message): IssueCredential = {
+    val body = message.body.asJson.as[IssueCredential.Body].toOption.get // TODO get
+    IssueCredential(
+      id = message.id,
+      `type` = message.piuri,
+      body = body,
+      attachments = message.attachments.getOrElse(Seq.empty),
+      thid = message.thid,
+      from = message.from.get, // TODO get
+      to = {
+        assert(message.to.length == 1, "The recipient is ambiguous. Need to have only 1 recipient") // TODO return error
+        message.to.head
+      },
     )
   }
 }

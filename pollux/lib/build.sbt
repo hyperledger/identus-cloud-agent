@@ -1,10 +1,11 @@
 import Dependencies._
+import Dependencies_VC_JWT._ //TODO REMOVE
 import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
 
 inThisBuild(
   Seq(
     organization := "io.iohk.atala",
-    scalaVersion := "3.2.0",
+    scalaVersion := "3.2.2",
     fork := true,
     run / connectInput := true,
     versionScheme := Some("semver-spec"),
@@ -15,6 +16,7 @@ inThisBuild(
 )
 
 val commonSettings = Seq(
+  testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
   githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN"),
   resolvers += Resolver.githubPackages("input-output-hk"),
   // Needed for Kotlin coroutines that support new memory management mode
@@ -25,11 +27,17 @@ val commonSettings = Seq(
 lazy val root = project
   .in(file("."))
   .settings(commonSettings)
+  .settings(name := "pollux-root")
+  .aggregate(core, `sql-doobie`, vcJWT)
+publish / skip := true //Do not publish the root
+
+lazy val vcJWT = project
+  .in(file("vc-jwt"))
+  .settings(commonSettings)
   .settings(
-    name := "pollux-root",
-    skip / publish := true
+    name := "pollux-vc-jwt",
+    libraryDependencies ++= polluxVcJwtDependencies
   )
-  .aggregate(core, `sql-doobie`)
 
 lazy val core = project
   .in(file("core"))
@@ -38,6 +46,7 @@ lazy val core = project
     name := "pollux-core",
     libraryDependencies ++= coreDependencies
   )
+  .dependsOn(vcJWT)
 
 lazy val `sql-doobie` = project
   .in(file("sql-doobie"))
@@ -46,7 +55,7 @@ lazy val `sql-doobie` = project
     name := "pollux-sql-doobie",
     libraryDependencies ++= sqlDoobieDependencies
   )
-  .dependsOn(core)
+  .dependsOn(core % "compile->compile;test->test")
 
 // ### ReleaseStep ###
 releaseProcess := Seq[ReleaseStep](

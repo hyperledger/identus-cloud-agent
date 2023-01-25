@@ -17,10 +17,10 @@ object Mailbox {
     def asMessage = {
       Message(
         from = Some(from),
-        to = Some(to),
+        to = Seq(to),
         body = JsonObject.empty,
         id = id,
-        piuri = `type`
+        `type` = `type`
       )
     }
   }

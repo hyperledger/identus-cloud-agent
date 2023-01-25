@@ -1,0 +1,740 @@
+components:
+  schemas:
+    # Common
+    InternalServerError:
+      required:
+        - msg
+      type: object
+      properties:
+        msg:
+          type: string
+
+    NotFound:
+      required:
+        - msg
+      type: object
+      properties:
+        msg:
+          type: string
+
+    BadRequest:
+      required:
+        - msg
+      type: object
+      properties:
+        msg:
+          type: string
+        errors:
+          type: array
+          items:
+            type: string
+
+    # Schema Registry
+
+    Proof:
+      required:
+        - type
+        - created
+        - verificationMethod
+        - proofPurpose
+        - proofValue
+      type: object
+      properties:
+        type:
+          type: string
+        created:
+          type: string
+          format: date-time
+        verificationMethod:
+          type: string
+        proofPurpose:
+          type: string
+        proofValue:
+          type: string
+        domain:
+          type: string
+
+    VerifiableCredentialSchema:
+      required:
+        - id
+        - name
+        - version
+        - author
+        - authored
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        version:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        description:
+          type: string
+        attributes:
+          type: array
+          items:
+            type: string
+        author:
+          type: string
+        authored:
+          type: string
+          format: date-time
+        proof:
+          $ref: '#/components/schemas/Proof'
+
+    VerifiableCredentialSchemaPage:
+      required:
+        - self
+        - kind
+        - pageOf
+      type: object
+      properties:
+        self:
+          type: string
+        kind:
+          type: string
+        pageOf:
+          type: string
+        next:
+          type: string
+        previous:
+          type: string
+        contents:
+          type: array
+          items:
+            $ref: '#/components/schemas/VerifiableCredentialSchema'
+
+    VerificationCredentialSchemaInput:
+      required:
+        - name
+        - version
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        version:
+          type: string
+        description:
+          type: string
+        attributes:
+          type: array
+          items:
+            type: string
+        authored:
+          type: string
+          format: date-time
+        tags:
+          type: array
+          items:
+            type: string
+
+    VerificationPolicy:
+      required:
+        - self
+        - kind
+        - id
+        - name
+        - createdAt
+        - updatedAt
+      type: object
+      properties:
+        self:
+          type: string
+        kind:
+          type: string
+        id:
+          type: string
+        name:
+          type: string
+        attributes:
+          type: array
+          items:
+            type: string
+        issuerDIDs:
+          type: array
+          items:
+            type: string
+        credentialTypes:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    VerificationPolicyInput:
+      required:
+        - name
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        attributes:
+          type: array
+          items:
+            type: string
+        issuerDIDs:
+          type: array
+          items:
+            type: string
+        credentialTypes:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    VerificationPolicyPage:
+      required:
+        - self
+        - kind
+        - pageOf
+      type: object
+      properties:
+        self:
+          type: string
+        kind:
+          type: string
+        pageOf:
+          type: string
+        next:
+          type: string
+        previous:
+          type: string
+        contents:
+          type: array
+          items:
+            $ref: '#/components/schemas/VerificationPolicy'
+
+    # Issue Credential Protocol
+
+    CreateIssueCredentialRecordRequest:
+      description: A request to create a new "issue credential record"
+      required:
+        - subjectId
+        - claims
+      properties:
+        schemaId:
+          type: string
+          description: Identifier of the VC Schema associated with this object
+        subjectId:
+          type: string
+          description: Subject DID of the verifiable credentials object
+          example: did:prism:subjectofverifiablecredentials
+        validityPeriod:
+          type: number
+          description: The validity period in seconds of the verifiable credential
+          example: 3600
+        claims:
+          type: object
+          description: Claims that will be associated with given verifiable credentials
+          additionalProperties:
+            type: string
+        automaticIssuance:
+          type: boolean
+          default: true
+        awaitConfirmation:
+          type: boolean
+          default: true
+
+    IssueCredentialRecord:
+      description: An issue credential record to store the state of the protocol execution
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/CreateIssueCredentialRecordRequest'
+        - type: object
+          required:
+            - recordId
+            - createdAt
+            - role
+            - protocolState
+          properties:
+            recordId:
+              type: string
+              format: uuid
+            createdAt:
+              type: string
+              format: date-time
+            updatedAt:
+              type: string
+              format: date-time
+            role:
+              type: string
+              enum:
+                - Issuer
+                - Holder
+            protocolState:
+              type: string
+              enum:
+                - OfferPending
+                - OfferSent
+                - OfferReceived
+                - RequestPending
+                - RequestSent
+                - RequestReceived
+                - ProblemReportPending
+                - ProblemReportSent
+                - ProblemReportReceived
+                - CredentialPending
+                - CredentialSent
+                - CredentialReceived
+            publicationState:
+              type: string
+              enum:
+                - PublicationPending
+                - PublicationQueued
+                - Published
+            jwtCredential:
+              type: string
+
+    IssueCredentialRecordCollection:
+      description: A collection of issue credential records
+      required:
+        - items
+        - offset
+        - limit
+        - count
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/IssueCredentialRecord"
+        offset:
+          type: integer
+        limit:
+          type: integer
+        count:
+          type: integer
+
+    #
+
+    W3CCredentialInput:
+      description: |-
+        Credential input object based on which the new instance of the verifiable credentials is created.
+        Object contains the minimal set of the fields required to create the credentials for the given subject.
+        All other required fields of the verifiable credential depend on the context of the cloud agent
+      required:
+        - subjectId
+        - claims
+      properties:
+        schemaId:
+          type: string
+          description: "Identity of the Verifiable Credentials Schema associated with this object"
+          example: "did:example:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0"
+        subjectId:
+          type: string
+          description: "Subject DID of the verifiable credentials object"
+          example: "did:prism:subjectofverifiablecredentials"
+        validityPeriod:
+          type: number
+          description: "The validity period in seconds of the verifiable credential"
+          example: 3600
+        claims:
+          type: object
+          additionalProperties:
+            type: string
+          description: "Clams associated with given credentials object (for now it's just a key/value, later should be more complex"
+
+    W3CCredential:
+      description: "Verifiable Credential Object according to W3C specification"
+      required: ["id", "type", "issuer", "issuanceDate", "credentialSubject"]
+      properties:
+        id:
+          type: string
+          description: "Credential id or url that can be used to get the status of revoke the credential"
+          example: "http://example.edu/credentials/1872"
+        type:
+          type: string
+          description: "Credential type according to W3C specification. Must include VerifiableCredentials and type of concrete credentials"
+          example: '["VerifiableCredential", "AlumniCredential"]'
+        issuer:
+          type: string
+          description: "Issuer DID"
+          example: "did:prism:issuerdid"
+        issuanceDate:
+          type: string
+          description: "Datetime in ISO format that corresponds to the date of issuance"
+          example: "2010-01-01T19:23:24Z"
+        credentialSubject:
+          type: object
+          description: "Credentials subject DID and claims according to the schema object"
+          additionalProperties:
+            type: string
+          example:
+            id: "did:prism:subject12345"
+            alumni_of: "University"
+            degree: "master of openapi specification"
+        proof:
+          $ref: "#/components/schemas/W3CProof"
+
+    W3CCredentialsPaginated:
+      description: "Paginated response that contains an array of the credential objects"
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/W3CCredential"
+        offset:
+          type: integer
+        limit:
+          type: integer
+        count:
+          type: integer
+
+    W3CIssuanceBatch:
+      description: "An issuance batch object that is associated with thelist of verifiable credentials"
+      properties:
+        id:
+          type: string
+          description: "Issuance batch id"
+        count:
+          type: integer
+          description: "Count of the verifiable credentials object in the batch"
+        actions:
+          type: array
+          items:
+            $ref: "#/components/schemas/W3CIssuanceBatchAction"
+
+    W3CIssuanceBatchAction:
+      description: "Action performed on the list of credentials associated with the issuance batch"
+      properties:
+        action:
+          description: "Action name"
+          type: string
+          enum: ["sign", "issue", "send"]
+          example: "issue"
+        id:
+          description: "Action id for tracking"
+          type: string
+          example: "uid"
+        status:
+          description: "Action status"
+          type: string
+          enum: ["scheduled", "pending", "completed", "failed"]
+
+    W3CIssuanceBatchPaginated:
+      description: "Paginated response that contains an array of the issuance-batch objects"
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/W3CIssuanceBatch"
+        offset:
+          type: integer
+        limit:
+          type: integer
+        count:
+          type: integer
+
+    W3CCredentialStatus:
+      description: Verifiable Credential revocation status
+      required:
+        - status
+      properties:
+        status:
+          description: Status name
+          type: string
+          enum:
+            - issued
+            - revoked
+          example: "issued"
+        description:
+          type: string
+          description: Description about the status
+          example: "Issued by did:prism:issuer12354 on 2022-02-01"
+
+    W3CCredentialRevocationRequest:
+      description: Credential revocation request. Contain credential id and other information required for revocation
+      required:
+        - credentialId
+      additionalProperties: false
+      properties:
+        credentialId:
+          type: string
+          description: Credential identity
+          example: "abcde-12345"
+
+    W3CCredentialRevocationResponse:
+      description: Credential revocation response. Contain credential id and revocation operation for tracing the completion
+      required:
+        - credentialId
+        - operationId
+        - status
+      properties:
+        credentialId:
+          type: string
+          description: Credential identity
+          example: "abcde-12345"
+        operation:
+          $ref: "#/components/schemas/RevocationStatus"
+
+    RevocationStatus:
+      description: Revocation status record
+      properties:
+        id:
+          type: string
+          description: Operation id
+          example: "operation1235"
+        status:
+          type: string
+          description: Operation status
+          enum:
+            - scheduled
+            - pending
+            - completed
+            - failed
+
+    ProofRequestAux:
+      required: [schemaId, trustIssuers]
+      properties:
+        schemaId:
+          description: Ex ID card or driving licence
+          type: string
+          example: "https://schema.org/Person"
+        trustIssuers:
+          description: Issuer that the verifier trust trust
+          example:
+            [
+              "did:web:atalaprism.io/users/testUser",
+              "did.prism:123",
+              "did:prism:...",
+            ]
+          type: array
+          items:
+            type: string
+
+    RequestPresentationInput:
+      description: Request Presentation Input
+      required: [connectionId, proofs]
+      properties:
+        connectionId:
+          type: string
+        proofs:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProofRequestAux"
+    RequestPresentationOutput:
+      description: Request Presentation Output
+      required: [presentationId]
+      properties:
+        presentationId:
+          description: Ref to the id on the presentation (db ref)
+          type: string
+    PresentationStatus:
+      description: Presentation Status
+      required: [presentationId, status, proofs, data]
+      properties:
+        presentationId:
+          type: string
+        status:
+          type: string
+        proofs:
+          type: array 
+          items:
+            $ref: "#/components/schemas/ProofRequestAux"
+        data:
+          type: array
+          items: 
+            type: string     
+        connectionId:
+          type: string
+    RequestPresentationAction:
+      # RequestPresentationActionAccept:
+      description: Actions on presetations (to update)
+      required: [action]
+      properties:
+        action:
+          type: string
+          enum:
+            - request-accept
+            - request-reject
+            - presentation-accept
+            - presentation-reject
+        proofId:
+          description: This is to choose what VCs to use
+          type: array
+          items:
+            type: string
+
+    W3CPresentationPaginated:
+      description: "Paginated response that contains an array of the presentation objects"
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/W3CPresentation"
+        offset:
+          type: integer
+        limit:
+          type: integer
+        count:
+          type: integer
+
+    JWTCompactSerialisation:
+      description: "Verifiable Credentials or Presentation encoded as JWT token"
+      type: string
+      externalDocs:
+        url: "https://w3c.github.io/vc-jwt/#example-verifiable-credential-using-jwt-compact-serialization-non-normative"
+      example:
+        "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImRpZDpleGFtcGxlOmFiZmUxM2Y3MTIxMjA0
+             MzFjMjc2ZTEyZWNhYiNrZXlzLTEifQ.eyJzdWIiOiJkaWQ6ZXhhbXBsZTplYmZlYjFmNzEyZWJjNmYxY
+             zI3NmUxMmVjMjEiLCJqdGkiOiJodHRwOi8vZXhhbXBsZS5lZHUvY3JlZGVudGlhbHMvMzczMiIsImlzc
+             yI6Imh0dHBzOi8vZXhhbXBsZS5jb20va2V5cy9mb28uandrIiwibmJmIjoxNTQxNDkzNzI0LCJpYXQiO
+             jE1NDE0OTM3MjQsImV4cCI6MTU3MzAyOTcyMywibm9uY2UiOiI2NjAhNjM0NUZTZXIiLCJ2YyI6eyJAY
+             29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvMjAxOC9jcmVkZW50aWFscy92MSIsImh0dHBzOi8vd
+             3d3LnczLm9yZy8yMDE4L2NyZWRlbnRpYWxzL2V4YW1wbGVzL3YxIl0sInR5cGUiOlsiVmVyaWZpYWJsZ
+             UNyZWRlbnRpYWwiLCJVbml2ZXJzaXR5RGVncmVlQ3JlZGVudGlhbCJdLCJjcmVkZW50aWFsU3ViamVjd
+             CI6eyJkZWdyZWUiOnsidHlwZSI6IkJhY2hlbG9yRGVncmVlIiwibmFtZSI6IjxzcGFuIGxhbmc9J2ZyL
+             UNBJz5CYWNjYWxhdXLDqWF0IGVuIG11c2lxdWVzIG51bcOpcmlxdWVzPC9zcGFuPiJ9fX19.KLJo5GAy
+             BND3LDTn9H7FQokEsUEi8jKwXhGvoN3JtRa51xrNDgXDb0cq1UTYB-rK4Ft9YVmR1NI_ZOF8oGc_7wAp
+             8PHbF2HaWodQIoOBxxT-4WNqAxft7ET6lkH-4S6Ux3rSGAmczMohEEf8eCeN-jC8WekdPl6zKZQj0YPB
+             1rx6X0-xlFBs7cl6Wt8rfBP_tZ9YgVWrQmUWypSioc0MUyiphmyEbLZagTyPlUyflGlEdqrZAv6eSe6R
+             txJy6M1-lD7a5HTzanYTWBPAUHDZGyGKXdJw-W_x0IWChBzI8t3kpG253fg6V3tPgHeKXE94fz_QpYfg
+             --7kLsyBAfQGbg"
+
+    JWTHeader:
+      description: "JWT Header for Verifiable Credentials or Verifiable Presentation"
+      required:
+        - alg
+        - type
+        - kid
+      externalDocs:
+        url: "https://www.rfc-editor.org/rfc/rfc7519"
+      properties:
+        alg:
+          type: string
+          description: -|
+            Must be set for digital signatures.
+            If only the proof property is needed for the chosen signature method, the alg header MUST be set to none
+          example: RS256
+        type:
+          type: string
+          description: if present, MUST be set to JWT
+        kid:
+          type: string #TODO: clarify the better type for DID key id
+          description: -|
+            MAY be used if there are multiple keys associated with the issuer of the JWT.
+            The key discovery is out of the scope of this specification.
+            For example, the kid can refer to a key in a DID document, or can be the identifier of a key inside a JWKS
+
+    JWTCredential:
+      description: "Verifiable Credential Object according to JWT specification"
+      externalDocs:
+        url: "https://w3c.github.io/vc-jwt/"
+      required: [ "exp", "iss", "nbf", "jti", "sub" ]
+      properties:
+        exp:
+          type: string
+          description: MUST represent the expirationDate property, encoded as a UNIX timestamp (NumericDate).
+          example: "2022-07-12T16:51:22.000Z" #TODO: exp field is required according to the spec, but looks like it's not required in VC data model
+        iss:
+          type: string
+          description: -|
+            MUST represent the issuer property of a verifiable credential or the holder property of a verifiable presentation.
+            In JSON or JSON-LD formats it's 'issuer' field
+          example: "did:prism:issuerdid"
+        nbf:
+          type: string
+          description: -|
+            MUST represent issuanceDate, encoded as a UNIX timestamp (NumericDate).
+            Datetime in ISO format that corresponds to the date of issuance
+          example: "2022-01-01T19:23:24Z"
+        jti:
+          type: string
+          description: -|
+            MUST represent the id property of the verifiable credential or verifiable presentation.
+          example: "http://example.edu/credentials/1872"
+        sub:
+          type: string
+          description: MUST represent the id property contained in the credentialSubject.
+          example: "did:holder:abdce1234"
+        aud:
+          type: string
+          description: MUST represent (i.e., identify) the intended audience of the verifiable presentation (i.e., the verifier intended by the presenting holder to receive and verify the verifiable presentation).
+          example: "did:verifier:asdfkj"
+        vc:
+          type: object
+          description: Content of Verifiable Credentials object in JSON format. Contains 'type', 'credentialsSubject' and claims
+          required:
+            - type
+            - credentialsSubject
+          additionalProperties: true
+          properties:
+            type:
+              type: array
+              items:
+                type: string
+              description: "Credential type according to W3C specification. Must include VerifiableCredentials and type of concrete credentials"
+              example:
+                - VerifiableCredential
+                - UniversityDegreeCredential
+            credentialSubject:
+              type: object
+              additionalProperties: true
+              required: [ "id" ]
+              description: "Credentials subject DID and claims according to the schema object"
+              example:
+                id: "did:prism:subject12345"
+                alumni_of: "University"
+                degree: "master of openapi specification"
+              properties:
+                id:
+                  type: string
+                  description: "DID of the subject of the credential"
+        proof:
+          $ref: "#/components/schemas/Proof"
+
+    ErrorResponse:
+      type: object
+      description: An RFC-7807 compliant data structure for reporting errors to the client
+      required:
+        - type
+        - title
+        - status
+        - instance
+      properties:
+        type:
+          type: string
+          description: A URI reference that identifies the problem type.
+          example: https://example.org/doc/#model-MalformedEmail
+        title:
+          type: string
+          example: "Malformed email"
+          description: |-
+            A short, human-readable summary of the problem type. It does not
+            change from occurrence to occurrence of the problem.
+        status:
+          type: integer
+          format: int32
+          example: 400
+          description: |-
+            The HTTP status code for this occurrence of the problem.
+        detail:
+          type: string
+          description: |-
+            A human-readable explanation specific to this occurrence of the problem.
+          example: "The received '{}à!è@!.b}' email does not conform to the email format"
+        instance:
+          type: string
+          example: "/problems/d914e"
+          description: |-
+            A URI reference that identifies the specific occurrence of the problem.
+            It may or may not yield further information if dereferenced.

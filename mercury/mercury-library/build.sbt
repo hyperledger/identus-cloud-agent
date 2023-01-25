@@ -1,16 +1,33 @@
-import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
+val SCALA_VERSION = sys.env.get("SBT_SCOVERAGE") match {
+  case None    => "3.2.1"
+  case Some(_) => "3.2.2-RC1-bin-20221026-a210b7f-NIGHTLY" // Needed for sbt-scoverage
+}
 
 inThisBuild(
   Seq(
     organization := "io.iohk.atala",
-    scalaVersion := "3.2.0",
+    scalaVersion := SCALA_VERSION,
     fork := true,
     run / connectInput := true,
     releaseUseGlobalVersion := false,
     versionScheme := Some("semver-spec"),
     githubOwner := "input-output-hk",
-    githubRepository := "atala-prism-building-blocks",
-    githubTokenSource := TokenSource.Environment("GITHUB_TOKEN")
+    githubRepository := "atala-prism-building-blocks"
+  )
+)
+
+inThisBuild(
+  Seq(
+    scalacOptions ++= Seq(
+      "-encoding",
+      "UTF-8",
+      "-deprecation",
+      "-unchecked",
+      // TODO "-feature",
+      // TODO "-Xfatal-warnings",
+      // TODO "-Yexplicit-nulls",
+      "-Ysafe-init",
+    )
   )
 )
 
@@ -26,7 +43,7 @@ lazy val V = new {
   val munitZio = "0.1.1"
 
   // https://mvnrepository.com/artifact/dev.zio/zio
-  val zio = "2.0.2"
+  val zio = "2.0.4"
   val zioLogging = "2.0.0"
   val zioJson = "0.3.0"
   val zioHttp = "2.0.0-RC11"
@@ -45,8 +62,7 @@ lazy val D = new {
   val zioSLF4J = Def.setting("dev.zio" %% "zio-logging-slf4j" % V.zioLogging)
   val zioJson = Def.setting("dev.zio" %% "zio-json" % V.zioJson)
 
-  // val zioHttp = Def.setting("dev.zio" %% "zio-http" % V.zioHttp) // FIXME USE THIS ONE
-  val zioHttp = Def.setting("io.d11" %% "zhttp" % V.zioHttp) // REMOVE (this is the old name)
+  val zioHttp = Def.setting("dev.zio" %% "zio-http" % "0.0.3")
 
   val circeCore = Def.setting("io.circe" %% "circe-core" % V.circe)
   val circeGeneric = Def.setting("io.circe" %% "circe-generic" % V.circe)
@@ -89,6 +105,14 @@ lazy val models = project
     // libraryDependencies += D.didScala.value
   )
 
+/* TODO move code from agentDidcommx to here
+models implementation for didcommx () */
+// lazy val modelsDidcommx = project
+//   .in(file("models-didcommx"))
+//   .settings(name := "mercury-models-didcommx")
+//   .settings(libraryDependencies += D.didcommx.value)
+//   .dependsOn(models)
+
 // #################
 // ### Protocols ###
 // #################
@@ -98,6 +122,7 @@ lazy val protocolConnection = project
   .settings(name := "mercury-protocol-connection")
   .settings(libraryDependencies += D.zio.value)
   .settings(libraryDependencies ++= Seq(D.circeCore.value, D.circeGeneric.value, D.circeParser.value))
+  .settings(libraryDependencies += D.munitZio.value)
   .dependsOn(models, protocolInvitation)
 
 lazy val protocolCoordinateMediation = project
@@ -164,6 +189,14 @@ lazy val protocolIssueCredential = project
   .settings(libraryDependencies += D.munitZio.value)
   .dependsOn(models)
 
+lazy val protocolPresentProof = project
+  .in(file("protocol-present-proof"))
+  .settings(name := "mercury-protocol-present-proof")
+  .settings(libraryDependencies += D.zio.value)
+  .settings(libraryDependencies ++= Seq(D.circeCore.value, D.circeGeneric.value, D.circeParser.value))
+  .settings(libraryDependencies += D.munitZio.value)
+  .dependsOn(models)
+
 // ################
 // ### Resolver ###
 // ################
@@ -179,8 +212,6 @@ lazy val resolver = project // maybe merge into models
       D.munit.value,
       D.munitZio.value,
       D.jwk.value,
-      "org.jetbrains.kotlin" % "kotlin-runtime" % "1.2.71",
-      "org.jetbrains.kotlin" % "kotlin-stdlib" % "1.7.10",
     ),
     testFrameworks += new TestFramework("munit.Framework")
   )
@@ -193,8 +224,7 @@ lazy val resolver = project // maybe merge into models
 lazy val agent = project // maybe merge into models
   .in(file("agent"))
   .settings(name := "mercury-agent-core")
-  .settings(libraryDependencies += "com.google.zxing" % "core" % "3.5.0")
-  .settings(libraryDependencies ++= Seq(D.zioLog.value, D.zioHttp.value)) // , D.zioSLF4J.value))
+  .settings(libraryDependencies ++= Seq(D.zioLog.value)) // , D.zioSLF4J.value))
   .dependsOn(
     models,
     resolver,
@@ -204,14 +234,25 @@ lazy val agent = project // maybe merge into models
     protocolMercuryMailbox,
     protocolLogin,
     protocolIssueCredential,
+    protocolPresentProof,
+    protocolConnection,
   )
 
-/** Demos agents and services implementation with didcommx */
+/** agents implementation with didcommx */
 lazy val agentDidcommx = project
   .in(file("agent-didcommx"))
   .settings(name := "mercury-agent-didcommx")
   .settings(libraryDependencies += D.didcommx.value)
-  .dependsOn(agent)
+  .settings(libraryDependencies += D.munitZio.value)
+  .dependsOn(agent) //modelsDidcommx
+
+/** Demos agents and services implementation with didcommx */
+lazy val agentCliDidcommx = project
+  .in(file("agent-cli-didcommx"))
+  .settings(name := "mercury-agent-cli-didcommx")
+  .settings(libraryDependencies += "com.google.zxing" % "core" % "3.5.0")
+  .settings(libraryDependencies += D.zioHttp.value)
+  .dependsOn(agentDidcommx)
 
 ///** TODO Demos agents and services implementation with did-scala */
 lazy val agentDidScala =
@@ -226,13 +267,31 @@ lazy val agentDidScala =
     )
     .dependsOn(agent)
 
+// ### Test coverage ###
+sys.env
+  .get("SBT_SCOVERAGE")
+  .map { _ =>
+    lazy val coverageDataDir: SettingKey[File] =
+      settingKey[File]("directory where the measurements and report files will be stored")
+    coverageDataDir := target.value / "coverage"
+  }
+  .toSeq
+
 // ### ReleaseStep ###
-releaseProcess := Seq[ReleaseStep](
-  checkSnapshotDependencies,
-  inquireVersions,
-  runClean,
-  runTest,
-  setReleaseVersion,
-  publishArtifacts,
-  setNextVersion
-)
+sys.env
+  .get("SBT_PACKAGER") // SEE also plugin.sbt
+  .map { _ =>
+    println("### Config SBT_PACKAGER (releaseProcess) ###")
+  import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
+
+  releaseProcess := Seq[ReleaseStep](
+    checkSnapshotDependencies,
+    inquireVersions,
+    runClean,
+    runTest,
+    setReleaseVersion,
+    publishArtifacts,
+    setNextVersion
+  )
+  }
+  .toSeq

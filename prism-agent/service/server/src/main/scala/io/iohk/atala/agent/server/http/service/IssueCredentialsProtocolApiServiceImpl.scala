@@ -1,42 +1,65 @@
 package io.iohk.atala.agent.server.http.service
 
-import akka.http.scaladsl.server.Directives.*
 import akka.http.scaladsl.marshalling.ToEntityMarshaller
+import akka.http.scaladsl.server.Directives.*
 import akka.http.scaladsl.server.Route
-import io.iohk.atala.agent.openapi.api.IssueCredentialsApi
 import io.iohk.atala.agent.openapi.api.IssueCredentialsProtocolApiService
-import zio.*
-import io.iohk.atala.pollux.core.service.CredentialService
 import io.iohk.atala.agent.openapi.model.*
-import java.util.UUID
 import io.iohk.atala.agent.server.http.model.HttpServiceError
-import io.iohk.atala.pollux.core.model.error.IssueCredentialError
-import io.iohk.atala.agent.server.http.model.{HttpServiceError, OASDomainModelHelper, OASErrorModelHelper}
-import scala.util.Try
 import io.iohk.atala.agent.server.http.model.HttpServiceError.InvalidPayload
+import io.iohk.atala.agent.server.http.model.OASDomainModelHelper
+import io.iohk.atala.agent.server.http.model.OASErrorModelHelper
+import io.iohk.atala.pollux.core.model.error.CredentialServiceError
+import io.iohk.atala.pollux.core.service.CredentialService
+import zio.*
 
-class IssueCredentialsProtocolApiServiceImpl(credentialService: CredentialService)(using runtime: zio.Runtime[Any])
+import java.util.UUID
+import scala.util.Try
+import io.iohk.atala.agent.walletapi.service.ManagedDIDService
+import io.iohk.atala.agent.server.config.AgentConfig
+import io.iohk.atala.agent.server.config.AppConfig
+import io.iohk.atala.mercury.model.DidId
+import io.iohk.atala.connect.core.service.ConnectionService
+import io.iohk.atala.connect.core.model.error.ConnectionServiceError
+import io.iohk.atala.connect.core.model.ConnectionRecord
+import io.iohk.atala.connect.core.model.ConnectionRecord.Role
+import io.iohk.atala.connect.core.model.ConnectionRecord.ProtocolState
+
+class IssueCredentialsProtocolApiServiceImpl(
+    credentialService: CredentialService,
+    managedDIDService: ManagedDIDService,
+    connectionService: ConnectionService,
+    agentConfig: AgentConfig
+)(using runtime: zio.Runtime[Any])
     extends IssueCredentialsProtocolApiService,
       AkkaZioSupport,
       OASDomainModelHelper,
       OASErrorModelHelper {
+
+  private[this] case class DidIdPair(myDID: DidId, theirDid: DidId)
 
   override def createCredentialOffer(request: CreateIssueCredentialRecordRequest)(implicit
       toEntityMarshallerCreateIssueCredentialRecordResponse: ToEntityMarshaller[IssueCredentialRecord],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
     val result = for {
+      didIdPair <- getPairwiseDIDs(request.subjectId)
       outcome <- credentialService
-        .createCredentialOffer(
-          request.subjectId,
+        .createIssueCredentialRecord(
+          pairwiseDID = didIdPair.myDID,
+          thid = UUID.randomUUID(),
+          didIdPair.theirDid.value,
           request.schemaId,
           request.claims,
-          request.validityPeriod
+          request.validityPeriod,
+          request.automaticIssuance.orElse(Some(true)),
+          request.awaitConfirmation.orElse(Some(false))
         )
-        .mapError(HttpServiceError.DomainError[IssueCredentialError].apply)
+        .mapError(HttpServiceError.DomainError[CredentialServiceError].apply)
+        .mapError(_.toOAS)
     } yield outcome
 
-    onZioSuccess(result.mapBoth(_.toOAS, _.toOAS).either) {
+    onZioSuccess(result.map(_.toOAS).either) {
       case Left(error)   => complete(error.status -> error)
       case Right(result) => createCredentialOffer201(result)
     }
@@ -48,8 +71,8 @@ class IssueCredentialsProtocolApiServiceImpl(credentialService: CredentialServic
   ): Route = {
     val result = for {
       outcome <- credentialService
-        .getCredentialRecords()
-        .mapError(HttpServiceError.DomainError[IssueCredentialError].apply)
+        .getIssueCredentialRecords()
+        .mapError(HttpServiceError.DomainError[CredentialServiceError].apply)
     } yield outcome
 
     onZioSuccess(result.mapBoth(_.toOAS, _.map(_.toOAS)).either) {
@@ -66,22 +89,15 @@ class IssueCredentialsProtocolApiServiceImpl(credentialService: CredentialServic
     }
   }
 
-  extension (str: String) {
-    def toUUID: ZIO[Any, InvalidPayload, UUID] =
-      ZIO
-        .fromTry(Try(UUID.fromString(str)))
-        .mapError(e => HttpServiceError.InvalidPayload(s"Error parsing string as UUID: ${e.getMessage()}"))
-  }
-
-  def getCredentialRecord(recordId: String)(implicit
+  override def getCredentialRecord(recordId: String)(implicit
       toEntityMarshallerIssueCredentialRecord: ToEntityMarshaller[IssueCredentialRecord],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
     val result = for {
       uuid <- recordId.toUUID
       outcome <- credentialService
-        .getCredentialRecord(uuid)
-        .mapError(HttpServiceError.DomainError[IssueCredentialError].apply)
+        .getIssueCredentialRecord(uuid)
+        .mapError(HttpServiceError.DomainError[CredentialServiceError].apply)
     } yield outcome
 
     onZioSuccess(result.mapBoth(_.toOAS, _.map(_.toOAS)).either) {
@@ -91,7 +107,7 @@ class IssueCredentialsProtocolApiServiceImpl(credentialService: CredentialServic
     }
   }
 
-  def acceptCredentialOffer(recordId: String)(implicit
+  override def acceptCredentialOffer(recordId: String)(implicit
       toEntityMarshallerIssueCredentialRecord: ToEntityMarshaller[IssueCredentialRecord],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
@@ -99,7 +115,7 @@ class IssueCredentialsProtocolApiServiceImpl(credentialService: CredentialServic
       uuid <- recordId.toUUID
       outcome <- credentialService
         .acceptCredentialOffer(uuid)
-        .mapError(HttpServiceError.DomainError[IssueCredentialError].apply)
+        .mapError(HttpServiceError.DomainError[CredentialServiceError].apply)
     } yield outcome
 
     onZioSuccess(result.mapBoth(_.toOAS, _.map(_.toOAS)).either) {
@@ -109,15 +125,15 @@ class IssueCredentialsProtocolApiServiceImpl(credentialService: CredentialServic
     }
   }
 
-  def issueCredential(recordId: String)(implicit
+  override def issueCredential(recordId: String)(implicit
       toEntityMarshallerIssueCredentialRecord: ToEntityMarshaller[IssueCredentialRecord],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
     val result = for {
       uuid <- recordId.toUUID
       outcome <- credentialService
-        .issueCredential(uuid)
-        .mapError(HttpServiceError.DomainError[IssueCredentialError].apply)
+        .acceptCredentialRequest(uuid)
+        .mapError(HttpServiceError.DomainError[CredentialServiceError].apply)
     } yield outcome
 
     onZioSuccess(result.mapBoth(_.toOAS, _.map(_.toOAS)).either) {
@@ -127,13 +143,77 @@ class IssueCredentialsProtocolApiServiceImpl(credentialService: CredentialServic
     }
   }
 
+  private[this] def getPairwiseDIDs(subjectId: String): ZIO[Any, ErrorResponse, DidIdPair] = {
+    val didRegex = "^did:.*".r
+    subjectId match {
+      case didRegex() =>
+        for {
+          pairwiseDID <- managedDIDService.createAndStorePeerDID(agentConfig.didCommServiceEndpointUrl)
+        } yield DidIdPair(pairwiseDID.did, DidId(subjectId))
+      case _ =>
+        for {
+          maybeConnection <- connectionService
+            .getConnectionRecord(UUID.fromString(subjectId))
+            .mapError(HttpServiceError.DomainError[ConnectionServiceError].apply)
+            .mapError(_.toOAS)
+          connection <- ZIO
+            .fromOption(maybeConnection)
+            .mapError(_ => notFoundErrorResponse(Some("Connection not found")))
+          connectionResponse <- ZIO
+            .fromOption(connection.connectionResponse)
+            .mapError(_ => notFoundErrorResponse(Some("ConnectionResponse not found in record")))
+          didIdPair <- connection match
+            case ConnectionRecord(
+                  _,
+                  _,
+                  _,
+                  _,
+                  _,
+                  Role.Inviter,
+                  ProtocolState.ConnectionResponseSent,
+                  _,
+                  _,
+                  Some(resp)
+                ) =>
+              ZIO.succeed(DidIdPair(resp.from, resp.to))
+            case ConnectionRecord(
+                  _,
+                  _,
+                  _,
+                  _,
+                  _,
+                  Role.Invitee,
+                  ProtocolState.ConnectionResponseReceived,
+                  _,
+                  _,
+                  Some(resp)
+                ) =>
+              ZIO.succeed(DidIdPair(resp.to, resp.from))
+            case _ =>
+              ZIO.fail(badRequestErrorResponse(Some("Invalid connection record state for operation")))
+        } yield didIdPair
+    }
+  }
+
 }
 
 object IssueCredentialsProtocolApiServiceImpl {
-  val layer: URLayer[CredentialService, IssueCredentialsProtocolApiService] = ZLayer.fromZIO {
-    for {
-      rt <- ZIO.runtime[Any]
-      svc <- ZIO.service[CredentialService]
-    } yield IssueCredentialsProtocolApiServiceImpl(svc)(using rt)
-  }
+  val layer: URLayer[
+    CredentialService & ManagedDIDService & ConnectionService & AppConfig,
+    IssueCredentialsProtocolApiService
+  ] =
+    ZLayer.fromZIO {
+      for {
+        rt <- ZIO.runtime[Any]
+        credentialService <- ZIO.service[CredentialService]
+        managedDIDService <- ZIO.service[ManagedDIDService]
+        connectionService <- ZIO.service[ConnectionService]
+        appConfig <- ZIO.service[AppConfig]
+      } yield IssueCredentialsProtocolApiServiceImpl(
+        credentialService,
+        managedDIDService,
+        connectionService,
+        appConfig.agent
+      )(using rt)
+    }
 }

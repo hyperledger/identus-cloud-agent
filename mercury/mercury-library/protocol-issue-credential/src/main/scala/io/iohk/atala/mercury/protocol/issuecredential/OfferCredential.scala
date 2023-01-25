@@ -27,17 +27,17 @@ final case class OfferCredential(
     thid: Option[String] = None,
     from: DidId,
     to: DidId,
-) {
+) extends ReadAttachmentsUtils {
   assert(`type` == OfferCredential.`type`)
 
   def makeMessage: Message = Message(
     id = this.id,
-    piuri = this.`type`,
+    `type` = this.`type`,
     from = Some(this.from),
-    to = Some(to),
+    to = Seq(to),
     thid = this.thid,
     body = this.body.asJson.asObject.get, // TODO get
-    attachments = this.attachments,
+    attachments = Some(this.attachments),
   )
 }
 
@@ -51,6 +51,27 @@ object OfferCredential {
 
   def `type`: PIURI = "https://didcomm.org/issue-credential/2.0/offer-credential"
 
+  def build(
+      fromDID: DidId,
+      toDID: DidId,
+      thid: Option[String] = None,
+      credential_preview: CredentialPreview,
+      credentials: Map[String, Array[Byte]],
+  ): OfferCredential = {
+    val aux = credentials.map { case (formatName, singleCredential) =>
+      val attachment = AttachmentDescriptor.buildBase64Attachment(payload = singleCredential)
+      val credentialFormat: CredentialFormat = CredentialFormat(attachment.id, formatName)
+      (credentialFormat, attachment)
+    }
+    OfferCredential(
+      thid = thid,
+      from = fromDID,
+      to = toDID,
+      body = Body(credential_preview = credential_preview, formats = aux.keys.toSeq),
+      attachments = aux.values.toSeq
+    )
+  }
+
   final case class Body(
       goal_code: Option[String] = None,
       comment: Option[String] = None,
@@ -58,7 +79,7 @@ object OfferCredential {
       multiple_available: Option[String] = None,
       credential_preview: CredentialPreview,
       formats: Seq[CredentialFormat] = Seq.empty[CredentialFormat]
-  )
+  ) extends BodyUtils
 
   object Body {
     given Encoder[Body] = deriveEncoder[Body]
@@ -78,9 +99,9 @@ object OfferCredential {
         formats = pc.body.formats,
       ),
       attachments = pc.attachments,
-      thid = Some(msg.id),
-      from = msg.to.get, // TODO get
-      to = msg.from.get, // TODO get
+      thid = msg.thid.orElse(Some(pc.id)),
+      from = pc.to,
+      to = pc.from,
     )
   }
 
@@ -90,10 +111,13 @@ object OfferCredential {
       id = message.id,
       `type` = message.piuri,
       body = body,
-      attachments = message.attachments,
+      attachments = message.attachments.getOrElse(Seq.empty),
       thid = message.thid,
       from = message.from.get, // TODO get
-      to = message.to.get, // TODO get
+      to = {
+        assert(message.to.length == 1, "The recipient is ambiguous. Need to have only 1 recipient") // TODO return error
+        message.to.head
+      },
     )
   }
 }

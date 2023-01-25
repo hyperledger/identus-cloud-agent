@@ -1,28 +1,40 @@
 package io.iohk.atala.castor.core.model
 
 import java.net.URI
+import java.time.Instant
 import com.google.protobuf.ByteString
+import io.iohk.atala.castor.core.model.did.{
+  CanonicalPrismDID,
+  DIDData,
+  EllipticCurve,
+  InternalKeyPurpose,
+  InternalPublicKey,
+  LongFormPrismDID,
+  PrismDID,
+  PrismDIDOperation,
+  PublicKey,
+  PublicKeyData,
+  ScheduledDIDOperationDetail,
+  ScheduledDIDOperationStatus,
+  Service,
+  ServiceType,
+  SignedPrismDIDOperation,
+  UpdateDIDAction,
+  VerificationRelationship
+}
+import io.iohk.atala.prism.crypto.EC
+import io.iohk.atala.prism.protos.common_models.OperationStatus
+import io.iohk.atala.prism.protos.node_models.KeyUsage
+import io.iohk.atala.prism.protos.node_models.PublicKey.KeyData
 import io.iohk.atala.shared.models.HexStrings.*
 import io.iohk.atala.shared.models.Base64UrlStrings.*
 import io.iohk.atala.shared.utils.Traverse.*
-import io.iohk.atala.castor.core.model.did.{
-  DIDDocument,
-  DIDStorage,
-  EllipticCurve,
-  PublicKey,
-  PublicKeyJwk,
-  PublishedDIDOperation,
-  PublishedDIDOperationOutcome,
-  Service,
-  ServiceType,
-  VerificationRelationship
-}
-import io.iohk.atala.iris.proto as iris_proto
-import io.iohk.atala.iris.proto.did_operations.DocumentDefinition.PublicKey.Purpose
-import io.iohk.atala.iris.proto.did_operations.DocumentDefinition.Service.Type
-import io.iohk.atala.iris.proto.did_operations.PublicKeyJwk.{Curve, Key}
+import io.iohk.atala.prism.protos.{common_models, node_api, node_models}
+import zio.*
 
 import scala.util.Try
+
+object ProtoModelHelper extends ProtoModelHelper
 
 private[castor] trait ProtoModelHelper {
 
@@ -30,190 +42,267 @@ private[castor] trait ProtoModelHelper {
     def toProto: ByteString = ByteString.copyFrom(bytes)
   }
 
-  extension (operation: PublishedDIDOperation.Create) {
-    def toProto: iris_proto.did_operations.CreateDid = {
-      iris_proto.did_operations.CreateDid(
-        initialUpdateCommitment = operation.updateCommitment.toByteArray.toProto,
-        initialRecoveryCommitment = operation.recoveryCommitment.toByteArray.toProto,
-        ledger = operation.storage.ledgerName,
-        document = Some(operation.document.toProto)
+  extension (signedOperation: SignedPrismDIDOperation) {
+    def toProto: node_models.SignedAtalaOperation =
+      node_models.SignedAtalaOperation(
+        signedWith = signedOperation.signedWithKey,
+        signature = signedOperation.signature.toArray.toProto,
+        operation = Some(signedOperation.operation.toAtalaOperation)
+      )
+  }
+
+  extension (operation: PrismDIDOperation.Create) {
+    def toProto: node_models.AtalaOperation.Operation.CreateDid = {
+      node_models.AtalaOperation.Operation.CreateDid(
+        value = node_models.CreateDIDOperation(
+          didData = Some(
+            node_models.CreateDIDOperation.DIDCreationData(
+              publicKeys = operation.publicKeys.map(_.toProto) ++ operation.internalKeys.map(_.toProto),
+              services = operation.services.map(_.toProto)
+            )
+          )
+        )
       )
     }
   }
 
-  extension (doc: DIDDocument) {
-    def toProto: iris_proto.did_operations.DocumentDefinition = {
-      iris_proto.did_operations.DocumentDefinition(
-        publicKeys = doc.publicKeys.map(_.toProto),
-        services = doc.services.map(_.toProto)
+  extension (operation: PrismDIDOperation.Update) {
+    def toProto: node_models.AtalaOperation.Operation.UpdateDid = {
+      node_models.AtalaOperation.Operation.UpdateDid(
+        value = node_models.UpdateDIDOperation(
+          previousOperationHash = operation.previousOperationHash.toArray.toProto,
+          id = operation.did.suffix.toString,
+          actions = operation.actions.map(_.toProto)
+        )
       )
     }
   }
 
-  extension (service: Service) {
-    def toProto: iris_proto.did_operations.DocumentDefinition.Service = {
-      iris_proto.did_operations.DocumentDefinition.Service(
-        id = service.id,
-        `type` = service.`type`.toProto,
-        serviceEndpoint = service.serviceEndpoint.toString
-      )
-    }
-  }
-
-  extension (key: PublicKey) {
-    def toProto: iris_proto.did_operations.DocumentDefinition.PublicKey = {
-      key match {
-        case k: PublicKey.JsonWebKey2020 =>
-          iris_proto.did_operations.DocumentDefinition.PublicKey(
-            id = k.id,
-            jwk = Some(k.publicKeyJwk.toProto),
-            purposes = k.purposes.map(_.toProto)
+  extension (action: UpdateDIDAction) {
+    def toProto: node_models.UpdateDIDAction = {
+      val a = action match {
+        case UpdateDIDAction.AddKey(publicKey) =>
+          node_models.UpdateDIDAction.Action.AddKey(node_models.AddKeyAction(Some(publicKey.toProto)))
+        case UpdateDIDAction.AddInternalKey(publicKey) =>
+          node_models.UpdateDIDAction.Action.AddKey(node_models.AddKeyAction(Some(publicKey.toProto)))
+        case UpdateDIDAction.RemoveKey(id) =>
+          node_models.UpdateDIDAction.Action.RemoveKey(node_models.RemoveKeyAction(id))
+        case UpdateDIDAction.AddService(service) =>
+          node_models.UpdateDIDAction.Action.AddService(node_models.AddServiceAction(Some(service.toProto)))
+        case UpdateDIDAction.RemoveService(id) =>
+          node_models.UpdateDIDAction.Action.RemoveService(node_models.RemoveServiceAction(id))
+        case UpdateDIDAction.UpdateService(serviceId, serviceType, endpoints) =>
+          node_models.UpdateDIDAction.Action.UpdateService(
+            node_models.UpdateServiceAction(
+              serviceId = serviceId,
+              `type` = serviceType.fold("")(_.name),
+              serviceEndpoints = endpoints.map(_.toString)
+            )
           )
       }
+      node_models.UpdateDIDAction(action = a)
     }
   }
 
-  extension (serviceType: ServiceType) {
-    def toProto: iris_proto.did_operations.DocumentDefinition.Service.Type = {
-      import iris_proto.did_operations.DocumentDefinition.Service.Type.*
-      serviceType match {
-        case ServiceType.MediatorService => MEDIATOR_SERVICE
-      }
+  extension (publicKey: PublicKey) {
+    def toProto: node_models.PublicKey = {
+      node_models.PublicKey(
+        id = publicKey.id,
+        usage = publicKey.purpose match {
+          case VerificationRelationship.Authentication       => node_models.KeyUsage.AUTHENTICATION_KEY
+          case VerificationRelationship.AssertionMethod      => node_models.KeyUsage.ISSUING_KEY
+          case VerificationRelationship.KeyAgreement         => node_models.KeyUsage.KEY_AGREEMENT_KEY
+          case VerificationRelationship.CapabilityInvocation => node_models.KeyUsage.CAPABILITY_INVOCATION_KEY
+          case VerificationRelationship.CapabilityDelegation => node_models.KeyUsage.CAPABILITY_DELEGATION_KEY
+        },
+        addedOn = None,
+        revokedOn = None,
+        keyData = publicKey.publicKeyData.toProto
+      )
     }
   }
 
-  extension (purpose: VerificationRelationship) {
-    def toProto: iris_proto.did_operations.DocumentDefinition.PublicKey.Purpose = {
-      import iris_proto.did_operations.DocumentDefinition.PublicKey.Purpose.*
-      purpose match {
-        case VerificationRelationship.Authentication       => AUTHENTICATION
-        case VerificationRelationship.AssertionMethod      => ASSERTION_METHOD
-        case VerificationRelationship.KeyAgreement         => KEY_AGREEMENT
-        case VerificationRelationship.CapabilityInvocation => CAPABILITY_INVOCATION
-      }
+  extension (internalPublicKey: InternalPublicKey) {
+    def toProto: node_models.PublicKey = {
+      node_models.PublicKey(
+        id = internalPublicKey.id,
+        usage = internalPublicKey.purpose match {
+          case InternalKeyPurpose.Master     => node_models.KeyUsage.MASTER_KEY
+          case InternalKeyPurpose.Revocation => node_models.KeyUsage.REVOCATION_KEY
+        },
+        addedOn = None,
+        revokedOn = None,
+        keyData = internalPublicKey.publicKeyData.toProto
+      )
     }
   }
 
-  extension (key: PublicKeyJwk) {
-    def toProto: iris_proto.did_operations.PublicKeyJwk = {
-      key match {
-        case k: PublicKeyJwk.ECPublicKeyData =>
-          iris_proto.did_operations.PublicKeyJwk(
-            key = iris_proto.did_operations.PublicKeyJwk.Key.EcKey(
-              iris_proto.did_operations.PublicKeyJwk.ECKeyData(
-                curve = k.crv.toProto,
-                x = k.x.toByteArray.toProto,
-                y = k.y.toByteArray.toProto
-              )
+  extension (publicKeyData: PublicKeyData) {
+    def toProto: node_models.PublicKey.KeyData = {
+      publicKeyData match {
+        case PublicKeyData.ECKeyData(crv, x, y) =>
+          node_models.PublicKey.KeyData.EcKeyData(
+            value = node_models.ECKeyData(
+              curve = crv.name,
+              x = x.toByteArray.toProto,
+              y = y.toByteArray.toProto
             )
           )
       }
     }
   }
 
-  extension (curve: EllipticCurve) {
-    def toProto: iris_proto.did_operations.PublicKeyJwk.Curve = {
-      import iris_proto.did_operations.PublicKeyJwk.Curve.*
-      curve match {
-        case EllipticCurve.SECP256K1 => SECP256K1
+  extension (service: Service) {
+    def toProto: node_models.Service = node_models.Service(
+      id = service.id,
+      `type` = service.`type`.name,
+      serviceEndpoint = service.serviceEndpoint.map(_.toString),
+      addedOn = None,
+      deletedOn = None
+    )
+  }
+
+  extension (resp: node_api.GetOperationInfoResponse) {
+    def toDomain: Either[String, Option[ScheduledDIDOperationDetail]] = {
+      val status = resp.operationStatus match {
+        case OperationStatus.UNKNOWN_OPERATION      => Right(None)
+        case OperationStatus.PENDING_SUBMISSION     => Right(Some(ScheduledDIDOperationStatus.Pending))
+        case OperationStatus.AWAIT_CONFIRMATION     => Right(Some(ScheduledDIDOperationStatus.AwaitingConfirmation))
+        case OperationStatus.CONFIRMED_AND_APPLIED  => Right(Some(ScheduledDIDOperationStatus.Confirmed))
+        case OperationStatus.CONFIRMED_AND_REJECTED => Right(Some(ScheduledDIDOperationStatus.Rejected))
+        case OperationStatus.Unrecognized(unrecognizedValue) =>
+          Left(s"unrecognized status of GetOperationInfoResponse: $unrecognizedValue")
+      }
+      status.map(s => s.map(ScheduledDIDOperationDetail.apply))
+    }
+  }
+
+  extension (didData: node_models.DIDData) {
+    def toDomain: Either[String, DIDData] = {
+      for {
+        canonicalDID <- PrismDID.buildCanonicalFromSuffix(didData.id)
+        allKeys <- didData.publicKeys.traverse(_.toDomain)
+        services <- didData.services.traverse(_.toDomain)
+      } yield DIDData(
+        id = canonicalDID,
+        publicKeys = allKeys.collect { case key: PublicKey => key },
+        internalKeys = allKeys.collect { case key: InternalPublicKey => key },
+        services = services
+      )
+    }
+
+    /** Return DIDData with keys and services removed by checking revocation time against the current time */
+    def filterRevokedKeysAndServices: UIO[node_models.DIDData] = {
+      Clock.instant.map { now =>
+        didData
+          .withPublicKeys(didData.publicKeys.filter { publicKey =>
+            publicKey.revokedOn.flatMap(_.toInstant).forall(revokeTime => revokeTime isAfter now)
+          })
+          .withServices(didData.services.filter { service =>
+            service.deletedOn.flatMap(_.toInstant).forall(revokeTime => revokeTime isAfter now)
+          })
       }
     }
   }
 
-  extension (op: iris_proto.did_operations.CreateDid) {
-    def toDomain: Either[String, PublishedDIDOperation.Create] =
-      for {
-        document <- op.document.toRight("expected a DIDDocument in the protobuf message").flatMap(_.toDomain)
-      } yield PublishedDIDOperation.Create(
-        updateCommitment = HexString.fromByteArray(op.initialUpdateCommitment.toByteArray),
-        recoveryCommitment = HexString.fromByteArray(op.initialRecoveryCommitment.toByteArray),
-        storage = DIDStorage.Cardano(op.ledger),
-        document = document
-      )
+  extension (ledgerData: node_models.LedgerData) {
+    def toInstant: Option[Instant] = ledgerData.timestampInfo
+      .flatMap(_.blockTimestamp)
+      .map(ts => Instant.ofEpochSecond(ts.seconds).plusNanos(ts.nanos))
   }
 
-  extension (doc: iris_proto.did_operations.DocumentDefinition) {
-    def toDomain: Either[String, DIDDocument] =
+  extension (operation: node_models.CreateDIDOperation) {
+    def toDomain: Either[String, PrismDIDOperation.Create] = {
       for {
-        publicKeys <- doc.publicKeys.traverse(_.toDomain)
-        services <- doc.services.traverse(_.toDomain)
-      } yield DIDDocument(
-        publicKeys = publicKeys,
+        allKeys <- operation.didData.map(_.publicKeys.traverse(_.toDomain)).getOrElse(Right(Nil))
+        services <- operation.didData.map(_.services.traverse(_.toDomain)).getOrElse(Right(Nil))
+      } yield PrismDIDOperation.Create(
+        publicKeys = allKeys.collect { case key: PublicKey => key },
+        internalKeys = allKeys.collect { case key: InternalPublicKey => key },
         services = services
       )
+    }
   }
 
-  extension (service: iris_proto.did_operations.DocumentDefinition.Service) {
+  extension (service: node_models.Service) {
     def toDomain: Either[String, Service] = {
       for {
-        serviceType <- service.`type`.toDomain
-        serviceEndpoint <- Try(URI.create(service.serviceEndpoint)).toEither.left.map(_ =>
-          s"unable to parse serviceEndpoint ${service.serviceEndpoint} as URI"
+        uris <- service.serviceEndpoint.traverse(s =>
+          Try(URI.create(s)).toEither.left.map(_ => s"unable to parse serviceEndpoint $s as URI")
         )
+        serviceType <- ServiceType
+          .parseString(service.`type`)
+          .toRight(s"unable to parse ${service.`type`} as service type")
       } yield Service(
         id = service.id,
         `type` = serviceType,
-        serviceEndpoint = serviceEndpoint
+        serviceEndpoint = uris
       )
     }
   }
 
-  extension (serviceType: iris_proto.did_operations.DocumentDefinition.Service.Type) {
-    def toDomain: Either[String, ServiceType] = {
-      serviceType match {
-        case Type.MEDIATOR_SERVICE    => Right(ServiceType.MediatorService)
-        case Type.Unrecognized(value) => Left(s"unrecognized serviceType value $value")
+  extension (publicKey: node_models.PublicKey) {
+    def toDomain: Either[String, PublicKey | InternalPublicKey] = {
+      val purpose: Either[String, VerificationRelationship | InternalKeyPurpose] = publicKey.usage match {
+        case node_models.KeyUsage.UNKNOWN_KEY => Left(s"unsupported use of KeyUsage.UNKNOWN_KEY on key ${publicKey.id}")
+        case node_models.KeyUsage.MASTER_KEY  => Right(InternalKeyPurpose.Master)
+        case node_models.KeyUsage.ISSUING_KEY => Right(VerificationRelationship.AssertionMethod)
+        case node_models.KeyUsage.KEY_AGREEMENT_KEY         => Right(VerificationRelationship.KeyAgreement)
+        case node_models.KeyUsage.AUTHENTICATION_KEY        => Right(VerificationRelationship.Authentication)
+        case node_models.KeyUsage.CAPABILITY_INVOCATION_KEY => Right(VerificationRelationship.CapabilityInvocation)
+        case node_models.KeyUsage.CAPABILITY_DELEGATION_KEY => Right(VerificationRelationship.CapabilityDelegation)
+        case node_models.KeyUsage.REVOCATION_KEY            => Right(InternalKeyPurpose.Revocation)
+        case node_models.KeyUsage.Unrecognized(unrecognizedValue) =>
+          Left(s"unrecognized KeyUsage: $unrecognizedValue on key ${publicKey.id}")
       }
-    }
-  }
 
-  extension (publicKey: iris_proto.did_operations.DocumentDefinition.PublicKey) {
-    def toDomain: Either[String, PublicKey] =
       for {
-        purposes <- publicKey.purposes.traverse(_.toDomain)
-        publicKeysJwk <- publicKey.jwk
-          .toRight(s"publicKeyJwk does not exist on key id ${publicKey.id}")
-          .flatMap(_.toDomain)
-      } yield PublicKey.JsonWebKey2020(
-        id = publicKey.id,
-        purposes = purposes,
-        publicKeyJwk = publicKeysJwk
-      )
-  }
-
-  extension (purpose: iris_proto.did_operations.DocumentDefinition.PublicKey.Purpose) {
-    def toDomain: Either[String, VerificationRelationship] = {
-      purpose match {
-        case Purpose.AUTHENTICATION        => Right(VerificationRelationship.Authentication)
-        case Purpose.KEY_AGREEMENT         => Right(VerificationRelationship.KeyAgreement)
-        case Purpose.ASSERTION_METHOD      => Right(VerificationRelationship.AssertionMethod)
-        case Purpose.CAPABILITY_INVOCATION => Right(VerificationRelationship.CapabilityInvocation)
-        case Purpose.Unrecognized(value)   => Left(s"unrecognized publicKey purpose $value")
+        purpose <- purpose
+        keyData <- publicKey.keyData.toDomain
+      } yield purpose match {
+        case purpose: VerificationRelationship =>
+          PublicKey(
+            id = publicKey.id,
+            purpose = purpose,
+            publicKeyData = keyData
+          )
+        case purpose: InternalKeyPurpose =>
+          publicKey.keyData.ecKeyData
+          InternalPublicKey(
+            id = publicKey.id,
+            purpose = purpose,
+            publicKeyData = keyData
+          )
       }
     }
   }
 
-  extension (jwk: iris_proto.did_operations.PublicKeyJwk) {
-    def toDomain: Either[String, PublicKeyJwk] = {
-      val errorOrEcKey = jwk.key match {
-        case Key.Empty        => Left("publicKeyJwk value does not exist")
-        case Key.EcKey(value) => Right(value)
+  extension (publicKeyData: node_models.PublicKey.KeyData) {
+    def toDomain: Either[String, PublicKeyData] = {
+      publicKeyData match {
+        case KeyData.Empty => Left(s"unable to convert KeyData.Emtpy to PublicKeyData")
+        case KeyData.EcKeyData(ecKeyData) =>
+          for {
+            curve <- EllipticCurve
+              .parseString(ecKeyData.curve)
+              .toRight(s"unsupported elliptic curve ${ecKeyData.curve}")
+          } yield PublicKeyData.ECKeyData(
+            crv = curve,
+            x = Base64UrlString.fromByteArray(ecKeyData.x.toByteArray),
+            y = Base64UrlString.fromByteArray(ecKeyData.y.toByteArray)
+          )
+        case KeyData.CompressedEcKeyData(ecKeyData) =>
+          val ecPublicKey = EC.INSTANCE.toPublicKeyFromCompressed(ecKeyData.data.toByteArray)
+          for {
+            curve <- EllipticCurve
+              .parseString(ecKeyData.curve)
+              .toRight(s"unsupported elliptic curve ${ecKeyData.curve}")
+          } yield PublicKeyData.ECKeyData(
+            crv = curve,
+            x = Base64UrlString.fromByteArray(ecPublicKey.getCurvePoint.getX.bytes()),
+            y = Base64UrlString.fromByteArray(ecPublicKey.getCurvePoint.getY.bytes())
+          )
       }
-      for {
-        ecKey <- errorOrEcKey
-        curve <- ecKey.curve.toDomain
-      } yield PublicKeyJwk.ECPublicKeyData(
-        crv = curve,
-        x = Base64UrlString.fromByteArray(ecKey.x.toByteArray),
-        y = Base64UrlString.fromByteArray(ecKey.y.toByteArray)
-      )
-    }
-  }
-
-  extension (curve: iris_proto.did_operations.PublicKeyJwk.Curve) {
-    def toDomain: Either[String, EllipticCurve] = curve match {
-      case Curve.SECP256K1           => Right(EllipticCurve.SECP256K1)
-      case Curve.Unrecognized(value) => Left(s"unrecognized elliptic-curve value $value")
     }
   }
 

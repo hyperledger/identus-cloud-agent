@@ -1,0 +1,55 @@
+# [connect-v0.6.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/connect-v0.5.0...connect-v0.6.0) (2022-12-19)
+
+
+### Features
+
+* **connect:** bump mercury version ([#272](https://github.com/input-output-hk/atala-prism-building-blocks/issues/272)) ([70f878c](https://github.com/input-output-hk/atala-prism-building-blocks/commit/70f878c81bbffd73228d2a40b55295b74c918ba9))
+
+# [connect-v0.5.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/connect-v0.4.0...connect-v0.5.0) (2022-12-14)
+
+
+### Features
+
+* **pollux:** use dedicated pairwise PeerDIDs instead of a global one ([#252](https://github.com/input-output-hk/atala-prism-building-blocks/issues/252)) ([38a9b95](https://github.com/input-output-hk/atala-prism-building-blocks/commit/38a9b95a254e53483c15d7ee381f82a1d7556a18))
+
+# [connect-v0.4.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/connect-v0.3.1...connect-v0.4.0) (2022-12-13)
+
+
+### Features
+
+* **connect:** updated  the version for mercury ([#246](https://github.com/input-output-hk/atala-prism-building-blocks/issues/246)) ([7629eab](https://github.com/input-output-hk/atala-prism-building-blocks/commit/7629eab985354a64d4a7c7f5814ae4a84a48ab31))
+
+# [connect-v0.3.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/connect-v0.3.0...connect-v0.3.1) (2022-12-09)
+
+
+### Bug Fixes
+
+* **connect:** bump mercury version to 1.10.1 and touch README.md ([e13a1bd](https://github.com/input-output-hk/atala-prism-building-blocks/commit/e13a1bdcf2eec2c6059d8e9b4f4a587ff6aa15a6))
+* **pollux:** upgrade mercury lib to 1.10.1 ([ee27755](https://github.com/input-output-hk/atala-prism-building-blocks/commit/ee2775534f6207a6fed6332c938e6249d62168df))
+
+# [connect-v0.3.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/connect-v0.2.0...connect-v0.3.0) (2022-12-02)
+
+
+### Features
+
+* **pollux:** validate the current record state on each protocol action received ([#193](https://github.com/input-output-hk/atala-prism-building-blocks/issues/193)) ([6fffde2](https://github.com/input-output-hk/atala-prism-building-blocks/commit/6fffde28bee50b130a0f1f8b5f4dae80ec488498))
+
+# [connect-v0.2.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/connect-v0.1.0...connect-v0.2.0) (2022-11-28)
+
+
+### Features
+
+* **connect:** bump up shared version to use 0.2.0 ([56cc1c3](https://github.com/input-output-hk/atala-prism-building-blocks/commit/56cc1c38caa313846c61253527accb456ccc476a))
+
+# [connect-v0.1.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/connect-v0.0.1...connect-v0.1.0) (2022-11-25)
+
+
+### Features
+
+* **connect:** implement Connect protocol ([#172](https://github.com/input-output-hk/atala-prism-building-blocks/issues/172)) ([b707792](https://github.com/input-output-hk/atala-prism-building-blocks/commit/b707792ba7c3a48f25089b5224b90dd186733539))
+* **connect:** removed the unwanted dependencies ([#145](https://github.com/input-output-hk/atala-prism-building-blocks/issues/145)) ([96b0fbc](https://github.com/input-output-hk/atala-prism-building-blocks/commit/96b0fbcd83879840c1b6a46cfeff3604c92ea2a4))
+
+
+### Reverts
+
+* **connect:** revert wrongly released 1.0.0 ([b5e81ec](https://github.com/input-output-hk/atala-prism-building-blocks/commit/b5e81ec9ec89f2baf9d37a09045e4705c6fb57d1))

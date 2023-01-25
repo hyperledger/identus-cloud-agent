@@ -1,19 +1,24 @@
 package io.iohk.atala.agent.walletapi.storage
 
-import io.iohk.atala.agent.walletapi.model.{CommitmentPurpose, ECKeyPair}
-import io.iohk.atala.agent.walletapi.storage.InMemoryDIDSecretStorage.DIDSecretRecord
+import io.iohk.atala.agent.walletapi.model.ECKeyPair
+import io.iohk.atala.agent.walletapi.storage.InMemoryDIDSecretStorage.{DIDSecretRecord, PeerDIDSecretRecord}
+import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError._
 import io.iohk.atala.castor.core.model.did.PrismDID
 import io.iohk.atala.shared.models.HexStrings.HexString
 import zio.*
+import io.iohk.atala.mercury.model.DidId
+import com.nimbusds.jose.jwk.OctetKeyPair
 
-private[walletapi] class InMemoryDIDSecretStorage private (store: Ref[Map[PrismDID, DIDSecretRecord]])
-    extends DIDSecretStorage {
+private[walletapi] class InMemoryDIDSecretStorage private (
+    store: Ref[Map[PrismDID, DIDSecretRecord]],
+    peerDIDStore: Ref[Map[DidId, PeerDIDSecretRecord]]
+) extends DIDSecretStorage {
   override def listKeys(did: PrismDID): Task[Map[String, ECKeyPair]] =
     store.get.map(_.get(did).map(_.keyPairs).getOrElse(Map.empty))
 
   override def getKey(did: PrismDID, keyId: String): Task[Option[ECKeyPair]] = listKeys(did).map(_.get(keyId))
 
-  override def upsertKey(did: PrismDID, keyId: String, keyPair: ECKeyPair): Task[Unit] =
+  override def insertKey(did: PrismDID, keyId: String, keyPair: ECKeyPair, operationHash: Array[Byte]): Task[Int] =
     store
       .update { currentStore =>
         val currentSecret = currentStore.get(did)
@@ -23,8 +28,9 @@ private[walletapi] class InMemoryDIDSecretStorage private (store: Ref[Map[PrismD
           currentSecret.fold(DIDSecretRecord(keyPairs = updatedKeyPairs))(_.copy(keyPairs = updatedKeyPairs))
         currentStore.updated(did, updatedSecret)
       }
+      .map(_ => 1)
 
-  override def removeKey(did: PrismDID, keyId: String): Task[Unit] = store
+  override def removeKey(did: PrismDID, keyId: String): Task[Int] = store
     .update { currentStore =>
       currentStore.get(did) match {
         case Some(secret) =>
@@ -35,40 +41,33 @@ private[walletapi] class InMemoryDIDSecretStorage private (store: Ref[Map[PrismD
         case None => currentStore
       }
     }
+    .map(_ => 1)
 
-  override def getDIDCommitmentRevealValue(did: PrismDID, purpose: CommitmentPurpose): Task[Option[HexString]] =
-    store.get.map(
-      _.get(did).flatMap(secret =>
-        purpose match {
-          case CommitmentPurpose.Update   => secret.updateCommitmentRevealValue
-          case CommitmentPurpose.Recovery => secret.recoveryCommitmentRevealValue
+  override def removeDIDSecret(did: PrismDID): Task[Int] = store.update(_.removed(did)).map(_ => 1)
+
+  override def insertKey(did: DidId, keyId: String, keyPair: OctetKeyPair): Task[Int] = {
+    for {
+      _ <- peerDIDStore
+        .update { currentStore =>
+          val currentSecret = currentStore.get(did)
+          val currentKeyPairs = currentSecret.map(_.keyPairs).getOrElse(Map.empty)
+          val updatedKeyPairs = currentKeyPairs.updated(keyId, keyPair)
+          val updatedSecret =
+            currentSecret.fold(PeerDIDSecretRecord(keyPairs = updatedKeyPairs))(_.copy(keyPairs = updatedKeyPairs))
+          currentStore.updated(did, updatedSecret)
         }
-      )
-    )
+      storage <- peerDIDStore.get
+      _ <- ZIO.logInfo(s"Peer DID Store content after insert: ${storage.size}")
+    } yield 1
+  }
 
-  override def upsertDIDCommitmentRevealValue(
-      did: PrismDID,
-      purpose: CommitmentPurpose,
-      revealValue: HexString
-  ): Task[Unit] =
-    store
-      .update { currentStore =>
-        val currentSecret = currentStore.get(did)
-        val updatedSecret: DIDSecretRecord = purpose match {
-          case CommitmentPurpose.Update =>
-            currentSecret.fold(DIDSecretRecord(updateCommitmentRevealValue = Some(revealValue)))(
-              _.copy(updateCommitmentRevealValue = Some(revealValue))
-            )
-          case CommitmentPurpose.Recovery =>
-            currentSecret.fold(DIDSecretRecord(recoveryCommitmentRevealValue = Some(revealValue)))(
-              _.copy(recoveryCommitmentRevealValue = Some(revealValue))
-            )
-        }
-
-        currentStore.updated(did, updatedSecret)
-      }
-
-  override def removeDIDSecret(did: PrismDID): Task[Unit] = store.update(_.removed(did))
+  override def getKey(did: DidId, keyId: String): Task[Option[OctetKeyPair]] =
+    for {
+      storage <- peerDIDStore.get
+      _ <- ZIO.logInfo(s"Peer DID Store content before get: ${storage.size}")
+      maybeKeyPair <- peerDIDStore.get.map(_.get(did).map(_.keyPairs).flatMap(_.get(keyId)))
+      keyPair <- ZIO.fromOption(maybeKeyPair).mapError(_ => KeyNotFoundError(did, keyId))
+    } yield Some(keyPair)
 
 }
 
@@ -80,9 +79,17 @@ private[walletapi] object InMemoryDIDSecretStorage {
       keyPairs: Map[String, ECKeyPair] = Map.empty
   )
 
+  private final case class PeerDIDSecretRecord(
+      keyPairs: Map[String, OctetKeyPair] = Map.empty
+  )
+
   val layer: ULayer[DIDSecretStorage] = {
     ZLayer.fromZIO(
-      Ref.make(Map.empty[PrismDID, DIDSecretRecord]).map(InMemoryDIDSecretStorage(_))
+      for {
+        _ <- ZIO.logInfo(s"Creating InMemoryDIDSecretStorage !!")
+        prismDIDStore <- Ref.make(Map.empty[PrismDID, DIDSecretRecord])
+        peerDIDStore <- Ref.make(Map.empty[DidId, PeerDIDSecretRecord])
+      } yield InMemoryDIDSecretStorage(prismDIDStore, peerDIDStore)
     )
   }
 }

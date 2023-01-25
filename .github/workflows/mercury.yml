@@ -7,61 +7,23 @@ concurrency:
   cancel-in-progress: true
 
 on:
-  # Run with every push to `main` branch
-  # Run with each PR opened vs Mercury
-  pull_request:
-    paths:
-      - ".github/workflows/mercury.yml"
-      - "mercury/**"
   push:
     branches:
       - "main"
     paths:
       - ".github/workflows/mercury.yml"
-      - "mercury/**"
-
-env:
-  GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
-
-defaults:
-  run:
-    shell: bash
-    working-directory: "mercury/mercury-library"
+      - ".github/workflows/scala-unit-tests.yml"
+      - "mercury/mercury-library/**"
+  pull_request:
+    paths:
+      - ".github/workflows/mercury.yml"
+      - ".github/workflows/scala-unit-tests.yml"
+      - "mercury/mercury-library/**"
 
 jobs:
   build-and-test-mercury:
-    name: "Build and test Mercury"
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Setup Java and Scala
-        uses: olafurpg/setup-scala@v13
-        with:
-          java-version: openjdk@1.11
-
-      - name: Cache sbt
-        uses: coursier/cache-action@v6.3
-
-      - name: Run Scala formatter
-        run: |
-          sbt scalafmtCheckAll
-
-      - name: Build and test Mercury
-        run: sbt test
-
-      - name: Aggregate test reports
-        if: always()
-        uses: ./.github/actions/aggregate-test-reports
-        with:
-          tests-dir: "mercury/mercury-library"
-
-      - name: Publish test results
-        # Publish even if the test step fails
-        if: always()
-        uses: EnricoMi/publish-unit-test-result-action@v2
-        with:
-          junit_files: "mercury/mercury-library/target/test-reports/**/TEST-*.xml"
-          comment_title: "Mercury Test Results"
-          check_name: "Mercury Test Results"
+    uses: ./.github/workflows/scala-unit-tests.yml
+    with:
+      component-name: "Mercury Lib"
+      component-dir: "mercury/mercury-library"
+    secrets: inherit

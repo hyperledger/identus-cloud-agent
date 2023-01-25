@@ -1,3 +1,4 @@
+---
 name: Linter
 
 # Default shell is `sh`
@@ -7,21 +8,14 @@ defaults:
     shell: bash
 
 on:
-  push:
-    branches:
-      - fixme
-  # pull_request:
+  pull_request:
 
 jobs:
   lint:
     name: Lint changes
     runs-on: ubuntu-latest
     env:
-      APPLY_FIXES: all
-      APPLY_FIXES_EVENT: pull_request
-      APPLY_FIXES_MODE: commit
-      VALIDATE_ALL_CODEBASE: ${{ github.ref_name == 'main' }}
-      DISABLE: COPYPASTE,SPELL
+      APPLY_FIXES: none
       GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
     steps:
       - name: Checkout Code
@@ -38,5 +32,5 @@ jobs:
         with:
           name: Mega-Linter reports
           path: |
-            report
+            megalinter-reports
             mega-linter.log

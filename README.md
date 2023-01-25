@@ -13,13 +13,28 @@
   <br>
 </p>
 <p align="center">
-  <a href="CONTRIBUTING.md">Contributing Guidelines</a> · <a href="https://blog.atalaprism.io/">Blog</a>
+  <a href="CONTRIBUTING.md">Contributing Guidelines</a>
 </p>
 <hr>
 
 ## Documentation
 
-* [OpenAPI docs](openapi)
+<!-- FIXME * [OpenAPI docs](openapi) -->
+
+* [Interdependencies](./Interdependencies.md)
+
+## Running a single instance locally
+
+Instructions for running the `building-block` stack locally can be found here: [Running locally](infrastructure/local/README.md)
+
+## Running multiple instances locally
+
+Instructions for running multiple instances of the `building-block` stack locally can be found here: [Running multiple locally](infrastructure/multi/README.md)
+
+## Developing
+
+Instructions for running the `building-block` stack for development purposes can be found here: [Developing locally](infrastructure/local/README.md)
+
 
 ## Contributing
 

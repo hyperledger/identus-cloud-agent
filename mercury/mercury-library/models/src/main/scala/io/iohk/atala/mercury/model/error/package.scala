@@ -18,11 +18,14 @@ package object error {
 
   trait TransportError extends Exception with MercuryError
 
-  case class SendMessage(cause: Throwable)
-      extends RuntimeException("Error when sending message", cause)
+  case class SendMessageError(cause: Throwable, mData: Option[String] = None)
+      extends RuntimeException(
+        s"Error when sending message: ${cause.getMessage};${mData.map(e => s" DATA:'$e'").getOrElse("")}",
+        cause
+      )
       with TransportError
 
   case class ParseResponse(cause: Throwable)
-      extends RuntimeException("Error when parsing response", cause)
+      extends RuntimeException(s"Error when sending message: ${cause.getMessage}", cause)
       with TransportError
 }
