@@ -160,6 +160,29 @@ paths:
               schema:
                 $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
 
+  /did-registrar/dids/{didRef}/deactivations:
+    post:
+      tags: ["DID Registrar"]
+      operationId: deactivateManagedDid
+      summary: Deactivate DID in PrismAgent's wallet and post deactivate operation to blockchain
+      description: |
+        Deactivate DID in PrismAgent's wallet and post deactivate operation to blockchain.
+      parameters:
+        - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
+      responses:
+        "202":
+          description: Publishing DID to Blockchain.
+          content:
+            application/json:
+              schema:
+                $ref: "./castor/schemas.yaml#/components/schemas/DIDOperationResponse"
+        "422":
+          description: The DID deactivation failed.
+          content:
+            application/json:
+              schema:
+                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
+
   # ----------------------------------
   # Pollux
   # ----------------------------------

@@ -207,6 +207,31 @@ final class ManagedDIDService private[walletapi] (
     } yield outcome
   }
 
+  def deactivateManagedDID(did: CanonicalPrismDID): IO[UpdateManagedDIDError, ScheduleDIDOperationOutcome] = {
+    // TODO: should we keep deactivation state somewhere?
+    def doDeactivate(operation: PrismDIDOperation.Deactivate) = {
+      for {
+        signedOperation <- signOperationWithMasterKey[UpdateManagedDIDError](operation)
+        outcome <- submitSignedOperation[UpdateManagedDIDError](signedOperation)
+      } yield outcome
+    }
+
+    for {
+      _ <- computeNewDIDStateFromDLTAndPersist[UpdateManagedDIDError](did)
+      didState <- nonSecretStorage
+        .getManagedDIDState(did)
+        .mapError(UpdateManagedDIDError.WalletStorageError.apply)
+        .someOrFail(UpdateManagedDIDError.DIDNotFound(did))
+        .collect(UpdateManagedDIDError.DIDNotPublished(did)) { case s: ManagedDIDState.Published => s }
+      previousOperationHash <- getPreviousOperationHash[UpdateManagedDIDError](did, didState.createOperation)
+      deactivateOperation = PrismDIDOperation.Deactivate(did, ArraySeq.from(previousOperationHash))
+      _ <- ZIO
+        .fromEither(didOpValidator.validate(deactivateOperation))
+        .mapError(UpdateManagedDIDError.OperationError.apply)
+      outcome <- doDeactivate(deactivateOperation)
+    } yield outcome
+  }
+
   /** return hash of previous operation. Currently support only last confirmed operation */
   private def getPreviousOperationHash[E](
       did: CanonicalPrismDID,
