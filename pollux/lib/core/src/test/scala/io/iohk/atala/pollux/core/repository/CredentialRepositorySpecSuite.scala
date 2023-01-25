@@ -245,8 +245,8 @@ object CredentialRepositorySpecSuite {
         updatedRecord <- repo.getIssueCredentialRecord(aRecord.id)
       } yield {
         assertTrue(count == 1) &&
-        assertTrue(record.get.publicationState == None) &&
-        assertTrue(updatedRecord.get.publicationState == Some(PublicationState.PublicationPending))
+        assertTrue(record.get.publicationState.isEmpty) &&
+        assertTrue(updatedRecord.get.publicationState.contains(PublicationState.PublicationPending))
       }
     },
     test("updateCredentialRecordPublicationState doesn't update the record for invalid from state") {
@@ -263,8 +263,8 @@ object CredentialRepositorySpecSuite {
         updatedRecord <- repo.getIssueCredentialRecord(aRecord.id)
       } yield {
         assertTrue(count == 0) &&
-        assertTrue(record.get.publicationState == None) &&
-        assertTrue(updatedRecord.get.publicationState == None)
+        assertTrue(record.get.publicationState.isEmpty) &&
+        assertTrue(updatedRecord.get.publicationState.isEmpty)
       }
     },
     test("updateWithRequestCredential updates record") {

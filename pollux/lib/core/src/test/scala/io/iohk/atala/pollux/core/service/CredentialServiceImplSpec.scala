@@ -53,11 +53,11 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
             assertTrue(record.offerCredentialData.get.from == did) &&
             assertTrue(record.offerCredentialData.get.to == DidId(subjectId)) &&
             assertTrue(record.offerCredentialData.get.attachments.isEmpty) &&
-            assertTrue(record.offerCredentialData.get.thid == Some(thid.toString)) &&
-            assertTrue(record.offerCredentialData.get.body.comment == None) &&
-            assertTrue(record.offerCredentialData.get.body.goal_code == Some("Offer Credential")) &&
-            assertTrue(record.offerCredentialData.get.body.multiple_available == None) &&
-            assertTrue(record.offerCredentialData.get.body.replacement_id == None) &&
+            assertTrue(record.offerCredentialData.get.thid.contains(thid.toString)) &&
+            assertTrue(record.offerCredentialData.get.body.comment.isEmpty) &&
+            assertTrue(record.offerCredentialData.get.body.goal_code.contains("Offer Credential")) &&
+            assertTrue(record.offerCredentialData.get.body.multiple_available.isEmpty) &&
+            assertTrue(record.offerCredentialData.get.body.replacement_id.isEmpty) &&
             assertTrue(record.offerCredentialData.get.body.formats.isEmpty) &&
             assertTrue(
               record.offerCredentialData.get.body.credential_preview.attributes == Seq(
