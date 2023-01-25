@@ -25,17 +25,17 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
           did = DidId("did:peer:INVITER")
           record <- svc.createConnectionInvitation(Some("Test connection invitation"), did)
         } yield {
-          assertTrue(record.label == Some("Test connection invitation")) &&
+          assertTrue(record.label.contains("Test connection invitation")) &&
           assertTrue(record.protocolState == ProtocolState.InvitationGenerated) &&
           assertTrue(record.role == Role.Inviter) &&
-          assertTrue(record.connectionRequest == None) &&
-          assertTrue(record.connectionResponse == None) &&
-          assertTrue(record.thid == Some(record.id)) &&
-          assertTrue(record.updatedAt == None) &&
+          assertTrue(record.connectionRequest.isEmpty) &&
+          assertTrue(record.connectionResponse.isEmpty) &&
+          assertTrue(record.thid.contains(record.id)) &&
+          assertTrue(record.updatedAt.isEmpty) &&
           assertTrue(record.invitation.from == did) &&
-          assertTrue(record.invitation.attachments == None) &&
+          assertTrue(record.invitation.attachments.isEmpty) &&
           assertTrue(record.invitation.body.goal_code == "connect") &&
-          assertTrue(record.invitation.body.accept == Seq.empty)
+          assertTrue(record.invitation.body.accept.isEmpty)
         }
       }, {
         test("getConnectionRecord correctly returns record") {
@@ -48,8 +48,8 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
             foundRecord <- svc.getConnectionRecord(createdRecord.id)
             notFoundRecord <- svc.getConnectionRecord(UUID.randomUUID)
           } yield {
-            assertTrue(foundRecord == Some(createdRecord)) &&
-            assertTrue(notFoundRecord == None)
+            assertTrue(foundRecord.contains(createdRecord)) &&
+            assertTrue(notFoundRecord.isEmpty)
           }
         }
       }, {
@@ -111,7 +111,7 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
             assertTrue(inviteeRecord.role == Role.Invitee) &&
             assertTrue(inviteeRecord.connectionRequest.isEmpty) &&
             assertTrue(inviteeRecord.connectionResponse.isEmpty) &&
-            assertTrue(inviteeRecord.thid == Some(UUID.fromString(inviterRecord.invitation.id))) &&
+            assertTrue(inviteeRecord.thid.contains(UUID.fromString(inviterRecord.invitation.id))) &&
             assertTrue(inviteeRecord.updatedAt.isEmpty) &&
             assertTrue(inviteeRecord.invitation == inviterRecord.invitation)
           }

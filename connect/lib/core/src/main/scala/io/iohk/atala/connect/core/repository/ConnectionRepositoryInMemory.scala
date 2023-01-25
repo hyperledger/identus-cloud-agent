@@ -96,7 +96,7 @@ class ConnectionRepositoryInMemory(storeRef: Ref[Map[UUID, ConnectionRecord]]) e
   override def getConnectionRecordByThreadId(thid: UUID): Task[Option[ConnectionRecord]] = {
     for {
       store <- storeRef.get
-    } yield store.values.find(_.thid == Some(thid))
+    } yield store.values.find(_.thid.contains(thid))
   }
 
   override def getConnectionRecords(): Task[Seq[ConnectionRecord]] = {
