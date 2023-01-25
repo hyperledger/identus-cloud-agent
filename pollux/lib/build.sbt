@@ -55,7 +55,7 @@ lazy val `sql-doobie` = project
     name := "pollux-sql-doobie",
     libraryDependencies ++= sqlDoobieDependencies
   )
-  .dependsOn(core)
+  .dependsOn(core % "compile->compile;test->test")
 
 // ### ReleaseStep ###
 releaseProcess := Seq[ReleaseStep](
