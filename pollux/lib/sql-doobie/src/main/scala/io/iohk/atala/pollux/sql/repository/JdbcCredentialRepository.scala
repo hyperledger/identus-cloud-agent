@@ -1,5 +1,6 @@
 package io.iohk.atala.pollux.sql.repository
 
+import cats.data.NonEmptyList
 import cats.instances.seq
 import doobie.*
 import doobie.implicits.*
@@ -11,10 +12,12 @@ import io.iohk.atala.mercury.protocol.issuecredential.OfferCredential
 import io.iohk.atala.mercury.protocol.issuecredential.RequestCredential
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord.ProtocolState
 import io.iohk.atala.pollux.core.model.*
+import io.iohk.atala.pollux.core.model.error.CredentialRepositoryError._
 import io.iohk.atala.pollux.core.repository.CredentialRepository
 import io.iohk.atala.pollux.sql.model.JWTCredentialRow
 import io.iohk.atala.prism.crypto.MerkleInclusionProof
 import io.iohk.atala.shared.utils.BytesOps
+import org.postgresql.util.PSQLException
 import zio.*
 import zio.interop.catz.*
 
@@ -106,6 +109,10 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
 
     cxnIO.run
       .transact(xa)
+      .mapError {
+        case e: PSQLException => UniqueConstraintViolation(e.getMessage())
+        case e                => e
+      }
   }
 
   override def getIssueCredentialRecords(): Task[Seq[IssueCredentialRecord]] = {
@@ -330,14 +337,19 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
       .transact(xa)
   }
 
-  override def getValidIssuedCredentials(recordId: Seq[UUID]): Task[Seq[ValidIssuedCredentialRecord]] = {
+  override def getValidIssuedCredentials(recordIds: Seq[UUID]): Task[Seq[ValidIssuedCredentialRecord]] = {
+    val idAsStrings = recordIds.map(_.toString)
+    val nel = NonEmptyList.of(idAsStrings.head, idAsStrings.tail: _*)
+    val inClauseFragment = Fragments.in(fr"id", nel)
+
     val cxnIO = sql"""
         | SELECT
         |   id,
         |   issued_credential_raw
         | FROM public.issue_credential_records
-        | WHERE
-        |   id IN (${recordId.mkString(",")})
+        | WHERE 
+        |   issued_credential_raw IS NOT NULL
+        |   AND $inClauseFragment
         """.stripMargin
       .query[ValidIssuedCredentialRecord]
       .to[Seq]
