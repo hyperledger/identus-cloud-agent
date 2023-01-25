@@ -926,18 +926,6 @@ paths:
             application/json:
               schema:
                 $ref: "./connect/schemas.yaml#/components/schemas/ErrorResponse"
-    delete:
-      tags: ["Connections Management"]
-      parameters:
-        - $ref: "./connect/schemas.yaml#/components/parameters/connectionId"
-      operationId: deleteConnection
-      summary: Deletes existing connection record.
-      description: Just deletes connection state in the Agent, it does not include notifing other party that connection is deleted. We should consider this feature for the future. If additional action is attempted over deleted connection, it should thow error (no matter which side deleted connection).
-      responses:
-        "200":
-          description: Successful delete
-        "404":
-          description: Connection state record not found for given `connectionId`
 
   /connection-invitations:
     post:
