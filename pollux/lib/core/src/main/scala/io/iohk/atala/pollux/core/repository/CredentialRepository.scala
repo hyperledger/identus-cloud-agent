@@ -47,6 +47,8 @@ trait CredentialRepository[F[_]] {
       protocolState: ProtocolState
   ): F[Int]
 
+  def deleteIssueCredentialRecord(recordId: UUID): F[Int]
+
   def getValidIssuedCredentials(recordId: Seq[UUID]): F[Seq[ValidIssuedCredentialRecord]]
 
 }

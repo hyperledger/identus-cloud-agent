@@ -5,17 +5,20 @@ import doobie.implicits.*
 import io.circe._
 import io.circe.parser._
 import io.circe.syntax._
+import io.iohk.atala.connect.core.model.ConnectionRecord
+import io.iohk.atala.connect.core.model.ConnectionRecord.ProtocolState
+import io.iohk.atala.connect.core.model.ConnectionRecord.Role
 import io.iohk.atala.connect.core.model.*
+import io.iohk.atala.connect.core.model.error.ConnectionRepositoryError._
+import io.iohk.atala.connect.core.repository.ConnectionRepository
+import io.iohk.atala.mercury.protocol.connection.*
+import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
+import org.postgresql.util.PSQLException
 import zio.*
 import zio.interop.catz.*
-import io.iohk.atala.mercury.protocol.connection.*
-import io.iohk.atala.connect.core.model.ConnectionRecord
-import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
-import java.util.UUID
-import io.iohk.atala.connect.core.model.ConnectionRecord.Role
-import io.iohk.atala.connect.core.model.ConnectionRecord.ProtocolState
-import io.iohk.atala.connect.core.repository.ConnectionRepository
+
 import java.time.Instant
+import java.util.UUID
 
 class JdbcConnectionRepository(xa: Transactor[Task]) extends ConnectionRepository[Task] {
 
@@ -67,6 +70,10 @@ class JdbcConnectionRepository(xa: Transactor[Task]) extends ConnectionRepositor
 
     cxnIO.run
       .transact(xa)
+      .mapError {
+        case e: PSQLException => UniqueConstraintViolation(e.getMessage())
+        case e                => e
+      }
   }
 
   override def getConnectionRecords(): Task[Seq[ConnectionRecord]] = {
