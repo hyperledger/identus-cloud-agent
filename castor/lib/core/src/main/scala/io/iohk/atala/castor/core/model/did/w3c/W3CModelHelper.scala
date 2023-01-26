@@ -24,18 +24,18 @@ private[castor] trait W3CModelHelper {
   }
 
   extension (didData: DIDData) {
-    def toW3C: DIDDocumentRepr = {
-      val keyWithPurpose = didData.publicKeys.map(k => k.purpose -> k.toW3C(didData.id, didData.id))
+    def toW3C(did: PrismDID): DIDDocumentRepr = {
+      val keyWithPurpose = didData.publicKeys.map(k => k.purpose -> k.toW3C(did, did))
       DIDDocumentRepr(
-        id = didData.id.toString,
-        controller = didData.id.toString,
+        id = did.toString,
+        controller = did.toString,
         verificationMethod = Nil,
         authentication = keyWithPurpose.collect { case (VerificationRelationship.Authentication, k) => k },
         assertionMethod = keyWithPurpose.collect { case (VerificationRelationship.AssertionMethod, k) => k },
         keyAgreement = keyWithPurpose.collect { case (VerificationRelationship.KeyAgreement, k) => k },
         capabilityInvocation = keyWithPurpose.collect { case (VerificationRelationship.CapabilityInvocation, k) => k },
         capabilityDelegation = keyWithPurpose.collect { case (VerificationRelationship.CapabilityDelegation, k) => k },
-        service = didData.services.map(_.toW3C(didData.id))
+        service = didData.services.map(_.toW3C(did))
       )
     }
   }
