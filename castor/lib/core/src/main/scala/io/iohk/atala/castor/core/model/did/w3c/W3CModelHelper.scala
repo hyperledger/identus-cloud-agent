@@ -9,6 +9,7 @@ import io.iohk.atala.castor.core.model.did.{
   Service,
   VerificationRelationship
 }
+import io.iohk.atala.shared.models.HexStrings.*
 
 object W3CModelHelper extends W3CModelHelper
 
@@ -17,7 +18,8 @@ private[castor] trait W3CModelHelper {
   extension (didMetadata: DIDMetadata) {
     def toW3C(did: PrismDID): DIDDocumentMetadataRepr = DIDDocumentMetadataRepr(
       deactivated = didMetadata.deactivated,
-      canonicalId = did.asCanonical.toString
+      canonicalId = did.asCanonical.toString,
+      versionId = HexString.fromByteArray(didMetadata.lastOperationHash.toArray).toString
     )
   }
 

@@ -14,4 +14,4 @@ enum DIDResolutionErrorRepr(val value: String) {
   case UnsupportedPublicKeyType extends DIDResolutionErrorRepr("unsupportedPublicKeyType")
 }
 
-final case class DIDDocumentMetadataRepr(deactivated: Boolean, canonicalId: String)
+final case class DIDDocumentMetadataRepr(deactivated: Boolean, canonicalId: String, versionId: String)
