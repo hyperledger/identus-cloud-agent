@@ -15,7 +15,10 @@ object W3CModelHelper extends W3CModelHelper
 private[castor] trait W3CModelHelper {
 
   extension (didMetadata: DIDMetadata) {
-    def toW3C: DIDDocumentMetadataRepr = DIDDocumentMetadataRepr(deactivated = didMetadata.deactivated)
+    def toW3C(did: PrismDID): DIDDocumentMetadataRepr = DIDDocumentMetadataRepr(
+      deactivated = didMetadata.deactivated,
+      canonicalId = did.asCanonical.toString
+    )
   }
 
   extension (didData: DIDData) {

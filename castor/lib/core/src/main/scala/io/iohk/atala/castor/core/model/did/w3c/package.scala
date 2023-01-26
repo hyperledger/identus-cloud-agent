@@ -28,7 +28,7 @@ package object w3c {
           _.toRight(DIDResolutionErrorRepr.NotFound)
         )
         .absolve
-    } yield (didData._1.toW3C, didData._2.toW3C)
+    } yield (didData._1.toW3C(prismDID), didData._2.toW3C)
   }
 
 }
