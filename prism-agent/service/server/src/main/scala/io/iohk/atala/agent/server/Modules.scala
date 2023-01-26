@@ -12,16 +12,10 @@ import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.agent.server.http.marshaller.{
   ConnectionsManagementApiMarshallerImpl,
   DIDApiMarshallerImpl,
-  DIDAuthenticationApiMarshallerImpl,
   DIDRegistrarApiMarshallerImpl
 }
-import io.iohk.atala.agent.server.http.service.{
-  ConnectionsManagementApiServiceImpl,
-  DIDApiServiceImpl,
-  DIDAuthenticationApiServiceImpl,
-  DIDRegistrarApiServiceImpl
-}
-import io.iohk.atala.agent.openapi.api.{ConnectionsManagementApi, DIDApi, DIDAuthenticationApi, DIDRegistrarApi}
+import io.iohk.atala.agent.server.http.service.{ConnectionsManagementApiServiceImpl, DIDApiServiceImpl}
+import io.iohk.atala.agent.openapi.api.{ConnectionsManagementApi, DIDApi, DIDRegistrarApi}
 import cats.effect.std.Dispatcher
 import com.typesafe.config.ConfigFactory
 import doobie.util.transactor.Transactor
@@ -103,7 +97,7 @@ object Modules {
 
   def app(port: Int): RIO[
     DidComm & ManagedDIDService & AppConfig & DIDRegistrarApi & IssueCredentialsProtocolApi & ConnectionsManagementApi &
-      DIDApi & DIDAuthenticationApi & PresentProofApi & ActorSystem[Nothing],
+      DIDApi & PresentProofApi & ActorSystem[Nothing],
     Unit
   ] = {
     val httpServerApp = HttpRoutes.routes.flatMap(HttpServer.start(port, _))
@@ -479,12 +473,6 @@ object HttpModule {
     (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new DIDApi(_, _))
   }
 
-  val didAuthenticationApiLayer: ULayer[DIDAuthenticationApi] = {
-    val apiServiceLayer = DIDAuthenticationApiServiceImpl.layer
-    val apiMarshallerLayer = DIDAuthenticationApiMarshallerImpl.layer
-    (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new DIDAuthenticationApi(_, _))
-  }
-
   val didRegistrarApiLayer: TaskLayer[DIDRegistrarApi] = {
     val serviceLayer = AppModule.manageDIDServiceLayer
     val apiServiceLayer = serviceLayer >>> DIDRegistrarApiServiceImpl.layer
@@ -515,7 +503,7 @@ object HttpModule {
   }
 
   val layers =
-    didApiLayer ++ didAuthenticationApiLayer ++ didRegistrarApiLayer ++
+    didApiLayer ++ didRegistrarApiLayer ++
       issueCredentialsProtocolApiLayer ++ connectionsManagementApiLayer ++ presentProofProtocolApiLayer
 }
 
