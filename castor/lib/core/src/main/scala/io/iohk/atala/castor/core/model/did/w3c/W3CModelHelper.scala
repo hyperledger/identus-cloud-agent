@@ -1,9 +1,9 @@
 package io.iohk.atala.castor.core.model.did.w3c
 
 import io.iohk.atala.castor.core.model.did.{
-  CanonicalPrismDID,
   DIDData,
   DIDMetadata,
+  PrismDID,
   PublicKey,
   PublicKeyData,
   Service,
@@ -36,7 +36,7 @@ private[castor] trait W3CModelHelper {
   }
 
   extension (service: Service) {
-    def toW3C(did: CanonicalPrismDID): ServiceRepr = ServiceRepr(
+    def toW3C(did: PrismDID): ServiceRepr = ServiceRepr(
       id = s"${did.toString}#${service.id}",
       `type` = service.`type`.name,
       serviceEndpoint = service.serviceEndpoint.map(_.toString)
@@ -44,7 +44,7 @@ private[castor] trait W3CModelHelper {
   }
 
   extension (publicKey: PublicKey) {
-    def toW3C(did: CanonicalPrismDID, controller: CanonicalPrismDID): PublicKeyRepr = PublicKeyRepr(
+    def toW3C(did: PrismDID, controller: PrismDID): PublicKeyRepr = PublicKeyRepr(
       id = s"${did.toString}#${publicKey.id}",
       `type` = "EcdsaSecp256k1VerificationKey2019",
       controller = controller.toString,
