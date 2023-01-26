@@ -100,7 +100,7 @@ private class DIDServiceImpl(didOpValidator: DIDOperationValidator, nodeClient: 
           deactivated = false // unpublished DID cannot be deactivated
         )
       val didData = DIDData(
-        id = canonicalDID,
+        id = did, // id must match the DID that was resolved: https://www.w3.org/TR/did-core/#dfn-diddocument
         publicKeys = op.publicKeys,
         services = op.services,
         internalKeys = op.internalKeys
