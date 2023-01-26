@@ -10,20 +10,18 @@ import zio.http.service._
 import java.io.IOException
 import org.didcommx.didcomm.DIDComm
 import io.iohk.atala.QRcode
+import io.iohk.atala.mercury._
 import io.iohk.atala.mercury.model.{given, _}
 import io.iohk.atala.mercury.model.error._
 import io.iohk.atala.mercury.protocol.outofbandlogin._
 import io.iohk.atala.mercury.protocol.issuecredential._
 import io.iohk.atala.mercury.protocol.presentproof._
-import io.iohk.atala.resolvers.UniversalDidResolver
 import io.iohk.atala.mercury.protocol.connection.*
 import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
-import io.iohk.atala.resolvers.DIDResolver
+import io.iohk.atala.resolvers._
 import io.circe.Json
 import io.circe.parser.*
 import io.circe.syntax.*
-
-import io.iohk.atala.mercury.DidCommX
 
 /** AgentCli
   * {{{
