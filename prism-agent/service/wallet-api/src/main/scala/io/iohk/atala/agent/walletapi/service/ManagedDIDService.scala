@@ -3,12 +3,12 @@ package io.iohk.atala.agent.walletapi.service
 import io.iohk.atala.agent.walletapi.crypto.{ECWrapper, KeyGeneratorWrapper}
 import io.iohk.atala.agent.walletapi.model.{
   DIDPublicKeyTemplate,
+  DIDUpdateLineage,
   ECKeyPair,
   ManagedDIDDetail,
   ManagedDIDState,
   ManagedDIDTemplate,
-  UpdateManagedDIDAction,
-  DIDUpdateLineage
+  UpdateManagedDIDAction
 }
 import io.iohk.atala.agent.walletapi.model.ECCoordinates.*
 import io.iohk.atala.agent.walletapi.model.error.{*, given}
@@ -28,6 +28,7 @@ import io.iohk.atala.agent.walletapi.util.{
 import io.iohk.atala.castor.core.model.did.{
   CanonicalPrismDID,
   DID,
+  DIDMetadata,
   EllipticCurve,
   InternalKeyPurpose,
   InternalPublicKey,
@@ -194,6 +195,11 @@ final class ManagedDIDService private[walletapi] (
         .fromEither(UpdateManagedDIDActionValidator.validate(actions))
         .mapError(UpdateManagedDIDError.InvalidArgument.apply)
       _ <- computeNewDIDStateFromDLTAndPersist[UpdateManagedDIDError](did)
+      _ <- didService
+        .resolveDID(did)
+        .mapError(UpdateManagedDIDError.ResolutionError.apply)
+        .someOrFail(UpdateManagedDIDError.DIDNotFound(did))
+        .filterOrFail { case (metaData, _) => !metaData.deactivated }(UpdateManagedDIDError.DIDAlreadyDeactivated(did))
       didState <- nonSecretStorage
         .getManagedDIDState(did)
         .mapError(UpdateManagedDIDError.WalletStorageError.apply)
@@ -208,7 +214,6 @@ final class ManagedDIDService private[walletapi] (
   }
 
   def deactivateManagedDID(did: CanonicalPrismDID): IO[UpdateManagedDIDError, ScheduleDIDOperationOutcome] = {
-    // TODO: should we keep deactivation state somewhere?
     def doDeactivate(operation: PrismDIDOperation.Deactivate) = {
       for {
         signedOperation <- signOperationWithMasterKey[UpdateManagedDIDError](operation)
@@ -218,6 +223,11 @@ final class ManagedDIDService private[walletapi] (
 
     for {
       _ <- computeNewDIDStateFromDLTAndPersist[UpdateManagedDIDError](did)
+      _ <- didService
+        .resolveDID(did)
+        .mapError(UpdateManagedDIDError.ResolutionError.apply)
+        .someOrFail(UpdateManagedDIDError.DIDNotFound(did))
+        .filterOrFail { case (metaData, _) => !metaData.deactivated }(UpdateManagedDIDError.DIDAlreadyDeactivated(did))
       didState <- nonSecretStorage
         .getManagedDIDState(did)
         .mapError(UpdateManagedDIDError.WalletStorageError.apply)
