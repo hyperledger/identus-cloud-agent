@@ -8,7 +8,7 @@ object Dependencies {
     val prismSdk = "v1.4.1" // scala-steward:off
     val iris = "0.1.0"
     val shared = "0.2.0"
-    val mercury = "0.15.0"
+    val mercury = "0.16.0"
     val flyway = "9.8.3"
     val testContainersScalaPostgresql = "0.40.11"
     val quill = "4.6.0"
@@ -30,8 +30,10 @@ object Dependencies {
 
   private lazy val flyway = "org.flywaydb" % "flyway-core" % Versions.flyway
 
-  private lazy val quillDoobie = "io.getquill" %% "quill-doobie" % Versions.quill exclude("org.scala-lang.modules", "scala-java8-compat_3")
-  private lazy val testcontainers = "com.dimafeng" %% "testcontainers-scala-postgresql" % Versions.testContainersScalaPostgresql % Test
+  private lazy val quillDoobie =
+    "io.getquill" %% "quill-doobie" % Versions.quill exclude ("org.scala-lang.modules", "scala-java8-compat_3")
+  private lazy val testcontainers =
+    "com.dimafeng" %% "testcontainers-scala-postgresql" % Versions.testContainersScalaPostgresql % Test
 
   // We have to exclude bouncycastle since for some reason bitcoinj depends on bouncycastle jdk15to18
   // (i.e. JDK 1.5 to 1.8), but we are using JDK 11
