@@ -1,3 +1,31 @@
+# [prism-agent-v0.31.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.31.0...prism-agent-v0.31.1) (2023-01-26)
+
+
+### Bug Fixes
+
+* **prism-agent:** remove deprecated did-auth endpoints ([#324](https://github.com/input-output-hk/atala-prism-building-blocks/issues/324)) ([a934cd4](https://github.com/input-output-hk/atala-prism-building-blocks/commit/a934cd4ac48f4ba4724681eeff92f4c67c009940))
+
+# [prism-agent-v0.31.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.30.0...prism-agent-v0.31.0) (2023-01-25)
+
+
+### Features
+
+* **prism-agent:** remove connection deletion enpoint from OAS spec ([#323](https://github.com/input-output-hk/atala-prism-building-blocks/issues/323)) ([cb17acf](https://github.com/input-output-hk/atala-prism-building-blocks/commit/cb17acf782500c0885c077570392423deee9a2f2))
+
+# [prism-agent-v0.30.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.29.0...prism-agent-v0.30.0) (2023-01-23)
+
+
+### Features
+
+* **prism-agent:** enable update DID operation on prism-agent ([#307](https://github.com/input-output-hk/atala-prism-building-blocks/issues/307)) ([a57365f](https://github.com/input-output-hk/atala-prism-building-blocks/commit/a57365f8c063958e7a41e01fde71653843dafe24))
+
+# [prism-agent-v0.29.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.28.0...prism-agent-v0.29.0) (2023-01-20)
+
+
+### Features
+
+* **prism-agent:** implement DAL for the credential schema. ATL-1334 ([3d0c642](https://github.com/input-output-hk/atala-prism-building-blocks/commit/3d0c6426cc7fddbce41de16a1c85f4242e046c6a))
+
 # [prism-agent-v0.28.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.27.0...prism-agent-v0.28.0) (2023-01-06)
 
 

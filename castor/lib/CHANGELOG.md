@@ -1,3 +1,11 @@
+# [castor-v0.6.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/castor-v0.5.1...castor-v0.6.0) (2023-01-20)
+
+
+### Features
+
+* **castor:** add support for DID update operation ([#306](https://github.com/input-output-hk/atala-prism-building-blocks/issues/306)) ([27b77b2](https://github.com/input-output-hk/atala-prism-building-blocks/commit/27b77b24680fef57d55f64e4f3448232cc73d323))
+* **castor:** upgrade node client for new key type ([#287](https://github.com/input-output-hk/atala-prism-building-blocks/issues/287)) ([5661e76](https://github.com/input-output-hk/atala-prism-building-blocks/commit/5661e760c4e8c129f5947621dbf47b4ae3048bf4))
+
 # [castor-v0.5.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/castor-v0.5.0...castor-v0.5.1) (2022-12-14)
 
 

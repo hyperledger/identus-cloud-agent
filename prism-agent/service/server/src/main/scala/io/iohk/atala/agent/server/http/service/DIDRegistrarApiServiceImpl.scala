@@ -8,8 +8,9 @@ import zio.*
 import io.iohk.atala.agent.openapi.api.DIDRegistrarApiService
 import io.iohk.atala.agent.openapi.model.*
 import io.iohk.atala.agent.server.http.model.{HttpServiceError, OASDomainModelHelper, OASErrorModelHelper}
-import io.iohk.atala.agent.walletapi.model.error.PublishManagedDIDError
+import io.iohk.atala.agent.walletapi.model.error.{PublishManagedDIDError, UpdateManagedDIDError}
 import io.iohk.atala.castor.core.model.did.PrismDID
+import io.iohk.atala.shared.utils.Traverse.*
 
 class DIDRegistrarApiServiceImpl(service: ManagedDIDService)(using runtime: Runtime[Any])
     extends DIDRegistrarApiService,
@@ -66,6 +67,26 @@ class DIDRegistrarApiServiceImpl(service: ManagedDIDService)(using runtime: Runt
     onZioSuccess(result.mapBoth(_.toOAS, _.toOAS).either) {
       case Left(error)   => complete(error.status -> error)
       case Right(result) => publishManagedDid202(result)
+    }
+  }
+
+  def updateManagedDid(didRef: String, updateManagedDIDRequest: UpdateManagedDIDRequest)(implicit
+      toEntityMarshallerDIDOperationResponse: ToEntityMarshaller[DIDOperationResponse],
+      toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
+  ): Route = {
+    val result = for {
+      prismDID <- ZIO.fromEither(PrismDID.fromString(didRef)).mapError(HttpServiceError.InvalidPayload.apply)
+      actions <- ZIO
+        .fromEither(updateManagedDIDRequest.actions.traverse(_.toDomain))
+        .mapError(HttpServiceError.InvalidPayload.apply)
+      outcome <- service
+        .updateManagedDID(prismDID.asCanonical, actions)
+        .mapError(HttpServiceError.DomainError[UpdateManagedDIDError].apply)
+    } yield outcome
+
+    onZioSuccess(result.mapBoth(_.toOAS, _.toOAS).either) {
+      case Left(error)   => complete(error.status -> error)
+      case Right(result) => updateManagedDid202(result)
     }
   }
 

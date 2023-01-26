@@ -6,6 +6,7 @@ import io.iohk.atala.castor.core.model.did.{
   DIDMetadata,
   LongFormPrismDID,
   PrismDID,
+  PrismDIDOperation,
   ScheduleDIDOperationOutcome,
   ScheduledDIDOperationDetail,
   SignedPrismDIDOperation
@@ -24,7 +25,7 @@ import io.iohk.atala.prism.protos.node_models.OperationOutput.{OperationMaybe, R
 import scala.collection.immutable.ArraySeq
 
 trait DIDService {
-  def createPublishedDID(operation: SignedPrismDIDOperation.Create): IO[DIDOperationError, ScheduleDIDOperationOutcome]
+  def scheduleOperation(operation: SignedPrismDIDOperation): IO[DIDOperationError, ScheduleDIDOperationOutcome]
   def getScheduledDIDOperationDetail(
       operationId: Array[Byte]
   ): IO[DIDOperationError, Option[ScheduledDIDOperationDetail]]
@@ -40,17 +41,11 @@ private class DIDServiceImpl(didOpValidator: DIDOperationValidator, nodeClient: 
     extends DIDService,
       ProtoModelHelper {
 
-  override def createPublishedDID(
-      signedOperation: SignedPrismDIDOperation.Create
+  override def scheduleOperation(
+      signedOperation: SignedPrismDIDOperation
   ): IO[DIDOperationError, ScheduleDIDOperationOutcome] = {
     val operationRequest = node_api.ScheduleOperationsRequest(
-      signedOperations = Seq(
-        node_models.SignedAtalaOperation(
-          signedWith = signedOperation.signedWithKey,
-          signature = signedOperation.signature.toArray.toProto,
-          operation = Some(signedOperation.operation.toAtalaOperation)
-        )
-      )
+      signedOperations = Seq(signedOperation.toProto)
     )
     for {
       _ <- ZIO.fromEither(didOpValidator.validate(signedOperation.operation))
@@ -59,44 +54,20 @@ private class DIDServiceImpl(didOpValidator: DIDOperationValidator, nodeClient: 
         .mapBoth(DIDOperationError.DLTProxyError.apply, _.outputs.toList)
         .map {
           case output :: Nil => Right(output)
-          case _ => Left(DIDOperationError.UnexpectedDLTResult("createDID operation result must have exactly 1 output"))
+          case _ => Left(DIDOperationError.UnexpectedDLTResult("operation result is expected to have exactly 1 output"))
         }
         .absolve
       operationId <- ZIO.fromEither {
         operationOutput.operationMaybe match {
           case OperationMaybe.OperationId(id) => Right(id.toByteArray)
           case OperationMaybe.Empty =>
-            Left(DIDOperationError.UnexpectedDLTResult("createDID operation result does not contain operation detail"))
+            Left(DIDOperationError.UnexpectedDLTResult("operation result does not contain operation detail"))
           case OperationMaybe.Error(e) =>
-            Left(DIDOperationError.UnexpectedDLTResult(s"createDID operation result was not successful: $e"))
+            Left(DIDOperationError.UnexpectedDLTResult(s"operation result was not successful: $e"))
         }
       }
-      suffix <- ZIO.fromEither {
-        operationOutput.result match {
-          case Result.CreateDidOutput(createDIDOutput) => Right(createDIDOutput.didSuffix)
-          case _ =>
-            Left(
-              DIDOperationError.UnexpectedDLTResult("createDID operation result must have a type of CreateDIDOutput")
-            )
-        }
-      }
-      did <- ZIO
-        .fromTry(HexString.fromString(suffix))
-        .mapError(_ =>
-          DIDOperationError
-            .UnexpectedDLTResult(s"createDID operation result must have suffix formatted in hex string: $suffix")
-        )
-        .map(suffix =>
-          PrismDID
-            .buildCanonical(suffix.toByteArray)
-            .left
-            .map(e =>
-              DIDOperationError.UnexpectedDLTResult(s"createDID operation result must have a valid DID suffix: $e")
-            )
-        )
-        .absolve
     } yield ScheduleDIDOperationOutcome(
-      did = did,
+      did = signedOperation.operation.did,
       operation = signedOperation.operation,
       operationId = ArraySeq.from(operationId)
     )

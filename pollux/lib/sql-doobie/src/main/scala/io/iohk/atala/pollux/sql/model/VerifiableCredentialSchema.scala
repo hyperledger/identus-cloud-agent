@@ -69,6 +69,30 @@ object VerifiableCredentialSchema {
       }
     }
 
+    def lookupCount(
+        authorOpt: Option[String] = None,
+        nameOpt: Option[String] = None,
+        versionOpt: Option[String] = None,
+        attributeOpt: Option[String] = None,
+        tagOpt: Option[String] = None
+    ) = run {
+      val query = dynamicQuery[VerifiableCredentialSchema]
+        .filterOpt(authorOpt)((vcs, author) => quote(vcs.author.like(author)))
+        .filterOpt(nameOpt)((vcs, name) => quote(vcs.name.like(name)))
+        .filterOpt(versionOpt)((vcs, version) => quote(vcs.version.like(version)))
+        .filter(vcs =>
+          attributeOpt
+            .fold(quote(true))(attr => quote(vcs.attributes.contains(lift(attr))))
+        )
+        .filter(vcs =>
+          tagOpt
+            .fold(quote(true))(tag => quote(vcs.tags.contains(lift(tag))))
+        )
+        .size
+
+      query
+    }
+
     def lookup(
         authorOpt: Option[String] = None,
         nameOpt: Option[String] = None,
@@ -77,7 +101,7 @@ object VerifiableCredentialSchema {
         tagOpt: Option[String] = None,
         offsetOpt: Option[Int] = Some(0),
         limitOpt: Option[Int] = Some(100)
-    ) = {
+    ) = run {
       val quotedQuery = limitOpt
         .fold(quote(query[VerifiableCredentialSchema]))(limit =>
           quote(query[VerifiableCredentialSchema].take(lift(limit)))
