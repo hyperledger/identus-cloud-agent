@@ -1,3 +1,10 @@
+# [prism-agent-v0.31.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.31.0...prism-agent-v0.31.1) (2023-01-26)
+
+
+### Bug Fixes
+
+* **prism-agent:** remove deprecated did-auth endpoints ([#324](https://github.com/input-output-hk/atala-prism-building-blocks/issues/324)) ([a934cd4](https://github.com/input-output-hk/atala-prism-building-blocks/commit/a934cd4ac48f4ba4724681eeff92f4c67c009940))
+
 # [prism-agent-v0.31.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.30.0...prism-agent-v0.31.0) (2023-01-25)
 
 
