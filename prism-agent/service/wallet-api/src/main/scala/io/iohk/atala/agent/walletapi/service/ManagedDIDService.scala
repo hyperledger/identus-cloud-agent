@@ -195,16 +195,16 @@ final class ManagedDIDService private[walletapi] (
         .fromEither(UpdateManagedDIDActionValidator.validate(actions))
         .mapError(UpdateManagedDIDError.InvalidArgument.apply)
       _ <- computeNewDIDStateFromDLTAndPersist[UpdateManagedDIDError](did)
-      _ <- didService
-        .resolveDID(did)
-        .mapError(UpdateManagedDIDError.ResolutionError.apply)
-        .someOrFail(UpdateManagedDIDError.DIDNotFound(did))
-        .filterOrFail { case (metaData, _) => !metaData.deactivated }(UpdateManagedDIDError.DIDAlreadyDeactivated(did))
       didState <- nonSecretStorage
         .getManagedDIDState(did)
         .mapError(UpdateManagedDIDError.WalletStorageError.apply)
         .someOrFail(UpdateManagedDIDError.DIDNotFound(did))
         .collect(UpdateManagedDIDError.DIDNotPublished(did)) { case s: ManagedDIDState.Published => s }
+      _ <- didService
+        .resolveDID(did)
+        .mapError(UpdateManagedDIDError.ResolutionError.apply)
+        .someOrFail(UpdateManagedDIDError.DIDNotFound(did))
+        .filterOrFail { case (metaData, _) => !metaData.deactivated }(UpdateManagedDIDError.DIDAlreadyDeactivated(did))
       previousOperationHash <- getPreviousOperationHash[UpdateManagedDIDError](did, didState.createOperation)
       generated <- generateUpdateOperation(did, previousOperationHash, actions)
       (updateOperation, secret) = generated
@@ -223,16 +223,16 @@ final class ManagedDIDService private[walletapi] (
 
     for {
       _ <- computeNewDIDStateFromDLTAndPersist[UpdateManagedDIDError](did)
-      _ <- didService
-        .resolveDID(did)
-        .mapError(UpdateManagedDIDError.ResolutionError.apply)
-        .someOrFail(UpdateManagedDIDError.DIDNotFound(did))
-        .filterOrFail { case (metaData, _) => !metaData.deactivated }(UpdateManagedDIDError.DIDAlreadyDeactivated(did))
       didState <- nonSecretStorage
         .getManagedDIDState(did)
         .mapError(UpdateManagedDIDError.WalletStorageError.apply)
         .someOrFail(UpdateManagedDIDError.DIDNotFound(did))
         .collect(UpdateManagedDIDError.DIDNotPublished(did)) { case s: ManagedDIDState.Published => s }
+      _ <- didService
+        .resolveDID(did)
+        .mapError(UpdateManagedDIDError.ResolutionError.apply)
+        .someOrFail(UpdateManagedDIDError.DIDNotFound(did))
+        .filterOrFail { case (metaData, _) => !metaData.deactivated }(UpdateManagedDIDError.DIDAlreadyDeactivated(did))
       previousOperationHash <- getPreviousOperationHash[UpdateManagedDIDError](did, didState.createOperation)
       deactivateOperation = PrismDIDOperation.Deactivate(did, ArraySeq.from(previousOperationHash))
       _ <- ZIO
