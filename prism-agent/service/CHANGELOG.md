@@ -1,3 +1,10 @@
+# [prism-agent-v0.32.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.31.1...prism-agent-v0.32.0) (2023-01-27)
+
+
+### Features
+
+* **prism-agent:** add deactivate DID endpoint ([#326](https://github.com/input-output-hk/atala-prism-building-blocks/issues/326)) ([29a804f](https://github.com/input-output-hk/atala-prism-building-blocks/commit/29a804fce71d2c500cec9ab8db21de84f9016c95))
+
 # [prism-agent-v0.31.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.31.0...prism-agent-v0.31.1) (2023-01-26)
 
 
