@@ -118,21 +118,34 @@ object JWTVerification {
       )
   }
 
+  // TODO: update the tests
   private def extractVerificationMethods(
       didDocument: DIDDocument,
       jwtAlgorithm: JwtAlgorithm,
       proofPurpose: Option[VerificationRelationship]
   ): Validation[String, IndexedSeq[VerificationMethod]] = {
-    val publicKeysToCheck = proofPurpose.fold(didDocument.verificationMethod) {
+    val publicKeysToCheck: Vector[VerificationMethodOrRef] = proofPurpose.fold(didDocument.verificationMethod) {
       case VerificationRelationship.Authentication       => didDocument.authentication
       case VerificationRelationship.AssertionMethod      => didDocument.assertionMethod
       case VerificationRelationship.KeyAgreement         => didDocument.keyAgreement
       case VerificationRelationship.CapabilityInvocation => didDocument.capabilityInvocation
       case VerificationRelationship.CapabilityDelegation => didDocument.capabilityDelegation
     }
+    // FIXME
+    // To be fully compliant, key extraction MUST follow the referenced URI which
+    // might not be in the same DID document. For now, this only performs lookup within
+    // the same DID document which is what Prism DID currently support.
+    val dereferencedKeysToCheck: Vector[VerificationMethod] = {
+      val (referenced, embedded) = publicKeysToCheck.partitionMap[String, VerificationMethod] {
+        case uri: String            => Left(uri)
+        case pk: VerificationMethod => Right(pk)
+      }
+      val keySet = referenced.toSet
+      embedded ++ didDocument.verificationMethod.filter(pk => keySet.contains(pk.id))
+    }
     Validation
       .fromPredicateWith("No PublicKey to validate against found")(
-        publicKeysToCheck.filter { verification =>
+        dereferencedKeysToCheck.filter { verification =>
           val supportPublicKeys = SUPPORT_PUBLIC_KEY_TYPES.getOrElse(jwtAlgorithm.name, Set.empty)
           supportPublicKeys.contains(verification.`type`)
         }
