@@ -7,7 +7,7 @@ object Dependencies_VC_JWT {
     val circeVersion = "0.14.3"
     val jwtCirceVersion = "9.1.2"
     val zioPreludeVersion = "1.0.0-RC16"
-    val castor = "0.6.0"
+    val castor = "0.7.0"
   }
 
   private lazy val coreJwtCirce = "io.circe" %% "circe-core" % Versions.circeVersion
