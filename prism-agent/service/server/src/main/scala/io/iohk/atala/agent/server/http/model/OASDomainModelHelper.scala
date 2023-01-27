@@ -240,7 +240,11 @@ trait OASDomainModelHelper {
           capabilityInvocation = Some(didDoc.capabilityInvocation.map(_.toOAS)),
           service = Some(didDoc.service.map(_.toOAS))
         ),
-        metadata = DIDDocumentMetadata(deactivated = metadata.deactivated)
+        metadata = DIDDocumentMetadata(
+          deactivated = metadata.deactivated,
+          versionId = Some(metadata.versionId),
+          canonicalId = Some(metadata.canonicalId)
+        )
       )
     }
   }
