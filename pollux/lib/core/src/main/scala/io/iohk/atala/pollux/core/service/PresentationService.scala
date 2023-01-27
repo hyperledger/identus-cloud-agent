@@ -20,18 +20,16 @@ import java.security.SecureRandom
 import java.security.spec.ECGenParameterSpec
 import java.time.Instant
 import java.util.UUID
+import io.iohk.atala.mercury.DidAgent
+import io.iohk.atala.mercury.model._
 import io.iohk.atala.mercury.protocol.presentproof._
-import io.iohk.atala.mercury.model.AttachmentDescriptor
-import io.iohk.atala.mercury.DidComm
-import io.iohk.atala.mercury.model.DidId
-import io.iohk.atala.mercury.model.Message
 import java.time.Instant
 import io.iohk.atala.mercury.protocol.presentproof.RequestPresentation
 import java.security.PublicKey
 import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord
 import io.iohk.atala.pollux.core.repository.CredentialRepository
-import org.didcommx.didcomm.message.Attachment.Data.Base64
+import org.didcommx.didcomm.message.Attachment.Data.Base64 //FIXME create interface so we do not have to use it directly
 import java.{util => ju}
 
 trait PresentationService {
@@ -103,14 +101,14 @@ trait PresentationService {
 }
 
 object PresentationServiceImpl {
-  val layer: URLayer[PresentationRepository[Task] & CredentialRepository[Task] & DidComm, PresentationService] =
+  val layer: URLayer[PresentationRepository[Task] & CredentialRepository[Task] & DidAgent, PresentationService] =
     ZLayer.fromFunction(PresentationServiceImpl(_, _, _))
 }
 
 private class PresentationServiceImpl(
     presentationRepository: PresentationRepository[Task],
     credentialRepository: CredentialRepository[Task],
-    didComm: DidComm
+    didAgent: DidAgent
 ) extends PresentationService {
 
   import PresentationRecord._
@@ -494,7 +492,7 @@ private class PresentationServiceImpl(
         proof_types = proofTypes
       ),
       attachments = Seq.empty,
-      from = didComm.myDid,
+      from = didAgent.id,
       to = subjectDId,
       thid = Some(thid.toString)
     )
@@ -509,7 +507,7 @@ private class PresentationServiceImpl(
     RequestPresentation(
       body = body,
       attachments = proposePresentation.attachments,
-      from = didComm.myDid,
+      from = didAgent.id,
       to = proposePresentation.from,
       thid = proposePresentation.thid
     )
@@ -542,7 +540,7 @@ private class PresentationServiceImpl(
       ),
       attachments = Seq(
         AttachmentDescriptor
-          .buildAttachment(payload = jwtPresentation.value, mediaType = Some("prism/jwt"))
+          .buildJsonAttachment(payload = jwtPresentation.value, mediaType = Some("prism/jwt"))
       ),
       thid = request.thid.orElse(Some(request.id)),
       from = request.to,

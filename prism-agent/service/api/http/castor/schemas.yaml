@@ -63,6 +63,12 @@ components:
         deactivated:
           type: boolean
           description: If a DID has been deactivated, DID document metadata MUST include this property with the boolean value true. If a DID has not been deactivated, this property is OPTIONAL, but if included, MUST have the boolean value false.
+        versionId:
+          type: string
+          description: A hexstring representing the last operation applied to the DID Document
+        canonicalId:
+          type: string
+          description: A DID in canonical form
 
     VerificationMethod:
       type: object
@@ -198,6 +204,7 @@ components:
             example: did:prism:abc:123
           status:
             type: string
+            description: A status indicating whether this is published DID or not. Does not represent DID full lifecyle (e.g. deactivated, recovered, updated).
             enum:
               - CREATED
               - PUBLICATION_PENDING
@@ -283,82 +290,6 @@ components:
         didRef:
           type: string
           example: "did:prism:123"
-
-    # ----------------------------------
-    # AUTHENTICATION
-    # ----------------------------------
-    CreateAuthenticationChallengeRequest:
-      type: object
-      required:
-        - ttl
-      properties:
-        ttl:
-          type: number
-          description: A number of seconds that challenge will be considered valid.
-          example: 900
-        state:
-          type: string
-          description: |
-            An opaque string provided by a relying-party indicating the purpose of
-            this challenge in order to avoid repurposing the challenge submission.
-          example: qrcode#123
-        subject:
-          $ref: "#/components/schemas/AuthenticationChallengeSubject"
-
-    CreateAuthenticationChallengeResponse:
-      type: object
-      required:
-        - challenge
-      properties:
-        challenge:
-          $ref: "#/components/schemas/AuthenticationChallengeJwt"
-        subject:
-          $ref: "#/components/schemas/AuthenticationChallengeSubject"
-
-    AuthenticationChallengeSubmissionRequest:
-      type: object
-      required:
-        - subject
-        - challenge
-        - signature
-      properties:
-        challenge:
-          $ref: "#/components/schemas/AuthenticationChallengeJwt"
-        subject:
-          $ref: "#/components/schemas/AuthenticationChallengeSubject"
-        signature:
-          type: string
-          example: 243b9ed6561ab3...5d497f609b8cd04
-
-    AuthenticationChallengeSubmissionResponse:
-      type: object
-      required:
-        - success
-      properties:
-        success:
-          type: boolean
-          example: true
-        state:
-          type: string
-          description: |
-            An opaque string provided by a relying-party indicating the purpose of
-            this challenge in order to avoid repurposing the challenge submission.
-          example: qrcode#123
-
-    AuthenticationChallengeSubject:
-      description: |
-        A challenged subject that must complete the challenge.
-        May refer to DID or VerificationMethod inside a DID. If VerificationMethod
-        is used, it must be inside the authentication verification relationship.
-      type: string
-      example: "did:example:123456789abcdefghi"
-
-    AuthenticationChallengeJwt:
-      type: string
-      description: |
-        A JWT challenge that a user must provide to Castor SDK to create a ChallengeSubmission.
-        JWT payload contains nonce, state, expiration, issuer
-      example: eyJhbGciOiJIUzI1NiIsInR5c...0eu8Ri_WSPSsBTlCes2YMpuB1mHU
 
     ErrorResponse:
       type: object

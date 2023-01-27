@@ -61,7 +61,7 @@ class DIDOperationValidator(config: Config) {
         val ids = extractKeyIds(op)
         if (ids.isUnique) Right(())
         else Left(DIDOperationError.InvalidArgument("id for public-keys is not unique"))
-      case _: PrismDIDOperation.Update => Right(())
+      case _: PrismDIDOperation.Update | _: PrismDIDOperation.Deactivate => Right(())
     }
   }
 
@@ -71,7 +71,7 @@ class DIDOperationValidator(config: Config) {
         val ids = extractServiceIds(operation)
         if (ids.isUnique) Right(())
         else Left(DIDOperationError.InvalidArgument("id for services is not unique"))
-      case _: PrismDIDOperation.Update => Right(())
+      case _: PrismDIDOperation.Update | _: PrismDIDOperation.Deactivate => Right(())
     }
   }
 
@@ -138,6 +138,7 @@ class DIDOperationValidator(config: Config) {
           case _: UpdateDIDAction.RemoveService          => None
           case _: UpdateDIDAction.UpdateService          => None
         }
+      case _: PrismDIDOperation.Deactivate => Nil
     }
   }
 
@@ -153,6 +154,7 @@ class DIDOperationValidator(config: Config) {
           case UpdateDIDAction.RemoveService(id)       => Some(id)
           case UpdateDIDAction.UpdateService(id, _, _) => Some(id)
         }
+      case _: PrismDIDOperation.Deactivate => Nil
     }
   }
 

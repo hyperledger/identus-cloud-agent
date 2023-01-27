@@ -25,17 +25,17 @@ object InvitationPrograms {
     _ <- ZIO.log(s"*******OutOfBand********${message.toString}")
   } yield (message)
 
-  def createInvitationV2(): ZIO[DidComm, Nothing, String] = {
+  def createInvitationV2(): ZIO[DidOps & DidAgent, Nothing, String] = {
     for {
-      merdiator <- ZIO.service[DidComm]
+      merdiator <- ZIO.service[DidAgent]
       // _ <- ZIO.unit
       invitation = Invitation(
         "https://didcomm.org/out-of-band/2.0/invitation",
         getNewMsgId,
-        merdiator.myDid,
+        merdiator.id,
         Body("request-mediate", "RequestMediate", Seq("didcomm/v2", "didcomm/aip2;env=rfc587"))
       )
-      _ <- ZIO.log(s"createInvitationV2 from '${merdiator.myDid}'")
+      _ <- ZIO.log(s"createInvitationV2 from '${merdiator.id}'")
       result = invitation.asJson.deepDropNullValues
     } yield (java.util.Base64.getUrlEncoder.encodeToString(result.noSpaces.getBytes))
 

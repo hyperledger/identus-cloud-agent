@@ -19,21 +19,13 @@ import java.time.OffsetDateTime
 trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 
   // Castor
-  given RootJsonFormat[AuthenticationChallengeSubmissionRequest] = jsonFormat3(
-    AuthenticationChallengeSubmissionRequest.apply
-  )
-  given RootJsonFormat[AuthenticationChallengeSubmissionResponse] = jsonFormat2(
-    AuthenticationChallengeSubmissionResponse.apply
-  )
-  given RootJsonFormat[CreateAuthenticationChallengeRequest] = jsonFormat3(CreateAuthenticationChallengeRequest.apply)
-  given RootJsonFormat[CreateAuthenticationChallengeResponse] = jsonFormat2(CreateAuthenticationChallengeResponse.apply)
   given RootJsonFormat[CreateManagedDidRequest] = jsonFormat1(CreateManagedDidRequest.apply)
   given RootJsonFormat[CreateManagedDidRequestDocumentTemplate] = jsonFormat2(
     CreateManagedDidRequestDocumentTemplate.apply
   )
   given RootJsonFormat[CreateManagedDIDResponse] = jsonFormat1(CreateManagedDIDResponse.apply)
   given RootJsonFormat[DID] = jsonFormat8(DID.apply)
-  given RootJsonFormat[DIDDocumentMetadata] = jsonFormat1(DIDDocumentMetadata.apply)
+  given RootJsonFormat[DIDDocumentMetadata] = jsonFormat3(DIDDocumentMetadata.apply)
   given RootJsonFormat[DIDOperationResponse] = jsonFormat1(DIDOperationResponse.apply)
   given RootJsonFormat[DidOperationSubmission] = jsonFormat2(DidOperationSubmission.apply)
   given RootJsonFormat[DIDResponse] = jsonFormat2(DIDResponse.apply)

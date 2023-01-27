@@ -1,3 +1,10 @@
+# [pollux-v0.19.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.18.0...pollux-v0.19.0) (2023-01-27)
+
+
+### Features
+
+* **pollux:** upgrade castor to 0.7.0 ([#330](https://github.com/input-output-hk/atala-prism-building-blocks/issues/330)) ([de180a6](https://github.com/input-output-hk/atala-prism-building-blocks/commit/de180a6e7b939f6139618eb57003b1036bf300e0))
+
 # [pollux-v0.18.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.17.0...pollux-v0.18.0) (2023-01-20)
 
 
