@@ -112,6 +112,7 @@ Quill is used instead of Doobie
 - Good, because it is built using Free Monad, which makes it composable and easy to integrate with any widespread effects library
 - Good, because it is used for SQL statement generation at the compile time instead of using Doobie low-level API
 - Good, because it can be configured to use non-blocking IO at the network level
+- Good, because it get rid of the `cats` ecosystem that comes with `doobie` (simplify the dependency management)
 - Bad, because significant refactoring of all DAL is required
 - Bad, because the DTO case class must be created for each table
 
