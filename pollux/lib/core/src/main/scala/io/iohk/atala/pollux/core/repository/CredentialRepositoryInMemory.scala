@@ -22,9 +22,7 @@ class CredentialRepositoryInMemory(storeRef: Ref[Map[UUID, IssueCredentialRecord
   ): Task[Int] = {
     for {
       store <- storeRef.get
-      maybeRecord <- ZIO.succeed(
-        store.find((uuid, record) => uuid == recordId && record.publicationState == from).map(_._2)
-      )
+      maybeRecord = store.find((uuid, record) => uuid == recordId && record.publicationState == from).map(_._2)
       count <- maybeRecord
         .map(record =>
           for {
@@ -39,7 +37,7 @@ class CredentialRepositoryInMemory(storeRef: Ref[Map[UUID, IssueCredentialRecord
     for {
       _ <- for {
         store <- storeRef.get
-        maybeRecord <- ZIO.succeed(store.values.find(_.thid == record.thid))
+        maybeRecord = store.values.find(_.thid == record.thid)
         _ <- maybeRecord match
           case None        => ZIO.unit
           case Some(value) => ZIO.fail(UniqueConstraintViolation("Unique Constraint Violation on 'thid'"))
@@ -68,9 +66,7 @@ class CredentialRepositoryInMemory(storeRef: Ref[Map[UUID, IssueCredentialRecord
   ): Task[Int] = {
     for {
       store <- storeRef.get
-      maybeRecord <- ZIO.succeed(
-        store.find((uuid, record) => uuid == recordId && record.protocolState == from).map(_._2)
-      )
+      maybeRecord = store.find((uuid, record) => uuid == recordId && record.protocolState == from).map(_._2)
       count <- maybeRecord
         .map(record =>
           for {
