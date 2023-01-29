@@ -31,7 +31,7 @@ private[this] trait ReadAttachmentsUtils {
             case obj: JsonData =>
               java.util.Base64
                 .getUrlEncoder()
-                .encode(obj.data.asJson.noSpaces.getBytes())
+                .encode(obj.json.asJson.noSpaces.getBytes())
           })
         maybeAttachament.map(formatName -> _)
       }

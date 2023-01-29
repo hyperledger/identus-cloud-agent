@@ -5,23 +5,14 @@ import io.iohk.atala.mercury._
 import org.didcommx.didcomm.DIDComm
 
 object MediatorDidComm {
-  // val mediator: ZLayer[Any, Nothing, DidComm] = ZLayer.succeed(
-  //   AgentService[Agent.Mediator.type](
-  //     new DIDComm(
-  //       io.iohk.atala.resolvers.UniversalDidResolver,
-  //       MediatorSecretResolver.secretResolver
-  //     ),
-  //     Agent.Mediator
-  //   )
-  // )
 
-  val peerDidMediator: ZLayer[Any, Nothing, DidComm] = ZLayer.succeed(
-    AgentServiceAny(
-      new DIDComm(
-        io.iohk.atala.resolvers.UniversalDidResolver,
-        PeerDidMediatorSecretResolver.peer.getSecretResolverInMemory
-      ),
-      PeerDidMediatorSecretResolver.peer.did
+  /** This genereate a new Agent with new keys each time it start.
+    *
+    * The identity of mediator will need to be static. TODO
+    */
+  val peerDidMediator: ZLayer[Any, Nothing, DidAgent] =
+    AgentPeerService.makeLayer(
+      PeerDidMediatorSecretResolver.peer
     )
-  )
+
 }

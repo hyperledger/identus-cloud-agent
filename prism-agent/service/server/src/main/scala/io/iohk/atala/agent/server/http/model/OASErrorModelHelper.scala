@@ -2,7 +2,12 @@ package io.iohk.atala.agent.server.http.model
 
 import akka.http.scaladsl.server.StandardRoute
 import io.iohk.atala.agent.openapi.model.ErrorResponse
-import io.iohk.atala.agent.walletapi.model.error.{CreateManagedDIDError, GetManagedDIDError, PublishManagedDIDError}
+import io.iohk.atala.agent.walletapi.model.error.{
+  CreateManagedDIDError,
+  GetManagedDIDError,
+  PublishManagedDIDError,
+  UpdateManagedDIDError
+}
 import io.iohk.atala.castor.core.model.did.w3c.DIDResolutionErrorRepr
 import io.iohk.atala.castor.core.model.error.DIDOperationError
 import io.iohk.atala.castor.core.model.error.DIDResolutionError
@@ -72,6 +77,18 @@ trait OASErrorModelHelper {
 
   given ToErrorResponse[CreateManagedDIDError] with {
     override def toErrorResponse(e: CreateManagedDIDError): ErrorResponse = {
+      ErrorResponse(
+        `type` = "error-type",
+        title = "error-title",
+        status = 500,
+        detail = Some(e.toString),
+        instance = "error-instance"
+      )
+    }
+  }
+
+  given ToErrorResponse[UpdateManagedDIDError] with {
+    override def toErrorResponse(e: UpdateManagedDIDError): ErrorResponse = {
       ErrorResponse(
         `type` = "error-type",
         title = "error-title",

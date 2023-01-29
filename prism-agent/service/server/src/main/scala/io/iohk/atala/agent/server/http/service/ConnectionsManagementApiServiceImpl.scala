@@ -110,7 +110,6 @@ class ConnectionsManagementApiServiceImpl(
     }
   }
 
-  override def deleteConnection(connectionId: String): Route = ???
 }
 
 object ConnectionsManagementApiServiceImpl {
