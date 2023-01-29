@@ -3,7 +3,7 @@ import sbt._
 //TODO REMOVE THIS
 object Dependencies_VC_JWT {
   object Versions {
-    val zio = "2.0.6"
+    val zio = "2.0.4"
     val circeVersion = "0.14.3"
     val jwtCirceVersion = "9.1.2"
     val zioPreludeVersion = "1.0.0-RC16"
@@ -25,7 +25,7 @@ object Dependencies_VC_JWT {
   private lazy val zio = "dev.zio" %% "zio" % Versions.zio
   private lazy val zioPrelude = "dev.zio" %% "zio-prelude" % Versions.zioPreludeVersion
 
-  private lazy val nimbusJoseJwt = "com.nimbusds" % "nimbus-jose-jwt" % "9.29"
+  private lazy val nimbusJoseJwt = "com.nimbusds" % "nimbus-jose-jwt" % "9.25.6"
 
   private lazy val test = "org.scalameta" %% "munit" % "0.7.29" % Test
 

@@ -2,12 +2,12 @@ import sbt._
 
 object Dependencies {
   object Versions {
-    val zio = "2.0.6"
+    val zio = "2.0.4"
     val doobie = "1.0.0-RC2"
-    val zioCatsInterop = "23.0.0.1"
+    val zioCatsInterop = "3.3.0"
     val iris = "0.1.0"
     val mercury = "0.15.0"
-    val flyway = "9.12.0"
+    val flyway = "9.8.3"
     val shared = "0.2.0"
   }
 
