@@ -2,7 +2,7 @@ import sbt._
 
 object Dependencies {
   object Versions {
-    val zio = "2.0.4"
+    val zio = "2.0.6"
     val zioConfig = "3.0.2"
     val zioHttp = "2.0.0-RC11"
     val zioInteropCats = "3.3.0" // scala-steward:off
