@@ -72,7 +72,7 @@ object Dependencies {
   private lazy val sttpClient3ZioJson = "com.softwaremill.sttp.client3" %% "zio-json" % "3.8.9" % Test
 
   private lazy val quillDoobie = "io.getquill" %% "quill-doobie" % Versions.quill exclude("org.scala-lang.modules", "scala-java8-compat_3")
-  private lazy val postgresql = "org.postgresql" % "postgresql" % "42.2.8"
+  private lazy val postgresql = "org.postgresql" % "postgresql" % "42.2.27"
   private lazy val quillJdbcZio = "io.getquill" %% "quill-jdbc-zio" % Versions.quill exclude("org.scala-lang.modules", "scala-java8-compat_3")
   private lazy val flyway = "org.flywaydb" % "flyway-core" % Versions.flyway
   private lazy val testcontainers_scala_postgresql =
