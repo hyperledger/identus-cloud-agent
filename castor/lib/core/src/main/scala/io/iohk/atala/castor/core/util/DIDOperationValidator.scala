@@ -28,8 +28,7 @@ object DIDOperationValidator {
 class DIDOperationValidator(config: Config) {
 
   // TODO: specification alignment
-  // - service endpoint normalization DONE
-  // - service endpoints in create-operation must be non-empty
+  // - previousOperation must be sha256 digest
   def validate(operation: PrismDIDOperation): Either[DIDOperationError, Unit] = {
     for {
       _ <- validateMaxPublicKeysAccess(operation)
@@ -41,6 +40,7 @@ class DIDOperationValidator(config: Config) {
       _ <- validateMasterKeyExists(operation)
       _ <- validateUpdateOperationAction(operation)
       _ <- validateServiceEndpointNormalized(operation)
+      _ <- validateNewServiceNonEmptyEndpoints(operation)
     } yield ()
   }
 
@@ -120,6 +120,28 @@ class DIDOperationValidator(config: Config) {
         Left(
           DIDOperationError.InvalidArgument(
             s"serviceEndpoint URIs must be normalized: ${uris.mkString("[", ", ", "]")}"
+          )
+        )
+    }
+  }
+
+  // TODO: add tests
+  private def validateNewServiceNonEmptyEndpoints(operation: PrismDIDOperation): Either[DIDOperationError, Unit] = {
+    val newServiceWithEmptyEndpoints = operation match {
+      case PrismDIDOperation.Create(_, _, services) => services.filter(_.serviceEndpoint.isEmpty)
+      case PrismDIDOperation.Update(_, _, actions) =>
+        actions.collect {
+          case UpdateDIDAction.AddService(service) if service.serviceEndpoint.isEmpty => service
+        }
+      case _: PrismDIDOperation.Deactivate => Nil
+    }
+
+    newServiceWithEmptyEndpoints match {
+      case Nil => Right(())
+      case services =>
+        Left(
+          DIDOperationError.InvalidArgument(
+            s"new service must not have empty serviceEndpoint: ${services.mkString("[", ", ", "]")}"
           )
         )
     }
