@@ -12,6 +12,10 @@ import io.iohk.atala.connect.core.model.ConnectionRecord
 import java.util.UUID
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import java.time.Instant
+import io.circe.syntax._
+import io.circe.parser.decode
+import io.iohk.atala.mercury.model.Message
+import io.iohk.atala.mercury.protocol.connection.ConnectionResponse
 
 object ConnectionServiceImplSpec extends ZIOSpecDefault {
 
@@ -223,9 +227,13 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
             _ <- inviteeSvc.markConnectionRequestSent(inviteeRecord.id)
             maybeReceivedRequestConnectionRecord <- inviterSvc.receiveConnectionRequest(connectionRequest)
             maybeAcceptedRequestConnectionRecord <- inviterSvc.acceptConnectionRequest(inviterRecord.id)
-            connectionResponse = maybeAcceptedRequestConnectionRecord.get.connectionResponse.get
+            connectionResponseMessage <- ZIO.fromEither(
+              maybeAcceptedRequestConnectionRecord.get.connectionResponse.get.makeMessage.asJson.as[Message]
+            )
             _ <- inviterSvc.markConnectionResponseSent(inviterRecord.id)
-            maybeReceivedResponseConnectionRecord <- inviteeSvc.receiveConnectionResponse(connectionResponse)
+            maybeReceivedResponseConnectionRecord <- inviteeSvc.receiveConnectionResponse(
+              ConnectionResponse.readFromMessage(connectionResponseMessage)
+            )
             allInviteeRecords <- inviteeSvc.getConnectionRecords()
           } yield {
             val updatedRecord = maybeReceivedResponseConnectionRecord.get
