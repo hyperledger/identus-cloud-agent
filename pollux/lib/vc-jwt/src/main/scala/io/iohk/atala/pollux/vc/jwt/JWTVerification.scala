@@ -118,7 +118,6 @@ object JWTVerification {
       )
   }
 
-  // TODO: update the tests
   private def extractVerificationMethods(
       didDocument: DIDDocument,
       jwtAlgorithm: JwtAlgorithm,

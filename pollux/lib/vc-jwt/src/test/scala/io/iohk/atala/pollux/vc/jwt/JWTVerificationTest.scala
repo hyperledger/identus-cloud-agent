@@ -142,6 +142,32 @@ object JWTVerificationTest extends ZIOSpecDefault {
         )
       } yield assertTrue(validation.fold(_ => false, _ => true))
     },
+    test("validate PrismDID issued JWT VC using specified proofPurpose resolved as referenced key") {
+      val issuer = createUser(DID("did:prism:issuer"))
+      val jwtCredential = createJwtCredential(issuer)
+      val resolver = makeResolver(
+        Map(
+          "did:prism:issuer" ->
+            generateDidDocument(
+              did = "did:prism:issuer",
+              verificationMethod = Vector(
+                VerificationMethod(
+                  id = "did:prism:issuer#key0",
+                  `type` = "EcdsaSecp256k1VerificationKey2019",
+                  controller = "did:prism:issuer",
+                  publicKeyJwk = Some(toJWKFormat(issuer.key))
+                )
+              ),
+              assertionMethod = Vector("did:prism:issuer#key0")
+            )
+        )
+      )
+      for {
+        validation <- JwtCredential.validateEncodedJWT(jwtCredential, Some(VerificationRelationship.AssertionMethod))(
+          resolver
+        )
+      } yield assertTrue(validation.fold(_ => false, _ => true))
+    },
     test("validate PrismDID issued JWT VC using incorrect proofPurpose should fail") {
       val issuer = createUser(DID("did:prism:issuer"))
       val jwtCredential = createJwtCredential(issuer)
@@ -217,7 +243,7 @@ object JWTVerificationTest extends ZIOSpecDefault {
               verificationMethod = Vector(
                 VerificationMethod(
                   id = "did:prism:issuer#key0",
-                  `type` = "ThisIsInvalidPublicKeyType",
+                  `type` = "EcdsaSecp256k1VerificationKey2019",
                   controller = "did:prism:issuer",
                   publicKeyJwk = Some(toJWKFormat(ECKeyGenerator(Curve.SECP256K1).generate()))
                 )
