@@ -3,24 +3,32 @@ package io.iohk.atala.agent.walletapi.service
 import io.iohk.atala.agent.walletapi.crypto.{ECWrapper, KeyGeneratorWrapper}
 import io.iohk.atala.agent.walletapi.model.{
   DIDPublicKeyTemplate,
+  DIDUpdateLineage,
   ECKeyPair,
   ManagedDIDDetail,
   ManagedDIDState,
-  ManagedDIDTemplate
+  ManagedDIDTemplate,
+  UpdateManagedDIDAction
 }
 import io.iohk.atala.agent.walletapi.model.ECCoordinates.*
-import io.iohk.atala.agent.walletapi.model.error.{given, *}
-import io.iohk.atala.agent.walletapi.service.ManagedDIDService.{CreateDIDSecret, DEFAULT_MASTER_KEY_ID}
+import io.iohk.atala.agent.walletapi.model.error.{*, given}
+import io.iohk.atala.agent.walletapi.service.ManagedDIDService.DEFAULT_MASTER_KEY_ID
 import io.iohk.atala.agent.walletapi.storage.{
   DIDNonSecretStorage,
   DIDSecretStorage,
   InMemoryDIDNonSecretStorage,
   InMemoryDIDSecretStorage
 }
-import io.iohk.atala.agent.walletapi.util.ManagedDIDTemplateValidator
+import io.iohk.atala.agent.walletapi.util.{
+  ManagedDIDTemplateValidator,
+  OperationFactory,
+  UpdateDIDSecret,
+  UpdateManagedDIDActionValidator
+}
 import io.iohk.atala.castor.core.model.did.{
   CanonicalPrismDID,
   DID,
+  DIDMetadata,
   EllipticCurve,
   InternalKeyPurpose,
   InternalPublicKey,
@@ -61,12 +69,35 @@ final class ManagedDIDService private[walletapi] (
   private val AGREEMENT_KEY_ID = "agreement"
   private val AUTHENTICATION_KEY_ID = "authentication"
 
+  private val generateCreateOperation = OperationFactory.makeCreateOperation(
+    DEFAULT_MASTER_KEY_ID,
+    CURVE,
+    () => KeyGeneratorWrapper.generateECKeyPair(CURVE)
+  )
+
+  private val generateUpdateOperation = OperationFactory.makeUpdateOperation(
+    CURVE,
+    () => KeyGeneratorWrapper.generateECKeyPair(CURVE)
+  )
+
   def syncManagedDIDState: IO[GetManagedDIDError, Unit] = nonSecretStorage.listManagedDID
     .mapError(GetManagedDIDError.WalletStorageError.apply)
     .flatMap { kv =>
       ZIO.foreach(kv.keys.map(_.asCanonical))(computeNewDIDStateFromDLTAndPersist[GetManagedDIDError])
     }
     .unit
+
+  def syncUnconfirmedUpdateOperations: IO[GetManagedDIDError, Unit] = {
+    for {
+      awaitingConfirmationOps <- nonSecretStorage
+        .listUpdateLineage(did = None, status = Some(ScheduledDIDOperationStatus.AwaitingConfirmation))
+        .mapError(GetManagedDIDError.WalletStorageError.apply)
+      pendingOps <- nonSecretStorage
+        .listUpdateLineage(did = None, status = Some(ScheduledDIDOperationStatus.Pending))
+        .mapError(GetManagedDIDError.WalletStorageError.apply)
+      _ <- ZIO.foreach(awaitingConfirmationOps ++ pendingOps)(computeNewDIDLineageStatusAndPersist[GetManagedDIDError])
+    } yield ()
+  }
 
   def listManagedDID: IO[GetManagedDIDError, Seq[ManagedDIDDetail]] =
     for {
@@ -75,34 +106,15 @@ final class ManagedDIDService private[walletapi] (
     } yield dids.toSeq.map { case (did, state) => ManagedDIDDetail(did.asCanonical, state) }
 
   def publishStoredDID(did: CanonicalPrismDID): IO[PublishManagedDIDError, ScheduleDIDOperationOutcome] = {
-    def submitOperation(operation: PrismDIDOperation.Create) =
+    def doPublish(operation: PrismDIDOperation.Create) = {
       for {
-        masterKeyPair <-
-          secretStorage
-            .getKey(did, DEFAULT_MASTER_KEY_ID)
-            .mapError(PublishManagedDIDError.WalletStorageError.apply)
-            .someOrElseZIO(
-              ZIO.die(Exception("master-key must exists in the wallet for DID publication operation signature"))
-            )
-        signedAtalaOperation <- ZIO
-          .fromTry(
-            ECWrapper.signBytes(CURVE, operation.toAtalaOperation.toByteArray, masterKeyPair.privateKey)
-          )
-          .mapError(PublishManagedDIDError.CryptographyError.apply)
-          .map(signature =>
-            SignedPrismDIDOperation.Create(
-              operation = operation,
-              signature = ArraySeq.from(signature),
-              signedWithKey = DEFAULT_MASTER_KEY_ID
-            )
-          )
-        outcome <- didService
-          .createPublishedDID(signedAtalaOperation)
-          .mapError(PublishManagedDIDError.OperationError.apply)
+        signedOperation <- signOperationWithMasterKey[PublishManagedDIDError](operation)
+        outcome <- submitSignedOperation[PublishManagedDIDError](signedOperation)
         _ <- nonSecretStorage
           .setManagedDIDState(did, ManagedDIDState.PublicationPending(operation, outcome.operationId))
           .mapError(PublishManagedDIDError.WalletStorageError.apply)
       } yield outcome
+    }
 
     for {
       _ <- computeNewDIDStateFromDLTAndPersist[PublishManagedDIDError](did)
@@ -111,11 +123,11 @@ final class ManagedDIDService private[walletapi] (
         .mapError(PublishManagedDIDError.WalletStorageError.apply)
         .someOrFail(PublishManagedDIDError.DIDNotFound(did))
       outcome <- didState match {
-        case ManagedDIDState.Created(operation) => submitOperation(operation)
-        case ManagedDIDState.PublicationPending(operation, operationId) =>
-          ZIO.succeed(ScheduleDIDOperationOutcome(did, operation, operationId))
-        case ManagedDIDState.Published(operation, operationId) =>
-          ZIO.succeed(ScheduleDIDOperationOutcome(did, operation, operationId))
+        case ManagedDIDState.Created(operation) => doPublish(operation)
+        case ManagedDIDState.PublicationPending(operation, publishOperationId) =>
+          ZIO.succeed(ScheduleDIDOperationOutcome(did, operation, publishOperationId))
+        case ManagedDIDState.Published(operation, publishOperationId) =>
+          ZIO.succeed(ScheduleDIDOperationOutcome(did, operation, publishOperationId))
       }
     } yield outcome
   }
@@ -136,10 +148,10 @@ final class ManagedDIDService private[walletapi] (
         .filterOrFail(_.isEmpty)(CreateManagedDIDError.DIDAlreadyExists(did))
       _ <- ZIO
         .foreachDiscard(secret.keyPairs ++ secret.internalKeyPairs) { case (keyId, keyPair) =>
-          secretStorage.upsertKey(did, keyId, keyPair)
+          secretStorage.insertKey(did, keyId, keyPair, createOperation.toAtalaOperationHash)
         }
         .mapError(CreateManagedDIDError.WalletStorageError.apply)
-      // A DID is considered created after a successful save using saveCreatedDID
+      // A DID is considered created after a successful setState
       // If some steps above failed, it is not considered created and data that
       // are persisted along the way may be garbage collected.
       _ <- nonSecretStorage
@@ -148,50 +160,153 @@ final class ManagedDIDService private[walletapi] (
     } yield longFormDID
   }
 
-  private def generateCreateOperation(
-      didTemplate: ManagedDIDTemplate
-  ): IO[CreateManagedDIDError, (PrismDIDOperation.Create, CreateDIDSecret)] = {
+  def updateManagedDID(
+      did: CanonicalPrismDID,
+      actions: Seq[UpdateManagedDIDAction]
+  ): IO[UpdateManagedDIDError, ScheduleDIDOperationOutcome] = {
+    def doUpdate(operation: PrismDIDOperation.Update, secret: UpdateDIDSecret) = {
+      val operationHash = operation.toAtalaOperationHash
+      for {
+        signedOperation <- signOperationWithMasterKey[UpdateManagedDIDError](operation)
+        updateLineage <- Clock.instant.map { now =>
+          DIDUpdateLineage(
+            operationId = ArraySeq.from(signedOperation.toAtalaOperationId),
+            operationHash = ArraySeq.from(operation.toAtalaOperationHash),
+            previousOperationHash = operation.previousOperationHash,
+            status = ScheduledDIDOperationStatus.Pending,
+            createdAt = now,
+            updatedAt = now
+          )
+        }
+        _ <- ZIO
+          .foreachDiscard(secret.newKeyPairs) { case (keyId, keyPair) =>
+            secretStorage.insertKey(did, keyId, keyPair, operationHash)
+          }
+          .mapError(UpdateManagedDIDError.WalletStorageError.apply)
+        _ <- nonSecretStorage
+          .insertDIDUpdateLineage(did, updateLineage)
+          .mapError(UpdateManagedDIDError.WalletStorageError.apply)
+        outcome <- submitSignedOperation[UpdateManagedDIDError](signedOperation)
+      } yield outcome
+    }
+
     for {
-      keys <- ZIO
-        .foreach(didTemplate.publicKeys.sortBy(_.id))(generateKeyPairAndPublicKey)
-        .mapError(CreateManagedDIDError.KeyGenerationError.apply)
-      masterKey <- generateKeyPairAndInternalPublicKey(DEFAULT_MASTER_KEY_ID, InternalKeyPurpose.Master).mapError(
-        CreateManagedDIDError.KeyGenerationError.apply
-      )
-      operation = PrismDIDOperation.Create(
-        publicKeys = keys.map(_._2),
-        internalKeys = Seq(masterKey._2),
-        services = didTemplate.services
-      )
-      secret = CreateDIDSecret(
-        keyPairs = keys.map { case (keyPair, template) => template.id -> keyPair }.toMap,
-        internalKeyPairs = Map(masterKey._2.id -> masterKey._1)
-      )
-    } yield operation -> secret
+      _ <- ZIO
+        .fromEither(UpdateManagedDIDActionValidator.validate(actions))
+        .mapError(UpdateManagedDIDError.InvalidArgument.apply)
+      _ <- computeNewDIDStateFromDLTAndPersist[UpdateManagedDIDError](did)
+      didState <- nonSecretStorage
+        .getManagedDIDState(did)
+        .mapError(UpdateManagedDIDError.WalletStorageError.apply)
+        .someOrFail(UpdateManagedDIDError.DIDNotFound(did))
+        .collect(UpdateManagedDIDError.DIDNotPublished(did)) { case s: ManagedDIDState.Published => s }
+      _ <- didService
+        .resolveDID(did)
+        .mapError(UpdateManagedDIDError.ResolutionError.apply)
+        .someOrFail(UpdateManagedDIDError.DIDNotFound(did))
+        .filterOrFail { case (metaData, _) => !metaData.deactivated }(UpdateManagedDIDError.DIDAlreadyDeactivated(did))
+      previousOperationHash <- getPreviousOperationHash[UpdateManagedDIDError](did, didState.createOperation)
+      generated <- generateUpdateOperation(did, previousOperationHash, actions)
+      (updateOperation, secret) = generated
+      _ <- ZIO.fromEither(didOpValidator.validate(updateOperation)).mapError(UpdateManagedDIDError.OperationError.apply)
+      outcome <- doUpdate(updateOperation, secret)
+    } yield outcome
   }
 
-  private def generateKeyPairAndPublicKey(template: DIDPublicKeyTemplate): Task[(ECKeyPair, PublicKey)] = {
+  def deactivateManagedDID(did: CanonicalPrismDID): IO[UpdateManagedDIDError, ScheduleDIDOperationOutcome] = {
+    def doDeactivate(operation: PrismDIDOperation.Deactivate) = {
+      for {
+        signedOperation <- signOperationWithMasterKey[UpdateManagedDIDError](operation)
+        outcome <- submitSignedOperation[UpdateManagedDIDError](signedOperation)
+      } yield outcome
+    }
+
     for {
-      keyPair <- KeyGeneratorWrapper.generateECKeyPair(CURVE)
-      publicKey = PublicKey(template.id, template.purpose, publicKeyData = toPublicKeyData(keyPair))
-    } yield (keyPair, publicKey)
+      _ <- computeNewDIDStateFromDLTAndPersist[UpdateManagedDIDError](did)
+      didState <- nonSecretStorage
+        .getManagedDIDState(did)
+        .mapError(UpdateManagedDIDError.WalletStorageError.apply)
+        .someOrFail(UpdateManagedDIDError.DIDNotFound(did))
+        .collect(UpdateManagedDIDError.DIDNotPublished(did)) { case s: ManagedDIDState.Published => s }
+      _ <- didService
+        .resolveDID(did)
+        .mapError(UpdateManagedDIDError.ResolutionError.apply)
+        .someOrFail(UpdateManagedDIDError.DIDNotFound(did))
+        .filterOrFail { case (metaData, _) => !metaData.deactivated }(UpdateManagedDIDError.DIDAlreadyDeactivated(did))
+      previousOperationHash <- getPreviousOperationHash[UpdateManagedDIDError](did, didState.createOperation)
+      deactivateOperation = PrismDIDOperation.Deactivate(did, ArraySeq.from(previousOperationHash))
+      _ <- ZIO
+        .fromEither(didOpValidator.validate(deactivateOperation))
+        .mapError(UpdateManagedDIDError.OperationError.apply)
+      outcome <- doDeactivate(deactivateOperation)
+    } yield outcome
   }
 
-  private def generateKeyPairAndInternalPublicKey(
-      id: String,
-      purpose: InternalKeyPurpose
-  ): Task[(ECKeyPair, InternalPublicKey)] = {
-    for {
-      keyPair <- KeyGeneratorWrapper.generateECKeyPair(CURVE)
-      internalPublicKey = InternalPublicKey(id, purpose, toPublicKeyData(keyPair))
-    } yield (keyPair, internalPublicKey)
+  /** return hash of previous operation. Currently support only last confirmed operation */
+  private def getPreviousOperationHash[E](
+      did: CanonicalPrismDID,
+      createOperation: PrismDIDOperation.Create
+  )(using c1: Conversion[CommonWalletStorageError, E]): IO[E, Array[Byte]] = {
+    nonSecretStorage
+      .listUpdateLineage(did = Some(did), status = Some(ScheduledDIDOperationStatus.Confirmed))
+      .mapError[E](CommonWalletStorageError.apply)
+      .map { lineage =>
+        // Correlation between local timestamp and confirmed operation order on-chain is assumed.
+        // We may want to improve previous operation detection by using resolution metadata from Node in the future.
+        // We may also want to allow updating from unconfirmed operation to allow multiple updates
+        // without waiting for confirmation.
+        val lastConfirmedUpdate = lineage.maxByOption(_.createdAt)
+        lastConfirmedUpdate.fold(createOperation.toAtalaOperationHash)(_.operationHash.toArray)
+      }
   }
 
-  private def toPublicKeyData(keyPair: ECKeyPair): PublicKeyData = PublicKeyData.ECKeyData(
-    crv = CURVE,
-    x = Base64UrlString.fromByteArray(keyPair.publicKey.p.x.toPaddedByteArray(CURVE)),
-    y = Base64UrlString.fromByteArray(keyPair.publicKey.p.y.toPaddedByteArray(CURVE))
-  )
+  private def signOperationWithMasterKey[E](operation: PrismDIDOperation)(using
+      c1: Conversion[CommonWalletStorageError, E],
+      c2: Conversion[CommonCryptographyError, E]
+  ): IO[E, SignedPrismDIDOperation] = {
+    val did = operation.did
+    for {
+      masterKeyPair <-
+        secretStorage
+          .getKey(did, DEFAULT_MASTER_KEY_ID)
+          .mapError[E](CommonWalletStorageError.apply)
+          .someOrElseZIO(
+            ZIO.die(Exception("master-key must exists in the wallet for signing DID operation and submit to Node"))
+          )
+      signedOperation <- ZIO
+        .fromTry(
+          ECWrapper.signBytes(CURVE, operation.toAtalaOperation.toByteArray, masterKeyPair.privateKey)
+        )
+        .mapError[E](CommonCryptographyError.apply)
+        .map(signature =>
+          SignedPrismDIDOperation(
+            operation = operation,
+            signature = ArraySeq.from(signature),
+            signedWithKey = DEFAULT_MASTER_KEY_ID
+          )
+        )
+    } yield signedOperation
+  }
+
+  private def submitSignedOperation[E](
+      signedOperation: SignedPrismDIDOperation
+  )(using c1: Conversion[DIDOperationError, E]): IO[E, ScheduleDIDOperationOutcome] =
+    didService.scheduleOperation(signedOperation).mapError[E](e => e)
+
+  private def computeNewDIDLineageStatusAndPersist[E](
+      updateLineage: DIDUpdateLineage
+  )(using c1: Conversion[DIDOperationError, E], c2: Conversion[CommonWalletStorageError, E]): IO[E, Unit] = {
+    for {
+      maybeOperationDetail <- didService
+        .getScheduledDIDOperationDetail(updateLineage.operationId.toArray)
+        .mapError[E](e => e)
+      newStatus = maybeOperationDetail.fold(ScheduledDIDOperationStatus.Rejected)(_.status)
+      _ <- nonSecretStorage
+        .setDIDUpdateLineageStatus(updateLineage.operationId.toArray, newStatus)
+        .mapError[E](CommonWalletStorageError.apply)
+        .when(updateLineage.status != newStatus)
+    } yield ()
+  }
 
   /** Reconcile state with DLT and write new state to the storage */
   private def computeNewDIDStateFromDLTAndPersist[E](
@@ -200,28 +315,32 @@ final class ManagedDIDService private[walletapi] (
       c1: Conversion[CommonWalletStorageError, E],
       c2: Conversion[DIDOperationError, E]
   ): IO[E, Unit] = {
-    nonSecretStorage
-      .getManagedDIDState(did)
-      .mapError[E](CommonWalletStorageError.apply)
-      .flatMap(maybeState => ZIO.foreach(maybeState)(computeNewDIDStateFromDLT(_).mapError[E](e => e)))
-      .flatMap(maybeState =>
-        ZIO.foreach(maybeState)(nonSecretStorage.setManagedDIDState(did, _)).mapError[E](CommonWalletStorageError.apply)
-      )
-      .unit
+    for {
+      maybeCurrentState <- nonSecretStorage
+        .getManagedDIDState(did)
+        .mapError[E](CommonWalletStorageError.apply)
+      maybeNewState <- ZIO.foreach(maybeCurrentState)(computeNewDIDStateFromDLT(_).mapError[E](e => e))
+      _ <- ZIO.foreach(maybeCurrentState zip maybeNewState) { case (currentState, newState) =>
+        nonSecretStorage
+          .setManagedDIDState(did, newState)
+          .mapError[E](CommonWalletStorageError.apply)
+          .when(currentState != newState)
+      }
+    } yield ()
   }
 
   /** Reconcile state with DLT and return an updated state */
   private def computeNewDIDStateFromDLT(state: ManagedDIDState): IO[DIDOperationError, ManagedDIDState] = {
     state match {
-      case s @ ManagedDIDState.PublicationPending(operation, operationId) =>
+      case s @ ManagedDIDState.PublicationPending(operation, publishOperationId) =>
         didService
-          .getScheduledDIDOperationDetail(operationId.toArray)
+          .getScheduledDIDOperationDetail(publishOperationId.toArray)
           .map {
             case Some(result) =>
               result.status match {
                 case ScheduledDIDOperationStatus.Pending              => s
                 case ScheduledDIDOperationStatus.AwaitingConfirmation => s
-                case ScheduledDIDOperationStatus.Confirmed => ManagedDIDState.Published(operation, operationId)
+                case ScheduledDIDOperationStatus.Confirmed => ManagedDIDState.Published(operation, publishOperationId)
                 case ScheduledDIDOperationStatus.Rejected  => ManagedDIDState.Created(operation)
               }
             case None => ManagedDIDState.Created(operation)
@@ -259,11 +378,6 @@ object ManagedDIDService {
   val DEFAULT_MASTER_KEY_ID: String = "master0"
 
   val reservedKeyIds: Set[String] = Set(DEFAULT_MASTER_KEY_ID)
-
-  private final case class CreateDIDSecret(
-      keyPairs: Map[String, ECKeyPair],
-      internalKeyPairs: Map[String, ECKeyPair]
-  )
 
   def inMemoryStorage: URLayer[DIDOperationValidator & DIDService, ManagedDIDService] =
     (InMemoryDIDNonSecretStorage.layer ++ InMemoryDIDSecretStorage.layer) >>> ZLayer.fromFunction(

@@ -21,31 +21,31 @@ final case class PeerDID(
     jwkForKeyAgreement: OctetKeyPair,
     jwkForKeyAuthentication: OctetKeyPair,
 ) {
-  def keyAgreement = PeerDID.keyAgreemenFromPublicJWK(jwkForKeyAgreement)
-  def keyAuthentication = PeerDID.keyAuthenticationFromPublicJWK(jwkForKeyAuthentication)
+  // def keyAgreement = PeerDID.keyAgreemenFromPublicJWK(jwkForKeyAgreement)
+  // def keyAuthentication = PeerDID.keyAuthenticationFromPublicJWK(jwkForKeyAuthentication)
 
-  def getSecretResolverInMemory: SecretResolverInMemory = {
-    val keyIdAgreement = PeerDIDUtils.createMultibaseEncnumbasis(keyAgreement).drop(1)
-    val keyIdAuthentication = PeerDIDUtils.createMultibaseEncnumbasis(keyAuthentication).drop(1)
+  // def getSecretResolverInMemory: SecretResolverInMemory = {
+  //   val keyIdAgreement = PeerDIDUtils.createMultibaseEncnumbasis(keyAgreement).drop(1)
+  //   val keyIdAuthentication = PeerDIDUtils.createMultibaseEncnumbasis(keyAuthentication).drop(1)
 
-    val secretKeyAgreement = new Secret(
-      s"${did.value}#$keyIdAgreement",
-      VerificationMethodType.JSON_WEB_KEY_2020,
-      new VerificationMaterial(VerificationMaterialFormat.JWK, jwkForKeyAgreement.toJSONString)
-    )
-    val secretKeyAuthentication = new Secret(
-      s"${did.value}#$keyIdAuthentication",
-      VerificationMethodType.JSON_WEB_KEY_2020,
-      new VerificationMaterial(VerificationMaterialFormat.JWK, jwkForKeyAuthentication.toJSONString)
-    )
+  //   val secretKeyAgreement = new Secret(
+  //     s"${did.value}#$keyIdAgreement",
+  //     VerificationMethodType.JSON_WEB_KEY_2020,
+  //     new VerificationMaterial(VerificationMaterialFormat.JWK, jwkForKeyAgreement.toJSONString)
+  //   )
+  //   val secretKeyAuthentication = new Secret(
+  //     s"${did.value}#$keyIdAuthentication",
+  //     VerificationMethodType.JSON_WEB_KEY_2020,
+  //     new VerificationMaterial(VerificationMaterialFormat.JWK, jwkForKeyAuthentication.toJSONString)
+  //   )
 
-    new SecretResolverInMemory(
-      Map(
-        s"${did.value}#$keyIdAgreement" -> secretKeyAgreement,
-        s"${did.value}#$keyIdAuthentication" -> secretKeyAuthentication,
-      ).asJava
-    )
-  }
+  //   new SecretResolverInMemory(
+  //     Map(
+  //       s"${did.value}#$keyIdAgreement" -> secretKeyAgreement,
+  //       s"${did.value}#$keyIdAuthentication" -> secretKeyAuthentication,
+  //     ).asJava
+  //   )
+  // }
 
   def getDIDDocument = org.didcommx.peerdid.PeerDIDResolver
     .resolvePeerDID(did.value, VerificationMaterialFormatPeerDID.JWK)

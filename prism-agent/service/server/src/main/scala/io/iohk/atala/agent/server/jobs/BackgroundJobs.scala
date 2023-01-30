@@ -513,6 +513,11 @@ object BackgroundJobs {
     ZIO.unit
   }
 
-  val syncDIDPublicationStateFromDlt = ZIO.serviceWithZIO[ManagedDIDService](_.syncManagedDIDState)
+  val syncDIDPublicationStateFromDlt =
+    for {
+      managedDidService <- ZIO.service[ManagedDIDService]
+      _ <- managedDidService.syncManagedDIDState
+      _ <- managedDidService.syncUnconfirmedUpdateOperations
+    } yield ()
 
 }

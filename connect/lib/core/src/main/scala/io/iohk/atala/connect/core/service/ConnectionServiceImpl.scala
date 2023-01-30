@@ -1,8 +1,7 @@
 package io.iohk.atala.connect.core.service
 
-import io.iohk.atala.connect.core.repository.ConnectionRepository
-import io.iohk.atala.mercury.DidComm
 import zio._
+import io.iohk.atala.connect.core.repository.ConnectionRepository
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError._
 import io.iohk.atala.connect.core.model.ConnectionRecord
@@ -26,14 +25,13 @@ private class ConnectionServiceImpl(
       pairwiseDID: DidId
   ): IO[ConnectionServiceError, ConnectionRecord] =
     for {
-      recordId <- ZIO.succeed(UUID.randomUUID)
-      invitation <- ZIO.succeed(createDidCommInvitation(recordId, pairwiseDID))
+      invitation <- ZIO.succeed(Invitation.invitation2Connect(pairwiseDID))
       record <- ZIO.succeed(
         ConnectionRecord(
-          id = recordId,
+          id = UUID.fromString(invitation.id),
           createdAt = Instant.now,
           updatedAt = None,
-          thid = Some(recordId),
+          thid = Some(UUID.fromString(invitation.id)), // this is the default, can't with just use None?
           label = label,
           role = ConnectionRecord.Role.Inviter,
           protocolState = ConnectionRecord.ProtocolState.InvitationGenerated,
@@ -203,14 +201,6 @@ private class ConnectionServiceImpl(
         case state           => ZIO.fail(InvalidFlowStateError(s"Invalid protocol state for operation: $state"))
       }
     } yield record
-  }
-
-  private[this] def createDidCommInvitation(thid: UUID, from: DidId): Invitation = {
-    Invitation(
-      id = thid.toString,
-      from = from,
-      body = Invitation.Body(goal_code = "connect", goal = "Establish a trust connection between two peers", Nil)
-    )
   }
 
   private[this] def createDidCommConnectionRequest(record: ConnectionRecord, pairwiseDid: DidId): ConnectionRequest = {

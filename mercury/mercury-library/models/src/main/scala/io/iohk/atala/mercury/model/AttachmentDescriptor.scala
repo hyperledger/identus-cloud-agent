@@ -43,7 +43,7 @@ object LinkData {
 
 }
 
-final case class JsonData(data: JsonObject) extends AttachmentData
+final case class JsonData(json: JsonObject) extends AttachmentData
 object JsonData {
   given Encoder[JsonData] = deriveEncoder[JsonData]
   given Decoder[JsonData] = deriveDecoder[JsonData]

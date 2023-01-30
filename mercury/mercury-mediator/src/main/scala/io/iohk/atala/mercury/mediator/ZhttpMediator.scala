@@ -7,8 +7,8 @@ import zio.http.service._
 
 import java.nio.charset.StandardCharsets
 
+import io.iohk.atala.mercury._
 import io.iohk.atala.mercury.model.DidId
-import io.iohk.atala.mercury.{Agent, DidComm, InvitationPrograms, MediaTypes}
 import io.iohk.atala.mercury.resolvers.MediatorDidComm
 import scala.io.Source
 import java.util.Base64
@@ -18,7 +18,7 @@ object ZhttpMediator extends ZIOAppDefault {
   val header = "content-type" -> MediaTypes.contentTypeEncrypted
 
   // Create HTTP route
-  val app: HttpApp[DidComm & MailStorage & ConnectionStorage, Throwable] = Http.collectZIO[Request] {
+  val app: HttpApp[DidAgent & DidOps & MailStorage & ConnectionStorage, Throwable] = Http.collectZIO[Request] {
     case req @ Method.POST -> !! if req.headersAsList.exists(h => (h.key == header._1) && h.value == header._2) =>
       req.body.asString
         .flatMap(data => MediatorProgram.program(data))
@@ -102,5 +102,7 @@ object ZhttpMediator extends ZIOAppDefault {
   }
 
   override val run = { MediatorProgram.startLogo *> Server.serve(app) }
-    .provide(server ++ MediatorDidComm.peerDidMediator ++ MailStorage.layer ++ ConnectionStorage.layer)
+    .provide(
+      server ++ MediatorDidComm.peerDidMediator ++ DidCommX.liveLayer ++ MailStorage.layer ++ ConnectionStorage.layer
+    )
 }

@@ -56,6 +56,37 @@ def json2Map(json: Json): Any = json match {
   case _                => null // Impossible case but Json cases are private in circe ...
 }
 
+def mapValueToJson(obj: java.lang.Object): Json = {
+  obj match {
+    case null                 => Json.Null
+    case b: java.lang.Boolean => Json.fromBoolean(b)
+    case i: java.lang.Integer => Json.fromInt(i)
+    case d: java.lang.Double =>
+      Json.fromDouble(d).getOrElse(Json.fromDouble(0d).get)
+    case l: java.lang.Long   => Json.fromLong(l)
+    case s: java.lang.String => Json.fromString(String.valueOf(s))
+    case array: com.nimbusds.jose.shaded.json.JSONArray => {
+      Json.fromValues(array.iterator().asScala.map(mapValueToJson).toList)
+    }
+    case joseObject: com.nimbusds.jose.shaded.json.JSONObject =>
+      Json.fromJsonObject {
+        JsonObject.fromMap(
+          joseObject
+            .asInstanceOf[java.util.Map[String, Object]]
+            .asScala
+            .toMap
+            .view
+            .mapValues(mapValueToJson)
+            .toMap
+        )
+      }
+    case any => {
+      println("*****NotImplemented***" + any.getClass().getCanonicalName() + "**********") // FIXME
+      ???
+    }
+  }
+}
+
 given Conversion[AttachmentDescriptor, XAttachment] with {
   def apply(attachment: AttachmentDescriptor): XAttachment = {
     val id = attachment.id
@@ -82,8 +113,8 @@ given Conversion[XAttachment, AttachmentDescriptor] with {
     val data: AttachmentData = attachment.getData().toJSONObject.asScala.toMap match {
       case e if e contains ("json") =>
         val aux = e("json")
-        println(aux.getClass().getCanonicalName()) // TODO
-        ???
+        val x = aux.asInstanceOf[java.util.Map[String, Object]].asScala.toMap.view.mapValues(mapValueToJson)
+        JsonData(JsonObject.fromMap(x.toMap))
       case e if e contains ("base64") =>
         val tmp = e("base64").asInstanceOf[String] // ...
         Base64(tmp)
