@@ -28,7 +28,7 @@ object DIDOperationValidator {
 class DIDOperationValidator(config: Config) {
 
   // TODO: specification alignment
-  // - service endpoint normalization
+  // - service endpoint normalization DONE
   // - service endpoints in create-operation must be non-empty
   def validate(operation: PrismDIDOperation): Either[DIDOperationError, Unit] = {
     for {
@@ -40,6 +40,7 @@ class DIDOperationValidator(config: Config) {
       _ <- validateServiceIdIsUriFragment(operation)
       _ <- validateMasterKeyExists(operation)
       _ <- validateUpdateOperationAction(operation)
+      _ <- validateServiceEndpointNormalized(operation)
     } yield ()
   }
 
@@ -98,6 +99,29 @@ class DIDOperationValidator(config: Config) {
         if (masterKeys.nonEmpty) Right(())
         else Left(DIDOperationError.InvalidArgument("create operation must contain at least 1 master key"))
       case _ => Right(())
+    }
+  }
+
+  // TODO: add tests
+  private def validateServiceEndpointNormalized(operation: PrismDIDOperation): Either[DIDOperationError, Unit] = {
+    val uris = operation match {
+      case PrismDIDOperation.Create(_, _, services) => services.flatMap(_.serviceEndpoint)
+      case PrismDIDOperation.Update(_, _, actions) =>
+        actions.flatMap {
+          case UpdateDIDAction.AddService(service)            => service.serviceEndpoint
+          case UpdateDIDAction.UpdateService(_, _, endpoints) => endpoints
+          case _                                              => Nil
+        }
+      case _: PrismDIDOperation.Deactivate => Nil
+    }
+    uris.filterNot(isUriNormalized) match {
+      case Nil => Right(())
+      case uris =>
+        Left(
+          DIDOperationError.InvalidArgument(
+            s"serviceEndpoint URIs must be normalized: ${uris.mkString("[", ", ", "]")}"
+          )
+        )
     }
   }
 
@@ -176,6 +200,12 @@ class DIDOperationValidator(config: Config) {
 
     // In general, empty URI fragment is a valid fragment, but for our use-case it would be pointless
     str.nonEmpty && uriFragmentRegex.matches(str)
+  }
+
+  /** @return true if a given uri is normalized */
+  private def isUriNormalized(uri: URI): Boolean = {
+    val normalized = uri.normalize()
+    uri.toString == normalized.toString
   }
 
 }
