@@ -97,7 +97,7 @@ object AgentCli extends ZIOAppDefault {
     import io.iohk.atala.mercury.protocol.invitation._
     for {
       agentService <- ZIO.service[DidAgent]
-      invitation = OutOfBandConnection.createInvitation(from = agentService.id)
+      invitation = ConnectionInvitation.makeConnectionInvitation(from = agentService.id)
       serverUrl = s"https://didcomm-bootstrap.atalaprism.com?_oob=${invitation.toBase64}"
       _ <- Console.printLine(serverUrl)
       _ <- Console.printLine(invitation.id + " -> " + invitation)
@@ -222,7 +222,8 @@ object AgentCli extends ZIOAppDefault {
       connectionRequest = ConnectionRequest(
         from = agentService.id,
         to = connectionInvitation.from,
-        thid = Some(connectionInvitation.id), // TODO if this is coorect
+        thid = None,
+        pthid = Some(connectionInvitation.id),
         body = ConnectionRequest.Body(goal_code = Some("connect"), goal = Some("Establish Connection"))
       )
       msg = connectionRequest.makeMessage
@@ -421,12 +422,12 @@ object AgentCli extends ZIOAppDefault {
               for {
                 _ <- ZIO.logInfo("*" * 100)
                 _ <- ZIO.logInfo("As Inviter in Connect:")
-                connectionRequest = ConnectionRequest.readFromMessage(msg)
+                connectionRequest = ConnectionRequest.fromMessage(msg).toOption.get // TODO .get
                 _ <- ZIO.logInfo("Got ConnectionRequest: " + connectionRequest)
                 _ <- ZIO.logInfo("Creating New PeerDID...")
 //                peer <- ZIO.succeed(PeerDID.makePeerDid(serviceEndpoint = serviceEndpoint)) TODO
 //                _ <- ZIO.logInfo(s"My new DID => $peer")
-                connectionResponse = ConnectionResponse.makeResponseFromRequest(msg)
+                connectionResponse = ConnectionResponse.makeResponseFromRequest(msg).toOption.get // TODO .get
                 msgToSend = connectionResponse.makeMessage
                 _ <- MessagingService.send(msgToSend)
               } yield ("Connection Request Sent")
@@ -434,7 +435,7 @@ object AgentCli extends ZIOAppDefault {
               for {
                 _ <- ZIO.logInfo("*" * 100)
                 _ <- ZIO.logInfo("As Invitee in Connect:")
-                connectionResponse = ConnectionResponse.readFromMessage(msg)
+                connectionResponse = ConnectionResponse.fromMessage(msg).toOption.get // TODO .get
                 _ <- ZIO.logInfo("Got Connection Response: " + connectionResponse)
               } yield ("Connection established")
 

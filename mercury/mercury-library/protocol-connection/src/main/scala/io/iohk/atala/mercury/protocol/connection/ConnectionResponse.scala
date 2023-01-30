@@ -19,41 +19,55 @@ object ConnectionResponse {
     given Decoder[Body] = deriveDecoder[Body]
   }
 
-  def makeResponseFromRequest(msg: Message): ConnectionResponse = {
-    val cr: ConnectionRequest = ConnectionRequest.readFromMessage(msg)
+  def makeResponseFromRequest(msg: Message): Either[String, ConnectionResponse] =
+    for {
+      cr: ConnectionRequest <- ConnectionRequest.fromMessage(msg)
+      ret = makeResponseFromRequest(cr)
+    } yield (ret)
 
+  def makeResponseFromRequest(cr: ConnectionRequest): ConnectionResponse =
     ConnectionResponse(
       body = ConnectionResponse.Body(
         goal_code = cr.body.goal_code,
         goal = cr.body.goal,
         accept = cr.body.accept,
       ),
-      thid = msg.thid.orElse(Some(cr.id)),
-      from = {
-        assert(msg.to.length == 1, "The recipient is ambiguous. Need to have only 1 recipient") // TODO return error
-        msg.to.head
-      },
-      to = msg.from.get, // TODO get
+      thid = cr.thid.orElse(Some(cr.id)),
+      pthid = cr.pthid,
+      from = cr.to,
+      to = cr.from,
     )
-  }
 
-  def readFromMessage(message: Message): ConnectionResponse = {
-    val body = message.body.asJson.as[ConnectionResponse.Body].toOption.get // TODO get
-    ConnectionResponse(
-      id = message.id,
-      `type` = message.piuri,
-      body = body,
-      thid = message.thid,
-      from = message.from.get, // TODO get
-      to = {
-        assert(message.to.length == 1, "The recipient is ambiguous. Need to have only 1 recipient") // TODO return error
-        message.to.head
-      },
-    )
-  }
+  /** Parse a generecy DIDComm Message into a ConnectionResponse */
+  def fromMessage(message: Message): Either[String, ConnectionResponse] =
+    for {
+      piuri <-
+        if (message.`type` == ConnectionResponse.`type`) Right(message.`type`)
+        else Left(s"Message MUST be of the type '${ConnectionResponse.`type`}' instead of '${message.`type`}'")
+      body <- message.body.asJson
+        .as[ConnectionResponse.Body]
+        .left
+        .map(ex => "Fail to parse the body of the ConnectionResponse because: " + ex.message)
+      ret <- message.to match
+        case Seq(inviter) => // is from only one inviter
+          message.from match
+            case Some(invitee) =>
+              Right(
+                ConnectionResponse(
+                  id = message.id,
+                  `type` = piuri,
+                  body = body,
+                  thid = message.thid,
+                  pthid = message.pthid,
+                  from = invitee, // TODO get
+                  to = inviter
+                )
+              )
+            case None => Left("ConnectionResponse needs to define the Inviter")
+        case _ => Left("The inviter (recipient) is ambiguous. Message need to have only 1 recipient")
+    } yield ret
 
   given Encoder[ConnectionResponse] = deriveEncoder[ConnectionResponse]
-
   given Decoder[ConnectionResponse] = deriveDecoder[ConnectionResponse]
 }
 
@@ -63,6 +77,7 @@ final case class ConnectionResponse(
     from: DidId,
     to: DidId,
     thid: Option[String],
+    pthid: Option[String],
     body: ConnectionResponse.Body,
 ) {
   assert(`type` == "https://atalaprism.io/mercury/connections/1.0/response")
@@ -73,6 +88,7 @@ final case class ConnectionResponse(
     from = Some(this.from),
     to = Seq(this.to),
     thid = this.thid,
+    pthid = this.pthid,
     body = this.body.asJson.asObject.get,
   )
 }
