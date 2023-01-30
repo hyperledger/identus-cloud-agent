@@ -43,7 +43,7 @@ object LinkData {
 
 }
 
-final case class JsonData(data: JsonObject) extends AttachmentData
+final case class JsonData(json: JsonObject) extends AttachmentData
 object JsonData {
   given Encoder[JsonData] = deriveEncoder[JsonData]
   given Decoder[JsonData] = deriveDecoder[JsonData]
@@ -102,13 +102,13 @@ final case class AttachmentDescriptor(
 
 object AttachmentDescriptor {
 
-  def buildAttachment[A](
+  def buildBase64Attachment(
       id: String = java.util.UUID.randomUUID.toString,
-      payload: A,
-      mediaType: Option[String] = Some("application/json")
-  )(using Encoder[A]): AttachmentDescriptor = {
-    val encoded = JBase64.getUrlEncoder.encodeToString(payload.asJson.noSpaces.getBytes)
-    AttachmentDescriptor(id, mediaType, Base64(encoded)) // use JsonData or Base64 by default?
+      payload: Array[Byte],
+      mediaType: Option[String] = None
+  ): AttachmentDescriptor = {
+    val encoded = JBase64.getUrlEncoder.encodeToString(payload)
+    AttachmentDescriptor(id, mediaType, Base64(encoded))
   }
 
   def buildJsonAttachment[A](

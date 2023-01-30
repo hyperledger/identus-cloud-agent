@@ -27,12 +27,12 @@ lazy val V = new {
   val zio = "2.0.4"
   val zioLogging = "2.0.0"
   val zioJson = "0.3.0"
-  val zioHttp = "2.0.0-RC10" // "2.0.0-RC11" TODO
+  val zioHttp = "0.0.3" // "2.0.0-RC10" // "2.0.0-RC11" TODO
 
   // https://mvnrepository.com/artifact/io.circe/circe-core
   val circe = "0.14.2"
 
-  val mercury = "0.7.0"
+  val mercury = "0.16.0"
 }
 
 /** Dependencies */
@@ -57,8 +57,8 @@ lazy val D = new {
   val zioSLF4J = Def.setting("dev.zio" %% "zio-logging-slf4j" % V.zioLogging)
   val zioJson = Def.setting("dev.zio" %% "zio-json" % V.zioJson)
 
-  // val zioHttp = Def.setting("dev.zio" %% "zio-http" % V.zioHttp) // FIXME USE THIS ONE
-  val zioHttp = Def.setting("io.d11" %% "zhttp" % V.zioHttp) // REMOVE (this is the old name)
+  val zioHttp = Def.setting("dev.zio" %% "zio-http" % V.zioHttp) // FIXME USE THIS ONE
+  // val zioHttp = Def.setting("io.d11" %% "zhttp" % V.zioHttp) // REMOVE (this is the old name)
 
   val circeCore = Def.setting("io.circe" %% "circe-core" % V.circe)
   val circeGeneric = Def.setting("io.circe" %% "circe-generic" % V.circe)
@@ -82,7 +82,7 @@ lazy val mediator = project
   .settings(libraryDependencies += D.zio.value)
   .settings(libraryDependencies += D.munitZio.value)
   .settings(
-    libraryDependencies ++= Seq(D.mercuryModels.value, D.mercuryAgent.value),
+    libraryDependencies ++= Seq(D.mercuryModels.value, D.mercuryAgent.value, D.zioHttp.value),
     Compile / unmanagedResourceDirectories += apiBaseDirectory.value,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
     githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN"),

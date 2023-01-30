@@ -12,16 +12,10 @@ import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.agent.server.http.marshaller.{
   ConnectionsManagementApiMarshallerImpl,
   DIDApiMarshallerImpl,
-  DIDAuthenticationApiMarshallerImpl,
   DIDRegistrarApiMarshallerImpl
 }
-import io.iohk.atala.agent.server.http.service.{
-  ConnectionsManagementApiServiceImpl,
-  DIDApiServiceImpl,
-  DIDAuthenticationApiServiceImpl,
-  DIDRegistrarApiServiceImpl
-}
-import io.iohk.atala.agent.openapi.api.{ConnectionsManagementApi, DIDApi, DIDAuthenticationApi, DIDRegistrarApi}
+import io.iohk.atala.agent.server.http.service.{ConnectionsManagementApiServiceImpl, DIDApiServiceImpl}
+import io.iohk.atala.agent.openapi.api.{ConnectionsManagementApi, DIDApi, DIDRegistrarApi}
 import cats.effect.std.Dispatcher
 import com.typesafe.config.ConfigFactory
 import doobie.util.transactor.Transactor
@@ -62,7 +56,12 @@ import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc
 import java.io.IOException
 import cats.implicits.*
 import io.iohk.atala.pollux.schema.SchemaRegistryServerEndpoints
-import io.iohk.atala.pollux.service.SchemaRegistryServiceInMemory
+import io.iohk.atala.pollux.service.{
+  JdbcSchemaRegistryService,
+  SchemaRegistryService,
+  SchemaRegistryServiceInMemory,
+  VerificationPolicyServiceInMemory
+}
 import io.iohk.atala.pollux.core.service.PresentationService
 import io.iohk.atala.pollux.core.service.PresentationServiceImpl
 import io.iohk.atala.pollux.core.repository.PresentationRepository
@@ -77,7 +76,6 @@ import io.iohk.atala.mercury.protocol.connection.ConnectionRequest
 import io.iohk.atala.mercury.protocol.connection.ConnectionResponse
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.pollux.schema.{SchemaRegistryServerEndpoints, VerificationPolicyServerEndpoints}
-import io.iohk.atala.pollux.service.{SchemaRegistryServiceInMemory, VerificationPolicyServiceInMemory}
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.mercury.protocol.presentproof.*
 import io.iohk.atala.agent.server.config.AgentConfig
@@ -91,7 +89,7 @@ import io.circe.DecodingFailure
 import io.iohk.atala.agent.walletapi.sql.{JdbcDIDNonSecretStorage, JdbcDIDSecretStorage}
 import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
-import io.iohk.atala.pollux.vc.jwt.{DidResolver => JwtDidResolver}
+import io.iohk.atala.pollux.vc.jwt.DidResolver as JwtDidResolver
 import io.iohk.atala.castor.core.model.error.DIDOperationError.TooManyDidServiceAccess
 import io.iohk.atala.pollux.vc.jwt.PrismDidResolver
 
@@ -99,7 +97,7 @@ object Modules {
 
   def app(port: Int): RIO[
     DidComm & ManagedDIDService & AppConfig & DIDRegistrarApi & IssueCredentialsProtocolApi & ConnectionsManagementApi &
-      DIDApi & DIDAuthenticationApi & PresentProofApi & ActorSystem[Nothing],
+      DIDApi & PresentProofApi & ActorSystem[Nothing],
     Unit
   ] = {
     val httpServerApp = HttpRoutes.routes.flatMap(HttpServer.start(port, _))
@@ -107,7 +105,7 @@ object Modules {
     httpServerApp.unit
   }
 
-  lazy val zioApp: RIO[SchemaRegistryServiceInMemory & VerificationPolicyServiceInMemory & AppConfig, Unit] = {
+  lazy val zioApp: RIO[SchemaRegistryService & VerificationPolicyServiceInMemory & AppConfig, Unit] = {
     val zioHttpServerApp = for {
       allSchemaRegistryEndpoints <- SchemaRegistryServerEndpoints.all
       allVerificationPolicyEndpoints <- VerificationPolicyServerEndpoints.all
@@ -475,12 +473,6 @@ object HttpModule {
     (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new DIDApi(_, _))
   }
 
-  val didAuthenticationApiLayer: ULayer[DIDAuthenticationApi] = {
-    val apiServiceLayer = DIDAuthenticationApiServiceImpl.layer
-    val apiMarshallerLayer = DIDAuthenticationApiMarshallerImpl.layer
-    (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new DIDAuthenticationApi(_, _))
-  }
-
   val didRegistrarApiLayer: TaskLayer[DIDRegistrarApi] = {
     val serviceLayer = AppModule.manageDIDServiceLayer
     val apiServiceLayer = serviceLayer >>> DIDRegistrarApiServiceImpl.layer
@@ -511,7 +503,7 @@ object HttpModule {
   }
 
   val layers =
-    didApiLayer ++ didAuthenticationApiLayer ++ didRegistrarApiLayer ++
+    didApiLayer ++ didRegistrarApiLayer ++
       issueCredentialsProtocolApiLayer ++ connectionsManagementApiLayer ++ presentProofProtocolApiLayer
 }
 
@@ -603,5 +595,8 @@ object RepoModule {
 
   val connectionRepoLayer: TaskLayer[ConnectionRepository[Task]] =
     RepoModule.connectTransactorLayer >>> JdbcConnectionRepository.layer
+
+  val credentialSchemaServiceLayer: TaskLayer[SchemaRegistryService] =
+    RepoModule.polluxTransactorLayer >>> JdbcSchemaRegistryService.layer
 
 }

@@ -4,21 +4,21 @@ import zio._
 import io.circe._
 import io.circe.syntax._
 
-import io.iohk.atala.mercury.model.{_, given}
+import io.iohk.atala.mercury.model.{given, _}
 import io.iohk.atala.mercury.protocol.issuecredential._
 import java.io.IOException
 
+import io.iohk.atala.mercury.DidCommX
 object AgentHardCode extends ZIOAppDefault {
 
   def run = for {
-    agentDID <- for {
+    didPeer <- for {
       peer <- ZIO.succeed(PeerDID.makePeerDid()) // (serviceEndpoint = serviceEndpoint))
       _ <- Console.printLine(s"New DID: ${peer.did}") *>
         Console.printLine(s"JWK for KeyAgreement: ${peer.jwkForKeyAgreement.toJSONString}") *>
         Console.printLine(s"JWK for KeyAuthentication: ${peer.jwkForKeyAuthentication.toJSONString}")
     } yield (peer)
-    didCommLayer = AgentCli.agentLayer(agentDID)
-    _ <- test.provide(didCommLayer)
+    _ <- test.provide(DidCommX.liveLayer, AgentPeerService.makeLayer(didPeer))
   } yield ()
 
   val attribute1 = Attribute(name = "name", value = "Joe Blog")
@@ -30,18 +30,19 @@ object AgentHardCode extends ZIOAppDefault {
     formats = Seq.empty
   )
 
-  def test: ZIO[DidComm, IOException, Unit] = {
+  def test: ZIO[DidOps & DidAgent, IOException, Unit] = {
     for {
-      didCommService <- ZIO.service[DidComm]
+      agentService <- ZIO.service[DidAgent]
+      opsService <- ZIO.service[DidOps]
       msg = Message(
         `type` = "TEST",
-        from = Some(didCommService.myDid),
+        from = Some(agentService.id),
         to = Seq.empty,
         body = body.asJson.asObject.get
       )
       // signed <- didCommService.packSigned(msg)
-      ttt <- didCommService.packEncrypted(msg, to = didCommService.myDid)
-      msg2 <- didCommService.unpack(ttt.string)
+      ttt <- opsService.packEncrypted(msg, to = agentService.id)
+      msg2 <- opsService.unpack(ttt.string)
       _ <- Console.printLine(msg)
 
       aaa = msg: org.didcommx.didcomm.message.Message

@@ -6,7 +6,7 @@ import io.circe._
 import io.circe.Json._
 import io.circe.parser._
 import io.circe.JsonObject
-import io.iohk.atala.mercury.{_, given}
+import io.iohk.atala.mercury.{given, _}
 import io.iohk.atala.mercury.model._
 import io.iohk.atala.mercury.protocol.mailbox.Mailbox.ReadMessage
 import io.iohk.atala.mercury.protocol.routing._
@@ -28,7 +28,7 @@ def makeForwardMessage(mediator: Agent, to: Agent, msg: EncryptedMessage) =
     to = mediator.id,
     expires_time = None,
     body = ForwardBody(next = to.id), // TODO check msg header
-    attachments = Seq(AttachmentDescriptor.buildAttachment(payload = msg.asJson)),
+    attachments = Seq(AttachmentDescriptor.buildJsonAttachment(payload = msg.asJson)),
   )
 
 object AgentPrograms {
@@ -43,7 +43,7 @@ object AgentPrograms {
   val senderProgram = for {
     _ <- Console.printLine("\n#### Bob Sending type Readmessages ####")
     messageCreated <- ZIO.succeed(makeReadMessage(Agent.Bob, Agent.Mediator))
-    bob <- ZIO.service[DidComm] // AgentService[Agent.Bob.type]]
+    bob <- ZIO.service[DidOps] // AgentService[Agent.Bob.type]]
 
     // ##########################################
     encryptedMsg <- bob.packEncrypted(messageCreated.asMessage, to = Agent.Mediator.id)
@@ -70,7 +70,7 @@ object AgentPrograms {
   val pickupMessageProgram = for {
     _ <- Console.printLine("\n#### Program 4 ####")
     messageCreated <- ZIO.succeed(makeMsg(Agent.Alice, Agent.Bob))
-    alice <- ZIO.service[DidComm] // AgentService[Agent.Alice.type]]
+    alice <- ZIO.service[DidOps] // AgentService[Agent.Alice.type]]
     _ <- Console.printLine("Send Message")
     _ <- Console.printLine(
       "\n*********************************************************************************************************************************\n"
@@ -94,7 +94,7 @@ object AgentPrograms {
 
     // HTTP
 
-    alice <- ZIO.service[DidComm]
+    alice <- ZIO.service[DidOps]
     httpClient <- ZIO.service[HttpClient]
     res <- httpClient.postDIDComm(
       url = "http://localhost:8080",

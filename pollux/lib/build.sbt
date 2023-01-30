@@ -5,7 +5,7 @@ import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
 inThisBuild(
   Seq(
     organization := "io.iohk.atala",
-    scalaVersion := "3.2.1",
+    scalaVersion := "3.2.2",
     fork := true,
     run / connectInput := true,
     versionScheme := Some("semver-spec"),
@@ -16,6 +16,7 @@ inThisBuild(
 )
 
 val commonSettings = Seq(
+  testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
   githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN"),
   resolvers += Resolver.githubPackages("input-output-hk"),
   // Needed for Kotlin coroutines that support new memory management mode
@@ -54,7 +55,7 @@ lazy val `sql-doobie` = project
     name := "pollux-sql-doobie",
     libraryDependencies ++= sqlDoobieDependencies
   )
-  .dependsOn(core)
+  .dependsOn(core % "compile->compile;test->test")
 
 // ### ReleaseStep ###
 releaseProcess := Seq[ReleaseStep](

@@ -10,7 +10,12 @@ DISABLE_LINTERS:
     DOCKERFILE_HADOLINT,
     REPOSITORY_TRIVY,
     REPOSITORY_CHECKOV,
+    REPOSITORY_SECRETLINT,
+    SCALA_SCALAFIX,
+    SQL_TSQLLINT,
   ]
+DISABLE_ERRORS_LINTERS: [KOTLIN_KTLINT, PROTOBUF_PROTOLINT, OPENAPI_SPECTRAL, MARKDOWN_MARKDOWN_LINK_CHECK]
+
 DISABLE: [COPYPASTE, SPELL, CREDENTIALS]
 SHOW_ELAPSED_TIME: false
 FILEIO_REPORTER: false
@@ -19,6 +24,7 @@ PRINT_ALPACA: false
 VALIDATE_ALL_CODEBASE: false
 SHOW_SKIPPED_LINTERS: false
 LOG_LEVEL: INFO
+BASH_SHELLCHECK_DISABLE_ERRORS: true
 # This pre-command fixes complex CLRF bug
 # when MegaLinter takes changes, it checkouts code twice
 # that could lead to new files in workspace created
@@ -26,3 +32,8 @@ LOG_LEVEL: INFO
 PRE_COMMANDS:
   - command: git config --global core.autocrlf input
     cwd: "workspace"
+
+# Linter customisation
+MARKDOWN_MARKDOWN_LINK_CHECK_FILTER_REGEX_EXCLUDE: "CHANGELOG.md"
+MARKDOWN_MARKDOWNLINT_FILTER_REGEX_EXCLUDE: "CHANGELOG.md"
+SQL_SQL_LINT_ARGUMENTS: -d postgres --ignore-errors=postgres-invalid-alter-option

@@ -8,17 +8,32 @@ object Dependencies {
     val prismSdk = "v1.4.1" // scala-steward:off
     val iris = "0.1.0"
     val shared = "0.2.0"
-    val mercury = "0.15.0"
+    val mercury = "0.16.0"
     val flyway = "9.8.3"
+    val testContainersScalaPostgresql = "0.40.11"
+    val quill = "4.6.0"
+    val logback = "1.4.5"
   }
+
+  private lazy val logback = "ch.qos.logback" % "logback-classic" % Versions.logback % Test
+  private lazy val slf4jApi = "org.slf4j" % "slf4j-api" % "2.0.6" % Test
+  private lazy val slf4jSimple = "org.slf4j" % "slf4j-simple" % "2.0.6" % Test
 
   private lazy val zio = "dev.zio" %% "zio" % Versions.zio
   private lazy val zioCatsInterop = "dev.zio" %% "zio-interop-cats" % Versions.zioCatsInterop
+  private lazy val zioTest = "dev.zio" %% "zio-test" % Versions.zio % Test
+  private lazy val zioTestSbt = "dev.zio" %% "zio-test-sbt" % Versions.zio % Test
+  private lazy val zioTestMagnolia = "dev.zio" %% "zio-test-magnolia" % Versions.zio % Test
 
   private lazy val doobiePostgres = "org.tpolecat" %% "doobie-postgres" % Versions.doobie
   private lazy val doobieHikari = "org.tpolecat" %% "doobie-hikari" % Versions.doobie
 
   private lazy val flyway = "org.flywaydb" % "flyway-core" % Versions.flyway
+
+  private lazy val quillDoobie =
+    "io.getquill" %% "quill-doobie" % Versions.quill exclude ("org.scala-lang.modules", "scala-java8-compat_3")
+  private lazy val testcontainers =
+    "com.dimafeng" %% "testcontainers-scala-postgresql" % Versions.testContainersScalaPostgresql % Test
 
   // We have to exclude bouncycastle since for some reason bitcoinj depends on bouncycastle jdk15to18
   // (i.e. JDK 1.5 to 1.8), but we are using JDK 11
@@ -36,8 +51,26 @@ object Dependencies {
     "io.iohk.atala" %% "mercury-protocol-present-proof" % Versions.mercury
   private lazy val mercuryResolver = "io.iohk.atala" %% "mercury-resolver" % Versions.mercury
   // Dependency Modules
-  private lazy val baseDependencies: Seq[ModuleID] = Seq(zio, prismCrypto, shared)
-  private lazy val doobieDependencies: Seq[ModuleID] = Seq(doobiePostgres, doobieHikari, flyway)
+  private lazy val baseDependencies: Seq[ModuleID] = Seq(
+    zio,
+    zioTest,
+    zioTestSbt,
+    zioTestMagnolia,
+    prismCrypto,
+    shared,
+    logback,
+    slf4jApi,
+    slf4jSimple
+  )
+
+  private lazy val doobieDependencies: Seq[ModuleID] = Seq(
+    zioCatsInterop,
+    doobiePostgres,
+    doobieHikari,
+    flyway,
+    quillDoobie,
+    testcontainers
+  )
 
   // Project Dependencies
   lazy val coreDependencies: Seq[ModuleID] =
@@ -46,5 +79,5 @@ object Dependencies {
       mercuryProtocolPresentProof,
       mercuryResolver
     )
-  lazy val sqlDoobieDependencies: Seq[ModuleID] = baseDependencies ++ doobieDependencies ++ Seq(zioCatsInterop)
+  lazy val sqlDoobieDependencies: Seq[ModuleID] = baseDependencies ++ doobieDependencies
 }

@@ -4,7 +4,7 @@ import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
 inThisBuild(
   Seq(
     organization := "io.iohk.atala",
-    scalaVersion := "3.2.1",
+    scalaVersion := "3.2.2",
     fork := true,
     run / connectInput := true,
     versionScheme := Some("semver-spec"),
@@ -18,7 +18,8 @@ val commonSettings = Seq(
   githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN"),
   resolvers += Resolver.githubPackages("input-output-hk"),
   // Needed for Kotlin coroutines that support new memory management mode
-  resolvers += "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven"
+  resolvers += "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven",
+  testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
 )
 
 // Project definitions
@@ -34,7 +35,8 @@ lazy val core = project
   .settings(commonSettings)
   .settings(
     name := "connect-core",
-    libraryDependencies ++= coreDependencies
+    libraryDependencies ++= coreDependencies,
+    Test / publishArtifact := true
   )
 
 lazy val `sql-doobie` = project
@@ -44,7 +46,7 @@ lazy val `sql-doobie` = project
     name := "connect-sql-doobie",
     libraryDependencies ++= sqlDoobieDependencies
   )
-  .dependsOn(core)
+  .dependsOn(core % "compile->compile;test->test")
 
 // ### ReleaseStep ###
 releaseProcess := Seq[ReleaseStep](

@@ -1,3 +1,18 @@
+# [mercury-v0.16.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.15.0...mercury-v0.16.0) (2023-01-26)
+
+
+### Bug Fixes
+
+* **mercury:** Add compilation flags and fix code ([#302](https://github.com/input-output-hk/atala-prism-building-blocks/issues/302)) ([43014c5](https://github.com/input-output-hk/atala-prism-building-blocks/commit/43014c52b1671328956cd5913c2ebb4f6d206d89))
+
+
+### Features
+
+* **mercury:** Add extra method invitation2Connect ([#309](https://github.com/input-output-hk/atala-prism-building-blocks/issues/309)) ([ea3d819](https://github.com/input-output-hk/atala-prism-building-blocks/commit/ea3d81935cd0ccca032310021a89d0a9bc016d48))
+* **mercury:** Improve support for ForwardMessage in MessagingService ([#269](https://github.com/input-output-hk/atala-prism-building-blocks/issues/269)) ([4385440](https://github.com/input-output-hk/atala-prism-building-blocks/commit/4385440d4b202af97aad5f17f3327bad452b7930))
+* **mercury:** replace method buildBaseAttachment with buildBase64Attachment ([#278](https://github.com/input-output-hk/atala-prism-building-blocks/issues/278)) ([94c7895](https://github.com/input-output-hk/atala-prism-building-blocks/commit/94c7895a5630251aacbdcb0445e7d3da9b225d4c))
+* **mercury:** Split DidComm into DidAgent and DidOps ([#319](https://github.com/input-output-hk/atala-prism-building-blocks/issues/319)) ([e12ca22](https://github.com/input-output-hk/atala-prism-building-blocks/commit/e12ca22daaecb775894067f36f82d1ed0e3e6ea0))
+
 # [mercury-v0.15.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.14.0...mercury-v0.15.0) (2022-12-19)
 
 

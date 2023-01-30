@@ -8,7 +8,8 @@ import io.iohk.atala.agent.openapi.model.{
   CreateManagedDidRequest,
   DIDOperationResponse,
   ErrorResponse,
-  ListManagedDIDResponseInner
+  ListManagedDIDResponseInner,
+  UpdateManagedDIDRequest
 }
 import spray.json.RootJsonFormat
 import zio.*
@@ -19,6 +20,9 @@ object DIDRegistrarApiMarshallerImpl extends JsonSupport {
     new DIDRegistrarApiMarshaller {
       override implicit def fromEntityUnmarshallerCreateManagedDidRequest
           : FromEntityUnmarshaller[CreateManagedDidRequest] = summon[RootJsonFormat[CreateManagedDidRequest]]
+
+      override implicit def fromEntityUnmarshallerUpdateManagedDIDRequest
+          : FromEntityUnmarshaller[UpdateManagedDIDRequest] = summon[RootJsonFormat[UpdateManagedDIDRequest]]
 
       override implicit def toEntityMarshallerDIDOperationResponse: ToEntityMarshaller[DIDOperationResponse] =
         summon[RootJsonFormat[DIDOperationResponse]]

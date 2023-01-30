@@ -3,8 +3,8 @@ package io.iohk.atala.mercury.mediator
 import zio.*
 
 import scala.jdk.CollectionConverters.*
-import io.iohk.atala.mercury.DidComm.*
-import io.iohk.atala.mercury.DidComm
+import io.iohk.atala.mercury._
+import io.iohk.atala.mercury.DidOps._
 import io.iohk.atala.mercury.mediator.MailStorage
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.model.Message
@@ -31,13 +31,13 @@ object MediatorProgram {
         |   ╚═╝     ╚═╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═════╝ ╚═╝  ╚═╝   ╚═╝
         |DID Comm V2 - Mediator agent - Build by Atala (IOHK)
         |""".stripMargin)
-      mediator <- ZIO.service[DidComm]
+      mediator <- ZIO.service[DidAgent]
       _ <- Console.printLine(
         s"""
         |#####################################################
         |###  Starting the server at http://localhost:$port
         |###  Open API docs at http://localhost:$port/docs
-        |###  ${mediator.myDid.value}
+        |###  ${mediator.id.value}
         |###  Press ENTER key to exit.
         |#####################################################""".stripMargin
       )
@@ -54,7 +54,7 @@ object MediatorProgram {
 
   def program(
       jsonString: String
-  ): ZIO[DidComm & MailStorage & ConnectionStorage, Nothing, String] = {
+  ): ZIO[DidAgent & DidOps & MailStorage & ConnectionStorage, Nothing, String] = {
     ZIO.logAnnotate("request-id", java.util.UUID.randomUUID.toString()) {
       for {
         _ <- ZIO.logInfo("Received new message")
@@ -73,7 +73,7 @@ object MediatorProgram {
                       + fromJsonObject(toJson(mediatorMessage.toString)).spaces2
                       + "\n********************************************************************************************************************************\n"
                   )
-                  msg = mediatorMessage.attachments.map(_.data.toString).head // FIXME Head
+                  msg = mediatorMessage.attachments.toSeq.flatten.map(e => e.data.toString).head // FIXME Head
                   // msgxx = mediatorMessage.getAttachments().get(0).getData().toJSONObject().get("json").toString() //FIXME REMOVE
                   nextRecipient = DidId(
                     mediatorMessage
@@ -128,8 +128,9 @@ object MediatorProgram {
   def makeMsg(
       to: DidId,
       messageState: MediationState
-  ): ZIO[DidComm, Nothing, Message] = for {
-    from <- ZIO.service[DidComm].map(_.myDid)
+  ): ZIO[DidAgent & DidOps, Nothing, Message] = for {
+    from <- ZIO.service[DidAgent].map(_.id)
+    // from <- ZIO.service[DidComm].map(_.myDid)
     message = messageState match
       case Granted =>
         val body = MediateGrant.Body(routing_did = from.value)
@@ -140,9 +141,9 @@ object MediatorProgram {
             body = body
           )
         Message(
-          piuri = mediateGrant.`type`,
+          `type` = mediateGrant.`type`,
           from = Some(from),
-          to = Some(to),
+          to = Seq(to),
           body = JsonObject("routing_did" -> from.value.asJson)
         )
       case _ =>
@@ -152,9 +153,9 @@ object MediatorProgram {
             `type` = MediateDeny.`type`
           )
         Message(
-          piuri = mediateDeny.`type`,
+          `type` = mediateDeny.`type`,
           from = Some(from),
-          to = Some(to)
+          to = Seq(to)
         )
   } yield (message)
 
