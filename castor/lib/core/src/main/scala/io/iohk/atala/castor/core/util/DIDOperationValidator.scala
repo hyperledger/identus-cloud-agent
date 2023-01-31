@@ -60,12 +60,12 @@ private object CreateOperationValidator extends BaseOperationValidator {
   private def validateServiceNonEmptyEndpoints(
       operation: PrismDIDOperation.Create
   ): Either[DIDOperationError, Unit] = {
-    val serviceWithEmptyEndpoints = operation.services.filter(_.serviceEndpoint.isEmpty)
+    val serviceWithEmptyEndpoints = operation.services.filter(_.serviceEndpoint.isEmpty).map(_.id)
     if (serviceWithEmptyEndpoints.isEmpty) Right(())
     else
       Left(
         DIDOperationError.InvalidArgument(
-          s"new service must not have empty serviceEndpoint: ${serviceWithEmptyEndpoints.mkString("[", ", ", "]")}"
+          s"service must not have empty serviceEndpoint: ${serviceWithEmptyEndpoints.mkString("[", ", ", "]")}"
         )
       )
   }
@@ -90,6 +90,7 @@ private object UpdateOperationValidator extends BaseOperationValidator {
       _ <- validatePreviousOperationHash(operation, _.previousOperationHash)
       _ <- validateNonEmptyUpdateAction(operation)
       _ <- validateUpdateServiceNonEmpty(operation)
+      _ <- validateAddServiceNonEmptyEndpoint(operation)
     } yield ()
   }
 
@@ -109,6 +110,22 @@ private object UpdateOperationValidator extends BaseOperationValidator {
       Left(
         DIDOperationError.InvalidArgument(
           "update operation with UpdateServiceAction must not have both 'type' and 'serviceEndpoints' empty"
+        )
+      )
+  }
+
+  private def validateAddServiceNonEmptyEndpoint(
+      operation: PrismDIDOperation.Update
+  ): Either[DIDOperationError, Unit] = {
+    val serviceWithEmptyEndpoints = operation.actions
+      .collect { case UpdateDIDAction.AddService(s) => s }
+      .filter(_.serviceEndpoint.isEmpty)
+      .map(_.id)
+    if (serviceWithEmptyEndpoints.isEmpty) Right(())
+    else
+      Left(
+        DIDOperationError.InvalidArgument(
+          s"service must not have empty serviceEndpoint: ${serviceWithEmptyEndpoints.mkString("[", ", ", "]")}"
         )
       )
   }
