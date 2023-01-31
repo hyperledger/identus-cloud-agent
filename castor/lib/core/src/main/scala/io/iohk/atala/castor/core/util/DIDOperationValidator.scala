@@ -278,10 +278,4 @@ private trait BaseOperationValidator {
     str.nonEmpty && uriFragmentRegex.matches(str)
   }
 
-  /** @return true if a given uri is normalized */
-  private def isUriNormalized(uri: URI): Boolean = {
-    val normalized = uri.normalize()
-    uri.toString == normalized.toString
-  }
-
 }
