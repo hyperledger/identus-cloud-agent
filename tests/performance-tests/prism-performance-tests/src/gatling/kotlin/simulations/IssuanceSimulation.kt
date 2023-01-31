@@ -20,7 +20,8 @@ class IssuanceSimulation : Simulation() {
         IssuanceSteps.holderRequestsCredential(),
         IssuanceSteps.issuerReceivesRequest(),
         IssuanceSteps.issuerIssuesCredential(),
-        IssuanceSteps.issuerWaitsCredentialIssued()
+        IssuanceSteps.issuerWaitsCredentialIssued(),
+        IssuanceSteps.holderAwaitsCredentialReceived()
     )
 
     init {

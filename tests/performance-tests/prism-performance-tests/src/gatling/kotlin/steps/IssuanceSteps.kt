@@ -140,4 +140,29 @@ object IssuanceSteps {
                 session.getInt(WAITING_LOOP_COUNTER_NAME) == WAITING_LOOP_MAX_ITERATIONS
             }
         )
+
+    fun holderAwaitsCredentialReceived(
+        url: String = Configuration.HOLDER_AGENT_URL,
+        apikey: String = Configuration.HOLDER_AGENT_API_KEY
+    ): ChainBuilder =
+        doWhile(
+            { session -> session.getString("holderRecordIdState") != "CredentialReceived" },
+            WAITING_LOOP_COUNTER_NAME
+        ).on(
+            exec(
+                http("Holder record state achieves CredentialReceived")
+                    .get("$url/issue-credentials/records/#{holderRecordId}")
+                    .header("content-type", "application/json")
+                    .header("apikey", apikey)
+                    .check(
+                        status().shouldBe(HTTP_OK),
+                        jsonPath("$.protocolState").find().saveAs("holderRecordIdState"),
+                    )
+            ).exec { session ->
+                logger.info("Holder recordId state: ${session.getString("holderRecordIdState")}")
+                session
+            }.pause(WAITING_LOOP_PAUSE_INTERVAL).exitHereIf { session ->
+                session.getInt(WAITING_LOOP_COUNTER_NAME) == WAITING_LOOP_MAX_ITERATIONS
+            }
+        )
 }
