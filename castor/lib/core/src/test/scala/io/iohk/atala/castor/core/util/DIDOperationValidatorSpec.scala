@@ -16,7 +16,7 @@ import io.iohk.atala.castor.core.model.did.{
   UpdateDIDAction,
   VerificationRelationship
 }
-import io.iohk.atala.castor.core.model.error.DIDOperationError
+import io.iohk.atala.castor.core.model.error.OperationValidationError
 import io.iohk.atala.castor.core.util.DIDOperationValidator.Config
 import zio.*
 import zio.test.*
@@ -35,7 +35,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
   )
 
   private def invalidArgumentContainsString(text: String): Assertion[Either[Any, Any]] = isLeft(
-    isSubtype[DIDOperationError.InvalidArgument](hasField("msg", _.msg, containsString(text)))
+    isSubtype[OperationValidationError.InvalidArgument](hasField("msg", _.msg, containsString(text)))
   )
 
   private val createOperationValidationSpec = {
@@ -74,7 +74,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         )
         val op = createPrismDIDOperation(publicKeys = publicKeys, internalKeys = internalKeys)
         assert(DIDOperationValidator(Config(15, 15)).validate(op))(
-          isLeft(isSubtype[DIDOperationError.TooManyDidPublicKeyAccess](anything))
+          isLeft(isSubtype[OperationValidationError.TooManyDidPublicKeyAccess](anything))
         )
       },
       test("reject CreateOperation on duplicated DID public key id") {
@@ -107,7 +107,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         )
         val op = createPrismDIDOperation(services = services)
         assert(DIDOperationValidator(Config(15, 15)).validate(op))(
-          isLeft(isSubtype[DIDOperationError.TooManyDidServiceAccess](anything))
+          isLeft(isSubtype[OperationValidationError.TooManyDidServiceAccess](anything))
         )
       },
       test("reject CreateOperation on duplicated service id") {
@@ -243,7 +243,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         val removeKeyActions = (1 to 10).map(i => UpdateDIDAction.RemoveKey(s"remove$i"))
         val op = updatePrismDIDOperation(addKeyActions ++ addInternalKeyActions ++ removeKeyActions)
         assert(DIDOperationValidator(Config(25, 25)).validate(op))(
-          isLeft(isSubtype[DIDOperationError.TooManyDidPublicKeyAccess](anything))
+          isLeft(isSubtype[OperationValidationError.TooManyDidPublicKeyAccess](anything))
         )
       },
       test("reject UpdateOperation on too many service access") {
@@ -266,7 +266,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         )
         val op = updatePrismDIDOperation(addServiceActions ++ removeServiceActions ++ updateServiceActions)
         assert(DIDOperationValidator(Config(25, 25)).validate(op))(
-          isLeft(isSubtype[DIDOperationError.TooManyDidServiceAccess](anything))
+          isLeft(isSubtype[OperationValidationError.TooManyDidServiceAccess](anything))
         )
       },
       test("reject UpdateOperation on invalid key-id") {
