@@ -82,4 +82,4 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: performance-tests-results
-          path: ./build/reports
+          path: tests/performance-tests/prism-performance-tests/build/reports
