@@ -7,12 +7,12 @@ import java.util.logging.Level
  */
 object Configuration {
     // Issuer agent
-    val ISSUER_AGENT_URL = System.getenv("ISSUER_AGENT_URL") ?: "https://n6p3a4hp2mes.atalaprism.io/prism-agent"
-    val ISSUER_AGENT_API_KEY: String = System.getenv("ISSUER_AGENT_API_KEY")
+    val ISSUER_AGENT_URL = System.getenv("ISSUER_AGENT_URL") ?: "http://localhost:8080/prism-agent"
+    val ISSUER_AGENT_API_KEY: String = System.getenv("ISSUER_AGENT_API_KEY") ?: ""
 
     // Holder agent
-    val HOLDER_AGENT_URL = System.getenv("HOLDER_AGENT_URL") ?: "https://x539f3jae4yj.atalaprism.io/prism-agent"
-    val HOLDER_AGENT_API_KEY: String = System.getenv("HOLDER_AGENT_API_KEY")
+    val HOLDER_AGENT_URL = System.getenv("HOLDER_AGENT_URL") ?: "http://localhost:8090/prism-agent"
+    val HOLDER_AGENT_API_KEY: String = System.getenv("HOLDER_AGENT_API_KEY") ?: ""
 
     // Verbose debugging mode
     val LOGGER_LEVEL: Level = if (System.getenv("VERBOSE_SIMULATION").toBoolean()) Level.INFO else Level.WARNING

@@ -76,7 +76,6 @@ jobs:
           down-flags: "--volumes"
 
       - name: Run performance tests
-        continue-on-error: true
         run: |
           ./gradlew gatlingRun
 
