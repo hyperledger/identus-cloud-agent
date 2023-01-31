@@ -206,7 +206,7 @@ object JWTVerificationTest extends ZIOSpecDefault {
       val jwtCredential = createJwtCredential(issuer)
       val resolver = makeResolver(Map("did:prism:issuer" -> generateDidDocument(did = "did:prism:issuer")))
       for {
-        validation <- JwtCredential.validateEncodedJWT(jwtCredential)(resolver).debug("validation result")
+        validation <- JwtCredential.validateEncodedJWT(jwtCredential)(resolver)
       } yield assert(validation.fold(_ => false, _ => true))(equalTo(false))
     },
     test("validate PrismDID issued JWT VC using incompatible public-key type should fail") {
