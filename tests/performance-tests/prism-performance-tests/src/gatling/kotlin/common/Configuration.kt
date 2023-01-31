@@ -25,4 +25,21 @@ object Configuration {
 
     // Name of the counter in the waiting loop
     const val WAITING_LOOP_COUNTER_NAME: String = "counter"
+
+    // Random credential to be issued during benchmarks
+    // it depends on holderDid session variable (!)
+    val RANDOM_CREDENTIAL: String =
+        """{
+             "schemaId": "schema:1234",
+             "subjectId": "#{holderDid}",
+             "validityPeriod": 3600,
+             "claims": {
+               "prop1": "value1",
+               "prop2": "value2",
+               "prop3": "value3"
+             },
+             "automaticIssuance": false,
+             "awaitConfirmation": false
+           }
+        """.trimIndent()
 }

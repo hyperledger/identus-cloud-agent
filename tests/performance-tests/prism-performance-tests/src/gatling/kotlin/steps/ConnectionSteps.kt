@@ -35,7 +35,7 @@ object ConnectionSteps {
         label: String = "test"
     ): ChainBuilder =
         exec(
-            http("Generate connection invitation")
+            http("Inviter generates connection invitation")
                 .post("$url/connections")
                 .header("content-type", "application/json")
                 .header("apikey", apikey)
@@ -48,7 +48,7 @@ object ConnectionSteps {
         ).exec { session ->
             logger.info("Inviter connection ID: ${session.getString("inviterConnectionId")}")
             session
-        }
+        }.exitHereIfFailed()
 
 
     /**
@@ -82,7 +82,7 @@ object ConnectionSteps {
         ).exec { session ->
             logger.info("Invitee connection ID: ${session.getString("inviteeConnectionId")}")
             session
-        }
+        }.exitHereIfFailed()
 
     /**
      * Inviter receives the connection request and sends the connection response to invitee
@@ -100,7 +100,7 @@ object ConnectionSteps {
             WAITING_LOOP_COUNTER_NAME)
             .on(
                 exec(
-                    http("Get connection state for inviter")
+                    http("Inviter receives connection request and sends response back")
                         .get("$url/connections/#{inviterConnectionId}")
                         .header("content-type", "application/json")
                         .header("apikey", apikey)
@@ -132,7 +132,7 @@ object ConnectionSteps {
             WAITING_LOOP_COUNTER_NAME)
             .on(
                 exec(
-                    http("Get connection state for invitee")
+                    http("Invitee achieves connection response")
                         .get("$url/connections/#{inviteeConnectionId}" )
                         .header("content-type", "application/json")
                         .header("apikey", apikey)
