@@ -178,7 +178,11 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
     def updatePrismDIDOperation(
         actions: Seq[UpdateDIDAction] = Nil
     ) =
-      PrismDIDOperation.Update(did = PrismDID.buildCanonicalFromSuffix("0" * 64).toOption.get, ArraySeq.empty, actions)
+      PrismDIDOperation.Update(
+        did = PrismDID.buildCanonicalFromSuffix("0" * 64).toOption.get,
+        ArraySeq.fill(32)(0),
+        actions
+      )
 
     suite("UpdateOperation validation")(
       test("accept valid UpdateOperation") {

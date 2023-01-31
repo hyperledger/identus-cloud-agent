@@ -41,6 +41,7 @@ class DIDOperationValidator(config: Config) {
       _ <- validateUpdateOperationAction(operation)
       _ <- validateServiceEndpointNormalized(operation)
       _ <- validateNewServiceNonEmptyEndpoints(operation)
+      _ <- validatePreviousOperationHash(operation)
     } yield ()
   }
 
@@ -114,15 +115,14 @@ class DIDOperationValidator(config: Config) {
         }
       case _: PrismDIDOperation.Deactivate => Nil
     }
-    uris.filterNot(isUriNormalized) match {
-      case Nil => Right(())
-      case uris =>
-        Left(
-          DIDOperationError.InvalidArgument(
-            s"serviceEndpoint URIs must be normalized: ${uris.mkString("[", ", ", "]")}"
-          )
+    val nonNormalizedUris = uris.filterNot(isUriNormalized)
+    if (nonNormalizedUris.isEmpty) Right(())
+    else
+      Left(
+        DIDOperationError.InvalidArgument(
+          s"serviceEndpoint URIs must be normalized: ${nonNormalizedUris.mkString("[", ", ", "]")}"
         )
-    }
+      )
   }
 
   // TODO: add tests
@@ -135,15 +135,25 @@ class DIDOperationValidator(config: Config) {
         }
       case _: PrismDIDOperation.Deactivate => Nil
     }
-
-    newServiceWithEmptyEndpoints match {
-      case Nil => Right(())
-      case services =>
-        Left(
-          DIDOperationError.InvalidArgument(
-            s"new service must not have empty serviceEndpoint: ${services.mkString("[", ", ", "]")}"
-          )
+    if (newServiceWithEmptyEndpoints.isEmpty) Right(())
+    else
+      Left(
+        DIDOperationError.InvalidArgument(
+          s"new service must not have empty serviceEndpoint: ${newServiceWithEmptyEndpoints.mkString("[", ", ", "]")}"
         )
+      )
+  }
+
+  // TODO: add test
+  private def validatePreviousOperationHash(operation: PrismDIDOperation): Either[DIDOperationError, Unit] = {
+    val previousOperationHash = operation match {
+      case _: PrismDIDOperation.Create                            => None
+      case PrismDIDOperation.Update(_, previousOperationHash, _)  => Some(previousOperationHash)
+      case PrismDIDOperation.Deactivate(_, previousOperationHash) => Some(previousOperationHash)
+    }
+    previousOperationHash.fold(Right(())) { hash =>
+      if (hash.length == 32) Right(())
+      else Left(DIDOperationError.InvalidArgument(s"previousOperationHash must have size of 32 bytes"))
     }
   }
 
