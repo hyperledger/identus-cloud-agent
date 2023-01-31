@@ -19,6 +19,8 @@ import java.util.UUID
 
 object ConnectionRepositorySpecSuite {
 
+  val maxRetries = 2
+
   private def connectionRecord = ConnectionRecord(
     UUID.randomUUID,
     Instant.ofEpochSecond(Instant.now.getEpochSecond()),
@@ -33,6 +35,8 @@ object ConnectionRepositorySpecSuite {
       body = Invitation.Body(goal_code = "connect", goal = "Establish a trust connection between two peers", Nil)
     ),
     None,
+    None,
+    maxRetries,
     None
   )
 
@@ -161,7 +165,8 @@ object ConnectionRepositorySpecSuite {
         count <- repo.updateConnectionProtocolState(
           aRecord.id,
           ProtocolState.InvitationGenerated,
-          ProtocolState.ConnectionRequestReceived
+          ProtocolState.ConnectionRequestReceived,
+          maxRetries
         )
         updatedRecord <- repo.getConnectionRecord(aRecord.id)
       } yield {
@@ -179,7 +184,8 @@ object ConnectionRepositorySpecSuite {
         count <- repo.updateConnectionProtocolState(
           aRecord.id,
           ProtocolState.ConnectionRequestPending,
-          ProtocolState.ConnectionRequestReceived
+          ProtocolState.ConnectionRequestReceived,
+          maxRetries
         )
         updatedRecord <- repo.getConnectionRecord(aRecord.id)
       } yield {
@@ -198,7 +204,8 @@ object ConnectionRepositorySpecSuite {
         count <- repo.updateWithConnectionRequest(
           aRecord.id,
           request,
-          ProtocolState.ConnectionRequestSent
+          ProtocolState.ConnectionRequestSent,
+          maxRetries
         )
         updatedRecord <- repo.getConnectionRecord(aRecord.id)
       } yield {
@@ -217,13 +224,42 @@ object ConnectionRepositorySpecSuite {
         count <- repo.updateWithConnectionResponse(
           aRecord.id,
           response,
-          ProtocolState.ConnectionResponseSent
+          ProtocolState.ConnectionResponseSent,
+          maxRetries
         )
         updatedRecord <- repo.getConnectionRecord(aRecord.id)
       } yield {
         assertTrue(count == 1) &&
         assertTrue(record.get.connectionResponse.isEmpty) &&
         assertTrue(updatedRecord.get.connectionResponse.contains(response))
+      }
+    },
+    test("updateFail (fail one retry) updates record") {
+      val failReason = Some("Just to test")
+      for {
+        repo <- ZIO.service[ConnectionRepository[Task]]
+        aRecord = connectionRecord
+        _ <- repo.createConnectionRecord(aRecord)
+        record <- repo.getConnectionRecord(aRecord.id)
+        count <- repo.updateAfterFail(aRecord.id, Some("Just to test")) // TEST
+        updatedRecord1 <- repo.getConnectionRecord(aRecord.id)
+        response = ConnectionResponse.makeResponseFromRequest(connectionRequest.makeMessage)
+        count <- repo.updateWithConnectionResponse(
+          aRecord.id,
+          response,
+          ProtocolState.ConnectionResponseSent,
+          maxRetries
+        )
+        updatedRecord2 <- repo.getConnectionRecord(aRecord.id)
+      } yield {
+        assertTrue(updatedRecord1.get.metaRetries == (maxRetries - 1)) &&
+        assertTrue(updatedRecord1.get.metaLastFailure == failReason) &&
+        assertTrue(updatedRecord2.get.metaRetries == maxRetries) &&
+        assertTrue(updatedRecord2.get.metaLastFailure == None) &&
+        // continues to work normally after retry
+        assertTrue(count == 1) &&
+        assertTrue(record.get.connectionResponse.isEmpty) &&
+        assertTrue(updatedRecord2.get.connectionResponse.contains(response))
       }
     }
   )

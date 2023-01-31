@@ -17,7 +17,8 @@ import io.iohk.atala.mercury.protocol.connection.ConnectionResponse
 import io.iohk.atala.shared.utils.Base64Utils
 
 private class ConnectionServiceImpl(
-    connectionRepository: ConnectionRepository[Task]
+    connectionRepository: ConnectionRepository[Task],
+    maxRetries: Int = 5, // TODO move to config
 ) extends ConnectionService {
 
   override def createConnectionInvitation(
@@ -37,7 +38,9 @@ private class ConnectionServiceImpl(
           protocolState = ConnectionRecord.ProtocolState.InvitationGenerated,
           invitation = invitation,
           connectionRequest = None,
-          connectionResponse = None
+          connectionResponse = None,
+          metaRetries = maxRetries,
+          metaLastFailure = None,
         )
       )
       count <- connectionRepository
@@ -92,7 +95,9 @@ private class ConnectionServiceImpl(
           protocolState = ConnectionRecord.ProtocolState.InvitationReceived,
           invitation = invitation,
           connectionRequest = None,
-          connectionResponse = None
+          connectionResponse = None,
+          metaRetries = maxRetries,
+          metaLastFailure = None,
         )
       )
       count <- connectionRepository
@@ -112,7 +117,7 @@ private class ConnectionServiceImpl(
       record <- getRecordWithState(recordId, ProtocolState.InvitationReceived)
       request = createDidCommConnectionRequest(record, pairwiseDid)
       count <- connectionRepository
-        .updateWithConnectionRequest(recordId, request, ProtocolState.ConnectionRequestPending)
+        .updateWithConnectionRequest(recordId, request, ProtocolState.ConnectionRequestPending, maxRetries)
         .mapError(RepositoryError.apply)
       _ <- count match
         case 1 => ZIO.succeed(())
@@ -135,7 +140,7 @@ private class ConnectionServiceImpl(
     for {
       record <- getRecordFromThreadIdAndState(request.thid, ProtocolState.InvitationGenerated)
       _ <- connectionRepository
-        .updateWithConnectionRequest(record.id, request, ProtocolState.ConnectionRequestReceived)
+        .updateWithConnectionRequest(record.id, request, ProtocolState.ConnectionRequestReceived, maxRetries)
         .flatMap {
           case 1 => ZIO.succeed(())
           case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
@@ -151,7 +156,7 @@ private class ConnectionServiceImpl(
       record <- getRecordWithState(recordId, ProtocolState.ConnectionRequestReceived)
       response = createDidCommConnectionResponse(record)
       count <- connectionRepository
-        .updateWithConnectionResponse(recordId, response, ProtocolState.ConnectionResponsePending)
+        .updateWithConnectionResponse(recordId, response, ProtocolState.ConnectionResponsePending, maxRetries)
         .mapError(RepositoryError.apply)
       _ <- count match
         case 1 => ZIO.succeed(())
@@ -165,7 +170,7 @@ private class ConnectionServiceImpl(
     updateConnectionProtocolState(
       recordId,
       ProtocolState.ConnectionResponsePending,
-      ProtocolState.ConnectionResponseSent
+      ProtocolState.ConnectionResponseSent,
     )
 
   override def receiveConnectionResponse(
@@ -174,7 +179,7 @@ private class ConnectionServiceImpl(
     for {
       record <- getRecordFromThreadIdAndState(response.thid, ProtocolState.ConnectionRequestSent)
       _ <- connectionRepository
-        .updateWithConnectionResponse(record.id, response, ProtocolState.ConnectionResponseReceived)
+        .updateWithConnectionResponse(record.id, response, ProtocolState.ConnectionResponseReceived, maxRetries)
         .flatMap {
           case 1 => ZIO.succeed(())
           case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
@@ -218,11 +223,11 @@ private class ConnectionServiceImpl(
   private[this] def updateConnectionProtocolState(
       recordId: UUID,
       from: ProtocolState,
-      to: ProtocolState
+      to: ProtocolState,
   ): IO[ConnectionServiceError, Option[ConnectionRecord]] = {
     for {
       _ <- connectionRepository
-        .updateConnectionProtocolState(recordId, from, to)
+        .updateConnectionProtocolState(recordId, from, to, maxRetries)
         .flatMap {
           case 1 => ZIO.succeed(())
           case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
