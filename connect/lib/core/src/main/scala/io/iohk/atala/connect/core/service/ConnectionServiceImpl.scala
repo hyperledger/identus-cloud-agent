@@ -172,7 +172,11 @@ private class ConnectionServiceImpl(
       response: ConnectionResponse
   ): IO[ConnectionServiceError, Option[ConnectionRecord]] =
     for {
-      record <- getRecordFromThreadIdAndState(response.thid, ProtocolState.ConnectionRequestSent)
+      record <- getRecordFromThreadIdAndState(
+        response.thid,
+        ProtocolState.ConnectionRequestPending,
+        ProtocolState.ConnectionRequestSent
+      )
       _ <- connectionRepository
         .updateWithConnectionResponse(record.id, response, ProtocolState.ConnectionResponseReceived)
         .flatMap {
@@ -236,7 +240,7 @@ private class ConnectionServiceImpl(
 
   private[this] def getRecordFromThreadIdAndState(
       thid: Option[String],
-      state: ProtocolState
+      states: ProtocolState*
   ): IO[ConnectionServiceError, ConnectionRecord] = {
     for {
       thid <- ZIO
@@ -250,8 +254,8 @@ private class ConnectionServiceImpl(
         .fromOption(maybeRecord)
         .mapError(_ => ThreadIdNotFound(thid))
       _ <- record.protocolState match {
-        case s if s == state => ZIO.unit
-        case state           => ZIO.fail(InvalidFlowStateError(s"Invalid protocol state for operation: $state"))
+        case s if states.contains(s) => ZIO.unit
+        case state                   => ZIO.fail(InvalidFlowStateError(s"Invalid protocol state for operation: $state"))
       }
     } yield record
   }
