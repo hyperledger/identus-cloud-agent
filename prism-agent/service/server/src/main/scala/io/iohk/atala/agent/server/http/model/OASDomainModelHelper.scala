@@ -18,7 +18,8 @@ import io.iohk.atala.agent.openapi.model.{
   Service,
   UpdateManagedDIDRequestActionsInner,
   UpdateManagedDIDRequestActionsInnerUpdateService,
-  VerificationMethod
+  VerificationMethod,
+  VerificationMethodOrRef
 }
 import io.iohk.atala.castor.core.model.did as castorDomain
 import io.iohk.atala.agent.walletapi.model as walletDomain
@@ -37,6 +38,7 @@ import io.iohk.atala.mercury.model.Base64
 import zio.ZIO
 import io.iohk.atala.agent.server.http.model.HttpServiceError.InvalidPayload
 import io.iohk.atala.agent.walletapi.model.ManagedDIDState
+import io.iohk.atala.castor.core.model.did.w3c.PublicKeyRepr
 import io.iohk.atala.castor.core.model.did.{LongFormPrismDID, PrismDID, ServiceType}
 
 import java.util.UUID
@@ -257,6 +259,15 @@ trait OASDomainModelHelper {
         controller = publicKeyRepr.controller,
         publicKeyJwk = publicKeyRepr.publicKeyJwk.toOAS
       )
+    }
+  }
+
+  extension (publicKeyReprOrRef: castorDomain.w3c.PublicKeyReprOrRef) {
+    def toOAS: VerificationMethodOrRef = {
+      publicKeyReprOrRef match {
+        case s: String         => VerificationMethodOrRef(`type` = "REFERENCED", uri = Some(s))
+        case pk: PublicKeyRepr => VerificationMethodOrRef(`type` = "EMBEDDED", verificationMethod = Some(pk.toOAS))
+      }
     }
   }
 
