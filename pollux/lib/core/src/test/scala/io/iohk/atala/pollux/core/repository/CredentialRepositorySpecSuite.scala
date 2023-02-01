@@ -167,11 +167,36 @@ object CredentialRepositorySpecSuite {
         _ <- repo.createIssueCredentialRecord(bRecord)
         _ <- repo.createIssueCredentialRecord(cRecord)
         _ <- repo.updateCredentialRecordProtocolState(aRecord.id, ProtocolState.OfferPending, ProtocolState.OfferSent)
-        _ <- repo.updateCredentialRecordProtocolState(cRecord.id, ProtocolState.OfferPending, ProtocolState.OfferSent)
-        records <- repo.getIssueCredentialRecordsByState(ProtocolState.OfferPending)
+        _ <- repo.updateCredentialRecordProtocolState(
+          cRecord.id,
+          ProtocolState.OfferPending,
+          ProtocolState.CredentialGenerated
+        )
+        pendingRecords <- repo.getIssueCredentialRecordsByStates(ProtocolState.OfferPending)
+        otherRecords <- repo.getIssueCredentialRecordsByStates(
+          ProtocolState.OfferSent,
+          ProtocolState.CredentialGenerated
+        )
       } yield {
-        assertTrue(records.size == 1) &&
-        assertTrue(records.contains(bRecord))
+        assertTrue(pendingRecords.size == 1) &&
+        assertTrue(pendingRecords.contains(bRecord)) &&
+        assertTrue(otherRecords.size == 2) &&
+        assertTrue(otherRecords.exists(_.id == aRecord.id)) &&
+        assertTrue(otherRecords.exists(_.id == cRecord.id))
+      }
+    },
+    test("getIssueCredentialRecordsByState returns an empty list if 'states' parameter is empty") {
+      for {
+        repo <- ZIO.service[CredentialRepository[Task]]
+        aRecord = issueCredentialRecord.copy(thid = UUID.randomUUID())
+        bRecord = issueCredentialRecord.copy(thid = UUID.randomUUID())
+        cRecord = issueCredentialRecord.copy(thid = UUID.randomUUID())
+        _ <- repo.createIssueCredentialRecord(aRecord)
+        _ <- repo.createIssueCredentialRecord(bRecord)
+        _ <- repo.createIssueCredentialRecord(cRecord)
+        records <- repo.getIssueCredentialRecordsByStates()
+      } yield {
+        assertTrue(records.isEmpty)
       }
     },
     test("getValidIssuedCredentials returns valid records") {

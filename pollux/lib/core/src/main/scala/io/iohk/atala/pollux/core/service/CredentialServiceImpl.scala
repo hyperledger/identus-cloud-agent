@@ -109,12 +109,12 @@ private class CredentialServiceImpl(
     } yield record
   }
 
-  override def getCredentialRecordsByState(
-      state: IssueCredentialRecord.ProtocolState
+  override def getCredentialRecordsByStates(
+      states: IssueCredentialRecord.ProtocolState*
   ): IO[CredentialServiceError, Seq[IssueCredentialRecord]] = {
     for {
       records <- credentialRepository
-        .getIssueCredentialRecordsByState(state)
+        .getIssueCredentialRecordsByStates(states: _*)
         .mapError(RepositoryError.apply)
     } yield records
   }
