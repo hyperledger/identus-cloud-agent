@@ -64,8 +64,8 @@ object BackgroundJobs {
       credentialService <- ZIO.service[CredentialService]
       records <- credentialService
         .getIssueCredentialRecords()
-        .mapError(err => Throwable(s"Error occured while getting issue credential records: $err"))
-      _ <- ZIO.foreach(records)(performExchange)
+        .mapError(err => Throwable(s"Error occurred while getting Issue Credential records: $err"))
+      _ <- ZIO.foreachPar(records)(performExchange)
     } yield ()
   }
   val presentProofExchanges = {
@@ -73,8 +73,8 @@ object BackgroundJobs {
       presentationService <- ZIO.service[PresentationService]
       records <- presentationService
         .getPresentationRecords()
-        .mapError(err => Throwable(s"Error occured while getting Presentation records: $err"))
-      _ <- ZIO.foreach(records)(performPresentation)
+        .mapError(err => Throwable(s"Error occurred while getting Presentation records: $err"))
+      _ <- ZIO.foreachPar(records)(performPresentation)
     } yield ()
   }
 
