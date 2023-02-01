@@ -154,7 +154,7 @@ object Modules {
     Server.start(port, app)
   }
 
-  val didCommExchangesJob: RIO[
+  val issueCredentialDidCommExchangesJob: RIO[
     AppConfig & DIDResolver & JwtDidResolver & HttpClient & CredentialService & ManagedDIDService & DIDSecretStorage,
     Unit
   ] =
@@ -526,7 +526,7 @@ object RepoModule {
           username = config.username,
           password = config.password,
           jdbcUrl = s"jdbc:postgresql://${config.host}:${config.port}/${config.databaseName}",
-          awaitConnectionThreads = 2
+          awaitConnectionThreads = config.awaitConnectionThreads
         )
       }
     }
@@ -552,7 +552,7 @@ object RepoModule {
           username = config.username,
           password = config.password,
           jdbcUrl = s"jdbc:postgresql://${config.host}:${config.port}/${config.databaseName}",
-          awaitConnectionThreads = 2
+          awaitConnectionThreads = config.awaitConnectionThreads
         )
       }
     }
@@ -578,7 +578,7 @@ object RepoModule {
           username = config.username,
           password = config.password,
           jdbcUrl = s"jdbc:postgresql://${config.host}:${config.port}/${config.databaseName}",
-          awaitConnectionThreads = 2
+          awaitConnectionThreads = config.awaitConnectionThreads
         )
       }
     }
