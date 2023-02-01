@@ -155,25 +155,35 @@ object Modules {
   }
 
   val didCommExchangesJob: RIO[
-    DIDResolver & JwtDidResolver & HttpClient & CredentialService & ManagedDIDService & DIDSecretStorage,
+    AppConfig & DIDResolver & JwtDidResolver & HttpClient & CredentialService & ManagedDIDService & DIDSecretStorage,
     Unit
   ] =
-    BackgroundJobs.didCommExchanges
-      .repeat(Schedule.spaced(10.seconds))
-      .unit
+    for {
+      config <- ZIO.service[AppConfig]
+      job <- BackgroundJobs.issueCredentialDidCommExchanges
+        .repeat(Schedule.spaced(config.pollux.issueBgJobRecurrenceDelay))
+        .unit
+    } yield job
 
   val presentProofExchangeJob: RIO[
-    DIDResolver & JwtDidResolver & HttpClient & PresentationService & ManagedDIDService & DIDSecretStorage,
+    AppConfig & DIDResolver & JwtDidResolver & HttpClient & PresentationService & ManagedDIDService & DIDSecretStorage,
     Unit
   ] =
-    BackgroundJobs.presentProofExchanges
-      .repeat(Schedule.spaced(10.seconds))
-      .unit
+    for {
+      config <- ZIO.service[AppConfig]
+      job <- BackgroundJobs.presentProofExchanges
+        .repeat(Schedule.spaced(config.pollux.presentationBgJobRecurrenceDelay))
+        .unit
+    } yield job
 
-  val connectDidCommExchangesJob: RIO[DIDResolver & HttpClient & ConnectionService & ManagedDIDService, Unit] =
-    ConnectBackgroundJobs.didCommExchanges
-      .repeat(Schedule.spaced(10.seconds))
-      .unit
+  val connectDidCommExchangesJob
+      : RIO[AppConfig & DIDResolver & HttpClient & ConnectionService & ManagedDIDService, Unit] =
+    for {
+      config <- ZIO.service[AppConfig]
+      job <- ConnectBackgroundJobs.didCommExchanges
+        .repeat(Schedule.spaced(config.connect.connectBgJobRecurrenceDelay))
+        .unit
+    } yield job
 
   val syncDIDPublicationStateFromDltJob: URIO[ManagedDIDService, Unit] =
     BackgroundJobs.syncDIDPublicationStateFromDlt

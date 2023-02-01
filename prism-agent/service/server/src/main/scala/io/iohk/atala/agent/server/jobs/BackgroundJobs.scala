@@ -59,7 +59,7 @@ import io.iohk.atala.agent.walletapi.model._
 
 object BackgroundJobs {
 
-  val didCommExchanges = {
+  val issueCredentialDidCommExchanges = {
     for {
       credentialService <- ZIO.service[CredentialService]
       records <- credentialService

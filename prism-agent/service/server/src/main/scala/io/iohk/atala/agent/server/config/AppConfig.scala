@@ -2,6 +2,7 @@ package io.iohk.atala.agent.server.config
 
 import zio.config.*
 import zio.config.magnolia.Descriptor
+import java.time.Duration
 
 final case class AppConfig(
     iris: IrisConfig,
@@ -19,8 +20,12 @@ object AppConfig {
 final case class IrisConfig(service: GrpcServiceConfig)
 
 final case class CastorConfig(database: DatabaseConfig)
-final case class PolluxConfig(database: DatabaseConfig)
-final case class ConnectConfig(database: DatabaseConfig)
+final case class PolluxConfig(
+    database: DatabaseConfig,
+    issueBgJobRecurrenceDelay: Duration,
+    presentationBgJobRecurrenceDelay: Duration
+)
+final case class ConnectConfig(database: DatabaseConfig, connectBgJobRecurrenceDelay: Duration)
 
 final case class PrismNodeConfig(service: GrpcServiceConfig)
 
