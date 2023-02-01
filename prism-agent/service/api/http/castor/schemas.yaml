@@ -37,19 +37,23 @@ components:
         authentication:
           type: array
           items:
-            $ref: "#/components/schemas/VerificationMethod"
+            $ref: "#/components/schemas/VerificationMethodOrRef"
         assertionMethod:
           type: array
           items:
-            $ref: "#/components/schemas/VerificationMethod"
+            $ref: "#/components/schemas/VerificationMethodOrRef"
         keyAgreement:
           type: array
           items:
-            $ref: "#/components/schemas/VerificationMethod"
+            $ref: "#/components/schemas/VerificationMethodOrRef"
         capabilityInvocation:
           type: array
           items:
-            $ref: "#/components/schemas/VerificationMethod"
+            $ref: "#/components/schemas/VerificationMethodOrRef"
+        capabilityDelegation:
+          type: array
+          items:
+            $ref: "#/components/schemas/VerificationMethodOrRef"
         service:
           type: array
           items:
@@ -89,6 +93,28 @@ components:
           example: "did:prism:456"
         publicKeyJwk:
           $ref: "#/components/schemas/PublicKeyJwk"
+
+    VerificationMethodOrRef:
+      type: object
+      description: |
+        An embedded verificationMethod as JSON or a referenced key as a URI.
+        Referenced key and embedded key are mutually exclusive.
+        If the type is EMBEDDED, `uri` field must be present.
+        Otherwise `verificationMethod` field must be present.
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          example: EMBEDDED
+          enum:
+            - EMBEDDED
+            - REFERENCED
+        uri:
+          type: string
+          example: did:example:123#key-1
+        verificationMethod:
+          $ref: "#/components/schemas/VerificationMethod"
 
     CreateManagedDidRequest:
       type: object
