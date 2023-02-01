@@ -117,4 +117,3 @@ volumes:
 networks:
   default:
     name: ${NETWORK}
-
