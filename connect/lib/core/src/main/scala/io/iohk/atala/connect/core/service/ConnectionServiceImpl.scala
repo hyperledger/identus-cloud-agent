@@ -57,6 +57,16 @@ private class ConnectionServiceImpl(
     } yield records
   }
 
+  override def getConnectionRecordsByStates(
+      states: ProtocolState*
+  ): IO[ConnectionServiceError, Seq[ConnectionRecord]] = {
+    for {
+      records <- connectionRepository
+        .getConnectionRecordsByStates(states: _*)
+        .mapError(RepositoryError.apply)
+    } yield records
+  }
+
   override def getConnectionRecord(recordId: UUID): IO[ConnectionServiceError, Option[ConnectionRecord]] = {
     for {
       record <- connectionRepository
