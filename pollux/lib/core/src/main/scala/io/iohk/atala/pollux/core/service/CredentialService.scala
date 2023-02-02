@@ -65,7 +65,7 @@ trait CredentialService {
 
   def getIssueCredentialRecords(): IO[CredentialServiceError, Seq[IssueCredentialRecord]]
 
-  def getCredentialRecordsByStates(
+  def getIssueCredentialRecordsByStates(
       states: IssueCredentialRecord.ProtocolState*
   ): IO[CredentialServiceError, Seq[IssueCredentialRecord]]
 
