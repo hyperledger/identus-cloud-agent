@@ -89,7 +89,7 @@ object BackgroundJobs {
         case IssueCredentialRecord(id, _, _, _, _, Role.Issuer, _, _, _, _, OfferPending, _, Some(offer), _, _, _) =>
           for {
             _ <- ZIO.log(s"IssueCredentialRecord: OfferPending (START)")
-            didCommAgent <- buildDIDCommAgent2(offer.from)
+            didCommAgent <- buildDIDCommAgent(offer.from)
             _ <- MessagingService
               .send(offer.makeMessage)
               .provideSomeLayer(didCommAgent)
@@ -117,7 +117,7 @@ object BackgroundJobs {
               _,
             ) =>
           for {
-            didCommAgent <- buildDIDCommAgent2(request.from)
+            didCommAgent <- buildDIDCommAgent(request.from)
             _ <- MessagingService
               .send(request.makeMessage)
               .provideSomeLayer(didCommAgent)
@@ -211,7 +211,7 @@ object BackgroundJobs {
               _,
             ) =>
           for {
-            didCommAgent <- buildDIDCommAgent2(issue.from)
+            didCommAgent <- buildDIDCommAgent(issue.from)
             _ <- MessagingService
               .send(issue.makeMessage)
               .provideSomeLayer(didCommAgent)
@@ -239,7 +239,7 @@ object BackgroundJobs {
               _,
             ) =>
           for {
-            didCommAgent <- buildDIDCommAgent2(issue.from)
+            didCommAgent <- buildDIDCommAgent(issue.from)
             _ <- MessagingService.send(issue.makeMessage).provideSomeLayer(didCommAgent)
             credentialService <- ZIO.service[CredentialService]
             _ <- credentialService.markCredentialSent(id)
@@ -339,7 +339,7 @@ object BackgroundJobs {
               for {
                 _ <- ZIO.log(s"PresentationRecord: RequestPending (Send Massage)")
                 didOps <- ZIO.service[DidOps]
-                didCommAgent <- buildDIDCommAgent2(record.from)
+                didCommAgent <- buildDIDCommAgent(record.from)
                 _ <- MessagingService.send(record.makeMessage).provideSomeLayer(didCommAgent)
                 service <- ZIO.service[PresentationService]
                 _ <- service.markRequestPresentationSent(id)
@@ -411,7 +411,7 @@ object BackgroundJobs {
             case Some(p) =>
               for {
                 _ <- ZIO.log(s"PresentationRecord: PresentationPending (Send Message)")
-                didCommAgent <- buildDIDCommAgent2(p.from)
+                didCommAgent <- buildDIDCommAgent(p.from)
                 _ <- MessagingService
                   .send(p.makeMessage)
                   .provideSomeLayer(didCommAgent)
@@ -481,16 +481,16 @@ object BackgroundJobs {
       }
   }
 
-  private[this] def buildDIDCommAgent(myDid: DidId): ZLayer[ManagedDIDService, KeyNotFoundError, DidAgent] = { // FIXME
-    val aux = for {
-      managedDidService <- ZIO.service[ManagedDIDService]
-      peerDID <- managedDidService.getPeerDID(myDid)
-      agent = AgentPeerService.makeLayer(peerDID)
-    } yield agent
-    ZLayer.fromZIO(aux).flatten
-  }
+  // private[this] def buildDIDCommAgent(myDid: DidId): ZLayer[ManagedDIDService, KeyNotFoundError, DidAgent] = { // FIXME
+  //   val aux = for {
+  //     managedDidService <- ZIO.service[ManagedDIDService]
+  //     peerDID <- managedDidService.getPeerDID(myDid)
+  //     agent = AgentPeerService.makeLayer(peerDID)
+  //   } yield agent
+  //   ZLayer.fromZIO(aux).flatten
+  // }
 
-  private[this] def buildDIDCommAgent2(
+  private[this] def buildDIDCommAgent(
       myDid: DidId
   ): ZIO[ManagedDIDService, KeyNotFoundError, ZLayer[Any, Nothing, DidAgent]] = {
     for {
