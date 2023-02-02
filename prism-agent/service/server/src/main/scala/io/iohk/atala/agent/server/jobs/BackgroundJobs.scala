@@ -521,7 +521,7 @@ object BackgroundJobs {
 
   private[this] def performPublishCredentialsToDlt(credentialService: CredentialService) = {
     val res: ZIO[Any, CredentialServiceError, Unit] = for {
-      records <- credentialService.getCredentialRecordsByState(IssueCredentialRecord.ProtocolState.CredentialPending)
+      records <- credentialService.getIssueCredentialRecordsByStates(IssueCredentialRecord.ProtocolState.CredentialPending)
       // NOTE: the line below is a potentially slow operation, because <createCredentialPayloadFromRecord> makes a database SELECT call,
       // so calling this function n times will make n database SELECT calls, while it can be optimized to get
       // all data in one query, this function here has to be refactored as well. Consider doing this if this job is too slow
