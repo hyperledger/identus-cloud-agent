@@ -11,10 +11,7 @@ import zio.Duration
 import java.time.Instant
 import java.time.Clock
 import java.time.ZoneId
-import io.iohk.atala.mercury.DidComm
-import io.iohk.atala.mercury.MediaTypes
-import io.iohk.atala.mercury.MessagingService
-import io.iohk.atala.mercury.HttpClient
+import io.iohk.atala.mercury._
 import io.iohk.atala.mercury.model._
 import io.iohk.atala.mercury.model.error._
 import io.iohk.atala.mercury.protocol.issuecredential._
@@ -30,12 +27,13 @@ import io.iohk.atala.pollux.core.model.PresentationRecord
 import io.iohk.atala.pollux.core.service.PresentationService
 import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.agent.server.http.model.{InvalidState, NotImplemented}
-import io.iohk.atala.agent.walletapi.service.ManagedDIDService
-import io.iohk.atala.mercury.AgentServiceAny
 import org.didcommx.didcomm.DIDComm
-import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError
-import io.iohk.atala.agent.walletapi.model.ManagedDIDTemplate
+import io.iohk.atala.agent.walletapi.model._
+import io.iohk.atala.agent.walletapi.model.error._
+import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError.KeyNotFoundError
+import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
+import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
 import io.iohk.atala.pollux.vc.jwt.ES256KSigner
 import io.iohk.atala.castor.core.model.did._
 import java.security.KeyFactory
@@ -51,11 +49,8 @@ import java.security.spec.ECPoint
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import io.circe.Json
 import io.circe.syntax._
-import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
-import io.iohk.atala.agent.walletapi.model.error.CreateManagedDIDError
 import io.iohk.atala.pollux.vc.jwt.JWT
 import io.iohk.atala.pollux.vc.jwt.{DidResolver => JwtDidResolver}
-import io.iohk.atala.agent.walletapi.model._
 
 object BackgroundJobs {
 
@@ -81,7 +76,7 @@ object BackgroundJobs {
   private[this] def performExchange(
       record: IssueCredentialRecord
   ): URIO[
-    DIDResolver & JwtDidResolver & HttpClient & CredentialService & ManagedDIDService & DIDSecretStorage,
+    DidOps & DIDResolver & JwtDidResolver & HttpClient & CredentialService & ManagedDIDService & DIDSecretStorage,
     Unit
   ] = {
     import IssueCredentialRecord._
@@ -94,8 +89,10 @@ object BackgroundJobs {
         case IssueCredentialRecord(id, _, _, _, _, Role.Issuer, _, _, _, _, OfferPending, _, Some(offer), _, _, _) =>
           for {
             _ <- ZIO.log(s"IssueCredentialRecord: OfferPending (START)")
-            didCommAgent <- buildDIDCommAgent(offer.from)
-            _ <- MessagingService.send(offer.makeMessage).provideSomeLayer(didCommAgent)
+            didCommAgent <- buildDIDCommAgent2(offer.from)
+            _ <- MessagingService
+              .send(offer.makeMessage)
+              .provideSomeLayer(didCommAgent)
             credentialService <- ZIO.service[CredentialService]
             _ <- credentialService.markOfferSent(id)
           } yield ()
@@ -120,8 +117,10 @@ object BackgroundJobs {
               _,
             ) =>
           for {
-            didCommAgent <- buildDIDCommAgent(request.from)
-            _ <- MessagingService.send(request.makeMessage).provideSomeLayer(didCommAgent)
+            didCommAgent <- buildDIDCommAgent2(request.from)
+            _ <- MessagingService
+              .send(request.makeMessage)
+              .provideSomeLayer(didCommAgent)
             credentialService <- ZIO.service[CredentialService]
             _ <- credentialService.markRequestSent(id)
           } yield ()
@@ -186,7 +185,7 @@ object BackgroundJobs {
               fromDID = issue.from,
               toDID = issue.to,
               thid = issue.thid,
-              credentials = Map("prims/jwt" -> signedJwtCredential.value)
+              credentials = Map("prims/jwt" -> signedJwtCredential.value.getBytes)
             )
             _ <- credentialService.markCredentialGenerated(id, issueCredential)
 
@@ -212,8 +211,10 @@ object BackgroundJobs {
               _,
             ) =>
           for {
-            didCommAgent <- buildDIDCommAgent(issue.from)
-            _ <- MessagingService.send(issue.makeMessage).provideSomeLayer(didCommAgent)
+            didCommAgent <- buildDIDCommAgent2(issue.from)
+            _ <- MessagingService
+              .send(issue.makeMessage)
+              .provideSomeLayer(didCommAgent)
             credentialService <- ZIO.service[CredentialService]
             _ <- credentialService.markCredentialSent(id)
           } yield ()
@@ -238,7 +239,7 @@ object BackgroundJobs {
               _,
             ) =>
           for {
-            didCommAgent <- buildDIDCommAgent(issue.from)
+            didCommAgent <- buildDIDCommAgent2(issue.from)
             _ <- MessagingService.send(issue.makeMessage).provideSomeLayer(didCommAgent)
             credentialService <- ZIO.service[CredentialService]
             _ <- credentialService.markCredentialSent(id)
@@ -315,7 +316,7 @@ object BackgroundJobs {
   private[this] def performPresentation(
       record: PresentationRecord
   ): URIO[
-    DIDResolver & JwtDidResolver & HttpClient & PresentationService & ManagedDIDService & DIDSecretStorage,
+    DidOps & DIDResolver & JwtDidResolver & HttpClient & PresentationService & ManagedDIDService & DIDSecretStorage,
     Unit
   ] = {
     import io.iohk.atala.pollux.core.model.PresentationRecord.ProtocolState._
@@ -337,7 +338,8 @@ object BackgroundJobs {
             case Some(record) =>
               for {
                 _ <- ZIO.log(s"PresentationRecord: RequestPending (Send Massage)")
-                didCommAgent <- buildDIDCommAgent(record.from)
+                didOps <- ZIO.service[DidOps]
+                didCommAgent <- buildDIDCommAgent2(record.from)
                 _ <- MessagingService.send(record.makeMessage).provideSomeLayer(didCommAgent)
                 service <- ZIO.service[PresentationService]
                 _ <- service.markRequestPresentationSent(id)
@@ -388,7 +390,10 @@ object BackgroundJobs {
                     ),
                     attachments = Seq(
                       AttachmentDescriptor
-                        .buildAttachment(payload = signedJwtPresentation.value, mediaType = Some("prism/jwt"))
+                        .buildBase64Attachment(
+                          payload = signedJwtPresentation.value.getBytes(),
+                          mediaType = Some("prism/jwt")
+                        )
                     ),
                     thid = requestPresentation.thid.orElse(Some(requestPresentation.id)),
                     from = requestPresentation.to,
@@ -406,8 +411,10 @@ object BackgroundJobs {
             case Some(p) =>
               for {
                 _ <- ZIO.log(s"PresentationRecord: PresentationPending (Send Message)")
-                didCommAgent <- buildDIDCommAgent(p.from)
-                _ <- MessagingService.send(p.makeMessage).provideSomeLayer(didCommAgent)
+                didCommAgent <- buildDIDCommAgent2(p.from)
+                _ <- MessagingService
+                  .send(p.makeMessage)
+                  .provideSomeLayer(didCommAgent)
                 service <- ZIO.service[PresentationService]
                 _ <- service.markPresentationSent(id)
               } yield ()
@@ -474,17 +481,23 @@ object BackgroundJobs {
       }
   }
 
-  private[this] def buildDIDCommAgent(myDid: DidId) = {
+  private[this] def buildDIDCommAgent(myDid: DidId): ZLayer[ManagedDIDService, KeyNotFoundError, DidAgent] = { // FIXME
+    val aux = for {
+      managedDidService <- ZIO.service[ManagedDIDService]
+      peerDID <- managedDidService.getPeerDID(myDid)
+      agent = AgentPeerService.makeLayer(peerDID)
+    } yield agent
+    ZLayer.fromZIO(aux).flatten
+  }
+
+  private[this] def buildDIDCommAgent2(
+      myDid: DidId
+  ): ZIO[ManagedDIDService, KeyNotFoundError, ZLayer[Any, Nothing, DidAgent]] = {
     for {
       managedDidService <- ZIO.service[ManagedDIDService]
       peerDID <- managedDidService.getPeerDID(myDid)
-      didCommAgent = ZLayer.succeed(
-        AgentServiceAny(
-          new DIDComm(UniversalDidResolver, peerDID.getSecretResolverInMemory),
-          peerDID.did
-        )
-      )
-    } yield didCommAgent
+      agent = AgentPeerService.makeLayer(peerDID)
+    } yield agent
   }
 
   val publishCredentialsToDlt = {
