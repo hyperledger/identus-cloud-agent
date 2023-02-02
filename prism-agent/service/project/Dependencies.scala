@@ -9,11 +9,11 @@ object Dependencies {
     val akka = "2.6.20"
     val akkaHttp = "10.2.9"
     val castor = "0.7.0"
-    val pollux = "0.19.0"
-    val connect = "0.6.0"
+    val pollux = "0.21.0"
+    val connect = "0.7.0"
     val bouncyCastle = "1.70"
     val logback = "1.4.5"
-    val mercury = "0.15.0"
+    val mercury = "0.16.0"
     val zioJson = "0.3.0"
     val tapir = "1.2.3"
     val flyway = "9.8.3"
@@ -71,13 +71,14 @@ object Dependencies {
     "com.softwaremill.sttp.tapir" %% "tapir-sttp-stub-server" % Versions.tapir % Test
   private lazy val sttpClient3ZioJson = "com.softwaremill.sttp.client3" %% "zio-json" % "3.8.3" % Test
 
-  private lazy val quillDoobie = "io.getquill" %% "quill-doobie" % Versions.quill exclude("org.scala-lang.modules", "scala-java8-compat_3")
+  private lazy val quillDoobie =
+    "io.getquill" %% "quill-doobie" % Versions.quill exclude ("org.scala-lang.modules", "scala-java8-compat_3")
   private lazy val postgresql = "org.postgresql" % "postgresql" % "42.2.8"
-  private lazy val quillJdbcZio = "io.getquill" %% "quill-jdbc-zio" % Versions.quill exclude("org.scala-lang.modules", "scala-java8-compat_3")
+  private lazy val quillJdbcZio =
+    "io.getquill" %% "quill-jdbc-zio" % Versions.quill exclude ("org.scala-lang.modules", "scala-java8-compat_3")
   private lazy val flyway = "org.flywaydb" % "flyway-core" % Versions.flyway
   private lazy val testcontainers_scala_postgresql =
-    "com.dimafeng"   %% "testcontainers-scala-postgresql" % Versions.testContainersScalaPostgresql % Test
-
+    "com.dimafeng" %% "testcontainers-scala-postgresql" % Versions.testContainersScalaPostgresql % Test
 
   // Dependency Modules
   private lazy val baseDependencies: Seq[ModuleID] = Seq(
@@ -111,13 +112,8 @@ object Dependencies {
       http4sBlazeServer
     )
 
-  private lazy val postgresDependencies: Seq[ModuleID] = Seq(
-    quillDoobie,
-    quillJdbcZio,
-    postgresql,
-    flyway,
-    testcontainers_scala_postgresql)
-
+  private lazy val postgresDependencies: Seq[ModuleID] =
+    Seq(quillDoobie, quillJdbcZio, postgresql, flyway, testcontainers_scala_postgresql)
 
   // Project Dependencies
   lazy val keyManagementDependencies: Seq[ModuleID] =

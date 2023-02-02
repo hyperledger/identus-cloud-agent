@@ -4,23 +4,20 @@ import zio._
 import io.iohk.atala.connect.core.service.ConnectionService
 import io.iohk.atala.connect.core.model.ConnectionRecord
 import io.iohk.atala.connect.core.model.ConnectionRecord._
-import io.iohk.atala.mercury.DidComm
-import io.iohk.atala.mercury.MediaTypes
-import io.iohk.atala.mercury.MessagingService
-import io.iohk.atala.mercury.HttpClient
+import io.iohk.atala.mercury._
 import io.iohk.atala.mercury.model._
 import io.iohk.atala.mercury.model.error._
 import io.iohk.atala.mercury.protocol.issuecredential._
 import io.iohk.atala.resolvers.DIDResolver
 import java.io.IOException
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
-import io.iohk.atala.mercury.AgentServiceAny
 import org.didcommx.didcomm.DIDComm
 import io.iohk.atala.mercury.PeerDID
 import com.nimbusds.jose.jwk.OctetKeyPair
 import io.iohk.atala.resolvers.UniversalDidResolver
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError
+import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError.KeyNotFoundError
 
 object ConnectBackgroundJobs {
 
@@ -36,7 +33,7 @@ object ConnectBackgroundJobs {
 
   private[this] def performExchange(
       record: ConnectionRecord
-  ): URIO[DIDResolver & HttpClient & ConnectionService & ManagedDIDService, Unit] = {
+  ): URIO[DidOps & DIDResolver & HttpClient & ConnectionService & ManagedDIDService, Unit] = {
     import Role._
     import ProtocolState._
     val exchange = record match {
@@ -73,17 +70,14 @@ object ConnectBackgroundJobs {
       }
   }
 
-  private[this] def buildDIDCommAgent(myDid: DidId) = {
+  private[this] def buildDIDCommAgent(
+      myDid: DidId
+  ): ZIO[ManagedDIDService, KeyNotFoundError, ZLayer[Any, Nothing, DidAgent]] = {
     for {
       managedDidService <- ZIO.service[ManagedDIDService]
       peerDID <- managedDidService.getPeerDID(myDid)
-      didCommAgent = ZLayer.succeed(
-        AgentServiceAny(
-          new DIDComm(UniversalDidResolver, peerDID.getSecretResolverInMemory),
-          peerDID.did
-        )
-      )
-    } yield didCommAgent
+      agent = AgentPeerService.makeLayer(peerDID)
+    } yield agent
   }
 
 }

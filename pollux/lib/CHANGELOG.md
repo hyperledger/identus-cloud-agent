@@ -1,3 +1,17 @@
+# [pollux-v0.21.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.20.0...pollux-v0.21.0) (2023-02-02)
+
+
+### Features
+
+* **pollux:** get rid of 'drop(1)' and 'dropRight(1)' on credential attachment value ([#341](https://github.com/input-output-hk/atala-prism-building-blocks/issues/341)) ([b0a14d4](https://github.com/input-output-hk/atala-prism-building-blocks/commit/b0a14d459cd806353b73461194a847ec03551332))
+
+# [pollux-v0.20.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.19.0...pollux-v0.20.0) (2023-02-01)
+
+
+### Features
+
+* **pollux:** Dummy commit to make a release (2) ([#338](https://github.com/input-output-hk/atala-prism-building-blocks/issues/338)) ([4c7516c](https://github.com/input-output-hk/atala-prism-building-blocks/commit/4c7516c20c65906c3188f04ab1b7dc1dfd2e7822))
+
 # [pollux-v0.19.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.18.0...pollux-v0.19.0) (2023-01-27)
 
 

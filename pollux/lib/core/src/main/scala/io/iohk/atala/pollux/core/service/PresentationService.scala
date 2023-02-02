@@ -280,7 +280,6 @@ private class PresentationServiceImpl(
     val verifiableCredentials = issuedCredentials.map { issuedCredential =>
       decode[io.iohk.atala.mercury.model.Base64](issuedCredential.signedCredential)
         .map(x => new String(java.util.Base64.getDecoder().decode(x.base64)))
-        .map(_.drop(1).dropRight(1))
         .map(x => JwtVerifiableCredentialPayload(JWT(x)))
         .getOrElse(???)
     }.toVector
