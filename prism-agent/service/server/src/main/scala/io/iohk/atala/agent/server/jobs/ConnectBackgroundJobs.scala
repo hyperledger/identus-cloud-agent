@@ -28,7 +28,10 @@ object ConnectBackgroundJobs {
     for {
       connectionService <- ZIO.service[ConnectionService]
       records <- connectionService
-        .getConnectionRecords()
+        .getConnectionRecordsByStates(
+          ConnectionRecord.ProtocolState.ConnectionRequestPending,
+          ConnectionRecord.ProtocolState.ConnectionResponsePending
+        )
         .mapError(err => Throwable(s"Error occurred while getting connection records: $err"))
       _ <- ZIO.foreachPar(records)(performExchange)
     } yield ()

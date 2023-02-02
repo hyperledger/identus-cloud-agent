@@ -63,7 +63,13 @@ object BackgroundJobs {
     for {
       credentialService <- ZIO.service[CredentialService]
       records <- credentialService
-        .getIssueCredentialRecords()
+        .getIssueCredentialRecordsByStates(
+          IssueCredentialRecord.ProtocolState.OfferPending,
+          IssueCredentialRecord.ProtocolState.RequestPending,
+          IssueCredentialRecord.ProtocolState.RequestReceived,
+          IssueCredentialRecord.ProtocolState.CredentialPending,
+          IssueCredentialRecord.ProtocolState.CredentialGenerated
+        )
         .mapError(err => Throwable(s"Error occurred while getting Issue Credential records: $err"))
       _ <- ZIO.foreachPar(records)(performExchange)
     } yield ()
@@ -72,7 +78,12 @@ object BackgroundJobs {
     for {
       presentationService <- ZIO.service[PresentationService]
       records <- presentationService
-        .getPresentationRecords()
+        .getPresentationRecordsByStates(
+          PresentationRecord.ProtocolState.RequestPending,
+          PresentationRecord.ProtocolState.PresentationPending,
+          PresentationRecord.ProtocolState.PresentationGenerated,
+          PresentationRecord.ProtocolState.PresentationReceived
+        )
         .mapError(err => Throwable(s"Error occurred while getting Presentation records: $err"))
       _ <- ZIO.foreachPar(records)(performPresentation)
     } yield ()
