@@ -120,7 +120,8 @@ object Dependencies {
     baseDependencies ++
       castorDependencies ++
       mercuryDependencies ++
-      bouncyDependencies
+      bouncyDependencies ++
+      postgresDependencies
 
   lazy val serverDependencies: Seq[ModuleID] =
     baseDependencies ++
