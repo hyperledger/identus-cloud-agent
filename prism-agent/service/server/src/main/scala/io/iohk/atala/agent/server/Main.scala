@@ -21,16 +21,14 @@ import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
 
 object Main extends ZIOAppDefault {
 
-  def didCommAgentLayer(didCommServiceUrl: String) = ZLayer(
-    for {
+  def didCommAgentLayer(didCommServiceUrl: String): ZLayer[ManagedDIDService, Nothing, DidAgent] = {
+    val aux = for {
       managedDIDService <- ZIO.service[ManagedDIDService]
       peerDID <- managedDIDService.createAndStorePeerDID(didCommServiceUrl)
       _ <- ZIO.logInfo(s"New DID: ${peerDID.did}")
-    } yield io.iohk.atala.mercury.AgentServiceAny(
-      new DIDComm(UniversalDidResolver, peerDID.getSecretResolverInMemory),
-      peerDID.did
-    )
-  )
+    } yield io.iohk.atala.mercury.AgentPeerService.makeLayer(peerDID)
+    ZLayer.fromZIO(aux).flatten
+  }
 
   val migrations = for {
     _ <- ZIO.serviceWithZIO[PolluxMigrations](_.migrate)
@@ -91,6 +89,7 @@ object Main extends ZIOAppDefault {
 
       app <- appComponents(didCommServicePort, restServicePort).provide(
         didCommAgentLayer(didCommServiceUrl),
+        DidCommX.liveLayer,
         AppModule.didJwtResolverlayer,
         AppModule.didServiceLayer,
         DIDResolver.layer,
