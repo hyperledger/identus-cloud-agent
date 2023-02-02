@@ -150,19 +150,19 @@ object CredentialRepositorySpecSuite {
     test("getIssueCredentialRecordByThreadId returns nothing for an unknown thid") {
       for {
         repo <- ZIO.service[CredentialRepository[Task]]
-        aRecord = issueCredentialRecord.copy(thid = UUID.randomUUID())
-        bRecord = issueCredentialRecord.copy(thid = UUID.randomUUID())
+        aRecord = issueCredentialRecord
+        bRecord = issueCredentialRecord
         _ <- repo.createIssueCredentialRecord(aRecord)
         _ <- repo.createIssueCredentialRecord(bRecord)
         record <- repo.getIssueCredentialRecordByThreadId(UUID.randomUUID())
       } yield assertTrue(record.isEmpty)
     },
-    test("getIssueCredentialRecordsByState returns valid records") {
+    test("getIssueCredentialRecordsByStates returns valid records") {
       for {
         repo <- ZIO.service[CredentialRepository[Task]]
-        aRecord = issueCredentialRecord.copy(thid = UUID.randomUUID())
-        bRecord = issueCredentialRecord.copy(thid = UUID.randomUUID())
-        cRecord = issueCredentialRecord.copy(thid = UUID.randomUUID())
+        aRecord = issueCredentialRecord
+        bRecord = issueCredentialRecord
+        cRecord = issueCredentialRecord
         _ <- repo.createIssueCredentialRecord(aRecord)
         _ <- repo.createIssueCredentialRecord(bRecord)
         _ <- repo.createIssueCredentialRecord(cRecord)
@@ -185,12 +185,12 @@ object CredentialRepositorySpecSuite {
         assertTrue(otherRecords.exists(_.id == cRecord.id))
       }
     },
-    test("getIssueCredentialRecordsByState returns an empty list if 'states' parameter is empty") {
+    test("getIssueCredentialRecordsByStates returns an empty list if 'states' parameter is empty") {
       for {
         repo <- ZIO.service[CredentialRepository[Task]]
-        aRecord = issueCredentialRecord.copy(thid = UUID.randomUUID())
-        bRecord = issueCredentialRecord.copy(thid = UUID.randomUUID())
-        cRecord = issueCredentialRecord.copy(thid = UUID.randomUUID())
+        aRecord = issueCredentialRecord
+        bRecord = issueCredentialRecord
+        cRecord = issueCredentialRecord
         _ <- repo.createIssueCredentialRecord(aRecord)
         _ <- repo.createIssueCredentialRecord(bRecord)
         _ <- repo.createIssueCredentialRecord(cRecord)
@@ -202,9 +202,9 @@ object CredentialRepositorySpecSuite {
     test("getValidIssuedCredentials returns valid records") {
       for {
         repo <- ZIO.service[CredentialRepository[Task]]
-        aRecord = issueCredentialRecord.copy(thid = UUID.randomUUID())
-        bRecord = issueCredentialRecord.copy(thid = UUID.randomUUID())
-        cRecord = issueCredentialRecord.copy(thid = UUID.randomUUID())
+        aRecord = issueCredentialRecord
+        bRecord = issueCredentialRecord
+        cRecord = issueCredentialRecord
         _ <- repo.createIssueCredentialRecord(aRecord)
         _ <- repo.createIssueCredentialRecord(bRecord)
         _ <- repo.createIssueCredentialRecord(cRecord)

@@ -1,5 +1,6 @@
 package io.iohk.atala.pollux.sql.repository
 
+import cats.data.NonEmptyList
 import cats.instances.seq
 import doobie.*
 import doobie.implicits.*
@@ -142,32 +143,38 @@ class JdbcPresentationRepository(xa: Transactor[Task]) extends PresentationRepos
       .transact(xa)
   }
 
-  override def getPresentationRecordsByState(
-      state: PresentationRecord.ProtocolState
+  override def getPresentationRecordsByStates(
+      states: PresentationRecord.ProtocolState*
   ): Task[Seq[PresentationRecord]] = {
-    val cxnIO = sql"""
-        | SELECT
-        |   id,
-        |   created_at,
-        |   updated_at,
-        |   thid,
-        |   connection_id,
-        |   schema_id,
-        |   role,
-        |   subject_id,
-        |   protocol_state,
-        |   request_presentation_data,
-        |   propose_presentation_data,
-        |   presentation_data,
-        |   credentials_to_use
-        | FROM public.presentation_records
-        | WHERE protocol_state = ${state.toString}
-        """.stripMargin
-      .query[PresentationRecord]
-      .to[Seq]
+    states match
+      case Nil =>
+        ZIO.succeed(Nil)
+      case head +: tail =>
+        val nel = NonEmptyList.of(head, tail: _*)
+        val inClauseFragment = Fragments.in(fr"protocol_state", nel)
+        val cxnIO = sql"""
+            | SELECT
+            |   id,
+            |   created_at,
+            |   updated_at,
+            |   thid,
+            |   connection_id,
+            |   schema_id,
+            |   role,
+            |   subject_id,
+            |   protocol_state,
+            |   request_presentation_data,
+            |   propose_presentation_data,
+            |   presentation_data,
+            |   credentials_to_use
+            | FROM public.presentation_records
+            | WHERE $inClauseFragment
+            """.stripMargin
+          .query[PresentationRecord]
+          .to[Seq]
 
-    cxnIO
-      .transact(xa)
+        cxnIO
+          .transact(xa)
   }
 
   override def getPresentationRecord(recordId: UUID): Task[Option[PresentationRecord]] = {
