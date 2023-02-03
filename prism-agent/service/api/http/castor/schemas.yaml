@@ -202,8 +202,8 @@ components:
                   type:
                     type: string
                     enum:
-                      - MediatorService
-                    example: MediatorService
+                      - LinkedDomains
+                    example: LinkedDomains
                   serviceEndpoint:
                     type: array
                     items:
@@ -267,8 +267,8 @@ components:
         type:
           type: string
           enum:
-            - MediatorService
-          example: MediatorService
+            - LinkedDomains
+          example: LinkedDomains
         serviceEndpoint:
           type: array
           items:
