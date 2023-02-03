@@ -42,8 +42,8 @@ class ConnectionRepositoryInMemory(storeRef: Ref[Map[UUID, ConnectionRecord]]) e
     for {
       store <- storeRef.get
       maybeRecord = store
-          .find((uuid, record) => uuid == recordId && record.protocolState == from)
-          .map(_._2)
+        .find((uuid, record) => uuid == recordId && record.protocolState == from)
+        .map(_._2)
       count <- maybeRecord
         .map(record =>
           for {
