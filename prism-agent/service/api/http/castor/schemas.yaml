@@ -21,6 +21,8 @@ components:
 
     DID:
       type: object
+      description: |
+        A core DID data model capable of being transformed into W3C compliant representation.
       required:
         - id
       properties:
@@ -197,7 +199,7 @@ components:
                 properties:
                   id:
                     type: string
-                    description: ID of service to remove from DID document
+                    description: ID of existing service to update in the DID document
                     example: service1
                   type:
                     type: string
@@ -227,7 +229,7 @@ components:
             example: did:prism:abc:123
           status:
             type: string
-            description: A status indicating whether this is published DID or not. Does not represent DID full lifecyle (e.g. deactivated, recovered, updated).
+            description: A status indicating whether this is already published from the wallet or not. Does not represent DID full lifecyle (e.g. deactivated, recovered, updated).
             enum:
               - CREATED
               - PUBLICATION_PENDING
