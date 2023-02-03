@@ -134,7 +134,7 @@ The `footer` is optional. The [Commit Message Footer](#commit-message-footer) fo
   │       │             │
   │       │             └─⫸ Summary in present tense. Not capitalized. No period at the end.
   │       │
-  │       └─⫸ Commit Scope: iris|apollo|castor|pollux|mercury|pluto|athena|pistis|atlas|agent
+  │       └─⫸ Commit Scope: iris|apollo|castor|connect|pollux|mercury|pluto|athena|pistis|atlas|agent
   │
   └─⫸ Commit Type: build|ci|docs|feat|fix|perf|refactor|test
 
@@ -156,6 +156,8 @@ Must be one of the following:
 * **refactor**: A code change that neither fixes a bug nor adds a feature
 * **test**: Adding missing tests or correcting existing tests
 
+NOTE: Only the types **feat**, **fix** and **perf** will be consider to calculate the next release version. (if none is present since last release no new release will be generated).
+
 ##### Scope
 
 The scope should be the name of the affected module or building block (as perceived by the person reading the changelog generated from commit messages).
@@ -165,6 +167,7 @@ The following is the list of supported scopes:
 * `iris`
 * `apollo`
 * `castor`
+* `connect`
 * `pollux`
 * `mercury`
 * `pluto`
