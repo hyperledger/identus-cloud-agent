@@ -1,3 +1,10 @@
+# [prism-agent-v0.33.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.32.0...prism-agent-v0.33.0) (2023-02-02)
+
+
+### Features
+
+* **prism-agent:** Upgrade mercury connect pollux ([#340](https://github.com/input-output-hk/atala-prism-building-blocks/issues/340)) ([3758232](https://github.com/input-output-hk/atala-prism-building-blocks/commit/3758232448ae66fbc444c487f32917a106645473))
+
 # [prism-agent-v0.32.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.31.1...prism-agent-v0.32.0) (2023-01-27)
 
 

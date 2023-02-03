@@ -48,7 +48,7 @@
             "version.sbt",
             "CHANGELOG.md"
           ],
-          "message": "chore(release): cut prism-agent image ${nextRelease.version} release [skip ci]\n\n${nextRelease.notes}"
+          "message": "chore(release): cut prism-agent image ${nextRelease.version} release\n\n${nextRelease.notes}"
         }
       ],
       [

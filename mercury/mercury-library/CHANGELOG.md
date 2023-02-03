@@ -1,3 +1,10 @@
+# [mercury-v0.17.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.16.0...mercury-v0.17.0) (2023-01-31)
+
+
+### Features
+
+* **mercury:** Expose pthid on the connection protocol ([#333](https://github.com/input-output-hk/atala-prism-building-blocks/issues/333)) ([82eca31](https://github.com/input-output-hk/atala-prism-building-blocks/commit/82eca31f2dd29ab1ce96ae4948208883499d23c0))
+
 # [mercury-v0.16.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.15.0...mercury-v0.16.0) (2023-01-26)
 
 
