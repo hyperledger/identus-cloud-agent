@@ -244,7 +244,6 @@ trait OASDomainModelHelper {
         ),
         metadata = DIDDocumentMetadata(
           deactivated = metadata.deactivated,
-          versionId = Some(metadata.versionId),
           canonicalId = Some(metadata.canonicalId)
         )
       )
