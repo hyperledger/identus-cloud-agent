@@ -1,3 +1,10 @@
+# [pollux-v0.22.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.21.0...pollux-v0.22.0) (2023-02-03)
+
+
+### Features
+
+* **pollux:** upgrade castor and update DID public key extraction logic ([#339](https://github.com/input-output-hk/atala-prism-building-blocks/issues/339)) ([00a6026](https://github.com/input-output-hk/atala-prism-building-blocks/commit/00a6026b10434bb3fa17c1d11b581316f5295237))
+
 # [pollux-v0.21.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.20.0...pollux-v0.21.0) (2023-02-02)
 
 

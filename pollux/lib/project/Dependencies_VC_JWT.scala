@@ -7,7 +7,7 @@ object Dependencies_VC_JWT {
     val circeVersion = "0.14.3"
     val jwtCirceVersion = "9.1.2"
     val zioPreludeVersion = "1.0.0-RC16"
-    val castor = "0.7.0"
+    val castor = "0.8.0"
   }
 
   private lazy val coreJwtCirce = "io.circe" %% "circe-core" % Versions.circeVersion
@@ -27,15 +27,17 @@ object Dependencies_VC_JWT {
 
   private lazy val nimbusJoseJwt = "com.nimbusds" % "nimbus-jose-jwt" % "9.25.6"
 
-  private lazy val test = "org.scalameta" %% "munit" % "0.7.29" % Test
+  private lazy val zioTest = "dev.zio" %% "zio-test" % Versions.zio % Test
+  private lazy val zioTestSbt = "dev.zio" %% "zio-test-sbt" % Versions.zio % Test
+  private lazy val zioTestMagnolia = "dev.zio" %% "zio-test-magnolia" % Versions.zio % Test
 
   private lazy val castorCore = "io.iohk.atala" %% "castor-core" % Versions.castor
 
   // Dependency Modules
-  private lazy val zioDependencies: Seq[ModuleID] = Seq(zio, zioPrelude)
+  private lazy val zioDependencies: Seq[ModuleID] = Seq(zio, zioPrelude, zioTest, zioTestSbt, zioTestMagnolia)
   private lazy val circeDependencies: Seq[ModuleID] = Seq(coreJwtCirce, genericJwtCirce, parserJwtCirce)
   private lazy val baseDependencies: Seq[ModuleID] =
-    circeDependencies ++ zioDependencies :+ jwtCirce :+ circeJsonSchema :+ nimbusJoseJwt :+ test :+ castorCore
+    circeDependencies ++ zioDependencies :+ jwtCirce :+ circeJsonSchema :+ nimbusJoseJwt :+ castorCore
 
   // Project Dependencies
   lazy val polluxVcJwtDependencies: Seq[ModuleID] = baseDependencies

@@ -25,16 +25,18 @@ private[castor] trait W3CModelHelper {
 
   extension (didData: DIDData) {
     def toW3C(did: PrismDID): DIDDocumentRepr = {
-      val keyWithPurpose = didData.publicKeys.map(k => k.purpose -> k.toW3C(did, did))
+      import VerificationRelationship.*
+      val embeddedKeys = didData.publicKeys.map(k => k.toW3C(did, did))
+      val keyRefWithPurpose = didData.publicKeys.map(k => k.purpose -> s"${did.toString}#${k.id}")
       DIDDocumentRepr(
         id = did.toString,
         controller = did.toString,
-        verificationMethod = Nil,
-        authentication = keyWithPurpose.collect { case (VerificationRelationship.Authentication, k) => k },
-        assertionMethod = keyWithPurpose.collect { case (VerificationRelationship.AssertionMethod, k) => k },
-        keyAgreement = keyWithPurpose.collect { case (VerificationRelationship.KeyAgreement, k) => k },
-        capabilityInvocation = keyWithPurpose.collect { case (VerificationRelationship.CapabilityInvocation, k) => k },
-        capabilityDelegation = keyWithPurpose.collect { case (VerificationRelationship.CapabilityDelegation, k) => k },
+        verificationMethod = embeddedKeys,
+        authentication = keyRefWithPurpose.collect { case (Authentication, k) => k },
+        assertionMethod = keyRefWithPurpose.collect { case (AssertionMethod, k) => k },
+        keyAgreement = keyRefWithPurpose.collect { case (KeyAgreement, k) => k },
+        capabilityInvocation = keyRefWithPurpose.collect { case (CapabilityInvocation, k) => k },
+        capabilityDelegation = keyRefWithPurpose.collect { case (CapabilityDelegation, k) => k },
         service = didData.services.map(_.toW3C(did))
       )
     }
