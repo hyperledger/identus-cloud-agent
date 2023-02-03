@@ -38,6 +38,7 @@ case class ConnectionRecord(
     metaRetries: Int,
     metaLastFailure: Option[String]
 )
+
 object ConnectionRecord {
   enum Role:
     case Inviter extends Role

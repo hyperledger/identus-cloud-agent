@@ -252,6 +252,7 @@ object ConnectionRepositorySpecSuite {
         )
         updatedRecord2 <- repo.getConnectionRecord(aRecord.id)
       } yield {
+        assertTrue(record.get.metaRetries == maxRetries) &&
         assertTrue(updatedRecord1.get.metaRetries == (maxRetries - 1)) &&
         assertTrue(updatedRecord1.get.metaLastFailure == failReason) &&
         assertTrue(updatedRecord2.get.metaRetries == maxRetries) &&

@@ -50,7 +50,7 @@ class ConnectionRepositoryInMemory(storeRef: Ref[Map[UUID, ConnectionRecord]]) e
     for {
       store <- storeRef.get
       maybeRecord = store
-        .find((uuid, record) => uuid == recordId && record.protocolState == from) // FIXME restart retries from cofig
+        .find((uuid, record) => uuid == recordId && record.protocolState == from)
         .map(_._2)
       count <- maybeRecord
         .map(record =>
@@ -109,7 +109,7 @@ class ConnectionRepositoryInMemory(storeRef: Ref[Map[UUID, ConnectionRecord]]) e
             )
           } yield 1
         )
-        .getOrElse(ZIO.succeed(1))
+        .getOrElse(ZIO.succeed(0))
     } yield count
   }
 
@@ -125,14 +125,14 @@ class ConnectionRepositoryInMemory(storeRef: Ref[Map[UUID, ConnectionRecord]]) e
             r.updated(
               recordId,
               record.copy(
-                metaRetries = record.metaRetries,
+                metaRetries = record.metaRetries - 1,
                 metaLastFailure = failReason,
               )
             )
           )
         } yield 1
       )
-      .getOrElse(ZIO.succeed(1))
+      .getOrElse(ZIO.succeed(0))
   } yield count
 
   override def getConnectionRecordByThreadId(thid: UUID): Task[Option[ConnectionRecord]] = {
