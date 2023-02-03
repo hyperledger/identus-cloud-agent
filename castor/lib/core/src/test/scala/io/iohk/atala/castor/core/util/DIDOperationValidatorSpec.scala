@@ -101,7 +101,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         val services = (1 to 20).map(i =>
           Service(
             id = s"service$i",
-            `type` = ServiceType.MediatorService,
+            `type` = ServiceType.LinkedDomains,
             serviceEndpoint = Seq(URI.create("http://example.com"))
           )
         )
@@ -114,7 +114,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         val services = (1 to 3).map(i =>
           Service(
             id = s"service0",
-            `type` = ServiceType.MediatorService,
+            `type` = ServiceType.LinkedDomains,
             serviceEndpoint = Seq(URI.create("http://example.com"))
           )
         )
@@ -140,7 +140,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         val services = (1 to 2).map(i =>
           Service(
             id = s"service $i",
-            `type` = ServiceType.MediatorService,
+            `type` = ServiceType.LinkedDomains,
             serviceEndpoint = Seq(URI.create("http://example.com"))
           )
         )
@@ -160,7 +160,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
           Seq(
             Service(
               id = "service-0",
-              `type` = ServiceType.MediatorService,
+              `type` = ServiceType.LinkedDomains,
               serviceEndpoint = Nil
             )
           )
@@ -174,7 +174,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
           Seq(
             Service(
               id = "service-0",
-              `type` = ServiceType.MediatorService,
+              `type` = ServiceType.LinkedDomains,
               serviceEndpoint = Seq(
                 URI.create("http://example.com/login/../login")
               )
@@ -207,14 +207,14 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
             UpdateDIDAction.AddInternalKey(InternalPublicKey("master0", InternalKeyPurpose.Master, publicKeyData)),
             UpdateDIDAction.RemoveKey("key0"),
             UpdateDIDAction.AddService(
-              Service("service0", ServiceType.MediatorService, Seq(URI.create("http://example.com")))
+              Service("service0", ServiceType.LinkedDomains, Seq(URI.create("http://example.com")))
             ),
             UpdateDIDAction.RemoveService("service0"),
-            UpdateDIDAction.UpdateService("service0", Some(ServiceType.MediatorService), Nil),
+            UpdateDIDAction.UpdateService("service0", Some(ServiceType.LinkedDomains), Nil),
             UpdateDIDAction.UpdateService("service0", None, Seq(URI.create("http://example.com"))),
             UpdateDIDAction.UpdateService(
               "service0",
-              Some(ServiceType.MediatorService),
+              Some(ServiceType.LinkedDomains),
               Seq(URI.create("http://example.com"))
             )
           )
@@ -251,7 +251,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
           UpdateDIDAction.AddService(
             Service(
               id = s"service$i",
-              `type` = ServiceType.MediatorService,
+              `type` = ServiceType.LinkedDomains,
               serviceEndpoint = Seq(URI.create("http://example.com"))
             )
           )
@@ -260,7 +260,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         val updateServiceActions = (1 to 10).map(i =>
           UpdateDIDAction.UpdateService(
             s"update$i",
-            Some(ServiceType.MediatorService),
+            Some(ServiceType.LinkedDomains),
             Seq(URI.create("http://example.com"))
           )
         )
@@ -287,7 +287,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         val action1 = UpdateDIDAction.AddService(
           Service(
             id = "service 1",
-            `type` = ServiceType.MediatorService,
+            `type` = ServiceType.LinkedDomains,
             serviceEndpoint = Seq(URI.create("http://example.com"))
           )
         )
@@ -311,7 +311,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
       },
       test("reject UpdateOperation when action AddService serviceEndpoint is empty") {
         val op = updatePrismDIDOperation(
-          Seq(UpdateDIDAction.AddService(Service("service-1", ServiceType.MediatorService, Nil)))
+          Seq(UpdateDIDAction.AddService(Service("service-1", ServiceType.LinkedDomains, Nil)))
         )
         assert(DIDOperationValidator(Config(50, 50)).validate(op))(
           invalidArgumentContainsString("service must not have empty serviceEndpoint")
@@ -321,7 +321,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         val op = updatePrismDIDOperation(
           Seq(
             UpdateDIDAction.AddService(
-              Service("service-1", ServiceType.MediatorService, Seq(URI.create("http://example.com/login/../login")))
+              Service("service-1", ServiceType.LinkedDomains, Seq(URI.create("http://example.com/login/../login")))
             )
           )
         )
