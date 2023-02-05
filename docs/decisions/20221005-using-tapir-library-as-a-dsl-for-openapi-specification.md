@@ -1,9 +1,9 @@
 # Using tapir library as a DSL for OpenAPI specification
 
-- Status: [ accepted ] <!-- optional -->
-- Deciders: [ Yurii Shynbuiev, David Poltorak, Benjamin Voiturier, Ilya Peresadin, Bart Suichies ] <!-- optional -->
-- Date: [2022-10-05] <!-- optional. To customize the ordering without relying on Git creation dates and filenames -->
-- Tags: [ OpenAPI, DLS, Tapir, code generation, REST API] <!-- optional -->
+- Status: accepted
+- Deciders: Yurii Shynbuiev, David Poltorak, Benjamin Voiturier, Ilya Peresadin, Bart Suichies
+- Date: [2022-10-05]
+- Tags: OpenAPI, DSL, Tapir, code-generation, RESTAPI
 
 Related ADR/AIP: [Introduce REST HTTP for existing Node services](https://input-output.atlassian.net/wiki/spaces/AV2/pages/3454500948/AIP+-+001)
 

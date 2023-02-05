@@ -15,7 +15,8 @@ class ConnectionRepositoryInMemory(storeRef: Ref[Map[UUID, ConnectionRecord]]) e
   override def updateWithConnectionResponse(
       recordId: UUID,
       response: ConnectionResponse,
-      state: ProtocolState
+      state: ProtocolState,
+      maxRetries: Int,
   ): Task[Int] = {
     for {
       maybeRecord <- getConnectionRecord(recordId)
@@ -28,7 +29,9 @@ class ConnectionRepositoryInMemory(storeRef: Ref[Map[UUID, ConnectionRecord]]) e
                 record.copy(
                   updatedAt = Some(Instant.now),
                   connectionResponse = Some(response),
-                  protocolState = state
+                  protocolState = state,
+                  metaRetries = maxRetries,
+                  metaLastFailure = None,
                 )
               )
             )
@@ -38,16 +41,30 @@ class ConnectionRepositoryInMemory(storeRef: Ref[Map[UUID, ConnectionRecord]]) e
     } yield count
   }
 
-  override def updateConnectionProtocolState(recordId: UUID, from: ProtocolState, to: ProtocolState): Task[Int] = {
+  override def updateConnectionProtocolState(
+      recordId: UUID,
+      from: ProtocolState,
+      to: ProtocolState,
+      maxRetries: Int
+  ): Task[Int] = {
     for {
       store <- storeRef.get
       maybeRecord = store
-          .find((uuid, record) => uuid == recordId && record.protocolState == from)
-          .map(_._2)
+        .find((uuid, record) => uuid == recordId && record.protocolState == from)
+        .map(_._2)
       count <- maybeRecord
         .map(record =>
           for {
-            _ <- storeRef.update(r => r.updated(recordId, record.copy(protocolState = to)))
+            _ <- storeRef.update(r =>
+              r.updated(
+                recordId,
+                record.copy(
+                  protocolState = to,
+                  metaRetries = maxRetries,
+                  metaLastFailure = None,
+                )
+              )
+            )
           } yield 1
         )
         .getOrElse(ZIO.succeed(0))
@@ -70,7 +87,8 @@ class ConnectionRepositoryInMemory(storeRef: Ref[Map[UUID, ConnectionRecord]]) e
   override def updateWithConnectionRequest(
       recordId: UUID,
       request: ConnectionRequest,
-      state: ProtocolState
+      state: ProtocolState,
+      maxRetries: Int,
   ): Task[Int] = {
     for {
       maybeRecord <- getConnectionRecord(recordId)
@@ -83,15 +101,39 @@ class ConnectionRepositoryInMemory(storeRef: Ref[Map[UUID, ConnectionRecord]]) e
                 record.copy(
                   updatedAt = Some(Instant.now),
                   connectionRequest = Some(request),
-                  protocolState = state
+                  protocolState = state,
+                  metaRetries = maxRetries,
+                  metaLastFailure = None,
                 )
               )
             )
           } yield 1
         )
-        .getOrElse(ZIO.succeed(1))
+        .getOrElse(ZIO.succeed(0))
     } yield count
   }
+
+  def updateAfterFail(
+      recordId: UUID,
+      failReason: Option[String],
+  ): Task[Int] = for {
+    maybeRecord <- getConnectionRecord(recordId)
+    count <- maybeRecord
+      .map(record =>
+        for {
+          _ <- storeRef.update(r =>
+            r.updated(
+              recordId,
+              record.copy(
+                metaRetries = record.metaRetries - 1,
+                metaLastFailure = failReason,
+              )
+            )
+          )
+        } yield 1
+      )
+      .getOrElse(ZIO.succeed(0))
+  } yield count
 
   override def getConnectionRecordByThreadId(thid: UUID): Task[Option[ConnectionRecord]] = {
     for {
