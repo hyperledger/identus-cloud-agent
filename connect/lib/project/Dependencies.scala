@@ -2,7 +2,7 @@ import sbt._
 
 object Dependencies {
   object Versions {
-    val zio = "2.0.4"
+    val zio = "2.0.6"
     val doobie = "1.0.0-RC2"
     val zioCatsInterop = "3.3.0"
     val iris = "0.1.0"
