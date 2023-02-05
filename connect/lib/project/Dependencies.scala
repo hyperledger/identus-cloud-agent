@@ -6,7 +6,7 @@ object Dependencies {
     val doobie = "1.0.0-RC2"
     val zioCatsInterop = "23.0.0.1"
     val iris = "0.1.0"
-    val mercury = "0.16.0"
+    val mercury = "0.17.0"
     val flyway = "9.8.3"
     val shared = "0.2.0"
     val testContainersScalaPostgresql = "0.40.12"
