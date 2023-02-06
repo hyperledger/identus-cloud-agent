@@ -232,7 +232,7 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
             )
             _ <- inviterSvc.markConnectionResponseSent(inviterRecord.id)
             maybeReceivedResponseConnectionRecord <- inviteeSvc.receiveConnectionResponse(
-              ConnectionResponse.readFromMessage(connectionResponseMessage)
+              ConnectionResponse.fromMessage(connectionResponseMessage).toOption.get
             )
             allInviteeRecords <- inviteeSvc.getConnectionRecords()
           } yield {

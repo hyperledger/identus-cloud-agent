@@ -137,7 +137,7 @@ private class ConnectionServiceImpl(
       request: ConnectionRequest
   ): IO[ConnectionServiceError, Option[ConnectionRecord]] =
     for {
-      record <- getRecordFromThreadIdAndState(request.thid, ProtocolState.InvitationGenerated)
+      record <- getRecordFromThreadIdAndState(request.thid.orElse(request.pthid), ProtocolState.InvitationGenerated)
       _ <- connectionRepository
         .updateWithConnectionRequest(record.id, request, ProtocolState.ConnectionRequestReceived, maxRetries)
         .flatMap {
@@ -182,7 +182,7 @@ private class ConnectionServiceImpl(
       response: ConnectionResponse
   ): IO[ConnectionServiceError, Option[ConnectionRecord]] =
     for {
-      record <- getRecordFromThreadIdAndState(response.thid, ProtocolState.ConnectionRequestSent)
+      record <- getRecordFromThreadIdAndState(response.thid.orElse(response.pthid), ProtocolState.ConnectionRequestSent)
       _ <- connectionRepository
         .updateWithConnectionResponse(record.id, response, ProtocolState.ConnectionResponseReceived, maxRetries)
         .flatMap {
@@ -233,7 +233,7 @@ private class ConnectionServiceImpl(
   }
 
   private[this] def getRecordFromThreadIdAndState(
-      thid: Option[String],
+      thid: Option[String], // TODO this should not be optional
       state: ProtocolState
   ): IO[ConnectionServiceError, ConnectionRecord] = {
     for {
