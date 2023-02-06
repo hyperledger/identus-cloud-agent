@@ -69,7 +69,7 @@ paths:
       description: List all DIDs stored in PrismAgent's wallet
       responses:
         "200":
-          description: List managed DIDs
+          description: List PrismAgent managed DIDs
           content:
             application/json:
               schema:
@@ -138,6 +138,9 @@ paths:
       summary: Update DID in PrismAgent's wallet and post update operation to blockchain
       description: |
         Update DID in PrismAgent's wallet and post update operation to blockchain.
+        This endpoint updates the DID document from last confirmed operation.
+        Submitting multiple update operations without waiting for confirmation will result in
+        some operation being rejected as only one operation can be appended from last confirmed operation.
       requestBody:
         required: true
         content:
