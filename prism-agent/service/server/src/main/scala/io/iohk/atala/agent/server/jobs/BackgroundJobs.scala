@@ -20,8 +20,6 @@ import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.resolvers.UniversalDidResolver
 import java.io.IOException
 import io.iohk.atala.pollux.vc.jwt._
-import zhttp.service._
-import zhttp.http._
 import io.iohk.atala.pollux.vc.jwt.W3CCredential
 import io.iohk.atala.pollux.core.model.PresentationRecord
 import io.iohk.atala.pollux.core.service.PresentationService
