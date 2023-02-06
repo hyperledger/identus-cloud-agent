@@ -13,7 +13,7 @@
     <logger name="io.getquill" level="OFF"/>
     <logger name="com.zaxxer.hikari" level="OFF"/>
 
-    <root level="INFO">
+    <root level="WARN">
         <appender-ref ref="ASYNCSTDOUT"/>
     </root>
 

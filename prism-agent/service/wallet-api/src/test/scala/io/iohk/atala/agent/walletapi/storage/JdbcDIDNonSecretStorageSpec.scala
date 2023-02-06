@@ -8,7 +8,7 @@ import zio.test.*
 object JdbcDIDNonSecretStorageSpec extends ZIOSpecDefault, PostgresTestContainerSupport {
 
   override def spec =
-    suite("JdbcDIDSecretStorageSpec")(sample).provideSomeLayer(
+    suite("JdbcDIDNonSecretStorageSpec")(sample).provideSomeLayer(
       pgContainerLayer >+> transactorLayer >+> JdbcDIDNonSecretStorage.layer
     )
 
@@ -17,6 +17,6 @@ object JdbcDIDNonSecretStorageSpec extends ZIOSpecDefault, PostgresTestContainer
       storage <- ZIO.service[DIDNonSecretStorage]
       _ <- storage.listManagedDID.debug("listState")
     } yield assertCompletes
-  } @@ TestAspect.tag("dev") @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
+  } @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
 
 }
