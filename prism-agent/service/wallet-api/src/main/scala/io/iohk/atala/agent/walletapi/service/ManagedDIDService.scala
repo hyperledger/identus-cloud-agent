@@ -141,7 +141,9 @@ final class ManagedDIDService private[walletapi] (
       (createOperation, secret) = generated
       longFormDID = PrismDID.buildLongFormFromOperation(createOperation)
       did = longFormDID.asCanonical
-      _ <- ZIO.fromEither(didOpValidator.validate(createOperation)).mapError(CreateManagedDIDError.OperationError.apply)
+      _ <- ZIO
+        .fromEither(didOpValidator.validate(createOperation))
+        .mapError(CreateManagedDIDError.InvalidOperation.apply)
       _ <- nonSecretStorage
         .getManagedDIDState(did)
         .mapError(CreateManagedDIDError.WalletStorageError.apply)
@@ -208,7 +210,9 @@ final class ManagedDIDService private[walletapi] (
       previousOperationHash <- getPreviousOperationHash[UpdateManagedDIDError](did, didState.createOperation)
       generated <- generateUpdateOperation(did, previousOperationHash, actions)
       (updateOperation, secret) = generated
-      _ <- ZIO.fromEither(didOpValidator.validate(updateOperation)).mapError(UpdateManagedDIDError.OperationError.apply)
+      _ <- ZIO
+        .fromEither(didOpValidator.validate(updateOperation))
+        .mapError(UpdateManagedDIDError.InvalidOperation.apply)
       outcome <- doUpdate(updateOperation, secret)
     } yield outcome
   }
@@ -237,7 +241,7 @@ final class ManagedDIDService private[walletapi] (
       deactivateOperation = PrismDIDOperation.Deactivate(did, ArraySeq.from(previousOperationHash))
       _ <- ZIO
         .fromEither(didOpValidator.validate(deactivateOperation))
-        .mapError(UpdateManagedDIDError.OperationError.apply)
+        .mapError(UpdateManagedDIDError.InvalidOperation.apply)
       outcome <- doDeactivate(deactivateOperation)
     } yield outcome
   }
