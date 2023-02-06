@@ -19,10 +19,9 @@ import cats.Functor
 import cats.effect.std.Dispatcher
 import cats.effect.{Async, Resource}
 import cats.syntax.functor.*
-import io.iohk.atala.pollux.sql.model.VerifiableCredentialSchema as VCS
 import io.iohk.atala.pollux.service.SchemaRegistryService
 
-import io.getquill.*
+//import io.getquill.*
 import io.getquill.idiom.*
 
 import java.util.UUID
@@ -30,8 +29,6 @@ import scala.util.Try
 
 class JdbcSchemaRegistryService(tx: Transactor[Task]) extends SchemaRegistryService {
 
-  import io.iohk.atala.pollux.sql.model.VerifiableCredentialSchema.sql
-  import io.iohk.atala.pollux.sql.model.VerifiableCredentialSchema.sql.*
   import JdbcSchemaRegistryService.given_Conversion_VerifiableCredentialSchema_VCS
   import JdbcSchemaRegistryService.given_Conversion_VCS_VerifiableCredentialSchema
   override def createSchema(in: VerifiableCredentialSchemaInput): Task[VerifiableCredentialSchema] = {
