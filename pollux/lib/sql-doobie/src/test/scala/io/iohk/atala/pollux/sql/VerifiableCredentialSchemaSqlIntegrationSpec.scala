@@ -16,7 +16,6 @@ import io.getquill.idiom.*
 import io.getquill.util.Messages.{QuatTrace, TraceType, traceQuats}
 import io.iohk.atala.pollux.sql.model.VerifiableCredentialSchema
 import io.iohk.atala.pollux.sql.model.VerifiableCredentialSchema.sql
-import io.iohk.atala.pollux.sql.model.VerifiableCredentialSchema.sql.*
 import io.iohk.atala.test.container.MigrationAspects.*
 import io.iohk.atala.test.container.PostgresTestContainer.*
 import zio.*
@@ -250,8 +249,6 @@ case class LookupDataSample(
     expected: List[VerifiableCredentialSchema],
     expectedCount: Long
 ) {
-
-  import model.VerifiableCredentialSchema.sql
 
   lazy val lookupQuery =
     sql.lookup(
