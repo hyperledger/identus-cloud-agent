@@ -1,3 +1,10 @@
+# [prism-agent-v0.34.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.33.0...prism-agent-v0.34.0) (2023-02-06)
+
+
+### Features
+
+* **prism-agent:** upgrade castor and pollux and align OAS to the DID spec ([#342](https://github.com/input-output-hk/atala-prism-building-blocks/issues/342)) ([b8643a8](https://github.com/input-output-hk/atala-prism-building-blocks/commit/b8643a81710300082bfaceb08f906d364869d405))
+
 # [prism-agent-v0.33.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.32.0...prism-agent-v0.33.0) (2023-02-02)
 
 

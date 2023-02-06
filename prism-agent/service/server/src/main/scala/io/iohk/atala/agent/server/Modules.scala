@@ -91,7 +91,6 @@ import io.iohk.atala.agent.walletapi.sql.{JdbcDIDNonSecretStorage, JdbcDIDSecret
 import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
 import io.iohk.atala.pollux.vc.jwt.DidResolver as JwtDidResolver
-import io.iohk.atala.castor.core.model.error.DIDOperationError.TooManyDidServiceAccess
 import io.iohk.atala.pollux.vc.jwt.PrismDidResolver
 import io.iohk.atala.mercury.DidAgent
 

@@ -23,4 +23,6 @@ object ConnectionRepositoryInMemorySpec extends ZIOSpecDefault {
       ConnectionRepositoryInMemory.layer
     )
 
+  // FIXME not good enough I want to ttest the SQL queries!
+
 }

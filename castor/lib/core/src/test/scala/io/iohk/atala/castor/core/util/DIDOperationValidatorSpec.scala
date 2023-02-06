@@ -16,7 +16,7 @@ import io.iohk.atala.castor.core.model.did.{
   UpdateDIDAction,
   VerificationRelationship
 }
-import io.iohk.atala.castor.core.model.error.DIDOperationError
+import io.iohk.atala.castor.core.model.error.OperationValidationError
 import io.iohk.atala.castor.core.util.DIDOperationValidator.Config
 import zio.*
 import zio.test.*
@@ -32,6 +32,10 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
     crv = EllipticCurve.SECP256K1,
     x = Base64UrlString.fromStringUnsafe("00"),
     y = Base64UrlString.fromStringUnsafe("00")
+  )
+
+  private def invalidArgumentContainsString(text: String): Assertion[Either[Any, Any]] = isLeft(
+    isSubtype[OperationValidationError.InvalidArgument](hasField("msg", _.msg, containsString(text)))
   )
 
   private val createOperationValidationSpec = {
@@ -70,7 +74,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         )
         val op = createPrismDIDOperation(publicKeys = publicKeys, internalKeys = internalKeys)
         assert(DIDOperationValidator(Config(15, 15)).validate(op))(
-          isLeft(isSubtype[DIDOperationError.TooManyDidPublicKeyAccess](anything))
+          isLeft(isSubtype[OperationValidationError.TooManyDidPublicKeyAccess](anything))
         )
       },
       test("reject CreateOperation on duplicated DID public key id") {
@@ -90,41 +94,33 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         )
         val op = createPrismDIDOperation(publicKeys = publicKeys, internalKeys = internalKeys)
         assert(DIDOperationValidator(Config(50, 50)).validate(op))(
-          isLeft(
-            isSubtype[DIDOperationError.InvalidArgument](
-              hasField("msg", _.msg, containsString("id for public-keys is not unique"))
-            )
-          )
+          invalidArgumentContainsString("id for public-keys is not unique")
         )
       },
       test("reject CreateOperation on too many service access") {
         val services = (1 to 20).map(i =>
           Service(
             id = s"service$i",
-            `type` = ServiceType.MediatorService,
+            `type` = ServiceType.LinkedDomains,
             serviceEndpoint = Seq(URI.create("http://example.com"))
           )
         )
         val op = createPrismDIDOperation(services = services)
         assert(DIDOperationValidator(Config(15, 15)).validate(op))(
-          isLeft(isSubtype[DIDOperationError.TooManyDidServiceAccess](anything))
+          isLeft(isSubtype[OperationValidationError.TooManyDidServiceAccess](anything))
         )
       },
       test("reject CreateOperation on duplicated service id") {
         val services = (1 to 3).map(i =>
           Service(
             id = s"service0",
-            `type` = ServiceType.MediatorService,
+            `type` = ServiceType.LinkedDomains,
             serviceEndpoint = Seq(URI.create("http://example.com"))
           )
         )
         val op = createPrismDIDOperation(services = services)
         assert(DIDOperationValidator(Config(15, 15)).validate(op))(
-          isLeft(
-            isSubtype[DIDOperationError.InvalidArgument](
-              hasField("msg", _.msg, containsString("id for services is not unique"))
-            )
-          )
+          invalidArgumentContainsString("id for services is not unique")
         )
       },
       test("reject CreateOperation on invalid key-id") {
@@ -137,38 +133,56 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         )
         val op = createPrismDIDOperation(publicKeys = publicKeys)
         assert(DIDOperationValidator(Config(50, 50)).validate(op))(
-          isLeft(
-            isSubtype[DIDOperationError.InvalidArgument](
-              hasField("msg", _.msg, containsString("public key id is invalid: [key 1, key 2]"))
-            )
-          )
+          invalidArgumentContainsString("public key id is invalid: [key 1, key 2]")
         )
       },
       test("reject CreateOperation on invalid service-id") {
         val services = (1 to 2).map(i =>
           Service(
             id = s"service $i",
-            `type` = ServiceType.MediatorService,
+            `type` = ServiceType.LinkedDomains,
             serviceEndpoint = Seq(URI.create("http://example.com"))
           )
         )
         val op = createPrismDIDOperation(services = services)
         assert(DIDOperationValidator(Config(50, 50)).validate(op))(
-          isLeft(
-            isSubtype[DIDOperationError.InvalidArgument](
-              hasField("msg", _.msg, containsString("service id is invalid: [service 1, service 2]"))
+          invalidArgumentContainsString("service id is invalid: [service 1, service 2]")
+        )
+      },
+      test("reject CreateOperation when master key does not exist") {
+        val op = createPrismDIDOperation(internalKeys = Nil)
+        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
+          invalidArgumentContainsString("operation must contain at least 1 master key")
+        )
+      },
+      test("reject CreateOperation when service endpoint is empty") {
+        val op = createPrismDIDOperation(services =
+          Seq(
+            Service(
+              id = "service-0",
+              `type` = ServiceType.LinkedDomains,
+              serviceEndpoint = Nil
             )
           )
         )
-      },
-      test("reject CreateOperation when master does not exist") {
-        val op = createPrismDIDOperation(internalKeys = Nil)
         assert(DIDOperationValidator(Config(50, 50)).validate(op))(
-          isLeft(
-            isSubtype[DIDOperationError.InvalidArgument](
-              hasField("msg", _.msg, containsString("operation must contain at least 1 master key"))
+          invalidArgumentContainsString("service must not have empty serviceEndpoint")
+        )
+      },
+      test("reject CreateOperation when service URL is not normalized") {
+        val op = createPrismDIDOperation(services =
+          Seq(
+            Service(
+              id = "service-0",
+              `type` = ServiceType.LinkedDomains,
+              serviceEndpoint = Seq(
+                URI.create("http://example.com/login/../login")
+              )
             )
           )
+        )
+        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
+          invalidArgumentContainsString("serviceEndpoint URIs must be normalized")
         )
       }
     )
@@ -176,9 +190,14 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
 
   private val updateOperationValidationSpec = {
     def updatePrismDIDOperation(
-        actions: Seq[UpdateDIDAction] = Nil
+        actions: Seq[UpdateDIDAction] = Nil,
+        previousOperationHash: ArraySeq[Byte] = ArraySeq.fill(32)(0)
     ) =
-      PrismDIDOperation.Update(did = PrismDID.buildCanonicalFromSuffix("0" * 64).toOption.get, ArraySeq.empty, actions)
+      PrismDIDOperation.Update(
+        PrismDID.buildCanonicalFromSuffix("0" * 64).toOption.get,
+        previousOperationHash,
+        actions
+      )
 
     suite("UpdateOperation validation")(
       test("accept valid UpdateOperation") {
@@ -188,14 +207,14 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
             UpdateDIDAction.AddInternalKey(InternalPublicKey("master0", InternalKeyPurpose.Master, publicKeyData)),
             UpdateDIDAction.RemoveKey("key0"),
             UpdateDIDAction.AddService(
-              Service("service0", ServiceType.MediatorService, Seq(URI.create("http://example.com")))
+              Service("service0", ServiceType.LinkedDomains, Seq(URI.create("http://example.com")))
             ),
             UpdateDIDAction.RemoveService("service0"),
-            UpdateDIDAction.UpdateService("service0", Some(ServiceType.MediatorService), Nil),
+            UpdateDIDAction.UpdateService("service0", Some(ServiceType.LinkedDomains), Nil),
             UpdateDIDAction.UpdateService("service0", None, Seq(URI.create("http://example.com"))),
             UpdateDIDAction.UpdateService(
               "service0",
-              Some(ServiceType.MediatorService),
+              Some(ServiceType.LinkedDomains),
               Seq(URI.create("http://example.com"))
             )
           )
@@ -224,7 +243,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         val removeKeyActions = (1 to 10).map(i => UpdateDIDAction.RemoveKey(s"remove$i"))
         val op = updatePrismDIDOperation(addKeyActions ++ addInternalKeyActions ++ removeKeyActions)
         assert(DIDOperationValidator(Config(25, 25)).validate(op))(
-          isLeft(isSubtype[DIDOperationError.TooManyDidPublicKeyAccess](anything))
+          isLeft(isSubtype[OperationValidationError.TooManyDidPublicKeyAccess](anything))
         )
       },
       test("reject UpdateOperation on too many service access") {
@@ -232,7 +251,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
           UpdateDIDAction.AddService(
             Service(
               id = s"service$i",
-              `type` = ServiceType.MediatorService,
+              `type` = ServiceType.LinkedDomains,
               serviceEndpoint = Seq(URI.create("http://example.com"))
             )
           )
@@ -241,13 +260,13 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         val updateServiceActions = (1 to 10).map(i =>
           UpdateDIDAction.UpdateService(
             s"update$i",
-            Some(ServiceType.MediatorService),
+            Some(ServiceType.LinkedDomains),
             Seq(URI.create("http://example.com"))
           )
         )
         val op = updatePrismDIDOperation(addServiceActions ++ removeServiceActions ++ updateServiceActions)
         assert(DIDOperationValidator(Config(25, 25)).validate(op))(
-          isLeft(isSubtype[DIDOperationError.TooManyDidServiceAccess](anything))
+          isLeft(isSubtype[OperationValidationError.TooManyDidServiceAccess](anything))
         )
       },
       test("reject UpdateOperation on invalid key-id") {
@@ -261,49 +280,67 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         val action2 = UpdateDIDAction.RemoveKey(id = "key 2")
         val op = updatePrismDIDOperation(Seq(action1, action2))
         assert(DIDOperationValidator(Config(50, 50)).validate(op))(
-          isLeft(
-            isSubtype[DIDOperationError.InvalidArgument](
-              hasField("msg", _.msg, containsString("public key id is invalid: [key 1, key 2]"))
-            )
-          )
+          invalidArgumentContainsString("public key id is invalid: [key 1, key 2]")
         )
       },
       test("reject UpdateOperation on invalid service-id") {
         val action1 = UpdateDIDAction.AddService(
           Service(
             id = "service 1",
-            `type` = ServiceType.MediatorService,
+            `type` = ServiceType.LinkedDomains,
             serviceEndpoint = Seq(URI.create("http://example.com"))
           )
         )
         val action2 = UpdateDIDAction.RemoveService(id = "service 2")
         val op = updatePrismDIDOperation(Seq(action1, action2))
         assert(DIDOperationValidator(Config(50, 50)).validate(op))(
-          isLeft(
-            isSubtype[DIDOperationError.InvalidArgument](
-              hasField("msg", _.msg, containsString("service id is invalid: [service 1, service 2]"))
-            )
-          )
+          invalidArgumentContainsString("service id is invalid: [service 1, service 2]")
+        )
+      },
+      test("reject UpdateOperation on invalid previousOperationHash") {
+        val op = updatePrismDIDOperation(previousOperationHash = ArraySeq.empty)
+        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
+          invalidArgumentContainsString("previousOperationHash must have a size of")
         )
       },
       test("reject UpdateOperation on empty update action") {
         val op = updatePrismDIDOperation(Nil)
         assert(DIDOperationValidator(Config(50, 50)).validate(op))(
-          isLeft(
-            isSubtype[DIDOperationError.InvalidArgument](
-              hasField("msg", _.msg, containsString("operation must contain at least 1 update action"))
+          invalidArgumentContainsString("operation must contain at least 1 update action")
+        )
+      },
+      test("reject UpdateOperation when action AddService serviceEndpoint is empty") {
+        val op = updatePrismDIDOperation(
+          Seq(UpdateDIDAction.AddService(Service("service-1", ServiceType.LinkedDomains, Nil)))
+        )
+        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
+          invalidArgumentContainsString("service must not have empty serviceEndpoint")
+        )
+      },
+      test("reject UpdateOperation when action AddService serviceEndpoint is not normalized") {
+        val op = updatePrismDIDOperation(
+          Seq(
+            UpdateDIDAction.AddService(
+              Service("service-1", ServiceType.LinkedDomains, Seq(URI.create("http://example.com/login/../login")))
             )
           )
         )
-      },
-      test("reject UpdateOperation on UpdateService action empty") {
-        val op = updatePrismDIDOperation(Seq(UpdateDIDAction.UpdateService("service0", None, Nil)))
         assert(DIDOperationValidator(Config(50, 50)).validate(op))(
-          isLeft(
-            isSubtype[DIDOperationError.InvalidArgument](
-              hasField("msg", _.msg, containsString("must not have both 'type' and 'serviceEndpoints' empty"))
-            )
-          )
+          invalidArgumentContainsString("serviceEndpoint URIs must be normalized")
+        )
+      },
+      test("reject updateOperation when action UpdateService serviceEndpoint is not normalized") {
+        val op = updatePrismDIDOperation(
+          Seq(UpdateDIDAction.UpdateService("service-1", None, Seq(URI.create("http://example.com/login/../login"))))
+        )
+        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
+          invalidArgumentContainsString("serviceEndpoint URIs must be normalized")
+        )
+      },
+      test("reject UpdateOperation when action UpdateService have both type and serviceEndpoint empty") {
+        val op = updatePrismDIDOperation(Seq(UpdateDIDAction.UpdateService("service-1", None, Nil)))
+        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
+          invalidArgumentContainsString("must not have both 'type' and 'serviceEndpoints' empty")
         )
       }
     )

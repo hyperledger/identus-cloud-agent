@@ -56,7 +56,8 @@ class JdbcConnectionRepository(xa: Transactor[Task]) extends ConnectionRepositor
         |   label,
         |   role,
         |   protocol_state,
-        |   invitation
+        |   invitation,
+        |   meta_retries
         | ) values (
         |   ${record.id},
         |   ${record.createdAt},
@@ -65,7 +66,8 @@ class JdbcConnectionRepository(xa: Transactor[Task]) extends ConnectionRepositor
         |   ${record.label},
         |   ${record.role},
         |   ${record.protocolState},
-        |   ${record.invitation}
+        |   ${record.invitation},
+        |   ${record.metaRetries}
         | )
         """.stripMargin.update
 
@@ -89,7 +91,9 @@ class JdbcConnectionRepository(xa: Transactor[Task]) extends ConnectionRepositor
         |   protocol_state,
         |   invitation,
         |   connection_request,
-        |   connection_response
+        |   connection_response,
+        |   meta_retries,
+        |   meta_last_failure
         | FROM public.connection_records
         """.stripMargin
       .query[ConnectionRecord]
@@ -141,7 +145,9 @@ class JdbcConnectionRepository(xa: Transactor[Task]) extends ConnectionRepositor
         |   protocol_state,
         |   invitation,
         |   connection_request,
-        |   connection_response
+        |   connection_response,
+        |   meta_retries,
+        |   meta_last_failure
         | FROM public.connection_records
         | WHERE id = $recordId
         """.stripMargin
@@ -175,7 +181,9 @@ class JdbcConnectionRepository(xa: Transactor[Task]) extends ConnectionRepositor
         |   protocol_state,
         |   invitation,
         |   connection_request,
-        |   connection_response
+        |   connection_response,
+        |   meta_retries,
+        |   meta_last_failure
         | FROM public.connection_records
         | WHERE thid = $thid
         """.stripMargin
@@ -189,13 +197,16 @@ class JdbcConnectionRepository(xa: Transactor[Task]) extends ConnectionRepositor
   override def updateConnectionProtocolState(
       id: UUID,
       from: ConnectionRecord.ProtocolState,
-      to: ConnectionRecord.ProtocolState
+      to: ConnectionRecord.ProtocolState,
+      maxRetries: Int,
   ): Task[Int] = {
     val cxnIO = sql"""
         | UPDATE public.connection_records
         | SET
         |   protocol_state = $to,
-        |   updated_at = ${Instant.now}
+        |   updated_at = ${Instant.now},
+        |   meta_retries = ${maxRetries},
+        |   meta_last_failure = null
         | WHERE
         |   id = $id
         |   AND protocol_state = $from
@@ -208,14 +219,17 @@ class JdbcConnectionRepository(xa: Transactor[Task]) extends ConnectionRepositor
   override def updateWithConnectionRequest(
       recordId: UUID,
       request: ConnectionRequest,
-      state: ProtocolState
+      state: ProtocolState,
+      maxRetries: Int,
   ): Task[Int] = {
     val cxnIO = sql"""
         | UPDATE public.connection_records
         | SET
         |   connection_request = $request,
         |   protocol_state = $state,
-        |   updated_at = ${Instant.now}
+        |   updated_at = ${Instant.now},
+        |   meta_retries = ${maxRetries},
+        |   meta_last_failure = null
         | WHERE
         |   id = $recordId
         """.stripMargin.update
@@ -227,20 +241,38 @@ class JdbcConnectionRepository(xa: Transactor[Task]) extends ConnectionRepositor
   override def updateWithConnectionResponse(
       recordId: UUID,
       response: ConnectionResponse,
-      state: ProtocolState
+      state: ProtocolState,
+      maxRetries: Int,
   ): Task[Int] = {
     val cxnIO = sql"""
         | UPDATE public.connection_records
         | SET
         |   connection_response = $response,
         |   protocol_state = $state,
-        |   updated_at = ${Instant.now}
+        |   updated_at = ${Instant.now},
+        |   meta_retries = ${maxRetries},
+        |   meta_last_failure = null
         | WHERE
         |   id = $recordId
         """.stripMargin.update
 
     cxnIO.run
       .transact(xa)
+  }
+
+  def updateAfterFail(
+      recordId: UUID,
+      failReason: Option[String],
+  ): Task[Int] = {
+    val cxnIO = sql"""
+        | UPDATE public.connection_records
+        | SET
+        |   meta_retries = meta_retries - 1 ,
+        |   meta_last_failure = ${failReason}
+        | WHERE
+        |   id = $recordId
+        """.stripMargin.update
+    cxnIO.run.transact(xa)
   }
 
 }

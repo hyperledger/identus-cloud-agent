@@ -1,3 +1,10 @@
+# [connect-v0.8.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/connect-v0.7.0...connect-v0.8.0) (2023-02-03)
+
+
+### Features
+
+* **connect:** Add retries field for ATL-3202 ([#335](https://github.com/input-output-hk/atala-prism-building-blocks/issues/335)) ([7cbcebc](https://github.com/input-output-hk/atala-prism-building-blocks/commit/7cbcebc7c9229e1dac47b3f31b3d1d6621e739d3))
+
 # [connect-v0.7.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/connect-v0.6.0...connect-v0.7.0) (2023-02-01)
 
 
