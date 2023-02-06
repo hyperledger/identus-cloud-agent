@@ -30,11 +30,11 @@ jobs:
         id: parse-params
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "COMPONENT_TAG=${{ github.event.inputs.component-tag }}" >> $GITHUB_OUTPUT
-            echo "ENV=${{ github.event.inputs.env }}" >> $GITHUB_OUTPUT
+            echo "COMPONENT_TAG=${{ github.event.inputs.component-tag }}" >> "${GITHUB_OUTPUT}"
+            echo "ENV=${{ github.event.inputs.env }}" >> "${GITHUB_OUTPUT}"
           else
-            echo "COMPONENT_TAG=${{ inputs.component-tag }}" >> $GITHUB_OUTPUT
-            echo "ENV=${{ inputs.env }}" >> $GITHUB_OUTPUT
+            echo "COMPONENT_TAG=${{ inputs.component-tag }}" >> "${GITHUB_OUTPUT}"
+            echo "ENV=${{ inputs.env }}" >> "${GITHUB_OUTPUT}"
           fi
       - name: Trigger deployment
         uses: peter-evans/repository-dispatch@v2
