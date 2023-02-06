@@ -17,6 +17,6 @@ object JdbcDIDNonSecretStorageSpec extends ZIOSpecDefault, PostgresTestContainer
       storage <- ZIO.service[DIDNonSecretStorage]
       _ <- storage.listManagedDID.debug("listState")
     } yield assertCompletes
-  } @@ TestAspect.before(DBTestUtils.runMigrationPgContainer("public", "classpath:sql/agent"))
+  } @@ TestAspect.tag("dev") @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
 
 }

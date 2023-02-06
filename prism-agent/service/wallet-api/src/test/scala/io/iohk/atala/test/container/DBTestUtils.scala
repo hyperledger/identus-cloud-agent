@@ -7,6 +7,11 @@ import zio.*
 import zio.test.{TestAspect, TestAspectAtLeastR, TestAspectPoly}
 
 object DBTestUtils {
+  def runMigrationAgentDB: RIO[PostgreSQLContainer, MigrateResult] = runMigrationPgContainer(
+    "public",
+    "filesystem:../server/src/main/resources/sql/agent"
+  )
+
   def runMigrationPgContainer(schema: String, paths: String*): RIO[PostgreSQLContainer, MigrateResult] =
     for {
       pg <- ZIO.service[PostgreSQLContainer]
