@@ -23,9 +23,15 @@ final case class CastorConfig(database: DatabaseConfig)
 final case class PolluxConfig(
     database: DatabaseConfig,
     issueBgJobRecurrenceDelay: Duration,
-    presentationBgJobRecurrenceDelay: Duration
+    issueBgJobProcessingParallelism: Int,
+    presentationBgJobRecurrenceDelay: Duration,
+    presentationBgJobProcessingParallelism: Int,
 )
-final case class ConnectConfig(database: DatabaseConfig, connectBgJobRecurrenceDelay: Duration)
+final case class ConnectConfig(
+    database: DatabaseConfig,
+    connectBgJobRecurrenceDelay: Duration,
+    connectBgJobProcessingParallelism: Int
+)
 
 final case class PrismNodeConfig(service: GrpcServiceConfig)
 

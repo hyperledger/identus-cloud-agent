@@ -49,12 +49,14 @@ import io.circe.Json
 import io.circe.syntax._
 import io.iohk.atala.pollux.vc.jwt.JWT
 import io.iohk.atala.pollux.vc.jwt.{DidResolver => JwtDidResolver}
+import io.iohk.atala.agent.server.config.AppConfig
 
 object BackgroundJobs {
 
   val issueCredentialDidCommExchanges = {
     for {
       credentialService <- ZIO.service[CredentialService]
+      config <- ZIO.service[AppConfig]
       records <- credentialService
         .getIssueCredentialRecordsByStates(
           IssueCredentialRecord.ProtocolState.OfferPending,
@@ -64,12 +66,13 @@ object BackgroundJobs {
           IssueCredentialRecord.ProtocolState.CredentialGenerated
         )
         .mapError(err => Throwable(s"Error occurred while getting Issue Credential records: $err"))
-      _ <- ZIO.foreachPar(records)(performExchange)
+      _ <- ZIO.foreachPar(records)(performExchange).withParallelism(config.pollux.issueBgJobProcessingParallelism)
     } yield ()
   }
   val presentProofExchanges = {
     for {
       presentationService <- ZIO.service[PresentationService]
+      config <- ZIO.service[AppConfig]
       records <- presentationService
         .getPresentationRecordsByStates(
           PresentationRecord.ProtocolState.RequestPending,
@@ -78,7 +81,9 @@ object BackgroundJobs {
           PresentationRecord.ProtocolState.PresentationReceived
         )
         .mapError(err => Throwable(s"Error occurred while getting Presentation records: $err"))
-      _ <- ZIO.foreachPar(records)(performPresentation)
+      _ <- ZIO
+        .foreachPar(records)(performPresentation)
+        .withParallelism(config.pollux.presentationBgJobProcessingParallelism)
     } yield ()
   }
 
@@ -519,7 +524,9 @@ object BackgroundJobs {
 
   private[this] def performPublishCredentialsToDlt(credentialService: CredentialService) = {
     val res: ZIO[Any, CredentialServiceError, Unit] = for {
-      records <- credentialService.getIssueCredentialRecordsByStates(IssueCredentialRecord.ProtocolState.CredentialPending)
+      records <- credentialService.getIssueCredentialRecordsByStates(
+        IssueCredentialRecord.ProtocolState.CredentialPending
+      )
       // NOTE: the line below is a potentially slow operation, because <createCredentialPayloadFromRecord> makes a database SELECT call,
       // so calling this function n times will make n database SELECT calls, while it can be optimized to get
       // all data in one query, this function here has to be refactored as well. Consider doing this if this job is too slow

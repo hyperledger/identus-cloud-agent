@@ -18,19 +18,21 @@ import io.iohk.atala.resolvers.UniversalDidResolver
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError
 import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError.KeyNotFoundError
+import io.iohk.atala.agent.server.config.AppConfig
 
 object ConnectBackgroundJobs {
 
   val didCommExchanges = {
     for {
       connectionService <- ZIO.service[ConnectionService]
+      config <- ZIO.service[AppConfig]
       records <- connectionService
         .getConnectionRecordsByStates(
           ConnectionRecord.ProtocolState.ConnectionRequestPending,
           ConnectionRecord.ProtocolState.ConnectionResponsePending
         )
         .mapError(err => Throwable(s"Error occurred while getting connection records: $err"))
-      _ <- ZIO.foreachPar(records)(performExchange)
+      _ <- ZIO.foreachPar(records)(performExchange).withParallelism(config.connect.connectBgJobProcessingParallelism)
     } yield ()
   }
 
