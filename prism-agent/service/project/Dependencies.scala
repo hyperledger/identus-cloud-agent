@@ -10,7 +10,7 @@ object Dependencies {
     val akkaHttp = "10.2.9"
     val castor = "0.7.0"
     val pollux = "0.21.0"
-    val connect = "0.7.0"
+    val connect = "0.8.0"
     val bouncyCastle = "1.70"
     val logback = "1.4.5"
     val mercury = "0.16.0"
