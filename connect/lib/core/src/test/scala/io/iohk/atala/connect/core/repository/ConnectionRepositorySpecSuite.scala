@@ -116,12 +116,14 @@ object ConnectionRepositorySpecSuite {
         _ <- repo.updateConnectionProtocolState(
           aRecord.id,
           ProtocolState.InvitationGenerated,
-          ProtocolState.ConnectionRequestReceived
+          ProtocolState.ConnectionRequestReceived,
+          1
         )
         _ <- repo.updateConnectionProtocolState(
           cRecord.id,
           ProtocolState.InvitationGenerated,
-          ProtocolState.ConnectionResponsePending
+          ProtocolState.ConnectionResponsePending,
+          1
         )
         invitationGeneratedRecords <- repo.getConnectionRecordsByStates(ProtocolState.InvitationGenerated)
         otherRecords <- repo.getConnectionRecordsByStates(

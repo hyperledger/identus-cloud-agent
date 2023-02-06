@@ -121,7 +121,9 @@ class JdbcConnectionRepository(xa: Transactor[Task]) extends ConnectionRepositor
         |   protocol_state,
         |   invitation,
         |   connection_request,
-        |   connection_response
+        |   connection_response,
+        |   meta_retries,
+        |   meta_last_failure
         | FROM public.connection_records
         | WHERE $inClauseFragment
         | LIMIT 50
