@@ -37,22 +37,64 @@ object ConnectBackgroundJobs {
     import Role._
     import ProtocolState._
     val exchange = record match {
-      case ConnectionRecord(id, _, _, _, _, Invitee, ConnectionRequestPending, _, Some(request), _) =>
-        for {
+      case ConnectionRecord(
+            id,
+            _,
+            _,
+            _,
+            _,
+            Invitee,
+            ConnectionRequestPending,
+            _,
+            Some(request),
+            _,
+            metaRetries,
+            _
+          ) if metaRetries > 0 =>
+        val aux = for {
+
           didCommAgent <- buildDIDCommAgent(request.from)
           _ <- MessagingService.send(request.makeMessage).provideSomeLayer(didCommAgent)
           connectionService <- ZIO.service[ConnectionService]
           _ <- connectionService.markConnectionRequestSent(id)
         } yield ()
 
-      case ConnectionRecord(id, _, _, _, _, Inviter, ConnectionResponsePending, _, _, Some(response)) =>
-        for {
+        // aux // TODO decrete metaRetries if it has a error
+        aux
+
+      case ConnectionRecord(
+            id,
+            _,
+            _,
+            _,
+            _,
+            Inviter,
+            ConnectionResponsePending,
+            _,
+            _,
+            Some(response),
+            metaRetries,
+            _
+          ) if metaRetries > 0 =>
+        val aux = for {
           didCommAgent <- buildDIDCommAgent(response.from)
           _ <- MessagingService.send(response.makeMessage).provideSomeLayer(didCommAgent)
           connectionService <- ZIO.service[ConnectionService]
           _ <- connectionService.markConnectionResponseSent(id)
         } yield ()
 
+        aux.tapError(ex =>
+          for {
+            connectionService <- ZIO.service[ConnectionService]
+            _ <- connectionService
+              .reportProcessingFailure(id, None) // TODO ex get message
+          } yield ()
+        )
+      case e
+          if (e.protocolState == ConnectionRequestPending || e.protocolState == ConnectionResponsePending) && e.metaRetries == 0 =>
+        ZIO.logWarning( // TODO use logDebug
+          s"ConnectionRecord '${e.id}' has '${e.metaRetries}' retries and will NOT be processed"
+        )
       case _ => ZIO.unit
     }
 
