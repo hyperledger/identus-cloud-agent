@@ -153,10 +153,10 @@ class CredentialRepositoryInMemory(storeRef: Ref[Map[UUID, IssueCredentialRecord
     } yield count
   }
 
-  override def getIssueCredentialRecordsByState(state: ProtocolState): Task[Seq[IssueCredentialRecord]] = {
+  override def getIssueCredentialRecordsByStates(states: ProtocolState*): Task[Seq[IssueCredentialRecord]] = {
     for {
       store <- storeRef.get
-    } yield store.values.filter(rec => rec.protocolState == state).toSeq
+    } yield store.values.filter(rec => states.contains(rec.protocolState)).toSeq
   }
 
   override def getIssueCredentialRecordByThreadId(thid: UUID): Task[Option[IssueCredentialRecord]] = {

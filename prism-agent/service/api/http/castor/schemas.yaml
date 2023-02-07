@@ -21,6 +21,8 @@ components:
 
     DID:
       type: object
+      description: |
+        A core DID data model capable of being transformed into W3C compliant representation.
       required:
         - id
       properties:
@@ -37,19 +39,23 @@ components:
         authentication:
           type: array
           items:
-            $ref: "#/components/schemas/VerificationMethod"
+            $ref: "#/components/schemas/VerificationMethodOrRef"
         assertionMethod:
           type: array
           items:
-            $ref: "#/components/schemas/VerificationMethod"
+            $ref: "#/components/schemas/VerificationMethodOrRef"
         keyAgreement:
           type: array
           items:
-            $ref: "#/components/schemas/VerificationMethod"
+            $ref: "#/components/schemas/VerificationMethodOrRef"
         capabilityInvocation:
           type: array
           items:
-            $ref: "#/components/schemas/VerificationMethod"
+            $ref: "#/components/schemas/VerificationMethodOrRef"
+        capabilityDelegation:
+          type: array
+          items:
+            $ref: "#/components/schemas/VerificationMethodOrRef"
         service:
           type: array
           items:
@@ -63,9 +69,6 @@ components:
         deactivated:
           type: boolean
           description: If a DID has been deactivated, DID document metadata MUST include this property with the boolean value true. If a DID has not been deactivated, this property is OPTIONAL, but if included, MUST have the boolean value false.
-        versionId:
-          type: string
-          description: A hexstring representing the last operation applied to the DID Document
         canonicalId:
           type: string
           description: A DID in canonical form
@@ -89,6 +92,28 @@ components:
           example: "did:prism:456"
         publicKeyJwk:
           $ref: "#/components/schemas/PublicKeyJwk"
+
+    VerificationMethodOrRef:
+      type: object
+      description: |
+        An embedded verificationMethod as JSON or a referenced key as a URI.
+        Referenced key and embedded key are mutually exclusive.
+        If the type is EMBEDDED, `uri` field must be present.
+        Otherwise `verificationMethod` field must be present.
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          example: EMBEDDED
+          enum:
+            - EMBEDDED
+            - REFERENCED
+        uri:
+          type: string
+          example: did:example:123#key-1
+        verificationMethod:
+          $ref: "#/components/schemas/VerificationMethod"
 
     CreateManagedDidRequest:
       type: object
@@ -174,13 +199,13 @@ components:
                 properties:
                   id:
                     type: string
-                    description: ID of service to remove from DID document
+                    description: ID of existing service to update in the DID document
                     example: service1
                   type:
                     type: string
                     enum:
-                      - MediatorService
-                    example: MediatorService
+                      - LinkedDomains
+                    example: LinkedDomains
                   serviceEndpoint:
                     type: array
                     items:
@@ -204,7 +229,7 @@ components:
             example: did:prism:abc:123
           status:
             type: string
-            description: A status indicating whether this is published DID or not. Does not represent DID full lifecyle (e.g. deactivated, recovered, updated).
+            description: A status indicating whether this is already published from the wallet or not. Does not represent DID full lifecyle (e.g. deactivated, recovered, updated).
             enum:
               - CREATED
               - PUBLICATION_PENDING
@@ -244,8 +269,8 @@ components:
         type:
           type: string
           enum:
-            - MediatorService
-          example: MediatorService
+            - LinkedDomains
+          example: LinkedDomains
         serviceEndpoint:
           type: array
           items:

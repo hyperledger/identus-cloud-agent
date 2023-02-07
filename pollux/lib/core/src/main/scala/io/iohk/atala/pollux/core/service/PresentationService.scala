@@ -51,8 +51,8 @@ trait PresentationService {
       issuanceDate: Instant
   ): IO[PresentationError, W3cPresentationPayload]
 
-  def getCredentialRecordsByState(
-      state: PresentationRecord.ProtocolState
+  def getPresentationRecordsByStates(
+      state: PresentationRecord.ProtocolState*
   ): IO[PresentationError, Seq[PresentationRecord]]
 
   def getPresentationRecord(recordId: UUID): IO[PresentationError, Option[PresentationRecord]]
@@ -230,12 +230,12 @@ private class PresentationServiceImpl(
     } yield record
   }
 
-  override def getCredentialRecordsByState(
-      state: PresentationRecord.ProtocolState
+  override def getPresentationRecordsByStates(
+      states: PresentationRecord.ProtocolState*
   ): IO[PresentationError, Seq[PresentationRecord]] = {
     for {
       records <- presentationRepository
-        .getPresentationRecordsByState(state)
+        .getPresentationRecordsByStates(states: _*)
         .mapError(RepositoryError.apply)
     } yield records
   }

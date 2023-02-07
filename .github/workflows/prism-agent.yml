@@ -4,7 +4,6 @@ name: Prism agent testing workflow
 # this will help to push fixes earlier and stop previous workflows
 concurrency:
   group: ${{ github.head_ref }}${{ github.ref }}-prism-agent
-  cancel-in-progress: true
 
 on:
   push:
@@ -28,8 +27,15 @@ jobs:
       component-dir: "prism-agent/service"
     secrets: inherit
   release:
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && !contains(github.event.head_commit.message, 'chore(release)')
     uses: ./.github/workflows/release.yml
     with:
       release-component: "prism-agent/service"
+    secrets: inherit
+  deploy:
+    if: github.event_name == 'push' && contains(github.event.head_commit.message, 'chore(release)')
+    uses: ./.github/workflows/deployment.yml
+    with:
+      component-tag: "${{ github.ref_name }}"
+      env: "dev"
     secrets: inherit

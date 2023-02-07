@@ -27,7 +27,7 @@ object ManagedDIDTemplateValidatorSpec extends ZIOSpecDefault {
         services = Seq(
           Service(
             id = "service0",
-            `type` = ServiceType.MediatorService,
+            `type` = ServiceType.LinkedDomains,
             serviceEndpoint = Seq(URI.create("http://example.com"))
           )
         )

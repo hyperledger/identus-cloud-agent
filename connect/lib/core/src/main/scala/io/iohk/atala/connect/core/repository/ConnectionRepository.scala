@@ -15,6 +15,8 @@ trait ConnectionRepository[F[_]] {
 
   def getConnectionRecords(): F[Seq[ConnectionRecord]]
 
+  def getConnectionRecordsByStates(states: ConnectionRecord.ProtocolState*): F[Seq[ConnectionRecord]]
+
   def getConnectionRecord(recordId: UUID): F[Option[ConnectionRecord]]
 
   def deleteConnectionRecord(recordId: UUID): F[Int]
