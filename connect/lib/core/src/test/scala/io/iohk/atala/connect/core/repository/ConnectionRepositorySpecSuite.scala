@@ -32,7 +32,8 @@ object ConnectionRepositorySpecSuite {
     Invitation(
       id = UUID.randomUUID().toString,
       from = DidId("did:prism:aaa"),
-      body = Invitation.Body(goal_code = "connect", goal = "Establish a trust connection between two peers", Nil)
+      body = Invitation
+        .Body(goal_code = "io.atalaprism.connect", goal = "Establish a trust connection between two peers", Nil)
     ),
     None,
     None,
@@ -43,8 +44,9 @@ object ConnectionRepositorySpecSuite {
   private def connectionRequest = ConnectionRequest(
     from = DidId("did:prism:aaa"),
     to = DidId("did:prism:bbb"),
-    thid = Some(UUID.randomUUID().toString),
-    body = ConnectionRequest.Body(goal_code = Some("Connect"))
+    thid = None,
+    pthid = Some(UUID.randomUUID().toString),
+    body = ConnectionRequest.Body(goal_code = Some("io.atalaprism.connect"))
   )
 
   val testSuite = suite("CRUD operations")(
@@ -268,7 +270,7 @@ object ConnectionRepositorySpecSuite {
         aRecord = connectionRecord
         _ <- repo.createConnectionRecord(aRecord)
         record <- repo.getConnectionRecord(aRecord.id)
-        response = ConnectionResponse.makeResponseFromRequest(connectionRequest.makeMessage)
+        response = ConnectionResponse.makeResponseFromRequest(connectionRequest.makeMessage).toOption.get
         count <- repo.updateWithConnectionResponse(
           aRecord.id,
           response,
@@ -291,7 +293,7 @@ object ConnectionRepositorySpecSuite {
         record <- repo.getConnectionRecord(aRecord.id)
         count <- repo.updateAfterFail(aRecord.id, Some("Just to test")) // TEST
         updatedRecord1 <- repo.getConnectionRecord(aRecord.id)
-        response = ConnectionResponse.makeResponseFromRequest(connectionRequest.makeMessage)
+        response = ConnectionResponse.makeResponseFromRequest(connectionRequest.makeMessage).toOption.get
         count <- repo.updateWithConnectionResponse(
           aRecord.id,
           response,

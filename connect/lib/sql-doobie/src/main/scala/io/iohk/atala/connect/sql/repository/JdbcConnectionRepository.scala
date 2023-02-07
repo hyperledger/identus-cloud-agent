@@ -188,7 +188,7 @@ class JdbcConnectionRepository(xa: Transactor[Task]) extends ConnectionRepositor
         |   meta_last_failure
         | FROM public.connection_records
         | WHERE thid = $thid
-        """.stripMargin
+        """.stripMargin // | WHERE thid = $thid OR id = $thid
       .query[ConnectionRecord]
       .option
 

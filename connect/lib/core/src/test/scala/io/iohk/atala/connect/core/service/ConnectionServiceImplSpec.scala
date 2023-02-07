@@ -38,7 +38,7 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
           assertTrue(record.updatedAt.isEmpty) &&
           assertTrue(record.invitation.from == did) &&
           assertTrue(record.invitation.attachments.isEmpty) &&
-          assertTrue(record.invitation.body.goal_code == "connect") &&
+          assertTrue(record.invitation.body.goal_code == "io.atalaprism.connect") &&
           assertTrue(record.invitation.body.accept.isEmpty)
         }
       }, {
@@ -232,7 +232,7 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
             )
             _ <- inviterSvc.markConnectionResponseSent(inviterRecord.id)
             maybeReceivedResponseConnectionRecord <- inviteeSvc.receiveConnectionResponse(
-              ConnectionResponse.readFromMessage(connectionResponseMessage)
+              ConnectionResponse.fromMessage(connectionResponseMessage).toOption.get
             )
             allInviteeRecords <- inviteeSvc.getConnectionRecords()
           } yield {
