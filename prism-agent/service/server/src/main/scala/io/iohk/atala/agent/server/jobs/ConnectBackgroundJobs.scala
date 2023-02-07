@@ -59,9 +59,12 @@ object ConnectBackgroundJobs {
         val aux = for {
 
           didCommAgent <- buildDIDCommAgent(request.from)
-          _ <- MessagingService.send(request.makeMessage).provideSomeLayer(didCommAgent)
+          resp <- MessagingService.send(request.makeMessage).provideSomeLayer(didCommAgent)
           connectionService <- ZIO.service[ConnectionService]
-          _ <- connectionService.markConnectionRequestSent(id)
+          _ <- {
+            if (resp.status >= 200 && resp.status < 300) connectionService.markConnectionRequestSent(id)
+            else ZIO.logWarning(s"DIDComm sending error: [${resp.status}] - ${resp.bodyAsString}")
+          }
         } yield ()
 
         // aux // TODO decrete metaRetries if it has a error
@@ -83,9 +86,12 @@ object ConnectBackgroundJobs {
           ) if metaRetries > 0 =>
         val aux = for {
           didCommAgent <- buildDIDCommAgent(response.from)
-          _ <- MessagingService.send(response.makeMessage).provideSomeLayer(didCommAgent)
+          resp <- MessagingService.send(response.makeMessage).provideSomeLayer(didCommAgent)
           connectionService <- ZIO.service[ConnectionService]
-          _ <- connectionService.markConnectionResponseSent(id)
+          _ <- {
+            if (resp.status >= 200 && resp.status < 300) connectionService.markConnectionResponseSent(id)
+            else ZIO.logWarning(s"DIDComm sending error: [${resp.status}] - ${resp.bodyAsString}")
+          }
         } yield ()
 
         aux.tapError(ex =>

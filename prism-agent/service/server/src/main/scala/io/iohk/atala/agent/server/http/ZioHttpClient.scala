@@ -2,7 +2,7 @@ package io.iohk.atala.agent.server.http
 
 import zio._
 import zio.http._
-import zio.http.model._
+import zio.http.model.{Header => _, _}
 import zio.http.service._
 import io.iohk.atala.mercury._
 
@@ -12,15 +12,24 @@ object ZioHttpClient {
 
 class ZioHttpClient extends HttpClient {
 
-  override def get(url: String): Task[HttpResponseBody] =
+  override def get(url: String): Task[HttpResponse] =
     zio.http.Client
       .request(url)
       .provideSomeLayer(zio.http.Client.default)
       .provideSomeLayer(zio.Scope.default)
-      .flatMap(_.body.asString)
-      .map(e => HttpResponseBody(e))
+      .flatMap { response =>
+        response.headers.toSeq.map(e => e)
+        response.body.asString
+          .map(body =>
+            HttpResponse(
+              response.status.code,
+              response.headers.toSeq.map(h => Header(h.key.toString, h.value.toString)),
+              body
+            )
+          )
+      }
 
-  def postDIDComm(url: String, data: String): Task[HttpResponseBody] =
+  def postDIDComm(url: String, data: String): Task[HttpResponse] =
     zio.http.Client
       .request(
         url = url, // TODO make ERROR type
@@ -32,6 +41,15 @@ class ZioHttpClient extends HttpClient {
       )
       .provideSomeLayer(zio.http.Client.default)
       .provideSomeLayer(zio.Scope.default)
-      .flatMap(_.body.asString)
-      .map(e => HttpResponseBody(e))
+      .flatMap { response =>
+        response.headers.toSeq.map(e => e)
+        response.body.asString
+          .map(body =>
+            HttpResponse(
+              response.status.code,
+              response.headers.toSeq.map(h => Header(h.key.toString, h.value.toString)),
+              body
+            )
+          )
+      }
 }

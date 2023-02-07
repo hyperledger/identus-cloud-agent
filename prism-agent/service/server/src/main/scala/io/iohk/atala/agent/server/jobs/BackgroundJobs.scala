@@ -104,11 +104,14 @@ object BackgroundJobs {
           for {
             _ <- ZIO.log(s"IssueCredentialRecord: OfferPending (START)")
             didCommAgent <- buildDIDCommAgent(offer.from)
-            _ <- MessagingService
+            resp <- MessagingService
               .send(offer.makeMessage)
               .provideSomeLayer(didCommAgent)
             credentialService <- ZIO.service[CredentialService]
-            _ <- credentialService.markOfferSent(id)
+            _ <- {
+              if (resp.status >= 200 && resp.status < 300) credentialService.markOfferSent(id)
+              else ZIO.logWarning(s"DIDComm sending error: [${resp.status}] - ${resp.bodyAsString}")
+            }
           } yield ()
 
         // Request should be sent from Holder to Issuer
@@ -132,11 +135,14 @@ object BackgroundJobs {
             ) =>
           for {
             didCommAgent <- buildDIDCommAgent(request.from)
-            _ <- MessagingService
+            resp <- MessagingService
               .send(request.makeMessage)
               .provideSomeLayer(didCommAgent)
             credentialService <- ZIO.service[CredentialService]
-            _ <- credentialService.markRequestSent(id)
+            _ <- {
+              if (resp.status >= 200 && resp.status < 300) credentialService.markRequestSent(id)
+              else ZIO.logWarning(s"DIDComm sending error: [${resp.status}] - ${resp.bodyAsString}")
+            }
           } yield ()
 
         // 'automaticIssuance' is TRUE. Issuer automatically accepts the Request
@@ -226,11 +232,14 @@ object BackgroundJobs {
             ) =>
           for {
             didCommAgent <- buildDIDCommAgent(issue.from)
-            _ <- MessagingService
+            resp <- MessagingService
               .send(issue.makeMessage)
               .provideSomeLayer(didCommAgent)
             credentialService <- ZIO.service[CredentialService]
-            _ <- credentialService.markCredentialSent(id)
+            _ <- {
+              if (resp.status >= 200 && resp.status < 300) credentialService.markCredentialSent(id)
+              else ZIO.logWarning(s"DIDComm sending error: [${resp.status}] - ${resp.bodyAsString}")
+            }
           } yield ()
 
         // Credential has been generated, published, and can now be sent to the Holder
@@ -254,9 +263,12 @@ object BackgroundJobs {
             ) =>
           for {
             didCommAgent <- buildDIDCommAgent(issue.from)
-            _ <- MessagingService.send(issue.makeMessage).provideSomeLayer(didCommAgent)
+            resp <- MessagingService.send(issue.makeMessage).provideSomeLayer(didCommAgent)
             credentialService <- ZIO.service[CredentialService]
-            _ <- credentialService.markCredentialSent(id)
+            _ <- {
+              if (resp.status >= 200 && resp.status < 300) credentialService.markCredentialSent(id)
+              else ZIO.logWarning(s"DIDComm sending error: [${resp.status}] - ${resp.bodyAsString}")
+            }
           } yield ()
 
         case IssueCredentialRecord(id, _, _, _, _, _, _, _, _, _, ProblemReportPending, _, _, _, _, _) => ???
@@ -354,9 +366,12 @@ object BackgroundJobs {
                 _ <- ZIO.log(s"PresentationRecord: RequestPending (Send Massage)")
                 didOps <- ZIO.service[DidOps]
                 didCommAgent <- buildDIDCommAgent(record.from)
-                _ <- MessagingService.send(record.makeMessage).provideSomeLayer(didCommAgent)
+                resp <- MessagingService.send(record.makeMessage).provideSomeLayer(didCommAgent)
                 service <- ZIO.service[PresentationService]
-                _ <- service.markRequestPresentationSent(id)
+                _ <- {
+                  if (resp.status >= 200 && resp.status < 300) service.markRequestPresentationSent(id)
+                  else ZIO.logWarning(s"DIDComm sending error: [${resp.status}] - ${resp.bodyAsString}")
+                }
               } yield ()
 
         case PresentationRecord(id, _, _, _, _, _, _, _, RequestSent, _, _, _, _) => // Verifier
@@ -426,11 +441,14 @@ object BackgroundJobs {
               for {
                 _ <- ZIO.log(s"PresentationRecord: PresentationPending (Send Message)")
                 didCommAgent <- buildDIDCommAgent(p.from)
-                _ <- MessagingService
+                resp <- MessagingService
                   .send(p.makeMessage)
                   .provideSomeLayer(didCommAgent)
                 service <- ZIO.service[PresentationService]
-                _ <- service.markPresentationSent(id)
+                _ <- {
+                  if (resp.status >= 200 && resp.status < 300) service.markPresentationSent(id)
+                  else ZIO.logWarning(s"DIDComm sending error: [${resp.status}] - ${resp.bodyAsString}")
+                }
               } yield ()
         case PresentationRecord(id, _, _, _, _, _, _, _, PresentationSent, _, _, _, _) =>
           ZIO.logDebug("PresentationRecord: PresentationSent") *> ZIO.unit
