@@ -7,6 +7,7 @@ concurrency:
 
 on:
   push:
+    tags:
     branches:
       - "main"
     paths:
@@ -18,7 +19,6 @@ on:
       - ".github/workflows/prism-agent.yml"
       - ".github/workflows/scala-unit-tests.yml"
       - "prism-agent/**"
-  tags:
 
 jobs:
   build-and-test-prism-agent:
