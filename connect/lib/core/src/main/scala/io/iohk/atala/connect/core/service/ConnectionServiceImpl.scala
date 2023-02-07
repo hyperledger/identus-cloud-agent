@@ -197,10 +197,10 @@ private class ConnectionServiceImpl(
       response: ConnectionResponse
   ): IO[ConnectionServiceError, Option[ConnectionRecord]] =
     for {
-      record <- getRecordFromThreadIdAndState(        
-        response.thid.orElse(response.pthid),       
+      record <- getRecordFromThreadIdAndState(
+        response.thid.orElse(response.pthid),
         ProtocolState.ConnectionRequestPending,
-        ProtocolState.ConnectionRequestSent      
+        ProtocolState.ConnectionRequestSent
       )
       _ <- connectionRepository
         .updateWithConnectionResponse(record.id, response, ProtocolState.ConnectionResponseReceived, maxRetries)
