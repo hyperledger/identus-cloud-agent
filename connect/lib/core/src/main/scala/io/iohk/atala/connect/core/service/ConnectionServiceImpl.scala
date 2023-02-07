@@ -6,14 +6,13 @@ import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError._
 import io.iohk.atala.connect.core.model.ConnectionRecord
 import io.iohk.atala.connect.core.model.ConnectionRecord._
-import io.iohk.atala.mercury.protocol.connection.ConnectionRequest
 import java.util.UUID
 import io.iohk.atala.mercury._
 import io.iohk.atala.mercury.model.DidId
+import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
+import io.iohk.atala.mercury.protocol.connection._
 import java.time.Instant
 import java.rmi.UnexpectedException
-import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
-import io.iohk.atala.mercury.protocol.connection.ConnectionResponse
 import io.iohk.atala.shared.utils.Base64Utils
 
 private class ConnectionServiceImpl(
@@ -26,7 +25,7 @@ private class ConnectionServiceImpl(
       pairwiseDID: DidId
   ): IO[ConnectionServiceError, ConnectionRecord] =
     for {
-      invitation <- ZIO.succeed(Invitation.invitation2Connect(pairwiseDID))
+      invitation <- ZIO.succeed(ConnectionInvitation.makeConnectionInvitation(pairwiseDID))
       record <- ZIO.succeed(
         ConnectionRecord(
           id = UUID.fromString(invitation.id),
@@ -125,7 +124,9 @@ private class ConnectionServiceImpl(
   ): IO[ConnectionServiceError, Option[ConnectionRecord]] =
     for {
       record <- getRecordWithState(recordId, ProtocolState.InvitationReceived)
-      request = createDidCommConnectionRequest(record, pairwiseDid)
+      request = ConnectionRequest
+        .makeFromInvitation(record.invitation, pairwiseDid)
+        .copy(thid = Some(record.invitation.id)) //  This logic shound be move to the SQL when fetching the record
       count <- connectionRepository
         .updateWithConnectionRequest(recordId, request, ProtocolState.ConnectionRequestPending, maxRetries)
         .mapError(RepositoryError.apply)
@@ -148,7 +149,10 @@ private class ConnectionServiceImpl(
       request: ConnectionRequest
   ): IO[ConnectionServiceError, Option[ConnectionRecord]] =
     for {
-      record <- getRecordFromThreadIdAndState(request.thid, ProtocolState.InvitationGenerated)
+      record <- getRecordFromThreadIdAndState(
+        Some(request.thid.orElse(request.pthid).getOrElse(request.id)),
+        ProtocolState.InvitationGenerated
+      )
       _ <- connectionRepository
         .updateWithConnectionRequest(record.id, request, ProtocolState.ConnectionRequestReceived, maxRetries)
         .flatMap {
@@ -164,7 +168,13 @@ private class ConnectionServiceImpl(
   override def acceptConnectionRequest(recordId: UUID): IO[ConnectionServiceError, Option[ConnectionRecord]] =
     for {
       record <- getRecordWithState(recordId, ProtocolState.ConnectionRequestReceived)
-      response = createDidCommConnectionResponse(record)
+      response <- {
+        record.connectionRequest.map(_.makeMessage).map(ConnectionResponse.makeResponseFromRequest(_)) match
+          case None                  => ZIO.fail(RepositoryError.apply(new RuntimeException("Unable to make Message")))
+          case Some(Left(value))     => ZIO.fail(RepositoryError.apply(new RuntimeException(value)))
+          case Some(Right(response)) => ZIO.succeed(response)
+      }
+      // response = createDidCommConnectionResponse(record)
       count <- connectionRepository
         .updateWithConnectionResponse(recordId, response, ProtocolState.ConnectionResponsePending, maxRetries)
         .mapError(RepositoryError.apply)
@@ -187,10 +197,10 @@ private class ConnectionServiceImpl(
       response: ConnectionResponse
   ): IO[ConnectionServiceError, Option[ConnectionRecord]] =
     for {
-      record <- getRecordFromThreadIdAndState(
-        response.thid,
+      record <- getRecordFromThreadIdAndState(        
+        response.thid.orElse(response.pthid),       
         ProtocolState.ConnectionRequestPending,
-        ProtocolState.ConnectionRequestSent
+        ProtocolState.ConnectionRequestSent      
       )
       _ <- connectionRepository
         .updateWithConnectionResponse(record.id, response, ProtocolState.ConnectionResponseReceived, maxRetries)
@@ -221,18 +231,6 @@ private class ConnectionServiceImpl(
       }
     } yield record
   }
-
-  private[this] def createDidCommConnectionRequest(record: ConnectionRecord, pairwiseDid: DidId): ConnectionRequest = {
-    ConnectionRequest(
-      from = pairwiseDid,
-      to = record.invitation.from,
-      thid = record.thid.map(_.toString),
-      body = ConnectionRequest.Body(goal_code = Some("Connect"))
-    )
-  }
-
-  private[this] def createDidCommConnectionResponse(record: ConnectionRecord): ConnectionResponse =
-    ConnectionResponse.makeResponseFromRequest(record.connectionRequest.get.makeMessage) // TODO: get
 
   private[this] def updateConnectionProtocolState(
       recordId: UUID,
@@ -274,6 +272,11 @@ private class ConnectionServiceImpl(
       }
     } yield record
   }
+
+  def reportProcessingFailure(recordId: UUID, failReason: Option[String]): IO[ConnectionServiceError, Int] =
+    connectionRepository
+      .updateAfterFail(recordId, failReason)
+      .mapError(RepositoryError.apply)
 
 }
 
