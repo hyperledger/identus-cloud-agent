@@ -200,7 +200,7 @@ private class ConnectionServiceImpl(
       record <- getRecordFromThreadIdAndState(        
         response.thid.orElse(response.pthid),       
         ProtocolState.ConnectionRequestPending,
-        ProtocolState.ConnectionRequestSent      
+        ProtocolState.ConnectionRequestSent
       )
       _ <- connectionRepository
         .updateWithConnectionResponse(record.id, response, ProtocolState.ConnectionResponseReceived, maxRetries)
