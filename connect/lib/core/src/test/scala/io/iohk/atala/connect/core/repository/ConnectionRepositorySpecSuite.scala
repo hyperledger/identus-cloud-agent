@@ -104,7 +104,55 @@ object ConnectionRepositorySpecSuite {
         assertTrue(records.contains(bRecord))
       }
     },
-    test("deleteRecord deletes an exsiting record") {
+    test("getConnectionRecordsByStates returns correct records") {
+      for {
+        repo <- ZIO.service[ConnectionRepository[Task]]
+        aRecord = connectionRecord
+        bRecord = connectionRecord
+        cRecord = connectionRecord
+        _ <- repo.createConnectionRecord(aRecord)
+        _ <- repo.createConnectionRecord(bRecord)
+        _ <- repo.createConnectionRecord(cRecord)
+        _ <- repo.updateConnectionProtocolState(
+          aRecord.id,
+          ProtocolState.InvitationGenerated,
+          ProtocolState.ConnectionRequestReceived,
+          1
+        )
+        _ <- repo.updateConnectionProtocolState(
+          cRecord.id,
+          ProtocolState.InvitationGenerated,
+          ProtocolState.ConnectionResponsePending,
+          1
+        )
+        invitationGeneratedRecords <- repo.getConnectionRecordsByStates(ProtocolState.InvitationGenerated)
+        otherRecords <- repo.getConnectionRecordsByStates(
+          ProtocolState.ConnectionRequestReceived,
+          ProtocolState.ConnectionResponsePending
+        )
+      } yield {
+        assertTrue(invitationGeneratedRecords.size == 1) &&
+        assertTrue(invitationGeneratedRecords.contains(bRecord)) &&
+        assertTrue(otherRecords.size == 2) &&
+        assertTrue(otherRecords.exists(_.id == aRecord.id)) &&
+        assertTrue(otherRecords.exists(_.id == cRecord.id))
+      }
+    },
+    test("getConnectionRecordsByStates returns an empty list if 'states' parameter is empty") {
+      for {
+        repo <- ZIO.service[ConnectionRepository[Task]]
+        aRecord = connectionRecord
+        bRecord = connectionRecord
+        cRecord = connectionRecord
+        _ <- repo.createConnectionRecord(aRecord)
+        _ <- repo.createConnectionRecord(bRecord)
+        _ <- repo.createConnectionRecord(cRecord)
+        records <- repo.getConnectionRecordsByStates()
+      } yield {
+        assertTrue(records.isEmpty)
+      }
+    },
+    test("deleteRecord deletes an existing record") {
       for {
         repo <- ZIO.service[ConnectionRepository[Task]]
         aRecord = connectionRecord
