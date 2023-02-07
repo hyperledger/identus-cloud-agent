@@ -261,6 +261,11 @@ private class ConnectionServiceImpl(
     } yield record
   }
 
+  def reportProcessingFailure(recordId: UUID, failReason: Option[String]): IO[ConnectionServiceError, Int] =
+    connectionRepository
+      .updateAfterFail(recordId, failReason)
+      .mapError(RepositoryError.apply)
+
 }
 
 object ConnectionServiceImpl {

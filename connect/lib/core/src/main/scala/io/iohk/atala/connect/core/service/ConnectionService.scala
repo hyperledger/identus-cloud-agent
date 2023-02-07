@@ -39,4 +39,6 @@ trait ConnectionService {
 
   def deleteConnectionRecord(recordId: UUID): IO[ConnectionServiceError, Int]
 
+  def reportProcessingFailure(recordId: UUID, failReason: Option[String]): IO[ConnectionServiceError, Int]
+
 }
