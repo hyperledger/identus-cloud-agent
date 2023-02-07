@@ -169,7 +169,6 @@ class JdbcPresentationRepository(xa: Transactor[Task]) extends PresentationRepos
             |   credentials_to_use
             | FROM public.presentation_records
             | WHERE $inClauseFragment
-            | LIMIT 50
             """.stripMargin
           .query[PresentationRecord]
           .to[Seq]
