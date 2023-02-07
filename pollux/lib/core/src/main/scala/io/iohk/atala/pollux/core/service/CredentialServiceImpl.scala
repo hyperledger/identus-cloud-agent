@@ -109,12 +109,12 @@ private class CredentialServiceImpl(
     } yield record
   }
 
-  override def getCredentialRecordsByState(
-      state: IssueCredentialRecord.ProtocolState
+  override def getIssueCredentialRecordsByStates(
+      states: IssueCredentialRecord.ProtocolState*
   ): IO[CredentialServiceError, Seq[IssueCredentialRecord]] = {
     for {
       records <- credentialRepository
-        .getIssueCredentialRecordsByState(state)
+        .getIssueCredentialRecordsByStates(states: _*)
         .mapError(RepositoryError.apply)
     } yield records
   }
@@ -176,7 +176,7 @@ private class CredentialServiceImpl(
       request: RequestCredential
   ): IO[CredentialServiceError, Option[IssueCredentialRecord]] = {
     for {
-      record <- getRecordFromThreadIdWithState(request.thid, ProtocolState.OfferSent)
+      record <- getRecordFromThreadIdWithState(request.thid, ProtocolState.OfferPending, ProtocolState.OfferSent)
       _ <- credentialRepository
         .updateWithRequestCredential(record.id, request, ProtocolState.RequestReceived)
         .flatMap {
@@ -214,7 +214,7 @@ private class CredentialServiceImpl(
   ): IO[CredentialServiceError, Option[IssueCredentialRecord]] = {
     val rawIssuedCredential = issue.attachments.map(_.data.asJson.noSpaces).headOption.getOrElse("???") // TODO
     for {
-      record <- getRecordFromThreadIdWithState(issue.thid, ProtocolState.RequestSent)
+      record <- getRecordFromThreadIdWithState(issue.thid, ProtocolState.RequestPending, ProtocolState.RequestSent)
       _ <- credentialRepository
         .updateWithIssuedRawCredential(record.id, issue, rawIssuedCredential, ProtocolState.CredentialReceived)
         .flatMap {
@@ -316,7 +316,7 @@ private class CredentialServiceImpl(
 
   private[this] def getRecordFromThreadIdWithState(
       thid: Option[String],
-      state: ProtocolState
+      states: ProtocolState*
   ): IO[CredentialServiceError, IssueCredentialRecord] = {
     for {
       thid <- ZIO
@@ -330,8 +330,8 @@ private class CredentialServiceImpl(
         .fromOption(maybeRecord)
         .mapError(_ => ThreadIdNotFound(thid))
       _ <- record.protocolState match {
-        case s if s == state => ZIO.unit
-        case state           => ZIO.fail(InvalidFlowStateError(s"Invalid protocol state for operation: $state"))
+        case s if states.contains(s) => ZIO.unit
+        case state                   => ZIO.fail(InvalidFlowStateError(s"Invalid protocol state for operation: $state"))
       }
     } yield record
   }

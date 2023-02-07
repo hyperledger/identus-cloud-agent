@@ -150,36 +150,61 @@ object CredentialRepositorySpecSuite {
     test("getIssueCredentialRecordByThreadId returns nothing for an unknown thid") {
       for {
         repo <- ZIO.service[CredentialRepository[Task]]
-        aRecord = issueCredentialRecord.copy(thid = UUID.randomUUID())
-        bRecord = issueCredentialRecord.copy(thid = UUID.randomUUID())
+        aRecord = issueCredentialRecord
+        bRecord = issueCredentialRecord
         _ <- repo.createIssueCredentialRecord(aRecord)
         _ <- repo.createIssueCredentialRecord(bRecord)
         record <- repo.getIssueCredentialRecordByThreadId(UUID.randomUUID())
       } yield assertTrue(record.isEmpty)
     },
-    test("getIssueCredentialRecordsByState returns valid records") {
+    test("getIssueCredentialRecordsByStates returns valid records") {
       for {
         repo <- ZIO.service[CredentialRepository[Task]]
-        aRecord = issueCredentialRecord.copy(thid = UUID.randomUUID())
-        bRecord = issueCredentialRecord.copy(thid = UUID.randomUUID())
-        cRecord = issueCredentialRecord.copy(thid = UUID.randomUUID())
+        aRecord = issueCredentialRecord
+        bRecord = issueCredentialRecord
+        cRecord = issueCredentialRecord
         _ <- repo.createIssueCredentialRecord(aRecord)
         _ <- repo.createIssueCredentialRecord(bRecord)
         _ <- repo.createIssueCredentialRecord(cRecord)
         _ <- repo.updateCredentialRecordProtocolState(aRecord.id, ProtocolState.OfferPending, ProtocolState.OfferSent)
-        _ <- repo.updateCredentialRecordProtocolState(cRecord.id, ProtocolState.OfferPending, ProtocolState.OfferSent)
-        records <- repo.getIssueCredentialRecordsByState(ProtocolState.OfferPending)
+        _ <- repo.updateCredentialRecordProtocolState(
+          cRecord.id,
+          ProtocolState.OfferPending,
+          ProtocolState.CredentialGenerated
+        )
+        pendingRecords <- repo.getIssueCredentialRecordsByStates(ProtocolState.OfferPending)
+        otherRecords <- repo.getIssueCredentialRecordsByStates(
+          ProtocolState.OfferSent,
+          ProtocolState.CredentialGenerated
+        )
       } yield {
-        assertTrue(records.size == 1) &&
-        assertTrue(records.contains(bRecord))
+        assertTrue(pendingRecords.size == 1) &&
+        assertTrue(pendingRecords.contains(bRecord)) &&
+        assertTrue(otherRecords.size == 2) &&
+        assertTrue(otherRecords.exists(_.id == aRecord.id)) &&
+        assertTrue(otherRecords.exists(_.id == cRecord.id))
+      }
+    },
+    test("getIssueCredentialRecordsByStates returns an empty list if 'states' parameter is empty") {
+      for {
+        repo <- ZIO.service[CredentialRepository[Task]]
+        aRecord = issueCredentialRecord
+        bRecord = issueCredentialRecord
+        cRecord = issueCredentialRecord
+        _ <- repo.createIssueCredentialRecord(aRecord)
+        _ <- repo.createIssueCredentialRecord(bRecord)
+        _ <- repo.createIssueCredentialRecord(cRecord)
+        records <- repo.getIssueCredentialRecordsByStates()
+      } yield {
+        assertTrue(records.isEmpty)
       }
     },
     test("getValidIssuedCredentials returns valid records") {
       for {
         repo <- ZIO.service[CredentialRepository[Task]]
-        aRecord = issueCredentialRecord.copy(thid = UUID.randomUUID())
-        bRecord = issueCredentialRecord.copy(thid = UUID.randomUUID())
-        cRecord = issueCredentialRecord.copy(thid = UUID.randomUUID())
+        aRecord = issueCredentialRecord
+        bRecord = issueCredentialRecord
+        cRecord = issueCredentialRecord
         _ <- repo.createIssueCredentialRecord(aRecord)
         _ <- repo.createIssueCredentialRecord(bRecord)
         _ <- repo.createIssueCredentialRecord(cRecord)
