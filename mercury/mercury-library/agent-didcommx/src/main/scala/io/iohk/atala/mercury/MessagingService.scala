@@ -115,7 +115,7 @@ object MessagingService {
       *
       * TODO Move this method to another model
       */
-  def send(msg: Message): ZIO[DidOps & DidAgent & DIDResolver & HttpClient, SendMessageError, HttpResponseBody] =
+  def send(msg: Message): ZIO[DidOps & DidAgent & DIDResolver & HttpClient, SendMessageError, HttpResponse] =
     for {
       auxFinalMessage <- makeMessage(msg)
       MessageAndAddress(finalMessage, serviceEndpoint) = auxFinalMessage
