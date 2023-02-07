@@ -1,3 +1,10 @@
+# [prism-agent-v0.36.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.35.0...prism-agent-v0.36.0) (2023-02-07)
+
+
+### Features
+
+* **prism-agent:** ATL-3349 connection state issue and perf improvements ([#359](https://github.com/input-output-hk/atala-prism-building-blocks/issues/359)) ([c77f160](https://github.com/input-output-hk/atala-prism-building-blocks/commit/c77f160043262662ce7d5d9c6f75cd893bcab68d))
+
 # [prism-agent-v0.35.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.34.0...prism-agent-v0.35.0) (2023-02-07)
 
 
