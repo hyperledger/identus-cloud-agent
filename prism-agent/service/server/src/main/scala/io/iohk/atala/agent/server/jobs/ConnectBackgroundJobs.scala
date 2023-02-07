@@ -83,10 +83,11 @@ object ConnectBackgroundJobs {
           _ <- connectionService.markConnectionResponseSent(id)
         } yield ()
 
-        aux.flatMapError(ex =>
+        aux.tapError(ex =>
           for {
             connectionService <- ZIO.service[ConnectionService]
-            _ <- connectionService // FIXME
+            _ <- connectionService
+              .reportProcessingFailure(id, None) // TODO ex get message
           } yield ()
         )
       case e
