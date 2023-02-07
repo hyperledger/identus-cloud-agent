@@ -141,7 +141,9 @@ final class ManagedDIDService private[walletapi] (
       (createOperation, secret) = generated
       longFormDID = PrismDID.buildLongFormFromOperation(createOperation)
       did = longFormDID.asCanonical
-      _ <- ZIO.fromEither(didOpValidator.validate(createOperation)).mapError(CreateManagedDIDError.OperationError.apply)
+      _ <- ZIO
+        .fromEither(didOpValidator.validate(createOperation))
+        .mapError(CreateManagedDIDError.OperationError.apply)
       _ <- nonSecretStorage
         .getManagedDIDState(did)
         .mapError(CreateManagedDIDError.WalletStorageError.apply)
