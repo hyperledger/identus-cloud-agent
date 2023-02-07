@@ -147,6 +147,12 @@ class ConnectionRepositoryInMemory(storeRef: Ref[Map[UUID, ConnectionRecord]]) e
     } yield store.values.toSeq
   }
 
+  override def getConnectionRecordsByStates(states: ConnectionRecord.ProtocolState*): Task[Seq[ConnectionRecord]] = {
+    for {
+      store <- storeRef.get
+    } yield store.values.filter(rec => states.contains(rec.protocolState)).toSeq
+  }
+
   override def createConnectionRecord(record: ConnectionRecord): Task[Int] = {
     for {
       _ <- record.thid match

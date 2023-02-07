@@ -19,6 +19,7 @@ import zio.interop.catz.*
 
 import java.time.Instant
 import java.util.UUID
+import cats.data.NonEmptyList
 
 class JdbcConnectionRepository(xa: Transactor[Task]) extends ConnectionRepository[Task] {
 
@@ -100,6 +101,38 @@ class JdbcConnectionRepository(xa: Transactor[Task]) extends ConnectionRepositor
 
     cxnIO
       .transact(xa)
+  }
+
+  override def getConnectionRecordsByStates(states: ConnectionRecord.ProtocolState*): Task[Seq[ConnectionRecord]] = {
+    states match
+      case Nil =>
+        ZIO.succeed(Nil)
+      case head +: tail =>
+        val nel = NonEmptyList.of(head, tail: _*)
+        val inClauseFragment = Fragments.in(fr"protocol_state", nel)
+        val cxnIO = sql"""
+        | SELECT
+        |   id,
+        |   created_at,
+        |   updated_at,
+        |   thid,
+        |   label,
+        |   role,
+        |   protocol_state,
+        |   invitation,
+        |   connection_request,
+        |   connection_response,
+        |   meta_retries,
+        |   meta_last_failure
+        | FROM public.connection_records
+        | WHERE $inClauseFragment
+        | LIMIT 50
+        """.stripMargin
+          .query[ConnectionRecord]
+          .to[Seq]
+
+        cxnIO
+          .transact(xa)
   }
 
   override def getConnectionRecord(recordId: UUID): Task[Option[ConnectionRecord]] = {

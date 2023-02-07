@@ -35,6 +35,10 @@ trait ConnectionService {
 
   def getConnectionRecords(): IO[ConnectionServiceError, Seq[ConnectionRecord]]
 
+  def getConnectionRecordsByStates(
+      states: ConnectionRecord.ProtocolState*
+  ): IO[ConnectionServiceError, Seq[ConnectionRecord]]
+
   def getConnectionRecord(recordId: UUID): IO[ConnectionServiceError, Option[ConnectionRecord]]
 
   def deleteConnectionRecord(recordId: UUID): IO[ConnectionServiceError, Int]

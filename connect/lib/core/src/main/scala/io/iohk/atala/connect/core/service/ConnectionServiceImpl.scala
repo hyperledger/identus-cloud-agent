@@ -59,6 +59,16 @@ private class ConnectionServiceImpl(
     } yield records
   }
 
+  override def getConnectionRecordsByStates(
+      states: ProtocolState*
+  ): IO[ConnectionServiceError, Seq[ConnectionRecord]] = {
+    for {
+      records <- connectionRepository
+        .getConnectionRecordsByStates(states: _*)
+        .mapError(RepositoryError.apply)
+    } yield records
+  }
+
   override def getConnectionRecord(recordId: UUID): IO[ConnectionServiceError, Option[ConnectionRecord]] = {
     for {
       record <- connectionRepository
@@ -189,6 +199,7 @@ private class ConnectionServiceImpl(
     for {
       record <- getRecordFromThreadIdAndState(
         response.thid.orElse(response.pthid),
+        ProtocolState.ConnectionRequestPending,
         ProtocolState.ConnectionRequestSent
       )
       _ <- connectionRepository
@@ -241,8 +252,8 @@ private class ConnectionServiceImpl(
   }
 
   private[this] def getRecordFromThreadIdAndState(
-      thid: Option[String], // TODO this should not be optional
-      state: ProtocolState
+      thid: Option[String],
+      states: ProtocolState*
   ): IO[ConnectionServiceError, ConnectionRecord] = {
     for {
       thid <- ZIO
@@ -256,8 +267,8 @@ private class ConnectionServiceImpl(
         .fromOption(maybeRecord)
         .mapError(_ => ThreadIdNotFound(thid))
       _ <- record.protocolState match {
-        case s if s == state => ZIO.unit
-        case state           => ZIO.fail(InvalidFlowStateError(s"Invalid protocol state for operation: $state"))
+        case s if states.contains(s) => ZIO.unit
+        case state                   => ZIO.fail(InvalidFlowStateError(s"Invalid protocol state for operation: $state"))
       }
     } yield record
   }
