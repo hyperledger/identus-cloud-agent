@@ -4,27 +4,27 @@ import zio.*
 import zio.test.*
 import zio.test.Assertion.*
 import io.iohk.atala.agent.walletapi.crypto.KeyGeneratorWrapper
-import io.iohk.atala.agent.walletapi.model.DIDPublicKeyTemplate
-import io.iohk.atala.agent.walletapi.model.DIDUpdateLineage
-import io.iohk.atala.agent.walletapi.model.ECCoordinates.ECCoordinate
-import io.iohk.atala.agent.walletapi.model.ECKeyPair
-import io.iohk.atala.agent.walletapi.model.ECPoint
-import io.iohk.atala.agent.walletapi.model.ECPrivateKey
-import io.iohk.atala.agent.walletapi.model.ECPublicKey
-import io.iohk.atala.agent.walletapi.model.ManagedDIDState
-import io.iohk.atala.agent.walletapi.model.ManagedDIDTemplate
-import io.iohk.atala.agent.walletapi.sql.JdbcDIDNonSecretStorage
-import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
+import io.iohk.atala.agent.walletapi.model.{
+  DIDPublicKeyTemplate,
+  DIDUpdateLineage,
+  ECKeyPair,
+  ManagedDIDState,
+  ManagedDIDTemplate
+}
+import io.iohk.atala.agent.walletapi.sql.{JdbcDIDNonSecretStorage, JdbcDIDSecretStorage}
 import io.iohk.atala.agent.walletapi.util.OperationFactory
-import io.iohk.atala.castor.core.model.did.EllipticCurve
-import io.iohk.atala.castor.core.model.did.PrismDID
-import io.iohk.atala.castor.core.model.did.PrismDIDOperation
-import io.iohk.atala.castor.core.model.did.ScheduledDIDOperationStatus
-import io.iohk.atala.castor.core.model.did.VerificationRelationship
+import io.iohk.atala.castor.core.model.did.{
+  EllipticCurve,
+  PrismDID,
+  PrismDIDOperation,
+  ScheduledDIDOperationStatus,
+  VerificationRelationship
+}
 import io.iohk.atala.test.container.{DBTestUtils, PostgresTestContainerSupport}
 
 import java.time.Instant
 import scala.collection.immutable.ArraySeq
+import org.postgresql.util.PSQLException
 
 object JdbcDIDSecretStorageSpec extends ZIOSpecDefault, PostgresTestContainerSupport {
 
@@ -73,10 +73,9 @@ object JdbcDIDSecretStorageSpec extends ZIOSpecDefault, PostgresTestContainerSup
       suite("JdbcDIDSecretStorageSpec")(
         listKeySpec,
         getKeySpec,
-        // upsertKeySpec,
+        insertKeySpec,
         // removeKeySpec
-      ) @@ TestAspect.sequential @@ TestAspect.before(DBTestUtils.runMigrationAgentDB) @@ TestAspect.timed @@ TestAspect
-        .tag("dev")
+      ) @@ TestAspect.sequential @@ TestAspect.before(DBTestUtils.runMigrationAgentDB) @@ TestAspect.timed @@ TestAspect.tag("dev")
 
     testSuite.provideSomeLayer(
       pgContainerLayer >+> transactorLayer >+> (JdbcDIDSecretStorage.layer ++ JdbcDIDNonSecretStorage.layer)
@@ -170,6 +169,61 @@ object JdbcDIDSecretStorageSpec extends ZIOSpecDefault, PostgresTestContainerSup
         }
         readKeyPairs <- ZIO.foreach(keyIds)(keyId => storage.getKey(did, keyId))
       } yield assert(readKeyPairs)(forall(isNone))
+    }
+  )
+
+  private val insertKeySpec = suite("insertKey")(
+    test("insert new key") {
+      for {
+        storage <- ZIO.service[DIDSecretStorage]
+        keyPair <- generateKeyPair()
+        _ <- storage.insertKey(didExample, "key-1", keyPair, Array.fill(32)(0))
+        readKeyPairs <- storage.listKeys(didExample)
+      } yield assert(readKeyPairs)(contains(("key-1", keyPair)))
+    },
+    test("insert same key-id on different dids") {
+      for {
+        storage <- ZIO.service[DIDSecretStorage]
+        did1 = PrismDID.buildCanonicalFromSuffix("0" * 64).toOption.get
+        did2 = PrismDID.buildCanonicalFromSuffix("1" * 64).toOption.get
+        keyPair1 <- generateKeyPair()
+        keyPair2 <- generateKeyPair()
+        _ <- storage.insertKey(did1, "key-1", keyPair1, Array.fill(32)(0))
+        _ <- storage.insertKey(did2, "key-1", keyPair2, Array.fill(32)(0))
+        readKeyPairs1 <- storage.listKeys(did1)
+        readKeyPairs2 <- storage.listKeys(did2)
+      } yield assert(readKeyPairs1)(contains(("key-1" -> keyPair1))) && assert(readKeyPairs2)(
+        contains(("key-1" -> keyPair2))
+      )
+    },
+    test("insert same key-id, did with different opration hash") {
+      for {
+        storage <- ZIO.service[DIDSecretStorage]
+        _ <- ZIO.foreach(1 to 10) { i =>
+          for {
+            keyPair <- generateKeyPair()
+            _ <- storage.insertKey(didExample, s"key-$i", keyPair, Array.fill(32)(i.toByte))
+          } yield ()
+        }
+        readKeyPairs <- storage.listKeys(didExample)
+      } yield assert(readKeyPairs)(hasSize(equalTo(10)))
+    },
+    test("fail on inserting same key-id, did, operation hash") {
+      val effect = for {
+        storage <- ZIO.service[DIDSecretStorage]
+        keyPair1 <- generateKeyPair()
+        keyPair2 <- generateKeyPair()
+        _ <- storage.insertKey(didExample, "key-1", keyPair1, Array.fill(32)(0))
+        _ <- storage.insertKey(didExample, "key-1", keyPair2, Array.fill(32)(0))
+      } yield ()
+
+      assertZIO(effect.exit)(
+        fails(
+          isSubtype[PSQLException](
+            hasField("getMessage", _.getMessage(), containsString("duplicate key value violates unique constraint"))
+          )
+        )
+      )
     }
   )
 

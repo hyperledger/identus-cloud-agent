@@ -15,7 +15,7 @@ object JdbcDIDNonSecretStorageSpec extends ZIOSpecDefault, PostgresTestContainer
   private val sample = test("dummyDB") {
     for {
       storage <- ZIO.service[DIDNonSecretStorage]
-      _ <- storage.listManagedDID.debug("listState")
+      _ <- storage.listManagedDID
     } yield assertCompletes
   } @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
 
