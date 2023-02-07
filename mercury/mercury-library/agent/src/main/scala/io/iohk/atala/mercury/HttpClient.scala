@@ -10,7 +10,7 @@ object Header:
     def key: String = header._1
     def value: String = header._2
 
-case class HttpResponse(status: Int, header: Seq[Header], bodyAsString: String)
+case class HttpResponse(status: Int, headers: Seq[Header], bodyAsString: String)
 
 trait HttpClient {
   def get(url: String): Task[HttpResponse]
