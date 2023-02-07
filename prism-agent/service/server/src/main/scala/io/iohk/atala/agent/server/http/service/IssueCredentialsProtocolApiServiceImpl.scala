@@ -173,7 +173,9 @@ class IssueCredentialsProtocolApiServiceImpl(
                   ProtocolState.ConnectionResponseSent,
                   _,
                   _,
-                  Some(resp)
+                  Some(resp),
+                  _, // metaRetries: Int,
+                  _, // metaLastFailure: Option[String]
                 ) =>
               ZIO.succeed(DidIdPair(resp.from, resp.to))
             case ConnectionRecord(
@@ -186,7 +188,9 @@ class IssueCredentialsProtocolApiServiceImpl(
                   ProtocolState.ConnectionResponseReceived,
                   _,
                   _,
-                  Some(resp)
+                  Some(resp),
+                  _, // metaRetries: Int,
+                  _, // metaLastFailure: Option[String]
                 ) =>
               ZIO.succeed(DidIdPair(resp.to, resp.from))
             case _ =>

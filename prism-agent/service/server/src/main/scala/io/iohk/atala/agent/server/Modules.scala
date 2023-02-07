@@ -345,7 +345,10 @@ object Modules {
               for {
                 _ <- ZIO.logInfo("*" * 100)
                 _ <- ZIO.logInfo("As an Inviter in connect:")
-                connectionRequest = ConnectionRequest.readFromMessage(msg)
+                connectionRequest <- ConnectionRequest.fromMessage(msg) match {
+                  case Left(error)  => ZIO.fail(new RuntimeException(error))
+                  case Right(value) => ZIO.succeed(value)
+                }
                 _ <- ZIO.logInfo("Got ConnectionRequest: " + connectionRequest)
                 // Receive and store ConnectionRequest
                 maybeRecord <- connectionService
@@ -370,7 +373,10 @@ object Modules {
               for {
                 _ <- ZIO.logInfo("*" * 100)
                 _ <- ZIO.logInfo("As an Invitee in connect:")
-                connectionResponse = ConnectionResponse.readFromMessage(msg)
+                connectionResponse <- ConnectionResponse.fromMessage(msg) match {
+                  case Left(error)  => ZIO.fail(new RuntimeException(error))
+                  case Right(value) => ZIO.succeed(value)
+                }
                 _ <- ZIO.logInfo("Got ConnectionResponse: " + connectionResponse)
                 _ <- connectionService
                   .receiveConnectionResponse(connectionResponse)
