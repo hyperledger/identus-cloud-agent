@@ -114,7 +114,9 @@ private class ConnectionServiceImpl(
   ): IO[ConnectionServiceError, Option[ConnectionRecord]] =
     for {
       record <- getRecordWithState(recordId, ProtocolState.InvitationReceived)
-      request = ConnectionRequest.makeFromInvitation(record.invitation, pairwiseDid)
+      request = ConnectionRequest
+        .makeFromInvitation(record.invitation, pairwiseDid)
+        .copy(thid = Some(record.invitation.id)) //  This logic shound be move to the SQL when fetching the record
       count <- connectionRepository
         .updateWithConnectionRequest(recordId, request, ProtocolState.ConnectionRequestPending, maxRetries)
         .mapError(RepositoryError.apply)
@@ -137,7 +139,10 @@ private class ConnectionServiceImpl(
       request: ConnectionRequest
   ): IO[ConnectionServiceError, Option[ConnectionRecord]] =
     for {
-      record <- getRecordFromThreadIdAndState(request.thid.orElse(request.pthid), ProtocolState.InvitationGenerated)
+      record <- getRecordFromThreadIdAndState(
+        Some(request.thid.orElse(request.pthid).getOrElse(request.id)),
+        ProtocolState.InvitationGenerated
+      )
       _ <- connectionRepository
         .updateWithConnectionRequest(record.id, request, ProtocolState.ConnectionRequestReceived, maxRetries)
         .flatMap {
@@ -182,7 +187,10 @@ private class ConnectionServiceImpl(
       response: ConnectionResponse
   ): IO[ConnectionServiceError, Option[ConnectionRecord]] =
     for {
-      record <- getRecordFromThreadIdAndState(response.thid.orElse(response.pthid), ProtocolState.ConnectionRequestSent)
+      record <- getRecordFromThreadIdAndState(
+        response.thid.orElse(response.pthid),
+        ProtocolState.ConnectionRequestSent
+      )
       _ <- connectionRepository
         .updateWithConnectionResponse(record.id, response, ProtocolState.ConnectionResponseReceived, maxRetries)
         .flatMap {

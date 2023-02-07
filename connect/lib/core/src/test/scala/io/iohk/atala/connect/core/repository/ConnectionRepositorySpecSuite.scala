@@ -32,7 +32,8 @@ object ConnectionRepositorySpecSuite {
     Invitation(
       id = UUID.randomUUID().toString,
       from = DidId("did:prism:aaa"),
-      body = Invitation.Body(goal_code = "connect", goal = "Establish a trust connection between two peers", Nil)
+      body = Invitation
+        .Body(goal_code = "io.atalaprism.connect", goal = "Establish a trust connection between two peers", Nil)
     ),
     None,
     None,
@@ -45,7 +46,7 @@ object ConnectionRepositorySpecSuite {
     to = DidId("did:prism:bbb"),
     thid = None,
     pthid = Some(UUID.randomUUID().toString),
-    body = ConnectionRequest.Body(goal_code = Some("Connect"))
+    body = ConnectionRequest.Body(goal_code = Some("io.atalaprism.connect"))
   )
 
   val testSuite = suite("CRUD operations")(
@@ -221,18 +222,18 @@ object ConnectionRepositorySpecSuite {
         aRecord = connectionRecord
         _ <- repo.createConnectionRecord(aRecord)
         record <- repo.getConnectionRecord(aRecord.id)
-        response = ConnectionResponse.makeResponseFromRequest(connectionRequest.makeMessage)
+        response = ConnectionResponse.makeResponseFromRequest(connectionRequest.makeMessage).toOption.get
         count <- repo.updateWithConnectionResponse(
           aRecord.id,
-          response.toOption.get,
+          response,
           ProtocolState.ConnectionResponseSent,
           maxRetries
         )
         updatedRecord <- repo.getConnectionRecord(aRecord.id)
       } yield {
         assertTrue(count == 1) &&
-        assertTrue(record.get.connectionResponse.isEmpty) // &&
-        // assertTrue(updatedRecord.get.connectionResponse.contains(response))
+        assertTrue(record.get.connectionResponse.isEmpty) &&
+        assertTrue(updatedRecord.get.connectionResponse.contains(response))
       }
     },
     test("updateFail (fail one retry) updates record") {
@@ -244,10 +245,10 @@ object ConnectionRepositorySpecSuite {
         record <- repo.getConnectionRecord(aRecord.id)
         count <- repo.updateAfterFail(aRecord.id, Some("Just to test")) // TEST
         updatedRecord1 <- repo.getConnectionRecord(aRecord.id)
-        response = ConnectionResponse.makeResponseFromRequest(connectionRequest.makeMessage)
+        response = ConnectionResponse.makeResponseFromRequest(connectionRequest.makeMessage).toOption.get
         count <- repo.updateWithConnectionResponse(
           aRecord.id,
-          response.toOption.get,
+          response,
           ProtocolState.ConnectionResponseSent,
           maxRetries
         )
