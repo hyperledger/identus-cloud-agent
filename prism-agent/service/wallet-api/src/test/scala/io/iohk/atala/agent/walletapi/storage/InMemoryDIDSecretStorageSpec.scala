@@ -10,6 +10,7 @@ import zio.test.Assertion.*
 
 import scala.collection.immutable.ArraySeq
 
+// TODO: remove this test
 object InMemoryDIDSecretStorageSpec extends ZIOSpecDefault {
 
   private val didExample = PrismDID.buildLongFormFromOperation(PrismDIDOperation.Create(Nil, Nil, Nil))
