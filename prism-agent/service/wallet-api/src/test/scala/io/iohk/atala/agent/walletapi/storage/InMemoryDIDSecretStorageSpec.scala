@@ -115,7 +115,7 @@ object InMemoryDIDSecretStorageSpec extends ZIOSpecDefault {
         }
         _ <- storage.removeKey(didExample, "key-1")
         keys <- storage.listKeys(didExample)
-      } yield assert(keys.keys)(hasSameElements(Seq("key-2", "key-3")))
+      } yield assert(keys.map(_._1))(hasSameElements(Seq("key-2", "key-3")))
     }
   )
 }

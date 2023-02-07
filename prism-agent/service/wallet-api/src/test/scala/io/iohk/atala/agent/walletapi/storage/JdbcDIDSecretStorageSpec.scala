@@ -74,8 +74,9 @@ object JdbcDIDSecretStorageSpec extends ZIOSpecDefault, PostgresTestContainerSup
         listKeySpec,
         getKeySpec,
         insertKeySpec,
-        // removeKeySpec
-      ) @@ TestAspect.sequential @@ TestAspect.before(DBTestUtils.runMigrationAgentDB) @@ TestAspect.timed @@ TestAspect.tag("dev")
+        removeKeySpec
+      ) @@ TestAspect.sequential @@ TestAspect.before(DBTestUtils.runMigrationAgentDB) @@ TestAspect.timed @@ TestAspect
+        .tag("dev")
 
     testSuite.provideSomeLayer(
       pgContainerLayer >+> transactorLayer >+> (JdbcDIDSecretStorage.layer ++ JdbcDIDNonSecretStorage.layer)
@@ -97,7 +98,7 @@ object JdbcDIDSecretStorageSpec extends ZIOSpecDefault, PostgresTestContainerSup
         _ <- ZIO.foreachDiscard(keyPairs) { case (keyId, keyPair) =>
           storage.insertKey(didExample, keyId, keyPair, operationHash)
         }
-        readKeyPairs <- storage.listKeys(didExample)
+        readKeyPairs <- storage.listKeys(didExample).map(_.map(i => i._1 -> i._3))
       } yield assert(readKeyPairs)(hasSameElements(keyPairs))
     }
   )
@@ -177,36 +178,36 @@ object JdbcDIDSecretStorageSpec extends ZIOSpecDefault, PostgresTestContainerSup
       for {
         storage <- ZIO.service[DIDSecretStorage]
         keyPair <- generateKeyPair()
-        _ <- storage.insertKey(didExample, "key-1", keyPair, Array.fill(32)(0))
-        readKeyPairs <- storage.listKeys(didExample)
-      } yield assert(readKeyPairs)(contains(("key-1", keyPair)))
+        row <- storage.insertKey(didExample, "key-1", keyPair, Array.fill(32)(0))
+        readKeyPairs <- storage.listKeys(didExample).map(_.map(i => i._1 -> i._3))
+      } yield assert(readKeyPairs)(contains(("key-1", keyPair))) && assert(row)(equalTo(1))
     },
-    test("insert same key-id on different dids") {
+    test("insert same key-id with different did") {
       for {
         storage <- ZIO.service[DIDSecretStorage]
         did1 = PrismDID.buildCanonicalFromSuffix("0" * 64).toOption.get
         did2 = PrismDID.buildCanonicalFromSuffix("1" * 64).toOption.get
         keyPair1 <- generateKeyPair()
         keyPair2 <- generateKeyPair()
-        _ <- storage.insertKey(did1, "key-1", keyPair1, Array.fill(32)(0))
-        _ <- storage.insertKey(did2, "key-1", keyPair2, Array.fill(32)(0))
-        readKeyPairs1 <- storage.listKeys(did1)
-        readKeyPairs2 <- storage.listKeys(did2)
+        row1 <- storage.insertKey(did1, "key-1", keyPair1, Array.fill(32)(0))
+        row2 <- storage.insertKey(did2, "key-1", keyPair2, Array.fill(32)(0))
+        readKeyPairs1 <- storage.listKeys(did1).map(_.map(i => i._1 -> i._3))
+        readKeyPairs2 <- storage.listKeys(did2).map(_.map(i => i._1 -> i._3))
       } yield assert(readKeyPairs1)(contains(("key-1" -> keyPair1))) && assert(readKeyPairs2)(
         contains(("key-1" -> keyPair2))
-      )
+      ) && assert(row1)(equalTo(1)) && assert(row2)(equalTo(1))
     },
     test("insert same key-id, did with different opration hash") {
       for {
         storage <- ZIO.service[DIDSecretStorage]
-        _ <- ZIO.foreach(1 to 10) { i =>
+        rows <- ZIO.foreach(1 to 10) { i =>
           for {
             keyPair <- generateKeyPair()
-            _ <- storage.insertKey(didExample, s"key-$i", keyPair, Array.fill(32)(i.toByte))
-          } yield ()
+            row <- storage.insertKey(didExample, s"key-$i", keyPair, Array.fill(32)(i.toByte))
+          } yield row
         }
         readKeyPairs <- storage.listKeys(didExample)
-      } yield assert(readKeyPairs)(hasSize(equalTo(10)))
+      } yield assert(readKeyPairs)(hasSize(equalTo(10))) && assert(rows)(forall(equalTo(1)))
     },
     test("fail on inserting same key-id, did, operation hash") {
       val effect = for {
@@ -227,53 +228,26 @@ object JdbcDIDSecretStorageSpec extends ZIOSpecDefault, PostgresTestContainerSup
     }
   )
 
-  // private val upsertKeySpec = suite("upsertKey")(
-  //   test("replace value for existing key") {
-  //     val keyPair1 = generateKeyPair(publicKey = (1, 1))
-  //     val keyPair2 = generateKeyPair(publicKey = (2, 2))
-  //     for {
-  //       storage <- ZIO.service[DIDSecretStorage]
-  //       _ <- storage.insertKey(didExample, "key-1", keyPair1, Array.empty)
-  //       _ <- storage.insertKey(didExample, "key-1", keyPair2, Array.empty)
-  //       key <- storage.getKey(didExample, "key-1")
-  //     } yield assert(key)(isSome(equalTo(keyPair2)))
-  //   }
-  // )
-
-  // private val removeKeySpec = suite("removeKey")(
-  //   test("remove existing key and return removed value") {
-  //     val keyPair = generateKeyPair(publicKey = (1, 1))
-  //     for {
-  //       storage <- ZIO.service[DIDSecretStorage]
-  //       _ <- storage.insertKey(didExample, "key-1", keyPair, Array.empty)
-  //       _ <- storage.removeKey(didExample, "key-1")
-  //       keys <- storage.listKeys(didExample)
-  //     } yield assert(keys)(isEmpty)
-  //   },
-  //   test("remove non-existing key and return None for the removed value") {
-  //     val keyPair = generateKeyPair(publicKey = (1, 1))
-  //     for {
-  //       storage <- ZIO.service[DIDSecretStorage]
-  //       _ <- storage.insertKey(didExample, "key-1", keyPair, Array.empty)
-  //       _ <- storage.removeKey(didExample, "key-2")
-  //       keys <- storage.listKeys(didExample)
-  //     } yield assert(keys)(hasSize(equalTo(1)))
-  //   },
-  //   test("remove some of existing keys and keep other keys") {
-  //     val keyPairs = Map(
-  //       "key-1" -> generateKeyPair(publicKey = (1, 1)),
-  //       "key-2" -> generateKeyPair(publicKey = (2, 2)),
-  //       "key-3" -> generateKeyPair(publicKey = (3, 3))
-  //     )
-  //     for {
-  //       storage <- ZIO.service[DIDSecretStorage]
-  //       _ <- ZIO.foreachDiscard(keyPairs) { case (keyId, keyPair) =>
-  //         storage.insertKey(didExample, keyId, keyPair, Array.empty)
-  //       }
-  //       _ <- storage.removeKey(didExample, "key-1")
-  //       keys <- storage.listKeys(didExample)
-  //     } yield assert(keys.keys)(hasSameElements(Seq("key-2", "key-3")))
-  //   }
-  // )
+  private val removeKeySpec = suite("removeKey")(
+    test("do not fail on removing non-existing keys") {
+      for {
+        storage <- ZIO.service[DIDSecretStorage]
+        n <- storage.removeKey(didExample, "key-1")
+      } yield assert(n)(isZero)
+    },
+    test("remove exiting keys") {
+      for {
+        storage <- ZIO.service[DIDSecretStorage]
+        keyPair <- generateKeyPair()
+        _ <- storage.insertKey(didExample, "key-1", keyPair, Array.fill(32)(0))
+        _ <- storage.insertKey(didExample, "key-1", keyPair, Array.fill(32)(1))
+        _ <- storage.insertKey(didExample, "key-1", keyPair, Array.fill(32)(2))
+        _ <- storage.insertKey(didExample, "key-2", keyPair, Array.fill(32)(3))
+        before <- storage.listKeys(didExample)
+        n <- storage.removeKey(didExample, "key-1")
+        after <- storage.listKeys(didExample)
+      } yield assert(before)(hasSize(equalTo(4))) && assert(after.map(_._1))(hasSameElements(Seq("key-2"))) && assert(n)(equalTo(3))
+    }
+  )
 
 }

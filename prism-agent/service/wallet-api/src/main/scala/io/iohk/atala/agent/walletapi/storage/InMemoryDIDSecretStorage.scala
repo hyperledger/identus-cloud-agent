@@ -8,15 +8,15 @@ import io.iohk.atala.shared.models.HexStrings.HexString
 import zio.*
 import io.iohk.atala.mercury.model.DidId
 import com.nimbusds.jose.jwk.OctetKeyPair
+import scala.collection.immutable.ArraySeq
 
 private[walletapi] class InMemoryDIDSecretStorage private (
     store: Ref[Map[PrismDID, DIDSecretRecord]],
     peerDIDStore: Ref[Map[DidId, PeerDIDSecretRecord]]
 ) extends DIDSecretStorage {
-  override def listKeys(did: PrismDID): Task[Map[String, ECKeyPair]] =
-    store.get.map(_.get(did).map(_.keyPairs).getOrElse(Map.empty))
+  override def listKeys(did: PrismDID): Task[Seq[(String, ArraySeq[Byte], ECKeyPair)]] = ???
 
-  override def getKey(did: PrismDID, keyId: String): Task[Option[ECKeyPair]] = listKeys(did).map(_.get(keyId))
+  override def getKey(did: PrismDID, keyId: String): Task[Option[ECKeyPair]] = ???
 
   override def insertKey(did: PrismDID, keyId: String, keyPair: ECKeyPair, operationHash: Array[Byte]): Task[Int] =
     store
