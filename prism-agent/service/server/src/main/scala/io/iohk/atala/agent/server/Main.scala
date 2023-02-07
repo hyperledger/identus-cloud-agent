@@ -37,7 +37,7 @@ object Main extends ZIOAppDefault {
   } yield ()
 
   def appComponents(didCommServicePort: Int, restServicePort: Int) = for {
-    _ <- Modules.didCommExchangesJob.debug.fork
+    _ <- Modules.issueCredentialDidCommExchangesJob.debug.fork
     _ <- Modules.presentProofExchangeJob.debug.fork
     _ <- Modules.connectDidCommExchangesJob.debug.fork
     _ <- Modules.didCommServiceEndpoint(didCommServicePort).debug.fork
