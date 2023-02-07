@@ -172,7 +172,6 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
             |   issued_credential_raw
             | FROM public.issue_credential_records
             | WHERE $inClauseFragment
-            | LIMIT 50
             """.stripMargin
           .query[IssueCredentialRecord]
           .to[Seq]
