@@ -516,18 +516,22 @@ private class PresentationServiceImpl(
       proofTypes: Seq[ProofType],
       thid: UUID,
       subjectDId: DidId,
-      options: Option[io.iohk.atala.pollux.core.model.presentation.Options]
+      maybeOptions: Option[io.iohk.atala.pollux.core.model.presentation.Options]
   ): RequestPresentation = {
     RequestPresentation(
       body = RequestPresentation.Body(
         goal_code = Some("request"),
         proof_types = proofTypes
       ),
-      attachments = Seq(
-        AttachmentDescriptor.buildJsonAttachment(payload =
-          io.iohk.atala.pollux.core.model.presentation.PresentationAttachment.build(options)
+      attachments = maybeOptions
+        .map(options =>
+          Seq(
+            AttachmentDescriptor.buildJsonAttachment(payload =
+              io.iohk.atala.pollux.core.model.presentation.PresentationAttachment.build(Some(options))
+            )
+          )
         )
-      ),
+        .getOrElse(Seq.empty),
       from = didAgent.id,
       to = subjectDId,
       thid = Some(thid.toString)
