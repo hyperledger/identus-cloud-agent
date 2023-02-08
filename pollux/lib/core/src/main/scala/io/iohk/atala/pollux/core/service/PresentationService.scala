@@ -11,6 +11,7 @@ import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.model.error.PresentationError._
 import io.iohk.atala.pollux.core.model.IssuedCredentialRaw
 import io.iohk.atala.pollux.core.repository.PresentationRepository
+import io.iohk.atala.pollux.core.model.presentation._
 import io.iohk.atala.pollux.vc.jwt.*
 import zio.*
 import io.iohk.atala.mercury.model.AttachmentDescriptor
@@ -29,7 +30,6 @@ import java.security.PublicKey
 import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord
 import io.iohk.atala.pollux.core.repository.CredentialRepository
-import org.didcommx.didcomm.message.Attachment.Data.Base64 //FIXME create interface so we do not have to use it directly
 import java.{util => ju}
 
 trait PresentationService {
@@ -40,7 +40,8 @@ trait PresentationService {
       thid: UUID,
       subjectDid: DidId,
       connectionId: Option[String],
-      proofTypes: Seq[ProofType]
+      proofTypes: Seq[ProofType],
+      options: Option[io.iohk.atala.pollux.core.model.presentation.Options]
   ): IO[PresentationError, PresentationRecord]
 
   def getPresentationRecords(): IO[PresentationError, Seq[PresentationRecord]]
@@ -49,7 +50,7 @@ trait PresentationService {
       record: UUID,
       issuer: Issuer,
       issuanceDate: Instant
-  ): IO[PresentationError, W3cPresentationPayload]
+  ): IO[PresentationError, PresentationPayload]
 
   def getPresentationRecordsByStates(
       state: PresentationRecord.ProtocolState*
@@ -136,7 +137,7 @@ private class PresentationServiceImpl(
       recordId: UUID,
       prover: Issuer,
       issuanceDate: Instant
-  ): IO[PresentationError, W3cPresentationPayload] = {
+  ): IO[PresentationError, PresentationPayload] = {
 
     for {
       maybeRecord <- presentationRepository
@@ -149,7 +150,9 @@ private class PresentationServiceImpl(
       credentialsToUse <- ZIO
         .fromOption(record.credentialsToUse)
         .mapError(_ => InvalidFlowStateError(s"No request found for this record: $recordId"))
-
+      requestPresentation <- ZIO
+        .fromOption(record.requestPresentationData)
+        .mapError(_ => InvalidFlowStateError(s"RequestPresentation not found: $recordId"))
       issuedValidCredentials <- credentialRepository
         .getValidIssuedCredentials(credentialsToUse.map(UUID.fromString))
         .mapError(RepositoryError.apply)
@@ -165,8 +168,8 @@ private class PresentationServiceImpl(
         )
       )
 
-      w3cPresentationPayload <- createPresentationPayloadFromCredential(issuedCredentials, prover)
-    } yield w3cPresentationPayload
+      presentationPayload <- createPresentationPayloadFromCredential(issuedCredentials, requestPresentation, prover)
+    } yield presentationPayload
   }
 
   override def extractIdFromCredential(credential: W3cCredentialPayload): Option[UUID] =
@@ -199,10 +202,11 @@ private class PresentationServiceImpl(
       thid: UUID,
       subjectId: DidId,
       connectionId: Option[String],
-      proofTypes: Seq[ProofType]
+      proofTypes: Seq[ProofType],
+      options: Option[io.iohk.atala.pollux.core.model.presentation.Options]
   ): IO[PresentationError, PresentationRecord] = {
     for {
-      request <- ZIO.succeed(createDidCommRequestPresentation(proofTypes, thid, subjectId))
+      request <- ZIO.succeed(createDidCommRequestPresentation(proofTypes, thid, subjectId, options))
       record <- ZIO.succeed(
         PresentationRecord(
           id = UUID.randomUUID(),
@@ -274,8 +278,9 @@ private class PresentationServiceImpl(
 
   private def createPresentationPayloadFromCredential(
       issuedCredentials: Seq[IssuedCredentialRaw],
+      requestPresentation: RequestPresentation,
       prover: Issuer
-  ): IO[PresentationError, W3cPresentationPayload] = {
+  ): IO[PresentationError, PresentationPayload] = {
 
     val verifiableCredentials = issuedCredentials.map { issuedCredential =>
       decode[io.iohk.atala.mercury.model.Base64](issuedCredential.signedCredential)
@@ -284,18 +289,45 @@ private class PresentationServiceImpl(
         .getOrElse(???)
     }.toVector
 
-    val w3cPresentationPayload =
-      W3cPresentationPayload(
-        `@context` = Vector("https://www.w3.org/2018/presentations/v1"),
-        maybeId = None,
-        `type` = Vector("VerifiablePresentation"),
-        verifiableCredential = verifiableCredentials,
-        holder = prover.did.value,
-        verifier = Vector("https://example.edu/issuers/565049"), // TODO Fix this
-        maybeIssuanceDate = None,
-        maybeExpirationDate = None
+    val maybeOptions = requestPresentation.attachments
+      .map(_.data.asJson.noSpaces)
+      .headOption
+      .flatMap(
+        decode[io.iohk.atala.mercury.model.JsonData](_)
+          .map(data =>
+            io.iohk.atala.pollux.core.model.presentation.PresentationAttachment.given_Decoder_PresentationAttachment
+              .decodeJson(data.json.asJson)
+              .map(x => x.options)
+              .getOrElse(???)
+          )
+          .getOrElse(???)
       )
-    ZIO.succeed(w3cPresentationPayload)
+    val presentationPayload = maybeOptions
+      .map { options =>
+        W3cPresentationPayload(
+          `@context` = Vector("https://www.w3.org/2018/presentations/v1"),
+          maybeId = None,
+          `type` = Vector("VerifiablePresentation"),
+          verifiableCredential = verifiableCredentials,
+          holder = prover.did.value,
+          verifier = Vector(options.domain),
+          maybeIssuanceDate = None,
+          maybeExpirationDate = None
+        ).toJwtPresentationPayload.copy(maybeNonce = Some(options.challenge))
+      }
+      .getOrElse {
+        W3cPresentationPayload(
+          `@context` = Vector("https://www.w3.org/2018/presentations/v1"),
+          maybeId = None,
+          `type` = Vector("VerifiablePresentation"),
+          verifiableCredential = verifiableCredentials,
+          holder = prover.did.value,
+          verifier = Vector("https://example.verifier"), // TODO Fix this
+          maybeIssuanceDate = None,
+          maybeExpirationDate = None
+        ).toJwtPresentationPayload
+      }
+    ZIO.succeed(presentationPayload)
   }
 
   override def acceptRequestPresentation(
@@ -483,14 +515,19 @@ private class PresentationServiceImpl(
   private[this] def createDidCommRequestPresentation(
       proofTypes: Seq[ProofType],
       thid: UUID,
-      subjectDId: DidId
+      subjectDId: DidId,
+      options: Option[io.iohk.atala.pollux.core.model.presentation.Options]
   ): RequestPresentation = {
     RequestPresentation(
       body = RequestPresentation.Body(
         goal_code = Some("request"),
         proof_types = proofTypes
       ),
-      attachments = Seq.empty,
+      attachments = Seq(
+        AttachmentDescriptor.buildJsonAttachment(payload =
+          io.iohk.atala.pollux.core.model.presentation.PresentationAttachment.build(options)
+        )
+      ),
       from = didAgent.id,
       to = subjectDId,
       thid = Some(thid.toString)
