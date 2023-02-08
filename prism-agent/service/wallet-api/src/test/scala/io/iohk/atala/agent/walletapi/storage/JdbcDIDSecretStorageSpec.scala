@@ -26,47 +26,7 @@ import java.time.Instant
 import scala.collection.immutable.ArraySeq
 import org.postgresql.util.PSQLException
 
-object JdbcDIDSecretStorageSpec extends ZIOSpecDefault, PostgresTestContainerSupport {
-
-  private val didExample = PrismDID.buildLongFormFromOperation(PrismDIDOperation.Create(Nil, Nil, Nil))
-
-  private def updateLineage(
-      operationId: Array[Byte] = Array.fill(32)(0),
-      operationHash: Array[Byte] = Array.fill(32)(0),
-      status: ScheduledDIDOperationStatus = ScheduledDIDOperationStatus.Confirmed
-  ) = DIDUpdateLineage(
-    operationId = ArraySeq.from(operationId),
-    operationHash = ArraySeq.from(operationHash),
-    previousOperationHash = ArraySeq.fill(32)(0),
-    status = status,
-    createdAt = Instant.EPOCH,
-    updatedAt = Instant.EPOCH
-  )
-
-  private def generateKeyPair() = KeyGeneratorWrapper.generateECKeyPair(EllipticCurve.SECP256K1)
-
-  private def generateCreateOperation(keyIds: Seq[String]) =
-    OperationFactory.makeCreateOperation("master0", EllipticCurve.SECP256K1, generateKeyPair)(
-      ManagedDIDTemplate(
-        publicKeys = keyIds.map(DIDPublicKeyTemplate(_, VerificationRelationship.Authentication)),
-        services = Nil
-      )
-    )
-
-  private def initializeDIDStateAndKeys(keyIds: Seq[String] = Nil) = {
-    for {
-      nonSecretStorage <- ZIO.service[DIDNonSecretStorage]
-      secretStorage <- ZIO.service[DIDSecretStorage]
-      generated <- generateCreateOperation(keyIds)
-      (createOperation, secrets) = generated
-      did = createOperation.did
-      keyPairs = secrets.keyPairs.toSeq
-      _ <- nonSecretStorage.setManagedDIDState(did, ManagedDIDState.Created(createOperation))
-      _ <- ZIO.foreach(keyPairs) { case (keyId, keyPair) =>
-        secretStorage.insertKey(did, keyId, keyPair, createOperation.toAtalaOperationHash)
-      }
-    } yield (did, keyPairs)
-  }
+object JdbcDIDSecretStorageSpec extends ZIOSpecDefault, StorageSpecHelper, PostgresTestContainerSupport {
 
   override def spec = {
     val testSuite =
