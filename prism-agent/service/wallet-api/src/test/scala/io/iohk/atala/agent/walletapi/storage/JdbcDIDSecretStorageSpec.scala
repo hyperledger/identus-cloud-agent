@@ -74,9 +74,9 @@ object JdbcDIDSecretStorageSpec extends ZIOSpecDefault, PostgresTestContainerSup
         listKeySpec,
         getKeySpec,
         insertKeySpec,
-        removeKeySpec
-      ) @@ TestAspect.sequential @@ TestAspect.before(DBTestUtils.runMigrationAgentDB) @@ TestAspect.timed @@ TestAspect
-        .tag("dev")
+        removeKeySpec,
+        removeDIDSecretSpec
+      ) @@ TestAspect.sequential @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
 
     testSuite.provideSomeLayer(
       pgContainerLayer >+> transactorLayer >+> (JdbcDIDSecretStorage.layer ++ JdbcDIDNonSecretStorage.layer)
@@ -246,7 +246,39 @@ object JdbcDIDSecretStorageSpec extends ZIOSpecDefault, PostgresTestContainerSup
         before <- storage.listKeys(didExample)
         n <- storage.removeKey(didExample, "key-1")
         after <- storage.listKeys(didExample)
-      } yield assert(before)(hasSize(equalTo(4))) && assert(after.map(_._1))(hasSameElements(Seq("key-2"))) && assert(n)(equalTo(3))
+      } yield assert(before)(hasSize(equalTo(4)))
+        && assert(after.map(_._1))(hasSameElements(Seq("key-2")))
+        && assert(n)(equalTo(3))
+    }
+  )
+
+  private val removeDIDSecretSpec = suite("removeDIDSecret")(
+    test("do not fail on removing secret for non-existing did") {
+      for {
+        storage <- ZIO.service[DIDSecretStorage]
+        n <- storage.removeDIDSecret(didExample)
+      } yield assert(n)(isZero)
+    },
+    test("remove all existing secrets for a given DID") {
+      for {
+        storage <- ZIO.service[DIDSecretStorage]
+        keyPair <- generateKeyPair()
+        did1 = PrismDID.buildCanonicalFromSuffix("0" * 64).toOption.get
+        did2 = PrismDID.buildCanonicalFromSuffix("1" * 64).toOption.get
+        _ <- storage.insertKey(did1, "key-1", keyPair, Array.fill(32)(0))
+        _ <- storage.insertKey(did1, "key-2", keyPair, Array.fill(32)(1))
+        _ <- storage.insertKey(did2, "key-1", keyPair, Array.fill(32)(0))
+        _ <- storage.insertKey(did2, "key-2", keyPair, Array.fill(32)(1))
+        before1 <- storage.listKeys(did1)
+        before2 <- storage.listKeys(did2)
+        n <- storage.removeDIDSecret(did1)
+        after1 <- storage.listKeys(did1)
+        after2 <- storage.listKeys(did2)
+      } yield assert(n)(equalTo(2))
+        && assert(before1)(hasSize(equalTo(2)))
+        && assert(after1)(isEmpty)
+        && assert(before2)(hasSize(equalTo(2)))
+        && assert(after2)(equalTo(before2))
     }
   )
 
