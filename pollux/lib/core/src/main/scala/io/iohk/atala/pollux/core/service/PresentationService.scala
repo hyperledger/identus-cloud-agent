@@ -31,6 +31,8 @@ import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord
 import io.iohk.atala.pollux.core.repository.CredentialRepository
 import java.{util => ju}
+import cats.syntax.all._
+import cats._, cats.data._, cats.implicits._
 
 trait PresentationService {
 
@@ -282,52 +284,73 @@ private class PresentationServiceImpl(
       prover: Issuer
   ): IO[PresentationError, PresentationPayload] = {
 
-    val verifiableCredentials = issuedCredentials.map { issuedCredential =>
-      decode[io.iohk.atala.mercury.model.Base64](issuedCredential.signedCredential)
-        .map(x => new String(java.util.Base64.getDecoder().decode(x.base64)))
-        .map(x => JwtVerifiableCredentialPayload(JWT(x)))
-        .getOrElse(???)
-    }.toVector
+    // val verifiableCredentials = issuedCredentials.map { issuedCredential =>
+    //   decode[io.iohk.atala.mercury.model.Base64](issuedCredential.signedCredential)
+    //     .map(x => new String(java.util.Base64.getDecoder().decode(x.base64)))
+    //     .map(x => JwtVerifiableCredentialPayload(JWT(x)))
+    //     .getOrElse(???)
+    // }.toVector
 
-    val maybeOptions = requestPresentation.attachments
-      .map(_.data.asJson.noSpaces)
-      .headOption
-      .flatMap(
-        decode[io.iohk.atala.mercury.model.JsonData](_)
-          .map(data =>
-            io.iohk.atala.pollux.core.model.presentation.PresentationAttachment.given_Decoder_PresentationAttachment
-              .decodeJson(data.json.asJson)
-              .map(x => x.options)
-              .getOrElse(???)
-          )
-          .getOrElse(???)
-      )
-    val presentationPayload = maybeOptions
-      .map { options =>
-        W3cPresentationPayload(
-          `@context` = Vector("https://www.w3.org/2018/presentations/v1"),
-          maybeId = None,
-          `type` = Vector("VerifiablePresentation"),
-          verifiableCredential = verifiableCredentials,
-          holder = prover.did.value,
-          verifier = Vector(options.domain),
-          maybeIssuanceDate = None,
-          maybeExpirationDate = None
-        ).toJwtPresentationPayload.copy(maybeNonce = Some(options.challenge))
-      }
-      .getOrElse {
-        W3cPresentationPayload(
-          `@context` = Vector("https://www.w3.org/2018/presentations/v1"),
-          maybeId = None,
-          `type` = Vector("VerifiablePresentation"),
-          verifiableCredential = verifiableCredentials,
-          holder = prover.did.value,
-          verifier = Vector("https://example.verifier"), // TODO Fix this
-          maybeIssuanceDate = None,
-          maybeExpirationDate = None
-        ).toJwtPresentationPayload
-      }
-    ZIO.succeed(presentationPayload)
+    val verifiableCredentials =
+      issuedCredentials.map { issuedCredential =>
+        decode[io.iohk.atala.mercury.model.Base64](issuedCredential.signedCredential).right
+          .flatMap(x => Right(new String(java.util.Base64.getDecoder().decode(x.base64))))
+          .right
+          .flatMap(x => Right(JwtVerifiableCredentialPayload(JWT(x))))
+          .left
+          .map(err => PresentationDecodingError(new Throwable(s"JsonData decoding error: $err")))
+      }.sequence
+
+    val maybePresentationOptions
+        : Either[PresentationError, Option[io.iohk.atala.pollux.core.model.presentation.Options]] =
+      requestPresentation.attachments.headOption
+        .map(attachment =>
+          decode[io.iohk.atala.mercury.model.JsonData](attachment.data.asJson.noSpaces)
+            .flatMap(data =>
+              io.iohk.atala.pollux.core.model.presentation.PresentationAttachment.given_Decoder_PresentationAttachment
+                .decodeJson(data.json.asJson)
+                .map(_.options)
+                .leftMap(err =>
+                  PresentationDecodingError(new Throwable(s"PresentationAttachment decoding error: $err"))
+                )
+            )
+            .leftMap(err => PresentationDecodingError(new Throwable(s"JsonData decoding error: $err")))
+        )
+        .getOrElse(Right(None))
+
+    for {
+      maybeOptions <- ZIO.fromEither(maybePresentationOptions)
+      vcs <- ZIO.fromEither(verifiableCredentials)
+      presentationPayload <-
+        ZIO.succeed(
+          maybeOptions
+            .map { options =>
+              W3cPresentationPayload(
+                `@context` = Vector("https://www.w3.org/2018/presentations/v1"),
+                maybeId = None,
+                `type` = Vector("VerifiablePresentation"),
+                verifiableCredential = vcs.toVector,
+                holder = prover.did.value,
+                verifier = Vector(options.domain),
+                maybeIssuanceDate = None,
+                maybeExpirationDate = None
+              ).toJwtPresentationPayload.copy(maybeNonce = Some(options.challenge))
+            }
+            .getOrElse {
+              W3cPresentationPayload(
+                `@context` = Vector("https://www.w3.org/2018/presentations/v1"),
+                maybeId = None,
+                `type` = Vector("VerifiablePresentation"),
+                verifiableCredential = vcs.toVector,
+                holder = prover.did.value,
+                verifier = Vector("https://example.verifier"), // TODO Fix this
+                maybeIssuanceDate = None,
+                maybeExpirationDate = None
+              ).toJwtPresentationPayload
+            }
+        )
+    } yield presentationPayload
+
   }
 
   override def acceptRequestPresentation(
