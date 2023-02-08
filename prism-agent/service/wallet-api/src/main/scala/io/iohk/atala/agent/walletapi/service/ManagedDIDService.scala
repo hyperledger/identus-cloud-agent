@@ -13,12 +13,7 @@ import io.iohk.atala.agent.walletapi.model.{
 import io.iohk.atala.agent.walletapi.model.ECCoordinates.*
 import io.iohk.atala.agent.walletapi.model.error.{*, given}
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService.DEFAULT_MASTER_KEY_ID
-import io.iohk.atala.agent.walletapi.storage.{
-  DIDNonSecretStorage,
-  DIDSecretStorage,
-  InMemoryDIDNonSecretStorage,
-  InMemoryDIDSecretStorage
-}
+import io.iohk.atala.agent.walletapi.storage.{DIDNonSecretStorage, DIDSecretStorage}
 import io.iohk.atala.agent.walletapi.util.{
   ManagedDIDTemplateValidator,
   OperationFactory,
@@ -382,11 +377,6 @@ object ManagedDIDService {
   val DEFAULT_MASTER_KEY_ID: String = "master0"
 
   val reservedKeyIds: Set[String] = Set(DEFAULT_MASTER_KEY_ID)
-
-  def inMemoryStorage: URLayer[DIDOperationValidator & DIDService, ManagedDIDService] =
-    (InMemoryDIDNonSecretStorage.layer ++ InMemoryDIDSecretStorage.layer) >>> ZLayer.fromFunction(
-      ManagedDIDService(_, _, _, _)
-    )
 
   val layer: URLayer[DIDOperationValidator & DIDService & DIDSecretStorage & DIDNonSecretStorage, ManagedDIDService] =
     ZLayer.fromFunction(ManagedDIDService(_, _, _, _))

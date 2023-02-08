@@ -23,8 +23,12 @@ import zio.test.*
 import zio.test.Assertion.*
 
 import scala.collection.immutable.ArraySeq
+import io.iohk.atala.test.container.PostgresTestContainerSupport
+import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
+import io.iohk.atala.agent.walletapi.sql.JdbcDIDNonSecretStorage
+import io.iohk.atala.test.container.DBTestUtils
 
-object ManagedDIDServiceSpec extends ZIOSpecDefault {
+object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSupport {
 
   private trait TestDIDService extends DIDService {
     def getPublishedOperations: UIO[Seq[SignedPrismDIDOperation]]
@@ -53,16 +57,24 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault {
     }
   }
 
-  private def managedDIDServiceLayer: ULayer[TestDIDService & ManagedDIDService] =
-    (DIDOperationValidator.layer() ++ testDIDServiceLayer) >+> ManagedDIDService.inMemoryStorage
+  private def jdbcStorageLayer =
+    pgContainerLayer >+> transactorLayer >+> (JdbcDIDSecretStorage.layer ++ JdbcDIDNonSecretStorage.layer)
+
+  private def managedDIDServiceLayer =
+    (DIDOperationValidator.layer() ++ testDIDServiceLayer) >+> ManagedDIDService.layer
 
   private def generateDIDTemplate(
       publicKeys: Seq[DIDPublicKeyTemplate] = Nil,
       services: Seq[Service] = Nil
   ): ManagedDIDTemplate = ManagedDIDTemplate(publicKeys, services)
 
-  override def spec =
-    suite("ManagedDIDService")(publishStoredDIDSpec, createAndStoreDIDSpec).provideLayer(managedDIDServiceLayer)
+  override def spec = {
+    val testSuite =
+      suite("ManagedDIDService")(publishStoredDIDSpec, createAndStoreDIDSpec) @@ TestAspect
+        .before(DBTestUtils.runMigrationAgentDB)
+
+    testSuite.provideLayer(jdbcStorageLayer >+> managedDIDServiceLayer)
+  }
 
   private val publishStoredDIDSpec =
     suite("publishStoredDID")(

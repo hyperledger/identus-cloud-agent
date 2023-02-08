@@ -76,7 +76,7 @@ object JdbcDIDSecretStorageSpec extends ZIOSpecDefault, PostgresTestContainerSup
         insertKeySpec,
         removeKeySpec,
         removeDIDSecretSpec
-      ) @@ TestAspect.sequential @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
+      ) @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
 
     testSuite.provideSomeLayer(
       pgContainerLayer >+> transactorLayer >+> (JdbcDIDSecretStorage.layer ++ JdbcDIDNonSecretStorage.layer)
