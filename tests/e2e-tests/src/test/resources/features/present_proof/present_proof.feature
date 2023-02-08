@@ -1,6 +1,6 @@
-#@RFC0037
-#Feature: Present Proof Protocol
-#
+@RFC0037
+Feature: Present Proof Protocol
+
 #  @AIP20
 #  Scenario: Holder presents credential proof to verifier
 #    Given Faber and Bob have an existing connection
