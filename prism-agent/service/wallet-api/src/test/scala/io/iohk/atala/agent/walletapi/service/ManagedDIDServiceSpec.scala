@@ -27,6 +27,7 @@ import io.iohk.atala.test.container.PostgresTestContainerSupport
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDNonSecretStorage
 import io.iohk.atala.test.container.DBTestUtils
+import io.iohk.atala.castor.core.model.did.InternalKeyPurpose
 
 object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSupport {
 
@@ -74,7 +75,7 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSuppor
         .before(DBTestUtils.runMigrationAgentDB)
 
     testSuite.provideLayer(jdbcStorageLayer >+> managedDIDServiceLayer)
-  }
+  } @@ TestAspect.tag("dev")
 
   private val publishStoredDIDSpec =
     suite("publishStoredDID")(
@@ -97,6 +98,35 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSuppor
         val did = PrismDID.buildLongFormFromOperation(PrismDIDOperation.Create(Nil, Nil, Nil)).asCanonical
         val result = ZIO.serviceWithZIO[ManagedDIDService](_.publishStoredDID(did))
         assertZIO(result.exit)(fails(isSubtype[PublishManagedDIDError.DIDNotFound](anything)))
+      },
+      test("set status to publication pending after publishing") {
+        val template = generateDIDTemplate()
+        for {
+          svc <- ZIO.service[ManagedDIDService]
+          did <- svc.createAndStoreDID(template).map(_.asCanonical)
+          stateBefore <- svc.nonSecretStorage.getManagedDIDState(did)
+          _ <- svc.publishStoredDID(did)
+          stateAfter <- svc.nonSecretStorage.getManagedDIDState(did)
+        } yield assert(stateBefore)(isSome(isSubtype[ManagedDIDState.Created](anything)))
+          && assert(stateAfter)(isSome(isSubtype[ManagedDIDState.PublicationPending](anything)))
+      },
+      test("do not re-publish when publishing already published DID") {
+        val template = generateDIDTemplate()
+        for {
+          svc <- ZIO.service[ManagedDIDService]
+          testDIDSvc <- ZIO.service[TestDIDService]
+          did <- svc.createAndStoreDID(template).map(_.asCanonical)
+          createOp <- svc.nonSecretStorage.getManagedDIDState(did).collect(()) {
+            case Some(ManagedDIDState.Created(op)) => op
+          }
+          // set status as if already published
+          publishedStatus = ManagedDIDState.Published(createOp, ArraySeq.fill(32)(0))
+          _ <- svc.nonSecretStorage.setManagedDIDState(did, publishedStatus)
+          _ <- svc.publishStoredDID(did)
+          state <- svc.nonSecretStorage.getManagedDIDState(did)
+          publishedOperation <- testDIDSvc.getPublishedOperations
+        } yield assert(state)(isSome(equalTo(publishedStatus)))
+          && assert(publishedOperation)(isEmpty)
       }
     )
 
@@ -135,10 +165,9 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSuppor
       for {
         svc <- ZIO.service[ManagedDIDService]
         did <- svc.createAndStoreDID(template).map(_.asCanonical)
-        createOperation <- svc.nonSecretStorage.getManagedDIDState(did)
-        publicKeys <- ZIO.fromOption(createOperation.collect { case ManagedDIDState.Created(operation) =>
-          operation.publicKeys
-        })
+        state <- svc.nonSecretStorage.getManagedDIDState(did)
+        createOperation <- ZIO.fromOption(state.collect { case ManagedDIDState.Created(operation) => operation })
+        publicKeys = createOperation.publicKeys
       } yield assert(publicKeys.map(i => i.id -> i.purpose))(
         hasSameElements(
           Seq(
@@ -148,6 +177,15 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSuppor
           )
         )
       )
+    },
+    test("created DID contain at least 1 master key in CreateOperation") {
+      for {
+        svc <- ZIO.service[ManagedDIDService]
+        did <- svc.createAndStoreDID(generateDIDTemplate()).map(_.asCanonical)
+        state <- svc.nonSecretStorage.getManagedDIDState(did)
+        createOperation <- ZIO.fromOption(state.collect { case ManagedDIDState.Created(operation) => operation })
+        internalKeys = createOperation.internalKeys
+      } yield assert(internalKeys.map(_.purpose))(contains(InternalKeyPurpose.Master))
     },
     test("validate DID before persisting it in storage") {
       // this template will fail during validation for reserved key id
