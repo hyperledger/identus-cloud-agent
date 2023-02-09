@@ -10,7 +10,7 @@
         <appender-ref ref="STDOUT"/>
     </appender>
 
-    <logger name="io.getquill" level="OFF"/>
+    <!-- disable logger(s) that log too much when using test container -->
     <logger name="com.zaxxer.hikari" level="OFF"/>
 
     <root level="WARN">
