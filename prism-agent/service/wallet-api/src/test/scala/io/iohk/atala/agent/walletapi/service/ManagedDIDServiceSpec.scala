@@ -109,11 +109,12 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSuppor
       suite("ManagedDIDService")(
         publishStoredDIDSpec,
         createAndStoreDIDSpec,
-        updateManagedDIDSpec
+        updateManagedDIDSpec,
+        deactivateManagedDIDSpec
       ) @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
 
     testSuite.provideLayer(jdbcStorageLayer >+> managedDIDServiceLayer)
-  } @@ TestAspect.tag("dev") // TODO: remove
+  }
 
   private val publishStoredDIDSpec =
     suite("publishStoredDID")(
@@ -281,8 +282,81 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSuppor
           // catch expected validation error and assert that operation was not submitted
           _ <- svc.updateManagedDID(did, Nil).catchSome { case _: UpdateManagedDIDError.InvalidOperation => ZIO.unit }
           operations <- testDIDSvc.getPublishedOperations
-        } yield assert(operations)(hasSize(equalTo(1))) // only 1 publish and no update operation
+        } yield assert(operations)(hasSize(equalTo(1)))
+      },
+      test("store private keys in update operation") {
+        val template = generateDIDTemplate()
+        for {
+          svc <- ZIO.service[ManagedDIDService]
+          testDIDSvc <- ZIO.service[TestDIDService]
+          did <- initPublishedDID
+          _ <- testDIDSvc.setResolutionResult(Some(resolutionResult()))
+          actions = Seq("key-1", "key-2").map(id =>
+            UpdateManagedDIDAction.AddKey(DIDPublicKeyTemplate(id, VerificationRelationship.Authentication))
+          )
+          _ <- svc.updateManagedDID(did, actions)
+          keyPairs <- svc.secretStorage.listKeys(did)
+        } yield assert(keyPairs.map(_._1))(
+          hasSameElements(Seq(ManagedDIDService.DEFAULT_MASTER_KEY_ID, "key-1", "key-2"))
+        )
+      },
+      test("store private keys with the same key-id across multiple update operation") {
+        val template = generateDIDTemplate()
+        for {
+          svc <- ZIO.service[ManagedDIDService]
+          testDIDSvc <- ZIO.service[TestDIDService]
+          did <- initPublishedDID
+          _ <- testDIDSvc.setResolutionResult(Some(resolutionResult()))
+          actions = Seq("key-1", "key-2").map(id =>
+            UpdateManagedDIDAction.AddKey(DIDPublicKeyTemplate(id, VerificationRelationship.Authentication))
+          )
+          _ <- svc.updateManagedDID(did, actions) // 1st update
+          _ <- svc.updateManagedDID(did, actions.take(1)) // 2nd update: key-1 is added twice
+          keyPairs <- svc.secretStorage.listKeys(did)
+        } yield assert(keyPairs.map(_._1))(
+          hasSameElements(Seq(ManagedDIDService.DEFAULT_MASTER_KEY_ID, "key-1", "key-1", "key-2"))
+        )
       }
     )
+
+  private val deactivateManagedDIDSpec = suite("deactivateManagedDID")(
+    test("deactivate published DID") {
+      for {
+        svc <- ZIO.service[ManagedDIDService]
+        testDIDSvc <- ZIO.service[TestDIDService]
+        did <- initPublishedDID
+        _ <- testDIDSvc.setResolutionResult(Some(resolutionResult()))
+        _ <- svc.deactivateManagedDID(did)
+        operations <- testDIDSvc.getPublishedOperations
+      } yield assert(operations.map(_.operation))(exists(isSubtype[PrismDIDOperation.Deactivate](anything)))
+    },
+    test("fail on deactivating non-existing DID") {
+      val did = PrismDID.buildCanonicalFromSuffix("0" * 64).toOption.get
+      val effect = for {
+        svc <- ZIO.service[ManagedDIDService]
+        _ <- svc.deactivateManagedDID(did)
+      } yield ()
+      assertZIO(effect.exit)(fails(isSubtype[UpdateManagedDIDError.DIDNotFound](anything)))
+    },
+    test("fail on deactivating unpublished DID") {
+      val template = generateDIDTemplate()
+      val effect = for {
+        svc <- ZIO.service[ManagedDIDService]
+        did <- svc.createAndStoreDID(template).map(_.asCanonical)
+        _ <- svc.deactivateManagedDID(did)
+      } yield ()
+      assertZIO(effect.exit)(fails(isSubtype[UpdateManagedDIDError.DIDNotPublished](anything)))
+    },
+    test("fail on deactivating deactivated DID") {
+      val effect = for {
+        svc <- ZIO.service[ManagedDIDService]
+        testDIDSvc <- ZIO.service[TestDIDService]
+        did <- initPublishedDID
+        _ <- testDIDSvc.setResolutionResult(Some(resolutionResult(deactivated = true)))
+        _ <- svc.deactivateManagedDID(did)
+      } yield ()
+      assertZIO(effect.exit)(fails(isSubtype[UpdateManagedDIDError.DIDAlreadyDeactivated](anything)))
+    }
+  )
 
 }
