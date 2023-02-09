@@ -1,3 +1,10 @@
+# [prism-agent-v0.37.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.36.0...prism-agent-v0.37.0) (2023-02-09)
+
+
+### Features
+
+* **prism-agent:** Added challenge and domain and to protect agains r… ([#364](https://github.com/input-output-hk/atala-prism-building-blocks/issues/364)) ([4f0b261](https://github.com/input-output-hk/atala-prism-building-blocks/commit/4f0b261b3545c8681eccd8b38c7fa028ee840c50))
+
 # [prism-agent-v0.36.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.35.0...prism-agent-v0.36.0) (2023-02-07)
 
 
