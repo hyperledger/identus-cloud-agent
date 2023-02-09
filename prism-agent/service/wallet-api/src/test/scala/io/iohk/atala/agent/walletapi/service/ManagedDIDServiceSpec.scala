@@ -28,33 +28,44 @@ import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDNonSecretStorage
 import io.iohk.atala.test.container.DBTestUtils
 import io.iohk.atala.castor.core.model.did.InternalKeyPurpose
+import io.iohk.atala.agent.walletapi.model.error.UpdateManagedDIDError
+import io.iohk.atala.agent.walletapi.model.UpdateManagedDIDAction
 
 object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSupport {
 
   private trait TestDIDService extends DIDService {
     def getPublishedOperations: UIO[Seq[SignedPrismDIDOperation]]
+    def setOperationStatus(status: ScheduledDIDOperationStatus): UIO[Unit]
+    def setResolutionResult(result: Option[(DIDMetadata, DIDData)]): UIO[Unit]
   }
 
   private def testDIDServiceLayer = ZLayer.fromZIO {
-    Ref.make(Seq.empty[SignedPrismDIDOperation]).map { store =>
-      new TestDIDService {
-        override def scheduleOperation(
-            signOperation: SignedPrismDIDOperation
-        ): IO[error.DIDOperationError, ScheduleDIDOperationOutcome] = {
-          store
-            .update(_.appended(signOperation))
-            .as(ScheduleDIDOperationOutcome(signOperation.operation.did, signOperation.operation, ArraySeq.empty))
-        }
-
-        override def resolveDID(did: PrismDID): IO[error.DIDResolutionError, Option[(DIDMetadata, DIDData)]] = ZIO.none
-
-        override def getScheduledDIDOperationDetail(
-            operationId: Array[Byte]
-        ): IO[error.DIDOperationError, Option[ScheduledDIDOperationDetail]] =
-          ZIO.some(ScheduledDIDOperationDetail(ScheduledDIDOperationStatus.Pending))
-
-        override def getPublishedOperations: UIO[Seq[SignedPrismDIDOperation]] = store.get
+    for {
+      operationStore <- Ref.make(Seq.empty[SignedPrismDIDOperation])
+      statusStore <- Ref.make[ScheduledDIDOperationStatus](ScheduledDIDOperationStatus.Pending)
+      resolutionStore <- Ref.make[Option[(DIDMetadata, DIDData)]](None)
+    } yield new TestDIDService {
+      override def scheduleOperation(
+          signOperation: SignedPrismDIDOperation
+      ): IO[error.DIDOperationError, ScheduleDIDOperationOutcome] = {
+        operationStore
+          .update(_.appended(signOperation))
+          .as(ScheduleDIDOperationOutcome(signOperation.operation.did, signOperation.operation, ArraySeq.empty))
       }
+
+      override def resolveDID(did: PrismDID): IO[error.DIDResolutionError, Option[(DIDMetadata, DIDData)]] =
+        resolutionStore.get
+
+      override def getScheduledDIDOperationDetail(
+          operationId: Array[Byte]
+      ): IO[error.DIDOperationError, Option[ScheduledDIDOperationDetail]] =
+        statusStore.get.map(ScheduledDIDOperationDetail(_)).asSome
+
+      override def getPublishedOperations: UIO[Seq[SignedPrismDIDOperation]] = operationStore.get
+
+      override def setOperationStatus(status: ScheduledDIDOperationStatus): UIO[Unit] = statusStore.set(status)
+
+      override def setResolutionResult(result: Option[(DIDMetadata, DIDData)]): UIO[Unit] = resolutionStore.set(result)
     }
   }
 
@@ -69,13 +80,40 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSuppor
       services: Seq[Service] = Nil
   ): ManagedDIDTemplate = ManagedDIDTemplate(publicKeys, services)
 
+  private def resolutionResult(deactivated: Boolean = false): (DIDMetadata, DIDData) = {
+    val metadata = DIDMetadata(
+      lastOperationHash = ArraySeq.empty,
+      deactivated = deactivated
+    )
+    val didData = DIDData(
+      id = PrismDID.buildCanonicalFromSuffix("0" * 64).toOption.get,
+      publicKeys = Nil,
+      internalKeys = Nil,
+      services = Nil
+    )
+    metadata -> didData
+  }
+
+  private val initPublishedDID =
+    for {
+      svc <- ZIO.service[ManagedDIDService]
+      testDIDSvc <- ZIO.service[TestDIDService]
+      did <- svc.createAndStoreDID(generateDIDTemplate()).map(_.asCanonical)
+      _ <- svc.publishStoredDID(did)
+      _ <- testDIDSvc.setOperationStatus(ScheduledDIDOperationStatus.Confirmed)
+      _ <- svc.syncManagedDIDState
+    } yield did
+
   override def spec = {
     val testSuite =
-      suite("ManagedDIDService")(publishStoredDIDSpec, createAndStoreDIDSpec) @@ TestAspect
-        .before(DBTestUtils.runMigrationAgentDB)
+      suite("ManagedDIDService")(
+        publishStoredDIDSpec,
+        createAndStoreDIDSpec,
+        updateManagedDIDSpec
+      ) @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
 
     testSuite.provideLayer(jdbcStorageLayer >+> managedDIDServiceLayer)
-  } @@ TestAspect.tag("dev")
+  } @@ TestAspect.tag("dev") // TODO: remove
 
   private val publishStoredDIDSpec =
     suite("publishStoredDID")(
@@ -115,18 +153,10 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSuppor
         for {
           svc <- ZIO.service[ManagedDIDService]
           testDIDSvc <- ZIO.service[TestDIDService]
-          did <- svc.createAndStoreDID(template).map(_.asCanonical)
-          createOp <- svc.nonSecretStorage.getManagedDIDState(did).collect(()) {
-            case Some(ManagedDIDState.Created(op)) => op
-          }
-          // set status as if already published
-          publishedStatus = ManagedDIDState.Published(createOp, ArraySeq.fill(32)(0))
-          _ <- svc.nonSecretStorage.setManagedDIDState(did, publishedStatus)
-          _ <- svc.publishStoredDID(did)
-          state <- svc.nonSecretStorage.getManagedDIDState(did)
-          publishedOperation <- testDIDSvc.getPublishedOperations
-        } yield assert(state)(isSome(equalTo(publishedStatus)))
-          && assert(publishedOperation)(isEmpty)
+          did <- initPublishedDID // 1st publish
+          _ <- svc.publishStoredDID(did) // 2nd publish
+          opsAfter <- testDIDSvc.getPublishedOperations
+        } yield assert(opsAfter)(hasSize(equalTo(1)))
       }
     )
 
@@ -198,5 +228,61 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSuppor
       assertZIO(result.exit)(fails(isSubtype[CreateManagedDIDError.InvalidArgument](anything)))
     }
   )
+
+  private val updateManagedDIDSpec =
+    suite("updateManagedDID")(
+      test("update stored and published DID") {
+        val template = generateDIDTemplate()
+        for {
+          svc <- ZIO.service[ManagedDIDService]
+          testDIDSvc <- ZIO.service[TestDIDService]
+          did <- initPublishedDID
+          _ <- testDIDSvc.setResolutionResult(Some(resolutionResult()))
+          _ <- svc.updateManagedDID(did, Seq(UpdateManagedDIDAction.RemoveKey("key-1")))
+          operations <- testDIDSvc.getPublishedOperations
+        } yield assert(operations.map(_.operation))(exists(isSubtype[PrismDIDOperation.Update](anything)))
+      },
+      test("fail on updating non-existing DID") {
+        val did = PrismDID.buildCanonicalFromSuffix("0" * 64).toOption.get
+        val effect = for {
+          svc <- ZIO.service[ManagedDIDService]
+          _ <- svc.updateManagedDID(did, Seq(UpdateManagedDIDAction.RemoveKey("key-1")))
+        } yield ()
+        assertZIO(effect.exit)(fails(isSubtype[UpdateManagedDIDError.DIDNotFound](anything)))
+      },
+      test("fail on updating unpublished DID") {
+        val template = generateDIDTemplate()
+        val effect = for {
+          svc <- ZIO.service[ManagedDIDService]
+          did <- svc.createAndStoreDID(template).map(_.asCanonical)
+          _ <- svc.updateManagedDID(did, Seq(UpdateManagedDIDAction.RemoveKey("key-1")))
+        } yield ()
+        assertZIO(effect.exit)(fails(isSubtype[UpdateManagedDIDError.DIDNotPublished](anything)))
+      },
+      test("fail on deactivated DID") {
+        val template = generateDIDTemplate()
+        val effect = for {
+          svc <- ZIO.service[ManagedDIDService]
+          testDIDSvc <- ZIO.service[TestDIDService]
+          did <- initPublishedDID
+          // set did as deactivated
+          _ <- testDIDSvc.setResolutionResult(Some(resolutionResult(deactivated = true)))
+          _ <- svc.updateManagedDID(did, Seq(UpdateManagedDIDAction.RemoveKey("key-1")))
+        } yield ()
+        assertZIO(effect.exit)(fails(isSubtype[UpdateManagedDIDError.DIDAlreadyDeactivated](anything)))
+      },
+      test("validate constructed operation before submitting an operation") {
+        val template = generateDIDTemplate()
+        for {
+          svc <- ZIO.service[ManagedDIDService]
+          testDIDSvc <- ZIO.service[TestDIDService]
+          did <- initPublishedDID
+          _ <- testDIDSvc.setResolutionResult(Some(resolutionResult()))
+          // catch expected validation error and assert that operation was not submitted
+          _ <- svc.updateManagedDID(did, Nil).catchSome { case _: UpdateManagedDIDError.InvalidOperation => ZIO.unit }
+          operations <- testDIDSvc.getPublishedOperations
+        } yield assert(operations)(hasSize(equalTo(1))) // only 1 publish and no update operation
+      }
+    )
 
 }
