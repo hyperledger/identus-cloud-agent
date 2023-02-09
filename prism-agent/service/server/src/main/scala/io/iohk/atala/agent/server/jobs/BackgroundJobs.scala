@@ -24,6 +24,7 @@ import io.iohk.atala.pollux.vc.jwt.W3CCredential
 import io.iohk.atala.pollux.core.model.PresentationRecord
 import io.iohk.atala.pollux.core.service.PresentationService
 import io.iohk.atala.pollux.core.model.error.PresentationError
+import io.iohk.atala.pollux.core.model.error.PresentationError._
 import io.iohk.atala.agent.server.http.model.{InvalidState, NotImplemented}
 import org.didcommx.didcomm.DIDComm
 import io.iohk.atala.agent.walletapi.model._
@@ -50,6 +51,10 @@ import io.circe.syntax._
 import io.iohk.atala.pollux.vc.jwt.JWT
 import io.iohk.atala.pollux.vc.jwt.{DidResolver => JwtDidResolver}
 import io.iohk.atala.agent.server.config.AppConfig
+import io.circe.parser._
+import zio.prelude.AssociativeBothOps
+import zio.prelude.Validation
+import cats.syntax.all._
 
 object BackgroundJobs {
 
@@ -401,16 +406,16 @@ object BackgroundJobs {
           for {
 
             presentationService <- ZIO.service[PresentationService]
-            prover <- createPrismDIDIssuer()
-            w3cPresentationPayload <- presentationService.createPresentationPayloadFromRecord(
+            prover <- createPrismDIDIssuer() // TODO Prover Prism DID should be coming from DB and resolvable
+            presentationPayload <- presentationService.createPresentationPayloadFromRecord(
               id,
               prover,
               Instant.now()
             )
-            signedJwtPresentation = JwtPresentation.toEncodedJwt(w3cPresentationPayload, prover)
+            signedJwtPresentation = JwtPresentation.encodeJwt(presentationPayload.toJwtPresentationPayload, prover)
             presentation <- oRequestPresentation match
               case None => ZIO.fail(InvalidState("PresentationRecord 'RequestPending' with no Record"))
-              case Some(requestPresentation) => { // TODO create build in mercury for Presentation
+              case Some(requestPresentation) => { // TODO create build method in mercury for Presentation
                 ZIO.succeed(
                   Presentation(
                     body = Presentation.Body(
@@ -452,7 +457,21 @@ object BackgroundJobs {
               } yield ()
         case PresentationRecord(id, _, _, _, _, _, _, _, PresentationSent, _, _, _, _) =>
           ZIO.logDebug("PresentationRecord: PresentationSent") *> ZIO.unit
-        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationReceived, _, _, presentation, _) => // Verifier
+        case PresentationRecord(
+              id,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              PresentationReceived,
+              mayBeRequestPresentation,
+              _,
+              presentation,
+              _
+            ) => // Verifier
           ZIO.logDebug("PresentationRecord: PresentationReceived") *> ZIO.unit
           val clock = java.time.Clock.system(ZoneId.systemDefault)
           presentation match
@@ -464,25 +483,56 @@ object BackgroundJobs {
                 credentialsValidationResult <- p.attachments.head.data match {
                   case Base64(data) =>
                     val base64Decoded = new String(java.util.Base64.getDecoder().decode(data))
-
-                    println(s"Base64decode:\n\n ${base64Decoded} \n\n")
-                    JwtPresentation.verify(
-                      JWT(base64Decoded),
-                      JwtPresentation.PresentationVerificationOptions(
-                        maybeProofPurpose = Some(VerificationRelationship.Authentication),
-                        verifySignature = true,
-                        verifyDates = false,
-                        leeway = Duration.Zero,
-                        maybeCredentialOptions = Some(
-                          CredentialVerification.CredentialVerificationOptions(
-                            verifySignature = true,
-                            verifyDates = false,
-                            leeway = Duration.Zero,
-                            maybeProofPurpose = Some(VerificationRelationship.Authentication)
+                    val maybePresentationOptions
+                        : Either[PresentationError, Option[io.iohk.atala.pollux.core.model.presentation.Options]] =
+                      mayBeRequestPresentation
+                        .map(
+                          _.attachments.headOption
+                            .map(attachment =>
+                              decode[io.iohk.atala.mercury.model.JsonData](attachment.data.asJson.noSpaces)
+                                .flatMap(data =>
+                                  io.iohk.atala.pollux.core.model.presentation.PresentationAttachment.given_Decoder_PresentationAttachment
+                                    .decodeJson(data.json.asJson)
+                                    .map(_.options)
+                                    .leftMap(err =>
+                                      PresentationDecodingError(
+                                        new Throwable(s"PresentationAttachment decoding error: $err")
+                                      )
+                                    )
+                                )
+                                .leftMap(err =>
+                                  PresentationDecodingError(new Throwable(s"JsonData decoding error: $err"))
+                                )
+                            )
+                            .getOrElse(Right(None))
+                        )
+                        .getOrElse(Left(UnexpectedError("RequestPresentation NotFound")))
+                    for {
+                      _ <- ZIO.fromEither(maybePresentationOptions.map { maybeOptions =>
+                        maybeOptions match
+                          case Some(options) =>
+                            JwtPresentation.validatePresentation(JWT(base64Decoded), options.domain, options.challenge)
+                          case _ => Validation.unit
+                      })
+                      result <- JwtPresentation.verify(
+                        JWT(base64Decoded),
+                        JwtPresentation.PresentationVerificationOptions(
+                          maybeProofPurpose = Some(VerificationRelationship.Authentication),
+                          verifySignature = true,
+                          verifyDates = false,
+                          leeway = Duration.Zero,
+                          maybeCredentialOptions = Some(
+                            CredentialVerification.CredentialVerificationOptions(
+                              verifySignature = true,
+                              verifyDates = false,
+                              leeway = Duration.Zero,
+                              maybeProofPurpose = Some(VerificationRelationship.Authentication)
+                            )
                           )
                         )
-                      )
-                    )(didResolverService)(clock)
+                      )(didResolverService)(clock)
+                    } yield result
+
                   case any => ZIO.fail(NotImplemented)
                 }
                 _ <- ZIO.log(s"CredentialsValidationResult: $credentialsValidationResult")

@@ -521,12 +521,27 @@ components:
           items:
             type: string
 
+    Options:
+      required: [challenge, domain]
+      properties:
+        challenge:
+          description: The challenge should be a randomly generated string.
+          type: string
+          example: "11c91493-01b3-4c4d-ac36-b336bab5bddf"
+        domain:
+          description: The domain value can be any string or URI
+          example: "https://example-verifier.com"
+          type: string
+
     RequestPresentationInput:
       description: Request Presentation Input
       required: [connectionId, proofs]
       properties:
         connectionId:
           type: string
+        options:
+          type: object
+          $ref: "#/components/schemas/Options"
         proofs:
           type: array
           items:
