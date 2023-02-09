@@ -22,6 +22,8 @@ connectionId is the holder (connectionId or did)
 Replace `{CONNECTION_ID}` with the DID of the holder displayed at startup in the his Prism Agent console logs
 
 - **Verifier** - Initiates a Proof Request
+`challenge` and `domain` are options which is optional
+but reuired to protect against replay attack
 
 ```shell
 curl -X 'POST' \
@@ -29,7 +31,10 @@ curl -X 'POST' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
-  "connectionId": "{CONNECTION_ID}", "proofs":[]
+  "connectionId": "{CONNECTION_ID}", "proofs":[],"options": {
+    "challenge": "11c91493-01b3-4c4d-ac36-b336bab5bddf",
+    "domain": "https://prism-verifier.com"
+  }
 }'
 ```
 - **Holder** - Retrieving the list of presentation records
@@ -58,19 +63,35 @@ curl -X 'PATCH' \
   "proofId": ["{RECORD_ID}"]
 }'
 ```
+
+- **Holder** - Reject the Presentation Request 
+Replace `{PRESENTATION_ID}` with the UUID of the record from the presentation records list
+Replace `{RECORD_ID}` with the UUID of the record from the credential records list
+
+
+```shell
+curl -X 'PATCH' \
+  'http://localhost:8090/prism-agent/present-proof/presentations/{PRESENTATION_ID}' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "action": "request-reject",
+  "proofId": ["{RECORD_ID}"]
+}'
+```
+
 - **Holder** - check Presentation state  PresentationSent 
 # check PresentationSent !
 ```shell
 curl -X 'GET' 'http://localhost:8090/prism-agent/present-proof/presentations' -H 'accept: application/json' | jq
 ```
 
-- **Verifier** - check Presentation state  PresentationReceived 
-# check PresentationReceived !
+- **Verifier** - check Presentation state  PresentationVerified 
+# check PresentationVerified !
 ```shell
 curl -X 'GET' 'http://localhost:8070/prism-agent/present-proof/presentations' -H 'accept: application/json' | jq
 ```
-- **Verifier** - Accept PresentationReceived 
-Replace `{PRESENTATION_ID}` with the UUID of the record from the presentation records list with state PresentationReceived
+- **Verifier** - Accept PresentationVerified 
+Replace `{PRESENTATION_ID}` with the UUID of the record from the presentation records list with state PresentationVerified 
 
 ```shell
 curl -X 'PATCH' \
@@ -79,9 +100,26 @@ curl -X 'PATCH' \
   -d '{"action": "presentation-accept"}' | jq
 ```
 
+- **Verifier** - Reject Presentation 
+Replace `{PRESENTATION_ID}` with the UUID of the record from the presentation records list with state PresentationVerified 
+
+```shell
+curl -X 'PATCH' \
+  'http://localhost:8070/prism-agent/present-proof/presentations/{PRESENTATION_ID}' \
+  -H 'Content-Type: application/json' \
+  -d '{"action": "presentation-reject"}' | jq
+```
+
 - **Verifier** - check Presentation state  PresentationVerified 
-# check PresentationVerified !
+# check PresentationAccepted !
 
 ```shell
 curl -X 'GET' 'http://localhost:8070/prism-agent/present-proof/presentations' -H 'accept: application/json' | jq
+```
+
+- **Holder / Verifier** - Get a specicic Presentation  
+Replace `{PRESENTATION_ID}` with the UUID of the record from the presentation list
+
+```shell
+curl -X 'GET' 'http://localhost:8070/prism-agent/present-proof/presentations/{PRESENTATION_ID}' -H 'accept: application/json' | jq
 ```
