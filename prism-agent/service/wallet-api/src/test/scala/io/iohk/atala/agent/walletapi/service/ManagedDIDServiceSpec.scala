@@ -316,6 +316,33 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSuppor
         } yield assert(keyPairs.map(_._1))(
           hasSameElements(Seq(ManagedDIDService.DEFAULT_MASTER_KEY_ID, "key-1", "key-1", "key-2"))
         )
+      },
+      test("store did lineage for each update operation") {
+        val template = generateDIDTemplate()
+        for {
+          svc <- ZIO.service[ManagedDIDService]
+          testDIDSvc <- ZIO.service[TestDIDService]
+          did <- initPublishedDID
+          _ <- testDIDSvc.setResolutionResult(Some(resolutionResult()))
+          _ <- ZIO.foreach(1 to 5) { _ =>
+            val actions = Seq(UpdateManagedDIDAction.RemoveKey("key-1"))
+            svc.updateManagedDID(did, actions)
+          }
+          _ <- ZIO.foreach(1 to 5) { _ =>
+            val actions =
+              Seq(UpdateManagedDIDAction.AddKey(DIDPublicKeyTemplate("key-1", VerificationRelationship.Authentication)))
+            svc.updateManagedDID(did, actions)
+          }
+          lineage <- svc.nonSecretStorage.listUpdateLineage(None, None)
+        } yield {
+          // There are a total of 10 updates: 5 add-key updates & 5 remove-key updates.
+          // There should be 10 unique operationId (randomness in signature) and
+          // 6 unique operationHash since remove-key update all have the same content
+          // and add-key all have different content (randomness in key generation).
+          assert(lineage)(hasSize(equalTo(10)))
+          && assert(lineage.map(_.operationId).toSet)(hasSize(equalTo(10)))
+          && assert(lineage.map(_.operationHash).toSet)(hasSize(equalTo(6)))
+        }
       }
     )
 
