@@ -24,6 +24,8 @@ import io.iohk.atala.pollux.core.service.PresentationService
 import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.model.PresentationRecord
 import io.iohk.atala.mercury.model.Base64
+import cats.instances.option
+import io.iohk.atala.pollux.core.model.presentation.Options
 
 class PresentProofApiServiceImpl(
     presentationService: PresentationService,
@@ -62,7 +64,8 @@ class PresentProofApiServiceImpl(
               requiredFields = None,
               trustIssuers = Some(e.trustIssuers.map(DidId(_)))
             )
-          }
+          },
+          options = requestPresentationInput.options.map(x => Options(x.challenge, x.domain))
         )
         .mapError(HttpServiceError.DomainError[PresentationError].apply)
         .mapError(_.toOAS)
