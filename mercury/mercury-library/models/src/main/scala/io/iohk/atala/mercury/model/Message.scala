@@ -20,6 +20,7 @@ case class Message(
     thid: Option[String] = None,
     pthid: Option[String] = None,
     ack: Option[Seq[String]] = None,
+    pleaseAck: Option[Seq[String]] = None,
 ) {
   def piuri = `type`
 }

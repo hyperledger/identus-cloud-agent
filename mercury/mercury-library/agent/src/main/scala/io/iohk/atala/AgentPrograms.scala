@@ -61,7 +61,7 @@ object AgentPrograms {
     _ <- Console.printLine("Unpacking and decrypting the received message ...")
     _ <- Console.printLine(
       "\n*********************************************************************************************************************************\n"
-        + toPrettyJson(messageReceived.getMessage.toString)
+        + toPrettyJson(messageReceived.message.toString)
         + "\n********************************************************************************************************************************\n"
     )
 
