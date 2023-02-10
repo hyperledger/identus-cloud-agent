@@ -104,7 +104,7 @@ final class ManagedDIDService private[walletapi] (
 
   // FIXME
   // Instead of returning privateKey directly, it should provide more secure interface like
-  // {{{ def signWithDID(did, keyId, bytes): IO[?, Array[Byte]] }}} or a Signer interface.
+  // {{{ def signWithDID(did, keyId, bytes): IO[?, Array[Byte]] }}}.
   // At the moment, the purpose of this method is just to disallow SecretStorage to be
   // used outside of this module.
   def javaKeyPairWithDID(
@@ -118,6 +118,7 @@ final class ManagedDIDService private[walletapi] (
         maybeKeyPair.fold(ZIO.none) { ecKeyPair =>
           ZIO
             .attempt {
+              // TODO: Simplify conversion of ECKeyPair to JDK security classes
               val ba = ecKeyPair.privateKey.toPaddedByteArray(EllipticCurve.SECP256K1)
               val keyFactory = KeyFactory.getInstance("EC", new BouncyCastleProvider())
               val ecParameterSpec = ECNamedCurveTable.getParameterSpec("secp256k1")

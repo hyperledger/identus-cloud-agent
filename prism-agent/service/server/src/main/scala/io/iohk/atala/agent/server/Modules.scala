@@ -91,7 +91,6 @@ import io.circe.ParsingFailure
 import io.circe.DecodingFailure
 import io.iohk.atala.agent.walletapi.sql.{JdbcDIDNonSecretStorage, JdbcDIDSecretStorage}
 import io.iohk.atala.resolvers.DIDResolver
-import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
 import io.iohk.atala.pollux.vc.jwt.DidResolver as JwtDidResolver
 import io.iohk.atala.pollux.vc.jwt.PrismDidResolver
 import io.iohk.atala.mercury.DidAgent
@@ -163,8 +162,7 @@ object Modules {
   }
 
   val issueCredentialDidCommExchangesJob: RIO[
-    AppConfig & DidOps & DIDResolver & JwtDidResolver & HttpClient & CredentialService & ManagedDIDService &
-      DIDSecretStorage,
+    AppConfig & DidOps & DIDResolver & JwtDidResolver & HttpClient & CredentialService & ManagedDIDService,
     Unit
   ] =
     for {
@@ -175,8 +173,7 @@ object Modules {
     } yield job
 
   val presentProofExchangeJob: RIO[
-    AppConfig & DidOps & DIDResolver & JwtDidResolver & HttpClient & PresentationService & ManagedDIDService &
-      DIDSecretStorage,
+    AppConfig & DidOps & DIDResolver & JwtDidResolver & HttpClient & PresentationService & ManagedDIDService,
     Unit
   ] =
     for {

@@ -31,8 +31,6 @@ import io.iohk.atala.agent.walletapi.model._
 import io.iohk.atala.agent.walletapi.model.error._
 import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError.KeyNotFoundError
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
-import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
-import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
 import io.iohk.atala.pollux.vc.jwt.ES256KSigner
 import io.iohk.atala.castor.core.model.did._
 import java.security.KeyFactory
@@ -95,7 +93,7 @@ object BackgroundJobs {
   private[this] def performExchange(
       record: IssueCredentialRecord
   ): URIO[
-    DidOps & DIDResolver & JwtDidResolver & HttpClient & CredentialService & ManagedDIDService & DIDSecretStorage,
+    DidOps & DIDResolver & JwtDidResolver & HttpClient & CredentialService & ManagedDIDService,
     Unit
   ] = {
     import IssueCredentialRecord._
@@ -299,55 +297,39 @@ object BackgroundJobs {
   // - A single PrismDID genrated at agent startup should be used.
   // - For now, we include the long form in the JWT credential to facilitate validation on client-side, but resolution should be used instead.
   // - There should be a way to retrieve the 'default' PrismDID from ManagedDIDService (use of an alias in DB record?)
-  // - Simplify convertion of ECKeyPair to JDK security classes
-  // - ECPrivateKey should probably remain 'private' and signing operation occur in ManagedDIDService
-  private[this] def createPrismDIDIssuer(): ZIO[ManagedDIDService & DIDSecretStorage, Throwable, Issuer] = {
+  private[this] def createPrismDIDIssuer(): ZIO[ManagedDIDService, Throwable, Issuer] = {
+    val issuingKeyId = "issuing"
     for {
       managedDIDService <- ZIO.service[ManagedDIDService]
+      // TODO: use pre-generated DID
       longFormPrismDID <- managedDIDService.createAndStoreDID(
         ManagedDIDTemplate(
           Seq(
-            DIDPublicKeyTemplate("issuing", VerificationRelationship.Authentication)
+            DIDPublicKeyTemplate(issuingKeyId, VerificationRelationship.Authentication)
           ),
           Nil
         )
       )
-      didSecretStorage <- ZIO.service[DIDSecretStorage]
-      maybeECKeyPair <- didSecretStorage.getKey(longFormPrismDID.asCanonical, "issuing")
-      _ <- ZIO.logInfo(s"ECKeyPair => $maybeECKeyPair") // TODO: remove this after done debugging
-      maybeIssuer <- ZIO.succeed(maybeECKeyPair.map(ecKeyPair => {
-        val ba = ecKeyPair.privateKey.toPaddedByteArray(EllipticCurve.SECP256K1)
-        val keyFactory = KeyFactory.getInstance("EC", new BouncyCastleProvider())
-        val ecParameterSpec = ECNamedCurveTable.getParameterSpec("secp256k1")
-        val ecNamedCurveSpec = ECNamedCurveSpec(
-          ecParameterSpec.getName(),
-          ecParameterSpec.getCurve(),
-          ecParameterSpec.getG(),
-          ecParameterSpec.getN()
-        )
-        val ecPrivateKeySpec = ECPrivateKeySpec(java.math.BigInteger(1, ba), ecNamedCurveSpec)
-        val privateKey = keyFactory.generatePrivate(ecPrivateKeySpec)
-        val bcECPoint = ecParameterSpec
-          .getG()
-          .multiply(privateKey.asInstanceOf[org.bouncycastle.jce.interfaces.ECPrivateKey].getD())
-        val ecPublicKeySpec = ECPublicKeySpec(
-          new ECPoint(
-            bcECPoint.normalize().getAffineXCoord().toBigInteger(),
-            bcECPoint.normalize().getAffineYCoord().toBigInteger()
-          ),
-          ecNamedCurveSpec
-        )
-        val publicKey = keyFactory.generatePublic(ecPublicKeySpec)
-        Issuer(io.iohk.atala.pollux.vc.jwt.DID(longFormPrismDID.toString), ES256KSigner(privateKey), publicKey)
-      }))
-      issuer = maybeIssuer.get
+      canonicalDID = longFormPrismDID.asCanonical
+      // TODO: define consistent error handling (ATL-3210)
+      ecKeyPair <- managedDIDService
+        .javaKeyPairWithDID(canonicalDID, issuingKeyId)
+        .mapError(e => RuntimeException(s"Error occurred while getting issuer key-pair: ${e.toString}"))
+        .someOrFail(RuntimeException(s"Issuer key-pair does not exist: $canonicalDID#$issuingKeyId"))
+      _ <- ZIO.logInfo(s"ECKeyPair => $ecKeyPair")
+      (privateKey, publicKey) = ecKeyPair
+      issuer = Issuer(
+        io.iohk.atala.pollux.vc.jwt.DID(longFormPrismDID.toString),
+        ES256KSigner(privateKey),
+        publicKey
+      )
     } yield issuer
   }
 
   private[this] def performPresentation(
       record: PresentationRecord
   ): URIO[
-    DidOps & DIDResolver & JwtDidResolver & HttpClient & PresentationService & ManagedDIDService & DIDSecretStorage,
+    DidOps & DIDResolver & JwtDidResolver & HttpClient & PresentationService & ManagedDIDService,
     Unit
   ] = {
     import io.iohk.atala.pollux.core.model.PresentationRecord.ProtocolState._
