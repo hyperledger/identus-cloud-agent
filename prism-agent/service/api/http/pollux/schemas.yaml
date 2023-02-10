@@ -228,7 +228,7 @@ components:
 
     # Issue Credential Protocol
 
-    CreateIssueCredentialRecordRequest:
+    IssueCredentialRecordBase:
       description: A request to create a new "issue credential record"
       required:
         - subjectId
@@ -257,11 +257,25 @@ components:
           type: boolean
           default: true
 
+    CreateIssueCredentialRecordRequest:
+      description: A request to create a new "issue credential record"
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/IssueCredentialRecordBase"
+        - type: object
+          required:
+            - issuingDID
+          properties:
+            issuingDID:
+              type: string
+              description: Issuer DID of the verifiable credentials object
+              example: did:prism:issuerofverifiablecredentials
+
     IssueCredentialRecord:
       description: An issue credential record to store the state of the protocol execution
       type: object
       allOf:
-        - $ref: "#/components/schemas/CreateIssueCredentialRecordRequest"
+        - $ref: "#/components/schemas/IssueCredentialRecordBase"
         - type: object
           required:
             - recordId
@@ -306,6 +320,10 @@ components:
                 - Published
             jwtCredential:
               type: string
+            issuingDID:
+              type: string
+              description: Issuer DID of the verifiable credentials object
+              example: did:prism:issuerofverifiablecredentials
 
     IssueCredentialRecordCollection:
       description: A collection of issue credential records

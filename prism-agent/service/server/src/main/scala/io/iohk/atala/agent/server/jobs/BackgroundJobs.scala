@@ -103,7 +103,7 @@ object BackgroundJobs {
       _ <- ZIO.logDebug(s"Running action with records => $record")
       _ <- record match {
         // Offer should be sent from Issuer to Holder
-        case IssueCredentialRecord(id, _, _, _, _, Role.Issuer, _, _, _, _, OfferPending, _, Some(offer), _, _, _) =>
+        case IssueCredentialRecord(id, _, _, _, _, Role.Issuer, _, _, _, _, OfferPending, _, Some(offer), _, _, _, _) =>
           for {
             _ <- ZIO.log(s"IssueCredentialRecord: OfferPending (START)")
             didCommAgent <- buildDIDCommAgent(offer.from)
@@ -135,6 +135,7 @@ object BackgroundJobs {
               Some(request),
               _,
               _,
+              _
             ) =>
           for {
             didCommAgent <- buildDIDCommAgent(request.from)
@@ -166,6 +167,7 @@ object BackgroundJobs {
               _,
               _,
               _,
+              _
             ) =>
           for {
             credentialService <- ZIO.service[CredentialService]
@@ -190,6 +192,7 @@ object BackgroundJobs {
               _,
               Some(issue),
               _,
+              _
             ) =>
           // Generate the JWT Credential and store it in DB as an attacment to IssueCredentialData
           // Set ProtocolState to CredentialGenerated
@@ -232,6 +235,7 @@ object BackgroundJobs {
               _,
               Some(issue),
               _,
+              _
             ) =>
           for {
             didCommAgent <- buildDIDCommAgent(issue.from)
@@ -263,6 +267,7 @@ object BackgroundJobs {
               _,
               Some(issue),
               _,
+              _
             ) =>
           for {
             didCommAgent <- buildDIDCommAgent(issue.from)
@@ -274,8 +279,8 @@ object BackgroundJobs {
             }
           } yield ()
 
-        case IssueCredentialRecord(id, _, _, _, _, _, _, _, _, _, ProblemReportPending, _, _, _, _, _) => ???
-        case IssueCredentialRecord(id, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)                    => ZIO.unit
+        case IssueCredentialRecord(id, _, _, _, _, _, _, _, _, _, ProblemReportPending, _, _, _, _, _, _) => ???
+        case IssueCredentialRecord(id, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)                    => ZIO.unit
       }
     } yield ()
 

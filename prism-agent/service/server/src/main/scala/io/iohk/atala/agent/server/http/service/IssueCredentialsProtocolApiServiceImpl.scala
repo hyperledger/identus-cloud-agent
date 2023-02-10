@@ -24,6 +24,7 @@ import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.connect.core.model.ConnectionRecord
 import io.iohk.atala.connect.core.model.ConnectionRecord.Role
 import io.iohk.atala.connect.core.model.ConnectionRecord.ProtocolState
+import io.iohk.atala.castor.core.model.did.PrismDID
 
 class IssueCredentialsProtocolApiServiceImpl(
     credentialService: CredentialService,
@@ -44,16 +45,21 @@ class IssueCredentialsProtocolApiServiceImpl(
   ): Route = {
     val result = for {
       didIdPair <- getPairwiseDIDs(request.subjectId)
+      issuingDID <- ZIO
+        .fromEither(PrismDID.fromString(request.issuingDID))
+        .mapError(HttpServiceError.InvalidPayload.apply)
+        .mapError(_.toOAS)
       outcome <- credentialService
         .createIssueCredentialRecord(
           pairwiseDID = didIdPair.myDID,
           thid = UUID.randomUUID(),
-          didIdPair.theirDid.value,
-          request.schemaId,
-          request.claims,
-          request.validityPeriod,
-          request.automaticIssuance.orElse(Some(true)),
-          request.awaitConfirmation.orElse(Some(false))
+          subjectId = didIdPair.theirDid.value,
+          schemaId = request.schemaId,
+          claims = request.claims,
+          validityPeriod = request.validityPeriod,
+          automaticIssuance = request.automaticIssuance.orElse(Some(true)),
+          awaitConfirmation = request.awaitConfirmation.orElse(Some(false)),
+          issuingDID = Some(issuingDID.asCanonical)
         )
         .mapError(HttpServiceError.DomainError[CredentialServiceError].apply)
         .mapError(_.toOAS)
