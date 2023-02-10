@@ -20,6 +20,7 @@ import zio.*
 import zio.test.*
 
 import java.util.UUID
+import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
 
 object CredentialServiceImplSpec extends ZIOSpecDefault {
 
@@ -429,7 +430,8 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
         claims: Map[String, String] = Map("name" -> "Alice"),
         validityPeriod: Option[Double] = None,
         automaticIssuance: Option[Boolean] = None,
-        awaitConfirmation: Option[Boolean] = None
+        awaitConfirmation: Option[Boolean] = None,
+        issuingDID: Option[CanonicalPrismDID] = None
     ) = {
       svc.createIssueCredentialRecord(
         pairwiseDID = did,
@@ -439,7 +441,8 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
         claims = claims,
         validityPeriod = validityPeriod,
         automaticIssuance = automaticIssuance,
-        awaitConfirmation = awaitConfirmation
+        awaitConfirmation = awaitConfirmation,
+        issuingDID = issuingDID
       )
     }
 

@@ -34,6 +34,7 @@ import java.security.SecureRandom
 import java.security.spec.ECGenParameterSpec
 import java.time.Instant
 import java.util.UUID
+import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
 
 object CredentialServiceImpl {
   val layer: URLayer[IrisServiceStub & CredentialRepository[Task], CredentialService] =
@@ -74,7 +75,8 @@ private class CredentialServiceImpl(
       claims: Map[String, String],
       validityPeriod: Option[Double],
       automaticIssuance: Option[Boolean],
-      awaitConfirmation: Option[Boolean]
+      awaitConfirmation: Option[Boolean],
+      issuingDID: Option[CanonicalPrismDID]
   ): IO[CredentialServiceError, IssueCredentialRecord] = {
     for {
       _ <- if (DidValidator.supportedDid(subjectId)) ZIO.unit else ZIO.fail(UnsupportedDidFormat(subjectId))
@@ -96,7 +98,8 @@ private class CredentialServiceImpl(
           offerCredentialData = Some(offer),
           requestCredentialData = None,
           issueCredentialData = None,
-          issuedCredentialRaw = None
+          issuedCredentialRaw = None,
+          issuingDID = issuingDID
         )
       )
       count <- credentialRepository
@@ -140,7 +143,8 @@ private class CredentialServiceImpl(
           offerCredentialData = Some(offer),
           requestCredentialData = None,
           issueCredentialData = None,
-          issuedCredentialRaw = None
+          issuedCredentialRaw = None,
+          issuingDID = None // populated only on issuer side
         )
       )
       count <- credentialRepository
