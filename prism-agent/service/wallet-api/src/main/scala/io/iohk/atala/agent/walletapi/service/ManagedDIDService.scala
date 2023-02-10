@@ -49,6 +49,14 @@ import scala.collection.immutable.ArraySeq
 import io.iohk.atala.mercury.PeerDID
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
+import org.bouncycastle.jce.ECNamedCurveTable
+import org.bouncycastle.jce.provider.BouncyCastleProvider
+
+import java.security.spec.ECPoint
+import java.security.{KeyFactory, PrivateKey as JavaPrivateKey, PublicKey as JavaPublicKey}
+import org.bouncycastle.jce.spec.ECNamedCurveSpec
+import java.security.spec.ECPrivateKeySpec
+import java.security.spec.ECPublicKeySpec
 
 /** A wrapper around Castor's DIDService providing key-management capability. Analogous to the secretAPI in
   * indy-wallet-sdk.
@@ -92,6 +100,52 @@ final class ManagedDIDService private[walletapi] (
         .mapError(GetManagedDIDError.WalletStorageError.apply)
       _ <- ZIO.foreach(awaitingConfirmationOps ++ pendingOps)(computeNewDIDLineageStatusAndPersist[GetManagedDIDError])
     } yield ()
+  }
+
+  // FIXME
+  // Instead of returning privateKey directly, it should provide more secure interface like
+  // {{{ def signWithDID(did, keyId, bytes): IO[?, Array[Byte]] }}} or a Signer interface.
+  // At the moment, the purpose of this method is just to disallow SecretStorage to be
+  // used outside of this module.
+  def javaKeyPairWithDID(
+      did: CanonicalPrismDID,
+      keyId: String
+  ): IO[GetKeyError, Option[(JavaPrivateKey, JavaPublicKey)]] = {
+    secretStorage
+      .getKey(did, keyId)
+      .mapError(GetKeyError.WalletStorageError.apply)
+      .flatMap { maybeKeyPair =>
+        maybeKeyPair.fold(ZIO.none) { ecKeyPair =>
+          ZIO
+            .attempt {
+              val ba = ecKeyPair.privateKey.toPaddedByteArray(EllipticCurve.SECP256K1)
+              val keyFactory = KeyFactory.getInstance("EC", new BouncyCastleProvider())
+              val ecParameterSpec = ECNamedCurveTable.getParameterSpec("secp256k1")
+              val ecNamedCurveSpec = ECNamedCurveSpec(
+                ecParameterSpec.getName(),
+                ecParameterSpec.getCurve(),
+                ecParameterSpec.getG(),
+                ecParameterSpec.getN()
+              )
+              val ecPrivateKeySpec = ECPrivateKeySpec(java.math.BigInteger(1, ba), ecNamedCurveSpec)
+              val privateKey = keyFactory.generatePrivate(ecPrivateKeySpec)
+              val bcECPoint = ecParameterSpec
+                .getG()
+                .multiply(privateKey.asInstanceOf[org.bouncycastle.jce.interfaces.ECPrivateKey].getD())
+              val ecPublicKeySpec = ECPublicKeySpec(
+                new ECPoint(
+                  bcECPoint.normalize().getAffineXCoord().toBigInteger(),
+                  bcECPoint.normalize().getAffineYCoord().toBigInteger()
+                ),
+                ecNamedCurveSpec
+              )
+              val publicKey = keyFactory.generatePublic(ecPublicKeySpec)
+              (privateKey, publicKey)
+            }
+            .mapError(GetKeyError.KeyConstructionError.apply)
+            .asSome
+        }
+      }
   }
 
   def listManagedDID: IO[GetManagedDIDError, Seq[ManagedDIDDetail]] =

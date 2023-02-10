@@ -314,7 +314,7 @@ object BackgroundJobs {
       )
       didSecretStorage <- ZIO.service[DIDSecretStorage]
       maybeECKeyPair <- didSecretStorage.getKey(longFormPrismDID.asCanonical, "issuing")
-      _ <- ZIO.logInfo(s"ECKeyPair => $maybeECKeyPair")
+      _ <- ZIO.logInfo(s"ECKeyPair => $maybeECKeyPair") // TODO: remove this after done debugging
       maybeIssuer <- ZIO.succeed(maybeECKeyPair.map(ecKeyPair => {
         val ba = ecKeyPair.privateKey.toPaddedByteArray(EllipticCurve.SECP256K1)
         val keyFactory = KeyFactory.getInstance("EC", new BouncyCastleProvider())
