@@ -192,7 +192,7 @@ object BackgroundJobs {
               _,
               Some(issue),
               _,
-              _
+              Some(issuingDID)
             ) =>
           // Generate the JWT Credential and store it in DB as an attacment to IssueCredentialData
           // Set ProtocolState to CredentialGenerated
@@ -200,7 +200,7 @@ object BackgroundJobs {
           for {
             credentialService <- ZIO.service[CredentialService]
             // issuer = credentialService.createIssuer
-            issuer <- createPrismDIDIssuer()
+            issuer <- createPrismDIDIssuer(issuingDID)
             w3Credential <- credentialService.createCredentialPayloadFromRecord(
               record,
               issuer,
@@ -299,28 +299,24 @@ object BackgroundJobs {
   }
 
   // TODO: Improvements needed here:
-  // - A single PrismDID genrated at agent startup should be used.
   // - For now, we include the long form in the JWT credential to facilitate validation on client-side, but resolution should be used instead.
-  // - There should be a way to retrieve the 'default' PrismDID from ManagedDIDService (use of an alias in DB record?)
-  private[this] def createPrismDIDIssuer(): ZIO[ManagedDIDService, Throwable, Issuer] = {
-    val issuingKeyId = "issuing"
+  // - Define consistent error handling (ATL-3210)
+  private[this] def createPrismDIDIssuer(issuingDID: CanonicalPrismDID): ZIO[ManagedDIDService, Throwable, Issuer] = {
+    val issuingKeyId = "issuing" // TODO: where to create this key?
     for {
       managedDIDService <- ZIO.service[ManagedDIDService]
-      // TODO: use pre-generated DID
-      longFormPrismDID <- managedDIDService.createAndStoreDID(
-        ManagedDIDTemplate(
-          Seq(
-            DIDPublicKeyTemplate(issuingKeyId, VerificationRelationship.Authentication)
-          ),
-          Nil
-        )
-      )
-      canonicalDID = longFormPrismDID.asCanonical
-      // TODO: define consistent error handling (ATL-3210)
+      longFormPrismDID <- managedDIDService
+        .getManagedDIDState(issuingDID)
+        .mapError(e => RuntimeException(s"Error occured while getting did from wallet: ${e.toString}"))
+        .someOrFail(RuntimeException(s"Issuer DID does not exist in the wallet: $issuingDID"))
+        .collect(RuntimeException(s"Issuer DID must be published: ${issuingDID.toString}")) {
+          case s: ManagedDIDState.Published => PrismDID.buildLongFormFromOperation(s.createOperation)
+        }
+      // TODO: resolve DID document and infer key to use?
       ecKeyPair <- managedDIDService
-        .javaKeyPairWithDID(canonicalDID, issuingKeyId)
+        .javaKeyPairWithDID(issuingDID, issuingKeyId)
         .mapError(e => RuntimeException(s"Error occurred while getting issuer key-pair: ${e.toString}"))
-        .someOrFail(RuntimeException(s"Issuer key-pair does not exist: $canonicalDID#$issuingKeyId"))
+        .someOrFail(RuntimeException(s"Issuer key-pair does not exist: ${issuingDID.toString}#$issuingKeyId"))
       _ <- ZIO.logInfo(s"ECKeyPair => $ecKeyPair")
       (privateKey, publicKey) = ecKeyPair
       issuer = Issuer(
@@ -393,7 +389,9 @@ object BackgroundJobs {
           for {
 
             presentationService <- ZIO.service[PresentationService]
-            prover <- createPrismDIDIssuer() // TODO Prover Prism DID should be coming from DB and resolvable
+            prover <- createPrismDIDIssuer(
+              throw NotImplementedError("get holder/prover did")
+            ) // TODO Prover Prism DID should be coming from DB and resolvable
             presentationPayload <- presentationService.createPresentationPayloadFromRecord(
               id,
               prover,

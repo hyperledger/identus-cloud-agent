@@ -149,9 +149,17 @@ final class ManagedDIDService private[walletapi] (
       }
   }
 
+  def getManagedDIDState(did: CanonicalPrismDID): IO[GetManagedDIDError, Option[ManagedDIDState]] =
+    for {
+      // state in wallet maybe stale, update it from DLT
+      _ <- computeNewDIDStateFromDLTAndPersist(did)
+      state <- nonSecretStorage.getManagedDIDState(did).mapError(GetManagedDIDError.WalletStorageError.apply)
+    } yield state
+
   def listManagedDID: IO[GetManagedDIDError, Seq[ManagedDIDDetail]] =
     for {
-      _ <- syncManagedDIDState // state in wallet maybe stale, update it from DLT
+      // state in wallet maybe stale, update it from DLT
+      _ <- syncManagedDIDState
       dids <- nonSecretStorage.listManagedDID.mapError(GetManagedDIDError.WalletStorageError.apply)
     } yield dids.toSeq.map { case (did, state) => ManagedDIDDetail(did.asCanonical, state) }
 
