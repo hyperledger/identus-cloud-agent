@@ -186,11 +186,13 @@ object AgentCli extends ZIOAppDefault {
 
       // Make a Request
       body = RequestPresentation.Body(goal_code = Some("Presentation Request"))
-      presentationAttachment = PresentationAttachment.build(
-        Some(Options(challenge = "somechallenge", domain = "somedomain"))
-      )
+      presentationAttachmentAsJson = """{
+                "challenge": "1f44d55f-f161-4938-a659-f8026467f126",
+                "domain": "us.gov/DriverLicense",
+                "credential_manifest": {}
+            }"""
 
-      attachmentDescriptor = AttachmentDescriptor.buildJsonAttachment(payload = presentationAttachment)
+      attachmentDescriptor = AttachmentDescriptor.buildJsonAttachment(payload = presentationAttachmentAsJson)
       requestPresentation = RequestPresentation(
         body = body,
         attachments = Seq(attachmentDescriptor),
