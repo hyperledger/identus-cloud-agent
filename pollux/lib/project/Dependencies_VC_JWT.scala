@@ -25,7 +25,7 @@ object Dependencies_VC_JWT {
   private lazy val zio = "dev.zio" %% "zio" % Versions.zio
   private lazy val zioPrelude = "dev.zio" %% "zio-prelude" % Versions.zioPreludeVersion
 
-  private lazy val nimbusJoseJwt = "com.nimbusds" % "nimbus-jose-jwt" % "9.25.6"
+  private lazy val nimbusJoseJwt = "com.nimbusds" % "nimbus-jose-jwt" % "9.30.1"
 
   private lazy val zioTest = "dev.zio" %% "zio-test" % Versions.zio % Test
   private lazy val zioTestSbt = "dev.zio" %% "zio-test-sbt" % Versions.zio % Test
