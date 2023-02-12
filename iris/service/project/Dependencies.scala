@@ -2,17 +2,17 @@ import sbt._
 
 object Dependencies {
   object Versions {
-    val zio = "2.0.6"
-    val zioConfig = "3.0.7"
+    val zio = "2.0.4"
+    val zioConfig = "3.0.2"
     val circe = "0.14.1"
     val circeOptics = "0.14.1"
     val akka = "2.6.19"
     val doobie = "1.0.0-RC2"
-    val zioCatsInterop = "23.0.0.1"
+    val zioCatsInterop = "3.3.0"
     val prismSdk = "v1.4.1" // scala-steward:off
     val shared = "0.1.0"
-    val enumeratum = "1.7.2"
-    val zioTest = "2.0.6"
+    val enumeratum = "1.7.0"
+    val zioTest = "2.0.4"
   }
 
   private lazy val zio = "dev.zio" %% "zio" % Versions.zio
@@ -47,9 +47,9 @@ object Dependencies {
 //  val circeOptics = ("io.circe" %% "circe-optics" % Versions.circeOptics).cross(CrossVersion.for3Use2_13)
 
   // Tests
-  private lazy val zioTest = "dev.zio" %% "zio-test" % "2.0.6" % Test
-  private lazy val zioTestSbt = "dev.zio" %% "zio-test-sbt" % "2.0.6" % Test
-  private lazy val zioTestMagnolia = "dev.zio" %% "zio-test-magnolia" % "2.0.6" % Test
+  private lazy val zioTest = "dev.zio" %% "zio-test" % "2.0.4" % Test
+  private lazy val zioTestSbt = "dev.zio" %% "zio-test-sbt" % "2.0.4" % Test
+  private lazy val zioTestMagnolia = "dev.zio" %% "zio-test-magnolia" % "2.0.4" % Test
 
   // Dependency Modules
   private lazy val baseDependencies: Seq[ModuleID] =
