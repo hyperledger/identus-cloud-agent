@@ -47,7 +47,7 @@ object Dependencies {
 //  val circeOptics = ("io.circe" %% "circe-optics" % Versions.circeOptics).cross(CrossVersion.for3Use2_13)
 
   // Tests
-  private lazy val zioTest = "dev.zio" %% "zio-test" % "2.0.4" % Test
+  private lazy val zioTest = "dev.zio" %% "zio-test" % "2.0.8" % Test
   private lazy val zioTestSbt = "dev.zio" %% "zio-test-sbt" % "2.0.4" % Test
   private lazy val zioTestMagnolia = "dev.zio" %% "zio-test-magnolia" % "2.0.4" % Test
 
