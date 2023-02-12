@@ -19,7 +19,7 @@ new sbt.Def.SettingList(
     .get("SBT_SCOVERAGE") // SEE also build.sbt
     .map { _ =>
       println("### Enable sbt-scoverage ###")
-      addSbtPlugin("org.scoverage" % "sbt-scoverage" % "2.0.6") // Needs scala version 3.2.2
+      addSbtPlugin("org.scoverage" % "sbt-scoverage" % "2.0.7") // Needs scala version 3.2.2
     }
     .toSeq
 )
