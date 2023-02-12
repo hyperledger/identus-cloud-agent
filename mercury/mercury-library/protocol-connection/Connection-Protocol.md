@@ -8,9 +8,9 @@ The protocol is used when you wish to create a connection with another agent.
 
 ## PIURI
 
-Version 1.0: `https://atalaprism.io/mercury/connections/1.0/request`
-
-Version 1.0: `https://atalaprism.io/mercury/connections/1.0/response`
+Version 1.0:
+ - `https://atalaprism.io/mercury/connections/1.0/request`
+ - `https://atalaprism.io/mercury/connections/1.0/response`
 
 ### Roles
 

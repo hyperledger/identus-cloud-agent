@@ -8,11 +8,13 @@ object Dependencies {
     val prismSdk = "v1.4.1" // scala-steward:off
     val iris = "0.1.0"
     val shared = "0.2.0"
-    val mercury = "0.16.0"
+    val mercury = "0.18.0"
     val flyway = "9.8.3"
     val testContainersScalaPostgresql = "0.40.11"
     val quill = "4.6.0"
     val logback = "1.4.5"
+    val munit = "1.0.0-M6" // "0.7.29"
+    val munitZio = "0.1.1"
   }
 
   private lazy val logback = "ch.qos.logback" % "logback-classic" % Versions.logback % Test
@@ -24,6 +26,10 @@ object Dependencies {
   private lazy val zioTest = "dev.zio" %% "zio-test" % Versions.zio % Test
   private lazy val zioTestSbt = "dev.zio" %% "zio-test-sbt" % Versions.zio % Test
   private lazy val zioTestMagnolia = "dev.zio" %% "zio-test-magnolia" % Versions.zio % Test
+  // For munit https://scalameta.org/munit/docs/getting-started.html
+  private lazy val munit = "org.scalameta" %% "munit" % Versions.munit % Test
+  // For munit zio https://github.com/poslegm/munit-zio
+  private lazy val munitZio = "com.github.poslegm" %% "munit-zio" % Versions.munitZio % Test
 
   private lazy val doobiePostgres = "org.tpolecat" %% "doobie-postgres" % Versions.doobie
   private lazy val doobieHikari = "org.tpolecat" %% "doobie-hikari" % Versions.doobie
@@ -56,7 +62,8 @@ object Dependencies {
     zioTest,
     zioTestSbt,
     zioTestMagnolia,
-    prismCrypto,
+    munit,
+    munitZio,
     shared,
     logback,
     slf4jApi,

@@ -91,7 +91,6 @@ import io.iohk.atala.agent.walletapi.sql.{JdbcDIDNonSecretStorage, JdbcDIDSecret
 import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
 import io.iohk.atala.pollux.vc.jwt.DidResolver as JwtDidResolver
-import io.iohk.atala.castor.core.model.error.DIDOperationError.TooManyDidServiceAccess
 import io.iohk.atala.pollux.vc.jwt.PrismDidResolver
 import io.iohk.atala.mercury.DidAgent
 
@@ -156,26 +155,38 @@ object Modules {
     Server.start(port, app)
   }
 
-  val didCommExchangesJob: RIO[
-    DidOps & DIDResolver & JwtDidResolver & HttpClient & CredentialService & ManagedDIDService & DIDSecretStorage,
+  val issueCredentialDidCommExchangesJob: RIO[
+    AppConfig & DidOps & DIDResolver & JwtDidResolver & HttpClient & CredentialService & ManagedDIDService &
+      DIDSecretStorage,
     Unit
   ] =
-    BackgroundJobs.didCommExchanges
-      .repeat(Schedule.spaced(10.seconds))
-      .unit
+    for {
+      config <- ZIO.service[AppConfig]
+      job <- BackgroundJobs.issueCredentialDidCommExchanges
+        .repeat(Schedule.spaced(config.pollux.issueBgJobRecurrenceDelay))
+        .unit
+    } yield job
 
   val presentProofExchangeJob: RIO[
-    DidOps & DIDResolver & JwtDidResolver & HttpClient & PresentationService & ManagedDIDService & DIDSecretStorage,
+    AppConfig & DidOps & DIDResolver & JwtDidResolver & HttpClient & PresentationService & ManagedDIDService &
+      DIDSecretStorage,
     Unit
   ] =
-    BackgroundJobs.presentProofExchanges
-      .repeat(Schedule.spaced(10.seconds))
-      .unit
+    for {
+      config <- ZIO.service[AppConfig]
+      job <- BackgroundJobs.presentProofExchanges
+        .repeat(Schedule.spaced(config.pollux.presentationBgJobRecurrenceDelay))
+        .unit
+    } yield job
 
-  val connectDidCommExchangesJob: RIO[DidOps & DIDResolver & HttpClient & ConnectionService & ManagedDIDService, Unit] =
-    ConnectBackgroundJobs.didCommExchanges
-      .repeat(Schedule.spaced(10.seconds))
-      .unit
+  val connectDidCommExchangesJob
+      : RIO[AppConfig & DidOps & DIDResolver & HttpClient & ConnectionService & ManagedDIDService, Unit] =
+    for {
+      config <- ZIO.service[AppConfig]
+      job <- ConnectBackgroundJobs.didCommExchanges
+        .repeat(Schedule.spaced(config.connect.connectBgJobRecurrenceDelay))
+        .unit
+    } yield job
 
   val syncDIDPublicationStateFromDltJob: URIO[ManagedDIDService, Unit] =
     BackgroundJobs.syncDIDPublicationStateFromDlt
@@ -336,7 +347,10 @@ object Modules {
               for {
                 _ <- ZIO.logInfo("*" * 100)
                 _ <- ZIO.logInfo("As an Inviter in connect:")
-                connectionRequest = ConnectionRequest.readFromMessage(msg)
+                connectionRequest <- ConnectionRequest.fromMessage(msg) match {
+                  case Left(error)  => ZIO.fail(new RuntimeException(error))
+                  case Right(value) => ZIO.succeed(value)
+                }
                 _ <- ZIO.logInfo("Got ConnectionRequest: " + connectionRequest)
                 // Receive and store ConnectionRequest
                 maybeRecord <- connectionService
@@ -361,7 +375,10 @@ object Modules {
               for {
                 _ <- ZIO.logInfo("*" * 100)
                 _ <- ZIO.logInfo("As an Invitee in connect:")
-                connectionResponse = ConnectionResponse.readFromMessage(msg)
+                connectionResponse <- ConnectionResponse.fromMessage(msg) match {
+                  case Left(error)  => ZIO.fail(new RuntimeException(error))
+                  case Right(value) => ZIO.succeed(value)
+                }
                 _ <- ZIO.logInfo("Got ConnectionResponse: " + connectionResponse)
                 _ <- connectionService
                   .receiveConnectionResponse(connectionResponse)
@@ -518,7 +535,7 @@ object RepoModule {
           username = config.username,
           password = config.password,
           jdbcUrl = s"jdbc:postgresql://${config.host}:${config.port}/${config.databaseName}",
-          awaitConnectionThreads = 2
+          awaitConnectionThreads = config.awaitConnectionThreads
         )
       }
     }
@@ -544,7 +561,7 @@ object RepoModule {
           username = config.username,
           password = config.password,
           jdbcUrl = s"jdbc:postgresql://${config.host}:${config.port}/${config.databaseName}",
-          awaitConnectionThreads = 2
+          awaitConnectionThreads = config.awaitConnectionThreads
         )
       }
     }
@@ -570,7 +587,7 @@ object RepoModule {
           username = config.username,
           password = config.password,
           jdbcUrl = s"jdbc:postgresql://${config.host}:${config.port}/${config.databaseName}",
-          awaitConnectionThreads = 2
+          awaitConnectionThreads = config.awaitConnectionThreads
         )
       }
     }

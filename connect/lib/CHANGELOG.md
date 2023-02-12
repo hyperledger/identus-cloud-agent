@@ -1,3 +1,23 @@
+# [connect-v0.10.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/connect-v0.9.0...connect-v0.10.0) (2023-02-07)
+
+
+### Features
+
+* **connect:** bump mercury version and fix queries ([#356](https://github.com/input-output-hk/atala-prism-building-blocks/issues/356)) ([957bdea](https://github.com/input-output-hk/atala-prism-building-blocks/commit/957bdeae59f566446caa14dabe7cc7310478ba8e))
+
+# [connect-v0.9.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/connect-v0.8.0...connect-v0.9.0) (2023-02-07)
+
+
+### Features
+
+* **connect:** Add method reportProcessingFailure ([#345](https://github.com/input-output-hk/atala-prism-building-blocks/issues/345)) ([ebf583c](https://github.com/input-output-hk/atala-prism-building-blocks/commit/ebf583cff2c00d40e7d534305f21fa47d35eb087))
+* **connect:** support connect records retrieval by states ([#349](https://github.com/input-output-hk/atala-prism-building-blocks/issues/349)) ([7673278](https://github.com/input-output-hk/atala-prism-building-blocks/commit/7673278b2a9a88ec503c44b31dd14902462e43a4))
+
+
+### Performance Improvements
+
+* **connect:** Update to Mercury 0.17.0 ([#346](https://github.com/input-output-hk/atala-prism-building-blocks/issues/346)) ([8823325](https://github.com/input-output-hk/atala-prism-building-blocks/commit/8823325e88604c970d3dd6a94c4573f5658a8ca2))
+
 # [connect-v0.8.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/connect-v0.7.0...connect-v0.8.0) (2023-02-03)
 
 

@@ -23,6 +23,7 @@ import io.iohk.atala.agent.walletapi.model.ECKeyPair
 import com.nimbusds.jose.jwk.OctetKeyPair
 import io.iohk.atala.prism.crypto.EC
 import io.iohk.atala.shared.utils.Base64Utils
+import scala.collection.immutable.ArraySeq
 
 class JdbcDIDSecretStorage(xa: Transactor[Task]) extends DIDSecretStorage {
 
@@ -106,17 +107,18 @@ class JdbcDIDSecretStorage(xa: Transactor[Task]) extends DIDSecretStorage {
     Clock.instant.flatMap(cxnIO(_).run.transact(xa))
   }
 
-  override def listKeys(did: PrismDID): Task[Map[String, ECKeyPair]] = {
+  override def listKeys(did: PrismDID): Task[Seq[(String, ArraySeq[Byte], ECKeyPair)]] = {
     val cxnIO = sql"""
         | SELECT
         |   key_id,
+        |   operation_hash,
         |   key_pair
         | FROM public.prism_did_secret_storage
         | WHERE
         |   did = $did
         """.stripMargin
-      .query[(String, ECKeyPair)]
-      .toMap
+      .query[(String, ArraySeq[Byte], ECKeyPair)]
+      .to[List]
 
     cxnIO.transact(xa)
   }

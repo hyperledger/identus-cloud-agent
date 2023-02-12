@@ -24,8 +24,8 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
     CreateManagedDidRequestDocumentTemplate.apply
   )
   given RootJsonFormat[CreateManagedDIDResponse] = jsonFormat1(CreateManagedDIDResponse.apply)
-  given RootJsonFormat[DID] = jsonFormat8(DID.apply)
-  given RootJsonFormat[DIDDocumentMetadata] = jsonFormat3(DIDDocumentMetadata.apply)
+  given RootJsonFormat[DID] = jsonFormat9(DID.apply)
+  given RootJsonFormat[DIDDocumentMetadata] = jsonFormat2(DIDDocumentMetadata.apply)
   given RootJsonFormat[DIDOperationResponse] = jsonFormat1(DIDOperationResponse.apply)
   given RootJsonFormat[DidOperationSubmission] = jsonFormat2(DidOperationSubmission.apply)
   given RootJsonFormat[DIDResponse] = jsonFormat2(DIDResponse.apply)
@@ -46,6 +46,7 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
     UpdateManagedDIDRequestActionsInnerUpdateService.apply
   )
   given RootJsonFormat[VerificationMethod] = jsonFormat4(VerificationMethod.apply)
+  given RootJsonFormat[VerificationMethodOrRef] = jsonFormat3(VerificationMethodOrRef.apply)
 
   // Issue Credential Protocol
   implicit object UUIDFormat extends JsonFormat[UUID] {
@@ -78,8 +79,9 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   given RootJsonFormat[W3CCredentialStatus] = jsonFormat2(W3CCredentialStatus.apply)
 
   // Presentation
+  given RootJsonFormat[Options] = jsonFormat2(Options.apply)
   given RootJsonFormat[ProofRequestAux] = jsonFormat2(ProofRequestAux.apply)
-  given RootJsonFormat[RequestPresentationInput] = jsonFormat2(RequestPresentationInput.apply)
+  given RootJsonFormat[RequestPresentationInput] = jsonFormat3(RequestPresentationInput.apply)
   given RootJsonFormat[RequestPresentationOutput] = jsonFormat1(RequestPresentationOutput.apply)
   given RootJsonFormat[PresentationStatus] = jsonFormat5(PresentationStatus.apply)
   given RootJsonFormat[RequestPresentationAction] = jsonFormat2(RequestPresentationAction.apply)

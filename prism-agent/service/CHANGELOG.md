@@ -1,3 +1,31 @@
+# [prism-agent-v0.37.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.36.0...prism-agent-v0.37.0) (2023-02-09)
+
+
+### Features
+
+* **prism-agent:** Added challenge and domain and to protect agains r… ([#364](https://github.com/input-output-hk/atala-prism-building-blocks/issues/364)) ([4f0b261](https://github.com/input-output-hk/atala-prism-building-blocks/commit/4f0b261b3545c8681eccd8b38c7fa028ee840c50))
+
+# [prism-agent-v0.36.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.35.0...prism-agent-v0.36.0) (2023-02-07)
+
+
+### Features
+
+* **prism-agent:** ATL-3349 connection state issue and perf improvements ([#359](https://github.com/input-output-hk/atala-prism-building-blocks/issues/359)) ([c77f160](https://github.com/input-output-hk/atala-prism-building-blocks/commit/c77f160043262662ce7d5d9c6f75cd893bcab68d))
+
+# [prism-agent-v0.35.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.34.0...prism-agent-v0.35.0) (2023-02-07)
+
+
+### Features
+
+* **prism-agent:** Upgrade libs ([#344](https://github.com/input-output-hk/atala-prism-building-blocks/issues/344)) ([64a7857](https://github.com/input-output-hk/atala-prism-building-blocks/commit/64a7857ecc0acc6d940e7f2fcce1c68c8163562c))
+
+# [prism-agent-v0.34.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.33.0...prism-agent-v0.34.0) (2023-02-06)
+
+
+### Features
+
+* **prism-agent:** upgrade castor and pollux and align OAS to the DID spec ([#342](https://github.com/input-output-hk/atala-prism-building-blocks/issues/342)) ([b8643a8](https://github.com/input-output-hk/atala-prism-building-blocks/commit/b8643a81710300082bfaceb08f906d364869d405))
+
 # [prism-agent-v0.33.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.32.0...prism-agent-v0.33.0) (2023-02-02)
 
 

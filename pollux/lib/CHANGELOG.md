@@ -1,3 +1,29 @@
+# [pollux-v0.25.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.24.0...pollux-v0.25.0) (2023-02-09)
+
+
+### Features
+
+* **pollux:** Added New Erorr ([#363](https://github.com/input-output-hk/atala-prism-building-blocks/issues/363)) ([5349a0e](https://github.com/input-output-hk/atala-prism-building-blocks/commit/5349a0edf1c297a76aaf0a5e6ed6b8d97f13b16c))
+
+# [pollux-v0.24.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.23.0...pollux-v0.24.0) (2023-02-07)
+
+
+### Features
+
+* **pollux:** bump mercury version and fix queries ([#357](https://github.com/input-output-hk/atala-prism-building-blocks/issues/357)) ([28f779a](https://github.com/input-output-hk/atala-prism-building-blocks/commit/28f779a5a8bb24eb5ffd8fce0b5cd0a4e8387132))
+
+# [pollux-v0.23.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.22.0...pollux-v0.23.0) (2023-02-07)
+
+
+### Features
+
+* **pollux:** support issue/presentation records retrieval by states ([#350](https://github.com/input-output-hk/atala-prism-building-blocks/issues/350)) ([f810ee3](https://github.com/input-output-hk/atala-prism-building-blocks/commit/f810ee31a7e5a523efa193e9efaadc3f67b2783f))
+
+
+### Performance Improvements
+
+* **pollux:** Update to Mercury 0.17.0 ([#347](https://github.com/input-output-hk/atala-prism-building-blocks/issues/347)) ([8e90c5f](https://github.com/input-output-hk/atala-prism-building-blocks/commit/8e90c5fe0ad25ac40c7e7df14ed952c1d68333bd))
+
 # [pollux-v0.22.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.21.0...pollux-v0.22.0) (2023-02-03)
 
 

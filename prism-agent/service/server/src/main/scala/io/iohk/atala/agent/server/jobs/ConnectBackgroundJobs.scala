@@ -18,16 +18,21 @@ import io.iohk.atala.resolvers.UniversalDidResolver
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError
 import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError.KeyNotFoundError
+import io.iohk.atala.agent.server.config.AppConfig
 
 object ConnectBackgroundJobs {
 
   val didCommExchanges = {
     for {
       connectionService <- ZIO.service[ConnectionService]
+      config <- ZIO.service[AppConfig]
       records <- connectionService
-        .getConnectionRecords()
-        .mapError(err => Throwable(s"Error occured while getting connection records: $err"))
-      _ <- ZIO.foreach(records)(performExchange)
+        .getConnectionRecordsByStates(
+          ConnectionRecord.ProtocolState.ConnectionRequestPending,
+          ConnectionRecord.ProtocolState.ConnectionResponsePending
+        )
+        .mapError(err => Throwable(s"Error occurred while getting connection records: $err"))
+      _ <- ZIO.foreachPar(records)(performExchange).withParallelism(config.connect.connectBgJobProcessingParallelism)
     } yield ()
   }
 
@@ -37,22 +42,70 @@ object ConnectBackgroundJobs {
     import Role._
     import ProtocolState._
     val exchange = record match {
-      case ConnectionRecord(id, _, _, _, _, Invitee, ConnectionRequestPending, _, Some(request), _) =>
-        for {
+      case ConnectionRecord(
+            id,
+            _,
+            _,
+            _,
+            _,
+            Invitee,
+            ConnectionRequestPending,
+            _,
+            Some(request),
+            _,
+            metaRetries,
+            _
+          ) if metaRetries > 0 =>
+        val aux = for {
+
           didCommAgent <- buildDIDCommAgent(request.from)
-          _ <- MessagingService.send(request.makeMessage).provideSomeLayer(didCommAgent)
+          resp <- MessagingService.send(request.makeMessage).provideSomeLayer(didCommAgent)
           connectionService <- ZIO.service[ConnectionService]
-          _ <- connectionService.markConnectionRequestSent(id)
+          _ <- {
+            if (resp.status >= 200 && resp.status < 300) connectionService.markConnectionRequestSent(id)
+            else ZIO.logWarning(s"DIDComm sending error: [${resp.status}] - ${resp.bodyAsString}")
+          }
         } yield ()
 
-      case ConnectionRecord(id, _, _, _, _, Inviter, ConnectionResponsePending, _, _, Some(response)) =>
-        for {
+        // aux // TODO decrete metaRetries if it has a error
+        aux
+
+      case ConnectionRecord(
+            id,
+            _,
+            _,
+            _,
+            _,
+            Inviter,
+            ConnectionResponsePending,
+            _,
+            _,
+            Some(response),
+            metaRetries,
+            _
+          ) if metaRetries > 0 =>
+        val aux = for {
           didCommAgent <- buildDIDCommAgent(response.from)
-          _ <- MessagingService.send(response.makeMessage).provideSomeLayer(didCommAgent)
+          resp <- MessagingService.send(response.makeMessage).provideSomeLayer(didCommAgent)
           connectionService <- ZIO.service[ConnectionService]
-          _ <- connectionService.markConnectionResponseSent(id)
+          _ <- {
+            if (resp.status >= 200 && resp.status < 300) connectionService.markConnectionResponseSent(id)
+            else ZIO.logWarning(s"DIDComm sending error: [${resp.status}] - ${resp.bodyAsString}")
+          }
         } yield ()
 
+        aux.tapError(ex =>
+          for {
+            connectionService <- ZIO.service[ConnectionService]
+            _ <- connectionService
+              .reportProcessingFailure(id, None) // TODO ex get message
+          } yield ()
+        )
+      case e
+          if (e.protocolState == ConnectionRequestPending || e.protocolState == ConnectionResponsePending) && e.metaRetries == 0 =>
+        ZIO.logWarning( // TODO use logDebug
+          s"ConnectionRecord '${e.id}' has '${e.metaRetries}' retries and will NOT be processed"
+        )
       case _ => ZIO.unit
     }
 

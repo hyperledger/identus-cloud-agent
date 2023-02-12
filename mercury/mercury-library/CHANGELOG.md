@@ -1,3 +1,10 @@
+# [mercury-v0.18.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.17.0...mercury-v0.18.0) (2023-02-07)
+
+
+### Features
+
+* **mercury:** ATL-3424 Expose HTTP status ([#351](https://github.com/input-output-hk/atala-prism-building-blocks/issues/351)) ([d87613c](https://github.com/input-output-hk/atala-prism-building-blocks/commit/d87613c7cb8c892964820e3346d44b3bf46114fd))
+
 # [mercury-v0.17.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.16.0...mercury-v0.17.0) (2023-01-31)
 
 

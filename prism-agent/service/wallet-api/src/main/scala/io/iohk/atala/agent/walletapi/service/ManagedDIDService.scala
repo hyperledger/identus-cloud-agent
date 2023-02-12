@@ -13,12 +13,7 @@ import io.iohk.atala.agent.walletapi.model.{
 import io.iohk.atala.agent.walletapi.model.ECCoordinates.*
 import io.iohk.atala.agent.walletapi.model.error.{*, given}
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService.DEFAULT_MASTER_KEY_ID
-import io.iohk.atala.agent.walletapi.storage.{
-  DIDNonSecretStorage,
-  DIDSecretStorage,
-  InMemoryDIDNonSecretStorage,
-  InMemoryDIDSecretStorage
-}
+import io.iohk.atala.agent.walletapi.storage.{DIDNonSecretStorage, DIDSecretStorage}
 import io.iohk.atala.agent.walletapi.util.{
   ManagedDIDTemplateValidator,
   OperationFactory,
@@ -141,7 +136,9 @@ final class ManagedDIDService private[walletapi] (
       (createOperation, secret) = generated
       longFormDID = PrismDID.buildLongFormFromOperation(createOperation)
       did = longFormDID.asCanonical
-      _ <- ZIO.fromEither(didOpValidator.validate(createOperation)).mapError(CreateManagedDIDError.OperationError.apply)
+      _ <- ZIO
+        .fromEither(didOpValidator.validate(createOperation))
+        .mapError(CreateManagedDIDError.InvalidOperation.apply)
       _ <- nonSecretStorage
         .getManagedDIDState(did)
         .mapError(CreateManagedDIDError.WalletStorageError.apply)
@@ -208,7 +205,9 @@ final class ManagedDIDService private[walletapi] (
       previousOperationHash <- getPreviousOperationHash[UpdateManagedDIDError](did, didState.createOperation)
       generated <- generateUpdateOperation(did, previousOperationHash, actions)
       (updateOperation, secret) = generated
-      _ <- ZIO.fromEither(didOpValidator.validate(updateOperation)).mapError(UpdateManagedDIDError.OperationError.apply)
+      _ <- ZIO
+        .fromEither(didOpValidator.validate(updateOperation))
+        .mapError(UpdateManagedDIDError.InvalidOperation.apply)
       outcome <- doUpdate(updateOperation, secret)
     } yield outcome
   }
@@ -237,7 +236,7 @@ final class ManagedDIDService private[walletapi] (
       deactivateOperation = PrismDIDOperation.Deactivate(did, ArraySeq.from(previousOperationHash))
       _ <- ZIO
         .fromEither(didOpValidator.validate(deactivateOperation))
-        .mapError(UpdateManagedDIDError.OperationError.apply)
+        .mapError(UpdateManagedDIDError.InvalidOperation.apply)
       outcome <- doDeactivate(deactivateOperation)
     } yield outcome
   }
@@ -378,11 +377,6 @@ object ManagedDIDService {
   val DEFAULT_MASTER_KEY_ID: String = "master0"
 
   val reservedKeyIds: Set[String] = Set(DEFAULT_MASTER_KEY_ID)
-
-  def inMemoryStorage: URLayer[DIDOperationValidator & DIDService, ManagedDIDService] =
-    (InMemoryDIDNonSecretStorage.layer ++ InMemoryDIDSecretStorage.layer) >>> ZLayer.fromFunction(
-      ManagedDIDService(_, _, _, _)
-    )
 
   val layer: URLayer[DIDOperationValidator & DIDService & DIDSecretStorage & DIDNonSecretStorage, ManagedDIDService] =
     ZLayer.fromFunction(ManagedDIDService(_, _, _, _))

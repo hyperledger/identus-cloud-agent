@@ -143,35 +143,41 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
       .transact(xa)
   }
 
-  override def getIssueCredentialRecordsByState(
-      state: IssueCredentialRecord.ProtocolState
+  override def getIssueCredentialRecordsByStates(
+      states: IssueCredentialRecord.ProtocolState*
   ): Task[Seq[IssueCredentialRecord]] = {
-    val cxnIO = sql"""
-        | SELECT
-        |   id,
-        |   created_at,
-        |   updated_at,
-        |   thid,
-        |   schema_id,
-        |   role,
-        |   subject_id,
-        |   validity_period,
-        |   automatic_issuance,
-        |   await_confirmation,
-        |   protocol_state,
-        |   publication_state,
-        |   offer_credential_data,
-        |   request_credential_data,
-        |   issue_credential_data,
-        |   issued_credential_raw
-        | FROM public.issue_credential_records
-        | WHERE protocol_state = ${state.toString}
-        """.stripMargin
-      .query[IssueCredentialRecord]
-      .to[Seq]
+    states match
+      case Nil =>
+        ZIO.succeed(Nil)
+      case head +: tail =>
+        val nel = NonEmptyList.of(head, tail: _*)
+        val inClauseFragment = Fragments.in(fr"protocol_state", nel)
+        val cxnIO = sql"""
+            | SELECT
+            |   id,
+            |   created_at,
+            |   updated_at,
+            |   thid,
+            |   schema_id,
+            |   role,
+            |   subject_id,
+            |   validity_period,
+            |   automatic_issuance,
+            |   await_confirmation,
+            |   protocol_state,
+            |   publication_state,
+            |   offer_credential_data,
+            |   request_credential_data,
+            |   issue_credential_data,
+            |   issued_credential_raw
+            | FROM public.issue_credential_records
+            | WHERE $inClauseFragment
+            """.stripMargin
+          .query[IssueCredentialRecord]
+          .to[Seq]
 
-    cxnIO
-      .transact(xa)
+        cxnIO
+          .transact(xa)
   }
 
   override def getIssueCredentialRecord(recordId: UUID): Task[Option[IssueCredentialRecord]] = {

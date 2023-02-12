@@ -19,6 +19,7 @@ import zio.interop.catz.*
 
 import java.time.Instant
 import java.util.UUID
+import cats.data.NonEmptyList
 
 class JdbcConnectionRepository(xa: Transactor[Task]) extends ConnectionRepository[Task] {
 
@@ -102,6 +103,37 @@ class JdbcConnectionRepository(xa: Transactor[Task]) extends ConnectionRepositor
       .transact(xa)
   }
 
+  override def getConnectionRecordsByStates(states: ConnectionRecord.ProtocolState*): Task[Seq[ConnectionRecord]] = {
+    states match
+      case Nil =>
+        ZIO.succeed(Nil)
+      case head +: tail =>
+        val nel = NonEmptyList.of(head, tail: _*)
+        val inClauseFragment = Fragments.in(fr"protocol_state", nel)
+        val cxnIO = sql"""
+        | SELECT
+        |   id,
+        |   created_at,
+        |   updated_at,
+        |   thid,
+        |   label,
+        |   role,
+        |   protocol_state,
+        |   invitation,
+        |   connection_request,
+        |   connection_response,
+        |   meta_retries,
+        |   meta_last_failure
+        | FROM public.connection_records
+        | WHERE $inClauseFragment
+        """.stripMargin
+          .query[ConnectionRecord]
+          .to[Seq]
+
+        cxnIO
+          .transact(xa)
+  }
+
   override def getConnectionRecord(recordId: UUID): Task[Option[ConnectionRecord]] = {
     val cxnIO = sql"""
         | SELECT
@@ -155,7 +187,7 @@ class JdbcConnectionRepository(xa: Transactor[Task]) extends ConnectionRepositor
         |   meta_last_failure
         | FROM public.connection_records
         | WHERE thid = $thid
-        """.stripMargin
+        """.stripMargin // | WHERE thid = $thid OR id = $thid
       .query[ConnectionRecord]
       .option
 
