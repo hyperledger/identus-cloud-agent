@@ -26,7 +26,7 @@ lazy val V = new {
   // https://mvnrepository.com/artifact/dev.zio/zio
   val zio = "2.0.8"
   val zioLogging = "2.0.0"
-  val zioJson = "0.3.0"
+  val zioJson = "0.4.2"
   val zioHttp = "0.0.3" // "2.0.0-RC10" // "2.0.0-RC11" TODO
 
   // https://mvnrepository.com/artifact/io.circe/circe-core
