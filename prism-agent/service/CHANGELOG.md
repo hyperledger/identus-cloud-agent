@@ -1,3 +1,10 @@
+# [prism-agent-v0.38.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.37.0...prism-agent-v0.38.0) (2023-02-13)
+
+
+### Features
+
+* **prism-agent:** integrate VerificationPolicy DAL into the agent, update OAS and implement REST API for verification policies ([#369](https://github.com/input-output-hk/atala-prism-building-blocks/issues/369)) ([142ff55](https://github.com/input-output-hk/atala-prism-building-blocks/commit/142ff550a278e7f28d97c539e529fea3cc92c178))
+
 # [prism-agent-v0.37.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.36.0...prism-agent-v0.37.0) (2023-02-09)
 
 
