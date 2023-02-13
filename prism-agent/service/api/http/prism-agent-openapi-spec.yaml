@@ -335,26 +335,11 @@ paths:
         - Verification
       summary: Lookup verification policies by query
       description:
-        Lookup verification policies by `name`, `attributes`, `issuerDIDs`,
-        and `credentialTypes` and control the pagination by `offset` and `limit` parameters
+        Lookup verification policies by `name`, and control the pagination
+        by `offset` and `limit` parameters
       operationId: lookupVerificationPoliciesByQuery
       parameters:
         - name: name
-          in: query
-          required: false
-          schema:
-            type: string
-        - name: attributes
-          in: query
-          required: false
-          schema:
-            type: string
-        - name: issuerDIDs
-          in: query
-          required: false
-          schema:
-            type: string
-        - name: credentialTypes
           in: query
           required: false
           schema:
@@ -441,6 +426,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
       responses:
         "200":
           description: ""
@@ -470,9 +456,7 @@ paths:
       tags:
         - Verification
       summary: Update the verification policy object by id
-      description:
-        "Update the fields of the verification policy entry: `attributes`,
-        `issuerDIDs`, `name`, `credentialTypes`, "
+      description: Update the verification policy entry
       operationId: updateVerificationPolicy
       parameters:
         - name: id
@@ -480,6 +464,14 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
+        - name: nonce
+          in: query
+          description: Nonce of the previous VerificationPolicy
+          required: true
+          schema:
+            type: integer
+            format: int32
       requestBody:
         description: Update verification policy object
         content:
@@ -525,6 +517,14 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
+        - name: nonce
+          in: query
+          description: Nonce of the previous VerificationPolicy
+          required: true
+          schema:
+            type: integer
+            format: int32
       responses:
         "200":
           description: ""

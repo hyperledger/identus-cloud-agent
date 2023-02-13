@@ -21,8 +21,9 @@ import cats.effect.{Async, Resource}
 import cats.syntax.functor.*
 import io.iohk.atala.pollux.sql.model.VerifiableCredentialSchema as VCS
 import io.iohk.atala.pollux.service.SchemaRegistryService
+import io.iohk.atala.pollux.sql.model.VerifiableCredentialSchema.sql as CredentialSchemaSql
 
-import io.getquill.*
+//import io.getquill.*
 import io.getquill.idiom.*
 
 import java.util.UUID
@@ -30,21 +31,19 @@ import scala.util.Try
 
 class JdbcSchemaRegistryService(tx: Transactor[Task]) extends SchemaRegistryService {
 
-  import io.iohk.atala.pollux.sql.model.VerifiableCredentialSchema.sql
-  import io.iohk.atala.pollux.sql.model.VerifiableCredentialSchema.sql.*
   import JdbcSchemaRegistryService.given_Conversion_VerifiableCredentialSchema_VCS
   import JdbcSchemaRegistryService.given_Conversion_VCS_VerifiableCredentialSchema
   override def createSchema(in: VerifiableCredentialSchemaInput): Task[VerifiableCredentialSchema] = {
     for {
       vcs <- zio.ZIO.fromTry(Try(VerifiableCredentialSchema(in)))
       vcs_dto: VCS = vcs.convert
-      action <- sql.insert(vcs_dto).transact(tx)
+      action <- CredentialSchemaSql.insert(vcs_dto).transact(tx)
     } yield vcs
   }
 
   override def getSchemaById(id: UUID): Task[Option[VerifiableCredentialSchema]] = {
     for {
-      vcsOption <- sql.findBy(id).transact(tx).map(_.headOption)
+      vcsOption <- CredentialSchemaSql.findBy(id).transact(tx).map(_.headOption)
       result = vcsOption.map[VerifiableCredentialSchema](dto => dto.convert)
     } yield result
   }
@@ -54,7 +53,7 @@ class JdbcSchemaRegistryService(tx: Transactor[Task]) extends SchemaRegistryServ
       pagination: Pagination,
       order: Option[Order]
   ): Task[(VerifiableCredentialSchemaPage, CollectionStats)] = {
-    val lookupQuery = sql.lookup(
+    val lookupQuery = CredentialSchemaSql.lookup(
       authorOpt = filter.author,
       nameOpt = filter.name,
       versionOpt = filter.version,
@@ -63,7 +62,7 @@ class JdbcSchemaRegistryService(tx: Transactor[Task]) extends SchemaRegistryServ
       offsetOpt = Some(pagination.offset),
       limitOpt = Some(pagination.limit)
     )
-    val lookupQueryCount = sql.lookupCount(
+    val lookupQueryCount = CredentialSchemaSql.lookupCount(
       authorOpt = filter.author,
       nameOpt = filter.name,
       versionOpt = filter.version,
@@ -71,7 +70,7 @@ class JdbcSchemaRegistryService(tx: Transactor[Task]) extends SchemaRegistryServ
       tagOpt = filter.tags
     )
 
-    val totalCountQuery = sql.totalCount
+    val totalCountQuery = CredentialSchemaSql.totalCount
 
     for {
       dtoList <- lookupQuery.transact(tx)
