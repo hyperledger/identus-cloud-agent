@@ -3,9 +3,8 @@ package io.iohk.atala.pollux.schema
 import io.iohk.atala.api.http.model.{CollectionStats, Order, PaginationInput}
 import io.iohk.atala.api.http.{FailureResponse, InternalServerError, NotFound, RequestContext}
 import io.iohk.atala.pollux.schema.VerificationPolicyEndpoints.*
-import io.iohk.atala.pollux.schema.controller.VerificationPolicyController
+import io.iohk.atala.pollux.schema.controller.{VerificationPolicyController, VerificationPolicyPageRequestLogic}
 import io.iohk.atala.pollux.schema.model.{VerificationPolicy, VerificationPolicyInput, VerificationPolicyPage}
-import io.iohk.atala.pollux.service.VerificationPolicyService
 import sttp.tapir.redoc.RedocUIOptions
 import sttp.tapir.redoc.bundle.RedocInterpreter
 import sttp.tapir.server.ServerEndpoint
@@ -16,7 +15,7 @@ import zio.{Task, URIO, ZIO, ZLayer}
 import java.util.UUID
 
 class VerificationPolicyServerEndpoints(
-    service: VerificationPolicyService
+    controller: VerificationPolicyController
 ) {
   def throwableToInternalServerError(throwable: Throwable) =
     ZIO.fail[FailureResponse](InternalServerError(throwable.getMessage))
@@ -24,59 +23,24 @@ class VerificationPolicyServerEndpoints(
   // TODO: make the endpoint typed ZServerEndpoint[SchemaRegistryService, Any]
   val createVerificationPolicyServerEndpoint: ZServerEndpoint[Any, Any] =
     createVerificationPolicyEndpoint.zServerLogic { case (ctx: RequestContext, input: VerificationPolicyInput) =>
-      service
-        .createVerificationPolicy(input)
-        .foldZIO(throwableToInternalServerError, vp => ZIO.succeed(vp.withBaseUri(ctx.request.uri)))
+      controller.createVerificationPolicy(ctx, input)
     }
 
   val updateVerificationPolicyServerEndpoint: ZServerEndpoint[Any, Any] = {
     updateVerificationPolicyEndpoint.zServerLogic {
-      case (ctx: RequestContext, id: String, update: VerificationPolicyInput) =>
-        service
-          .updateVerificationPolicyById(id, update)
-          .foldZIO(
-            throwableToInternalServerError,
-            {
-              case Some(pv) => ZIO.succeed(pv.withUri(ctx.request.uri))
-              case None =>
-                ZIO.fail[FailureResponse](
-                  NotFound(s"Verification policy is not found by $id")
-                )
-            }
-          )
+      case (ctx: RequestContext, id: UUID, nonce: Int, update: VerificationPolicyInput) =>
+        controller.updateVerificationPolicyById(ctx, id, nonce, update)
     }
   }
 
   val getVerificationPolicyByIdServerEndpoint: ZServerEndpoint[Any, Any] =
-    getVerificationPolicyByIdEndpoint.zServerLogic { case (ctx: RequestContext, id: String) =>
-      service
-        .getVerificationPolicyById(id)
-        .foldZIO(
-          throwableToInternalServerError,
-          {
-            case Some(pv) => ZIO.succeed(pv.withUri(ctx.request.uri))
-            case None =>
-              ZIO.fail[FailureResponse](
-                NotFound(s"Verification policy is not found by $id")
-              )
-          }
-        )
+    getVerificationPolicyByIdEndpoint.zServerLogic { case (ctx: RequestContext, id: UUID) =>
+      controller.getVerificationPolicyById(ctx, id)
     }
 
   val deleteVerificationPolicyByIdServerEndpoint: ZServerEndpoint[Any, Any] =
-    deleteVerificationPolicyByIdEndpoint.zServerLogic { case (ctx: RequestContext, id: String) =>
-      service
-        .deleteVerificationPolicyById(id)
-        .foldZIO(
-          throwableToInternalServerError,
-          {
-            case Some(_) => ZIO.succeed(())
-            case None =>
-              ZIO.fail[FailureResponse](
-                NotFound(s"Verification policy is not found by $id")
-              )
-          }
-        )
+    deleteVerificationPolicyByIdEndpoint.zServerLogic { case (ctx: RequestContext, id: UUID, nonce: Int) =>
+      controller.deleteVerificationPolicyById(ctx, id, nonce)
     }
 
   val lookupVerificationPoliciesByQueryServerEndpoint: ZServerEndpoint[Any, Any] =
@@ -87,24 +51,12 @@ class VerificationPolicyServerEndpoints(
             paginationInput: PaginationInput,
             order: Option[Order]
           ) =>
-        service
-          .lookupVerificationPolicies(filter, paginationInput.toPagination, order)
-          .foldZIO(
-            throwableToInternalServerError,
-            {
-              case (
-                    page: VerificationPolicyPage,
-                    stats: CollectionStats
-                  ) =>
-                ZIO.succeed(
-                  VerificationPolicyController(
-                    ctx,
-                    paginationInput.toPagination,
-                    page,
-                    stats
-                  ).result
-                )
-            }
+        controller
+          .lookupVerificationPolicies(
+            ctx,
+            filter,
+            paginationInput.toPagination,
+            order
           )
     }
 
@@ -119,12 +71,10 @@ class VerificationPolicyServerEndpoints(
 }
 
 object VerificationPolicyServerEndpoints {
-  def all: URIO[VerificationPolicyService, List[ZServerEndpoint[Any, Any]]] = {
+  def all: URIO[VerificationPolicyController, List[ZServerEndpoint[Any, Any]]] = {
     for {
-      service <- ZIO.service[VerificationPolicyService]
-      endpoints = new VerificationPolicyServerEndpoints(
-        service
-      )
+      controller <- ZIO.service[VerificationPolicyController]
+      endpoints = new VerificationPolicyServerEndpoints(controller)
     } yield endpoints.all
   }
 }

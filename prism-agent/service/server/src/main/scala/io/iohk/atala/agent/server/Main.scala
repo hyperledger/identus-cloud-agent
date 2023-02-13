@@ -12,12 +12,9 @@ import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.agent.server.http.ZioHttpClient
 import org.flywaydb.core.extensibility.AppliedMigration
-import io.iohk.atala.pollux.service.{
-  JdbcSchemaRegistryService,
-  SchemaRegistryServiceInMemory,
-  VerificationPolicyServiceInMemory
-}
+import io.iohk.atala.pollux.service.{JdbcSchemaRegistryService, SchemaRegistryServiceInMemory}
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
+import io.iohk.atala.pollux.schema.controller.VerificationPolicyControllerInMemory
 
 object Main extends ZIOAppDefault {
 
@@ -101,10 +98,10 @@ object Main extends ZIOAppDefault {
         SystemModule.actorSystemLayer,
         HttpModule.layers,
         RepoModule.credentialSchemaServiceLayer,
-        VerificationPolicyServiceInMemory.layer,
         AppModule.manageDIDServiceLayer,
         JdbcDIDSecretStorage.layer,
-        RepoModule.agentTransactorLayer
+        RepoModule.agentTransactorLayer,
+        RepoModule.verificationPolicyServiceLayer
       )
     } yield app
 

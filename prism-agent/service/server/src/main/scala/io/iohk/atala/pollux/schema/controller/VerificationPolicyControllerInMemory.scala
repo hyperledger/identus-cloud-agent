@@ -1,21 +1,25 @@
-package io.iohk.atala.pollux.service
+package io.iohk.atala.pollux.schema.controller
 
 import io.iohk.atala.api.http.model.{CollectionStats, Order, Pagination, PaginationInput}
+import io.iohk.atala.api.http.{FailureResponse, RequestContext}
+import io.iohk.atala.pollux.schema.controller.{VerificationPolicyController, VerificationPolicyPageRequestLogic}
 import io.iohk.atala.pollux.schema.model.{VerificationPolicy, VerificationPolicyInput, VerificationPolicyPage}
-import zio.{Ref, Task, UIO, ZIO, ZLayer}
+import zio.{IO, Ref, Task, UIO, ULayer, ZIO, ZLayer}
 
 import java.time.ZonedDateTime
+import java.util.UUID
 import scala.collection.mutable
 
-class VerificationPolicyServiceInMemory(
-    ref: Ref[Map[String, VerificationPolicy]]
-) extends VerificationPolicyService {
+class VerificationPolicyControllerInMemory(
+    ref: Ref[Map[UUID, VerificationPolicy]]
+) extends VerificationPolicyController {
 
   // TODO: Figure out what is the logic for trying to overwrite the schema with the same id (409 Conflict)
   // TODO: Other validations (same [schema_name, version], list of the attributes is not empty, etc)
   override def createVerificationPolicy(
+      ctx: RequestContext,
       in: VerificationPolicyInput
-  ): Task[VerificationPolicy] = {
+  ): IO[FailureResponse, VerificationPolicy] = {
     val vp = VerificationPolicy(in)
     for {
       _ <- ref.update(s => s + (vp.id -> vp))
@@ -23,47 +27,53 @@ class VerificationPolicyServiceInMemory(
   }
 
   override def getVerificationPolicyById(
-      id: String
-  ): Task[Option[VerificationPolicy]] = {
+      ctx: RequestContext,
+      id: UUID
+  ): IO[FailureResponse, VerificationPolicy] = {
     for {
       storage <- ref.get
       vp = storage.get(id)
-    } yield vp
+    } yield vp.get
   }
 
   override def updateVerificationPolicyById(
-      id: String,
+      ctx: RequestContext,
+      id: UUID,
+      nonce: Int,
       in: VerificationPolicyInput
-  ): Task[Option[VerificationPolicy]] = {
+  ): IO[FailureResponse, VerificationPolicy] = {
     for {
-      storage: Map[String, VerificationPolicy] <- ref.updateAndGet(kv =>
+      storage: Map[UUID, VerificationPolicy] <- ref.updateAndGet(kv =>
         kv.get(id)
           .fold(kv)(oldVp => kv + (id -> oldVp.update(in)))
       )
       vp = storage.get(id)
-    } yield vp
+    } yield vp.get
   }
 
   override def deleteVerificationPolicyById(
-      id: String
-  ): Task[Option[VerificationPolicy]] = {
+      ctx: RequestContext,
+      id: UUID,
+      nonce: Int
+  ): IO[FailureResponse, Unit] = {
     for {
-      storage: Map[String, VerificationPolicy] <- ref.getAndUpdate(kv =>
+      storage: Map[UUID, VerificationPolicy] <- ref.getAndUpdate(kv =>
         kv.get(id)
           .fold(kv)(_ => kv - id)
       )
       vp = storage.get(id)
-    } yield vp
+    } yield ()
   }
 
   // TODO: this is naive implementation for demo purposes, sorting doesn't work
   override def lookupVerificationPolicies(
+      ctx: RequestContext,
       filter: VerificationPolicy.Filter,
       pagination: Pagination,
       order: Option[Order]
-  ): Task[(VerificationPolicyPage, CollectionStats)] = {
+  ): IO[FailureResponse, VerificationPolicyPage] = {
     for {
-      storage: Map[String, VerificationPolicy] <- ref.get
+      storage: Map[UUID, VerificationPolicy] <- ref.get
       totalCount = storage.count(_ => true)
       filtered = storage.values.filter(filter.predicate).toList
       filteredCount = filtered.length
@@ -72,24 +82,19 @@ class VerificationPolicyServiceInMemory(
           pagination.offset,
           pagination.offset + pagination.limit
         )
-    } yield (
-      VerificationPolicyPage(
-        self = "to be defined",
-        kind = "VerificationPolicyPage",
-        pageOf = "to be defined",
-        next = None,
-        previous = None,
-        contents = paginated
-      ),
+    } yield VerificationPolicyPageRequestLogic(
+      ctx,
+      pagination,
+      paginated,
       CollectionStats(totalCount, filteredCount)
-    )
+    ).result
   }
 }
 
-object VerificationPolicyServiceInMemory {
-  val layer = ZLayer.fromZIO(
+object VerificationPolicyControllerInMemory {
+  val layer: ULayer[VerificationPolicyController] = ZLayer.fromZIO(
     Ref
-      .make(Map.empty[String, VerificationPolicy])
-      .map(VerificationPolicyServiceInMemory(_))
+      .make(Map.empty[UUID, VerificationPolicy])
+      .map(VerificationPolicyControllerInMemory(_))
   )
 }

@@ -110,6 +110,18 @@ components:
           items:
             $ref: "#/components/schemas/VerifiableCredentialSchema"
 
+    VerificationPolicyConstraint:
+      required:
+        - schemaId
+      type: object
+      properties:
+        schemaId:
+          type: string
+        trustedIssuers:
+          type: array
+          items:
+            type: string
+
     VerificationCredentialSchemaInput:
       required:
         - name
@@ -142,7 +154,9 @@ components:
         - self
         - kind
         - id
+        - nonce
         - name
+        - description
         - createdAt
         - updatedAt
       type: object
@@ -153,54 +167,42 @@ components:
           type: string
         id:
           type: string
+          format: uuid
+        nonce:
+          type: integer
+          format: int32
         name:
           type: string
-        attributes:
-          type: array
-          items:
-            type: string
-        issuerDIDs:
-          type: array
-          items:
-            type: string
-        credentialTypes:
-          type: array
-          items:
-            type: string
+        description:
+          type: string
         createdAt:
           type: string
           format: date-time
         updatedAt:
           type: string
           format: date-time
+        constraints:
+          type: array
+          items:
+            $ref: "#/components/schemas/VerificationPolicyConstraint"
 
     VerificationPolicyInput:
       required:
         - name
+        - description
       type: object
       properties:
         id:
           type: string
+          format: uuid
         name:
           type: string
-        attributes:
-          type: array
-          items:
-            type: string
-        issuerDIDs:
-          type: array
-          items:
-            type: string
-        credentialTypes:
-          type: array
-          items:
-            type: string
-        createdAt:
+        description:
           type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
+        constraints:
+          type: array
+          items:
+            $ref: "#/components/schemas/VerificationPolicyConstraint"
 
     VerificationPolicyPage:
       required:
