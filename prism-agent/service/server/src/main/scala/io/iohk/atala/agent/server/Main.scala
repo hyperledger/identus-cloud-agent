@@ -98,8 +98,8 @@ object Main extends ZIOAppDefault {
         SystemModule.actorSystemLayer,
         HttpModule.layers,
         RepoModule.credentialSchemaServiceLayer,
-        VerificationPolicyServiceInMemory.layer,
-        AppModule.manageDIDServiceLayer
+        AppModule.manageDIDServiceLayer,
+        RepoModule.verificationPolicyServiceLayer
       )
     } yield app
 
