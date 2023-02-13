@@ -41,11 +41,13 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
         ) { (thid, schemaId, validityPeriod, automaticIssuance, awaitConfirmation) =>
           for {
             svc <- ZIO.service[CredentialService]
-            did = DidId("did:prism:INVITER")
+            pairwiseIssuerDid = DidId("did:prism:INVITER")
+            pairwiseHolderDid = DidId("did:peer:HOLDER")
             subjectId = "did:prism:HOLDER"
             record <- svc.createRecord(
               thid = thid,
-              did = did,
+              pairwiseIssuerDID = pairwiseIssuerDid,
+              pairwiseHolderDID = pairwiseHolderDid,
               subjectId = subjectId,
               schemaId = schemaId,
               validityPeriod = validityPeriod,
@@ -64,8 +66,8 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
             assertTrue(record.protocolState == ProtocolState.OfferPending) &&
             assertTrue(record.publicationState.isEmpty) &&
             assertTrue(record.offerCredentialData.isDefined) &&
-            assertTrue(record.offerCredentialData.get.from == did) &&
-            assertTrue(record.offerCredentialData.get.to == DidId(subjectId)) &&
+            assertTrue(record.offerCredentialData.get.from == pairwiseIssuerDid) &&
+            assertTrue(record.offerCredentialData.get.to == pairwiseHolderDid) &&
             assertTrue(record.offerCredentialData.get.attachments.isEmpty) &&
             assertTrue(record.offerCredentialData.get.thid.contains(thid.toString)) &&
             assertTrue(record.offerCredentialData.get.body.comment.isEmpty) &&
@@ -89,7 +91,7 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
           svc <- ZIO.service[CredentialService]
           did = DidId("did:prism:INVITER")
           subjectId = "did:unsupported:HOLDER"
-          record <- svc.createRecord(did = did, subjectId = subjectId).exit
+          record <- svc.createRecord(pairwiseIssuerDID = did, subjectId = subjectId).exit
         } yield {
           assertTrue(record match
             case Exit.Failure(cause: Cause.Fail[_]) if cause.value.isInstanceOf[UnsupportedDidFormat] => true
@@ -423,7 +425,8 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
 
   extension (svc: CredentialService)
     def createRecord(
-        did: DidId = DidId("did:prism:issuer"),
+        pairwiseIssuerDID: DidId = DidId("did:prism:issuer"),
+        pairwiseHolderDID: DidId = DidId("did:prism:holder-pairwise"),
         thid: UUID = UUID.randomUUID(),
         subjectId: String = "did:prism:holder",
         schemaId: Option[String] = None,
@@ -434,7 +437,8 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
         issuingDID: Option[CanonicalPrismDID] = None
     ) = {
       svc.createIssueCredentialRecord(
-        pairwiseDID = did,
+        pairwiseIssuerDID = pairwiseIssuerDID,
+        pairwiseHolderDID = pairwiseHolderDID,
         thid = thid,
         subjectId = subjectId,
         schemaId = schemaId,

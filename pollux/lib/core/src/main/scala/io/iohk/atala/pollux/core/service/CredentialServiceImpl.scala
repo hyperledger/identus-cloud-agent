@@ -68,7 +68,8 @@ private class CredentialServiceImpl(
   }
 
   override def createIssueCredentialRecord(
-      pairwiseDID: DidId,
+      pairwiseIssuerDID: DidId,
+      pairwiseHolderDID: DidId,
       thid: UUID,
       subjectId: String,
       schemaId: Option[String],
@@ -80,7 +81,7 @@ private class CredentialServiceImpl(
   ): IO[CredentialServiceError, IssueCredentialRecord] = {
     for {
       _ <- if (DidValidator.supportedDid(subjectId)) ZIO.unit else ZIO.fail(UnsupportedDidFormat(subjectId))
-      offer <- ZIO.succeed(createDidCommOfferCredential(pairwiseDID, claims, thid, subjectId))
+      offer <- ZIO.succeed(createDidCommOfferCredential(pairwiseIssuerDID, claims, thid, pairwiseHolderDID))
       record <- ZIO.succeed(
         IssueCredentialRecord(
           id = UUID.randomUUID(),
@@ -341,10 +342,10 @@ private class CredentialServiceImpl(
   }
 
   private[this] def createDidCommOfferCredential(
-      pairwiseDID: DidId,
+      pairwiseIssuerDID: DidId,
       claims: Map[String, String],
       thid: UUID,
-      subjectId: String
+      pairwiseHolderDID: DidId
   ): OfferCredential = {
     val attributes = claims.map { case (k, v) => Attribute(k, v) }
     val credentialPreview = CredentialPreview(attributes = attributes.toSeq)
@@ -353,8 +354,8 @@ private class CredentialServiceImpl(
     OfferCredential(
       body = body,
       attachments = Seq(),
-      from = pairwiseDID,
-      to = DidId(subjectId),
+      from = pairwiseIssuerDID,
+      to = pairwiseHolderDID,
       thid = Some(thid.toString())
     )
   }

@@ -54,7 +54,8 @@ trait CredentialService {
   def extractIdFromCredential(credential: W3cCredentialPayload): Option[UUID]
 
   def createIssueCredentialRecord(
-      pairwiseDID: DidId,
+      pairwiseIssuerDID: DidId,
+      pairwiseHolderDID: DidId,
       thid: UUID,
       subjectId: String,
       schemaId: Option[String],
