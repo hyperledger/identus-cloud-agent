@@ -27,7 +27,7 @@ object VerificationPolicyExtensions {
     def toDto = db.VerificationPolicy(
       id = vp.id,
       name = vp.name,
-      nonce = vp.hashCode(),
+      nonce = vp.nonce,
       description = vp.description,
       createdAt = vp.createdAt,
       updatedAt = vp.updatedAt
@@ -122,7 +122,7 @@ class JdbcVerificationPolicyRepository(xa: Transactor[Task]) extends Verificatio
     program.transact(xa)
   }
 
-  override def delete(id: UUID, hash: Int): Task[Option[model.VerificationPolicy]] = {
+  override def delete(id: UUID, nonce: Int): Task[Option[model.VerificationPolicy]] = {
     val program = for {
       vp <- VerificationPolicySql.getById(id)
       vpc <- VerificationPolicySql.getVerificationPolicyConstrains(Seq(id))
