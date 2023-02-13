@@ -21,17 +21,17 @@ trait ConnectionService {
   def acceptConnectionInvitation(
       recordId: UUID,
       pairwiseDid: DidId
-  ): IO[ConnectionServiceError, Option[ConnectionRecord]]
+  ): IO[ConnectionServiceError, ConnectionRecord]
 
-  def markConnectionRequestSent(recordId: UUID): IO[ConnectionServiceError, Option[ConnectionRecord]]
+  def markConnectionRequestSent(recordId: UUID): IO[ConnectionServiceError, ConnectionRecord]
 
-  def receiveConnectionRequest(request: ConnectionRequest): IO[ConnectionServiceError, Option[ConnectionRecord]]
+  def receiveConnectionRequest(request: ConnectionRequest): IO[ConnectionServiceError, ConnectionRecord]
 
-  def acceptConnectionRequest(recordId: UUID): IO[ConnectionServiceError, Option[ConnectionRecord]]
+  def acceptConnectionRequest(recordId: UUID): IO[ConnectionServiceError, ConnectionRecord]
 
-  def markConnectionResponseSent(recordId: UUID): IO[ConnectionServiceError, Option[ConnectionRecord]]
+  def markConnectionResponseSent(recordId: UUID): IO[ConnectionServiceError, ConnectionRecord]
 
-  def receiveConnectionResponse(response: ConnectionResponse): IO[ConnectionServiceError, Option[ConnectionRecord]]
+  def receiveConnectionResponse(response: ConnectionResponse): IO[ConnectionServiceError, ConnectionRecord]
 
   def getConnectionRecords(): IO[ConnectionServiceError, Seq[ConnectionRecord]]
 
