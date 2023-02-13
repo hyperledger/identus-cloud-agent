@@ -265,11 +265,15 @@ components:
         - type: object
           required:
             - issuingDID
+            - connectionId
           properties:
             issuingDID:
               type: string
               description: Issuer DID of the verifiable credentials object
               example: did:prism:issuerofverifiablecredentials
+            connectionId:
+              type: string
+              description: A connection ID between issuer and holder.
 
     IssueCredentialRecord:
       description: An issue credential record to store the state of the protocol execution
