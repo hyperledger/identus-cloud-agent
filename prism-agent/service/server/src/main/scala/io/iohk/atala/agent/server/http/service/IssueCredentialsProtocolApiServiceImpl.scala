@@ -44,16 +44,21 @@ class IssueCredentialsProtocolApiServiceImpl(
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
     val result = for {
-      didIdPair <- getPairwiseDIDs(request.subjectId)
+      didIdPair <- getPairwiseDIDs(request.connectionId)
       issuingDID <- ZIO
         .fromEither(PrismDID.fromString(request.issuingDID))
         .mapError(HttpServiceError.InvalidPayload.apply)
         .mapError(_.toOAS)
+      subjectId <- ZIO
+        .fromEither(PrismDID.fromString(request.subjectId))
+        .mapError(HttpServiceError.InvalidPayload.apply)
+        .mapError(_.toOAS)
       outcome <- credentialService
         .createIssueCredentialRecord(
-          pairwiseDID = didIdPair.myDID,
+          pairwiseIssuerDID = didIdPair.myDID,
+          pairwiseHolderDID = didIdPair.theirDid,
           thid = UUID.randomUUID(),
-          subjectId = didIdPair.theirDid.value,
+          subjectId = subjectId.toString,
           schemaId = request.schemaId,
           claims = request.claims,
           validityPeriod = request.validityPeriod,
@@ -149,60 +154,53 @@ class IssueCredentialsProtocolApiServiceImpl(
     }
   }
 
-  private[this] def getPairwiseDIDs(subjectId: String): ZIO[Any, ErrorResponse, DidIdPair] = {
-    val didRegex = "^did:.*".r
-    subjectId match {
-      case didRegex() =>
-        for {
-          pairwiseDID <- managedDIDService.createAndStorePeerDID(agentConfig.didCommServiceEndpointUrl)
-        } yield DidIdPair(pairwiseDID.did, DidId(subjectId))
-      case _ =>
-        for {
-          maybeConnection <- connectionService
-            .getConnectionRecord(UUID.fromString(subjectId))
-            .mapError(HttpServiceError.DomainError[ConnectionServiceError].apply)
-            .mapError(_.toOAS)
-          connection <- ZIO
-            .fromOption(maybeConnection)
-            .mapError(_ => notFoundErrorResponse(Some("Connection not found")))
-          connectionResponse <- ZIO
-            .fromOption(connection.connectionResponse)
-            .mapError(_ => notFoundErrorResponse(Some("ConnectionResponse not found in record")))
-          didIdPair <- connection match
-            case ConnectionRecord(
-                  _,
-                  _,
-                  _,
-                  _,
-                  _,
-                  Role.Inviter,
-                  ProtocolState.ConnectionResponseSent,
-                  _,
-                  _,
-                  Some(resp),
-                  _, // metaRetries: Int,
-                  _, // metaLastFailure: Option[String]
-                ) =>
-              ZIO.succeed(DidIdPair(resp.from, resp.to))
-            case ConnectionRecord(
-                  _,
-                  _,
-                  _,
-                  _,
-                  _,
-                  Role.Invitee,
-                  ProtocolState.ConnectionResponseReceived,
-                  _,
-                  _,
-                  Some(resp),
-                  _, // metaRetries: Int,
-                  _, // metaLastFailure: Option[String]
-                ) =>
-              ZIO.succeed(DidIdPair(resp.to, resp.from))
-            case _ =>
-              ZIO.fail(badRequestErrorResponse(Some("Invalid connection record state for operation")))
-        } yield didIdPair
-    }
+  private[this] def getPairwiseDIDs(connectionId: String): ZIO[Any, ErrorResponse, DidIdPair] = {
+    for {
+      maybeConnection <- connectionService
+        .getConnectionRecord(UUID.fromString(connectionId))
+        .mapError(HttpServiceError.DomainError[ConnectionServiceError].apply)
+        .mapError(_.toOAS)
+      connection <- ZIO
+        .fromOption(maybeConnection)
+        .mapError(_ => notFoundErrorResponse(Some("Connection not found")))
+      connectionResponse <- ZIO
+        .fromOption(connection.connectionResponse)
+        .mapError(_ => notFoundErrorResponse(Some("ConnectionResponse not found in record")))
+      didIdPair <- connection match
+        case ConnectionRecord(
+              _,
+              _,
+              _,
+              _,
+              _,
+              Role.Inviter,
+              ProtocolState.ConnectionResponseSent,
+              _,
+              _,
+              Some(resp),
+              _, // metaRetries: Int,
+              _, // metaLastFailure: Option[String]
+            ) =>
+          ZIO.succeed(DidIdPair(resp.from, resp.to))
+        case ConnectionRecord(
+              _,
+              _,
+              _,
+              _,
+              _,
+              Role.Invitee,
+              ProtocolState.ConnectionResponseReceived,
+              _,
+              _,
+              Some(resp),
+              _, // metaRetries: Int,
+              _, // metaLastFailure: Option[String]
+            ) =>
+          ZIO.succeed(DidIdPair(resp.to, resp.from))
+        case _ =>
+          ZIO.fail(badRequestErrorResponse(Some("Invalid connection record state for operation")))
+    } yield didIdPair
+
   }
 
 }

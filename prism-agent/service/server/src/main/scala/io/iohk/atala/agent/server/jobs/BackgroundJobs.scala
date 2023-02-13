@@ -302,7 +302,7 @@ object BackgroundJobs {
   // - For now, we include the long form in the JWT credential to facilitate validation on client-side, but resolution should be used instead.
   // - Define consistent error handling (ATL-3210)
   private[this] def createPrismDIDIssuer(issuingDID: CanonicalPrismDID): ZIO[ManagedDIDService, Throwable, Issuer] = {
-    val issuingKeyId = "issuing" // TODO: where to create this key?
+    val issuingKeyId = "issuing-1" // TODO: where to create this key?
     for {
       managedDIDService <- ZIO.service[ManagedDIDService]
       longFormPrismDID <- managedDIDService
