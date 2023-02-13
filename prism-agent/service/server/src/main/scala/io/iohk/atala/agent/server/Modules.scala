@@ -162,7 +162,7 @@ object Modules {
   }
 
   val issueCredentialDidCommExchangesJob: RIO[
-    AppConfig & DidOps & DIDResolver & JwtDidResolver & HttpClient & CredentialService & ManagedDIDService,
+    AppConfig & DidOps & DIDResolver & JwtDidResolver & HttpClient & CredentialService & DIDService & ManagedDIDService,
     Unit
   ] =
     for {
@@ -173,7 +173,8 @@ object Modules {
     } yield job
 
   val presentProofExchangeJob: RIO[
-    AppConfig & DidOps & DIDResolver & JwtDidResolver & HttpClient & PresentationService & ManagedDIDService,
+    AppConfig & DidOps & DIDResolver & JwtDidResolver & HttpClient & PresentationService & DIDService &
+      ManagedDIDService,
     Unit
   ] =
     for {

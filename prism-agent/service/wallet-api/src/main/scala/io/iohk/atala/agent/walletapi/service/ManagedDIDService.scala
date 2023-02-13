@@ -103,9 +103,9 @@ final class ManagedDIDService private[walletapi] (
   }
 
   // FIXME
-  // Instead of returning privateKey directly, it should provide more secure interface like
+  // Instead of returning the privateKey directly, it should provide more secure interface like
   // {{{ def signWithDID(did, keyId, bytes): IO[?, Array[Byte]] }}}.
-  // At the moment, the purpose of this method is just to disallow SecretStorage to be
+  // For the time being, the purpose of this method is just to disallow SecretStorage to be
   // used outside of this module.
   def javaKeyPairWithDID(
       did: CanonicalPrismDID,

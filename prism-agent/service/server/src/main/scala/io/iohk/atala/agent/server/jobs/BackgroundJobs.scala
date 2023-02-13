@@ -53,6 +53,7 @@ import io.circe.parser._
 import zio.prelude.AssociativeBothOps
 import zio.prelude.Validation
 import cats.syntax.all._
+import io.iohk.atala.castor.core.service.DIDService
 
 object BackgroundJobs {
 
@@ -93,7 +94,7 @@ object BackgroundJobs {
   private[this] def performExchange(
       record: IssueCredentialRecord
   ): URIO[
-    DidOps & DIDResolver & JwtDidResolver & HttpClient & CredentialService & ManagedDIDService,
+    DidOps & DIDResolver & JwtDidResolver & HttpClient & CredentialService & DIDService & ManagedDIDService,
     Unit
   ] = {
     import IssueCredentialRecord._
@@ -300,24 +301,38 @@ object BackgroundJobs {
 
   // TODO: Improvements needed here:
   // - For now, we include the long form in the JWT credential to facilitate validation on client-side, but resolution should be used instead.
-  // - Define consistent error handling (ATL-3210)
-  private[this] def createPrismDIDIssuer(issuingDID: CanonicalPrismDID): ZIO[ManagedDIDService, Throwable, Issuer] = {
-    val issuingKeyId = "issuing-1" // TODO: where to create this key?
+  // - Improve consistency in error handling (ATL-3210)
+  private[this] def createPrismDIDIssuer(
+      issuingDID: PrismDID,
+      verificationRelationship: VerificationRelationship = VerificationRelationship.AssertionMethod,
+      allowUnpublishedIssuingDID: Boolean = false
+  ): ZIO[DIDService & ManagedDIDService, Throwable, Issuer] = {
     for {
       managedDIDService <- ZIO.service[ManagedDIDService]
-      longFormPrismDID <- managedDIDService
-        .getManagedDIDState(issuingDID)
+      didService <- ZIO.service[DIDService]
+      didState <- managedDIDService
+        .getManagedDIDState(issuingDID.asCanonical)
         .mapError(e => RuntimeException(s"Error occured while getting did from wallet: ${e.toString}"))
         .someOrFail(RuntimeException(s"Issuer DID does not exist in the wallet: $issuingDID"))
-        .collect(RuntimeException(s"Issuer DID must be published: ${issuingDID.toString}")) {
-          case s: ManagedDIDState.Published => PrismDID.buildLongFormFromOperation(s.createOperation)
+        .flatMap {
+          case s: ManagedDIDState.Published    => ZIO.succeed(s)
+          case s if allowUnpublishedIssuingDID => ZIO.succeed(s)
+          case _ => ZIO.fail(RuntimeException(s"Issuer DID must be published: $issuingDID"))
         }
-      // TODO: resolve DID document and infer key to use?
+      longFormPrismDID = PrismDID.buildLongFormFromOperation(didState.createOperation)
+      // Automatically infer keyId to use by resolving DID and choose the corresponding VerificationRelationship
+      issuingKeyId <- didService
+        .resolveDID(issuingDID)
+        .mapError(e => RuntimeException(s"Error occured while resolving DID during JwtIssuer creation: ${e.toString}"))
+        .someOrFail(RuntimeException(s"Issuer DID cannot be resolved"))
+        .map { case (_, didData) => didData.publicKeys.find(_.purpose == verificationRelationship).map(_.id) }
+        .someOrFail(
+          RuntimeException(s"Issuing DID doesn't have a key in ${verificationRelationship.name} to use: $issuingDID")
+        )
       ecKeyPair <- managedDIDService
-        .javaKeyPairWithDID(issuingDID, issuingKeyId)
+        .javaKeyPairWithDID(issuingDID.asCanonical, issuingKeyId)
         .mapError(e => RuntimeException(s"Error occurred while getting issuer key-pair: ${e.toString}"))
         .someOrFail(RuntimeException(s"Issuer key-pair does not exist: ${issuingDID.toString}#$issuingKeyId"))
-      _ <- ZIO.logInfo(s"ECKeyPair => $ecKeyPair")
       (privateKey, publicKey) = ecKeyPair
       issuer = Issuer(
         io.iohk.atala.pollux.vc.jwt.DID(longFormPrismDID.toString),
@@ -330,7 +345,7 @@ object BackgroundJobs {
   private[this] def performPresentation(
       record: PresentationRecord
   ): URIO[
-    DidOps & DIDResolver & JwtDidResolver & HttpClient & PresentationService & ManagedDIDService,
+    DidOps & DIDResolver & JwtDidResolver & HttpClient & PresentationService & DIDService & ManagedDIDService,
     Unit
   ] = {
     import io.iohk.atala.pollux.core.model.PresentationRecord.ProtocolState._
