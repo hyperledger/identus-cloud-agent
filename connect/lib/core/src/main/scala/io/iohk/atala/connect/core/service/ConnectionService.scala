@@ -39,6 +39,7 @@ trait ConnectionService {
       states: ConnectionRecord.ProtocolState*
   ): IO[ConnectionServiceError, Seq[ConnectionRecord]]
 
+  /** Get the ConnectionRecord by the record id. If the record is id is not found the value None will be return */
   def getConnectionRecord(recordId: UUID): IO[ConnectionServiceError, Option[ConnectionRecord]]
 
   def deleteConnectionRecord(recordId: UUID): IO[ConnectionServiceError, Int]
