@@ -1,3 +1,10 @@
+# [pollux-v0.26.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.25.0...pollux-v0.26.0) (2023-02-13)
+
+
+### Features
+
+* **pollux:** implement the DAL for CRUD on the verifiable policy entity. ATL-2478 ([#368](https://github.com/input-output-hk/atala-prism-building-blocks/issues/368)) ([b290a18](https://github.com/input-output-hk/atala-prism-building-blocks/commit/b290a18a2aef67cfded20062e111f85bad7ad248))
+
 # [pollux-v0.25.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.24.0...pollux-v0.25.0) (2023-02-09)
 
 
