@@ -63,21 +63,29 @@ trait CredentialService {
       awaitConfirmation: Option[Boolean]
   ): IO[CredentialServiceError, IssueCredentialRecord]
 
+  /** Return the full list of CredentialRecords.
+    *
+    * TODO this function API maybe change in the future to return a lazy sequence of records or something similar to a
+    * batabase cursor.
+    */
   def getIssueCredentialRecords(): IO[CredentialServiceError, Seq[IssueCredentialRecord]]
 
   def getIssueCredentialRecordsByStates(
       states: IssueCredentialRecord.ProtocolState*
   ): IO[CredentialServiceError, Seq[IssueCredentialRecord]]
 
+  /** Get the CredentialRecord by the record's id. If the record's id is not found the value None will be return
+    * instead.
+    */
   def getIssueCredentialRecord(recordId: UUID): IO[CredentialServiceError, Option[IssueCredentialRecord]]
 
   def receiveCredentialOffer(offer: OfferCredential): IO[CredentialServiceError, IssueCredentialRecord]
 
-  def acceptCredentialOffer(recordId: UUID): IO[CredentialServiceError, Option[IssueCredentialRecord]]
+  def acceptCredentialOffer(recordId: UUID): IO[CredentialServiceError, IssueCredentialRecord]
 
-  def receiveCredentialRequest(request: RequestCredential): IO[CredentialServiceError, Option[IssueCredentialRecord]]
+  def receiveCredentialRequest(request: RequestCredential): IO[CredentialServiceError, IssueCredentialRecord]
 
-  def acceptCredentialRequest(recordId: UUID): IO[CredentialServiceError, Option[IssueCredentialRecord]]
+  def acceptCredentialRequest(recordId: UUID): IO[CredentialServiceError, IssueCredentialRecord]
 
   def createCredentialPayloadFromRecord(
       record: IssueCredentialRecord,
@@ -94,23 +102,23 @@ trait CredentialService {
       credentialsAndProofs: Seq[(W3cCredentialPayload, MerkleInclusionProof)]
   ): IO[CredentialServiceError, Int]
 
-  def receiveCredentialIssue(issue: IssueCredential): IO[CredentialServiceError, Option[IssueCredentialRecord]]
+  def receiveCredentialIssue(issue: IssueCredential): IO[CredentialServiceError, IssueCredentialRecord]
 
-  def markOfferSent(recordId: UUID): IO[CredentialServiceError, Option[IssueCredentialRecord]]
+  def markOfferSent(recordId: UUID): IO[CredentialServiceError, IssueCredentialRecord]
 
-  def markRequestSent(recordId: UUID): IO[CredentialServiceError, Option[IssueCredentialRecord]]
+  def markRequestSent(recordId: UUID): IO[CredentialServiceError, IssueCredentialRecord]
 
   def markCredentialGenerated(
       recordId: UUID,
       issueCredential: IssueCredential
-  ): IO[CredentialServiceError, Option[IssueCredentialRecord]]
+  ): IO[CredentialServiceError, IssueCredentialRecord]
 
-  def markCredentialSent(recordId: UUID): IO[CredentialServiceError, Option[IssueCredentialRecord]]
+  def markCredentialSent(recordId: UUID): IO[CredentialServiceError, IssueCredentialRecord]
 
-  def markCredentialPublicationPending(recordId: UUID): IO[CredentialServiceError, Option[IssueCredentialRecord]]
+  def markCredentialPublicationPending(recordId: UUID): IO[CredentialServiceError, IssueCredentialRecord]
 
-  def markCredentialPublicationQueued(recordId: UUID): IO[CredentialServiceError, Option[IssueCredentialRecord]]
+  def markCredentialPublicationQueued(recordId: UUID): IO[CredentialServiceError, IssueCredentialRecord]
 
-  def markCredentialPublished(recordId: UUID): IO[CredentialServiceError, Option[IssueCredentialRecord]]
+  def markCredentialPublished(recordId: UUID): IO[CredentialServiceError, IssueCredentialRecord]
 
 }
