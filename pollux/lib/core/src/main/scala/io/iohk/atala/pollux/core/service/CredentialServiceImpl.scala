@@ -35,6 +35,8 @@ import java.security.spec.ECGenParameterSpec
 import java.time.Instant
 import java.util.UUID
 import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
+import io.iohk.atala.mercury.model.AttachmentDescriptor
+import io.iohk.atala.pollux.core.model.CredentialOfferAttachment
 
 object CredentialServiceImpl {
   val layer: URLayer[IrisServiceStub & CredentialRepository[Task], CredentialService] =
@@ -81,7 +83,15 @@ private class CredentialServiceImpl(
   ): IO[CredentialServiceError, IssueCredentialRecord] = {
     for {
       _ <- if (DidValidator.supportedDid(subjectId)) ZIO.unit else ZIO.fail(UnsupportedDidFormat(subjectId))
-      offer <- ZIO.succeed(createDidCommOfferCredential(pairwiseIssuerDID, claims, thid, pairwiseHolderDID))
+      offer <- ZIO.succeed(
+        createDidCommOfferCredential(
+          pairwiseIssuerDID = pairwiseIssuerDID,
+          pairwiseHolderDID = pairwiseHolderDID,
+          claims = claims,
+          thid = thid,
+          subjectId = subjectId
+        )
+      )
       record <- ZIO.succeed(
         IssueCredentialRecord(
           id = UUID.randomUUID(),
@@ -127,6 +137,16 @@ private class CredentialServiceImpl(
       offer: OfferCredential
   ): IO[CredentialServiceError, IssueCredentialRecord] = {
     for {
+      offerAttachment <- offer.attachments.headOption
+        .map(_.data.asJson)
+        .fold(ZIO.fail(CredentialServiceError.UnexpectedError("An attachment is expected in CredentialOffer"))) {
+          json =>
+            ZIO
+              .fromTry(json.hcursor.downField("json").as[CredentialOfferAttachment].toTry)
+              .mapError(e =>
+                CredentialServiceError.UnexpectedError(s"Unexpected CredentialOffer attachment format: ${e.toString()}")
+              )
+        }
       record <- ZIO.succeed(
         IssueCredentialRecord(
           id = UUID.randomUUID(),
@@ -135,7 +155,7 @@ private class CredentialServiceImpl(
           thid = UUID.fromString(offer.thid.getOrElse(offer.id)),
           schemaId = None,
           role = Role.Holder,
-          subjectId = offer.to.value,
+          subjectId = offerAttachment.subjectId,
           validityPeriod = None,
           automaticIssuance = None,
           awaitConfirmation = None,
@@ -343,9 +363,10 @@ private class CredentialServiceImpl(
 
   private[this] def createDidCommOfferCredential(
       pairwiseIssuerDID: DidId,
+      pairwiseHolderDID: DidId,
       claims: Map[String, String],
       thid: UUID,
-      pairwiseHolderDID: DidId
+      subjectId: String
   ): OfferCredential = {
     val attributes = claims.map { case (k, v) => Attribute(k, v) }
     val credentialPreview = CredentialPreview(attributes = attributes.toSeq)
@@ -353,7 +374,11 @@ private class CredentialServiceImpl(
 
     OfferCredential(
       body = body,
-      attachments = Seq(),
+      attachments = Seq(
+        AttachmentDescriptor.buildJsonAttachment(
+          payload = CredentialOfferAttachment(subjectId = subjectId)
+        )
+      ),
       from = pairwiseIssuerDID,
       to = pairwiseHolderDID,
       thid = Some(thid.toString())
