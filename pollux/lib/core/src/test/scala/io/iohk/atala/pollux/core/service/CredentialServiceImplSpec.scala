@@ -400,7 +400,10 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
     ).provideLayer(credentialServiceLayer)
   } @@ TestAspect.tag("dev")
 
-  private[this] def offerCredential(thid: Option[UUID] = Some(UUID.randomUUID()), subjectId: String = "did:prism:subject") = OfferCredential(
+  private[this] def offerCredential(
+      thid: Option[UUID] = Some(UUID.randomUUID()),
+      subjectId: String = "did:prism:subject"
+  ) = OfferCredential(
     from = DidId("did:prism:issuer"),
     to = DidId("did:prism:holder"),
     thid = thid.map(_.toString),
