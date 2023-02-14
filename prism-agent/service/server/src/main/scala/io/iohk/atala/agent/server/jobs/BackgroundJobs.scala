@@ -200,7 +200,6 @@ object BackgroundJobs {
           // Set PublicationState to PublicationPending
           for {
             credentialService <- ZIO.service[CredentialService]
-            // issuer = credentialService.createIssuer
             issuer <- createPrismDIDIssuer(issuingDID)
             w3Credential <- credentialService.createCredentialPayloadFromRecord(
               record,
@@ -404,9 +403,18 @@ object BackgroundJobs {
           for {
 
             presentationService <- ZIO.service[PresentationService]
-            prover <- createPrismDIDIssuer(
-              throw NotImplementedError("get holder/prover did")
-            ) // TODO Prover Prism DID should be coming from DB and resolvable
+            // TODO: Do not create new DID for presentation (ATL-3244)
+            proverDID <- ZIO.serviceWithZIO[ManagedDIDService](
+              _.createAndStoreDID(
+                ManagedDIDTemplate(
+                  publicKeys = Seq(
+                    DIDPublicKeyTemplate("issuing-1", VerificationRelationship.AssertionMethod)
+                  ),
+                  services = Nil
+                )
+              )
+            )
+            prover <- createPrismDIDIssuer(proverDID, allowUnpublishedIssuingDID = true)
             presentationPayload <- presentationService.createPresentationPayloadFromRecord(
               id,
               prover,
