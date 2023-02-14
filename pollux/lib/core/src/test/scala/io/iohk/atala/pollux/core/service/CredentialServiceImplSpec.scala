@@ -43,7 +43,7 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
         ) { (thid, schemaId, validityPeriod, automaticIssuance, awaitConfirmation) =>
           for {
             svc <- ZIO.service[CredentialService]
-            pairwiseIssuerDid = DidId("did:prism:INVITER")
+            pairwiseIssuerDid = DidId("did:peer:INVITER")
             pairwiseHolderDid = DidId("did:peer:HOLDER")
             subjectId = "did:prism:HOLDER"
             record <- svc.createRecord(
@@ -398,7 +398,7 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
         } yield assertTrue(true)
       }
     ).provideLayer(credentialServiceLayer)
-  } @@ TestAspect.tag("dev")
+  }
 
   private[this] def offerCredential(
       thid: Option[UUID] = Some(UUID.randomUUID()),

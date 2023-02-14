@@ -83,14 +83,12 @@ private class CredentialServiceImpl(
   ): IO[CredentialServiceError, IssueCredentialRecord] = {
     for {
       _ <- if (DidValidator.supportedDid(subjectId)) ZIO.unit else ZIO.fail(UnsupportedDidFormat(subjectId))
-      offer <- ZIO.succeed(
-        createDidCommOfferCredential(
-          pairwiseIssuerDID = pairwiseIssuerDID,
-          pairwiseHolderDID = pairwiseHolderDID,
-          claims = claims,
-          thid = thid,
-          subjectId = subjectId
-        )
+      offer = createDidCommOfferCredential(
+        pairwiseIssuerDID = pairwiseIssuerDID,
+        pairwiseHolderDID = pairwiseHolderDID,
+        claims = claims,
+        thid = thid,
+        subjectId = subjectId
       )
       record <- ZIO.succeed(
         IssueCredentialRecord(
@@ -137,6 +135,7 @@ private class CredentialServiceImpl(
       offer: OfferCredential
   ): IO[CredentialServiceError, IssueCredentialRecord] = {
     for {
+      // TODO: align with the standard (ATL-3507)
       offerAttachment <- offer.attachments.headOption
         .map(_.data.asJson)
         .fold(ZIO.fail(CredentialServiceError.UnexpectedError("An attachment is expected in CredentialOffer"))) {
@@ -165,7 +164,7 @@ private class CredentialServiceImpl(
           requestCredentialData = None,
           issueCredentialData = None,
           issuedCredentialRaw = None,
-          issuingDID = None // populated only on issuer side
+          issuingDID = None
         )
       )
       count <- credentialRepository
@@ -374,6 +373,7 @@ private class CredentialServiceImpl(
 
     OfferCredential(
       body = body,
+      // TODO: align with the standard (ATL-3507)
       attachments = Seq(
         AttachmentDescriptor.buildJsonAttachment(
           payload = CredentialOfferAttachment(subjectId = subjectId)

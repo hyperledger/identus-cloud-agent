@@ -9,6 +9,7 @@ import IssueCredentialRecord._
 import java.time.Instant
 import io.iohk.atala.pollux.vc.jwt.JwtCredential
 import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
+
 final case class IssueCredentialRecord(
     id: UUID,
     createdAt: Instant,
