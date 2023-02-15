@@ -1,3 +1,4 @@
+---
 components:
   schemas:
     # Common
@@ -667,7 +668,7 @@ components:
           type: string
           description: if present, MUST be set to JWT
         kid:
-          type: string #TODO: clarify the better type for DID key id
+          type: string # TODO: clarify the better type for DID key id
           description: -|
             MAY be used if there are multiple keys associated with the issuer of the JWT.
             The key discovery is out of the scope of this specification.
@@ -682,7 +683,7 @@ components:
         exp:
           type: string
           description: MUST represent the expirationDate property, encoded as a UNIX timestamp (NumericDate).
-          example: "2022-07-12T16:51:22.000Z" #TODO: exp field is required according to the spec, but looks like it's not required in VC data model
+          example: "2022-07-12T16:51:22.000Z" # TODO: exp field is required according to the spec, but looks like it's not required in VC data model
         iss:
           type: string
           description: -|
