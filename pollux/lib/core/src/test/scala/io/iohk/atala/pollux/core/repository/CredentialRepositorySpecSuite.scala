@@ -18,6 +18,7 @@ import zio.test._
 
 import java.time.Instant
 import java.util.UUID
+import io.iohk.atala.castor.core.model.did.PrismDID
 
 object CredentialRepositorySpecSuite {
 
@@ -37,7 +38,8 @@ object CredentialRepositorySpecSuite {
     offerCredentialData = None,
     requestCredentialData = None,
     issueCredentialData = None,
-    issuedCredentialRaw = None
+    issuedCredentialRaw = None,
+    issuingDID = None
   )
 
   private def requestCredential = RequestCredential(
@@ -64,12 +66,16 @@ object CredentialRepositorySpecSuite {
         bRecord = issueCredentialRecord.copy(thid = thid)
         aCount <- repo.createIssueCredentialRecord(aRecord)
         bCount <- repo.createIssueCredentialRecord(bRecord).exit
-      } yield {
-        assertTrue(bCount match
-          case Exit.Failure(cause: Cause.Fail[_]) if cause.value.isInstanceOf[UniqueConstraintViolation] => true
-          case _                                                                                         => false
-        )
-      }
+      } yield assertTrue(aCount == 1) && assert(bCount)(fails(isSubtype[UniqueConstraintViolation](anything)))
+    },
+    test("createIssueCredentialRecord correctly read and write on non-null issuingDID") {
+      for {
+        repo <- ZIO.service[CredentialRepository[Task]]
+        issuingDID <- ZIO.fromEither(PrismDID.buildCanonicalFromSuffix("0" * 64))
+        record = issueCredentialRecord.copy(issuingDID = Some(issuingDID))
+        count <- repo.createIssueCredentialRecord(record)
+        readRecord <- repo.getIssueCredentialRecord(record.id)
+      } yield assertTrue(count == 1) && assert(readRecord)(isSome(equalTo(record)))
     },
     test("getIssueCredentialRecord correctly returns an existing record") {
       for {
