@@ -1,3 +1,10 @@
+# [pollux-v0.27.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.26.0...pollux-v0.27.0) (2023-02-15)
+
+
+### Features
+
+* **pollux:** support issuing VC to Prism DID subject by Prism DID issuer ([#371](https://github.com/input-output-hk/atala-prism-building-blocks/issues/371)) ([5a1acde](https://github.com/input-output-hk/atala-prism-building-blocks/commit/5a1acdecb5e25bdf39398511d6ed1219da83e62e))
+
 # [pollux-v0.26.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.25.0...pollux-v0.26.0) (2023-02-13)
 
 
