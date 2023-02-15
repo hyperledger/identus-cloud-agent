@@ -35,7 +35,7 @@ trait OASErrorModelHelper {
   extension (e: HttpServiceError.InvalidPayload) {
     def toOAS: ErrorResponse = {
       ErrorResponse(
-        `type` = "error-type",
+        `type` = "InvalidPayload",
         title = "error-title",
         status = 422,
         detail = Some(e.msg),
