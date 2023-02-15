@@ -18,9 +18,39 @@ PORT=8090 docker-compose -p holder -f infrastructure/local/docker-compose.yml up
 ### Executing the `Issue` flow
 ---
 
+- **Issuer** - Create a DID that will be used for issuing a VC
+
+```bash
+curl --location --request POST 'http://localhost:8080/prism-agent/did-registrar/dids' \
+  --header 'Content-Type: application/json' \
+  --header 'Accept: application/json' \
+  --data-raw '{
+    "documentTemplate": {
+      "publicKeys": [
+        {
+          "id": "my-issuing-key",
+          "purpose": "assertionMethod"
+        }
+      ],
+      "services": []
+    }
+  }'
+```
+
+- **Issuer** - Publish an issuing DID to the blockchain
+
+Replace `DID_REF` by the DID on Prism Agent that should be published
+```bash
+curl --location --request POST 'http://localhost:8080/prism-agent/did-registrar/dids/{DID_REF}/publications' \
+--header 'Accept: application/json'
+```
+
 - **Issuer** - Initiate a new issue credential flow
 
-Replace `{SUBJECT_ID}` with the DID of the holder displayed at startup in the his Prism Agent console logs
+Replace `{SUBJECT_ID}` with the DID of the holder and `{CONNECTION_ID}` with the connection to the holder.
+This assumes that there is a connection already established (see ["connect" documentation](./connect.md)). Also `{ISSUING_DID}` must be specified using the DID created above.
+
+
 ```bash
 curl -X 'POST' \
   'http://localhost:8080/prism-agent/issue-credentials/credential-offers' \
@@ -29,6 +59,8 @@ curl -X 'POST' \
   -d '{
       "schemaId": "schema:1234",
       "subjectId": "{SUBJECT_ID}",
+      "connectionId": "{CONNECTION_ID}",
+      "issuingDID": "{ISSUING_DID}",
       "validityPeriod": 3600,
       "automaticIssuance": false,
       "awaitConfirmation": false,
@@ -37,7 +69,7 @@ curl -X 'POST' \
         "lastname": "Wonderland",
         "birthdate": "01/01/2000"
       }
-	}' | jq
+ }' | jq
 ```
 
 - **Holder** - Retrieving the list of issue records
@@ -45,7 +77,7 @@ curl -X 'POST' \
 curl -X 'GET' 'http://localhost:8090/prism-agent/issue-credentials/records' | jq
 ```
 
-- **Holder** - Accepting the credential offer 
+- **Holder** - Accepting the credential offer
 
 Replace `{RECORD_ID}` with the UUID of the record from the previous list
 ```bash
