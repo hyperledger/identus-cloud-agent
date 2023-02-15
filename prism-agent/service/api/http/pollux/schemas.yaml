@@ -236,21 +236,24 @@ components:
       properties:
         schemaId:
           type: string
-          description: Identifier of the VC Schema associated with this object
+          description: The unique identifier of the schema used for this credential offer.
         subjectId:
           type: string
-          description: Subject DID of the verifiable credentials object
+          description: The identifier (e.g DID) of the subject to which the verifiable credential will be issued.
           example: did:prism:subjectofverifiablecredentials
         validityPeriod:
           type: number
-          description: The validity period in seconds of the verifiable credential
+          description: The validity period in seconds of the verifiable credential that will be issued.
           example: 3600
         claims:
           type: object
-          description: Claims that will be associated with given verifiable credentials
+          description: The claims that will be associated with the issued verifiable credential.
           additionalProperties:
             type: string
         automaticIssuance:
+          description: |
+            Specifies whether or not the credential should be automatically generated and issued when receiving the `CredentialRequest` from the holder.
+            If set to `false`, a manual approval by the issuer via API call will be required for the VC to be issued.
           type: boolean
           default: true
         awaitConfirmation:
@@ -258,7 +261,7 @@ components:
           default: true
 
     CreateIssueCredentialRecordRequest:
-      description: A request to create a new "issue credential record"
+      description: A request to create a new "issue credential record".
       type: object
       allOf:
         - $ref: "#/components/schemas/IssueCredentialRecordBase"
@@ -269,14 +272,14 @@ components:
           properties:
             issuingDID:
               type: string
-              description: Issuer DID of the verifiable credentials object
+              description: The issuer DID of the verifiable credential object.
               example: did:prism:issuerofverifiablecredentials
             connectionId:
               type: string
-              description: A connection ID between issuer and holder.
+              description: The unique identifier of a DIDComm connection that already exists between the issuer and the holder, and that will be used to execute the issue credential protocol.
 
     IssueCredentialRecord:
-      description: An issue credential record to store the state of the protocol execution
+      description: An issue credential record that stores the state of the protocol execution.
       type: object
       allOf:
         - $ref: "#/components/schemas/IssueCredentialRecordBase"
@@ -288,20 +291,25 @@ components:
             - protocolState
           properties:
             recordId:
+              description: The unique identifier of the issue credential record.
               type: string
               format: uuid
             createdAt:
+              description: The date and time when the issue credential record was created.
               type: string
               format: date-time
             updatedAt:
+              description: The date and time when the issue credential record was last updated.
               type: string
               format: date-time
             role:
+              description: The role played by the Prism agent in the credential issuance flow.
               type: string
               enum:
                 - Issuer
                 - Holder
             protocolState:
+              description: The current state of the issue credential protocol execution.
               type: string
               enum:
                 - OfferPending
@@ -323,14 +331,15 @@ components:
                 - PublicationQueued
                 - Published
             jwtCredential:
+              description: The base64-encoded JWT verifiable credential that has been sent by the issuer.
               type: string
             issuingDID:
               type: string
-              description: Issuer DID of the verifiable credentials object
+              description: Issuer DID of the verifiable credential object.
               example: did:prism:issuerofverifiablecredentials
 
     IssueCredentialRecordCollection:
-      description: A collection of issue credential records
+      description: A collection of issue credential records.
       required:
         - items
         - offset
@@ -338,6 +347,7 @@ components:
         - count
       properties:
         items:
+          description: The array containing the list of issue credential records.
           type: array
           items:
             $ref: "#/components/schemas/IssueCredentialRecord"

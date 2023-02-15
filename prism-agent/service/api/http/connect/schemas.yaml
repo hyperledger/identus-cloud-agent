@@ -5,7 +5,7 @@ components:
       in: path
       name: connectionId
       required: true
-      description: the unique identifier of the connection record
+      description: The unique identifier of the connection record.
       schema:
         type: string
   schemas:
@@ -13,19 +13,23 @@ components:
       type: object
       properties:
         label:
+          description: A human readable alias for the connection.
           type: string
           example: "Peter"
 
     AcceptConnectionInvitationRequest:
+      description: The request used by an invitee to accept a connection invitation received from an inviter, using out-of-band mechanism.
       type: object
       required:
         - invitation
       properties:
         invitation:
+          description: The base64-encoded raw invitation.
           type: string
           example: "eyJAaWQiOiIzZmE4NWY2NC01NzE3LTQ1NjItYjNmYy0yYzk2M2Y2NmFmYTYiLCJAdHlwZSI6Imh0dHBzOi8vZGlkY29tbS5vcmcvbXktZmFtaWx5LzEuMC9teS1tZXNzYWdlLXR5cGUiLCJkaWQiOiJXZ1d4cXp0ck5vb0c5MlJYdnhTVFd2IiwiaW1hZ2VVcmwiOiJodHRwOi8vMTkyLjE2OC41Ni4xMDEvaW1nL2xvZ28uanBnIiwibGFiZWwiOiJCb2IiLCJyZWNpcGllbnRLZXlzIjpbIkgzQzJBVnZMTXY2Z21NTmFtM3VWQWpacGZrY0pDd0R3blpuNnozd1htcVBWIl0sInJvdXRpbmdLZXlzIjpbIkgzQzJBVnZMTXY2Z21NTmFtM3VWQWpacGZrY0pDd0R3blpuNnozd1htcVBWIl0sInNlcnZpY2VFbmRwb2ludCI6Imh0dHA6Ly8xOTIuMTY4LjU2LjEwMTo4MDIwIn0="
 
     Connection:
+      description: A connection record.
       type: object
       allOf:
         - $ref: "#/components/schemas/CreateConnectionRequest"
@@ -39,42 +43,48 @@ components:
             - invitation
           properties:
             self:
+              description: The reference to the connection resource.
               type: string
               example: https://atala-prism-products.io/connections/ABCD-1234
             kind:
+              description: The type of object returned. In this case a `Connection`.
               type: string
-              example: ConnectionState
+              example: Connection
             connectionId:
+              description: The unique identifier of the connection.
               type: string
               format: uuid
-              example: "12345-9876"
+              example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
             myDid:
-              type: string
-              example: "did:prism:12345"
-            theirDid:
+              description: The DID representing me as the inviter or invitee in this specific connection.
               type: string
               example: "did:peer:12345"
+            theirDid:
+              description: The DID representing the other peer as the an inviter or invitee in this specific connection.
+              type: string
+              example: "did:peer:67890"
             state:
+              description: The current state of the connection protocol execution.
               type: string
               enum:
-                [
-                  "InvitationGenerated",
-                  "InvitationReceived",
-                  "ConnectionRequestPending",
-                  "ConnectionRequestSent",
-                  "ConnectionRequestReceived",
-                  "ConnectionResponsePending",
-                  "ConnectionResponseSent",
-                  "ConnectionResponseReceived",
-                  "ProblemReportPending",
-                  "ProblemReportSent",
-                  "ProblemReportReceived",
-                ]
+                - InvitationGenerated
+                - InvitationReceived
+                - ConnectionRequestPending
+                - ConnectionRequestSent
+                - ConnectionRequestReceived
+                - ConnectionResponsePending
+                - ConnectionResponseSent
+                - ConnectionResponseReceived
+                - ProblemReportPending
+                - ProblemReportSent
+                - ProblemReportReceived
             createdAt:
+              description: The date and time the connection record was created.
               type: string
               format: date-time
               example: 2021-10-31T09:22:23Z
             updatedAt:
+              description: The date and time the connection record was last updated.
               type: string
               format: date-time
               example: 2021-12-31T13:59:60Z
@@ -82,6 +92,7 @@ components:
               $ref: "#/components/schemas/ConnectionInvitation"
 
     ConnectionCollection:
+      description: A collection of connection records.
       type: object
       required:
         - self
@@ -89,17 +100,21 @@ components:
         - contents
       properties:
         self:
+          description: The reference to the connection collection itself.
           type: string
           example: https://atala-prism-products.io/connections
         kind:
+          description: The type of object returned. In this case a `Collection`.
           type: string
           example: Collection
         contents:
+          description: The array containing the list of connection records.
           type: array
           items:
             $ref: "#/components/schemas/Connection"
 
     ConnectionInvitation:
+      description: A connection invitation.
       type: object
       required:
         - id
