@@ -1,0 +1,20 @@
+<configuration>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>[%level] %logger{15} - %message%n%rEx%xException{10}</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="ASYNCSTDOUT" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="STDOUT"/>
+    </appender>
+
+    <!-- disable logger(s) that log too much when using test container -->
+    <logger name="com.zaxxer.hikari" level="OFF"/>
+
+    <root level="WARN">
+        <appender-ref ref="ASYNCSTDOUT"/>
+    </root>
+
+</configuration>

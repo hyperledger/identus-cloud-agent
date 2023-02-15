@@ -5,6 +5,7 @@ import io.iohk.atala.castor.core.model.did.w3c.{
   DIDResolutionErrorRepr,
   PublicKeyJwk,
   PublicKeyRepr,
+  PublicKeyReprOrRef,
   ServiceRepr,
   makeW3CResolver
 }
@@ -54,13 +55,16 @@ case class DIDDocument(
     alsoKnowAs: Vector[String],
     controller: Vector[String],
     verificationMethod: Vector[VerificationMethod] = Vector.empty,
-    authentication: Vector[VerificationMethod] = Vector.empty,
-    assertionMethod: Vector[VerificationMethod] = Vector.empty,
-    keyAgreement: Vector[VerificationMethod] = Vector.empty,
-    capabilityInvocation: Vector[VerificationMethod] = Vector.empty,
-    capabilityDelegation: Vector[VerificationMethod] = Vector.empty,
+    authentication: Vector[VerificationMethodOrRef] = Vector.empty,
+    assertionMethod: Vector[VerificationMethodOrRef] = Vector.empty,
+    keyAgreement: Vector[VerificationMethodOrRef] = Vector.empty,
+    capabilityInvocation: Vector[VerificationMethodOrRef] = Vector.empty,
+    capabilityDelegation: Vector[VerificationMethodOrRef] = Vector.empty,
     service: Vector[Service] = Vector.empty
 )
+
+type VerificationMethodOrRef = VerificationMethod | String
+
 case class VerificationMethod(
     id: String,
     `type`: String,
@@ -115,11 +119,11 @@ class PrismDidResolver(didService: DIDService) extends DidResolver {
       alsoKnowAs = Vector.empty,
       controller = Vector(didDocument.controller),
       verificationMethod = didDocument.verificationMethod.map(toPolluxVerificationMethodModel).toVector,
-      authentication = didDocument.authentication.map(toPolluxVerificationMethodModel).toVector,
-      assertionMethod = didDocument.assertionMethod.map(toPolluxVerificationMethodModel).toVector,
-      keyAgreement = didDocument.keyAgreement.map(toPolluxVerificationMethodModel).toVector,
-      capabilityInvocation = didDocument.capabilityInvocation.map(toPolluxVerificationMethodModel).toVector,
-      capabilityDelegation = didDocument.capabilityDelegation.map(toPolluxVerificationMethodModel).toVector,
+      authentication = didDocument.authentication.map(toPolluxVerificationMethodOrRefModel).toVector,
+      assertionMethod = didDocument.assertionMethod.map(toPolluxVerificationMethodOrRefModel).toVector,
+      keyAgreement = didDocument.keyAgreement.map(toPolluxVerificationMethodOrRefModel).toVector,
+      capabilityInvocation = didDocument.capabilityInvocation.map(toPolluxVerificationMethodOrRefModel).toVector,
+      capabilityDelegation = didDocument.capabilityDelegation.map(toPolluxVerificationMethodOrRefModel).toVector,
       service = didDocument.service.map(toPolluxServiceModel).toVector
     )
   }
@@ -153,6 +157,13 @@ class PrismDidResolver(didService: DIDService) extends DidResolver {
       controller = verificationMethod.controller,
       publicKeyJwk = Some(toPolluxJwtModel(verificationMethod.publicKeyJwk))
     )
+  }
+
+  private def toPolluxVerificationMethodOrRefModel(verificationMethod: PublicKeyReprOrRef): VerificationMethodOrRef = {
+    verificationMethod match {
+      case uri: String       => uri
+      case pk: PublicKeyRepr => toPolluxVerificationMethodModel(pk)
+    }
   }
 
   private def toPolluxJwtModel(jwk: PublicKeyJwk): JsonWebKey = {

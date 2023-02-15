@@ -66,6 +66,17 @@ private[castor] trait ProtoModelHelper {
     }
   }
 
+  extension (operation: PrismDIDOperation.Deactivate) {
+    def toProto: node_models.AtalaOperation.Operation.DeactivateDid = {
+      node_models.AtalaOperation.Operation.DeactivateDid(
+        value = node_models.DeactivateDIDOperation(
+          previousOperationHash = operation.previousOperationHash.toArray.toProto,
+          id = operation.did.suffix.toString
+        )
+      )
+    }
+  }
+
   extension (operation: PrismDIDOperation.Update) {
     def toProto: node_models.AtalaOperation.Operation.UpdateDid = {
       node_models.AtalaOperation.Operation.UpdateDid(

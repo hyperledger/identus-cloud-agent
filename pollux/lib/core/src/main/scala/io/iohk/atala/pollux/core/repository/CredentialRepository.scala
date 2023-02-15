@@ -14,7 +14,7 @@ trait CredentialRepository[F[_]] {
   def createIssueCredentialRecord(record: IssueCredentialRecord): F[Int]
   def getIssueCredentialRecords(): F[Seq[IssueCredentialRecord]]
   def getIssueCredentialRecord(recordId: UUID): F[Option[IssueCredentialRecord]]
-  def getIssueCredentialRecordsByState(state: IssueCredentialRecord.ProtocolState): F[Seq[IssueCredentialRecord]]
+  def getIssueCredentialRecordsByStates(states: IssueCredentialRecord.ProtocolState*): F[Seq[IssueCredentialRecord]]
   def updateCredentialRecordStateAndProofByCredentialIdBulk(
       idsStatesAndProofs: Seq[(UUID, IssueCredentialRecord.PublicationState, MerkleInclusionProof)]
   ): F[Int]

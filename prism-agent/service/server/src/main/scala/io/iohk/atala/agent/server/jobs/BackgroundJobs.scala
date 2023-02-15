@@ -11,10 +11,7 @@ import zio.Duration
 import java.time.Instant
 import java.time.Clock
 import java.time.ZoneId
-import io.iohk.atala.mercury.DidComm
-import io.iohk.atala.mercury.MediaTypes
-import io.iohk.atala.mercury.MessagingService
-import io.iohk.atala.mercury.HttpClient
+import io.iohk.atala.mercury._
 import io.iohk.atala.mercury.model._
 import io.iohk.atala.mercury.model.error._
 import io.iohk.atala.mercury.protocol.issuecredential._
@@ -23,19 +20,19 @@ import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.resolvers.UniversalDidResolver
 import java.io.IOException
 import io.iohk.atala.pollux.vc.jwt._
-import zhttp.service._
-import zhttp.http._
 import io.iohk.atala.pollux.vc.jwt.W3CCredential
 import io.iohk.atala.pollux.core.model.PresentationRecord
 import io.iohk.atala.pollux.core.service.PresentationService
 import io.iohk.atala.pollux.core.model.error.PresentationError
+import io.iohk.atala.pollux.core.model.error.PresentationError._
 import io.iohk.atala.agent.server.http.model.{InvalidState, NotImplemented}
-import io.iohk.atala.agent.walletapi.service.ManagedDIDService
-import io.iohk.atala.mercury.AgentServiceAny
 import org.didcommx.didcomm.DIDComm
-import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError
-import io.iohk.atala.agent.walletapi.model.ManagedDIDTemplate
+import io.iohk.atala.agent.walletapi.model._
+import io.iohk.atala.agent.walletapi.model.error._
+import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError.KeyNotFoundError
+import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
+import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
 import io.iohk.atala.pollux.vc.jwt.ES256KSigner
 import io.iohk.atala.castor.core.model.did._
 import java.security.KeyFactory
@@ -51,37 +48,54 @@ import java.security.spec.ECPoint
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import io.circe.Json
 import io.circe.syntax._
-import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
-import io.iohk.atala.agent.walletapi.model.error.CreateManagedDIDError
 import io.iohk.atala.pollux.vc.jwt.JWT
 import io.iohk.atala.pollux.vc.jwt.{DidResolver => JwtDidResolver}
-import io.iohk.atala.agent.walletapi.model._
+import io.iohk.atala.agent.server.config.AppConfig
+import io.circe.parser._
+import zio.prelude.AssociativeBothOps
+import zio.prelude.Validation
+import cats.syntax.all._
 
 object BackgroundJobs {
 
-  val didCommExchanges = {
+  val issueCredentialDidCommExchanges = {
     for {
       credentialService <- ZIO.service[CredentialService]
+      config <- ZIO.service[AppConfig]
       records <- credentialService
-        .getIssueCredentialRecords()
-        .mapError(err => Throwable(s"Error occured while getting issue credential records: $err"))
-      _ <- ZIO.foreach(records)(performExchange)
+        .getIssueCredentialRecordsByStates(
+          IssueCredentialRecord.ProtocolState.OfferPending,
+          IssueCredentialRecord.ProtocolState.RequestPending,
+          IssueCredentialRecord.ProtocolState.RequestReceived,
+          IssueCredentialRecord.ProtocolState.CredentialPending,
+          IssueCredentialRecord.ProtocolState.CredentialGenerated
+        )
+        .mapError(err => Throwable(s"Error occurred while getting Issue Credential records: $err"))
+      _ <- ZIO.foreachPar(records)(performExchange).withParallelism(config.pollux.issueBgJobProcessingParallelism)
     } yield ()
   }
   val presentProofExchanges = {
     for {
       presentationService <- ZIO.service[PresentationService]
+      config <- ZIO.service[AppConfig]
       records <- presentationService
-        .getPresentationRecords()
-        .mapError(err => Throwable(s"Error occured while getting Presentation records: $err"))
-      _ <- ZIO.foreach(records)(performPresentation)
+        .getPresentationRecordsByStates(
+          PresentationRecord.ProtocolState.RequestPending,
+          PresentationRecord.ProtocolState.PresentationPending,
+          PresentationRecord.ProtocolState.PresentationGenerated,
+          PresentationRecord.ProtocolState.PresentationReceived
+        )
+        .mapError(err => Throwable(s"Error occurred while getting Presentation records: $err"))
+      _ <- ZIO
+        .foreachPar(records)(performPresentation)
+        .withParallelism(config.pollux.presentationBgJobProcessingParallelism)
     } yield ()
   }
 
   private[this] def performExchange(
       record: IssueCredentialRecord
   ): URIO[
-    DIDResolver & JwtDidResolver & HttpClient & CredentialService & ManagedDIDService & DIDSecretStorage,
+    DidOps & DIDResolver & JwtDidResolver & HttpClient & CredentialService & ManagedDIDService & DIDSecretStorage,
     Unit
   ] = {
     import IssueCredentialRecord._
@@ -95,9 +109,14 @@ object BackgroundJobs {
           for {
             _ <- ZIO.log(s"IssueCredentialRecord: OfferPending (START)")
             didCommAgent <- buildDIDCommAgent(offer.from)
-            _ <- MessagingService.send(offer.makeMessage).provideSomeLayer(didCommAgent)
+            resp <- MessagingService
+              .send(offer.makeMessage)
+              .provideSomeLayer(didCommAgent)
             credentialService <- ZIO.service[CredentialService]
-            _ <- credentialService.markOfferSent(id)
+            _ <- {
+              if (resp.status >= 200 && resp.status < 300) credentialService.markOfferSent(id)
+              else ZIO.logWarning(s"DIDComm sending error: [${resp.status}] - ${resp.bodyAsString}")
+            }
           } yield ()
 
         // Request should be sent from Holder to Issuer
@@ -121,9 +140,14 @@ object BackgroundJobs {
             ) =>
           for {
             didCommAgent <- buildDIDCommAgent(request.from)
-            _ <- MessagingService.send(request.makeMessage).provideSomeLayer(didCommAgent)
+            resp <- MessagingService
+              .send(request.makeMessage)
+              .provideSomeLayer(didCommAgent)
             credentialService <- ZIO.service[CredentialService]
-            _ <- credentialService.markRequestSent(id)
+            _ <- {
+              if (resp.status >= 200 && resp.status < 300) credentialService.markRequestSent(id)
+              else ZIO.logWarning(s"DIDComm sending error: [${resp.status}] - ${resp.bodyAsString}")
+            }
           } yield ()
 
         // 'automaticIssuance' is TRUE. Issuer automatically accepts the Request
@@ -186,7 +210,7 @@ object BackgroundJobs {
               fromDID = issue.from,
               toDID = issue.to,
               thid = issue.thid,
-              credentials = Map("prims/jwt" -> signedJwtCredential.value)
+              credentials = Map("prims/jwt" -> signedJwtCredential.value.getBytes)
             )
             _ <- credentialService.markCredentialGenerated(id, issueCredential)
 
@@ -213,9 +237,14 @@ object BackgroundJobs {
             ) =>
           for {
             didCommAgent <- buildDIDCommAgent(issue.from)
-            _ <- MessagingService.send(issue.makeMessage).provideSomeLayer(didCommAgent)
+            resp <- MessagingService
+              .send(issue.makeMessage)
+              .provideSomeLayer(didCommAgent)
             credentialService <- ZIO.service[CredentialService]
-            _ <- credentialService.markCredentialSent(id)
+            _ <- {
+              if (resp.status >= 200 && resp.status < 300) credentialService.markCredentialSent(id)
+              else ZIO.logWarning(s"DIDComm sending error: [${resp.status}] - ${resp.bodyAsString}")
+            }
           } yield ()
 
         // Credential has been generated, published, and can now be sent to the Holder
@@ -239,9 +268,12 @@ object BackgroundJobs {
             ) =>
           for {
             didCommAgent <- buildDIDCommAgent(issue.from)
-            _ <- MessagingService.send(issue.makeMessage).provideSomeLayer(didCommAgent)
+            resp <- MessagingService.send(issue.makeMessage).provideSomeLayer(didCommAgent)
             credentialService <- ZIO.service[CredentialService]
-            _ <- credentialService.markCredentialSent(id)
+            _ <- {
+              if (resp.status >= 200 && resp.status < 300) credentialService.markCredentialSent(id)
+              else ZIO.logWarning(s"DIDComm sending error: [${resp.status}] - ${resp.bodyAsString}")
+            }
           } yield ()
 
         case IssueCredentialRecord(id, _, _, _, _, _, _, _, _, _, ProblemReportPending, _, _, _, _, _) => ???
@@ -315,7 +347,7 @@ object BackgroundJobs {
   private[this] def performPresentation(
       record: PresentationRecord
   ): URIO[
-    DIDResolver & JwtDidResolver & HttpClient & PresentationService & ManagedDIDService & DIDSecretStorage,
+    DidOps & DIDResolver & JwtDidResolver & HttpClient & PresentationService & ManagedDIDService & DIDSecretStorage,
     Unit
   ] = {
     import io.iohk.atala.pollux.core.model.PresentationRecord.ProtocolState._
@@ -337,10 +369,14 @@ object BackgroundJobs {
             case Some(record) =>
               for {
                 _ <- ZIO.log(s"PresentationRecord: RequestPending (Send Massage)")
+                didOps <- ZIO.service[DidOps]
                 didCommAgent <- buildDIDCommAgent(record.from)
-                _ <- MessagingService.send(record.makeMessage).provideSomeLayer(didCommAgent)
+                resp <- MessagingService.send(record.makeMessage).provideSomeLayer(didCommAgent)
                 service <- ZIO.service[PresentationService]
-                _ <- service.markRequestPresentationSent(id)
+                _ <- {
+                  if (resp.status >= 200 && resp.status < 300) service.markRequestPresentationSent(id)
+                  else ZIO.logWarning(s"DIDComm sending error: [${resp.status}] - ${resp.bodyAsString}")
+                }
               } yield ()
 
         case PresentationRecord(id, _, _, _, _, _, _, _, RequestSent, _, _, _, _) => // Verifier
@@ -370,16 +406,16 @@ object BackgroundJobs {
           for {
 
             presentationService <- ZIO.service[PresentationService]
-            prover <- createPrismDIDIssuer()
-            w3cPresentationPayload <- presentationService.createPresentationPayloadFromRecord(
+            prover <- createPrismDIDIssuer() // TODO Prover Prism DID should be coming from DB and resolvable
+            presentationPayload <- presentationService.createPresentationPayloadFromRecord(
               id,
               prover,
               Instant.now()
             )
-            signedJwtPresentation = JwtPresentation.toEncodedJwt(w3cPresentationPayload, prover)
+            signedJwtPresentation = JwtPresentation.encodeJwt(presentationPayload.toJwtPresentationPayload, prover)
             presentation <- oRequestPresentation match
               case None => ZIO.fail(InvalidState("PresentationRecord 'RequestPending' with no Record"))
-              case Some(requestPresentation) => { // TODO create build in mercury for Presentation
+              case Some(requestPresentation) => { // TODO create build method in mercury for Presentation
                 ZIO.succeed(
                   Presentation(
                     body = Presentation.Body(
@@ -388,7 +424,10 @@ object BackgroundJobs {
                     ),
                     attachments = Seq(
                       AttachmentDescriptor
-                        .buildAttachment(payload = signedJwtPresentation.value, mediaType = Some("prism/jwt"))
+                        .buildBase64Attachment(
+                          payload = signedJwtPresentation.value.getBytes(),
+                          mediaType = Some("prism/jwt")
+                        )
                     ),
                     thid = requestPresentation.thid.orElse(Some(requestPresentation.id)),
                     from = requestPresentation.to,
@@ -407,13 +446,32 @@ object BackgroundJobs {
               for {
                 _ <- ZIO.log(s"PresentationRecord: PresentationPending (Send Message)")
                 didCommAgent <- buildDIDCommAgent(p.from)
-                _ <- MessagingService.send(p.makeMessage).provideSomeLayer(didCommAgent)
+                resp <- MessagingService
+                  .send(p.makeMessage)
+                  .provideSomeLayer(didCommAgent)
                 service <- ZIO.service[PresentationService]
-                _ <- service.markPresentationSent(id)
+                _ <- {
+                  if (resp.status >= 200 && resp.status < 300) service.markPresentationSent(id)
+                  else ZIO.logWarning(s"DIDComm sending error: [${resp.status}] - ${resp.bodyAsString}")
+                }
               } yield ()
         case PresentationRecord(id, _, _, _, _, _, _, _, PresentationSent, _, _, _, _) =>
           ZIO.logDebug("PresentationRecord: PresentationSent") *> ZIO.unit
-        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationReceived, _, _, presentation, _) => // Verifier
+        case PresentationRecord(
+              id,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              PresentationReceived,
+              mayBeRequestPresentation,
+              _,
+              presentation,
+              _
+            ) => // Verifier
           ZIO.logDebug("PresentationRecord: PresentationReceived") *> ZIO.unit
           val clock = java.time.Clock.system(ZoneId.systemDefault)
           presentation match
@@ -424,26 +482,57 @@ object BackgroundJobs {
                 didResolverService <- ZIO.service[JwtDidResolver]
                 credentialsValidationResult <- p.attachments.head.data match {
                   case Base64(data) =>
-                    val base64Decoded = new String(java.util.Base64.getDecoder().decode(data)).drop(1).dropRight(1)
-
-                    println(s"Base64decode:\n\n ${base64Decoded} \n\n")
-                    JwtPresentation.verify(
-                      JWT(base64Decoded),
-                      JwtPresentation.PresentationVerificationOptions(
-                        maybeProofPurpose = Some(VerificationRelationship.Authentication),
-                        verifySignature = true,
-                        verifyDates = false,
-                        leeway = Duration.Zero,
-                        maybeCredentialOptions = Some(
-                          CredentialVerification.CredentialVerificationOptions(
-                            verifySignature = true,
-                            verifyDates = false,
-                            leeway = Duration.Zero,
-                            maybeProofPurpose = Some(VerificationRelationship.Authentication)
+                    val base64Decoded = new String(java.util.Base64.getDecoder().decode(data))
+                    val maybePresentationOptions
+                        : Either[PresentationError, Option[io.iohk.atala.pollux.core.model.presentation.Options]] =
+                      mayBeRequestPresentation
+                        .map(
+                          _.attachments.headOption
+                            .map(attachment =>
+                              decode[io.iohk.atala.mercury.model.JsonData](attachment.data.asJson.noSpaces)
+                                .flatMap(data =>
+                                  io.iohk.atala.pollux.core.model.presentation.PresentationAttachment.given_Decoder_PresentationAttachment
+                                    .decodeJson(data.json.asJson)
+                                    .map(_.options)
+                                    .leftMap(err =>
+                                      PresentationDecodingError(
+                                        new Throwable(s"PresentationAttachment decoding error: $err")
+                                      )
+                                    )
+                                )
+                                .leftMap(err =>
+                                  PresentationDecodingError(new Throwable(s"JsonData decoding error: $err"))
+                                )
+                            )
+                            .getOrElse(Right(None))
+                        )
+                        .getOrElse(Left(UnexpectedError("RequestPresentation NotFound")))
+                    for {
+                      _ <- ZIO.fromEither(maybePresentationOptions.map { maybeOptions =>
+                        maybeOptions match
+                          case Some(options) =>
+                            JwtPresentation.validatePresentation(JWT(base64Decoded), options.domain, options.challenge)
+                          case _ => Validation.unit
+                      })
+                      result <- JwtPresentation.verify(
+                        JWT(base64Decoded),
+                        JwtPresentation.PresentationVerificationOptions(
+                          maybeProofPurpose = Some(VerificationRelationship.Authentication),
+                          verifySignature = true,
+                          verifyDates = false,
+                          leeway = Duration.Zero,
+                          maybeCredentialOptions = Some(
+                            CredentialVerification.CredentialVerificationOptions(
+                              verifySignature = true,
+                              verifyDates = false,
+                              leeway = Duration.Zero,
+                              maybeProofPurpose = Some(VerificationRelationship.Authentication)
+                            )
                           )
                         )
-                      )
-                    )(didResolverService)(clock)
+                      )(didResolverService)(clock)
+                    } yield result
+
                   case any => ZIO.fail(NotImplemented)
                 }
                 _ <- ZIO.log(s"CredentialsValidationResult: $credentialsValidationResult")
@@ -474,17 +563,23 @@ object BackgroundJobs {
       }
   }
 
-  private[this] def buildDIDCommAgent(myDid: DidId) = {
+  // private[this] def buildDIDCommAgent(myDid: DidId): ZLayer[ManagedDIDService, KeyNotFoundError, DidAgent] = { // FIXME
+  //   val aux = for {
+  //     managedDidService <- ZIO.service[ManagedDIDService]
+  //     peerDID <- managedDidService.getPeerDID(myDid)
+  //     agent = AgentPeerService.makeLayer(peerDID)
+  //   } yield agent
+  //   ZLayer.fromZIO(aux).flatten
+  // }
+
+  private[this] def buildDIDCommAgent(
+      myDid: DidId
+  ): ZIO[ManagedDIDService, KeyNotFoundError, ZLayer[Any, Nothing, DidAgent]] = {
     for {
       managedDidService <- ZIO.service[ManagedDIDService]
       peerDID <- managedDidService.getPeerDID(myDid)
-      didCommAgent = ZLayer.succeed(
-        AgentServiceAny(
-          new DIDComm(UniversalDidResolver, peerDID.getSecretResolverInMemory),
-          peerDID.did
-        )
-      )
-    } yield didCommAgent
+      agent = AgentPeerService.makeLayer(peerDID)
+    } yield agent
   }
 
   val publishCredentialsToDlt = {
@@ -497,7 +592,9 @@ object BackgroundJobs {
 
   private[this] def performPublishCredentialsToDlt(credentialService: CredentialService) = {
     val res: ZIO[Any, CredentialServiceError, Unit] = for {
-      records <- credentialService.getCredentialRecordsByState(IssueCredentialRecord.ProtocolState.CredentialPending)
+      records <- credentialService.getIssueCredentialRecordsByStates(
+        IssueCredentialRecord.ProtocolState.CredentialPending
+      )
       // NOTE: the line below is a potentially slow operation, because <createCredentialPayloadFromRecord> makes a database SELECT call,
       // so calling this function n times will make n database SELECT calls, while it can be optimized to get
       // all data in one query, this function here has to be refactored as well. Consider doing this if this job is too slow

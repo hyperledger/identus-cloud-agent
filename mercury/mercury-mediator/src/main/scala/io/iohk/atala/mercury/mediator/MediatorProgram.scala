@@ -3,8 +3,8 @@ package io.iohk.atala.mercury.mediator
 import zio.*
 
 import scala.jdk.CollectionConverters.*
-import io.iohk.atala.mercury.DidComm.*
-import io.iohk.atala.mercury.DidComm
+import io.iohk.atala.mercury._
+import io.iohk.atala.mercury.DidOps._
 import io.iohk.atala.mercury.mediator.MailStorage
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.model.Message
@@ -31,13 +31,13 @@ object MediatorProgram {
         |   ╚═╝     ╚═╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═════╝ ╚═╝  ╚═╝   ╚═╝
         |DID Comm V2 - Mediator agent - Build by Atala (IOHK)
         |""".stripMargin)
-      mediator <- ZIO.service[DidComm]
+      mediator <- ZIO.service[DidAgent]
       _ <- Console.printLine(
         s"""
         |#####################################################
         |###  Starting the server at http://localhost:$port
         |###  Open API docs at http://localhost:$port/docs
-        |###  ${mediator.myDid.value}
+        |###  ${mediator.id.value}
         |###  Press ENTER key to exit.
         |#####################################################""".stripMargin
       )
@@ -54,7 +54,7 @@ object MediatorProgram {
 
   def program(
       jsonString: String
-  ): ZIO[DidComm & MailStorage & ConnectionStorage, Nothing, String] = {
+  ): ZIO[DidAgent & DidOps & MailStorage & ConnectionStorage, Nothing, String] = {
     ZIO.logAnnotate("request-id", java.util.UUID.randomUUID.toString()) {
       for {
         _ <- ZIO.logInfo("Received new message")
@@ -128,8 +128,9 @@ object MediatorProgram {
   def makeMsg(
       to: DidId,
       messageState: MediationState
-  ): ZIO[DidComm, Nothing, Message] = for {
-    from <- ZIO.service[DidComm].map(_.myDid)
+  ): ZIO[DidAgent & DidOps, Nothing, Message] = for {
+    from <- ZIO.service[DidAgent].map(_.id)
+    // from <- ZIO.service[DidComm].map(_.myDid)
     message = messageState match
       case Granted =>
         val body = MediateGrant.Body(routing_did = from.value)

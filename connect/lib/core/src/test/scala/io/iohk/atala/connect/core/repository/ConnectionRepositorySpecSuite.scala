@@ -19,6 +19,8 @@ import java.util.UUID
 
 object ConnectionRepositorySpecSuite {
 
+  val maxRetries = 2
+
   private def connectionRecord = ConnectionRecord(
     UUID.randomUUID,
     Instant.ofEpochSecond(Instant.now.getEpochSecond()),
@@ -30,17 +32,21 @@ object ConnectionRepositorySpecSuite {
     Invitation(
       id = UUID.randomUUID().toString,
       from = DidId("did:prism:aaa"),
-      body = Invitation.Body(goal_code = "connect", goal = "Establish a trust connection between two peers", Nil)
+      body = Invitation
+        .Body(goal_code = "io.atalaprism.connect", goal = "Establish a trust connection between two peers", Nil)
     ),
     None,
+    None,
+    maxRetries,
     None
   )
 
   private def connectionRequest = ConnectionRequest(
     from = DidId("did:prism:aaa"),
     to = DidId("did:prism:bbb"),
-    thid = Some(UUID.randomUUID().toString),
-    body = ConnectionRequest.Body(goal_code = Some("Connect"))
+    thid = None,
+    pthid = Some(UUID.randomUUID().toString),
+    body = ConnectionRequest.Body(goal_code = Some("io.atalaprism.connect"))
   )
 
   val testSuite = suite("CRUD operations")(
@@ -100,7 +106,55 @@ object ConnectionRepositorySpecSuite {
         assertTrue(records.contains(bRecord))
       }
     },
-    test("deleteRecord deletes an exsiting record") {
+    test("getConnectionRecordsByStates returns correct records") {
+      for {
+        repo <- ZIO.service[ConnectionRepository[Task]]
+        aRecord = connectionRecord
+        bRecord = connectionRecord
+        cRecord = connectionRecord
+        _ <- repo.createConnectionRecord(aRecord)
+        _ <- repo.createConnectionRecord(bRecord)
+        _ <- repo.createConnectionRecord(cRecord)
+        _ <- repo.updateConnectionProtocolState(
+          aRecord.id,
+          ProtocolState.InvitationGenerated,
+          ProtocolState.ConnectionRequestReceived,
+          1
+        )
+        _ <- repo.updateConnectionProtocolState(
+          cRecord.id,
+          ProtocolState.InvitationGenerated,
+          ProtocolState.ConnectionResponsePending,
+          1
+        )
+        invitationGeneratedRecords <- repo.getConnectionRecordsByStates(ProtocolState.InvitationGenerated)
+        otherRecords <- repo.getConnectionRecordsByStates(
+          ProtocolState.ConnectionRequestReceived,
+          ProtocolState.ConnectionResponsePending
+        )
+      } yield {
+        assertTrue(invitationGeneratedRecords.size == 1) &&
+        assertTrue(invitationGeneratedRecords.contains(bRecord)) &&
+        assertTrue(otherRecords.size == 2) &&
+        assertTrue(otherRecords.exists(_.id == aRecord.id)) &&
+        assertTrue(otherRecords.exists(_.id == cRecord.id))
+      }
+    },
+    test("getConnectionRecordsByStates returns an empty list if 'states' parameter is empty") {
+      for {
+        repo <- ZIO.service[ConnectionRepository[Task]]
+        aRecord = connectionRecord
+        bRecord = connectionRecord
+        cRecord = connectionRecord
+        _ <- repo.createConnectionRecord(aRecord)
+        _ <- repo.createConnectionRecord(bRecord)
+        _ <- repo.createConnectionRecord(cRecord)
+        records <- repo.getConnectionRecordsByStates()
+      } yield {
+        assertTrue(records.isEmpty)
+      }
+    },
+    test("deleteRecord deletes an existing record") {
       for {
         repo <- ZIO.service[ConnectionRepository[Task]]
         aRecord = connectionRecord
@@ -161,7 +215,8 @@ object ConnectionRepositorySpecSuite {
         count <- repo.updateConnectionProtocolState(
           aRecord.id,
           ProtocolState.InvitationGenerated,
-          ProtocolState.ConnectionRequestReceived
+          ProtocolState.ConnectionRequestReceived,
+          maxRetries
         )
         updatedRecord <- repo.getConnectionRecord(aRecord.id)
       } yield {
@@ -179,7 +234,8 @@ object ConnectionRepositorySpecSuite {
         count <- repo.updateConnectionProtocolState(
           aRecord.id,
           ProtocolState.ConnectionRequestPending,
-          ProtocolState.ConnectionRequestReceived
+          ProtocolState.ConnectionRequestReceived,
+          maxRetries
         )
         updatedRecord <- repo.getConnectionRecord(aRecord.id)
       } yield {
@@ -198,7 +254,8 @@ object ConnectionRepositorySpecSuite {
         count <- repo.updateWithConnectionRequest(
           aRecord.id,
           request,
-          ProtocolState.ConnectionRequestSent
+          ProtocolState.ConnectionRequestSent,
+          maxRetries
         )
         updatedRecord <- repo.getConnectionRecord(aRecord.id)
       } yield {
@@ -213,17 +270,47 @@ object ConnectionRepositorySpecSuite {
         aRecord = connectionRecord
         _ <- repo.createConnectionRecord(aRecord)
         record <- repo.getConnectionRecord(aRecord.id)
-        response = ConnectionResponse.makeResponseFromRequest(connectionRequest.makeMessage)
+        response = ConnectionResponse.makeResponseFromRequest(connectionRequest.makeMessage).toOption.get
         count <- repo.updateWithConnectionResponse(
           aRecord.id,
           response,
-          ProtocolState.ConnectionResponseSent
+          ProtocolState.ConnectionResponseSent,
+          maxRetries
         )
         updatedRecord <- repo.getConnectionRecord(aRecord.id)
       } yield {
         assertTrue(count == 1) &&
         assertTrue(record.get.connectionResponse.isEmpty) &&
         assertTrue(updatedRecord.get.connectionResponse.contains(response))
+      }
+    },
+    test("updateFail (fail one retry) updates record") {
+      val failReason = Some("Just to test")
+      for {
+        repo <- ZIO.service[ConnectionRepository[Task]]
+        aRecord = connectionRecord
+        _ <- repo.createConnectionRecord(aRecord)
+        record <- repo.getConnectionRecord(aRecord.id)
+        count <- repo.updateAfterFail(aRecord.id, Some("Just to test")) // TEST
+        updatedRecord1 <- repo.getConnectionRecord(aRecord.id)
+        response = ConnectionResponse.makeResponseFromRequest(connectionRequest.makeMessage).toOption.get
+        count <- repo.updateWithConnectionResponse(
+          aRecord.id,
+          response,
+          ProtocolState.ConnectionResponseSent,
+          maxRetries
+        )
+        updatedRecord2 <- repo.getConnectionRecord(aRecord.id)
+      } yield {
+        assertTrue(record.get.metaRetries == maxRetries) &&
+        assertTrue(updatedRecord1.get.metaRetries == (maxRetries - 1)) &&
+        assertTrue(updatedRecord1.get.metaLastFailure == failReason) &&
+        assertTrue(updatedRecord2.get.metaRetries == maxRetries) &&
+        assertTrue(updatedRecord2.get.metaLastFailure == None) &&
+        // continues to work normally after retry
+        assertTrue(count == 1) &&
+        assertTrue(record.get.connectionResponse.isEmpty) &&
+        assertTrue(updatedRecord2.get.connectionResponse.contains(response))
       }
     }
   )

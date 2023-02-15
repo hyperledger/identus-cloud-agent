@@ -32,7 +32,7 @@
       [
         "@semantic-release/exec",
         {
-          "publishCmd": "sbt \"release release-version ${nextRelease.version} next-version ${nextRelease.version}-SNAPSHOT with-defaults\""
+          "prepareCmd": "sbt \"release release-version ${nextRelease.version} next-version ${nextRelease.version}-SNAPSHOT with-defaults\""
         }
       ],
       [
@@ -48,7 +48,7 @@
             "version.sbt",
             "CHANGELOG.md"
           ],
-          "message": "chore(release): cut prism-agent image ${nextRelease.version} release [skip ci]\n\n${nextRelease.notes}"
+          "message": "chore(release): cut prism-agent image ${nextRelease.version} release\n\n${nextRelease.notes}"
         }
       ],
       [

@@ -24,11 +24,16 @@ package object w3c {
           {
             case DIDResolutionError.DLTProxyError(_)       => DIDResolutionErrorRepr.InternalError
             case DIDResolutionError.UnexpectedDLTResult(_) => DIDResolutionErrorRepr.InternalError
+            case DIDResolutionError.ValidationError(_)     => DIDResolutionErrorRepr.InvalidDID
           },
           _.toRight(DIDResolutionErrorRepr.NotFound)
         )
         .absolve
-    } yield (didData._1.toW3C, didData._2.toW3C)
+    } yield {
+      // https://www.w3.org/TR/did-core/#dfn-diddocument
+      // The value of id in the resolved DID document MUST match the DID that was resolved.
+      (didData._1.toW3C(prismDID), didData._2.toW3C(prismDID))
+    }
   }
 
 }

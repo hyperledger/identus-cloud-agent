@@ -4,58 +4,108 @@ import zio._
 import io.iohk.atala.connect.core.service.ConnectionService
 import io.iohk.atala.connect.core.model.ConnectionRecord
 import io.iohk.atala.connect.core.model.ConnectionRecord._
-import io.iohk.atala.mercury.DidComm
-import io.iohk.atala.mercury.MediaTypes
-import io.iohk.atala.mercury.MessagingService
-import io.iohk.atala.mercury.HttpClient
+import io.iohk.atala.mercury._
 import io.iohk.atala.mercury.model._
 import io.iohk.atala.mercury.model.error._
 import io.iohk.atala.mercury.protocol.issuecredential._
 import io.iohk.atala.resolvers.DIDResolver
 import java.io.IOException
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
-import io.iohk.atala.mercury.AgentServiceAny
 import org.didcommx.didcomm.DIDComm
 import io.iohk.atala.mercury.PeerDID
 import com.nimbusds.jose.jwk.OctetKeyPair
 import io.iohk.atala.resolvers.UniversalDidResolver
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError
+import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError.KeyNotFoundError
+import io.iohk.atala.agent.server.config.AppConfig
 
 object ConnectBackgroundJobs {
 
   val didCommExchanges = {
     for {
       connectionService <- ZIO.service[ConnectionService]
+      config <- ZIO.service[AppConfig]
       records <- connectionService
-        .getConnectionRecords()
-        .mapError(err => Throwable(s"Error occured while getting connection records: $err"))
-      _ <- ZIO.foreach(records)(performExchange)
+        .getConnectionRecordsByStates(
+          ConnectionRecord.ProtocolState.ConnectionRequestPending,
+          ConnectionRecord.ProtocolState.ConnectionResponsePending
+        )
+        .mapError(err => Throwable(s"Error occurred while getting connection records: $err"))
+      _ <- ZIO.foreachPar(records)(performExchange).withParallelism(config.connect.connectBgJobProcessingParallelism)
     } yield ()
   }
 
   private[this] def performExchange(
       record: ConnectionRecord
-  ): URIO[DIDResolver & HttpClient & ConnectionService & ManagedDIDService, Unit] = {
+  ): URIO[DidOps & DIDResolver & HttpClient & ConnectionService & ManagedDIDService, Unit] = {
     import Role._
     import ProtocolState._
     val exchange = record match {
-      case ConnectionRecord(id, _, _, _, _, Invitee, ConnectionRequestPending, _, Some(request), _) =>
-        for {
+      case ConnectionRecord(
+            id,
+            _,
+            _,
+            _,
+            _,
+            Invitee,
+            ConnectionRequestPending,
+            _,
+            Some(request),
+            _,
+            metaRetries,
+            _
+          ) if metaRetries > 0 =>
+        val aux = for {
+
           didCommAgent <- buildDIDCommAgent(request.from)
-          _ <- MessagingService.send(request.makeMessage).provideSomeLayer(didCommAgent)
+          resp <- MessagingService.send(request.makeMessage).provideSomeLayer(didCommAgent)
           connectionService <- ZIO.service[ConnectionService]
-          _ <- connectionService.markConnectionRequestSent(id)
+          _ <- {
+            if (resp.status >= 200 && resp.status < 300) connectionService.markConnectionRequestSent(id)
+            else ZIO.logWarning(s"DIDComm sending error: [${resp.status}] - ${resp.bodyAsString}")
+          }
         } yield ()
 
-      case ConnectionRecord(id, _, _, _, _, Inviter, ConnectionResponsePending, _, _, Some(response)) =>
-        for {
+        // aux // TODO decrete metaRetries if it has a error
+        aux
+
+      case ConnectionRecord(
+            id,
+            _,
+            _,
+            _,
+            _,
+            Inviter,
+            ConnectionResponsePending,
+            _,
+            _,
+            Some(response),
+            metaRetries,
+            _
+          ) if metaRetries > 0 =>
+        val aux = for {
           didCommAgent <- buildDIDCommAgent(response.from)
-          _ <- MessagingService.send(response.makeMessage).provideSomeLayer(didCommAgent)
+          resp <- MessagingService.send(response.makeMessage).provideSomeLayer(didCommAgent)
           connectionService <- ZIO.service[ConnectionService]
-          _ <- connectionService.markConnectionResponseSent(id)
+          _ <- {
+            if (resp.status >= 200 && resp.status < 300) connectionService.markConnectionResponseSent(id)
+            else ZIO.logWarning(s"DIDComm sending error: [${resp.status}] - ${resp.bodyAsString}")
+          }
         } yield ()
 
+        aux.tapError(ex =>
+          for {
+            connectionService <- ZIO.service[ConnectionService]
+            _ <- connectionService
+              .reportProcessingFailure(id, None) // TODO ex get message
+          } yield ()
+        )
+      case e
+          if (e.protocolState == ConnectionRequestPending || e.protocolState == ConnectionResponsePending) && e.metaRetries == 0 =>
+        ZIO.logWarning( // TODO use logDebug
+          s"ConnectionRecord '${e.id}' has '${e.metaRetries}' retries and will NOT be processed"
+        )
       case _ => ZIO.unit
     }
 
@@ -73,17 +123,14 @@ object ConnectBackgroundJobs {
       }
   }
 
-  private[this] def buildDIDCommAgent(myDid: DidId) = {
+  private[this] def buildDIDCommAgent(
+      myDid: DidId
+  ): ZIO[ManagedDIDService, KeyNotFoundError, ZLayer[Any, Nothing, DidAgent]] = {
     for {
       managedDidService <- ZIO.service[ManagedDIDService]
       peerDID <- managedDidService.getPeerDID(myDid)
-      didCommAgent = ZLayer.succeed(
-        AgentServiceAny(
-          new DIDComm(UniversalDidResolver, peerDID.getSecretResolverInMemory),
-          peerDID.did
-        )
-      )
-    } yield didCommAgent
+      agent = AgentPeerService.makeLayer(peerDID)
+    } yield agent
   }
 
 }

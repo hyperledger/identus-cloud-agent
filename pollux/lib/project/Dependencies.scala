@@ -8,11 +8,14 @@ object Dependencies {
     val prismSdk = "v1.4.1" // scala-steward:off
     val iris = "0.1.0"
     val shared = "0.2.0"
-    val mercury = "0.15.0"
+    val mercury = "0.18.0"
+    val castor = "0.8.0"
     val flyway = "9.8.3"
     val testContainersScalaPostgresql = "0.40.11"
     val quill = "4.6.0"
     val logback = "1.4.5"
+    val munit = "1.0.0-M6" // "0.7.29"
+    val munitZio = "0.1.1"
   }
 
   private lazy val logback = "ch.qos.logback" % "logback-classic" % Versions.logback % Test
@@ -24,14 +27,20 @@ object Dependencies {
   private lazy val zioTest = "dev.zio" %% "zio-test" % Versions.zio % Test
   private lazy val zioTestSbt = "dev.zio" %% "zio-test-sbt" % Versions.zio % Test
   private lazy val zioTestMagnolia = "dev.zio" %% "zio-test-magnolia" % Versions.zio % Test
+  // For munit https://scalameta.org/munit/docs/getting-started.html
+  private lazy val munit = "org.scalameta" %% "munit" % Versions.munit % Test
+  // For munit zio https://github.com/poslegm/munit-zio
+  private lazy val munitZio = "com.github.poslegm" %% "munit-zio" % Versions.munitZio % Test
 
   private lazy val doobiePostgres = "org.tpolecat" %% "doobie-postgres" % Versions.doobie
   private lazy val doobieHikari = "org.tpolecat" %% "doobie-hikari" % Versions.doobie
 
   private lazy val flyway = "org.flywaydb" % "flyway-core" % Versions.flyway
 
-  private lazy val quillDoobie = "io.getquill" %% "quill-doobie" % Versions.quill exclude("org.scala-lang.modules", "scala-java8-compat_3")
-  private lazy val testcontainers = "com.dimafeng" %% "testcontainers-scala-postgresql" % Versions.testContainersScalaPostgresql % Test
+  private lazy val quillDoobie =
+    "io.getquill" %% "quill-doobie" % Versions.quill exclude ("org.scala-lang.modules", "scala-java8-compat_3")
+  private lazy val testcontainers =
+    "com.dimafeng" %% "testcontainers-scala-postgresql" % Versions.testContainersScalaPostgresql % Test
 
   // We have to exclude bouncycastle since for some reason bitcoinj depends on bouncycastle jdk15to18
   // (i.e. JDK 1.5 to 1.8), but we are using JDK 11
@@ -42,6 +51,7 @@ object Dependencies {
 
   private lazy val shared = "io.iohk.atala" % "shared" % Versions.shared
   private lazy val irisClient = "io.iohk.atala" %% "iris-client" % Versions.iris
+  private lazy val castorCore = "io.iohk.atala" %% "castor-core" % Versions.castor
 
   private lazy val mercuryProtocolIssueCredential =
     "io.iohk.atala" %% "mercury-protocol-issue-credential" % Versions.mercury
@@ -54,7 +64,8 @@ object Dependencies {
     zioTest,
     zioTestSbt,
     zioTestMagnolia,
-    prismCrypto,
+    munit,
+    munitZio,
     shared,
     logback,
     slf4jApi,
@@ -72,7 +83,7 @@ object Dependencies {
 
   // Project Dependencies
   lazy val coreDependencies: Seq[ModuleID] =
-    baseDependencies ++ Seq(irisClient) ++ Seq(
+    baseDependencies ++ Seq(irisClient, castorCore) ++ Seq(
       mercuryProtocolIssueCredential,
       mercuryProtocolPresentProof,
       mercuryResolver

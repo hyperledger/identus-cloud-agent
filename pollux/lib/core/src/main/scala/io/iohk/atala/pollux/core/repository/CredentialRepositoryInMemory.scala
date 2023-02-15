@@ -22,9 +22,7 @@ class CredentialRepositoryInMemory(storeRef: Ref[Map[UUID, IssueCredentialRecord
   ): Task[Int] = {
     for {
       store <- storeRef.get
-      maybeRecord <- ZIO.succeed(
-        store.find((uuid, record) => uuid == recordId && record.publicationState == from).map(_._2)
-      )
+      maybeRecord = store.find((uuid, record) => uuid == recordId && record.publicationState == from).map(_._2)
       count <- maybeRecord
         .map(record =>
           for {
@@ -39,7 +37,7 @@ class CredentialRepositoryInMemory(storeRef: Ref[Map[UUID, IssueCredentialRecord
     for {
       _ <- for {
         store <- storeRef.get
-        maybeRecord <- ZIO.succeed(store.values.find(_.thid == record.thid))
+        maybeRecord = store.values.find(_.thid == record.thid)
         _ <- maybeRecord match
           case None        => ZIO.unit
           case Some(value) => ZIO.fail(UniqueConstraintViolation("Unique Constraint Violation on 'thid'"))
@@ -68,9 +66,7 @@ class CredentialRepositoryInMemory(storeRef: Ref[Map[UUID, IssueCredentialRecord
   ): Task[Int] = {
     for {
       store <- storeRef.get
-      maybeRecord <- ZIO.succeed(
-        store.find((uuid, record) => uuid == recordId && record.protocolState == from).map(_._2)
-      )
+      maybeRecord = store.find((uuid, record) => uuid == recordId && record.protocolState == from).map(_._2)
       count <- maybeRecord
         .map(record =>
           for {
@@ -157,10 +153,10 @@ class CredentialRepositoryInMemory(storeRef: Ref[Map[UUID, IssueCredentialRecord
     } yield count
   }
 
-  override def getIssueCredentialRecordsByState(state: ProtocolState): Task[Seq[IssueCredentialRecord]] = {
+  override def getIssueCredentialRecordsByStates(states: ProtocolState*): Task[Seq[IssueCredentialRecord]] = {
     for {
       store <- storeRef.get
-    } yield store.values.filter(rec => rec.protocolState == state).toSeq
+    } yield store.values.filter(rec => states.contains(rec.protocolState)).toSeq
   }
 
   override def getIssueCredentialRecordByThreadId(thid: UUID): Task[Option[IssueCredentialRecord]] = {

@@ -18,6 +18,7 @@ import java.security.SecureRandom
 import java.security.spec.ECGenParameterSpec
 import java.time.Instant
 import java.util.UUID
+import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
 
 trait CredentialService {
 
@@ -53,20 +54,22 @@ trait CredentialService {
   def extractIdFromCredential(credential: W3cCredentialPayload): Option[UUID]
 
   def createIssueCredentialRecord(
-      pairwiseDID: DidId,
+      pairwiseIssuerDID: DidId,
+      pairwiseHolderDID: DidId,
       thid: UUID,
       subjectId: String,
       schemaId: Option[String],
       claims: Map[String, String],
       validityPeriod: Option[Double] = None,
       automaticIssuance: Option[Boolean],
-      awaitConfirmation: Option[Boolean]
+      awaitConfirmation: Option[Boolean],
+      issuingDID: Option[CanonicalPrismDID]
   ): IO[CredentialServiceError, IssueCredentialRecord]
 
   def getIssueCredentialRecords(): IO[CredentialServiceError, Seq[IssueCredentialRecord]]
 
-  def getCredentialRecordsByState(
-      state: IssueCredentialRecord.ProtocolState
+  def getIssueCredentialRecordsByStates(
+      states: IssueCredentialRecord.ProtocolState*
   ): IO[CredentialServiceError, Seq[IssueCredentialRecord]]
 
   def getIssueCredentialRecord(recordId: UUID): IO[CredentialServiceError, Option[IssueCredentialRecord]]

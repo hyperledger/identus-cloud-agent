@@ -7,6 +7,23 @@ import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
 import java.util.UUID
 import java.time.Instant
 
+/** @param id
+  * @param createdAt
+  * @param updatedAt
+  * @param thid
+  * @param label
+  * @param role
+  * @param protocolState
+  * @param invitation
+  * @param connectionRequest
+  * @param connectionResponse
+  * @param metaRetries
+  *   represents the number of tries that this state can be processed. If the retries is 0 mean there is no more tries
+  *   available and the State MUST be considered unrecoverable.
+  * @param metaLastFailure
+  *   if present contains information about the last failure. TODO this information should be moved to some metric
+  *   service.
+  */
 case class ConnectionRecord(
     id: UUID,
     createdAt: Instant,
@@ -17,7 +34,9 @@ case class ConnectionRecord(
     protocolState: ProtocolState,
     invitation: Invitation,
     connectionRequest: Option[ConnectionRequest],
-    connectionResponse: Option[ConnectionResponse]
+    connectionResponse: Option[ConnectionResponse],
+    metaRetries: Int,
+    metaLastFailure: Option[String]
 )
 
 object ConnectionRecord {

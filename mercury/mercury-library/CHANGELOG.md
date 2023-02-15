@@ -1,3 +1,39 @@
+# [mercury-v0.19.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.18.0...mercury-v0.19.0) (2023-02-13)
+
+
+### Features
+
+* **mercury:** Support for pleaseAck (needed for ATL-3222) ([#366](https://github.com/input-output-hk/atala-prism-building-blocks/issues/366)) ([a2d9c98](https://github.com/input-output-hk/atala-prism-building-blocks/commit/a2d9c9855390ea77a36943e86cfdec8a3adf0b57))
+
+# [mercury-v0.18.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.17.0...mercury-v0.18.0) (2023-02-07)
+
+
+### Features
+
+* **mercury:** ATL-3424 Expose HTTP status ([#351](https://github.com/input-output-hk/atala-prism-building-blocks/issues/351)) ([d87613c](https://github.com/input-output-hk/atala-prism-building-blocks/commit/d87613c7cb8c892964820e3346d44b3bf46114fd))
+
+# [mercury-v0.17.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.16.0...mercury-v0.17.0) (2023-01-31)
+
+
+### Features
+
+* **mercury:** Expose pthid on the connection protocol ([#333](https://github.com/input-output-hk/atala-prism-building-blocks/issues/333)) ([82eca31](https://github.com/input-output-hk/atala-prism-building-blocks/commit/82eca31f2dd29ab1ce96ae4948208883499d23c0))
+
+# [mercury-v0.16.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.15.0...mercury-v0.16.0) (2023-01-26)
+
+
+### Bug Fixes
+
+* **mercury:** Add compilation flags and fix code ([#302](https://github.com/input-output-hk/atala-prism-building-blocks/issues/302)) ([43014c5](https://github.com/input-output-hk/atala-prism-building-blocks/commit/43014c52b1671328956cd5913c2ebb4f6d206d89))
+
+
+### Features
+
+* **mercury:** Add extra method invitation2Connect ([#309](https://github.com/input-output-hk/atala-prism-building-blocks/issues/309)) ([ea3d819](https://github.com/input-output-hk/atala-prism-building-blocks/commit/ea3d81935cd0ccca032310021a89d0a9bc016d48))
+* **mercury:** Improve support for ForwardMessage in MessagingService ([#269](https://github.com/input-output-hk/atala-prism-building-blocks/issues/269)) ([4385440](https://github.com/input-output-hk/atala-prism-building-blocks/commit/4385440d4b202af97aad5f17f3327bad452b7930))
+* **mercury:** replace method buildBaseAttachment with buildBase64Attachment ([#278](https://github.com/input-output-hk/atala-prism-building-blocks/issues/278)) ([94c7895](https://github.com/input-output-hk/atala-prism-building-blocks/commit/94c7895a5630251aacbdcb0445e7d3da9b225d4c))
+* **mercury:** Split DidComm into DidAgent and DidOps ([#319](https://github.com/input-output-hk/atala-prism-building-blocks/issues/319)) ([e12ca22](https://github.com/input-output-hk/atala-prism-building-blocks/commit/e12ca22daaecb775894067f36f82d1ed0e3e6ea0))
+
 # [mercury-v0.15.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.14.0...mercury-v0.15.0) (2022-12-19)
 
 

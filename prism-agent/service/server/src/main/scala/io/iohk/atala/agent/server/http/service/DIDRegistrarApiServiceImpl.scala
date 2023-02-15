@@ -39,6 +39,23 @@ class DIDRegistrarApiServiceImpl(service: ManagedDIDService)(using runtime: Runt
     }
   }
 
+  override def deactivateManagedDid(didRef: String)(implicit
+      toEntityMarshallerDIDOperationResponse: ToEntityMarshaller[DIDOperationResponse],
+      toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
+  ): Route = {
+    val result = for {
+      prismDID <- ZIO.fromEither(PrismDID.fromString(didRef)).mapError(HttpServiceError.InvalidPayload.apply)
+      outcome <- service
+        .deactivateManagedDID(prismDID.asCanonical)
+        .mapError(HttpServiceError.DomainError[UpdateManagedDIDError].apply)
+    } yield outcome
+
+    onZioSuccess(result.mapBoth(_.toOAS, _.toOAS).either) {
+      case Left(error)   => complete(error.status -> error)
+      case Right(result) => deactivateManagedDid202(result)
+    }
+  }
+
   override def listManagedDid()(implicit
       toEntityMarshallerListManagedDIDResponseInnerarray: ToEntityMarshaller[Seq[ListManagedDIDResponseInner]],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]

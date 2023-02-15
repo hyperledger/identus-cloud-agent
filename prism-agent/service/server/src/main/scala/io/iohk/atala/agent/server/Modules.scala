@@ -12,16 +12,10 @@ import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.agent.server.http.marshaller.{
   ConnectionsManagementApiMarshallerImpl,
   DIDApiMarshallerImpl,
-  DIDAuthenticationApiMarshallerImpl,
   DIDRegistrarApiMarshallerImpl
 }
-import io.iohk.atala.agent.server.http.service.{
-  ConnectionsManagementApiServiceImpl,
-  DIDApiServiceImpl,
-  DIDAuthenticationApiServiceImpl,
-  DIDRegistrarApiServiceImpl
-}
-import io.iohk.atala.agent.openapi.api.{ConnectionsManagementApi, DIDApi, DIDAuthenticationApi, DIDRegistrarApi}
+import io.iohk.atala.agent.server.http.service.{ConnectionsManagementApiServiceImpl, DIDApiServiceImpl}
+import io.iohk.atala.agent.openapi.api.{ConnectionsManagementApi, DIDApi, DIDRegistrarApi}
 import cats.effect.std.Dispatcher
 import com.typesafe.config.ConfigFactory
 import doobie.util.transactor.Transactor
@@ -33,13 +27,23 @@ import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError
 import io.iohk.atala.agent.server.http.marshaller.*
 import io.iohk.atala.agent.server.http.service.*
 import io.iohk.atala.agent.server.http.{HttpRoutes, HttpServer}
-import io.iohk.atala.pollux.core.service.CredentialServiceImpl
+import io.iohk.atala.pollux.core.service.{
+  CredentialService,
+  CredentialServiceImpl,
+  PresentationService,
+  PresentationServiceImpl,
+  VerificationPolicyService,
+  VerificationPolicyServiceImpl
+}
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
 import io.iohk.atala.pollux.core.repository.CredentialRepository
-import io.iohk.atala.pollux.core.service.CredentialService
-import io.iohk.atala.pollux.sql.repository.JdbcCredentialRepository
-import io.iohk.atala.pollux.sql.repository.DbConfig as PolluxDbConfig
+import io.iohk.atala.pollux.sql.repository.{
+  JdbcCredentialRepository,
+  JdbcPresentationRepository,
+  JdbcVerificationPolicyRepository,
+  DbConfig as PolluxDbConfig
+}
 import io.iohk.atala.connect.sql.repository.DbConfig as ConnectDbConfig
 import io.iohk.atala.agent.server.sql.DbConfig as AgentDbConfig
 import io.iohk.atala.agent.server.jobs.*
@@ -53,6 +57,7 @@ import zhttp.service.Server
 
 import java.util.concurrent.Executors
 import io.iohk.atala.mercury.*
+import io.iohk.atala.mercury.DidOps.*
 import io.iohk.atala.mercury.model.*
 import io.iohk.atala.mercury.model.error.*
 import io.iohk.atala.mercury.protocol.issuecredential.*
@@ -62,16 +67,8 @@ import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc
 import java.io.IOException
 import cats.implicits.*
 import io.iohk.atala.pollux.schema.SchemaRegistryServerEndpoints
-import io.iohk.atala.pollux.service.{
-  JdbcSchemaRegistryService,
-  SchemaRegistryService,
-  SchemaRegistryServiceInMemory,
-  VerificationPolicyServiceInMemory
-}
-import io.iohk.atala.pollux.core.service.PresentationService
-import io.iohk.atala.pollux.core.service.PresentationServiceImpl
+import io.iohk.atala.pollux.service.{JdbcSchemaRegistryService, SchemaRegistryService, SchemaRegistryServiceInMemory}
 import io.iohk.atala.pollux.core.repository.PresentationRepository
-import io.iohk.atala.pollux.sql.repository.JdbcPresentationRepository
 import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.connect.core.service.ConnectionService
@@ -96,14 +93,19 @@ import io.iohk.atala.agent.walletapi.sql.{JdbcDIDNonSecretStorage, JdbcDIDSecret
 import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
 import io.iohk.atala.pollux.vc.jwt.DidResolver as JwtDidResolver
-import io.iohk.atala.castor.core.model.error.DIDOperationError.TooManyDidServiceAccess
 import io.iohk.atala.pollux.vc.jwt.PrismDidResolver
+import io.iohk.atala.mercury.DidAgent
+import io.iohk.atala.pollux.schema.controller.{
+  VerificationPolicyController,
+  VerificationPolicyControllerImpl,
+  VerificationPolicyControllerInMemory
+}
 
 object Modules {
 
   def app(port: Int): RIO[
-    DidComm & ManagedDIDService & AppConfig & DIDRegistrarApi & IssueCredentialsProtocolApi & ConnectionsManagementApi &
-      DIDApi & DIDAuthenticationApi & PresentProofApi & ActorSystem[Nothing],
+    DidOps & DidAgent & ManagedDIDService & AppConfig & DIDRegistrarApi & IssueCredentialsProtocolApi &
+      ConnectionsManagementApi & DIDApi & PresentProofApi & ActorSystem[Nothing],
     Unit
   ] = {
     val httpServerApp = HttpRoutes.routes.flatMap(HttpServer.start(port, _))
@@ -111,7 +113,7 @@ object Modules {
     httpServerApp.unit
   }
 
-  lazy val zioApp: RIO[SchemaRegistryService & VerificationPolicyServiceInMemory & AppConfig, Unit] = {
+  lazy val zioApp: RIO[SchemaRegistryService & VerificationPolicyController & AppConfig, Unit] = {
     val zioHttpServerApp = for {
       allSchemaRegistryEndpoints <- SchemaRegistryServerEndpoints.all
       allVerificationPolicyEndpoints <- VerificationPolicyServerEndpoints.all
@@ -128,7 +130,7 @@ object Modules {
   def didCommServiceEndpoint(port: Int) = {
     val header = "content-type" -> MediaTypes.contentTypeEncrypted
     val app: HttpApp[
-      DidComm with CredentialService with PresentationService with ConnectionService & ManagedDIDService,
+      DidOps & DidAgent & CredentialService & PresentationService & ConnectionService & ManagedDIDService,
       Throwable
     ] =
       Http.collectZIO[Request] {
@@ -137,8 +139,8 @@ object Modules {
         // case Method.POST -> !! / "did-comm-v2" =>
         case Method.GET -> !! / "did" =>
           for {
-            didCommService <- ZIO.service[DidComm]
-            str = didCommService.myDid.value
+            didCommService <- ZIO.service[DidAgent]
+            str = didCommService.id.value
           } yield (Response.text(str))
 
         case req @ Method.POST -> !!
@@ -160,26 +162,38 @@ object Modules {
     Server.start(port, app)
   }
 
-  val didCommExchangesJob: RIO[
-    DIDResolver & JwtDidResolver & HttpClient & CredentialService & ManagedDIDService & DIDSecretStorage,
+  val issueCredentialDidCommExchangesJob: RIO[
+    AppConfig & DidOps & DIDResolver & JwtDidResolver & HttpClient & CredentialService & ManagedDIDService &
+      DIDSecretStorage,
     Unit
   ] =
-    BackgroundJobs.didCommExchanges
-      .repeat(Schedule.spaced(10.seconds))
-      .unit
+    for {
+      config <- ZIO.service[AppConfig]
+      job <- BackgroundJobs.issueCredentialDidCommExchanges
+        .repeat(Schedule.spaced(config.pollux.issueBgJobRecurrenceDelay))
+        .unit
+    } yield job
 
   val presentProofExchangeJob: RIO[
-    DIDResolver & JwtDidResolver & HttpClient & PresentationService & ManagedDIDService & DIDSecretStorage,
+    AppConfig & DidOps & DIDResolver & JwtDidResolver & HttpClient & PresentationService & ManagedDIDService &
+      DIDSecretStorage,
     Unit
   ] =
-    BackgroundJobs.presentProofExchanges
-      .repeat(Schedule.spaced(10.seconds))
-      .unit
+    for {
+      config <- ZIO.service[AppConfig]
+      job <- BackgroundJobs.presentProofExchanges
+        .repeat(Schedule.spaced(config.pollux.presentationBgJobRecurrenceDelay))
+        .unit
+    } yield job
 
-  val connectDidCommExchangesJob: RIO[DIDResolver & HttpClient & ConnectionService & ManagedDIDService, Unit] =
-    ConnectBackgroundJobs.didCommExchanges
-      .repeat(Schedule.spaced(10.seconds))
-      .unit
+  val connectDidCommExchangesJob
+      : RIO[AppConfig & DidOps & DIDResolver & HttpClient & ConnectionService & ManagedDIDService, Unit] =
+    for {
+      config <- ZIO.service[AppConfig]
+      job <- ConnectBackgroundJobs.didCommExchanges
+        .repeat(Schedule.spaced(config.connect.connectBgJobRecurrenceDelay))
+        .unit
+    } yield job
 
   val syncDIDPublicationStateFromDltJob: URIO[ManagedDIDService, Unit] =
     BackgroundJobs.syncDIDPublicationStateFromDlt
@@ -198,7 +212,7 @@ object Modules {
 
   private[this] def unpackMessage(
       jsonString: String
-  ): ZIO[ManagedDIDService, ParseResponse | DIDSecretStorageError, Message] = {
+  ): ZIO[DidOps & ManagedDIDService, ParseResponse | DIDSecretStorageError, Message] = {
     // Needed for implicit conversion from didcommx UnpackResuilt to mercury UnpackMessage
     import io.iohk.atala.mercury.model.given
     for {
@@ -206,20 +220,19 @@ object Modules {
       _ <- ZIO.logInfo(s"Extracted recipient Did => $recipientDid")
       managedDIDService <- ZIO.service[ManagedDIDService]
       peerDID <- managedDIDService.getPeerDID(DidId(recipientDid))
-      msg: UnpackMessage = new DIDComm(UniversalDidResolver, peerDID.getSecretResolverInMemory).unpack(
-        new UnpackParams.Builder(jsonString).build()
-      )
+      agent = AgentPeerService.makeLayer(peerDID)
+      msg <- unpack(jsonString).provideSomeLayer(agent)
     } yield msg.message
   }
 
   def webServerProgram(
       jsonString: String
   ): ZIO[
-    CredentialService with PresentationService with ConnectionService & ManagedDIDService,
+    DidOps & CredentialService & PresentationService & ConnectionService & ManagedDIDService,
     MercuryThrowable | DIDSecretStorageError,
     Unit
   ] = {
-    import io.iohk.atala.mercury.DidComm.*
+
     ZIO.logAnnotate("request-id", java.util.UUID.randomUUID.toString()) {
       for {
         _ <- ZIO.logInfo("Received new message")
@@ -341,7 +354,10 @@ object Modules {
               for {
                 _ <- ZIO.logInfo("*" * 100)
                 _ <- ZIO.logInfo("As an Inviter in connect:")
-                connectionRequest = ConnectionRequest.readFromMessage(msg)
+                connectionRequest <- ConnectionRequest.fromMessage(msg) match {
+                  case Left(error)  => ZIO.fail(new RuntimeException(error))
+                  case Right(value) => ZIO.succeed(value)
+                }
                 _ <- ZIO.logInfo("Got ConnectionRequest: " + connectionRequest)
                 // Receive and store ConnectionRequest
                 maybeRecord <- connectionService
@@ -366,7 +382,10 @@ object Modules {
               for {
                 _ <- ZIO.logInfo("*" * 100)
                 _ <- ZIO.logInfo("As an Invitee in connect:")
-                connectionResponse = ConnectionResponse.readFromMessage(msg)
+                connectionResponse <- ConnectionResponse.fromMessage(msg) match {
+                  case Left(error)  => ZIO.fail(new RuntimeException(error))
+                  case Right(value) => ZIO.succeed(value)
+                }
                 _ <- ZIO.logInfo("Got ConnectionResponse: " + connectionResponse)
                 _ <- connectionService
                   .receiveConnectionResponse(connectionResponse)
@@ -384,7 +403,7 @@ object Modules {
     }
   }
 
-  val publishCredentialsToDltJob: RIO[DidComm & CredentialService, Unit] = {
+  val publishCredentialsToDltJob: RIO[CredentialService, Unit] = {
     val effect = BackgroundJobs.publishCredentialsToDlt
     (effect repeat Schedule.spaced(1.seconds)).unit
   }
@@ -427,13 +446,13 @@ object AppModule {
     (didOpValidatorLayer ++ didServiceLayer ++ secretStorageLayer ++ nonSecretStorageLayer) >>> ManagedDIDService.layer
   }
 
-  val credentialServiceLayer: RLayer[DidComm, CredentialService] =
+  val credentialServiceLayer: RLayer[DidOps & DidAgent, CredentialService] =
     (GrpcModule.layers ++ RepoModule.credentialRepoLayer) >>> CredentialServiceImpl.layer
 
   def presentationServiceLayer =
     (RepoModule.presentationRepoLayer ++ RepoModule.credentialRepoLayer) >>> PresentationServiceImpl.layer
 
-  val connectionServiceLayer: RLayer[DidComm, ConnectionService] =
+  val connectionServiceLayer: RLayer[DidOps & DidAgent, ConnectionService] =
     (GrpcModule.layers ++ RepoModule.connectionRepoLayer) >>> ConnectionServiceImpl.layer
 
 }
@@ -479,12 +498,6 @@ object HttpModule {
     (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new DIDApi(_, _))
   }
 
-  val didAuthenticationApiLayer: ULayer[DIDAuthenticationApi] = {
-    val apiServiceLayer = DIDAuthenticationApiServiceImpl.layer
-    val apiMarshallerLayer = DIDAuthenticationApiMarshallerImpl.layer
-    (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new DIDAuthenticationApi(_, _))
-  }
-
   val didRegistrarApiLayer: TaskLayer[DIDRegistrarApi] = {
     val serviceLayer = AppModule.manageDIDServiceLayer
     val apiServiceLayer = serviceLayer >>> DIDRegistrarApiServiceImpl.layer
@@ -493,21 +506,22 @@ object HttpModule {
   }
 
   val issueCredentialsProtocolApiLayer
-      : RLayer[DidComm & ManagedDIDService & ConnectionService & AppConfig, IssueCredentialsProtocolApi] = {
+      : RLayer[DidOps & DidAgent & ManagedDIDService & ConnectionService & AppConfig, IssueCredentialsProtocolApi] = {
     val serviceLayer = AppModule.credentialServiceLayer
     val apiServiceLayer = serviceLayer >>> IssueCredentialsProtocolApiServiceImpl.layer
     val apiMarshallerLayer = IssueCredentialsProtocolApiMarshallerImpl.layer
     (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new IssueCredentialsProtocolApi(_, _))
   }
 
-  val presentProofProtocolApiLayer: RLayer[DidComm, PresentProofApi] = {
+  val presentProofProtocolApiLayer: RLayer[DidOps & DidAgent, PresentProofApi] = {
     val serviceLayer = AppModule.presentationServiceLayer ++ AppModule.connectionServiceLayer // ++ didCommServiceLayer
     val apiServiceLayer = serviceLayer >>> PresentProofApiServiceImpl.layer
     val apiMarshallerLayer = PresentProofApiMarshallerImpl.layer
     (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new PresentProofApi(_, _))
   }
 
-  val connectionsManagementApiLayer: RLayer[DidComm & ManagedDIDService & AppConfig, ConnectionsManagementApi] = {
+  val connectionsManagementApiLayer
+      : RLayer[DidOps & DidAgent & ManagedDIDService & AppConfig, ConnectionsManagementApi] = {
     val serviceLayer = AppModule.connectionServiceLayer
     val apiServiceLayer = serviceLayer >>> ConnectionsManagementApiServiceImpl.layer
     val apiMarshallerLayer = ConnectionsManagementApiMarshallerImpl.layer
@@ -515,7 +529,7 @@ object HttpModule {
   }
 
   val layers =
-    didApiLayer ++ didAuthenticationApiLayer ++ didRegistrarApiLayer ++
+    didApiLayer ++ didRegistrarApiLayer ++
       issueCredentialsProtocolApiLayer ++ connectionsManagementApiLayer ++ presentProofProtocolApiLayer
 }
 
@@ -528,7 +542,7 @@ object RepoModule {
           username = config.username,
           password = config.password,
           jdbcUrl = s"jdbc:postgresql://${config.host}:${config.port}/${config.databaseName}",
-          awaitConnectionThreads = 2
+          awaitConnectionThreads = config.awaitConnectionThreads
         )
       }
     }
@@ -554,7 +568,7 @@ object RepoModule {
           username = config.username,
           password = config.password,
           jdbcUrl = s"jdbc:postgresql://${config.host}:${config.port}/${config.databaseName}",
-          awaitConnectionThreads = 2
+          awaitConnectionThreads = config.awaitConnectionThreads
         )
       }
     }
@@ -580,7 +594,7 @@ object RepoModule {
           username = config.username,
           password = config.password,
           jdbcUrl = s"jdbc:postgresql://${config.host}:${config.port}/${config.databaseName}",
-          awaitConnectionThreads = 2
+          awaitConnectionThreads = config.awaitConnectionThreads
         )
       }
     }
@@ -611,4 +625,9 @@ object RepoModule {
   val credentialSchemaServiceLayer: TaskLayer[SchemaRegistryService] =
     RepoModule.polluxTransactorLayer >>> JdbcSchemaRegistryService.layer
 
+  val verificationPolicyServiceLayer: TaskLayer[VerificationPolicyController] =
+    RepoModule.polluxTransactorLayer >>>
+      JdbcVerificationPolicyRepository.layer >+>
+      VerificationPolicyServiceImpl.layer >+>
+      VerificationPolicyControllerImpl.layer
 }

@@ -22,8 +22,6 @@ tags:
   # Castor
   - name: DID
     description: Generic DID Endpoints
-  - name: DID Authentication
-    description: DID Authentication REST API
   - name: DID Registrar
     description: DID Endpoints where keys are managed by PrismAgent
   # Pollux
@@ -63,63 +61,6 @@ paths:
               schema:
                 $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
 
-  /authentication/challenges:
-    post:
-      tags: ["DID Authentication"]
-      operationId: createDidAuthenticationChallenge
-      summary: Create a new authentication challenge
-      deprecated: true
-      description: |
-        Create a new authentication challenge that will be later verified
-        by Castor for a relying-party.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "./castor/schemas.yaml#/components/schemas/CreateAuthenticationChallengeRequest"
-      responses:
-        "200":
-          description: Authentication challenge created successfully
-          content:
-            application/json:
-              schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/CreateAuthenticationChallengeResponse"
-        "400":
-          description: A create AuthenticationChallenge payload is malformed
-          content:
-            application/json:
-              schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
-
-  /authentication/challenge-submissions:
-    post:
-      tags: ["DID Authentication"]
-      operationId: createDidAuthenticationChallengeSubmission
-      summary: Create a verification from challenge
-      deprecated: true
-      description: |
-        Submit a challenge submission that will be verified by Castor for a relying-party.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "./castor/schemas.yaml#/components/schemas/AuthenticationChallengeSubmissionRequest"
-      responses:
-        "200":
-          description: Authentication challenge has been successfully verified
-          content:
-            application/json:
-              schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/AuthenticationChallengeSubmissionResponse"
-        "400":
-          description: ChallengeSubmission is malformed
-          content:
-            application/json:
-              schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
-
   /did-registrar/dids:
     get:
       tags: ["DID Registrar"]
@@ -128,7 +69,7 @@ paths:
       description: List all DIDs stored in PrismAgent's wallet
       responses:
         "200":
-          description: List managed DIDs
+          description: List PrismAgent managed DIDs
           content:
             application/json:
               schema:
@@ -197,6 +138,9 @@ paths:
       summary: Update DID in PrismAgent's wallet and post update operation to the VDR
       description: |
         Update DID in PrismAgent's wallet and post update operation to the VDR.
+        This endpoint updates the DID document from last confirmed operation.
+        Submitting multiple update operations without waiting for confirmation will result in
+        some operation being rejected as only one operation can be appended from last confirmed operation.
       requestBody:
         required: true
         content:
@@ -214,6 +158,29 @@ paths:
                 $ref: "./castor/schemas.yaml#/components/schemas/DIDOperationResponse"
         "422":
           description: The DID update failed.
+          content:
+            application/json:
+              schema:
+                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
+
+  /did-registrar/dids/{didRef}/deactivations:
+    post:
+      tags: ["DID Registrar"]
+      operationId: deactivateManagedDid
+      summary: Deactivate DID in PrismAgent's wallet and post deactivate operation to blockchain
+      description: |
+        Deactivate DID in PrismAgent's wallet and post deactivate operation to blockchain.
+      parameters:
+        - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
+      responses:
+        "202":
+          description: Publishing DID to Blockchain.
+          content:
+            application/json:
+              schema:
+                $ref: "./castor/schemas.yaml#/components/schemas/DIDOperationResponse"
+        "422":
+          description: The DID deactivation failed.
           content:
             application/json:
               schema:
@@ -368,26 +335,11 @@ paths:
         - Verification
       summary: Lookup verification policies by query
       description:
-        Lookup verification policies by `name`, `attributes`, `issuerDIDs`,
-        and `credentialTypes` and control the pagination by `offset` and `limit` parameters
+        Lookup verification policies by `name`, and control the pagination
+        by `offset` and `limit` parameters
       operationId: lookupVerificationPoliciesByQuery
       parameters:
         - name: name
-          in: query
-          required: false
-          schema:
-            type: string
-        - name: attributes
-          in: query
-          required: false
-          schema:
-            type: string
-        - name: issuerDIDs
-          in: query
-          required: false
-          schema:
-            type: string
-        - name: credentialTypes
           in: query
           required: false
           schema:
@@ -474,6 +426,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
       responses:
         "200":
           description: ""
@@ -503,9 +456,7 @@ paths:
       tags:
         - Verification
       summary: Update the verification policy object by id
-      description:
-        "Update the fields of the verification policy entry: `attributes`,
-        `issuerDIDs`, `name`, `credentialTypes`, "
+      description: Update the verification policy entry
       operationId: updateVerificationPolicy
       parameters:
         - name: id
@@ -513,6 +464,14 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
+        - name: nonce
+          in: query
+          description: Nonce of the previous VerificationPolicy
+          required: true
+          schema:
+            type: integer
+            format: int32
       requestBody:
         description: Update verification policy object
         content:
@@ -558,6 +517,14 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
+        - name: nonce
+          in: query
+          description: Nonce of the previous VerificationPolicy
+          required: true
+          schema:
+            type: integer
+            format: int32
       responses:
         "200":
           description: ""
@@ -926,18 +893,6 @@ paths:
             application/json:
               schema:
                 $ref: "./connect/schemas.yaml#/components/schemas/ErrorResponse"
-    delete:
-      tags: ["Connections Management"]
-      parameters:
-        - $ref: "./connect/schemas.yaml#/components/parameters/connectionId"
-      operationId: deleteConnection
-      summary: Deletes existing connection record.
-      description: Just deletes connection state in the Agent, it does not include notifing other party that connection is deleted. We should consider this feature for the future. If additional action is attempted over deleted connection, it should thow error (no matter which side deleted connection).
-      responses:
-        "200":
-          description: Successful delete
-        "404":
-          description: Connection state record not found for given `connectionId`
 
   /connection-invitations:
     post:

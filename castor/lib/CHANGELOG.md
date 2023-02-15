@@ -1,3 +1,17 @@
+# [castor-v0.8.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/castor-v0.7.0...castor-v0.8.0) (2023-02-03)
+
+
+### Features
+
+* **castor:** align castor implementation with DID spec ([#336](https://github.com/input-output-hk/atala-prism-building-blocks/issues/336)) ([7992b80](https://github.com/input-output-hk/atala-prism-building-blocks/commit/7992b80a35df9e1308b811bfa0492e9d17975f5a))
+
+# [castor-v0.7.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/castor-v0.6.0...castor-v0.7.0) (2023-01-27)
+
+
+### Features
+
+* **castor:** add support DID deactivate operation ([#325](https://github.com/input-output-hk/atala-prism-building-blocks/issues/325)) ([5ceb7e9](https://github.com/input-output-hk/atala-prism-building-blocks/commit/5ceb7e953664c15457e6a6657041442a5c3d761b))
+
 # [castor-v0.6.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/castor-v0.5.1...castor-v0.6.0) (2023-01-20)
 
 
