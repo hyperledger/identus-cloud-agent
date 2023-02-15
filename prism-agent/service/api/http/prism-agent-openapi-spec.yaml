@@ -580,7 +580,7 @@ paths:
     get:
       tags: ["Issue Credentials Protocol"]
       operationId: getCredentialRecords
-      summary: Gets the list of issue credential records. 
+      summary: Gets the list of issue credential records.
       responses:
         "200":
           description: The list of issue credential records.
