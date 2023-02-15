@@ -87,7 +87,7 @@ paths:
       summary: Create unpublished DID and store it in PrismAgent's wallet
       description: |
         Create unpublished DID and store it inside PrismAgent's wallet. The private keys of the DID is
-        managed by PrismAgent. The DID can later be published to blockchain using publications endpoint.
+        managed by PrismAgent. The DID can later be published to the VDR using publications endpoint.
       requestBody:
         required: true
         content:
@@ -112,14 +112,14 @@ paths:
     post:
       tags: ["DID Registrar"]
       operationId: publishManagedDid
-      summary: Publish the DID stored in PrismAgent's wallet to the blockchain
+      summary: Publish the DID stored in PrismAgent's wallet to the VDR
       description: |
-        Publish the DID stored in PrismAgent's wallet to the blockchain.
+        Publish the DID stored in PrismAgent's wallet to the VDR.
       parameters:
         - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
       responses:
         "202":
-          description: Publishing DID to Blockchain.
+          description: Publishing DID to the VDR.
           content:
             application/json:
               schema:
@@ -135,9 +135,9 @@ paths:
     post:
       tags: ["DID Registrar"]
       operationId: updateManagedDid
-      summary: Update DID in PrismAgent's wallet and post update operation to blockchain
+      summary: Update DID in PrismAgent's wallet and post update operation to the VDR
       description: |
-        Update DID in PrismAgent's wallet and post update operation to blockchain.
+        Update DID in PrismAgent's wallet and post update operation to the VDR.
         This endpoint updates the DID document from last confirmed operation.
         Submitting multiple update operations without waiting for confirmation will result in
         some operation being rejected as only one operation can be appended from last confirmed operation.
@@ -151,7 +151,7 @@ paths:
         - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
       responses:
         "202":
-          description: Publishing DID to Blockchain.
+          description: Publishing DID to the VDR.
           content:
             application/json:
               schema:
@@ -630,7 +630,7 @@ paths:
               schema:
                 $ref: ./pollux/schemas.yaml#/components/schemas/IssueCredentialRecord
         "404":
-          description: There is no issue credential record maatching the given 'recordId'.
+          description: There is no issue credential record matching the given 'recordId'.
           content:
             application/json:
               schema:
@@ -651,7 +651,7 @@ paths:
               schema:
                 $ref: ./pollux/schemas.yaml#/components/schemas/IssueCredentialRecord
         "404":
-          description: There is no issue credential record maatching the given 'recordId'.
+          description: There is no issue credential record matching the given 'recordId'.
           content:
             application/json:
               schema:
