@@ -229,7 +229,6 @@ components:
     # Issue Credential Protocol
 
     IssueCredentialRecordBase:
-      description: A request to create a new "issue credential record"
       required:
         - subjectId
         - claims

@@ -322,8 +322,8 @@ object BackgroundJobs {
       // Automatically infer keyId to use by resolving DID and choose the corresponding VerificationRelationship
       issuingKeyId <- didService
         .resolveDID(issuingDID)
-        .mapError(e => RuntimeException(s"Error occured while resolving DID during JwtIssuer creation: ${e.toString}"))
-        .someOrFail(RuntimeException(s"Issuer DID cannot be resolved"))
+        .mapError(e => RuntimeException(s"Error occured while resolving Issuing DID during VC creation: ${e.toString}"))
+        .someOrFail(RuntimeException(s"Issuing DID resolution result is not found"))
         .map { case (_, didData) => didData.publicKeys.find(_.purpose == verificationRelationship).map(_.id) }
         .someOrFail(
           RuntimeException(s"Issuing DID doesn't have a key in ${verificationRelationship.name} to use: $issuingDID")
@@ -331,7 +331,9 @@ object BackgroundJobs {
       ecKeyPair <- managedDIDService
         .javaKeyPairWithDID(issuingDID.asCanonical, issuingKeyId)
         .mapError(e => RuntimeException(s"Error occurred while getting issuer key-pair: ${e.toString}"))
-        .someOrFail(RuntimeException(s"Issuer key-pair does not exist: ${issuingDID.toString}#$issuingKeyId"))
+        .someOrFail(
+          RuntimeException(s"Issuer key-pair does not exist in the wallet: ${issuingDID.toString}#$issuingKeyId")
+        )
       (privateKey, publicKey) = ecKeyPair
       issuer = Issuer(
         io.iohk.atala.pollux.vc.jwt.DID(longFormPrismDID.toString),
@@ -408,13 +410,17 @@ object BackgroundJobs {
               _.createAndStoreDID(
                 ManagedDIDTemplate(
                   publicKeys = Seq(
-                    DIDPublicKeyTemplate("issuing-1", VerificationRelationship.AssertionMethod)
+                    DIDPublicKeyTemplate("auth-1", VerificationRelationship.Authentication)
                   ),
                   services = Nil
                 )
               )
             )
-            prover <- createPrismDIDIssuer(proverDID, allowUnpublishedIssuingDID = true)
+            prover <- createPrismDIDIssuer(
+              proverDID,
+              verificationRelationship = VerificationRelationship.Authentication,
+              allowUnpublishedIssuingDID = true
+            )
             presentationPayload <- presentationService.createPresentationPayloadFromRecord(
               id,
               prover,
@@ -522,6 +528,9 @@ object BackgroundJobs {
                             JwtPresentation.validatePresentation(JWT(base64Decoded), options.domain, options.challenge)
                           case _ => Validation.unit
                       })
+                      // https://www.w3.org/TR/vc-data-model/#proofs-signatures-0
+                      // A proof is typically attached to a verifiable presentation for authentication purposes
+                      // and to a verifiable credential as a method of assertion.
                       result <- JwtPresentation.verify(
                         JWT(base64Decoded),
                         JwtPresentation.PresentationVerificationOptions(
@@ -534,7 +543,7 @@ object BackgroundJobs {
                               verifySignature = true,
                               verifyDates = false,
                               leeway = Duration.Zero,
-                              maybeProofPurpose = Some(VerificationRelationship.Authentication)
+                              maybeProofPurpose = Some(VerificationRelationship.AssertionMethod)
                             )
                           )
                         )
