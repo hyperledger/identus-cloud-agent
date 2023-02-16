@@ -256,9 +256,6 @@ components:
             If set to `false`, a manual approval by the issuer via API call will be required for the VC to be issued.
           type: boolean
           default: true
-        awaitConfirmation:
-          type: boolean
-          default: true
 
     CreateIssueCredentialRecordRequest:
       description: A request to create a new "issue credential record".
@@ -324,12 +321,6 @@ components:
                 - CredentialPending
                 - CredentialSent
                 - CredentialReceived
-            publicationState:
-              type: string
-              enum:
-                - PublicationPending
-                - PublicationQueued
-                - Published
             jwtCredential:
               description: The base64-encoded JWT verifiable credential that has been sent by the issuer.
               type: string

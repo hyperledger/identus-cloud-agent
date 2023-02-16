@@ -63,7 +63,7 @@ class IssueCredentialsProtocolApiServiceImpl(
           claims = request.claims,
           validityPeriod = request.validityPeriod,
           automaticIssuance = request.automaticIssuance.orElse(Some(true)),
-          awaitConfirmation = request.awaitConfirmation.orElse(Some(false)),
+          awaitConfirmation = Some(false),
           issuingDID = Some(issuingDID.asCanonical)
         )
         .mapError(HttpServiceError.DomainError[CredentialServiceError].apply)

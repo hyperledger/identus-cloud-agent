@@ -158,9 +158,7 @@ trait OASDomainModelHelper {
       schemaId = domain.schemaId,
       validityPeriod = domain.validityPeriod,
       automaticIssuance = domain.automaticIssuance,
-      awaitConfirmation = domain.awaitConfirmation,
       protocolState = domain.protocolState.toString(),
-      publicationState = domain.publicationState.map(_.toString),
       jwtCredential = domain.issueCredentialData.flatMap(issueCredential => {
         issueCredential.attachments.collectFirst { case AttachmentDescriptor(_, _, Base64(jwt), _, _, _, _) =>
           jwt
