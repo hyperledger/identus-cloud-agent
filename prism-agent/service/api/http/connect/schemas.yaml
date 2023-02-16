@@ -38,8 +38,9 @@ components:
             - self
             - kind
             - connectionId
-            - state
+            - state            
             - createdAt
+            - role
             - invitation
           properties:
             self:
@@ -88,6 +89,12 @@ components:
               type: string
               format: date-time
               example: 2021-12-31T13:59:60Z
+            role:
+              description: The role played by the Prism agent in the connection flow.
+              type: string
+              enum:
+                - Inviter
+                - Invitee
             invitation:
               $ref: "#/components/schemas/ConnectionInvitation"
 

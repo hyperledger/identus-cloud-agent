@@ -187,6 +187,7 @@ trait OASDomainModelHelper {
       state = domain.protocolState.toString,
       createdAt = domain.createdAt.atOffset(ZoneOffset.UTC),
       updatedAt = domain.updatedAt.map(_.atOffset(ZoneOffset.UTC)),
+      role = domain.role.toString,
       invitation = ConnectionInvitation(
         id = UUID.fromString(domain.invitation.id),
         `type` = domain.invitation.`type`,
