@@ -63,7 +63,7 @@ class IssueCredentialsProtocolApiServiceImpl(
           claims = request.claims,
           validityPeriod = request.validityPeriod,
           automaticIssuance = request.automaticIssuance.orElse(Some(true)),
-          awaitConfirmation = request.awaitConfirmation.orElse(Some(false)),
+          awaitConfirmation = Some(false),
           issuingDID = Some(issuingDID.asCanonical)
         )
         .mapError(HttpServiceError.DomainError[CredentialServiceError].apply)
@@ -91,10 +91,7 @@ class IssueCredentialsProtocolApiServiceImpl(
       case Right(result) =>
         getCredentialRecords200(
           IssueCredentialRecordCollection(
-            items = result,
-            offset = 0,
-            limit = 0,
-            count = result.size
+            contents = result
           )
         )
     }

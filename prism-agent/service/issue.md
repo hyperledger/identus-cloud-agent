@@ -63,7 +63,6 @@ curl -X 'POST' \
       "issuingDID": "{ISSUING_DID}",
       "validityPeriod": 3600,
       "automaticIssuance": false,
-      "awaitConfirmation": false,
       "claims": {
         "firstname": "Alice",
         "lastname": "Wonderland",

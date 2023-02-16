@@ -40,6 +40,7 @@ components:
             - connectionId
             - state
             - createdAt
+            - role
             - invitation
           properties:
             self:
@@ -87,7 +88,13 @@ components:
               description: The date and time the connection record was last updated.
               type: string
               format: date-time
-              example: 2021-12-31T13:59:60Z
+              example: 2021-12-31T13:59:59Z
+            role:
+              description: The role played by the Prism agent in the connection flow.
+              type: string
+              enum:
+                - Inviter
+                - Invitee
             invitation:
               $ref: "#/components/schemas/ConnectionInvitation"
 

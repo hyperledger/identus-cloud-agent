@@ -256,9 +256,6 @@ components:
             If set to `false`, a manual approval by the issuer via API call will be required for the VC to be issued.
           type: boolean
           default: true
-        awaitConfirmation:
-          type: boolean
-          default: true
 
     CreateIssueCredentialRecordRequest:
       description: A request to create a new "issue credential record".
@@ -324,12 +321,6 @@ components:
                 - CredentialPending
                 - CredentialSent
                 - CredentialReceived
-            publicationState:
-              type: string
-              enum:
-                - PublicationPending
-                - PublicationQueued
-                - Published
             jwtCredential:
               description: The base64-encoded JWT verifiable credential that has been sent by the issuer.
               type: string
@@ -341,184 +332,13 @@ components:
     IssueCredentialRecordCollection:
       description: A collection of issue credential records.
       required:
-        - items
-        - offset
-        - limit
-        - count
+        - contents
       properties:
-        items:
+        contents:
           description: The array containing the list of issue credential records.
           type: array
           items:
             $ref: "#/components/schemas/IssueCredentialRecord"
-        offset:
-          type: integer
-        limit:
-          type: integer
-        count:
-          type: integer
-
-    #
-
-    W3CCredentialInput:
-      description: |-
-        Credential input object based on which the new instance of the verifiable credentials is created.
-        Object contains the minimal set of the fields required to create the credentials for the given subject.
-        All other required fields of the verifiable credential depend on the context of the cloud agent
-      required:
-        - subjectId
-        - claims
-      properties:
-        schemaId:
-          type: string
-          description: "Identity of the Verifiable Credentials Schema associated with this object"
-          example: "did:example:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0"
-        subjectId:
-          type: string
-          description: "Subject DID of the verifiable credentials object"
-          example: "did:prism:subjectofverifiablecredentials"
-        validityPeriod:
-          type: number
-          description: "The validity period in seconds of the verifiable credential"
-          example: 3600
-        claims:
-          type: object
-          additionalProperties:
-            type: string
-          description: "Clams associated with given credentials object (for now it's just a key/value, later should be more complex"
-
-    W3CCredential:
-      description: "Verifiable Credential Object according to W3C specification"
-      required: ["id", "type", "issuer", "issuanceDate", "credentialSubject"]
-      properties:
-        id:
-          type: string
-          description: "Credential id or url that can be used to get the status of revoke the credential"
-          example: "http://example.edu/credentials/1872"
-        type:
-          type: string
-          description: "Credential type according to W3C specification. Must include VerifiableCredentials and type of concrete credentials"
-          example: '["VerifiableCredential", "AlumniCredential"]'
-        issuer:
-          type: string
-          description: "Issuer DID"
-          example: "did:prism:issuerdid"
-        issuanceDate:
-          type: string
-          description: "Datetime in ISO format that corresponds to the date of issuance"
-          example: "2010-01-01T19:23:24Z"
-        credentialSubject:
-          type: object
-          description: "Credentials subject DID and claims according to the schema object"
-          additionalProperties:
-            type: string
-          example:
-            id: "did:prism:subject12345"
-            alumni_of: "University"
-            degree: "master of openapi specification"
-        proof:
-          $ref: "#/components/schemas/W3CProof"
-
-    W3CCredentialsPaginated:
-      description: "Paginated response that contains an array of the credential objects"
-      properties:
-        data:
-          type: array
-          items:
-            $ref: "#/components/schemas/W3CCredential"
-        offset:
-          type: integer
-        limit:
-          type: integer
-        count:
-          type: integer
-
-    W3CIssuanceBatch:
-      description: "An issuance batch object that is associated with thelist of verifiable credentials"
-      properties:
-        id:
-          type: string
-          description: "Issuance batch id"
-        count:
-          type: integer
-          description: "Count of the verifiable credentials object in the batch"
-        actions:
-          type: array
-          items:
-            $ref: "#/components/schemas/W3CIssuanceBatchAction"
-
-    W3CIssuanceBatchAction:
-      description: "Action performed on the list of credentials associated with the issuance batch"
-      properties:
-        action:
-          description: "Action name"
-          type: string
-          enum: ["sign", "issue", "send"]
-          example: "issue"
-        id:
-          description: "Action id for tracking"
-          type: string
-          example: "uid"
-        status:
-          description: "Action status"
-          type: string
-          enum: ["scheduled", "pending", "completed", "failed"]
-
-    W3CIssuanceBatchPaginated:
-      description: "Paginated response that contains an array of the issuance-batch objects"
-      properties:
-        data:
-          type: array
-          items:
-            $ref: "#/components/schemas/W3CIssuanceBatch"
-        offset:
-          type: integer
-        limit:
-          type: integer
-        count:
-          type: integer
-
-    W3CCredentialStatus:
-      description: Verifiable Credential revocation status
-      required:
-        - status
-      properties:
-        status:
-          description: Status name
-          type: string
-          enum:
-            - issued
-            - revoked
-          example: "issued"
-        description:
-          type: string
-          description: Description about the status
-          example: "Issued by did:prism:issuer12354 on 2022-02-01"
-
-    W3CCredentialRevocationRequest:
-      description: Credential revocation request. Contain credential id and other information required for revocation
-      required:
-        - credentialId
-      additionalProperties: false
-      properties:
-        credentialId:
-          type: string
-          description: Credential identity
-          example: "abcde-12345"
-
-    W3CCredentialRevocationResponse:
-      description: Credential revocation response. Contain credential id and revocation operation for tracing the completion
-      required:
-        - credentialId
-        - operationId
-        - status
-      properties:
-        credentialId:
-          type: string
-          description: Credential identity
-          example: "abcde-12345"
-        operation:
-          $ref: "#/components/schemas/RevocationStatus"
 
     RevocationStatus:
       description: Revocation status record
@@ -622,20 +442,6 @@ components:
           type: array
           items:
             type: string
-
-    W3CPresentationPaginated:
-      description: "Paginated response that contains an array of the presentation objects"
-      properties:
-        data:
-          type: array
-          items:
-            $ref: "#/components/schemas/W3CPresentation"
-        offset:
-          type: integer
-        limit:
-          type: integer
-        count:
-          type: integer
 
     JWTCompactSerialisation:
       description: "Verifiable Credentials or Presentation encoded as JWT token"

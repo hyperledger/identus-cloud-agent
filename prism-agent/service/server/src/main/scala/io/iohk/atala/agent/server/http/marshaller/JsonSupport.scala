@@ -67,16 +67,10 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
       }
     }
   }
-  given RootJsonFormat[CreateIssueCredentialRecordRequest] = jsonFormat8(CreateIssueCredentialRecordRequest.apply)
-  given RootJsonFormat[IssueCredentialRecord] = jsonFormat14(IssueCredentialRecord.apply)
-  given RootJsonFormat[IssueCredentialRecordCollection] = jsonFormat4(IssueCredentialRecordCollection.apply)
-  //
-
-  // Pollux
-  given RootJsonFormat[RevocationStatus] = jsonFormat2(RevocationStatus.apply)
-  given RootJsonFormat[W3CCredentialRevocationRequest] = jsonFormat1(W3CCredentialRevocationRequest.apply)
-  given RootJsonFormat[W3CCredentialRevocationResponse] = jsonFormat2(W3CCredentialRevocationResponse.apply)
-  given RootJsonFormat[W3CCredentialStatus] = jsonFormat2(W3CCredentialStatus.apply)
+  // Issue
+  given RootJsonFormat[CreateIssueCredentialRecordRequest] = jsonFormat7(CreateIssueCredentialRecordRequest.apply)
+  given RootJsonFormat[IssueCredentialRecord] = jsonFormat12(IssueCredentialRecord.apply)
+  given RootJsonFormat[IssueCredentialRecordCollection] = jsonFormat1(IssueCredentialRecordCollection.apply)
 
   // Presentation
   given RootJsonFormat[Options] = jsonFormat2(Options.apply)
@@ -90,7 +84,7 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   given RootJsonFormat[CreateConnectionRequest] = jsonFormat1(CreateConnectionRequest.apply)
   given RootJsonFormat[AcceptConnectionInvitationRequest] = jsonFormat1(AcceptConnectionInvitationRequest.apply)
   given RootJsonFormat[ConnectionCollection] = jsonFormat3(ConnectionCollection.apply)
-  given RootJsonFormat[Connection] = jsonFormat10(Connection.apply)
+  given RootJsonFormat[Connection] = jsonFormat11(Connection.apply)
   given RootJsonFormat[ConnectionInvitation] = jsonFormat4(ConnectionInvitation.apply)
 
 }
