@@ -159,13 +159,20 @@ private class PresentationServiceImpl(
         .getValidIssuedCredentials(credentialsToUse.map(UUID.fromString))
         .mapError(RepositoryError.apply)
 
+      _ <- ZIO.cond(
+        issuedValidCredentials.forall(_.subjectId == prover.did.value),
+        (),
+        PresentationError.HolderBindingError(
+          s"Presenting credential with different subject than the prover DID is not supported"
+        )
+      )
       issuedRawCredentials = issuedValidCredentials.map(_.issuedCredentialRaw.map(IssuedCredentialRaw(_))).flatten
       issuedCredentials <- ZIO.fromEither(
         Either.cond(
           issuedRawCredentials.nonEmpty,
           issuedRawCredentials,
           PresentationError.IssuedCredentialNotFoundError(
-            new Throwable("No matching issued credentials foound in prover db")
+            new Throwable("No matching issued credentials found in prover db")
           )
         )
       )

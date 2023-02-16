@@ -223,7 +223,9 @@ object CredentialRepositorySpecSuite {
         records <- repo.getValidIssuedCredentials(Seq(aRecord.id, bRecord.id))
       } yield {
         assertTrue(records.size == 1) &&
-        assertTrue(records.contains(ValidIssuedCredentialRecord(aRecord.id, Some("RAW_CREDENTIAL_DATA"))))
+        assertTrue(
+          records.contains(ValidIssuedCredentialRecord(aRecord.id, Some("RAW_CREDENTIAL_DATA"), aRecord.subjectId))
+        )
       }
     },
     test("updateCredentialRecordProtocolState updates the record") {
