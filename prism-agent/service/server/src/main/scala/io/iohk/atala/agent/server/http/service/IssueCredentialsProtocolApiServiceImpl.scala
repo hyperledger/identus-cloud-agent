@@ -91,10 +91,7 @@ class IssueCredentialsProtocolApiServiceImpl(
       case Right(result) =>
         getCredentialRecords200(
           IssueCredentialRecordCollection(
-            items = result,
-            offset = 0,
-            limit = 0,
-            count = result.size
+            items = result
           )
         )
     }

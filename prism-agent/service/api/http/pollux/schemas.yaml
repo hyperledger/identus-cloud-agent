@@ -333,21 +333,12 @@ components:
       description: A collection of issue credential records.
       required:
         - items
-        - offset
-        - limit
-        - count
       properties:
         items:
           description: The array containing the list of issue credential records.
           type: array
           items:
             $ref: "#/components/schemas/IssueCredentialRecord"
-        offset:
-          type: integer
-        limit:
-          type: integer
-        count:
-          type: integer
 
     #
 
