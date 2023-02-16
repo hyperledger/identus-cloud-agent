@@ -332,9 +332,9 @@ components:
     IssueCredentialRecordCollection:
       description: A collection of issue credential records.
       required:
-        - items
+        - contents
       properties:
-        items:
+        contents:
           description: The array containing the list of issue credential records.
           type: array
           items:

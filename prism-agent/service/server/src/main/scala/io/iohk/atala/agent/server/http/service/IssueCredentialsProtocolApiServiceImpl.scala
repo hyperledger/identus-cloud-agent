@@ -91,7 +91,7 @@ class IssueCredentialsProtocolApiServiceImpl(
       case Right(result) =>
         getCredentialRecords200(
           IssueCredentialRecordCollection(
-            items = result
+            contents = result
           )
         )
     }
