@@ -12,6 +12,7 @@ import io.iohk.atala.pollux.vc.jwt.PresentationPayload.Implicits.*
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
+import zio.test.TestAspect.ignore
 
 import java.time.Instant
 
@@ -255,6 +256,6 @@ object JWTVerificationTest extends ZIOSpecDefault {
         validation <- JwtCredential.validateEncodedJWT(jwtCredential)(resolver)
       } yield assert(validation.fold(_ => false, _ => true))(equalTo(false))
     }
-  )
+  ).when(!sys.props.get("os.name").contains("Mac OS X")) // Mac OS X throws `Curve not supported: secp256k1`
 
 }
