@@ -9,12 +9,13 @@ import zio.*
 import io.iohk.atala.mercury.PeerDID
 import com.nimbusds.jose.jwk.OctetKeyPair
 import io.iohk.atala.mercury.model.DidId
+import scala.collection.immutable.ArraySeq
 
 /** A simple single-user DID key storage */
-trait DIDSecretStorage {
+private[walletapi] trait DIDSecretStorage {
 
-  /** Returns a mapping of key-id to key-pair */
-  def listKeys(did: PrismDID): Task[Map[String, ECKeyPair]]
+  /** Returns a list of keys */
+  def listKeys(did: PrismDID): Task[Seq[(String, ArraySeq[Byte], ECKeyPair)]]
 
   /** Returns the key of confirmed operation */
   def getKey(did: PrismDID, keyId: String): Task[Option[ECKeyPair]]

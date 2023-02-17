@@ -61,14 +61,15 @@ object VerificationPolicyEndpoints {
       .tag("Verification")
 
   val updateVerificationPolicyEndpoint: PublicEndpoint[
-    (RequestContext, String, VerificationPolicyInput),
+    (RequestContext, UUID, Int, VerificationPolicyInput),
     FailureResponse,
     VerificationPolicy,
     Any
   ] =
     endpoint.put
       .in(extractFromRequest[RequestContext](RequestContext.apply))
-      .in("verification" / "policies" / path[String]("id"))
+      .in("verification" / "policies" / path[UUID]("id"))
+      .in(query[Int](name = "nonce").description("Nonce of the previous VerificationPolicy"))
       .in(
         jsonBody[VerificationPolicyInput].description(
           "Update verification policy object"
@@ -80,12 +81,12 @@ object VerificationPolicyEndpoints {
       .name("updateVerificationPolicy")
       .summary("Update the verification policy object by id")
       .description(
-        "Update the fields of the verification policy entry: `attributes`, `issuerDIDs`, `name`, `credentialTypes`, "
+        "Update the verification policy entry"
       )
       .tag("Verification")
 
   val getVerificationPolicyByIdEndpoint: PublicEndpoint[
-    (RequestContext, String),
+    (RequestContext, UUID),
     FailureResponse,
     VerificationPolicy,
     Any
@@ -93,7 +94,7 @@ object VerificationPolicyEndpoints {
     endpoint.get
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
-        "verification" / "policies" / path[String]("id")
+        "verification" / "policies" / path[UUID]("id")
           .description("Get the verification policy by id")
       )
       .out(jsonBody[VerificationPolicy])
@@ -106,7 +107,7 @@ object VerificationPolicyEndpoints {
       .tag("Verification")
 
   val deleteVerificationPolicyByIdEndpoint: PublicEndpoint[
-    (RequestContext, String),
+    (RequestContext, UUID, Int),
     FailureResponse,
     Unit,
     Any
@@ -114,9 +115,10 @@ object VerificationPolicyEndpoints {
     endpoint.delete
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
-        "verification" / "policies" / path[String]("id")
+        "verification" / "policies" / path[UUID]("id")
           .description("Delete the verification policy by id")
       )
+      .in(query[Int](name = "nonce").description("Nonce of the previous VerificationPolicy"))
       .out(statusCode(StatusCode.Ok))
       .errorOut(basicFailuresAndNotFound)
       .name("deleteVerificationPolicyById")
@@ -138,19 +140,7 @@ object VerificationPolicyEndpoints {
         "verification" / "policies"
           .description("Lookup verification policy by query")
       )
-      .in(
-        query[Option[String]]("name")
-          .and(
-            query[Option[String]]("attributes")
-              .and(
-                query[Option[String]]("issuerDIDs")
-                  .and(
-                    query[Option[String]]("credentialTypes")
-                  )
-              )
-          )
-          .mapTo[VerificationPolicy.Filter]
-      )
+      .in(query[Option[String]]("name").mapTo[VerificationPolicy.Filter])
       .in(
         query[Option[Int]]("offset")
           .and(query[Option[Int]]("limit"))
@@ -162,7 +152,7 @@ object VerificationPolicyEndpoints {
       .name("lookupVerificationPoliciesByQuery")
       .summary("Lookup verification policies by query")
       .description(
-        "Lookup verification policies by `name`, `attributes`, `issuerDIDs`, and `credentialTypes` and control the pagination by `offset` and `limit` parameters"
+        "Lookup verification policies by `name`, and control the pagination by `offset` and `limit` parameters"
       )
       .tag("Verification")
 }

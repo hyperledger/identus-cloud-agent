@@ -13,12 +13,7 @@ import io.iohk.atala.agent.walletapi.model.{
 import io.iohk.atala.agent.walletapi.model.ECCoordinates.*
 import io.iohk.atala.agent.walletapi.model.error.{*, given}
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService.DEFAULT_MASTER_KEY_ID
-import io.iohk.atala.agent.walletapi.storage.{
-  DIDNonSecretStorage,
-  DIDSecretStorage,
-  InMemoryDIDNonSecretStorage,
-  InMemoryDIDSecretStorage
-}
+import io.iohk.atala.agent.walletapi.storage.{DIDNonSecretStorage, DIDSecretStorage}
 import io.iohk.atala.agent.walletapi.util.{
   ManagedDIDTemplateValidator,
   OperationFactory,
@@ -54,6 +49,14 @@ import scala.collection.immutable.ArraySeq
 import io.iohk.atala.mercury.PeerDID
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
+import org.bouncycastle.jce.ECNamedCurveTable
+import org.bouncycastle.jce.provider.BouncyCastleProvider
+
+import java.security.spec.ECPoint
+import java.security.{KeyFactory, PrivateKey as JavaPrivateKey, PublicKey as JavaPublicKey}
+import org.bouncycastle.jce.spec.ECNamedCurveSpec
+import java.security.spec.ECPrivateKeySpec
+import java.security.spec.ECPublicKeySpec
 
 /** A wrapper around Castor's DIDService providing key-management capability. Analogous to the secretAPI in
   * indy-wallet-sdk.
@@ -99,9 +102,64 @@ final class ManagedDIDService private[walletapi] (
     } yield ()
   }
 
+  // FIXME
+  // Instead of returning the privateKey directly, it should provide more secure interface like
+  // {{{ def signWithDID(did, keyId, bytes): IO[?, Array[Byte]] }}}.
+  // For the time being, the purpose of this method is just to disallow SecretStorage to be
+  // used outside of this module.
+  def javaKeyPairWithDID(
+      did: CanonicalPrismDID,
+      keyId: String
+  ): IO[GetKeyError, Option[(JavaPrivateKey, JavaPublicKey)]] = {
+    secretStorage
+      .getKey(did, keyId)
+      .mapError(GetKeyError.WalletStorageError.apply)
+      .flatMap { maybeKeyPair =>
+        maybeKeyPair.fold(ZIO.none) { ecKeyPair =>
+          ZIO
+            .attempt {
+              // TODO: Simplify conversion of ECKeyPair to JDK security classes
+              val ba = ecKeyPair.privateKey.toPaddedByteArray(EllipticCurve.SECP256K1)
+              val keyFactory = KeyFactory.getInstance("EC", new BouncyCastleProvider())
+              val ecParameterSpec = ECNamedCurveTable.getParameterSpec("secp256k1")
+              val ecNamedCurveSpec = ECNamedCurveSpec(
+                ecParameterSpec.getName(),
+                ecParameterSpec.getCurve(),
+                ecParameterSpec.getG(),
+                ecParameterSpec.getN()
+              )
+              val ecPrivateKeySpec = ECPrivateKeySpec(java.math.BigInteger(1, ba), ecNamedCurveSpec)
+              val privateKey = keyFactory.generatePrivate(ecPrivateKeySpec)
+              val bcECPoint = ecParameterSpec
+                .getG()
+                .multiply(privateKey.asInstanceOf[org.bouncycastle.jce.interfaces.ECPrivateKey].getD())
+              val ecPublicKeySpec = ECPublicKeySpec(
+                new ECPoint(
+                  bcECPoint.normalize().getAffineXCoord().toBigInteger(),
+                  bcECPoint.normalize().getAffineYCoord().toBigInteger()
+                ),
+                ecNamedCurveSpec
+              )
+              val publicKey = keyFactory.generatePublic(ecPublicKeySpec)
+              (privateKey, publicKey)
+            }
+            .mapError(GetKeyError.KeyConstructionError.apply)
+            .asSome
+        }
+      }
+  }
+
+  def getManagedDIDState(did: CanonicalPrismDID): IO[GetManagedDIDError, Option[ManagedDIDState]] =
+    for {
+      // state in wallet maybe stale, update it from DLT
+      _ <- computeNewDIDStateFromDLTAndPersist(did)
+      state <- nonSecretStorage.getManagedDIDState(did).mapError(GetManagedDIDError.WalletStorageError.apply)
+    } yield state
+
   def listManagedDID: IO[GetManagedDIDError, Seq[ManagedDIDDetail]] =
     for {
-      _ <- syncManagedDIDState // state in wallet maybe stale, update it from DLT
+      // state in wallet maybe stale, update it from DLT
+      _ <- syncManagedDIDState
       dids <- nonSecretStorage.listManagedDID.mapError(GetManagedDIDError.WalletStorageError.apply)
     } yield dids.toSeq.map { case (did, state) => ManagedDIDDetail(did.asCanonical, state) }
 
@@ -382,11 +440,6 @@ object ManagedDIDService {
   val DEFAULT_MASTER_KEY_ID: String = "master0"
 
   val reservedKeyIds: Set[String] = Set(DEFAULT_MASTER_KEY_ID)
-
-  def inMemoryStorage: URLayer[DIDOperationValidator & DIDService, ManagedDIDService] =
-    (InMemoryDIDNonSecretStorage.layer ++ InMemoryDIDSecretStorage.layer) >>> ZLayer.fromFunction(
-      ManagedDIDService(_, _, _, _)
-    )
 
   val layer: URLayer[DIDOperationValidator & DIDService & DIDSecretStorage & DIDNonSecretStorage, ManagedDIDService] =
     ZLayer.fromFunction(ManagedDIDService(_, _, _, _))

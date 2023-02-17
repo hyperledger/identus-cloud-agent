@@ -158,9 +158,7 @@ trait OASDomainModelHelper {
       schemaId = domain.schemaId,
       validityPeriod = domain.validityPeriod,
       automaticIssuance = domain.automaticIssuance,
-      awaitConfirmation = domain.awaitConfirmation,
       protocolState = domain.protocolState.toString(),
-      publicationState = domain.publicationState.map(_.toString),
       jwtCredential = domain.issueCredentialData.flatMap(issueCredential => {
         issueCredential.attachments.collectFirst { case AttachmentDescriptor(_, _, Base64(jwt), _, _, _, _) =>
           jwt
@@ -189,6 +187,7 @@ trait OASDomainModelHelper {
       state = domain.protocolState.toString,
       createdAt = domain.createdAt.atOffset(ZoneOffset.UTC),
       updatedAt = domain.updatedAt.map(_.atOffset(ZoneOffset.UTC)),
+      role = domain.role.toString,
       invitation = ConnectionInvitation(
         id = UUID.fromString(domain.invitation.id),
         `type` = domain.invitation.`type`,
