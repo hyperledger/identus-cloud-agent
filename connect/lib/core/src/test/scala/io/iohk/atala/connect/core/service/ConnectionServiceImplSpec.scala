@@ -146,7 +146,7 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
             )
             allInviteeRecords <- inviteeSvc.getConnectionRecords()
           } yield {
-            val updatedRecord = maybeInviteeRecord.get
+            val updatedRecord = maybeInviteeRecord
             assertTrue(allInviteeRecords.head == updatedRecord) &&
             assertTrue(updatedRecord.updatedAt.isDefined) &&
             assertTrue(updatedRecord.protocolState == ProtocolState.ConnectionRequestPending) &&
@@ -168,11 +168,11 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
               DidId("did:peer:INVITEE")
             )
             // FIXME: Should the service return an Option while we have dedicated "not found" error for that case !?
-            connectionRequest = maybeAcceptedInvitationRecord.get.connectionRequest.get
+            connectionRequest = maybeAcceptedInvitationRecord.connectionRequest.get
             maybeReceivedRequestConnectionRecord <- inviterSvc.receiveConnectionRequest(connectionRequest)
             allInviterRecords <- inviterSvc.getConnectionRecords()
           } yield {
-            val updatedRecord = maybeReceivedRequestConnectionRecord.get
+            val updatedRecord = maybeReceivedRequestConnectionRecord
             assertTrue(allInviterRecords.head == updatedRecord) &&
             assertTrue(updatedRecord.updatedAt.isDefined) &&
             assertTrue(updatedRecord.protocolState == ProtocolState.ConnectionRequestReceived) &&
@@ -194,15 +194,15 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
               inviteeRecord.id,
               DidId("did:peer:INVITEE")
             )
-            connectionRequest = maybeAcceptedInvitationRecord.get.connectionRequest.get
+            connectionRequest = maybeAcceptedInvitationRecord.connectionRequest.get
             maybeReceivedRequestConnectionRecord <- inviterSvc.receiveConnectionRequest(connectionRequest)
             maybeAcceptedRequestConnectionRecord <- inviterSvc.acceptConnectionRequest(inviterRecord.id)
             allInviterRecords <- inviterSvc.getConnectionRecords()
           } yield {
-            val updatedRecord = maybeAcceptedRequestConnectionRecord.get
+            val updatedRecord = maybeAcceptedRequestConnectionRecord
             assertTrue(allInviterRecords.head == updatedRecord) &&
             assertTrue(
-              updatedRecord.updatedAt.forall(_.isAfter(maybeReceivedRequestConnectionRecord.get.updatedAt.get))
+              updatedRecord.updatedAt.forall(_.isAfter(maybeReceivedRequestConnectionRecord.updatedAt.get))
             ) &&
             assertTrue(updatedRecord.protocolState == ProtocolState.ConnectionResponsePending) &&
             assertTrue(updatedRecord.connectionRequest.isDefined) &&
@@ -223,12 +223,12 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
               inviteeRecord.id,
               DidId("did:peer:INVITEE")
             )
-            connectionRequest = maybeAcceptedInvitationRecord.get.connectionRequest.get
+            connectionRequest = maybeAcceptedInvitationRecord.connectionRequest.get
             _ <- inviteeSvc.markConnectionRequestSent(inviteeRecord.id)
             maybeReceivedRequestConnectionRecord <- inviterSvc.receiveConnectionRequest(connectionRequest)
             maybeAcceptedRequestConnectionRecord <- inviterSvc.acceptConnectionRequest(inviterRecord.id)
             connectionResponseMessage <- ZIO.fromEither(
-              maybeAcceptedRequestConnectionRecord.get.connectionResponse.get.makeMessage.asJson.as[Message]
+              maybeAcceptedRequestConnectionRecord.connectionResponse.get.makeMessage.asJson.as[Message]
             )
             _ <- inviterSvc.markConnectionResponseSent(inviterRecord.id)
             maybeReceivedResponseConnectionRecord <- inviteeSvc.receiveConnectionResponse(
@@ -236,10 +236,10 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
             )
             allInviteeRecords <- inviteeSvc.getConnectionRecords()
           } yield {
-            val updatedRecord = maybeReceivedResponseConnectionRecord.get
+            val updatedRecord = maybeReceivedResponseConnectionRecord
             assertTrue(allInviteeRecords.head == updatedRecord) &&
             assertTrue(
-              updatedRecord.updatedAt.forall(_.isAfter(maybeAcceptedInvitationRecord.get.updatedAt.get))
+              updatedRecord.updatedAt.forall(_.isAfter(maybeAcceptedInvitationRecord.updatedAt.get))
             ) &&
             assertTrue(updatedRecord.protocolState == ProtocolState.ConnectionResponseReceived) &&
             assertTrue(updatedRecord.connectionRequest.isDefined) &&
