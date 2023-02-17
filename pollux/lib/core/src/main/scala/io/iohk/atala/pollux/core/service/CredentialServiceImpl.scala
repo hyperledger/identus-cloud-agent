@@ -191,10 +191,7 @@ private class CredentialServiceImpl(
       record <- credentialRepository
         .getIssueCredentialRecord(record.id)
         .mapError(RepositoryError.apply)
-        .flatMap {
-          case None        => ZIO.fail(RecordIdNotFound(record.id))
-          case Some(value) => ZIO.succeed(value)
-        }
+        .someOrFail(RecordIdNotFound(record.id))
     } yield record
   }
 
@@ -214,10 +211,7 @@ private class CredentialServiceImpl(
       record <- credentialRepository
         .getIssueCredentialRecord(record.id)
         .mapError(RepositoryError.apply)
-        .flatMap {
-          case None        => ZIO.fail(RecordIdNotFound(record.id))
-          case Some(value) => ZIO.succeed(value)
-        }
+        .someOrFail(RecordIdNotFound(record.id))
     } yield record
   }
 
@@ -237,10 +231,7 @@ private class CredentialServiceImpl(
       record <- credentialRepository
         .getIssueCredentialRecord(record.id)
         .mapError(RepositoryError.apply)
-        .flatMap {
-          case None        => ZIO.fail(RecordIdNotFound(record.id))
-          case Some(value) => ZIO.succeed(value)
-        }
+        .someOrFail(RecordIdNotFound(record.id))
     } yield record
   }
 
@@ -447,13 +438,12 @@ private class CredentialServiceImpl(
               .flatMap {
                 case None => ZIO.fail(RecordIdNotFound(id))
                 case Some(record) =>
-                  {
-                    if (record.protocolState == to) (ZIO.unit)
-                    else
-                      ZIO.logError(
-                        s"The CredentialRecord ($id) is expected to be on the ProtocolState '$to' after updating it"
-                      ) // The expectation is for the record to still be on the state we (just) updated to
-                  } *> ZIO.succeed(record)
+                  ZIO
+                    .logError(
+                      s"The CredentialRecord ($id) is expected to be on the ProtocolState '$to' after updating it"
+                    )
+                    .when(record.protocolState != to)
+                    .as(record)
               }
           case n => ZIO.fail(UnexpectedError(s"Invalid row count result: $n"))
         }
