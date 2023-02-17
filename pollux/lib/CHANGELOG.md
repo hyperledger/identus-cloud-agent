@@ -1,3 +1,11 @@
+# [pollux-v0.28.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.28.0...pollux-v0.28.1) (2023-02-17)
+
+
+### Performance Improvements
+
+* **pollux:** Improve CredentialService's API ATL-3225 ([#372](https://github.com/input-output-hk/atala-prism-building-blocks/issues/372)) ([ad5602d](https://github.com/input-output-hk/atala-prism-building-blocks/commit/ad5602dffd909b0d2a2e6652043720ac58f22193))
+* **pollux:** Update to Mercury 0.19.0 ([#355](https://github.com/input-output-hk/atala-prism-building-blocks/issues/355)) ([fb60ca8](https://github.com/input-output-hk/atala-prism-building-blocks/commit/fb60ca8dae120ee641c46e00f073bc868f95177e))
+
 # [pollux-v0.28.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.27.0...pollux-v0.28.0) (2023-02-17)
 
 
