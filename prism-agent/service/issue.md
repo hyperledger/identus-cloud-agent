@@ -18,7 +18,7 @@ PORT=8090 docker-compose -p holder -f infrastructure/local/docker-compose.yml up
 ### Executing the `Issue` flow
 ---
 
-- **Issuer** - Create a DID that will be used for issuing a VC
+- **Issuer** - Create a DID that will be used for issuing a VC with at least 1 `assertionMethod` key
 
 ```bash
 curl --location --request POST 'http://localhost:8080/prism-agent/did-registrar/dids' \
@@ -43,6 +43,28 @@ Replace `DID_REF` by the DID on Prism Agent that should be published
 ```bash
 curl --location --request POST 'http://localhost:8080/prism-agent/did-registrar/dids/{DID_REF}/publications' \
 --header 'Accept: application/json'
+```
+
+- **Holder** - Create a Prism DID to receive a credential
+
+Holder also needs a Prism DID to be used as a VC subject, but it is not required to be published.
+The holder DID must have at least 1 `authentication` key for presenting credentials later in the process.
+
+```bash
+curl --location --request POST 'http://localhost:8090/prism-agent/did-registrar/dids' \
+  --header 'Content-Type: application/json' \
+  --header 'Accept: application/json' \
+  --data-raw '{
+    "documentTemplate": {
+      "publicKeys": [
+        {
+          "id": "my-auth-key",
+          "purpose": "authentication"
+        }
+      ],
+      "services": []
+    }
+  }'
 ```
 
 - **Issuer** - Initiate a new issue credential flow
