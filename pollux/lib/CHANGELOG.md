@@ -1,3 +1,10 @@
+# [pollux-v0.28.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.27.0...pollux-v0.28.0) (2023-02-17)
+
+
+### Features
+
+* **pollux:** check prover DID is the same as VC subject when creating a VP ([#377](https://github.com/input-output-hk/atala-prism-building-blocks/issues/377)) ([253f827](https://github.com/input-output-hk/atala-prism-building-blocks/commit/253f8271e557297a8438e5509542026aa518835f))
+
 # [pollux-v0.27.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.26.0...pollux-v0.27.0) (2023-02-15)
 
 
