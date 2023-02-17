@@ -367,7 +367,7 @@ object Modules {
                   .catchAll { case ex: IOException => ZIO.fail(ex) }
                 // Accept the ConnectionRequest
                 _ <- connectionService
-                  .acceptConnectionRequest(maybeRecord.get.id) // TODO: get
+                  .acceptConnectionRequest(maybeRecord.id)
                   .catchSome { case ConnectionServiceError.RepositoryError(cause) =>
                     ZIO.logError(cause.getMessage()) *>
                       ZIO.fail(cause)
