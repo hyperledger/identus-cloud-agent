@@ -90,6 +90,7 @@ class ConnectionSteps {
                 response.body("invitation.invitationUrl", containsString(acmeInvitation.invitationUrl))
                 response.body("invitation.type", containsString(acmeInvitation.type))
                 response.body("state", containsString("ConnectionRequestPending"))
+                response.body("role", containsString("Invitee"))
             }
         )
         invitee.remember("connectionId", lastResponseObject("", Connection::class).connectionId)
