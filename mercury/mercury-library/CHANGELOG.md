@@ -1,3 +1,10 @@
+# [mercury-v0.19.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.18.0...mercury-v0.19.0) (2023-02-13)
+
+
+### Features
+
+* **mercury:** Support for pleaseAck (needed for ATL-3222) ([#366](https://github.com/input-output-hk/atala-prism-building-blocks/issues/366)) ([a2d9c98](https://github.com/input-output-hk/atala-prism-building-blocks/commit/a2d9c9855390ea77a36943e86cfdec8a3adf0b57))
+
 # [mercury-v0.18.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.17.0...mercury-v0.18.0) (2023-02-07)
 
 

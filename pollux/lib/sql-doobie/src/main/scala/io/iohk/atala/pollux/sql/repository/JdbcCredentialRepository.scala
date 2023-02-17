@@ -23,6 +23,8 @@ import zio.interop.catz.*
 
 import java.time.Instant
 import java.util.UUID
+import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
+import io.iohk.atala.castor.core.model.did.PrismDID
 
 // TODO: replace with actual implementation
 class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepository[Task] {
@@ -68,6 +70,10 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
 
   given inclusionProofGet: Get[MerkleInclusionProof] = Get[String].map(deserializeInclusionProof)
 
+  given prismDIDGet: Get[CanonicalPrismDID] =
+    Get[String].map(s => PrismDID.fromString(s).fold(e => throw RuntimeException(e), _.asCanonical))
+  given prismDIDPut: Put[CanonicalPrismDID] = Put[String].contramap(_.toString)
+
   override def createIssueCredentialRecord(record: IssueCredentialRecord): Task[Int] = {
     val cxnIO = sql"""
         | INSERT INTO public.issue_credential_records(
@@ -86,7 +92,8 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   offer_credential_data,
         |   request_credential_data,
         |   issue_credential_data,
-        |   issued_credential_raw
+        |   issued_credential_raw,
+        |   issuing_did
         | ) values (
         |   ${record.id},
         |   ${record.createdAt},
@@ -103,7 +110,8 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   ${record.offerCredentialData},
         |   ${record.requestCredentialData},
         |   ${record.issueCredentialData},
-        |   ${record.issuedCredentialRaw}
+        |   ${record.issuedCredentialRaw},
+        |   ${record.issuingDID}
         | )
         """.stripMargin.update
 
@@ -133,7 +141,8 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   offer_credential_data,
         |   request_credential_data,
         |   issue_credential_data,
-        |   issued_credential_raw
+        |   issued_credential_raw,
+        |   issuing_did
         | FROM public.issue_credential_records
         """.stripMargin
       .query[IssueCredentialRecord]
@@ -169,10 +178,10 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
             |   offer_credential_data,
             |   request_credential_data,
             |   issue_credential_data,
-            |   issued_credential_raw
+            |   issued_credential_raw,
+            |   issuing_did
             | FROM public.issue_credential_records
             | WHERE $inClauseFragment
-            | LIMIT 50
             """.stripMargin
           .query[IssueCredentialRecord]
           .to[Seq]
@@ -199,7 +208,8 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   offer_credential_data,
         |   request_credential_data,
         |   issue_credential_data,
-        |   issued_credential_raw
+        |   issued_credential_raw,
+        |   issuing_did
         | FROM public.issue_credential_records
         | WHERE id = $recordId
         """.stripMargin
@@ -228,7 +238,8 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   offer_credential_data,
         |   request_credential_data,
         |   issue_credential_data,
-        |   issued_credential_raw
+        |   issued_credential_raw,
+        |   issuing_did
         | FROM public.issue_credential_records
         | WHERE thid = $thid
         """.stripMargin
@@ -272,7 +283,7 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
 
       val cxnIO = sql"""
           | UPDATE public.issue_credential_records as icr
-          | SET 
+          | SET
           |   publication_state = idsStatesAndProofs.publication_state,
           |   merkle_inclusion_proof = idsStatesAndProofs.serializedProof
           | FROM (values ${values.mkString(",")}) as idsStatesAndProofs(id, publication_state, serializedProof)
@@ -352,9 +363,10 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
     val cxnIO = sql"""
         | SELECT
         |   id,
-        |   issued_credential_raw
+        |   issued_credential_raw,
+        |   subject_id
         | FROM public.issue_credential_records
-        | WHERE 
+        | WHERE
         |   issued_credential_raw IS NOT NULL
         |   AND $inClauseFragment
         """.stripMargin

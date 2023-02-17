@@ -367,6 +367,37 @@ object JwtPresentation {
     }
   }
 
+  def validatePresentation(
+      jwt: JWT,
+      domain: String,
+      challenge: String
+  ): Validation[String, Unit] = {
+    val validateJwtPresentation = Validation.fromTry(decodeJwt(jwt)).mapError(_.toString)
+    for {
+      decodeJwtPresentation <- validateJwtPresentation
+      aud <- validateAudience(decodeJwtPresentation, domain)
+      result <- validateNonce(decodeJwtPresentation, Some(challenge))
+    } yield result
+
+  }
+
+  def validateNonce(
+      decodedJwtPresentation: JwtPresentationPayload,
+      nonce: Option[String]
+  ): Validation[String, Unit] = {
+    if (nonce != decodedJwtPresentation.maybeNonce) {
+      Validation.fail(s"Challenge/Nonce dont match nonce=$nonce exp=${decodedJwtPresentation.maybeNonce}")
+    } else Validation.unit
+  }
+  def validateAudience(
+      decodedJwtPresentation: JwtPresentationPayload,
+      domain: String
+  ): Validation[String, Unit] = {
+    if (!decodedJwtPresentation.aud.contains(domain)) {
+      Validation.fail(s"domain/Audience dont match doamin=$domain, exp=${decodedJwtPresentation.aud}")
+    } else Validation.unit
+  }
+
   def verifyDates(jwt: JWT, leeway: TemporalAmount)(implicit clock: Clock): Validation[String, Unit] = {
     val now = clock.instant()
 

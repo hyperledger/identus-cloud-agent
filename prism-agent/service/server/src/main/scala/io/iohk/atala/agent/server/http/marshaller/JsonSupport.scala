@@ -67,20 +67,15 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
       }
     }
   }
-  given RootJsonFormat[CreateIssueCredentialRecordRequest] = jsonFormat6(CreateIssueCredentialRecordRequest.apply)
-  given RootJsonFormat[IssueCredentialRecord] = jsonFormat13(IssueCredentialRecord.apply)
-  given RootJsonFormat[IssueCredentialRecordCollection] = jsonFormat4(IssueCredentialRecordCollection.apply)
-  //
-
-  // Pollux
-  given RootJsonFormat[RevocationStatus] = jsonFormat2(RevocationStatus.apply)
-  given RootJsonFormat[W3CCredentialRevocationRequest] = jsonFormat1(W3CCredentialRevocationRequest.apply)
-  given RootJsonFormat[W3CCredentialRevocationResponse] = jsonFormat2(W3CCredentialRevocationResponse.apply)
-  given RootJsonFormat[W3CCredentialStatus] = jsonFormat2(W3CCredentialStatus.apply)
+  // Issue
+  given RootJsonFormat[CreateIssueCredentialRecordRequest] = jsonFormat7(CreateIssueCredentialRecordRequest.apply)
+  given RootJsonFormat[IssueCredentialRecord] = jsonFormat12(IssueCredentialRecord.apply)
+  given RootJsonFormat[IssueCredentialRecordCollection] = jsonFormat1(IssueCredentialRecordCollection.apply)
 
   // Presentation
+  given RootJsonFormat[Options] = jsonFormat2(Options.apply)
   given RootJsonFormat[ProofRequestAux] = jsonFormat2(ProofRequestAux.apply)
-  given RootJsonFormat[RequestPresentationInput] = jsonFormat2(RequestPresentationInput.apply)
+  given RootJsonFormat[RequestPresentationInput] = jsonFormat3(RequestPresentationInput.apply)
   given RootJsonFormat[RequestPresentationOutput] = jsonFormat1(RequestPresentationOutput.apply)
   given RootJsonFormat[PresentationStatus] = jsonFormat5(PresentationStatus.apply)
   given RootJsonFormat[RequestPresentationAction] = jsonFormat2(RequestPresentationAction.apply)
@@ -89,7 +84,7 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   given RootJsonFormat[CreateConnectionRequest] = jsonFormat1(CreateConnectionRequest.apply)
   given RootJsonFormat[AcceptConnectionInvitationRequest] = jsonFormat1(AcceptConnectionInvitationRequest.apply)
   given RootJsonFormat[ConnectionCollection] = jsonFormat3(ConnectionCollection.apply)
-  given RootJsonFormat[Connection] = jsonFormat10(Connection.apply)
+  given RootJsonFormat[Connection] = jsonFormat11(Connection.apply)
   given RootJsonFormat[ConnectionInvitation] = jsonFormat4(ConnectionInvitation.apply)
 
 }

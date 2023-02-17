@@ -126,7 +126,6 @@ class JdbcConnectionRepository(xa: Transactor[Task]) extends ConnectionRepositor
         |   meta_last_failure
         | FROM public.connection_records
         | WHERE $inClauseFragment
-        | LIMIT 50
         """.stripMargin
           .query[ConnectionRecord]
           .to[Seq]

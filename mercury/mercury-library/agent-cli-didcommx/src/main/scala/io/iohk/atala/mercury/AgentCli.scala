@@ -120,7 +120,7 @@ object AgentCli extends ZIOAppDefault {
       }
       didCommService <- ZIO.service[DidOps]
       msg <- didCommService.unpack(data)
-      outOfBandLoginInvitation = reaOutOfBandLoginInvitation(msg.getMessage)
+      outOfBandLoginInvitation = reaOutOfBandLoginInvitation(msg.message)
       agentService <- ZIO.service[DidAgent]
       reply = outOfBandLoginInvitation.reply(agentService.id)
       _ <- Console.printLine(s"Replying to ${outOfBandLoginInvitation.id} with $reply")
@@ -344,7 +344,7 @@ object AgentCli extends ZIOAppDefault {
       for {
         _ <- ZIO.logInfo("Received new message")
         _ <- ZIO.logTrace(jsonString)
-        msg <- unpack(jsonString).map(_.getMessage)
+        msg <- unpack(jsonString).map(_.message)
         ret <- {
           msg.getType match {
             case s if s == OutOfBandloginReply.piuri =>
