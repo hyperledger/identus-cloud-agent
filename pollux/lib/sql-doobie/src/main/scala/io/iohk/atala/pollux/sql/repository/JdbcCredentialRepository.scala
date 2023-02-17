@@ -23,8 +23,14 @@ import zio.interop.catz.*
 
 import java.time.Instant
 import java.util.UUID
+<<<<<<< Updated upstream
 import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
 import io.iohk.atala.castor.core.model.did.PrismDID
+=======
+import org.postgresql.util.PSQLState
+import java.sql.SQLException
+import io.iohk.atala.pollux.core.model.error.CredentialRepositoryError
+>>>>>>> Stashed changes
 
 // TODO: replace with actual implementation
 class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepository[Task] {
@@ -47,8 +53,9 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
   given uuidGet: Get[UUID] = Get[String].map(UUID.fromString)
   given uuidPut: Put[UUID] = Put[String].contramap(_.toString())
 
-  given instantGet: Get[Instant] = Get[Long].map(Instant.ofEpochSecond)
-  given instantPut: Put[Instant] = Put[Long].contramap(_.getEpochSecond())
+  // given instantGet: Get[Instant] = Get[Long].map(Instant.ofEpochSecond)
+  // given instantPut: Put[Instant] = Put[Long].contramap(_.getEpochSecond())
+  import doobie.postgres.implicits.JavaTimeInstantMeta
 
   given protocolStateGet: Get[ProtocolState] = Get[String].map(ProtocolState.valueOf)
   given protocolStatePut: Put[ProtocolState] = Put[String].contramap(_.toString)
@@ -93,7 +100,13 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   request_credential_data,
         |   issue_credential_data,
         |   issued_credential_raw,
+<<<<<<< Updated upstream
         |   issuing_did
+=======
+        |   meta_retries,
+        |   meta_next_retry,
+        |   meta_last_failure
+>>>>>>> Stashed changes
         | ) values (
         |   ${record.id},
         |   ${record.createdAt},
@@ -111,14 +124,20 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   ${record.requestCredentialData},
         |   ${record.issueCredentialData},
         |   ${record.issuedCredentialRaw},
+<<<<<<< Updated upstream
         |   ${record.issuingDID}
+=======
+        |   ${record.metaRetries},
+        |   ${record.metaNextRetry},
+        |   ${record.metaLastFailure}
+>>>>>>> Stashed changes
         | )
         """.stripMargin.update
 
     cxnIO.run
       .transact(xa)
       .mapError {
-        case e: PSQLException => UniqueConstraintViolation(e.getMessage())
+        case e: PSQLException => CredentialRepositoryError.fromPSQLException(e.getSQLState, e.getMessage)
         case e                => e
       }
   }
@@ -142,7 +161,13 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   request_credential_data,
         |   issue_credential_data,
         |   issued_credential_raw,
+<<<<<<< Updated upstream
         |   issuing_did
+=======
+        |   meta_retries,
+        |   meta_next_retry,
+        |   meta_last_failure
+>>>>>>> Stashed changes
         | FROM public.issue_credential_records
         """.stripMargin
       .query[IssueCredentialRecord]
@@ -179,7 +204,13 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
             |   request_credential_data,
             |   issue_credential_data,
             |   issued_credential_raw,
+<<<<<<< Updated upstream
             |   issuing_did
+=======
+            |   meta_retries,
+            |   meta_next_retry,
+            |   meta_last_failure
+>>>>>>> Stashed changes
             | FROM public.issue_credential_records
             | WHERE $inClauseFragment
             """.stripMargin
@@ -209,7 +240,13 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   request_credential_data,
         |   issue_credential_data,
         |   issued_credential_raw,
+<<<<<<< Updated upstream
         |   issuing_did
+=======
+        |   meta_retries,
+        |   meta_next_retry,
+        |   meta_last_failure
+>>>>>>> Stashed changes
         | FROM public.issue_credential_records
         | WHERE id = $recordId
         """.stripMargin
@@ -239,7 +276,13 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   request_credential_data,
         |   issue_credential_data,
         |   issued_credential_raw,
+<<<<<<< Updated upstream
         |   issuing_did
+=======
+        |   meta_retries,
+        |   meta_next_retry,
+        |   meta_last_failure
+>>>>>>> Stashed changes
         | FROM public.issue_credential_records
         | WHERE thid = $thid
         """.stripMargin
@@ -408,6 +451,23 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
 
     cxnIO.run
       .transact(xa)
+  }
+
+  def updateAfterFail(
+      recordId: UUID,
+      failReason: Option[String]
+  ): Task[Int] = {
+    val cxnIO = sql"""
+        | UPDATE public.issue_credential_records
+        | SET
+        |   meta_retries = meta_retries - 1,
+        |   meta_next_retry = ${Instant.now().plusSeconds(60)},
+        |   meta_last_failure = ${failReason}
+        | WHERE
+        |   id = $recordId
+        """.stripMargin.update
+    // FIXME   meta_next_retry = ${if (record.metaRetries - 1 == 0) None else Some(Instant.now().plusSeconds(60))} // TODO exponention time
+    cxnIO.run.transact(xa)
   }
 }
 

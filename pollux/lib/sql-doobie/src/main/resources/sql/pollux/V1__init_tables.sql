@@ -15,8 +15,8 @@
 
 CREATE TABLE public.issue_credential_records(
   "id" VARCHAR(36) NOT NULL PRIMARY KEY,
-  "created_at" BIGINT NOT NULL,
-  "updated_at" BIGINT,
+  "created_at" TIMESTAMP NOT NULL,
+  "updated_at" TIMESTAMP,
   "thid" VARCHAR(36) NOT NULL,
   "schema_id" VARCHAR(36),
   "role"  VARCHAR(50) NOT NULL,
@@ -29,13 +29,17 @@ CREATE TABLE public.issue_credential_records(
   "offer_credential_data" TEXT,
   "request_credential_data" TEXT,
   "issue_credential_data" TEXT,
-  "issued_credential_raw" TEXT  
+  "issued_credential_raw" TEXT,
+  "meta_retries" BIGINT NOT NULL,
+  "meta_next_retry" TIMESTAMP,
+  "meta_last_failure" TEXT,
+  CONSTRAINT unique_thid UNIQUE (thid)
 );
 
 CREATE TABLE public.presentation_records(
   "id" VARCHAR(36) NOT NULL PRIMARY KEY,
-  "created_at" BIGINT NOT NULL,
-  "updated_at" BIGINT,
+  "created_at" TIMESTAMP NOT NULL,
+  "updated_at" TIMESTAMP,
   "thid" VARCHAR(36) NOT NULL,
   "schema_id" VARCHAR(36),
   "connection_id" VARCHAR(36),
@@ -44,5 +48,6 @@ CREATE TABLE public.presentation_records(
   "protocol_state" VARCHAR(50) NOT NULL,
   "request_presentation_data" TEXT,
   "propose_presentation_data" TEXT,
-  "presentation_data" TEXT
+  "presentation_data" TEXT,
+  "credentials_to_use" TEXT[] NULL -- Include the credentials_to_use to create a verifiable presentation 
 );

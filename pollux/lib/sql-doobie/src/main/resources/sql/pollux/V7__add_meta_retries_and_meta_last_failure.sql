@@ -1,0 +1,4 @@
+-- ALTER TABLE public.issue_credential_records
+-- ADD meta_retries BIGINT NOT NULL DEFAULT '3',
+-- ADD meta_next_retry TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- ADD meta_last_failure TEXT;

@@ -195,6 +195,31 @@ class CredentialRepositoryInMemory(storeRef: Ref[Map[UUID, IssueCredentialRecord
       idsStatesAndProofs: Seq[(UUID, PublicationState, MerkleInclusionProof)]
   ): Task[Int] = ???
 
+  def updateAfterFail(
+      recordId: UUID,
+      failReason: Option[String]
+  ): Task[Int] = for {
+    maybeRecord <- getIssueCredentialRecord(recordId)
+    count <- maybeRecord
+      .map(record =>
+        for {
+          _ <- storeRef.update(r =>
+            r.updated(
+              recordId,
+              record.copy(
+                metaRetries = record.metaRetries - 1,
+                metaNextRetry =
+                  if (record.metaRetries - 1 == 0) None
+                  else Some(Instant.now().plusSeconds(60)), // TODO exponention time
+                metaLastFailure = failReason
+              )
+            )
+          )
+        } yield 1
+      )
+      .getOrElse(ZIO.succeed(0))
+  } yield count
+
 }
 
 object CredentialRepositoryInMemory {

@@ -27,7 +27,13 @@ final case class IssueCredentialRecord(
     requestCredentialData: Option[RequestCredential],
     issueCredentialData: Option[IssueCredential],
     issuedCredentialRaw: Option[String],
+<<<<<<< Updated upstream
     issuingDID: Option[CanonicalPrismDID]
+=======
+    metaRetries: Int,
+    metaNextRetry: Option[Instant],
+    metaLastFailure: Option[String]
+>>>>>>> Stashed changes
 )
 final case class ValidIssuedCredentialRecord(
     id: UUID,

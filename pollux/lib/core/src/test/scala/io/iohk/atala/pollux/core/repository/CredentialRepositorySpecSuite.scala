@@ -21,6 +21,7 @@ import java.util.UUID
 import io.iohk.atala.castor.core.model.did.PrismDID
 
 object CredentialRepositorySpecSuite {
+  val maxRetries = 2
 
   private def issueCredentialRecord = IssueCredentialRecord(
     id = UUID.randomUUID,
@@ -39,7 +40,13 @@ object CredentialRepositorySpecSuite {
     requestCredentialData = None,
     issueCredentialData = None,
     issuedCredentialRaw = None,
+<<<<<<< Updated upstream
     issuingDID = None
+=======
+    metaRetries = maxRetries,
+    metaNextRetry = Some(Instant.now()),
+    metaLastFailure = None
+>>>>>>> Stashed changes
   )
 
   private def requestCredential = RequestCredential(
