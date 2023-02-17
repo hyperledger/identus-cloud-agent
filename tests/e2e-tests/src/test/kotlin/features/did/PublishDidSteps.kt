@@ -22,7 +22,7 @@ class PublishDidSteps {
     @Given("{actor} creates unpublished DID")
     fun acmeCreatesUnpublishedDid(acme: Actor) {
         val publicKeys = listOf(PublicKey("key1", Purpose.AUTHENTICATION))
-        val services = listOf(Service("https://foo.bar.com", "MediatorService", listOf("https://foo.bar.com")))
+        val services = listOf(Service("https://foo.bar.com", "LinkedDomains", listOf("https://foo.bar.com")))
         val documentTemplate = DocumentTemplate(publicKeys, services)
         acme.attemptsTo(
             Post.to("/did-registrar/dids")
