@@ -31,7 +31,8 @@ final case class IssueCredentialRecord(
 )
 final case class ValidIssuedCredentialRecord(
     id: UUID,
-    issuedCredentialRaw: Option[String]
+    issuedCredentialRaw: Option[String],
+    subjectId: String
 )
 
 object IssueCredentialRecord {

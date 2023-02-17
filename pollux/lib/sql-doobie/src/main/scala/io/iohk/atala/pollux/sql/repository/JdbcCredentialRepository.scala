@@ -363,7 +363,8 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
     val cxnIO = sql"""
         | SELECT
         |   id,
-        |   issued_credential_raw
+        |   issued_credential_raw,
+        |   subject_id
         | FROM public.issue_credential_records
         | WHERE
         |   issued_credential_raw IS NOT NULL
