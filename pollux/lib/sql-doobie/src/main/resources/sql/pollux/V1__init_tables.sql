@@ -50,5 +50,5 @@ CREATE TABLE public.presentation_records(
   "request_presentation_data" TEXT,
   "propose_presentation_data" TEXT,
   "presentation_data" TEXT,
-  "credentials_to_use" TEXT[] NULL -- Include the credentials_to_use to create a verifiable presentation 
+  "credentials_to_use" TEXT[] NULL
 );
