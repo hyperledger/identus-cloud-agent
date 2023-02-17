@@ -37,6 +37,7 @@ class ConnectionSteps {
                 response.body("invitation", notNullValue())
                 response.body("label", containsString(connectionLabel))
                 response.body("state", containsString("InvitationGenerated"))
+                response.body("role", containsString("Inviter"))
             }
         )
         // Acme remembers invitation URL to send it out of band to Bob
