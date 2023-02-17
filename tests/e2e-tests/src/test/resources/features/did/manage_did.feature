@@ -28,8 +28,8 @@ Feature: Manage DID
     Then He sees the request has failed with error status <error>
     Examples:
       | field                                           | value  | error |
-      | documentTemplate.publicKeys[0].id               | @      | 500   |
+      | documentTemplate.publicKeys[0].id               | @      | 422   |
       | documentTemplate.publicKeys[0].purpose          | potato | 422   |
-      | documentTemplate.services[0].id                 | @      | 200   |
+      | documentTemplate.services[0].id                 | @      | 422   |
       | documentTemplate.services[0].type               | potato | 422   |
-      | documentTemplate.services[0].serviceEndpoint[0] | potato | 200   |
+      | documentTemplate.services[0].serviceEndpoint[0] | potato | 422   |
