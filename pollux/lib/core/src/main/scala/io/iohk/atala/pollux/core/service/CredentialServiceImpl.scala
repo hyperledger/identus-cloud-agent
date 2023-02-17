@@ -109,13 +109,10 @@ private class CredentialServiceImpl(
           requestCredentialData = None,
           issueCredentialData = None,
           issuedCredentialRaw = None,
-<<<<<<< Updated upstream
-          issuingDID = issuingDID
-=======
+          issuingDID = issuingDID,
           metaRetries = maxRetries,
           metaNextRetry = Some(Instant.now()),
-          metaLastFailure = None
->>>>>>> Stashed changes
+          metaLastFailure = None,
         )
       )
       count <- credentialRepository
@@ -171,13 +168,10 @@ private class CredentialServiceImpl(
           requestCredentialData = None,
           issueCredentialData = None,
           issuedCredentialRaw = None,
-<<<<<<< Updated upstream
-          issuingDID = None
-=======
+          issuingDID = None,
           metaRetries = maxRetries,
           metaNextRetry = Some(Instant.now()),
-          metaLastFailure = None
->>>>>>> Stashed changes
+          metaLastFailure = None,
         )
       )
       count <- credentialRepository

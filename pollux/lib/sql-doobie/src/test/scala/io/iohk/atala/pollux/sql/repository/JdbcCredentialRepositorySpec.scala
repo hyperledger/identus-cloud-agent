@@ -61,6 +61,7 @@ object JdbcCredentialRepositorySpec extends ZIOSpecDefault {
     requestCredentialData = None,
     issueCredentialData = None,
     issuedCredentialRaw = None,
+    issuingDID = None,
     metaRetries = maxRetries,
     metaNextRetry = Some(Instant.now()),
     metaLastFailure = None

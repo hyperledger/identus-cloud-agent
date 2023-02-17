@@ -10,8 +10,10 @@ import io.circe.syntax._
 import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
 import io.iohk.atala.mercury.protocol.issuecredential.OfferCredential
 import io.iohk.atala.mercury.protocol.issuecredential.RequestCredential
+import io.iohk.atala.castor.core.model.did._
+import io.iohk.atala.pollux.core.model._
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord.ProtocolState
-import io.iohk.atala.pollux.core.model.*
+import io.iohk.atala.pollux.core.model.error.CredentialRepositoryError
 import io.iohk.atala.pollux.core.model.error.CredentialRepositoryError._
 import io.iohk.atala.pollux.core.repository.CredentialRepository
 import io.iohk.atala.pollux.sql.model.JWTCredentialRow
@@ -23,14 +25,9 @@ import zio.interop.catz.*
 
 import java.time.Instant
 import java.util.UUID
-<<<<<<< Updated upstream
-import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
-import io.iohk.atala.castor.core.model.did.PrismDID
-=======
+
 import org.postgresql.util.PSQLState
 import java.sql.SQLException
-import io.iohk.atala.pollux.core.model.error.CredentialRepositoryError
->>>>>>> Stashed changes
 
 // TODO: replace with actual implementation
 class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepository[Task] {
@@ -100,13 +97,10 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   request_credential_data,
         |   issue_credential_data,
         |   issued_credential_raw,
-<<<<<<< Updated upstream
-        |   issuing_did
-=======
+        |   issuing_did,
         |   meta_retries,
         |   meta_next_retry,
         |   meta_last_failure
->>>>>>> Stashed changes
         | ) values (
         |   ${record.id},
         |   ${record.createdAt},
@@ -124,13 +118,10 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   ${record.requestCredentialData},
         |   ${record.issueCredentialData},
         |   ${record.issuedCredentialRaw},
-<<<<<<< Updated upstream
-        |   ${record.issuingDID}
-=======
+        |   ${record.issuingDID},
         |   ${record.metaRetries},
         |   ${record.metaNextRetry},
         |   ${record.metaLastFailure}
->>>>>>> Stashed changes
         | )
         """.stripMargin.update
 
@@ -161,13 +152,10 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   request_credential_data,
         |   issue_credential_data,
         |   issued_credential_raw,
-<<<<<<< Updated upstream
-        |   issuing_did
-=======
+        |   issuing_did,
         |   meta_retries,
         |   meta_next_retry,
         |   meta_last_failure
->>>>>>> Stashed changes
         | FROM public.issue_credential_records
         """.stripMargin
       .query[IssueCredentialRecord]
@@ -204,13 +192,10 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
             |   request_credential_data,
             |   issue_credential_data,
             |   issued_credential_raw,
-<<<<<<< Updated upstream
-            |   issuing_did
-=======
+            |   issuing_did,
             |   meta_retries,
             |   meta_next_retry,
             |   meta_last_failure
->>>>>>> Stashed changes
             | FROM public.issue_credential_records
             | WHERE $inClauseFragment
             """.stripMargin
@@ -240,13 +225,10 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   request_credential_data,
         |   issue_credential_data,
         |   issued_credential_raw,
-<<<<<<< Updated upstream
-        |   issuing_did
-=======
+        |   issuing_did,
         |   meta_retries,
         |   meta_next_retry,
         |   meta_last_failure
->>>>>>> Stashed changes
         | FROM public.issue_credential_records
         | WHERE id = $recordId
         """.stripMargin
@@ -276,13 +258,10 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   request_credential_data,
         |   issue_credential_data,
         |   issued_credential_raw,
-<<<<<<< Updated upstream
-        |   issuing_did
-=======
+        |   issuing_did,
         |   meta_retries,
         |   meta_next_retry,
         |   meta_last_failure
->>>>>>> Stashed changes
         | FROM public.issue_credential_records
         | WHERE thid = $thid
         """.stripMargin

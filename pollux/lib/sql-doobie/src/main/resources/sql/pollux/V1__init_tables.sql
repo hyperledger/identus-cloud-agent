@@ -30,6 +30,7 @@ CREATE TABLE public.issue_credential_records(
   "request_credential_data" TEXT,
   "issue_credential_data" TEXT,
   "issued_credential_raw" TEXT,
+  "issuing_did" TEXT,
   "meta_retries" BIGINT NOT NULL,
   "meta_next_retry" TIMESTAMP,
   "meta_last_failure" TEXT,

@@ -40,13 +40,10 @@ object CredentialRepositorySpecSuite {
     requestCredentialData = None,
     issueCredentialData = None,
     issuedCredentialRaw = None,
-<<<<<<< Updated upstream
-    issuingDID = None
-=======
+    issuingDID = None,
     metaRetries = maxRetries,
     metaNextRetry = Some(Instant.now()),
-    metaLastFailure = None
->>>>>>> Stashed changes
+    metaLastFailure = None,
   )
 
   private def requestCredential = RequestCredential(
