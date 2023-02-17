@@ -34,6 +34,9 @@ import java.security.SecureRandom
 import java.security.spec.ECGenParameterSpec
 import java.time.Instant
 import java.util.UUID
+import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
+import io.iohk.atala.mercury.model.AttachmentDescriptor
+import io.iohk.atala.pollux.core.model.CredentialOfferAttachment
 
 object CredentialServiceImpl {
   val layer: URLayer[IrisServiceStub & CredentialRepository[Task], CredentialService] =
@@ -67,18 +70,26 @@ private class CredentialServiceImpl(
   }
 
   override def createIssueCredentialRecord(
-      pairwiseDID: DidId,
+      pairwiseIssuerDID: DidId,
+      pairwiseHolderDID: DidId,
       thid: UUID,
       subjectId: String,
       schemaId: Option[String],
       claims: Map[String, String],
       validityPeriod: Option[Double],
       automaticIssuance: Option[Boolean],
-      awaitConfirmation: Option[Boolean]
+      awaitConfirmation: Option[Boolean],
+      issuingDID: Option[CanonicalPrismDID]
   ): IO[CredentialServiceError, IssueCredentialRecord] = {
     for {
       _ <- if (DidValidator.supportedDid(subjectId)) ZIO.unit else ZIO.fail(UnsupportedDidFormat(subjectId))
-      offer <- ZIO.succeed(createDidCommOfferCredential(pairwiseDID, claims, thid, subjectId))
+      offer = createDidCommOfferCredential(
+        pairwiseIssuerDID = pairwiseIssuerDID,
+        pairwiseHolderDID = pairwiseHolderDID,
+        claims = claims,
+        thid = thid,
+        subjectId = subjectId
+      )
       record <- ZIO.succeed(
         IssueCredentialRecord(
           id = UUID.randomUUID(),
@@ -96,7 +107,8 @@ private class CredentialServiceImpl(
           offerCredentialData = Some(offer),
           requestCredentialData = None,
           issueCredentialData = None,
-          issuedCredentialRaw = None
+          issuedCredentialRaw = None,
+          issuingDID = issuingDID
         )
       )
       count <- credentialRepository
@@ -123,6 +135,17 @@ private class CredentialServiceImpl(
       offer: OfferCredential
   ): IO[CredentialServiceError, IssueCredentialRecord] = {
     for {
+      // TODO: align with the standard (ATL-3507)
+      offerAttachment <- offer.attachments.headOption
+        .map(_.data.asJson)
+        .fold(ZIO.fail(CredentialServiceError.UnexpectedError("An attachment is expected in CredentialOffer"))) {
+          json =>
+            ZIO
+              .fromTry(json.hcursor.downField("json").as[CredentialOfferAttachment].toTry)
+              .mapError(e =>
+                CredentialServiceError.UnexpectedError(s"Unexpected CredentialOffer attachment format: ${e.toString()}")
+              )
+        }
       record <- ZIO.succeed(
         IssueCredentialRecord(
           id = UUID.randomUUID(),
@@ -131,7 +154,7 @@ private class CredentialServiceImpl(
           thid = UUID.fromString(offer.thid.getOrElse(offer.id)),
           schemaId = None,
           role = Role.Holder,
-          subjectId = offer.to.value,
+          subjectId = offerAttachment.subjectId,
           validityPeriod = None,
           automaticIssuance = None,
           awaitConfirmation = None,
@@ -140,7 +163,8 @@ private class CredentialServiceImpl(
           offerCredentialData = Some(offer),
           requestCredentialData = None,
           issueCredentialData = None,
-          issuedCredentialRaw = None
+          issuedCredentialRaw = None,
+          issuingDID = None
         )
       )
       count <- credentialRepository
@@ -337,7 +361,8 @@ private class CredentialServiceImpl(
   }
 
   private[this] def createDidCommOfferCredential(
-      pairwiseDID: DidId,
+      pairwiseIssuerDID: DidId,
+      pairwiseHolderDID: DidId,
       claims: Map[String, String],
       thid: UUID,
       subjectId: String
@@ -348,9 +373,14 @@ private class CredentialServiceImpl(
 
     OfferCredential(
       body = body,
-      attachments = Seq(),
-      from = pairwiseDID,
-      to = DidId(subjectId),
+      // TODO: align with the standard (ATL-3507)
+      attachments = Seq(
+        AttachmentDescriptor.buildJsonAttachment(
+          payload = CredentialOfferAttachment(subjectId = subjectId)
+        )
+      ),
+      from = pairwiseIssuerDID,
+      to = pairwiseHolderDID,
       thid = Some(thid.toString())
     )
   }

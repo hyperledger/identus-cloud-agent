@@ -8,6 +8,8 @@ import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
 import IssueCredentialRecord._
 import java.time.Instant
 import io.iohk.atala.pollux.vc.jwt.JwtCredential
+import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
+
 final case class IssueCredentialRecord(
     id: UUID,
     createdAt: Instant,
@@ -24,11 +26,13 @@ final case class IssueCredentialRecord(
     offerCredentialData: Option[OfferCredential],
     requestCredentialData: Option[RequestCredential],
     issueCredentialData: Option[IssueCredential],
-    issuedCredentialRaw: Option[String]
+    issuedCredentialRaw: Option[String],
+    issuingDID: Option[CanonicalPrismDID]
 )
 final case class ValidIssuedCredentialRecord(
     id: UUID,
-    issuedCredentialRaw: Option[String]
+    issuedCredentialRaw: Option[String],
+    subjectId: String
 )
 
 object IssueCredentialRecord {
