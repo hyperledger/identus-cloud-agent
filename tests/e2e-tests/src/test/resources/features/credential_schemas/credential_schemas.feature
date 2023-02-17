@@ -19,6 +19,10 @@ Feature: Credential schemas
       | id         | -1    | 400    |
       | attributes | null  | 400    |
 
+
+  @skip
+  Scenario: Schema creation with identical name should fail
+
   @skip @bug
   Scenario: Schema creation with identical id should fail
     When Acme creates a new schema with some id
