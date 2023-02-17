@@ -200,7 +200,7 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
           assertTrue(offerAcceptedRecord.offerCredentialData.isDefined) &&
           assertTrue(offerAcceptedRecord.offerCredentialData.get.from == offer.from) &&
           assertTrue(offerAcceptedRecord.offerCredentialData.get.to == offer.to) &&
-          assertTrue(offerAcceptedRecord.offerCredentialData.get.attachments.isEmpty) &&
+          assertTrue(offerAcceptedRecord.offerCredentialData.get.attachments == offer.attachments) &&
           assertTrue(offerAcceptedRecord.offerCredentialData.get.thid == offer.thid) &&
           assertTrue(offerAcceptedRecord.offerCredentialData.get.body.comment.isEmpty) &&
           assertTrue(offerAcceptedRecord.offerCredentialData.get.body.goal_code.contains("Offer Credential")) &&
