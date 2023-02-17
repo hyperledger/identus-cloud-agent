@@ -12,7 +12,7 @@ import io.iohk.atala.mercury.model.DidId
 import scala.collection.immutable.ArraySeq
 
 /** A simple single-user DID key storage */
-trait DIDSecretStorage {
+private[walletapi] trait DIDSecretStorage {
 
   /** Returns a list of keys */
   def listKeys(did: PrismDID): Task[Seq[(String, ArraySeq[Byte], ECKeyPair)]]

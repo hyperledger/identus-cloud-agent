@@ -1,3 +1,17 @@
+# [prism-agent-v0.40.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.39.0...prism-agent-v0.40.0) (2023-02-16)
+
+
+### Features
+
+* **prism-agent:** ATL-3554 clean-up OAS and remove unused endpoints and definitions ([#376](https://github.com/input-output-hk/atala-prism-building-blocks/issues/376)) ([146cd52](https://github.com/input-output-hk/atala-prism-building-blocks/commit/146cd52062c712de30c9862c32cba73ebe213a89))
+
+# [prism-agent-v0.39.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.38.0...prism-agent-v0.39.0) (2023-02-15)
+
+
+### Features
+
+* **prism-agent:** issue credential to Prism DID holder by Prism DID issuer ([#373](https://github.com/input-output-hk/atala-prism-building-blocks/issues/373)) ([1c1a171](https://github.com/input-output-hk/atala-prism-building-blocks/commit/1c1a171d1ba983a9c93644ded4feafe0ed6e5294))
+
 # [prism-agent-v0.38.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.37.0...prism-agent-v0.38.0) (2023-02-13)
 
 

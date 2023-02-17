@@ -8,7 +8,8 @@ object Dependencies {
     val prismSdk = "v1.4.1" // scala-steward:off
     val iris = "0.1.0"
     val shared = "0.2.0"
-    val mercury = "0.18.0"
+    val mercury = "0.19.0"
+    val castor = "0.8.0"
     val flyway = "9.8.3"
     val testContainersScalaPostgresql = "0.40.11"
     val quill = "4.6.0"
@@ -50,6 +51,7 @@ object Dependencies {
 
   private lazy val shared = "io.iohk.atala" % "shared" % Versions.shared
   private lazy val irisClient = "io.iohk.atala" %% "iris-client" % Versions.iris
+  private lazy val castorCore = "io.iohk.atala" %% "castor-core" % Versions.castor
 
   private lazy val mercuryProtocolIssueCredential =
     "io.iohk.atala" %% "mercury-protocol-issue-credential" % Versions.mercury
@@ -81,7 +83,7 @@ object Dependencies {
 
   // Project Dependencies
   lazy val coreDependencies: Seq[ModuleID] =
-    baseDependencies ++ Seq(irisClient) ++ Seq(
+    baseDependencies ++ Seq(irisClient, castorCore) ++ Seq(
       mercuryProtocolIssueCredential,
       mercuryProtocolPresentProof,
       mercuryResolver

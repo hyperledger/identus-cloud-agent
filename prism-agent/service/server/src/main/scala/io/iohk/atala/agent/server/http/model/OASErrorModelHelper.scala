@@ -27,15 +27,20 @@ trait OASErrorModelHelper {
   extension [E](e: HttpServiceError[E]) {
     def toOAS(using te: ToErrorResponse[E]): ErrorResponse = {
       e match
-        case HttpServiceError.InvalidPayload(msg) =>
-          ErrorResponse(
-            `type` = "error-type",
-            title = "error-title",
-            status = 422,
-            detail = Some(msg),
-            instance = "error-instance"
-          )
+        case e: HttpServiceError.InvalidPayload  => e.toOAS
         case HttpServiceError.DomainError(cause) => te.toErrorResponse(cause)
+    }
+  }
+
+  extension (e: HttpServiceError.InvalidPayload) {
+    def toOAS: ErrorResponse = {
+      ErrorResponse(
+        `type` = "InvalidPayload",
+        title = "error-title",
+        status = 422,
+        detail = Some(e.msg),
+        instance = "error-instance"
+      )
     }
   }
 

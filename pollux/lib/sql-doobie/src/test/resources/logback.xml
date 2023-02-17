@@ -13,7 +13,11 @@
     <logger name="io.getquill" level="OFF"/>
     <logger name="com.zaxxer.hikari" level="OFF"/>
 
-    <root level="INFO">
+    <!--
+    INFO level is too noisy because of flyway migration log when running "sbt test".
+    If root level set to INFO, we should also set flyway logLevel to WARN
+    -->
+    <root level="WARN">
         <appender-ref ref="ASYNCSTDOUT"/>
     </root>
 

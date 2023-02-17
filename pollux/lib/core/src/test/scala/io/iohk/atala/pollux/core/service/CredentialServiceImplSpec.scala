@@ -20,6 +20,9 @@ import zio.*
 import zio.test.*
 
 import java.util.UUID
+import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
+import io.iohk.atala.mercury.model.AttachmentDescriptor
+import io.iohk.atala.pollux.core.model.CredentialOfferAttachment
 
 object CredentialServiceImplSpec extends ZIOSpecDefault {
 
@@ -40,11 +43,13 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
         ) { (thid, schemaId, validityPeriod, automaticIssuance, awaitConfirmation) =>
           for {
             svc <- ZIO.service[CredentialService]
-            did = DidId("did:prism:INVITER")
+            pairwiseIssuerDid = DidId("did:peer:INVITER")
+            pairwiseHolderDid = DidId("did:peer:HOLDER")
             subjectId = "did:prism:HOLDER"
             record <- svc.createRecord(
               thid = thid,
-              did = did,
+              pairwiseIssuerDID = pairwiseIssuerDid,
+              pairwiseHolderDID = pairwiseHolderDid,
               subjectId = subjectId,
               schemaId = schemaId,
               validityPeriod = validityPeriod,
@@ -63,9 +68,10 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
             assertTrue(record.protocolState == ProtocolState.OfferPending) &&
             assertTrue(record.publicationState.isEmpty) &&
             assertTrue(record.offerCredentialData.isDefined) &&
-            assertTrue(record.offerCredentialData.get.from == did) &&
-            assertTrue(record.offerCredentialData.get.to == DidId(subjectId)) &&
-            assertTrue(record.offerCredentialData.get.attachments.isEmpty) &&
+            assertTrue(record.offerCredentialData.get.from == pairwiseIssuerDid) &&
+            assertTrue(record.offerCredentialData.get.to == pairwiseHolderDid) &&
+            // FIXME: update the assertion when when CredentialOffer attachment is realized
+            // assertTrue(record.offerCredentialData.get.attachments.isEmpty) &&
             assertTrue(record.offerCredentialData.get.thid.contains(thid.toString)) &&
             assertTrue(record.offerCredentialData.get.body.comment.isEmpty) &&
             assertTrue(record.offerCredentialData.get.body.goal_code.contains("Offer Credential")) &&
@@ -88,7 +94,7 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
           svc <- ZIO.service[CredentialService]
           did = DidId("did:prism:INVITER")
           subjectId = "did:unsupported:HOLDER"
-          record <- svc.createRecord(did = did, subjectId = subjectId).exit
+          record <- svc.createRecord(pairwiseIssuerDID = did, subjectId = subjectId).exit
         } yield {
           assertTrue(record match
             case Exit.Failure(cause: Cause.Fail[_]) if cause.value.isInstanceOf[UnsupportedDidFormat] => true
@@ -150,13 +156,14 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
       test("receiveCredentialOffer successfully creates a record") {
         for {
           holderSvc <- ZIO.service[CredentialService].provideLayer(credentialServiceLayer)
-          offer = offerCredential()
+          subjectId = "did:prism:subject"
+          offer = offerCredential(subjectId = subjectId)
           holderRecord <- holderSvc.receiveCredentialOffer(offer)
         } yield {
           assertTrue(holderRecord.thid.toString == offer.thid.get) &&
           assertTrue(holderRecord.updatedAt.isEmpty) &&
           assertTrue(holderRecord.schemaId.isEmpty) &&
-          assertTrue(holderRecord.subjectId == offer.to.value) &&
+          assertTrue(holderRecord.subjectId == subjectId) &&
           assertTrue(holderRecord.validityPeriod.isEmpty) &&
           assertTrue(holderRecord.automaticIssuance.isEmpty) &&
           assertTrue(holderRecord.awaitConfirmation.isEmpty) &&
@@ -388,11 +395,18 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
     ).provideLayer(credentialServiceLayer)
   }
 
-  private[this] def offerCredential(thid: Option[UUID] = Some(UUID.randomUUID())) = OfferCredential(
+  private[this] def offerCredential(
+      thid: Option[UUID] = Some(UUID.randomUUID()),
+      subjectId: String = "did:prism:subject"
+  ) = OfferCredential(
     from = DidId("did:prism:issuer"),
     to = DidId("did:prism:holder"),
     thid = thid.map(_.toString),
-    attachments = Nil,
+    attachments = Seq(
+      AttachmentDescriptor.buildJsonAttachment(
+        payload = CredentialOfferAttachment(subjectId)
+      )
+    ),
     body = OfferCredential.Body(
       goal_code = Some("Offer Credential"),
       credential_preview = CredentialPreview(attributes = Seq(Attribute("name", "Alice")))
@@ -417,24 +431,28 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
 
   extension (svc: CredentialService)
     def createRecord(
-        did: DidId = DidId("did:prism:issuer"),
+        pairwiseIssuerDID: DidId = DidId("did:prism:issuer"),
+        pairwiseHolderDID: DidId = DidId("did:prism:holder-pairwise"),
         thid: UUID = UUID.randomUUID(),
         subjectId: String = "did:prism:holder",
         schemaId: Option[String] = None,
         claims: Map[String, String] = Map("name" -> "Alice"),
         validityPeriod: Option[Double] = None,
         automaticIssuance: Option[Boolean] = None,
-        awaitConfirmation: Option[Boolean] = None
+        awaitConfirmation: Option[Boolean] = None,
+        issuingDID: Option[CanonicalPrismDID] = None
     ) = {
       svc.createIssueCredentialRecord(
-        pairwiseDID = did,
+        pairwiseIssuerDID = pairwiseIssuerDID,
+        pairwiseHolderDID = pairwiseHolderDID,
         thid = thid,
         subjectId = subjectId,
         schemaId = schemaId,
         claims = claims,
         validityPeriod = validityPeriod,
         automaticIssuance = automaticIssuance,
-        awaitConfirmation = awaitConfirmation
+        awaitConfirmation = awaitConfirmation,
+        issuingDID = issuingDID
       )
     }
 
