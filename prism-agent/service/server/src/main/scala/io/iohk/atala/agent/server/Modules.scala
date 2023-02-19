@@ -27,13 +27,23 @@ import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError
 import io.iohk.atala.agent.server.http.marshaller.*
 import io.iohk.atala.agent.server.http.service.*
 import io.iohk.atala.agent.server.http.{HttpRoutes, HttpServer}
-import io.iohk.atala.pollux.core.service.CredentialServiceImpl
+import io.iohk.atala.pollux.core.service.{
+  CredentialService,
+  CredentialServiceImpl,
+  PresentationService,
+  PresentationServiceImpl,
+  VerificationPolicyService,
+  VerificationPolicyServiceImpl
+}
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
 import io.iohk.atala.pollux.core.repository.CredentialRepository
-import io.iohk.atala.pollux.core.service.CredentialService
-import io.iohk.atala.pollux.sql.repository.JdbcCredentialRepository
-import io.iohk.atala.pollux.sql.repository.DbConfig as PolluxDbConfig
+import io.iohk.atala.pollux.sql.repository.{
+  JdbcCredentialRepository,
+  JdbcPresentationRepository,
+  JdbcVerificationPolicyRepository,
+  DbConfig as PolluxDbConfig
+}
 import io.iohk.atala.connect.sql.repository.DbConfig as ConnectDbConfig
 import io.iohk.atala.agent.server.sql.DbConfig as AgentDbConfig
 import io.iohk.atala.agent.server.jobs.*
@@ -47,7 +57,7 @@ import zhttp.service.Server
 
 import java.util.concurrent.Executors
 import io.iohk.atala.mercury.*
-import io.iohk.atala.mercury.DidOps._
+import io.iohk.atala.mercury.DidOps.*
 import io.iohk.atala.mercury.model.*
 import io.iohk.atala.mercury.model.error.*
 import io.iohk.atala.mercury.protocol.issuecredential.*
@@ -57,16 +67,8 @@ import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc
 import java.io.IOException
 import cats.implicits.*
 import io.iohk.atala.pollux.schema.SchemaRegistryServerEndpoints
-import io.iohk.atala.pollux.service.{
-  JdbcSchemaRegistryService,
-  SchemaRegistryService,
-  SchemaRegistryServiceInMemory,
-  VerificationPolicyServiceInMemory
-}
-import io.iohk.atala.pollux.core.service.PresentationService
-import io.iohk.atala.pollux.core.service.PresentationServiceImpl
+import io.iohk.atala.pollux.service.{JdbcSchemaRegistryService, SchemaRegistryService, SchemaRegistryServiceInMemory}
 import io.iohk.atala.pollux.core.repository.PresentationRepository
-import io.iohk.atala.pollux.sql.repository.JdbcPresentationRepository
 import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.connect.core.service.ConnectionService
@@ -89,10 +91,14 @@ import io.circe.ParsingFailure
 import io.circe.DecodingFailure
 import io.iohk.atala.agent.walletapi.sql.{JdbcDIDNonSecretStorage, JdbcDIDSecretStorage}
 import io.iohk.atala.resolvers.DIDResolver
-import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
 import io.iohk.atala.pollux.vc.jwt.DidResolver as JwtDidResolver
 import io.iohk.atala.pollux.vc.jwt.PrismDidResolver
 import io.iohk.atala.mercury.DidAgent
+import io.iohk.atala.pollux.schema.controller.{
+  VerificationPolicyController,
+  VerificationPolicyControllerImpl,
+  VerificationPolicyControllerInMemory
+}
 
 object Modules {
 
@@ -106,7 +112,7 @@ object Modules {
     httpServerApp.unit
   }
 
-  lazy val zioApp: RIO[SchemaRegistryService & VerificationPolicyServiceInMemory & AppConfig, Unit] = {
+  lazy val zioApp: RIO[SchemaRegistryService & VerificationPolicyController & AppConfig, Unit] = {
     val zioHttpServerApp = for {
       allSchemaRegistryEndpoints <- SchemaRegistryServerEndpoints.all
       allVerificationPolicyEndpoints <- VerificationPolicyServerEndpoints.all
@@ -156,8 +162,7 @@ object Modules {
   }
 
   val issueCredentialDidCommExchangesJob: RIO[
-    AppConfig & DidOps & DIDResolver & JwtDidResolver & HttpClient & CredentialService & ManagedDIDService &
-      DIDSecretStorage,
+    AppConfig & DidOps & DIDResolver & JwtDidResolver & HttpClient & CredentialService & DIDService & ManagedDIDService,
     Unit
   ] =
     for {
@@ -168,8 +173,8 @@ object Modules {
     } yield job
 
   val presentProofExchangeJob: RIO[
-    AppConfig & DidOps & DIDResolver & JwtDidResolver & HttpClient & PresentationService & ManagedDIDService &
-      DIDSecretStorage,
+    AppConfig & DidOps & DIDResolver & JwtDidResolver & HttpClient & PresentationService & DIDService &
+      ManagedDIDService,
     Unit
   ] =
     for {
@@ -362,7 +367,7 @@ object Modules {
                   .catchAll { case ex: IOException => ZIO.fail(ex) }
                 // Accept the ConnectionRequest
                 _ <- connectionService
-                  .acceptConnectionRequest(maybeRecord.get.id) // TODO: get
+                  .acceptConnectionRequest(maybeRecord.id)
                   .catchSome { case ConnectionServiceError.RepositoryError(cause) =>
                     ZIO.logError(cause.getMessage()) *>
                       ZIO.fail(cause)
@@ -618,4 +623,9 @@ object RepoModule {
   val credentialSchemaServiceLayer: TaskLayer[SchemaRegistryService] =
     RepoModule.polluxTransactorLayer >>> JdbcSchemaRegistryService.layer
 
+  val verificationPolicyServiceLayer: TaskLayer[VerificationPolicyController] =
+    RepoModule.polluxTransactorLayer >>>
+      JdbcVerificationPolicyRepository.layer >+>
+      VerificationPolicyServiceImpl.layer >+>
+      VerificationPolicyControllerImpl.layer
 }

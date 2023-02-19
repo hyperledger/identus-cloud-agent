@@ -1,78 +1,40 @@
 package io.iohk.atala.pollux.schema.controller
 
-import io.iohk.atala.api.http.RequestContext
-import io.iohk.atala.api.http.model.{CollectionStats, Pagination}
-import io.iohk.atala.pollux.schema.model.{VerifiableCredentialSchemaPage, VerificationPolicyPage}
-import sttp.model.Uri
-import sttp.model.Uri.QuerySegment
-import sttp.model.Uri.QuerySegment.KeyValue
+import io.iohk.atala.api.http.model.{CollectionStats, Order, Pagination, PaginationInput}
+import io.iohk.atala.api.http.{FailureResponse, RequestContext}
+import io.iohk.atala.pollux.schema.model.{VerificationPolicy, VerificationPolicyInput, VerificationPolicyPage}
+import zio.{IO, Task, ZIO, ZLayer}
 
-import scala.util.Try
+import java.util.UUID
 
-//TODO:It's a hard copy of SchemaRegistryController. These two classes will be refactored later
-case class VerificationPolicyController(
-    ctx: RequestContext,
-    pagination: Pagination,
-    page: VerificationPolicyPage,
-    stats: CollectionStats
-) {
-  def composeNextUri(uri: Uri): Option[Uri] = if (
-    stats.filteredCount == 0 || // no filtered content to return
-    page.contents.length < pagination.limit || // it's already the last page
-    pagination.offset + pagination.limit == stats.filteredCount // it's exactly the last page
-  ) None
-  else {
-    val next = pagination.next
-    val newOffsetQueryParam = KeyValue(k = "offset", v = next.offset.toString)
-    val newLimitQueryParam = KeyValue("limit", pagination.limit.toString)
-    Some(
-      uri.copy(
-        querySegments = dropQueryParam(uri.querySegments, Set("limit", "offset")) ++
-          Seq(newOffsetQueryParam, newLimitQueryParam)
-      )
-    )
-  }
+trait VerificationPolicyController {
+  def createVerificationPolicy(
+      ctx: RequestContext,
+      in: VerificationPolicyInput
+  ): IO[FailureResponse, VerificationPolicy]
 
-  def composePreviousUri(uri: Uri): Option[Uri] = if (
-    pagination.offset == 0 || // it's the beginning of the pagination
-    stats.filteredCount == 0 // no filtered content to return
-  ) None
-  else {
-    val prev = pagination.prev
-    val newOffsetQueryParam = KeyValue(k = "offset", v = prev.offset.toString)
-    val newLimitQueryParam = KeyValue(k = "limit", v = prev.limit.toString)
-    Some(
-      uri.copy(
-        querySegments = dropQueryParam(uri.querySegments, Set("limit", "offset")) ++
-          Seq(newOffsetQueryParam, newLimitQueryParam)
-      )
-    )
-  }
+  def getVerificationPolicyById(
+      ctx: RequestContext,
+      id: UUID
+  ): IO[FailureResponse, VerificationPolicy]
 
-  def dropQueryParam(seq: Seq[QuerySegment], keysToDrop: Set[String]) =
-    seq.filterNot {
-      case KeyValue(k, _, _, _) => keysToDrop(k)
-      case _                    => false
-    }
+  def updateVerificationPolicyById(
+      ctx: RequestContext,
+      id: UUID,
+      nonce: Int,
+      update: VerificationPolicyInput
+  ): IO[FailureResponse, VerificationPolicy]
 
-  def result: VerificationPolicyPage = {
-    val self = ctx.request.uri.toString
-    val pageOf = ctx.request.uri.copy(querySegments = Seq.empty).toString
-    val next = composeNextUri(ctx.request.uri).map(_.toString)
-    val previous = composePreviousUri(ctx.request.uri).map(_.toString)
+  def deleteVerificationPolicyById(
+      ctx: RequestContext,
+      id: UUID,
+      nonce: Int
+  ): IO[FailureResponse, Unit]
 
-    val pageResult = page.copy(
-      self = self,
-      pageOf = pageOf,
-      next = next,
-      previous = previous,
-      contents = page.contents.map(item =>
-        item.withBaseUri(
-          ctx.request.uri.copy(querySegments = Seq.empty)
-        )
-      )
-    )
-
-    pageResult
-  }
+  def lookupVerificationPolicies(
+      ctx: RequestContext,
+      filter: VerificationPolicy.Filter,
+      pagination: Pagination,
+      order: Option[Order]
+  ): IO[FailureResponse, VerificationPolicyPage]
 }

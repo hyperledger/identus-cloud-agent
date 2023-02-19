@@ -82,6 +82,26 @@ Insert suggestion / description of what it did well, what it didn't do well and 
 ## Changelog
 
 ---
+#### YAMLLINT checker configuration file is added explicitly and rule line-length is set to 600
+Date Added: 2023-02-15
+
+Author: Yurii Shynbuiev
+
+Date Actioned: 2023-02-15
+
+Linter - Current Status: Enabled
+
+Linter - Suggested Change: Customise
+
+*Change detail*
+
+yamllint checker reports the error for OAS files for lines longer than 500 characters.
+
+The configuration file for the yamllint checker was added to the root of the project `.yamllint.yml`.
+
+The rule for the line-length was set to 600
+
+---
 #### BASH_SHELLCHECK_DISABLE_ERRORS
 
 Date Added: 2023-01-20

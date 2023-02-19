@@ -103,10 +103,10 @@ class ConnectionsManagementApiServiceImpl(
         .mapError(HttpServiceError.DomainError[ConnectionServiceError].apply(_).toOAS)
     } yield record
 
-    onZioSuccess(result.map(_.map(_.toOAS)).either) {
-      case Left(error)         => complete(error.status -> error)
-      case Right(Some(result)) => acceptConnectionInvitation200(result)
-      case Right(None) => acceptConnectionInvitation500(notFoundErrorResponse(Some("Connection record not found")))
+    onZioSuccess(result.map(_.toOAS).either) {
+      case Left(error)   => complete(error.status -> error)
+      case Right(result) => acceptConnectionInvitation200(result)
+      // case Right(None) => acceptConnectionInvitation500(notFoundErrorResponse(Some("Connection record not found"))) // TODO this is now Left
     }
   }
 
