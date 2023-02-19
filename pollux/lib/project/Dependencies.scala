@@ -2,7 +2,7 @@ import sbt._
 
 object Dependencies {
   object Versions {
-    val zio = "2.0.4"
+    val zio = "2.0.9"
     val doobie = "1.0.0-RC2"
     val zioCatsInterop = "3.3.0"
     val prismSdk = "v1.4.1" // scala-steward:off
