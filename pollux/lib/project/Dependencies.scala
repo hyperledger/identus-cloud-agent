@@ -11,7 +11,7 @@ object Dependencies {
     val mercury = "0.19.0"
     val castor = "0.8.0"
     val flyway = "9.8.3"
-    val testContainersScalaPostgresql = "0.40.11"
+    val testContainersScalaPostgresql = "0.40.12"
     val quill = "4.6.0"
     val logback = "1.4.5"
     val munit = "1.0.0-M6" // "0.7.29"
