@@ -12,7 +12,7 @@ object Dependencies {
     val prismSdk = "v1.4.1" // scala-steward:off
     val shared = "0.1.0"
     val enumeratum = "1.7.2"
-    val zioTest = "2.0.4"
+    val zioTest = "2.0.9"
   }
 
   private lazy val zio = "dev.zio" %% "zio" % Versions.zio
