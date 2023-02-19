@@ -54,7 +54,7 @@ object Dependencies {
   // Added here to make prism-crypto works.
   // Once migrated to apollo, re-evaluate if this should be removed.
   private lazy val bouncyBcpkix = "org.bouncycastle" % "bcpkix-jdk18on" % Versions.bouncyCastle
-  private lazy val bouncyBcprov = "org.bouncycastle" % "bcprov-jdk15on" % Versions.bouncyCastle
+  private lazy val bouncyBcprov = "org.bouncycastle" % "bcprov-jdk18on" % Versions.bouncyCastle
 
   private lazy val logback = "ch.qos.logback" % "logback-classic" % Versions.logback
 
