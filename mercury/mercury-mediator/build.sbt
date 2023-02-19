@@ -32,7 +32,7 @@ lazy val V = new {
   // https://mvnrepository.com/artifact/io.circe/circe-core
   val circe = "0.14.2"
 
-  val mercury = "0.16.0"
+  val mercury = "0.19.0"
 }
 
 /** Dependencies */
