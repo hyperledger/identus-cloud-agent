@@ -6,21 +6,22 @@ data class DidDocument(
 )
 
 data class W3cCompatibleDid(
-    var assertionMethod: List<String>? = null,
+    var assertionMethod: List<DidDocumentAuthentication>? = null,
     var authentication: List<DidDocumentAuthentication>? = null,
     var capabilityInvocation: List<String>? = null,
     var controller: String? = null,
     var id: String? = null,
     var keyAgreement: List<String>? = null,
     var service: List<DidDocumentService>? = null,
-    var verificationMethod: List<String>? = null
+    var verificationMethod: List<DidDocumentAuthentication>? = null
 )
 
 data class DidDocumentAuthentication(
     var controller: String? = null,
     var id: String? = null,
     var publicKeyJwk: PublicKeyJwk? = null,
-    var type: String? = null
+    var type: String? = null,
+    var uri: String? = null
 )
 
 data class PublicKeyJwk(
@@ -31,7 +32,8 @@ data class PublicKeyJwk(
 )
 
 data class DidDocumentMetadata(
-    var deactivated: String? = null
+    var canonicalId: String? = null,
+    var deactivated: Boolean? = null
 )
 
 data class DidDocumentService(
