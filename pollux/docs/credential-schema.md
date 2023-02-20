@@ -86,6 +86,7 @@ The tags are additional information for searching the credential schema instance
 
 ## 3. Data Model
 The credential schema has the data model specified by [Verifiable Credentials Data Model v2.0](https://w3c.github.io/vc-data-model/): `metadata`, `schema`, `proof`.
+
 The current implementation contains the following
 `metadata` fields:
 
