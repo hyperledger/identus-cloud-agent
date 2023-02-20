@@ -1,3 +1,10 @@
+# [prism-agent-v0.41.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.40.1...prism-agent-v0.41.0) (2023-02-20)
+
+
+### Features
+
+* **prism-agent:** do not create new Prism DID when proof presentation is generated ([#378](https://github.com/input-output-hk/atala-prism-building-blocks/issues/378)) ([1aa856f](https://github.com/input-output-hk/atala-prism-building-blocks/commit/1aa856f4281c23f6fd2f12b8e250ed1be285d49e))
+
 # [prism-agent-v0.40.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.40.0...prism-agent-v0.40.1) (2023-02-17)
 
 
