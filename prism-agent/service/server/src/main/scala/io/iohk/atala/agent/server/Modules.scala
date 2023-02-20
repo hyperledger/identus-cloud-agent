@@ -173,8 +173,8 @@ object Modules {
     } yield job
 
   val presentProofExchangeJob: RIO[
-    AppConfig & DidOps & DIDResolver & JwtDidResolver & HttpClient & PresentationService & DIDService &
-      ManagedDIDService,
+    AppConfig & DidOps & DIDResolver & JwtDidResolver & HttpClient & PresentationService & CredentialService &
+      DIDService & ManagedDIDService,
     Unit
   ] =
     for {
