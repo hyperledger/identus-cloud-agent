@@ -18,7 +18,8 @@ import io.iohk.atala.agent.openapi.model.{
   Service,
   UpdateManagedDIDRequestActionsInner,
   UpdateManagedDIDRequestActionsInnerUpdateService,
-  VerificationMethod
+  VerificationMethod,
+  VerificationMethodOrRef
 }
 import io.iohk.atala.castor.core.model.did as castorDomain
 import io.iohk.atala.agent.walletapi.model as walletDomain
@@ -37,6 +38,7 @@ import io.iohk.atala.mercury.model.Base64
 import zio.ZIO
 import io.iohk.atala.agent.server.http.model.HttpServiceError.InvalidPayload
 import io.iohk.atala.agent.walletapi.model.ManagedDIDState
+import io.iohk.atala.castor.core.model.did.w3c.PublicKeyRepr
 import io.iohk.atala.castor.core.model.did.{LongFormPrismDID, PrismDID, ServiceType}
 
 import java.util.UUID
@@ -156,9 +158,7 @@ trait OASDomainModelHelper {
       schemaId = domain.schemaId,
       validityPeriod = domain.validityPeriod,
       automaticIssuance = domain.automaticIssuance,
-      awaitConfirmation = domain.awaitConfirmation,
       protocolState = domain.protocolState.toString(),
-      publicationState = domain.publicationState.map(_.toString),
       jwtCredential = domain.issueCredentialData.flatMap(issueCredential => {
         issueCredential.attachments.collectFirst { case AttachmentDescriptor(_, _, Base64(jwt), _, _, _, _) =>
           jwt
@@ -187,6 +187,7 @@ trait OASDomainModelHelper {
       state = domain.protocolState.toString,
       createdAt = domain.createdAt.atOffset(ZoneOffset.UTC),
       updatedAt = domain.updatedAt.map(_.atOffset(ZoneOffset.UTC)),
+      role = domain.role.toString,
       invitation = ConnectionInvitation(
         id = UUID.fromString(domain.invitation.id),
         `type` = domain.invitation.`type`,
@@ -203,7 +204,7 @@ trait OASDomainModelHelper {
         case Some(p) =>
           p.attachments.head.data match {
             case Base64(data) =>
-              val base64Decoded = new String(java.util.Base64.getDecoder().decode(data)).drop(1).dropRight(1)
+              val base64Decoded = new String(java.util.Base64.getDecoder().decode(data))
               println(s"Base64decode:\n\n ${base64Decoded} \n\n")
               Seq(base64Decoded)
             case any => ???
@@ -242,7 +243,6 @@ trait OASDomainModelHelper {
         ),
         metadata = DIDDocumentMetadata(
           deactivated = metadata.deactivated,
-          versionId = Some(metadata.versionId),
           canonicalId = Some(metadata.canonicalId)
         )
       )
@@ -257,6 +257,15 @@ trait OASDomainModelHelper {
         controller = publicKeyRepr.controller,
         publicKeyJwk = publicKeyRepr.publicKeyJwk.toOAS
       )
+    }
+  }
+
+  extension (publicKeyReprOrRef: castorDomain.w3c.PublicKeyReprOrRef) {
+    def toOAS: VerificationMethodOrRef = {
+      publicKeyReprOrRef match {
+        case s: String         => VerificationMethodOrRef(`type` = "REFERENCED", uri = Some(s))
+        case pk: PublicKeyRepr => VerificationMethodOrRef(`type` = "EMBEDDED", verificationMethod = Some(pk.toOAS))
+      }
     }
   }
 

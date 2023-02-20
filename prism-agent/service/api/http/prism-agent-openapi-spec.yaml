@@ -1,3 +1,4 @@
+---
 openapi: 3.0.1
 info:
   title: PrismAgent OpenAPI specification
@@ -33,7 +34,7 @@ tags:
     description: Present Proof REST API
   # Connect
   - name: Connections Management
-    description: API for driving connection process.
+    description: Manage [DIDComm v2](https://identity.foundation/didcomm-messaging/spec/v2.0/) connections
 
 paths:
   # ----------------------------------
@@ -69,7 +70,7 @@ paths:
       description: List all DIDs stored in PrismAgent's wallet
       responses:
         "200":
-          description: List managed DIDs
+          description: List PrismAgent managed DIDs
           content:
             application/json:
               schema:
@@ -87,7 +88,7 @@ paths:
       summary: Create unpublished DID and store it in PrismAgent's wallet
       description: |
         Create unpublished DID and store it inside PrismAgent's wallet. The private keys of the DID is
-        managed by PrismAgent. The DID can later be published to blockchain using publications endpoint.
+        managed by PrismAgent. The DID can later be published to the VDR using publications endpoint.
       requestBody:
         required: true
         content:
@@ -112,14 +113,14 @@ paths:
     post:
       tags: ["DID Registrar"]
       operationId: publishManagedDid
-      summary: Publish the DID stored in PrismAgent's wallet to the blockchain
+      summary: Publish the DID stored in PrismAgent's wallet to the VDR
       description: |
-        Publish the DID stored in PrismAgent's wallet to the blockchain.
+        Publish the DID stored in PrismAgent's wallet to the VDR.
       parameters:
         - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
       responses:
         "202":
-          description: Publishing DID to Blockchain.
+          description: Publishing DID to the VDR.
           content:
             application/json:
               schema:
@@ -135,9 +136,12 @@ paths:
     post:
       tags: ["DID Registrar"]
       operationId: updateManagedDid
-      summary: Update DID in PrismAgent's wallet and post update operation to blockchain
+      summary: Update DID in PrismAgent's wallet and post update operation to the VDR
       description: |
-        Update DID in PrismAgent's wallet and post update operation to blockchain.
+        Update DID in PrismAgent's wallet and post update operation to the VDR.
+        This endpoint updates the DID document from last confirmed operation.
+        Submitting multiple update operations without waiting for confirmation will result in
+        some operation being rejected as only one operation can be appended from last confirmed operation.
       requestBody:
         required: true
         content:
@@ -148,7 +152,7 @@ paths:
         - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
       responses:
         "202":
-          description: Publishing DID to Blockchain.
+          description: Publishing DID to the VDR.
           content:
             application/json:
               schema:
@@ -332,26 +336,11 @@ paths:
         - Verification
       summary: Lookup verification policies by query
       description:
-        Lookup verification policies by `name`, `attributes`, `issuerDIDs`,
-        and `credentialTypes` and control the pagination by `offset` and `limit` parameters
+        Lookup verification policies by `name`, and control the pagination
+        by `offset` and `limit` parameters
       operationId: lookupVerificationPoliciesByQuery
       parameters:
         - name: name
-          in: query
-          required: false
-          schema:
-            type: string
-        - name: attributes
-          in: query
-          required: false
-          schema:
-            type: string
-        - name: issuerDIDs
-          in: query
-          required: false
-          schema:
-            type: string
-        - name: credentialTypes
           in: query
           required: false
           schema:
@@ -438,6 +427,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
       responses:
         "200":
           description: ""
@@ -467,9 +457,7 @@ paths:
       tags:
         - Verification
       summary: Update the verification policy object by id
-      description:
-        "Update the fields of the verification policy entry: `attributes`,
-        `issuerDIDs`, `name`, `credentialTypes`, "
+      description: Update the verification policy entry
       operationId: updateVerificationPolicy
       parameters:
         - name: id
@@ -477,6 +465,14 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
+        - name: nonce
+          in: query
+          description: Nonce of the previous VerificationPolicy
+          required: true
+          schema:
+            type: integer
+            format: int32
       requestBody:
         description: Update verification policy object
         content:
@@ -522,6 +518,14 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
+        - name: nonce
+          in: query
+          description: Nonce of the previous VerificationPolicy
+          required: true
+          schema:
+            type: integer
+            format: int32
       responses:
         "200":
           description: ""
@@ -550,9 +554,9 @@ paths:
     post:
       tags: ["Issue Credentials Protocol"]
       operationId: createCredentialOffer
-      summary: As a VC issuer, create a new credential offer to be sent to a VC holder
+      summary: As a credential issuer, create a new credential offer to be sent to a holder.
       requestBody:
-        description: CredentialOffer object with schema identifier and claims
+        description: The credential offer object.
         required: true
         content:
           application/json:
@@ -560,13 +564,13 @@ paths:
               $ref: ./pollux/schemas.yaml#/components/schemas/CreateIssueCredentialRecordRequest
       responses:
         "201":
-          description: The issue credential record
+          description: The issue credential record was created successfully, and is returned in the response body.
           content:
             application/json:
               schema:
                 $ref: ./pollux/schemas.yaml#/components/schemas/IssueCredentialRecord
         "422":
-          description: The issue credential record creation failed.
+          description: The issue credential record creation failed. More information on the error can be found in the response body.
           content:
             application/json:
               schema:
@@ -576,16 +580,16 @@ paths:
     get:
       tags: ["Issue Credentials Protocol"]
       operationId: getCredentialRecords
-      summary: Get credential records
+      summary: Gets the list of issue credential records.
       responses:
         "200":
-          description: The issue credential records
+          description: The list of issue credential records.
           content:
             application/json:
               schema:
                 $ref: ./pollux/schemas.yaml#/components/schemas/IssueCredentialRecordCollection
         "500":
-          description: Retrieving the issue credential records failed for an unexpected reason.
+          description: Retrieving the issue credential records failed for an unexpected reason. More information on the error can be found in the response body.
           content:
             application/json:
               schema:
@@ -595,18 +599,18 @@ paths:
     get:
       tags: ["Issue Credentials Protocol"]
       operationId: getCredentialRecord
-      summary: Get a credential record by Id
+      summary: Gets an existing issue credential record by its unique identifier.
       parameters:
         - $ref: ./pollux/parameters.yaml#/components/parameters/issueCredentialRecordIdInPath
       responses:
         "200":
-          description: The issue credential record
+          description: The issue credential record.
           content:
             application/json:
               schema:
                 $ref: ./pollux/schemas.yaml#/components/schemas/IssueCredentialRecord
         "404":
-          description: There is no issue credential record matching the given 'recordId'.
+          description: There is no issue credential record matching the given identifier.
           content:
             application/json:
               schema:
@@ -616,18 +620,19 @@ paths:
     post:
       tags: ["Issue Credentials Protocol"]
       operationId: acceptCredentialOffer
-      summary: As a VC holder, accept a credential offer received from an issuer
+      summary: As a holder, accepts a credential offer received from an issuer.
+      description: Accepts a credential offer received from a VC issuer and sends back a credential request.
       parameters:
         - $ref: ./pollux/parameters.yaml#/components/parameters/issueCredentialRecordIdInPath
       responses:
         "200":
-          description: The issue credential offer has been accepted
+          description: The issue credential offer was successfully accepted.
           content:
             application/json:
               schema:
                 $ref: ./pollux/schemas.yaml#/components/schemas/IssueCredentialRecord
         "404":
-          description: There is no issue credential record maatching the given 'recordId'.
+          description: There is no issue credential record matching the given identifier.
           content:
             application/json:
               schema:
@@ -637,88 +642,22 @@ paths:
     post:
       tags: ["Issue Credentials Protocol"]
       operationId: issueCredential
-      summary: As a VC issuer, issue the VC for the specified issue credential record
+      summary: As an issuer, issues the verifiable credential related to the specified record.
       parameters:
         - $ref: ./pollux/parameters.yaml#/components/parameters/issueCredentialRecordIdInPath
       responses:
         "200":
-          description: The VC has been issued
+          description: The request was processed successfully and the credential will be issued asynchronously.
           content:
             application/json:
               schema:
                 $ref: ./pollux/schemas.yaml#/components/schemas/IssueCredentialRecord
         "404":
-          description: There is no issue credential record maatching the given 'recordId'.
+          description: There is no issue credential record matching the given identifier.
           content:
             application/json:
               schema:
                 $ref: "./pollux/schemas.yaml#/components/schemas/ErrorResponse"
-
-  /revocation-registry/credential-status/{id}:
-    get:
-      tags: ["Revocation Registry"]
-      operationId: getCredentialRevocationStatusById
-      summary: Get credentials revocation status by credential id
-      description: Get credentials revocation status by credential id
-      parameters:
-        - in: path
-          name: id
-          description: Verifiable Credential Id
-          schema:
-            type: string
-          required: true
-          example: "abcde12345"
-      responses:
-        "200":
-          description: Status request processed successfully
-          content:
-            application/json:
-              schema:
-                $ref: "./pollux/schemas.yaml#/components/schemas/W3CCredentialStatus"
-  /revocation-registry/revoke:
-    post:
-      tags: ["Revocation Registry"]
-      operationId: revokeCredentialById
-      summary: Revoke credential by id
-      description: Revoke credential by id
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "./pollux/schemas.yaml#/components/schemas/W3CCredentialRevocationRequest"
-        required: true
-      responses:
-        "202":
-          description: Revocation request successfully submitted
-          content:
-            application/json:
-              schema:
-                $ref: "./pollux/schemas.yaml#/components/schemas/W3CCredentialRevocationResponse"
-          headers:
-            Location:
-              schema:
-                type: string
-              description: URL to access credential revocation status.
-
-  /revocation-registry/operations/{id}:
-    get:
-      tags: ["Revocation Registry"]
-      operationId: getRevocationOperationStatusById
-      summary: Get revocation operation status by id
-      description: Get revocation operation status by id
-      parameters:
-        - in: path
-          name: id
-          schema:
-            type: string
-          required: true
-      responses:
-        "200":
-          description: Success, operation status is returned
-          content:
-            application/json:
-              schema:
-                $ref: "./pollux/schemas.yaml#/components/schemas/RevocationStatus"
 
   /present-proof/presentations:
     post:
@@ -825,12 +764,11 @@ paths:
     post:
       tags: ["Connections Management"]
       operationId: createConnection
-      summary: Creates new connection and returns an invitation.
-      description: |-
-        Returns new invitation object and creates new connection state record in `pending` state.
-        Content of invitation depends on DIDComm protocol used, here is an example of how it would look like for `AIP 1.0 connection/v1` protocol.
-        Once connection invitation is accepted, Agent should filter all additional attempts to accept it.
-        We consider mult-party connections as out of scope for now.
+      summary: Creates a new connection record and returns an Out of Band invitation.
+      description: |
+        Generates a new Peer DID and creates an [Out of Band 2.0](https://identity.foundation/didcomm-messaging/spec/v2.0/#out-of-band-messages) invitation.
+        It returns a new connection record in `InvitationGenerated` state.
+        The request body may contain a `label` that can be used as a human readable alias for the connection, for example `{'label': "Bob"}`
       requestBody:
         required: true
         content:
@@ -840,13 +778,13 @@ paths:
 
       responses:
         "201":
-          description: The connection record
+          description: The connection record was created successfully, and is returned in the response body.
           content:
             application/json:
               schema:
                 $ref: "./connect/schemas.yaml#/components/schemas/Connection"
         "422":
-          description: The connection record creation failed.
+          description: The connection record creation failed. More information on the error can be found in the response body.
           content:
             application/json:
               schema:
@@ -855,16 +793,16 @@ paths:
     get:
       tags: ["Connections Management"]
       operationId: getConnections
-      summary: Returns a list of connections.
+      summary: Gets the list of connection records.
       responses:
         "200":
-          description: List of connection state objects
+          description: The list of connection records.
           content:
             application/json:
               schema:
                 $ref: "./connect/schemas.yaml#/components/schemas/ConnectionCollection"
         "500":
-          description: Retrieving the connection records failed for an unexpected reason.
+          description: Retrieving the connection records failed for an unexpected reason. More information on the error can be found in the response body.
           content:
             application/json:
               schema:
@@ -876,16 +814,16 @@ paths:
       parameters:
         - $ref: "./connect/schemas.yaml#/components/parameters/connectionId"
       operationId: getConnection
-      summary: Returns an existing connection record by id.
+      summary: Gets an existing connection record by its unique identifier.
       responses:
         "200":
-          description: Connection state record
+          description: The connection record.
           content:
             application/json:
               schema:
                 $ref: "./connect/schemas.yaml#/components/schemas/Connection"
         "404":
-          description: There is no issue credential record matching the given 'recordId'.
+          description: There is no connection record matching the given identifier.
           content:
             application/json:
               schema:
@@ -895,8 +833,11 @@ paths:
     post:
       tags: ["Connections Management"]
       operationId: acceptConnectionInvitation
-      summary: Accepts externally received invitation.
-      description: Creates new connection state record in `pending` state. It is assumed that application would first decode and validate the invitation. When it is accepted in the application side, it should be submitted in raw format to this API.
+      summary: Accepts an Out of Band invitation.
+      description: |
+        Accepts an [Out of Band 2.0](https://identity.foundation/didcomm-messaging/spec/v2.0/#out-of-band-messages) invitation, generates a new Peer DID,
+        and submits a Connection Request to the inviter.
+        It returns a connection object in `ConnectionRequestPending` state, until the Connection Request is eventually sent to the inviter by the prism-agent's background process. The connection object state will then automatically move to `ConnectionRequestSent`.
       requestBody:
         required: true
         content:
@@ -906,13 +847,13 @@ paths:
 
       responses:
         "200":
-          description: Invitation successfully accepted.
+          description: The invitation was successfully accepted.
           content:
             application/json:
               schema:
                 $ref: "./connect/schemas.yaml#/components/schemas/Connection"
         "500":
-          description: Storing the connection invitation failed for an unexpected reason.
+          description: Storing the connection invitation failed for an unexpected reason. More information on the error can be found in the response body.
           content:
             application/json:
               schema:

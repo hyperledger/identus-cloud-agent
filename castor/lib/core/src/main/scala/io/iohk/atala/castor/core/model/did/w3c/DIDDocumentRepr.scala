@@ -7,13 +7,15 @@ final case class DIDDocumentRepr(
     id: String,
     controller: String,
     verificationMethod: Seq[PublicKeyRepr],
-    authentication: Seq[PublicKeyRepr],
-    assertionMethod: Seq[PublicKeyRepr],
-    keyAgreement: Seq[PublicKeyRepr],
-    capabilityInvocation: Seq[PublicKeyRepr],
-    capabilityDelegation: Seq[PublicKeyRepr],
+    authentication: Seq[PublicKeyReprOrRef],
+    assertionMethod: Seq[PublicKeyReprOrRef],
+    keyAgreement: Seq[PublicKeyReprOrRef],
+    capabilityInvocation: Seq[PublicKeyReprOrRef],
+    capabilityDelegation: Seq[PublicKeyReprOrRef],
     service: Seq[ServiceRepr]
 )
+
+type PublicKeyReprOrRef = PublicKeyRepr | String
 
 final case class PublicKeyRepr(
     id: String,

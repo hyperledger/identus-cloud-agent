@@ -4,7 +4,7 @@ components:
       in: path
       name: recordId
       required: true
-      description: The issue credential record Id.
+      description: The unique identifier of the issue credential record.
       schema:
         type: string
         format: uuid

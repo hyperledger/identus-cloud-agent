@@ -10,10 +10,12 @@ import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import io.iohk.atala.pollux.vc.jwt.CredentialPayload.Implicits.*
 import io.iohk.atala.pollux.vc.jwt.PresentationPayload.Implicits.*
 import zio.*
+import zio.test.*
+import zio.test.Assertion.*
 
 import java.time.Instant
 
-class JWTVerificationTest extends munit.FunSuite {
+object JWTVerificationTest extends ZIOSpecDefault {
 
   case class IssuerWithKey(issuer: Issuer, key: ECKey)
 
@@ -56,11 +58,11 @@ class JWTVerificationTest extends munit.FunSuite {
   private def generateDidDocument(
       did: String,
       verificationMethod: Vector[VerificationMethod] = Vector.empty,
-      authentication: Vector[VerificationMethod] = Vector.empty,
-      assertionMethod: Vector[VerificationMethod] = Vector.empty,
-      keyAgreement: Vector[VerificationMethod] = Vector.empty,
-      capabilityInvocation: Vector[VerificationMethod] = Vector.empty,
-      capabilityDelegation: Vector[VerificationMethod] = Vector.empty,
+      authentication: Vector[VerificationMethodOrRef] = Vector.empty,
+      assertionMethod: Vector[VerificationMethodOrRef] = Vector.empty,
+      keyAgreement: Vector[VerificationMethodOrRef] = Vector.empty,
+      capabilityInvocation: Vector[VerificationMethodOrRef] = Vector.empty,
+      capabilityDelegation: Vector[VerificationMethodOrRef] = Vector.empty,
       service: Vector[Service] = Vector.empty
   ): DIDDocument =
     DIDDocument(
@@ -91,160 +93,168 @@ class JWTVerificationTest extends munit.FunSuite {
       })
   }
 
-  test("validate PrismDID issued JWT VC using verification publicKeys") {
-    val issuer = createUser(DID("did:prism:issuer"))
-    val jwtCredential = createJwtCredential(issuer)
-    val resolver = makeResolver(
-      Map(
-        "did:prism:issuer" ->
-          generateDidDocument(
-            did = "did:prism:issuer",
-            verificationMethod = Vector(
-              VerificationMethod(
-                id = "did:prism:issuer#key0",
-                `type` = "EcdsaSecp256k1VerificationKey2019",
-                controller = "did:prism:issuer",
-                publicKeyJwk = Some(toJWKFormat(issuer.key))
+  override def spec = suite("JWTVerificationSpec")(
+    test("validate PrismDID issued JWT VC using verification publicKeys") {
+      val issuer = createUser(DID("did:prism:issuer"))
+      val jwtCredential = createJwtCredential(issuer)
+      val resolver = makeResolver(
+        Map(
+          "did:prism:issuer" ->
+            generateDidDocument(
+              did = "did:prism:issuer",
+              verificationMethod = Vector(
+                VerificationMethod(
+                  id = "did:prism:issuer#key0",
+                  `type` = "EcdsaSecp256k1VerificationKey2019",
+                  controller = "did:prism:issuer",
+                  publicKeyJwk = Some(toJWKFormat(issuer.key))
+                )
               )
             )
-          )
+        )
       )
-    )
-    val effect = for {
-      validation <- JwtCredential.validateEncodedJWT(jwtCredential)(resolver)
-    } yield assert(validation.fold(_ => false, _ => true))
-
-    Unsafe.unsafe { implicit unsafe => Runtime.default.unsafe.runToFuture(effect.mapError(Exception(_))) }
-  }
-
-  test("validate PrismDID issued JWT VC using specified proofPurpose") {
-    val issuer = createUser(DID("did:prism:issuer"))
-    val jwtCredential = createJwtCredential(issuer)
-    val resolver = makeResolver(
-      Map(
-        "did:prism:issuer" ->
-          generateDidDocument(
-            did = "did:prism:issuer",
-            assertionMethod = Vector(
-              VerificationMethod(
-                id = "did:prism:issuer#key0",
-                `type` = "EcdsaSecp256k1VerificationKey2019",
-                controller = "did:prism:issuer",
-                publicKeyJwk = Some(toJWKFormat(issuer.key))
+      for {
+        validation <- JwtCredential.validateEncodedJWT(jwtCredential)(resolver)
+      } yield assertTrue(validation.fold(_ => false, _ => true))
+    },
+    test("validate PrismDID issued JWT VC using specified proofPurpose resolved as embedded key") {
+      val issuer = createUser(DID("did:prism:issuer"))
+      val jwtCredential = createJwtCredential(issuer)
+      val resolver = makeResolver(
+        Map(
+          "did:prism:issuer" ->
+            generateDidDocument(
+              did = "did:prism:issuer",
+              assertionMethod = Vector(
+                VerificationMethod(
+                  id = "did:prism:issuer#key0",
+                  `type` = "EcdsaSecp256k1VerificationKey2019",
+                  controller = "did:prism:issuer",
+                  publicKeyJwk = Some(toJWKFormat(issuer.key))
+                )
               )
             )
-          )
+        )
       )
-    )
-    val effect = for {
-      validation <- JwtCredential.validateEncodedJWT(jwtCredential, Some(VerificationRelationship.AssertionMethod))(
-        resolver
+      for {
+        validation <- JwtCredential.validateEncodedJWT(jwtCredential, Some(VerificationRelationship.AssertionMethod))(
+          resolver
+        )
+      } yield assertTrue(validation.fold(_ => false, _ => true))
+    },
+    test("validate PrismDID issued JWT VC using specified proofPurpose resolved as referenced key") {
+      val issuer = createUser(DID("did:prism:issuer"))
+      val jwtCredential = createJwtCredential(issuer)
+      val resolver = makeResolver(
+        Map(
+          "did:prism:issuer" ->
+            generateDidDocument(
+              did = "did:prism:issuer",
+              verificationMethod = Vector(
+                VerificationMethod(
+                  id = "did:prism:issuer#key0",
+                  `type` = "EcdsaSecp256k1VerificationKey2019",
+                  controller = "did:prism:issuer",
+                  publicKeyJwk = Some(toJWKFormat(issuer.key))
+                )
+              ),
+              assertionMethod = Vector("did:prism:issuer#key0")
+            )
+        )
       )
-    } yield assert(validation.fold(_ => false, _ => true))
-
-    Unsafe.unsafe { implicit unsafe => Runtime.default.unsafe.runToFuture(effect.mapError(Exception(_))) }
-  }
-
-  test("validate PrismDID issued JWT VC using incorrect proofPurpose should fail") {
-    val issuer = createUser(DID("did:prism:issuer"))
-    val jwtCredential = createJwtCredential(issuer)
-    val resolver = makeResolver(
-      Map(
-        "did:prism:issuer" ->
-          generateDidDocument(
-            did = "did:prism:issuer",
-            authentication = Vector(
-              VerificationMethod(
-                id = "did:prism:issuer#key0",
-                `type` = "EcdsaSecp256k1VerificationKey2019",
-                controller = "did:prism:issuer",
-                publicKeyJwk = Some(toJWKFormat(issuer.key))
+      for {
+        validation <- JwtCredential.validateEncodedJWT(jwtCredential, Some(VerificationRelationship.AssertionMethod))(
+          resolver
+        )
+      } yield assertTrue(validation.fold(_ => false, _ => true))
+    },
+    test("validate PrismDID issued JWT VC using incorrect proofPurpose should fail") {
+      val issuer = createUser(DID("did:prism:issuer"))
+      val jwtCredential = createJwtCredential(issuer)
+      val resolver = makeResolver(
+        Map(
+          "did:prism:issuer" ->
+            generateDidDocument(
+              did = "did:prism:issuer",
+              authentication = Vector(
+                VerificationMethod(
+                  id = "did:prism:issuer#key0",
+                  `type` = "EcdsaSecp256k1VerificationKey2019",
+                  controller = "did:prism:issuer",
+                  publicKeyJwk = Some(toJWKFormat(issuer.key))
+                )
               )
             )
-          )
+        )
       )
-    )
-    val effect = for {
-      validation <- JwtCredential.validateEncodedJWT(jwtCredential, Some(VerificationRelationship.AssertionMethod))(
-        resolver
-      )
-    } yield assertEquals(validation.fold(_ => false, _ => true), false)
-
-    Unsafe.unsafe { implicit unsafe => Runtime.default.unsafe.runToFuture(effect.mapError(Exception(_))) }
-  }
-
-  test("validate PrismDID issued JWT VC using non-resolvable DID should fail") {
-    val issuer = createUser(DID("did:prism:issuer"))
-    val jwtCredential = createJwtCredential(issuer)
-    val resolver = makeResolver(Map.empty)
-    val effect = for {
-      validation <- JwtCredential.validateEncodedJWT(jwtCredential)(resolver)
-    } yield assertEquals(validation.fold(_ => false, _ => true), false)
-
-    Unsafe.unsafe { implicit unsafe => Runtime.default.unsafe.runToFuture(effect.mapError(Exception(_))) }
-  }
-
-  test("validate PrismDID issued JWT VC using non-existing public-key should fail") {
-    val issuer = createUser(DID("did:prism:issuer"))
-    val jwtCredential = createJwtCredential(issuer)
-    val resolver = makeResolver(Map("did:prism:issuer" -> generateDidDocument(did = "did:prism:issuer")))
-    val effect = for {
-      validation <- JwtCredential.validateEncodedJWT(jwtCredential)(resolver).debug("validation result")
-    } yield assertEquals(validation.fold(_ => false, _ => true), false)
-
-    Unsafe.unsafe { implicit unsafe => Runtime.default.unsafe.runToFuture(effect.mapError(Exception(_))) }
-  }
-
-  test("validate PrismDID issued JWT VC using incompatible public-key type should fail") {
-    val issuer = createUser(DID("did:prism:issuer"))
-    val jwtCredential = createJwtCredential(issuer)
-    val resolver = makeResolver(
-      Map(
-        "did:prism:issuer" ->
-          generateDidDocument(
-            did = "did:prism:issuer",
-            verificationMethod = Vector(
-              VerificationMethod(
-                id = "did:prism:issuer#key0",
-                `type` = "ThisIsInvalidPublicKeyType",
-                controller = "did:prism:issuer",
-                publicKeyJwk = Some(toJWKFormat(issuer.key))
+      for {
+        validation <- JwtCredential.validateEncodedJWT(jwtCredential, Some(VerificationRelationship.AssertionMethod))(
+          resolver
+        )
+      } yield assert(validation.fold(_ => false, _ => true))(equalTo(false))
+    },
+    test("validate PrismDID issued JWT VC using non-resolvable DID should fail") {
+      val issuer = createUser(DID("did:prism:issuer"))
+      val jwtCredential = createJwtCredential(issuer)
+      val resolver = makeResolver(Map.empty)
+      for {
+        validation <- JwtCredential.validateEncodedJWT(jwtCredential)(resolver)
+      } yield assert(validation.fold(_ => false, _ => true))(equalTo(false))
+    },
+    test("validate PrismDID issued JWT VC using non-existing public-key should fail") {
+      val issuer = createUser(DID("did:prism:issuer"))
+      val jwtCredential = createJwtCredential(issuer)
+      val resolver = makeResolver(Map("did:prism:issuer" -> generateDidDocument(did = "did:prism:issuer")))
+      for {
+        validation <- JwtCredential.validateEncodedJWT(jwtCredential)(resolver)
+      } yield assert(validation.fold(_ => false, _ => true))(equalTo(false))
+    },
+    test("validate PrismDID issued JWT VC using incompatible public-key type should fail") {
+      val issuer = createUser(DID("did:prism:issuer"))
+      val jwtCredential = createJwtCredential(issuer)
+      val resolver = makeResolver(
+        Map(
+          "did:prism:issuer" ->
+            generateDidDocument(
+              did = "did:prism:issuer",
+              verificationMethod = Vector(
+                VerificationMethod(
+                  id = "did:prism:issuer#key0",
+                  `type` = "ThisIsInvalidPublicKeyType",
+                  controller = "did:prism:issuer",
+                  publicKeyJwk = Some(toJWKFormat(issuer.key))
+                )
               )
             )
-          )
+        )
       )
-    )
-    val effect = for {
-      validation <- JwtCredential.validateEncodedJWT(jwtCredential)(resolver)
-    } yield assertEquals(validation.fold(_ => false, _ => true), false)
-
-    Unsafe.unsafe { implicit unsafe => Runtime.default.unsafe.runToFuture(effect.mapError(Exception(_))) }
-  }
-
-  test("validate PrismDID issued JWT VC using different ECKey should fail") {
-    val issuer = createUser(DID("did:prism:issuer"))
-    val jwtCredential = createJwtCredential(issuer)
-    val resolver = makeResolver(
-      Map(
-        "did:prism:issuer" ->
-          generateDidDocument(
-            did = "did:prism:issuer",
-            verificationMethod = Vector(
-              VerificationMethod(
-                id = "did:prism:issuer#key0",
-                `type` = "ThisIsInvalidPublicKeyType",
-                controller = "did:prism:issuer",
-                publicKeyJwk = Some(toJWKFormat(ECKeyGenerator(Curve.SECP256K1).generate()))
+      for {
+        validation <- JwtCredential.validateEncodedJWT(jwtCredential)(resolver)
+      } yield assert(validation.fold(_ => false, _ => true))(equalTo(false))
+    },
+    test("validate PrismDID issued JWT VC using different ECKey should fail") {
+      val issuer = createUser(DID("did:prism:issuer"))
+      val jwtCredential = createJwtCredential(issuer)
+      val resolver = makeResolver(
+        Map(
+          "did:prism:issuer" ->
+            generateDidDocument(
+              did = "did:prism:issuer",
+              verificationMethod = Vector(
+                VerificationMethod(
+                  id = "did:prism:issuer#key0",
+                  `type` = "EcdsaSecp256k1VerificationKey2019",
+                  controller = "did:prism:issuer",
+                  publicKeyJwk = Some(toJWKFormat(ECKeyGenerator(Curve.SECP256K1).generate()))
+                )
               )
             )
-          )
+        )
       )
-    )
-    val effect = for {
-      validation <- JwtCredential.validateEncodedJWT(jwtCredential)(resolver)
-    } yield assertEquals(validation.fold(_ => false, _ => true), false)
-
-    Unsafe.unsafe { implicit unsafe => Runtime.default.unsafe.runToFuture(effect.mapError(Exception(_))) }
-  }
+      for {
+        validation <- JwtCredential.validateEncodedJWT(jwtCredential)(resolver)
+      } yield assert(validation.fold(_ => false, _ => true))(equalTo(false))
+    }
+  )
 
 }

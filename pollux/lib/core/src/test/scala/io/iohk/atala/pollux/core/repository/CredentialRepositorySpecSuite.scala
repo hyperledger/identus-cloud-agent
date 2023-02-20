@@ -18,6 +18,7 @@ import zio.test._
 
 import java.time.Instant
 import java.util.UUID
+import io.iohk.atala.castor.core.model.did.PrismDID
 
 object CredentialRepositorySpecSuite {
 
@@ -37,7 +38,8 @@ object CredentialRepositorySpecSuite {
     offerCredentialData = None,
     requestCredentialData = None,
     issueCredentialData = None,
-    issuedCredentialRaw = None
+    issuedCredentialRaw = None,
+    issuingDID = None
   )
 
   private def requestCredential = RequestCredential(
@@ -64,12 +66,16 @@ object CredentialRepositorySpecSuite {
         bRecord = issueCredentialRecord.copy(thid = thid)
         aCount <- repo.createIssueCredentialRecord(aRecord)
         bCount <- repo.createIssueCredentialRecord(bRecord).exit
-      } yield {
-        assertTrue(bCount match
-          case Exit.Failure(cause: Cause.Fail[_]) if cause.value.isInstanceOf[UniqueConstraintViolation] => true
-          case _                                                                                         => false
-        )
-      }
+      } yield assertTrue(aCount == 1) && assert(bCount)(fails(isSubtype[UniqueConstraintViolation](anything)))
+    },
+    test("createIssueCredentialRecord correctly read and write on non-null issuingDID") {
+      for {
+        repo <- ZIO.service[CredentialRepository[Task]]
+        issuingDID <- ZIO.fromEither(PrismDID.buildCanonicalFromSuffix("0" * 64))
+        record = issueCredentialRecord.copy(issuingDID = Some(issuingDID))
+        count <- repo.createIssueCredentialRecord(record)
+        readRecord <- repo.getIssueCredentialRecord(record.id)
+      } yield assertTrue(count == 1) && assert(readRecord)(isSome(equalTo(record)))
     },
     test("getIssueCredentialRecord correctly returns an existing record") {
       for {
@@ -150,36 +156,61 @@ object CredentialRepositorySpecSuite {
     test("getIssueCredentialRecordByThreadId returns nothing for an unknown thid") {
       for {
         repo <- ZIO.service[CredentialRepository[Task]]
-        aRecord = issueCredentialRecord.copy(thid = UUID.randomUUID())
-        bRecord = issueCredentialRecord.copy(thid = UUID.randomUUID())
+        aRecord = issueCredentialRecord
+        bRecord = issueCredentialRecord
         _ <- repo.createIssueCredentialRecord(aRecord)
         _ <- repo.createIssueCredentialRecord(bRecord)
         record <- repo.getIssueCredentialRecordByThreadId(UUID.randomUUID())
       } yield assertTrue(record.isEmpty)
     },
-    test("getIssueCredentialRecordsByState returns valid records") {
+    test("getIssueCredentialRecordsByStates returns valid records") {
       for {
         repo <- ZIO.service[CredentialRepository[Task]]
-        aRecord = issueCredentialRecord.copy(thid = UUID.randomUUID())
-        bRecord = issueCredentialRecord.copy(thid = UUID.randomUUID())
-        cRecord = issueCredentialRecord.copy(thid = UUID.randomUUID())
+        aRecord = issueCredentialRecord
+        bRecord = issueCredentialRecord
+        cRecord = issueCredentialRecord
         _ <- repo.createIssueCredentialRecord(aRecord)
         _ <- repo.createIssueCredentialRecord(bRecord)
         _ <- repo.createIssueCredentialRecord(cRecord)
         _ <- repo.updateCredentialRecordProtocolState(aRecord.id, ProtocolState.OfferPending, ProtocolState.OfferSent)
-        _ <- repo.updateCredentialRecordProtocolState(cRecord.id, ProtocolState.OfferPending, ProtocolState.OfferSent)
-        records <- repo.getIssueCredentialRecordsByState(ProtocolState.OfferPending)
+        _ <- repo.updateCredentialRecordProtocolState(
+          cRecord.id,
+          ProtocolState.OfferPending,
+          ProtocolState.CredentialGenerated
+        )
+        pendingRecords <- repo.getIssueCredentialRecordsByStates(ProtocolState.OfferPending)
+        otherRecords <- repo.getIssueCredentialRecordsByStates(
+          ProtocolState.OfferSent,
+          ProtocolState.CredentialGenerated
+        )
       } yield {
-        assertTrue(records.size == 1) &&
-        assertTrue(records.contains(bRecord))
+        assertTrue(pendingRecords.size == 1) &&
+        assertTrue(pendingRecords.contains(bRecord)) &&
+        assertTrue(otherRecords.size == 2) &&
+        assertTrue(otherRecords.exists(_.id == aRecord.id)) &&
+        assertTrue(otherRecords.exists(_.id == cRecord.id))
+      }
+    },
+    test("getIssueCredentialRecordsByStates returns an empty list if 'states' parameter is empty") {
+      for {
+        repo <- ZIO.service[CredentialRepository[Task]]
+        aRecord = issueCredentialRecord
+        bRecord = issueCredentialRecord
+        cRecord = issueCredentialRecord
+        _ <- repo.createIssueCredentialRecord(aRecord)
+        _ <- repo.createIssueCredentialRecord(bRecord)
+        _ <- repo.createIssueCredentialRecord(cRecord)
+        records <- repo.getIssueCredentialRecordsByStates()
+      } yield {
+        assertTrue(records.isEmpty)
       }
     },
     test("getValidIssuedCredentials returns valid records") {
       for {
         repo <- ZIO.service[CredentialRepository[Task]]
-        aRecord = issueCredentialRecord.copy(thid = UUID.randomUUID())
-        bRecord = issueCredentialRecord.copy(thid = UUID.randomUUID())
-        cRecord = issueCredentialRecord.copy(thid = UUID.randomUUID())
+        aRecord = issueCredentialRecord
+        bRecord = issueCredentialRecord
+        cRecord = issueCredentialRecord
         _ <- repo.createIssueCredentialRecord(aRecord)
         _ <- repo.createIssueCredentialRecord(bRecord)
         _ <- repo.createIssueCredentialRecord(cRecord)
@@ -192,7 +223,9 @@ object CredentialRepositorySpecSuite {
         records <- repo.getValidIssuedCredentials(Seq(aRecord.id, bRecord.id))
       } yield {
         assertTrue(records.size == 1) &&
-        assertTrue(records.contains(ValidIssuedCredentialRecord(aRecord.id, Some("RAW_CREDENTIAL_DATA"))))
+        assertTrue(
+          records.contains(ValidIssuedCredentialRecord(aRecord.id, Some("RAW_CREDENTIAL_DATA"), aRecord.subjectId))
+        )
       }
     },
     test("updateCredentialRecordProtocolState updates the record") {

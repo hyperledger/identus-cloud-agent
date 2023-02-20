@@ -1,3 +1,79 @@
+# [pollux-v0.28.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.28.0...pollux-v0.28.1) (2023-02-17)
+
+
+### Performance Improvements
+
+* **pollux:** Improve CredentialService's API ATL-3225 ([#372](https://github.com/input-output-hk/atala-prism-building-blocks/issues/372)) ([ad5602d](https://github.com/input-output-hk/atala-prism-building-blocks/commit/ad5602dffd909b0d2a2e6652043720ac58f22193))
+* **pollux:** Update to Mercury 0.19.0 ([#355](https://github.com/input-output-hk/atala-prism-building-blocks/issues/355)) ([fb60ca8](https://github.com/input-output-hk/atala-prism-building-blocks/commit/fb60ca8dae120ee641c46e00f073bc868f95177e))
+
+# [pollux-v0.28.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.27.0...pollux-v0.28.0) (2023-02-17)
+
+
+### Features
+
+* **pollux:** check prover DID is the same as VC subject when creating a VP ([#377](https://github.com/input-output-hk/atala-prism-building-blocks/issues/377)) ([253f827](https://github.com/input-output-hk/atala-prism-building-blocks/commit/253f8271e557297a8438e5509542026aa518835f))
+
+# [pollux-v0.27.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.26.0...pollux-v0.27.0) (2023-02-15)
+
+
+### Features
+
+* **pollux:** support issuing VC to Prism DID subject by Prism DID issuer ([#371](https://github.com/input-output-hk/atala-prism-building-blocks/issues/371)) ([5a1acde](https://github.com/input-output-hk/atala-prism-building-blocks/commit/5a1acdecb5e25bdf39398511d6ed1219da83e62e))
+
+# [pollux-v0.26.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.25.0...pollux-v0.26.0) (2023-02-13)
+
+
+### Features
+
+* **pollux:** implement the DAL for CRUD on the verifiable policy entity. ATL-2478 ([#368](https://github.com/input-output-hk/atala-prism-building-blocks/issues/368)) ([b290a18](https://github.com/input-output-hk/atala-prism-building-blocks/commit/b290a18a2aef67cfded20062e111f85bad7ad248))
+
+# [pollux-v0.25.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.24.0...pollux-v0.25.0) (2023-02-09)
+
+
+### Features
+
+* **pollux:** Added New Erorr ([#363](https://github.com/input-output-hk/atala-prism-building-blocks/issues/363)) ([5349a0e](https://github.com/input-output-hk/atala-prism-building-blocks/commit/5349a0edf1c297a76aaf0a5e6ed6b8d97f13b16c))
+
+# [pollux-v0.24.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.23.0...pollux-v0.24.0) (2023-02-07)
+
+
+### Features
+
+* **pollux:** bump mercury version and fix queries ([#357](https://github.com/input-output-hk/atala-prism-building-blocks/issues/357)) ([28f779a](https://github.com/input-output-hk/atala-prism-building-blocks/commit/28f779a5a8bb24eb5ffd8fce0b5cd0a4e8387132))
+
+# [pollux-v0.23.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.22.0...pollux-v0.23.0) (2023-02-07)
+
+
+### Features
+
+* **pollux:** support issue/presentation records retrieval by states ([#350](https://github.com/input-output-hk/atala-prism-building-blocks/issues/350)) ([f810ee3](https://github.com/input-output-hk/atala-prism-building-blocks/commit/f810ee31a7e5a523efa193e9efaadc3f67b2783f))
+
+
+### Performance Improvements
+
+* **pollux:** Update to Mercury 0.17.0 ([#347](https://github.com/input-output-hk/atala-prism-building-blocks/issues/347)) ([8e90c5f](https://github.com/input-output-hk/atala-prism-building-blocks/commit/8e90c5fe0ad25ac40c7e7df14ed952c1d68333bd))
+
+# [pollux-v0.22.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.21.0...pollux-v0.22.0) (2023-02-03)
+
+
+### Features
+
+* **pollux:** upgrade castor and update DID public key extraction logic ([#339](https://github.com/input-output-hk/atala-prism-building-blocks/issues/339)) ([00a6026](https://github.com/input-output-hk/atala-prism-building-blocks/commit/00a6026b10434bb3fa17c1d11b581316f5295237))
+
+# [pollux-v0.21.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.20.0...pollux-v0.21.0) (2023-02-02)
+
+
+### Features
+
+* **pollux:** get rid of 'drop(1)' and 'dropRight(1)' on credential attachment value ([#341](https://github.com/input-output-hk/atala-prism-building-blocks/issues/341)) ([b0a14d4](https://github.com/input-output-hk/atala-prism-building-blocks/commit/b0a14d459cd806353b73461194a847ec03551332))
+
+# [pollux-v0.20.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.19.0...pollux-v0.20.0) (2023-02-01)
+
+
+### Features
+
+* **pollux:** Dummy commit to make a release (2) ([#338](https://github.com/input-output-hk/atala-prism-building-blocks/issues/338)) ([4c7516c](https://github.com/input-output-hk/atala-prism-building-blocks/commit/4c7516c20c65906c3188f04ab1b7dc1dfd2e7822))
+
 # [pollux-v0.19.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.18.0...pollux-v0.19.0) (2023-01-27)
 
 

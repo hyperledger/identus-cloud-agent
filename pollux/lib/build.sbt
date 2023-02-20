@@ -16,7 +16,7 @@ inThisBuild(
 )
 
 val commonSettings = Seq(
-  testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+  testFrameworks ++= Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
   githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN"),
   resolvers += Resolver.githubPackages("input-output-hk"),
   // Needed for Kotlin coroutines that support new memory management mode

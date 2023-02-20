@@ -12,25 +12,20 @@ import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.agent.server.http.ZioHttpClient
 import org.flywaydb.core.extensibility.AppliedMigration
-import io.iohk.atala.pollux.service.{
-  JdbcSchemaRegistryService,
-  SchemaRegistryServiceInMemory,
-  VerificationPolicyServiceInMemory
-}
+import io.iohk.atala.pollux.service.{JdbcSchemaRegistryService, SchemaRegistryServiceInMemory}
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
+import io.iohk.atala.pollux.schema.controller.VerificationPolicyControllerInMemory
 
 object Main extends ZIOAppDefault {
 
-  def didCommAgentLayer(didCommServiceUrl: String) = ZLayer(
-    for {
+  def didCommAgentLayer(didCommServiceUrl: String): ZLayer[ManagedDIDService, Nothing, DidAgent] = {
+    val aux = for {
       managedDIDService <- ZIO.service[ManagedDIDService]
       peerDID <- managedDIDService.createAndStorePeerDID(didCommServiceUrl)
       _ <- ZIO.logInfo(s"New DID: ${peerDID.did}")
-    } yield io.iohk.atala.mercury.AgentServiceAny(
-      new DIDComm(UniversalDidResolver, peerDID.getSecretResolverInMemory),
-      peerDID.did
-    )
-  )
+    } yield io.iohk.atala.mercury.AgentPeerService.makeLayer(peerDID)
+    ZLayer.fromZIO(aux).flatten
+  }
 
   val migrations = for {
     _ <- ZIO.serviceWithZIO[PolluxMigrations](_.migrate)
@@ -39,7 +34,7 @@ object Main extends ZIOAppDefault {
   } yield ()
 
   def appComponents(didCommServicePort: Int, restServicePort: Int) = for {
-    _ <- Modules.didCommExchangesJob.debug.fork
+    _ <- Modules.issueCredentialDidCommExchangesJob.debug.fork
     _ <- Modules.presentProofExchangeJob.debug.fork
     _ <- Modules.connectDidCommExchangesJob.debug.fork
     _ <- Modules.didCommServiceEndpoint(didCommServicePort).debug.fork
@@ -91,6 +86,7 @@ object Main extends ZIOAppDefault {
 
       app <- appComponents(didCommServicePort, restServicePort).provide(
         didCommAgentLayer(didCommServiceUrl),
+        DidCommX.liveLayer,
         AppModule.didJwtResolverlayer,
         AppModule.didServiceLayer,
         DIDResolver.layer,
@@ -102,10 +98,8 @@ object Main extends ZIOAppDefault {
         SystemModule.actorSystemLayer,
         HttpModule.layers,
         RepoModule.credentialSchemaServiceLayer,
-        VerificationPolicyServiceInMemory.layer,
         AppModule.manageDIDServiceLayer,
-        JdbcDIDSecretStorage.layer,
-        RepoModule.agentTransactorLayer
+        RepoModule.verificationPolicyServiceLayer
       )
     } yield app
 

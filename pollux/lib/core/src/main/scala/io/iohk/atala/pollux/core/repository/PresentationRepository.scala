@@ -13,7 +13,7 @@ trait PresentationRepository[F[_]] {
   def createPresentationRecord(record: PresentationRecord): F[Int]
   def getPresentationRecords(): F[Seq[PresentationRecord]]
   def getPresentationRecord(recordId: UUID): F[Option[PresentationRecord]]
-  def getPresentationRecordsByState(state: PresentationRecord.ProtocolState): F[Seq[PresentationRecord]]
+  def getPresentationRecordsByStates(states: PresentationRecord.ProtocolState*): F[Seq[PresentationRecord]]
   def getPresentationRecordByThreadId(thid: UUID): F[Option[PresentationRecord]]
 
   def updatePresentationRecordProtocolState(

@@ -48,7 +48,9 @@ private class DIDServiceImpl(didOpValidator: DIDOperationValidator, nodeClient: 
       signedOperations = Seq(signedOperation.toProto)
     )
     for {
-      _ <- ZIO.fromEither(didOpValidator.validate(signedOperation.operation))
+      _ <- ZIO
+        .fromEither(didOpValidator.validate(signedOperation.operation))
+        .mapError(DIDOperationError.ValidationError.apply)
       operationOutput <- ZIO
         .fromFuture(_ => nodeClient.scheduleOperations(operationRequest))
         .mapBoth(DIDOperationError.DLTProxyError.apply, _.outputs.toList)
@@ -110,6 +112,10 @@ private class DIDServiceImpl(didOpValidator: DIDOperationValidator, nodeClient: 
 
     val request = node_api.GetDidDocumentRequest(did = canonicalDID.toString)
     for {
+      // unpublished CreateOperation (if exists) must be validated before the resolution
+      _ <- createOperation
+        .fold(ZIO.unit)(op => ZIO.fromEither(didOpValidator.validate(op)))
+        .mapError(DIDResolutionError.ValidationError.apply)
       result <- ZIO
         .fromFuture(_ => nodeClient.getDidDocument(request))
         .mapError(DIDResolutionError.DLTProxyError.apply)

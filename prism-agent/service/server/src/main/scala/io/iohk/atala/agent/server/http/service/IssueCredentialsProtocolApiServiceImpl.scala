@@ -24,6 +24,7 @@ import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.connect.core.model.ConnectionRecord
 import io.iohk.atala.connect.core.model.ConnectionRecord.Role
 import io.iohk.atala.connect.core.model.ConnectionRecord.ProtocolState
+import io.iohk.atala.castor.core.model.did.PrismDID
 
 class IssueCredentialsProtocolApiServiceImpl(
     credentialService: CredentialService,
@@ -43,17 +44,27 @@ class IssueCredentialsProtocolApiServiceImpl(
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
     val result = for {
-      didIdPair <- getPairwiseDIDs(request.subjectId)
+      didIdPair <- getPairwiseDIDs(request.connectionId)
+      issuingDID <- ZIO
+        .fromEither(PrismDID.fromString(request.issuingDID))
+        .mapError(HttpServiceError.InvalidPayload.apply)
+        .mapError(_.toOAS)
+      subjectId <- ZIO
+        .fromEither(PrismDID.fromString(request.subjectId))
+        .mapError(HttpServiceError.InvalidPayload.apply)
+        .mapError(_.toOAS)
       outcome <- credentialService
         .createIssueCredentialRecord(
-          pairwiseDID = didIdPair.myDID,
+          pairwiseIssuerDID = didIdPair.myDID,
+          pairwiseHolderDID = didIdPair.theirDid,
           thid = UUID.randomUUID(),
-          didIdPair.theirDid.value,
-          request.schemaId,
-          request.claims,
-          request.validityPeriod,
-          request.automaticIssuance.orElse(Some(true)),
-          request.awaitConfirmation.orElse(Some(false))
+          subjectId = subjectId.toString,
+          schemaId = request.schemaId,
+          claims = request.claims,
+          validityPeriod = request.validityPeriod,
+          automaticIssuance = request.automaticIssuance.orElse(Some(true)),
+          awaitConfirmation = Some(false),
+          issuingDID = Some(issuingDID.asCanonical)
         )
         .mapError(HttpServiceError.DomainError[CredentialServiceError].apply)
         .mapError(_.toOAS)
@@ -80,10 +91,7 @@ class IssueCredentialsProtocolApiServiceImpl(
       case Right(result) =>
         getCredentialRecords200(
           IssueCredentialRecordCollection(
-            items = result,
-            offset = 0,
-            limit = 0,
-            count = result.size
+            contents = result
           )
         )
     }
@@ -118,10 +126,10 @@ class IssueCredentialsProtocolApiServiceImpl(
         .mapError(HttpServiceError.DomainError[CredentialServiceError].apply)
     } yield outcome
 
-    onZioSuccess(result.mapBoth(_.toOAS, _.map(_.toOAS)).either) {
-      case Left(error)         => complete(error.status -> error)
-      case Right(Some(result)) => acceptCredentialOffer200(result)
-      case Right(None) => getCredentialRecord404(notFoundErrorResponse(Some("Issue credential record not found")))
+    onZioSuccess(result.mapBoth(_.toOAS, _.toOAS).either) {
+      case Left(error)   => complete(error.status -> error)
+      case Right(result) => acceptCredentialOffer200(result)
+      // case Right(None) => getCredentialRecord404(notFoundErrorResponse(Some("Issue credential record not found"))) // TODO this is now Left
     }
   }
 
@@ -136,63 +144,60 @@ class IssueCredentialsProtocolApiServiceImpl(
         .mapError(HttpServiceError.DomainError[CredentialServiceError].apply)
     } yield outcome
 
-    onZioSuccess(result.mapBoth(_.toOAS, _.map(_.toOAS)).either) {
-      case Left(error)         => complete(error.status -> error)
-      case Right(Some(result)) => issueCredential200(result)
-      case Right(None) => getCredentialRecord404(notFoundErrorResponse(Some("Issue credential record not found")))
+    onZioSuccess(result.mapBoth(_.toOAS, _.toOAS).either) {
+      case Left(error)   => complete(error.status -> error)
+      case Right(result) => issueCredential200(result)
+      // case Right(None) => getCredentialRecord404(notFoundErrorResponse(Some("Issue credential record not found"))) // TODO this is now Left
     }
   }
 
-  private[this] def getPairwiseDIDs(subjectId: String): ZIO[Any, ErrorResponse, DidIdPair] = {
-    val didRegex = "^did:.*".r
-    subjectId match {
-      case didRegex() =>
-        for {
-          pairwiseDID <- managedDIDService.createAndStorePeerDID(agentConfig.didCommServiceEndpointUrl)
-        } yield DidIdPair(pairwiseDID.did, DidId(subjectId))
-      case _ =>
-        for {
-          maybeConnection <- connectionService
-            .getConnectionRecord(UUID.fromString(subjectId))
-            .mapError(HttpServiceError.DomainError[ConnectionServiceError].apply)
-            .mapError(_.toOAS)
-          connection <- ZIO
-            .fromOption(maybeConnection)
-            .mapError(_ => notFoundErrorResponse(Some("Connection not found")))
-          connectionResponse <- ZIO
-            .fromOption(connection.connectionResponse)
-            .mapError(_ => notFoundErrorResponse(Some("ConnectionResponse not found in record")))
-          didIdPair <- connection match
-            case ConnectionRecord(
-                  _,
-                  _,
-                  _,
-                  _,
-                  _,
-                  Role.Inviter,
-                  ProtocolState.ConnectionResponseSent,
-                  _,
-                  _,
-                  Some(resp)
-                ) =>
-              ZIO.succeed(DidIdPair(resp.from, resp.to))
-            case ConnectionRecord(
-                  _,
-                  _,
-                  _,
-                  _,
-                  _,
-                  Role.Invitee,
-                  ProtocolState.ConnectionResponseReceived,
-                  _,
-                  _,
-                  Some(resp)
-                ) =>
-              ZIO.succeed(DidIdPair(resp.to, resp.from))
-            case _ =>
-              ZIO.fail(badRequestErrorResponse(Some("Invalid connection record state for operation")))
-        } yield didIdPair
-    }
+  private[this] def getPairwiseDIDs(connectionId: String): ZIO[Any, ErrorResponse, DidIdPair] = {
+    for {
+      maybeConnection <- connectionService
+        .getConnectionRecord(UUID.fromString(connectionId))
+        .mapError(HttpServiceError.DomainError[ConnectionServiceError].apply)
+        .mapError(_.toOAS)
+      connection <- ZIO
+        .fromOption(maybeConnection)
+        .mapError(_ => notFoundErrorResponse(Some("Connection not found")))
+      connectionResponse <- ZIO
+        .fromOption(connection.connectionResponse)
+        .mapError(_ => notFoundErrorResponse(Some("ConnectionResponse not found in record")))
+      didIdPair <- connection match
+        case ConnectionRecord(
+              _,
+              _,
+              _,
+              _,
+              _,
+              Role.Inviter,
+              ProtocolState.ConnectionResponseSent,
+              _,
+              _,
+              Some(resp),
+              _, // metaRetries: Int,
+              _, // metaLastFailure: Option[String]
+            ) =>
+          ZIO.succeed(DidIdPair(resp.from, resp.to))
+        case ConnectionRecord(
+              _,
+              _,
+              _,
+              _,
+              _,
+              Role.Invitee,
+              ProtocolState.ConnectionResponseReceived,
+              _,
+              _,
+              Some(resp),
+              _, // metaRetries: Int,
+              _, // metaLastFailure: Option[String]
+            ) =>
+          ZIO.succeed(DidIdPair(resp.to, resp.from))
+        case _ =>
+          ZIO.fail(badRequestErrorResponse(Some("Invalid connection record state for operation")))
+    } yield didIdPair
+
   }
 
 }

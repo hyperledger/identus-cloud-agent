@@ -15,16 +15,37 @@ trait ConnectionRepository[F[_]] {
 
   def getConnectionRecords(): F[Seq[ConnectionRecord]]
 
+  def getConnectionRecordsByStates(states: ConnectionRecord.ProtocolState*): F[Seq[ConnectionRecord]]
+
   def getConnectionRecord(recordId: UUID): F[Option[ConnectionRecord]]
 
   def deleteConnectionRecord(recordId: UUID): F[Int]
 
   def getConnectionRecordByThreadId(thid: UUID): F[Option[ConnectionRecord]]
 
-  def updateWithConnectionRequest(recordId: UUID, request: ConnectionRequest, state: ProtocolState): F[Int]
+  def updateWithConnectionRequest(
+      recordId: UUID,
+      request: ConnectionRequest,
+      state: ProtocolState,
+      maxRetries: Int, // max numbre of retries -> set the metaRetries
+  ): F[Int]
 
-  def updateWithConnectionResponse(recordId: UUID, response: ConnectionResponse, state: ProtocolState): F[Int]
+  def updateWithConnectionResponse(
+      recordId: UUID,
+      response: ConnectionResponse,
+      state: ProtocolState,
+      maxRetries: Int, // max numbre of retries -> set the metaRetries
+  ): F[Int]
 
-  def updateConnectionProtocolState(recordId: UUID, from: ProtocolState, to: ProtocolState): F[Int]
+  def updateConnectionProtocolState(
+      recordId: UUID,
+      from: ProtocolState,
+      to: ProtocolState,
+      maxRetries: Int, // max numbre of retries -> set the metaRetries
+  ): F[Int]
 
+  def updateAfterFail(
+      recordId: UUID,
+      failReason: Option[String],
+  ): F[Int]
 }

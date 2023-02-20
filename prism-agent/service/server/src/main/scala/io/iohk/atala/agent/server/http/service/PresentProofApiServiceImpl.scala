@@ -8,10 +8,10 @@ import akka.http.scaladsl.server.Route
 import zio._
 import scala.concurrent.Future
 import io.iohk.atala.agent.server.http.model.HttpServiceError
+import io.iohk.atala.mercury._
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.presentproof._
 import java.util.UUID
-import io.iohk.atala.mercury.DidComm
 import io.iohk.atala.agent.server.http.model.OASDomainModelHelper
 import io.iohk.atala.agent.server.http.model.OASErrorModelHelper
 import io.iohk.atala.agent.server.http.model.InvalidState
@@ -24,11 +24,12 @@ import io.iohk.atala.pollux.core.service.PresentationService
 import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.model.PresentationRecord
 import io.iohk.atala.mercury.model.Base64
+import cats.instances.option
+import io.iohk.atala.pollux.core.model.presentation.Options
 
 class PresentProofApiServiceImpl(
     presentationService: PresentationService,
     connectionService: ConnectionService,
-    didCommService: DidComm
 )(using runtime: Runtime[Any])
     extends PresentProofApiService
     with AkkaZioSupport
@@ -39,19 +40,12 @@ class PresentProofApiServiceImpl(
       toEntityMarshallerRequestPresentationOutput: ToEntityMarshaller[RequestPresentationOutput],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
-    val didRegex = "^did.*".r
-
     val result = for {
-      didId <- requestPresentationInput.connectionId match {
-        case didRegex() => ZIO.succeed(DidId(requestPresentationInput.connectionId))
-        case _ =>
-          connectionService
-            .getConnectionRecord(UUID.fromString(requestPresentationInput.connectionId))
-            .map(_.flatMap(_.connectionRequest).map(_.from).get) // TODO GET
-            .mapError(HttpServiceError.DomainError[ConnectionServiceError].apply)
-            .mapError(_.toOAS)
-      }
-
+      didId <- connectionService
+        .getConnectionRecord(UUID.fromString(requestPresentationInput.connectionId))
+        .map(_.flatMap(_.connectionRequest).map(_.from).get) // TODO GET
+        .mapError(HttpServiceError.DomainError[ConnectionServiceError].apply)
+        .mapError(_.toOAS)
       record <- presentationService
         .createPresentationRecord(
           thid = UUID.randomUUID(),
@@ -63,7 +57,8 @@ class PresentProofApiServiceImpl(
               requiredFields = None,
               trustIssuers = Some(e.trustIssuers.map(DidId(_)))
             )
-          }
+          },
+          options = requestPresentationInput.options.map(x => Options(x.challenge, x.domain))
         )
         .mapError(HttpServiceError.DomainError[PresentationError].apply)
         .mapError(_.toOAS)
@@ -162,13 +157,12 @@ class PresentProofApiServiceImpl(
 }
 
 object PresentProofApiServiceImpl {
-  val layer: URLayer[PresentationService & ConnectionService & DidComm, PresentProofApiService] = ZLayer.fromZIO {
+  val layer: URLayer[PresentationService & ConnectionService, PresentProofApiService] = ZLayer.fromZIO {
 
     for {
       rt <- ZIO.runtime[Any]
       presentationService <- ZIO.service[PresentationService]
       connectionService <- ZIO.service[ConnectionService]
-      didCommService <- ZIO.service[DidComm]
-    } yield PresentProofApiServiceImpl(presentationService, connectionService, didCommService)(using rt)
+    } yield PresentProofApiServiceImpl(presentationService, connectionService)(using rt)
   }
 }

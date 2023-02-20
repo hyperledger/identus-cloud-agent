@@ -21,22 +21,29 @@ trait ConnectionService {
   def acceptConnectionInvitation(
       recordId: UUID,
       pairwiseDid: DidId
-  ): IO[ConnectionServiceError, Option[ConnectionRecord]]
+  ): IO[ConnectionServiceError, ConnectionRecord]
 
-  def markConnectionRequestSent(recordId: UUID): IO[ConnectionServiceError, Option[ConnectionRecord]]
+  def markConnectionRequestSent(recordId: UUID): IO[ConnectionServiceError, ConnectionRecord]
 
-  def receiveConnectionRequest(request: ConnectionRequest): IO[ConnectionServiceError, Option[ConnectionRecord]]
+  def receiveConnectionRequest(request: ConnectionRequest): IO[ConnectionServiceError, ConnectionRecord]
 
-  def acceptConnectionRequest(recordId: UUID): IO[ConnectionServiceError, Option[ConnectionRecord]]
+  def acceptConnectionRequest(recordId: UUID): IO[ConnectionServiceError, ConnectionRecord]
 
-  def markConnectionResponseSent(recordId: UUID): IO[ConnectionServiceError, Option[ConnectionRecord]]
+  def markConnectionResponseSent(recordId: UUID): IO[ConnectionServiceError, ConnectionRecord]
 
-  def receiveConnectionResponse(response: ConnectionResponse): IO[ConnectionServiceError, Option[ConnectionRecord]]
+  def receiveConnectionResponse(response: ConnectionResponse): IO[ConnectionServiceError, ConnectionRecord]
 
   def getConnectionRecords(): IO[ConnectionServiceError, Seq[ConnectionRecord]]
 
+  def getConnectionRecordsByStates(
+      states: ConnectionRecord.ProtocolState*
+  ): IO[ConnectionServiceError, Seq[ConnectionRecord]]
+
+  /** Get the ConnectionRecord by the record id. If the record is id is not found the value None will be return */
   def getConnectionRecord(recordId: UUID): IO[ConnectionServiceError, Option[ConnectionRecord]]
 
   def deleteConnectionRecord(recordId: UUID): IO[ConnectionServiceError, Int]
+
+  def reportProcessingFailure(recordId: UUID, failReason: Option[String]): IO[ConnectionServiceError, Int]
 
 }

@@ -54,9 +54,9 @@ object CoordinateMediationPrograms {
       messageReceived <- opsService.unpack(res.bodyAsString)
       _ <- Console.printLine("Unpacking and decrypting the received message ...")
       _ <- Console.printLine("*" * 100)
-      _ <- Console.printLine(toPrettyJson(messageReceived.getMessage.toString))
+      _ <- Console.printLine(toPrettyJson(messageReceived.message.toString))
       _ <- Console.printLine("*" * 100)
-      ret = parse(messageReceived.getMessage.toString)
+      ret = parse(messageReceived.message.toString)
         .getOrElse(???)
         // .flatMap()
         .pipe { json =>

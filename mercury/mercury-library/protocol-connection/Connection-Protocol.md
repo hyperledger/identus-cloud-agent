@@ -8,18 +8,17 @@ The protocol is used when you wish to create a connection with another agent.
 
 ## PIURI
 
-Version 1.0: `https://atalaprism.io/mercury/connections/1.0/request`
-
-Version 1.0: `https://atalaprism.io/mercury/connections/1.0/response`
+Version 1.0:
+ - `https://atalaprism.io/mercury/connections/1.0/request`
+ - `https://atalaprism.io/mercury/connections/1.0/response`
 
 ### Roles
 
 - Inviter
   - Will create the message `https://didcomm.org/out-of-band/2.0/invitation`
-  - will accept the Connection request and create new did peer and reply Connection response
+  - Will accept the Connection request and reply Connection Response `https://atalaprism.io/mercury/connections/1.0/response`
 - Invitee
-  - Will accept the invitation
-  - Will create a did peer and reply to the Invitee with Connection Request
+  - Will accept the invitation by sending a Connection Request `https://atalaprism.io/mercury/connections/1.0/request`
 
 ### Notes
 
