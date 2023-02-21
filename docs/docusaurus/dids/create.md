@@ -13,7 +13,7 @@ PRISM Agent provides two endpoint groups to facilitate the PRISM DID usage.
 
 - `/dids/*`
 Facilitates a low-level interaction between DID operation and the blockchain.
-The DID controllers are expected to handle key management on their own and use these endpoints for blockchain interaction.
+The DID controllers are expected to handle key management independently and use these endpoints for blockchain interaction.
 
 - `/did-registrar/*`
 Facilitates a higher-level interaction with PRISM DID where concerns of key management are handled by PRISM Agent.
