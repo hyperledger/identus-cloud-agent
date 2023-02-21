@@ -20,14 +20,16 @@ class IssueCredentialsSteps {
     fun acmeOffersACredential(issuer: Actor, holder: Actor) {
         val newCredential = Credential(
             schemaId = "schema:1234",
-            subjectId = issuer.recall<Connection>("connection-with-${holder.name}").theirDid,
+            subjectId = holder.recall<String>("shortFormDid"),
             validityPeriod = 3600,
             automaticIssuance = false,
             awaitConfirmation = false,
             claims = linkedMapOf(
                 "firstName" to "FirstName",
                 "lastName" to "LastName"
-            )
+            ),
+            issuingDID = issuer.recall<String>("shortFormDid"),
+            connectionId = issuer.recall<Connection>("connection-with-${holder.name}").connectionId
         )
 
         issuer.attemptsTo(
@@ -45,7 +47,7 @@ class IssueCredentialsSteps {
         // TODO: add check that newCredential object corresponds to the output of restapi call here
     }
 
-    @When("{actor} requests the credential")
+    @When("{actor} receives the credential offer and accepts")
     fun bobRequestsTheCredential(holder: Actor) {
         wait(
             {
@@ -57,12 +59,12 @@ class IssueCredentialsSteps {
                         it.statusCode(SC_OK)
                     }
                 )
-                lastResponseList("items", Credential::class).findLast { it.protocolState == "OfferReceived" } != null
+                lastResponseList("contents", Credential::class).findLast { it.protocolState == "OfferReceived" } != null
             },
             "Holder was unable to receive the credential offer from Issuer! Protocol state did not achieve OfferReceived state."
         )
 
-        val recordId = lastResponseList("items", Credential::class)
+        val recordId = lastResponseList("contents", Credential::class)
             .findLast { it.protocolState == "OfferReceived" }!!.recordId
         holder.remember("recordId", recordId)
 
@@ -88,12 +90,12 @@ class IssueCredentialsSteps {
                         it.statusCode(SC_OK)
                     }
                 )
-                lastResponseList("items", Credential::class)
+                lastResponseList("contents", Credential::class)
                     .findLast { it.protocolState == "RequestReceived" } != null
             },
             "Issuer was unable to receive the credential request from Holder! Protocol state did not achieve RequestReceived state."
         )
-        val recordId = lastResponseList("items", Credential::class)
+        val recordId = lastResponseList("contents", Credential::class)
             .findLast { it.protocolState == "RequestReceived" }!!.recordId
         issuer.attemptsTo(
             Post.to("/issue-credentials/records/${recordId}/issue-credential")
@@ -120,7 +122,7 @@ class IssueCredentialsSteps {
         )
     }
 
-    @Then("{actor} has the credential issued")
+    @Then("{actor} receives the issued credential")
     fun bobHasTheCredentialIssued(holder: Actor) {
         wait(
             {

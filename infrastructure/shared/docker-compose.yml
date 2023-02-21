@@ -1,13 +1,12 @@
-version: '3.8'
+---
+version: "3.8"
 
 services:
-
   ##########################
   # Database
   ##########################
   db:
     image: postgres:13
-    restart: always
     environment:
       POSTGRES_MULTIPLE_DATABASES: "castor,pollux,connect,iris,agent,node_db"
       POSTGRES_USER: postgres
@@ -27,9 +26,9 @@ services:
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
-      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_CONFIG_SERVER_MODE: "False"
     volumes:
-       - pgadmin:/var/lib/pgadmin
+      - pgadmin:/var/lib/pgadmin
     ports:
       - "${PGADMIN_PORT:-5050}:80"
     depends_on:
@@ -41,22 +40,6 @@ services:
   ##########################
   # Services
   ##########################
-  mediator:
-    image: ghcr.io/input-output-hk/mercury-mediator:${MERCURY_MEDIATOR_VERSION}
-    depends_on:
-      db:
-        condition: service_healthy
-
-  iris:
-    image: ghcr.io/input-output-hk/iris-service:${IRIS_SERVICE_VERSION}
-    environment:
-      IRIS_DB_HOST: db
-      IRIS_DB_PORT: 5432
-      IRIS_DB_NAME: iris
-      IRIS_DB_USER: postgres
-    depends_on:
-      db:
-        condition: service_healthy
 
   prism-node:
     image: ghcr.io/input-output-hk/prism-node:${PRISM_NODE_VERSION}
@@ -100,7 +83,7 @@ services:
       prism-node:
         condition: service_started
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://prism-agent:8080/connections" ]
+      test: ["CMD", "curl", "-f", "http://prism-agent:8080/connections"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -111,20 +94,18 @@ services:
     image: swaggerapi/swagger-ui:v4.14.0
     environment:
       - 'URLS=[
-          { name: "Prism Agent", url: "/prism-agent/api/openapi-spec.yaml" },
-          { name: "Mediator", url: "/mediator/api/openapi-spec.yaml" }
+        { name: "Prism Agent", url: "/prism-agent/api/openapi-spec.yaml" },
+        { name: "Mediator", url: "/mediator/api/openapi-spec.yaml" }
         ]'
 
   apisix:
     image: apache/apisix:2.15.0-alpine
-    restart: always
     volumes:
       - ./apisix/conf/apisix.yaml:/usr/local/apisix/conf/apisix.yaml:ro
       - ./apisix/conf/config.yaml:/usr/local/apisix/conf/config.yaml:ro
     ports:
       - "${PORT}:9080/tcp"
     depends_on:
-      - mediator
       - prism-agent
       - swagger-ui
 
