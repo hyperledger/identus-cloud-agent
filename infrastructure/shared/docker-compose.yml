@@ -7,7 +7,6 @@ services:
   ##########################
   db:
     image: postgres:13
-    restart: always
     environment:
       POSTGRES_MULTIPLE_DATABASES: "castor,pollux,connect,iris,agent,node_db"
       POSTGRES_USER: postgres
@@ -41,22 +40,6 @@ services:
   ##########################
   # Services
   ##########################
-  mediator:
-    image: ghcr.io/input-output-hk/mercury-mediator:${MERCURY_MEDIATOR_VERSION}
-    depends_on:
-      db:
-        condition: service_healthy
-
-  iris:
-    image: ghcr.io/input-output-hk/iris-service:${IRIS_SERVICE_VERSION}
-    environment:
-      IRIS_DB_HOST: db
-      IRIS_DB_PORT: 5432
-      IRIS_DB_NAME: iris
-      IRIS_DB_USER: postgres
-    depends_on:
-      db:
-        condition: service_healthy
 
   prism-node:
     image: ghcr.io/input-output-hk/prism-node:${PRISM_NODE_VERSION}
@@ -117,14 +100,12 @@ services:
 
   apisix:
     image: apache/apisix:2.15.0-alpine
-    restart: always
     volumes:
       - ./apisix/conf/apisix.yaml:/usr/local/apisix/conf/apisix.yaml:ro
       - ./apisix/conf/config.yaml:/usr/local/apisix/conf/config.yaml:ro
     ports:
       - "${PORT}:9080/tcp"
     depends_on:
-      - mediator
       - prism-agent
       - swagger-ui
 
