@@ -9,7 +9,7 @@ Once the create-operation is constructed, a DID can be derived from this operati
 
 ## DID and DID registrar endpoints
 
-PRISM Agent provides 2 endpoint groups to facilitate the PRISM DID usage.
+PRISM Agent provides two endpoint groups to facilitate the PRISM DID usage.
 
 - `/dids/*`
 Facilitates a low-level interaction between DID operation and the blockchain.
