@@ -69,7 +69,7 @@ The response should look like
 
 ### 3. List the created DID
 
-Checking the `GET /did-registrar/dids` endpoint, the response should now return a list containing 1 DID.
+`GET /did-registrar/dids` endpoint returns the response that should have a list containing one DID.
 
 ```json
 [
