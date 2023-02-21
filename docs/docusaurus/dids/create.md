@@ -7,7 +7,19 @@ A PRISM DID can be created entirely offline without interacting with the blockch
 This can be done by constructing a DID create-operation, which is a protobuf message with a set of public keys and services.
 Once the create-operation is constructed, a DID can be derived from this operation which is well-defined by the PRISM DID method. [**TODO**: insert a link to the spec]
 
-## DID and DID registrar endpoints
+## Roles
+
+1. **DID Controller** is the organization or individual who has control of the DID.
+
+## Prerequisites
+
+1. **DID Controller** PRISM Agents up and running
+
+## Overview
+
+For this example, a PRISM DID is created and stored inside PRISM Agent along with the private keys.
+The DID is not automatically published after its creation.
+The Agent will keep track of private keys used for the create-operation and the content of the operation itself.
 
 PRISM Agent provides two endpoint groups to facilitate the PRISM DID usage.
 
@@ -18,16 +30,17 @@ The DID controllers are expected to handle key management independently and use 
 - `/did-registrar/*`
 Facilitates a higher-level interaction with PRISM DID where PRISM Agent handles key-management concerns.
 
-## Creating a PRISM Agent managed DID
-
-For this example, a PRISM DID is created and stored inside PRISM Agent along with the private keys.
-The DID is not automatically published after its creation.
-The Agent will keep track of private keys used for the create-operation and the content of the operation itself.
+## Endpoints
 
 The example uses the following endpoints
-1. [`GET /did-registrar/dids`](/agent-api/#tag/DID-Registrar/operation/listManagedDid): List all DIDs stored in PRISM Agent.
-2. [`POST /did-registrar/dids`](/agent-api/#tag/DID-Registrar/operation/createManagedDid): Create a new PRISM DID managed by PRISM Agent.
-3. [`GET /dids/{didRef}`](/agent-api/#tag/DID/operation/getDid): Resolve a DID to DID document.
+
+| Endpoint                                                                               | Description                                   | Role           |
+|----------------------------------------------------------------------------------------|-----------------------------------------------|----------------|
+| [`GET /did-registrar/dids`](/agent-api/#tag/DID-Registrar/operation/listManagedDid)    | List all DIDs stored in PRISM Agent           | DID Controller |
+| [`POST /did-registrar/dids`](/agent-api/#tag/DID-Registrar/operation/createManagedDid) | Create a new PRISM DID managed by PRISM Agent | DID Controller |
+| [`GET /dids/{didRef}`](/agent-api/#tag/DID/operation/getDid)                           | Resolve a DID to DID document                 | DID Controller |
+
+## DID Controller interactions
 
 ### 1. Check existing DID on the PRISM Agent
 
