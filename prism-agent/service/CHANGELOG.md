@@ -1,3 +1,10 @@
+# [prism-agent-v0.42.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.41.0...prism-agent-v0.42.0) (2023-02-21)
+
+
+### Features
+
+* **prism-agent:** set OAS version to 0.41.0 ([#386](https://github.com/input-output-hk/atala-prism-building-blocks/issues/386)) ([198643e](https://github.com/input-output-hk/atala-prism-building-blocks/commit/198643e3856c51dcd1e68047f9269cdd71238923))
+
 # [prism-agent-v0.41.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.40.1...prism-agent-v0.41.0) (2023-02-20)
 
 
