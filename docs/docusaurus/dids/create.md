@@ -16,7 +16,7 @@ Facilitates a low-level interaction between DID operation and the blockchain.
 The DID controllers are expected to handle key management independently and use these endpoints for blockchain interaction.
 
 - `/did-registrar/*`
-Facilitates a higher-level interaction with PRISM DID where concerns of key management are handled by PRISM Agent.
+Facilitates a higher-level interaction with PRISM DID where PRISM Agent handles key-management concerns.
 
 ## Creating a PRISM Agent managed DID
 
