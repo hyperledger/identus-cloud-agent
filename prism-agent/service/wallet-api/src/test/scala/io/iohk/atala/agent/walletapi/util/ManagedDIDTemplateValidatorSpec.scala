@@ -7,7 +7,7 @@ import zio.*
 import zio.test.*
 import zio.test.Assertion.*
 
-import java.net.URI
+import io.lemonlabs.uri.Uri
 
 object ManagedDIDTemplateValidatorSpec extends ZIOSpecDefault {
 
@@ -28,7 +28,7 @@ object ManagedDIDTemplateValidatorSpec extends ZIOSpecDefault {
           Service(
             id = "service0",
             `type` = ServiceType.LinkedDomains,
-            serviceEndpoint = Seq(URI.create("http://example.com"))
+            serviceEndpoint = Seq(Uri.parse("http://example.com/"))
           )
         )
       )
