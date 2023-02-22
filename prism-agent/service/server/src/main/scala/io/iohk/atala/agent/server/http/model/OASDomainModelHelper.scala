@@ -61,6 +61,7 @@ trait OASDomainModelHelper {
           `type` = serviceType,
           serviceEndpoint = serviceEndpoint
         )
+        .normalizeServiceEndpoint()
     }
   }
 
