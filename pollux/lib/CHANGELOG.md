@@ -1,3 +1,10 @@
+# [pollux-v0.30.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.29.0...pollux-v0.30.0) (2023-02-22)
+
+
+### Features
+
+* **pollux:** Added the Issued credetinal check at the ApiEndpoint ([#387](https://github.com/input-output-hk/atala-prism-building-blocks/issues/387)) ([35704f4](https://github.com/input-output-hk/atala-prism-building-blocks/commit/35704f4bd364b9fcc25cf9049533716e2fcdc36e))
+
 # [pollux-v0.29.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.28.1...pollux-v0.29.0) (2023-02-22)
 
 
