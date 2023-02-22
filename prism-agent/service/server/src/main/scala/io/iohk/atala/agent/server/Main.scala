@@ -15,8 +15,46 @@ import org.flywaydb.core.extensibility.AppliedMigration
 import io.iohk.atala.pollux.service.{JdbcSchemaRegistryService, SchemaRegistryServiceInMemory}
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
 import io.iohk.atala.pollux.schema.controller.VerificationPolicyControllerInMemory
+import zhttp.http.*
+import zhttp.service.Server
+import zio.metrics.connectors.prometheus.PrometheusPublisher
+import zio.metrics.connectors.{MetricsConfig, prometheus}
+import zio.metrics.jvm.DefaultJvmMetrics
+import io.iohk.atala.agent.server.buildinfo.BuildInfo
+import io.circe.*
+import io.circe.generic.auto.*
+import io.circe.parser.*
+import io.circe.syntax.*
+import io.iohk.atala.agent.server.health.VersionInfo
 
-object Main extends ZIOAppDefault {
+
+object SystemInfoApp extends ZIOAppDefault {
+  private val metricsConfig = ZLayer.succeed(MetricsConfig(5.seconds))
+
+  def run =
+    Server
+      .start(
+        port = 8082,
+        http = Http.collectZIO[Request] {
+          case Method.GET -> !! / "metrics" =>
+            ZIO.serviceWithZIO[PrometheusPublisher](_.get.map(Response.text))
+          case Method.GET -> !! / "health" =>
+            ZIO.succeed(Response.json(
+              VersionInfo(
+                version = BuildInfo.version
+              ).asJson.toString
+            ))z
+        }
+      )
+      .provide(
+        metricsConfig,
+        prometheus.publisherLayer,
+        prometheus.prometheusLayer
+      )
+}
+
+
+object AgentApp extends ZIOAppDefault {
 
   def didCommAgentLayer(didCommServiceUrl: String): ZLayer[ManagedDIDService, Nothing, DidAgent] = {
     val aux = for {
@@ -45,9 +83,10 @@ object Main extends ZIOAppDefault {
   } yield ()
 
   override def run: ZIO[Any, Throwable, Unit] = {
+
     val app = for {
       _ <- Console
-        .printLine("""
+        .printLine(s"""
       |██████╗ ██████╗ ██╗███████╗███╗   ███╗
       |██╔══██╗██╔══██╗██║██╔════╝████╗ ████║
       |██████╔╝██████╔╝██║███████╗██╔████╔██║
@@ -61,6 +100,9 @@ object Main extends ZIOAppDefault {
       |██╔══██║██║   ██║██╔══╝  ██║╚██╗██║   ██║
       |██║  ██║╚██████╔╝███████╗██║ ╚████║   ██║
       |╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚═╝  ╚═══╝   ╚═╝
+      |
+      |version: ${BuildInfo.version}
+      |
       |""".stripMargin)
         .ignore
 
@@ -111,3 +153,5 @@ object Main extends ZIOAppDefault {
   }
 
 }
+
+object MainApp extends ZIOApp.Proxy(SystemInfoApp <> DefaultJvmMetrics.app <> AgentApp)
