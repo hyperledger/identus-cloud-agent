@@ -5,7 +5,7 @@ PRISM DIDs are a type of _decentralized identifier_ used across Atala PRISM prod
 It is a variation of a [_sidetree protocol_](https://identity.foundation/sidetree/spec/) and uses the Cardano blockchain as the underlying ledger for DID resolution and operation publication.
 
 A PRISM DID can be created entirely offline without interacting with the blockchain by constructing a DID create-operation, a protobuf message with a set of public keys and services.
-Once the create-operation gets constructed, deriving a DID from this operation is possible, which is well-defined by the PRISM DID method. [**TODO**: insert a link to the spec]
+Once the create-operation gets constructed, deriving a DID from this operation is possible, which is well-defined by the [PRISM DID method](https://github.com/input-output-hk/prism-did-method-spec/blob/main/w3c-spec/PRISM-method.md).
 
 ## Roles
 
