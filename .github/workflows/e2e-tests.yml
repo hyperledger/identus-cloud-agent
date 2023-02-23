@@ -57,6 +57,11 @@ jobs:
           version: v2.12.2 # defaults to 'latest'
           legacy: true    # will also install in PATH as `docker-compose`
 
+      - name: Update .env file to the latest version
+        run: |
+          ../../infrastructure/local/update_env.sh
+          cat ../../infrastructure/local/.env
+
       - name: Start services for issuer
         env:
           PORT: 8080
