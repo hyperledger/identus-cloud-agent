@@ -6,6 +6,13 @@ import scala.util.chaining.scalaUtilChainingOps
 
 object PaginationUtils {
 
+  def composePageOfUri[U: UriUpdate](uri: U): U = {
+    val uriUpdate = summon[UriUpdate[U]]
+    uri
+      .pipe(uriUpdate.removeAllQueryParam(_, "offset"))
+      .pipe(uriUpdate.removeAllQueryParam(_, "limit"))
+  }
+
   def composeNextUri[U: UriUpdate](
       uri: U,
       items: Seq[Any],

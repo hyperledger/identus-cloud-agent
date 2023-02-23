@@ -13,6 +13,7 @@ import io.iohk.atala.castor.core.model.did.PrismDID
 import io.iohk.atala.shared.utils.Traverse.*
 import io.iohk.atala.api.http.model.PaginationInput
 import io.iohk.atala.api.http.model.CollectionStats
+import io.iohk.atala.api.util.PaginationUtils
 
 class DIDRegistrarApiServiceImpl(service: ManagedDIDService)(using runtime: Runtime[Any])
     extends DIDRegistrarApiService,
@@ -61,16 +62,22 @@ class DIDRegistrarApiServiceImpl(service: ManagedDIDService)(using runtime: Runt
   override def listManagedDid(offset: Option[Int], limit: Option[Int])(implicit
       toEntityMarshallerManagedDIDPage: ToEntityMarshaller[ManagedDIDPage],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
-  ): Route = {
+  ): Route = extractUri { uri =>
     val pagination = PaginationInput(offset = offset, limit = limit).toPagination
     val result = for {
       pageResult <- service
         .listManagedDIDPage(offset = pagination.offset, limit = pagination.limit)
         .mapError(HttpServiceError.DomainError.apply)
       (items, totalCount) = pageResult
-      respItems = items.map(_.toOAS)
       stats = CollectionStats(totalCount = totalCount, filteredCount = totalCount)
-    } yield ???
+    } yield ManagedDIDPage(
+      self = uri.toString(),
+      kind = "ManagedDIDPage",
+      pageOf = PaginationUtils.composePageOfUri(uri).toString,
+      next = PaginationUtils.composeNextUri(uri, items, pagination, stats).map(_.toString),
+      previous = PaginationUtils.composePreviousUri(uri, items, pagination, stats).map(_.toString),
+      contents = Some(items.map(_.toOAS)),
+    )
 
     onZioSuccess(result.mapError(_.toOAS).either) {
       case Left(error)   => complete(error.status -> error)

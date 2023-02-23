@@ -77,6 +77,7 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
            |   created_at,
            |   updated_at
            | FROM public.prism_did_wallet_state
+           | ORDER BY created_at
            """.stripMargin
         .query[DIDPublicationStateRow]
         .to[List]
