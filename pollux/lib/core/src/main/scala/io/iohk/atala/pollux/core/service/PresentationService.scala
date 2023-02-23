@@ -159,14 +159,8 @@ private class PresentationServiceImpl(
         .getValidIssuedCredentials(credentialsToUse.map(UUID.fromString))
         .mapError(RepositoryError.apply)
 
-      _ <- ZIO.cond(
-        issuedValidCredentials.forall(_.subjectId == prover.did.value),
-        (),
-        PresentationError.HolderBindingError(
-          s"Presenting credential with different subject than the prover DID is not supported"
-        )
-      )
-      issuedRawCredentials = issuedValidCredentials.map(_.issuedCredentialRaw.map(IssuedCredentialRaw(_))).flatten
+      issuedRawCredentials = issuedValidCredentials.flatMap(_.issuedCredentialRaw.map(IssuedCredentialRaw(_)))
+
       issuedCredentials <- ZIO.fromEither(
         Either.cond(
           issuedRawCredentials.nonEmpty,
@@ -363,6 +357,14 @@ private class PresentationServiceImpl(
       issuedValidCredentials <- credentialRepository
         .getValidIssuedCredentials(credentialsToUse.map(UUID.fromString))
         .mapError(RepositoryError.apply)
+      _ <- ZIO.cond(
+        (issuedValidCredentials.map(_.subjectId).toSet.size == 1),
+        (),
+        PresentationError.HolderBindingError(
+          s"Creating a Verifiable Presentation for credential with different subject DID is not supported, found : ${issuedValidCredentials
+              .map(_.subjectId)}"
+        )
+      )
       issuedRawCredentials = issuedValidCredentials.flatMap(_.issuedCredentialRaw.map(IssuedCredentialRaw(_)))
       issuedCredentials <- ZIO.fromEither(
         Either.cond(
