@@ -14,10 +14,10 @@ Scenario Outline: Multiple schema creation
 Scenario Outline: Wrong specified fields for schema generation requests should fail
   When Acme tries to create a new schema with <value> in field <field>
   Then He sees the request with status <status>
-  Examples:
-    | field      | value | status |
-    | id         | -1    | 400    |
-    | attributes | null  | 400    |
+Examples:
+  | field      | value | status |
+  | id         | -1    | 400    |
+  | attributes | null  | 400    |
 
 @skip
 Scenario: Schema creation with identical name should fail
@@ -32,8 +32,8 @@ Scenario: Schema creation with identical id should fail
 Scenario Outline: Using incorrect filter params should result in error
   When Acme tries to get schemas with <value> in parameter <parameter>
   Then He sees the request with status <status>
-  Examples:
-    | parameter | value   | status |
-    | limit     | -1      | 400    |
-    | offset    | -1      | 400    |
-    | offset    | 1000000 | 400    |
+Examples:
+  | parameter | value   | status |
+  | limit     | -1      | 400    |
+  | offset    | -1      | 400    |
+  | offset    | 1000000 | 400    |
