@@ -20,9 +20,9 @@ import java.time.Duration
 class PublishDidSteps {
 
     @Given("{actor} creates unpublished DID")
-    fun acmeCreatesUnpublishedDid(acme: Actor) {
-        val publicKeys = listOf(PublicKey("key1", Purpose.AUTHENTICATION))
-        val services = listOf(Service("https://foo.bar.com", "MediatorService", listOf("https://foo.bar.com")))
+    fun createsUnpublishedDid(acme: Actor) {
+        val publicKeys = listOf(PublicKey("key1", Purpose.AUTHENTICATION), PublicKey("key2", Purpose.ASSERTION_METHOD))
+        val services = listOf(Service("https://foo.bar.com", "LinkedDomains", listOf("https://foo.bar.com")))
         val documentTemplate = DocumentTemplate(publicKeys, services)
         acme.attemptsTo(
             Post.to("/did-registrar/dids")
@@ -90,6 +90,7 @@ class PublishDidSteps {
 
     @Then("{actor} resolves DID document corresponds to W3C standard")
     fun heSeesDidDocumentCorrespondsToW3cStandard(acme: Actor) {
+
         val didDocument = lastResponseObject("", DidDocument::class).did!!
         assertThat(didDocument)
             .hasFieldOrProperty("assertionMethod")
@@ -101,12 +102,21 @@ class PublishDidSteps {
             .hasFieldOrProperty("service")
             .hasFieldOrProperty("verificationMethod")
 
-        assertThat(didDocument.id == acme.recall<String>("shortFormDid"))
+        val shortFormDid = acme.recall<String>("shortFormDid")
 
-        assertThat(didDocument.authentication!![0].publicKeyJwk)
-            .hasNoNullFieldsOrProperties()
+        assertThat(didDocument.id == shortFormDid)
+
+        assertThat(didDocument.authentication!![0])
+            .hasFieldOrPropertyWithValue("type", "REFERENCED")
+            .hasFieldOrPropertyWithValue("uri", "${shortFormDid}#key1")
+
+        assertThat(didDocument.verificationMethod!![0])
+            .hasFieldOrPropertyWithValue("controller", shortFormDid)
+            .hasFieldOrPropertyWithValue("id", "${shortFormDid}#key1")
+            .hasFieldOrProperty("publicKeyJwk")
 
         assertThat(lastResponseObject("", DidDocument::class).metadata!!)
-            .hasFieldOrPropertyWithValue("deactivated", "false")
+            .hasFieldOrPropertyWithValue("deactivated", false)
+            .hasFieldOrProperty("canonicalId")
     }
 }

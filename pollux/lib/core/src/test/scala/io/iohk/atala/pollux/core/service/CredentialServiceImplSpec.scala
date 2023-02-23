@@ -196,20 +196,19 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
           offerReceivedRecord <- holderSvc.receiveCredentialOffer(offer)
           offerAcceptedRecord <- holderSvc.acceptCredentialOffer(offerReceivedRecord.id)
         } yield {
-          assertTrue(offerAcceptedRecord.isDefined) &&
-          assertTrue(offerAcceptedRecord.get.protocolState == ProtocolState.RequestPending) &&
-          assertTrue(offerAcceptedRecord.get.offerCredentialData.isDefined) &&
-          assertTrue(offerAcceptedRecord.get.offerCredentialData.get.from == offer.from) &&
-          assertTrue(offerAcceptedRecord.get.offerCredentialData.get.to == offer.to) &&
-          assertTrue(offerAcceptedRecord.get.offerCredentialData.get.attachments == offer.attachments) &&
-          assertTrue(offerAcceptedRecord.get.offerCredentialData.get.thid == offer.thid) &&
-          assertTrue(offerAcceptedRecord.get.offerCredentialData.get.body.comment.isEmpty) &&
-          assertTrue(offerAcceptedRecord.get.offerCredentialData.get.body.goal_code.contains("Offer Credential")) &&
-          assertTrue(offerAcceptedRecord.get.offerCredentialData.get.body.multiple_available.isEmpty) &&
-          assertTrue(offerAcceptedRecord.get.offerCredentialData.get.body.replacement_id.isEmpty) &&
-          assertTrue(offerAcceptedRecord.get.offerCredentialData.get.body.formats.isEmpty) &&
+          assertTrue(offerAcceptedRecord.protocolState == ProtocolState.RequestPending) &&
+          assertTrue(offerAcceptedRecord.offerCredentialData.isDefined) &&
+          assertTrue(offerAcceptedRecord.offerCredentialData.get.from == offer.from) &&
+          assertTrue(offerAcceptedRecord.offerCredentialData.get.to == offer.to) &&
+          assertTrue(offerAcceptedRecord.offerCredentialData.get.attachments == offer.attachments) &&
+          assertTrue(offerAcceptedRecord.offerCredentialData.get.thid == offer.thid) &&
+          assertTrue(offerAcceptedRecord.offerCredentialData.get.body.comment.isEmpty) &&
+          assertTrue(offerAcceptedRecord.offerCredentialData.get.body.goal_code.contains("Offer Credential")) &&
+          assertTrue(offerAcceptedRecord.offerCredentialData.get.body.multiple_available.isEmpty) &&
+          assertTrue(offerAcceptedRecord.offerCredentialData.get.body.replacement_id.isEmpty) &&
+          assertTrue(offerAcceptedRecord.offerCredentialData.get.body.formats.isEmpty) &&
           assertTrue(
-            offerAcceptedRecord.get.offerCredentialData.get.body.credential_preview.attributes == Seq(
+            offerAcceptedRecord.offerCredentialData.get.body.credential_preview.attributes == Seq(
               Attribute("name", "Alice", None)
             )
           )
@@ -237,9 +236,8 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
           request = requestCredential(Some(issuerRecord.thid))
           requestReceivedRecord <- issuerSvc.receiveCredentialRequest(request)
         } yield {
-          assertTrue(requestReceivedRecord.isDefined) &&
-          assertTrue(requestReceivedRecord.get.protocolState == ProtocolState.RequestReceived) &&
-          assertTrue(requestReceivedRecord.get.requestCredentialData.contains(request))
+          assertTrue(requestReceivedRecord.protocolState == ProtocolState.RequestReceived) &&
+          assertTrue(requestReceivedRecord.requestCredentialData.contains(request))
         }
       },
       test("receiveCredentialRequest cannot be called twice for the same record") {
@@ -278,11 +276,10 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
           _ <- issuerSvc.markOfferSent(issuerRecord.id)
           request = requestCredential(Some(issuerRecord.thid))
           requestReceivedRecord <- issuerSvc.receiveCredentialRequest(request)
-          requestAcceptedRecord <- issuerSvc.acceptCredentialRequest(requestReceivedRecord.get.id)
+          requestAcceptedRecord <- issuerSvc.acceptCredentialRequest(requestReceivedRecord.id)
         } yield {
-          assertTrue(requestAcceptedRecord.isDefined) &&
-          assertTrue(requestAcceptedRecord.get.protocolState == ProtocolState.CredentialPending) &&
-          assertTrue(requestAcceptedRecord.get.issueCredentialData.isDefined)
+          assertTrue(requestAcceptedRecord.protocolState == ProtocolState.CredentialPending) &&
+          assertTrue(requestAcceptedRecord.issueCredentialData.isDefined)
         }
       },
       test("acceptCredentialRequest cannot be called twice for the same record") {
@@ -292,8 +289,8 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
           _ <- issuerSvc.markOfferSent(issuerRecord.id)
           request = requestCredential(Some(issuerRecord.thid))
           requestReceivedRecord <- issuerSvc.receiveCredentialRequest(request)
-          requestAcceptedRecord <- issuerSvc.acceptCredentialRequest(requestReceivedRecord.get.id)
-          exit <- issuerSvc.acceptCredentialRequest(requestReceivedRecord.get.id).exit
+          requestAcceptedRecord <- issuerSvc.acceptCredentialRequest(requestReceivedRecord.id)
+          exit <- issuerSvc.acceptCredentialRequest(requestReceivedRecord.id).exit
         } yield {
           assertTrue(exit match
             case Exit.Failure(cause: Cause.Fail[_]) if cause.value.isInstanceOf[InvalidFlowStateError] => true
@@ -308,13 +305,12 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
           _ <- issuerSvc.markOfferSent(issuerRecord.id)
           request = requestCredential(Some(issuerRecord.thid))
           requestReceivedRecord <- issuerSvc.receiveCredentialRequest(request)
-          requestAcceptedRecord <- issuerSvc.acceptCredentialRequest(requestReceivedRecord.get.id)
+          requestAcceptedRecord <- issuerSvc.acceptCredentialRequest(requestReceivedRecord.id)
           issue = issueCredential()
           credentialGeneratedRecord <- issuerSvc.markCredentialGenerated(issuerRecord.id, issue)
         } yield {
-          assertTrue(credentialGeneratedRecord.isDefined) &&
-          assertTrue(credentialGeneratedRecord.get.protocolState == ProtocolState.CredentialGenerated) &&
-          assertTrue(credentialGeneratedRecord.get.issueCredentialData.contains(issue))
+          assertTrue(credentialGeneratedRecord.protocolState == ProtocolState.CredentialGenerated) &&
+          assertTrue(credentialGeneratedRecord.issueCredentialData.contains(issue))
         }
       },
       test("receiveCredentialIssue successfully updates the record") {
@@ -327,9 +323,8 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
           issue = issueCredential(thid = Some(offerReceivedRecord.thid))
           credentialReceivedRecord <- holderSvc.receiveCredentialIssue(issue)
         } yield {
-          assertTrue(credentialReceivedRecord.isDefined) &&
-          assertTrue(credentialReceivedRecord.get.protocolState == ProtocolState.CredentialReceived) &&
-          assertTrue(credentialReceivedRecord.get.issueCredentialData.contains(issue))
+          assertTrue(credentialReceivedRecord.protocolState == ProtocolState.CredentialReceived) &&
+          assertTrue(credentialReceivedRecord.issueCredentialData.contains(issue))
         }
       },
       test("receiveCredentialIssue cannot be called twice for the same record") {
@@ -382,17 +377,17 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
           offerAcceptedRecord <- holderSvc.acceptCredentialOffer(holderRecordId)
           // Holder sends offer
           _ <- holderSvc.markRequestSent(holderRecordId)
-          msg <- ZIO.fromEither(offerAcceptedRecord.get.requestCredentialData.get.makeMessage.asJson.as[Message])
+          msg <- ZIO.fromEither(offerAcceptedRecord.requestCredentialData.get.makeMessage.asJson.as[Message])
           // Issuer receives request
           requestReceivedRecord <- issuerSvc.receiveCredentialRequest(RequestCredential.readFromMessage(msg))
           // Issuer accepts request
           requestAcceptedRecord <- issuerSvc.acceptCredentialRequest(issuerRecordId)
           // Issuer generates credential
-          issue = issueCredential(Some(requestAcceptedRecord.get.thid))
+          issue = issueCredential(Some(requestAcceptedRecord.thid))
           credentialGenerateRecord <- issuerSvc.markCredentialGenerated(issuerRecordId, issue)
           // Issuer sends credential
           _ <- issuerSvc.markCredentialSent(issuerRecordId)
-          msg <- ZIO.fromEither(credentialGenerateRecord.get.issueCredentialData.get.makeMessage.asJson.as[Message])
+          msg <- ZIO.fromEither(credentialGenerateRecord.issueCredentialData.get.makeMessage.asJson.as[Message])
           // Holder receives credential
           _ <- holderSvc.receiveCredentialIssue(IssueCredential.readFromMessage(msg))
         } yield assertTrue(true)

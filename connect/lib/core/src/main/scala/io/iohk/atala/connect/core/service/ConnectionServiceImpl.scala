@@ -121,7 +121,7 @@ private class ConnectionServiceImpl(
   override def acceptConnectionInvitation(
       recordId: UUID,
       pairwiseDid: DidId
-  ): IO[ConnectionServiceError, Option[ConnectionRecord]] =
+  ): IO[ConnectionServiceError, ConnectionRecord] =
     for {
       record <- getRecordWithState(recordId, ProtocolState.InvitationReceived)
       request = ConnectionRequest
@@ -136,18 +136,25 @@ private class ConnectionServiceImpl(
       record <- connectionRepository
         .getConnectionRecord(record.id)
         .mapError(RepositoryError.apply)
+        .flatMap {
+          case None        => ZIO.fail(RecordIdNotFound(recordId))
+          case Some(value) => ZIO.succeed(value)
+        }
     } yield record
 
-  override def markConnectionRequestSent(recordId: UUID): IO[ConnectionServiceError, Option[ConnectionRecord]] =
+  override def markConnectionRequestSent(recordId: UUID): IO[ConnectionServiceError, ConnectionRecord] =
     updateConnectionProtocolState(
       recordId,
       ProtocolState.ConnectionRequestPending,
       ProtocolState.ConnectionRequestSent
-    )
+    ).flatMap {
+      case None        => ZIO.fail(RecordIdNotFound(recordId))
+      case Some(value) => ZIO.succeed(value)
+    }
 
   override def receiveConnectionRequest(
       request: ConnectionRequest
-  ): IO[ConnectionServiceError, Option[ConnectionRecord]] =
+  ): IO[ConnectionServiceError, ConnectionRecord] =
     for {
       record <- getRecordFromThreadIdAndState(
         Some(request.thid.orElse(request.pthid).getOrElse(request.id)),
@@ -163,9 +170,13 @@ private class ConnectionServiceImpl(
       record <- connectionRepository
         .getConnectionRecord(record.id)
         .mapError(RepositoryError.apply)
+        .flatMap {
+          case None        => ZIO.fail(RecordIdNotFound(record.id))
+          case Some(value) => ZIO.succeed(value)
+        }
     } yield record
 
-  override def acceptConnectionRequest(recordId: UUID): IO[ConnectionServiceError, Option[ConnectionRecord]] =
+  override def acceptConnectionRequest(recordId: UUID): IO[ConnectionServiceError, ConnectionRecord] =
     for {
       record <- getRecordWithState(recordId, ProtocolState.ConnectionRequestReceived)
       response <- {
@@ -184,18 +195,25 @@ private class ConnectionServiceImpl(
       record <- connectionRepository
         .getConnectionRecord(record.id)
         .mapError(RepositoryError.apply)
+        .flatMap {
+          case None        => ZIO.fail(RecordIdNotFound(record.id))
+          case Some(value) => ZIO.succeed(value)
+        }
     } yield record
 
-  override def markConnectionResponseSent(recordId: UUID): IO[ConnectionServiceError, Option[ConnectionRecord]] =
+  override def markConnectionResponseSent(recordId: UUID): IO[ConnectionServiceError, ConnectionRecord] =
     updateConnectionProtocolState(
       recordId,
       ProtocolState.ConnectionResponsePending,
       ProtocolState.ConnectionResponseSent,
-    )
+    ).flatMap {
+      case None        => ZIO.fail(RecordIdNotFound(recordId))
+      case Some(value) => ZIO.succeed(value)
+    }
 
   override def receiveConnectionResponse(
       response: ConnectionResponse
-  ): IO[ConnectionServiceError, Option[ConnectionRecord]] =
+  ): IO[ConnectionServiceError, ConnectionRecord] =
     for {
       record <- getRecordFromThreadIdAndState(
         response.thid.orElse(response.pthid),
@@ -212,6 +230,10 @@ private class ConnectionServiceImpl(
       record <- connectionRepository
         .getConnectionRecord(record.id)
         .mapError(RepositoryError.apply)
+        .flatMap {
+          case None        => ZIO.fail(RecordIdNotFound(record.id))
+          case Some(value) => ZIO.succeed(value)
+        }
     } yield record
 
   private[this] def getRecordWithState(

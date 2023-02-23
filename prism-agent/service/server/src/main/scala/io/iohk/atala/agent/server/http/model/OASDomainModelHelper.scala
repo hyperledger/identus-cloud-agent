@@ -29,7 +29,7 @@ import io.iohk.atala.shared.models.HexStrings.*
 import io.iohk.atala.shared.models.Base64UrlStrings.*
 import io.iohk.atala.shared.utils.Traverse.*
 
-import java.net.URI
+import io.lemonlabs.uri.Uri
 import scala.util.Try
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -50,16 +50,18 @@ trait OASDomainModelHelper {
     def toDomain: Either[String, castorDomain.Service] = {
       for {
         serviceEndpoint <- service.serviceEndpoint.traverse(s =>
-          Try(URI.create(s)).toEither.left.map(_ => s"unable to parse serviceEndpoint $s as URI")
+          Uri.parseTry(s).toEither.left.map(_ => s"unable to parse serviceEndpoint $s as URI")
         )
         serviceType <- castorDomain.ServiceType
           .parseString(service.`type`)
           .toRight(s"unsupported serviceType ${service.`type`}")
-      } yield castorDomain.Service(
-        id = service.id,
-        `type` = serviceType,
-        serviceEndpoint = serviceEndpoint
-      )
+      } yield castorDomain
+        .Service(
+          id = service.id,
+          `type` = serviceType,
+          serviceEndpoint = serviceEndpoint
+        )
+        .normalizeServiceEndpoint()
     }
   }
 
@@ -112,7 +114,7 @@ trait OASDomainModelHelper {
       for {
         serviceEndpoint <- servicePatch.serviceEndpoint
           .getOrElse(Nil)
-          .traverse(s => Try(URI.create(s)).toEither.left.map(_ => s"unable to parse serviceEndpoint $s as URI"))
+          .traverse(s => Uri.parseTry(s).toEither.left.map(_ => s"unable to parse serviceEndpoint $s as URI"))
         serviceType <- servicePatch.`type`.fold[Either[String, Option[ServiceType]]](Right(None))(s =>
           castorDomain.ServiceType.parseString(s).toRight(s"unsupported serviceType $s").map(Some(_))
         )

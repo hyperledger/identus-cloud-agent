@@ -126,10 +126,10 @@ class IssueCredentialsProtocolApiServiceImpl(
         .mapError(HttpServiceError.DomainError[CredentialServiceError].apply)
     } yield outcome
 
-    onZioSuccess(result.mapBoth(_.toOAS, _.map(_.toOAS)).either) {
-      case Left(error)         => complete(error.status -> error)
-      case Right(Some(result)) => acceptCredentialOffer200(result)
-      case Right(None) => getCredentialRecord404(notFoundErrorResponse(Some("Issue credential record not found")))
+    onZioSuccess(result.mapBoth(_.toOAS, _.toOAS).either) {
+      case Left(error)   => complete(error.status -> error)
+      case Right(result) => acceptCredentialOffer200(result)
+      // case Right(None) => getCredentialRecord404(notFoundErrorResponse(Some("Issue credential record not found"))) // TODO this is now Left
     }
   }
 
@@ -144,10 +144,10 @@ class IssueCredentialsProtocolApiServiceImpl(
         .mapError(HttpServiceError.DomainError[CredentialServiceError].apply)
     } yield outcome
 
-    onZioSuccess(result.mapBoth(_.toOAS, _.map(_.toOAS)).either) {
-      case Left(error)         => complete(error.status -> error)
-      case Right(Some(result)) => issueCredential200(result)
-      case Right(None) => getCredentialRecord404(notFoundErrorResponse(Some("Issue credential record not found")))
+    onZioSuccess(result.mapBoth(_.toOAS, _.toOAS).either) {
+      case Left(error)   => complete(error.status -> error)
+      case Right(result) => issueCredential200(result)
+      // case Right(None) => getCredentialRecord404(notFoundErrorResponse(Some("Issue credential record not found"))) // TODO this is now Left
     }
   }
 

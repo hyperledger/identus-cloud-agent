@@ -1,3 +1,10 @@
+# [castor-v0.8.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/castor-v0.8.0...castor-v0.8.1) (2023-02-22)
+
+
+### Bug Fixes
+
+* **castor:** use URI that is compliant to RFC3986 ([#385](https://github.com/input-output-hk/atala-prism-building-blocks/issues/385)) ([f92fed6](https://github.com/input-output-hk/atala-prism-building-blocks/commit/f92fed658a20832398538dec51c9ae56b3cf3975))
+
 # [castor-v0.8.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/castor-v0.7.0...castor-v0.8.0) (2023-02-03)
 
 

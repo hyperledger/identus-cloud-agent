@@ -9,6 +9,7 @@ object Dependencies {
     val prismSdk = "v1.4.1" // scala-steward:off
     val shared = "0.2.0"
     val flyway = "9.8.3"
+    val scalaUri = "4.0.3"
   }
 
   private lazy val zio = "dev.zio" %% "zio" % Versions.zio
@@ -23,6 +24,8 @@ object Dependencies {
 
   private lazy val flyway = "org.flywaydb" % "flyway-core" % Versions.flyway
 
+  private lazy val scalaUri = "io.lemonlabs" %% "scala-uri" % Versions.scalaUri
+
   private lazy val shared = "io.iohk.atala" % "shared" % Versions.shared
   private lazy val prismNodeClient = "io.iohk.atala" %% "prism-node-client" % Versions.prismNodeClient
 
@@ -35,7 +38,7 @@ object Dependencies {
   private lazy val prismIdentity = "io.iohk.atala" % "prism-identity-jvm" % Versions.prismSdk
 
   // Dependency Modules
-  private lazy val baseDependencies: Seq[ModuleID] = Seq(zio, zioTest, zioTestSbt, zioTestMagnolia, shared, prismCrypto, prismIdentity, prismNodeClient)
+  private lazy val baseDependencies: Seq[ModuleID] = Seq(zio, zioTest, zioTestSbt, zioTestMagnolia, shared, prismCrypto, prismIdentity, prismNodeClient, scalaUri)
   private lazy val doobieDependencies: Seq[ModuleID] = Seq(doobiePostgres, doobieHikari, flyway)
 
   // Project Dependencies

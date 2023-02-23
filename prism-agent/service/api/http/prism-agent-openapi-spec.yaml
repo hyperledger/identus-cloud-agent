@@ -3,7 +3,7 @@ openapi: 3.0.1
 info:
   title: PrismAgent OpenAPI specification
   description: OpenAPI specification for Decentralized Identifiers (DID) Operations
-  version: 0.1.0
+  version: 0.41.0
   contact:
     name: Core DID
     email: atala-coredid@iohk.io

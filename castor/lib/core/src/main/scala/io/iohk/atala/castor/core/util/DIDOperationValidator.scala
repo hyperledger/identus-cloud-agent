@@ -9,10 +9,11 @@ import io.iohk.atala.castor.core.model.did.{
 }
 import io.iohk.atala.castor.core.model.error.OperationValidationError
 import io.iohk.atala.castor.core.util.DIDOperationValidator.Config
+import io.iohk.atala.castor.core.util.UriUtils
 import io.iohk.atala.castor.core.util.Prelude.*
 import zio.*
 
-import java.net.URI
+import io.lemonlabs.uri.Uri
 import scala.collection.immutable.ArraySeq
 
 object DIDOperationValidator {
@@ -75,7 +76,7 @@ private object CreateOperationValidator extends BaseOperationValidator {
 
   private def extractServiceIds(operation: PrismDIDOperation.Create): Seq[String] = operation.services.map(_.id)
 
-  private def extractServiceEndpoint(operation: PrismDIDOperation.Create): Seq[(String, Seq[URI])] =
+  private def extractServiceEndpoint(operation: PrismDIDOperation.Create): Seq[(String, Seq[Uri])] =
     operation.services.map(s => s.id -> s.serviceEndpoint)
 }
 
@@ -152,7 +153,7 @@ private object UpdateOperationValidator extends BaseOperationValidator {
     case UpdateDIDAction.UpdateService(id, _, _) => Some(id)
   }
 
-  private def extractServiceEndpoint(operation: PrismDIDOperation.Update): Seq[(String, Seq[URI])] =
+  private def extractServiceEndpoint(operation: PrismDIDOperation.Update): Seq[(String, Seq[Uri])] =
     operation.actions.collect {
       case UpdateDIDAction.AddService(service)             => service.id -> service.serviceEndpoint
       case UpdateDIDAction.UpdateService(id, _, endpoints) => id -> endpoints
@@ -168,7 +169,7 @@ private trait BaseOperationValidator {
 
   type KeyIdExtractor[T] = T => Seq[String]
   type ServiceIdExtractor[T] = T => Seq[String]
-  type ServiceEndpointExtractor[T] = T => Seq[(String, Seq[URI])]
+  type ServiceEndpointExtractor[T] = T => Seq[(String, Seq[Uri])]
 
   protected def validateMaxPublicKeysAccess[T <: PrismDIDOperation](
       config: Config
@@ -209,7 +210,7 @@ private trait BaseOperationValidator {
       keyIdExtractor: KeyIdExtractor[T]
   ): Either[OperationValidationError, Unit] = {
     val ids = keyIdExtractor(operation)
-    val invalidIds = ids.filterNot(isValidUriFragment)
+    val invalidIds = ids.filterNot(UriUtils.isValidUriFragment)
     if (invalidIds.isEmpty) Right(())
     else
       Left(
@@ -222,7 +223,7 @@ private trait BaseOperationValidator {
       serviceIdExtractor: ServiceIdExtractor[T]
   ): Either[OperationValidationError, Unit] = {
     val ids = serviceIdExtractor(operation)
-    val invalidIds = ids.filterNot(isValidUriFragment)
+    val invalidIds = ids.filterNot(UriUtils.isValidUriFragment)
     if (invalidIds.isEmpty) Right(())
     else
       Left(OperationValidationError.InvalidArgument(s"service id is invalid: ${invalidIds.mkString("[", ", ", "]")}"))
@@ -253,29 +254,9 @@ private trait BaseOperationValidator {
   }
 
   /** @return true if a given uri is normalized */
-  protected def isUriNormalized(uri: URI): Boolean = {
-    val normalized = uri.normalize()
-    uri.toString == normalized.toString
-  }
-
-  /** Checks if a string is a valid URI fragment according to <a
-    * href="https://www.rfc-editor.org/rfc/rfc3986#section-3.5">RFC&nbsp;3986&nbsp;section-3.5</a>
-    *
-    * @param str
-    * @return
-    *   true if str is a valid URI fragment, otherwise false
-    */
-  protected def isValidUriFragment(str: String): Boolean = {
-
-    /*
-     * Alphanumeric characters (A-Z, a-z, 0-9)
-     * Some special characters: -._~!$&'()*+,;=:@
-     * Percent-encoded characters, which are represented by the pattern %[0-9A-Fa-f]{2}
-     */
-    val uriFragmentRegex = "^([A-Za-z0-9\\-._~!$&'()*+,;=:@/?]|%[0-9A-Fa-f]{2})*$".r
-
-    // In general, empty URI fragment is a valid fragment, but for our use-case it would be pointless
-    str.nonEmpty && uriFragmentRegex.matches(str)
+  protected def isUriNormalized(uri: Uri): Boolean = {
+    val uriString = uri.toString
+    UriUtils.normalizeUri(uriString).contains(uriString)
   }
 
 }

@@ -53,11 +53,11 @@ class CredentialSchemasSteps {
     @When("{actor} creates {int} new schemas")
     fun acmeCreatesMultipleSchemas(actor: Actor, numberOfSchemas: Int) {
         val createdSchemas: MutableList<CredentialSchema> = mutableListOf()
-        repeat(numberOfSchemas) {
+        repeat(numberOfSchemas) { i: Int ->
             actor.attemptsTo(
                 Post.to("/schema-registry/schemas")
                     .with {
-                        it.body(TestConstants.CREDENTIAL_SCHEMAS.STUDENT_SCHEMA)
+                        it.body(TestConstants.CREDENTIAL_SCHEMAS.generate_with_name_suffix(i.toString()))
                     }
             )
             actor.should(

@@ -184,7 +184,7 @@ private class CredentialServiceImpl(
     } yield record
   }
 
-  override def acceptCredentialOffer(recordId: UUID): IO[CredentialServiceError, Option[IssueCredentialRecord]] = {
+  override def acceptCredentialOffer(recordId: UUID): IO[CredentialServiceError, IssueCredentialRecord] = {
     for {
       record <- getRecordWithState(recordId, ProtocolState.OfferReceived)
       offer <- ZIO
@@ -200,12 +200,16 @@ private class CredentialServiceImpl(
       record <- credentialRepository
         .getIssueCredentialRecord(record.id)
         .mapError(RepositoryError.apply)
+        .flatMap {
+          case None        => ZIO.fail(RecordIdNotFound(recordId))
+          case Some(value) => ZIO.succeed(value)
+        }
     } yield record
   }
 
   override def receiveCredentialRequest(
       request: RequestCredential
-  ): IO[CredentialServiceError, Option[IssueCredentialRecord]] = {
+  ): IO[CredentialServiceError, IssueCredentialRecord] = {
     for {
       record <- getRecordFromThreadIdWithState(request.thid, ProtocolState.OfferPending, ProtocolState.OfferSent)
       _ <- credentialRepository
@@ -218,10 +222,11 @@ private class CredentialServiceImpl(
       record <- credentialRepository
         .getIssueCredentialRecord(record.id)
         .mapError(RepositoryError.apply)
+        .someOrFail(RecordIdNotFound(record.id))
     } yield record
   }
 
-  override def acceptCredentialRequest(recordId: UUID): IO[CredentialServiceError, Option[IssueCredentialRecord]] = {
+  override def acceptCredentialRequest(recordId: UUID): IO[CredentialServiceError, IssueCredentialRecord] = {
     for {
       record <- getRecordWithState(recordId, ProtocolState.RequestReceived)
       request <- ZIO
@@ -237,12 +242,13 @@ private class CredentialServiceImpl(
       record <- credentialRepository
         .getIssueCredentialRecord(record.id)
         .mapError(RepositoryError.apply)
+        .someOrFail(RecordIdNotFound(record.id))
     } yield record
   }
 
   override def receiveCredentialIssue(
       issue: IssueCredential
-  ): IO[CredentialServiceError, Option[IssueCredentialRecord]] = {
+  ): IO[CredentialServiceError, IssueCredentialRecord] = {
     val rawIssuedCredential = issue.attachments.map(_.data.asJson.noSpaces).headOption.getOrElse("???") // TODO
     for {
       record <- getRecordFromThreadIdWithState(issue.thid, ProtocolState.RequestPending, ProtocolState.RequestSent)
@@ -256,17 +262,18 @@ private class CredentialServiceImpl(
       record <- credentialRepository
         .getIssueCredentialRecord(record.id)
         .mapError(RepositoryError.apply)
+        .someOrFail(RecordIdNotFound(record.id))
     } yield record
   }
 
-  override def markOfferSent(recordId: UUID): IO[CredentialServiceError, Option[IssueCredentialRecord]] =
+  override def markOfferSent(recordId: UUID): IO[CredentialServiceError, IssueCredentialRecord] =
     updateCredentialRecordProtocolState(
       recordId,
       IssueCredentialRecord.ProtocolState.OfferPending,
       IssueCredentialRecord.ProtocolState.OfferSent
     )
 
-  override def markRequestSent(recordId: UUID): IO[CredentialServiceError, Option[IssueCredentialRecord]] =
+  override def markRequestSent(recordId: UUID): IO[CredentialServiceError, IssueCredentialRecord] =
     updateCredentialRecordProtocolState(
       recordId,
       IssueCredentialRecord.ProtocolState.RequestPending,
@@ -276,7 +283,7 @@ private class CredentialServiceImpl(
   override def markCredentialGenerated(
       recordId: UUID,
       issueCredential: IssueCredential
-  ): IO[CredentialServiceError, Option[IssueCredentialRecord]] = {
+  ): IO[CredentialServiceError, IssueCredentialRecord] = {
     for {
       record <- getRecordWithState(recordId, ProtocolState.CredentialPending)
       count <- credentialRepository
@@ -292,10 +299,15 @@ private class CredentialServiceImpl(
       record <- credentialRepository
         .getIssueCredentialRecord(recordId)
         .mapError(RepositoryError.apply)
+        .flatMap {
+          case None        => ZIO.fail(RecordIdNotFound(recordId))
+          case Some(value) => ZIO.succeed(value)
+        }
+
     } yield record
   }
 
-  override def markCredentialSent(recordId: UUID): IO[CredentialServiceError, Option[IssueCredentialRecord]] =
+  override def markCredentialSent(recordId: UUID): IO[CredentialServiceError, IssueCredentialRecord] =
     updateCredentialRecordProtocolState(
       recordId,
       IssueCredentialRecord.ProtocolState.CredentialGenerated,
@@ -304,7 +316,7 @@ private class CredentialServiceImpl(
 
   override def markCredentialPublicationPending(
       recordId: UUID
-  ): IO[CredentialServiceError, Option[IssueCredentialRecord]] =
+  ): IO[CredentialServiceError, IssueCredentialRecord] =
     updateCredentialRecordPublicationState(
       recordId,
       None,
@@ -313,14 +325,14 @@ private class CredentialServiceImpl(
 
   override def markCredentialPublicationQueued(
       recordId: UUID
-  ): IO[CredentialServiceError, Option[IssueCredentialRecord]] =
+  ): IO[CredentialServiceError, IssueCredentialRecord] =
     updateCredentialRecordPublicationState(
       recordId,
       Some(IssueCredentialRecord.PublicationState.PublicationPending),
       Some(IssueCredentialRecord.PublicationState.PublicationQueued)
     )
 
-  override def markCredentialPublished(recordId: UUID): IO[CredentialServiceError, Option[IssueCredentialRecord]] =
+  override def markCredentialPublished(recordId: UUID): IO[CredentialServiceError, IssueCredentialRecord] =
     updateCredentialRecordPublicationState(
       recordId,
       Some(IssueCredentialRecord.PublicationState.PublicationQueued),
@@ -422,41 +434,110 @@ private class CredentialServiceImpl(
     )
   }
 
+  /** this is an auxiliary function.
+    *
+    * @note
+    *   Between updating and getting the CredentialRecord back the CredentialRecord can be updated by other operations
+    *   in the middle.
+    *
+    * TODO: this should be improved to behave exactly like atomic operation.
+    */
   private[this] def updateCredentialRecordProtocolState(
       id: UUID,
       from: IssueCredentialRecord.ProtocolState,
       to: IssueCredentialRecord.ProtocolState
-  ): IO[CredentialServiceError, Option[IssueCredentialRecord]] = {
+  ): IO[CredentialServiceError, IssueCredentialRecord] = {
     for {
-      outcome <- credentialRepository
-        .updateCredentialRecordProtocolState(id, from, to)
-        .flatMap {
-          case 1 => ZIO.succeed(())
-          case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
-        }
-        .mapError(RepositoryError.apply)
       record <- credentialRepository
-        .getIssueCredentialRecord(id)
+        .updateCredentialRecordProtocolState(id, from, to)
         .mapError(RepositoryError.apply)
+        .flatMap {
+          case 0 =>
+            credentialRepository
+              .getIssueCredentialRecord(id)
+              .mapError(RepositoryError.apply)
+              .flatMap {
+                case None => ZIO.fail(RecordIdNotFound(id))
+                case Some(record) if record.protocolState == to => // Not update by is alredy on the desirable state
+                  ZIO.succeed(record)
+                case Some(record) =>
+                  ZIO.fail(
+                    OperationNotExecuted(
+                      id,
+                      s"CredentialRecord was not updated because have the ProtocolState ${record.protocolState}"
+                    )
+                  )
+              }
+          case 1 =>
+            credentialRepository
+              .getIssueCredentialRecord(id)
+              .mapError(RepositoryError.apply)
+              .flatMap {
+                case None => ZIO.fail(RecordIdNotFound(id))
+                case Some(record) =>
+                  ZIO
+                    .logError(
+                      s"The CredentialRecord ($id) is expected to be on the ProtocolState '$to' after updating it"
+                    )
+                    .when(record.protocolState != to)
+                    .as(record)
+              }
+          case n => ZIO.fail(UnexpectedError(s"Invalid row count result: $n"))
+        }
     } yield record
   }
 
+  /** this is an auxiliary function.
+    *
+    * @note
+    *   Between updating and getting the CredentialRecord back the CredentialRecord can be updated by other operations
+    *   in the middle.
+    *
+    * TODO: this should be improved to behave exactly like atomic operation.
+    */
   private[this] def updateCredentialRecordPublicationState(
       id: UUID,
       from: Option[IssueCredentialRecord.PublicationState],
       to: Option[IssueCredentialRecord.PublicationState]
-  ): IO[CredentialServiceError, Option[IssueCredentialRecord]] = {
+  ): IO[CredentialServiceError, IssueCredentialRecord] = {
     for {
-      outcome <- credentialRepository
-        .updateCredentialRecordPublicationState(id, from, to)
-        .flatMap {
-          case 1 => ZIO.succeed(())
-          case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
-        }
-        .mapError(RepositoryError.apply)
       record <- credentialRepository
-        .getIssueCredentialRecord(id)
+        .updateCredentialRecordPublicationState(id, from, to)
         .mapError(RepositoryError.apply)
+        .flatMap {
+          case 0 =>
+            credentialRepository
+              .getIssueCredentialRecord(id)
+              .mapError(RepositoryError.apply)
+              .flatMap {
+                case None => ZIO.fail(RecordIdNotFound(id))
+                case Some(record) if record.publicationState == to => // Not update by is alredy on the desirable state
+                  ZIO.succeed(record)
+                case Some(record) =>
+                  ZIO.fail(
+                    OperationNotExecuted(
+                      id,
+                      s"CredentialRecord was not updated because have the PublicationState ${record.publicationState}"
+                    )
+                  )
+              }
+          case 1 =>
+            credentialRepository
+              .getIssueCredentialRecord(id)
+              .mapError(RepositoryError.apply)
+              .flatMap {
+                case None => ZIO.fail(RecordIdNotFound(id))
+                case Some(record) =>
+                  {
+                    if (record.publicationState == to) (ZIO.unit)
+                    else
+                      ZIO.logError(
+                        s"The CredentialRecord ($id) is expected to be on the PublicationState '$to' after updating it"
+                      ) // The expectation is for the record to still be on the state we (just) updated to
+                  } *> ZIO.succeed(record)
+              }
+          case n => ZIO.fail(UnexpectedError(s"Invalid row count result: $n"))
+        }
     } yield record
   }
 

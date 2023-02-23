@@ -10,5 +10,6 @@ data class Connection(
     var state: String = "",
     var label: String = "",
     var myDid: String = "",
-    var theirDid: String = ""
+    var theirDid: String = "",
+    var role: String = "",
 )

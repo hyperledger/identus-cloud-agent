@@ -1,6 +1,5 @@
 package io.iohk.atala.castor.core.model
 
-import java.net.URI
 import java.time.Instant
 import com.google.protobuf.ByteString
 import io.iohk.atala.castor.core.model.did.{
@@ -30,6 +29,7 @@ import io.iohk.atala.shared.models.HexStrings.*
 import io.iohk.atala.shared.models.Base64UrlStrings.*
 import io.iohk.atala.shared.utils.Traverse.*
 import io.iohk.atala.prism.protos.{common_models, node_api, node_models}
+import io.lemonlabs.uri.Uri
 import zio.*
 
 import scala.util.Try
@@ -239,7 +239,7 @@ private[castor] trait ProtoModelHelper {
     def toDomain: Either[String, Service] = {
       for {
         uris <- service.serviceEndpoint.traverse(s =>
-          Try(URI.create(s)).toEither.left.map(_ => s"unable to parse serviceEndpoint $s as URI")
+          Uri.parseTry(s).toEither.left.map(_ => s"unable to parse serviceEndpoint $s as URI")
         )
         serviceType <- ServiceType
           .parseString(service.`type`)
