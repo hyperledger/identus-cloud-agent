@@ -1,11 +1,11 @@
 # Create DID
 
-PRISM DID is a type of _decentralized identifier_ that is used across Atala PRISM product suites.
-It is powered by a variation of a [_sidetree protocol_](https://identity.foundation/sidetree/spec/) and uses Cardano blockchain as the underlying ledger for DID resolution and operation publication.
+PRISM DIDs are a type of _decentralized identifier_ used across Atala PRISM product suites.
 
-A PRISM DID can be created entirely offline without interacting with the blockchain.
-This can be done by constructing a DID create-operation, which is a protobuf message with a set of public keys and services.
-Once the create-operation is constructed, a DID can be derived from this operation which is well-defined by the PRISM DID method. [**TODO**: insert a link to the spec]
+It is a variation of a [_sidetree protocol_](https://identity.foundation/sidetree/spec/) and uses the Cardano blockchain as the underlying ledger for DID resolution and operation publication.
+
+A PRISM DID can be created entirely offline without interacting with the blockchain by constructing a DID create-operation, a protobuf message with a set of public keys and services.
+Once the create-operation gets constructed, deriving a DID from this operation is possible, which is well-defined by the PRISM DID method. [**TODO**: insert a link to the spec]
 
 ## Roles
 
@@ -17,28 +17,27 @@ Once the create-operation is constructed, a DID can be derived from this operati
 
 ## Overview
 
-For this example, a PRISM DID is created and stored inside PRISM Agent along with the private keys.
-The DID is not automatically published after its creation.
+For this example, a PRISM DID gets created and stored inside PRISM Agent along with the private keys. It is not automatically published.
 The Agent will keep track of private keys used for the create-operation and the content of the operation itself.
 
-PRISM Agent provides two endpoint groups to facilitate the PRISM DID usage.
+PRISM Agent provides two endpoint groups to facilitate PRISM DID usage.
 
 - `/dids/*`
-Facilitates a low-level interaction between DID operation and the blockchain.
-The DID controllers are expected to handle key management independently and use these endpoints for blockchain interaction.
+are facilitators of low-level interactions between DID operations and the blockchain.
+The DID controllers will handle key management independently and use these endpoints for blockchain interaction.
 
 - `/did-registrar/*`
-Facilitates a higher-level interaction with PRISM DID where PRISM Agent handles key-management concerns.
+Facilitates a higher-level interaction with PRISM DID, where the PRISM Agent handles key management concerns.
 
 ## Endpoints
 
 The example uses the following endpoints
 
-| Endpoint                                                                               | Description                                   | Role           |
-|----------------------------------------------------------------------------------------|-----------------------------------------------|----------------|
-| [`GET /did-registrar/dids`](/agent-api/#tag/DID-Registrar/operation/listManagedDid)    | List all DIDs stored in PRISM Agent           | DID Controller |
-| [`POST /did-registrar/dids`](/agent-api/#tag/DID-Registrar/operation/createManagedDid) | Create a new PRISM DID managed by PRISM Agent | DID Controller |
-| [`GET /dids/{didRef}`](/agent-api/#tag/DID/operation/getDid)                           | Resolve a DID to DID document                 | DID Controller |
+| Endpoint                                                                               | Description                                         | Role           |
+|----------------------------------------------------------------------------------------|-----------------------------------------------------|----------------|
+| [`GET /did-registrar/dids`](/agent-api/#tag/DID-Registrar/operation/listManagedDid)    | List all DIDs stored in PRISM Agent                 | DID Controller |
+| [`POST /did-registrar/dids`](/agent-api/#tag/DID-Registrar/operation/createManagedDid) | Create a new PRISM DID to be managed by PRISM Agent | DID Controller |
+| [`GET /dids/{didRef}`](/agent-api/#tag/DID/operation/getDid)                           | Resolve a DID to DID document                       | DID Controller |
 
 ## DID Controller interactions
 
@@ -48,12 +47,12 @@ The example uses the following endpoints
 curl --location --request GET 'http://localhost:8080/prism-agent/did-registrar/dids' \
   --header 'Accept: application/json'
 ```
-The result should show an empty list as no DID has been created on this PRISM Agent instance.
+The result should show an empty list, as no DIDs exist on this PRISM Agent instance.
 
 ### 2. Create a PRISM Agent managed DID using DID registrar endpoint
 
 The DID controller can create a new DID by sending a DID document template to the Agent.
-Since key pairs are generated and managed by PRISM Agent, DID controller only has to specify the key `id` and its purpose (e.g. `authentication`, `assertionMethod`, etc).
+Since key pairs are generated and managed by PRISM Agent, DID controller only has to specify the key `id` and its purpose (e.g., `authentication`, `assertionMethod`, etc.).
 
 ```bash
 curl --location --request POST 'http://localhost:8080/prism-agent/did-registrar/dids' \
@@ -82,7 +81,7 @@ The response should look like
 
 ### 3. List the created DID
 
-`GET /did-registrar/dids` endpoint returns the response that should have a list containing one DID.
+Checking the `GET /did-registrar/dids` endpoint, the response should return a list containing 1 DID.
 
 ```json
 [
@@ -98,8 +97,8 @@ The response should look like
 
 To check that the DID document is correctly populated, test the created DID against the resolution endpoint.
 
-Replacing the `{DID_REF}` with the long-form DID and the response should return the DID document.
-Replacing the `{DID_REF}` with the short-form DID and the resolution should fail since the DID is not yet published.
+Replacing the `{DID_REF}` with the long-form DID, and the response should return the DID document.
+Replacing the `{DID_REF}` with the short-form DID, and the resolution should fail since the DID is not yet published.
 
 ```bash
 curl --location --request GET 'http://localhost:8080/prism-agent/dids/{DID_REF}' \
