@@ -57,12 +57,15 @@ class DIDRegistrarApiServiceImpl(service: ManagedDIDService)(using runtime: Runt
   }
 
   override def listManagedDid()(implicit
-      toEntityMarshallerListManagedDIDResponseInnerarray: ToEntityMarshaller[Seq[ListManagedDIDResponseInner]],
+      toEntityMarshallerManagedDIDCollection: ToEntityMarshaller[ManagedDIDCollection],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
-    val result = service.listManagedDID
-      .map(_.map(_.toOAS))
-      .mapError(HttpServiceError.DomainError.apply)
+    // TODO: proper pagination
+    val result = for {
+      dids <- service.listManagedDID
+        .map(_.map(_.toOAS))
+        .mapError(HttpServiceError.DomainError.apply)
+    } yield ???
 
     onZioSuccess(result.mapError(_.toOAS).either) {
       case Left(error)   => complete(error.status -> error)

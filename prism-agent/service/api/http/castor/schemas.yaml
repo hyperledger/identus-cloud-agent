@@ -212,28 +212,48 @@ components:
                       type: string
                       example: "https://bar.example.com"
 
-    ListManagedDIDResponse:
-      type: array
-      items:
-        type: object
-        required:
-          - did
-          - status
-        properties:
-          did:
-            type: string
-            example: did:prism:abc
-          longFormDid:
-            type: string
-            description: A long-form DID. Mandatory when status is not PUBLISHED and optional when status is PUBLISHED
-            example: did:prism:abc:123
-          status:
-            type: string
-            description: A status indicating whether this is already published from the wallet or not. Does not represent DID full lifecyle (e.g. deactivated, recovered, updated).
-            enum:
-              - CREATED
-              - PUBLICATION_PENDING
-              - PUBLISHED
+    ManagedDIDCollection:
+      type: object
+      required:
+        - self
+        - kind
+        - pageOf
+      properties:
+        self:
+          type: string
+        kind:
+          type: string
+        pageOf:
+          type: string
+        next:
+          type: string
+        previous:
+          type: string
+        contents:
+          type: array
+          items:
+            $ref: "#/components/schemas/ManagedDID"
+
+    ManagedDID:
+      type: object
+      required:
+        - did
+        - status
+      properties:
+        did:
+          type: string
+          example: did:prism:abc
+        longFormDid:
+          type: string
+          description: A long-form DID. Mandatory when status is not PUBLISHED and optional when status is PUBLISHED
+          example: did:prism:abc:123
+        status:
+          type: string
+          description: A status indicating whether this is already published from the wallet or not. Does not represent DID full lifecyle (e.g. deactivated, recovered, updated).
+          enum:
+            - CREATED
+            - PUBLICATION_PENDING
+            - PUBLISHED
 
     PublicKeyJwk:
       type: object
