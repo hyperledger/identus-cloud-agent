@@ -441,12 +441,11 @@ class JdbcCredentialRepository(xa: Transactor[Task], maxRetries: Int) extends Cr
         | UPDATE public.issue_credential_records
         | SET
         |   meta_retries = meta_retries - 1,
-        |   meta_next_retry = ${Instant.now().plusSeconds(60)},
+        |   meta_next_retry = CASE WHEN (meta_retries > 1) THEN ${Instant.now().plusSeconds(60)} ELSE null END,
         |   meta_last_failure = ${failReason}
         | WHERE
         |   id = $recordId
         """.stripMargin.update
-    // FIXME   meta_next_retry = ${if (record.metaRetries - 1 == 0) None else Some(Instant.now().plusSeconds(60))} // TODO exponention time
     cxnIO.run.transact(xa)
   }
 }
