@@ -21,7 +21,7 @@ import java.util.UUID
 import io.iohk.atala.castor.core.model.did.PrismDID
 
 object CredentialRepositorySpecSuite {
-  val maxRetries = 2
+  val maxRetries = 5 // TODO Move to config
 
   private def issueCredentialRecord = IssueCredentialRecord(
     id = UUID.randomUUID,
@@ -361,6 +361,35 @@ object CredentialRepositorySpecSuite {
         assertTrue(record.get.issueCredentialData.isEmpty) &&
         assertTrue(updatedRecord.get.issueCredentialData.contains(issueCredential)) &&
         assertTrue(updatedRecord.get.issuedCredentialRaw.contains("RAW_CREDENTIAL_DATA"))
+      }
+    },
+    test("updateFail (fail one retry) updates record") {
+      val aRecord = issueCredentialRecord
+
+      val failReason = Some("Just to test")
+      for {
+        repo <- ZIO.service[CredentialRepository[Task]]
+        tmp <- repo.createIssueCredentialRecord(aRecord)
+        record0 <- repo.getIssueCredentialRecord(aRecord.id)
+        // record <- repo.getIssueCredentialRecord(aRecord.id)
+        count <- repo.updateAfterFail(aRecord.id, Some("Just to test")) // TEST
+        updatedRecord1 <- repo.getIssueCredentialRecord(aRecord.id)
+        count <- repo.updateCredentialRecordProtocolState(
+          aRecord.id,
+          ProtocolState.OfferPending,
+          ProtocolState.OfferSent
+        )
+        updatedRecord2 <- repo.getIssueCredentialRecord(aRecord.id)
+      } yield {
+        assertTrue(tmp == 1) &&
+        assertTrue(record0.isDefined) &&
+        assertTrue(record0.get.metaRetries == maxRetries) &&
+        assertTrue(updatedRecord1.get.metaRetries == (maxRetries - 1)) &&
+        assertTrue(updatedRecord1.get.metaLastFailure == failReason) &&
+        // continues to work normally after retry
+        assertTrue(count == 1) &&
+        assertTrue(updatedRecord2.get.metaRetries == maxRetries) &&
+        assertTrue(updatedRecord2.get.metaLastFailure == None)
       }
     }
   )

@@ -13,7 +13,10 @@ import zio.*
 import java.time.Instant
 import java.util.UUID
 
-class CredentialRepositoryInMemory(storeRef: Ref[Map[UUID, IssueCredentialRecord]]) extends CredentialRepository[Task] {
+class CredentialRepositoryInMemory(
+    storeRef: Ref[Map[UUID, IssueCredentialRecord]],
+    maxRetries: Int
+) extends CredentialRepository[Task] {
 
   override def updateCredentialRecordPublicationState(
       recordId: UUID,
@@ -70,7 +73,15 @@ class CredentialRepositoryInMemory(storeRef: Ref[Map[UUID, IssueCredentialRecord
       count <- maybeRecord
         .map(record =>
           for {
-            _ <- storeRef.update(r => r.updated(recordId, record.copy(protocolState = to)))
+            _ <- storeRef.update(r =>
+              r.updated(
+                recordId,
+                record.copy(
+                  protocolState = to,
+                  metaRetries = maxRetries
+                )
+              )
+            )
           } yield 1
         )
         .getOrElse(ZIO.succeed(0))
@@ -223,9 +234,10 @@ class CredentialRepositoryInMemory(storeRef: Ref[Map[UUID, IssueCredentialRecord
 }
 
 object CredentialRepositoryInMemory {
+  val maxRetries = 5 // TODO Move to config
   val layer: ULayer[CredentialRepository[Task]] = ZLayer.fromZIO(
     Ref
       .make(Map.empty[UUID, IssueCredentialRecord])
-      .map(CredentialRepositoryInMemory(_))
+      .map(CredentialRepositoryInMemory(_, maxRetries))
   )
 }

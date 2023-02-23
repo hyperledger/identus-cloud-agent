@@ -30,7 +30,7 @@ import org.postgresql.util.PSQLState
 import java.sql.SQLException
 
 // TODO: replace with actual implementation
-class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepository[Task] {
+class JdbcCredentialRepository(xa: Transactor[Task], maxRetries: Int) extends CredentialRepository[Task] {
   // serializes into hex string
 
   private def serializeInclusionProof(proof: MerkleInclusionProof): String = BytesOps.bytesToHex(proof.encode.getBytes)
@@ -50,8 +50,6 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
   given uuidGet: Get[UUID] = Get[String].map(UUID.fromString)
   given uuidPut: Put[UUID] = Put[String].contramap(_.toString())
 
-  // given instantGet: Get[Instant] = Get[Long].map(Instant.ofEpochSecond)
-  // given instantPut: Put[Instant] = Put[Long].contramap(_.getEpochSecond())
   import doobie.postgres.implicits.JavaTimeInstantMeta
 
   given protocolStateGet: Get[ProtocolState] = Get[String].map(ProtocolState.valueOf)
@@ -281,7 +279,10 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         | UPDATE public.issue_credential_records
         | SET
         |   protocol_state = $to,
-        |   updated_at = ${Instant.now}
+        |   updated_at = ${Instant.now},
+        |   meta_retries = $maxRetries,
+        |   meta_next_retry = ${Instant.now},
+        |   meta_last_failure = null
         | WHERE
         |   id = $recordId
         |   AND protocol_state = $from
@@ -451,6 +452,7 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
 }
 
 object JdbcCredentialRepository {
+  val maxRetries = 5 // TODO Move to config
   val layer: URLayer[Transactor[Task], CredentialRepository[Task]] =
-    ZLayer.fromFunction(new JdbcCredentialRepository(_))
+    ZLayer.fromFunction(new JdbcCredentialRepository(_, maxRetries))
 }
