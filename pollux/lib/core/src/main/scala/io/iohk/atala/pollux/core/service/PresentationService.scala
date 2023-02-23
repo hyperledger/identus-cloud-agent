@@ -358,7 +358,7 @@ private class PresentationServiceImpl(
         .getValidIssuedCredentials(credentialsToUse.map(UUID.fromString))
         .mapError(RepositoryError.apply)
       _ <- ZIO.cond(
-        issuedValidCredentials.forall(_.subjectId == issuedValidCredentials.head.subjectId),
+        (issuedValidCredentials.map(_.subjectId).toSet.size == 1),
         (),
         PresentationError.HolderBindingError(
           s"Creating a Verifiable Presentation for credential with different subject DID is not supported, found : ${issuedValidCredentials
