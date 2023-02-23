@@ -1,3 +1,12 @@
 {
-  "indentation": ["on", {"Feature": 0, "Scenario": 2, "Step": 4}],
+  "indentation" : [
+    "on", {
+      "Feature": 0,
+      "Background": 0,
+      "Scenario": 2,
+      "Step": 4,
+      "Examples": 4,
+      "example": 6
+    }
+  ]
 }
