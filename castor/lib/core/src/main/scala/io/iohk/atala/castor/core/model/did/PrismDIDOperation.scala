@@ -7,7 +7,7 @@ import scala.collection.compat.immutable.ArraySeq
 import io.iohk.atala.prism.protos.node_models
 import io.iohk.atala.shared.models.HexStrings.HexString
 
-import java.net.URI
+import io.lemonlabs.uri.Uri
 
 sealed trait PrismDIDOperation {
   def did: CanonicalPrismDID
@@ -70,6 +70,6 @@ object UpdateDIDAction {
   final case class RemoveKey(id: String) extends UpdateDIDAction
   final case class AddService(service: Service) extends UpdateDIDAction
   final case class RemoveService(id: String) extends UpdateDIDAction
-  final case class UpdateService(id: String, `type`: Option[ServiceType] = None, endpoints: Seq[URI] = Nil)
+  final case class UpdateService(id: String, `type`: Option[ServiceType] = None, endpoints: Seq[Uri] = Nil)
       extends UpdateDIDAction
 }

@@ -102,7 +102,7 @@ class ManageDidSteps {
 
     private fun createManagedDidRequest(): CreateManagedDidRequest {
         val publicKeys = listOf(PublicKey("123", Purpose.AUTHENTICATION))
-        val services = listOf(Service("did:prism:321", "MediatorService", listOf("https://foo.bar.com")))
+        val services = listOf(Service("did:prism:321", "LinkedDomains", listOf("https://foo.bar.com")))
         val documentTemplate = DocumentTemplate(publicKeys, services)
         return CreateManagedDidRequest(documentTemplate)
     }

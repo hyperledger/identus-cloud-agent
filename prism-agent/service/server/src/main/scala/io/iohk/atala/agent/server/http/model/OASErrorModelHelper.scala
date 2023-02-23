@@ -10,6 +10,7 @@ import io.iohk.atala.agent.walletapi.model.error.{
 }
 import io.iohk.atala.castor.core.model.did.w3c.DIDResolutionErrorRepr
 import io.iohk.atala.castor.core.model.error.DIDOperationError
+import io.iohk.atala.castor.core.model.error.OperationValidationError
 import io.iohk.atala.castor.core.model.error.DIDResolutionError
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
@@ -44,18 +45,6 @@ trait OASErrorModelHelper {
     }
   }
 
-  given ToErrorResponse[DIDOperationError] with {
-    override def toErrorResponse(e: DIDOperationError): ErrorResponse = {
-      ErrorResponse(
-        `type` = "error-type",
-        title = "error-title",
-        status = 500,
-        detail = Some(e.toString),
-        instance = "error-instance"
-      )
-    }
-  }
-
   given ToErrorResponse[GetManagedDIDError] with {
     override def toErrorResponse(e: GetManagedDIDError): ErrorResponse = {
       ErrorResponse(
@@ -82,11 +71,18 @@ trait OASErrorModelHelper {
 
   given ToErrorResponse[CreateManagedDIDError] with {
     override def toErrorResponse(e: CreateManagedDIDError): ErrorResponse = {
+      val (status, detail) = e match {
+        case CreateManagedDIDError.InvalidArgument(msg)    => (422, s"Unable to construct a DID operation: $msg")
+        case CreateManagedDIDError.DIDAlreadyExists(did)   => (409, s"DID ${did.toString} already exists")
+        case CreateManagedDIDError.KeyGenerationError(_)   => (500, s"Internal server error (key-pair generation)")
+        case CreateManagedDIDError.WalletStorageError(_)   => (500, s"Internal server error (storage)")
+        case CreateManagedDIDError.InvalidOperation(cause) => (422, s"Create DID payload is invalid: ${cause.toString}")
+      }
       ErrorResponse(
         `type` = "error-type",
         title = "error-title",
-        status = 500,
-        detail = Some(e.toString),
+        status = status,
+        detail = Some(detail),
         instance = "error-instance"
       )
     }
