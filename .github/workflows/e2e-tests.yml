@@ -148,7 +148,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Slack Notification
-        if: github.ref_name == 'master'
+        if: github.ref_name == 'main'
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_CHANNEL: atala-qa-results
