@@ -1,7 +1,4 @@
 package api_models
-
-import com.fasterxml.jackson.annotation.JsonValue
-
 data class Connection(
     var connectionId: String = "",
     var createdAt: String = "",
