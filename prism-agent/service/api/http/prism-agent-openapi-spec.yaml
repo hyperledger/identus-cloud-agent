@@ -77,7 +77,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/ManagedDIDCollection"
+                $ref: "./castor/schemas.yaml#/components/schemas/ManagedDIDPage"
         "500":
           description: Internal Error.
           content:

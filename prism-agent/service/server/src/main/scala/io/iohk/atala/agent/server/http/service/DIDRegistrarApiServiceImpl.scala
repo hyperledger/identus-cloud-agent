@@ -11,6 +11,8 @@ import io.iohk.atala.agent.server.http.model.{HttpServiceError, OASDomainModelHe
 import io.iohk.atala.agent.walletapi.model.error.{PublishManagedDIDError, UpdateManagedDIDError}
 import io.iohk.atala.castor.core.model.did.PrismDID
 import io.iohk.atala.shared.utils.Traverse.*
+import io.iohk.atala.api.http.model.PaginationInput
+import io.iohk.atala.api.http.model.CollectionStats
 
 class DIDRegistrarApiServiceImpl(service: ManagedDIDService)(using runtime: Runtime[Any])
     extends DIDRegistrarApiService,
@@ -57,14 +59,17 @@ class DIDRegistrarApiServiceImpl(service: ManagedDIDService)(using runtime: Runt
   }
 
   override def listManagedDid(offset: Option[Int], limit: Option[Int])(implicit
-      toEntityMarshallerManagedDIDCollection: ToEntityMarshaller[ManagedDIDCollection],
+      toEntityMarshallerManagedDIDPage: ToEntityMarshaller[ManagedDIDPage],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
-    // TODO: proper pagination
+    val pagination = PaginationInput(offset = offset, limit = limit).toPagination
     val result = for {
-      dids <- service.listManagedDID
-        .map(_.map(_.toOAS))
+      pageResult <- service
+        .listManagedDIDPage(offset = pagination.offset, limit = pagination.limit)
         .mapError(HttpServiceError.DomainError.apply)
+      (items, totalCount) = pageResult
+      respItems = items.map(_.toOAS)
+      stats = CollectionStats(totalCount = totalCount, filteredCount = totalCount)
     } yield ???
 
     onZioSuccess(result.mapError(_.toOAS).either) {

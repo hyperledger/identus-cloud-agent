@@ -163,6 +163,12 @@ final class ManagedDIDService private[walletapi] (
       dids <- nonSecretStorage.listManagedDID.mapError(GetManagedDIDError.WalletStorageError.apply)
     } yield dids.toSeq.map { case (did, state) => ManagedDIDDetail(did.asCanonical, state) }
 
+  /** @return A tuple containing a list of items and a count of total items */
+  def listManagedDIDPage(offset: Int, limit: Int): IO[GetManagedDIDError, (Seq[ManagedDIDDetail], Int)] = {
+    // TODO: implement limit / offset at Repository level
+    listManagedDID.map(ls => ls.drop(offset).take(limit) -> ls.length)
+  }
+
   def publishStoredDID(did: CanonicalPrismDID): IO[PublishManagedDIDError, ScheduleDIDOperationOutcome] = {
     def doPublish(operation: PrismDIDOperation.Create) = {
       for {
