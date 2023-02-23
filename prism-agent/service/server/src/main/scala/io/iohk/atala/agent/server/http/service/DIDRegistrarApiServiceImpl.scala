@@ -56,7 +56,7 @@ class DIDRegistrarApiServiceImpl(service: ManagedDIDService)(using runtime: Runt
     }
   }
 
-  override def listManagedDid()(implicit
+  override def listManagedDid(offset: Option[Int], limit: Option[Int])(implicit
       toEntityMarshallerManagedDIDCollection: ToEntityMarshaller[ManagedDIDCollection],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {

@@ -68,6 +68,9 @@ paths:
       operationId: listManagedDid
       summary: List all DIDs stored in PrismAgent's wallet
       description: List all DIDs stored in PrismAgent's wallet
+      parameters:
+        - $ref: ./shared/parameters.yaml#/components/parameters/offset
+        - $ref: ./shared/parameters.yaml#/components/parameters/limit
       responses:
         "200":
           description: List PrismAgent managed DIDs
@@ -200,6 +203,8 @@ paths:
         the pagination by `offset` and `limit` parameters "
       operationId: lookupSchemasByQuery
       parameters:
+        - $ref: ./shared/parameters.yaml#/components/parameters/offset
+        - $ref: ./shared/parameters.yaml#/components/parameters/limit
         - name: author
           in: query
           required: false
@@ -215,18 +220,6 @@ paths:
           required: false
           schema:
             type: string
-        - name: offset
-          in: query
-          required: false
-          schema:
-            type: integer
-            format: int32
-        - name: limit
-          in: query
-          required: false
-          schema:
-            type: integer
-            format: int32
         - name: order
           in: query
           required: false
