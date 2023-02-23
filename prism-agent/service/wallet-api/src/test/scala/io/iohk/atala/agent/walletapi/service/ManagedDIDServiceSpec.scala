@@ -166,11 +166,11 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSuppor
       val template = generateDIDTemplate()
       for {
         svc <- ZIO.service[ManagedDIDService]
-        didsBefore <- svc.nonSecretStorage.listManagedDID
+        didsBefore <- svc.nonSecretStorage.listManagedDID(None, None).map(_._1)
         did <- svc.createAndStoreDID(template).map(_.asCanonical)
-        didsAfter <- svc.nonSecretStorage.listManagedDID
+        didsAfter <- svc.nonSecretStorage.listManagedDID(None, None).map(_._1)
       } yield assert(didsBefore)(isEmpty) &&
-        assert(didsAfter.keySet)(hasSameElements(Seq(did)))
+        assert(didsAfter.map(_._1))(hasSameElements(Seq(did)))
     },
     test("create and store DID secret in DIDSecretStorage") {
       val template = generateDIDTemplate(

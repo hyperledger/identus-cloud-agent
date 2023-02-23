@@ -66,8 +66,19 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
     } yield ()
   }
 
-  override def listManagedDID: Task[Map[PrismDID, ManagedDIDState]] = {
-    val cxnIO =
+  override def listManagedDID(
+      offset: Option[Int],
+      limit: Option[Int]
+  ): Task[(Seq[(PrismDID, ManagedDIDState)], Int)] = {
+    val countCxnIO =
+      sql"""
+        | SELECT COUNT(*)
+        | FROM public.prism_did_wallet_state
+      """.stripMargin
+        .query[Int]
+        .unique
+
+    val baseFr =
       sql"""
            | SELECT
            |   did,
@@ -78,15 +89,21 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
            |   updated_at
            | FROM public.prism_did_wallet_state
            | ORDER BY created_at
-           """.stripMargin
+      """.stripMargin
+    val withOffsetFr = offset.fold(baseFr)(offsetValue => baseFr ++ fr"OFFSET $offsetValue")
+    val withOffsetAndLimitFr = limit.fold(withOffsetFr)(limitValue => withOffsetFr ++ fr"LIMIT $limitValue")
+    val didsCxnIO =
+      withOffsetAndLimitFr
         .query[DIDPublicationStateRow]
         .to[List]
 
-    cxnIO
-      .transact(xa)
-      .map(_.map(row => row.toDomain.map(row.did -> _)))
-      .flatMap(ls => ZIO.foreach(ls)(ZIO.fromTry[(PrismDID, ManagedDIDState)](_)))
-      .map(_.toMap)
+    for {
+      totalCount <- countCxnIO.transact(xa)
+      dids <- didsCxnIO
+        .transact(xa)
+        .map(_.map(row => row.toDomain.map(row.did -> _)))
+        .flatMap(ls => ZIO.foreach(ls)(ZIO.fromTry[(PrismDID, ManagedDIDState)](_)))
+    } yield (dids, totalCount)
   }
 
   override def insertDIDUpdateLineage(did: PrismDID, updateLineage: DIDUpdateLineage): Task[Unit] = {
