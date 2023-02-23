@@ -1,17 +1,17 @@
 package features.connection
 
 import api_models.Connection
+import api_models.ConnectionState
 import api_models.Invitation
-import common.Utils.lastResponseList
 import common.Utils.lastResponseObject
 import common.Utils.wait
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
-import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
 import net.serenitybdd.screenplay.rest.interactions.Get
 import net.serenitybdd.screenplay.rest.interactions.Post
 import net.serenitybdd.screenplay.rest.questions.ResponseConsequence
+import org.apache.http.HttpStatus.SC_CREATED
 import org.apache.http.HttpStatus.SC_OK
 import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.CoreMatchers.*
@@ -30,13 +30,13 @@ class ConnectionSteps {
                 }
         )
         inviter.should(
-            ResponseConsequence.seeThatResponse("Generates connection request") { response ->
-                response.statusCode(201)
+            ResponseConsequence.seeThatResponse { response ->
+                response.statusCode(SC_CREATED)
                 response.body("connectionId", notNullValue())
                 response.body("createdAt", notNullValue())
                 response.body("invitation", notNullValue())
                 response.body("label", containsString(connectionLabel))
-                response.body("state", containsString("InvitationGenerated"))
+                response.body("state", containsString(ConnectionState.INVITATION_GENERATED))
                 response.body("role", containsString("Inviter"))
             }
         )
@@ -79,7 +79,7 @@ class ConnectionSteps {
         )
         val acmeInvitation = inviter.recall<Invitation>("invitation")
         invitee.should(
-            ResponseConsequence.seeThatResponse("Accepts connection request") { response ->
+            ResponseConsequence.seeThatResponse { response ->
                 response.statusCode(SC_OK)
                 response.body("connectionId", notNullValue())
                 response.body("createdAt", notNullValue())
@@ -89,14 +89,14 @@ class ConnectionSteps {
                 response.body("invitation.id", containsString(acmeInvitation.id))
                 response.body("invitation.invitationUrl", containsString(acmeInvitation.invitationUrl))
                 response.body("invitation.type", containsString(acmeInvitation.type))
-                response.body("state", containsString("ConnectionRequestPending"))
+                response.body("state", containsString(ConnectionState.CONNECTION_REQUEST_PENDING))
                 response.body("role", containsString("Invitee"))
             }
         )
         invitee.remember("connectionId", lastResponseObject("", Connection::class).connectionId)
     }
 
-    @When("{actor} receives the connection request")
+    @When("{actor} receives the connection request and sends back the response")
     fun inviterReceivesTheConnectionRequest(inviter: Actor) {
         wait(
             {
@@ -104,35 +104,14 @@ class ConnectionSteps {
                     Get.resource("/connections/${inviter.recall<String>("connectionId")}"),
                 )
                 inviter.should(
-                    ResponseConsequence.seeThatResponse("Get connection ${inviter.recall<String>("connectionId")}") {
+                    ResponseConsequence.seeThatResponse {
                         it.statusCode(SC_OK)
                     }
                 )
-                lastResponseObject("", Connection::class).state == "ConnectionResponsePending" ||
-                        lastResponseObject("", Connection::class).state == "ConnectionResponseSent"
+                lastResponseObject("", Connection::class).state == ConnectionState.CONNECTION_RESPONSE_SENT
             },
-            "Inviter connection didn't reach ConnectionResponsePending state: " +
+            "Inviter connection didn't reach ${ConnectionState.CONNECTION_RESPONSE_SENT} state: " +
                     "connection state = ${lastResponseObject("", Connection::class).state}"
-        )
-    }
-
-    @When("{actor} sends a connection response to {actor}")
-    fun inviterSendsAConnectionResponseToInvitee(inviter: Actor, invitee: Actor) {
-        // Acme(Issuer) checks their connections to check if invitation was accepted by Bob(Holder)
-        // and sends final connection response
-        wait(
-            {
-                inviter.attemptsTo(
-                    Get.resource("/connections/${inviter.recall<String>("connectionId")}"),
-                )
-                inviter.should(
-                    ResponseConsequence.seeThatResponse("Get connection ${inviter.recall<String>("connectionId")}") {
-                        it.statusCode(SC_OK)
-                    }
-                )
-                lastResponseObject("", Connection::class).state == "ConnectionResponseSent"
-            },
-            "Inviter connection didn't reach ConnectionResponseSent state."
         )
     }
 
@@ -145,13 +124,14 @@ class ConnectionSteps {
                     Get.resource("/connections/${invitee.recall<String>("connectionId")}")
                 )
                 invitee.should(
-                    ResponseConsequence.seeThatResponse("Get connection ${invitee.recall<String>("connectionId")}") {
+                    ResponseConsequence.seeThatResponse {
                         it.statusCode(SC_OK)
                     }
                 )
-                lastResponseObject("", Connection::class).state == "ConnectionResponseReceived"
+                lastResponseObject("", Connection::class).state == ConnectionState.CONNECTION_RESPONSE_RECEIVED
             },
-            "Invitee connection didn't reach ConnectionResponseReceived state: state is ${lastResponseObject("", Connection::class).state}"
+            "Invitee connection didn't reach ${ConnectionState.CONNECTION_RESPONSE_RECEIVED} state: " +
+                    "state is ${lastResponseObject("", Connection::class).state}"
         )
     }
 
@@ -162,7 +142,7 @@ class ConnectionSteps {
             Get.resource("/connections/${inviter.recall<String>("connectionId")}"),
         )
         inviter.should(
-            ResponseConsequence.seeThatResponse("Get connection ${inviter.recall<String>("connectionId")}") {
+            ResponseConsequence.seeThatResponse {
                 it.statusCode(SC_OK)
             }
         )
@@ -172,7 +152,7 @@ class ConnectionSteps {
             Get.resource("/connections/${invitee.recall<String>("connectionId")}")
         )
         invitee.should(
-            ResponseConsequence.seeThatResponse("Get connection ${invitee.recall<String>("connectionId")}") {
+            ResponseConsequence.seeThatResponse {
                 it.statusCode(SC_OK)
             }
         )
@@ -183,11 +163,8 @@ class ConnectionSteps {
         assertThat(inviter.recall<Connection>("connection-with-${invitee.name}").theirDid)
             .isEqualTo(invitee.recall<Connection>("connection-with-${inviter.name}").myDid)
         assertThat(inviter.recall<Connection>("connection-with-${invitee.name}").state)
-            .isEqualTo("ConnectionResponseSent")
+            .isEqualTo(ConnectionState.CONNECTION_RESPONSE_SENT)
         assertThat(invitee.recall<Connection>("connection-with-${inviter.name}").state)
-            .isEqualTo("ConnectionResponseReceived")
-
-        invitee.forget<String>("connectionId")
-        inviter.forget<String>("connectionId")
+            .isEqualTo(ConnectionState.CONNECTION_RESPONSE_RECEIVED)
     }
 }

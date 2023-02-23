@@ -1,5 +1,7 @@
 package api_models
 
+import com.fasterxml.jackson.annotation.JsonValue
+
 data class Connection(
     var connectionId: String = "",
     var createdAt: String = "",
@@ -13,3 +15,10 @@ data class Connection(
     var theirDid: String = "",
     var role: String = "",
 )
+
+object ConnectionState {
+    const val INVITATION_GENERATED = "InvitationGenerated"
+    const val CONNECTION_REQUEST_PENDING = "ConnectionRequestPending"
+    const val CONNECTION_RESPONSE_SENT = "ConnectionResponseSent"
+    const val CONNECTION_RESPONSE_RECEIVED = "ConnectionResponseReceived"
+}

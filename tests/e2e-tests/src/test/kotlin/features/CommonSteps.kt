@@ -1,6 +1,7 @@
 package features
 
 import api_models.Connection
+import api_models.ConnectionState
 import api_models.Credential
 import common.Agents.Acme
 import common.Agents.Bob
@@ -47,7 +48,7 @@ class CommonSteps {
                 it.statusCode(SC_OK)
             }
         )
-        val receivedCredential = lastResponseList("items", Credential::class).findLast { credential ->
+        val receivedCredential = lastResponseList("contents", Credential::class).findLast { credential ->
             credential.protocolState == "CredentialReceived"
         }
 
@@ -69,13 +70,12 @@ class CommonSteps {
             Get.resource("/connections")
         )
         inviter.should(
-            ResponseConsequence.seeThatResponse("Get connections") {
-                it.statusCode(200)
+            ResponseConsequence.seeThatResponse {
+                it.statusCode(SC_OK)
             }
         )
         val inviterConnection = lastResponseList("contents", Connection::class).firstOrNull {
-            it.label == "Connection with ${invitee.name}" &&
-                    (it.state == "ConnectionResponseSent" || it.state == "ConnectionResponseReceived")
+            it.label == "Connection with ${invitee.name}" && it.state == ConnectionState.CONNECTION_RESPONSE_SENT
         }
 
         var inviteeConnection: Connection? = null
@@ -84,12 +84,12 @@ class CommonSteps {
                 Get.resource("/connections")
             )
             invitee.should(
-                ResponseConsequence.seeThatResponse("Get connections") {
+                ResponseConsequence.seeThatResponse {
                     it.statusCode(SC_OK)
                 }
             )
             inviteeConnection = lastResponseList("contents", Connection::class).firstOrNull {
-                it.theirDid == inviterConnection.myDid
+                it.theirDid == inviterConnection.myDid && it.state == ConnectionState.CONNECTION_RESPONSE_RECEIVED
             }
         }
 
@@ -102,7 +102,6 @@ class CommonSteps {
             connectionSteps.inviteeReceivesTheConnectionInvitation(invitee, inviter)
             connectionSteps.inviteeSendsAConnectionRequestToInviter(invitee, inviter)
             connectionSteps.inviterReceivesTheConnectionRequest(inviter)
-            connectionSteps.inviterSendsAConnectionResponseToInvitee(inviter, invitee)
             connectionSteps.inviteeReceivesTheConnectionResponse(invitee)
             connectionSteps.inviterAndInviteeHaveAConnection(inviter, invitee)
         }

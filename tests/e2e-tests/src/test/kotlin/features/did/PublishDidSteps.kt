@@ -20,17 +20,26 @@ import java.time.Duration
 class PublishDidSteps {
 
     @Given("{actor} creates unpublished DID")
-    fun createsUnpublishedDid(acme: Actor) {
-        val publicKeys = listOf(PublicKey("key1", Purpose.AUTHENTICATION), PublicKey("key2", Purpose.ASSERTION_METHOD))
-        val services = listOf(Service("https://foo.bar.com", "LinkedDomains", listOf("https://foo.bar.com")))
+    fun createsUnpublishedDid(actor: Actor) {
+        val publicKeys = listOf(
+            PublicKey("key1", Purpose.AUTHENTICATION),
+            PublicKey("key2", Purpose.ASSERTION_METHOD)
+        )
+        val services = listOf(
+            Service(
+                "https://foo.bar.com",
+                "LinkedDomains",
+                listOf("https://foo.bar.com")
+            )
+        )
         val documentTemplate = DocumentTemplate(publicKeys, services)
-        acme.attemptsTo(
+        actor.attemptsTo(
             Post.to("/did-registrar/dids")
                 .with {
                     it.body(CreateManagedDidRequest(documentTemplate))
                 }
         )
-        acme.should(
+        actor.should(
             ResponseConsequence.seeThatResponse {
                 it.statusCode(SC_OK)
                 it.body("longFormDid", not(emptyString()))
@@ -38,58 +47,55 @@ class PublishDidSteps {
         )
         val longFormDid = lastResponseObject("longFormDid", String::class)
 
-        acme.attemptsTo(
+        actor.attemptsTo(
             Get.resource("/did-registrar/dids")
         )
-        acme.should(
+        actor.should(
             ResponseConsequence.seeThatResponse {
                 it.statusCode(SC_OK)
             }
         )
-        acme.remember(
+        actor.remember(
             "shortFormDid",
             lastResponseList("", ManagedDid::class).find {
                 it.longFormDid == longFormDid
             }!!.did
         )
+        actor.remember("longFormDid", longFormDid)
     }
 
     @When("{actor} publishes DID to ledger")
-    fun hePublishesDidToLedger(acme: Actor) {
-        acme.attemptsTo(
-            Post.to("/did-registrar/dids/${acme.recall<String>("shortFormDid")}/publications")
+    fun hePublishesDidToLedger(actor: Actor) {
+        actor.attemptsTo(
+            Post.to("/did-registrar/dids/${actor.recall<String>("shortFormDid")}/publications")
         )
-        acme.should(
+        actor.should(
             ResponseConsequence.seeThatResponse {
                 it.statusCode(SC_ACCEPTED)
                 it.body("scheduledOperation.didRef", not(emptyString()))
                 it.body("scheduledOperation.id", not(emptyString()))
             }
         )
-    }
-
-    @Then("{actor} sees DID successfully published to ledger")
-    fun heSeesDidSuccessfullyPublishedToLedger(acme: Actor) {
         wait(
             {
-                acme.attemptsTo(
-                    Get.resource("/dids/${acme.recall<String>("shortFormDid")}")
+                actor.attemptsTo(
+                    Get.resource("/dids/${actor.recall<String>("shortFormDid")}")
                 )
                 SerenityRest.lastResponse().statusCode == SC_OK
             },
             "ERROR: DID was not published to ledger!",
             timeout = Duration.ofSeconds(600L)
         )
-        acme.should(
+        actor.should(
             ResponseConsequence.seeThatResponse {
                 it.statusCode(SC_OK)
-                it.body("did.id", equalTo(acme.recall<String>("shortFormDid")))
+                it.body("did.id", equalTo(actor.recall<String>("shortFormDid")))
             }
         )
     }
 
     @Then("{actor} resolves DID document corresponds to W3C standard")
-    fun heSeesDidDocumentCorrespondsToW3cStandard(acme: Actor) {
+    fun heSeesDidDocumentCorrespondsToW3cStandard(actor: Actor) {
 
         val didDocument = lastResponseObject("", DidDocument::class).did!!
         assertThat(didDocument)
@@ -102,7 +108,7 @@ class PublishDidSteps {
             .hasFieldOrProperty("service")
             .hasFieldOrProperty("verificationMethod")
 
-        val shortFormDid = acme.recall<String>("shortFormDid")
+        val shortFormDid = actor.recall<String>("shortFormDid")
 
         assertThat(didDocument.id == shortFormDid)
 

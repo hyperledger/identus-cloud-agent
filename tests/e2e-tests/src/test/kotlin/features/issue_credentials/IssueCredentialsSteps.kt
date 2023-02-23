@@ -16,11 +16,11 @@ import org.apache.http.HttpStatus.SC_CREATED
 import org.apache.http.HttpStatus.SC_OK
 
 class IssueCredentialsSteps {
-    @Given("{actor} offers a credential to {actor}")
+    @When("{actor} offers a credential to {actor}")
     fun acmeOffersACredential(issuer: Actor, holder: Actor) {
         val newCredential = Credential(
             schemaId = "schema:1234",
-            subjectId = holder.recall<String>("shortFormDid"),
+            subjectId = holder.recall("longFormDid"),
             validityPeriod = 3600,
             automaticIssuance = false,
             awaitConfirmation = false,
@@ -28,7 +28,7 @@ class IssueCredentialsSteps {
                 "firstName" to "FirstName",
                 "lastName" to "LastName"
             ),
-            issuingDID = issuer.recall<String>("shortFormDid"),
+            issuingDID = issuer.recall("shortFormDid"),
             connectionId = issuer.recall<Connection>("connection-with-${holder.name}").connectionId
         )
 
@@ -39,12 +39,39 @@ class IssueCredentialsSteps {
                 }
         )
         issuer.should(
-            ResponseConsequence.seeThatResponse("The issue credential offer created") {
+            ResponseConsequence.seeThatResponse {
                 it.statusCode(SC_CREATED)
             }
         )
+    }
 
-        // TODO: add check that newCredential object corresponds to the output of restapi call here
+    @When("{actor} offers a credential with unpublished did to {actor}")
+    fun acmeOffersACredentialWithUnpublishedDids(issuer: Actor, holder: Actor) {
+        val newCredential = Credential(
+            schemaId = "schema:1234",
+            subjectId = holder.recall("longFormDid"),
+            validityPeriod = 3600,
+            automaticIssuance = false,
+            awaitConfirmation = false,
+            claims = linkedMapOf(
+                "firstName" to "FirstName",
+                "lastName" to "LastName"
+            ),
+            issuingDID = issuer.recall("longFormDid"),
+            connectionId = issuer.recall<Connection>("connection-with-${holder.name}").connectionId
+        )
+
+        issuer.attemptsTo(
+            Post.to("/issue-credentials/credential-offers")
+                .with {
+                    it.body(newCredential)
+                }
+        )
+        issuer.should(
+            ResponseConsequence.seeThatResponse {
+                it.statusCode(SC_CREATED)
+            }
+        )
     }
 
     @When("{actor} receives the credential offer and accepts")
@@ -55,7 +82,7 @@ class IssueCredentialsSteps {
                     Get.resource("/issue-credentials/records")
                 )
                 holder.should(
-                    ResponseConsequence.seeThatResponse("Credential records") {
+                    ResponseConsequence.seeThatResponse {
                         it.statusCode(SC_OK)
                     }
                 )

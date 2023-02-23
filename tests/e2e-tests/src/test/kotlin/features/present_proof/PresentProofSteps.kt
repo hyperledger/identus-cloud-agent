@@ -15,7 +15,6 @@ import net.serenitybdd.screenplay.rest.interactions.Post
 import net.serenitybdd.screenplay.rest.questions.ResponseConsequence
 import org.apache.http.HttpStatus.SC_CREATED
 import org.apache.http.HttpStatus.SC_OK
-import java.time.Duration
 
 class PresentProofSteps {
     @When("{actor} sends a request for proof presentation to {actor}")
@@ -23,14 +22,30 @@ class PresentProofSteps {
         faber.attemptsTo(
             Post.to("/present-proof/presentations")
                 .with {
-                    it.body("""
-                        { "connectionId": "${faber.recall<Connection>("connection-with-${bob.name}").connectionId}", "proofs":[] }
+                    it.body(
+                        """
+                            {
+                                "description":"Request presentation of credential",
+                                "connectionId": "${faber.recall<Connection>("connection-with-${bob.name}").connectionId}",
+                                "options":{
+                                    "challenge": "11c91493-01b3-4c4d-ac36-b336bab5bddf",
+                                    "domain": "https://example-verifier.com"
+                                },
+                                "proofs":[
+                                    {
+                                        "schemaId": "https://schema.org/Person",
+                                        "trustIssuers": [
+                                            "did:web:atalaprism.io/users/testUser"
+                                        ]
+                                    }
+                                ]
+                            }
                         """.trimIndent()
                     )
                 }
         )
         faber.should(
-            ResponseConsequence.seeThatResponse("Presentation proof request created") {
+            ResponseConsequence.seeThatResponse {
                 it.statusCode(SC_CREATED)
             }
         )
