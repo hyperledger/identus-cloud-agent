@@ -7,9 +7,9 @@ Scenario: Successful schema creation
 Scenario Outline: Multiple schema creation
   When Acme creates <schemas> new schemas
   Then He can access all of them one by one
-  Examples:
-    | schemas |
-    | 4       |
+Examples:
+  | schemas |
+  | 4       |
 
 Scenario Outline: Wrong specified fields for schema generation requests should fail
   When Acme tries to create a new schema with <value> in field <field>
