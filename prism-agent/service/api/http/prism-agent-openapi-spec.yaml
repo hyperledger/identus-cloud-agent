@@ -67,7 +67,10 @@ paths:
       tags: ["DID Registrar"]
       operationId: listManagedDid
       summary: List all DIDs stored in PrismAgent's wallet
-      description: List all DIDs stored in PrismAgent's wallet
+      description: |
+        List all DIDs stored in PrismAgent's wallet.
+        Return a paginated items ordered by created timestamp.
+        If the `limit` parameter is not set, it defaults to 100 items per page.
       parameters:
         - $ref: ./shared/parameters.yaml#/components/parameters/offset
         - $ref: ./shared/parameters.yaml#/components/parameters/limit

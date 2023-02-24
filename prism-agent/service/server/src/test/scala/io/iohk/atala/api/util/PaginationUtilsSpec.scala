@@ -35,6 +35,14 @@ object PaginationUtilsSpec extends ZIOSpecDefault {
       val stats = CollectionStats(totalCount = 50, filteredCount = 50)
       val nextUri = PaginationUtils.composeNextUri(uri, items, pagination, stats).map(_.toString)
       assert(nextUri)(isNone)
+    },
+    test("not return next URI when result is empty") {
+      val uri = Uri.parse("http://example.com?foo=bar").toOption.get
+      val items = Nil
+      val pagination = Pagination(offset = 20, limit = 10)
+      val stats = CollectionStats(totalCount = 0, filteredCount = 0)
+      val nextUri = PaginationUtils.composeNextUri(uri, items, pagination, stats).map(_.toString)
+      assert(nextUri)(isNone)
     }
   )
 
