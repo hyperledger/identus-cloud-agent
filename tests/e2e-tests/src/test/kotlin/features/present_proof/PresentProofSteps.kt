@@ -15,7 +15,6 @@ import net.serenitybdd.screenplay.rest.interactions.Post
 import net.serenitybdd.screenplay.rest.questions.ResponseConsequence
 import org.apache.http.HttpStatus.SC_CREATED
 import org.apache.http.HttpStatus.SC_OK
-import java.time.Duration
 
 class PresentProofSteps {
     @When("{actor} sends a request for proof presentation to {actor}")
@@ -23,16 +22,32 @@ class PresentProofSteps {
         faber.attemptsTo(
             Post.to("/present-proof/presentations")
                 .with {
-                    it.body("""
-                        { "connectionId": "${faber.recall<Connection>("connection-with-${bob.name}").connectionId}", "proofs":[] }
-                        """.trimIndent()
+                    it.body(
+                        """
+                            {
+                                "description":"Request presentation of credential",
+                                "connectionId": "${faber.recall<Connection>("connection-with-${bob.name}").connectionId}",
+                                "options":{
+                                    "challenge": "11c91493-01b3-4c4d-ac36-b336bab5bddf",
+                                    "domain": "https://example-verifier.com"
+                                },
+                                "proofs":[
+                                    {
+                                        "schemaId": "https://schema.org/Person",
+                                        "trustIssuers": [
+                                            "did:web:atalaprism.io/users/testUser"
+                                        ]
+                                    }
+                                ]
+                            }
+                        """.trimIndent(),
                     )
-                }
+                },
         )
         faber.should(
-            ResponseConsequence.seeThatResponse("Presentation proof request created") {
+            ResponseConsequence.seeThatResponse {
                 it.statusCode(SC_CREATED)
-            }
+            },
         )
         faber.remember("presentationId", lastResponseObject("", PresentationProof::class).presentationId)
     }
@@ -42,18 +57,18 @@ class PresentProofSteps {
         wait(
             {
                 bob.attemptsTo(
-                    Get.resource("/present-proof/presentations")
+                    Get.resource("/present-proof/presentations"),
                 )
                 bob.should(
                     ResponseConsequence.seeThatResponse("Get presentations") {
                         it.statusCode(SC_OK)
-                    }
+                    },
                 )
                 lastResponseList("", PresentationProof::class).findLast {
                     it.status == "RequestReceived"
                 } != null
             },
-            "ERROR: Bob did not achieve any presentation request!"
+            "ERROR: Bob did not achieve any presentation request!",
         )
 
         val presentationId = lastResponseList("", PresentationProof::class).findLast {
@@ -61,11 +76,12 @@ class PresentProofSteps {
         }!!.presentationId
         bob.attemptsTo(
             Patch.to("/present-proof/presentations/$presentationId").with {
-                it.body("""
+                it.body(
+                    """
                         { "action": "request-accept", "proofId": ["${bob.recall<Credential>("issuedCredential").recordId}"] }
-                        """.trimIndent()
+                    """.trimIndent(),
                 )
-            }
+            },
         )
     }
 
@@ -74,22 +90,21 @@ class PresentProofSteps {
         wait(
             {
                 faber.attemptsTo(
-                    Get.resource("/present-proof/presentations")
+                    Get.resource("/present-proof/presentations"),
                 )
                 faber.should(
                     ResponseConsequence.seeThatResponse("Get presentations") {
                         it.statusCode(SC_OK)
-                    }
+                    },
                 )
                 val presentation = lastResponseList("", PresentationProof::class).find {
                     it.presentationId == faber.recall<String>("presentationId")
                 }
                 presentation != null &&
-                        (presentation.status == "PresentationReceived" || presentation.status == "PresentationVerified")
+                    (presentation.status == "PresentationReceived" || presentation.status == "PresentationVerified")
             },
-            "ERROR: Faber did not receive presentation from Bob!"
+            "ERROR: Faber did not receive presentation from Bob!",
         )
-
     }
 
     @Then("{actor} has the proof verified")
@@ -97,19 +112,19 @@ class PresentProofSteps {
         wait(
             {
                 faber.attemptsTo(
-                    Get.resource("/present-proof/presentations")
+                    Get.resource("/present-proof/presentations"),
                 )
                 faber.should(
                     ResponseConsequence.seeThatResponse("Get presentations") {
                         it.statusCode(SC_OK)
-                    }
+                    },
                 )
                 val presentation = lastResponseList("", PresentationProof::class).find {
                     it.presentationId == faber.recall<String>("presentationId")
                 }
-                presentation!= null && presentation.status == "PresentationVerified"
+                presentation != null && presentation.status == "PresentationVerified"
             },
-            "ERROR: presentation did not achieve PresentationVerified state!"
+            "ERROR: presentation did not achieve PresentationVerified state!",
         )
     }
 }

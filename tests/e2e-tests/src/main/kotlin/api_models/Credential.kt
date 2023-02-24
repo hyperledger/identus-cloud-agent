@@ -11,8 +11,8 @@ data class Credential(
     var subjectId: String = "",
     var updatedAt: String = "",
     var validityPeriod: Int = 0,
-    var claims: LinkedHashMap<String,String> = LinkedHashMap(),
+    var claims: LinkedHashMap<String, String> = LinkedHashMap(),
     var jwtCredential: String = "",
     var issuingDID: String = "",
-    var connectionId: String = ""
+    var connectionId: String = "",
 )
