@@ -52,14 +52,10 @@ class ReportProblemSpec extends ZSuite {
 }""".stripMargin).getOrElse(Json.Null)
     val result = reportproblem.asJson.deepDropNullValues
 
-    println("************************")
-    println(result)
-    println("************************")
-
     assertEquals(result, expectedProposalJson)
   }
 
-  test("ReportProblemBuild") {
+  test("ReportProblem.build") {
 
     val fromDid = DidId("did:prism:test1")
     val toDid = DidId("did:prism:test2")
@@ -74,9 +70,6 @@ class ReportProblemSpec extends ZSuite {
 
     val result = reportproblem.asJson.deepDropNullValues
 
-    println("************************")
-    println(result)
-    println("************************")
     assertEquals(result.hcursor.get[String]("pthid").toOption, Some("1e513ad4-48c9-444e-9e7e-5b8b45c5e325"))
     assertEquals(result.hcursor.get[String]("from").toOption, Some("did:prism:test1"))
     assertEquals(result.hcursor.get[String]("to").toOption, Some("did:prism:test2"))
