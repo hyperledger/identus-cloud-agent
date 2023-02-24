@@ -1,52 +1,12 @@
 package io.iohk.atala.mercury.protocol.reportproblem.v2
 
 import io.circe._
-
+import io.iohk.atala.mercury.model.{DidId, Message, PIURI}
 import io.iohk.atala.mercury.model.Message
-
-/** ReportProblem
-  *
-  * @see
-  *   https://identity.foundation/didcomm-messaging/spec/#problem-reports
-  *
-  * @param pthid
-  *   REQUIRED. The value is the thid of the thread in which the problem occurred. (Thus, the problem report begins a
-  *   new child thread, of which the triggering context is the parent. The parent context can react immediately to the
-  *   problem, or can suspend progress while troubleshooting occurs.)
-  *
-  * @param ack
-  *   OPTIONAL. It SHOULD be included if the problem in question was triggered directly by a preceding message.
-  *   (Contrast problems arising from a timeout or a user deciding to cancel a transaction, which can arise independent
-  *   of a preceding message. In such cases, ack MAY still be used, but there is no strong recommendation.)
-  *
-  * @param code
-  *   REQUIRED. Deserves a rich explanation; see Problem Codes below.
-  *
-  * @param comment
-  *   OPTIONAL but recommended. Contains human-friendly text describing the problem. If the field is present, the text
-  *   MUST be statically associated with code, meaning that each time circumstances trigger a problem with the same
-  *   code, the value of comment will be the same. This enables localization and cached lookups, and it has some
-  *   cybersecurity benefits. The value of comment supports simple interpolation with args (see next), where args are
-  *   referenced as {1}, {2}, and so forth.
-  *
-  * @param args
-  *   OPTIONAL. Contains situation-specific values that are interpolated into the value of comment, providing extra
-  *   detail for human readers. Each unique problem code has a definition for the args it takes. In this example,
-  *   e.p.xfer.cant-use-endpoint apparently expects two values in args: the first is a URL and the second is a DID.
-  *   Missing or null args MUST be replaced with a question mark character (?) during interpolation; extra args MUST be
-  *   appended to the main text as comma-separated values.
-  *
-  * @param escalate_to
-  *   OPTIONAL. Provides a URI where additional help on the issue can be received.
-  */
-final case class ReportProblem(
-    pthid: String,
-    ack: Option[Seq[String]],
-    code: ProblemCode,
-    comment: Option[String],
-    args: Option[Seq[String]],
-    escalate_to: Option[String],
-)
+import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
+import io.circe.{Decoder, Encoder}
+import io.circe.syntax.*
+import io.circe.generic.auto
 object ReportProblem {
 
   /** {{{
@@ -63,29 +23,52 @@ object ReportProblem {
     *   }
     * }
     * }}}
-    *
-    * @param obj
-    * @return
     */
-  def reportProblemToMessagem(problem: ReportProblem, msg: Message): Message = {
-    assert(problem.pthid == msg.id) // This is a reply!
-    Message(
-      `type` = "https://didcomm.org/report-problem/2.0/problem-report",
-      from = {
-        assert(msg.to.length <= 0, "The recipient is ambiguous. Need to have no more that 1 recipient") // TODO
-        msg.to.headOption
-      },
-      to = msg.from.toSeq,
-      body = JsonObject.fromIterable(
-        Seq(("code", Json.fromString(problem.code.value))) ++
-          problem.comment.map(e => ("comment", Json.fromString(e))) ++
-          problem.args.map(e => ("args", Json.fromValues(e.map(Json.fromString _)))) ++
-          problem.escalate_to.map(e => ("escalate_to", Json.fromString(e)))
-      ),
-      ack = problem.ack,
-      pthid = Some(problem.pthid)
-    )
+
+  def `type`: PIURI = "https://didcomm.org/report-problem/2.0/problem-report"
+
+  case class Body(
+      code: ProblemCode,
+      comment: Option[String] = None,
+      args: Option[Seq[String]] = None,
+      escalate_to: Option[String] = None,
+  )
+
+  object Body {
+    given Encoder[Body] = deriveEncoder[Body]
+    given Decoder[Body] = deriveDecoder[Body]
   }
+
+  def build(
+      fromDID: DidId,
+      toDID: DidId,
+      pthid: String,
+      code: ProblemCode,
+      comment: Option[String] = None,
+  ): ReportProblem = {
+    val body = Body(code, comment = comment)
+    ReportProblem(from = fromDID, to = toDID, pthid = Some(pthid), body = body)
+  }
+
+  given Encoder[ReportProblem] = deriveEncoder[ReportProblem]
+  given Decoder[ReportProblem] = deriveDecoder[ReportProblem]
+
+  def readFromMessage(message: Message): ReportProblem =
+    val body = message.body.asJson.as[ReportProblem.Body].toOption.get // TODO get
+    ReportProblem(
+      id = message.id,
+      `type` = message.piuri,
+      body = body,
+      thid = message.thid,
+      from = message.from.get, // TODO get
+      pthid = message.pthid,
+      ack = message.ack,
+      to = {
+        assert(message.to.length == 1, "The recipient is ambiguous. Need to have only 1 recipient") // TODO return error
+        message.to.head
+      },
+    )
+
 }
 
 /** ProblemCode
@@ -101,6 +84,9 @@ object ProblemCode {
     assert(true) // TODO regex to check value
     value
   }
+  given Encoder[ProblemCode] = Encoder.encodeString.contramap(identity)
+  given Decoder[ProblemCode] = Decoder.decodeString.map(ProblemCode(_))
+
 }
 
 extension (problemCode: ProblemCode) {
@@ -187,3 +173,63 @@ enum Scope {
   * | legal        | Failed for legal reasons.                         |
   */
 type Descriptor = String
+
+/** ReportProblem
+  *
+  * @see
+  *   https://identity.foundation/didcomm-messaging/spec/#problem-reports
+  *
+  * @param pthid
+  *   REQUIRED. The value is the thid of the thread in which the problem occurred. (Thus, the problem report begins a
+  *   new child thread, of which the triggering context is the parent. The parent context can react immediately to the
+  *   problem, or can suspend progress while troubleshooting occurs.)
+  *
+  * @param ack
+  *   OPTIONAL. It SHOULD be included if the problem in question was triggered directly by a preceding message.
+  *   (Contrast problems arising from a timeout or a user deciding to cancel a transaction, which can arise independent
+  *   of a preceding message. In such cases, ack MAY still be used, but there is no strong recommendation.)
+  *
+  * @param code
+  *   REQUIRED. Deserves a rich explanation; see Problem Codes below.
+  *
+  * @param comment
+  *   OPTIONAL but recommended. Contains human-friendly text describing the problem. If the field is present, the text
+  *   MUST be statically associated with code, meaning that each time circumstances trigger a problem with the same
+  *   code, the value of comment will be the same. This enables localization and cached lookups, and it has some
+  *   cybersecurity benefits. The value of comment supports simple interpolation with args (see next), where args are
+  *   referenced as {1}, {2}, and so forth.
+  *
+  * @param args
+  *   OPTIONAL. Contains situation-specific values that are interpolated into the value of comment, providing extra
+  *   detail for human readers. Each unique problem code has a definition for the args it takes. In this example,
+  *   e.p.xfer.cant-use-endpoint apparently expects two values in args: the first is a URL and the second is a DID.
+  *   Missing or null args MUST be replaced with a question mark character (?) during interpolation; extra args MUST be
+  *   appended to the main text as comma-separated values.
+  *
+  * @param escalate_to
+  *   OPTIONAL. Provides a URI where additional help on the issue can be received.
+  */
+final case class ReportProblem(
+    `type`: PIURI = ReportProblem.`type`,
+    id: String = java.util.UUID.randomUUID().toString,
+    from: DidId,
+    to: DidId,
+    thid: Option[String] = None,
+    pthid: Option[String],
+    ack: Option[Seq[String]] = None,
+    body: ReportProblem.Body,
+) {
+  assert(`type` == ReportProblem.`type`)
+  assert(pthid.nonEmpty)
+
+  def toMessage: Message = Message(
+    id = this.id,
+    `type` = this.`type`,
+    from = Some(this.from),
+    to = Seq(this.to),
+    thid = this.thid,
+    pthid = this.pthid,
+    body = this.body.asJson.asObject.get,
+    ack = ack
+  )
+}
