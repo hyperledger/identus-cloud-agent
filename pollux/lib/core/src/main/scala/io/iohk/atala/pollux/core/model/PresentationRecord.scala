@@ -1,17 +1,16 @@
 package io.iohk.atala.pollux.core.model
 import io.iohk.atala.prism.crypto.MerkleInclusionProof
 
-import java.util.UUID
 import io.iohk.atala.mercury.protocol.presentproof.ProposePresentation
 import io.iohk.atala.mercury.protocol.presentproof.RequestPresentation
 import io.iohk.atala.mercury.protocol.presentproof.Presentation
 import io.iohk.atala.mercury.model.DidId
 import java.time.Instant
 final case class PresentationRecord(
-    id: UUID,
+    id: DidCommID,
     createdAt: Instant,
     updatedAt: Option[Instant],
-    thid: UUID,
+    thid: DidCommID,
     schemaId: Option[String],
     connectionId: Option[String],
     role: PresentationRecord.Role,

@@ -28,7 +28,7 @@ import java.time.Instant
 import io.iohk.atala.mercury.protocol.presentproof.RequestPresentation
 import java.security.PublicKey
 import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
-import io.iohk.atala.pollux.core.model.IssueCredentialRecord
+import io.iohk.atala.pollux.core.model._
 import io.iohk.atala.pollux.core.repository.CredentialRepository
 import java.{util => ju}
 import cats.syntax.all._
@@ -39,7 +39,7 @@ trait PresentationService {
   def extractIdFromCredential(credential: W3cCredentialPayload): Option[UUID]
 
   def createPresentationRecord(
-      thid: UUID,
+      thid: DidCommID,
       subjectDid: DidId,
       connectionId: Option[String],
       proofTypes: Seq[ProofType],
@@ -49,7 +49,7 @@ trait PresentationService {
   def getPresentationRecords(): IO[PresentationError, Seq[PresentationRecord]]
 
   def createPresentationPayloadFromRecord(
-      record: UUID,
+      record: DidCommID,
       issuer: Issuer,
       issuanceDate: Instant
   ): IO[PresentationError, PresentationPayload]
@@ -58,7 +58,7 @@ trait PresentationService {
       state: PresentationRecord.ProtocolState*
   ): IO[PresentationError, Seq[PresentationRecord]]
 
-  def getPresentationRecord(recordId: UUID): IO[PresentationError, Option[PresentationRecord]]
+  def getPresentationRecord(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]]
 
   def receiveRequestPresentation(
       connectionId: Option[String],
@@ -66,40 +66,40 @@ trait PresentationService {
   ): IO[PresentationError, PresentationRecord]
 
   def acceptRequestPresentation(
-      recordId: UUID,
+      recordId: DidCommID,
       crecentialsToUse: Seq[String]
   ): IO[PresentationError, Option[PresentationRecord]]
 
-  def rejectRequestPresentation(recordId: UUID): IO[PresentationError, Option[PresentationRecord]]
+  def rejectRequestPresentation(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]]
 
   def receiveProposePresentation(request: ProposePresentation): IO[PresentationError, Option[PresentationRecord]]
 
-  def acceptProposePresentation(recordId: UUID): IO[PresentationError, Option[PresentationRecord]]
+  def acceptProposePresentation(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]]
 
   def receivePresentation(presentation: Presentation): IO[PresentationError, Option[PresentationRecord]]
 
-  def acceptPresentation(recordId: UUID): IO[PresentationError, Option[PresentationRecord]]
+  def acceptPresentation(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]]
 
-  def rejectPresentation(recordId: UUID): IO[PresentationError, Option[PresentationRecord]]
+  def rejectPresentation(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]]
 
-  def markRequestPresentationSent(recordId: UUID): IO[PresentationError, Option[PresentationRecord]]
+  def markRequestPresentationSent(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]]
 
-  def markRequestPresentationRejected(recordId: UUID): IO[PresentationError, Option[PresentationRecord]]
+  def markRequestPresentationRejected(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]]
 
-  def markProposePresentationSent(recordId: UUID): IO[PresentationError, Option[PresentationRecord]]
+  def markProposePresentationSent(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]]
 
-  def markPresentationSent(recordId: UUID): IO[PresentationError, Option[PresentationRecord]]
+  def markPresentationSent(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]]
 
   def markPresentationGenerated(
-      recordId: UUID,
+      recordId: DidCommID,
       presentation: Presentation
   ): IO[PresentationError, Option[PresentationRecord]]
 
-  def markPresentationVerified(recordId: UUID): IO[PresentationError, Option[PresentationRecord]]
+  def markPresentationVerified(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]]
 
-  def markPresentationRejected(recordId: UUID): IO[PresentationError, Option[PresentationRecord]]
+  def markPresentationRejected(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]]
 
-  def markPresentationAccepted(recordId: UUID): IO[PresentationError, Option[PresentationRecord]]
+  def markPresentationAccepted(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]]
 
 }
 
@@ -117,7 +117,7 @@ private class PresentationServiceImpl(
   import PresentationRecord._
 
   override def markPresentationGenerated(
-      recordId: UUID,
+      recordId: DidCommID,
       presentation: Presentation
   ): IO[PresentationError, Option[PresentationRecord]] = {
     for {
@@ -136,7 +136,7 @@ private class PresentationServiceImpl(
   }
 
   override def createPresentationPayloadFromRecord(
-      recordId: UUID,
+      recordId: DidCommID,
       prover: Issuer,
       issuanceDate: Instant
   ): IO[PresentationError, PresentationPayload] = {
@@ -156,7 +156,7 @@ private class PresentationServiceImpl(
         .fromOption(record.requestPresentationData)
         .mapError(_ => InvalidFlowStateError(s"RequestPresentation not found: $recordId"))
       issuedValidCredentials <- credentialRepository
-        .getValidIssuedCredentials(credentialsToUse.map(UUID.fromString))
+        .getValidIssuedCredentials(credentialsToUse.map(DidCommID(_)))
         .mapError(RepositoryError.apply)
 
       _ <- ZIO.cond(
@@ -192,7 +192,7 @@ private class PresentationServiceImpl(
     } yield records
   }
 
-  override def getPresentationRecord(recordId: UUID): IO[PresentationError, Option[PresentationRecord]] = {
+  override def getPresentationRecord(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]] = {
     for {
       record <- presentationRepository
         .getPresentationRecord(recordId)
@@ -200,15 +200,15 @@ private class PresentationServiceImpl(
     } yield record
   }
 
-  override def rejectRequestPresentation(recordId: UUID): IO[PresentationError, Option[PresentationRecord]] = {
+  override def rejectRequestPresentation(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]] = {
     markRequestPresentationRejected(recordId)
   }
-  def rejectPresentation(recordId: UUID): IO[PresentationError, Option[PresentationRecord]] = {
+  def rejectPresentation(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]] = {
     markPresentationRejected(recordId)
   }
 
   override def createPresentationRecord(
-      thid: UUID,
+      thid: DidCommID,
       subjectId: DidId,
       connectionId: Option[String],
       proofTypes: Seq[ProofType],
@@ -218,7 +218,7 @@ private class PresentationServiceImpl(
       request <- ZIO.succeed(createDidCommRequestPresentation(proofTypes, thid, subjectId, options))
       record <- ZIO.succeed(
         PresentationRecord(
-          id = UUID.randomUUID(),
+          id = DidCommID(),
           createdAt = Instant.now,
           updatedAt = None,
           thid = thid,
@@ -260,10 +260,10 @@ private class PresentationServiceImpl(
     for {
       record <- ZIO.succeed(
         PresentationRecord(
-          id = UUID.randomUUID(),
+          id = DidCommID(),
           createdAt = Instant.now,
           updatedAt = None,
-          thid = UUID.fromString(request.thid.getOrElse(request.id)),
+          thid = DidCommID(request.thid.getOrElse(request.id)),
           connectionId = connectionId,
           schemaId = None,
           role = Role.Prover,
@@ -354,14 +354,14 @@ private class PresentationServiceImpl(
   }
 
   def acceptRequestPresentation(
-      recordId: UUID,
+      recordId: DidCommID,
       credentialsToUse: Seq[String]
   ): IO[PresentationError, Option[PresentationRecord]] = {
 
     for {
       record <- getRecordWithState(recordId, ProtocolState.RequestReceived)
       issuedValidCredentials <- credentialRepository
-        .getValidIssuedCredentials(credentialsToUse.map(UUID.fromString))
+        .getValidIssuedCredentials(credentialsToUse.map(DidCommID(_)))
         .mapError(RepositoryError.apply)
       issuedRawCredentials = issuedValidCredentials.flatMap(_.issuedCredentialRaw.map(IssuedCredentialRaw(_)))
       issuedCredentials <- ZIO.fromEither(
@@ -385,7 +385,7 @@ private class PresentationServiceImpl(
     } yield record
   }
 
-  override def acceptPresentation(recordId: UUID): IO[PresentationError, Option[PresentationRecord]] = {
+  override def acceptPresentation(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]] = {
     for {
       maybeRecord <- presentationRepository
         .getPresentationRecord(recordId)
@@ -422,7 +422,7 @@ private class PresentationServiceImpl(
     } yield record
   }
 
-  override def acceptProposePresentation(recordId: UUID): IO[PresentationError, Option[PresentationRecord]] = {
+  override def acceptProposePresentation(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]] = {
     for {
       maybeRecord <- presentationRepository
         .getPresentationRecord(recordId)
@@ -466,7 +466,7 @@ private class PresentationServiceImpl(
   }
 
   private[this] def getRecordWithState(
-      recordId: UUID,
+      recordId: DidCommID,
       state: ProtocolState
   ): IO[PresentationError, PresentationRecord] = {
     for {
@@ -483,48 +483,48 @@ private class PresentationServiceImpl(
     } yield record
   }
 
-  override def markRequestPresentationSent(recordId: UUID): IO[PresentationError, Option[PresentationRecord]] =
+  override def markRequestPresentationSent(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]] =
     updatePresentationRecordProtocolState(
       recordId,
       PresentationRecord.ProtocolState.RequestPending,
       PresentationRecord.ProtocolState.RequestSent
     )
 
-  override def markProposePresentationSent(recordId: UUID): IO[PresentationError, Option[PresentationRecord]] =
+  override def markProposePresentationSent(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]] =
     updatePresentationRecordProtocolState(
       recordId,
       PresentationRecord.ProtocolState.ProposalPending,
       PresentationRecord.ProtocolState.ProposalSent
     )
-  override def markPresentationVerified(recordId: UUID): IO[PresentationError, Option[PresentationRecord]] =
+  override def markPresentationVerified(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]] =
     updatePresentationRecordProtocolState(
       recordId,
       PresentationRecord.ProtocolState.PresentationReceived,
       PresentationRecord.ProtocolState.PresentationVerified
     )
 
-  override def markPresentationAccepted(recordId: UUID): IO[PresentationError, Option[PresentationRecord]] =
+  override def markPresentationAccepted(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]] =
     updatePresentationRecordProtocolState(
       recordId,
       PresentationRecord.ProtocolState.PresentationVerified,
       PresentationRecord.ProtocolState.PresentationAccepted
     )
 
-  override def markPresentationSent(recordId: UUID): IO[PresentationError, Option[PresentationRecord]] =
+  override def markPresentationSent(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]] =
     updatePresentationRecordProtocolState(
       recordId,
       PresentationRecord.ProtocolState.PresentationGenerated,
       PresentationRecord.ProtocolState.PresentationSent
     )
 
-  override def markPresentationRejected(recordId: UUID): IO[PresentationError, Option[PresentationRecord]] =
+  override def markPresentationRejected(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]] =
     updatePresentationRecordProtocolState(
       recordId,
       PresentationRecord.ProtocolState.PresentationReceived,
       PresentationRecord.ProtocolState.PresentationRejected
     )
 
-  override def markRequestPresentationRejected(recordId: UUID): IO[PresentationError, Option[PresentationRecord]] =
+  override def markRequestPresentationRejected(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]] =
     updatePresentationRecordProtocolState(
       recordId,
       PresentationRecord.ProtocolState.RequestReceived,
@@ -535,22 +535,22 @@ private class PresentationServiceImpl(
       thid: Option[String]
   ): IO[PresentationError, PresentationRecord] = {
     for {
-      thid <- ZIO
+      thidID <- ZIO
         .fromOption(thid)
+        .map(DidCommID(_))
         .mapError(_ => UnexpectedError("No `thid` found in Presentation request"))
-        .map(UUID.fromString)
       maybeRecord <- presentationRepository
-        .getPresentationRecordByThreadId(thid)
+        .getPresentationRecordByThreadId(thidID)
         .mapError(RepositoryError.apply)
       record <- ZIO
         .fromOption(maybeRecord)
-        .mapError(_ => ThreadIdNotFound(thid))
+        .mapError(_ => ThreadIdNotFound(thidID))
     } yield record
   }
 
   private[this] def createDidCommRequestPresentation(
       proofTypes: Seq[ProofType],
-      thid: UUID,
+      thid: DidCommID,
       subjectDId: DidId,
       maybeOptions: Option[io.iohk.atala.pollux.core.model.presentation.Options]
   ): RequestPresentation = {
@@ -625,7 +625,7 @@ private class PresentationServiceImpl(
   }
 
   private[this] def updatePresentationRecordProtocolState(
-      id: UUID,
+      id: DidCommID,
       from: PresentationRecord.ProtocolState,
       to: PresentationRecord.ProtocolState
   ): IO[PresentationError, Option[PresentationRecord]] = {
