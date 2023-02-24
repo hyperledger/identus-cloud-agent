@@ -112,6 +112,28 @@ paths:
               schema:
                 $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
 
+  /did-registrar/dids/{didRef}:
+    get:
+      tags: ["DID Registrar"]
+      operationId: getManagedDid
+      summary: Get DID stored in PrismAgent's wallet
+      description: Get DID stored in PrismAgent's wallet
+      parameters:
+        - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
+      responses:
+        "200":
+          description: Get PrismAgent managed DID
+          content:
+            application/json:
+              schema:
+                $ref: "./castor/schemas.yaml#/components/schemas/ManagedDID"
+        "404":
+          description: There is no DID existing for the 'didRef'.
+          content:
+            application/json:
+              schema:
+                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
+
   /did-registrar/dids/{didRef}/publications:
     post:
       tags: ["DID Registrar"]
