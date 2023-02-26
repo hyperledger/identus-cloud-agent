@@ -1,6 +1,7 @@
 package features
 
 import api_models.Connection
+import api_models.ConnectionState
 import api_models.Credential
 import common.Agents.Acme
 import common.Agents.Bob
@@ -24,7 +25,7 @@ class CommonSteps {
     @Before
     fun setStage() {
         createAgents()
-        val cast = object: Cast() {
+        val cast = object : Cast() {
             override fun getActors(): MutableList<Actor> {
                 return mutableListOf(Acme, Bob, Mallory, Faber)
             }
@@ -34,20 +35,20 @@ class CommonSteps {
 
     @ParameterType(".*")
     fun actor(actorName: String): Actor {
-        return OnStage.theActorCalled(actorName);
+        return OnStage.theActorCalled(actorName)
     }
 
     @Given("{actor} has an issued credential from {actor}")
     fun holderHasIssuedCredentialFromIssuer(holder: Actor, issuer: Actor) {
         holder.attemptsTo(
-            Get.resource("/issue-credentials/records")
+            Get.resource("/issue-credentials/records"),
         )
         holder.should(
-            ResponseConsequence.seeThatResponse("Credential records") {
+            ResponseConsequence.seeThatResponse {
                 it.statusCode(SC_OK)
-            }
+            },
         )
-        val receivedCredential = lastResponseList("items", Credential::class).findLast { credential ->
+        val receivedCredential = lastResponseList("contents", Credential::class).findLast { credential ->
             credential.protocolState == "CredentialReceived"
         }
 
@@ -66,30 +67,29 @@ class CommonSteps {
     @Given("{actor} and {actor} have an existing connection")
     fun actorsHaveExistingConnection(inviter: Actor, invitee: Actor) {
         inviter.attemptsTo(
-            Get.resource("/connections")
+            Get.resource("/connections"),
         )
         inviter.should(
-            ResponseConsequence.seeThatResponse("Get connections") {
-                it.statusCode(200)
-            }
+            ResponseConsequence.seeThatResponse {
+                it.statusCode(SC_OK)
+            },
         )
         val inviterConnection = lastResponseList("contents", Connection::class).firstOrNull {
-            it.label == "Connection with ${invitee.name}" &&
-                    (it.state == "ConnectionResponseSent" || it.state == "ConnectionResponseReceived")
+            it.label == "Connection with ${invitee.name}" && it.state == ConnectionState.CONNECTION_RESPONSE_SENT
         }
 
         var inviteeConnection: Connection? = null
         if (inviterConnection != null) {
             invitee.attemptsTo(
-                Get.resource("/connections")
+                Get.resource("/connections"),
             )
             invitee.should(
-                ResponseConsequence.seeThatResponse("Get connections") {
+                ResponseConsequence.seeThatResponse {
                     it.statusCode(SC_OK)
-                }
+                },
             )
             inviteeConnection = lastResponseList("contents", Connection::class).firstOrNull {
-                it.theirDid == inviterConnection.myDid
+                it.theirDid == inviterConnection.myDid && it.state == ConnectionState.CONNECTION_RESPONSE_RECEIVED
             }
         }
 
@@ -102,7 +102,6 @@ class CommonSteps {
             connectionSteps.inviteeReceivesTheConnectionInvitation(invitee, inviter)
             connectionSteps.inviteeSendsAConnectionRequestToInviter(invitee, inviter)
             connectionSteps.inviterReceivesTheConnectionRequest(inviter)
-            connectionSteps.inviterSendsAConnectionResponseToInvitee(inviter, invitee)
             connectionSteps.inviteeReceivesTheConnectionResponse(invitee)
             connectionSteps.inviterAndInviteeHaveAConnection(inviter, invitee)
         }

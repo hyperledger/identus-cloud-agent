@@ -54,6 +54,7 @@ import zio.prelude.AssociativeBothOps
 import zio.prelude.Validation
 import cats.syntax.all._
 import io.iohk.atala.castor.core.service.DIDService
+import java.util.UUID
 
 object BackgroundJobs {
 
@@ -343,10 +344,46 @@ object BackgroundJobs {
     } yield issuer
   }
 
+  private[this] def createPrismDIDIssuerFromPresentationCredentials(
+      presentationId: UUID,
+      credentialsToUse: Seq[String]
+  ) =
+    for {
+      credentialService <- ZIO.service[CredentialService]
+      // Choose first credential from the list to detect the subject DID to be used in Presentation.
+      // Holder binding check implies that any credential record can be chosen to detect the DID to use in VP.
+      credentialRecordId <- ZIO
+        .fromOption(credentialsToUse.headOption)
+        .mapError(_ =>
+          PresentationError.UnexpectedError(s"No credential found in the Presentation record: $presentationId")
+        )
+      credentialRecordUuid <- ZIO
+        .attempt(UUID.fromString(credentialRecordId))
+        .mapError(_ => PresentationError.UnexpectedError(s"$credentialRecordId is not a valid UUID"))
+      vcSubjectId <- credentialService
+        .getIssueCredentialRecord(credentialRecordUuid)
+        .someOrFail(CredentialServiceError.RecordIdNotFound(credentialRecordUuid))
+        .map(_.subjectId)
+      proverDID <- ZIO
+        .fromEither(PrismDID.fromString(vcSubjectId))
+        .mapError(e =>
+          PresentationError
+            .UnexpectedError(
+              s"One of the credential(s) subject is not a valid Prism DID: ${vcSubjectId}"
+            )
+        )
+      prover <- createPrismDIDIssuer(
+        proverDID,
+        verificationRelationship = VerificationRelationship.Authentication,
+        allowUnpublishedIssuingDID = true
+      )
+    } yield prover
+
   private[this] def performPresentation(
       record: PresentationRecord
   ): URIO[
-    DidOps & DIDResolver & JwtDidResolver & HttpClient & PresentationService & DIDService & ManagedDIDService,
+    DidOps & DIDResolver & JwtDidResolver & HttpClient & PresentationService & CredentialService & DIDService &
+      ManagedDIDService,
     Unit
   ] = {
     import io.iohk.atala.pollux.core.model.PresentationRecord.ProtocolState._
@@ -403,24 +440,8 @@ object BackgroundJobs {
               credentialsToUse
             ) => // Prover
           for {
-
             presentationService <- ZIO.service[PresentationService]
-            // TODO: Do not create new DID for presentation (ATL-3244)
-            proverDID <- ZIO.serviceWithZIO[ManagedDIDService](
-              _.createAndStoreDID(
-                ManagedDIDTemplate(
-                  publicKeys = Seq(
-                    DIDPublicKeyTemplate("auth-1", VerificationRelationship.Authentication)
-                  ),
-                  services = Nil
-                )
-              )
-            )
-            prover <- createPrismDIDIssuer(
-              proverDID,
-              verificationRelationship = VerificationRelationship.Authentication,
-              allowUnpublishedIssuingDID = true
-            )
+            prover <- createPrismDIDIssuerFromPresentationCredentials(id, credentialsToUse.getOrElse(Nil))
             presentationPayload <- presentationService.createPresentationPayloadFromRecord(
               id,
               prover,
@@ -570,6 +591,8 @@ object BackgroundJobs {
       .catchAll {
         case ex: MercuryException =>
           ZIO.logErrorCause(s"DIDComm communication error processing record: ${record.id}", Cause.fail(ex))
+        case ex: CredentialServiceError =>
+          ZIO.logErrorCause(s"Credential service error processing record: ${record.id} ", Cause.fail(ex))
         case ex: PresentationError =>
           ZIO.logErrorCause(s"Presentation service error processing record: ${record.id} ", Cause.fail(ex))
         case ex: DIDSecretStorageError =>

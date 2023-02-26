@@ -1,3 +1,24 @@
+# [prism-agent-v0.43.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.42.0...prism-agent-v0.43.0) (2023-02-22)
+
+
+### Features
+
+* **prism-agent:** fix DID service URI class and improve validation error response message ([#389](https://github.com/input-output-hk/atala-prism-building-blocks/issues/389)) ([3d08996](https://github.com/input-output-hk/atala-prism-building-blocks/commit/3d08996b8e92c427b317c9fac50e2d8bce85cb78))
+
+# [prism-agent-v0.42.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.41.0...prism-agent-v0.42.0) (2023-02-21)
+
+
+### Features
+
+* **prism-agent:** set OAS version to 0.41.0 ([#386](https://github.com/input-output-hk/atala-prism-building-blocks/issues/386)) ([198643e](https://github.com/input-output-hk/atala-prism-building-blocks/commit/198643e3856c51dcd1e68047f9269cdd71238923))
+
+# [prism-agent-v0.41.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.40.1...prism-agent-v0.41.0) (2023-02-20)
+
+
+### Features
+
+* **prism-agent:** do not create new Prism DID when proof presentation is generated ([#378](https://github.com/input-output-hk/atala-prism-building-blocks/issues/378)) ([1aa856f](https://github.com/input-output-hk/atala-prism-building-blocks/commit/1aa856f4281c23f6fd2f12b8e250ed1be285d49e))
+
 # [prism-agent-v0.40.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.40.0...prism-agent-v0.40.1) (2023-02-17)
 
 

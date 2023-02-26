@@ -25,7 +25,7 @@ class CredentialSchemasSteps {
             Post.to("/schema-registry/schemas")
                 .with {
                     it.body(TestConstants.CREDENTIAL_SCHEMAS.STUDENT_SCHEMA)
-                }
+                },
         )
     }
 
@@ -46,24 +46,24 @@ class CredentialSchemasSteps {
                 TestConstants.CREDENTIAL_SCHEMAS.STUDENT_SCHEMA.attributes!!.forEach { attr ->
                     it.body("attributes", hasItem(attr))
                 }
-            }
+            },
         )
     }
 
     @When("{actor} creates {int} new schemas")
     fun acmeCreatesMultipleSchemas(actor: Actor, numberOfSchemas: Int) {
         val createdSchemas: MutableList<CredentialSchema> = mutableListOf()
-        repeat(numberOfSchemas) {
+        repeat(numberOfSchemas) { i: Int ->
             actor.attemptsTo(
                 Post.to("/schema-registry/schemas")
                     .with {
-                        it.body(TestConstants.CREDENTIAL_SCHEMAS.STUDENT_SCHEMA)
-                    }
+                        it.body(TestConstants.CREDENTIAL_SCHEMAS.generate_with_name_suffix(i.toString()))
+                    },
             )
             actor.should(
                 ResponseConsequence.seeThatResponse("New schema created") {
                     it.statusCode(SC_CREATED)
-                }
+                },
             )
             createdSchemas.add(lastResponseObject("", CredentialSchema::class))
         }
@@ -74,12 +74,12 @@ class CredentialSchemasSteps {
     fun theyCanBeAccessedWithPagination(actor: Actor) {
         actor.recall<List<CredentialSchema>>("createdSchemas").forEach { schema ->
             actor.attemptsTo(
-                Get.resource("/schema-registry/schemas/${schema.id}")
+                Get.resource("/schema-registry/schemas/${schema.id}"),
             )
             actor.should(
                 ResponseConsequence.seeThatResponse("Schema achieved") {
                     it.statusCode(SC_OK)
-                }
+                },
             )
         }
     }
@@ -92,12 +92,12 @@ class CredentialSchemasSteps {
             Post.to("/schema-registry/schemas")
                 .with {
                     it.body(wrongSchema)
-                }
+                },
         )
         actor.should(
             ResponseConsequence.seeThatResponse("New schema created") {
                 it.statusCode(SC_CREATED)
-            }
+            },
         )
     }
 
@@ -109,7 +109,7 @@ class CredentialSchemasSteps {
             Post.to("/schema-registry/schemas")
                 .with {
                     it.body(wrongSchema)
-                }
+                },
         )
     }
 
@@ -119,9 +119,9 @@ class CredentialSchemasSteps {
             actor.should(
                 ResponseConsequence.seeThatResponse("New schema creation error: same UUID") {
                     it.statusCode(SC_BAD_REQUEST)
-                }
+                },
             )
-        } catch(err: AssertionError) {
+        } catch (err: AssertionError) {
             println(err.message)
             throw PendingException("BUG: New credential schema CAN be created with same UUID.")
         }
@@ -133,16 +133,16 @@ class CredentialSchemasSteps {
             Post.to("/schema-registry/schemas")
                 .with {
                     it.body(
-                        toJsonPath(TestConstants.CREDENTIAL_SCHEMAS.STUDENT_SCHEMA).set(field, value).jsonString()
+                        toJsonPath(TestConstants.CREDENTIAL_SCHEMAS.STUDENT_SCHEMA).set(field, value).jsonString(),
                     )
-                }
+                },
         )
     }
 
     @When("{actor} tries to get schemas with {int} in parameter {word}")
     fun acmeTriesToCreateANewSchemaWithParameter(actor: Actor, value: Int, parameter: String) {
         actor.attemptsTo(
-            Get.resource("/schema-registry/schemas?$parameter=$value")
+            Get.resource("/schema-registry/schemas?$parameter=$value"),
         )
     }
 
@@ -152,9 +152,9 @@ class CredentialSchemasSteps {
             actor.should(
                 ResponseConsequence.seeThatResponse {
                     it.statusCode(errorStatusCode)
-                }
+                },
             )
-        } catch(err: AssertionError) {
+        } catch (err: AssertionError) {
             println(err.message)
             throw PendingException("BUG: credential schemas CAN be accessed with negative limit and offset.")
         }

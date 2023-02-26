@@ -57,6 +57,13 @@ jobs:
           version: v2.12.2 # defaults to 'latest'
           legacy: true    # will also install in PATH as `docker-compose`
 
+      - name: Update .env file to the latest version
+        env:
+          ATALA_GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
+        run: |
+          ../../infrastructure/local/update_env.sh
+          cat ../../infrastructure/local/.env
+
       - name: Start services for issuer
         env:
           PORT: 8080
@@ -121,7 +128,6 @@ jobs:
           TESTS_WITH_ERRORS=0
           if [ -f "${JSON_RESULTS}" ]; then
             TOTAL_TESTS="$(cat ${JSON_RESULTS} | jq '.results.counts.total')"
-            SUCCESS_TESTS="$(cat ${JSON_RESULTS} | jq '.results.counts.success')"
             PENDING_TESTS="$(cat ${JSON_RESULTS} | jq '.results.counts.pending')"
             SKIPPED_TESTS="$(cat ${JSON_RESULTS} | jq '.results.counts.skipped')"
             IGNORED_TESTS="$(cat ${JSON_RESULTS} | jq '.results.counts.ignored')"
@@ -131,16 +137,18 @@ jobs:
               CONCLUSION=success
             fi
           fi
-          echo "conclusion=${CONCLUSION}" >> $GITHUB_OUTPUT
-          echo "tests=${TOTAL_TESTS}" >> $GITHUB_OUTPUT
-          echo "failures=${FAILED_TESTS}" >> $GITHUB_OUTPUT
-          echo "errors=${TESTS_WITH_ERRORS}" >> $GITHUB_OUTPUT
-          echo "pending=${PENDING_TESTS}" >> $GITHUB_OUTPUT
-          echo "skipped=${SKIPPED_TESTS}" >> $GITHUB_OUTPUT
-          echo "ignored=${IGNORED_TESTS}" >> $GITHUB_OUTPUT
+          {
+            echo "conclusion=${CONCLUSION}";
+            echo "tests=${TOTAL_TESTS}";
+            echo "failures=${FAILED_TESTS}";
+            echo "errors=${TESTS_WITH_ERRORS}";
+            echo "pending=${PENDING_TESTS}";
+            echo "skipped=${SKIPPED_TESTS}";
+            echo "ignored=${IGNORED_TESTS}";
+          } >> "$GITHUB_OUTPUT"
 
       - name: Slack Notification
-        if: github.ref_name == 'master'
+        if: github.ref_name == 'main'
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_CHANNEL: atala-qa-results

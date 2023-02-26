@@ -1,6 +1,6 @@
 package io.iohk.atala.castor.core.util
 
-import java.net.{URI, URL}
+import io.lemonlabs.uri.Uri
 import io.iohk.atala.shared.models.HexStrings.*
 import io.iohk.atala.shared.models.Base64UrlStrings.*
 import io.iohk.atala.castor.core.model.did.{
@@ -102,7 +102,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
           Service(
             id = s"service$i",
             `type` = ServiceType.LinkedDomains,
-            serviceEndpoint = Seq(URI.create("http://example.com"))
+            serviceEndpoint = Seq(Uri.parse("http://example.com/"))
           )
         )
         val op = createPrismDIDOperation(services = services)
@@ -115,7 +115,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
           Service(
             id = s"service0",
             `type` = ServiceType.LinkedDomains,
-            serviceEndpoint = Seq(URI.create("http://example.com"))
+            serviceEndpoint = Seq(Uri.parse("http://example.com/"))
           )
         )
         val op = createPrismDIDOperation(services = services)
@@ -141,7 +141,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
           Service(
             id = s"service $i",
             `type` = ServiceType.LinkedDomains,
-            serviceEndpoint = Seq(URI.create("http://example.com"))
+            serviceEndpoint = Seq(Uri.parse("http://example.com/"))
           )
         )
         val op = createPrismDIDOperation(services = services)
@@ -176,7 +176,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
               id = "service-0",
               `type` = ServiceType.LinkedDomains,
               serviceEndpoint = Seq(
-                URI.create("http://example.com/login/../login")
+                Uri.parse("http://example.com/login/../login")
               )
             )
           )
@@ -207,15 +207,15 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
             UpdateDIDAction.AddInternalKey(InternalPublicKey("master0", InternalKeyPurpose.Master, publicKeyData)),
             UpdateDIDAction.RemoveKey("key0"),
             UpdateDIDAction.AddService(
-              Service("service0", ServiceType.LinkedDomains, Seq(URI.create("http://example.com")))
+              Service("service0", ServiceType.LinkedDomains, Seq(Uri.parse("http://example.com/")))
             ),
             UpdateDIDAction.RemoveService("service0"),
             UpdateDIDAction.UpdateService("service0", Some(ServiceType.LinkedDomains), Nil),
-            UpdateDIDAction.UpdateService("service0", None, Seq(URI.create("http://example.com"))),
+            UpdateDIDAction.UpdateService("service0", None, Seq(Uri.parse("http://example.com/"))),
             UpdateDIDAction.UpdateService(
               "service0",
               Some(ServiceType.LinkedDomains),
-              Seq(URI.create("http://example.com"))
+              Seq(Uri.parse("http://example.com/"))
             )
           )
         )
@@ -252,7 +252,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
             Service(
               id = s"service$i",
               `type` = ServiceType.LinkedDomains,
-              serviceEndpoint = Seq(URI.create("http://example.com"))
+              serviceEndpoint = Seq(Uri.parse("http://example.com/"))
             )
           )
         )
@@ -261,7 +261,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
           UpdateDIDAction.UpdateService(
             s"update$i",
             Some(ServiceType.LinkedDomains),
-            Seq(URI.create("http://example.com"))
+            Seq(Uri.parse("http://example.com/"))
           )
         )
         val op = updatePrismDIDOperation(addServiceActions ++ removeServiceActions ++ updateServiceActions)
@@ -288,7 +288,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
           Service(
             id = "service 1",
             `type` = ServiceType.LinkedDomains,
-            serviceEndpoint = Seq(URI.create("http://example.com"))
+            serviceEndpoint = Seq(Uri.parse("http://example.com/"))
           )
         )
         val action2 = UpdateDIDAction.RemoveService(id = "service 2")
@@ -321,7 +321,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         val op = updatePrismDIDOperation(
           Seq(
             UpdateDIDAction.AddService(
-              Service("service-1", ServiceType.LinkedDomains, Seq(URI.create("http://example.com/login/../login")))
+              Service("service-1", ServiceType.LinkedDomains, Seq(Uri.parse("http://example.com/login/../login")))
             )
           )
         )
@@ -331,7 +331,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
       },
       test("reject updateOperation when action UpdateService serviceEndpoint is not normalized") {
         val op = updatePrismDIDOperation(
-          Seq(UpdateDIDAction.UpdateService("service-1", None, Seq(URI.create("http://example.com/login/../login"))))
+          Seq(UpdateDIDAction.UpdateService("service-1", None, Seq(Uri.parse("http://example.com/login/../login"))))
         )
         assert(DIDOperationValidator(Config(50, 50)).validate(op))(
           invalidArgumentContainsString("serviceEndpoint URIs must be normalized")

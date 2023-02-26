@@ -1,5 +1,4 @@
 package api_models
-
 data class Connection(
     var connectionId: String = "",
     var createdAt: String = "",
@@ -10,5 +9,13 @@ data class Connection(
     var state: String = "",
     var label: String = "",
     var myDid: String = "",
-    var theirDid: String = ""
+    var theirDid: String = "",
+    var role: String = "",
 )
+
+object ConnectionState {
+    const val INVITATION_GENERATED = "InvitationGenerated"
+    const val CONNECTION_REQUEST_PENDING = "ConnectionRequestPending"
+    const val CONNECTION_RESPONSE_SENT = "ConnectionResponseSent"
+    const val CONNECTION_RESPONSE_RECEIVED = "ConnectionResponseReceived"
+}

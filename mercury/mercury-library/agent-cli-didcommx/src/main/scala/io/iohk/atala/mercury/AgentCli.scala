@@ -17,6 +17,7 @@ import io.iohk.atala.mercury.protocol.outofbandlogin._
 import io.iohk.atala.mercury.protocol.issuecredential._
 import io.iohk.atala.mercury.protocol.presentproof._
 import io.iohk.atala.mercury.protocol.connection.*
+import io.iohk.atala.mercury.protocol.reportproblem.v2._
 import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
 import io.iohk.atala.resolvers._
 import io.circe.Json
@@ -188,9 +189,7 @@ object AgentCli extends ZIOAppDefault {
       presentationAttachment = PresentationAttachment.build(
         Some(Options(challenge = "somechallenge", domain = "somedomain"))
       )
-      // attachmentDescriptor = AttachmentDescriptor.buildBase64Attachment(payload =
-      //   presentationAttachment.asJson.noSpaces.getBytes()
-      // )
+
       attachmentDescriptor = AttachmentDescriptor.buildJsonAttachment(payload = presentationAttachment)
       requestPresentation = RequestPresentation(
         body = body,
@@ -199,6 +198,30 @@ object AgentCli extends ZIOAppDefault {
         from = agentService.id,
       )
       msg = requestPresentation.makeMessage
+      _ <- Console.printLine("Sending: " + msg)
+      _ <- MessagingService.send(msg)
+    } yield ()
+  }
+
+  def problemReport: ZIO[DidOps & DidAgent & DIDResolver & HttpClient, MercuryError | IOException, Unit] = {
+    for {
+      _ <- Console.printLine("Problem Report")
+      agentService <- ZIO.service[DidAgent]
+
+      _ <- Console.printLine(s"Problem report to did (ex: ${agentService.id})")
+      requestTo <- Console.readLine.flatMap {
+        case ""  => ZIO.succeed(agentService.id)
+        case did => ZIO.succeed(DidId(did))
+      }
+      // Make a Problem Report
+      reportproblem = ReportProblem.build(
+        fromDID = agentService.id,
+        toDID = requestTo,
+        pthid = "1e513ad4-48c9-444e-9e7e-5b8b45c5e325",
+        code = ProblemCode("e.p.xfer.cant-use-endpoint"),
+        comment = Some("Unable to use the {1} endpoint for {2}.")
+      )
+      msg = reportproblem.toMessage
       _ <- Console.printLine("Sending: " + msg)
       _ <- MessagingService.send(msg)
     } yield ()
@@ -331,6 +354,7 @@ object AgentCli extends ZIOAppDefault {
         "Present Proof" -> presentProof.provide(layers),
         "Generate Connection invitation" -> generateConnectionInvitation.provide(DidCommX.liveLayer ++ agentService),
         "Connect" -> connect.provide(layers),
+        "Problem Report" -> problemReport.provide(layers),
       )
     ).repeatWhile((_) => true)
 
@@ -399,6 +423,9 @@ object AgentCli extends ZIOAppDefault {
                 _ <- ZIO.logInfo("Got IssueCredential: " + msg)
               } yield ("IssueCredential Received")
             // ######################################################################
+            // ########################
+            // ### Present-Proof ###
+            // ########################
             case s if s == RequestPresentation.`type` => // Prover
               for {
                 _ <- ZIO.logInfo("*" * 100)
@@ -417,7 +444,18 @@ object AgentCli extends ZIOAppDefault {
                 presentation = Presentation.readFromMessage(msg)
                 _ <- ZIO.logInfo("Got Presentation: " + presentation)
               } yield ("Presentation Recived")
-            // ########################Comnnect##############################################
+            // ########################
+            // ### ReportProblem ###
+            // ########################
+            case s if s == ReportProblem.`type` => // receiver
+              for {
+                _ <- ZIO.logInfo("Received Problem report")
+                reportProblem = ReportProblem.readFromMessage(msg)
+                _ <- ZIO.logInfo("Got Problemreport: " + reportProblem)
+              } yield ("Problemreport Recived")
+            // ########################
+            // ### Comnnect ###
+            // ########################
             case s if s == ConnectionRequest.`type` => // Inviter
               for {
                 _ <- ZIO.logInfo("*" * 100)

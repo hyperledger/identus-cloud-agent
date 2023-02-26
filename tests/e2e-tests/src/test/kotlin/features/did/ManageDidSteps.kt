@@ -34,7 +34,7 @@ class ManageDidSteps {
             Post.to("/did-registrar/dids")
                 .with {
                     it.body(createDidRequest)
-                }
+                },
         )
         var createdDids = actor.recall<MutableList<String>>("createdDids")
         if (createdDids == null) {
@@ -52,7 +52,7 @@ class ManageDidSteps {
             Post.to("/did-registrar/dids")
                 .with {
                     it.body(requestBody)
-                }
+                },
         )
     }
 
@@ -64,23 +64,25 @@ class ManageDidSteps {
             Post.to("/did-registrar/dids")
                 .with {
                     it.body(requestBody)
-                }
+                },
         )
     }
 
     @When("{actor} lists all the managed DIDs")
     fun iListManagedDids(actor: Actor) {
         actor.attemptsTo(
-            Get.resource("/did-registrar/dids")
+            Get.resource("/did-registrar/dids"),
         )
     }
 
     @Then("{actor} sees the managed DID was created successfully")
     fun theDidShouldBeRegisteredSuccessfully(actor: Actor) {
-        actor.should(ResponseConsequence.seeThatResponse {
-            it.statusCode(SC_OK)
-            it.body("longFormDid", not(emptyString()))
-        })
+        actor.should(
+            ResponseConsequence.seeThatResponse {
+                it.statusCode(SC_OK)
+                it.body("longFormDid", not(emptyString()))
+            },
+        )
     }
 
     @Then("{actor} sees the request has failed with error status {int}")
@@ -102,7 +104,7 @@ class ManageDidSteps {
 
     private fun createManagedDidRequest(): CreateManagedDidRequest {
         val publicKeys = listOf(PublicKey("123", Purpose.AUTHENTICATION))
-        val services = listOf(Service("did:prism:321", "MediatorService", listOf("https://foo.bar.com")))
+        val services = listOf(Service("did:prism:321", "LinkedDomains", listOf("https://foo.bar.com")))
         val documentTemplate = DocumentTemplate(publicKeys, services)
         return CreateManagedDidRequest(documentTemplate)
     }

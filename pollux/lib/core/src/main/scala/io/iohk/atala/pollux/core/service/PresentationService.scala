@@ -159,14 +159,8 @@ private class PresentationServiceImpl(
         .getValidIssuedCredentials(credentialsToUse.map(UUID.fromString))
         .mapError(RepositoryError.apply)
 
-      _ <- ZIO.cond(
-        issuedValidCredentials.forall(_.subjectId == prover.did.value),
-        (),
-        PresentationError.HolderBindingError(
-          s"Presenting credential with different subject than the prover DID is not supported"
-        )
-      )
-      issuedRawCredentials = issuedValidCredentials.map(_.issuedCredentialRaw.map(IssuedCredentialRaw(_))).flatten
+      issuedRawCredentials = issuedValidCredentials.flatMap(_.issuedCredentialRaw.map(IssuedCredentialRaw(_)))
+
       issuedCredentials <- ZIO.fromEither(
         Either.cond(
           issuedRawCredentials.nonEmpty,
@@ -291,13 +285,6 @@ private class PresentationServiceImpl(
       prover: Issuer
   ): IO[PresentationError, PresentationPayload] = {
 
-    // val verifiableCredentials = issuedCredentials.map { issuedCredential =>
-    //   decode[io.iohk.atala.mercury.model.Base64](issuedCredential.signedCredential)
-    //     .map(x => new String(java.util.Base64.getDecoder().decode(x.base64)))
-    //     .map(x => JwtVerifiableCredentialPayload(JWT(x)))
-    //     .getOrElse(???)
-    // }.toVector
-
     val verifiableCredentials =
       issuedCredentials.map { issuedCredential =>
         decode[io.iohk.atala.mercury.model.Base64](issuedCredential.signedCredential).right
@@ -360,13 +347,34 @@ private class PresentationServiceImpl(
 
   }
 
-  override def acceptRequestPresentation(
+  def acceptRequestPresentation(
       recordId: UUID,
       credentialsToUse: Seq[String]
   ): IO[PresentationError, Option[PresentationRecord]] = {
 
     for {
       record <- getRecordWithState(recordId, ProtocolState.RequestReceived)
+      issuedValidCredentials <- credentialRepository
+        .getValidIssuedCredentials(credentialsToUse.map(UUID.fromString))
+        .mapError(RepositoryError.apply)
+      _ <- ZIO.cond(
+        (issuedValidCredentials.map(_.subjectId).toSet.size == 1),
+        (),
+        PresentationError.HolderBindingError(
+          s"Creating a Verifiable Presentation for credential with different subject DID is not supported, found : ${issuedValidCredentials
+              .map(_.subjectId)}"
+        )
+      )
+      issuedRawCredentials = issuedValidCredentials.flatMap(_.issuedCredentialRaw.map(IssuedCredentialRaw(_)))
+      issuedCredentials <- ZIO.fromEither(
+        Either.cond(
+          issuedRawCredentials.nonEmpty,
+          issuedRawCredentials,
+          PresentationError.IssuedCredentialNotFoundError(
+            new Throwable(s"No matching issued credentials found in prover db from the given: $credentialsToUse")
+          )
+        )
+      )
       count <- presentationRepository
         .updatePresentationWithCredentialsToUse(recordId, Option(credentialsToUse), ProtocolState.PresentationPending)
         .mapError(RepositoryError.apply)
