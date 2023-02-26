@@ -39,13 +39,13 @@ def didScalaAUX =
   else (libraryDependencies ++= Seq())
 
 lazy val V = new {
-  val munit = "1.0.0-M7" // "0.7.29"
+  val munit = "1.0.0-M6" // "0.7.29"
   val munitZio = "0.1.1"
 
   // https://mvnrepository.com/artifact/dev.zio/zio
-  val zio = "2.0.9"
+  val zio = "2.0.4"
   val zioLogging = "2.0.0"
-  val zioJson = "0.4.2"
+  val zioJson = "0.3.0"
   val zioHttp = "2.0.0-RC11"
 
   // https://mvnrepository.com/artifact/io.circe/circe-core
@@ -62,7 +62,7 @@ lazy val D = new {
   val zioSLF4J = Def.setting("dev.zio" %% "zio-logging-slf4j" % V.zioLogging)
   val zioJson = Def.setting("dev.zio" %% "zio-json" % V.zioJson)
 
-  val zioHttp = Def.setting("dev.zio" %% "zio-http" % "0.0.4")
+  val zioHttp = Def.setting("dev.zio" %% "zio-http" % "0.0.3")
 
   val circeCore = Def.setting("io.circe" %% "circe-core" % V.circe)
   val circeGeneric = Def.setting("io.circe" %% "circe-generic" % V.circe)
