@@ -8,7 +8,7 @@ object Dependencies {
     val circeOptics = "0.14.1"
     val akka = "2.6.19"
     val doobie = "1.0.0-RC2"
-    val zioCatsInterop = "3.3.0"
+    val zioCatsInterop = "23.0.0.2"
     val prismSdk = "v1.4.1" // scala-steward:off
     val shared = "0.1.0"
     val enumeratum = "1.7.2"
