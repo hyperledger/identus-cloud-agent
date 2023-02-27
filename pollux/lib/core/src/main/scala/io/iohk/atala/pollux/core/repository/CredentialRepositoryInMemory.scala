@@ -77,7 +77,8 @@ class CredentialRepositoryInMemory(
                 recordId,
                 record.copy(
                   protocolState = to,
-                  metaRetries = maxRetries
+                  metaRetries = maxRetries,
+                  metaLastFailure = None,
                 )
               )
             )
@@ -105,7 +106,9 @@ class CredentialRepositoryInMemory(
                   updatedAt = Some(Instant.now),
                   issueCredentialData = Some(issue),
                   issuedCredentialRaw = Some(issuedRawCredential),
-                  protocolState = protocolState
+                  protocolState = protocolState,
+                  metaRetries = maxRetries,
+                  metaLastFailure = None,
                 )
               )
             )
@@ -153,7 +156,9 @@ class CredentialRepositoryInMemory(
                 record.copy(
                   updatedAt = Some(Instant.now),
                   issueCredentialData = Some(issue),
-                  protocolState = protocolState
+                  protocolState = protocolState,
+                  metaRetries = maxRetries,
+                  metaLastFailure = None,
                 )
               )
             )
@@ -191,7 +196,9 @@ class CredentialRepositoryInMemory(
                 record.copy(
                   updatedAt = Some(Instant.now),
                   requestCredentialData = Some(request),
-                  protocolState = protocolState
+                  protocolState = protocolState,
+                  metaRetries = maxRetries,
+                  metaLastFailure = None,
                 )
               )
             )
@@ -217,9 +224,9 @@ class CredentialRepositoryInMemory(
             r.updated(
               recordId,
               record.copy(
-                metaRetries = record.metaRetries - 1,
+                metaRetries = math.max(0, record.metaRetries - 1),
                 metaNextRetry =
-                  if (record.metaRetries - 1 == 0) None
+                  if (record.metaRetries - 1 <= 0) None
                   else Some(Instant.now().plusSeconds(60)), // TODO exponention time
                 metaLastFailure = failReason
               )
