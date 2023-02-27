@@ -11,7 +11,7 @@ import io.iohk.atala.agent.openapi.model.{
   DidOperationSubmission,
   IssueCredentialRecord,
   IssueCredentialRecordCollection,
-  ListManagedDIDResponseInner,
+  ManagedDID,
   ManagedDIDKeyTemplate,
   PresentationStatus,
   PublicKeyJwk,
@@ -292,14 +292,14 @@ trait OASDomainModelHelper {
   }
 
   extension (didDetail: walletDomain.ManagedDIDDetail) {
-    def toOAS: ListManagedDIDResponseInner = {
+    def toOAS: ManagedDID = {
       val (longFormDID, status) = didDetail.state match {
         case ManagedDIDState.Created(operation) => Some(PrismDID.buildLongFormFromOperation(operation)) -> "CREATED"
         case ManagedDIDState.PublicationPending(operation, _) =>
           Some(PrismDID.buildLongFormFromOperation(operation)) -> "PUBLICATION_PENDING"
         case ManagedDIDState.Published(_, _) => None -> "PUBLISHED"
       }
-      ListManagedDIDResponseInner(
+      ManagedDID(
         did = didDetail.did.toString,
         longFormDid = longFormDID.map(_.toString),
         status = status

@@ -83,10 +83,11 @@ final class ManagedDIDService private[walletapi] (
     () => KeyGeneratorWrapper.generateECKeyPair(CURVE)
   )
 
-  def syncManagedDIDState: IO[GetManagedDIDError, Unit] = nonSecretStorage.listManagedDID
+  def syncManagedDIDState: IO[GetManagedDIDError, Unit] = nonSecretStorage
+    .listManagedDID(offset = None, limit = None)
     .mapError(GetManagedDIDError.WalletStorageError.apply)
-    .flatMap { kv =>
-      ZIO.foreach(kv.keys.map(_.asCanonical))(computeNewDIDStateFromDLTAndPersist[GetManagedDIDError])
+    .flatMap { case (kv, _) =>
+      ZIO.foreach(kv.map(_._1.asCanonical))(computeNewDIDStateFromDLTAndPersist[GetManagedDIDError])
     }
     .unit
 
@@ -156,12 +157,15 @@ final class ManagedDIDService private[walletapi] (
       state <- nonSecretStorage.getManagedDIDState(did).mapError(GetManagedDIDError.WalletStorageError.apply)
     } yield state
 
-  def listManagedDID: IO[GetManagedDIDError, Seq[ManagedDIDDetail]] =
+  /** @return A tuple containing a list of items and a count of total items */
+  def listManagedDIDPage(offset: Int, limit: Int): IO[GetManagedDIDError, (Seq[ManagedDIDDetail], Int)] =
     for {
-      // state in wallet maybe stale, update it from DLT
-      _ <- syncManagedDIDState
-      dids <- nonSecretStorage.listManagedDID.mapError(GetManagedDIDError.WalletStorageError.apply)
-    } yield dids.toSeq.map { case (did, state) => ManagedDIDDetail(did.asCanonical, state) }
+      results <- nonSecretStorage
+        .listManagedDID(offset = Some(offset), limit = Some(limit))
+        .mapError(GetManagedDIDError.WalletStorageError.apply)
+      (dids, totalCount) = results
+      details = dids.map { case (did, state) => ManagedDIDDetail(did.asCanonical, state) }
+    } yield details -> totalCount
 
   def publishStoredDID(did: CanonicalPrismDID): IO[PublishManagedDIDError, ScheduleDIDOperationOutcome] = {
     def doPublish(operation: PrismDIDOperation.Create) = {

@@ -10,7 +10,8 @@ private[walletapi] trait DIDNonSecretStorage {
 
   def setManagedDIDState(did: PrismDID, state: ManagedDIDState): Task[Unit]
 
-  def listManagedDID: Task[Map[PrismDID, ManagedDIDState]]
+  /** Return a list of Managed DID as well as a count of all filtered items */
+  def listManagedDID(offset: Option[Int], limit: Option[Int]): Task[(Seq[(PrismDID, ManagedDIDState)], Int)]
 
   def insertDIDUpdateLineage(did: PrismDID, updateLineage: DIDUpdateLineage): Task[Unit]
 
