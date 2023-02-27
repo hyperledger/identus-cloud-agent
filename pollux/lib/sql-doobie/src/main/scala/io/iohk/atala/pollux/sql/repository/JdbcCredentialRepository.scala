@@ -440,7 +440,7 @@ class JdbcCredentialRepository(xa: Transactor[Task], maxRetries: Int) extends Cr
     val cxnIO = sql"""
         | UPDATE public.issue_credential_records
         | SET
-        |   meta_retries = meta_retries - 1,
+        |   meta_retries = CASE WHEN (meta_retries > 1) THEN meta_retries - 1 ELSE 0 END,
         |   meta_next_retry = CASE WHEN (meta_retries > 1) THEN ${Instant.now().plusSeconds(60)} ELSE null END,
         |   meta_last_failure = ${failReason}
         | WHERE

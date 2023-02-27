@@ -371,8 +371,7 @@ object CredentialRepositorySpecSuite {
         repo <- ZIO.service[CredentialRepository[Task]]
         tmp <- repo.createIssueCredentialRecord(aRecord)
         record0 <- repo.getIssueCredentialRecord(aRecord.id)
-        // record <- repo.getIssueCredentialRecord(aRecord.id)
-        count <- repo.updateAfterFail(aRecord.id, Some("Just to test")) // TEST
+        _ <- repo.updateAfterFail(aRecord.id, Some("Just to test")) // TEST
         updatedRecord1 <- repo.getIssueCredentialRecord(aRecord.id)
         count <- repo.updateCredentialRecordProtocolState(
           aRecord.id,
@@ -386,10 +385,44 @@ object CredentialRepositorySpecSuite {
         assertTrue(record0.get.metaRetries == maxRetries) &&
         assertTrue(updatedRecord1.get.metaRetries == (maxRetries - 1)) &&
         assertTrue(updatedRecord1.get.metaLastFailure == failReason) &&
+        assertTrue(updatedRecord1.get.metaNextRetry.isDefined) &&
         // continues to work normally after retry
         assertTrue(count == 1) &&
+        assertTrue(updatedRecord2.get.metaNextRetry.isDefined) &&
         assertTrue(updatedRecord2.get.metaRetries == maxRetries) &&
         assertTrue(updatedRecord2.get.metaLastFailure == None)
+      }
+    },
+    test("updateFail (fail all retry) updates record") {
+      val aRecord = issueCredentialRecord
+
+      for {
+        repo <- ZIO.service[CredentialRepository[Task]]
+        tmp <- repo.createIssueCredentialRecord(aRecord)
+        record0 <- repo.getIssueCredentialRecord(aRecord.id)
+        count1 <- repo.updateAfterFail(aRecord.id, Some("1 - Just to test"))
+        count2 <- repo.updateAfterFail(aRecord.id, Some("2 - Just to test"))
+        count3 <- repo.updateAfterFail(aRecord.id, Some("3 - Just to test"))
+        count4 <- repo.updateAfterFail(aRecord.id, Some("4 - Just to test"))
+        count5 <- repo.updateAfterFail(aRecord.id, Some("5 - Just to test"))
+        count6 <- repo.updateAfterFail(aRecord.id, Some("6 - Just to test"))
+        // The 6 retry should not happen since the max retries is 5
+        // (but should also not have an effect other that update the error message)
+        updatedRecord1 <- repo.getIssueCredentialRecord(aRecord.id)
+      } yield {
+
+        assertTrue(tmp == 1) &&
+        assertTrue(count1 == 1) &&
+        assertTrue(count2 == 1) &&
+        assertTrue(count3 == 1) &&
+        assertTrue(count4 == 1) &&
+        assertTrue(count5 == 1) &&
+        assertTrue(record0.isDefined) &&
+        assertTrue(record0.get.metaRetries == maxRetries) &&
+        assertTrue(updatedRecord1.get.metaRetries == 0) && // assume the max retries is 5
+        assertTrue(updatedRecord1.get.metaNextRetry.isEmpty) &&
+        assertTrue(updatedRecord1.get.metaLastFailure == Some("6 - Just to test"))
+
       }
     }
   )
