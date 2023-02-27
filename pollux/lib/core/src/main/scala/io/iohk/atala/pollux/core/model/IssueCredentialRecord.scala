@@ -1,7 +1,6 @@
 package io.iohk.atala.pollux.core.model
 import io.iohk.atala.prism.crypto.MerkleInclusionProof
 
-import java.util.UUID
 import io.iohk.atala.mercury.protocol.issuecredential.OfferCredential
 import io.iohk.atala.mercury.protocol.issuecredential.RequestCredential
 import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
@@ -11,10 +10,10 @@ import io.iohk.atala.pollux.vc.jwt.JwtCredential
 import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
 
 final case class IssueCredentialRecord(
-    id: UUID,
+    id: DidCommID,
     createdAt: Instant,
     updatedAt: Option[Instant],
-    thid: UUID,
+    thid: DidCommID,
     schemaId: Option[String],
     role: Role,
     subjectId: String,
@@ -33,7 +32,7 @@ final case class IssueCredentialRecord(
     metaLastFailure: Option[String],
 )
 final case class ValidIssuedCredentialRecord(
-    id: UUID,
+    id: DidCommID,
     issuedCredentialRaw: Option[String],
     subjectId: String
 )

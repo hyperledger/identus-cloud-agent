@@ -1,3 +1,10 @@
+# [pollux-v0.33.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.32.0...pollux-v0.33.0) (2023-02-27)
+
+
+### Features
+
+* **pollux:** Replace UUID with String - ATL-3555 ([#397](https://github.com/input-output-hk/atala-prism-building-blocks/issues/397)) ([cc11479](https://github.com/input-output-hk/atala-prism-building-blocks/commit/cc1147987e68cc87545854eb9da78b5217331dcc))
+
 # [pollux-v0.32.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.31.0...pollux-v0.32.0) (2023-02-27)
 
 

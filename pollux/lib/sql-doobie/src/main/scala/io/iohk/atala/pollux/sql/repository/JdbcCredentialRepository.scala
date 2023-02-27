@@ -47,8 +47,11 @@ class JdbcCredentialRepository(xa: Transactor[Task], maxRetries: Int) extends Cr
   // given logHandler: LogHandler = LogHandler.jdkLogHandler
 
   import IssueCredentialRecord._
-  given uuidGet: Get[UUID] = Get[String].map(UUID.fromString)
-  given uuidPut: Put[UUID] = Put[String].contramap(_.toString())
+  // given uuidGet: Get[UUID] = Get[String].map(UUID.fromString)
+  // given uuidPut: Put[UUID] = Put[String].contramap(_.toString())
+
+  given didCommIDGet: Get[DidCommID] = Get[String].map(DidCommID(_))
+  given didCommIDPut: Put[DidCommID] = Put[String].contramap(_.value)
 
   import doobie.postgres.implicits.JavaTimeInstantMeta
 
@@ -204,7 +207,7 @@ class JdbcCredentialRepository(xa: Transactor[Task], maxRetries: Int) extends Cr
           .transact(xa)
   }
 
-  override def getIssueCredentialRecord(recordId: UUID): Task[Option[IssueCredentialRecord]] = {
+  override def getIssueCredentialRecord(recordId: DidCommID): Task[Option[IssueCredentialRecord]] = {
     val cxnIO = sql"""
         | SELECT
         |   id,
@@ -237,7 +240,7 @@ class JdbcCredentialRepository(xa: Transactor[Task], maxRetries: Int) extends Cr
       .transact(xa)
   }
 
-  override def getIssueCredentialRecordByThreadId(thid: UUID): Task[Option[IssueCredentialRecord]] = {
+  override def getIssueCredentialRecordByThreadId(thid: DidCommID): Task[Option[IssueCredentialRecord]] = {
     val cxnIO = sql"""
         | SELECT
         |   id,
@@ -271,7 +274,7 @@ class JdbcCredentialRepository(xa: Transactor[Task], maxRetries: Int) extends Cr
   }
 
   override def updateCredentialRecordProtocolState(
-      recordId: UUID,
+      recordId: DidCommID,
       from: IssueCredentialRecord.ProtocolState,
       to: IssueCredentialRecord.ProtocolState
   ): Task[Int] = {
@@ -294,7 +297,7 @@ class JdbcCredentialRepository(xa: Transactor[Task], maxRetries: Int) extends Cr
 
   // TODO: refactor to work with issueCredential form mercury
   override def updateCredentialRecordStateAndProofByCredentialIdBulk(
-      idsStatesAndProofs: Seq[(UUID, IssueCredentialRecord.PublicationState, MerkleInclusionProof)]
+      idsStatesAndProofs: Seq[(DidCommID, IssueCredentialRecord.PublicationState, MerkleInclusionProof)]
   ): Task[Int] = {
 
     if (idsStatesAndProofs.isEmpty) ZIO.succeed(0)
@@ -318,7 +321,7 @@ class JdbcCredentialRepository(xa: Transactor[Task], maxRetries: Int) extends Cr
   }
 
   override def updateCredentialRecordPublicationState(
-      recordId: UUID,
+      recordId: DidCommID,
       from: Option[IssueCredentialRecord.PublicationState],
       to: Option[IssueCredentialRecord.PublicationState]
   ): Task[Int] = {
@@ -341,7 +344,7 @@ class JdbcCredentialRepository(xa: Transactor[Task], maxRetries: Int) extends Cr
   }
 
   override def updateWithRequestCredential(
-      recordId: UUID,
+      recordId: DidCommID,
       request: RequestCredential,
       protocolState: ProtocolState
   ): Task[Int] = {
@@ -360,7 +363,7 @@ class JdbcCredentialRepository(xa: Transactor[Task], maxRetries: Int) extends Cr
   }
 
   override def updateWithIssueCredential(
-      recordId: UUID,
+      recordId: DidCommID,
       issue: IssueCredential,
       protocolState: ProtocolState
   ): Task[Int] = {
@@ -378,7 +381,7 @@ class JdbcCredentialRepository(xa: Transactor[Task], maxRetries: Int) extends Cr
       .transact(xa)
   }
 
-  override def getValidIssuedCredentials(recordIds: Seq[UUID]): Task[Seq[ValidIssuedCredentialRecord]] = {
+  override def getValidIssuedCredentials(recordIds: Seq[DidCommID]): Task[Seq[ValidIssuedCredentialRecord]] = {
     val idAsStrings = recordIds.map(_.toString)
     val nel = NonEmptyList.of(idAsStrings.head, idAsStrings.tail: _*)
     val inClauseFragment = Fragments.in(fr"id", nel)
@@ -401,7 +404,7 @@ class JdbcCredentialRepository(xa: Transactor[Task], maxRetries: Int) extends Cr
 
   }
 
-  override def deleteIssueCredentialRecord(recordId: UUID): Task[Int] = {
+  override def deleteIssueCredentialRecord(recordId: DidCommID): Task[Int] = {
     val cxnIO = sql"""
       | DELETE
       | FROM public.issue_credential_records
@@ -413,7 +416,7 @@ class JdbcCredentialRepository(xa: Transactor[Task], maxRetries: Int) extends Cr
   }
 
   override def updateWithIssuedRawCredential(
-      recordId: UUID,
+      recordId: DidCommID,
       issue: IssueCredential,
       issuedRawCredential: String,
       protocolState: ProtocolState
@@ -434,7 +437,7 @@ class JdbcCredentialRepository(xa: Transactor[Task], maxRetries: Int) extends Cr
   }
 
   def updateAfterFail(
-      recordId: UUID,
+      recordId: DidCommID,
       failReason: Option[String]
   ): Task[Int] = {
     val cxnIO = sql"""

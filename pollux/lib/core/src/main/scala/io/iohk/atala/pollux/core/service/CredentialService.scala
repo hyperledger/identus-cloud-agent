@@ -4,8 +4,7 @@ import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
 import io.iohk.atala.mercury.protocol.issuecredential.OfferCredential
 import io.iohk.atala.mercury.protocol.issuecredential.RequestCredential
-import io.iohk.atala.pollux.core.model.IssueCredentialRecord
-import io.iohk.atala.pollux.core.model.PublishedBatchData
+import io.iohk.atala.pollux.core.model._
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError._
 import io.iohk.atala.pollux.vc.jwt.Issuer
@@ -51,12 +50,12 @@ trait CredentialService {
     )
   }
 
-  def extractIdFromCredential(credential: W3cCredentialPayload): Option[UUID]
+  def extractIdFromCredential(credential: W3cCredentialPayload): Option[DidCommID]
 
   def createIssueCredentialRecord(
       pairwiseIssuerDID: DidId,
       pairwiseHolderDID: DidId,
-      thid: UUID,
+      thid: DidCommID,
       subjectId: String,
       schemaId: Option[String],
       claims: Map[String, String],
@@ -80,15 +79,15 @@ trait CredentialService {
   /** Get the CredentialRecord by the record's id. If the record's id is not found the value None will be return
     * instead.
     */
-  def getIssueCredentialRecord(recordId: UUID): IO[CredentialServiceError, Option[IssueCredentialRecord]]
+  def getIssueCredentialRecord(recordId: DidCommID): IO[CredentialServiceError, Option[IssueCredentialRecord]]
 
   def receiveCredentialOffer(offer: OfferCredential): IO[CredentialServiceError, IssueCredentialRecord]
 
-  def acceptCredentialOffer(recordId: UUID): IO[CredentialServiceError, IssueCredentialRecord]
+  def acceptCredentialOffer(recordId: DidCommID): IO[CredentialServiceError, IssueCredentialRecord]
 
   def receiveCredentialRequest(request: RequestCredential): IO[CredentialServiceError, IssueCredentialRecord]
 
-  def acceptCredentialRequest(recordId: UUID): IO[CredentialServiceError, IssueCredentialRecord]
+  def acceptCredentialRequest(recordId: DidCommID): IO[CredentialServiceError, IssueCredentialRecord]
 
   def createCredentialPayloadFromRecord(
       record: IssueCredentialRecord,
@@ -107,21 +106,21 @@ trait CredentialService {
 
   def receiveCredentialIssue(issue: IssueCredential): IO[CredentialServiceError, IssueCredentialRecord]
 
-  def markOfferSent(recordId: UUID): IO[CredentialServiceError, IssueCredentialRecord]
+  def markOfferSent(recordId: DidCommID): IO[CredentialServiceError, IssueCredentialRecord]
 
-  def markRequestSent(recordId: UUID): IO[CredentialServiceError, IssueCredentialRecord]
+  def markRequestSent(recordId: DidCommID): IO[CredentialServiceError, IssueCredentialRecord]
 
   def markCredentialGenerated(
-      recordId: UUID,
+      recordId: DidCommID,
       issueCredential: IssueCredential
   ): IO[CredentialServiceError, IssueCredentialRecord]
 
-  def markCredentialSent(recordId: UUID): IO[CredentialServiceError, IssueCredentialRecord]
+  def markCredentialSent(recordId: DidCommID): IO[CredentialServiceError, IssueCredentialRecord]
 
-  def markCredentialPublicationPending(recordId: UUID): IO[CredentialServiceError, IssueCredentialRecord]
+  def markCredentialPublicationPending(recordId: DidCommID): IO[CredentialServiceError, IssueCredentialRecord]
 
-  def markCredentialPublicationQueued(recordId: UUID): IO[CredentialServiceError, IssueCredentialRecord]
+  def markCredentialPublicationQueued(recordId: DidCommID): IO[CredentialServiceError, IssueCredentialRecord]
 
-  def markCredentialPublished(recordId: UUID): IO[CredentialServiceError, IssueCredentialRecord]
+  def markCredentialPublished(recordId: DidCommID): IO[CredentialServiceError, IssueCredentialRecord]
 
 }

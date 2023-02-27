@@ -28,7 +28,7 @@ class JdbcPresentationRepository(xa: Transactor[Task]) extends PresentationRepos
   // serializes into hex string
 
   override def updatePresentationWithCredentialsToUse(
-      recordId: ju.UUID,
+      recordId: DidCommID,
       credentialsToUse: Option[Seq[String]],
       protocolState: ProtocolState
   ): Task[Int] = {
@@ -60,8 +60,11 @@ class JdbcPresentationRepository(xa: Transactor[Task]) extends PresentationRepos
   // given logHandler: LogHandler = LogHandler.jdkLogHandler
 
   import PresentationRecord._
-  given uuidGet: Get[UUID] = Get[String].map(UUID.fromString)
-  given uuidPut: Put[UUID] = Put[String].contramap(_.toString())
+  // given uuidGet: Get[UUID] = Get[String].map(UUID.fromString)
+  // given uuidPut: Put[UUID] = Put[String].contramap(_.toString())
+
+  given didCommIDGet: Get[DidCommID] = Get[String].map(DidCommID(_))
+  given didCommIDPut: Put[DidCommID] = Put[String].contramap(_.value)
 
   given instantGet: Get[Instant] = Get[Long].map(Instant.ofEpochSecond)
   given instantPut: Put[Instant] = Put[Long].contramap(_.getEpochSecond())
@@ -177,7 +180,7 @@ class JdbcPresentationRepository(xa: Transactor[Task]) extends PresentationRepos
           .transact(xa)
   }
 
-  override def getPresentationRecord(recordId: UUID): Task[Option[PresentationRecord]] = {
+  override def getPresentationRecord(recordId: DidCommID): Task[Option[PresentationRecord]] = {
     val cxnIO = sql"""
         | SELECT
         |   id,
@@ -203,7 +206,7 @@ class JdbcPresentationRepository(xa: Transactor[Task]) extends PresentationRepos
       .transact(xa)
   }
 
-  override def getPresentationRecordByThreadId(thid: UUID): Task[Option[PresentationRecord]] = {
+  override def getPresentationRecordByThreadId(thid: DidCommID): Task[Option[PresentationRecord]] = {
     val cxnIO = sql"""
         | SELECT
         |   id,
@@ -230,7 +233,7 @@ class JdbcPresentationRepository(xa: Transactor[Task]) extends PresentationRepos
   }
 
   override def updatePresentationRecordProtocolState(
-      recordId: UUID,
+      recordId: DidCommID,
       from: PresentationRecord.ProtocolState,
       to: PresentationRecord.ProtocolState
   ): Task[Int] = {
@@ -249,7 +252,7 @@ class JdbcPresentationRepository(xa: Transactor[Task]) extends PresentationRepos
   }
 
   override def updateWithRequestPresentation(
-      recordId: UUID,
+      recordId: DidCommID,
       request: RequestPresentation,
       protocolState: ProtocolState
   ): Task[Int] = {
@@ -268,7 +271,7 @@ class JdbcPresentationRepository(xa: Transactor[Task]) extends PresentationRepos
   }
 
   override def updateWithProposePresentation(
-      recordId: UUID,
+      recordId: DidCommID,
       propose: ProposePresentation,
       protocolState: ProtocolState
   ): Task[Int] = {
@@ -287,7 +290,7 @@ class JdbcPresentationRepository(xa: Transactor[Task]) extends PresentationRepos
   }
 
   override def updateWithPresentation(
-      recordId: UUID,
+      recordId: DidCommID,
       presentation: Presentation,
       protocolState: ProtocolState
   ): Task[Int] = {

@@ -14,10 +14,10 @@
 -- );
 
 CREATE TABLE public.issue_credential_records(
-  "id" VARCHAR(36) NOT NULL PRIMARY KEY,
+  "id" VARCHAR(64) NOT NULL PRIMARY KEY,-- must be <=32 bytes string consisting entirely of unreserved URI characters
   "created_at" TIMESTAMP NOT NULL,
   "updated_at" TIMESTAMP,
-  "thid" VARCHAR(36) NOT NULL,
+  "thid" VARCHAR(64) NOT NULL,
   "schema_id" VARCHAR(36),
   "role"  VARCHAR(50) NOT NULL,
   "subject_id" TEXT NOT NULL,
@@ -38,10 +38,10 @@ CREATE TABLE public.issue_credential_records(
 );
 
 CREATE TABLE public.presentation_records(
-  "id" VARCHAR(36) NOT NULL PRIMARY KEY,
+  "id" VARCHAR(64) NOT NULL PRIMARY KEY,
   "created_at" TIMESTAMP NOT NULL,
   "updated_at" TIMESTAMP,
-  "thid" VARCHAR(36) NOT NULL,
+  "thid" VARCHAR(64) NOT NULL,
   "schema_id" VARCHAR(36),
   "connection_id" VARCHAR(36),
   "role"  VARCHAR(50) NOT NULL,

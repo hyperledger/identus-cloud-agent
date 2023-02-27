@@ -12,6 +12,7 @@ import io.iohk.atala.mercury.protocol.issuecredential.CredentialPreview
 import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
 import io.iohk.atala.mercury.protocol.issuecredential.OfferCredential
 import io.iohk.atala.mercury.protocol.issuecredential.RequestCredential
+import io.iohk.atala.pollux.core.model._
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord._
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError._
@@ -22,7 +23,6 @@ import zio.test.*
 import java.util.UUID
 import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
 import io.iohk.atala.mercury.model.AttachmentDescriptor
-import io.iohk.atala.pollux.core.model.CredentialOfferAttachment
 
 object CredentialServiceImplSpec extends ZIOSpecDefault {
 
@@ -35,7 +35,7 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
     suite("CredentialServiceImpl")(
       test("createIssuerCredentialRecord creates a valid issuer credential record") {
         check(
-          Gen.uuid,
+          Gen.uuid.map(e => DidCommID(e.toString())),
           Gen.option(Gen.string),
           Gen.option(Gen.double),
           Gen.option(Gen.boolean),
@@ -105,7 +105,7 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
       test("createIssuerCredentialRecord should reject creation with a duplicate 'thid'") {
         for {
           svc <- ZIO.service[CredentialService]
-          thid = UUID.randomUUID()
+          thid = DidCommID()
           aRecord <- svc.createRecord(thid = thid)
           bRecord <- svc.createRecord(thid = thid).exit
         } yield {
@@ -150,7 +150,7 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
           svc <- ZIO.service[CredentialService]
           aRecord <- svc.createRecord()
           bRecord <- svc.createRecord()
-          record <- svc.getIssueCredentialRecord(UUID.randomUUID())
+          record <- svc.getIssueCredentialRecord(DidCommID())
         } yield assertTrue(record.isEmpty)
       },
       test("receiveCredentialOffer successfully creates a record") {
@@ -260,7 +260,7 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
           issuerSvc <- ZIO.service[CredentialService].provideLayer(credentialServiceLayer)
           issuerRecord <- issuerSvc.createRecord()
           _ <- issuerSvc.markOfferSent(issuerRecord.id)
-          request = requestCredential(Some(UUID.randomUUID()))
+          request = requestCredential(Some(DidCommID()))
           exit <- issuerSvc.receiveCredentialRequest(request).exit
         } yield {
           assertTrue(exit match
@@ -351,7 +351,7 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
           offerReceivedRecord <- holderSvc.receiveCredentialOffer(offer)
           _ <- holderSvc.acceptCredentialOffer(offerReceivedRecord.id)
           _ <- holderSvc.markRequestSent(offerReceivedRecord.id)
-          issue = issueCredential(thid = Some(UUID.randomUUID()))
+          issue = issueCredential(thid = Some(DidCommID()))
           exit <- holderSvc.receiveCredentialIssue(issue).exit
         } yield {
           assertTrue(exit match
@@ -413,7 +413,7 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
     )
   )
 
-  private[this] def requestCredential(thid: Option[UUID] = Some(UUID.randomUUID())) = RequestCredential(
+  private[this] def requestCredential(thid: Option[DidCommID] = Some(DidCommID())) = RequestCredential(
     from = DidId("did:prism:holder"),
     to = DidId("did:prism:issuer"),
     thid = thid.map(_.toString),
@@ -421,7 +421,7 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
     body = RequestCredential.Body()
   )
 
-  private[this] def issueCredential(thid: Option[UUID] = Some(UUID.randomUUID())) = IssueCredential(
+  private[this] def issueCredential(thid: Option[DidCommID] = Some(DidCommID())) = IssueCredential(
     from = DidId("did:prism:issuer"),
     to = DidId("did:prism:holder"),
     thid = thid.map(_.toString),
@@ -433,7 +433,7 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
     def createRecord(
         pairwiseIssuerDID: DidId = DidId("did:prism:issuer"),
         pairwiseHolderDID: DidId = DidId("did:prism:holder-pairwise"),
-        thid: UUID = UUID.randomUUID(),
+        thid: DidCommID = DidCommID(),
         subjectId: String = "did:prism:holder",
         schemaId: Option[String] = None,
         claims: Map[String, String] = Map("name" -> "Alice"),
