@@ -25,8 +25,7 @@ import io.circe.*
 import io.circe.generic.auto.*
 import io.circe.parser.*
 import io.circe.syntax.*
-import io.iohk.atala.agent.server.health.VersionInfo
-
+import io.iohk.atala.agent.server.health.HealthInfo
 
 object SystemInfoApp extends ZIOAppDefault {
   private val metricsConfig = ZLayer.succeed(MetricsConfig(5.seconds))
@@ -39,11 +38,14 @@ object SystemInfoApp extends ZIOAppDefault {
           case Method.GET -> !! / "metrics" =>
             ZIO.serviceWithZIO[PrometheusPublisher](_.get.map(Response.text))
           case Method.GET -> !! / "health" =>
-            ZIO.succeed(Response.json(
-              VersionInfo(
-                version = BuildInfo.version
-              ).asJson.toString
-            ))z
+            ZIO
+              .succeed(
+                Response.json(
+                  HealthInfo(
+                    version = BuildInfo.version
+                  ).asJson.toString
+                )
+              )
         }
       )
       .provide(
@@ -52,7 +54,6 @@ object SystemInfoApp extends ZIOAppDefault {
         prometheus.prometheusLayer
       )
 }
-
 
 object AgentApp extends ZIOAppDefault {
 
