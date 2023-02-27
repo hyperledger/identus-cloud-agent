@@ -1,3 +1,17 @@
+# [pollux-v0.32.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.31.0...pollux-v0.32.0) (2023-02-27)
+
+
+### Features
+
+* **pollux:** Updated version for mercury ([#399](https://github.com/input-output-hk/atala-prism-building-blocks/issues/399)) ([faac0a7](https://github.com/input-output-hk/atala-prism-building-blocks/commit/faac0a718e07ab3ccfa814b875b9684855baff5c))
+
+# [pollux-v0.31.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.30.0...pollux-v0.31.0) (2023-02-23)
+
+
+### Features
+
+* **pollux:** Moving the check when accepting the credential to crea… ([#391](https://github.com/input-output-hk/atala-prism-building-blocks/issues/391)) ([2765845](https://github.com/input-output-hk/atala-prism-building-blocks/commit/2765845e4255e0ff5c087563d52cf6ac0d4bd3e9))
+
 # [pollux-v0.30.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.29.0...pollux-v0.30.0) (2023-02-22)
 
 

@@ -67,14 +67,20 @@ paths:
       tags: ["DID Registrar"]
       operationId: listManagedDid
       summary: List all DIDs stored in PrismAgent's wallet
-      description: List all DIDs stored in PrismAgent's wallet
+      description: |
+        List all DIDs stored in PrismAgent's wallet.
+        Return a paginated items ordered by created timestamp.
+        If the `limit` parameter is not set, it defaults to 100 items per page.
+      parameters:
+        - $ref: ./shared/parameters.yaml#/components/parameters/offset
+        - $ref: ./shared/parameters.yaml#/components/parameters/limit
       responses:
         "200":
           description: List PrismAgent managed DIDs
           content:
             application/json:
               schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/ListManagedDIDResponse"
+                $ref: "./castor/schemas.yaml#/components/schemas/ManagedDIDPage"
         "500":
           description: Internal Error.
           content:
@@ -104,6 +110,28 @@ paths:
                 $ref: "./castor/schemas.yaml#/components/schemas/CreateManagedDIDResponse"
         "422":
           description: The DID creation failed.
+          content:
+            application/json:
+              schema:
+                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
+
+  /did-registrar/dids/{didRef}:
+    get:
+      tags: ["DID Registrar"]
+      operationId: getManagedDid
+      summary: Get DID stored in PrismAgent's wallet
+      description: Get DID stored in PrismAgent's wallet
+      parameters:
+        - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
+      responses:
+        "200":
+          description: Get PrismAgent managed DID
+          content:
+            application/json:
+              schema:
+                $ref: "./castor/schemas.yaml#/components/schemas/ManagedDID"
+        "404":
+          description: There is no DID existing for the 'didRef'.
           content:
             application/json:
               schema:
@@ -200,6 +228,8 @@ paths:
         the pagination by `offset` and `limit` parameters "
       operationId: lookupSchemasByQuery
       parameters:
+        - $ref: ./shared/parameters.yaml#/components/parameters/offset
+        - $ref: ./shared/parameters.yaml#/components/parameters/limit
         - name: author
           in: query
           required: false
@@ -215,18 +245,6 @@ paths:
           required: false
           schema:
             type: string
-        - name: offset
-          in: query
-          required: false
-          schema:
-            type: integer
-            format: int32
-        - name: limit
-          in: query
-          required: false
-          schema:
-            type: integer
-            format: int32
         - name: order
           in: query
           required: false
