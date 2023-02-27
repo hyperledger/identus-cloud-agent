@@ -13,8 +13,9 @@
 --   "content" TEXT NOT NULL
 -- );
 
+-- Note id must be <=32 bytes string consisting entirely of unreserved URI characters
 CREATE TABLE public.issue_credential_records(
-  "id" VARCHAR(64) NOT NULL PRIMARY KEY,-- <=32 bytes string consisting entirely of unreserved URI characters
+  "id" VARCHAR(64) NOT NULL PRIMARY KEY,
   "created_at" BIGINT NOT NULL,
   "updated_at" BIGINT,
   "thid" VARCHAR(64) NOT NULL,
