@@ -1,3 +1,11 @@
+# [prism-agent-v0.44.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.43.0...prism-agent-v0.44.0) (2023-02-27)
+
+
+### Features
+
+* **prism-agent:** add pagination to did-registrar list DID endpoint ([#394](https://github.com/input-output-hk/atala-prism-building-blocks/issues/394)) ([a21e388](https://github.com/input-output-hk/atala-prism-building-blocks/commit/a21e38880a5d49e0616e30b9dd9b92dc01980256))
+* **prsim-agent:** pollux version updated ([#392](https://github.com/input-output-hk/atala-prism-building-blocks/issues/392)) ([409b673](https://github.com/input-output-hk/atala-prism-building-blocks/commit/409b673e954b913d7bebf31cdf0c2e8dcee3ce03))
+
 # [prism-agent-v0.43.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.42.0...prism-agent-v0.43.0) (2023-02-22)
 
 
