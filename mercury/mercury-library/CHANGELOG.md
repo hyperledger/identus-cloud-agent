@@ -1,3 +1,10 @@
+# [mercury-v0.20.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.19.0...mercury-v0.20.0) (2023-02-24)
+
+
+### Features
+
+* **mercury:** ReportProblem Protocol updated with test and updated t… ([#396](https://github.com/input-output-hk/atala-prism-building-blocks/issues/396)) ([403f4c2](https://github.com/input-output-hk/atala-prism-building-blocks/commit/403f4c2c51908972fef49dee5195e7f0004e46b5))
+
 # [mercury-v0.19.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.18.0...mercury-v0.19.0) (2023-02-13)
 
 

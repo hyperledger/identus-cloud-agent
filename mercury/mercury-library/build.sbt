@@ -175,6 +175,9 @@ lazy val protocolLogin = project
 lazy val protocolReportProblem = project
   .in(file("protocol-report-problem"))
   .settings(name := "mercury-protocol-report-problem")
+  .settings(libraryDependencies += D.zio.value)
+  .settings(libraryDependencies ++= Seq(D.circeCore.value, D.circeGeneric.value, D.circeParser.value))
+  .settings(libraryDependencies += D.munitZio.value)
   .dependsOn(models)
 
 lazy val protocolRouting = project
@@ -238,6 +241,7 @@ lazy val agent = project // maybe merge into models
     protocolIssueCredential,
     protocolPresentProof,
     protocolConnection,
+    protocolReportProblem,
   )
 
 /** agents implementation with didcommx */
