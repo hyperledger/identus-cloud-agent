@@ -4,9 +4,8 @@ import com.squareup.okhttp.Protocol
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
 import io.iohk.atala.mercury.protocol.issuecredential.RequestCredential
-import io.iohk.atala.pollux.core.model.IssueCredentialRecord
+import io.iohk.atala.pollux.core.model._
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord._
-import io.iohk.atala.pollux.core.model.ValidIssuedCredentialRecord
 import io.iohk.atala.pollux.core.model.error.CredentialRepositoryError._
 import io.iohk.atala.prism.identity.Did
 import zio.Cause
@@ -23,10 +22,10 @@ import io.iohk.atala.castor.core.model.did.PrismDID
 object CredentialRepositorySpecSuite {
 
   private def issueCredentialRecord = IssueCredentialRecord(
-    id = UUID.randomUUID,
+    id = DidCommID(),
     createdAt = Instant.ofEpochSecond(Instant.now.getEpochSecond()),
     updatedAt = None,
-    thid = UUID.randomUUID,
+    thid = DidCommID(),
     schemaId = None,
     role = IssueCredentialRecord.Role.Issuer,
     subjectId = "did:prism:HOLDER",
@@ -61,7 +60,7 @@ object CredentialRepositorySpecSuite {
     test("createIssueCredentialRecord prevents creation of 2 records with the same thid") {
       for {
         repo <- ZIO.service[CredentialRepository[Task]]
-        thid = UUID.randomUUID()
+        thid = DidCommID()
         aRecord = issueCredentialRecord.copy(thid = thid)
         bRecord = issueCredentialRecord.copy(thid = thid)
         aCount <- repo.createIssueCredentialRecord(aRecord)
@@ -94,7 +93,7 @@ object CredentialRepositorySpecSuite {
         bRecord = issueCredentialRecord
         _ <- repo.createIssueCredentialRecord(aRecord)
         _ <- repo.createIssueCredentialRecord(bRecord)
-        record <- repo.getIssueCredentialRecord(UUID.randomUUID())
+        record <- repo.getIssueCredentialRecord(DidCommID())
       } yield assertTrue(record.isEmpty)
     },
     test("getIssuanceCredentialRecord returns all records") {
@@ -133,7 +132,7 @@ object CredentialRepositorySpecSuite {
         bRecord = issueCredentialRecord
         _ <- repo.createIssueCredentialRecord(aRecord)
         _ <- repo.createIssueCredentialRecord(bRecord)
-        count <- repo.deleteIssueCredentialRecord(UUID.randomUUID)
+        count <- repo.deleteIssueCredentialRecord(DidCommID())
         records <- repo.getIssueCredentialRecords()
       } yield {
         assertTrue(count == 0) &&
@@ -145,7 +144,7 @@ object CredentialRepositorySpecSuite {
     test("getIssueCredentialRecordByThreadId correctly returns an existing thid") {
       for {
         repo <- ZIO.service[CredentialRepository[Task]]
-        thid = UUID.randomUUID()
+        thid = DidCommID()
         aRecord = issueCredentialRecord.copy(thid = thid)
         bRecord = issueCredentialRecord
         _ <- repo.createIssueCredentialRecord(aRecord)
@@ -160,7 +159,7 @@ object CredentialRepositorySpecSuite {
         bRecord = issueCredentialRecord
         _ <- repo.createIssueCredentialRecord(aRecord)
         _ <- repo.createIssueCredentialRecord(bRecord)
-        record <- repo.getIssueCredentialRecordByThreadId(UUID.randomUUID())
+        record <- repo.getIssueCredentialRecordByThreadId(DidCommID())
       } yield assertTrue(record.isEmpty)
     },
     test("getIssueCredentialRecordsByStates returns valid records") {

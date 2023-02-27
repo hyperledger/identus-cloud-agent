@@ -2,10 +2,9 @@ package io.iohk.atala.pollux.core.repository
 
 import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
 import io.iohk.atala.mercury.protocol.issuecredential.RequestCredential
-import io.iohk.atala.pollux.core.model.IssueCredentialRecord
+import io.iohk.atala.pollux.core.model._
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord.ProtocolState
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord.PublicationState
-import io.iohk.atala.pollux.core.model.ValidIssuedCredentialRecord
 import io.iohk.atala.pollux.core.model.error.CredentialRepositoryError._
 import io.iohk.atala.prism.crypto.MerkleInclusionProof
 import zio.*
@@ -13,16 +12,17 @@ import zio.*
 import java.time.Instant
 import java.util.UUID
 
-class CredentialRepositoryInMemory(storeRef: Ref[Map[UUID, IssueCredentialRecord]]) extends CredentialRepository[Task] {
+class CredentialRepositoryInMemory(storeRef: Ref[Map[DidCommID, IssueCredentialRecord]])
+    extends CredentialRepository[Task] {
 
   override def updateCredentialRecordPublicationState(
-      recordId: UUID,
+      recordId: DidCommID,
       from: Option[PublicationState],
       to: Option[PublicationState]
   ): Task[Int] = {
     for {
       store <- storeRef.get
-      maybeRecord = store.find((uuid, record) => uuid == recordId && record.publicationState == from).map(_._2)
+      maybeRecord = store.find((id, record) => id == recordId && record.publicationState == from).map(_._2)
       count <- maybeRecord
         .map(record =>
           for {
@@ -46,7 +46,7 @@ class CredentialRepositoryInMemory(storeRef: Ref[Map[UUID, IssueCredentialRecord
     } yield 1
   }
 
-  override def getIssueCredentialRecord(recordId: UUID): Task[Option[IssueCredentialRecord]] = {
+  override def getIssueCredentialRecord(recordId: DidCommID): Task[Option[IssueCredentialRecord]] = {
     for {
       store <- storeRef.get
       record = store.get(recordId)
@@ -60,13 +60,13 @@ class CredentialRepositoryInMemory(storeRef: Ref[Map[UUID, IssueCredentialRecord
   }
 
   override def updateCredentialRecordProtocolState(
-      recordId: UUID,
+      recordId: DidCommID,
       from: ProtocolState,
       to: ProtocolState
   ): Task[Int] = {
     for {
       store <- storeRef.get
-      maybeRecord = store.find((uuid, record) => uuid == recordId && record.protocolState == from).map(_._2)
+      maybeRecord = store.find((id, record) => id == recordId && record.protocolState == from).map(_._2)
       count <- maybeRecord
         .map(record =>
           for {
@@ -78,7 +78,7 @@ class CredentialRepositoryInMemory(storeRef: Ref[Map[UUID, IssueCredentialRecord
   }
 
   override def updateWithIssuedRawCredential(
-      recordId: UUID,
+      recordId: DidCommID,
       issue: IssueCredential,
       issuedRawCredential: String,
       protocolState: ProtocolState
@@ -105,7 +105,7 @@ class CredentialRepositoryInMemory(storeRef: Ref[Map[UUID, IssueCredentialRecord
     } yield count
   }
 
-  override def getValidIssuedCredentials(recordId: Seq[UUID]): Task[Seq[ValidIssuedCredentialRecord]] = {
+  override def getValidIssuedCredentials(recordId: Seq[DidCommID]): Task[Seq[ValidIssuedCredentialRecord]] = {
     for {
       store <- storeRef.get
     } yield store.values
@@ -114,7 +114,7 @@ class CredentialRepositoryInMemory(storeRef: Ref[Map[UUID, IssueCredentialRecord
       .toSeq
   }
 
-  override def deleteIssueCredentialRecord(recordId: UUID): Task[Int] = {
+  override def deleteIssueCredentialRecord(recordId: DidCommID): Task[Int] = {
     for {
       maybeRecord <- getIssueCredentialRecord(recordId)
       count <- maybeRecord
@@ -128,7 +128,7 @@ class CredentialRepositoryInMemory(storeRef: Ref[Map[UUID, IssueCredentialRecord
   }
 
   override def updateWithIssueCredential(
-      recordId: UUID,
+      recordId: DidCommID,
       issue: IssueCredential,
       protocolState: ProtocolState
   ): Task[Int] = {
@@ -159,14 +159,14 @@ class CredentialRepositoryInMemory(storeRef: Ref[Map[UUID, IssueCredentialRecord
     } yield store.values.filter(rec => states.contains(rec.protocolState)).toSeq
   }
 
-  override def getIssueCredentialRecordByThreadId(thid: UUID): Task[Option[IssueCredentialRecord]] = {
+  override def getIssueCredentialRecordByThreadId(thid: DidCommID): Task[Option[IssueCredentialRecord]] = {
     for {
       store <- storeRef.get
     } yield store.values.find(_.thid == thid)
   }
 
   override def updateWithRequestCredential(
-      recordId: UUID,
+      recordId: DidCommID,
       request: RequestCredential,
       protocolState: ProtocolState
   ): Task[Int] = {
@@ -192,7 +192,7 @@ class CredentialRepositoryInMemory(storeRef: Ref[Map[UUID, IssueCredentialRecord
   }
 
   override def updateCredentialRecordStateAndProofByCredentialIdBulk(
-      idsStatesAndProofs: Seq[(UUID, PublicationState, MerkleInclusionProof)]
+      idsStatesAndProofs: Seq[(DidCommID, PublicationState, MerkleInclusionProof)]
   ): Task[Int] = ???
 
 }
@@ -200,7 +200,7 @@ class CredentialRepositoryInMemory(storeRef: Ref[Map[UUID, IssueCredentialRecord
 object CredentialRepositoryInMemory {
   val layer: ULayer[CredentialRepository[Task]] = ZLayer.fromZIO(
     Ref
-      .make(Map.empty[UUID, IssueCredentialRecord])
+      .make(Map.empty[DidCommID, IssueCredentialRecord])
       .map(CredentialRepositoryInMemory(_))
   )
 }
