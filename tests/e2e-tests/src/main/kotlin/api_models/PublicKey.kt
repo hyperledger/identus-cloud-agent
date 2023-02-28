@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 
 data class PublicKey(
     val id: String,
-    val purpose: Purpose,
+    var purpose: Purpose? = null,
 )
 
 enum class Purpose(@JsonValue val value: String) {
