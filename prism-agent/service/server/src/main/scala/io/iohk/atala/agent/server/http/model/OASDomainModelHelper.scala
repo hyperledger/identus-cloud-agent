@@ -149,7 +149,7 @@ trait OASDomainModelHelper {
 
   extension (domain: polluxdomain.IssueCredentialRecord) {
     def toOAS: IssueCredentialRecord = IssueCredentialRecord(
-      recordId = domain.id,
+      recordId = domain.id.value,
       createdAt = domain.createdAt.atOffset(ZoneOffset.UTC),
       updatedAt = domain.updatedAt.map(_.atOffset(ZoneOffset.UTC)),
       role = domain.role.toString,
@@ -223,10 +223,16 @@ trait OASDomainModelHelper {
   }
 
   extension (str: String) {
+    // FIXME REMOVE methods
     def toUUID: ZIO[Any, InvalidPayload, UUID] =
       ZIO
         .fromTry(Try(UUID.fromString(str)))
         .mapError(e => HttpServiceError.InvalidPayload(s"Error parsing string as UUID: ${e.getMessage()}"))
+
+    def toDidCommID: ZIO[Any, InvalidPayload, io.iohk.atala.pollux.core.model.DidCommID] =
+      ZIO
+        .fromTry(Try(io.iohk.atala.pollux.core.model.DidCommID(str)))
+        .mapError(e => HttpServiceError.InvalidPayload(s"Error parsing string as DidCommID: ${e.getMessage()}"))
   }
 
   extension (resolution: (castorDomain.w3c.DIDDocumentMetadataRepr, castorDomain.w3c.DIDDocumentRepr)) {
