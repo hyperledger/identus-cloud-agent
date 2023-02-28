@@ -111,7 +111,8 @@ object PresentationServiceImpl {
 private class PresentationServiceImpl(
     presentationRepository: PresentationRepository[Task],
     credentialRepository: CredentialRepository[Task],
-    didAgent: DidAgent
+    didAgent: DidAgent,
+    maxRetries: Int = 5, // TODO move to config
 ) extends PresentationService {
 
   import PresentationRecord._
@@ -224,7 +225,10 @@ private class PresentationServiceImpl(
           requestPresentationData = Some(request),
           proposePresentationData = None,
           presentationData = None,
-          credentialsToUse = None
+          credentialsToUse = None,
+          metaRetries = maxRetries,
+          metaNextRetry = Some(Instant.now()),
+          metaLastFailure = None,
         )
       )
       count <- presentationRepository
@@ -266,7 +270,10 @@ private class PresentationServiceImpl(
           requestPresentationData = Some(request),
           proposePresentationData = None,
           presentationData = None,
-          credentialsToUse = None
+          credentialsToUse = None,
+          metaRetries = maxRetries,
+          metaNextRetry = Some(Instant.now()),
+          metaLastFailure = None,
         )
       )
       count <- presentationRepository

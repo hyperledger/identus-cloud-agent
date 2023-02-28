@@ -19,7 +19,10 @@ final case class PresentationRecord(
     requestPresentationData: Option[RequestPresentation],
     proposePresentationData: Option[ProposePresentation],
     presentationData: Option[Presentation],
-    credentialsToUse: Option[List[String]]
+    credentialsToUse: Option[List[String]],
+    metaRetries: Int,
+    metaNextRetry: Option[Instant],
+    metaLastFailure: Option[String],
 )
 
 object PresentationRecord {
