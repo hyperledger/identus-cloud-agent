@@ -67,6 +67,7 @@ jobs:
       - name: Start services for issuer
         env:
           PORT: 8080
+          NETWORK: prism
         uses: isbang/compose-action@v1.4.1
         with:
           compose-file: "./infrastructure/shared/docker-compose.yml"
@@ -77,6 +78,7 @@ jobs:
       - name: Start services for holder
         env:
           PORT: 8090
+          NETWORK: prism
         uses: isbang/compose-action@v1.4.1
         with:
           compose-file: "./infrastructure/shared/docker-compose.yml"
