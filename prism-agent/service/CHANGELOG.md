@@ -1,3 +1,10 @@
+# [prism-agent-v0.45.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.45.0...prism-agent-v0.45.1) (2023-02-28)
+
+
+### Bug Fixes
+
+* **prism-agent:** add uri normalization on UpdateService patch ([#401](https://github.com/input-output-hk/atala-prism-building-blocks/issues/401)) ([6a98f70](https://github.com/input-output-hk/atala-prism-building-blocks/commit/6a98f7015069dba781d03584ae97a40681c5a5a9))
+
 # [prism-agent-v0.45.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.44.0...prism-agent-v0.45.0) (2023-02-27)
 
 
