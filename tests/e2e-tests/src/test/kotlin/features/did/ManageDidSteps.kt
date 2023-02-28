@@ -94,7 +94,7 @@ class ManageDidSteps {
     fun seeTheListContainsAllCreatedDids(actor: Actor) {
         val expectedDidsCount = actor.recall<Int>("number")
         val expectedDids = actor.recall<List<String>>("createdDids")
-        val managedDidList = lastResponseList("", ManagedDid::class)
+        val managedDidList = lastResponseList("contents", ManagedDid::class)
         Assertions.assertThat(managedDidList)
             .filteredOn {
                 expectedDids.contains(it.longFormDid) && it.status == "CREATED"
