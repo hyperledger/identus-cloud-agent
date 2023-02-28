@@ -29,10 +29,7 @@ class DeactivateDidSteps {
     @When("{actor} deactivates PRISM DID")
     fun actorIssuesDeactivateDidOperation(actor: Actor) {
         actor.attemptsTo(
-            Post.to("/did-registrar/dids/${TestConstants.PRISM_DID_FOR_UPDATES}/deactivations")
-                .with {
-                    it.body(UpdatePrismDidRequest(listOf(actor.recall("updatePrismDidAction"))))
-                },
+            Post.to("/did-registrar/dids/${TestConstants.PRISM_DID_FOR_DEACTIVATION}/deactivations")
         )
         actor.should(
             ResponseConsequence.seeThatResponse {
@@ -48,7 +45,7 @@ class DeactivateDidSteps {
         Utils.wait(
             {
                 actor.attemptsTo(
-                    Get.resource("/dids/${TestConstants.PRISM_DID_FOR_UPDATES}"),
+                    Get.resource("/dids/${TestConstants.PRISM_DID_FOR_DEACTIVATION}"),
                 )
                 lastResponseObject("metadata.deactivated", String::class) == "true"
             },
