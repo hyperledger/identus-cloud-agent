@@ -15,14 +15,14 @@ object TestConstants {
     val PRISM_DID_UPDATE_NEW_AUTH_KEY = PublicKey("new_auth_key", Purpose.AUTHENTICATION)
     val PRISM_DID_SERVICE = Service(
         "https://foo.bar.com",
+        listOf("https://foo.bar.com/"),
         "LinkedDomains",
-        listOf("https://foo.bar.com"),
     )
-    val PRISM_DID_UPDATE_NEW_SERVICE_URL = "https://bar.foo.com"
+    val PRISM_DID_UPDATE_NEW_SERVICE_URL = "https://bar.foo.com/"
     val PRISM_DID_UPDATE_NEW_SERVICE = Service(
         "https://new.service.com",
+        listOf("https://new.service.com/"),
         "LinkedDomains",
-        listOf("https://new.service.com"),
     )
     var PRISM_DID_FOR_UPDATES: String? = null
     var PRISM_DID_FOR_DEACTIVATION: String? = null

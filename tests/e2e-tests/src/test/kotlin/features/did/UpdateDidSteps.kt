@@ -3,7 +3,6 @@ package features.did
 import api_models.*
 import common.TestConstants
 import common.Utils.lastResponseList
-import common.Utils.lastResponseObject
 import common.Utils.wait
 import io.cucumber.java.en.Given
 import io.cucumber.java.en.When
@@ -40,7 +39,7 @@ class UpdateDidSteps {
     fun actorUpdatesPrismDidByRemovingKeys(actor: Actor) {
         val updatePrismDidAction = UpdatePrismDidAction(
             actionType = "REMOVE_KEY",
-            removeKey = TestConstants.PRISM_DID_AUTH_KEY
+            removeKey = TestConstants.PRISM_DID_AUTH_KEY,
         )
         actor.remember("updatePrismDidAction", updatePrismDidAction)
     }
@@ -49,7 +48,7 @@ class UpdateDidSteps {
     fun actorUpdatesPrismDidWithNewServices(actor: Actor) {
         val updatePrismDidAction = UpdatePrismDidAction(
             actionType = "ADD_SERVICE",
-            addService = TestConstants.PRISM_DID_UPDATE_NEW_SERVICE
+            addService = TestConstants.PRISM_DID_UPDATE_NEW_SERVICE,
         )
         actor.remember("updatePrismDidAction", updatePrismDidAction)
     }
@@ -58,7 +57,7 @@ class UpdateDidSteps {
     fun actorUpdatesPrismDidByRemovingServices(actor: Actor) {
         val updatePrismDidAction = UpdatePrismDidAction(
             actionType = "REMOVE_SERVICE",
-            removeService = TestConstants.PRISM_DID_SERVICE
+            removeService = TestConstants.PRISM_DID_SERVICE,
         )
         actor.remember("updatePrismDidAction", updatePrismDidAction)
     }
@@ -70,11 +69,11 @@ class UpdateDidSteps {
             type = TestConstants.PRISM_DID_SERVICE.type,
             serviceEndpoint = listOf(
                 TestConstants.PRISM_DID_UPDATE_NEW_SERVICE_URL,
-            )
+            ),
         )
         val updatePrismDidAction = UpdatePrismDidAction(
             actionType = "UPDATE_SERVICE",
-            updateService = newService
+            updateService = newService,
         )
         actor.remember("updatePrismDidAction", updatePrismDidAction)
     }
@@ -177,8 +176,8 @@ class UpdateDidSteps {
                 actor.attemptsTo(
                     Get.resource("/dids/${TestConstants.PRISM_DID_FOR_UPDATES}"),
                 )
-                val service = lastResponseObject("did.service", Service::class)
-                service.serviceEndpoint.contains(TestConstants.PRISM_DID_UPDATE_NEW_SERVICE_URL)
+                val service = lastResponseList("did.service", Service::class)
+                service.any { it.serviceEndpoint.contains(TestConstants.PRISM_DID_UPDATE_NEW_SERVICE_URL) }
             },
             "ERROR: DID UPDATE operation did not succeed on the ledger!",
             timeout = TestConstants.DID_UPDATE_PUBLISH_MAX_WAIT_5_MIN,

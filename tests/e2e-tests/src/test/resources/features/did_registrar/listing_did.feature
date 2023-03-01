@@ -1,6 +1,5 @@
 Feature: DID listing
 
-@mytag
 Scenario: Listing multiple PRISM DIDs
   Given Acme creates 5 PRISM DIDs
   When He lists all PRISM DIDs

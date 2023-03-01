@@ -15,7 +15,6 @@ import net.serenitybdd.screenplay.rest.questions.ResponseConsequence
 import org.apache.http.HttpStatus.*
 import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.Matchers.*
-import java.time.Duration
 
 class PublishDidSteps {
 

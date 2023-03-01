@@ -1,6 +1,5 @@
 package features.did
 
-import api_models.UpdatePrismDidRequest
 import common.TestConstants
 import common.Utils
 import common.Utils.lastResponseObject
@@ -29,7 +28,7 @@ class DeactivateDidSteps {
     @When("{actor} deactivates PRISM DID")
     fun actorIssuesDeactivateDidOperation(actor: Actor) {
         actor.attemptsTo(
-            Post.to("/did-registrar/dids/${TestConstants.PRISM_DID_FOR_DEACTIVATION}/deactivations")
+            Post.to("/did-registrar/dids/${TestConstants.PRISM_DID_FOR_DEACTIVATION}/deactivations"),
         )
         actor.should(
             ResponseConsequence.seeThatResponse {
