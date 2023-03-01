@@ -10,6 +10,7 @@ on:
   pull_request:
     paths:
       - ".github/workflows/e2e-tests.yml"
+      - "infrastructure/shared/docker-compose.yml"
       - "tests/e2e-tests/**"
   push:
     branches:
@@ -162,4 +163,4 @@ jobs:
             Skipped (known bugs): ${{ steps.analyze_test_results.outputs.skipped }}
           SLACK_TITLE: "Atala PRISM V2 E2E tests: ${{ steps.analyze_test_results.outputs.conclusion }}"
           SLACK_USERNAME: circleci
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_WEBHOOK: ${{ secrets.E2E_TESTS_SLACK_WEBHOOK }}
