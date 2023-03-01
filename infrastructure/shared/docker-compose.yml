@@ -114,6 +114,6 @@ volumes:
   pg_data_db:
   pgadmin:
 
-networks:
-  default:
-    name: ${NETWORK}
+#networks:
+#  default:
+#    name: ${NETWORK}
