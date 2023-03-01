@@ -18,8 +18,8 @@ Before using the **Issuing Credentials protocol**, the following conditions must
 
 1. **Issuer** and **Holder** PRISM Agents up and running
 2. A connection must be established between the **Issuer** and **Holder** PRISM Agents (see [Connections](../connections/connection.md))
-3. An **Issuer** must have a Prism DID created and published. The DID document must have at least one `assertionMethod` key. (see [Create DID](../dids/create.md))
-4. A **Holder** must have a Prism DID created. The DID document must have at least one `authentication` key for presenting the proof later on.
+3. The **Issuer** must have a published PRISM DID and the DID document must have at least one `assertionMethod` key for issuing credendials (see [Create DID](../dids/create.md) and [Publish DID](../dids/publish.md))
+4. The **Holder** must have a PRISM DID and the DID document must have at least one `authentication` key for presenting the proof
 
 ## Overview
 
