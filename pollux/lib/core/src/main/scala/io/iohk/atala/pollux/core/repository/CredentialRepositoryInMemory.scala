@@ -12,8 +12,10 @@ import zio.*
 import java.time.Instant
 import java.util.UUID
 
-class CredentialRepositoryInMemory(storeRef: Ref[Map[DidCommID, IssueCredentialRecord]])
-    extends CredentialRepository[Task] {
+class CredentialRepositoryInMemory(
+    storeRef: Ref[Map[DidCommID, IssueCredentialRecord]],
+    maxRetries: Int
+) extends CredentialRepository[Task] {
 
   override def updateCredentialRecordPublicationState(
       recordId: DidCommID,
@@ -70,7 +72,16 @@ class CredentialRepositoryInMemory(storeRef: Ref[Map[DidCommID, IssueCredentialR
       count <- maybeRecord
         .map(record =>
           for {
-            _ <- storeRef.update(r => r.updated(recordId, record.copy(protocolState = to)))
+            _ <- storeRef.update(r =>
+              r.updated(
+                recordId,
+                record.copy(
+                  protocolState = to,
+                  metaRetries = maxRetries,
+                  metaLastFailure = None,
+                )
+              )
+            )
           } yield 1
         )
         .getOrElse(ZIO.succeed(0))
@@ -95,7 +106,9 @@ class CredentialRepositoryInMemory(storeRef: Ref[Map[DidCommID, IssueCredentialR
                   updatedAt = Some(Instant.now),
                   issueCredentialData = Some(issue),
                   issuedCredentialRaw = Some(issuedRawCredential),
-                  protocolState = protocolState
+                  protocolState = protocolState,
+                  metaRetries = maxRetries,
+                  metaLastFailure = None,
                 )
               )
             )
@@ -143,7 +156,9 @@ class CredentialRepositoryInMemory(storeRef: Ref[Map[DidCommID, IssueCredentialR
                 record.copy(
                   updatedAt = Some(Instant.now),
                   issueCredentialData = Some(issue),
-                  protocolState = protocolState
+                  protocolState = protocolState,
+                  metaRetries = maxRetries,
+                  metaLastFailure = None,
                 )
               )
             )
@@ -181,7 +196,9 @@ class CredentialRepositoryInMemory(storeRef: Ref[Map[DidCommID, IssueCredentialR
                 record.copy(
                   updatedAt = Some(Instant.now),
                   requestCredentialData = Some(request),
-                  protocolState = protocolState
+                  protocolState = protocolState,
+                  metaRetries = maxRetries,
+                  metaLastFailure = None,
                 )
               )
             )
@@ -195,12 +212,38 @@ class CredentialRepositoryInMemory(storeRef: Ref[Map[DidCommID, IssueCredentialR
       idsStatesAndProofs: Seq[(DidCommID, PublicationState, MerkleInclusionProof)]
   ): Task[Int] = ???
 
+  def updateAfterFail(
+      recordId: DidCommID,
+      failReason: Option[String]
+  ): Task[Int] = for {
+    maybeRecord <- getIssueCredentialRecord(recordId)
+    count <- maybeRecord
+      .map(record =>
+        for {
+          _ <- storeRef.update(r =>
+            r.updated(
+              recordId,
+              record.copy(
+                metaRetries = math.max(0, record.metaRetries - 1),
+                metaNextRetry =
+                  if (record.metaRetries - 1 <= 0) None
+                  else Some(Instant.now().plusSeconds(60)), // TODO exponention time
+                metaLastFailure = failReason
+              )
+            )
+          )
+        } yield 1
+      )
+      .getOrElse(ZIO.succeed(0))
+  } yield count
+
 }
 
 object CredentialRepositoryInMemory {
+  val maxRetries = 5 // TODO Move to config
   val layer: ULayer[CredentialRepository[Task]] = ZLayer.fromZIO(
     Ref
       .make(Map.empty[DidCommID, IssueCredentialRecord])
-      .map(CredentialRepositoryInMemory(_))
+      .map(CredentialRepositoryInMemory(_, maxRetries))
   )
 }

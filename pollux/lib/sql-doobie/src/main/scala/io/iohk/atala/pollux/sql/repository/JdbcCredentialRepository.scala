@@ -10,8 +10,10 @@ import io.circe.syntax._
 import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
 import io.iohk.atala.mercury.protocol.issuecredential.OfferCredential
 import io.iohk.atala.mercury.protocol.issuecredential.RequestCredential
+import io.iohk.atala.castor.core.model.did._
+import io.iohk.atala.pollux.core.model._
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord.ProtocolState
-import io.iohk.atala.pollux.core.model.*
+import io.iohk.atala.pollux.core.model.error.CredentialRepositoryError
 import io.iohk.atala.pollux.core.model.error.CredentialRepositoryError._
 import io.iohk.atala.pollux.core.repository.CredentialRepository
 import io.iohk.atala.pollux.sql.model.JWTCredentialRow
@@ -23,11 +25,12 @@ import zio.interop.catz.*
 
 import java.time.Instant
 import java.util.UUID
-import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
-import io.iohk.atala.castor.core.model.did.PrismDID
+
+import org.postgresql.util.PSQLState
+import java.sql.SQLException
 
 // TODO: replace with actual implementation
-class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepository[Task] {
+class JdbcCredentialRepository(xa: Transactor[Task], maxRetries: Int) extends CredentialRepository[Task] {
   // serializes into hex string
 
   private def serializeInclusionProof(proof: MerkleInclusionProof): String = BytesOps.bytesToHex(proof.encode.getBytes)
@@ -50,8 +53,7 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
   given didCommIDGet: Get[DidCommID] = Get[String].map(DidCommID(_))
   given didCommIDPut: Put[DidCommID] = Put[String].contramap(_.value)
 
-  given instantGet: Get[Instant] = Get[Long].map(Instant.ofEpochSecond)
-  given instantPut: Put[Instant] = Put[Long].contramap(_.getEpochSecond())
+  import doobie.postgres.implicits.JavaTimeInstantMeta
 
   given protocolStateGet: Get[ProtocolState] = Get[String].map(ProtocolState.valueOf)
   given protocolStatePut: Put[ProtocolState] = Put[String].contramap(_.toString)
@@ -96,7 +98,10 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   request_credential_data,
         |   issue_credential_data,
         |   issued_credential_raw,
-        |   issuing_did
+        |   issuing_did,
+        |   meta_retries,
+        |   meta_next_retry,
+        |   meta_last_failure
         | ) values (
         |   ${record.id},
         |   ${record.createdAt},
@@ -114,14 +119,17 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   ${record.requestCredentialData},
         |   ${record.issueCredentialData},
         |   ${record.issuedCredentialRaw},
-        |   ${record.issuingDID}
+        |   ${record.issuingDID},
+        |   ${record.metaRetries},
+        |   ${record.metaNextRetry},
+        |   ${record.metaLastFailure}
         | )
         """.stripMargin.update
 
     cxnIO.run
       .transact(xa)
       .mapError {
-        case e: PSQLException => UniqueConstraintViolation(e.getMessage())
+        case e: PSQLException => CredentialRepositoryError.fromPSQLException(e.getSQLState, e.getMessage)
         case e                => e
       }
   }
@@ -145,7 +153,10 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   request_credential_data,
         |   issue_credential_data,
         |   issued_credential_raw,
-        |   issuing_did
+        |   issuing_did,
+        |   meta_retries,
+        |   meta_next_retry,
+        |   meta_last_failure
         | FROM public.issue_credential_records
         """.stripMargin
       .query[IssueCredentialRecord]
@@ -182,7 +193,10 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
             |   request_credential_data,
             |   issue_credential_data,
             |   issued_credential_raw,
-            |   issuing_did
+            |   issuing_did,
+            |   meta_retries,
+            |   meta_next_retry,
+            |   meta_last_failure
             | FROM public.issue_credential_records
             | WHERE $inClauseFragment
             """.stripMargin
@@ -212,7 +226,10 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   request_credential_data,
         |   issue_credential_data,
         |   issued_credential_raw,
-        |   issuing_did
+        |   issuing_did,
+        |   meta_retries,
+        |   meta_next_retry,
+        |   meta_last_failure
         | FROM public.issue_credential_records
         | WHERE id = $recordId
         """.stripMargin
@@ -242,7 +259,10 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         |   request_credential_data,
         |   issue_credential_data,
         |   issued_credential_raw,
-        |   issuing_did
+        |   issuing_did,
+        |   meta_retries,
+        |   meta_next_retry,
+        |   meta_last_failure
         | FROM public.issue_credential_records
         | WHERE thid = $thid
         """.stripMargin
@@ -262,7 +282,10 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
         | UPDATE public.issue_credential_records
         | SET
         |   protocol_state = $to,
-        |   updated_at = ${Instant.now}
+        |   updated_at = ${Instant.now},
+        |   meta_retries = $maxRetries,
+        |   meta_next_retry = ${Instant.now},
+        |   meta_last_failure = null
         | WHERE
         |   id = $recordId
         |   AND protocol_state = $from
@@ -412,9 +435,26 @@ class JdbcCredentialRepository(xa: Transactor[Task]) extends CredentialRepositor
     cxnIO.run
       .transact(xa)
   }
+
+  def updateAfterFail(
+      recordId: DidCommID,
+      failReason: Option[String]
+  ): Task[Int] = {
+    val cxnIO = sql"""
+        | UPDATE public.issue_credential_records
+        | SET
+        |   meta_retries = CASE WHEN (meta_retries > 1) THEN meta_retries - 1 ELSE 0 END,
+        |   meta_next_retry = CASE WHEN (meta_retries > 1) THEN ${Instant.now().plusSeconds(60)} ELSE null END,
+        |   meta_last_failure = ${failReason}
+        | WHERE
+        |   id = $recordId
+        """.stripMargin.update
+    cxnIO.run.transact(xa)
+  }
 }
 
 object JdbcCredentialRepository {
+  val maxRetries = 5 // TODO Move to config
   val layer: URLayer[Transactor[Task], CredentialRepository[Task]] =
-    ZLayer.fromFunction(new JdbcCredentialRepository(_))
+    ZLayer.fromFunction(new JdbcCredentialRepository(_, maxRetries))
 }

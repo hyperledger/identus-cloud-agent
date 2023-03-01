@@ -51,4 +51,9 @@ trait CredentialRepository[F[_]] {
 
   def getValidIssuedCredentials(recordId: Seq[DidCommID]): F[Seq[ValidIssuedCredentialRecord]]
 
+  def updateAfterFail(
+      recordId: DidCommID,
+      failReason: Option[String]
+  ): Task[Int]
+
 }
