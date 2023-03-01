@@ -1,7 +1,6 @@
 package features.did
 
 import api_models.*
-import common.Utils.lastResponseList
 import common.Utils.lastResponseObject
 import common.Utils.wait
 import io.cucumber.java.en.Given
@@ -48,7 +47,7 @@ class PublishDidSteps {
         val longFormDid = lastResponseObject("longFormDid", String::class)
 
         actor.attemptsTo(
-            Get.resource("/did-registrar/dids"),
+            Get.resource("/did-registrar/dids/$longFormDid"),
         )
         actor.should(
             ResponseConsequence.seeThatResponse {
@@ -57,9 +56,7 @@ class PublishDidSteps {
         )
         actor.remember(
             "shortFormDid",
-            lastResponseList("", ManagedDid::class).find {
-                it.longFormDid == longFormDid
-            }!!.did,
+            lastResponseObject("", ManagedDid::class).did,
         )
         actor.remember("longFormDid", longFormDid)
     }
