@@ -23,7 +23,6 @@ Examples:
   | documentTemplate.services[0].type            | 400   |
   | documentTemplate.services[0].serviceEndpoint | 400   |
 
-@skip @bug
 Scenario Outline: Wrong formatted fields to create manage DID should fail
   Given Acme tries to create a managed DID with value <value> in <field>
   Then He sees the request has failed with error status <error>

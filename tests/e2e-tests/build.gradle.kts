@@ -41,4 +41,5 @@ serenity {
 
 tasks.test {
     testLogging.showStandardStreams = true
+    systemProperty("cucumber.filter.tags", System.getProperty("cucumber.filter.tags"))
 }
