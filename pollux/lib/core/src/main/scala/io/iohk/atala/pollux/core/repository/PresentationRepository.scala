@@ -42,4 +42,8 @@ trait PresentationRepository[F[_]] {
       protocolState: ProtocolState
   ): F[Int]
 
+  def updateAfterFail(
+      recordId: DidCommID,
+      failReason: Option[String]
+  ): F[Int]
 }
