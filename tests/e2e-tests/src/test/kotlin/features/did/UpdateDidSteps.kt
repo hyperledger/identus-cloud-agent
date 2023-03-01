@@ -3,6 +3,7 @@ package features.did
 import api_models.*
 import common.TestConstants
 import common.Utils.lastResponseList
+import common.Utils.lastResponseObject
 import common.Utils.wait
 import io.cucumber.java.en.Given
 import io.cucumber.java.en.When
@@ -176,10 +177,8 @@ class UpdateDidSteps {
                 actor.attemptsTo(
                     Get.resource("/dids/${TestConstants.PRISM_DID_FOR_UPDATES}"),
                 )
-                val services = lastResponseList("did.service", Service::class)
-                services.any {
-                    it.serviceEndpoint.contains(TestConstants.PRISM_DID_UPDATE_NEW_SERVICE_URL)
-                }
+                val service = lastResponseObject("did.service", Service::class)
+                service.serviceEndpoint.contains(TestConstants.PRISM_DID_UPDATE_NEW_SERVICE_URL)
             },
             "ERROR: DID UPDATE operation did not succeed on the ledger!",
             timeout = TestConstants.DID_UPDATE_PUBLISH_MAX_WAIT_5_MIN,

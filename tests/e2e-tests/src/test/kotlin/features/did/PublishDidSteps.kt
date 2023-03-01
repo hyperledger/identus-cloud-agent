@@ -111,7 +111,7 @@ class PublishDidSteps {
 
         assertThat(didDocument.verificationMethod!![0])
             .hasFieldOrPropertyWithValue("controller", shortFormDid)
-            .hasFieldOrPropertyWithValue("id", "$shortFormDid#${TestConstants.PRISM_DID_AUTH_KEY.id}")
+            .hasFieldOrPropertyWithValue("id", "$shortFormDid#${TestConstants.PRISM_DID_ASSERTION_KEY.id}")
             .hasFieldOrProperty("publicKeyJwk")
 
         assertThat(lastResponseObject("", DidDocument::class).metadata!!)
