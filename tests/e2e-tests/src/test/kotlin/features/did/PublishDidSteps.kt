@@ -1,6 +1,7 @@
 package features.did
 
 import api_models.*
+import common.TestConstants
 import common.Utils.lastResponseObject
 import common.Utils.wait
 import io.cucumber.java.en.Given
