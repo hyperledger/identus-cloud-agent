@@ -59,6 +59,7 @@ const sidebars = {
         description: 'Schema tutorials'
       },
       items: [
+        'schemas/credential-schema',
         'schemas/create',
         'schemas/update',
         'schemas/delete'
