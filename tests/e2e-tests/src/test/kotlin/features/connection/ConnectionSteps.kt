@@ -20,14 +20,6 @@ class ConnectionSteps {
 
     @When("{actor} generates a connection invitation to {actor}")
     fun inviterGeneratesAConnectionInvitation(inviter: Actor, invitee: Actor) {
-        inviter.attemptsTo(
-            Get.resource("/connections"),
-        )
-
-        invitee.attemptsTo(
-            Get.resource("/connections"),
-        )
-
         // Acme(Issuer) initiates a connection
         // and sends it to Bob(Holder) out-of-band, e.g. using QR-code
         val connectionLabel = "Connection with ${invitee.name}"
