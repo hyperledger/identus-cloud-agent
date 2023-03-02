@@ -101,7 +101,7 @@ trait PresentationService {
 
   def markPresentationAccepted(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]]
 
-  def markPresentationVerificationFailed(recordId: UUID): IO[PresentationError, Option[PresentationRecord]]
+  def markPresentationVerificationFailed(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]]
 
 }
 
@@ -542,7 +542,9 @@ private class PresentationServiceImpl(
       PresentationRecord.ProtocolState.RequestRejected
     )
 
-  override def markPresentationVerificationFailed(recordId: UUID): IO[PresentationError, Option[PresentationRecord]] =
+  override def markPresentationVerificationFailed(
+      recordId: DidCommID
+  ): IO[PresentationError, Option[PresentationRecord]] =
     updatePresentationRecordProtocolState(
       recordId,
       PresentationRecord.ProtocolState.PresentationReceived,
