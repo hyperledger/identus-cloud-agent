@@ -107,8 +107,8 @@ class JdbcPresentationRepository(
         |   request_presentation_data,
         |   credentials_to_use,
         |   meta_retries,
-        |   next_retry,
-        |   last_failure
+        |   meta_next_retry,
+        |   meta_last_failure
         | ) values (
         |   ${record.id},
         |   ${record.createdAt},
@@ -148,8 +148,8 @@ class JdbcPresentationRepository(
         |   presentation_data,
         |   credentials_to_use,
         |   meta_retries,
-        |   next_retry,
-        |   last_failure
+        |   meta_next_retry,
+        |   meta_last_failure
         | FROM public.presentation_records
         """.stripMargin
       .query[PresentationRecord]
@@ -184,8 +184,8 @@ class JdbcPresentationRepository(
             |   presentation_data,
             |   credentials_to_use,
             |   meta_retries,
-            |   next_retry,
-            |   last_failure
+            |   meta_next_retry,
+            |   meta_last_failure
             | FROM public.presentation_records
             | WHERE $inClauseFragment
             """.stripMargin
@@ -213,8 +213,8 @@ class JdbcPresentationRepository(
         |   presentation_data,
         |   credentials_to_use,
         |   meta_retries,
-        |   next_retry,
-        |   last_failure
+        |   meta_next_retry,
+        |   meta_last_failure
         | FROM public.presentation_records
         | WHERE id = $recordId
         """.stripMargin
@@ -242,8 +242,8 @@ class JdbcPresentationRepository(
         |   presentation_data,
         |   credentials_to_use,
         |   meta_retries,
-        |   next_retry,
-        |   last_failure
+        |   meta_next_retry,
+        |   meta_last_failure
         | FROM public.presentation_records
         | WHERE thid = $thid
         """.stripMargin
