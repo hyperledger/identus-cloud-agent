@@ -42,8 +42,8 @@ paths:
   # ----------------------------------
   /dids/{didRef}:
     get:
-      tags: ["DID"]
       operationId: getDid
+      tags: ["DID"]
       summary: Resolve Prism DID
       description: Resolve Prism DID
       parameters:
@@ -60,12 +60,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
+                $ref: "./shared/schemas.yaml#/components/schemas/ErrorResponse"
 
   /did-registrar/dids:
     get:
-      tags: ["DID Registrar"]
       operationId: listManagedDid
+      tags: ["DID Registrar"]
       summary: List all DIDs stored in PrismAgent's wallet
       description: |
         List all DIDs stored in PrismAgent's wallet.
@@ -86,11 +86,11 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
+                $ref: "./shared/schemas.yaml#/components/schemas/ErrorResponse"
 
     post:
-      tags: ["DID Registrar"]
       operationId: createManagedDid
+      tags: ["DID Registrar"]
       summary: Create unpublished DID and store it in PrismAgent's wallet
       description: |
         Create unpublished DID and store it inside PrismAgent's wallet. The private keys of the DID is
@@ -102,7 +102,7 @@ paths:
             schema:
               $ref: "./castor/schemas.yaml#/components/schemas/CreateManagedDidRequest"
       responses:
-        "200":
+        "201":
           description: Created unpublished DID.
           content:
             application/json:
@@ -113,12 +113,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
+                $ref: "./shared/schemas.yaml#/components/schemas/ErrorResponse"
 
   /did-registrar/dids/{didRef}:
     get:
-      tags: ["DID Registrar"]
       operationId: getManagedDid
+      tags: ["DID Registrar"]
       summary: Get DID stored in PrismAgent's wallet
       description: Get DID stored in PrismAgent's wallet
       parameters:
@@ -135,12 +135,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
+                $ref: "./shared/schemas.yaml#/components/schemas/ErrorResponse"
 
   /did-registrar/dids/{didRef}/publications:
     post:
-      tags: ["DID Registrar"]
       operationId: publishManagedDid
+      tags: ["DID Registrar"]
       summary: Publish the DID stored in PrismAgent's wallet to the VDR
       description: |
         Publish the DID stored in PrismAgent's wallet to the VDR.
@@ -158,12 +158,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
+                $ref: "./shared/schemas.yaml#/components/schemas/ErrorResponse"
 
   /did-registrar/dids/{didRef}/updates:
     post:
-      tags: ["DID Registrar"]
       operationId: updateManagedDid
+      tags: ["DID Registrar"]
       summary: Update DID in PrismAgent's wallet and post update operation to the VDR
       description: |
         Update DID in PrismAgent's wallet and post update operation to the VDR.
@@ -190,20 +190,20 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
+                $ref: "./shared/schemas.yaml#/components/schemas/ErrorResponse"
 
   /did-registrar/dids/{didRef}/deactivations:
     post:
-      tags: ["DID Registrar"]
       operationId: deactivateManagedDid
-      summary: Deactivate DID in PrismAgent's wallet and post deactivate operation to blockchain
+      tags: ["DID Registrar"]
+      summary: Deactivate DID in PrismAgent's wallet and post deactivate operation to VDR
       description: |
-        Deactivate DID in PrismAgent's wallet and post deactivate operation to blockchain.
+        Deactivate DID in PrismAgent's wallet and post deactivate operation to VDR.
       parameters:
         - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
       responses:
         "202":
-          description: Publishing DID to Blockchain.
+          description: DID deactivation to VDR successfully queued.
           content:
             application/json:
               schema:
@@ -213,20 +213,20 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
+                $ref: "./shared/schemas.yaml#/components/schemas/ErrorResponse"
 
   # ----------------------------------
   # Pollux
   # ----------------------------------
   /schema-registry/schemas:
     get:
+      operationId: lookupSchemasByQuery
       tags:
         - Schema Registry
       summary: Lookup schemas by indexed fields
       description:
         "Lookup schemas by `author`, `name`, `tags` parameters and control
         the pagination by `offset` and `limit` parameters "
-      operationId: lookupSchemasByQuery
       parameters:
         - $ref: ./shared/parameters.yaml#/components/parameters/offset
         - $ref: ./shared/parameters.yaml#/components/parameters/limit
@@ -252,27 +252,24 @@ paths:
             type: string
       responses:
         "200":
-          description: ""
+          description: "List of all schemas managed by the Agent"
           content:
             application/json:
               schema:
                 $ref: ./pollux/schemas.yaml#/components/schemas/VerifiableCredentialSchemaPage
         "400":
           description:
-            "Invalid value for: query parameter author, Invalid value for:
-            query parameter name, Invalid value for: query parameter tags, Invalid
-            value for: query parameter offset, Invalid value for: query parameter
-            limit, Invalid value for: query parameter order"
-          content:
-            text/plain:
-              schema:
-                type: string
-        "500":
-          description: ""
+            "Invalid value for one of the query parameters: author, name, tags, offset, limit, order"
           content:
             application/json:
               schema:
-                $ref: ./pollux/schemas.yaml#/components/schemas/InternalServerError
+                $ref: ./shared/schemas.yaml#/components/schemas/ErrorResponse
+        "500":
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                $ref: ./shared/schemas.yaml#/components/schemas/ErrorResponse
     post:
       tags:
         - Schema Registry
@@ -310,13 +307,13 @@ paths:
                 $ref: ./pollux/schemas.yaml#/components/schemas/InternalServerError
   /schema-registry/schemas/{id}:
     get:
+      operationId: getSchemaById
       tags:
         - Schema Registry
       summary: Fetch the schema from the registry by id
       description:
         Fetch the schema by the unique identifier. Verifiable Credential
         Schema in json format is returned.
-      operationId: getSchemaById
       parameters:
         - name: id
           in: path

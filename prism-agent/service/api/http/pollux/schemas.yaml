@@ -90,26 +90,14 @@ components:
           $ref: "#/components/schemas/Proof"
 
     VerifiableCredentialSchemaPage:
-      required:
-        - self
-        - kind
-        - pageOf
-      type: object
-      properties:
-        self:
-          type: string
-        kind:
-          type: string
-        pageOf:
-          type: string
-        next:
-          type: string
-        previous:
-          type: string
-        contents:
-          type: array
-          items:
-            $ref: "#/components/schemas/VerifiableCredentialSchema"
+      allOf:
+        - $ref: "../shared/schemas.yaml#/components/schemas/Pagination"
+        - type: object
+          properties:
+            contents:
+              type: array
+              items:
+                $ref: "#/components/schemas/VerifiableCredentialSchema"
 
     VerificationPolicyConstraint:
       required:

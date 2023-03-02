@@ -193,7 +193,7 @@ components:
                     example: service1
               updateService:
                 type: object
-                description: A patch to existing Service. 'type' and 'serviceEndpoint' must not be both empty.
+                description: A patch to existing Service. 'type' and 'serviceEndpoint' can't both be empty.
                 required:
                   - id
                 properties:
@@ -210,29 +210,17 @@ components:
                     type: array
                     items:
                       type: string
-                      example: "https://bar.example.com"
+                      example: "https://bar.example.com/"
 
     ManagedDIDPage:
-      type: object
-      required:
-        - self
-        - kind
-        - pageOf
-      properties:
-        self:
-          type: string
-        kind:
-          type: string
-        pageOf:
-          type: string
-        next:
-          type: string
-        previous:
-          type: string
-        contents:
-          type: array
-          items:
-            $ref: "#/components/schemas/ManagedDID"
+      allOf:
+        - $ref: "../shared/schemas.yaml#/components/schemas/Pagination"
+        - type: object
+          properties:
+            contents:
+              type: array
+              items:
+                $ref: "#/components/schemas/ManagedDID"
 
     ManagedDID:
       type: object
@@ -295,7 +283,7 @@ components:
           type: array
           items:
             type: string
-            example: "https://bar.example.com"
+            example: "https://bar.example.com/"
 
     ManagedDIDKeyTemplate:
       type: object
