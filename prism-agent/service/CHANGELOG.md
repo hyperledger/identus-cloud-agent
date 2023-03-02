@@ -1,3 +1,10 @@
+# [prism-agent-v0.48.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.47.1...prism-agent-v0.48.0) (2023-03-02)
+
+
+### Features
+
+* **prism-agent:** Added new state PresentationVerificationFailed ([#412](https://github.com/input-output-hk/atala-prism-building-blocks/issues/412)) ([55569ed](https://github.com/input-output-hk/atala-prism-building-blocks/commit/55569edbae03a034b84548878fe3ab19252b3bb3))
+
 # [prism-agent-v0.47.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.47.0...prism-agent-v0.47.1) (2023-03-02)
 
 
