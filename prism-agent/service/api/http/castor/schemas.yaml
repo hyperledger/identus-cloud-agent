@@ -252,7 +252,9 @@ components:
           example: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff:Cr4BCrsBElsKBmF1dGgtMRAEQk8KCXNlY3AyNTZrMRIg0opTuxu-zt6aRbT1tPniG4eu4CYsQPM3rrLzvzNiNgwaIIFTnyT2N4U7qCQ78qtWC3-p0el6Hvv8qxG5uuEw-WgMElwKB21hc3RlcjAQAUJPCglzZWNwMjU2azESIKhBU0eCOO6Vinz_8vhtFSAhYYqrkEXC8PHGxkuIUev8GiAydFHLXb7c22A1Uj_PR21NZp6BCDQqNq2xd244txRgsQ
         status:
           type: string
-          description: A status indicating an internal publication state of a DID in the wallet. Does not represent DID a full lifecyle (e.g. deactivated, recovered, updated).
+          description: |
+            A status indicating a publication state of a DID in the wallet (e.g. PUBLICATION_PENDING, PUBLISHED).
+            Does not represent DID a full lifecyle (e.g. deactivated, recovered, updated).
           enum:
             - CREATED
             - PUBLICATION_PENDING
