@@ -167,9 +167,9 @@ paths:
       summary: Update DID in PrismAgent's wallet and post update operation to the VDR
       description: |
         Update DID in PrismAgent's wallet and post update operation to the VDR.
-        This endpoint updates the DID document from last confirmed operation.
+        This endpoint updates the DID document from the last confirmed operation.
         Submitting multiple update operations without waiting for confirmation will result in
-        some operation being rejected as only one operation can be appended from last confirmed operation.
+        some operations being rejected as only one operation is allowed to be appended to the last confirmed operation.
       requestBody:
         required: true
         content:
@@ -196,9 +196,9 @@ paths:
     post:
       tags: ["DID Registrar"]
       operationId: deactivateManagedDid
-      summary: Deactivate DID in PrismAgent's wallet and post deactivate operation to blockchain
+      summary: Deactivate DID in PrismAgent's wallet and post deactivate operation to the VDR
       description: |
-        Deactivate DID in PrismAgent's wallet and post deactivate operation to blockchain.
+        Deactivate DID in PrismAgent's wallet and post deactivate operation to the VDR.
       parameters:
         - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
       responses:
