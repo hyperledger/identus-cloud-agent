@@ -50,5 +50,8 @@ CREATE TABLE public.presentation_records(
   "request_presentation_data" TEXT,
   "propose_presentation_data" TEXT,
   "presentation_data" TEXT,
-  "credentials_to_use" TEXT[] NULL
+  "credentials_to_use" TEXT[] NULL,
+  "meta_retries" BIGINT NOT NULL,
+  "meta_next_retry" TIMESTAMP,
+  "meta_last_failure" TEXT
 );
