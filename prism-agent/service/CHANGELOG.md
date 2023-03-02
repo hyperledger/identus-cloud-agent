@@ -1,3 +1,10 @@
+# [prism-agent-v0.47.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.47.0...prism-agent-v0.47.1) (2023-03-02)
+
+
+### Bug Fixes
+
+* **prism-agent:** add consistency to documentation of OAS on DID endpoints ([#408](https://github.com/input-output-hk/atala-prism-building-blocks/issues/408)) ([dd04c3f](https://github.com/input-output-hk/atala-prism-building-blocks/commit/dd04c3fd14c76c02a7cfbb26ca52141590c48371))
+
 # [prism-agent-v0.47.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.46.0...prism-agent-v0.47.0) (2023-03-02)
 
 
