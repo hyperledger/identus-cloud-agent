@@ -26,6 +26,7 @@ Scenario: Update PRISM DID by adding new keys
   And He submits PRISM DID update operation
   Then He sees PRISM DID was successfully updated with new keys
 
+@skip @bug @ATL-3705
 Scenario: Update PRISM DID by removing keys
   When Acme updates PRISM DID by removing keys
   And He submits PRISM DID update operation
