@@ -5,6 +5,7 @@ import common.TestConstants
 import common.Utils.lastResponseList
 import common.Utils.wait
 import io.cucumber.java.en.Given
+import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import net.serenitybdd.screenplay.Actor
 import net.serenitybdd.screenplay.rest.interactions.Get
@@ -57,7 +58,7 @@ class UpdateDidSteps {
     fun actorUpdatesPrismDidByRemovingServices(actor: Actor) {
         val updatePrismDidAction = UpdatePrismDidAction(
             actionType = "REMOVE_SERVICE",
-            removeService = TestConstants.PRISM_DID_SERVICE,
+            removeService = TestConstants.PRISM_DID_SERVICE_TO_REMOVE,
         )
         actor.remember("updatePrismDidAction", updatePrismDidAction)
     }
@@ -65,8 +66,8 @@ class UpdateDidSteps {
     @When("{actor} updates PRISM DID by updating services")
     fun actorUpdatesPrismDidByUpdatingServices(actor: Actor) {
         val newService = Service(
-            id = TestConstants.PRISM_DID_SERVICE.id,
-            type = TestConstants.PRISM_DID_SERVICE.type,
+            id = TestConstants.PRISM_DID_SERVICE_FOR_UPDATE.id,
+            type = TestConstants.PRISM_DID_SERVICE_FOR_UPDATE.type,
             serviceEndpoint = listOf(
                 TestConstants.PRISM_DID_UPDATE_NEW_SERVICE_URL,
             ),
@@ -95,7 +96,7 @@ class UpdateDidSteps {
         )
     }
 
-    @When("{actor} sees PRISM DID was successfully updated with new keys")
+    @Then("{actor} sees PRISM DID was successfully updated with new keys")
     fun actorSeesDidSuccessfullyUpdatedWithNewKeys(actor: Actor) {
         wait(
             {
@@ -115,7 +116,7 @@ class UpdateDidSteps {
         )
     }
 
-    @When("{actor} sees PRISM DID was successfully updated and keys removed")
+    @Then("{actor} sees PRISM DID was successfully updated and keys removed")
     fun actorSeesDidSuccessfullyUpdatedAndKeysRemoved(actor: Actor) {
         wait(
             {
@@ -135,7 +136,7 @@ class UpdateDidSteps {
         )
     }
 
-    @When("{actor} sees PRISM DID was successfully updated with new services")
+    @Then("{actor} sees PRISM DID was successfully updated with new services")
     fun actorSeesDidSuccessfullyUpdatedWithNewServices(actor: Actor) {
         wait(
             {
@@ -152,7 +153,7 @@ class UpdateDidSteps {
         )
     }
 
-    @When("{actor} sees PRISM DID was successfully updated by removing services")
+    @Then("{actor} sees PRISM DID was successfully updated by removing services")
     fun actorSeesDidSuccessfullyUpdatedByRemovingServices(actor: Actor) {
         wait(
             {
@@ -161,7 +162,7 @@ class UpdateDidSteps {
                 )
                 val serviceIds = lastResponseList("did.service.id", String::class)
                 serviceIds.none {
-                    it == "${TestConstants.PRISM_DID_FOR_UPDATES}#${TestConstants.PRISM_DID_SERVICE.id}"
+                    it == "${TestConstants.PRISM_DID_FOR_UPDATES}#${TestConstants.PRISM_DID_SERVICE_TO_REMOVE.id}"
                 }
             },
             "ERROR: DID UPDATE operation did not succeed on the ledger!",
@@ -169,7 +170,7 @@ class UpdateDidSteps {
         )
     }
 
-    @When("{actor} sees PRISM DID was successfully updated by updating services")
+    @Then("{actor} sees PRISM DID was successfully updated by updating services")
     fun actorSeesDidSuccessfullyUpdatedByUpdatingServices(actor: Actor) {
         wait(
             {

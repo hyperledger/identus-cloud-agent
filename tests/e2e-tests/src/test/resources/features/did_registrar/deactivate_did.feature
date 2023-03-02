@@ -1,3 +1,4 @@
+@DLT
 Feature: Deactivate DID
 
 Scenario: Deactivate DID

@@ -9,13 +9,23 @@ import java.util.UUID
 object TestConstants {
     val CREDENTIAL_SCHEMAS = CredentialSchemas
     val RANDOM_CONSTAND_UUID = UUID.randomUUID().toString()
-    val DID_UPDATE_PUBLISH_MAX_WAIT_5_MIN = Duration.ofSeconds(600L)
-    var PRISM_DID_AUTH_KEY = PublicKey("auth_key1", Purpose.AUTHENTICATION)
-    val PRISM_DID_ASSERTION_KEY = PublicKey("assertion_key1", Purpose.ASSERTION_METHOD)
-    val PRISM_DID_UPDATE_NEW_AUTH_KEY = PublicKey("new_auth_key", Purpose.AUTHENTICATION)
+    val DID_UPDATE_PUBLISH_MAX_WAIT_5_MIN = Duration.ofSeconds(60L)
+    var PRISM_DID_AUTH_KEY = PublicKey("auth-1", Purpose.AUTHENTICATION)
+    val PRISM_DID_ASSERTION_KEY = PublicKey("assertion-1", Purpose.ASSERTION_METHOD)
+    val PRISM_DID_UPDATE_NEW_AUTH_KEY = PublicKey("auth-2", Purpose.AUTHENTICATION)
     val PRISM_DID_SERVICE = Service(
         "https://foo.bar.com",
         listOf("https://foo.bar.com/"),
+        "LinkedDomains",
+    )
+    val PRISM_DID_SERVICE_FOR_UPDATE = Service(
+        "https://update.com",
+        listOf("https://update.com/"),
+        "LinkedDomains",
+    )
+    val PRISM_DID_SERVICE_TO_REMOVE = Service(
+        "https://remove.com",
+        listOf("https://remove.com/"),
         "LinkedDomains",
     )
     val PRISM_DID_UPDATE_NEW_SERVICE_URL = "https://bar.foo.com/"

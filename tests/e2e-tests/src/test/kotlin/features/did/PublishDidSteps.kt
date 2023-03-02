@@ -26,6 +26,8 @@ class PublishDidSteps {
         )
         val services = listOf(
             TestConstants.PRISM_DID_SERVICE,
+            TestConstants.PRISM_DID_SERVICE_FOR_UPDATE,
+            TestConstants.PRISM_DID_SERVICE_TO_REMOVE,
         )
         val documentTemplate = DocumentTemplate(publicKeys, services)
         actor.attemptsTo(

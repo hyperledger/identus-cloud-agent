@@ -1,3 +1,4 @@
+@DLT
 Feature: Update DID
 
 Background:
