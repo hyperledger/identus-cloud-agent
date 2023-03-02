@@ -58,7 +58,7 @@ class UpdateDidSteps {
     fun actorUpdatesPrismDidByRemovingServices(actor: Actor) {
         val updatePrismDidAction = UpdatePrismDidAction(
             actionType = "REMOVE_SERVICE",
-            removeService = TestConstants.PRISM_DID_SERVICE_TO_REMOVE,
+            removeService = TestConstants.PRISM_DID_UPDATE_NEW_SERVICE,
         )
         actor.remember("updatePrismDidAction", updatePrismDidAction)
     }
@@ -162,7 +162,7 @@ class UpdateDidSteps {
                 )
                 val serviceIds = lastResponseList("did.service.id", String::class)
                 serviceIds.none {
-                    it == "${TestConstants.PRISM_DID_FOR_UPDATES}#${TestConstants.PRISM_DID_SERVICE_TO_REMOVE.id}"
+                    it == "${TestConstants.PRISM_DID_FOR_UPDATES}#${TestConstants.PRISM_DID_UPDATE_NEW_SERVICE.id}"
                 }
             },
             "ERROR: DID UPDATE operation did not succeed on the ledger!",

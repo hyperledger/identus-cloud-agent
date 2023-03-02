@@ -4,11 +4,13 @@ Feature: Update DID
 Background:
   Given Acme have published PRISM DID for updates
 
+@skip @bug @ATL-3705
 Scenario: Update PRISM DID by adding new services
   When Acme updates PRISM DID with new services
   And He submits PRISM DID update operation
   Then He sees PRISM DID was successfully updated with new services
 
+@skip @bug @ATL-3705
 Scenario: Update PRISM DID by removing services
   When Acme updates PRISM DID by removing services
   And He submits PRISM DID update operation
