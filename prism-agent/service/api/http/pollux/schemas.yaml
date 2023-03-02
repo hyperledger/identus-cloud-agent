@@ -360,11 +360,11 @@ components:
       required: [schemaId, trustIssuers]
       properties:
         schemaId:
-          description: Ex ID card or driving licence
+          description: The unique identifier of a schema the VC should comply with.
           type: string
           example: "https://schema.org/Person"
         trustIssuers:
-          description: Issuer that the verifier trust trust
+          description: One or more issuers that are trusted by the verifier emitting the proof presentation request.
           example:
             [
               "did:web:atalaprism.io/users/testUser",
@@ -388,46 +388,72 @@ components:
           type: string
 
     RequestPresentationInput:
-      description: Request Presentation Input
+      description: A request to create a new "proof presentation" record and send it to the prover.
       required: [connectionId, proofs]
       properties:
         connectionId:
+          description: The unique identifier of an established connection between the verifier and the prover.
           type: string
+          example: bc528dc8-69f1-4c5a-a508-5f8019047900
         options:
+          description: The options to use when creating the proof presentation request (e.g., domain, challenge).
           type: object
           $ref: "#/components/schemas/Options"
         proofs:
+          description: The type of proofs requested in the context of this proof presentation request (e.g., VC schema, trusted issuers, etc.)
           type: array
           items:
             $ref: "#/components/schemas/ProofRequestAux"
     RequestPresentationOutput:
-      description: Request Presentation Output
+      description: The proof presentation record details. Only the unique identifier for now.
       required: [presentationId]
       properties:
         presentationId:
           description: Ref to the id on the presentation (db ref)
           type: string
     PresentationStatus:
-      description: Presentation Status
+      description: The proof presentation record.
       required: [presentationId, status, proofs, data]
       properties:
         presentationId:
+          description: The unique identifier of the presentation record.
           type: string
+          example: 3c6d9fa5-d277-431e-a6cb-d3956e47e610
         status:
+          description: The current state of the proof presentation record.
           type: string
+          enum:
+            - RequestPending
+            - RequestSent
+            - RequestReceived
+            - RequestRejected
+            - PresentationPending
+            - PresentationGenerated
+            - PresentationSent
+            - PresentationReceived
+            - PresentationVerified
+            - PresentationAccepted
+            - PresentationRejected
+            - ProblemReportPending
+            - ProblemReportSent
+            - ProblemReportReceived
         proofs:
+          description: The type of proofs requested in the context of this proof presentation request (e.g., VC schema, trusted issuers, etc.)
           type: array
           items:
             $ref: "#/components/schemas/ProofRequestAux"
         data:
+          description: The list of proofs presented by the prover to the verifier.
           type: array
           items:
             type: string
         connectionId:
+          description: The unique identifier of an established connection between the verifier and the prover.
           type: string
+          example: bc528dc8-69f1-4c5a-a508-5f8019047900
     RequestPresentationAction:
       # RequestPresentationActionAccept:
-      description: Actions on presetations (to update)
+      description: The action to perform on the proof presentation record.
       required: [action]
       properties:
         action:
@@ -438,10 +464,11 @@ components:
             - presentation-accept
             - presentation-reject
         proofId:
-          description: This is to choose what VCs to use
+          description: The unique identifier of the issue credential record - and hence VC - to use as the prover accepts the presentation request. Only applicable on the prover side when the action is `request-accept`.
           type: array
           items:
             type: string
+            example: 0d3a0f8d-852e-42d5-a6f8-2281c4be945c
 
     JWTCompactSerialisation:
       description: "Verifiable Credentials or Presentation encoded as JWT token"
