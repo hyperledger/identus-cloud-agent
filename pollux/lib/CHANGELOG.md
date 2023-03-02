@@ -1,3 +1,10 @@
+# [pollux-v0.35.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.35.0...pollux-v0.35.1) (2023-03-02)
+
+
+### Bug Fixes
+
+* **pollux:** Fix column meta_next_retry ([#413](https://github.com/input-output-hk/atala-prism-building-blocks/issues/413)) ([c02aba8](https://github.com/input-output-hk/atala-prism-building-blocks/commit/c02aba87adbdbea4c30ac4c1c7f7e3a8fe0aa7c4))
+
 # [pollux-v0.35.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.34.0...pollux-v0.35.0) (2023-03-02)
 
 
