@@ -9,6 +9,7 @@ import io.iohk.atala.agent.server.http.model.HttpServiceError
 import io.iohk.atala.agent.server.http.model.HttpServiceError.InvalidPayload
 import io.iohk.atala.agent.server.http.model.OASDomainModelHelper
 import io.iohk.atala.agent.server.http.model.OASErrorModelHelper
+import io.iohk.atala.pollux.core.model.DidCommID
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.core.service.CredentialService
 import zio.*
@@ -57,7 +58,7 @@ class IssueCredentialsProtocolApiServiceImpl(
         .createIssueCredentialRecord(
           pairwiseIssuerDID = didIdPair.myDID,
           pairwiseHolderDID = didIdPair.theirDid,
-          thid = UUID.randomUUID(),
+          thid = DidCommID(),
           subjectId = subjectId.toString,
           schemaId = request.schemaId,
           claims = request.claims,
@@ -102,9 +103,9 @@ class IssueCredentialsProtocolApiServiceImpl(
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
     val result = for {
-      uuid <- recordId.toUUID
+      id <- recordId.toDidCommID
       outcome <- credentialService
-        .getIssueCredentialRecord(uuid)
+        .getIssueCredentialRecord(id)
         .mapError(HttpServiceError.DomainError[CredentialServiceError].apply)
     } yield outcome
 
@@ -120,9 +121,9 @@ class IssueCredentialsProtocolApiServiceImpl(
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
     val result = for {
-      uuid <- recordId.toUUID
+      id <- recordId.toDidCommID
       outcome <- credentialService
-        .acceptCredentialOffer(uuid)
+        .acceptCredentialOffer(id)
         .mapError(HttpServiceError.DomainError[CredentialServiceError].apply)
     } yield outcome
 
@@ -138,9 +139,9 @@ class IssueCredentialsProtocolApiServiceImpl(
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
     val result = for {
-      uuid <- recordId.toUUID
+      id <- recordId.toDidCommID
       outcome <- credentialService
-        .acceptCredentialRequest(uuid)
+        .acceptCredentialRequest(id)
         .mapError(HttpServiceError.DomainError[CredentialServiceError].apply)
     } yield outcome
 

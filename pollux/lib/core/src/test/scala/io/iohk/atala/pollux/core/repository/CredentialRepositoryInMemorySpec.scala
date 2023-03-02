@@ -13,6 +13,7 @@ import java.sql.SQLException
 import java.time.Instant
 import java.util.UUID
 
+/** core/testOnly io.iohk.atala.pollux.core.repository.CredentialRepositoryInMemorySpec */
 object CredentialRepositoryInMemorySpec extends ZIOSpecDefault {
 
   override def spec: Spec[TestEnvironment with Scope, Any] =

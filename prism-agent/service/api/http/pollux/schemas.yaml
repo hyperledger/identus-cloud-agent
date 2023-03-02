@@ -278,7 +278,7 @@ components:
             recordId:
               description: The unique identifier of the issue credential record.
               type: string
-              format: uuid
+              # format: uuid
             createdAt:
               description: The date and time when the issue credential record was created.
               type: string

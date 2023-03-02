@@ -1,3 +1,17 @@
+# [prism-agent-v0.46.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.45.1...prism-agent-v0.46.0) (2023-03-02)
+
+
+### Features
+
+* **prism-agent:** update libs: pollux 0.33.0; connect 0.11.0; mercury 0.20.0 ([#403](https://github.com/input-output-hk/atala-prism-building-blocks/issues/403)) ([d724a02](https://github.com/input-output-hk/atala-prism-building-blocks/commit/d724a02a7b5551bb8a49ddd702a6b14c42f53a81))
+
+# [prism-agent-v0.45.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.45.0...prism-agent-v0.45.1) (2023-02-28)
+
+
+### Bug Fixes
+
+* **prism-agent:** add uri normalization on UpdateService patch ([#401](https://github.com/input-output-hk/atala-prism-building-blocks/issues/401)) ([6a98f70](https://github.com/input-output-hk/atala-prism-building-blocks/commit/6a98f7015069dba781d03584ae97a40681c5a5a9))
+
 # [prism-agent-v0.45.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.44.0...prism-agent-v0.45.0) (2023-02-27)
 
 

@@ -21,7 +21,7 @@ import io.iohk.atala.resolvers.UniversalDidResolver
 import java.io.IOException
 import io.iohk.atala.pollux.vc.jwt._
 import io.iohk.atala.pollux.vc.jwt.W3CCredential
-import io.iohk.atala.pollux.core.model.PresentationRecord
+import io.iohk.atala.pollux.core.model._
 import io.iohk.atala.pollux.core.service.PresentationService
 import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.model.error.PresentationError._
@@ -345,7 +345,7 @@ object BackgroundJobs {
   }
 
   private[this] def createPrismDIDIssuerFromPresentationCredentials(
-      presentationId: UUID,
+      presentationId: DidCommID,
       credentialsToUse: Seq[String]
   ) =
     for {
@@ -358,8 +358,8 @@ object BackgroundJobs {
           PresentationError.UnexpectedError(s"No credential found in the Presentation record: $presentationId")
         )
       credentialRecordUuid <- ZIO
-        .attempt(UUID.fromString(credentialRecordId))
-        .mapError(_ => PresentationError.UnexpectedError(s"$credentialRecordId is not a valid UUID"))
+        .attempt(DidCommID(credentialRecordId))
+        .mapError(_ => PresentationError.UnexpectedError(s"$credentialRecordId is not a valid DidCommID"))
       vcSubjectId <- credentialService
         .getIssueCredentialRecord(credentialRecordUuid)
         .someOrFail(CredentialServiceError.RecordIdNotFound(credentialRecordUuid))

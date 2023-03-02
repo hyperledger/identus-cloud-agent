@@ -101,6 +101,8 @@ trait PresentationService {
 
   def markPresentationAccepted(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]]
 
+  def markPresentationVerificationFailed(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]]
+
 }
 
 object PresentationServiceImpl {
@@ -111,7 +113,8 @@ object PresentationServiceImpl {
 private class PresentationServiceImpl(
     presentationRepository: PresentationRepository[Task],
     credentialRepository: CredentialRepository[Task],
-    didAgent: DidAgent
+    didAgent: DidAgent,
+    maxRetries: Int = 5, // TODO move to config
 ) extends PresentationService {
 
   import PresentationRecord._
@@ -224,7 +227,10 @@ private class PresentationServiceImpl(
           requestPresentationData = Some(request),
           proposePresentationData = None,
           presentationData = None,
-          credentialsToUse = None
+          credentialsToUse = None,
+          metaRetries = maxRetries,
+          metaNextRetry = Some(Instant.now()),
+          metaLastFailure = None,
         )
       )
       count <- presentationRepository
@@ -266,7 +272,10 @@ private class PresentationServiceImpl(
           requestPresentationData = Some(request),
           proposePresentationData = None,
           presentationData = None,
-          credentialsToUse = None
+          credentialsToUse = None,
+          metaRetries = maxRetries,
+          metaNextRetry = Some(Instant.now()),
+          metaLastFailure = None,
         )
       )
       count <- presentationRepository
@@ -531,6 +540,15 @@ private class PresentationServiceImpl(
       recordId,
       PresentationRecord.ProtocolState.RequestReceived,
       PresentationRecord.ProtocolState.RequestRejected
+    )
+
+  override def markPresentationVerificationFailed(
+      recordId: DidCommID
+  ): IO[PresentationError, Option[PresentationRecord]] =
+    updatePresentationRecordProtocolState(
+      recordId,
+      PresentationRecord.ProtocolState.PresentationReceived,
+      PresentationRecord.ProtocolState.PresentationVerificationFailed
     )
 
   private[this] def getRecordFromThreadId(

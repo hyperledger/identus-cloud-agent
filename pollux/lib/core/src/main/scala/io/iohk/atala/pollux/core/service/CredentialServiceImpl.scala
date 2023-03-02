@@ -44,7 +44,8 @@ object CredentialServiceImpl {
 
 private class CredentialServiceImpl(
     irisClient: IrisServiceStub,
-    credentialRepository: CredentialRepository[Task]
+    credentialRepository: CredentialRepository[Task],
+    maxRetries: Int = 5 // TODO move to config
 ) extends CredentialService {
 
   import IssueCredentialRecord._
@@ -109,7 +110,10 @@ private class CredentialServiceImpl(
           requestCredentialData = None,
           issueCredentialData = None,
           issuedCredentialRaw = None,
-          issuingDID = issuingDID
+          issuingDID = issuingDID,
+          metaRetries = maxRetries,
+          metaNextRetry = Some(Instant.now()),
+          metaLastFailure = None,
         )
       )
       count <- credentialRepository
@@ -165,7 +169,10 @@ private class CredentialServiceImpl(
           requestCredentialData = None,
           issueCredentialData = None,
           issuedCredentialRaw = None,
-          issuingDID = None
+          issuingDID = None,
+          metaRetries = maxRetries,
+          metaNextRetry = Some(Instant.now()),
+          metaLastFailure = None,
         )
       )
       count <- credentialRepository
