@@ -163,6 +163,7 @@ object BackgroundJobs {
               _,
               _,
               _,
+              _
             ) =>
           for {
             didCommAgent <- buildDIDCommAgent(request.from)
@@ -189,6 +190,7 @@ object BackgroundJobs {
               Some(true),
               _,
               RequestReceived,
+              _,
               _,
               _,
               _,
@@ -265,6 +267,7 @@ object BackgroundJobs {
               _,
               _,
               Some(issue),
+              _,
               _,
               _,
               _,
@@ -561,7 +564,6 @@ object BackgroundJobs {
             case None => ZIO.fail(InvalidState("PresentationRecord in 'PresentationReceived' with no Presentation"))
             case Some(p) =>
               for {
-                _ <- ZIO.log(s"PresentationRecord: 'PresentationReceived' ")
                 didResolverService <- ZIO.service[JwtDidResolver]
                 credentialsValidationResult <- p.attachments.head.data match {
                   case Base64(data) =>
@@ -645,13 +647,12 @@ object BackgroundJobs {
                 }
 
               } yield ()
-        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationVerificationFailed, _, _, _, _) =>
+        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationVerificationFailed, _, _, _, _, _, _, _) =>
           ZIO.logDebug("PresentationRecord: PresentationVerificationFailed") *> ZIO.unit
         case PresentationRecord(id, _, _, _, _, _, _, _, PresentationAccepted, _, _, _, _, _, _, _) =>
+          ZIO.logDebug("PresentationRecord: PresentationVerifiedAccepted") *> ZIO.unit
         case PresentationRecord(id, _, _, _, _, _, _, _, PresentationVerified, _, _, _, _, _, _, _) =>
           ZIO.logDebug("PresentationRecord: PresentationVerified") *> ZIO.unit
-        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationAccepted, _, _, _, _) =>
-          ZIO.logDebug("PresentationRecord: PresentationVerifiedAccepted") *> ZIO.unit
         case PresentationRecord(id, _, _, _, _, _, _, _, PresentationRejected, _, _, _, _, _, _, _) =>
           ZIO.logDebug("PresentationRecord: PresentationRejected") *> ZIO.unit
       }
