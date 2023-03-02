@@ -21,7 +21,7 @@ import io.iohk.atala.resolvers.UniversalDidResolver
 import java.io.IOException
 import io.iohk.atala.pollux.vc.jwt._
 import io.iohk.atala.pollux.vc.jwt.W3CCredential
-import io.iohk.atala.pollux.core.model.PresentationRecord
+import io.iohk.atala.pollux.core.model._
 import io.iohk.atala.pollux.core.service.PresentationService
 import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.model.error.PresentationError._
@@ -105,7 +105,28 @@ object BackgroundJobs {
       _ <- ZIO.logDebug(s"Running action with records => $record")
       _ <- record match {
         // Offer should be sent from Issuer to Holder
-        case IssueCredentialRecord(id, _, _, _, _, Role.Issuer, _, _, _, _, OfferPending, _, Some(offer), _, _, _, _) =>
+        case IssueCredentialRecord(
+              id,
+              _,
+              _,
+              _,
+              _,
+              Role.Issuer,
+              _,
+              _,
+              _,
+              _,
+              OfferPending,
+              _,
+              Some(offer),
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+            ) =>
           for {
             _ <- ZIO.log(s"IssueCredentialRecord: OfferPending (START)")
             didCommAgent <- buildDIDCommAgent(offer.from)
@@ -137,7 +158,10 @@ object BackgroundJobs {
               Some(request),
               _,
               _,
-              _
+              _,
+              _,
+              _,
+              _,
             ) =>
           for {
             didCommAgent <- buildDIDCommAgent(request.from)
@@ -169,7 +193,10 @@ object BackgroundJobs {
               _,
               _,
               _,
-              _
+              _,
+              _,
+              _,
+              _,
             ) =>
           for {
             credentialService <- ZIO.service[CredentialService]
@@ -194,7 +221,10 @@ object BackgroundJobs {
               _,
               Some(issue),
               _,
-              Some(issuingDID)
+              Some(issuingDID),
+              _,
+              _,
+              _,
             ) =>
           // Generate the JWT Credential and store it in DB as an attacment to IssueCredentialData
           // Set ProtocolState to CredentialGenerated
@@ -236,7 +266,10 @@ object BackgroundJobs {
               _,
               Some(issue),
               _,
-              _
+              _,
+              _,
+              _,
+              _,
             ) =>
           for {
             didCommAgent <- buildDIDCommAgent(issue.from)
@@ -268,6 +301,9 @@ object BackgroundJobs {
               _,
               Some(issue),
               _,
+              _,
+              _,
+              _,
               _
             ) =>
           for {
@@ -280,8 +316,9 @@ object BackgroundJobs {
             }
           } yield ()
 
-        case IssueCredentialRecord(id, _, _, _, _, _, _, _, _, _, ProblemReportPending, _, _, _, _, _, _) => ???
-        case IssueCredentialRecord(id, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)                    => ZIO.unit
+        case IssueCredentialRecord(id, _, _, _, _, _, _, _, _, _, ProblemReportPending, _, _, _, _, _, _, _, _, _) =>
+          ???
+        case IssueCredentialRecord(id, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _) => ZIO.unit
       }
     } yield ()
 
@@ -345,7 +382,7 @@ object BackgroundJobs {
   }
 
   private[this] def createPrismDIDIssuerFromPresentationCredentials(
-      presentationId: UUID,
+      presentationId: DidCommID,
       credentialsToUse: Seq[String]
   ) =
     for {
@@ -358,8 +395,8 @@ object BackgroundJobs {
           PresentationError.UnexpectedError(s"No credential found in the Presentation record: $presentationId")
         )
       credentialRecordUuid <- ZIO
-        .attempt(UUID.fromString(credentialRecordId))
-        .mapError(_ => PresentationError.UnexpectedError(s"$credentialRecordId is not a valid UUID"))
+        .attempt(DidCommID(credentialRecordId))
+        .mapError(_ => PresentationError.UnexpectedError(s"$credentialRecordId is not a valid DidCommID"))
       vcSubjectId <- credentialService
         .getIssueCredentialRecord(credentialRecordUuid)
         .someOrFail(CredentialServiceError.RecordIdNotFound(credentialRecordUuid))
@@ -394,12 +431,15 @@ object BackgroundJobs {
         // ##########################
         // ### PresentationRecord ###
         // ##########################
-        case PresentationRecord(id, _, _, _, _, _, _, _, ProposalPending, _, _, _, _)  => ZIO.fail(NotImplemented)
-        case PresentationRecord(id, _, _, _, _, _, _, _, ProposalSent, _, _, _, _)     => ZIO.fail(NotImplemented)
-        case PresentationRecord(id, _, _, _, _, _, _, _, ProposalReceived, _, _, _, _) => ZIO.fail(NotImplemented)
-        case PresentationRecord(id, _, _, _, _, _, _, _, ProposalRejected, _, _, _, _) => ZIO.fail(NotImplemented)
+        case PresentationRecord(id, _, _, _, _, _, _, _, ProposalPending, _, _, _, _, _, _, _) =>
+          ZIO.fail(NotImplemented)
+        case PresentationRecord(id, _, _, _, _, _, _, _, ProposalSent, _, _, _, _, _, _, _) => ZIO.fail(NotImplemented)
+        case PresentationRecord(id, _, _, _, _, _, _, _, ProposalReceived, _, _, _, _, _, _, _) =>
+          ZIO.fail(NotImplemented)
+        case PresentationRecord(id, _, _, _, _, _, _, _, ProposalRejected, _, _, _, _, _, _, _) =>
+          ZIO.fail(NotImplemented)
 
-        case PresentationRecord(id, _, _, _, _, _, _, _, RequestPending, oRecord, _, _, _) => // Verifier
+        case PresentationRecord(id, _, _, _, _, _, _, _, RequestPending, oRecord, _, _, _, _, _, _) => // Verifier
           oRecord match
             case None => ZIO.fail(InvalidState("PresentationRecord 'RequestPending' with no Record"))
             case Some(record) =>
@@ -415,15 +455,18 @@ object BackgroundJobs {
                 }
               } yield ()
 
-        case PresentationRecord(id, _, _, _, _, _, _, _, RequestSent, _, _, _, _) => // Verifier
+        case PresentationRecord(id, _, _, _, _, _, _, _, RequestSent, _, _, _, _, _, _, _) => // Verifier
           ZIO.logDebug("PresentationRecord: RequestSent") *> ZIO.unit
-        case PresentationRecord(id, _, _, _, _, _, _, _, RequestReceived, _, _, _, _) => // Prover
+        case PresentationRecord(id, _, _, _, _, _, _, _, RequestReceived, _, _, _, _, _, _, _) => // Prover
           ZIO.logDebug("PresentationRecord: RequestReceived") *> ZIO.unit
-        case PresentationRecord(id, _, _, _, _, _, _, _, RequestRejected, _, _, _, _) => // Prover
+        case PresentationRecord(id, _, _, _, _, _, _, _, RequestRejected, _, _, _, _, _, _, _) => // Prover
           ZIO.logDebug("PresentationRecord: RequestRejected") *> ZIO.unit
-        case PresentationRecord(id, _, _, _, _, _, _, _, ProblemReportPending, _, _, _, _)  => ZIO.fail(NotImplemented)
-        case PresentationRecord(id, _, _, _, _, _, _, _, ProblemReportSent, _, _, _, _)     => ZIO.fail(NotImplemented)
-        case PresentationRecord(id, _, _, _, _, _, _, _, ProblemReportReceived, _, _, _, _) => ZIO.fail(NotImplemented)
+        case PresentationRecord(id, _, _, _, _, _, _, _, ProblemReportPending, _, _, _, _, _, _, _) =>
+          ZIO.fail(NotImplemented)
+        case PresentationRecord(id, _, _, _, _, _, _, _, ProblemReportSent, _, _, _, _, _, _, _) =>
+          ZIO.fail(NotImplemented)
+        case PresentationRecord(id, _, _, _, _, _, _, _, ProblemReportReceived, _, _, _, _, _, _, _) =>
+          ZIO.fail(NotImplemented)
         case PresentationRecord(
               id,
               _,
@@ -437,7 +480,10 @@ object BackgroundJobs {
               oRequestPresentation,
               _,
               _,
-              credentialsToUse
+              credentialsToUse,
+              _,
+              _,
+              _
             ) => // Prover
           for {
             presentationService <- ZIO.service[PresentationService]
@@ -473,7 +519,7 @@ object BackgroundJobs {
             _ <- presentationService.markPresentationGenerated(id, presentation)
 
           } yield ()
-        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationGenerated, _, _, presentation, _) =>
+        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationGenerated, _, _, presentation, _, _, _, _) =>
           ZIO.logDebug("PresentationRecord: PresentationGenerated") *> ZIO.unit
           presentation match
             case None => ZIO.fail(InvalidState("PresentationRecord in 'PresentationPending' with no Presentation"))
@@ -490,7 +536,7 @@ object BackgroundJobs {
                   else ZIO.logWarning(s"DIDComm sending error: [${resp.status}] - ${resp.bodyAsString}")
                 }
               } yield ()
-        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationSent, _, _, _, _) =>
+        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationSent, _, _, _, _, _, _, _) =>
           ZIO.logDebug("PresentationRecord: PresentationSent") *> ZIO.unit
         case PresentationRecord(
               id,
@@ -505,6 +551,9 @@ object BackgroundJobs {
               mayBeRequestPresentation,
               _,
               presentation,
+              _,
+              _,
+              _,
               _
             ) => // Verifier
           ZIO.logDebug("PresentationRecord: PresentationReceived") *> ZIO.unit
@@ -578,11 +627,11 @@ object BackgroundJobs {
                 _ <- service.markPresentationVerified(id)
               } yield ()
         // TODO move the state to PresentationVerified
-        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationVerified, _, _, _, _) =>
+        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationVerified, _, _, _, _, _, _, _) =>
           ZIO.logDebug("PresentationRecord: PresentationVerified") *> ZIO.unit
-        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationAccepted, _, _, _, _) =>
+        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationAccepted, _, _, _, _, _, _, _) =>
           ZIO.logDebug("PresentationRecord: PresentationVerifiedAccepted") *> ZIO.unit
-        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationRejected, _, _, _, _) =>
+        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationRejected, _, _, _, _, _, _, _) =>
           ZIO.logDebug("PresentationRecord: PresentationRejected") *> ZIO.unit
       }
     } yield ()

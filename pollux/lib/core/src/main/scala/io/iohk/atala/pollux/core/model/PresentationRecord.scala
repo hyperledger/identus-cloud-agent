@@ -67,6 +67,8 @@ object PresentationRecord {
     case PresentationReceived extends ProtocolState
     // Verifier has verified the presentation (proof) (Verifier DB)
     case PresentationVerified extends ProtocolState
+    // Verifier has updated Verification failed in the presentation (proof) (Verifier DB)
+    case PresentationVerificationFailed extends ProtocolState
     // Verifier has accepted the verified presentation (proof) (Verifier DB)
     case PresentationAccepted extends ProtocolState
     // Verifier has rejected the presentation (proof) (Verifier DB)

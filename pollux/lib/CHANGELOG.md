@@ -1,3 +1,10 @@
+# [pollux-v0.35.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.34.0...pollux-v0.35.0) (2023-03-02)
+
+
+### Features
+
+* **pollux:** Added new state PresentationVerificationFailed ([#400](https://github.com/input-output-hk/atala-prism-building-blocks/issues/400)) ([94031f8](https://github.com/input-output-hk/atala-prism-building-blocks/commit/94031f880f00f61be2da2dd91f22fb92246b1609))
+
 # [pollux-v0.34.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.33.0...pollux-v0.34.0) (2023-03-01)
 
 
