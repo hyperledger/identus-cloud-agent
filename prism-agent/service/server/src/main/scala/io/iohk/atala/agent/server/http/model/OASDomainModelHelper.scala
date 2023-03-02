@@ -286,7 +286,6 @@ trait OASDomainModelHelper {
         x = Some(publicKeyJwk.x),
         y = Some(publicKeyJwk.y),
         kty = publicKeyJwk.kty,
-        kid = None
       )
     }
   }

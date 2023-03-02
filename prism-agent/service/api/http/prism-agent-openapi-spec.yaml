@@ -22,9 +22,9 @@ security:
 tags:
   # Castor
   - name: DID
-    description: Generic DID Endpoints
+    description: DID REST API
   - name: DID Registrar
-    description: DID Endpoints where keys are managed by PrismAgent
+    description: DID Registrar REST API (PrismAgent managed DID)
   # Pollux
   - name: Schema Registry
     description: Schema Registry REST API
@@ -45,7 +45,7 @@ paths:
       tags: ["DID"]
       operationId: getDid
       summary: Resolve Prism DID
-      description: Resolve Prism DID
+      description: Resolve Prism DID to a DID document.
       parameters:
         - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
       responses:

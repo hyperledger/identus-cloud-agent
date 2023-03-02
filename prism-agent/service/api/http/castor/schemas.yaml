@@ -28,10 +28,10 @@ components:
       properties:
         id:
           type: string
-          example: "did:prism:mainnet:123"
+          example: "did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff"
         controller:
           type: string
-          example: "did:prism:mainnet:456"
+          example: "did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff"
         verificationMethod:
           type: array
           items:
@@ -83,13 +83,13 @@ components:
       properties:
         id:
           type: string
-          example: "did:prism:123#key-1"
+          example: "did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff#key-1"
         type:
           type: string
           example: "EcdsaSecp256k1VerificationKey2019"
         controller:
           type: string
-          example: "did:prism:456"
+          example: "did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff"
         publicKeyJwk:
           $ref: "#/components/schemas/PublicKeyJwk"
 
@@ -111,7 +111,7 @@ components:
             - REFERENCED
         uri:
           type: string
-          example: did:example:123#key-1
+          example: did:prism:c7bd808e8e135236d7262ecf5e639b8f9d22bd886f59a4e6c909486846ca8319#key-1
         verificationMethod:
           $ref: "#/components/schemas/VerificationMethod"
 
@@ -154,6 +154,10 @@ components:
       properties:
         actions:
           type: array
+          description: |
+            A list of actions to perform on DID document.
+            The field `addKey`, `removeKey`, `addService`, `removeService`, `updateService` must corresponds to
+            the `actionType` specified. For example, `addKey` must be present when `actionType` is `ADD_KEY`.
           items:
             type: object
             description: Detail of DID update action. Only property matching actionType can be present.
@@ -272,9 +276,6 @@ components:
         kty:
           type: string
           example: "EC"
-        kid:
-          type: string
-          example: "_TKzHv2jFIyvdTGF1Dsgwngfdg3SH6TpDv0Ta1aOEkw"
 
     Service:
       type: object
