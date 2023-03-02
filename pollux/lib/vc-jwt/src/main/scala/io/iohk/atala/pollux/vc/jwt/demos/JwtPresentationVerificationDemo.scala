@@ -169,6 +169,12 @@ object JwtPresentationVerificationDemo extends ZIOAppDefault {
         maybeExp = Some(jwtCredentialExp), // EXPIRATION DATE
         maybeJti = Some("http://example.edu/credentials/3732") // CREDENTIAL ID
       )
+    println("************************JSOJSONJSONJSONJSONJSONJSONJSONJSONN*******************************************")
+    println(jwtCredentialPayload.asJson)
+    println(( decode[JwtCredentialPayload](jwtCredentialPayload.asJson.noSpaces)))
+
+    println("**************************JSONJSONJSONJSONJSONJSONJSONJSONJSON*****************************************")
+
 
     val jwtIssuerSignedCredential = issuer2.issuer.signer.encode(jwtCredentialPayload.asJson)
     val jwtVerifiableCredentialPayload = JwtVerifiableCredentialPayload(jwtIssuerSignedCredential)
@@ -260,6 +266,7 @@ object JwtPresentationVerificationDemo extends ZIOAppDefault {
           JwtPresentation.PresentationVerificationOptions(
             verifySignature = true,
             verifyDates = true,
+            verifyHoldersBinding = true,
             leeway = Duration.ZERO,
             Some(CredentialVerification.CredentialVerificationOptions(verifySignature = true, verifyDates = true))
           )
