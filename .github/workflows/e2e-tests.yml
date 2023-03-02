@@ -118,7 +118,7 @@ jobs:
 
       - name: Extract test results
         id: analyze_test_results
-        if: github.ref_name == 'master'
+        if: github.ref_name == 'main'
         run: |
           JSON_RESULTS="target/site/serenity/serenity-summary.json"
           CONCLUSION=failure

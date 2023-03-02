@@ -15,6 +15,7 @@ services:
       - pg_data_db:/var/lib/postgresql/data
       - ./postgres/init-script.sh:/docker-entrypoint-initdb.d/init-script.sh
       - ./postgres/max_conns.sql:/docker-entrypoint-initdb.d/max_conns.sql
+
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "postgres", "-d", "iris"]
       interval: 10s
@@ -112,3 +113,7 @@ services:
 volumes:
   pg_data_db:
   pgadmin:
+
+networks:
+  default:
+    name: ${NETWORK}

@@ -43,6 +43,7 @@ import io.iohk.atala.castor.core.model.did.{LongFormPrismDID, PrismDID, ServiceT
 
 import java.util.UUID
 import io.iohk.atala.connect.core.model.ConnectionRecord.Role
+import io.iohk.atala.castor.core.util.UriUtils
 
 trait OASDomainModelHelper {
 
@@ -115,13 +116,20 @@ trait OASDomainModelHelper {
         serviceEndpoint <- servicePatch.serviceEndpoint
           .getOrElse(Nil)
           .traverse(s => Uri.parseTry(s).toEither.left.map(_ => s"unable to parse serviceEndpoint $s as URI"))
+        normalizedServiceEndpoint <- serviceEndpoint
+          .traverse(uri =>
+            UriUtils
+              .normalizeUri(uri.toString)
+              .toRight(s"unable to parse serviceEndpoint ${uri.toString} as URI")
+              .map(Uri.parse)
+          )
         serviceType <- servicePatch.`type`.fold[Either[String, Option[ServiceType]]](Right(None))(s =>
           castorDomain.ServiceType.parseString(s).toRight(s"unsupported serviceType $s").map(Some(_))
         )
       } yield walletDomain.UpdateServicePatch(
         id = servicePatch.id,
         serviceType = serviceType,
-        serviceEndpoints = serviceEndpoint
+        serviceEndpoints = normalizedServiceEndpoint
       )
   }
 

@@ -26,7 +26,10 @@ final case class IssueCredentialRecord(
     requestCredentialData: Option[RequestCredential],
     issueCredentialData: Option[IssueCredential],
     issuedCredentialRaw: Option[String],
-    issuingDID: Option[CanonicalPrismDID]
+    issuingDID: Option[CanonicalPrismDID],
+    metaRetries: Int,
+    metaNextRetry: Option[Instant],
+    metaLastFailure: Option[String],
 )
 final case class ValidIssuedCredentialRecord(
     id: DidCommID,

@@ -1,3 +1,18 @@
+# [pollux-v0.35.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.34.0...pollux-v0.35.0) (2023-03-02)
+
+
+### Features
+
+* **pollux:** Added new state PresentationVerificationFailed ([#400](https://github.com/input-output-hk/atala-prism-building-blocks/issues/400)) ([94031f8](https://github.com/input-output-hk/atala-prism-building-blocks/commit/94031f880f00f61be2da2dd91f22fb92246b1609))
+
+# [pollux-v0.34.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.33.0...pollux-v0.34.0) (2023-03-01)
+
+
+### Features
+
+* **pollux:** Add meta fields to presentation table (for retries) ([#405](https://github.com/input-output-hk/atala-prism-building-blocks/issues/405)) ([37dee86](https://github.com/input-output-hk/atala-prism-building-blocks/commit/37dee8616349e2d5ae858475dd4951f064bbe9db))
+* **pollux:** Add retries field for ATL-3205 ([#380](https://github.com/input-output-hk/atala-prism-building-blocks/issues/380)) ([c7efde6](https://github.com/input-output-hk/atala-prism-building-blocks/commit/c7efde651c7b3e0260568290ab9dd58e2d955a70))
+
 # [pollux-v0.33.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.32.0...pollux-v0.33.0) (2023-02-27)
 
 

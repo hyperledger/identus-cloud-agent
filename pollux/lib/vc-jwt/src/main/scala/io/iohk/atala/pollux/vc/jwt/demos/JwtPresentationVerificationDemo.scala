@@ -260,6 +260,7 @@ object JwtPresentationVerificationDemo extends ZIOAppDefault {
           JwtPresentation.PresentationVerificationOptions(
             verifySignature = true,
             verifyDates = true,
+            verifyHoldersBinding = true,
             leeway = Duration.ZERO,
             Some(CredentialVerification.CredentialVerificationOptions(verifySignature = true, verifyDates = true))
           )

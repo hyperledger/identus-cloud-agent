@@ -19,7 +19,10 @@ final case class PresentationRecord(
     requestPresentationData: Option[RequestPresentation],
     proposePresentationData: Option[ProposePresentation],
     presentationData: Option[Presentation],
-    credentialsToUse: Option[List[String]]
+    credentialsToUse: Option[List[String]],
+    metaRetries: Int,
+    metaNextRetry: Option[Instant],
+    metaLastFailure: Option[String],
 )
 
 object PresentationRecord {
@@ -64,6 +67,8 @@ object PresentationRecord {
     case PresentationReceived extends ProtocolState
     // Verifier has verified the presentation (proof) (Verifier DB)
     case PresentationVerified extends ProtocolState
+    // Verifier has updated Verification failed in the presentation (proof) (Verifier DB)
+    case PresentationVerificationFailed extends ProtocolState
     // Verifier has accepted the verified presentation (proof) (Verifier DB)
     case PresentationAccepted extends ProtocolState
     // Verifier has rejected the presentation (proof) (Verifier DB)
