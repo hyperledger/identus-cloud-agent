@@ -428,7 +428,6 @@ object JwtPresentation {
             case (jwtVerifiableCredentialPayload: JwtVerifiableCredentialPayload) =>
               for {
                 jwtCredentialDecoded <- decodeJWT(jwtVerifiableCredentialPayload.jwt)
-                sssss = decode[JwtCredentialPayload](jwtCredentialDecoded)
                 jwtCredentialPayload <- Validation
                   .fromEither(decode[JwtCredentialPayload](jwtCredentialDecoded))
                   .mapError(_.getMessage)
