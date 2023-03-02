@@ -16,6 +16,7 @@ import io.iohk.atala.mercury.model._
 import io.iohk.atala.mercury.model.error._
 import io.iohk.atala.mercury.protocol.issuecredential._
 import io.iohk.atala.mercury.protocol.presentproof._
+import io.iohk.atala.mercury.protocol.reportproblem.v2._
 import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.resolvers.UniversalDidResolver
 import java.io.IOException
@@ -52,6 +53,7 @@ import io.iohk.atala.agent.server.config.AppConfig
 import io.circe.parser._
 import zio.prelude.AssociativeBothOps
 import zio.prelude.Validation
+import zio.prelude.ZValidation._
 import cats.syntax.all._
 import io.iohk.atala.castor.core.service.DIDService
 import java.util.UUID
@@ -161,7 +163,7 @@ object BackgroundJobs {
               _,
               _,
               _,
-              _,
+              _
             ) =>
           for {
             didCommAgent <- buildDIDCommAgent(request.from)
@@ -562,7 +564,6 @@ object BackgroundJobs {
             case None => ZIO.fail(InvalidState("PresentationRecord in 'PresentationReceived' with no Presentation"))
             case Some(p) =>
               for {
-                _ <- ZIO.log(s"PresentationRecord: 'PresentationReceived' ")
                 didResolverService <- ZIO.service[JwtDidResolver]
                 credentialsValidationResult <- p.attachments.head.data match {
                   case Base64(data) =>
@@ -624,13 +625,34 @@ object BackgroundJobs {
                 }
                 _ <- ZIO.log(s"CredentialsValidationResult: $credentialsValidationResult")
                 service <- ZIO.service[PresentationService]
-                _ <- service.markPresentationVerified(id)
+                _ <- credentialsValidationResult match {
+                  case Success(log, value) => service.markPresentationVerified(id)
+                  case Failure(log, error) => {
+                    for {
+                      _ <- service.markPresentationVerificationFailed(id)
+                      didCommAgent <- buildDIDCommAgent(p.from)
+                      reportproblem = ReportProblem.build(
+                        fromDID = p.to,
+                        toDID = p.from,
+                        pthid = p.thid.getOrElse(p.id),
+                        code = ProblemCode("e.p.presentation-verification-failed"),
+                        comment = Some(error.mkString)
+                      )
+                      resp <- MessagingService
+                        .send(reportproblem.toMessage)
+                        .provideSomeLayer(didCommAgent)
+                      _ <- ZIO.log(s"CredentialsValidationResult: $error")
+                    } yield ()
+                  }
+                }
+
               } yield ()
-        // TODO move the state to PresentationVerified
-        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationVerified, _, _, _, _, _, _, _) =>
-          ZIO.logDebug("PresentationRecord: PresentationVerified") *> ZIO.unit
+        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationVerificationFailed, _, _, _, _, _, _, _) =>
+          ZIO.logDebug("PresentationRecord: PresentationVerificationFailed") *> ZIO.unit
         case PresentationRecord(id, _, _, _, _, _, _, _, PresentationAccepted, _, _, _, _, _, _, _) =>
           ZIO.logDebug("PresentationRecord: PresentationVerifiedAccepted") *> ZIO.unit
+        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationVerified, _, _, _, _, _, _, _) =>
+          ZIO.logDebug("PresentationRecord: PresentationVerified") *> ZIO.unit
         case PresentationRecord(id, _, _, _, _, _, _, _, PresentationRejected, _, _, _, _, _, _, _) =>
           ZIO.logDebug("PresentationRecord: PresentationRejected") *> ZIO.unit
       }
@@ -651,15 +673,6 @@ object BackgroundJobs {
         ZIO.logErrorCause(s"Proof Presentation protocol defect processing record: ${record.id}", Cause.fail(throwable))
       }
   }
-
-  // private[this] def buildDIDCommAgent(myDid: DidId): ZLayer[ManagedDIDService, KeyNotFoundError, DidAgent] = { // FIXME
-  //   val aux = for {
-  //     managedDidService <- ZIO.service[ManagedDIDService]
-  //     peerDID <- managedDidService.getPeerDID(myDid)
-  //     agent = AgentPeerService.makeLayer(peerDID)
-  //   } yield agent
-  //   ZLayer.fromZIO(aux).flatten
-  // }
 
   private[this] def buildDIDCommAgent(
       myDid: DidId
