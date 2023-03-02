@@ -46,8 +46,6 @@ services:
     image: ghcr.io/input-output-hk/prism-node:${PRISM_NODE_VERSION}
     environment:
       NODE_PSQL_HOST: db:5432
-    ports:
-      - "50053:50053"
     depends_on:
       db:
         condition: service_healthy
