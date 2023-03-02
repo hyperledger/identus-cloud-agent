@@ -1,37 +1,6 @@
----
 components:
   schemas:
-    # Common
-    InternalServerError:
-      required:
-        - msg
-      type: object
-      properties:
-        msg:
-          type: string
-
-    NotFound:
-      required:
-        - msg
-      type: object
-      properties:
-        msg:
-          type: string
-
-    BadRequest:
-      required:
-        - msg
-      type: object
-      properties:
-        msg:
-          type: string
-        errors:
-          type: array
-          items:
-            type: string
-
     # Schema Registry
-
     Proof:
       required:
         - type

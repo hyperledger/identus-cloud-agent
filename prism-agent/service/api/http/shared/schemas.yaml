@@ -30,7 +30,7 @@ components:
         type:
           type: string
           description: A URI reference that identifies the problem type.
-          example: https://example.org/doc/#model-MalformedEmail
+          example: https://example.org/doc/#model-MalformedEmail/
         title:
           type: string
           example: "Malformed email"
@@ -54,3 +54,11 @@ components:
           description: |-
             A URI reference that identifies the specific occurrence of the problem.
             It may or may not yield further information if dereferenced.
+
+  responses:
+    InternalServerError:
+      description: "Internal server error"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
