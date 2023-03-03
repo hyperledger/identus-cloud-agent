@@ -3,7 +3,6 @@ package features.did
 import common.TestConstants
 import common.Utils
 import common.Utils.lastResponseObject
-import io.cucumber.java.en.Given
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import net.serenitybdd.screenplay.Actor
@@ -15,20 +14,10 @@ import org.hamcrest.Matchers
 
 class DeactivateDidSteps {
 
-    @Given("{actor} have published PRISM DID for deactivation")
-    fun actorHavePublishedPrismDidForDeactivation(actor: Actor) {
-        if (TestConstants.PRISM_DID_FOR_DEACTIVATION == null) {
-            val publishDidSteps = PublishDidSteps()
-            publishDidSteps.createsUnpublishedDid(actor)
-            publishDidSteps.hePublishesDidToLedger(actor)
-            TestConstants.PRISM_DID_FOR_DEACTIVATION = actor.recall("shortFormDid")
-        }
-    }
-
     @When("{actor} deactivates PRISM DID")
     fun actorIssuesDeactivateDidOperation(actor: Actor) {
         actor.attemptsTo(
-            Post.to("/did-registrar/dids/${TestConstants.PRISM_DID_FOR_DEACTIVATION}/deactivations"),
+            Post.to("/did-registrar/dids/${actor.recall<String>("shortFormDid")}/deactivations"),
         )
         actor.should(
             ResponseConsequence.seeThatResponse {
@@ -44,7 +33,7 @@ class DeactivateDidSteps {
         Utils.wait(
             {
                 actor.attemptsTo(
-                    Get.resource("/dids/${TestConstants.PRISM_DID_FOR_DEACTIVATION}"),
+                    Get.resource("/dids/${actor.recall<String>("shortFormDid")}"),
                 )
                 lastResponseObject("metadata.deactivated", String::class) == "true"
             },

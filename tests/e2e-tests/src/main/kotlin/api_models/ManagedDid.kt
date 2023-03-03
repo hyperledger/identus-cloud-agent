@@ -5,3 +5,8 @@ data class ManagedDid(
     var longFormDid: String = "",
     var status: String = "",
 )
+
+object ManagedDidStatuses {
+    val PUBLISHED = "PUBLISHED"
+    val UNPUBLISHED = "UNPUBLISHED"
+}

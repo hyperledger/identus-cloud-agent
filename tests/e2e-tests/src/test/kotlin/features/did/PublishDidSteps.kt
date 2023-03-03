@@ -2,6 +2,7 @@ package features.did
 
 import api_models.*
 import common.TestConstants
+import common.Utils.lastResponseList
 import common.Utils.lastResponseObject
 import common.Utils.wait
 import io.cucumber.java.en.Given
@@ -17,6 +18,33 @@ import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.Matchers.*
 
 class PublishDidSteps {
+
+    @Given("{actor} have published PRISM DID")
+    fun actorHavePublishedPrismDid(actor: Actor) {
+        actor.attemptsTo(
+            Get.resource("/did-registrar/dids"),
+        )
+        actor.should(
+            ResponseConsequence.seeThatResponse {
+                it.statusCode(SC_OK)
+            },
+        )
+        val publishedDids = lastResponseList("contents", ManagedDid::class).filter {
+            it.status == ManagedDidStatuses.PUBLISHED
+        }
+        val did = publishedDids.firstOrNull {
+            actor.attemptsTo(
+                Get.resource("/dids/${it.did}"),
+            )
+            lastResponseObject("metadata.deactivated", String::class) == "false"
+        }
+        if (did == null) {
+            createsUnpublishedDid(actor)
+            hePublishesDidToLedger(actor)
+        } else {
+            actor.remember("shortFormDid", did.did)
+        }
+    }
 
     @Given("{actor} creates unpublished DID")
     fun createsUnpublishedDid(actor: Actor) {

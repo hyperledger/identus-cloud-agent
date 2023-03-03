@@ -34,6 +34,4 @@ object TestConstants {
         listOf("https://new.service.com/"),
         "LinkedDomains",
     )
-    var PRISM_DID_FOR_UPDATES: String? = null
-    var PRISM_DID_FOR_DEACTIVATION: String? = null
 }
