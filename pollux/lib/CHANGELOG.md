@@ -1,3 +1,10 @@
+# [pollux-v0.35.2](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.35.1...pollux-v0.35.2) (2023-03-03)
+
+
+### Bug Fixes
+
+* **pollux:** Fix Instant encoder in JdbcPresentationRepository ([#418](https://github.com/input-output-hk/atala-prism-building-blocks/issues/418)) ([2ece2c6](https://github.com/input-output-hk/atala-prism-building-blocks/commit/2ece2c6881430c180fa9c1bad6cdd6085be2c453))
+
 # [pollux-v0.35.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.35.0...pollux-v0.35.1) (2023-03-02)
 
 
