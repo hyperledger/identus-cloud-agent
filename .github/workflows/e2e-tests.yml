@@ -128,7 +128,7 @@ jobs:
 
       - name: Extract test results
         id: analyze_test_results
-        if: github.ref_name == 'main'
+        # if: github.ref_name == 'main'
         run: |
           JSON_RESULTS="target/site/serenity/serenity-summary.json"
           CONCLUSION=failure
@@ -158,7 +158,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Slack Notification
-        if: github.ref_name == 'main'
+        # if: github.ref_name == 'main'
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_CHANNEL: atala-qa-results
