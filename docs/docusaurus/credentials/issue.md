@@ -18,6 +18,8 @@ Before using the **Issuing Credentials protocol**, the following conditions must
 
 1. **Issuer** and **Holder** PRISM Agents up and running
 2. A connection must be established between the **Issuer** and **Holder** PRISM Agents (see [Connections](../connections/connection.md))
+3. The **Issuer** must have a published PRISM DID and the DID document must have at least one `assertionMethod` key for issuing credendials (see [Create DID](../dids/create.md) and [Publish DID](../dids/publish.md))
+4. The **Holder** must have a PRISM DID and the DID document must have at least one `authentication` key for presenting the proof
 
 ## Overview
 
@@ -38,13 +40,13 @@ The VCs issued during this protocol could represent a diploma, a certificate of 
 
 ## Endpoints
 
-| Endpoint | Description | Role |
-| --- | --- | --- |
-| [`/issue-credentials/credential-offers`](/agent-api/#tag/Issue-Credentials-Protocol/operation/createCredentialOffer) | This endpoint allows you to create a new credential offer | Issuer |
-| [`/issue-credentials/records`](/agent-api/#tag/Issue-Credentials-Protocol/operation/getCredentialRecords) | This endpoint allows you to retrieve a collection of all the existing credential records | Issuer, Holder |
-| [`/issue-credentials/records/{recordId}`](/agent-api/#tag/Issue-Credentials-Protocol/operation/getCredentialRecord) | This endpoint allows you to retrieve a specific credential record by its `id` | Issuer, Holder |
-| [`/issue-credentials/records/{recordId}/accept-offer`](/agent-api/#tag/Issue-Credentials-Protocol/operation/acceptCredentialOffer) | This endpoint allows you to accept a credential offer | Holder |
-| [`/issue-credentials/records/{recordId}/issue-credential`](/agent-api/#tag/Issue-Credentials-Protocol/operation/issueCredential) | This endpoint allows you to issue a VC for a specific credential record. | Issuer |
+| Endpoint                                                                                                                           | Description                                                                              | Role           |
+|------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------|----------------|
+| [`/issue-credentials/credential-offers`](/agent-api/#tag/Issue-Credentials-Protocol/operation/createCredentialOffer)               | This endpoint allows you to create a new credential offer                                | Issuer         |
+| [`/issue-credentials/records`](/agent-api/#tag/Issue-Credentials-Protocol/operation/getCredentialRecords)                          | This endpoint allows you to retrieve a collection of all the existing credential records | Issuer, Holder |
+| [`/issue-credentials/records/{recordId}`](/agent-api/#tag/Issue-Credentials-Protocol/operation/getCredentialRecord)                | This endpoint allows you to retrieve a specific credential record by its `id`            | Issuer, Holder |
+| [`/issue-credentials/records/{recordId}/accept-offer`](/agent-api/#tag/Issue-Credentials-Protocol/operation/acceptCredentialOffer) | This endpoint allows you to accept a credential offer                                    | Holder         |
+| [`/issue-credentials/records/{recordId}/issue-credential`](/agent-api/#tag/Issue-Credentials-Protocol/operation/issueCredential)   | This endpoint allows you to issue a VC for a specific credential record.                 | Issuer         |
 
 
 :::info
@@ -60,9 +62,9 @@ This section describes the Issuer role's available interactions with the PRISM A
 To start the process, the issuer needs to create a credential offer.
 To do this, make a `POST` request to the [`/issue-credentials/credential-offers`](/agent-api/#tag/Issue-Credentials-Protocol/operation/createCredentialOffer) endpoint with a JSON payload that includes the following information:
 
-1.  `subjectId`: This field represents the unique identifier for the subject of the verifiable credential. It is a DID (Decentralized Identifier) string, such as `did:prism:subjectIdentifier`.
-2.  `schemaId`: This is an identifier for a schema, which defines the structure and format of the data in a verifiable credential. The schema identifier must be unique and typically a URL or a URN.
-3.  `claims`: The data stored in a verifiable credential. Claims get expressed in a key-value format and must conform to the structure and format defined in the schema. The claims contain the data that the issuer attests to, such as name, address, date of birth, and so on.
+1. `subjectId`: This field represents the unique identifier for the subject of the verifiable credential. It is a DID (Decentralized Identifier) string, such as `did:prism:subjectIdentifier`.
+2. `schemaId`: This is an identifier for a schema, which defines the structure and format of the data in a verifiable credential. The schema identifier must be unique and typically a URL or a URN.
+3. `claims`: The data stored in a verifiable credential. Claims get expressed in a key-value format and must conform to the structure and format defined in the schema. The claims contain the data that the issuer attests to, such as name, address, date of birth, and so on.
 
 Once the request initiates, a new credential record for the issuer gets created with a unique ID. The state of this record is now `OfferPending`.
 
@@ -80,7 +82,7 @@ curl -X 'POST' \
             "lastname": "Wonderland",
             "birthdate": "01/01/2000"
           }
-	    }'
+     }'
 ```
 
 ### Sending the Offer to the Holder
