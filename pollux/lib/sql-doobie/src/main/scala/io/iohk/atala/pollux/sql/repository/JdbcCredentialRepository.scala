@@ -3,7 +3,8 @@ package io.iohk.atala.pollux.sql.repository
 import cats.data.NonEmptyList
 import cats.instances.seq
 import doobie.*
-import doobie.implicits.*
+import doobie.implicits._
+import doobie.postgres.implicits._
 import io.circe._
 import io.circe.parser._
 import io.circe.syntax._
@@ -47,13 +48,9 @@ class JdbcCredentialRepository(xa: Transactor[Task], maxRetries: Int) extends Cr
   // given logHandler: LogHandler = LogHandler.jdkLogHandler
 
   import IssueCredentialRecord._
-  // given uuidGet: Get[UUID] = Get[String].map(UUID.fromString)
-  // given uuidPut: Put[UUID] = Put[String].contramap(_.toString())
 
   given didCommIDGet: Get[DidCommID] = Get[String].map(DidCommID(_))
   given didCommIDPut: Put[DidCommID] = Put[String].contramap(_.value)
-
-  import doobie.postgres.implicits.JavaTimeInstantMeta
 
   given protocolStateGet: Get[ProtocolState] = Get[String].map(ProtocolState.valueOf)
   given protocolStatePut: Put[ProtocolState] = Put[String].contramap(_.toString)
