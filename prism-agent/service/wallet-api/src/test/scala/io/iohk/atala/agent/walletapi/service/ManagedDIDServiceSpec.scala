@@ -80,9 +80,12 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSuppor
       services: Seq[Service] = Nil
   ): ManagedDIDTemplate = ManagedDIDTemplate(publicKeys, services)
 
-  private def resolutionResult(deactivated: Boolean = false): (DIDMetadata, DIDData) = {
+  private def resolutionResult(
+      deactivated: Boolean = false,
+      lastOperationHash: ArraySeq[Byte] = ArraySeq.fill(32)(0)
+  ): (DIDMetadata, DIDData) = {
     val metadata = DIDMetadata(
-      lastOperationHash = ArraySeq.empty,
+      lastOperationHash = lastOperationHash,
       deactivated = deactivated
     )
     val didData = DIDData(
