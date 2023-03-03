@@ -13,7 +13,7 @@ trait CredentialSchemaService {
     * @return
     *   Created instance of the Credential Schema
     */
-  def create(in: CredentialSchema.Input): Result[CredentialSchema]
+  def create(in: Input): Result[CredentialSchema]
 
   /** @param guid
     *   Globally unique UUID of the credential schema
@@ -22,9 +22,11 @@ trait CredentialSchemaService {
     */
   def getByGUID(guid: UUID): Result[CredentialSchema]
 
-  def update(in: CredentialSchema.Input): Result[CredentialSchema]
+  def update(in: Input): Result[CredentialSchema]
 
   def delete(id: UUID): Result[CredentialSchema]
+
+  def lookup(filter: Filter, skip: Int, limit: Int): Result[FilteredEntries]
 }
 
 object CredentialSchemaService {

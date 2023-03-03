@@ -90,7 +90,7 @@ object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault {
       version = version,
       description = description,
       schema = JsonValue(schema),
-      schemaType = "AnonCreds",
+      `type` = "AnonCreds",
       author = "Prism Agent",
       authored = authored,
       tags = tags
