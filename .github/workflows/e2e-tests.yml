@@ -67,8 +67,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
           ATALA_GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
         run: |
-          (cd ${PRISM_AGENT_PATH} && sbt docker:publishLocal || true)
-          PRISM_AGENT_VERSION=$(sbt -Dsbt.supershell=false -error "print version" | tail -1 | tr -d "[:space:]")
+          cd ${PRISM_AGENT_PATH}
+          sbt docker:publishLocal
+          echo "im successfully published image"
+          PRISM_AGENT_VERSION=$(sbt -Dsbt.supershell=false "print version" | tail -1 | tr -d "[:space:]")
+          echo ${PRISM_AGENT_VERSION}
           sed -i.bak "s/PRISM_AGENT_VERSION=.*/PRISM_AGENT_VERSION=${PRISM_AGENT_VERSION}/" ${ENV_FILE} && rm -f ${ENV_FILE}.bak
           cat ${ENV_FILE}
 
