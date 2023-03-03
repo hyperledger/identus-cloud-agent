@@ -23,6 +23,7 @@ import net.serenitybdd.screenplay.rest.questions.ResponseConsequence
 import org.apache.http.HttpStatus.SC_OK
 
 class CommonSteps {
+
     @Before
     fun setStage() {
         createAgents()
