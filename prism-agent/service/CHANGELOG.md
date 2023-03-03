@@ -1,3 +1,10 @@
+# [prism-agent-v0.48.2](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.48.1...prism-agent-v0.48.2) (2023-03-03)
+
+
+### Bug Fixes
+
+* **prism-agent:** avoid race condition when update or deactivate DID ([#415](https://github.com/input-output-hk/atala-prism-building-blocks/issues/415)) ([bf03674](https://github.com/input-output-hk/atala-prism-building-blocks/commit/bf03674769f0b6163de13f4002198902fdd413e9))
+
 # [prism-agent-v0.48.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.48.0...prism-agent-v0.48.1) (2023-03-02)
 
 
