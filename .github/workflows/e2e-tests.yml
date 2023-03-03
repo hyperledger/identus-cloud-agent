@@ -69,9 +69,7 @@ jobs:
         run: |
           cd ${PRISM_AGENT_PATH}
           sbt docker:publishLocal
-          echo "im successfully published image"
-          PRISM_AGENT_VERSION=$(sbt -Dsbt.supershell=false "print version" | tail -1 | tr -d "[:space:]")
-          echo ${PRISM_AGENT_VERSION}
+          PRISM_AGENT_VERSION=$(cat version.sbt | cut -d '=' -f2 | tr -d '" ')
           sed -i.bak "s/PRISM_AGENT_VERSION=.*/PRISM_AGENT_VERSION=${PRISM_AGENT_VERSION}/" ${ENV_FILE} && rm -f ${ENV_FILE}.bak
           cat ${ENV_FILE}
 
