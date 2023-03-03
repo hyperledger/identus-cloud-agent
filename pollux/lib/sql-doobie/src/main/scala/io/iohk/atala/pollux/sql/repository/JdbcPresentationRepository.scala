@@ -70,8 +70,7 @@ class JdbcPresentationRepository(
   given didCommIDGet: Get[DidCommID] = Get[String].map(DidCommID(_))
   given didCommIDPut: Put[DidCommID] = Put[String].contramap(_.value)
 
-  given instantGet: Get[Instant] = Get[Long].map(Instant.ofEpochSecond)
-  given instantPut: Put[Instant] = Put[Long].contramap(_.getEpochSecond())
+  import doobie.postgres.implicits.JavaTimeInstantMeta
 
   given protocolStateGet: Get[ProtocolState] = Get[String].map(ProtocolState.valueOf)
   given protocolStatePut: Put[ProtocolState] = Put[String].contramap(_.toString)
