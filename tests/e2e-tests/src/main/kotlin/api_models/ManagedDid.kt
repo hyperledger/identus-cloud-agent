@@ -8,5 +8,5 @@ data class ManagedDid(
 
 object ManagedDidStatuses {
     val PUBLISHED = "PUBLISHED"
-    val UNPUBLISHED = "UNPUBLISHED"
+    val CREATED = "CREATED"
 }

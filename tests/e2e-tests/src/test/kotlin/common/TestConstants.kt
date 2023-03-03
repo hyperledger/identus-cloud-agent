@@ -10,7 +10,7 @@ object TestConstants {
     val CREDENTIAL_SCHEMAS = CredentialSchemas
     val RANDOM_CONSTAND_UUID = UUID.randomUUID().toString()
     val DID_UPDATE_PUBLISH_MAX_WAIT_5_MIN = Duration.ofSeconds(60L)
-    var PRISM_DID_AUTH_KEY = PublicKey("auth-1", Purpose.AUTHENTICATION)
+    val PRISM_DID_AUTH_KEY = PublicKey("auth-1", Purpose.AUTHENTICATION)
     val PRISM_DID_ASSERTION_KEY = PublicKey("assertion-1", Purpose.ASSERTION_METHOD)
     val PRISM_DID_UPDATE_NEW_AUTH_KEY = PublicKey("auth-2", Purpose.AUTHENTICATION)
     val PRISM_DID_SERVICE = Service(

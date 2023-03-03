@@ -1,6 +1,7 @@
 package features.did
 
 import api_models.*
+import common.TestConstants
 import common.Utils.lastResponseList
 import common.Utils.lastResponseObject
 import common.Utils.toJsonPath
@@ -97,14 +98,18 @@ class ManageDidSteps {
         val managedDidList = lastResponseList("contents", ManagedDid::class)
         Assertions.assertThat(managedDidList)
             .filteredOn {
-                expectedDids.contains(it.longFormDid) && it.status == "CREATED"
+                expectedDids.contains(it.longFormDid) && it.status == ManagedDidStatuses.CREATED
             }
             .hasSize(expectedDidsCount)
     }
 
     private fun createPrismDidRequest(): CreatePrismDidRequest {
-        val publicKeys = listOf(PublicKey("123", Purpose.AUTHENTICATION))
-        val services = listOf(Service("did:prism:321", listOf("https://foo.bar.com"), "LinkedDomains"))
+        val publicKeys = listOf(
+            TestConstants.PRISM_DID_AUTH_KEY,
+        )
+        val services = listOf(
+            TestConstants.PRISM_DID_SERVICE,
+        )
         val documentTemplate = DocumentTemplate(publicKeys, services)
         return CreatePrismDidRequest(documentTemplate)
     }
