@@ -63,6 +63,9 @@ jobs:
         env:
           ENV_FILE: "../../infrastructure/local/.env"
           PRISM_AGENT_PATH: "../../prism-agent/service/"
+          GITHUB_ACTOR: ${{ secrets.ATALA_GITHUB_ACTOR }}
+          GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
+          ATALA_GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
         run: |
           (cd ${PRISM_AGENT_PATH} && sbt docker:publishLocal)
           PRISM_AGENT_VERSION=$(sbt -Dsbt.supershell=false -error "print version" | tail -1 | tr -d "[:space:]")
