@@ -12,7 +12,7 @@ object Dependencies {
     val castor = "0.8.1"
     val pollux = "0.35.2"
     val connect = "0.11.0"
-    val bouncyCastle = "1.70"
+    val bouncyCastle = "1.72"
     val logback = "1.4.5"
     val mercury = "0.20.0"
     val zioJson = "0.4.2"
@@ -56,7 +56,7 @@ object Dependencies {
 
   // Added here to make prism-crypto works.
   // Once migrated to apollo, re-evaluate if this should be removed.
-  private lazy val bouncyBcpkix = "org.bouncycastle" % "bcpkix-jdk15on" % Versions.bouncyCastle
+  private lazy val bouncyBcpkix = "org.bouncycastle" % "bcpkix-jdk18on" % Versions.bouncyCastle
   private lazy val bouncyBcprov = "org.bouncycastle" % "bcprov-jdk15on" % Versions.bouncyCastle
 
   private lazy val logback = "ch.qos.logback" % "logback-classic" % Versions.logback
