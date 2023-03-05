@@ -10,6 +10,7 @@ import common.Agents.Mallory
 import common.Agents.createAgents
 import common.Utils.lastResponseList
 import features.connection.ConnectionSteps
+import features.did.PublishDidSteps
 import features.issue_credentials.IssueCredentialsSteps
 import io.cucumber.java.Before
 import io.cucumber.java.ParameterType
@@ -22,6 +23,7 @@ import net.serenitybdd.screenplay.rest.questions.ResponseConsequence
 import org.apache.http.HttpStatus.SC_OK
 
 class CommonSteps {
+
     @Before
     fun setStage() {
         createAgents()
@@ -55,8 +57,12 @@ class CommonSteps {
         if (receivedCredential != null) {
             holder.remember("issuedCredential", receivedCredential)
         } else {
+            val publishDidSteps = PublishDidSteps()
             val issueSteps = IssueCredentialsSteps()
             actorsHaveExistingConnection(issuer, holder)
+            publishDidSteps.createsUnpublishedDid(holder)
+            publishDidSteps.createsUnpublishedDid(issuer)
+            publishDidSteps.hePublishesDidToLedger(issuer)
             issueSteps.acmeOffersACredential(issuer, holder)
             issueSteps.bobRequestsTheCredential(holder)
             issueSteps.acmeIssuesTheCredential(issuer)

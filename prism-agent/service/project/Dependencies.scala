@@ -6,14 +6,15 @@ object Dependencies {
     val zioConfig = "3.0.2"
     val zioHttp = "2.0.0-RC11"
     val zioInteropCats = "3.3.0" // scala-steward:off
+    val zioMetrics = "2.0.6"
     val akka = "2.6.20"
     val akkaHttp = "10.2.9"
     val castor = "0.8.1"
-    val pollux = "0.31.0"
-    val connect = "0.10.1"
+    val pollux = "0.35.2"
+    val connect = "0.11.0"
     val bouncyCastle = "1.70"
     val logback = "1.4.5"
-    val mercury = "0.19.0"
+    val mercury = "0.20.0"
     val zioJson = "0.3.0"
     val tapir = "1.2.3"
     val flyway = "9.8.3"
@@ -33,6 +34,8 @@ object Dependencies {
   private lazy val zioTestMagnolia = "dev.zio" %% "zio-test-magnolia" % Versions.zio % Test
 
   private lazy val zioHttp = "io.d11" %% "zhttp" % Versions.zioHttp
+
+  private lazy val zioMetrics = "dev.zio" %% "zio-metrics-connectors" % Versions.zioMetrics
 
   private lazy val akkaTyped = "com.typesafe.akka" %% "akka-actor-typed" % Versions.akka
   private lazy val akkaStream = "com.typesafe.akka" %% "akka-stream" % Versions.akka
@@ -91,7 +94,8 @@ object Dependencies {
     zioConfigTypesafe,
     zioJson,
     logback,
-    zioHttp
+    zioHttp,
+    zioMetrics
   )
   private lazy val castorDependencies: Seq[ModuleID] = Seq(castorCore, castorSqlDoobie)
   private lazy val polluxDependencies: Seq[ModuleID] = Seq(polluxCore, polluxSqlDoobie)

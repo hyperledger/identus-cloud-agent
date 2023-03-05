@@ -10,8 +10,19 @@ import io.iohk.atala.agent.walletapi.model.ManagedDIDState
 import scala.collection.compat.immutable.ArraySeq
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
 import io.iohk.atala.castor.core.model.did.ScheduledDIDOperationStatus
+import io.iohk.atala.castor.core.model.did.PrismDIDOperation
+import org.postgresql.util.PSQLException
 
 object JdbcDIDNonSecretStorageSpec extends ZIOSpecDefault, StorageSpecHelper, PostgresTestContainerSupport {
+
+  private def insertDIDStateWithDelay(operation: Seq[PrismDIDOperation.Create], delay: zio.Duration) =
+    ZIO.foreach(operation) { op =>
+      for {
+        storage <- ZIO.service[DIDNonSecretStorage]
+        _ <- storage.setManagedDIDState(op.did, ManagedDIDState.Created(op))
+        _ <- TestClock.adjust(delay)
+      } yield ()
+    }
 
   override def spec = {
     val testSuite =
@@ -32,8 +43,9 @@ object JdbcDIDNonSecretStorageSpec extends ZIOSpecDefault, StorageSpecHelper, Po
     test("initialize with empty list") {
       for {
         storage <- ZIO.service[DIDNonSecretStorage]
-        states <- storage.listManagedDID
-      } yield assert(states)(isEmpty)
+        resultsWithCount <- storage.listManagedDID(None, None)
+        (results, count) = resultsWithCount
+      } yield assert(results)(isEmpty) && assert(count)(isZero)
     },
     test("list stored dids") {
       for {
@@ -44,8 +56,74 @@ object JdbcDIDNonSecretStorageSpec extends ZIOSpecDefault, StorageSpecHelper, Po
         createOperation2 <- generateCreateOperation(Seq("key-1")).map(_._1)
         _ <- storage.setManagedDIDState(did1, ManagedDIDState.Created(createOperation1))
         _ <- storage.setManagedDIDState(did2, ManagedDIDState.Created(createOperation2))
-        states <- storage.listManagedDID
-      } yield assert(states.keys)(hasSameElements(Seq(did1, did2)))
+        states <- storage.listManagedDID(None, None).map(_._1)
+      } yield assert(states.map(_._1))(hasSameElements(Seq(did1, did2)))
+    },
+    test("list stored dids and return correct item count when using offset and limit") {
+      for {
+        storage <- ZIO.service[DIDNonSecretStorage]
+        operations <- ZIO.foreach(1 to 50)(_ => generateCreateOperation(Seq("key-1")).map(_._1))
+        _ <- insertDIDStateWithDelay(operations, 100.millis)
+        resultsWithCount <- storage.listManagedDID(offset = Some(20), limit = Some(10))
+        (results, count) = resultsWithCount
+        dids = results.map(_._1.asCanonical)
+      } yield assert(count)(equalTo(50)) && assert(dids)(hasSameElements(operations.drop(20).take(10).map(_.did)))
+    },
+    test("list stored dids and return correct item count when using offset only") {
+      for {
+        storage <- ZIO.service[DIDNonSecretStorage]
+        operations <- ZIO.foreach(1 to 50)(_ => generateCreateOperation(Seq("key-1")).map(_._1))
+        _ <- insertDIDStateWithDelay(operations, 100.millis)
+        resultsWithCount <- storage.listManagedDID(offset = Some(20), limit = None)
+        (results, count) = resultsWithCount
+        dids = results.map(_._1)
+      } yield assert(count)(equalTo(50)) && assert(dids)(hasSameElements(operations.drop(20).map(_.did)))
+    },
+    test("list stored dids and return correct item count when using limit only") {
+      for {
+        storage <- ZIO.service[DIDNonSecretStorage]
+        operations <- ZIO.foreach(1 to 50)(_ => generateCreateOperation(Seq("key-1")).map(_._1))
+        _ <- insertDIDStateWithDelay(operations, 100.millis)
+        resultsWithCount <- storage.listManagedDID(offset = None, limit = Some(10))
+        (results, count) = resultsWithCount
+        dids = results.map(_._1)
+      } yield assert(count)(equalTo(50)) && assert(dids)(hasSameElements(operations.take(10).map(_.did)))
+    },
+    test("return empty list when limit is zero") {
+      for {
+        storage <- ZIO.service[DIDNonSecretStorage]
+        operations <- ZIO.foreach(1 to 50)(_ => generateCreateOperation(Seq("key-1")).map(_._1))
+        _ <- insertDIDStateWithDelay(operations, 100.millis)
+        resultsWithCount <- storage.listManagedDID(offset = None, limit = Some(0))
+        (results, count) = resultsWithCount
+        dids = results.map(_._1.asCanonical)
+      } yield assert(count)(equalTo(50)) && assert(dids)(isEmpty)
+    },
+    test("fail when limit is negative") {
+      for {
+        storage <- ZIO.service[DIDNonSecretStorage]
+        operations <- ZIO.foreach(1 to 50)(_ => generateCreateOperation(Seq("key-1")).map(_._1))
+        _ <- insertDIDStateWithDelay(operations, 100.millis)
+        exit <- storage.listManagedDID(offset = None, limit = Some(-1)).exit
+      } yield assert(exit)(
+        fails(
+          isSubtype[PSQLException](hasField("getMessage", _.getMessage(), containsString("LIMIT must not be negative")))
+        )
+      )
+    },
+    test("fail when offset is negative") {
+      for {
+        storage <- ZIO.service[DIDNonSecretStorage]
+        operations <- ZIO.foreach(1 to 50)(_ => generateCreateOperation(Seq("key-1")).map(_._1))
+        _ <- insertDIDStateWithDelay(operations, 100.millis)
+        exit <- storage.listManagedDID(offset = Some(-1), limit = None).exit
+      } yield assert(exit)(
+        fails(
+          isSubtype[PSQLException](
+            hasField("getMessage", _.getMessage(), containsString("OFFSET must not be negative"))
+          )
+        )
+      )
     }
   )
 

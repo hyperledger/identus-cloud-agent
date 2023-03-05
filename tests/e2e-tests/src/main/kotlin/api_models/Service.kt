@@ -1,7 +1,7 @@
 package api_models
 
 data class Service(
-    val id: String,
-    val type: String,
-    val serviceEndpoint: List<String>,
+    var id: String = "",
+    var serviceEndpoint: List<String> = listOf(""),
+    var type: String = "",
 )

@@ -24,11 +24,14 @@ import java.util.UUID
 import java.{util => ju}
 
 // TODO: replace with actual implementation
-class JdbcPresentationRepository(xa: Transactor[Task]) extends PresentationRepository[Task] {
+class JdbcPresentationRepository(
+    xa: Transactor[Task],
+    maxRetries: Int
+) extends PresentationRepository[Task] {
   // serializes into hex string
 
   override def updatePresentationWithCredentialsToUse(
-      recordId: ju.UUID,
+      recordId: DidCommID,
       credentialsToUse: Option[Seq[String]],
       protocolState: ProtocolState
   ): Task[Int] = {
@@ -37,7 +40,10 @@ class JdbcPresentationRepository(xa: Transactor[Task]) extends PresentationRepos
         | SET
         |   credentials_to_use = ${credentialsToUse.map(_.toList)},
         |   protocol_state = $protocolState,
-        |   updated_at = ${Instant.now}
+        |   updated_at = ${Instant.now},
+        |   meta_retries = $maxRetries,
+        |   meta_next_retry = ${Instant.now},
+        |   meta_last_failure = null
         | WHERE
         |   id = $recordId
         """.stripMargin.update
@@ -60,11 +66,9 @@ class JdbcPresentationRepository(xa: Transactor[Task]) extends PresentationRepos
   // given logHandler: LogHandler = LogHandler.jdkLogHandler
 
   import PresentationRecord._
-  given uuidGet: Get[UUID] = Get[String].map(UUID.fromString)
-  given uuidPut: Put[UUID] = Put[String].contramap(_.toString())
 
-  given instantGet: Get[Instant] = Get[Long].map(Instant.ofEpochSecond)
-  given instantPut: Put[Instant] = Put[Long].contramap(_.getEpochSecond())
+  given didCommIDGet: Get[DidCommID] = Get[String].map(DidCommID(_))
+  given didCommIDPut: Put[DidCommID] = Put[String].contramap(_.value)
 
   given protocolStateGet: Get[ProtocolState] = Get[String].map(ProtocolState.valueOf)
   given protocolStatePut: Put[ProtocolState] = Put[String].contramap(_.toString)
@@ -98,7 +102,10 @@ class JdbcPresentationRepository(xa: Transactor[Task]) extends PresentationRepos
         |   subject_id,
         |   protocol_state,
         |   request_presentation_data,
-        |   credentials_to_use 
+        |   credentials_to_use,
+        |   meta_retries,
+        |   meta_next_retry,
+        |   meta_last_failure
         | ) values (
         |   ${record.id},
         |   ${record.createdAt},
@@ -110,7 +117,10 @@ class JdbcPresentationRepository(xa: Transactor[Task]) extends PresentationRepos
         |   ${record.subjectId},
         |   ${record.protocolState},
         |   ${record.requestPresentationData},
-        |   ${record.credentialsToUse.map(_.toList)}
+        |   ${record.credentialsToUse.map(_.toList)},
+        |   ${record.metaRetries},
+        |   ${record.metaNextRetry},
+        |   ${record.metaLastFailure}
         | )
         """.stripMargin.update
 
@@ -133,7 +143,10 @@ class JdbcPresentationRepository(xa: Transactor[Task]) extends PresentationRepos
         |   request_presentation_data,
         |   propose_presentation_data,
         |   presentation_data,
-        |   credentials_to_use
+        |   credentials_to_use,
+        |   meta_retries,
+        |   meta_next_retry,
+        |   meta_last_failure
         | FROM public.presentation_records
         """.stripMargin
       .query[PresentationRecord]
@@ -166,7 +179,10 @@ class JdbcPresentationRepository(xa: Transactor[Task]) extends PresentationRepos
             |   request_presentation_data,
             |   propose_presentation_data,
             |   presentation_data,
-            |   credentials_to_use
+            |   credentials_to_use,
+            |   meta_retries,
+            |   meta_next_retry,
+            |   meta_last_failure
             | FROM public.presentation_records
             | WHERE $inClauseFragment
             """.stripMargin
@@ -177,7 +193,7 @@ class JdbcPresentationRepository(xa: Transactor[Task]) extends PresentationRepos
           .transact(xa)
   }
 
-  override def getPresentationRecord(recordId: UUID): Task[Option[PresentationRecord]] = {
+  override def getPresentationRecord(recordId: DidCommID): Task[Option[PresentationRecord]] = {
     val cxnIO = sql"""
         | SELECT
         |   id,
@@ -192,7 +208,10 @@ class JdbcPresentationRepository(xa: Transactor[Task]) extends PresentationRepos
         |   request_presentation_data,
         |   propose_presentation_data,
         |   presentation_data,
-        |   credentials_to_use
+        |   credentials_to_use,
+        |   meta_retries,
+        |   meta_next_retry,
+        |   meta_last_failure
         | FROM public.presentation_records
         | WHERE id = $recordId
         """.stripMargin
@@ -203,7 +222,7 @@ class JdbcPresentationRepository(xa: Transactor[Task]) extends PresentationRepos
       .transact(xa)
   }
 
-  override def getPresentationRecordByThreadId(thid: UUID): Task[Option[PresentationRecord]] = {
+  override def getPresentationRecordByThreadId(thid: DidCommID): Task[Option[PresentationRecord]] = {
     val cxnIO = sql"""
         | SELECT
         |   id,
@@ -218,7 +237,10 @@ class JdbcPresentationRepository(xa: Transactor[Task]) extends PresentationRepos
         |   request_presentation_data,
         |   propose_presentation_data,
         |   presentation_data,
-        |   credentials_to_use
+        |   credentials_to_use,
+        |   meta_retries,
+        |   meta_next_retry,
+        |   meta_last_failure
         | FROM public.presentation_records
         | WHERE thid = $thid
         """.stripMargin
@@ -230,7 +252,7 @@ class JdbcPresentationRepository(xa: Transactor[Task]) extends PresentationRepos
   }
 
   override def updatePresentationRecordProtocolState(
-      recordId: UUID,
+      recordId: DidCommID,
       from: PresentationRecord.ProtocolState,
       to: PresentationRecord.ProtocolState
   ): Task[Int] = {
@@ -238,7 +260,10 @@ class JdbcPresentationRepository(xa: Transactor[Task]) extends PresentationRepos
         | UPDATE public.presentation_records
         | SET
         |   protocol_state = $to,
-        |   updated_at = ${Instant.now}
+        |   updated_at = ${Instant.now},
+        |   meta_retries = $maxRetries,
+        |   meta_next_retry = ${Instant.now},
+        |   meta_last_failure = null
         | WHERE
         |   id = $recordId
         |   AND protocol_state = $from
@@ -249,7 +274,7 @@ class JdbcPresentationRepository(xa: Transactor[Task]) extends PresentationRepos
   }
 
   override def updateWithRequestPresentation(
-      recordId: UUID,
+      recordId: DidCommID,
       request: RequestPresentation,
       protocolState: ProtocolState
   ): Task[Int] = {
@@ -258,7 +283,10 @@ class JdbcPresentationRepository(xa: Transactor[Task]) extends PresentationRepos
         | SET
         |   request_presentation_data = $request,
         |   protocol_state = $protocolState,
-        |   updated_at = ${Instant.now}
+        |   updated_at = ${Instant.now},
+        |   meta_retries = $maxRetries,
+        |   meta_next_retry = ${Instant.now},
+        |   meta_last_failure = null
         | WHERE
         |   id = $recordId
         """.stripMargin.update
@@ -268,7 +296,7 @@ class JdbcPresentationRepository(xa: Transactor[Task]) extends PresentationRepos
   }
 
   override def updateWithProposePresentation(
-      recordId: UUID,
+      recordId: DidCommID,
       propose: ProposePresentation,
       protocolState: ProtocolState
   ): Task[Int] = {
@@ -277,7 +305,10 @@ class JdbcPresentationRepository(xa: Transactor[Task]) extends PresentationRepos
         | SET
         |   propose_presentation_data = $propose,
         |   protocol_state = $protocolState,
-        |   updated_at = ${Instant.now}
+        |   updated_at = ${Instant.now},
+        |   meta_retries = $maxRetries,
+        |   meta_next_retry = ${Instant.now},
+        |   meta_last_failure = null
         | WHERE
         |   id = $recordId
         """.stripMargin.update
@@ -287,7 +318,7 @@ class JdbcPresentationRepository(xa: Transactor[Task]) extends PresentationRepos
   }
 
   override def updateWithPresentation(
-      recordId: UUID,
+      recordId: DidCommID,
       presentation: Presentation,
       protocolState: ProtocolState
   ): Task[Int] = {
@@ -296,7 +327,10 @@ class JdbcPresentationRepository(xa: Transactor[Task]) extends PresentationRepos
         | SET
         |   presentation_data = $presentation,
         |   protocol_state = $protocolState,
-        |   updated_at = ${Instant.now}
+        |   updated_at = ${Instant.now},
+        |   meta_retries = $maxRetries,
+        |   meta_next_retry = ${Instant.now},
+        |   meta_last_failure = null
         | WHERE
         |   id = $recordId
         """.stripMargin.update
@@ -305,9 +339,26 @@ class JdbcPresentationRepository(xa: Transactor[Task]) extends PresentationRepos
       .transact(xa)
   }
 
+  def updateAfterFail(
+      recordId: DidCommID,
+      failReason: Option[String]
+  ): Task[Int] = {
+    val cxnIO = sql"""
+        | UPDATE public.issue_credential_records
+        | SET
+        |   meta_retries = CASE WHEN (meta_retries > 1) THEN meta_retries - 1 ELSE 0 END,
+        |   meta_next_retry = CASE WHEN (meta_retries > 1) THEN ${Instant.now().plusSeconds(60)} ELSE null END,
+        |   meta_last_failure = ${failReason}
+        | WHERE
+        |   id = $recordId
+        """.stripMargin.update
+    cxnIO.run.transact(xa)
+  }
+
 }
 
 object JdbcPresentationRepository {
+  val maxRetries = 5 // TODO Move to config
   val layer: URLayer[Transactor[Task], PresentationRepository[Task]] =
-    ZLayer.fromFunction(new JdbcPresentationRepository(_))
+    ZLayer.fromFunction(new JdbcPresentationRepository(_, maxRetries))
 }

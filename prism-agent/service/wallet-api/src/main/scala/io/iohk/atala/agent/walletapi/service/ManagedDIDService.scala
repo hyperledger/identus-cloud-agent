@@ -83,24 +83,15 @@ final class ManagedDIDService private[walletapi] (
     () => KeyGeneratorWrapper.generateECKeyPair(CURVE)
   )
 
-  def syncManagedDIDState: IO[GetManagedDIDError, Unit] = nonSecretStorage.listManagedDID
+  def syncManagedDIDState: IO[GetManagedDIDError, Unit] = nonSecretStorage
+    .listManagedDID(offset = None, limit = None)
     .mapError(GetManagedDIDError.WalletStorageError.apply)
-    .flatMap { kv =>
-      ZIO.foreach(kv.keys.map(_.asCanonical))(computeNewDIDStateFromDLTAndPersist[GetManagedDIDError])
+    .flatMap { case (kv, _) =>
+      ZIO.foreach(kv.map(_._1.asCanonical))(computeNewDIDStateFromDLTAndPersist[GetManagedDIDError])
     }
     .unit
 
-  def syncUnconfirmedUpdateOperations: IO[GetManagedDIDError, Unit] = {
-    for {
-      awaitingConfirmationOps <- nonSecretStorage
-        .listUpdateLineage(did = None, status = Some(ScheduledDIDOperationStatus.AwaitingConfirmation))
-        .mapError(GetManagedDIDError.WalletStorageError.apply)
-      pendingOps <- nonSecretStorage
-        .listUpdateLineage(did = None, status = Some(ScheduledDIDOperationStatus.Pending))
-        .mapError(GetManagedDIDError.WalletStorageError.apply)
-      _ <- ZIO.foreach(awaitingConfirmationOps ++ pendingOps)(computeNewDIDLineageStatusAndPersist[GetManagedDIDError])
-    } yield ()
-  }
+  def syncUnconfirmedUpdateOperations: IO[GetManagedDIDError, Unit] = syncUnconfirmedUpdateOperationsByDID(did = None)
 
   // FIXME
   // Instead of returning the privateKey directly, it should provide more secure interface like
@@ -156,12 +147,15 @@ final class ManagedDIDService private[walletapi] (
       state <- nonSecretStorage.getManagedDIDState(did).mapError(GetManagedDIDError.WalletStorageError.apply)
     } yield state
 
-  def listManagedDID: IO[GetManagedDIDError, Seq[ManagedDIDDetail]] =
+  /** @return A tuple containing a list of items and a count of total items */
+  def listManagedDIDPage(offset: Int, limit: Int): IO[GetManagedDIDError, (Seq[ManagedDIDDetail], Int)] =
     for {
-      // state in wallet maybe stale, update it from DLT
-      _ <- syncManagedDIDState
-      dids <- nonSecretStorage.listManagedDID.mapError(GetManagedDIDError.WalletStorageError.apply)
-    } yield dids.toSeq.map { case (did, state) => ManagedDIDDetail(did.asCanonical, state) }
+      results <- nonSecretStorage
+        .listManagedDID(offset = Some(offset), limit = Some(limit))
+        .mapError(GetManagedDIDError.WalletStorageError.apply)
+      (dids, totalCount) = results
+      details = dids.map { case (did, state) => ManagedDIDDetail(did.asCanonical, state) }
+    } yield details -> totalCount
 
   def publishStoredDID(did: CanonicalPrismDID): IO[PublishManagedDIDError, ScheduleDIDOperationOutcome] = {
     def doPublish(operation: PrismDIDOperation.Create) = {
@@ -260,12 +254,16 @@ final class ManagedDIDService private[walletapi] (
         .mapError(UpdateManagedDIDError.WalletStorageError.apply)
         .someOrFail(UpdateManagedDIDError.DIDNotFound(did))
         .collect(UpdateManagedDIDError.DIDNotPublished(did)) { case s: ManagedDIDState.Published => s }
-      _ <- didService
+      resolvedDID <- didService
         .resolveDID(did)
         .mapError(UpdateManagedDIDError.ResolutionError.apply)
         .someOrFail(UpdateManagedDIDError.DIDNotFound(did))
         .filterOrFail { case (metaData, _) => !metaData.deactivated }(UpdateManagedDIDError.DIDAlreadyDeactivated(did))
-      previousOperationHash <- getPreviousOperationHash[UpdateManagedDIDError](did, didState.createOperation)
+      previousOperationHash <- computePreviousOperationHash[UpdateManagedDIDError](
+        did,
+        resolvedDID._1,
+        didState.createOperation
+      )
       generated <- generateUpdateOperation(did, previousOperationHash, actions)
       (updateOperation, secret) = generated
       _ <- ZIO
@@ -290,12 +288,16 @@ final class ManagedDIDService private[walletapi] (
         .mapError(UpdateManagedDIDError.WalletStorageError.apply)
         .someOrFail(UpdateManagedDIDError.DIDNotFound(did))
         .collect(UpdateManagedDIDError.DIDNotPublished(did)) { case s: ManagedDIDState.Published => s }
-      _ <- didService
+      resolvedDID <- didService
         .resolveDID(did)
         .mapError(UpdateManagedDIDError.ResolutionError.apply)
         .someOrFail(UpdateManagedDIDError.DIDNotFound(did))
         .filterOrFail { case (metaData, _) => !metaData.deactivated }(UpdateManagedDIDError.DIDAlreadyDeactivated(did))
-      previousOperationHash <- getPreviousOperationHash[UpdateManagedDIDError](did, didState.createOperation)
+      previousOperationHash <- computePreviousOperationHash[UpdateManagedDIDError](
+        did,
+        resolvedDID._1,
+        didState.createOperation
+      )
       deactivateOperation = PrismDIDOperation.Deactivate(did, ArraySeq.from(previousOperationHash))
       _ <- ZIO
         .fromEither(didOpValidator.validate(deactivateOperation))
@@ -305,21 +307,40 @@ final class ManagedDIDService private[walletapi] (
   }
 
   /** return hash of previous operation. Currently support only last confirmed operation */
-  private def getPreviousOperationHash[E](
+  private def computePreviousOperationHash[E](
       did: CanonicalPrismDID,
+      didMetadata: DIDMetadata,
       createOperation: PrismDIDOperation.Create
-  )(using c1: Conversion[CommonWalletStorageError, E]): IO[E, Array[Byte]] = {
-    nonSecretStorage
-      .listUpdateLineage(did = Some(did), status = Some(ScheduledDIDOperationStatus.Confirmed))
-      .mapError[E](CommonWalletStorageError.apply)
-      .map { lineage =>
-        // Correlation between local timestamp and confirmed operation order on-chain is assumed.
-        // We may want to improve previous operation detection by using resolution metadata from Node in the future.
-        // We may also want to allow updating from unconfirmed operation to allow multiple updates
-        // without waiting for confirmation.
-        val lastConfirmedUpdate = lineage.maxByOption(_.createdAt)
-        lastConfirmedUpdate.fold(createOperation.toAtalaOperationHash)(_.operationHash.toArray)
-      }
+  )(using c1: Conversion[CommonWalletStorageError, E], c2: Conversion[DIDOperationError, E]): IO[E, Array[Byte]] = {
+    for {
+      previousOperationHashInternal <- nonSecretStorage
+        .listUpdateLineage(did = Some(did), status = Some(ScheduledDIDOperationStatus.Confirmed))
+        .mapError[E](CommonWalletStorageError.apply)
+        .map { lineage =>
+          // Correlation between local timestamp and confirmed operation order on-chain is assumed.
+          val lastConfirmedUpdate = lineage.maxByOption(_.createdAt)
+          lastConfirmedUpdate.fold(ArraySeq.from(createOperation.toAtalaOperationHash))(_.operationHash)
+        }
+      // Sync operation lineage status if the tip is different from lastOperation in resolution metadata
+      // This is done to avoid a race condition where users resolve the DID and see
+      // the update is already applied but the agent doesn't know about it yet.
+      _ <- syncUnconfirmedUpdateOperationsByDID[E](did = Some(did))
+        .when(didMetadata.lastOperationHash != previousOperationHashInternal)
+    } yield didMetadata.lastOperationHash.toArray
+  }
+
+  private def syncUnconfirmedUpdateOperationsByDID[E](
+      did: Option[PrismDID]
+  )(using c1: Conversion[CommonWalletStorageError, E], c2: Conversion[DIDOperationError, E]): IO[E, Unit] = {
+    for {
+      awaitingConfirmationOps <- nonSecretStorage
+        .listUpdateLineage(did = did, status = Some(ScheduledDIDOperationStatus.AwaitingConfirmation))
+        .mapError[E](CommonWalletStorageError.apply)
+      pendingOps <- nonSecretStorage
+        .listUpdateLineage(did = did, status = Some(ScheduledDIDOperationStatus.Pending))
+        .mapError[E](CommonWalletStorageError.apply)
+      _ <- ZIO.foreach(awaitingConfirmationOps ++ pendingOps)(computeNewDIDLineageStatusAndPersist[E])
+    } yield ()
   }
 
   private def signOperationWithMasterKey[E](operation: PrismDIDOperation)(using

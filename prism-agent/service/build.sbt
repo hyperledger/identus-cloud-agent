@@ -49,7 +49,7 @@ lazy val server = project
     name := "prism-agent",
     fork := true,
     libraryDependencies ++= serverDependencies,
-    Compile / mainClass := Some("io.iohk.atala.agent.server.Main"),
+    Compile / mainClass := Some("io.iohk.atala.agent.server.MainApp"),
     // OpenAPI settings
     Compile / unmanagedResourceDirectories += apiBaseDirectory.value,
     Compile / sourceGenerators += openApiGenerateClasses,
@@ -68,9 +68,11 @@ lazy val server = project
     Docker / githubOwner := "atala-prism-building-blocks",
     Docker / dockerRepository := Some("ghcr.io"),
     dockerExposedPorts := Seq(8080, 8085, 8090),
-    dockerBaseImage := "openjdk:11"
+    dockerBaseImage := "openjdk:11",
+    buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion),
+    buildInfoPackage := "io.iohk.atala.agent.server.buildinfo"
   )
-  .enablePlugins(OpenApiGeneratorPlugin, JavaAppPackaging, DockerPlugin)
+  .enablePlugins(OpenApiGeneratorPlugin, JavaAppPackaging, DockerPlugin, BuildInfoPlugin)
   .dependsOn(`wallet-api`)
 
 releaseProcess := Seq[ReleaseStep](

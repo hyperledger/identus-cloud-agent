@@ -1,16 +1,11 @@
-Feature: Manage DID
+Feature: Create DID
 
-Scenario: Successfully create managed DID
-  When Acme create a managed DID
-  Then He sees the managed DID was created successfully
+Scenario: Create PRISM DID
+  When Acme creates PRISM DID
+  Then He sees PRISM DID was created successfully
 
-Scenario: DIDs should be stored
-  Given Acme creates 5 managed DIDs
-  When He lists all the managed DIDs
-  Then He sees the list contains all created DIDs
-
-Scenario Outline: Missing fields to create manage DID should fail
-  Given Acme tries to create a managed DID with missing <field>
+Scenario Outline: PRISM DID creation fails when required request fields are missing
+  Given Acme tries to create PRISM DID with missing <field>
   Then He sees the request has failed with error status <error>
 Examples:
   | field                                        | error |
@@ -23,8 +18,7 @@ Examples:
   | documentTemplate.services[0].type            | 400   |
   | documentTemplate.services[0].serviceEndpoint | 400   |
 
-@skip @bug
-Scenario Outline: Wrong formatted fields to create manage DID should fail
+Scenario Outline: PRISM DID creation fails with wrong formatted fields
   Given Acme tries to create a managed DID with value <value> in <field>
   Then He sees the request has failed with error status <error>
 Examples:

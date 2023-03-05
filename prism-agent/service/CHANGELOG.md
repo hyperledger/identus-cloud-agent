@@ -1,3 +1,74 @@
+# [prism-agent-v0.48.3](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.48.2...prism-agent-v0.48.3) (2023-03-03)
+
+
+### Bug Fixes
+
+* **prism-agent:** update pollux to 0.35.2 ([#419](https://github.com/input-output-hk/atala-prism-building-blocks/issues/419)) ([63cd430](https://github.com/input-output-hk/atala-prism-building-blocks/commit/63cd4305cfe10b6be5d57d1d2988536eefde35f0))
+
+# [prism-agent-v0.48.2](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.48.1...prism-agent-v0.48.2) (2023-03-03)
+
+
+### Bug Fixes
+
+* **prism-agent:** avoid race condition when update or deactivate DID ([#415](https://github.com/input-output-hk/atala-prism-building-blocks/issues/415)) ([bf03674](https://github.com/input-output-hk/atala-prism-building-blocks/commit/bf03674769f0b6163de13f4002198902fdd413e9))
+
+# [prism-agent-v0.48.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.48.0...prism-agent-v0.48.1) (2023-03-02)
+
+
+### Bug Fixes
+
+* **prism-agent:** update pollux to 0.35.1 ([#414](https://github.com/input-output-hk/atala-prism-building-blocks/issues/414)) ([20770c8](https://github.com/input-output-hk/atala-prism-building-blocks/commit/20770c84a67ca4105e964e97de7aeddbbcab5941))
+
+# [prism-agent-v0.48.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.47.1...prism-agent-v0.48.0) (2023-03-02)
+
+
+### Features
+
+* **prism-agent:** Added new state PresentationVerificationFailed ([#412](https://github.com/input-output-hk/atala-prism-building-blocks/issues/412)) ([55569ed](https://github.com/input-output-hk/atala-prism-building-blocks/commit/55569edbae03a034b84548878fe3ab19252b3bb3))
+
+# [prism-agent-v0.47.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.47.0...prism-agent-v0.47.1) (2023-03-02)
+
+
+### Bug Fixes
+
+* **prism-agent:** add consistency to documentation of OAS on DID endpoints ([#408](https://github.com/input-output-hk/atala-prism-building-blocks/issues/408)) ([dd04c3f](https://github.com/input-output-hk/atala-prism-building-blocks/commit/dd04c3fd14c76c02a7cfbb26ca52141590c48371))
+
+# [prism-agent-v0.47.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.46.0...prism-agent-v0.47.0) (2023-03-02)
+
+
+### Features
+
+* **prism-agent:** update pollux from 0.33.0 to 0.35.0 ([#410](https://github.com/input-output-hk/atala-prism-building-blocks/issues/410)) ([59afe8c](https://github.com/input-output-hk/atala-prism-building-blocks/commit/59afe8cd2acea17fd201378066b89f0bfcb8e98a))
+
+# [prism-agent-v0.46.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.45.1...prism-agent-v0.46.0) (2023-03-02)
+
+
+### Features
+
+* **prism-agent:** update libs: pollux 0.33.0; connect 0.11.0; mercury 0.20.0 ([#403](https://github.com/input-output-hk/atala-prism-building-blocks/issues/403)) ([d724a02](https://github.com/input-output-hk/atala-prism-building-blocks/commit/d724a02a7b5551bb8a49ddd702a6b14c42f53a81))
+
+# [prism-agent-v0.45.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.45.0...prism-agent-v0.45.1) (2023-02-28)
+
+
+### Bug Fixes
+
+* **prism-agent:** add uri normalization on UpdateService patch ([#401](https://github.com/input-output-hk/atala-prism-building-blocks/issues/401)) ([6a98f70](https://github.com/input-output-hk/atala-prism-building-blocks/commit/6a98f7015069dba781d03584ae97a40681c5a5a9))
+
+# [prism-agent-v0.45.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.44.0...prism-agent-v0.45.0) (2023-02-27)
+
+
+### Features
+
+* **prism-agent:** add JVM metrics endpoint, add health/version endpoint ([#390](https://github.com/input-output-hk/atala-prism-building-blocks/issues/390)) ([6d3e5a0](https://github.com/input-output-hk/atala-prism-building-blocks/commit/6d3e5a038b75250c3813a5454f1547247b5e5d13))
+
+# [prism-agent-v0.44.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.43.0...prism-agent-v0.44.0) (2023-02-27)
+
+
+### Features
+
+* **prism-agent:** add pagination to did-registrar list DID endpoint ([#394](https://github.com/input-output-hk/atala-prism-building-blocks/issues/394)) ([a21e388](https://github.com/input-output-hk/atala-prism-building-blocks/commit/a21e38880a5d49e0616e30b9dd9b92dc01980256))
+* **prsim-agent:** pollux version updated ([#392](https://github.com/input-output-hk/atala-prism-building-blocks/issues/392)) ([409b673](https://github.com/input-output-hk/atala-prism-building-blocks/commit/409b673e954b913d7bebf31cdf0c2e8dcee3ce03))
+
 # [prism-agent-v0.43.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.42.0...prism-agent-v0.43.0) (2023-02-22)
 
 

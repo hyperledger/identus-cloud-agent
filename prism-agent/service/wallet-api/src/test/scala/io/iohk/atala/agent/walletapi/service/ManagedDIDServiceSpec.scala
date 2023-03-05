@@ -80,9 +80,12 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSuppor
       services: Seq[Service] = Nil
   ): ManagedDIDTemplate = ManagedDIDTemplate(publicKeys, services)
 
-  private def resolutionResult(deactivated: Boolean = false): (DIDMetadata, DIDData) = {
+  private def resolutionResult(
+      deactivated: Boolean = false,
+      lastOperationHash: ArraySeq[Byte] = ArraySeq.fill(32)(0)
+  ): (DIDMetadata, DIDData) = {
     val metadata = DIDMetadata(
-      lastOperationHash = ArraySeq.empty,
+      lastOperationHash = lastOperationHash,
       deactivated = deactivated
     )
     val didData = DIDData(
@@ -166,11 +169,11 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSuppor
       val template = generateDIDTemplate()
       for {
         svc <- ZIO.service[ManagedDIDService]
-        didsBefore <- svc.nonSecretStorage.listManagedDID
+        didsBefore <- svc.nonSecretStorage.listManagedDID(None, None).map(_._1)
         did <- svc.createAndStoreDID(template).map(_.asCanonical)
-        didsAfter <- svc.nonSecretStorage.listManagedDID
+        didsAfter <- svc.nonSecretStorage.listManagedDID(None, None).map(_._1)
       } yield assert(didsBefore)(isEmpty) &&
-        assert(didsAfter.keySet)(hasSameElements(Seq(did)))
+        assert(didsAfter.map(_._1))(hasSameElements(Seq(did)))
     },
     test("create and store DID secret in DIDSecretStorage") {
       val template = generateDIDTemplate(

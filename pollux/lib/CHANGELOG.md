@@ -1,3 +1,46 @@
+# [pollux-v0.35.2](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.35.1...pollux-v0.35.2) (2023-03-03)
+
+
+### Bug Fixes
+
+* **pollux:** Fix Instant encoder in JdbcPresentationRepository ([#418](https://github.com/input-output-hk/atala-prism-building-blocks/issues/418)) ([2ece2c6](https://github.com/input-output-hk/atala-prism-building-blocks/commit/2ece2c6881430c180fa9c1bad6cdd6085be2c453))
+
+# [pollux-v0.35.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.35.0...pollux-v0.35.1) (2023-03-02)
+
+
+### Bug Fixes
+
+* **pollux:** Fix column meta_next_retry ([#413](https://github.com/input-output-hk/atala-prism-building-blocks/issues/413)) ([c02aba8](https://github.com/input-output-hk/atala-prism-building-blocks/commit/c02aba87adbdbea4c30ac4c1c7f7e3a8fe0aa7c4))
+
+# [pollux-v0.35.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.34.0...pollux-v0.35.0) (2023-03-02)
+
+
+### Features
+
+* **pollux:** Added new state PresentationVerificationFailed ([#400](https://github.com/input-output-hk/atala-prism-building-blocks/issues/400)) ([94031f8](https://github.com/input-output-hk/atala-prism-building-blocks/commit/94031f880f00f61be2da2dd91f22fb92246b1609))
+
+# [pollux-v0.34.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.33.0...pollux-v0.34.0) (2023-03-01)
+
+
+### Features
+
+* **pollux:** Add meta fields to presentation table (for retries) ([#405](https://github.com/input-output-hk/atala-prism-building-blocks/issues/405)) ([37dee86](https://github.com/input-output-hk/atala-prism-building-blocks/commit/37dee8616349e2d5ae858475dd4951f064bbe9db))
+* **pollux:** Add retries field for ATL-3205 ([#380](https://github.com/input-output-hk/atala-prism-building-blocks/issues/380)) ([c7efde6](https://github.com/input-output-hk/atala-prism-building-blocks/commit/c7efde651c7b3e0260568290ab9dd58e2d955a70))
+
+# [pollux-v0.33.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.32.0...pollux-v0.33.0) (2023-02-27)
+
+
+### Features
+
+* **pollux:** Replace UUID with String - ATL-3555 ([#397](https://github.com/input-output-hk/atala-prism-building-blocks/issues/397)) ([cc11479](https://github.com/input-output-hk/atala-prism-building-blocks/commit/cc1147987e68cc87545854eb9da78b5217331dcc))
+
+# [pollux-v0.32.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.31.0...pollux-v0.32.0) (2023-02-27)
+
+
+### Features
+
+* **pollux:** Updated version for mercury ([#399](https://github.com/input-output-hk/atala-prism-building-blocks/issues/399)) ([faac0a7](https://github.com/input-output-hk/atala-prism-building-blocks/commit/faac0a718e07ab3ccfa814b875b9684855baff5c))
+
 # [pollux-v0.31.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.30.0...pollux-v0.31.0) (2023-02-23)
 
 

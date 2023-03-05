@@ -4,9 +4,8 @@ import com.squareup.okhttp.Protocol
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
 import io.iohk.atala.mercury.protocol.issuecredential.RequestCredential
-import io.iohk.atala.pollux.core.model.IssueCredentialRecord
+import io.iohk.atala.pollux.core.model._
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord._
-import io.iohk.atala.pollux.core.model.ValidIssuedCredentialRecord
 import io.iohk.atala.pollux.core.model.error.CredentialRepositoryError._
 import io.iohk.atala.prism.identity.Did
 import zio.Cause
@@ -21,12 +20,13 @@ import java.util.UUID
 import io.iohk.atala.castor.core.model.did.PrismDID
 
 object CredentialRepositorySpecSuite {
+  val maxRetries = 5 // TODO Move to config
 
   private def issueCredentialRecord = IssueCredentialRecord(
-    id = UUID.randomUUID,
+    id = DidCommID(),
     createdAt = Instant.ofEpochSecond(Instant.now.getEpochSecond()),
     updatedAt = None,
-    thid = UUID.randomUUID,
+    thid = DidCommID(),
     schemaId = None,
     role = IssueCredentialRecord.Role.Issuer,
     subjectId = "did:prism:HOLDER",
@@ -39,7 +39,10 @@ object CredentialRepositorySpecSuite {
     requestCredentialData = None,
     issueCredentialData = None,
     issuedCredentialRaw = None,
-    issuingDID = None
+    issuingDID = None,
+    metaRetries = maxRetries,
+    metaNextRetry = Some(Instant.now()),
+    metaLastFailure = None,
   )
 
   private def requestCredential = RequestCredential(
@@ -61,7 +64,7 @@ object CredentialRepositorySpecSuite {
     test("createIssueCredentialRecord prevents creation of 2 records with the same thid") {
       for {
         repo <- ZIO.service[CredentialRepository[Task]]
-        thid = UUID.randomUUID()
+        thid = DidCommID()
         aRecord = issueCredentialRecord.copy(thid = thid)
         bRecord = issueCredentialRecord.copy(thid = thid)
         aCount <- repo.createIssueCredentialRecord(aRecord)
@@ -94,7 +97,7 @@ object CredentialRepositorySpecSuite {
         bRecord = issueCredentialRecord
         _ <- repo.createIssueCredentialRecord(aRecord)
         _ <- repo.createIssueCredentialRecord(bRecord)
-        record <- repo.getIssueCredentialRecord(UUID.randomUUID())
+        record <- repo.getIssueCredentialRecord(DidCommID())
       } yield assertTrue(record.isEmpty)
     },
     test("getIssuanceCredentialRecord returns all records") {
@@ -133,7 +136,7 @@ object CredentialRepositorySpecSuite {
         bRecord = issueCredentialRecord
         _ <- repo.createIssueCredentialRecord(aRecord)
         _ <- repo.createIssueCredentialRecord(bRecord)
-        count <- repo.deleteIssueCredentialRecord(UUID.randomUUID)
+        count <- repo.deleteIssueCredentialRecord(DidCommID())
         records <- repo.getIssueCredentialRecords()
       } yield {
         assertTrue(count == 0) &&
@@ -145,7 +148,7 @@ object CredentialRepositorySpecSuite {
     test("getIssueCredentialRecordByThreadId correctly returns an existing thid") {
       for {
         repo <- ZIO.service[CredentialRepository[Task]]
-        thid = UUID.randomUUID()
+        thid = DidCommID()
         aRecord = issueCredentialRecord.copy(thid = thid)
         bRecord = issueCredentialRecord
         _ <- repo.createIssueCredentialRecord(aRecord)
@@ -160,7 +163,7 @@ object CredentialRepositorySpecSuite {
         bRecord = issueCredentialRecord
         _ <- repo.createIssueCredentialRecord(aRecord)
         _ <- repo.createIssueCredentialRecord(bRecord)
-        record <- repo.getIssueCredentialRecordByThreadId(UUID.randomUUID())
+        record <- repo.getIssueCredentialRecordByThreadId(DidCommID())
       } yield assertTrue(record.isEmpty)
     },
     test("getIssueCredentialRecordsByStates returns valid records") {
@@ -357,6 +360,68 @@ object CredentialRepositorySpecSuite {
         assertTrue(record.get.issueCredentialData.isEmpty) &&
         assertTrue(updatedRecord.get.issueCredentialData.contains(issueCredential)) &&
         assertTrue(updatedRecord.get.issuedCredentialRaw.contains("RAW_CREDENTIAL_DATA"))
+      }
+    },
+    test("updateFail (fail one retry) updates record") {
+      val aRecord = issueCredentialRecord
+
+      val failReason = Some("Just to test")
+      for {
+        repo <- ZIO.service[CredentialRepository[Task]]
+        tmp <- repo.createIssueCredentialRecord(aRecord)
+        record0 <- repo.getIssueCredentialRecord(aRecord.id)
+        _ <- repo.updateAfterFail(aRecord.id, Some("Just to test")) // TEST
+        updatedRecord1 <- repo.getIssueCredentialRecord(aRecord.id)
+        count <- repo.updateCredentialRecordProtocolState(
+          aRecord.id,
+          ProtocolState.OfferPending,
+          ProtocolState.OfferSent
+        )
+        updatedRecord2 <- repo.getIssueCredentialRecord(aRecord.id)
+      } yield {
+        assertTrue(tmp == 1) &&
+        assertTrue(record0.isDefined) &&
+        assertTrue(record0.get.metaRetries == maxRetries) &&
+        assertTrue(updatedRecord1.get.metaRetries == (maxRetries - 1)) &&
+        assertTrue(updatedRecord1.get.metaLastFailure == failReason) &&
+        assertTrue(updatedRecord1.get.metaNextRetry.isDefined) &&
+        // continues to work normally after retry
+        assertTrue(count == 1) &&
+        assertTrue(updatedRecord2.get.metaNextRetry.isDefined) &&
+        assertTrue(updatedRecord2.get.metaRetries == maxRetries) &&
+        assertTrue(updatedRecord2.get.metaLastFailure == None)
+      }
+    },
+    test("updateFail (fail all retry) updates record") {
+      val aRecord = issueCredentialRecord
+
+      for {
+        repo <- ZIO.service[CredentialRepository[Task]]
+        tmp <- repo.createIssueCredentialRecord(aRecord)
+        record0 <- repo.getIssueCredentialRecord(aRecord.id)
+        count1 <- repo.updateAfterFail(aRecord.id, Some("1 - Just to test"))
+        count2 <- repo.updateAfterFail(aRecord.id, Some("2 - Just to test"))
+        count3 <- repo.updateAfterFail(aRecord.id, Some("3 - Just to test"))
+        count4 <- repo.updateAfterFail(aRecord.id, Some("4 - Just to test"))
+        count5 <- repo.updateAfterFail(aRecord.id, Some("5 - Just to test"))
+        count6 <- repo.updateAfterFail(aRecord.id, Some("6 - Just to test"))
+        // The 6 retry should not happen since the max retries is 5
+        // (but should also not have an effect other that update the error message)
+        updatedRecord1 <- repo.getIssueCredentialRecord(aRecord.id)
+      } yield {
+
+        assertTrue(tmp == 1) &&
+        assertTrue(count1 == 1) &&
+        assertTrue(count2 == 1) &&
+        assertTrue(count3 == 1) &&
+        assertTrue(count4 == 1) &&
+        assertTrue(count5 == 1) &&
+        assertTrue(record0.isDefined) &&
+        assertTrue(record0.get.metaRetries == maxRetries) &&
+        assertTrue(updatedRecord1.get.metaRetries == 0) && // assume the max retries is 5
+        assertTrue(updatedRecord1.get.metaNextRetry.isEmpty) &&
+        assertTrue(updatedRecord1.get.metaLastFailure == Some("6 - Just to test"))
+
       }
     }
   )

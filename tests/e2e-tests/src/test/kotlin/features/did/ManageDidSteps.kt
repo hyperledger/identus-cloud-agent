@@ -1,6 +1,7 @@
 package features.did
 
 import api_models.*
+import common.TestConstants
 import common.Utils.lastResponseList
 import common.Utils.lastResponseObject
 import common.Utils.toJsonPath
@@ -18,7 +19,7 @@ import org.hamcrest.Matchers.*
 
 class ManageDidSteps {
 
-    @Given("{actor} creates {int} managed DIDs")
+    @Given("{actor} creates {int} PRISM DIDs")
     fun createsMultipleManagedDids(actor: Actor, number: Int) {
         repeat(number) {
             createManageDid(actor)
@@ -26,9 +27,9 @@ class ManageDidSteps {
         actor.remember("number", number)
     }
 
-    @When("{actor} create a managed DID")
+    @When("{actor} creates PRISM DID")
     fun createManageDid(actor: Actor) {
-        val createDidRequest = createManagedDidRequest()
+        val createDidRequest = createPrismDidRequest()
 
         actor.attemptsTo(
             Post.to("/did-registrar/dids")
@@ -44,9 +45,9 @@ class ManageDidSteps {
         actor.remember("createdDids", createdDids)
     }
 
-    @When("{actor} tries to create a managed DID with missing {word}")
+    @When("{actor} tries to create PRISM DID with missing {word}")
     fun triesToCreateManagedDidWithMissingField(actor: Actor, missingFieldPath: String) {
-        val createDidRequest = createManagedDidRequest()
+        val createDidRequest = createPrismDidRequest()
         val requestBody = toJsonPath(createDidRequest).delete(missingFieldPath).jsonString()
         actor.attemptsTo(
             Post.to("/did-registrar/dids")
@@ -58,7 +59,7 @@ class ManageDidSteps {
 
     @When("{actor} tries to create a managed DID with value {word} in {word}")
     fun trisToCreateManagedDidWithValueInField(actor: Actor, value: String, fieldPath: String) {
-        val createDidRequest = createManagedDidRequest()
+        val createDidRequest = createPrismDidRequest()
         val requestBody = toJsonPath(createDidRequest).set(fieldPath, value).jsonString()
         actor.attemptsTo(
             Post.to("/did-registrar/dids")
@@ -68,14 +69,14 @@ class ManageDidSteps {
         )
     }
 
-    @When("{actor} lists all the managed DIDs")
+    @When("{actor} lists all PRISM DIDs")
     fun iListManagedDids(actor: Actor) {
         actor.attemptsTo(
             Get.resource("/did-registrar/dids"),
         )
     }
 
-    @Then("{actor} sees the managed DID was created successfully")
+    @Then("{actor} sees PRISM DID was created successfully")
     fun theDidShouldBeRegisteredSuccessfully(actor: Actor) {
         actor.should(
             ResponseConsequence.seeThatResponse {
@@ -94,18 +95,22 @@ class ManageDidSteps {
     fun seeTheListContainsAllCreatedDids(actor: Actor) {
         val expectedDidsCount = actor.recall<Int>("number")
         val expectedDids = actor.recall<List<String>>("createdDids")
-        val managedDidList = lastResponseList("", ManagedDid::class)
+        val managedDidList = lastResponseList("contents", ManagedDid::class)
         Assertions.assertThat(managedDidList)
             .filteredOn {
-                expectedDids.contains(it.longFormDid) && it.status == "CREATED"
+                expectedDids.contains(it.longFormDid) && it.status == ManagedDidStatuses.CREATED
             }
             .hasSize(expectedDidsCount)
     }
 
-    private fun createManagedDidRequest(): CreateManagedDidRequest {
-        val publicKeys = listOf(PublicKey("123", Purpose.AUTHENTICATION))
-        val services = listOf(Service("did:prism:321", "LinkedDomains", listOf("https://foo.bar.com")))
+    private fun createPrismDidRequest(): CreatePrismDidRequest {
+        val publicKeys = listOf(
+            TestConstants.PRISM_DID_AUTH_KEY,
+        )
+        val services = listOf(
+            TestConstants.PRISM_DID_SERVICE,
+        )
         val documentTemplate = DocumentTemplate(publicKeys, services)
-        return CreateManagedDidRequest(documentTemplate)
+        return CreatePrismDidRequest(documentTemplate)
     }
 }

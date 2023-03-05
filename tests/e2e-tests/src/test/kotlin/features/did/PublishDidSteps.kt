@@ -1,6 +1,7 @@
 package features.did
 
 import api_models.*
+import common.TestConstants
 import common.Utils.lastResponseList
 import common.Utils.lastResponseObject
 import common.Utils.wait
@@ -15,28 +16,52 @@ import net.serenitybdd.screenplay.rest.questions.ResponseConsequence
 import org.apache.http.HttpStatus.*
 import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.Matchers.*
-import java.time.Duration
 
 class PublishDidSteps {
+
+    @Given("{actor} have published PRISM DID")
+    fun actorHavePublishedPrismDid(actor: Actor) {
+        actor.attemptsTo(
+            Get.resource("/did-registrar/dids"),
+        )
+        actor.should(
+            ResponseConsequence.seeThatResponse {
+                it.statusCode(SC_OK)
+            },
+        )
+        val publishedDids = lastResponseList("contents", ManagedDid::class).filter {
+            it.status == ManagedDidStatuses.PUBLISHED
+        }
+        val did = publishedDids.firstOrNull {
+            actor.attemptsTo(
+                Get.resource("/dids/${it.did}"),
+            )
+            lastResponseObject("metadata.deactivated", String::class) == "false"
+        }
+        if (did == null) {
+            createsUnpublishedDid(actor)
+            hePublishesDidToLedger(actor)
+        } else {
+            actor.remember("shortFormDid", did.did)
+        }
+    }
 
     @Given("{actor} creates unpublished DID")
     fun createsUnpublishedDid(actor: Actor) {
         val publicKeys = listOf(
-            PublicKey("key1", Purpose.AUTHENTICATION),
-            PublicKey("key2", Purpose.ASSERTION_METHOD),
+            TestConstants.PRISM_DID_AUTH_KEY,
+            TestConstants.PRISM_DID_ASSERTION_KEY,
         )
         val services = listOf(
-            Service(
-                "https://foo.bar.com",
-                "LinkedDomains",
-                listOf("https://foo.bar.com"),
-            ),
+            TestConstants.PRISM_DID_SERVICE,
+            TestConstants.PRISM_DID_SERVICE_FOR_UPDATE,
+            TestConstants.PRISM_DID_SERVICE_TO_REMOVE,
         )
         val documentTemplate = DocumentTemplate(publicKeys, services)
         actor.attemptsTo(
             Post.to("/did-registrar/dids")
                 .with {
-                    it.body(CreateManagedDidRequest(documentTemplate))
+                    it.body(CreatePrismDidRequest(documentTemplate))
                 },
         )
         actor.should(
@@ -46,9 +71,10 @@ class PublishDidSteps {
             },
         )
         val longFormDid = lastResponseObject("longFormDid", String::class)
+        actor.remember("longFormDid", longFormDid)
 
         actor.attemptsTo(
-            Get.resource("/did-registrar/dids"),
+            Get.resource("/did-registrar/dids/$longFormDid"),
         )
         actor.should(
             ResponseConsequence.seeThatResponse {
@@ -57,11 +83,8 @@ class PublishDidSteps {
         )
         actor.remember(
             "shortFormDid",
-            lastResponseList("", ManagedDid::class).find {
-                it.longFormDid == longFormDid
-            }!!.did,
+            lastResponseObject("", ManagedDid::class).did,
         )
-        actor.remember("longFormDid", longFormDid)
     }
 
     @When("{actor} publishes DID to ledger")
@@ -84,7 +107,7 @@ class PublishDidSteps {
                 SerenityRest.lastResponse().statusCode == SC_OK
             },
             "ERROR: DID was not published to ledger!",
-            timeout = Duration.ofSeconds(600L),
+            timeout = TestConstants.DID_UPDATE_PUBLISH_MAX_WAIT_5_MIN,
         )
         actor.should(
             ResponseConsequence.seeThatResponse {
@@ -113,11 +136,11 @@ class PublishDidSteps {
 
         assertThat(didDocument.authentication!![0])
             .hasFieldOrPropertyWithValue("type", "REFERENCED")
-            .hasFieldOrPropertyWithValue("uri", "$shortFormDid#key1")
+            .hasFieldOrPropertyWithValue("uri", "$shortFormDid#${TestConstants.PRISM_DID_AUTH_KEY.id}")
 
         assertThat(didDocument.verificationMethod!![0])
             .hasFieldOrPropertyWithValue("controller", shortFormDid)
-            .hasFieldOrPropertyWithValue("id", "$shortFormDid#key1")
+            .hasFieldOrPropertyWithValue("id", "$shortFormDid#${TestConstants.PRISM_DID_ASSERTION_KEY.id}")
             .hasFieldOrProperty("publicKeyJwk")
 
         assertThat(lastResponseObject("", DidDocument::class).metadata!!)
