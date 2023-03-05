@@ -2,8 +2,8 @@ import sbt._
 
 object Dependencies {
   object Versions {
-    val zio = "2.0.9"
-    val zioConfig = "3.0.7"
+    val zio = "2.0.4"
+    val zioConfig = "3.0.2"
     val zioHttp = "2.0.0-RC11"
     val zioInteropCats = "3.3.0" // scala-steward:off
     val akka = "2.6.20"
@@ -11,14 +11,14 @@ object Dependencies {
     val castor = "0.8.1"
     val pollux = "0.31.0"
     val connect = "0.10.1"
-    val bouncyCastle = "1.72"
+    val bouncyCastle = "1.70"
     val logback = "1.4.5"
-    val mercury = "0.20.0"
-    val zioJson = "0.4.2"
-    val tapir = "1.2.9"
-    val flyway = "9.15.1"
-    val testContainersScalaPostgresql = "0.40.12"
-    val quill = "4.6.0.1"
+    val mercury = "0.19.0"
+    val zioJson = "0.3.0"
+    val tapir = "1.2.3"
+    val flyway = "9.8.3"
+    val testContainersScalaPostgresql = "0.40.11"
+    val quill = "4.6.0"
   }
 
   private lazy val zio = "dev.zio" %% "zio" % Versions.zio
@@ -53,8 +53,8 @@ object Dependencies {
 
   // Added here to make prism-crypto works.
   // Once migrated to apollo, re-evaluate if this should be removed.
-  private lazy val bouncyBcpkix = "org.bouncycastle" % "bcpkix-jdk18on" % Versions.bouncyCastle
-  private lazy val bouncyBcprov = "org.bouncycastle" % "bcprov-jdk18on" % Versions.bouncyCastle
+  private lazy val bouncyBcpkix = "org.bouncycastle" % "bcpkix-jdk15on" % Versions.bouncyCastle
+  private lazy val bouncyBcprov = "org.bouncycastle" % "bcprov-jdk15on" % Versions.bouncyCastle
 
   private lazy val logback = "ch.qos.logback" % "logback-classic" % Versions.logback
 
@@ -63,17 +63,17 @@ object Dependencies {
 
   private lazy val tapirZioHttpServer = "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server" % Versions.tapir
   private lazy val tapirHttp4sServerZio = "com.softwaremill.sttp.tapir" %% "tapir-http4s-server-zio" % Versions.tapir
-  private lazy val http4sBlazeServer = "org.http4s" %% "http4s-blaze-server" % "0.23.13"
+  private lazy val http4sBlazeServer = "org.http4s" %% "http4s-blaze-server" % "0.23.12"
 
   private lazy val tapirRedocBundle = "com.softwaremill.sttp.tapir" %% "tapir-redoc-bundle" % Versions.tapir
 
   private lazy val tapirSttpStubServer =
     "com.softwaremill.sttp.tapir" %% "tapir-sttp-stub-server" % Versions.tapir % Test
-  private lazy val sttpClient3ZioJson = "com.softwaremill.sttp.client3" %% "zio-json" % "3.8.11" % Test
+  private lazy val sttpClient3ZioJson = "com.softwaremill.sttp.client3" %% "zio-json" % "3.8.3" % Test
 
   private lazy val quillDoobie =
     "io.getquill" %% "quill-doobie" % Versions.quill exclude ("org.scala-lang.modules", "scala-java8-compat_3")
-  private lazy val postgresql = "org.postgresql" % "postgresql" % "42.2.27"
+  private lazy val postgresql = "org.postgresql" % "postgresql" % "42.2.8"
   private lazy val quillJdbcZio =
     "io.getquill" %% "quill-jdbc-zio" % Versions.quill exclude ("org.scala-lang.modules", "scala-java8-compat_3")
   private lazy val flyway = "org.flywaydb" % "flyway-core" % Versions.flyway

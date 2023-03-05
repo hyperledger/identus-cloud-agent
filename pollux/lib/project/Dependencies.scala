@@ -2,19 +2,19 @@ import sbt._
 
 object Dependencies {
   object Versions {
-    val zio = "2.0.9"
+    val zio = "2.0.4"
     val doobie = "1.0.0-RC2"
-    val zioCatsInterop = "23.0.0.2"
+    val zioCatsInterop = "3.3.0"
     val prismSdk = "v1.4.1" // scala-steward:off
     val iris = "0.1.0"
     val shared = "0.2.0"
-    val mercury = "0.20.0"
+    val mercury = "0.19.0"
     val castor = "0.8.1"
-    val flyway = "9.15.1"
-    val testContainersScalaPostgresql = "0.40.12"
-    val quill = "4.6.0.1"
+    val flyway = "9.8.3"
+    val testContainersScalaPostgresql = "0.40.11"
+    val quill = "4.6.0"
     val logback = "1.4.5"
-    val munit = "1.0.0-M7" // "0.7.29"
+    val munit = "1.0.0-M6" // "0.7.29"
     val munitZio = "0.1.1"
   }
 
