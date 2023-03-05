@@ -4,7 +4,7 @@ import sbt._
 object Dependencies_VC_JWT {
   object Versions {
     val zio = "2.0.9"
-    val circeVersion = "0.14.3"
+    val circeVersion = "0.14.5"
     val jwtCirceVersion = "9.2.0"
     val zioPreludeVersion = "1.0.0-RC17"
     val castor = Dependencies.Versions.castor
