@@ -1,4 +1,4 @@
-package io.iohk.atala.pollux.schema.model
+package io.iohk.atala.pollux.credentialschema.http
 
 import io.iohk.atala.pollux.core.model
 import io.iohk.atala.pollux.core.model.CredentialSchemaAndTrustedIssuersConstraint

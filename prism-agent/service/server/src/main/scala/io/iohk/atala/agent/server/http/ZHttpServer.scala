@@ -3,8 +3,8 @@ package io.iohk.atala.agent.server.http
 import cats.implicits.*
 import io.iohk.atala.agent.server.http.ZHttpEndpoints
 import io.iohk.atala.api.http.BadRequest
-import io.iohk.atala.pollux.schema.SchemaRegistryServerEndpoints
-import io.iohk.atala.pollux.service.{SchemaRegistryService, SchemaRegistryServiceInMemory}
+import io.iohk.atala.pollux.credentialschema.SchemaRegistryServerEndpoints
+import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaController
 import org.http4s.*
 import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.server.Router

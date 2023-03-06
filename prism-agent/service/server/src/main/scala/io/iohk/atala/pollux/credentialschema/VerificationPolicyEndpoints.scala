@@ -1,20 +1,10 @@
-package io.iohk.atala.pollux.schema
+package io.iohk.atala.pollux.credentialschema
 
+import io.iohk.atala.api.http.EndpointOutputs.*
 import io.iohk.atala.api.http.codec.OrderCodec.*
 import io.iohk.atala.api.http.model.{Order, PaginationInput}
-import io.iohk.atala.api.http.{BadRequest, FailureResponse, InternalServerError, NotFound, RequestContext}
-import io.iohk.atala.pollux.schema.model.{
-  VerifiableCredentialSchema,
-  VerifiableCredentialSchemaInput,
-  VerifiableCredentialSchemaPage
-}
-import io.iohk.atala.api.http.EndpointOutputs.*
-import io.iohk.atala.pollux.schema.model.{
-  VerifiableCredentialSchema,
-  VerificationPolicy,
-  VerificationPolicyInput,
-  VerificationPolicyPage
-}
+import io.iohk.atala.api.http.*
+import io.iohk.atala.pollux.credentialschema.http.*
 import sttp.model.StatusCode
 import sttp.tapir.EndpointIO.Info
 import sttp.tapir.json.zio.jsonBody
@@ -69,7 +59,11 @@ object VerificationPolicyEndpoints {
     endpoint.put
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in("verification" / "policies" / path[UUID]("id"))
-      .in(query[Int](name = "nonce").description("Nonce of the previous VerificationPolicy"))
+      .in(
+        query[Int](name = "nonce").description(
+          "Nonce of the previous VerificationPolicy"
+        )
+      )
       .in(
         jsonBody[VerificationPolicyInput].description(
           "Update verification policy object"
@@ -118,7 +112,11 @@ object VerificationPolicyEndpoints {
         "verification" / "policies" / path[UUID]("id")
           .description("Delete the verification policy by id")
       )
-      .in(query[Int](name = "nonce").description("Nonce of the previous VerificationPolicy"))
+      .in(
+        query[Int](name = "nonce").description(
+          "Nonce of the previous VerificationPolicy"
+        )
+      )
       .out(statusCode(StatusCode.Ok))
       .errorOut(basicFailuresAndNotFound)
       .name("deleteVerificationPolicyById")
