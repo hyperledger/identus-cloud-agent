@@ -31,28 +31,35 @@ object SystemInfoApp extends ZIOAppDefault {
   private val metricsConfig = ZLayer.succeed(MetricsConfig(5.seconds))
 
   def run =
-    Server
-      .start(
-        port = 8082,
-        http = Http.collectZIO[Request] {
-          case Method.GET -> !! / "metrics" =>
-            ZIO.serviceWithZIO[PrometheusPublisher](_.get.map(Response.text))
-          case Method.GET -> !! / "health" =>
-            ZIO
-              .succeed(
-                Response.json(
-                  HealthInfo(
-                    version = BuildInfo.version
-                  ).asJson.toString
+    for {
+      systemServicePort <- System.env("SYSTEM_SERVICE_PORT").map {
+        case Some(s) if s.toIntOption.isDefined => s.toInt
+        case _                                  => 8082
+      }
+      _ <- Server
+        .start(
+          port = systemServicePort,
+          http = Http.collectZIO[Request] {
+            case Method.GET -> !! / "metrics" =>
+              ZIO.serviceWithZIO[PrometheusPublisher](_.get.map(Response.text))
+            case Method.GET -> !! / "health" =>
+              ZIO
+                .succeed(
+                  Response.json(
+                    HealthInfo(
+                      version = BuildInfo.version
+                    ).asJson.toString
+                  )
                 )
-              )
-        }
-      )
-      .provide(
-        metricsConfig,
-        prometheus.publisherLayer,
-        prometheus.prometheusLayer
-      )
+          }
+        )
+        .provide(
+          metricsConfig,
+          prometheus.publisherLayer,
+          prometheus.prometheusLayer
+        )
+    } yield ()
+
 }
 
 object AgentApp extends ZIOAppDefault {

@@ -114,6 +114,8 @@ volumes:
   pg_data_db:
   pgadmin:
 
-networks:
-  default:
-    name: ${NETWORK}
+# Temporary commit network setting due to e2e CI bug
+# to be enabled later after debugging
+#networks:
+#  default:
+#    name: ${NETWORK}

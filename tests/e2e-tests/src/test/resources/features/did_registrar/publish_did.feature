@@ -1,3 +1,4 @@
+@DLT
 Feature: Publish DID
 
 Scenario: Successfully publish DID to ledger
