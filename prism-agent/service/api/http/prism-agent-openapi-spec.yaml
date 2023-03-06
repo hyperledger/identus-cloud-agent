@@ -18,7 +18,7 @@ components:
       in: header
       name: apikey
 security:
-  - ApiKeyAuth: []
+  - ApiKeyAuth: [ ]
 tags:
   # Castor
   - name: DID
@@ -43,7 +43,7 @@ paths:
   /dids/{didRef}:
     get:
       operationId: getDid
-      tags: ["DID"]
+      tags: [ "DID" ]
       summary: Resolve Prism DID
       description: Resolve Prism DID
       parameters:
@@ -61,7 +61,7 @@ paths:
   /did-registrar/dids:
     get:
       operationId: listManagedDid
-      tags: ["DID Registrar"]
+      tags: [ "DID Registrar" ]
       summary: List all DIDs stored in PrismAgent's wallet
       description: |
         List all DIDs stored in PrismAgent's wallet.
@@ -82,7 +82,7 @@ paths:
 
     post:
       operationId: createManagedDid
-      tags: ["DID Registrar"]
+      tags: [ "DID Registrar" ]
       summary: Create unpublished DID and store it in PrismAgent's wallet
       description: |
         Create unpublished DID and store it inside PrismAgent's wallet. The private keys of the DID is
@@ -110,7 +110,7 @@ paths:
   /did-registrar/dids/{didRef}:
     get:
       operationId: getManagedDid
-      tags: ["DID Registrar"]
+      tags: [ "DID Registrar" ]
       summary: Get DID stored in PrismAgent's wallet
       description: Get DID stored in PrismAgent's wallet
       parameters:
@@ -128,7 +128,7 @@ paths:
   /did-registrar/dids/{didRef}/publications:
     post:
       operationId: publishManagedDid
-      tags: ["DID Registrar"]
+      tags: [ "DID Registrar" ]
       summary: Publish the DID stored in PrismAgent's wallet to the VDR
       description: |
         Publish the DID stored in PrismAgent's wallet to the VDR.
@@ -151,7 +151,7 @@ paths:
   /did-registrar/dids/{didRef}/updates:
     post:
       operationId: updateManagedDid
-      tags: ["DID Registrar"]
+      tags: [ "DID Registrar" ]
       summary: Update DID in PrismAgent's wallet and post update operation to the VDR
       description: |
         Update DID in PrismAgent's wallet and post update operation to the VDR.
@@ -183,7 +183,7 @@ paths:
   /did-registrar/dids/{didRef}/deactivations:
     post:
       operationId: deactivateManagedDid
-      tags: ["DID Registrar"]
+      tags: [ "DID Registrar" ]
       summary: Deactivate DID in PrismAgent's wallet and post deactivate operation to VDR
       description: |
         Deactivate DID in PrismAgent's wallet and post deactivate operation to VDR.
@@ -472,23 +472,24 @@ paths:
 
   /issue-credentials/credential-offers:
     post:
-      tags: ["Issue Credentials Protocol"]
       operationId: createCredentialOffer
+      tags: [ "Issue Credentials Protocol" ]
       summary: As a credential issuer, create a new credential offer to be sent to a holder.
+      description: Creates a new credential offer in the database
       requestBody:
         description: The credential offer object.
         required: true
         content:
           application/json:
             schema:
-              $ref: ./pollux/schemas.yaml#/components/schemas/CreateIssueCredentialRecordRequest
+              $ref: "./pollux/schemas.yaml#/components/schemas/CreateIssueCredentialRecordRequest"
       responses:
         "201":
           description: The issue credential record was created successfully, and is returned in the response body.
           content:
             application/json:
               schema:
-                $ref: ./pollux/schemas.yaml#/components/schemas/IssueCredentialRecord
+                $ref: "./pollux/schemas.yaml#/components/schemas/IssueCredentialRecord"
         "422":
           description: The issue credential record creation failed. More information on the error can be found in the response body.
           content:
@@ -498,52 +499,51 @@ paths:
 
   /issue-credentials/records:
     get:
-      tags: ["Issue Credentials Protocol"]
       operationId: getCredentialRecords
+      tags: [ "Issue Credentials Protocol" ]
       summary: Gets the list of issue credential records.
+      description: Get the list of issue credential records paginated
+      parameters:
+        - $ref: "./shared/parameters.yaml#/components/parameters/offset"
+        - $ref: "./shared/parameters.yaml#/components/parameters/limit"
       responses:
         "200":
           description: The list of issue credential records.
           content:
             application/json:
               schema:
-                $ref: ./pollux/schemas.yaml#/components/schemas/IssueCredentialRecordCollection
+                $ref: "./pollux/schemas.yaml#/components/schemas/IssueCredentialRecordPage"
         "500":
-          description: Retrieving the issue credential records failed for an unexpected reason. More information on the error can be found in the response body.
-          content:
-            application/json:
-              schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
+          $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
 
   /issue-credentials/records/{recordId}:
     get:
-      tags: ["Issue Credentials Protocol"]
       operationId: getCredentialRecord
+      tags: ["Issue Credentials Protocol"]
       summary: Gets an existing issue credential record by its unique identifier.
+      description: Gets issue credential records by record id
       parameters:
-        - $ref: ./pollux/parameters.yaml#/components/parameters/issueCredentialRecordIdInPath
+        - $ref: "./pollux/parameters.yaml#/components/parameters/issueCredentialRecordIdInPath"
       responses:
         "200":
           description: The issue credential record.
           content:
             application/json:
               schema:
-                $ref: ./pollux/schemas.yaml#/components/schemas/IssueCredentialRecord
+                $ref: "./pollux/schemas.yaml#/components/schemas/IssueCredentialRecord"
         "404":
-          description: There is no issue credential record matching the given identifier.
-          content:
-            application/json:
-              schema:
-                $ref: "./pollux/schemas.yaml#/components/schemas/ErrorResponse"
+          $ref: "./shared/responses.yaml#/components/responses/NotFound"
+        "500":
+          $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
 
   /issue-credentials/records/{recordId}/accept-offer:
     post:
-      tags: ["Issue Credentials Protocol"]
       operationId: acceptCredentialOffer
+      tags: ["Issue Credentials Protocol"]
       summary: As a holder, accepts a credential offer received from an issuer.
       description: Accepts a credential offer received from a VC issuer and sends back a credential request.
       parameters:
-        - $ref: ./pollux/parameters.yaml#/components/parameters/issueCredentialRecordIdInPath
+        - $ref: "./pollux/parameters.yaml#/components/parameters/issueCredentialRecordIdInPath"
       responses:
         "200":
           description: The issue credential offer was successfully accepted.
@@ -552,17 +552,18 @@ paths:
               schema:
                 $ref: ./pollux/schemas.yaml#/components/schemas/IssueCredentialRecord
         "404":
-          description: There is no issue credential record matching the given identifier.
-          content:
-            application/json:
-              schema:
-                $ref: "./pollux/schemas.yaml#/components/schemas/ErrorResponse"
+          $ref: "./shared/responses.yaml#/components/responses/NotFound"
+        "500":
+          $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
 
   /issue-credentials/records/{recordId}/issue-credential:
     post:
-      tags: ["Issue Credentials Protocol"]
       operationId: issueCredential
+      tags: ["Issue Credentials Protocol"]
       summary: As an issuer, issues the verifiable credential related to the specified record.
+      description: | 
+        Sends credential to a holder (holder DID is specified in credential as subjectDid).
+        Credential is constructed from the credential records found by credential id.
       parameters:
         - $ref: ./pollux/parameters.yaml#/components/parameters/issueCredentialRecordIdInPath
       responses:
@@ -573,16 +574,18 @@ paths:
               schema:
                 $ref: ./pollux/schemas.yaml#/components/schemas/IssueCredentialRecord
         "404":
-          description: There is no issue credential record matching the given identifier.
-          content:
-            application/json:
-              schema:
-                $ref: "./pollux/schemas.yaml#/components/schemas/ErrorResponse"
+          $ref: "./shared/responses.yaml#/components/responses/NotFound"
+        "500":
+          $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
+
+## Present proof
 
   /present-proof/presentations:
     post:
-      tags: ["Present Proof"]
       operationId: requestPresentation
+      tags: [ "Present Proof" ]
+      summary: Presents proof derived from the verifiable credential to verifier.
+      description: Holder presents proof derived from the verifiable credential to verifier.
       requestBody:
         description: Request presentation of some type of Proof or Proofs (VC)
         required: true
@@ -602,29 +605,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
+                $ref: "./shared/schemas.yaml#/components/schemas/ErrorResponse"
+        "500":
+          $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
+
     get:
-      tags: ["Present Proof"]
       operationId: getAllPresentation
+      tags: [ "Present Proof" ]
+      summary: Get the list of presentation statuses
+      description: list of presentation statuses
+      parameters:
+        - $ref: "./shared/parameters.yaml#/components/parameters/offset"
+        - $ref: "./shared/parameters.yaml#/components/parameters/limit"
       responses:
         "200":
           description: List of presentations and status
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "./pollux/schemas.yaml#/components/schemas/PresentationStatus"
-        "404":
-          description: There is no presentations record
-          content:
-            application/json:
-              schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
+                $ref: "./pollux/schemas.yaml#/components/schemas/PresentationStatusPage"
   /present-proof/presentations/{id}:
     patch:
-      tags: ["Present Proof"]
       operationId: updatePresentation
+      tags: [ "Present Proof" ]
+      summary: Update presentation proof status
+      description: Accept or reject presentation of proof request
       parameters:
         - in: path
           name: id
@@ -639,21 +644,22 @@ paths:
           application/json:
             schema:
               $ref: "./pollux/schemas.yaml#/components/schemas/RequestPresentationAction"
-              # oneOf:
-              #  - $ref: "./pollux/schemas.yaml#/components/schemas/RequestPresentationActionAccept"
-              #  - $ref: "./pollux/schemas.yaml#/components/schemas/RequestPresentationActionReject"
       responses:
         "200":
-          description: Update the presentation record
-        "404":
-          description: There is no presentation record existing with the 'id'
+          description: presentation record successfully updated
           content:
             application/json:
               schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
+                type: object
+        "404":
+          $ref: "./shared/responses.yaml#/components/responses/NotFound"
+        "500":
+          $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
     get:
-      tags: ["Present Proof"]
       operationId: getPresentation
+      tags: [ "Present Proof" ]
+      summary: Returns an existing presentation record by id.
+      description: Returns an existing presentation record by id.
       parameters:
         - in: path
           name: id
@@ -662,7 +668,6 @@ paths:
           required: true
           description: Unique identifier of the presentation
           example: "06e126d1-fa44-4882-a243-1e326fbe21db"
-      summary: Returns an existing presentation record by id.
       responses:
         "200":
           description: Presentation state record
@@ -671,19 +676,17 @@ paths:
               schema:
                 $ref: "./pollux/schemas.yaml#/components/schemas/PresentationStatus"
         "404":
-          description: There is no presentation record matching the given 'id'.
-          content:
-            application/json:
-              schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
+          $ref: "./shared/responses.yaml#/components/responses/NotFound"
+        "500":
+          $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
 
   # ----------------------------------
   # Connect
   # ----------------------------------
   /connections:
     post:
-      tags: ["Connections Management"]
       operationId: createConnection
+      tags: [ "Connections Management" ]
       summary: Creates a new connection record and returns an Out of Band invitation.
       description: |
         Generates a new Peer DID and creates an [Out of Band 2.0](https://identity.foundation/didcomm-messaging/spec/v2.0/#out-of-band-messages) invitation.
@@ -708,33 +711,34 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "./connect/schemas.yaml#/components/schemas/ErrorResponse"
+                $ref: "./shared/schemas.yaml#/components/schemas/ErrorResponse"
 
     get:
-      tags: ["Connections Management"]
       operationId: getConnections
+      tags: [ "Connections Management" ]
       summary: Gets the list of connection records.
+      description: Get the list of connection records paginated
+      parameters:
+        - $ref: "./shared/parameters.yaml#/components/parameters/offset"
+        - $ref: "./shared/parameters.yaml#/components/parameters/limit"
       responses:
         "200":
           description: The list of connection records.
           content:
             application/json:
               schema:
-                $ref: "./connect/schemas.yaml#/components/schemas/ConnectionCollection"
+                $ref: "./connect/schemas.yaml#/components/schemas/ConnectionsPage"
         "500":
-          description: Retrieving the connection records failed for an unexpected reason. More information on the error can be found in the response body.
-          content:
-            application/json:
-              schema:
-                $ref: "./connect/schemas.yaml#/components/schemas/ErrorResponse"
+          $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
 
   /connections/{connectionId}:
     get:
-      tags: ["Connections Management"]
-      parameters:
-        - $ref: "./connect/schemas.yaml#/components/parameters/connectionId"
       operationId: getConnection
+      tags: [ "Connections Management" ]
       summary: Gets an existing connection record by its unique identifier.
+      description: Gets an existing connection record by its unique identifier
+      parameters:
+        - $ref: "./connect/parameters.yaml#/components/parameters/connectionId"
       responses:
         "200":
           description: The connection record.
@@ -743,16 +747,14 @@ paths:
               schema:
                 $ref: "./connect/schemas.yaml#/components/schemas/Connection"
         "404":
-          description: There is no connection record matching the given identifier.
-          content:
-            application/json:
-              schema:
-                $ref: "./connect/schemas.yaml#/components/schemas/ErrorResponse"
+          $ref: "./shared/responses.yaml#/components/responses/NotFound"
+        "500":
+          $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
 
   /connection-invitations:
     post:
-      tags: ["Connections Management"]
       operationId: acceptConnectionInvitation
+      tags: [ "Connections Management" ]
       summary: Accepts an Out of Band invitation.
       description: |
         Accepts an [Out of Band 2.0](https://identity.foundation/didcomm-messaging/spec/v2.0/#out-of-band-messages) invitation, generates a new Peer DID,
@@ -773,8 +775,4 @@ paths:
               schema:
                 $ref: "./connect/schemas.yaml#/components/schemas/Connection"
         "500":
-          description: Storing the connection invitation failed for an unexpected reason. More information on the error can be found in the response body.
-          content:
-            application/json:
-              schema:
-                $ref: "./connect/schemas.yaml#/components/schemas/ErrorResponse"
+          $ref: "./shared/responses.yaml#/components/responses/InternalServerError"

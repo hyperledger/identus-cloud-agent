@@ -1,12 +1,4 @@
 components:
-  parameters:
-    connectionId:
-      in: path
-      name: connectionId
-      required: true
-      description: The unique identifier of the connection record.
-      schema:
-        type: string
   schemas:
     CreateConnectionRequest:
       type: object
@@ -97,27 +89,16 @@ components:
             invitation:
               $ref: "#/components/schemas/ConnectionInvitation"
 
-    ConnectionCollection:
-      description: A collection of connection records.
-      type: object
-      required:
-        - self
-        - kind
-        - contents
-      properties:
-        self:
-          description: The reference to the connection collection itself.
-          type: string
-          example: https://atala-prism-products.io/connections
-        kind:
-          description: The type of object returned. In this case a `Collection`.
-          type: string
-          example: Collection
-        contents:
-          description: The array containing the list of connection records.
-          type: array
-          items:
-            $ref: "#/components/schemas/Connection"
+    ConnectionsPage:
+      allOf:
+        - $ref: "../shared/schemas.yaml#/components/schemas/Pagination"
+        - type: object
+          properties:
+            contents:
+              type: array
+              description: The array containing the list of connection records.
+              items:
+                $ref: "#/components/schemas/Connection"
 
     ConnectionInvitation:
       description: A connection invitation.
@@ -145,40 +126,3 @@ components:
           type: string
           description: The invitation message encoded as a URL. This URL follows the Out of [Band 2.0 protocol](https://identity.foundation/didcomm-messaging/spec/v2.0/#out-of-band-messages) and can be used to generate a QR code for example.
           example: https://domain.com/path?_oob=eyJAaWQiOiIzZmE4NWY2NC01NzE3LTQ1NjItYjNmYy0yYzk2M2Y2NmFmYTYiLCJAdHlwZSI6Imh0dHBzOi8vZGlkY29tbS5vcmcvbXktZmFtaWx5LzEuMC9teS1tZXNzYWdlLXR5cGUiLCJkaWQiOiJXZ1d4cXp0ck5vb0c5MlJYdnhTVFd2IiwiaW1hZ2VVcmwiOiJodHRwOi8vMTkyLjE2OC41Ni4xMDEvaW1nL2xvZ28uanBnIiwibGFiZWwiOiJCb2IiLCJyZWNpcGllbnRLZXlzIjpbIkgzQzJBVnZMTXY2Z21NTmFtM3VWQWpacGZrY0pDd0R3blpuNnozd1htcVBWIl0sInJvdXRpbmdLZXlzIjpbIkgzQzJBVnZMTXY2Z21NTmFtM3VWQWpacGZrY0pDd0R3blpuNnozd1htcVBWIl0sInNlcnZpY2VFbmRwb2ludCI6Imh0dHA6Ly8xOTIuMTY4LjU2LjEwMTo4MDIwIn0=
-
-    ErrorResponse:
-      type: object
-      description: An RFC-7807 compliant data structure for reporting errors to the client
-      required:
-        - type
-        - title
-        - status
-        - instance
-      properties:
-        type:
-          type: string
-          description: A URI reference that identifies the problem type.
-          example: https://example.org/doc/#model-MalformedEmail
-        title:
-          type: string
-          example: "Malformed email"
-          description: |-
-            A short, human-readable summary of the problem type. It does not
-            change from occurrence to occurrence of the problem.
-        status:
-          type: integer
-          format: int32
-          example: 400
-          description: |-
-            The HTTP status code for this occurrence of the problem.
-        detail:
-          type: string
-          description: |-
-            A human-readable explanation specific to this occurrence of the problem.
-          example: "The received '{}à!è@!.b}' email does not conform to the email format"
-        instance:
-          type: string
-          example: "/problems/d914e"
-          description: |-
-            A URI reference that identifies the specific occurrence of the problem.
-            It may or may not yield further information if dereferenced.

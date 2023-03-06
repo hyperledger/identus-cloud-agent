@@ -8,14 +8,21 @@ components:
         - pageOf
       properties:
         self:
+          description: The reference to the connection collection itself.
           type: string
+          example: https://atala-prism-products.io/dids
         kind:
+          description: The type of object returned. In this case a `Collection`.
           type: string
+          example: Collection
         pageOf:
+          description: Page number within the context of paginated response.
           type: string
         next:
+          description: URL of the next page (if available)
           type: string
         previous:
+          description: URL of the previous page (if available)
           type: string
 
     ErrorResponse:
@@ -54,11 +61,3 @@ components:
           description: |-
             A URI reference that identifies the specific occurrence of the problem.
             It may or may not yield further information if dereferenced.
-
-  responses:
-    InternalServerError:
-      description: "Internal server error"
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/ErrorResponse"
