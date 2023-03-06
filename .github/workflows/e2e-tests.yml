@@ -12,6 +12,7 @@ on:
       - ".github/workflows/e2e-tests.yml"
       - "infrastructure/shared/docker-compose.yml"
       - "tests/e2e-tests/**"
+      - "prism-agent/service"
   push:
     branches:
       - "main"
@@ -58,13 +59,19 @@ jobs:
           version: v2.12.2 # defaults to 'latest'
           legacy: true    # will also install in PATH as `docker-compose`
 
-      - name: Update .env file to the latest version
+      - name: Build local version of PRISM Agent
         env:
+          ENV_FILE: "../../infrastructure/local/.env"
+          PRISM_AGENT_PATH: "../../prism-agent/service/"
+          GITHUB_ACTOR: ${{ secrets.ATALA_GITHUB_ACTOR }}
+          GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
           ATALA_GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
         run: |
-          ../../infrastructure/local/update_env.sh
-          cat ../../infrastructure/local/.env
-
+          cd "${PRISM_AGENT_PATH}" || exit 129
+          sbt docker:publishLocal
+          PRISM_AGENT_VERSION=$(cut version.sbt -d '=' -f2 | tr -d '" ')
+          sed -i.bak "s/PRISM_AGENT_VERSION=.*/PRISM_AGENT_VERSION=${PRISM_AGENT_VERSION}/" "${ENV_FILE}" && rm -f "${ENV_FILE}.bak"
+          cat "${ENV_FILE}"
       - name: Start services for issuer
         env:
           PORT: 8080
