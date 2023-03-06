@@ -70,9 +70,6 @@ class JdbcPresentationRepository(
   given didCommIDGet: Get[DidCommID] = Get[String].map(DidCommID(_))
   given didCommIDPut: Put[DidCommID] = Put[String].contramap(_.value)
 
-  given instantGet: Get[Instant] = Get[Long].map(Instant.ofEpochSecond)
-  given instantPut: Put[Instant] = Put[Long].contramap(_.getEpochSecond())
-
   given protocolStateGet: Get[ProtocolState] = Get[String].map(ProtocolState.valueOf)
   given protocolStatePut: Put[ProtocolState] = Put[String].contramap(_.toString)
 
@@ -107,8 +104,8 @@ class JdbcPresentationRepository(
         |   request_presentation_data,
         |   credentials_to_use,
         |   meta_retries,
-        |   next_retry,
-        |   last_failure
+        |   meta_next_retry,
+        |   meta_last_failure
         | ) values (
         |   ${record.id},
         |   ${record.createdAt},
@@ -148,8 +145,8 @@ class JdbcPresentationRepository(
         |   presentation_data,
         |   credentials_to_use,
         |   meta_retries,
-        |   next_retry,
-        |   last_failure
+        |   meta_next_retry,
+        |   meta_last_failure
         | FROM public.presentation_records
         """.stripMargin
       .query[PresentationRecord]
@@ -184,8 +181,8 @@ class JdbcPresentationRepository(
             |   presentation_data,
             |   credentials_to_use,
             |   meta_retries,
-            |   next_retry,
-            |   last_failure
+            |   meta_next_retry,
+            |   meta_last_failure
             | FROM public.presentation_records
             | WHERE $inClauseFragment
             """.stripMargin
@@ -213,8 +210,8 @@ class JdbcPresentationRepository(
         |   presentation_data,
         |   credentials_to_use,
         |   meta_retries,
-        |   next_retry,
-        |   last_failure
+        |   meta_next_retry,
+        |   meta_last_failure
         | FROM public.presentation_records
         | WHERE id = $recordId
         """.stripMargin
@@ -242,8 +239,8 @@ class JdbcPresentationRepository(
         |   presentation_data,
         |   credentials_to_use,
         |   meta_retries,
-        |   next_retry,
-        |   last_failure
+        |   meta_next_retry,
+        |   meta_last_failure
         | FROM public.presentation_records
         | WHERE thid = $thid
         """.stripMargin

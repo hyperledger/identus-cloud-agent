@@ -22,7 +22,7 @@ import io.iohk.atala.agent.server.http.model.HttpServiceError.DomainError
 import io.iohk.atala.pollux.vc.jwt.Issuer
 import io.iohk.atala.pollux.core.service.PresentationService
 import io.iohk.atala.pollux.core.model.error.PresentationError
-import io.iohk.atala.pollux.core.model.PresentationRecord
+import io.iohk.atala.pollux.core.model._
 import io.iohk.atala.mercury.model.Base64
 import cats.instances.option
 import io.iohk.atala.pollux.core.model.presentation.Options
@@ -48,7 +48,7 @@ class PresentProofApiServiceImpl(
         .mapError(_.toOAS)
       record <- presentationService
         .createPresentationRecord(
-          thid = UUID.randomUUID(),
+          thid = DidCommID(),
           subjectDid = didId,
           connectionId = None,
           proofTypes = requestPresentationInput.proofs.map { e =>
@@ -96,7 +96,7 @@ class PresentProofApiServiceImpl(
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
     val result = for {
-      presentationId <- id.toUUID
+      presentationId <- id.toDidCommID
       outcome <- presentationService
         .getPresentationRecord(presentationId)
         .mapError(HttpServiceError.DomainError[PresentationError].apply)
@@ -118,7 +118,7 @@ class PresentProofApiServiceImpl(
         for {
           record <- presentationService
             .acceptRequestPresentation(
-              recordId = UUID.fromString(id),
+              recordId = DidCommID(id),
               crecentialsToUse = requestPresentationAction.proofId.getOrElse(Seq.empty)
             )
             .mapError(HttpServiceError.DomainError[PresentationError].apply)
@@ -126,20 +126,20 @@ class PresentProofApiServiceImpl(
       case "request-reject" => {
         for {
           record <- presentationService
-            .rejectRequestPresentation(UUID.fromString(id))
+            .rejectRequestPresentation(DidCommID(id))
             .mapError(HttpServiceError.DomainError[PresentationError].apply)
         } yield record
       }
       case "presentation-accept" =>
         for {
           record <- presentationService
-            .acceptPresentation(UUID.fromString(id))
+            .acceptPresentation(DidCommID(id))
             .mapError(HttpServiceError.DomainError[PresentationError].apply)
         } yield record // TODO FIXME
       case "presentation-reject" => {
         for {
           record <- presentationService
-            .rejectPresentation(UUID.fromString(id))
+            .rejectPresentation(DidCommID(id))
             .mapError(HttpServiceError.DomainError[PresentationError].apply)
         } yield record
       }

@@ -1,7 +1,7 @@
 ---
 openapi: 3.0.1
 info:
-  title: PrismAgent OpenAPI specification
+  title: Prism Agent OpenAPI specification
   description: OpenAPI specification for Decentralized Identifiers (DID) Operations
   version: 0.41.0
   contact:
@@ -22,9 +22,9 @@ security:
 tags:
   # Castor
   - name: DID
-    description: Generic DID Endpoints
+    description: DID REST API
   - name: DID Registrar
-    description: DID Endpoints where keys are managed by PrismAgent
+    description: DID Registrar REST API (Prism Agent managed DID)
   # Pollux
   - name: Schema Registry
     description: Schema Registry REST API
@@ -45,7 +45,7 @@ paths:
       tags: ["DID"]
       operationId: getDid
       summary: Resolve Prism DID
-      description: Resolve Prism DID
+      description: Resolve Prism DID to a DID document.
       parameters:
         - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
       responses:
@@ -66,9 +66,9 @@ paths:
     get:
       tags: ["DID Registrar"]
       operationId: listManagedDid
-      summary: List all DIDs stored in PrismAgent's wallet
+      summary: List all DIDs stored in Prism Agent's wallet
       description: |
-        List all DIDs stored in PrismAgent's wallet.
+        List all DIDs stored in Prism Agent's wallet.
         Return a paginated items ordered by created timestamp.
         If the `limit` parameter is not set, it defaults to 100 items per page.
       parameters:
@@ -76,7 +76,7 @@ paths:
         - $ref: ./shared/parameters.yaml#/components/parameters/limit
       responses:
         "200":
-          description: List PrismAgent managed DIDs
+          description: List Prism Agent managed DIDs
           content:
             application/json:
               schema:
@@ -91,10 +91,10 @@ paths:
     post:
       tags: ["DID Registrar"]
       operationId: createManagedDid
-      summary: Create unpublished DID and store it in PrismAgent's wallet
+      summary: Create unpublished DID and store it in Prism Agent's wallet
       description: |
-        Create unpublished DID and store it inside PrismAgent's wallet. The private keys of the DID is
-        managed by PrismAgent. The DID can later be published to the VDR using publications endpoint.
+        Create unpublished DID and store it inside Prism Agent's wallet. The private keys of the DID is
+        managed by Prism Agent. The DID can later be published to the VDR using publications endpoint.
       requestBody:
         required: true
         content:
@@ -119,13 +119,13 @@ paths:
     get:
       tags: ["DID Registrar"]
       operationId: getManagedDid
-      summary: Get DID stored in PrismAgent's wallet
-      description: Get DID stored in PrismAgent's wallet
+      summary: Get DID stored in Prism Agent's wallet
+      description: Get DID stored in Prism Agent's wallet
       parameters:
         - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
       responses:
         "200":
-          description: Get PrismAgent managed DID
+          description: Get Prism Agent managed DID
           content:
             application/json:
               schema:
@@ -141,9 +141,9 @@ paths:
     post:
       tags: ["DID Registrar"]
       operationId: publishManagedDid
-      summary: Publish the DID stored in PrismAgent's wallet to the VDR
+      summary: Publish the DID stored in Prism Agent's wallet to the VDR
       description: |
-        Publish the DID stored in PrismAgent's wallet to the VDR.
+        Publish the DID stored in Prism Agent's wallet to the VDR.
       parameters:
         - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
       responses:
@@ -164,12 +164,12 @@ paths:
     post:
       tags: ["DID Registrar"]
       operationId: updateManagedDid
-      summary: Update DID in PrismAgent's wallet and post update operation to the VDR
+      summary: Update DID in Prism Agent's wallet and post update operation to the VDR
       description: |
-        Update DID in PrismAgent's wallet and post update operation to the VDR.
-        This endpoint updates the DID document from last confirmed operation.
+        Update DID in Prism Agent's wallet and post update operation to the VDR.
+        This endpoint updates the DID document from the last confirmed operation.
         Submitting multiple update operations without waiting for confirmation will result in
-        some operation being rejected as only one operation can be appended from last confirmed operation.
+        some operations being rejected as only one operation is allowed to be appended to the last confirmed operation.
       requestBody:
         required: true
         content:
@@ -196,9 +196,9 @@ paths:
     post:
       tags: ["DID Registrar"]
       operationId: deactivateManagedDid
-      summary: Deactivate DID in PrismAgent's wallet and post deactivate operation to blockchain
+      summary: Deactivate DID in Prism Agent's wallet and post deactivate operation to the VDR
       description: |
-        Deactivate DID in PrismAgent's wallet and post deactivate operation to blockchain.
+        Deactivate DID in Prism Agent's wallet and post deactivate operation to the VDR.
       parameters:
         - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
       responses:
@@ -681,8 +681,9 @@ paths:
     post:
       tags: ["Present Proof"]
       operationId: requestPresentation
+      summary: As a Verifier, create a new proof presentation request and send it to the Prover.
       requestBody:
-        description: Request presentation of some type of Proof or Proofs (VC)
+        description: The present proof creation request.
         required: true
         content:
           application/json:
@@ -690,13 +691,13 @@ paths:
               $ref: "./pollux/schemas.yaml#/components/schemas/RequestPresentationInput"
       responses:
         "201":
-          description: The new presentation is created
+          description: The proof presentation request was created successfully and will be sent asynchronously to the Prover.
           content:
             application/json:
               schema:
                 $ref: "./pollux/schemas.yaml#/components/schemas/RequestPresentationOutput"
         "422":
-          description: Failed to create a presentation request.
+          description: Creating the proof presentation request failed for an unexpected reason. More information on the error can be found in the response body.
           content:
             application/json:
               schema:
@@ -704,34 +705,31 @@ paths:
     get:
       tags: ["Present Proof"]
       operationId: getAllPresentation
+      summary: Gets the list of proof presentation records.
       responses:
         "200":
-          description: List of presentations and status
+          description: The list of proof presentation records.
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: "./pollux/schemas.yaml#/components/schemas/PresentationStatus"
-        "404":
-          description: There is no presentations record
+        "500":
+          description: Retrieving the proof presentation records failed for an unexpected reason. More information on the error can be found in the response body.
           content:
             application/json:
               schema:
                 $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
-  /present-proof/presentations/{id}:
+  /present-proof/presentations/{recordId}:
     patch:
       tags: ["Present Proof"]
       operationId: updatePresentation
+      summary: Updates the proof presentation record matching the unique identifier, with the specific action to perform.
       parameters:
-        - in: path
-          name: id
-          schema:
-            type: string
-          required: true
-          description: Unique identifier of the presentation
-          example: "06e126d1-fa44-4882-a243-1e326fbe21db"
+        - $ref: ./pollux/parameters.yaml#/components/parameters/presentationRecordIdInPath
       requestBody:
+        description: The action to perform on the proof presentation record.
         required: true
         content:
           application/json:
@@ -742,9 +740,9 @@ paths:
               #  - $ref: "./pollux/schemas.yaml#/components/schemas/RequestPresentationActionReject"
       responses:
         "200":
-          description: Update the presentation record
+          description: The proof presentation record was successfully updated.
         "404":
-          description: There is no presentation record existing with the 'id'
+          description: There is no presentation record matching the given identifier.
           content:
             application/json:
               schema:
@@ -752,24 +750,18 @@ paths:
     get:
       tags: ["Present Proof"]
       operationId: getPresentation
+      summary: Gets an existing proof presentation record by its unique identifier. More information on the error can be found in the response body.
       parameters:
-        - in: path
-          name: id
-          schema:
-            type: string
-          required: true
-          description: Unique identifier of the presentation
-          example: "06e126d1-fa44-4882-a243-1e326fbe21db"
-      summary: Returns an existing presentation record by id.
+        - $ref: ./pollux/parameters.yaml#/components/parameters/presentationRecordIdInPath
       responses:
         "200":
-          description: Presentation state record
+          description: The proof presentation record.
           content:
             application/json:
               schema:
                 $ref: "./pollux/schemas.yaml#/components/schemas/PresentationStatus"
         "404":
-          description: There is no presentation record matching the given 'id'.
+          description: There is no presentation record matching the given identifier. More information on the error can be found in the response body.
           content:
             application/json:
               schema:

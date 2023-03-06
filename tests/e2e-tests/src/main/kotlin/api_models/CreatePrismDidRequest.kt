@@ -1,5 +1,5 @@
 package api_models
 
-data class CreateManagedDidRequest(
+data class CreatePrismDidRequest(
     val documentTemplate: DocumentTemplate,
 )

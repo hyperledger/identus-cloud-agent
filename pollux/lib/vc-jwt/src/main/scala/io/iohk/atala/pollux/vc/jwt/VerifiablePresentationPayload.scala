@@ -2,6 +2,7 @@ package io.iohk.atala.pollux.vc.jwt
 
 import io.circe
 import io.circe.*
+import io.circe.Decoder.Result
 import io.circe.generic.auto.*
 import io.circe.parser.decode
 import io.circe.syntax.*
@@ -398,6 +399,58 @@ object JwtPresentation {
     } else Validation.unit
   }
 
+  def verifyHolderBinding(jwt: JWT): Validation[String, Unit] = {
+    import io.iohk.atala.pollux.vc.jwt.CredentialPayload.Implicits.*
+    val decodeJWT = (jwt: JWT) =>
+      Validation
+        .fromTry(JwtCirce.decodeRaw(jwt.value, options = JwtOptions(false, false, false)))
+        .mapError(_.getMessage)
+
+    def validateCredentialSubjectId(
+        vcList: IndexedSeq[VerifiableCredentialPayload],
+        iss: String
+    ): Validation[String, Unit] = {
+      ZValidation
+        .validateAll(
+          vcList.map {
+            case (w3cVerifiableCredentialPayload: W3cVerifiableCredentialPayload) =>
+              val mayBeSubjectDid = w3cVerifiableCredentialPayload.payload.credentialSubject.hcursor
+                .downField("id")
+                .as[String]
+                .toOption
+              if (mayBeSubjectDid.contains(iss)) {
+                Validation.unit
+              } else
+                Validation.fail(
+                  s"holder DID ${iss} that signed the presentation must match the credentialSubject did ${mayBeSubjectDid}  in each of the attached credentials"
+                )
+
+            case (jwtVerifiableCredentialPayload: JwtVerifiableCredentialPayload) =>
+              for {
+                jwtCredentialDecoded <- decodeJWT(jwtVerifiableCredentialPayload.jwt)
+                jwtCredentialPayload <- Validation
+                  .fromEither(decode[JwtCredentialPayload](jwtCredentialDecoded))
+                  .mapError(_.getMessage)
+                mayBeSubjectDid = jwtCredentialPayload.maybeSub
+                x <-
+                  if (mayBeSubjectDid.contains(iss)) {
+                    Validation.unit
+                  } else
+                    Validation.fail(
+                      s"holder DID ${iss} that signed the presentation must match the credentialSubject did  ${mayBeSubjectDid}  in each of the attached credentials"
+                    )
+              } yield x
+          }
+        )
+        .map(_ => ())
+    }
+    for {
+      decodedJWT <- decodeJWT(jwt)
+      jwtPresentationPayload <- Validation.fromEither(decode[JwtPresentationPayload](decodedJWT)).mapError(_.getMessage)
+      result <- validateCredentialSubjectId(jwtPresentationPayload.vp.verifiableCredential, jwtPresentationPayload.iss)
+    } yield result
+  }
+
   def verifyDates(jwt: JWT, leeway: TemporalAmount)(implicit clock: Clock): Validation[String, Unit] = {
     val now = clock.instant()
 
@@ -468,6 +521,7 @@ object JwtPresentation {
   case class PresentationVerificationOptions(
       verifySignature: Boolean = true,
       verifyDates: Boolean = false,
+      verifyHoldersBinding: Boolean = false,
       leeway: TemporalAmount = Duration.Zero,
       maybeCredentialOptions: Option[CredentialVerification.CredentialVerificationOptions] = None,
       maybeProofPurpose: Option[VerificationRelationship] = None
@@ -496,10 +550,18 @@ object JwtPresentation {
       dateVerification <- ZIO.succeed(
         if (options.verifyDates) then verifyDates(jwt, options.leeway)(clock) else Validation.unit
       )
+      verifyHoldersBinding <- ZIO.succeed(
+        if (options.verifyHoldersBinding) then verifyHolderBinding(jwt) else Validation.unit
+      )
       credentialVerification <-
         options.maybeCredentialOptions
           .map(credentialOptions => validateEnclosedCredentials(jwt, credentialOptions)(didResolver)(clock))
           .getOrElse(ZIO.succeed(Validation.unit))
-    } yield Validation.validateWith(signatureValidation, dateVerification, credentialVerification)((a, _, _) => a)
+    } yield Validation.validateWith(
+      signatureValidation,
+      dateVerification,
+      credentialVerification,
+      verifyHoldersBinding
+    )((a, _, _, _) => a)
   }
 }

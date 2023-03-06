@@ -1,3 +1,24 @@
+# [pollux-v0.35.2](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.35.1...pollux-v0.35.2) (2023-03-03)
+
+
+### Bug Fixes
+
+* **pollux:** Fix Instant encoder in JdbcPresentationRepository ([#418](https://github.com/input-output-hk/atala-prism-building-blocks/issues/418)) ([2ece2c6](https://github.com/input-output-hk/atala-prism-building-blocks/commit/2ece2c6881430c180fa9c1bad6cdd6085be2c453))
+
+# [pollux-v0.35.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.35.0...pollux-v0.35.1) (2023-03-02)
+
+
+### Bug Fixes
+
+* **pollux:** Fix column meta_next_retry ([#413](https://github.com/input-output-hk/atala-prism-building-blocks/issues/413)) ([c02aba8](https://github.com/input-output-hk/atala-prism-building-blocks/commit/c02aba87adbdbea4c30ac4c1c7f7e3a8fe0aa7c4))
+
+# [pollux-v0.35.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.34.0...pollux-v0.35.0) (2023-03-02)
+
+
+### Features
+
+* **pollux:** Added new state PresentationVerificationFailed ([#400](https://github.com/input-output-hk/atala-prism-building-blocks/issues/400)) ([94031f8](https://github.com/input-output-hk/atala-prism-building-blocks/commit/94031f880f00f61be2da2dd91f22fb92246b1609))
+
 # [pollux-v0.34.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.33.0...pollux-v0.34.0) (2023-03-01)
 
 
