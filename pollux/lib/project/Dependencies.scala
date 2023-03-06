@@ -3,6 +3,7 @@ import sbt._
 object Dependencies {
   object Versions {
     val zio = "2.0.4"
+    val zioJson = "0.4.2"
     val doobie = "1.0.0-RC2"
     val zioCatsInterop = "3.3.0"
     val prismSdk = "v1.4.1" // scala-steward:off
@@ -23,6 +24,7 @@ object Dependencies {
   private lazy val slf4jSimple = "org.slf4j" % "slf4j-simple" % "2.0.6" % Test
 
   private lazy val zio = "dev.zio" %% "zio" % Versions.zio
+  private lazy val zioJson = "dev.zio" %% "zio-json" % Versions.zioJson
   private lazy val zioCatsInterop = "dev.zio" %% "zio-interop-cats" % Versions.zioCatsInterop
   private lazy val zioTest = "dev.zio" %% "zio-test" % Versions.zio % Test
   private lazy val zioTestSbt = "dev.zio" %% "zio-test-sbt" % Versions.zio % Test
@@ -37,6 +39,7 @@ object Dependencies {
 
   private lazy val flyway = "org.flywaydb" % "flyway-core" % Versions.flyway
 
+  private lazy val quillJdbcZio = "io.getquill" %% "quill-jdbc-zio" % Versions.quill
   private lazy val quillDoobie =
     "io.getquill" %% "quill-doobie" % Versions.quill exclude ("org.scala-lang.modules", "scala-java8-compat_3")
   private lazy val testcontainers =
@@ -61,6 +64,7 @@ object Dependencies {
   // Dependency Modules
   private lazy val baseDependencies: Seq[ModuleID] = Seq(
     zio,
+    zioJson,
     zioTest,
     zioTestSbt,
     zioTestMagnolia,
@@ -78,6 +82,7 @@ object Dependencies {
     doobieHikari,
     flyway,
     quillDoobie,
+    quillJdbcZio,
     testcontainers
   )
 

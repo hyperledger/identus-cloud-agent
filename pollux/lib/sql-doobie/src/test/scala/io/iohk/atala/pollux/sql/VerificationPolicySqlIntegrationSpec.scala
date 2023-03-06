@@ -21,7 +21,7 @@ import io.iohk.atala.pollux.core.model.{
 }
 import io.iohk.atala.pollux.core.repository.VerificationPolicyRepository
 import io.iohk.atala.pollux.sql.model.VerifiableCredentialSchema
-import io.iohk.atala.pollux.sql.model.db.VerificationPolicySql
+import io.iohk.atala.pollux.sql.model.db.{VerificationPolicySql}
 import io.iohk.atala.pollux.sql.repository.JdbcVerificationPolicyRepository
 import io.iohk.atala.test.container.MigrationAspects.*
 import io.iohk.atala.test.container.PostgresTestContainer.*

@@ -9,7 +9,6 @@ import io.getquill.doobie.DoobieContext
 import java.time.OffsetDateTime
 import io.getquill.*
 import io.getquill.idiom.*
-import io.iohk.atala.pollux.sql.model.VerifiableCredentialSchema.sql.run
 
 case class VerificationPolicy(
     id: UUID,
