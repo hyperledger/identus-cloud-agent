@@ -11,7 +11,10 @@ inThisBuild(
     versionScheme := Some("semver-spec"),
     githubOwner := "input-output-hk",
     githubRepository := "atala-prism-building-blocks",
-    githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN")
+    githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN"),
+    Compile / javaOptions += "-Dquill.macro.log=false -Duser.timezone=UTC",
+    Test / javaOptions += "-Dquill.macro.log=false -Duser.timezone=UTC -Xms2048m -Xmx2048m -Xss16M",
+    Test / envVars := Map("TZ" -> "UTC")
   )
 )
 
