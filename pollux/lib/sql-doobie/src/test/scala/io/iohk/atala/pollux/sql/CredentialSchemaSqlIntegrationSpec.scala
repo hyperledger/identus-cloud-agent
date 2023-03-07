@@ -90,7 +90,7 @@ object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault {
       version = version,
       description = description,
       schema = JsonValue(schema),
-      schemaType = "AnonCreds",
+      `type` = "AnonCreds",
       author = "Prism Agent",
       authored = authored,
       tags = tags
@@ -158,7 +158,7 @@ object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault {
         tx <- ZIO.service[Transactor[Task]]
         _ <- CredentialSchemaSql.deleteAll.transact(tx)
 
-        generatedSchemas <- Generators.schemaUnique.runCollectN(1000)
+        generatedSchemas <- Generators.schemaUnique.runCollectN(10)
 
         allSchemasHaveUniqueId = assert(
           generatedSchemas

@@ -44,7 +44,7 @@ object RequestPresentation {
       comment: Option[String] = None,
       will_confirm: Option[Boolean] = Some(false), // Will send a ack message after the presentation
       // AtalaPrism Extension!
-      proof_types: Seq[ProofType] = Seq.empty
+      proof_types: Seq[ProofType] = Seq.empty // TODO  Move this to pollux
   )
 
   object Body {

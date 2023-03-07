@@ -22,7 +22,7 @@ case class CredentialSchema(
     authored: OffsetDateTime,
     tags: Seq[String],
     description: String,
-    schemaType: String,
+    `type`: String,
     schema: JsonValue[Schema]
 ) {
   lazy val uniqueConstraintKey = author + name + version
@@ -41,7 +41,7 @@ object CredentialSchema {
       authored = m.authored,
       tags = m.tags,
       description = m.description,
-      schemaType = m.schemaType,
+      `type` = m.`type`,
       schema = JsonValue(m.schema)
     )
 
@@ -57,7 +57,7 @@ object CredentialSchema {
       authored = db.authored,
       tags = db.tags,
       description = db.description,
-      schemaType = db.schemaType,
+      `type` = db.`type`,
       schema = db.schema.value
     )
   }
@@ -68,8 +68,7 @@ object CredentialSchemaSql extends DoobieContext.Postgres(SnakeCase) with Postgr
     quote(
       query[CredentialSchema]
         .insertValue(lift(schema))
-    )
-      .returning(cs => cs)
+    ).returning(cs => cs)
   }
 
   def findByGUID(guid: UUID) = run {

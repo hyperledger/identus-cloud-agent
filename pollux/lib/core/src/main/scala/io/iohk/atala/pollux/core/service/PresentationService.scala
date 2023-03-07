@@ -551,6 +551,18 @@ private class PresentationServiceImpl(
       PresentationRecord.ProtocolState.PresentationVerificationFailed
     )
 
+  def markOneFail(
+      recordId: DidCommID,
+      failReason: Option[String]
+  ): ZIO[Any, RepositoryError, Unit] = {
+    for {
+      outcome <- presentationRepository
+        .updateAfterFail(recordId, failReason)
+        .tapError(ex => ZIO.logError(s"Failure in $recordId not registered:" + ex.getMessage()))
+        .mapError(RepositoryError.apply)
+    } yield ()
+  }
+
   private[this] def getRecordFromThreadId(
       thid: Option[String]
   ): IO[PresentationError, PresentationRecord] = {
