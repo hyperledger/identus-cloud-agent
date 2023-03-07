@@ -1,12 +1,7 @@
 package io.iohk.atala.pollux.credentialschema.controller
 
 import io.iohk.atala.agent.server.http.model.HttpServiceError.DomainError
-import io.iohk.atala.api.http.model.{
-  CollectionStats,
-  Order,
-  Pagination,
-  PaginationInput
-}
+import io.iohk.atala.api.http.model.{CollectionStats, Order, Pagination, PaginationInput}
 import io.iohk.atala.api.http.*
 import io.iohk.atala.pollux.core.service.CredentialSchemaService
 import io.iohk.atala.pollux.core.service.CredentialSchemaService.Error.*
