@@ -82,3 +82,8 @@ class JdbcCredentialSchemaRepository(xa: Transactor[Task]) extends CredentialSch
     } yield SearchResult(entries, filteredRowsCount, totalRowsCount)
   }
 }
+
+object JdbcCredentialSchemaRepository {
+  val layer: URLayer[Transactor[Task], JdbcCredentialSchemaRepository] =
+    ZLayer.fromFunction(JdbcCredentialSchemaRepository(_))
+}
