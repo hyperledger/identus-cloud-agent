@@ -1,3 +1,10 @@
+# [pollux-v0.37.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.36.0...pollux-v0.37.0) (2023-03-07)
+
+
+### Features
+
+* **pollux:** Add method in PresentationService need for ATL-3624 ([#422](https://github.com/input-output-hk/atala-prism-building-blocks/issues/422)) ([9a62057](https://github.com/input-output-hk/atala-prism-building-blocks/commit/9a620578a444bd4bebb851c2ef9c62e6293ce5c1))
+
 # [pollux-v0.36.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.35.2...pollux-v0.36.0) (2023-03-07)
 
 
