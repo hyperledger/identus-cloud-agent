@@ -17,7 +17,7 @@ components:
       in: header
       name: apikey
 security:
-  - ApiKeyAuth: [ ]
+  - ApiKeyAuth: []
 tags:
   # Castor
   - name: DID
@@ -42,7 +42,7 @@ paths:
   /dids/{didRef}:
     get:
       operationId: getDid
-      tags: [ "DID" ]
+      tags: ["DID"]
       summary: Resolve Prism DID
       description: Resolve Prism DID to a DID document.
       parameters:
@@ -60,7 +60,7 @@ paths:
   /did-registrar/dids:
     get:
       operationId: listManagedDid
-      tags: [ "DID Registrar" ]
+      tags: ["DID Registrar"]
       summary: List all DIDs stored in Prism Agent's wallet
       description: |
         List all DIDs stored in Prism Agent's wallet.
@@ -81,7 +81,7 @@ paths:
 
     post:
       operationId: createManagedDid
-      tags: [ "DID Registrar" ]
+      tags: ["DID Registrar"]
       summary: Create unpublished DID and store it in Prism Agent's wallet
       description: |
         Create unpublished DID and store it inside Prism Agent's wallet. The private keys of the DID is
@@ -109,7 +109,7 @@ paths:
   /did-registrar/dids/{didRef}:
     get:
       operationId: getManagedDid
-      tags: [ "DID Registrar" ]
+      tags: ["DID Registrar"]
       summary: Get DID stored in Prism Agent's wallet
       description: Get DID stored in Prism Agent's wallet
       parameters:
@@ -127,7 +127,7 @@ paths:
   /did-registrar/dids/{didRef}/publications:
     post:
       operationId: publishManagedDid
-      tags: [ "DID Registrar" ]
+      tags: ["DID Registrar"]
       summary: Publish the DID stored in Prism Agent's wallet to the VDR
       description: |
         Publish the DID stored in Prism Agent's wallet to the VDR.
@@ -150,7 +150,7 @@ paths:
   /did-registrar/dids/{didRef}/updates:
     post:
       operationId: updateManagedDid
-      tags: [ "DID Registrar" ]
+      tags: ["DID Registrar"]
       summary: Update DID in Prism Agent's wallet and post update operation to the VDR
       description: |
         Update DID in Prism Agent's wallet and post update operation to the VDR.
@@ -182,7 +182,7 @@ paths:
   /did-registrar/dids/{didRef}/deactivations:
     post:
       operationId: deactivateManagedDid
-      tags: [ "DID Registrar" ]
+      tags: ["DID Registrar"]
       summary: Deactivate DID in Prism Agent's wallet and post deactivate operation to the VDR
       description: |
         Deactivate DID in Prism Agent's wallet and post deactivate operation to the VDR.
@@ -211,8 +211,7 @@ paths:
       tags:
         - Schema Registry
       summary: Lookup schemas by indexed fields
-      description:
-        "Lookup schemas by `author`, `name`, `tags` parameters"
+      description: "Lookup schemas by `author`, `name`, `tags` parameters"
       parameters:
         - $ref: "./shared/parameters.yaml#/components/parameters/offset"
         - $ref: "./shared/parameters.yaml#/components/parameters/limit"
@@ -313,8 +312,7 @@ paths:
       tags:
         - Verification
       summary: Lookup verification policies by query
-      description:
-        Lookup verification policies by `name`
+      description: Lookup verification policies by `name`
       parameters:
         - $ref: ./shared/parameters.yaml#/components/parameters/offset
         - $ref: ./shared/parameters.yaml#/components/parameters/limit
@@ -472,7 +470,7 @@ paths:
   /issue-credentials/credential-offers:
     post:
       operationId: createCredentialOffer
-      tags: [ "Issue Credentials Protocol" ]
+      tags: ["Issue Credentials Protocol"]
       summary: As a credential issuer, create a new credential offer to be sent to a holder.
       description: Creates a new credential offer in the database
       requestBody:
@@ -499,7 +497,7 @@ paths:
   /issue-credentials/records:
     get:
       operationId: getCredentialRecords
-      tags: [ "Issue Credentials Protocol" ]
+      tags: ["Issue Credentials Protocol"]
       summary: Gets the list of issue credential records.
       description: Get the list of issue credential records paginated
       parameters:
@@ -518,7 +516,7 @@ paths:
   /issue-credentials/records/{recordId}:
     get:
       operationId: getCredentialRecord
-      tags: [ "Issue Credentials Protocol" ]
+      tags: ["Issue Credentials Protocol"]
       summary: Gets an existing issue credential record by its unique identifier.
       description: Gets issue credential records by record id
       parameters:
@@ -538,7 +536,7 @@ paths:
   /issue-credentials/records/{recordId}/accept-offer:
     post:
       operationId: acceptCredentialOffer
-      tags: [ "Issue Credentials Protocol" ]
+      tags: ["Issue Credentials Protocol"]
       summary: As a holder, accepts a credential offer received from an issuer.
       description: Accepts a credential offer received from a VC issuer and sends back a credential request.
       parameters:
@@ -558,7 +556,7 @@ paths:
   /issue-credentials/records/{recordId}/issue-credential:
     post:
       operationId: issueCredential
-      tags: [ "Issue Credentials Protocol" ]
+      tags: ["Issue Credentials Protocol"]
       summary: As an issuer, issues the verifiable credential related to the specified record.
       description: |
         Sends credential to a holder (holder DID is specified in credential as subjectDid).
@@ -582,7 +580,7 @@ paths:
   /present-proof/presentations:
     post:
       operationId: requestPresentation
-      tags: [ "Present Proof" ]
+      tags: ["Present Proof"]
       summary: As a Verifier, create a new proof presentation request and send it to the Prover.
       description: Holder presents proof derived from the verifiable credential to verifier.
       requestBody:
@@ -610,7 +608,7 @@ paths:
 
     get:
       operationId: getAllPresentation
-      tags: [ "Present Proof" ]
+      tags: ["Present Proof"]
       summary: Gets the list of proof presentation records.
       description: list of presentation statuses
       parameters:
@@ -629,7 +627,7 @@ paths:
   /present-proof/presentations/{recordId}:
     patch:
       operationId: updatePresentation
-      tags: [ "Present Proof" ]
+      tags: ["Present Proof"]
       summary: Updates the proof presentation record matching the unique identifier, with the specific action to perform.
       description: Accept or reject presentation of proof request
       parameters:
@@ -645,14 +643,14 @@ paths:
         "200":
           description: The proof presentation record was successfully updated.
           content:
-            application/json: { }
+            application/json: {}
         "404":
           $ref: "./shared/responses.yaml#/components/responses/NotFound"
         "500":
           $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
     get:
       operationId: getPresentation
-      tags: [ "Present Proof" ]
+      tags: ["Present Proof"]
       summary: Gets an existing proof presentation record by its unique identifier. More information on the error can be found in the response body.
       description: Returns an existing presentation record by id.
       parameters:
@@ -675,7 +673,7 @@ paths:
   /connections:
     post:
       operationId: createConnection
-      tags: [ "Connections Management" ]
+      tags: ["Connections Management"]
       summary: Creates a new connection record and returns an Out of Band invitation.
       description: |
         Generates a new Peer DID and creates an [Out of Band 2.0](https://identity.foundation/didcomm-messaging/spec/v2.0/#out-of-band-messages) invitation.
@@ -704,7 +702,7 @@ paths:
 
     get:
       operationId: getConnections
-      tags: [ "Connections Management" ]
+      tags: ["Connections Management"]
       summary: Gets the list of connection records.
       description: Get the list of connection records paginated
       parameters:
@@ -723,7 +721,7 @@ paths:
   /connections/{connectionId}:
     get:
       operationId: getConnection
-      tags: [ "Connections Management" ]
+      tags: ["Connections Management"]
       summary: Gets an existing connection record by its unique identifier.
       description: Gets an existing connection record by its unique identifier
       parameters:
@@ -743,7 +741,7 @@ paths:
   /connection-invitations:
     post:
       operationId: acceptConnectionInvitation
-      tags: [ "Connections Management" ]
+      tags: ["Connections Management"]
       summary: Accepts an Out of Band invitation.
       description: |
         Accepts an [Out of Band 2.0](https://identity.foundation/didcomm-messaging/spec/v2.0/#out-of-band-messages) invitation, generates a new Peer DID,

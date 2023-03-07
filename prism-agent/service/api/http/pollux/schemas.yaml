@@ -167,7 +167,7 @@ components:
       allOf:
         - $ref: "../shared/schemas.yaml#/components/schemas/Pagination"
         - type: object
-          required: [ contents ]
+          required: [contents]
           properties:
             contents:
               type: array
@@ -276,18 +276,16 @@ components:
               description: Issuer DID of the verifiable credential object.
               example: did:prism:issuerofverifiablecredentials
 
-
     IssueCredentialRecordPage:
       allOf:
         - $ref: "../shared/schemas.yaml#/components/schemas/Pagination"
         - type: object
-          required: [ contents ]
+          required: [contents]
           properties:
             contents:
               type: array
               items:
                 $ref: "#/components/schemas/IssueCredentialRecord"
-
 
     RevocationStatus:
       description: Revocation status record
@@ -306,7 +304,7 @@ components:
             - failed
 
     ProofRequestAux:
-      required: [ schemaId, trustIssuers ]
+      required: [schemaId, trustIssuers]
       properties:
         schemaId:
           description: The unique identifier of a schema the VC should comply with.
@@ -325,7 +323,7 @@ components:
             type: string
 
     Options:
-      required: [ challenge, domain ]
+      required: [challenge, domain]
       properties:
         challenge:
           description: The challenge should be a randomly generated string.
@@ -338,7 +336,7 @@ components:
 
     RequestPresentationInput:
       description: A request to create a new "proof presentation" record and send it to the prover.
-      required: [ connectionId, proofs ]
+      required: [connectionId, proofs]
       properties:
         connectionId:
           description: The unique identifier of an established connection between the verifier and the prover.
@@ -356,7 +354,7 @@ components:
 
     RequestPresentationOutput:
       description: The proof presentation record details. Only the unique identifier for now.
-      required: [ presentationId ]
+      required: [presentationId]
       properties:
         presentationId:
           description: Ref to the id on the presentation (db ref)
@@ -376,7 +374,7 @@ components:
     PresentationStatus:
       type: object
       description: The proof presentation record.
-      required: [ presentationId, status, proofs, data ]
+      required: [presentationId, status, proofs, data]
       properties:
         presentationId:
           description: The unique identifier of the presentation record.
@@ -416,7 +414,7 @@ components:
           example: bc528dc8-69f1-4c5a-a508-5f8019047900
     RequestPresentationAction:
       description: The action to perform on the proof presentation record.
-      required: [ action ]
+      required: [action]
       properties:
         action:
           type: string
@@ -483,7 +481,7 @@ components:
       description: "Verifiable Credential Object according to JWT specification"
       externalDocs:
         url: "https://w3c.github.io/vc-jwt/"
-      required: [ "exp", "iss", "nbf", "jti", "sub" ]
+      required: ["exp", "iss", "nbf", "jti", "sub"]
       properties:
         exp:
           type: string
@@ -533,7 +531,7 @@ components:
             credentialSubject:
               type: object
               additionalProperties: true
-              required: [ "id" ]
+              required: ["id"]
               description: "Credentials subject DID and claims according to the schema object"
               example:
                 id: "did:prism:subject12345"
