@@ -518,7 +518,7 @@ paths:
   /issue-credentials/records/{recordId}:
     get:
       operationId: getCredentialRecord
-      tags: ["Issue Credentials Protocol"]
+      tags: [ "Issue Credentials Protocol" ]
       summary: Gets an existing issue credential record by its unique identifier.
       description: Gets issue credential records by record id
       parameters:
@@ -538,7 +538,7 @@ paths:
   /issue-credentials/records/{recordId}/accept-offer:
     post:
       operationId: acceptCredentialOffer
-      tags: ["Issue Credentials Protocol"]
+      tags: [ "Issue Credentials Protocol" ]
       summary: As a holder, accepts a credential offer received from an issuer.
       description: Accepts a credential offer received from a VC issuer and sends back a credential request.
       parameters:
@@ -558,9 +558,9 @@ paths:
   /issue-credentials/records/{recordId}/issue-credential:
     post:
       operationId: issueCredential
-      tags: ["Issue Credentials Protocol"]
+      tags: [ "Issue Credentials Protocol" ]
       summary: As an issuer, issues the verifiable credential related to the specified record.
-      description: | 
+      description: |
         Sends credential to a holder (holder DID is specified in credential as subjectDid).
         Credential is constructed from the credential records found by credential id.
       parameters:
@@ -577,7 +577,7 @@ paths:
         "500":
           $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
 
-## Present proof
+  ## Present proof
 
   /present-proof/presentations:
     post:
@@ -645,7 +645,7 @@ paths:
         "200":
           description: The proof presentation record was successfully updated.
           content:
-            application/json: {}
+            application/json: { }
         "404":
           $ref: "./shared/responses.yaml#/components/responses/NotFound"
         "500":
