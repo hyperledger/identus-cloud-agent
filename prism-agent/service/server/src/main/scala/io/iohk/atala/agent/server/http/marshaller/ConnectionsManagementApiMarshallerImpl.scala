@@ -18,8 +18,8 @@ object ConnectionsManagementApiMarshallerImpl extends JsonSupport {
           : FromEntityUnmarshaller[AcceptConnectionInvitationRequest] =
         summon[RootJsonFormat[AcceptConnectionInvitationRequest]]
 
-      implicit def toEntityMarshallerConnectionCollection: ToEntityMarshaller[ConnectionCollection] =
-        summon[RootJsonFormat[ConnectionCollection]]
+      implicit def toEntityMarshallerConnectionsPage: ToEntityMarshaller[ConnectionsPage] =
+        summon[RootJsonFormat[ConnectionsPage]]
 
       implicit def toEntityMarshallerConnection: ToEntityMarshaller[Connection] =
         summon[RootJsonFormat[Connection]]

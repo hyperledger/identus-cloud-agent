@@ -645,9 +645,7 @@ paths:
         "200":
           description: The proof presentation record was successfully updated.
           content:
-            application/json:
-              schema:
-                type: object
+            application/json: {}
         "404":
           $ref: "./shared/responses.yaml#/components/responses/NotFound"
         "500":

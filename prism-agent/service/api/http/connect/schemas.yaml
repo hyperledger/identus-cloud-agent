@@ -93,6 +93,7 @@ components:
       allOf:
         - $ref: "../shared/schemas.yaml#/components/schemas/Pagination"
         - type: object
+          required: [contents]
           properties:
             contents:
               type: array
