@@ -1,3 +1,15 @@
+# [pollux-v0.36.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.35.2...pollux-v0.36.0) (2023-03-07)
+
+
+### Bug Fixes
+
+* add more heap size for unit tests ([#421](https://github.com/input-output-hk/atala-prism-building-blocks/issues/421)) ([1734533](https://github.com/input-output-hk/atala-prism-building-blocks/commit/1734533534f911090fff45adc79b15ff61ca4122))
+
+
+### Features
+
+* **pollux:** CredentialSchema service, repository and sql ([#416](https://github.com/input-output-hk/atala-prism-building-blocks/issues/416)) ([ffa5f7e](https://github.com/input-output-hk/atala-prism-building-blocks/commit/ffa5f7e0e4abc4d2193a4224fbe6c99d03fa7ea8))
+
 # [pollux-v0.35.2](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.35.1...pollux-v0.35.2) (2023-03-03)
 
 
