@@ -1,17 +1,25 @@
 package api_models
 
-import org.openqa.selenium.json.Json
-
 data class CredentialSchema(
-    var id: String? = null,
     var name: String? = null,
     var version: String? = null,
+    var tags: List<String>? = listOf(""),
     var description: String? = null,
+    var type: String? = null,
     var author: String? = null,
     var authored: String? = null,
+    var schema: JsonSchema? = null,
+
+    var guid: String? = null,
+    var longId: String? = null,
+    var id: String? = null,
     var kind: String? = null,
     var self: String? = null,
-    var schemaType: String? = null,
-    var schema: String? = null,
-    var tags: List<String>? = listOf(""),
+)
+data class JsonSchema(
+    var `$id`: String? = null,
+    var `$schema`: String? = null,
+    var description: String? = null,
+    var type: String? = null,
+    var properties: Map<String, LinkedHashMap<String, String>>? = null,
 )
