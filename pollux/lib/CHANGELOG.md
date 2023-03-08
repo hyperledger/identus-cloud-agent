@@ -1,3 +1,10 @@
+# [pollux-v0.39.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.38.0...pollux-v0.39.0) (2023-03-08)
+
+
+### Features
+
+* **pollux:** Add method interface in PresentationService ([#427](https://github.com/input-output-hk/atala-prism-building-blocks/issues/427)) ([bbbc797](https://github.com/input-output-hk/atala-prism-building-blocks/commit/bbbc79709678a67210788b658c87b2bbb8599630))
+
 # [pollux-v0.38.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.37.0...pollux-v0.38.0) (2023-03-07)
 
 
