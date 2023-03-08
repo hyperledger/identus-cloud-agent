@@ -64,7 +64,7 @@ class PresentProofSteps {
                         it.statusCode(SC_OK)
                     },
                 )
-                lastResponseList("", PresentationProof::class).findLast {
+                lastResponseList("contents", PresentationProof::class).findLast {
                     it.status == "RequestReceived"
                 } != null
             },
@@ -97,7 +97,7 @@ class PresentProofSteps {
                         it.statusCode(SC_OK)
                     },
                 )
-                val presentation = lastResponseList("", PresentationProof::class).find {
+                val presentation = lastResponseList("contents", PresentationProof::class).find {
                     it.presentationId == faber.recall<String>("presentationId")
                 }
                 presentation != null &&
@@ -119,7 +119,7 @@ class PresentProofSteps {
                         it.statusCode(SC_OK)
                     },
                 )
-                val presentation = lastResponseList("", PresentationProof::class).find {
+                val presentation = lastResponseList("contents", PresentationProof::class).find {
                     it.presentationId == faber.recall<String>("presentationId")
                 }
                 presentation != null && presentation.status == "PresentationVerified"
