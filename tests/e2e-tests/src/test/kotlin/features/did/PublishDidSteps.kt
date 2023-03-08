@@ -66,7 +66,7 @@ class PublishDidSteps {
         )
         actor.should(
             ResponseConsequence.seeThatResponse {
-                it.statusCode(SC_OK)
+                it.statusCode(SC_CREATED)
                 it.body("longFormDid", not(emptyString()))
             },
         )

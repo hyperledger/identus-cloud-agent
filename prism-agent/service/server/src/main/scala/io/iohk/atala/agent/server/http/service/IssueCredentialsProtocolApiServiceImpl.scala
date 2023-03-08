@@ -77,8 +77,8 @@ class IssueCredentialsProtocolApiServiceImpl(
     }
   }
 
-  override def getCredentialRecords()(implicit
-      toEntityMarshallerIssueCredentialRecordCollection: ToEntityMarshaller[IssueCredentialRecordCollection],
+  override def getCredentialRecords(offset: Option[Int], limit: Option[Int])(implicit
+      toEntityMarshallerIssueCredentialRecordCollection: ToEntityMarshaller[IssueCredentialRecordPage],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
     val result = for {
@@ -91,7 +91,12 @@ class IssueCredentialsProtocolApiServiceImpl(
       case Left(error) => complete(error.status -> error)
       case Right(result) =>
         getCredentialRecords200(
-          IssueCredentialRecordCollection(
+          IssueCredentialRecordPage(
+            self = "/issue-credentials/records",
+            kind = "Collection",
+            pageOf = "1",
+            next = None,
+            previous = None,
             contents = result
           )
         )

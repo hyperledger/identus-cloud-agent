@@ -39,7 +39,7 @@ class DIDRegistrarApiServiceImpl(service: ManagedDIDService)(using runtime: Runt
 
     onZioSuccess(result.mapError(_.toOAS).either) {
       case Left(error)   => complete(error.status -> error)
-      case Right(result) => createManagedDid200(result)
+      case Right(result) => createManagedDid201(result)
     }
   }
 
@@ -77,7 +77,7 @@ class DIDRegistrarApiServiceImpl(service: ManagedDIDService)(using runtime: Runt
       pageOf = PaginationUtils.composePageOfUri(uri).toString,
       next = PaginationUtils.composeNextUri(uri, items, pagination, stats).map(_.toString),
       previous = PaginationUtils.composePreviousUri(uri, items, pagination, stats).map(_.toString),
-      contents = Some(items.map(_.toOAS)),
+      contents = items.map(_.toOAS),
     )
 
     onZioSuccess(result.mapError(_.toOAS).either) {

@@ -1,3 +1,22 @@
+# [pollux-v0.39.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.38.0...pollux-v0.39.0) (2023-03-08)
+
+
+### Features
+
+* **pollux:** Add method interface in PresentationService ([#427](https://github.com/input-output-hk/atala-prism-building-blocks/issues/427)) ([bbbc797](https://github.com/input-output-hk/atala-prism-building-blocks/commit/bbbc79709678a67210788b658c87b2bbb8599630))
+
+# [pollux-v0.38.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.37.0...pollux-v0.38.0) (2023-03-07)
+
+
+### Bug Fixes
+
+* **pollux:** fix 56f7aab7d3f58de51691271e1708edecc67b51b0 by exclude scala-java8-compat ([#423](https://github.com/input-output-hk/atala-prism-building-blocks/issues/423)) ([bc7e783](https://github.com/input-output-hk/atala-prism-building-blocks/commit/bc7e783c3e1499b6ab469178a2e524980d18d236))
+
+
+### Features
+
+* **pollux:** CredentialSchema DAL, model, service and repository [#2](https://github.com/input-output-hk/atala-prism-building-blocks/issues/2) ([#424](https://github.com/input-output-hk/atala-prism-building-blocks/issues/424)) ([79352f0](https://github.com/input-output-hk/atala-prism-building-blocks/commit/79352f02cdceed6d509848e97670e1d9cfaa3632))
+
 # [pollux-v0.37.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.36.0...pollux-v0.37.0) (2023-03-07)
 
 

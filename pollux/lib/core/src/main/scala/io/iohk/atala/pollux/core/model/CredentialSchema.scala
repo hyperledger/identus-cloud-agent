@@ -5,15 +5,6 @@ import java.util.UUID
 import io.circe.Json
 import zio.*
 
-//TODO: test CredentialSchema DAL
-//TODO: define the business logic:
-//       1. create new schema
-//       2. update the existing schema
-//       3. delete the existing schema
-//       4. business rules for breaking changes and versioning
-//
-//TODO: implement a new CredentialSchema endpoint
-
 type Schema = zio.json.ast.Json
 
 /** @param guid
@@ -47,7 +38,7 @@ case class CredentialSchema(
     authored: OffsetDateTime,
     tags: Seq[String],
     description: String,
-    schemaType: String,
+    `type`: String,
     schema: Schema
 ) {
   def longId = CredentialSchema.makeLongId(author, id, version)
@@ -58,7 +49,7 @@ object CredentialSchema {
   def makeLongId(author: String, id: UUID, version: String) =
     s"$author/${id.toString}?version=${version}"
   def makeGUID(author: String, id: UUID, version: String) =
-    UUID.fromString(makeLongId(author, id, version))
+    UUID.nameUUIDFromBytes(makeLongId(author, id, version).getBytes)
   def make(in: Input) = {
     for {
       id <- zio.Random.nextUUID
@@ -75,7 +66,7 @@ object CredentialSchema {
       authored = ts,
       tags = in.tags,
       description = in.description,
-      schemaType = in.schemaType,
+      `type` = in.`type`,
       schema = in.schema
     )
   }
@@ -89,7 +80,7 @@ object CredentialSchema {
       authored: Option[OffsetDateTime],
       tags: Seq[String],
       author: String = defaultAgentDid,
-      schemaType: String,
+      `type`: String,
       schema: Schema
   )
 
@@ -99,4 +90,6 @@ object CredentialSchema {
       version: Option[String] = None,
       tags: Option[String] = None
   )
+
+  case class FilteredEntries(entries: Seq[CredentialSchema], count: Long, totalCount: Long)
 }

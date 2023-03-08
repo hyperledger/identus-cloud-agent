@@ -1,9 +1,11 @@
 package io.iohk.atala.pollux.core.service
 import io.iohk.atala.pollux.core.model.CredentialSchema
+import io.iohk.atala.pollux.core.model.CredentialSchema.FilteredEntries
 import io.iohk.atala.pollux.core.repository.CredentialSchemaRepository
-import zio.Task
+import io.iohk.atala.pollux.core.repository.Repository.SearchQuery
+import io.iohk.atala.pollux.core.service.CredentialSchemaService.Error.*
 import zio.ZIO.getOrFailWith
-import CredentialSchemaService.Error.*
+import zio.{Task, URLayer, ZLayer}
 
 import java.util.UUID
 
@@ -15,9 +17,8 @@ class CredentialSchemaServiceImpl(
       credentialSchema <- CredentialSchema.make(in)
       createdCredentialSchema <- credentialSchemaRepository
         .create(credentialSchema)
-        .mapError(t => RepositoryError(t))
     } yield createdCredentialSchema
-  }
+  }.mapError(t => RepositoryError(t))
 
   override def getByGUID(guid: UUID): Result[CredentialSchema] = {
     credentialSchemaRepository
@@ -42,11 +43,10 @@ class CredentialSchemaServiceImpl(
       cs <- CredentialSchema.make(in)
       updated_opt <- credentialSchemaRepository
         .update(cs)
-        .mapError(RepositoryError.apply)
+        .mapError[CredentialSchemaService.Error](RepositoryError.apply)
       updated <- getOrFailWith(NotFoundError(cs.guid))(updated_opt)
     } yield updated
   }
-
   override def delete(guid: UUID): Result[CredentialSchema] = {
     for {
       deleted_row_opt <- credentialSchemaRepository
@@ -55,4 +55,20 @@ class CredentialSchemaServiceImpl(
       deleted_row <- getOrFailWith(NotFoundError(guid))(deleted_row_opt)
     } yield deleted_row
   }
+
+  override def lookup(
+      filter: CredentialSchema.Filter,
+      skip: Int,
+      limit: Int
+  ): Result[CredentialSchema.FilteredEntries] = {
+    credentialSchemaRepository
+      .search(SearchQuery(filter, skip, limit))
+      .mapError(t => RepositoryError(t))
+      .map(sr => FilteredEntries(sr.entries, sr.count.toInt, sr.totalCount.toInt))
+  }
+}
+
+object CredentialSchemaServiceImpl {
+  val layer: URLayer[CredentialSchemaRepository[Task], CredentialSchemaService] =
+    ZLayer.fromFunction(CredentialSchemaServiceImpl(_))
 }
