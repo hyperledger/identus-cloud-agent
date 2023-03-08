@@ -2,6 +2,7 @@ package io.iohk.atala.connect.sql.repository
 
 import doobie.*
 import doobie.implicits.*
+import doobie.postgres.implicits._
 import io.circe._
 import io.circe.parser._
 import io.circe.syntax._
@@ -27,9 +28,6 @@ class JdbcConnectionRepository(xa: Transactor[Task]) extends ConnectionRepositor
 
   given uuidGet: Get[UUID] = Get[String].map(UUID.fromString)
   given uuidPut: Put[UUID] = Put[String].contramap(_.toString())
-
-  given instantGet: Get[Instant] = Get[Long].map(Instant.ofEpochSecond)
-  given instantPut: Put[Instant] = Put[Long].contramap(_.getEpochSecond())
 
   given protocolStateGet: Get[ProtocolState] = Get[String].map(ProtocolState.valueOf)
   given protocolStatePut: Put[ProtocolState] = Put[String].contramap(_.toString)
