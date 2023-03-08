@@ -1,5 +1,7 @@
 package api_models
 
+import org.openqa.selenium.json.Json
+
 data class CredentialSchema(
     var id: String? = null,
     var name: String? = null,
@@ -9,6 +11,7 @@ data class CredentialSchema(
     var authored: String? = null,
     var kind: String? = null,
     var self: String? = null,
-    var attributes: List<String>? = listOf(""),
+    var schemaType: String? = null,
+    var schema: String? = null,
     var tags: List<String>? = listOf(""),
 )
