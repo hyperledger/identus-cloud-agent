@@ -13,7 +13,7 @@ import net.serenitybdd.screenplay.Actor
 import net.serenitybdd.screenplay.rest.interactions.Get
 import net.serenitybdd.screenplay.rest.interactions.Post
 import net.serenitybdd.screenplay.rest.questions.ResponseConsequence
-import org.apache.http.HttpStatus.SC_OK
+import org.apache.http.HttpStatus.SC_CREATED
 import org.assertj.core.api.Assertions
 import org.hamcrest.Matchers.*
 
@@ -80,7 +80,7 @@ class ManageDidSteps {
     fun theDidShouldBeRegisteredSuccessfully(actor: Actor) {
         actor.should(
             ResponseConsequence.seeThatResponse {
-                it.statusCode(SC_OK)
+                it.statusCode(SC_CREATED)
                 it.body("longFormDid", not(emptyString()))
             },
         )
