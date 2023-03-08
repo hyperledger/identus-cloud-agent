@@ -71,7 +71,7 @@ class PresentProofSteps {
             "ERROR: Bob did not achieve any presentation request!",
         )
 
-        val presentationId = lastResponseList("", PresentationProof::class).findLast {
+        val presentationId = lastResponseList("contents", PresentationProof::class).findLast {
             it.status == "RequestReceived"
         }!!.presentationId
         bob.attemptsTo(
