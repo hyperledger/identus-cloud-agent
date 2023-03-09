@@ -1,10 +1,13 @@
-package io.iohk.atala.pollux.schema
+package io.iohk.atala.pollux.credentialschema
 
 import io.iohk.atala.api.http.model.{CollectionStats, Order, PaginationInput}
 import io.iohk.atala.api.http.{FailureResponse, InternalServerError, NotFound, RequestContext}
-import io.iohk.atala.pollux.schema.VerificationPolicyEndpoints.*
-import io.iohk.atala.pollux.schema.controller.{VerificationPolicyController, VerificationPolicyPageRequestLogic}
-import io.iohk.atala.pollux.schema.model.{VerificationPolicy, VerificationPolicyInput, VerificationPolicyPage}
+import io.iohk.atala.pollux.credentialschema.VerificationPolicyEndpoints.*
+import io.iohk.atala.pollux.credentialschema.controller.{
+  VerificationPolicyController,
+  VerificationPolicyPageRequestLogic
+}
+import io.iohk.atala.pollux.credentialschema.http.{VerificationPolicy, VerificationPolicyInput, VerificationPolicyPage}
 import sttp.tapir.redoc.RedocUIOptions
 import sttp.tapir.redoc.bundle.RedocInterpreter
 import sttp.tapir.server.ServerEndpoint
@@ -28,7 +31,12 @@ class VerificationPolicyServerEndpoints(
 
   val updateVerificationPolicyServerEndpoint: ZServerEndpoint[Any, Any] = {
     updateVerificationPolicyEndpoint.zServerLogic {
-      case (ctx: RequestContext, id: UUID, nonce: Int, update: VerificationPolicyInput) =>
+      case (
+            ctx: RequestContext,
+            id: UUID,
+            nonce: Int,
+            update: VerificationPolicyInput
+          ) =>
         controller.updateVerificationPolicyById(ctx, id, nonce, update)
     }
   }

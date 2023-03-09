@@ -1,9 +1,12 @@
-package io.iohk.atala.pollux.schema.controller
+package io.iohk.atala.pollux.credentialschema.controller
 
 import io.iohk.atala.api.http.model.{CollectionStats, Order, Pagination, PaginationInput}
 import io.iohk.atala.api.http.{FailureResponse, RequestContext}
-import io.iohk.atala.pollux.schema.controller.{VerificationPolicyController, VerificationPolicyPageRequestLogic}
-import io.iohk.atala.pollux.schema.model.{VerificationPolicy, VerificationPolicyInput, VerificationPolicyPage}
+import io.iohk.atala.pollux.credentialschema.controller.{
+  VerificationPolicyController,
+  VerificationPolicyPageRequestLogic
+}
+import io.iohk.atala.pollux.credentialschema.http.{VerificationPolicy, VerificationPolicyInput, VerificationPolicyPage}
 import zio.{IO, Ref, Task, UIO, ULayer, ZIO, ZLayer}
 
 import java.time.ZonedDateTime

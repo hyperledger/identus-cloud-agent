@@ -1,4 +1,4 @@
-package io.iohk.atala.pollux.schema.model
+package io.iohk.atala.pollux.credentialschema.http
 
 import sttp.tapir.Schema
 import sttp.tapir.generic.auto.*

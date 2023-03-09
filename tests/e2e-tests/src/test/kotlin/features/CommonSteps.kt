@@ -15,6 +15,11 @@ import features.issue_credentials.IssueCredentialsSteps
 import io.cucumber.java.Before
 import io.cucumber.java.ParameterType
 import io.cucumber.java.en.Given
+import io.restassured.RestAssured
+import io.restassured.config.ObjectMapperConfig
+import io.restassured.config.ObjectMapperConfig.objectMapperConfig
+import io.restassured.config.RestAssuredConfig
+import io.restassured.mapper.ObjectMapperType
 import net.serenitybdd.screenplay.Actor
 import net.serenitybdd.screenplay.actors.Cast
 import net.serenitybdd.screenplay.actors.OnStage
