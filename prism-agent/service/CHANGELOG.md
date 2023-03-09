@@ -1,3 +1,10 @@
+# [prism-agent-v0.49.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.48.4...prism-agent-v0.49.0) (2023-03-09)
+
+
+### Features
+
+* **prism-agent:** CredentialSchema DAL, model, service and repositor… ([#425](https://github.com/input-output-hk/atala-prism-building-blocks/issues/425)) ([32f9e83](https://github.com/input-output-hk/atala-prism-building-blocks/commit/32f9e832a7789a971a4506a8971b6ba8b06daabe))
+
 # [prism-agent-v0.48.4](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.48.3...prism-agent-v0.48.4) (2023-03-09)
 
 
