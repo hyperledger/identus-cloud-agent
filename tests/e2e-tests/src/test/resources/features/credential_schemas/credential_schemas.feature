@@ -1,10 +1,12 @@
 @schemas
 Feature: Credential schemas
 
+@credentialschema
 Scenario: Successful schema creation
   When Acme creates a new credential schema
   Then He sees new credential schema is available
 
+@credentialschema
 Scenario Outline: Multiple schema creation
   When Acme creates <schemas> new schemas
   Then He can access all of them one by one

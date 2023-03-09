@@ -2,6 +2,7 @@ package common
 
 import api_models.CredentialSchema
 import api_models.JsonSchema
+import com.fasterxml.jackson.databind.ObjectMapper
 import java.util.*
 
 object CredentialSchemas {
@@ -9,7 +10,24 @@ object CredentialSchemas {
 
     val SCHEMA_TYPE = "https://json-schema.org/draft/2019-09/schema"
 
-    val JSON_SCHEMA = JsonSchema(
+    val JSON_SCHEMA = """
+        {
+          "${"$"}id": "student-schema-1.0",
+          "${"$"}schema": "$SCHEMA_TYPE",
+          "description": "Student schema",
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "age": {
+              "type": "integer"
+            }
+          }
+        }""".trimIndent()
+
+    //TODO: this can be removed
+    val JSON_SCHEMA_V2 = JsonSchema(
         `$id` = "student-schema-1.0",
         `$schema` = SCHEMA_TYPE,
         description = "Student schema",
@@ -25,8 +43,8 @@ object CredentialSchemas {
             author = "University",
             name = "${UUID.randomUUID()} $suffix",
             description = "Simple student credentials schema",
-            type = "object",
-            schema = JSON_SCHEMA,
+            type = CREDENTIAL_SCHEMA_TYPE,
+            schema =  ObjectMapper().readTree(JSON_SCHEMA),
             tags = listOf("school", "students"),
             version = "1.0",
         )
@@ -36,8 +54,8 @@ object CredentialSchemas {
         author = "University",
         name = UUID.randomUUID().toString(),
         description = "Simple student credentials schema",
-        type = "object",
-        schema = JSON_SCHEMA,
+        type = CREDENTIAL_SCHEMA_TYPE,
+        schema =  ObjectMapper().readTree(JSON_SCHEMA),
         tags = listOf("school", "students"),
         version = "1.0",
     )
