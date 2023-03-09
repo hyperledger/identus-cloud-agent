@@ -21,6 +21,10 @@ object Utils {
         return SerenityRest.lastResponse().jsonPath().getList(path, clazz.java)
     }
 
+    fun <T : Any, V: Any> lastResponseMap(path: String, keyType: KClass<T>, valueType: KClass<V>): Map<T, V> {
+        return SerenityRest.lastResponse().jsonPath().getMap(path, keyType.java, valueType.java)
+    }
+
     fun toJsonPath(any: Any): DocumentContext {
         val json = ObjectMapper().writeValueAsString(any)
         return JsonPath.parse(json)

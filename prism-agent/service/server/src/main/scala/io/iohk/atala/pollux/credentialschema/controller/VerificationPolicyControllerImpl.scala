@@ -1,4 +1,4 @@
-package io.iohk.atala.pollux.schema.controller
+package io.iohk.atala.pollux.credentialschema.controller
 
 import io.iohk.atala.api.http.*
 import io.iohk.atala.api.http.model.{CollectionStats, Order, Pagination}
@@ -7,9 +7,9 @@ import io.iohk.atala.pollux.core.model.CredentialSchemaAndTrustedIssuersConstrai
 import io.iohk.atala.pollux.core.model.error.VerificationPolicyError
 import io.iohk.atala.pollux.core.model.error.VerificationPolicyError.*
 import io.iohk.atala.pollux.core.service.VerificationPolicyService
-import io.iohk.atala.pollux.schema.controller.*
-import io.iohk.atala.pollux.schema.model.VerificationPolicy.*
-import io.iohk.atala.pollux.schema.model.{
+import io.iohk.atala.pollux.credentialschema.controller.*
+import io.iohk.atala.pollux.credentialschema.http.VerificationPolicy.*
+import io.iohk.atala.pollux.credentialschema.http.{
   VerificationPolicy,
   VerificationPolicyConstraint,
   VerificationPolicyInput,

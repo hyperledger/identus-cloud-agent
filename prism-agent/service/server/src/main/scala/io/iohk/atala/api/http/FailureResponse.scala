@@ -9,6 +9,7 @@ import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder}
 import sttp.tapir.server.model.ValuedEndpointOutput
 
 sealed trait FailureResponse
+//TODO: Refactor: create a FailureResponse object and put all errors inside of it
 
 case class NotFound(msg: String) extends FailureResponse
 
