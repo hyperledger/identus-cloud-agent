@@ -17,12 +17,3 @@ data class CredentialSchema(
     var kind: String? = null,
     var self: String? = null,
 )
-
-//TODO: this can be removed
-data class JsonSchema(
-    var `$id`: String? = null,
-    var `$schema`: String? = null,
-    var description: String? = null,
-    var type: String? = null,
-    var properties: Map<String, LinkedHashMap<String, String>>? = null,
-)

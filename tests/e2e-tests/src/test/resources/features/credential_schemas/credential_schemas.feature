@@ -1,18 +1,16 @@
 @schemas
 Feature: Credential schemas
 
-@credentialschema
-Scenario: Successful schema creation
-  When Acme creates a new credential schema
-  Then He sees new credential schema is available
+  Scenario: Successful schema creation
+    When Acme creates a new credential schema
+    Then He sees new credential schema is available
 
-@credentialschema
-Scenario Outline: Multiple schema creation
-  When Acme creates <schemas> new schemas
-  Then He can access all of them one by one
-Examples:
-  | schemas |
-  | 4       |
+  Scenario Outline: Multiple schema creation
+    When Acme creates <schemas> new schemas
+    Then He can access all of them one by one
+    Examples:
+      | schemas |
+      | 4       |
 
 #Scenario Outline: Wrong specified fields for schema generation requests should fail
 #  When Acme tries to create a new schema with <value> in field <field>
