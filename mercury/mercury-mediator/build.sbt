@@ -13,6 +13,8 @@ inThisBuild(
   )
 )
 
+coverageDataDir := target.value / "coverage"
+
 // Custom keys
 val apiBaseDirectory =
   settingKey[File]("The base directory for Castor API specifications")
