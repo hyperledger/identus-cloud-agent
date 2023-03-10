@@ -20,7 +20,7 @@ Enabling the resolution of short-form DID can be done by DID publication which i
 
 ## Prerequisites
 
-1. **DID Controller** PRISM Agents up and running
+1. **DID Controller** PRISM Agent up and running
 2. **DID Controller** has a DID created on PRISM Agent (see [Create DID](./create.md))
 
 ## Overview

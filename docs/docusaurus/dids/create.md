@@ -14,7 +14,7 @@ Once the create-operation gets constructed, deriving a DID from this operation i
 
 ## Prerequisites
 
-1. **DID Controller** PRISM Agents up and running
+1. **DID Controller** PRISM Agent up and running
 
 ## Overview
 

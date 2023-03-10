@@ -20,7 +20,7 @@ The data on the DID document is updated only from the operations on the valid li
 
 ## Prerequisites
 
-1. **DID Controller** PRISM Agents up and running
+1. **DID Controller** PRISM Agent up and running
 2. **DID Controller** has a DID created on PRISM Agent (see [Create DID](./create.md))
 3. **DID Controller** has a DID published to the blockchain (see [Publish DID](./publish.md))
 
@@ -31,6 +31,8 @@ This update mechanism is implementation specific and it links the DID update-ope
 
 Updating the DID will take some time until the update-operation gets confirmed on the blockchain.
 By updating the DID on PRISM Agent without waiting for the *previous update-operation* to be confirmed, the **DID Controller** is creating a fork on the DID lineage and risking having the subsequent operation discarded.
+Please refer to the `SECURE_DEPTH` parameter in [PRISM method - protocol parameters](https://github.com/input-output-hk/prism-did-method-spec/blob/main/w3c-spec/PRISM-method.md#versioning-and-protocol-parameters) for the number of confirmation blocks.
+At the time of writing, this number is 112 blocks.
 
 This example shows the DID update capability on PRISM Agent and the steps to verify that the update has been confirmed and applied.
 
