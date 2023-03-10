@@ -59,7 +59,7 @@ jobs:
           path: "${{ inputs.component-dir }}/target/coverage/coverage-report/cobertura.xml"
           report_name: "${{ inputs.component-name }} Code Coverage"
           minimum_coverage: 10
-          fail_below_threshold: false,
+          fail_below_threshold: false
           only_changed_files: true
 
       - name: Artifact coverage HTML
