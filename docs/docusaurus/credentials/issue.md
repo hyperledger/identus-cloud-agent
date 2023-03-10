@@ -62,9 +62,8 @@ This section describes the Issuer role's available interactions with the PRISM A
 To start the process, the issuer needs to create a credential offer.
 To do this, make a `POST` request to the [`/issue-credentials/credential-offers`](/agent-api/#tag/Issue-Credentials-Protocol/operation/createCredentialOffer) endpoint with a JSON payload that includes the following information:
 
-1. `subjectId`: This field represents the unique identifier for the subject of the verifiable credential. It is a DID (Decentralized Identifier) string, such as `did:prism:subjectIdentifier`.
-2. `schemaId`: This is an identifier for a schema, which defines the structure and format of the data in a verifiable credential. The schema identifier must be unique and typically a URL or a URN.
-3. `claims`: The data stored in a verifiable credential. Claims get expressed in a key-value format and must conform to the structure and format defined in the schema. The claims contain the data that the issuer attests to, such as name, address, date of birth, and so on.
+1. `schemaId`: This is an identifier for a schema, which defines the structure and format of the data in a verifiable credential. The schema identifier must be unique and typically a URL or a URN.
+2. `claims`: The data stored in a verifiable credential. Claims get expressed in a key-value format and must conform to the structure and format defined in the schema. The claims contain the data that the issuer attests to, such as name, address, date of birth, and so on.
 
 Once the request initiates, a new credential record for the issuer gets created with a unique ID. The state of this record is now `OfferPending`.
 
@@ -147,11 +146,19 @@ curl "http://localhost:8090/prism-agent/issue-credentials/records" \
 
 ### Approving the VC Offer
 
-To accept the offer, the **Holder** can make a `POST` request to the [`/issue-credentials/records/{recordId}/accept-offer`](/agent-api/#tag/Issue-Credentials-Protocol/operation/acceptCredentialOffer) endpoint:
+To accept the offer, the **Holder** can make a `POST` request to the [`/issue-credentials/records/{recordId}/accept-offer`](/agent-api/#tag/Issue-Credentials-Protocol/operation/acceptCredentialOffer) endpoint with a JSON payload that includes the following information:
+
+1. `holder_record_id`: The unique identifier of the issue credential record known by the holder PRISM Agent.
+2. `subjectId`: This field represents the unique identifier for the subject of the verifiable credential. It is a short-form PRISM DID (Decentralized Identifier) string, such as `did:prism:subjectIdentifier`.
+
 ```shell
 # Holder POST request to accept the credential offer
 curl -X POST "http://localhost:8090/prism-agent/issue-credentials/records/$holder_record_id/accept-offer" \
-    -H "Content-Type: application/json"
+    -H 'accept: application/json' \
+    -H 'Content-Type: application/json' \
+    -d '{
+          "subjectId": "did:prism:subjectIdentifier"
+     }'
 ```
 
 This request will change the state of the record to `RequestPending`.
