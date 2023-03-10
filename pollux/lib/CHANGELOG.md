@@ -1,3 +1,10 @@
+# [pollux-v0.40.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.39.0...pollux-v0.40.0) (2023-03-10)
+
+
+### Features
+
+* **pollux:** move subjectId field from issuer side to holder side ([#434](https://github.com/input-output-hk/atala-prism-building-blocks/issues/434)) ([434f1fd](https://github.com/input-output-hk/atala-prism-building-blocks/commit/434f1fd7616c5f538819b1a68f4bc5ed4eeb4b5d))
+
 # [pollux-v0.39.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.38.0...pollux-v0.39.0) (2023-03-08)
 
 
