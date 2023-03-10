@@ -70,16 +70,22 @@ class PresentProofApiServiceImpl(presentationService: PresentationService, conne
 
   }
 
-  override def getAllPresentation(offset: Option[Int], limit: Option[Int])(implicit
+  override def getAllPresentation(
+      offset: Option[Int],
+      limit: Option[Int],
+      thid: Option[String]
+  )(implicit
       toEntityMarshallerPresentationStatusPage: ToEntityMarshaller[PresentationStatusPage],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
-
     val result = for {
       records <- presentationService
         .getPresentationRecords()
         .mapError(HttpServiceError.DomainError[PresentationError].apply)
-    } yield records
+      outcome = thid match
+        case None        => records
+        case Some(value) => records.filter(_.thid.value == value) // this logic should be moved to the DB
+    } yield outcome
 
     onZioSuccess(result.mapBoth(_.toOAS, _.map(_.toOAS)).either) {
       case Left(error) => complete(error.status -> error)
