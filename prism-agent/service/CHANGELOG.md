@@ -1,3 +1,10 @@
+# [prism-agent-v0.50.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.49.0...prism-agent-v0.50.0) (2023-03-10)
+
+
+### Features
+
+* **prism-agent:** Added connectionId to the request Presentation and deleted the readme files as they are moved here https://github.com/input-output-hk/atala-prism-building-blocks/tree/main/docs/docusaurus ([#432](https://github.com/input-output-hk/atala-prism-building-blocks/issues/432)) ([301022a](https://github.com/input-output-hk/atala-prism-building-blocks/commit/301022a372e40b126b389548ef0c9acb4f0382f0))
+
 # [prism-agent-v0.49.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.48.4...prism-agent-v0.49.0) (2023-03-09)
 
 
