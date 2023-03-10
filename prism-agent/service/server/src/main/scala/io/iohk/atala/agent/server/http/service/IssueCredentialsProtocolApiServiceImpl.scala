@@ -50,16 +50,11 @@ class IssueCredentialsProtocolApiServiceImpl(
         .fromEither(PrismDID.fromString(request.issuingDID))
         .mapError(HttpServiceError.InvalidPayload.apply)
         .mapError(_.toOAS)
-      subjectId <- ZIO
-        .fromEither(PrismDID.fromString(request.subjectId))
-        .mapError(HttpServiceError.InvalidPayload.apply)
-        .mapError(_.toOAS)
       outcome <- credentialService
         .createIssueCredentialRecord(
           pairwiseIssuerDID = didIdPair.myDID,
           pairwiseHolderDID = didIdPair.theirDid,
           thid = DidCommID(),
-          subjectId = subjectId.toString,
           schemaId = request.schemaId,
           claims = request.claims,
           validityPeriod = request.validityPeriod,
@@ -121,14 +116,15 @@ class IssueCredentialsProtocolApiServiceImpl(
     }
   }
 
-  override def acceptCredentialOffer(recordId: String)(implicit
+  override def acceptCredentialOffer(recordId: String, request: AcceptCredentialOfferRequest)(implicit
       toEntityMarshallerIssueCredentialRecord: ToEntityMarshaller[IssueCredentialRecord],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
     val result = for {
       id <- recordId.toDidCommID
+      prismDID <- ZIO.fromEither(PrismDID.fromString(request.subjectId)).mapError(HttpServiceError.InvalidPayload.apply)
       outcome <- credentialService
-        .acceptCredentialOffer(id)
+        .acceptCredentialOffer(id, request.subjectId)
         .mapError(HttpServiceError.DomainError[CredentialServiceError].apply)
     } yield outcome
 

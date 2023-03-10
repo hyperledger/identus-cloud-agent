@@ -16,6 +16,10 @@ object IssueCredentialsProtocolApiMarshallerImpl extends JsonSupport {
           : FromEntityUnmarshaller[CreateIssueCredentialRecordRequest] =
         summon[RootJsonFormat[CreateIssueCredentialRecordRequest]]
 
+      implicit def fromEntityUnmarshallerAcceptCredentialOfferRequest
+          : FromEntityUnmarshaller[AcceptCredentialOfferRequest] =
+        summon[RootJsonFormat[AcceptCredentialOfferRequest]]
+
       implicit def toEntityMarshallerIssueCredentialRecord: ToEntityMarshaller[IssueCredentialRecord] =
         summon[RootJsonFormat[IssueCredentialRecord]]
 
