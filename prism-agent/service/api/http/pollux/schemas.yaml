@@ -220,7 +220,7 @@ components:
             connectionId:
               type: string
               description: The unique identifier of a DIDComm connection that already exists between the issuer and the holder, and that will be used to execute the issue credential protocol.
-    
+
     AcceptCredentialOfferRequest:
       description: A request to accept a credential offer received from an issuer.
       type: object
