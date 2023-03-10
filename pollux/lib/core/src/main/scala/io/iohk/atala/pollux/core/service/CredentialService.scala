@@ -87,7 +87,10 @@ trait CredentialService {
 
   def createPresentationPayload(recordId: DidCommID, subject: Issuer): IO[CredentialServiceError, PresentationPayload]
 
-  def generateCredentialRequest(recordId: DidCommID, signedPresentation: JWT): IO[CredentialServiceError, IssueCredentialRecord]
+  def generateCredentialRequest(
+      recordId: DidCommID,
+      signedPresentation: JWT
+  ): IO[CredentialServiceError, IssueCredentialRecord]
 
   def receiveCredentialRequest(request: RequestCredential): IO[CredentialServiceError, IssueCredentialRecord]
 
