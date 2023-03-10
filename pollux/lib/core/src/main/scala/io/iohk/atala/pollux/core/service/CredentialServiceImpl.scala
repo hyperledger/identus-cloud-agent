@@ -515,7 +515,7 @@ private class CredentialServiceImpl(
         more_available = None,
         formats = request.body.formats
       ),
-      attachments = Nil,
+      attachments = Seq(),
       thid = request.thid.orElse(Some(request.id)),
       from = request.to,
       to = request.from
