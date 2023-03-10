@@ -17,8 +17,6 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
       ATALA_GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
-      SBT_PACKAGER: "enable"
-      SBT_SCOVERAGE: "enable"
     defaults:
       run:
         working-directory: ${{ inputs.component-dir }}
@@ -38,12 +36,7 @@ jobs:
         run: sbt scalafmtCheckAll
 
       - name: Run Unit Tests
-        run: |
-          if [[ ${{ inputs.component-dir }} == mercury/mercury-library ]]; then
-            SBT_SCOVERAGE=enable sbt clean coverage test coverageAggregate
-          else
-            sbt test
-          fi
+        run: sbt coverage test coverageAggregate
 
       - name: Aggregate test reports
         if: always()
