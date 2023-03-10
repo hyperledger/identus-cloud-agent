@@ -1,3 +1,10 @@
+# [prism-agent-v0.51.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.50.0...prism-agent-v0.51.0) (2023-03-10)
+
+
+### Features
+
+* **prism-agent:** move subjectId field from issuer to holder ([#435](https://github.com/input-output-hk/atala-prism-building-blocks/issues/435)) ([d7813ba](https://github.com/input-output-hk/atala-prism-building-blocks/commit/d7813ba9b3d5a1c422d3d7e7fb57af4dabcb0d54))
+
 # [prism-agent-v0.50.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.49.0...prism-agent-v0.50.0) (2023-03-10)
 
 
