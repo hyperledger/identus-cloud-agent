@@ -16,7 +16,7 @@ final case class IssueCredentialRecord(
     thid: DidCommID,
     schemaId: Option[String],
     role: Role,
-    subjectId: String,
+    subjectId: Option[String],
     validityPeriod: Option[Double] = None,
     automaticIssuance: Option[Boolean],
     awaitConfirmation: Option[Boolean],
@@ -34,7 +34,7 @@ final case class IssueCredentialRecord(
 final case class ValidIssuedCredentialRecord(
     id: DidCommID,
     issuedCredentialRaw: Option[String],
-    subjectId: String
+    subjectId: Option[String]
 )
 
 object IssueCredentialRecord {
@@ -53,6 +53,8 @@ object IssueCredentialRecord {
 
     // Holder has reviewed and approved the offer (in Holder DB)
     case RequestPending extends ProtocolState
+    // Holder has generated the request that that includes the subjectID and proofs (in Holder DB)
+    case RequestGenerated extends ProtocolState    
     // Holder has sent a request to a an Issuer (in Holder DB)
     case RequestSent extends ProtocolState
     // Issuer has received a request from the holder (In Issuer DB)
