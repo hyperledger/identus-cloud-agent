@@ -20,6 +20,8 @@ inThisBuild(
   )
 )
 
+coverageDataDir := target.value / "coverage"
+
 val commonSettings = Seq(
   testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
   githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN"),

@@ -13,6 +13,8 @@ inThisBuild(
   )
 )
 
+coverageDataDir := target.value / "coverage"
+
 inThisBuild(
   Seq(
     scalacOptions ++= Seq(

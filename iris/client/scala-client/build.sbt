@@ -14,6 +14,8 @@ inThisBuild(
   )
 )
 
+coverageDataDir := target.value / "coverage"
+
 val commonSettings = Seq(
   githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN"),
   resolvers += Resolver.githubPackages("input-output-hk"),

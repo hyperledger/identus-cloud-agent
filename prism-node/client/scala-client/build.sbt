@@ -4,12 +4,14 @@ import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
 inThisBuild(
   Seq(
     organization := "io.iohk.atala",
-    scalaVersion := "3.2.1",
+    scalaVersion := "3.2.2",
     fork := true,
     run / connectInput := true,
     versionScheme := Some("semver-spec")
   )
 )
+
+coverageDataDir := target.value / "coverage"
 
 val commonSettings = Seq(
   githubOwner := "input-output-hk",
