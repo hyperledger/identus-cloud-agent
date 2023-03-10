@@ -1,12 +1,9 @@
-val SCALA_VERSION = sys.env.get("SBT_SCOVERAGE") match {
-  case None    => "3.2.1"
-  case Some(_) => "3.2.2-RC1-bin-20221026-a210b7f-NIGHTLY" // Needed for sbt-scoverage
-}
+import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
 
 inThisBuild(
   Seq(
     organization := "io.iohk.atala",
-    scalaVersion := SCALA_VERSION,
+    scalaVersion := "3.2.2",
     fork := true,
     run / connectInput := true,
     releaseUseGlobalVersion := false,
@@ -273,31 +270,12 @@ lazy val agentDidScala =
     )
     .dependsOn(agent)
 
-// ### Test coverage ###
-sys.env
-  .get("SBT_SCOVERAGE")
-  .map { _ =>
-    lazy val coverageDataDir: SettingKey[File] =
-      settingKey[File]("directory where the measurements and report files will be stored")
-    coverageDataDir := target.value / "coverage"
-  }
-  .toSeq
-
-// ### ReleaseStep ###
-sys.env
-  .get("SBT_PACKAGER") // SEE also plugin.sbt
-  .map { _ =>
-    println("### Config SBT_PACKAGER (releaseProcess) ###")
-  import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
-
-  releaseProcess := Seq[ReleaseStep](
-    checkSnapshotDependencies,
-    inquireVersions,
-    runClean,
-    runTest,
-    setReleaseVersion,
-    publishArtifacts,
-    setNextVersion
-  )
-  }
-  .toSeq
+releaseProcess := Seq[ReleaseStep](
+  checkSnapshotDependencies,
+  inquireVersions,
+  runClean,
+  runTest,
+  setReleaseVersion,
+  publishArtifacts,
+  setNextVersion
+)
