@@ -12,7 +12,7 @@ on:
       - ".github/workflows/e2e-tests.yml"
       - "infrastructure/shared/docker-compose.yml"
       - "tests/e2e-tests/**"
-      - "prism-agent/service"
+      - "prism-agent/service/**"
   push:
     branches:
       - "main"
@@ -161,7 +161,6 @@ jobs:
         if: github.ref_name == 'main'
         uses: rtCamp/action-slack-notify@v2
         env:
-          SLACK_CHANNEL: atala-qa-results
           SLACK_COLOR: ${{ steps.analyze_test_results.outputs.conclusion }}
           SLACK_MESSAGE: |
             Total: ${{ steps.analyze_test_results.outputs.tests }}
