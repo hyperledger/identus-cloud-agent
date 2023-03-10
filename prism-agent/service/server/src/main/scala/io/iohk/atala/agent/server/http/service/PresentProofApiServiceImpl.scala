@@ -26,6 +26,7 @@ import io.iohk.atala.pollux.core.model._
 import io.iohk.atala.mercury.model.Base64
 import cats.instances.option
 import io.iohk.atala.pollux.core.model.presentation.Options
+import io.iohk.atala.agent.openapi.model.PublicKeyJwk
 
 class PresentProofApiServiceImpl(presentationService: PresentationService, connectionService: ConnectionService)(using
     runtime: Runtime[Any]
@@ -48,7 +49,7 @@ class PresentProofApiServiceImpl(presentationService: PresentationService, conne
         .createPresentationRecord(
           thid = DidCommID(),
           subjectDid = didId,
-          connectionId = None,
+          connectionId = Some(requestPresentationInput.connectionId),
           proofTypes = requestPresentationInput.proofs.map { e =>
             ProofType(
               schema = e.schemaId, // TODO rename field to schemaId
