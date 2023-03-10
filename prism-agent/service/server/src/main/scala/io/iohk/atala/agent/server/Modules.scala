@@ -449,7 +449,7 @@ object AppModule {
     (didOpValidatorLayer ++ didServiceLayer ++ secretStorageLayer ++ nonSecretStorageLayer) >>> ManagedDIDService.layer
   }
 
-  val credentialServiceLayer: RLayer[DidOps & DidAgent, CredentialService] =
+  val credentialServiceLayer: RLayer[DidOps & DidAgent & JwtDidResolver, CredentialService] =
     (GrpcModule.layers ++ RepoModule.credentialRepoLayer) >>> CredentialServiceImpl.layer
 
   def presentationServiceLayer =
@@ -508,8 +508,10 @@ object HttpModule {
     (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new DIDRegistrarApi(_, _))
   }
 
-  val issueCredentialsProtocolApiLayer
-      : RLayer[DidOps & DidAgent & ManagedDIDService & ConnectionService & AppConfig, IssueCredentialsProtocolApi] = {
+  val issueCredentialsProtocolApiLayer: RLayer[
+    DidOps & DidAgent & ManagedDIDService & ConnectionService & AppConfig & JwtDidResolver,
+    IssueCredentialsProtocolApi
+  ] = {
     val serviceLayer = AppModule.credentialServiceLayer
     val apiServiceLayer = serviceLayer >>> IssueCredentialsProtocolApiServiceImpl.layer
     val apiMarshallerLayer = IssueCredentialsProtocolApiMarshallerImpl.layer

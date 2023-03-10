@@ -541,6 +541,13 @@ paths:
       description: Accepts a credential offer received from a VC issuer and sends back a credential request.
       parameters:
         - $ref: "./pollux/parameters.yaml#/components/parameters/issueCredentialRecordIdInPath"
+      requestBody:
+        description: The accept credential offer request object.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./pollux/schemas.yaml#/components/schemas/AcceptCredentialOfferRequest
       responses:
         "200":
           description: The issue credential offer was successfully accepted.

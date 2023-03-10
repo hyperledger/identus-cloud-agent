@@ -19,7 +19,6 @@ class IssueCredentialsSteps {
     fun acmeOffersACredential(issuer: Actor, holder: Actor) {
         val newCredential = Credential(
             schemaId = "schema:1234",
-            subjectId = holder.recall("longFormDid"),
             validityPeriod = 3600,
             automaticIssuance = false,
             awaitConfirmation = false,
@@ -28,35 +27,6 @@ class IssueCredentialsSteps {
                 "lastName" to "LastName",
             ),
             issuingDID = issuer.recall("shortFormDid"),
-            connectionId = issuer.recall<Connection>("connection-with-${holder.name}").connectionId,
-        )
-
-        issuer.attemptsTo(
-            Post.to("/issue-credentials/credential-offers")
-                .with {
-                    it.body(newCredential)
-                },
-        )
-        issuer.should(
-            ResponseConsequence.seeThatResponse {
-                it.statusCode(SC_CREATED)
-            },
-        )
-    }
-
-    @When("{actor} offers a credential with unpublished did to {actor}")
-    fun acmeOffersACredentialWithUnpublishedDids(issuer: Actor, holder: Actor) {
-        val newCredential = Credential(
-            schemaId = "schema:1234",
-            subjectId = holder.recall("longFormDid"),
-            validityPeriod = 3600,
-            automaticIssuance = false,
-            awaitConfirmation = false,
-            claims = linkedMapOf(
-                "firstName" to "FirstName",
-                "lastName" to "LastName",
-            ),
-            issuingDID = issuer.recall("longFormDid"),
             connectionId = issuer.recall<Connection>("connection-with-${holder.name}").connectionId,
         )
 
@@ -95,7 +65,12 @@ class IssueCredentialsSteps {
         holder.remember("recordId", recordId)
 
         holder.attemptsTo(
-            Post.to("/issue-credentials/records/$recordId/accept-offer"),
+            Post.to("/issue-credentials/records/$recordId/accept-offer")
+                .with {
+                    it.body("""
+                        { "subjectId": "${holder.recall<String>("longFormDid")}" }
+                    """.trimIndent())
+                },
         )
         holder.should(
             ResponseConsequence.seeThatResponse("Accept offer") {
