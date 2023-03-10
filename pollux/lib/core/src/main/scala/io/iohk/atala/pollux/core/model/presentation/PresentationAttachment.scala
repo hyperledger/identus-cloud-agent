@@ -20,7 +20,12 @@ object Jwt {
   given Encoder[Jwt] = deriveEncoder[Jwt]
   given Decoder[Jwt] = deriveDecoder[Jwt]
 }
-case class ClaimFormat(jwt: Jwt)
+case class Ldp(proof_type: Seq[String])
+object Ldp {
+  given Encoder[Ldp] = deriveEncoder[Ldp]
+  given Decoder[Ldp] = deriveDecoder[Ldp]
+}
+case class ClaimFormat(jwt: Option[Jwt] = None, ldp: Option[Ldp] = None)
 object ClaimFormat {
   given Encoder[ClaimFormat] = deriveEncoder[ClaimFormat]
   given Decoder[ClaimFormat] = deriveDecoder[ClaimFormat]
