@@ -6,7 +6,7 @@ object Dependencies_VC_JWT {
     val zio = "2.0.10"
     val circeVersion = "0.14.3"
     val jwtCirceVersion = "9.2.0"
-    val zioPreludeVersion = "1.0.0-RC16"
+    val zioPreludeVersion = "1.0.0-RC18"
     val castor = Dependencies.Versions.castor
   }
 
