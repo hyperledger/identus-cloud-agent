@@ -16,7 +16,7 @@ object Dependencies {
     val logback = "1.4.5"
     val mercury = "0.20.0"
     val zioJson = "0.3.0"
-    val tapir = "1.2.3"
+    val tapir = "1.2.10"
     val flyway = "9.8.3"
     val testContainersScalaPostgresql = "0.40.12"
     val quill = "4.6.0"
