@@ -47,8 +47,8 @@ class ConnectionsManagementApiServiceImpl(
     }
   }
 
-  override def getConnections()(implicit
-      toEntityMarshallerConnectionCollection: ToEntityMarshaller[ConnectionCollection],
+  override def getConnections(offset: Option[Int], limit: Option[Int])(implicit
+      toEntityMarshallerConnectionCollection: ToEntityMarshaller[ConnectionsPage],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
     val result = for {
@@ -61,9 +61,12 @@ class ConnectionsManagementApiServiceImpl(
       case Left(error) => complete(error.status -> error)
       case Right(result) =>
         getConnections200(
-          ConnectionCollection(
+          ConnectionsPage(
             self = "/collections",
             kind = "Collection",
+            pageOf = "1",
+            next = None,
+            previous = None,
             contents = result
           )
         )

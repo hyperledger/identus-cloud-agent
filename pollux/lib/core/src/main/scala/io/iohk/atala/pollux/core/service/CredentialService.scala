@@ -18,6 +18,7 @@ import java.security.spec.ECGenParameterSpec
 import java.time.Instant
 import java.util.UUID
 import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
+import io.iohk.atala.pollux.vc.jwt.{PresentationPayload, JWT}
 
 trait CredentialService {
 
@@ -56,7 +57,6 @@ trait CredentialService {
       pairwiseIssuerDID: DidId,
       pairwiseHolderDID: DidId,
       thid: DidCommID,
-      subjectId: String,
       schemaId: Option[String],
       claims: Map[String, String],
       validityPeriod: Option[Double] = None,
@@ -83,7 +83,14 @@ trait CredentialService {
 
   def receiveCredentialOffer(offer: OfferCredential): IO[CredentialServiceError, IssueCredentialRecord]
 
-  def acceptCredentialOffer(recordId: DidCommID): IO[CredentialServiceError, IssueCredentialRecord]
+  def acceptCredentialOffer(recordId: DidCommID, subjectId: String): IO[CredentialServiceError, IssueCredentialRecord]
+
+  def createPresentationPayload(recordId: DidCommID, subject: Issuer): IO[CredentialServiceError, PresentationPayload]
+
+  def generateCredentialRequest(
+      recordId: DidCommID,
+      signedPresentation: JWT
+  ): IO[CredentialServiceError, IssueCredentialRecord]
 
   def receiveCredentialRequest(request: RequestCredential): IO[CredentialServiceError, IssueCredentialRecord]
 
@@ -93,7 +100,7 @@ trait CredentialService {
       record: IssueCredentialRecord,
       issuer: Issuer,
       issuanceDate: Instant
-  ): IO[CreateCredentialPayloadFromRecordError, W3cCredentialPayload]
+  ): IO[CredentialServiceError, W3cCredentialPayload]
 
   def publishCredentialBatch(
       credentials: Seq[W3cCredentialPayload],

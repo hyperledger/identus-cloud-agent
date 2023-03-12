@@ -340,6 +340,25 @@ class JdbcCredentialRepository(xa: Transactor[Task], maxRetries: Int) extends Cr
       .transact(xa)
   }
 
+  def updateWithSubjectId(
+      recordId: DidCommID,
+      subjectId: String,
+      protocolState: ProtocolState
+  ): Task[Int] = {
+    val cxnIO = sql"""
+        | UPDATE public.issue_credential_records
+        | SET
+        |   protocol_state = $protocolState,
+        |   subject_id = ${Some(subjectId)},
+        |   updated_at = ${Instant.now}
+        | WHERE
+        |   id = $recordId
+        """.stripMargin.update
+
+    cxnIO.run
+      .transact(xa)
+  }
+
   override def updateWithRequestCredential(
       recordId: DidCommID,
       request: RequestCredential,

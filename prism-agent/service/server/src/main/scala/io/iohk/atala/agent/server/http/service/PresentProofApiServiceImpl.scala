@@ -26,12 +26,11 @@ import io.iohk.atala.pollux.core.model._
 import io.iohk.atala.mercury.model.Base64
 import cats.instances.option
 import io.iohk.atala.pollux.core.model.presentation.Options
+import io.iohk.atala.agent.openapi.model.PublicKeyJwk
 
-class PresentProofApiServiceImpl(
-    presentationService: PresentationService,
-    connectionService: ConnectionService,
-)(using runtime: Runtime[Any])
-    extends PresentProofApiService
+class PresentProofApiServiceImpl(presentationService: PresentationService, connectionService: ConnectionService)(using
+    runtime: Runtime[Any]
+) extends PresentProofApiService
     with AkkaZioSupport
     with OASDomainModelHelper
     with OASErrorModelHelper {
@@ -50,7 +49,7 @@ class PresentProofApiServiceImpl(
         .createPresentationRecord(
           thid = DidCommID(),
           subjectDid = didId,
-          connectionId = None,
+          connectionId = Some(requestPresentationInput.connectionId),
           proofTypes = requestPresentationInput.proofs.map { e =>
             ProofType(
               schema = e.schemaId, // TODO rename field to schemaId
@@ -71,8 +70,8 @@ class PresentProofApiServiceImpl(
 
   }
 
-  override def getAllPresentation()(implicit
-      toEntityMarshallerPresentationStatusarray: ToEntityMarshaller[Seq[PresentationStatus]],
+  override def getAllPresentation(offset: Option[Int], limit: Option[Int])(implicit
+      toEntityMarshallerPresentationStatusPage: ToEntityMarshaller[PresentationStatusPage],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
 
@@ -84,10 +83,17 @@ class PresentProofApiServiceImpl(
 
     onZioSuccess(result.mapBoth(_.toOAS, _.map(_.toOAS)).either) {
       case Left(error) => complete(error.status -> error)
-      case Right(results) => {
-
-        getAllPresentation200(results)
-      }
+      case Right(results) =>
+        getAllPresentation200(
+          PresentationStatusPage(
+            self = "/present-proof/presentations",
+            kind = "Collection",
+            pageOf = "1",
+            next = None,
+            previous = None,
+            contents = results
+          )
+        )
     }
   }
 
@@ -150,8 +156,8 @@ class PresentProofApiServiceImpl(
     }
 
     onZioSuccess(result.mapBoth(_.toOAS, record => record).either) {
-      case Left(error)   => complete(error.status -> error)
-      case Right(result) => updatePresentation200
+      case Left(error) => complete(error.status -> error)
+      case Right(_)    => updatePresentation200
     }
   }
 }

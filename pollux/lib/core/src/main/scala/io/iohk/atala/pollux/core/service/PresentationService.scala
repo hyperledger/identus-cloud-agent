@@ -103,6 +103,8 @@ trait PresentationService {
 
   def markPresentationVerificationFailed(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]]
 
+  def markFailure(recordId: DidCommID, failReason: Option[String]): IO[RepositoryError, Unit]
+
 }
 
 object PresentationServiceImpl {
@@ -550,6 +552,18 @@ private class PresentationServiceImpl(
       PresentationRecord.ProtocolState.PresentationReceived,
       PresentationRecord.ProtocolState.PresentationVerificationFailed
     )
+
+  def markFailure(
+      recordId: DidCommID,
+      failReason: Option[String]
+  ): ZIO[Any, RepositoryError, Unit] = {
+    for {
+      outcome <- presentationRepository
+        .updateAfterFail(recordId, failReason)
+        .tapError(ex => ZIO.logError(s"Failure in $recordId not registered:" + ex.getMessage()))
+        .mapError(RepositoryError.apply)
+    } yield ()
+  }
 
   private[this] def getRecordFromThreadId(
       thid: Option[String]

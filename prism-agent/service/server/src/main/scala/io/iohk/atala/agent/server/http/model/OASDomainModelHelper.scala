@@ -1,26 +1,6 @@
 package io.iohk.atala.agent.server.http.model
 
-import io.iohk.atala.agent.openapi.model.{
-  Connection,
-  ConnectionInvitation,
-  CreateManagedDidRequestDocumentTemplate,
-  DID,
-  DIDDocumentMetadata,
-  DIDOperationResponse,
-  DIDResponse,
-  DidOperationSubmission,
-  IssueCredentialRecord,
-  IssueCredentialRecordCollection,
-  ManagedDID,
-  ManagedDIDKeyTemplate,
-  PresentationStatus,
-  PublicKeyJwk,
-  Service,
-  UpdateManagedDIDRequestActionsInner,
-  UpdateManagedDIDRequestActionsInnerUpdateService,
-  VerificationMethod,
-  VerificationMethodOrRef
-}
+import io.iohk.atala.agent.openapi.model.*
 import io.iohk.atala.castor.core.model.did as castorDomain
 import io.iohk.atala.agent.walletapi.model as walletDomain
 import io.iohk.atala.pollux.core.model as polluxdomain

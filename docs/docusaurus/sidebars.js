@@ -9,18 +9,6 @@ const sidebars = {
 
   tutorialsSidebar: [
     'index',
-    {
-      type: 'category',
-      label: 'Essentials',
-      link: {
-        type: 'generated-index',
-        title: 'Essentials',
-        description: 'Essential tutorials'
-      },
-      items: [
-        'essentials/setup-agent'
-      ]
-    },
     'connections/connection',
     {
       type: 'category',
@@ -59,21 +47,10 @@ const sidebars = {
         description: 'Schema tutorials'
       },
       items: [
+        'schemas/credential-schema',
         'schemas/create',
         'schemas/update',
         'schemas/delete'
-      ]
-    },
-    {
-      type: 'category',
-      label: 'Wallets',
-      link: {
-        type: 'generated-index',
-        title: 'Wallets',
-        description: 'Wallets tutorials'
-      },
-      items: [
-        'wallets/use-wallet-sdk'
       ]
     }
   ]

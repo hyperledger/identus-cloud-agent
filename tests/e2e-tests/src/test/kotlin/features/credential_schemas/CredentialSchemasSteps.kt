@@ -1,12 +1,15 @@
 package features.credential_schemas
 
 import api_models.CredentialSchema
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
 import common.TestConstants
 import common.Utils.lastResponseObject
 import common.Utils.toJsonPath
 import io.cucumber.java.PendingException
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
+import io.restassured.path.json.JsonPath
 import net.serenitybdd.screenplay.Actor
 import net.serenitybdd.screenplay.rest.interactions.Get
 import net.serenitybdd.screenplay.rest.interactions.Post
@@ -22,32 +25,43 @@ class CredentialSchemasSteps {
     @When("{actor} creates a new credential schema")
     fun acmeCreatesANewCredentialSchema(actor: Actor) {
         actor.attemptsTo(
-            Post.to("/schema-registry/schemas")
-                .with {
-                    it.body(TestConstants.CREDENTIAL_SCHEMAS.STUDENT_SCHEMA)
-                },
+            Post.to("/schema-registry/schemas").with {
+                it.body(TestConstants.CREDENTIAL_SCHEMAS.STUDENT_SCHEMA)
+            },
         )
     }
 
     @Then("{actor} sees new credential schema is available")
     fun newCredentialSchemaIsAvailable(actor: Actor) {
-        actor.should(
-            ResponseConsequence.seeThatResponse("New schema created") {
-                it.statusCode(SC_CREATED)
-                it.body("id", not(emptyString()))
-                it.body("authored", not(emptyString()))
-                it.body("kind", containsString("VerifiableCredentialSchema"))
-                it.body("name", containsString(TestConstants.CREDENTIAL_SCHEMAS.STUDENT_SCHEMA.name))
-                it.body("description", containsString(TestConstants.CREDENTIAL_SCHEMAS.STUDENT_SCHEMA.description))
-                it.body("version", containsString(TestConstants.CREDENTIAL_SCHEMAS.STUDENT_SCHEMA.version))
-                TestConstants.CREDENTIAL_SCHEMAS.STUDENT_SCHEMA.tags!!.forEach { tag ->
-                    it.body("tags", hasItem(tag))
-                }
-                TestConstants.CREDENTIAL_SCHEMAS.STUDENT_SCHEMA.attributes!!.forEach { attr ->
-                    it.body("attributes", hasItem(attr))
-                }
-            },
-        )
+        actor.should(ResponseConsequence.seeThatResponse("New schema created") {
+            it.statusCode(SC_CREATED)
+            it.body("guid", not(emptyString()))
+            it.body("id", not(emptyString()))
+            it.body("longId", not(emptyString()))
+            it.body("authored", not(emptyString()))
+            it.body("kind", containsString("CredentialSchema"))
+            it.body("name", containsString(TestConstants.CREDENTIAL_SCHEMAS.STUDENT_SCHEMA.name))
+            it.body("description", containsString(TestConstants.CREDENTIAL_SCHEMAS.STUDENT_SCHEMA.description))
+            it.body("version", containsString(TestConstants.CREDENTIAL_SCHEMAS.STUDENT_SCHEMA.version))
+            it.body("type", equalTo(TestConstants.CREDENTIAL_SCHEMAS.CREDENTIAL_SCHEMA_TYPE))
+            TestConstants.CREDENTIAL_SCHEMAS.STUDENT_SCHEMA.tags!!.forEach { tag ->
+                it.body("tags", hasItem(tag))
+            }
+            it.body(
+                "schema.\$id",
+                equalTo(TestConstants.CREDENTIAL_SCHEMAS.STUDENT_SCHEMA.schema!!.get("\$id").asText())
+            )
+
+            it.body(
+                "schema", equalTo<Map<String, Any>>(
+                    JsonPath(
+                        ObjectMapper().writeValueAsString(
+                            TestConstants.CREDENTIAL_SCHEMAS.STUDENT_SCHEMA.schema
+                        )
+                    ).getMap("")
+                )
+            )
+        })
     }
 
     @When("{actor} creates {int} new schemas")
@@ -55,10 +69,9 @@ class CredentialSchemasSteps {
         val createdSchemas: MutableList<CredentialSchema> = mutableListOf()
         repeat(numberOfSchemas) { i: Int ->
             actor.attemptsTo(
-                Post.to("/schema-registry/schemas")
-                    .with {
-                        it.body(TestConstants.CREDENTIAL_SCHEMAS.generate_with_name_suffix(i.toString()))
-                    },
+                Post.to("/schema-registry/schemas").with {
+                    it.body(TestConstants.CREDENTIAL_SCHEMAS.generate_with_name_suffix(i.toString()))
+                },
             )
             actor.should(
                 ResponseConsequence.seeThatResponse("New schema created") {
@@ -74,7 +87,7 @@ class CredentialSchemasSteps {
     fun theyCanBeAccessedWithPagination(actor: Actor) {
         actor.recall<List<CredentialSchema>>("createdSchemas").forEach { schema ->
             actor.attemptsTo(
-                Get.resource("/schema-registry/schemas/${schema.id}"),
+                Get.resource("/schema-registry/schemas/${schema.guid}"),
             )
             actor.should(
                 ResponseConsequence.seeThatResponse("Schema achieved") {
@@ -87,12 +100,11 @@ class CredentialSchemasSteps {
     @When("{actor} creates a new schema with some id")
     fun acmeCreatesANewSchemaWithFixedId(actor: Actor) {
         val wrongSchema = TestConstants.CREDENTIAL_SCHEMAS.STUDENT_SCHEMA
-        wrongSchema.id = TestConstants.RANDOM_CONSTAND_UUID
+        wrongSchema.guid = TestConstants.RANDOM_CONSTAND_UUID
         actor.attemptsTo(
-            Post.to("/schema-registry/schemas")
-                .with {
-                    it.body(wrongSchema)
-                },
+            Post.to("/schema-registry/schemas").with {
+                it.body(wrongSchema)
+            },
         )
         actor.should(
             ResponseConsequence.seeThatResponse("New schema created") {
@@ -104,12 +116,11 @@ class CredentialSchemasSteps {
     @When("{actor} tries to create a new schema with identical id")
     fun acmeTriesToCreateANewSchemaWithSameId(actor: Actor) {
         val wrongSchema = TestConstants.CREDENTIAL_SCHEMAS.STUDENT_SCHEMA
-        wrongSchema.id = TestConstants.RANDOM_CONSTAND_UUID
+        wrongSchema.guid = TestConstants.RANDOM_CONSTAND_UUID
         actor.attemptsTo(
-            Post.to("/schema-registry/schemas")
-                .with {
-                    it.body(wrongSchema)
-                },
+            Post.to("/schema-registry/schemas").with {
+                it.body(wrongSchema)
+            },
         )
     }
 
@@ -130,12 +141,11 @@ class CredentialSchemasSteps {
     @When("{actor} tries to create a new schema with {word} in field {word}")
     fun acmeTriesToCreateANewSchemaWithField(actor: Actor, value: String, field: String) {
         actor.attemptsTo(
-            Post.to("/schema-registry/schemas")
-                .with {
-                    it.body(
-                        toJsonPath(TestConstants.CREDENTIAL_SCHEMAS.STUDENT_SCHEMA).set(field, value).jsonString(),
-                    )
-                },
+            Post.to("/schema-registry/schemas").with {
+                it.body(
+                    toJsonPath(TestConstants.CREDENTIAL_SCHEMAS.STUDENT_SCHEMA).set(field, value).jsonString(),
+                )
+            },
         )
     }
 

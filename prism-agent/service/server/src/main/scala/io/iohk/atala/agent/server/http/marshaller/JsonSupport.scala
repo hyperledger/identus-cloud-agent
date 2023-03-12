@@ -70,8 +70,9 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   }
   // Issue
   given RootJsonFormat[CreateIssueCredentialRecordRequest] = jsonFormat7(CreateIssueCredentialRecordRequest.apply)
+  given RootJsonFormat[AcceptCredentialOfferRequest] = jsonFormat1(AcceptCredentialOfferRequest.apply)
   given RootJsonFormat[IssueCredentialRecord] = jsonFormat12(IssueCredentialRecord.apply)
-  given RootJsonFormat[IssueCredentialRecordCollection] = jsonFormat1(IssueCredentialRecordCollection.apply)
+  given RootJsonFormat[IssueCredentialRecordPage] = jsonFormat6(IssueCredentialRecordPage.apply)
 
   // Presentation
   given RootJsonFormat[Options] = jsonFormat2(Options.apply)
@@ -80,11 +81,12 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   given RootJsonFormat[RequestPresentationOutput] = jsonFormat1(RequestPresentationOutput.apply)
   given RootJsonFormat[PresentationStatus] = jsonFormat5(PresentationStatus.apply)
   given RootJsonFormat[RequestPresentationAction] = jsonFormat2(RequestPresentationAction.apply)
+  given RootJsonFormat[PresentationStatusPage] = jsonFormat6(PresentationStatusPage.apply)
 
   // Connections Management
   given RootJsonFormat[CreateConnectionRequest] = jsonFormat1(CreateConnectionRequest.apply)
   given RootJsonFormat[AcceptConnectionInvitationRequest] = jsonFormat1(AcceptConnectionInvitationRequest.apply)
-  given RootJsonFormat[ConnectionCollection] = jsonFormat3(ConnectionCollection.apply)
+  given RootJsonFormat[ConnectionsPage] = jsonFormat6(ConnectionsPage.apply)
   given RootJsonFormat[Connection] = jsonFormat11(Connection.apply)
   given RootJsonFormat[ConnectionInvitation] = jsonFormat4(ConnectionInvitation.apply)
 

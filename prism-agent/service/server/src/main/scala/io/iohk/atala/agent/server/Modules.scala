@@ -33,8 +33,11 @@ import io.iohk.atala.pollux.core.service.{
   PresentationService,
   PresentationServiceImpl,
   VerificationPolicyService,
-  VerificationPolicyServiceImpl
+  VerificationPolicyServiceImpl,
+  CredentialSchemaService,
+  CredentialSchemaServiceImpl
 }
+import io.iohk.atala.pollux.credentialschema.controller.{CredentialSchemaController, CredentialSchemaControllerImpl}
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
 import io.iohk.atala.pollux.core.repository.CredentialRepository
@@ -42,6 +45,7 @@ import io.iohk.atala.pollux.sql.repository.{
   JdbcCredentialRepository,
   JdbcPresentationRepository,
   JdbcVerificationPolicyRepository,
+  JdbcCredentialSchemaRepository,
   DbConfig as PolluxDbConfig
 }
 import io.iohk.atala.connect.sql.repository.DbConfig as ConnectDbConfig
@@ -66,8 +70,7 @@ import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc
 
 import java.io.IOException
 import cats.implicits.*
-import io.iohk.atala.pollux.schema.SchemaRegistryServerEndpoints
-import io.iohk.atala.pollux.service.{JdbcSchemaRegistryService, SchemaRegistryService, SchemaRegistryServiceInMemory}
+import io.iohk.atala.pollux.credentialschema.SchemaRegistryServerEndpoints
 import io.iohk.atala.pollux.core.repository.PresentationRepository
 import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
@@ -78,7 +81,7 @@ import io.iohk.atala.connect.sql.repository.JdbcConnectionRepository
 import io.iohk.atala.mercury.protocol.connection.ConnectionRequest
 import io.iohk.atala.mercury.protocol.connection.ConnectionResponse
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
-import io.iohk.atala.pollux.schema.{SchemaRegistryServerEndpoints, VerificationPolicyServerEndpoints}
+import io.iohk.atala.pollux.credentialschema.{SchemaRegistryServerEndpoints, VerificationPolicyServerEndpoints}
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.mercury.protocol.presentproof.*
 import io.iohk.atala.agent.server.config.AgentConfig
@@ -94,7 +97,8 @@ import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.pollux.vc.jwt.DidResolver as JwtDidResolver
 import io.iohk.atala.pollux.vc.jwt.PrismDidResolver
 import io.iohk.atala.mercury.DidAgent
-import io.iohk.atala.pollux.schema.controller.{
+import io.iohk.atala.pollux.credentialschema.controller.{
+  CredentialSchemaController,
   VerificationPolicyController,
   VerificationPolicyControllerImpl,
   VerificationPolicyControllerInMemory
@@ -112,7 +116,7 @@ object Modules {
     httpServerApp.unit
   }
 
-  lazy val zioApp: RIO[SchemaRegistryService & VerificationPolicyController & AppConfig, Unit] = {
+  lazy val zioApp: RIO[CredentialSchemaController & VerificationPolicyController & AppConfig, Unit] = {
     val zioHttpServerApp = for {
       allSchemaRegistryEndpoints <- SchemaRegistryServerEndpoints.all
       allVerificationPolicyEndpoints <- VerificationPolicyServerEndpoints.all
@@ -162,7 +166,8 @@ object Modules {
   }
 
   val issueCredentialDidCommExchangesJob: RIO[
-    AppConfig & DidOps & DIDResolver & JwtDidResolver & HttpClient & CredentialService & DIDService & ManagedDIDService,
+    AppConfig & DidOps & DIDResolver & JwtDidResolver & HttpClient & CredentialService & DIDService &
+      ManagedDIDService & PresentationService,
     Unit
   ] =
     for {
@@ -444,7 +449,7 @@ object AppModule {
     (didOpValidatorLayer ++ didServiceLayer ++ secretStorageLayer ++ nonSecretStorageLayer) >>> ManagedDIDService.layer
   }
 
-  val credentialServiceLayer: RLayer[DidOps & DidAgent, CredentialService] =
+  val credentialServiceLayer: RLayer[DidOps & DidAgent & JwtDidResolver, CredentialService] =
     (GrpcModule.layers ++ RepoModule.credentialRepoLayer) >>> CredentialServiceImpl.layer
 
   def presentationServiceLayer =
@@ -503,8 +508,10 @@ object HttpModule {
     (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new DIDRegistrarApi(_, _))
   }
 
-  val issueCredentialsProtocolApiLayer
-      : RLayer[DidOps & DidAgent & ManagedDIDService & ConnectionService & AppConfig, IssueCredentialsProtocolApi] = {
+  val issueCredentialsProtocolApiLayer: RLayer[
+    DidOps & DidAgent & ManagedDIDService & ConnectionService & AppConfig & JwtDidResolver,
+    IssueCredentialsProtocolApi
+  ] = {
     val serviceLayer = AppModule.credentialServiceLayer
     val apiServiceLayer = serviceLayer >>> IssueCredentialsProtocolApiServiceImpl.layer
     val apiMarshallerLayer = IssueCredentialsProtocolApiMarshallerImpl.layer
@@ -620,8 +627,11 @@ object RepoModule {
   val connectionRepoLayer: TaskLayer[ConnectionRepository[Task]] =
     RepoModule.connectTransactorLayer >>> JdbcConnectionRepository.layer
 
-  val credentialSchemaServiceLayer: TaskLayer[SchemaRegistryService] =
-    RepoModule.polluxTransactorLayer >>> JdbcSchemaRegistryService.layer
+  val credentialSchemaServiceLayer: TaskLayer[CredentialSchemaController] =
+    RepoModule.polluxTransactorLayer >>>
+      JdbcCredentialSchemaRepository.layer >>>
+      CredentialSchemaServiceImpl.layer >>>
+      CredentialSchemaControllerImpl.layer
 
   val verificationPolicyServiceLayer: TaskLayer[VerificationPolicyController] =
     RepoModule.polluxTransactorLayer >>>

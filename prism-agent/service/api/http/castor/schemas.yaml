@@ -196,7 +196,7 @@ components:
                     example: service-1
               updateService:
                 type: object
-                description: A patch to existing Service. 'type' and 'serviceEndpoint' must not be both empty.
+                description: A patch to existing Service. 'type' and 'serviceEndpoint' can't both be empty.
                 required:
                   - id
                 properties:
@@ -213,29 +213,18 @@ components:
                     type: array
                     items:
                       type: string
-                      example: "https://bar.example.com"
+                      example: "https://bar.example.com/"
 
     ManagedDIDPage:
-      type: object
-      required:
-        - self
-        - kind
-        - pageOf
-      properties:
-        self:
-          type: string
-        kind:
-          type: string
-        pageOf:
-          type: string
-        next:
-          type: string
-        previous:
-          type: string
-        contents:
-          type: array
-          items:
-            $ref: "#/components/schemas/ManagedDID"
+      allOf:
+        - $ref: "../shared/schemas.yaml#/components/schemas/Pagination"
+        - type: object
+          required: [contents]
+          properties:
+            contents:
+              type: array
+              items:
+                $ref: "#/components/schemas/ManagedDID"
 
     ManagedDID:
       type: object
@@ -297,7 +286,7 @@ components:
           type: array
           items:
             type: string
-            example: "https://bar.example.com"
+            example: "https://bar.example.com/"
 
     ManagedDIDKeyTemplate:
       type: object
@@ -337,40 +326,3 @@ components:
         didRef:
           type: string
           example: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff
-
-    ErrorResponse:
-      type: object
-      description: An RFC-7807 compliant data structure for reporting errors to the client
-      required:
-        - type
-        - title
-        - status
-        - instance
-      properties:
-        type:
-          type: string
-          description: A URI reference that identifies the problem type.
-          example: https://example.org/doc/#model-MalformedEmail
-        title:
-          type: string
-          example: "Malformed email"
-          description: |-
-            A short, human-readable summary of the problem type. It does not
-            change from occurrence to occurrence of the problem.
-        status:
-          type: integer
-          format: int32
-          example: 400
-          description: |-
-            The HTTP status code for this occurrence of the problem.
-        detail:
-          type: string
-          description: |-
-            A human-readable explanation specific to this occurrence of the problem.
-          example: "The received '{}à!è@!.b}' email does not conform to the email format"
-        instance:
-          type: string
-          example: "/problems/d914e"
-          description: |-
-            A URI reference that identifies the specific occurrence of the problem.
-            It may or may not yield further information if dereferenced.

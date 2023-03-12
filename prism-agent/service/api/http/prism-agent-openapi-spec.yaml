@@ -1,4 +1,3 @@
----
 openapi: 3.0.1
 info:
   title: Prism Agent OpenAPI specification
@@ -42,8 +41,8 @@ paths:
   # ----------------------------------
   /dids/{didRef}:
     get:
-      tags: ["DID"]
       operationId: getDid
+      tags: ["DID"]
       summary: Resolve Prism DID
       description: Resolve Prism DID to a DID document.
       parameters:
@@ -56,24 +55,20 @@ paths:
               schema:
                 $ref: "./castor/schemas.yaml#/components/schemas/DIDResponse"
         "404":
-          description: There is no DID existing for the 'didRef'.
-          content:
-            application/json:
-              schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
+          $ref: "./shared/responses.yaml#/components/responses/NotFound"
 
   /did-registrar/dids:
     get:
-      tags: ["DID Registrar"]
       operationId: listManagedDid
+      tags: ["DID Registrar"]
       summary: List all DIDs stored in Prism Agent's wallet
       description: |
         List all DIDs stored in Prism Agent's wallet.
         Return a paginated items ordered by created timestamp.
         If the `limit` parameter is not set, it defaults to 100 items per page.
       parameters:
-        - $ref: ./shared/parameters.yaml#/components/parameters/offset
-        - $ref: ./shared/parameters.yaml#/components/parameters/limit
+        - $ref: "./shared/parameters.yaml#/components/parameters/offset"
+        - $ref: "./shared/parameters.yaml#/components/parameters/limit"
       responses:
         "200":
           description: List Prism Agent managed DIDs
@@ -82,15 +77,11 @@ paths:
               schema:
                 $ref: "./castor/schemas.yaml#/components/schemas/ManagedDIDPage"
         "500":
-          description: Internal Error.
-          content:
-            application/json:
-              schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
+          $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
 
     post:
-      tags: ["DID Registrar"]
       operationId: createManagedDid
+      tags: ["DID Registrar"]
       summary: Create unpublished DID and store it in Prism Agent's wallet
       description: |
         Create unpublished DID and store it inside Prism Agent's wallet. The private keys of the DID is
@@ -102,7 +93,7 @@ paths:
             schema:
               $ref: "./castor/schemas.yaml#/components/schemas/CreateManagedDidRequest"
       responses:
-        "200":
+        "201":
           description: Created unpublished DID.
           content:
             application/json:
@@ -113,12 +104,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
+                $ref: "./shared/schemas.yaml#/components/schemas/ErrorResponse"
 
   /did-registrar/dids/{didRef}:
     get:
-      tags: ["DID Registrar"]
       operationId: getManagedDid
+      tags: ["DID Registrar"]
       summary: Get DID stored in Prism Agent's wallet
       description: Get DID stored in Prism Agent's wallet
       parameters:
@@ -131,16 +122,12 @@ paths:
               schema:
                 $ref: "./castor/schemas.yaml#/components/schemas/ManagedDID"
         "404":
-          description: There is no DID existing for the 'didRef'.
-          content:
-            application/json:
-              schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
+          $ref: "./shared/responses.yaml#/components/responses/NotFound"
 
   /did-registrar/dids/{didRef}/publications:
     post:
-      tags: ["DID Registrar"]
       operationId: publishManagedDid
+      tags: ["DID Registrar"]
       summary: Publish the DID stored in Prism Agent's wallet to the VDR
       description: |
         Publish the DID stored in Prism Agent's wallet to the VDR.
@@ -158,12 +145,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
+                $ref: "./shared/schemas.yaml#/components/schemas/ErrorResponse"
 
   /did-registrar/dids/{didRef}/updates:
     post:
-      tags: ["DID Registrar"]
       operationId: updateManagedDid
+      tags: ["DID Registrar"]
       summary: Update DID in Prism Agent's wallet and post update operation to the VDR
       description: |
         Update DID in Prism Agent's wallet and post update operation to the VDR.
@@ -190,12 +177,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
+                $ref: "./shared/schemas.yaml#/components/schemas/ErrorResponse"
 
   /did-registrar/dids/{didRef}/deactivations:
     post:
-      tags: ["DID Registrar"]
       operationId: deactivateManagedDid
+      tags: ["DID Registrar"]
       summary: Deactivate DID in Prism Agent's wallet and post deactivate operation to the VDR
       description: |
         Deactivate DID in Prism Agent's wallet and post deactivate operation to the VDR.
@@ -203,7 +190,7 @@ paths:
         - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
       responses:
         "202":
-          description: Publishing DID to Blockchain.
+          description: DID deactivation to VDR successfully queued.
           content:
             application/json:
               schema:
@@ -213,23 +200,21 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
+                $ref: "./shared/schemas.yaml#/components/schemas/ErrorResponse"
 
   # ----------------------------------
   # Pollux
   # ----------------------------------
   /schema-registry/schemas:
     get:
+      operationId: lookupSchemasByQuery
       tags:
         - Schema Registry
       summary: Lookup schemas by indexed fields
-      description:
-        "Lookup schemas by `author`, `name`, `tags` parameters and control
-        the pagination by `offset` and `limit` parameters "
-      operationId: lookupSchemasByQuery
+      description: "Lookup schemas by `author`, `name`, `tags` parameters"
       parameters:
-        - $ref: ./shared/parameters.yaml#/components/parameters/offset
-        - $ref: ./shared/parameters.yaml#/components/parameters/limit
+        - $ref: "./shared/parameters.yaml#/components/parameters/offset"
+        - $ref: "./shared/parameters.yaml#/components/parameters/limit"
         - name: author
           in: query
           required: false
@@ -252,28 +237,17 @@ paths:
             type: string
       responses:
         "200":
-          description: ""
+          description: "List of all schemas managed by the Agent"
           content:
             application/json:
               schema:
-                $ref: ./pollux/schemas.yaml#/components/schemas/VerifiableCredentialSchemaPage
+                $ref: "./pollux/schemas.yaml#/components/schemas/VerifiableCredentialSchemaPage"
         "400":
-          description:
-            "Invalid value for: query parameter author, Invalid value for:
-            query parameter name, Invalid value for: query parameter tags, Invalid
-            value for: query parameter offset, Invalid value for: query parameter
-            limit, Invalid value for: query parameter order"
-          content:
-            text/plain:
-              schema:
-                type: string
+          $ref: "./shared/responses.yaml#/components/responses/BadRequest"
         "500":
-          description: ""
-          content:
-            application/json:
-              schema:
-                $ref: ./pollux/schemas.yaml#/components/schemas/InternalServerError
+          $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
     post:
+      operationId: createSchema
       tags:
         - Schema Registry
       summary: Publish new schema to the schema registry
@@ -281,7 +255,6 @@ paths:
         Publish the new schema with attributes to the schema registry on
         behalf of Cloud Agent. Schema will be signed by the keys of Cloud Agent and
         issued by the DID that corresponds to it
-      operationId: createSchema
       requestBody:
         description: Create schema input object with the metadata and attributes
         content:
@@ -291,32 +264,24 @@ paths:
         required: true
       responses:
         "201":
-          description: ""
+          description: "Schema successfully created"
           content:
             application/json:
               schema:
                 $ref: ./pollux/schemas.yaml#/components/schemas/VerifiableCredentialSchema
         "400":
-          description: "Invalid value for: body"
-          content:
-            text/plain:
-              schema:
-                type: string
+          $ref: "./shared/responses.yaml#/components/responses/BadRequest"
         "500":
-          description: ""
-          content:
-            application/json:
-              schema:
-                $ref: ./pollux/schemas.yaml#/components/schemas/InternalServerError
+          $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
   /schema-registry/schemas/{id}:
     get:
+      operationId: getSchemaById
       tags:
         - Schema Registry
       summary: Fetch the schema from the registry by id
       description:
         Fetch the schema by the unique identifier. Verifiable Credential
         Schema in json format is returned.
-      operationId: getSchemaById
       parameters:
         - name: id
           in: path
@@ -327,54 +292,35 @@ paths:
             format: uuid
       responses:
         "200":
-          description: ""
+          description: "Verifiable credential Schema"
           content:
             application/json:
               schema:
                 $ref: ./pollux/schemas.yaml#/components/schemas/VerifiableCredentialSchema
-        "400":
-          description: "Invalid value for: path parameter id"
-          content:
-            text/plain:
-              schema:
-                type: string
         "404":
-          description: ""
-          content:
-            application/json:
-              schema:
-                $ref: ./pollux/schemas.yaml#/components/schemas/NotFound
-
+          $ref: "./shared/responses.yaml#/components/responses/NotFound"
+        "400":
+          $ref: "./shared/responses.yaml#/components/responses/BadRequest"
+        "500":
+          $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
   # ----------------------------------
   # Verification Policies
   # ----------------------------------
   /verification/policies:
     get:
+      operationId: lookupVerificationPoliciesByQuery
       tags:
         - Verification
       summary: Lookup verification policies by query
-      description:
-        Lookup verification policies by `name`, and control the pagination
-        by `offset` and `limit` parameters
-      operationId: lookupVerificationPoliciesByQuery
+      description: Lookup verification policies by `name`
       parameters:
+        - $ref: ./shared/parameters.yaml#/components/parameters/offset
+        - $ref: ./shared/parameters.yaml#/components/parameters/limit
         - name: name
           in: query
           required: false
           schema:
             type: string
-        - name: offset
-          in: query
-          required: false
-          schema:
-            type: integer
-            format: int32
-        - name: limit
-          in: query
-          required: false
-          schema:
-            type: integer
-            format: int32
         - name: order
           in: query
           required: false
@@ -382,29 +328,21 @@ paths:
             type: string
       responses:
         "200":
-          description: ""
+          description: "List of Verification policies"
           content:
             application/json:
               schema:
                 $ref: "./pollux/schemas.yaml#/components/schemas/VerificationPolicyPage"
         "400":
-          description: ""
-          content:
-            application/json:
-              schema:
-                $ref: "./pollux/schemas.yaml#/components/schemas/BadRequest"
+          $ref: "./shared/responses.yaml#/components/responses/BadRequest"
         "500":
-          description: ""
-          content:
-            application/json:
-              schema:
-                $ref: "./pollux/schemas.yaml#/components/schemas/InternalServerError"
+          $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
     post:
+      operationId: createVerificationPolicy
       tags:
         - Verification
       summary: Create the new verification policy
       description: Create the new verification policy
-      operationId: createVerificationPolicy
       requestBody:
         description: Create verification policy object
         content:
@@ -414,30 +352,23 @@ paths:
         required: true
       responses:
         "201":
-          description: ""
+          description: "Verification policy created successfully"
           content:
             application/json:
               schema:
                 $ref: "./pollux/schemas.yaml#/components/schemas/VerificationPolicy"
         "400":
-          description: ""
-          content:
-            application/json:
-              schema:
-                $ref: "./pollux/schemas.yaml#/components/schemas/BadRequest"
+          $ref: "./shared/responses.yaml#/components/responses/BadRequest"
         "500":
-          description: ""
-          content:
-            application/json:
-              schema:
-                $ref: "./pollux/schemas.yaml#/components/schemas/InternalServerError"
+          $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
+
   /verification/policies/{id}:
     get:
+      operationId: getVerificationPolicyById
       tags:
         - Verification
       summary: Fetch the verification policy by id
       description: Get the verification policy by id
-      operationId: getVerificationPolicyById
       parameters:
         - name: id
           in: path
@@ -448,35 +379,23 @@ paths:
             format: uuid
       responses:
         "200":
-          description: ""
+          description: "Verification policy"
           content:
             application/json:
               schema:
                 $ref: "./pollux/schemas.yaml#/components/schemas/VerificationPolicy"
         "400":
-          description: ""
-          content:
-            application/json:
-              schema:
-                $ref: "./pollux/schemas.yaml#/components/schemas/BadRequest"
+          $ref: "./shared/responses.yaml#/components/responses/BadRequest"
         "404":
-          description: ""
-          content:
-            application/json:
-              schema:
-                $ref: "./pollux/schemas.yaml#/components/schemas/NotFound"
+          $ref: "./shared/responses.yaml#/components/responses/NotFound"
         "500":
-          description: ""
-          content:
-            application/json:
-              schema:
-                $ref: "./pollux/schemas.yaml#/components/schemas/InternalServerError"
+          $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
     put:
+      operationId: updateVerificationPolicy
       tags:
         - Verification
       summary: Update the verification policy object by id
       description: Update the verification policy entry
-      operationId: updateVerificationPolicy
       parameters:
         - name: id
           in: path
@@ -500,35 +419,23 @@ paths:
         required: true
       responses:
         "200":
-          description: ""
+          description: "Verification policy updated successfully"
           content:
             application/json:
               schema:
                 $ref: "./pollux/schemas.yaml#/components/schemas/VerificationPolicy"
         "400":
-          description: ""
-          content:
-            application/json:
-              schema:
-                $ref: "./pollux/schemas.yaml#/components/schemas/BadRequest"
+          $ref: "./shared/responses.yaml#/components/responses/BadRequest"
         "404":
-          description: ""
-          content:
-            application/json:
-              schema:
-                $ref: "./pollux/schemas.yaml#/components/schemas/NotFound"
+          $ref: "./shared/responses.yaml#/components/responses/NotFound"
         "500":
-          description: ""
-          content:
-            application/json:
-              schema:
-                $ref: "./pollux/schemas.yaml#/components/schemas/InternalServerError"
+          $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
     delete:
+      operationId: deleteVerificationPolicyById
       tags:
         - Verification
       summary: Delete the verification policy by id
       description: Delete the verification policy by id
-      operationId: deleteVerificationPolicyById
       parameters:
         - name: id
           in: path
@@ -546,102 +453,101 @@ paths:
             format: int32
       responses:
         "200":
-          description: ""
+          description: "Verification policy deleted successfully"
+          content:
+            application/json:
+              schema:
+                type: object
         "400":
-          description: ""
-          content:
-            application/json:
-              schema:
-                $ref: "./pollux/schemas.yaml#/components/schemas/BadRequest"
+          $ref: "./shared/responses.yaml#/components/responses/BadRequest"
         "404":
-          description: ""
-          content:
-            application/json:
-              schema:
-                $ref: "./pollux/schemas.yaml#/components/schemas/NotFound"
+          $ref: "./shared/responses.yaml#/components/responses/NotFound"
         "500":
-          description: ""
-          content:
-            application/json:
-              schema:
-                $ref: "./pollux/schemas.yaml#/components/schemas/InternalServerError"
+          $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
 
   ## Issue Credential Protocol
 
   /issue-credentials/credential-offers:
     post:
-      tags: ["Issue Credentials Protocol"]
       operationId: createCredentialOffer
+      tags: ["Issue Credentials Protocol"]
       summary: As a credential issuer, create a new credential offer to be sent to a holder.
+      description: Creates a new credential offer in the database
       requestBody:
         description: The credential offer object.
         required: true
         content:
           application/json:
             schema:
-              $ref: ./pollux/schemas.yaml#/components/schemas/CreateIssueCredentialRecordRequest
+              $ref: "./pollux/schemas.yaml#/components/schemas/CreateIssueCredentialRecordRequest"
       responses:
         "201":
           description: The issue credential record was created successfully, and is returned in the response body.
           content:
             application/json:
               schema:
-                $ref: ./pollux/schemas.yaml#/components/schemas/IssueCredentialRecord
+                $ref: "./pollux/schemas.yaml#/components/schemas/IssueCredentialRecord"
         "422":
           description: The issue credential record creation failed. More information on the error can be found in the response body.
           content:
             application/json:
               schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
+                $ref: "./shared/schemas.yaml#/components/schemas/ErrorResponse"
 
   /issue-credentials/records:
     get:
-      tags: ["Issue Credentials Protocol"]
       operationId: getCredentialRecords
+      tags: ["Issue Credentials Protocol"]
       summary: Gets the list of issue credential records.
+      description: Get the list of issue credential records paginated
+      parameters:
+        - $ref: "./shared/parameters.yaml#/components/parameters/offset"
+        - $ref: "./shared/parameters.yaml#/components/parameters/limit"
       responses:
         "200":
           description: The list of issue credential records.
           content:
             application/json:
               schema:
-                $ref: ./pollux/schemas.yaml#/components/schemas/IssueCredentialRecordCollection
+                $ref: "./pollux/schemas.yaml#/components/schemas/IssueCredentialRecordPage"
         "500":
-          description: Retrieving the issue credential records failed for an unexpected reason. More information on the error can be found in the response body.
-          content:
-            application/json:
-              schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
+          $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
 
   /issue-credentials/records/{recordId}:
     get:
-      tags: ["Issue Credentials Protocol"]
       operationId: getCredentialRecord
+      tags: ["Issue Credentials Protocol"]
       summary: Gets an existing issue credential record by its unique identifier.
+      description: Gets issue credential records by record id
       parameters:
-        - $ref: ./pollux/parameters.yaml#/components/parameters/issueCredentialRecordIdInPath
+        - $ref: "./pollux/parameters.yaml#/components/parameters/issueCredentialRecordIdInPath"
       responses:
         "200":
           description: The issue credential record.
           content:
             application/json:
               schema:
-                $ref: ./pollux/schemas.yaml#/components/schemas/IssueCredentialRecord
+                $ref: "./pollux/schemas.yaml#/components/schemas/IssueCredentialRecord"
         "404":
-          description: There is no issue credential record matching the given identifier.
-          content:
-            application/json:
-              schema:
-                $ref: "./pollux/schemas.yaml#/components/schemas/ErrorResponse"
+          $ref: "./shared/responses.yaml#/components/responses/NotFound"
+        "500":
+          $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
 
   /issue-credentials/records/{recordId}/accept-offer:
     post:
-      tags: ["Issue Credentials Protocol"]
       operationId: acceptCredentialOffer
+      tags: ["Issue Credentials Protocol"]
       summary: As a holder, accepts a credential offer received from an issuer.
       description: Accepts a credential offer received from a VC issuer and sends back a credential request.
       parameters:
-        - $ref: ./pollux/parameters.yaml#/components/parameters/issueCredentialRecordIdInPath
+        - $ref: "./pollux/parameters.yaml#/components/parameters/issueCredentialRecordIdInPath"
+      requestBody:
+        description: The accept credential offer request object.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./pollux/schemas.yaml#/components/schemas/AcceptCredentialOfferRequest
       responses:
         "200":
           description: The issue credential offer was successfully accepted.
@@ -650,17 +556,18 @@ paths:
               schema:
                 $ref: ./pollux/schemas.yaml#/components/schemas/IssueCredentialRecord
         "404":
-          description: There is no issue credential record matching the given identifier.
-          content:
-            application/json:
-              schema:
-                $ref: "./pollux/schemas.yaml#/components/schemas/ErrorResponse"
+          $ref: "./shared/responses.yaml#/components/responses/NotFound"
+        "500":
+          $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
 
   /issue-credentials/records/{recordId}/issue-credential:
     post:
-      tags: ["Issue Credentials Protocol"]
       operationId: issueCredential
+      tags: ["Issue Credentials Protocol"]
       summary: As an issuer, issues the verifiable credential related to the specified record.
+      description: |
+        Sends credential to a holder (holder DID is specified in credential as subjectDid).
+        Credential is constructed from the credential records found by credential id.
       parameters:
         - $ref: ./pollux/parameters.yaml#/components/parameters/issueCredentialRecordIdInPath
       responses:
@@ -671,17 +578,18 @@ paths:
               schema:
                 $ref: ./pollux/schemas.yaml#/components/schemas/IssueCredentialRecord
         "404":
-          description: There is no issue credential record matching the given identifier.
-          content:
-            application/json:
-              schema:
-                $ref: "./pollux/schemas.yaml#/components/schemas/ErrorResponse"
+          $ref: "./shared/responses.yaml#/components/responses/NotFound"
+        "500":
+          $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
+
+  ## Present proof
 
   /present-proof/presentations:
     post:
-      tags: ["Present Proof"]
       operationId: requestPresentation
+      tags: ["Present Proof"]
       summary: As a Verifier, create a new proof presentation request and send it to the Prover.
+      description: Holder presents proof derived from the verifiable credential to verifier.
       requestBody:
         description: The present proof creation request.
         required: true
@@ -701,31 +609,34 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
+                $ref: "./shared/schemas.yaml#/components/schemas/ErrorResponse"
+        "500":
+          $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
+
     get:
-      tags: ["Present Proof"]
       operationId: getAllPresentation
+      tags: ["Present Proof"]
       summary: Gets the list of proof presentation records.
+      description: list of presentation statuses
+      parameters:
+        - $ref: "./shared/parameters.yaml#/components/parameters/offset"
+        - $ref: "./shared/parameters.yaml#/components/parameters/limit"
       responses:
         "200":
           description: The list of proof presentation records.
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "./pollux/schemas.yaml#/components/schemas/PresentationStatus"
+                $ref: "./pollux/schemas.yaml#/components/schemas/PresentationStatusPage"
         "500":
-          description: Retrieving the proof presentation records failed for an unexpected reason. More information on the error can be found in the response body.
-          content:
-            application/json:
-              schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
+          $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
+
   /present-proof/presentations/{recordId}:
     patch:
-      tags: ["Present Proof"]
       operationId: updatePresentation
+      tags: ["Present Proof"]
       summary: Updates the proof presentation record matching the unique identifier, with the specific action to perform.
+      description: Accept or reject presentation of proof request
       parameters:
         - $ref: ./pollux/parameters.yaml#/components/parameters/presentationRecordIdInPath
       requestBody:
@@ -735,24 +646,22 @@ paths:
           application/json:
             schema:
               $ref: "./pollux/schemas.yaml#/components/schemas/RequestPresentationAction"
-              # oneOf:
-              #  - $ref: "./pollux/schemas.yaml#/components/schemas/RequestPresentationActionAccept"
-              #  - $ref: "./pollux/schemas.yaml#/components/schemas/RequestPresentationActionReject"
       responses:
         "200":
           description: The proof presentation record was successfully updated.
-        "404":
-          description: There is no presentation record matching the given identifier.
           content:
-            application/json:
-              schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
+            application/json: {}
+        "404":
+          $ref: "./shared/responses.yaml#/components/responses/NotFound"
+        "500":
+          $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
     get:
-      tags: ["Present Proof"]
       operationId: getPresentation
+      tags: ["Present Proof"]
       summary: Gets an existing proof presentation record by its unique identifier. More information on the error can be found in the response body.
+      description: Returns an existing presentation record by id.
       parameters:
-        - $ref: ./pollux/parameters.yaml#/components/parameters/presentationRecordIdInPath
+        - $ref: "./pollux/parameters.yaml#/components/parameters/presentationRecordIdInPath"
       responses:
         "200":
           description: The proof presentation record.
@@ -761,19 +670,17 @@ paths:
               schema:
                 $ref: "./pollux/schemas.yaml#/components/schemas/PresentationStatus"
         "404":
-          description: There is no presentation record matching the given identifier. More information on the error can be found in the response body.
-          content:
-            application/json:
-              schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/ErrorResponse"
+          $ref: "./shared/responses.yaml#/components/responses/NotFound"
+        "500":
+          $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
 
   # ----------------------------------
   # Connect
   # ----------------------------------
   /connections:
     post:
-      tags: ["Connections Management"]
       operationId: createConnection
+      tags: ["Connections Management"]
       summary: Creates a new connection record and returns an Out of Band invitation.
       description: |
         Generates a new Peer DID and creates an [Out of Band 2.0](https://identity.foundation/didcomm-messaging/spec/v2.0/#out-of-band-messages) invitation.
@@ -798,33 +705,34 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "./connect/schemas.yaml#/components/schemas/ErrorResponse"
+                $ref: "./shared/schemas.yaml#/components/schemas/ErrorResponse"
 
     get:
-      tags: ["Connections Management"]
       operationId: getConnections
+      tags: ["Connections Management"]
       summary: Gets the list of connection records.
+      description: Get the list of connection records paginated
+      parameters:
+        - $ref: "./shared/parameters.yaml#/components/parameters/offset"
+        - $ref: "./shared/parameters.yaml#/components/parameters/limit"
       responses:
         "200":
           description: The list of connection records.
           content:
             application/json:
               schema:
-                $ref: "./connect/schemas.yaml#/components/schemas/ConnectionCollection"
+                $ref: "./connect/schemas.yaml#/components/schemas/ConnectionsPage"
         "500":
-          description: Retrieving the connection records failed for an unexpected reason. More information on the error can be found in the response body.
-          content:
-            application/json:
-              schema:
-                $ref: "./connect/schemas.yaml#/components/schemas/ErrorResponse"
+          $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
 
   /connections/{connectionId}:
     get:
-      tags: ["Connections Management"]
-      parameters:
-        - $ref: "./connect/schemas.yaml#/components/parameters/connectionId"
       operationId: getConnection
+      tags: ["Connections Management"]
       summary: Gets an existing connection record by its unique identifier.
+      description: Gets an existing connection record by its unique identifier
+      parameters:
+        - $ref: "./connect/parameters.yaml#/components/parameters/connectionId"
       responses:
         "200":
           description: The connection record.
@@ -833,16 +741,14 @@ paths:
               schema:
                 $ref: "./connect/schemas.yaml#/components/schemas/Connection"
         "404":
-          description: There is no connection record matching the given identifier.
-          content:
-            application/json:
-              schema:
-                $ref: "./connect/schemas.yaml#/components/schemas/ErrorResponse"
+          $ref: "./shared/responses.yaml#/components/responses/NotFound"
+        "500":
+          $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
 
   /connection-invitations:
     post:
-      tags: ["Connections Management"]
       operationId: acceptConnectionInvitation
+      tags: ["Connections Management"]
       summary: Accepts an Out of Band invitation.
       description: |
         Accepts an [Out of Band 2.0](https://identity.foundation/didcomm-messaging/spec/v2.0/#out-of-band-messages) invitation, generates a new Peer DID,
@@ -863,8 +769,4 @@ paths:
               schema:
                 $ref: "./connect/schemas.yaml#/components/schemas/Connection"
         "500":
-          description: Storing the connection invitation failed for an unexpected reason. More information on the error can be found in the response body.
-          content:
-            application/json:
-              schema:
-                $ref: "./connect/schemas.yaml#/components/schemas/ErrorResponse"
+          $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
