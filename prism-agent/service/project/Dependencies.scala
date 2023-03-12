@@ -17,7 +17,7 @@ object Dependencies {
     val mercury = "0.20.0"
     val zioJson = "0.3.0"
     val tapir = "1.2.10"
-    val flyway = "9.8.3"
+    val flyway = "9.15.2"
     val testContainersScalaPostgresql = "0.40.12"
     val quill = "4.6.0.1"
   }
