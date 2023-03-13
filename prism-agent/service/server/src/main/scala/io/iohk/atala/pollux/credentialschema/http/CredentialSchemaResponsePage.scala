@@ -3,10 +3,10 @@ package io.iohk.atala.pollux.credentialschema.http
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
-import io.iohk.atala.pollux.credentialschema.http.CredentialSchemaPageResponse.annotations
+import io.iohk.atala.pollux.credentialschema.http.CredentialSchemaResponsePage.annotations
 import io.iohk.atala.api.http.Annotation
 
-case class CredentialSchemaPageResponse(
+case class CredentialSchemaResponsePage(
     @description(annotations.contents.description)
     @encodedExample(annotations.contents.example)
     contents: Seq[CredentialSchemaResponse],
@@ -29,14 +29,14 @@ case class CredentialSchemaPageResponse(
   def withSelf(self: String) = copy(self = self)
 }
 
-object CredentialSchemaPageResponse {
-  given encoder: JsonEncoder[CredentialSchemaPageResponse] =
-    DeriveJsonEncoder.gen[CredentialSchemaPageResponse]
-  given decoder: JsonDecoder[CredentialSchemaPageResponse] =
-    DeriveJsonDecoder.gen[CredentialSchemaPageResponse]
-  given schema: Schema[CredentialSchemaPageResponse] = Schema.derived
+object CredentialSchemaResponsePage {
+  given encoder: JsonEncoder[CredentialSchemaResponsePage] =
+    DeriveJsonEncoder.gen[CredentialSchemaResponsePage]
+  given decoder: JsonDecoder[CredentialSchemaResponsePage] =
+    DeriveJsonDecoder.gen[CredentialSchemaResponsePage]
+  given schema: Schema[CredentialSchemaResponsePage] = Schema.derived
 
-  val Example = CredentialSchemaPageResponse(
+  val Example = CredentialSchemaResponsePage(
     contents = annotations.contents.example,
     kind = annotations.kind.example,
     self = annotations.self.example,

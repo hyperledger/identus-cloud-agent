@@ -7,7 +7,7 @@ import io.iohk.atala.pollux.credentialschema.SchemaRegistryServerEndpoints
 import io.iohk.atala.pollux.credentialschema.controller.{CredentialSchemaController, CredentialSchemaControllerImpl}
 import io.iohk.atala.pollux.credentialschema.http.{
   CredentialSchemaInput,
-  CredentialSchemaPageResponse,
+  CredentialSchemaResponsePage,
   CredentialSchemaResponse
 }
 import io.iohk.atala.pollux.sql.repository.JdbcCredentialSchemaRepository
@@ -41,7 +41,7 @@ trait CredentialSchemaTestTools {
     Response[Either[DeserializationException[String], CredentialSchemaResponse]]
   type SchemaPageResponse =
     Response[
-      Either[DeserializationException[String], CredentialSchemaPageResponse]
+      Either[DeserializationException[String], CredentialSchemaResponsePage]
     ]
 
   private val pgLayer = postgresLayer(verbose = false)

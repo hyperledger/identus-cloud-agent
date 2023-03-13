@@ -7,7 +7,7 @@ import io.iohk.atala.api.http.model.{Order, PaginationInput}
 import io.iohk.atala.api.http.*
 import io.iohk.atala.pollux.credentialschema.http.{
   CredentialSchemaInput,
-  CredentialSchemaPageResponse,
+  CredentialSchemaResponsePage,
   CredentialSchemaResponse,
   FilterInput
 }
@@ -80,7 +80,7 @@ object SchemaRegistryEndpoints {
           "Globally unique identifier of the credential schema record"
         )
       )
-      .out(jsonBody[CredentialSchemaResponse])
+      .out(jsonBody[CredentialSchemaResponse].description("CredentialSchema found by `guid`"))
       .errorOut(basicFailuresAndNotFound)
       .name("getSchemaById")
       .summary("Fetch the schema from the registry by `guid`")
@@ -99,7 +99,7 @@ object SchemaRegistryEndpoints {
         Option[Order]
     ),
     FailureResponse,
-    CredentialSchemaPageResponse,
+    CredentialSchemaResponsePage,
     Any
   ] =
     endpoint.get
@@ -108,7 +108,7 @@ object SchemaRegistryEndpoints {
       .in(credentialSchemaFilterInput)
       .in(paginationInput)
       .in(query[Option[Order]]("order"))
-      .out(jsonBody[CredentialSchemaPageResponse])
+      .out(jsonBody[CredentialSchemaResponsePage].description("Collection of CredentialSchema records."))
       .errorOut(basicFailures)
       .name("lookupSchemasByQuery")
       .summary("Lookup schemas by indexed fields")

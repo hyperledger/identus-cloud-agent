@@ -6,7 +6,7 @@ import io.iohk.atala.pollux.credentialschema.*
 import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaController
 import io.iohk.atala.pollux.credentialschema.http.{
   CredentialSchemaInput,
-  CredentialSchemaPageResponse,
+  CredentialSchemaResponsePage,
   CredentialSchemaResponse
 }
 import io.iohk.atala.pollux.test.container.MigrationAspects.migrate
@@ -37,34 +37,34 @@ object CredentialSchemaLookupAndPaginationSpec
     with CredentialSchemaTestTools
     with CredentialSchemaGen:
 
-  def fetchAllPages(uri: Uri): ZIO[CredentialSchemaController, Throwable, List[CredentialSchemaPageResponse]] = {
+  def fetchAllPages(uri: Uri): ZIO[CredentialSchemaController, Throwable, List[CredentialSchemaResponsePage]] = {
     for {
       controller <- ZIO.service[CredentialSchemaController]
       backend = httpBackend(controller)
       response: SchemaPageResponse <- basicRequest
         .get(uri)
-        .response(asJsonAlways[CredentialSchemaPageResponse])
+        .response(asJsonAlways[CredentialSchemaResponsePage])
         .send(backend)
       firstPage <- ZIO.fromEither(response.body)
       otherPagesStream = zio.stream.ZStream
-        .unfoldZIO[Any, Throwable, CredentialSchemaPageResponse, CredentialSchemaPageResponse](firstPage)(page =>
+        .unfoldZIO[Any, Throwable, CredentialSchemaResponsePage, CredentialSchemaResponsePage](firstPage)(page =>
           page.next
             .map(n => uri"$n")
             .fold(
-              ZIO.succeed(Option.empty[(CredentialSchemaPageResponse, CredentialSchemaPageResponse)])
+              ZIO.succeed(Option.empty[(CredentialSchemaResponsePage, CredentialSchemaResponsePage)])
             )(nextPageUri =>
               for {
                 nextPageResponse: SchemaPageResponse <-
                   basicRequest
                     .get(nextPageUri)
-                    .response(asJsonAlways[CredentialSchemaPageResponse])
+                    .response(asJsonAlways[CredentialSchemaResponsePage])
                     .send(backend)
                 nextPage <- ZIO.fromEither(nextPageResponse.body)
               } yield Some((nextPage, nextPage))
             )
         )
       otherPages <- otherPagesStream.runCollect
-        .fold(_ => List.empty[CredentialSchemaPageResponse], success => success.toList)
+        .fold(_ => List.empty[CredentialSchemaResponsePage], success => success.toList)
 
     } yield List(firstPage) ++ otherPages
   }
@@ -97,7 +97,7 @@ object CredentialSchemaLookupAndPaginationSpec
 
         response: SchemaPageResponse <- basicRequest
           .get(credentialSchemaUriBase)
-          .response(asJsonAlways[CredentialSchemaPageResponse])
+          .response(asJsonAlways[CredentialSchemaResponsePage])
           .send(backend)
 
         schemaPage <- ZIO.fromEither(response.body)

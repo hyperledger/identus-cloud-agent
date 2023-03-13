@@ -136,7 +136,7 @@ components:
             - licence
             - id
 
-    CredentialSchemaPageResponse:
+    CredentialSchemaResponsePage:
       required:
         - kind
         - self
