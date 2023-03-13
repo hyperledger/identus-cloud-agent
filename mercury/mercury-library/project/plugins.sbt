@@ -8,7 +8,7 @@ new sbt.Def.SettingList(
     .get("SBT_PACKAGER")
     .map { _ =>
       println("### Enable sbt-native-packager ###")
-      addSbtPlugin("com.github.sbt" % "sbt-release" % "1.8.2")
+      addSbtPlugin("com.github.sbt" % "sbt-release" % "1.1.0")
       addSbtPlugin("com.codecommit" % "sbt-github-packages" % "0.5.3")
       addSbtPlugin("com.github.sbt" % "sbt-native-packager" % "1.9.16")
     }
