@@ -1,5 +1,3 @@
-import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
-
 inThisBuild(
   Seq(
     organization := "io.iohk.atala",
@@ -7,13 +5,37 @@ inThisBuild(
     fork := true,
     run / connectInput := true,
     versionScheme := Some("semver-spec"),
-    githubOwner := "input-output-hk",
-    githubRepository := "atala-prism-building-blocks",
-    githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN")
   )
 )
 
 coverageDataDir := target.value / "coverage"
+
+SbtUtils.disablePlugins(publishConfigure) // SEE also SbtUtils.scala
+lazy val publishConfigure: Project => Project = sys.env
+  .get("PUBLISH_PACKAGES") match {
+  case None    => _.disablePlugins(GitHubPackagesPlugin)
+  case Some(_) => (p: Project) => p
+}
+
+sys.env
+  .get("PUBLISH_PACKAGES") // SEE also plugin.sbt
+  .map { _ =>
+    println("### Configure release process ###")
+    import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
+    ThisBuild / releaseUseGlobalVersion := false
+    ThisBuild / githubOwner := "input-output-hk"
+    ThisBuild / githubRepository := "atala-prism-building-blocks"
+    releaseProcess := Seq[ReleaseStep](
+      checkSnapshotDependencies,
+      inquireVersions,
+      runClean,
+      runTest,
+      setReleaseVersion,
+      ReleaseStep(releaseStepTask(Docker / publish)),
+      setNextVersion
+    )
+  }
+  .toSeq
 
 // Custom keys
 val apiBaseDirectory =
@@ -80,6 +102,7 @@ lazy val D = new {
 /** The mediator service */
 lazy val mediator = project
   .in(file("."))
+  .configure(publishConfigure)
   .settings(name := "mercury-mediator")
   .settings(libraryDependencies += D.zio.value)
   .settings(libraryDependencies += D.munitZio.value)
@@ -87,7 +110,6 @@ lazy val mediator = project
     libraryDependencies ++= Seq(D.mercuryModels.value, D.mercuryAgent.value, D.zioHttp.value),
     Compile / unmanagedResourceDirectories += apiBaseDirectory.value,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
-    githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN"),
     // ### Build Docker Image ###
     Docker / maintainer := "atala-coredid@iohk.io",
     Docker / dockerRepository := Some("ghcr.io"),
@@ -98,14 +120,3 @@ lazy val mediator = project
     dockerBaseImage := "openjdk:11"
   )
   .enablePlugins(JavaAppPackaging, DockerPlugin)
-
-// ### ReleaseStep ###
-releaseProcess := Seq[ReleaseStep](
-  checkSnapshotDependencies,
-  inquireVersions,
-  runClean,
-  runTest,
-  setReleaseVersion,
-  ReleaseStep(releaseStepTask(Docker / publish)),
-  setNextVersion
-)

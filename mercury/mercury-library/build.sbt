@@ -1,4 +1,3 @@
-import sbt.internal.DslEntry
 inThisBuild(
   Seq(
     organization := "io.iohk.atala",

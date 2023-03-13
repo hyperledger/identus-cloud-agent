@@ -16,7 +16,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
-      ATALA_GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
     defaults:
       run:
         working-directory: ${{ inputs.component-dir }}

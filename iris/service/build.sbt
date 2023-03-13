@@ -1,7 +1,6 @@
 import Dependencies._
 import sbt.Keys.testFrameworks
 import sbtghpackages.GitHubPackagesPlugin.autoImport._
-import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
 
 // Custom keys
 val apiBaseDirectory = settingKey[File]("The base directory for Iris gRPC specifications")
@@ -14,20 +13,42 @@ inThisBuild(
     fork := true,
     run / connectInput := true,
     versionScheme := Some("semver-spec"),
-    githubOwner := "input-output-hk",
-    githubRepository := "atala-prism-building-blocks",
-    githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN")
   )
 )
 
 coverageDataDir := target.value / "coverage"
 
+SbtUtils.disablePlugins(publishConfigure) // SEE also SbtUtils.scala
+lazy val publishConfigure: Project => Project = sys.env
+  .get("PUBLISH_PACKAGES") match {
+  case None    => _.disablePlugins(GitHubPackagesPlugin)
+  case Some(_) => (p: Project) => p
+}
+
+sys.env
+  .get("PUBLISH_PACKAGES") // SEE also plugin.sbt
+  .map { _ =>
+    println("### Configure release process ###")
+    import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
+    ThisBuild / releaseUseGlobalVersion := false
+    ThisBuild / githubOwner := "input-output-hk"
+    ThisBuild / githubRepository := "atala-prism-building-blocks"
+    releaseProcess := Seq[ReleaseStep](
+      checkSnapshotDependencies,
+      inquireVersions,
+      runClean,
+      runTest,
+      setReleaseVersion,
+      ReleaseStep(releaseStepTask(server / Docker / publish)),
+      setNextVersion
+    )
+  }
+  .toSeq
+
 def commonProject(project: Project): Project =
   project.settings(
-    version := "0.1.0",
     organization := "io.iohk.atala",
     scalaVersion := "3.2.2",
-    githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN"),
     versionScheme := Some("semver-spec"),
     resolvers += Resolver
       .githubPackages("input-output-hk"),
@@ -39,6 +60,7 @@ def commonProject(project: Project): Project =
 // Project definitions
 lazy val root = project
   .in(file("."))
+  .configure(publishConfigure)
   .settings(
     name := "iris-service-root"
   )
@@ -46,6 +68,7 @@ lazy val root = project
 
 lazy val core = commonProject(project)
   .in(file("core"))
+  .configure(publishConfigure)
   .settings(
     name := "iris-core",
     testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
@@ -57,6 +80,7 @@ lazy val core = commonProject(project)
 
 lazy val sql = commonProject(project)
   .in(file("sql"))
+  .configure(publishConfigure)
   .settings(
     name := "iris-sql",
     libraryDependencies ++= sqlDependencies
@@ -65,6 +89,7 @@ lazy val sql = commonProject(project)
 
 lazy val server = commonProject(project)
   .in(file("server"))
+  .configure(publishConfigure)
   .settings(
     name := "iris-service",
     libraryDependencies ++= serverDependencies,
@@ -78,13 +103,3 @@ lazy val server = commonProject(project)
   )
   .enablePlugins(JavaAppPackaging, DockerPlugin)
   .dependsOn(core, sql)
-
-releaseProcess := Seq[ReleaseStep](
-  checkSnapshotDependencies,
-  inquireVersions,
-  runClean,
-  runTest,
-  setReleaseVersion,
-  ReleaseStep(releaseStepTask(server / Docker / publish)),
-  setNextVersion
-)

@@ -66,7 +66,7 @@ pass_globals = click.make_pass_decorator(Globals)
 @click.group()
 @click.option(
     "--token",
-    envvar="ATALA_GITHUB_TOKEN",
+    envvar="GITHUB_TOKEN",
     metavar="TOKEN",
     required=True,
     help="GitHub authentication token.",
