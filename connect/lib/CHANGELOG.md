@@ -1,3 +1,10 @@
+# [connect-v0.12.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/connect-v0.11.0...connect-v0.12.0) (2023-03-13)
+
+
+### Features
+
+* **connect:** Use TIMESTAMP instead of BIGINT ATL-3786 ([#431](https://github.com/input-output-hk/atala-prism-building-blocks/issues/431)) ([fb7f2d2](https://github.com/input-output-hk/atala-prism-building-blocks/commit/fb7f2d28a5a8eabb2f52beebd8c794a90793c6fc))
+
 # [connect-v0.11.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/connect-v0.10.0...connect-v0.11.0) (2023-02-27)
 
 
