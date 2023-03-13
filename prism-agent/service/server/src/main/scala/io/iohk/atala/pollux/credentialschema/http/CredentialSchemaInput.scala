@@ -28,7 +28,7 @@ case class CredentialSchemaInput(
     @encodedExample(annotations.`type`.example)
     `type`: String,
     @description(annotations.schema.description)
-    @encodedExample(annotations.schema.example)
+    @encodedExample(annotations.schema.example.toJson)
     schema: zio.json.ast.Json,
     @description(annotations.tags.description)
     @encodedExample(annotations.tags.example)

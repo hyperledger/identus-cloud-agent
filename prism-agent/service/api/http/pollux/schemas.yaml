@@ -52,7 +52,14 @@ components:
           example: prims.atala.com
       description: A digital signature over the Credential Schema for the sake of
         asserting authorship. A piece of Metadata.
-      example: Proof(Ed25519Signature2018,2022-03-10T12:00Z,did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff#key-1,assertionMethod,FiPfjknHikKmZ...,eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il0sImt0eSI6Ik...,Some(prims.atala.com))
+      example:
+        type: Ed25519Signature2018
+        created: '2022-03-10T12:00:00Z'
+        verificationMethod: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff#key-1
+        proofPurpose: assertionMethod
+        proofValue: FiPfjknHikKmZ...
+        jws: eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il0sImt0eSI6Ik...
+        domain: prims.atala.com
 
     CredentialSchemaInput:
       required:
@@ -88,6 +95,36 @@ components:
           description: |-
             Valid JSON Schema where the Credential Schema data fields are defined
             A piece of Metadata
+          example:
+            example:
+              $id: driving-license-1.0
+              $schema: https://json-schema.org/draft/2020-12/schema
+              description: Driving License
+              type: object
+              properties:
+                credentialSubject:
+                  type: object
+                  properties:
+                    emailAddress:
+                      type: string
+                      format: email
+                    givenName:
+                      type: string
+                    familyName:
+                      type: string
+                    dateOfIssuance:
+                      type: datetime
+                    drivingLicenseID:
+                      type: string
+                    drivingClass:
+                      type: integer
+                    required:
+                      - emailAddress
+                      - familyName
+                      - dateOfIssuance
+                      - drivingLicenseID
+                      - drivingClass
+                    additionalProperties: true
         tags:
           type: array
           items:
@@ -98,8 +135,6 @@ components:
             - driving
             - licence
             - id
-            -
-
 
     CredentialSchemaPageResponse:
       required:
@@ -141,7 +176,6 @@ components:
             page of results.<br/>If the API response is the first page of results,
             this field should be set to None.
           example: /prism-agent/schema-registry/schemas?skip=0&limit=10
-
 
     CredentialSchemaResponse:
       required:
@@ -211,6 +245,36 @@ components:
           description: |-
             Valid JSON Schema where the Credential Schema data fields are defined
             A piece of Metadata
+          example:
+            example:
+              $id: driving-license-1.0
+              $schema: https://json-schema.org/draft/2020-12/schema
+              description: Driving License
+              type: object
+              properties:
+                credentialSubject:
+                  type: object
+                  properties:
+                    emailAddress:
+                      type: string
+                      format: email
+                    givenName:
+                      type: string
+                    familyName:
+                      type: string
+                    dateOfIssuance:
+                      type: datetime
+                    drivingLicenseID:
+                      type: string
+                    drivingClass:
+                      type: integer
+                    required:
+                      - emailAddress
+                      - familyName
+                      - dateOfIssuance
+                      - drivingLicenseID
+                      - drivingClass
+                    additionalProperties: true
         author:
           type: string
           description: DID of the identity which authored the credential schema. A

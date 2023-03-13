@@ -45,7 +45,7 @@ case class CredentialSchemaResponse(
     @encodedExample(annotations.`type`.example)
     `type`: String,
     @description(annotations.schema.description)
-    @encodedExample(annotations.schema.example)
+    @encodedExample(annotations.schema.example.toJson)
     schema: Json,
     @description(annotations.author.description)
     @encodedExample(annotations.author.example)
@@ -54,7 +54,7 @@ case class CredentialSchemaResponse(
     @encodedExample(annotations.authored.example)
     authored: OffsetDateTime,
     @description(annotations.proof.description)
-    @encodedExample(annotations.proof.example)
+    @encodedExample(annotations.proof.example.toJson)
     proof: Option[Proof],
     @description(annotations.kind.description)
     @encodedExample(annotations.kind.example)
@@ -212,7 +212,7 @@ object CredentialSchemaResponse {
           |        },
           |        "drivingClass": {
           |           "type": "integer"
-          |        }
+          |        },
           |        "required": [
           |          "emailAddress",
           |          "familyName",
