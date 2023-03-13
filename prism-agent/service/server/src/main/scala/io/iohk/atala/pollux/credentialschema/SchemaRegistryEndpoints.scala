@@ -4,6 +4,7 @@ import io.iohk.atala.api.http.*
 import io.iohk.atala.api.http.EndpointOutputs.*
 import io.iohk.atala.api.http.codec.OrderCodec.*
 import io.iohk.atala.api.http.model.{Order, PaginationInput}
+import io.iohk.atala.api.http.*
 import io.iohk.atala.pollux.credentialschema.http.{
   CredentialSchemaInput,
   CredentialSchemaPageResponse,
@@ -16,6 +17,7 @@ import sttp.tapir.json.zio.jsonBody
 import sttp.tapir.{
   Endpoint,
   EndpointInfo,
+  EndpointInput,
   PublicEndpoint,
   endpoint,
   extractFromRequest,
@@ -45,16 +47,23 @@ object SchemaRegistryEndpoints {
       .in(
         jsonBody[CredentialSchemaInput]
           .description(
-            "Create schema input object with the metadata and attributes"
+            "JSON object required for the credential schema creation"
           )
       )
-      .out(statusCode(StatusCode.Created))
+      .out(
+        statusCode(StatusCode.Created)
+          .description(
+            "The new credential schema record is successfully created"
+          )
+      )
       .out(jsonBody[CredentialSchemaResponse])
+      .description("Credential schema record")
       .errorOut(basicFailures)
       .name("createSchema")
       .summary("Publish new schema to the schema registry")
       .description(
-        "Publish the new schema with attributes to the schema registry on behalf of Cloud Agent. Schema will be signed by the keys of Cloud Agent and issued by the DID that corresponds to it"
+        "Create the new credential schema record with metadata and internal JSON Schema on behalf of Cloud Agent.<br/>" +
+          "The credential schema will be signed by the keys of Cloud Agent and issued by the DID that corresponds to it"
       )
       .tag("Schema Registry")
 
@@ -68,7 +77,7 @@ object SchemaRegistryEndpoints {
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
         "schema-registry" / "schemas" / path[UUID]("guid").description(
-          "Globally unique identifier of the credential schema object"
+          "Globally unique identifier of the credential schema record"
         )
       )
       .out(jsonBody[CredentialSchemaResponse])
@@ -80,6 +89,8 @@ object SchemaRegistryEndpoints {
       )
       .tag("Schema Registry")
 
+  private val credentialSchemaFilterInput: EndpointInput[FilterInput] = EndpointInput.derived[FilterInput]
+  private val paginationInput: EndpointInput[PaginationInput] = EndpointInput.derived[PaginationInput]
   val lookupSchemasByQueryEndpoint: PublicEndpoint[
     (
         RequestContext,
@@ -94,24 +105,8 @@ object SchemaRegistryEndpoints {
     endpoint.get
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in("schema-registry" / "schemas".description("Lookup schemas by query"))
-      .in(
-        query[Option[String]]("author")
-          .and(
-            query[Option[String]]("name")
-              .and(
-                query[Option[String]]("version")
-                  .and(
-                    query[Option[String]]("tags")
-                  )
-              )
-          )
-          .mapTo[FilterInput]
-      )
-      .in(
-        query[Option[Int]]("offset")
-          .and(query[Option[Int]]("limit"))
-          .mapTo[PaginationInput]
-      )
+      .in(credentialSchemaFilterInput)
+      .in(paginationInput)
       .in(query[Option[Order]]("order"))
       .out(jsonBody[CredentialSchemaPageResponse])
       .errorOut(basicFailures)
