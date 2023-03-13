@@ -5,7 +5,7 @@ The update-operation describes the update action on the DID document.
 For example, **DID Controller** can add a new key to the DID document by constructing an update-operation containing the `AddKeyAction`.
 It is also possible for **DID Controller** to compose multiple actions in the same update-operation.
 The full list of supported update actions can be found in the [PRISM DID method - Update DID section](https://github.com/input-output-hk/prism-did-method-spec/blob/main/w3c-spec/PRISM-method.md#update-did).
-The PRISM DID method currently only allows published DID to be updated.
+The PRISM DID method only allows published DID to be updated.
 
 Each DID update-operation is cryptographically linked creating a lineage of DID operations.
 The lineage is not allowed to contain forks.

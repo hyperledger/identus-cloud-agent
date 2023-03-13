@@ -67,7 +67,7 @@ Example response
 To publish a DID, **DID Controller** `POST` a request to `/did-registrar/dids/{didRef}/publications` endpoint.
 
 ```bash
-curl --location --request POST 'http://localhost:8080/did-registrar/dids/{didRef}/publications' \
+curl --location --request POST 'http://localhost:8080/prism-agent/did-registrar/dids/{didRef}/publications' \
 --header 'Accept: application/json'
 ```
 
