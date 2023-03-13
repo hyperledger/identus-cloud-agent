@@ -84,6 +84,7 @@ components:
             schema metadata that applies to the schema. A piece of Metadata.
           example: https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json
         schema:
+          type: object
           description: |-
             Valid JSON Schema where the Credential Schema data fields are defined
             A piece of Metadata
@@ -206,6 +207,7 @@ components:
             schema metadata that applies to the schema. A piece of Metadata.
           example: https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json
         schema:
+          type: object
           description: |-
             Valid JSON Schema where the Credential Schema data fields are defined
             A piece of Metadata
