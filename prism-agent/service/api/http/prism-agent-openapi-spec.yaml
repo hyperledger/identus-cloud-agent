@@ -503,6 +503,12 @@ paths:
       parameters:
         - $ref: "./shared/parameters.yaml#/components/parameters/offset"
         - $ref: "./shared/parameters.yaml#/components/parameters/limit"
+        - name: thid
+          in: query
+          description: The thid of a DIDComm communication.
+          required: false
+          schema:
+            type: string
       responses:
         "200":
           description: The list of issue credential records.
@@ -621,6 +627,12 @@ paths:
       parameters:
         - $ref: "./shared/parameters.yaml#/components/parameters/offset"
         - $ref: "./shared/parameters.yaml#/components/parameters/limit"
+        - name: thid
+          in: query
+          description: The thid of a DIDComm communication.
+          required: false
+          schema:
+            type: string
       responses:
         "200":
           description: The list of proof presentation records.
