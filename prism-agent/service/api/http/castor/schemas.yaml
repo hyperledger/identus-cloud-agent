@@ -22,15 +22,19 @@ components:
     DID:
       type: object
       description: |
-        A core DID data model capable of being transformed into W3C compliant representation.
+        A Prism DID document data model capable of being transformed into W3C compliant representation.
       required:
         - id
       properties:
         id:
           type: string
+          description: |
+            [DID subject](https://www.w3.org/TR/did-core/#did-subject)
           example: "did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff"
         controller:
           type: string
+          description: |
+            [DID controller](https://www.w3.org/TR/did-core/#did-controller)
           example: "did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff"
         verificationMethod:
           type: array
@@ -63,6 +67,8 @@ components:
 
     DIDDocumentMetadata:
       type: object
+      description: |
+        [DID document metadata](https://www.w3.org/TR/did-core/#did-document-metadata)
       required:
         - deactivated
       properties:
@@ -71,10 +77,18 @@ components:
           description: If a DID has been deactivated, DID document metadata MUST include this property with the boolean value true. If a DID has not been deactivated, this property is OPTIONAL, but if included, MUST have the boolean value false.
         canonicalId:
           type: string
-          description: A DID in canonical form
+          description: |
+            A DID in canonical form.
+
+            If a DID is in long form and has been published, DID document metadata MUST contain a `canonicalId`` property with the short form DID as its value.
+
+            If a DID in short form or has not been published, DID document metadata MUST NOT contain a `canonicalId` property.
 
     VerificationMethod:
       type: object
+      description: |
+        A cryptographic public key expressed in the DID document.
+        https://www.w3.org/TR/did-core/#verification-methods
       required:
         - id
         - type
@@ -100,6 +114,7 @@ components:
         Referenced key and embedded key are mutually exclusive.
         If the type is EMBEDDED, `uri` field must be present.
         Otherwise `verificationMethod` field must be present.
+
       required:
         - type
       properties:
@@ -269,6 +284,9 @@ components:
 
     Service:
       type: object
+      description: |
+        A service expressed in the DID document.
+        https://www.w3.org/TR/did-core/#services
       required:
         - id
         - type
@@ -279,11 +297,21 @@ components:
           example: "service-1"
         type:
           type: string
+          description: |
+            Service type.
+            Can contain multiple possible values as described in the [Create DID operation](https://github.com/input-output-hk/prism-did-method-spec/blob/main/w3c-spec/PRISM-method.md#create-did) under the construction section.
+
+            *Known issue: This is currently misaligned with Prism DID method. This will be fixed in the future version of Prism Agent*
           enum:
             - LinkedDomains
           example: LinkedDomains
         serviceEndpoint:
           type: array
+          description: |
+            Application service endpoints.
+            Can contain multiple possible values as described in the [Create DID operation](https://github.com/input-output-hk/prism-did-method-spec/blob/main/w3c-spec/PRISM-method.md#create-did) under the construction section.
+
+            *Known issue: This is currently misaligned with Prism DID method. This will be fixed in the future version of Prism Agent*
           items:
             type: string
             example: "https://bar.example.com/"

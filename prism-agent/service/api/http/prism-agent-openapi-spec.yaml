@@ -44,12 +44,15 @@ paths:
       operationId: getDid
       tags: ["DID"]
       summary: Resolve Prism DID
-      description: Resolve Prism DID to a DID document.
+      description: |
+        Resolve Prism DID to a DID document data model.
+        The returned DID document is not the W3C DID document representation, but a DID document data model.
+        However, this data model is capable of being transformed into the W3C compliant representation.
       parameters:
         - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
       responses:
         "200":
-          description: The DID resource
+          description: The DID document data model
           content:
             application/json:
               schema:
