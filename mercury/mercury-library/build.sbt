@@ -1,3 +1,4 @@
+import sbt.internal.DslEntry
 inThisBuild(
   Seq(
     organization := "io.iohk.atala",
@@ -9,6 +10,13 @@ inThisBuild(
 )
 
 coverageDataDir := target.value / "coverage"
+
+SbtUtils.disablePlugins(publishConfigure) // SEE also SbtUtils.scala
+lazy val publishConfigure: Project => Project = sys.env
+  .get("PUBLISH_PACKAGES") match {
+  case None    => _.disablePlugins(GitHubPackagesPlugin)
+  case Some(_) => (p: Project) => p
+}
 
 sys.env
   .get("PUBLISH_PACKAGES") // SEE also plugin.sbt
@@ -27,7 +35,8 @@ sys.env
       publishArtifacts,
       setNextVersion
     )
-  }.toSeq
+  }
+  .toSeq
 
 inThisBuild(
   Seq(
@@ -108,6 +117,7 @@ publish / skip := true
   */
 lazy val models = project
   .in(file("models"))
+  .configure(publishConfigure)
   .settings(name := "mercury-data-models")
   .settings(
     libraryDependencies ++= Seq(D.zio.value),
@@ -134,6 +144,7 @@ models implementation for didcommx () */
 
 lazy val protocolConnection = project
   .in(file("protocol-connection"))
+  .configure(publishConfigure)
   .settings(name := "mercury-protocol-connection")
   .settings(libraryDependencies += D.zio.value)
   .settings(libraryDependencies ++= Seq(D.circeCore.value, D.circeGeneric.value, D.circeParser.value))
@@ -142,6 +153,7 @@ lazy val protocolConnection = project
 
 lazy val protocolCoordinateMediation = project
   .in(file("protocol-coordinate-mediation"))
+  .configure(publishConfigure)
   .settings(name := "mercury-protocol-coordinate-mediation")
   .settings(libraryDependencies += D.zio.value)
   .settings(libraryDependencies ++= Seq(D.circeCore.value, D.circeGeneric.value, D.circeParser.value))
@@ -150,6 +162,7 @@ lazy val protocolCoordinateMediation = project
 
 lazy val protocolDidExchange = project
   .in(file("protocol-did-exchange"))
+  .configure(publishConfigure)
   .settings(name := "mercury-protocol-did-exchange")
   .settings(libraryDependencies += D.zio.value)
   .settings(libraryDependencies ++= Seq(D.circeCore.value, D.circeGeneric.value, D.circeParser.value))
@@ -157,6 +170,7 @@ lazy val protocolDidExchange = project
 
 lazy val protocolInvitation = project
   .in(file("protocol-invitation"))
+  .configure(publishConfigure)
   .settings(name := "mercury-protocol-invitation")
   .settings(libraryDependencies += D.zio.value)
   .settings(
@@ -172,12 +186,14 @@ lazy val protocolInvitation = project
 
 lazy val protocolMercuryMailbox = project
   .in(file("protocol-mercury-mailbox"))
+  .configure(publishConfigure)
   .settings(name := "mercury-protocol-mailbox")
   .settings(libraryDependencies += D.zio.value)
   .dependsOn(models, protocolInvitation, protocolRouting)
 
 lazy val protocolLogin = project
   .in(file("protocol-outofband-login"))
+  .configure(publishConfigure)
   .settings(name := "mercury-protocol-outofband-login")
   .settings(libraryDependencies += D.zio.value)
   .settings(libraryDependencies += D.zio.value)
@@ -187,6 +203,7 @@ lazy val protocolLogin = project
 
 lazy val protocolReportProblem = project
   .in(file("protocol-report-problem"))
+  .configure(publishConfigure)
   .settings(name := "mercury-protocol-report-problem")
   .settings(libraryDependencies += D.zio.value)
   .settings(libraryDependencies ++= Seq(D.circeCore.value, D.circeGeneric.value, D.circeParser.value))
@@ -195,12 +212,14 @@ lazy val protocolReportProblem = project
 
 lazy val protocolRouting = project
   .in(file("protocol-routing"))
+  .configure(publishConfigure)
   .settings(name := "mercury-protocol-routing-2-0")
   .settings(libraryDependencies += D.zio.value)
   .dependsOn(models)
 
 lazy val protocolIssueCredential = project
   .in(file("protocol-issue-credential"))
+  .configure(publishConfigure)
   .settings(name := "mercury-protocol-issue-credential")
   .settings(libraryDependencies += D.zio.value)
   .settings(libraryDependencies ++= Seq(D.circeCore.value, D.circeGeneric.value, D.circeParser.value))
@@ -209,6 +228,7 @@ lazy val protocolIssueCredential = project
 
 lazy val protocolPresentProof = project
   .in(file("protocol-present-proof"))
+  .configure(publishConfigure)
   .settings(name := "mercury-protocol-present-proof")
   .settings(libraryDependencies += D.zio.value)
   .settings(libraryDependencies ++= Seq(D.circeCore.value, D.circeGeneric.value, D.circeParser.value))
@@ -222,6 +242,7 @@ lazy val protocolPresentProof = project
 // TODO move stuff to the models module
 lazy val resolver = project // maybe merge into models
   .in(file("resolver"))
+  .configure(publishConfigure)
   .settings(name := "mercury-resolver")
   .settings(
     libraryDependencies ++= Seq(
@@ -241,6 +262,7 @@ lazy val resolver = project // maybe merge into models
 
 lazy val agent = project // maybe merge into models
   .in(file("agent"))
+  .configure(publishConfigure)
   .settings(name := "mercury-agent-core")
   .settings(libraryDependencies ++= Seq(D.zioLog.value)) // , D.zioSLF4J.value))
   .dependsOn(
@@ -260,6 +282,7 @@ lazy val agent = project // maybe merge into models
 /** agents implementation with didcommx */
 lazy val agentDidcommx = project
   .in(file("agent-didcommx"))
+  .configure(publishConfigure)
   .settings(name := "mercury-agent-didcommx")
   .settings(libraryDependencies += D.didcommx.value)
   .settings(libraryDependencies += D.munitZio.value)
@@ -268,6 +291,7 @@ lazy val agentDidcommx = project
 /** Demos agents and services implementation with didcommx */
 lazy val agentCliDidcommx = project
   .in(file("agent-cli-didcommx"))
+  .configure(publishConfigure)
   .settings(name := "mercury-agent-cli-didcommx")
   .settings(libraryDependencies += "com.google.zxing" % "core" % "3.5.0")
   .settings(libraryDependencies += D.zioHttp.value)
@@ -276,6 +300,7 @@ lazy val agentCliDidcommx = project
 ///** TODO Demos agents and services implementation with did-scala */
 lazy val agentDidScala =
   project
+    .configure(publishConfigure)
     .in(file("agent-did-scala"))
     .settings(name := "mercury-agent-didscala")
     .settings(
