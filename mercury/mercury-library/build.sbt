@@ -1,19 +1,33 @@
-import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
-
 inThisBuild(
   Seq(
     organization := "io.iohk.atala",
     scalaVersion := "3.2.2",
     fork := true,
     run / connectInput := true,
-    releaseUseGlobalVersion := false,
     versionScheme := Some("semver-spec"),
-    githubOwner := "input-output-hk",
-    githubRepository := "atala-prism-building-blocks"
   )
 )
 
 coverageDataDir := target.value / "coverage"
+
+sys.env
+  .get("PUBLISH_PACKAGES") // SEE also plugin.sbt
+  .map { _ =>
+    println("### Configure release process ###")
+    import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
+    ThisBuild / releaseUseGlobalVersion := false
+    ThisBuild / githubOwner := "input-output-hk"
+    ThisBuild / githubRepository := "atala-prism-building-blocks"
+    releaseProcess := Seq[ReleaseStep](
+      checkSnapshotDependencies,
+      inquireVersions,
+      runClean,
+      runTest,
+      setReleaseVersion,
+      publishArtifacts,
+      setNextVersion
+    )
+  }.toSeq
 
 inThisBuild(
   Seq(
@@ -271,13 +285,3 @@ lazy val agentDidScala =
       else (Compile / sources := Seq()),
     )
     .dependsOn(agent)
-
-releaseProcess := Seq[ReleaseStep](
-  checkSnapshotDependencies,
-  inquireVersions,
-  runClean,
-  runTest,
-  setReleaseVersion,
-  publishArtifacts,
-  setNextVersion
-)
