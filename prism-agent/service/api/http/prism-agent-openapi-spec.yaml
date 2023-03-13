@@ -210,7 +210,8 @@ paths:
       tags:
         - Schema Registry
       summary: Lookup schemas by indexed fields
-      description: "Lookup schemas by `author`, `name`, `tags` parameters and control
+      description:
+        "Lookup schemas by `author`, `name`, `tags` parameters and control
         the pagination by `offset` and `limit` parameters"
       operationId: lookupSchemasByQuery
       parameters:
@@ -271,7 +272,8 @@ paths:
       tags:
         - Schema Registry
       summary: Publish new schema to the schema registry
-      description: Create the new credential schema record with metadata and internal
+      description:
+        Create the new credential schema record with metadata and internal
         JSON Schema on behalf of Cloud Agent. The credential schema will be signed
         by the keys of Cloud Agent and issued by the DID that corresponds to it
       operationId: createSchema

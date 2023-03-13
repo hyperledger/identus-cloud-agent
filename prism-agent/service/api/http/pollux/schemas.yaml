@@ -13,31 +13,36 @@ components:
       properties:
         type:
           type: string
-          description: The type of cryptographic signature algorithm used to generate
+          description:
+            The type of cryptographic signature algorithm used to generate
             the proof
           example: Ed25519Signature2018
         created:
           type: string
-          description: The date and time at which the proof was created, in UTC format.<br/>This
+          description:
+            The date and time at which the proof was created, in UTC format.<br/>This
             field is used to ensure that the proof was generated before or at the
             same time as the credential schema itself
           format: date-time
-          example: 2022-03-10T12:00Z
+          example: "2022-03-10T12:00:00Z"
         verificationMethod:
           type: string
-          description: The verification method used to generate the proof<br/>This
+          description:
+            The verification method used to generate the proof<br/>This
             is usually a DID and key ID combination that can be used to look up the
             public key needed to verify the proof
           example: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff#key-1
         proofPurpose:
           type: string
-          description: 'The purpose of the proof (for example: `assertionMethod`)<br/>This
+          description:
+            "The purpose of the proof (for example: `assertionMethod`)<br/>This
             indicates that the proof is being used to assert that the issuer really
-            issued this credential schema instance'
+            issued this credential schema instance"
           example: assertionMethod
         proofValue:
           type: string
-          description: The cryptographic signature value that was generated using
+          description:
+            The cryptographic signature value that was generated using
             the private key associated with the verification method, and which can
             be used to verify the proof
           example: FiPfjknHikKmZ...
@@ -47,14 +52,16 @@ components:
           example: eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il0sImt0eSI6Ik...
         domain:
           type: string
-          description: It specifies the domain context within which the credential
+          description:
+            It specifies the domain context within which the credential
             schema and proof are being used
           example: prims.atala.com
-      description: A digital signature over the Credential Schema for the sake of
+      description:
+        A digital signature over the Credential Schema for the sake of
         asserting authorship. A piece of Metadata.
       example:
         type: Ed25519Signature2018
-        created: '2022-03-10T12:00:00Z'
+        created: "2022-03-10T12:00:00Z"
         verificationMethod: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff#key-1
         proofPurpose: assertionMethod
         proofValue: FiPfjknHikKmZ...
@@ -71,23 +78,27 @@ components:
       properties:
         name:
           type: string
-          description: A human-readable name for the credential schema. A piece of
+          description:
+            A human-readable name for the credential schema. A piece of
             Metadata.
           example: DrivingLicense
         version:
           type: string
-          description: Denotes the revision of a given Credential Schema. It should
+          description:
+            Denotes the revision of a given Credential Schema. It should
             follow semantic version convention to describe the impact of the schema
             evolution
           example: 1.0.0
         description:
           type: string
           description: A human-readable description of the credential schema
-          example: Simple credential schema for the driving licence verifiable credential.
+          example:
+            Simple credential schema for the driving licence verifiable credential.
             This field is not a part of W3C specification
         type:
           type: string
-          description: This field resolves to a JSON schema with details about the
+          description:
+            This field resolves to a JSON schema with details about the
             schema metadata that applies to the schema. A piece of Metadata.
           example: https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json
         schema:
@@ -129,9 +140,10 @@ components:
           type: array
           items:
             type: string
-          description: Tokens that allow to lookup and filter the credential schema
+          description:
+            Tokens that allow to lookup and filter the credential schema
             records. This field is not a part of W3C specification
-          examples:
+          example:
             - driving
             - licence
             - id
@@ -146,13 +158,14 @@ components:
         contents:
           type: array
           items:
-            $ref: '#/components/schemas/CredentialSchemaResponse'
-          description: A sequence of CredentialSchemaResponse objects representing
+            $ref: "#/components/schemas/CredentialSchemaResponse"
+          description:
+            A sequence of CredentialSchemaResponse objects representing
             the list of credential schemas that the API response contains
-          examples: []
         kind:
           type: string
-          description: A string field indicating the type of the API response. In
+          description:
+            A string field indicating the type of the API response. In
             this case, it will always be set to `CredentialSchemaPage`
           example: CredentialSchemaPage
         self:
@@ -161,18 +174,21 @@ components:
           example: /prism-agent/schema-registry/schemas?skip=10&limit=10
         pageOf:
           type: string
-          description: A string field indicating the type of resource that the contents
+          description:
+            A string field indicating the type of resource that the contents
             field contains
           example: /prism-agent/schema-registry/schemas
         next:
           type: string
-          description: An optional string field containing the URL of the next page
+          description:
+            An optional string field containing the URL of the next page
             of results.<br/> If the API response does not contain any more pages,
             this field should be set to None.
           example: /prism-agent/schema-registry/schemas?skip=20&limit=10
         previous:
           type: string
-          description: An optional string field containing the URL of the previous
+          description:
+            An optional string field containing the URL of the previous
             page of results.<br/>If the API response is the first page of results,
             this field should be set to None.
           example: /prism-agent/schema-registry/schemas?skip=0&limit=10
@@ -194,29 +210,34 @@ components:
       properties:
         guid:
           type: string
-          description: Globally unique id of the credential schema<br/>It's composed
+          description:
+            Globally unique id of the credential schema<br/>It's composed
             from the bytes of the string that contain the `authored`, `name`, and
             `version` values<br/>The string format looks like the resource identifier:<br/>`author`/`id`?version=`version`
           format: uuid
           example: 0527aea1-d131-3948-a34d-03af39aba8b4
         id:
           type: string
-          description: A locally unique identifier to address the schema. UUID is
+          description:
+            A locally unique identifier to address the schema. UUID is
             generated by the backend
           example: 0527aea1-d131-3948-a34d-03af39aba8b5
         longId:
           type: string
-          description: Resource id of the credential schema. Contains the `author`'s
+          description:
+            Resource id of the credential schema. Contains the `author`'s
             DID, `id` and `version` fields.
           example: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff/0527aea1-d131-3948-a34d-03af39aba8b4?version=1.0.0
         name:
           type: string
-          description: A human-readable name for the credential schema. A piece of
+          description:
+            A human-readable name for the credential schema. A piece of
             Metadata.
           example: DrivingLicense
         version:
           type: string
-          description: Denotes the revision of a given Credential Schema. It should
+          description:
+            Denotes the revision of a given Credential Schema. It should
             follow semantic version convention to describe the impact of the schema
             evolution
           example: 1.0.0
@@ -224,20 +245,23 @@ components:
           type: array
           items:
             type: string
-          description: Tokens that allow to lookup and filter the credential schema
+          description:
+            Tokens that allow to lookup and filter the credential schema
             records. This field is not a part of W3C specification
-          examples:
+          example:
             - driving
             - licence
             - id
         description:
           type: string
           description: A human-readable description of the credential schema
-          example: Simple credential schema for the driving licence verifiable credential.
+          example:
+            Simple credential schema for the driving licence verifiable credential.
             This field is not a part of W3C specification
         type:
           type: string
-          description: This field resolves to a JSON schema with details about the
+          description:
+            This field resolves to a JSON schema with details about the
             schema metadata that applies to the schema. A piece of Metadata.
           example: https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json
         schema:
@@ -277,28 +301,31 @@ components:
                     additionalProperties: true
         author:
           type: string
-          description: DID of the identity which authored the credential schema. A
+          description:
+            DID of the identity which authored the credential schema. A
             piece of Metadata.
           example: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff
         authored:
           type: string
-          description: '[RFC3339](https://www.rfc-editor.org/rfc/rfc3339) date on
-            which the credential schema was created. A piece of Metadata.'
+          description:
+            "[RFC3339](https://www.rfc-editor.org/rfc/rfc3339) date on
+            which the credential schema was created. A piece of Metadata."
           format: date-time
-          example: 2022-03-10T12:00Z
+          example: "2022-03-10T12:00:00Z"
         proof:
-          $ref: '#/components/schemas/Proof'
+          $ref: "#/components/schemas/Proof"
         kind:
           type: string
-          description: A string that identifies the type of resource being returned
+          description:
+            A string that identifies the type of resource being returned
             in the response
           example: CredentialSchema
         self:
           type: string
-          description: The URL that uniquely identifies the resource being returned
+          description:
+            The URL that uniquely identifies the resource being returned
             in the response
           example: /prism-agent/schema-registry/schemas/0527aea1-d131-3948-a34d-03af39aba8b4
-
 
     VerificationPolicyConstraint:
       required:
