@@ -1,3 +1,10 @@
+# [prism-agent-v0.52.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.51.0...prism-agent-v0.52.0) (2023-03-13)
+
+
+### Features
+
+* **prism-agent:** Add filter by thid to OpenAPI when fetching records ([#436](https://github.com/input-output-hk/atala-prism-building-blocks/issues/436)) ([af01359](https://github.com/input-output-hk/atala-prism-building-blocks/commit/af0135904d4961d12e109004e7b001b154b1493e))
+
 # [prism-agent-v0.51.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.50.0...prism-agent-v0.51.0) (2023-03-10)
 
 
