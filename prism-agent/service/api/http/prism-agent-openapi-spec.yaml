@@ -503,12 +503,6 @@ paths:
       parameters:
         - $ref: "./shared/parameters.yaml#/components/parameters/offset"
         - $ref: "./shared/parameters.yaml#/components/parameters/limit"
-        # - name: connectionId
-        #   in: query
-        #   description: The unique identifier of a DIDComm connection that already exists.
-        #   required: false
-        #   schema:
-        #     type: string
         - name: thid
           in: query
           description: The thid of a DIDComm communication.
@@ -633,12 +627,6 @@ paths:
       parameters:
         - $ref: "./shared/parameters.yaml#/components/parameters/offset"
         - $ref: "./shared/parameters.yaml#/components/parameters/limit"
-        # - name: connectionId
-        #   in: query
-        #   description: The unique identifier of a DIDComm connection that already exists.
-        #   required: false
-        #   schema:
-        #     type: string
         - name: thid
           in: query
           description: The thid of a DIDComm communication.
