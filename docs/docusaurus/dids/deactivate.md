@@ -34,10 +34,10 @@ This example shows the DID deactivation and steps to observe the changes to the 
 
 The example uses the following endpoints
 
-| Endpoint | Description | Role |
-|---------------------------------------------------------------------------------------------------------|-------------------------------|----------------|
-| [`POST /did-registrar/dids/{didRef}/deactivations`](/agent-api/#tag/DID-Registrar/operation/deactivateManagedDid) | Deactivate a PRISM DID            | DID Controller |
-| [`GET /dids/{didRef}`](/agent-api/#tag/DID/operation/getDid)                                            | Resolve a DID to DID document | DID Controller |
+| Endpoint                                                                                                          | Description                   | Role           |
+|-------------------------------------------------------------------------------------------------------------------|-------------------------------|----------------|
+| [`POST /did-registrar/dids/{didRef}/deactivations`](/agent-api/#tag/DID-Registrar/operation/deactivateManagedDid) | Deactivate a PRISM DID        | DID Controller |
+| [`GET /dids/{didRef}`](/agent-api/#tag/DID/operation/getDid)                                                      | Resolve a DID to DID document | DID Controller |
 
 ## DID Controller interactions
 
@@ -85,25 +85,21 @@ the content might still be the same because the operation is not yet confirmed a
 
 The **DID Controller** keeps polling this endpoint until the `deactivated` status in DID document metadata is changed to `true`.
 
-Example response of updated DID document (some fields are omitted for readability)
+Example response of deactivated DID document (some fields are omitted for readability)
 
 ```json
 {
     "did": {
         "assertionMethod": [],
         "authentication": [],
-        "capabilityInvocation": [],
-        "controller": "did:prism:66e431434f201c7ae43f6e63569f1ee556d7dfbee1646101547324013e545d2c",
-        "id": "did:prism:66e431434f201c7ae43f6e63569f1ee556d7dfbee1646101547324013e545d2c",
-        "keyAgreement": [],
-        "service": [],
-        "verificationMethod": []
+        ...
     },
     "metadata": {
         "canonicalId": "did:prism:66e431434f201c7ae43f6e63569f1ee556d7dfbee1646101547324013e545d2c",
-        "deactivated": true
+        "deactivated": true,
+        ...
     }
 }
 ```
 
-The DID metadata indicates that the DID is not deactivated. The DID document is now no longer contain any keys or services.
+The DID metadata indicates that the DID is already deactivated and the DID document no longer contains any keys or services.
