@@ -10,6 +10,7 @@ import dataclasses
 import logging
 import sys
 
+# pylint: disable=import-error
 import click
 
 # pylint: disable=E0402
