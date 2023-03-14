@@ -1,31 +1,51 @@
 import Dependencies._
-import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
 
 inThisBuild(
   Seq(
     organization := "io.iohk.atala",
-    scalaVersion := "3.2.1",
+    scalaVersion := "3.2.2",
     fork := true,
     run / connectInput := true,
     versionScheme := Some("semver-spec"),
-    githubOwner := "input-output-hk",
-    githubRepository := "atala-prism-building-blocks",
-    githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN")
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+    resolvers += Resolver.githubPackages("input-output-hk"),
+    resolvers += "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven"
   )
 )
 
-val commonSettings = Seq(
-  testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
-  githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN"),
-  resolvers += Resolver.githubPackages("input-output-hk"),
-  // Needed for Kotlin coroutines that support new memory management mode
-  resolvers += "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven"
-)
+coverageDataDir := target.value / "coverage"
+
+SbtUtils.disablePlugins(publishConfigure) // SEE also SbtUtils.scala
+lazy val publishConfigure: Project => Project = sys.env
+  .get("PUBLISH_PACKAGES") match {
+  case None    => _.disablePlugins(GitHubPackagesPlugin)
+  case Some(_) => (p: Project) => p
+}
+
+sys.env
+  .get("PUBLISH_PACKAGES") // SEE also plugin.sbt
+  .map { _ =>
+    println("### Configure release process ###")
+    import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
+    ThisBuild / releaseUseGlobalVersion := false
+    ThisBuild / githubOwner := "input-output-hk"
+    ThisBuild / githubRepository := "atala-prism-building-blocks"
+    releaseProcess := Seq[ReleaseStep](
+      checkSnapshotDependencies,
+      inquireVersions,
+      runClean,
+      runTest,
+      setReleaseVersion,
+      publishArtifacts,
+      setNextVersion
+    )
+  }
+  .toSeq
 
 // Project definitions
 lazy val root = project
   .in(file("."))
-  .settings(commonSettings)
+  .configure(publishConfigure)
   .settings(
     name := "castor-root",
   )
@@ -34,7 +54,7 @@ lazy val root = project
 
 lazy val core = project
   .in(file("core"))
-  .settings(commonSettings)
+  .configure(publishConfigure)
   .settings(
     name := "castor-core",
     libraryDependencies ++= coreDependencies
@@ -42,20 +62,9 @@ lazy val core = project
 
 lazy val `sql-doobie` = project
   .in(file("sql-doobie"))
-  .settings(commonSettings)
+  .configure(publishConfigure)
   .settings(
     name := "castor-sql-doobie",
     libraryDependencies ++= sqlDoobieDependencies
   )
   .dependsOn(core)
-
-// ### ReleaseStep ###
-releaseProcess := Seq[ReleaseStep](
-  checkSnapshotDependencies,
-  inquireVersions,
-  runClean,
-  runTest,
-  setReleaseVersion,
-  publishArtifacts,
-  setNextVersion
-)

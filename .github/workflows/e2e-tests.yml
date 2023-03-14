@@ -65,7 +65,6 @@ jobs:
           PRISM_AGENT_PATH: "../../prism-agent/service/"
           GITHUB_ACTOR: ${{ secrets.ATALA_GITHUB_ACTOR }}
           GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
-          ATALA_GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
         run: |
           cd "${PRISM_AGENT_PATH}" || exit 129
           sbt docker:publishLocal
@@ -106,8 +105,6 @@ jobs:
 
       - name: Run e2e tests
         continue-on-error: true
-        env:
-          ATALA_GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
         run: |
           ./gradlew test --tests "E2eTestsRunner" || true
           ./gradlew reports
@@ -132,6 +129,7 @@ jobs:
         run: |
           JSON_RESULTS="target/site/serenity/serenity-summary.json"
           CONCLUSION=failure
+          SLACK_REPORT_FAILURE=true
           TOTAL_TESTS=0
           FAILED_TESTS=0
           SKIPPED_TESTS=0
@@ -145,9 +143,11 @@ jobs:
             TESTS_WITH_ERRORS="$(cat ${JSON_RESULTS} | jq '.results.counts.error')"
             if [[ ${FAILED_TESTS} == 0 && ${TESTS_WITH_ERRORS} == 0 ]] ; then
               CONCLUSION=success
+              SLACK_REPORT_FAILURE=false
             fi
           fi
           {
+            echo "slack_report_failure=${SLACK_REPORT_FAILURE}";
             echo "conclusion=${CONCLUSION}";
             echo "tests=${TOTAL_TESTS}";
             echo "failures=${FAILED_TESTS}";
@@ -158,7 +158,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Slack Notification
-        if: github.ref_name == 'main'
+        if: github.ref_name == 'main' && steps.analyze_test_results.outputs.slack_report_failure
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_COLOR: ${{ steps.analyze_test_results.outputs.conclusion }}

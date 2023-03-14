@@ -10,6 +10,7 @@ import dataclasses
 import logging
 import sys
 
+# pylint: disable=import-error
 import click
 
 # pylint: disable=E0402
@@ -66,7 +67,7 @@ pass_globals = click.make_pass_decorator(Globals)
 @click.group()
 @click.option(
     "--token",
-    envvar="ATALA_GITHUB_TOKEN",
+    envvar="GITHUB_TOKEN",
     metavar="TOKEN",
     required=True,
     help="GitHub authentication token.",
@@ -137,7 +138,7 @@ def get_latest_package_version(ctx, package, package_type):
                 print(versions[0].get("metadata").get("container").get("tags")[0])
             else:
                 print(versions[0].get("name", "NOT EXIST"))
-        except:
+        except IndexError:
             print("NOT EXIST")
 
 

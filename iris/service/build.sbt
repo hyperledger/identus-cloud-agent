@@ -1,7 +1,6 @@
 import Dependencies._
 import sbt.Keys.testFrameworks
 import sbtghpackages.GitHubPackagesPlugin.autoImport._
-import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
 
 // Custom keys
 val apiBaseDirectory = settingKey[File]("The base directory for Iris gRPC specifications")
@@ -10,31 +9,22 @@ ThisBuild / apiBaseDirectory := baseDirectory.value / "../api"
 inThisBuild(
   Seq(
     organization := "io.iohk.atala",
-    scalaVersion := "3.2.1",
+    scalaVersion := "3.2.2",
     fork := true,
     run / connectInput := true,
     versionScheme := Some("semver-spec"),
     githubOwner := "input-output-hk",
     githubRepository := "atala-prism-building-blocks",
-    githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN")
+    resolvers += Resolver.githubPackages("input-output-hk"),
+    resolvers +=
+      "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven"
   )
 )
 
-def commonProject(project: Project): Project =
-  project.settings(
-    version := "0.1.0",
-    organization := "io.iohk.atala",
-    scalaVersion := "3.2.1",
-    githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN"),
-    versionScheme := Some("semver-spec"),
-    resolvers += Resolver
-      .githubPackages("input-output-hk"),
-    // Needed for Kotlin coroutines that support new memory management mode
-    resolvers +=
-      "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven",
-  )
+coverageDataDir := target.value / "coverage"
 
 // Project definitions
+publish / skip := true
 lazy val root = project
   .in(file("."))
   .settings(
@@ -42,7 +32,7 @@ lazy val root = project
   )
   .aggregate(core, sql, server)
 
-lazy val core = commonProject(project)
+lazy val core = project
   .in(file("core"))
   .settings(
     name := "iris-core",
@@ -53,7 +43,7 @@ lazy val core = commonProject(project)
     Compile / PB.protoSources := Seq(apiBaseDirectory.value / "grpc")
   )
 
-lazy val sql = commonProject(project)
+lazy val sql = project
   .in(file("sql"))
   .settings(
     name := "iris-sql",
@@ -61,7 +51,7 @@ lazy val sql = commonProject(project)
   )
   .dependsOn(core)
 
-lazy val server = commonProject(project)
+lazy val server = project
   .in(file("server"))
   .settings(
     name := "iris-service",
@@ -77,6 +67,7 @@ lazy val server = commonProject(project)
   .enablePlugins(JavaAppPackaging, DockerPlugin)
   .dependsOn(core, sql)
 
+import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
 releaseProcess := Seq[ReleaseStep](
   checkSnapshotDependencies,
   inquireVersions,
