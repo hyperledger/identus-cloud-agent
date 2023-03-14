@@ -1,3 +1,10 @@
+# [prism-agent-v0.53.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.52.0...prism-agent-v0.53.0) (2023-03-14)
+
+
+### Features
+
+* **prism-agent:** Add OAS specification to the schema registry endpoint. ATL-3164 ([#438](https://github.com/input-output-hk/atala-prism-building-blocks/issues/438)) ([91902ce](https://github.com/input-output-hk/atala-prism-building-blocks/commit/91902ce3840227ed4d683b55060d9603320ff9fd))
+
 # [prism-agent-v0.52.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.51.0...prism-agent-v0.52.0) (2023-03-13)
 
 
