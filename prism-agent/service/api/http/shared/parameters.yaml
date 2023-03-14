@@ -2,6 +2,9 @@ components:
   parameters:
     offset:
       name: offset
+      description: |
+        Pagination offset starting from 0.
+        If the parameter is not specifed, it defaults to 0.
       in: query
       required: false
       schema:
@@ -9,6 +12,9 @@ components:
         format: int32
     limit:
       name: limit
+      description:
+        Pagination limit. The maximum number of items in the paginated response.
+        If the parameter is not specified, it defualt to 100.
       in: query
       required: false
       schema:
