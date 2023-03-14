@@ -59,6 +59,10 @@ paths:
                 $ref: "./castor/schemas.yaml#/components/schemas/DIDResponse"
         "404":
           $ref: "./shared/responses.yaml#/components/responses/NotFound"
+        "422":
+          $ref: "./shared/responses.yaml#/components/responses/UnprocessableEntity"
+        "500":
+          $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
 
   /did-registrar/dids:
     get:
@@ -103,11 +107,9 @@ paths:
               schema:
                 $ref: "./castor/schemas.yaml#/components/schemas/CreateManagedDIDResponse"
         "422":
-          description: The DID creation failed.
-          content:
-            application/json:
-              schema:
-                $ref: "./shared/schemas.yaml#/components/schemas/ErrorResponse"
+          $ref: "./shared/responses.yaml#/components/responses/UnprocessableEntity"
+        "500":
+          $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
 
   /did-registrar/dids/{didRef}:
     get:
@@ -126,6 +128,8 @@ paths:
                 $ref: "./castor/schemas.yaml#/components/schemas/ManagedDID"
         "404":
           $ref: "./shared/responses.yaml#/components/responses/NotFound"
+        "500":
+          $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
 
   /did-registrar/dids/{didRef}/publications:
     post:
@@ -144,11 +148,9 @@ paths:
               schema:
                 $ref: "./castor/schemas.yaml#/components/schemas/DIDOperationResponse"
         "422":
-          description: The DID publication failed.
-          content:
-            application/json:
-              schema:
-                $ref: "./shared/schemas.yaml#/components/schemas/ErrorResponse"
+          $ref: "./shared/responses.yaml#/components/responses/UnprocessableEntity"
+        "500":
+          $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
 
   /did-registrar/dids/{didRef}/updates:
     post:
@@ -176,11 +178,9 @@ paths:
               schema:
                 $ref: "./castor/schemas.yaml#/components/schemas/DIDOperationResponse"
         "422":
-          description: The DID update failed.
-          content:
-            application/json:
-              schema:
-                $ref: "./shared/schemas.yaml#/components/schemas/ErrorResponse"
+          $ref: "./shared/responses.yaml#/components/responses/UnprocessableEntity"
+        "500":
+          $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
 
   /did-registrar/dids/{didRef}/deactivations:
     post:
@@ -199,11 +199,9 @@ paths:
               schema:
                 $ref: "./castor/schemas.yaml#/components/schemas/DIDOperationResponse"
         "422":
-          description: The DID deactivation failed.
-          content:
-            application/json:
-              schema:
-                $ref: "./shared/schemas.yaml#/components/schemas/ErrorResponse"
+          $ref: "./shared/responses.yaml#/components/responses/UnprocessableEntity"
+        "500":
+          $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
 
   # ----------------------------------
   # Pollux

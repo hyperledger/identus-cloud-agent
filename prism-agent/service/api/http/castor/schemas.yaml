@@ -29,7 +29,8 @@ components:
         id:
           type: string
           description: |
-            [DID subject](https://www.w3.org/TR/did-core/#did-subject)
+            [DID subject](https://www.w3.org/TR/did-core/#did-subject).
+            The value must match the DID that was given to the resolver.
           example: "did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff"
         controller:
           type: string
