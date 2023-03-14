@@ -96,9 +96,9 @@ object CredentialSchemaResponse {
   object annotations {
     object guid
         extends Annotation[UUID](
-          description = "Globally unique id of the credential schema<br/>" +
-            "It's composed from the bytes of the string that contain the `author`, `name`, and `version` values<br/>" +
-            "The string format looks like the resource identifier:<br/>" +
+          description = "Globally unique id of the credential schema." +
+            "It's composed from the bytes of the string that contain the `author`, `name`, and `version` values." +
+            "The string format looks like the resource identifier: " +
             "`author`/`id`?version=`version`",
           example = UUID.fromString("0527aea1-d131-3948-a34d-03af39aba8b4")
         )
@@ -110,7 +110,7 @@ object CredentialSchemaResponse {
         )
     object schema
         extends Annotation[Json](
-          description = "Valid JSON Schema where the Credential Schema data fields are defined. <br/>" +
+          description = "Valid JSON Schema where the Credential Schema data fields are defined. " +
             "A piece of Metadata",
           example = DrivingLicenseSchemaExample.fromJson[Json].toOption.getOrElse(Json.Null)
         )
@@ -118,7 +118,7 @@ object CredentialSchemaResponse {
     object `type`
         extends Annotation[String](
           description =
-            "This field resolves to a JSON schema with details about the schema metadata that applies to the schema. <br/>" +
+            "This field resolves to a JSON schema with details about the schema metadata that applies to the schema. " +
               "A piece of Metadata.",
           example = "https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json"
         )
@@ -140,7 +140,7 @@ object CredentialSchemaResponse {
         )
     object proof
         extends Annotation[Proof](
-          description = "A digital signature over the Credential Schema for the sake of asserting authorship. <br/>" +
+          description = "A digital signature over the Credential Schema for the sake of asserting authorship. " +
             "A piece of Metadata.",
           example = Proof.Example
         )
@@ -153,8 +153,8 @@ object CredentialSchemaResponse {
 
     object version
         extends Annotation[String](
-          description = "Denotes the revision of a given Credential Schema. <br/>" +
-            "It should follow semantic version convention to describe the impact of the schema evolution",
+          description = "Denotes the revision of a given Credential Schema. " +
+            "It should follow semantic version convention to describe the impact of the schema evolution.",
           example = "1.0.0"
         )
     object tags
@@ -171,7 +171,7 @@ object CredentialSchemaResponse {
 
     object author
         extends Annotation[String](
-          description = "DID of the identity which authored the credential schema. <br/>" +
+          description = "DID of the identity which authored the credential schema. " +
             "A piece of Metadata.",
           example = "did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff"
         )
@@ -179,7 +179,7 @@ object CredentialSchemaResponse {
     object authored
         extends Annotation[OffsetDateTime](
           description =
-            "[RFC3339](https://www.rfc-editor.org/rfc/rfc3339) date on which the credential schema was created. <br/>" +
+            "[RFC3339](https://www.rfc-editor.org/rfc/rfc3339) date on which the credential schema was created. " +
               "A piece of Metadata.",
           example = OffsetDateTime.parse("2022-03-10T12:00:00Z")
         )

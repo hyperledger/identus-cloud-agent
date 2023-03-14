@@ -62,8 +62,8 @@ object SchemaRegistryEndpoints {
       .name("createSchema")
       .summary("Publish new schema to the schema registry")
       .description(
-        "Create the new credential schema record with metadata and internal JSON Schema on behalf of Cloud Agent.<br/>" +
-          "The credential schema will be signed by the keys of Cloud Agent and issued by the DID that corresponds to it"
+        "Create the new credential schema record with metadata and internal JSON Schema on behalf of Cloud Agent. " +
+          "The credential schema will be signed by the keys of Cloud Agent and issued by the DID that corresponds to it."
       )
       .tag("Schema Registry")
 

@@ -48,21 +48,21 @@ object Proof {
 
     object created
         extends Annotation[OffsetDateTime](
-          description = "The date and time at which the proof was created, in UTC format.<br/>" +
+          description = "The date and time at which the proof was created, in UTC format. " +
             "This field is used to ensure that the proof was generated before or at the same time as the credential schema itself.",
           example = OffsetDateTime.parse("2022-03-10T12:00:00Z")
         )
 
     object proofPurpose
         extends Annotation[String](
-          description = "The purpose of the proof (for example: `assertionMethod`)<br/>" +
+          description = "The purpose of the proof (for example: `assertionMethod`). " +
             "This indicates that the proof is being used to assert that the issuer really issued this credential schema instance.",
           example = "assertionMethod"
         )
 
     object verificationMethod
         extends Annotation[String](
-          description = "The verification method used to generate the proof. <br/>" +
+          description = "The verification method used to generate the proof. " +
             "This is usually a DID and key ID combination that can be used to look up the public key needed to verify the proof.",
           example = "did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff#key-1"
         )
