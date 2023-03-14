@@ -129,7 +129,6 @@ jobs:
         run: |
           JSON_RESULTS="target/site/serenity/serenity-summary.json"
           CONCLUSION=failure
-          SLACK_REPORT_FAILURE=true
           TOTAL_TESTS=0
           FAILED_TESTS=0
           SKIPPED_TESTS=0
@@ -143,7 +142,6 @@ jobs:
             TESTS_WITH_ERRORS="$(cat ${JSON_RESULTS} | jq '.results.counts.error')"
             if [[ ${FAILED_TESTS} == 0 && ${TESTS_WITH_ERRORS} == 0 ]] ; then
               CONCLUSION=success
-              SLACK_REPORT_FAILURE=false
             fi
           fi
           {
@@ -158,7 +156,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Slack Notification
-        if: github.ref_name == 'main' && steps.analyze_test_results.outputs.slack_report_failure
+        if: github.ref_name == 'main' && steps.analyze_test_results.outputs.conclusion == 'failure'
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_COLOR: ${{ steps.analyze_test_results.outputs.conclusion }}
