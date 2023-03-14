@@ -23,7 +23,8 @@ object CredentialSchemas {
               "type": "integer"
             }
           }
-        }""".trimIndent()
+        }
+    """.trimIndent()
 
     fun generate_with_name_suffix(suffix: String): CredentialSchema {
         return CredentialSchema(
