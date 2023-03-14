@@ -41,10 +41,6 @@ sys.env
   }
   .toSeq
 
-val commonSettings = Seq(
-  resolvers += Resolver.githubPackages("input-output-hk"),
-)
-
 lazy val root = (project in file("."))
   .configure(publishConfigure)
   .settings(
@@ -55,5 +51,4 @@ lazy val root = (project in file("."))
     crossPaths := false,
     libraryDependencies ++= dependencies
   )
-   .settings(commonSettings)
    .enablePlugins(BuildInfoPlugin)

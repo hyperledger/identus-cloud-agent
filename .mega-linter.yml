@@ -32,6 +32,8 @@ BASH_SHELLCHECK_DISABLE_ERRORS: true
 PRE_COMMANDS:
   - command: git config --global core.autocrlf input
     cwd: "workspace"
+  - command: pip install ./infrastructure/utils/python/github-helpers
+    cwd: "workspace"
 
 # Linter customisation
 MARKDOWN_MARKDOWN_LINK_CHECK_FILTER_REGEX_EXCLUDE: "CHANGELOG.md"

@@ -137,7 +137,7 @@ def get_latest_package_version(ctx, package, package_type):
                 print(versions[0].get("metadata").get("container").get("tags")[0])
             else:
                 print(versions[0].get("name", "NOT EXIST"))
-        except:
+        except IndexError:
             print("NOT EXIST")
 
 

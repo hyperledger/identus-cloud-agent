@@ -7,6 +7,9 @@ inThisBuild(
     fork := true,
     run / connectInput := true,
     versionScheme := Some("semver-spec"),
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+    resolvers += Resolver.githubPackages("input-output-hk"),
+    resolvers += "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven"
   )
 )
 
@@ -39,18 +42,10 @@ sys.env
   }
   .toSeq
 
-val commonSettings = Seq(
-  testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
-  resolvers += Resolver.githubPackages("input-output-hk"),
-  // Needed for Kotlin coroutines that support new memory management mode
-  resolvers += "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven"
-)
-
 // Project definitions
 lazy val root = project
   .in(file("."))
   .configure(publishConfigure)
-  .settings(commonSettings)
   .settings(
     name := "castor-root",
   )
@@ -60,7 +55,6 @@ lazy val root = project
 lazy val core = project
   .in(file("core"))
   .configure(publishConfigure)
-  .settings(commonSettings)
   .settings(
     name := "castor-core",
     libraryDependencies ++= coreDependencies
@@ -69,7 +63,6 @@ lazy val core = project
 lazy val `sql-doobie` = project
   .in(file("sql-doobie"))
   .configure(publishConfigure)
-  .settings(commonSettings)
   .settings(
     name := "castor-sql-doobie",
     libraryDependencies ++= sqlDoobieDependencies

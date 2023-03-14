@@ -13,62 +13,27 @@ inThisBuild(
     fork := true,
     run / connectInput := true,
     versionScheme := Some("semver-spec"),
+    githubOwner := "input-output-hk",
+    githubRepository := "atala-prism-building-blocks",
+    resolvers += Resolver.githubPackages("input-output-hk"),
+    resolvers +=
+      "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven"
   )
 )
 
 coverageDataDir := target.value / "coverage"
 
-SbtUtils.disablePlugins(publishConfigure) // SEE also SbtUtils.scala
-lazy val publishConfigure: Project => Project = sys.env
-  .get("PUBLISH_PACKAGES") match {
-  case None    => _.disablePlugins(GitHubPackagesPlugin)
-  case Some(_) => (p: Project) => p
-}
-
-sys.env
-  .get("PUBLISH_PACKAGES") // SEE also plugin.sbt
-  .map { _ =>
-    println("### Configure release process ###")
-    import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
-    ThisBuild / releaseUseGlobalVersion := false
-    ThisBuild / githubOwner := "input-output-hk"
-    ThisBuild / githubRepository := "atala-prism-building-blocks"
-    releaseProcess := Seq[ReleaseStep](
-      checkSnapshotDependencies,
-      inquireVersions,
-      runClean,
-      runTest,
-      setReleaseVersion,
-      ReleaseStep(releaseStepTask(server / Docker / publish)),
-      setNextVersion
-    )
-  }
-  .toSeq
-
-def commonProject(project: Project): Project =
-  project.settings(
-    organization := "io.iohk.atala",
-    scalaVersion := "3.2.2",
-    versionScheme := Some("semver-spec"),
-    resolvers += Resolver
-      .githubPackages("input-output-hk"),
-    // Needed for Kotlin coroutines that support new memory management mode
-    resolvers +=
-      "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven",
-  )
-
 // Project definitions
+publish / skip := true
 lazy val root = project
   .in(file("."))
-  .configure(publishConfigure)
   .settings(
     name := "iris-service-root"
   )
   .aggregate(core, sql, server)
 
-lazy val core = commonProject(project)
+lazy val core = project
   .in(file("core"))
-  .configure(publishConfigure)
   .settings(
     name := "iris-core",
     testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
@@ -78,18 +43,16 @@ lazy val core = commonProject(project)
     Compile / PB.protoSources := Seq(apiBaseDirectory.value / "grpc")
   )
 
-lazy val sql = commonProject(project)
+lazy val sql = project
   .in(file("sql"))
-  .configure(publishConfigure)
   .settings(
     name := "iris-sql",
     libraryDependencies ++= sqlDependencies
   )
   .dependsOn(core)
 
-lazy val server = commonProject(project)
+lazy val server = project
   .in(file("server"))
-  .configure(publishConfigure)
   .settings(
     name := "iris-service",
     libraryDependencies ++= serverDependencies,
@@ -103,3 +66,14 @@ lazy val server = commonProject(project)
   )
   .enablePlugins(JavaAppPackaging, DockerPlugin)
   .dependsOn(core, sql)
+
+import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
+releaseProcess := Seq[ReleaseStep](
+  checkSnapshotDependencies,
+  inquireVersions,
+  runClean,
+  runTest,
+  setReleaseVersion,
+  ReleaseStep(releaseStepTask(server / Docker / publish)),
+  setNextVersion
+)
