@@ -17,8 +17,7 @@ case class CredentialSchemaInput(
     name: String,
     @description(annotations.version.description)
     @encodedExample(annotations.version.example)
-    // TODO: clarify with Lohan about `version` validation
-    // @validate(pattern(SemVerRegex))
+    @validate(pattern(SemVerRegex))
     version: String,
     @description(annotations.description.description)
     @encodedExample(annotations.description.example)

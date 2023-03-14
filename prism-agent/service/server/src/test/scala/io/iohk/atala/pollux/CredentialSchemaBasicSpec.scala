@@ -43,7 +43,7 @@ object CredentialSchemaBasicSpec extends ZIOSpecDefault with CredentialSchemaTes
 
   private val schemaInput = CredentialSchemaInput(
     name = "TestSchema",
-    version = "1.0",
+    version = "1.0.0",
     description = Option("schema description"),
     `type` = "json",
     schema = """{"first_name":  "string", "dob": "datetime"}"""
