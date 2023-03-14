@@ -5,43 +5,19 @@ inThisBuild(
     fork := true,
     run / connectInput := true,
     versionScheme := Some("semver-spec"),
+    resolvers += Resolver.githubPackages("input-output-hk"),
+    releaseUseGlobalVersion := false,
+    githubOwner := "input-output-hk",
+    githubRepository := "atala-prism-building-blocks"
   )
 )
 
 coverageDataDir := target.value / "coverage"
 
-SbtUtils.disablePlugins(publishConfigure) // SEE also SbtUtils.scala
-lazy val publishConfigure: Project => Project = sys.env
-  .get("PUBLISH_PACKAGES") match {
-  case None    => _.disablePlugins(GitHubPackagesPlugin)
-  case Some(_) => (p: Project) => p
-}
-
-sys.env
-  .get("PUBLISH_PACKAGES") // SEE also plugin.sbt
-  .map { _ =>
-    println("### Configure release process ###")
-    import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
-    ThisBuild / releaseUseGlobalVersion := false
-    ThisBuild / githubOwner := "input-output-hk"
-    ThisBuild / githubRepository := "atala-prism-building-blocks"
-    releaseProcess := Seq[ReleaseStep](
-      checkSnapshotDependencies,
-      inquireVersions,
-      runClean,
-      runTest,
-      setReleaseVersion,
-      ReleaseStep(releaseStepTask(Docker / publish)),
-      setNextVersion
-    )
-  }
-  .toSeq
-
 // Custom keys
 val apiBaseDirectory =
   settingKey[File]("The base directory for Castor API specifications")
 ThisBuild / apiBaseDirectory := baseDirectory.value / "api"
-ThisBuild / resolvers += Resolver.githubPackages("input-output-hk", "atala-prism-building-blocks")
 
 lazy val V = new {
   val munit = "1.0.0-M6" // "0.7.29"
@@ -102,7 +78,6 @@ lazy val D = new {
 /** The mediator service */
 lazy val mediator = project
   .in(file("."))
-  .configure(publishConfigure)
   .settings(name := "mercury-mediator")
   .settings(libraryDependencies += D.zio.value)
   .settings(libraryDependencies += D.munitZio.value)
@@ -120,3 +95,14 @@ lazy val mediator = project
     dockerBaseImage := "openjdk:11"
   )
   .enablePlugins(JavaAppPackaging, DockerPlugin)
+
+import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
+releaseProcess := Seq[ReleaseStep](
+  checkSnapshotDependencies,
+  inquireVersions,
+  runClean,
+  runTest,
+  setReleaseVersion,
+  ReleaseStep(releaseStepTask(Docker / publish)),
+  setNextVersion
+)
