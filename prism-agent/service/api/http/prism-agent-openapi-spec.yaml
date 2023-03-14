@@ -207,29 +207,50 @@ paths:
   # ----------------------------------
   /schema-registry/schemas:
     get:
-      operationId: lookupSchemasByQuery
       tags:
         - Schema Registry
       summary: Lookup schemas by indexed fields
-      description: "Lookup schemas by `author`, `name`, `tags` parameters"
+      description:
+        "Lookup schemas by `author`, `name`, `tags` parameters and control
+        the pagination by `offset` and `limit` parameters"
+      operationId: lookupSchemasByQuery
       parameters:
-        - $ref: "./shared/parameters.yaml#/components/parameters/offset"
-        - $ref: "./shared/parameters.yaml#/components/parameters/limit"
         - name: author
           in: query
           required: false
           schema:
             type: string
+          example: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff
         - name: name
           in: query
           required: false
           schema:
             type: string
+          example: DrivingLicense
+        - name: version
+          in: query
+          required: false
+          schema:
+            type: string
+          example: 1.0.0
         - name: tags
           in: query
           required: false
           schema:
             type: string
+          example: driving
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
         - name: order
           in: query
           required: false
@@ -237,72 +258,73 @@ paths:
             type: string
       responses:
         "200":
-          description: "List of all schemas managed by the Agent"
+          description: Collection of CredentialSchema records.
           content:
             application/json:
               schema:
-                $ref: "./pollux/schemas.yaml#/components/schemas/VerifiableCredentialSchemaPage"
+                $ref: "./pollux/schemas.yaml#/components/schemas/CredentialSchemaResponsePage"
         "400":
           $ref: "./shared/responses.yaml#/components/responses/BadRequest"
         "500":
           $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
+
     post:
-      operationId: createSchema
       tags:
         - Schema Registry
       summary: Publish new schema to the schema registry
       description:
-        Publish the new schema with attributes to the schema registry on
-        behalf of Cloud Agent. Schema will be signed by the keys of Cloud Agent and
-        issued by the DID that corresponds to it
+        Create the new credential schema record with metadata and internal
+        JSON Schema on behalf of Cloud Agent. The credential schema will be signed
+        by the keys of Cloud Agent and issued by the DID that corresponds to it
+      operationId: createSchema
       requestBody:
-        description: Create schema input object with the metadata and attributes
+        description: JSON object required for the credential schema creation
         content:
           application/json:
             schema:
-              $ref: ./pollux/schemas.yaml#/components/schemas/VerificationCredentialSchemaInput
+              $ref: "./pollux/schemas.yaml#/components/schemas/CredentialSchemaInput"
         required: true
       responses:
         "201":
-          description: "Schema successfully created"
+          description: "The new credential schema record is successfully created"
           content:
             application/json:
               schema:
-                $ref: ./pollux/schemas.yaml#/components/schemas/VerifiableCredentialSchema
+                $ref: "./pollux/schemas.yaml#/components/schemas/CredentialSchemaResponse"
         "400":
           $ref: "./shared/responses.yaml#/components/responses/BadRequest"
         "500":
           $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
-  /schema-registry/schemas/{id}:
+
+  /schema-registry/schemas/{guid}:
     get:
-      operationId: getSchemaById
       tags:
         - Schema Registry
-      summary: Fetch the schema from the registry by id
-      description:
-        Fetch the schema by the unique identifier. Verifiable Credential
-        Schema in json format is returned.
+      summary: Fetch the schema from the registry by `guid`
+      description: Fetch the credential schema by the unique identifier
+      operationId: getSchemaById
       parameters:
-        - name: id
+        - name: guid
           in: path
-          description: Get the schema by id
+          description: Globally unique identifier of the credential schema record
           required: true
           schema:
             type: string
             format: uuid
       responses:
         "200":
-          description: "Verifiable credential Schema"
+          description: CredentialSchema found by `guid`
           content:
             application/json:
               schema:
-                $ref: ./pollux/schemas.yaml#/components/schemas/VerifiableCredentialSchema
+                $ref: "./pollux/schemas.yaml#/components/schemas/CredentialSchemaResponse"
         "404":
           $ref: "./shared/responses.yaml#/components/responses/NotFound"
         "400":
           $ref: "./shared/responses.yaml#/components/responses/BadRequest"
         "500":
           $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
+
   # ----------------------------------
   # Verification Policies
   # ----------------------------------

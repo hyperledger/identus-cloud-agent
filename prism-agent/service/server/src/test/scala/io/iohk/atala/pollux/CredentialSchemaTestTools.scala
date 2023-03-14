@@ -7,7 +7,7 @@ import io.iohk.atala.pollux.credentialschema.SchemaRegistryServerEndpoints
 import io.iohk.atala.pollux.credentialschema.controller.{CredentialSchemaController, CredentialSchemaControllerImpl}
 import io.iohk.atala.pollux.credentialschema.http.{
   CredentialSchemaInput,
-  CredentialSchemaPageResponse,
+  CredentialSchemaResponsePage,
   CredentialSchemaResponse
 }
 import io.iohk.atala.pollux.sql.repository.JdbcCredentialSchemaRepository
@@ -41,7 +41,7 @@ trait CredentialSchemaTestTools {
     Response[Either[DeserializationException[String], CredentialSchemaResponse]]
   type SchemaPageResponse =
     Response[
-      Either[DeserializationException[String], CredentialSchemaPageResponse]
+      Either[DeserializationException[String], CredentialSchemaResponsePage]
     ]
 
   private val pgLayer = postgresLayer(verbose = false)
@@ -96,7 +96,10 @@ trait CredentialSchemaGen {
   self: ZIOSpecDefault with CredentialSchemaTestTools =>
   object Generator {
     val schemaName = Gen.alphaNumericStringBounded(4, 12)
-    val schemaVersion = Gen.int(1, 5).map(i => s"$i.0")
+    val majorVersion = Gen.int(1, 9)
+    val minorVersion = Gen.int(0, 9)
+    val patchVersion = Gen.int(0, 9)
+    val schemaVersion = majorVersion <*> minorVersion <*> patchVersion map (v => s"${v._1}.${v._2}.${v._3}")
     val schemaDescription = Gen.alphaNumericStringBounded(5, 30)
     val schemaAttribute = Gen.alphaNumericStringBounded(3, 9)
     val schemaAttributes = Gen.setOfBounded(1, 4)(schemaAttribute).map(_.toList)

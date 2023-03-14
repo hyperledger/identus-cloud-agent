@@ -11,7 +11,7 @@ import io.iohk.atala.pollux.credentialschema.SchemaRegistryEndpoints.{
 import io.iohk.atala.pollux.credentialschema.controller.{CredentialSchemaController, CredentialSchemaControllerLogic}
 import io.iohk.atala.pollux.credentialschema.http.{
   CredentialSchemaInput,
-  CredentialSchemaPageResponse,
+  CredentialSchemaResponsePage,
   CredentialSchemaResponse,
   FilterInput
 }

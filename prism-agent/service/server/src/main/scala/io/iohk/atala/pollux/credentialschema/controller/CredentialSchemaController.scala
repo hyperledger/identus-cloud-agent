@@ -7,7 +7,7 @@ import io.iohk.atala.pollux.core.service.CredentialSchemaService
 import io.iohk.atala.pollux.core.service.CredentialSchemaService.Error.*
 import io.iohk.atala.pollux.credentialschema.http.{
   CredentialSchemaInput,
-  CredentialSchemaPageResponse,
+  CredentialSchemaResponsePage,
   CredentialSchemaResponse,
   FilterInput
 }
@@ -33,7 +33,7 @@ trait CredentialSchemaController {
       order: Option[Order]
   )(implicit
       rc: RequestContext
-  ): IO[FailureResponse, CredentialSchemaPageResponse]
+  ): IO[FailureResponse, CredentialSchemaResponsePage]
 }
 
 object CredentialSchemaController {

@@ -2,7 +2,7 @@ package io.iohk.atala.pollux.credentialschema.controller
 
 import io.iohk.atala.api.http.RequestContext
 import io.iohk.atala.api.http.model.{CollectionStats, Pagination}
-import io.iohk.atala.pollux.credentialschema.http.CredentialSchemaPageResponse
+import io.iohk.atala.pollux.credentialschema.http.CredentialSchemaResponsePage
 import sttp.model.Uri
 import sttp.model.Uri.QuerySegment
 import sttp.model.Uri.QuerySegment.KeyValue
@@ -13,7 +13,7 @@ import io.iohk.atala.api.util.PaginationUtils
 case class CredentialSchemaControllerLogic(
     ctx: RequestContext,
     pagination: Pagination,
-    page: CredentialSchemaPageResponse,
+    page: CredentialSchemaResponsePage,
     stats: CollectionStats
 ) {
 
@@ -23,7 +23,7 @@ case class CredentialSchemaControllerLogic(
   def composePreviousUri(uri: Uri): Option[Uri] =
     PaginationUtils.composePreviousUri(uri, page.contents, pagination, stats)
 
-  def result: CredentialSchemaPageResponse = {
+  def result: CredentialSchemaResponsePage = {
     val self = ctx.request.uri.toString
     val pageOf = ctx.request.uri.copy(querySegments = Seq.empty).toString
     val next = composeNextUri(ctx.request.uri).map(_.toString)

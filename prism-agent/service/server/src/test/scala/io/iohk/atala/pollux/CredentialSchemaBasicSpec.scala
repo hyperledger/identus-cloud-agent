@@ -7,7 +7,7 @@ import io.iohk.atala.pollux.credentialschema.*
 import io.iohk.atala.pollux.credentialschema.controller.{CredentialSchemaController, CredentialSchemaControllerImpl}
 import io.iohk.atala.pollux.credentialschema.http.{
   CredentialSchemaInput,
-  CredentialSchemaPageResponse,
+  CredentialSchemaResponsePage,
   CredentialSchemaResponse
 }
 import io.iohk.atala.pollux.sql.repository.JdbcCredentialSchemaRepository
@@ -43,7 +43,7 @@ object CredentialSchemaBasicSpec extends ZIOSpecDefault with CredentialSchemaTes
 
   private val schemaInput = CredentialSchemaInput(
     name = "TestSchema",
-    version = "1.0",
+    version = "1.0.0",
     description = Option("schema description"),
     `type` = "json",
     schema = """{"first_name":  "string", "dob": "datetime"}"""
