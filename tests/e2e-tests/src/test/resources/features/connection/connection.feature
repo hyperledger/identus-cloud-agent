@@ -1,4 +1,3 @@
-@ATL-3851
 Feature: Agents connection
 
 @TEST_ATL-3834 

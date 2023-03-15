@@ -10,6 +10,13 @@ inputs:
   json:
     description: "Path to JSON to import"
     required: true
+  execution_tag:
+    description: "X-Ray Tests Execution to upload results"
+    required: true
+  scripts_path:
+    description: "Path to Python scripts to update test execution in results"
+    required: false
+    default: "./tests/e2e-tests/src/test/resources/scripts"
   url:
     description: "X-Ray Cloud URL"
     required: false
@@ -20,6 +27,8 @@ runs:
     - name: "Upload results to X-Ray"
       shell: bash
       run: |
+        pip install -r ${{ inputs.scripts_path }}/requirements.txt
+        ${{ scripts_path }}/add_test_execution.py "${{ inputs.json }}" "${{ inputs.execution_tag }}"
         XRAY_TOKEN=$(curl -H "Content-Type: application/json" \
             -X POST --data "{ \"client_id\": \"${{ inputs.username }}\", \
             \"client_secret\": \"${{ inputs.password }}\" }" \

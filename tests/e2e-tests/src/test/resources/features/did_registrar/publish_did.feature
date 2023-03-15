@@ -1,4 +1,4 @@
-@ATL-3851 @DLT
+@DLT
 Feature: Publish DID
 
 @TEST_ATL-3842 

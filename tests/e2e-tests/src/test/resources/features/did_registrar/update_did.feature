@@ -1,4 +1,4 @@
-@ATL-3851 @DLT
+@DLT
 Feature: Update DID
 
 Background: Published DID is created
