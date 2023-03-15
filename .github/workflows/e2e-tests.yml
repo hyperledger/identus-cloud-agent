@@ -109,7 +109,16 @@ jobs:
           ./gradlew test --tests "E2eTestsRunner" || true
           ./gradlew reports
 
-      - uses: actions/upload-artifact@v2
+      - name: Update X-Ray test execution
+        uses: ./.github/actions/upload-to-xray
+        # if: github.ref_name == 'main'
+        with:
+          username: ${{ secrets.XRAY_CLIENT_ID }}
+          password: ${{ secrets.XRAY_CLIENT_SECRET }}
+          json: "tests/e2e-tests/target/serenity-reports/cucumber_report.json"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
         with:
           name: e2e-tests-result
           path: ${{ env.REPORTS_DIR }}

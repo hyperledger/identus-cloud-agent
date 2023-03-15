@@ -1,0 +1,30 @@
+name: "Upload to X-Ray"
+description: "Uploads test results to X-Ray"
+inputs:
+  username:
+    description: "XRAY_CLIENT_ID for authentication"
+    required: true
+  password:
+    description: "XRAY_CLIENT_SECRET for authentication"
+    required: true
+  json:
+    description: "Path to JSON to import"
+    required: true
+  url:
+    description: "X-Ray Cloud URL"
+    required: false
+    default: "https://xray.cloud.getxray.app"
+runs:
+  using: "composite"
+  steps:
+    - name: "Upload results to X-Ray"
+      shell: bash
+      run: |
+        XRAY_TOKEN=$(curl -H "Content-Type: application/json" \
+            -X POST --data "{ \"client_id\": \"${{ inputs.username }}\", \
+            \"client_secret\": \"${{ inputs.password }}\" }" \
+            ${{ inputs.url }}/api/v1/authenticate | tr -d '"')
+        curl -H "Content-Type: application/json" \
+            -X POST -H "Authorization: Bearer ${XRAY_TOKEN}" \
+            --data @"${{ inputs.json }}" \
+            ${{ inputs.url }}/api/v1/import/execution/cucumber
