@@ -128,7 +128,9 @@ class JdbcPresentationRepository(
       .transact(xa)
   }
 
-  override def getPresentationRecords(): Task[Seq[PresentationRecord]] = {
+  override def getPresentationRecords(
+      igoneWithZeroRetries: Boolean = true
+  ): Task[Seq[PresentationRecord]] = {
     val cxnIO = sql"""
         | SELECT
         |   id,
@@ -147,7 +149,9 @@ class JdbcPresentationRepository(
         |   meta_retries,
         |   meta_next_retry,
         |   meta_last_failure
-        | FROM public.presentation_records
+        | FROM
+        |   public.presentation_records
+        |   ${if (igoneWithZeroRetries) "AND meta_next_retry > 0" else ""}
         """.stripMargin
       .query[PresentationRecord]
       .to[Seq]
@@ -157,6 +161,7 @@ class JdbcPresentationRepository(
   }
 
   override def getPresentationRecordsByStates(
+      igoneWithZeroRetries: Boolean = true,
       states: PresentationRecord.ProtocolState*
   ): Task[Seq[PresentationRecord]] = {
     states match
@@ -184,7 +189,9 @@ class JdbcPresentationRepository(
             |   meta_next_retry,
             |   meta_last_failure
             | FROM public.presentation_records
-            | WHERE $inClauseFragment
+            | WHERE
+            |   $inClauseFragment
+            |   ${if (igoneWithZeroRetries) "AND meta_next_retry > 0" else ""}
             """.stripMargin
           .query[PresentationRecord]
           .to[Seq]

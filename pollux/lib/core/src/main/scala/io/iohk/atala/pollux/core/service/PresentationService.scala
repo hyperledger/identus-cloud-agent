@@ -55,6 +55,7 @@ trait PresentationService {
   ): IO[PresentationError, PresentationPayload]
 
   def getPresentationRecordsByStates(
+      igoneWithZeroRetries: Boolean = true,
       state: PresentationRecord.ProtocolState*
   ): IO[PresentationError, Seq[PresentationRecord]]
 
@@ -246,11 +247,12 @@ private class PresentationServiceImpl(
   }
 
   override def getPresentationRecordsByStates(
+      igoneWithZeroRetries: Boolean = true,
       states: PresentationRecord.ProtocolState*
   ): IO[PresentationError, Seq[PresentationRecord]] = {
     for {
       records <- presentationRepository
-        .getPresentationRecordsByStates(states: _*)
+        .getPresentationRecordsByStates(igoneWithZeroRetries, states: _*)
         .mapError(RepositoryError.apply)
     } yield records
   }

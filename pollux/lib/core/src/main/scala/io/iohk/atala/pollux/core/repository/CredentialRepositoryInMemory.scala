@@ -55,7 +55,9 @@ class CredentialRepositoryInMemory(
     } yield record
   }
 
-  override def getIssueCredentialRecords(): Task[Seq[IssueCredentialRecord]] = {
+  override def getIssueCredentialRecords(
+      igoneWithZeroRetries: Boolean = true,
+  ): Task[Seq[IssueCredentialRecord]] = {
     for {
       store <- storeRef.get
     } yield store.values.toSeq
@@ -168,7 +170,10 @@ class CredentialRepositoryInMemory(
     } yield count
   }
 
-  override def getIssueCredentialRecordsByStates(states: ProtocolState*): Task[Seq[IssueCredentialRecord]] = {
+  override def getIssueCredentialRecordsByStates(
+      igoneWithZeroRetries: Boolean = true,
+      states: ProtocolState*
+  ): Task[Seq[IssueCredentialRecord]] = {
     for {
       store <- storeRef.get
     } yield store.values.filter(rec => states.contains(rec.protocolState)).toSeq
