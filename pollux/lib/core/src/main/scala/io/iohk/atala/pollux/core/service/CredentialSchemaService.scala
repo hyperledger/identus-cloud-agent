@@ -48,6 +48,8 @@ object CredentialSchemaService {
 
     final case class UpdateError(id: UUID, version: String, author: String, message: String) extends Error
 
+    final case class UpdateError(id: UUID, version: String, author: String, message: String) extends Error
+
     final case class UnexpectedError(msg: String) extends Error
   }
 }
