@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
+# pylint: disable=import-error
 import click
 import json
+
 
 @click.command()
 @click.argument('file_path', type=click.Path(exists=True))
@@ -20,7 +22,9 @@ def add_tag(file_path, new_tag):
         json.dump(json_obj, file)
 
     # print a message to indicate that the operation is complete
-    click.echo(f'The "{new_tag}" tag has been added to the JSON object in the file "{file_path}".')
+    click.echo(f'The "{new_tag}" tag has been added to "{file_path}".')
+
 
 if __name__ == '__main__':
+    # pytlint: disable=no-value-for-parameter
     add_tag()
