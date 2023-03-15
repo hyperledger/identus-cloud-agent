@@ -10,10 +10,10 @@ import io.iohk.atala.pollux.core.model.PresentationRecord.ProtocolState
 
 trait PresentationRepository[F[_]] {
   def createPresentationRecord(record: PresentationRecord): F[Int]
-  def getPresentationRecords(igoneWithZeroRetries: Boolean = true): F[Seq[PresentationRecord]]
+  def getPresentationRecords(ignoreWithZeroRetries: Boolean = true): F[Seq[PresentationRecord]]
   def getPresentationRecord(recordId: DidCommID): F[Option[PresentationRecord]]
   def getPresentationRecordsByStates(
-      igoneWithZeroRetries: Boolean = true,
+      ignoreWithZeroRetries: Boolean = true,
       states: PresentationRecord.ProtocolState*
   ): F[Seq[PresentationRecord]]
   def getPresentationRecordByThreadId(thid: DidCommID): F[Option[PresentationRecord]]

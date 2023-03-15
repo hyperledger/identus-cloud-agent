@@ -132,10 +132,10 @@ class JdbcCredentialRepository(xa: Transactor[Task], maxRetries: Int) extends Cr
   }
 
   override def getIssueCredentialRecords(
-      igoneWithZeroRetries: Boolean = true
+      ignoreWithZeroRetries: Boolean = true
   ): Task[Seq[IssueCredentialRecord]] = {
     val conditionFragment = Fragments.whereAndOpt(
-      Option.when(igoneWithZeroRetries)(fr"meta_retries > 0")
+      Option.when(ignoreWithZeroRetries)(fr"meta_retries > 0")
     )
     val cxnIO = sql"""
         | SELECT
@@ -170,7 +170,7 @@ class JdbcCredentialRepository(xa: Transactor[Task], maxRetries: Int) extends Cr
   }
 
   override def getIssueCredentialRecordsByStates(
-      igoneWithZeroRetries: Boolean = true,
+      ignoreWithZeroRetries: Boolean = true,
       states: IssueCredentialRecord.ProtocolState*
   ): Task[Seq[IssueCredentialRecord]] = {
     states match
@@ -181,7 +181,7 @@ class JdbcCredentialRepository(xa: Transactor[Task], maxRetries: Int) extends Cr
         val inClauseFragment = Fragments.in(fr"protocol_state", nel)
         val conditionFragment = Fragments.andOpt(
           Some(inClauseFragment),
-          Option.when(igoneWithZeroRetries)(fr"meta_retries > 0")
+          Option.when(ignoreWithZeroRetries)(fr"meta_retries > 0")
         )
         val cxnIO = sql"""
             | SELECT
@@ -250,11 +250,11 @@ class JdbcCredentialRepository(xa: Transactor[Task], maxRetries: Int) extends Cr
 
   override def getIssueCredentialRecordByThreadId(
       thid: DidCommID,
-      igoneWithZeroRetries: Boolean = true,
+      ignoreWithZeroRetries: Boolean = true,
   ): Task[Option[IssueCredentialRecord]] = {
     val conditionFragment = Fragments.whereAndOpt(
       Some(fr"thid = $thid"),
-      Option.when(igoneWithZeroRetries)(fr"meta_retries > 0")
+      Option.when(ignoreWithZeroRetries)(fr"meta_retries > 0")
     )
     val cxnIO = sql"""
         | SELECT

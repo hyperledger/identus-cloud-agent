@@ -145,12 +145,12 @@ private class CredentialServiceImpl(
   }
 
   override def getIssueCredentialRecordsByStates(
-      igoneWithZeroRetries: Boolean = true,
+      ignoreWithZeroRetries: Boolean = true,
       states: IssueCredentialRecord.ProtocolState*
   ): IO[CredentialServiceError, Seq[IssueCredentialRecord]] = {
     for {
       records <- credentialRepository
-        .getIssueCredentialRecordsByStates(igoneWithZeroRetries, states: _*)
+        .getIssueCredentialRecordsByStates(ignoreWithZeroRetries, states: _*)
         .mapError(RepositoryError.apply)
     } yield records
   }
@@ -282,7 +282,7 @@ private class CredentialServiceImpl(
     for {
       record <- getRecordFromThreadIdWithState(
         request.thid.map(DidCommID(_)),
-        igoneWithZeroRetries = true,
+        ignoreWithZeroRetries = true,
         ProtocolState.OfferPending,
         ProtocolState.OfferSent
       )
@@ -327,7 +327,7 @@ private class CredentialServiceImpl(
     for {
       record <- getRecordFromThreadIdWithState(
         issue.thid.map(DidCommID(_)),
-        igoneWithZeroRetries = true,
+        ignoreWithZeroRetries = true,
         ProtocolState.RequestPending,
         ProtocolState.RequestSent
       )
@@ -438,7 +438,7 @@ private class CredentialServiceImpl(
 
   private[this] def getRecordFromThreadIdWithState(
       thid: Option[DidCommID],
-      igoneWithZeroRetries: Boolean,
+      ignoreWithZeroRetries: Boolean,
       states: ProtocolState*
   ): IO[CredentialServiceError, IssueCredentialRecord] = {
     for {
@@ -446,7 +446,7 @@ private class CredentialServiceImpl(
         .fromOption(thid)
         .mapError(_ => UnexpectedError("No `thid` found in credential request"))
       maybeRecord <- credentialRepository
-        .getIssueCredentialRecordByThreadId(thid, igoneWithZeroRetries)
+        .getIssueCredentialRecordByThreadId(thid, ignoreWithZeroRetries)
         .mapError(RepositoryError.apply)
       record <- ZIO
         .fromOption(maybeRecord)

@@ -12,11 +12,11 @@ import io.iohk.atala.pollux.core.model.IssueCredentialRecord.ProtocolState
 trait CredentialRepository[F[_]] {
   def createIssueCredentialRecord(record: IssueCredentialRecord): F[Int]
   def getIssueCredentialRecords(
-      igoneWithZeroRetries: Boolean = true
+      ignoreWithZeroRetries: Boolean = true
   ): F[Seq[IssueCredentialRecord]]
   def getIssueCredentialRecord(recordId: DidCommID): F[Option[IssueCredentialRecord]]
   def getIssueCredentialRecordsByStates(
-      igoneWithZeroRetries: Boolean = true,
+      ignoreWithZeroRetries: Boolean = true,
       states: IssueCredentialRecord.ProtocolState*
   ): F[Seq[IssueCredentialRecord]]
   def updateCredentialRecordStateAndProofByCredentialIdBulk(
@@ -25,7 +25,7 @@ trait CredentialRepository[F[_]] {
 
   def getIssueCredentialRecordByThreadId(
       thid: DidCommID,
-      igoneWithZeroRetries: Boolean = true,
+      ignoreWithZeroRetries: Boolean = true,
   ): F[Option[IssueCredentialRecord]]
 
   def updateCredentialRecordProtocolState(

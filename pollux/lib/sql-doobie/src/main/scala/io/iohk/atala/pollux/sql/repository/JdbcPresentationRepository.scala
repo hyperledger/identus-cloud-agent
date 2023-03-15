@@ -129,10 +129,10 @@ class JdbcPresentationRepository(
   }
 
   override def getPresentationRecords(
-      igoneWithZeroRetries: Boolean = true
+      ignoreWithZeroRetries: Boolean = true
   ): Task[Seq[PresentationRecord]] = {
     val conditionFragment = Fragments.whereAndOpt(
-      Option.when(igoneWithZeroRetries)(fr"meta_retries > 0")
+      Option.when(ignoreWithZeroRetries)(fr"meta_retries > 0")
     )
     val cxnIO = sql"""
         | SELECT
@@ -164,7 +164,7 @@ class JdbcPresentationRepository(
   }
 
   override def getPresentationRecordsByStates(
-      igoneWithZeroRetries: Boolean = true,
+      ignoreWithZeroRetries: Boolean = true,
       states: PresentationRecord.ProtocolState*
   ): Task[Seq[PresentationRecord]] = {
     states match
@@ -175,7 +175,7 @@ class JdbcPresentationRepository(
         val inClauseFragment = Fragments.in(fr"protocol_state", nel)
         val conditionFragment = Fragments.whereAndOpt(
           Some(inClauseFragment),
-          Option.when(igoneWithZeroRetries)(fr"meta_retries > 0")
+          Option.when(ignoreWithZeroRetries)(fr"meta_retries > 0")
         )
         val cxnIO = sql"""
             | SELECT
