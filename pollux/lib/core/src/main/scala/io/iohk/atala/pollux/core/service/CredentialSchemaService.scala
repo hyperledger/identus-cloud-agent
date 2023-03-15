@@ -22,7 +22,7 @@ trait CredentialSchemaService {
     */
   def getByGUID(guid: UUID): Result[CredentialSchema]
 
-  def update(in: Input): Result[CredentialSchema]
+  def update(id: UUID, in: Input): Result[CredentialSchema]
 
   def delete(id: UUID): Result[CredentialSchema]
 
@@ -38,6 +38,8 @@ object CredentialSchemaService {
     final case class RepositoryError(cause: Throwable) extends Error
 
     final case class NotFoundError(guid: UUID) extends Error
+
+    final case class UpdateError(id: UUID, version: String, author: String, message: String) extends Error
 
     final case class UnexpectedError(msg: String) extends Error
   }

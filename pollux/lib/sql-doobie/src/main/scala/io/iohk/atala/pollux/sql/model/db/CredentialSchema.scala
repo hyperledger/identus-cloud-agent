@@ -79,6 +79,16 @@ object CredentialSchemaSql extends DoobieContext.Postgres(SnakeCase) with Postgr
     quote(query[CredentialSchema].filter(_.id == lift(id)))
   }
 
+  def getAllVersions(id: UUID, author: String) = run {
+    quote(
+      query[CredentialSchema]
+        .filter(_.id == lift(id))
+        .filter(_.author == lift(author))
+        .sortBy(_.version)(ord = Ord.asc)
+        .map(_.version)
+    )
+  }
+
   def update(schema: CredentialSchema) = run {
     quote {
       query[CredentialSchema]

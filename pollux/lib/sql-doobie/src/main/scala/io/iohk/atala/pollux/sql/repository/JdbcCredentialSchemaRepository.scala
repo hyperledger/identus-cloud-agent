@@ -42,6 +42,12 @@ class JdbcCredentialSchemaRepository(xa: Transactor[Task]) extends CredentialSch
       .map(_.map(CredentialSchemaRow.toModel))
   }
 
+  def getAllVersions(id: UUID, author: String): Task[Seq[String]] = {
+    CredentialSchemaSql
+      .getAllVersions(id, author)
+      .transact(xa)
+  }
+
   override def delete(guid: UUID): Task[Option[CredentialSchema]] = {
     CredentialSchemaSql
       .delete(guid)
