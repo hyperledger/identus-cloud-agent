@@ -176,13 +176,18 @@ class CredentialRepositoryInMemory(
   ): Task[Seq[IssueCredentialRecord]] = {
     for {
       store <- storeRef.get
-    } yield store.values.filter(rec => states.contains(rec.protocolState)).toSeq
+    } yield store.values
+      .filter(rec => states.contains(rec.protocolState) & (!igoneWithZeroRetries | rec.metaRetries > 0))
+      .toSeq
   }
 
-  override def getIssueCredentialRecordByThreadId(thid: DidCommID): Task[Option[IssueCredentialRecord]] = {
+  override def getIssueCredentialRecordByThreadId(
+      thid: DidCommID,
+      igoneWithZeroRetries: Boolean = true,
+  ): Task[Option[IssueCredentialRecord]] = {
     for {
       store <- storeRef.get
-    } yield store.values.find(_.thid == thid)
+    } yield store.values.find(_.thid == thid).filter(!igoneWithZeroRetries | _.metaRetries > 0)
   }
 
   override def updateWithSubjectId(

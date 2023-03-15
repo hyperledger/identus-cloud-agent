@@ -282,6 +282,7 @@ private class CredentialServiceImpl(
     for {
       record <- getRecordFromThreadIdWithState(
         request.thid.map(DidCommID(_)),
+        igoneWithZeroRetries = true,
         ProtocolState.OfferPending,
         ProtocolState.OfferSent
       )
@@ -326,6 +327,7 @@ private class CredentialServiceImpl(
     for {
       record <- getRecordFromThreadIdWithState(
         issue.thid.map(DidCommID(_)),
+        igoneWithZeroRetries = true,
         ProtocolState.RequestPending,
         ProtocolState.RequestSent
       )
@@ -436,6 +438,7 @@ private class CredentialServiceImpl(
 
   private[this] def getRecordFromThreadIdWithState(
       thid: Option[DidCommID],
+      igoneWithZeroRetries: Boolean,
       states: ProtocolState*
   ): IO[CredentialServiceError, IssueCredentialRecord] = {
     for {
@@ -443,7 +446,7 @@ private class CredentialServiceImpl(
         .fromOption(thid)
         .mapError(_ => UnexpectedError("No `thid` found in credential request"))
       maybeRecord <- credentialRepository
-        .getIssueCredentialRecordByThreadId(thid)
+        .getIssueCredentialRecordByThreadId(thid, igoneWithZeroRetries)
         .mapError(RepositoryError.apply)
       record <- ZIO
         .fromOption(maybeRecord)

@@ -181,8 +181,12 @@ object CredentialRepositorySpecSuite {
           ProtocolState.OfferPending,
           ProtocolState.CredentialGenerated
         )
-        pendingRecords <- repo.getIssueCredentialRecordsByStates(ProtocolState.OfferPending)
+        pendingRecords <- repo.getIssueCredentialRecordsByStates(
+          igoneWithZeroRetries = true,
+          ProtocolState.OfferPending
+        )
         otherRecords <- repo.getIssueCredentialRecordsByStates(
+          igoneWithZeroRetries = true,
           ProtocolState.OfferSent,
           ProtocolState.CredentialGenerated
         )

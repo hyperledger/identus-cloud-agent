@@ -131,7 +131,9 @@ class JdbcCredentialRepository(xa: Transactor[Task], maxRetries: Int) extends Cr
       }
   }
 
-  override def getIssueCredentialRecords(): Task[Seq[IssueCredentialRecord]] = {
+  override def getIssueCredentialRecords(
+      igoneWithZeroRetries: Boolean = true
+  ): Task[Seq[IssueCredentialRecord]] = {
     val cxnIO = sql"""
         | SELECT
         |   id,
@@ -155,6 +157,7 @@ class JdbcCredentialRepository(xa: Transactor[Task], maxRetries: Int) extends Cr
         |   meta_next_retry,
         |   meta_last_failure
         | FROM public.issue_credential_records
+        | ${if (igoneWithZeroRetries) "WHERE meta_next_retry > 0" else ""}
         """.stripMargin
       .query[IssueCredentialRecord]
       .to[Seq]
@@ -241,8 +244,8 @@ class JdbcCredentialRepository(xa: Transactor[Task], maxRetries: Int) extends Cr
   }
 
   override def getIssueCredentialRecordByThreadId(
+      thid: DidCommID,
       igoneWithZeroRetries: Boolean = true,
-      thid: DidCommID
   ): Task[Option[IssueCredentialRecord]] = {
     val cxnIO = sql"""
         | SELECT

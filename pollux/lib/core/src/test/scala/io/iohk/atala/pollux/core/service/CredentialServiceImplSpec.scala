@@ -122,9 +122,15 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
         for {
           svc <- ZIO.service[CredentialService]
           aRecord <- svc.createRecord()
-          records <- svc.getIssueCredentialRecordsByStates(ProtocolState.OfferPending)
+          records <- svc.getIssueCredentialRecordsByStates(
+            igoneWithZeroRetries = true,
+            ProtocolState.OfferPending
+          )
           onePending = assertTrue(records.size == 1) && assertTrue(records.contains(aRecord))
-          records <- svc.getIssueCredentialRecordsByStates(ProtocolState.OfferSent)
+          records <- svc.getIssueCredentialRecordsByStates(
+            igoneWithZeroRetries = true,
+            ProtocolState.OfferSent
+          )
           zeroSent = assertTrue(records.isEmpty)
         } yield onePending && zeroSent
       },

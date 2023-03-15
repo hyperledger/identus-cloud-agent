@@ -23,7 +23,10 @@ trait CredentialRepository[F[_]] {
       idsStatesAndProofs: Seq[(DidCommID, IssueCredentialRecord.PublicationState, MerkleInclusionProof)]
   ): F[Int]
 
-  def getIssueCredentialRecordByThreadId(thid: DidCommID): F[Option[IssueCredentialRecord]]
+  def getIssueCredentialRecordByThreadId(
+      thid: DidCommID,
+      igoneWithZeroRetries: Boolean = true,
+  ): F[Option[IssueCredentialRecord]]
 
   def updateCredentialRecordProtocolState(
       recordId: DidCommID,
