@@ -1,4 +1,4 @@
-@system @smoke
+@ATL-3851 @system @smoke
 Feature: Agent Health Endpoint
 
 @TEST_ATL-3833 

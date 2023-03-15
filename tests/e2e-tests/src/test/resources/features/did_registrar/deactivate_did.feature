@@ -1,4 +1,4 @@
-@DLT
+@ATL-3851 @DLT
 Feature: Deactivate DID
 
 @TEST_ATL-3837 

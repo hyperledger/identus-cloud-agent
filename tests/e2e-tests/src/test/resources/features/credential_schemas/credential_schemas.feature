@@ -1,4 +1,4 @@
-@schemas
+@ATL-3851
 Feature: Credential schemas
 
 @TEST_ATL-3835 
