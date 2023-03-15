@@ -128,7 +128,12 @@ class JdbcPresentationRepository(
       .transact(xa)
   }
 
-  override def getPresentationRecords(): Task[Seq[PresentationRecord]] = {
+  override def getPresentationRecords(
+      ignoreWithZeroRetries: Boolean = true
+  ): Task[Seq[PresentationRecord]] = {
+    val conditionFragment = Fragments.whereAndOpt(
+      Option.when(ignoreWithZeroRetries)(fr"meta_retries > 0")
+    )
     val cxnIO = sql"""
         | SELECT
         |   id,
@@ -147,7 +152,9 @@ class JdbcPresentationRepository(
         |   meta_retries,
         |   meta_next_retry,
         |   meta_last_failure
-        | FROM public.presentation_records
+        | FROM
+        |   public.presentation_records
+        | $conditionFragment
         """.stripMargin
       .query[PresentationRecord]
       .to[Seq]
@@ -157,6 +164,7 @@ class JdbcPresentationRepository(
   }
 
   override def getPresentationRecordsByStates(
+      ignoreWithZeroRetries: Boolean = true,
       states: PresentationRecord.ProtocolState*
   ): Task[Seq[PresentationRecord]] = {
     states match
@@ -165,6 +173,10 @@ class JdbcPresentationRepository(
       case head +: tail =>
         val nel = NonEmptyList.of(head, tail: _*)
         val inClauseFragment = Fragments.in(fr"protocol_state", nel)
+        val conditionFragment = Fragments.whereAndOpt(
+          Some(inClauseFragment),
+          Option.when(ignoreWithZeroRetries)(fr"meta_retries > 0")
+        )
         val cxnIO = sql"""
             | SELECT
             |   id,
@@ -184,7 +196,7 @@ class JdbcPresentationRepository(
             |   meta_next_retry,
             |   meta_last_failure
             | FROM public.presentation_records
-            | WHERE $inClauseFragment
+            | $conditionFragment
             """.stripMargin
           .query[PresentationRecord]
           .to[Seq]
