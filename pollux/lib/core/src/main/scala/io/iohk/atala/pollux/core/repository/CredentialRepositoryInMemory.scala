@@ -55,7 +55,9 @@ class CredentialRepositoryInMemory(
     } yield record
   }
 
-  override def getIssueCredentialRecords(): Task[Seq[IssueCredentialRecord]] = {
+  override def getIssueCredentialRecords(
+      ignoreWithZeroRetries: Boolean = true,
+  ): Task[Seq[IssueCredentialRecord]] = {
     for {
       store <- storeRef.get
     } yield store.values.toSeq
@@ -168,16 +170,24 @@ class CredentialRepositoryInMemory(
     } yield count
   }
 
-  override def getIssueCredentialRecordsByStates(states: ProtocolState*): Task[Seq[IssueCredentialRecord]] = {
+  override def getIssueCredentialRecordsByStates(
+      ignoreWithZeroRetries: Boolean = true,
+      states: ProtocolState*
+  ): Task[Seq[IssueCredentialRecord]] = {
     for {
       store <- storeRef.get
-    } yield store.values.filter(rec => states.contains(rec.protocolState)).toSeq
+    } yield store.values
+      .filter(rec => states.contains(rec.protocolState) & (!ignoreWithZeroRetries | rec.metaRetries > 0))
+      .toSeq
   }
 
-  override def getIssueCredentialRecordByThreadId(thid: DidCommID): Task[Option[IssueCredentialRecord]] = {
+  override def getIssueCredentialRecordByThreadId(
+      thid: DidCommID,
+      ignoreWithZeroRetries: Boolean = true,
+  ): Task[Option[IssueCredentialRecord]] = {
     for {
       store <- storeRef.get
-    } yield store.values.find(_.thid == thid)
+    } yield store.values.find(_.thid == thid).filter(!ignoreWithZeroRetries | _.metaRetries > 0)
   }
 
   override def updateWithSubjectId(
