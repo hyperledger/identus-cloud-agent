@@ -28,7 +28,9 @@ runs:
       shell: bash
       run: |
         pip install -r ${{ inputs.scripts_path }}/requirements.txt
-        ${{ inputs.scripts_path }}/add_test_execution.py "${{ inputs.json }}" "${{ inputs.execution_tag }}"
+        ls -la ${PWD}/${{ inputs.json }}
+        cat ${PWD}/${{ inputs.json }}
+        ${{ inputs.scripts_path }}/add_test_execution.py "${PWD}/${{ inputs.json }}" "${{ inputs.execution_tag }}"
         XRAY_TOKEN=$(curl -H "Content-Type: application/json" \
             -X POST --data "{ \"client_id\": \"${{ inputs.username }}\", \
             \"client_secret\": \"${{ inputs.password }}\" }" \
