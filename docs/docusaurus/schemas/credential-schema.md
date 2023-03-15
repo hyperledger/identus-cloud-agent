@@ -16,7 +16,7 @@ semantic interoperability of the Credential.
 The PRISM Platform supports the following specifications of the credential schemas:
 
 - [Verifiable Credentials JSON Schema 2022](https://w3c-ccg.github.io/vc-json-schemas/)
-- [AnonCreds Schema](https://hyperledger.github.io/anoncreds-spec/#term:schemas) - will be supported after v2.0
+- [AnonCreds Schema](https://hyperledger.github.io/anoncreds-spec/#term:schemas) - planned
 
 The signed credential schema allows doing following verifications:
 
