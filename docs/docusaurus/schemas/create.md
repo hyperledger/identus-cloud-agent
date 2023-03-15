@@ -201,7 +201,7 @@ curl -X 'POST' \
 }'
 ```
 
-...and response must be the following:
+...and response might be the following:
 
 ```json
 {
