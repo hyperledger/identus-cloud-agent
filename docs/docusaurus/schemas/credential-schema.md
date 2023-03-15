@@ -44,7 +44,7 @@ The Credential Schema is a template that defines a set of attributes the Issuer 
 
 The registry is where the Credential Schema is published and available for parties.
 
-### Issuer, Holder, Verifier, Party
+### Issuer, Holder, Verifier
 
 These are well-known roles in the SSI domain.
 
