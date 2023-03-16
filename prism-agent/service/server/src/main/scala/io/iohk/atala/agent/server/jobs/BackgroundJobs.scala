@@ -482,7 +482,7 @@ object BackgroundJobs {
       record: PresentationRecord
   ): URIO[
     DidOps & DIDResolver & JwtDidResolver & HttpClient & PresentationService & CredentialService & DIDService &
-      ManagedDIDService,
+      ManagedDIDService & AppConfig,
     Unit
   ] = {
     import io.iohk.atala.pollux.core.model.PresentationRecord.ProtocolState._
@@ -659,25 +659,15 @@ object BackgroundJobs {
                             JwtPresentation.validatePresentation(JWT(base64Decoded), options.domain, options.challenge)
                           case _ => Validation.unit
                       })
+                      verificationConfig <- ZIO.service[AppConfig].map(_.agent.verification)
+                      _ <- ZIO.log(s"VerificationConfig: ${verificationConfig}")
+
                       // https://www.w3.org/TR/vc-data-model/#proofs-signatures-0
                       // A proof is typically attached to a verifiable presentation for authentication purposes
                       // and to a verifiable credential as a method of assertion.
                       result <- JwtPresentation.verify(
                         JWT(base64Decoded),
-                        JwtPresentation.PresentationVerificationOptions(
-                          maybeProofPurpose = Some(VerificationRelationship.Authentication),
-                          verifySignature = true,
-                          verifyDates = false,
-                          leeway = Duration.Zero,
-                          maybeCredentialOptions = Some(
-                            CredentialVerification.CredentialVerificationOptions(
-                              verifySignature = true,
-                              verifyDates = false,
-                              leeway = Duration.Zero,
-                              maybeProofPurpose = Some(VerificationRelationship.AssertionMethod)
-                            )
-                          )
-                        )
+                        verificationConfig.toPresentationVerificationOptions()
                       )(didResolverService)(clock)
                     } yield result
 

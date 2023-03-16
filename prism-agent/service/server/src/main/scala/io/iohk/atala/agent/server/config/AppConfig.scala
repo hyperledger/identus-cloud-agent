@@ -3,6 +3,9 @@ package io.iohk.atala.agent.server.config
 import zio.config.*
 import zio.config.magnolia.Descriptor
 import java.time.Duration
+import io.iohk.atala.pollux.vc.jwt._
+import io.iohk.atala.pollux.vc.jwt.JwtPresentation
+import io.iohk.atala.castor.core.model.did.VerificationRelationship
 
 final case class AppConfig(
     iris: IrisConfig,
@@ -46,10 +49,46 @@ final case class DatabaseConfig(
     awaitConnectionThreads: Int
 )
 
+final case class PresentationVerificationConfig(
+    verifySignature: Boolean,
+    verifyDates: Boolean,
+    verifyHoldersBinding: Boolean,
+    leeway: Duration,
+)
+
+final case class CredentialVerificationConfig(
+    verifySignature: Boolean,
+    verifyDates: Boolean,
+    leeway: Duration,
+)
+
+final case class Options(credential: CredentialVerificationConfig, presentation: PresentationVerificationConfig)
+
+final case class VerificationConfig(options: Options) {
+  def toPresentationVerificationOptions(): JwtPresentation.PresentationVerificationOptions = {
+    JwtPresentation.PresentationVerificationOptions(
+      maybeProofPurpose = Some(VerificationRelationship.Authentication),
+      verifySignature = options.presentation.verifySignature,
+      verifyDates = options.presentation.verifyDates,
+      verifyHoldersBinding = options.presentation.verifyHoldersBinding,
+      leeway = options.presentation.leeway,
+      maybeCredentialOptions = Some(
+        CredentialVerification.CredentialVerificationOptions(
+          verifySignature = options.credential.verifySignature,
+          verifyDates = options.credential.verifyDates,
+          leeway = options.credential.leeway,
+          maybeProofPurpose = Some(VerificationRelationship.AssertionMethod)
+        )
+      )
+    )
+  }
+}
+
 final case class AgentConfig(
     httpEndpoint: HttpEndpointConfig,
     didCommServiceEndpointUrl: String,
-    database: DatabaseConfig
+    database: DatabaseConfig,
+    verification: VerificationConfig
 )
 
 final case class HttpEndpointConfig(http: HttpConfig)
