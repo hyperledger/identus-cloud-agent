@@ -37,7 +37,14 @@ object CredentialSchemaService {
 
     final case class RepositoryError(cause: Throwable) extends Error
 
-    final case class NotFoundError(guid: UUID) extends Error
+    final case class NotFoundError(guid: Option[UUID] = None, id: Option[UUID] = None, message: String) extends Error
+
+    object NotFoundError {
+      def byGuid(guid: UUID): NotFoundError =
+        NotFoundError(guid = Option(guid), message = s"Credential schema record cannot be found by `guid`=$guid")
+      def byId(id: UUID): NotFoundError =
+        NotFoundError(id = Option(id), message = s"Credential schema record cannot be found by `id`=$id")
+    }
 
     final case class UpdateError(id: UUID, version: String, author: String, message: String) extends Error
 

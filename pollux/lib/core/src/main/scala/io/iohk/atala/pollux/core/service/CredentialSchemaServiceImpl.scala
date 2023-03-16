@@ -4,7 +4,7 @@ import io.iohk.atala.pollux.core.model.CredentialSchema.FilteredEntries
 import io.iohk.atala.pollux.core.repository.CredentialSchemaRepository
 import io.iohk.atala.pollux.core.repository.Repository.SearchQuery
 import io.iohk.atala.pollux.core.service.CredentialSchemaService.Error.*
-import zio.ZIO.getOrFailWith
+import zio.ZIO.{fail, getOrFailWith, succeed}
 import zio.{Task, URLayer, ZLayer}
 
 import java.util.UUID
@@ -25,7 +25,7 @@ class CredentialSchemaServiceImpl(
       .getByGuid(guid)
       .mapError[CredentialSchemaService.Error](t => RepositoryError(t))
       .flatMap(
-        getOrFailWith(NotFoundError(guid))(_)
+        getOrFailWith(NotFoundError.byGuid(guid))(_)
       )
   }
 
@@ -37,14 +37,49 @@ class CredentialSchemaServiceImpl(
     getByGUID(CredentialSchema.makeGUID(author, id, version))
   }
 
-  // TODO: Implement a business logic for a real schema update
-  override def update(in: CredentialSchema.Input): Result[CredentialSchema] = {
+  override def update(
+      id: UUID,
+      in: CredentialSchema.Input
+  ): Result[CredentialSchema] = {
     for {
-      cs <- CredentialSchema.make(in)
-      updated_opt <- credentialSchemaRepository
-        .update(cs)
+      cs <- CredentialSchema.make(id, in)
+      existingVersions <- credentialSchemaRepository
+        .getAllVersions(id, in.author)
         .mapError[CredentialSchemaService.Error](RepositoryError.apply)
-      updated <- getOrFailWith(NotFoundError(cs.guid))(updated_opt)
+      _ <- existingVersions.headOption match {
+        case None =>
+          fail(NotFoundError.byId(id))
+        case _ =>
+          succeed(cs)
+      }
+      _ <- existingVersions.find(_ > in.version) match {
+        case Some(higherVersion) =>
+          fail(
+            UpdateError(
+              id,
+              in.version,
+              in.author,
+              s"Higher version is found: $higherVersion"
+            )
+          )
+        case None =>
+          succeed(cs)
+      }
+      _ <- existingVersions.find(_ == in.version) match {
+        case Some(existingVersion) =>
+          fail(
+            UpdateError(
+              id,
+              in.version,
+              in.author,
+              s"The version already exists: $existingVersion"
+            )
+          )
+        case None => succeed(cs)
+      }
+      updated <- credentialSchemaRepository
+        .create(cs)
+        .mapError[CredentialSchemaService.Error](RepositoryError.apply)
     } yield updated
   }
   override def delete(guid: UUID): Result[CredentialSchema] = {
@@ -52,7 +87,7 @@ class CredentialSchemaServiceImpl(
       deleted_row_opt <- credentialSchemaRepository
         .delete(guid)
         .mapError(RepositoryError.apply)
-      deleted_row <- getOrFailWith(NotFoundError(guid))(deleted_row_opt)
+      deleted_row <- getOrFailWith(NotFoundError.byGuid(guid))(deleted_row_opt)
     } yield deleted_row
   }
 
