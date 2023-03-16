@@ -1,3 +1,10 @@
+# [prism-agent-v0.55.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.54.0...prism-agent-v0.55.0) (2023-03-16)
+
+
+### Features
+
+* **prism-agent:** VerificationOptions are configurable for PrismAgent ([#449](https://github.com/input-output-hk/atala-prism-building-blocks/issues/449)) ([ee93880](https://github.com/input-output-hk/atala-prism-building-blocks/commit/ee93880dff6bd8a1fa098c3e1afd29939a6216dd))
+
 # [prism-agent-v0.54.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.53.0...prism-agent-v0.54.0) (2023-03-16)
 
 
