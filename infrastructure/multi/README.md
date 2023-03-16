@@ -19,7 +19,7 @@ All images will be pulled from a remote repository and the `.env` file controls 
 
 **Running using the scripts in this directory does not create a production-ready or secure environment. It is designed to allow easy development and should not be used to run a production instance**
  
-Please ensure you have set the `ATALA_GITHUB_TOKEN` and `GITHUB_TOKEN` environment variable. These both need to be set to the same value. 
+Please ensure you have set the `GITHUB_TOKEN` environment variable. 
 
 The value of this variable must be a Github token generated with the  `read:packages` permission set on the `building-block` repository.
 
@@ -27,7 +27,6 @@ The value of this variable must be a Github token generated with the  `read:pack
 
 ```
 export GITHUB_TOKEN=YOUR_TOKEN_HERE
-export ATALA_GITHUB_TOKEN=$GITHUB_TOKEN
 ```
 
 Please ensure you have logged into the ATALA IOHK Docker Registry using the following command [once the `GITHUB_TOKEN` is set]

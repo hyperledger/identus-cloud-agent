@@ -1,3 +1,10 @@
+# [mercury-mediator-v0.3.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-mediator-v0.2.0...mercury-mediator-v0.3.0) (2023-03-14)
+
+
+### Features
+
+* **mercury-mediator:** Update to Mercury 0.12.0; Fix code ([#257](https://github.com/input-output-hk/atala-prism-building-blocks/issues/257)) ([e990a92](https://github.com/input-output-hk/atala-prism-building-blocks/commit/e990a92a377e92925486f525a7c7ea977fe2797a))
+
 # [mercury-mediator-v0.2.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-mediator-v0.1.0...mercury-mediator-v0.2.0) (2022-11-23)
 
 

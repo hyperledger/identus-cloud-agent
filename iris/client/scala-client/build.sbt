@@ -1,23 +1,20 @@
 import Dependencies._
-import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
 
 inThisBuild(
   Seq(
     organization := "io.iohk.atala",
-    scalaVersion := "3.2.1",
+    scalaVersion := "3.2.2",
     fork := true,
     run / connectInput := true,
     versionScheme := Some("semver-spec"),
+    releaseUseGlobalVersion := false,
     githubOwner := "input-output-hk",
     githubRepository := "atala-prism-building-blocks",
-    githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN")
+    resolvers += Resolver.githubPackages("input-output-hk"),
   )
 )
 
-val commonSettings = Seq(
-  githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN"),
-  resolvers += Resolver.githubPackages("input-output-hk"),
-)
+coverageDataDir := target.value / "coverage"
 
 // Custom keys
 val apiBaseDirectory = settingKey[File]("The base directory for Iris API specifications")
@@ -32,9 +29,8 @@ lazy val root = project
     Compile / PB.targets := Seq(scalapb.gen() -> (Compile / sourceManaged).value / "scalapb"),
     Compile / PB.protoSources := Seq(apiBaseDirectory.value / "grpc")
   )
-  .settings(commonSettings)
 
-// ### ReleaseStep ###
+import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
 releaseProcess := Seq[ReleaseStep](
   checkSnapshotDependencies,
   inquireVersions,

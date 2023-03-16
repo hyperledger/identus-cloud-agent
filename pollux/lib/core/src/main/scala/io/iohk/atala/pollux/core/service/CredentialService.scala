@@ -73,6 +73,7 @@ trait CredentialService {
   def getIssueCredentialRecords(): IO[CredentialServiceError, Seq[IssueCredentialRecord]]
 
   def getIssueCredentialRecordsByStates(
+      ignoreWithZeroRetries: Boolean = true,
       states: IssueCredentialRecord.ProtocolState*
   ): IO[CredentialServiceError, Seq[IssueCredentialRecord]]
 

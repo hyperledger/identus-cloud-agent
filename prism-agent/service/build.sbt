@@ -1,6 +1,5 @@
 import Dependencies._
 import sbtghpackages.GitHubPackagesPlugin.autoImport._
-import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
 
 // Custom keys
 val apiBaseDirectory =
@@ -9,34 +8,28 @@ val apiBaseDirectory =
 inThisBuild(
   Seq(
     organization := "io.iohk.atala",
-    scalaVersion := "3.2.1",
+    scalaVersion := "3.2.2",
     apiBaseDirectory := baseDirectory.value / "api",
     fork := true,
     run / connectInput := true,
     versionScheme := Some("semver-spec"),
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+    resolvers += Resolver.githubPackages("input-output-hk"),
+    resolvers += "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven",
     githubOwner := "input-output-hk",
-    githubRepository := "atala-prism-building-blocks",
-    githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN")
+    githubRepository := "atala-prism-building-blocks"
   )
 )
 
-val commonSettings = Seq(
-  testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
-  githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN"),
-  resolvers += Resolver.githubPackages("input-output-hk"),
-  // Needed for Kotlin coroutines that support new memory management mode
-  resolvers += "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven"
-)
+coverageDataDir := target.value / "coverage"
 
 // Project definitions
 lazy val root = project
   .in(file("."))
-  .settings(commonSettings)
   .aggregate(`wallet-api`, server)
 
 lazy val `wallet-api` = project
   .in(file("wallet-api"))
-  .settings(commonSettings)
   .settings(
     name := "prism-agent-wallet-api",
     libraryDependencies ++= keyManagementDependencies
@@ -44,7 +37,6 @@ lazy val `wallet-api` = project
 
 lazy val server = project
   .in(file("server"))
-  .settings(commonSettings)
   .settings(
     name := "prism-agent",
     fork := true,
@@ -75,6 +67,7 @@ lazy val server = project
   .enablePlugins(OpenApiGeneratorPlugin, JavaAppPackaging, DockerPlugin, BuildInfoPlugin)
   .dependsOn(`wallet-api`)
 
+import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
 releaseProcess := Seq[ReleaseStep](
   checkSnapshotDependencies,
   inquireVersions,

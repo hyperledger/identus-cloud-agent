@@ -4,21 +4,8 @@ components:
       in: path
       name: didRef
       required: true
-      description: DID reference.
+      description: |
+        Prism DID according to [the Prism DID method syntax](https://github.com/input-output-hk/prism-did-method-spec/blob/main/w3c-spec/PRISM-method.md#prism-did-method-syntax)
       schema:
         type: string
       example: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff
-    didOperationRefInPath:
-      in: path
-      name: didOperationRef
-      required: true
-      description: DID Operation Reference.
-      schema:
-        type: string
-    didRefInQuery:
-      in: query
-      name: didRef
-      required: true
-      description: DID reference
-      schema:
-        type: string

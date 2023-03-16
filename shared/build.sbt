@@ -1,27 +1,48 @@
 import sbtbuildinfo.BuildInfoPlugin
 import sbtbuildinfo.BuildInfoPlugin.autoImport._
 import Dependencies._
-import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
 
 inThisBuild(
     Seq(
         organization := "io.iohk.atala",
-        scalaVersion := "3.2.1",
+        scalaVersion := "3.2.2",
         fork := true,
         run / connectInput := true,
         versionScheme := Some("semver-spec"),
-        githubOwner := "input-output-hk",
-        githubRepository := "atala-prism-building-blocks",
-        githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN")
     )
 )
 
-val commonSettings = Seq(
-  githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN"),
-  resolvers += Resolver.githubPackages("input-output-hk"),
-)
+coverageDataDir := target.value / "coverage"
+
+SbtUtils.disablePlugins(publishConfigure) // SEE also SbtUtils.scala
+lazy val publishConfigure: Project => Project = sys.env
+  .get("PUBLISH_PACKAGES") match {
+    case None    => _.disablePlugins(GitHubPackagesPlugin)
+    case Some(_) => (p: Project) => p
+}
+
+sys.env
+  .get("PUBLISH_PACKAGES") // SEE also plugin.sbt
+  .map { _ =>
+      println("### Configure release process ###")
+      import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
+      ThisBuild / releaseUseGlobalVersion := false
+      ThisBuild / githubOwner := "input-output-hk"
+      ThisBuild / githubRepository := "atala-prism-building-blocks"
+      releaseProcess := Seq[ReleaseStep](
+          checkSnapshotDependencies,
+          inquireVersions,
+          runClean,
+          runTest,
+          setReleaseVersion,
+          publishArtifacts,
+          setNextVersion
+      )
+  }
+  .toSeq
 
 lazy val root = (project in file("."))
+  .configure(publishConfigure)
   .settings(
     organization := "io.iohk.atala",
     organizationName := "Input Output Global",
@@ -30,16 +51,4 @@ lazy val root = (project in file("."))
     crossPaths := false,
     libraryDependencies ++= dependencies
   )
-   .settings(commonSettings)
    .enablePlugins(BuildInfoPlugin)
-
-// ### ReleaseStep ###
-releaseProcess := Seq[ReleaseStep](
-    checkSnapshotDependencies,
-    inquireVersions,
-    runClean,
-    runTest,
-    setReleaseVersion,
-    publishArtifacts,
-    setNextVersion
-)

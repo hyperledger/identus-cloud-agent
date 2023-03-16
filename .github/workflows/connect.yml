@@ -21,7 +21,7 @@ on:
       - "connect/lib/**"
 
 jobs:
-  build-and-test-mercury:
+  build-and-test-connect:
     uses: ./.github/workflows/scala-unit-tests.yml
     with:
       component-name: "Connect Lib"
