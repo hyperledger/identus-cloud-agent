@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       REPORTS_DIR: "tests/e2e-tests/target/site/serenity"
-      XRAY_EXECUTION_TAG_LOCALHOST: "@ATL-3853"
+      XRAY_EXECUTION_TAG_LOCALHOST: "@ATL-3851"
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -72,6 +72,7 @@ jobs:
           PRISM_AGENT_VERSION=$(cut version.sbt -d '=' -f2 | tr -d '" ')
           sed -i.bak "s/PRISM_AGENT_VERSION=.*/PRISM_AGENT_VERSION=${PRISM_AGENT_VERSION}/" "${ENV_FILE}" && rm -f "${ENV_FILE}.bak"
           cat "${ENV_FILE}"
+
       - name: Start services for issuer
         env:
           PORT: 8080
@@ -112,7 +113,7 @@ jobs:
 
       - name: Update X-Ray test execution
         uses: ./.github/actions/upload-to-xray
-        # if: github.ref_name == 'main'
+        if: github.ref_name == 'main'
         with:
           username: ${{ secrets.XRAY_CLIENT_ID }}
           password: ${{ secrets.XRAY_CLIENT_SECRET }}

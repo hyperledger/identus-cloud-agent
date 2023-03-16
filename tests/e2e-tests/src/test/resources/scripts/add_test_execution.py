@@ -26,5 +26,5 @@ def add_tag(file_path, new_tag):
 
 
 if __name__ == '__main__':
-    # pytlint: disable=no-value-for-parameter
+    # pylint: disable=no-value-for-parameter
     add_tag()
