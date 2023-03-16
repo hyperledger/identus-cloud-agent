@@ -660,7 +660,7 @@ object BackgroundJobs {
                           case _ => Validation.unit
                       })
                       verificationConfig <- ZIO.service[AppConfig].map(_.agent.verification)
-                      _ <- ZIO.log(s"VerificationConfig: ${verificationConfig.asJson}")
+                      _ <- ZIO.log(s"VerificationConfig: ${verificationConfig}")
 
                       // https://www.w3.org/TR/vc-data-model/#proofs-signatures-0
                       // A proof is typically attached to a verifiable presentation for authentication purposes
