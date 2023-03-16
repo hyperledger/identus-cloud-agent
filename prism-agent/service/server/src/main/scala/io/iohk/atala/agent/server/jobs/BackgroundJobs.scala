@@ -68,6 +68,7 @@ object BackgroundJobs {
       config <- ZIO.service[AppConfig]
       records <- credentialService
         .getIssueCredentialRecordsByStates(
+          ignoreWithZeroRetries = true,
           IssueCredentialRecord.ProtocolState.OfferPending,
           IssueCredentialRecord.ProtocolState.RequestPending,
           IssueCredentialRecord.ProtocolState.RequestGenerated,
@@ -85,6 +86,7 @@ object BackgroundJobs {
       config <- ZIO.service[AppConfig]
       records <- presentationService
         .getPresentationRecordsByStates(
+          ignoreWithZeroRetries = true,
           PresentationRecord.ProtocolState.RequestPending,
           PresentationRecord.ProtocolState.PresentationPending,
           PresentationRecord.ProtocolState.PresentationGenerated,
@@ -753,6 +755,7 @@ object BackgroundJobs {
   private[this] def performPublishCredentialsToDlt(credentialService: CredentialService) = {
     val res: ZIO[Any, CredentialServiceError, Unit] = for {
       records <- credentialService.getIssueCredentialRecordsByStates(
+        ignoreWithZeroRetries = true,
         IssueCredentialRecord.ProtocolState.CredentialPending
       )
       // NOTE: the line below is a potentially slow operation, because <createCredentialPayloadFromRecord> makes a database SELECT call,
