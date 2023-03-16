@@ -1,3 +1,10 @@
+# [pollux-v0.42.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.41.0...pollux-v0.42.0) (2023-03-16)
+
+
+### Features
+
+* **pollux:** update credential schema logic ([#450](https://github.com/input-output-hk/atala-prism-building-blocks/issues/450)) ATL-3164 ([6e22bfc](https://github.com/input-output-hk/atala-prism-building-blocks/commit/6e22bfcd582b4e33611a91d9ce1339a222778d25)), closes [#2](https://github.com/input-output-hk/atala-prism-building-blocks/issues/2)
+
 # [pollux-v0.41.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.40.0...pollux-v0.41.0) (2023-03-15)
 
 
