@@ -1,6 +1,6 @@
-@RFC0160 @AIP10
 Feature: Agents connection
 
+@TEST_ATL-3834
 Scenario: Establish a connection between two agents
   When Acme generates a connection invitation to Bob
   And Bob receives the connection invitation from Acme
