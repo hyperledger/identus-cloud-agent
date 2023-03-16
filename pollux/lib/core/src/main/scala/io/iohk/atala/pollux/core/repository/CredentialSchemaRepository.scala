@@ -14,6 +14,8 @@ trait CredentialSchemaRepository[F[_]]
 
   def update(cs: CredentialSchema): F[Option[CredentialSchema]]
 
+  def getAllVersions(id: UUID, author: String): F[Seq[String]]
+
   def delete(guid: UUID): F[Option[CredentialSchema]]
 
   def deleteAll(): F[Long]
