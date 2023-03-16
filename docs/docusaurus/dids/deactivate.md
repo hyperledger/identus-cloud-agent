@@ -5,7 +5,7 @@ DID deactivation can come in handy if the DID is compromised or no longer used.
 This is crucial for the security and risk management of identity owners.
 
 Similar to [DID update](./update.md), the deactivation of a PRISM DID is a process of putting deactivate-operation on the blockchain so that other participants know that the DID is no longer active.
-The PRISM DID method only allows published DID to be updated.
+The PRISM DID method only allows published DID to be deactivated.
 
 ## Roles
 
@@ -102,4 +102,4 @@ Example response of deactivated DID document (some fields are omitted for readab
 }
 ```
 
-The DID metadata indicates that the DID is already deactivated and the DID document no longer contains any keys or services.
+The DID metadata indicates that the DID is now deactivated and the DID document no longer contains any keys or services.
