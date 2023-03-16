@@ -4,6 +4,7 @@ import io.iohk.atala.api.http.model.{CollectionStats, Order, Pagination, Paginat
 import io.iohk.atala.api.http.{FailureResponse, InternalServerError, NotFound, RequestContext}
 import io.iohk.atala.pollux.credentialschema.SchemaRegistryEndpoints.{
   createSchemaEndpoint,
+  updateSchemaEndpoint,
   getSchemaByIdEndpoint,
   lookupSchemasByQueryEndpoint,
   testEndpoint
@@ -35,6 +36,12 @@ class SchemaRegistryServerEndpoints(
       credentialSchemaController.createSchema(schemaInput)(ctx)
     }
 
+  val updateSchemaServerEndpoint: ZServerEndpoint[Any, Any] =
+    updateSchemaEndpoint.zServerLogic {
+      case (ctx: RequestContext, author: String, id: UUID, schemaInput: CredentialSchemaInput) =>
+        credentialSchemaController.updateSchema(author, id, schemaInput)(ctx)
+    }
+
   val getSchemaByIdServerEndpoint: ZServerEndpoint[Any, Any] =
     getSchemaByIdEndpoint.zServerLogic { case (ctx: RequestContext, guid: UUID) =>
       credentialSchemaController.getSchemaByGuid(guid)(ctx)
@@ -61,6 +68,7 @@ class SchemaRegistryServerEndpoints(
   val all: List[ZServerEndpoint[Any, Any]] =
     List(
       createSchemaServerEndpoint,
+      updateSchemaServerEndpoint,
       getSchemaByIdServerEndpoint,
       lookupSchemasByQueryServerEndpoint,
       testServerEndpoint

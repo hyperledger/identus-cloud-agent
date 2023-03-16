@@ -32,6 +32,10 @@ case class CredentialSchemaInput(
     @description(annotations.tags.description)
     @encodedExample(annotations.tags.example)
     tags: Seq[String],
+    @description(annotations.author.description)
+    @encodedExample(annotations.author.example)
+    @validate(pattern(DIDRefRegex))
+    author: String
 )
 object CredentialSchemaInput {
   def toDomain(in: CredentialSchemaInput): Input =
@@ -42,7 +46,7 @@ object CredentialSchemaInput {
       description = in.description.getOrElse(""),
       `type` = in.`type`,
       schema = in.schema,
-      author = "did:prism:agent",
+      author = in.author,
       authored = None
     )
   given encoder: JsonEncoder[CredentialSchemaInput] =
