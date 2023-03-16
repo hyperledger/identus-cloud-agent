@@ -13,9 +13,9 @@ def add_tag(file_path, new_tag):
     with open(file_path, 'r') as file:
         json_obj = json.load(file)
 
-    # add the new tag to the "tags" field of each scenario
-    for scenario in json_obj[0]["elements"]:
-        scenario["tags"].append({"name": new_tag})
+    # add the new tag to the "tags" field of each feature
+    for feature in json_obj:
+        feature["tags"].append({"name": new_tag, "type": "Tag"})
 
     # write the updated JSON object back to the file
     with open(file_path, 'w') as file:
