@@ -43,7 +43,7 @@ paths:
     get:
       operationId: getDid
       tags: ["DID"]
-      summary: Resolve Prism DID
+      summary: Resolve Prism DID to DID document model
       description: |
         Resolve Prism DID to a DID document data model.
         The returned DID document is not the W3C DID document representation, but a DID document data model.
@@ -63,6 +63,27 @@ paths:
           $ref: "./shared/responses.yaml#/components/responses/UnprocessableEntity"
         "500":
           $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
+
+  /dids/representations/{didRef}:
+    get:
+      operationId: getDidRepresentation
+      tags: ["DID"]
+      summary: Resolve Prism DID to a W3C representation
+      description: |
+        Resolve Prism DID to a W3C DID document representation.
+        The response can be the [DID resolution result](https://w3c-ccg.github.io/did-resolution/#did-resolution-result)
+        or [DID document representation](https://www.w3.org/TR/did-core/#representations) depending on the `Accept` request header.
+        The response is implemented according to [resolver HTTP binding](https://w3c-ccg.github.io/did-resolution/#bindings-https) in the DID resolution spec.
+      parameters:
+        - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
+        - $ref: "./castor/parameters.yaml#/components/parameters/resolutionAcceptOption"
+      responses:
+        "200":
+          description: The resolution result or W3C DID document representation
+          content:
+            application/json:
+              schema:
+                $ref: "./castor/schemas.yaml#/components/schemas/DIDResponse" # TODO
 
   /did-registrar/dids:
     get:
