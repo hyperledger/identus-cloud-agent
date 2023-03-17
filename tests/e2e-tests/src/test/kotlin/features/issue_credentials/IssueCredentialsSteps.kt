@@ -15,8 +15,12 @@ import org.apache.http.HttpStatus.SC_CREATED
 import org.apache.http.HttpStatus.SC_OK
 
 class IssueCredentialsSteps {
-    @When("{actor} offers a credential to {actor}")
-    fun acmeOffersACredential(issuer: Actor, holder: Actor) {
+    @When("{actor} offers a credential to {actor} with {string} form DID")
+    fun acmeOffersACredential(issuer: Actor, holder: Actor, didForm: String) {
+
+        val did: String = if (didForm == "short")
+            issuer.recall("shortFormDid") else issuer.recall("longFormDid")
+
         val newCredential = Credential(
             schemaId = "schema:1234",
             validityPeriod = 3600,
@@ -26,10 +30,9 @@ class IssueCredentialsSteps {
                 "firstName" to "FirstName",
                 "lastName" to "LastName",
             ),
-            issuingDID = issuer.recall("shortFormDid"),
+            issuingDID = did,
             connectionId = issuer.recall<Connection>("connection-with-${holder.name}").connectionId,
         )
-
         issuer.attemptsTo(
             Post.to("/issue-credentials/credential-offers")
                 .with {

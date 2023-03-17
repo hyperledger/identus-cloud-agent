@@ -274,7 +274,7 @@ object BackgroundJobs {
           // Set PublicationState to PublicationPending
           for {
             credentialService <- ZIO.service[CredentialService]
-            longFormPrismDID <- getLongForm(issuerDID, false)
+            longFormPrismDID <- getLongForm(issuerDID, true)
             jwtIssuer <- createJwtIssuer(longFormPrismDID, VerificationRelationship.AssertionMethod)
             w3Credential <- credentialService.createCredentialPayloadFromRecord(
               record,
@@ -402,9 +402,8 @@ object BackgroundJobs {
         .mapError(e => RuntimeException(s"Error occurred while getting did from wallet: ${e.toString}"))
         .someOrFail(RuntimeException(s"Issuer DID does not exist in the wallet: $did"))
         .flatMap {
-          case s: ManagedDIDState.Published    => ZIO.succeed(s)
-          case s if allowUnpublishedIssuingDID => ZIO.succeed(s)
-          case _                               => ZIO.fail(RuntimeException(s"Issuer DID must be published: $did"))
+          case s: ManagedDIDState.Published => ZIO.succeed(s)
+          case s => ZIO.cond(allowUnpublishedIssuingDID, s, RuntimeException(s"Issuer DID must be published: $did"))
         }
       longFormPrismDID = PrismDID.buildLongFormFromOperation(didState.createOperation)
     } yield longFormPrismDID
