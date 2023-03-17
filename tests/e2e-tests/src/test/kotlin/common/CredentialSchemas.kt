@@ -28,25 +28,23 @@ object CredentialSchemas {
 
     fun generate_with_name_suffix(suffix: String): CredentialSchema {
         return CredentialSchema(
-            author = "University",
+            author = "did:prism:agent",
             name = "${UUID.randomUUID()} $suffix",
             description = "Simple student credentials schema",
             type = CREDENTIAL_SCHEMA_TYPE,
             schema = ObjectMapper().readTree(JSON_SCHEMA),
             tags = listOf("school", "students"),
-            version = "1.0.0",
-            authored = "did:prism:agent"
+            version = "1.0.0"
         )
     }
 
     val STUDENT_SCHEMA = CredentialSchema(
-        author = "University",
+        author = "did:prism:agent",
         name = UUID.randomUUID().toString(),
         description = "Simple student credentials schema",
         type = CREDENTIAL_SCHEMA_TYPE,
         schema = ObjectMapper().readTree(JSON_SCHEMA),
         tags = listOf("school", "students"),
-        version = "1.0.0",
-        authored = "did:prism:agent"
+        version = "1.0.0"
     )
 }
