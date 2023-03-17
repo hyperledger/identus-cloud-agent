@@ -35,6 +35,7 @@ object CredentialSchemas {
             schema = ObjectMapper().readTree(JSON_SCHEMA),
             tags = listOf("school", "students"),
             version = "1.0.0",
+            authored = "did:prism:agent"
         )
     }
 
@@ -46,5 +47,6 @@ object CredentialSchemas {
         schema = ObjectMapper().readTree(JSON_SCHEMA),
         tags = listOf("school", "students"),
         version = "1.0.0",
+        authored = "did:prism:agent"
     )
 }
