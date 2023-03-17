@@ -68,7 +68,7 @@ class CommonSteps {
             publishDidSteps.createsUnpublishedDid(holder)
             publishDidSteps.createsUnpublishedDid(issuer)
             publishDidSteps.hePublishesDidToLedger(issuer)
-            issueSteps.acmeOffersACredential(issuer, holder)
+            issueSteps.acmeOffersACredential(issuer, holder, "short")
             issueSteps.bobRequestsTheCredential(holder)
             issueSteps.acmeIssuesTheCredential(issuer)
             issueSteps.bobHasTheCredentialIssued(holder)
