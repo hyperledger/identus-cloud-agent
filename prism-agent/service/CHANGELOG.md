@@ -1,3 +1,10 @@
+# [prism-agent-v0.56.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.55.0...prism-agent-v0.56.0) (2023-03-17)
+
+
+### Features
+
+* **prism-agent:** allow published and unpublished DIDs in the issuingDID field ([#454](https://github.com/input-output-hk/atala-prism-building-blocks/issues/454)) ([ec107ad](https://github.com/input-output-hk/atala-prism-building-blocks/commit/ec107ad42a66da3703ce60b1fe7697217683c89c))
+
 # [prism-agent-v0.55.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.54.0...prism-agent-v0.55.0) (2023-03-16)
 
 
