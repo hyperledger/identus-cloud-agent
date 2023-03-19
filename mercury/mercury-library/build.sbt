@@ -83,7 +83,7 @@ lazy val D = new {
   val zioSLF4J = Def.setting("dev.zio" %% "zio-logging-slf4j" % V.zioLogging)
   val zioJson = Def.setting("dev.zio" %% "zio-json" % V.zioJson)
 
-  val zioHttp = Def.setting("dev.zio" %% "zio-http" % "0.0.3")
+  val zioHttp = Def.setting("dev.zio" %% "zio-http" % "0.0.5")
 
   val circeCore = Def.setting("io.circe" %% "circe-core" % V.circe)
   val circeGeneric = Def.setting("io.circe" %% "circe-generic" % V.circe)
