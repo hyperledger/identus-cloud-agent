@@ -13,7 +13,7 @@ setup(
         "console_scripts": ["github=github_helpers.cli:cli"],
     },
     install_requires=[
-        "Click==8.0.1",
+        "Click==8.1.3",
         "requests==2.26.0",
         "pylint==2.10.2",
         "pytest==6.2.4",

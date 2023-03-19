@@ -23,7 +23,8 @@ object CredentialSchemas {
               "type": "integer"
             }
           }
-        }""".trimIndent()
+        }
+    """.trimIndent()
 
     fun generate_with_name_suffix(suffix: String): CredentialSchema {
         return CredentialSchema(
@@ -33,7 +34,7 @@ object CredentialSchemas {
             type = CREDENTIAL_SCHEMA_TYPE,
             schema = ObjectMapper().readTree(JSON_SCHEMA),
             tags = listOf("school", "students"),
-            version = "1.0",
+            version = "1.0.0",
         )
     }
 
@@ -44,6 +45,6 @@ object CredentialSchemas {
         type = CREDENTIAL_SCHEMA_TYPE,
         schema = ObjectMapper().readTree(JSON_SCHEMA),
         tags = listOf("school", "students"),
-        version = "1.0",
+        version = "1.0.0",
     )
 }

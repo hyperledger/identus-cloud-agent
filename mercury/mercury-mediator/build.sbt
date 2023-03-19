@@ -1,23 +1,23 @@
-import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
-
 inThisBuild(
   Seq(
     organization := "io.iohk.atala",
-    scalaVersion := "3.2.1",
+    scalaVersion := "3.2.2",
     fork := true,
     run / connectInput := true,
     versionScheme := Some("semver-spec"),
+    resolvers += Resolver.githubPackages("input-output-hk"),
+    releaseUseGlobalVersion := false,
     githubOwner := "input-output-hk",
-    githubRepository := "atala-prism-building-blocks",
-    githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN")
+    githubRepository := "atala-prism-building-blocks"
   )
 )
+
+coverageDataDir := target.value / "coverage"
 
 // Custom keys
 val apiBaseDirectory =
   settingKey[File]("The base directory for Castor API specifications")
 ThisBuild / apiBaseDirectory := baseDirectory.value / "api"
-ThisBuild / resolvers += Resolver.githubPackages("input-output-hk", "atala-prism-building-blocks")
 
 lazy val V = new {
   val munit = "1.0.0-M6" // "0.7.29"
@@ -85,7 +85,6 @@ lazy val mediator = project
     libraryDependencies ++= Seq(D.mercuryModels.value, D.mercuryAgent.value, D.zioHttp.value),
     Compile / unmanagedResourceDirectories += apiBaseDirectory.value,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
-    githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN"),
     // ### Build Docker Image ###
     Docker / maintainer := "atala-coredid@iohk.io",
     Docker / dockerRepository := Some("ghcr.io"),
@@ -97,7 +96,7 @@ lazy val mediator = project
   )
   .enablePlugins(JavaAppPackaging, DockerPlugin)
 
-// ### ReleaseStep ###
+import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
 releaseProcess := Seq[ReleaseStep](
   checkSnapshotDependencies,
   inquireVersions,

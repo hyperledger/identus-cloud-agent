@@ -10,7 +10,7 @@ import io.iohk.atala.pollux.credentialschema.http.CredentialSchemaInput.toDomain
 import io.iohk.atala.pollux.credentialschema.http.CredentialSchemaResponse.fromDomain
 import io.iohk.atala.pollux.credentialschema.http.{
   CredentialSchemaInput,
-  CredentialSchemaPageResponse,
+  CredentialSchemaResponsePage,
   CredentialSchemaResponse,
   FilterInput
 }
@@ -57,7 +57,7 @@ class CredentialSchemaControllerImpl(service: CredentialSchemaService) extends C
       order: Option[Order]
   )(implicit
       rc: RequestContext
-  ): IO[FailureResponse, CredentialSchemaPageResponse] = {
+  ): IO[FailureResponse, CredentialSchemaResponsePage] = {
     for {
       filteredEntries: FilteredEntries <- service.lookup(
         filter.toDomain,
@@ -67,7 +67,7 @@ class CredentialSchemaControllerImpl(service: CredentialSchemaService) extends C
       entries = filteredEntries.entries
         .map(fromDomain(_).withBaseUri(rc.request.uri))
         .toList
-      page = CredentialSchemaPageResponse(entries)
+      page = CredentialSchemaResponsePage(entries)
       stats = CollectionStats(filteredEntries.totalCount, filteredEntries.count)
     } yield CredentialSchemaControllerLogic(rc, pagination, page, stats).result
   }

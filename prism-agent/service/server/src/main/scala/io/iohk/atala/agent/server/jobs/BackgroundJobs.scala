@@ -68,6 +68,7 @@ object BackgroundJobs {
       config <- ZIO.service[AppConfig]
       records <- credentialService
         .getIssueCredentialRecordsByStates(
+          ignoreWithZeroRetries = true,
           IssueCredentialRecord.ProtocolState.OfferPending,
           IssueCredentialRecord.ProtocolState.RequestPending,
           IssueCredentialRecord.ProtocolState.RequestGenerated,
@@ -85,6 +86,7 @@ object BackgroundJobs {
       config <- ZIO.service[AppConfig]
       records <- presentationService
         .getPresentationRecordsByStates(
+          ignoreWithZeroRetries = true,
           PresentationRecord.ProtocolState.RequestPending,
           PresentationRecord.ProtocolState.PresentationPending,
           PresentationRecord.ProtocolState.PresentationGenerated,
@@ -272,7 +274,7 @@ object BackgroundJobs {
           // Set PublicationState to PublicationPending
           for {
             credentialService <- ZIO.service[CredentialService]
-            longFormPrismDID <- getLongForm(issuerDID, false)
+            longFormPrismDID <- getLongForm(issuerDID, true)
             jwtIssuer <- createJwtIssuer(longFormPrismDID, VerificationRelationship.AssertionMethod)
             w3Credential <- credentialService.createCredentialPayloadFromRecord(
               record,
@@ -400,9 +402,8 @@ object BackgroundJobs {
         .mapError(e => RuntimeException(s"Error occurred while getting did from wallet: ${e.toString}"))
         .someOrFail(RuntimeException(s"Issuer DID does not exist in the wallet: $did"))
         .flatMap {
-          case s: ManagedDIDState.Published    => ZIO.succeed(s)
-          case s if allowUnpublishedIssuingDID => ZIO.succeed(s)
-          case _                               => ZIO.fail(RuntimeException(s"Issuer DID must be published: $did"))
+          case s: ManagedDIDState.Published => ZIO.succeed(s)
+          case s => ZIO.cond(allowUnpublishedIssuingDID, s, RuntimeException(s"Issuer DID must be published: $did"))
         }
       longFormPrismDID = PrismDID.buildLongFormFromOperation(didState.createOperation)
     } yield longFormPrismDID
@@ -480,7 +481,7 @@ object BackgroundJobs {
       record: PresentationRecord
   ): URIO[
     DidOps & DIDResolver & JwtDidResolver & HttpClient & PresentationService & CredentialService & DIDService &
-      ManagedDIDService,
+      ManagedDIDService & AppConfig,
     Unit
   ] = {
     import io.iohk.atala.pollux.core.model.PresentationRecord.ProtocolState._
@@ -657,25 +658,15 @@ object BackgroundJobs {
                             JwtPresentation.validatePresentation(JWT(base64Decoded), options.domain, options.challenge)
                           case _ => Validation.unit
                       })
+                      verificationConfig <- ZIO.service[AppConfig].map(_.agent.verification)
+                      _ <- ZIO.log(s"VerificationConfig: ${verificationConfig}")
+
                       // https://www.w3.org/TR/vc-data-model/#proofs-signatures-0
                       // A proof is typically attached to a verifiable presentation for authentication purposes
                       // and to a verifiable credential as a method of assertion.
                       result <- JwtPresentation.verify(
                         JWT(base64Decoded),
-                        JwtPresentation.PresentationVerificationOptions(
-                          maybeProofPurpose = Some(VerificationRelationship.Authentication),
-                          verifySignature = true,
-                          verifyDates = false,
-                          leeway = Duration.Zero,
-                          maybeCredentialOptions = Some(
-                            CredentialVerification.CredentialVerificationOptions(
-                              verifySignature = true,
-                              verifyDates = false,
-                              leeway = Duration.Zero,
-                              maybeProofPurpose = Some(VerificationRelationship.AssertionMethod)
-                            )
-                          )
-                        )
+                        verificationConfig.toPresentationVerificationOptions()
                       )(didResolverService)(clock)
                     } yield result
 
@@ -753,6 +744,7 @@ object BackgroundJobs {
   private[this] def performPublishCredentialsToDlt(credentialService: CredentialService) = {
     val res: ZIO[Any, CredentialServiceError, Unit] = for {
       records <- credentialService.getIssueCredentialRecordsByStates(
+        ignoreWithZeroRetries = true,
         IssueCredentialRecord.ProtocolState.CredentialPending
       )
       // NOTE: the line below is a potentially slow operation, because <createCredentialPayloadFromRecord> makes a database SELECT call,

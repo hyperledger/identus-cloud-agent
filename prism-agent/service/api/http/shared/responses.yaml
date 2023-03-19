@@ -12,6 +12,12 @@ components:
         application/json:
           schema:
             $ref: "./schemas.yaml#/components/schemas/ErrorResponse"
+    UnprocessableEntity:
+      description: "Invalid request parameters"
+      content:
+        application/json:
+          schema:
+            $ref: "./schemas.yaml#/components/schemas/ErrorResponse"
     NotFound:
       description: "Resource could not be found"
       content:

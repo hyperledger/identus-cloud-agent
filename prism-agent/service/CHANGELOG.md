@@ -1,3 +1,38 @@
+# [prism-agent-v0.56.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.55.0...prism-agent-v0.56.0) (2023-03-17)
+
+
+### Features
+
+* **prism-agent:** allow published and unpublished DIDs in the issuingDID field ([#454](https://github.com/input-output-hk/atala-prism-building-blocks/issues/454)) ([ec107ad](https://github.com/input-output-hk/atala-prism-building-blocks/commit/ec107ad42a66da3703ce60b1fe7697217683c89c))
+
+# [prism-agent-v0.55.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.54.0...prism-agent-v0.55.0) (2023-03-16)
+
+
+### Features
+
+* **prism-agent:** VerificationOptions are configurable for PrismAgent ([#449](https://github.com/input-output-hk/atala-prism-building-blocks/issues/449)) ([ee93880](https://github.com/input-output-hk/atala-prism-building-blocks/commit/ee93880dff6bd8a1fa098c3e1afd29939a6216dd))
+
+# [prism-agent-v0.54.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.53.0...prism-agent-v0.54.0) (2023-03-16)
+
+
+### Features
+
+* **prism-agent:** update pollux to 0.41.0; ([#447](https://github.com/input-output-hk/atala-prism-building-blocks/issues/447)) ([f52c5e0](https://github.com/input-output-hk/atala-prism-building-blocks/commit/f52c5e007821e9df1b56e882d443bc31755c1ee6))
+
+# [prism-agent-v0.53.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.52.0...prism-agent-v0.53.0) (2023-03-14)
+
+
+### Features
+
+* **prism-agent:** Add OAS specification to the schema registry endpoint. ATL-3164 ([#438](https://github.com/input-output-hk/atala-prism-building-blocks/issues/438)) ([91902ce](https://github.com/input-output-hk/atala-prism-building-blocks/commit/91902ce3840227ed4d683b55060d9603320ff9fd))
+
+# [prism-agent-v0.52.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.51.0...prism-agent-v0.52.0) (2023-03-13)
+
+
+### Features
+
+* **prism-agent:** Add filter by thid to OpenAPI when fetching records ([#436](https://github.com/input-output-hk/atala-prism-building-blocks/issues/436)) ([af01359](https://github.com/input-output-hk/atala-prism-building-blocks/commit/af0135904d4961d12e109004e7b001b154b1493e))
+
 # [prism-agent-v0.51.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.50.0...prism-agent-v0.51.0) (2023-03-10)
 
 

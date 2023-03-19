@@ -72,14 +72,21 @@ class IssueCredentialsProtocolApiServiceImpl(
     }
   }
 
-  override def getCredentialRecords(offset: Option[Int], limit: Option[Int])(implicit
+  override def getCredentialRecords(
+      offset: Option[Int],
+      limit: Option[Int],
+      thid: Option[String],
+  )(implicit
       toEntityMarshallerIssueCredentialRecordCollection: ToEntityMarshaller[IssueCredentialRecordPage],
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
     val result = for {
-      outcome <- credentialService
+      records <- credentialService
         .getIssueCredentialRecords()
         .mapError(HttpServiceError.DomainError[CredentialServiceError].apply)
+      outcome = thid match
+        case None        => records
+        case Some(value) => records.filter(_.thid.value == value) // this logic should be moved to the DB
     } yield outcome
 
     onZioSuccess(result.mapBoth(_.toOAS, _.map(_.toOAS)).either) {

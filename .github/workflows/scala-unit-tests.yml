@@ -16,9 +16,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
-      ATALA_GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
-      SBT_PACKAGER: "enable"
-      SBT_SCOVERAGE: "enable"
     defaults:
       run:
         working-directory: ${{ inputs.component-dir }}
@@ -38,12 +35,7 @@ jobs:
         run: sbt scalafmtCheckAll
 
       - name: Run Unit Tests
-        run: |
-          if [[ ${{ inputs.component-dir }} == mercury/mercury-library ]]; then
-            SBT_SCOVERAGE=enable sbt clean coverage test coverageAggregate
-          else
-            sbt test
-          fi
+        run: sbt coverage test coverageAggregate
 
       - name: Aggregate test reports
         if: always()
@@ -61,17 +53,17 @@ jobs:
           check_name: "${{ inputs.component-name }} Test Results"
 
       - name: Code coverage report
-        if: inputs.component-dir == 'mercury/mercury-library'
+        if: github.event_name == 'pull_request'
         uses: 5monkeys/cobertura-action@master
         with:
           path: "${{ inputs.component-dir }}/target/coverage/coverage-report/cobertura.xml"
           report_name: "${{ inputs.component-name }} Code Coverage"
           minimum_coverage: 10
           fail_below_threshold: false
+          only_changed_files: true
 
       - name: Artifact coverage HTML
         uses: actions/upload-artifact@v2
-        if: inputs.component-dir == 'mercury/mercury-library'
         with:
-          name: code-coverage-report-mercury
+          name: "code-coverage-report-${{ inputs.component-name }}"
           path: "${{ inputs.component-dir }}/target/coverage/scoverage-report"
