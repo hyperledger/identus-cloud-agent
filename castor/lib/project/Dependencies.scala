@@ -2,13 +2,13 @@ import sbt._
 
 object Dependencies {
   object Versions {
-    val zio = "2.0.10"
+    val zio = "2.0.4"
     val doobie = "1.0.0-RC2"
-    val zioCatsInterop = "23.0.0.2"
+    val zioCatsInterop = "3.3.0"
     val prismNodeClient = "0.3.0"
     val prismSdk = "v1.4.1" // scala-steward:off
     val shared = "0.2.0"
-    val flyway = "9.15.2"
+    val flyway = "9.8.3"
     val scalaUri = "4.0.3"
   }
 

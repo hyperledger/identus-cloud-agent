@@ -5,4 +5,4 @@ addSbtPlugin("com.github.sbt" % "sbt-release" % "1.1.0")
 addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.11.0")
 //addDependencyTreePlugin
 
-libraryDependencies ++= Seq("org.openapitools" % "openapi-generator" % "6.4.0")
+libraryDependencies ++= Seq("org.openapitools" % "openapi-generator" % "6.0.1")
