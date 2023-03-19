@@ -4,7 +4,7 @@ object Dependencies {
   object Versions {
     val zio = "2.0.10"
     val doobie = "1.0.0-RC2"
-    val zioCatsInterop = "3.3.0"
+    val zioCatsInterop = "23.0.0.2"
     val prismNodeClient = "0.3.0"
     val prismSdk = "v1.4.1" // scala-steward:off
     val shared = "0.2.0"
