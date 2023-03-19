@@ -20,7 +20,7 @@ object Dependencies {
   }
 
   private lazy val logback = "ch.qos.logback" % "logback-classic" % Versions.logback % Test
-  private lazy val slf4jApi = "org.slf4j" % "slf4j-api" % "2.0.6" % Test
+  private lazy val slf4jApi = "org.slf4j" % "slf4j-api" % "2.0.7" % Test
   private lazy val slf4jSimple = "org.slf4j" % "slf4j-simple" % "2.0.6" % Test
 
   private lazy val zio = "dev.zio" %% "zio" % Versions.zio
