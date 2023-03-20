@@ -8,6 +8,9 @@ inThisBuild(
     run / connectInput := true,
     versionScheme := Some("semver-spec"),
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+    releaseUseGlobalVersion := false,
+    githubOwner := "input-output-hk",
+    githubRepository := "atala-prism-building-blocks",
     resolvers += Resolver.githubPackages("input-output-hk"),
     resolvers += "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven"
   )
@@ -27,9 +30,6 @@ sys.env
   .map { _ =>
     println("### Configure release process ###")
     import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
-    ThisBuild / releaseUseGlobalVersion := false
-    ThisBuild / githubOwner := "input-output-hk"
-    ThisBuild / githubRepository := "atala-prism-building-blocks"
     releaseProcess := Seq[ReleaseStep](
       checkSnapshotDependencies,
       inquireVersions,
