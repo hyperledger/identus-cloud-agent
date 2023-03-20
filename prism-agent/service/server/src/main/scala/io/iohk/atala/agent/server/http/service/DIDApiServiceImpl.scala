@@ -41,14 +41,14 @@ class DIDApiServiceImpl(service: DIDService)(using runtime: Runtime[Any])
       result <- makeW3CResolver(service)(didRef).either
       resolutionResult = result.fold(_.toOASResolutionResult, _.toOASResolutionResult)
       resolutionError = result.swap.toOption
-    } yield buildResolutionResp(resolutionResult, resolutionError)
+    } yield buildHttpBindingResponse(resolutionResult, resolutionError)
 
     onZioSuccess(result)(identity)
   }
 
   // Return response dynamically based on "Content-Type" negotiation
   // according to https://w3c-ccg.github.io/did-resolution/#bindings-https
-  private def buildResolutionResp(
+  private def buildHttpBindingResponse(
       resolutionResult: OASModelPatches.DIDResolutionResult,
       resolutionError: Option[DIDResolutionErrorRepr]
   ): Route = {
@@ -67,6 +67,11 @@ class DIDApiServiceImpl(service: DIDService)(using runtime: Runtime[Any])
       Marshaller.StringMarshaller
         .wrap(CustomMediaTypes.`application/ld+json;did-resolution`)(CompactPrinter)
         .compose(writer.write)
+        .compose { result =>
+          result.copy(didResolutionMetadata =
+            result.didResolutionMetadata.copy(contentType = Some(CustomMediaTypes.`application/did+ld+json`.value))
+          )
+        }
     }
 
     given ToEntityMarshaller[OASModelPatches.DIDResolutionResult] =

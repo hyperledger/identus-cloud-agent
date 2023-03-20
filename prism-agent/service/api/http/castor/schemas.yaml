@@ -162,6 +162,10 @@ components:
           type: string
           description: Resolution error constant according to [DID spec registries](https://www.w3.org/TR/did-spec-registries/#error)
           example: invalidDid
+        contentType:
+          type: string
+          description: The media type of the returned DID document
+          example: application/did+ld+json
 
     VerificationMethod:
       type: object
