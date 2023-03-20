@@ -38,8 +38,7 @@ components:
 
     DIDDocument:
       type: object
-      description: |
-        A Prism DID document data model capable of being transformed into W3C compliant representation.
+      description: A W3C compliant Prism DID document representation.
       required:
         - "@context"
         - id

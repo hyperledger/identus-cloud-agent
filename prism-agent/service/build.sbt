@@ -7,7 +7,6 @@ val apiBaseDirectory =
 
 inThisBuild(
   Seq(
-    maxErrors := 5, // TODO: remove before PR
     organization := "io.iohk.atala",
     scalaVersion := "3.2.2",
     apiBaseDirectory := baseDirectory.value / "api",
