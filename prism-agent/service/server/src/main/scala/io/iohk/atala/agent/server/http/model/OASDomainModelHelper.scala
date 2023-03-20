@@ -227,7 +227,7 @@ trait OASDomainModelHelper {
     def toOAS: DIDResponse = {
       val (metadata, didDoc) = resolution
       DIDResponse(
-        did = DID(
+        did = DIDDocumentDataModel(
           id = didDoc.id,
           controller = Some(didDoc.controller),
           verificationMethod = Some(didDoc.verificationMethod.map(_.toOAS)),

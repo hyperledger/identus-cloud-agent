@@ -7,7 +7,7 @@ components:
         - metadata
       properties:
         did:
-          $ref: "#/components/schemas/DID"
+          $ref: "#/components/schemas/DIDDocumentDataModel"
         metadata:
           $ref: "#/components/schemas/DIDDocumentMetadata"
 
@@ -19,7 +19,77 @@ components:
         scheduledOperation:
           $ref: "#/components/schemas/DidOperationSubmission"
 
-    DID:
+    DIDResolutionResult:
+      type: object
+      required:
+        - "@context"
+        - didDocumentMetadata
+        - didResolutionMetadata
+      properties:
+        "@context":
+          type: string
+          example: "https://w3id.org/did-resolution/v1"
+        didDocument:
+          $ref: "#/components/schemas/DIDDocument"
+        didDocumentMetadata:
+          $ref: "#/components/schemas/DIDDocumentMetadata"
+        didResolutionMetadata:
+          $ref: "#/components/schemas/DIDResolutionMetadata"
+
+    DIDDocument:
+      type: object
+      description: |
+        A Prism DID document data model capable of being transformed into W3C compliant representation.
+      required:
+        - "@context"
+        - id
+      properties:
+        "@context":
+          type: array
+          items:
+            type: string
+            example: "https://www.w3.org/ns/did/v1"
+        id:
+          type: string
+          description: |
+            [DID subject](https://www.w3.org/TR/did-core/#did-subject).
+            The value must match the DID that was given to the resolver.
+          example: "did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff"
+        controller:
+          type: string
+          description: |
+            [DID controller](https://www.w3.org/TR/did-core/#did-controller)
+          example: "did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff"
+        verificationMethod:
+          type: array
+          items:
+            $ref: "#/components/schemas/VerificationMethod"
+        authentication:
+          type: array
+          items:
+            $ref: "#/components/schemas/VerificationMethodRef"
+        assertionMethod:
+          type: array
+          items:
+            $ref: "#/components/schemas/VerificationMethodRef"
+        keyAgreement:
+          type: array
+          items:
+            $ref: "#/components/schemas/VerificationMethodRef"
+        capabilityInvocation:
+          type: array
+          items:
+            $ref: "#/components/schemas/VerificationMethodRef"
+        capabilityDelegation:
+          type: array
+          items:
+            $ref: "#/components/schemas/VerificationMethodRef"
+        service:
+          type: array
+          items:
+            $ref: "#/components/schemas/Service"
+
+    DIDDocumentDataModel:
       type: object
       description: |
         A Prism DID document data model capable of being transformed into W3C compliant representation.
@@ -85,6 +155,16 @@ components:
 
             If a DID in short form or has not been published, DID document metadata MUST NOT contain a `canonicalId` property.
 
+    DIDResolutionMetadata:
+      type: object
+      description: |
+        [DID resolution metadata](https://www.w3.org/TR/did-core/#did-resolution-metadata)
+      properties:
+        error:
+          type: string
+          description: Resolution error constant according to [DID spec registries](https://www.w3.org/TR/did-spec-registries/#error)
+          example: invalidDid
+
     VerificationMethod:
       type: object
       description: |
@@ -115,7 +195,6 @@ components:
         Referenced key and embedded key are mutually exclusive.
         If the type is EMBEDDED, `uri` field must be present.
         Otherwise `verificationMethod` field must be present.
-
       required:
         - type
       properties:
@@ -130,6 +209,12 @@ components:
           example: did:prism:c7bd808e8e135236d7262ecf5e639b8f9d22bd886f59a4e6c909486846ca8319#key-1
         verificationMethod:
           $ref: "#/components/schemas/VerificationMethod"
+
+    VerificationMethodRef:
+      type: string
+      description: |
+        A reference to a `verificationMethod`
+      example: did:prism:c7bd808e8e135236d7262ecf5e639b8f9d22bd886f59a4e6c909486846ca8319#key-1
 
     CreateManagedDidRequest:
       type: object

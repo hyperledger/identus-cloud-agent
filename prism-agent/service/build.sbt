@@ -7,6 +7,7 @@ val apiBaseDirectory =
 
 inThisBuild(
   Seq(
+    maxErrors := 5, // TODO: remove before PR
     organization := "io.iohk.atala",
     scalaVersion := "3.2.2",
     apiBaseDirectory := baseDirectory.value / "api",
@@ -48,8 +49,8 @@ lazy val server = project
     openApiGeneratorSpec := apiBaseDirectory.value / "http/prism-agent-openapi-spec.yaml",
     openApiGeneratorConfig := baseDirectory.value / "openapi/generator-config/config.yaml",
     openApiGeneratorImportMapping := Seq(
-      "DidOperationType",
-      "DidOperationStatus"
+      "DIDDocument",
+      "DIDResolutionResult"
     )
       .map(model =>
         (model, s"io.iohk.atala.agent.server.http.model.OASModelPatches.$model")

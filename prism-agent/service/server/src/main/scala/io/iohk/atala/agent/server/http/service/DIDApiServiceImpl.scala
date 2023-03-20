@@ -12,6 +12,7 @@ import io.iohk.atala.agent.openapi.model.*
 import io.iohk.atala.agent.server.http.model.{HttpServiceError, OASDomainModelHelper, OASErrorModelHelper}
 import io.iohk.atala.castor.core.model.error.DIDOperationError
 import zio.*
+import io.iohk.atala.agent.server.http.model.OASModelPatches
 
 class DIDApiServiceImpl(service: DIDService)(using runtime: Runtime[Any])
     extends DIDApiService,
@@ -29,6 +30,10 @@ class DIDApiServiceImpl(service: DIDService)(using runtime: Runtime[Any])
       case Right(response) => getDid200(response)
     }
   }
+
+  override def getDidRepresentation(didRef: String, accept: Option[String])(implicit
+      toEntityMarshallerDIDResolutionResult: ToEntityMarshaller[OASModelPatches.DIDResolutionResult]
+  ): Route = ??? // TODO
 
 }
 
