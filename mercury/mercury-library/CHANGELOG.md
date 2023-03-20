@@ -1,3 +1,10 @@
+# [mercury-v0.21.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.20.0...mercury-v0.21.0) (2023-03-20)
+
+
+### Features
+
+* **mercury:** Code cleanup removed the Presentation Attachment and added to the Pollux ([#365](https://github.com/input-output-hk/atala-prism-building-blocks/issues/365)) ([8f52b12](https://github.com/input-output-hk/atala-prism-building-blocks/commit/8f52b1214e7bee3b18693f25a657630d85eee26f))
+
 # [mercury-v0.20.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.19.0...mercury-v0.20.0) (2023-02-24)
 
 
