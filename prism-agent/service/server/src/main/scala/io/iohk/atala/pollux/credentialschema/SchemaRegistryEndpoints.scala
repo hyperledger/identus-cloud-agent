@@ -67,6 +67,42 @@ object SchemaRegistryEndpoints {
       )
       .tag("Schema Registry")
 
+  val updateSchemaEndpoint: PublicEndpoint[
+    (RequestContext, String, UUID, CredentialSchemaInput),
+    FailureResponse,
+    CredentialSchemaResponse,
+    Any
+  ] =
+    endpoint.put
+      .in(extractFromRequest[RequestContext](RequestContext.apply))
+      .in(
+        "schema-registry" /
+          path[String]("author").description(CredentialSchemaResponse.annotations.author.description) /
+          path[UUID]("id").description(CredentialSchemaResponse.annotations.id.description)
+      )
+      .in(
+        jsonBody[CredentialSchemaInput]
+          .description(
+            "JSON object required for the credential schema update"
+          )
+      )
+      .out(
+        statusCode(StatusCode.Ok)
+          .description(
+            "The credential schema record is successfully updated"
+          )
+      )
+      .out(jsonBody[CredentialSchemaResponse])
+      .description("Credential schema record")
+      .errorOut(basicFailures)
+      .name("updateSchema")
+      .summary("Publish the new version of the credential schema to the schema registry")
+      .description(
+        "Publish the new version of the credential schema record with metadata and internal JSON Schema on behalf of Cloud Agent. " +
+          "The credential schema will be signed by the keys of Cloud Agent and issued by the DID that corresponds to it."
+      )
+      .tag("Schema Registry")
+
   val getSchemaByIdEndpoint: PublicEndpoint[
     (RequestContext, UUID),
     FailureResponse,

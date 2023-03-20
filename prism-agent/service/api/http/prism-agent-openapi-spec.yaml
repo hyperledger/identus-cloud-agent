@@ -297,6 +297,54 @@ paths:
         "500":
           $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
 
+  /schema-registry/{author}/{id}:
+    put:
+      tags:
+        - Schema Registry
+      summary: Publish the new version of the credential schema to the schema registry
+      description:
+        Publish the new version of the credential schema record with metadata
+        and internal JSON Schema on behalf of Cloud Agent. The credential schema will
+        be signed by the keys of Cloud Agent and issued by the DID that corresponds
+        to it.
+      operationId: updateSchema
+      parameters:
+        - name: author
+          in: path
+          description:
+            DID of the identity which authored the credential schema. A piece
+            of Metadata.
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          description:
+            A locally unique identifier to address the schema. UUID is generated
+            by the backend.
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: JSON object required for the credential schema update
+        content:
+          application/json:
+            schema:
+              $ref: "./pollux/schemas.yaml#/components/schemas/CredentialSchemaInput"
+        required: true
+      responses:
+        "200":
+          description: The credential schema record is successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: "./pollux/schemas.yaml#/components/schemas/CredentialSchemaResponse"
+        "400":
+          $ref: "./shared/responses.yaml#/components/responses/BadRequest"
+        "500":
+          $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
+
   /schema-registry/schemas/{guid}:
     get:
       tags:

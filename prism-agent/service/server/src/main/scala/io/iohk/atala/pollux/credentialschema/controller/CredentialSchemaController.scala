@@ -19,6 +19,11 @@ trait CredentialSchemaController {
   def createSchema(in: CredentialSchemaInput)(implicit
       rc: RequestContext
   ): IO[FailureResponse, CredentialSchemaResponse]
+
+  def updateSchema(author: String, id: UUID, in: CredentialSchemaInput)(implicit
+      rc: RequestContext
+  ): IO[FailureResponse, CredentialSchemaResponse]
+
   def getSchemaByGuid(id: UUID)(implicit
       rc: RequestContext
   ): IO[FailureResponse, CredentialSchemaResponse]
@@ -43,8 +48,13 @@ object CredentialSchemaController {
     error match {
       case RepositoryError(cause: Throwable) =>
         InternalServerError(cause.getMessage)
-      case NotFoundError(guid: UUID) =>
-        NotFound(s"CredentialSchema is not found by guid $guid")
+      case NotFoundError(_, _, message) =>
+        NotFound(message)
+      case UpdateError(id, version, author, message) =>
+        BadRequest(
+          msg = s"Credential schema update error: id=$id, version=$version",
+          errors = List(message)
+        )
       case UnexpectedError(msg: String) => InternalServerError(msg)
     }
   }

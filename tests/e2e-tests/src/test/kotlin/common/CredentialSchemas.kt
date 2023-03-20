@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import java.util.*
 
 object CredentialSchemas {
+
     val CREDENTIAL_SCHEMA_TYPE = "https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json"
 
     val SCHEMA_TYPE = "https://json-schema.org/draft/2019-09/schema"
@@ -28,7 +29,7 @@ object CredentialSchemas {
 
     fun generate_with_name_suffix(suffix: String): CredentialSchema {
         return CredentialSchema(
-            author = "University",
+            author = "did:prism:agent",
             name = "${UUID.randomUUID()} $suffix",
             description = "Simple student credentials schema",
             type = CREDENTIAL_SCHEMA_TYPE,
@@ -39,7 +40,7 @@ object CredentialSchemas {
     }
 
     val STUDENT_SCHEMA = CredentialSchema(
-        author = "University",
+        author = "did:prism:agent",
         name = UUID.randomUUID().toString(),
         description = "Simple student credentials schema",
         type = CREDENTIAL_SCHEMA_TYPE,

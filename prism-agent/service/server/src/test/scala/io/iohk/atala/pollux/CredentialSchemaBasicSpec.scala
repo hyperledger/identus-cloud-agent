@@ -50,7 +50,8 @@ object CredentialSchemaBasicSpec extends ZIOSpecDefault with CredentialSchemaTes
       .fromJson[zio.json.ast.Json]
       .toOption
       .get,
-    tags = List("test")
+    tags = List("test"),
+    author = "did:prism:agent"
   )
 
   def spec = (
@@ -94,7 +95,8 @@ object CredentialSchemaBasicSpec extends ZIOSpecDefault with CredentialSchemaTes
             description = Option(credentialSchema.description),
             `type` = credentialSchema.`type`,
             schema = credentialSchema.schema,
-            tags = credentialSchema.tags
+            tags = credentialSchema.tags,
+            author = credentialSchema.author
           )
 
           credentialSchemaIsCreated = assert(schemaInput)(equalTo(actualFields))
