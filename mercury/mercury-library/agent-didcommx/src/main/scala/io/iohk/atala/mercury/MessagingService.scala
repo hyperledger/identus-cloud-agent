@@ -116,107 +116,28 @@ object MessagingService {
       * TODO Move this method to another model
       */
   def send(msg: Message): ZIO[DidOps & DidAgent & DIDResolver & HttpClient, SendMessageError, HttpResponse] =
-    for {
-      auxFinalMessage <- makeMessage(msg)
-      MessageAndAddress(finalMessage, serviceEndpoint) = auxFinalMessage
-      didCommService <- ZIO.service[DidOps]
-      encryptedMessage <-
-        if (finalMessage.`type` == ForwardMessage.PIURI)
-          didCommService.packEncryptedAnon(msg = finalMessage, to = finalMessage.to.head) // TODO Head
-        else
-          didCommService.packEncrypted(msg = finalMessage, to = finalMessage.to.head) // TODO Head
+    ZIO.logAnnotate("msgId", msg.id) {
+      for {
+        auxFinalMessage <- makeMessage(msg)
+        MessageAndAddress(finalMessage, serviceEndpoint) = auxFinalMessage
+        didCommService <- ZIO.service[DidOps]
+        encryptedMessage <-
+          if (finalMessage.`type` == ForwardMessage.PIURI)
+            didCommService.packEncryptedAnon(msg = finalMessage, to = finalMessage.to.head) // TODO Head
+          else
+            didCommService.packEncrypted(msg = finalMessage, to = finalMessage.to.head) // TODO Head
 
-      _ <- ZIO.log(s"Sending to Message to '$serviceEndpoint'")
-      res <- HttpClient
-        .postDIDComm(url = serviceEndpoint, data = encryptedMessage.string)
-        .catchAll { case ex => ZIO.fail(SendMessageError(ex, Some(encryptedMessage.string))) }
-    } yield (res)
+        _ <- ZIO.log(s"Sending to Message to '$serviceEndpoint'")
+        resp <- HttpClient
+          .postDIDComm(url = serviceEndpoint, data = encryptedMessage.string)
+          .catchAll { case ex => ZIO.fail(SendMessageError(ex, Some(encryptedMessage.string))) }
+        _ <- ZIO.when(resp.status >= 300)(
+          ZIO.logWarning(
+            s"Message to '$serviceEndpoint' return [${resp.status}] '${resp.bodyAsString}' for the request '${encryptedMessage.string}'"
+          )
+        )
+
+      } yield (resp)
+    }
 
 }
-// WIP do not delete!
-//   /** Encrypt and send a Message via HTTP
-//     *
-//     * TODO move to another module (agent module)
-//     */
-//   def sendMessage(msg: Message): ZIO[DidComm & DIDResolver, Throwable, HttpResponseBody] = { // TODO  Throwable
-//     for {
-//       didCommService <- ZIO.service[DidComm]
-//       resolver <- ZIO.service[DIDResolver]
-//       sendToDID <- msg.to match {
-//         case Seq() => // TODO support for anonymous message
-//           ZIO.fail(new RuntimeException("Missing the destination DID - TODO support for anonymous message"))
-//         case Seq(value) =>
-//           ZIO.succeed(value)
-//         case head +: tail => // TODO support for multiple destinations
-//           ZIO.fail(new RuntimeException("TODO multiple destinations"))
-//       }
-
-//       didCommService <- resolver
-//         .didCommServices(sendToDID) /* Seq[DIDCommService] */
-//         .flatMap {
-//           case Seq() =>
-//             ZIO.fail(new RuntimeException("To send a Message you need a destination")) // TODO ERROR
-//           case Seq(v) =>
-//             ZIO.succeed(
-//               ServiceEndpoint(
-//                 uri = v.getServiceEndpoint(),
-//                 accept = Option(v.getAccept()).map(_.asScala.toSeq),
-//                 routingKeys = Option(v.getRoutingKeys()).map(_.asScala.toSeq)
-//               )
-//             )
-//           case headDID +: tail =>
-//             ZIO.logError("TODO multiple destinations") *>
-//               ZIO.succeed(
-//                 ServiceEndpoint(
-//                   uri = headDID.getServiceEndpoint(),
-//                   accept = Option(headDID.getAccept()).map(_.asScala.toSeq),
-//                   routingKeys = Option(headDID.getRoutingKeys()).map(_.asScala.toSeq)
-//                 )
-//               )
-//         }
-
-//       sendToHttp <- didCommService match { // TODO
-//         case ServiceEndpoint(uri: HttpOrDID, _, _) if uri.startsWith("http") => ZIO.succeed(uri)
-//         case ServiceEndpoint(uri: HttpOrDID, _, _) if uri.startsWith("did")  => ZIO.fail(???) // FIXME
-//       }
-
-//       keys <- didCommService match { // TODO
-//         case ServiceEndpoint(_, _, None | Some(Seq())) => ZIO.succeed(Seq())
-//         case ServiceEndpoint(_, _, Some(routingKeys)) =>
-//           ZIO.forall(routingKeys) { key =>
-//             val did = DidId(key.split("#", 1)(1))
-//             val allKeys = resolver
-//               .resolveDID(did)
-//               .map(e =>
-//                 e.getVerificationMethods()
-//                   .asScala
-//                   .toSeq
-//                   .find(_.getId() == key)
-//                   .map { vm =>
-//                     vm.getVerificationMaterial().getFormat() match
-//                       case VerificationMaterialFormat.JWK =>
-//                         vm.getVerificationMaterial().getValue()
-//                       case VerificationMaterialFormat.BASE58    => ZIO.fail(???) // FIXME
-//                       case VerificationMaterialFormat.MULTIBASE => ZIO.fail(???) // FIXME
-//                       case VerificationMaterialFormat.OTHER     => ZIO.fail(???) // FIXME
-//                   }
-//               )
-
-//             ZIO.succeed(Seq()) // FIXME
-//           }
-
-//       }
-
-//       serviceEndpoint = {
-//         // didCommService.getRoutingKeys().to
-//         ???
-//       }
-
-//       encryptedForwardMessage <- didCommService.packEncrypted(msg, to = sendToDID)
-//       jsonString = encryptedForwardMessage.string
-
-//       _ <- Console.printLine("Sending to" + serviceEndpoint)
-
-//       res <- postDIDComm(serviceEndpoint)
-//     } yield (res)
-//   }
