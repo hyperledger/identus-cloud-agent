@@ -238,9 +238,49 @@ trait OASDomainModelHelper {
           service = Some(didDoc.service.map(_.toOAS))
         ),
         metadata = DIDDocumentMetadata(
-          deactivated = metadata.deactivated,
+          deactivated = Some(metadata.deactivated),
           canonicalId = Some(metadata.canonicalId)
         )
+      )
+    }
+
+    def toOASResolutionResult: OASModelPatches.DIDResolutionResult = {
+      val (metadata, didDoc) = resolution
+      val isDeactivated = metadata.deactivated
+      OASModelPatches.DIDResolutionResult(
+        `@context` = "https://w3id.org/did-resolution/v1",
+        didDocument =
+          if (isDeactivated) None
+          else
+            Some(
+              OASModelPatches.DIDDocument(
+                `@context` = Seq("https://www.w3.org/ns/did/v1"),
+                id = didDoc.id,
+                controller = Some(didDoc.controller),
+                verificationMethod = Some(didDoc.verificationMethod.map(_.toOAS)),
+                authentication = Some(didDoc.authentication.map(_.toOASVerificationMethodRef)),
+                assertionMethod = Some(didDoc.assertionMethod.map(_.toOASVerificationMethodRef)),
+                keyAgreement = Some(didDoc.keyAgreement.map(_.toOASVerificationMethodRef)),
+                capabilityInvocation = Some(didDoc.capabilityInvocation.map(_.toOASVerificationMethodRef)),
+                service = Some(didDoc.service.map(_.toOAS))
+              )
+            ),
+        didDocumentMetadata = DIDDocumentMetadata(
+          deactivated = Some(metadata.deactivated),
+          canonicalId = Some(metadata.canonicalId)
+        ),
+        didResolutionMetadata = DIDResolutionMetadata()
+      )
+    }
+  }
+
+  extension (resolutionError: castorDomain.w3c.DIDResolutionErrorRepr) {
+    def toOASResolutionResult: OASModelPatches.DIDResolutionResult = {
+      OASModelPatches.DIDResolutionResult(
+        `@context` = "https://w3id.org/did-resolution/v1",
+        didDocument = None,
+        didDocumentMetadata = DIDDocumentMetadata(),
+        didResolutionMetadata = DIDResolutionMetadata(error = Some(resolutionError.value))
       )
     }
   }
@@ -261,6 +301,12 @@ trait OASDomainModelHelper {
       publicKeyReprOrRef match {
         case s: String         => VerificationMethodOrRef(`type` = "REFERENCED", uri = Some(s))
         case pk: PublicKeyRepr => VerificationMethodOrRef(`type` = "EMBEDDED", verificationMethod = Some(pk.toOAS))
+      }
+    }
+    def toOASVerificationMethodRef: String = {
+      publicKeyReprOrRef match {
+        case s: String         => s
+        case pk: PublicKeyRepr => throw Exception("Embedded public key is not yet supported in W3C representation")
       }
     }
   }

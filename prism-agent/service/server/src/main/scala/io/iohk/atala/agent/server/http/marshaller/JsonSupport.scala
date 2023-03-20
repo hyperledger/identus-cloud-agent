@@ -17,6 +17,8 @@ import java.util.UUID
 import java.time.OffsetDateTime
 import io.iohk.atala.agent.server.http.model.OASModelPatches
 
+object JsonSupport extends JsonSupport
+
 trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 
   // Castor

@@ -140,8 +140,6 @@ components:
       type: object
       description: |
         [DID document metadata](https://www.w3.org/TR/did-core/#did-document-metadata)
-      required:
-        - deactivated
       properties:
         deactivated:
           type: boolean
