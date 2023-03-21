@@ -2,6 +2,7 @@ package io.iohk.atala.pollux.vc.jwt
 
 import com.nimbusds.jose.{JWSAlgorithm, JWSHeader}
 import com.nimbusds.jose.crypto.ECDSASigner
+import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
 import com.nimbusds.jose.jwk.{Curve, ECKey}
 import com.nimbusds.jwt.{JWTClaimsSet, SignedJWT}
 import io.circe
@@ -72,9 +73,14 @@ class ES256Signer(privateKey: PrivateKey) extends Signer {
 // works with java 7, 8, 11 & bouncycastle provider
 // https://connect2id.com/products/nimbus-jose-jwt/jca-algorithm-support#alg-support-table
 class ES256KSigner(privateKey: PrivateKey) extends Signer {
+  lazy val signer: ECDSASigner = {
+    val ecdsaSigner = ECDSASigner(privateKey, Curve.SECP256K1)
+    val bouncyCastleProvider = BouncyCastleProviderSingleton.getInstance
+    ecdsaSigner.getJCAContext.setProvider(bouncyCastleProvider)
+    ecdsaSigner
+  }
   override def encode(claim: Json): JWT = {
     val claimSet = JWTClaimsSet.parse(claim.noSpaces)
-    val signer = ECDSASigner(privateKey, Curve.SECP256K1)
     val signedJwt = SignedJWT(
       new JWSHeader.Builder(JWSAlgorithm.ES256K).build(),
       claimSet

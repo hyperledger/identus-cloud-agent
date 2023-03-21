@@ -4,6 +4,7 @@ import com.nimbusds.jose.jwk.*
 import com.nimbusds.jose.jwk.gen.*
 import com.nimbusds.jose.util.Base64URL
 import com.nimbusds.jose.JWSVerifier
+import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
 import com.nimbusds.jwt.SignedJWT
 import io.circe
 import io.circe.generic.auto.*
@@ -80,14 +81,20 @@ object JWTVerification {
       })
   }
 
+  def toECDSAVerifier(publicKey: PublicKey): JWSVerifier = {
+    val verifier: JWSVerifier = publicKey match {
+      case key: ECPublicKey => ECDSAVerifier(key)
+      case key              => throw Exception(s"unsupported public-key type: ${key.getClass.getCanonicalName}")
+    }
+    verifier.getJCAContext.setProvider(BouncyCastleProviderSingleton.getInstance)
+    verifier
+  }
+
   def validateEncodedJwt(jwt: JWT, publicKey: PublicKey): Validation[String, Unit] = {
     Try {
       val parsedJwt = SignedJWT.parse(jwt.value)
       // TODO Implement other key types
-      val verifier: JWSVerifier = publicKey match {
-        case key: ECPublicKey => ECDSAVerifier(key)
-        case key              => throw Exception(s"unsupported public-key type: ${key.getClass.getCanonicalName}")
-      }
+      val verifier = toECDSAVerifier(publicKey)
       parsedJwt.verify(verifier)
     } match {
       case Failure(exception) => Validation.fail(s"Jwt[$jwt] verification pre-process failed: ${exception.getMessage}")
