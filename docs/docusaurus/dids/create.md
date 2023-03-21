@@ -34,11 +34,11 @@ Facilitates a higher-level interaction with PRISM DID, where the PRISM Agent han
 
 The example uses the following endpoints
 
-| Endpoint                                                                               | Description                                         | Role           |
-|----------------------------------------------------------------------------------------|-----------------------------------------------------|----------------|
-| [`GET /did-registrar/dids`](/agent-api/#tag/DID-Registrar/operation/listManagedDid)    | List all DIDs stored in PRISM Agent                 | DID Controller |
-| [`POST /did-registrar/dids`](/agent-api/#tag/DID-Registrar/operation/createManagedDid) | Create a new PRISM DID to be managed by PRISM Agent | DID Controller |
-| [`GET /dids/{didRef}`](/agent-api/#tag/DID/operation/getDid)                           | Resolve a DID to DID document                       | DID Controller |
+| Endpoint                                                                                   | Description                                         | Role           |
+|--------------------------------------------------------------------------------------------|-----------------------------------------------------|----------------|
+| [`GET /did-registrar/dids`](/agent-api/#tag/DID-Registrar/operation/listManagedDid)        | List all DIDs stored in PRISM Agent                 | DID Controller |
+| [`POST /did-registrar/dids`](/agent-api/#tag/DID-Registrar/operation/createManagedDid)     | Create a new PRISM DID to be managed by PRISM Agent | DID Controller |
+| [`GET /dids/representations/{didRef}`](/agent-api/#tag/DID/operation/getDidRepresentation) | Resolve a DID to DID document representation        | DID Controller |
 
 ## DID Controller interactions
 
@@ -54,7 +54,7 @@ The result should show an empty list, as no DIDs exist on this PRISM Agent insta
 
 The DID controller can create a new DID by sending a DID document template to the Agent.
 Since key pairs are generated and managed by PRISM Agent, DID controller only has to specify the key `id` and its purpose (e.g., `authentication`, `assertionMethod`, etc.).
-The current PRISM DID method supports a key with a single purpose, but it may be extended to support a key with multitple purposes in the future.
+The current PRISM DID method supports a key with a single purpose, but it may be extended to support a key with multiple purposes in the future.
 
 ```bash
 curl --location --request POST 'http://localhost:8080/prism-agent/did-registrar/dids' \
@@ -108,6 +108,24 @@ Replacing the `{didRef}` with the long-form DID, and the response should return 
 Replacing the `{didRef}` with the short-form DID, and the resolution should fail since the DID is not yet published.
 
 ```bash
-curl --location --request GET 'http://localhost:8080/prism-agent/dids/{didRef}' \
---header 'Accept: application/json'
+curl --location --request GET 'http://localhost:8080/prism-agent/dids/representations/{didRef}' \
+--header 'Accept: */*'
+```
+
+Example DID document response (some fields are omitted for readability)
+
+```json
+{
+    "@context": "https://w3id.org/did-resolution/v1",
+    "didDocument": {
+        "@context": ["https://www.w3.org/ns/did/v1"],
+        ...
+        "id": "did:prism:62675a438616773280f70e4f4d1047133fc56bb183758fcccd5d5714ea5b1959:Cr0BCroBEloKBWtleS0xEARCTwoJc2VjcDI1NmsxEiDRh7iIj8WKJ28nde1uc6ZnEBWIwEVMXlIEmrqCo-bE5Bogn6o2TzP0HzekLOhA-06MrIpOuaaHL_Rhy01wyjV4ypsSXAoHbWFzdGVyMBABQk8KCXNlY3AyNTZrMRIg0y28R1CS3F0-kwNcQShdRhtcvz-LQlI86z1DIYrKM7oaIPkmCAegj-sSaAy0zTxrR9F4TSXB-62vCQxIsEovkEcA",
+        "verificationMethod": [
+            {...}
+        ],
+    },
+    "didDocumentMetadata": {...},
+    "didResolutionMetadata": {...}
+}
 ```

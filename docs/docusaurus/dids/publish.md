@@ -38,7 +38,7 @@ The example uses the following endpoints
 |---------------------------------------------------------------------------------------------------------------|---------------------------------------------------------|----------------|
 | [`GET /did-registrar/dids/{didRef}`](/agent-api/#tag/DID-Registrar/operation/getManagedDid)                   | Get the DID stored in PRISM Agent                       | DID Controller |
 | [`POST /did-registrar/dids/{didRef}/publications`](/agent-api/#tag/DID-Registrar/operation/publishManagedDid) | Publish the DID stored in PRISM Agent to the blockchain | DID Controller |
-| [`GET /dids/{didRef}`](/agent-api/#tag/DID/operation/getDid)                                                  | Resolve a DID to DID document                           | DID Controller |
+| [`GET /dids/representations/{didRef}`](/agent-api/#tag/DID/operation/getDidRepresentation)                    | Resolve a DID to DID document representation            | DID Controller |
 
 ## DID Controller interactions
 
