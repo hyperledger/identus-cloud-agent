@@ -53,6 +53,7 @@ inThisBuild(
 )
 
 ThisBuild / resolvers += Resolver.githubPackages("FabioPinheiro", "scala-did")
+ThisBuild / resolvers += Resolver.githubPackages("input-output-hk")
 
 val useDidLib = false
 def didScalaAUX =
