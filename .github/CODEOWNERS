@@ -1,20 +1,32 @@
-# Apollo maintainers (Jesus Diaz Vico, Shota Jolbordi):
-/apollo/ @jesusdiazvico @shotexa
+# Castor:
+/castor/ @patlo-iog @yshyn-iohk
 
-# Castor maintainers (Ilya Peresadin, Fabio Pinheiro):
-/castor/ @pva701 @FabioPinheiro
-
-# Mercury maintainers (Fabio Pinheiro, Shailesh Patil):
+# Mercury:
 /mercury/ @FabioPinheiro @mineme0110
 
-# Pluto maintainers (Ilya Peresadin, Yurii Shynbuiev):
-/pluto/ @pva701 @yshyn-iohk
+# Connect:
+/connect/ @FabioPinheiro @mineme0110
 
-# Pollux maintainers (Shota Jolbordi, Yurii Shynbuiev):
-/pollux/ @shotexa @yshyn-iohk
+# Pollux:
+/pollux/ @patlo-iog @CryptoKnightIOG @mineme0110
 
-# Github maintainer (Anton Baliasnikov):
+# PRISM Agent:
+/prism-agent/ @bvoiturier @yshyn-iohk
+
+# CI pipelines:
 /.github/ @antonbaliasnikov
+
+# PRISM Node:
+/prism-node/ @shotexa
+
+# Shared:
+/shared/ @patlo-iog @FabioPinheiro @mineme0110 @yshyn-iohk
+
+# E2E tests:
+/tests/ @antonbaliasnikov
+
+# Docs:
+/docs/ @antonbaliasnikov @davidpoltorak-io @yshyn-iohk @BS-IO 
 
 # Everything else will be reviewed by someone from the Atala group
 * @input-output-hk/atala
