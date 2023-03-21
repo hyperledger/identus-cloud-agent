@@ -69,7 +69,7 @@ jobs:
           path: "${{ inputs.component-dir }}/target/coverage/scoverage-report"
 
       - name: Generate coverage badge
-        # if: github.ref_name == 'main'
+        if: github.ref_name == 'main'
         uses: action-badges/cobertura-coverage-xml-badges@0.2.1
         with:
           file-name: "${{ inputs.component-name }}-coverage.svg"

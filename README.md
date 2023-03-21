@@ -17,6 +17,10 @@
 </p>
 <hr>
 
+## Coverage
+
+![castor-coverage](https://raw.githubusercontent.com/input-output-hk/atala-prism-building-blocks/badges/.badges/Castor-coverage.svg)
+
 ## Documentation
 
 <!-- FIXME * [OpenAPI docs](openapi) -->
