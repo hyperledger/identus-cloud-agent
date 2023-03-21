@@ -1,3 +1,10 @@
+# [pollux-v0.43.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.42.1...pollux-v0.43.0) (2023-03-21)
+
+
+### Features
+
+* **pollux:** Update the nimbus-jose-jwt library with a patch 10.0.0-preview ([#457](https://github.com/input-output-hk/atala-prism-building-blocks/issues/457)) ([8c0070f](https://github.com/input-output-hk/atala-prism-building-blocks/commit/8c0070f1789e8f42c234eadeffba08e5f0b6e836))
+
 # [pollux-v0.42.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.42.0...pollux-v0.42.1) (2023-03-21)
 
 
