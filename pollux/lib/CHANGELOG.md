@@ -1,3 +1,10 @@
+# [pollux-v0.42.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.42.0...pollux-v0.42.1) (2023-03-21)
+
+
+### Bug Fixes
+
+* update mercury to 0.21.0 ([8d42fb1](https://github.com/input-output-hk/atala-prism-building-blocks/commit/8d42fb18206c9e599a4ab77f3c4a5162da03ba35))
+
 # [pollux-v0.42.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.41.0...pollux-v0.42.0) (2023-03-16)
 
 
