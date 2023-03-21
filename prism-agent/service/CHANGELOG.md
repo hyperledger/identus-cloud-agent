@@ -1,3 +1,10 @@
+# [prism-agent-v0.57.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.56.0...prism-agent-v0.57.0) (2023-03-21)
+
+
+### Features
+
+* **prism-agent:** Update pollux lib to 0.43.0 includes the nimbus-jo… ([#460](https://github.com/input-output-hk/atala-prism-building-blocks/issues/460)) ([adb7000](https://github.com/input-output-hk/atala-prism-building-blocks/commit/adb7000348a29a83ca59f0d945b1327795dd3b42))
+
 # [prism-agent-v0.56.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.55.0...prism-agent-v0.56.0) (2023-03-17)
 
 
