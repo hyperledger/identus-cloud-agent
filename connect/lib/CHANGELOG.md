@@ -1,3 +1,10 @@
+# [connect-v0.12.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/connect-v0.12.0...connect-v0.12.1) (2023-03-21)
+
+
+### Bug Fixes
+
+* update mercury to 0.21.0 ([8d42fb1](https://github.com/input-output-hk/atala-prism-building-blocks/commit/8d42fb18206c9e599a4ab77f3c4a5162da03ba35))
+
 # [connect-v0.12.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/connect-v0.11.0...connect-v0.12.0) (2023-03-13)
 
 
