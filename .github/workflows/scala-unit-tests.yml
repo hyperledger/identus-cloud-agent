@@ -67,3 +67,18 @@ jobs:
         with:
           name: "code-coverage-report-${{ inputs.component-name }}"
           path: "${{ inputs.component-dir }}/target/coverage/scoverage-report"
+
+      - name: Create badges branch
+        # if: github.ref_name == 'main'
+        uses: action-badges/create-orphan-branch@0.1.0
+        with:
+          branch-name: badges
+
+      - name: Generate coverage badge
+        # if: github.ref_name == 'main'
+        uses: action-badges/cobertura-coverage-xml-badges@0.2.1
+        with:
+          file-name: "${{ inputs.component-name }}-coverage.svg"
+          badge-branch: badges
+          github-token: "${{ secrets.ATALA_GITHUB_TOKEN }}"
+          coverage-file-name: "${{ inputs.component-dir }}/target/coverage/coverage-report/cobertura.xml"
