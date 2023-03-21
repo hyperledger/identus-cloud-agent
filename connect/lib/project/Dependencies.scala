@@ -1,6 +1,7 @@
 import sbt._
 
 object Dependencies {
+
   object Versions {
     val zio = "2.0.4"
     val doobie = "1.0.0-RC2"
