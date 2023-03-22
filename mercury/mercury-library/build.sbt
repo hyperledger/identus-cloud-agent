@@ -8,7 +8,7 @@ inThisBuild(
     releaseUseGlobalVersion := false,
     githubOwner := "input-output-hk",
     githubRepository := "atala-prism-building-blocks",
-    resolvers += Resolver.githubPackages("input-output-hk", "atala-prism-building-blocks")
+    resolvers += Resolver.githubPackages("input-output-hk")
   )
 )
 
@@ -117,7 +117,6 @@ publish / skip := true
   */
 lazy val models = project
   .in(file("models"))
-  .configure(publishConfigure)
   .settings(name := "mercury-data-models")
   .settings(
     libraryDependencies ++= Seq(D.zio.value),
