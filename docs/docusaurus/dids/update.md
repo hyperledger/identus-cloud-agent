@@ -60,7 +60,9 @@ Example DID document response (some fields are omitted for readability)
 
 ```json
 {
-    "did": {
+    "@context": "https://w3id.org/did-resolution/v1",
+    "didDocument": {
+        "@context": ["https://www.w3.org/ns/did/v1"],
         ...
         "verificationMethod": [
             {
@@ -77,7 +79,8 @@ Example DID document response (some fields are omitted for readability)
         ]
         ...
     },
-    ...
+    "didDocumentMetadata": {...},
+    "didResolutionMetadata": {...}
 }
 ```
 The `verificationMethod` in the DID document only shows one public key called `key-1`.
@@ -135,23 +138,27 @@ Example response of updated DID document (some fields are omitted for readabilit
 
 ```json
 {
-    "did": {
-      ...
-      "verificationMethod": [
-          {
-            "controller": "did:prism:4262377859267f308a06ec6acf211fbe4d6745aa9e637e04548771169616fb86",
-            "id": "did:prism:4262377859267f308a06ec6acf211fbe4d6745aa9e637e04548771169616fb86#key-2",
-            "publicKeyJwk": {
-                "crv": "secp256k1",
-                "kty": "EC",
-                "x": "sg5X06yRDNaW2YcuMuOPwrDPp_vqOtKng0hMHxaME10",
-                "y": "uAKJanSsNoC_bcL4YS93qIqu_Qwdsr_80DzRTzI8RLU"
-            },
-            "type": "EcdsaSecp256k1VerificationKey2019"
-          }
-      ]
+    "@context": "https://w3id.org/did-resolution/v1",
+    "didDocument": {
+        "@context": ["https://www.w3.org/ns/did/v1"],
+        ...
+        "verificationMethod": [
+            {
+                "controller": "did:prism:4262377859267f308a06ec6acf211fbe4d6745aa9e637e04548771169616fb86",
+                "id": "did:prism:4262377859267f308a06ec6acf211fbe4d6745aa9e637e04548771169616fb86#key-2",
+                "publicKeyJwk": {
+                    "crv": "secp256k1",
+                    "kty": "EC",
+                    "x": "sg5X06yRDNaW2YcuMuOPwrDPp_vqOtKng0hMHxaME10",
+                    "y": "uAKJanSsNoC_bcL4YS93qIqu_Qwdsr_80DzRTzI8RLU"
+                },
+                "type": "EcdsaSecp256k1VerificationKey2019"
+            }
+        ]
+        ...
     },
-    ...
+    "didDocumentMetadata": {...},
+    "didResolutionMetadata": {...}
 }
 ```
 

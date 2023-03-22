@@ -8,6 +8,7 @@ import io.iohk.atala.shared.models.HexStrings.*
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
+import io.iohk.atala.castor.core.util.DIDOperationValidator
 
 object PrismDIDSpec extends ZIOSpecDefault {
 
@@ -26,6 +27,14 @@ object PrismDIDSpec extends ZIOSpecDefault {
   override def spec = suite("PrismDID")(didParserSpec)
 
   private val didParserSpec = suite("PrismDID.fromString")(
+    test("dummy") {
+      val result = for {
+        did <- PrismDID.fromString("did:prism:adbe9289d0c5fb56ffa50387d1804ab4a1576527c946a5252817fa8e8a2cced0:CssBCsgBEmIKDW1hc3RlcihpbmRleCkQAUJPCglTZWNwMjU2azESIE-LiGL3QHdUnNkpYbJhsTkmXPXISqVz76c1U9xhP9rpGiDqV59sEzJVRCjR4kM0gHxluP6eMJItw267fXVRa0xC5hJiCg1tYXN0ZXIoaW5kZXgpEARCTwoJU2VjcDI1NmsxEiBPi4hi90B3VJzZKWGyYbE5Jlz1yEqlc--nNVPcYT_a6Rog6lefbBMyVUQo0eJDNIB8Zbj-njCSLcNuu311UWtMQuY")
+        validator = DIDOperationValidator(DIDOperationValidator.Config.default)
+        _ <- validator.validate(did.asInstanceOf[LongFormPrismDID].createOperation)
+      } yield ()
+      assert(result)(isRight)
+    } @@ TestAspect.tag("dev"),
     test("success for valid DID") {
       val stateHash = Sha256.compute(Array()).getValue
       val validDID = PrismDID.buildCanonical(stateHash).toOption.get

@@ -128,6 +128,6 @@ To confirm that the short-form DID is resolvable, test the DID against the resol
 Replace `{didRef}` with the short-form DID and the response should return a DID document.
 
 ```bash
-curl --location --request GET 'http://localhost:8080/prism-agent/dids/{didRef}' \
---header 'Accept: application/json'
+curl --location --request GET 'http://localhost:8080/prism-agent/dids/representations/{didRef}' \
+--header 'Accept: */*'
 ```
