@@ -40,10 +40,10 @@ This example shows the DID update capability on PRISM Agent and the steps to ver
 
 The example uses the following endpoints
 
-| Endpoint                                                                                                | Description                   | Role           |
-|---------------------------------------------------------------------------------------------------------|-------------------------------|----------------|
-| [`POST /did-registrar/dids/{didRef}/updates`](/agent-api/#tag/DID-Registrar/operation/updateManagedDid) | Update a PRISM DID            | DID Controller |
-| [`GET /dids/{didRef}`](/agent-api/#tag/DID/operation/getDid)                                            | Resolve a DID to DID document | DID Controller |
+| Endpoint                                                                                                | Description                                  | Role           |
+|---------------------------------------------------------------------------------------------------------|----------------------------------------------|----------------|
+| [`POST /did-registrar/dids/{didRef}/updates`](/agent-api/#tag/DID-Registrar/operation/updateManagedDid) | Update a PRISM DID                           | DID Controller |
+| [`GET /dids/{didRef}`](/agent-api/#tag/DID/operation/getDid)                                            | Resolve a DID to DID document representation | DID Controller |
 
 ## DID Controller interactions
 
@@ -53,7 +53,7 @@ Given the **DID Controller** has a DID on PRISM Agent and that DID is published,
 
 ```bash
 curl --location --request GET 'http://localhost:8080/prism-agent/dids/{didRef}' \
---header 'Accept: application/json'
+--header 'Accept: */*'
 ```
 
 Example DID document response (some fields are omitted for readability)
