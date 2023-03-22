@@ -7,7 +7,8 @@ inThisBuild(
     versionScheme := Some("semver-spec"),
     releaseUseGlobalVersion := false,
     githubOwner := "input-output-hk",
-    githubRepository := "atala-prism-building-blocks"
+    githubRepository := "atala-prism-building-blocks",
+    resolvers += Resolver.githubPackages("input-output-hk")
   )
 )
 
@@ -51,7 +52,6 @@ inThisBuild(
     )
   )
 )
-
 ThisBuild / resolvers += Resolver.githubPackages("FabioPinheiro", "scala-did")
 
 val useDidLib = false
@@ -95,7 +95,8 @@ lazy val D = new {
   val didScala = Def.setting("app.fmgp" %% "did" % "0.0.0+113-61efa271-SNAPSHOT")
 
   // https://mvnrepository.com/artifact/com.nimbusds/nimbus-jose-jwt/9.16-preview.1
-  val jwk = Def.setting("com.nimbusds" % "nimbus-jose-jwt" % "9.25.4")
+  // https://github.com/input-output-hk/atala-prism-building-blocks/packages/1818097
+  val jwk = Def.setting("com.nimbusds" % "nimbus-jose-jwt" % "10.0.0-preview")
 
   // For munit https://scalameta.org/munit/docs/getting-started.html#scalajs-setup
   val munit = Def.setting("org.scalameta" %% "munit" % V.munit % Test)
@@ -116,7 +117,6 @@ publish / skip := true
   */
 lazy val models = project
   .in(file("models"))
-  .configure(publishConfigure)
   .settings(name := "mercury-data-models")
   .settings(
     libraryDependencies ++= Seq(D.zio.value),
