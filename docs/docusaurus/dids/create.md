@@ -34,11 +34,11 @@ Facilitates a higher-level interaction with PRISM DID, where the PRISM Agent han
 
 The example uses the following endpoints
 
-| Endpoint                                                                                   | Description                                         | Role           |
-|--------------------------------------------------------------------------------------------|-----------------------------------------------------|----------------|
-| [`GET /did-registrar/dids`](/agent-api/#tag/DID-Registrar/operation/listManagedDid)        | List all DIDs stored in PRISM Agent                 | DID Controller |
-| [`POST /did-registrar/dids`](/agent-api/#tag/DID-Registrar/operation/createManagedDid)     | Create a new PRISM DID to be managed by PRISM Agent | DID Controller |
-| [`GET /dids/representations/{didRef}`](/agent-api/#tag/DID/operation/getDidRepresentation) | Resolve a DID to DID document representation        | DID Controller |
+| Endpoint                                                                               | Description                                         | Role           |
+|----------------------------------------------------------------------------------------|-----------------------------------------------------|----------------|
+| [`GET /did-registrar/dids`](/agent-api/#tag/DID-Registrar/operation/listManagedDid)    | List all DIDs stored in PRISM Agent                 | DID Controller |
+| [`POST /did-registrar/dids`](/agent-api/#tag/DID-Registrar/operation/createManagedDid) | Create a new PRISM DID to be managed by PRISM Agent | DID Controller |
+| [`GET /dids/{didRef}`](/agent-api/#tag/DID/operation/getDid)                           | Resolve a DID to DID document representation        | DID Controller |
 
 ## DID Controller interactions
 
@@ -108,7 +108,7 @@ Replacing the `{didRef}` with the long-form DID, and the response should return 
 Replacing the `{didRef}` with the short-form DID, and the resolution should fail since the DID is not yet published.
 
 ```bash
-curl --location --request GET 'http://localhost:8080/prism-agent/dids/representations/{didRef}' \
+curl --location --request GET 'http://localhost:8080/prism-agent/dids/{didRef}' \
 --header 'Accept: */*'
 ```
 
