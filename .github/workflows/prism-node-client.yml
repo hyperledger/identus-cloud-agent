@@ -26,4 +26,5 @@ jobs:
     with:
       component-name: "PRISM Node Client"
       component-dir: "prism-node/client/scala-client"
+      measure-coverage: false
     secrets: inherit
