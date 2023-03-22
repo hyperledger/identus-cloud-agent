@@ -1,3 +1,10 @@
+# [prism-agent-v0.59.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.58.0...prism-agent-v0.59.0) (2023-03-22)
+
+
+### Features
+
+* **prism-agent:** add universal-resolver compatible endpoint ([#455](https://github.com/input-output-hk/atala-prism-building-blocks/issues/455)) ([1cbb729](https://github.com/input-output-hk/atala-prism-building-blocks/commit/1cbb729c05da51d98163a9c99d035f2814cc9fb1))
+
 # [prism-agent-v0.58.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.57.0...prism-agent-v0.58.0) (2023-03-22)
 
 
