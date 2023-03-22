@@ -10,7 +10,7 @@ object Dependencies {
     val prismSdk = "v1.4.1" // scala-steward:off
     val iris = "0.1.0"
     val shared = "0.2.0"
-    val mercury = "0.21.0"
+    val mercury = "0.22.0"
     val castor = "0.8.1"
     val flyway = "9.8.3"
     val testContainersScalaPostgresql = "0.40.11"
