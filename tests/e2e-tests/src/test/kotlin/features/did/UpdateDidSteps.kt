@@ -92,8 +92,8 @@ class UpdateDidSteps {
                 actor.attemptsTo(
                     Get.resource("/dids/${actor.recall<String>("shortFormDid")}"),
                 )
-                val authUris = lastResponseList("did.authentication.uri", String::class)
-                val verificationMethods = lastResponseList("did.verificationMethod.id", String::class)
+                val authUris = lastResponseList("didDocument.authentication", String::class)
+                val verificationMethods = lastResponseList("didDocument.verificationMethod.id", String::class)
                 authUris.any {
                     it == "${actor.recall<String>("shortFormDid")}#${TestConstants.PRISM_DID_UPDATE_NEW_AUTH_KEY.id}"
                 } && verificationMethods.any {
@@ -112,8 +112,8 @@ class UpdateDidSteps {
                 actor.attemptsTo(
                     Get.resource("/dids/${actor.recall<String>("shortFormDid")}"),
                 )
-                val authUris = lastResponseList("did.authentication.uri", String::class)
-                val verificationMethods = lastResponseList("did.verificationMethod.id", String::class)
+                val authUris = lastResponseList("didDocument.authentication", String::class)
+                val verificationMethods = lastResponseList("didDocument.verificationMethod.id", String::class)
                 authUris.none {
                     it == "${actor.recall<String>("shortFormDid")}#${TestConstants.PRISM_DID_AUTH_KEY.id}"
                 } && verificationMethods.none {
@@ -132,7 +132,7 @@ class UpdateDidSteps {
                 actor.attemptsTo(
                     Get.resource("/dids/${actor.recall<String>("shortFormDid")}"),
                 )
-                val serviceIds = lastResponseList("did.service.id", String::class)
+                val serviceIds = lastResponseList("didDocument.service.id", String::class)
                 serviceIds.any {
                     it == "${actor.recall<String>("shortFormDid")}#${TestConstants.PRISM_DID_UPDATE_NEW_SERVICE.id}"
                 }
@@ -149,7 +149,7 @@ class UpdateDidSteps {
                 actor.attemptsTo(
                     Get.resource("/dids/${actor.recall<String>("shortFormDid")}"),
                 )
-                val serviceIds = lastResponseList("did.service.id", String::class)
+                val serviceIds = lastResponseList("didDocument.service.id", String::class)
                 serviceIds.none {
                     it == "${actor.recall<String>("shortFormDid")}#${TestConstants.PRISM_DID_UPDATE_NEW_SERVICE.id}"
                 }
@@ -166,7 +166,7 @@ class UpdateDidSteps {
                 actor.attemptsTo(
                     Get.resource("/dids/${actor.recall<String>("shortFormDid")}"),
                 )
-                val service = lastResponseList("did.service", Service::class)
+                val service = lastResponseList("didDocument.service", Service::class)
                 service.any { it.serviceEndpoint.contains(TestConstants.PRISM_DID_UPDATE_NEW_SERVICE_URL) }
             },
             "ERROR: DID UPDATE operation did not succeed on the ledger!",
