@@ -1,3 +1,10 @@
+# [prism-agent-v0.58.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.57.0...prism-agent-v0.58.0) (2023-03-22)
+
+
+### Features
+
+* **prism-agent:** Update the connect pollux and mercury to fix to use nimbus-jose-jwt 10.0.0-preview ([#467](https://github.com/input-output-hk/atala-prism-building-blocks/issues/467)) ([948f2fc](https://github.com/input-output-hk/atala-prism-building-blocks/commit/948f2fc26a7b965c47e7907cf4d4eb14bb9e640f))
+
 # [prism-agent-v0.57.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.56.0...prism-agent-v0.57.0) (2023-03-21)
 
 
