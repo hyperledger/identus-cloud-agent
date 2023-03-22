@@ -57,7 +57,7 @@ jobs:
           check_name: "${{ inputs.component-name }} Test Results"
 
       - name: Code coverage report
-        if: github.event_name == 'pull_request' && inputs.measure_coverage
+        if: github.event_name == 'pull_request' && inputs.measure-coverage
         uses: 5monkeys/cobertura-action@master
         with:
           path: "${{ inputs.component-dir }}/target/coverage/coverage-report/cobertura.xml"
