@@ -1,3 +1,10 @@
+# [pollux-v0.43.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.43.0...pollux-v0.43.1) (2023-03-22)
+
+
+### Bug Fixes
+
+* **pollux:** ATL-3900 Force use of Bouncycastle ([#463](https://github.com/input-output-hk/atala-prism-building-blocks/issues/463)) ([5b4aa5d](https://github.com/input-output-hk/atala-prism-building-blocks/commit/5b4aa5d2cd5afeded9efa2d43d924db8e9516670))
+
 # [pollux-v0.43.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.42.1...pollux-v0.43.0) (2023-03-21)
 
 
