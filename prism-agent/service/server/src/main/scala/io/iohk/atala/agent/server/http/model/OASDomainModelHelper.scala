@@ -224,27 +224,7 @@ trait OASDomainModelHelper {
   }
 
   extension (resolution: (castorDomain.w3c.DIDDocumentMetadataRepr, castorDomain.w3c.DIDDocumentRepr)) {
-    def toOAS: DIDResponse = {
-      val (metadata, didDoc) = resolution
-      DIDResponse(
-        did = DIDDocumentDataModel(
-          id = didDoc.id,
-          controller = Some(didDoc.controller),
-          verificationMethod = Some(didDoc.verificationMethod.map(_.toOAS)),
-          authentication = Some(didDoc.authentication.map(_.toOAS)),
-          assertionMethod = Some(didDoc.assertionMethod.map(_.toOAS)),
-          keyAgreement = Some(didDoc.keyAgreement.map(_.toOAS)),
-          capabilityInvocation = Some(didDoc.capabilityInvocation.map(_.toOAS)),
-          service = Some(didDoc.service.map(_.toOAS))
-        ),
-        metadata = DIDDocumentMetadata(
-          deactivated = Some(metadata.deactivated),
-          canonicalId = Some(metadata.canonicalId)
-        )
-      )
-    }
-
-    def toOASResolutionResult: OASModelPatches.DIDResolutionResult = {
+    def toOAS: OASModelPatches.DIDResolutionResult = {
       val (metadata, didDoc) = resolution
       val isDeactivated = metadata.deactivated
       OASModelPatches.DIDResolutionResult(
@@ -258,10 +238,10 @@ trait OASDomainModelHelper {
                 id = didDoc.id,
                 controller = Some(didDoc.controller),
                 verificationMethod = Some(didDoc.verificationMethod.map(_.toOAS)),
-                authentication = Some(didDoc.authentication.map(_.toOASVerificationMethodRef)),
-                assertionMethod = Some(didDoc.assertionMethod.map(_.toOASVerificationMethodRef)),
-                keyAgreement = Some(didDoc.keyAgreement.map(_.toOASVerificationMethodRef)),
-                capabilityInvocation = Some(didDoc.capabilityInvocation.map(_.toOASVerificationMethodRef)),
+                authentication = Some(didDoc.authentication.map(_.toOAS)),
+                assertionMethod = Some(didDoc.assertionMethod.map(_.toOAS)),
+                keyAgreement = Some(didDoc.keyAgreement.map(_.toOAS)),
+                capabilityInvocation = Some(didDoc.capabilityInvocation.map(_.toOAS)),
                 service = Some(didDoc.service.map(_.toOAS))
               )
             ),
@@ -275,7 +255,7 @@ trait OASDomainModelHelper {
   }
 
   extension (resolutionError: castorDomain.w3c.DIDResolutionErrorRepr) {
-    def toOASResolutionResult: OASModelPatches.DIDResolutionResult = {
+    def toOAS: OASModelPatches.DIDResolutionResult = {
       OASModelPatches.DIDResolutionResult(
         `@context` = "https://w3id.org/did-resolution/v1",
         didDocument = None,
@@ -297,13 +277,7 @@ trait OASDomainModelHelper {
   }
 
   extension (publicKeyReprOrRef: castorDomain.w3c.PublicKeyReprOrRef) {
-    def toOAS: VerificationMethodOrRef = {
-      publicKeyReprOrRef match {
-        case s: String         => VerificationMethodOrRef(`type` = "REFERENCED", uri = Some(s))
-        case pk: PublicKeyRepr => VerificationMethodOrRef(`type` = "EMBEDDED", verificationMethod = Some(pk.toOAS))
-      }
-    }
-    def toOASVerificationMethodRef: String = {
+    def toOAS: String = {
       publicKeyReprOrRef match {
         case s: String         => s
         case pk: PublicKeyRepr => throw Exception("Embedded public key is not yet supported in W3C representation")

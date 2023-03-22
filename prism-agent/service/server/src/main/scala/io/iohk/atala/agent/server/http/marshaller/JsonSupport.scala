@@ -27,11 +27,9 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
     CreateManagedDidRequestDocumentTemplate.apply
   )
   given RootJsonFormat[CreateManagedDIDResponse] = jsonFormat1(CreateManagedDIDResponse.apply)
-  given RootJsonFormat[DIDDocumentDataModel] = jsonFormat9(DIDDocumentDataModel.apply)
   given RootJsonFormat[DIDDocumentMetadata] = jsonFormat2(DIDDocumentMetadata.apply)
   given RootJsonFormat[DIDOperationResponse] = jsonFormat1(DIDOperationResponse.apply)
   given RootJsonFormat[DidOperationSubmission] = jsonFormat2(DidOperationSubmission.apply)
-  given RootJsonFormat[DIDResponse] = jsonFormat2(DIDResponse.apply)
   given RootJsonFormat[DIDResolutionMetadata] = jsonFormat2(DIDResolutionMetadata.apply)
   given RootJsonFormat[ErrorResponse] = jsonFormat5(ErrorResponse.apply)
   given RootJsonFormat[ManagedDID] = jsonFormat3(ManagedDID.apply)
@@ -51,7 +49,6 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
     UpdateManagedDIDRequestActionsInnerUpdateService.apply
   )
   given RootJsonFormat[VerificationMethod] = jsonFormat4(VerificationMethod.apply)
-  given RootJsonFormat[VerificationMethodOrRef] = jsonFormat3(VerificationMethodOrRef.apply)
 
   // Issue Credential Protocol
   implicit object UUIDFormat extends JsonFormat[UUID] {

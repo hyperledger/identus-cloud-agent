@@ -23,23 +23,12 @@ class DIDApiServiceImpl(service: DIDService)(using runtime: Runtime[Any])
       OASDomainModelHelper,
       OASErrorModelHelper {
 
-  override def getDid(didRef: String)(implicit
-      toEntityMarshallerDIDResponse: ToEntityMarshaller[DIDResponse],
-      toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
-  ): Route = {
-    val result = makeW3CResolver(service)(didRef).mapError(HttpServiceError.DomainError.apply)
-    onZioSuccess(result.mapBoth(_.toOAS, _.toOAS).either) {
-      case Left(error)     => complete(error.status -> error)
-      case Right(response) => getDid200(response)
-    }
-  }
-
-  override def getDidRepresentation(didRef: String, accept: Option[String])(implicit
+  override def getDid(didRef: String, accept: Option[String])(implicit
       toEntityMarshallerDIDResolutionResult: ToEntityMarshaller[OASModelPatches.DIDResolutionResult]
   ): Route = {
     val result = for {
       result <- makeW3CResolver(service)(didRef).either
-      resolutionResult = result.fold(_.toOASResolutionResult, _.toOASResolutionResult)
+      resolutionResult = result.fold(_.toOAS, _.toOAS)
       resolutionError = result.swap.toOption
     } yield buildHttpBindingResponse(resolutionResult, resolutionError)
 
