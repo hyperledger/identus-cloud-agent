@@ -12,7 +12,7 @@ components:
     resolutionAcceptOption:
       in: header
       name: Accept
-      require: false
+      required: false
       description: |
         Represents [accept resolution option](https://www.w3.org/TR/did-core/#did-resolution-options).
 
