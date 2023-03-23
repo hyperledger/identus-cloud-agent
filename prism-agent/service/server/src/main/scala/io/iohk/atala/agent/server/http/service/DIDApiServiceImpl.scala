@@ -70,11 +70,11 @@ class DIDApiServiceImpl(service: DIDService)(using runtime: Runtime[Any])
     resolutionError match {
       case None if !isDeactivated           => complete(200 -> resolutionResult)
       case None                             => complete(410 -> resolutionResult)
-      case Some(InvalidDID)                 => complete(400 -> resolutionResult)
-      case Some(InvalidDIDUrl)              => complete(400 -> resolutionResult)
+      case Some(InvalidDID(_))              => complete(400 -> resolutionResult)
+      case Some(InvalidDIDUrl(_))           => complete(400 -> resolutionResult)
       case Some(NotFound)                   => complete(404 -> resolutionResult)
       case Some(RepresentationNotSupported) => complete(406 -> resolutionResult)
-      case Some(InternalError)              => complete(500 -> resolutionResult)
+      case Some(InternalError(_))           => complete(500 -> resolutionResult)
       case Some(_)                          => complete(500 -> resolutionResult)
     }
   }

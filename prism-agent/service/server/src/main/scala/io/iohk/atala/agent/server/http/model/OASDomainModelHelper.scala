@@ -260,7 +260,8 @@ trait OASDomainModelHelper {
         `@context` = "https://w3id.org/did-resolution/v1",
         didDocument = None,
         didDocumentMetadata = DIDDocumentMetadata(),
-        didResolutionMetadata = DIDResolutionMetadata(error = Some(resolutionError.value))
+        didResolutionMetadata =
+          DIDResolutionMetadata(error = Some(resolutionError.value), errorMessage = resolutionError.errorMessage)
       )
     }
   }
