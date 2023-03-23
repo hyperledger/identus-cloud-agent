@@ -100,29 +100,6 @@ trait OASErrorModelHelper {
     }
   }
 
-  given ToErrorResponse[DIDResolutionErrorRepr] with {
-    override def toErrorResponse(e: DIDResolutionErrorRepr): ErrorResponse = {
-      import DIDResolutionErrorRepr.*
-      val status = e match {
-        case InvalidDID                 => 422
-        case InvalidDIDUrl              => 422
-        case NotFound                   => 404
-        case RepresentationNotSupported => 422
-        case InternalError              => 500
-        case InvalidPublicKeyLength     => 422
-        case InvalidPublicKeyType       => 422
-        case UnsupportedPublicKeyType   => 422
-      }
-      ErrorResponse(
-        `type` = "error-type",
-        title = e.value,
-        status = status,
-        detail = Some(e.toString),
-        instance = "error-instance"
-      )
-    }
-  }
-
   given ToErrorResponse[CredentialServiceError] with {
     def toErrorResponse(error: CredentialServiceError): ErrorResponse = {
       ErrorResponse(
