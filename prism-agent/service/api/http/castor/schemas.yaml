@@ -103,6 +103,10 @@ components:
           type: string
           description: Resolution error constant according to [DID spec registries](https://www.w3.org/TR/did-spec-registries/#error)
           example: invalidDid
+        errorMessage:
+          type: string
+          description: Resolution error message
+          example: The initialState does not match the suffix
         contentType:
           type: string
           description: The media type of the returned DID document

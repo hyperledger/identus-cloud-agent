@@ -30,7 +30,7 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   given RootJsonFormat[DIDDocumentMetadata] = jsonFormat2(DIDDocumentMetadata.apply)
   given RootJsonFormat[DIDOperationResponse] = jsonFormat1(DIDOperationResponse.apply)
   given RootJsonFormat[DidOperationSubmission] = jsonFormat2(DidOperationSubmission.apply)
-  given RootJsonFormat[DIDResolutionMetadata] = jsonFormat2(DIDResolutionMetadata.apply)
+  given RootJsonFormat[DIDResolutionMetadata] = jsonFormat3(DIDResolutionMetadata.apply)
   given RootJsonFormat[ErrorResponse] = jsonFormat5(ErrorResponse.apply)
   given RootJsonFormat[ManagedDID] = jsonFormat3(ManagedDID.apply)
   given RootJsonFormat[ManagedDIDPage] = jsonFormat6(ManagedDIDPage.apply)
