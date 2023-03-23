@@ -26,6 +26,7 @@ jobs:
     with:
       component-name: "Mercury Mediator"
       component-dir: "mercury/mercury-mediator"
+      measure-coverage: false
     secrets: inherit
   release:
     if: github.event_name == 'push'

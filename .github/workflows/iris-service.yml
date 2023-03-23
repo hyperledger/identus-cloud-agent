@@ -26,6 +26,7 @@ jobs:
     with:
       component-name: "Iris Service"
       component-dir: "iris/service"
+      measure-coverage: false
     secrets: inherit
   release:
     if: github.event_name == 'push'

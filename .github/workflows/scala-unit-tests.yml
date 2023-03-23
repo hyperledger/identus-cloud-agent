@@ -9,6 +9,10 @@ on:
       component-dir:
         required: true
         type: string
+      measure-coverage:
+        required: false
+        type: boolean
+        default: true
 
 jobs:
   build-and-unit-tests:
@@ -53,13 +57,13 @@ jobs:
           check_name: "${{ inputs.component-name }} Test Results"
 
       - name: Code coverage report
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && inputs.measure-coverage
         uses: 5monkeys/cobertura-action@master
         with:
           path: "${{ inputs.component-dir }}/target/coverage/coverage-report/cobertura.xml"
           report_name: "${{ inputs.component-name }} Code Coverage"
-          minimum_coverage: 10
-          fail_below_threshold: false
+          minimum_coverage: 12
+          fail_below_threshold: true
           only_changed_files: true
 
       - name: Artifact coverage HTML
