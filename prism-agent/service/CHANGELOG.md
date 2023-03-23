@@ -1,3 +1,10 @@
+# [prism-agent-v0.59.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.59.0...prism-agent-v0.59.1) (2023-03-23)
+
+
+### Bug Fixes
+
+* **prism-agent:** fix incorrect long-form parsing behavior on resolution endpoint ([#475](https://github.com/input-output-hk/atala-prism-building-blocks/issues/475)) ([af356d6](https://github.com/input-output-hk/atala-prism-building-blocks/commit/af356d66763197f118aee8f7d1ac7d82be05a46e))
+
 # [prism-agent-v0.59.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.58.0...prism-agent-v0.59.0) (2023-03-22)
 
 
