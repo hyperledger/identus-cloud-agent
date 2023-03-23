@@ -30,7 +30,7 @@ jobs:
 #        working-directory: ${{ inputs.component-dir }}
     steps:
       - name: Env Check
-        run: ls -lah /
+        run: ls -lah /__e /__w
         
       - name: Checkout
         uses: actions/checkout@v3
