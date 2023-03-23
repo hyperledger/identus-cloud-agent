@@ -62,6 +62,18 @@ object PrismDIDSpec extends ZIOSpecDefault {
       val didString = s"did:prism:$stateHash:$encodedStateBase64"
       val unsafeDID = PrismDID.fromString(didString)
       assert(unsafeDID)(isLeft(containsString("CreateDid Atala operation expected")))
+    },
+    test("parsing long form examples and convert it back should be the same") {
+      val longFormDIDs = Seq(
+        // from TS SDK
+        "did:prism:2c6c7c7490a4196f0b3877c83ef18255f327ecb26e0de2df5fa72618f931a3d4:CtMBCtABEmIKDW1hc3RlcihpbmRleCkQAUJPCglzZWNwMjU2azESIAfAhyZhkEJmSB_jJTzIW0u6jTui-_-Ac8qDhcbaAb-AGiALZ0fogk8QyDqud03bRAYxtcZJPElxHd3pnNCSbM05NRJqChVhdXRoZW50aWNhdGlvbihpbmRleCkQBEJPCglzZWNwMjU2azESIAfAhyZhkEJmSB_jJTzIW0u6jTui-_-Ac8qDhcbaAb-AGiALZ0fogk8QyDqud03bRAYxtcZJPElxHd3pnNCSbM05NQ",
+        // from Switft SDK
+        "did:prism:f2c267b1e7426c9b6bc9853c0521e08514cba95164c6c2ca1fef5f719df0bfa4:CtMBCtABEmIKDW1hc3RlcihpbmRleCkQAUJPCglzZWNwMjU2azESIEOoZGnyVFlIkzVHcdF57Bg1dWpX_EbaxDm8D4mEgLK7GiCiwmj120GSFX0Mo1BjtGMDi0sCsIoKyS0rwC8qAznFkxJqChVhdXRoZW50aWNhdGlvbihpbmRleCkQBEJPCglzZWNwMjU2azESIEOoZGnyVFlIkzVHcdF57Bg1dWpX_EbaxDm8D4mEgLK7GiCiwmj120GSFX0Mo1BjtGMDi0sCsIoKyS0rwC8qAznFkw",
+        // from 1.4 SDK
+        s"did:prism:$canonicalSuffixHex:$encodedStateUsedBase64"
+      )
+      val parsedDIDs = longFormDIDs.flatMap(PrismDID.fromString(_).toOption.map(_.toString))
+      assert(parsedDIDs)(hasSameElements(longFormDIDs))
     }
   )
 
