@@ -4,11 +4,13 @@ import io.iohk.atala.castor.core.model.did.{
   CanonicalPrismDID,
   DIDData,
   DIDMetadata,
+  InternalPublicKey,
   LongFormPrismDID,
   PrismDID,
   PrismDIDOperation,
-  ScheduleDIDOperationOutcome,
+  PublicKey,
   ScheduledDIDOperationDetail,
+  ScheduleDIDOperationOutcome,
   SignedPrismDIDOperation
 }
 import zio.*
@@ -103,9 +105,9 @@ private class DIDServiceImpl(didOpValidator: DIDOperationValidator, nodeClient: 
         )
       val didData = DIDData(
         id = canonicalDID,
-        publicKeys = op.publicKeys,
+        publicKeys = op.publicKeys.collect { case pk: PublicKey => pk },
         services = op.services,
-        internalKeys = op.internalKeys
+        internalKeys = op.publicKeys.collect { case pk: InternalPublicKey => pk }
       )
       metadata -> didData
     }

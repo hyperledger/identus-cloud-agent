@@ -3,6 +3,7 @@ package io.iohk.atala.castor.core.util
 import io.iohk.atala.shared.models.HexStrings.*
 import io.iohk.atala.castor.core.model.did.{
   InternalKeyPurpose,
+  InternalPublicKey,
   PrismDIDOperation,
   SignedPrismDIDOperation,
   UpdateDIDAction
@@ -15,6 +16,7 @@ import zio.*
 
 import io.lemonlabs.uri.Uri
 import scala.collection.immutable.ArraySeq
+import io.iohk.atala.castor.core.model.did.PublicKey
 
 object DIDOperationValidator {
   final case class Config(publicKeyLimit: Int, serviceLimit: Int)
@@ -53,7 +55,8 @@ private object CreateOperationValidator extends BaseOperationValidator {
   }
 
   private def validateMasterKeyExists(operation: PrismDIDOperation.Create): Either[OperationValidationError, Unit] = {
-    val masterKeys = operation.internalKeys.filter(_.purpose == InternalKeyPurpose.Master)
+    val masterKeys =
+      operation.publicKeys.collect { case pk: InternalPublicKey => pk }.filter(_.purpose == InternalKeyPurpose.Master)
     if (masterKeys.nonEmpty) Right(())
     else Left(OperationValidationError.InvalidArgument("create operation must contain at least 1 master key"))
   }
@@ -72,7 +75,10 @@ private object CreateOperationValidator extends BaseOperationValidator {
   }
 
   private def extractKeyIds(operation: PrismDIDOperation.Create): Seq[String] =
-    operation.publicKeys.map(_.id) ++ operation.internalKeys.map(_.id)
+    operation.publicKeys.map {
+      case PublicKey(id, _, _)         => id
+      case InternalPublicKey(id, _, _) => id
+    }
 
   private def extractServiceIds(operation: PrismDIDOperation.Create): Seq[String] = operation.services.map(_.id)
 

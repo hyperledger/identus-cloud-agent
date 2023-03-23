@@ -1,6 +1,7 @@
 package io.iohk.atala.castor.core.model.did
 
 import io.iohk.atala.shared.models.Base64UrlStrings.Base64UrlString
+import io.iohk.atala.prism.crypto.EC
 
 final case class PublicKey(
     id: String,
@@ -27,4 +28,19 @@ object PublicKeyData {
       x: Base64UrlString,
       y: Base64UrlString
   ) extends PublicKeyData
+
+  final case class ECCompressedKeyData(
+      crv: EllipticCurve,
+      data: Base64UrlString
+  ) extends PublicKeyData {
+    def toUncompressedKeyData: ECKeyData = {
+      val prism14PublicKey = EC.INSTANCE.toPublicKeyFromCompressed(data.toByteArray)
+      val ecPoint = prism14PublicKey.getCurvePoint()
+      ECKeyData(
+        crv = crv,
+        x = Base64UrlString.fromByteArray(ecPoint.getX().bytes()),
+        y = Base64UrlString.fromByteArray(ecPoint.getY().bytes())
+      )
+    }
+  }
 }

@@ -14,17 +14,24 @@ package object w3c {
   def makeW3CResolver(
       service: DIDService
   )(did: String): IO[DIDResolutionErrorRepr, (DIDDocumentMetadataRepr, DIDDocumentRepr)] = {
+    import DIDResolutionError.*
     for {
       prismDID <- ZIO
         .fromEither(PrismDID.fromString(did))
-        .mapError(_ => DIDResolutionErrorRepr.InvalidDID)
+        .mapError(e => DIDResolutionErrorRepr.InvalidDID(e))
       didData <- service
         .resolveDID(prismDID)
+        .tapError {
+          case ValidationError(_) => ZIO.unit
+          case error              => ZIO.logError(error.toString)
+        }
         .mapBoth(
           {
-            case DIDResolutionError.DLTProxyError(_)       => DIDResolutionErrorRepr.InternalError
-            case DIDResolutionError.UnexpectedDLTResult(_) => DIDResolutionErrorRepr.InternalError
-            case DIDResolutionError.ValidationError(_)     => DIDResolutionErrorRepr.InvalidDID
+            case DLTProxyError(_) =>
+              DIDResolutionErrorRepr.InternalError("Error occurred while connecting to Prism Node")
+            case UnexpectedDLTResult(_) =>
+              DIDResolutionErrorRepr.InternalError("Unexpected result obtained from Prism Node")
+            case ValidationError(e) => DIDResolutionErrorRepr.InvalidDID(e.toString)
           },
           _.toRight(DIDResolutionErrorRepr.NotFound)
         )
