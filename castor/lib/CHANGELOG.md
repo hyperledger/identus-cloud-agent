@@ -1,3 +1,10 @@
+# [castor-v0.8.2](https://github.com/input-output-hk/atala-prism-building-blocks/compare/castor-v0.8.1...castor-v0.8.2) (2023-03-23)
+
+
+### Bug Fixes
+
+* **castor:** fix unintended ordering behavior when parsing long-form DID ([#471](https://github.com/input-output-hk/atala-prism-building-blocks/issues/471)) ([5ed0978](https://github.com/input-output-hk/atala-prism-building-blocks/commit/5ed097850126e6c40f7d7119c947446c813edde7))
+
 # [castor-v0.8.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/castor-v0.8.0...castor-v0.8.1) (2023-02-22)
 
 
