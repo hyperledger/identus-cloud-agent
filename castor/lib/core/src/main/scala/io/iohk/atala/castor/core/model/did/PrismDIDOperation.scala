@@ -16,7 +16,7 @@ sealed trait PrismDIDOperation {
 }
 
 object PrismDIDOperation extends ProtoModelHelper {
-  final case class Create(publicKeys: Seq[PublicKey], internalKeys: Seq[InternalPublicKey], services: Seq[Service])
+  final case class Create(publicKeys: Seq[PublicKey | InternalPublicKey], services: Seq[Service])
       extends PrismDIDOperation {
     override def toAtalaOperation: node_models.AtalaOperation = node_models.AtalaOperation(this.toProto)
     override def did: CanonicalPrismDID = PrismDID.buildLongFormFromOperation(this).asCanonical
