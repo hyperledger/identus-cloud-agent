@@ -560,10 +560,6 @@ paths:
       responses:
         "200":
           description: "Verification policy deleted successfully"
-          content:
-            application/json:
-              schema:
-                type: object
         "400":
           $ref: "./shared/responses.yaml#/components/responses/BadRequest"
         "404":

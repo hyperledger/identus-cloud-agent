@@ -42,8 +42,16 @@ object VerificationPolicyEndpoints {
           "Create verification policy object"
         )
       )
-      .out(statusCode(StatusCode.Created))
-      .out(jsonBody[VerificationPolicy])
+      .out(
+        statusCode(StatusCode.Created).description(
+          "Verification policy successfully created"
+        )
+      )
+      .out(
+        jsonBody[VerificationPolicy].description(
+          "Created verification policy entity"
+        )
+      )
       .errorOut(basicFailures)
       .name("createVerificationPolicy")
       .summary("Create the new verification policy")
@@ -117,7 +125,11 @@ object VerificationPolicyEndpoints {
           "Nonce of the previous VerificationPolicy"
         )
       )
-      .out(statusCode(StatusCode.Ok))
+      .out(
+        statusCode(StatusCode.Ok).description(
+          "Verification policy deleted successfully"
+        )
+      )
       .errorOut(basicFailuresAndNotFound)
       .name("deleteVerificationPolicyById")
       .summary("Deleted the verification policy by id")
