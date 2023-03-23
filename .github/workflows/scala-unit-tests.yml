@@ -18,6 +18,7 @@ jobs:
   build-and-unit-tests:
     name: "Build and unit tests for ${{ inputs.component-name }}"
     runs-on: self-hosted
+    container: ghcr.io/input-output-hk/atala-qa-automation
     env:
       GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
     defaults:
