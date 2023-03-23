@@ -11,7 +11,7 @@ object Dependencies {
     val iris = "0.1.0"
     val shared = "0.2.0"
     val mercury = "0.22.0"
-    val castor = "0.8.1"
+    val castor = "0.8.1-SNAPSHOT"
     val flyway = "9.8.3"
     val testContainersScalaPostgresql = "0.40.11"
     val quill = "4.6.0"

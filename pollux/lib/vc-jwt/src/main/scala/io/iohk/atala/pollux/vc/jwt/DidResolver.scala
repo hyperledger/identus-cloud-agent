@@ -130,11 +130,11 @@ class PrismDidResolver(didService: DIDService) extends DidResolver {
 
   private def toPolluxResolutionErrorModel(error: DIDResolutionErrorRepr): DIDResolutionFailed = {
     val e = error match {
-      case DIDResolutionErrorRepr.InvalidDID                 => InvalidDid(error.value)
-      case DIDResolutionErrorRepr.InvalidDIDUrl              => InvalidDid(error.value)
+      case DIDResolutionErrorRepr.InvalidDID(_)              => InvalidDid(error.value)
+      case DIDResolutionErrorRepr.InvalidDIDUrl(_)           => InvalidDid(error.value)
       case DIDResolutionErrorRepr.NotFound                   => NotFound(error.value)
       case DIDResolutionErrorRepr.RepresentationNotSupported => RepresentationNotSupported(error.value)
-      case DIDResolutionErrorRepr.InternalError              => Error(error.value, error.value)
+      case DIDResolutionErrorRepr.InternalError(_)           => Error(error.value, error.value)
       case DIDResolutionErrorRepr.InvalidPublicKeyLength     => InvalidPublicKeyLength(error.value)
       case DIDResolutionErrorRepr.InvalidPublicKeyType       => InvalidPublicKeyType(error.value)
       case DIDResolutionErrorRepr.UnsupportedPublicKeyType   => UnsupportedPublicKeyType(error.value)
