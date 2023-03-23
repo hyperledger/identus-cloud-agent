@@ -147,4 +147,4 @@ stateDiagram-v2
 
 The following diagram shows the end-to-end flow for a verifier to request and verify a proof presentation from a prover. 
 
-![](issue-flow.png)
+![](present-proof-flow.png)
