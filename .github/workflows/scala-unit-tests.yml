@@ -80,7 +80,7 @@ jobs:
           only_changed_files: true
 
       - name: Artifact coverage HTML
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: "code-coverage-report-${{ inputs.component-name }}"
           path: "${{ inputs.component-dir }}/target/coverage/scoverage-report"
