@@ -36,11 +36,10 @@ jobs:
 
       # test
       - name: Cache sbt
-        uses: coursier/cache-action@v6
+        uses: antonbaliasnikov/cache-action@main
         with:
           root: ./${{ inputs.component-dir }}
           path: "/root/.cache/coursier/v1"
-          # extraSbtFiles: "__w/atala-prism-building-blocks/atala-prism-building-blocks/castor/lib/build.sbt"
 
 #      - name: Cache ivy
 #        uses: actions/cache@v3
