@@ -43,7 +43,7 @@ jobs:
       - name: Run Scala formatter
         run: |
           find /root/.cache/coursier/v1
-          sbt scalafmtCheckAll -Dsbt.coursier.home=/root/.cache/coursier/v1
+          sbt +scalafmtCheckAll -Dsbt.coursier.home=/root/.cache/coursier/v1
 
       - name: Run Unit Tests
         run: sbt coverage test coverageAggregate
