@@ -58,8 +58,7 @@ jobs:
           export COURSIER_CACHE=/root/.cache/coursier/v1
           sbt +update
           du -hs /root/.ivy2/cache
-          mkdir -p /github
-          ln -s /root ${HOME}
+          echo HOME=/root >> ${GITHUB_ENV}
 
 #      - name: Aggregate test reports
 #        if: always()
