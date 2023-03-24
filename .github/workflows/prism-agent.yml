@@ -1,43 +1,43 @@
-#name: Prism agent testing workflow
-#
-## Cancel previously running workflows if new commit pushed to the branch
-## this will help to push fixes earlier and stop previous workflows
-#concurrency:
-#  group: ${{ github.head_ref }}${{ github.ref }}-prism-agent
-#
-#on:
-#  push:
-#    tags:
-#      - "*"
-#    branches:
-#      - "main"
-#    paths:
-#      - ".github/workflows/prism-agent.yml"
-#      - ".github/workflows/scala-unit-tests.yml"
-#      - "prism-agent/**"
-#  pull_request:
-#    paths:
-#      - ".github/workflows/prism-agent.yml"
-#      - ".github/workflows/scala-unit-tests.yml"
-#      - "prism-agent/**"
-#
-#jobs:
-#  build-and-test-prism-agent:
-#    uses: ./.github/workflows/scala-unit-tests.yml
-#    with:
-#      component-name: "PRISM Agent"
-#      component-dir: "prism-agent/service"
-#    secrets: inherit
-#  release:
-#    if: github.event_name == 'push' && !contains(github.event.head_commit.message, 'chore(release)')
-#    uses: ./.github/workflows/release.yml
-#    with:
-#      release-component: "prism-agent/service"
-#    secrets: inherit
-#  deploy:
-#    if: startsWith(github.ref, 'refs/tags') && contains(github.event.head_commit.message, 'chore(release)')
-#    uses: ./.github/workflows/deployment.yml
-#    with:
-#      component-tag: "${{ github.ref_name }}"
-#      env: "dev"
-#    secrets: inherit
+name: Prism agent testing workflow
+
+# Cancel previously running workflows if new commit pushed to the branch
+# this will help to push fixes earlier and stop previous workflows
+concurrency:
+  group: ${{ github.head_ref }}${{ github.ref }}-prism-agent
+
+on:
+  push:
+    tags:
+      - "*"
+    branches:
+      - "main"
+    paths:
+      - ".github/workflows/prism-agent.yml"
+      - ".github/workflows/scala-unit-tests.yml"
+      - "prism-agent/**"
+  pull_request:
+    paths:
+      - ".github/workflows/prism-agent.yml"
+      - ".github/workflows/scala-unit-tests.yml"
+      - "prism-agent/**"
+
+jobs:
+  build-and-test-prism-agent:
+    uses: ./.github/workflows/scala-unit-tests.yml
+    with:
+      component-name: "PRISM Agent"
+      component-dir: "prism-agent/service"
+    secrets: inherit
+  release:
+    if: github.event_name == 'push' && !contains(github.event.head_commit.message, 'chore(release)')
+    uses: ./.github/workflows/release.yml
+    with:
+      release-component: "prism-agent/service"
+    secrets: inherit
+  deploy:
+    if: startsWith(github.ref, 'refs/tags') && contains(github.event.head_commit.message, 'chore(release)')
+    uses: ./.github/workflows/deployment.yml
+    with:
+      component-tag: "${{ github.ref_name }}"
+      env: "dev"
+    secrets: inherit
