@@ -40,7 +40,7 @@ jobs:
         with:
           root: ${{ env.GITHUB_WORKSPACE }}/${{ inputs.component-dir }}
           path: "/root/.cache/coursier/v1"
-          extraSbtFiles: "${{ env.GITHUB_WORKSPACE }}/${{ inputs.component-dir }}/*.sbt"
+          extraSbtFiles: "[\"${{ env.GITHUB_WORKSPACE }}/${{ inputs.component-dir }}/*.sbt\", \"${{ env.GITHUB_WORKSPACE }}/${{ inputs.component-dir }}/project/**.scala\", \"${{ env.GITHUB_WORKSPACE }}/${{ inputs.component-dir }}/project/**.sbt\"]"
 
 #      - name: Cache ivy
 #        uses: actions/cache@v3
@@ -55,8 +55,6 @@ jobs:
 
       - name: Run Unit Tests
         run: |
-          echo "${{ env.GITHUB_WORKSPACE }}/${{ inputs.component-dir }}"
-          pwd
           du -hs /root/.cache/coursier/v1
           # find /root/.ivy2/cache
           export COURSIER_CACHE=/root/.cache/coursier/v1
