@@ -45,7 +45,7 @@ sys.env
 // Project definitions
 lazy val root = project
   .in(file("."))
-  .configure(publishConfigure)
+  //.configure(publishConfigure)
   .settings(
     name := "castor-root",
   )
@@ -54,7 +54,7 @@ lazy val root = project
 
 lazy val core = project
   .in(file("core"))
-  .configure(publishConfigure)
+  //.configure(publishConfigure)
   .settings(
     name := "castor-core",
     libraryDependencies ++= coreDependencies
@@ -62,7 +62,7 @@ lazy val core = project
 
 lazy val `sql-doobie` = project
   .in(file("sql-doobie"))
-  .configure(publishConfigure)
+  //.configure(publishConfigure)
   .settings(
     name := "castor-sql-doobie",
     libraryDependencies ++= sqlDoobieDependencies
