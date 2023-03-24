@@ -48,8 +48,9 @@ jobs:
       - name: Run Unit Tests
         run: |
           du -hs /root/.cache/coursier/v1
-          find /root/.ivy2/cache
-          sbt -ivy /root/.ivy2 +update
+          # find /root/.ivy2/cache
+          export COURSIER_CACHE=/root/.cache/coursier/v1
+          sbt -ivy /root/.ivy2 -Dsbt.coursier.home=/root/.cache/coursier/v1 +update
 
       - name: Aggregate test reports
         if: always()
