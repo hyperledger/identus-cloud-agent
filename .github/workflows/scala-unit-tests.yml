@@ -39,7 +39,7 @@ jobs:
         uses: coursier/cache-action@v6
         with:
           path: "/root/.cache/coursier/v1"
-          extraSbtFiles: ["${{ inputs.component-dir }}/*.sbt", "${{ inputs.component-dir }}/project/**.scala", "${{ inputs.component-dir }}/project/**.sbt"]
+          extraSbtFiles: "[\"${{ inputs.component-dir }}/*.sbt\", \"${{ inputs.component-dir }}/project/**.scala\", \"${{ inputs.component-dir }}/project/**.sbt\"]"
 
 #      - name: Cache ivy
 #        uses: actions/cache@v3
