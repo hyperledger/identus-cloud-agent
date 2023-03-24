@@ -38,7 +38,7 @@ jobs:
       - name: Cache sbt
         uses: coursier/cache-action@v6
         with:
-          root: ${{ env.GITHUB_WORKSPACE }}/${{ inputs.component-dir }}
+          #root: ${{ env.GITHUB_WORKSPACE }}/${{ inputs.component-dir }}
           path: "/root/.cache/coursier/v1"
           extraSbtFiles: "[\"${{ env.GITHUB_WORKSPACE }}/${{ inputs.component-dir }}/*.sbt\", \"${{ env.GITHUB_WORKSPACE }}/${{ inputs.component-dir }}/project/**.scala\", \"${{ env.GITHUB_WORKSPACE }}/${{ inputs.component-dir }}/project/**.sbt\"]"
 
@@ -48,7 +48,6 @@ jobs:
 #          path: "/root/.ivy2/cache"
 #          key: ivy
 
-#
 #      - name: Run Scala formatter
 #        run: |
 #          sbt scalafmtCheckAll
