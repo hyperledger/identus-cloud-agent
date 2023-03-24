@@ -38,9 +38,7 @@ jobs:
         uses: coursier/cache-action@v6
         with:
           path: "/root/.cache/coursier/v1"
-          extraFiles:
-            - "/root/.sbt"
-            - "/root/.ivy2/cache"
+          extraFiles: "['/root/.sbt', '/root/.ivy2/cache']"
 
       - name: Run Scala formatter
         run: |
