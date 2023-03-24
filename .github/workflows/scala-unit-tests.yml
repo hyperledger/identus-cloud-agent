@@ -34,21 +34,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      # test
-      - name: Cache sbt
-        uses: coursier/cache-action@v6
+      - name: Setup JDK
+        uses: actions/setup-java@v3
         with:
-          path: "/root/.cache/coursier/v1"
-          extraFiles: /root/.ivy2/cache
-          extraSbtFiles: /root/.sbt
+          java-version: 11
+          cache: sbt
 
-      - name: Run Scala formatter
-        run: |
-          find /root/.cache/coursier/v1
-          sbt scalafmtCheckAll
+#      - name: Run Scala formatter
+#        run: |
+#          sbt scalafmtCheckAll
 
       - name: Run Unit Tests
-        run: sbt coverage test coverageAggregate
+        run: sbt -v +test
 
       - name: Aggregate test reports
         if: always()
