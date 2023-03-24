@@ -38,7 +38,7 @@ jobs:
       - name: Cache sbt
         uses: coursier/cache-action@v6
         with:
-          #root: ${{ env.GITHUB_WORKSPACE }}/${{ inputs.component-dir }}
+          root: ./${{ inputs.component-dir }}
           path: "/root/.cache/coursier/v1"
           extraSbtFiles: "__w/atala-prism-building-blocks/atala-prism-building-blocks/castor/lib/build.sbt"
 
