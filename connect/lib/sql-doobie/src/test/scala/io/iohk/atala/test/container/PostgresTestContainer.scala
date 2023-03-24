@@ -9,6 +9,7 @@ import com.zaxxer.hikari.HikariConfig
 import doobie.hikari.HikariTransactor
 import doobie.util.ExecutionContexts
 import doobie.util.transactor.Transactor
+import org.testcontainers.containers.Network
 import org.testcontainers.containers.output.OutputFrame
 import org.testcontainers.utility.DockerImageName
 import zio.*
@@ -29,6 +30,8 @@ object PostgresTestContainer {
         val container = new PostgreSQLContainer(
           dockerImageNameOverride = imageName.map(DockerImageName.parse)
         )
+
+        container.container.setNetwork(Network.SHARED)
 
         if (verbose) {
           container.container
