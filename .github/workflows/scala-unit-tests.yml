@@ -32,7 +32,12 @@ jobs:
 #        working-directory: ${{ inputs.component-dir }}
     steps:
       - name: Env Check
-        run: ls -lah /__e /__e/node16/ /__w
+        run: |
+          ls -lah /__e
+          ls -lah /__e/node16/
+          ls -lah /__w
+          ls -lah /github/home/
+          curl -sL -O https://github.com/shyiko/jabba/releases/download/0.11.2/jabba-0.11.2-linux-amd64
         
       - name: Checkout
         uses: actions/checkout@v3
