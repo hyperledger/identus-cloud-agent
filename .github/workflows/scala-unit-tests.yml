@@ -47,6 +47,7 @@ jobs:
           path: "/root/.ivy2/cache"
           key: ivy
 
+#
 #      - name: Run Scala formatter
 #        run: |
 #          sbt scalafmtCheckAll
