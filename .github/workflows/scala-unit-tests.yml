@@ -34,7 +34,7 @@ jobs:
         working-directory: ${{ inputs.component-dir }}
     steps:
       - name: Env Check
-        run: echo "Yes"
+        run: env
         
       - name: Checkout
         uses: actions/checkout@v3
