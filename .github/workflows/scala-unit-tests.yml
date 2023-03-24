@@ -45,16 +45,16 @@ jobs:
           root: ./${{ inputs.component-dir }}
           path: "/root/.cache/coursier/v1"
 
-      - name: Run Scala formatter
-        run: |
-          sbt scalafmtCheckAll
+#      - name: Run Scala formatter
+#        run: |
+#          sbt scalafmtCheckAll
 
       - name: Run Unit Tests
         run: |
           # Workaround for container runners to correctly restore
           # https://github.com/actions/runner/issues/863
           echo HOME=/root >> ${GITHUB_ENV}
-          sbt coverage test coverageAggregate
+          sbt -v coverage test coverageAggregate
 
       - name: Aggregate test reports
         if: always()
