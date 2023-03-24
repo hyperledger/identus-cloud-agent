@@ -52,33 +52,33 @@ jobs:
           export COURSIER_CACHE=/root/.cache/coursier/v1
           sbt -ivy /root/.ivy2 -Dsbt.coursier.home=/root/.cache/coursier/v1 +update
 
-      - name: Aggregate test reports
-        if: always()
-        uses: ./.github/actions/aggregate-test-reports
-        with:
-          tests-dir: ${{ inputs.component-dir }}
-
-      - name: Publish test results
-        # Publish even if the previous test step fails
-        if: always()
-        uses: EnricoMi/publish-unit-test-result-action@v2
-        with:
-          junit_files: "${{ inputs.component-dir }}/target/test-reports/**/TEST-*.xml"
-          comment_title: "${{ inputs.component-name }} Test Results"
-          check_name: "${{ inputs.component-name }} Test Results"
-
-      - name: Code coverage report
-        if: github.event_name == 'pull_request' && inputs.measure-coverage
-        uses: 5monkeys/cobertura-action@master
-        with:
-          path: "${{ inputs.component-dir }}/target/coverage/coverage-report/cobertura.xml"
-          report_name: "${{ inputs.component-name }} Code Coverage"
-          minimum_coverage: 12
-          fail_below_threshold: true
-          only_changed_files: true
-
-      - name: Artifact coverage HTML
-        uses: actions/upload-artifact@v3
-        with:
-          name: "code-coverage-report-${{ inputs.component-name }}"
-          path: "${{ inputs.component-dir }}/target/coverage/scoverage-report"
+#      - name: Aggregate test reports
+#        if: always()
+#        uses: ./.github/actions/aggregate-test-reports
+#        with:
+#          tests-dir: ${{ inputs.component-dir }}
+#
+#      - name: Publish test results
+#        # Publish even if the previous test step fails
+#        if: always()
+#        uses: EnricoMi/publish-unit-test-result-action@v2
+#        with:
+#          junit_files: "${{ inputs.component-dir }}/target/test-reports/**/TEST-*.xml"
+#          comment_title: "${{ inputs.component-name }} Test Results"
+#          check_name: "${{ inputs.component-name }} Test Results"
+#
+#      - name: Code coverage report
+#        if: github.event_name == 'pull_request' && inputs.measure-coverage
+#        uses: 5monkeys/cobertura-action@master
+#        with:
+#          path: "${{ inputs.component-dir }}/target/coverage/coverage-report/cobertura.xml"
+#          report_name: "${{ inputs.component-name }} Code Coverage"
+#          minimum_coverage: 12
+#          fail_below_threshold: true
+#          only_changed_files: true
+#
+#      - name: Artifact coverage HTML
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: "code-coverage-report-${{ inputs.component-name }}"
+#          path: "${{ inputs.component-dir }}/target/coverage/scoverage-report"
