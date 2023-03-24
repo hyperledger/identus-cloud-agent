@@ -39,13 +39,13 @@ jobs:
         uses: coursier/cache-action@v6
         with:
           path: "/root/.cache/coursier/v1"
-          extraSbtFiles: "/root/.ivy2/cache"
+          extraSbtFiles: ["${{ inputs.component-dir }}/*.sbt", "${{ inputs.component-dir }}/project/**.scala", "${{ inputs.component-dir }}/project/**.sbt"]
 
-      - name: Cache ivy
-        uses: actions/cache@v3
-        with:
-          path: "/root/.ivy2/cache"
-          key: ivy
+#      - name: Cache ivy
+#        uses: actions/cache@v3
+#        with:
+#          path: "/root/.ivy2/cache"
+#          key: ivy
 
 #
 #      - name: Run Scala formatter
