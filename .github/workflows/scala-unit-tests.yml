@@ -27,7 +27,7 @@ jobs:
         username: ${{ secrets.ATALA_GITHUB_ACTOR }}
         password: ${{ secrets.ATALA_GITHUB_TOKEN }}
       env:
-        GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.LOCAL_RUNNERS_TOKEN }}
     defaults:
       run:
         working-directory: ${{ inputs.component-dir }}
