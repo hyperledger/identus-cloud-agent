@@ -25,6 +25,8 @@ jobs:
       credentials:
         username: ${{ secrets.ATALA_GITHUB_ACTOR }}
         password: ${{ secrets.ATALA_GITHUB_TOKEN }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
     env:
       GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
     defaults:
