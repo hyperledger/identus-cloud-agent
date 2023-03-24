@@ -41,6 +41,12 @@ jobs:
           path: "/root/.cache/coursier/v1"
           extraSbtFiles: "/root/.ivy2/cache"
 
+      - name: Cache ivy
+        uses: actions/cache@v3
+        with:
+          path: "/root/.ivy2/cache"
+          key: ivy
+
 #      - name: Run Scala formatter
 #        run: |
 #          sbt scalafmtCheckAll
@@ -48,7 +54,7 @@ jobs:
       - name: Run Unit Tests
         run: |
           du -hs /root/.cache/coursier/v1
-          # find /root/.ivy2/cache
+          find /root/.ivy2/cache
           export COURSIER_CACHE=/root/.cache/coursier/v1
           sbt -ivy /root/.ivy2 -Dsbt.coursier.home=/root/.cache/coursier/v1 +update
 
