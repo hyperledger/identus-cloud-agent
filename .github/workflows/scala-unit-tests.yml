@@ -46,7 +46,7 @@ jobs:
 #          sbt scalafmtCheckAll
 
       - name: Run Unit Tests
-        run: sbt -v +test
+        run: sbt -v +coverage +test +coverageAggregate
 
       - name: Aggregate test reports
         if: always()
