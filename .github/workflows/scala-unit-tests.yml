@@ -34,11 +34,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-#      - name: Setup Java and Scala
-#        uses: olafurpg/setup-scala@v14
-#        with:
-#          java-version: openjdk@1.11
-#
       - name: Cache sbt
         uses: coursier/cache-action@v6
 
