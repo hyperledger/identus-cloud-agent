@@ -42,7 +42,6 @@ jobs:
       - name: Run Scala formatter
         run: |
           sbt scalafmtCheckAll
-          du -hs /root/.cache/coursier/v1
 
       - name: Run Unit Tests
         run: sbt coverage test coverageAggregate
