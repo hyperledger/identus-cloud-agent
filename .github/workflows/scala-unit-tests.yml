@@ -40,12 +40,11 @@ jobs:
           root: "/__w/atala-prism-building-blocks/atala-prism-building-blocks/castor/lib"
           path:
             - "/root/.cache/coursier/v1"
-            - "/root/.ivy2/cache"
-            - "/root/.m2"
 
       - name: Run Scala formatter
         run: |
-          sbt scalafmtCheckAll
+          find /root/.cache/coursier/v1
+          sbt scalafmtCheckAll -Dsbt.coursier.home=/root/.cache/coursier/v1
 
       - name: Run Unit Tests
         run: sbt coverage test coverageAggregate
