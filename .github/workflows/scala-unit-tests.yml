@@ -46,7 +46,7 @@ jobs:
 #          sbt scalafmtCheckAll
 
       - name: Run Unit Tests
-        run: sbt -v +coverage +test +coverageAggregate
+        run: sbt -v +coverage +test +coverageAggregate --cache=/root/.cache/coursier/v1
 
       - name: Aggregate test reports
         if: always()
