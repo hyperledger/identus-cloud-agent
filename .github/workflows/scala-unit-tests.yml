@@ -37,13 +37,15 @@ jobs:
       - name: Cache sbt
         uses: coursier/cache-action@v6
         with:
-          root: "/__w/atala-prism-building-blocks/atala-prism-building-blocks/castor/lib"
           path: "/root/.cache/coursier/v1"
+          extraFiles:
+            - "/root/.sbt"
+            - "/root/.ivy2/cache"
 
       - name: Run Scala formatter
         run: |
           find /root/.cache/coursier/v1
-          sbt +scalafmtCheckAll -Dsbt.coursier.home=/root/.cache/coursier/v1
+          sbt scalafmtCheckAll
 
       - name: Run Unit Tests
         run: sbt coverage test coverageAggregate
