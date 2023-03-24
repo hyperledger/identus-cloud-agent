@@ -37,6 +37,7 @@ jobs:
       - name: Cache sbt
         uses: coursier/cache-action@v6
         with:
+          root: "/__w/atala-prism-building-blocks/atala-prism-building-blocks/castor/lib"
           path: "/root/.cache/coursier/v1"
 
       - name: Run Scala formatter
