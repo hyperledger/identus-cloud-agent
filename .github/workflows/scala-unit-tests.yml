@@ -56,7 +56,8 @@ jobs:
           du -hs /root/.cache/coursier/v1
           # find /root/.ivy2/cache
           export COURSIER_CACHE=/root/.cache/coursier/v1
-          sbt -ivy /root/.ivy2 -Dsbt.coursier.home=/root/.cache/coursier/v1 +update
+          sbt +update
+          du -hs /root/.ivy2/cache
 
 #      - name: Aggregate test reports
 #        if: always()
