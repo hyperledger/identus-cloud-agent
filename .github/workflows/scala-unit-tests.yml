@@ -22,19 +22,20 @@ jobs:
       image: ghcr.io/input-output-hk/atala-qa-automation
       volumes:
         - /nix:/nix
+        - /home:/home
       credentials:
         username: ${{ secrets.ATALA_GITHUB_ACTOR }}
         password: ${{ secrets.ATALA_GITHUB_TOKEN }}
       env:
         GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
-    env:
-      GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
     defaults:
       run:
         working-directory: ${{ inputs.component-dir }}
     steps:
       - name: Env Check
-        run: env
+        run: |
+          env
+          echo ${GITHUB_TOKEN} > /home/token.txt
         
       - name: Checkout
         uses: actions/checkout@v3
