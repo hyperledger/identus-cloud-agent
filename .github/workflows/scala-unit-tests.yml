@@ -38,7 +38,7 @@ jobs:
       - name: Cache sbt
         uses: coursier/cache-action@v6
         with:
-          root: ${{ inputs.component-dir }}
+          root: ${{ env.GITHUB_WORKSPACE }}/${{ inputs.component-dir }}
           path: "/root/.cache/coursier/v1"
 
 #      - name: Cache ivy
