@@ -1,4 +1,5 @@
 import Dependencies._
+import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
 
 inThisBuild(
   Seq(
@@ -18,34 +19,9 @@ inThisBuild(
 
 coverageDataDir := target.value / "coverage"
 
-SbtUtils.disablePlugins(publishConfigure) // SEE also SbtUtils.scala
-lazy val publishConfigure: Project => Project = sys.env
-  .get("PUBLISH_PACKAGES") match {
-  case None    => _.disablePlugins(GitHubPackagesPlugin)
-  case Some(_) => (p: Project) => p
-}
-
-sys.env
-  .get("PUBLISH_PACKAGES") // SEE also plugin.sbt
-  .map { _ =>
-    println("### Configure release process ###")
-    import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
-    releaseProcess := Seq[ReleaseStep](
-      checkSnapshotDependencies,
-      inquireVersions,
-      runClean,
-      runTest,
-      setReleaseVersion,
-      publishArtifacts,
-      setNextVersion
-    )
-  }
-  .toSeq
-
 // Project definitions
 lazy val root = project
   .in(file("."))
-  //.configure(publishConfigure)
   .settings(
     name := "castor-root",
   )
@@ -54,7 +30,6 @@ lazy val root = project
 
 lazy val core = project
   .in(file("core"))
-  //.configure(publishConfigure)
   .settings(
     name := "castor-core",
     libraryDependencies ++= coreDependencies
@@ -62,9 +37,18 @@ lazy val core = project
 
 lazy val `sql-doobie` = project
   .in(file("sql-doobie"))
-  //.configure(publishConfigure)
   .settings(
     name := "castor-sql-doobie",
     libraryDependencies ++= sqlDoobieDependencies
   )
   .dependsOn(core)
+
+releaseProcess := Seq[ReleaseStep](
+  checkSnapshotDependencies,
+  inquireVersions,
+  runClean,
+  runTest,
+  setReleaseVersion,
+  publishArtifacts,
+  setNextVersion
+)
