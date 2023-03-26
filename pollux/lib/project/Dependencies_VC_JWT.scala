@@ -31,7 +31,7 @@ object Dependencies_VC_JWT {
   private lazy val zioTestSbt = "dev.zio" %% "zio-test-sbt" % Versions.zio % Test
   private lazy val zioTestMagnolia = "dev.zio" %% "zio-test-magnolia" % Versions.zio % Test
 
-  private lazy val scalaTest = "org.scalatest" %% "scalatest" % "3.2.9" % Test
+  private lazy val scalaTest = "org.scalatest" %% "scalatest" % "3.2.15" % Test
 
   private lazy val castorCore = "io.iohk.atala" %% "castor-core" % Versions.castor
 
