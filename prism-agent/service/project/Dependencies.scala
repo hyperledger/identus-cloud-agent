@@ -19,7 +19,7 @@ object Dependencies {
     val tapir = "1.2.11"
     val flyway = "9.8.3"
     val testContainersScalaPostgresql = "0.40.14"
-    val quill = "4.6.0"
+    val quill = "4.6.0.1"
   }
 
   private lazy val zio = "dev.zio" %% "zio" % Versions.zio
