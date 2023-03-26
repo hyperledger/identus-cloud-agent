@@ -5,11 +5,13 @@ import io.iohk.atala.agent.walletapi.model.{DIDPublicKeyTemplate, ManagedDIDStat
 import io.iohk.atala.castor.core.model.did.{
   DIDData,
   DIDMetadata,
+  InternalPublicKey,
   PrismDID,
   PrismDIDOperation,
-  ScheduleDIDOperationOutcome,
+  PublicKey,
   ScheduledDIDOperationDetail,
   ScheduledDIDOperationStatus,
+  ScheduleDIDOperationOutcome,
   Service,
   SignedPrismDIDOperation,
   VerificationRelationship
@@ -137,7 +139,7 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSuppor
           assert(opsAfter.map(_.operation))(hasSameElements(Seq(createOp)))
       },
       test("fail when publish non-existing DID") {
-        val did = PrismDID.buildLongFormFromOperation(PrismDIDOperation.Create(Nil, Nil, Nil)).asCanonical
+        val did = PrismDID.buildLongFormFromOperation(PrismDIDOperation.Create(Nil, Nil)).asCanonical
         val result = ZIO.serviceWithZIO[ManagedDIDService](_.publishStoredDID(did))
         assertZIO(result.exit)(fails(isSubtype[PublishManagedDIDError.DIDNotFound](anything)))
       },
@@ -201,7 +203,7 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSuppor
         did <- svc.createAndStoreDID(template).map(_.asCanonical)
         state <- svc.nonSecretStorage.getManagedDIDState(did)
         createOperation <- ZIO.fromOption(state.collect { case ManagedDIDState.Created(operation) => operation })
-        publicKeys = createOperation.publicKeys
+        publicKeys = createOperation.publicKeys.collect { case pk: PublicKey => pk }
       } yield assert(publicKeys.map(i => i.id -> i.purpose))(
         hasSameElements(
           Seq(
@@ -218,7 +220,7 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSuppor
         did <- svc.createAndStoreDID(generateDIDTemplate()).map(_.asCanonical)
         state <- svc.nonSecretStorage.getManagedDIDState(did)
         createOperation <- ZIO.fromOption(state.collect { case ManagedDIDState.Created(operation) => operation })
-        internalKeys = createOperation.internalKeys
+        internalKeys = createOperation.publicKeys.collect { case pk: InternalPublicKey => pk }
       } yield assert(internalKeys.map(_.purpose))(contains(InternalKeyPurpose.Master))
     },
     test("validate DID before persisting it in storage") {

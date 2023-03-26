@@ -63,6 +63,14 @@ private[castor] trait W3CModelHelper {
             x = x.toStringNoPadding,
             y = y.toStringNoPadding
           )
+        case pk: PublicKeyData.ECCompressedKeyData =>
+          val uncompressed = pk.toUncompressedKeyData
+          PublicKeyJwk(
+            kty = "EC",
+            crv = uncompressed.crv.name,
+            x = uncompressed.x.toStringNoPadding,
+            y = uncompressed.y.toStringNoPadding
+          )
       }
     )
   }

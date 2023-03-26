@@ -1,3 +1,31 @@
+# [prism-agent-v0.59.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.59.0...prism-agent-v0.59.1) (2023-03-23)
+
+
+### Bug Fixes
+
+* **prism-agent:** fix incorrect long-form parsing behavior on resolution endpoint ([#475](https://github.com/input-output-hk/atala-prism-building-blocks/issues/475)) ([af356d6](https://github.com/input-output-hk/atala-prism-building-blocks/commit/af356d66763197f118aee8f7d1ac7d82be05a46e))
+
+# [prism-agent-v0.59.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.58.0...prism-agent-v0.59.0) (2023-03-22)
+
+
+### Features
+
+* **prism-agent:** add universal-resolver compatible endpoint ([#455](https://github.com/input-output-hk/atala-prism-building-blocks/issues/455)) ([1cbb729](https://github.com/input-output-hk/atala-prism-building-blocks/commit/1cbb729c05da51d98163a9c99d035f2814cc9fb1))
+
+# [prism-agent-v0.58.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.57.0...prism-agent-v0.58.0) (2023-03-22)
+
+
+### Features
+
+* **prism-agent:** Update the connect pollux and mercury to fix to use nimbus-jose-jwt 10.0.0-preview ([#467](https://github.com/input-output-hk/atala-prism-building-blocks/issues/467)) ([948f2fc](https://github.com/input-output-hk/atala-prism-building-blocks/commit/948f2fc26a7b965c47e7907cf4d4eb14bb9e640f))
+
+# [prism-agent-v0.57.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.56.0...prism-agent-v0.57.0) (2023-03-21)
+
+
+### Features
+
+* **prism-agent:** Update pollux lib to 0.43.0 includes the nimbus-jo… ([#460](https://github.com/input-output-hk/atala-prism-building-blocks/issues/460)) ([adb7000](https://github.com/input-output-hk/atala-prism-building-blocks/commit/adb7000348a29a83ca59f0d945b1327795dd3b42))
+
 # [prism-agent-v0.56.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.55.0...prism-agent-v0.56.0) (2023-03-17)
 
 

@@ -1,6 +1,7 @@
 import sbt._
 
 object Dependencies {
+
   object Versions {
     val zio = "2.0.4"
     val zioJson = "0.4.2"
@@ -9,8 +10,8 @@ object Dependencies {
     val prismSdk = "v1.4.1" // scala-steward:off
     val iris = "0.1.0"
     val shared = "0.2.0"
-    val mercury = "0.20.0"
-    val castor = "0.8.1"
+    val mercury = "0.22.0"
+    val castor = "0.8.2"
     val flyway = "9.8.3"
     val testContainersScalaPostgresql = "0.40.11"
     val quill = "4.6.0"

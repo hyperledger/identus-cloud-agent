@@ -44,8 +44,7 @@ object OperationFactory {
           CreateManagedDIDError.KeyGenerationError.apply
         )
       operation = PrismDIDOperation.Create(
-        publicKeys = keys.map(_._2),
-        internalKeys = Seq(masterKey._2),
+        publicKeys = keys.map(_._2) ++ Seq(masterKey._2),
         services = didTemplate.services
       )
       secret = CreateDIDSecret(

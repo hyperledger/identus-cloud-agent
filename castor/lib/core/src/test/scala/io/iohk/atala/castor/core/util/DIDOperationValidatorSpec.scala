@@ -50,7 +50,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         ),
         services: Seq[Service] = Nil
     ) =
-      PrismDIDOperation.Create(publicKeys = publicKeys, internalKeys = internalKeys, services = services)
+      PrismDIDOperation.Create(publicKeys = publicKeys ++ internalKeys, services = services)
 
     suite("CreateOperation validation")(
       test("accept valid CreateOperation") {

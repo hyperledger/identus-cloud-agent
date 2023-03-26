@@ -1,28 +1,32 @@
 package api_models
 
-data class DidDocument(
-    var did: W3cCompatibleDid? = null,
-    var metadata: DidDocumentMetadata? = null,
+data class DidResolutionResult(
+    var `@context`: String? = null,
+    var didDocument: DidDocument? = null,
+    var didDocumentMetadata: DidDocumentMetadata? = null,
+    var didResolutionMetadata: DidResolutionMetadata? = null,
 )
 
-data class W3cCompatibleDid(
-    var assertionMethod: List<DidDocumentAuthentication>? = null,
-    var authentication: List<DidDocumentAuthentication>? = null,
+data class DidDocument(
+    var `@context`: List<String>? = null,
+    var assertionMethod: List<VerificationMethodRef>? = null,
+    var authentication: List<VerificationMethodRef>? = null,
     var capabilityInvocation: List<String>? = null,
     var controller: String? = null,
     var id: String? = null,
     var keyAgreement: List<String>? = null,
     var service: List<DidDocumentService>? = null,
-    var verificationMethod: List<DidDocumentAuthentication>? = null,
+    var verificationMethod: List<VerificationMethod>? = null,
 )
 
-data class DidDocumentAuthentication(
+data class VerificationMethod(
     var controller: String? = null,
     var id: String? = null,
     var publicKeyJwk: PublicKeyJwk? = null,
     var type: String? = null,
-    var uri: String? = null,
 )
+
+typealias VerificationMethodRef = String
 
 data class PublicKeyJwk(
     var crv: String? = null,
@@ -40,4 +44,8 @@ data class DidDocumentService(
     var id: String? = null,
     var serviceEndpoint: List<String>? = null,
     var type: String? = null,
+)
+
+data class DidResolutionMetadata(
+    var contentType: String? = null,
 )

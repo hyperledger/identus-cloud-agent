@@ -35,7 +35,7 @@ class DeactivateDidSteps {
                 actor.attemptsTo(
                     Get.resource("/dids/${actor.recall<String>("shortFormDid")}"),
                 )
-                lastResponseObject("metadata.deactivated", String::class) == "true"
+                lastResponseObject("didDocumentMetadata.deactivated", String::class) == "true"
             },
             "ERROR: DID deactivate operation did not succeed on the ledger!",
             timeout = TestConstants.DID_UPDATE_PUBLISH_MAX_WAIT_5_MIN,

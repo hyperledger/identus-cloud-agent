@@ -1,3 +1,17 @@
+# [mercury-v0.22.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.21.0...mercury-v0.22.0) (2023-03-22)
+
+
+### Features
+
+* **mercury:** Added the resolver and update the nimbus libray to pre… ([#465](https://github.com/input-output-hk/atala-prism-building-blocks/issues/465)) ([67e3622](https://github.com/input-output-hk/atala-prism-building-blocks/commit/67e362212858b5a69e3c7cb0419449cc721f857f))
+
+# [mercury-v0.21.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.20.0...mercury-v0.21.0) (2023-03-20)
+
+
+### Features
+
+* **mercury:** Code cleanup removed the Presentation Attachment and added to the Pollux ([#365](https://github.com/input-output-hk/atala-prism-building-blocks/issues/365)) ([8f52b12](https://github.com/input-output-hk/atala-prism-building-blocks/commit/8f52b1214e7bee3b18693f25a657630d85eee26f))
+
 # [mercury-v0.20.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/mercury-v0.19.0...mercury-v0.20.0) (2023-02-24)
 
 

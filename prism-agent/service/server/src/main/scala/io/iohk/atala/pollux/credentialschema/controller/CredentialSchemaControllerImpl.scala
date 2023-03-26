@@ -10,8 +10,8 @@ import io.iohk.atala.pollux.credentialschema.http.CredentialSchemaInput.toDomain
 import io.iohk.atala.pollux.credentialschema.http.CredentialSchemaResponse.fromDomain
 import io.iohk.atala.pollux.credentialschema.http.{
   CredentialSchemaInput,
-  CredentialSchemaResponsePage,
   CredentialSchemaResponse,
+  CredentialSchemaResponsePage,
   FilterInput
 }
 import zio.{IO, Task, URLayer, ZIO, ZLayer}
@@ -26,6 +26,14 @@ class CredentialSchemaControllerImpl(service: CredentialSchemaService) extends C
   ): IO[FailureResponse, CredentialSchemaResponse] = {
     service
       .create(toDomain(in))
+      .map(cs => fromDomain(cs).withBaseUri(rc.request.uri))
+  }
+
+  override def updateSchema(author: String, id: UUID, in: CredentialSchemaInput)(implicit
+      rc: RequestContext
+  ): IO[FailureResponse, CredentialSchemaResponse] = {
+    service
+      .update(id, toDomain(in).copy(author = author))
       .map(cs => fromDomain(cs).withBaseUri(rc.request.uri))
   }
 

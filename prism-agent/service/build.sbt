@@ -48,8 +48,8 @@ lazy val server = project
     openApiGeneratorSpec := apiBaseDirectory.value / "http/prism-agent-openapi-spec.yaml",
     openApiGeneratorConfig := baseDirectory.value / "openapi/generator-config/config.yaml",
     openApiGeneratorImportMapping := Seq(
-      "DidOperationType",
-      "DidOperationStatus"
+      "DIDDocument",
+      "DIDResolutionResult"
     )
       .map(model =>
         (model, s"io.iohk.atala.agent.server.http.model.OASModelPatches.$model")

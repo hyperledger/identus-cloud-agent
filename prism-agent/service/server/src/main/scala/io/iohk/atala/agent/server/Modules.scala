@@ -28,14 +28,14 @@ import io.iohk.atala.agent.server.http.marshaller.*
 import io.iohk.atala.agent.server.http.service.*
 import io.iohk.atala.agent.server.http.{HttpRoutes, HttpServer}
 import io.iohk.atala.pollux.core.service.{
+  CredentialSchemaService,
+  CredentialSchemaServiceImpl,
   CredentialService,
   CredentialServiceImpl,
   PresentationService,
   PresentationServiceImpl,
   VerificationPolicyService,
-  VerificationPolicyServiceImpl,
-  CredentialSchemaService,
-  CredentialSchemaServiceImpl
+  VerificationPolicyServiceImpl
 }
 import io.iohk.atala.pollux.credentialschema.controller.{CredentialSchemaController, CredentialSchemaControllerImpl}
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
@@ -43,9 +43,9 @@ import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
 import io.iohk.atala.pollux.core.repository.CredentialRepository
 import io.iohk.atala.pollux.sql.repository.{
   JdbcCredentialRepository,
+  JdbcCredentialSchemaRepository,
   JdbcPresentationRepository,
   JdbcVerificationPolicyRepository,
-  JdbcCredentialSchemaRepository,
   DbConfig as PolluxDbConfig
 }
 import io.iohk.atala.connect.sql.repository.DbConfig as ConnectDbConfig

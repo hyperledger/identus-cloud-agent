@@ -111,11 +111,13 @@ trait CredentialSchemaGen {
     val schemaTags: Gen[Any, List[String]] =
       Gen.setOfBounded(0, 3)(schemaTag).map(_.toList)
 
+    val schemaAuthor = Gen.alphaNumericStringBounded(64, 64).map(id => s"did:prism:$id")
+
     val schemaInput = for {
       name <- schemaName
       version <- schemaVersion
       description <- schemaDescription
-      attributes <- schemaAttributes
+      author <- schemaAuthor
       tags <- schemaTags
     } yield CredentialSchemaInput(
       name = name,
@@ -123,7 +125,8 @@ trait CredentialSchemaGen {
       description = Some(description),
       `type` = "json",
       schema = Arr(Obj("first_name" -> Str("String"))),
-      tags = tags
+      tags = tags,
+      author = author
     )
   }
 

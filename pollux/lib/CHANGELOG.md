@@ -1,3 +1,31 @@
+# [pollux-v0.43.2](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.43.1...pollux-v0.43.2) (2023-03-23)
+
+
+### Bug Fixes
+
+* **pollux:** upgrade castor version ([#472](https://github.com/input-output-hk/atala-prism-building-blocks/issues/472)) ([f269b7e](https://github.com/input-output-hk/atala-prism-building-blocks/commit/f269b7e21623d8e60bc7069b001addc29a09f7ac))
+
+# [pollux-v0.43.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.43.0...pollux-v0.43.1) (2023-03-22)
+
+
+### Bug Fixes
+
+* **pollux:** ATL-3900 Force use of Bouncycastle ([#463](https://github.com/input-output-hk/atala-prism-building-blocks/issues/463)) ([5b4aa5d](https://github.com/input-output-hk/atala-prism-building-blocks/commit/5b4aa5d2cd5afeded9efa2d43d924db8e9516670))
+
+# [pollux-v0.43.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.42.1...pollux-v0.43.0) (2023-03-21)
+
+
+### Features
+
+* **pollux:** Update the nimbus-jose-jwt library with a patch 10.0.0-preview ([#457](https://github.com/input-output-hk/atala-prism-building-blocks/issues/457)) ([8c0070f](https://github.com/input-output-hk/atala-prism-building-blocks/commit/8c0070f1789e8f42c234eadeffba08e5f0b6e836))
+
+# [pollux-v0.42.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.42.0...pollux-v0.42.1) (2023-03-21)
+
+
+### Bug Fixes
+
+* update mercury to 0.21.0 ([8d42fb1](https://github.com/input-output-hk/atala-prism-building-blocks/commit/8d42fb18206c9e599a4ab77f3c4a5162da03ba35))
+
 # [pollux-v0.42.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.41.0...pollux-v0.42.0) (2023-03-16)
 
 

@@ -15,6 +15,9 @@ import spray.json.{
 
 import java.util.UUID
 import java.time.OffsetDateTime
+import io.iohk.atala.agent.server.http.model.OASModelPatches
+
+object JsonSupport extends JsonSupport
 
 trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 
@@ -24,11 +27,10 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
     CreateManagedDidRequestDocumentTemplate.apply
   )
   given RootJsonFormat[CreateManagedDIDResponse] = jsonFormat1(CreateManagedDIDResponse.apply)
-  given RootJsonFormat[DID] = jsonFormat9(DID.apply)
   given RootJsonFormat[DIDDocumentMetadata] = jsonFormat2(DIDDocumentMetadata.apply)
   given RootJsonFormat[DIDOperationResponse] = jsonFormat1(DIDOperationResponse.apply)
   given RootJsonFormat[DidOperationSubmission] = jsonFormat2(DidOperationSubmission.apply)
-  given RootJsonFormat[DIDResponse] = jsonFormat2(DIDResponse.apply)
+  given RootJsonFormat[DIDResolutionMetadata] = jsonFormat3(DIDResolutionMetadata.apply)
   given RootJsonFormat[ErrorResponse] = jsonFormat5(ErrorResponse.apply)
   given RootJsonFormat[ManagedDID] = jsonFormat3(ManagedDID.apply)
   given RootJsonFormat[ManagedDIDPage] = jsonFormat6(ManagedDIDPage.apply)
@@ -47,7 +49,6 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
     UpdateManagedDIDRequestActionsInnerUpdateService.apply
   )
   given RootJsonFormat[VerificationMethod] = jsonFormat4(VerificationMethod.apply)
-  given RootJsonFormat[VerificationMethodOrRef] = jsonFormat3(VerificationMethodOrRef.apply)
 
   // Issue Credential Protocol
   implicit object UUIDFormat extends JsonFormat[UUID] {
@@ -89,5 +90,9 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   given RootJsonFormat[ConnectionsPage] = jsonFormat6(ConnectionsPage.apply)
   given RootJsonFormat[Connection] = jsonFormat11(Connection.apply)
   given RootJsonFormat[ConnectionInvitation] = jsonFormat4(ConnectionInvitation.apply)
+
+  // Manual model patches
+  given RootJsonFormat[OASModelPatches.DIDDocument] = jsonFormat10(OASModelPatches.DIDDocument.apply)
+  given RootJsonFormat[OASModelPatches.DIDResolutionResult] = jsonFormat4(OASModelPatches.DIDResolutionResult.apply)
 
 }

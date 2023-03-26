@@ -36,7 +36,7 @@ class PublishDidSteps {
             actor.attemptsTo(
                 Get.resource("/dids/${it.did}"),
             )
-            lastResponseObject("metadata.deactivated", String::class) == "false"
+            lastResponseObject("didDocumentMetadata.deactivated", String::class) == "false"
         }
         if (did == null) {
             createsUnpublishedDid(actor)
@@ -112,14 +112,14 @@ class PublishDidSteps {
         actor.should(
             ResponseConsequence.seeThatResponse {
                 it.statusCode(SC_OK)
-                it.body("did.id", equalTo(actor.recall<String>("shortFormDid")))
+                it.body("didDocument.id", equalTo(actor.recall<String>("shortFormDid")))
             },
         )
     }
 
     @Then("{actor} resolves DID document corresponds to W3C standard")
     fun heSeesDidDocumentCorrespondsToW3cStandard(actor: Actor) {
-        val didDocument = lastResponseObject("", DidDocument::class).did!!
+        val didDocument = lastResponseObject("", DidResolutionResult::class).didDocument!!
         assertThat(didDocument)
             .hasFieldOrProperty("assertionMethod")
             .hasFieldOrProperty("authentication")
@@ -135,15 +135,14 @@ class PublishDidSteps {
         assertThat(didDocument.id == shortFormDid)
 
         assertThat(didDocument.authentication!![0])
-            .hasFieldOrPropertyWithValue("type", "REFERENCED")
-            .hasFieldOrPropertyWithValue("uri", "$shortFormDid#${TestConstants.PRISM_DID_AUTH_KEY.id}")
+            .isEqualTo("$shortFormDid#${TestConstants.PRISM_DID_AUTH_KEY.id}")
 
         assertThat(didDocument.verificationMethod!![0])
             .hasFieldOrPropertyWithValue("controller", shortFormDid)
             .hasFieldOrPropertyWithValue("id", "$shortFormDid#${TestConstants.PRISM_DID_ASSERTION_KEY.id}")
             .hasFieldOrProperty("publicKeyJwk")
 
-        assertThat(lastResponseObject("", DidDocument::class).metadata!!)
+        assertThat(lastResponseObject("", DidResolutionResult::class).didDocumentMetadata!!)
             .hasFieldOrPropertyWithValue("deactivated", false)
             .hasFieldOrProperty("canonicalId")
     }

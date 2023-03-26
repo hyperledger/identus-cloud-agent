@@ -6,7 +6,10 @@ inThisBuild(
     scalaVersion := "3.2.2",
     fork := true,
     run / connectInput := true,
-    versionScheme := Some("semver-spec")
+    versionScheme := Some("semver-spec"),
+    releaseUseGlobalVersion := false,
+    githubOwner := "input-output-hk",
+    githubRepository := "atala-prism-building-blocks"
   )
 )
 
@@ -24,9 +27,6 @@ sys.env
   .map { _ =>
     println("### Configure release process ###")
     import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
-    ThisBuild / releaseUseGlobalVersion := false
-    ThisBuild / githubOwner := "input-output-hk"
-    ThisBuild / githubRepository := "atala-prism-building-blocks"
     releaseProcess := Seq[ReleaseStep](
       checkSnapshotDependencies,
       inquireVersions,

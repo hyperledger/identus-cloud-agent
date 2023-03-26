@@ -1,16 +1,5 @@
 components:
   schemas:
-    DIDResponse:
-      type: object
-      required:
-        - did
-        - metadata
-      properties:
-        did:
-          $ref: "#/components/schemas/DID"
-        metadata:
-          $ref: "#/components/schemas/DIDDocumentMetadata"
-
     DIDOperationResponse:
       type: object
       required:
@@ -19,13 +8,35 @@ components:
         scheduledOperation:
           $ref: "#/components/schemas/DidOperationSubmission"
 
-    DID:
+    DIDResolutionResult:
       type: object
-      description: |
-        A Prism DID document data model capable of being transformed into W3C compliant representation.
       required:
+        - "@context"
+        - didDocumentMetadata
+        - didResolutionMetadata
+      properties:
+        "@context":
+          type: string
+          example: "https://w3id.org/did-resolution/v1"
+        didDocument:
+          $ref: "#/components/schemas/DIDDocument"
+        didDocumentMetadata:
+          $ref: "#/components/schemas/DIDDocumentMetadata"
+        didResolutionMetadata:
+          $ref: "#/components/schemas/DIDResolutionMetadata"
+
+    DIDDocument:
+      type: object
+      description: A W3C compliant Prism DID document representation.
+      required:
+        - "@context"
         - id
       properties:
+        "@context":
+          type: array
+          items:
+            type: string
+            example: "https://www.w3.org/ns/did/v1"
         id:
           type: string
           description: |
@@ -44,23 +55,23 @@ components:
         authentication:
           type: array
           items:
-            $ref: "#/components/schemas/VerificationMethodOrRef"
+            $ref: "#/components/schemas/VerificationMethodRef"
         assertionMethod:
           type: array
           items:
-            $ref: "#/components/schemas/VerificationMethodOrRef"
+            $ref: "#/components/schemas/VerificationMethodRef"
         keyAgreement:
           type: array
           items:
-            $ref: "#/components/schemas/VerificationMethodOrRef"
+            $ref: "#/components/schemas/VerificationMethodRef"
         capabilityInvocation:
           type: array
           items:
-            $ref: "#/components/schemas/VerificationMethodOrRef"
+            $ref: "#/components/schemas/VerificationMethodRef"
         capabilityDelegation:
           type: array
           items:
-            $ref: "#/components/schemas/VerificationMethodOrRef"
+            $ref: "#/components/schemas/VerificationMethodRef"
         service:
           type: array
           items:
@@ -70,8 +81,6 @@ components:
       type: object
       description: |
         [DID document metadata](https://www.w3.org/TR/did-core/#did-document-metadata)
-      required:
-        - deactivated
       properties:
         deactivated:
           type: boolean
@@ -84,6 +93,24 @@ components:
             If a DID is in long form and has been published, DID document metadata MUST contain a `canonicalId`` property with the short form DID as its value.
 
             If a DID in short form or has not been published, DID document metadata MUST NOT contain a `canonicalId` property.
+
+    DIDResolutionMetadata:
+      type: object
+      description: |
+        [DID resolution metadata](https://www.w3.org/TR/did-core/#did-resolution-metadata)
+      properties:
+        error:
+          type: string
+          description: Resolution error constant according to [DID spec registries](https://www.w3.org/TR/did-spec-registries/#error)
+          example: invalidDid
+        errorMessage:
+          type: string
+          description: Resolution error message
+          example: The initialState does not match the suffix
+        contentType:
+          type: string
+          description: The media type of the returned DID document
+          example: application/did+ld+json
 
     VerificationMethod:
       type: object
@@ -108,28 +135,10 @@ components:
         publicKeyJwk:
           $ref: "#/components/schemas/PublicKeyJwk"
 
-    VerificationMethodOrRef:
-      type: object
-      description: |
-        An embedded verificationMethod as JSON or a referenced key as a URI.
-        Referenced key and embedded key are mutually exclusive.
-        If the type is EMBEDDED, `uri` field must be present.
-        Otherwise `verificationMethod` field must be present.
-
-      required:
-        - type
-      properties:
-        type:
-          type: string
-          example: EMBEDDED
-          enum:
-            - EMBEDDED
-            - REFERENCED
-        uri:
-          type: string
-          example: did:prism:c7bd808e8e135236d7262ecf5e639b8f9d22bd886f59a4e6c909486846ca8319#key-1
-        verificationMethod:
-          $ref: "#/components/schemas/VerificationMethod"
+    VerificationMethodRef:
+      type: string
+      description: A reference to a `verificationMethod`
+      example: did:prism:c7bd808e8e135236d7262ecf5e639b8f9d22bd886f59a4e6c909486846ca8319#key-1
 
     CreateManagedDidRequest:
       type: object

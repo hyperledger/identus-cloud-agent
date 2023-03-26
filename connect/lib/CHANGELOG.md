@@ -1,3 +1,17 @@
+# [connect-v0.13.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/connect-v0.12.1...connect-v0.13.0) (2023-03-22)
+
+
+### Features
+
+* **connect:** Updated the mercury version for jwt ([#466](https://github.com/input-output-hk/atala-prism-building-blocks/issues/466)) ([8444057](https://github.com/input-output-hk/atala-prism-building-blocks/commit/84440573bebbdf46f901e1a8bae7ba3d84239c2d))
+
+# [connect-v0.12.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/connect-v0.12.0...connect-v0.12.1) (2023-03-21)
+
+
+### Bug Fixes
+
+* update mercury to 0.21.0 ([8d42fb1](https://github.com/input-output-hk/atala-prism-building-blocks/commit/8d42fb18206c9e599a4ab77f3c4a5162da03ba35))
+
 # [connect-v0.12.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/connect-v0.11.0...connect-v0.12.0) (2023-03-13)
 
 

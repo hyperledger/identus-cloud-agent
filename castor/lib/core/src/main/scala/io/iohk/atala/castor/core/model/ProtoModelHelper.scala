@@ -57,7 +57,10 @@ private[castor] trait ProtoModelHelper {
         value = node_models.CreateDIDOperation(
           didData = Some(
             node_models.CreateDIDOperation.DIDCreationData(
-              publicKeys = operation.publicKeys.map(_.toProto) ++ operation.internalKeys.map(_.toProto),
+              publicKeys = operation.publicKeys.map {
+                case pk: PublicKey         => pk.toProto
+                case pk: InternalPublicKey => pk.toProto
+              },
               services = operation.services.map(_.toProto)
             )
           )
@@ -159,6 +162,13 @@ private[castor] trait ProtoModelHelper {
               y = y.toByteArray.toProto
             )
           )
+        case PublicKeyData.ECCompressedKeyData(crv, data) =>
+          node_models.PublicKey.KeyData.CompressedEcKeyData(
+            value = node_models.CompressedECKeyData(
+              curve = crv.name,
+              data = data.toByteArray.toProto
+            )
+          )
       }
     }
   }
@@ -228,8 +238,7 @@ private[castor] trait ProtoModelHelper {
         allKeys <- operation.didData.map(_.publicKeys.traverse(_.toDomain)).getOrElse(Right(Nil))
         services <- operation.didData.map(_.services.traverse(_.toDomain)).getOrElse(Right(Nil))
       } yield PrismDIDOperation.Create(
-        publicKeys = allKeys.collect { case key: PublicKey => key },
-        internalKeys = allKeys.collect { case key: InternalPublicKey => key },
+        publicKeys = allKeys,
         services = services
       )
     }
@@ -278,7 +287,6 @@ private[castor] trait ProtoModelHelper {
             publicKeyData = keyData
           )
         case purpose: InternalKeyPurpose =>
-          publicKey.keyData.ecKeyData
           InternalPublicKey(
             id = publicKey.id,
             purpose = purpose,
@@ -303,15 +311,13 @@ private[castor] trait ProtoModelHelper {
             y = Base64UrlString.fromByteArray(ecKeyData.y.toByteArray)
           )
         case KeyData.CompressedEcKeyData(ecKeyData) =>
-          val ecPublicKey = EC.INSTANCE.toPublicKeyFromCompressed(ecKeyData.data.toByteArray)
           for {
             curve <- EllipticCurve
               .parseString(ecKeyData.curve)
               .toRight(s"unsupported elliptic curve ${ecKeyData.curve}")
-          } yield PublicKeyData.ECKeyData(
+          } yield PublicKeyData.ECCompressedKeyData(
             crv = curve,
-            x = Base64UrlString.fromByteArray(ecPublicKey.getCurvePoint.getX.bytes()),
-            y = Base64UrlString.fromByteArray(ecPublicKey.getCurvePoint.getY.bytes())
+            data = Base64UrlString.fromByteArray(ecKeyData.data.toByteArray)
           )
       }
     }

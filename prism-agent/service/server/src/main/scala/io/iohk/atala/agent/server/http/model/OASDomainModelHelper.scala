@@ -224,23 +224,44 @@ trait OASDomainModelHelper {
   }
 
   extension (resolution: (castorDomain.w3c.DIDDocumentMetadataRepr, castorDomain.w3c.DIDDocumentRepr)) {
-    def toOAS: DIDResponse = {
+    def toOAS: OASModelPatches.DIDResolutionResult = {
       val (metadata, didDoc) = resolution
-      DIDResponse(
-        did = DID(
-          id = didDoc.id,
-          controller = Some(didDoc.controller),
-          verificationMethod = Some(didDoc.verificationMethod.map(_.toOAS)),
-          authentication = Some(didDoc.authentication.map(_.toOAS)),
-          assertionMethod = Some(didDoc.assertionMethod.map(_.toOAS)),
-          keyAgreement = Some(didDoc.keyAgreement.map(_.toOAS)),
-          capabilityInvocation = Some(didDoc.capabilityInvocation.map(_.toOAS)),
-          service = Some(didDoc.service.map(_.toOAS))
-        ),
-        metadata = DIDDocumentMetadata(
-          deactivated = metadata.deactivated,
+      val isDeactivated = metadata.deactivated
+      OASModelPatches.DIDResolutionResult(
+        `@context` = "https://w3id.org/did-resolution/v1",
+        didDocument =
+          if (isDeactivated) None
+          else
+            Some(
+              OASModelPatches.DIDDocument(
+                `@context` = Seq("https://www.w3.org/ns/did/v1"),
+                id = didDoc.id,
+                controller = Some(didDoc.controller),
+                verificationMethod = Some(didDoc.verificationMethod.map(_.toOAS)),
+                authentication = Some(didDoc.authentication.map(_.toOAS)),
+                assertionMethod = Some(didDoc.assertionMethod.map(_.toOAS)),
+                keyAgreement = Some(didDoc.keyAgreement.map(_.toOAS)),
+                capabilityInvocation = Some(didDoc.capabilityInvocation.map(_.toOAS)),
+                service = Some(didDoc.service.map(_.toOAS))
+              )
+            ),
+        didDocumentMetadata = DIDDocumentMetadata(
+          deactivated = Some(metadata.deactivated),
           canonicalId = Some(metadata.canonicalId)
-        )
+        ),
+        didResolutionMetadata = DIDResolutionMetadata()
+      )
+    }
+  }
+
+  extension (resolutionError: castorDomain.w3c.DIDResolutionErrorRepr) {
+    def toOAS: OASModelPatches.DIDResolutionResult = {
+      OASModelPatches.DIDResolutionResult(
+        `@context` = "https://w3id.org/did-resolution/v1",
+        didDocument = None,
+        didDocumentMetadata = DIDDocumentMetadata(),
+        didResolutionMetadata =
+          DIDResolutionMetadata(error = Some(resolutionError.value), errorMessage = resolutionError.errorMessage)
       )
     }
   }
@@ -257,10 +278,10 @@ trait OASDomainModelHelper {
   }
 
   extension (publicKeyReprOrRef: castorDomain.w3c.PublicKeyReprOrRef) {
-    def toOAS: VerificationMethodOrRef = {
+    def toOAS: String = {
       publicKeyReprOrRef match {
-        case s: String         => VerificationMethodOrRef(`type` = "REFERENCED", uri = Some(s))
-        case pk: PublicKeyRepr => VerificationMethodOrRef(`type` = "EMBEDDED", verificationMethod = Some(pk.toOAS))
+        case s: String         => s
+        case pk: PublicKeyRepr => throw Exception("Embedded public key is not yet supported in W3C representation")
       }
     }
   }
