@@ -4,7 +4,7 @@ object Dependencies {
 
   object Versions {
     val zio = "2.0.10"
-    val zioJson = "0.4.2"
+    val zioJson = "0.5.0"
     val doobie = "1.0.0-RC2"
     val zioCatsInterop = "23.0.0.2"
     val prismSdk = "v1.4.1" // scala-steward:off
