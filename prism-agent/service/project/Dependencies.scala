@@ -13,7 +13,7 @@ object Dependencies {
     val pollux = "0.43.2"
     val connect = "0.13.0"
     val bouncyCastle = "1.70"
-    val logback = "1.4.5"
+    val logback = "1.4.6"
     val mercury = "0.22.0"
     val zioJson = "0.3.0"
     val tapir = "1.2.3"

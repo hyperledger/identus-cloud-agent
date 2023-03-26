@@ -15,7 +15,7 @@ object Dependencies {
     val flyway = "9.8.3"
     val testContainersScalaPostgresql = "0.40.11"
     val quill = "4.6.0"
-    val logback = "1.4.5"
+    val logback = "1.4.6"
     val munit = "1.0.0-M6" // "0.7.29"
     val munitZio = "0.1.1"
   }

@@ -11,7 +11,7 @@ object Dependencies {
     val flyway = "9.8.3"
     val shared = "0.2.0"
     val testContainersScalaPostgresql = "0.40.11"
-    val logback = "1.4.5"
+    val logback = "1.4.6"
   }
 
   private lazy val zio = "dev.zio" %% "zio" % Versions.zio
