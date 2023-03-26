@@ -2,15 +2,15 @@ import sbt._
 
 object Dependencies {
   object Versions {
-    val zio = "2.0.10"
+    val zio = "2.0.4"
     val doobie = "1.0.0-RC2"
-    val zioCatsInterop = "23.0.0.2"
+    val zioCatsInterop = "3.3.0"
     val iris = "0.1.0"
     val mercury = "0.20.0"
-    val flyway = "9.16.0"
+    val flyway = "9.8.3"
     val shared = "0.2.0"
-    val testContainersScalaPostgresql = "0.40.12"
-    val logback = "1.4.6"
+    val testContainersScalaPostgresql = "0.40.11"
+    val logback = "1.4.5"
   }
 
   private lazy val zio = "dev.zio" %% "zio" % Versions.zio
