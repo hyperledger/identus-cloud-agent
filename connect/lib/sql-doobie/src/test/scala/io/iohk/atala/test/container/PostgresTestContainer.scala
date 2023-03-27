@@ -31,7 +31,7 @@ object PostgresTestContainer {
           dockerImageNameOverride = imageName.map(DockerImageName.parse)
         )
 
-        container.container.setNetwork(Network.SHARED)
+        sys.env.get("GITHUB_NETWORK").map { value => container.container.networkMode = value }
 
         if (verbose) {
           container.container
