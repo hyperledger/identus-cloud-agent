@@ -28,8 +28,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
         TESTCONTAINERS_RYUK_DISABLED: true
-        TESTCONTAINERS_HOST_OVERRIDE: host.docker.internal
-      options: --privileged --add-host host.docker.internal:host-gateway
+        TESTCONTAINERS_HOST_OVERRIDE: postgres
+      options: --privileged
     defaults:
       run:
         working-directory: ${{ inputs.component-dir }}
