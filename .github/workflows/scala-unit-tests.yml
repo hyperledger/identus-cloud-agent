@@ -39,7 +39,6 @@ jobs:
       - name: Debug Env
         run: |
           env
-          docker network ls
           
       - name: Checkout
         uses: actions/checkout@v3
