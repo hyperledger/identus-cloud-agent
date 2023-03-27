@@ -35,8 +35,6 @@ object PostgresTestContainer {
           container.container.withNetworkMode(network)
         }
 
-        println(s"JDBC url: ${container.jdbcUrl}")
-
         if (verbose) {
           container.container
             .withLogConsumer(new Consumer[OutputFrame] {
