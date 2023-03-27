@@ -33,6 +33,7 @@ object PostgresTestContainer {
 
         sys.env.get("GITHUB_NETWORK").foreach { network =>
           container.container.withNetworkMode(network)
+          container.container.withExposedPorts(5432)
         }
 
         println(s"JDBC url: ${container.jdbcUrl}")
@@ -47,7 +48,6 @@ object PostgresTestContainer {
         }
 
         container.start()
-        container.container.addExposedPort(5432)
         container
       }.orDie)(container => attemptBlockingIO(container.stop()).orDie)
     }
