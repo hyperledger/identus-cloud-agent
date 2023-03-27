@@ -30,7 +30,7 @@ object JdbcConnectionRepositorySpec extends ZIOSpecDefault {
   private val dbConfig = ZLayer.fromZIO(
     for {
       postgres <- ZIO.service[PostgreSQLContainer]
-    } yield DbConfig(postgres.username, postgres.password, postgres.jdbcUrl, 8, postgres.container.getFirstMappedPort.toString())
+    } yield DbConfig(postgres.username, postgres.password, postgres.jdbcUrl, 8, postgres.containerName)
   )
   private val transactorLayer = ZLayer.fromZIO {
     ZIO.service[DbConfig].flatMap { config =>
