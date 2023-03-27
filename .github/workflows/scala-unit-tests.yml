@@ -22,9 +22,9 @@ jobs:
       image: ghcr.io/input-output-hk/atala-qa-automation
       volumes:
         - /nix:/nix
-      ports:
-        - 80:80
-        - 49336:5432
+#      ports:
+#        - 80:80
+#        - 49336:5432
       credentials:
         username: ${{ secrets.ATALA_GITHUB_ACTOR }}
         password: ${{ secrets.ATALA_GITHUB_TOKEN }}
