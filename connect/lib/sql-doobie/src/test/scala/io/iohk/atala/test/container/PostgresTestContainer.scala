@@ -27,11 +27,14 @@ object PostgresTestContainer {
   ): ZLayer[Any, Nothing, PostgreSQLContainer] =
     ZLayer.scoped {
       acquireRelease(ZIO.attemptBlockingIO {
-        val container = new PostgreSQLContainer(
+        val container_ = new PostgreSQLContainer(
           dockerImageNameOverride = imageName.map(DockerImageName.parse)
         )
 
-        sys.env.get("GITHUB_NETWORK").map { value => container.networkMode = value }
+        val container = sys.env.get("GITHUB_NETWORK") match {
+          case Some(network) => container_.withNetworkMode(network)
+          case None => container_
+        }
 
         if (verbose) {
           container.container
