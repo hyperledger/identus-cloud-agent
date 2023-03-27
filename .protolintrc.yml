@@ -1,0 +1,8 @@
+lint:
+  rules:
+    # include all default rules
+    no_default: false
+
+    # disable some specific rules
+    remove:
+      - REPEATED_FIELD_NAMES_PLURALIZED
