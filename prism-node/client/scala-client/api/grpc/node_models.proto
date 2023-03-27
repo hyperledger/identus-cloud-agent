@@ -21,33 +21,33 @@ message TimestampInfo {
 // Every key has a single purpose:
 enum KeyUsage {
   // UNKNOWN_KEY is an invalid value - Protobuf uses 0 if no value is provided and we want the user to explicitly choose the usage.
-  KEY_USAGE_UNKNOWN_KEY_UNSPECIFIED = 0;
+  UNKNOWN_KEY_UNSPECIFIED = 0;
 
   // This is the most privileged key-type, when any other key is lost, you could use this to recover the others.
-  KEY_USAGE_MASTER_KEY = 1;
+  MASTER_KEY = 1;
 
   // This key-type is used for issuing credentials only, it should be kept in a safe place
   // to avoid malicious credentials being issued.
-  KEY_USAGE_ISSUING_KEY = 2;
+  ISSUING_KEY = 2;
 
   // This key-type is used to establish a shared symmetric key for secure end-to end communication
   // use this key-type to encrypt the content.
-  KEY_USAGE_KEY_AGREEMENT_KEY = 3;
+  KEY_AGREEMENT_KEY = 3;
 
   // This key-type is used to authenticate requests or logging into services.
-  KEY_USAGE_AUTHENTICATION_KEY = 4;
+  AUTHENTICATION_KEY = 4;
 
   // This key-type is used for revoking credentials only, it should be kept in a safe place
   // to avoid malicious credentials being issued.
-  KEY_USAGE_REVOCATION_KEY = 5;
+  REVOCATION_KEY = 5;
 
   // This key-type is used to specify a verification method that might be used by the DID subject to invoke a cryptographic capability,
   // such as the authorization to update the DID Document.
-  KEY_USAGE_CAPABILITY_INVOCATION_KEY = 6;
+  CAPABILITY_INVOCATION_KEY = 6;
 
   // This is used to specify a mechanism that might be used by the DID subject to delegate a cryptographic capability to another party,
   // such as delegating the authority to access a specific HTTP API to a subordinate.
-  KEY_USAGE_CAPABILITY_DELEGATION_KEY = 7;
+  CAPABILITY_DELEGATION_KEY = 7;
 }
 
 /**
@@ -92,8 +92,6 @@ message DIDData {
   string id = 1; // The DID suffix, where DID is in form did:prism:[DID suffix]
   repeated PublicKey public_keys = 2; // The keys that belong to this DID Document.
   repeated Service services = 3; // The list of services that belong to this DID Document.
-
-  // TODO: sync this field when Node implements it
   repeated string context = 4; // The list of @context values to consider on JSON-LD representations
 }
 
@@ -172,7 +170,7 @@ message IssueCredentialBatchOperation {
 message RevokeCredentialsOperation {
   bytes previous_operation_hash = 1; // The hash of the operation that issued the batch.
   string credential_batch_id = 2; // The corresponding batch ID, as returned in IssueCredentialBatchResponse.
-  repeated bytes credentials_to_revokes = 3; // The hashes of the credentials to revoke. If empty, the full batch is revoked.
+  repeated bytes credentials_to_revoke = 3; // The hashes of the credentials to revoke. If empty, the full batch is revoked.
 }
 
 // Specifies the protocol version update
@@ -285,7 +283,7 @@ message Service {
   string id = 1;
   string type = 2;
 
-  repeated string service_endpoints = 3;
+  repeated string service_endpoint = 3;
   LedgerData added_on = 4; // (when present) The ledger details related to the event that added the service.
   LedgerData deleted_on = 5; // (when present) The ledger details related to the event that revoked the service.
 }
