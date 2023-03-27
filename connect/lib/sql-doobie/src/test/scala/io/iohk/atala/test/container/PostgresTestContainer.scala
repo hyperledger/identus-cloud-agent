@@ -32,7 +32,7 @@ object PostgresTestContainer {
         )
 
         val container = sys.env.get("GITHUB_NETWORK") match {
-          case Some(network) => container_.withNetworkMode(network)
+          case Some(network) => container_.container.withNetworkMode(network)
           case None => container_
         }
 
