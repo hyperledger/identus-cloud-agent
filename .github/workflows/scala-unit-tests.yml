@@ -29,6 +29,7 @@ jobs:
         password: ${{ secrets.ATALA_GITHUB_TOKEN }}
       env:
         GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
+        TESTCONTAINERS_RYUK_DISABLED: true
       options: --privileged
     defaults:
       run:
@@ -54,6 +55,9 @@ jobs:
 #      - name: Run Scala formatter
 #        run: |
 #          sbt scalafmtCheckAll
+
+      - name: 10min time
+        run: sleep 600
 
       - name: Run Unit Tests
         run: |
