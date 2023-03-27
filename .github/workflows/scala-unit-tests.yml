@@ -30,8 +30,6 @@ jobs:
         password: ${{ secrets.ATALA_GITHUB_TOKEN }}
       env:
         GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
-        TESTCONTAINERS_RYUK_DISABLED: true
-        GITHUB_NETWORK: "prism-unit-tests"
       options: --privileged
     defaults:
       run:
