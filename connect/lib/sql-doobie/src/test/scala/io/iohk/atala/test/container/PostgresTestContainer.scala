@@ -36,6 +36,8 @@ object PostgresTestContainer {
           container.container.addExposedPort(5432)
         }
 
+        println(s"JDBC url: ${container.jdbcUrl}")
+
         if (verbose) {
           container.container
             .withLogConsumer(new Consumer[OutputFrame] {
