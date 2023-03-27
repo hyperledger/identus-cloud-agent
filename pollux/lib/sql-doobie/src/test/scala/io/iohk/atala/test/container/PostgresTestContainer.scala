@@ -30,6 +30,8 @@ object PostgresTestContainer {
           dockerImageNameOverride = imageName.map(DockerImageName.parse)
         )
 
+        sys.env.get("GITHUB_NETWORK").map { network => container.container.withNetworkMode(network) }
+
         if (verbose) {
           container.container
             .withLogConsumer(new Consumer[OutputFrame] {
@@ -40,6 +42,7 @@ object PostgresTestContainer {
         }
 
         container.start()
+        println(container.getContainerId)
         println(container.jdbcUrl)
         container
       }.orDie)(container => attemptBlockingIO(container.stop()).orDie)
