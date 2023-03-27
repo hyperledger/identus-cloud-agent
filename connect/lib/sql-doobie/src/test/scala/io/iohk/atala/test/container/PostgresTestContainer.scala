@@ -33,7 +33,6 @@ object PostgresTestContainer {
 
         sys.env.get("GITHUB_NETWORK").foreach { network =>
           container.container.withNetworkMode(network)
-          container.container.withExposedPorts(5432)
         }
 
         println(s"JDBC url: ${container.jdbcUrl}")
@@ -43,7 +42,6 @@ object PostgresTestContainer {
             .withLogConsumer(new Consumer[OutputFrame] {
               override def accept(t: OutputFrame): Unit = println(t.getUtf8String)
             })
-          container.container
             .withCommand("postgres", "-c", "log_statement=all", "-c", "log_destination=stderr")
         }
 
