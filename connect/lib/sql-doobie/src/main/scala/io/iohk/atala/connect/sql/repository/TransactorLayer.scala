@@ -14,7 +14,7 @@ case class DbConfig(
     password: String,
     jdbcUrl: String,
     awaitConnectionThreads: Int = 8,
-    boundPorts: List[Int] = List.empty
+    boundPorts: String
 )
 
 object TransactorLayer {
@@ -50,9 +50,7 @@ object TransactorLayer {
 
     hikariConfig.setJdbcUrl(config.jdbcUrl)
     println(config.jdbcUrl)
-    config.boundPorts.foreach { port =>
-      println(s"Postgres port: $port")
-    }
+    println(config.boundPorts)
     hikariConfig.setUsername(config.username)
     hikariConfig.setPassword(config.password)
     hikariConfig.setAutoCommit(false)
