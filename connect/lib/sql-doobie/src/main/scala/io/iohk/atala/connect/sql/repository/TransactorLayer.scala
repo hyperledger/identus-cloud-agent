@@ -48,6 +48,7 @@ object TransactorLayer {
     val hikariConfig = HikariConfig()
 
     hikariConfig.setJdbcUrl(config.jdbcUrl)
+    println(config.jdbcUrl)
     hikariConfig.setUsername(config.username)
     hikariConfig.setPassword(config.password)
     hikariConfig.setAutoCommit(false)
