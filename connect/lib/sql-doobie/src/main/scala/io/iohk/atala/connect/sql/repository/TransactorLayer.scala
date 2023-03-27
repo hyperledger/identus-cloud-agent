@@ -14,7 +14,8 @@ case class DbConfig(
     password: String,
     jdbcUrl: String,
     awaitConnectionThreads: Int = 8,
-    boundPorts: String
+    containerName: String,
+    mappedPort: String
 )
 
 object TransactorLayer {
@@ -48,9 +49,11 @@ object TransactorLayer {
   private def makeHikariConfig(config: DbConfig): HikariConfig = {
     val hikariConfig = HikariConfig()
 
-    hikariConfig.setJdbcUrl(config.jdbcUrl)
+    // jdbc:postgresql://host.docker.internal:49970/test?loggerLevel=OFF
+    
+    hikariConfig.setJdbcUrl(s"jdbc:postgresql:/${config.containerName}:${config.mappedPort}?loggerLevel=OFF")
     println(config.jdbcUrl)
-    println(config.boundPorts)
+    println(s"jdbc:postgresql:/${config.containerName}:${config.mappedPort}?loggerLevel=OFF")
     hikariConfig.setUsername(config.username)
     hikariConfig.setPassword(config.password)
     hikariConfig.setAutoCommit(false)
