@@ -53,7 +53,7 @@ object TransactorLayer {
     
     hikariConfig.setJdbcUrl(s"jdbc:postgresql:/${config.containerName}:${config.mappedPort}?loggerLevel=OFF")
     println(config.jdbcUrl)
-    println(s"jdbc:postgresql:/${config.containerName}:${config.mappedPort}?loggerLevel=OFF")
+    println(s"jdbc:postgresql:/${config.containerName}:${config.mappedPort}/test?loggerLevel=OFF")
     hikariConfig.setUsername(config.username)
     hikariConfig.setPassword(config.password)
     hikariConfig.setAutoCommit(false)
