@@ -22,13 +22,15 @@ jobs:
       image: ghcr.io/input-output-hk/atala-qa-automation
       volumes:
         - /nix:/nix
-      ports:
-        - 5432:5432
+#      ports:
+#        - 80:80
+#        - 49336:5432
       credentials:
         username: ${{ secrets.ATALA_GITHUB_ACTOR }}
         password: ${{ secrets.ATALA_GITHUB_TOKEN }}
       env:
         GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
+        TESTCONTAINERS_RYUK_DISABLED: true
       options: --privileged
     defaults:
       run:
