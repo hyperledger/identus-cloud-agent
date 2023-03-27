@@ -31,14 +31,15 @@ object PostgresTestContainer {
           dockerImageNameOverride = imageName.map(DockerImageName.parse)
         )
 
-        sys.env.get("GITHUB_NETWORK").map { network => container.container.withNetworkMode(network) }
+        sys.env.get("GITHUB_NETWORK").foreach { network =>
+          container.container.withNetworkMode(network)
+        }
 
         if (verbose) {
           container.container
             .withLogConsumer(new Consumer[OutputFrame] {
               override def accept(t: OutputFrame): Unit = println(t.getUtf8String)
             })
-          container.container
             .withCommand("postgres", "-c", "log_statement=all", "-c", "log_destination=stderr")
         }
 
