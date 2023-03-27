@@ -51,5 +51,8 @@ lazy val root = project
     libraryDependencies ++= rootDependencies,
     // gRPC settings
     Compile / PB.targets := Seq(scalapb.gen() -> (Compile / sourceManaged).value / "scalapb"),
-    Compile / PB.protoSources := Seq(apiBaseDirectory.value / "grpc")
+    Compile / PB.protoSources := Seq(
+      apiBaseDirectory.value / "grpc",
+      (Compile / resourceDirectory).value // includes package wide scalapb codegen config
+    )
   )
