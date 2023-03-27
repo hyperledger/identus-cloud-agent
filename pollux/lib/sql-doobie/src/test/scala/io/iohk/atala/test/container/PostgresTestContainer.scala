@@ -40,6 +40,7 @@ object PostgresTestContainer {
         }
 
         container.start()
+        println(container.jdbcUrl)
         container
       }.orDie)(container => attemptBlockingIO(container.stop()).orDie)
     }

@@ -34,7 +34,7 @@ import scala.io.Source
 
 object VerifiableCredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault {
 
-  private val pgLayer = postgresLayer(verbose = false)
+  private val pgLayer = postgresLayer(verbose = true)
   private val transactorLayer =
     pgLayer >>> hikariConfigLayer >>> transactor
   private val testEnvironmentLayer =

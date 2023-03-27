@@ -34,7 +34,7 @@ import io.iohk.atala.pollux.sql.model.db.{CredentialSchemaSql, CredentialSchema}
 
 object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault {
 
-  private val pgLayer = postgresLayer(verbose = false)
+  private val pgLayer = postgresLayer(verbose = true)
   private val transactorLayer =
     pgLayer >>> hikariConfigLayer >>> transactor
   private val testEnvironmentLayer =
