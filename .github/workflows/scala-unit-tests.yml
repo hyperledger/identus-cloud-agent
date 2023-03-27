@@ -37,7 +37,10 @@ jobs:
         working-directory: ${{ inputs.component-dir }}
     steps:
       - name: Debug Env
-        run: env
+        run: |
+          env
+          docker network ls
+          
       - name: Checkout
         uses: actions/checkout@v3
 
