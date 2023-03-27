@@ -31,6 +31,8 @@ object PostgresTestContainer {
           dockerImageNameOverride = imageName.map(DockerImageName.parse)
         )
 
+        container.container.withExposedPorts(5432)
+
         sys.env.get("GITHUB_NETWORK").foreach { network =>
           container.container.withNetworkMode(network)
         }
