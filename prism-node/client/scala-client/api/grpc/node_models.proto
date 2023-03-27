@@ -21,7 +21,7 @@ message TimestampInfo {
 // Every key has a single purpose:
 enum KeyUsage {
   // UNKNOWN_KEY is an invalid value - Protobuf uses 0 if no value is provided and we want the user to explicitly choose the usage.
-  UNKNOWN_KEY_UNSPECIFIED = 0;
+  UNKNOWN_KEY = 0;
 
   // This is the most privileged key-type, when any other key is lost, you could use this to recover the others.
   MASTER_KEY = 1;
