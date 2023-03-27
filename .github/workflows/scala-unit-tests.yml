@@ -37,7 +37,7 @@ jobs:
         working-directory: ${{ inputs.component-dir }}
     steps:
       - name: Ensure working directory
-        working-directory: /
+        working-directory: ${GITHUB_WORKSPACE}
         run: mkdir -p ${{ inputs.component-dir }}
           
       - name: Debug Env
