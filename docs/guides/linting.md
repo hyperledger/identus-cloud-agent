@@ -81,7 +81,6 @@ Insert suggestion / description of what it did well, what it didn't do well and 
 
 ## Changelog
 
----
 #### YAMLLINT checker configuration file is added explicitly and rule line-length is set to 600
 Date Added: 2023-02-15
 
@@ -102,6 +101,7 @@ The configuration file for the yamllint checker was added to the root of the pro
 The rule for the line-length was set to 600
 
 ---
+
 #### BASH_SHELLCHECK_DISABLE_ERRORS
 
 Date Added: 2023-01-20
@@ -122,31 +122,32 @@ Linter - Suggested Change: Customise
   cd ${SCRIPT_DIR}
   ^--------------^ SC2164 (warning): Use 'cd ... || exit' or 'cd ... || return' in case cd fails.
      ^-----------^ SC2086 (info): Double quote to prevent globbing and word splitting.
-  
-  Did you mean: 
+
+  Did you mean:
   cd "${SCRIPT_DIR}" || exit
-  
-  
+
+
   In /github/workspace/infrastructure/dev/get-versions.sh line 8:
   export PRISM_AGENT_VERSION=$(cd ../../prism-agent/service && sbt "project server" -Dsbt.supershell=false -error "print version")
          ^-----------------^ SC2155 (warning): Declare and assign separately to avoid masking return values.
-  
-  
+
+
   In /github/workspace/infrastructure/dev/get-versions.sh line 11:
   export MERCURY_MEDIATOR_VERSION=$(cd ../../mercury/mercury-mediator && sbt "project mediator" -Dsbt.supershell=false -error "print version")
          ^----------------------^ SC2155 (warning): Declare and assign separately to avoid masking return values.
-  
-  
+
+
   In /github/workspace/infrastructure/dev/get-versions.sh line 14:
   export IRIS_SERVICE_VERSION=$(cd ../../iris/service && sbt "project server" -Dsbt.supershell=false -error "print version")
          ^------------------^ SC2155 (warning): Declare and assign separately to avoid masking return values.
-  
+
   For more information:
     https://www.shellcheck.net/wiki/SC2155 -- Declare and assign separately to ...
     https://www.shellcheck.net/wiki/SC2164 -- Use 'cd ... || exit' or 'cd ... |...
     https://www.shellcheck.net/wiki/SC2086 -- Double quote to prevent globbing ...
 ```
 
+---
 
 #### SQL_SQL_LINT_ARGUMENTS
 
@@ -244,6 +245,23 @@ Linter - Suggested Change: Enabled but pass even with error
 *Change detail*
 
 PROTOBUF_PROTOLINT generates lots of errors for files which are quite large and may block small changes to these files. Suggest change to enable but pass even with error to not block velocity. Suggest to re enabled when files can be reviewed as a specific task
+
+---
+
+Date Added: 2023-03-27
+
+Author: Pat Losoponkul
+
+Date Actioned: 2023-03-27
+
+Linter - Current Status: Enabled
+
+Linter - Suggested Change:  Customise
+
+*Change detail*
+
+Add `.protolintrc.yml` used by `protolint` linter and configure it to disable `REPEATED_FIELD_NAMES_PLURALIZED` rule.
+This rule should be disabled since it tries to pluralize the field name that doesn't conform to the spec submitted to W3C.
 
 ---
 
