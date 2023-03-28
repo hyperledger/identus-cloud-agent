@@ -18,6 +18,14 @@ import zio.interop.catz.*
 import java.util.function.Consumer
 import scala.concurrent.ExecutionContext
 
+class PostgreSQLContainerPlus extends PostgreSQLContainer {
+  override def getJdbcUrl() : String {
+    val params = constructUrlParameters("?", "&")
+
+    s"jdbc:postgresql://${containerId.take(12)}:5432}/${databaseName}${params}"
+  }
+}
+
 object PostgresTestContainer {
 
   def postgresLayer(
@@ -26,7 +34,7 @@ object PostgresTestContainer {
   ): ZLayer[Any, Nothing, PostgreSQLContainer] =
     ZLayer.scoped {
       acquireRelease(ZIO.attemptBlockingIO {
-        val container = new PostgreSQLContainer(
+        val container = new PostgreSQLContainerPlus(
           dockerImageNameOverride = imageName.map(DockerImageName.parse)
         )
 
@@ -42,15 +50,13 @@ object PostgresTestContainer {
         }
 
         container.start()
-        println(container.containerId.take(12))
-        println(container.jdbcUrl)
         container
       }.orDie)(container => attemptBlockingIO(container.stop()).orDie)
     }
 
   private def hikariConfig(container: PostgreSQLContainer): HikariConfig = {
     val config = HikariConfig()
-    config.setJdbcUrl(s"jdbc:postgresql://${container.containerId.take(10)}:5432/test?loggerLevel=OFF")
+    config.setJdbcUrl(container.jdbcUrl)
     config.setUsername(container.username)
     config.setPassword(container.password)
     config
