@@ -1,3 +1,10 @@
+# [pollux-v0.43.3](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.43.2...pollux-v0.43.3) (2023-03-28)
+
+
+### Bug Fixes
+
+* update pollux to use shared postgres container ([#485](https://github.com/input-output-hk/atala-prism-building-blocks/issues/485)) ([1dbaa15](https://github.com/input-output-hk/atala-prism-building-blocks/commit/1dbaa1515d9a5e9008b85d1f27a9d899a8cf7425))
+
 # [pollux-v0.43.2](https://github.com/input-output-hk/atala-prism-building-blocks/compare/pollux-v0.43.1...pollux-v0.43.2) (2023-03-23)
 
 
