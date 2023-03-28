@@ -12,7 +12,7 @@ import io.iohk.atala.pollux.credentialschema.http.{
 }
 import io.iohk.atala.pollux.sql.repository.JdbcCredentialSchemaRepository
 import io.iohk.atala.pollux.test.container.MigrationAspects.*
-import io.iohk.atala.pollux.test.container.PostgresTestContainer.*
+import io.iohk.atala.pollux.test.container.PostgresLayer.*
 import sttp.client3.testing.SttpBackendStub
 import sttp.client3.ziojson.*
 import sttp.client3.{DeserializationException, Response, ResponseException, SttpBackend, UriContext, basicRequest}
