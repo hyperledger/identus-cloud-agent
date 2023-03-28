@@ -16,7 +16,7 @@ import java.security.interfaces.ECPrivateKey
 class ECDSAVerifierTest extends AnyFunSuite with Matchers {
 
   test("toECDSAVerifier should use BouncyCastleProviderSingleton") {
-    val ecKey = ECKeyGenerator(Curve.SECP256K1).generate()
+    val ecKey = ECKeyGenerator(Curve.SECP256K1).provider(BouncyCastleProviderSingleton.getInstance()).generate()
     val verifier = JWTVerification.toECDSAVerifier(ecKey.toPublicKey)
     val provider = verifier.getJCAContext.getProvider
     provider mustBe a[BouncyCastleProvider]
