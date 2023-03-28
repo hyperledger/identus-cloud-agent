@@ -1,3 +1,11 @@
+# [shared-v0.3.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/shared-v0.2.0...shared-v0.3.0) (2023-03-28)
+
+
+### Features
+
+* add general test postgresql container support ([#481](https://github.com/input-output-hk/atala-prism-building-blocks/issues/481)) ([3b1fc8d](https://github.com/input-output-hk/atala-prism-building-blocks/commit/3b1fc8dda752bb81f5eeef31f24663ea58e0bf73))
+* **pollux:** implement Issue Credential v2 Protocol ([#144](https://github.com/input-output-hk/atala-prism-building-blocks/issues/144)) ([a80702f](https://github.com/input-output-hk/atala-prism-building-blocks/commit/a80702f5b255d8079085a6ec27c87baa6a23ac59)), closes [#92](https://github.com/input-output-hk/atala-prism-building-blocks/issues/92)
+
 # [shared-v0.2.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/shared-v0.1.0...shared-v0.2.0) (2022-11-21)
 
 
