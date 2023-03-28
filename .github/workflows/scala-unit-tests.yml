@@ -36,15 +36,6 @@ jobs:
       - name: Ensure working directory
         working-directory: /
         run: mkdir -p ${GITHUB_WORKSPACE}/${{ inputs.component-dir }}
-          
-      - name: Debug Env
-        run: |
-          env
-      
-      - name: basic tools
-        run: |
-          apt update || true
-          apt install -y iputils-ping
 
       - name: Checkout
         uses: actions/checkout@v3
