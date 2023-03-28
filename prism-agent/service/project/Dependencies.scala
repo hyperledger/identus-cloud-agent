@@ -12,7 +12,7 @@ object Dependencies {
     val castor = "0.8.3"
     val pollux = "0.43.3"
     val shared = "0.3.0"
-    val connect = "0.14.1"
+    val connect = "0.13.1"
     val bouncyCastle = "1.70"
     val logback = "1.4.5"
     val mercury = "0.22.0"
