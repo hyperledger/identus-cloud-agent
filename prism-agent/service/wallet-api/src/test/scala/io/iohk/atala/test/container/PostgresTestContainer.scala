@@ -78,6 +78,10 @@ object PostgresTestContainer {
             .withCommand("postgres", "-c", "log_statement=all", "-c", "log_destination=stderr")
         }
 
+        sys.env.get("GITHUB_NETWORK").foreach { network =>
+          container.container.withNetworkMode(network)
+        }
+
         container.start()
         container
       }.orDie)(container => attemptBlockingIO(container.stop()).orDie)
