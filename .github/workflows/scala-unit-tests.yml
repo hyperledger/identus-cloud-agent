@@ -43,7 +43,7 @@ jobs:
       
       - name: basic tools
         run: |
-          apt update
+          apt update || true
           apt install iputils-ping
 
       - name: Checkout
