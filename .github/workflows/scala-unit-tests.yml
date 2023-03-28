@@ -50,9 +50,6 @@ jobs:
 #        run: |
 #          sbt scalafmtCheckAll
 
-      - name: 20min time
-        run: sleep 1200
-
       - name: Run Unit Tests
         run: |
           # Workaround for container runners to correctly restore
