@@ -5,10 +5,12 @@ import cats.effect.std.Dispatcher
 import cats.effect.{Async, Resource}
 import cats.syntax.functor.*
 import com.dimafeng.testcontainers.PostgreSQLContainer
+import com.dimafeng.testcontainers.JdbcDatabaseContainer
 import com.zaxxer.hikari.HikariConfig
 import doobie.hikari.HikariTransactor
 import doobie.util.ExecutionContexts
 import doobie.util.transactor.Transactor
+import io.iohk.atala.shared.test.containers.PostgresTestContainer.postgresContainer
 import org.testcontainers.containers.output.OutputFrame
 import org.testcontainers.utility.DockerImageName
 import zio.*
@@ -18,7 +20,7 @@ import zio.interop.catz.*
 import java.util.function.Consumer
 import scala.concurrent.ExecutionContext
 
-object PostgresTestContainer {
+object PostgresLayer {
 
   def postgresLayer(
       imageName: Option[String] = Some("postgres"),
@@ -26,19 +28,7 @@ object PostgresTestContainer {
   ): ZLayer[Any, Nothing, PostgreSQLContainer] =
     ZLayer.scoped {
       acquireRelease(ZIO.attemptBlockingIO {
-        val container = new PostgreSQLContainer(
-          dockerImageNameOverride = imageName.map(DockerImageName.parse)
-        )
-
-        if (verbose) {
-          container.container
-            .withLogConsumer(new Consumer[OutputFrame] {
-              override def accept(t: OutputFrame): Unit = println(t.getUtf8String)
-            })
-          container.container
-            .withCommand("postgres", "-c", "log_statement=all", "-c", "log_destination=stderr")
-        }
-
+        val container = postgresContainer(imageName, verbose)
         container.start()
         container
       }.orDie)(container => attemptBlockingIO(container.stop()).orDie)

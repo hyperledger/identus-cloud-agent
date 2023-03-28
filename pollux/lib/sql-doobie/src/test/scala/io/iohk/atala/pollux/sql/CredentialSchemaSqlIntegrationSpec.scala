@@ -15,7 +15,7 @@ import io.getquill.*
 import io.getquill.idiom.*
 import io.getquill.util.Messages.{QuatTrace, TraceType, traceQuats}
 import io.iohk.atala.test.container.MigrationAspects.*
-import io.iohk.atala.test.container.PostgresTestContainer.*
+import io.iohk.atala.test.container.PostgresLayer.*
 import zio.*
 import zio.interop.catz.*
 import zio.interop.catz.implicits.*
