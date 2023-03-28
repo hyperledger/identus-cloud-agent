@@ -19,14 +19,22 @@ import java.util.function.Consumer
 import scala.concurrent.ExecutionContext
 
 class PostgreSQLContainerPlus(
-                               dockerImageNameOverride: Option[DockerImageName] = None,
-                               databaseName: Option[String] = None,
-                               pgUsername: Option[String] = None,
-                               pgPassword: Option[String] = None,
-                               mountPostgresDataToTmpfs: Boolean = false,
-                               urlParams: Map[String, String] = Map.empty,
-                               commonJdbcParams: JdbcDatabaseContainer.CommonParams = JdbcDatabaseContainer.CommonParams()
-                             ) extends PostgreSQLContainer(dockerImageNameOverride, databaseName, pgUsername, pgPassword, mountPostgresDataToTmpfs, urlParams, commonJdbcParams) {
+    dockerImageNameOverride: Option[DockerImageName] = None,
+    databaseName: Option[String] = None,
+    pgUsername: Option[String] = None,
+    pgPassword: Option[String] = None,
+    mountPostgresDataToTmpfs: Boolean = false,
+    urlParams: Map[String, String] = Map.empty,
+    commonJdbcParams: JdbcDatabaseContainer.CommonParams = JdbcDatabaseContainer.CommonParams()
+) extends PostgreSQLContainer(
+      dockerImageNameOverride,
+      databaseName,
+      pgUsername,
+      pgPassword,
+      mountPostgresDataToTmpfs,
+      urlParams,
+      commonJdbcParams
+    ) {
 
   override def jdbcUrl: String = {
     /* This is such a hack!
