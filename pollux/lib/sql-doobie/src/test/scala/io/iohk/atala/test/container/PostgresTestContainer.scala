@@ -10,7 +10,6 @@ import com.zaxxer.hikari.HikariConfig
 import doobie.hikari.HikariTransactor
 import doobie.util.ExecutionContexts
 import doobie.util.transactor.Transactor
-import org.testcontainers.containers.{JdbcDatabaseContainer => JavaJdbcDatabaseContainer}
 import org.testcontainers.containers.output.OutputFrame
 import org.testcontainers.utility.DockerImageName
 import zio.*
@@ -28,16 +27,34 @@ class PostgreSQLContainerPlus(
   mountPostgresDataToTmpfs: Boolean = false,
   urlParams: Map[String, String] = Map.empty,
   commonJdbcParams: JdbcDatabaseContainer.CommonParams = JdbcDatabaseContainer.CommonParams()
-) extends PostgreSQLContainer(dockerImageNameOverride, databaseName, pgUsername, pgPassword, mountPostgresDataToTmpfs, urlParams, commonJdbcParams) with JdbcDatabaseContainerPlus {
+) extends PostgreSQLContainer(dockerImageNameOverride, databaseName, pgUsername, pgPassword, mountPostgresDataToTmpfs, urlParams, commonJdbcParams) {
 
   override def jdbcUrl: String = {
-    // Custom implementation for the jdbcUrl method
+    /* This is such a hack!
+     *
+     * We are running PostgreSQL test containers inside a bridged (user-derfined)
+     * network.  Testcontainers expects to be able to connect to the _host_ and
+     * map ports on the host.  However we are running _inside_ a docker container.
+     * So now the mapping to _localhost:randomport_ -> spawned postgres:5432 is
+     * available from _outside_, but not form the docker container actually 
+     * spawning the others.
+     *
+     * We also can't refer to them by name, because docker somehow fails to
+     * resolve names sometimes once a container has joined a network but didn't
+     * get a name assigned when joining :shurg:.
+     *
+     * We can however refer to containers by their containerId, or more
+     * precisely by their _short_ (first 12 char) Id. 
+     *
+     * So we overwrite the jdbcUrl, and change the way it's constructed in test
+     * containers.
+     *
+     * This is a mess :(
+     */
     val origUrl = super.jdbcUrl
-    val idx = origUrl.indexOf(',')
+    val idx = origUrl.indexOf('?')
     val params = if (idx >= 0) origUrl.substring(idx) else ""
-    println(origUrl)
-    println(s"jdbc:postgresql://${containerId.take(12)}:5432/${databaseName}${params}")
-    s"jdbc:postgresql://${containerId.take(12)}:5432/${databaseName}${params}"
+    s"jdbc:postgresql://${containerId.take(12)}:5432/${super.databaseName}${params}"
   }
 }
 
