@@ -21,10 +21,10 @@ import io.iohk.atala.pollux.core.model.{
 }
 import io.iohk.atala.pollux.core.repository.VerificationPolicyRepository
 import io.iohk.atala.pollux.sql.model.VerifiableCredentialSchema
-import io.iohk.atala.pollux.sql.model.db.{VerificationPolicySql}
+import io.iohk.atala.pollux.sql.model.db.VerificationPolicySql
 import io.iohk.atala.pollux.sql.repository.JdbcVerificationPolicyRepository
 import io.iohk.atala.test.container.MigrationAspects.*
-import io.iohk.atala.test.container.PostgresTestContainer.*
+import io.iohk.atala.test.container.PostgresLayer.*
 import zio.*
 import zio.interop.catz.*
 import zio.interop.catz.implicits.*
@@ -40,7 +40,7 @@ import scala.io.Source
 
 object VerificationPolicySqlIntegrationSpec extends ZIOSpecDefault {
 
-  private val pgLayer = postgresLayer(verbose = false)
+  private val pgLayer = postgresLayer()
   private val transactorLayer =
     pgLayer >>> hikariConfigLayer >>> transactor
   private val repositoryLayer =
