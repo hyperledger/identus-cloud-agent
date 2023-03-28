@@ -1,35 +1,35 @@
-#name: Mercury mediator testing workflow
-#
-## Cancel previously running workflows if new commit pushed to the branch
-## this will help to push fixes earlier and stop previous workflows
-#concurrency:
-#  group: ${{ github.head_ref }}${{ github.ref }}-mercury-mediator
-#  cancel-in-progress: true
-#
-#on:
-#  push:
-#    branches:
-#      - "main"
-#    paths:
-#      - ".github/workflows/mercury-mediator.yml"
-#      - ".github/workflows/scala-unit-tests.yml"
-#      - "mercury-mediator/**"
-#  pull_request:
-#    paths:
-#      - ".github/workflows/mercury-mediator.yml"
-#      - ".github/workflows/scala-unit-tests.yml"
-#      - "mercury-mediator/**"
-#
-#jobs:
-#  build-and-test-mercury-mediator:
-#    uses: ./.github/workflows/scala-unit-tests.yml
-#    with:
-#      component-name: "Mercury Mediator"
-#      component-dir: "mercury/mercury-mediator"
-#    secrets: inherit
-#  release:
-#    if: github.event_name == 'push'
-#    uses: ./.github/workflows/release.yml
-#    with:
-#      release-component: "mercury/mercury-mediator"
-#    secrets: inherit
+name: Mercury mediator testing workflow
+
+# Cancel previously running workflows if new commit pushed to the branch
+# this will help to push fixes earlier and stop previous workflows
+concurrency:
+  group: ${{ github.head_ref }}${{ github.ref }}-mercury-mediator
+  cancel-in-progress: true
+
+on:
+  push:
+    branches:
+      - "main"
+    paths:
+      - ".github/workflows/mercury-mediator.yml"
+      - ".github/workflows/scala-unit-tests.yml"
+      - "mercury-mediator/**"
+  pull_request:
+    paths:
+      - ".github/workflows/mercury-mediator.yml"
+      - ".github/workflows/scala-unit-tests.yml"
+      - "mercury-mediator/**"
+
+jobs:
+  build-and-test-mercury-mediator:
+    uses: ./.github/workflows/scala-unit-tests.yml
+    with:
+      component-name: "Mercury Mediator"
+      component-dir: "mercury/mercury-mediator"
+    secrets: inherit
+  release:
+    if: github.event_name == 'push'
+    uses: ./.github/workflows/release.yml
+    with:
+      release-component: "mercury/mercury-mediator"
+    secrets: inherit

@@ -13,9 +13,7 @@ case class DbConfig(
     username: String,
     password: String,
     jdbcUrl: String,
-    awaitConnectionThreads: Int = 8,
-    containerName: String,
-    mappedPort: String
+    awaitConnectionThreads: Int = 8
 )
 
 object TransactorLayer {

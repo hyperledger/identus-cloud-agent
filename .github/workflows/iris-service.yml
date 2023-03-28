@@ -1,35 +1,35 @@
-#name: Iris service testing workflow
-#
-## Cancel previously running workflows if new commit pushed to the branch
-## this will help to push fixes earlier and stop previous workflows
-#concurrency:
-#  group: ${{ github.head_ref }}${{ github.ref }}-iris-service
-#  cancel-in-progress: true
-#
-#on:
-#  push:
-#    branches:
-#      - "main"
-#    paths:
-#      - ".github/workflows/iris-service.yml"
-#      - ".github/workflows/scala-unit-tests.yml"
-#      - "iris/service/**"
-#  pull_request:
-#    paths:
-#      - ".github/workflows/iris-service.yml"
-#      - ".github/workflows/scala-unit-tests.yml"
-#      - "iris/service/**"
-#
-#jobs:
-#  build-and-test-iris-service:
-#    uses: ./.github/workflows/scala-unit-tests.yml
-#    with:
-#      component-name: "Iris Service"
-#      component-dir: "iris/service"
-#    secrets: inherit
-#  release:
-#    if: github.event_name == 'push'
-#    uses: ./.github/workflows/release.yml
-#    with:
-#      release-component: "iris/service"
-#    secrets: inherit
+name: Iris service testing workflow
+
+# Cancel previously running workflows if new commit pushed to the branch
+# this will help to push fixes earlier and stop previous workflows
+concurrency:
+  group: ${{ github.head_ref }}${{ github.ref }}-iris-service
+  cancel-in-progress: true
+
+on:
+  push:
+    branches:
+      - "main"
+    paths:
+      - ".github/workflows/iris-service.yml"
+      - ".github/workflows/scala-unit-tests.yml"
+      - "iris/service/**"
+  pull_request:
+    paths:
+      - ".github/workflows/iris-service.yml"
+      - ".github/workflows/scala-unit-tests.yml"
+      - "iris/service/**"
+
+jobs:
+  build-and-test-iris-service:
+    uses: ./.github/workflows/scala-unit-tests.yml
+    with:
+      component-name: "Iris Service"
+      component-dir: "iris/service"
+    secrets: inherit
+  release:
+    if: github.event_name == 'push'
+    uses: ./.github/workflows/release.yml
+    with:
+      release-component: "iris/service"
+    secrets: inherit
