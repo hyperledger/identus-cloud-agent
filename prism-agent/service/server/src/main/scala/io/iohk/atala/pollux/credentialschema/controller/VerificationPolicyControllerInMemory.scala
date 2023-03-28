@@ -1,7 +1,7 @@
 package io.iohk.atala.pollux.credentialschema.controller
 
 import io.iohk.atala.api.http.model.{CollectionStats, Order, Pagination, PaginationInput}
-import io.iohk.atala.api.http.{FailureResponse, RequestContext}
+import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.pollux.credentialschema.controller.{
   VerificationPolicyController,
   VerificationPolicyPageRequestLogic
@@ -22,7 +22,7 @@ class VerificationPolicyControllerInMemory(
   override def createVerificationPolicy(
       ctx: RequestContext,
       in: VerificationPolicyInput
-  ): IO[FailureResponse, VerificationPolicy] = {
+  ): IO[ErrorResponse, VerificationPolicy] = {
     val vp = VerificationPolicy(in)
     for {
       _ <- ref.update(s => s + (vp.id -> vp))
@@ -32,7 +32,7 @@ class VerificationPolicyControllerInMemory(
   override def getVerificationPolicyById(
       ctx: RequestContext,
       id: UUID
-  ): IO[FailureResponse, VerificationPolicy] = {
+  ): IO[ErrorResponse, VerificationPolicy] = {
     for {
       storage <- ref.get
       vp = storage.get(id)
@@ -44,7 +44,7 @@ class VerificationPolicyControllerInMemory(
       id: UUID,
       nonce: Int,
       in: VerificationPolicyInput
-  ): IO[FailureResponse, VerificationPolicy] = {
+  ): IO[ErrorResponse, VerificationPolicy] = {
     for {
       storage: Map[UUID, VerificationPolicy] <- ref.updateAndGet(kv =>
         kv.get(id)
@@ -58,7 +58,7 @@ class VerificationPolicyControllerInMemory(
       ctx: RequestContext,
       id: UUID,
       nonce: Int
-  ): IO[FailureResponse, Unit] = {
+  ): IO[ErrorResponse, Unit] = {
     for {
       storage: Map[UUID, VerificationPolicy] <- ref.getAndUpdate(kv =>
         kv.get(id)
@@ -74,7 +74,7 @@ class VerificationPolicyControllerInMemory(
       filter: VerificationPolicy.Filter,
       pagination: Pagination,
       order: Option[Order]
-  ): IO[FailureResponse, VerificationPolicyPage] = {
+  ): IO[ErrorResponse, VerificationPolicyPage] = {
     for {
       storage: Map[UUID, VerificationPolicy] <- ref.get
       totalCount = storage.count(_ => true)

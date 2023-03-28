@@ -23,7 +23,7 @@ class CredentialSchemaControllerImpl(service: CredentialSchemaService) extends C
       in: CredentialSchemaInput
   )(implicit
       rc: RequestContext
-  ): IO[FailureResponse, CredentialSchemaResponse] = {
+  ): IO[ErrorResponse, CredentialSchemaResponse] = {
     service
       .create(toDomain(in))
       .map(cs => fromDomain(cs).withBaseUri(rc.request.uri))
@@ -31,7 +31,7 @@ class CredentialSchemaControllerImpl(service: CredentialSchemaService) extends C
 
   override def updateSchema(author: String, id: UUID, in: CredentialSchemaInput)(implicit
       rc: RequestContext
-  ): IO[FailureResponse, CredentialSchemaResponse] = {
+  ): IO[ErrorResponse, CredentialSchemaResponse] = {
     service
       .update(id, toDomain(in).copy(author = author))
       .map(cs => fromDomain(cs).withBaseUri(rc.request.uri))
@@ -39,7 +39,7 @@ class CredentialSchemaControllerImpl(service: CredentialSchemaService) extends C
 
   override def getSchemaByGuid(guid: UUID)(implicit
       rc: RequestContext
-  ): IO[FailureResponse, CredentialSchemaResponse] = {
+  ): IO[ErrorResponse, CredentialSchemaResponse] = {
     service
       .getByGUID(guid)
       .map(
@@ -50,7 +50,7 @@ class CredentialSchemaControllerImpl(service: CredentialSchemaService) extends C
 
   override def delete(guid: UUID)(implicit
       rc: RequestContext
-  ): IO[FailureResponse, CredentialSchemaResponse] = {
+  ): IO[ErrorResponse, CredentialSchemaResponse] = {
     service
       .delete(guid)
       .map(
@@ -65,7 +65,7 @@ class CredentialSchemaControllerImpl(service: CredentialSchemaService) extends C
       order: Option[Order]
   )(implicit
       rc: RequestContext
-  ): IO[FailureResponse, CredentialSchemaResponsePage] = {
+  ): IO[ErrorResponse, CredentialSchemaResponsePage] = {
     for {
       filteredEntries: FilteredEntries <- service.lookup(
         filter.toDomain,
