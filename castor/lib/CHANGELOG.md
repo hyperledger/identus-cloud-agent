@@ -1,3 +1,10 @@
+# [castor-v0.8.3](https://github.com/input-output-hk/atala-prism-building-blocks/compare/castor-v0.8.2...castor-v0.8.3) (2023-03-28)
+
+
+### Bug Fixes
+
+* update shared module for castor ([#484](https://github.com/input-output-hk/atala-prism-building-blocks/issues/484)) ([2202a22](https://github.com/input-output-hk/atala-prism-building-blocks/commit/2202a220fdcd404bb3fe280b3b76923fbf499b8c))
+
 # [castor-v0.8.2](https://github.com/input-output-hk/atala-prism-building-blocks/compare/castor-v0.8.1...castor-v0.8.2) (2023-03-23)
 
 
