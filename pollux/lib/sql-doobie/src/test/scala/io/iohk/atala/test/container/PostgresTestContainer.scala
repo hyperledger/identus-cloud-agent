@@ -18,10 +18,19 @@ import zio.interop.catz.*
 import java.util.function.Consumer
 import scala.concurrent.ExecutionContext
 
-class PostgreSQLContainerPlus extends PostgreSQLContainer {
-  override def getJdbcUrl() : String {
-    val params = constructUrlParameters("?", "&")
+class PostgreSQLContainerPlus(
+  dockerImageNameOverride: Option[DockerImageName] = None,
+  databaseName: Option[String] = None,
+  pgUsername: Option[String] = None,
+  pgPassword: Option[String] = None,
+  mountPostgresDataToTmpfs: Boolean = false,
+  urlParams: Map[String, String] = Map.empty,
+  commonJdbcParams: JdbcDatabaseContainer.CommonParams = JdbcDatabaseContainer.CommonParams()
+) extends PostgreSQLContainer(dockerImageNameOverride, databaseName, pgUsername, pgPassword, mountPostgresDataToTmpfs, urlParams, commonJdbcParams) {
 
+  override def jdbcUrl: String = {
+    // Custom implementation for the jdbcUrl method
+    val params = constructUrlParameters("?", "&")
     s"jdbc:postgresql://${containerId.take(12)}:5432}/${databaseName}${params}"
   }
 }
