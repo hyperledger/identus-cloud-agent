@@ -40,7 +40,12 @@ jobs:
       - name: Debug Env
         run: |
           env
-          
+      
+      - name: basic tools
+        run: |
+          apt update
+          apt install iputils-ping
+
       - name: Checkout
         uses: actions/checkout@v3
 
@@ -54,8 +59,8 @@ jobs:
 #        run: |
 #          sbt scalafmtCheckAll
 
-      - name: 10min time
-        run: sleep 600
+      - name: 20min time
+        run: sleep 1200
 
       - name: Run Unit Tests
         run: |
