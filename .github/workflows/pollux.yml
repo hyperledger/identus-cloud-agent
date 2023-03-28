@@ -1,5 +1,5 @@
 name: Pollux testing workflow
-#
+
 ## Cancel previously running workflows if new commit pushed to the branch
 ## this will help to push fixes earlier and stop previous workflows
 concurrency:
