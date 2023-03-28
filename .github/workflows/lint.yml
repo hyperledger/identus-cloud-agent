@@ -1,36 +1,36 @@
-#---
-#name: Linter
-#
-## Default shell is `sh`
-## which is old, use bourne-again version instead
-#defaults:
-#  run:
-#    shell: bash
-#
-#on:
-#  pull_request:
-#
-#jobs:
-#  lint:
-#    name: Lint changes
-#    runs-on: ubuntu-latest
-#    env:
-#      APPLY_FIXES: none
-#      GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
-#    steps:
-#      - name: Checkout Code
-#        uses: actions/checkout@v2
-#        with:
-#          token: ${{ secrets.ATALA_GITHUB_TOKEN }}
-#          fetch-depth: 0
-#      - name: Mega-Linter
-#        id: ml
-#        uses: megalinter/megalinter@v6
-#      - name: Archive production artifacts
-#        if: success() || failure()
-#        uses: actions/upload-artifact@v2
-#        with:
-#          name: Mega-Linter reports
-#          path: |
-#            megalinter-reports
-#            mega-linter.log
+---
+name: Linter
+
+# Default shell is `sh`
+# which is old, use bourne-again version instead
+defaults:
+  run:
+    shell: bash
+
+on:
+  pull_request:
+
+jobs:
+  lint:
+    name: Lint changes
+    runs-on: ubuntu-latest
+    env:
+      APPLY_FIXES: none
+      GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.ATALA_GITHUB_TOKEN }}
+          fetch-depth: 0
+      - name: Mega-Linter
+        id: ml
+        uses: megalinter/megalinter@v6
+      - name: Archive production artifacts
+        if: success() || failure()
+        uses: actions/upload-artifact@v2
+        with:
+          name: Mega-Linter reports
+          path: |
+            megalinter-reports
+            mega-linter.log
