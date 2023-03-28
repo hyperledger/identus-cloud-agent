@@ -1,3 +1,10 @@
+# [connect-v0.13.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/connect-v0.13.0...connect-v0.13.1) (2023-03-28)
+
+
+### Bug Fixes
+
+* use postgres container from shared module ([#482](https://github.com/input-output-hk/atala-prism-building-blocks/issues/482)) ([efe4557](https://github.com/input-output-hk/atala-prism-building-blocks/commit/efe45579a1a7a690b41aa15b30c386bd7d030137))
+
 # [connect-v0.13.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/connect-v0.12.1...connect-v0.13.0) (2023-03-22)
 
 
