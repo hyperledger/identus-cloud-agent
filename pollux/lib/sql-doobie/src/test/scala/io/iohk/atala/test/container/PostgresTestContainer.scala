@@ -9,6 +9,7 @@ import com.zaxxer.hikari.HikariConfig
 import doobie.hikari.HikariTransactor
 import doobie.util.ExecutionContexts
 import doobie.util.transactor.Transactor
+import org.testcontainers.containers.{JdbcDatabaseContainer => JavaJdbcDatabaseContainer}
 import org.testcontainers.containers.output.OutputFrame
 import org.testcontainers.utility.DockerImageName
 import zio.*
@@ -18,6 +19,10 @@ import zio.interop.catz.*
 import java.util.function.Consumer
 import scala.concurrent.ExecutionContext
 
+trait JdbcDatabaseContainerPlus { self: SingleContainer[_ <: JavaJdbcDatabaseContainer[_]] =>
+  def constructUrlParameters(startCharacter: String, delimiter: String) : String = underlyingUnsafeContainer.constructUrlParameters(startCharacter, delimiter)
+}
+
 class PostgreSQLContainerPlus(
   dockerImageNameOverride: Option[DockerImageName] = None,
   databaseName: Option[String] = None,
@@ -26,7 +31,7 @@ class PostgreSQLContainerPlus(
   mountPostgresDataToTmpfs: Boolean = false,
   urlParams: Map[String, String] = Map.empty,
   commonJdbcParams: JdbcDatabaseContainer.CommonParams = JdbcDatabaseContainer.CommonParams()
-) extends PostgreSQLContainer(dockerImageNameOverride, databaseName, pgUsername, pgPassword, mountPostgresDataToTmpfs, urlParams, commonJdbcParams) {
+) extends PostgreSQLContainer(dockerImageNameOverride, databaseName, pgUsername, pgPassword, mountPostgresDataToTmpfs, urlParams, commonJdbcParams) with JdbcDatabaseContainerPlus {
 
   override def jdbcUrl: String = {
     // Custom implementation for the jdbcUrl method
