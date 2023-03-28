@@ -1,3 +1,10 @@
+# [prism-agent-v0.60.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.60.0...prism-agent-v0.60.1) (2023-03-28)
+
+
+### Bug Fixes
+
+* use shared postgres container for tests ([#486](https://github.com/input-output-hk/atala-prism-building-blocks/issues/486)) ([1d6aada](https://github.com/input-output-hk/atala-prism-building-blocks/commit/1d6aada72fedf6420133451214ca27965cff245f))
+
 # [prism-agent-v0.60.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.59.1...prism-agent-v0.60.0) (2023-03-28)
 
 
