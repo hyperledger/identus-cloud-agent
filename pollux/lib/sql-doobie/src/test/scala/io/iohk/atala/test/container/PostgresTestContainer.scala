@@ -70,7 +70,9 @@ object PostgresTestContainer {
           dockerImageNameOverride = imageName.map(DockerImageName.parse)
         )
 
-        sys.env.get("GITHUB_NETWORK").map { network => container.container.withNetworkMode(network) }
+        sys.env.get("GITHUB_NETWORK").foreach { network =>
+          container.container.withNetworkMode(network)
+        }
 
         if (verbose) {
           container.container
