@@ -28,8 +28,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
         TESTCONTAINERS_RYUK_DISABLED: true
-        TESTCONTAINERS_HOST_OVERRIDE: host.docker.internal
-      options: --privileged --add-host=host.docker.internal:host-gateway
+      options: --privileged
     defaults:
       run:
         working-directory: ${{ inputs.component-dir }}
@@ -37,11 +36,7 @@ jobs:
       - name: Ensure working directory
         working-directory: /
         run: mkdir -p ${GITHUB_WORKSPACE}/${{ inputs.component-dir }}
-          
-      - name: Debug Env
-        run: |
-          env
-          
+
       - name: Checkout
         uses: actions/checkout@v3
 

@@ -48,13 +48,7 @@ object TransactorLayer {
 
   private def makeHikariConfig(config: DbConfig): HikariConfig = {
     val hikariConfig = HikariConfig()
-
-    // jdbc:postgresql://host.docker.internal:49970/test?loggerLevel=OFF
-    // jdbc:postgresql://nice_kapitsa:50000?loggerLevel=OFF
-    
-    hikariConfig.setJdbcUrl(s"jdbc:postgresql:/${config.containerName}:${config.mappedPort}/test?loggerLevel=OFF")
-    println(config.jdbcUrl)
-    println(s"jdbc:postgresql:/${config.containerName}:${config.mappedPort}/test?loggerLevel=OFF")
+    hikariConfig.setJdbcUrl(config.jdbcUrl)
     hikariConfig.setUsername(config.username)
     hikariConfig.setPassword(config.password)
     hikariConfig.setAutoCommit(false)
