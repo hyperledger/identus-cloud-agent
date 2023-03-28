@@ -44,7 +44,7 @@ jobs:
       - name: basic tools
         run: |
           apt update || true
-          apt install iputils-ping
+          apt install -y iputils-ping
 
       - name: Checkout
         uses: actions/checkout@v3
