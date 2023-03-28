@@ -42,7 +42,7 @@ object PostgresTestContainer {
         }
 
         container.start()
-        println(container.containerName)
+        println(container.containerId.take(12))
         println(container.jdbcUrl)
         container
       }.orDie)(container => attemptBlockingIO(container.stop()).orDie)
@@ -50,7 +50,7 @@ object PostgresTestContainer {
 
   private def hikariConfig(container: PostgreSQLContainer): HikariConfig = {
     val config = HikariConfig()
-    config.setJdbcUrl(container.jdbcUrl)
+    config.setJdbcUrl(s"jdbc:postgresql://${container.containerId.take(10)}:5432/test?loggerLevel=OFF")
     config.setUsername(container.username)
     config.setPassword(container.password)
     config
