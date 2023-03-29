@@ -7,7 +7,7 @@ object ConnectDependencies {
     val zioCatsInterop = "3.3.0"
     val iris = "0.1.0"
     val flyway = "9.8.3"
-    val shared = "0.2.0"
+    // val shared = "0.3.0"
     val testContainersScalaPostgresql = "0.40.11"
     val logback = "1.4.5"
   }
@@ -28,14 +28,14 @@ object ConnectDependencies {
 
   // private lazy val mercuryProtocolConnection = "io.iohk.atala" %% "mercury-protocol-connection" % Versions.mercury
 
-  private lazy val shared = "io.iohk.atala" % "shared" % Versions.shared
+  // private lazy val shared = "io.iohk.atala" % "shared" % Versions.shared
 
   private lazy val testcontainers =
     "com.dimafeng" %% "testcontainers-scala-postgresql" % Versions.testContainersScalaPostgresql % Test
 
   // Dependency Modules
   private lazy val baseDependencies: Seq[ModuleID] =
-    Seq(zio, zioTest, zioTestSbt, zioTestMagnolia, shared, testcontainers, logback)
+    Seq(zio, zioTest, zioTestSbt, zioTestMagnolia, /*shared,*/ testcontainers, logback)
   private lazy val doobieDependencies: Seq[ModuleID] = Seq(doobiePostgres, doobieHikari, flyway)
 
   // Project Dependencies

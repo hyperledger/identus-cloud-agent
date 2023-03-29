@@ -1,13 +1,13 @@
 import sbt._
 
-object Dependencies {
+object CastorDependencies {
   object Versions {
     val zio = "2.0.4"
     val doobie = "1.0.0-RC2"
     val zioCatsInterop = "3.3.0"
-    val prismNodeClient = "0.4.0"
+    val prismNodeClient = "0.3.0"
     val prismSdk = "v1.4.1" // scala-steward:off
-    val shared = "0.3.0"
+    // val shared = "0.3.0"
     val flyway = "9.8.3"
     val scalaUri = "4.0.3"
   }
@@ -26,7 +26,7 @@ object Dependencies {
 
   private lazy val scalaUri = "io.lemonlabs" %% "scala-uri" % Versions.scalaUri
 
-  private lazy val shared = "io.iohk.atala" % "shared" % Versions.shared
+  // private lazy val shared = "io.iohk.atala" % "shared" % Versions.shared
   private lazy val prismNodeClient = "io.iohk.atala" %% "prism-node-client" % Versions.prismNodeClient
 
   // We have to exclude bouncycastle since for some reason bitcoinj depends on bouncycastle jdk15to18
@@ -39,7 +39,7 @@ object Dependencies {
 
   // Dependency Modules
   private lazy val baseDependencies: Seq[ModuleID] =
-    Seq(zio, zioTest, zioTestSbt, zioTestMagnolia, shared, prismCrypto, prismIdentity, prismNodeClient, scalaUri)
+    Seq(zio, zioTest, zioTestSbt, zioTestMagnolia, /*shared,*/ prismCrypto, prismIdentity, prismNodeClient, scalaUri)
   private lazy val doobieDependencies: Seq[ModuleID] = Seq(doobiePostgres, doobieHikari, flyway)
 
   // Project Dependencies
