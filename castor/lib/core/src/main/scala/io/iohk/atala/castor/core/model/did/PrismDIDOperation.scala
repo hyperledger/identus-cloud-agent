@@ -72,4 +72,6 @@ object UpdateDIDAction {
   final case class RemoveService(id: String) extends UpdateDIDAction
   final case class UpdateService(id: String, `type`: Option[ServiceType] = None, endpoints: Seq[Uri] = Nil)
       extends UpdateDIDAction
+
+  final case class PatchContext(context: Seq[String]) extends UpdateDIDAction
 }

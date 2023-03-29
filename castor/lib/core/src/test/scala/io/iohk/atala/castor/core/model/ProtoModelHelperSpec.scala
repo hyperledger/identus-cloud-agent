@@ -35,8 +35,6 @@ object ProtoModelHelperSpec extends ZIOSpecDefault {
       deletedOn = deletedOn
     )
 
-  override def spec = suite("ProtoModelHelper")(conversionSpec, didDataFilterSpec)
-
   extension (i: Instant) {
     def toLedgerData: node_models.LedgerData = {
       val timestamp = Timestamp.of(i.getEpochSecond, i.getNano)
@@ -52,6 +50,8 @@ object ProtoModelHelperSpec extends ZIOSpecDefault {
       )
     }
   }
+
+  override def spec = suite("ProtoModelHelper")(conversionSpec, didDataFilterSpec)
 
   private val conversionSpec = suite("round trip model conversion does not change data of models")(
     test("PublicKeyData") {

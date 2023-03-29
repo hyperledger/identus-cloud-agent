@@ -43,6 +43,7 @@ private[castor] trait W3CModelHelper {
       )
     }
 
+    // Reference: https://github.com/input-output-hk/prism-did-method-spec/blob/main/w3c-spec/PRISM-method.md#constructing-a-json-ld-did-document
     private def deriveContext(keys: Seq[PublicKeyRepr], services: Seq[ServiceRepr]): Seq[String] = {
       val mandatoryContext = Seq("https://www.w3.org/ns/did/v1")
       val additionalContext = {

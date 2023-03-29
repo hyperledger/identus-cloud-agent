@@ -114,6 +114,8 @@ private[castor] trait ProtoModelHelper {
               serviceEndpoints = endpoints.map(_.toString)
             )
           )
+        case UpdateDIDAction.PatchContext(context) =>
+          node_models.UpdateDIDAction.Action.PatchContext(node_models.PatchContextAction(context))
       }
       node_models.UpdateDIDAction(action = a)
     }

@@ -40,7 +40,7 @@ object W3CModelHelperSpec extends ZIOSpecDefault {
       masterKey <- generateInternalPublicKey(masterKeyId)
       keys <- ZIO.foreach(keyIds) { case (id, purpose) => generatePublicKey(id, purpose) }
       services <- ZIO.foreach(serviceIds)(generateService)
-    } yield DIDData(id = did, publicKeys = keys, services = services, internalKeys = Seq(masterKey), context = context)
+    } yield DIDData(did, keys, services, Seq(masterKey), context)
 
   override def spec = suite("W3CModelHelper")(
     test("convert DIDData to w3c DID document representation") {
@@ -110,13 +110,12 @@ object W3CModelHelperSpec extends ZIOSpecDefault {
         )
         didDataNoKeys = didData.copy(publicKeys = Seq())
         didDataNoService = didData.copy(services = Seq())
-      } yield
-      // TODO: add assertion on JsonWebKey2020 context when align the key type (ATL-3788)
-      assert(didData.toW3C(did).context)(
+      } yield assert(didData.toW3C(did).context)(
         hasSameElements(
           Seq(
             "https://www.w3.org/ns/did/v1",
             "https://identity.foundation/.well-known/did-configuration/v1",
+            // "https://w3id.org/security/suites/jws-2020/v1", // TODO: enable when align the key type (ATL-3788)
             "user-defined-context"
           )
         )
@@ -134,6 +133,7 @@ object W3CModelHelperSpec extends ZIOSpecDefault {
           hasSameElements(
             Seq(
               "https://www.w3.org/ns/did/v1",
+              // "https://w3id.org/security/suites/jws-2020/v1", // TODO: enable when align the key type (ATL-3788)
               "user-defined-context"
             )
           )

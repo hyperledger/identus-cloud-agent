@@ -13,7 +13,7 @@ object GenUtils {
 
   val uri: Gen[Any, String] =
     for {
-      scheme <- Gen.fromIterable(Seq("http", "https", "ftp", "ws", "wss"))
+      scheme <- Gen.fromIterable(Seq("http", "https", "ftp", "ws", "wss", "file", "imap", "ssh"))
       host <- Gen.alphaNumericStringBounded(1, 10)
       path <- Gen.listOfBounded(0, 5)(Gen.alphaNumericStringBounded(1, 10)).map(_.mkString("/"))
       uri <- Gen.const(s"$scheme://$host/$path").map(UriUtils.normalizeUri).collect { case Some(uri) => uri }
@@ -25,10 +25,9 @@ object GenUtils {
       pk <- Gen.fromZIO(ZIO.attempt(EC.INSTANCE.generateKeyPair().getPublicKey).orDie)
       x = Base64UrlString.fromByteArray(pk.getCurvePoint.getX.bytes())
       y = Base64UrlString.fromByteArray(pk.getCurvePoint.getY.bytes())
-      compressedX = Base64UrlString.fromByteArray(pk.getEncodedCompressed)
-      uncompressedGen = PublicKeyData.ECKeyData(curve, x, y)
-      compressedGen = PublicKeyData.ECCompressedKeyData(curve, compressedX)
-      generated <- Gen.fromIterable(Seq(uncompressedGen, compressedGen))
+      uncompressedKey = PublicKeyData.ECKeyData(curve, x, y)
+      compressedKey = PublicKeyData.ECCompressedKeyData(curve, Base64UrlString.fromByteArray(pk.getEncodedCompressed))
+      generated <- Gen.fromIterable(Seq(uncompressedKey, compressedKey))
     } yield generated
 
   val publicKey: Gen[Any, PublicKey] =
