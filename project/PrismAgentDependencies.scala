@@ -6,9 +6,10 @@ object PrismAgentDependencies {
     val zioConfig = "3.0.2"
     val zioHttp = "2.0.0-RC11"
     val zioInteropCats = "3.3.0" // scala-steward:off
+    val zioMetrics = "2.0.6"
     val akka = "2.6.20"
     val akkaHttp = "10.2.9"
-    val castor = "0.8.0"
+    // val castor = "0.8.0"
     // val pollux = "0.23.0"
     // val connect = "0.9.0"
     val bouncyCastle = "1.70"
@@ -34,13 +35,15 @@ object PrismAgentDependencies {
 
   private lazy val zioHttp = "io.d11" %% "zhttp" % Versions.zioHttp
 
+  private lazy val zioMetrics = "dev.zio" %% "zio-metrics-connectors" % Versions.zioMetrics
+
   private lazy val akkaTyped = "com.typesafe.akka" %% "akka-actor-typed" % Versions.akka
   private lazy val akkaStream = "com.typesafe.akka" %% "akka-stream" % Versions.akka
   private lazy val akkaHttp = "com.typesafe.akka" %% "akka-http" % Versions.akkaHttp
   private lazy val akkaSprayJson = "com.typesafe.akka" %% "akka-http-spray-json" % Versions.akkaHttp
 
-  private lazy val castorCore = "io.iohk.atala" %% "castor-core" % Versions.castor
-  private lazy val castorSqlDoobie = "io.iohk.atala" %% "castor-sql-doobie" % Versions.castor
+  // private lazy val castorCore = "io.iohk.atala" %% "castor-core" % Versions.castor
+  // private lazy val castorSqlDoobie = "io.iohk.atala" %% "castor-sql-doobie" % Versions.castor
 
   // private lazy val polluxCore = "io.iohk.atala" %% "pollux-core" % Versions.pollux
   // private lazy val polluxSqlDoobie = "io.iohk.atala" %% "pollux-sql-doobie" % Versions.pollux
@@ -91,9 +94,10 @@ object PrismAgentDependencies {
     zioConfigTypesafe,
     zioJson,
     logback,
-    zioHttp
+    zioHttp,
+    zioMetrics,
   )
-  private lazy val castorDependencies: Seq[ModuleID] = Seq(castorCore, castorSqlDoobie)
+  // private lazy val castorDependencies: Seq[ModuleID] = Seq(castorCore, castorSqlDoobie)
   // private lazy val polluxDependencies: Seq[ModuleID] = Seq(polluxCore, polluxSqlDoobie)
   // private lazy val mercuryDependencies: Seq[ModuleID] = Seq(mercuryAgent)
   // private lazy val connectDependencies: Seq[ModuleID] = Seq(connectCore, connectSqlDoobie)
@@ -118,14 +122,14 @@ object PrismAgentDependencies {
   // Project Dependencies
   lazy val keyManagementDependencies: Seq[ModuleID] =
     baseDependencies ++
-      castorDependencies ++
+      // castorDependencies ++
       // mercuryDependencies ++
       bouncyDependencies
 
   lazy val serverDependencies: Seq[ModuleID] =
     baseDependencies ++
       akkaHttpDependencies ++
-      castorDependencies ++
+      // castorDependencies ++
       // polluxDependencies ++
       // mercuryDependencies ++
       // connectDependencies ++

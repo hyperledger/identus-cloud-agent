@@ -38,7 +38,8 @@ object Dependencies {
   private lazy val prismIdentity = "io.iohk.atala" % "prism-identity-jvm" % Versions.prismSdk
 
   // Dependency Modules
-  private lazy val baseDependencies: Seq[ModuleID] = Seq(zio, zioTest, zioTestSbt, zioTestMagnolia, shared, prismCrypto, prismIdentity, prismNodeClient, scalaUri)
+  private lazy val baseDependencies: Seq[ModuleID] =
+    Seq(zio, zioTest, zioTestSbt, zioTestMagnolia, shared, prismCrypto, prismIdentity, prismNodeClient, scalaUri)
   private lazy val doobieDependencies: Seq[ModuleID] = Seq(doobiePostgres, doobieHikari, flyway)
 
   // Project Dependencies

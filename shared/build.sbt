@@ -1,3 +1,4 @@
+/*
 import sbtbuildinfo.BuildInfoPlugin
 import sbtbuildinfo.BuildInfoPlugin.autoImport._
 import Dependencies._
@@ -52,3 +53,5 @@ lazy val root = (project in file("."))
     libraryDependencies ++= dependencies
   )
    .enablePlugins(BuildInfoPlugin)
+
+ */

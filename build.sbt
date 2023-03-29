@@ -226,6 +226,7 @@ lazy val agent = project // maybe merge into models
     protocolIssueCredential,
     protocolPresentProof,
     protocolConnection,
+    protocolReportProblem,
   )
 
 /** agents implementation with didcommx */
@@ -282,6 +283,53 @@ sys.env
   .toSeq
 
 // #####################
+// #####  shared  ######
+// #####################
+
+lazy val shared = (project in file("shared"))
+  // .configure(publishConfigure)
+  .settings(
+    organization := "io.iohk.atala",
+    organizationName := "Input Output Global",
+    buildInfoPackage := "io.iohk.atala.shared",
+    name := "shared",
+    crossPaths := false,
+    libraryDependencies ++= SharedDependencies.dependencies
+  )
+  .enablePlugins(BuildInfoPlugin)
+
+// #####################
+// #####  castor  ######
+// #####################
+
+val castorCommonSettings = Seq(
+  testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+  githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN"),
+  resolvers += Resolver.githubPackages("input-output-hk"),
+  // Needed for Kotlin coroutines that support new memory management mode
+  resolvers += "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven"
+)
+
+// Project definitions
+lazy val castorCore = project
+  .in(file("castor/lib/core"))
+  .settings(castorCommonSettings)
+  .settings(
+    name := "castor-core",
+    libraryDependencies ++= CastorDependencies.coreDependencies
+  )
+  .dependsOn(shared)
+
+lazy val castorDoobie = project
+  .in(file("castor/lib/sql-doobie"))
+  .settings(castorCommonSettings)
+  .settings(
+    name := "castor-sql-doobie",
+    libraryDependencies ++= CastorDependencies.sqlDoobieDependencies
+  )
+  .dependsOn(shared, castorCore)
+
+// #####################
 // #####  pollux  ######
 // #####################
 
@@ -300,6 +348,7 @@ lazy val polluxVcJWT = project
     name := "pollux-vc-jwt",
     libraryDependencies ++= PolluxDependencies_VC_JWT.polluxVcJwtDependencies
   )
+  .dependsOn(castorCore)
 
 lazy val polluxCore = project
   .in(file("pollux/lib/core"))
@@ -308,6 +357,7 @@ lazy val polluxCore = project
     name := "pollux-core",
     libraryDependencies ++= PolluxDependencies.coreDependencies
   )
+  .dependsOn(shared)
   .dependsOn(polluxVcJWT)
   .dependsOn(protocolIssueCredential, protocolPresentProof, resolver)
 
@@ -319,6 +369,7 @@ lazy val polluxDoobie = project
     libraryDependencies ++= PolluxDependencies.sqlDoobieDependencies
   )
   .dependsOn(polluxCore % "compile->compile;test->test")
+  .dependsOn(shared)
 
 // #####################
 // #####  connect  #####
@@ -334,6 +385,7 @@ lazy val connectCore = project
     libraryDependencies ++= ConnectDependencies.coreDependencies,
     Test / publishArtifact := true
   )
+  .dependsOn(shared)
   .dependsOn(protocolConnection, protocolReportProblem)
 
 lazy val connectDoobie = project
@@ -343,6 +395,7 @@ lazy val connectDoobie = project
     name := "connect-sql-doobie",
     libraryDependencies ++= ConnectDependencies.sqlDoobieDependencies
   )
+  .dependsOn(shared)
   .dependsOn(connectCore % "compile->compile;test->test")
 
 // #####################
@@ -361,14 +414,14 @@ def prismAgentConnectCommonSettings = polluxCommonSettings
 //   )
 // )
 
-lazy val prismAgentWalletAPI = project
-  .in(file("prism-agent/service/wallet-api"))
-  .settings(prismAgentConnectCommonSettings)
-  .settings(
-    name := "prism-agent-wallet-api",
-    libraryDependencies ++= PrismAgentDependencies.keyManagementDependencies
-  )
-  .dependsOn(agentDidcommx)
+// lazy val prismAgentWalletAPI = project
+//   .in(file("prism-agent/service/wallet-api"))
+//   .settings(prismAgentConnectCommonSettings)
+//   .settings(
+//     name := "prism-agent-wallet-api",
+//     libraryDependencies ++= PrismAgentDependencies.keyManagementDependencies
+//   )
+//   .dependsOn(agentDidcommx)
 
 // lazy val prismAgentServer = project
 //   .in(file("prism-agent/service/server"))
@@ -400,4 +453,4 @@ lazy val prismAgentWalletAPI = project
 //   // FIXME .enablePlugins(OpenApiGeneratorPlugin, JavaAppPackaging, DockerPlugin)
 //   .enablePlugins(OpenApiGeneratorPlugin)
 //   .dependsOn(prismAgentWalletAPI)
-//   .dependsOn(agent, polluxCore, polluxDoobie, connectCore, connectDoobie)
+//   .dependsOn(agent, polluxCore, polluxDoobie, connectCore, connectDoobie, castorDoobie)
