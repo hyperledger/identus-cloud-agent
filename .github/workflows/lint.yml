@@ -13,13 +13,13 @@ on:
 jobs:
   lint:
     name: Lint changes
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     env:
       APPLY_FIXES: none
       GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v2
         with:
           token: ${{ secrets.ATALA_GITHUB_TOKEN }}
           fetch-depth: 0
