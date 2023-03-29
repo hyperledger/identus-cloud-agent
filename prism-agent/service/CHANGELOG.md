@@ -1,3 +1,10 @@
+# [prism-agent-v0.60.2](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.60.1...prism-agent-v0.60.2) (2023-03-29)
+
+
+### Bug Fixes
+
+* **prism-agent:** Alight the error responses according to RFC7807. ATL-3962 ([#480](https://github.com/input-output-hk/atala-prism-building-blocks/issues/480)) ([64b0a2a](https://github.com/input-output-hk/atala-prism-building-blocks/commit/64b0a2a04599c30adaf64e8411e1ec95305846cd))
+
 # [prism-agent-v0.60.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.60.0...prism-agent-v0.60.1) (2023-03-28)
 
 
