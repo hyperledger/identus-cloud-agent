@@ -9,8 +9,8 @@ import io.iohk.atala.castor.core.model.did.{
   PrismDID,
   PrismDIDOperation,
   PublicKey,
-  ScheduledDIDOperationDetail,
   ScheduleDIDOperationOutcome,
+  ScheduledDIDOperationDetail,
   SignedPrismDIDOperation
 }
 import zio.*
@@ -21,7 +21,7 @@ import io.iohk.atala.prism.crypto.Sha256
 import io.iohk.atala.shared.models.HexStrings.*
 import io.iohk.atala.shared.utils.Traverse.*
 import io.iohk.atala.prism.protos.{node_api, node_models}
-import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc.NodeServiceStub
+import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc.NodeService
 import io.iohk.atala.prism.protos.node_models.OperationOutput.{OperationMaybe, Result}
 
 import scala.collection.immutable.ArraySeq
@@ -35,11 +35,11 @@ trait DIDService {
 }
 
 object DIDServiceImpl {
-  val layer: URLayer[NodeServiceStub & DIDOperationValidator, DIDService] =
+  val layer: URLayer[NodeService & DIDOperationValidator, DIDService] =
     ZLayer.fromFunction(DIDServiceImpl(_, _))
 }
 
-private class DIDServiceImpl(didOpValidator: DIDOperationValidator, nodeClient: NodeServiceStub)
+private class DIDServiceImpl(didOpValidator: DIDOperationValidator, nodeClient: NodeService)
     extends DIDService,
       ProtoModelHelper {
 
@@ -107,7 +107,8 @@ private class DIDServiceImpl(didOpValidator: DIDOperationValidator, nodeClient: 
         id = canonicalDID,
         publicKeys = op.publicKeys.collect { case pk: PublicKey => pk },
         services = op.services,
-        internalKeys = op.publicKeys.collect { case pk: InternalPublicKey => pk }
+        internalKeys = op.publicKeys.collect { case pk: InternalPublicKey => pk },
+        context = op.context
       )
       metadata -> didData
     }

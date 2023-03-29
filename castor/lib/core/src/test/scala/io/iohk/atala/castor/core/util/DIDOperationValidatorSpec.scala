@@ -109,9 +109,10 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
             publicKeyData = publicKeyData
           )
         ),
-        services: Seq[Service] = Nil
+        services: Seq[Service] = Nil,
+        context: Seq[String] = Nil
     ) =
-      PrismDIDOperation.Create(publicKeys = publicKeys ++ internalKeys, services = services)
+      PrismDIDOperation.Create(publicKeys = publicKeys ++ internalKeys, services = services, context = context)
 
     val testLayer = DIDOperationValidator.layer()
 
