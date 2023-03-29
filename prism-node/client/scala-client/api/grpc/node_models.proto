@@ -133,6 +133,10 @@ message UpdateServiceAction {
   repeated string service_endpoints = 3;
 }
 
+message PatchContextAction {
+  repeated string context = 1; // The list of strings to use by resolvers during resolution when producing a JSON-LD output
+}
+
 // The potential details that can be updated in a DID.
 message UpdateDIDAction {
 
@@ -143,6 +147,7 @@ message UpdateDIDAction {
     AddServiceAction add_service = 3; // Used to add a new service to a DID,
     RemoveServiceAction remove_service = 4; // Used to remove an existing service from a DID,
     UpdateServiceAction update_service = 5; // Used to Update a list of service endpoints of a given service on a given DID.
+    PatchContextAction patch_context = 6; // Used to Update a list of `@context` strings used during resolution for a given DID.
   }
 }
 
