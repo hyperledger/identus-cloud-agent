@@ -264,6 +264,7 @@ Add `.protolintrc.yml` used by `protolint` linter and configure it to disable th
 - `REPEATED_FIELD_NAMES_PLURALIZED`
 - `ENUM_FIELD_NAMES_PREFIX`
 - `ENUM_FIELD_NAMES_ZERO_VALUE_END_WITH`
+- `FIELD_NAMES_LOWER_SNAKE_CASE`
 
 These rules should be disabled since they try to rename some fields deviating from the spec submitted to W3C.
 

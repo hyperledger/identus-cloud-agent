@@ -115,7 +115,7 @@ message AddKeyAction {
 
 // The necessary data to remove a key from a DID.
 message RemoveKeyAction {
-  string key_id = 1; // the key id to remove
+  string keyId = 1; // the key id to remove
 }
 
 message AddServiceAction {
@@ -123,7 +123,7 @@ message AddServiceAction {
 }
 
 message RemoveServiceAction {
-  string service_id = 1;
+  string serviceId = 1;
 }
 
 message UpdateServiceAction {
