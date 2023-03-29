@@ -1,3 +1,5 @@
+import sbtbuildinfo.BuildInfoPlugin.autoImport._
+
 inThisBuild(
   Seq(
     organization := "io.iohk.atala",
@@ -72,6 +74,22 @@ lazy val D = new {
 }
 
 publish / skip := true
+
+// #####################
+// #####  shared  ######
+// #####################
+
+lazy val shared = (project in file("shared"))
+  // .configure(publishConfigure)
+  .settings(
+    organization := "io.iohk.atala",
+    organizationName := "Input Output Global",
+    buildInfoPackage := "io.iohk.atala.shared",
+    name := "shared",
+    crossPaths := false,
+    libraryDependencies ++= SharedDependencies.dependencies
+  )
+  .enablePlugins(BuildInfoPlugin)
 
 // #########################
 // ### Models & Services ###
@@ -281,22 +299,6 @@ sys.env
   )
   }
   .toSeq
-
-// #####################
-// #####  shared  ######
-// #####################
-
-lazy val shared = (project in file("shared"))
-  // .configure(publishConfigure)
-  .settings(
-    organization := "io.iohk.atala",
-    organizationName := "Input Output Global",
-    buildInfoPackage := "io.iohk.atala.shared",
-    name := "shared",
-    crossPaths := false,
-    libraryDependencies ++= SharedDependencies.dependencies
-  )
-  .enablePlugins(BuildInfoPlugin)
 
 // #####################
 // #####  castor  ######

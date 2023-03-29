@@ -12,8 +12,12 @@ object DIDApiMarshallerImpl extends JsonSupport {
 
   val layer: ULayer[DIDApiMarshaller] = ZLayer.succeed {
     new DIDApiMarshaller {
-      implicit def toEntityMarshallerDIDResolutionResult: ToEntityMarshaller[OASModelPatches.DIDResolutionResult] =
-        summon[RootJsonFormat[OASModelPatches.DIDResolutionResult]]
+      // implicit def toEntityMarshallerDIDResolutionResult: ToEntityMarshaller[OASModelPatches.DIDResolutionResult] =
+      //   summon[RootJsonFormat[OASModelPatches.DIDResolutionResult]]
+
+      implicit def toEntityMarshallerDIDResolutionResult: akka.http.scaladsl.marshalling.ToEntityMarshaller[
+        io.iohk.atala.agent.openapi.model.DIDResolutionResult
+      ] = ??? // FIXME
     }
   }
 
