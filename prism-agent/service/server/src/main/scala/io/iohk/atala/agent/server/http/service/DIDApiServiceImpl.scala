@@ -24,6 +24,11 @@ class DIDApiServiceImpl(service: DIDService)(using runtime: Runtime[Any])
       OASErrorModelHelper {
 
   override def getDid(didRef: String, accept: Option[String])(implicit
+      toEntityMarshallerDIDResolutionResult: ToEntityMarshaller[DIDResolutionResult]
+  ): Route = ???
+
+  // FIXME
+  def getDidFIXME(didRef: String, accept: Option[String])(implicit
       toEntityMarshallerDIDResolutionResult: ToEntityMarshaller[OASModelPatches.DIDResolutionResult]
   ): Route = {
     val result = for {
