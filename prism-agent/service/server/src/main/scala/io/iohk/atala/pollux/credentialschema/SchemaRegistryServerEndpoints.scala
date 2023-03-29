@@ -1,19 +1,13 @@
 package io.iohk.atala.pollux.credentialschema
 
 import io.iohk.atala.api.http.model.{CollectionStats, Order, Pagination, PaginationInput}
-import io.iohk.atala.api.http.{FailureResponse, InternalServerError, NotFound, RequestContext}
-import io.iohk.atala.pollux.credentialschema.SchemaRegistryEndpoints.{
-  createSchemaEndpoint,
-  updateSchemaEndpoint,
-  getSchemaByIdEndpoint,
-  lookupSchemasByQueryEndpoint,
-  testEndpoint
-}
+import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
+import io.iohk.atala.pollux.credentialschema.SchemaRegistryEndpoints.*
 import io.iohk.atala.pollux.credentialschema.controller.{CredentialSchemaController, CredentialSchemaControllerLogic}
 import io.iohk.atala.pollux.credentialschema.http.{
   CredentialSchemaInput,
-  CredentialSchemaResponsePage,
   CredentialSchemaResponse,
+  CredentialSchemaResponsePage,
   FilterInput
 }
 import sttp.tapir.redoc.RedocUIOptions
@@ -29,7 +23,7 @@ class SchemaRegistryServerEndpoints(
     credentialSchemaController: CredentialSchemaController
 ) {
   def throwableToInternalServerError(throwable: Throwable) =
-    ZIO.fail[FailureResponse](InternalServerError(throwable.getMessage))
+    ZIO.fail[ErrorResponse](ErrorResponse.internalServerError(detail = Option(throwable.getMessage)))
 
   val createSchemaServerEndpoint: ZServerEndpoint[Any, Any] =
     createSchemaEndpoint.zServerLogic { case (ctx: RequestContext, schemaInput: CredentialSchemaInput) =>

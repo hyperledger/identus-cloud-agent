@@ -1,13 +1,13 @@
 package io.iohk.atala.pollux
 
 import io.iohk.atala.agent.server.http.ZHttp4sBlazeServer
-import io.iohk.atala.api.http.{BadRequest, NotFound}
+import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.pollux.credentialschema.*
 import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaController
 import io.iohk.atala.pollux.credentialschema.http.{
   CredentialSchemaInput,
-  CredentialSchemaResponsePage,
-  CredentialSchemaResponse
+  CredentialSchemaResponse,
+  CredentialSchemaResponsePage
 }
 import io.iohk.atala.pollux.test.container.MigrationAspects.migrate
 import sttp.client3.testing.SttpBackendStub

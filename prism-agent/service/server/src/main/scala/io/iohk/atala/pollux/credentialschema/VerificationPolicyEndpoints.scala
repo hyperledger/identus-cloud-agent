@@ -1,9 +1,9 @@
 package io.iohk.atala.pollux.credentialschema
 
+import io.iohk.atala.api.http.*
 import io.iohk.atala.api.http.EndpointOutputs.*
 import io.iohk.atala.api.http.codec.OrderCodec.*
 import io.iohk.atala.api.http.model.{Order, PaginationInput}
-import io.iohk.atala.api.http.*
 import io.iohk.atala.pollux.credentialschema.http.*
 import sttp.model.StatusCode
 import sttp.tapir.EndpointIO.Info
@@ -30,7 +30,7 @@ object VerificationPolicyEndpoints {
 
   val createVerificationPolicyEndpoint: PublicEndpoint[
     (RequestContext, VerificationPolicyInput),
-    FailureResponse,
+    ErrorResponse,
     VerificationPolicy,
     Any
   ] =
@@ -60,7 +60,7 @@ object VerificationPolicyEndpoints {
 
   val updateVerificationPolicyEndpoint: PublicEndpoint[
     (RequestContext, UUID, Int, VerificationPolicyInput),
-    FailureResponse,
+    ErrorResponse,
     VerificationPolicy,
     Any
   ] =
@@ -89,7 +89,7 @@ object VerificationPolicyEndpoints {
 
   val getVerificationPolicyByIdEndpoint: PublicEndpoint[
     (RequestContext, UUID),
-    FailureResponse,
+    ErrorResponse,
     VerificationPolicy,
     Any
   ] =
@@ -110,7 +110,7 @@ object VerificationPolicyEndpoints {
 
   val deleteVerificationPolicyByIdEndpoint: PublicEndpoint[
     (RequestContext, UUID, Int),
-    FailureResponse,
+    ErrorResponse,
     Unit,
     Any
   ] =
@@ -140,7 +140,7 @@ object VerificationPolicyEndpoints {
 
   val lookupVerificationPoliciesByQueryEndpoint: PublicEndpoint[
     (RequestContext, VerificationPolicy.Filter, PaginationInput, Option[Order]),
-    FailureResponse,
+    ErrorResponse,
     VerificationPolicyPage,
     Any
   ] =

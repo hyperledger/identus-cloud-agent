@@ -24,18 +24,20 @@ class VerificationPolicyControllerImpl(service: VerificationPolicyService) exten
 
   def verificationPolicyError2FailureResponse(
       vpe: VerificationPolicyError
-  ): FailureResponse = {
+  ): ErrorResponse = {
     vpe match {
-      case RepositoryError(cause) => InternalServerError(cause.getMessage)
+      case RepositoryError(cause) =>
+        ErrorResponse.internalServerError(detail = Option(cause.getMessage))
       case NotFoundError(id) =>
-        NotFound(s"VerificationPolicy is not found by $id")
-      case UnexpectedError(cause) => InternalServerError(cause.getMessage)
+        ErrorResponse.notFound(detail = Option(s"VerificationPolicy is not found by $id"))
+      case UnexpectedError(cause) =>
+        ErrorResponse.internalServerError(detail = Option(cause.getMessage))
     }
   }
   override def createVerificationPolicy(
       ctx: RequestContext,
       in: VerificationPolicyInput
-  ): IO[FailureResponse, VerificationPolicy] = {
+  ): IO[ErrorResponse, VerificationPolicy] = {
     val constraints = in.constraints
       .map(c =>
         CredentialSchemaAndTrustedIssuersConstraint(
@@ -59,7 +61,7 @@ class VerificationPolicyControllerImpl(service: VerificationPolicyService) exten
   override def getVerificationPolicyById(
       ctx: RequestContext,
       id: UUID
-  ): IO[FailureResponse, VerificationPolicy] = {
+  ): IO[ErrorResponse, VerificationPolicy] = {
     service.get(id).flatMap {
       case Some(vp) => succeed(vp.toSchema().withUri(ctx.request.uri))
       case None     => fail(NotFoundError(id))
@@ -71,7 +73,7 @@ class VerificationPolicyControllerImpl(service: VerificationPolicyService) exten
       id: UUID,
       nonce: Int,
       update: VerificationPolicyInput
-  ): IO[FailureResponse, VerificationPolicy] = {
+  ): IO[ErrorResponse, VerificationPolicy] = {
     val updatedZIO = for {
       constraints <- zio.ZIO.succeed(
         update.constraints.toVector // TODO: refactor to Seq
@@ -102,7 +104,7 @@ class VerificationPolicyControllerImpl(service: VerificationPolicyService) exten
       ctx: RequestContext,
       id: UUID,
       nonce: Int
-  ): IO[FailureResponse, Unit] = {
+  ): IO[ErrorResponse, Unit] = {
     service
       .delete(id, nonce)
       .flatMap {
@@ -117,7 +119,7 @@ class VerificationPolicyControllerImpl(service: VerificationPolicyService) exten
       filter: VerificationPolicy.Filter,
       pagination: Pagination,
       order: Option[Order]
-  ): IO[FailureResponse, VerificationPolicyPage] = {
+  ): IO[ErrorResponse, VerificationPolicyPage] = {
     for {
       filteredDomainRecords <- service
         .lookup(filter.name, Some(pagination.offset), Some(pagination.limit))

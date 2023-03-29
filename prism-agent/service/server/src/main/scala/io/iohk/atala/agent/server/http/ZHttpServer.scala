@@ -2,7 +2,7 @@ package io.iohk.atala.agent.server.http
 
 import cats.implicits.*
 import io.iohk.atala.agent.server.http.ZHttpEndpoints
-import io.iohk.atala.api.http.BadRequest
+import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.pollux.credentialschema.SchemaRegistryServerEndpoints
 import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaController
 import org.http4s.*
@@ -24,7 +24,7 @@ object ZHttp4sBlazeServer {
 
   val serverOptions: Http4sServerOptions[Task] = Http4sServerOptions
     .customiseInterceptors[Task]
-    .defaultHandlers(BadRequest.failureResponseHandler)
+    .defaultHandlers(ErrorResponse.failureResponseHandler)
     .options
 
   def start(

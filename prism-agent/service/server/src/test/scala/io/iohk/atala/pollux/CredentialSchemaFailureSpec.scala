@@ -1,13 +1,13 @@
 package io.iohk.atala.pollux
 
 import io.iohk.atala.agent.server.http.ZHttp4sBlazeServer
-import io.iohk.atala.api.http.{BadRequest, NotFound}
+import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.pollux.credentialschema.*
 import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaController
 import io.iohk.atala.pollux.credentialschema.http.{
   CredentialSchemaInput,
-  CredentialSchemaResponsePage,
-  CredentialSchemaResponse
+  CredentialSchemaResponse,
+  CredentialSchemaResponsePage
 }
 import io.iohk.atala.pollux.test.container.MigrationAspects.migrate
 import sttp.client3.testing.SttpBackendStub
@@ -47,11 +47,13 @@ object CredentialSchemaFailureSpec extends ZIOSpecDefault with CredentialSchemaT
         response: SchemaBadRequestResponse <- basicRequest
           .post(credentialSchemaUriBase)
           .body("""{"foo":"bar"}""")
-          .response(asJsonAlways[BadRequest])
+          .response(asJsonAlways[ErrorResponse])
           .send(backend)
 
         itIsABadRequestStatusCode = assert(response.code)(equalTo(StatusCode.BadRequest))
-        theBodyWasParsedFromJsonAsBadRequest = assert(response.body)(isRight(isSubtype[BadRequest](Assertion.anything)))
+        theBodyWasParsedFromJsonAsBadRequest = assert(response.body)(
+          isRight(isSubtype[ErrorResponse](Assertion.anything))
+        )
       } yield itIsABadRequestStatusCode && theBodyWasParsedFromJsonAsBadRequest
     }
   )

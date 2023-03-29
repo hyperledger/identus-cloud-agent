@@ -1,36 +1,36 @@
 package io.iohk.atala.pollux.credentialschema.controller
 
-import io.iohk.atala.agent.server.http.model.HttpServiceError.DomainError
-import io.iohk.atala.api.http.model.{CollectionStats, Order, Pagination, PaginationInput}
 import io.iohk.atala.api.http.*
+import io.iohk.atala.api.http.model.{CollectionStats, Order, Pagination, PaginationInput}
 import io.iohk.atala.pollux.core.service.CredentialSchemaService
 import io.iohk.atala.pollux.core.service.CredentialSchemaService.Error.*
 import io.iohk.atala.pollux.credentialschema.http.{
   CredentialSchemaInput,
-  CredentialSchemaResponsePage,
   CredentialSchemaResponse,
+  CredentialSchemaResponsePage,
   FilterInput
 }
 import zio.{IO, Task, ZIO, ZLayer}
+//import io.iohk.atala.api.http.ErrorResponse.*
 
 import java.util.UUID
 
 trait CredentialSchemaController {
   def createSchema(in: CredentialSchemaInput)(implicit
       rc: RequestContext
-  ): IO[FailureResponse, CredentialSchemaResponse]
+  ): IO[ErrorResponse, CredentialSchemaResponse]
 
   def updateSchema(author: String, id: UUID, in: CredentialSchemaInput)(implicit
       rc: RequestContext
-  ): IO[FailureResponse, CredentialSchemaResponse]
+  ): IO[ErrorResponse, CredentialSchemaResponse]
 
   def getSchemaByGuid(id: UUID)(implicit
       rc: RequestContext
-  ): IO[FailureResponse, CredentialSchemaResponse]
+  ): IO[ErrorResponse, CredentialSchemaResponse]
 
   def delete(guid: UUID)(implicit
       rc: RequestContext
-  ): IO[FailureResponse, CredentialSchemaResponse]
+  ): IO[ErrorResponse, CredentialSchemaResponse]
 
   def lookupSchemas(
       filter: FilterInput,
@@ -38,30 +38,32 @@ trait CredentialSchemaController {
       order: Option[Order]
   )(implicit
       rc: RequestContext
-  ): IO[FailureResponse, CredentialSchemaResponsePage]
+  ): IO[ErrorResponse, CredentialSchemaResponsePage]
 }
 
 object CredentialSchemaController {
   def domainToHttpError(
       error: CredentialSchemaService.Error
-  ): FailureResponse = {
+  ): ErrorResponse = {
     error match {
       case RepositoryError(cause: Throwable) =>
-        InternalServerError(cause.getMessage)
+        ErrorResponse.internalServerError("RepositoryError", detail = Option(cause.toString))
       case NotFoundError(_, _, message) =>
-        NotFound(message)
+        ErrorResponse.notFound(detail = Option(message))
       case UpdateError(id, version, author, message) =>
-        BadRequest(
-          msg = s"Credential schema update error: id=$id, version=$version",
-          errors = List(message)
+        ErrorResponse.badRequest(
+          title = "CredentialSchemaUpdateError",
+          detail = Option(s"Credential schema update error: id=$id, version=$version, author=$author"),
+          instance = message
         )
-      case UnexpectedError(msg: String) => InternalServerError(msg)
+      case UnexpectedError(msg: String) =>
+        ErrorResponse.internalServerError(detail = Option(msg))
     }
   }
 
   implicit def domainToHttpErrorIO[R, T](
       domainIO: ZIO[R, CredentialSchemaService.Error, T]
-  ): ZIO[R, FailureResponse, T] = {
+  ): ZIO[R, ErrorResponse, T] = {
     domainIO.mapError(domainToHttpError)
   }
 }
