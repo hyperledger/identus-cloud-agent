@@ -35,12 +35,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Cache sbt
-        uses: coursier/cache-action@v6.3
-        with:
-          root: ./${{ inputs.component-dir }}
-          path: "/root/.cache/coursier/v1"
-
       - name: Run Scala formatter
         run: sbt scalafmtCheckAll
 
