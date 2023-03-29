@@ -406,51 +406,60 @@ import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
 
 def prismAgentConnectCommonSettings = polluxCommonSettings
 
-// val apiBaseDirectory =
-//   settingKey[File]("The base directory for PrismAgent API specifications")
-// inThisBuild(
-//   Seq(
-//     apiBaseDirectory := baseDirectory.value / "api"
-//   )
-// )
+val apiBaseDirectory =
+  settingKey[File]("The base directory for PrismAgent API specifications")
+inThisBuild(
+  Seq(
+    apiBaseDirectory := baseDirectory.value / "api"
+  )
+)
 
-// lazy val prismAgentWalletAPI = project
-//   .in(file("prism-agent/service/wallet-api"))
-//   .settings(prismAgentConnectCommonSettings)
-//   .settings(
-//     name := "prism-agent-wallet-api",
-//     libraryDependencies ++= PrismAgentDependencies.keyManagementDependencies
-//   )
-//   .dependsOn(agentDidcommx)
+lazy val prismAgentWalletAPI = project
+  .in(file("prism-agent/service/wallet-api"))
+  .settings(prismAgentConnectCommonSettings)
+  .settings(
+    name := "prism-agent-wallet-api",
+    libraryDependencies ++= PrismAgentDependencies.keyManagementDependencies
+  )
+  .dependsOn(agentDidcommx)
+  .dependsOn(castorCore, castorDoobie)
 
-// lazy val prismAgentServer = project
-//   .in(file("prism-agent/service/server"))
-//   .settings(prismAgentConnectCommonSettings)
-//   .settings(
-//     name := "prism-agent",
-//     fork := true,
-//     libraryDependencies ++= PrismAgentDependencies.serverDependencies,
-//     Compile / mainClass := Some("io.iohk.atala.agent.server.Main"),
-//     // OpenAPI settings
-//     Compile / unmanagedResourceDirectories += baseDirectory.value / ".." / "api",
-//     Compile / sourceGenerators += openApiGenerateClasses,
-//     openApiGeneratorSpec := baseDirectory.value / ".." / "api" / "http/prism-agent-openapi-spec.yaml",
-//     openApiGeneratorConfig := baseDirectory.value / "openapi/generator-config/config2.yaml",
-//     openApiGeneratorImportMapping := Seq(
-//       "DidOperationType",
-//       "DidOperationStatus"
-//     )
-//       .map(model => (model, s"io.iohk.atala.agent.server.http.model.OASModelPatches.$model"))
-//       .toMap,
-//     // FIXME
-//     // Docker / maintainer := "atala-coredid@iohk.io",
-//     // Docker / dockerUsername := Some("input-output-hk"),
-//     // Docker / githubOwner := "atala-prism-building-blocks",
-//     // Docker / dockerRepository := Some("ghcr.io"),
-//     // dockerExposedPorts := Seq(8080, 8085, 8090),
-//     // dockerBaseImage := "openjdk:11"
-//   )
-//   // FIXME .enablePlugins(OpenApiGeneratorPlugin, JavaAppPackaging, DockerPlugin)
-//   .enablePlugins(OpenApiGeneratorPlugin)
-//   .dependsOn(prismAgentWalletAPI)
-//   .dependsOn(agent, polluxCore, polluxDoobie, connectCore, connectDoobie, castorDoobie)
+lazy val prismAgentServer = project
+  .in(file("prism-agent/service/server"))
+  .settings(prismAgentConnectCommonSettings)
+  .settings(
+    name := "prism-agent",
+    fork := true,
+    libraryDependencies ++= PrismAgentDependencies.serverDependencies,
+    Compile / mainClass := Some("io.iohk.atala.agent.server.Main"),
+    // OpenAPI settings
+    Compile / unmanagedResourceDirectories += baseDirectory.value / ".." / "api",
+    Compile / sourceGenerators += openApiGenerateClasses,
+    openApiGeneratorSpec := baseDirectory.value / ".." / "api" / "http/prism-agent-openapi-spec.yaml",
+    openApiGeneratorConfig := baseDirectory.value / "openapi/generator-config/config2.yaml",
+    openApiGeneratorImportMapping := Seq(
+      "DidOperationType",
+      "DidOperationStatus"
+    )
+      .map(model => (model, s"io.iohk.atala.agent.server.http.model.OASModelPatches.$model"))
+      .toMap,
+    // FIXME
+    // Docker / maintainer := "atala-coredid@iohk.io",
+    // Docker / dockerUsername := Some("input-output-hk"),
+    // Docker / githubOwner := "atala-prism-building-blocks",
+    // Docker / dockerRepository := Some("ghcr.io"),
+    // dockerExposedPorts := Seq(8080, 8085, 8090),
+    // dockerBaseImage := "openjdk:11"
+  )
+  // FIXME .enablePlugins(OpenApiGeneratorPlugin, JavaAppPackaging, DockerPlugin)
+  .enablePlugins(OpenApiGeneratorPlugin)
+  .dependsOn(prismAgentWalletAPI)
+  .dependsOn(
+    agent,
+    polluxCore,
+    polluxDoobie,
+    connectCore,
+    connectDoobie,
+    castorCore,
+    castorDoobie
+  )
