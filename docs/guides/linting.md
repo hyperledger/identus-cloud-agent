@@ -260,8 +260,12 @@ Linter - Suggested Change:  Customise
 
 *Change detail*
 
-Add `.protolintrc.yml` used by `protolint` linter and configure it to disable `REPEATED_FIELD_NAMES_PLURALIZED` rule.
-This rule should be disabled since it tries to pluralize the field name that doesn't conform to the spec submitted to W3C.
+Add `.protolintrc.yml` used by `protolint` linter and configure it to disable the following rules
+- `REPEATED_FIELD_NAMES_PLURALIZED`
+- `ENUM_FIELD_NAMES_PREFIX`
+- `ENUM_FIELD_NAMES_ZERO_VALUE_END_WITH`
+
+These rules should be disabled since they try to rename some fields deviating from the spec submitted to W3C.
 
 ---
 
