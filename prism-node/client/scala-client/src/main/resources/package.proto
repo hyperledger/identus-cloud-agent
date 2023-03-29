@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package io.iohk.atala.prism.protos;
+
+import "scalapb/scalapb.proto";
+
+option (scalapb.options) = {
+  scope: PACKAGE
+  no_default_values_in_constructor: true
+};
