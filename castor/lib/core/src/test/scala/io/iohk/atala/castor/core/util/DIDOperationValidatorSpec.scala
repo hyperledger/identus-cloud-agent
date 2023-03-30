@@ -262,11 +262,9 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
           invalidArgumentContainsString("serviceEndpoint URIs must be normalized")
         )
       },
-      test("reject CreateOperation when publicKeys is empty") {
+      test("accept CreateOperation when publicKeys is empty because master key always exist") {
         val op = createPrismDIDOperation(publicKeys = Nil)
-        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
-          invalidArgumentContainsString("operation must contain at least 1 public key")
-        )
+        assert(DIDOperationValidator(Config(50, 50)).validate(op))(isRight)
       },
       // Test that the validator accepts a CreateOperation when the services list is not present
       test("accept CreateOperation when services is None") {
