@@ -23,7 +23,7 @@ inThisBuild(
       // TODO "-feature",
       // TODO "-Xfatal-warnings",
       // TODO "-Yexplicit-nulls",
-      "-Ysafe-init",
+      //"-Ysafe-init",
     )
   )
 )
@@ -456,7 +456,6 @@ lazy val prismAgentServer = project
     buildInfoPackage := "io.iohk.atala.agent.server.buildinfo"
   )
   // FIXME .enablePlugins(OpenApiGeneratorPlugin, JavaAppPackaging, DockerPlugin)
-  // .enablePlugins(OpenApiGeneratorPlugin)
   .enablePlugins(OpenApiGeneratorPlugin, BuildInfoPlugin)
   .dependsOn(prismAgentWalletAPI)
   .dependsOn(
