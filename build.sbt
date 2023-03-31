@@ -77,8 +77,14 @@ lazy val D = new {
   val zioLog: ModuleID = "dev.zio" %% "zio-logging" % V.zioLogging
   val zioSLF4J: ModuleID = "dev.zio" %% "zio-logging-slf4j" % V.zioLogging
   val zioJson: ModuleID = "dev.zio" %% "zio-json" % V.zioJson
-  val zioHttp: ModuleID = "dev.zio" %% "zio-http" % "0.0.3"
+  val zioHttp: ModuleID = "dev.zio" %% "zio-http" % "0.0.3" // TODO version
+  val zioHttpD11 = "io.d11" %% "zhttp" % V.zioHttp // FIXME!!!!!!!
   val zioCatsInterop = "dev.zio" %% "zio-interop-cats" % V.zioCatsInterop
+  val zioMetrics = "dev.zio" %% "zio-metrics-connectors" % V.zioMetrics
+
+  val zioConfig = "dev.zio" %% "zio-config" % V.zioConfig
+  val zioConfigMagnolia = "dev.zio" %% "zio-config-magnolia" % V.zioConfig
+  val zioConfigTypesafe = "dev.zio" %% "zio-config-typesafe" % V.zioConfig
 
   val circeCore: ModuleID = "io.circe" %% "circe-core" % V.circe
   val circeGeneric: ModuleID = "io.circe" %% "circe-generic" % V.circe
@@ -92,23 +98,23 @@ lazy val D = new {
   // https://mvnrepository.com/artifact/com.nimbusds/nimbus-jose-jwt/9.16-preview.1
   val jwk: ModuleID = "com.nimbusds" % "nimbus-jose-jwt" % "9.25.4"
 
-  val typesafeConfig = "com.typesafe" % "config" % V.typesafeConfig
-  val scalaPbGrpc = "com.thesamet.scalapb" %% "scalapb-runtime-grpc" % scalapb.compiler.Version.scalapbVersion
+  val typesafeConfig: ModuleID = "com.typesafe" % "config" % V.typesafeConfig
+  val scalaPbGrpc: ModuleID = "com.thesamet.scalapb" %% "scalapb-runtime-grpc" % scalapb.compiler.Version.scalapbVersion
   // TODO we are adding test stuff to the main dependencies
-  val testcontainers = "com.dimafeng" %% "testcontainers-scala-postgresql" % V.testContainersScalaPostgresql
+  val testcontainers: ModuleID = "com.dimafeng" %% "testcontainers-scala-postgresql" % V.testContainersScalaPostgresql
 
-  val doobiePostgres = "org.tpolecat" %% "doobie-postgres" % V.doobie
-  val doobieHikari = "org.tpolecat" %% "doobie-hikari" % V.doobie
-  val flyway = "org.flywaydb" % "flyway-core" % V.flyway
+  val doobiePostgres: ModuleID = "org.tpolecat" %% "doobie-postgres" % V.doobie
+  val doobieHikari: ModuleID = "org.tpolecat" %% "doobie-hikari" % V.doobie
+  val flyway: ModuleID = "org.flywaydb" % "flyway-core" % V.flyway
 
   // For munit https://scalameta.org/munit/docs/getting-started.html#scalajs-setup
-  val munit = "org.scalameta" %% "munit" % V.munit % Test
+  val munit: ModuleID = "org.scalameta" %% "munit" % V.munit % Test
   // For munit zio https://github.com/poslegm/munit-zio
-  val munitZio = "com.github.poslegm" %% "munit-zio" % V.munitZio % Test
+  val munitZio: ModuleID = "com.github.poslegm" %% "munit-zio" % V.munitZio % Test
 
-  val zioTest = "dev.zio" %% "zio-test" % V.zio % Test
-  val zioTestSbt = "dev.zio" %% "zio-test-sbt" % V.zio % Test
-  val zioTestMagnolia = "dev.zio" %% "zio-test-magnolia" % V.zio % Test
+  val zioTest: ModuleID = "dev.zio" %% "zio-test" % V.zio % Test
+  val zioTestSbt: ModuleID = "dev.zio" %% "zio-test-sbt" % V.zio % Test
+  val zioTestMagnolia: ModuleID = "dev.zio" %% "zio-test-magnolia" % V.zio % Test
 
   // LIST of Dependencies
   val doobieDependencies: Seq[ModuleID] =
@@ -140,27 +146,24 @@ lazy val D_Connect = new {
 
 lazy val D_Castor = new {
 
-  lazy val scalaUri = "io.lemonlabs" %% "scala-uri" % V.scalaUri
-
-  //  lazy val shared = "io.iohk.atala" % "shared" % V.shared
-  lazy val prismNodeClient = "io.iohk.atala" %% "prism-node-client" % V.prismNodeClient
+  val scalaUri = "io.lemonlabs" %% "scala-uri" % V.scalaUri
+  val prismNodeClient = "io.iohk.atala" %% "prism-node-client" % V.prismNodeClient
 
   // We have to exclude bouncycastle since for some reason bitcoinj depends on bouncycastle jdk15to18
   // (i.e. JDK 1.5 to 1.8), but we are using JDK 11
-  lazy val prismCrypto = "io.iohk.atala" % "prism-crypto-jvm" % V.prismSdk excludeAll
+  val prismCrypto = "io.iohk.atala" % "prism-crypto-jvm" % V.prismSdk excludeAll
     ExclusionRule(
       organization = "org.bouncycastle"
     )
-  lazy val prismIdentity = "io.iohk.atala" % "prism-identity-jvm" % V.prismSdk
+  val prismIdentity = "io.iohk.atala" % "prism-identity-jvm" % V.prismSdk
 
   // Dependency Modules
-  lazy val baseDependencies: Seq[ModuleID] =
+  val baseDependencies: Seq[ModuleID] =
     Seq(
       D.zio,
       D.zioTest,
       D.zioTestSbt,
       D.zioTestMagnolia,
-      /*shared,*/
       prismCrypto,
       prismIdentity,
       prismNodeClient,
@@ -168,58 +171,41 @@ lazy val D_Castor = new {
     )
 
   // Project Dependencies
-  lazy val coreDependencies: Seq[ModuleID] = baseDependencies
-  lazy val sqlDoobieDependencies: Seq[ModuleID] =
+  val coreDependencies: Seq[ModuleID] = baseDependencies
+  val sqlDoobieDependencies: Seq[ModuleID] =
     baseDependencies ++ D.doobieDependencies ++ Seq(D.zioCatsInterop)
 }
 
 lazy val D_Pollux = new {
-  lazy val logback = "ch.qos.logback" % "logback-classic" % V.logback % Test
-  lazy val slf4jApi = "org.slf4j" % "slf4j-api" % "2.0.6" % Test
-  lazy val slf4jSimple = "org.slf4j" % "slf4j-simple" % "2.0.6" % Test
+  val logback = "ch.qos.logback" % "logback-classic" % V.logback % Test
+  val slf4jApi = "org.slf4j" % "slf4j-api" % "2.0.6" % Test
+  val slf4jSimple = "org.slf4j" % "slf4j-simple" % "2.0.6" % Test
 
-  // lazy val zio = "dev.zio" %% "zio" % V.zio
-  // lazy val zioJson = "dev.zio" %% "zio-json" % V.zioJson
-  // lazy val zioCatsInterop = "dev.zio" %% "zio-interop-cats" % V.zioCatsInterop
-  // lazy val zioTest = "dev.zio" %% "zio-test" % V.zio % Test
-  // lazy val zioTestSbt = "dev.zio" %% "zio-test-sbt" % V.zio % Test
-  // lazy val zioTestMagnolia = "dev.zio" %% "zio-test-magnolia" % V.zio % Test
-  // For munit https://scalameta.org/munit/docs/getting-started.html
-  lazy val munit = "org.scalameta" %% "munit" % V.munit % Test
-  // For munit zio https://github.com/poslegm/munit-zio
-  lazy val munitZio = "com.github.poslegm" %% "munit-zio" % V.munitZio % Test
+  val doobiePostgres = "org.tpolecat" %% "doobie-postgres" % V.doobie
+  val doobieHikari = "org.tpolecat" %% "doobie-hikari" % V.doobie
 
-  lazy val doobiePostgres = "org.tpolecat" %% "doobie-postgres" % V.doobie
-  lazy val doobieHikari = "org.tpolecat" %% "doobie-hikari" % V.doobie
+  val flyway = "org.flywaydb" % "flyway-core" % V.flyway
 
-  lazy val flyway = "org.flywaydb" % "flyway-core" % V.flyway
-
-  lazy val quillJdbcZio = "io.getquill" %% "quill-jdbc-zio" %
+  val quillJdbcZio = "io.getquill" %% "quill-jdbc-zio" %
     V.quill exclude ("org.scala-lang.modules", "scala-java8-compat_3")
 
-  lazy val quillDoobie = "io.getquill" %% "quill-doobie" %
+  val quillDoobie = "io.getquill" %% "quill-doobie" %
     V.quill exclude ("org.scala-lang.modules", "scala-java8-compat_3")
 
-  lazy val testcontainers =
+  val testcontainers =
     "com.dimafeng" %% "testcontainers-scala-postgresql" % V.testContainersScalaPostgresql % Test
 
   // We have to exclude bouncycastle since for some reason bitcoinj depends on bouncycastle jdk15to18
   // (i.e. JDK 1.5 to 1.8), but we are using JDK 11
-  lazy val prismCrypto = "io.iohk.atala" % "prism-crypto-jvm" % V.prismSdk excludeAll
+  val prismCrypto = "io.iohk.atala" % "prism-crypto-jvm" % V.prismSdk excludeAll
     ExclusionRule(
       organization = "org.bouncycastle"
     )
 
-  //  lazy val shared = "io.iohk.atala" % "shared" % V.shared
-  lazy val irisClient = "io.iohk.atala" %% "iris-client" % V.iris
+  val irisClient = "io.iohk.atala" %% "iris-client" % V.iris // TODO REMOVE?
 
-  //  lazy val mercuryProtocolIssueCredential =
-  //   "io.iohk.atala" %% "mercury-protocol-issue-credential" % V.mercury
-  //  lazy val mercuryProtocolPresentProof =
-  //   "io.iohk.atala" %% "mercury-protocol-present-proof" % V.mercury
-  //  lazy val mercuryResolver = "io.iohk.atala" %% "mercury-resolver" % V.mercury
   // Dependency Modules
-  lazy val baseDependencies: Seq[ModuleID] = Seq(
+  val baseDependencies: Seq[ModuleID] = Seq(
     D.zio,
     D.zioJson,
     D.zioTest,
@@ -234,7 +220,7 @@ lazy val D_Pollux = new {
     slf4jSimple
   )
 
-  lazy val doobieDependencies: Seq[ModuleID] = Seq(
+  val doobieDependencies: Seq[ModuleID] = Seq(
     D.zioCatsInterop,
     D.doobiePostgres,
     D.doobieHikari,
@@ -245,21 +231,11 @@ lazy val D_Pollux = new {
   )
 
   // Project Dependencies
-  lazy val coreDependencies: Seq[ModuleID] =
-    baseDependencies ++ Seq(irisClient)
-    // ++ Seq(
-    //   mercuryProtocolIssueCredential,
-    //   mercuryProtocolPresentProof,
-    //   mercuryResolver
-    // )
-  lazy val sqlDoobieDependencies: Seq[ModuleID] = baseDependencies ++ doobieDependencies
+  val coreDependencies: Seq[ModuleID] = baseDependencies ++ Seq(irisClient)
+  val sqlDoobieDependencies: Seq[ModuleID] = baseDependencies ++ doobieDependencies
 }
 
 lazy val D_Pollux_VC_JWT = new {
-
-  private lazy val coreJwtCirce = "io.circe" %% "circe-core" % V.circeVersion
-  private lazy val genericJwtCirce = "io.circe" %% "circe-generic" % V.circeVersion
-  private lazy val parserJwtCirce = "io.circe" %% "circe-parser" % V.circeVersion
 
   private lazy val circeJsonSchema = ("net.reactivecore" %% "circe-json-schema" % "0.3.0")
     .cross(CrossVersion.for3Use2_13)
@@ -267,23 +243,23 @@ lazy val D_Pollux_VC_JWT = new {
     .exclude("io.circe", "circe-generic_2.13")
     .exclude("io.circe", "circe-parser_2.13")
 
-  private lazy val jwtCirce = "com.github.jwt-scala" %% "jwt-circe" % V.jwtCirceVersion
+  val jwtCirce = "com.github.jwt-scala" %% "jwt-circe" % V.jwtCirceVersion
 
-  private lazy val zio = "dev.zio" %% "zio" % V.zio
-  private lazy val zioPrelude = "dev.zio" %% "zio-prelude" % V.zioPreludeVersion
+  val zio = "dev.zio" %% "zio" % V.zio
+  val zioPrelude = "dev.zio" %% "zio-prelude" % V.zioPreludeVersion
 
-  private lazy val nimbusJoseJwt = "com.nimbusds" % "nimbus-jose-jwt" % "10.0.0-preview"
+  val nimbusJoseJwt = "com.nimbusds" % "nimbus-jose-jwt" % "10.0.0-preview"
 
-  private lazy val zioTest = "dev.zio" %% "zio-test" % V.zio % Test
-  private lazy val zioTestSbt = "dev.zio" %% "zio-test-sbt" % V.zio % Test
-  private lazy val zioTestMagnolia = "dev.zio" %% "zio-test-magnolia" % V.zio % Test
+  val zioTest = "dev.zio" %% "zio-test" % V.zio % Test
+  val zioTestSbt = "dev.zio" %% "zio-test-sbt" % V.zio % Test
+  val zioTestMagnolia = "dev.zio" %% "zio-test-magnolia" % V.zio % Test
 
-  private lazy val scalaTest = "org.scalatest" %% "scalatest" % "3.2.9" % Test
+  val scalaTest = "org.scalatest" %% "scalatest" % "3.2.9" % Test
 
   // Dependency Modules
-  private lazy val zioDependencies: Seq[ModuleID] = Seq(zio, zioPrelude, zioTest, zioTestSbt, zioTestMagnolia)
-  private lazy val circeDependencies: Seq[ModuleID] = Seq(coreJwtCirce, genericJwtCirce, parserJwtCirce)
-  private lazy val baseDependencies: Seq[ModuleID] =
+  val zioDependencies: Seq[ModuleID] = Seq(zio, zioPrelude, zioTest, zioTestSbt, zioTestMagnolia)
+  val circeDependencies: Seq[ModuleID] = Seq(D.circeCore, D.circeGeneric, D.circeParser)
+  val baseDependencies: Seq[ModuleID] =
     circeDependencies ++ zioDependencies :+ jwtCirce :+ circeJsonSchema :+ nimbusJoseJwt :+ scalaTest
 
   // Project Dependencies
@@ -292,89 +268,59 @@ lazy val D_Pollux_VC_JWT = new {
 
 lazy val D_PrismAgent = new {
 
-  private lazy val zio = "dev.zio" %% "zio" % V.zio
-  private lazy val zioConfig = "dev.zio" %% "zio-config" % V.zioConfig
-  private lazy val zioConfigMagnolia = "dev.zio" %% "zio-config-magnolia" % V.zioConfig
-  private lazy val zioConfigTypesafe = "dev.zio" %% "zio-config-typesafe" % V.zioConfig
-  private lazy val zioJson = "dev.zio" %% "zio-json" % V.zioJson
-  private lazy val zioInteropCats = "dev.zio" %% "zio-interop-cats" % V.zioCatsInterop
-
-  private lazy val zioTest = "dev.zio" %% "zio-test" % V.zio % Test
-  private lazy val zioTestSbt = "dev.zio" %% "zio-test-sbt" % V.zio % Test
-  private lazy val zioTestMagnolia = "dev.zio" %% "zio-test-magnolia" % V.zio % Test
-
-  private lazy val zioHttp = "io.d11" %% "zhttp" % V.zioHttp
-
-  private lazy val zioMetrics = "dev.zio" %% "zio-metrics-connectors" % V.zioMetrics
-
-  private lazy val akkaTyped = "com.typesafe.akka" %% "akka-actor-typed" % V.akka
-  private lazy val akkaStream = "com.typesafe.akka" %% "akka-stream" % V.akka
-  private lazy val akkaHttp = "com.typesafe.akka" %% "akka-http" % V.akkaHttp
-  private lazy val akkaSprayJson = "com.typesafe.akka" %% "akka-http-spray-json" % V.akkaHttp
-
-  // private lazy val castorCore = "io.iohk.atala" %% "castor-core" % V.castor
-  // private lazy val castorSqlDoobie = "io.iohk.atala" %% "castor-sql-doobie" % V.castor
-
-  // private lazy val polluxCore = "io.iohk.atala" %% "pollux-core" % V.pollux
-  // private lazy val polluxSqlDoobie = "io.iohk.atala" %% "pollux-sql-doobie" % V.pollux
-
-  // private lazy val connectCore = "io.iohk.atala" %% "connect-core" % V.connect
-  // private lazy val connectSqlDoobie = "io.iohk.atala" %% "connect-sql-doobie" % V.connect
-
-  // private lazy val mercuryAgent = "io.iohk.atala" %% "mercury-agent-didcommx" % V.mercury
-  // private lazy val mercuryPresentProof = "io.iohk.atala" %% "mercury-protocol-present-proof" % V.mercury
+  val akkaTyped = "com.typesafe.akka" %% "akka-actor-typed" % V.akka
+  val akkaStream = "com.typesafe.akka" %% "akka-stream" % V.akka
+  val akkaHttp = "com.typesafe.akka" %% "akka-http" % V.akkaHttp
+  val akkaSprayJson = "com.typesafe.akka" %% "akka-http-spray-json" % V.akkaHttp
 
   // Added here to make prism-crypto works.
   // Once migrated to apollo, re-evaluate if this should be removed.
-  private lazy val bouncyBcpkix = "org.bouncycastle" % "bcpkix-jdk15on" % V.bouncyCastle
-  private lazy val bouncyBcprov = "org.bouncycastle" % "bcprov-jdk15on" % V.bouncyCastle
+  val bouncyBcpkix = "org.bouncycastle" % "bcpkix-jdk15on" % V.bouncyCastle
+  val bouncyBcprov = "org.bouncycastle" % "bcprov-jdk15on" % V.bouncyCastle
 
-  private lazy val logback = "ch.qos.logback" % "logback-classic" % V.logback
+  val logback = "ch.qos.logback" % "logback-classic" % V.logback
 
-  private lazy val tapirSwaggerUiBundle = "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % V.tapir
-  private lazy val tapirJsonZio = "com.softwaremill.sttp.tapir" %% "tapir-json-zio" % V.tapir
+  val tapirSwaggerUiBundle = "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % V.tapir
+  val tapirJsonZio = "com.softwaremill.sttp.tapir" %% "tapir-json-zio" % V.tapir
 
-  private lazy val tapirZioHttpServer = "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server" % V.tapir
-  private lazy val tapirHttp4sServerZio = "com.softwaremill.sttp.tapir" %% "tapir-http4s-server-zio" % V.tapir
-  private lazy val http4sBlazeServer = "org.http4s" %% "http4s-blaze-server" % "0.23.12"
+  val tapirZioHttpServer = "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server" % V.tapir
+  val tapirHttp4sServerZio = "com.softwaremill.sttp.tapir" %% "tapir-http4s-server-zio" % V.tapir
+  val http4sBlazeServer = "org.http4s" %% "http4s-blaze-server" % "0.23.12"
 
-  private lazy val tapirRedocBundle = "com.softwaremill.sttp.tapir" %% "tapir-redoc-bundle" % V.tapir
+  val tapirRedocBundle = "com.softwaremill.sttp.tapir" %% "tapir-redoc-bundle" % V.tapir
 
-  private lazy val tapirSttpStubServer =
+  val tapirSttpStubServer =
     "com.softwaremill.sttp.tapir" %% "tapir-sttp-stub-server" % V.tapir % Test
-  private lazy val sttpClient3ZioJson = "com.softwaremill.sttp.client3" %% "zio-json" % "3.8.3" % Test
+  val sttpClient3ZioJson = "com.softwaremill.sttp.client3" %% "zio-json" % "3.8.3" % Test
 
-  private lazy val quillDoobie =
+  val quillDoobie =
     "io.getquill" %% "quill-doobie" % V.quill exclude ("org.scala-lang.modules", "scala-java8-compat_3")
-  private lazy val postgresql = "org.postgresql" % "postgresql" % "42.2.8"
-  private lazy val quillJdbcZio =
+  val postgresql = "org.postgresql" % "postgresql" % "42.2.8"
+  val quillJdbcZio =
     "io.getquill" %% "quill-jdbc-zio" % V.quill exclude ("org.scala-lang.modules", "scala-java8-compat_3")
-  private lazy val flyway = "org.flywaydb" % "flyway-core" % V.flyway
-  private lazy val testcontainers_scala_postgresql =
+
+  val flyway = "org.flywaydb" % "flyway-core" % V.flyway
+  val testcontainers_scala_postgresql =
     "com.dimafeng" %% "testcontainers-scala-postgresql" % V.testContainersScalaPostgresql % Test
 
   // Dependency Modules
-  private lazy val baseDependencies: Seq[ModuleID] = Seq(
-    zio,
-    zioTest,
-    zioTestSbt,
-    zioTestMagnolia,
-    zioConfig,
-    zioConfigMagnolia,
-    zioConfigTypesafe,
-    zioJson,
+  val baseDependencies: Seq[ModuleID] = Seq(
+    D.zio,
+    D.zioTest,
+    D.zioTestSbt,
+    D.zioTestMagnolia,
+    D.zioConfig,
+    D.zioConfigMagnolia,
+    D.zioConfigTypesafe,
+    D.zioJson,
     logback,
-    zioHttp,
-    zioMetrics,
+    D.zioHttpD11,
+    D.zioMetrics,
   )
-  // private lazy val castorDependencies: Seq[ModuleID] = Seq(castorCore, castorSqlDoobie)
-  // private lazy val polluxDependencies: Seq[ModuleID] = Seq(polluxCore, polluxSqlDoobie)
-  // private lazy val mercuryDependencies: Seq[ModuleID] = Seq(mercuryAgent)
-  // private lazy val connectDependencies: Seq[ModuleID] = Seq(connectCore, connectSqlDoobie)
-  private lazy val akkaHttpDependencies: Seq[ModuleID] =
+  val akkaHttpDependencies: Seq[ModuleID] =
     Seq(akkaTyped, akkaStream, akkaHttp, akkaSprayJson).map(_.cross(CrossVersion.for3Use2_13))
-  private lazy val bouncyDependencies: Seq[ModuleID] = Seq(bouncyBcpkix, bouncyBcprov)
-  private lazy val tapirDependencies: Seq[ModuleID] =
+  val bouncyDependencies: Seq[ModuleID] = Seq(bouncyBcpkix, bouncyBcprov)
+  val tapirDependencies: Seq[ModuleID] =
     Seq(
       tapirSwaggerUiBundle,
       tapirJsonZio,
@@ -386,25 +332,15 @@ lazy val D_PrismAgent = new {
       http4sBlazeServer
     )
 
-  private lazy val postgresDependencies: Seq[ModuleID] =
+  val postgresDependencies: Seq[ModuleID] =
     Seq(quillDoobie, quillJdbcZio, postgresql, flyway, testcontainers_scala_postgresql)
 
   // Project Dependencies
   lazy val keyManagementDependencies: Seq[ModuleID] =
-    baseDependencies ++
-      // castorDependencies ++
-      // mercuryDependencies ++
-      bouncyDependencies
+    baseDependencies ++ bouncyDependencies
 
   lazy val serverDependencies: Seq[ModuleID] =
-    baseDependencies ++
-      akkaHttpDependencies ++
-      // castorDependencies ++
-      // polluxDependencies ++
-      // mercuryDependencies ++
-      // connectDependencies ++
-      tapirDependencies ++
-      postgresDependencies
+    baseDependencies ++ akkaHttpDependencies ++ tapirDependencies ++ postgresDependencies
 }
 
 publish / skip := true
@@ -747,7 +683,7 @@ lazy val prismAgentWalletAPI = project
   .settings(prismAgentConnectCommonSettings)
   .settings(
     name := "prism-agent-wallet-api",
-    libraryDependencies ++= PrismAgentDependencies.keyManagementDependencies
+    libraryDependencies ++= D_PrismAgent.keyManagementDependencies
   )
   .dependsOn(agentDidcommx)
   .dependsOn(castorCore, castorDoobie)
@@ -758,7 +694,7 @@ lazy val prismAgentServer = project
   .settings(
     name := "prism-agent",
     fork := true,
-    libraryDependencies ++= PrismAgentDependencies.serverDependencies,
+    libraryDependencies ++= D_PrismAgent.serverDependencies,
     Compile / mainClass := Some("io.iohk.atala.agent.server.Main"),
     // OpenAPI settings
     Compile / unmanagedResourceDirectories += baseDirectory.value / ".." / "api",
