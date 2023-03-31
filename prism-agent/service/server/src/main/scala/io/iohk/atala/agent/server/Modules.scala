@@ -9,11 +9,7 @@ import doobie.util.transactor.Transactor
 import io.iohk.atala.agent.server.http.{HttpRoutes, HttpServer, ZHttp4sBlazeServer, ZHttpEndpoints}
 import io.iohk.atala.castor.core.service.{DIDService, DIDServiceImpl}
 import io.iohk.atala.castor.core.util.DIDOperationValidator
-import io.iohk.atala.agent.server.http.marshaller.{
-  ConnectionsManagementApiMarshallerImpl,
-  DIDApiMarshallerImpl,
-  DIDRegistrarApiMarshallerImpl
-}
+import io.iohk.atala.agent.server.http.marshaller.{ConnectionsManagementApiMarshallerImpl, DIDApiMarshallerImpl, DIDRegistrarApiMarshallerImpl}
 import io.iohk.atala.agent.server.http.service.{ConnectionsManagementApiServiceImpl, DIDApiServiceImpl}
 import io.iohk.atala.agent.openapi.api.{ConnectionsManagementApi, DIDApi, DIDRegistrarApi}
 import cats.effect.std.Dispatcher
@@ -27,27 +23,12 @@ import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError
 import io.iohk.atala.agent.server.http.marshaller.*
 import io.iohk.atala.agent.server.http.service.*
 import io.iohk.atala.agent.server.http.{HttpRoutes, HttpServer}
-import io.iohk.atala.pollux.core.service.{
-  CredentialSchemaService,
-  CredentialSchemaServiceImpl,
-  CredentialService,
-  CredentialServiceImpl,
-  PresentationService,
-  PresentationServiceImpl,
-  VerificationPolicyService,
-  VerificationPolicyServiceImpl
-}
+import io.iohk.atala.pollux.core.service.{CredentialSchemaService, CredentialSchemaServiceImpl, CredentialService, CredentialServiceImpl, PresentationService, PresentationServiceImpl, VerificationPolicyService, VerificationPolicyServiceImpl}
 import io.iohk.atala.pollux.credentialschema.controller.{CredentialSchemaController, CredentialSchemaControllerImpl}
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
 import io.iohk.atala.pollux.core.repository.CredentialRepository
-import io.iohk.atala.pollux.sql.repository.{
-  JdbcCredentialRepository,
-  JdbcCredentialSchemaRepository,
-  JdbcPresentationRepository,
-  JdbcVerificationPolicyRepository,
-  DbConfig as PolluxDbConfig
-}
+import io.iohk.atala.pollux.sql.repository.{JdbcCredentialRepository, JdbcCredentialSchemaRepository, JdbcPresentationRepository, JdbcVerificationPolicyRepository, DbConfig as PolluxDbConfig}
 import io.iohk.atala.connect.sql.repository.DbConfig as ConnectDbConfig
 import io.iohk.atala.agent.server.sql.DbConfig as AgentDbConfig
 import io.iohk.atala.agent.server.jobs.*
@@ -93,16 +74,12 @@ import org.didcommx.didcomm.secret.Secret
 import io.circe.ParsingFailure
 import io.circe.DecodingFailure
 import io.iohk.atala.agent.walletapi.sql.{JdbcDIDNonSecretStorage, JdbcDIDSecretStorage}
+import io.iohk.atala.connect.controller.{ConnectionController, ConnectionControllerImpl, ConnectionServerEndpoints}
 import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.pollux.vc.jwt.DidResolver as JwtDidResolver
 import io.iohk.atala.pollux.vc.jwt.PrismDidResolver
 import io.iohk.atala.mercury.DidAgent
-import io.iohk.atala.pollux.credentialschema.controller.{
-  CredentialSchemaController,
-  VerificationPolicyController,
-  VerificationPolicyControllerImpl,
-  VerificationPolicyControllerInMemory
-}
+import io.iohk.atala.pollux.credentialschema.controller.{CredentialSchemaController, VerificationPolicyController, VerificationPolicyControllerImpl, VerificationPolicyControllerInMemory}
 
 object Modules {
 
@@ -116,12 +93,14 @@ object Modules {
     httpServerApp.unit
   }
 
-  lazy val zioApp: RIO[CredentialSchemaController & VerificationPolicyController & AppConfig, Unit] = {
+  lazy val zioApp
+      : RIO[CredentialSchemaController & VerificationPolicyController & ConnectionController & AppConfig, Unit] = {
     val zioHttpServerApp = for {
       allSchemaRegistryEndpoints <- SchemaRegistryServerEndpoints.all
       allVerificationPolicyEndpoints <- VerificationPolicyServerEndpoints.all
+      allConnectionEndpoints <- ConnectionServerEndpoints.all
       allEndpoints = ZHttpEndpoints.withDocumentations[Task](
-        allSchemaRegistryEndpoints ++ allVerificationPolicyEndpoints
+        allSchemaRegistryEndpoints ++ allVerificationPolicyEndpoints ++ allConnectionEndpoints
       )
       appConfig <- ZIO.service[AppConfig]
       httpServer <- ZHttp4sBlazeServer.start(allEndpoints, port = appConfig.agent.httpEndpoint.http.port)
@@ -638,4 +617,5 @@ object RepoModule {
       JdbcVerificationPolicyRepository.layer >+>
       VerificationPolicyServiceImpl.layer >+>
       VerificationPolicyControllerImpl.layer
+
 }
