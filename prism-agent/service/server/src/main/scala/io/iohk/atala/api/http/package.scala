@@ -1,7 +1,9 @@
 package io.iohk.atala.api
 
+import sttp.tapir.Validator
+
 package object http {
-  case class Annotation[E](description: String, example: E)
+  case class Annotation[E](description: String, example: E, validator: Validator[E] = Validator.pass[E])
 
   val DIDRefRegex = """^did:(?<method>[a-z0-9]+(:[a-z0-9]+)*)\:(?<idstring>[^#?]*)$"""
   val DIDRegex = """^did:(?<method>[a-z0-9]+(:[a-z0-9]+)*)\:(?<idstring>[^#?]*)?(?<query>\?[^#]*)?(?<fragment>\#.*)?$"""
