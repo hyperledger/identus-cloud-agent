@@ -32,28 +32,28 @@ object ConnectionEndpoints {
   ] =
     endpoint.post
       .in(extractFromRequest[RequestContext](RequestContext.apply))
-      .in("" / "connections")
+      .in("connections")
       .in(
-        jsonBody[CreateConnectionRequest]
-          .description(
-            "JSON object required for the credential schema creation"
-          )
+        jsonBody[CreateConnectionRequest].description(
+          "JSON object required for the connection creation"
+        )
       )
       .out(
         statusCode(StatusCode.Created)
           .description(
-            "The new credential schema record is successfully created"
+            "The connection record was created successfully, and is returned in the response body."
           )
       )
       .out(jsonBody[Connection])
       .description("Credential schema record")
       .errorOut(basicFailures)
-      .name("createSchema")
-      .summary("Publish new schema to the schema registry")
-      .description(
-        "Create the new credential schema record with metadata and internal JSON Schema on behalf of Cloud Agent. " +
-          "The credential schema will be signed by the keys of Cloud Agent and issued by the DID that corresponds to it."
-      )
-      .tag("Schema Registry")
+      .name("createConnection")
+      .summary("Creates a new connection record and returns an Out of Band invitation.")
+      .description("""
+         |Generates a new Peer DID and creates an [Out of Band 2.0](https://identity.foundation/didcomm-messaging/spec/v2.0/#out-of-band-messages) invitation.
+         |It returns a new connection record in `InvitationGenerated` state.
+         |The request body may contain a `label` that can be used as a human readable alias for the connection, for example `{'label': "Bob"}`
+         |""".stripMargin)
+      .tag("Connections Management")
 
 }

@@ -5,8 +5,8 @@ import io.iohk.atala.connect.controller.http.Connection.annotations
 import io.iohk.atala.connect.core.model
 import io.iohk.atala.connect.core.model.ConnectionRecord.Role
 import sttp.model.Uri
-import sttp.tapir.Schema
-import sttp.tapir.Schema.annotations.{description, encodedExample}
+import sttp.tapir.Schema.annotations.{description, encodedExample, validate}
+import sttp.tapir.{Schema, Validator}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 import java.time.{OffsetDateTime, ZoneOffset}
@@ -27,9 +27,11 @@ case class Connection(
     theirDid: Option[String] = None,
     @description(annotations.role.description)
     @encodedExample(annotations.role.example)
+    @validate(annotations.role.validator)
     role: String,
     @description(annotations.state.description)
     @encodedExample(annotations.state.example)
+    @validate(annotations.state.validator)
     state: String,
     @description(annotations.invitation.description)
     @encodedExample(annotations.invitation.example)
@@ -81,68 +83,89 @@ object Connection {
   object annotations {
     object connectionId
         extends Annotation[UUID](
-          description = "",
+          description = "The unique identifier of the connection.",
           example = UUID.fromString("0527aea1-d131-3948-a34d-03af39aba8b4")
         )
 
     object label
         extends Annotation[String](
-          description = "",
-          example = ""
+          description = "A human readable alias for the connection.",
+          example = "Peter"
         )
 
     object myDid
         extends Annotation[String](
-          description = "",
-          example = ""
+          description = "The DID representing me as the inviter or invitee in this specific connection.",
+          example = "did:peer:12345"
         )
 
     object theirDid
         extends Annotation[String](
-          description = "",
-          example = ""
+          description = "The DID representing the other peer as the an inviter or invitee in this specific connection.",
+          example = "did:peer:67890"
         )
 
     object role
         extends Annotation[String](
-          description = "",
-          example = ""
+          description = "The role played by the Prism agent in the connection flow.",
+          example = "Inviter",
+          validator = Validator.enumeration(
+            List(
+              "Inviter",
+              "Invitee"
+            )
+          )
         )
 
     object state
         extends Annotation[String](
-          description = "",
-          example = ""
+          description = "The current state of the connection protocol execution.",
+          example = "InvitationGenerated",
+          validator = Validator.enumeration(
+            List(
+              "InvitationGenerated",
+              "InvitationReceived",
+              "ConnectionRequestPending",
+              "ConnectionRequestSent",
+              "ConnectionRequestReceived",
+              "ConnectionResponsePending",
+              "ConnectionResponseSent",
+              "ConnectionResponseReceived",
+              "ProblemReportPending",
+              "ProblemReportSent",
+              "ProblemReportReceived"
+            )
+          )
         )
 
     object invitation
         extends Annotation[ConnectionInvitation](
-          description = "",
+          description = "The invitation for this connection",
           example = ConnectionInvitation.Example
         )
 
     object createdAt
         extends Annotation[OffsetDateTime](
-          description = "",
+          description = "The date and time the connection record was created.",
           example = OffsetDateTime.parse("2022-03-10T12:00:00Z")
         )
 
     object updatedAt
         extends Annotation[OffsetDateTime](
-          description = "",
+          description = "The date and time the connection record was last updated.",
           example = OffsetDateTime.parse("2022-03-10T12:00:00Z")
         )
 
     object self
         extends Annotation[String](
-          description = "",
-          example = ""
+          description = "The reference to the connection resource.",
+          example = "https://atala-prism-products.io/connections/ABCD-1234"
         )
 
     object kind
         extends Annotation[String](
-          description = "",
-          example = ""
+          description = "The type of object returned. In this case a `Connection`.",
+          example = "Connection"
         )
   }
 
