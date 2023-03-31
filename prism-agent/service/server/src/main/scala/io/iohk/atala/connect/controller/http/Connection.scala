@@ -5,7 +5,9 @@ import io.iohk.atala.connect.controller.http.Connection.annotations
 import io.iohk.atala.connect.core.model
 import io.iohk.atala.connect.core.model.ConnectionRecord.Role
 import sttp.model.Uri
+import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 import java.time.{OffsetDateTime, ZoneOffset}
 import java.util.UUID
@@ -143,5 +145,13 @@ object Connection {
           example = ""
         )
   }
+
+  given encoder: JsonEncoder[Connection] =
+    DeriveJsonEncoder.gen[Connection]
+
+  given decoder: JsonDecoder[Connection] =
+    DeriveJsonDecoder.gen[Connection]
+
+  given schema: Schema[Connection] = Schema.derived
 
 }

@@ -3,9 +3,11 @@ package io.iohk.atala.connect.controller.http
 import io.iohk.atala.api.http.Annotation
 import io.iohk.atala.connect.controller.http.ConnectionInvitation.annotations
 import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
+import sttp.tapir.Schema
+import sttp.tapir.Schema.annotations.{description, encodedExample}
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 import java.util.UUID
-import sttp.tapir.Schema.annotations.{description, encodedExample}
 
 case class ConnectionInvitation(
     @description(annotations.id.description)
@@ -63,4 +65,12 @@ object ConnectionInvitation {
     from = annotations.from.example,
     invitationUrl = annotations.invitationUrl.example
   )
+
+  given encoder: JsonEncoder[ConnectionInvitation] =
+    DeriveJsonEncoder.gen[ConnectionInvitation]
+
+  given decoder: JsonDecoder[ConnectionInvitation] =
+    DeriveJsonDecoder.gen[ConnectionInvitation]
+
+  given schema: Schema[ConnectionInvitation] = Schema.derived
 }
