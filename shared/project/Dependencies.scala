@@ -4,7 +4,7 @@ object Dependencies {
   object Versions {
     val typesafeConfig = "1.4.2"
     val protobuf = "3.1.9"
-    val testContainersScalaPostgresql = "0.40.11"
+    val testContainersScalaPostgresql = "0.40.14"
   }
 
   private lazy val typesafeConfig = "com.typesafe" % "config" % Versions.typesafeConfig

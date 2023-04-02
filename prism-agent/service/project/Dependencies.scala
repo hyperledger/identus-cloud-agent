@@ -19,7 +19,7 @@ object Dependencies {
     val zioJson = "0.3.0"
     val tapir = "1.2.3"
     val flyway = "9.8.3"
-    val testContainersScalaPostgresql = "0.40.11"
+    val testContainersScalaPostgresql = "0.40.14"
     val quill = "4.6.0"
   }
 
