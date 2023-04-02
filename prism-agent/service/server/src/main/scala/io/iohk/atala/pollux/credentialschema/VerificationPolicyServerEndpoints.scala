@@ -1,7 +1,7 @@
 package io.iohk.atala.pollux.credentialschema
 
+import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.api.http.model.{CollectionStats, Order, PaginationInput}
-import io.iohk.atala.api.http.{FailureResponse, InternalServerError, NotFound, RequestContext}
 import io.iohk.atala.pollux.credentialschema.VerificationPolicyEndpoints.*
 import io.iohk.atala.pollux.credentialschema.controller.{
   VerificationPolicyController,
@@ -21,7 +21,7 @@ class VerificationPolicyServerEndpoints(
     controller: VerificationPolicyController
 ) {
   def throwableToInternalServerError(throwable: Throwable) =
-    ZIO.fail[FailureResponse](InternalServerError(throwable.getMessage))
+    ZIO.fail[ErrorResponse](ErrorResponse.internalServerError(detail = Option(throwable.getMessage)))
 
   // TODO: make the endpoint typed ZServerEndpoint[SchemaRegistryService, Any]
   val createVerificationPolicyServerEndpoint: ZServerEndpoint[Any, Any] =

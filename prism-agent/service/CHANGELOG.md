@@ -1,3 +1,24 @@
+# [prism-agent-v0.60.2](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.60.1...prism-agent-v0.60.2) (2023-03-29)
+
+
+### Bug Fixes
+
+* **prism-agent:** Alight the error responses according to RFC7807. ATL-3962 ([#480](https://github.com/input-output-hk/atala-prism-building-blocks/issues/480)) ([64b0a2a](https://github.com/input-output-hk/atala-prism-building-blocks/commit/64b0a2a04599c30adaf64e8411e1ec95305846cd))
+
+# [prism-agent-v0.60.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.60.0...prism-agent-v0.60.1) (2023-03-28)
+
+
+### Bug Fixes
+
+* use shared postgres container for tests ([#486](https://github.com/input-output-hk/atala-prism-building-blocks/issues/486)) ([1d6aada](https://github.com/input-output-hk/atala-prism-building-blocks/commit/1d6aada72fedf6420133451214ca27965cff245f))
+
+# [prism-agent-v0.60.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.59.1...prism-agent-v0.60.0) (2023-03-28)
+
+
+### Features
+
+* **prism-agent:** insert bouncy-castle security as 2nd provider globally in agent entry point ([#477](https://github.com/input-output-hk/atala-prism-building-blocks/issues/477)) ([44f06cc](https://github.com/input-output-hk/atala-prism-building-blocks/commit/44f06cc191d10e8f590ba56ced75c78e73089b7b))
+
 # [prism-agent-v0.59.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.59.0...prism-agent-v0.59.1) (2023-03-23)
 
 

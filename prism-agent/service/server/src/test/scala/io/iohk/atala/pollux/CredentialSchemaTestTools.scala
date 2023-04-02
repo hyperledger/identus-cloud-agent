@@ -1,18 +1,18 @@
 package io.iohk.atala.pollux
 
-import io.iohk.atala.api.http.BadRequest
+import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.pollux.core.repository.CredentialSchemaRepository
 import io.iohk.atala.pollux.core.service.CredentialSchemaServiceImpl
 import io.iohk.atala.pollux.credentialschema.SchemaRegistryServerEndpoints
 import io.iohk.atala.pollux.credentialschema.controller.{CredentialSchemaController, CredentialSchemaControllerImpl}
 import io.iohk.atala.pollux.credentialschema.http.{
   CredentialSchemaInput,
-  CredentialSchemaResponsePage,
-  CredentialSchemaResponse
+  CredentialSchemaResponse,
+  CredentialSchemaResponsePage
 }
 import io.iohk.atala.pollux.sql.repository.JdbcCredentialSchemaRepository
 import io.iohk.atala.pollux.test.container.MigrationAspects.*
-import io.iohk.atala.pollux.test.container.PostgresTestContainer.*
+import io.iohk.atala.pollux.test.container.PostgresLayer.*
 import sttp.client3.testing.SttpBackendStub
 import sttp.client3.ziojson.*
 import sttp.client3.{DeserializationException, Response, ResponseException, SttpBackend, UriContext, basicRequest}
@@ -36,7 +36,7 @@ trait CredentialSchemaTestTools {
   self: ZIOSpecDefault =>
 
   type SchemaBadRequestResponse =
-    Response[Either[DeserializationException[String], BadRequest]]
+    Response[Either[DeserializationException[String], ErrorResponse]]
   type SchemaResponse =
     Response[Either[DeserializationException[String], CredentialSchemaResponse]]
   type SchemaPageResponse =
@@ -61,7 +61,7 @@ trait CredentialSchemaTestTools {
   def bootstrapOptions[F[_]](monadError: MonadError[F]) = {
     import sttp.tapir.server.interceptor.RequestResult.Response
     new CustomiseInterceptors[F, Any](_ => ())
-      .defaultHandlers(BadRequest.failureResponseHandler)
+      .defaultHandlers(ErrorResponse.failureResponseHandler)
   }
 
   def httpBackend(controller: CredentialSchemaController) = {

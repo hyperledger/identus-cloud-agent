@@ -1,0 +1,11 @@
+lint:
+  rules:
+    # include all default rules
+    no_default: false
+
+    # disable some specific rules
+    remove:
+      - REPEATED_FIELD_NAMES_PLURALIZED
+      - ENUM_FIELD_NAMES_PREFIX
+      - ENUM_FIELD_NAMES_ZERO_VALUE_END_WITH
+      - FIELD_NAMES_LOWER_SNAKE_CASE

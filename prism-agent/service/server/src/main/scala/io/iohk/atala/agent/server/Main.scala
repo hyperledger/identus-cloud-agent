@@ -1,5 +1,6 @@
 package io.iohk.atala.agent.server
 
+import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
 import zio.*
 import io.iohk.atala.mercury.*
 import org.didcommx.didcomm.DIDComm
@@ -26,6 +27,8 @@ import io.circe.generic.auto.*
 import io.circe.parser.*
 import io.circe.syntax.*
 import io.iohk.atala.agent.server.health.HealthInfo
+
+import java.security.Security
 
 object SystemInfoApp extends ZIOAppDefault {
   private val metricsConfig = ZLayer.succeed(MetricsConfig(5.seconds))
@@ -63,6 +66,8 @@ object SystemInfoApp extends ZIOAppDefault {
 }
 
 object AgentApp extends ZIOAppDefault {
+
+  Security.insertProviderAt(BouncyCastleProviderSingleton.getInstance(), 2)
 
   def didCommAgentLayer(didCommServiceUrl: String): ZLayer[ManagedDIDService, Nothing, DidAgent] = {
     val aux = for {

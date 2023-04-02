@@ -4,11 +4,10 @@ import io.iohk.atala.api.http.*
 import io.iohk.atala.api.http.EndpointOutputs.*
 import io.iohk.atala.api.http.codec.OrderCodec.*
 import io.iohk.atala.api.http.model.{Order, PaginationInput}
-import io.iohk.atala.api.http.*
 import io.iohk.atala.pollux.credentialschema.http.{
   CredentialSchemaInput,
-  CredentialSchemaResponsePage,
   CredentialSchemaResponse,
+  CredentialSchemaResponsePage,
   FilterInput
 }
 import sttp.model.StatusCode
@@ -37,7 +36,7 @@ object SchemaRegistryEndpoints {
 
   val createSchemaEndpoint: PublicEndpoint[
     (RequestContext, CredentialSchemaInput),
-    FailureResponse,
+    ErrorResponse,
     CredentialSchemaResponse,
     Any
   ] =
@@ -69,7 +68,7 @@ object SchemaRegistryEndpoints {
 
   val updateSchemaEndpoint: PublicEndpoint[
     (RequestContext, String, UUID, CredentialSchemaInput),
-    FailureResponse,
+    ErrorResponse,
     CredentialSchemaResponse,
     Any
   ] =
@@ -105,7 +104,7 @@ object SchemaRegistryEndpoints {
 
   val getSchemaByIdEndpoint: PublicEndpoint[
     (RequestContext, UUID),
-    FailureResponse,
+    ErrorResponse,
     CredentialSchemaResponse,
     Any
   ] =
@@ -134,7 +133,7 @@ object SchemaRegistryEndpoints {
         PaginationInput,
         Option[Order]
     ),
-    FailureResponse,
+    ErrorResponse,
     CredentialSchemaResponsePage,
     Any
   ] =

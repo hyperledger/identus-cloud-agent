@@ -9,9 +9,10 @@ object Dependencies {
     val zioMetrics = "2.0.6"
     val akka = "2.6.20"
     val akkaHttp = "10.2.9"
-    val castor = "0.8.2"
-    val pollux = "0.43.2"
-    val connect = "0.13.0"
+    val castor = "0.8.3"
+    val pollux = "0.43.3"
+    val shared = "0.3.0"
+    val connect = "0.13.1"
     val bouncyCastle = "1.70"
     val logback = "1.4.5"
     val mercury = "0.22.0"
@@ -47,6 +48,7 @@ object Dependencies {
 
   private lazy val polluxCore = "io.iohk.atala" %% "pollux-core" % Versions.pollux
   private lazy val polluxSqlDoobie = "io.iohk.atala" %% "pollux-sql-doobie" % Versions.pollux
+  private lazy val shared = "io.iohk.atala" % "shared" % Versions.shared
 
   private lazy val connectCore = "io.iohk.atala" %% "connect-core" % Versions.connect
   private lazy val connectSqlDoobie = "io.iohk.atala" %% "connect-sql-doobie" % Versions.connect

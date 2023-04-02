@@ -1,18 +1,18 @@
 package io.iohk.atala.pollux
 
 import io.iohk.atala.agent.server.http.ZHttp4sBlazeServer
-import io.iohk.atala.api.http.{BadRequest, NotFound}
+import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.pollux.core.service.CredentialSchemaServiceImpl
 import io.iohk.atala.pollux.credentialschema.*
 import io.iohk.atala.pollux.credentialschema.controller.{CredentialSchemaController, CredentialSchemaControllerImpl}
 import io.iohk.atala.pollux.credentialschema.http.{
   CredentialSchemaInput,
-  CredentialSchemaResponsePage,
-  CredentialSchemaResponse
+  CredentialSchemaResponse,
+  CredentialSchemaResponsePage
 }
 import io.iohk.atala.pollux.sql.repository.JdbcCredentialSchemaRepository
 import io.iohk.atala.pollux.test.container.MigrationAspects.*
-import io.iohk.atala.pollux.test.container.PostgresTestContainer.*
+import io.iohk.atala.pollux.test.container.PostgresLayer.*
 import sttp.client3.testing.SttpBackendStub
 import sttp.client3.ziojson.*
 import sttp.client3.{DeserializationException, ResponseException, SttpBackend, UriContext, basicRequest, Response as R}
@@ -114,7 +114,7 @@ object CredentialSchemaBasicSpec extends ZIOSpecDefault with CredentialSchemaTes
 
           response <- basicRequest
             .get(credentialSchemaUriBase.addPath(uuid.toString))
-            .response(asJsonAlways[NotFound])
+            .response(asJsonAlways[ErrorResponse])
             .send(backend)
         } yield assert(response.code)(equalTo(StatusCode.NotFound))
       }

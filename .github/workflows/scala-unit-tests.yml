@@ -17,9 +17,17 @@ on:
 jobs:
   build-and-unit-tests:
     name: "Build and unit tests for ${{ inputs.component-name }}"
-    runs-on: ubuntu-latest
-    env:
-      GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
+    runs-on: self-hosted
+    container:
+      image: ghcr.io/input-output-hk/atala-qa-automation
+      volumes:
+        - /nix:/nix
+      credentials:
+        username: ${{ secrets.ATALA_GITHUB_ACTOR }}
+        password: ${{ secrets.ATALA_GITHUB_TOKEN }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
+        TESTCONTAINERS_RYUK_DISABLED: true
     defaults:
       run:
         working-directory: ${{ inputs.component-dir }}
@@ -27,19 +35,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Setup Java and Scala
-        uses: olafurpg/setup-scala@v13
-        with:
-          java-version: openjdk@1.11
-
-      - name: Cache sbt
-        uses: coursier/cache-action@v6.3
-
       - name: Run Scala formatter
         run: sbt scalafmtCheckAll
 
       - name: Run Unit Tests
-        run: sbt coverage test coverageAggregate
+        run: |
+          # Workaround for container runners to correctly restore
+          # https://github.com/actions/runner/issues/863
+          echo HOME=/root >> "${GITHUB_ENV}"
+          sbt -v coverage test coverageAggregate
 
       - name: Aggregate test reports
         if: always()
@@ -67,7 +71,8 @@ jobs:
           only_changed_files: true
 
       - name: Artifact coverage HTML
-        uses: actions/upload-artifact@v2
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v3
         with:
           name: "code-coverage-report-${{ inputs.component-name }}"
           path: "${{ inputs.component-dir }}/target/coverage/scoverage-report"
