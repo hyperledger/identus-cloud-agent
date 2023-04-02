@@ -14,7 +14,7 @@ object Dependencies_VC_JWT {
   private lazy val genericJwtCirce = "io.circe" %% "circe-generic" % Versions.circeVersion
   private lazy val parserJwtCirce = "io.circe" %% "circe-parser" % Versions.circeVersion
 
-  private lazy val circeJsonSchema = ("net.reactivecore" %% "circe-json-schema" % "0.3.0")
+  private lazy val circeJsonSchema = ("net.reactivecore" %% "circe-json-schema" % "0.4.0")
     .cross(CrossVersion.for3Use2_13)
     .exclude("io.circe", "circe-core_2.13")
     .exclude("io.circe", "circe-generic_2.13")
