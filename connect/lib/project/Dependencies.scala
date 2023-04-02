@@ -8,7 +8,7 @@ object Dependencies {
     val zioCatsInterop = "23.0.03"
     val iris = "0.1.0"
     val mercury = "0.22.0"
-    val flyway = "9.8.3"
+    val flyway = "9.16.1"
     val shared = "0.3.0"
     val testContainersScalaPostgresql = "0.40.14"
     val logback = "1.4.6"
