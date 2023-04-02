@@ -3,26 +3,26 @@ import sbt._
 object Dependencies {
 
   object Versions {
-    val zio = "2.0.10"
-    val zioJson = "0.5.0"
+    val zio = "2.0.4"
+    val zioJson = "0.4.2"
     val doobie = "1.0.0-RC2"
-    val zioCatsInterop = "23.0.0.2"
+    val zioCatsInterop = "3.3.0"
     val prismSdk = "v1.4.1" // scala-steward:off
     val iris = "0.1.0"
     val shared = "0.2.0"
     val mercury = "0.22.0"
     val castor = "0.8.2"
-    val flyway = "9.16.1"
-    val testContainersScalaPostgresql = "0.40.14"
-    val quill = "4.6.0.1"
-    val logback = "1.4.6"
-    val munit = "1.0.0-M7" // "0.7.29"
+    val flyway = "9.8.3"
+    val testContainersScalaPostgresql = "0.40.11"
+    val quill = "4.6.0"
+    val logback = "1.4.5"
+    val munit = "1.0.0-M6" // "0.7.29"
     val munitZio = "0.1.1"
   }
 
   private lazy val logback = "ch.qos.logback" % "logback-classic" % Versions.logback % Test
-  private lazy val slf4jApi = "org.slf4j" % "slf4j-api" % "2.0.7" % Test
-  private lazy val slf4jSimple = "org.slf4j" % "slf4j-simple" % "2.0.7" % Test
+  private lazy val slf4jApi = "org.slf4j" % "slf4j-api" % "2.0.6" % Test
+  private lazy val slf4jSimple = "org.slf4j" % "slf4j-simple" % "2.0.6" % Test
 
   private lazy val zio = "dev.zio" %% "zio" % Versions.zio
   private lazy val zioJson = "dev.zio" %% "zio-json" % Versions.zioJson

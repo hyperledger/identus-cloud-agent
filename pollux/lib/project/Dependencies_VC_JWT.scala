@@ -3,10 +3,10 @@ import sbt._
 //TODO REMOVE THIS
 object Dependencies_VC_JWT {
   object Versions {
-    val zio = "2.0.10"
-    val circeVersion = "0.14.5"
-    val jwtCirceVersion = "9.2.0"
-    val zioPreludeVersion = "1.0.0-RC18"
+    val zio = "2.0.4"
+    val circeVersion = "0.14.3"
+    val jwtCirceVersion = "9.1.2"
+    val zioPreludeVersion = "1.0.0-RC16"
     val castor = Dependencies.Versions.castor
   }
 
@@ -31,7 +31,7 @@ object Dependencies_VC_JWT {
   private lazy val zioTestSbt = "dev.zio" %% "zio-test-sbt" % Versions.zio % Test
   private lazy val zioTestMagnolia = "dev.zio" %% "zio-test-magnolia" % Versions.zio % Test
 
-  private lazy val scalaTest = "org.scalatest" %% "scalatest" % "3.2.15" % Test
+  private lazy val scalaTest = "org.scalatest" %% "scalatest" % "3.2.9" % Test
 
   private lazy val castorCore = "io.iohk.atala" %% "castor-core" % Versions.castor
 
