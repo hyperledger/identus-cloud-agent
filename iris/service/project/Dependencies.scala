@@ -11,7 +11,7 @@ object Dependencies {
     val zioCatsInterop = "3.3.0"
     val prismSdk = "v1.4.1" // scala-steward:off
     val shared = "0.1.0"
-    val enumeratum = "1.7.0"
+    val enumeratum = "1.7.2"
     val zioTest = "2.0.4"
   }
 
