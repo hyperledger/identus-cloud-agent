@@ -16,7 +16,7 @@ object Dependencies {
     val testContainersScalaPostgresql = "0.40.14"
     val quill = "4.6.0.1"
     val logback = "1.4.6"
-    val munit = "1.0.0-M6" // "0.7.29"
+    val munit = "1.0.0-M7" // "0.7.29"
     val munitZio = "0.1.1"
   }
 
