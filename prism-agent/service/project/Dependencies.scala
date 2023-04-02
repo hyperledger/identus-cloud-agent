@@ -6,7 +6,7 @@ object Dependencies {
     val zioConfig = "3.0.7"
     val zioHttp = "2.0.0-RC11"
     val zioInteropCats = "3.3.0" // scala-steward:off
-    val zioMetrics = "2.0.6"
+    val zioMetrics = "2.0.7"
     val akka = "2.6.20"
     val akkaHttp = "10.2.9"
     val castor = "0.8.3"
