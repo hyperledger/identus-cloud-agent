@@ -14,7 +14,7 @@ object Dependencies {
     val shared = "0.3.0"
     val connect = "0.13.1"
     val bouncyCastle = "1.70"
-    val logback = "1.4.5"
+    val logback = "1.4.6"
     val mercury = "0.22.0"
     val zioJson = "0.3.0"
     val tapir = "1.2.3"
