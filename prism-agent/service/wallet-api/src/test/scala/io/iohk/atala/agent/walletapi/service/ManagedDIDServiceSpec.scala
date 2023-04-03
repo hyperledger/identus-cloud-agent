@@ -94,7 +94,8 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSuppor
       id = PrismDID.buildCanonicalFromSuffix("0" * 64).toOption.get,
       publicKeys = Nil,
       internalKeys = Nil,
-      services = Nil
+      services = Nil,
+      context = Seq.empty, // TODO ask Pat to review this
     )
     metadata -> didData
   }
@@ -139,7 +140,15 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSuppor
           assert(opsAfter.map(_.operation))(hasSameElements(Seq(createOp)))
       },
       test("fail when publish non-existing DID") {
-        val did = PrismDID.buildLongFormFromOperation(PrismDIDOperation.Create(Nil, Nil)).asCanonical
+        val did = PrismDID
+          .buildLongFormFromOperation(
+            PrismDIDOperation.Create(
+              Nil,
+              Nil,
+              Nil, // TODO ask Pat to review this
+            ),
+          )
+          .asCanonical
         val result = ZIO.serviceWithZIO[ManagedDIDService](_.publishStoredDID(did))
         assertZIO(result.exit)(fails(isSubtype[PublishManagedDIDError.DIDNotFound](anything)))
       },

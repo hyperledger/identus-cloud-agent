@@ -451,6 +451,7 @@ lazy val protocolLogin = project
 lazy val protocolReportProblem = project
   .in(file("mercury/mercury-library/protocol-report-problem"))
   .settings(name := "mercury-protocol-report-problem")
+  .settings(libraryDependencies += D.munitZio)
   .dependsOn(models)
 
 lazy val protocolRouting = project
