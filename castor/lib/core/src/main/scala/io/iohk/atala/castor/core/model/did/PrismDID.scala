@@ -43,13 +43,14 @@ object PrismDID extends ProtoModelHelper {
       .map(e => s"unable to parse suffix as hex string: ${e.getMessage}")
       .flatMap(suffix => buildCanonical(suffix.toByteArray))
 
-  def buildLongFormFromOperation(createOperation: PrismDIDOperation.Create): LongFormPrismDID = LongFormPrismDID(
-    createOperation
-  )
+  def buildLongFormFromOperation(createOperation: PrismDIDOperation.Create): LongFormPrismDID =
+    buildLongFormFromAtalaOperation(
+      createOperation.toAtalaOperation
+    ).toOption.get // This cannot fail because we know the operation is a CreateDid
 
   def buildLongFormFromAtalaOperation(atalaOperation: node_models.AtalaOperation): Either[String, LongFormPrismDID] =
     atalaOperation.operation match {
-      case Operation.CreateDid(op) => op.toDomain.map(LongFormPrismDID.apply)
+      case _: Operation.CreateDid => Right(LongFormPrismDID(atalaOperation))
       case operation =>
         Left(s"Provided initial state of long form Prism DID is ${operation.value}, CreateDid Atala operation expected")
     }
@@ -108,7 +109,7 @@ final case class CanonicalPrismDID private[did] (stateHash: HexString) extends P
   override val suffix: DIDMethodSpecificId = DIDMethodSpecificId.fromString(stateHash.toString).get
 }
 
-final case class LongFormPrismDID private[did] (createOperation: PrismDIDOperation.Create) extends PrismDID {
+final case class LongFormPrismDID private[did] (atalaOperation: node_models.AtalaOperation) extends PrismDID {
 
   override val stateHash: HexString = {
     val encodedState = atalaOperation.toByteArray
@@ -120,5 +121,13 @@ final case class LongFormPrismDID private[did] (createOperation: PrismDIDOperati
     DIDMethodSpecificId.fromString(s"${stateHash.toString}:${encodedState}").get
   }
 
-  def atalaOperation: node_models.AtalaOperation = createOperation.toAtalaOperation
+  def createOperation: Either[String, PrismDIDOperation.Create] = {
+    import ProtoModelHelper.*
+    atalaOperation.operation match {
+      case Operation.CreateDid(op) => op.toDomain
+      case operation =>
+        Left(s"Provided initial state of long form Prism DID is ${operation.value}, CreateDid Atala operation expected")
+    }
+  }
+
 }
