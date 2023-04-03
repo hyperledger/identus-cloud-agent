@@ -3,7 +3,16 @@ package io.iohk.atala.agent.server.http.marshaller
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import io.iohk.atala.agent.openapi.model.*
 import io.iohk.atala.agent.server.http.model.OASModelPatches
-import spray.json.{DefaultJsonProtocol, DeserializationException, JsString, JsValue, JsonFormat, RootJsonFormat, jsonReader, jsonWriter}
+import spray.json.{
+  DefaultJsonProtocol,
+  DeserializationException,
+  JsString,
+  JsValue,
+  JsonFormat,
+  RootJsonFormat,
+  jsonReader,
+  jsonWriter
+}
 
 import java.time.OffsetDateTime
 import java.util.UUID
