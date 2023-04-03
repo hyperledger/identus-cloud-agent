@@ -577,7 +577,7 @@ sys.env
 
 val castorCommonSettings = Seq(
   testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
-  githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN"),
+  githubTokenSource := TokenSource.Environment("GITHUB_TOKEN"),
   resolvers += Resolver.githubPackages("input-output-hk"),
   // Needed for Kotlin coroutines that support new memory management mode
   resolvers += "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven"
@@ -608,7 +608,7 @@ lazy val castorDoobie = project
 
 val polluxCommonSettings = Seq(
   testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
-  githubTokenSource := TokenSource.Environment("ATALA_GITHUB_TOKEN"),
+  githubTokenSource := TokenSource.Environment("GITHUB_TOKEN"),
   resolvers += Resolver.githubPackages("input-output-hk"),
   // Needed for Kotlin coroutines that support new memory management mode
   resolvers += "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven"
