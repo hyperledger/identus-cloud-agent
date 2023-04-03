@@ -8,7 +8,8 @@ final case class DIDData(
     id: CanonicalPrismDID,
     publicKeys: Seq[PublicKey],
     services: Seq[Service],
-    internalKeys: Seq[InternalPublicKey]
+    internalKeys: Seq[InternalPublicKey],
+    context: Seq[String]
 )
 
 final case class DIDMetadata(

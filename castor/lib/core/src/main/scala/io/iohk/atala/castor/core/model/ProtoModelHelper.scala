@@ -61,7 +61,8 @@ private[castor] trait ProtoModelHelper {
                 case pk: PublicKey         => pk.toProto
                 case pk: InternalPublicKey => pk.toProto
               },
-              services = operation.services.map(_.toProto)
+              services = operation.services.map(_.toProto),
+              context = operation.context
             )
           )
         )
@@ -113,6 +114,8 @@ private[castor] trait ProtoModelHelper {
               serviceEndpoints = endpoints.map(_.toString)
             )
           )
+        case UpdateDIDAction.PatchContext(context) =>
+          node_models.UpdateDIDAction.Action.PatchContext(node_models.PatchContextAction(context))
       }
       node_models.UpdateDIDAction(action = a)
     }
@@ -208,7 +211,8 @@ private[castor] trait ProtoModelHelper {
         id = canonicalDID,
         publicKeys = allKeys.collect { case key: PublicKey => key },
         internalKeys = allKeys.collect { case key: InternalPublicKey => key },
-        services = services
+        services = services,
+        context = didData.context
       )
     }
 
@@ -237,9 +241,11 @@ private[castor] trait ProtoModelHelper {
       for {
         allKeys <- operation.didData.map(_.publicKeys.traverse(_.toDomain)).getOrElse(Right(Nil))
         services <- operation.didData.map(_.services.traverse(_.toDomain)).getOrElse(Right(Nil))
+        context = operation.didData.map(_.context).getOrElse(Nil)
       } yield PrismDIDOperation.Create(
         publicKeys = allKeys,
-        services = services
+        services = services,
+        context = context
       )
     }
   }

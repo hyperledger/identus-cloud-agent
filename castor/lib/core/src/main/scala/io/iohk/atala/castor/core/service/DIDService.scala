@@ -9,8 +9,8 @@ import io.iohk.atala.castor.core.model.did.{
   PrismDID,
   PrismDIDOperation,
   PublicKey,
-  ScheduledDIDOperationDetail,
   ScheduleDIDOperationOutcome,
+  ScheduledDIDOperationDetail,
   SignedPrismDIDOperation
 }
 import zio.*
@@ -21,10 +21,11 @@ import io.iohk.atala.prism.crypto.Sha256
 import io.iohk.atala.shared.models.HexStrings.*
 import io.iohk.atala.shared.utils.Traverse.*
 import io.iohk.atala.prism.protos.{node_api, node_models}
-import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc.NodeServiceStub
+import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc.NodeService
 import io.iohk.atala.prism.protos.node_models.OperationOutput.{OperationMaybe, Result}
 
 import scala.collection.immutable.ArraySeq
+import io.iohk.atala.castor.core.model.error.OperationValidationError
 
 trait DIDService {
   def scheduleOperation(operation: SignedPrismDIDOperation): IO[DIDOperationError, ScheduleDIDOperationOutcome]
@@ -35,11 +36,11 @@ trait DIDService {
 }
 
 object DIDServiceImpl {
-  val layer: URLayer[NodeServiceStub & DIDOperationValidator, DIDService] =
+  val layer: URLayer[NodeService & DIDOperationValidator, DIDService] =
     ZLayer.fromFunction(DIDServiceImpl(_, _))
 }
 
-private class DIDServiceImpl(didOpValidator: DIDOperationValidator, nodeClient: NodeServiceStub)
+private class DIDServiceImpl(didOpValidator: DIDOperationValidator, nodeClient: NodeService)
     extends DIDService,
       ProtoModelHelper {
 
@@ -92,32 +93,12 @@ private class DIDServiceImpl(didOpValidator: DIDOperationValidator, nodeClient: 
 
   override def resolveDID(did: PrismDID): IO[DIDResolutionError, Option[(DIDMetadata, DIDData)]] = {
     val canonicalDID = did.asCanonical
-    val createOperation = did match {
-      case LongFormPrismDID(createOperation) => Some(createOperation)
-      case _: CanonicalPrismDID              => None
-    }
-
-    val unpublishedDidData = createOperation.map { op =>
-      val metadata =
-        DIDMetadata(
-          lastOperationHash = ArraySeq.from(PrismDID.buildLongFormFromOperation(op).stateHash.toByteArray),
-          deactivated = false // unpublished DID cannot be deactivated
-        )
-      val didData = DIDData(
-        id = canonicalDID,
-        publicKeys = op.publicKeys.collect { case pk: PublicKey => pk },
-        services = op.services,
-        internalKeys = op.publicKeys.collect { case pk: InternalPublicKey => pk }
-      )
-      metadata -> didData
-    }
-
     val request = node_api.GetDidDocumentRequest(did = canonicalDID.toString)
     for {
-      // unpublished CreateOperation (if exists) must be validated before the resolution
-      _ <- createOperation
-        .fold(ZIO.unit)(op => ZIO.fromEither(didOpValidator.validate(op)))
-        .mapError(DIDResolutionError.ValidationError.apply)
+      unpublishedDidData <- did match {
+        case _: CanonicalPrismDID => ZIO.none
+        case d: LongFormPrismDID  => extractUnpublishedDIDData(d).asSome
+      }
       result <- ZIO
         .fromFuture(_ => nodeClient.getDidDocument(request))
         .mapError(DIDResolutionError.DLTProxyError.apply)
@@ -139,6 +120,34 @@ private class DIDServiceImpl(didOpValidator: DIDOperationValidator, nodeClient: 
               .asSome
         )
     } yield publishedDidData.orElse(unpublishedDidData)
+  }
+
+  private def extractUnpublishedDIDData(did: LongFormPrismDID): IO[DIDResolutionError, (DIDMetadata, DIDData)] = {
+    ZIO
+      .fromEither(did.createOperation)
+      .mapError(e => DIDResolutionError.ValidationError(OperationValidationError.InvalidArgument(e)))
+      .flatMap { op =>
+        // unpublished CreateOperation (if exists) must be validated before the resolution
+        ZIO
+          .fromEither(didOpValidator.validate(op))
+          .mapError(DIDResolutionError.ValidationError.apply)
+          .as(op)
+      }
+      .map { op =>
+        val metadata =
+          DIDMetadata(
+            lastOperationHash = ArraySeq.from(did.stateHash.toByteArray),
+            deactivated = false // unpublished DID cannot be deactivated
+          )
+        val didData = DIDData(
+          id = did.asCanonical,
+          publicKeys = op.publicKeys.collect { case pk: PublicKey => pk },
+          services = op.services,
+          internalKeys = op.publicKeys.collect { case pk: InternalPublicKey => pk },
+          context = op.context
+        )
+        metadata -> didData
+      }
   }
 
 }

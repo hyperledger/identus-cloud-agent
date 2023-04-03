@@ -148,6 +148,7 @@ private object UpdateOperationValidator extends BaseOperationValidator {
     case _: UpdateDIDAction.AddService             => None
     case _: UpdateDIDAction.RemoveService          => None
     case _: UpdateDIDAction.UpdateService          => None
+    case _: UpdateDIDAction.PatchContext           => None
   }
 
   private def extractServiceIds(operation: PrismDIDOperation.Update): Seq[String] = operation.actions.flatMap {
@@ -157,6 +158,7 @@ private object UpdateOperationValidator extends BaseOperationValidator {
     case UpdateDIDAction.AddService(service)     => Some(service.id)
     case UpdateDIDAction.RemoveService(id)       => Some(id)
     case UpdateDIDAction.UpdateService(id, _, _) => Some(id)
+    case _: UpdateDIDAction.PatchContext         => None
   }
 
   private def extractServiceEndpoint(operation: PrismDIDOperation.Update): Seq[(String, Seq[Uri])] =
