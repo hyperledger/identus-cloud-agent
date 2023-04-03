@@ -109,9 +109,10 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
             publicKeyData = publicKeyData
           )
         ),
-        services: Seq[Service] = Nil
+        services: Seq[Service] = Nil,
+        context: Seq[String] = Nil
     ) =
-      PrismDIDOperation.Create(publicKeys = publicKeys ++ internalKeys, services = services)
+      PrismDIDOperation.Create(publicKeys = publicKeys ++ internalKeys, services = services, context = context)
 
     val testLayer = DIDOperationValidator.layer()
 
@@ -124,7 +125,8 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
           ),
           services = Seq(
             Service("service1", ServiceType.LinkedDomains, Seq(Uri.parse("http://example.com/")))
-          )
+          ),
+          context = Seq()
         )
         for {
           result <- ZIO.serviceWith[DIDOperationValidator](validator => validator.validate(operation))

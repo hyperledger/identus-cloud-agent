@@ -16,7 +16,7 @@ sealed trait PrismDIDOperation {
 }
 
 object PrismDIDOperation extends ProtoModelHelper {
-  final case class Create(publicKeys: Seq[PublicKey | InternalPublicKey], services: Seq[Service])
+  final case class Create(publicKeys: Seq[PublicKey | InternalPublicKey], services: Seq[Service], context: Seq[String])
       extends PrismDIDOperation {
     override def toAtalaOperation: node_models.AtalaOperation = node_models.AtalaOperation(this.toProto)
     override def did: CanonicalPrismDID = PrismDID.buildLongFormFromOperation(this).asCanonical
@@ -72,4 +72,6 @@ object UpdateDIDAction {
   final case class RemoveService(id: String) extends UpdateDIDAction
   final case class UpdateService(id: String, `type`: Option[ServiceType] = None, endpoints: Seq[Uri] = Nil)
       extends UpdateDIDAction
+
+  final case class PatchContext(context: Seq[String]) extends UpdateDIDAction
 }

@@ -28,6 +28,7 @@ private[castor] trait W3CModelHelper {
       import VerificationRelationship.*
       val embeddedKeys = didData.publicKeys.map(k => k.toW3C(did, did))
       val keyRefWithPurpose = didData.publicKeys.map(k => k.purpose -> s"${did.toString}#${k.id}")
+      val services = didData.services.map(_.toW3C(did))
       DIDDocumentRepr(
         id = did.toString,
         controller = did.toString,
@@ -37,8 +38,27 @@ private[castor] trait W3CModelHelper {
         keyAgreement = keyRefWithPurpose.collect { case (KeyAgreement, k) => k },
         capabilityInvocation = keyRefWithPurpose.collect { case (CapabilityInvocation, k) => k },
         capabilityDelegation = keyRefWithPurpose.collect { case (CapabilityDelegation, k) => k },
-        service = didData.services.map(_.toW3C(did))
+        service = services,
+        context = deriveContext(embeddedKeys, services)
       )
+    }
+
+    // Reference: https://github.com/input-output-hk/prism-did-method-spec/blob/main/w3c-spec/PRISM-method.md#constructing-a-json-ld-did-document
+    private def deriveContext(keys: Seq[PublicKeyRepr], services: Seq[ServiceRepr]): Seq[String] = {
+      val mandatoryContext = Seq("https://www.w3.org/ns/did/v1")
+      val additionalContext = {
+        val keyTypes = keys.map(_.`type`).toSet
+        val serviceTypes = services.map(_.`type`).toSet
+        Seq(
+          Option.when(keyTypes.contains("JsonWebKey2020"))("https://w3id.org/security/suites/jws-2020/v1"),
+          Option.when(serviceTypes.contains("DIDCommMessaging"))("https://didcomm.org/messaging/contexts/v2"),
+          Option.when(serviceTypes.contains("LinkedDomains"))(
+            "https://identity.foundation/.well-known/did-configuration/v1"
+          )
+        ).flatten
+      }
+      val userDefinedContext = didData.context
+      mandatoryContext ++ additionalContext ++ userDefinedContext
     }
   }
 
