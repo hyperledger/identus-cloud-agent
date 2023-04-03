@@ -57,7 +57,7 @@ lazy val V = new {
   val flyway = "9.8.3"
   val logback = "1.4.5"
 
-  val prismNodeClient = "0.3.0"
+  val prismNodeClient = "0.4.0"
   val prismSdk = "v1.4.1" // scala-steward:off
   val scalaUri = "4.0.3"
 
