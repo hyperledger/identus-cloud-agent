@@ -1,4 +1,4 @@
-import sbtbuildinfo.BuildInfoPlugin.autoImport._
+import sbtbuildinfo.BuildInfoPlugin.autoImport.*
 
 inThisBuild(
   Seq(
@@ -12,6 +12,8 @@ inThisBuild(
     githubRepository := "atala-prism-building-blocks"
   )
 )
+
+coverageDataDir := target.value / "coverage"
 
 inThisBuild(
   Seq(
@@ -557,7 +559,7 @@ sys.env
   .get("SBT_PACKAGER") // SEE also plugin.sbt
   .map { _ =>
     println("### Config SBT_PACKAGER (releaseProcess) ###")
-  import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
+  import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations.*
 
   releaseProcess := Seq[ReleaseStep](
     checkSnapshotDependencies,
@@ -674,8 +676,8 @@ lazy val connectDoobie = project
 // #####################
 // #### Prism Agent ####
 // #####################
-import sbtghpackages.GitHubPackagesPlugin.autoImport._
-import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
+import sbtghpackages.GitHubPackagesPlugin.autoImport.*
+import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations.*
 
 def prismAgentConnectCommonSettings = polluxCommonSettings
 
