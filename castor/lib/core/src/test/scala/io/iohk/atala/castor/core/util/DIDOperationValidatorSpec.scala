@@ -125,7 +125,8 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
           ),
           services = Seq(
             Service("service1", ServiceType.LinkedDomains, Seq(Uri.parse("http://example.com/")))
-          )
+          ),
+          context = Seq()
         )
         for {
           result <- ZIO.serviceWith[DIDOperationValidator](validator => validator.validate(operation))
