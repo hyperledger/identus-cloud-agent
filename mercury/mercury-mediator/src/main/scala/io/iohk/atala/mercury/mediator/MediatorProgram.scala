@@ -59,7 +59,7 @@ object MediatorProgram {
       for {
         _ <- ZIO.logInfo("Received new message")
         _ <- ZIO.logTrace(jsonString)
-        mediatorMessage <- unpack(jsonString).map(_.getMessage)
+        mediatorMessage <- unpack(jsonString).map(_.message)
 
         ret <- // messageProcessing(mediatorMessage)
           {

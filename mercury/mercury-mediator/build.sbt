@@ -1,3 +1,4 @@
+/*
 inThisBuild(
   Seq(
     organization := "io.iohk.atala",
@@ -32,7 +33,7 @@ lazy val V = new {
   // https://mvnrepository.com/artifact/io.circe/circe-core
   val circe = "0.14.2"
 
-  val mercury = "0.16.0"
+  val mercury = "0.22.0"
 }
 
 /** Dependencies */
@@ -106,3 +107,4 @@ releaseProcess := Seq[ReleaseStep](
   ReleaseStep(releaseStepTask(Docker / publish)),
   setNextVersion
 )
+ */
