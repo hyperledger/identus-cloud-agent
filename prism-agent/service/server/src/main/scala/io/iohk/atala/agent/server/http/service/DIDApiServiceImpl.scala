@@ -25,11 +25,6 @@ class DIDApiServiceImpl(service: DIDService)(using runtime: Runtime[Any])
 
   override def getDid(didRef: String, accept: Option[String])(implicit
       toEntityMarshallerDIDResolutionResult: ToEntityMarshaller[OASModelPatches.DIDResolutionResult]
-  ): Route = ???
-
-  // FIXME
-  def getDidFIXME(didRef: String, accept: Option[String])(implicit
-      toEntityMarshallerDIDResolutionResult: ToEntityMarshaller[OASModelPatches.DIDResolutionResult]
   ): Route = {
     val result = for {
       result <- makeW3CResolver(service)(didRef).either
