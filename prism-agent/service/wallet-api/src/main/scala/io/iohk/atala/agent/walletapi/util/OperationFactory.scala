@@ -45,7 +45,8 @@ object OperationFactory {
         )
       operation = PrismDIDOperation.Create(
         publicKeys = keys.map(_._2) ++ Seq(masterKey._2),
-        services = didTemplate.services
+        services = didTemplate.services,
+        context = Seq() // TODO: expose context in the API
       )
       secret = CreateDIDSecret(
         keyPairs = keys.map { case (keyPair, publicKey) => publicKey.id -> keyPair }.toMap,
