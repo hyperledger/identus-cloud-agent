@@ -2,20 +2,11 @@ package io.iohk.atala.agent.server.http.marshaller
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import io.iohk.atala.agent.openapi.model.*
-import spray.json.{
-  DefaultJsonProtocol,
-  DeserializationException,
-  JsString,
-  JsValue,
-  JsonFormat,
-  RootJsonFormat,
-  jsonReader,
-  jsonWriter
-}
-
-import java.util.UUID
-import java.time.OffsetDateTime
 import io.iohk.atala.agent.server.http.model.OASModelPatches
+import spray.json.{DefaultJsonProtocol, DeserializationException, JsString, JsValue, JsonFormat, RootJsonFormat, jsonReader, jsonWriter}
+
+import java.time.OffsetDateTime
+import java.util.UUID
 
 object JsonSupport extends JsonSupport
 
@@ -83,13 +74,6 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   given RootJsonFormat[PresentationStatus] = jsonFormat5(PresentationStatus.apply)
   given RootJsonFormat[RequestPresentationAction] = jsonFormat2(RequestPresentationAction.apply)
   given RootJsonFormat[PresentationStatusPage] = jsonFormat6(PresentationStatusPage.apply)
-
-  // Connections Management
-  given RootJsonFormat[CreateConnectionRequest] = jsonFormat1(CreateConnectionRequest.apply)
-  given RootJsonFormat[AcceptConnectionInvitationRequest] = jsonFormat1(AcceptConnectionInvitationRequest.apply)
-  given RootJsonFormat[ConnectionsPage] = jsonFormat6(ConnectionsPage.apply)
-  given RootJsonFormat[Connection] = jsonFormat11(Connection.apply)
-  given RootJsonFormat[ConnectionInvitation] = jsonFormat4(ConnectionInvitation.apply)
 
   // Manual model patches
   given RootJsonFormat[OASModelPatches.DIDDocument] = jsonFormat10(OASModelPatches.DIDDocument.apply)

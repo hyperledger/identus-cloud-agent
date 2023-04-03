@@ -5,87 +5,67 @@ import akka.actor.setup.ActorSystemSetup
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.server.Route
-import doobie.util.transactor.Transactor
-import io.iohk.atala.agent.server.http.{HttpRoutes, HttpServer, ZHttp4sBlazeServer, ZHttpEndpoints}
-import io.iohk.atala.castor.core.service.{DIDService, DIDServiceImpl}
-import io.iohk.atala.castor.core.util.DIDOperationValidator
-import io.iohk.atala.agent.server.http.marshaller.{ConnectionsManagementApiMarshallerImpl, DIDApiMarshallerImpl, DIDRegistrarApiMarshallerImpl}
-import io.iohk.atala.agent.server.http.service.{ConnectionsManagementApiServiceImpl, DIDApiServiceImpl}
-import io.iohk.atala.agent.openapi.api.{ConnectionsManagementApi, DIDApi, DIDRegistrarApi}
 import cats.effect.std.Dispatcher
+import cats.implicits.*
 import com.typesafe.config.ConfigFactory
 import doobie.util.transactor.Transactor
+import io.circe.{DecodingFailure, ParsingFailure}
 import io.grpc.ManagedChannelBuilder
 import io.iohk.atala.agent.openapi.api.*
-import io.iohk.atala.agent.server.config.AppConfig
-import io.iohk.atala.agent.walletapi.service.ManagedDIDService
-import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError
+import io.iohk.atala.agent.server.config.{AgentConfig, AppConfig}
 import io.iohk.atala.agent.server.http.marshaller.*
 import io.iohk.atala.agent.server.http.service.*
-import io.iohk.atala.agent.server.http.{HttpRoutes, HttpServer}
-import io.iohk.atala.pollux.core.service.{CredentialSchemaService, CredentialSchemaServiceImpl, CredentialService, CredentialServiceImpl, PresentationService, PresentationServiceImpl, VerificationPolicyService, VerificationPolicyServiceImpl}
-import io.iohk.atala.pollux.credentialschema.controller.{CredentialSchemaController, CredentialSchemaControllerImpl}
+import io.iohk.atala.agent.server.http.{HttpRoutes, HttpServer, ZHttp4sBlazeServer, ZHttpEndpoints}
+import io.iohk.atala.agent.server.jobs.*
+import io.iohk.atala.agent.server.sql.DbConfig as AgentDbConfig
+import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError
+import io.iohk.atala.agent.walletapi.service.ManagedDIDService
+import io.iohk.atala.agent.walletapi.sql.{JdbcDIDNonSecretStorage, JdbcDIDSecretStorage}
+import io.iohk.atala.castor.core.service.{DIDService, DIDServiceImpl}
+import io.iohk.atala.castor.core.util.DIDOperationValidator
+import io.iohk.atala.connect.controller.{ConnectionController, ConnectionControllerImpl, ConnectionServerEndpoints}
+import io.iohk.atala.connect.core.model.error.ConnectionServiceError
+import io.iohk.atala.connect.core.repository.ConnectionRepository
+import io.iohk.atala.connect.core.service.{ConnectionService, ConnectionServiceImpl}
+import io.iohk.atala.connect.sql.repository.{JdbcConnectionRepository, DbConfig as ConnectDbConfig}
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
-import io.iohk.atala.pollux.core.repository.CredentialRepository
+import io.iohk.atala.mercury.*
+import io.iohk.atala.mercury.DidOps.*
+import io.iohk.atala.mercury.model.*
+import io.iohk.atala.mercury.model.error.*
+import io.iohk.atala.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
+import io.iohk.atala.mercury.protocol.issuecredential.*
+import io.iohk.atala.mercury.protocol.presentproof.*
+import io.iohk.atala.pollux.core.model.error.CredentialServiceError.RepositoryError
+import io.iohk.atala.pollux.core.model.error.{CredentialServiceError, PresentationError}
+import io.iohk.atala.pollux.core.repository.{CredentialRepository, PresentationRepository}
+import io.iohk.atala.pollux.core.service.*
+import io.iohk.atala.pollux.credentialschema.controller.*
+import io.iohk.atala.pollux.credentialschema.{SchemaRegistryServerEndpoints, VerificationPolicyServerEndpoints}
 import io.iohk.atala.pollux.sql.repository.{JdbcCredentialRepository, JdbcCredentialSchemaRepository, JdbcPresentationRepository, JdbcVerificationPolicyRepository, DbConfig as PolluxDbConfig}
-import io.iohk.atala.connect.sql.repository.DbConfig as ConnectDbConfig
-import io.iohk.atala.agent.server.sql.DbConfig as AgentDbConfig
-import io.iohk.atala.agent.server.jobs.*
+import io.iohk.atala.pollux.vc.jwt.{PrismDidResolver, DidResolver as JwtDidResolver}
+import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc
+import io.iohk.atala.resolvers.{DIDResolver, UniversalDidResolver}
+import org.didcommx.didcomm.DIDComm
+import org.didcommx.didcomm.model.UnpackParams
+import org.didcommx.didcomm.secret.{Secret, SecretResolver}
+import zhttp.http.*
+import zhttp.service.Server
 import zio.*
 import zio.config.typesafe.TypesafeConfigSource
 import zio.config.{ReadError, read}
 import zio.interop.catz.*
 import zio.stream.ZStream
-import zhttp.http.*
-import zhttp.service.Server
-
-import java.util.concurrent.Executors
-import io.iohk.atala.mercury.*
-import io.iohk.atala.mercury.DidOps.*
-import io.iohk.atala.mercury.model.*
-import io.iohk.atala.mercury.model.error.*
-import io.iohk.atala.mercury.protocol.issuecredential.*
-import io.iohk.atala.pollux.core.model.error.CredentialServiceError.RepositoryError
-import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc
 
 import java.io.IOException
-import cats.implicits.*
-import io.iohk.atala.pollux.credentialschema.SchemaRegistryServerEndpoints
-import io.iohk.atala.pollux.core.repository.PresentationRepository
-import io.iohk.atala.pollux.core.model.error.PresentationError
-import io.iohk.atala.pollux.core.model.error.CredentialServiceError
-import io.iohk.atala.connect.core.service.ConnectionService
-import io.iohk.atala.connect.core.service.ConnectionServiceImpl
-import io.iohk.atala.connect.core.repository.ConnectionRepository
-import io.iohk.atala.connect.sql.repository.JdbcConnectionRepository
-import io.iohk.atala.mercury.protocol.connection.ConnectionRequest
-import io.iohk.atala.mercury.protocol.connection.ConnectionResponse
-import io.iohk.atala.connect.core.model.error.ConnectionServiceError
-import io.iohk.atala.pollux.credentialschema.{SchemaRegistryServerEndpoints, VerificationPolicyServerEndpoints}
-import io.iohk.atala.connect.core.model.error.ConnectionServiceError
-import io.iohk.atala.mercury.protocol.presentproof.*
-import io.iohk.atala.agent.server.config.AgentConfig
-import org.didcommx.didcomm.DIDComm
-import io.iohk.atala.resolvers.UniversalDidResolver
-import org.didcommx.didcomm.secret.SecretResolver
-import org.didcommx.didcomm.model.UnpackParams
-import org.didcommx.didcomm.secret.Secret
-import io.circe.ParsingFailure
-import io.circe.DecodingFailure
-import io.iohk.atala.agent.walletapi.sql.{JdbcDIDNonSecretStorage, JdbcDIDSecretStorage}
-import io.iohk.atala.connect.controller.{ConnectionController, ConnectionControllerImpl, ConnectionServerEndpoints}
-import io.iohk.atala.resolvers.DIDResolver
-import io.iohk.atala.pollux.vc.jwt.DidResolver as JwtDidResolver
-import io.iohk.atala.pollux.vc.jwt.PrismDidResolver
-import io.iohk.atala.mercury.DidAgent
-import io.iohk.atala.pollux.credentialschema.controller.{CredentialSchemaController, VerificationPolicyController, VerificationPolicyControllerImpl, VerificationPolicyControllerInMemory}
+import java.util.concurrent.Executors
 
 object Modules {
 
   def app(port: Int): RIO[
-    DidOps & DidAgent & ManagedDIDService & AppConfig & DIDRegistrarApi & IssueCredentialsProtocolApi &
-      ConnectionsManagementApi & DIDApi & PresentProofApi & ActorSystem[Nothing],
+    DidOps & DidAgent & ManagedDIDService & AppConfig & DIDRegistrarApi & IssueCredentialsProtocolApi & DIDApi &
+      PresentProofApi & ActorSystem[Nothing],
     Unit
   ] = {
     val httpServerApp = HttpRoutes.routes.flatMap(HttpServer.start(port, _))
@@ -184,7 +164,8 @@ object Modules {
       .unit
 
   private[this] def extractFirstRecipientDid(jsonMessage: String): IO[ParsingFailure | DecodingFailure, String] = {
-    import io.circe._, io.circe.parser._
+    import io.circe.*
+    import io.circe.parser.*
     val doc = parse(jsonMessage).getOrElse(Json.Null)
     val cursor = doc.hcursor
     ZIO.fromEither(
@@ -504,17 +485,9 @@ object HttpModule {
     (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new PresentProofApi(_, _))
   }
 
-  val connectionsManagementApiLayer
-      : RLayer[DidOps & DidAgent & ManagedDIDService & AppConfig, ConnectionsManagementApi] = {
-    val serviceLayer = AppModule.connectionServiceLayer
-    val apiServiceLayer = serviceLayer >>> ConnectionsManagementApiServiceImpl.layer
-    val apiMarshallerLayer = ConnectionsManagementApiMarshallerImpl.layer
-    (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new ConnectionsManagementApi(_, _))
-  }
-
   val layers =
     didApiLayer ++ didRegistrarApiLayer ++
-      issueCredentialsProtocolApiLayer ++ connectionsManagementApiLayer ++ presentProofProtocolApiLayer
+      issueCredentialsProtocolApiLayer ++ presentProofProtocolApiLayer
 }
 
 object RepoModule {
