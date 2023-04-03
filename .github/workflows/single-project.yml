@@ -1,0 +1,29 @@
+name: Testing workflow
+
+# Cancel previously running workflows if new commit pushed to the branch
+# this will help to push fixes earlier and stop previous workflows
+concurrency:
+  group: ${{ github.head_ref }}${{ github.ref }}-all
+  cancel-in-progress: true
+
+on:
+  push:
+    branches:
+      - "main"
+    # paths:
+    #   - ".github/workflows/castor.yml"
+    #   - ".github/workflows/scala-unit-tests.yml"
+    #   - "castor/**"
+  pull_request:
+    # paths:
+    #   - ".github/workflows/castor.yml"
+    #   - ".github/workflows/scala-unit-tests.yml"
+    #   - "castor/**"
+
+jobs:
+  build-and-test-castor:
+    uses: ./.github/workflows/scala-unit-tests.yml
+    with:
+      component-name: "all"
+      component-dir: "."
+    secrets: inherit
