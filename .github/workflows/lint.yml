@@ -35,7 +35,7 @@ jobs:
         uses: megalinter/megalinter@v6
       - name: Archive production artifacts
         if: success() || failure()
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: Mega-Linter reports
           path: |
