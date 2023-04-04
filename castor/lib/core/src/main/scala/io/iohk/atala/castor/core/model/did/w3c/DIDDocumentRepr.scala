@@ -12,14 +12,15 @@ final case class DIDDocumentRepr(
     keyAgreement: Seq[PublicKeyReprOrRef],
     capabilityInvocation: Seq[PublicKeyReprOrRef],
     capabilityDelegation: Seq[PublicKeyReprOrRef],
-    service: Seq[ServiceRepr]
+    service: Seq[ServiceRepr],
+    context: Seq[String]
 )
 
 type PublicKeyReprOrRef = PublicKeyRepr | String
 
 final case class PublicKeyRepr(
     id: String,
-    `type`: "EcdsaSecp256k1VerificationKey2019",
+    `type`: "EcdsaSecp256k1VerificationKey2019", // TODO: use JsonWebKey2020 (ATL-3788)
     controller: String,
     publicKeyJwk: PublicKeyJwk
 )
