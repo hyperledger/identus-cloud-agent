@@ -14,9 +14,16 @@ jobs:
   lint:
     name: Lint changes
     runs-on: self-hosted
-    env:
-      APPLY_FIXES: none
-      GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
+    container:
+      image: ghcr.io/input-output-hk/atala-qa-automation
+      volumes:
+        - /nix:/nix
+      credentials:
+        username: ${{ secrets.ATALA_GITHUB_ACTOR }}
+        password: ${{ secrets.ATALA_GITHUB_TOKEN }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
+        APPLY_FIXES: none
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
