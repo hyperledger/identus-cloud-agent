@@ -580,7 +580,7 @@ lazy val castorDoobie = project
 // #####################
 
 val polluxCommonSettings = Seq(
-  testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+  testFrameworks ++= Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
   githubTokenSource := TokenSource.Environment("GITHUB_TOKEN"),
   resolvers += Resolver.githubPackages("input-output-hk"),
   // Needed for Kotlin coroutines that support new memory management mode
