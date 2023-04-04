@@ -183,8 +183,8 @@ class JdbcPresentationRepository(
             |   created_at,
             |   updated_at,
             |   thid,
-            |   connection_id,
             |   schema_id,
+            |   connection_id,
             |   role,
             |   subject_id,
             |   protocol_state,
@@ -212,8 +212,8 @@ class JdbcPresentationRepository(
         |   created_at,
         |   updated_at,
         |   thid,
-        |   connection_id,
         |   schema_id,
+        |   connection_id,
         |   role,
         |   subject_id,
         |   protocol_state,
@@ -241,8 +241,8 @@ class JdbcPresentationRepository(
         |   created_at,
         |   updated_at,
         |   thid,
-        |   connection_id,
         |   schema_id,
+        |   connection_id,
         |   role,
         |   subject_id,
         |   protocol_state,
@@ -356,7 +356,7 @@ class JdbcPresentationRepository(
       failReason: Option[String]
   ): Task[Int] = {
     val cxnIO = sql"""
-        | UPDATE public.issue_credential_records
+        | UPDATE public.presentation_records
         | SET
         |   meta_retries = CASE WHEN (meta_retries > 1) THEN meta_retries - 1 ELSE 0 END,
         |   meta_next_retry = CASE WHEN (meta_retries > 1) THEN ${Instant.now().plusSeconds(60)} ELSE null END,
