@@ -1,7 +1,8 @@
 {
   "name": "atala-prism-building-blocks",
+  "version": "0.60.2",
   "engines": {
-    "node": ">=16"
+    "node": ">=16.13.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^17.0.3",
@@ -33,6 +34,12 @@
       [
         "@semantic-release/exec",
         {
+          "prepareCmd": "npm version ${nextRelease.version} --git-tag-version false"
+        }
+      ],
+      [
+        "@semantic-release/exec",
+        {
           "prepareCmd": "sbt \"release release-version ${nextRelease.version} next-version ${nextRelease.version}-SNAPSHOT with-defaults\""
         }
       ],
@@ -47,7 +54,9 @@
         {
           "assets": [
             "version.sbt",
-            "CHANGELOG.md"
+            "CHANGELOG.md",
+            "package.json",
+            "package-lock.json"
           ],
           "message": "chore(release): cut atala prism ${nextRelease.version} release\n\n${nextRelease.notes}"
         }

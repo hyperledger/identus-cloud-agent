@@ -1,6 +1,6 @@
 {
   "name": "@input-output-hk/atala-prism-protos",
-  "version": "VERSION",
+  "version": "2.0.0",
   "description": "raw proto files for Atala PRISM project",
   "repository": {
     "type": "git",
