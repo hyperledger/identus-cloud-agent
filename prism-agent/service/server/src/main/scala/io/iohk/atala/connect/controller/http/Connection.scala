@@ -47,7 +47,7 @@ case class Connection(
     self: String = "",
     @description(annotations.kind.description)
     @encodedExample(annotations.kind.example)
-    kind: String = "CredentialSchema"
+    kind: String = "Connection"
 ) {
   def withBaseUri(base: Uri) = withSelf(base.addPath(connectionId.toString).toString)
   def withSelf(self: String) = copy(self = self)
