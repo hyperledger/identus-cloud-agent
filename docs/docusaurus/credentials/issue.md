@@ -183,3 +183,9 @@ stateDiagram-v2
   RequestPending --> RequestSent: send request (auto via PRISM Agent)
   RequestSent --> CredentialReceived: receive credential (auto via PRISM Agent)
 ```
+
+## Sequence diagram
+
+The following diagram shows the end-to-end flow for an issuer to issue a VC to a holder.
+
+![](issue-flow.png)

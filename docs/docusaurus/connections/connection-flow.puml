@@ -1,0 +1,51 @@
+@startuml
+title Connect flow
+
+actor Invitee as invitee
+participant "Invitee PRISM Agent" as inviteeAgent
+participant "Inviter PRISM Agent" as inviterAgent
+actor Inviter as inviter
+
+== Generate and send a connection invitation ==
+inviter -> inviterAgent: Create new connection\n""POST /connections {label=Bob}""
+inviterAgent -> inviterAgent: Generate new pairwise Peer DID
+inviterAgent -> inviterAgent: Create connection state record
+inviterAgent --> inviter: Connection record ""{id, invitation, state}""
+|||
+note over inviterAgent: state=InvitationGenerated
+|||
+inviter -> inviter: Pack connection invitation\ninto QR code
+inviter --> invitee: Send invitation using Out-of-band (OOB) mechanism\n E.g., email "Please install required app (instructions provided) and scan this QR code"
+|||
+
+== Check connection state ==
+inviter -> inviterAgent: ""GET /connections/{connectionId}""
+inviterAgent --> inviter: ""Connection {state=InvitationGenerated}""
+|||
+
+== Accept connection invitation ==
+invitee -> invitee: Parse invitation message (scan QR code)
+invitee -> invitee: Review invitation
+invitee -> inviteeAgent: Receive and accept invitation\n""POST /connection-invitations {invitation=xxx}""
+inviteeAgent -> inviteeAgent: Create pairwise DID
+inviteeAgent -> inviteeAgent: Create Connection state record
+inviteeAgent --> invitee: Connection record ""{id, invitation, state}""
+|||
+
+== DIDComm exchange ==
+note over inviteeAgent: state=ConnectionRequestPending
+|||
+inviteeAgent -> inviterAgent: ""ConnectionRequest"" message (includes invitee's Peer DID)
+inviterAgent --> inviteeAgent: OK
+|||
+note over inviteeAgent: state=ConnectionRequestSent
+/ note over inviterAgent: state=ConnectionResponsePending
+|||
+inviterAgent -> inviteeAgent: ""ConnectionResponse"" message (includes inviter's Peer DID)
+inviteeAgent --> inviterAgent: OK
+|||
+note over inviteeAgent: state=ConnectionResponseReceived
+/ note over inviterAgent: state=ConnectionResponseSent
+|||
+
+@enduml

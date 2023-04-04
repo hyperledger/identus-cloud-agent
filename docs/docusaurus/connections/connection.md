@@ -73,6 +73,12 @@ ConnectionRequestSent --> ConnectionResponseReceived: receive connection respons
 ConnectionResponseReceived --> [*]
 ```
 
+## Sequence diagram
+
+The following diagram shows the end-to-end flow for establishing a connection between an inviter and an invitee.
+
+![](connection-flow.png)
+
 ## Command line example
 
 The following example demonstrates on how you could use two PRISM Agents API to set up connection between them.
