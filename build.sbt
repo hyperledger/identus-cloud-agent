@@ -671,7 +671,7 @@ lazy val prismAgentServer = project
     Compile / unmanagedResourceDirectories += baseDirectory.value / ".." / "api",
     Compile / sourceGenerators += openApiGenerateClasses,
     openApiGeneratorSpec := baseDirectory.value / ".." / "api" / "http/prism-agent-openapi-spec.yaml",
-    openApiGeneratorConfig := baseDirectory.value / "openapi/generator-config/config2.yaml",
+    openApiGeneratorConfig := baseDirectory.value / "openapi/generator-config/config.yaml",
     openApiGeneratorImportMapping := Seq(
       "DIDDocument",
       "DIDResolutionResult"
@@ -739,10 +739,11 @@ releaseProcess := Seq[ReleaseStep](
   sys.env
     .get("RELEASE_MEDIATOR") match {
     case Some(value) => ReleaseStep(releaseStepTask(mediator / Docker / publish))
-    case None => ReleaseStep(action = st => {
-      println("INFO: prism mediator release disabled!")
-      st
-    })
+    case None =>
+      ReleaseStep(action = st => {
+        println("INFO: prism mediator release disabled!")
+        st
+      })
   },
   setNextVersion
 )
