@@ -57,7 +57,7 @@ class PresentProofApiServiceImpl(presentationService: PresentationService, conne
               trustIssuers = Some(e.trustIssuers.map(DidId(_)))
             )
           },
-          options = requestPresentationInput.options.map(x => Options(x.challenge, x.domain))
+          options = requestPresentationInput.options.map(x => Options(x.challenge, x.domain)),
         )
         .mapError(HttpServiceError.DomainError[PresentationError].apply)
         .mapError(_.toOAS)

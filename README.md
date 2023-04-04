@@ -32,6 +32,12 @@ Instructions for running the `building-block` stack locally can be found here: [
 
 Instructions for running multiple instances of the `building-block` stack locally can be found here: [Running multiple locally](infrastructure/multi/README.md)
 
+## Running a instanve locally from sbt (single project)
+
+
+Run sbt from the root of the repository
+- if you want to run the `prism-agent` call the comment `sbt> prismAgentServer/runMain io.iohk.atala.agent.server.AgentApp`
+
 ## Developing
 
 Instructions for running the `building-block` stack for development purposes can be found here: [Developing locally](infrastructure/local/README.md)

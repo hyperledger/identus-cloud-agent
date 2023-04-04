@@ -554,7 +554,11 @@ object BackgroundJobs {
               prover,
               Instant.now()
             )
-            signedJwtPresentation = JwtPresentation.encodeJwt(presentationPayload.toJwtPresentationPayload, prover)
+            signedJwtPresentation = JwtPresentation.toEncodedJwt(
+              presentationPayload.toW3CPresentationPayload,
+              prover
+            )
+            // signedJwtPresentation = JwtPresentation.toEncodedJwt(w3cPresentationPayload, prover)
             presentation <- oRequestPresentation match
               case None => ZIO.fail(InvalidState("PresentationRecord 'RequestPending' with no Record"))
               case Some(requestPresentation) => { // TODO create build method in mercury for Presentation

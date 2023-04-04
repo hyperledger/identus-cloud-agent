@@ -1,15 +1,26 @@
-repo:
-  - "*"
-apollo:
-  - apollo/**/*
 castor:
   - castor/**/*
 mercury:
   - mercury/**/*
-pluto:
-  - pluto/**/*
+connect:
+  - connect/**/*
 pollux:
   - pollux/**/*
+iris:
+  - iris/**/*
+prism-agent:
+  - prism-agent/**/*
+prism-node:
+  - prism-node/**/*
+shared:
+  - shared/**/*
+infra:
+  - infrastructure/**/*
+build:
+  - project/**/*
+  - build.sbt
+  - version.sbt
+  - package*.json
 ci:
   - .github/**/*
 docs:

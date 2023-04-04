@@ -6,19 +6,12 @@ concurrency:
 on:
   workflow_call:
     inputs:
-      release-component:
-        required: true
-        type: string
       release-branch:
         required: false
         type: string
         default: "main"
   workflow_dispatch:
     inputs:
-      release-component:
-        description: "Release component"
-        required: true
-        default: "mercury/mercury-library"
       release-branch:
         description: "Branch to release from"
         required: false
@@ -30,7 +23,6 @@ jobs:
       GITHUB_ACTOR: ${{ secrets.ATALA_GITHUB_ACTOR }}
       GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
       SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-      PUBLISH_PACKAGES: "enable" # To enable the packager plugin on Mercury
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -65,6 +57,5 @@ jobs:
           GIT_AUTHOR_NAME: ${{ steps.import_gpg.outputs.name }}
           GIT_COMMITTER_NAME: ${{ steps.import_gpg.outputs.name }}
         run: |
-          cd ${{ inputs.release-component }}
           npm install
-          npx semantic-release -e semantic-release-monorepo
+          npx semantic-release

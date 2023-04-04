@@ -13,13 +13,20 @@ on:
 jobs:
   lint:
     name: Lint changes
-    runs-on: ubuntu-latest
-    env:
-      APPLY_FIXES: none
-      GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
+    runs-on: self-hosted
+    container:
+      image: ghcr.io/input-output-hk/atala-qa-automation
+      volumes:
+        - /nix:/nix
+      credentials:
+        username: ${{ secrets.ATALA_GITHUB_ACTOR }}
+        password: ${{ secrets.ATALA_GITHUB_TOKEN }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
+        APPLY_FIXES: none
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           token: ${{ secrets.ATALA_GITHUB_TOKEN }}
           fetch-depth: 0
@@ -28,7 +35,7 @@ jobs:
         uses: megalinter/megalinter@v6
       - name: Archive production artifacts
         if: success() || failure()
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: Mega-Linter reports
           path: |

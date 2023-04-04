@@ -1,0 +1,21 @@
+name: Atala PRISM unit tests
+
+# Cancel previously running workflows if new commit pushed to the branch
+# this will help to push fixes earlier and stop previous workflows
+concurrency:
+  group: ${{ github.head_ref }}${{ github.ref }}-atala-prism
+  cancel-in-progress: true
+
+on:
+  push:
+    branches:
+      - "main"
+  pull_request:
+
+jobs:
+  build-and-test-atala-prism:
+    uses: ./.github/workflows/unit-tests-common.yml
+    with:
+      component-name: "Atala PRISM"
+      component-dir: "."
+    secrets: inherit
