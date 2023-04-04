@@ -95,7 +95,7 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSuppor
       publicKeys = Nil,
       internalKeys = Nil,
       services = Nil,
-      context = Seq.empty, // TODO ask Pat to review this
+      context = Seq.empty,
     )
     metadata -> didData
   }
@@ -145,7 +145,7 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSuppor
             PrismDIDOperation.Create(
               Nil,
               Nil,
-              Nil, // TODO ask Pat to review this
+              Nil,
             ),
           )
           .asCanonical

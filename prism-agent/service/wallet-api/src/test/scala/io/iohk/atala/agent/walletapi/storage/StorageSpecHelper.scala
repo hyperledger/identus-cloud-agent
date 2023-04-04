@@ -16,7 +16,6 @@ import zio.*
 import io.iohk.atala.agent.walletapi.model.ManagedDIDState
 
 trait StorageSpecHelper {
-  // TODO ask Pat to review this
   protected val didExample = PrismDID.buildLongFormFromOperation(PrismDIDOperation.Create(Nil, Nil, Nil))
 
   protected def updateLineage(
