@@ -546,7 +546,6 @@ object BackgroundJobs {
               _,
               _
             ) => // Prover
-          val fixme: io.iohk.atala.pollux.vc.jwt.W3cPresentationPayload = ???
           for {
             presentationService <- ZIO.service[PresentationService]
             prover <- createPrismDIDIssuerFromPresentationCredentials(id, credentialsToUse.getOrElse(Nil))
@@ -555,7 +554,10 @@ object BackgroundJobs {
               prover,
               Instant.now()
             )
-            signedJwtPresentation = JwtPresentation.toEncodedJwt(fixme, prover) // FIXME
+            signedJwtPresentation = JwtPresentation.toEncodedJwt(
+              presentationPayload.toW3CPresentationPayload,
+              prover
+            )
             // signedJwtPresentation = JwtPresentation.toEncodedJwt(w3cPresentationPayload, prover)
             presentation <- oRequestPresentation match
               case None => ZIO.fail(InvalidState("PresentationRecord 'RequestPending' with no Record"))
