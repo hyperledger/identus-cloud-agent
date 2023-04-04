@@ -1,0 +1,29 @@
+name: Mercury testing workflow
+
+# Cancel previously running workflows if new commit pushed to the branch
+# this will help to push fixes earlier and stop previous workflows
+concurrency:
+  group: ${{ github.head_ref }}${{ github.ref }}-mercury
+  cancel-in-progress: true
+
+on:
+  push:
+    branches:
+      - "main"
+    paths:
+      - ".github/workflows/mercury.yml"
+      - ".github/workflows/scala-unit-tests.yml"
+      - "mercury/mercury-library/**"
+  pull_request:
+    paths:
+      - ".github/workflows/mercury.yml"
+      - ".github/workflows/scala-unit-tests.yml"
+      - "mercury/mercury-library/**"
+
+jobs:
+  build-and-test-mercury:
+    uses: ./.github/workflows/scala-unit-tests.yml
+    with:
+      component-name: "Mercury Lib"
+      component-dir: "mercury/mercury-library"
+    secrets: inherit
