@@ -544,35 +544,6 @@ lazy val agentCliDidcommx = project
 //     .settings(skip / publish := true)
 //     .dependsOn(agent)
 
-// ### Test coverage ###
-sys.env
-  .get("SBT_SCOVERAGE")
-  .map { _ =>
-    lazy val coverageDataDir: SettingKey[File] =
-      settingKey[File]("directory where the measurements and report files will be stored")
-    coverageDataDir := target.value / "coverage"
-  }
-  .toSeq
-
-// ### ReleaseStep ###
-sys.env
-  .get("SBT_PACKAGER") // SEE also plugin.sbt
-  .map { _ =>
-    println("### Config SBT_PACKAGER (releaseProcess) ###")
-  import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations.*
-
-  releaseProcess := Seq[ReleaseStep](
-    checkSnapshotDependencies,
-    inquireVersions,
-    runClean,
-    runTest,
-    setReleaseVersion,
-    publishArtifacts,
-    setNextVersion
-  )
-  }
-  .toSeq
-
 // #####################
 // #####  castor  ######
 // #####################
@@ -676,9 +647,6 @@ lazy val connectDoobie = project
 // #####################
 // #### Prism Agent ####
 // #####################
-import sbtghpackages.GitHubPackagesPlugin.autoImport.*
-import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations.*
-
 def prismAgentConnectCommonSettings = polluxCommonSettings
 
 lazy val prismAgentWalletAPI = project
@@ -712,7 +680,6 @@ lazy val prismAgentServer = project
       .toMap,
     Docker / maintainer := "atala-coredid@iohk.io",
     Docker / dockerUsername := Some("input-output-hk"),
-    // Docker / githubOwner := "atala-prism-building-blocks", // not used by any other settings
     Docker / dockerRepository := Some("ghcr.io"),
     dockerExposedPorts := Seq(8080, 8085, 8090),
     dockerBaseImage := "openjdk:11",
@@ -736,11 +703,6 @@ lazy val prismAgentServer = project
 // #### Mediator ####
 // ##################
 
-// // Custom keys
-// val apiBaseDirectory =
-//   settingKey[File]("The base directory for Castor API specifications")
-// ThisBuild / apiBaseDirectory := baseDirectory.value / "api"
-
 /** The mediator service */
 lazy val mediator = project
   .in(file("mercury/mercury-mediator"))
@@ -762,3 +724,25 @@ lazy val mediator = project
   )
   .enablePlugins(JavaAppPackaging, DockerPlugin)
   .dependsOn(models, agentDidcommx)
+
+// ############################
+// ####  Release process  #####
+// ############################
+import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations.*
+releaseProcess := Seq[ReleaseStep](
+  checkSnapshotDependencies,
+  inquireVersions,
+  runClean,
+  runTest,
+  setReleaseVersion,
+  ReleaseStep(releaseStepTask(prismAgentServer / Docker / publish)),
+  sys.env
+    .get("RELEASE_MEDIATOR") match {
+    case Some(value) => ReleaseStep(releaseStepTask(mediator / Docker / publish))
+    case None => ReleaseStep(action = st => {
+      println("INFO: prism mediator release disabled!")
+      st
+    })
+  },
+  setNextVersion
+)
