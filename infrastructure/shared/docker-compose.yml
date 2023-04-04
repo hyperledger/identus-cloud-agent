@@ -84,7 +84,7 @@ services:
       prism-node:
         condition: service_started
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://prism-agent:8080/connections"]
+      test: ["CMD", "curl", "-f", "http://prism-agent:8085/connections"]
       interval: 30s
       timeout: 10s
       retries: 5
