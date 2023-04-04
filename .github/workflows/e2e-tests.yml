@@ -63,11 +63,9 @@ jobs:
       - name: Build local version of PRISM Agent
         env:
           ENV_FILE: "../../infrastructure/local/.env"
-          PRISM_AGENT_PATH: "../../prism-agent/service/"
           GITHUB_ACTOR: ${{ secrets.ATALA_GITHUB_ACTOR }}
           GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
         run: |
-          cd "${PRISM_AGENT_PATH}" || exit 129
           sbt docker:publishLocal
           PRISM_AGENT_VERSION=$(cut version.sbt -d '=' -f2 | tr -d '" ')
           sed -i.bak "s/PRISM_AGENT_VERSION=.*/PRISM_AGENT_VERSION=${PRISM_AGENT_VERSION}/" "${ENV_FILE}" && rm -f "${ENV_FILE}.bak"
