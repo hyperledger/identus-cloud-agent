@@ -666,7 +666,7 @@ lazy val prismAgentServer = project
     name := "prism-agent",
     fork := true,
     libraryDependencies ++= D_PrismAgent.serverDependencies,
-    Compile / mainClass := Some("io.iohk.atala.agent.server.Main"),
+    Compile / mainClass := Some("io.iohk.atala.agent.server.MainApp"),
     // OpenAPI settings
     Compile / unmanagedResourceDirectories += baseDirectory.value / ".." / "api",
     Compile / sourceGenerators += openApiGenerateClasses,
