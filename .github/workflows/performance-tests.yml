@@ -17,8 +17,7 @@ on:
 defaults:
   run:
     shell: bash
-    # working-directory: "tests/performance-tests/prism-performance-tests"
-    working-directory: "tests/e2e-tests"
+    working-directory: "tests/performance-tests/prism-performance-tests"
 
 jobs:
   run-performance-tests:
@@ -34,7 +33,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
     services:
-      db:
+      db-issuer:
         image: ghcr.io/input-output-hk/postgres-multi-db
         ports:
           - 5432:5432
@@ -47,72 +46,36 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-      # prism-node:
-      #   image: ghcr.io/input-output-hk/prism-node:v2.1.1
-      #   env:
-      #     NODE_PSQL_HOST: db:5432
-      #   ports:
-      #     - 50053:50053
       prism-agent-issuer:
         image: ghcr.io/input-output-hk/prism-agent:0.61.0
         env:
           IRIS_HOST: iris
           IRIS_PORT: 8081
-          CASTOR_DB_HOST: db
+          CASTOR_DB_HOST: db-issuer
           CASTOR_DB_PORT: 5432
           CASTOR_DB_NAME: castor
           CASTOR_DB_USER: postgres
           CASTOR_DB_PASSWORD: postgres
-          POLLUX_DB_HOST: db
+          POLLUX_DB_HOST: db-issuer
           POLLUX_DB_PORT: 5432
           POLLUX_DB_NAME: pollux
           POLLUX_DB_USER: postgres
           POLLUX_DB_PASSWORD: postgres
-          CONNECT_DB_HOST: db
+          CONNECT_DB_HOST: db-issuer
           CONNECT_DB_PORT: 5432
           CONNECT_DB_NAME: connect
           CONNECT_DB_USER: postgres
           CONNECT_DB_PASSWORD: postgres
-          AGENT_DB_HOST: db
+          AGENT_DB_HOST: db-issuer
           AGENT_DB_PORT: 5432
           AGENT_DB_NAME: agent
           AGENT_DB_USER: postgres
           AGENT_DB_PASSWORD: postgres
-          DIDCOMM_SERVICE_URL: http://prism-agent-issuer:8080/didcomm
-          PRISM_NODE_HOST: prism-node
+          DIDCOMM_SERVICE_URL: http://host.docker.internal:8080/didcomm
+          PRISM_NODE_HOST: prism-node-issuer
           PRISM_NODE_PORT: 50053
         ports:
           - 8080:8080
-      # prism-agent-holder:
-      #   image: ghcr.io/input-output-hk/prism-agent:0.61.0
-      #   env:
-      #     IRIS_HOST: iris
-      #     IRIS_PORT: 8081
-      #     CASTOR_DB_HOST: db
-      #     CASTOR_DB_PORT: 5433
-      #     CASTOR_DB_NAME: castor_holder
-      #     CASTOR_DB_USER: postgres
-      #     CASTOR_DB_PASSWORD: postgres
-      #     POLLUX_DB_HOST: db
-      #     POLLUX_DB_PORT: 5433
-      #     POLLUX_DB_NAME: pollux_holder
-      #     POLLUX_DB_USER: postgres
-      #     POLLUX_DB_PASSWORD: postgres
-      #     CONNECT_DB_HOST: db
-      #     CONNECT_DB_PORT: 5433
-      #     CONNECT_DB_NAME: connect_holder
-      #     CONNECT_DB_USER: postgres
-      #     CONNECT_DB_PASSWORD: postgres
-      #     AGENT_DB_HOST: db
-      #     AGENT_DB_PORT: 5433
-      #     AGENT_DB_NAME: agent_holder
-      #     AGENT_DB_USER: postgres
-      #     AGENT_DB_PASSWORD: postgres
-      #     DIDCOMM_SERVICE_URL: http://prism-agent-holder:8090/didcomm
-      #     PRISM_NODE_HOST: prism-node
-      #     PRISM_NODE_PORT: 50053
-      #   ports:
-      #     - 8090:8090
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -147,7 +110,6 @@ jobs:
         run: |
           export ACME_AGENT_URL="http://prism-agent-issuer:8080"
           export BOB_AGENT_URL="http://prism-agent-holder:8090"
-          sleep 20
           curl -v http://prism-agent-issuer:8080/connections
           # ./gradlew test --tests "E2eTestsRunner" -Dcucumber.filter.tags="@TEST_ATL-3834"
 
