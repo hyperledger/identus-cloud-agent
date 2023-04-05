@@ -5,9 +5,7 @@ ENV HOME=/root
 # Proper pipe commands failure checking
 SHELL [ "/bin/bash", "-o", "pipefail", "-c" ]
 # Install Linux dependencies
-RUN wget --progress=dot:giga -O - https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && \
-    echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list && \
-    echo "deb https://repo.scala-sbt.org/scalasbt/debian all main" | tee /etc/apt/sources.list.d/sbt.list && \
+RUN echo "deb https://repo.scala-sbt.org/scalasbt/debian all main" | tee /etc/apt/sources.list.d/sbt.list && \
     echo "deb https://repo.scala-sbt.org/scalasbt/debian /" | tee /etc/apt/sources.list.d/sbt_old.list && \
     wget --progress=dot:giga -O - "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x2EE0EA64E40A89B84B2DF73499E82A75642AC823" | apt-key add  && \
     apt-get --allow-releaseinfo-change update && \
@@ -23,13 +21,17 @@ RUN wget --progress=dot:giga -O - https://dl.yarnpkg.com/debian/pubkey.gpg | apt
     lsb-release=11.* \
     postgresql=13* \
     libxml2-utils=2.9.* \
-    yarn=1.22.* \
     sbt=1.4.* \
     jq=1.* \
     xxd=2:* \
     zip=3.* \
+    curl=7.* \
     && rm -rf /var/lib/apt/lists/* && \
     ln -sf /usr/bin/python3 /usr/bin/python
+
+RUN curl -fsSL https://get.docker.com -o get-docker.sh && \
+    sh get-docker.sh && \
+    rm get-docker.sh
 
 WORKDIR ${HOME}
 CMD [ "/bin/bash" ]

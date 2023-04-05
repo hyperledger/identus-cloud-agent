@@ -24,7 +24,7 @@ jobs:
     name: "Run performance tests"
     runs-on: self-hosted
     container:
-      image: ghcr.io/input-output-hk/atala-qa-automation
+      image: ghcr.io/input-output-hk/atala-prism-tests
       volumes:
         - /nix:/nix
       credentials:
@@ -43,12 +43,6 @@ jobs:
           registry: ghcr.io
           username: ${{ secrets.ATALA_GITHUB_ACTOR }}
           password: ${{ secrets.ATALA_GITHUB_TOKEN }}
-
-      - name: Install Compose
-        uses: ndeloof/install-compose-action@v0.0.1
-        with:
-          version: v2.12.2 # defaults to 'latest'
-          legacy: true    # will also install in PATH as `docker-compose`
 
       - name: Start services for issuer
         env:
@@ -74,7 +68,7 @@ jobs:
         run: |
           ./gradlew gatlingRun
 
-      - uses: actions/upload-artifact@v2
-        with:
-          name: performance-tests-results
-          path: tests/performance-tests/prism-performance-tests/build/reports
+      # - uses: actions/upload-artifact@v2
+      #   with:
+      #     name: performance-tests-results
+      #     path: tests/performance-tests/prism-performance-tests/build/reports
