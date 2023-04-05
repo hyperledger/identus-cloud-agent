@@ -36,19 +36,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Setup Java and Scala
-        uses: olafurpg/setup-scala@v13
-        with:
-          java-version: openjdk@1.11
-
-      - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
-
-      - name: Install Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.8'
-
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
         with:
