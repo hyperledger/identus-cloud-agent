@@ -83,36 +83,36 @@ jobs:
           PRISM_NODE_PORT: 50053
         ports:
           - 8080:8080
-      prism-agent-holder:
-        image: ghcr.io/input-output-hk/prism-agent:0.61.0
-        env:
-          IRIS_HOST: iris
-          IRIS_PORT: 8081
-          CASTOR_DB_HOST: db
-          CASTOR_DB_PORT: 5433
-          CASTOR_DB_NAME: castor_holder
-          CASTOR_DB_USER: postgres
-          CASTOR_DB_PASSWORD: postgres
-          POLLUX_DB_HOST: db
-          POLLUX_DB_PORT: 5433
-          POLLUX_DB_NAME: pollux_holder
-          POLLUX_DB_USER: postgres
-          POLLUX_DB_PASSWORD: postgres
-          CONNECT_DB_HOST: db
-          CONNECT_DB_PORT: 5433
-          CONNECT_DB_NAME: connect_holder
-          CONNECT_DB_USER: postgres
-          CONNECT_DB_PASSWORD: postgres
-          AGENT_DB_HOST: db
-          AGENT_DB_PORT: 5433
-          AGENT_DB_NAME: agent_holder
-          AGENT_DB_USER: postgres
-          AGENT_DB_PASSWORD: postgres
-          DIDCOMM_SERVICE_URL: http://prism-agent-holder:8090/didcomm
-          PRISM_NODE_HOST: prism-node
-          PRISM_NODE_PORT: 50053
-        ports:
-          - 8090:8090
+      # prism-agent-holder:
+      #   image: ghcr.io/input-output-hk/prism-agent:0.61.0
+      #   env:
+      #     IRIS_HOST: iris
+      #     IRIS_PORT: 8081
+      #     CASTOR_DB_HOST: db
+      #     CASTOR_DB_PORT: 5433
+      #     CASTOR_DB_NAME: castor_holder
+      #     CASTOR_DB_USER: postgres
+      #     CASTOR_DB_PASSWORD: postgres
+      #     POLLUX_DB_HOST: db
+      #     POLLUX_DB_PORT: 5433
+      #     POLLUX_DB_NAME: pollux_holder
+      #     POLLUX_DB_USER: postgres
+      #     POLLUX_DB_PASSWORD: postgres
+      #     CONNECT_DB_HOST: db
+      #     CONNECT_DB_PORT: 5433
+      #     CONNECT_DB_NAME: connect_holder
+      #     CONNECT_DB_USER: postgres
+      #     CONNECT_DB_PASSWORD: postgres
+      #     AGENT_DB_HOST: db
+      #     AGENT_DB_PORT: 5433
+      #     AGENT_DB_NAME: agent_holder
+      #     AGENT_DB_USER: postgres
+      #     AGENT_DB_PASSWORD: postgres
+      #     DIDCOMM_SERVICE_URL: http://prism-agent-holder:8090/didcomm
+      #     PRISM_NODE_HOST: prism-node
+      #     PRISM_NODE_PORT: 50053
+      #   ports:
+      #     - 8090:8090
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -147,9 +147,8 @@ jobs:
         run: |
           export ACME_AGENT_URL="http://prism-agent-issuer:8080"
           export BOB_AGENT_URL="http://prism-agent-holder:8090"
-          curl ${ACME_AGENT_URL}/connections
-          curl http://localhost:8080/connections
-          curl http://host.docker.internal:8080/connections
+          sleep 60
+          curl -v http://prism-agent-issuer:8080/connections
           # ./gradlew test --tests "E2eTestsRunner" -Dcucumber.filter.tags="@TEST_ATL-3834"
 
       # - uses: actions/upload-artifact@v2
