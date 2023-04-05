@@ -147,8 +147,8 @@ jobs:
         run: |
           export ACME_AGENT_URL="http://prism-agent-issuer:8080"
           export BOB_AGENT_URL="http://prism-agent-holder:8090"
-          sleep 60
-          curl -v http://prism-agent-issuer:8080/connections
+          sleep 20
+          curl -v prism-agent-issuer:8080/connections
           # ./gradlew test --tests "E2eTestsRunner" -Dcucumber.filter.tags="@TEST_ATL-3834"
 
       # - uses: actions/upload-artifact@v2
