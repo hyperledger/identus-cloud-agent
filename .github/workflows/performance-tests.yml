@@ -17,7 +17,8 @@ on:
 defaults:
   run:
     shell: bash
-    working-directory: "tests/performance-tests/prism-performance-tests"
+    # working-directory: "tests/performance-tests/prism-performance-tests"
+    working-directory: "tests/e2e-tests"
 
 jobs:
   run-performance-tests:
@@ -59,7 +60,7 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-      prism-node-issuer:
+      prism-node:
         image: ghcr.io/input-output-hk/prism-node:v2.1.1
         env:
           NODE_PSQL_HOST: db-issuer:5432
@@ -90,9 +91,41 @@ jobs:
           AGENT_DB_NAME: agent
           AGENT_DB_USER: postgres
           AGENT_DB_PASSWORD: postgres
-          DIDCOMM_SERVICE_URL: http://host.docker.internal:8080/didcomm
-          PRISM_NODE_HOST: prism-node-issuer
+          DIDCOMM_SERVICE_URL: http://prism-agent-issuer:8080/didcomm
+          PRISM_NODE_HOST: prism-node
           PRISM_NODE_PORT: 50053
+        ports:
+          - 8080:8080
+      prism-agent-holder:
+        image: ghcr.io/input-output-hk/prism-agent:0.61.0
+        env:
+          IRIS_HOST: iris
+          IRIS_PORT: 8081
+          CASTOR_DB_HOST: db-holder
+          CASTOR_DB_PORT: 5433
+          CASTOR_DB_NAME: castor
+          CASTOR_DB_USER: postgres
+          CASTOR_DB_PASSWORD: postgres
+          POLLUX_DB_HOST: db-holder
+          POLLUX_DB_PORT: 5433
+          POLLUX_DB_NAME: pollux
+          POLLUX_DB_USER: postgres
+          POLLUX_DB_PASSWORD: postgres
+          CONNECT_DB_HOST: db-holder
+          CONNECT_DB_PORT: 5433
+          CONNECT_DB_NAME: connect
+          CONNECT_DB_USER: postgres
+          CONNECT_DB_PASSWORD: postgres
+          AGENT_DB_HOST: db-holder
+          AGENT_DB_PORT: 5433
+          AGENT_DB_NAME: agent
+          AGENT_DB_USER: postgres
+          AGENT_DB_PASSWORD: postgres
+          DIDCOMM_SERVICE_URL: http://prism-agent-holder:8090/didcomm
+          PRISM_NODE_HOST: prism-node
+          PRISM_NODE_PORT: 50053
+        ports:
+          - 8090:8090
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -123,9 +156,9 @@ jobs:
       #     up-flags: "--wait"
       #     down-flags: "--volumes"
 
-      # - name: Run performance tests
-      #   run: |
-      #     ./gradlew gatlingRun
+      - name: Run performance tests
+        run: |
+          ./gradlew test --tests "E2eTestsRunner"
 
       # - uses: actions/upload-artifact@v2
       #   with:
