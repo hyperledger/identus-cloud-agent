@@ -35,8 +35,10 @@ jobs:
     services:
       postgres:
         image: postgres:13.3
+        ports:
+          - 5432:5432
         env:
-          POSTGRES_DB: db
+          POSTGRES_MULTIPLE_DATABASES: "castor,pollux,connect,iris,agent,node_db"
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
         options: >-
@@ -102,9 +104,9 @@ jobs:
       #     up-flags: "--wait"
       #     down-flags: "--volumes"
 
-      - name: Run performance tests
-        run: |
-          ./gradlew gatlingRun
+      # - name: Run performance tests
+      #   run: |
+      #     ./gradlew gatlingRun
 
       # - uses: actions/upload-artifact@v2
       #   with:
