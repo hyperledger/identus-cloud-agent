@@ -33,7 +33,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
     services:
-      db:
+      db-issuer:
         image: ghcr.io/input-output-hk/postgres-multi-db
         ports:
           - 5432:5432
@@ -46,15 +46,52 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-      prism-node:
+      db-holder:
+        image: ghcr.io/input-output-hk/postgres-multi-db
+        ports:
+          - 5433:5433
+        env:
+          POSTGRES_MULTIPLE_DATABASES: "castor,pollux,connect,iris,agent,node_db"
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      prism-node-issuer:
         image: ghcr.io/input-output-hk/prism-node:v2.1.1
         env:
-          NODE_PSQL_HOST: db:5432
-      prism-agent:
+          NODE_PSQL_HOST: db-issuer:5432
+        ports:
+          - 50053:50053
+      prism-agent-issuer:
         image: ghcr.io/input-output-hk/prism-agent:0.61.0
         env:
-          DIDCOMM_SERVICE_URL: http://host.docker.internal:${PORT}/didcomm
-          PRISM_NODE_HOST: prism-node
+          IRIS_HOST: iris
+          IRIS_PORT: 8081
+          CASTOR_DB_HOST: db-issuer
+          CASTOR_DB_PORT: 5432
+          CASTOR_DB_NAME: castor
+          CASTOR_DB_USER: postgres
+          CASTOR_DB_PASSWORD: postgres
+          POLLUX_DB_HOST: db-issuer
+          POLLUX_DB_PORT: 5432
+          POLLUX_DB_NAME: pollux
+          POLLUX_DB_USER: postgres
+          POLLUX_DB_PASSWORD: postgres
+          CONNECT_DB_HOST: db-issuer
+          CONNECT_DB_PORT: 5432
+          CONNECT_DB_NAME: connect
+          CONNECT_DB_USER: postgres
+          CONNECT_DB_PASSWORD: postgres
+          AGENT_DB_HOST: db-issuer
+          AGENT_DB_PORT: 5432
+          AGENT_DB_NAME: agent
+          AGENT_DB_USER: postgres
+          AGENT_DB_PASSWORD: postgres
+          DIDCOMM_SERVICE_URL: http://host.docker.internal:8080/didcomm
+          PRISM_NODE_HOST: prism-node-issuer
           PRISM_NODE_PORT: 50053
     steps:
       - name: Checkout
