@@ -34,7 +34,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
     services:
       db:
-        image: ghcr.io/input-output-hk/postgres-multi-db@sha256:f2786dcfabc34d752586fcc92db4187f22f5e130ca07dbc761db0e9b83a0de82
+        image: ghcr.io/input-output-hk/postgres-multi-db
         ports:
           - 5432:5432
         env:
