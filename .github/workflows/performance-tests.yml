@@ -45,7 +45,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
       prism-agent:
-        image: ghcr.io/input-output-hk/prism-node:0.61.0
+        image: ghcr.io/input-output-hk/prism-agent:0.61.0
         env:
           IRIS_HOST: iris
           IRIS_PORT: 8081
