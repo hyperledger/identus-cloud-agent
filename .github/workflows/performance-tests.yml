@@ -61,23 +61,23 @@ jobs:
           CASTOR_DB_HOST: db
           CASTOR_DB_PORT: 5432
           CASTOR_DB_NAME: castor_issuer
-          CASTOR_DB_USER: postgres
-          CASTOR_DB_PASSWORD: postgres
+          CASTOR_DB_USER: castor_issuer
+          CASTOR_DB_PASSWORD: castor_issuer
           POLLUX_DB_HOST: db
           POLLUX_DB_PORT: 5432
           POLLUX_DB_NAME: pollux_issuer
-          POLLUX_DB_USER: postgres
-          POLLUX_DB_PASSWORD: postgres
+          POLLUX_DB_USER: pollux_issuer
+          POLLUX_DB_PASSWORD: pollux_issuer
           CONNECT_DB_HOST: db
           CONNECT_DB_PORT: 5432
           CONNECT_DB_NAME: connect_issuer
-          CONNECT_DB_USER: postgres
-          CONNECT_DB_PASSWORD: postgres
+          CONNECT_DB_USER: connect_issuer
+          CONNECT_DB_PASSWORD: connect_issuer
           AGENT_DB_HOST: db
           AGENT_DB_PORT: 5432
           AGENT_DB_NAME: agent_issuer
-          AGENT_DB_USER: postgres
-          AGENT_DB_PASSWORD: postgres
+          AGENT_DB_USER: agent_issuer
+          AGENT_DB_PASSWORD: agent_issuer
           DIDCOMM_SERVICE_URL: http://prism-agent-issuer:8080/didcomm
           PRISM_NODE_HOST: prism-node
           PRISM_NODE_PORT: 50053
@@ -148,7 +148,7 @@ jobs:
           export ACME_AGENT_URL="http://prism-agent-issuer:8080"
           export BOB_AGENT_URL="http://prism-agent-holder:8090"
           sleep 20
-          curl -v prism-agent-issuer:8080/prism-agent/connections
+          curl -v http://prism-agent-issuer:8080/prism-agent/connections
           # ./gradlew test --tests "E2eTestsRunner" -Dcucumber.filter.tags="@TEST_ATL-3834"
 
       # - uses: actions/upload-artifact@v2
