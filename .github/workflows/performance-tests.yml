@@ -5,8 +5,6 @@ concurrency:
   cancel-in-progress: true
 
 on:
-  schedule:
-    - cron: "0 3 * * *"
   pull_request:
     paths:
       - ".github/workflows/performance-tests.yml"
@@ -22,9 +20,18 @@ defaults:
     working-directory: "tests/performance-tests/prism-performance-tests"
 
 jobs:
-  run-e2e-tests:
+  run-performance-tests:
     name: "Run performance tests"
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
+    container:
+      image: ghcr.io/input-output-hk/atala-qa-automation
+      volumes:
+        - /nix:/nix
+      credentials:
+        username: ${{ secrets.ATALA_GITHUB_ACTOR }}
+        password: ${{ secrets.ATALA_GITHUB_TOKEN }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
