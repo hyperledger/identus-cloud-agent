@@ -33,7 +33,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
     services:
-      postgres:
+      db:
         image: postgres:13.3
         ports:
           - 5432:5432
