@@ -34,25 +34,12 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
     services:
-      db-issuer:
+      db:
         image: ghcr.io/input-output-hk/postgres-multi-db
         ports:
           - 5432:5432
         env:
-          POSTGRES_MULTIPLE_DATABASES: "castor,pollux,connect,iris,agent,node_db"
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-      db-holder:
-        image: ghcr.io/input-output-hk/postgres-multi-db
-        ports:
-          - 5433:5432
-        env:
-          POSTGRES_MULTIPLE_DATABASES: "castor,pollux,connect,iris,agent,node_db"
+          POSTGRES_MULTIPLE_DATABASES: "castor-issuer,pollux-issuer,connect-issuer,iris-issuer,agent-issuer,node_db,castor-holder,pollux-holder,connect-holder,iris-holder,agent-holder,node_db"
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
         options: >-
@@ -63,7 +50,7 @@ jobs:
       prism-node:
         image: ghcr.io/input-output-hk/prism-node:v2.1.1
         env:
-          NODE_PSQL_HOST: db-issuer:5432
+          NODE_PSQL_HOST: db:5432
         ports:
           - 50053:50053
       prism-agent-issuer:
@@ -71,24 +58,24 @@ jobs:
         env:
           IRIS_HOST: iris
           IRIS_PORT: 8081
-          CASTOR_DB_HOST: db-issuer
+          CASTOR_DB_HOST: db
           CASTOR_DB_PORT: 5432
-          CASTOR_DB_NAME: castor
+          CASTOR_DB_NAME: castor-issuer
           CASTOR_DB_USER: postgres
           CASTOR_DB_PASSWORD: postgres
-          POLLUX_DB_HOST: db-issuer
+          POLLUX_DB_HOST: db
           POLLUX_DB_PORT: 5432
-          POLLUX_DB_NAME: pollux
+          POLLUX_DB_NAME: pollux-issuer
           POLLUX_DB_USER: postgres
           POLLUX_DB_PASSWORD: postgres
-          CONNECT_DB_HOST: db-issuer
+          CONNECT_DB_HOST: db
           CONNECT_DB_PORT: 5432
-          CONNECT_DB_NAME: connect
+          CONNECT_DB_NAME: connect-issuer
           CONNECT_DB_USER: postgres
           CONNECT_DB_PASSWORD: postgres
-          AGENT_DB_HOST: db-issuer
+          AGENT_DB_HOST: db
           AGENT_DB_PORT: 5432
-          AGENT_DB_NAME: agent
+          AGENT_DB_NAME: agent-issuer
           AGENT_DB_USER: postgres
           AGENT_DB_PASSWORD: postgres
           DIDCOMM_SERVICE_URL: http://prism-agent-issuer:8080/didcomm
@@ -101,24 +88,24 @@ jobs:
         env:
           IRIS_HOST: iris
           IRIS_PORT: 8081
-          CASTOR_DB_HOST: db-holder
+          CASTOR_DB_HOST: db
           CASTOR_DB_PORT: 5433
-          CASTOR_DB_NAME: castor
+          CASTOR_DB_NAME: castor-holder
           CASTOR_DB_USER: postgres
           CASTOR_DB_PASSWORD: postgres
-          POLLUX_DB_HOST: db-holder
+          POLLUX_DB_HOST: db
           POLLUX_DB_PORT: 5433
-          POLLUX_DB_NAME: pollux
+          POLLUX_DB_NAME: pollux-holder
           POLLUX_DB_USER: postgres
           POLLUX_DB_PASSWORD: postgres
-          CONNECT_DB_HOST: db-holder
+          CONNECT_DB_HOST: db
           CONNECT_DB_PORT: 5433
-          CONNECT_DB_NAME: connect
+          CONNECT_DB_NAME: connect-holder
           CONNECT_DB_USER: postgres
           CONNECT_DB_PASSWORD: postgres
-          AGENT_DB_HOST: db-holder
+          AGENT_DB_HOST: db
           AGENT_DB_PORT: 5433
-          AGENT_DB_NAME: agent
+          AGENT_DB_NAME: agent-holder
           AGENT_DB_USER: postgres
           AGENT_DB_PASSWORD: postgres
           DIDCOMM_SERVICE_URL: http://prism-agent-holder:8090/didcomm
