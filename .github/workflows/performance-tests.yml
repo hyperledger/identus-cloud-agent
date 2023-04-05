@@ -47,12 +47,12 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-      prism-node:
-        image: ghcr.io/input-output-hk/prism-node:v2.1.1
-        env:
-          NODE_PSQL_HOST: db:5432
-        ports:
-          - 50053:50053
+      # prism-node:
+      #   image: ghcr.io/input-output-hk/prism-node:v2.1.1
+      #   env:
+      #     NODE_PSQL_HOST: db:5432
+      #   ports:
+      #     - 50053:50053
       prism-agent-issuer:
         image: ghcr.io/input-output-hk/prism-agent:0.61.0
         env:
