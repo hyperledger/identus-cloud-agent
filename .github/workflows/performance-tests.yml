@@ -27,7 +27,6 @@ jobs:
       image: ghcr.io/input-output-hk/atala-prism-tests
       volumes:
         - /nix:/nix
-        - /docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
       credentials:
         username: ${{ secrets.ATALA_GITHUB_ACTOR }}
         password: ${{ secrets.ATALA_GITHUB_TOKEN }}

@@ -33,5 +33,7 @@ RUN curl -fsSL https://get.docker.com -o get-docker.sh && \
     sh get-docker.sh && \
     rm get-docker.sh
 
+COPY docker-entrypoint-initdb.d /docker-entrypoint-initdb.d
+
 WORKDIR ${HOME}
 CMD [ "/bin/bash" ]
