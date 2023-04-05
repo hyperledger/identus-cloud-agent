@@ -32,35 +32,75 @@ jobs:
         password: ${{ secrets.ATALA_GITHUB_TOKEN }}
       env:
         GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
+    services:
+      postgres:
+        image: postgres:13.3
+        env:
+          POSTGRES_DB: db
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      prism-agent:
+        image: ghcr.io/input-output-hk/prism-node:0.61.0
+        env:
+          IRIS_HOST: iris
+          IRIS_PORT: 8081
+          CASTOR_DB_HOST: db
+          CASTOR_DB_PORT: 5432
+          CASTOR_DB_NAME: castor
+          CASTOR_DB_USER: postgres
+          CASTOR_DB_PASSWORD: postgres
+          POLLUX_DB_HOST: db
+          POLLUX_DB_PORT: 5432
+          POLLUX_DB_NAME: pollux
+          POLLUX_DB_USER: postgres
+          POLLUX_DB_PASSWORD: postgres
+          CONNECT_DB_HOST: db
+          CONNECT_DB_PORT: 5432
+          CONNECT_DB_NAME: connect
+          CONNECT_DB_USER: postgres
+          CONNECT_DB_PASSWORD: postgres
+          AGENT_DB_HOST: db
+          AGENT_DB_PORT: 5432
+          AGENT_DB_NAME: agent
+          AGENT_DB_USER: postgres
+          AGENT_DB_PASSWORD: postgres
+          DIDCOMM_SERVICE_URL: http://host.docker.internal:${PORT}/didcomm
+          PRISM_NODE_HOST: prism-node
+          PRISM_NODE_PORT: 50053
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ secrets.ATALA_GITHUB_ACTOR }}
-          password: ${{ secrets.ATALA_GITHUB_TOKEN }}
+      # - name: Login to GitHub Container Registry
+      #   uses: docker/login-action@v2
+      #   with:
+      #     registry: ghcr.io
+      #     username: ${{ secrets.ATALA_GITHUB_ACTOR }}
+      #     password: ${{ secrets.ATALA_GITHUB_TOKEN }}
 
-      - name: Start services for issuer
-        env:
-          PORT: 8080
-        uses: isbang/compose-action@v1.4.1
-        with:
-          compose-file: "./infrastructure/shared/docker-compose.yml"
-          compose-flags: "--env-file ./infrastructure/local/.env -p issuer"
-          up-flags: "--wait"
-          down-flags: "--volumes"
+      # - name: Start services for issuer
+      #   env:
+      #     PORT: 8080
+      #   uses: isbang/compose-action@v1.4.1
+      #   with:
+      #     compose-file: "./infrastructure/shared/docker-compose.yml"
+      #     compose-flags: "--env-file ./infrastructure/local/.env -p issuer"
+      #     up-flags: "--wait"
+      #     down-flags: "--volumes"
 
-      - name: Start services for holder
-        env:
-          PORT: 8090
-        uses: isbang/compose-action@v1.4.1
-        with:
-          compose-file: "./infrastructure/shared/docker-compose.yml"
-          compose-flags: "--env-file ./infrastructure/local/.env -p holder"
-          up-flags: "--wait"
-          down-flags: "--volumes"
+      # - name: Start services for holder
+      #   env:
+      #     PORT: 8090
+      #   uses: isbang/compose-action@v1.4.1
+      #   with:
+      #     compose-file: "./infrastructure/shared/docker-compose.yml"
+      #     compose-flags: "--env-file ./infrastructure/local/.env -p holder"
+      #     up-flags: "--wait"
+      #     down-flags: "--volumes"
 
       - name: Run performance tests
         run: |
