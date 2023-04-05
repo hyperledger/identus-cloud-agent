@@ -55,6 +55,7 @@ jobs:
           POSTGRES_MULTIPLE_DATABASES: "castor,pollux,connect,iris,agent,node_db"
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
+          PGPORT: 5433
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -158,6 +159,8 @@ jobs:
 
       - name: Run performance tests
         run: |
+          export ACME_AGENT_URL="http://prism-agent-issuer:8080"
+          export BOB_AGENT_URL="http://prism-agent-holder:8090"
           ./gradlew test --tests "E2eTestsRunner"
 
       # - uses: actions/upload-artifact@v2
