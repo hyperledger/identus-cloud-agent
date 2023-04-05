@@ -60,22 +60,22 @@ jobs:
           IRIS_PORT: 8081
           CASTOR_DB_HOST: db
           CASTOR_DB_PORT: 5432
-          CASTOR_DB_NAME: castor_issuer
+          CASTOR_DB_NAME: castor
           CASTOR_DB_USER: postgres
           CASTOR_DB_PASSWORD: postgres
           POLLUX_DB_HOST: db
           POLLUX_DB_PORT: 5432
-          POLLUX_DB_NAME: pollux_issuer
+          POLLUX_DB_NAME: pollux
           POLLUX_DB_USER: postgres
           POLLUX_DB_PASSWORD: postgres
           CONNECT_DB_HOST: db
           CONNECT_DB_PORT: 5432
-          CONNECT_DB_NAME: connect_issuer
+          CONNECT_DB_NAME: connect
           CONNECT_DB_USER: postgres
           CONNECT_DB_PASSWORD: postgres
           AGENT_DB_HOST: db
           AGENT_DB_PORT: 5432
-          AGENT_DB_NAME: agent_issuer
+          AGENT_DB_NAME: agent
           AGENT_DB_USER: postgres
           AGENT_DB_PASSWORD: postgres
           DIDCOMM_SERVICE_URL: http://prism-agent-issuer:8080/didcomm
