@@ -57,7 +57,6 @@ jobs:
           sbt -v coverage test coverageAggregate
 
       - name: Upload coverage data to Coveralls
-        # if: github.event_name != 'pull_request'
         run: sbt coveralls
         env:
           COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
