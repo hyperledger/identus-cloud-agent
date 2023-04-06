@@ -1,55 +1,31 @@
-<h1 align="center">Atala PRISM v2 - The modern SSI ecosystem.</h1>
 <p align="center">
-  <img src="docs/images/logos/atala-prism-logo.svg" alt="atala-prism-logo" width="120px" height="120px" />
-  <br>
-  <i> is an ecosystem and development platform for Self-Sovereign Identity applications
-  </i>
-  <br>
-</p>
-<p align="center">
-  <a href="https://www.atalaprism.io">
-    <strong>www.atalaprism.io</strong>
+  <a href="https://atalaprism.io">
+    <img src="docs/images/logos/atala-prism-logo.png" alt="atala-prism-logo" width="513px" height="99px" />
   </a>
   <br>
-</p>
-<p align="center">
-  <a href="CONTRIBUTING.md">Contributing Guidelines</a>
+  <a href="https://github.com/input-output-hk/atala-prism-building-blocks/actions/workflows/prism-unit-tests.yml"> <img src="https://github.com/input-output-hk/atala-prism-building-blocks/actions/workflows/prism-unit-tests.yml/badge.svg" alt="Unit tests" /> </a>
+  <a href="https://github.com/input-output-hk/atala-prism-building-blocks/actions/workflows/e2e-tests.yml"> <img src="https://github.com/input-output-hk/atala-prism-building-blocks/actions/workflows/e2e-tests.yml/badge.svg" alt="End-to-end tests" /> </a>
+  <a href="https://github.com/input-output-hk/atala-prism-building-blocks/actions/workflows/performance-tests.yml"> <img src="https://github.com/input-output-hk/atala-prism-building-blocks/actions/workflows/performance-tests.yml/badge.svg" alt="Performance tests" /> </a>
+  <br>
+  <i> Modern ecosystem and development platform for Self-Sovereign Identity applications
+  </i>
 </p>
 <hr>
 
-## Documentation
+## User documentation
 
-<!-- FIXME * [OpenAPI docs](openapi) -->
+* [Documentation portal](https://docs.atalaprism.io/)
+* [Handbook](https://handbook.atalaprism.io/)
 
-* [Interdependencies](./Interdependencies.md)
-* [repositories and relationships](./RepositoriesRrelationships.md)
+## Developer documentation
 
-## Running a single instance locally
-
-Instructions for running the `building-block` stack locally can be found here: [Running locally](infrastructure/local/README.md)
-
-## Running multiple instances locally
-
-Instructions for running multiple instances of the `building-block` stack locally can be found here: [Running multiple locally](infrastructure/multi/README.md)
-
-## Running a instanve locally from sbt (single project)
-
-
-Run sbt from the root of the repository
-- if you want to run the `prism-agent` call the comment `sbt> prismAgentServer/runMain io.iohk.atala.agent.server.AgentApp`
-
-## Developing
-
-Instructions for running the `building-block` stack for development purposes can be found here: [Developing locally](infrastructure/local/README.md)
-
-
-## Contributing
-
-Read through our [contributing guidelines][contributing] to learn about our submission process, coding rules and more.
+* [Contributing Guidelines](CONTRIBUTING.md)
+* [Interdependencies](./docs/general/Interdependencies.md)
+* [Repositories & relationships](./docs/general/repositories_relationships.md)
+* [Code linting](./docs/guides/linting.md)
+* [Signing commits](./docs/guides/signing_commits.md)
+* [Running agent locally](./infrastructure/local/README.md)
 
 <hr>
 
 **Love Atala PRISM? Give our repo a star :star: :arrow_up:.**
-
-[openapi]: docs/README.md
-[contributing]: CONTRIBUTING.md
