@@ -51,7 +51,7 @@ lazy val V = new {
 
   val typesafeConfig = "1.4.2"
   val protobuf = "3.1.9"
-  val testContainersScalaPostgresql = "0.40.11"
+  val testContainersScalaPostgresql = "0.40.14"
 
   val doobie = "1.0.0-RC2"
   val quill = "4.6.0"
