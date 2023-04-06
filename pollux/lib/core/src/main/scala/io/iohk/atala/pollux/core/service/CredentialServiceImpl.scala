@@ -49,7 +49,7 @@ private class CredentialServiceImpl(
   override def extractIdFromCredential(credential: W3cCredentialPayload): Option[DidCommID] =
     credential.maybeId.map(_.split("/").last).map(DidCommID(_))
 
-  override def getIssueCredentialRecords(): IO[CredentialServiceError, Seq[IssueCredentialRecord]] = {
+  override def getIssueCredentialRecords: IO[CredentialServiceError, Seq[IssueCredentialRecord]] = {
     for {
       records <- credentialRepository
         .getIssueCredentialRecords()
@@ -185,7 +185,7 @@ private class CredentialServiceImpl(
   }
 
   override def getIssueCredentialRecordsByStates(
-      ignoreWithZeroRetries: Boolean = true,
+      ignoreWithZeroRetries: Boolean,
       states: IssueCredentialRecord.ProtocolState*
   ): IO[CredentialServiceError, Seq[IssueCredentialRecord]] = {
     for {

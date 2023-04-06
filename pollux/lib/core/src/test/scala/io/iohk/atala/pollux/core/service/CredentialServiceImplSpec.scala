@@ -2,61 +2,76 @@ package io.iohk.atala.pollux.core.service
 
 import cats.syntax.validated
 import io.circe.parser.decode
-import io.circe.syntax._
+import io.circe.syntax.*
 import io.grpc.ManagedChannelBuilder
+import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
-import io.iohk.atala.mercury.model.DidId
-import io.iohk.atala.mercury.model.Message
-import io.iohk.atala.mercury.protocol.issuecredential.Attribute
-import io.iohk.atala.mercury.protocol.issuecredential.CredentialPreview
-import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
-import io.iohk.atala.mercury.protocol.issuecredential.OfferCredential
-import io.iohk.atala.mercury.protocol.issuecredential.RequestCredential
-import io.iohk.atala.pollux.core.model._
-import io.iohk.atala.pollux.core.model.IssueCredentialRecord._
+import io.iohk.atala.mercury.model.{AttachmentDescriptor, DidId, Message}
+import io.iohk.atala.mercury.protocol.issuecredential.*
+import io.iohk.atala.pollux.core.model.*
+import io.iohk.atala.pollux.core.model.IssueCredentialRecord.*
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
-import io.iohk.atala.pollux.core.model.error.CredentialServiceError._
+import io.iohk.atala.pollux.core.model.error.CredentialServiceError.*
+import io.iohk.atala.pollux.core.model.presentation.{ClaimFormat, Ldp, Options, PresentationDefinition}
 import io.iohk.atala.pollux.core.repository.CredentialRepositoryInMemory
+import io.iohk.atala.pollux.vc.jwt.*
 import zio.*
 import zio.test.*
+import zio.test.TestAspect.{nondeterministic, samples}
 
+import java.io.{BufferedReader, InputStreamReader}
+import java.net.{HttpURLConnection, URI}
 import java.util.UUID
-import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
-import io.iohk.atala.mercury.model.AttachmentDescriptor
-import io.iohk.atala.pollux.core.model.presentation.Options
-import io.iohk.atala.pollux.core.model.presentation.Ldp
-import io.iohk.atala.pollux.core.model.presentation.ClaimFormat
-import io.iohk.atala.pollux.core.model.presentation.PresentationDefinition
-import io.iohk.atala.pollux.vc.jwt._
 
 object CredentialServiceImplSpec extends ZIOSpecDefault {
+
+  private[this] val uriDereferencerLayer = ZLayer.succeed {
+    new URIDereferencer {
+      override def dereference(uri: URI): Task[String] = {
+        val result = for {
+          body <- ZIO.attempt {
+            val conn = uri.toURL.openConnection().asInstanceOf[HttpURLConnection]
+            conn.setConnectTimeout(5000)
+            conn.setReadTimeout(5000)
+            conn.setRequestMethod("GET")
+            val is = conn.getInputStream
+            if (is != null)
+              val content = scala.io.Source.fromInputStream(is).mkString
+              is.close()
+              content
+            else ""
+          }
+        } yield body
+        result
+      }
+    }
+  }
 
   val irisStubLayer = ZLayer.fromZIO(
     ZIO.succeed(IrisServiceGrpc.stub(ManagedChannelBuilder.forAddress("localhost", 9999).usePlaintext.build))
   )
   val didResolverLayer = ZLayer.fromZIO(ZIO.succeed(makeResolver(Map.empty)))
   val credentialServiceLayer =
-    irisStubLayer ++ CredentialRepositoryInMemory.layer ++ didResolverLayer >>> CredentialServiceImpl.layer
+    irisStubLayer ++ CredentialRepositoryInMemory.layer ++ didResolverLayer ++ uriDereferencerLayer >>> CredentialServiceImpl.layer
 
   override def spec = {
     suite("CredentialServiceImpl")(
       test("createIssuerCredentialRecord creates a valid issuer credential record") {
         check(
-          Gen.uuid.map(e => DidCommID(e.toString())),
-          Gen.option(Gen.string),
           Gen.option(Gen.double),
           Gen.option(Gen.boolean),
           Gen.option(Gen.boolean)
-        ) { (thid, schemaId, validityPeriod, automaticIssuance, awaitConfirmation) =>
+        ) { (validityPeriod, automaticIssuance, awaitConfirmation) =>
           for {
             svc <- ZIO.service[CredentialService]
             pairwiseIssuerDid = DidId("did:peer:INVITER")
             pairwiseHolderDid = DidId("did:peer:HOLDER")
+            thid = DidCommID(UUID.randomUUID().toString())
             record <- svc.createRecord(
               thid = thid,
               pairwiseIssuerDID = pairwiseIssuerDid,
               pairwiseHolderDID = pairwiseHolderDid,
-              schemaId = schemaId,
+              schemaId = None,
               validityPeriod = validityPeriod,
               automaticIssuance = automaticIssuance,
               awaitConfirmation = awaitConfirmation
@@ -64,7 +79,7 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
           } yield {
             assertTrue(record.thid == thid) &&
             assertTrue(record.updatedAt.isEmpty) &&
-            assertTrue(record.schemaId == schemaId) &&
+            assertTrue(record.schemaId.isEmpty) &&
             assertTrue(record.validityPeriod == validityPeriod) &&
             assertTrue(record.automaticIssuance == automaticIssuance) &&
             assertTrue(record.awaitConfirmation == awaitConfirmation) &&
@@ -111,7 +126,7 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
           svc <- ZIO.service[CredentialService]
           aRecord <- svc.createRecord()
           bRecord <- svc.createRecord()
-          records <- svc.getIssueCredentialRecords()
+          records <- svc.getIssueCredentialRecords
         } yield {
           assertTrue(records.size == 2) &&
           assertTrue(records.contains(aRecord)) &&

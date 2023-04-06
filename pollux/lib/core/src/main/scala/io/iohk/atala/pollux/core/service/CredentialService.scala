@@ -70,10 +70,10 @@ trait CredentialService {
     * TODO this function API maybe change in the future to return a lazy sequence of records or something similar to a
     * batabase cursor.
     */
-  def getIssueCredentialRecords(): IO[CredentialServiceError, Seq[IssueCredentialRecord]]
+  def getIssueCredentialRecords: IO[CredentialServiceError, Seq[IssueCredentialRecord]]
 
   def getIssueCredentialRecordsByStates(
-      ignoreWithZeroRetries: Boolean = true,
+      ignoreWithZeroRetries: Boolean,
       states: IssueCredentialRecord.ProtocolState*
   ): IO[CredentialServiceError, Seq[IssueCredentialRecord]]
 

@@ -82,7 +82,7 @@ class IssueCredentialsProtocolApiServiceImpl(
   ): Route = {
     val result = for {
       records <- credentialService
-        .getIssueCredentialRecords()
+        .getIssueCredentialRecords
         .mapError(HttpServiceError.DomainError[CredentialServiceError].apply)
       outcome = thid match
         case None        => records
