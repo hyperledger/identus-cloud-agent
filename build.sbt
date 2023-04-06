@@ -65,7 +65,7 @@ lazy val V = new {
 
   val circeVersion = "0.14.3"
   val jwtCirceVersion = "9.2.0"
-  val zioPreludeVersion = "1.0.0-RC16"
+  val zioPreludeVersion = "1.0.0-RC18"
 
   val akka = "2.6.20"
   val akkaHttp = "10.2.9"
