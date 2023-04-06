@@ -15,8 +15,10 @@ case class VerifiableCredentialsSchemaInput(
     tags: List[String]
 )
 object VerifiableCredentialsSchemaInput {
-  given encoder: zio.json.JsonEncoder[VerifiableCredentialsSchemaInput] = DeriveJsonEncoder.gen[VerifiableCredentialsSchemaInput]
-  given decoder: zio.json.JsonDecoder[VerifiableCredentialsSchemaInput] = DeriveJsonDecoder.gen[VerifiableCredentialsSchemaInput]
+  given encoder: zio.json.JsonEncoder[VerifiableCredentialsSchemaInput] =
+    DeriveJsonEncoder.gen[VerifiableCredentialsSchemaInput]
+  given decoder: zio.json.JsonDecoder[VerifiableCredentialsSchemaInput] =
+    DeriveJsonDecoder.gen[VerifiableCredentialsSchemaInput]
 }
 
 case class VerifiableCredentialsSchema(
