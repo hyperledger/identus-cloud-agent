@@ -21,9 +21,6 @@ import io.iohk.atala.pollux.core.repository.CredentialRepository
 import io.iohk.atala.pollux.vc.jwt.*
 import io.iohk.atala.prism.crypto.{MerkleInclusionProof, MerkleTreeKt, Sha256}
 import io.iohk.atala.resolvers.DidValidator
-import org.everit.json.schema.ValidationException
-import org.everit.json.schema.loader.SchemaLoader
-import org.json.{JSONObject, JSONTokener}
 import zio.*
 import zio.prelude.ZValidation
 
@@ -85,8 +82,19 @@ private class CredentialServiceImpl(
             uri <- ZIO.attempt(new URI(schemaId)).mapError(VCSchemaParsingError.apply)
             // Dereference VC Schema URI
             vcSchemaString <- uriDereferencer.dereference(uri).mapError(VCSchemaParsingError.apply)
-            // Extract inner JSON Schema used to validate JSON claims structure
+            // Get a Jackson mapper
             mapper = new ObjectMapper()
+            // Validate the VC Schema structure
+            /*
+            credentialSchema <- ZIO.fromEither(body.fromJson[CredentialSchema])
+            jsonSchemaAsString = credentialSchema.schema.toString
+            jsonSchema <- ZIO.succeed {
+              val rawSchema = new JSONObject(new JSONTokener(jsonSchemaAsString))
+              SchemaLoader.load(rawSchema.getJSONObject("schema"))
+            }
+             */
+
+            // Extract inner JSON Schema used to validate JSON claims structure
             jsonSchema <- ZIO
               .attempt {
                 val vcSchemaJsonNode = mapper.readTree(vcSchemaString)
@@ -98,39 +106,23 @@ private class CredentialServiceImpl(
                 factory.getSchema(jsonSchemaNode)
               }
               .mapError(VCSchemaParsingError.apply)
+
             // Convert claims map to JsonNode
             jsonClaims <- ZIO
-              .attempt(claims.foldLeft(mapper.createObjectNode()) { case (node, (k, v)) => node.put(k, v) })
-              .mapError(VCClaimsParsingError.apply)
-            // Validate claims JsonNode
-            validationMessages <- ZIO.attempt(jsonSchema.validate(jsonClaims)).mapError(VCSchemaParsingError.apply)
-
-            // Validate the VC Schema structure
-            /*
-            credentialSchema <- ZIO.fromEither(body.fromJson[CredentialSchema])
-            jsonSchemaAsString = credentialSchema.schema.toString
-            jsonSchema <- ZIO.succeed {
-              val rawSchema = new JSONObject(new JSONTokener(jsonSchemaAsString))
-              SchemaLoader.load(rawSchema.getJSONObject("schema"))
-            }
-             */
-            // Extract inner JSON Schema used to validate JSON claims structure
-            innerJsonSchema <- ZIO
               .attempt {
-                val vcJsonSchema = new JSONObject(new JSONTokener(vcSchemaString))
-                val jsonSchema = vcJsonSchema.getJSONObject("schema")
-                SchemaLoader.load(jsonSchema)
+                claims.foldLeft(mapper.createObjectNode()) { case (node, (k, v)) => node.put(k, v) }
               }
-              .mapError(VCSchemaParsingError.apply)
-            // Construct a JSON object from provided claims
-            claimsJsonObject <- ZIO.attempt(new JSONObject(claims)).mapError(VCClaimsParsingError.apply)
-            // Validate claims against schema
-            _ <- ZIO
-              .attempt(innerJsonSchema.validate(claimsJsonObject))
-              .mapError {
-                case e: ValidationException => VCClaimsValidationFailed(e.getAllMessages.asScala.toSeq)
-                case t                      => VCClaimsValidationFailed(Seq(t.getMessage))
-              }
+              .mapError(VCClaimsParsingError.apply)
+
+            // Validate claims JsonNode
+            validationMessages <- ZIO
+              .attempt(jsonSchema.validate(jsonClaims).asScala.toSeq)
+              .mapError(t => VCClaimsValidationFailed(Seq(t.getMessage)))
+            _ <-
+              if (validationMessages.isEmpty)
+                ZIO.unit
+              else
+                ZIO.fail(VCClaimsValidationFailed(validationMessages.map(_.getMessage)))
           } yield ()
     } yield result
   }
