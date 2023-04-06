@@ -1,5 +1,10 @@
 <h1 align="center">Atala PRISM v2 - The modern SSI ecosystem.</h1>
 <p align="center">
+  <a href="https://github.com/input-output-hk/atala-prism-building-blocks/actions/workflows/prism-unit-tests.yml"> <img src="https://github.com/input-output-hk/atala-prism-building-blocks/actions/workflows/prism-unit-tests.yml/badge.svg" alt="Unit tests" /> </a>
+  <a href="https://github.com/input-output-hk/atala-prism-building-blocks/actions/workflows/e2e-tests.yml"> <img src="https://github.com/input-output-hk/atala-prism-building-blocks/actions/workflows/e2e-tests.yml/badge.svg" alt="End-to-end tests" /> </a>
+  <a href="https://github.com/input-output-hk/atala-prism-building-blocks/actions/workflows/performance-tests.yml"> <img src="https://github.com/input-output-hk/atala-prism-building-blocks/actions/workflows/performance-tests.yml/badge.svg" alt="Performance tests" /> </a>
+</p>
+<p align="center">
   <img src="docs/images/logos/atala-prism-logo.svg" alt="atala-prism-logo" width="120px" height="120px" />
   <br>
   <i> is an ecosystem and development platform for Self-Sovereign Identity applications
@@ -14,11 +19,6 @@
 </p>
 <p align="center">
   <a href="CONTRIBUTING.md">Contributing Guidelines</a>
-</p>
-<p align="center">
-  <a href="https://github.com/input-output-hk/atala-prism-building-blocks/actions/workflows/prism-unit-tests.yml"> <img src="https://github.com/input-output-hk/atala-prism-building-blocks/actions/workflows/prism-unit-tests.yml/badge.svg" alt="Unit tests" /> </a>
-  <a href="https://github.com/input-output-hk/atala-prism-building-blocks/actions/workflows/e2e-tests.yml"> <img src="https://github.com/input-output-hk/atala-prism-building-blocks/actions/workflows/e2e-tests.yml/badge.svg" alt="End-to-end tests" /> </a>
-  <a href="https://github.com/input-output-hk/atala-prism-building-blocks/actions/workflows/performance-tests.yml"> <img src="https://github.com/input-output-hk/atala-prism-building-blocks/actions/workflows/performance-tests.yml/badge.svg" alt="Performance tests" /> </a>
 </p>
 <hr>
 
