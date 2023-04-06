@@ -5,7 +5,7 @@
   <a href="https://github.com/input-output-hk/atala-prism-building-blocks/actions/workflows/performance-tests.yml"> <img src="https://github.com/input-output-hk/atala-prism-building-blocks/actions/workflows/performance-tests.yml/badge.svg" alt="Performance tests" /> </a>
 </p>
 <p align="center">
-  <img src="docs/images/logos/atala-prism-logo.svg" alt="atala-prism-logo" width="120px" height="120px" />
+  <img src="docs/images/logos/atala-prism-logo.svg" alt="atala-prism-logo" width="240px" height="240px" />
   <br>
   <i> is an ecosystem and development platform for Self-Sovereign Identity applications
   </i>
