@@ -228,11 +228,16 @@ object Modules {
                       case Some(true)  => Some(trustPing.makeReply.makeMessage)
                       case Some(false) => None
                 }
-                // service <- ZIO.service[HttpClient]
-                // aaa = service.postDIDComm(service)
-                _ = trustPingResponseMsg match
-                  case None          => ZIO.logWarning(s"Did not reply to the ${TrustPing.`type`}")
-                  case Some(message) => MessagingService.send(message)
+                _ <- trustPingResponseMsg match
+                  case None => ZIO.logWarning(s"Did not reply to the ${TrustPing.`type`}")
+                  case Some(message) =>
+                    MessagingService
+                      .send(message)
+                      .flatMap(response =>
+                        response.status match
+                          case c if c >= 200 & c < 300 => ZIO.unit
+                          case c                       => ZIO.logWarning(response.toString())
+                      )
               } yield ()
 
             // ########################

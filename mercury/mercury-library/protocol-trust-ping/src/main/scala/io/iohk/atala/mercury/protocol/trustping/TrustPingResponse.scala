@@ -6,7 +6,7 @@ import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.iohk.atala.mercury.model._
 
 final case class TrustPingResponse(
-    `type`: PIURI = TrustPing.`type`,
+    `type`: PIURI = TrustPingResponse.`type`,
     id: String = java.util.UUID.randomUUID().toString,
     thid: String,
     from: DidId,
