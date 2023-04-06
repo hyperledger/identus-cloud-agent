@@ -13,11 +13,11 @@ import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.agent.server.http.ZioHttpClient
 import org.flywaydb.core.extensibility.AppliedMigration
-import io.iohk.atala.pollux.core.service.CredentialSchemaServiceImpl
+import io.iohk.atala.pollux.core.service.{CredentialSchemaServiceImpl, URIDereferencer}
 import io.iohk.atala.pollux.sql.repository.JdbcCredentialSchemaRepository
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
 import zhttp.http.*
-import zhttp.service.Server
+import zhttp.service.{ChannelFactory, Client, EventLoopGroup, Server}
 import zio.metrics.connectors.prometheus.PrometheusPublisher
 import zio.metrics.connectors.{MetricsConfig, prometheus}
 import zio.metrics.jvm.DefaultJvmMetrics
@@ -29,6 +29,7 @@ import io.circe.syntax.*
 import io.iohk.atala.agent.server.health.HealthInfo
 import io.iohk.atala.connect.controller.ConnectionControllerImpl
 
+import java.net.URI
 import java.security.Security
 
 object SystemInfoApp extends ZIOAppDefault {
@@ -96,6 +97,18 @@ object AgentApp extends ZIOAppDefault {
     _ <- ZIO.never
   } yield ()
 
+  private[this] val uriDereferencerLayer = ZLayer.succeed {
+    new URIDereferencer {
+      override def dereference(uri: URI): Task[String] = {
+        val result = for {
+          response <- Client.request(uri.toString)
+          body <- response.body.asString
+        } yield body
+        result.provide(ChannelFactory.auto ++ EventLoopGroup.auto())
+      }
+    }
+  }
+
   override def run: ZIO[Any, Throwable, Unit] = {
 
     val app = for {
@@ -156,7 +169,8 @@ object AgentApp extends ZIOAppDefault {
         RepoModule.credentialSchemaServiceLayer,
         AppModule.manageDIDServiceLayer,
         RepoModule.verificationPolicyServiceLayer,
-        ConnectionControllerImpl.layer
+        ConnectionControllerImpl.layer,
+        uriDereferencerLayer
       )
     } yield app
 

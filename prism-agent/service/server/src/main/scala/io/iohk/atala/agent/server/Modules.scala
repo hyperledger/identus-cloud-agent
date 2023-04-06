@@ -415,7 +415,7 @@ object AppModule {
     (didOpValidatorLayer ++ didServiceLayer ++ secretStorageLayer ++ nonSecretStorageLayer) >>> ManagedDIDService.layer
   }
 
-  val credentialServiceLayer: RLayer[DidOps & DidAgent & JwtDidResolver, CredentialService] =
+  val credentialServiceLayer: RLayer[DidOps & DidAgent & JwtDidResolver & URIDereferencer, CredentialService] =
     (GrpcModule.layers ++ RepoModule.credentialRepoLayer) >>> CredentialServiceImpl.layer
 
   def presentationServiceLayer =
@@ -475,7 +475,7 @@ object HttpModule {
   }
 
   val issueCredentialsProtocolApiLayer: RLayer[
-    DidOps & DidAgent & ManagedDIDService & ConnectionService & AppConfig & JwtDidResolver,
+    DidOps & DidAgent & ManagedDIDService & ConnectionService & AppConfig & JwtDidResolver & URIDereferencer,
     IssueCredentialsProtocolApi
   ] = {
     val serviceLayer = AppModule.credentialServiceLayer
