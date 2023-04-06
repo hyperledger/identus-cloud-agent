@@ -44,7 +44,7 @@ lazy val V = new {
   val zioMetrics = "2.0.7"
 
   // https://mvnrepository.com/artifact/io.circe/circe-core
-  val circe = "0.14.2"
+  val circe = "0.14.5"
 
   // val tapir = "1.0.3"
   val tapir = "1.2.12"
