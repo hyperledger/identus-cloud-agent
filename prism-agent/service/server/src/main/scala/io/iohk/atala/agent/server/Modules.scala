@@ -66,6 +66,7 @@ import zio.stream.ZStream
 
 import java.io.IOException
 import java.util.concurrent.Executors
+import io.iohk.atala.mercury.protocol.trustping.TrustPing
 
 object Modules {
 
@@ -98,7 +99,8 @@ object Modules {
   def didCommServiceEndpoint(port: Int) = {
     val header = "content-type" -> MediaTypes.contentTypeEncrypted
     val app: HttpApp[
-      DidOps & DidAgent & CredentialService & PresentationService & ConnectionService & ManagedDIDService,
+      DidOps & DidAgent & CredentialService & PresentationService & ConnectionService & ManagedDIDService & HttpClient &
+        DidAgent & DIDResolver,
       Throwable
     ] =
       Http.collectZIO[Request] {
@@ -194,10 +196,9 @@ object Modules {
     } yield msg.message
   }
 
-  def webServerProgram(
-      jsonString: String
-  ): ZIO[
-    DidOps & CredentialService & PresentationService & ConnectionService & ManagedDIDService,
+  def webServerProgram(jsonString: String): ZIO[
+    DidOps & CredentialService & PresentationService & ConnectionService & ManagedDIDService & HttpClient & DidAgent &
+      DIDResolver,
     MercuryThrowable | DIDSecretStorageError,
     Unit
   ] = {
@@ -211,6 +212,34 @@ object Modules {
         connectionService <- ZIO.service[ConnectionService]
         _ <- {
           msg.piuri match {
+            // ##################
+            // ### Trust-Ping ###
+            // ##################
+            case s if s == TrustPing.`type` =>
+              for {
+                _ <- ZIO.logInfo("*" * 100)
+                trustPingMsg = TrustPing.fromMessage(msg)
+                _ <- ZIO.logInfo(s"TrustPing from ${msg.from}: " + msg + " -> " + trustPingMsg)
+                trustPingResponseMsg = trustPingMsg match {
+                  case Left(value) => None
+                  case Right(trustPing) =>
+                    trustPing.body.response_requested match
+                      case None        => Some(trustPing.makeReply.makeMessage)
+                      case Some(true)  => Some(trustPing.makeReply.makeMessage)
+                      case Some(false) => None
+                }
+                _ <- trustPingResponseMsg match
+                  case None => ZIO.logWarning(s"Did not reply to the ${TrustPing.`type`}")
+                  case Some(message) =>
+                    MessagingService
+                      .send(message)
+                      .flatMap(response =>
+                        response.status match
+                          case c if c >= 200 & c < 300 => ZIO.unit
+                          case c                       => ZIO.logWarning(response.toString())
+                      )
+              } yield ()
+
             // ########################
             // ### issue-credential ###
             // ########################
