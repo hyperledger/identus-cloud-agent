@@ -1,8 +1,9 @@
 package io.iohk.atala.pollux.core.model.error
 
-import java.util.UUID
-import io.iohk.atala.pollux.vc.jwt.W3cCredentialPayload
 import io.iohk.atala.pollux.core.model.DidCommID
+import io.iohk.atala.pollux.vc.jwt.W3cCredentialPayload
+
+import java.util.UUID
 
 sealed trait CredentialServiceError
 
@@ -18,4 +19,7 @@ object CredentialServiceError {
   final case class CredentialRequestValidationError(error: String) extends CredentialServiceError
   final case class CredentialIdNotDefined(credential: W3cCredentialPayload) extends CredentialServiceError
   final case class IrisError(cause: Throwable) extends CredentialServiceError
+  final case class VCSchemaParsingError(cause: Throwable) extends CredentialServiceError
+  final case class VCClaimsParsingError(cause: Throwable) extends CredentialServiceError
+  final case class VCClaimsValidationFailed(causes: Seq[String]) extends CredentialServiceError
 }
