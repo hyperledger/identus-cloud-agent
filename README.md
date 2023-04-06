@@ -15,12 +15,14 @@
 <p align="center">
   <a href="CONTRIBUTING.md">Contributing Guidelines</a>
 </p>
-<p align="center">
-  [![Unit tests](https://github.com/input-output-hk/atala-prism-building-blocks/actions/workflows/prism-unit-tests.yml/badge.svg)](https://github.com/input-output-hk/atala-prism-building-blocks/actions/workflows/prism-unit-tests.yml)
-  [![End-to-end tests](https://github.com/input-output-hk/atala-prism-building-blocks/actions/workflows/e2e-tests.yml/badge.svg)](https://github.com/input-output-hk/atala-prism-building-blocks/actions/workflows/e2e-tests.yml)
-  [![Performance tests](https://github.com/input-output-hk/atala-prism-building-blocks/actions/workflows/performance-tests.yml/badge.svg)](https://github.com/input-output-hk/atala-prism-building-blocks/actions/workflows/performance-tests.yml)
+<p align="center>
+  <a href="https://github.com/input-output-hk/atala-prism-building-blocks/actions/workflows/prism-unit-tests.yml"> <img src="https://github.com/input-output-hk/atala-prism-building-blocks/actions/workflows/prism-unit-tests.yml/badge.svg" alt="Unit tests" /> </a>
 </p>
 <hr>
+
+<!-- [![Unit tests](https://github.com/input-output-hk/atala-prism-building-blocks/actions/workflows/prism-unit-tests.yml/badge.svg)](https://github.com/input-output-hk/atala-prism-building-blocks/actions/workflows/prism-unit-tests.yml)
+[![End-to-end tests](https://github.com/input-output-hk/atala-prism-building-blocks/actions/workflows/e2e-tests.yml/badge.svg)](https://github.com/input-output-hk/atala-prism-building-blocks/actions/workflows/e2e-tests.yml)
+[![Performance tests](https://github.com/input-output-hk/atala-prism-building-blocks/actions/workflows/performance-tests.yml/badge.svg)](https://github.com/input-output-hk/atala-prism-building-blocks/actions/workflows/performance-tests.yml) -->
 
 ## Documentation
 
