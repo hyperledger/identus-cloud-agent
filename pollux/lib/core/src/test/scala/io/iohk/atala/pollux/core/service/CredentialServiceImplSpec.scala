@@ -15,12 +15,13 @@ import io.iohk.atala.pollux.core.model.error.CredentialServiceError.*
 import io.iohk.atala.pollux.core.model.presentation.{ClaimFormat, Ldp, Options, PresentationDefinition}
 import io.iohk.atala.pollux.core.repository.CredentialRepositoryInMemory
 import io.iohk.atala.pollux.vc.jwt.*
+import sun.net.www.URLConnection
 import zio.*
 import zio.test.*
 import zio.test.TestAspect.{nondeterministic, samples}
 
 import java.io.{BufferedReader, InputStreamReader}
-import java.net.{HttpURLConnection, URI}
+import java.net.{HttpURLConnection, JarURLConnection, URI}
 import java.util.UUID
 
 object CredentialServiceImplSpec extends ZIOSpecDefault {
@@ -30,14 +31,22 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
       override def dereference(uri: URI): Task[String] = {
         val result = for {
           body <- ZIO.attempt {
-            val conn = uri.toURL.openConnection().asInstanceOf[HttpURLConnection]
-            conn.setConnectTimeout(5000)
-            conn.setReadTimeout(5000)
-            conn.setRequestMethod("GET")
-            val is = conn.getInputStream
-            if (is != null)
-              val content = scala.io.Source.fromInputStream(is).mkString
-              is.close()
+            val inputStream = uri.getScheme match {
+              case "resource" =>
+                println(s"URI path => ${uri.getPath}")
+                this.getClass.getResourceAsStream(uri.getPath)
+              case _ =>
+                val conn = uri.toURL.openConnection()
+                conn.setConnectTimeout(5000)
+                conn.setReadTimeout(5000)
+                conn match
+                  case connection: HttpURLConnection => connection.setRequestMethod("GET")
+                  case _                             =>
+                conn.getInputStream
+            }
+            if (inputStream != null)
+              val content = scala.io.Source.fromInputStream(inputStream).mkString
+              inputStream.close()
               content
             else ""
           }
@@ -56,7 +65,7 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
 
   override def spec = {
     suite("CredentialServiceImpl")(
-      test("createIssuerCredentialRecord creates a valid issuer credential record") {
+      test("createIssuerCredentialRecord without schema creates a valid issuer credential record") {
         check(
           Gen.option(Gen.double),
           Gen.option(Gen.boolean),
@@ -108,6 +117,105 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
           }
         }
       },
+      test("createIssuerCredentialRecord with a schema and valid claims creates a valid issuer credential record") {
+        check(
+          Gen.option(Gen.double),
+          Gen.option(Gen.boolean),
+          Gen.option(Gen.boolean)
+        ) { (validityPeriod, automaticIssuance, awaitConfirmation) =>
+          for {
+            svc <- ZIO.service[CredentialService]
+            pairwiseIssuerDid = DidId("did:peer:INVITER")
+            pairwiseHolderDid = DidId("did:peer:HOLDER")
+            claims = Map(
+              "emailAddress" -> "alice@wonderland.com",
+              "givenName" -> "Alice",
+              "familyName" -> "Wonderland",
+              "dateOfIssuance" -> "2000-01-01T10:00:00Z",
+              "drivingLicenseID" -> "12345",
+              "drivingClass" -> "5"
+            )
+            thid = DidCommID(UUID.randomUUID().toString())
+            record <- svc.createRecord(
+              thid = thid,
+              pairwiseIssuerDID = pairwiseIssuerDid,
+              pairwiseHolderDID = pairwiseHolderDid,
+              schemaId = Some("resource:///vc-schema-example.json"),
+              claims = claims,
+              validityPeriod = validityPeriod,
+              automaticIssuance = automaticIssuance,
+              awaitConfirmation = awaitConfirmation
+            )
+          } yield {
+            assertTrue(record.thid == thid) &&
+            assertTrue(record.updatedAt.isEmpty) &&
+            assertTrue(
+              record.schemaId.contains("resource:///vc-schema-example.json")
+            ) &&
+            assertTrue(record.validityPeriod == validityPeriod) &&
+            assertTrue(record.automaticIssuance == automaticIssuance) &&
+            assertTrue(record.awaitConfirmation == awaitConfirmation) &&
+            assertTrue(record.role == Role.Issuer) &&
+            assertTrue(record.protocolState == ProtocolState.OfferPending) &&
+            assertTrue(record.publicationState.isEmpty) &&
+            assertTrue(record.offerCredentialData.isDefined) &&
+            assertTrue(record.offerCredentialData.get.from == pairwiseIssuerDid) &&
+            assertTrue(record.offerCredentialData.get.to == pairwiseHolderDid) &&
+            // FIXME: update the assertion when when CredentialOffer attachment is realized
+            // assertTrue(record.offerCredentialData.get.attachments.isEmpty) &&
+            assertTrue(record.offerCredentialData.get.thid.contains(thid.toString)) &&
+            assertTrue(record.offerCredentialData.get.body.comment.isEmpty) &&
+            assertTrue(record.offerCredentialData.get.body.goal_code.contains("Offer Credential")) &&
+            assertTrue(record.offerCredentialData.get.body.multiple_available.isEmpty) &&
+            assertTrue(record.offerCredentialData.get.body.replacement_id.isEmpty) &&
+            assertTrue(record.offerCredentialData.get.body.formats.isEmpty) &&
+            assertTrue(
+              record.offerCredentialData.get.body.credential_preview.attributes == claims.map { case (k, v) =>
+                Attribute(k, v, None)
+              }.toSeq
+            ) &&
+            assertTrue(record.requestCredentialData.isEmpty) &&
+            assertTrue(record.issueCredentialData.isEmpty) &&
+            assertTrue(record.issuedCredentialRaw.isEmpty)
+          }
+        }
+      },
+      test("createIssuerCredentialRecord with a schema and invalid claims should fail") {
+        check(
+          Gen.option(Gen.double),
+          Gen.option(Gen.boolean),
+          Gen.option(Gen.boolean)
+        ) { (validityPeriod, automaticIssuance, awaitConfirmation) =>
+          for {
+            svc <- ZIO.service[CredentialService]
+            pairwiseIssuerDid = DidId("did:peer:INVITER")
+            pairwiseHolderDid = DidId("did:peer:HOLDER")
+            claims = Map(
+              "emailAddress" -> "alice@wonderland.com",
+              "givenName" -> "Alice",
+              "familyName" -> "Wonderland"
+            )
+            thid = DidCommID(UUID.randomUUID().toString())
+            record <- svc
+              .createRecord(
+                thid = thid,
+                pairwiseIssuerDID = pairwiseIssuerDid,
+                pairwiseHolderDID = pairwiseHolderDid,
+                schemaId = Some("resource:///vc-schema-example.json"),
+                claims = claims,
+                validityPeriod = validityPeriod,
+                automaticIssuance = automaticIssuance,
+                awaitConfirmation = awaitConfirmation
+              )
+              .exit
+          } yield {
+            assertTrue(record match
+              case Exit.Failure(Cause.Fail(_: CredentialServiceError, _)) => true
+              case _                                                      => false
+            )
+          }
+        }
+      },
       test("createIssuerCredentialRecord should reject creation with a duplicate 'thid'") {
         for {
           svc <- ZIO.service[CredentialService]
@@ -116,8 +224,8 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
           bRecord <- svc.createRecord(thid = thid).exit
         } yield {
           assertTrue(bRecord match
-            case Exit.Failure(cause: Cause.Fail[_]) if cause.value.isInstanceOf[RepositoryError] => true
-            case _                                                                               => false
+            case Exit.Failure(Cause.Fail(_: RepositoryError, _)) => true
+            case _                                               => false
           )
         }
       },
@@ -195,8 +303,8 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
           exit <- holderSvc.receiveCredentialOffer(offer).exit
         } yield {
           assertTrue(exit match
-            case Exit.Failure(cause: Cause.Fail[_]) if cause.value.isInstanceOf[RepositoryError] => true
-            case _                                                                               => false
+            case Exit.Failure(Cause.Fail(_: RepositoryError, _)) => true
+            case _                                               => false
           )
         }
       },
@@ -237,8 +345,8 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
           exit <- holderSvc.acceptCredentialOffer(offerReceivedRecord.id, subjectId).exit
         } yield {
           assertTrue(exit match
-            case Exit.Failure(cause: Cause.Fail[_]) if cause.value.isInstanceOf[InvalidFlowStateError] => true
-            case _                                                                                     => false
+            case Exit.Failure(Cause.Fail(_: InvalidFlowStateError, _)) => true
+            case _                                                     => false
           )
         }
       },
@@ -251,8 +359,8 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
           record <- holderSvc.acceptCredentialOffer(offerReceivedRecord.id, subjectId).exit
         } yield {
           assertTrue(record match
-            case Exit.Failure(cause: Cause.Fail[_]) if cause.value.isInstanceOf[UnsupportedDidFormat] => true
-            case _                                                                                    => false
+            case Exit.Failure(Cause.Fail(_: UnsupportedDidFormat, _)) => true
+            case _                                                    => false
           )
         }
       },
@@ -278,8 +386,8 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
           exit <- issuerSvc.receiveCredentialRequest(request).exit
         } yield {
           assertTrue(exit match
-            case Exit.Failure(cause: Cause.Fail[_]) if cause.value.isInstanceOf[InvalidFlowStateError] => true
-            case _                                                                                     => false
+            case Exit.Failure(Cause.Fail(_: InvalidFlowStateError, _)) => true
+            case _                                                     => false
           )
         }
       },
@@ -292,8 +400,8 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
           exit <- issuerSvc.receiveCredentialRequest(request).exit
         } yield {
           assertTrue(exit match
-            case Exit.Failure(cause: Cause.Fail[_]) if cause.value.isInstanceOf[ThreadIdNotFound] => true
-            case _                                                                                => false
+            case Exit.Failure(Cause.Fail(_: ThreadIdNotFound, _)) => true
+            case _                                                => false
           )
         }
       },
@@ -321,8 +429,8 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
           exit <- issuerSvc.acceptCredentialRequest(requestReceivedRecord.id).exit
         } yield {
           assertTrue(exit match
-            case Exit.Failure(cause: Cause.Fail[_]) if cause.value.isInstanceOf[InvalidFlowStateError] => true
-            case _                                                                                     => false
+            case Exit.Failure(Cause.Fail(_: InvalidFlowStateError, _)) => true
+            case _                                                     => false
           )
         }
       },
@@ -371,8 +479,8 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
           exit <- holderSvc.receiveCredentialIssue(issue).exit
         } yield {
           assertTrue(exit match
-            case Exit.Failure(cause: Cause.Fail[_]) if cause.value.isInstanceOf[InvalidFlowStateError] => true
-            case _                                                                                     => false
+            case Exit.Failure(Cause.Fail(_: InvalidFlowStateError, _)) => true
+            case _                                                     => false
           )
         }
       },
@@ -389,8 +497,8 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
           exit <- holderSvc.receiveCredentialIssue(issue).exit
         } yield {
           assertTrue(exit match
-            case Exit.Failure(cause: Cause.Fail[_]) if cause.value.isInstanceOf[ThreadIdNotFound] => true
-            case _                                                                                => false
+            case Exit.Failure(Cause.Fail(_: ThreadIdNotFound, _)) => true
+            case _                                                => false
           )
         }
       },

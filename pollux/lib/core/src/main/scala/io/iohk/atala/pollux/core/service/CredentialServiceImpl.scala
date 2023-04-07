@@ -88,12 +88,7 @@ private class CredentialServiceImpl(
             /*
             credentialSchema <- ZIO.fromEither(body.fromJson[CredentialSchema])
             jsonSchemaAsString = credentialSchema.schema.toString
-            jsonSchema <- ZIO.succeed {
-              val rawSchema = new JSONObject(new JSONTokener(jsonSchemaAsString))
-              SchemaLoader.load(rawSchema.getJSONObject("schema"))
-            }
              */
-
             // Extract inner JSON Schema used to validate JSON claims structure
             jsonSchema <- ZIO
               .attempt {

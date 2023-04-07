@@ -1,0 +1,52 @@
+{
+  "guid": "1631026d-5d55-3285-8ccd-bd70480cfbdc",
+  "id": "329da384-b2bb-497f-a605-4118dec75d31",
+  "longId": "did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff/329da384-b2bb-497f-a605-4118dec75d31?version=5.0.0",
+  "name": "DrivingLicense",
+  "version": "5.0.0",
+  "tags": [
+    "string"
+  ],
+  "description": "Simple credential schema for the driving licence verifiable credential.",
+  "type": "https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json",
+  "schema": {
+    "$id": "https://json-schema.org",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "description": "Driving License",
+    "type": "object",
+    "properties": {
+      "emailAddress": {
+        "type": "string",
+        "format": "email"
+      },
+      "givenName": {
+        "type": "string"
+      },
+      "familyName": {
+        "type": "string"
+      },
+      "dateOfIssuance": {
+        "type": "string",
+        "format": "datetime"
+      },
+      "drivingLicenseID": {
+        "type": "string"
+      },
+      "drivingClass": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "emailAddress",
+      "familyName",
+      "dateOfIssuance",
+      "drivingLicenseID",
+      "drivingClass"
+    ],
+    "additionalProperties": false
+  },
+  "author": "did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff",
+  "authored": "2023-04-06T08:48:01.654162Z",
+  "kind": "CredentialSchema",
+  "self": "/schema-registry/schemas/1631026d-5d55-3285-8ccd-bd70480cfbdc"
+}
