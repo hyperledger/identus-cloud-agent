@@ -128,13 +128,13 @@ object AgentApp extends ZIOAppDefault {
 
       didCommServiceUrl <- System.env("DIDCOMM_SERVICE_URL").map {
         case Some(s) => s
-        case _       => "http://localhost"
+        case _       => "http://localhost:8190"
       }
       _ <- ZIO.logInfo(s"DIDComm Service URL => $didCommServiceUrl")
 
       didCommServicePort <- System.env("DIDCOMM_SERVICE_PORT").map {
         case Some(s) if s.toIntOption.isDefined => s.toInt
-        case _                                  => 8090
+        case _                                  => 8190
       }
       _ <- ZIO.logInfo(s"DIDComm Service port => $didCommServicePort")
 
