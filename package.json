@@ -1,6 +1,6 @@
 {
   "name": "atala-prism-building-blocks",
-  "version": "1.0.0",
+  "version": "0.60.2",
   "engines": {
     "node": ">=16.13.0"
   },
@@ -28,6 +28,7 @@
         "prerelease": "snapshot"
       }
     ],
+    "tagFormat": "prism-agent-v${version}",
     "plugins": [
       "@semantic-release/commit-analyzer",
       "@semantic-release/release-notes-generator",
