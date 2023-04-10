@@ -56,9 +56,9 @@ import io.iohk.atala.resolvers.{DIDResolver, UniversalDidResolver}
 import org.didcommx.didcomm.DIDComm
 import org.didcommx.didcomm.model.UnpackParams
 import org.didcommx.didcomm.secret.{Secret, SecretResolver}
-import zhttp.http.*
-import zhttp.service.Server
 import zio.*
+import zio.http.*
+import zio.http.model.*
 import zio.config.typesafe.TypesafeConfigSource
 import zio.config.{ReadError, read}
 import zio.interop.catz.*
@@ -96,40 +96,36 @@ object Modules {
     zioHttpServerApp.unit
   }
 
-  def didCommServiceEndpoint(port: Int) = {
-    val header = "content-type" -> MediaTypes.contentTypeEncrypted
-    val app: HttpApp[
-      DidOps & DidAgent & CredentialService & PresentationService & ConnectionService & ManagedDIDService & HttpClient &
-        DidAgent & DIDResolver,
-      Throwable
-    ] =
-      Http.collectZIO[Request] {
-        //   // TODO add DIDComm messages parsing logic here!
-        //   Response.text("Hello World!").setStatus(Status.Accepted)
-        // case Method.POST -> !! / "did-comm-v2" =>
-        case Method.GET -> !! / "did" =>
-          for {
-            didCommService <- ZIO.service[DidAgent]
-            str = didCommService.id.value
-          } yield (Response.text(str))
+  def didCommServiceEndpoint: HttpApp[
+    DidOps & DidAgent & CredentialService & PresentationService & ConnectionService & ManagedDIDService & HttpClient &
+      DidAgent & DIDResolver,
+    Throwable
+  ] = Http.collectZIO[Request] {
+    case Method.GET -> !! / "did" =>
+      for {
+        didCommService <- ZIO.service[DidAgent]
+        str = didCommService.id.value
+      } yield (Response.text(str))
 
-        case req @ Method.POST -> !!
-            if req.headersAsList.exists(h => h._1.equalsIgnoreCase(header._1) && h._2.equalsIgnoreCase(header._2)) =>
-          val result = for {
-            data <- req.body.asString
-            _ <- webServerProgram(data)
-          } yield Response.ok
+    case req @ Method.POST -> !!
+        if req.headersAsList
+          .exists(h =>
+            h.key.toString.equalsIgnoreCase("content-type") &&
+              h.value.toString.equalsIgnoreCase(MediaTypes.contentTypeEncrypted)
+          ) =>
+      val result = for {
+        data <- req.body.asString
+        _ <- webServerProgram(data)
+      } yield Response.ok
 
-          result
-            .tapError { error =>
-              ZIO.logErrorCause("Fail to POST form webServerProgram", Cause.fail(error))
-            }
-            .mapError {
-              case ex: DIDSecretStorageError => ex
-              case ex: MercuryThrowable      => mercuryErrorAsThrowable(ex)
-            }
-      }
-    Server.start(port, app)
+      result
+        .tapError { error =>
+          ZIO.logErrorCause("Fail to POST form webServerProgram", Cause.fail(error))
+        }
+        .mapError {
+          case ex: DIDSecretStorageError => ex
+          case ex: MercuryThrowable      => mercuryErrorAsThrowable(ex)
+        }
   }
 
   val issueCredentialDidCommExchangesJob: RIO[
