@@ -1,3 +1,19 @@
+# [1.0.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.60.2...prism-agent-v1.0.0) (2023-04-10)
+
+
+### Features
+
+* add prism-agent-* prefix to the tag ([#505](https://github.com/input-output-hk/atala-prism-building-blocks/issues/505)) ([6087f2d](https://github.com/input-output-hk/atala-prism-building-blocks/commit/6087f2dcc77179a4bb4702e60a9669c6329ba55c))
+* **castor:** add support for context in DID document & operation ([#489](https://github.com/input-output-hk/atala-prism-building-blocks/issues/489)) ([8384fe3](https://github.com/input-output-hk/atala-prism-building-blocks/commit/8384fe39be38f24e6b821851781c6b465e8e4bfa))
+* **prism-agent:** migrate connect endpoints to Tapir ([#493](https://github.com/input-output-hk/atala-prism-building-blocks/issues/493)) ([876dd9e](https://github.com/input-output-hk/atala-prism-building-blocks/commit/876dd9ed4b89f7c2cf779d47bb89b8a0358743db))
+* **prism-node:** add context to protobuf definition ([#487](https://github.com/input-output-hk/atala-prism-building-blocks/issues/487)) ([e426a82](https://github.com/input-output-hk/atala-prism-building-blocks/commit/e426a82b4f593204f1dc69c2b65c7362e8707ec6))
+* Reply to Trust Pings ([#496](https://github.com/input-output-hk/atala-prism-building-blocks/issues/496)) ([b07da78](https://github.com/input-output-hk/atala-prism-building-blocks/commit/b07da78d3ee927c7ddfbd311d442a687b0b901a4))
+
+
+### BREAKING CHANGES
+
+* incrementing major version for the first stable release
+
 # [prism-agent-v0.60.2](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.60.1...prism-agent-v0.60.2) (2023-03-29)
 
 

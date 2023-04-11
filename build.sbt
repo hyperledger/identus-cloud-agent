@@ -1,4 +1,5 @@
 import sbtbuildinfo.BuildInfoPlugin.autoImport.*
+import org.scoverage.coveralls.Imports.CoverallsKeys._
 
 inThisBuild(
   Seq(
@@ -14,6 +15,7 @@ inThisBuild(
 )
 
 coverageDataDir := target.value / "coverage"
+coberturaFile := target.value / "coverage" / "coverage-report" / "cobertura.xml"
 
 inThisBuild(
   Seq(
@@ -480,6 +482,14 @@ lazy val protocolPresentProof = project
   .settings(libraryDependencies += D.munitZio)
   .dependsOn(models)
 
+lazy val protocolTrustPing = project
+  .in(file("mercury/mercury-library/protocol-trust-ping"))
+  .settings(name := "mercury-protocol-trust-ping")
+  .settings(libraryDependencies += D.zio)
+  .settings(libraryDependencies ++= Seq(D.circeCore, D.circeGeneric, D.circeParser))
+  .settings(libraryDependencies += D.munitZio)
+  .dependsOn(models)
+
 // ################
 // ### Resolver ###
 // ################
@@ -520,6 +530,7 @@ lazy val agent = project // maybe merge into models
     protocolPresentProof,
     protocolConnection,
     protocolReportProblem,
+    protocolTrustPing,
   )
 
 /** agents implementation with didcommx */
