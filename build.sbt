@@ -1,4 +1,5 @@
 import sbtbuildinfo.BuildInfoPlugin.autoImport.*
+import org.scoverage.coveralls.Imports.CoverallsKeys._
 
 inThisBuild(
   Seq(
@@ -14,6 +15,7 @@ inThisBuild(
 )
 
 coverageDataDir := target.value / "coverage"
+coberturaFile := target.value / "coverage" / "coverage-report" / "cobertura.xml"
 
 inThisBuild(
   Seq(
