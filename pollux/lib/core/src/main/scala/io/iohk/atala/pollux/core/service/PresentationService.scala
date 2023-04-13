@@ -300,9 +300,8 @@ private class PresentationServiceImpl(
 
     val verifiableCredentials =
       issuedCredentials.map { issuedCredential =>
-        decode[io.iohk.atala.mercury.model.Base64](issuedCredential.signedCredential).right
+        decode[io.iohk.atala.mercury.model.Base64](issuedCredential.signedCredential)
           .flatMap(x => Right(new String(java.util.Base64.getDecoder().decode(x.base64))))
-          .right
           .flatMap(x => Right(JwtVerifiableCredentialPayload(JWT(x))))
           .left
           .map(err => PresentationDecodingError(new Throwable(s"JsonData decoding error: $err")))
@@ -409,13 +408,10 @@ private class PresentationServiceImpl(
         .fromOption(maybeRecord)
         .mapError(_ => RecordIdNotFound(recordId))
       _ <- ZIO.log(record.toString())
-
       presentationRequest <- ZIO
         .fromOption(record.presentationData)
         .mapError(_ => InvalidFlowStateError(s"No request found for this record: $recordId"))
-
       recordUpdated <- markPresentationAccepted(record.id)
-
     } yield recordUpdated
   }
   override def receivePresentation(
@@ -433,7 +429,6 @@ private class PresentationServiceImpl(
       record <- presentationRepository
         .getPresentationRecord(record.id)
         .mapError(RepositoryError.apply)
-
     } yield record
   }
 
@@ -592,7 +587,7 @@ private class PresentationServiceImpl(
   ): RequestPresentation = {
     RequestPresentation(
       body = RequestPresentation.Body(
-        goal_code = Some("request"),
+        goal_code = Some("Request Proof Presentation"),
         proof_types = proofTypes
       ),
       attachments = maybeOptions
