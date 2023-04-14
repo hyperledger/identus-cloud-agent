@@ -1,27 +1,26 @@
 package io.iohk.atala.agent.server.http.model
 
 import io.iohk.atala.agent.openapi.model.*
-import io.iohk.atala.castor.core.model.did as castorDomain
-import io.iohk.atala.agent.walletapi.model as walletDomain
-import io.iohk.atala.pollux.core.model as polluxdomain
-import io.iohk.atala.shared.models.HexStrings.*
-import io.iohk.atala.shared.models.Base64UrlStrings.*
-import io.iohk.atala.shared.utils.Traverse.*
-
-import io.lemonlabs.uri.Uri
-import scala.util.Try
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
-import io.iohk.atala.mercury.model.AttachmentDescriptor
-import io.iohk.atala.mercury.model.Base64
-import zio.ZIO
 import io.iohk.atala.agent.server.http.model.HttpServiceError.InvalidPayload
+import io.iohk.atala.agent.walletapi.model as walletDomain
 import io.iohk.atala.agent.walletapi.model.ManagedDIDState
+import io.iohk.atala.castor.core.model.did as castorDomain
 import io.iohk.atala.castor.core.model.did.w3c.PublicKeyRepr
 import io.iohk.atala.castor.core.model.did.{LongFormPrismDID, PrismDID, ServiceType}
-
-import java.util.UUID
 import io.iohk.atala.castor.core.util.UriUtils
+import io.iohk.atala.mercury.model.{AttachmentDescriptor, Base64}
+import io.iohk.atala.pollux.core.model as polluxdomain
+import io.iohk.atala.shared.models.Base64UrlStrings.*
+import io.iohk.atala.shared.models.HexStrings.*
+import io.iohk.atala.shared.utils.Traverse.*
+import io.lemonlabs.uri.Uri
+import spray.json.{JsObject, JsString, JsonParser}
+import zio.ZIO
+
+import java.nio.charset.StandardCharsets
+import java.time.{OffsetDateTime, ZoneOffset}
+import java.util.UUID
+import scala.util.Try
 
 trait OASDomainModelHelper {
 
@@ -141,8 +140,19 @@ trait OASDomainModelHelper {
       role = domain.role.toString,
       subjectId = domain.subjectId,
       claims = domain.offerCredentialData
-        .map(offer => offer.body.credential_preview.attributes.map(attr => (attr.name -> attr.value)).toMap)
-        .getOrElse(Map.empty),
+        .map(offer =>
+          offer.body.credential_preview.attributes
+            .foldLeft(JsObject()) { case (jsObject, attr) =>
+              val jsonValue = attr.mimeType match
+                case Some("application/json") =>
+                  val jsonBytes = java.util.Base64.getUrlDecoder.decode(attr.value.getBytes(StandardCharsets.UTF_8))
+                  JsonParser(jsonBytes)
+                case Some(mime) => JsString(s"Unsupported 'mime-type': $mime")
+                case None       => JsString(attr.value)
+              jsObject.copy(fields = jsObject.fields + (attr.name -> jsonValue))
+            }
+        )
+        .getOrElse(JsObject()),
       schemaId = domain.schemaId,
       validityPeriod = domain.validityPeriod,
       automaticIssuance = domain.automaticIssuance,

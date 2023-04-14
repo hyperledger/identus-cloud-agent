@@ -5,10 +5,16 @@ import akka.http.scaladsl.server.Directives.*
 import akka.http.scaladsl.server.Route
 import io.iohk.atala.agent.openapi.api.IssueCredentialsProtocolApiService
 import io.iohk.atala.agent.openapi.model.*
-import io.iohk.atala.agent.server.http.model.HttpServiceError
+import io.iohk.atala.agent.server.config.{AgentConfig, AppConfig}
 import io.iohk.atala.agent.server.http.model.HttpServiceError.InvalidPayload
-import io.iohk.atala.agent.server.http.model.OASDomainModelHelper
-import io.iohk.atala.agent.server.http.model.OASErrorModelHelper
+import io.iohk.atala.agent.server.http.model.{HttpServiceError, OASDomainModelHelper, OASErrorModelHelper}
+import io.iohk.atala.agent.walletapi.service.ManagedDIDService
+import io.iohk.atala.castor.core.model.did.PrismDID
+import io.iohk.atala.connect.core.model.ConnectionRecord
+import io.iohk.atala.connect.core.model.ConnectionRecord.{ProtocolState, Role}
+import io.iohk.atala.connect.core.model.error.ConnectionServiceError
+import io.iohk.atala.connect.core.service.ConnectionService
+import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.pollux.core.model.DidCommID
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.core.service.CredentialService
@@ -16,16 +22,6 @@ import zio.*
 
 import java.util.UUID
 import scala.util.Try
-import io.iohk.atala.agent.walletapi.service.ManagedDIDService
-import io.iohk.atala.agent.server.config.AgentConfig
-import io.iohk.atala.agent.server.config.AppConfig
-import io.iohk.atala.mercury.model.DidId
-import io.iohk.atala.connect.core.service.ConnectionService
-import io.iohk.atala.connect.core.model.error.ConnectionServiceError
-import io.iohk.atala.connect.core.model.ConnectionRecord
-import io.iohk.atala.connect.core.model.ConnectionRecord.Role
-import io.iohk.atala.connect.core.model.ConnectionRecord.ProtocolState
-import io.iohk.atala.castor.core.model.did.PrismDID
 
 class IssueCredentialsProtocolApiServiceImpl(
     credentialService: CredentialService,
@@ -50,13 +46,17 @@ class IssueCredentialsProtocolApiServiceImpl(
         .fromEither(PrismDID.fromString(request.issuingDID))
         .mapError(HttpServiceError.InvalidPayload.apply)
         .mapError(_.toOAS)
+      jsonClaims <- ZIO
+        .fromEither(io.circe.parser.parse(request.claims.compactPrint))
+        .mapError(e => HttpServiceError.InvalidPayload.apply(e.message))
+        .mapError(_.toOAS)
       outcome <- credentialService
         .createIssueCredentialRecord(
           pairwiseIssuerDID = didIdPair.myDID,
           pairwiseHolderDID = didIdPair.theirDid,
           thid = DidCommID(),
           schemaId = request.schemaId,
-          claims = request.claims,
+          claims = jsonClaims,
           validityPeriod = request.validityPeriod,
           automaticIssuance = request.automaticIssuance.orElse(Some(true)),
           awaitConfirmation = Some(false),
@@ -81,8 +81,7 @@ class IssueCredentialsProtocolApiServiceImpl(
       toEntityMarshallerErrorResponse: ToEntityMarshaller[ErrorResponse]
   ): Route = {
     val result = for {
-      records <- credentialService
-        .getIssueCredentialRecords
+      records <- credentialService.getIssueCredentialRecords
         .mapError(HttpServiceError.DomainError[CredentialServiceError].apply)
       outcome = thid match
         case None        => records

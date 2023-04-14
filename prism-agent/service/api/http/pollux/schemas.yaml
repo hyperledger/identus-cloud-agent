@@ -423,10 +423,7 @@ components:
           description: The validity period in seconds of the verifiable credential that will be issued.
           example: 3600
         claims:
-          type: object
           description: The claims that will be associated with the issued verifiable credential.
-          additionalProperties:
-            type: string
         automaticIssuance:
           description: |
             Specifies whether or not the credential should be automatically generated and issued when receiving the `CredentialRequest` from the holder.
