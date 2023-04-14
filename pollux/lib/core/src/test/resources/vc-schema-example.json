@@ -10,38 +10,46 @@
   "description": "Simple credential schema for the driving licence verifiable credential.",
   "type": "https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json",
   "schema": {
-    "$id": "https://json-schema.org",
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "description": "Driving License",
     "type": "object",
     "properties": {
-      "emailAddress": {
-        "type": "string",
-        "format": "email"
-      },
-      "givenName": {
-        "type": "string"
-      },
-      "familyName": {
-        "type": "string"
-      },
-      "dateOfIssuance": {
-        "type": "string",
-        "format": "datetime"
-      },
-      "drivingLicenseID": {
-        "type": "string"
-      },
-      "drivingClass": {
-        "type": "string"
+      "credentialSubject": {
+        "type": "object",
+        "properties": {
+          "emailAddress": {
+            "type": "string",
+            "format": "email"
+          },
+          "givenName": {
+            "type": "string"
+          },
+          "familyName": {
+            "type": "string"
+          },
+          "dateOfIssuance": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "drivingLicenseID": {
+            "type": "string"
+          },
+          "drivingClass": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "emailAddress",
+          "familyName",
+          "dateOfIssuance",
+          "drivingLicenseID",
+          "drivingClass"
+        ],
+        "additionalProperties": false
       }
     },
     "required": [
-      "emailAddress",
-      "familyName",
-      "dateOfIssuance",
-      "drivingLicenseID",
-      "drivingClass"
+      "credentialSubject"
     ],
     "additionalProperties": false
   },

@@ -21,5 +21,7 @@ object CredentialServiceError {
   final case class IrisError(cause: Throwable) extends CredentialServiceError
   final case class VCSchemaParsingError(cause: Throwable) extends CredentialServiceError
   final case class VCClaimsParsingError(cause: Throwable) extends CredentialServiceError
+  final case class UnsupportedVCClaimsValue(error: String) extends CredentialServiceError
+  final case class UnsupportedVCClaimsMimeType(mimeType: String) extends CredentialServiceError
   final case class VCClaimsValidationFailed(causes: Seq[String]) extends CredentialServiceError
 }

@@ -1,6 +1,7 @@
 package io.iohk.atala.pollux.core.service
 
 import cats.syntax.validated
+import io.circe.Json
 import io.circe.parser.decode
 import io.circe.syntax.*
 import io.grpc.ManagedChannelBuilder
@@ -127,14 +128,20 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
             svc <- ZIO.service[CredentialService]
             pairwiseIssuerDid = DidId("did:peer:INVITER")
             pairwiseHolderDid = DidId("did:peer:HOLDER")
-            claims = Map(
-              "emailAddress" -> "alice@wonderland.com",
-              "givenName" -> "Alice",
-              "familyName" -> "Wonderland",
-              "dateOfIssuance" -> "2000-01-01T10:00:00Z",
-              "drivingLicenseID" -> "12345",
-              "drivingClass" -> "5"
-            )
+            claims = io.circe.parser
+              .parse("""
+                |{
+                |   "credentialSubject": {
+                |     "emailAddress": "alice@wonderland.com",
+                |     "givenName": "Alice",
+                |     "familyName": "Wonderland",
+                |     "dateOfIssuance": "2000-01-01T10:00:00Z",
+                |     "drivingLicenseID": "12345",
+                |     "drivingClass": 5
+                |   }
+                |}
+                |""".stripMargin)
+              .getOrElse(Json.Null)
             thid = DidCommID(UUID.randomUUID().toString())
             record <- svc.createRecord(
               thid = thid,
@@ -146,6 +153,7 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
               automaticIssuance = automaticIssuance,
               awaitConfirmation = awaitConfirmation
             )
+            attributes <- CredentialService.convertJsonClaimsToAttributes(claims)
           } yield {
             assertTrue(record.thid == thid) &&
             assertTrue(record.updatedAt.isEmpty) &&
@@ -169,11 +177,7 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
             assertTrue(record.offerCredentialData.get.body.multiple_available.isEmpty) &&
             assertTrue(record.offerCredentialData.get.body.replacement_id.isEmpty) &&
             assertTrue(record.offerCredentialData.get.body.formats.isEmpty) &&
-            assertTrue(
-              record.offerCredentialData.get.body.credential_preview.attributes == claims.map { case (k, v) =>
-                Attribute(k, v, None)
-              }.toSeq
-            ) &&
+            assertTrue(record.offerCredentialData.get.body.credential_preview.attributes == attributes) &&
             assertTrue(record.requestCredentialData.isEmpty) &&
             assertTrue(record.issueCredentialData.isEmpty) &&
             assertTrue(record.issuedCredentialRaw.isEmpty)
@@ -190,11 +194,17 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
             svc <- ZIO.service[CredentialService]
             pairwiseIssuerDid = DidId("did:peer:INVITER")
             pairwiseHolderDid = DidId("did:peer:HOLDER")
-            claims = Map(
-              "emailAddress" -> "alice@wonderland.com",
-              "givenName" -> "Alice",
-              "familyName" -> "Wonderland"
-            )
+            claims = io.circe.parser
+              .parse(
+                """
+                |{
+                |   "emailAddress": "alice@wonderland.com",
+                |   "givenName": "Alice",
+                |   "familyName": "Wonderland"
+                |}
+                |""".stripMargin
+              )
+              .getOrElse(Json.Null)
             thid = DidCommID(UUID.randomUUID().toString())
             record <- svc
               .createRecord(
@@ -591,13 +601,15 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
       })
   }
 
+  val defaultClaims = io.circe.parser.parse("""{"name":"Alice"}""").getOrElse(Json.Null)
+
   extension (svc: CredentialService)
     def createRecord(
         pairwiseIssuerDID: DidId = DidId("did:prism:issuer"),
         pairwiseHolderDID: DidId = DidId("did:prism:holder-pairwise"),
         thid: DidCommID = DidCommID(),
         schemaId: Option[String] = None,
-        claims: Map[String, String] = Map("name" -> "Alice"),
+        claims: Json = defaultClaims,
         validityPeriod: Option[Double] = None,
         automaticIssuance: Option[Boolean] = None,
         awaitConfirmation: Option[Boolean] = None,
