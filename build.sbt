@@ -615,7 +615,7 @@ lazy val polluxCore = project
   )
   .dependsOn(shared)
   .dependsOn(polluxVcJWT)
-  .dependsOn(protocolIssueCredential, protocolPresentProof, resolver)
+  .dependsOn(protocolIssueCredential, protocolPresentProof, resolver, agentDidcommx)
 
 lazy val polluxDoobie = project
   .in(file("pollux/lib/sql-doobie"))
