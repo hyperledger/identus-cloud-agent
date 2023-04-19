@@ -31,6 +31,7 @@ import io.iohk.atala.agent.server.health.HealthInfo
 import io.iohk.atala.connect.controller.ConnectionControllerImpl
 
 import java.security.Security
+import io.iohk.atala.agent.server.http.HttpRoutes
 
 object AgentApp extends ZIOAppDefault {
 
@@ -51,33 +52,32 @@ object AgentApp extends ZIOAppDefault {
     _ <- ZIO.serviceWithZIO[AgentMigrations](_.migrate)
   } yield ()
 
-  def serverProgram = for {
-    systemServicePort <- System.env("SYSTEM_SERVICE_PORT").map {
-      case Some(s) if s.toIntOption.isDefined => s.toInt
-      case _                                  => 8082
-    }
-    server = {
-      val config = ServerConfig(address = new java.net.InetSocketAddress(systemServicePort))
+  def serverProgram(didCommServicePort: Int) = {
+    val server = {
+      val config = ServerConfig(address = new java.net.InetSocketAddress(didCommServicePort))
       ServerConfig.live(config)(using Trace.empty) >>> Server.live
     }
-    client = Scope.default >>> Client.default
-    myServer <- Server
-      .serve(Modules.didCommServiceEndpoint ++ SystemInfoApp.app)
-      .provideSomeLayer(server)
-      .debug
-      .fork
-    _ <- ZIO.log(s"Server Started")
-  } yield (server)
+    for {
+      _ <- ZIO.logInfo(s"Server Started on port $didCommServicePort")
+      myServer <- {
+        Server
+          .serve(Modules.didCommServiceEndpoint ++ SystemInfoApp.app)
+          .provideSomeLayer(server)
+          .debug *> ZIO.logWarning(s"Server STOP (on port $didCommServicePort)")
+      }.fork
+    } yield (myServer)
+  }
 
   def appComponents(didCommServicePort: Int, restServicePort: Int) = for {
     _ <- Modules.issueCredentialDidCommExchangesJob.debug.fork
     _ <- Modules.presentProofExchangeJob.debug.fork
     _ <- Modules.connectDidCommExchangesJob.debug.fork
-    server <- serverProgram.debug.fork
+    server <- serverProgram(didCommServicePort)
     _ <- Modules.syncDIDPublicationStateFromDltJob.fork
     _ <- Modules.app(restServicePort).fork
     _ <- Modules.zioApp.fork
     _ <- server.join *> ZIO.log(s"Server End")
+    _ <- ZIO.never
   } yield ()
 
   override def run: ZIO[Any, Throwable, Unit] = {
@@ -112,13 +112,13 @@ object AgentApp extends ZIOAppDefault {
 
       didCommServiceUrl <- System.env("DIDCOMM_SERVICE_URL").map {
         case Some(s) => s
-        case _       => "http://localhost:8190"
+        case _       => "http://localhost:8090"
       }
       _ <- ZIO.logInfo(s"DIDComm Service URL => $didCommServiceUrl")
 
       didCommServicePort <- System.env("DIDCOMM_SERVICE_PORT").map {
         case Some(s) if s.toIntOption.isDefined => s.toInt
-        case _                                  => 8190
+        case _                                  => 8090
       }
       _ <- ZIO.logInfo(s"DIDComm Service port => $didCommServicePort")
 

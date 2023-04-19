@@ -3,7 +3,7 @@ plugins:
 
 routes:
   - uri: /prism-agent/_system/*
-    upstream_id: 6
+    upstream_id: 3
     plugins:
       proxy-rewrite:
         regex_uri: ["^/prism-agent/_system/(.*)", "/$1"]
@@ -21,7 +21,8 @@ routes:
     upstream_id: 4
     plugins:
       proxy-rewrite:
-        regex_uri: ["^/prism-agent/connection-invitations", "/connection-invitations"]
+        regex_uri:
+          ["^/prism-agent/connection-invitations", "/connection-invitations"]
   - uri: /didcomm
     upstream_id: 3
     plugins:
@@ -64,7 +65,7 @@ upstreams:
     type: roundrobin
   - id: 3
     nodes:
-      "prism-agent:8090": 1 #didcom
+      "prism-agent:8090": 1 #didcom and system
     type: roundrobin
   - id: 4
     nodes:
@@ -73,9 +74,5 @@ upstreams:
   - id: 5
     nodes:
       "swagger-ui:8080": 1
-    type: roundrobin
-  - id: 6
-    nodes:
-      "prism-agent:8082": 1 #_system
     type: roundrobin
 #END
