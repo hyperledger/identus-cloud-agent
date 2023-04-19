@@ -1,57 +1,32 @@
 package io.iohk.atala.pollux.core.service
 
 import com.google.protobuf.ByteString
+import com.squareup.okhttp.Protocol
 import io.circe.Json
 import io.circe.syntax.*
+import io.iohk.atala.castor.core.model.did.{CanonicalPrismDID, PrismDID, VerificationRelationship}
 import io.iohk.atala.iris.proto.dlt.IrisOperation
 import io.iohk.atala.iris.proto.service.IrisOperationId
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
 import io.iohk.atala.iris.proto.vc_operations.IssueCredentialsBatch
-import io.iohk.atala.mercury.model.DidId
-import io.iohk.atala.mercury.protocol.issuecredential.Attribute
-import io.iohk.atala.mercury.protocol.issuecredential.CredentialPreview
-import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
-import io.iohk.atala.mercury.protocol.issuecredential.OfferCredential
-import io.iohk.atala.mercury.protocol.issuecredential.RequestCredential
-import io.iohk.atala.pollux.core.model._
+import io.iohk.atala.mercury.model.{AttachmentDescriptor, Base64, DidId, JsonData}
+import io.iohk.atala.mercury.protocol.issuecredential.*
+import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
-import io.iohk.atala.pollux.core.model.error.CredentialServiceError._
+import io.iohk.atala.pollux.core.model.error.CredentialServiceError.*
+import io.iohk.atala.pollux.core.model.presentation.*
 import io.iohk.atala.pollux.core.repository.CredentialRepository
-import io.iohk.atala.pollux.vc.jwt.Issuer
-import io.iohk.atala.pollux.vc.jwt.JwtCredentialPayload
-import io.iohk.atala.pollux.vc.jwt.W3CCredential
-import io.iohk.atala.pollux.vc.jwt.W3cCredentialPayload
-import io.iohk.atala.pollux.vc.jwt.W3cPresentationPayload
-import io.iohk.atala.pollux.vc.jwt.DidResolver
-import io.iohk.atala.prism.crypto.MerkleInclusionProof
-import io.iohk.atala.prism.crypto.MerkleTreeKt
-import io.iohk.atala.prism.crypto.Sha256
+import io.iohk.atala.pollux.vc.jwt.*
+import io.iohk.atala.prism.crypto.{MerkleInclusionProof, MerkleTreeKt, Sha256}
 import io.iohk.atala.resolvers.DidValidator
 import zio.*
+import zio.prelude.ZValidation
 
 import java.rmi.UnexpectedException
-import java.security.KeyPairGenerator
-import java.security.SecureRandom
 import java.security.spec.ECGenParameterSpec
-import java.time.Instant
+import java.security.{KeyPairGenerator, SecureRandom}
+import java.time.{Instant, ZoneId}
 import java.util.UUID
-import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
-import io.iohk.atala.mercury.model.AttachmentDescriptor
-import io.iohk.atala.pollux.core.model._
-import io.iohk.atala.pollux.core.model.presentation.PresentationAttachment
-import io.iohk.atala.pollux.core.model.presentation.Options
-import io.iohk.atala.pollux.core.model.presentation.PresentationDefinition
-import io.iohk.atala.pollux.core.model.presentation.ClaimFormat
-import io.iohk.atala.pollux.core.model.presentation.Ldp
-import io.iohk.atala.pollux.vc.jwt.{PresentationPayload, JWT, JwtVerifiableCredentialPayload, JwtPresentation}
-import io.iohk.atala.mercury.model.{JsonData, Base64}
-import io.iohk.atala.castor.core.model.did.PrismDID
-import zio.prelude.ZValidation
-import io.iohk.atala.castor.core.model.did.VerificationRelationship
-import io.iohk.atala.pollux.vc.jwt.CredentialVerification
-import java.time.ZoneId
-import com.squareup.okhttp.Protocol
-import io.iohk.atala.pollux.core.model.presentation.Jwt
 
 object CredentialServiceImpl {
   val layer: URLayer[IrisServiceStub & CredentialRepository[Task] & DidResolver, CredentialService] =
@@ -65,7 +40,7 @@ private class CredentialServiceImpl(
     maxRetries: Int = 5 // TODO move to config
 ) extends CredentialService {
 
-  import IssueCredentialRecord._
+  import IssueCredentialRecord.*
 
   override def extractIdFromCredential(credential: W3cCredentialPayload): Option[DidCommID] =
     credential.maybeId.map(_.split("/").last).map(DidCommID(_))
@@ -769,7 +744,7 @@ private class CredentialServiceImpl(
       credentials: Seq[W3cCredentialPayload],
       issuer: Issuer
   ): IO[CredentialServiceError, PublishedBatchData] = {
-    import collection.JavaConverters.*
+    import scala.jdk.CollectionConverters.*
 
     val hashes = credentials
       .map { c =>

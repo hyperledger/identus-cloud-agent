@@ -28,6 +28,12 @@ routes:
     plugins:
       proxy-rewrite:
         uri: "/"
+  - uri: /didcomm/did
+    # Get the default did:peer of the prism-agent (use to make a trust ping)
+    upstream_id: 3
+    plugins:
+      proxy-rewrite:
+        uri: "/did"
   - uri: /prism-agent/schema-registry/*
     upstream_id: 4
     plugins:

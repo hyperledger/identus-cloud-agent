@@ -28,6 +28,7 @@
         "prerelease": "snapshot"
       }
     ],
+    "tagFormat": "prism-agent-v${version}",
     "plugins": [
       "@semantic-release/commit-analyzer",
       "@semantic-release/release-notes-generator",

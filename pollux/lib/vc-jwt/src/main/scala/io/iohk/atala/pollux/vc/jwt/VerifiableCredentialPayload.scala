@@ -57,22 +57,35 @@ case class CredentialSchema(
     `type`: String
 )
 
-sealed trait CredentialPayload(
-    val maybeSub: Option[String],
-    val `@context`: Set[String],
-    val `type`: Set[String],
-    val maybeJti: Option[String],
-    val nbf: Instant,
-    val aud: Set[String],
-    val maybeExp: Option[Instant],
-    val iss: String,
-    val maybeCredentialStatus: Option[CredentialStatus],
-    val maybeRefreshService: Option[RefreshService],
-    val maybeEvidence: Option[Json],
-    val maybeTermsOfUse: Option[Json],
-    val maybeCredentialSchema: Option[CredentialSchema],
-    val credentialSubject: Json
-) {
+sealed trait CredentialPayload {
+  def maybeSub: Option[String]
+
+  def `@context`: Set[String]
+
+  def `type`: Set[String]
+
+  def maybeJti: Option[String]
+
+  def nbf: Instant
+
+  def aud: Set[String]
+
+  def maybeExp: Option[Instant]
+
+  def iss: String
+
+  def maybeCredentialStatus: Option[CredentialStatus]
+
+  def maybeRefreshService: Option[RefreshService]
+
+  def maybeEvidence: Option[Json]
+
+  def maybeTermsOfUse: Option[Json]
+
+  def maybeCredentialSchema: Option[CredentialSchema]
+
+  def credentialSubject: Json
+
   def toJwtCredentialPayload: JwtCredentialPayload =
     JwtCredentialPayload(
       iss = iss,
@@ -229,22 +242,16 @@ case class JwtCredentialPayload(
     override val aud: Set[String],
     override val maybeExp: Option[Instant],
     override val maybeJti: Option[String]
-) extends CredentialPayload(
-      maybeSub = maybeSub.orElse(vc.credentialSubject.hcursor.downField("id").as[String].toOption),
-      `@context` = vc.`@context`,
-      `type` = vc.`type`,
-      maybeJti = maybeJti,
-      nbf = nbf,
-      aud = aud,
-      maybeExp = maybeExp,
-      iss = iss,
-      maybeCredentialStatus = vc.maybeCredentialStatus,
-      maybeRefreshService = vc.maybeRefreshService,
-      maybeEvidence = vc.maybeEvidence,
-      maybeTermsOfUse = vc.maybeTermsOfUse,
-      maybeCredentialSchema = vc.maybeCredentialSchema,
-      credentialSubject = vc.credentialSubject
-    )
+) extends CredentialPayload {
+  override val `@context` = vc.`@context`
+  override val `type` = vc.`type`
+  override val maybeCredentialStatus = vc.maybeCredentialStatus
+  override val maybeRefreshService = vc.maybeRefreshService
+  override val maybeEvidence = vc.maybeEvidence
+  override val maybeTermsOfUse = vc.maybeTermsOfUse
+  override val maybeCredentialSchema = vc.maybeCredentialSchema
+  override val credentialSubject = vc.credentialSubject
+}
 
 case class W3cCredentialPayload(
     override val `@context`: Set[String],
@@ -259,25 +266,14 @@ case class W3cCredentialPayload(
     override val maybeRefreshService: Option[RefreshService],
     override val maybeEvidence: Option[Json],
     override val maybeTermsOfUse: Option[Json],
-
-    /** Not part of W3C Credential but included to preserve in case of conversion from JWT. */
     override val aud: Set[String] = Set.empty
-) extends CredentialPayload(
-      maybeSub = credentialSubject.hcursor.downField("id").as[String].toOption,
-      `@context` = `@context`,
-      `type` = `type`,
-      maybeJti = maybeId,
-      nbf = issuanceDate,
-      aud = aud,
-      maybeExp = maybeExpirationDate,
-      iss = issuer.value,
-      maybeCredentialStatus = maybeCredentialStatus,
-      maybeRefreshService = maybeRefreshService,
-      maybeEvidence = maybeEvidence,
-      maybeTermsOfUse = maybeTermsOfUse,
-      maybeCredentialSchema = maybeCredentialSchema,
-      credentialSubject = credentialSubject
-    )
+) extends CredentialPayload {
+  override val maybeSub = credentialSubject.hcursor.downField("id").as[String].toOption
+  override val maybeJti = maybeId
+  override val nbf = issuanceDate
+  override val maybeExp = maybeExpirationDate
+  override val iss = issuer.value
+}
 
 object CredentialPayload {
   object Implicits {
