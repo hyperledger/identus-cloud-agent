@@ -29,9 +29,9 @@ class IssueControllerImpl(
   appConfig: AppConfig
 ) extends IssueController {
   override def createCredentialOffer(request: CreateIssueCredentialRecordRequest)(implicit rc: RequestContext): IO[ErrorResponse, IssueCredentialRecord] = {
-    val result: IO[String | ConnectionServiceError | CredentialServiceError, IssueCredentialRecord] = for {
+    val result: IO[ConnectionServiceError | CredentialServiceError | InvalidPayload, IssueCredentialRecord] = for {
       didIdPair <- getPairwiseDIDs(request.connectionId)
-      issuingDID <- ZIO.fromEither(PrismDID.fromString(request.issuingDID))
+      issuingDID <- extractPrismDIDFromString(request.issuingDID)
       outcome <- credentialService
         .createIssueCredentialRecord(
           pairwiseIssuerDID = didIdPair.myDID,
@@ -44,7 +44,7 @@ class IssueControllerImpl(
           awaitConfirmation = Some(false),
           issuingDID = Some(issuingDID.asCanonical)
         )
-    } yield IssueCredentialRecord.fromDomain(outcome) //TODO Optimise this transformation each time we get a list of things
+    } yield IssueCredentialRecord.fromDomain(outcome)
     mapIssueErrors(result)
   }
 
@@ -62,7 +62,7 @@ class IssueControllerImpl(
       pageOf = "1",
       next = None,
       previous = None,
-      contents = (outcome map IssueCredentialRecord.fromDomain)
+      contents = (outcome map IssueCredentialRecord.fromDomain) //TODO Optimise this transformation - each time we get a list of things we iterate it once here
     )
     mapIssueErrors(result)
   }
@@ -91,7 +91,7 @@ class IssueControllerImpl(
     mapIssueErrors(result)
   }
 
-  private def mapIssueErrors[T](result: IO[CredentialServiceError | ConnectionServiceError | InvalidPayload | String, T]): IO[ErrorResponse, T] = {
+  private def mapIssueErrors[T](result: IO[CredentialServiceError | ConnectionServiceError | InvalidPayload, T]): IO[ErrorResponse, T] = {
     result mapError {
       case invalidPayload: InvalidPayload =>
         ErrorResponse(
@@ -101,7 +101,6 @@ class IssueControllerImpl(
           detail = Some(invalidPayload.msg),
           instance = "error-instance"
         )
-      case s: String => toHttpError(CredentialServiceError.UnexpectedError(s))
       case connError: ConnectionServiceError => ConnectionController.toHttpError(connError)
       case credError: CredentialServiceError => toHttpError(credError)
     }
@@ -109,10 +108,16 @@ class IssueControllerImpl(
 
   private[this] case class DidIdPair(myDID: DidId, theirDid: DidId)
 
-  private[this] def extractDidCommIdFromString(str: String): IO[InvalidPayload, io.iohk.atala.pollux.core.model.DidCommID] = {
+  private[this] def extractDidCommIdFromString(maybeDidCommId: String): IO[InvalidPayload, io.iohk.atala.pollux.core.model.DidCommID] = {
     ZIO
-      .fromTry(Try(io.iohk.atala.pollux.core.model.DidCommID(str)))
+      .fromTry(Try(io.iohk.atala.pollux.core.model.DidCommID(maybeDidCommId)))
       .mapError(e => HttpServiceError.InvalidPayload(s"Error parsing string as DidCommID: ${e.getMessage}"))
+  }
+
+  private[this] def extractPrismDIDFromString(maybeDid: String): IO[InvalidPayload, PrismDID] = {
+    ZIO
+      .fromEither(PrismDID.fromString(maybeDid))
+      .mapError(e => HttpServiceError.InvalidPayload(s"Error parsing string as PrismDID: ${e}"))
   }
 
   private[this] def extractDidIdPairFromValidConnection(connRecord: ConnectionRecord): Option[DidIdPair] = {

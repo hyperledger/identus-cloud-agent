@@ -40,7 +40,7 @@ object ConnectionEndpoints {
     Connection,
     Any
   ] =
-    endpoint.post
+    val out = endpoint.post
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in("connections")
       .in(
@@ -65,6 +65,7 @@ object ConnectionEndpoints {
          |The request body may contain a `label` that can be used as a human readable alias for the connection, for example `{'label': "Bob"}`
          |""".stripMargin)
       .tag("Connections Management")
+    out
 
   val getConnection: PublicEndpoint[(RequestContext, UUID), ErrorResponse, Connection, Any] =
     endpoint.get
