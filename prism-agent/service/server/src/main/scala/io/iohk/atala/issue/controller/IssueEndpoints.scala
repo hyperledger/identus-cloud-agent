@@ -27,18 +27,19 @@ object IssueEndpoints {
       .in("issue-credentials" / "credential-offers")
       .in(jsonBody[CreateIssueCredentialRecordRequest].description("The credential offer object."))
       .errorOut(basicFailures)
+      .out(jsonBody[IssueCredentialRecord].description("The issue credential record."))
       .tag("Issue Credentials Protocol")
       .summary("As a credential issuer, create a new credential offer to be sent to a holder.")
       .description("Creates a new credential offer in the database")
       .name("createCredentialOffer")
 
   val getCredentialRecords: PublicEndpoint[
-    (RequestContext, CreateIssueCredentialRecordRequest),
+    (RequestContext, PaginationInput, Option[String]),
     ErrorResponse,
     IssueCredentialRecordPage,
     Any
   ] =
-    val out = endpoint.get
+    endpoint.get
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in("issue-credentials" / "records")
       .in(paginationInput)
@@ -49,10 +50,9 @@ object IssueEndpoints {
       .summary("Gets the list of issue credential records.")
       .description("Get the list of issue credential records paginated")
       .name("getCredentialRecords")
-    out
 
   val getCredentialRecord: PublicEndpoint[
-    (RequestContext, CreateIssueCredentialRecordRequest),
+    (RequestContext, String),
     ErrorResponse,
     IssueCredentialRecord,
     Any
@@ -68,7 +68,7 @@ object IssueEndpoints {
       .name("getCredentialRecord")
 
   val acceptCredentialOffer: PublicEndpoint[
-    (RequestContext, AcceptCredentialOfferRequest),
+    (RequestContext, String, AcceptCredentialOfferRequest),
     ErrorResponse,
     IssueCredentialRecord,
     Any
@@ -86,7 +86,7 @@ object IssueEndpoints {
       .name("acceptCredentialOffer")
 
   val issueCredential: PublicEndpoint[
-    (RequestContext, AcceptCredentialOfferRequest),
+    (RequestContext, String),
     ErrorResponse,
     IssueCredentialRecord,
     Any

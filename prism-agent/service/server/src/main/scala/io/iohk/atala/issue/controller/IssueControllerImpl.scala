@@ -4,7 +4,7 @@ import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.server.http.model.HttpServiceError
 import io.iohk.atala.agent.server.http.model.HttpServiceError.InvalidPayload
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
-import io.iohk.atala.api.http.model.Pagination
+import io.iohk.atala.api.http.model.{Pagination, PaginationInput}
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.castor.core.model.did.PrismDID
 import io.iohk.atala.connect.controller.ConnectionController
@@ -50,7 +50,7 @@ class IssueControllerImpl(
 
   //TODO - Do not filter this in memory - need to filter at the database level - create tech debt ticket
   //TODO - Implement pagination properly
-  override def getCredentialRecords(pagination: Pagination, thid: Option[String])(implicit rc: RequestContext): IO[ErrorResponse, IssueCredentialRecordPage] = {
+  override def getCredentialRecords(paginationInput: PaginationInput, thid: Option[String])(implicit rc: RequestContext): IO[ErrorResponse, IssueCredentialRecordPage] = {
     val result = for {
       records <- credentialService.getIssueCredentialRecords()
       outcome = thid match

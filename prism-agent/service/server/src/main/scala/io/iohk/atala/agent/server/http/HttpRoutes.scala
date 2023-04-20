@@ -9,17 +9,15 @@ import zio.*
 object HttpRoutes {
 
   def routes: URIO[
-    DIDApi & DIDRegistrarApi & IssueCredentialsProtocolApi & PresentProofApi,
+    DIDApi & DIDRegistrarApi & PresentProofApi,
     Route
   ] =
     for {
       didApi <- ZIO.service[DIDApi]
       disRegistrarApi <- ZIO.service[DIDRegistrarApi]
-      issueCredentialsProtocolApi <- ZIO.service[IssueCredentialsProtocolApi]
       presentProofApi <- ZIO.service[PresentProofApi]
     } yield didApi.route ~
       disRegistrarApi.route ~
-      issueCredentialsProtocolApi.route ~
       presentProofApi.route ~
       additionalRoute
 

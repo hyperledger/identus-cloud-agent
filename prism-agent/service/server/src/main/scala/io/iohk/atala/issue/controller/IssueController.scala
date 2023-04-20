@@ -1,7 +1,7 @@
 package io.iohk.atala.issue.controller
 
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
-import io.iohk.atala.api.http.model.Pagination
+import io.iohk.atala.api.http.model.PaginationInput
 import io.iohk.atala.issue.controller.http.{AcceptCredentialOfferRequest, IssueCredentialRecordPage, CreateIssueCredentialRecordRequest, IssueCredentialRecord}
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import zio.IO
@@ -11,7 +11,7 @@ trait IssueController {
                                                                          rc: RequestContext
   ): IO[ErrorResponse, IssueCredentialRecord]
 
-  def getCredentialRecords(pagination: Pagination, thid: Option[String])(implicit rc: RequestContext): IO[ErrorResponse, IssueCredentialRecordPage]
+  def getCredentialRecords(paginationInput: PaginationInput, thid: Option[String])(implicit rc: RequestContext): IO[ErrorResponse, IssueCredentialRecordPage]
 
   def getCredentialRecord(recordId: String)(implicit rc: RequestContext): IO[ErrorResponse, IssueCredentialRecord]
 

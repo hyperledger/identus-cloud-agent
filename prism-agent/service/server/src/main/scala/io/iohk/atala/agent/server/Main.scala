@@ -28,6 +28,7 @@ import io.circe.parser.*
 import io.circe.syntax.*
 import io.iohk.atala.agent.server.health.HealthInfo
 import io.iohk.atala.connect.controller.ConnectionControllerImpl
+import io.iohk.atala.issue.controller.IssueControllerImpl
 
 import java.security.Security
 
@@ -156,7 +157,8 @@ object AgentApp extends ZIOAppDefault {
         RepoModule.credentialSchemaServiceLayer,
         AppModule.manageDIDServiceLayer,
         RepoModule.verificationPolicyServiceLayer,
-        ConnectionControllerImpl.layer
+        ConnectionControllerImpl.layer,
+        IssueControllerImpl.layer
       )
     } yield app
 
