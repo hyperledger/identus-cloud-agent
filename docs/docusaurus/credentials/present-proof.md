@@ -2,16 +2,16 @@
 
 The **Present Proof Protocol** allows:
 - a **Verifier** to request a verifiable credential presentation from a **Prover**
-- a **Prover** to respond by presenting a proof to the **Verifier**
+- a **Prover** responds by presenting a cryptographic proof to the **Verifier**
 
-The protocol provides endpoints for a **Verifier** to request new proof presentations from provers, and for a **Prover** to respond to the presentation request using a specific verifiable credential he owns.
+The protocol provides endpoints for a **Verifier** to request new proof presentations from provers and for a **Prover** to respond to the presentation request using a specific verifiable credential he owns.
 
 ## Roles
 
 The present proof protocol has two roles:
 
-1.  **Verifier**: A subject that requests the presentation of a proof by sending a *request presentation* message, and then verifies the presentation.
-2.  **Prover**: A subject that receives a proof presentation request, prepares a proof and sends it to the verifier by sending a *proof presentation* message.
+1.  **Verifier**: A subject requesting a proof presentation by sending a request presentation message, then verifying the presentation.
+2.  **Prover**: A subject that receives a proof presentation request, prepares a proof, and sends it to the verifier by sending a *proof presentation* message.
 
 ## Prerequisites
 
@@ -27,10 +27,10 @@ This protocol supports the presentation of verifiable claims between two Atala P
 
 The protocol consists of the following main parts:
 
-1. The **Verifier** creates a new proof presentation request using the [`/present-proof/presentations`](/agent-api/#tag/Present-Proof/operation/requestPresentation) endpoint. It includes the identifier of an existing `connection` between both parties as well as a `domain` and `challenge` to protect from potential replay attacks.
+1. The **Verifier** creates a new proof presentation request using the [`/present-proof/presentations`](/agent-api/#tag/Present-Proof/operation/requestPresentation) endpoint. It includes the identifier of an existing `connection` between both parties, `domain`, and a `challenge` to protect from potential replay attacks.
 2. The **Prover** receives the presentation request from the **Verifier** and can retrieve the list of existing requests using the [`/present-proof/presentations`](/agent-api/#tag/Present-Proof/operation/getAllPresentation) endpoint.
 3. The **Prover** can then review and accept a specific request using the [`/present-proof/presentations/{presentationId}`](/agent-api/#tag/Present-Proof/operation/updatePresentation) endpoint, providing the identifier of the `credential` record to use in the proof presentation.
-4. The **Verifier** receives the proof presentation from the **Prover** and can accept it using the [`/present-proof/presentations/{presentationId}`](/agent-api/#tag/Present-Proof/operation/updatePresentation) endpoint, specifying `presentation-accept` as action type.
+4. The **Verifier** receives the proof presentation from the **Prover** and can accept it using the [`/present-proof/presentations/{presentationId}`](/agent-api/#tag/Present-Proof/operation/updatePresentation) endpoint, specifying `presentation-accept` as the action type.
 
 ## Endpoints
 
@@ -39,7 +39,7 @@ The protocol consists of the following main parts:
 | [`/present-proof/presentations`](/agent-api/#tag/Present-Proof/operation/requestPresentation) | POST | Creates and sends a new proof presentation request.  | Verifier |
 | [`/present-proof/presentations`](/agent-api/#tag/Present-Proof/operation/getAllPresentation) | GET | Retrieves the collection of all the existing presentation proof records - sent or received. | Verifier, Prover |
 | [`/present-proof/presentations/{id}`](/agent-api/#tag/Present-Proof/operation/getPresentation) | GET | Retrieves a specific presentation proof record by `id`. | Verifier, Prover |
-| [`/present-proof/presentations/{id}`](/agent-api/#tag/Present-Proof/operation/updatePresentation) | PATCH | Updates an existing presentation proof record to e.g. accept the request on **Prover** side, or accept the presentation on **Verifier** side. | Verifier, Prover |
+| [`/present-proof/presentations/{id}`](/agent-api/#tag/Present-Proof/operation/updatePresentation) | PATCH | Updates an existing presentation proof record to, e.g., accept the request on the **Prover** side or accept the presentation on the **Verifier** side. | Verifier, Prover |
 
 :::info
 For more detailed information, please, check the full **[PRISM Agent API](/agent-api).**
@@ -47,15 +47,15 @@ For more detailed information, please, check the full **[PRISM Agent API](/agent
 
 ## Verifier interactions
 
-This section describes the interactions available to the **Verifier** with his PRISM Agent.
+This section describes the interactions available to the **Verifier** with the PRISM Agent.
 
 ### Creating and sending a Presentation Request
 
-To start the process, the verifier needs to create a proof presentation request.
+The Verifier needs to create a proof presentation request to start the process.
 To do this, he makes a `POST` request to the [`/present-proof/presentations`](/agent-api/#tag/Present-Proof/operation/requestPresentation) endpoint with a JSON payload that includes the following information:
 
-1. `connectionId`: This field represents the unique identifier of an existing connection between the verifier and the prover. This connection will be used to exchange messages related to the protocol flow execution.
-2. `challenge` and `domain`: The random seed challenge and operational domain are provided by the **Verifier** and must be signed by the **Prover** in the generated proof in order to protect from replay attacks.
+1. `connectionId`: This field represents the unique identifier of an existing connection between the verifier and the prover. It is for exchanging messages related to the protocol flow execution.
+2. `challenge` and `domain`: The **Verifier** provides the random seed challenge and operational domain, and the **Prover** must sign the generated proof to protect from replay attacks.
 
 ```bash
 curl -X 'POST' 'http://localhost:8070/prism-agent/present-proof/presentations' \
@@ -71,18 +71,18 @@ curl -X 'POST' 'http://localhost:8070/prism-agent/present-proof/presentations' \
       }'
 ```
 
-Upon execution, a new presentation request record will be created with an initial state of `RequestPending`. The **Verifier** PRISM Agent will take care of sending the presentation request message to the PRISM Agent of the **Prover** through the specified DIDComm connection. The record state will then be moved to `RequestSent`.
+Upon execution, a new presentation request record gets created with an initial state of `RequestPending`. The **Verifier** PRISM Agent will send the presentation request message to the PRISM Agent of the **Prover** through the specified DIDComm connection. The record state then is updated to `RequestSent`.
 
-The **Verifier** can retrieve the list of presentation records making a `GET` request to the [`/present-proof/presentations`](/agent-api/#tag/Present-Proof/operation/getAllPresentation) endpoint:
+The **Verifier** can retrieve the list of presentation records by making a `GET` request to the [`/present-proof/presentations`](/agent-api/#tag/Present-Proof/operation/getAllPresentation) endpoint:
 ```bash
 curl -X 'GET' 'http://localhost:8070/prism-agent/present-proof/presentations' \
   -H 'accept: application/json'
 ```
 
 ### Accept presentation proof received from the prover
-Once the **Prover** has received a proof presentation request, he can accept it using an appropriate verifiable credential. The PRISM Agent of the **Verifier** will receive that proof and verify it. Upon successful verification, the presentation record state will be moved to `PresentationVerified`.
+Once the **Prover** has received a proof presentation request, he can accept it using an appropriate verifiable credential. The PRISM Agent of the **Verifier** will receive that proof and verify it. Upon successful verification, the presentation record state gets updated to `PresentationVerified`.
 
-The **Verifier** can then explicitly accept the specific verified proof presentation to move the record state to `PresentationAccepted`. This can be achieved by making a `PATCH` request to the [`/present-proof/presentations/{id}`](/agent-api/#tag/Present-Proof/operation/updatePresentation) endpoint:
+The **Verifier** can then explicitly accept the specific verified proof presentation to change the record state to `PresentationAccepted` by making a `PATCH` request to the [`/present-proof/presentations/{id}`](/agent-api/#tag/Present-Proof/operation/updatePresentation) endpoint:
 
 ```bash
 curl -X 'PATCH' 'http://localhost:8070/prism-agent/present-proof/presentations/{PRESENTATION_ID}' \
@@ -126,11 +126,11 @@ curl -X 'PATCH' 'http://localhost:8090/prism-agent/present-proof/presentations/{
       }'
 ```
 
-He will have to provide the following information:
+The **Prover** will have to provide the following information:
 1. `presentationId`: The unique identifier of the presentation record to accept.
 2. `proofId`: The unique identifier of the verifiable credential record to use as proof. 
 
-Doing so, the record state will be moved to `PresentationPending` and processed by the Prover PRISM Agent. The agent will automatically generate the proof presentation - and move the state to `PresentationGenerated` - and will eventually send it to the Verifier Agent - and move the state to `PresentationSent`.
+The record state is updated to `PresentationPending` and processed by the Prover PRISM Agent. The agent will automatically generate the proof presentation, change the state to `PresentationGenerated`, and will eventually send it to the Verifier Agent, and change the state to `PresentationSent`.
 
 ```mermaid
 ---

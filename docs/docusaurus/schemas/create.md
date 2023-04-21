@@ -2,7 +2,7 @@
 
 The PRISM platform v2.0 exposes REST API for creation, fetching, and searching the credential schema records.
 
-The OpenAPI specification and redoc documentation describe the endpoint.
+The OpenAPI specification and ReDoc documentation describe the endpoint.
 
 In this document, you can find step-by-step instructions for creating the credential schema.
 
@@ -23,7 +23,7 @@ fields:
 - drivingClass - driving class that denotes which types of vehicles the driver is allowed to go.
   Also, let's assume that the driving license might have additional optional claims.
 
-First of all, the JSON Schema for the given fields must be defined as:
+For the above fields, the JSON Schema definition must be:
 
 ```json
 {
@@ -68,7 +68,7 @@ First of all, the JSON Schema for the given fields must be defined as:
 }
 ```
 
-Fields `$id` and `$schema` must be set to corresponding values which describe
+The fields `$id` and `$schema` must correspond values that describe
 
 - the identity of the given JSON Schema `driving-license-1.0.0` and
 - the meta schema `https://json-schema.org/draft/2020-12/schema`
@@ -76,7 +76,7 @@ Fields `$id` and `$schema` must be set to corresponding values which describe
 All the claims are listed under the `properties` object with corresponding `type`s and `format`s according to JSON
 Specification.
 
-`additionalProperties` is set to true, meaning other fields can also be added to the verifiable credential..
+`additionalProperties` is set to true, meaning adding other fields to the verifiable credential is possible.
 
 ### 2. Create the credential schema record
 
@@ -339,14 +339,14 @@ The response should contain the JSON object representing the schema you just cre
 
 ```
 
-The triple `author`, `id`, and `version` are unique for the PRISM Agent instance.
+The PRISM Agent instance's triple `author`, `id`, and `version` are unique.
 So, having a single DID reference that the author uses, creating the credential schema with the same `id` and `version`
 is impossible.
 
 ### 4. Update the credential schema
 
-In order to upgrade the credential schema you need to perform the following steps:
+To upgrade the credential schema, you need to perform the following steps:
 
-1. start from the first step and change the JSON Schema
-2. change the `version` according to the nature of your change
-3. create a new credential schema record with a higher version
+1. Start from the first step and change the JSON Schema
+2. Change the `version` according to the nature of your change
+3. Create a new credential schema record with a higher version

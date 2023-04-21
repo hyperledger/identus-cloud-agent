@@ -1,13 +1,13 @@
 # Issue Credentials
 
-In Atala PRISM, the **Issue Credentials Protocol** allows you to create, retrieve, and manage issued verifiable credentials (VCs) between a VC issuer and a VC holder.
+In Atala PRISM, the **Issue Credentials Protocol** allows you to create, retrieve, and manage issued [verifiable credentials (VCs)](/documentation/docs/concepts/glossary.md#verifiable-credentials) between a VC issuer and a VC holder.
 
 ## Roles
 
 In the **Issue Credentials Protocol**, there are two roles:
 
-1. **Issuer** is responsible for creating a new credential offer, sending it to a **Holder**, and issuing the VC once the offer is accepted.
-2. **Holder** is responsible for accepting a credential offer from an issuer and receiving the VC.
+1. The **Issuer** is responsible for creating a new credential offer, sending it to a **Holder**, and issuing the VC once the offer is accepted.
+2. The **Holder** is responsible for accepting a credential offer from an issuer and receiving the VC.
 
 The **Issuer** and **Holder** interact with the **PRISM Agent API** to perform the operations defined in the protocol.
 
@@ -18,8 +18,8 @@ Before using the **Issuing Credentials protocol**, the following conditions must
 
 1. **Issuer** and **Holder** PRISM Agents up and running
 2. A connection must be established between the **Issuer** and **Holder** PRISM Agents (see [Connections](../connections/connection.md))
-3. The **Issuer** must have a published PRISM DID and the DID document must have at least one `assertionMethod` key for issuing credendials (see [Create DID](../dids/create.md) and [Publish DID](../dids/publish.md))
-4. The **Holder** must have a PRISM DID and the DID document must have at least one `authentication` key for presenting the proof
+3. The **Issuer** must have a published PRISM DID, and the DID document must have at least one `assertionMethod` key for issuing credentials (see [Create DID](../dids/create.md) and [Publish DID](../dids/publish.md))
+4. The **Holder** must have a PRISM DID, and the DID document must have at least one `authentication` key for presenting the proof.
 
 ## Overview
 
@@ -34,7 +34,7 @@ The protocol consists of the following main parts:
 The schema identifier defines the structure and the credential type issued,
 while the claims provide specific information about the individual, such as their name or qualifications.
 
-This protocol is applicable in various real-life scenarios, such as educational credentialing, employment verification, and more.
+This protocol applies in various real-life scenarios, such as educational credentialing, employment verification, etc.
 In these scenarios, the **Issuer** could be a school, an employer, etc., and the **Holder** could be a student or an employee.
 The VCs issued during this protocol could represent a diploma, a certificate of employment, etc.
 
@@ -50,7 +50,7 @@ The VCs issued during this protocol could represent a diploma, a certificate of 
 
 
 :::info
-For more detailed information, please, check the full **[PRISM Agent API](/agent-api).**
+Please check the full **[PRISM Agent API](/agent-api)** specification for more detailed information.
 :::
 
 ## Issuer interactions
@@ -63,7 +63,7 @@ To start the process, the issuer needs to create a credential offer.
 To do this, make a `POST` request to the [`/issue-credentials/credential-offers`](/agent-api/#tag/Issue-Credentials-Protocol/operation/createCredentialOffer) endpoint with a JSON payload that includes the following information:
 
 1. `schemaId`: This is an identifier for a schema, which defines the structure and format of the data in a verifiable credential. The schema identifier must be unique and typically a URL or a URN.
-2. `claims`: The data stored in a verifiable credential. Claims get expressed in a key-value format and must conform to the structure and format defined in the schema. The claims contain the data that the issuer attests to, such as name, address, date of birth, and so on.
+2. `claims`: are the data stored in a verifiable credential. Claims get expressed in a key-value format and must conform to the structure and format defined in the schema. Claims contain the data that the issuer attests to, such as name, address, date of birth, etc.
 
 Once the request initiates, a new credential record for the issuer gets created with a unique ID. The state of this record is now `OfferPending`.
 
@@ -93,7 +93,7 @@ This process is automatic. The state of the **Issuer**'s record will change to `
 ### Issuing the Credential
 
 Once the holder has approved the offer and sent a request to the **Issuer**,
-the **Issuer** will receive the request via DIDComm and update the state of the record to `RequestReceived.`
+the **Issuer** will receive the request via DIDComm and update the record state to `RequestReceived.`
 
 The **Issuer** can then use the [`/issue-credentials/records/{recordId}/issue-credential`](/agent-api/#tag/Issue-Credentials-Protocol/operation/issueCredential) endpoint to issue the credential to the holder.
 
@@ -132,7 +132,7 @@ This section describes the Holder role's available interactions with the PRISM A
 ### Receiving the VC Offer
 
 The **Holder** will receive the offer from the **Issuer** via DIDComm,
-and a new credential record with a unique ID will be created in the `OfferReceived` state.
+and a new credential record with a unique ID gets created in the `OfferReceived` state.
 
 This process is automatic for the PRISM Agent.
 
@@ -171,7 +171,7 @@ The state of the **Holder**'s record will change to `RequestSent`.
 After the **Issuer** has issued the credential, the **Holder** will receive the credential via DIDComm, and the state of the **Holder**'s record will change to `CredentialReceived`.
 This process is automatic for the PRISM Agent.
 
-**Holder** can check the achieved credential using a GET request to [`/issue-credentials/records/{recordId}/`](/agent-api/#tag/Issue-Credentials-Protocol/operation/getCredentialRecord) endpoint.
+The **Holder** can check the achieved credential using a GET request to [`/issue-credentials/records/{recordId}/`](/agent-api/#tag/Issue-Credentials-Protocol/operation/getCredentialRecord) endpoint.
 
 ```mermaid
 ---

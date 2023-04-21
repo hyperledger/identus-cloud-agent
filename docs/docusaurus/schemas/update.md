@@ -2,13 +2,12 @@
 
 The PRISM platform v2.0 exposes REST API for creation, fetching, and searching the credential schema records.
 
-The OpenAPI specification and redoc documentation describe the endpoint.
+The OpenAPI specification and ReDoc documentation describe the endpoint.
 
 In this document, you can find step-by-step instructions for updating the credential schema.
 
-After creation, the credential schema record cannot be updated.
-If you need to create a similar schema but with the additional fields or different description, or metadata,
-you need to create the credential schema record with the same `id` and higher `version`.
+After creation, updating the credential schema record is not possible.
+If you need to create a similar schema but with additional fields or a different description, or metadata, you need to create the credential schema record with the same `id` and a higher `version`.
 
 ## Step-by-step guide
 
@@ -22,17 +21,16 @@ So, there is an existing driving license, and the verifiable credential must add
 - bloodType - the blood type of the driver
 - organDonor - indicates whether or not the person is an organ donor
 
-The blood type on a driver's license is typically represented using the ABO blood group system, and
-may be represented as A+, A-, B+, B-, AB+, AB-, O+, or O-.
-So, assume that these set of values must be enforced by the schema definition using the following regex:
+The blood type on a driver's license is represented using the ABO blood group system, and
+potentially represented as A+, A-, B+, B-, AB+, AB-, O+, or O-.
+So, assume that this set of values must be enforced by the schema definition using the following regex:
 
 ```regexp
 ^(A|B|AB|O)[+-]?$
 ```
 
-At the same time, organ donor must be represented as a binary value: `true`/`false`, `yes`/`no`, depending on the
-jurisdiction, and it also might be `unknown`.
-This also must be enforced by the schema definition using the `enum` keyword:
+At the same time, the organ donor must represent a binary value: `true`/`false`, `yes`/`no`, depending on the
+jurisdiction, and it also might be `unknown` and must be enforced by the schema definition using the `enum` keyword:
 
 ```yaml
   enum:
@@ -45,14 +43,14 @@ This also must be enforced by the schema definition using the `enum` keyword:
 
 **NOTE**:
 
-as the original credential schema allows `additionalProperties` to be defined, we assume, that two additional claims
-must be added to the `required` attributes.
+As the original credential schema allows `additionalProperties` to be defined, we assume that two additional claims
+must get added to the `required` attributes.
 
-as the change to the credential schema is a backward compatible, the next version can be `1.1.0`
+As the change to the credential schema is backward compatible, the next version can be `1.1.0`
 
 ---
 
-The JSON Schema for the given changes must be defined as:
+The JSON Schema changes must be defined as follows:
 
 ```json
 {

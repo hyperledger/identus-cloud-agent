@@ -7,11 +7,11 @@
 
 ## Context and Problem Statement
 
-PostgreSQL is essential to the Atala Prism technology stack, where most entities are stored.
+PostgreSQL is essential to the Atala PRISM technology stack, where most entities are stored.
 
-Backend services: Prism Agent, Prism Mediator, and Prism Node use PostgreSQL.
+Backend services: PRISM Agent, PRISM Mediator, and PRISM Node use PostgreSQL.
 
-[Doobie](https://tpolecat.github.io/doobie/index.html) llibrary is currently used in Scala code to communicate with Postgresql. Quotes from the website
+[Doobie](https://tpolecat.github.io/doobie/index.html) library is currently used in Scala code to communicate with Postgresql. Quotes from the website
 
 ```
 Doobie is a pure functional JDBC layer for Scala and Cats. It is not an ORM, nor is it a relational algebra; 

@@ -29,17 +29,17 @@ The protocol uses the following REST API endpoints:
 3. [`POST /connection-invitations`](/agent-api/#tag/Connections-Management/operation/acceptConnectionInvitation): Accepts an externally received invitation
 
 :::info
-For more detailed information, please, check the full **[PRISM Agent API](/agent-api).**
+Please check the full **[PRISM Agent API](/agent-api) specification for more detailed information.**
 :::
 
 ## Inviter Flow
 
-1.  Generate and share a new Out-of-Band (OOB) invitation (connection is created in `InvitationGenerated` state)
-2.  Receive a connection request from the **Invitee** (connection is moved to `ConnectionRequestReceived` state)
-3.  Accept the connection request (connection is moved to `ConnectionResponsePending` state)
+1.  Generate and share a new Out-of-Band (OOB) invitation (connection gets created in `InvitationGenerated` state)
+2.  Receive a connection request from the **Invitee** (connection moves to `ConnectionRequestReceived` state)
+3.  Accept the connection request (connection moves to `ConnectionResponsePending` state)
 4.  Send the connection response via the DIDComm Agent (connection achieves `ConnectionResponseSent` state)
 
-The **Inviter**'s state transitions are represented by the following Mermaid diagram:
+The following Mermaid diagram represents the **Inviter**'s Connection state transitions:
 ```mermaid
 ---
 title: Inviter Connection State
@@ -60,7 +60,7 @@ ConnectionResponseSent --> [*]
 3.  Send the connection request via DIDComm (connection achieves `ConnectionRequestSent` state)
 4.  Receive the connection response (connection achieves `ConnectionResponseReceived` state)
 
-The **Invitee**'s state transitions are represented by the following Mermaid diagram:
+The following Mermaid diagram represents the **Invitee**'s Connection state transitions:
 ```mermaid
 ---
 title: Invitee Connection State
@@ -81,7 +81,7 @@ The following diagram shows the end-to-end flow for establishing a connection be
 
 ## Command line example
 
-The following example demonstrates on how you could use two PRISM Agents API to set up connection between them.
+The following example demonstrates how you could use two PRISM Agent APIs to set up a connection between them.
 
 ### **Inviter** creates an invitation
 
@@ -206,5 +206,5 @@ Example response:
 ```
 
 :::info
-For more detailed information, please, check the full **[PRISM Agent API](/agent-api).**
+Please check the full **[PRISM Agent API](/agent-api)** specification for more detailed information.
 :::

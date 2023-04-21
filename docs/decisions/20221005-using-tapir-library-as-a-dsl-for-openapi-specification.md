@@ -8,14 +8,14 @@
 Related ADR/AIP: [Introduce REST HTTP for existing Node services](https://input-output.atlassian.net/wiki/spaces/AV2/pages/3454500948/AIP+-+001)
 
 ## Context and Problem Statement
-Prism Platform v2 will contain the REST API. The decision was made by team consensus during the first AOH meeting to follow "OpenAPI specification first" approach and generate stubs, server side and client side code based on OAS.
+PRISM Platform v2 will contain the REST API. The decision was made by team consensus during the first AOH meeting to follow "OpenAPI specification first" approach and generate stubs, server side and client side code based on OAS.
 Following this strategy we currently have 4-5 OAS files (Castor, Pollux, Mercury, Configuration).
 
 The following tool was selected for code generation: [OpenAPI Tools](https://github.com/OpenAPITools/openapi-generator)
 
 Instead of using the yaml file as OpenAPI specification and openapi-generator for server and client stub generation - this ADR proposes to use [Tapir](https://tapir.softwaremill.com/en/latest/index.html) Scala library as DSL for OpenAPI specification, `interpret` the endpoint defitions as Scala server and client stub, generate the yaml file, and use openapi-generator for client stubs.
 
-Technology stack that is going to be used in Prism v2 backend: Scala 3 + ZIO ecosystem
+Technology stack that is going to be used in PRISM v2 backend: Scala 3 + ZIO ecosystem
 
 Akka framework after version 2.6.x cannot be used because [Lightbend changed the license type to BSL 1.1](https://www.lightbend.com/blog/why-we-are-changing-the-license-for-akka). 
 
