@@ -1325,6 +1325,7 @@ components:
       required:
         - id
         - type
+        - serviceEndpoint
       type: object
       properties:
         id:

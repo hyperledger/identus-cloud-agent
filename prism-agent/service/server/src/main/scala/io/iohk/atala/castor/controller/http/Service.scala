@@ -47,7 +47,9 @@ object Service {
 
   given encoder: JsonEncoder[Service] = DeriveJsonEncoder.gen[Service]
   given decoder: JsonDecoder[Service] = DeriveJsonDecoder.gen[Service]
-  given schema: Schema[Service] = Schema.derived
+  given schema: Schema[Service] = Schema
+    .derived[Service]
+    .modify(_.serviceEndpoint)(_.copy(isOptional = false)) // need this because the derived schema mark it as optional
 
   given Conversion[w3c.ServiceRepr, Service] = (service: w3c.ServiceRepr) =>
     Service(
