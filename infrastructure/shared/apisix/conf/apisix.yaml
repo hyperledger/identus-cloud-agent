@@ -26,8 +26,7 @@ routes:
     upstream_id: 4
     plugins:
       proxy-rewrite:
-        regex_uri:
-          ["^/prism-agent/connection-invitations", "/connection-invitations"]
+        uri: "/connection-invitations"
   - uri: /didcomm
     upstream_id: 3
     plugins:
@@ -90,4 +89,4 @@ upstreams:
     nodes:
       "prism-agent:8082": 1 # _system
     type: roundrobin
-# END
+#END
