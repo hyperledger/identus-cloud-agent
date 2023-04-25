@@ -1,6 +1,6 @@
 # Create the credential schema
 
-The PRISM platform v2.0 exposes REST API for creation, fetching, and searching the credential schema records.
+The PRISM platform v2.0 exposes REST API for creation, fetching, and searching the [credential schema](https://github.com/input-output-hk/atala-prism-docs/blob/main/documentation/docs/concepts/glossary.md#credential-schema) records.
 
 The OpenAPI specification and ReDoc documentation describe the endpoint.
 
@@ -12,7 +12,7 @@ The following guide demonstrates how to create a driving license credential sche
 
 ### 1. Define the JSON Schema for the Verifiable Credential
 
-Assume that you need a credential schema for the driving license, and the verifiable credential must have the following
+Assume that you need a credential schema for the driving license, and the [verifiable credential](https://github.com/input-output-hk/atala-prism-docs/blob/main/documentation/docs/concepts/glossary.md#verifiable-credential) must have the following
 fields:
 
 - emailAddress - the email address of the driver
@@ -340,7 +340,7 @@ The response should contain the JSON object representing the schema you just cre
 ```
 
 The PRISM Agent instance's triple `author`, `id`, and `version` are unique.
-So, having a single DID reference that the author uses, creating the credential schema with the same `id` and `version`
+So, having a single [DID](https://github.com/input-output-hk/atala-prism-docs/blob/main/documentation/docs/concepts/glossary.md#decentralized-identifier) reference that the author uses, creating the credential schema with the same `id` and `version`
 is impossible.
 
 ### 4. Update the credential schema

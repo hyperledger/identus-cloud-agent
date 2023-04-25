@@ -7,8 +7,8 @@ the Atala PRISM Platform.
 
 ## 1. Introduction
 
-Credential Schema is a data template for the Verifiable Credentials.
-It contains claims (attributes) of the Verifiable Credentials, credential schema author, type, name, version, and proof
+[Credential Schema](https://github.com/input-output-hk/atala-prism-docs/blob/main/documentation/docs/concepts/glossary.md#credential-schema) is a data template for [Verifiable Credentials](https://github.com/input-output-hk/atala-prism-docs/blob/main/documentation/docs/concepts/glossary.md#verifiable-credential).
+It contains [claims](https://github.com/input-output-hk/atala-prism-docs/blob/main/documentation/docs/concepts/glossary.md#claims) (attributes) of the Verifiable Credentials, credential schema author, type, name, version, and proof
 of authorship.
 By putting schema definitions on a public blockchain, they are available for all verifiers to examine to determine the
 semantic interoperability of the Credential.
@@ -38,7 +38,7 @@ Limitations and constraints of the PRISM Platform v2.0:
 
 ### Credential Schema
 
-The Credential Schema is a template that defines a set of attributes the Issuer uses to issue the Verifiable Credential.
+The Credential Schema is a template that defines a set of attributes the [Issuer](https://github.com/input-output-hk/atala-prism-docs/blob/main/documentation/docs/concepts/glossary.md#issuer) uses to issue the Verifiable Credential.
 
 ### Schema Registry
 
@@ -46,7 +46,7 @@ The registry is where the Credential Schema is published and available for parti
 
 ### Issuer, Holder, Verifier
 
-These are well-known roles in the SSI domain.
+These are well-known roles in the [SSI](https://github.com/input-output-hk/atala-prism-docs/blob/main/documentation/docs/concepts/glossary.md#self-sovereign-identity) domain.
 
 ## 2. Credential Schema Attributes
 
@@ -61,15 +61,11 @@ The locally unique identifier of the schema.
 
 ### longId (String)
 
-Resource identifier of the given credential schema composed from the author's DID reference, id, and version fields.
-Example: `{author}/{id}?version={version}`
+Resource identifier of the given credential schema composed from the author's [DID]((https://github.com/input-output-hk/atala-prism-docs/blob/main/documentation/docs/concepts/glossary.md#decentralized-identifier) reference, id, and version fields.
+**Example:** `{author}/{id}?version={version}`
 
-**_NOTE:_**
-According to the [W3C specification](https://w3c-ccg.github.io/vc-json-schemas/#id), this field is locally unique and combines the Issuer `DID`, `uuid`, and `version`.
-
-For example:
-
-`did:example:MDP8AsFhHzhwUvGNuYkX7T/06e126d1-fa44-4882-a243-1e326fbe21db?version=1.0`
+> **Note:** According to the [W3C specification](https://w3c-ccg.github.io/vc-json-schemas/#id), this field is locally unique and combines the Issuer `DID`, `uuid`, and `version`.
+**For **example:** `did:example:MDP8AsFhHzhwUvGNuYkX7T/06e126d1-fa44-4882-a243-1e326fbe21db?version=1.0`
 
 
 ---
@@ -91,7 +87,7 @@ In the current implementation, this field must always be the value in the follow
 ### name (String)
 
 It is a human-readable name for the schema.
-Example:
+**Example:**
 
 ```json
 {
@@ -107,8 +103,7 @@ Example:
 
 It is a human-readable description of the schema.
 
-**NOTE:** This field may get removed later as it's not a part of W3C specification but rather the internal field of the
-JSON schema.
+> **Note:** This field may get removed later as it's not a part of W3C specification but rather the internal field of the JSON schema.
 
 ---
 
@@ -116,7 +111,7 @@ JSON schema.
 
 It is a version of the schema that contains the revision of the credential schema in [SemVer](https://semver.org/)
 format.
-Example:
+**Example:**
 
 ```json
 {
@@ -135,7 +130,7 @@ version.
 ### author (DID)
 
 DID of the identity which authored the credential schema.
-Example:
+**Example:**
 
 ```json
 {
@@ -148,7 +143,7 @@ Example:
 ### authored (DateTime)
 
 [RFC3339](https://www.rfc-editor.org/rfc/rfc3339) date of when the credential schema creation. A piece of Metadata.
-Example:
+**Example:**
 
 ```json
 {
@@ -162,7 +157,7 @@ Example:
 
 A valid [JSON-SCHEMA](https://json-schema.org/) where the credential schema semantic gets defined.
 JSON Schema must be composed according to <https://json-schema.org/draft/2020-12/schema> schema.
-Example:
+**Example:**
 
 ```json
 {
@@ -212,8 +207,8 @@ Example:
 ### tags (String[])
 
 It is a set of tokens that allow one to look up and filter the credential schema records.
-This field is not a part of the W3C specification. Its usage by the PRISM Platform for filtering the records.
-Example:
+This field is not a part of the W3C specification. Its usage by the PRISM platform for filtering the records.
+**Example:**
 
 ```json
 {
@@ -236,7 +231,7 @@ The proof field is a JOSE object containing the credential schema's signature, i
 - domain
 - jws
 
-Example:
+**Example:**
 
 ```json
 {

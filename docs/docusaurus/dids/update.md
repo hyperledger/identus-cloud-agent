@@ -1,34 +1,34 @@
 # Update DID
 
-PRISM DID method allows **DID Controller** to update the content of the DID document by constructing a DID update-operation.
+PRISM DID method allows [DID Controller](https://github.com/input-output-hk/atala-prism-docs/blob/main/documentation/docs/concepts/glossary.md#did-controller) to update the content of the [DID document(https://github.com/input-output-hk/atala-prism-docs/blob/main/documentation/docs/concepts/glossary.md#did-document) by constructing a DID update-operation.
 The update-operation describes the update action on the DID document.
-For example, **DID Controller** can add a new key to the DID document by constructing an update-operation containing the `AddKeyAction`.
-It is also possible for **DID Controller** to compose multiple actions in the same update-operation.
+For example, DID Controller can add a new key to the DID document by constructing an update-operation containing the `AddKeyAction`.
+It is also possible for DID Controller to compose multiple actions in the same update-operation.
 The [PRISM DID method - Update DID section](https://github.com/input-output-hk/prism-did-method-spec/blob/main/w3c-spec/PRISM-method.md#update-did) includes a complete list of supported update actions.
-The PRISM DID method only allows published DID to be updated.
+The PRISM DID method only allows published [DID](https://github.com/input-output-hk/atala-prism-docs/blob/main/documentation/docs/concepts/glossary.md#decentralized-identifier) to be updated.
 
 Each DID update-operation is cryptographically linked, creating a lineage of DID operations.
 The lineage is not allowed to contain forks.
 The data on the DID document is updated only from the operations on the valid lineage, and the operations on the fork get discarded.
 
-*Please refer to [PRISM DID method - processing of update operation](https://github.com/input-output-hk/prism-did-method-spec/blob/main/w3c-spec/PRISM-method.md#processing-of-updatedidoperations) for more detail about how a DID update-operation is processed.*
-*It has an important implication on how the operation lineage is determined.*
+Please refer to [PRISM DID method - processing of update operation](https://github.com/input-output-hk/prism-did-method-spec/blob/main/w3c-spec/PRISM-method.md#processing-of-updatedidoperations) for more detail about how a DID update-operation is processed.
+It has an important implication on how the operation lineage is determined.
 
 ## Roles
 
-1. **DID Controller** is the organization or individual who has control of the DID.
+1. DID Controller is the organization or individual who has control of the DID.
 
 ## Prerequisites
 
-1. **DID Controller** PRISM Agent up and running
-2. **DID Controller** has a DID created on PRISM Agent (see [Create DID](./create.md))
-3. **DID Controller** has a DID published to the blockchain (see [Publish DID](./publish.md))
+1. DID Controller PRISM Agent up and running
+2. DID Controller has a DID created on PRISM Agent (see [Create DID](./create.md))
+3. DID Controller has a DID published to the blockchain (see [Publish DID](./publish.md))
 
 ## Overview
 
-PRISM Agent allows the **DID Controller** to update the DID easily. This update mechanism is implementation specific and links the DID update-operation from the last confirmed operation observed on the blockchain.
+PRISM Agent allows the DID Controller to update the DID easily. This update mechanism is implementation specific and links the DID update-operation from the last confirmed operation observed on the blockchain.
 
-Updating the DID will take some time until the update-operation gets confirmed on the blockchain. By updating the DID on PRISM Agent without waiting for the *previous update-operation* to be confirmed, the **DID Controller** is creating a fork on the DID lineage and risking having the subsequent operation discarded.
+Updating the DID will take some time until the update-operation gets confirmed on the blockchain. By updating the DID on PRISM Agent without waiting for the previous update-operation to be confirmed, the DID Controller is creating a fork on the DID lineage and risking having the subsequent operation discarded.
 
 Please refer to the `SECURE_DEPTH` parameter in [PRISM method - protocol parameters](https://github.com/input-output-hk/prism-did-method-spec/blob/main/w3c-spec/PRISM-method.md#versioning-and-protocol-parameters) for the number of confirmation blocks.
 At the time of writing, this number is 112 blocks.
@@ -48,7 +48,7 @@ The example uses the following endpoints
 
 ### 1. Check the current state of the DID document
 
-Given the **DID Controller** has a DID on PRISM Agent and that DID is published, he can resolve the DID document using short-form DID.
+Given the DID Controller has a DID on PRISM Agent and that DID is published, he can resolve the DID document using short-form DID.
 
 ```bash
 curl --location --request GET 'http://localhost:8080/prism-agent/dids/{didRef}' \
@@ -87,9 +87,9 @@ The `verificationMethod` in the DID document only shows one public key called `k
 ### 2. Add a new key and remove the existing key
 
 The current DID document contains a key called `key-1`.
-The **DID Controller** wishes to remove that key and add a new key called `key-2`
+The DID Controller wishes to remove that key and add a new key called `key-2`
 
-The **DID Controller** submits a DID update request to `POST /did-registrar/dids/{didRef}/updates`.
+The DID Controller submits a DID update request to `POST /did-registrar/dids/{didRef}/updates`.
 
 ```bash
 curl --location --request POST 'http://localhost:8080/prism-agent/did-registrar/dids/did:prism:4262377859267f308a06ec6acf211fbe4d6745aa9e637e04548771169616fb86/updates' \
@@ -113,8 +113,8 @@ curl --location --request POST 'http://localhost:8080/prism-agent/did-registrar/
     ]
 }'
 ```
-Under the hood, PRISM Agent constructs the DID update-operation from the *last confirmed operation* observed on the blockchain.
-The **DID Controller** should receive a response about the scheduled operation, waiting for confirmation on the blockchain.
+Under the hood, PRISM Agent constructs the DID update-operation from the last confirmed operation observed on the blockchain.
+The DID Controller should receive a response about the scheduled operation, waiting for confirmation on the blockchain.
 
 
 ```json
@@ -128,10 +128,10 @@ The **DID Controller** should receive a response about the scheduled operation, 
 
 ### 3. Wait for the confirmation and observe the change on the DID document
 
-When the **DID Controller** tries to resolve the DID again using the example in Step 1,
+When the DID Controller tries to resolve the DID again using the example in Step 1,
 the content might remain the same because the operation still needs to be confirmed and applied.
 
-The **DID Controller** keeps polling this endpoint until the new key, `key-2`, gets observed.
+The DID Controller keeps polling this endpoint until the new key, `key-2`, gets observed.
 
 Example response of updated DID document (some fields omitted for readability)
 

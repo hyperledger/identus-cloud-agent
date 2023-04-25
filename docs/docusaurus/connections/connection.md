@@ -2,21 +2,19 @@
 
 A connection is a stateful relationship between two parties that enables secure communication.
 
-The **Connection protocol** is required to establish secure connections between agents,
+The [Connection protocol](https://github.com/input-output-hk/atala-prism-docs/blob/main/documentation/docs/concepts/glossary.md#connection-protocol) is required to establish secure connections between agents,
 allowing them to exchange information and interact.
-
-The protocol provides endpoints for creating and managing connections, as well as for accepting invitations.
 
 ## Roles
 
 The connection protocol has two roles:
 
-1.  **Inviter**: A subject that initiates a connection request by sending a *connection invitation*.
-2.  **Invitee**: A subject that receives a connection invitation and accepts it by sending a *connection request*.
+1.  [Inviter](https://github.com/input-output-hk/atala-prism-docs/blob/main/documentation/docs/concepts/glossary.md#inviter): A subject that initiates a connection request by sending a [connection invitation](https://github.com/input-output-hk/atala-prism-docs/blob/main/documentation/docs/concepts/glossary.md#connection-invitation).
+2.  [Invitee](https://github.com/input-output-hk/atala-prism-docs/blob/main/documentation/docs/concepts/glossary.md#invitee): A subject that receives a connection invitation and accepts it by sending a [connection request](https://github.com/input-output-hk/atala-prism-docs/blob/main/documentation/docs/concepts/glossary.md#connection-request).
 
 ## Prerequisites
 
-1. **Inviter** and **Invitee** PRISM Agents up and running
+1. Inviter and Invitee PRISM Agents up and running
 
 ## PRISM Agent endpoints overview
 
@@ -29,17 +27,17 @@ The protocol uses the following REST API endpoints:
 3. [`POST /connection-invitations`](/agent-api/#tag/Connections-Management/operation/acceptConnectionInvitation): Accepts an externally received invitation
 
 :::info
-Please check the full **[PRISM Agent API](/agent-api) specification for more detailed information.**
+Please check the full [PRISM Agent API](/agent-api) specification for more detailed information.
 :::
 
 ## Inviter Flow
 
 1.  Generate and share a new Out-of-Band (OOB) invitation (connection gets created in `InvitationGenerated` state)
-2.  Receive a connection request from the **Invitee** (connection moves to `ConnectionRequestReceived` state)
+2.  Receive a connection request from the Invitee (connection moves to `ConnectionRequestReceived` state)
 3.  Accept the connection request (connection moves to `ConnectionResponsePending` state)
 4.  Send the connection response via the DIDComm Agent (connection achieves `ConnectionResponseSent` state)
 
-The following Mermaid diagram represents the **Inviter**'s Connection state transitions:
+The following Mermaid diagram represents the Inviter's Connection state transitions:
 ```mermaid
 ---
 title: Inviter Connection State
@@ -57,10 +55,10 @@ ConnectionResponseSent --> [*]
 
 1.  Receive the OOB invitation (`InvitationReceived` state)
 2.  Accept the invitation (connection is created in `ConnectionRequestPending` state)
-3.  Send the connection request via DIDComm (connection achieves `ConnectionRequestSent` state)
+3.  Send the connection request via [DIDComm](https://github.com/input-output-hk/atala-prism-docs/blob/main/documentation/docs/concepts/glossary.md#didcomm) (connection achieves `ConnectionRequestSent` state)
 4.  Receive the connection response (connection achieves `ConnectionResponseReceived` state)
 
-The following Mermaid diagram represents the **Invitee**'s Connection state transitions:
+The following Mermaid diagram represents the Invitee's Connection state transitions:
 ```mermaid
 ---
 title: Invitee Connection State
@@ -83,7 +81,7 @@ The following diagram shows the end-to-end flow for establishing a connection be
 
 The following example demonstrates how you could use two PRISM Agent APIs to set up a connection between them.
 
-### **Inviter** creates an invitation
+### Inviter creates an invitation
 
 ```shell
 curl -X 'POST' \
@@ -140,7 +138,7 @@ Example response:
 }
 ```
 
-### **Invitee** retrieves the list of connections
+### Invitee retrieves the list of connections
 
 ```shell
 curl -X 'GET' 'http://localhost:8090/prism-agent/connections' | jq
@@ -172,7 +170,7 @@ Example output:
 }
 ```
 
-### **Inviter** retrieves the list of connections
+### Inviter retrieves the list of connections
 
 ```shell
 curl -X 'GET' 'http://localhost:8080/prism-agent/connections' | jq
@@ -206,5 +204,5 @@ Example response:
 ```
 
 :::info
-Please check the full **[PRISM Agent API](/agent-api)** specification for more detailed information.
+Please check the full [PRISM Agent API](/agent-api) specification for more detailed information.
 :::
