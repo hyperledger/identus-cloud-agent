@@ -28,9 +28,7 @@ object IssueController {
       case CredentialServiceError.RepositoryError(cause) =>
         ErrorResponse.internalServerError(title = "RepositoryError", detail = Some(cause.toString))
       case CredentialServiceError.RecordIdNotFound(recordId) =>
-        ErrorResponse.notFound("NotFound", Some(s"Record Id not found: $recordId"), "")
-//        ErrorResponse.notFound(detail = Some(s"Record Id not found: $recordId"))
-//        ErrorResponse.badRequest("Unsupported DID format", Some(s"The following DID is not supported:  $recordId"))
+        ErrorResponse.notFound(detail = Some(s"Record Id not found: $recordId"))
       case CredentialServiceError.OperationNotExecuted(recordId, info) =>
         ErrorResponse.internalServerError(title = "Operation Not Executed", detail = Some(s"${recordId}-${info}"))
       case CredentialServiceError.ThreadIdNotFound(thid) =>
