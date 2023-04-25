@@ -101,8 +101,10 @@ class IssueControllerImpl(
           detail = Some(invalidPayload.msg),
           instance = "error-instance"
         )
-      case connError: ConnectionServiceError => ConnectionController.toHttpError(connError)
-      case credError: CredentialServiceError => toHttpError(credError)
+      case connError: ConnectionServiceError =>
+        ConnectionController.toHttpError(connError)
+      case credError: CredentialServiceError =>
+        toHttpError(credError)
     }
   }
 

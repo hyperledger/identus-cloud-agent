@@ -27,6 +27,7 @@ object IssueEndpoints {
       .in("issue-credentials" / "credential-offers")
       .in(jsonBody[CreateIssueCredentialRecordRequest].description("The credential offer object."))
       .errorOut(basicFailures)
+      .out(statusCode(StatusCode.Created))
       .out(jsonBody[IssueCredentialRecord].description("The issue credential record."))
       .tag("Issue Credentials Protocol")
       .summary("As a credential issuer, create a new credential offer to be sent to a holder.")

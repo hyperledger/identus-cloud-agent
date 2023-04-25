@@ -93,7 +93,7 @@ object AgentApp extends ZIOAppDefault {
     _ <- Modules.didCommServiceEndpoint(didCommServicePort).debug.fork
     _ <- Modules.syncDIDPublicationStateFromDltJob.fork
     _ <- Modules.app(restServicePort).fork
-    _ <- Modules.zioApp.fork
+    _ <- Modules.zioApp.debug.fork
     _ <- ZIO.never
   } yield ()
 

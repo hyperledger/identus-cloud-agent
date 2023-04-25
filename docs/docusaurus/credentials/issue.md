@@ -17,8 +17,8 @@ The **Issuer** and **Holder** interact with the **PRISM Agent API** to perform t
 Before using the **Issuing Credentials protocol**, the following conditions must be present:
 
 1. **Issuer** and **Holder** PRISM Agents up and running
-2. A connection must be established between the **Issuer** and **Holder** PRISM Agents (see [Connections](../connections/connection.md))
-3. The **Issuer** must have a published PRISM DID and the DID document must have at least one `assertionMethod` key for issuing credendials (see [Create DID](../dids/create.md) and [Publish DID](../dids/publish.md))
+2. A connection must be established between the **Issuer** and **Holder** PRISM Agents (see [Connections](../connections/connection.md)). The unique ID of the connection is required when making a request to create a credential offer
+3. The **Issuer** must have a published PRISM DID and the DID document must have at least one `assertionMethod` key for issuing credentials (see [Create DID](../dids/create.md) and [Publish DID](../dids/publish.md))
 4. The **Holder** must have a PRISM DID and the DID document must have at least one `authentication` key for presenting the proof
 
 ## Overview
@@ -64,6 +64,15 @@ To do this, make a `POST` request to the [`/issue-credentials/credential-offers`
 
 1. `schemaId`: This is an identifier for a schema, which defines the structure and format of the data in a verifiable credential. The schema identifier must be unique and typically a URL or a URN.
 2. `claims`: The data stored in a verifiable credential. Claims get expressed in a key-value format and must conform to the structure and format defined in the schema. The claims contain the data that the issuer attests to, such as name, address, date of birth, and so on.
+3. `subjectId`: The DID referring to the holder to issue this credential to
+4. `issuingDID`: The DID referring to the issuer to issue this credential from
+5. `connectionId`: The unique ID of the connection between the holder and the issuer to offer this credential over.
+
+:::note
+
+The issuingDID and connectionId properties come from completing the pre-requisite steps of listed above
+
+:::
 
 Once the request initiates, a new credential record for the issuer gets created with a unique ID. The state of this record is now `OfferPending`.
 
@@ -80,8 +89,10 @@ curl -X 'POST' \
             "firstname": "Alice",
             "lastname": "Wonderland",
             "birthdate": "01/01/2000"
-          }
-     }'
+          },
+          "issuingDID": "did:prism:9f847f8bbb66c112f71d08ab39930d468ccbfe1e0e1d002be53d46c431212c26",
+     "connectionId": "9d075518-f97e-4f11-9d10-d7348a7a0fda"
+        }'
 ```
 
 ### Sending the Offer to the Holder

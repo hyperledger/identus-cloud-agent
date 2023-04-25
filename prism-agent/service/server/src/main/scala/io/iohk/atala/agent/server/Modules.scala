@@ -499,16 +499,6 @@ object HttpModule {
     (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new DIDRegistrarApi(_, _))
   }
 
-  val issueCredentialsProtocolApiLayer: RLayer[
-    DidOps & DidAgent & ManagedDIDService & ConnectionService & AppConfig & JwtDidResolver,
-    IssueCredentialsProtocolApi
-  ] = {
-    val serviceLayer = AppModule.credentialServiceLayer
-    val apiServiceLayer = serviceLayer >>> IssueCredentialsProtocolApiServiceImpl.layer
-    val apiMarshallerLayer = IssueCredentialsProtocolApiMarshallerImpl.layer
-    (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new IssueCredentialsProtocolApi(_, _))
-  }
-
   val presentProofProtocolApiLayer: RLayer[DidOps & DidAgent, PresentProofApi] = {
     val serviceLayer = AppModule.presentationServiceLayer ++ AppModule.connectionServiceLayer // ++ didCommServiceLayer
     val apiServiceLayer = serviceLayer >>> PresentProofApiServiceImpl.layer
@@ -517,8 +507,7 @@ object HttpModule {
   }
 
   val layers =
-    didApiLayer ++ didRegistrarApiLayer ++
-      issueCredentialsProtocolApiLayer ++ presentProofProtocolApiLayer
+    didApiLayer ++ didRegistrarApiLayer ++ presentProofProtocolApiLayer
 }
 
 object RepoModule {
