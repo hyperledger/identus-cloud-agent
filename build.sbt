@@ -56,7 +56,7 @@ lazy val V = new {
   val testContainersScalaPostgresql = "0.40.15"
 
   val doobie = "1.0.0-RC2"
-  val quill = "4.6.0"
+  val quill = "4.6.0.1"
   val iris = "0.1.0" // TODO REMOVE
   val flyway = "9.8.3"
   val logback = "1.4.7"
