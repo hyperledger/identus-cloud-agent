@@ -73,6 +73,7 @@ curl -X 'POST' \
   'http://localhost:8080/prism-agent/issue-credentials/credential-offers' \
     -H 'accept: application/json' \
     -H 'Content-Type: application/json' \
+    -H "apiKey: $API_KEY" \
     -d '{
           "schemaId": "schema:1234",
           "subjectId": "did:prism:subjectIdentifier",
@@ -103,7 +104,8 @@ The Issuer can then use the [`/issue-credentials/records/{recordId}/issue-creden
 # and the record achieved `RequestReceived` state
 curl -X POST \
     "http://localhost:8080/prism-agent/issue-credentials/records/$issuer_record_id/issue-credential" \
-    -H "Content-Type: application/json"
+    -H "Content-Type: application/json" \
+    -H "apiKey: $API_KEY"
 ```
 
 When this endpoint gets called, the state of the record will change to `CredentialPending,` and after processing, it will change to `CredentialGenerated.`
@@ -140,7 +142,8 @@ You could check if a new credential offer is available using [`/issue-credential
 ```shell
 # Holder GET request to retrieve credential records
 curl "http://localhost:8090/prism-agent/issue-credentials/records" \
-    -H "Content-Type: application/json"
+    -H "Content-Type: application/json" \
+    -H "apiKey: $API_KEY"
 ```
 
 
@@ -156,6 +159,7 @@ To accept the offer, the Holder can make a `POST` request to the [`/issue-creden
 curl -X POST "http://localhost:8090/prism-agent/issue-credentials/records/$holder_record_id/accept-offer" \
     -H 'accept: application/json' \
     -H 'Content-Type: application/json' \
+    -H "apiKey: $API_KEY" \
     -d '{
           "subjectId": "did:prism:subjectIdentifier"
      }'

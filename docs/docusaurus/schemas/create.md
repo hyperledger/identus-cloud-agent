@@ -147,7 +147,7 @@ Specification.
 curl -X 'POST' \
   'https://k8s-dev.atalaprism.io/prism-agent/schema-registry/schemas' \
   -H 'accept: application/json' \
-  -H 'apikey: $APIKEY' \
+  -H "apikey: $API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
   "name": "driving-license",
@@ -273,7 +273,7 @@ Send the GET request to retrieve the schema. Curl example is the following:
 curl -X 'GET' \
   'https://k8s-dev.atalaprism.io/prism-agent/schema-registry/schemas/3f86a73f-5b78-39c7-af77-0c16123fa9c2' \
   -H 'accept: application/json' \
-  -H 'apikey: $APIKEY'
+  -H "apiKey: $API_KEY"
 ```
 
 The response should contain the JSON object representing the schema you just created.

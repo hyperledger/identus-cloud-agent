@@ -13,6 +13,10 @@ Throughout all code examples in tutorials, the following conventions are in use:
 * Holder Agent is hosted at `http://localhost:8090/prism-agent/`
 * Verifier Agent is hosted at `http://localhost:8100/prism-agent/`
 
-:::info To use the PRISM Cloud Agents, you must include an `apiKey` header in your requests. You can configure the value of the key, so make sure to replace `{API_KEY}` with your key value in the CURL commands supplied throughout this tutorial. ::: 
+:::info To use the PRISM Cloud Agents, you must include an `apiKey` header in your requests. You can configure the key, and in some instances, it will be provided to you, so make sure to create an environment variable with the proper value.
+```shell
+export API_KEY=<API Key value>
+```
+Alternatively, replace `$API_KEY` with your key in the CURL commands supplied throughout this tutorial. ::: 
 
 

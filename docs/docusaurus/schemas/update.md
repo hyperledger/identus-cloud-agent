@@ -190,7 +190,7 @@ The curl example might be the following:
 curl -X 'PUT' \
   'https://k8s-dev.atalaprism.io/prism-agent/schema-registry/schemas/f2bfbf78-8bd6-4cc6-8b39-b3a25e01e8ea' \
   -H 'accept: application/json' \
-  -H 'apikey: $APIKEY' \
+  -H "apiKey: $API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
   "name": "driving-license",

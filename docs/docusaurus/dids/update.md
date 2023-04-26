@@ -52,6 +52,7 @@ Given the DID Controller has a DID on PRISM Agent and that DID is published, he 
 
 ```bash
 curl --location --request GET 'http://localhost:8080/prism-agent/dids/{didRef}' \
+--header "apiKey: $API_KEY" \
 --header 'Accept: */*'
 ```
 
@@ -95,6 +96,7 @@ The DID Controller submits a DID update request to `POST /did-registrar/dids/{di
 curl --location --request POST 'http://localhost:8080/prism-agent/did-registrar/dids/did:prism:4262377859267f308a06ec6acf211fbe4d6745aa9e637e04548771169616fb86/updates' \
 --header 'Content-Type: application/json' \
 --header 'Accept: application/json' \
+--header "apiKey: $API_KEY" \
 --data-raw '{
     "actions": [
         {

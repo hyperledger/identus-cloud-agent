@@ -46,6 +46,7 @@ Given the DID Controller has a DID on PRISM Agent and that DID is published, he 
 
 ```bash
 curl --location --request GET 'http://localhost:8080/prism-agent/dids/{didRef}' \
+--header "apiKey: $API_KEY" \
 --header 'Accept: */*'
 ```
 
@@ -71,6 +72,7 @@ The DID deactivation can be performed by calling `POST /did-registrar/dids/{didR
 
 ```bash
 curl --location --request POST 'http://localhost:8080/prism-agent/did-registrar/dids/{didRef}/deactivations' \
+--header "apiKey: $API_KEY" \
 --header 'Accept: application/json'
 ```
 
