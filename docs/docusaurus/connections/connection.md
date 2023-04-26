@@ -37,7 +37,7 @@ Please check the full [PRISM Agent API](/agent-api) specification for more detai
 3.  Accept the connection request (connection moves to `ConnectionResponsePending` state)
 4.  Send the connection response via the DIDComm Agent (connection achieves `ConnectionResponseSent` state)
 
-The following Mermaid diagram represents the Inviter's Connection state transitions:
+The following diagram represents the Inviter's Connection state transitions:
 ```mermaid
 ---
 title: Inviter Connection State
@@ -58,7 +58,7 @@ ConnectionResponseSent --> [*]
 3.  Send the connection request via [DIDComm](https://github.com/input-output-hk/atala-prism-docs/blob/main/documentation/docs/concepts/glossary.md#didcomm) (connection achieves `ConnectionRequestSent` state)
 4.  Receive the connection response (connection achieves `ConnectionResponseReceived` state)
 
-The following Mermaid diagram represents the Invitee's Connection state transitions:
+The following diagram represents the Invitee's Connection state transitions:
 ```mermaid
 ---
 title: Invitee Connection State
