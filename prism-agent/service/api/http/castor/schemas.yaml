@@ -8,138 +8,6 @@ components:
         scheduledOperation:
           $ref: "#/components/schemas/DidOperationSubmission"
 
-    DIDResolutionResult:
-      type: object
-      required:
-        - "@context"
-        - didDocumentMetadata
-        - didResolutionMetadata
-      properties:
-        "@context":
-          type: string
-          example: "https://w3id.org/did-resolution/v1"
-        didDocument:
-          $ref: "#/components/schemas/DIDDocument"
-        didDocumentMetadata:
-          $ref: "#/components/schemas/DIDDocumentMetadata"
-        didResolutionMetadata:
-          $ref: "#/components/schemas/DIDResolutionMetadata"
-
-    DIDDocument:
-      type: object
-      description: A W3C compliant Prism DID document representation.
-      required:
-        - "@context"
-        - id
-      properties:
-        "@context":
-          type: array
-          items:
-            type: string
-            example: "https://www.w3.org/ns/did/v1"
-        id:
-          type: string
-          description: |
-            [DID subject](https://www.w3.org/TR/did-core/#did-subject).
-            The value must match the DID that was given to the resolver.
-          example: "did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff"
-        controller:
-          type: string
-          description: |
-            [DID controller](https://www.w3.org/TR/did-core/#did-controller)
-          example: "did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff"
-        verificationMethod:
-          type: array
-          items:
-            $ref: "#/components/schemas/VerificationMethod"
-        authentication:
-          type: array
-          items:
-            $ref: "#/components/schemas/VerificationMethodRef"
-        assertionMethod:
-          type: array
-          items:
-            $ref: "#/components/schemas/VerificationMethodRef"
-        keyAgreement:
-          type: array
-          items:
-            $ref: "#/components/schemas/VerificationMethodRef"
-        capabilityInvocation:
-          type: array
-          items:
-            $ref: "#/components/schemas/VerificationMethodRef"
-        capabilityDelegation:
-          type: array
-          items:
-            $ref: "#/components/schemas/VerificationMethodRef"
-        service:
-          type: array
-          items:
-            $ref: "#/components/schemas/Service"
-
-    DIDDocumentMetadata:
-      type: object
-      description: |
-        [DID document metadata](https://www.w3.org/TR/did-core/#did-document-metadata)
-      properties:
-        deactivated:
-          type: boolean
-          description: If a DID has been deactivated, DID document metadata MUST include this property with the boolean value true. If a DID has not been deactivated, this property is OPTIONAL, but if included, MUST have the boolean value false.
-        canonicalId:
-          type: string
-          description: |
-            A DID in canonical form.
-
-            If a DID is in long form and has been published, DID document metadata MUST contain a `canonicalId`` property with the short form DID as its value.
-
-            If a DID in short form or has not been published, DID document metadata MUST NOT contain a `canonicalId` property.
-
-    DIDResolutionMetadata:
-      type: object
-      description: |
-        [DID resolution metadata](https://www.w3.org/TR/did-core/#did-resolution-metadata)
-      properties:
-        error:
-          type: string
-          description: Resolution error constant according to [DID spec registries](https://www.w3.org/TR/did-spec-registries/#error)
-          example: invalidDid
-        errorMessage:
-          type: string
-          description: Resolution error message
-          example: The initialState does not match the suffix
-        contentType:
-          type: string
-          description: The media type of the returned DID document
-          example: application/did+ld+json
-
-    VerificationMethod:
-      type: object
-      description: |
-        A cryptographic public key expressed in the DID document.
-        https://www.w3.org/TR/did-core/#verification-methods
-      required:
-        - id
-        - type
-        - controller
-        - publicKeyJwk
-      properties:
-        id:
-          type: string
-          example: "did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff#key-1"
-        type:
-          type: string
-          example: "EcdsaSecp256k1VerificationKey2019"
-        controller:
-          type: string
-          example: "did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff"
-        publicKeyJwk:
-          $ref: "#/components/schemas/PublicKeyJwk"
-
-    VerificationMethodRef:
-      type: string
-      description: A reference to a `verificationMethod`
-      example: did:prism:c7bd808e8e135236d7262ecf5e639b8f9d22bd886f59a4e6c909486846ca8319#key-1
-
     CreateManagedDidRequest:
       type: object
       required:
@@ -159,7 +27,7 @@ components:
             services:
               type: array
               items:
-                $ref: "#/components/schemas/Service"
+                $ref: "../tapir-generated.yaml#/components/schemas/Service"
 
     CreateManagedDIDResponse:
       type: object
@@ -209,7 +77,7 @@ components:
                     description: ID of key to remove from DID document
                     example: key-1
               addService:
-                $ref: "#/components/schemas/Service"
+                $ref: "../tapir-generated.yaml#/components/schemas/Service"
               removeService:
                 type: object
                 required:
@@ -273,58 +141,6 @@ components:
             - CREATED
             - PUBLICATION_PENDING
             - PUBLISHED
-
-    PublicKeyJwk:
-      type: object
-      required:
-        - kty
-      properties:
-        crv:
-          type: string
-          example: "secp256k1"
-        x:
-          type: string
-          example: "38M1FDts7Oea7urmseiugGW7tWc3mLpJh6rKe7xINZ8"
-        y:
-          type: string
-          example: "nDQW6XZ7b_u2Sy9slofYLlG03sOEoug3I0aAPQ0exs4"
-        kty:
-          type: string
-          example: "EC"
-
-    Service:
-      type: object
-      description: |
-        A service expressed in the DID document.
-        https://www.w3.org/TR/did-core/#services
-      required:
-        - id
-        - type
-        - serviceEndpoint
-      properties:
-        id:
-          type: string
-          example: "service-1"
-        type:
-          type: string
-          description: |
-            Service type.
-            Can contain multiple possible values as described in the [Create DID operation](https://github.com/input-output-hk/prism-did-method-spec/blob/main/w3c-spec/PRISM-method.md#create-did) under the construction section.
-
-            *Known issue: This is currently misaligned with Prism DID method. This will be fixed in the future version of Prism Agent*
-          enum:
-            - LinkedDomains
-          example: LinkedDomains
-        serviceEndpoint:
-          type: array
-          description: |
-            Application service endpoints.
-            Can contain multiple possible values as described in the [Create DID operation](https://github.com/input-output-hk/prism-did-method-spec/blob/main/w3c-spec/PRISM-method.md#create-did) under the construction section.
-
-            *Known issue: This is currently misaligned with Prism DID method. This will be fixed in the future version of Prism Agent*
-          items:
-            type: string
-            example: "https://bar.example.com/"
 
     ManagedDIDKeyTemplate:
       type: object

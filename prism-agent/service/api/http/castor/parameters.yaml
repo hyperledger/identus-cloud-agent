@@ -9,21 +9,3 @@ components:
       schema:
         type: string
       example: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff
-    resolutionAcceptOption:
-      in: header
-      name: Accept
-      required: false
-      description: |
-        Represents [accept resolution option](https://www.w3.org/TR/did-core/#did-resolution-options).
-
-        For [DID resolution result](https://w3c-ccg.github.io/did-resolution/#did-resolution-result), `application/ld+json;profile="https://w3id.org/did-resolution"` can be used.
-
-        For [DID document representation](https://www.w3.org/TR/did-core/#representations), `application/<format>` can be used.
-
-        Default to `application/ld+json;profile="https://w3id.org/did-resolution"` if not specified.
-      schema:
-        type: string
-        enum:
-          - application/did+ld+json
-          - application/ld+json;profile="https://w3id.org/did-resolution"
-        example: application/ld+json;profile="https://w3id.org/did-resolution"
