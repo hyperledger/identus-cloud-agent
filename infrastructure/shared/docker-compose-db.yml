@@ -1,0 +1,28 @@
+---
+version: "3.8"
+
+services:
+  ##########################
+  # Database
+  ##########################
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_MULTIPLE_DATABASES: "castor,pollux,connect,iris,agent,node_db"
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - pg_data_db:/var/lib/postgresql/data
+      - ./postgres/init-script.sh:/docker-entrypoint-initdb.d/init-script.sh
+      - ./postgres/max_conns.sql:/docker-entrypoint-initdb.d/max_conns.sql
+    ports:
+      - "5433:5432"
+
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "iris"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pg_data_db:

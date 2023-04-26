@@ -16,8 +16,9 @@ import org.flywaydb.core.extensibility.AppliedMigration
 import io.iohk.atala.pollux.core.service.CredentialSchemaServiceImpl
 import io.iohk.atala.pollux.sql.repository.JdbcCredentialSchemaRepository
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
-import zhttp.http.*
-import zhttp.service.Server
+import zio.http.*
+import zio.http.model.*
+import zio.http.ZClient.ClientLive
 import zio.metrics.connectors.prometheus.PrometheusPublisher
 import zio.metrics.connectors.{MetricsConfig, prometheus}
 import zio.metrics.jvm.DefaultJvmMetrics
@@ -28,43 +29,10 @@ import io.circe.parser.*
 import io.circe.syntax.*
 import io.iohk.atala.agent.server.health.HealthInfo
 import io.iohk.atala.connect.controller.ConnectionControllerImpl
+import io.iohk.atala.castor.controller.DIDControllerImpl
 
 import java.security.Security
-
-object SystemInfoApp extends ZIOAppDefault {
-  private val metricsConfig = ZLayer.succeed(MetricsConfig(5.seconds))
-
-  def run =
-    for {
-      systemServicePort <- System.env("SYSTEM_SERVICE_PORT").map {
-        case Some(s) if s.toIntOption.isDefined => s.toInt
-        case _                                  => 8082
-      }
-      _ <- Server
-        .start(
-          port = systemServicePort,
-          http = Http.collectZIO[Request] {
-            case Method.GET -> !! / "metrics" =>
-              ZIO.serviceWithZIO[PrometheusPublisher](_.get.map(Response.text))
-            case Method.GET -> !! / "health" =>
-              ZIO
-                .succeed(
-                  Response.json(
-                    HealthInfo(
-                      version = BuildInfo.version
-                    ).asJson.toString
-                  )
-                )
-          }
-        )
-        .provide(
-          metricsConfig,
-          prometheus.publisherLayer,
-          prometheus.prometheusLayer
-        )
-    } yield ()
-
-}
+import io.iohk.atala.agent.server.http.HttpRoutes
 
 object AgentApp extends ZIOAppDefault {
 
@@ -85,14 +53,31 @@ object AgentApp extends ZIOAppDefault {
     _ <- ZIO.serviceWithZIO[AgentMigrations](_.migrate)
   } yield ()
 
+  def serverProgram(didCommServicePort: Int) = {
+    val server = {
+      val config = ServerConfig(address = new java.net.InetSocketAddress(didCommServicePort))
+      ServerConfig.live(config)(using Trace.empty) >>> Server.live
+    }
+    for {
+      _ <- ZIO.logInfo(s"Server Started on port $didCommServicePort")
+      myServer <- {
+        Server
+          .serve(Modules.didCommServiceEndpoint ++ SystemInfoApp.app)
+          .provideSomeLayer(server)
+          .debug *> ZIO.logWarning(s"Server STOP (on port $didCommServicePort)")
+      }.fork
+    } yield (myServer)
+  }
+
   def appComponents(didCommServicePort: Int, restServicePort: Int) = for {
     _ <- Modules.issueCredentialDidCommExchangesJob.debug.fork
     _ <- Modules.presentProofExchangeJob.debug.fork
     _ <- Modules.connectDidCommExchangesJob.debug.fork
-    _ <- Modules.didCommServiceEndpoint(didCommServicePort).debug.fork
+    server <- serverProgram(didCommServicePort)
     _ <- Modules.syncDIDPublicationStateFromDltJob.fork
     _ <- Modules.app(restServicePort).fork
     _ <- Modules.zioApp.fork
+    _ <- server.join *> ZIO.log(s"Server End")
     _ <- ZIO.never
   } yield ()
 
@@ -128,7 +113,7 @@ object AgentApp extends ZIOAppDefault {
 
       didCommServiceUrl <- System.env("DIDCOMM_SERVICE_URL").map {
         case Some(s) => s
-        case _       => "http://localhost"
+        case _       => "http://localhost:8090"
       }
       _ <- ZIO.logInfo(s"DIDComm Service URL => $didCommServiceUrl")
 
@@ -156,7 +141,8 @@ object AgentApp extends ZIOAppDefault {
         RepoModule.credentialSchemaServiceLayer,
         AppModule.manageDIDServiceLayer,
         RepoModule.verificationPolicyServiceLayer,
-        ConnectionControllerImpl.layer
+        ConnectionControllerImpl.layer,
+        DIDControllerImpl.layer,
       )
     } yield app
 
@@ -169,4 +155,4 @@ object AgentApp extends ZIOAppDefault {
 
 }
 
-object MainApp extends ZIOApp.Proxy(SystemInfoApp <> DefaultJvmMetrics.app <> AgentApp)
+object MainApp extends ZIOApp.Proxy(DefaultJvmMetrics.app <> AgentApp)

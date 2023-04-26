@@ -40,64 +40,7 @@ paths:
   # Castor
   # ----------------------------------
   /dids/{didRef}:
-    get:
-      operationId: getDid
-      tags: ["DID"]
-      summary: Resolve Prism DID to a W3C representation
-      description: |
-        Resolve Prism DID to a W3C DID document representation.
-        The response can be the [DID resolution result](https://w3c-ccg.github.io/did-resolution/#did-resolution-result)
-        or [DID document representation](https://www.w3.org/TR/did-core/#representations) depending on the `Accept` request header.
-        The response is implemented according to [resolver HTTP binding](https://w3c-ccg.github.io/did-resolution/#bindings-https) in the DID resolution spec.
-      parameters:
-        - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
-        - $ref: "./castor/parameters.yaml#/components/parameters/resolutionAcceptOption"
-      responses:
-        "200":
-          description: The resolution result or W3C DID document representation
-          content:
-            application/ld+json;profile="https://w3id.org/did-resolution":
-              schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/DIDResolutionResult"
-            application/did+ld+json:
-              schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/DIDDocument"
-        "400":
-          description: Invalid input
-          content:
-            application/ld+json;profile="https://w3id.org/did-resolution":
-              schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/DIDResolutionResult"
-        "404":
-          description: Not found
-          content:
-            application/ld+json;profile="https://w3id.org/did-resolution":
-              schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/DIDResolutionResult"
-        "406":
-          description: Representation not supported
-          content:
-            application/ld+json;profile="https://w3id.org/did-resolution":
-              schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/DIDResolutionResult"
-        "410":
-          description: DID Deactivated
-          content:
-            application/ld+json;profile="https://w3id.org/did-resolution":
-              schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/DIDResolutionResult"
-        "500":
-          description: Internal error
-          content:
-            application/ld+json;profile="https://w3id.org/did-resolution":
-              schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/DIDResolutionResult"
-        "501":
-          description: Method not supported
-          content:
-            application/ld+json;profile="https://w3id.org/did-resolution":
-              schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/DIDResolutionResult"
+    $ref: "./tapir-generated.yaml#/paths/~1dids~1{didRef}"
 
   /did-registrar/dids:
     get:
