@@ -141,11 +141,11 @@ Specification.
 
 3. Send the POST request to create the new schema. The response should contain a GUID that uniquely identifies the new
    schema.
-   Curl example for the `k8s-dev.atalaprism.io` environment is the following:
+   Curl example is the following:
 
 ```shell
 curl -X 'POST' \
-  'https://k8s-dev.atalaprism.io/prism-agent/schema-registry/schemas' \
+  'http://localhost:8080/prism-agent/schema-registry/schemas' \
   -H 'accept: application/json' \
   -H "apikey: $API_KEY" \
   -H 'Content-Type: application/json' \
@@ -271,7 +271,7 @@ Send the GET request to retrieve the schema. Curl example is the following:
 
 ```shell
 curl -X 'GET' \
-  'https://k8s-dev.atalaprism.io/prism-agent/schema-registry/schemas/3f86a73f-5b78-39c7-af77-0c16123fa9c2' \
+  'http://localhost:8080/prism-agent/schema-registry/schemas/3f86a73f-5b78-39c7-af77-0c16123fa9c2' \
   -H 'accept: application/json' \
   -H "apiKey: $API_KEY"
 ```
