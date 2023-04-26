@@ -298,7 +298,7 @@ lazy val D_PrismAgent = new {
 
   val quillDoobie =
     "io.getquill" %% "quill-doobie" % V.quill exclude ("org.scala-lang.modules", "scala-java8-compat_3")
-  val postgresql = "org.postgresql" % "postgresql" % "42.2.8"
+  val postgresql = "org.postgresql" % "postgresql" % "42.2.27"
   val quillJdbcZio =
     "io.getquill" %% "quill-jdbc-zio" % V.quill exclude ("org.scala-lang.modules", "scala-java8-compat_3")
 
