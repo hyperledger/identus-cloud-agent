@@ -741,10 +741,10 @@ releaseProcess := Seq[ReleaseStep](
   runClean,
   runTest,
   setReleaseVersion,
-  ReleaseStep(releaseStepTask(prismAgentServer / Docker / publish)),
+  ReleaseStep(releaseStepTask(prismAgentServer / Docker / stage)),
   sys.env
     .get("RELEASE_MEDIATOR") match {
-    case Some(value) => ReleaseStep(releaseStepTask(mediator / Docker / publish))
+    case Some(value) => ReleaseStep(releaseStepTask(mediator / Docker / stage))
     case None =>
       ReleaseStep(action = st => {
         println("INFO: prism mediator release disabled!")
