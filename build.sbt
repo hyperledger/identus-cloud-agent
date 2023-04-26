@@ -41,7 +41,7 @@ lazy val V = new {
   val zioConfig = "3.0.7"
   val zioLogging = "2.0.0"
   val zioJson = "0.3.0"
-  val zioHttp = "0.0.3"
+  val zioHttp = "0.0.5"
   val zioCatsInterop = "3.3.0"
   val zioMetrics = "2.0.6"
 
