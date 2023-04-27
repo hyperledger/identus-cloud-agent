@@ -27,9 +27,8 @@ trait OASDomainModelHelper {
   extension (service: Service) {
     def toDomain: Either[String, castorDomain.Service] = {
       for {
-        serviceEndpoint <- service.serviceEndpoint.traverse(s =>
-          Uri.parseTry(s).toEither.left.map(_ => s"unable to parse serviceEndpoint $s as URI")
-        )
+        serviceEndpoint <- service.serviceEndpoint
+          .traverse(s => Uri.parseTry(s).toEither.left.map(_ => s"unable to parse serviceEndpoint $s as URI"))
         serviceType <- castorDomain.ServiceType
           .parseString(service.`type`)
           .toRight(s"unsupported serviceType ${service.`type`}")
@@ -198,88 +197,6 @@ trait OASDomainModelHelper {
       ZIO
         .fromTry(Try(io.iohk.atala.pollux.core.model.DidCommID(str)))
         .mapError(e => HttpServiceError.InvalidPayload(s"Error parsing string as DidCommID: ${e.getMessage()}"))
-  }
-
-  extension (resolution: (castorDomain.w3c.DIDDocumentMetadataRepr, castorDomain.w3c.DIDDocumentRepr)) {
-    def toOAS: OASModelPatches.DIDResolutionResult = {
-      val (metadata, didDoc) = resolution
-      val isDeactivated = metadata.deactivated
-      OASModelPatches.DIDResolutionResult(
-        `@context` = "https://w3id.org/did-resolution/v1",
-        didDocument =
-          if (isDeactivated) None
-          else
-            Some(
-              OASModelPatches.DIDDocument(
-                `@context` = Seq("https://www.w3.org/ns/did/v1"),
-                id = didDoc.id,
-                controller = Some(didDoc.controller),
-                verificationMethod = Some(didDoc.verificationMethod.map(_.toOAS)),
-                authentication = Some(didDoc.authentication.map(_.toOAS)),
-                assertionMethod = Some(didDoc.assertionMethod.map(_.toOAS)),
-                keyAgreement = Some(didDoc.keyAgreement.map(_.toOAS)),
-                capabilityInvocation = Some(didDoc.capabilityInvocation.map(_.toOAS)),
-                service = Some(didDoc.service.map(_.toOAS))
-              )
-            ),
-        didDocumentMetadata = DIDDocumentMetadata(
-          deactivated = Some(metadata.deactivated),
-          canonicalId = Some(metadata.canonicalId)
-        ),
-        didResolutionMetadata = DIDResolutionMetadata()
-      )
-    }
-  }
-
-  extension (resolutionError: castorDomain.w3c.DIDResolutionErrorRepr) {
-    def toOAS: OASModelPatches.DIDResolutionResult = {
-      OASModelPatches.DIDResolutionResult(
-        `@context` = "https://w3id.org/did-resolution/v1",
-        didDocument = None,
-        didDocumentMetadata = DIDDocumentMetadata(),
-        didResolutionMetadata =
-          DIDResolutionMetadata(error = Some(resolutionError.value), errorMessage = resolutionError.errorMessage)
-      )
-    }
-  }
-
-  extension (publicKeyRepr: castorDomain.w3c.PublicKeyRepr) {
-    def toOAS: VerificationMethod = {
-      VerificationMethod(
-        id = publicKeyRepr.id,
-        `type` = publicKeyRepr.`type`,
-        controller = publicKeyRepr.controller,
-        publicKeyJwk = publicKeyRepr.publicKeyJwk.toOAS
-      )
-    }
-  }
-
-  extension (publicKeyReprOrRef: castorDomain.w3c.PublicKeyReprOrRef) {
-    def toOAS: String = {
-      publicKeyReprOrRef match {
-        case s: String         => s
-        case pk: PublicKeyRepr => throw Exception("Embedded public key is not yet supported in W3C representation")
-      }
-    }
-  }
-
-  extension (publicKeyJwk: castorDomain.w3c.PublicKeyJwk) {
-    def toOAS: PublicKeyJwk = {
-      PublicKeyJwk(
-        crv = Some(publicKeyJwk.crv),
-        x = Some(publicKeyJwk.x),
-        y = Some(publicKeyJwk.y),
-        kty = publicKeyJwk.kty,
-      )
-    }
-  }
-
-  extension (service: castorDomain.w3c.ServiceRepr) {
-    def toOAS: Service = Service(
-      id = service.id,
-      `type` = service.`type`,
-      serviceEndpoint = service.serviceEndpoint // FIXME @pat
-    )
   }
 
   extension (didDetail: walletDomain.ManagedDIDDetail) {

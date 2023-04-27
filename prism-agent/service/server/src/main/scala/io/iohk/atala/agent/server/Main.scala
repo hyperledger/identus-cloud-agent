@@ -1,71 +1,36 @@
 package io.iohk.atala.agent.server
 
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
-import zio.*
-import io.iohk.atala.mercury.*
-import org.didcommx.didcomm.DIDComm
-import io.iohk.atala.resolvers.UniversalDidResolver
-import io.iohk.atala.castor.sql.repository.Migrations as CastorMigrations
-import io.iohk.atala.pollux.sql.repository.Migrations as PolluxMigrations
-import io.iohk.atala.connect.sql.repository.Migrations as ConnectMigrations
-import io.iohk.atala.agent.server.sql.Migrations as AgentMigrations
-import io.iohk.atala.agent.walletapi.service.ManagedDIDService
-import io.iohk.atala.resolvers.DIDResolver
-import io.iohk.atala.agent.server.http.ZioHttpClient
-import org.flywaydb.core.extensibility.AppliedMigration
-import io.iohk.atala.pollux.core.service.{CredentialSchemaServiceImpl, URIDereferencer}
-import io.iohk.atala.pollux.sql.repository.JdbcCredentialSchemaRepository
-import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
-import zhttp.http.*
-import zhttp.service.{ChannelFactory, Client, EventLoopGroup, Server}
-import zio.metrics.connectors.prometheus.PrometheusPublisher
-import zio.metrics.connectors.{MetricsConfig, prometheus}
-import zio.metrics.jvm.DefaultJvmMetrics
-import io.iohk.atala.agent.server.buildinfo.BuildInfo
 import io.circe.*
 import io.circe.generic.auto.*
 import io.circe.parser.*
 import io.circe.syntax.*
+import io.iohk.atala.agent.server.buildinfo.BuildInfo
 import io.iohk.atala.agent.server.health.HealthInfo
+import io.iohk.atala.agent.server.http.{HttpRoutes, ZioHttpClient}
+import io.iohk.atala.agent.server.sql.Migrations as AgentMigrations
+import io.iohk.atala.agent.walletapi.service.ManagedDIDService
+import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
+import io.iohk.atala.castor.controller.DIDControllerImpl
+import io.iohk.atala.castor.sql.repository.Migrations as CastorMigrations
 import io.iohk.atala.connect.controller.ConnectionControllerImpl
+import io.iohk.atala.connect.sql.repository.Migrations as ConnectMigrations
+import io.iohk.atala.mercury.*
+import io.iohk.atala.pollux.core.service.{CredentialSchemaServiceImpl, URIDereferencer}
+import io.iohk.atala.pollux.sql.repository.{JdbcCredentialSchemaRepository, Migrations as PolluxMigrations}
+import io.iohk.atala.resolvers.{DIDResolver, UniversalDidResolver}
+import org.didcommx.didcomm.DIDComm
+import org.flywaydb.core.extensibility.AppliedMigration
+import zio.*
+import zio.http.*
+import zio.http.ZClient.ClientLive
+import zio.http.model.*
+import zio.metrics.connectors.prometheus.PrometheusPublisher
+import zio.metrics.connectors.{MetricsConfig, prometheus}
+import zio.metrics.jvm.DefaultJvmMetrics
 
 import java.net.URI
 import java.security.Security
-
-object SystemInfoApp extends ZIOAppDefault {
-  private val metricsConfig = ZLayer.succeed(MetricsConfig(5.seconds))
-
-  def run =
-    for {
-      systemServicePort <- System.env("SYSTEM_SERVICE_PORT").map {
-        case Some(s) if s.toIntOption.isDefined => s.toInt
-        case _                                  => 8082
-      }
-      _ <- Server
-        .start(
-          port = systemServicePort,
-          http = Http.collectZIO[Request] {
-            case Method.GET -> !! / "metrics" =>
-              ZIO.serviceWithZIO[PrometheusPublisher](_.get.map(Response.text))
-            case Method.GET -> !! / "health" =>
-              ZIO
-                .succeed(
-                  Response.json(
-                    HealthInfo(
-                      version = BuildInfo.version
-                    ).asJson.toString
-                  )
-                )
-          }
-        )
-        .provide(
-          metricsConfig,
-          prometheus.publisherLayer,
-          prometheus.prometheusLayer
-        )
-    } yield ()
-
-}
 
 object AgentApp extends ZIOAppDefault {
 
@@ -86,14 +51,31 @@ object AgentApp extends ZIOAppDefault {
     _ <- ZIO.serviceWithZIO[AgentMigrations](_.migrate)
   } yield ()
 
+  def serverProgram(didCommServicePort: Int) = {
+    val server = {
+      val config = ServerConfig(address = new java.net.InetSocketAddress(didCommServicePort))
+      ServerConfig.live(config)(using Trace.empty) >>> Server.live
+    }
+    for {
+      _ <- ZIO.logInfo(s"Server Started on port $didCommServicePort")
+      myServer <- {
+        Server
+          .serve(Modules.didCommServiceEndpoint ++ SystemInfoApp.app)
+          .provideSomeLayer(server)
+          .debug *> ZIO.logWarning(s"Server STOP (on port $didCommServicePort)")
+      }.fork
+    } yield (myServer)
+  }
+
   def appComponents(didCommServicePort: Int, restServicePort: Int) = for {
     _ <- Modules.issueCredentialDidCommExchangesJob.debug.fork
     _ <- Modules.presentProofExchangeJob.debug.fork
     _ <- Modules.connectDidCommExchangesJob.debug.fork
-    _ <- Modules.didCommServiceEndpoint(didCommServicePort).debug.fork
+    server <- serverProgram(didCommServicePort)
     _ <- Modules.syncDIDPublicationStateFromDltJob.fork
     _ <- Modules.app(restServicePort).fork
     _ <- Modules.zioApp.fork
+    _ <- server.join *> ZIO.log(s"Server End")
     _ <- ZIO.never
   } yield ()
 
@@ -104,7 +86,7 @@ object AgentApp extends ZIOAppDefault {
           response <- Client.request(uri.toString)
           body <- response.body.asString
         } yield body
-        result.provide(ChannelFactory.auto ++ EventLoopGroup.auto())
+        result.provide(Scope.default >>> Client.default)
       }
     }
   }
@@ -141,7 +123,7 @@ object AgentApp extends ZIOAppDefault {
 
       didCommServiceUrl <- System.env("DIDCOMM_SERVICE_URL").map {
         case Some(s) => s
-        case _       => "http://localhost"
+        case _       => "http://localhost:8090"
       }
       _ <- ZIO.logInfo(s"DIDComm Service URL => $didCommServiceUrl")
 
@@ -170,6 +152,7 @@ object AgentApp extends ZIOAppDefault {
         AppModule.manageDIDServiceLayer,
         RepoModule.verificationPolicyServiceLayer,
         ConnectionControllerImpl.layer,
+        DIDControllerImpl.layer,
         uriDereferencerLayer
       )
     } yield app
@@ -183,4 +166,4 @@ object AgentApp extends ZIOAppDefault {
 
 }
 
-object MainApp extends ZIOApp.Proxy(SystemInfoApp <> DefaultJvmMetrics.app <> AgentApp)
+object MainApp extends ZIOApp.Proxy(DefaultJvmMetrics.app <> AgentApp)

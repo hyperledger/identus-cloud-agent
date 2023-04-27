@@ -796,7 +796,7 @@ private class CredentialServiceImpl(
       credentials: Seq[W3cCredentialPayload],
       issuer: Issuer
   ): IO[CredentialServiceError, PublishedBatchData] = {
-    import collection.JavaConverters.*
+    import scala.jdk.CollectionConverters.*
 
     val hashes = credentials
       .map { c =>

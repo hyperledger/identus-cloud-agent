@@ -41,7 +41,7 @@ lazy val V = new {
   val zioConfig = "3.0.2"
   val zioLogging = "2.0.0"
   val zioJson = "0.3.0"
-  val zioHttp = "2.0.0-RC11"
+  val zioHttp = "0.0.3"
   val zioCatsInterop = "3.3.0"
   val zioMetrics = "2.0.6"
 
@@ -81,14 +81,13 @@ lazy val D = new {
   val zioLog: ModuleID = "dev.zio" %% "zio-logging" % V.zioLogging
   val zioSLF4J: ModuleID = "dev.zio" %% "zio-logging-slf4j" % V.zioLogging
   val zioJson: ModuleID = "dev.zio" %% "zio-json" % V.zioJson
-  val zioHttp: ModuleID = "dev.zio" %% "zio-http" % "0.0.3" // TODO version
-  val zioHttpD11 = "io.d11" %% "zhttp" % V.zioHttp // FIXME!!!!!!!
-  val zioCatsInterop = "dev.zio" %% "zio-interop-cats" % V.zioCatsInterop
-  val zioMetrics = "dev.zio" %% "zio-metrics-connectors" % V.zioMetrics
+  val zioHttp: ModuleID = "dev.zio" %% "zio-http" % V.zioHttp
+  val zioCatsInterop: ModuleID = "dev.zio" %% "zio-interop-cats" % V.zioCatsInterop
+  val zioMetrics: ModuleID = "dev.zio" %% "zio-metrics-connectors" % V.zioMetrics
 
-  val zioConfig = "dev.zio" %% "zio-config" % V.zioConfig
-  val zioConfigMagnolia = "dev.zio" %% "zio-config-magnolia" % V.zioConfig
-  val zioConfigTypesafe = "dev.zio" %% "zio-config-typesafe" % V.zioConfig
+  val zioConfig: ModuleID = "dev.zio" %% "zio-config" % V.zioConfig
+  val zioConfigMagnolia: ModuleID = "dev.zio" %% "zio-config-magnolia" % V.zioConfig
+  val zioConfigTypesafe: ModuleID = "dev.zio" %% "zio-config-typesafe" % V.zioConfig
 
   val circeCore: ModuleID = "io.circe" %% "circe-core" % V.circe
   val circeGeneric: ModuleID = "io.circe" %% "circe-generic" % V.circe
@@ -320,7 +319,7 @@ lazy val D_PrismAgent = new {
     D.zioConfigTypesafe,
     D.zioJson,
     logback,
-    D.zioHttpD11,
+    D.zioHttp,
     D.zioMetrics,
   )
   val akkaHttpDependencies: Seq[ModuleID] =
@@ -618,7 +617,7 @@ lazy val polluxCore = project
   )
   .dependsOn(shared)
   .dependsOn(polluxVcJWT)
-  .dependsOn(protocolIssueCredential, protocolPresentProof, resolver)
+  .dependsOn(protocolIssueCredential, protocolPresentProof, resolver, agentDidcommx)
 
 lazy val polluxDoobie = project
   .in(file("pollux/lib/sql-doobie"))
@@ -685,12 +684,7 @@ lazy val prismAgentServer = project
     Compile / sourceGenerators += openApiGenerateClasses,
     openApiGeneratorSpec := baseDirectory.value / ".." / "api" / "http/prism-agent-openapi-spec.yaml",
     openApiGeneratorConfig := baseDirectory.value / "openapi/generator-config/config.yaml",
-    openApiGeneratorImportMapping := Seq(
-      "DIDDocument",
-      "DIDResolutionResult"
-    )
-      .map(model => (model, s"io.iohk.atala.agent.server.http.model.OASModelPatches.$model"))
-      .toMap,
+    openApiGeneratorImportMapping := Map.empty,
     Docker / maintainer := "atala-coredid@iohk.io",
     Docker / dockerUsername := Some("input-output-hk"),
     Docker / dockerRepository := Some("ghcr.io"),
