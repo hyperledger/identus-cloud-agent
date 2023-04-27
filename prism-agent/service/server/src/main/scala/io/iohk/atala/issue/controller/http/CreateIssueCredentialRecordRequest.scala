@@ -13,7 +13,6 @@ import java.time.{OffsetDateTime, ZoneOffset}
 /**
  * A class to represent an incoming request to create a new credential offer.
  *
- * @param schemaId The unique identifier of the schema used for this credential offer. for example: ''null''
  * @param subjectId The identifier (e.g DID) of the subject to which the verifiable credential will be issued. for example: ''did:prism:subjectofverifiablecredentials''
  * @param validityPeriod The validity period in seconds of the verifiable credential that will be issued. for example: ''3600''
  * @param claims The claims that will be associated with the issued verifiable credential. for example: ''null''
@@ -23,9 +22,6 @@ import java.time.{OffsetDateTime, ZoneOffset}
  * @param connectionId The unique identifier of a DIDComm connection that already exists between the issuer and the holder, and that will be used to execute the issue credential protocol. for example: ''null''
  */
 final case class CreateIssueCredentialRecordRequest(
-  @description(annotations.schemaId.description)
-  @encodedExample(annotations.schemaId.example)
-  schemaId: Option[String] = None,
   @description(annotations.subjectId.description)
   @encodedExample(annotations.subjectId.example)
   subjectId: Option[String] = None,
@@ -49,12 +45,6 @@ final case class CreateIssueCredentialRecordRequest(
 object CreateIssueCredentialRecordRequest {
 
   object annotations {
-
-    object schemaId
-      extends Annotation[String](
-        description = "The unique identifier of the schema used for this credential offer.",
-        example = "null"
-      )
 
     object subjectId
       extends Annotation[String](

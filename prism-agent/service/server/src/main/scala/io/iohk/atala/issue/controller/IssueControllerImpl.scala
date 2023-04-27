@@ -37,7 +37,7 @@ class IssueControllerImpl(
           pairwiseIssuerDID = didIdPair.myDID,
           pairwiseHolderDID = didIdPair.theirDid,
           thid = DidCommID(),
-          schemaId = request.schemaId,
+          schemaId = None,
           claims = request.claims,
           validityPeriod = request.validityPeriod,
           automaticIssuance = request.automaticIssuance.orElse(Some(true)),

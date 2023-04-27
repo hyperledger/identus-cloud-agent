@@ -14,7 +14,6 @@ import java.time.{OffsetDateTime, ZoneOffset}
 /**
  * A class to represent an an outgoing response for a created credential offer.
  *
- * @param schemaId The unique identifier of the schema used for this credential offer. for example: ''null''
  * @param subjectId The identifier (e.g DID) of the subject to which the verifiable credential will be issued. for example: ''did:prism:subjectofverifiablecredentials''
  * @param validityPeriod The validity period in seconds of the verifiable credential that will be issued. for example: ''3600''
  * @param claims The claims that will be associated with the issued verifiable credential. for example: ''null''
@@ -28,9 +27,6 @@ import java.time.{OffsetDateTime, ZoneOffset}
  * @param issuingDID Issuer DID of the verifiable credential object. for example: ''did:prism:issuerofverifiablecredentials''
  */
 final case class IssueCredentialRecord(
-  @description(annotations.schemaId.description)
-  @encodedExample(annotations.schemaId.example)
-  schemaId: Option[String] = None,
   @description(annotations.subjectId.description)
   @encodedExample(annotations.subjectId.example)
   subjectId: Option[String] = None,
@@ -78,7 +74,6 @@ object IssueCredentialRecord {
       claims = domain.offerCredentialData
         .map(offer => offer.body.credential_preview.attributes.map(attr => (attr.name -> attr.value)).toMap)
         .getOrElse(Map.empty),
-      schemaId = domain.schemaId,
       validityPeriod = domain.validityPeriod,
       automaticIssuance = domain.automaticIssuance,
       protocolState = domain.protocolState.toString,
@@ -90,12 +85,6 @@ object IssueCredentialRecord {
     )
 
   object annotations {
-
-    object schemaId
-      extends Annotation[String](
-        description = "The unique identifier of the schema used for this credential offer.",
-        example = "null"
-      )
 
     object subjectId
       extends Annotation[String](
