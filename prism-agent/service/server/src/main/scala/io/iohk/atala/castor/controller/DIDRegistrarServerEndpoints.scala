@@ -7,7 +7,7 @@ import zio.*
 class DIDRegistrarServerEndpoints(didRegistrarController: DIDRegistrarController) {
 
   private val listManagedDidServerEndpoint: ZServerEndpoint[Any, Any] =
-    DIDRegistrarEndpoints.listManagedDid.zServerLogic { (requestContext, didRef, paginationInput) =>
+    DIDRegistrarEndpoints.listManagedDid.zServerLogic { (requestContext, paginationInput) =>
       ??? // TODO: implement
     }
 

@@ -9,19 +9,19 @@ import sttp.tapir.json.zio.jsonBody
 object DIDRegistrarEndpoints {
 
   private val baseEndpoint = endpoint
-    .tag("DID Registrar") // TODO: change this before PR
+    .tag("DID Registrar")
     .in("did-registrar")
     .in(extractFromRequest[RequestContext](RequestContext.apply))
 
   private val paginationInput: EndpointInput[PaginationInput] = EndpointInput.derived[PaginationInput]
 
   val listManagedDid: PublicEndpoint[
-    (RequestContext, String, PaginationInput),
+    (RequestContext, PaginationInput),
     ErrorResponse,
     ManagedDIDPage,
     Any
   ] = baseEndpoint.get
-    .in("dids" / DIDInput.didRefPathSegment)
+    .in("dids")
     .in(paginationInput)
     .errorOut(EndpointOutputs.basicFailures)
     .out(jsonBody[ManagedDIDPage])
