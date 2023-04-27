@@ -67,8 +67,12 @@ import zio.stream.ZStream
 import java.io.IOException
 import java.util.concurrent.Executors
 import io.iohk.atala.mercury.protocol.trustping.TrustPing
-import io.iohk.atala.castor.controller.DIDServerEndpoints
-import io.iohk.atala.castor.controller.DIDController
+import io.iohk.atala.castor.controller.{
+  DIDServerEndpoints,
+  DIDRegistrarServerEndpoints,
+  DIDController,
+  DIDRegistrarController
+}
 
 object Modules {
 
@@ -83,7 +87,8 @@ object Modules {
   }
 
   lazy val zioApp: RIO[
-    CredentialSchemaController & VerificationPolicyController & ConnectionController & DIDController & AppConfig,
+    CredentialSchemaController & VerificationPolicyController & ConnectionController & DIDController &
+      DIDRegistrarController & AppConfig,
     Unit
   ] = {
     val zioHttpServerApp = for {
@@ -91,8 +96,9 @@ object Modules {
       allVerificationPolicyEndpoints <- VerificationPolicyServerEndpoints.all
       allConnectionEndpoints <- ConnectionServerEndpoints.all
       allDIDEndpoints <- DIDServerEndpoints.all
+      allDIDRegistrarEndpoints <- DIDRegistrarServerEndpoints.all
       allEndpoints = ZHttpEndpoints.withDocumentations[Task](
-        allSchemaRegistryEndpoints ++ allVerificationPolicyEndpoints ++ allConnectionEndpoints ++ allDIDEndpoints
+        allSchemaRegistryEndpoints ++ allVerificationPolicyEndpoints ++ allConnectionEndpoints ++ allDIDEndpoints ++ allDIDRegistrarEndpoints
       )
       appConfig <- ZIO.service[AppConfig]
       httpServer <- ZHttp4sBlazeServer.start(allEndpoints, port = appConfig.agent.httpEndpoint.http.port)
