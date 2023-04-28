@@ -24,6 +24,7 @@ import io.iohk.atala.agent.walletapi.sql.{JdbcDIDNonSecretStorage, JdbcDIDSecret
 import io.iohk.atala.castor.core.service.{DIDService, DIDServiceImpl}
 import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.connect.controller.{ConnectionController, ConnectionControllerImpl, ConnectionServerEndpoints}
+import io.iohk.atala.issue.controller.{IssueController, IssueControllerImpl, IssueEndpoints, IssueServerEndpoints}
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.connect.core.repository.ConnectionRepository
 import io.iohk.atala.connect.core.service.{ConnectionService, ConnectionServiceImpl}
@@ -73,8 +74,7 @@ import io.iohk.atala.castor.controller.DIDController
 object Modules {
 
   def app(port: Int): RIO[
-    DidOps & DidAgent & ManagedDIDService & AppConfig & DIDRegistrarApi & IssueCredentialsProtocolApi &
-      PresentProofApi & ActorSystem[Nothing],
+    DidOps & DidAgent & ManagedDIDService & AppConfig & DIDRegistrarApi & PresentProofApi & ActorSystem[Nothing],
     Unit
   ] = {
     val httpServerApp = HttpRoutes.routes.flatMap(HttpServer.start(port, _))
@@ -83,16 +83,18 @@ object Modules {
   }
 
   lazy val zioApp: RIO[
-    CredentialSchemaController & VerificationPolicyController & ConnectionController & DIDController & AppConfig,
+    CredentialSchemaController & VerificationPolicyController & IssueController & ConnectionController & DIDController &
+      AppConfig,
     Unit
   ] = {
     val zioHttpServerApp = for {
       allSchemaRegistryEndpoints <- SchemaRegistryServerEndpoints.all
       allVerificationPolicyEndpoints <- VerificationPolicyServerEndpoints.all
       allConnectionEndpoints <- ConnectionServerEndpoints.all
+      allIssueEndpoints <- IssueServerEndpoints.all
       allDIDEndpoints <- DIDServerEndpoints.all
       allEndpoints = ZHttpEndpoints.withDocumentations[Task](
-        allSchemaRegistryEndpoints ++ allVerificationPolicyEndpoints ++ allConnectionEndpoints ++ allDIDEndpoints
+        allSchemaRegistryEndpoints ++ allVerificationPolicyEndpoints ++ allConnectionEndpoints ++ allDIDEndpoints ++ allIssueEndpoints
       )
       appConfig <- ZIO.service[AppConfig]
       httpServer <- ZHttp4sBlazeServer.start(allEndpoints, port = appConfig.agent.httpEndpoint.http.port)
@@ -497,16 +499,6 @@ object HttpModule {
     (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new DIDRegistrarApi(_, _))
   }
 
-  val issueCredentialsProtocolApiLayer: RLayer[
-    DidOps & DidAgent & ManagedDIDService & ConnectionService & AppConfig & JwtDidResolver,
-    IssueCredentialsProtocolApi
-  ] = {
-    val serviceLayer = AppModule.credentialServiceLayer
-    val apiServiceLayer = serviceLayer >>> IssueCredentialsProtocolApiServiceImpl.layer
-    val apiMarshallerLayer = IssueCredentialsProtocolApiMarshallerImpl.layer
-    (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new IssueCredentialsProtocolApi(_, _))
-  }
-
   val presentProofProtocolApiLayer: RLayer[DidOps & DidAgent, PresentProofApi] = {
     val serviceLayer = AppModule.presentationServiceLayer ++ AppModule.connectionServiceLayer
     val apiServiceLayer = serviceLayer >>> PresentProofApiServiceImpl.layer
@@ -514,7 +506,7 @@ object HttpModule {
     (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new PresentProofApi(_, _))
   }
 
-  val layers = didRegistrarApiLayer ++ issueCredentialsProtocolApiLayer ++ presentProofProtocolApiLayer
+  val layers = didRegistrarApiLayer ++ presentProofProtocolApiLayer
 }
 
 object RepoModule {

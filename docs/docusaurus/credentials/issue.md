@@ -31,10 +31,9 @@ The protocol consists of the following main parts:
 2. The Holder can then retrieve the offer using the [`/issue-credentials/records`](/agent-api/#tag/Issue-Credentials-Protocol/operation/getCredentialRecords) endpoint and accept the offer using the [`/issue-credentials/records/{recordId}/accept-offer`](/agent-api/#tag/Issue-Credentials-Protocol/operation/acceptCredentialOffer) endpoint.
 3. The Issuer then uses the [`/issue-credentials/records/{recordId}/issue-credential`](/agent-api/#tag/Issue-Credentials-Protocol/operation/issueCredential) endpoint to issue the credential, which gets sent to the Holder via [DIDComm](/docs/concepts/glossary#didcomm). The Holder receives the credential, and the protocol is complete.
 
-The schema identifier defines the structure and the credential type issued,
-while the claims provide specific information about the individual, such as their name or qualifications.
+The claims provide specific information about the individual, such as their name or qualifications.
 
-This protocol applies in various real-life scenarios, such as educational credentialing, employment verification, etc.
+This protocol is applicable in various real-life scenarios, such as educational credentialing, employment verification, and more.
 In these scenarios, the Issuer could be a school, an employer, etc., and the Holder could be a student or an employee.
 The VCs issued during this protocol could represent a diploma, a certificate of employment, etc.
 
@@ -62,8 +61,15 @@ This section describes the Issuer role's available interactions with the PRISM A
 To start the process, the issuer needs to create a credential offer.
 To do this, make a `POST` request to the [`/issue-credentials/credential-offers`](/agent-api/#tag/Issue-Credentials-Protocol/operation/createCredentialOffer) endpoint with a JSON payload that includes the following information:
 
-1. `schemaId`: This is an identifier for a schema, which defines the structure and format of the data in a verifiable credential. The schema identifier must be unique and typically a URL or a URN.
-2. `claims`: are the data stored in a verifiable credential. Claims get expressed in a key-value format and must conform to the structure and format defined in the schema. Claims contain the data that the issuer attests to, such as name, address, date of birth, etc.
+1. `claims`: The data stored in a verifiable credential. Claims get expressed in a key-value format. The claims contain the data that the issuer attests to, such as name, address, date of birth, and so on.
+2. `issuingDID`: The DID referring to the issuer to issue this credential from
+3. `connectionId`: The unique ID of the connection between the holder and the issuer to offer this credential over.
+
+:::note
+
+The issuingDID and connectionId properties come from completing the pre-requisite steps of listed above
+
+:::
 
 Once the request initiates, a new credential record for the issuer gets created with a unique ID. The state of this record is now `OfferPending`.
 
@@ -75,14 +81,14 @@ curl -X 'POST' \
     -H 'Content-Type: application/json' \
     -H "apiKey: $API_KEY" \
     -d '{
-          "schemaId": "schema:1234",
-          "subjectId": "did:prism:subjectIdentifier",
           "claims": {
             "firstname": "Alice",
             "lastname": "Wonderland",
             "birthdate": "01/01/2000"
-          }
-     }'
+          },
+          "issuingDID": "did:prism:9f847f8bbb66c112f71d08ab39930d468ccbfe1e0e1d002be53d46c431212c26",
+          "connectionId": "9d075518-f97e-4f11-9d10-d7348a7a0fda"
+        }'
 ```
 
 ### Sending the Offer to the Holder
