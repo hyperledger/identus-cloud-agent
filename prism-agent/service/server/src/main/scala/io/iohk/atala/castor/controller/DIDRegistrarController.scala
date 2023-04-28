@@ -11,6 +11,7 @@ import io.iohk.atala.api.util.PaginationUtils
 import io.iohk.atala.agent.walletapi.model.error.GetManagedDIDError
 import io.iohk.atala.castor.controller.http.CreateManagedDidRequest
 import io.iohk.atala.castor.controller.http.CreateManagedDIDResponse
+import io.iohk.atala.agent.walletapi.model.error.CreateManagedDIDError
 
 trait DIDRegistrarController {
   def createManagedDid(request: CreateManagedDidRequest)(
@@ -22,9 +23,22 @@ trait DIDRegistrarController {
 object DIDRegistrarController {
   given Conversion[GetManagedDIDError, ErrorResponse] = {
     case GetManagedDIDError.OperationError(e) =>
-      ErrorResponse.internalServerError(title = "DIDOperationError", detail = Some(e.toString))
+      ErrorResponse.internalServerError(detail = Some(e.toString))
     case GetManagedDIDError.WalletStorageError(e) =>
-      ErrorResponse.internalServerError(title = "StorageError", detail = Some(e.toString))
+      ErrorResponse.internalServerError(detail = Some(e.toString))
+  }
+
+  given Conversion[CreateManagedDIDError, ErrorResponse] = {
+    case CreateManagedDIDError.InvalidArgument(msg) =>
+      ErrorResponse.badRequest(detail = Some(msg))
+    case CreateManagedDIDError.DIDAlreadyExists(did) =>
+      ErrorResponse.internalServerError(detail = Some(s"DID already exists: $did"))
+    case CreateManagedDIDError.KeyGenerationError(e) =>
+      ErrorResponse.internalServerError(detail = Some(e.toString))
+    case CreateManagedDIDError.WalletStorageError(e) =>
+      ErrorResponse.internalServerError(detail = Some(e.toString))
+    case CreateManagedDIDError.InvalidOperation(e) =>
+      ErrorResponse.internalServerError(detail = Some(e.toString))
   }
 }
 
@@ -35,18 +49,16 @@ class DIDRegistrarControllerImpl(service: ManagedDIDService) extends DIDRegistra
   override def createManagedDid(createManagedDidRequest: CreateManagedDidRequest)(
       rc: RequestContext
   ): IO[ErrorResponse, CreateManagedDIDResponse] = {
-    val result = for {
+    for {
       didTemplate <- ZIO
         .fromEither(createManagedDidRequest.documentTemplate.toDomain)
-        .mapError(HttpServiceError.InvalidPayload.apply)
+        .mapError(e => ErrorResponse.badRequest(detail = Some(e)))
       longFormDID <- service
         .createAndStoreDID(didTemplate)
-        .mapError(HttpServiceError.DomainError.apply)
+        .mapError[ErrorResponse](e => e)
     } yield CreateManagedDIDResponse(
       longFormDid = longFormDID.toString
     )
-
-    ???
   }
 
   override def listManagedDid(
@@ -55,10 +67,9 @@ class DIDRegistrarControllerImpl(service: ManagedDIDService) extends DIDRegistra
     val uri = rc.request.uri
     val pagination = paginationInput.toPagination
     for {
-      _ <- ZIO.debug(uri.toString())
       pageResult <- service
         .listManagedDIDPage(offset = pagination.offset, limit = pagination.limit)
-        .mapError[ErrorResponse](i => i)
+        .mapError[ErrorResponse](e => e)
       (items, totalCount) = pageResult
       stats = CollectionStats(totalCount = totalCount, filteredCount = totalCount)
     } yield ManagedDIDPage(

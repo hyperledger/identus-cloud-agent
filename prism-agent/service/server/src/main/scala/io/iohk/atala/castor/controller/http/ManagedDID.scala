@@ -1,10 +1,13 @@
 package io.iohk.atala.castor.controller.http
 
-import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonEncoder, JsonDecoder}
-import sttp.tapir.Schema
+import io.iohk.atala.agent.walletapi.model as walletDomain
 import io.iohk.atala.agent.walletapi.model.ManagedDIDDetail
 import io.iohk.atala.agent.walletapi.model.ManagedDIDState
+import io.iohk.atala.castor.core.model.did as castorDomain
 import io.iohk.atala.castor.core.model.did.PrismDID
+import io.iohk.atala.shared.utils.Traverse.*
+import sttp.tapir.Schema
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonEncoder, JsonDecoder}
 
 final case class ManagedDID(
     did: String,
@@ -68,6 +71,18 @@ object CreateManagedDidRequestDocumentTemplate {
   given decoder: JsonDecoder[CreateManagedDidRequestDocumentTemplate] =
     DeriveJsonDecoder.gen[CreateManagedDidRequestDocumentTemplate]
   given schema: Schema[CreateManagedDidRequestDocumentTemplate] = Schema.derived
+
+  extension (template: CreateManagedDidRequestDocumentTemplate) {
+    def toDomain: Either[String, walletDomain.ManagedDIDTemplate] = {
+      for {
+        services <- template.services.traverse(_.toDomain)
+        publicKeys <- template.publicKeys.traverse(_.toDomain)
+      } yield walletDomain.ManagedDIDTemplate(
+        publicKeys = publicKeys,
+        services = services
+      )
+    }
+  }
 }
 
 final case class ManagedDIDKeyTemplate(
@@ -79,6 +94,19 @@ object ManagedDIDKeyTemplate {
   given encoder: JsonEncoder[ManagedDIDKeyTemplate] = DeriveJsonEncoder.gen[ManagedDIDKeyTemplate]
   given decoder: JsonDecoder[ManagedDIDKeyTemplate] = DeriveJsonDecoder.gen[ManagedDIDKeyTemplate]
   given schema: Schema[ManagedDIDKeyTemplate] = Schema.derived
+
+  extension (publicKeyTemplate: ManagedDIDKeyTemplate) {
+    def toDomain: Either[String, walletDomain.DIDPublicKeyTemplate] = {
+      for {
+        purpose <- castorDomain.VerificationRelationship
+          .parseString(publicKeyTemplate.purpose)
+          .toRight(s"unsupported verificationRelationship ${publicKeyTemplate.purpose}")
+      } yield walletDomain.DIDPublicKeyTemplate(
+        id = publicKeyTemplate.id,
+        purpose = purpose
+      )
+    }
+  }
 }
 
 final case class CreateManagedDIDResponse(
