@@ -16,7 +16,7 @@ The following guide demonstrates how to update a driving license credential sche
 ### 1. Define the updated JSON Schema for the Verifiable Credential
 
 Assume that you need to update the credential schema from the previous tutorial.
-So, there is an existing driving license, and the [verifiable credential](https://github.com/input-output-hk/atala-prism-docs/blob/main/documentation/docs/concepts/glossary.md#verifiable-credential) must additionally include two fields:
+So, there is an existing driving license, and the [verifiable credential](docs/concepts/glossary#verifiable-credential) must additionally include two fields:
 
 - bloodType - the blood type of the driver
 - organDonor - indicates whether or not the person is an organ donor
