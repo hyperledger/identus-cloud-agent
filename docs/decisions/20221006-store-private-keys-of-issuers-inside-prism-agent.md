@@ -6,7 +6,7 @@
 
 ## Context and Problem Statement
 
-While each holder has its own wallet application on the phone (edge agent) to store private keys, contacts and credentials that have been issued to them, prism 2.0 will provide a custodial solution to Issuers and Verifiers, thus they won't be having their own wallets and won't be storing/managing keys on their side, There needs to be a storage for private keys of issuers nad Verifiers on Prism side.
+While each holder has a wallet application on the phone (edge agent) to store private keys, contacts, and credentials, PRISM 2.0 will provide a custodial solution to Issuers and Verifiers. Thus they won't have their wallets or store/manage keys. There needs to be storage for the private keys of issuers and Verifiers on the PRISM side.
 
 
 ## Considered Options

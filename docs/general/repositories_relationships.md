@@ -1,14 +1,10 @@
 # Repositories & Relationships
 
-The building blocks are the separation of the projects by capabilities that work together.
-That makes the Atala PRISM framework.
+The building blocks separate the modules by capabilities that work together that make up the Atala PRISM framework. There are dependencies with Atala PRISM v1.
 
-This is the main repository for the Atala PRISM V2.
+This repo is the main repository for the Atala PRISM V2.
 
-However the BB are separated into several repositories.
-And there are dependencies with the Atala PRISM V1.
-
-So here we have a simplified view of all Atala repositories and how are they related together:
+So here we have a simplified view of all Atala repositories and how they are related:
 
 ```mermaid
 flowchart

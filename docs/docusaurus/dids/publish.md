@@ -1,33 +1,33 @@
 # Publish DID
 
-PRISM DID creation involves generating key pairs and some additional data (e.g. services) to construct a create-operation.
-The create-operation allows **DID Controller** to derive two types of DID:
+PRISM DID creation involves generating key pairs and additional data (e.g., services) to construct a create-operation.
+The create-operation allows [DID Controller](https://github.com/input-output-hk/atala-prism-docs/blob/main/documentation/docs/concepts/glossary.md#did-controller) to derive two types of [DIDs](https://github.com/input-output-hk/atala-prism-docs/blob/main/documentation/docs/concepts/glossary.md#decentralized-identifiers):
 
 1. [Long-form DID](https://github.com/input-output-hk/prism-did-method-spec/blob/main/w3c-spec/PRISM-method.md#long-form-dids-unpublished-dids). It has the following format `did:prism:<initial-hash>:<encoded-state>`
 2. Short-form DID. It has the following format `did:prism:<initial-hash>`
 
-The difference is the long-form DID contains the encoded create-operation in the DID itself while the short-form DID doesn't have this information.
+The difference is the long-form DID contains the encoded create-operation in the DID itself while, the short-form DID doesn't have this information.
 As a result, when resolving the short-form DID, the resolver must look for additional data from the blockchain.
 On the other hand, resolving long-form DID is self-contained.
 Even if the data is not on the blockchain, the resolver can still work out the DID document of the long-form DID.
 
-Enabling the resolution of short-form DID can be done by DID publication which is a process of putting the create-operation on the blockchain.
+The resolution of short-form DID is achievable by DID publication, which is a process of putting the create-operation on the blockchain.
 
 
 ## Roles
 
-1. **DID Controller** is the organization or individual who has control of the DID.
+1. DID Controller is the organization or individual who has control of the DID.
 
 ## Prerequisites
 
-1. **DID Controller** PRISM Agent up and running
-2. **DID Controller** has a DID created on PRISM Agent (see [Create DID](./create.md))
+1. DID Controller PRISM Agent up and running
+2. DID Controller has a DID created on PRISM Agent (see [Create DID](./create.md))
 
 ## Overview
 
-Publishing a DID requires the DID create-operation and the DID `MASTER` key pairs which PRISM Agent already created under the hood.
-When the **DID Controller** requests a publication of their DID, PRISM Agent uses the DID `MASTER` key to sign the operation and submit the signed operation to the blockchain.
-Once the operation is submitted to the blockchain, a specific number of confirmation blocks must be created before the DID operation is processed and considered published.
+Publishing a DID requires the DID create-operation and the DID `MASTER` key pairs, which PRISM Agent already created under the hood.
+When the DID Controller requests a publication of their DID, PRISM Agent uses the DID `MASTER` key to sign the operation and submit the signed operation to the blockchain.
+After the operation submission to the blockchain, a specific number of confirmation blocks must get created before the DID operation is processed and published.
 (see [PRISM DID method - Processing of DID operation](https://github.com/input-output-hk/prism-did-method-spec/blob/main/w3c-spec/PRISM-method.md#processing-of-operations))
 
 ## Endpoints
@@ -44,12 +44,13 @@ The example uses the following endpoints
 
 ### 1. Check the status of an unpublished DID
 
-**DID Controller** checks the status by replacing the `{didRef}` with the unpublished DID on the Agent.
+DID Controller checks the status by replacing the `{didRef}` with the unpublished DID on the Agent.
 The `{didRef}` path segment can be either short-form or long-form DID.
-When a DID is created and not yet published, it has the status of `CREATED`.
+When a DID gets created and not published, it has the status of `CREATED`.
 
 ```bash
 curl --location --request GET 'http://localhost:8080/prism-agent/did-registrar/dids/{didRef}' \
+--header "apiKey: $API_KEY" \
 --header 'Accept: application/json'
 ```
 
@@ -64,16 +65,17 @@ Example response
 ```
 ### 2. Request a publication of a DID
 
-To publish a DID, **DID Controller** `POST` a request to `/did-registrar/dids/{didRef}/publications` endpoint.
+To publish a DID, use DID Controller `POST` a request to `/did-registrar/dids/{didRef}/publications` endpoint.
 
 ```bash
 curl --location --request POST 'http://localhost:8080/prism-agent/did-registrar/dids/{didRef}/publications' \
+--header "apiKey: $API_KEY" \
 --header 'Accept: application/json'
 ```
 
 PRISM Agent will retrieve a DID `MASTER` key and sign the operation before submitting it to the blockchain.
-The process is asynchronous and it takes time until the operation is confirmed.
-The **DID Controller** receives a scheduled operation as a response.
+The process is asynchronous, and it takes time until the operation is confirmed.
+The DID Controller receives a scheduled operation as a response.
 
 ```json
 {
@@ -84,15 +86,15 @@ The **DID Controller** receives a scheduled operation as a response.
 }
 ```
 
-The response contains `scheduledOperation` property which describes a scheduled operation.
+The response contains the `scheduledOperation` property, which describes a scheduled operation.
 The submitted DID operations are batched together along with other operations to reduce the transaction cost when interacting with the blockchain.
 
-*PRISM Agent will eventually expose an endpoint to check the status of a scheduled operation.*
-*For now, checking the publishing status can be done by an example in step 3.*
+PRISM Agent will eventually expose an endpoint to check the status of a scheduled operation.
+Checking the publishing status is possible by following Step 3.
 
 ### 3. Wait until the DID operation is confirmed
 
-The **DID Controller** checks the DID status same as in step 1, the status of the DID has changed to `PUBLICATION_PENDING`.
+The DID Controller checks the DID status the same as in Step 1. The status of the DID has changed to `PUBLICATION_PENDING`.
 
 Example response with status `PUBLICATION_PENDING`
 
@@ -115,19 +117,17 @@ Example response with status `PUBLISHED`
 }
 ```
 
-**NOTE:**
-The `status` here is the internal status of the DID on the PRISM Agent (`PUBLISHED`, `CREATED`, `PUBLICAION_PENDING`).
-It does not indicate the lifecycle of the DID observed on the blockchain (e.g. deactivated, etc).
-The DID resolution metadata is used for that purpose.
+> **Note:** The `status` here is the internal status of the DID on the PRISM Agent (`PUBLISHED`, `CREATED`, `PUBLICAION_PENDING`). It does not indicate the lifecycle of the DID observed on the blockchain (e.g., deactivated, etc.). The [DID resolution](https://github.com/input-output-hk/atala-prism-docs/blob/main/documentation/docs/concepts/glossary.md#did-resolution) metadata is for that purpose.
 
 ### 4. Resolve a short-form DID
 
 Only published DID can be resolved using short-form.
 To confirm that the short-form DID is resolvable, test the DID against the resolution endpoint.
 
-Replace `{didRef}` with the short-form DID and the response should return a DID document.
+Replace `{didRef}` with the short-form DID; the response should return a DID document.
 
 ```bash
 curl --location --request GET 'http://localhost:8080/prism-agent/dids/{didRef}' \
+--header "apiKey: $API_KEY" \
 --header 'Accept: */*'
 ```

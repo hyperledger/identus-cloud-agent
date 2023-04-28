@@ -1,8 +1,8 @@
 # Create the credential schema
 
-The PRISM platform v2.0 exposes REST API for creation, fetching, and searching the credential schema records.
+The PRISM platform v2.0 exposes REST API for creation, fetching, and searching the [credential schema](https://github.com/input-output-hk/atala-prism-docs/blob/main/documentation/docs/concepts/glossary.md#credential-schema) records.
 
-The OpenAPI specification and redoc documentation describe the endpoint.
+The OpenAPI specification and ReDoc documentation describe the endpoint.
 
 In this document, you can find step-by-step instructions for creating the credential schema.
 
@@ -12,7 +12,7 @@ The following guide demonstrates how to create a driving license credential sche
 
 ### 1. Define the JSON Schema for the Verifiable Credential
 
-Assume that you need a credential schema for the driving license, and the verifiable credential must have the following
+Assume that you need a credential schema for the driving license, and the [verifiable credential](https://github.com/input-output-hk/atala-prism-docs/blob/main/documentation/docs/concepts/glossary.md#verifiable-credential) must have the following
 fields:
 
 - emailAddress - the email address of the driver
@@ -23,7 +23,7 @@ fields:
 - drivingClass - driving class that denotes which types of vehicles the driver is allowed to go.
   Also, let's assume that the driving license might have additional optional claims.
 
-First of all, the JSON Schema for the given fields must be defined as:
+For the above fields, the JSON Schema definition must be:
 
 ```json
 {
@@ -68,7 +68,7 @@ First of all, the JSON Schema for the given fields must be defined as:
 }
 ```
 
-Fields `$id` and `$schema` must be set to corresponding values which describe
+The fields `$id` and `$schema` must correspond values that describe
 
 - the identity of the given JSON Schema `driving-license-1.0.0` and
 - the meta schema `https://json-schema.org/draft/2020-12/schema`
@@ -76,7 +76,7 @@ Fields `$id` and `$schema` must be set to corresponding values which describe
 All the claims are listed under the `properties` object with corresponding `type`s and `format`s according to JSON
 Specification.
 
-`additionalProperties` is set to true, meaning other fields can also be added to the verifiable credential..
+`additionalProperties` is set to true, meaning adding other fields to the verifiable credential is possible.
 
 ### 2. Create the credential schema record
 
@@ -141,13 +141,13 @@ Specification.
 
 3. Send the POST request to create the new schema. The response should contain a GUID that uniquely identifies the new
    schema.
-   Curl example for the `k8s-dev.atalaprism.io` environment is the following:
+   Curl example is the following:
 
 ```shell
 curl -X 'POST' \
-  'https://k8s-dev.atalaprism.io/prism-agent/schema-registry/schemas' \
+  'http://localhost:8080/prism-agent/schema-registry/schemas' \
   -H 'accept: application/json' \
-  -H 'apikey: $APIKEY' \
+  -H "apikey: $API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
   "name": "driving-license",
@@ -271,9 +271,9 @@ Send the GET request to retrieve the schema. Curl example is the following:
 
 ```shell
 curl -X 'GET' \
-  'https://k8s-dev.atalaprism.io/prism-agent/schema-registry/schemas/3f86a73f-5b78-39c7-af77-0c16123fa9c2' \
+  'http://localhost:8080/prism-agent/schema-registry/schemas/3f86a73f-5b78-39c7-af77-0c16123fa9c2' \
   -H 'accept: application/json' \
-  -H 'apikey: $APIKEY'
+  -H "apiKey: $API_KEY"
 ```
 
 The response should contain the JSON object representing the schema you just created.
@@ -339,14 +339,14 @@ The response should contain the JSON object representing the schema you just cre
 
 ```
 
-The triple `author`, `id`, and `version` are unique for the PRISM Agent instance.
-So, having a single DID reference that the author uses, creating the credential schema with the same `id` and `version`
+The PRISM Agent instance's triple `author`, `id`, and `version` are unique.
+So, having a single [DID](https://github.com/input-output-hk/atala-prism-docs/blob/main/documentation/docs/concepts/glossary.md#decentralized-identifier) reference that the author uses, creating the credential schema with the same `id` and `version`
 is impossible.
 
 ### 4. Update the credential schema
 
-In order to upgrade the credential schema you need to perform the following steps:
+To upgrade the credential schema, you need to perform the following steps:
 
-1. start from the first step and change the JSON Schema
-2. change the `version` according to the nature of your change
-3. create a new credential schema record with a higher version
+1. Start from the first step and change the JSON Schema
+2. Change the `version` according to the nature of your change
+3. Create a new credential schema record with a higher version
