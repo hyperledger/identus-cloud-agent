@@ -27,6 +27,10 @@ trait DIDRegistrarController {
   def getManagedDid(did: String)(rc: RequestContext): IO[ErrorResponse, ManagedDID]
 
   def publishManagedDid(did: String)(rc: RequestContext): IO[ErrorResponse, DIDOperationResponse]
+
+  def updateManagedDid(did: String)(rc: RequestContext): IO[ErrorResponse, DIDOperationResponse]
+
+  def deactivateManagedDid(did: String)(rc: RequestContext): IO[ErrorResponse, DIDOperationResponse]
 }
 
 object DIDRegistrarController {
@@ -104,6 +108,10 @@ class DIDRegistrarControllerImpl(service: ManagedDIDService) extends DIDRegistra
   }
 
   override def publishManagedDid(did: String)(rc: RequestContext): IO[ErrorResponse, DIDOperationResponse] = ???
+
+  override def updateManagedDid(did: String)(rc: RequestContext): IO[ErrorResponse, DIDOperationResponse] = ???
+
+  override def deactivateManagedDid(did: String)(rc: RequestContext): IO[ErrorResponse, DIDOperationResponse] = ???
 }
 
 object DIDRegistrarControllerImpl {

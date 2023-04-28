@@ -19,7 +19,7 @@ object DIDRegistrarEndpoints {
 
   private val baseEndpoint = endpoint
     .tag("DID Registrar")
-    .in("did-registrar" / "did")
+    .in("did-registrar" / "dids")
     .in(extractFromRequest[RequestContext](RequestContext.apply))
 
   private val paginationInput: EndpointInput[PaginationInput] = EndpointInput.derived[PaginationInput]
@@ -63,7 +63,29 @@ object DIDRegistrarEndpoints {
     DIDOperationResponse,
     Any
   ] = baseEndpoint.post
-    .in(DIDInput.didRefPathSegment / "publish")
+    .in(DIDInput.didRefPathSegment / "publications")
+    .errorOut(EndpointOutputs.basicFailuresAndNotFound)
+    .out(statusCode(StatusCode.Accepted))
+    .out(jsonBody[DIDOperationResponse])
+
+  val updateManagedDid: PublicEndpoint[
+    (RequestContext, String),
+    ErrorResponse,
+    DIDOperationResponse,
+    Any
+  ] = baseEndpoint.post
+    .in(DIDInput.didRefPathSegment / "updates")
+    .errorOut(EndpointOutputs.basicFailuresAndNotFound)
+    .out(statusCode(StatusCode.Accepted))
+    .out(jsonBody[DIDOperationResponse])
+
+  val deactivateManagedDid: PublicEndpoint[
+    (RequestContext, String),
+    ErrorResponse,
+    DIDOperationResponse,
+    Any
+  ] = baseEndpoint.post
+    .in(DIDInput.didRefPathSegment / "deactivations")
     .errorOut(EndpointOutputs.basicFailuresAndNotFound)
     .out(statusCode(StatusCode.Accepted))
     .out(jsonBody[DIDOperationResponse])
