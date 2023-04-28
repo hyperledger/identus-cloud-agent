@@ -48,8 +48,8 @@ class IssueControllerImpl(
     mapIssueErrors(result)
   }
 
-  //TODO - Do not filter this in memory - need to filter at the database level - create tech debt ticket
-  //TODO - Implement pagination properly
+  //TODO - Tech Debt - Do not filter this in memory - need to filter at the database level
+  //TODO - Tech Debt - Implement pagination
   override def getCredentialRecords(paginationInput: PaginationInput, thid: Option[String])(implicit rc: RequestContext): IO[ErrorResponse, IssueCredentialRecordPage] = {
     val result = for {
       records <- credentialService.getIssueCredentialRecords()
@@ -62,7 +62,7 @@ class IssueControllerImpl(
       pageOf = "1",
       next = None,
       previous = None,
-      contents = (outcome map IssueCredentialRecord.fromDomain) //TODO Optimise this transformation - each time we get a list of things we iterate it once here
+      contents = (outcome map IssueCredentialRecord.fromDomain) //TODO - Tech Debt - Optimise this transformation - each time we get a list of things we iterate it once here
     )
     mapIssueErrors(result)
   }
@@ -72,7 +72,7 @@ class IssueControllerImpl(
       id <- extractDidCommIdFromString(recordId)
       outcome <- credentialService.getIssueCredentialRecord(id)
     } yield (outcome map IssueCredentialRecord.fromDomain)
-    mapIssueErrors(result) someOrFail toHttpError(CredentialServiceError.RecordIdNotFound(DidCommID("FIXME"))) //TODO FIXME
+    mapIssueErrors(result) someOrFail toHttpError(CredentialServiceError.RecordIdNotFound(DidCommID(recordId))) //TODO - Tech Debt - Review if this is safe. Currently is because DidCommID is opaque type => string with no validation
   }
 
   override def acceptCredentialOffer(recordId: String, request: AcceptCredentialOfferRequest)(implicit rc: RequestContext): IO[ErrorResponse, IssueCredentialRecord] = {
