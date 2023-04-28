@@ -7,8 +7,8 @@ the Atala PRISM Platform.
 
 ## 1. Introduction
 
-[Credential Schema](docs/concepts/glossary#credential-schema) is a data template for [Verifiable Credentials](docs/concepts/glossary#verifiable-credential).
-It contains [claims](docs/concepts/glossary#claims) (attributes) of the Verifiable Credentials, credential schema author, type, name, version, and proof
+[Credential Schema](/docs/concepts/glossary#credential-schema) is a data template for [Verifiable Credentials](/docs/concepts/glossary#verifiable-credential).
+It contains [claims](/docs/concepts/glossary#claims) (attributes) of the Verifiable Credentials, credential schema author, type, name, version, and proof
 of authorship.
 By putting schema definitions on a public blockchain, they are available for all verifiers to examine to determine the
 semantic interoperability of the Credential.
@@ -38,7 +38,7 @@ Limitations and constraints of the PRISM Platform v2.0:
 
 ### Credential Schema
 
-The Credential Schema is a template that defines a set of attributes the [Issuer](docs/concepts/glossary#issuer) uses to issue the Verifiable Credential.
+The Credential Schema is a template that defines a set of attributes the [Issuer](/docs/concepts/glossary#issuer) uses to issue the Verifiable Credential.
 
 ### Schema Registry
 
@@ -46,7 +46,7 @@ The registry is where the Credential Schema is published and available for parti
 
 ### Issuer, Holder, Verifier
 
-These are well-known roles in the [SSI](docs/concepts/glossary#self-sovereign-identity) domain.
+These are well-known roles in the [SSI](/docs/concepts/glossary#self-sovereign-identity) domain.
 
 ## 2. Credential Schema Attributes
 
@@ -61,7 +61,7 @@ The locally unique identifier of the schema.
 
 ### longId (String)
 
-Resource identifier of the given credential schema composed from the author's [DID]((docs/concepts/glossary#decentralized-identifier) reference, id, and version fields.
+Resource identifier of the given credential schema composed from the author's [DID]((/docs/concepts/glossary#decentralized-identifier) reference, id, and version fields.
 **Example:** `{author}/{id}?version={version}`
 
 > **Note:** According to the [W3C specification](https://w3c-ccg.github.io/vc-json-schemas/#id), this field is locally unique and combines the Issuer `DID`, `uuid`, and `version`.

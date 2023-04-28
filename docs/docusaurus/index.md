@@ -3,9 +3,9 @@
 Welcome to the Atala PRISM Tutorials!
 
 These tutorials will help you get started with using Atala PRISM.
-The tutorials will guide you through setting up a connection, working with [Decentralized Identifiers (DIDs)](docs/concepts/glossary#decentralized-identifer), and using [verifiable credentials](docs/concepts/glossary#verifiable-credentials).
+The tutorials will guide you through setting up a connection, working with [Decentralized Identifiers (DIDs)](/docs/concepts/glossary#decentralized-identifer), and using [verifiable credentials](/docs/concepts/glossary#verifiable-credentials).
 
-Whether you are new to [self-sovereign identity (SSI)](docs/concepts/glossary#self-sovereign-identity) or have prior experience, these tutorials will provide the necessary information and skills to build and use SSI-based applications.
+Whether you are new to [self-sovereign identity (SSI)](/docs/concepts/glossary#self-sovereign-identity) or have prior experience, these tutorials will provide the necessary information and skills to build and use SSI-based applications.
 
 
 Throughout all code examples in tutorials, the following conventions are in use:
