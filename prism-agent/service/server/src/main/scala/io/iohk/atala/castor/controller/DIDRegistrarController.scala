@@ -12,12 +12,18 @@ import io.iohk.atala.agent.walletapi.model.error.GetManagedDIDError
 import io.iohk.atala.castor.controller.http.CreateManagedDidRequest
 import io.iohk.atala.castor.controller.http.CreateManagedDIDResponse
 import io.iohk.atala.agent.walletapi.model.error.CreateManagedDIDError
+import io.iohk.atala.castor.controller.http.ManagedDID
+import io.iohk.atala.castor.core.model.did.PrismDID
+import io.iohk.atala.agent.walletapi.model.ManagedDIDDetail
 
 trait DIDRegistrarController {
+  def listManagedDid(paginationInput: PaginationInput)(rc: RequestContext): IO[ErrorResponse, ManagedDIDPage]
+
   def createManagedDid(request: CreateManagedDidRequest)(
       rc: RequestContext
   ): IO[ErrorResponse, CreateManagedDIDResponse]
-  def listManagedDid(paginationInput: PaginationInput)(rc: RequestContext): IO[ErrorResponse, ManagedDIDPage]
+
+  def getManagedDid(did: String)(rc: RequestContext): IO[ErrorResponse, ManagedDID]
 }
 
 object DIDRegistrarController {
@@ -46,21 +52,6 @@ class DIDRegistrarControllerImpl(service: ManagedDIDService) extends DIDRegistra
 
   import DIDRegistrarController.given
 
-  override def createManagedDid(createManagedDidRequest: CreateManagedDidRequest)(
-      rc: RequestContext
-  ): IO[ErrorResponse, CreateManagedDIDResponse] = {
-    for {
-      didTemplate <- ZIO
-        .fromEither(createManagedDidRequest.documentTemplate.toDomain)
-        .mapError(e => ErrorResponse.badRequest(detail = Some(e)))
-      longFormDID <- service
-        .createAndStoreDID(didTemplate)
-        .mapError[ErrorResponse](e => e)
-    } yield CreateManagedDIDResponse(
-      longFormDid = longFormDID.toString
-    )
-  }
-
   override def listManagedDid(
       paginationInput: PaginationInput
   )(rc: RequestContext): IO[ErrorResponse, ManagedDIDPage] = {
@@ -79,6 +70,34 @@ class DIDRegistrarControllerImpl(service: ManagedDIDService) extends DIDRegistra
       previous = PaginationUtils.composePreviousUri(uri, items, pagination, stats).map(_.toString),
       contents = items.map(i => i),
     )
+  }
+
+  override def createManagedDid(createManagedDidRequest: CreateManagedDidRequest)(
+      rc: RequestContext
+  ): IO[ErrorResponse, CreateManagedDIDResponse] = {
+    for {
+      didTemplate <- ZIO
+        .fromEither(createManagedDidRequest.documentTemplate.toDomain)
+        .mapError(e => ErrorResponse.badRequest(detail = Some(e)))
+      longFormDID <- service
+        .createAndStoreDID(didTemplate)
+        .mapError[ErrorResponse](e => e)
+    } yield CreateManagedDIDResponse(
+      longFormDid = longFormDID.toString
+    )
+  }
+
+  override def getManagedDid(did: String)(rc: RequestContext): IO[ErrorResponse, ManagedDID] = {
+    for {
+      prismDID <- ZIO
+        .fromEither(PrismDID.fromString(did))
+        .mapError(e => ErrorResponse.badRequest(detail = Some(e)))
+      didDetail <- service
+        .getManagedDIDState(prismDID.asCanonical)
+        .mapError[ErrorResponse](e => e)
+        .someOrFail(ErrorResponse.notFound(detail = Some(s"DID $did was not found in the storage")))
+        .map(state => ManagedDIDDetail(prismDID.asCanonical, state))
+    } yield didDetail
   }
 }
 
