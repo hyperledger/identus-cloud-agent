@@ -8,25 +8,35 @@ import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.agent.server.http.model.HttpServiceError
 import io.iohk.atala.api.http.model.CollectionStats
 import io.iohk.atala.api.util.PaginationUtils
+import io.iohk.atala.agent.walletapi.model.error.GetManagedDIDError
 
 trait DIDRegistrarController {
-  def listManagedDid(
-      requestContext: RequestContext,
-      paginationInput: PaginationInput
-  ): IO[ErrorResponse, ManagedDIDPage]
+  def listManagedDid(paginationInput: PaginationInput)(rc: RequestContext): IO[ErrorResponse, ManagedDIDPage]
+}
+
+object DIDRegistrarController {
+  given Conversion[GetManagedDIDError, ErrorResponse] = {
+    case GetManagedDIDError.OperationError(e) =>
+      ErrorResponse.internalServerError(title = "DIDOperationError", detail = Some(e.toString))
+    case GetManagedDIDError.WalletStorageError(e) =>
+      ErrorResponse.internalServerError(title = "StorageError", detail = Some(e.toString))
+  }
 }
 
 class DIDRegistrarControllerImpl(service: ManagedDIDService) extends DIDRegistrarController {
+
+  import DIDRegistrarController.given
+
   override def listManagedDid(
-      requestContext: RequestContext,
       paginationInput: PaginationInput
-  ): IO[ErrorResponse, ManagedDIDPage] = {
-    val uri = requestContext.request.uri
+  )(rc: RequestContext): IO[ErrorResponse, ManagedDIDPage] = {
+    val uri = rc.request.uri
     val pagination = paginationInput.toPagination
-    val result = for {
+    for {
+      _ <- ZIO.debug(uri.toString())
       pageResult <- service
         .listManagedDIDPage(offset = pagination.offset, limit = pagination.limit)
-        .mapError(HttpServiceError.DomainError.apply)
+        .mapError[ErrorResponse](i => i)
       (items, totalCount) = pageResult
       stats = CollectionStats(totalCount = totalCount, filteredCount = totalCount)
     } yield ManagedDIDPage(
@@ -36,8 +46,6 @@ class DIDRegistrarControllerImpl(service: ManagedDIDService) extends DIDRegistra
       previous = PaginationUtils.composePreviousUri(uri, items, pagination, stats).map(_.toString),
       contents = items.map(i => i),
     )
-
-    ???
   }
 }
 
