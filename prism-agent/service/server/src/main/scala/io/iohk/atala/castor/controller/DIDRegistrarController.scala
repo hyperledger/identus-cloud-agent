@@ -9,8 +9,13 @@ import io.iohk.atala.agent.server.http.model.HttpServiceError
 import io.iohk.atala.api.http.model.CollectionStats
 import io.iohk.atala.api.util.PaginationUtils
 import io.iohk.atala.agent.walletapi.model.error.GetManagedDIDError
+import io.iohk.atala.castor.controller.http.CreateManagedDidRequest
+import io.iohk.atala.castor.controller.http.CreateManagedDIDResponse
 
 trait DIDRegistrarController {
+  def createManagedDid(request: CreateManagedDidRequest)(
+      rc: RequestContext
+  ): IO[ErrorResponse, CreateManagedDIDResponse]
   def listManagedDid(paginationInput: PaginationInput)(rc: RequestContext): IO[ErrorResponse, ManagedDIDPage]
 }
 
@@ -26,6 +31,23 @@ object DIDRegistrarController {
 class DIDRegistrarControllerImpl(service: ManagedDIDService) extends DIDRegistrarController {
 
   import DIDRegistrarController.given
+
+  override def createManagedDid(createManagedDidRequest: CreateManagedDidRequest)(
+      rc: RequestContext
+  ): IO[ErrorResponse, CreateManagedDIDResponse] = {
+    val result = for {
+      didTemplate <- ZIO
+        .fromEither(createManagedDidRequest.documentTemplate.toDomain)
+        .mapError(HttpServiceError.InvalidPayload.apply)
+      longFormDID <- service
+        .createAndStoreDID(didTemplate)
+        .mapError(HttpServiceError.DomainError.apply)
+    } yield CreateManagedDIDResponse(
+      longFormDid = longFormDID.toString
+    )
+
+    ???
+  }
 
   override def listManagedDid(
       paginationInput: PaginationInput

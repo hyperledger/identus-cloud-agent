@@ -46,3 +46,47 @@ object ManagedDIDPage {
   given decoder: JsonDecoder[ManagedDIDPage] = DeriveJsonDecoder.gen[ManagedDIDPage]
   given schema: Schema[ManagedDIDPage] = Schema.derived
 }
+
+final case class CreateManagedDidRequest(
+    documentTemplate: CreateManagedDidRequestDocumentTemplate
+)
+
+object CreateManagedDidRequest {
+  given encoder: JsonEncoder[CreateManagedDidRequest] = DeriveJsonEncoder.gen[CreateManagedDidRequest]
+  given decoder: JsonDecoder[CreateManagedDidRequest] = DeriveJsonDecoder.gen[CreateManagedDidRequest]
+  given schema: Schema[CreateManagedDidRequest] = Schema.derived
+}
+
+final case class CreateManagedDidRequestDocumentTemplate(
+    publicKeys: Seq[ManagedDIDKeyTemplate],
+    services: Seq[Service]
+)
+
+object CreateManagedDidRequestDocumentTemplate {
+  given encoder: JsonEncoder[CreateManagedDidRequestDocumentTemplate] =
+    DeriveJsonEncoder.gen[CreateManagedDidRequestDocumentTemplate]
+  given decoder: JsonDecoder[CreateManagedDidRequestDocumentTemplate] =
+    DeriveJsonDecoder.gen[CreateManagedDidRequestDocumentTemplate]
+  given schema: Schema[CreateManagedDidRequestDocumentTemplate] = Schema.derived
+}
+
+final case class ManagedDIDKeyTemplate(
+    id: String,
+    purpose: String
+)
+
+object ManagedDIDKeyTemplate {
+  given encoder: JsonEncoder[ManagedDIDKeyTemplate] = DeriveJsonEncoder.gen[ManagedDIDKeyTemplate]
+  given decoder: JsonDecoder[ManagedDIDKeyTemplate] = DeriveJsonDecoder.gen[ManagedDIDKeyTemplate]
+  given schema: Schema[ManagedDIDKeyTemplate] = Schema.derived
+}
+
+final case class CreateManagedDIDResponse(
+    longFormDid: String
+)
+
+object CreateManagedDIDResponse {
+  given encoder: JsonEncoder[CreateManagedDIDResponse] = DeriveJsonEncoder.gen[CreateManagedDIDResponse]
+  given decoder: JsonDecoder[CreateManagedDIDResponse] = DeriveJsonDecoder.gen[CreateManagedDIDResponse]
+  given schema: Schema[CreateManagedDIDResponse] = Schema.derived
+}

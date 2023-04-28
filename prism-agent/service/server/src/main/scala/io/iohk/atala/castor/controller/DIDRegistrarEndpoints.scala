@@ -5,6 +5,8 @@ import io.iohk.atala.api.http.model.PaginationInput
 import io.iohk.atala.castor.controller.http.{DIDInput, ManagedDIDPage}
 import sttp.tapir.*
 import sttp.tapir.json.zio.jsonBody
+import io.iohk.atala.castor.controller.http.CreateManagedDidRequest
+import io.iohk.atala.castor.controller.http.CreateManagedDIDResponse
 
 object DIDRegistrarEndpoints {
 
@@ -14,6 +16,17 @@ object DIDRegistrarEndpoints {
     .in(extractFromRequest[RequestContext](RequestContext.apply))
 
   private val paginationInput: EndpointInput[PaginationInput] = EndpointInput.derived[PaginationInput]
+
+  val createManagedDid: PublicEndpoint[
+    (RequestContext, CreateManagedDidRequest),
+    ErrorResponse,
+    CreateManagedDIDResponse,
+    Any
+  ] = baseEndpoint.post
+    .in("dids")
+    .in(jsonBody[CreateManagedDidRequest])
+    .errorOut(EndpointOutputs.basicFailures)
+    .out(jsonBody[CreateManagedDIDResponse])
 
   val listManagedDid: PublicEndpoint[
     (RequestContext, PaginationInput),
