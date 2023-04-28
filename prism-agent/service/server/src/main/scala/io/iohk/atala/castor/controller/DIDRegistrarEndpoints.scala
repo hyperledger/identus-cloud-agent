@@ -86,7 +86,7 @@ object DIDRegistrarEndpoints {
     Any
   ] = baseEndpoint.post
     .in(DIDInput.didRefPathSegment / "deactivations")
-    .errorOut(EndpointOutputs.basicFailuresAndNotFound)
+    .errorOut(EndpointOutputs.basicFailuresAndNotFound) // TODO: fix error codes
     .out(statusCode(StatusCode.Accepted))
     .out(jsonBody[DIDOperationResponse])
 

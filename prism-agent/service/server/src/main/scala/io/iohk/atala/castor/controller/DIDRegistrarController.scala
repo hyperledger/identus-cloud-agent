@@ -16,6 +16,8 @@ import io.iohk.atala.castor.controller.http.ManagedDID
 import io.iohk.atala.castor.core.model.did.PrismDID
 import io.iohk.atala.agent.walletapi.model.ManagedDIDDetail
 import io.iohk.atala.castor.controller.http.DIDOperationResponse
+import io.iohk.atala.agent.walletapi.model.error.PublishManagedDIDError
+import io.iohk.atala.agent.walletapi.model.error.UpdateManagedDIDError
 
 trait DIDRegistrarController {
   def listManagedDid(paginationInput: PaginationInput)(rc: RequestContext): IO[ErrorResponse, ManagedDIDPage]
@@ -52,6 +54,29 @@ object DIDRegistrarController {
       ErrorResponse.internalServerError(detail = Some(e.toString))
     case CreateManagedDIDError.InvalidOperation(e) =>
       ErrorResponse.internalServerError(detail = Some(e.toString))
+  }
+
+  given Conversion[PublishManagedDIDError, ErrorResponse] = {
+    case PublishManagedDIDError.DIDNotFound(did) =>
+      ErrorResponse.notFound(detail = Some(s"DID not found: $did"))
+    case PublishManagedDIDError.WalletStorageError(e) =>
+      ErrorResponse.internalServerError(detail = Some(e.toString))
+    case PublishManagedDIDError.OperationError(e) =>
+      ErrorResponse.internalServerError(detail = Some(e.toString))
+    case PublishManagedDIDError.CryptographyError(e) =>
+      ErrorResponse.internalServerError(detail = Some(e.toString))
+  }
+
+  given Conversion[UpdateManagedDIDError, ErrorResponse] = {
+    case UpdateManagedDIDError.DIDNotFound(did) =>
+      ErrorResponse.notFound(detail = Some(s"DID not found: $did"))
+    case UpdateManagedDIDError.DIDNotPublished(did) =>
+      ErrorResponse.unprocessableEntity(detail = Some(s"DID not published: $did"))
+    case UpdateManagedDIDError.DIDAlreadyDeactivated(did) =>
+      ErrorResponse.unprocessableEntity(detail = Some(s"DID already deactivated: $did"))
+    case UpdateManagedDIDError.InvalidArgument(msg) =>
+      ErrorResponse.badRequest(detail = Some(msg))
+    case e => ErrorResponse.internalServerError(detail = Some(e.toString))
   }
 }
 
@@ -96,9 +121,7 @@ class DIDRegistrarControllerImpl(service: ManagedDIDService) extends DIDRegistra
 
   override def getManagedDid(did: String)(rc: RequestContext): IO[ErrorResponse, ManagedDID] = {
     for {
-      prismDID <- ZIO
-        .fromEither(PrismDID.fromString(did))
-        .mapError(e => ErrorResponse.badRequest(detail = Some(e)))
+      prismDID <- extractPrismDID(did)
       didDetail <- service
         .getManagedDIDState(prismDID.asCanonical)
         .mapError[ErrorResponse](e => e)
@@ -107,11 +130,29 @@ class DIDRegistrarControllerImpl(service: ManagedDIDService) extends DIDRegistra
     } yield didDetail
   }
 
-  override def publishManagedDid(did: String)(rc: RequestContext): IO[ErrorResponse, DIDOperationResponse] = ???
+  override def publishManagedDid(did: String)(rc: RequestContext): IO[ErrorResponse, DIDOperationResponse] = {
+    for {
+      prismDID <- extractPrismDID(did)
+      outcome <- service
+        .publishStoredDID(prismDID.asCanonical)
+        .mapError[ErrorResponse](e => e)
+    } yield outcome
+  }
 
   override def updateManagedDid(did: String)(rc: RequestContext): IO[ErrorResponse, DIDOperationResponse] = ???
 
-  override def deactivateManagedDid(did: String)(rc: RequestContext): IO[ErrorResponse, DIDOperationResponse] = ???
+  override def deactivateManagedDid(did: String)(rc: RequestContext): IO[ErrorResponse, DIDOperationResponse] = {
+    for {
+      prismDID <- extractPrismDID(did)
+      outcome <- service
+        .deactivateManagedDID(prismDID.asCanonical)
+        .mapError[ErrorResponse](e => e)
+    } yield outcome
+  }
+
+  private def extractPrismDID(did: String): IO[ErrorResponse, PrismDID] =
+    ZIO.fromEither(PrismDID.fromString(did)).mapError(e => ErrorResponse.badRequest(detail = Some(e.toString)))
+
 }
 
 object DIDRegistrarControllerImpl {
