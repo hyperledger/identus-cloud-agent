@@ -1,23 +1,25 @@
 package io.iohk.atala.castor.controller
 
-import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
-import io.iohk.atala.api.http.model.PaginationInput
-import io.iohk.atala.castor.controller.http.ManagedDIDPage
-import zio.*
-import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.agent.server.http.model.HttpServiceError
-import io.iohk.atala.api.http.model.CollectionStats
-import io.iohk.atala.api.util.PaginationUtils
-import io.iohk.atala.agent.walletapi.model.error.GetManagedDIDError
-import io.iohk.atala.castor.controller.http.CreateManagedDidRequest
-import io.iohk.atala.castor.controller.http.CreateManagedDIDResponse
 import io.iohk.atala.agent.walletapi.model.error.CreateManagedDIDError
-import io.iohk.atala.castor.controller.http.ManagedDID
-import io.iohk.atala.castor.core.model.did.PrismDID
-import io.iohk.atala.agent.walletapi.model.ManagedDIDDetail
-import io.iohk.atala.castor.controller.http.DIDOperationResponse
+import io.iohk.atala.agent.walletapi.model.error.GetManagedDIDError
 import io.iohk.atala.agent.walletapi.model.error.PublishManagedDIDError
 import io.iohk.atala.agent.walletapi.model.error.UpdateManagedDIDError
+import io.iohk.atala.agent.walletapi.model.ManagedDIDDetail
+import io.iohk.atala.agent.walletapi.service.ManagedDIDService
+import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
+import io.iohk.atala.api.http.model.CollectionStats
+import io.iohk.atala.api.http.model.PaginationInput
+import io.iohk.atala.api.util.PaginationUtils
+import io.iohk.atala.castor.controller.http.CreateManagedDidRequest
+import io.iohk.atala.castor.controller.http.CreateManagedDIDResponse
+import io.iohk.atala.castor.controller.http.DIDOperationResponse
+import io.iohk.atala.castor.controller.http.ManagedDID
+import io.iohk.atala.castor.controller.http.ManagedDIDPage
+import io.iohk.atala.castor.controller.http.UpdateManagedDIDRequest
+import io.iohk.atala.castor.core.model.did.PrismDID
+import io.iohk.atala.shared.utils.Traverse.*
+import zio.*
 
 trait DIDRegistrarController {
   def listManagedDid(paginationInput: PaginationInput)(rc: RequestContext): IO[ErrorResponse, ManagedDIDPage]
@@ -30,7 +32,9 @@ trait DIDRegistrarController {
 
   def publishManagedDid(did: String)(rc: RequestContext): IO[ErrorResponse, DIDOperationResponse]
 
-  def updateManagedDid(did: String)(rc: RequestContext): IO[ErrorResponse, DIDOperationResponse]
+  def updateManagedDid(did: String, updateRequest: UpdateManagedDIDRequest)(
+      rc: RequestContext
+  ): IO[ErrorResponse, DIDOperationResponse]
 
   def deactivateManagedDid(did: String)(rc: RequestContext): IO[ErrorResponse, DIDOperationResponse]
 }
@@ -139,7 +143,19 @@ class DIDRegistrarControllerImpl(service: ManagedDIDService) extends DIDRegistra
     } yield outcome
   }
 
-  override def updateManagedDid(did: String)(rc: RequestContext): IO[ErrorResponse, DIDOperationResponse] = ???
+  override def updateManagedDid(did: String, updateRequest: UpdateManagedDIDRequest)(
+      rc: RequestContext
+  ): IO[ErrorResponse, DIDOperationResponse] = {
+    for {
+      prismDID <- extractPrismDID(did)
+      actions <- ZIO
+        .fromEither(updateRequest.actions.traverse(_.toDomain))
+        .mapError(e => ErrorResponse.badRequest(detail = Some(e)))
+      outcome <- service
+        .updateManagedDID(prismDID.asCanonical, actions)
+        .mapError[ErrorResponse](e => e)
+    } yield outcome
+  }
 
   override def deactivateManagedDid(did: String)(rc: RequestContext): IO[ErrorResponse, DIDOperationResponse] = {
     for {

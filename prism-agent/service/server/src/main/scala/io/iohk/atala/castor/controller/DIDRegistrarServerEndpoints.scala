@@ -27,8 +27,8 @@ class DIDRegistrarServerEndpoints(didRegistrarController: DIDRegistrarController
     }
 
   private val updateManagedDidServerEndpoint: ZServerEndpoint[Any, Any] =
-    DIDRegistrarEndpoints.updateManagedDid.zServerLogic { (rc, did) =>
-      didRegistrarController.updateManagedDid(did)(rc)
+    DIDRegistrarEndpoints.updateManagedDid.zServerLogic { (rc, did, updateRequest) =>
+      didRegistrarController.updateManagedDid(did, updateRequest)(rc)
     }
 
   private val deactivateManagedDidServerEndpoint: ZServerEndpoint[Any, Any] =

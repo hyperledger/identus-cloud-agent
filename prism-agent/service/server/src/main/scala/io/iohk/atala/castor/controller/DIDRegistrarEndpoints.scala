@@ -14,6 +14,7 @@ import sttp.tapir.json.zio.jsonBody
 import scala.tools.nsc.doc.model.Public
 import io.iohk.atala.castor.controller.http.DIDOperationResponse
 import sttp.model.StatusCode
+import io.iohk.atala.castor.controller.http.UpdateManagedDIDRequest
 
 object DIDRegistrarEndpoints {
 
@@ -69,13 +70,14 @@ object DIDRegistrarEndpoints {
     .out(jsonBody[DIDOperationResponse])
 
   val updateManagedDid: PublicEndpoint[
-    (RequestContext, String),
+    (RequestContext, String, UpdateManagedDIDRequest),
     ErrorResponse,
     DIDOperationResponse,
     Any
   ] = baseEndpoint.post
     .in(DIDInput.didRefPathSegment / "updates")
-    .errorOut(EndpointOutputs.basicFailuresAndNotFound)
+    .in(jsonBody[UpdateManagedDIDRequest])
+    .errorOut(EndpointOutputs.basicFailuresAndNotFound) // TODO: fix error codes
     .out(statusCode(StatusCode.Accepted))
     .out(jsonBody[DIDOperationResponse])
 
