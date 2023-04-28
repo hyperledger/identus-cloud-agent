@@ -21,10 +21,16 @@ class DIDRegistrarServerEndpoints(didRegistrarController: DIDRegistrarController
       didRegistrarController.getManagedDid(did)(rc)
     }
 
+  private val publishManagedDidServerEndpoint: ZServerEndpoint[Any, Any] =
+    DIDRegistrarEndpoints.publishManagedDid.zServerLogic { (rc, did) =>
+      didRegistrarController.publishManagedDid(did)(rc)
+    }
+
   val all: List[ZServerEndpoint[Any, Any]] = List(
     listManagedDidServerEndpoint,
     createManagedDidServerEndpoint,
-    getManagedDidServerEndpoint
+    getManagedDidServerEndpoint,
+    publishManagedDidServerEndpoint
   )
 
 }

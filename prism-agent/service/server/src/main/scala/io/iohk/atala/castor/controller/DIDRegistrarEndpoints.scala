@@ -11,12 +11,15 @@ import io.iohk.atala.castor.controller.http.{
 }
 import sttp.tapir.*
 import sttp.tapir.json.zio.jsonBody
+import scala.tools.nsc.doc.model.Public
+import io.iohk.atala.castor.controller.http.DIDOperationResponse
+import sttp.model.StatusCode
 
 object DIDRegistrarEndpoints {
 
   private val baseEndpoint = endpoint
     .tag("DID Registrar")
-    .in("did-registrar")
+    .in("did-registrar" / "did")
     .in(extractFromRequest[RequestContext](RequestContext.apply))
 
   private val paginationInput: EndpointInput[PaginationInput] = EndpointInput.derived[PaginationInput]
@@ -27,9 +30,9 @@ object DIDRegistrarEndpoints {
     ManagedDIDPage,
     Any
   ] = baseEndpoint.get
-    .in("dids")
     .in(paginationInput)
     .errorOut(EndpointOutputs.basicFailures)
+    .out(statusCode(StatusCode.Ok))
     .out(jsonBody[ManagedDIDPage])
 
   val createManagedDid: PublicEndpoint[
@@ -38,9 +41,9 @@ object DIDRegistrarEndpoints {
     CreateManagedDIDResponse,
     Any
   ] = baseEndpoint.post
-    .in("dids")
     .in(jsonBody[CreateManagedDidRequest])
     .errorOut(EndpointOutputs.basicFailures)
+    .out(statusCode(StatusCode.Created))
     .out(jsonBody[CreateManagedDIDResponse])
 
   val getManagedDid: PublicEndpoint[
@@ -49,8 +52,20 @@ object DIDRegistrarEndpoints {
     ManagedDID,
     Any
   ] = baseEndpoint.get
-    .in("dids" / DIDInput.didRefPathSegment)
+    .in(DIDInput.didRefPathSegment)
     .errorOut(EndpointOutputs.basicFailuresAndNotFound)
+    .out(statusCode(StatusCode.Ok))
     .out(jsonBody[ManagedDID])
+
+  val publishManagedDid: PublicEndpoint[
+    (RequestContext, String),
+    ErrorResponse,
+    DIDOperationResponse,
+    Any
+  ] = baseEndpoint.post
+    .in(DIDInput.didRefPathSegment / "publish")
+    .errorOut(EndpointOutputs.basicFailuresAndNotFound)
+    .out(statusCode(StatusCode.Accepted))
+    .out(jsonBody[DIDOperationResponse])
 
 }

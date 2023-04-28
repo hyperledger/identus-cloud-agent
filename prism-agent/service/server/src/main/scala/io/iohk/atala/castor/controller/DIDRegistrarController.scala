@@ -15,6 +15,7 @@ import io.iohk.atala.agent.walletapi.model.error.CreateManagedDIDError
 import io.iohk.atala.castor.controller.http.ManagedDID
 import io.iohk.atala.castor.core.model.did.PrismDID
 import io.iohk.atala.agent.walletapi.model.ManagedDIDDetail
+import io.iohk.atala.castor.controller.http.DIDOperationResponse
 
 trait DIDRegistrarController {
   def listManagedDid(paginationInput: PaginationInput)(rc: RequestContext): IO[ErrorResponse, ManagedDIDPage]
@@ -24,6 +25,8 @@ trait DIDRegistrarController {
   ): IO[ErrorResponse, CreateManagedDIDResponse]
 
   def getManagedDid(did: String)(rc: RequestContext): IO[ErrorResponse, ManagedDID]
+
+  def publishManagedDid(did: String)(rc: RequestContext): IO[ErrorResponse, DIDOperationResponse]
 }
 
 object DIDRegistrarController {
@@ -99,6 +102,8 @@ class DIDRegistrarControllerImpl(service: ManagedDIDService) extends DIDRegistra
         .map(state => ManagedDIDDetail(prismDID.asCanonical, state))
     } yield didDetail
   }
+
+  override def publishManagedDid(did: String)(rc: RequestContext): IO[ErrorResponse, DIDOperationResponse] = ???
 }
 
 object DIDRegistrarControllerImpl {
