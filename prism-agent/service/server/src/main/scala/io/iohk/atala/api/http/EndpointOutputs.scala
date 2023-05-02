@@ -13,16 +13,16 @@ object EndpointOutputs {
 
   def basicFailuresWith(extraFailures: OneOfVariant[ErrorResponse]*) = {
     oneOf(
-      Failure.badRequest,
-      (Seq(Failure.internalServerError) ++ extraFailures): _*
+      FailureVariant.badRequest,
+      (Seq(FailureVariant.internalServerError) ++ extraFailures): _*
     )
   }
 
   val basicFailures: EndpointOutput[ErrorResponse] = basicFailuresWith()
 
-  val basicFailuresAndNotFound = basicFailuresWith(Failure.notFound)
+  val basicFailuresAndNotFound = basicFailuresWith(FailureVariant.notFound)
 
-  object Failure {
+  object FailureVariant {
     val badRequest = oneOfVariantValueMatcher(
       StatusCode.BadRequest,
       jsonBody[ErrorResponse].description("Invalid request parameters")

@@ -15,7 +15,7 @@ import scala.tools.nsc.doc.model.Public
 import io.iohk.atala.castor.controller.http.DIDOperationResponse
 import sttp.model.StatusCode
 import io.iohk.atala.castor.controller.http.UpdateManagedDIDRequest
-import io.iohk.atala.api.http.EndpointOutputs.Failure
+import io.iohk.atala.api.http.EndpointOutputs.FailureVariant
 
 object DIDRegistrarEndpoints {
 
@@ -44,7 +44,7 @@ object DIDRegistrarEndpoints {
     Any
   ] = baseEndpoint.post
     .in(jsonBody[CreateManagedDidRequest])
-    .errorOut(EndpointOutputs.basicFailuresWith(Failure.unprocessableEntity))
+    .errorOut(EndpointOutputs.basicFailuresWith(FailureVariant.unprocessableEntity))
     .out(statusCode(StatusCode.Created))
     .out(jsonBody[CreateManagedDIDResponse])
 
@@ -78,7 +78,7 @@ object DIDRegistrarEndpoints {
   ] = baseEndpoint.post
     .in(DIDInput.didRefPathSegment / "updates")
     .in(jsonBody[UpdateManagedDIDRequest])
-    .errorOut(EndpointOutputs.basicFailuresWith(Failure.unprocessableEntity, Failure.notFound))
+    .errorOut(EndpointOutputs.basicFailuresWith(FailureVariant.unprocessableEntity, FailureVariant.notFound))
     .out(statusCode(StatusCode.Accepted))
     .out(jsonBody[DIDOperationResponse])
 
@@ -89,7 +89,7 @@ object DIDRegistrarEndpoints {
     Any
   ] = baseEndpoint.post
     .in(DIDInput.didRefPathSegment / "deactivations")
-    .errorOut(EndpointOutputs.basicFailuresWith(Failure.unprocessableEntity, Failure.notFound))
+    .errorOut(EndpointOutputs.basicFailuresWith(FailureVariant.unprocessableEntity, FailureVariant.notFound))
     .out(statusCode(StatusCode.Accepted))
     .out(jsonBody[DIDOperationResponse])
 

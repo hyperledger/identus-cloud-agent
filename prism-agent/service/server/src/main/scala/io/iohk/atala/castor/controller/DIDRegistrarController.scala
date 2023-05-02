@@ -49,7 +49,7 @@ object DIDRegistrarController {
 
   given Conversion[CreateManagedDIDError, ErrorResponse] = {
     case CreateManagedDIDError.InvalidArgument(msg) =>
-      ErrorResponse.badRequest(detail = Some(msg))
+      ErrorResponse.unprocessableEntity(detail = Some(msg))
     case CreateManagedDIDError.DIDAlreadyExists(did) =>
       ErrorResponse.internalServerError(detail = Some(s"DID already exists: $did"))
     case CreateManagedDIDError.KeyGenerationError(e) =>
@@ -114,7 +114,7 @@ class DIDRegistrarControllerImpl(service: ManagedDIDService) extends DIDRegistra
     for {
       didTemplate <- ZIO
         .fromEither(createManagedDidRequest.documentTemplate.toDomain)
-        .mapError(e => ErrorResponse.badRequest(detail = Some(e)))
+        .mapError(e => ErrorResponse.unprocessableEntity(detail = Some(e)))
       longFormDID <- service
         .createAndStoreDID(didTemplate)
         .mapError[ErrorResponse](e => e)
