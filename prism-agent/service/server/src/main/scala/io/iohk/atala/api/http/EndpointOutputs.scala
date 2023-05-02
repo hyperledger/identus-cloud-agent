@@ -14,7 +14,7 @@ object EndpointOutputs {
   def basicFailuresWith(extraFailures: OneOfVariant[ErrorResponse]*) = {
     oneOf(
       FailureVariant.badRequest,
-      (Seq(FailureVariant.internalServerError) ++ extraFailures): _*
+      (FailureVariant.internalServerError +: extraFailures): _*
     )
   }
 
@@ -42,6 +42,11 @@ object EndpointOutputs {
       StatusCode.UnprocessableEntity,
       jsonBody[ErrorResponse].description("Unable to process the request")
     )(statusCodeMatcher(StatusCode.UnprocessableEntity))
+
+    val conflict = oneOfVariantValueMatcher(
+      StatusCode.Conflict,
+      jsonBody[ErrorResponse].description("Cannot process due to conflict with current state of the resource")
+    )(statusCodeMatcher(StatusCode.Conflict))
   }
 
 }

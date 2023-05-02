@@ -67,7 +67,7 @@ object UpdateManagedDIDRequestAction {
         case ActionType.ADD_KEY =>
           action.addKey
             .toRight("addKey property is missing from action type ADD_KEY")
-            .map(template => AddKey(template.toDomain))
+            .map(template => AddKey(template))
         case ActionType.REMOVE_KEY =>
           action.removeKey
             .toRight("removeKey property is missing from action type REMOVE_KEY")

@@ -100,4 +100,13 @@ object ErrorResponse {
       detail = detail,
       instance = instance
     )
+
+  def conflict(title: String = "Conflict", detail: Option[String] = None, instance: String = "") =
+    ErrorResponse(
+      StatusCode.Conflict.code,
+      `type` = title,
+      title = title,
+      detail = detail,
+      instance = instance
+    )
 }

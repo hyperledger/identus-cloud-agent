@@ -75,9 +75,9 @@ object DIDRegistrarController {
     case UpdateManagedDIDError.DIDNotFound(did) =>
       ErrorResponse.notFound(detail = Some(s"DID not found: $did"))
     case UpdateManagedDIDError.DIDNotPublished(did) =>
-      ErrorResponse.unprocessableEntity(detail = Some(s"DID not published: $did"))
+      ErrorResponse.conflict(detail = Some(s"DID not published: $did"))
     case UpdateManagedDIDError.DIDAlreadyDeactivated(did) =>
-      ErrorResponse.unprocessableEntity(detail = Some(s"DID already deactivated: $did"))
+      ErrorResponse.conflict(detail = Some(s"DID already deactivated: $did"))
     case UpdateManagedDIDError.InvalidArgument(msg) =>
       ErrorResponse.badRequest(detail = Some(msg))
     case e => ErrorResponse.internalServerError(detail = Some(e.toString))
@@ -118,9 +118,7 @@ class DIDRegistrarControllerImpl(service: ManagedDIDService) extends DIDRegistra
       longFormDID <- service
         .createAndStoreDID(didTemplate)
         .mapError[ErrorResponse](e => e)
-    } yield CreateManagedDIDResponse(
-      longFormDid = longFormDID.toString
-    )
+    } yield CreateManagedDIDResponse(longFormDid = longFormDID.toString)
   }
 
   override def getManagedDid(did: String)(rc: RequestContext): IO[ErrorResponse, ManagedDID] = {

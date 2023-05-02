@@ -93,7 +93,10 @@ object DIDRegistrarEndpoints {
   ] = baseEndpoint.post
     .in(DIDInput.didRefPathSegment / "updates")
     .in(jsonBody[UpdateManagedDIDRequest])
-    .errorOut(EndpointOutputs.basicFailuresWith(FailureVariant.unprocessableEntity, FailureVariant.notFound))
+    .errorOut(
+      EndpointOutputs
+        .basicFailuresWith(FailureVariant.unprocessableEntity, FailureVariant.notFound, FailureVariant.conflict)
+    )
     .out(statusCode(StatusCode.Accepted).description("DID update operation accepted"))
     .out(jsonBody[DIDOperationResponse])
     .summary("Update DID in Prism Agent's wallet and post update operation to the VDR")

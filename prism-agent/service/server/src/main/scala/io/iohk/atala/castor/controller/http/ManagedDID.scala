@@ -1,6 +1,7 @@
 package io.iohk.atala.castor.controller.http
 
 import io.iohk.atala.agent.walletapi.model as walletDomain
+import io.iohk.atala.agent.walletapi.model.DIDPublicKeyTemplate
 import io.iohk.atala.agent.walletapi.model.ManagedDIDDetail
 import io.iohk.atala.agent.walletapi.model.ManagedDIDState
 import io.iohk.atala.api.http.Annotation
@@ -108,7 +109,7 @@ object CreateManagedDidRequestDocumentTemplate {
     def toDomain: Either[String, walletDomain.ManagedDIDTemplate] = {
       for {
         services <- template.services.traverse(_.toDomain)
-        publicKeys = template.publicKeys.map(_.toDomain)
+        publicKeys = template.publicKeys.map[DIDPublicKeyTemplate](k => k)
       } yield walletDomain.ManagedDIDTemplate(
         publicKeys = publicKeys,
         services = services
@@ -177,14 +178,11 @@ object ManagedDIDKeyTemplate {
   given decoder: JsonDecoder[ManagedDIDKeyTemplate] = DeriveJsonDecoder.gen[ManagedDIDKeyTemplate]
   given schema: Schema[ManagedDIDKeyTemplate] = Schema.derived
 
-  extension (publicKeyTemplate: ManagedDIDKeyTemplate) {
-    def toDomain: walletDomain.DIDPublicKeyTemplate = {
-      walletDomain.DIDPublicKeyTemplate(
-        id = publicKeyTemplate.id,
-        purpose = publicKeyTemplate.purpose
-      )
-    }
-  }
+  given Conversion[ManagedDIDKeyTemplate, walletDomain.DIDPublicKeyTemplate] = publicKeyTemplate =>
+    walletDomain.DIDPublicKeyTemplate(
+      id = publicKeyTemplate.id,
+      purpose = publicKeyTemplate.purpose
+    )
 }
 
 final case class CreateManagedDIDResponse(
