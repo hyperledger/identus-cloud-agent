@@ -6,6 +6,7 @@ import io.iohk.atala.agent.walletapi.model.ManagedDIDState
 import io.iohk.atala.api.http.Annotation
 import io.iohk.atala.castor.core.model.did as castorDomain
 import io.iohk.atala.castor.core.model.did.PrismDID
+import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import io.iohk.atala.shared.utils.Traverse.*
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
@@ -107,13 +108,44 @@ object CreateManagedDidRequestDocumentTemplate {
     def toDomain: Either[String, walletDomain.ManagedDIDTemplate] = {
       for {
         services <- template.services.traverse(_.toDomain)
-        publicKeys <- template.publicKeys.traverse(_.toDomain)
+        publicKeys = template.publicKeys.map(_.toDomain)
       } yield walletDomain.ManagedDIDTemplate(
         publicKeys = publicKeys,
         services = services
       )
     }
   }
+}
+
+enum Purpose {
+  case authentication extends Purpose
+  case assertionMethod extends Purpose
+  case keyAgreement extends Purpose
+  case capabilityInvocation extends Purpose
+  case capabilityDelegation extends Purpose
+}
+
+object Purpose {
+  given Conversion[Purpose, VerificationRelationship] = {
+    case Purpose.authentication       => VerificationRelationship.Authentication
+    case Purpose.assertionMethod      => VerificationRelationship.AssertionMethod
+    case Purpose.keyAgreement         => VerificationRelationship.KeyAgreement
+    case Purpose.capabilityInvocation => VerificationRelationship.CapabilityInvocation
+    case Purpose.capabilityDelegation => VerificationRelationship.CapabilityDelegation
+  }
+
+  given Conversion[VerificationRelationship, Purpose] = {
+    case VerificationRelationship.Authentication       => Purpose.authentication
+    case VerificationRelationship.AssertionMethod      => Purpose.assertionMethod
+    case VerificationRelationship.KeyAgreement         => Purpose.keyAgreement
+    case VerificationRelationship.CapabilityInvocation => Purpose.capabilityInvocation
+    case VerificationRelationship.CapabilityDelegation => Purpose.capabilityDelegation
+  }
+
+  given encoder: JsonEncoder[Purpose] = JsonEncoder[String].contramap(_.toString)
+  given decoder: JsonDecoder[Purpose] =
+    JsonDecoder[String].mapOrFail(s => Purpose.values.find(_.toString == s).toRight(s"Unknown purpose: $s"))
+  given schema: Schema[Purpose] = Schema.derivedEnumeration.defaultStringBased
 }
 
 @description("key-pair template to add to DID document.")
@@ -123,7 +155,7 @@ final case class ManagedDIDKeyTemplate(
     id: String,
     @description(ManagedDIDKeyTemplate.annotations.purpose.description)
     @encodedExample(ManagedDIDKeyTemplate.annotations.purpose.example)
-    purpose: String // TOOD: use enum
+    purpose: Purpose
 )
 
 object ManagedDIDKeyTemplate {
@@ -135,9 +167,9 @@ object ManagedDIDKeyTemplate {
         )
 
     object purpose
-        extends Annotation[String](
+        extends Annotation[Purpose](
           description = "Purpose of the verification material in the DID Document",
-          example = "authentication"
+          example = VerificationRelationship.Authentication
         )
   }
 
@@ -146,14 +178,10 @@ object ManagedDIDKeyTemplate {
   given schema: Schema[ManagedDIDKeyTemplate] = Schema.derived
 
   extension (publicKeyTemplate: ManagedDIDKeyTemplate) {
-    def toDomain: Either[String, walletDomain.DIDPublicKeyTemplate] = {
-      for {
-        purpose <- castorDomain.VerificationRelationship
-          .parseString(publicKeyTemplate.purpose)
-          .toRight(s"unsupported verificationRelationship ${publicKeyTemplate.purpose}")
-      } yield walletDomain.DIDPublicKeyTemplate(
+    def toDomain: walletDomain.DIDPublicKeyTemplate = {
+      walletDomain.DIDPublicKeyTemplate(
         id = publicKeyTemplate.id,
-        purpose = purpose
+        purpose = publicKeyTemplate.purpose
       )
     }
   }

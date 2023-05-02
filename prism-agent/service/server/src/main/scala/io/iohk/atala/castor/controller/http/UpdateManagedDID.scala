@@ -10,6 +10,7 @@ import io.lemonlabs.uri.Uri
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonEncoder, JsonDecoder}
+import sttp.tapir.Codec
 
 final case class UpdateManagedDIDRequest(
     actions: Seq[UpdateManagedDIDRequestAction]
@@ -21,10 +22,25 @@ object UpdateManagedDIDRequest {
   given Schema[UpdateManagedDIDRequest] = Schema.derived
 }
 
+enum ActionType {
+  case ADD_KEY extends ActionType
+  case REMOVE_KEY extends ActionType
+  case ADD_SERVICE extends ActionType
+  case REMOVE_SERVICE extends ActionType
+  case UPDATE_SERVICE extends ActionType
+}
+
+object ActionType {
+  given JsonEncoder[ActionType] = JsonEncoder[String].contramap(_.toString)
+  given JsonDecoder[ActionType] = JsonDecoder[String].mapOrFail { s =>
+    ActionType.values.find(_.toString == s).toRight(s"Unknown action type: $s")
+  }
+  given Schema[ActionType] = Schema.derivedEnumeration.defaultStringBased
+}
+
+@description(UpdateManagedDIDRequestAction.annotations.description)
 final case class UpdateManagedDIDRequestAction(
-    @description(UpdateManagedDIDRequestAction.annotations.actionType.description)
-    @encodedExample(UpdateManagedDIDRequestAction.annotations.actionType.example)
-    actionType: String, // TODO: use enum
+    actionType: ActionType,
     addKey: Option[ManagedDIDKeyTemplate] = None,
     removeKey: Option[RemoveEntryById] = None,
     addService: Option[Service] = None,
@@ -34,11 +50,10 @@ final case class UpdateManagedDIDRequestAction(
 
 object UpdateManagedDIDRequestAction {
   object annotations {
-    object actionType
-        extends Annotation[String](
-          description = "The type of action to perform",
-          example = "ADD_KEY"
-        )
+    val description =
+      """A list of actions to perform on DID document.
+        |The field `addKey`, `removeKey`, `addService`, `removeService`, `updateService` must corresponds to
+        |the `actionType` specified. For example, `addKey` must be present when `actionType` is `ADD_KEY`.""".stripMargin
   }
 
   given JsonEncoder[UpdateManagedDIDRequestAction] = DeriveJsonEncoder.gen[UpdateManagedDIDRequestAction]
@@ -49,30 +64,28 @@ object UpdateManagedDIDRequestAction {
     def toDomain: Either[String, walletDomain.UpdateManagedDIDAction] = {
       import walletDomain.UpdateManagedDIDAction.*
       action.actionType match {
-        case "ADD_KEY" =>
+        case ActionType.ADD_KEY =>
           action.addKey
             .toRight("addKey property is missing from action type ADD_KEY")
-            .flatMap(_.toDomain)
-            .map(template => AddKey(template))
-        case "REMOVE_KEY" =>
+            .map(template => AddKey(template.toDomain))
+        case ActionType.REMOVE_KEY =>
           action.removeKey
             .toRight("removeKey property is missing from action type REMOVE_KEY")
             .map(i => RemoveKey(i.id))
-        case "ADD_SERVICE" =>
+        case ActionType.ADD_SERVICE =>
           action.addService
             .toRight("addservice property is missing from action type ADD_SERVICE")
             .flatMap(_.toDomain)
             .map(s => AddService(s))
-        case "REMOVE_SERVICE" =>
+        case ActionType.REMOVE_SERVICE =>
           action.removeService
             .toRight("removeService property is missing from action type REMOVE_SERVICE")
             .map(i => RemoveService(i.id))
-        case "UPDATE_SERVICE" =>
+        case ActionType.UPDATE_SERVICE =>
           action.updateService
             .toRight("updateService property is missing from action type UPDATE_SERVICE")
             .flatMap(_.toDomain)
             .map(s => UpdateService(s))
-        case s => Left(s"unsupported update DID action type: $s")
       }
     }
   }
