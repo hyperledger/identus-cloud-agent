@@ -1,13 +1,15 @@
 package io.iohk.atala.castor.controller.http
 
 import io.iohk.atala.agent.walletapi.model as walletDomain
+import io.iohk.atala.api.http.Annotation
 import io.iohk.atala.castor.core.model.did as castorDomain
+import io.iohk.atala.castor.core.model.did.ServiceType
 import io.iohk.atala.castor.core.util.UriUtils
 import io.iohk.atala.shared.utils.Traverse.*
 import io.lemonlabs.uri.Uri
 import sttp.tapir.Schema
+import sttp.tapir.Schema.annotations.{description, encodedExample}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonEncoder, JsonDecoder}
-import io.iohk.atala.castor.core.model.did.ServiceType
 
 final case class UpdateManagedDIDRequest(
     actions: Seq[UpdateManagedDIDRequestAction]
@@ -20,6 +22,8 @@ object UpdateManagedDIDRequest {
 }
 
 final case class UpdateManagedDIDRequestAction(
+    @description(UpdateManagedDIDRequestAction.annotations.actionType.description)
+    @encodedExample(UpdateManagedDIDRequestAction.annotations.actionType.example)
     actionType: String, // TODO: use enum
     addKey: Option[ManagedDIDKeyTemplate] = None,
     removeKey: Option[RemoveEntryById] = None,
@@ -29,6 +33,14 @@ final case class UpdateManagedDIDRequestAction(
 )
 
 object UpdateManagedDIDRequestAction {
+  object annotations {
+    object actionType
+        extends Annotation[String](
+          description = "The type of action to perform",
+          example = "ADD_KEY"
+        )
+  }
+
   given JsonEncoder[UpdateManagedDIDRequestAction] = DeriveJsonEncoder.gen[UpdateManagedDIDRequestAction]
   given JsonDecoder[UpdateManagedDIDRequestAction] = DeriveJsonDecoder.gen[UpdateManagedDIDRequestAction]
   given Schema[UpdateManagedDIDRequestAction] = Schema.derived
@@ -69,18 +81,45 @@ object UpdateManagedDIDRequestAction {
 final case class RemoveEntryById(id: String)
 
 object RemoveEntryById {
+  object annotations {
+    object id
+        extends Annotation[String](
+          description = "The id of the entry to remove",
+          example = "key-1"
+        )
+  }
+
   given JsonEncoder[RemoveEntryById] = DeriveJsonEncoder.gen[RemoveEntryById]
   given JsonDecoder[RemoveEntryById] = DeriveJsonDecoder.gen[RemoveEntryById]
   given Schema[RemoveEntryById] = Schema.derived
 }
 
+@description("A patch to existing Service. 'type' and 'serviceEndpoint' cannot both be empty.")
 final case class UpdateManagedDIDServiceAction(
+    @description(UpdateManagedDIDServiceAction.annotations.id.description)
+    @encodedExample(UpdateManagedDIDServiceAction.annotations.id.example)
     id: String,
+    @description(UpdateManagedDIDServiceAction.annotations.`type`.description)
+    @encodedExample(UpdateManagedDIDServiceAction.annotations.`type`.example)
     `type`: Option[String] = None,
     serviceEndpoint: Option[Seq[String]] = None
 )
 
 object UpdateManagedDIDServiceAction {
+  object annotations {
+    object id
+        extends Annotation[String](
+          description = "The id of the service to update",
+          example = "service-1"
+        )
+
+    object `type`
+        extends Annotation[String](
+          description = "The type of the service",
+          example = "LinkedDomains"
+        )
+  }
+
   given JsonEncoder[UpdateManagedDIDServiceAction] = DeriveJsonEncoder.gen[UpdateManagedDIDServiceAction]
   given JsonDecoder[UpdateManagedDIDServiceAction] = DeriveJsonDecoder.gen[UpdateManagedDIDServiceAction]
   given Schema[UpdateManagedDIDServiceAction] = Schema.derived

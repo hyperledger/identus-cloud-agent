@@ -1,9 +1,11 @@
 package io.iohk.atala.castor.controller.http
 
-import sttp.tapir.Schema
-import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonEncoder, JsonDecoder}
-import io.iohk.atala.shared.models.HexStrings.HexString
+import io.iohk.atala.api.http.Annotation
 import io.iohk.atala.castor.core.model.did.ScheduleDIDOperationOutcome
+import io.iohk.atala.shared.models.HexStrings.HexString
+import sttp.tapir.Schema
+import sttp.tapir.Schema.annotations.{description, encodedExample}
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonEncoder, JsonDecoder}
 
 final case class DIDOperationResponse(
     scheduledOperation: DidOperationSubmission
@@ -25,11 +27,29 @@ object DIDOperationResponse {
 }
 
 final case class DidOperationSubmission(
+    @description(DidOperationSubmission.annotations.id.description)
+    @encodedExample(DidOperationSubmission.annotations.id.example)
     id: String,
+    @description(DidOperationSubmission.annotations.didRef.description)
+    @encodedExample(DidOperationSubmission.annotations.didRef.example)
     didRef: String
 )
 
 object DidOperationSubmission {
+  object annotations {
+    object id
+        extends Annotation[String](
+          description = "A scheduled operation ID",
+          example = "98e6a4db10e58fcc011dd8def5ce99fd8b52af39e61e5fb436dc28259139818b"
+        )
+
+    object didRef
+        extends Annotation[String](
+          description = "A DID affected by the scheduled operation",
+          example = "did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff"
+        )
+  }
+
   given encoder: JsonEncoder[DidOperationSubmission] = DeriveJsonEncoder.gen[DidOperationSubmission]
   given decoder: JsonDecoder[DidOperationSubmission] = DeriveJsonDecoder.gen[DidOperationSubmission]
   given schema: Schema[DidOperationSubmission] = Schema.derived

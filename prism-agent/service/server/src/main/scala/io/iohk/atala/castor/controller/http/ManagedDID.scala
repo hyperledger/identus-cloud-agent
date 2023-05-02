@@ -3,19 +3,50 @@ package io.iohk.atala.castor.controller.http
 import io.iohk.atala.agent.walletapi.model as walletDomain
 import io.iohk.atala.agent.walletapi.model.ManagedDIDDetail
 import io.iohk.atala.agent.walletapi.model.ManagedDIDState
+import io.iohk.atala.api.http.Annotation
 import io.iohk.atala.castor.core.model.did as castorDomain
 import io.iohk.atala.castor.core.model.did.PrismDID
 import io.iohk.atala.shared.utils.Traverse.*
 import sttp.tapir.Schema
+import sttp.tapir.Schema.annotations.{description, encodedExample}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonEncoder, JsonDecoder}
 
 final case class ManagedDID(
+    @description(ManagedDID.annotations.did.description)
+    @encodedExample(ManagedDID.annotations.did.example)
     did: String,
+    @description(ManagedDID.annotations.longFormDid.description)
+    @encodedExample(ManagedDID.annotations.longFormDid.example)
     longFormDid: Option[String] = None,
+    @description(ManagedDID.annotations.status.description)
+    @encodedExample(ManagedDID.annotations.status.example)
     status: String // TODO: use enum
 )
 
 object ManagedDID {
+  object annotations {
+    object did
+        extends Annotation[String](
+          description = "A managed DID",
+          example = "did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff"
+        )
+
+    object longFormDid
+        extends Annotation[String](
+          description = "A long-form DID. Mandatory when status is not PUBLISHED and optional when status is PUBLISHED",
+          example =
+            "did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff:Cr4BCrsBElsKBmF1dGgtMRAEQk8KCXNlY3AyNTZrMRIg0opTuxu-zt6aRbT1tPniG4eu4CYsQPM3rrLzvzNiNgwaIIFTnyT2N4U7qCQ78qtWC3-p0el6Hvv8qxG5uuEw-WgMElwKB21hc3RlcjAQAUJPCglzZWNwMjU2azESIKhBU0eCOO6Vinz_8vhtFSAhYYqrkEXC8PHGxkuIUev8GiAydFHLXb7c22A1Uj_PR21NZp6BCDQqNq2xd244txRgsQ"
+        )
+
+    object status
+        extends Annotation[String](
+          description =
+            """A status indicating a publication state of a DID in the wallet (e.g. PUBLICATION_PENDING, PUBLISHED).
+          |Does not represent DID a full lifecyle (e.g. deactivated, recovered, updated).""".stripMargin,
+          example = "CREATED"
+        )
+  }
+
   given encoder: JsonEncoder[ManagedDID] = DeriveJsonEncoder.gen[ManagedDID]
   given decoder: JsonDecoder[ManagedDID] = DeriveJsonDecoder.gen[ManagedDID]
   given schema: Schema[ManagedDID] = Schema.derived
@@ -85,12 +116,31 @@ object CreateManagedDidRequestDocumentTemplate {
   }
 }
 
+@description("key-pair template to add to DID document.")
 final case class ManagedDIDKeyTemplate(
+    @description(ManagedDIDKeyTemplate.annotations.id.description)
+    @encodedExample(ManagedDIDKeyTemplate.annotations.id.example)
     id: String,
-    purpose: String
+    @description(ManagedDIDKeyTemplate.annotations.purpose.description)
+    @encodedExample(ManagedDIDKeyTemplate.annotations.purpose.example)
+    purpose: String // TOOD: use enum
 )
 
 object ManagedDIDKeyTemplate {
+  object annotations {
+    object id
+        extends Annotation[String](
+          description = "Identifier of a verification material in the DID Document",
+          example = "key-1"
+        )
+
+    object purpose
+        extends Annotation[String](
+          description = "Purpose of the verification material in the DID Document",
+          example = "authentication"
+        )
+  }
+
   given encoder: JsonEncoder[ManagedDIDKeyTemplate] = DeriveJsonEncoder.gen[ManagedDIDKeyTemplate]
   given decoder: JsonDecoder[ManagedDIDKeyTemplate] = DeriveJsonDecoder.gen[ManagedDIDKeyTemplate]
   given schema: Schema[ManagedDIDKeyTemplate] = Schema.derived
@@ -110,10 +160,21 @@ object ManagedDIDKeyTemplate {
 }
 
 final case class CreateManagedDIDResponse(
+    @description(CreateManagedDIDResponse.annotations.longFormDid.description)
+    @encodedExample(CreateManagedDIDResponse.annotations.longFormDid.example)
     longFormDid: String
 )
 
 object CreateManagedDIDResponse {
+  object annotations {
+    object longFormDid
+        extends Annotation[String](
+          description = "A long-form DID for the created DID",
+          example =
+            "did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff:Cr4BCrsBElsKBmF1dGgtMRAEQk8KCXNlY3AyNTZrMRIg0opTuxu-zt6aRbT1tPniG4eu4CYsQPM3rrLzvzNiNgwaIIFTnyT2N4U7qCQ78qtWC3-p0el6Hvv8qxG5uuEw-WgMElwKB21hc3RlcjAQAUJPCglzZWNwMjU2azESIKhBU0eCOO6Vinz_8vhtFSAhYYqrkEXC8PHGxkuIUev8GiAydFHLXb7c22A1Uj_PR21NZp6BCDQqNq2xd244txRgsQ"
+        )
+  }
+
   given encoder: JsonEncoder[CreateManagedDIDResponse] = DeriveJsonEncoder.gen[CreateManagedDIDResponse]
   given decoder: JsonDecoder[CreateManagedDIDResponse] = DeriveJsonDecoder.gen[CreateManagedDIDResponse]
   given schema: Schema[CreateManagedDIDResponse] = Schema.derived
