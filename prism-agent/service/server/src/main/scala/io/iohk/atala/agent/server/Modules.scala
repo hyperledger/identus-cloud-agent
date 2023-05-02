@@ -77,8 +77,8 @@ import io.iohk.atala.castor.controller.{
 object Modules {
 
   def app(port: Int): RIO[
-    DidOps & DidAgent & ManagedDIDService & AppConfig & DIDRegistrarApi & IssueCredentialsProtocolApi &
-      PresentProofApi & ActorSystem[Nothing],
+    DidOps & DidAgent & ManagedDIDService & AppConfig & IssueCredentialsProtocolApi & PresentProofApi &
+      ActorSystem[Nothing],
     Unit
   ] = {
     val httpServerApp = HttpRoutes.routes.flatMap(HttpServer.start(port, _))
@@ -496,13 +496,6 @@ object GrpcModule {
 }
 
 object HttpModule {
-  val didRegistrarApiLayer: TaskLayer[DIDRegistrarApi] = {
-    val serviceLayer = AppModule.manageDIDServiceLayer
-    val apiServiceLayer = serviceLayer >>> DIDRegistrarApiServiceImpl.layer
-    val apiMarshallerLayer = DIDRegistrarApiMarshallerImpl.layer
-    (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new DIDRegistrarApi(_, _))
-  }
-
   val issueCredentialsProtocolApiLayer: RLayer[
     DidOps & DidAgent & ManagedDIDService & ConnectionService & AppConfig & JwtDidResolver,
     IssueCredentialsProtocolApi
@@ -520,7 +513,7 @@ object HttpModule {
     (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new PresentProofApi(_, _))
   }
 
-  val layers = didRegistrarApiLayer ++ issueCredentialsProtocolApiLayer ++ presentProofProtocolApiLayer
+  val layers = issueCredentialsProtocolApiLayer ++ presentProofProtocolApiLayer
 }
 
 object RepoModule {
