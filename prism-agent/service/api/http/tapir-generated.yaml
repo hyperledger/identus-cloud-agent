@@ -679,6 +679,275 @@ paths:
             application/did+ld+json:
               schema:
                 $ref: "#/components/schemas/DIDDocument"
+  /did-registrar/dids:
+    get:
+      tags:
+        - DID Registrar
+      summary: List all DIDs stored in Prism Agent's wallet
+      description: |-
+        List all DIDs stored in Prism Agent's wallet.
+        Return a paginated items ordered by created timestamp.
+        If the `limit` parameter is not set, it defaults to 100 items per page.
+      operationId: getDid-registrarDids
+      parameters:
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+      responses:
+        "200":
+          description: List Prism Agent managed DIDs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ManagedDIDPage"
+        "400":
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      tags:
+        - DID Registrar
+      summary: Create unpublished DID and store it in Prism Agent's wallet
+      description: |-
+        Create unpublished DID and store it inside Prism Agent's wallet. The private keys of the DID is
+        managed by Prism Agent. The DID can later be published to the VDR using publications endpoint.
+      operationId: postDid-registrarDids
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateManagedDidRequest"
+        required: true
+      responses:
+        "201":
+          description: Created unpublished DID.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateManagedDIDResponse"
+        "400":
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /did-registrar/dids/{didRef}:
+    get:
+      tags:
+        - DID Registrar
+      summary: Get DID stored in Prism Agent's wallet
+      description: Get DID stored in Prism Agent's wallet
+      operationId: getDid-registrarDidsDidref
+      parameters:
+        - name: didRef
+          in: path
+          description: Prism DID according to [the Prism DID method syntax](https://github.com/input-output-hk/prism-did-method-spec/blob/main/w3c-spec/PRISM-method.md#prism-did-method-syntax)
+          required: true
+          schema:
+            type: string
+          example: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff
+      responses:
+        "200":
+          description: Get Prism Agent managed DID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ManagedDID"
+        "400":
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /did-registrar/dids/{didRef}/publications:
+    post:
+      tags:
+        - DID Registrar
+      summary: Publish the DID stored in Prism Agent's wallet to the VDR
+      description: Publish the DID stored in Prism Agent's wallet to the VDR.
+      operationId: postDid-registrarDidsDidrefPublications
+      parameters:
+        - name: didRef
+          in: path
+          description: Prism DID according to [the Prism DID method syntax](https://github.com/input-output-hk/prism-did-method-spec/blob/main/w3c-spec/PRISM-method.md#prism-did-method-syntax)
+          required: true
+          schema:
+            type: string
+          example: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff
+      responses:
+        "202":
+          description: Publishing DID to the VDR.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DIDOperationResponse"
+        "400":
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /did-registrar/dids/{didRef}/updates:
+    post:
+      tags:
+        - DID Registrar
+      summary:
+        Update DID in Prism Agent's wallet and post update operation to the
+        VDR
+      description: |-
+        Update DID in Prism Agent's wallet and post update operation to the VDR.
+        This endpoint updates the DID document from the last confirmed operation.
+        Submitting multiple update operations without waiting for confirmation will result in
+        some operations being rejected as only one operation is allowed to be appended to the last confirmed operation.
+      operationId: postDid-registrarDidsDidrefUpdates
+      parameters:
+        - name: didRef
+          in: path
+          description: Prism DID according to [the Prism DID method syntax](https://github.com/input-output-hk/prism-did-method-spec/blob/main/w3c-spec/PRISM-method.md#prism-did-method-syntax)
+          required: true
+          schema:
+            type: string
+          example: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateManagedDIDRequest"
+        required: true
+      responses:
+        "202":
+          description: DID update operation accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DIDOperationResponse"
+        "400":
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /did-registrar/dids/{didRef}/deactivations:
+    post:
+      tags:
+        - DID Registrar
+      summary:
+        Deactivate DID in Prism Agent's wallet and post deactivate operation
+        to the VDR
+      description:
+        Deactivate DID in Prism Agent's wallet and post deactivate operation
+        to the VDR.
+      operationId: postDid-registrarDidsDidrefDeactivations
+      parameters:
+        - name: didRef
+          in: path
+          description: Prism DID according to [the Prism DID method syntax](https://github.com/input-output-hk/prism-did-method-spec/blob/main/w3c-spec/PRISM-method.md#prism-did-method-syntax)
+          required: true
+          schema:
+            type: string
+          example: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff
+      responses:
+        "202":
+          description: DID deactivation operation accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DIDOperationResponse"
+        "400":
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 components:
   schemas:
     AcceptConnectionInvitationRequest:
@@ -690,6 +959,14 @@ components:
           type: string
           description: The base64-encoded raw invitation.
           example: eyJAaWQiOiIzZmE4NWY2NC01NzE3LTQ1NjItYjNmYy0yYzk2M2Y2NmFmYTYiLCJAdHlwZSI6Imh0dHBzOi8vZGlkY29tbS5vcmcvbXktZmFtaWx5LzEuMC9teS1tZXNzYWdlLXR5cGUiLCJkaWQiOiJXZ1d4cXp0ck5vb0c5MlJYdnhTVFd2IiwiaW1hZ2VVcmwiOiJodHRwOi8vMTkyLjE2OC41Ni4xMDEvaW1nL2xvZ28uanBnIiwibGFiZWwiOiJCb2IiLCJyZWNpcGllbnRLZXlzIjpbIkgzQzJBVnZMTXY2Z21NTmFtM3VWQWpacGZrY0pDd0R3blpuNnozd1htcVBWIl0sInJvdXRpbmdLZXlzIjpbIkgzQzJBVnZMTXY2Z21NTmFtM3VWQWpacGZrY0pDd0R3blpuNnozd1htcVBWIl0sInNlcnZpY2VFbmRwb2ludCI6Imh0dHA6Ly8xOTIuMTY4LjU2LjEwMTo4MDIwIn0=
+    ActionType:
+      type: string
+      enum:
+        - ADD_KEY
+        - ADD_SERVICE
+        - REMOVE_KEY
+        - REMOVE_SERVICE
+        - UPDATE_SERVICE
     Connection:
       required:
         - connectionId
@@ -800,11 +1077,6 @@ components:
             and can be used to generate a QR code for example.
           example: https://my.domain.com/path?_oob=eyJAaWQiOiIzZmE4NWY2NC01NzE3LTQ1NjItYjNmYy0yYzk2M2Y2NmFmYTYiLCJAdHlwZSI6Imh0dHBzOi8vZGlkY29tbS5vcmcvbXktZmFtaWx5LzEuMC9teS1tZXNzYWdlLXR5cGUiLCJkaWQiOiJXZ1d4cXp0ck5vb0c5MlJYdnhTVFd2IiwiaW1hZ2VVcmwiOiJodHRwOi8vMTkyLjE2OC41Ni4xMDEvaW1nL2xvZ28uanBnIiwibGFiZWwiOiJCb2IiLCJyZWNpcGllbnRLZXlzIjpbIkgzQzJBVnZMTXY2Z21NTmFtM3VWQWpacGZrY0pDd0R3blpuNnozd1htcVBWIl0sInJvdXRpbmdLZXlzIjpbIkgzQzJBVnZMTXY2Z21NTmFtM3VWQWpacGZrY0pDd0R3blpuNnozd1htcVBWIl0sInNlcnZpY2VFbmRwb2ludCI6Imh0dHA6Ly8xOTIuMTY4LjU2LjEwMTo4MDIwIn0=
       description: The invitation for this connection
-      example: >
-        ConnectionInvitation(
-        0527aea1-d131-3948-a34d-03af39aba8b4,
-        https://didcomm.org/out-of-band/2.0/invitation,did:peer:1234457,https://my.domain.com/path?
-        _oob=eyJAaWQiOiIzZmE4NWY2NC01NzE3LTQ1NjItYjNmYy0yYzk2M2Y2NmFmYTYiLCJAdHlwZSI6Imh0dHBzOi8vZGlkY29tbS5vcmcvbXktZmFtaWx5LzEuMC9teS1tZXNzYWdlLXR5cGUiLCJkaWQiOiJXZ1d4cXp0ck5vb0c5MlJYdnhTVFd2IiwiaW1hZ2VVcmwiOiJodHRwOi8vMTkyLjE2OC41Ni4xMDEvaW1nL2xvZ28uanBnIiwibGFiZWwiOiJCb2IiLCJyZWNpcGllbnRLZXlzIjpbIkgzQzJBVnZMTXY2Z21NTmFtM3VWQWpacGZrY0pDd0R3blpuNnozd1htcVBWIl0sInJvdXRpbmdLZXlzIjpbIkgzQzJBVnZMTXY2Z21NTmFtM3VWQWpacGZrY0pDd0R3blpuNnozd1htcVBWIl0sInNlcnZpY2VFbmRwb2ludCI6Imh0dHA6Ly8xOTIuMTY4LjU2LjEwMTo4MDIwIn0=)
     ConnectionsPage:
       required:
         - kind
@@ -845,6 +1117,33 @@ components:
           type: string
           description: A human readable alias for the connection.
           example: Peter
+    CreateManagedDIDResponse:
+      required:
+        - longFormDid
+      type: object
+      properties:
+        longFormDid:
+          type: string
+          description: A long-form DID for the created DID
+          example: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff:Cr4BCrsBElsKBmF1dGgtMRAEQk8KCXNlY3AyNTZrMRIg0opTuxu-zt6aRbT1tPniG4eu4CYsQPM3rrLzvzNiNgwaIIFTnyT2N4U7qCQ78qtWC3-p0el6Hvv8qxG5uuEw-WgMElwKB21hc3RlcjAQAUJPCglzZWNwMjU2azESIKhBU0eCOO6Vinz_8vhtFSAhYYqrkEXC8PHGxkuIUev8GiAydFHLXb7c22A1Uj_PR21NZp6BCDQqNq2xd244txRgsQ
+    CreateManagedDidRequest:
+      required:
+        - documentTemplate
+      type: object
+      properties:
+        documentTemplate:
+          $ref: "#/components/schemas/CreateManagedDidRequestDocumentTemplate"
+    CreateManagedDidRequestDocumentTemplate:
+      type: object
+      properties:
+        publicKeys:
+          type: array
+          items:
+            $ref: "#/components/schemas/ManagedDIDKeyTemplate"
+        services:
+          type: array
+          items:
+            $ref: "#/components/schemas/Service"
     CredentialSchemaInput:
       required:
         - name
@@ -1174,6 +1473,13 @@ components:
             If a DID in short form or has not been published, DID document metadata MUST NOT contain a `canonicalId` property.
           example: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff
       description: "[DID document metadata](https://www.w3.org/TR/did-core/#did-document-metadata)"
+    DIDOperationResponse:
+      required:
+        - scheduledOperation
+      type: object
+      properties:
+        scheduledOperation:
+          $ref: "#/components/schemas/DidOperationSubmission"
     DIDResolutionMetadata:
       type: object
       properties:
@@ -1207,6 +1513,20 @@ components:
           $ref: "#/components/schemas/DIDDocumentMetadata"
         didResolutionMetadata:
           $ref: "#/components/schemas/DIDResolutionMetadata"
+    DidOperationSubmission:
+      required:
+        - id
+        - didRef
+      type: object
+      properties:
+        id:
+          type: string
+          description: A scheduled operation ID
+          example: 98e6a4db10e58fcc011dd8def5ce99fd8b52af39e61e5fb436dc28259139818b
+        didRef:
+          type: string
+          description: A DID affected by the scheduled operation
+          example: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff
     ErrorResponse:
       required:
         - status
@@ -1242,6 +1562,62 @@ components:
             A URI reference that identifies the specific occurrence of
             the problem. It may or may not yield further information if dereferenced.
           example: The received '{}à!è@!.b}' email does not conform to the email format
+    ManagedDID:
+      required:
+        - did
+        - status
+      type: object
+      properties:
+        did:
+          type: string
+          description: A managed DID
+          example: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff
+        longFormDid:
+          type: string
+          description:
+            A long-form DID. Mandatory when status is not PUBLISHED and
+            optional when status is PUBLISHED
+          example: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff:Cr4BCrsBElsKBmF1dGgtMRAEQk8KCXNlY3AyNTZrMRIg0opTuxu-zt6aRbT1tPniG4eu4CYsQPM3rrLzvzNiNgwaIIFTnyT2N4U7qCQ78qtWC3-p0el6Hvv8qxG5uuEw-WgMElwKB21hc3RlcjAQAUJPCglzZWNwMjU2azESIKhBU0eCOO6Vinz_8vhtFSAhYYqrkEXC8PHGxkuIUev8GiAydFHLXb7c22A1Uj_PR21NZp6BCDQqNq2xd244txRgsQ
+        status:
+          type: string
+          description: |-
+            A status indicating a publication state of a DID in the wallet (e.g. PUBLICATION_PENDING, PUBLISHED).
+            Does not represent DID a full lifecyle (e.g. deactivated, recovered, updated).
+          example: CREATED
+    ManagedDIDKeyTemplate:
+      required:
+        - id
+        - purpose
+      type: object
+      properties:
+        id:
+          type: string
+          description: Identifier of a verification material in the DID Document
+          example: key-1
+        purpose:
+          $ref: "#/components/schemas/Purpose"
+      description: key-pair template to add to DID document.
+    ManagedDIDPage:
+      required:
+        - self
+        - kind
+        - pageOf
+      type: object
+      properties:
+        self:
+          type: string
+        kind:
+          type: string
+        pageOf:
+          type: string
+        next:
+          type: string
+        previous:
+          type: string
+        contents:
+          type: array
+          items:
+            $ref: "#/components/schemas/ManagedDID"
     Proof:
       required:
         - type
@@ -1321,6 +1697,23 @@ components:
           type: string
         kty:
           type: string
+    Purpose:
+      type: string
+      description: Purpose of the verification material in the DID Document
+      example: authentication
+      enum:
+        - assertionMethod
+        - authentication
+        - capabilityDelegation
+        - capabilityInvocation
+        - keyAgreement
+    RemoveEntryById:
+      required:
+        - id
+      type: object
+      properties:
+        id:
+          type: string
     Service:
       required:
         - id
@@ -1350,6 +1743,54 @@ components:
             The service endpoint. Can contain multiple possible values
             as described in the [Create DID operation]
       description: A service expressed in the DID document. https://www.w3.org/TR/did-core/#services
+    UpdateManagedDIDRequest:
+      type: object
+      properties:
+        actions:
+          type: array
+          items:
+            $ref: "#/components/schemas/UpdateManagedDIDRequestAction"
+    UpdateManagedDIDRequestAction:
+      required:
+        - actionType
+      type: object
+      properties:
+        actionType:
+          $ref: "#/components/schemas/ActionType"
+        addKey:
+          $ref: "#/components/schemas/ManagedDIDKeyTemplate"
+        removeKey:
+          $ref: "#/components/schemas/RemoveEntryById"
+        addService:
+          $ref: "#/components/schemas/Service"
+        removeService:
+          $ref: "#/components/schemas/RemoveEntryById"
+        updateService:
+          $ref: "#/components/schemas/UpdateManagedDIDServiceAction"
+      description: |-
+        A list of actions to perform on DID document.
+        The field `addKey`, `removeKey`, `addService`, `removeService`, `updateService` must corresponds to
+        the `actionType` specified. For example, `addKey` must be present when `actionType` is `ADD_KEY`.
+    UpdateManagedDIDServiceAction:
+      required:
+        - id
+      type: object
+      properties:
+        id:
+          type: string
+          description: The id of the service to update
+          example: service-1
+        type:
+          type: string
+          description: The type of the service
+          example: LinkedDomains
+        serviceEndpoint:
+          type: array
+          items:
+            type: string
+      description:
+        A patch to existing Service. 'type' and 'serviceEndpoint' cannot
+        both be empty.
     VerificationMethod:
       required:
         - id

@@ -34,7 +34,7 @@ case class Connection(
     @validate(annotations.state.validator)
     state: String,
     @description(annotations.invitation.description)
-    @encodedExample(annotations.invitation.example)
+    // @encodedExample(annotations.invitation.example) // FIXME: tapir incorrectly render this example
     invitation: ConnectionInvitation,
     @description(annotations.createdAt.description)
     @encodedExample(annotations.createdAt.example)

@@ -27,7 +27,7 @@ Scenario Outline: PRISM DID creation fails with wrong formatted fields
 Examples:
   | field                                           | value  | error |
   | documentTemplate.publicKeys[0].id               | #      | 422   |
-  | documentTemplate.publicKeys[0].purpose          | potato | 422   |
+  | documentTemplate.publicKeys[0].purpose          | potato | 400   |
   | documentTemplate.services[0].id                 | #      | 422   |
   | documentTemplate.services[0].type               | potato | 422   |
   | documentTemplate.services[0].serviceEndpoint[0] | potato | 422   |

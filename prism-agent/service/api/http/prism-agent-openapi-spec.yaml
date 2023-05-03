@@ -43,143 +43,19 @@ paths:
     $ref: "./tapir-generated.yaml#/paths/~1dids~1{didRef}"
 
   /did-registrar/dids:
-    get:
-      operationId: listManagedDid
-      tags: ["DID Registrar"]
-      summary: List all DIDs stored in Prism Agent's wallet
-      description: |
-        List all DIDs stored in Prism Agent's wallet.
-        Return a paginated items ordered by created timestamp.
-        If the `limit` parameter is not set, it defaults to 100 items per page.
-      parameters:
-        - $ref: "./shared/parameters.yaml#/components/parameters/offset"
-        - $ref: "./shared/parameters.yaml#/components/parameters/limit"
-      responses:
-        "200":
-          description: List Prism Agent managed DIDs
-          content:
-            application/json:
-              schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/ManagedDIDPage"
-        "500":
-          $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
-
-    post:
-      operationId: createManagedDid
-      tags: ["DID Registrar"]
-      summary: Create unpublished DID and store it in Prism Agent's wallet
-      description: |
-        Create unpublished DID and store it inside Prism Agent's wallet. The private keys of the DID is
-        managed by Prism Agent. The DID can later be published to the VDR using publications endpoint.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "./castor/schemas.yaml#/components/schemas/CreateManagedDidRequest"
-      responses:
-        "201":
-          description: Created unpublished DID.
-          content:
-            application/json:
-              schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/CreateManagedDIDResponse"
-        "422":
-          $ref: "./shared/responses.yaml#/components/responses/UnprocessableEntity"
-        "500":
-          $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
+    $ref: "./tapir-generated.yaml#/paths/~1did-registrar~1dids"
 
   /did-registrar/dids/{didRef}:
-    get:
-      operationId: getManagedDid
-      tags: ["DID Registrar"]
-      summary: Get DID stored in Prism Agent's wallet
-      description: Get DID stored in Prism Agent's wallet
-      parameters:
-        - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
-      responses:
-        "200":
-          description: Get Prism Agent managed DID
-          content:
-            application/json:
-              schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/ManagedDID"
-        "404":
-          $ref: "./shared/responses.yaml#/components/responses/NotFound"
-        "500":
-          $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
+    $ref: "./tapir-generated.yaml#/paths/~1did-registrar~1dids~1{didRef}"
 
   /did-registrar/dids/{didRef}/publications:
-    post:
-      operationId: publishManagedDid
-      tags: ["DID Registrar"]
-      summary: Publish the DID stored in Prism Agent's wallet to the VDR
-      description: |
-        Publish the DID stored in Prism Agent's wallet to the VDR.
-      parameters:
-        - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
-      responses:
-        "202":
-          description: Publishing DID to the VDR.
-          content:
-            application/json:
-              schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/DIDOperationResponse"
-        "422":
-          $ref: "./shared/responses.yaml#/components/responses/UnprocessableEntity"
-        "500":
-          $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
+    $ref: "./tapir-generated.yaml#/paths/~1did-registrar~1dids~1{didRef}~1publications"
 
   /did-registrar/dids/{didRef}/updates:
-    post:
-      operationId: updateManagedDid
-      tags: ["DID Registrar"]
-      summary: Update DID in Prism Agent's wallet and post update operation to the VDR
-      description: |
-        Update DID in Prism Agent's wallet and post update operation to the VDR.
-        This endpoint updates the DID document from the last confirmed operation.
-        Submitting multiple update operations without waiting for confirmation will result in
-        some operations being rejected as only one operation is allowed to be appended to the last confirmed operation.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "./castor/schemas.yaml#/components/schemas/UpdateManagedDIDRequest"
-      parameters:
-        - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
-      responses:
-        "202":
-          description: Publishing DID to the VDR.
-          content:
-            application/json:
-              schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/DIDOperationResponse"
-        "422":
-          $ref: "./shared/responses.yaml#/components/responses/UnprocessableEntity"
-        "500":
-          $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
+    $ref: "./tapir-generated.yaml#/paths/~1did-registrar~1dids~1{didRef}~1updates"
 
   /did-registrar/dids/{didRef}/deactivations:
-    post:
-      operationId: deactivateManagedDid
-      tags: ["DID Registrar"]
-      summary: Deactivate DID in Prism Agent's wallet and post deactivate operation to the VDR
-      description: |
-        Deactivate DID in Prism Agent's wallet and post deactivate operation to the VDR.
-      parameters:
-        - $ref: "./castor/parameters.yaml#/components/parameters/didRefInPath"
-      responses:
-        "202":
-          description: DID deactivation to VDR successfully queued.
-          content:
-            application/json:
-              schema:
-                $ref: "./castor/schemas.yaml#/components/schemas/DIDOperationResponse"
-        "422":
-          $ref: "./shared/responses.yaml#/components/responses/UnprocessableEntity"
-        "500":
-          $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
+    $ref: "./tapir-generated.yaml#/paths/~1did-registrar~1dids~1{didRef}~1deactivations"
 
   # ----------------------------------
   # Pollux
