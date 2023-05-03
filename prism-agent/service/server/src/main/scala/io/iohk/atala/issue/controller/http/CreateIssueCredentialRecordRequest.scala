@@ -12,9 +12,6 @@ import java.time.{OffsetDateTime, ZoneOffset}
 
 /** A class to represent an incoming request to create a new credential offer.
   *
-  * @param subjectId
-  *   The identifier (e.g DID) of the subject to which the verifiable credential will be issued. for example:
-  *   ''did:prism:subjectofverifiablecredentials''
   * @param validityPeriod
   *   The validity period in seconds of the verifiable credential that will be issued. for example: ''3600''
   * @param claims
@@ -31,9 +28,6 @@ import java.time.{OffsetDateTime, ZoneOffset}
   *   be used to execute the issue credential protocol. for example: ''null''
   */
 final case class CreateIssueCredentialRecordRequest(
-    @description(annotations.subjectId.description)
-    @encodedExample(annotations.subjectId.example)
-    subjectId: Option[String] = None,
     @description(annotations.validityPeriod.description)
     @encodedExample(annotations.validityPeriod.example)
     validityPeriod: Option[Double] = None,
@@ -54,12 +48,6 @@ final case class CreateIssueCredentialRecordRequest(
 object CreateIssueCredentialRecordRequest {
 
   object annotations {
-
-    object subjectId
-        extends Annotation[String](
-          description = "The identifier (e.g DID) of the subject to which the verifiable credential will be issued.",
-          example = "did:prism:subjectofverifiablecredentials"
-        )
 
     object validityPeriod
         extends Annotation[Double](
