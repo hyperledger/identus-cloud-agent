@@ -41,8 +41,7 @@ import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.prism.crypto.Sha256
 import io.iohk.atala.prism.crypto.util.Random
-import io.iohk.atala.shared.models.Base64UrlStrings.*
-import io.iohk.atala.shared.models.HexStrings.*
+import io.iohk.atala.shared.models.{Base64UrlString, HexString}
 import zio.*
 
 import scala.collection.immutable.ArraySeq

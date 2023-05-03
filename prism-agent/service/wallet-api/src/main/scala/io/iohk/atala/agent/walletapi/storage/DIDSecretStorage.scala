@@ -4,7 +4,7 @@ import io.iohk.atala.agent.walletapi.model.ECKeyPair
 import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError
 import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError._
 import io.iohk.atala.castor.core.model.did.PrismDID
-import io.iohk.atala.shared.models.HexStrings.HexString
+import io.iohk.atala.shared.models.HexString
 import zio.*
 import io.iohk.atala.mercury.PeerDID
 import com.nimbusds.jose.jwk.OctetKeyPair

@@ -2,7 +2,7 @@ package io.iohk.atala.castor.controller.http
 
 import io.iohk.atala.api.http.Annotation
 import io.iohk.atala.castor.core.model.did.ScheduleDIDOperationOutcome
-import io.iohk.atala.shared.models.HexStrings.HexString
+import io.iohk.atala.shared.models.HexString
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonEncoder, JsonDecoder}

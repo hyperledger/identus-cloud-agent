@@ -3,8 +3,9 @@ import org.scoverage.coveralls.Imports.CoverallsKeys._
 
 inThisBuild(
   Seq(
+    maxErrors := 1,
     organization := "io.iohk.atala",
-    scalaVersion := "3.2.2",
+    scalaVersion := "3.3.0-RC5",
     fork := true,
     run / connectInput := true,
     releaseUseGlobalVersion := false,
@@ -22,7 +23,7 @@ inThisBuild(
     scalacOptions ++= Seq(
       "-encoding",
       "UTF-8",
-      "-deprecation",
+      // "-deprecation",
       "-unchecked",
       // TODO "-feature",
       // TODO "-Xfatal-warnings",
@@ -340,7 +341,7 @@ lazy val D_PrismAgent = new {
 
   // Project Dependencies
   lazy val keyManagementDependencies: Seq[ModuleID] =
-    baseDependencies ++ bouncyDependencies
+    baseDependencies ++ bouncyDependencies ++ D.doobieDependencies ++ Seq(D.zioCatsInterop)
 
   lazy val serverDependencies: Seq[ModuleID] =
     baseDependencies ++ akkaHttpDependencies ++ tapirDependencies ++ postgresDependencies
@@ -576,15 +577,6 @@ lazy val castorCore = project
   )
   .dependsOn(shared)
 
-lazy val castorDoobie = project
-  .in(file("castor/lib/sql-doobie"))
-  .settings(castorCommonSettings)
-  .settings(
-    name := "castor-sql-doobie",
-    libraryDependencies ++= D_Castor.sqlDoobieDependencies
-  )
-  .dependsOn(shared, castorCore)
-
 // #####################
 // #####  pollux  ######
 // #####################
@@ -664,10 +656,11 @@ lazy val prismAgentWalletAPI = project
   .settings(prismAgentConnectCommonSettings)
   .settings(
     name := "prism-agent-wallet-api",
-    libraryDependencies ++= D_PrismAgent.keyManagementDependencies
+    libraryDependencies ++= D_PrismAgent.keyManagementDependencies,
+    scalacOptions ++= Seq("-Wunused:imports")
   )
   .dependsOn(agentDidcommx)
-  .dependsOn(castorCore, castorDoobie)
+  .dependsOn(castorCore)
 
 lazy val prismAgentServer = project
   .in(file("prism-agent/service/server"))
@@ -700,8 +693,7 @@ lazy val prismAgentServer = project
     polluxDoobie,
     connectCore,
     connectDoobie,
-    castorCore,
-    castorDoobie
+    castorCore
   )
 
 // ##################
