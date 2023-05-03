@@ -3,9 +3,8 @@ import org.scoverage.coveralls.Imports.CoverallsKeys._
 
 inThisBuild(
   Seq(
-    maxErrors := 1,
     organization := "io.iohk.atala",
-    scalaVersion := "3.3.0-RC5",
+    scalaVersion := "3.2.2",
     fork := true,
     run / connectInput := true,
     releaseUseGlobalVersion := false,
@@ -23,7 +22,7 @@ inThisBuild(
     scalacOptions ++= Seq(
       "-encoding",
       "UTF-8",
-      // "-deprecation",
+      "-deprecation",
       "-unchecked",
       // TODO "-feature",
       // TODO "-Xfatal-warnings",
