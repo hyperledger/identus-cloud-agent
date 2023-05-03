@@ -30,6 +30,7 @@ import io.circe.syntax.*
 import io.iohk.atala.agent.server.health.HealthInfo
 import io.iohk.atala.connect.controller.ConnectionControllerImpl
 import io.iohk.atala.castor.controller.DIDControllerImpl
+import io.iohk.atala.castor.controller.DIDRegistrarControllerImpl
 
 import java.security.Security
 import io.iohk.atala.agent.server.http.HttpRoutes
@@ -143,6 +144,7 @@ object AgentApp extends ZIOAppDefault {
         RepoModule.verificationPolicyServiceLayer,
         ConnectionControllerImpl.layer,
         DIDControllerImpl.layer,
+        DIDRegistrarControllerImpl.layer,
       )
     } yield app
 

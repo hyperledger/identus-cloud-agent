@@ -1,11 +1,14 @@
 package io.iohk.atala.castor.controller.http
 
+import io.iohk.atala.api.http.Annotation
+import io.iohk.atala.castor.controller.http.Service.annotations
+import io.iohk.atala.castor.core.model.did as castorDomain
 import io.iohk.atala.castor.core.model.did.w3c
+import io.iohk.atala.shared.utils.Traverse.*
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonEncoder, JsonDecoder}
-import io.iohk.atala.api.http.Annotation
-import io.iohk.atala.castor.controller.http.Service.annotations
+import io.lemonlabs.uri.Uri
 
 @description("A service expressed in the DID document. https://www.w3.org/TR/did-core/#services")
 final case class Service(
@@ -57,4 +60,22 @@ object Service {
       `type` = service.`type`,
       serviceEndpoint = service.serviceEndpoint
     )
+
+  extension (service: Service) {
+    def toDomain: Either[String, castorDomain.Service] = {
+      for {
+        serviceEndpoint <- service.serviceEndpoint
+          .traverse(s => Uri.parseTry(s).toEither.left.map(_ => s"unable to parse serviceEndpoint $s as URI"))
+        serviceType <- castorDomain.ServiceType
+          .parseString(service.`type`)
+          .toRight(s"unsupported serviceType ${service.`type`}")
+      } yield castorDomain
+        .Service(
+          id = service.id,
+          `type` = serviceType,
+          serviceEndpoint = serviceEndpoint
+        )
+        .normalizeServiceEndpoint()
+    }
+  }
 }

@@ -20,30 +20,7 @@ object JsonSupport extends JsonSupport
 
 trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 
-  // Castor
-  given RootJsonFormat[CreateManagedDidRequest] = jsonFormat1(CreateManagedDidRequest.apply)
-  given RootJsonFormat[CreateManagedDidRequestDocumentTemplate] = jsonFormat2(
-    CreateManagedDidRequestDocumentTemplate.apply
-  )
-  given RootJsonFormat[CreateManagedDIDResponse] = jsonFormat1(CreateManagedDIDResponse.apply)
-  given RootJsonFormat[DIDOperationResponse] = jsonFormat1(DIDOperationResponse.apply)
-  given RootJsonFormat[DidOperationSubmission] = jsonFormat2(DidOperationSubmission.apply)
   given RootJsonFormat[ErrorResponse] = jsonFormat5(ErrorResponse.apply)
-  given RootJsonFormat[ManagedDID] = jsonFormat3(ManagedDID.apply)
-  given RootJsonFormat[ManagedDIDPage] = jsonFormat6(ManagedDIDPage.apply)
-  given RootJsonFormat[ManagedDIDKeyTemplate] = jsonFormat2(ManagedDIDKeyTemplate.apply)
-  given RootJsonFormat[Service] = jsonFormat3(Service.apply)
-  given RootJsonFormat[UpdateManagedDIDRequest] = jsonFormat1(UpdateManagedDIDRequest.apply)
-  given RootJsonFormat[UpdateManagedDIDRequestActionsInner] = jsonFormat6(UpdateManagedDIDRequestActionsInner.apply)
-  given RootJsonFormat[UpdateManagedDIDRequestActionsInnerRemoveKey] = jsonFormat1(
-    UpdateManagedDIDRequestActionsInnerRemoveKey.apply
-  )
-  given RootJsonFormat[UpdateManagedDIDRequestActionsInnerRemoveService] = jsonFormat1(
-    UpdateManagedDIDRequestActionsInnerRemoveService.apply
-  )
-  given RootJsonFormat[UpdateManagedDIDRequestActionsInnerUpdateService] = jsonFormat3(
-    UpdateManagedDIDRequestActionsInnerUpdateService.apply
-  )
 
   // Issue Credential Protocol
   implicit object UUIDFormat extends JsonFormat[UUID] {
