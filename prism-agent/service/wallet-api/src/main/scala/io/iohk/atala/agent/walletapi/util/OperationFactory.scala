@@ -1,6 +1,5 @@
 package io.iohk.atala.agent.walletapi.util
 
-import io.iohk.atala.agent.walletapi.crypto.KeyGeneratorWrapper
 import io.iohk.atala.agent.walletapi.model.{DIDPublicKeyTemplate, ECKeyPair, ManagedDIDTemplate, UpdateManagedDIDAction}
 import io.iohk.atala.agent.walletapi.model.error.{CreateManagedDIDError, UpdateManagedDIDError}
 import io.iohk.atala.castor.core.model.did.{
@@ -13,7 +12,7 @@ import io.iohk.atala.castor.core.model.did.{
   PublicKeyData,
   UpdateDIDAction
 }
-import io.iohk.atala.shared.models.{Base64UrlString, HexString}
+import io.iohk.atala.shared.models.Base64UrlString
 import zio.*
 
 import scala.collection.immutable.ArraySeq

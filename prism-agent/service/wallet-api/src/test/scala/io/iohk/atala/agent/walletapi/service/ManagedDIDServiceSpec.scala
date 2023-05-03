@@ -19,7 +19,6 @@ import io.iohk.atala.castor.core.model.did.{
 import io.iohk.atala.castor.core.model.error
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.castor.core.util.DIDOperationValidator
-import io.iohk.atala.shared.models.HexString
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*

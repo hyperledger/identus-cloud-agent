@@ -3,26 +3,11 @@ package io.iohk.atala.agent.walletapi.storage
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
-import io.iohk.atala.agent.walletapi.crypto.KeyGeneratorWrapper
-import io.iohk.atala.agent.walletapi.model.{
-  DIDPublicKeyTemplate,
-  DIDUpdateLineage,
-  ECKeyPair,
-  ManagedDIDState,
-  ManagedDIDTemplate
-}
+import io.iohk.atala.agent.walletapi.model.{ECKeyPair}
 import io.iohk.atala.agent.walletapi.sql.{JdbcDIDNonSecretStorage, JdbcDIDSecretStorage}
-import io.iohk.atala.agent.walletapi.util.OperationFactory
-import io.iohk.atala.castor.core.model.did.{
-  EllipticCurve,
-  PrismDID,
-  PrismDIDOperation,
-  ScheduledDIDOperationStatus,
-  VerificationRelationship
-}
+import io.iohk.atala.castor.core.model.did.{PrismDID, ScheduledDIDOperationStatus}
 import io.iohk.atala.test.container.{DBTestUtils, PostgresTestContainerSupport}
 
-import java.time.Instant
 import scala.collection.immutable.ArraySeq
 import org.postgresql.util.PSQLException
 

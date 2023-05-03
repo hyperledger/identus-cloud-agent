@@ -656,8 +656,7 @@ lazy val prismAgentWalletAPI = project
   .settings(prismAgentConnectCommonSettings)
   .settings(
     name := "prism-agent-wallet-api",
-    libraryDependencies ++= D_PrismAgent.keyManagementDependencies,
-    scalacOptions ++= Seq("-Wunused:imports")
+    libraryDependencies ++= D_PrismAgent.keyManagementDependencies
   )
   .dependsOn(agentDidcommx)
   .dependsOn(castorCore)
