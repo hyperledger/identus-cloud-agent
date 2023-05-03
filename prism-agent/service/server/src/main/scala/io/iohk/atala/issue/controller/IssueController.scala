@@ -32,7 +32,6 @@ trait IssueController {
 
 object IssueController {
   def toHttpError(error: CredentialServiceError): ErrorResponse =
-    ZIO.logError(toHttpError(error).title)
     error match
       case CredentialServiceError.RepositoryError(cause) =>
         ErrorResponse.internalServerError(title = "RepositoryError", detail = Some(cause.toString))
