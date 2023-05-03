@@ -19,7 +19,7 @@ import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.shared.models.HexString
 import io.iohk.atala.prism.protos.{node_api, node_models}
 import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc.NodeService
-import io.iohk.atala.prism.protos.node_models.OperationOutput.{OperationMaybe}
+import io.iohk.atala.prism.protos.node_models.OperationOutput.OperationMaybe
 
 import scala.collection.immutable.ArraySeq
 import io.iohk.atala.castor.core.model.error.OperationValidationError

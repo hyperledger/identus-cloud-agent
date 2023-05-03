@@ -175,8 +175,6 @@ lazy val D_Castor = new {
 
   // Project Dependencies
   val coreDependencies: Seq[ModuleID] = baseDependencies
-  val sqlDoobieDependencies: Seq[ModuleID] =
-    baseDependencies ++ D.doobieDependencies ++ Seq(D.zioCatsInterop)
 }
 
 lazy val D_Pollux = new {
