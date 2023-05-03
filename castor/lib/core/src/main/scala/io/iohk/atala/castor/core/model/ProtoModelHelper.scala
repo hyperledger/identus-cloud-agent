@@ -3,12 +3,10 @@ package io.iohk.atala.castor.core.model
 import java.time.Instant
 import com.google.protobuf.ByteString
 import io.iohk.atala.castor.core.model.did.{
-  CanonicalPrismDID,
   DIDData,
   EllipticCurve,
   InternalKeyPurpose,
   InternalPublicKey,
-  LongFormPrismDID,
   PrismDID,
   PrismDIDOperation,
   PublicKey,
@@ -21,18 +19,14 @@ import io.iohk.atala.castor.core.model.did.{
   UpdateDIDAction,
   VerificationRelationship
 }
-import io.iohk.atala.prism.crypto.EC
 import io.iohk.atala.prism.protos.common_models.OperationStatus
 import io.iohk.atala.prism.protos.node_models.KeyUsage
 import io.iohk.atala.prism.protos.node_models.PublicKey.KeyData
-import io.iohk.atala.shared.models.HexStrings.*
 import io.iohk.atala.shared.models.Base64UrlStrings.*
 import io.iohk.atala.shared.utils.Traverse.*
 import io.iohk.atala.prism.protos.{common_models, node_api, node_models}
 import io.lemonlabs.uri.Uri
 import zio.*
-
-import scala.util.Try
 
 object ProtoModelHelper extends ProtoModelHelper
 

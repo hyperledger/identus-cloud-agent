@@ -1,9 +1,7 @@
 package io.iohk.atala.castor.core.model.did
 
-import io.iohk.atala.castor.core.model.did.w3c.DIDResolutionErrorRepr
 import io.iohk.atala.castor.core.model.error.DIDResolutionError
 import io.iohk.atala.castor.core.service.DIDService
-import io.iohk.atala.shared.models.HexStrings.HexString
 import zio.*
 
 package object w3c {
