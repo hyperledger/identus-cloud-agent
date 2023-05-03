@@ -28,7 +28,8 @@ object IssueControllerSpec extends ZIOSpecDefault {
     test("return internal server error if repository error") {
       val cse = CredentialServiceError.RepositoryError(new Throwable("test throw"))
       val httpError = IssueController.toHttpError(cse)
-      val errorResponse = ErrorResponse.internalServerError(title = "RepositoryError", detail = Some(cse.cause.toString))
+      val errorResponse =
+        ErrorResponse.internalServerError(title = "RepositoryError", detail = Some(cse.cause.toString))
       assert(httpError)(equalTo(errorResponse))
     },
     test("return not found error if record id not found") {
@@ -40,7 +41,8 @@ object IssueControllerSpec extends ZIOSpecDefault {
     test("return internal server error if operation not executed") {
       val cse = CredentialServiceError.OperationNotExecuted(DidCommID("12345"), "info")
       val httpError = IssueController.toHttpError(cse)
-      val errorResponse = ErrorResponse.internalServerError(title = "Operation Not Executed", detail = Some(s"12345-info"))
+      val errorResponse =
+        ErrorResponse.internalServerError(title = "Operation Not Executed", detail = Some(s"12345-info"))
       assert(httpError)(equalTo(errorResponse))
     },
     test("return not found error if thread Id not found") {
@@ -64,13 +66,15 @@ object IssueControllerSpec extends ZIOSpecDefault {
     test("return bad request error if unsupported did format error") {
       val cse = CredentialServiceError.UnsupportedDidFormat("12345")
       val httpError = IssueController.toHttpError(cse)
-      val errorResponse = ErrorResponse.badRequest("Unsupported DID format", Some(s"The following DID is not supported: 12345"))
+      val errorResponse =
+        ErrorResponse.badRequest("Unsupported DID format", Some(s"The following DID is not supported: 12345"))
       assert(httpError)(equalTo(errorResponse))
     },
     test("return bad request error if create credential payload from record error") {
       val cse = CredentialServiceError.CreateCredentialPayloadFromRecordError(new Throwable("message"))
       val httpError = IssueController.toHttpError(cse)
-      val errorResponse = ErrorResponse.badRequest(title = "Create Credential Payload From Record Error", detail = Some(cse.cause.getMessage))
+      val errorResponse = ErrorResponse
+        .badRequest(title = "Create Credential Payload From Record Error", detail = Some(cse.cause.getMessage))
       assert(httpError)(equalTo(errorResponse))
     },
     test("return bad request error if create request validation error") {
@@ -115,7 +119,10 @@ object IssueControllerSpec extends ZIOSpecDefault {
       )
       val cse = CredentialServiceError.CredentialIdNotDefined(w3cCredentialPayload)
       val httpError = IssueController.toHttpError(cse)
-      val errorResponse = ErrorResponse.badRequest(title = "Credential ID not defined one request", detail = Some(w3cCredentialPayload.toString))
+      val errorResponse = ErrorResponse.badRequest(
+        title = "Credential ID not defined one request",
+        detail = Some(w3cCredentialPayload.toString)
+      )
       assert(httpError)(equalTo(errorResponse))
     },
     test("return internal server error if iris error") {

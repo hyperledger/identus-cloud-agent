@@ -145,8 +145,8 @@ object AgentApp extends ZIOAppDefault {
         RepoModule.verificationPolicyServiceLayer,
         ConnectionControllerImpl.layer,
         DIDControllerImpl.layer,
-        IssueControllerImpl.layer
-        DIDRegistrarControllerImpl.layer,
+        IssueControllerImpl.layer,
+        DIDRegistrarControllerImpl.layer
       )
     } yield app
 
