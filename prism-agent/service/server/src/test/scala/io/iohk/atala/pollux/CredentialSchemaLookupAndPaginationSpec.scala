@@ -9,7 +9,7 @@ import io.iohk.atala.pollux.credentialschema.http.{
   CredentialSchemaResponse,
   CredentialSchemaResponsePage
 }
-import io.iohk.atala.pollux.test.container.MigrationAspects.migrate
+import io.iohk.atala.container.util.MigrationAspects.migrate
 import sttp.client3.testing.SttpBackendStub
 import sttp.client3.ziojson.*
 import sttp.client3.{DeserializationException, Response, ResponseException, SttpBackend, UriContext, basicRequest}

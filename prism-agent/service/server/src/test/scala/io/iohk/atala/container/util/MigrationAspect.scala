@@ -1,4 +1,4 @@
-package io.iohk.atala.pollux.test.container
+package io.iohk.atala.container.util
 
 import com.dimafeng.testcontainers.PostgreSQLContainer
 import org.flywaydb.core.Flyway
