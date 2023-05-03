@@ -389,125 +389,19 @@ paths:
   ## Issue Credential Protocol
 
   /issue-credentials/credential-offers:
-    post:
-      operationId: createCredentialOffer
-      tags: ["Issue Credentials Protocol"]
-      summary: As a credential issuer, create a new credential offer to be sent to a holder.
-      description: Creates a new credential offer in the database
-      requestBody:
-        description: The credential offer object.
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "./pollux/schemas.yaml#/components/schemas/CreateIssueCredentialRecordRequest"
-      responses:
-        "201":
-          description: The issue credential record was created successfully, and is returned in the response body.
-          content:
-            application/json:
-              schema:
-                $ref: "./pollux/schemas.yaml#/components/schemas/IssueCredentialRecord"
-        "422":
-          description: The issue credential record creation failed. More information on the error can be found in the response body.
-          content:
-            application/json:
-              schema:
-                $ref: "./shared/schemas.yaml#/components/schemas/ErrorResponse"
+    $ref: "./tapir-generated.yaml#/paths/~1issue-credentials~1credential-offers"
 
   /issue-credentials/records:
-    get:
-      operationId: getCredentialRecords
-      tags: ["Issue Credentials Protocol"]
-      summary: Gets the list of issue credential records.
-      description: Get the list of issue credential records paginated
-      parameters:
-        - $ref: "./shared/parameters.yaml#/components/parameters/offset"
-        - $ref: "./shared/parameters.yaml#/components/parameters/limit"
-        - name: thid
-          in: query
-          description: The thid of a DIDComm communication.
-          required: false
-          schema:
-            type: string
-      responses:
-        "200":
-          description: The list of issue credential records.
-          content:
-            application/json:
-              schema:
-                $ref: "./pollux/schemas.yaml#/components/schemas/IssueCredentialRecordPage"
-        "500":
-          $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
+    $ref: "./tapir-generated.yaml#/paths/~1issue-credentials~1records"
 
   /issue-credentials/records/{recordId}:
-    get:
-      operationId: getCredentialRecord
-      tags: ["Issue Credentials Protocol"]
-      summary: Gets an existing issue credential record by its unique identifier.
-      description: Gets issue credential records by record id
-      parameters:
-        - $ref: "./pollux/parameters.yaml#/components/parameters/issueCredentialRecordIdInPath"
-      responses:
-        "200":
-          description: The issue credential record.
-          content:
-            application/json:
-              schema:
-                $ref: "./pollux/schemas.yaml#/components/schemas/IssueCredentialRecord"
-        "404":
-          $ref: "./shared/responses.yaml#/components/responses/NotFound"
-        "500":
-          $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
+    $ref: "./tapir-generated.yaml#/paths/~1issue-credentials~1records~1{recordId}"
 
   /issue-credentials/records/{recordId}/accept-offer:
-    post:
-      operationId: acceptCredentialOffer
-      tags: ["Issue Credentials Protocol"]
-      summary: As a holder, accepts a credential offer received from an issuer.
-      description: Accepts a credential offer received from a VC issuer and sends back a credential request.
-      parameters:
-        - $ref: "./pollux/parameters.yaml#/components/parameters/issueCredentialRecordIdInPath"
-      requestBody:
-        description: The accept credential offer request object.
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: ./pollux/schemas.yaml#/components/schemas/AcceptCredentialOfferRequest
-      responses:
-        "200":
-          description: The issue credential offer was successfully accepted.
-          content:
-            application/json:
-              schema:
-                $ref: ./pollux/schemas.yaml#/components/schemas/IssueCredentialRecord
-        "404":
-          $ref: "./shared/responses.yaml#/components/responses/NotFound"
-        "500":
-          $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
+    $ref: "./tapir-generated.yaml#/paths/~1issue-credentials~1records~1{recordId}~1accept-offer"
 
   /issue-credentials/records/{recordId}/issue-credential:
-    post:
-      operationId: issueCredential
-      tags: ["Issue Credentials Protocol"]
-      summary: As an issuer, issues the verifiable credential related to the specified record.
-      description: |
-        Sends credential to a holder (holder DID is specified in credential as subjectDid).
-        Credential is constructed from the credential records found by credential id.
-      parameters:
-        - $ref: ./pollux/parameters.yaml#/components/parameters/issueCredentialRecordIdInPath
-      responses:
-        "200":
-          description: The request was processed successfully and the credential will be issued asynchronously.
-          content:
-            application/json:
-              schema:
-                $ref: ./pollux/schemas.yaml#/components/schemas/IssueCredentialRecord
-        "404":
-          $ref: "./shared/responses.yaml#/components/responses/NotFound"
-        "500":
-          $ref: "./shared/responses.yaml#/components/responses/InternalServerError"
+    $ref: "./tapir-generated.yaml#/paths/~1issue-credentials~1records~1{recordId}~1issue-credential"
 
   ## Present proof
 

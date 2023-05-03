@@ -1,13 +1,5 @@
 components:
   parameters:
-    issueCredentialRecordIdInPath:
-      in: path
-      name: recordId
-      required: true
-      description: The unique identifier of the issue credential record.
-      schema:
-        type: string
-        format: uuid
     presentationRecordIdInPath:
       in: path
       name: recordId
