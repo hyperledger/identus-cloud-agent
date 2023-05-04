@@ -175,8 +175,6 @@ lazy val D_Castor = new {
 
   // Project Dependencies
   val coreDependencies: Seq[ModuleID] = baseDependencies
-  val sqlDoobieDependencies: Seq[ModuleID] =
-    baseDependencies ++ D.doobieDependencies ++ Seq(D.zioCatsInterop)
 }
 
 lazy val D_Pollux = new {
@@ -340,7 +338,7 @@ lazy val D_PrismAgent = new {
 
   // Project Dependencies
   lazy val keyManagementDependencies: Seq[ModuleID] =
-    baseDependencies ++ bouncyDependencies
+    baseDependencies ++ bouncyDependencies ++ D.doobieDependencies ++ Seq(D.zioCatsInterop)
 
   lazy val serverDependencies: Seq[ModuleID] =
     baseDependencies ++ akkaHttpDependencies ++ tapirDependencies ++ postgresDependencies
@@ -576,15 +574,6 @@ lazy val castorCore = project
   )
   .dependsOn(shared)
 
-lazy val castorDoobie = project
-  .in(file("castor/lib/sql-doobie"))
-  .settings(castorCommonSettings)
-  .settings(
-    name := "castor-sql-doobie",
-    libraryDependencies ++= D_Castor.sqlDoobieDependencies
-  )
-  .dependsOn(shared, castorCore)
-
 // #####################
 // #####  pollux  ######
 // #####################
@@ -667,7 +656,7 @@ lazy val prismAgentWalletAPI = project
     libraryDependencies ++= D_PrismAgent.keyManagementDependencies
   )
   .dependsOn(agentDidcommx)
-  .dependsOn(castorCore, castorDoobie)
+  .dependsOn(castorCore)
 
 lazy val prismAgentServer = project
   .in(file("prism-agent/service/server"))
@@ -700,8 +689,7 @@ lazy val prismAgentServer = project
     polluxDoobie,
     connectCore,
     connectDoobie,
-    castorCore,
-    castorDoobie
+    castorCore
   )
 
 // ##################

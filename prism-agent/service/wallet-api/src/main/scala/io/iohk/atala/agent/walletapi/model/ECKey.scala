@@ -1,7 +1,5 @@
 package io.iohk.atala.agent.walletapi.model
 
-import com.ionspin.kotlin.bignum.integer.BigInteger
-import com.ionspin.kotlin.bignum.integer.util.ConversionUtilsKt
 import io.iohk.atala.agent.walletapi.model.ECCoordinates.ECCoordinate
 import io.iohk.atala.castor.core.model.did.EllipticCurve
 import io.iohk.atala.prism.crypto as prismcrypto

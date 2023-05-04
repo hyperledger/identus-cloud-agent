@@ -1,6 +1,5 @@
 package io.iohk.atala.agent.walletapi.model
 
-import io.iohk.atala.castor.core.model.did.PrismDID
 import io.iohk.atala.castor.core.model.error.DIDOperationError
 
 package object error {
