@@ -1,17 +1,24 @@
 package io.iohk.atala.issue.controller
 
+import com.typesafe.config.ConfigFactory
+import io.grpc.ManagedChannelBuilder
+import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.api.http.ErrorResponse
+import io.iohk.atala.connect.core.repository.ConnectionRepositoryInMemory
 import io.iohk.atala.connect.core.service.ConnectionServiceImpl
 import io.iohk.atala.connect.sql.repository.JdbcConnectionRepository
-import io.iohk.atala.pollux.core.repository.CredentialSchemaRepository
-import io.iohk.atala.pollux.core.service.CredentialSchemaServiceImpl
+import io.iohk.atala.pollux.core.repository.{CredentialRepositoryInMemory, CredentialSchemaRepository}
+import io.iohk.atala.pollux.core.service.{CredentialSchemaServiceImpl, CredentialServiceImpl}
 import io.iohk.atala.pollux.credentialschema.SchemaRegistryServerEndpoints
 import io.iohk.atala.pollux.credentialschema.controller.{CredentialSchemaController, CredentialSchemaControllerImpl}
 import io.iohk.atala.pollux.credentialschema.http.{CredentialSchemaInput, CredentialSchemaResponse, CredentialSchemaResponsePage}
 import io.iohk.atala.pollux.sql.repository.JdbcCredentialSchemaRepository
 import io.iohk.atala.container.util.MigrationAspects.*
 import io.iohk.atala.container.util.PostgresLayer.*
+import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import io.iohk.atala.issue.controller.http.{CreateIssueCredentialRecordRequest, IssueCredentialRecord, IssueCredentialRecordPage}
+import io.iohk.atala.pollux.core.service.CredentialServiceImplSpec.makeResolver
+import io.iohk.atala.pollux.vc.jwt.*
 import sttp.client3.testing.SttpBackendStub
 import sttp.client3.ziojson.*
 import sttp.client3.{DeserializationException, Response, ResponseException, SttpBackend, UriContext, basicRequest}
@@ -20,6 +27,8 @@ import sttp.monad.MonadError
 import sttp.tapir.server.interceptor.CustomiseInterceptors
 import sttp.tapir.server.stub.TapirStubInterpreter
 import sttp.tapir.ztapir.RIOMonadError
+import zio.config.{ReadError, read}
+import zio.config.typesafe.TypesafeConfigSource
 import zio.json.ast.Json.*
 import zio.json.{DecoderOps, EncoderOps, JsonDecoder}
 import zio.stream.ZSink
@@ -27,7 +36,7 @@ import zio.stream.ZSink.*
 import zio.stream.ZStream.unfold
 import zio.test.TestAspect.*
 import zio.test.{Gen, Spec, ZIOSpecDefault}
-import zio.{RIO, Task, URLayer, ZIO, ZLayer}
+import zio.{Layer, RIO, Task, URLayer, ZIO, ZLayer}
 
 import java.time.OffsetDateTime
 
@@ -43,12 +52,45 @@ trait IssueControllerTestTools {
       Either[DeserializationException[String], IssueCredentialRecordPage]
     ]
 
+  val irisStubLayer = ZLayer.fromZIO(
+    ZIO.succeed(IrisServiceGrpc.stub(ManagedChannelBuilder.forAddress("localhost", 9999).usePlaintext.build))
+  )
+  val didResolverLayer = ZLayer.fromZIO(ZIO.succeed(makeResolver(Map.empty)))
+
+  val configLayer: Layer[ReadError[String], AppConfig] = ZLayer.fromZIO {
+    read(
+      AppConfig.descriptor.from(
+        TypesafeConfigSource.fromTypesafeConfig(
+          ZIO.attempt(ConfigFactory.load())
+        )
+      )
+    )
+  }
+
+  private[this] def makeResolver(lookup: Map[String, DIDDocument]): DidResolver = (didUrl: String) => {
+    lookup
+      .get(didUrl)
+      .fold(
+        ZIO.succeed(DIDResolutionFailed(NotFound(s"DIDDocument not found for $didUrl")))
+      )((didDocument: DIDDocument) => {
+        ZIO.succeed(
+          DIDResolutionSucceeded(
+            didDocument,
+            DIDDocumentMetadata()
+          )
+        )
+      })
+  }
+
   private val pgLayer = postgresLayer(verbose = false)
   private val transactorLayer = pgLayer >>> hikariConfigLayer >>> transactor
-  private val controllerLayer = transactorLayer >>>
-    JdbcCredentialSchemaRepository.layer >+>
-    CredentialSchemaServiceImpl.layer >+>
-    JdbcConnectionRepository.layer >+>
+  private val controllerLayer = transactorLayer >+>
+    configLayer >+>
+    irisStubLayer >+>
+    didResolverLayer >+>
+    CredentialRepositoryInMemory.layer >+>
+    CredentialServiceImpl.layer >+>
+    ConnectionRepositoryInMemory.layer >+>
     ConnectionServiceImpl.layer >+>
     IssueControllerImpl.layer
 
