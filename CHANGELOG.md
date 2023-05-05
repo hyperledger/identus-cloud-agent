@@ -1,3 +1,18 @@
+# [1.1.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v1.0.0...prism-agent-v1.1.0) (2023-05-05)
+
+
+### Bug Fixes
+
+* **pollux:** ATL-3971 Fix all Deprecation Warning ([#506](https://github.com/input-output-hk/atala-prism-building-blocks/issues/506)) ([e5225b7](https://github.com/input-output-hk/atala-prism-building-blocks/commit/e5225b7101bf3572a85a6f0cf8ed05e93410f551))
+
+
+### Features
+
+* add multi-arch amd64 and arm64 support for agent docker ([#512](https://github.com/input-output-hk/atala-prism-building-blocks/issues/512)) ([dc2608c](https://github.com/input-output-hk/atala-prism-building-blocks/commit/dc2608c12e062a6af5d3fcf1077956281a2f0828))
+* expose API for default did:peer of prism agent ([#509](https://github.com/input-output-hk/atala-prism-building-blocks/issues/509)) ([b128292](https://github.com/input-output-hk/atala-prism-building-blocks/commit/b128292031c547938614b21fb4cd0a377310c19e))
+* **prism-agent:** migrate DID endpoint to tapir ([#511](https://github.com/input-output-hk/atala-prism-building-blocks/issues/511)) ([9d587ff](https://github.com/input-output-hk/atala-prism-building-blocks/commit/9d587ffc6e44da9dacb0af76e922030828831805))
+* **prism-agent:** migrate did-registrar endpoint to tapir ([#517](https://github.com/input-output-hk/atala-prism-building-blocks/issues/517)) ([88eeefd](https://github.com/input-output-hk/atala-prism-building-blocks/commit/88eeefdad81e05197ea0b6c2bf449c4c2960e023))
+
 # [1.0.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v0.60.2...prism-agent-v1.0.0) (2023-04-10)
 
 
