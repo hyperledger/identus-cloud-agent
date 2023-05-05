@@ -35,21 +35,21 @@ object IssueControllerImplSpec extends ZIOSpecDefault with IssueControllerTestTo
   )).provideSomeLayerShared(testEnvironmentLayer)
 
   private val httpErrorResponses = suite("IssueControllerImp http failure cases") {
-    test("provide wrong record Id to accept-offer endpoint") {
+    test("provide incorrect subjectId to endpoint") {
       for {
         issueControllerService <- ZIO.service[IssueController]
         backend = httpBackend(issueControllerService)
         response: IssueCredentialBadRequestResponse <- basicRequest
           .post(uri"${issueUriBase}/records/12345/accept-offer")
-          .body(AcceptCredentialOfferRequest("subjectId").toJson)
+          .body(AcceptCredentialOfferRequest("subjectId").toJsonPretty)
           .response(asJsonAlways[ErrorResponse])
           .send(backend)
 
-        isItANotFoundStatusCode = assert(response.code)(equalTo(StatusCode.NotFound))
-        theBodyWasParsedFromJsonAsANotFound = assert(response.body)(
-          isRight(isSubtype[ErrorResponse](equalTo(ErrorResponse.notFound(detail = Some(s"Record Id not found: 12345")))))
+        isItABadRequestStatusCode = assert(response.code)(equalTo(StatusCode.BadRequest))
+        theBodyWasParsedFromJsonAsABadRequest = assert(response.body)(
+          isRight(isSubtype[ErrorResponse](equalTo(ErrorResponse.badRequest("Unsupported DID format", Some(s"The following DID is not supported: subjectId")))))
         )
-      } yield isItANotFoundStatusCode && theBodyWasParsedFromJsonAsANotFound
+      } yield isItABadRequestStatusCode && theBodyWasParsedFromJsonAsABadRequest
     }
   }
 

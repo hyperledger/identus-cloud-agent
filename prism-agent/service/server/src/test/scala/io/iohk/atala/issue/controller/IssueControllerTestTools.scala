@@ -17,7 +17,6 @@ import io.iohk.atala.container.util.MigrationAspects.*
 import io.iohk.atala.container.util.PostgresLayer.*
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import io.iohk.atala.issue.controller.http.{CreateIssueCredentialRecordRequest, IssueCredentialRecord, IssueCredentialRecordPage}
-import io.iohk.atala.pollux.core.service.CredentialServiceImplSpec.makeResolver
 import io.iohk.atala.pollux.vc.jwt.*
 import sttp.client3.testing.SttpBackendStub
 import sttp.client3.ziojson.*
@@ -107,7 +106,7 @@ trait IssueControllerTestTools {
       .defaultHandlers(ErrorResponse.failureResponseHandler)
   }
 
-  def httpBackend(controller: IssueController): SttpBackend[_, _] = {
+  def httpBackend(controller: IssueController) = {
     val issueEndpoints = IssueServerEndpoints(controller)
 
     val backend =
