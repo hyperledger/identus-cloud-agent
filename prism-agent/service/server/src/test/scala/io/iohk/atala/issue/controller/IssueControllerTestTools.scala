@@ -11,12 +11,20 @@ import io.iohk.atala.pollux.core.repository.{CredentialRepositoryInMemory, Crede
 import io.iohk.atala.pollux.core.service.{CredentialSchemaServiceImpl, CredentialServiceImpl}
 import io.iohk.atala.pollux.credentialschema.SchemaRegistryServerEndpoints
 import io.iohk.atala.pollux.credentialschema.controller.{CredentialSchemaController, CredentialSchemaControllerImpl}
-import io.iohk.atala.pollux.credentialschema.http.{CredentialSchemaInput, CredentialSchemaResponse, CredentialSchemaResponsePage}
+import io.iohk.atala.pollux.credentialschema.http.{
+  CredentialSchemaInput,
+  CredentialSchemaResponse,
+  CredentialSchemaResponsePage
+}
 import io.iohk.atala.pollux.sql.repository.JdbcCredentialSchemaRepository
 import io.iohk.atala.container.util.MigrationAspects.*
 import io.iohk.atala.container.util.PostgresLayer.*
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
-import io.iohk.atala.issue.controller.http.{CreateIssueCredentialRecordRequest, IssueCredentialRecord, IssueCredentialRecordPage}
+import io.iohk.atala.issue.controller.http.{
+  CreateIssueCredentialRecordRequest,
+  IssueCredentialRecord,
+  IssueCredentialRecordPage
+}
 import io.iohk.atala.pollux.vc.jwt.*
 import sttp.client3.testing.SttpBackendStub
 import sttp.client3.ziojson.*
@@ -134,9 +142,10 @@ trait IssueGen {
   self: ZIOSpecDefault with IssueControllerTestTools =>
   object Generator {
     val gValidityPeriod: Gen[Any, Double] = Gen.double
-    val gClaims: Gen[Any, Map[String, String]] = Gen.mapOf(Gen.alphaNumericStringBounded(5, 20), Gen.alphaNumericStringBounded(5, 20))
+    val gClaims: Gen[Any, Map[String, String]] =
+      Gen.mapOf(Gen.alphaNumericStringBounded(5, 20), Gen.alphaNumericStringBounded(5, 20))
     val gAutomaticIssuance: Gen[Any, Boolean] = Gen.boolean
-    val gIssuingDID: Gen[Any, String] = Gen.alphaNumericStringBounded(5,20) //TODO Make a DID generator
+    val gIssuingDID: Gen[Any, String] = Gen.alphaNumericStringBounded(5, 20) // TODO Make a DID generator
     val gConnectionId: Gen[Any, String] = Gen.alphaNumericStringBounded(5, 20)
 
     val schemaInput = for {

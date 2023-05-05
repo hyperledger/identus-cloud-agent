@@ -29,7 +29,7 @@ import java.util.UUID
 
 object IssueControllerImplSpec extends ZIOSpecDefault with IssueControllerTestTools {
 
-  def spec = (httpErrorResponses @@ migrate (
+  def spec = (httpErrorResponses @@ migrate(
     schema = "public",
     paths = "classpath:sql/pollux"
   )).provideSomeLayerShared(testEnvironmentLayer)
@@ -47,7 +47,16 @@ object IssueControllerImplSpec extends ZIOSpecDefault with IssueControllerTestTo
 
         isItABadRequestStatusCode = assert(response.code)(equalTo(StatusCode.BadRequest))
         theBodyWasParsedFromJsonAsABadRequest = assert(response.body)(
-          isRight(isSubtype[ErrorResponse](equalTo(ErrorResponse.badRequest("Unsupported DID format", Some(s"The following DID is not supported: subjectId")))))
+          isRight(
+            isSubtype[ErrorResponse](
+              equalTo(
+                ErrorResponse.badRequest(
+                  "Unsupported DID format",
+                  Some(s"The following DID is not supported: subjectId")
+                )
+              )
+            )
+          )
         )
       } yield isItABadRequestStatusCode && theBodyWasParsedFromJsonAsABadRequest
     }
