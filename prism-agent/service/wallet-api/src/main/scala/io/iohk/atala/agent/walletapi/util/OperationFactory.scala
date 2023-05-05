@@ -1,6 +1,7 @@
 package io.iohk.atala.agent.walletapi.util
 
-import io.iohk.atala.agent.walletapi.model.{DIDPublicKeyTemplate, ECKeyPair, ManagedDIDTemplate, UpdateManagedDIDAction}
+import io.iohk.atala.agent.walletapi.crypto.ECKeyPair
+import io.iohk.atala.agent.walletapi.model.{DIDPublicKeyTemplate, ManagedDIDTemplate, UpdateManagedDIDAction}
 import io.iohk.atala.agent.walletapi.model.error.{CreateManagedDIDError, UpdateManagedDIDError}
 import io.iohk.atala.castor.core.model.did.{
   CanonicalPrismDID,

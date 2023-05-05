@@ -1,9 +1,9 @@
 package io.iohk.atala.agent.walletapi.storage
 
+import io.iohk.atala.agent.walletapi.crypto.ECKeyPair
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
-import io.iohk.atala.agent.walletapi.model.ECKeyPair
 import io.iohk.atala.agent.walletapi.sql.{JdbcDIDNonSecretStorage, JdbcDIDSecretStorage}
 import io.iohk.atala.castor.core.model.did.{PrismDID, ScheduledDIDOperationStatus}
 import io.iohk.atala.test.container.{DBTestUtils, PostgresTestContainerSupport}

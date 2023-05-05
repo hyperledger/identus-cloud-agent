@@ -4,7 +4,7 @@ import com.nimbusds.jose.jwk.OctetKeyPair
 import doobie.*
 import doobie.implicits.*
 import doobie.postgres.implicits.*
-import io.iohk.atala.agent.walletapi.model.ECKeyPair
+import io.iohk.atala.agent.walletapi.crypto.ECKeyPair
 import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
 import io.iohk.atala.castor.core.model.did.{PrismDID, EllipticCurve, ScheduledDIDOperationStatus}
 import io.iohk.atala.mercury.model.DidId

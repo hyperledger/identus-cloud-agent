@@ -1,9 +1,10 @@
 package io.iohk.atala.agent.walletapi.crypto
 
-import io.iohk.atala.agent.walletapi.model.ECKeyPair
 import io.iohk.atala.castor.core.model.did.EllipticCurve
 import io.iohk.atala.prism.crypto.EC
 import zio.*
+
+import java.security.PublicKey
 
 object KeyGeneratorWrapper {
 

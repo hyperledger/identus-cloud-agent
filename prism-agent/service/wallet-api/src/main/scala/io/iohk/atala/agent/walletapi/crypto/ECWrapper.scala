@@ -1,6 +1,5 @@
 package io.iohk.atala.agent.walletapi.crypto
 
-import io.iohk.atala.agent.walletapi.model.ECPrivateKey
 import io.iohk.atala.castor.core.model.did.EllipticCurve
 import io.iohk.atala.prism.crypto.EC
 import scala.util.Try

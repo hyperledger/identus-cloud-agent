@@ -1,22 +1,19 @@
-package io.iohk.atala.agent.walletapi.model
+package io.iohk.atala.agent.walletapi.crypto
 
-import io.iohk.atala.agent.walletapi.model.ECCoordinates.ECCoordinate
+import io.iohk.atala.agent.walletapi.crypto.ECCoordinate
+import io.iohk.atala.agent.walletapi.util.Prism14CompatUtil.*
 import io.iohk.atala.castor.core.model.did.EllipticCurve
 import io.iohk.atala.prism.crypto as prismcrypto
-import io.iohk.atala.agent.walletapi.util.Prism14CompatUtil.*
 
 import scala.collection.immutable.ArraySeq
 
-object ECCoordinates {
+// Uses prism-crypto ECCoordinate under the hood in order to reuse
+// existing padding functionality, but it only supports secp256k1 curve.
+// When more elliptic-curves support are added, it should be migrated to BigInt or Apollo primitive.
+opaque type ECCoordinate = prismcrypto.keys.ECCoordinate
 
-  // Uses prism-crypto ECCoordinate under the hood in order to reuse
-  // existing padding functionality, but it only supports secp256k1 curve.
-  // When more elliptic-curves support are added, it should be migrated to BigInt or Apollo primitive.
-  opaque type ECCoordinate = prismcrypto.keys.ECCoordinate
-
-  object ECCoordinate {
-    def fromBigInt(i: BigInt): ECCoordinate = prismcrypto.keys.ECCoordinate(i.toKotlinBigInt)
-  }
+object ECCoordinate {
+  def fromBigInt(i: BigInt): ECCoordinate = prismcrypto.keys.ECCoordinate(i.toKotlinBigInt)
 
   extension (c: ECCoordinate) {
     def toPaddedByteArray(curve: EllipticCurve): Array[Byte] = {
@@ -25,7 +22,6 @@ object ECCoordinates {
       }
     }
   }
-
 }
 
 final case class ECPoint(x: ECCoordinate, y: ECCoordinate)
