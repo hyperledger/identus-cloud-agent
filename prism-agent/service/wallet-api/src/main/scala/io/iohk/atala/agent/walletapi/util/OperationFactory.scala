@@ -18,12 +18,12 @@ import zio.*
 
 import scala.collection.immutable.ArraySeq
 
-private[walletapi] final case class CreateDIDSecret(
+private[walletapi] final case class CreateDIDSecret[ECKeyPair](
     keyPairs: Map[String, ECKeyPair],
     internalKeyPairs: Map[String, ECKeyPair]
 )
 
-private[walletapi] final case class UpdateDIDSecret(newKeyPairs: Map[String, ECKeyPair])
+private[walletapi] final case class UpdateDIDSecret[ECKeyPair](newKeyPairs: Map[String, ECKeyPair])
 
 object OperationFactory {
 

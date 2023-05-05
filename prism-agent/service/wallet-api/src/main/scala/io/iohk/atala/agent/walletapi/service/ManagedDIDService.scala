@@ -1,6 +1,5 @@
 package io.iohk.atala.agent.walletapi.service
 
-import io.iohk.atala.agent.walletapi.crypto.{ECWrapper, KeyGeneratorWrapper}
 import io.iohk.atala.agent.walletapi.model.{
   DIDUpdateLineage,
   ManagedDIDDetail,
@@ -8,7 +7,6 @@ import io.iohk.atala.agent.walletapi.model.{
   ManagedDIDTemplate,
   UpdateManagedDIDAction
 }
-import io.iohk.atala.agent.walletapi.crypto.ECCoordinate
 import io.iohk.atala.agent.walletapi.model.error.{*, given}
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService.DEFAULT_MASTER_KEY_ID
 import io.iohk.atala.agent.walletapi.storage.{DIDNonSecretStorage, DIDSecretStorage}
