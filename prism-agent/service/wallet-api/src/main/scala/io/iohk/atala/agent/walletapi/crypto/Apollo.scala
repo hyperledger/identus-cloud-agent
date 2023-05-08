@@ -5,34 +5,40 @@ import org.bouncycastle.jce.ECNamedCurveTable
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.bouncycastle.jce.spec.ECNamedCurveSpec
 import io.iohk.atala.agent.walletapi.util.Prism14CompatUtil.*
+import zio.*
 
 import java.security.KeyFactory
 import java.security.spec.{ECPrivateKeySpec, ECPublicKeySpec}
 import scala.util.Try
 
+final case class ECKeyPair(publicKey: ECPublicKey, privateKey: ECPrivateKey)
+
+trait ECPublicKey {
+  def curve: EllipticCurve
+  def toJavaPublicKey: java.security.PublicKey
+  def verify(data: Array[Byte], signature: Array[Byte]): Try[Unit]
+  def encode: Array[Byte]
+}
+
+trait ECPrivateKey {
+  def curve: EllipticCurve
+  def toJavaPrivateKey: java.security.PrivateKey
+  def sign(data: Array[Byte]): Try[Array[Byte]]
+  def encode: Array[Byte]
+  def computePublicKey: ECPublicKey
+}
+
+trait ECKeyFactory {
+  def publicKeyFromCoordinate(curve: EllipticCurve, x: BigInt, y: BigInt): Try[ECPublicKey]
+  def publicKeyFromEncoded(curve: EllipticCurve, bytes: Array[Byte]): Try[ECPublicKey]
+  def privateKeyFromEncoded(curve: EllipticCurve, bytes: Array[Byte]): Try[ECPrivateKey]
+  def generateKeyPair(curve: EllipticCurve): Task[ECKeyPair]
+}
+
 trait Apollo {
-  type PublicKey
-  type PrivateKey
-  type KeyPair = (PublicKey, PrivateKey)
-
-  given ecPucliKey: ECPublicKey[PublicKey]
-  given ecPrivateKey: ECPrivateKey[PrivateKey]
-  given ecKeyGen: ECKeyGen[PublicKey, PrivateKey]
+  def ecKeyFactory: ECKeyFactory
 }
 
-trait ECPublicKey[Pub] {
-  def curve(curve: EllipticCurve): Try[EllipticCurve]
-  def fromXY(curve: EllipticCurve, x: BigInt, y: BigInt): Try[Pub]
-  def toJavaPublicKey(publicKey: Pub): java.security.PublicKey
-}
-
-trait ECPrivateKey[Priv] {
-  def curve(curve: EllipticCurve): Try[EllipticCurve]
-  def fromBytes(curve: EllipticCurve, bytes: Array[Byte]): Try[Priv]
-  def toJavaPrivateKey(privateKey: Priv): java.security.PrivateKey
-  def sign(privateKey: Priv, bytes: Array[Byte]): Try[Array[Byte]]
-}
-
-trait ECKeyGen[Pub, Priv] {
-  def generateKeyPair(curve: EllipticCurve): Try[(Pub, Priv)]
+object Apollo {
+  val prism14Layer: ULayer[Apollo] = ZLayer.succeed(Prism14Apollo)
 }

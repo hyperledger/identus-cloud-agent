@@ -1,6 +1,6 @@
 package io.iohk.atala.agent.walletapi.util
 
-import io.iohk.atala.agent.walletapi.crypto.ECKeyPair
+import io.iohk.atala.agent.walletapi.crypto.{ECKeyPair, ECPublicKey}
 import io.iohk.atala.agent.walletapi.model.{DIDPublicKeyTemplate, ManagedDIDTemplate, UpdateManagedDIDAction}
 import io.iohk.atala.agent.walletapi.model.error.{CreateManagedDIDError, UpdateManagedDIDError}
 import io.iohk.atala.castor.core.model.did.{
@@ -18,27 +18,26 @@ import zio.*
 
 import scala.collection.immutable.ArraySeq
 
-private[walletapi] final case class CreateDIDSecret[ECKeyPair](
+private[walletapi] final case class CreateDIDSecret(
     keyPairs: Map[String, ECKeyPair],
     internalKeyPairs: Map[String, ECKeyPair]
 )
 
-private[walletapi] final case class UpdateDIDSecret[ECKeyPair](newKeyPairs: Map[String, ECKeyPair])
+private[walletapi] final case class UpdateDIDSecret(newKeyPairs: Map[String, ECKeyPair])
 
 object OperationFactory {
 
   def makeCreateOperation(
       masterKeyId: String,
-      curve: EllipticCurve,
       keyGenerator: () => Task[ECKeyPair]
   )(
       didTemplate: ManagedDIDTemplate
   ): IO[CreateManagedDIDError, (PrismDIDOperation.Create, CreateDIDSecret)] = {
     for {
       keys <- ZIO
-        .foreach(didTemplate.publicKeys)(generateKeyPairAndPublicKey(curve, keyGenerator))
+        .foreach(didTemplate.publicKeys)(generateKeyPairAndPublicKey(keyGenerator))
         .mapError(CreateManagedDIDError.KeyGenerationError.apply)
-      masterKey <- generateKeyPairAndInternalPublicKey(curve, keyGenerator)(masterKeyId, InternalKeyPurpose.Master)
+      masterKey <- generateKeyPairAndInternalPublicKey(keyGenerator)(masterKeyId, InternalKeyPurpose.Master)
         .mapError(
           CreateManagedDIDError.KeyGenerationError.apply
         )
@@ -55,7 +54,6 @@ object OperationFactory {
   }
 
   def makeUpdateOperation(
-      curve: EllipticCurve,
       keyGenerator: () => Task[ECKeyPair]
   )(
       did: CanonicalPrismDID,
@@ -64,7 +62,7 @@ object OperationFactory {
   ): IO[UpdateManagedDIDError, (PrismDIDOperation.Update, UpdateDIDSecret)] = {
     val actionsWithSecret = actions.map {
       case a @ UpdateManagedDIDAction.AddKey(template) =>
-        a -> generateKeyPairAndPublicKey(curve, keyGenerator)(template)
+        a -> generateKeyPairAndPublicKey(keyGenerator)(template)
           .mapError(UpdateManagedDIDError.KeyGenerationError.apply)
           .asSome
       case a => a -> ZIO.none
@@ -110,29 +108,28 @@ object OperationFactory {
     }
   }
 
-  private def generateKeyPairAndPublicKey(curve: EllipticCurve, keyGenerator: () => Task[ECKeyPair])(
+  private def generateKeyPairAndPublicKey(keyGenerator: () => Task[ECKeyPair])(
       template: DIDPublicKeyTemplate
   ): Task[(ECKeyPair, PublicKey)] = {
     for {
       keyPair <- keyGenerator()
-      publicKey = PublicKey(template.id, template.purpose, toPublicKeyData(curve, keyPair))
+      publicKey = PublicKey(template.id, template.purpose, toPublicKeyData(keyPair.publicKey))
     } yield (keyPair, publicKey)
   }
 
-  private def generateKeyPairAndInternalPublicKey(curve: EllipticCurve, keyGenerator: () => Task[ECKeyPair])(
+  private def generateKeyPairAndInternalPublicKey(keyGenerator: () => Task[ECKeyPair])(
       id: String,
       purpose: InternalKeyPurpose
   ): Task[(ECKeyPair, InternalPublicKey)] = {
     for {
       keyPair <- keyGenerator()
-      internalPublicKey = InternalPublicKey(id, purpose, toPublicKeyData(curve, keyPair))
+      internalPublicKey = InternalPublicKey(id, purpose, toPublicKeyData(keyPair.publicKey))
     } yield (keyPair, internalPublicKey)
   }
 
-  private def toPublicKeyData(curve: EllipticCurve, keyPair: ECKeyPair): PublicKeyData = PublicKeyData.ECKeyData(
-    crv = curve,
-    x = Base64UrlString.fromByteArray(keyPair.publicKey.p.x.toPaddedByteArray(curve)),
-    y = Base64UrlString.fromByteArray(keyPair.publicKey.p.y.toPaddedByteArray(curve))
+  private def toPublicKeyData(publicKey: ECPublicKey): PublicKeyData = PublicKeyData.ECCompressedKeyData(
+    crv = publicKey.curve,
+    data = Base64UrlString.fromByteArray(publicKey.encode),
   )
 
 }

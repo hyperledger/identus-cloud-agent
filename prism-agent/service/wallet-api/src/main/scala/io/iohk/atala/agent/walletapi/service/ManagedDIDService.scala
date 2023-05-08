@@ -1,5 +1,6 @@
 package io.iohk.atala.agent.walletapi.service
 
+import io.iohk.atala.agent.walletapi.crypto.Apollo
 import io.iohk.atala.agent.walletapi.model.{
   DIDUpdateLineage,
   ManagedDIDDetail,
@@ -41,8 +42,10 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider
 import java.security.spec.ECPoint
 import java.security.{KeyFactory, PrivateKey as JavaPrivateKey, PublicKey as JavaPublicKey}
 import org.bouncycastle.jce.spec.ECNamedCurveSpec
+
 import java.security.spec.ECPrivateKeySpec
 import java.security.spec.ECPublicKeySpec
+import io.iohk.atala.prism.crypto.keys.ECKeyPair
 
 /** A wrapper around Castor's DIDService providing key-management capability. Analogous to the secretAPI in
   * indy-wallet-sdk.
@@ -51,7 +54,8 @@ final class ManagedDIDService private[walletapi] (
     didService: DIDService,
     didOpValidator: DIDOperationValidator,
     private[walletapi] val secretStorage: DIDSecretStorage,
-    private[walletapi] val nonSecretStorage: DIDNonSecretStorage
+    private[walletapi] val nonSecretStorage: DIDNonSecretStorage,
+    apollo: Apollo
 ) {
 
   private val CURVE = EllipticCurve.SECP256K1
@@ -60,14 +64,11 @@ final class ManagedDIDService private[walletapi] (
 
   private val generateCreateOperation = OperationFactory.makeCreateOperation(
     DEFAULT_MASTER_KEY_ID,
-    CURVE,
-    () => KeyGeneratorWrapper.generateECKeyPair(CURVE)
+    () => apollo.ecKeyFactory.generateKeyPair(CURVE)
   )
 
-  private val generateUpdateOperation = OperationFactory.makeUpdateOperation(
-    CURVE,
-    () => KeyGeneratorWrapper.generateECKeyPair(CURVE)
-  )
+  private val generateUpdateOperation =
+    OperationFactory.makeUpdateOperation(() => apollo.ecKeyFactory.generateKeyPair(CURVE))
 
   def syncManagedDIDState: IO[GetManagedDIDError, Unit] = nonSecretStorage
     .listManagedDID(offset = None, limit = None)
@@ -90,40 +91,12 @@ final class ManagedDIDService private[walletapi] (
   ): IO[GetKeyError, Option[(JavaPrivateKey, JavaPublicKey)]] = {
     secretStorage
       .getKey(did, keyId)
-      .mapError(GetKeyError.WalletStorageError.apply)
-      .flatMap { maybeKeyPair =>
-        maybeKeyPair.fold(ZIO.none) { ecKeyPair =>
-          ZIO
-            .attempt {
-              // TODO: Simplify conversion of ECKeyPair to JDK security classes
-              val ba = ecKeyPair.privateKey.toPaddedByteArray(EllipticCurve.SECP256K1)
-              val keyFactory = KeyFactory.getInstance("EC", new BouncyCastleProvider())
-              val ecParameterSpec = ECNamedCurveTable.getParameterSpec("secp256k1")
-              val ecNamedCurveSpec = ECNamedCurveSpec(
-                ecParameterSpec.getName(),
-                ecParameterSpec.getCurve(),
-                ecParameterSpec.getG(),
-                ecParameterSpec.getN()
-              )
-              val ecPrivateKeySpec = ECPrivateKeySpec(java.math.BigInteger(1, ba), ecNamedCurveSpec)
-              val privateKey = keyFactory.generatePrivate(ecPrivateKeySpec)
-              val bcECPoint = ecParameterSpec
-                .getG()
-                .multiply(privateKey.asInstanceOf[org.bouncycastle.jce.interfaces.ECPrivateKey].getD())
-              val ecPublicKeySpec = ECPublicKeySpec(
-                new ECPoint(
-                  bcECPoint.normalize().getAffineXCoord().toBigInteger(),
-                  bcECPoint.normalize().getAffineYCoord().toBigInteger()
-                ),
-                ecNamedCurveSpec
-              )
-              val publicKey = keyFactory.generatePublic(ecPublicKeySpec)
-              (privateKey, publicKey)
-            }
-            .mapError(GetKeyError.KeyConstructionError.apply)
-            .asSome
+      .mapBoth(
+        GetKeyError.WalletStorageError.apply,
+        _.map { ecKeyPair =>
+          (ecKeyPair.privateKey.toJavaPrivateKey, ecKeyPair.publicKey.toJavaPublicKey)
         }
-      }
+      )
   }
 
   def getManagedDIDState(did: CanonicalPrismDID): IO[GetManagedDIDError, Option[ManagedDIDState]] =
@@ -343,9 +316,7 @@ final class ManagedDIDService private[walletapi] (
             ZIO.die(Exception("master-key must exists in the wallet for signing DID operation and submit to Node"))
           )
       signedOperation <- ZIO
-        .fromTry(
-          ECWrapper.signBytes(CURVE, operation.toAtalaOperation.toByteArray, masterKeyPair.privateKey)
-        )
+        .fromTry(masterKeyPair.privateKey.sign(operation.toAtalaOperation.toByteArray))
         .mapError[E](CommonCryptographyError.apply)
         .map(signature =>
           SignedPrismDIDOperation(
@@ -448,7 +419,10 @@ object ManagedDIDService {
 
   val reservedKeyIds: Set[String] = Set(DEFAULT_MASTER_KEY_ID)
 
-  val layer: URLayer[DIDOperationValidator & DIDService & DIDSecretStorage & DIDNonSecretStorage, ManagedDIDService] =
-    ZLayer.fromFunction(ManagedDIDService(_, _, _, _))
+  val layer: URLayer[
+    DIDOperationValidator & DIDService & DIDSecretStorage & DIDNonSecretStorage & Apollo,
+    ManagedDIDService
+  ] =
+    ZLayer.fromFunction(ManagedDIDService(_, _, _, _, _))
 
 }
