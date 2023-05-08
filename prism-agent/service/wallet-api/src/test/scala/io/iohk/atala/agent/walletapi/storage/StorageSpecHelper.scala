@@ -6,7 +6,8 @@ import io.iohk.atala.castor.core.model.did.ScheduledDIDOperationStatus
 import io.iohk.atala.agent.walletapi.model.DIDUpdateLineage
 import scala.collection.immutable.ArraySeq
 import java.time.Instant
-import io.iohk.atala.agent.walletapi.crypto.KeyGeneratorWrapper
+import io.iohk.atala.agent.walletapi.crypto.{Apollo, Prism14Apollo}
+import io.iohk.atala.agent.walletapi.crypto.ApolloSpecHelper
 import io.iohk.atala.castor.core.model.did.EllipticCurve
 import io.iohk.atala.agent.walletapi.util.OperationFactory
 import io.iohk.atala.agent.walletapi.model.ManagedDIDTemplate
@@ -14,8 +15,10 @@ import io.iohk.atala.agent.walletapi.model.DIDPublicKeyTemplate
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import zio.*
 import io.iohk.atala.agent.walletapi.model.ManagedDIDState
+import io.iohk.atala.agent.walletapi.crypto.Prism14Apollo
+import io.iohk.atala.agent.walletapi.crypto.Apollo
 
-trait StorageSpecHelper {
+trait StorageSpecHelper extends ApolloSpecHelper {
   protected val didExample = PrismDID.buildLongFormFromOperation(PrismDIDOperation.Create(Nil, Nil, Nil))
 
   protected def updateLineage(
@@ -31,10 +34,10 @@ trait StorageSpecHelper {
     updatedAt = Instant.EPOCH
   )
 
-  protected def generateKeyPair() = KeyGeneratorWrapper.generateECKeyPair(EllipticCurve.SECP256K1)
+  protected def generateKeyPair() = apollo.ecKeyFactory.generateKeyPair(EllipticCurve.SECP256K1)
 
   protected def generateCreateOperation(keyIds: Seq[String]) =
-    OperationFactory.makeCreateOperation("master0", EllipticCurve.SECP256K1, generateKeyPair)(
+    OperationFactory.makeCreateOperation("master0", generateKeyPair)(
       ManagedDIDTemplate(
         publicKeys = keyIds.map(DIDPublicKeyTemplate(_, VerificationRelationship.Authentication)),
         services = Nil

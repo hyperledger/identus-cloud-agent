@@ -1,6 +1,7 @@
 package io.iohk.atala.agent.walletapi.storage
 
 import io.iohk.atala.agent.walletapi.crypto.ECKeyPair
+import io.iohk.atala.agent.walletapi.crypto.ApolloSpecHelper
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
@@ -11,7 +12,11 @@ import io.iohk.atala.test.container.{DBTestUtils, PostgresTestContainerSupport}
 import scala.collection.immutable.ArraySeq
 import org.postgresql.util.PSQLException
 
-object JdbcDIDSecretStorageSpec extends ZIOSpecDefault, StorageSpecHelper, PostgresTestContainerSupport {
+object JdbcDIDSecretStorageSpec
+    extends ZIOSpecDefault,
+      StorageSpecHelper,
+      PostgresTestContainerSupport,
+      ApolloSpecHelper {
 
   override def spec = {
     val testSuite =
@@ -24,7 +29,7 @@ object JdbcDIDSecretStorageSpec extends ZIOSpecDefault, StorageSpecHelper, Postg
       ) @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
 
     testSuite.provideSomeLayer(
-      pgContainerLayer >+> transactorLayer >+> (JdbcDIDSecretStorage.layer ++ JdbcDIDNonSecretStorage.layer)
+      pgContainerLayer >+> (transactorLayer ++ apolloLayer) >+> (JdbcDIDSecretStorage.layer ++ JdbcDIDNonSecretStorage.layer)
     )
   }
 
