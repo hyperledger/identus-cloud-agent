@@ -40,6 +40,15 @@ final case class Prism14ECPublicKey(publicKey: io.iohk.atala.prism.crypto.keys.E
     EC.INSTANCE.verifyBytes(data, publicKey, sig)
   }.flatMap(isValid => if (isValid) Success(()) else Failure(Exception("The signature verification does not match")))
 
+  override def hashCode(): Int = publicKey.getHexEncoded().hashCode()
+
+  override def equals(x: Any): Boolean = {
+    x match {
+      case Prism14ECPublicKey(otherPK) => publicKey.getHexEncoded() == otherPK.getHexEncoded()
+      case _                           => false
+    }
+  }
+
 }
 
 final case class Prism14ECPrivateKey(privateKey: io.iohk.atala.prism.crypto.keys.ECPrivateKey) extends ECPrivateKey {
@@ -67,6 +76,16 @@ final case class Prism14ECPrivateKey(privateKey: io.iohk.atala.prism.crypto.keys
 
   override def computePublicKey: ECPublicKey =
     Prism14ECPublicKey(EC.INSTANCE.toPublicKeyFromPrivateKey(privateKey))
+
+  override def hashCode(): Int = privateKey.getHexEncoded().hashCode()
+
+  override def equals(x: Any): Boolean = {
+    x match {
+      case Prism14ECPrivateKey(otherPK) => privateKey.getHexEncoded() == otherPK.getHexEncoded()
+      case _                            => false
+    }
+  }
+
 }
 
 object Prism14ECKeyFactory extends ECKeyFactory {
