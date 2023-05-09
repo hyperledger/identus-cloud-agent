@@ -3,7 +3,7 @@ package io.iohk.atala.agent.walletapi.crypto
 import io.iohk.atala.castor.core.model.did.EllipticCurve
 
 import scala.util.{Failure, Success, Try}
-import java.security.{KeyFactory, PrivateKey, PublicKey}
+import java.security.KeyFactory
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.bouncycastle.jce.ECNamedCurveTable
 import org.bouncycastle.jce.spec.ECNamedCurveSpec
@@ -20,7 +20,7 @@ final case class Prism14ECPublicKey(publicKey: io.iohk.atala.prism.crypto.keys.E
 
   override def encode: Array[Byte] = publicKey.getEncodedCompressed
 
-  override def toJavaPublicKey: PublicKey = {
+  override def toJavaPublicKey: java.security.interfaces.ECPublicKey = {
     val x = publicKey.getCurvePoint.getX.getCoordinate.toScalaBigInt
     val y = publicKey.getCurvePoint.getY.getCoordinate.toScalaBigInt
     val keyFactory = KeyFactory.getInstance("EC", new BouncyCastleProvider())
@@ -32,7 +32,7 @@ final case class Prism14ECPublicKey(publicKey: io.iohk.atala.prism.crypto.keys.E
       ecParameterSpec.getN()
     )
     val ecPublicKeySpec = ECPublicKeySpec(java.security.spec.ECPoint(x.bigInteger, y.bigInteger), ecNamedCurveSpec)
-    keyFactory.generatePublic(ecPublicKeySpec)
+    keyFactory.generatePublic(ecPublicKeySpec).asInstanceOf[java.security.interfaces.ECPublicKey]
   }
 
   override def verify(data: Array[Byte], signature: Array[Byte]): Try[Unit] = Try {
@@ -55,7 +55,7 @@ final case class Prism14ECPrivateKey(privateKey: io.iohk.atala.prism.crypto.keys
 
   override def curve: EllipticCurve = EllipticCurve.SECP256K1
 
-  override def toJavaPrivateKey: PrivateKey = {
+  override def toJavaPrivateKey: java.security.interfaces.ECPrivateKey = {
     val bytes = privateKey.getEncoded()
     val keyFactory = KeyFactory.getInstance("EC", new BouncyCastleProvider())
     val ecParameterSpec = ECNamedCurveTable.getParameterSpec(EllipticCurve.SECP256K1.name)
@@ -66,7 +66,7 @@ final case class Prism14ECPrivateKey(privateKey: io.iohk.atala.prism.crypto.keys
       ecParameterSpec.getN()
     )
     val ecPrivateKeySpec = ECPrivateKeySpec(java.math.BigInteger(1, bytes), ecNamedCurveSpec)
-    keyFactory.generatePrivate(ecPrivateKeySpec)
+    keyFactory.generatePrivate(ecPrivateKeySpec).asInstanceOf[java.security.interfaces.ECPrivateKey]
   }
 
   override def encode: Array[Byte] = privateKey.getEncoded
