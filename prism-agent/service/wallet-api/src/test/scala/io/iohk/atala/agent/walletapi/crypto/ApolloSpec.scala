@@ -17,7 +17,7 @@ object ApolloSpec extends ZIOSpecDefault {
       ecKeyFactorySpec,
     )
     suite("Apollo - Prism14 implementation")(tests: _*).provideLayer(Apollo.prism14Layer)
-  } @@ TestAspect.tag("dev")
+  }
 
   private val publicKeySpec = suite("ECPublicKey")(
     test("same public key bytes must be equal and have same hashCode") {
@@ -60,6 +60,27 @@ object ApolloSpec extends ZIOSpecDefault {
           equalTo("36684214325164537089180371592352190153822062261502257266280631050350493669941")
         )
     },
+    test("sign a message and verify using public key") {
+      val message = BigInt("42").toByteArray
+      for {
+        apollo <- ZIO.service[Apollo]
+        keyPair <- apollo.ecKeyFactory.generateKeyPair(EllipticCurve.SECP256K1)
+        privateKey = keyPair.privateKey
+        publicKey = privateKey.computePublicKey
+        signature = privateKey.sign(message).get
+      } yield assert(publicKey.verify(message, signature))(isSuccess)
+    },
+    test("sign a message and verify using different public key should fail") {
+      val message = BigInt("42").toByteArray
+      for {
+        apollo <- ZIO.service[Apollo]
+        keyPair1 <- apollo.ecKeyFactory.generateKeyPair(EllipticCurve.SECP256K1)
+        keyPair2 <- apollo.ecKeyFactory.generateKeyPair(EllipticCurve.SECP256K1)
+        privateKey = keyPair1.privateKey
+        publicKey = keyPair2.publicKey
+        signature = privateKey.sign(message).get
+      } yield assert(publicKey.verify(message, signature))(isFailure)
+    }
   )
 
   private val privateKeySpec = suite("ECPrivateKey")(
