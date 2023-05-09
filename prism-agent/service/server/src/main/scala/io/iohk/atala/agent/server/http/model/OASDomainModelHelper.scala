@@ -4,8 +4,7 @@ import io.iohk.atala.agent.openapi.model.*
 import io.iohk.atala.castor.core.model.did as castorDomain
 import io.iohk.atala.agent.walletapi.model as walletDomain
 import io.iohk.atala.pollux.core.model as polluxdomain
-import io.iohk.atala.shared.models.HexStrings.*
-import io.iohk.atala.shared.models.Base64UrlStrings.*
+import io.iohk.atala.shared.models.{HexString, Base64UrlString}
 import io.iohk.atala.shared.utils.Traverse.*
 
 import io.lemonlabs.uri.Uri

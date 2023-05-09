@@ -4,7 +4,6 @@ import com.dimafeng.testcontainers.PostgreSQLContainer
 import org.flywaydb.core.Flyway
 import org.flywaydb.core.api.output.MigrateResult
 import zio.*
-import zio.test.{TestAspect, TestAspectAtLeastR, TestAspectPoly}
 
 object DBTestUtils {
   def runMigrationAgentDB: RIO[PostgreSQLContainer, MigrateResult] = runMigrationPgContainer(

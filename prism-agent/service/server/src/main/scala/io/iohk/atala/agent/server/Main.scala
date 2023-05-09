@@ -5,7 +5,6 @@ import zio.*
 import io.iohk.atala.mercury.*
 import org.didcommx.didcomm.DIDComm
 import io.iohk.atala.resolvers.UniversalDidResolver
-import io.iohk.atala.castor.sql.repository.Migrations as CastorMigrations
 import io.iohk.atala.pollux.sql.repository.Migrations as PolluxMigrations
 import io.iohk.atala.connect.sql.repository.Migrations as ConnectMigrations
 import io.iohk.atala.agent.server.sql.Migrations as AgentMigrations

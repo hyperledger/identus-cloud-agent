@@ -1,29 +1,20 @@
 package io.iohk.atala.agent.walletapi.sql
 
-import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
-
-import cats.instances.seq
+import com.nimbusds.jose.jwk.OctetKeyPair
 import doobie.*
 import doobie.implicits.*
 import doobie.postgres.implicits.*
-import io.circe._
-import io.circe.parser._
-import io.circe.syntax._
-
-import java.time.Instant
-import java.util.UUID
-
-import zio.*
-import zio.interop.catz.*
-import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError
-import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError.KeyNotFoundError
-import io.iohk.atala.mercury.model.DidId
-import io.iohk.atala.castor.core.model.did.{PrismDID, EllipticCurve, ScheduledDIDOperationStatus}
 import io.iohk.atala.agent.walletapi.model.ECKeyPair
-import com.nimbusds.jose.jwk.OctetKeyPair
+import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
+import io.iohk.atala.castor.core.model.did.{PrismDID, EllipticCurve, ScheduledDIDOperationStatus}
+import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.prism.crypto.EC
 import io.iohk.atala.shared.utils.Base64Utils
+import java.time.Instant
+import java.util.UUID
 import scala.collection.immutable.ArraySeq
+import zio.*
+import zio.interop.catz.*
 
 class JdbcDIDSecretStorage(xa: Transactor[Task]) extends DIDSecretStorage {
 
