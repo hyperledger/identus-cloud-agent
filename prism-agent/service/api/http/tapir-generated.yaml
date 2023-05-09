@@ -886,6 +886,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Cannot process due to conflict with current state of the resource
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "422":
           description: Unable to process the request
           content:
@@ -948,6 +954,219 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /issue-credentials/credential-offers:
+    post:
+      tags:
+        - Issue Credentials Protocol
+      summary:
+        As a credential issuer, create a new credential offer to be sent to
+        a holder.
+      description: Creates a new credential offer in the database
+      operationId: createCredentialOffer
+      requestBody:
+        description: The credential offer object.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateIssueCredentialRecordRequest"
+        required: true
+      responses:
+        "201":
+          description: The issue credential record.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IssueCredentialRecord"
+        "400":
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /issue-credentials/records:
+    get:
+      tags:
+        - Issue Credentials Protocol
+      summary: Gets the list of issue credential records.
+      description: Get the list of issue credential records paginated
+      operationId: getCredentialRecords
+      parameters:
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: thid
+          in: query
+          description: The thid of a DIDComm communication.
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The list of issue credential records.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IssueCredentialRecordPage"
+        "400":
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /issue-credentials/records/{recordId}:
+    get:
+      tags:
+        - Issue Credentials Protocol
+      summary: Gets an existing issue credential record by its unique identifier.
+      description: Gets issue credential records by record id
+      operationId: getCredentialRecord
+      parameters:
+        - name: recordId
+          in: path
+          description: The unique identifier of the issue credential record.
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The issue credential record.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IssueCredentialRecord"
+        "400":
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /issue-credentials/records/{recordId}/accept-offer:
+    post:
+      tags:
+        - Issue Credentials Protocol
+      summary: As a holder, accepts a credential offer received from an issuer.
+      description:
+        Accepts a credential offer received from a VC issuer and sends
+        back a credential request.
+      operationId: acceptCredentialOffer
+      parameters:
+        - name: recordId
+          in: path
+          description: The unique identifier of the issue credential record.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: The accept credential offer request object.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AcceptCredentialOfferRequest"
+        required: true
+      responses:
+        "200":
+          description: The issue credential offer was successfully accepted.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IssueCredentialRecord"
+        "400":
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /issue-credentials/records/{recordId}/issue-credential:
+    post:
+      tags:
+        - Issue Credentials Protocol
+      summary:
+        As an issuer, issues the verifiable credential related to the specified
+        record.
+      description:
+        Sends credential to a holder (holder DID is specified in credential
+        as subjectDid). Credential is constructed from the credential records found
+        by credential id.
+      operationId: issueCredential
+      parameters:
+        - name: recordId
+          in: path
+          description: The unique identifier of the issue credential record.
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description:
+            The request was processed successfully and the credential will
+            be issued asynchronously.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IssueCredentialRecord"
+        "400":
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 components:
   schemas:
     AcceptConnectionInvitationRequest:
@@ -959,6 +1178,17 @@ components:
           type: string
           description: The base64-encoded raw invitation.
           example: eyJAaWQiOiIzZmE4NWY2NC01NzE3LTQ1NjItYjNmYy0yYzk2M2Y2NmFmYTYiLCJAdHlwZSI6Imh0dHBzOi8vZGlkY29tbS5vcmcvbXktZmFtaWx5LzEuMC9teS1tZXNzYWdlLXR5cGUiLCJkaWQiOiJXZ1d4cXp0ck5vb0c5MlJYdnhTVFd2IiwiaW1hZ2VVcmwiOiJodHRwOi8vMTkyLjE2OC41Ni4xMDEvaW1nL2xvZ28uanBnIiwibGFiZWwiOiJCb2IiLCJyZWNpcGllbnRLZXlzIjpbIkgzQzJBVnZMTXY2Z21NTmFtM3VWQWpacGZrY0pDd0R3blpuNnozd1htcVBWIl0sInJvdXRpbmdLZXlzIjpbIkgzQzJBVnZMTXY2Z21NTmFtM3VWQWpacGZrY0pDd0R3blpuNnozd1htcVBWIl0sInNlcnZpY2VFbmRwb2ludCI6Imh0dHA6Ly8xOTIuMTY4LjU2LjEwMTo4MDIwIn0=
+    AcceptCredentialOfferRequest:
+      required:
+        - subjectId
+      type: object
+      properties:
+        subjectId:
+          type: string
+          description:
+            The short-form subject Prism DID to which the verifiable credential
+            should be issued.
+          example: did:prism:3bb0505d13fcb04d28a48234edb27b0d4e6d7e18a81e2c1abab58f3bbc21ce6f
     ActionType:
       type: string
       enum:
@@ -1117,6 +1347,40 @@ components:
           type: string
           description: A human readable alias for the connection.
           example: Peter
+    CreateIssueCredentialRecordRequest:
+      required:
+        - claims
+        - issuingDID
+        - connectionId
+      type: object
+      properties:
+        validityPeriod:
+          type: number
+          description:
+            The validity period in seconds of the verifiable credential
+            that will be issued.
+          format: double
+          example: 3600.0
+        claims:
+          $ref: "#/components/schemas/Map_String"
+        automaticIssuance:
+          type: boolean
+          description:
+            Specifies whether or not the credential should be automatically
+            generated and issued when receiving the `CredentialRequest` from the holder.
+            If set to `false`, a manual approval by the issuer via API call will be
+            required for the VC to be issued.
+          example: true
+        issuingDID:
+          type: string
+          description: The issuer DID of the verifiable credential object.
+          example: did:prism:issuerofverifiablecredentials
+        connectionId:
+          type: string
+          description:
+            The unique identifier of a DIDComm connection that already
+            exists between the issuer and the holder, and that will be used to execute
+            the issue credential protocol.
     CreateManagedDIDResponse:
       required:
         - longFormDid
@@ -1562,6 +1826,115 @@ components:
             A URI reference that identifies the specific occurrence of
             the problem. It may or may not yield further information if dereferenced.
           example: The received '{}à!è@!.b}' email does not conform to the email format
+    IssueCredentialRecord:
+      required:
+        - claims
+        - recordId
+        - createdAt
+        - role
+        - protocolState
+      type: object
+      properties:
+        subjectId:
+          type: string
+          description:
+            The identifier (e.g DID) of the subject to which the verifiable
+            credential will be issued.
+          example: did:prism:subjectofverifiablecredentials
+        validityPeriod:
+          type: number
+          description:
+            The validity period in seconds of the verifiable credential
+            that will be issued.
+          format: double
+          example: 3600.0
+        claims:
+          $ref: "#/components/schemas/Map_String"
+        automaticIssuance:
+          type: boolean
+          description:
+            Specifies whether or not the credential should be automatically
+            generated and issued when receiving the `CredentialRequest` from the holder.
+            If set to `false`, a manual approval by the issuer via API call will be
+            required for the VC to be issued.
+          example: true
+        recordId:
+          type: string
+          description: The unique identifier of the issue credential record.
+          example: 80d612dc-0ded-4ac9-90b4-1b8eabb04545
+        createdAt:
+          type: string
+          description: The date and time when the issue credential record was created.
+          format: date-time
+          example: "2023-05-03T11:10:34.234040+01:00"
+        updatedAt:
+          type: string
+          description:
+            The date and time when the issue credential record was last
+            updated.
+          format: date-time
+        role:
+          type: string
+          description:
+            The role played by the Prism agent in the credential issuance
+            flow.
+          example: Issuer
+        protocolState:
+          type: string
+          description: The current state of the issue credential protocol execution.
+          example: OfferPending
+        jwtCredential:
+          type: string
+          description:
+            The base64-encoded JWT verifiable credential that has been
+            sent by the issuer.
+        issuingDID:
+          type: string
+          description: Issuer DID of the verifiable credential object.
+          example: did:prism:issuerofverifiablecredentials
+    IssueCredentialRecordPage:
+      required:
+        - self
+        - kind
+        - pageOf
+      type: object
+      properties:
+        self:
+          type: string
+          description: A string field containing the URL of the current API endpoint
+          example: /prism-agent/schema-registry/schemas?skip=10&limit=10
+        kind:
+          type: string
+          description: A string field containing the URL of the current API endpoint
+          example: /prism-agent/schema-registry/schemas?skip=10&limit=10
+        pageOf:
+          type: string
+          description:
+            A string field indicating the type of resource that the contents
+            field contains
+          example: /prism-agent/schema-registry/schemas
+        next:
+          type: string
+          description:
+            An optional string field containing the URL of the next page
+            of results. If the API response does not contain any more pages, this
+            field should be set to None.
+          example: /prism-agent/schema-registry/schemas?skip=20&limit=10
+        previous:
+          type: string
+          description:
+            An optional string field containing the URL of the previous
+            page of results. If the API response is the first page of results, this
+            field should be set to None.
+          example: /prism-agent/schema-registry/schemas?skip=0&limit=10
+        contents:
+          type: array
+          items:
+            $ref: "#/components/schemas/IssueCredentialRecord"
+          description:
+            A sequence of IssueCredentialRecord objects representing the
+            list of credential records that the API response contains
+          examples: []
     ManagedDID:
       required:
         - did
@@ -1618,6 +1991,12 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ManagedDID"
+    Map_String:
+      type: object
+      description: The claims that will be associated with the issued verifiable credential.
+      example: (firstname,Alice)
+      additionalProperties:
+        type: string
     Proof:
       required:
         - type

@@ -33,7 +33,7 @@ trait ConnectionController {
 }
 
 object ConnectionController {
-  def toHttpError(error: ConnectionServiceError) =
+  def toHttpError(error: ConnectionServiceError): ErrorResponse =
     error match
       case ConnectionServiceError.RepositoryError(cause) =>
         ErrorResponse.internalServerError(title = "RepositoryError", detail = Some(cause.toString))

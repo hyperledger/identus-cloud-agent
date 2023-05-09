@@ -1,4 +1,4 @@
-package io.iohk.atala.pollux.test.container
+package io.iohk.atala.container.util
 
 import cats.Functor
 import cats.effect.std.Dispatcher

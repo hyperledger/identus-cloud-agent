@@ -3,20 +3,18 @@ package io.iohk.atala.agent.server.http
 import akka.http.scaladsl.model.ContentType
 import akka.http.scaladsl.server.Directives.*
 import akka.http.scaladsl.server.Route
-import io.iohk.atala.agent.openapi.api.{DIDRegistrarApi, IssueCredentialsProtocolApi, PresentProofApi}
+import io.iohk.atala.agent.openapi.api.PresentProofApi
 import zio.*
 
 object HttpRoutes {
 
   def routes: URIO[
-    IssueCredentialsProtocolApi & PresentProofApi,
+    PresentProofApi,
     Route
   ] =
     for {
-      issueCredentialsProtocolApi <- ZIO.service[IssueCredentialsProtocolApi]
       presentProofApi <- ZIO.service[PresentProofApi]
-    } yield issueCredentialsProtocolApi.route ~
-      presentProofApi.route ~
+    } yield presentProofApi.route ~
       additionalRoute
 
   private def additionalRoute: Route = {

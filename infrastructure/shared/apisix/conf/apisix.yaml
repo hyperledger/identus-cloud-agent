@@ -32,6 +32,11 @@ routes:
     plugins:
       proxy-rewrite:
         uri: "/connection-invitations"
+  - uri: /prism-agent/issue-credentials/*
+    upstream_id: 4
+    plugins:
+      proxy-rewrite:
+        regex_uri: ["^/prism-agent/issue-credentials/(.*)?", "/issue-credentials/$1"]
   - uri: /didcomm
     upstream_id: 3
     plugins:

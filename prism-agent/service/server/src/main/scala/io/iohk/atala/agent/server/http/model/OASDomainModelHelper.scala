@@ -42,27 +42,6 @@ trait OASDomainModelHelper {
     }
   }
 
-  extension (domain: polluxdomain.IssueCredentialRecord) {
-    def toOAS: IssueCredentialRecord = IssueCredentialRecord(
-      recordId = domain.id.value,
-      createdAt = domain.createdAt.atOffset(ZoneOffset.UTC),
-      updatedAt = domain.updatedAt.map(_.atOffset(ZoneOffset.UTC)),
-      role = domain.role.toString,
-      subjectId = domain.subjectId,
-      claims = domain.offerCredentialData
-        .map(offer => offer.body.credential_preview.attributes.map(attr => (attr.name -> attr.value)).toMap)
-        .getOrElse(Map.empty),
-      schemaId = domain.schemaId,
-      validityPeriod = domain.validityPeriod,
-      automaticIssuance = domain.automaticIssuance,
-      protocolState = domain.protocolState.toString(),
-      jwtCredential = domain.issueCredentialData.flatMap(issueCredential => {
-        issueCredential.attachments.collectFirst { case AttachmentDescriptor(_, _, Base64(jwt), _, _, _, _) =>
-          jwt
-        }
-      })
-    )
-  }
   extension (domain: polluxdomain.PresentationRecord) {
     def toOAS: PresentationStatus = {
       val connectionId = domain.connectionId
