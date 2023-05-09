@@ -2,9 +2,7 @@ package io.iohk.atala.agent.walletapi.service
 
 import io.iohk.atala.agent.walletapi.crypto.{ECWrapper, KeyGeneratorWrapper}
 import io.iohk.atala.agent.walletapi.model.{
-  DIDPublicKeyTemplate,
   DIDUpdateLineage,
-  ECKeyPair,
   ManagedDIDDetail,
   ManagedDIDState,
   ManagedDIDTemplate,
@@ -22,16 +20,11 @@ import io.iohk.atala.agent.walletapi.util.{
 }
 import io.iohk.atala.castor.core.model.did.{
   CanonicalPrismDID,
-  DID,
   DIDMetadata,
   EllipticCurve,
-  InternalKeyPurpose,
-  InternalPublicKey,
   LongFormPrismDID,
   PrismDID,
   PrismDIDOperation,
-  PublicKey,
-  PublicKeyData,
   ScheduleDIDOperationOutcome,
   ScheduledDIDOperationStatus,
   SignedPrismDIDOperation
@@ -39,16 +32,11 @@ import io.iohk.atala.castor.core.model.did.{
 import io.iohk.atala.castor.core.model.error.DIDOperationError
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.castor.core.util.DIDOperationValidator
-import io.iohk.atala.prism.crypto.Sha256
-import io.iohk.atala.prism.crypto.util.Random
-import io.iohk.atala.shared.models.Base64UrlStrings.*
-import io.iohk.atala.shared.models.HexStrings.*
 import zio.*
 
 import scala.collection.immutable.ArraySeq
 import io.iohk.atala.mercury.PeerDID
 import io.iohk.atala.mercury.model.DidId
-import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
 import org.bouncycastle.jce.ECNamedCurveTable
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 

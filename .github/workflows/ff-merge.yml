@@ -18,7 +18,7 @@ on:
 jobs:
   fast_forward_job:
     name: Fast Forward Merge
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     if: |
       github.event.issue.pull_request != '' &&
       contains(github.event.comment.body, '/fast-forward')

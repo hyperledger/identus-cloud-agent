@@ -1,7 +1,7 @@
 package io.iohk.atala.agent.walletapi.storage
 
 import io.iohk.atala.agent.walletapi.model.{DIDUpdateLineage, ManagedDIDState}
-import io.iohk.atala.castor.core.model.did.{PrismDID, PrismDIDOperation, ScheduledDIDOperationStatus}
+import io.iohk.atala.castor.core.model.did.{PrismDID, ScheduledDIDOperationStatus}
 import zio.*
 
 private[walletapi] trait DIDNonSecretStorage {

@@ -10,8 +10,7 @@ import io.iohk.atala.castor.core.model.did.{LongFormPrismDID, PrismDID, ServiceT
 import io.iohk.atala.castor.core.util.UriUtils
 import io.iohk.atala.mercury.model.{AttachmentDescriptor, Base64}
 import io.iohk.atala.pollux.core.model as polluxdomain
-import io.iohk.atala.shared.models.Base64UrlStrings.*
-import io.iohk.atala.shared.models.HexStrings.*
+import io.iohk.atala.shared.models.{HexString, Base64UrlString}
 import io.iohk.atala.shared.utils.Traverse.*
 import io.lemonlabs.uri.Uri
 import spray.json.{JsObject, JsString, JsonParser}
@@ -40,95 +39,6 @@ trait OASDomainModelHelper {
         )
         .normalizeServiceEndpoint()
     }
-  }
-
-  extension (template: CreateManagedDidRequestDocumentTemplate) {
-    def toDomain: Either[String, walletDomain.ManagedDIDTemplate] = {
-      for {
-        services <- template.services.traverse(_.toDomain)
-        publicKeys <- template.publicKeys.traverse(_.toDomain)
-      } yield walletDomain.ManagedDIDTemplate(
-        publicKeys = publicKeys,
-        services = services
-      )
-    }
-  }
-
-  extension (action: UpdateManagedDIDRequestActionsInner) {
-    def toDomain: Either[String, walletDomain.UpdateManagedDIDAction] = {
-      import walletDomain.UpdateManagedDIDAction.*
-      action.actionType match {
-        case "ADD_KEY" =>
-          action.addKey
-            .toRight("addKey property is missing from action type ADD_KEY")
-            .flatMap(_.toDomain)
-            .map(template => AddKey(template))
-        case "REMOVE_KEY" =>
-          action.removeKey
-            .toRight("removeKey property is missing from action type REMOVE_KEY")
-            .map(i => RemoveKey(i.id))
-        case "ADD_SERVICE" =>
-          action.addService
-            .toRight("addservice property is missing from action type ADD_SERVICE")
-            .flatMap(_.toDomain)
-            .map(s => AddService(s))
-        case "REMOVE_SERVICE" =>
-          action.removeService
-            .toRight("removeService property is missing from action type REMOVE_SERVICE")
-            .map(i => RemoveService(i.id))
-        case "UPDATE_SERVICE" =>
-          action.updateService
-            .toRight("updateService property is missing from action type UPDATE_SERVICE")
-            .flatMap(_.toDomain)
-            .map(s => UpdateService(s))
-        case s => Left(s"unsupported update DID action type: $s")
-      }
-    }
-  }
-
-  extension (servicePatch: UpdateManagedDIDRequestActionsInnerUpdateService) {
-    def toDomain: Either[String, walletDomain.UpdateServicePatch] =
-      for {
-        serviceEndpoint <- servicePatch.serviceEndpoint
-          .getOrElse(Nil)
-          .traverse(s => Uri.parseTry(s).toEither.left.map(_ => s"unable to parse serviceEndpoint $s as URI"))
-        normalizedServiceEndpoint <- serviceEndpoint
-          .traverse(uri =>
-            UriUtils
-              .normalizeUri(uri.toString)
-              .toRight(s"unable to parse serviceEndpoint ${uri.toString} as URI")
-              .map(Uri.parse)
-          )
-        serviceType <- servicePatch.`type`.fold[Either[String, Option[ServiceType]]](Right(None))(s =>
-          castorDomain.ServiceType.parseString(s).toRight(s"unsupported serviceType $s").map(Some(_))
-        )
-      } yield walletDomain.UpdateServicePatch(
-        id = servicePatch.id,
-        serviceType = serviceType,
-        serviceEndpoints = normalizedServiceEndpoint
-      )
-  }
-
-  extension (publicKeyTemplate: ManagedDIDKeyTemplate) {
-    def toDomain: Either[String, walletDomain.DIDPublicKeyTemplate] = {
-      for {
-        purpose <- castorDomain.VerificationRelationship
-          .parseString(publicKeyTemplate.purpose)
-          .toRight(s"unsupported verificationRelationship ${publicKeyTemplate.purpose}")
-      } yield walletDomain.DIDPublicKeyTemplate(
-        id = publicKeyTemplate.id,
-        purpose = purpose
-      )
-    }
-  }
-
-  extension (outcome: castorDomain.ScheduleDIDOperationOutcome) {
-    def toOAS: DIDOperationResponse = DIDOperationResponse(
-      scheduledOperation = DidOperationSubmission(
-        id = HexString.fromByteArray(outcome.operationId.toArray).toString,
-        didRef = outcome.did.toString
-      )
-    )
   }
 
   extension (domain: polluxdomain.IssueCredentialRecord) {

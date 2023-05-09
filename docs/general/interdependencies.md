@@ -77,7 +77,7 @@ test
 ```
 
 **Note:**
-- The **Mercury Libraries** are the collection of dependencies with the single cross version.
-We will represent as a single box here. But the real dependencies can of a subset of the Mercury Libraries.
-For more information about the Mercury Modules Interdependencies see [HERE](./mercury/mercury-library/README.md).
-- The **Pollux Libraries** are the collection of dependencies with the single cross version.
+- The **Mercury Libraries** collect all dependencies with the single cross version.
+We will represent it as a single box here. But the actual dependencies can be of a subset of the Mercury Libraries.
+For more information about the Mercury Modules Interdependencies, see [HERE](./mercury/mercury-library/README.md).
+- The **Pollux Libraries** collect all dependencies with the single cross version.

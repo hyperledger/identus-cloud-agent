@@ -1,36 +1,40 @@
 package io.iohk.atala.agent.server
 
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
+import zio.*
+import io.iohk.atala.mercury.*
+import org.didcommx.didcomm.DIDComm
+import io.iohk.atala.resolvers.UniversalDidResolver
+import io.iohk.atala.pollux.sql.repository.Migrations as PolluxMigrations
+import io.iohk.atala.connect.sql.repository.Migrations as ConnectMigrations
+import io.iohk.atala.agent.server.sql.Migrations as AgentMigrations
+import io.iohk.atala.agent.walletapi.service.ManagedDIDService
+import io.iohk.atala.resolvers.DIDResolver
+import io.iohk.atala.agent.server.http.ZioHttpClient
+import org.flywaydb.core.extensibility.AppliedMigration
+import io.iohk.atala.pollux.core.service.{CredentialSchemaServiceImpl, URIDereferencer}
+import io.iohk.atala.pollux.sql.repository.JdbcCredentialSchemaRepository
+import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
+import zio.http.*
+import zio.http.model.*
+import zio.http.ZClient.ClientLive
+import zio.metrics.connectors.prometheus.PrometheusPublisher
+import zio.metrics.connectors.{MetricsConfig, prometheus}
+import zio.metrics.jvm.DefaultJvmMetrics
+import io.iohk.atala.agent.server.buildinfo.BuildInfo
 import io.circe.*
 import io.circe.generic.auto.*
 import io.circe.parser.*
 import io.circe.syntax.*
-import io.iohk.atala.agent.server.buildinfo.BuildInfo
 import io.iohk.atala.agent.server.health.HealthInfo
-import io.iohk.atala.agent.server.http.{HttpRoutes, ZioHttpClient}
-import io.iohk.atala.agent.server.sql.Migrations as AgentMigrations
-import io.iohk.atala.agent.walletapi.service.ManagedDIDService
-import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
-import io.iohk.atala.castor.controller.DIDControllerImpl
-import io.iohk.atala.castor.sql.repository.Migrations as CastorMigrations
 import io.iohk.atala.connect.controller.ConnectionControllerImpl
-import io.iohk.atala.connect.sql.repository.Migrations as ConnectMigrations
-import io.iohk.atala.mercury.*
-import io.iohk.atala.pollux.core.service.{CredentialSchemaServiceImpl, URIDereferencer}
-import io.iohk.atala.pollux.sql.repository.{JdbcCredentialSchemaRepository, Migrations as PolluxMigrations}
-import io.iohk.atala.resolvers.{DIDResolver, UniversalDidResolver}
-import org.didcommx.didcomm.DIDComm
-import org.flywaydb.core.extensibility.AppliedMigration
-import zio.*
-import zio.http.*
-import zio.http.ZClient.ClientLive
-import zio.http.model.*
-import zio.metrics.connectors.prometheus.PrometheusPublisher
-import zio.metrics.connectors.{MetricsConfig, prometheus}
-import zio.metrics.jvm.DefaultJvmMetrics
+import io.iohk.atala.castor.controller.DIDControllerImpl
+import io.iohk.atala.castor.controller.DIDRegistrarControllerImpl
+
+import java.security.Security
+import io.iohk.atala.agent.server.http.HttpRoutes
 
 import java.net.URI
-import java.security.Security
 
 object AgentApp extends ZIOAppDefault {
 
@@ -153,6 +157,7 @@ object AgentApp extends ZIOAppDefault {
         RepoModule.verificationPolicyServiceLayer,
         ConnectionControllerImpl.layer,
         DIDControllerImpl.layer,
+        DIDRegistrarControllerImpl.layer,
         uriDereferencerLayer
       )
     } yield app

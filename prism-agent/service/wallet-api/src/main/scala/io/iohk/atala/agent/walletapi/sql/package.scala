@@ -1,7 +1,6 @@
 package io.iohk.atala.agent.walletapi
 
 import doobie.*
-import doobie.implicits.*
 import doobie.postgres.implicits.*
 import doobie.util.invariant.InvalidEnum
 import io.iohk.atala.agent.walletapi.model.ManagedDIDState

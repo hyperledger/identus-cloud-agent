@@ -1,6 +1,6 @@
 {
   "name": "atala-prism-building-blocks",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "engines": {
     "node": ">=16.13.0"
   },
@@ -42,6 +42,12 @@
         "@semantic-release/exec",
         {
           "prepareCmd": "sbt \"release release-version ${nextRelease.version} next-version ${nextRelease.version}-SNAPSHOT with-defaults\""
+        }
+      ],
+      [
+        "@semantic-release/exec",
+        {
+          "prepareCmd": "docker buildx build --platform=linux/arm64,linux/amd64 --push -t ghcr.io/input-output-hk/prism-agent:${nextRelease.version} ./prism-agent/service/server/target/docker/stage"
         }
       ],
       [

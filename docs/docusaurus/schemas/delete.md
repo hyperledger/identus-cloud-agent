@@ -1,13 +1,11 @@
 # Delete the credential schema
 
-Unfortunately, after publishing (especially in the Verifiable Data Registry) the credential schema cannot be deleted.
+Unfortunately, after publishing (especially in the [Verifiable Data Registry (VDR)](/docs/concepts/glossary#verifiable-data-registry), deleting the credential schema is impossible.
 
-PRISM Platform v2.0 doesn't publish the credential schema in the VDR, this capability will be implemented in the later
-version of the platform.
-That's the reason why the platform does not expose the REST API for deletion.
+PRISM Platform v2.0 doesn't publish the credential schema in the VDR. This capability will get implemented in the later version of the platform. That's why the platform does not expose the REST API for deletion.
 
-If you really need to `delete` the credential schema, you can ask the database administrator or delete it from the
-Posrgres instance by `guid`.
+If you need to `delete` the credential schema, you can ask the database administrator or delete it from the
+Postgres instance by `guid`.
 
 For example:
 
