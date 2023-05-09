@@ -12,13 +12,14 @@ object ApolloSpec extends ZIOSpecDefault {
 
   override def spec = {
     val tests = Seq(
+      publicKeySpec,
+      privateKeySpec,
       ecKeyFactorySpec,
-      publicKeySpec
     )
-    suite("Apollo - Prism14")(tests: _*).provideLayer(Apollo.prism14Layer)
+    suite("Apollo - Prism14 implementation")(tests: _*).provideLayer(Apollo.prism14Layer)
   } @@ TestAspect.tag("dev")
 
-  private val publicKeySpec = suite("PublicKey")(
+  private val publicKeySpec = suite("ECPublicKey")(
     test("same public key bytes must be equal and have same hashCode") {
       for {
         apollo <- ZIO.service[Apollo]
@@ -61,7 +62,71 @@ object ApolloSpec extends ZIOSpecDefault {
     },
   )
 
+  private val privateKeySpec = suite("ECPrivateKey")(
+    test("same private key bytes must be equal and have same hashCode") {
+      for {
+        apollo <- ZIO.service[Apollo]
+        keyPair <- apollo.ecKeyFactory.generateKeyPair(EllipticCurve.SECP256K1)
+        pk1 = keyPair.privateKey
+        pk2 = apollo.ecKeyFactory.privateKeyFromEncoded(EllipticCurve.SECP256K1, pk1.encode).get
+      } yield assert(pk1)(equalTo(pk2)) &&
+        assert(pk1 == pk2)(isTrue) &&
+        assert(pk1.hashCode())(equalTo(pk2.hashCode()))
+    },
+    test("different private key bytes must not be equal and have different hashCode") {
+      for {
+        apollo <- ZIO.service[Apollo]
+        keyPair1 <- apollo.ecKeyFactory.generateKeyPair(EllipticCurve.SECP256K1)
+        keyPair2 <- apollo.ecKeyFactory.generateKeyPair(EllipticCurve.SECP256K1)
+        pk1 = keyPair1.privateKey
+        pk2 = keyPair2.privateKey
+      } yield assert(pk1)(not(equalTo(pk2))) &&
+        assert(pk1 == pk2)(isFalse) &&
+        assert(pk1.hashCode())(not(equalTo(pk2.hashCode())))
+    },
+    test("convert to java PrivateKey class") {
+      // priv: 0x2789649b57d8f5df144a817f660b494e7a86d465ba86a638a2b525884c5c5849
+      // pub: 0x037b7e17f0524db221af0dd74bd21dec2fc6d0955bbfd43ec7d96ca61dbee2d9d1
+      // x: 55857268325124588620525700020439091507381445732605907422424441486941792426449
+      // y: 36684214325164537089180371592352190153822062261502257266280631050350493669941
+      val compressed = "2789649b57d8f5df144a817f660b494e7a86d465ba86a638a2b525884c5c5849"
+      val bytes = HexString.fromString(compressed).get.toByteArray
+      for {
+        apollo <- ZIO.service[Apollo]
+        pk = apollo.ecKeyFactory.privateKeyFromEncoded(EllipticCurve.SECP256K1, bytes).get
+        javaPk = pk.toJavaPrivateKey
+      } yield assert(javaPk.getAlgorithm())(equalTo("EC")) &&
+        assert(javaPk.getS().toByteArray())(equalTo(bytes))
+    },
+    test("compute public key from private key") {
+      // priv: 0x2789649b57d8f5df144a817f660b494e7a86d465ba86a638a2b525884c5c5849
+      // pub: 0x037b7e17f0524db221af0dd74bd21dec2fc6d0955bbfd43ec7d96ca61dbee2d9d1
+      // x: 55857268325124588620525700020439091507381445732605907422424441486941792426449
+      // y: 36684214325164537089180371592352190153822062261502257266280631050350493669941
+      val compressed = "2789649b57d8f5df144a817f660b494e7a86d465ba86a638a2b525884c5c5849"
+      val bytes = HexString.fromString(compressed).get.toByteArray
+      for {
+        apollo <- ZIO.service[Apollo]
+        privateKey = apollo.ecKeyFactory.privateKeyFromEncoded(EllipticCurve.SECP256K1, bytes).get
+        publicKey = privateKey.computePublicKey
+        javaPk = publicKey.toJavaPublicKey
+      } yield assert(javaPk.getAlgorithm())(equalTo("EC")) &&
+        assert(javaPk.getW().getAffineX().toString())(
+          equalTo("55857268325124588620525700020439091507381445732605907422424441486941792426449")
+        ) &&
+        assert(javaPk.getW().getAffineY().toString())(
+          equalTo("36684214325164537089180371592352190153822062261502257266280631050350493669941")
+        )
+    }
+  )
+
   private val ecKeyFactorySpec = suite("ECKeyFactory")(
+    test("decode invalid public key should fail") {
+      for {
+        apollo <- ZIO.service[Apollo]
+        decodeResult = apollo.ecKeyFactory.publicKeyFromEncoded(EllipticCurve.SECP256K1, Array.emptyByteArray)
+      } yield assert(decodeResult)(isFailure)
+    },
     test("decode valid uncompressed secp256k1 public key successfully") {
       // priv: 0xe005dfce415d0ff46485fa37a0f035cf02fedf4b611248eb851a6b563dcf61ed
       // pub: 0x0436e35f02c325a0cdc3c98968ca5cd51601b0fd8a6e29de4dd73bf0415987bd687c6ced9dbaaa3aca617223c5adaab1109dea0a9a2a75b8fb16361cd19c05f670
@@ -134,7 +199,7 @@ object ApolloSpec extends ZIOSpecDefault {
         pk1 = apollo.ecKeyFactory.publicKeyFromEncoded(EllipticCurve.SECP256K1, bytes).get
         pk2 = apollo.ecKeyFactory.publicKeyFromEncoded(EllipticCurve.SECP256K1, bytes2).get
       } yield assert(pk1)(equalTo(pk2))
-    }
+    },
   )
 
 }
