@@ -36,16 +36,8 @@ import zio.*
 import scala.collection.immutable.ArraySeq
 import io.iohk.atala.mercury.PeerDID
 import io.iohk.atala.mercury.model.DidId
-import org.bouncycastle.jce.ECNamedCurveTable
-import org.bouncycastle.jce.provider.BouncyCastleProvider
 
-import java.security.spec.ECPoint
-import java.security.{KeyFactory, PrivateKey as JavaPrivateKey, PublicKey as JavaPublicKey}
-import org.bouncycastle.jce.spec.ECNamedCurveSpec
-
-import java.security.spec.ECPrivateKeySpec
-import java.security.spec.ECPublicKeySpec
-import io.iohk.atala.prism.crypto.keys.ECKeyPair
+import java.security.{PrivateKey as JavaPrivateKey, PublicKey as JavaPublicKey}
 
 /** A wrapper around Castor's DIDService providing key-management capability. Analogous to the secretAPI in
   * indy-wallet-sdk.

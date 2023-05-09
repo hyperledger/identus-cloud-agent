@@ -5,7 +5,6 @@ import io.iohk.atala.agent.walletapi.model.{DIDPublicKeyTemplate, ManagedDIDTemp
 import io.iohk.atala.agent.walletapi.model.error.{CreateManagedDIDError, UpdateManagedDIDError}
 import io.iohk.atala.castor.core.model.did.{
   CanonicalPrismDID,
-  EllipticCurve,
   InternalKeyPurpose,
   InternalPublicKey,
   PrismDIDOperation,

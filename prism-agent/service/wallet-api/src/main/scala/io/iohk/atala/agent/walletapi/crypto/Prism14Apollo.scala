@@ -11,7 +11,6 @@ import org.bouncycastle.jce.spec.ECNamedCurveSpec
 import java.security.spec.{ECPrivateKeySpec, ECPublicKeySpec}
 import io.iohk.atala.agent.walletapi.util.Prism14CompatUtil.*
 import io.iohk.atala.prism.crypto.EC
-import io.iohk.atala.prism.crypto.signature.ECSignature
 import zio.*
 
 final case class Prism14ECPublicKey(publicKey: io.iohk.atala.prism.crypto.keys.ECPublicKey) extends ECPublicKey {

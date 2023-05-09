@@ -3,10 +3,8 @@ package io.iohk.atala.agent.walletapi.crypto
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
-import javafx.scene.shape.Ellipse
 import io.iohk.atala.castor.core.model.did.EllipticCurve
 import io.iohk.atala.shared.models.HexString
-import org.bouncycastle.jce.ECNamedCurveTable
 
 object ApolloSpec extends ZIOSpecDefault {
 

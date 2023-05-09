@@ -6,7 +6,6 @@ import io.iohk.atala.castor.core.model.did.ScheduledDIDOperationStatus
 import io.iohk.atala.agent.walletapi.model.DIDUpdateLineage
 import scala.collection.immutable.ArraySeq
 import java.time.Instant
-import io.iohk.atala.agent.walletapi.crypto.{Apollo, Prism14Apollo}
 import io.iohk.atala.agent.walletapi.crypto.ApolloSpecHelper
 import io.iohk.atala.castor.core.model.did.EllipticCurve
 import io.iohk.atala.agent.walletapi.util.OperationFactory
@@ -15,8 +14,6 @@ import io.iohk.atala.agent.walletapi.model.DIDPublicKeyTemplate
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import zio.*
 import io.iohk.atala.agent.walletapi.model.ManagedDIDState
-import io.iohk.atala.agent.walletapi.crypto.Prism14Apollo
-import io.iohk.atala.agent.walletapi.crypto.Apollo
 
 trait StorageSpecHelper extends ApolloSpecHelper {
   protected val didExample = PrismDID.buildLongFormFromOperation(PrismDIDOperation.Create(Nil, Nil, Nil))

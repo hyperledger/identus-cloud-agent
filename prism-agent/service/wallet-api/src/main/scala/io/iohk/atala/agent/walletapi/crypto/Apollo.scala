@@ -1,14 +1,9 @@
 package io.iohk.atala.agent.walletapi.crypto
 
 import io.iohk.atala.castor.core.model.did.EllipticCurve
-import org.bouncycastle.jce.ECNamedCurveTable
-import org.bouncycastle.jce.provider.BouncyCastleProvider
-import org.bouncycastle.jce.spec.ECNamedCurveSpec
 import io.iohk.atala.agent.walletapi.util.Prism14CompatUtil.*
 import zio.*
 
-import java.security.KeyFactory
-import java.security.spec.{ECPrivateKeySpec, ECPublicKeySpec}
 import scala.util.Try
 
 final case class ECKeyPair(publicKey: ECPublicKey, privateKey: ECPrivateKey)
