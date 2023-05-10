@@ -28,6 +28,12 @@ trait ECKeyFactory {
   def publicKeyFromEncoded(curve: EllipticCurve, bytes: Array[Byte]): Try[ECPublicKey]
   def privateKeyFromEncoded(curve: EllipticCurve, bytes: Array[Byte]): Try[ECPrivateKey]
   def generateKeyPair(curve: EllipticCurve): Task[ECKeyPair]
+  def deriveKeyPair(curve: EllipticCurve, seed: Array[Byte])(path: DerivationPath*): Task[ECKeyPair]
+}
+
+enum DerivationPath {
+  case Normal(i: Int) extends DerivationPath
+  case Hardened(i: Int) extends DerivationPath
 }
 
 trait Apollo {

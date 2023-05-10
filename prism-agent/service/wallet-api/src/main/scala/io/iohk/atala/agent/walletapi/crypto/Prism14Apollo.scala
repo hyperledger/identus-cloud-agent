@@ -12,6 +12,8 @@ import java.security.spec.{ECPrivateKeySpec, ECPublicKeySpec}
 import io.iohk.atala.agent.walletapi.util.Prism14CompatUtil.*
 import io.iohk.atala.prism.crypto.EC
 import zio.*
+import io.iohk.atala.prism.crypto.derivation.KeyDerivation
+import io.iohk.atala.prism.crypto.derivation.DerivationAxis
 
 final case class Prism14ECPublicKey(publicKey: io.iohk.atala.prism.crypto.keys.ECPublicKey) extends ECPublicKey {
 
@@ -117,6 +119,27 @@ object Prism14ECKeyFactory extends ECKeyFactory {
         ZIO.attempt {
           val keyPair = EC.INSTANCE.generateKeyPair()
           ECKeyPair(Prism14ECPublicKey(keyPair.getPublicKey), Prism14ECPrivateKey(keyPair.getPrivateKey))
+        }
+    }
+  }
+
+  override def deriveKeyPair(curve: EllipticCurve, seed: Array[Byte])(path: DerivationPath*): Task[ECKeyPair] = {
+    curve match {
+      case EllipticCurve.SECP256K1 =>
+        ZIO.attempt {
+          val extendedKey = path
+            .foldLeft(KeyDerivation.INSTANCE.derivationRoot(seed)) { case (extendedKey, p) =>
+              val axis = p match {
+                case DerivationPath.Hardened(i) => DerivationAxis.hardened(i)
+                case DerivationPath.Normal(i)   => DerivationAxis.normal(i)
+              }
+              extendedKey.derive(axis)
+            }
+          val prism14KeyPair = extendedKey.keyPair()
+          ECKeyPair(
+            Prism14ECPublicKey(prism14KeyPair.getPublicKey()),
+            Prism14ECPrivateKey(prism14KeyPair.getPrivateKey())
+          )
         }
     }
   }
