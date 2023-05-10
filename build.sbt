@@ -607,6 +607,76 @@ lazy val polluxDoobie = project
   .dependsOn(polluxCore % "compile->compile;test->test")
   .dependsOn(shared)
 
+// ########################
+// ### Pollux Anoncreds ###
+// ########################
+import scala.sys.process.Process
+import scala.language.postfixOps
+
+//define the compile time tasks to build the shim and download the appropriate anoncreds .so
+lazy val getAnonCredsSo = taskKey[Unit]("Download the Anoncreds .so if required")
+lazy val buildShim = taskKey[Unit]("Build  the Anoncreds shim shared object")
+
+// Download the anoncreds .so if necessary and build the shim.
+// The order of these tasks matters.
+(Compile / compile) := ((Compile / compile) dependsOn buildShim).value
+(Compile / compile) := ((Compile / compile) dependsOn getAnonCredsSo).value
+
+// TODO sbt clean must delete this folder! (Shared.TargetForAnoncredsSharedObjectDownload)
+buildShim := {
+  val tmp: Seq[String] = "make" :: "-f" ::
+    "GNUmakefile" ::
+    "CPU=$(uname -m)" :: // "CPU=${os.arch}" ::
+    s"SRC_DIR=${Shared.NativeCodeSourceFolder}" ::
+    s"SHIM_BUILD_DIR=${Shared.TargetForAnoncredsSharedObjectDownload}" ::
+    s"RT_LOCATION_ANONCREDS_SO=${Shared.TargetForAnoncredsSharedObjectDownload}" ::
+    Nil
+  println(tmp.mkString("RUN: \'", " ", "'"))
+  Process(tmp) !
+}
+
+getAnonCredsSo := {
+  println("getAnonCredsSo: downloadAndExtractAnonCredsSharedObject")
+  Shared.downloadAndExtractAnonCredsSharedObject
+  println("getAnonCredsSo: downloadSharedObjectHeaderFile")
+  Shared.downloadSharedObjectHeaderFile
+  println("getAnonCredsSo END")
+}
+lazy val polluxAnoncreds = project
+  .in(file("pollux/lib/anoncreds"))
+  // .settings(polluxCommonSettings)
+  .enablePlugins(BuildInfoPlugin)
+  .enablePlugins(JavaAppPackaging)
+  .settings(
+    name := "pollux-anoncreds",
+    // Make these values available to the project source at compile time
+    buildInfoKeys ++= Seq[BuildInfoKey](
+      "AnonCredsTag" -> Shared.AnonCredsTag,
+      "pathToNativeObjectsInJar" -> Shared.pathToNativeObjectsInJar,
+      "NameOfAnonCredsSharedObject" -> Shared.AnonCredsLibName,
+      "NameOfShimSharedObject" -> Shared.NameOfShimSharedObject,
+      "TargetForAnoncredsSharedObjectDownload" -> Shared.TargetForAnoncredsSharedObjectDownloadFIXME
+    ),
+    libraryDependencies ++= Seq(
+      "com.github.jnr" % "jnr-ffi" % "2.2.13",
+      "org.scalatest" %% "scalatest" % "3.2.15" % Test,
+      ("me.vican.jorge" %% "dijon" % "0.6.0" % Test).cross(CrossVersion.for3Use2_13)
+    ),
+
+    // Add the shim .so and the anoncreds .so to the packaged jar
+    Compile / packageBin / mappings += {
+      (baseDirectory.value / Shared.TargetForAnoncredsSharedObjectDownloadFIXME / Shared.NameOfShimSharedObject) ->
+        Shared.pathToNativeObjectsInJar
+          .resolve(Shared.NameOfShimSharedObject)
+          .toString
+    },
+    Compile / packageBin / mappings += {
+      (baseDirectory.value / Shared.anonCredsLibLocation) -> Shared.pathToNativeObjectsInJar
+        .resolve(Shared.AnonCredsLibName)
+        .toString
+    },
+  )
+
 // #####################
 // #####  connect  #####
 // #####################
@@ -672,6 +742,7 @@ lazy val prismAgentServer = project
     agent,
     polluxCore,
     polluxDoobie,
+    polluxAnoncreds,
     connectCore,
     connectDoobie,
     castorCore

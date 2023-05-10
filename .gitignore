@@ -17,3 +17,7 @@ package-lock.json
 target/
 **.env.*
 
+# anoncreds libs (tmp folder)
+pollux/lib/anoncreds/native-lib/anoncreds-shim.o
+pollux/lib/anoncreds/native-lib/libanoncreds-shim.so
+# TODO pollux/lib/anoncreds/native-lib/libanoncreds.so
