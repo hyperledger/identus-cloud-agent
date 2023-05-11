@@ -1,40 +1,36 @@
 package io.iohk.atala.agent.server
 
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
-import zio.*
-import io.iohk.atala.mercury.*
-import org.didcommx.didcomm.DIDComm
-import io.iohk.atala.resolvers.UniversalDidResolver
-import io.iohk.atala.pollux.sql.repository.Migrations as PolluxMigrations
-import io.iohk.atala.connect.sql.repository.Migrations as ConnectMigrations
-import io.iohk.atala.agent.server.sql.Migrations as AgentMigrations
-import io.iohk.atala.agent.walletapi.service.ManagedDIDService
-import io.iohk.atala.resolvers.DIDResolver
-import io.iohk.atala.agent.server.http.ZioHttpClient
-import org.flywaydb.core.extensibility.AppliedMigration
-import io.iohk.atala.pollux.core.service.{CredentialSchemaServiceImpl, URIDereferencer}
-import io.iohk.atala.pollux.sql.repository.JdbcCredentialSchemaRepository
-import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
-import zio.http.*
-import zio.http.model.*
-import zio.http.ZClient.ClientLive
-import zio.metrics.connectors.prometheus.PrometheusPublisher
-import zio.metrics.connectors.{MetricsConfig, prometheus}
-import zio.metrics.jvm.DefaultJvmMetrics
-import io.iohk.atala.agent.server.buildinfo.BuildInfo
 import io.circe.*
 import io.circe.generic.auto.*
 import io.circe.parser.*
 import io.circe.syntax.*
+import io.iohk.atala.agent.server.buildinfo.BuildInfo
 import io.iohk.atala.agent.server.health.HealthInfo
+import io.iohk.atala.agent.server.http.{HttpRoutes, ZioHttpClient}
+import io.iohk.atala.agent.server.sql.Migrations as AgentMigrations
+import io.iohk.atala.agent.walletapi.service.ManagedDIDService
+import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
+import io.iohk.atala.castor.controller.{DIDControllerImpl, DIDRegistrarControllerImpl}
 import io.iohk.atala.connect.controller.ConnectionControllerImpl
-import io.iohk.atala.castor.controller.DIDControllerImpl
-import io.iohk.atala.castor.controller.DIDRegistrarControllerImpl
-
-import java.security.Security
-import io.iohk.atala.agent.server.http.HttpRoutes
+import io.iohk.atala.connect.sql.repository.Migrations as ConnectMigrations
+import io.iohk.atala.mercury.*
+import io.iohk.atala.pollux.core.service.URIDereferencerError.{ConnectionError, ResourceNotFound, UnexpectedError}
+import io.iohk.atala.pollux.core.service.{CredentialSchemaServiceImpl, URIDereferencer, URIDereferencerError}
+import io.iohk.atala.pollux.sql.repository.{JdbcCredentialSchemaRepository, Migrations as PolluxMigrations}
+import io.iohk.atala.resolvers.{DIDResolver, UniversalDidResolver}
+import org.didcommx.didcomm.DIDComm
+import org.flywaydb.core.extensibility.AppliedMigration
+import zio.*
+import zio.http.*
+import zio.http.ZClient.ClientLive
+import zio.http.model.*
+import zio.metrics.connectors.prometheus.PrometheusPublisher
+import zio.metrics.connectors.{MetricsConfig, prometheus}
+import zio.metrics.jvm.DefaultJvmMetrics
 
 import java.net.URI
+import java.security.Security
 
 object AgentApp extends ZIOAppDefault {
 
@@ -85,12 +81,23 @@ object AgentApp extends ZIOAppDefault {
 
   private[this] val uriDereferencerLayer = ZLayer.succeed {
     new URIDereferencer {
-      override def dereference(uri: URI): Task[String] = {
+      override def dereference(uri: URI): IO[URIDereferencerError, String] = {
         val result = for {
-          response <- Client.request(uri.toString)
-          body <- response.body.asString
+          response <- Client.request(uri.toString).mapError(t => ConnectionError(t.getMessage))
+          body <- response match
+            case Response(Status.Ok, _, body, _, None) =>
+              body.asString.mapError(t => UnexpectedError(t.getMessage))
+            case Response(Status.NotFound, _, _, _, None) =>
+              ZIO.fail(ResourceNotFound(uri))
+            case Response(_, _, _, _, httpError) =>
+              ZIO.fail(UnexpectedError(s"HTTP response error: $httpError"))
         } yield body
-        result.provide(Scope.default >>> Client.default)
+        result
+          .provide(Scope.default >>> Client.default)
+          .mapError {
+            case e: URIDereferencerError => e
+            case t                       => UnexpectedError(t.toString)
+          }
       }
     }
   }
