@@ -144,6 +144,11 @@ object Prism14ECKeyFactory extends ECKeyFactory {
     }
   }
 
+  override def randomBip32Seed(): Task[Array[Byte]] = ZIO.attempt {
+    val mnemonic = KeyDerivation.INSTANCE.randomMnemonicCode()
+    KeyDerivation.INSTANCE.binarySeed(mnemonic, "")
+  }
+
 }
 
 object Prism14Apollo extends Apollo {
