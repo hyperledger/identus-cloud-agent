@@ -1,7 +1,7 @@
 package io.iohk.atala.pollux.core.service
 
-import io.circe.JsonObject
 import io.circe.syntax.*
+import io.circe.{Json, JsonObject}
 import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.issuecredential.{Attribute, IssueCredential, OfferCredential, RequestCredential}
@@ -13,8 +13,8 @@ import io.iohk.atala.prism.crypto.MerkleInclusionProof
 import zio.{IO, ZIO}
 
 import java.nio.charset.StandardCharsets
-import java.security.{KeyPairGenerator, SecureRandom}
 import java.security.spec.ECGenParameterSpec
+import java.security.{KeyPairGenerator, SecureRandom}
 import java.time.Instant
 import java.util.UUID
 
@@ -137,22 +137,15 @@ object CredentialService {
   ): IO[CredentialServiceError, Seq[Attribute]] = {
     for {
       fields <- ZIO.succeed(claims.asObject.map(_.toMap).getOrElse(Map.empty).toList)
-      res <- ZIO.foreach(fields) {
-        case (k, v) if v.isObject =>
-          ZIO.succeed {
-            val jsonValue = v.asObject.get.asJson.noSpaces
-            Attribute(
-              k,
-              java.util.Base64.getUrlEncoder.encodeToString(jsonValue.getBytes(StandardCharsets.UTF_8)),
-              Some("application/json")
-            )
-          }
-
-        case (k, v) if v.isString =>
-          ZIO.succeed(Attribute(k, v.asString.get))
-
-        case (k, v) =>
-          ZIO.fail(UnsupportedVCClaimsValue(s"Value not supported as top element => $k: ${v.noSpaces}"))
+      res <- ZIO.foreach(fields) { case (k, v) =>
+        ZIO.succeed {
+          val jsonValue = v.noSpaces
+          Attribute(
+            k,
+            java.util.Base64.getUrlEncoder.encodeToString(jsonValue.getBytes(StandardCharsets.UTF_8)),
+            Some("application/json")
+          )
+        }
       }
     } yield res
   }
