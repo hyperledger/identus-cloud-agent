@@ -16,6 +16,16 @@ import io.iohk.atala.shared.models.Base64UrlString
 import zio.*
 
 import scala.collection.immutable.ArraySeq
+import io.iohk.atala.agent.walletapi.model.ManagedDidHdKeyCounter
+import io.iohk.atala.agent.walletapi.crypto.Apollo
+import io.iohk.atala.castor.core.model.did.EllipticCurve
+import io.iohk.atala.agent.walletapi.model.ManagedDidHdKeyPath
+
+private[util] final case class KeyDerivationOutcome[PK](
+    publicKey: PK,
+    path: ManagedDidHdKeyPath,
+    nextCounter: ManagedDidHdKeyCounter
+)
 
 private[walletapi] final case class CreateDIDSecret(
     keyPairs: Map[String, ECKeyPair],
@@ -24,7 +34,61 @@ private[walletapi] final case class CreateDIDSecret(
 
 private[walletapi] final case class UpdateDIDSecret(newKeyPairs: Map[String, ECKeyPair])
 
-object OperationFactory {
+private[walletapi] final case class CreateDidHdKey(
+    keyPaths: Map[String, ManagedDidHdKeyPath],
+    internalKeyPaths: Map[String, ManagedDidHdKeyPath],
+    counter: ManagedDidHdKeyCounter
+)
+
+class OperationFactory(apollo: Apollo) {
+
+  /** Generates a key pair and a public key from a DID template
+    *
+    * @param masterKeyId
+    *   The key id of the master key
+    * @param seed
+    *   The seed to use for the key generation
+    * @param didTemplate
+    *   The DID template
+    * @param didIndex
+    *   The index of the DID to be used for the key derivation
+    */
+  def makeCreateOperationWithHDKey(
+      masterKeyId: String,
+      seed: Array[Byte]
+  )(
+      didTemplate: ManagedDIDTemplate,
+      didIndex: Int
+  ): IO[CreateManagedDIDError, (PrismDIDOperation.Create, CreateDidHdKey)] = {
+    val initKeysWithCounter = (Vector.empty[(PublicKey, ManagedDidHdKeyPath)], ManagedDidHdKeyCounter.zero(didIndex))
+    val result = for {
+      keysWithCounter <- ZIO.foldLeft(didTemplate.publicKeys)(initKeysWithCounter) {
+        case ((keys, keyCounter), template) =>
+          derivePublicKey(seed)(template, keyCounter)
+            .map { outcome =>
+              val newKeys = keys :+ (outcome.publicKey, outcome.path)
+              (newKeys, outcome.nextCounter)
+            }
+      }
+      masterKeyOutcome <- deriveInternalPublicKey(seed)(
+        masterKeyId,
+        InternalKeyPurpose.Master,
+        keysWithCounter._2
+      )
+      operation = PrismDIDOperation.Create(
+        publicKeys = keysWithCounter._1.map(_._1) ++ Seq(masterKeyOutcome.publicKey),
+        services = didTemplate.services,
+        context = Seq() // TODO: expose context in the api
+      )
+      hdKeys = CreateDidHdKey(
+        keyPaths = keysWithCounter._1.map { case (publicKey, path) => publicKey.id -> path }.toMap,
+        internalKeyPaths = Map(masterKeyOutcome.publicKey.id -> masterKeyOutcome.path),
+        counter = masterKeyOutcome.nextCounter
+      )
+    } yield operation -> hdKeys
+
+    result.mapError(CreateManagedDIDError.KeyGenerationError.apply)
+  }
 
   def makeCreateOperation(
       masterKeyId: String,
@@ -124,6 +188,30 @@ object OperationFactory {
       keyPair <- keyGenerator()
       internalPublicKey = InternalPublicKey(id, purpose, toPublicKeyData(keyPair.publicKey))
     } yield (keyPair, internalPublicKey)
+  }
+
+  private def derivePublicKey(seed: Array[Byte])(
+      template: DIDPublicKeyTemplate,
+      keyCounter: ManagedDidHdKeyCounter
+  ): Task[KeyDerivationOutcome[PublicKey]] = {
+    val purpose = template.purpose
+    val keyPath = keyCounter.path(purpose)
+    for {
+      keyPair <- apollo.ecKeyFactory.deriveKeyPair(EllipticCurve.SECP256K1, seed)(keyPath.derivationPath: _*)
+      publicKey = PublicKey(template.id, purpose, toPublicKeyData(keyPair.publicKey))
+    } yield KeyDerivationOutcome(publicKey, keyPath, keyCounter.next(purpose))
+  }
+
+  private def deriveInternalPublicKey(seed: Array[Byte])(
+      id: String,
+      purpose: InternalKeyPurpose,
+      keyCounter: ManagedDidHdKeyCounter
+  ): Task[KeyDerivationOutcome[InternalPublicKey]] = {
+    val keyPath = keyCounter.path(purpose)
+    for {
+      keyPair <- apollo.ecKeyFactory.deriveKeyPair(EllipticCurve.SECP256K1, seed)(keyPath.derivationPath: _*)
+      internalPublicKey = InternalPublicKey(id, purpose, toPublicKeyData(keyPair.publicKey))
+    } yield KeyDerivationOutcome(internalPublicKey, keyPath, keyCounter.next(purpose))
   }
 
   private def toPublicKeyData(publicKey: ECPublicKey): PublicKeyData = PublicKeyData.ECCompressedKeyData(

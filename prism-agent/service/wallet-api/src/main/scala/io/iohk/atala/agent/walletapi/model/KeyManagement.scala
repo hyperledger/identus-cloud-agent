@@ -44,39 +44,51 @@ object InternalKeyCounter {
 }
 
 /** Key counter of a single DID */
-final case class HDKeyCounter(
+final case class ManagedDidHdKeyCounter(
     didIndex: Int,
     verificationRelationship: VerificationRelationshipCounter,
     internalKey: InternalKeyCounter
 ) {
-  def next(keyUsage: VerificationRelationship | InternalKeyPurpose): HDKeyCounter = {
+  def next(keyUsage: VerificationRelationship | InternalKeyPurpose): ManagedDidHdKeyCounter = {
     keyUsage match {
       case i: VerificationRelationship => copy(verificationRelationship = verificationRelationship.next(i))
       case i: InternalKeyPurpose       => copy(internalKey = internalKey.next(i))
     }
   }
 
-  def pathOf(keyUsage: VerificationRelationship | InternalKeyPurpose): Seq[DerivationPath] = {
-    val usageIndex = keyUsagePath(keyUsage)
+  def path(keyUsage: VerificationRelationship | InternalKeyPurpose): ManagedDidHdKeyPath = {
     val keyIndex = keyUsage match {
+      case VerificationRelationship.AssertionMethod      => verificationRelationship.assertionMethod
+      case VerificationRelationship.KeyAgreement         => verificationRelationship.keyAgreement
+      case VerificationRelationship.CapabilityInvocation => verificationRelationship.capabilityInvocation
+      case VerificationRelationship.CapabilityDelegation => verificationRelationship.capabilityDelegation
+      case VerificationRelationship.Authentication       => verificationRelationship.authentication
       case InternalKeyPurpose.Master                     => internalKey.master
       case InternalKeyPurpose.Revocation                 => internalKey.revocation
-      case VerificationRelationship.AssertionMethod      => verificationRelationship.assertionMethod
-      case VerificationRelationship.Authentication       => verificationRelationship.authentication
-      case VerificationRelationship.CapabilityDelegation => verificationRelationship.capabilityDelegation
-      case VerificationRelationship.CapabilityInvocation => verificationRelationship.capabilityInvocation
-      case VerificationRelationship.KeyAgreement         => verificationRelationship.keyAgreement
     }
+    ManagedDidHdKeyPath(didIndex, keyUsage, keyIndex)
+  }
+}
 
+object ManagedDidHdKeyCounter {
+  def zero(didIndex: Int): ManagedDidHdKeyCounter =
+    ManagedDidHdKeyCounter(didIndex, VerificationRelationshipCounter.zero, InternalKeyCounter.zero)
+}
+
+final case class ManagedDidHdKeyPath(
+    didIndex: Int,
+    keyUsage: VerificationRelationship | InternalKeyPurpose,
+    keyIndex: Int
+) {
+  def derivationPath: Seq[DerivationPath] =
     Seq(
       DerivationPath.Hardened(0x1d), // TODO: confirm the value of wallet purpose
       DerivationPath.Hardened(didIndex),
-      DerivationPath.Hardened(usageIndex),
+      DerivationPath.Hardened(keyUsageIndex(keyUsage)),
       DerivationPath.Hardened(keyIndex)
     )
-  }
 
-  private def keyUsagePath(keyUsage: VerificationRelationship | InternalKeyPurpose): Int = {
+  private def keyUsageIndex(keyUsage: VerificationRelationship | InternalKeyPurpose): Int = {
     keyUsage match {
       case InternalKeyPurpose.Master                     => 0
       case VerificationRelationship.AssertionMethod      => 1
@@ -87,9 +99,4 @@ final case class HDKeyCounter(
       case VerificationRelationship.CapabilityDelegation => 6
     }
   }
-}
-
-object HDKeyCounter {
-  def zero(didIndex: Int): HDKeyCounter =
-    HDKeyCounter(didIndex, VerificationRelationshipCounter.zero, InternalKeyCounter.zero)
 }

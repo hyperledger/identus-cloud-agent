@@ -54,13 +54,14 @@ final class ManagedDIDService private[walletapi] (
   private val AGREEMENT_KEY_ID = "agreement"
   private val AUTHENTICATION_KEY_ID = "authentication"
 
-  private val generateCreateOperation = OperationFactory.makeCreateOperation(
-    DEFAULT_MASTER_KEY_ID,
-    () => apollo.ecKeyFactory.generateKeyPair(CURVE)
-  )
+  private val generateCreateOperation =
+    OperationFactory(apollo).makeCreateOperation(
+      DEFAULT_MASTER_KEY_ID,
+      () => apollo.ecKeyFactory.generateKeyPair(CURVE)
+    )
 
   private val generateUpdateOperation =
-    OperationFactory.makeUpdateOperation(() => apollo.ecKeyFactory.generateKeyPair(CURVE))
+    OperationFactory(apollo).makeUpdateOperation(() => apollo.ecKeyFactory.generateKeyPair(CURVE))
 
   def syncManagedDIDState: IO[GetManagedDIDError, Unit] = nonSecretStorage
     .listManagedDID(offset = None, limit = None)
