@@ -29,7 +29,6 @@ trait ECKeyFactory {
   def privateKeyFromEncoded(curve: EllipticCurve, bytes: Array[Byte]): Try[ECPrivateKey]
   def generateKeyPair(curve: EllipticCurve): Task[ECKeyPair]
   def deriveKeyPair(curve: EllipticCurve, seed: Array[Byte])(path: DerivationPath*): Task[ECKeyPair]
-
   def randomBip32Seed(): Task[Array[Byte]]
 }
 

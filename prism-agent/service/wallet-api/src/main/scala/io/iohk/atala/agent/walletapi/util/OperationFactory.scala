@@ -53,12 +53,12 @@ class OperationFactory(apollo: Apollo) {
     * @param didIndex
     *   The index of the DID to be used for the key derivation
     */
-  def makeCreateOperationWithHDKey(
+  def makeCreateOperationHdKey(
       masterKeyId: String,
       seed: Array[Byte]
   )(
-      didTemplate: ManagedDIDTemplate,
-      didIndex: Int
+      didIndex: Int,
+      didTemplate: ManagedDIDTemplate
   ): IO[CreateManagedDIDError, (PrismDIDOperation.Create, CreateDidHdKey)] = {
     val initKeysWithCounter = (Vector.empty[(PublicKey, ManagedDidHdKeyPath)], ManagedDidHdKeyCounter.zero(didIndex))
     val result = for {

@@ -34,7 +34,7 @@ trait StorageSpecHelper extends ApolloSpecHelper {
   protected def generateKeyPair() = apollo.ecKeyFactory.generateKeyPair(EllipticCurve.SECP256K1)
 
   protected def generateCreateOperation(keyIds: Seq[String]) =
-    OperationFactory.makeCreateOperation("master0", generateKeyPair)(
+    OperationFactory(apollo).makeCreateOperation("master0", generateKeyPair)(
       ManagedDIDTemplate(
         publicKeys = keyIds.map(DIDPublicKeyTemplate(_, VerificationRelationship.Authentication)),
         services = Nil
