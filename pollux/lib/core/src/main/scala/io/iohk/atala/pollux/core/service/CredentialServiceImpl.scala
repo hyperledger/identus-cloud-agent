@@ -81,9 +81,9 @@ private class CredentialServiceImpl(
         case None => ZIO.unit
         case Some(schemaId) =>
           for {
-            uri <- ZIO.attempt(new URI(schemaId)).mapError(VCSchemaParsingError.apply)
+            uri <- ZIO.attempt(new URI(schemaId)).mapError(t => VCSchemaParsingError(t.getMessage))
             // Dereference VC Schema URI
-            vcSchemaString <- uriDereferencer.dereference(uri).mapError(VCSchemaParsingError.apply)
+            vcSchemaString <- uriDereferencer.dereference(uri).mapError(err => VCSchemaParsingError(err.toString))
             // Get a Jackson mapper
             mapper = new ObjectMapper()
             // Validate the VC Schema structure
@@ -102,7 +102,7 @@ private class CredentialServiceImpl(
                   .build
                 factory.getSchema(jsonSchemaNode)
               }
-              .mapError(VCSchemaParsingError.apply)
+              .mapError(t => VCSchemaParsingError(t.getMessage))
 
             // Convert claims to JsonNode
             jsonClaims <- ZIO
