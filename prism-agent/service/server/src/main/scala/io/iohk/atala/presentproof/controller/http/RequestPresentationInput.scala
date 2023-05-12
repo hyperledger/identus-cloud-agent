@@ -22,18 +22,19 @@ object RequestPresentationInput {
   object annotations {
     object connectionId
         extends Annotation[String](
-          description = "",
-          example = ""
+          description = "The unique identifier of an established connection between the verifier and the prover.",
+          example = "bc528dc8-69f1-4c5a-a508-5f8019047900"
         )
     object options
-        extends Annotation[String](
-          description = "",
-          example = ""
+        extends Annotation[Options](
+          description = "The options to use when creating the proof presentation request (e.g., domain, challenge).",
+          example = Options.annotations.Example
         )
     object proofs
-        extends Annotation[String](
-          description = "",
-          example = ""
+        extends Annotation[Seq[ProofRequestAux]](
+          description =
+            "The type of proofs requested in the context of this proof presentation request (e.g., VC schema, trusted issuers, etc.)",
+          example = Seq.empty
         )
   }
 

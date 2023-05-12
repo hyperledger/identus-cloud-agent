@@ -19,13 +19,13 @@ object ProofRequestAux {
   object annotations {
     object schemaId
         extends Annotation[String](
-          description = "",
-          example = ""
+          description = "The unique identifier of a schema the VC should comply with.",
+          example = "https://schema.org/Person"
         )
     object trustIssuers
-        extends Annotation[String](
-          description = "",
-          example = ""
+        extends Annotation[Seq[String]](
+          description = "One or more issuers that are trusted by the verifier emitting the proof presentation request.",
+          example = Seq("did:web:atalaprism.io/users/testUser", "did.prism:123", "did:prism:...")
         )
   }
 

@@ -20,8 +20,8 @@ object RequestPresentationOutput {
   object annotations {
     object presentationId
         extends Annotation[String](
-          description = "",
-          example = ""
+          description = "Ref to the id on the presentation (db ref)",
+          example = "11c91493-01b3-4c4d-ac36-b336bab5bddf"
         )
   }
 

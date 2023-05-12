@@ -31,33 +31,33 @@ object PresentationStatusPage {
   object annotations {
     object self
         extends Annotation[String](
-          description = "",
+          description = "The reference to the presentation collection itself.",
           example = ""
         )
     object kind
         extends Annotation[String](
-          description = "",
-          example = ""
+          description = "The type of object returned. In this case a `Collection`.",
+          example = "Collection"
         )
     object pageOf
         extends Annotation[String](
-          description = "",
-          example = ""
+          description = "Page number within the context of paginated response.",
+          example = "1"
         )
     object next
         extends Annotation[String](
-          description = "",
+          description = "URL of the next page (if available)",
           example = ""
         )
     object previous
         extends Annotation[String](
-          description = "",
+          description = "URL of the previous page (if available)",
           example = ""
         )
     object contents
-        extends Annotation[String](
-          description = "",
-          example = ""
+        extends Annotation[Seq[PresentationStatus]](
+          description = "A sequence of Presentation objects.",
+          example = Seq.empty
         )
   }
 
