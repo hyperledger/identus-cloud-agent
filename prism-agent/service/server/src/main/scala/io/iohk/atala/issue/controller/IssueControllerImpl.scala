@@ -11,7 +11,12 @@ import io.iohk.atala.connect.core.model.ConnectionRecord.{ProtocolState, Role}
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.connect.core.service.ConnectionService
 import io.iohk.atala.issue.controller.IssueController.toHttpError
-import io.iohk.atala.issue.controller.http.{AcceptCredentialOfferRequest, CreateIssueCredentialRecordRequest, IssueCredentialRecord, IssueCredentialRecordPage}
+import io.iohk.atala.issue.controller.http.{
+  AcceptCredentialOfferRequest,
+  CreateIssueCredentialRecordRequest,
+  IssueCredentialRecord,
+  IssueCredentialRecordPage
+}
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.pollux.core.model.DidCommID
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
