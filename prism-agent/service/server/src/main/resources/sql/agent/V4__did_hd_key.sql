@@ -9,7 +9,8 @@ ADD COLUMN "key_mode" PRISM_DID_KEY_MODE,
 ADD COLUMN "did_index" INT;
 
 UPDATE public.prism_did_wallet_state
-SET "key_mode" = 'RANDOM';
+SET "key_mode" = 'RANDOM'
+WHERE "key_mode" IS NULL;
 
 ALTER TABLE public.prism_did_wallet_state
 ALTER COLUMN "key_mode" SET NOT NULL;

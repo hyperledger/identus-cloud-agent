@@ -38,7 +38,7 @@ object OperationFactorySpec extends ZIOSpecDefault, ApolloSpecHelper {
         _ <- ZIO.foreach(operationWithHdKey._1.publicKeys) { case i => ZIO.debug(i) }
         _ <- ZIO.debug(operationWithHdKey._2.counter)
       } yield assertCompletes
-    } @@ TestAspect.tag("dev")
+    }
   )
 
 }

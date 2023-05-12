@@ -59,7 +59,8 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
         |   publication_status = EXCLUDED.publication_status,
         |   atala_operation_content = EXCLUDED.atala_operation_content,
         |   publish_operation_id = EXCLUDED.publish_operation_id,
-        |   updated_at = EXCLUDED.updated_at
+        |   updated_at = EXCLUDED.updated_at,
+        |   key_mode = EXCLUDED.key_mode
         """.stripMargin.update
 
     for {

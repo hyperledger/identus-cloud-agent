@@ -84,7 +84,7 @@ package object sql {
     def toDomain: Try[ManagedDIDState] = {
       publicationStatus match {
         case PublicationStatusType.CREATED =>
-          createDIDOperation.map(op => ManagedDIDState(op, ???, PublicationState.Created()))
+          createDIDOperation.map(op => ManagedDIDState(op, keyMode, PublicationState.Created()))
         case PublicationStatusType.PUBLICATION_PENDING =>
           for {
             createDIDOperation <- createDIDOperation
@@ -93,7 +93,7 @@ package object sql {
               .toTry
           } yield ManagedDIDState(
             createDIDOperation,
-            ???,
+            keyMode,
             PublicationState.PublicationPending(ArraySeq.from(operationId))
           )
         case PublicationStatusType.PUBLISHED =>
@@ -102,7 +102,7 @@ package object sql {
             operationId <- publishOperationId
               .toRight(RuntimeException(s"DID publication operation id does not exists for PUBLISHED status"))
               .toTry
-          } yield ManagedDIDState(createDIDOperation, ???, PublicationState.Published(ArraySeq.from(operationId)))
+          } yield ManagedDIDState(createDIDOperation, keyMode, PublicationState.Published(ArraySeq.from(operationId)))
       }
     }
 

@@ -191,7 +191,7 @@ object JdbcDIDNonSecretStorageSpec
             readState <- storage.getManagedDIDState(didExample)
           } yield readState
         }
-      } yield assert(readStates.flatten)(equalTo(states))
+      } yield assert(readStates.flatten)(hasSameElements(states))
     }
   )
 
