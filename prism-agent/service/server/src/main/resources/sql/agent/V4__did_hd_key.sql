@@ -1,3 +1,20 @@
+-- add key management mode to prism did
+CREATE TYPE public.prism_did_key_mode AS ENUM(
+  'RANDOM',
+  'HD'
+);
+
+ALTER TABLE public.prism_did_wallet_state
+ADD COLUMN "key_mode" PRISM_DID_KEY_MODE,
+ADD COLUMN "did_index" INT;
+
+UPDATE public.prism_did_wallet_state
+SET "key_mode" = 'RANDOM';
+
+ALTER TABLE public.prism_did_wallet_state
+ALTER COLUMN "key_mode" SET NOT NULL;
+
+-- add hd key related tables
 CREATE TYPE public.prism_did_key_usage AS ENUM(
   'MASTER',
   'ISSUING',
@@ -8,20 +25,10 @@ CREATE TYPE public.prism_did_key_usage AS ENUM(
   'CAPABILITY_DELEGATION'
 );
 
-CREATE TYPE public.prism_did_key_mode AS ENUM(
-  'RANDOM',
-  'HD'
+CREATE TABLE public.prism_did_hd_key(
+  "did" TEXT NOT NULL,
+  "key_id" TEXT NOT NULL,
+  "key_usage" PRISM_DID_KEY_USAGE,
+  "key_index" INT,
+  CONSTRAINT fk_did FOREIGN KEY ("did") REFERENCES public.prism_did_wallet_state("did") ON DELETE RESTRICT
 );
-
--- add key derivation path to secret storage table
-ALTER TABLE public.prism_did_secret_storage
-ALTER COLUMN "key_pair" DROP NOT NULL,
-ADD COLUMN "key_mode" PRISM_DID_KEY_MODE,
-ADD COLUMN "hd_key_usage" PRISM_DID_KEY_USAGE,
-ADD COLUMN "hd_key_index" INT;
-
-UPDATE public.prism_did_secret_storage
-SET "key_mode" = 'RANDOM';
-
-ALTER TABLE public.prism_did_secret_storage
-ALTER COLUMN "key_mode" SET NOT NULL;
