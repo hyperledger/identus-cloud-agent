@@ -15,7 +15,7 @@ import org.didcommx.didcomm.diddoc.VerificationMethod
 object OperationFactorySpec extends ZIOSpecDefault, ApolloSpecHelper {
 
   override def spec = suite("OperationFactory")(
-    test("dummy") {
+    test("sanity check") {
       val seed = HexString
         .fromStringUnsafe(
           "511ed85f7b162caa4ea6a7448bcf3018ce06dd4fbf63665e21a35eb02c8cdb8631007432be2809cecd871d56d44532faf5cfc81bac4936cf0d937fdea6aedfad"
@@ -27,11 +27,16 @@ object OperationFactorySpec extends ZIOSpecDefault, ApolloSpecHelper {
           DIDPublicKeyTemplate(id = "auth0", purpose = VerificationRelationship.Authentication),
           DIDPublicKeyTemplate(id = "iss0", purpose = VerificationRelationship.AssertionMethod),
           DIDPublicKeyTemplate(id = "iss1", purpose = VerificationRelationship.AssertionMethod),
+          DIDPublicKeyTemplate(id = "iss2", purpose = VerificationRelationship.AssertionMethod),
+          DIDPublicKeyTemplate(id = "iss3", purpose = VerificationRelationship.AssertionMethod),
+          DIDPublicKeyTemplate(id = "iss4", purpose = VerificationRelationship.AssertionMethod),
         ),
         Nil
       )
       for {
         operationWithHdKey <- factory.makeCreateOperationHdKey("master0", seed)(0, template)
+        _ <- ZIO.foreach(operationWithHdKey._1.publicKeys) { case i => ZIO.debug(i) }
+        _ <- ZIO.debug(operationWithHdKey._2.counter)
       } yield assertCompletes
     } @@ TestAspect.tag("dev")
   )
