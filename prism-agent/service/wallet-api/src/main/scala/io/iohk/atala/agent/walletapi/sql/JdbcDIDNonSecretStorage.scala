@@ -22,11 +22,12 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
         |   atala_operation_content,
         |   publish_operation_id,
         |   created_at,
-        |   updated_at
+        |   updated_at,
+        |   key_mode
         | FROM public.prism_did_wallet_state
         | WHERE did = $did
         """.stripMargin
-        .query[DIDPublicationStateRow]
+        .query[DIDStateRow]
         .option
 
     cxnIO
@@ -35,14 +36,15 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
   }
 
   override def setManagedDIDState(did: PrismDID, state: ManagedDIDState): Task[Unit] = {
-    val cxnIO = (row: DIDPublicationStateRow) => sql"""
+    val cxnIO = (row: DIDStateRow) => sql"""
         | INSERT INTO public.prism_did_wallet_state(
         |   did,
         |   publication_status,
         |   atala_operation_content,
         |   publish_operation_id,
         |   created_at,
-        |   updated_at
+        |   updated_at,
+        |   key_mode
         | )
         | VALUES (
         |   ${row.did},
@@ -50,7 +52,8 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
         |   ${row.atalaOperationContent},
         |   ${row.publishOperationId},
         |   ${row.createdAt},
-        |   ${row.updatedAt}
+        |   ${row.updatedAt},
+        |   ${row.keyMode}
         | )
         | ON CONFLICT (did) DO UPDATE SET
         |   publication_status = EXCLUDED.publication_status,
@@ -61,7 +64,7 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
 
     for {
       now <- Clock.instant
-      row = DIDPublicationStateRow.from(did, state, now)
+      row = DIDStateRow.from(did, state, now)
       _ <- cxnIO(row).run.transact(xa)
     } yield ()
   }
@@ -86,7 +89,8 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
            |   atala_operation_content,
            |   publish_operation_id,
            |   created_at,
-           |   updated_at
+           |   updated_at,
+           |   key_mode
            | FROM public.prism_did_wallet_state
            | ORDER BY created_at
       """.stripMargin
@@ -94,7 +98,7 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
     val withOffsetAndLimitFr = limit.fold(withOffsetFr)(limitValue => withOffsetFr ++ fr"LIMIT $limitValue")
     val didsCxnIO =
       withOffsetAndLimitFr
-        .query[DIDPublicationStateRow]
+        .query[DIDStateRow]
         .to[List]
 
     for {

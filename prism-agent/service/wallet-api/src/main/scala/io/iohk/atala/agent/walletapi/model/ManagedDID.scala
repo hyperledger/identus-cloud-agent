@@ -7,16 +7,18 @@ import scala.collection.immutable.ArraySeq
 
 final case class ManagedDIDDetail(did: CanonicalPrismDID, state: ManagedDIDState)
 
-sealed trait ManagedDIDState {
-  def createOperation: PrismDIDOperation.Create
-}
+final case class ManagedDIDState(
+    createOperation: PrismDIDOperation.Create,
+    keyMode: KeyManagementMode,
+    publicationState: PublicationState
+)
 
-object ManagedDIDState {
-  final case class Created(createOperation: PrismDIDOperation.Create) extends ManagedDIDState
-  final case class PublicationPending(createOperation: PrismDIDOperation.Create, publishOperationId: ArraySeq[Byte])
-      extends ManagedDIDState
-  final case class Published(createOperation: PrismDIDOperation.Create, publishOperationId: ArraySeq[Byte])
-      extends ManagedDIDState
+sealed trait PublicationState
+
+object PublicationState {
+  final case class Created() extends PublicationState
+  final case class PublicationPending(publishOperationId: ArraySeq[Byte]) extends PublicationState
+  final case class Published(publishOperationId: ArraySeq[Byte]) extends PublicationState
 }
 
 final case class DIDUpdateLineage(

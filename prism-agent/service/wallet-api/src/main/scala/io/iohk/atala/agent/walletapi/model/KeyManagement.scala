@@ -5,6 +5,11 @@ import io.iohk.atala.castor.core.model.did.InternalKeyPurpose
 import io.iohk.atala.agent.walletapi.crypto.DerivationPath
 import io.circe.Derivation
 
+enum KeyManagementMode {
+  case Random extends KeyManagementMode
+  case HD extends KeyManagementMode
+}
+
 final case class VerificationRelationshipCounter(
     authentication: Int,
     assertionMethod: Int,

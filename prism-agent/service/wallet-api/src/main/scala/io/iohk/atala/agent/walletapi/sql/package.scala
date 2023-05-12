@@ -3,7 +3,7 @@ package io.iohk.atala.agent.walletapi
 import doobie.*
 import doobie.postgres.implicits.*
 import doobie.util.invariant.InvalidEnum
-import io.iohk.atala.agent.walletapi.model.ManagedDIDState
+import io.iohk.atala.agent.walletapi.model.{ManagedDIDState, PublicationState, KeyManagementMode}
 import io.iohk.atala.castor.core.model.did.{PrismDID, PrismDIDOperation, ScheduledDIDOperationStatus}
 import io.iohk.atala.castor.core.model.ProtoModelHelper.*
 import io.iohk.atala.prism.protos.node_models
@@ -14,25 +14,38 @@ import scala.collection.immutable.ArraySeq
 
 package object sql {
 
-  sealed trait DIDWalletStatusType
-  object DIDWalletStatusType {
-    case object CREATED extends DIDWalletStatusType
-    case object PUBLICATION_PENDING extends DIDWalletStatusType
-    case object PUBLISHED extends DIDWalletStatusType
+  sealed trait PublicationStatusType
+  object PublicationStatusType {
+    case object CREATED extends PublicationStatusType
+    case object PUBLICATION_PENDING extends PublicationStatusType
+    case object PUBLISHED extends PublicationStatusType
   }
 
-  given Meta[DIDWalletStatusType] = pgEnumString(
-    "PRISM_DID_WALLET_STATUS",
+  given Meta[KeyManagementMode] = pgEnumString(
+    "PRISM_DID_KEY_MODE",
     {
-      case "CREATED"             => DIDWalletStatusType.CREATED
-      case "PUBLICATION_PENDING" => DIDWalletStatusType.PUBLICATION_PENDING
-      case "PUBLISHED"           => DIDWalletStatusType.PUBLISHED
-      case s                     => throw InvalidEnum[DIDWalletStatusType](s)
+      case "HD"     => KeyManagementMode.HD
+      case "RANDOM" => KeyManagementMode.Random
+      case s        => throw InvalidEnum[KeyManagementMode](s)
     },
     {
-      case DIDWalletStatusType.CREATED             => "CREATED"
-      case DIDWalletStatusType.PUBLICATION_PENDING => "PUBLICATION_PENDING"
-      case DIDWalletStatusType.PUBLISHED           => "PUBLISHED"
+      case KeyManagementMode.HD     => "HD"
+      case KeyManagementMode.Random => "RANDOM"
+    }
+  )
+
+  given Meta[PublicationStatusType] = pgEnumString(
+    "PRISM_DID_WALLET_STATUS",
+    {
+      case "CREATED"             => PublicationStatusType.CREATED
+      case "PUBLICATION_PENDING" => PublicationStatusType.PUBLICATION_PENDING
+      case "PUBLISHED"           => PublicationStatusType.PUBLISHED
+      case s                     => throw InvalidEnum[PublicationStatusType](s)
+    },
+    {
+      case PublicationStatusType.CREATED             => "CREATED"
+      case PublicationStatusType.PUBLICATION_PENDING => "PUBLICATION_PENDING"
+      case PublicationStatusType.PUBLISHED           => "PUBLISHED"
     }
   )
 
@@ -59,31 +72,37 @@ package object sql {
   given arraySeqByteGet: Get[ArraySeq[Byte]] = Get[Array[Byte]].map(ArraySeq.from)
   given arraySeqBytePut: Put[ArraySeq[Byte]] = Put[Array[Byte]].contramap(_.toArray)
 
-  final case class DIDPublicationStateRow(
+  final case class DIDStateRow(
       did: PrismDID,
-      publicationStatus: DIDWalletStatusType,
+      publicationStatus: PublicationStatusType,
       atalaOperationContent: Array[Byte],
       publishOperationId: Option[Array[Byte]],
       createdAt: Instant,
-      updatedAt: Instant
+      updatedAt: Instant,
+      keyMode: KeyManagementMode
   ) {
     def toDomain: Try[ManagedDIDState] = {
       publicationStatus match {
-        case DIDWalletStatusType.CREATED => createDIDOperation.map(ManagedDIDState.Created.apply)
-        case DIDWalletStatusType.PUBLICATION_PENDING =>
+        case PublicationStatusType.CREATED =>
+          createDIDOperation.map(op => ManagedDIDState(op, ???, PublicationState.Created()))
+        case PublicationStatusType.PUBLICATION_PENDING =>
           for {
             createDIDOperation <- createDIDOperation
             operationId <- publishOperationId
               .toRight(RuntimeException(s"DID publication operation id does not exists for PUBLICATION_PENDING status"))
               .toTry
-          } yield ManagedDIDState.PublicationPending(createDIDOperation, ArraySeq.from(operationId))
-        case DIDWalletStatusType.PUBLISHED =>
+          } yield ManagedDIDState(
+            createDIDOperation,
+            ???,
+            PublicationState.PublicationPending(ArraySeq.from(operationId))
+          )
+        case PublicationStatusType.PUBLISHED =>
           for {
             createDIDOperation <- createDIDOperation
             operationId <- publishOperationId
               .toRight(RuntimeException(s"DID publication operation id does not exists for PUBLISHED status"))
               .toTry
-          } yield ManagedDIDState.Published(createDIDOperation, ArraySeq.from(operationId))
+          } yield ManagedDIDState(createDIDOperation, ???, PublicationState.Published(ArraySeq.from(operationId)))
       }
     }
 
@@ -102,22 +121,23 @@ package object sql {
     }
   }
 
-  object DIDPublicationStateRow {
-    def from(did: PrismDID, state: ManagedDIDState, now: Instant): DIDPublicationStateRow = {
-      import DIDWalletStatusType.*
-      val (status, createOperation, publishedOperationId) = state match {
-        case ManagedDIDState.Created(operation) => (CREATED, operation, None)
-        case ManagedDIDState.PublicationPending(operation, operationId) =>
-          (PUBLICATION_PENDING, operation, Some(operationId))
-        case ManagedDIDState.Published(operation, operationId) => (PUBLISHED, operation, Some(operationId))
+  object DIDStateRow {
+    def from(did: PrismDID, state: ManagedDIDState, now: Instant): DIDStateRow = {
+      import PublicationStatusType.*
+      val createOperation = state.createOperation
+      val (status, publishedOperationId) = state.publicationState match {
+        case PublicationState.Created()                       => (CREATED, None)
+        case PublicationState.PublicationPending(operationId) => (PUBLICATION_PENDING, Some(operationId.toArray))
+        case PublicationState.Published(operationId)          => (PUBLISHED, Some(operationId.toArray))
       }
-      DIDPublicationStateRow(
+      DIDStateRow(
         did = did,
         publicationStatus = status,
         atalaOperationContent = createOperation.toAtalaOperation.toByteArray,
         publishOperationId = publishedOperationId.map(_.toArray),
         createdAt = now,
-        updatedAt = now
+        updatedAt = now,
+        keyMode = state.keyMode
       )
     }
   }

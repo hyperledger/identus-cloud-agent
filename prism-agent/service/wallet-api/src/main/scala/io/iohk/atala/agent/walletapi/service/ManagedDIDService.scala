@@ -6,7 +6,8 @@ import io.iohk.atala.agent.walletapi.model.{
   ManagedDIDDetail,
   ManagedDIDState,
   ManagedDIDTemplate,
-  UpdateManagedDIDAction
+  UpdateManagedDIDAction,
+  PublicationState
 }
 import io.iohk.atala.agent.walletapi.model.error.{*, given}
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService.DEFAULT_MASTER_KEY_ID
@@ -38,6 +39,7 @@ import io.iohk.atala.mercury.PeerDID
 import io.iohk.atala.mercury.model.DidId
 
 import java.security.{PrivateKey as JavaPrivateKey, PublicKey as JavaPublicKey}
+import io.iohk.atala.agent.walletapi.model.KeyManagementMode
 
 /** A wrapper around Castor's DIDService providing key-management capability. Analogous to the secretAPI in
   * indy-wallet-sdk.
@@ -110,12 +112,13 @@ final class ManagedDIDService private[walletapi] (
     } yield details -> totalCount
 
   def publishStoredDID(did: CanonicalPrismDID): IO[PublishManagedDIDError, ScheduleDIDOperationOutcome] = {
-    def doPublish(operation: PrismDIDOperation.Create) = {
+    def doPublish(state: ManagedDIDState) = {
       for {
-        signedOperation <- signOperationWithMasterKey[PublishManagedDIDError](operation)
+        signedOperation <- signOperationWithMasterKey[PublishManagedDIDError](state.createOperation)
         outcome <- submitSignedOperation[PublishManagedDIDError](signedOperation)
+        newState = state.copy(publicationState = PublicationState.PublicationPending(outcome.operationId))
         _ <- nonSecretStorage
-          .setManagedDIDState(did, ManagedDIDState.PublicationPending(operation, outcome.operationId))
+          .setManagedDIDState(did, newState)
           .mapError(PublishManagedDIDError.WalletStorageError.apply)
       } yield outcome
     }
@@ -126,12 +129,12 @@ final class ManagedDIDService private[walletapi] (
         .getManagedDIDState(did)
         .mapError(PublishManagedDIDError.WalletStorageError.apply)
         .someOrFail(PublishManagedDIDError.DIDNotFound(did))
-      outcome <- didState match {
-        case ManagedDIDState.Created(operation) => doPublish(operation)
-        case ManagedDIDState.PublicationPending(operation, publishOperationId) =>
-          ZIO.succeed(ScheduleDIDOperationOutcome(did, operation, publishOperationId))
-        case ManagedDIDState.Published(operation, publishOperationId) =>
-          ZIO.succeed(ScheduleDIDOperationOutcome(did, operation, publishOperationId))
+      outcome <- didState.publicationState match {
+        case PublicationState.Created() => doPublish(didState)
+        case PublicationState.PublicationPending(publishOperationId) =>
+          ZIO.succeed(ScheduleDIDOperationOutcome(did, didState.createOperation, publishOperationId))
+        case PublicationState.Published(publishOperationId) =>
+          ZIO.succeed(ScheduleDIDOperationOutcome(did, didState.createOperation, publishOperationId))
       }
     } yield outcome
   }
@@ -161,7 +164,10 @@ final class ManagedDIDService private[walletapi] (
       // If some steps above failed, it is not considered created and data that
       // are persisted along the way may be garbage collected.
       _ <- nonSecretStorage
-        .setManagedDIDState(did, ManagedDIDState.Created(createOperation))
+        .setManagedDIDState(
+          did,
+          ManagedDIDState(createOperation, KeyManagementMode.Random, PublicationState.Created()) // TODO: allow HD key
+        )
         .mapError(CreateManagedDIDError.WalletStorageError.apply)
     } yield longFormDID
   }
@@ -205,7 +211,9 @@ final class ManagedDIDService private[walletapi] (
         .getManagedDIDState(did)
         .mapError(UpdateManagedDIDError.WalletStorageError.apply)
         .someOrFail(UpdateManagedDIDError.DIDNotFound(did))
-        .collect(UpdateManagedDIDError.DIDNotPublished(did)) { case s: ManagedDIDState.Published => s }
+        .collect(UpdateManagedDIDError.DIDNotPublished(did)) {
+          case s @ ManagedDIDState(_, _, PublicationState.Published(_)) => s
+        }
       resolvedDID <- didService
         .resolveDID(did)
         .mapError(UpdateManagedDIDError.ResolutionError.apply)
@@ -239,7 +247,9 @@ final class ManagedDIDService private[walletapi] (
         .getManagedDIDState(did)
         .mapError(UpdateManagedDIDError.WalletStorageError.apply)
         .someOrFail(UpdateManagedDIDError.DIDNotFound(did))
-        .collect(UpdateManagedDIDError.DIDNotPublished(did)) { case s: ManagedDIDState.Published => s }
+        .collect(UpdateManagedDIDError.DIDNotPublished(did)) {
+          case s @ ManagedDIDState(_, _, PublicationState.Published(_)) => s
+        }
       resolvedDID <- didService
         .resolveDID(did)
         .mapError(UpdateManagedDIDError.ResolutionError.apply)
@@ -352,8 +362,11 @@ final class ManagedDIDService private[walletapi] (
       maybeCurrentState <- nonSecretStorage
         .getManagedDIDState(did)
         .mapError[E](CommonWalletStorageError.apply)
-      maybeNewState <- ZIO.foreach(maybeCurrentState)(computeNewDIDStateFromDLT(_).mapError[E](e => e))
-      _ <- ZIO.foreach(maybeCurrentState zip maybeNewState) { case (currentState, newState) =>
+      maybeNewPubState <- ZIO
+        .foreach(maybeCurrentState)(i => computeNewDIDStateFromDLT(i.publicationState))
+        .mapError[E](e => e)
+      _ <- ZIO.foreach(maybeCurrentState zip maybeNewPubState) { case (currentState, newPubState) =>
+        val newState = currentState.copy(publicationState = newPubState)
         nonSecretStorage
           .setManagedDIDState(did, newState)
           .mapError[E](CommonWalletStorageError.apply)
@@ -363,9 +376,9 @@ final class ManagedDIDService private[walletapi] (
   }
 
   /** Reconcile state with DLT and return an updated state */
-  private def computeNewDIDStateFromDLT(state: ManagedDIDState): IO[DIDOperationError, ManagedDIDState] = {
-    state match {
-      case s @ ManagedDIDState.PublicationPending(operation, publishOperationId) =>
+  private def computeNewDIDStateFromDLT(publicationState: PublicationState): IO[DIDOperationError, PublicationState] = {
+    publicationState match {
+      case s @ PublicationState.PublicationPending(publishOperationId) =>
         didService
           .getScheduledDIDOperationDetail(publishOperationId.toArray)
           .map {
@@ -373,10 +386,10 @@ final class ManagedDIDService private[walletapi] (
               result.status match {
                 case ScheduledDIDOperationStatus.Pending              => s
                 case ScheduledDIDOperationStatus.AwaitingConfirmation => s
-                case ScheduledDIDOperationStatus.Confirmed => ManagedDIDState.Published(operation, publishOperationId)
-                case ScheduledDIDOperationStatus.Rejected  => ManagedDIDState.Created(operation)
+                case ScheduledDIDOperationStatus.Confirmed            => PublicationState.Published(publishOperationId)
+                case ScheduledDIDOperationStatus.Rejected             => PublicationState.Created()
               }
-            case None => ManagedDIDState.Created(operation)
+            case None => PublicationState.Created()
           }
       case s => ZIO.succeed(s)
     }
