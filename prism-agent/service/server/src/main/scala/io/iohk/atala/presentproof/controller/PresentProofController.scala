@@ -5,6 +5,7 @@ import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.presentproof.controller.http.*
 import zio.{IO, ZIO}
 
+import java.util.UUID
 import scala.util.Try
 
 trait PresentProofController {
@@ -14,7 +15,7 @@ trait PresentProofController {
       rc: RequestContext
   ): IO[ErrorResponse, RequestPresentationOutput]
 
-  def getAllPresentation(
+  def getAllPresentations(
       offset: Option[Int],
       limit: Option[Int],
       thid: Option[String]
@@ -22,11 +23,11 @@ trait PresentProofController {
       rc: RequestContext
   ): IO[ErrorResponse, PresentationStatusPage]
 
-  def getPresentation(id: String)(implicit
+  def getPresentation(id: UUID)(implicit
       rc: RequestContext
   ): IO[ErrorResponse, PresentationStatus]
 
-  def updatePresentation(id: String, requestPresentationAction: RequestPresentationAction)(implicit
+  def updatePresentation(id: UUID, requestPresentationAction: RequestPresentationAction)(implicit
       rc: RequestContext
   ): IO[ErrorResponse, PresentationStatus]
 

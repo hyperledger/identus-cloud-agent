@@ -32,10 +32,10 @@ object RequestPresentationAction {
           )
         )
     object proofId
-        extends Annotation[String](
+        extends Annotation[Option[Seq[String]]](
           description =
             "The unique identifier of the issue credential record - and hence VC - to use as the prover accepts the presentation request. Only applicable on the prover side when the action is `request-accept`.",
-          example = "0d3a0f8d-852e-42d5-a6f8-2281c4be945c"
+          example = None
         )
   }
 

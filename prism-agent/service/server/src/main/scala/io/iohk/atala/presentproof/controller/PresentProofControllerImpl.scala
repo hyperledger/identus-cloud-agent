@@ -12,7 +12,7 @@ import io.iohk.atala.pollux.core.model.{DidCommID, PresentationRecord}
 import io.iohk.atala.pollux.core.service.PresentationService
 import io.iohk.atala.presentproof.controller.PresentProofController.toDidCommID
 import io.iohk.atala.presentproof.controller.http.*
-import zio.{IO, ZIO}
+import zio.{IO, URLayer, ZIO, ZLayer}
 
 import java.util.UUID
 
@@ -49,7 +49,7 @@ class PresentProofControllerImpl(
     }
   }
 
-  override def getAllPresentation(offset: Option[Int], limit: Option[Int], thid: Option[String])(implicit
+  override def getAllPresentations(offset: Option[Int], limit: Option[Int], thid: Option[String])(implicit
       rc: RequestContext
   ): IO[ErrorResponse, PresentationStatusPage] = {
     val result = for {
@@ -64,9 +64,9 @@ class PresentProofControllerImpl(
     result.mapError(PresentProofController.toHttpError)
   }
 
-  override def getPresentation(id: String)(implicit rc: RequestContext): IO[ErrorResponse, PresentationStatus] = {
+  override def getPresentation(id: UUID)(implicit rc: RequestContext): IO[ErrorResponse, PresentationStatus] = {
     val result: ZIO[Any, ErrorResponse | PresentationError, PresentationStatus] = for {
-      presentationId <- toDidCommID(id)
+      presentationId <- toDidCommID(id.toString)
       maybeRecord <- presentationService.getPresentationRecord(presentationId)
       record <- ZIO
         .fromOption(maybeRecord)
@@ -79,19 +79,20 @@ class PresentProofControllerImpl(
     }
   }
 
-  override def updatePresentation(id: String, requestPresentationAction: RequestPresentationAction)(implicit
+  override def updatePresentation(id: UUID, requestPresentationAction: RequestPresentationAction)(implicit
       rc: RequestContext
   ): IO[ErrorResponse, PresentationStatus] = {
     val result: ZIO[Any, ErrorResponse | PresentationError, PresentationStatus] = for {
+      didCommId <- ZIO.succeed(DidCommID(id.toString))
       maybeRecord <- requestPresentationAction.action match {
         case "request-accept" =>
           presentationService.acceptRequestPresentation(
-            recordId = DidCommID(id),
+            recordId = didCommId,
             crecentialsToUse = requestPresentationAction.proofId.getOrElse(Seq.empty)
           )
-        case "request-reject"      => presentationService.rejectRequestPresentation(DidCommID(id))
-        case "presentation-accept" => presentationService.acceptPresentation(DidCommID(id))
-        case "presentation-reject" => presentationService.rejectPresentation(DidCommID(id))
+        case "request-reject"      => presentationService.rejectRequestPresentation(didCommId)
+        case "presentation-accept" => presentationService.acceptPresentation(didCommId)
+        case "presentation-reject" => presentationService.rejectPresentation(didCommId)
         case a =>
           ZIO.fail(
             ErrorResponse.badRequest(
@@ -112,4 +113,9 @@ class PresentProofControllerImpl(
       case e: PresentationError => PresentProofController.toHttpError(e)
     }
   }
+}
+
+object PresentProofControllerImpl {
+  val layer: URLayer[PresentationService & ConnectionService, PresentProofController] =
+    ZLayer.fromFunction(PresentProofControllerImpl(_, _))
 }

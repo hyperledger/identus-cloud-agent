@@ -12,7 +12,7 @@ final case class PresentationStatusPage(
     contents: Seq[PresentationStatus],
     @description(annotations.self.description)
     @encodedExample(annotations.self.example)
-    self: String = "",
+    self: String = "/present-proof/presentations",
     @description(annotations.kind.description)
     @encodedExample(annotations.kind.example)
     kind: String = "Collection",
@@ -32,7 +32,7 @@ object PresentationStatusPage {
     object self
         extends Annotation[String](
           description = "The reference to the presentation collection itself.",
-          example = ""
+          example = "/present-proof/presentations"
         )
     object kind
         extends Annotation[String](

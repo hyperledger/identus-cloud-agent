@@ -26,9 +26,9 @@ object RequestPresentationInput {
           example = "bc528dc8-69f1-4c5a-a508-5f8019047900"
         )
     object options
-        extends Annotation[Options](
+        extends Annotation[Option[Options]](
           description = "The options to use when creating the proof presentation request (e.g., domain, challenge).",
-          example = Options.annotations.Example
+          example = None
         )
     object proofs
         extends Annotation[Seq[ProofRequestAux]](

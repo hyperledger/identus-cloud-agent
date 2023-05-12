@@ -21,16 +21,17 @@ import io.iohk.atala.agent.server.sql.DbConfig as AgentDbConfig
 import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.agent.walletapi.sql.{JdbcDIDNonSecretStorage, JdbcDIDSecretStorage}
+import io.iohk.atala.castor.controller.{DIDController, DIDRegistrarController, DIDRegistrarServerEndpoints, DIDServerEndpoints}
 import io.iohk.atala.castor.core.service.{DIDService, DIDServiceImpl}
 import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.connect.controller.{ConnectionController, ConnectionControllerImpl, ConnectionServerEndpoints}
-import io.iohk.atala.issue.controller.{IssueController, IssueControllerImpl, IssueEndpoints, IssueServerEndpoints}
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.connect.core.repository.ConnectionRepository
 import io.iohk.atala.connect.core.service.{ConnectionService, ConnectionServiceImpl}
 import io.iohk.atala.connect.sql.repository.{JdbcConnectionRepository, DbConfig as ConnectDbConfig}
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
+import io.iohk.atala.issue.controller.{IssueController, IssueControllerImpl, IssueEndpoints, IssueServerEndpoints}
 import io.iohk.atala.mercury.*
 import io.iohk.atala.mercury.DidOps.*
 import io.iohk.atala.mercury.model.*
@@ -38,42 +39,31 @@ import io.iohk.atala.mercury.model.error.*
 import io.iohk.atala.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
 import io.iohk.atala.mercury.protocol.issuecredential.*
 import io.iohk.atala.mercury.protocol.presentproof.*
+import io.iohk.atala.mercury.protocol.trustping.TrustPing
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError.RepositoryError
 import io.iohk.atala.pollux.core.model.error.{CredentialServiceError, PresentationError}
 import io.iohk.atala.pollux.core.repository.{CredentialRepository, PresentationRepository}
 import io.iohk.atala.pollux.core.service.*
 import io.iohk.atala.pollux.credentialschema.controller.*
 import io.iohk.atala.pollux.credentialschema.{SchemaRegistryServerEndpoints, VerificationPolicyServerEndpoints}
-import io.iohk.atala.pollux.sql.repository.{
-  JdbcCredentialRepository,
-  JdbcCredentialSchemaRepository,
-  JdbcPresentationRepository,
-  JdbcVerificationPolicyRepository,
-  DbConfig as PolluxDbConfig
-}
+import io.iohk.atala.pollux.sql.repository.{JdbcCredentialRepository, JdbcCredentialSchemaRepository, JdbcPresentationRepository, JdbcVerificationPolicyRepository, DbConfig as PolluxDbConfig}
 import io.iohk.atala.pollux.vc.jwt.{PrismDidResolver, DidResolver as JwtDidResolver}
+import io.iohk.atala.presentproof.controller.{PresentProofController, PresentProofEndpoints, PresentProofServerEndpoints}
 import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc
 import io.iohk.atala.resolvers.{DIDResolver, UniversalDidResolver}
 import org.didcommx.didcomm.DIDComm
 import org.didcommx.didcomm.model.UnpackParams
 import org.didcommx.didcomm.secret.{Secret, SecretResolver}
 import zio.*
-import zio.http.*
-import zio.http.model.*
 import zio.config.typesafe.TypesafeConfigSource
 import zio.config.{ReadError, read}
+import zio.http.*
+import zio.http.model.*
 import zio.interop.catz.*
 import zio.stream.ZStream
 
 import java.io.IOException
 import java.util.concurrent.Executors
-import io.iohk.atala.mercury.protocol.trustping.TrustPing
-import io.iohk.atala.castor.controller.{
-  DIDServerEndpoints,
-  DIDRegistrarServerEndpoints,
-  DIDController,
-  DIDRegistrarController
-}
 
 object Modules {
 
@@ -88,7 +78,7 @@ object Modules {
 
   lazy val zioApp: RIO[
     CredentialSchemaController & VerificationPolicyController & ConnectionController & DIDController &
-      DIDRegistrarController & IssueController & AppConfig,
+      DIDRegistrarController & IssueController & PresentProofController & AppConfig,
     Unit
   ] = {
     val zioHttpServerApp = for {
@@ -98,8 +88,9 @@ object Modules {
       allIssueEndpoints <- IssueServerEndpoints.all
       allDIDEndpoints <- DIDServerEndpoints.all
       allDIDRegistrarEndpoints <- DIDRegistrarServerEndpoints.all
+      allPresentProofEndpoints <- PresentProofServerEndpoints.all
       allEndpoints = ZHttpEndpoints.withDocumentations[Task](
-        allSchemaRegistryEndpoints ++ allVerificationPolicyEndpoints ++ allConnectionEndpoints ++ allDIDEndpoints ++ allDIDRegistrarEndpoints ++ allIssueEndpoints
+        allSchemaRegistryEndpoints ++ allVerificationPolicyEndpoints ++ allConnectionEndpoints ++ allDIDEndpoints ++ allDIDRegistrarEndpoints ++ allIssueEndpoints ++ allPresentProofEndpoints
       )
       appConfig <- ZIO.service[AppConfig]
       httpServer <- ZHttp4sBlazeServer.start(allEndpoints, port = appConfig.agent.httpEndpoint.http.port)

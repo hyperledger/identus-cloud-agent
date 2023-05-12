@@ -34,6 +34,7 @@ import io.iohk.atala.castor.controller.DIDRegistrarControllerImpl
 
 import java.security.Security
 import io.iohk.atala.agent.server.http.HttpRoutes
+import io.iohk.atala.presentproof.controller.PresentProofControllerImpl
 
 object AgentApp extends ZIOAppDefault {
 
@@ -145,7 +146,8 @@ object AgentApp extends ZIOAppDefault {
         ConnectionControllerImpl.layer,
         DIDControllerImpl.layer,
         IssueControllerImpl.layer,
-        DIDRegistrarControllerImpl.layer
+        DIDRegistrarControllerImpl.layer,
+        PresentProofControllerImpl.layer
       )
     } yield app
 
