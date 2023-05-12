@@ -14,6 +14,8 @@ import io.iohk.atala.agent.walletapi.model.DIDPublicKeyTemplate
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import zio.*
 import io.iohk.atala.agent.walletapi.model.ManagedDIDState
+import io.iohk.atala.agent.walletapi.model.KeyManagementMode
+import io.iohk.atala.agent.walletapi.model.PublicationState
 
 trait StorageSpecHelper extends ApolloSpecHelper {
   protected val didExample = PrismDID.buildLongFormFromOperation(PrismDIDOperation.Create(Nil, Nil, Nil))
@@ -49,7 +51,10 @@ trait StorageSpecHelper extends ApolloSpecHelper {
       (createOperation, secrets) = generated
       did = createOperation.did
       keyPairs = secrets.keyPairs.toSeq
-      _ <- nonSecretStorage.setManagedDIDState(did, ManagedDIDState.Created(createOperation))
+      _ <- nonSecretStorage.setManagedDIDState(
+        did,
+        ManagedDIDState(createOperation, KeyManagementMode.Random, PublicationState.Created())
+      )
       _ <- ZIO.foreach(keyPairs) { case (keyId, keyPair) =>
         secretStorage.insertKey(did, keyId, keyPair, createOperation.toAtalaOperationHash)
       }
