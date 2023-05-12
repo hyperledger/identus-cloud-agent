@@ -1,21 +1,13 @@
 package io.iohk.atala.agent.server
 
-import akka.actor.BootstrapSetup
-import akka.actor.setup.ActorSystemSetup
-import akka.actor.typed.ActorSystem
-import akka.actor.typed.scaladsl.Behaviors
-import akka.http.scaladsl.server.Route
 import cats.effect.std.Dispatcher
 import cats.implicits.*
 import com.typesafe.config.ConfigFactory
 import doobie.util.transactor.Transactor
 import io.circe.{DecodingFailure, ParsingFailure}
 import io.grpc.ManagedChannelBuilder
-import io.iohk.atala.agent.openapi.api.*
 import io.iohk.atala.agent.server.config.{AgentConfig, AppConfig}
-import io.iohk.atala.agent.server.http.marshaller.*
-import io.iohk.atala.agent.server.http.service.*
-import io.iohk.atala.agent.server.http.{HttpRoutes, HttpServer, ZHttp4sBlazeServer, ZHttpEndpoints}
+import io.iohk.atala.agent.server.http.{ZHttp4sBlazeServer, ZHttpEndpoints}
 import io.iohk.atala.agent.server.jobs.*
 import io.iohk.atala.agent.server.sql.DbConfig as AgentDbConfig
 import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError
@@ -66,15 +58,6 @@ import java.io.IOException
 import java.util.concurrent.Executors
 
 object Modules {
-
-  def app(port: Int): RIO[
-    DidOps & DidAgent & ManagedDIDService & AppConfig & PresentProofApi & ActorSystem[Nothing],
-    Unit
-  ] = {
-    val httpServerApp = HttpRoutes.routes.flatMap(HttpServer.start(port, _))
-
-    httpServerApp.unit
-  }
 
   lazy val zioApp: RIO[
     CredentialSchemaController & VerificationPolicyController & ConnectionController & DIDController &
@@ -407,16 +390,6 @@ object Modules {
 
 }
 object SystemModule {
-  val actorSystemLayer: TaskLayer[ActorSystem[Nothing]] = ZLayer.scoped(
-    ZIO.acquireRelease(
-      ZIO.executor
-        .map(_.asExecutionContext)
-        .flatMap(ec =>
-          ZIO.attempt(ActorSystem(Behaviors.empty, "actor-system", BootstrapSetup().withDefaultExecutionContext(ec)))
-        )
-    )(system => ZIO.attempt(system.terminate()).orDie)
-  )
-
   val configLayer: Layer[ReadError[String], AppConfig] = ZLayer.fromZIO {
     read(
       AppConfig.descriptor.from(
@@ -485,17 +458,6 @@ object GrpcModule {
   }
 
   val layers = irisStubLayer ++ prismNodeStubLayer
-}
-
-object HttpModule {
-  val presentProofProtocolApiLayer: RLayer[DidOps & DidAgent, PresentProofApi] = {
-    val serviceLayer = AppModule.presentationServiceLayer ++ AppModule.connectionServiceLayer
-    val apiServiceLayer = serviceLayer >>> PresentProofApiServiceImpl.layer
-    val apiMarshallerLayer = PresentProofApiMarshallerImpl.layer
-    (apiServiceLayer ++ apiMarshallerLayer) >>> ZLayer.fromFunction(new PresentProofApi(_, _))
-  }
-
-  val layers = presentProofProtocolApiLayer
 }
 
 object RepoModule {

@@ -1,5 +1,4 @@
 package io.iohk.atala.presentproof.controller
-import io.iohk.atala.agent.server.http.model.HttpServiceError
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.connect.controller.ConnectionController
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError

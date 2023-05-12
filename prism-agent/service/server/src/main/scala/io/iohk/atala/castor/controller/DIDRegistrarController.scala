@@ -1,6 +1,5 @@
 package io.iohk.atala.castor.controller
 
-import io.iohk.atala.agent.server.http.model.HttpServiceError
 import io.iohk.atala.agent.walletapi.model.error.CreateManagedDIDError
 import io.iohk.atala.agent.walletapi.model.error.GetManagedDIDError
 import io.iohk.atala.agent.walletapi.model.error.PublishManagedDIDError
