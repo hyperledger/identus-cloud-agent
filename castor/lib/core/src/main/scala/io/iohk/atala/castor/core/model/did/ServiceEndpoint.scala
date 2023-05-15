@@ -3,50 +3,60 @@ package io.iohk.atala.castor.core.model.did
 import io.circe.JsonObject
 import io.iohk.atala.castor.core.util.UriUtils
 
-/** Marker for type that can be used in sevice endpoint list
-  */
-sealed trait UriOrJsonEndpoint
-
 sealed trait ServiceEndpoint {
   def normalize(): ServiceEndpoint
 }
 
 object ServiceEndpoint {
 
-  final case class URI private[did] (uri: String) extends ServiceEndpoint, UriOrJsonEndpoint {
-    override def normalize(): URI = {
-      UriUtils.normalizeUri(uri).map(URI(_)).get // uri is already validated
-    }
-  }
+  opaque type UriValue = String
 
-  object URI {
-    def fromString(s: String): Either[String, ServiceEndpoint.URI] = {
+  object UriValue {
+    def fromString(uri: String): Either[String, UriValue] = {
       UriUtils
-        .normalizeUri(s)
-        .toRight(s"unable to parse service endpoint URI: \"$s\"")
-        .map(_ => ServiceEndpoint.URI(s))
+        .normalizeUri(uri)
+        .toRight(s"unable to parse service endpoint URI: \"$uri\"")
+        .map(_ => uri)
     }
   }
 
-  final case class Json(json: JsonObject) extends ServiceEndpoint, UriOrJsonEndpoint {
-    override def normalize(): Json = this
+  extension (uri: UriValue) {
+    def value: String = uri
+
+    def normalize(): UriValue = {
+      UriUtils.normalizeUri(uri).get // uri is already validated
+    }
   }
 
-  final case class EndpointList(head: UriOrJsonEndpoint, tail: Seq[UriOrJsonEndpoint]) extends ServiceEndpoint {
+  sealed trait UriOrJsonEndpoint {
+    def normalize(): UriOrJsonEndpoint
+  }
+
+  object UriOrJsonEndpoint {
+    final case class Uri(uri: UriValue) extends UriOrJsonEndpoint {
+      override def normalize(): UriOrJsonEndpoint = copy(uri = uri.normalize())
+    }
+
+    final case class Json(json: JsonObject) extends UriOrJsonEndpoint {
+      override def normalize(): UriOrJsonEndpoint = this
+    }
+
+    given Conversion[UriValue, UriOrJsonEndpoint] = Uri(_)
+    given Conversion[JsonObject, UriOrJsonEndpoint] = Json(_)
+  }
+
+  final case class Single(value: UriOrJsonEndpoint) extends ServiceEndpoint {
+    override def normalize(): Single = copy(value = value.normalize())
+  }
+
+  final case class Multiple(head: UriOrJsonEndpoint, tail: Seq[UriOrJsonEndpoint]) extends ServiceEndpoint {
     def values: Seq[UriOrJsonEndpoint] = head +: tail
 
-    override def normalize(): EndpointList = {
-      EndpointList(
-        head = normalizeUriOrJsonEndpoint(head),
-        tail = tail.map(normalizeUriOrJsonEndpoint)
+    override def normalize(): Multiple = {
+      Multiple(
+        head = head.normalize(),
+        tail = tail.map(_.normalize())
       )
-    }
-
-    private def normalizeUriOrJsonEndpoint(endpoint: UriOrJsonEndpoint): UriOrJsonEndpoint = {
-      endpoint match {
-        case uri: URI   => uri.normalize()
-        case json: Json => json.normalize()
-      }
     }
   }
 
