@@ -7,11 +7,11 @@ routes:
     plugins:
       proxy-rewrite:
         regex_uri: ["^/prism-agent/_system/(.*)", "/$1"]
-  - uri: /prism-agent/*
-    upstream_id: 2
+  - uri: /prism-agent/present-proof/*
+    upstream_id: 4
     plugins:
       proxy-rewrite:
-        regex_uri: ["^/prism-agent/(.*)", "/$1"]
+        regex_uri: ["^/prism-agent/present-proof/(.*)", "/present-proof/$1"]
   - uri: /prism-agent/dids*
     upstream_id: 4
     plugins:
@@ -69,20 +69,20 @@ routes:
       proxy-rewrite:
         regex_uri: ["^/docs/mediator/api/(.*)", "/api/$1"]
   - uri: /docs/prism-agent/api/*
-    upstream_id: 2
+    upstream_id: 4
     plugins:
       proxy-rewrite:
-        regex_uri: ["^/docs/prism-agent/api/(.*)", "/api/$1"]
+        regex_uri: ["^/docs/prism-agent/api/(.*)", "/docs/$1"]
 
 upstreams:
   - id: 1
     nodes:
       "mediator:8080": 1
     type: roundrobin
-  - id: 2
-    nodes:
-      "prism-agent:8080": 1 # api
-    type: roundrobin
+#  - id: 2
+#    nodes:
+#      "prism-agent:8080": 1 # api
+#    type: roundrobin
   - id: 3
     nodes:
       "prism-agent:8090": 1 # didcom and system
