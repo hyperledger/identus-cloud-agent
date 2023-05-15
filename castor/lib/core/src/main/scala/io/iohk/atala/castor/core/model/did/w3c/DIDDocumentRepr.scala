@@ -1,5 +1,8 @@
 package io.iohk.atala.castor.core.model.did.w3c
 
+import io.iohk.atala.castor.core.model.did.{DID, DIDUrl}
+import io.circe.Json
+
 /** A projection of DIDDocument data model to W3C compliant DID representation */
 final case class DIDDocumentRepr(
     id: String,
@@ -25,8 +28,8 @@ final case class PublicKeyRepr(
 
 final case class ServiceRepr(
     id: String,
-    `type`: String,
-    serviceEndpoint: Seq[String]
+    `type`: String | Seq[String],
+    serviceEndpoint: Json
 )
 
 final case class PublicKeyJwk(kty: "EC", crv: String, x: String, y: String)

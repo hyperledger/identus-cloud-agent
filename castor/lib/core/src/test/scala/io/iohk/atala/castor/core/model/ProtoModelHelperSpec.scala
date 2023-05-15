@@ -10,10 +10,15 @@ import zio.test.Assertion.*
 import io.iohk.atala.prism.protos.node_models
 
 import java.time.Instant
+import io.iohk.atala.castor.core.model.did.ServiceEndpoint
+import io.circe.Json
 
 object ProtoModelHelperSpec extends ZIOSpecDefault {
 
   import ProtoModelHelper.*
+
+  given Conversion[String, ServiceType.Name] = ServiceType.Name.fromStringUnsafe
+  given Conversion[String, ServiceEndpoint.URI] = s => ServiceEndpoint.URI.fromString(s).toOption.get
 
   private def makePublicKey(id: String, revokedOn: Option[node_models.LedgerData] = None): node_models.PublicKey =
     node_models.PublicKey(
@@ -26,11 +31,16 @@ object ProtoModelHelperSpec extends ZIOSpecDefault {
       )
     )
 
-  private def makeService(id: String, deletedOn: Option[node_models.LedgerData] = None): node_models.Service =
+  private def makeService(
+      id: String,
+      serviceType: String = "LinkedDomains",
+      serviceEndpoint: String = "[]",
+      deletedOn: Option[node_models.LedgerData] = None
+  ): node_models.Service =
     node_models.Service(
       id = id,
-      `type` = ServiceType.LinkedDomains.name,
-      serviceEndpoint = Seq(),
+      `type` = serviceType,
+      serviceEndpoint = serviceEndpoint,
       addedOn = None,
       deletedOn = deletedOn
     )
@@ -51,7 +61,8 @@ object ProtoModelHelperSpec extends ZIOSpecDefault {
     }
   }
 
-  override def spec = suite("ProtoModelHelper")(conversionSpec, didDataFilterSpec)
+  override def spec =
+    suite("ProtoModelHelper")(conversionSpec, didDataFilterSpec, parseServiceType, parseServiceEndpoint)
 
   private val conversionSpec = suite("round trip model conversion does not change data of models")(
     test("PublicKeyData") {
@@ -209,6 +220,145 @@ object ProtoModelHelperSpec extends ZIOSpecDefault {
         validKeysId <- didData.filterRevokedKeysAndServices.map(_.services.map(_.id))
       } yield assert(validKeysId)(isEmpty)
     }
+  )
+
+  private val parseServiceType = suite("parseServiceType")(
+    test("parse valid single service type") {
+      val serviceType = "LinkedDomains"
+      val result = ProtoModelHelper.parseServiceType(serviceType)
+      assert(result)(isRight(equalTo(ServiceType.Single("LinkedDomains"))))
+    },
+    test("parse valid multiple service type") {
+      val serviceType = """["LinkedDomains", "IdentityHub"]"""
+      val result = ProtoModelHelper.parseServiceType(serviceType)
+      assert(result)(isRight(equalTo(ServiceType.Multiple("LinkedDomains", List("IdentityHub")))))
+    },
+    test("parse valid multiple service type with one item") {
+      val serviceType = """["LinkedDomains"]"""
+      val result = ProtoModelHelper.parseServiceType(serviceType)
+      assert(result)(isRight(equalTo(ServiceType.Multiple("LinkedDomains", List()))))
+    },
+    test("parse multiple service type containing item that is not a string") {
+      val serviceType = """["LinkedDomains", 1]"""
+      val result = ProtoModelHelper.parseServiceType(serviceType)
+      assert(result)(isLeft(containsString("service type is not a JSON array of strings")))
+    },
+    test("parse empty multiple service type") {
+      val serviceType = """[]"""
+      val result = ProtoModelHelper.parseServiceType(serviceType)
+      assert(result)(isLeft(containsString("service type cannot be an empty JSON array")))
+    },
+    test("parse empty string") {
+      val serviceType = ""
+      val result = ProtoModelHelper.parseServiceType(serviceType)
+      assert(result)(isLeft(containsString("service type name must have at least a non whitespace character")))
+    },
+    test("parse single service type starting with a white space character") {
+      val serviceType = " LinkedDomains"
+      val result = ProtoModelHelper.parseServiceType(serviceType)
+      assert(result)(isLeft(containsString("service type name cannot start nor end with whitespaces")))
+    },
+    test("parse single service type ending with a white space character") {
+      val serviceType = "LinkedDomains "
+      val result = ProtoModelHelper.parseServiceType(serviceType)
+      assert(result)(isLeft(containsString("service type name cannot start nor end with whitespaces")))
+    },
+    test("parse multiple service type starting with a white space character") {
+      val serviceType = """["LinkedDomains", " IdentityHub"]"""
+      val result = ProtoModelHelper.parseServiceType(serviceType)
+      assert(result)(isLeft(containsString("service type name cannot start nor end with whitespaces")))
+    },
+    test("parse multiple service type ending with a white space character") {
+      val serviceType = """["LinkedDomains", "IdentityHub "]"""
+      val result = ProtoModelHelper.parseServiceType(serviceType)
+      assert(result)(isLeft(containsString("service type name cannot start nor end with whitespaces")))
+    },
+    test("parse multiple service type that contain item with empty string") {
+      val serviceType = """["LinkedDomains", ""]"""
+      val result = ProtoModelHelper.parseServiceType(serviceType)
+      assert(result)(isLeft(containsString("service type name must have at least a non whitespace character")))
+    },
+    test("parse multiple service type with extra whitespace between items") {
+      val serviceType = """[   "LinkedDomains" ,      "IdentityHub"    ]"""
+      val result = ProtoModelHelper.parseServiceType(serviceType)
+      assert(result)(isRight(equalTo(ServiceType.Multiple("LinkedDomains", List("IdentityHub")))))
+    },
+  )
+
+  private val parseServiceEndpoint = suite("parseServiceEndpoint")(
+    test("parse valid uri string") {
+      val serviceEndpoint = "https://example.com"
+      val result = ProtoModelHelper.parseServiceEndpoint(serviceEndpoint)
+      val expected: ServiceEndpoint.URI = "https://example.com"
+      assert(result)(isRight(equalTo(expected)))
+    },
+    test("parse invalid uri string") {
+      val serviceEndpoint = "example"
+      val result = ProtoModelHelper.parseServiceEndpoint(serviceEndpoint)
+      assert(result)(isLeft(containsString("unable to parse service endpoint URI")))
+    },
+    test("parse empty uri string") {
+      val serviceEndpoint = ""
+      val result = ProtoModelHelper.parseServiceEndpoint(serviceEndpoint)
+      assert(result)(isLeft(containsString("unable to parse service endpoint URI")))
+    },
+    test("parse valid json object") {
+      val serviceEndpoint = """{"uri": "https://example.com"}"""
+      val result = ProtoModelHelper.parseServiceEndpoint(serviceEndpoint)
+      val expected = ServiceEndpoint.Json(Json.obj("uri" -> Json.fromString("https://example.com")).asObject.get)
+      assert(result)(isRight(equalTo(expected)))
+    },
+    test("parse invalid endpoint that is not a string or object") {
+      val serviceEndpoint = "123"
+      val result = ProtoModelHelper.parseServiceEndpoint(serviceEndpoint)
+      assert(result)(isLeft(containsString("unable to parse service endpoint URI")))
+    },
+    test("parse empty json object") {
+      val serviceEndpoint = "{}"
+      val result = ProtoModelHelper.parseServiceEndpoint(serviceEndpoint)
+      val expected = ServiceEndpoint.Json(Json.obj().asObject.get)
+      assert(result)(isRight(equalTo(expected)))
+    },
+    test("parse empty json array") {
+      val serviceEndpoint = "[]"
+      val result = ProtoModelHelper.parseServiceEndpoint(serviceEndpoint)
+      assert(result)(isLeft(containsString("the service endpoint cannot be an empty JSON array")))
+    },
+    test("parse json array of invalid items") {
+      val serviceEndpoint = """[123]"""
+      val result = ProtoModelHelper.parseServiceEndpoint(serviceEndpoint)
+      assert(result)(isLeft(containsString("the service endpoint is not a JSON array of URIs and/or JSON objects")))
+    },
+    test("parse json array of uris") {
+      val serviceEndpoint = """["https://example.com", "https://example2.com"]"""
+      val result = ProtoModelHelper.parseServiceEndpoint(serviceEndpoint)
+      val expected =
+        ServiceEndpoint.EndpointList(
+          "https://example.com",
+          Seq("https://example2.com")
+        )
+      assert(result)(isRight(equalTo(expected)))
+    },
+    test("parse json array of objects") {
+      val serviceEndpoint = """[{"uri": "https://example.com"}, {"uri": "https://example2.com"}]"""
+      val result = ProtoModelHelper.parseServiceEndpoint(serviceEndpoint)
+      val expected = ServiceEndpoint.EndpointList(
+        ServiceEndpoint.Json(Json.obj("uri" -> Json.fromString("https://example.com")).asObject.get),
+        Seq(
+          ServiceEndpoint.Json(Json.obj("uri" -> Json.fromString("https://example2.com")).asObject.get)
+        )
+      )
+      assert(result)(isRight(equalTo(expected)))
+    },
+    test("parse json array of mixed types") {
+      val serviceEndpoint = """[{"uri": "https://example.com"}, "https://example2.com"]"""
+      val result = ProtoModelHelper.parseServiceEndpoint(serviceEndpoint)
+      val expected = ServiceEndpoint.EndpointList(
+        ServiceEndpoint.Json(Json.obj("uri" -> Json.fromString("https://example.com")).asObject.get),
+        Seq("https://example2.com")
+      )
+      assert(result)(isRight(equalTo(expected)))
+    },
   )
 
 }
