@@ -9,6 +9,9 @@ import zio.*
 import scala.collection.immutable.ArraySeq
 import io.iohk.atala.castor.core.model.did.PublicKey
 import io.iohk.atala.castor.core.model.did.ServiceEndpoint
+import io.iohk.atala.castor.core.model.did.ServiceEndpoint.Single
+import io.iohk.atala.castor.core.model.did.ServiceEndpoint.UriOrJsonEndpoint
+import io.circe.JsonObject
 
 object DIDOperationValidator {
   final case class Config(publicKeyLimit: Int, serviceLimit: Int)
@@ -60,8 +63,8 @@ private object CreateOperationValidator extends BaseOperationValidator {
 
   private def extractServiceIds(operation: PrismDIDOperation.Create): Seq[String] = operation.services.map(_.id)
 
-  private def extractServiceEndpoint(operation: PrismDIDOperation.Create): Seq[(String, Seq[String])] = {
-    operation.services.map { s => (s.id, extractServiceEndpointUri(s.serviceEndpoint)) }
+  private def extractServiceEndpoint(operation: PrismDIDOperation.Create): Seq[(String, ServiceEndpoint)] = {
+    operation.services.map { s => (s.id, s.serviceEndpoint) }
   }
 
 }
@@ -124,11 +127,10 @@ private object UpdateOperationValidator extends BaseOperationValidator {
     case _: UpdateDIDAction.PatchContext         => None
   }
 
-  private def extractServiceEndpoint(operation: PrismDIDOperation.Update): Seq[(String, Seq[String])] =
+  private def extractServiceEndpoint(operation: PrismDIDOperation.Update): Seq[(String, ServiceEndpoint)] =
     operation.actions.collect {
-      case UpdateDIDAction.AddService(service) => service.id -> extractServiceEndpointUri(service.serviceEndpoint)
-      case UpdateDIDAction.UpdateService(id, _, endpoint) =>
-        id -> endpoint.map(extractServiceEndpointUri).getOrElse(Seq.empty)
+      case UpdateDIDAction.AddService(service)                  => service.id -> service.serviceEndpoint
+      case UpdateDIDAction.UpdateService(id, _, Some(endpoint)) => id -> endpoint
     }
 }
 
@@ -141,7 +143,7 @@ private trait BaseOperationValidator {
 
   type KeyIdExtractor[T] = T => Seq[String]
   type ServiceIdExtractor[T] = T => Seq[String]
-  type ServiceEndpointUriExtractor[T] = T => Seq[(String, Seq[String])]
+  type ServiceEndpointExtractor[T] = T => Seq[(String, ServiceEndpoint)]
 
   protected def validateMaxPublicKeysAccess[T <: PrismDIDOperation](
       config: Config
@@ -203,9 +205,19 @@ private trait BaseOperationValidator {
 
   protected def validateServiceEndpointNormalized[T <: PrismDIDOperation](
       operation: T,
-      endpointExtractor: ServiceEndpointUriExtractor[T]
+      endpointExtractor: ServiceEndpointExtractor[T]
   ): Either[OperationValidationError, Unit] = {
-    val uris = endpointExtractor(operation).flatMap(_._2)
+    val uris = endpointExtractor(operation)
+      .flatMap { case (_, serviceEndpoint) =>
+        val ls: Seq[UriOrJsonEndpoint] = serviceEndpoint match {
+          case ServiceEndpoint.Single(value) => Seq(value)
+          case i: ServiceEndpoint.Multiple   => i.values
+        }
+        ls.flatMap {
+          case UriOrJsonEndpoint.Uri(uri) => Some(uri.value)
+          case _                          => None
+        }
+      }
     val nonNormalizedUris = uris.filterNot(isUriNormalized)
     if (nonNormalizedUris.isEmpty) Right(())
     else
@@ -228,14 +240,6 @@ private trait BaseOperationValidator {
   /** @return true if a given uri is normalized */
   protected def isUriNormalized(uri: String): Boolean = {
     UriUtils.normalizeUri(uri).contains(uri)
-  }
-
-  protected def extractServiceEndpointUri(endpoint: ServiceEndpoint): Seq[String] = {
-    endpoint match {
-      case ServiceEndpoint.URI(uri)         => Seq(uri)
-      case ServiceEndpoint.Json(_)          => Seq()
-      case ep: ServiceEndpoint.EndpointList => ep.values.collect { case ServiceEndpoint.URI(uri) => uri }
-    }
   }
 
 }
