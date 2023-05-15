@@ -9,18 +9,18 @@ object ServiceEndpointSpec extends ZIOSpecDefault {
   override def spec = suite("ServiceEndpoint")(
     test("URI.fromString create an endpoint with a valid uri") {
       val uri = "https://example.com/login"
-      val result = ServiceEndpoint.URI.fromString(uri)
-      assert(result)(isRight(isSubtype[ServiceEndpoint.URI](hasField("uri", _.uri, equalTo(uri)))))
+      val result = ServiceEndpoint.UriValue.fromString(uri)
+      assert(result)(isRight(isSubtype[ServiceEndpoint.UriValue](hasField("value", _.value, equalTo(uri)))))
     },
     test("URI.fromString does not create an endpoint with invalid uri") {
       val uri = "this is not a uri"
-      val result = ServiceEndpoint.URI.fromString(uri)
+      val result = ServiceEndpoint.UriValue.fromString(uri)
       assert(result)(isLeft(containsString(s"unable to parse service endpoint URI")))
     },
     test("URI.fromString does not change original uri if it is unnormalized") {
       val uri = "https://example.com/../login"
-      val result = ServiceEndpoint.URI.fromString(uri)
-      assert(result)(isRight(isSubtype[ServiceEndpoint.URI](hasField("uri", _.uri, equalTo(uri)))))
+      val result = ServiceEndpoint.UriValue.fromString(uri)
+      assert(result)(isRight(isSubtype[ServiceEndpoint.UriValue](hasField("value", _.value, equalTo(uri)))))
     },
   )
 
