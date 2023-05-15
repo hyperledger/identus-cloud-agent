@@ -11,22 +11,25 @@ object ClasspathSharedObject {
 
   def namesOfSharedObjectsToLoad: Seq[String] = Seq(
     removeLibPrefixAndSuffix(BuildInfo.NameOfAnonCredsSharedObject),
-    removeLibPrefixAndSuffix(BuildInfo.NameOfShimSharedObject))
+    removeLibPrefixAndSuffix(BuildInfo.NameOfShimSharedObject)
+  )
 
   def createTempFolderWithExtractedLibs: Path = {
     val result = Files.createTempDirectory(".janoncreds")
-    val pathToAnonCredsSO = Path.of("/", BuildInfo.pathToNativeObjectsInJar).resolve(BuildInfo.NameOfAnonCredsSharedObject)
-    val pathToAnonCredsShimSO = Path.of("/", BuildInfo.pathToNativeObjectsInJar).resolve(BuildInfo.NameOfShimSharedObject)
+    val pathToAnonCredsSO =
+      Path.of("/", BuildInfo.pathToNativeObjectsInJar).resolve(BuildInfo.NameOfAnonCredsSharedObject)
+    val pathToAnonCredsShimSO =
+      Path.of("/", BuildInfo.pathToNativeObjectsInJar).resolve(BuildInfo.NameOfShimSharedObject)
     extractToTempFile(pathToAnonCredsSO, result)
     extractToTempFile(pathToAnonCredsShimSO, result)
     result
   }
 
-  /**
-   *
-   * @param pathToResource full path to resource including file name
-   * @return the path the file name is at (name included)
-   */
+  /** @param pathToResource
+    *   full path to resource including file name
+    * @return
+    *   the path the file name is at (name included)
+    */
   private def extractToTempFile(pathToResource: Path, tempPath: Path): Path = {
 
     val in = this.getClass.getResourceAsStream(pathToResource.toString)

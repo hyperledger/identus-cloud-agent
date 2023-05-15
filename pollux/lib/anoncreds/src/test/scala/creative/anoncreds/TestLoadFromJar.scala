@@ -19,6 +19,5 @@ object TestLoadFromJar {
 
     println(api.anoncreds_version())
 
-
   }
 }

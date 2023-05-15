@@ -8,29 +8,29 @@ import jnr.ffi.types.{int64_t, int8_t}
 object AnonCredsOps {
 
   case class FfiCredentialEntry(
-                                 credential: ObjectHandle,
-                                 @int64_t timestamp: Long,
-                                 rev_state: ObjectHandle
-                               )
+      credential: ObjectHandle,
+      @int64_t timestamp: Long,
+      rev_state: ObjectHandle
+  )
 
   case class FfiCredentialProve(
-                                 @int64_t entry_idx: Long,
-                                 referent: FfiStr,
-                                 @int8_t is_predicate: Int,
-                                 @int8_t reveal: Int
-                               )
+      @int64_t entry_idx: Long,
+      referent: FfiStr,
+      @int8_t is_predicate: Int,
+      @int8_t reveal: Int
+  )
 
   implicit class Helpers(val api: AnonCreds) extends AnyVal {
 
     /*
     If successful, returns the type of the object handle *if* the object handle is known
     and None if it is not known.
-   */
+     */
     def getObjectHandleType(objHandle: Pointer): Either[ErrorCode, Option[String]] = {
       val out = new PointerByReference()
       eitherErrorCodeOr(
-        api.anoncreds_object_get_type_name(objHandle, out)
-        , Option(out.getValue).map(_.getString(0))
+        api.anoncreds_object_get_type_name(objHandle, out),
+        Option(out.getValue).map(_.getString(0))
       )
     }
 
@@ -39,7 +39,8 @@ object AnonCredsOps {
       val buf = new PointerByReference()
 
       eitherErrorCodeOr(
-        api.anoncreds_generate_nonce(buf), buf.getValue.getString(0)
+        api.anoncreds_generate_nonce(buf),
+        buf.getValue.getString(0)
       )
     }
 
@@ -49,23 +50,26 @@ object AnonCredsOps {
 
       eitherErrorCodeOr(
         api.shim_anoncreds_object_get_json(
-          p, buf
+          p,
+          buf
         ),
         buf.getValue.getString(0)
       )
     }
 
-    def createPresentation(presentationRequest: ObjectHandle,
-                           credentials: Seq[FfiCredentialEntry],
-                           credentialProve: Seq[FfiCredentialProve],
-                           selfAttestNames: Seq[String],
-                           selfAttestValues: Seq[String],
-                           masterSecret: ObjectHandle,
-                           schemas: Seq[ObjectHandle],
-                           schemaIds: Seq[String],
-                           credentialDefs: Seq[ObjectHandle],
-                           credentialDefIds: Seq[String],
-                           presentationPtr: ObjectHandle_star): ErrorCode = {
+    def createPresentation(
+        presentationRequest: ObjectHandle,
+        credentials: Seq[FfiCredentialEntry],
+        credentialProve: Seq[FfiCredentialProve],
+        selfAttestNames: Seq[String],
+        selfAttestValues: Seq[String],
+        masterSecret: ObjectHandle,
+        schemas: Seq[ObjectHandle],
+        schemaIds: Seq[String],
+        credentialDefs: Seq[ObjectHandle],
+        credentialDefIds: Seq[String],
+        presentationPtr: ObjectHandle_star
+    ): ErrorCode = {
 
       val (c_cred, c_ts, c_rev_state) = credentials.map { cred =>
         (cred.credential, cred.timestamp, cred.rev_state)
@@ -106,16 +110,17 @@ object AnonCredsOps {
     }
 
     def verifyPresentation(
-                            presentation: ObjectHandle,
-                            presentationRequest: ObjectHandle,
-                            schemas: Seq[ObjectHandle],
-                            schemaIds: Seq[String],
-                            credentialDefs: Seq[ObjectHandle],
-                            credentialDefIds: Seq[String],
-                            revRegDefs: Seq[ObjectHandle],
-                            revRegDefIds:  Seq[String],
-                            revStatusList: Seq[ObjectHandle],
-                            presentationResult: StringBuffer): ErrorCode = {
+        presentation: ObjectHandle,
+        presentationRequest: ObjectHandle,
+        schemas: Seq[ObjectHandle],
+        schemaIds: Seq[String],
+        credentialDefs: Seq[ObjectHandle],
+        credentialDefIds: Seq[String],
+        revRegDefs: Seq[ObjectHandle],
+        revRegDefIds: Seq[String],
+        revStatusList: Seq[ObjectHandle],
+        presentationResult: StringBuffer
+    ): ErrorCode = {
 
       api.shim_anoncreds_verify_presentation(
         presentation,

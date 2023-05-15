@@ -9,10 +9,9 @@ import org.scalatest.flatspec.AnyFlatSpec
 
 import java.nio.file.Files
 
-
 class SingleIssuerSingleProver extends AnyFlatSpec {
 
-  val SCHEMA_ID  = "mock:uri2"
+  val SCHEMA_ID = "mock:uri2"
   val CRED_DEF_ID = "mock:uri2"
 
   private[anoncreds] val gvtSchemaName = "gvt2"
@@ -29,7 +28,9 @@ class SingleIssuerSingleProver extends AnyFlatSpec {
   }
 
   def script(): Unit = {
-    println("Run a test script based on https://github.com/hyperledger/anoncreds-rs/blob/199cfb4703f8f3c1b4f26f387845a094a63acf96/tests/anoncreds_demos.rs#L38-L226")
+    println(
+      "Run a test script based on https://github.com/hyperledger/anoncreds-rs/blob/199cfb4703f8f3c1b4f26f387845a094a63acf96/tests/anoncreds_demos.rs#L38-L226"
+    )
 
     implicit val api: AnonCreds = AnonCreds(
       Seq(BuildInfo.TargetForAnoncredsSharedObjectDownload, ".")
@@ -40,10 +41,9 @@ class SingleIssuerSingleProver extends AnyFlatSpec {
     val result = api.anoncreds_version()
     println(s"Version of anoncreds library is $result")
 
-
     val schema = createSchema
 
-    val supportRevocation: Byte = 1; //Assume this is true/false?
+    val supportRevocation: Byte = 1; // Assume this is true/false?
     val sigType = "CL"
 
     val cred_def_ptr = new PointerByReference()
@@ -93,7 +93,8 @@ class SingleIssuerSingleProver extends AnyFlatSpec {
         master_secret_id,
         cred_offer_ptr.getValue,
         cred_req_ptr,
-        cred_req_meta_ptr)
+        cred_req_meta_ptr
+      )
     )
 
     print("cred_req_meta_p: ")
@@ -102,17 +103,16 @@ class SingleIssuerSingleProver extends AnyFlatSpec {
     print("cred_req_p: ")
     api.getJson(cred_req_ptr.getValue).map(println)
 
-    val attr_raw_values = Array( "Alan", "29")
+    val attr_raw_values = Array("Alan", "29")
 
     val attr_enc_values_ptr = new PointerByReference()
 
     printIfError(
-      api.
-        shim_anoncreds_encode_credential_attributes(
-          attr_raw_values,
-          attr_raw_values.length,
-          attr_enc_values_ptr
-        )
+      api.shim_anoncreds_encode_credential_attributes(
+        attr_raw_values,
+        attr_raw_values.length,
+        attr_enc_values_ptr
+      )
     )
 
     val attr_enc_values = attr_enc_values_ptr.getValue.getString(0).split(",")
@@ -134,7 +134,6 @@ class SingleIssuerSingleProver extends AnyFlatSpec {
       )
     )
 
-
     print("cred_def_p: ")
     api.getJson(cred_def_ptr.getValue).map(println)
 
@@ -146,7 +145,6 @@ class SingleIssuerSingleProver extends AnyFlatSpec {
 
     print("reg_def_p: ")
     api.getJson(reg_def_ptr.getValue).map(println)
-
 
     val cred_offer_json = getJsonUnsafe(reg_def_ptr.getValue)
     println(s"reg_def_private_p: ${cred_offer_json}")
@@ -170,7 +168,7 @@ class SingleIssuerSingleProver extends AnyFlatSpec {
         rev_reg_def_id,
         reg_def_ptr.getValue,
         timeStamp,
-        0, ///not sure what this does, but only 0 seems to work
+        0, /// not sure what this does, but only 0 seems to work
         rev_status_list_ptr
       )
     )
@@ -319,8 +317,8 @@ class SingleIssuerSingleProver extends AnyFlatSpec {
     val regDefinitionIds = Seq(rev_reg_def_id)
     val revStatusList = Seq(rev_status_list_ptr.getValue)
 
-
-    printIfError(api.verifyPresentation(
+    printIfError(
+      api.verifyPresentation(
         presentationPtr.getValue,
         presentation_req_ptr.getValue,
         schemas,
@@ -334,7 +332,7 @@ class SingleIssuerSingleProver extends AnyFlatSpec {
       )
     )
 
-    //TODO what does 0 mean? I believe it's "truthy" as per js wrapper tests,
+    // TODO what does 0 mean? I believe it's "truthy" as per js wrapper tests,
     // but in any event - no errors in the script.
     // next level up is - what does all this mean?
     println(s"presentationVerification is $presentationVerification")
@@ -356,14 +354,15 @@ class SingleIssuerSingleProver extends AnyFlatSpec {
 
     val result_p = new PointerByReference()
 
-    val errorCode = printIfError(api.shim_anoncreds_create_schema(
-      gvtSchemaName,
-      schemaVersion,
-      issuerDid,
-      attrs,
-      attrs.length,
-      result_p
-    )
+    val errorCode = printIfError(
+      api.shim_anoncreds_create_schema(
+        gvtSchemaName,
+        schemaVersion,
+        issuerDid,
+        attrs,
+        attrs.length,
+        result_p
+      )
     )
     api.getJson(result_p.getValue) match {
       case Left(value) => printIfError(value)
