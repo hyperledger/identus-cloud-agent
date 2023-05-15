@@ -2,12 +2,15 @@ package io.iohk.atala.castor.core.util
 
 import io.iohk.atala.castor.core.model.did.*
 import io.iohk.atala.prism.crypto.EC
-import io.iohk.atala.shared.models.Base64UrlString
+import io.iohk.atala.shared.models.Base64UrlStrings.Base64UrlString
 import io.lemonlabs.uri.Uri
 import zio.*
 import zio.test.Gen
+import io.circe.Json
 
 object GenUtils {
+
+  given Conversion[String, ServiceType.Name] = ServiceType.Name.fromStringUnsafe
 
   val uriFragment: Gen[Any, String] = Gen.stringBounded(1, 20)(Gen.asciiChar).filter(UriUtils.isValidUriFragment)
 
@@ -47,8 +50,23 @@ object GenUtils {
   val service: Gen[Any, Service] =
     for {
       id <- uriFragment
-      serviceType <- Gen.fromIterable(ServiceType.values)
-      endpoints <- Gen.listOfBounded(1, 3)(uri).map(_.map(Uri.parse))
+      serviceType <- Gen.oneOf(
+        Gen.const(ServiceType.Single("LinkedDomains")),
+        Gen
+          .int(0, 1)
+          .map(n => Seq[ServiceType.Name]("CredentialRepository").take(n))
+          .map(tail => ServiceType.Multiple("LinkedDomains", tail))
+      )
+      sampleUri = "https://example.com"
+      uriEndpointGen = Gen.const(ServiceEndpoint.URI.fromString(sampleUri).toOption.get)
+      jsonEndpointGen = Gen.const(ServiceEndpoint.Json(Json.obj("uri" -> Json.fromString(sampleUri)).asObject.get))
+      endpoints <- Gen.oneOf[Any, ServiceEndpoint](
+        uriEndpointGen,
+        jsonEndpointGen,
+        Gen
+          .listOfBounded(1, 3)(Gen.oneOf[Any, UriOrJsonEndpoint](uriEndpointGen, jsonEndpointGen))
+          .map(xs => ServiceEndpoint.EndpointList(xs.head, xs.tail))
+      )
     } yield Service(id, serviceType, endpoints).normalizeServiceEndpoint()
 
   val createOperation: Gen[Any, PrismDIDOperation.Create] = {

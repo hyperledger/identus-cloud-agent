@@ -7,6 +7,7 @@ import io.iohk.atala.castor.core.model.did.{
   InternalPublicKey,
   LongFormPrismDID,
   PrismDID,
+  PrismDIDOperation,
   PublicKey,
   ScheduleDIDOperationOutcome,
   ScheduledDIDOperationDetail,
@@ -16,10 +17,12 @@ import zio.*
 import io.iohk.atala.castor.core.model.ProtoModelHelper
 import io.iohk.atala.castor.core.model.error.{DIDOperationError, DIDResolutionError}
 import io.iohk.atala.castor.core.util.DIDOperationValidator
-import io.iohk.atala.shared.models.HexString
+import io.iohk.atala.prism.crypto.Sha256
+import io.iohk.atala.shared.models.HexStrings.*
+import io.iohk.atala.shared.utils.Traverse.*
 import io.iohk.atala.prism.protos.{node_api, node_models}
 import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc.NodeService
-import io.iohk.atala.prism.protos.node_models.OperationOutput.OperationMaybe
+import io.iohk.atala.prism.protos.node_models.OperationOutput.{OperationMaybe, Result}
 
 import scala.collection.immutable.ArraySeq
 import io.iohk.atala.castor.core.model.error.OperationValidationError

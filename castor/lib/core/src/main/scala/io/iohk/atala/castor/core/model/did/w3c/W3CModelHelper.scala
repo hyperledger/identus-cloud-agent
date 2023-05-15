@@ -9,7 +9,10 @@ import io.iohk.atala.castor.core.model.did.{
   Service,
   VerificationRelationship
 }
-import io.iohk.atala.shared.models.HexString
+import io.iohk.atala.shared.models.HexStrings.*
+import io.iohk.atala.castor.core.model.did.ServiceType
+import io.circe.Json
+import io.iohk.atala.castor.core.model.did.ServiceEndpoint
 
 object W3CModelHelper extends W3CModelHelper
 
@@ -48,7 +51,13 @@ private[castor] trait W3CModelHelper {
       val mandatoryContext = Seq("https://www.w3.org/ns/did/v1")
       val additionalContext = {
         val keyTypes = keys.map(_.`type`).toSet
-        val serviceTypes = services.map(_.`type`).toSet
+        val serviceTypes = services
+          .map(_.`type`)
+          .flatMap {
+            case s: String      => Seq(s)
+            case s: Seq[String] => s
+          }
+          .toSet
         Seq(
           Option.when(keyTypes.contains("JsonWebKey2020"))("https://w3id.org/security/suites/jws-2020/v1"),
           Option.when(serviceTypes.contains("DIDCommMessaging"))("https://didcomm.org/messaging/contexts/v2"),
@@ -63,11 +72,33 @@ private[castor] trait W3CModelHelper {
   }
 
   extension (service: Service) {
-    def toW3C(did: PrismDID): ServiceRepr = ServiceRepr(
-      id = s"${did.toString}#${service.id}",
-      `type` = service.`type`.name,
-      serviceEndpoint = service.serviceEndpoint.map(_.toString)
-    )
+    def toW3C(did: PrismDID): ServiceRepr =
+      ServiceRepr(
+        id = s"${did.toString}#${service.id}",
+        `type` = serviceTypeToW3C(service.`type`),
+        serviceEndpoint = serviceEndpointToW3C(service.serviceEndpoint)
+      )
+
+    private def serviceTypeToW3C(serviceType: ServiceType): String | Seq[String] = {
+      import ServiceType.*
+      serviceType match {
+        case ServiceType.Single(name)    => name.value
+        case names: ServiceType.Multiple => names.values.map(_.value)
+      }
+    }
+
+    private def serviceEndpointToW3C(serviceEndpoint: ServiceEndpoint): Json = {
+      serviceEndpoint match {
+        case ServiceEndpoint.URI(uri)   => Json.fromString(uri)
+        case ServiceEndpoint.Json(json) => Json.fromJsonObject(json)
+        case ep: ServiceEndpoint.EndpointList =>
+          val uris = ep.values.map {
+            case ServiceEndpoint.URI(uri)   => Json.fromString(uri)
+            case ServiceEndpoint.Json(json) => Json.fromJsonObject(json)
+          }
+          Json.arr(uris: _*)
+      }
+    }
   }
 
   extension (publicKey: PublicKey) {

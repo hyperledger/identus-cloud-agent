@@ -5,6 +5,7 @@ import io.iohk.atala.prism.crypto.Sha256
 
 import scala.collection.compat.immutable.ArraySeq
 import io.iohk.atala.prism.protos.node_models
+import io.iohk.atala.shared.models.HexStrings.HexString
 
 import io.lemonlabs.uri.Uri
 
@@ -69,8 +70,10 @@ object UpdateDIDAction {
   final case class RemoveKey(id: String) extends UpdateDIDAction
   final case class AddService(service: Service) extends UpdateDIDAction
   final case class RemoveService(id: String) extends UpdateDIDAction
-  final case class UpdateService(id: String, `type`: Option[ServiceType] = None, endpoints: Seq[Uri] = Nil)
-      extends UpdateDIDAction
-
+  final case class UpdateService(
+      id: String,
+      `type`: Option[ServiceType] = None,
+      endpoint: Option[ServiceEndpoint] = None
+  ) extends UpdateDIDAction
   final case class PatchContext(context: Seq[String]) extends UpdateDIDAction
 }
