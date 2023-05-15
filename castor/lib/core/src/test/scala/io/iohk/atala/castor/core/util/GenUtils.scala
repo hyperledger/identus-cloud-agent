@@ -6,6 +6,8 @@ import io.iohk.atala.shared.models.Base64UrlString
 import zio.*
 import zio.test.Gen
 import io.circe.Json
+import io.iohk.atala.castor.core.model.did.ServiceEndpoint.UriValue
+import io.iohk.atala.castor.core.model.did.ServiceEndpoint.UriOrJsonEndpoint
 
 object GenUtils {
 
@@ -57,14 +59,14 @@ object GenUtils {
           .map(tail => ServiceType.Multiple("LinkedDomains", tail))
       )
       sampleUri = "https://example.com"
-      uriEndpointGen = Gen.const(ServiceEndpoint.URI.fromString(sampleUri).toOption.get)
-      jsonEndpointGen = Gen.const(ServiceEndpoint.Json(Json.obj("uri" -> Json.fromString(sampleUri)).asObject.get))
+      uriEndpointGen = Gen.const(UriOrJsonEndpoint.Uri(UriValue.fromString(sampleUri).toOption.get))
+      jsonEndpointGen = Gen.const(UriOrJsonEndpoint.Json(Json.obj("uri" -> Json.fromString(sampleUri)).asObject.get))
       endpoints <- Gen.oneOf[Any, ServiceEndpoint](
-        uriEndpointGen,
-        jsonEndpointGen,
+        uriEndpointGen.map(ServiceEndpoint.Single(_)),
+        jsonEndpointGen.map(ServiceEndpoint.Single(_)),
         Gen
           .listOfBounded(1, 3)(Gen.oneOf[Any, UriOrJsonEndpoint](uriEndpointGen, jsonEndpointGen))
-          .map(xs => ServiceEndpoint.EndpointList(xs.head, xs.tail))
+          .map(xs => ServiceEndpoint.Multiple(xs.head, xs.tail))
       )
     } yield Service(id, serviceType, endpoints).normalizeServiceEndpoint()
 

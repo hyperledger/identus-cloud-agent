@@ -26,7 +26,8 @@ import io.iohk.atala.castor.core.model.did.ServiceEndpoint
 object DIDOperationValidatorSpec extends ZIOSpecDefault {
 
   given Conversion[String, ServiceType.Name] = ServiceType.Name.fromStringUnsafe
-  given Conversion[String, ServiceEndpoint.URI] = s => ServiceEndpoint.URI.fromString(s).toOption.get
+  given Conversion[String, ServiceEndpoint] = s =>
+    ServiceEndpoint.Single(ServiceEndpoint.UriValue.fromString(s).toOption.get)
 
   override def spec = suite("DIDOperationValidator")(
     createOperationValidationSpec,
