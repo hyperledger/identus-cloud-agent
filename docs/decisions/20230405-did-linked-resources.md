@@ -1,7 +1,7 @@
 # DID-linked-resources
 
 - Status: draft
-- Deciders: Yurii Shynbuiev, Benjamin Voiturier, Lohan Spies, Ezequiel Postan
+- Deciders: Yurii Shynbuiev, Benjamin Voiturier, Lohan Spies, Ezequiel Postan, Shota Jolbordi
 - Date: 2023-04-05
 - Tags: did, linked-data, ledger
 
@@ -13,26 +13,32 @@
 - Provide a concrete proposal for what we would like to implement for PRISM.
 - Provide a generic way of storing and linking the resources for the DID in the PRISM platform.
 
-Cheqd's approach for linking the resources to the DID is not a part of the current version of DID specification. Even if it's possible to find some information about `linkedResources` and `linkedResourceMetadata` optional field of the DIDDoc, it looks like the current decision is 
-
 ## Context and Problem Statement
 
-Atala Prism platform must be able to store and distribute the various resources such as credential schemas, logos, revocation status lists, and documents (aka any text, JSON, images, etc)
+Atala Prism platform must be able to store and distribute the various resources such as credential schemas, logos, revocation status lists, and documents (aka any text, JSON, images, etc). But in the scope of the current ADR the following resource types are discussed:
+
+- credential schema (JSON and AnonCreds)
+- credential definition (AnonCreds)
+- revocation list
 
 **NOTE**: Resources containing the PII must never be stored on-chain.
 
 Requirements for storing and distributing resources:
 
 - Decentralization - resources must be stored in decentralized storage
-- Security - resources must be stored in the reliable tamper-proof storage
-- Immutability - resource must be immutable
-- Versioning - it should be possible to track the versioning of the resource
 - Discoverability - it should be possible to discover the resource
 - Longevity - the ability of a storage solution to maintain the availability and integrity of stored resources
 - Interoperability - it should be possible for other SSI systems to fetch the resource
-- Trust - the fetched resource should be trusted by other SSI systems
+- Trust - resources must be stored in reliable tamper-proof storage and be trusted by other SSI systems
+
+Other requirements, such as `versioning`, `security` and `immutability` are out of the scope of this ADR:
+
+- Versioning - is a specific requirement for the particular resource and belongs to the resource metadata
+- Security - is an important aspect that must be taken into account by the underlying storage system and data access layer
+- Immutability - is one of the strategies to guarantee `trust` and `decentralisation``, but it shouldn't be a requirement by itself.
 
 The technical solution contains a lot of variations and particular small decisions but overall it can be split into two main questions:
+
 - where the resource is stored?
 - how the resource is discovered and fetched?
 
@@ -40,34 +46,38 @@ The technical solution contains a lot of variations and particular small decisio
 
 ### Storage limitations
 
-All decentralized storage (DLT or IPFS) has storage limitations, and the amount of data that can be stored is limited by the available storage capacity and the way how the resources are stored.
+All decentralized storage (DLT or IPFS) has storage limitations, and the amount of data that can be stored is limited by the available storage capacity and the way how the resources are stored. 
 
-Known limitations for concrete decentralized storage:
-- Cardano blockchain (the resource is stored in the metadata space of the Tx): up to 64KB
-- Cheqd blockchain: up to 32KB 
-- IPFS: up to 5GB (Go SDK is limited by 255MB by default per file)
-- PostgreSQL (the resource is stored as JSON field): 255MB
+The following aspect must be taken into account for storing the resources in DLT:
+
+- transaction size limit (can be mitigated by data fragmentation, so the single resource is stored in multiple transactions) - 16KB, 32KB, 64KB, up to 1MB - depending on the type of the blockchain 
+- throughput - bytes we can insert to storage per unit of time
+- latency - multi-second time per insert
+- cost - each insertion costs fees
 
 Based on the nature of the resource the size limitations must be considered.
-For the following resource types and the common use cases 32KB should be enough, so it's possible to store these on DLT:
+
+For the following resource types and the common use cases 16KB should be enough, so it's possible to store these on DLT:
 - credential schema
 - credential definition
 - logo in SVG format
-- Merkle Tree DAG
+- Merkle Tree
 - documentation in the markdown format
 
-For larger resources IPFS or another option should be considered. Large resource examples:
+For larger resource types IPFS or another option should be considered. Large resource examples:
 - media files
 - large documents
 - large revocation status lists
+
+IPFS doesn't have a size limitation (it's limited by the underlying storage or the particular SDK) and requires additional infrastructure and `incentives` (the way to pay for the storage) from the community.
+
+IPFS can be used for storing the resources, but it should be covered in the scope of separated ADR. 
 
 ### Scalability
 
 While DLT and IPFS are designed for scalability, they can still face issues with scalability when it comes to storing SSI resources. As more users store their SSI resources on these platforms, it can become more difficult to scale the infrastructure to handle the increased demand.
 
-DLT and IPFS and other decentralized storages should not be considered for storing large collections of resources. For these cases, the hybrid solutions should be considered when the payload of the resource is stored off-chain and the hash for the resource is stored on-chain.
-
-**NOTE:** A hybrid solution is out of the scope of this ADR.
+To mitigate the scalability challenge the `hybrid` solution can be considered. In this case, the resource is stored in the centralized database or IPFS system, and the `hash`, `signature` or other metadata that guarantees the `trust` is stored on-chain.
 
 Storing credential schemas, and logos, not large documents don't require the hybrid solution, so the use cases for it is out of scope in the current ADR.
 
@@ -94,7 +104,6 @@ Personal data or any other sensitive information should not be stored on-chain a
 Credential schemas, documents, and logos usually do not contain personal data, so can be stored on-chain.
 
 Revocation lists that are designed using privacy-preserving capabilities can be stored on-chain as well.
-
 
 ## Decision Drivers
 
@@ -199,7 +208,9 @@ Example:
 
 The solution is not fully interoperable with the SSI ecosystem, but it's probably the first successful specification that formalizes the DID-linked resources and the DID URL. 
 
-Looks like the ToIP specification is inspired by Cheqd ADR.
+Cheqd's approach for linking the resources to the DID is not a part of the current version of DID specification. Even if it's possible to find some information about `linkedResources` and `linkedResourceMetadata` optional field of the DIDDoc in the cache of the search system or ChatGPT. 
+
+Looks like the ToIP specification is inspired by Cheqd's ADR.
 
 #### Positive Consequences
 
@@ -222,7 +233,13 @@ The current solution is based on the dereferencing algorithm described in the [D
 
 The main idea is an algorithm that allows using the DID URL and the information about the services in the DID Document that allows DID Resolver to compose the final resource URL and return the requested resource.
 
-Dereference is performed by defining the service `id` or `type` and `relativeRef` params or `path` in the DID URL
+Dereference is performed by defining the service `id` and `relativeRef` params or `path` in the DID URL
+
+**NOTE:**
+The `service.type` property is not taken into account in this flow. 
+According to the did-core specification, the service type and its associated properties SHOULD be registered in the [DID Specification Registries](
+https://www.w3.org/TR/did-spec-registries/#service-types).
+So, defining and registering the `schemaService` or `resourceService` should be the next step to facilitate the interoperability of SSI systems. 
 
 Example 1: using `service` and `relativeRef`
 
@@ -337,6 +354,7 @@ This specification describes many important aspects:
 - interoperability: the resource is resolved in a standard way according to the ToIP specification following W3C specification for DID URL dereferencing
 - discoverability: the resource defined in DID URL is resolved and fetched dynamically
 - scalability: compared to W3C specification, the DID Document is not required to fetch the resource, so instead of 2-3 steps (calls), the resource resolution should be completed in a single step. The behavior must be described in the DID Method and implemented by the DID resolver.
+- trust: publishing the `checksum` of the resource inside of the DID Document allows other SSI system to check the resource validity. 
 
 #### Negative Consequences
 
@@ -346,7 +364,7 @@ This specification describes many important aspects:
 
 #### Out of the Scope
 
-- trust, longevity, and technology stack are not specified in this solution but must be guaranteed by the underlying DLT
+- longevity, and technology stack are not specified in this solution but must be guaranteed by the underlying DLT
 
 
 ### RootsID - Cardano AnonCreds (Implementation of ToIP at the Cardano stack)
@@ -465,7 +483,7 @@ Are similar to the Hyperledger AnonCreds solution
 The main benefit of the Trinsic approach to storing resources is a good abstraction layer, documentation, REST API and a variety of supported programming languages in SDKs for dealing with underlying resources.
 
 
-### Atala PRISM solution #1 (W3C with dynamic resoruce resolution)
+### Atala PRISM solution #1 (W3C with dynamic resource resolution)
 
 Atala PRISM solution for storing the resources linked to the DID depends on two decisions that are described in the Context and Problem Statement:
 
@@ -616,6 +634,10 @@ Storing resources larger than 64KB is out of the scope of this ADR. These must b
 - longevity: for the resource that can not be stored on-chain because of the large size longevity is guaranteed by the cloud recovery procedures and data backup. As an option for mitigating this problem, the resource can be stored in IPFS (additional ADR is required for this)
 - vendor lock: the solution is coupled to the Cardano blockchain 
 
+**NOTE:** one of the main concerns of this ADR is storing the resources on-chain because of size limitation, throughput, latency and cost. This option allows to postpone this decision and implement the DID-linked resources without the need of storing resources on-chain.
+
+---
+
 ### Atala PRISM solution #2 (ToIP specification implementation)
 
 ToIP specification can be used to implement the resource resolution.
@@ -625,6 +647,13 @@ To implement it the following things are required:
 - specify the service mapping in the DID method and implement the resource resolution logic in the DID resolver
 - add `didDocumentMetadata.linkedResourceMetadata` field to the DID method and implement the logic in the VDR layer
 - implement the service layer according to the ToIP specification
+
+ToIP solution specifies the requirements to the VDR (blockchain) that is not easy to achieve with the current implementation of the Atala PRISM platform. 
+According to this specification, the Universal Resolver must have the direct access to the blockchain or use a centralized layer for fetching the resources over REST API.
+Before implementing this specification is the Atala PRISM platform we need to answer the following questions:
+
+- who is hosting the `prism-node` infrastructure for the Universal Resolver and how it's managed?
+- should we make the PRISM DID Method responsible for resource resolution logic?
 
 #### Positive Consequences
 
@@ -671,7 +700,7 @@ Each option reviewed in this ADR is a composition of the following architectural
 
 - the resource is stored on-chain or off-chain
 - the VDR layer is managed or unmanaged (for instance, leveraging the Blockfrost REST API can simplify the solution, but might be expensive at scale)
-- domestic or official (W3C/ToIP) specification implementation
+- domestic or official (W3C/ToIP specification implementation
 - static/dynamic resource discoverability (is resource metadata stored in the DID Document or not)
 - DID URL dereferencing algorithm and naming convention
 - level of trust: Tx signature, resource hash, resource signature
@@ -684,7 +713,6 @@ The main benefits of option #1 for the Atala PRISM platform are the following:
 - the resource is published and indexed by the managed VDR layer (prism-node)
 - the resource is available via REST API & SDK for the product-level applications
 - the resource is dereferenced via the DID URL in the DID resolver
-- the changes to the PRISM DID method are minimal or even not required
 - the resource is linked to the DID dynamically (using DID URL + dereferencing algorithm)
 - this solution is scalable and decentralized (anyone can deploy the PRISM stack)
 - level of trust can be guaranteed by the underlying VDR and enforced by hashes or signatures of the resource
