@@ -1,5 +1,7 @@
 package io.iohk.atala.castor.core.model.did.w3c
 
+import java.time.Instant
+
 // errors are based on https://www.w3.org/TR/did-spec-registries/#error
 enum DIDResolutionErrorRepr(val value: String, val errorMessage: Option[String]) {
   case InvalidDID(msg: String) extends DIDResolutionErrorRepr("invalidDid", Some(msg))
