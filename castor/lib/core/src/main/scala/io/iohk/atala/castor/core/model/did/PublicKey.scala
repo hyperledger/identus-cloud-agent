@@ -1,6 +1,6 @@
 package io.iohk.atala.castor.core.model.did
 
-import io.iohk.atala.shared.models.Base64UrlStrings.Base64UrlString
+import io.iohk.atala.shared.models.Base64UrlString
 import io.iohk.atala.prism.crypto.EC
 
 final case class PublicKey(
