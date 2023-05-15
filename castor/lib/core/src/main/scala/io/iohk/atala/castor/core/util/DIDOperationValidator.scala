@@ -11,7 +11,6 @@ import io.iohk.atala.castor.core.model.did.PublicKey
 import io.iohk.atala.castor.core.model.did.ServiceEndpoint
 import io.iohk.atala.castor.core.model.did.ServiceEndpoint.Single
 import io.iohk.atala.castor.core.model.did.ServiceEndpoint.UriOrJsonEndpoint
-import io.circe.JsonObject
 
 object DIDOperationValidator {
   final case class Config(publicKeyLimit: Int, serviceLimit: Int)

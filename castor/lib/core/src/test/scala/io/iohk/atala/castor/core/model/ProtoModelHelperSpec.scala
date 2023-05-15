@@ -12,13 +12,19 @@ import io.iohk.atala.prism.protos.node_models
 import java.time.Instant
 import io.iohk.atala.castor.core.model.did.ServiceEndpoint
 import io.circe.Json
+import io.iohk.atala.castor.core.model.did.ServiceEndpoint.UriValue
+import io.iohk.atala.castor.core.model.did.ServiceEndpoint.UriOrJsonEndpoint
+import io.circe.JsonObject
 
 object ProtoModelHelperSpec extends ZIOSpecDefault {
 
   import ProtoModelHelper.*
 
   given Conversion[String, ServiceType.Name] = ServiceType.Name.fromStringUnsafe
-  given Conversion[String, ServiceEndpoint.URI] = s => ServiceEndpoint.URI.fromString(s).toOption.get
+  given Conversion[String, UriOrJsonEndpoint] = s => UriOrJsonEndpoint.Uri(UriValue.fromString(s).toOption.get)
+  given Conversion[JsonObject, UriOrJsonEndpoint] = UriOrJsonEndpoint.Json(_)
+  given Conversion[String, ServiceEndpoint] = s => ServiceEndpoint.Single(s)
+  given Conversion[JsonObject, ServiceEndpoint] = json => ServiceEndpoint.Single(UriOrJsonEndpoint.Json(json))
 
   private def makePublicKey(id: String, revokedOn: Option[node_models.LedgerData] = None): node_models.PublicKey =
     node_models.PublicKey(
@@ -289,7 +295,7 @@ object ProtoModelHelperSpec extends ZIOSpecDefault {
     test("parse valid uri string") {
       val serviceEndpoint = "https://example.com"
       val result = ProtoModelHelper.parseServiceEndpoint(serviceEndpoint)
-      val expected: ServiceEndpoint.URI = "https://example.com"
+      val expected: ServiceEndpoint = "https://example.com"
       assert(result)(isRight(equalTo(expected)))
     },
     test("parse invalid uri string") {
@@ -305,7 +311,7 @@ object ProtoModelHelperSpec extends ZIOSpecDefault {
     test("parse valid json object") {
       val serviceEndpoint = """{"uri": "https://example.com"}"""
       val result = ProtoModelHelper.parseServiceEndpoint(serviceEndpoint)
-      val expected = ServiceEndpoint.Json(Json.obj("uri" -> Json.fromString("https://example.com")).asObject.get)
+      val expected: ServiceEndpoint = Json.obj("uri" -> Json.fromString("https://example.com")).asObject.get
       assert(result)(isRight(equalTo(expected)))
     },
     test("parse invalid endpoint that is not a string or object") {
@@ -316,7 +322,7 @@ object ProtoModelHelperSpec extends ZIOSpecDefault {
     test("parse empty json object") {
       val serviceEndpoint = "{}"
       val result = ProtoModelHelper.parseServiceEndpoint(serviceEndpoint)
-      val expected = ServiceEndpoint.Json(Json.obj().asObject.get)
+      val expected: ServiceEndpoint = Json.obj().asObject.get
       assert(result)(isRight(equalTo(expected)))
     },
     test("parse empty json array") {
@@ -333,7 +339,7 @@ object ProtoModelHelperSpec extends ZIOSpecDefault {
       val serviceEndpoint = """["https://example.com", "https://example2.com"]"""
       val result = ProtoModelHelper.parseServiceEndpoint(serviceEndpoint)
       val expected =
-        ServiceEndpoint.EndpointList(
+        ServiceEndpoint.Multiple(
           "https://example.com",
           Seq("https://example2.com")
         )
@@ -342,10 +348,10 @@ object ProtoModelHelperSpec extends ZIOSpecDefault {
     test("parse json array of objects") {
       val serviceEndpoint = """[{"uri": "https://example.com"}, {"uri": "https://example2.com"}]"""
       val result = ProtoModelHelper.parseServiceEndpoint(serviceEndpoint)
-      val expected = ServiceEndpoint.EndpointList(
-        ServiceEndpoint.Json(Json.obj("uri" -> Json.fromString("https://example.com")).asObject.get),
+      val expected = ServiceEndpoint.Multiple(
+        Json.obj("uri" -> Json.fromString("https://example.com")).asObject.get,
         Seq(
-          ServiceEndpoint.Json(Json.obj("uri" -> Json.fromString("https://example2.com")).asObject.get)
+          Json.obj("uri" -> Json.fromString("https://example2.com")).asObject.get
         )
       )
       assert(result)(isRight(equalTo(expected)))
@@ -353,8 +359,8 @@ object ProtoModelHelperSpec extends ZIOSpecDefault {
     test("parse json array of mixed types") {
       val serviceEndpoint = """[{"uri": "https://example.com"}, "https://example2.com"]"""
       val result = ProtoModelHelper.parseServiceEndpoint(serviceEndpoint)
-      val expected = ServiceEndpoint.EndpointList(
-        ServiceEndpoint.Json(Json.obj("uri" -> Json.fromString("https://example.com")).asObject.get),
+      val expected = ServiceEndpoint.Multiple(
+        Json.obj("uri" -> Json.fromString("https://example.com")).asObject.get,
         Seq("https://example2.com")
       )
       assert(result)(isRight(equalTo(expected)))
