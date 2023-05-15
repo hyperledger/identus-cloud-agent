@@ -3,6 +3,7 @@ import org.scoverage.coveralls.Imports.CoverallsKeys._
 
 inThisBuild(
   Seq(
+    maxErrors := 5, // TODO: remove this
     organization := "io.iohk.atala",
     scalaVersion := "3.2.2",
     fork := true,
@@ -19,7 +20,6 @@ coberturaFile := target.value / "coverage" / "coverage-report" / "cobertura.xml"
 
 inThisBuild(
   Seq(
-    maxErrors := 5, // TODO: remove this
     scalacOptions ++= Seq(
       "-encoding",
       "UTF-8",

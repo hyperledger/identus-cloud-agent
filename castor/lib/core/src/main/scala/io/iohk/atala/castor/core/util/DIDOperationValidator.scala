@@ -1,16 +1,8 @@
 package io.iohk.atala.castor.core.util
 
-import io.iohk.atala.shared.models.HexString
-import io.iohk.atala.castor.core.model.did.{
-  InternalKeyPurpose,
-  InternalPublicKey,
-  PrismDIDOperation,
-  SignedPrismDIDOperation,
-  UpdateDIDAction
-}
+import io.iohk.atala.castor.core.model.did.{InternalKeyPurpose, InternalPublicKey, PrismDIDOperation, UpdateDIDAction}
 import io.iohk.atala.castor.core.model.error.OperationValidationError
 import io.iohk.atala.castor.core.util.DIDOperationValidator.Config
-import io.iohk.atala.castor.core.util.UriUtils
 import io.iohk.atala.castor.core.util.Prelude.*
 import zio.*
 
