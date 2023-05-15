@@ -32,7 +32,7 @@ import zio.metrics.jvm.DefaultJvmMetrics
 
 import java.security.Security
 
-object AgentApp extends ZIOAppDefault {
+object MainApp extends ZIOAppDefault {
 
   Security.insertProviderAt(BouncyCastleProviderSingleton.getInstance(), 2)
 
@@ -140,7 +140,11 @@ object AgentApp extends ZIOAppDefault {
         DIDControllerImpl.layer,
         IssueControllerImpl.layer,
         DIDRegistrarControllerImpl.layer,
-        PresentProofControllerImpl.layer
+        PresentProofControllerImpl.layer,
+        prometheus.prometheusLayer,
+        prometheus.publisherLayer,
+        ZLayer.succeed(MetricsConfig(5.seconds)),
+        DefaultJvmMetrics.live.unit
       )
     } yield app
 
@@ -152,5 +156,3 @@ object AgentApp extends ZIOAppDefault {
   }
 
 }
-
-object MainApp extends ZIOApp.Proxy(DefaultJvmMetrics.app <> AgentApp)
