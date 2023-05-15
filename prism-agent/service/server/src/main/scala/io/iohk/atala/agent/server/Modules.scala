@@ -74,6 +74,7 @@ import io.iohk.atala.castor.controller.{
   DIDController,
   DIDRegistrarController
 }
+import io.iohk.atala.agent.walletapi.crypto.Apollo
 
 object Modules {
 
@@ -438,6 +439,8 @@ object SystemModule {
 }
 
 object AppModule {
+  val apolloLayer: ULayer[Apollo] = Apollo.prism14Layer
+
   val didOpValidatorLayer: ULayer[DIDOperationValidator] = DIDOperationValidator.layer()
 
   val didJwtResolverlayer: URLayer[DIDService, JwtDidResolver] =
@@ -447,9 +450,9 @@ object AppModule {
     (didOpValidatorLayer ++ GrpcModule.layers) >>> DIDServiceImpl.layer
 
   val manageDIDServiceLayer: TaskLayer[ManagedDIDService] = {
-    val secretStorageLayer = RepoModule.agentTransactorLayer >>> JdbcDIDSecretStorage.layer
+    val secretStorageLayer = (RepoModule.agentTransactorLayer ++ apolloLayer) >>> JdbcDIDSecretStorage.layer
     val nonSecretStorageLayer = RepoModule.agentTransactorLayer >>> JdbcDIDNonSecretStorage.layer
-    (didOpValidatorLayer ++ didServiceLayer ++ secretStorageLayer ++ nonSecretStorageLayer) >>> ManagedDIDService.layer
+    (didOpValidatorLayer ++ didServiceLayer ++ secretStorageLayer ++ nonSecretStorageLayer ++ apolloLayer) >>> ManagedDIDService.layer
   }
 
   val credentialServiceLayer: RLayer[DidOps & DidAgent & JwtDidResolver, CredentialService] =

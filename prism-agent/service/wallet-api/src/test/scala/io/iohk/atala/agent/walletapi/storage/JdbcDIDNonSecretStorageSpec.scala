@@ -9,11 +9,16 @@ import io.iohk.atala.castor.core.model.did.PrismDID
 import io.iohk.atala.agent.walletapi.model.ManagedDIDState
 import scala.collection.compat.immutable.ArraySeq
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
+import io.iohk.atala.agent.walletapi.crypto.ApolloSpecHelper
 import io.iohk.atala.castor.core.model.did.ScheduledDIDOperationStatus
 import io.iohk.atala.castor.core.model.did.PrismDIDOperation
 import org.postgresql.util.PSQLException
 
-object JdbcDIDNonSecretStorageSpec extends ZIOSpecDefault, StorageSpecHelper, PostgresTestContainerSupport {
+object JdbcDIDNonSecretStorageSpec
+    extends ZIOSpecDefault,
+      StorageSpecHelper,
+      PostgresTestContainerSupport,
+      ApolloSpecHelper {
 
   private def insertDIDStateWithDelay(operation: Seq[PrismDIDOperation.Create], delay: zio.Duration) =
     ZIO.foreach(operation) { op =>
@@ -35,7 +40,7 @@ object JdbcDIDNonSecretStorageSpec extends ZIOSpecDefault, StorageSpecHelper, Po
       ) @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
 
     testSuite.provideSomeLayer(
-      pgContainerLayer >+> transactorLayer >+> (JdbcDIDSecretStorage.layer ++ JdbcDIDNonSecretStorage.layer)
+      pgContainerLayer >+> (transactorLayer ++ apolloLayer) >+> (JdbcDIDSecretStorage.layer ++ JdbcDIDNonSecretStorage.layer)
     )
   }
 
