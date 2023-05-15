@@ -19,7 +19,6 @@ import io.iohk.atala.castor.core.model.did.{
   ServiceType,
   SignedPrismDIDOperation,
   UpdateDIDAction,
-  UriOrJsonEndpoint,
   VerificationRelationship
 }
 import io.iohk.atala.prism.protos.common_models.OperationStatus
@@ -29,6 +28,7 @@ import io.iohk.atala.shared.models.Base64UrlString
 import io.iohk.atala.shared.utils.Traverse.*
 import io.iohk.atala.prism.protos.{common_models, node_api, node_models}
 import zio.*
+import io.iohk.atala.castor.core.model.did.ServiceEndpoint.UriOrJsonEndpoint
 
 object ProtoModelHelper extends ProtoModelHelper
 
@@ -198,12 +198,15 @@ private[castor] trait ProtoModelHelper {
   extension (serviceEndpoint: ServiceEndpoint) {
     def toProto: String = {
       serviceEndpoint match {
-        case ServiceEndpoint.URI(uri)   => uri
-        case ServiceEndpoint.Json(json) => Json.fromJsonObject(json).noSpaces
-        case ep: ServiceEndpoint.EndpointList =>
-          val uris = ep.values.map {
-            case ServiceEndpoint.URI(uri)   => Json.fromString(uri)
-            case ServiceEndpoint.Json(json) => Json.fromJsonObject(json)
+        case ServiceEndpoint.Single(value) =>
+          value match {
+            case UriOrJsonEndpoint.Uri(uri)   => uri.value
+            case UriOrJsonEndpoint.Json(json) => Json.fromJsonObject(json).noSpaces
+          }
+        case endpoints: ServiceEndpoint.Multiple =>
+          val uris = endpoints.values.map {
+            case UriOrJsonEndpoint.Uri(uri)   => Json.fromString(uri.value)
+            case UriOrJsonEndpoint.Json(json) => Json.fromJsonObject(json)
           }
           Json.arr(uris: _*).noSpaces
       }
@@ -385,13 +388,13 @@ private[castor] trait ProtoModelHelper {
       .parse(s)
       .toOption // it's OK to let parsing fail (e.g. http://example.com without quote is not a JSON string)
       .flatMap { json =>
-        val parsedObject = json.asObject.map(obj => Right(ServiceEndpoint.Json(obj)))
+        val parsedObject = json.asObject.map(obj => Right(ServiceEndpoint.Single(obj)))
         val parsedArray = json.asArray.map(_.traverse[String, UriOrJsonEndpoint] { js =>
-          val obj = js.asObject.map(obj => Right(ServiceEndpoint.Json(obj)))
-          val str = js.asString.map(ServiceEndpoint.URI.fromString)
+          val obj = js.asObject.map(obj => Right(obj: UriOrJsonEndpoint))
+          val str = js.asString.map(str => ServiceEndpoint.UriValue.fromString(str).map[UriOrJsonEndpoint](i => i))
           obj.orElse(str).getOrElse(Left("the service endpoint is not a JSON array of URIs and/or JSON objects"))
         }.map(_.toList).flatMap {
-          case head :: tail => Right(ServiceEndpoint.EndpointList(head, tail))
+          case head :: tail => Right(ServiceEndpoint.Multiple(head, tail))
           case Nil          => Left("the service endpoint cannot be an empty JSON array")
         })
 
@@ -404,7 +407,7 @@ private[castor] trait ProtoModelHelper {
       // serviceEndpoint is a valid JSON but contains invalid values
       case Some(Left(error)) => Left(error)
       // serviceEndpoint is a string (raw string, not JSON quoted string)
-      case None => ServiceEndpoint.URI.fromString(s)
+      case None => ServiceEndpoint.UriValue.fromString(s).map(ServiceEndpoint.Single(_))
     }
   }
 

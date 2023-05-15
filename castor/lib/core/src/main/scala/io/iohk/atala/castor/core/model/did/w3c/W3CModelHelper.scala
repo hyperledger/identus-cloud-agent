@@ -13,6 +13,8 @@ import io.iohk.atala.shared.models.HexString
 import io.iohk.atala.castor.core.model.did.ServiceType
 import io.circe.Json
 import io.iohk.atala.castor.core.model.did.ServiceEndpoint
+import io.circe.JsonObject
+import io.iohk.atala.castor.core.model.did.ServiceEndpoint.UriOrJsonEndpoint
 
 object W3CModelHelper extends W3CModelHelper
 
@@ -89,12 +91,15 @@ private[castor] trait W3CModelHelper {
 
     private def serviceEndpointToW3C(serviceEndpoint: ServiceEndpoint): Json = {
       serviceEndpoint match {
-        case ServiceEndpoint.URI(uri)   => Json.fromString(uri)
-        case ServiceEndpoint.Json(json) => Json.fromJsonObject(json)
-        case ep: ServiceEndpoint.EndpointList =>
+        case ServiceEndpoint.Single(uri) =>
+          uri match {
+            case UriOrJsonEndpoint.Uri(uri)   => Json.fromString(uri.value)
+            case UriOrJsonEndpoint.Json(json) => Json.fromJsonObject(json)
+          }
+        case ep: ServiceEndpoint.Multiple =>
           val uris = ep.values.map {
-            case ServiceEndpoint.URI(uri)   => Json.fromString(uri)
-            case ServiceEndpoint.Json(json) => Json.fromJsonObject(json)
+            case UriOrJsonEndpoint.Uri(uri)   => Json.fromString(uri.value)
+            case UriOrJsonEndpoint.Json(json) => Json.fromJsonObject(json)
           }
           Json.arr(uris: _*)
       }
