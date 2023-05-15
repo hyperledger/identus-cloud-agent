@@ -1,7 +1,7 @@
 package io.iohk.atala.castor.core.util
 
-import io.iohk.atala.shared.models.HexStrings.*
-import io.iohk.atala.shared.models.Base64UrlStrings.*
+import io.iohk.atala.shared.models.HexString
+import io.iohk.atala.shared.models.Base64UrlString
 import io.iohk.atala.castor.core.model.did.{
   EllipticCurve,
   InternalKeyPurpose,

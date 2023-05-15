@@ -27,8 +27,8 @@ import io.iohk.atala.prism.crypto.EC
 import io.iohk.atala.prism.protos.common_models.OperationStatus
 import io.iohk.atala.prism.protos.node_models.KeyUsage
 import io.iohk.atala.prism.protos.node_models.PublicKey.KeyData
-import io.iohk.atala.shared.models.HexStrings.*
-import io.iohk.atala.shared.models.Base64UrlStrings.*
+import io.iohk.atala.shared.models.HexString
+import io.iohk.atala.shared.models.Base64UrlString
 import io.iohk.atala.shared.utils.Traverse.*
 import io.iohk.atala.prism.protos.{common_models, node_api, node_models}
 import io.lemonlabs.uri.Uri

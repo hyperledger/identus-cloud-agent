@@ -5,7 +5,7 @@ import io.iohk.atala.prism.crypto.Sha256
 
 import scala.collection.compat.immutable.ArraySeq
 import io.iohk.atala.prism.protos.node_models
-import io.iohk.atala.shared.models.HexStrings.HexString
+import io.iohk.atala.shared.models.HexString
 
 import io.lemonlabs.uri.Uri
 

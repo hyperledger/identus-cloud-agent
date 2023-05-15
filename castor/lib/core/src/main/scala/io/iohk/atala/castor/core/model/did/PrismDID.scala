@@ -6,6 +6,10 @@ import io.iohk.atala.prism.protos.node_models
 import io.iohk.atala.prism.protos.node_models.AtalaOperation.Operation
 import io.iohk.atala.shared.models.Base64UrlString
 import io.iohk.atala.shared.models.HexString
+<<<<<<< HEAD
+=======
+
+>>>>>>> 142c7c5b (make castor compile [skip ci])
 import scala.util.Try
 import scala.util.matching.Regex
 
