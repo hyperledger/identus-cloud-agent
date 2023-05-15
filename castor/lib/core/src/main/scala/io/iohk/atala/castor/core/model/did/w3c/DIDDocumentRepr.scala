@@ -1,6 +1,5 @@
 package io.iohk.atala.castor.core.model.did.w3c
 
-import io.iohk.atala.castor.core.model.did.{DID, DIDUrl}
 import io.circe.Json
 
 /** A projection of DIDDocument data model to W3C compliant DID representation */
