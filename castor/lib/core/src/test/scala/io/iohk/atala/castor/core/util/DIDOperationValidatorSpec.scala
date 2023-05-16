@@ -133,11 +133,11 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         )
         for {
           result <- ZIO.serviceWith[DIDOperationValidator](validator => validator.validate(operation))
-        } yield assert(result)(equalTo(DIDOperationValidator(Config(50, 50)).validate(operation)))
+        } yield assert(result)(equalTo(DIDOperationValidator(Config.default).validate(operation)))
       },
       test("accept valid CreateOperation") {
         val op = createPrismDIDOperation()
-        assert(DIDOperationValidator(Config(50, 50)).validate(op))(isRight)
+        assert(DIDOperationValidator(Config.default).validate(op))(isRight)
       },
       test("reject CreateOperation on too many DID publicKey access") {
         val publicKeys = (1 to 10).map(i =>
@@ -155,7 +155,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
           )
         )
         val op = createPrismDIDOperation(publicKeys = publicKeys, internalKeys = internalKeys)
-        assert(DIDOperationValidator(Config(15, 15)).validate(op))(
+        assert(DIDOperationValidator(Config.default.copy(publicKeyLimit = 15)).validate(op))(
           isLeft(isSubtype[OperationValidationError.TooManyDidPublicKeyAccess](anything))
         )
       },
@@ -175,7 +175,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
           )
         )
         val op = createPrismDIDOperation(publicKeys = publicKeys, internalKeys = internalKeys)
-        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
+        assert(DIDOperationValidator(Config.default).validate(op))(
           invalidArgumentContainsString("id for public-keys is not unique")
         )
       },
@@ -188,7 +188,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
           )
         )
         val op = createPrismDIDOperation(services = services)
-        assert(DIDOperationValidator(Config(15, 15)).validate(op))(
+        assert(DIDOperationValidator(Config.default.copy(serviceLimit = 15)).validate(op))(
           isLeft(isSubtype[OperationValidationError.TooManyDidServiceAccess](anything))
         )
       },
@@ -201,7 +201,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
           )
         )
         val op = createPrismDIDOperation(services = services)
-        assert(DIDOperationValidator(Config(15, 15)).validate(op))(
+        assert(DIDOperationValidator(Config.default).validate(op))(
           invalidArgumentContainsString("id for services is not unique")
         )
       },
@@ -214,7 +214,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
           )
         )
         val op = createPrismDIDOperation(publicKeys = publicKeys)
-        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
+        assert(DIDOperationValidator(Config.default).validate(op))(
           invalidArgumentContainsString("public key id is invalid: [key 1, key 2]")
         )
       },
@@ -227,13 +227,13 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
           )
         )
         val op = createPrismDIDOperation(services = services)
-        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
+        assert(DIDOperationValidator(Config.default).validate(op))(
           invalidArgumentContainsString("service id is invalid: [service 1, service 2]")
         )
       },
       test("reject CreateOperation when master key does not exist") {
         val op = createPrismDIDOperation(internalKeys = Nil)
-        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
+        assert(DIDOperationValidator(Config.default).validate(op))(
           invalidArgumentContainsString("operation must contain at least 1 master key")
         )
       },
@@ -247,18 +247,18 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
             )
           )
         )
-        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
+        assert(DIDOperationValidator(Config.default).validate(op))(
           invalidArgumentContainsString("serviceEndpoint URIs must be normalized")
         )
       },
       test("accept CreateOperation when publicKeys is empty because master key always exist") {
         val op = createPrismDIDOperation(publicKeys = Nil)
-        assert(DIDOperationValidator(Config(50, 50)).validate(op))(isRight)
+        assert(DIDOperationValidator(Config.default).validate(op))(isRight)
       },
       // Test that the validator accepts a CreateOperation when the services list is not present
       test("accept CreateOperation when services is None") {
         val op = createPrismDIDOperation(services = Nil)
-        assert(DIDOperationValidator(Config(50, 50)).validate(op))(isRight)
+        assert(DIDOperationValidator(Config.default).validate(op))(isRight)
       },
       // Test that the validator rejects a CreateOperation when a service has an empty id string.
       test("reject CreateOperation when service id is empty") {
@@ -271,7 +271,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
             )
           )
         )
-        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
+        assert(DIDOperationValidator(Config.default).validate(op))(
           invalidArgumentContainsString("service id is invalid: []")
         )
       },
@@ -302,7 +302,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
             )
           )
         )
-        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
+        assert(DIDOperationValidator(Config.default).validate(op))(
           invalidArgumentContainsString("service id is invalid: [Wrong service]")
         )
       }
@@ -319,7 +319,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
     suite("DeactivateOperation validation")(
       test("accept valid DeactivateOperation") {
         val op = deactivatePrismDIDOperation()
-        assert(DIDOperationValidator(Config(50, 50)).validate(op))(isRight)
+        assert(DIDOperationValidator(Config.default).validate(op))(isRight)
       }
     )
   }
@@ -355,7 +355,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
             )
           )
         )
-        assert(DIDOperationValidator(Config(50, 50)).validate(op))(isRight)
+        assert(DIDOperationValidator(Config.default).validate(op))(isRight)
       },
       test("reject UpdateOperation on too many DID publicKey access") {
         val addKeyActions = (1 to 10).map(i =>
@@ -378,7 +378,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         )
         val removeKeyActions = (1 to 10).map(i => UpdateDIDAction.RemoveKey(s"remove$i"))
         val op = updatePrismDIDOperation(addKeyActions ++ addInternalKeyActions ++ removeKeyActions)
-        assert(DIDOperationValidator(Config(25, 25)).validate(op))(
+        assert(DIDOperationValidator(Config.default.copy(publicKeyLimit = 25)).validate(op))(
           isLeft(isSubtype[OperationValidationError.TooManyDidPublicKeyAccess](anything))
         )
       },
@@ -401,7 +401,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
           )
         )
         val op = updatePrismDIDOperation(addServiceActions ++ removeServiceActions ++ updateServiceActions)
-        assert(DIDOperationValidator(Config(25, 25)).validate(op))(
+        assert(DIDOperationValidator(Config.default.copy(serviceLimit = 25)).validate(op))(
           isLeft(isSubtype[OperationValidationError.TooManyDidServiceAccess](anything))
         )
       },
@@ -415,7 +415,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         )
         val action2 = UpdateDIDAction.RemoveKey(id = "key 2")
         val op = updatePrismDIDOperation(Seq(action1, action2))
-        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
+        assert(DIDOperationValidator(Config.default).validate(op))(
           invalidArgumentContainsString("public key id is invalid: [key 1, key 2]")
         )
       },
@@ -429,19 +429,19 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         )
         val action2 = UpdateDIDAction.RemoveService(id = "service 2")
         val op = updatePrismDIDOperation(Seq(action1, action2))
-        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
+        assert(DIDOperationValidator(Config.default).validate(op))(
           invalidArgumentContainsString("service id is invalid: [service 1, service 2]")
         )
       },
       test("reject UpdateOperation on invalid previousOperationHash") {
         val op = updatePrismDIDOperation(previousOperationHash = ArraySeq.empty)
-        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
+        assert(DIDOperationValidator(Config.default).validate(op))(
           invalidArgumentContainsString("previousOperationHash must have a size of")
         )
       },
       test("reject UpdateOperation on empty update action") {
         val op = updatePrismDIDOperation(Nil)
-        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
+        assert(DIDOperationValidator(Config.default).validate(op))(
           invalidArgumentContainsString("operation must contain at least 1 update action")
         )
       },
@@ -457,7 +457,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
             )
           )
         )
-        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
+        assert(DIDOperationValidator(Config.default).validate(op))(
           invalidArgumentContainsString("serviceEndpoint URIs must be normalized")
         )
       },
@@ -465,13 +465,13 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         val op = updatePrismDIDOperation(
           Seq(UpdateDIDAction.UpdateService("service-1", None, Some("http://example.com/login/../login")))
         )
-        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
+        assert(DIDOperationValidator(Config.default).validate(op))(
           invalidArgumentContainsString("serviceEndpoint URIs must be normalized")
         )
       },
       test("reject UpdateOperation when action UpdateService have both type and serviceEndpoint empty") {
         val op = updatePrismDIDOperation(Seq(UpdateDIDAction.UpdateService("service-1", None, None)))
-        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
+        assert(DIDOperationValidator(Config.default).validate(op))(
           invalidArgumentContainsString("must not have both 'type' and 'serviceEndpoints' empty")
         )
       }
