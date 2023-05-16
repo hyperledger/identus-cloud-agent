@@ -231,6 +231,28 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
           invalidArgumentContainsString("service id is invalid: [service 1, service 2]")
         )
       },
+      test("reject CreateOperation on too long key-id") {
+        val publicKey = PublicKey(
+          id = s"key-${"0" * 100}",
+          purpose = VerificationRelationship.Authentication,
+          publicKeyData = publicKeyData
+        )
+        val op = createPrismDIDOperation(publicKeys = Seq(publicKey))
+        assert(DIDOperationValidator(Config.default).validate(op))(
+          invalidArgumentContainsString(s"public key id is too long: [${publicKey.id}]")
+        )
+      },
+      test("reject CreateOperation on too long service-id") {
+        val service = Service(
+          id = s"service-${"0" * 100}",
+          `type` = ServiceType.Single("LinkedDomains"),
+          serviceEndpoint = "http://example.com/"
+        )
+        val op = createPrismDIDOperation(services = Seq(service))
+        assert(DIDOperationValidator(Config.default).validate(op))(
+          invalidArgumentContainsString(s"service id is too long: [${service.id}]")
+        )
+      },
       test("reject CreateOperation when master key does not exist") {
         val op = createPrismDIDOperation(internalKeys = Nil)
         assert(DIDOperationValidator(Config.default).validate(op))(
@@ -431,6 +453,34 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         val op = updatePrismDIDOperation(Seq(action1, action2))
         assert(DIDOperationValidator(Config.default).validate(op))(
           invalidArgumentContainsString("service id is invalid: [service 1, service 2]")
+        )
+      },
+      test("reject UpdateOperation on too long key-id") {
+        val action1 = UpdateDIDAction.AddKey(
+          PublicKey(
+            id = s"key-${"0" * 100}",
+            purpose = VerificationRelationship.Authentication,
+            publicKeyData = publicKeyData
+          )
+        )
+        val action2 = UpdateDIDAction.RemoveKey(id = s"key-${"1" * 100}")
+        val op = updatePrismDIDOperation(Seq(action1, action2))
+        assert(DIDOperationValidator(Config.default).validate(op))(
+          invalidArgumentContainsString(s"public key id is too long: [${action1.publicKey.id}, ${action2.id}]")
+        )
+      },
+      test("reject UpdateOperation on too long service-id") {
+        val action1 = UpdateDIDAction.AddService(
+          Service(
+            id = s"service-${"0" * 100}",
+            `type` = ServiceType.Single("LinkedDomains"),
+            serviceEndpoint = "http://example.com/"
+          )
+        )
+        val action2 = UpdateDIDAction.RemoveService(id = s"service-${"1" * 100}")
+        val op = updatePrismDIDOperation(Seq(action1, action2))
+        assert(DIDOperationValidator(Config.default).validate(op))(
+          invalidArgumentContainsString(s"service id is too long: [${action1.service.id}, ${action2.id}]")
         )
       },
       test("reject UpdateOperation on invalid previousOperationHash") {
