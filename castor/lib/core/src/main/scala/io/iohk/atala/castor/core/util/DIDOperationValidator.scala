@@ -11,6 +11,7 @@ import io.iohk.atala.castor.core.model.did.PublicKey
 import io.iohk.atala.castor.core.model.did.ServiceEndpoint
 import io.iohk.atala.castor.core.model.did.ServiceEndpoint.Single
 import io.iohk.atala.castor.core.model.did.ServiceEndpoint.UriOrJsonEndpoint
+import io.iohk.atala.castor.core.model.did.ServiceType
 
 object DIDOperationValidator {
   final case class Config(
@@ -53,10 +54,12 @@ private object CreateOperationValidator extends BaseOperationValidator {
       _ <- validateUniquePublicKeyId(operation, extractKeyIds)
       _ <- validateUniqueServiceId(operation, extractServiceIds)
       _ <- validateKeyIdIsUriFragment(operation, extractKeyIds)
-      _ <- validateKeyIdNotExceedLimit(config)(operation, extractKeyIds)
+      _ <- validateKeyIdLength(config)(operation, extractKeyIds)
       _ <- validateServiceIdIsUriFragment(operation, extractServiceIds)
-      _ <- validateServiceIdNotExceedLimit(config)(operation, extractServiceIds)
+      _ <- validateServiceIdLength(config)(operation, extractServiceIds)
       _ <- validateServiceEndpointNormalized(operation, extractServiceEndpoint)
+      _ <- validateServiceEndpointLength(config)(operation, extractServiceEndpoint)
+      _ <- validateServiceTypeLength(config)(operation, extractServiceType)
       _ <- validateUniqueContext(operation, _.context :: Nil)
       _ <- validateMasterKeyExists(operation)
     } yield ()
@@ -81,6 +84,10 @@ private object CreateOperationValidator extends BaseOperationValidator {
     operation.services.map { s => (s.id, s.serviceEndpoint) }
   }
 
+  private def extractServiceType(operation: PrismDIDOperation.Create): Seq[(String, ServiceType)] = {
+    operation.services.map { s => (s.id, s.`type`) }
+  }
+
 }
 
 private object UpdateOperationValidator extends BaseOperationValidator {
@@ -89,10 +96,12 @@ private object UpdateOperationValidator extends BaseOperationValidator {
       _ <- validateMaxPublicKeysAccess(config)(operation, extractKeyIds)
       _ <- validateMaxServiceAccess(config)(operation, extractServiceIds)
       _ <- validateKeyIdIsUriFragment(operation, extractKeyIds)
-      _ <- validateKeyIdNotExceedLimit(config)(operation, extractKeyIds)
+      _ <- validateKeyIdLength(config)(operation, extractKeyIds)
       _ <- validateServiceIdIsUriFragment(operation, extractServiceIds)
-      _ <- validateServiceIdNotExceedLimit(config)(operation, extractServiceIds)
+      _ <- validateServiceIdLength(config)(operation, extractServiceIds)
       _ <- validateServiceEndpointNormalized(operation, extractServiceEndpoint)
+      _ <- validateServiceEndpointLength(config)(operation, extractServiceEndpoint)
+      _ <- validateServiceTypeLength(config)(operation, extractServiceType)
       _ <- validateUniqueContext(operation, extractContexts)
       _ <- validatePreviousOperationHash(operation, _.previousOperationHash)
       _ <- validateNonEmptyUpdateAction(operation)
@@ -150,6 +159,12 @@ private object UpdateOperationValidator extends BaseOperationValidator {
       case UpdateDIDAction.UpdateService(id, _, Some(endpoint)) => id -> endpoint
     }
 
+  private def extractServiceType(operatio: PrismDIDOperation.Update): Seq[(String, ServiceType)] =
+    operatio.actions.collect {
+      case UpdateDIDAction.AddService(service)                     => service.id -> service.`type`
+      case UpdateDIDAction.UpdateService(id, Some(serviceType), _) => id -> serviceType
+    }
+
   private def extractContexts(operation: PrismDIDOperation.Update): Seq[Seq[String]] = {
     operation.actions.flatMap {
       case UpdateDIDAction.PatchContext(context) => Some(context)
@@ -167,6 +182,7 @@ private trait BaseOperationValidator {
 
   type KeyIdExtractor[T] = T => Seq[String]
   type ServiceIdExtractor[T] = T => Seq[String]
+  type ServiceTypeExtractor[T] = T => Seq[(String, ServiceType)]
   type ServiceEndpointExtractor[T] = T => Seq[(String, ServiceEndpoint)]
   type ContextExtractor[T] = T => Seq[Seq[String]]
 
@@ -238,7 +254,7 @@ private trait BaseOperationValidator {
       Left(OperationValidationError.InvalidArgument(s"service id is invalid: ${invalidIds.mkString("[", ", ", "]")}"))
   }
 
-  protected def validateKeyIdNotExceedLimit[T <: PrismDIDOperation](
+  protected def validateKeyIdLength[T <: PrismDIDOperation](
       config: Config
   )(operation: T, keyIdExtractor: KeyIdExtractor[T]): Either[OperationValidationError, Unit] = {
     val ids = keyIdExtractor(operation)
@@ -252,7 +268,7 @@ private trait BaseOperationValidator {
       )
   }
 
-  protected def validateServiceIdNotExceedLimit[T <: PrismDIDOperation](
+  protected def validateServiceIdLength[T <: PrismDIDOperation](
       config: Config
   )(operation: T, serviceIdExtractor: ServiceIdExtractor[T]): Either[OperationValidationError, Unit] = {
     val ids = serviceIdExtractor(operation)
@@ -287,6 +303,36 @@ private trait BaseOperationValidator {
       Left(
         OperationValidationError.InvalidArgument(
           s"serviceEndpoint URIs must be normalized: ${nonNormalizedUris.mkString("[", ", ", "]")}"
+        )
+      )
+  }
+
+  protected def validateServiceTypeLength[T <: PrismDIDOperation](
+      config: Config
+  )(operation: T, serviceTypeExtractor: ServiceTypeExtractor[T]): Either[OperationValidationError, Unit] = {
+    import io.iohk.atala.castor.core.model.ProtoModelHelper.*
+    val serviceTypes = serviceTypeExtractor(operation)
+    val invalidServiceTypes = serviceTypes.filter(_._2.toProto.length > config.maxServiceTypeSize)
+    if (invalidServiceTypes.isEmpty) Right(())
+    else
+      Left(
+        OperationValidationError.InvalidArgument(
+          s"service type is too long: ${invalidServiceTypes.map(_._1).mkString("[", ", ", "]")}"
+        )
+      )
+  }
+
+  protected def validateServiceEndpointLength[T <: PrismDIDOperation](
+      config: Config
+  )(operation: T, serviceEndpointExtractor: ServiceEndpointExtractor[T]): Either[OperationValidationError, Unit] = {
+    import io.iohk.atala.castor.core.model.ProtoModelHelper.*
+    val serviceEndpoints = serviceEndpointExtractor(operation)
+    val invalidServiceEndpoints = serviceEndpoints.filter(_._2.toProto.length > config.maxServiceEndpointSize)
+    if (invalidServiceEndpoints.isEmpty) Right(())
+    else
+      Left(
+        OperationValidationError.InvalidArgument(
+          s"service endpoint is too long: ${invalidServiceEndpoints.map(_._1).mkString("[", ", ", "]")}"
         )
       )
   }
