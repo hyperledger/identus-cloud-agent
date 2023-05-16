@@ -72,6 +72,6 @@ trait CredentialRepository[F[_]] {
   def updateAfterFail(
       recordId: DidCommID,
       failReason: Option[String]
-  ): Task[Int]
+  ): F[Int]
 
 }

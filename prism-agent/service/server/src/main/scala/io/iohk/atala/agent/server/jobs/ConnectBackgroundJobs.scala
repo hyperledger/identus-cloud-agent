@@ -54,6 +54,7 @@ object ConnectBackgroundJobs {
             Some(request),
             _,
             metaRetries,
+            _,
             _
           ) if metaRetries > 0 =>
         val aux = for {
@@ -82,6 +83,7 @@ object ConnectBackgroundJobs {
             _,
             Some(response),
             metaRetries,
+            _,
             _
           ) if metaRetries > 0 =>
         val aux = for {

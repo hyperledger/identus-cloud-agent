@@ -39,6 +39,7 @@ private class ConnectionServiceImpl(
           connectionRequest = None,
           connectionResponse = None,
           metaRetries = maxRetries,
+          metaNextRetry = Some(Instant.now()),
           metaLastFailure = None,
         )
       )
@@ -106,6 +107,7 @@ private class ConnectionServiceImpl(
           connectionRequest = None,
           connectionResponse = None,
           metaRetries = maxRetries,
+          metaNextRetry = Some(Instant.now()),
           metaLastFailure = None,
         )
       )
