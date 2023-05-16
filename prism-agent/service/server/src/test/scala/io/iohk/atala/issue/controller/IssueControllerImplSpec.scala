@@ -34,7 +34,7 @@ object IssueControllerImplSpec extends ZIOSpecDefault with IssueControllerTestTo
     paths = "classpath:sql/pollux"
   )).provideSomeLayerShared(testEnvironmentLayer)
 
-  private val httpErrorResponses = suite("IssueControllerImp http failure cases") {
+  private val httpErrorResponses = suite("IssueControllerImp http failure cases")(
     test("provide incorrect subjectId to endpoint") {
       for {
         issueControllerService <- ZIO.service[IssueController]
@@ -60,6 +60,6 @@ object IssueControllerImplSpec extends ZIOSpecDefault with IssueControllerTestTo
         )
       } yield isItABadRequestStatusCode && theBodyWasParsedFromJsonAsABadRequest
     }
-  }
+  )
 
 }
