@@ -23,7 +23,16 @@ import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.error.PresentationError.*
 import io.iohk.atala.pollux.core.model.error.{CredentialServiceError, PresentationError}
 import io.iohk.atala.pollux.core.service.{CredentialService, PresentationService}
-import io.iohk.atala.pollux.vc.jwt.{CredentialVerification, ES256KSigner, JWT, JwtPresentation, W3CCredential, W3cCredentialPayload, DidResolver as JwtDidResolver, Issuer as JwtIssuer}
+import io.iohk.atala.pollux.vc.jwt.{
+  CredentialVerification,
+  ES256KSigner,
+  JWT,
+  JwtPresentation,
+  W3CCredential,
+  W3cCredentialPayload,
+  DidResolver as JwtDidResolver,
+  Issuer as JwtIssuer
+}
 import io.iohk.atala.resolvers.{DIDResolver, UniversalDidResolver}
 import org.bouncycastle.jce.ECNamedCurveTable
 import org.bouncycastle.jce.provider.BouncyCastleProvider
@@ -343,11 +352,11 @@ object BackgroundJobs {
     } yield ()
 
     aux
-      .tapError(ex =>
+      .tapError(e =>
         for {
           credentialService <- ZIO.service[CredentialService]
           _ <- credentialService
-            .reportProcessingFailure(record.id, Some(ex.toString))
+            .reportProcessingFailure(record.id, Some(e.toString))
             .tapError(err =>
               ZIO.logErrorCause(
                 s"Issue Credential - failed to report processing failure: ${record.id}",
@@ -356,17 +365,10 @@ object BackgroundJobs {
             )
         } yield ()
       )
-      .catchAll {
-        case ex: MercuryException =>
-          ZIO.logErrorCause(s"DIDComm communication error processing record: ${record.id}", Cause.fail(ex))
-        case ex: CredentialServiceError =>
-          ZIO.logErrorCause(s"Credential service error processing record: ${record.id} ", Cause.fail(ex))
-        case ex: DIDSecretStorageError =>
-          ZIO.logErrorCause(s"DID secret storage error processing record: ${record.id} ", Cause.fail(ex))
-      }
-      .catchAllDefect { case throwable =>
-        ZIO.logErrorCause(s"Issue Credential protocol defect processing record: ${record.id}", Cause.fail(throwable))
-      }
+      .catchAll(e => ZIO.logErrorCause(s"Issue Credential - Error processing record: ${record.id} ", Cause.fail(e)))
+      .catchAllDefect(d =>
+        ZIO.logErrorCause(s"Issue Credential - Defect processing record: ${record.id}", Cause.fail(d))
+      )
 
   }
 
@@ -685,11 +687,11 @@ object BackgroundJobs {
     } yield ()
 
     aux
-      .tapError(ex =>
+      .tapError(e =>
         for {
           presentationService <- ZIO.service[PresentationService]
           _ <- presentationService
-            .reportProcessingFailure(record.id, Some(ex.toString))
+            .reportProcessingFailure(record.id, Some(e.toString))
             .tapError(err =>
               ZIO.logErrorCause(
                 s"Present Proof - failed to report processing failure: ${record.id}",
@@ -698,19 +700,8 @@ object BackgroundJobs {
             )
         } yield ()
       )
-      .catchAll {
-        case ex: MercuryException =>
-          ZIO.logErrorCause(s"DIDComm communication error processing record: ${record.id}", Cause.fail(ex))
-        case ex: CredentialServiceError =>
-          ZIO.logErrorCause(s"Credential service error processing record: ${record.id} ", Cause.fail(ex))
-        case ex: PresentationError =>
-          ZIO.logErrorCause(s"Presentation service error processing record: ${record.id} ", Cause.fail(ex))
-        case ex: DIDSecretStorageError =>
-          ZIO.logErrorCause(s"DID secret storage error processing record: ${record.id} ", Cause.fail(ex))
-      }
-      .catchAllDefect { case throwable =>
-        ZIO.logErrorCause(s"Proof Presentation protocol defect processing record: ${record.id}", Cause.fail(throwable))
-      }
+      .catchAll(e => ZIO.logErrorCause(s"Present Proof - Error processing record: ${record.id} ", Cause.fail(e)))
+      .catchAllDefect(d => ZIO.logErrorCause(s"Present Proof - Defect processing record: ${record.id}", Cause.fail(d)))
   }
 
   private[this] def buildDIDCommAgent(

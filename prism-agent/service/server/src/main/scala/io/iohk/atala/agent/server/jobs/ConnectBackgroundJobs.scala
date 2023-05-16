@@ -103,11 +103,11 @@ object ConnectBackgroundJobs {
     }
 
     exchange
-      .tapError(ex =>
+      .tapError(e =>
         for {
           connectService <- ZIO.service[ConnectionService]
           _ <- connectService
-            .reportProcessingFailure(record.id, Some(ex.toString))
+            .reportProcessingFailure(record.id, Some(e.toString))
             .tapError(err =>
               ZIO.logErrorCause(
                 s"Connect - failed to report processing failure: ${record.id}",
@@ -116,17 +116,8 @@ object ConnectBackgroundJobs {
             )
         } yield ()
       )
-      .catchAll {
-        case ex: MercuryException =>
-          ZIO.logErrorCause(s"DIDComm communication error processing record: ${record.id}", Cause.fail(ex))
-        case ex: ConnectionServiceError =>
-          ZIO.logErrorCause(s"Connection service error processing record: ${record.id} ", Cause.fail(ex))
-        case ex: DIDSecretStorageError =>
-          ZIO.logErrorCause(s"DID secret storage error processing record: ${record.id} ", Cause.fail(ex))
-      }
-      .catchAllDefect { case throwable =>
-        ZIO.logErrorCause(s"Connection protocol defect processing record: ${record.id}", Cause.fail(throwable))
-      }
+      .catchAll(e => ZIO.logErrorCause(s"Connect - Error processing record: ${record.id} ", Cause.fail(e)))
+      .catchAllDefect(d => ZIO.logErrorCause(s"Connect - Defect processing record: ${record.id}", Cause.fail(d)))
   }
 
   private[this] def buildDIDCommAgent(
