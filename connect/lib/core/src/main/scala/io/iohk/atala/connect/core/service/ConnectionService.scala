@@ -3,13 +3,12 @@ package io.iohk.atala.connect.core.service
 import io.iohk.atala.connect.core.model.ConnectionRecord
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError.RepositoryError
+import io.iohk.atala.mercury.model.DidId
+import io.iohk.atala.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
+import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
 import zio.*
 
 import java.util.UUID
-import io.iohk.atala.mercury.model.DidId
-import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
-import io.iohk.atala.mercury.protocol.connection.ConnectionRequest
-import io.iohk.atala.mercury.protocol.connection.ConnectionResponse
 
 trait ConnectionService {
 
@@ -46,6 +45,6 @@ trait ConnectionService {
 
   def deleteConnectionRecord(recordId: UUID): IO[ConnectionServiceError, Int]
 
-  def reportProcessingFailure(recordId: UUID, failReason: Option[String]): IO[RepositoryError, Int]
+  def reportProcessingFailure(recordId: UUID, failReason: Option[String]): IO[ConnectionServiceError, Unit]
 
 }

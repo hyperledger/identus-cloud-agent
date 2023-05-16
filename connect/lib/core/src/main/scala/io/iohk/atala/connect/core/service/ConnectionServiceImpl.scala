@@ -298,10 +298,14 @@ private class ConnectionServiceImpl(
     } yield record
   }
 
-  def reportProcessingFailure(recordId: UUID, failReason: Option[String]): IO[RepositoryError, Int] =
+  def reportProcessingFailure(recordId: UUID, failReason: Option[String]): IO[ConnectionServiceError, Unit] =
     connectionRepository
       .updateAfterFail(recordId, failReason)
       .mapError(RepositoryError.apply)
+      .flatMap {
+        case 1 => ZIO.unit
+        case n => ZIO.fail(UnexpectedError(s"Invalid number of records updated: $n"))
+      }
 
 }
 

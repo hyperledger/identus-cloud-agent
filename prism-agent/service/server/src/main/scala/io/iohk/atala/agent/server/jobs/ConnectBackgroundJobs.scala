@@ -1,24 +1,23 @@
 package io.iohk.atala.agent.server.jobs
 
-import zio._
-import io.iohk.atala.connect.core.service.ConnectionService
-import io.iohk.atala.connect.core.model.ConnectionRecord
-import io.iohk.atala.connect.core.model.ConnectionRecord._
-import io.iohk.atala.mercury._
-import io.iohk.atala.mercury.model._
-import io.iohk.atala.mercury.model.error._
-import io.iohk.atala.mercury.protocol.issuecredential._
-import io.iohk.atala.resolvers.DIDResolver
-import java.io.IOException
-import io.iohk.atala.connect.core.model.error.ConnectionServiceError
-import org.didcommx.didcomm.DIDComm
-import io.iohk.atala.mercury.PeerDID
 import com.nimbusds.jose.jwk.OctetKeyPair
-import io.iohk.atala.resolvers.UniversalDidResolver
-import io.iohk.atala.agent.walletapi.service.ManagedDIDService
+import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError
 import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError.KeyNotFoundError
-import io.iohk.atala.agent.server.config.AppConfig
+import io.iohk.atala.agent.walletapi.service.ManagedDIDService
+import io.iohk.atala.connect.core.model.ConnectionRecord
+import io.iohk.atala.connect.core.model.ConnectionRecord.*
+import io.iohk.atala.connect.core.model.error.ConnectionServiceError
+import io.iohk.atala.connect.core.service.ConnectionService
+import io.iohk.atala.mercury.*
+import io.iohk.atala.mercury.model.*
+import io.iohk.atala.mercury.model.error.*
+import io.iohk.atala.mercury.protocol.issuecredential.*
+import io.iohk.atala.resolvers.{DIDResolver, UniversalDidResolver}
+import org.didcommx.didcomm.DIDComm
+import zio.*
+
+import java.io.IOException
 
 object ConnectBackgroundJobs {
 
@@ -39,8 +38,8 @@ object ConnectBackgroundJobs {
   private[this] def performExchange(
       record: ConnectionRecord
   ): URIO[DidOps & DIDResolver & HttpClient & ConnectionService & ManagedDIDService, Unit] = {
-    import Role._
-    import ProtocolState._
+    import ProtocolState.*
+    import Role.*
     val exchange = record match {
       case ConnectionRecord(
             id,
@@ -86,7 +85,7 @@ object ConnectBackgroundJobs {
             _,
             _
           ) if metaRetries > 0 =>
-        val aux = for {
+        for {
           didCommAgent <- buildDIDCommAgent(response.from)
           resp <- MessagingService.send(response.makeMessage).provideSomeLayer(didCommAgent)
           connectionService <- ZIO.service[ConnectionService]
@@ -95,14 +94,6 @@ object ConnectBackgroundJobs {
             else ZIO.logWarning(s"DIDComm sending error: [${resp.status}] - ${resp.bodyAsString}")
           }
         } yield ()
-
-        aux.tapError(ex =>
-          for {
-            connectionService <- ZIO.service[ConnectionService]
-            _ <- connectionService
-              .reportProcessingFailure(id, None) // TODO ex get message
-          } yield ()
-        )
       case e
           if (e.protocolState == ConnectionRequestPending || e.protocolState == ConnectionResponsePending) && e.metaRetries == 0 =>
         ZIO.logWarning( // TODO use logDebug
@@ -112,6 +103,19 @@ object ConnectBackgroundJobs {
     }
 
     exchange
+      .tapError(ex =>
+        for {
+          connectService <- ZIO.service[ConnectionService]
+          _ <- connectService
+            .reportProcessingFailure(record.id, Some(ex.toString))
+            .tapError(err =>
+              ZIO.logErrorCause(
+                s"Present Proof - failed to report processing failure: ${record.id}",
+                Cause.fail(err)
+              )
+            )
+        } yield ()
+      )
       .catchAll {
         case ex: MercuryException =>
           ZIO.logErrorCause(s"DIDComm communication error processing record: ${record.id}", Cause.fail(ex))
