@@ -131,4 +131,6 @@ trait CredentialService {
 
   def markCredentialPublished(recordId: DidCommID): IO[CredentialServiceError, IssueCredentialRecord]
 
+  def reportProcessingFailure(recordId: DidCommID, failReason: Option[String]): IO[RepositoryError, Int]
+
 }

@@ -97,6 +97,6 @@ trait PresentationService {
 
   def markPresentationVerificationFailed(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]]
 
-  def markFailure(recordId: DidCommID, failReason: Option[String]): IO[RepositoryError, Unit]
+  def reportProcessingFailure(recordId: DidCommID, failReason: Option[String]): IO[RepositoryError, Int]
 
 }

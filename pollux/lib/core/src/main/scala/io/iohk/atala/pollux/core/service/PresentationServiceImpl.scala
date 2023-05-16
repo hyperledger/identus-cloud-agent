@@ -21,8 +21,8 @@ import io.iohk.atala.pollux.vc.jwt.*
 import zio.*
 
 import java.rmi.UnexpectedException
-import java.security.{KeyPairGenerator, PublicKey, SecureRandom}
 import java.security.spec.ECGenParameterSpec
+import java.security.{KeyPairGenerator, PublicKey, SecureRandom}
 import java.time.Instant
 import java.util as ju
 import java.util.UUID
@@ -464,17 +464,13 @@ private class PresentationServiceImpl(
       PresentationRecord.ProtocolState.PresentationVerificationFailed
     )
 
-  def markFailure(
+  def reportProcessingFailure(
       recordId: DidCommID,
       failReason: Option[String]
-  ): ZIO[Any, RepositoryError, Unit] = {
-    for {
-      outcome <- presentationRepository
-        .updateAfterFail(recordId, failReason)
-        .tapError(ex => ZIO.logError(s"Failure in $recordId not registered:" + ex.getMessage()))
-        .mapError(RepositoryError.apply)
-    } yield ()
-  }
+  ): ZIO[Any, RepositoryError, Int] =
+    presentationRepository
+      .updateAfterFail(recordId, failReason)
+      .mapError(RepositoryError.apply)
 
   private[this] def getRecordFromThreadId(
       thid: Option[String]

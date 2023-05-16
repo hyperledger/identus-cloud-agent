@@ -347,7 +347,7 @@ object BackgroundJobs {
         for {
           presentationService <- ZIO.service[PresentationService]
           _ <- presentationService
-            .markFailure(record.id, Some(ex.toString))
+            .reportProcessingFailure(record.id, Some(ex.toString))
             .catchAll(throwable =>
               ZIO.logErrorCause(s"Issue Credential fail to markFailure: ${record.id}", Cause.fail(throwable))
             )

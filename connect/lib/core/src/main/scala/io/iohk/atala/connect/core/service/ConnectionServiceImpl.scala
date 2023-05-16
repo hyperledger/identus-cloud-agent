@@ -1,19 +1,20 @@
 package io.iohk.atala.connect.core.service
 
-import zio._
-import io.iohk.atala.connect.core.repository.ConnectionRepository
-import io.iohk.atala.connect.core.model.error.ConnectionServiceError
-import io.iohk.atala.connect.core.model.error.ConnectionServiceError._
 import io.iohk.atala.connect.core.model.ConnectionRecord
-import io.iohk.atala.connect.core.model.ConnectionRecord._
-import java.util.UUID
-import io.iohk.atala.mercury._
+import io.iohk.atala.connect.core.model.ConnectionRecord.*
+import io.iohk.atala.connect.core.model.error.ConnectionServiceError
+import io.iohk.atala.connect.core.model.error.ConnectionServiceError.*
+import io.iohk.atala.connect.core.repository.ConnectionRepository
+import io.iohk.atala.mercury.*
 import io.iohk.atala.mercury.model.DidId
+import io.iohk.atala.mercury.protocol.connection.*
 import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
-import io.iohk.atala.mercury.protocol.connection._
-import java.time.Instant
-import java.rmi.UnexpectedException
 import io.iohk.atala.shared.utils.Base64Utils
+import zio.*
+
+import java.rmi.UnexpectedException
+import java.time.Instant
+import java.util.UUID
 
 private class ConnectionServiceImpl(
     connectionRepository: ConnectionRepository[Task],
@@ -297,7 +298,7 @@ private class ConnectionServiceImpl(
     } yield record
   }
 
-  def reportProcessingFailure(recordId: UUID, failReason: Option[String]): IO[ConnectionServiceError, Int] =
+  def reportProcessingFailure(recordId: UUID, failReason: Option[String]): IO[RepositoryError, Int] =
     connectionRepository
       .updateAfterFail(recordId, failReason)
       .mapError(RepositoryError.apply)

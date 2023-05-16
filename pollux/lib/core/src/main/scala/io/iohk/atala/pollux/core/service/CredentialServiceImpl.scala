@@ -393,6 +393,11 @@ private class CredentialServiceImpl(
       Some(IssueCredentialRecord.PublicationState.Published)
     )
 
+  override def reportProcessingFailure(recordId: DidCommID, failReason: Option[String]): IO[RepositoryError, Int] =
+    credentialRepository
+      .updateAfterFail(recordId, failReason)
+      .mapError(RepositoryError.apply)
+
   private[this] def getRecordWithState(
       recordId: DidCommID,
       state: ProtocolState

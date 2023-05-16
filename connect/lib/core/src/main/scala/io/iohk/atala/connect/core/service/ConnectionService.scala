@@ -2,7 +2,9 @@ package io.iohk.atala.connect.core.service
 
 import io.iohk.atala.connect.core.model.ConnectionRecord
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
-import zio._
+import io.iohk.atala.connect.core.model.error.ConnectionServiceError.RepositoryError
+import zio.*
+
 import java.util.UUID
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
@@ -44,6 +46,6 @@ trait ConnectionService {
 
   def deleteConnectionRecord(recordId: UUID): IO[ConnectionServiceError, Int]
 
-  def reportProcessingFailure(recordId: UUID, failReason: Option[String]): IO[ConnectionServiceError, Int]
+  def reportProcessingFailure(recordId: UUID, failReason: Option[String]): IO[RepositoryError, Int]
 
 }
