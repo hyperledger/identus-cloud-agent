@@ -1,62 +1,42 @@
 package io.iohk.atala.agent.server.jobs
 
-import cats.syntax.all._
-import com.ionspin.kotlin.bignum.integer.BigInteger
-import com.ionspin.kotlin.bignum.integer.Sign
+import cats.syntax.all.*
+import com.ionspin.kotlin.bignum.integer.{BigInteger, Sign}
 import io.circe.Json
-import io.circe.parser._
-import io.circe.syntax._
+import io.circe.parser.*
+import io.circe.syntax.*
 import io.iohk.atala.agent.server.config.AppConfig
-import io.iohk.atala.agent.server.http.model.InvalidState
-import io.iohk.atala.agent.server.http.model.NotImplemented
-import io.iohk.atala.agent.walletapi.model._
+import io.iohk.atala.agent.server.http.model.{InvalidState, NotImplemented}
+import io.iohk.atala.agent.walletapi.model.*
+import io.iohk.atala.agent.walletapi.model.error.*
 import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError.KeyNotFoundError
-import io.iohk.atala.agent.walletapi.model.error._
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
-import io.iohk.atala.castor.core.model.did._
+import io.iohk.atala.castor.core.model.did.*
 import io.iohk.atala.castor.core.service.DIDService
-import io.iohk.atala.mercury._
-import io.iohk.atala.mercury.model._
-import io.iohk.atala.mercury.model.error._
-import io.iohk.atala.mercury.protocol.issuecredential._
-import io.iohk.atala.mercury.protocol.presentproof._
-import io.iohk.atala.mercury.protocol.reportproblem.v2._
-import io.iohk.atala.pollux.core.model.IssueCredentialRecord
-import io.iohk.atala.pollux.core.model._
-import io.iohk.atala.pollux.core.model.error.CredentialServiceError
-import io.iohk.atala.pollux.core.model.error.PresentationError
-import io.iohk.atala.pollux.core.model.error.PresentationError._
-import io.iohk.atala.pollux.core.service.CredentialService
-import io.iohk.atala.pollux.core.service.PresentationService
-import io.iohk.atala.pollux.vc.jwt.ES256KSigner
-import io.iohk.atala.pollux.vc.jwt.JWT
-import io.iohk.atala.pollux.vc.jwt.W3CCredential
-import io.iohk.atala.pollux.vc.jwt.W3cCredentialPayload
-import io.iohk.atala.pollux.vc.jwt.JwtPresentation
-import io.iohk.atala.pollux.vc.jwt.CredentialVerification
-import io.iohk.atala.pollux.vc.jwt.{DidResolver => JwtDidResolver}
-import io.iohk.atala.pollux.vc.jwt.{Issuer => JwtIssuer}
-import io.iohk.atala.resolvers.DIDResolver
-import io.iohk.atala.resolvers.UniversalDidResolver
+import io.iohk.atala.mercury.*
+import io.iohk.atala.mercury.model.*
+import io.iohk.atala.mercury.model.error.*
+import io.iohk.atala.mercury.protocol.issuecredential.*
+import io.iohk.atala.mercury.protocol.presentproof.*
+import io.iohk.atala.mercury.protocol.reportproblem.v2.*
+import io.iohk.atala.pollux.core.model.*
+import io.iohk.atala.pollux.core.model.error.PresentationError.*
+import io.iohk.atala.pollux.core.model.error.{CredentialServiceError, PresentationError}
+import io.iohk.atala.pollux.core.service.{CredentialService, PresentationService}
+import io.iohk.atala.pollux.vc.jwt.{CredentialVerification, ES256KSigner, JWT, JwtPresentation, W3CCredential, W3cCredentialPayload, DidResolver as JwtDidResolver, Issuer as JwtIssuer}
+import io.iohk.atala.resolvers.{DIDResolver, UniversalDidResolver}
 import org.bouncycastle.jce.ECNamedCurveTable
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.bouncycastle.jce.spec.ECNamedCurveSpec
 import org.didcommx.didcomm.DIDComm
-import zio.Duration
 import zio.*
-import zio.prelude.AssociativeBothOps
-import zio.prelude.Validation
-import zio.prelude.ZValidation._
+import zio.prelude.ZValidation.*
+import zio.prelude.{AssociativeBothOps, Validation}
 
 import java.io.IOException
 import java.security.KeyFactory
-import java.security.spec.ECPoint
-import java.security.spec.ECPrivateKeySpec
-import java.security.spec.ECPublicKeySpec
-import java.security.spec.EncodedKeySpec
-import java.time.Clock
-import java.time.Instant
-import java.time.ZoneId
+import java.security.spec.{ECPoint, ECPrivateKeySpec, ECPublicKeySpec, EncodedKeySpec}
+import java.time.{Clock, Instant, ZoneId}
 import java.util.UUID
 import scala.jdk.CollectionConverters.*
 
@@ -77,7 +57,9 @@ object BackgroundJobs {
           IssueCredentialRecord.ProtocolState.CredentialGenerated
         )
         .mapError(err => Throwable(s"Error occurred while getting Issue Credential records: $err"))
-      _ <- ZIO.foreachPar(records)(performExchange).withParallelism(config.pollux.issueBgJobProcessingParallelism)
+      _ <- ZIO
+        .foreachPar(records)(performIssueCredentialExchange)
+        .withParallelism(config.pollux.issueBgJobProcessingParallelism)
     } yield ()
   }
   val presentProofExchanges = {
@@ -94,21 +76,15 @@ object BackgroundJobs {
         )
         .mapError(err => Throwable(s"Error occurred while getting Presentation records: $err"))
       _ <- ZIO
-        .foreachPar(records)(performPresentation)
+        .foreachPar(records)(performPresentProofExchange)
         .withParallelism(config.pollux.presentationBgJobProcessingParallelism)
     } yield ()
   }
 
-  private[this] def performExchange(
-      record: IssueCredentialRecord
-  ): URIO[
-    DidOps & DIDResolver & JwtDidResolver & HttpClient & CredentialService & DIDService & ManagedDIDService &
-      PresentationService,
-    Unit
-  ] = {
-    import IssueCredentialRecord._
-    import IssueCredentialRecord.ProtocolState._
-    import IssueCredentialRecord.PublicationState._
+  private[this] def performIssueCredentialExchange(record: IssueCredentialRecord) = {
+    import IssueCredentialRecord.*
+    import IssueCredentialRecord.ProtocolState.*
+    import IssueCredentialRecord.PublicationState.*
     val aux = for {
       _ <- ZIO.logDebug(s"Running action with records => $record")
       _ <- record match {
@@ -477,14 +453,8 @@ object BackgroundJobs {
       jwtIssuer <- createJwtIssuer(longFormPrismDID, VerificationRelationship.Authentication)
     } yield jwtIssuer
 
-  private[this] def performPresentation(
-      record: PresentationRecord
-  ): URIO[
-    DidOps & DIDResolver & JwtDidResolver & HttpClient & PresentationService & CredentialService & DIDService &
-      ManagedDIDService & AppConfig,
-    Unit
-  ] = {
-    import io.iohk.atala.pollux.core.model.PresentationRecord.ProtocolState._
+  private[this] def performPresentProofExchange(record: PresentationRecord) = {
+    import io.iohk.atala.pollux.core.model.PresentationRecord.ProtocolState.*
 
     val aux = for {
       _ <- ZIO.logDebug(s"Running action with records => $record")
