@@ -13,10 +13,22 @@ import io.iohk.atala.castor.core.model.did.ServiceEndpoint.Single
 import io.iohk.atala.castor.core.model.did.ServiceEndpoint.UriOrJsonEndpoint
 
 object DIDOperationValidator {
-  final case class Config(publicKeyLimit: Int, serviceLimit: Int)
+  final case class Config(
+      publicKeyLimit: Int,
+      serviceLimit: Int,
+      maxIdSize: Int,
+      maxServiceTypeSize: Int,
+      maxServiceEndpointSize: Int
+  )
 
   object Config {
-    val default: Config = Config(publicKeyLimit = 50, serviceLimit = 50)
+    val default: Config = Config(
+      publicKeyLimit = 50,
+      serviceLimit = 50,
+      maxIdSize = 50,
+      maxServiceTypeSize = 100,
+      maxServiceEndpointSize = 300
+    )
   }
 
   def layer(config: Config = Config.default): ULayer[DIDOperationValidator] =
@@ -41,7 +53,9 @@ private object CreateOperationValidator extends BaseOperationValidator {
       _ <- validateUniquePublicKeyId(operation, extractKeyIds)
       _ <- validateUniqueServiceId(operation, extractServiceIds)
       _ <- validateKeyIdIsUriFragment(operation, extractKeyIds)
+      _ <- validateKeyIdNotExceedLimit(config)(operation, extractKeyIds)
       _ <- validateServiceIdIsUriFragment(operation, extractServiceIds)
+      _ <- validateServiceIdNotExceedLimit(config)(operation, extractServiceIds)
       _ <- validateServiceEndpointNormalized(operation, extractServiceEndpoint)
       _ <- validateMasterKeyExists(operation)
     } yield ()
@@ -74,7 +88,9 @@ private object UpdateOperationValidator extends BaseOperationValidator {
       _ <- validateMaxPublicKeysAccess(config)(operation, extractKeyIds)
       _ <- validateMaxServiceAccess(config)(operation, extractServiceIds)
       _ <- validateKeyIdIsUriFragment(operation, extractKeyIds)
+      _ <- validateKeyIdNotExceedLimit(config)(operation, extractKeyIds)
       _ <- validateServiceIdIsUriFragment(operation, extractServiceIds)
+      _ <- validateServiceIdNotExceedLimit(config)(operation, extractServiceIds)
       _ <- validateServiceEndpointNormalized(operation, extractServiceEndpoint)
       _ <- validatePreviousOperationHash(operation, _.previousOperationHash)
       _ <- validateNonEmptyUpdateAction(operation)
@@ -200,6 +216,34 @@ private trait BaseOperationValidator {
     if (invalidIds.isEmpty) Right(())
     else
       Left(OperationValidationError.InvalidArgument(s"service id is invalid: ${invalidIds.mkString("[", ", ", "]")}"))
+  }
+
+  protected def validateKeyIdNotExceedLimit[T <: PrismDIDOperation](
+      config: Config
+  )(operation: T, keyIdExtractor: KeyIdExtractor[T]): Either[OperationValidationError, Unit] = {
+    val ids = keyIdExtractor(operation)
+    val invalidIds = ids.filter(_.length > config.maxIdSize)
+    if (invalidIds.isEmpty) Right(())
+    else
+      Left(
+        OperationValidationError.InvalidArgument(
+          s"public key id is too long: ${invalidIds.mkString("[", ", ", "]")}"
+        )
+      )
+  }
+
+  protected def validateServiceIdNotExceedLimit[T <: PrismDIDOperation](
+      config: Config
+  )(operation: T, serviceIdExtractor: ServiceIdExtractor[T]): Either[OperationValidationError, Unit] = {
+    val ids = serviceIdExtractor(operation)
+    val invalidIds = ids.filter(_.length > config.maxIdSize)
+    if (invalidIds.isEmpty) Right(())
+    else
+      Left(
+        OperationValidationError.InvalidArgument(
+          s"service id is too long: ${invalidIds.mkString("[", ", ", "]")}"
+        )
+      )
   }
 
   protected def validateServiceEndpointNormalized[T <: PrismDIDOperation](
