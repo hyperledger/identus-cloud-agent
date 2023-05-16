@@ -27,6 +27,7 @@ object ConnectBackgroundJobs {
       config <- ZIO.service[AppConfig]
       records <- connectionService
         .getConnectionRecordsByStates(
+          ignoreWithZeroRetries = true,
           ConnectionRecord.ProtocolState.ConnectionRequestPending,
           ConnectionRecord.ProtocolState.ConnectionResponsePending
         )

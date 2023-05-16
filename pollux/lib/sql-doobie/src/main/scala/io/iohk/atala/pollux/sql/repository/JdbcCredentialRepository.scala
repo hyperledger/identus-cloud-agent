@@ -3,32 +3,28 @@ package io.iohk.atala.pollux.sql.repository
 import cats.data.NonEmptyList
 import cats.instances.seq
 import doobie.*
-import doobie.implicits._
-import doobie.postgres.implicits._
-import io.circe._
-import io.circe.parser._
-import io.circe.syntax._
-import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
-import io.iohk.atala.mercury.protocol.issuecredential.OfferCredential
-import io.iohk.atala.mercury.protocol.issuecredential.RequestCredential
-import io.iohk.atala.castor.core.model.did._
-import io.iohk.atala.pollux.core.model._
+import doobie.implicits.*
+import doobie.postgres.implicits.*
+import io.circe.*
+import io.circe.parser.*
+import io.circe.syntax.*
+import io.iohk.atala.castor.core.model.did.*
+import io.iohk.atala.mercury.protocol.issuecredential.{IssueCredential, OfferCredential, RequestCredential}
+import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord.ProtocolState
 import io.iohk.atala.pollux.core.model.error.CredentialRepositoryError
-import io.iohk.atala.pollux.core.model.error.CredentialRepositoryError._
+import io.iohk.atala.pollux.core.model.error.CredentialRepositoryError.*
 import io.iohk.atala.pollux.core.repository.CredentialRepository
 import io.iohk.atala.pollux.sql.model.JWTCredentialRow
 import io.iohk.atala.prism.crypto.MerkleInclusionProof
 import io.iohk.atala.shared.utils.BytesOps
-import org.postgresql.util.PSQLException
+import org.postgresql.util.{PSQLException, PSQLState}
 import zio.*
 import zio.interop.catz.*
 
+import java.sql.SQLException
 import java.time.Instant
 import java.util.UUID
-
-import org.postgresql.util.PSQLState
-import java.sql.SQLException
 
 // TODO: replace with actual implementation
 class JdbcCredentialRepository(xa: Transactor[Task], maxRetries: Int) extends CredentialRepository[Task] {
@@ -47,7 +43,7 @@ class JdbcCredentialRepository(xa: Transactor[Task], maxRetries: Int) extends Cr
   // Uncomment to have Doobie LogHandler in scope and automatically output SQL statements in logs
   // given logHandler: LogHandler = LogHandler.jdkLogHandler
 
-  import IssueCredentialRecord._
+  import IssueCredentialRecord.*
 
   given didCommIDGet: Get[DidCommID] = Get[String].map(DidCommID(_))
   given didCommIDPut: Put[DidCommID] = Put[String].contramap(_.value)
@@ -170,7 +166,7 @@ class JdbcCredentialRepository(xa: Transactor[Task], maxRetries: Int) extends Cr
   }
 
   override def getIssueCredentialRecordsByStates(
-      ignoreWithZeroRetries: Boolean = true,
+      ignoreWithZeroRetries: Boolean,
       states: IssueCredentialRecord.ProtocolState*
   ): Task[Seq[IssueCredentialRecord]] = {
     states match

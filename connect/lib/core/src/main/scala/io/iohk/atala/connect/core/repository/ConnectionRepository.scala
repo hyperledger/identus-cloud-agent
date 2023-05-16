@@ -13,9 +13,12 @@ import io.iohk.atala.connect.core.model.ConnectionRecord
 trait ConnectionRepository[F[_]] {
   def createConnectionRecord(record: ConnectionRecord): F[Int]
 
-  def getConnectionRecords(): F[Seq[ConnectionRecord]]
+  def getConnectionRecords: F[Seq[ConnectionRecord]]
 
-  def getConnectionRecordsByStates(states: ConnectionRecord.ProtocolState*): F[Seq[ConnectionRecord]]
+  def getConnectionRecordsByStates(
+      ignoreWithZeroRetries: Boolean,
+      states: ConnectionRecord.ProtocolState*
+  ): F[Seq[ConnectionRecord]]
 
   def getConnectionRecord(recordId: UUID): F[Option[ConnectionRecord]]
 

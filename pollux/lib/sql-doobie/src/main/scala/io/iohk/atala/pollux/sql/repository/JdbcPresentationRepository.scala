@@ -164,7 +164,7 @@ class JdbcPresentationRepository(
   }
 
   override def getPresentationRecordsByStates(
-      ignoreWithZeroRetries: Boolean = true,
+      ignoreWithZeroRetries: Boolean,
       states: PresentationRecord.ProtocolState*
   ): Task[Seq[PresentationRecord]] = {
     states match

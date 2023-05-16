@@ -21,8 +21,8 @@ import io.iohk.atala.pollux.vc.jwt.*
 import zio.*
 
 import java.rmi.UnexpectedException
-import java.security.{KeyPairGenerator, PublicKey, SecureRandom}
 import java.security.spec.ECGenParameterSpec
+import java.security.{KeyPairGenerator, PublicKey, SecureRandom}
 import java.time.Instant
 import java.util as ju
 import java.util.UUID
@@ -48,7 +48,7 @@ trait PresentationService {
   ): IO[PresentationError, PresentationPayload]
 
   def getPresentationRecordsByStates(
-      ignoreWithZeroRetries: Boolean = true,
+      ignoreWithZeroRetries: Boolean,
       state: PresentationRecord.ProtocolState*
   ): IO[PresentationError, Seq[PresentationRecord]]
 

@@ -55,18 +55,18 @@ private class ConnectionServiceImpl(
 
   override def getConnectionRecords(): IO[ConnectionServiceError, Seq[ConnectionRecord]] = {
     for {
-      records <- connectionRepository
-        .getConnectionRecords()
+      records <- connectionRepository.getConnectionRecords
         .mapError(RepositoryError.apply)
     } yield records
   }
 
   override def getConnectionRecordsByStates(
+      ignoreWithZeroRetries: Boolean,
       states: ProtocolState*
   ): IO[ConnectionServiceError, Seq[ConnectionRecord]] = {
     for {
       records <- connectionRepository
-        .getConnectionRecordsByStates(states: _*)
+        .getConnectionRecordsByStates(ignoreWithZeroRetries, states: _*)
         .mapError(RepositoryError.apply)
     } yield records
   }

@@ -1,25 +1,19 @@
 package io.iohk.atala.pollux.core.repository
 
 import com.squareup.okhttp.Protocol
+import io.iohk.atala.castor.core.model.did.PrismDID
 import io.iohk.atala.mercury.model.DidId
-import io.iohk.atala.mercury.protocol.presentproof.Presentation
-import io.iohk.atala.mercury.protocol.presentproof.RequestPresentation
-import io.iohk.atala.mercury.protocol.presentproof.ProposePresentation
-import io.iohk.atala.pollux.core.model._
-import io.iohk.atala.pollux.core.model.PresentationRecord._
-import io.iohk.atala.pollux.core.model.error.CredentialRepositoryError._
+import io.iohk.atala.mercury.protocol.presentproof.{Presentation, ProposePresentation, RequestPresentation}
+import io.iohk.atala.pollux.core.model.*
+import io.iohk.atala.pollux.core.model.PresentationRecord.*
+import io.iohk.atala.pollux.core.model.error.CredentialRepositoryError.*
 import io.iohk.atala.prism.identity.Did
-import zio.Cause
-import zio.Exit
-import zio.Task
-import zio.ZIO
-import zio.test.Assertion._
-import zio.test._
+import zio.{Cause, Exit, Task, ZIO}
+import zio.test.*
+import zio.test.Assertion.*
 
 import java.time.Instant
 import java.util.UUID
-import io.iohk.atala.castor.core.model.did.PrismDID
-import io.iohk.atala.pollux.core.model.PresentationRecord
 
 object PresentationRepositorySpecSuite {
   val maxRetries = 5 // TODO Move to config
@@ -175,7 +169,7 @@ object PresentationRepositorySpecSuite {
         _ <- repo.createPresentationRecord(aRecord)
         _ <- repo.createPresentationRecord(bRecord)
         _ <- repo.createPresentationRecord(cRecord)
-        records <- repo.getPresentationRecordsByStates()
+        records <- repo.getPresentationRecordsByStates(ignoreWithZeroRetries = true)
       } yield {
         assertTrue(records.isEmpty)
       }

@@ -1,11 +1,10 @@
 package io.iohk.atala.connect.core.repository
 
 import io.iohk.atala.connect.core.model.ConnectionRecord
-import io.iohk.atala.connect.core.model.error.ConnectionRepositoryError._
 import io.iohk.atala.connect.core.model.ConnectionRecord.ProtocolState
-import io.iohk.atala.mercury.protocol.connection.ConnectionRequest
-import io.iohk.atala.mercury.protocol.connection.ConnectionResponse
-import zio._
+import io.iohk.atala.connect.core.model.error.ConnectionRepositoryError.*
+import io.iohk.atala.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
+import zio.*
 
 import java.time.Instant
 import java.util.UUID
@@ -141,16 +140,21 @@ class ConnectionRepositoryInMemory(storeRef: Ref[Map[UUID, ConnectionRecord]]) e
     } yield store.values.find(_.thid.contains(thid))
   }
 
-  override def getConnectionRecords(): Task[Seq[ConnectionRecord]] = {
+  override def getConnectionRecords: Task[Seq[ConnectionRecord]] = {
     for {
       store <- storeRef.get
     } yield store.values.toSeq
   }
 
-  override def getConnectionRecordsByStates(states: ConnectionRecord.ProtocolState*): Task[Seq[ConnectionRecord]] = {
+  override def getConnectionRecordsByStates(
+      ignoreWithZeroRetries: Boolean,
+      states: ConnectionRecord.ProtocolState*
+  ): Task[Seq[ConnectionRecord]] = {
     for {
       store <- storeRef.get
-    } yield store.values.filter(rec => states.contains(rec.protocolState)).toSeq
+    } yield store.values
+      .filter(rec => (ignoreWithZeroRetries & rec.metaRetries > 0) & states.contains(rec.protocolState))
+      .toSeq
   }
 
   override def createConnectionRecord(record: ConnectionRecord): Task[Int] = {
