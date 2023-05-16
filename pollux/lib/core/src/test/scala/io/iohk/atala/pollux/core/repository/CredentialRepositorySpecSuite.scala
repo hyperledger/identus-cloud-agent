@@ -179,10 +179,12 @@ object CredentialRepositorySpecSuite {
         )
         pendingRecords <- repo.getIssueCredentialRecordsByStates(
           ignoreWithZeroRetries = true,
+          limit = 10,
           ProtocolState.OfferPending
         )
         otherRecords <- repo.getIssueCredentialRecordsByStates(
           ignoreWithZeroRetries = true,
+          limit = 10,
           ProtocolState.OfferSent,
           ProtocolState.CredentialGenerated
         )
@@ -203,7 +205,7 @@ object CredentialRepositorySpecSuite {
         _ <- repo.createIssueCredentialRecord(aRecord)
         _ <- repo.createIssueCredentialRecord(bRecord)
         _ <- repo.createIssueCredentialRecord(cRecord)
-        records <- repo.getIssueCredentialRecordsByStates(ignoreWithZeroRetries = true)
+        records <- repo.getIssueCredentialRecordsByStates(ignoreWithZeroRetries = true, limit = 10)
       } yield {
         assertTrue(records.isEmpty)
       }

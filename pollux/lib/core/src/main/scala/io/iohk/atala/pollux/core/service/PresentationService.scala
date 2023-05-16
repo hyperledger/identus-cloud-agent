@@ -49,6 +49,7 @@ trait PresentationService {
 
   def getPresentationRecordsByStates(
       ignoreWithZeroRetries: Boolean,
+      limit: Int,
       state: PresentationRecord.ProtocolState*
   ): IO[PresentationError, Seq[PresentationRecord]]
 

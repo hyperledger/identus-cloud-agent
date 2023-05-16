@@ -126,10 +126,12 @@ object ConnectionRepositorySpecSuite {
         )
         invitationGeneratedRecords <- repo.getConnectionRecordsByStates(
           ignoreWithZeroRetries = true,
+          limit = 10,
           ProtocolState.InvitationGenerated
         )
         otherRecords <- repo.getConnectionRecordsByStates(
           ignoreWithZeroRetries = true,
+          limit = 10,
           ProtocolState.ConnectionRequestReceived,
           ProtocolState.ConnectionResponsePending
         )
@@ -150,9 +152,27 @@ object ConnectionRepositorySpecSuite {
         _ <- repo.createConnectionRecord(aRecord)
         _ <- repo.createConnectionRecord(bRecord)
         _ <- repo.createConnectionRecord(cRecord)
-        records <- repo.getConnectionRecordsByStates(ignoreWithZeroRetries = true)
+        records <- repo.getConnectionRecordsByStates(ignoreWithZeroRetries = true, limit = 10)
       } yield {
         assertTrue(records.isEmpty)
+      }
+    },
+    test("getConnectionRecordsByStates returns an a subset of records when limit is specified") {
+      for {
+        repo <- ZIO.service[ConnectionRepository[Task]]
+        aRecord = connectionRecord
+        bRecord = connectionRecord
+        cRecord = connectionRecord
+        _ <- repo.createConnectionRecord(aRecord)
+        _ <- repo.createConnectionRecord(bRecord)
+        _ <- repo.createConnectionRecord(cRecord)
+        records <- repo.getConnectionRecordsByStates(
+          ignoreWithZeroRetries = true,
+          limit = 2,
+          ProtocolState.InvitationGenerated
+        )
+      } yield {
+        assertTrue(records.size == 2)
       }
     },
     test("deleteRecord deletes an existing record") {

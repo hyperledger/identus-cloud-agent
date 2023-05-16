@@ -145,10 +145,12 @@ object PresentationRepositorySpecSuite {
         )
         pendingRecords <- repo.getPresentationRecordsByStates(
           ignoreWithZeroRetries = true,
+          limit = 10,
           ProtocolState.RequestPending
         )
         otherRecords <- repo.getPresentationRecordsByStates(
           ignoreWithZeroRetries = true,
+          limit = 10,
           ProtocolState.RequestSent,
           ProtocolState.PresentationReceived
         )
@@ -169,7 +171,7 @@ object PresentationRepositorySpecSuite {
         _ <- repo.createPresentationRecord(aRecord)
         _ <- repo.createPresentationRecord(bRecord)
         _ <- repo.createPresentationRecord(cRecord)
-        records <- repo.getPresentationRecordsByStates(ignoreWithZeroRetries = true)
+        records <- repo.getPresentationRecordsByStates(ignoreWithZeroRetries = true, limit = 10)
       } yield {
         assertTrue(records.isEmpty)
       }

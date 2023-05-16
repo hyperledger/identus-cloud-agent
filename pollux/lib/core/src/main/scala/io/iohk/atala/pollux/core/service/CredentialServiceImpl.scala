@@ -120,12 +120,13 @@ private class CredentialServiceImpl(
   }
 
   override def getIssueCredentialRecordsByStates(
-      ignoreWithZeroRetries: Boolean = true,
+      ignoreWithZeroRetries: Boolean,
+      limit: Int,
       states: IssueCredentialRecord.ProtocolState*
   ): IO[CredentialServiceError, Seq[IssueCredentialRecord]] = {
     for {
       records <- credentialRepository
-        .getIssueCredentialRecordsByStates(ignoreWithZeroRetries, states: _*)
+        .getIssueCredentialRecordsByStates(ignoreWithZeroRetries, limit, states: _*)
         .mapError(RepositoryError.apply)
     } yield records
   }

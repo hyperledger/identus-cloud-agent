@@ -161,12 +161,13 @@ private class PresentationServiceImpl(
   }
 
   override def getPresentationRecordsByStates(
-      ignoreWithZeroRetries: Boolean = true,
+      ignoreWithZeroRetries: Boolean,
+      limit: Int,
       states: PresentationRecord.ProtocolState*
   ): IO[PresentationError, Seq[PresentationRecord]] = {
     for {
       records <- presentationRepository
-        .getPresentationRecordsByStates(ignoreWithZeroRetries, states: _*)
+        .getPresentationRecordsByStates(ignoreWithZeroRetries, limit, states: _*)
         .mapError(RepositoryError.apply)
     } yield records
   }

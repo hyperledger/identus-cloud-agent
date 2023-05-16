@@ -17,6 +17,7 @@ trait ConnectionRepository[F[_]] {
 
   def getConnectionRecordsByStates(
       ignoreWithZeroRetries: Boolean,
+      limit: Int,
       states: ConnectionRecord.ProtocolState*
   ): F[Seq[ConnectionRecord]]
 

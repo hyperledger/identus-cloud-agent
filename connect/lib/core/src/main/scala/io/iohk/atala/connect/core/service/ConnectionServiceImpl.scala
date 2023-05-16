@@ -62,11 +62,12 @@ private class ConnectionServiceImpl(
 
   override def getConnectionRecordsByStates(
       ignoreWithZeroRetries: Boolean,
+      limit: Int,
       states: ProtocolState*
   ): IO[ConnectionServiceError, Seq[ConnectionRecord]] = {
     for {
       records <- connectionRepository
-        .getConnectionRecordsByStates(ignoreWithZeroRetries, states: _*)
+        .getConnectionRecordsByStates(ignoreWithZeroRetries, limit, states: _*)
         .mapError(RepositoryError.apply)
     } yield records
   }

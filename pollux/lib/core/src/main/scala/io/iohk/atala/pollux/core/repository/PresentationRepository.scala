@@ -14,6 +14,7 @@ trait PresentationRepository[F[_]] {
   def getPresentationRecord(recordId: DidCommID): F[Option[PresentationRecord]]
   def getPresentationRecordsByStates(
       ignoreWithZeroRetries: Boolean,
+      limit: Int,
       states: PresentationRecord.ProtocolState*
   ): F[Seq[PresentationRecord]]
   def getPresentationRecordByThreadId(thid: DidCommID): F[Option[PresentationRecord]]

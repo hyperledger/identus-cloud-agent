@@ -58,6 +58,7 @@ object BackgroundJobs {
       records <- credentialService
         .getIssueCredentialRecordsByStates(
           ignoreWithZeroRetries = true,
+          limit = config.pollux.issueBgJobRecordsLimit,
           IssueCredentialRecord.ProtocolState.OfferPending,
           IssueCredentialRecord.ProtocolState.RequestPending,
           IssueCredentialRecord.ProtocolState.RequestGenerated,
@@ -78,6 +79,7 @@ object BackgroundJobs {
       records <- presentationService
         .getPresentationRecordsByStates(
           ignoreWithZeroRetries = true,
+          limit = config.pollux.presentationBgJobRecordsLimit,
           PresentationRecord.ProtocolState.RequestPending,
           PresentationRecord.ProtocolState.PresentationPending,
           PresentationRecord.ProtocolState.PresentationGenerated,

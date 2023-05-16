@@ -28,6 +28,7 @@ object ConnectBackgroundJobs {
       records <- connectionService
         .getConnectionRecordsByStates(
           ignoreWithZeroRetries = true,
+          limit = config.connect.connectBgJobRecordsLimit,
           ConnectionRecord.ProtocolState.ConnectionRequestPending,
           ConnectionRecord.ProtocolState.ConnectionResponsePending
         )

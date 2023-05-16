@@ -38,6 +38,7 @@ trait ConnectionService {
 
   def getConnectionRecordsByStates(
       ignoreWithZeroRetries: Boolean,
+      limit: Int,
       states: ConnectionRecord.ProtocolState*
   ): IO[ConnectionServiceError, Seq[ConnectionRecord]]
 

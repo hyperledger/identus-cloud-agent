@@ -17,6 +17,7 @@ trait CredentialRepository[F[_]] {
   def getIssueCredentialRecord(recordId: DidCommID): F[Option[IssueCredentialRecord]]
   def getIssueCredentialRecordsByStates(
       ignoreWithZeroRetries: Boolean,
+      limit: Int,
       states: IssueCredentialRecord.ProtocolState*
   ): F[Seq[IssueCredentialRecord]]
   def updateCredentialRecordStateAndProofByCredentialIdBulk(

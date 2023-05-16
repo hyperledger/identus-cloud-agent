@@ -148,12 +148,14 @@ class ConnectionRepositoryInMemory(storeRef: Ref[Map[UUID, ConnectionRecord]]) e
 
   override def getConnectionRecordsByStates(
       ignoreWithZeroRetries: Boolean,
+      limit: Int,
       states: ConnectionRecord.ProtocolState*
   ): Task[Seq[ConnectionRecord]] = {
     for {
       store <- storeRef.get
     } yield store.values
       .filter(rec => (ignoreWithZeroRetries & rec.metaRetries > 0) & states.contains(rec.protocolState))
+      .take(limit)
       .toSeq
   }
 

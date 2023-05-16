@@ -167,6 +167,7 @@ class JdbcCredentialRepository(xa: Transactor[Task], maxRetries: Int) extends Cr
 
   override def getIssueCredentialRecordsByStates(
       ignoreWithZeroRetries: Boolean,
+      limit: Int,
       states: IssueCredentialRecord.ProtocolState*
   ): Task[Seq[IssueCredentialRecord]] = {
     states match
@@ -203,6 +204,7 @@ class JdbcCredentialRepository(xa: Transactor[Task], maxRetries: Int) extends Cr
             |   meta_last_failure
             | FROM public.issue_credential_records
             | WHERE $conditionFragment
+            | LIMIT $limit
             """.stripMargin
           .query[IssueCredentialRecord]
           .to[Seq]
