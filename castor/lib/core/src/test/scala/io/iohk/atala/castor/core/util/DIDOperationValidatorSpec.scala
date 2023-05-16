@@ -253,6 +253,12 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
           invalidArgumentContainsString(s"service id is too long: [${service.id}]")
         )
       },
+      test("reject CreateOperation on duplicated context") {
+        val op = createPrismDIDOperation(context = Seq("https://example.com", "https://example.com"))
+        assert(DIDOperationValidator(Config.default).validate(op))(
+          invalidArgumentContainsString("context is not unique")
+        )
+      },
       test("reject CreateOperation when master key does not exist") {
         val op = createPrismDIDOperation(internalKeys = Nil)
         assert(DIDOperationValidator(Config.default).validate(op))(
@@ -481,6 +487,14 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         val op = updatePrismDIDOperation(Seq(action1, action2))
         assert(DIDOperationValidator(Config.default).validate(op))(
           invalidArgumentContainsString(s"service id is too long: [${action1.service.id}, ${action2.id}]")
+        )
+      },
+      test("reject UpdateOperation on duplicated context") {
+        val action1 = UpdateDIDAction.PatchContext(Seq.empty)
+        val action2 = UpdateDIDAction.PatchContext(Seq.fill(2)("https://www.w3.org/ns/did/v1"))
+        val op = updatePrismDIDOperation(Seq(action1, action2))
+        assert(DIDOperationValidator(Config.default).validate(op))(
+          invalidArgumentContainsString("context is not unique")
         )
       },
       test("reject UpdateOperation on invalid previousOperationHash") {
