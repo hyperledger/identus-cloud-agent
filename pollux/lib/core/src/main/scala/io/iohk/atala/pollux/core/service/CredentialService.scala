@@ -1,24 +1,19 @@
 package io.iohk.atala.pollux.core.service
 
+import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
 import io.iohk.atala.mercury.model.DidId
-import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
-import io.iohk.atala.mercury.protocol.issuecredential.OfferCredential
-import io.iohk.atala.mercury.protocol.issuecredential.RequestCredential
-import io.iohk.atala.pollux.core.model._
+import io.iohk.atala.mercury.protocol.issuecredential.{IssueCredential, OfferCredential, RequestCredential}
+import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
-import io.iohk.atala.pollux.core.model.error.CredentialServiceError._
-import io.iohk.atala.pollux.vc.jwt.Issuer
-import io.iohk.atala.pollux.vc.jwt.W3cCredentialPayload
+import io.iohk.atala.pollux.core.model.error.CredentialServiceError.*
+import io.iohk.atala.pollux.vc.jwt.{Issuer, JWT, PresentationPayload, W3cCredentialPayload}
 import io.iohk.atala.prism.crypto.MerkleInclusionProof
 import zio.IO
 
-import java.security.KeyPairGenerator
-import java.security.SecureRandom
+import java.security.{KeyPairGenerator, SecureRandom}
 import java.security.spec.ECGenParameterSpec
 import java.time.Instant
 import java.util.UUID
-import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
-import io.iohk.atala.pollux.vc.jwt.{PresentationPayload, JWT}
 
 trait CredentialService {
 
@@ -131,6 +126,6 @@ trait CredentialService {
 
   def markCredentialPublished(recordId: DidCommID): IO[CredentialServiceError, IssueCredentialRecord]
 
-  def reportProcessingFailure(recordId: DidCommID, failReason: Option[String]): IO[RepositoryError, Int]
+  def reportProcessingFailure(recordId: DidCommID, failReason: Option[String]): IO[CredentialServiceError, Unit]
 
 }

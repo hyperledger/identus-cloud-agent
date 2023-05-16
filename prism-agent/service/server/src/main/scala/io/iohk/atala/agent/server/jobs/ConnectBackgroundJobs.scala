@@ -110,7 +110,7 @@ object ConnectBackgroundJobs {
             .reportProcessingFailure(record.id, Some(ex.toString))
             .tapError(err =>
               ZIO.logErrorCause(
-                s"Present Proof - failed to report processing failure: ${record.id}",
+                s"Connect - failed to report processing failure: ${record.id}",
                 Cause.fail(err)
               )
             )

@@ -345,11 +345,14 @@ object BackgroundJobs {
     aux
       .tapError(ex =>
         for {
-          presentationService <- ZIO.service[PresentationService]
-          _ <- presentationService
+          credentialService <- ZIO.service[CredentialService]
+          _ <- credentialService
             .reportProcessingFailure(record.id, Some(ex.toString))
-            .catchAll(throwable =>
-              ZIO.logErrorCause(s"Issue Credential fail to markFailure: ${record.id}", Cause.fail(throwable))
+            .tapError(err =>
+              ZIO.logErrorCause(
+                s"Issue Credential - failed to report processing failure: ${record.id}",
+                Cause.fail(err)
+              )
             )
         } yield ()
       )
@@ -682,6 +685,19 @@ object BackgroundJobs {
     } yield ()
 
     aux
+      .tapError(ex =>
+        for {
+          presentationService <- ZIO.service[PresentationService]
+          _ <- presentationService
+            .reportProcessingFailure(record.id, Some(ex.toString))
+            .tapError(err =>
+              ZIO.logErrorCause(
+                s"Present Proof - failed to report processing failure: ${record.id}",
+                Cause.fail(err)
+              )
+            )
+        } yield ()
+      )
       .catchAll {
         case ex: MercuryException =>
           ZIO.logErrorCause(s"DIDComm communication error processing record: ${record.id}", Cause.fail(ex))

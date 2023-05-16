@@ -393,10 +393,17 @@ private class CredentialServiceImpl(
       Some(IssueCredentialRecord.PublicationState.Published)
     )
 
-  override def reportProcessingFailure(recordId: DidCommID, failReason: Option[String]): IO[RepositoryError, Int] =
+  override def reportProcessingFailure(
+      recordId: DidCommID,
+      failReason: Option[String]
+  ): IO[CredentialServiceError, Unit] =
     credentialRepository
       .updateAfterFail(recordId, failReason)
       .mapError(RepositoryError.apply)
+      .flatMap {
+        case 1 => ZIO.unit
+        case n => ZIO.fail(UnexpectedError(s"Invalid number of records updated: $n"))
+      }
 
   private[this] def getRecordWithState(
       recordId: DidCommID,

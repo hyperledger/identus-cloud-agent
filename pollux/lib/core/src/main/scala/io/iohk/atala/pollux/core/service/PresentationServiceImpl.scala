@@ -467,10 +467,14 @@ private class PresentationServiceImpl(
   def reportProcessingFailure(
       recordId: DidCommID,
       failReason: Option[String]
-  ): ZIO[Any, RepositoryError, Int] =
+  ): IO[PresentationError, Unit] =
     presentationRepository
       .updateAfterFail(recordId, failReason)
       .mapError(RepositoryError.apply)
+      .flatMap {
+        case 1 => ZIO.unit
+        case n => ZIO.fail(UnexpectedError(s"Invalid number of records updated: $n"))
+      }
 
   private[this] def getRecordFromThreadId(
       thid: Option[String]
