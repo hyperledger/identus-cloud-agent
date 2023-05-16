@@ -259,6 +259,28 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
           invalidArgumentContainsString("context is not unique")
         )
       },
+      test("reject CreateOperation on too long serviceType") {
+        val service = Service(
+          id = "service",
+          `type` = ServiceType.Single("0" * 101),
+          serviceEndpoint = "http://example.com/"
+        )
+        val op = createPrismDIDOperation(services = Seq(service))
+        assert(DIDOperationValidator(Config.default).validate(op))(
+          invalidArgumentContainsString(s"service type is too long: [service]")
+        )
+      },
+      test("reject CreateOperation on too long serviceEndpoint") {
+        val service = Service(
+          id = "service",
+          `type` = ServiceType.Single("LinkedDomains"),
+          serviceEndpoint = s"http://example.com/${"0" * 300}"
+        )
+        val op = createPrismDIDOperation(services = Seq(service))
+        assert(DIDOperationValidator(Config.default).validate(op))(
+          invalidArgumentContainsString(s"service endpoint is too long: [service]")
+        )
+      },
       test("reject CreateOperation when master key does not exist") {
         val op = createPrismDIDOperation(internalKeys = Nil)
         assert(DIDOperationValidator(Config.default).validate(op))(
@@ -495,6 +517,32 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         val op = updatePrismDIDOperation(Seq(action1, action2))
         assert(DIDOperationValidator(Config.default).validate(op))(
           invalidArgumentContainsString("context is not unique")
+        )
+      },
+      test("reject UpdateOperation on too long serviceType") {
+        val action = UpdateDIDAction.AddService(
+          Service(
+            id = "service",
+            `type` = ServiceType.Single("a" * 101),
+            serviceEndpoint = "http://example.com/"
+          )
+        )
+        val op = updatePrismDIDOperation(Seq(action))
+        assert(DIDOperationValidator(Config.default).validate(op))(
+          invalidArgumentContainsString("service type is too long: [service]")
+        )
+      },
+      test("reject UpdateOperation on too long serviceEndpoint") {
+        val action = UpdateDIDAction.AddService(
+          Service(
+            id = "service",
+            `type` = ServiceType.Single("LinkedDomains"),
+            serviceEndpoint = "http://example.com/" + "a" * 1001
+          )
+        )
+        val op = updatePrismDIDOperation(Seq(action))
+        assert(DIDOperationValidator(Config.default).validate(op))(
+          invalidArgumentContainsString("service endpoint is too long: [service]")
         )
       },
       test("reject UpdateOperation on invalid previousOperationHash") {
