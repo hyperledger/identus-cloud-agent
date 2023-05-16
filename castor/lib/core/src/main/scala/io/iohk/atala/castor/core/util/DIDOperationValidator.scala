@@ -57,6 +57,7 @@ private object CreateOperationValidator extends BaseOperationValidator {
       _ <- validateServiceIdIsUriFragment(operation, extractServiceIds)
       _ <- validateServiceIdNotExceedLimit(config)(operation, extractServiceIds)
       _ <- validateServiceEndpointNormalized(operation, extractServiceEndpoint)
+      _ <- validateUniqueContext(operation, _.context :: Nil)
       _ <- validateMasterKeyExists(operation)
     } yield ()
   }
@@ -92,6 +93,7 @@ private object UpdateOperationValidator extends BaseOperationValidator {
       _ <- validateServiceIdIsUriFragment(operation, extractServiceIds)
       _ <- validateServiceIdNotExceedLimit(config)(operation, extractServiceIds)
       _ <- validateServiceEndpointNormalized(operation, extractServiceEndpoint)
+      _ <- validateUniqueContext(operation, extractContexts)
       _ <- validatePreviousOperationHash(operation, _.previousOperationHash)
       _ <- validateNonEmptyUpdateAction(operation)
       _ <- validateUpdateServiceNonEmpty(operation)
@@ -147,6 +149,13 @@ private object UpdateOperationValidator extends BaseOperationValidator {
       case UpdateDIDAction.AddService(service)                  => service.id -> service.serviceEndpoint
       case UpdateDIDAction.UpdateService(id, _, Some(endpoint)) => id -> endpoint
     }
+
+  private def extractContexts(operation: PrismDIDOperation.Update): Seq[Seq[String]] = {
+    operation.actions.flatMap {
+      case UpdateDIDAction.PatchContext(context) => Some(context)
+      case _                                     => None
+    }
+  }
 }
 
 private object DeactivateOperationValidator extends BaseOperationValidator {
@@ -159,6 +168,7 @@ private trait BaseOperationValidator {
   type KeyIdExtractor[T] = T => Seq[String]
   type ServiceIdExtractor[T] = T => Seq[String]
   type ServiceEndpointExtractor[T] = T => Seq[(String, ServiceEndpoint)]
+  type ContextExtractor[T] = T => Seq[Seq[String]]
 
   protected def validateMaxPublicKeysAccess[T <: PrismDIDOperation](
       config: Config
@@ -192,6 +202,16 @@ private trait BaseOperationValidator {
     val ids = serviceIdExtractor(operation)
     if (ids.isUnique) Right(())
     else Left(OperationValidationError.InvalidArgument("id for services is not unique"))
+  }
+
+  protected def validateUniqueContext[T <: PrismDIDOperation](
+      operation: T,
+      contextExtractor: ContextExtractor[T]
+  ): Either[OperationValidationError, Unit] = {
+    val contexts = contextExtractor(operation)
+    val nonUniqueContextList = contexts.filterNot(_.isUnique)
+    if (nonUniqueContextList.isEmpty) Right(())
+    else Left(OperationValidationError.InvalidArgument("context is not unique"))
   }
 
   protected def validateKeyIdIsUriFragment[T <: PrismDIDOperation](
