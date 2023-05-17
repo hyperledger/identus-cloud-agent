@@ -3,7 +3,7 @@ package io.iohk.atala.agent.walletapi.sql
 import doobie.*
 import doobie.implicits.*
 import doobie.postgres.implicits.*
-import io.iohk.atala.agent.walletapi.model.{DIDUpdateLineage, ManagedDIDState}
+import io.iohk.atala.agent.walletapi.model.{DIDUpdateLineage, ManagedDIDState, ManagedDIDStatePatch}
 import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
 import io.iohk.atala.castor.core.model.did.{PrismDID, ScheduledDIDOperationStatus}
 import zio.*
@@ -13,6 +13,7 @@ import java.time.Instant
 import io.iohk.atala.agent.walletapi.model.ManagedDidHdKeyPath
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import io.iohk.atala.castor.core.model.did.InternalKeyPurpose
+import io.iohk.atala.agent.walletapi.model.PublicationState
 
 class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage {
 
@@ -37,44 +38,6 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
     cxnIO
       .transact(xa)
       .flatMap(_.map(_.toDomain).fold(ZIO.none)(t => ZIO.fromTry(t).asSome))
-  }
-
-  // TODO: remove
-  override def setManagedDIDState(did: PrismDID, state: ManagedDIDState): Task[Unit] = {
-    val cxnIO = (row: DIDStateRow) => sql"""
-        | INSERT INTO public.prism_did_wallet_state(
-        |   did,
-        |   publication_status,
-        |   atala_operation_content,
-        |   publish_operation_id,
-        |   created_at,
-        |   updated_at,
-        |   key_mode,
-        |   did_index
-        | )
-        | VALUES (
-        |   ${row.did},
-        |   ${row.publicationStatus},
-        |   ${row.atalaOperationContent},
-        |   ${row.publishOperationId},
-        |   ${row.createdAt},
-        |   ${row.updatedAt},
-        |   ${row.keyMode},
-        |   ${row.didIndex}
-        | )
-        | ON CONFLICT (did) DO UPDATE SET
-        |   publication_status = EXCLUDED.publication_status,
-        |   atala_operation_content = EXCLUDED.atala_operation_content,
-        |   publish_operation_id = EXCLUDED.publish_operation_id,
-        |   updated_at = EXCLUDED.updated_at,
-        |   key_mode = EXCLUDED.key_mode
-        """.stripMargin.update
-
-    for {
-      now <- Clock.instant
-      row = DIDStateRow.from(did, state, now)
-      _ <- cxnIO(row).run.transact(xa)
-    } yield ()
   }
 
   override def insertManagedDID(
@@ -110,7 +73,7 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
       "INSERT INTO public.prism_did_hd_key(did, key_id, key_usage, key_index) VALUES (?, ?, ?, ?)"
     )
 
-    val cxnIO = (now: Instant) =>
+    val txnIO = (now: Instant) =>
       for {
         _ <- insertStateIO(DIDStateRow.from(did, state, now)).run
         _ <- insertHdKeyIO.updateMany(hdKeyValues)
@@ -118,17 +81,39 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
 
     for {
       now <- Clock.instant
-      _ <- cxnIO(now).transact(xa)
+      _ <- txnIO(now).transact(xa)
+    } yield ()
+  }
+
+  override def updateManagedDID(did: PrismDID, patch: ManagedDIDStatePatch): Task[Unit] = {
+    val status = PublicationStatusType.from(patch.publicationState)
+    val publishedOperationId = patch.publicationState match {
+      case PublicationState.Created()                       => None
+      case PublicationState.PublicationPending(operationId) => Some(operationId)
+      case PublicationState.Published(operationId)          => Some(operationId)
+    }
+    val cxnIO = (now: Instant) => sql"""
+           | UPDATE public.prism_did_wallet_state
+           | SET
+           |   publication_status = $status,
+           |   publish_operation_id = $publishedOperationId,
+           |   updated_at = $now
+           | WHERE did = $did
+           """.stripMargin.update
+
+    for {
+      now <- Clock.instant
+      _ <- cxnIO(now).run.transact(xa)
     } yield ()
   }
 
   override def getMaxDIDIndex(): Task[Option[Int]] = {
     val cxnIO =
       sql"""
-        | SELECT MAX(did_index)
-        | FROM public.prism_did_wallet_state
-        | WHERE did_index IS NOT NULL
-      """.stripMargin
+           | SELECT MAX(did_index)
+           | FROM public.prism_did_wallet_state
+           | WHERE did_index IS NOT NULL
+           """.stripMargin
         .query[Option[Int]]
         .option
 
@@ -143,7 +128,7 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
       sql"""
         | SELECT COUNT(*)
         | FROM public.prism_did_wallet_state
-      """.stripMargin
+        """.stripMargin
         .query[Int]
         .unique
 
@@ -160,7 +145,7 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
            |   did_index
            | FROM public.prism_did_wallet_state
            | ORDER BY created_at
-      """.stripMargin
+           """.stripMargin
     val withOffsetFr = offset.fold(baseFr)(offsetValue => baseFr ++ fr"OFFSET $offsetValue")
     val withOffsetAndLimitFr = limit.fold(withOffsetFr)(limitValue => withOffsetFr ++ fr"LIMIT $limitValue")
     val didsCxnIO =
@@ -220,7 +205,7 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
            |   created_at,
            |   updated_at
            | FROM public.prism_did_update_lineage
-      """.stripMargin
+           """.stripMargin
     val cxnIO = (baseFr ++ whereFr)
       .query[DIDUpdateLineage]
       .to[List]
@@ -238,7 +223,7 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
             |   status = $status,
             |   updated_at = $now
             | WHERE operation_id = $operationId
-        """.stripMargin.update
+            """.stripMargin.update
 
     Clock.instant.flatMap(now => cxnIO(now).run.transact(xa)).unit
   }

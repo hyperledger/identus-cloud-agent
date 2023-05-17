@@ -22,6 +22,12 @@ package object sql {
     case object CREATED extends PublicationStatusType
     case object PUBLICATION_PENDING extends PublicationStatusType
     case object PUBLISHED extends PublicationStatusType
+
+    def from(status: PublicationState): PublicationStatusType = status match {
+      case PublicationState.Created()             => CREATED
+      case PublicationState.PublicationPending(_) => PUBLICATION_PENDING
+      case PublicationState.Published(_)          => PUBLISHED
+    }
   }
 
   given Meta[VerificationRelationship | InternalKeyPurpose] = pgEnumString(
@@ -150,12 +156,12 @@ package object sql {
 
   object DIDStateRow {
     def from(did: PrismDID, state: ManagedDIDState, now: Instant): DIDStateRow = {
-      import PublicationStatusType.*
       val createOperation = state.createOperation
-      val (status, publishedOperationId) = state.publicationState match {
-        case PublicationState.Created()                       => (CREATED, None)
-        case PublicationState.PublicationPending(operationId) => (PUBLICATION_PENDING, Some(operationId.toArray))
-        case PublicationState.Published(operationId)          => (PUBLISHED, Some(operationId.toArray))
+      val status = PublicationStatusType.from(state.publicationState)
+      val publishedOperationId = state.publicationState match {
+        case PublicationState.Created()                       => None
+        case PublicationState.PublicationPending(operationId) => Some(operationId.toArray)
+        case PublicationState.Published(operationId)          => Some(operationId.toArray)
       }
       DIDStateRow(
         did = did,

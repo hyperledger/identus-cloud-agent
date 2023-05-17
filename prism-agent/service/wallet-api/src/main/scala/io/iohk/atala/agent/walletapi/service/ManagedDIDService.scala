@@ -8,6 +8,7 @@ import io.iohk.atala.agent.walletapi.model.{
   ManagedDIDTemplate,
   UpdateManagedDIDAction,
   UpdateDIDRandKey,
+  ManagedDIDStatePatch,
   PublicationState
 }
 import io.iohk.atala.agent.walletapi.model.error.{*, given}
@@ -124,9 +125,9 @@ final class ManagedDIDService private[walletapi] (
       for {
         signedOperation <- signOperationWithMasterKey[PublishManagedDIDError](state.createOperation)
         outcome <- submitSignedOperation[PublishManagedDIDError](signedOperation)
-        newState = state.copy(publicationState = PublicationState.PublicationPending(outcome.operationId))
+        publicationState = PublicationState.PublicationPending(outcome.operationId)
         _ <- nonSecretStorage
-          .setManagedDIDState(did, newState)
+          .updateManagedDID(did, ManagedDIDStatePatch(publicationState))
           .mapError(PublishManagedDIDError.WalletStorageError.apply)
       } yield outcome
     }
@@ -366,11 +367,10 @@ final class ManagedDIDService private[walletapi] (
         .foreach(maybeCurrentState)(i => computeNewDIDStateFromDLT(i.publicationState))
         .mapError[E](e => e)
       _ <- ZIO.foreach(maybeCurrentState zip maybeNewPubState) { case (currentState, newPubState) =>
-        val newState = currentState.copy(publicationState = newPubState)
         nonSecretStorage
-          .setManagedDIDState(did, newState)
+          .updateManagedDID(did, ManagedDIDStatePatch(newPubState))
           .mapError[E](CommonWalletStorageError.apply)
-          .when(currentState != newState)
+          .when(currentState.publicationState != newPubState)
       }
     } yield ()
   }

@@ -34,3 +34,5 @@ final case class DIDUpdateLineage(
     createdAt: Instant,
     updatedAt: Instant
 )
+
+final case class ManagedDIDStatePatch(publicationState: PublicationState)
