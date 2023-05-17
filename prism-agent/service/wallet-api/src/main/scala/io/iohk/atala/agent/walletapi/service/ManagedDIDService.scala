@@ -7,6 +7,7 @@ import io.iohk.atala.agent.walletapi.model.{
   ManagedDIDState,
   ManagedDIDTemplate,
   UpdateManagedDIDAction,
+  UpdateDIDRandKey,
   PublicationState
 }
 import io.iohk.atala.agent.walletapi.model.error.{*, given}
@@ -15,7 +16,6 @@ import io.iohk.atala.agent.walletapi.storage.{DIDNonSecretStorage, DIDSecretStor
 import io.iohk.atala.agent.walletapi.util.{
   ManagedDIDTemplateValidator,
   OperationFactory,
-  UpdateDIDRandKey,
   UpdateManagedDIDActionValidator
 }
 import io.iohk.atala.castor.core.model.did.{
@@ -154,21 +154,28 @@ final class ManagedDIDService private[walletapi] (
         .mapError(CreateManagedDIDError.InvalidArgument.apply)
       didIndex <- nonSecretStorage
         .getMaxDIDIndex()
+        .debug("didIndex")
         .mapBoth(
           CreateManagedDIDError.WalletStorageError.apply,
           maybeIdx => maybeIdx.map(_ + 1).getOrElse(0)
         )
       generated <- generateCreateOperationHdKey(didIndex, didTemplate)
-      (createOperation, secret) = generated
+      (createOperation, hdKey) = generated
       longFormDID = PrismDID.buildLongFormFromOperation(createOperation)
       did = longFormDID.asCanonical
       _ <- ZIO
         .fromEither(didOpValidator.validate(createOperation))
         .mapError(CreateManagedDIDError.InvalidOperation.apply)
+        .debug("validation")
+      // _ <- nonSecretStorage
+      //   .getManagedDIDState(did)
+      //   .mapError(CreateManagedDIDError.WalletStorageError.apply)
+      //   .filterOrFail(_.isEmpty)(CreateManagedDIDError.DIDAlreadyExists(did))
+      state = ManagedDIDState(createOperation, Some(didIndex), PublicationState.Created())
       _ <- nonSecretStorage
-        .getManagedDIDState(did)
+        .insertManagedDID(did, state, hdKey.keyPaths ++ hdKey.internalKeyPaths)
+        .debug("inserted DID")
         .mapError(CreateManagedDIDError.WalletStorageError.apply)
-        .filterOrFail(_.isEmpty)(CreateManagedDIDError.DIDAlreadyExists(did))
       // _ <- ZIO
       //   .foreachDiscard(secret.keyPairs ++ secret.internalKeyPairs) { case (keyId, keyPair) =>
       //     secretStorage.insertKey(did, keyId, keyPair, createOperation.toAtalaOperationHash)
@@ -183,7 +190,7 @@ final class ManagedDIDService private[walletapi] (
       //     ManagedDIDState(createOperation, didIndex, PublicationState.Created())
       //   )
       //   .mapError(CreateManagedDIDError.WalletStorageError.apply)
-    } yield ??? // longFormDID
+    } yield longFormDID
   }
 
   def updateManagedDID(

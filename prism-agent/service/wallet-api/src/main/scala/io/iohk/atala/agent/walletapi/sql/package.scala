@@ -11,6 +11,9 @@ import io.iohk.atala.prism.protos.node_models
 import java.time.Instant
 import scala.util.Try
 import scala.collection.immutable.ArraySeq
+import io.iohk.atala.castor.core.model.did.VerificationRelationship
+import io.iohk.atala.castor.core.model.did.InternalKeyPurpose
+import io.iohk.atala.agent.walletapi.model.ManagedDidHdKeyPath
 
 package object sql {
 
@@ -20,6 +23,29 @@ package object sql {
     case object PUBLICATION_PENDING extends PublicationStatusType
     case object PUBLISHED extends PublicationStatusType
   }
+
+  given Meta[VerificationRelationship | InternalKeyPurpose] = pgEnumString(
+    "PRISM_DID_KEY_USAGE",
+    {
+      case "MASTER"                => InternalKeyPurpose.Master
+      case "ISSUING"               => VerificationRelationship.AssertionMethod
+      case "KEY_AGREEMENT"         => VerificationRelationship.KeyAgreement
+      case "AUTHENTICATION"        => VerificationRelationship.Authentication
+      case "REVOCATION"            => InternalKeyPurpose.Revocation
+      case "CAPABILITY_INVOCATION" => VerificationRelationship.CapabilityInvocation
+      case "CAPABILITY_DELEGATION" => VerificationRelationship.CapabilityDelegation
+      case s                       => throw InvalidEnum[VerificationRelationship | InternalKeyPurpose](s)
+    },
+    {
+      case InternalKeyPurpose.Master                     => "MASTER"
+      case VerificationRelationship.AssertionMethod      => "ISSUING"
+      case VerificationRelationship.KeyAgreement         => "KEY_AGREEMENT"
+      case VerificationRelationship.Authentication       => "AUTHENTICATION"
+      case InternalKeyPurpose.Revocation                 => "REVOCATION"
+      case VerificationRelationship.CapabilityInvocation => "CAPABILITY_INVOCATION"
+      case VerificationRelationship.CapabilityDelegation => "CAPABILITY_DELEGATION"
+    }
+  )
 
   given Meta[KeyManagementMode] = pgEnumString(
     "PRISM_DID_KEY_MODE",

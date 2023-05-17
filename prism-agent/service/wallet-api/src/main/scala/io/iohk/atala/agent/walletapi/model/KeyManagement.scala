@@ -4,6 +4,7 @@ import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import io.iohk.atala.castor.core.model.did.InternalKeyPurpose
 import io.iohk.atala.agent.walletapi.crypto.DerivationPath
 import io.circe.Derivation
+import io.iohk.atala.agent.walletapi.crypto.ECKeyPair
 
 enum KeyManagementMode {
   case Random extends KeyManagementMode
@@ -107,3 +108,16 @@ final case class ManagedDidHdKeyPath(
     }
   }
 }
+
+private[walletapi] final case class CreateDIDRandKey(
+    keyPairs: Map[String, ECKeyPair],
+    internalKeyPairs: Map[String, ECKeyPair]
+)
+
+private[walletapi] final case class UpdateDIDRandKey(newKeyPairs: Map[String, ECKeyPair])
+
+private[walletapi] final case class CreateDidHdKey(
+    keyPaths: Map[String, ManagedDidHdKeyPath],
+    internalKeyPaths: Map[String, ManagedDidHdKeyPath],
+    counter: ManagedDidHdKeyCounter
+)

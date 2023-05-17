@@ -9,7 +9,10 @@ private[walletapi] trait DIDNonSecretStorage {
 
   def getManagedDIDState(did: PrismDID): Task[Option[ManagedDIDState]]
 
+  // TODO: deprecated, remove
   def setManagedDIDState(did: PrismDID, state: ManagedDIDState): Task[Unit]
+
+  def insertManagedDID(did: PrismDID, state: ManagedDIDState, hdKey: Map[String, ManagedDidHdKeyPath]): Task[Unit]
 
   def getMaxDIDIndex(): Task[Option[Int]]
 

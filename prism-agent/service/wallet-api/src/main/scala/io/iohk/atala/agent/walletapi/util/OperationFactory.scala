@@ -1,7 +1,14 @@
 package io.iohk.atala.agent.walletapi.util
 
 import io.iohk.atala.agent.walletapi.crypto.{ECKeyPair, ECPublicKey}
-import io.iohk.atala.agent.walletapi.model.{DIDPublicKeyTemplate, ManagedDIDTemplate, UpdateManagedDIDAction}
+import io.iohk.atala.agent.walletapi.model.{
+  DIDPublicKeyTemplate,
+  ManagedDIDTemplate,
+  UpdateManagedDIDAction,
+  CreateDidHdKey,
+  CreateDIDRandKey,
+  UpdateDIDRandKey
+}
 import io.iohk.atala.agent.walletapi.model.error.{CreateManagedDIDError, UpdateManagedDIDError}
 import io.iohk.atala.castor.core.model.did.{
   CanonicalPrismDID,
@@ -20,19 +27,6 @@ import io.iohk.atala.agent.walletapi.model.ManagedDidHdKeyCounter
 import io.iohk.atala.agent.walletapi.crypto.Apollo
 import io.iohk.atala.castor.core.model.did.EllipticCurve
 import io.iohk.atala.agent.walletapi.model.ManagedDidHdKeyPath
-
-private[walletapi] final case class CreateDIDRandKey(
-    keyPairs: Map[String, ECKeyPair],
-    internalKeyPairs: Map[String, ECKeyPair]
-)
-
-private[walletapi] final case class UpdateDIDRandKey(newKeyPairs: Map[String, ECKeyPair])
-
-private[walletapi] final case class CreateDidHdKey(
-    keyPaths: Map[String, ManagedDidHdKeyPath],
-    internalKeyPaths: Map[String, ManagedDidHdKeyPath],
-    counter: ManagedDidHdKeyCounter
-)
 
 private[util] final case class KeyDerivationOutcome[PK](
     publicKey: PK,

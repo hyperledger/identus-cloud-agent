@@ -10,6 +10,9 @@ import zio.*
 import zio.interop.catz.*
 
 import java.time.Instant
+import io.iohk.atala.agent.walletapi.model.ManagedDidHdKeyPath
+import io.iohk.atala.castor.core.model.did.VerificationRelationship
+import io.iohk.atala.castor.core.model.did.InternalKeyPurpose
 
 class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage {
 
@@ -36,7 +39,7 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
       .flatMap(_.map(_.toDomain).fold(ZIO.none)(t => ZIO.fromTry(t).asSome))
   }
 
-  // TODO: do not upsert, but insert only
+  // TODO: remove
   override def setManagedDIDState(did: PrismDID, state: ManagedDIDState): Task[Unit] = {
     val cxnIO = (row: DIDStateRow) => sql"""
         | INSERT INTO public.prism_did_wallet_state(
@@ -74,16 +77,62 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
     } yield ()
   }
 
+  override def insertManagedDID(
+      did: PrismDID,
+      state: ManagedDIDState,
+      hdKey: Map[String, ManagedDidHdKeyPath]
+  ): Task[Unit] = {
+    val insertStateIO = (row: DIDStateRow) => sql"""
+        | INSERT INTO public.prism_did_wallet_state(
+        |   did,
+        |   publication_status,
+        |   atala_operation_content,
+        |   publish_operation_id,
+        |   created_at,
+        |   updated_at,
+        |   key_mode,
+        |   did_index
+        | )
+        | VALUES (
+        |   ${row.did},
+        |   ${row.publicationStatus},
+        |   ${row.atalaOperationContent},
+        |   ${row.publishOperationId},
+        |   ${row.createdAt},
+        |   ${row.updatedAt},
+        |   ${row.keyMode},
+        |   ${row.didIndex}
+        | )
+        """.stripMargin.update
+
+    val hdKeyValues = hdKey.toList.map { case (key, path) => (did, key, path.keyUsage, path.keyIndex) }
+    val insertHdKeyIO = Update[(PrismDID, String, VerificationRelationship | InternalKeyPurpose, Int)](
+      "INSERT INTO public.prism_did_hd_key(did, key_id, key_usage, key_index) VALUES (?, ?, ?, ?)"
+    )
+
+    val cxnIO = (now: Instant) =>
+      for {
+        _ <- insertStateIO(DIDStateRow.from(did, state, now)).run
+        _ <- insertHdKeyIO.updateMany(hdKeyValues)
+      } yield ()
+
+    for {
+      now <- Clock.instant
+      _ <- cxnIO(now).transact(xa)
+    } yield ()
+  }
+
   override def getMaxDIDIndex(): Task[Option[Int]] = {
     val cxnIO =
       sql"""
         | SELECT MAX(did_index)
         | FROM public.prism_did_wallet_state
+        | WHERE did_index IS NOT NULL
       """.stripMargin
-        .query[Int]
+        .query[Option[Int]]
         .option
 
-    cxnIO.transact(xa)
+    cxnIO.transact(xa).map(_.flatten)
   }
 
   override def listManagedDID(
