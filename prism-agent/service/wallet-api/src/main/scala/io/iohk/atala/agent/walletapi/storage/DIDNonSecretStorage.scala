@@ -15,6 +15,8 @@ private[walletapi] trait DIDNonSecretStorage {
 
   def getMaxDIDIndex(): Task[Option[Int]]
 
+  def getHdKeyPath(did: PrismDID, keyId: String): Task[Option[ManagedDidHdKeyPath]]
+
   /** Return a list of Managed DID as well as a count of all filtered items */
   def listManagedDID(offset: Option[Int], limit: Option[Int]): Task[(Seq[(PrismDID, ManagedDIDState)], Int)]
 

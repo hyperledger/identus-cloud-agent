@@ -88,7 +88,7 @@ final case class ManagedDidHdKeyPath(
 ) {
   def derivationPath: Seq[DerivationPath] =
     Seq(
-      DerivationPath.Hardened(0x1d), // TODO: confirm the value of wallet purpose
+      DerivationPath.Hardened(0x1d),
       DerivationPath.Hardened(didIndex),
       DerivationPath.Hardened(keyUsageIndex),
       DerivationPath.Hardened(keyIndex)

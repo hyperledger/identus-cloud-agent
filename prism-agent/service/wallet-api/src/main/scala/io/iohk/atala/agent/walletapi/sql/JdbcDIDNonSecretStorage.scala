@@ -120,6 +120,22 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
     cxnIO.transact(xa).map(_.flatten)
   }
 
+  override def getHdKeyPath(did: PrismDID, keyId: String): Task[Option[ManagedDidHdKeyPath]] = {
+    val cxnIO =
+      sql"""
+           | SELECT
+           |   ws.did_index,
+           |   hd.key_usage,
+           |   hd.key_index
+           | FROM public.prism_did_hd_key hd JOIN public.prism_did_wallet_state ws ON hd.did = ws.did
+           | WHERE hd.did = $did AND hd.key_id = $keyId
+           """.stripMargin
+        .query[ManagedDidHdKeyPath]
+        .option
+
+    cxnIO.transact(xa)
+  }
+
   override def listManagedDID(
       offset: Option[Int],
       limit: Option[Int]

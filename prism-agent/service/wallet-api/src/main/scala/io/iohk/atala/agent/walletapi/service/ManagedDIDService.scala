@@ -42,6 +42,7 @@ import io.iohk.atala.mercury.model.DidId
 import java.security.{PrivateKey as JavaPrivateKey, PublicKey as JavaPublicKey}
 import io.iohk.atala.agent.walletapi.model.KeyManagementMode
 import io.iohk.atala.shared.models.HexString
+import io.iohk.atala.agent.walletapi.util.KeyResolver
 
 /** A wrapper around Castor's DIDService providing key-management capability. Analogous to the secretAPI in
   * indy-wallet-sdk.
@@ -64,6 +65,8 @@ final class ManagedDIDService private[walletapi] (
       "fffcf9f6f3f0edeae7e4e1dedbd8d5d2cfccc9c6c3c0bdbab7b4b1aeaba8a5a29f9c999693908d8a8784817e7b7875726f6c696663605d5a5754514e4b484542"
     )
     .toByteArray
+
+  private val keyResolver = KeyResolver(apollo, nonSecretStorage, secretStorage)(seed)
 
   private val generateCreateOperation =
     OperationFactory(apollo).makeCreateOperationRandKey(DEFAULT_MASTER_KEY_ID)
@@ -93,8 +96,16 @@ final class ManagedDIDService private[walletapi] (
       did: CanonicalPrismDID,
       keyId: String
   ): IO[GetKeyError, Option[(JavaPrivateKey, JavaPublicKey)]] = {
-    secretStorage
-      .getKey(did, keyId)
+    nonSecretStorage
+      .getManagedDIDState(did)
+      .flatMap {
+        case None => ZIO.none
+        case Some(state) =>
+          val did = state.createOperation.did
+          keyResolver
+            .getKey(did, state.keyMode, keyId)
+
+      }
       .mapBoth(
         GetKeyError.WalletStorageError.apply,
         _.map { ecKeyPair =>
@@ -123,7 +134,7 @@ final class ManagedDIDService private[walletapi] (
   def publishStoredDID(did: CanonicalPrismDID): IO[PublishManagedDIDError, ScheduleDIDOperationOutcome] = {
     def doPublish(state: ManagedDIDState) = {
       for {
-        signedOperation <- signOperationWithMasterKey[PublishManagedDIDError](state.createOperation)
+        signedOperation <- signOperationWithMasterKey[PublishManagedDIDError](state, state.createOperation)
         outcome <- submitSignedOperation[PublishManagedDIDError](signedOperation)
         publicationState = PublicationState.PublicationPending(outcome.operationId)
         _ <- nonSecretStorage
@@ -177,10 +188,10 @@ final class ManagedDIDService private[walletapi] (
       did: CanonicalPrismDID,
       actions: Seq[UpdateManagedDIDAction]
   ): IO[UpdateManagedDIDError, ScheduleDIDOperationOutcome] = {
-    def doUpdate(operation: PrismDIDOperation.Update, secret: UpdateDIDRandKey) = {
+    def doUpdate(state: ManagedDIDState, operation: PrismDIDOperation.Update, secret: UpdateDIDRandKey) = {
       val operationHash = operation.toAtalaOperationHash
       for {
-        signedOperation <- signOperationWithMasterKey[UpdateManagedDIDError](operation)
+        signedOperation <- signOperationWithMasterKey[UpdateManagedDIDError](state, operation)
         updateLineage <- Clock.instant.map { now =>
           DIDUpdateLineage(
             operationId = ArraySeq.from(signedOperation.toAtalaOperationId),
@@ -230,14 +241,14 @@ final class ManagedDIDService private[walletapi] (
       _ <- ZIO
         .fromEither(didOpValidator.validate(updateOperation))
         .mapError(UpdateManagedDIDError.InvalidOperation.apply)
-      outcome <- doUpdate(updateOperation, secret)
+      outcome <- doUpdate(didState, updateOperation, secret)
     } yield outcome
   }
 
   def deactivateManagedDID(did: CanonicalPrismDID): IO[UpdateManagedDIDError, ScheduleDIDOperationOutcome] = {
-    def doDeactivate(operation: PrismDIDOperation.Deactivate) = {
+    def doDeactivate(state: ManagedDIDState, operation: PrismDIDOperation.Deactivate) = {
       for {
-        signedOperation <- signOperationWithMasterKey[UpdateManagedDIDError](operation)
+        signedOperation <- signOperationWithMasterKey[UpdateManagedDIDError](state, operation)
         outcome <- submitSignedOperation[UpdateManagedDIDError](signedOperation)
       } yield outcome
     }
@@ -265,7 +276,7 @@ final class ManagedDIDService private[walletapi] (
       _ <- ZIO
         .fromEither(didOpValidator.validate(deactivateOperation))
         .mapError(UpdateManagedDIDError.InvalidOperation.apply)
-      outcome <- doDeactivate(deactivateOperation)
+      outcome <- doDeactivate(didState, deactivateOperation)
     } yield outcome
   }
 
@@ -306,15 +317,14 @@ final class ManagedDIDService private[walletapi] (
     } yield ()
   }
 
-  private def signOperationWithMasterKey[E](operation: PrismDIDOperation)(using
+  private def signOperationWithMasterKey[E](state: ManagedDIDState, operation: PrismDIDOperation)(using
       c1: Conversion[CommonWalletStorageError, E],
       c2: Conversion[CommonCryptographyError, E]
   ): IO[E, SignedPrismDIDOperation] = {
-    val did = operation.did
     for {
       masterKeyPair <-
-        secretStorage
-          .getKey(did, DEFAULT_MASTER_KEY_ID)
+        keyResolver
+          .getKey(state, DEFAULT_MASTER_KEY_ID)
           .mapError[E](CommonWalletStorageError.apply)
           .someOrElseZIO(
             ZIO.die(Exception("master-key must exists in the wallet for signing DID operation and submit to Node"))
