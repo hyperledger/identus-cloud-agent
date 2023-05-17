@@ -1,3 +1,17 @@
+# [1.2.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v1.1.0...prism-agent-v1.2.0) (2023-05-17)
+
+
+### Bug Fixes
+
+* **prism-agent:** refactor crypto abstraction in the walletAPI ([#522](https://github.com/input-output-hk/atala-prism-building-blocks/issues/522)) ([e36c634](https://github.com/input-output-hk/atala-prism-building-blocks/commit/e36c63424ed2e28fc360c6a6a5d557938d4ec01a))
+
+
+### Features
+
+* migrate issue endpoint to tapir ([#516](https://github.com/input-output-hk/atala-prism-building-blocks/issues/516)) ([9b1558f](https://github.com/input-output-hk/atala-prism-building-blocks/commit/9b1558f50003ba1c79ec2cdd9888f2e99f0534d8))
+* **prism-agent:** fix infinite reprocessing of records in error ([#528](https://github.com/input-output-hk/atala-prism-building-blocks/issues/528)) ([904a2dc](https://github.com/input-output-hk/atala-prism-building-blocks/commit/904a2dcb09d2e907e284479c652c5f389fd0dec9))
+* **prism-agent:** migrate present-proof endpoints to Tapir ([#525](https://github.com/input-output-hk/atala-prism-building-blocks/issues/525)) ([cb01657](https://github.com/input-output-hk/atala-prism-building-blocks/commit/cb016570b6d0a1b0de98928d6daa1cbf055d26b4))
+
 # [1.1.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v1.0.0...prism-agent-v1.1.0) (2023-05-05)
 
 
