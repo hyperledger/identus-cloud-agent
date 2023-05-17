@@ -15,7 +15,7 @@ import io.iohk.atala.agent.walletapi.storage.{DIDNonSecretStorage, DIDSecretStor
 import io.iohk.atala.agent.walletapi.util.{
   ManagedDIDTemplateValidator,
   OperationFactory,
-  UpdateDIDSecret,
+  UpdateDIDRandKey,
   UpdateManagedDIDActionValidator
 }
 import io.iohk.atala.castor.core.model.did.{
@@ -40,6 +40,7 @@ import io.iohk.atala.mercury.model.DidId
 
 import java.security.{PrivateKey as JavaPrivateKey, PublicKey as JavaPublicKey}
 import io.iohk.atala.agent.walletapi.model.KeyManagementMode
+import io.iohk.atala.shared.models.HexString
 
 /** A wrapper around Castor's DIDService providing key-management capability. Analogous to the secretAPI in
   * indy-wallet-sdk.
@@ -56,14 +57,21 @@ final class ManagedDIDService private[walletapi] (
   private val AGREEMENT_KEY_ID = "agreement"
   private val AUTHENTICATION_KEY_ID = "authentication"
 
-  private val generateCreateOperation =
-    OperationFactory(apollo).makeCreateOperation(
-      DEFAULT_MASTER_KEY_ID,
-      () => apollo.ecKeyFactory.generateKeyPair(CURVE)
+  // TODO: remove
+  private val seed: Array[Byte] = HexString
+    .fromStringUnsafe(
+      "fffcf9f6f3f0edeae7e4e1dedbd8d5d2cfccc9c6c3c0bdbab7b4b1aeaba8a5a29f9c999693908d8a8784817e7b7875726f6c696663605d5a5754514e4b484542"
     )
+    .toByteArray
+
+  private val generateCreateOperation =
+    OperationFactory(apollo).makeCreateOperationRandKey(DEFAULT_MASTER_KEY_ID)
 
   private val generateUpdateOperation =
-    OperationFactory(apollo).makeUpdateOperation(() => apollo.ecKeyFactory.generateKeyPair(CURVE))
+    OperationFactory(apollo).makeUpdateOperationRandKey(() => apollo.ecKeyFactory.generateKeyPair(CURVE))
+
+  private val generateCreateOperationHdKey =
+    OperationFactory(apollo).makeCreateOperationHdKey(DEFAULT_MASTER_KEY_ID, seed)
 
   def syncManagedDIDState: IO[GetManagedDIDError, Unit] = nonSecretStorage
     .listManagedDID(offset = None, limit = None)
@@ -176,7 +184,7 @@ final class ManagedDIDService private[walletapi] (
       did: CanonicalPrismDID,
       actions: Seq[UpdateManagedDIDAction]
   ): IO[UpdateManagedDIDError, ScheduleDIDOperationOutcome] = {
-    def doUpdate(operation: PrismDIDOperation.Update, secret: UpdateDIDSecret) = {
+    def doUpdate(operation: PrismDIDOperation.Update, secret: UpdateDIDRandKey) = {
       val operationHash = operation.toAtalaOperationHash
       for {
         signedOperation <- signOperationWithMasterKey[UpdateManagedDIDError](operation)
