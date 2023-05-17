@@ -1,11 +1,11 @@
 package io.iohk.atala.agent.server.config
 
+import io.iohk.atala.castor.core.model.did.VerificationRelationship
+import io.iohk.atala.pollux.vc.jwt.*
 import zio.config.*
 import zio.config.magnolia.Descriptor
+
 import java.time.Duration
-import io.iohk.atala.pollux.vc.jwt._
-import io.iohk.atala.pollux.vc.jwt.JwtPresentation
-import io.iohk.atala.castor.core.model.did.VerificationRelationship
 
 final case class AppConfig(
     iris: IrisConfig,
@@ -25,13 +25,16 @@ final case class IrisConfig(service: GrpcServiceConfig)
 final case class CastorConfig(database: DatabaseConfig)
 final case class PolluxConfig(
     database: DatabaseConfig,
+    issueBgJobRecordsLimit: Int,
     issueBgJobRecurrenceDelay: Duration,
     issueBgJobProcessingParallelism: Int,
+    presentationBgJobRecordsLimit: Int,
     presentationBgJobRecurrenceDelay: Duration,
     presentationBgJobProcessingParallelism: Int,
 )
 final case class ConnectConfig(
     database: DatabaseConfig,
+    connectBgJobRecordsLimit: Int,
     connectBgJobRecurrenceDelay: Duration,
     connectBgJobProcessingParallelism: Int
 )

@@ -138,11 +138,13 @@ object PresentationServiceSpec extends ZIOSpecDefault {
           aRecord <- svc.createRecord()
           records <- svc.getPresentationRecordsByStates(
             ignoreWithZeroRetries = true,
+            limit = 10,
             PresentationRecord.ProtocolState.RequestPending
           )
           onePending = assertTrue(records.size == 1) && assertTrue(records.contains(aRecord))
           records <- svc.getPresentationRecordsByStates(
             ignoreWithZeroRetries = true,
+            limit = 10,
             PresentationRecord.ProtocolState.RequestSent
           )
           zeroSent = assertTrue(records.isEmpty)

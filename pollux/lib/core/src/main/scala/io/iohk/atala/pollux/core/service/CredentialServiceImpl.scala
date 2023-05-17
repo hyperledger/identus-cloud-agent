@@ -120,12 +120,13 @@ private class CredentialServiceImpl(
   }
 
   override def getIssueCredentialRecordsByStates(
-      ignoreWithZeroRetries: Boolean = true,
+      ignoreWithZeroRetries: Boolean,
+      limit: Int,
       states: IssueCredentialRecord.ProtocolState*
   ): IO[CredentialServiceError, Seq[IssueCredentialRecord]] = {
     for {
       records <- credentialRepository
-        .getIssueCredentialRecordsByStates(ignoreWithZeroRetries, states: _*)
+        .getIssueCredentialRecordsByStates(ignoreWithZeroRetries, limit, states: _*)
         .mapError(RepositoryError.apply)
     } yield records
   }
@@ -392,6 +393,18 @@ private class CredentialServiceImpl(
       Some(IssueCredentialRecord.PublicationState.PublicationQueued),
       Some(IssueCredentialRecord.PublicationState.Published)
     )
+
+  override def reportProcessingFailure(
+      recordId: DidCommID,
+      failReason: Option[String]
+  ): IO[CredentialServiceError, Unit] =
+    credentialRepository
+      .updateAfterFail(recordId, failReason)
+      .mapError(RepositoryError.apply)
+      .flatMap {
+        case 1 => ZIO.unit
+        case n => ZIO.fail(UnexpectedError(s"Invalid number of records updated: $n"))
+      }
 
   private[this] def getRecordWithState(
       recordId: DidCommID,

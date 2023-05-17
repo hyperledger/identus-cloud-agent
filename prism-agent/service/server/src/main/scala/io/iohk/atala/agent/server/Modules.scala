@@ -406,11 +406,6 @@ object Modules {
     }
   }
 
-  val publishCredentialsToDltJob: RIO[CredentialService, Unit] = {
-    val effect = BackgroundJobs.publishCredentialsToDlt
-    (effect repeat Schedule.spaced(1.seconds)).unit
-  }
-
 }
 object SystemModule {
   val configLayer: Layer[ReadError[String], AppConfig] = ZLayer.fromZIO {
