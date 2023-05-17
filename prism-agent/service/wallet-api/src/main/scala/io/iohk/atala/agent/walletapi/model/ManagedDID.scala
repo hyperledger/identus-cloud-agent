@@ -9,9 +9,14 @@ final case class ManagedDIDDetail(did: CanonicalPrismDID, state: ManagedDIDState
 
 final case class ManagedDIDState(
     createOperation: PrismDIDOperation.Create,
-    keyMode: KeyManagementMode,
+    didIndex: Option[Int],
     publicationState: PublicationState
-)
+) {
+  def keyMode: KeyManagementMode = didIndex match {
+    case Some(_) => KeyManagementMode.HD
+    case None    => KeyManagementMode.Random
+  }
+}
 
 sealed trait PublicationState
 

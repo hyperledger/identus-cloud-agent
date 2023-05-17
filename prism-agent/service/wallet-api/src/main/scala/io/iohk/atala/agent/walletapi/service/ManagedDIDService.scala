@@ -152,7 +152,13 @@ final class ManagedDIDService private[walletapi] (
       _ <- ZIO
         .fromEither(ManagedDIDTemplateValidator.validate(didTemplate))
         .mapError(CreateManagedDIDError.InvalidArgument.apply)
-      generated <- generateCreateOperation(didTemplate)
+      didIndex <- nonSecretStorage
+        .getMaxDIDIndex()
+        .mapBoth(
+          CreateManagedDIDError.WalletStorageError.apply,
+          maybeIdx => maybeIdx.map(_ + 1).getOrElse(0)
+        )
+      generated <- generateCreateOperationHdKey(didIndex, didTemplate)
       (createOperation, secret) = generated
       longFormDID = PrismDID.buildLongFormFromOperation(createOperation)
       did = longFormDID.asCanonical
@@ -163,21 +169,21 @@ final class ManagedDIDService private[walletapi] (
         .getManagedDIDState(did)
         .mapError(CreateManagedDIDError.WalletStorageError.apply)
         .filterOrFail(_.isEmpty)(CreateManagedDIDError.DIDAlreadyExists(did))
-      _ <- ZIO
-        .foreachDiscard(secret.keyPairs ++ secret.internalKeyPairs) { case (keyId, keyPair) =>
-          secretStorage.insertKey(did, keyId, keyPair, createOperation.toAtalaOperationHash)
-        }
-        .mapError(CreateManagedDIDError.WalletStorageError.apply)
-      // A DID is considered created after a successful setState
-      // If some steps above failed, it is not considered created and data that
-      // are persisted along the way may be garbage collected.
-      _ <- nonSecretStorage
-        .setManagedDIDState(
-          did,
-          ManagedDIDState(createOperation, KeyManagementMode.Random, PublicationState.Created()) // TODO: allow HD key
-        )
-        .mapError(CreateManagedDIDError.WalletStorageError.apply)
-    } yield longFormDID
+      // _ <- ZIO
+      //   .foreachDiscard(secret.keyPairs ++ secret.internalKeyPairs) { case (keyId, keyPair) =>
+      //     secretStorage.insertKey(did, keyId, keyPair, createOperation.toAtalaOperationHash)
+      //   }
+      //   .mapError(CreateManagedDIDError.WalletStorageError.apply)
+      // // A DID is considered created after a successful setState
+      // // If some steps above failed, it is not considered created and data that
+      // // are persisted along the way may be garbage collected.
+      // _ <- nonSecretStorage
+      //   .setManagedDIDState(
+      //     did,
+      //     ManagedDIDState(createOperation, didIndex, PublicationState.Created())
+      //   )
+      //   .mapError(CreateManagedDIDError.WalletStorageError.apply)
+    } yield ??? // longFormDID
   }
 
   def updateManagedDID(

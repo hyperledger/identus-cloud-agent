@@ -89,11 +89,13 @@ final case class ManagedDidHdKeyPath(
     Seq(
       DerivationPath.Hardened(0x1d), // TODO: confirm the value of wallet purpose
       DerivationPath.Hardened(didIndex),
-      DerivationPath.Hardened(keyUsageIndex(keyUsage)),
+      DerivationPath.Hardened(keyUsageIndex),
       DerivationPath.Hardened(keyIndex)
     )
 
-  private def keyUsageIndex(keyUsage: VerificationRelationship | InternalKeyPurpose): Int = {
+  def keyUsageIndex: Int = mapKeyUsageIndex(keyUsage)
+
+  private def mapKeyUsageIndex(keyUsage: VerificationRelationship | InternalKeyPurpose): Int = {
     keyUsage match {
       case InternalKeyPurpose.Master                     => 0
       case VerificationRelationship.AssertionMethod      => 1

@@ -23,7 +23,8 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
         |   publish_operation_id,
         |   created_at,
         |   updated_at,
-        |   key_mode
+        |   key_mode,
+        |   did_index
         | FROM public.prism_did_wallet_state
         | WHERE did = $did
         """.stripMargin
@@ -35,6 +36,7 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
       .flatMap(_.map(_.toDomain).fold(ZIO.none)(t => ZIO.fromTry(t).asSome))
   }
 
+  // TODO: do not upsert, but insert only
   override def setManagedDIDState(did: PrismDID, state: ManagedDIDState): Task[Unit] = {
     val cxnIO = (row: DIDStateRow) => sql"""
         | INSERT INTO public.prism_did_wallet_state(
@@ -44,7 +46,8 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
         |   publish_operation_id,
         |   created_at,
         |   updated_at,
-        |   key_mode
+        |   key_mode,
+        |   did_index
         | )
         | VALUES (
         |   ${row.did},
@@ -53,7 +56,8 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
         |   ${row.publishOperationId},
         |   ${row.createdAt},
         |   ${row.updatedAt},
-        |   ${row.keyMode}
+        |   ${row.keyMode},
+        |   ${row.didIndex}
         | )
         | ON CONFLICT (did) DO UPDATE SET
         |   publication_status = EXCLUDED.publication_status,
@@ -68,6 +72,18 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
       row = DIDStateRow.from(did, state, now)
       _ <- cxnIO(row).run.transact(xa)
     } yield ()
+  }
+
+  override def getMaxDIDIndex(): Task[Option[Int]] = {
+    val cxnIO =
+      sql"""
+        | SELECT MAX(did_index)
+        | FROM public.prism_did_wallet_state
+      """.stripMargin
+        .query[Int]
+        .option
+
+    cxnIO.transact(xa)
   }
 
   override def listManagedDID(
