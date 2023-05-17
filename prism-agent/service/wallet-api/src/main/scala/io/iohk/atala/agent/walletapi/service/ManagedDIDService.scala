@@ -154,7 +154,6 @@ final class ManagedDIDService private[walletapi] (
         .mapError(CreateManagedDIDError.InvalidArgument.apply)
       didIndex <- nonSecretStorage
         .getMaxDIDIndex()
-        .debug("didIndex")
         .mapBoth(
           CreateManagedDIDError.WalletStorageError.apply,
           maybeIdx => maybeIdx.map(_ + 1).getOrElse(0)
@@ -166,30 +165,10 @@ final class ManagedDIDService private[walletapi] (
       _ <- ZIO
         .fromEither(didOpValidator.validate(createOperation))
         .mapError(CreateManagedDIDError.InvalidOperation.apply)
-        .debug("validation")
-      // _ <- nonSecretStorage
-      //   .getManagedDIDState(did)
-      //   .mapError(CreateManagedDIDError.WalletStorageError.apply)
-      //   .filterOrFail(_.isEmpty)(CreateManagedDIDError.DIDAlreadyExists(did))
       state = ManagedDIDState(createOperation, Some(didIndex), PublicationState.Created())
       _ <- nonSecretStorage
         .insertManagedDID(did, state, hdKey.keyPaths ++ hdKey.internalKeyPaths)
-        .debug("inserted DID")
         .mapError(CreateManagedDIDError.WalletStorageError.apply)
-      // _ <- ZIO
-      //   .foreachDiscard(secret.keyPairs ++ secret.internalKeyPairs) { case (keyId, keyPair) =>
-      //     secretStorage.insertKey(did, keyId, keyPair, createOperation.toAtalaOperationHash)
-      //   }
-      //   .mapError(CreateManagedDIDError.WalletStorageError.apply)
-      // // A DID is considered created after a successful setState
-      // // If some steps above failed, it is not considered created and data that
-      // // are persisted along the way may be garbage collected.
-      // _ <- nonSecretStorage
-      //   .setManagedDIDState(
-      //     did,
-      //     ManagedDIDState(createOperation, didIndex, PublicationState.Created())
-      //   )
-      //   .mapError(CreateManagedDIDError.WalletStorageError.apply)
     } yield longFormDID
   }
 
