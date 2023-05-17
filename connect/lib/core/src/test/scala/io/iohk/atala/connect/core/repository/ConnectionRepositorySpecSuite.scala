@@ -1,18 +1,14 @@
 package io.iohk.atala.connect.core.repository
 
 import io.iohk.atala.connect.core.model.ConnectionRecord
-import io.iohk.atala.connect.core.model.ConnectionRecord._
-import io.iohk.atala.connect.core.model.error.ConnectionRepositoryError._
+import io.iohk.atala.connect.core.model.ConnectionRecord.*
+import io.iohk.atala.connect.core.model.error.ConnectionRepositoryError.*
 import io.iohk.atala.mercury.model.DidId
-import io.iohk.atala.mercury.protocol.connection.ConnectionRequest
-import io.iohk.atala.mercury.protocol.connection.ConnectionResponse
+import io.iohk.atala.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
 import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
-import zio.Cause
-import zio.Exit
-import zio.Task
-import zio.ZIO
-import zio.test.Assertion._
-import zio.test._
+import zio.test.*
+import zio.test.Assertion.*
+import zio.{Cause, Exit, Task, ZIO}
 
 import java.time.Instant
 import java.util.UUID
@@ -23,7 +19,7 @@ object ConnectionRepositorySpecSuite {
 
   private def connectionRecord = ConnectionRecord(
     UUID.randomUUID,
-    Instant.ofEpochSecond(Instant.now.getEpochSecond()),
+    Instant.ofEpochSecond(Instant.now.getEpochSecond),
     None,
     None,
     None,
@@ -38,6 +34,7 @@ object ConnectionRepositorySpecSuite {
     None,
     None,
     maxRetries,
+    Some(Instant.now),
     None
   )
 
@@ -99,7 +96,7 @@ object ConnectionRepositorySpecSuite {
         bRecord = connectionRecord
         _ <- repo.createConnectionRecord(aRecord)
         _ <- repo.createConnectionRecord(bRecord)
-        records <- repo.getConnectionRecords()
+        records <- repo.getConnectionRecords
       } yield {
         assertTrue(records.size == 2) &&
         assertTrue(records.contains(aRecord)) &&
@@ -127,8 +124,14 @@ object ConnectionRepositorySpecSuite {
           ProtocolState.ConnectionResponsePending,
           1
         )
-        invitationGeneratedRecords <- repo.getConnectionRecordsByStates(ProtocolState.InvitationGenerated)
+        invitationGeneratedRecords <- repo.getConnectionRecordsByStates(
+          ignoreWithZeroRetries = true,
+          limit = 10,
+          ProtocolState.InvitationGenerated
+        )
         otherRecords <- repo.getConnectionRecordsByStates(
+          ignoreWithZeroRetries = true,
+          limit = 10,
           ProtocolState.ConnectionRequestReceived,
           ProtocolState.ConnectionResponsePending
         )
@@ -149,9 +152,27 @@ object ConnectionRepositorySpecSuite {
         _ <- repo.createConnectionRecord(aRecord)
         _ <- repo.createConnectionRecord(bRecord)
         _ <- repo.createConnectionRecord(cRecord)
-        records <- repo.getConnectionRecordsByStates()
+        records <- repo.getConnectionRecordsByStates(ignoreWithZeroRetries = true, limit = 10)
       } yield {
         assertTrue(records.isEmpty)
+      }
+    },
+    test("getConnectionRecordsByStates returns an a subset of records when limit is specified") {
+      for {
+        repo <- ZIO.service[ConnectionRepository[Task]]
+        aRecord = connectionRecord
+        bRecord = connectionRecord
+        cRecord = connectionRecord
+        _ <- repo.createConnectionRecord(aRecord)
+        _ <- repo.createConnectionRecord(bRecord)
+        _ <- repo.createConnectionRecord(cRecord)
+        records <- repo.getConnectionRecordsByStates(
+          ignoreWithZeroRetries = true,
+          limit = 2,
+          ProtocolState.InvitationGenerated
+        )
+      } yield {
+        assertTrue(records.size == 2)
       }
     },
     test("deleteRecord deletes an existing record") {
@@ -162,7 +183,7 @@ object ConnectionRepositorySpecSuite {
         _ <- repo.createConnectionRecord(aRecord)
         _ <- repo.createConnectionRecord(bRecord)
         count <- repo.deleteConnectionRecord(aRecord.id)
-        records <- repo.getConnectionRecords()
+        records <- repo.getConnectionRecords
       } yield {
         assertTrue(count == 1) &&
         assertTrue(records.size == 1) &&
@@ -177,7 +198,7 @@ object ConnectionRepositorySpecSuite {
         _ <- repo.createConnectionRecord(aRecord)
         _ <- repo.createConnectionRecord(bRecord)
         count <- repo.deleteConnectionRecord(UUID.randomUUID)
-        records <- repo.getConnectionRecords()
+        records <- repo.getConnectionRecords
       } yield {
         assertTrue(count == 0) &&
         assertTrue(records.size == 2) &&

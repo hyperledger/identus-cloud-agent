@@ -69,8 +69,6 @@ lazy val V = new {
   val jwtCirceVersion = "9.1.2"
   val zioPreludeVersion = "1.0.0-RC16"
 
-  val akka = "2.6.20"
-  val akkaHttp = "10.2.9"
   val bouncyCastle = "1.70"
 }
 
@@ -271,11 +269,6 @@ lazy val D_Pollux_VC_JWT = new {
 
 lazy val D_PrismAgent = new {
 
-  val akkaTyped = "com.typesafe.akka" %% "akka-actor-typed" % V.akka
-  val akkaStream = "com.typesafe.akka" %% "akka-stream" % V.akka
-  val akkaHttp = "com.typesafe.akka" %% "akka-http" % V.akkaHttp
-  val akkaSprayJson = "com.typesafe.akka" %% "akka-http-spray-json" % V.akkaHttp
-
   // Added here to make prism-crypto works.
   // Once migrated to apollo, re-evaluate if this should be removed.
   val bouncyBcpkix = "org.bouncycastle" % "bcpkix-jdk15on" % V.bouncyCastle
@@ -320,8 +313,6 @@ lazy val D_PrismAgent = new {
     D.zioHttp,
     D.zioMetrics,
   )
-  val akkaHttpDependencies: Seq[ModuleID] =
-    Seq(akkaTyped, akkaStream, akkaHttp, akkaSprayJson).map(_.cross(CrossVersion.for3Use2_13))
   val bouncyDependencies: Seq[ModuleID] = Seq(bouncyBcpkix, bouncyBcprov)
   val tapirDependencies: Seq[ModuleID] =
     Seq(
@@ -343,7 +334,7 @@ lazy val D_PrismAgent = new {
     baseDependencies ++ bouncyDependencies ++ D.doobieDependencies ++ Seq(D.zioCatsInterop)
 
   lazy val serverDependencies: Seq[ModuleID] =
-    baseDependencies ++ akkaHttpDependencies ++ tapirDependencies ++ postgresDependencies
+    baseDependencies ++ tapirDependencies ++ postgresDependencies
 }
 
 publish / skip := true
@@ -668,12 +659,6 @@ lazy val prismAgentServer = project
     fork := true,
     libraryDependencies ++= D_PrismAgent.serverDependencies,
     Compile / mainClass := Some("io.iohk.atala.agent.server.MainApp"),
-    // OpenAPI settings
-    Compile / unmanagedResourceDirectories += baseDirectory.value / ".." / "api",
-    Compile / sourceGenerators += openApiGenerateClasses,
-    openApiGeneratorSpec := baseDirectory.value / ".." / "api" / "http/prism-agent-openapi-spec.yaml",
-    openApiGeneratorConfig := baseDirectory.value / "openapi/generator-config/config.yaml",
-    openApiGeneratorImportMapping := Map.empty,
     Docker / maintainer := "atala-coredid@iohk.io",
     Docker / dockerUsername := Some("input-output-hk"),
     Docker / dockerRepository := Some("ghcr.io"),
@@ -683,7 +668,7 @@ lazy val prismAgentServer = project
     buildInfoPackage := "io.iohk.atala.agent.server.buildinfo"
   )
   .enablePlugins(JavaAppPackaging, DockerPlugin)
-  .enablePlugins(OpenApiGeneratorPlugin, BuildInfoPlugin)
+  .enablePlugins(BuildInfoPlugin)
   .dependsOn(prismAgentWalletAPI)
   .dependsOn(
     agent,

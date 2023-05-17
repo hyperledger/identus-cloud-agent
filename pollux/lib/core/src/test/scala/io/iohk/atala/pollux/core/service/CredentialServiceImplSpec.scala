@@ -257,11 +257,13 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
           aRecord <- svc.createRecord()
           records <- svc.getIssueCredentialRecordsByStates(
             ignoreWithZeroRetries = true,
+            limit = 10,
             ProtocolState.OfferPending
           )
           onePending = assertTrue(records.size == 1) && assertTrue(records.contains(aRecord))
           records <- svc.getIssueCredentialRecordsByStates(
             ignoreWithZeroRetries = true,
+            limit = 10,
             ProtocolState.OfferSent
           )
           zeroSent = assertTrue(records.isEmpty)

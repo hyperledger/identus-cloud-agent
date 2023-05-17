@@ -72,6 +72,7 @@ trait CredentialService {
 
   def getIssueCredentialRecordsByStates(
       ignoreWithZeroRetries: Boolean,
+      limit: Int,
       states: IssueCredentialRecord.ProtocolState*
   ): IO[CredentialServiceError, Seq[IssueCredentialRecord]]
 
@@ -128,6 +129,8 @@ trait CredentialService {
   def markCredentialPublicationQueued(recordId: DidCommID): IO[CredentialServiceError, IssueCredentialRecord]
 
   def markCredentialPublished(recordId: DidCommID): IO[CredentialServiceError, IssueCredentialRecord]
+
+  def reportProcessingFailure(recordId: DidCommID, failReason: Option[String]): IO[CredentialServiceError, Unit]
 
 }
 

@@ -1,7 +1,7 @@
 package io.iohk.atala.agent.walletapi.storage
 
 import com.nimbusds.jose.jwk.OctetKeyPair
-import io.iohk.atala.agent.walletapi.model.ECKeyPair
+import io.iohk.atala.agent.walletapi.crypto.ECKeyPair
 import io.iohk.atala.castor.core.model.did.PrismDID
 import io.iohk.atala.mercury.model.DidId
 import scala.collection.immutable.ArraySeq

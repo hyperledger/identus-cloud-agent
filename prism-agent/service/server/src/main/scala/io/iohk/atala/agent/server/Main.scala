@@ -7,17 +7,19 @@ import io.circe.parser.*
 import io.circe.syntax.*
 import io.iohk.atala.agent.server.buildinfo.BuildInfo
 import io.iohk.atala.agent.server.health.HealthInfo
-import io.iohk.atala.agent.server.http.{HttpRoutes, ZioHttpClient}
+import io.iohk.atala.agent.server.http.ZioHttpClient
 import io.iohk.atala.agent.server.sql.Migrations as AgentMigrations
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
 import io.iohk.atala.castor.controller.{DIDControllerImpl, DIDRegistrarControllerImpl}
 import io.iohk.atala.connect.controller.ConnectionControllerImpl
 import io.iohk.atala.connect.sql.repository.Migrations as ConnectMigrations
+import io.iohk.atala.issue.controller.IssueControllerImpl
 import io.iohk.atala.mercury.*
 import io.iohk.atala.pollux.core.service.URIDereferencerError.{ConnectionError, ResourceNotFound, UnexpectedError}
 import io.iohk.atala.pollux.core.service.{CredentialSchemaServiceImpl, URIDereferencer, URIDereferencerError}
 import io.iohk.atala.pollux.sql.repository.{JdbcCredentialSchemaRepository, Migrations as PolluxMigrations}
+import io.iohk.atala.presentproof.controller.PresentProofControllerImpl
 import io.iohk.atala.resolvers.{DIDResolver, UniversalDidResolver}
 import org.didcommx.didcomm.DIDComm
 import org.flywaydb.core.extensibility.AppliedMigration
@@ -73,7 +75,6 @@ object AgentApp extends ZIOAppDefault {
     _ <- Modules.connectDidCommExchangesJob.debug.fork
     server <- serverProgram(didCommServicePort)
     _ <- Modules.syncDIDPublicationStateFromDltJob.fork
-    _ <- Modules.app(restServicePort).fork
     _ <- Modules.zioApp.fork
     _ <- server.join *> ZIO.log(s"Server End")
     _ <- ZIO.never
@@ -157,14 +158,14 @@ object AgentApp extends ZIOAppDefault {
         AppModule.presentationServiceLayer,
         AppModule.connectionServiceLayer,
         SystemModule.configLayer,
-        SystemModule.actorSystemLayer,
-        HttpModule.layers,
         RepoModule.credentialSchemaServiceLayer,
         AppModule.manageDIDServiceLayer,
         RepoModule.verificationPolicyServiceLayer,
         ConnectionControllerImpl.layer,
         DIDControllerImpl.layer,
+        IssueControllerImpl.layer,
         DIDRegistrarControllerImpl.layer,
+        PresentProofControllerImpl.layer,
         uriDereferencerLayer
       )
     } yield app

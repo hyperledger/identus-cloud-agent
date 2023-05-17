@@ -1,23 +1,19 @@
 package io.iohk.atala.pollux.core.repository
 
 import com.squareup.okhttp.Protocol
+import io.iohk.atala.castor.core.model.did.PrismDID
 import io.iohk.atala.mercury.model.DidId
-import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
-import io.iohk.atala.mercury.protocol.issuecredential.RequestCredential
-import io.iohk.atala.pollux.core.model._
-import io.iohk.atala.pollux.core.model.IssueCredentialRecord._
-import io.iohk.atala.pollux.core.model.error.CredentialRepositoryError._
+import io.iohk.atala.mercury.protocol.issuecredential.{IssueCredential, RequestCredential}
+import io.iohk.atala.pollux.core.model.*
+import io.iohk.atala.pollux.core.model.IssueCredentialRecord.*
+import io.iohk.atala.pollux.core.model.error.CredentialRepositoryError.*
 import io.iohk.atala.prism.identity.Did
-import zio.Cause
-import zio.Exit
-import zio.Task
-import zio.ZIO
-import zio.test.Assertion._
-import zio.test._
+import zio.{Cause, Exit, Task, ZIO}
+import zio.test.*
+import zio.test.Assertion.*
 
 import java.time.Instant
 import java.util.UUID
-import io.iohk.atala.castor.core.model.did.PrismDID
 
 object CredentialRepositorySpecSuite {
   val maxRetries = 5 // TODO Move to config
@@ -183,10 +179,12 @@ object CredentialRepositorySpecSuite {
         )
         pendingRecords <- repo.getIssueCredentialRecordsByStates(
           ignoreWithZeroRetries = true,
+          limit = 10,
           ProtocolState.OfferPending
         )
         otherRecords <- repo.getIssueCredentialRecordsByStates(
           ignoreWithZeroRetries = true,
+          limit = 10,
           ProtocolState.OfferSent,
           ProtocolState.CredentialGenerated
         )
@@ -207,7 +205,7 @@ object CredentialRepositorySpecSuite {
         _ <- repo.createIssueCredentialRecord(aRecord)
         _ <- repo.createIssueCredentialRecord(bRecord)
         _ <- repo.createIssueCredentialRecord(cRecord)
-        records <- repo.getIssueCredentialRecordsByStates()
+        records <- repo.getIssueCredentialRecordsByStates(ignoreWithZeroRetries = true, limit = 10)
       } yield {
         assertTrue(records.isEmpty)
       }
