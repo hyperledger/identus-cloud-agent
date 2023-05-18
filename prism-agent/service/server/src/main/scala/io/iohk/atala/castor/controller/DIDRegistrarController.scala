@@ -49,8 +49,6 @@ object DIDRegistrarController {
   given Conversion[CreateManagedDIDError, ErrorResponse] = {
     case CreateManagedDIDError.InvalidArgument(msg) =>
       ErrorResponse.unprocessableEntity(detail = Some(msg))
-    case CreateManagedDIDError.DIDAlreadyExists(did) =>
-      ErrorResponse.internalServerError(detail = Some(s"DID already exists: $did"))
     case CreateManagedDIDError.KeyGenerationError(e) =>
       ErrorResponse.internalServerError(detail = Some(e.toString))
     case CreateManagedDIDError.WalletStorageError(e) =>

@@ -98,13 +98,13 @@ final case class ManagedDidHdKeyPath(
 
   private def mapKeyUsageIndex(keyUsage: VerificationRelationship | InternalKeyPurpose): Int = {
     keyUsage match {
-      case InternalKeyPurpose.Master                     => 0
-      case VerificationRelationship.AssertionMethod      => 1
-      case VerificationRelationship.KeyAgreement         => 2
-      case VerificationRelationship.Authentication       => 3
-      case InternalKeyPurpose.Revocation                 => 4
-      case VerificationRelationship.CapabilityInvocation => 5
-      case VerificationRelationship.CapabilityDelegation => 6
+      case InternalKeyPurpose.Master                     => 1
+      case VerificationRelationship.AssertionMethod      => 2
+      case VerificationRelationship.KeyAgreement         => 3
+      case VerificationRelationship.Authentication       => 4
+      case InternalKeyPurpose.Revocation                 => 5
+      case VerificationRelationship.CapabilityInvocation => 6
+      case VerificationRelationship.CapabilityDelegation => 7
     }
   }
 }

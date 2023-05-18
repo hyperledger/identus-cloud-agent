@@ -100,11 +100,7 @@ final class ManagedDIDService private[walletapi] (
       .getManagedDIDState(did)
       .flatMap {
         case None => ZIO.none
-        case Some(state) =>
-          val did = state.createOperation.did
-          keyResolver
-            .getKey(did, state.keyMode, keyId)
-
+        case Some(state) => keyResolver.getKey(state.createOperation.did, state.keyMode, keyId)
       }
       .mapBoth(
         GetKeyError.WalletStorageError.apply,
