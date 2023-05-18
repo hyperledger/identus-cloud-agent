@@ -55,7 +55,9 @@ class JdbcConnectionRepository(xa: Transactor[Task]) extends ConnectionRepositor
         |   role,
         |   protocol_state,
         |   invitation,
-        |   meta_retries
+        |   meta_retries,
+        |   meta_next_retry,
+        |   meta_last_failure
         | ) values (
         |   ${record.id},
         |   ${record.createdAt},
@@ -65,7 +67,9 @@ class JdbcConnectionRepository(xa: Transactor[Task]) extends ConnectionRepositor
         |   ${record.role},
         |   ${record.protocolState},
         |   ${record.invitation},
-        |   ${record.metaRetries}
+        |   ${record.metaRetries},
+        |   ${record.metaNextRetry},
+        |   ${record.metaLastFailure}
         | )
         """.stripMargin.update
 
@@ -77,7 +81,7 @@ class JdbcConnectionRepository(xa: Transactor[Task]) extends ConnectionRepositor
       }
   }
 
-  override def getConnectionRecords(): Task[Seq[ConnectionRecord]] = {
+  override def getConnectionRecords: Task[Seq[ConnectionRecord]] = {
     val cxnIO = sql"""
         | SELECT
         |   id,
@@ -91,6 +95,7 @@ class JdbcConnectionRepository(xa: Transactor[Task]) extends ConnectionRepositor
         |   connection_request,
         |   connection_response,
         |   meta_retries,
+        |   meta_next_retry,
         |   meta_last_failure
         | FROM public.connection_records
         """.stripMargin
@@ -101,13 +106,21 @@ class JdbcConnectionRepository(xa: Transactor[Task]) extends ConnectionRepositor
       .transact(xa)
   }
 
-  override def getConnectionRecordsByStates(states: ConnectionRecord.ProtocolState*): Task[Seq[ConnectionRecord]] = {
+  override def getConnectionRecordsByStates(
+      ignoreWithZeroRetries: Boolean,
+      limit: Int,
+      states: ConnectionRecord.ProtocolState*
+  ): Task[Seq[ConnectionRecord]] = {
     states match
       case Nil =>
         ZIO.succeed(Nil)
       case head +: tail =>
         val nel = NonEmptyList.of(head, tail: _*)
         val inClauseFragment = Fragments.in(fr"protocol_state", nel)
+        val conditionFragment = Fragments.whereAndOpt(
+          Some(inClauseFragment),
+          Option.when(ignoreWithZeroRetries)(fr"meta_retries > 0")
+        )
         val cxnIO = sql"""
         | SELECT
         |   id,
@@ -121,9 +134,11 @@ class JdbcConnectionRepository(xa: Transactor[Task]) extends ConnectionRepositor
         |   connection_request,
         |   connection_response,
         |   meta_retries,
+        |   meta_next_retry,
         |   meta_last_failure
         | FROM public.connection_records
-        | WHERE $inClauseFragment
+        | $conditionFragment
+        | LIMIT $limit
         """.stripMargin
           .query[ConnectionRecord]
           .to[Seq]
@@ -146,6 +161,7 @@ class JdbcConnectionRepository(xa: Transactor[Task]) extends ConnectionRepositor
         |   connection_request,
         |   connection_response,
         |   meta_retries,
+        |   meta_next_retry,
         |   meta_last_failure
         | FROM public.connection_records
         | WHERE id = $recordId
@@ -182,6 +198,7 @@ class JdbcConnectionRepository(xa: Transactor[Task]) extends ConnectionRepositor
         |   connection_request,
         |   connection_response,
         |   meta_retries,
+        |   meta_next_retry,
         |   meta_last_failure
         | FROM public.connection_records
         | WHERE thid = $thid
@@ -205,6 +222,7 @@ class JdbcConnectionRepository(xa: Transactor[Task]) extends ConnectionRepositor
         |   protocol_state = $to,
         |   updated_at = ${Instant.now},
         |   meta_retries = ${maxRetries},
+        |   meta_next_retry = ${Instant.now},
         |   meta_last_failure = null
         | WHERE
         |   id = $id
@@ -228,6 +246,7 @@ class JdbcConnectionRepository(xa: Transactor[Task]) extends ConnectionRepositor
         |   protocol_state = $state,
         |   updated_at = ${Instant.now},
         |   meta_retries = ${maxRetries},
+        |   meta_next_retry = ${Instant.now},
         |   meta_last_failure = null
         | WHERE
         |   id = $recordId
@@ -250,6 +269,7 @@ class JdbcConnectionRepository(xa: Transactor[Task]) extends ConnectionRepositor
         |   protocol_state = $state,
         |   updated_at = ${Instant.now},
         |   meta_retries = ${maxRetries},
+        |   meta_next_retry = ${Instant.now},
         |   meta_last_failure = null
         | WHERE
         |   id = $recordId
@@ -266,7 +286,8 @@ class JdbcConnectionRepository(xa: Transactor[Task]) extends ConnectionRepositor
     val cxnIO = sql"""
         | UPDATE public.connection_records
         | SET
-        |   meta_retries = meta_retries - 1 ,
+        |   meta_retries = CASE WHEN (meta_retries > 1) THEN meta_retries - 1 ELSE 0 END,
+        |   meta_next_retry = CASE WHEN (meta_retries > 1) THEN ${Instant.now().plusSeconds(60)} ELSE null END,
         |   meta_last_failure = ${failReason}
         | WHERE
         |   id = $recordId

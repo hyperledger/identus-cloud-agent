@@ -171,13 +171,15 @@ class CredentialRepositoryInMemory(
   }
 
   override def getIssueCredentialRecordsByStates(
-      ignoreWithZeroRetries: Boolean = true,
+      ignoreWithZeroRetries: Boolean,
+      limit: Int,
       states: ProtocolState*
   ): Task[Seq[IssueCredentialRecord]] = {
     for {
       store <- storeRef.get
     } yield store.values
       .filter(rec => states.contains(rec.protocolState) & (!ignoreWithZeroRetries | rec.metaRetries > 0))
+      .take(limit)
       .toSeq
   }
 

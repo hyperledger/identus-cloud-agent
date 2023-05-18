@@ -1,19 +1,20 @@
 package io.iohk.atala.connect.core.service
 
-import zio._
-import io.iohk.atala.connect.core.repository.ConnectionRepository
-import io.iohk.atala.connect.core.model.error.ConnectionServiceError
-import io.iohk.atala.connect.core.model.error.ConnectionServiceError._
 import io.iohk.atala.connect.core.model.ConnectionRecord
-import io.iohk.atala.connect.core.model.ConnectionRecord._
-import java.util.UUID
-import io.iohk.atala.mercury._
+import io.iohk.atala.connect.core.model.ConnectionRecord.*
+import io.iohk.atala.connect.core.model.error.ConnectionServiceError
+import io.iohk.atala.connect.core.model.error.ConnectionServiceError.*
+import io.iohk.atala.connect.core.repository.ConnectionRepository
+import io.iohk.atala.mercury.*
 import io.iohk.atala.mercury.model.DidId
+import io.iohk.atala.mercury.protocol.connection.*
 import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
-import io.iohk.atala.mercury.protocol.connection._
-import java.time.Instant
-import java.rmi.UnexpectedException
 import io.iohk.atala.shared.utils.Base64Utils
+import zio.*
+
+import java.rmi.UnexpectedException
+import java.time.Instant
+import java.util.UUID
 
 private class ConnectionServiceImpl(
     connectionRepository: ConnectionRepository[Task],
@@ -39,6 +40,7 @@ private class ConnectionServiceImpl(
           connectionRequest = None,
           connectionResponse = None,
           metaRetries = maxRetries,
+          metaNextRetry = Some(Instant.now()),
           metaLastFailure = None,
         )
       )
@@ -53,18 +55,19 @@ private class ConnectionServiceImpl(
 
   override def getConnectionRecords(): IO[ConnectionServiceError, Seq[ConnectionRecord]] = {
     for {
-      records <- connectionRepository
-        .getConnectionRecords()
+      records <- connectionRepository.getConnectionRecords
         .mapError(RepositoryError.apply)
     } yield records
   }
 
   override def getConnectionRecordsByStates(
+      ignoreWithZeroRetries: Boolean,
+      limit: Int,
       states: ProtocolState*
   ): IO[ConnectionServiceError, Seq[ConnectionRecord]] = {
     for {
       records <- connectionRepository
-        .getConnectionRecordsByStates(states: _*)
+        .getConnectionRecordsByStates(ignoreWithZeroRetries, limit, states: _*)
         .mapError(RepositoryError.apply)
     } yield records
   }
@@ -106,6 +109,7 @@ private class ConnectionServiceImpl(
           connectionRequest = None,
           connectionResponse = None,
           metaRetries = maxRetries,
+          metaNextRetry = Some(Instant.now()),
           metaLastFailure = None,
         )
       )
@@ -295,10 +299,14 @@ private class ConnectionServiceImpl(
     } yield record
   }
 
-  def reportProcessingFailure(recordId: UUID, failReason: Option[String]): IO[ConnectionServiceError, Int] =
+  def reportProcessingFailure(recordId: UUID, failReason: Option[String]): IO[ConnectionServiceError, Unit] =
     connectionRepository
       .updateAfterFail(recordId, failReason)
       .mapError(RepositoryError.apply)
+      .flatMap {
+        case 1 => ZIO.unit
+        case n => ZIO.fail(UnexpectedError(s"Invalid number of records updated: $n"))
+      }
 
 }
 
