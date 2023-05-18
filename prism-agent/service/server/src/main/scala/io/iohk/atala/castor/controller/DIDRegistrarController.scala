@@ -77,6 +77,8 @@ object DIDRegistrarController {
       ErrorResponse.conflict(detail = Some(s"DID already deactivated: $did"))
     case UpdateManagedDIDError.InvalidArgument(msg) =>
       ErrorResponse.badRequest(detail = Some(msg))
+    case UpdateManagedDIDError.MultipleInflightUpdateNotAllowed(did) =>
+      ErrorResponse.conflict(detail = Some(s"Multiple in-flight update operations are not allowed: $did"))
     case e => ErrorResponse.internalServerError(detail = Some(e.toString))
   }
 }

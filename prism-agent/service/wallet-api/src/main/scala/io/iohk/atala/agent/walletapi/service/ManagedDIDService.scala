@@ -99,7 +99,7 @@ final class ManagedDIDService private[walletapi] (
     nonSecretStorage
       .getManagedDIDState(did)
       .flatMap {
-        case None => ZIO.none
+        case None        => ZIO.none
         case Some(state) => keyResolver.getKey(state.createOperation.did, state.keyMode, keyId)
       }
       .mapBoth(
@@ -232,6 +232,8 @@ final class ManagedDIDService private[walletapi] (
         resolvedDID._1,
         didState.createOperation
       )
+      _ <- getUnconfirmedUpdateOperationByDid[UpdateManagedDIDError](Some(did))
+        .filterOrFail(_.isEmpty)(UpdateManagedDIDError.MultipleInflightUpdateNotAllowed(did))
       generated <- generateUpdateOperation(did, previousOperationHash, actions)
       (updateOperation, secret) = generated
       _ <- ZIO
@@ -268,6 +270,8 @@ final class ManagedDIDService private[walletapi] (
         resolvedDID._1,
         didState.createOperation
       )
+      _ <- getUnconfirmedUpdateOperationByDid[UpdateManagedDIDError](Some(did))
+        .filterOrFail(_.isEmpty)(UpdateManagedDIDError.MultipleInflightUpdateNotAllowed(did))
       deactivateOperation = PrismDIDOperation.Deactivate(did, ArraySeq.from(previousOperationHash))
       _ <- ZIO
         .fromEither(didOpValidator.validate(deactivateOperation))
@@ -303,14 +307,23 @@ final class ManagedDIDService private[walletapi] (
       did: Option[PrismDID]
   )(using c1: Conversion[CommonWalletStorageError, E], c2: Conversion[DIDOperationError, E]): IO[E, Unit] = {
     for {
+      unconfirmedOps <- getUnconfirmedUpdateOperationByDid(did)
+      _ <- ZIO.foreach(unconfirmedOps)(computeNewDIDLineageStatusAndPersist[E])
+    } yield ()
+  }
+
+  private def getUnconfirmedUpdateOperationByDid[E](did: Option[PrismDID])(using
+      c1: Conversion[CommonWalletStorageError, E],
+      c2: Conversion[DIDOperationError, E]
+  ): IO[E, Seq[DIDUpdateLineage]] = {
+    for {
       awaitingConfirmationOps <- nonSecretStorage
         .listUpdateLineage(did = did, status = Some(ScheduledDIDOperationStatus.AwaitingConfirmation))
         .mapError[E](CommonWalletStorageError.apply)
       pendingOps <- nonSecretStorage
         .listUpdateLineage(did = did, status = Some(ScheduledDIDOperationStatus.Pending))
         .mapError[E](CommonWalletStorageError.apply)
-      _ <- ZIO.foreach(awaitingConfirmationOps ++ pendingOps)(computeNewDIDLineageStatusAndPersist[E])
-    } yield ()
+    } yield awaitingConfirmationOps ++ pendingOps
   }
 
   private def signOperationWithMasterKey[E](state: ManagedDIDState, operation: PrismDIDOperation)(using

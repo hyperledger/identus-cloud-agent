@@ -16,4 +16,5 @@ object UpdateManagedDIDError {
   final case class InvalidOperation(cause: castor.OperationValidationError) extends UpdateManagedDIDError
   final case class ResolutionError(cause: castor.DIDResolutionError) extends UpdateManagedDIDError
   final case class CryptographyError(cause: Throwable) extends UpdateManagedDIDError
+  final case class MultipleInflightUpdateNotAllowed(did: CanonicalPrismDID) extends UpdateManagedDIDError
 }
