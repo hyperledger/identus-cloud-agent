@@ -123,13 +123,15 @@ class PresentationRepositoryInMemory(
   }
 
   override def getPresentationRecordsByStates(
-      ignoreWithZeroRetries: Boolean = true,
+      ignoreWithZeroRetries: Boolean,
+      limit: Int,
       states: ProtocolState*
   ): Task[Seq[PresentationRecord]] = {
     for {
       store <- storeRef.get
     } yield store.values
       .filter(rec => states.contains(rec.protocolState) & (!ignoreWithZeroRetries | rec.metaRetries > 0))
+      .take(limit)
       .toSeq
   }
 
