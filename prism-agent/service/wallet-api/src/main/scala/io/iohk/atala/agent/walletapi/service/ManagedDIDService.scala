@@ -16,6 +16,7 @@ import io.iohk.atala.agent.walletapi.service.ManagedDIDService.DEFAULT_MASTER_KE
 import io.iohk.atala.agent.walletapi.storage.{DIDNonSecretStorage, DIDSecretStorage}
 import io.iohk.atala.agent.walletapi.util.{
   ManagedDIDTemplateValidator,
+  KeyRotationMaterial,
   OperationFactory,
   UpdateManagedDIDActionValidator
 }
@@ -43,6 +44,7 @@ import java.security.{PrivateKey as JavaPrivateKey, PublicKey as JavaPublicKey}
 import io.iohk.atala.agent.walletapi.model.KeyManagementMode
 import io.iohk.atala.shared.models.HexString
 import io.iohk.atala.agent.walletapi.util.KeyResolver
+import io.iohk.atala.agent.walletapi.util.KeyRotation
 
 /** A wrapper around Castor's DIDService providing key-management capability. Analogous to the secretAPI in
   * indy-wallet-sdk.
@@ -68,14 +70,10 @@ final class ManagedDIDService private[walletapi] (
 
   private val keyResolver = KeyResolver(apollo, nonSecretStorage, secretStorage)(seed)
 
-  private val generateUpdateOperation =
-    OperationFactory(apollo).makeUpdateOperationRandKey
+  private val keyRotation = KeyRotation(apollo, nonSecretStorage, secretStorage)(seed)
 
   private val generateCreateOperationHdKey =
     OperationFactory(apollo).makeCreateOperationHdKey(DEFAULT_MASTER_KEY_ID, seed)
-
-  private val generateUpdateOperationHdKey =
-    OperationFactory(apollo).makeUpdateOperationHdKey(seed)
 
   def syncManagedDIDState: IO[GetManagedDIDError, Unit] = nonSecretStorage
     .listManagedDID(offset = None, limit = None)
@@ -184,7 +182,8 @@ final class ManagedDIDService private[walletapi] (
       did: CanonicalPrismDID,
       actions: Seq[UpdateManagedDIDAction]
   ): IO[UpdateManagedDIDError, ScheduleDIDOperationOutcome] = {
-    def doUpdate(state: ManagedDIDState, operation: PrismDIDOperation.Update, secret: UpdateDIDRandKey) = {
+    def doUpdate(state: ManagedDIDState, material: KeyRotationMaterial) = {
+      val operation = material.operation
       val operationHash = operation.toAtalaOperationHash
       for {
         signedOperation <- signOperationWithMasterKey[UpdateManagedDIDError](state, operation)
@@ -198,11 +197,7 @@ final class ManagedDIDService private[walletapi] (
             updatedAt = now
           )
         }
-        _ <- ZIO
-          .foreachDiscard(secret.newKeyPairs) { case (keyId, keyPair) =>
-            secretStorage.insertKey(did, keyId, keyPair, operationHash)
-          }
-          .mapError(UpdateManagedDIDError.WalletStorageError.apply)
+        _ <- material.persist.mapError(UpdateManagedDIDError.WalletStorageError.apply)
         _ <- nonSecretStorage
           .insertDIDUpdateLineage(did, updateLineage)
           .mapError(UpdateManagedDIDError.WalletStorageError.apply)
@@ -234,12 +229,11 @@ final class ManagedDIDService private[walletapi] (
       )
       _ <- getUnconfirmedUpdateOperationByDid[UpdateManagedDIDError](Some(did))
         .filterOrFail(_.isEmpty)(UpdateManagedDIDError.MultipleInflightUpdateNotAllowed(did))
-      generated <- generateUpdateOperation(did, previousOperationHash, actions)
-      (updateOperation, secret) = generated
+      material <- keyRotation.materialize(didState, previousOperationHash, actions)
       _ <- ZIO
-        .fromEither(didOpValidator.validate(updateOperation))
+        .fromEither(didOpValidator.validate(material.operation))
         .mapError(UpdateManagedDIDError.InvalidOperation.apply)
-      outcome <- doUpdate(didState, updateOperation, secret)
+      outcome <- doUpdate(didState, material)
     } yield outcome
   }
 
