@@ -14,6 +14,9 @@ import io.iohk.atala.agent.walletapi.model.ManagedDIDHdKeyPath
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import io.iohk.atala.castor.core.model.did.InternalKeyPurpose
 import io.iohk.atala.agent.walletapi.model.PublicationState
+import io.iohk.atala.agent.walletapi.model.HdKeyIndexCounter
+import io.iohk.atala.agent.walletapi.model.InternalKeyCounter
+import io.iohk.atala.agent.walletapi.model.VerificationRelationshipCounter
 
 class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage {
 
@@ -119,6 +122,46 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
         .option
 
     cxnIO.transact(xa).map(_.flatten)
+  }
+
+  override def getHdKeyCounter(did: PrismDID): Task[Option[HdKeyIndexCounter]] = {
+    val cxnIO =
+      sql"""
+           | SELECT
+           |   hd.key_usage AS key_usage,
+           |   MAX(hd.key_index) AS key_index
+           | FROM public.prism_did_hd_key hd
+           | WHERE hd.did = $did
+           | GROUP BY hd.did, hd.key_usage
+           """.stripMargin
+        .query[(VerificationRelationship | InternalKeyPurpose, Int)]
+        .to[List]
+
+    getManagedDIDState(did)
+      .map(_.flatMap(_.didIndex))
+      .flatMap {
+        case None => ZIO.none
+        case Some(didIndex) =>
+          for {
+            keyUsageIndex <- cxnIO.transact(xa)
+            keyUsageIndexMap = keyUsageIndex.map { case (k, v) => k -> (v + 1) }.toMap
+          } yield Some(
+            HdKeyIndexCounter(
+              didIndex,
+              VerificationRelationshipCounter(
+                authentication = keyUsageIndexMap.getOrElse(VerificationRelationship.Authentication, 0),
+                assertionMethod = keyUsageIndexMap.getOrElse(VerificationRelationship.AssertionMethod, 0),
+                keyAgreement = keyUsageIndexMap.getOrElse(VerificationRelationship.KeyAgreement, 0),
+                capabilityInvocation = keyUsageIndexMap.getOrElse(VerificationRelationship.CapabilityInvocation, 0),
+                capabilityDelegation = keyUsageIndexMap.getOrElse(VerificationRelationship.CapabilityDelegation, 0),
+              ),
+              InternalKeyCounter(
+                master = keyUsageIndexMap.getOrElse(InternalKeyPurpose.Master, 0),
+                revocation = keyUsageIndexMap.getOrElse(InternalKeyPurpose.Revocation, 0),
+              )
+            )
+          )
+      }
   }
 
   override def getHdKeyPath(did: PrismDID, keyId: String): Task[Option[ManagedDIDHdKeyPath]] = {

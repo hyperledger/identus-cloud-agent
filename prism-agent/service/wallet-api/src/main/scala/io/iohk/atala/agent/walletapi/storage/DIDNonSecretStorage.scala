@@ -4,6 +4,7 @@ import io.iohk.atala.agent.walletapi.model.{DIDUpdateLineage, ManagedDIDState, M
 import io.iohk.atala.castor.core.model.did.{PrismDID, ScheduledDIDOperationStatus}
 import zio.*
 import io.iohk.atala.agent.walletapi.model.ManagedDIDHdKeyPath
+import io.iohk.atala.agent.walletapi.model.HdKeyIndexCounter
 
 private[walletapi] trait DIDNonSecretStorage {
 
@@ -14,6 +15,8 @@ private[walletapi] trait DIDNonSecretStorage {
   def updateManagedDID(did: PrismDID, patch: ManagedDIDStatePatch): Task[Unit]
 
   def getMaxDIDIndex(): Task[Option[Int]]
+
+  def getHdKeyCounter(did: PrismDID): Task[Option[HdKeyIndexCounter]]
 
   def getHdKeyPath(did: PrismDID, keyId: String): Task[Option[ManagedDIDHdKeyPath]]
 
