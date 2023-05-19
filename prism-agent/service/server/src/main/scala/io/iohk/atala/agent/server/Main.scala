@@ -6,7 +6,6 @@ import io.circe.generic.auto.*
 import io.circe.parser.*
 import io.circe.syntax.*
 import io.iohk.atala.agent.server.buildinfo.BuildInfo
-import io.iohk.atala.agent.server.health.HealthInfo
 import io.iohk.atala.agent.server.http.ZioHttpClient
 import io.iohk.atala.agent.server.sql.Migrations as AgentMigrations
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
@@ -20,6 +19,8 @@ import io.iohk.atala.pollux.core.service.CredentialSchemaServiceImpl
 import io.iohk.atala.pollux.sql.repository.{JdbcCredentialSchemaRepository, Migrations as PolluxMigrations}
 import io.iohk.atala.presentproof.controller.PresentProofControllerImpl
 import io.iohk.atala.resolvers.{DIDResolver, UniversalDidResolver}
+import io.iohk.atala.system.controller.SystemControllerImpl
+import io.iohk.atala.system.controller.http.HealthInfo
 import org.didcommx.didcomm.DIDComm
 import org.flywaydb.core.extensibility.AppliedMigration
 import zio.*
@@ -32,7 +33,7 @@ import zio.metrics.jvm.DefaultJvmMetrics
 
 import java.security.Security
 
-object AgentApp extends ZIOAppDefault {
+object MainApp extends ZIOAppDefault {
 
   Security.insertProviderAt(BouncyCastleProviderSingleton.getInstance(), 2)
 
@@ -60,7 +61,7 @@ object AgentApp extends ZIOAppDefault {
       _ <- ZIO.logInfo(s"Server Started on port $didCommServicePort")
       myServer <- {
         Server
-          .serve(Modules.didCommServiceEndpoint ++ SystemInfoApp.app)
+          .serve(Modules.didCommServiceEndpoint)
           .provideSomeLayer(server)
           .debug *> ZIO.logWarning(s"Server STOP (on port $didCommServicePort)")
       }.fork
@@ -140,7 +141,12 @@ object AgentApp extends ZIOAppDefault {
         DIDControllerImpl.layer,
         IssueControllerImpl.layer,
         DIDRegistrarControllerImpl.layer,
-        PresentProofControllerImpl.layer
+        PresentProofControllerImpl.layer,
+        prometheus.prometheusLayer,
+        prometheus.publisherLayer,
+        ZLayer.succeed(MetricsConfig(5.seconds)),
+        DefaultJvmMetrics.live.unit,
+        SystemControllerImpl.layer
       )
     } yield app
 
@@ -152,5 +158,3 @@ object AgentApp extends ZIOAppDefault {
   }
 
 }
-
-object MainApp extends ZIOApp.Proxy(DefaultJvmMetrics.app <> AgentApp)
