@@ -13,7 +13,7 @@ import scala.util.Try
 import scala.collection.immutable.ArraySeq
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import io.iohk.atala.castor.core.model.did.InternalKeyPurpose
-import io.iohk.atala.agent.walletapi.model.ManagedDidHdKeyPath
+import io.iohk.atala.agent.walletapi.model.ManagedDIDHdKeyPath
 
 package object sql {
 

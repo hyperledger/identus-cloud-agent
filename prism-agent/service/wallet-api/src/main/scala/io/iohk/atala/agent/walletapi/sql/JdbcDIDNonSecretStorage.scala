@@ -10,7 +10,7 @@ import zio.*
 import zio.interop.catz.*
 
 import java.time.Instant
-import io.iohk.atala.agent.walletapi.model.ManagedDidHdKeyPath
+import io.iohk.atala.agent.walletapi.model.ManagedDIDHdKeyPath
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import io.iohk.atala.castor.core.model.did.InternalKeyPurpose
 import io.iohk.atala.agent.walletapi.model.PublicationState
@@ -43,7 +43,7 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
   override def insertManagedDID(
       did: PrismDID,
       state: ManagedDIDState,
-      hdKey: Map[String, ManagedDidHdKeyPath]
+      hdKey: Map[String, ManagedDIDHdKeyPath]
   ): Task[Unit] = {
     val insertStateIO = (row: DIDStateRow) => sql"""
         | INSERT INTO public.prism_did_wallet_state(
@@ -120,7 +120,7 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
     cxnIO.transact(xa).map(_.flatten)
   }
 
-  override def getHdKeyPath(did: PrismDID, keyId: String): Task[Option[ManagedDidHdKeyPath]] = {
+  override def getHdKeyPath(did: PrismDID, keyId: String): Task[Option[ManagedDIDHdKeyPath]] = {
     val cxnIO =
       sql"""
            | SELECT
@@ -130,7 +130,7 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
            | FROM public.prism_did_hd_key hd JOIN public.prism_did_wallet_state ws ON hd.did = ws.did
            | WHERE hd.did = $did AND hd.key_id = $keyId
            """.stripMargin
-        .query[ManagedDidHdKeyPath]
+        .query[ManagedDIDHdKeyPath]
         .option
 
     cxnIO.transact(xa)

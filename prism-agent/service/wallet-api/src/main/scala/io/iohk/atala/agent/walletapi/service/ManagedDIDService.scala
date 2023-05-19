@@ -68,14 +68,14 @@ final class ManagedDIDService private[walletapi] (
 
   private val keyResolver = KeyResolver(apollo, nonSecretStorage, secretStorage)(seed)
 
-  private val generateCreateOperation =
-    OperationFactory(apollo).makeCreateOperationRandKey(DEFAULT_MASTER_KEY_ID)
-
   private val generateUpdateOperation =
-    OperationFactory(apollo).makeUpdateOperationRandKey(() => apollo.ecKeyFactory.generateKeyPair(CURVE))
+    OperationFactory(apollo).makeUpdateOperationRandKey
 
   private val generateCreateOperationHdKey =
     OperationFactory(apollo).makeCreateOperationHdKey(DEFAULT_MASTER_KEY_ID, seed)
+
+  private val generateUpdateOperationHdKey =
+    OperationFactory(apollo).makeUpdateOperationHdKey(seed)
 
   def syncManagedDIDState: IO[GetManagedDIDError, Unit] = nonSecretStorage
     .listManagedDID(offset = None, limit = None)

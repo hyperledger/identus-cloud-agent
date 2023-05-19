@@ -5,6 +5,9 @@ import io.iohk.atala.castor.core.model.did.InternalKeyPurpose
 import io.iohk.atala.agent.walletapi.crypto.DerivationPath
 import io.circe.Derivation
 import io.iohk.atala.agent.walletapi.crypto.ECKeyPair
+import io.iohk.atala.agent.walletapi.crypto.Apollo
+
+import zio.*
 
 enum KeyManagementMode {
   case Random extends KeyManagementMode
@@ -50,19 +53,19 @@ object InternalKeyCounter {
 }
 
 /** Key counter of a single DID */
-final case class ManagedDidHdKeyCounter(
+final case class HdKeyIndexCounter(
     didIndex: Int,
     verificationRelationship: VerificationRelationshipCounter,
     internalKey: InternalKeyCounter
 ) {
-  def next(keyUsage: VerificationRelationship | InternalKeyPurpose): ManagedDidHdKeyCounter = {
+  def next(keyUsage: VerificationRelationship | InternalKeyPurpose): HdKeyIndexCounter = {
     keyUsage match {
       case i: VerificationRelationship => copy(verificationRelationship = verificationRelationship.next(i))
       case i: InternalKeyPurpose       => copy(internalKey = internalKey.next(i))
     }
   }
 
-  def path(keyUsage: VerificationRelationship | InternalKeyPurpose): ManagedDidHdKeyPath = {
+  def path(keyUsage: VerificationRelationship | InternalKeyPurpose): ManagedDIDHdKeyPath = {
     val keyIndex = keyUsage match {
       case VerificationRelationship.AssertionMethod      => verificationRelationship.assertionMethod
       case VerificationRelationship.KeyAgreement         => verificationRelationship.keyAgreement
@@ -72,16 +75,16 @@ final case class ManagedDidHdKeyCounter(
       case InternalKeyPurpose.Master                     => internalKey.master
       case InternalKeyPurpose.Revocation                 => internalKey.revocation
     }
-    ManagedDidHdKeyPath(didIndex, keyUsage, keyIndex)
+    ManagedDIDHdKeyPath(didIndex, keyUsage, keyIndex)
   }
 }
 
-object ManagedDidHdKeyCounter {
-  def zero(didIndex: Int): ManagedDidHdKeyCounter =
-    ManagedDidHdKeyCounter(didIndex, VerificationRelationshipCounter.zero, InternalKeyCounter.zero)
+object HdKeyIndexCounter {
+  def zero(didIndex: Int): HdKeyIndexCounter =
+    HdKeyIndexCounter(didIndex, VerificationRelationshipCounter.zero, InternalKeyCounter.zero)
 }
 
-final case class ManagedDidHdKeyPath(
+final case class ManagedDIDHdKeyPath(
     didIndex: Int,
     keyUsage: VerificationRelationship | InternalKeyPurpose,
     keyIndex: Int
@@ -116,8 +119,13 @@ private[walletapi] final case class CreateDIDRandKey(
 
 private[walletapi] final case class UpdateDIDRandKey(newKeyPairs: Map[String, ECKeyPair])
 
-private[walletapi] final case class CreateDidHdKey(
-    keyPaths: Map[String, ManagedDidHdKeyPath],
-    internalKeyPaths: Map[String, ManagedDidHdKeyPath],
-    counter: ManagedDidHdKeyCounter
+private[walletapi] final case class CreateDIDHdKey(
+    keyPaths: Map[String, ManagedDIDHdKeyPath],
+    internalKeyPaths: Map[String, ManagedDIDHdKeyPath],
+    counter: HdKeyIndexCounter
+)
+
+private[walletapi] final case class UpdateDIDHdKey(
+    newKeyPaths: Map[String, ManagedDIDHdKeyPath],
+    counter: HdKeyIndexCounter
 )
