@@ -68,15 +68,16 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
         | )
         """.stripMargin.update
 
-    val hdKeyValues = hdKey.toList.map { case (key, path) => (did, key, path.keyUsage, path.keyIndex) }
-    val insertHdKeyIO = Update[(PrismDID, String, VerificationRelationship | InternalKeyPurpose, Int)](
-      "INSERT INTO public.prism_did_hd_key(did, key_id, key_usage, key_index) VALUES (?, ?, ?, ?)"
+    val hdKeyValues = (now: Instant) =>
+      hdKey.toList.map { case (key, path) => (did, key, path.keyUsage, path.keyIndex, now) }
+    val insertHdKeyIO = Update[(PrismDID, String, VerificationRelationship | InternalKeyPurpose, Int, Instant)](
+      "INSERT INTO public.prism_did_hd_key(did, key_id, key_usage, key_index, created_at) VALUES (?, ?, ?, ?, ?)"
     )
 
     val txnIO = (now: Instant) =>
       for {
         _ <- insertStateIO(DIDStateRow.from(did, state, now)).run
-        _ <- insertHdKeyIO.updateMany(hdKeyValues)
+        _ <- insertHdKeyIO.updateMany(hdKeyValues(now))
       } yield ()
 
     for {

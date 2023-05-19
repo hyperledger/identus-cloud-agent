@@ -187,27 +187,6 @@ class OperationFactory(apollo: Apollo) {
     }
   }
 
-  // TODO: remove
-  private def generateKeyPairAndPublicKey(keyGenerator: () => Task[ECKeyPair])(
-      template: DIDPublicKeyTemplate
-  ): Task[(ECKeyPair, PublicKey)] = {
-    for {
-      keyPair <- keyGenerator()
-      publicKey = PublicKey(template.id, template.purpose, toPublicKeyData(keyPair.publicKey))
-    } yield (keyPair, publicKey)
-  }
-
-  // TODO: remove
-  private def generateKeyPairAndInternalPublicKey(keyGenerator: () => Task[ECKeyPair])(
-      id: String,
-      purpose: InternalKeyPurpose
-  ): Task[(ECKeyPair, InternalPublicKey)] = {
-    for {
-      keyPair <- keyGenerator()
-      internalPublicKey = InternalPublicKey(id, purpose, toPublicKeyData(keyPair.publicKey))
-    } yield (keyPair, internalPublicKey)
-  }
-
   private def derivePublicKey(seed: Array[Byte])(
       template: DIDPublicKeyTemplate,
       keyCounter: HdKeyIndexCounter
