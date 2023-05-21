@@ -13,6 +13,7 @@ import io.iohk.atala.castor.core.service.DIDService
 import zio.{Task, UIO}
 
 import java.time.Instant
+import io.circe.Json
 
 trait DidResolver {
   def resolve(didUrl: String): UIO[DIDResolutionResult]
@@ -91,7 +92,7 @@ case class JsonWebKey(
     x: Option[String] = Option.empty,
     y: Option[String] = Option.empty
 )
-case class Service(id: String, `type`: String, serviceEndpoint: Vector[String])
+case class Service(id: String, `type`: String | Seq[String], serviceEndpoint: Json)
 
 /** An adapter for translating Castor resolver to resolver defined in JWT library */
 class PrismDidResolver(didService: DIDService) extends DidResolver {
@@ -146,7 +147,7 @@ class PrismDidResolver(didService: DIDService) extends DidResolver {
     Service(
       id = service.id,
       `type` = service.`type`,
-      serviceEndpoint = service.serviceEndpoint.toVector
+      serviceEndpoint = service.serviceEndpoint
     )
   }
 

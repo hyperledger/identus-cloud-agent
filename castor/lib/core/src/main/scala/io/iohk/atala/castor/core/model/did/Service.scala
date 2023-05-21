@@ -6,7 +6,6 @@ final case class Service(
     serviceEndpoint: ServiceEndpoint
 ) {
 
-  def normalizeServiceEndpoint(): Service =
-    this.copy(serviceEndpoint = serviceEndpoint.normalize())
+  def normalizeServiceEndpoint(): Service = copy(serviceEndpoint = serviceEndpoint.normalize())
 
 }
