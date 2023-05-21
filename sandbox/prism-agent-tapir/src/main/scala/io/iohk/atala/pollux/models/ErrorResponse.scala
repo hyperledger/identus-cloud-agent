@@ -31,8 +31,7 @@ object InternalServerError {
 }
 
 //An RFC-7807 compliant data structure for reporting errors to the client
-case class ErrorResponse(`type`: String, title: String, status: Int, instance: String, details: Option[String])
-    extends FailureResponse
+case class ErrorResponse(`type`: String, title: String, status: Int, instance: String, details: Option[String]) extends FailureResponse
 
 object ErrorResponse {
   given encoder: zio.json.JsonEncoder[ErrorResponse] = DeriveJsonEncoder.gen[ErrorResponse]
