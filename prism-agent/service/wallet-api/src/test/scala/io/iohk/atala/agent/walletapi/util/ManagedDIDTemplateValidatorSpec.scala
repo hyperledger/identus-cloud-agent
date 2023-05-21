@@ -8,6 +8,9 @@ import zio.test.*
 import zio.test.Assertion.*
 
 import io.lemonlabs.uri.Uri
+import io.iohk.atala.castor.core.model.did.ServiceEndpoint
+import io.iohk.atala.castor.core.model.did.ServiceEndpoint.UriValue
+import io.iohk.atala.castor.core.model.did.ServiceEndpoint.UriOrJsonEndpoint
 
 object ManagedDIDTemplateValidatorSpec extends ZIOSpecDefault {
 
@@ -27,8 +30,8 @@ object ManagedDIDTemplateValidatorSpec extends ZIOSpecDefault {
         services = Seq(
           Service(
             id = "service0",
-            `type` = ServiceType.LinkedDomains,
-            serviceEndpoint = Seq(Uri.parse("http://example.com/"))
+            `type` = ServiceType.Single(ServiceType.Name.fromStringUnsafe("LinkedDomains")),
+            serviceEndpoint = ServiceEndpoint.Single(UriValue.fromString("http://example.com/").toOption.get)
           )
         )
       )
