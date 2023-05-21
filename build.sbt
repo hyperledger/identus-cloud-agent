@@ -42,7 +42,7 @@ lazy val V = new {
   val zioLogging = "2.0.0"
   val zioJson = "0.3.0"
   val zioHttp = "0.0.5"
-  val zioCatsInterop = "3.3.0"
+  val zioCatsInterop = "23.0.03"
   val zioMetrics = "2.0.6"
 
   // https://mvnrepository.com/artifact/io.circe/circe-core
