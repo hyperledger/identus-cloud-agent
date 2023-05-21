@@ -100,7 +100,15 @@ object ServiceType {
       case Left(value)   => Single(value)
       case Right(values) => Multiple(values.toSeq)
     }
-  given schema: Schema[ServiceType] = Schema.derived[ServiceType]
+  given schema: Schema[ServiceType] = Schema
+    .schemaForEither(Schema.schemaForString, Schema.schemaForArray[String])
+    .map[ServiceType] {
+      case Left(value)   => Some(ServiceType.Single(value))
+      case Right(values) => Some(ServiceType.Multiple(values.toSeq))
+    } {
+      case Single(value)    => Left(value)
+      case Multiple(values) => Right(values.toArray)
+    }
 
   given Conversion[castorDomain.ServiceType, ServiceType] = {
     case t: castorDomain.ServiceType.Single   => Single(t.value.value)
