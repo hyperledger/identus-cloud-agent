@@ -88,10 +88,19 @@ object ServiceType {
   final case class Single(value: String) extends ServiceType
   final case class Multiple(values: Seq[String]) extends ServiceType
 
-  // TODO: implement
-  given encoder: JsonEncoder[ServiceType] = ???
-  given decoder: JsonDecoder[ServiceType] = ???
-  given schema: Schema[ServiceType] = ???
+  given encoder: JsonEncoder[ServiceType] = JsonEncoder.string
+    .orElseEither(JsonEncoder.array[String])
+    .contramap[ServiceType] {
+      case Single(value)    => Left(value)
+      case Multiple(values) => Right(values.toArray)
+    }
+  given decoder: JsonDecoder[ServiceType] = JsonDecoder.string
+    .orElseEither(JsonDecoder.array[String])
+    .map[ServiceType] {
+      case Left(value)   => Single(value)
+      case Right(values) => Multiple(values.toSeq)
+    }
+  given schema: Schema[ServiceType] = Schema.derived[ServiceType]
 
   given Conversion[castorDomain.ServiceType, ServiceType] = {
     case t: castorDomain.ServiceType.Single   => Single(t.value.value)
@@ -108,7 +117,7 @@ object ServiceType {
       case Single(value) =>
         castorDomain.ServiceType.Name.fromString(value).map(castorDomain.ServiceType.Single.apply)
       case Multiple(values) =>
-        values match {
+        values.toList match {
           case Nil => Left("serviceType cannot be empty")
           case head :: tail =>
             for {
@@ -123,10 +132,9 @@ object ServiceType {
 opaque type ServiceEndpoint = Json
 
 object ServiceEndpoint {
-  // TODO: implement
   given encoder: JsonEncoder[ServiceEndpoint] = CirceJsonInterop.encodeJson
   given decoder: JsonDecoder[ServiceEndpoint] = CirceJsonInterop.decodeJson
-  given schema: Schema[ServiceEndpoint] = ???
+  given schema: Schema[ServiceEndpoint] = CirceJsonInterop.schemaJson
 
   def fromJson(json: Json): ServiceEndpoint = json
 
