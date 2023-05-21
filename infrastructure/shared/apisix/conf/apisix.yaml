@@ -2,76 +2,41 @@ plugins:
   - name: proxy-rewrite
 
 routes:
-  - uri: /prism-agent/_system/*
-    upstream_id: 3
-    plugins:
-      proxy-rewrite:
-        regex_uri: ["^/prism-agent/_system/(.*)", "/$1"]
   - uri: /prism-agent/*
-    upstream_id: 2
+    upstream_id: 4
     plugins:
       proxy-rewrite:
         regex_uri: ["^/prism-agent/(.*)", "/$1"]
-  - uri: /prism-agent/dids*
+  - uri: /docs/prism-agent/api/*
     upstream_id: 4
     plugins:
       proxy-rewrite:
-        regex_uri: ["^/prism-agent/dids(/.*)?", "/dids$1"]
-  - uri: /prism-agent/connections*
-    upstream_id: 4
-    plugins:
-      proxy-rewrite:
-        regex_uri: ["^/prism-agent/connections(/.*)?", "/connections$1"]
-  - uri: /prism-agent/connection-invitations
-    upstream_id: 4
-    plugins:
-      proxy-rewrite:
-        uri: "/connection-invitations"
-  - uri: /didcomm
+        regex_uri: ["^/docs/prism-agent/api/(.*)", "/docs/$1"]
+  - uri: /didcomm*
     upstream_id: 3
     plugins:
       proxy-rewrite:
-        uri: "/"
-  - uri: /didcomm/did
-    # Get the default did:peer of the prism-agent (use to make a trust ping)
-    upstream_id: 3
-    plugins:
-      proxy-rewrite:
-        uri: "/did"
-  - uri: /prism-agent/schema-registry/*
-    upstream_id: 4
-    plugins:
-      proxy-rewrite:
-        regex_uri: ["^/prism-agent/schema-registry/(.*)", "/schema-registry/$1"]
+        regex_uri: ["^/didcomm(.*)", "/$1"]
   - uri: /mediator/*
     upstream_id: 1
     plugins:
       proxy-rewrite:
         regex_uri: ["^/mediator/(.*)", "/$1"]
-  - uri: /apidocs/*
-    upstream_id: 5
-    plugins:
-      proxy-rewrite:
-        regex_uri: ["^/apidocs/(.*)", "/$1"]
   - uri: /docs/mediator/api/*
     upstream_id: 1
     plugins:
       proxy-rewrite:
         regex_uri: ["^/docs/mediator/api/(.*)", "/api/$1"]
-  - uri: /docs/prism-agent/api/*
-    upstream_id: 2
+  - uri: /apidocs/*
+    upstream_id: 5
     plugins:
       proxy-rewrite:
-        regex_uri: ["^/docs/prism-agent/api/(.*)", "/api/$1"]
+        regex_uri: ["^/apidocs/(.*)", "/$1"]
 
 upstreams:
   - id: 1
     nodes:
       "mediator:8080": 1
-    type: roundrobin
-  - id: 2
-    nodes:
-      "prism-agent:8080": 1 # api
     type: roundrobin
   - id: 3
     nodes:

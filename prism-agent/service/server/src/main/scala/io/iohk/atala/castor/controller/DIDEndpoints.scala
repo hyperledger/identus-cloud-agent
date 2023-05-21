@@ -1,11 +1,11 @@
 package io.iohk.atala.castor.controller
 
+import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.api.http.codec.CustomMediaTypes
 import io.iohk.atala.api.http.codec.DIDCodec.{didJsonLD, didResolutionJsonLD}
-import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
+import io.iohk.atala.castor.controller.http.{DIDResolutionResult, DIDInput}
 import sttp.model.{Header, StatusCode}
 import sttp.tapir.*
-import io.iohk.atala.castor.controller.http.{DIDResolutionResult, DIDInput}
 import sttp.tapir.json.zio.jsonBody
 
 object DIDEndpoints {

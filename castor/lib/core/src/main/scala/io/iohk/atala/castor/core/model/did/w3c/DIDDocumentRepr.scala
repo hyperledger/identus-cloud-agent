@@ -1,7 +1,5 @@
 package io.iohk.atala.castor.core.model.did.w3c
 
-import io.iohk.atala.castor.core.model.did.{DID, DIDUrl}
-
 /** A projection of DIDDocument data model to W3C compliant DID representation */
 final case class DIDDocumentRepr(
     id: String,

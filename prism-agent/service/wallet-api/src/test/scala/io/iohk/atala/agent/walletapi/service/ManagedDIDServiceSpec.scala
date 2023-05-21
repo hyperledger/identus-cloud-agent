@@ -19,21 +19,22 @@ import io.iohk.atala.castor.core.model.did.{
 import io.iohk.atala.castor.core.model.error
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.castor.core.util.DIDOperationValidator
-import io.iohk.atala.shared.models.HexStrings.HexString
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
 
 import scala.collection.immutable.ArraySeq
 import io.iohk.atala.test.container.PostgresTestContainerSupport
+import io.iohk.atala.agent.walletapi.crypto.ApolloSpecHelper
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDNonSecretStorage
 import io.iohk.atala.test.container.DBTestUtils
 import io.iohk.atala.castor.core.model.did.InternalKeyPurpose
 import io.iohk.atala.agent.walletapi.model.error.UpdateManagedDIDError
 import io.iohk.atala.agent.walletapi.model.UpdateManagedDIDAction
+import io.iohk.atala.agent.walletapi.crypto.Apollo
 
-object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSupport {
+object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSupport, ApolloSpecHelper {
 
   private trait TestDIDService extends DIDService {
     def getPublishedOperations: UIO[Seq[SignedPrismDIDOperation]]
@@ -72,10 +73,10 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSuppor
   }
 
   private def jdbcStorageLayer =
-    pgContainerLayer >+> transactorLayer >+> (JdbcDIDSecretStorage.layer ++ JdbcDIDNonSecretStorage.layer)
+    pgContainerLayer >+> (transactorLayer ++ apolloLayer) >+> (JdbcDIDSecretStorage.layer ++ JdbcDIDNonSecretStorage.layer)
 
   private def managedDIDServiceLayer =
-    (DIDOperationValidator.layer() ++ testDIDServiceLayer) >+> ManagedDIDService.layer
+    (DIDOperationValidator.layer() ++ testDIDServiceLayer ++ apolloLayer) >+> ManagedDIDService.layer
 
   private def generateDIDTemplate(
       publicKeys: Seq[DIDPublicKeyTemplate] = Nil,

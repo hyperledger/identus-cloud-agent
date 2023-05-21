@@ -69,8 +69,6 @@ lazy val V = new {
   val jwtCirceVersion = "9.1.2"
   val zioPreludeVersion = "1.0.0-RC16"
 
-  val akka = "2.6.20"
-  val akkaHttp = "10.2.9"
   val bouncyCastle = "1.70"
 }
 
@@ -175,8 +173,6 @@ lazy val D_Castor = new {
 
   // Project Dependencies
   val coreDependencies: Seq[ModuleID] = baseDependencies
-  val sqlDoobieDependencies: Seq[ModuleID] =
-    baseDependencies ++ D.doobieDependencies ++ Seq(D.zioCatsInterop)
 }
 
 lazy val D_Pollux = new {
@@ -271,11 +267,6 @@ lazy val D_Pollux_VC_JWT = new {
 
 lazy val D_PrismAgent = new {
 
-  val akkaTyped = "com.typesafe.akka" %% "akka-actor-typed" % V.akka
-  val akkaStream = "com.typesafe.akka" %% "akka-stream" % V.akka
-  val akkaHttp = "com.typesafe.akka" %% "akka-http" % V.akkaHttp
-  val akkaSprayJson = "com.typesafe.akka" %% "akka-http-spray-json" % V.akkaHttp
-
   // Added here to make prism-crypto works.
   // Once migrated to apollo, re-evaluate if this should be removed.
   val bouncyBcpkix = "org.bouncycastle" % "bcpkix-jdk15on" % V.bouncyCastle
@@ -320,8 +311,6 @@ lazy val D_PrismAgent = new {
     D.zioHttp,
     D.zioMetrics,
   )
-  val akkaHttpDependencies: Seq[ModuleID] =
-    Seq(akkaTyped, akkaStream, akkaHttp, akkaSprayJson).map(_.cross(CrossVersion.for3Use2_13))
   val bouncyDependencies: Seq[ModuleID] = Seq(bouncyBcpkix, bouncyBcprov)
   val tapirDependencies: Seq[ModuleID] =
     Seq(
@@ -340,10 +329,10 @@ lazy val D_PrismAgent = new {
 
   // Project Dependencies
   lazy val keyManagementDependencies: Seq[ModuleID] =
-    baseDependencies ++ bouncyDependencies
+    baseDependencies ++ bouncyDependencies ++ D.doobieDependencies ++ Seq(D.zioCatsInterop)
 
   lazy val serverDependencies: Seq[ModuleID] =
-    baseDependencies ++ akkaHttpDependencies ++ tapirDependencies ++ postgresDependencies
+    baseDependencies ++ tapirDependencies ++ postgresDependencies
 }
 
 publish / skip := true
@@ -576,15 +565,6 @@ lazy val castorCore = project
   )
   .dependsOn(shared)
 
-lazy val castorDoobie = project
-  .in(file("castor/lib/sql-doobie"))
-  .settings(castorCommonSettings)
-  .settings(
-    name := "castor-sql-doobie",
-    libraryDependencies ++= D_Castor.sqlDoobieDependencies
-  )
-  .dependsOn(shared, castorCore)
-
 // #####################
 // #####  pollux  ######
 // #####################
@@ -667,7 +647,7 @@ lazy val prismAgentWalletAPI = project
     libraryDependencies ++= D_PrismAgent.keyManagementDependencies
   )
   .dependsOn(agentDidcommx)
-  .dependsOn(castorCore, castorDoobie)
+  .dependsOn(castorCore)
 
 lazy val prismAgentServer = project
   .in(file("prism-agent/service/server"))
@@ -677,12 +657,6 @@ lazy val prismAgentServer = project
     fork := true,
     libraryDependencies ++= D_PrismAgent.serverDependencies,
     Compile / mainClass := Some("io.iohk.atala.agent.server.MainApp"),
-    // OpenAPI settings
-    Compile / unmanagedResourceDirectories += baseDirectory.value / ".." / "api",
-    Compile / sourceGenerators += openApiGenerateClasses,
-    openApiGeneratorSpec := baseDirectory.value / ".." / "api" / "http/prism-agent-openapi-spec.yaml",
-    openApiGeneratorConfig := baseDirectory.value / "openapi/generator-config/config.yaml",
-    openApiGeneratorImportMapping := Map.empty,
     Docker / maintainer := "atala-coredid@iohk.io",
     Docker / dockerUsername := Some("input-output-hk"),
     Docker / dockerRepository := Some("ghcr.io"),
@@ -692,7 +666,7 @@ lazy val prismAgentServer = project
     buildInfoPackage := "io.iohk.atala.agent.server.buildinfo"
   )
   .enablePlugins(JavaAppPackaging, DockerPlugin)
-  .enablePlugins(OpenApiGeneratorPlugin, BuildInfoPlugin)
+  .enablePlugins(BuildInfoPlugin)
   .dependsOn(prismAgentWalletAPI)
   .dependsOn(
     agent,
@@ -700,8 +674,7 @@ lazy val prismAgentServer = project
     polluxDoobie,
     connectCore,
     connectDoobie,
-    castorCore,
-    castorDoobie
+    castorCore
   )
 
 // ##################
@@ -740,10 +713,10 @@ releaseProcess := Seq[ReleaseStep](
   runClean,
   runTest,
   setReleaseVersion,
-  ReleaseStep(releaseStepTask(prismAgentServer / Docker / publish)),
+  ReleaseStep(releaseStepTask(prismAgentServer / Docker / stage)),
   sys.env
     .get("RELEASE_MEDIATOR") match {
-    case Some(value) => ReleaseStep(releaseStepTask(mediator / Docker / publish))
+    case Some(value) => ReleaseStep(releaseStepTask(mediator / Docker / stage))
     case None =>
       ReleaseStep(action = st => {
         println("INFO: prism mediator release disabled!")

@@ -4,8 +4,8 @@ import io.iohk.atala.connect.core.model.ConnectionRecord.{ProtocolState, Role}
 import io.iohk.atala.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
 import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
 
-import java.util.UUID
 import java.time.Instant
+import java.util.UUID
 
 /** @param id
   * @param createdAt
@@ -36,6 +36,7 @@ case class ConnectionRecord(
     connectionRequest: Option[ConnectionRequest],
     connectionResponse: Option[ConnectionResponse],
     metaRetries: Int,
+    metaNextRetry: Option[Instant],
     metaLastFailure: Option[String]
 )
 

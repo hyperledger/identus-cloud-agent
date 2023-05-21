@@ -1,7 +1,7 @@
 package io.iohk.atala.api.util
 
-import io.iohk.atala.api.http.model.Pagination
-import io.iohk.atala.api.http.model.CollectionStats
+import io.iohk.atala.api.http.model.{CollectionStats, Pagination}
+
 import scala.util.chaining.scalaUtilChainingOps
 
 object PaginationUtils {
@@ -69,7 +69,6 @@ trait UriUpdate[U] {
 
 object UriUpdate {
   type SttpUri = sttp.model.Uri
-  type AkkaUri = akka.http.scaladsl.model.Uri
 
   given UriUpdate[SttpUri] with {
     override def addQueryParam(uri: SttpUri, key: String, value: String): SttpUri =
@@ -83,10 +82,4 @@ object UriUpdate {
     }
   }
 
-  given UriUpdate[AkkaUri] with {
-    override def addQueryParam(uri: AkkaUri, key: String, value: String): AkkaUri =
-      uri.withQuery((key, value) +: uri.query())
-    override def removeAllQueryParam(uri: AkkaUri, key: String): AkkaUri =
-      uri.withQuery(uri.query().filterNot { case (k, _) => k == key })
-  }
 }

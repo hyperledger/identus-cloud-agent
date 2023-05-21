@@ -1,20 +1,20 @@
 # Linting
 
-Megalinter is used as the default linter and is run at the point of creating a PR by Github Actions. It is also included as a pre-commit hook.
+Megalinter is the default linter and runs at the point of creating a Pull Request (PR) by GitHub Actions. It gets included as a pre-commit hook.
 
 ## Configuration
 
-The default configuration for megalinter is found at the root of the repository in `.mega-linter.yml`.
+The default configuration for Megalinter is at the repository's root in `.mega-linter.yml`.
 
-This configuration forms the base and additional properties are overridden in the Github Action workflow file `./github/workflows/lint.yml`.
+This configuration forms the base. To override additional properties, do so in the GitHub Action workflow file `./github/workflows/lint.yml`.
 
-The Github Action workflow file only impacts the configuration at the point it runs within the continuous integration (CI) environment.
+The GitHub Action workflow file only impacts the configuration when it runs within the continuous integration (CI) environment.
 
-This means that megalinter will behave differently when run locally as part of the pre-commit hook [or enacted manually] compared to when run in an automated way in Github Actions as part of CI.
+Megalinter's behavior will differ when run locally as part of the pre-commit hook [or enacted manually] compared to when run in an automated way in Github Actions as part of CI.
 
-**Linting is currently in an early adoption phase and due to adoption of Scala 3, it only runs in a mode which does not fail PR checks if errors are found for various linters.**
+> **Note:** Linting is currently in an early adoption phase and due to the adoption of Scala 3, it only runs in a mode that does not fail PR checks.
 
-> At the end of this markdown document is a section for changelog, please leave feedback in this section so that we can enable and refine the linting configuration over time
+> **Note:** At the end of this markdown document is a section for the changelog. Please leave feedback in this section so that we can enable and refine the linting configuration over time
 
 ### Base
 
@@ -50,13 +50,13 @@ This means that megalinter will behave differently when run locally as part of t
 
 ## Linting Feedback
 
-Please add any changes made to the linting rules in the below changelog section. This allows us to capture changes to linters over time which allows us to understand the good and the bad with respect to linting.
+Please add any changes to the linting rules in the below changelog section. It will allow us to capture changes to linters over time, allowing us to understand the good and the bad concerning linting.
 
-The objective with this feedback is to strike the balance of linting being useful for improving quality but not at the cost of developer velocity [it should not cause pain]
+This feedback aims to strike the balance of linting helping improve quality but not at the cost of developer velocity.
 
-The initial configuration has been created by disabling linters which were previously disabled and then changing linters which seem incompatible with our current work to "Enabled but pass even with error"
+The initial configuration disables linters which were previously disabled and then changing linters which seem incompatible with our current work to "Enabled but pass even with error"
 
-Please use the following format
+Please use the following format:
 
 ```text
 ---
