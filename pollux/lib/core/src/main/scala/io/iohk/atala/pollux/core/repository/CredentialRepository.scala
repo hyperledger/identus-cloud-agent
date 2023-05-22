@@ -16,7 +16,8 @@ trait CredentialRepository[F[_]] {
   ): F[Seq[IssueCredentialRecord]]
   def getIssueCredentialRecord(recordId: DidCommID): F[Option[IssueCredentialRecord]]
   def getIssueCredentialRecordsByStates(
-      ignoreWithZeroRetries: Boolean = true,
+      ignoreWithZeroRetries: Boolean,
+      limit: Int,
       states: IssueCredentialRecord.ProtocolState*
   ): F[Seq[IssueCredentialRecord]]
   def updateCredentialRecordStateAndProofByCredentialIdBulk(
@@ -72,6 +73,6 @@ trait CredentialRepository[F[_]] {
   def updateAfterFail(
       recordId: DidCommID,
       failReason: Option[String]
-  ): Task[Int]
+  ): F[Int]
 
 }

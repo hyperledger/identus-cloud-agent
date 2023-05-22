@@ -1,8 +1,6 @@
 package io.iohk.atala.issue.controller
 
 import io.iohk.atala.agent.server.config.AppConfig
-import io.iohk.atala.agent.server.http.model.HttpServiceError
-import io.iohk.atala.agent.server.http.model.HttpServiceError.InvalidPayload
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.api.http.model.{Pagination, PaginationInput}
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
@@ -20,9 +18,9 @@ import io.iohk.atala.issue.controller.http.{
   IssueCredentialRecordPage
 }
 import io.iohk.atala.mercury.model.DidId
-import io.iohk.atala.pollux.core.service.CredentialService
 import io.iohk.atala.pollux.core.model.DidCommID
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
+import io.iohk.atala.pollux.core.service.CredentialService
 import zio.{IO, URLayer, ZIO, ZLayer}
 
 import java.util.UUID
@@ -36,7 +34,7 @@ class IssueControllerImpl(
   override def createCredentialOffer(
       request: CreateIssueCredentialRecordRequest
   )(implicit rc: RequestContext): IO[ErrorResponse, IssueCredentialRecord] = {
-    val result: IO[ConnectionServiceError | CredentialServiceError | InvalidPayload, IssueCredentialRecord] = for {
+    val result: IO[ConnectionServiceError | CredentialServiceError | ErrorResponse, IssueCredentialRecord] = for {
       didIdPair <- getPairwiseDIDs(request.connectionId)
       issuingDID <- extractPrismDIDFromString(request.issuingDID)
       outcome <- credentialService
@@ -79,7 +77,7 @@ class IssueControllerImpl(
   override def getCredentialRecord(
       recordId: String
   )(implicit rc: RequestContext): IO[ErrorResponse, IssueCredentialRecord] = {
-    val result: IO[CredentialServiceError | InvalidPayload, Option[IssueCredentialRecord]] = for {
+    val result: IO[CredentialServiceError | ErrorResponse, Option[IssueCredentialRecord]] = for {
       id <- extractDidCommIdFromString(recordId)
       outcome <- credentialService.getIssueCredentialRecord(id)
     } yield (outcome map IssueCredentialRecord.fromDomain)
@@ -91,7 +89,7 @@ class IssueControllerImpl(
   override def acceptCredentialOffer(recordId: String, request: AcceptCredentialOfferRequest)(implicit
       rc: RequestContext
   ): IO[ErrorResponse, IssueCredentialRecord] = {
-    val result: IO[CredentialServiceError | InvalidPayload, IssueCredentialRecord] = for {
+    val result: IO[CredentialServiceError | ErrorResponse, IssueCredentialRecord] = for {
       id <- extractDidCommIdFromString(recordId)
       outcome <- credentialService.acceptCredentialOffer(id, request.subjectId)
     } yield IssueCredentialRecord.fromDomain(outcome)
@@ -101,7 +99,7 @@ class IssueControllerImpl(
   override def issueCredential(
       recordId: String
   )(implicit rc: RequestContext): IO[ErrorResponse, IssueCredentialRecord] = {
-    val result: IO[InvalidPayload | CredentialServiceError, IssueCredentialRecord] = for {
+    val result: IO[ErrorResponse | CredentialServiceError, IssueCredentialRecord] = for {
       id <- extractDidCommIdFromString(recordId)
       outcome <- credentialService.acceptCredentialRequest(id)
     } yield IssueCredentialRecord.fromDomain(outcome)
@@ -109,21 +107,12 @@ class IssueControllerImpl(
   }
 
   private def mapIssueErrors[T](
-      result: IO[CredentialServiceError | ConnectionServiceError | InvalidPayload, T]
+      result: IO[CredentialServiceError | ConnectionServiceError | ErrorResponse, T]
   ): IO[ErrorResponse, T] = {
     result mapError {
-      case invalidPayload: InvalidPayload =>
-        ErrorResponse(
-          status = 422,
-          `type` = "InvalidPayload",
-          title = "error-title",
-          detail = Some(invalidPayload.msg),
-          instance = "error-instance"
-        )
-      case connError: ConnectionServiceError =>
-        ConnectionController.toHttpError(connError)
-      case credError: CredentialServiceError =>
-        toHttpError(credError)
+      case e: ErrorResponse                  => e
+      case connError: ConnectionServiceError => ConnectionController.toHttpError(connError)
+      case credError: CredentialServiceError => toHttpError(credError)
     }
   }
 
@@ -131,16 +120,16 @@ class IssueControllerImpl(
 
   private[this] def extractDidCommIdFromString(
       maybeDidCommId: String
-  ): IO[InvalidPayload, io.iohk.atala.pollux.core.model.DidCommID] = {
+  ): IO[ErrorResponse, io.iohk.atala.pollux.core.model.DidCommID] = {
     ZIO
       .fromTry(Try(io.iohk.atala.pollux.core.model.DidCommID(maybeDidCommId)))
-      .mapError(e => HttpServiceError.InvalidPayload(s"Error parsing string as DidCommID: ${e.getMessage}"))
+      .mapError(e => ErrorResponse.badRequest(detail = Some(s"Error parsing string as DidCommID: ${e.getMessage}")))
   }
 
-  private[this] def extractPrismDIDFromString(maybeDid: String): IO[InvalidPayload, PrismDID] = {
+  private[this] def extractPrismDIDFromString(maybeDid: String): IO[ErrorResponse, PrismDID] = {
     ZIO
       .fromEither(PrismDID.fromString(maybeDid))
-      .mapError(e => HttpServiceError.InvalidPayload(s"Error parsing string as PrismDID: ${e}"))
+      .mapError(e => ErrorResponse.badRequest(detail = Some(s"Error parsing string as PrismDID: ${e}")))
   }
 
   private[this] def extractDidIdPairFromValidConnection(connRecord: ConnectionRecord): Option[DidIdPair] = {
