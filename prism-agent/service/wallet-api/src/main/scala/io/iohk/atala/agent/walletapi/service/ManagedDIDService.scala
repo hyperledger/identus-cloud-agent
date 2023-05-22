@@ -153,7 +153,6 @@ final class ManagedDIDService private[walletapi] (
     } yield outcome
   }
 
-
   // TODO: update this method to use the same handler as updateManagedDID
   def createAndStoreDID(didTemplate: ManagedDIDTemplate): IO[CreateManagedDIDError, LongFormPrismDID] = {
     for {

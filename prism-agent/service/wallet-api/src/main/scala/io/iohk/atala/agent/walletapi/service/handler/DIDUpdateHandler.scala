@@ -91,6 +91,7 @@ class RandKeyUpdateMaterial(secretStorage: DIDSecretStorage, nonSecretStorage: D
     val state: ManagedDIDState,
     randKey: UpdateDIDRandKey
 ) extends DIDUpdateMaterial {
+
   private def persistKeyMaterial: Task[Unit] =
     ZIO.foreachDiscard(randKey.newKeyPairs) { case (keyId, keyPair) =>
       val did = operation.did

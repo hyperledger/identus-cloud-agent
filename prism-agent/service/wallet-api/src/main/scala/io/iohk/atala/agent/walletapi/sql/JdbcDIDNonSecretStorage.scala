@@ -71,11 +71,13 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
         | )
         """.stripMargin.update
 
+    val operationHash = state.createOperation.toAtalaOperationHash
     val hdKeyValues = (now: Instant) =>
-      hdKey.toList.map { case (key, path) => (did, key, path.keyUsage, path.keyIndex, now) }
-    val insertHdKeyIO = Update[(PrismDID, String, VerificationRelationship | InternalKeyPurpose, Int, Instant)](
-      "INSERT INTO public.prism_did_hd_key(did, key_id, key_usage, key_index, created_at) VALUES (?, ?, ?, ?, ?)"
-    )
+      hdKey.toList.map { case (key, path) => (did, key, path.keyUsage, path.keyIndex, now, operationHash) }
+    val insertHdKeyIO =
+      Update[(PrismDID, String, VerificationRelationship | InternalKeyPurpose, Int, Instant, Array[Byte])](
+        "INSERT INTO public.prism_did_hd_key(did, key_id, key_usage, key_index, created_at, operation_hash) VALUES (?, ?, ?, ?, ?, ?)"
+      )
 
     val txnIO = (now: Instant) =>
       for {
@@ -125,13 +127,18 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
   }
 
   override def getHdKeyCounter(did: PrismDID): Task[Option[HdKeyIndexCounter]] = {
+    val status: ScheduledDIDOperationStatus = ScheduledDIDOperationStatus.Confirmed
     val cxnIO =
       sql"""
            | SELECT
            |   hd.key_usage AS key_usage,
            |   MAX(hd.key_index) AS key_index
            | FROM public.prism_did_hd_key hd
-           | WHERE hd.did = $did
+           |   LEFT JOIN public.prism_did_wallet_state ws ON hd.did = ws.did
+           |   LEFT JOIN public.prism_did_update_lineage ul ON hd.operation_hash = ul.operation_hash
+           | WHERE
+           |   hd.did = $did
+           |   AND (ul.status = $status OR (ul.status IS NULL AND hd.operation_hash = sha256(ws.atala_operation_content)))
            | GROUP BY hd.did, hd.key_usage
            """.stripMargin
         .query[(VerificationRelationship | InternalKeyPurpose, Int)]
@@ -165,14 +172,20 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
   }
 
   override def getHdKeyPath(did: PrismDID, keyId: String): Task[Option[ManagedDIDHdKeyPath]] = {
+    val status: ScheduledDIDOperationStatus = ScheduledDIDOperationStatus.Confirmed
     val cxnIO =
       sql"""
            | SELECT
            |   ws.did_index,
            |   hd.key_usage,
            |   hd.key_index
-           | FROM public.prism_did_hd_key hd JOIN public.prism_did_wallet_state ws ON hd.did = ws.did
-           | WHERE hd.did = $did AND hd.key_id = $keyId
+           | FROM public.prism_did_hd_key hd
+           |   LEFT JOIN public.prism_did_wallet_state ws ON hd.did = ws.did
+           |   LEFT JOIN public.prism_did_update_lineage ul ON hd.operation_hash = ul.operation_hash
+           | WHERE
+           |   hd.did = $did
+           |   AND hd.key_id = $keyId
+           |   AND (ul.status = $status OR (ul.status IS NULL AND hd.operation_hash = sha256(ws.atala_operation_content)))
            """.stripMargin
         .query[ManagedDIDHdKeyPath]
         .option
