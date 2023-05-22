@@ -123,11 +123,13 @@ final class ManagedDIDService private[walletapi] (
       details = dids.map { case (did, state) => ManagedDIDDetail(did.asCanonical, state) }
     } yield details -> totalCount
 
+  // TODO: update this method to use the same handler as updateManagedDID
   def publishStoredDID(did: CanonicalPrismDID): IO[PublishManagedDIDError, ScheduleDIDOperationOutcome] = {
     def doPublish(state: ManagedDIDState) = {
       for {
-        signedOperation <- signOperationWithMasterKey[PublishManagedDIDError](state, state.createOperation)
-        outcome <- submitSignedOperation[PublishManagedDIDError](signedOperation)
+        signedOperation <- publicationHandler
+          .signOperationWithMasterKey[PublishManagedDIDError](state, state.createOperation)
+        outcome <- publicationHandler.submitSignedOperation[PublishManagedDIDError](signedOperation)
         publicationState = PublicationState.PublicationPending(outcome.operationId)
         _ <- nonSecretStorage
           .updateManagedDID(did, ManagedDIDStatePatch(publicationState))
@@ -151,6 +153,8 @@ final class ManagedDIDService private[walletapi] (
     } yield outcome
   }
 
+
+  // TODO: update this method to use the same handler as updateManagedDID
   def createAndStoreDID(didTemplate: ManagedDIDTemplate): IO[CreateManagedDIDError, LongFormPrismDID] = {
     for {
       _ <- ZIO
@@ -180,29 +184,6 @@ final class ManagedDIDService private[walletapi] (
       did: CanonicalPrismDID,
       actions: Seq[UpdateManagedDIDAction]
   ): IO[UpdateManagedDIDError, ScheduleDIDOperationOutcome] = {
-    def doUpdate(state: ManagedDIDState, material: DIDUpdateMaterial) = {
-      val operation = material.operation
-      val operationHash = operation.toAtalaOperationHash
-      for {
-        signedOperation <- signOperationWithMasterKey[UpdateManagedDIDError](state, operation)
-        updateLineage <- Clock.instant.map { now =>
-          DIDUpdateLineage(
-            operationId = ArraySeq.from(signedOperation.toAtalaOperationId),
-            operationHash = ArraySeq.from(operation.toAtalaOperationHash),
-            previousOperationHash = operation.previousOperationHash,
-            status = ScheduledDIDOperationStatus.Pending,
-            createdAt = now,
-            updatedAt = now
-          )
-        }
-        _ <- material.persist.mapError(UpdateManagedDIDError.WalletStorageError.apply)
-        _ <- nonSecretStorage
-          .insertDIDUpdateLineage(did, updateLineage)
-          .mapError(UpdateManagedDIDError.WalletStorageError.apply)
-        outcome <- submitSignedOperation[UpdateManagedDIDError](signedOperation)
-      } yield outcome
-    }
-
     for {
       _ <- ZIO
         .fromEither(UpdateManagedDIDActionValidator.validate(actions))
@@ -231,15 +212,17 @@ final class ManagedDIDService private[walletapi] (
       _ <- ZIO
         .fromEither(didOpValidator.validate(material.operation))
         .mapError(UpdateManagedDIDError.InvalidOperation.apply)
-      outcome <- doUpdate(didState, material)
+      _ <- material.persist.mapError(UpdateManagedDIDError.WalletStorageError.apply)
+      outcome <- publicationHandler.submitSignedOperation[UpdateManagedDIDError](material.signedOperation)
     } yield outcome
   }
 
+  // TODO: refactor this method to use the same handler as updateManagedDID
   def deactivateManagedDID(did: CanonicalPrismDID): IO[UpdateManagedDIDError, ScheduleDIDOperationOutcome] = {
     def doDeactivate(state: ManagedDIDState, operation: PrismDIDOperation.Deactivate) = {
       for {
-        signedOperation <- signOperationWithMasterKey[UpdateManagedDIDError](state, operation)
-        outcome <- submitSignedOperation[UpdateManagedDIDError](signedOperation)
+        signedOperation <- publicationHandler.signOperationWithMasterKey[UpdateManagedDIDError](state, operation)
+        outcome <- publicationHandler.submitSignedOperation[UpdateManagedDIDError](signedOperation)
       } yield outcome
     }
 
@@ -317,16 +300,6 @@ final class ManagedDIDService private[walletapi] (
         .mapError[E](CommonWalletStorageError.apply)
     } yield awaitingConfirmationOps ++ pendingOps
   }
-
-  private def signOperationWithMasterKey[E](state: ManagedDIDState, operation: PrismDIDOperation)(using
-      c1: Conversion[CommonWalletStorageError, E],
-      c2: Conversion[CommonCryptographyError, E]
-  ): IO[E, SignedPrismDIDOperation] = publicationHandler.signOperationWithMasterKey(state, operation)
-
-  private def submitSignedOperation[E](
-      signedOperation: SignedPrismDIDOperation
-  )(using c1: Conversion[DIDOperationError, E]): IO[E, ScheduleDIDOperationOutcome] =
-    publicationHandler.submitSignedOperation(signedOperation)
 
   private def computeNewDIDLineageStatusAndPersist[E](
       updateLineage: DIDUpdateLineage
