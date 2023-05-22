@@ -1,4 +1,4 @@
-package io.iohk.atala.agent.walletapi.util
+package io.iohk.atala.agent.walletapi.service.handler
 
 import zio.*
 import io.iohk.atala.agent.walletapi.model.ManagedDIDState
@@ -6,12 +6,13 @@ import io.iohk.atala.agent.walletapi.model.UpdateManagedDIDAction
 import io.iohk.atala.agent.walletapi.model.{UpdateDIDRandKey, UpdateDIDHdKey}
 import io.iohk.atala.agent.walletapi.crypto.Apollo
 import io.iohk.atala.agent.walletapi.model.KeyManagementMode
+import io.iohk.atala.agent.walletapi.util.OperationFactory
 import io.iohk.atala.castor.core.model.did.PrismDIDOperation
 import io.iohk.atala.castor.core.model.did.PrismDIDOperation.Update
 import io.iohk.atala.agent.walletapi.storage.{DIDNonSecretStorage, DIDSecretStorage}
 import io.iohk.atala.agent.walletapi.model.error.UpdateManagedDIDError
 
-class KeyRotation(apollo: Apollo, nonSecretStorage: DIDNonSecretStorage, secretStorage: DIDSecretStorage)(
+class DIDUpdateHandler(apollo: Apollo, nonSecretStorage: DIDNonSecretStorage, secretStorage: DIDSecretStorage)(
     seed: Array[Byte]
 ) {
 
@@ -21,7 +22,7 @@ class KeyRotation(apollo: Apollo, nonSecretStorage: DIDNonSecretStorage, secretS
       state: ManagedDIDState,
       previousOperationHash: Array[Byte],
       actions: Seq[UpdateManagedDIDAction]
-  ): IO[UpdateManagedDIDError, KeyRotationMaterial] = {
+  ): IO[UpdateManagedDIDError, DIDUpdateMaterial] = {
     val did = state.createOperation.did
     state.keyMode match {
       case KeyManagementMode.HD =>
@@ -42,7 +43,7 @@ class KeyRotation(apollo: Apollo, nonSecretStorage: DIDNonSecretStorage, secretS
 
 }
 
-sealed trait KeyRotationMaterial {
+sealed trait DIDUpdateMaterial {
   def operation: PrismDIDOperation.Update
   def persist: Task[Unit]
 }
@@ -50,7 +51,7 @@ sealed trait KeyRotationMaterial {
 class RandKeyMaterial(secretStorage: DIDSecretStorage)(
     val operation: PrismDIDOperation.Update,
     randKey: UpdateDIDRandKey
-) extends KeyRotationMaterial {
+) extends DIDUpdateMaterial {
   override def persist: Task[Unit] =
     ZIO.foreachDiscard(randKey.newKeyPairs) { case (keyId, keyPair) =>
       val did = operation.did
@@ -62,7 +63,7 @@ class RandKeyMaterial(secretStorage: DIDSecretStorage)(
 class HdKeyMaterial(nonSecretStorage: DIDNonSecretStorage)(
     val operation: PrismDIDOperation.Update,
     hdKey: UpdateDIDHdKey
-) extends KeyRotationMaterial {
+) extends DIDUpdateMaterial {
 
   // TODO: think about rejected operation and how to revert persisted material
   override def persist: Task[Unit] = ???

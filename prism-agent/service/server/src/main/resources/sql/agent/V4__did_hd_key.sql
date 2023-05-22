@@ -31,6 +31,7 @@ CREATE TABLE public.prism_did_hd_key(
   "key_id" TEXT NOT NULL,
   "key_usage" PRISM_DID_KEY_USAGE,
   "key_index" INT,
+  "operation_hash" BYTEA NOT NULL,
   "created_at" TIMESTAMP WITH TIME ZONE NOT NULL,
   UNIQUE ("did", "key_usage", "key_index"),
   CONSTRAINT fk_did FOREIGN KEY ("did") REFERENCES public.prism_did_wallet_state("did") ON DELETE RESTRICT

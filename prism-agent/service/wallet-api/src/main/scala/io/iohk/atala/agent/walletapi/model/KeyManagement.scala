@@ -3,11 +3,7 @@ package io.iohk.atala.agent.walletapi.model
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import io.iohk.atala.castor.core.model.did.InternalKeyPurpose
 import io.iohk.atala.agent.walletapi.crypto.DerivationPath
-import io.circe.Derivation
 import io.iohk.atala.agent.walletapi.crypto.ECKeyPair
-import io.iohk.atala.agent.walletapi.crypto.Apollo
-
-import zio.*
 
 enum KeyManagementMode {
   case Random extends KeyManagementMode

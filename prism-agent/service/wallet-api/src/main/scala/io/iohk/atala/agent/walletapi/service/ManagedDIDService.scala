@@ -7,7 +7,6 @@ import io.iohk.atala.agent.walletapi.model.{
   ManagedDIDState,
   ManagedDIDTemplate,
   UpdateManagedDIDAction,
-  UpdateDIDRandKey,
   ManagedDIDStatePatch,
   PublicationState
 }
@@ -16,7 +15,6 @@ import io.iohk.atala.agent.walletapi.service.ManagedDIDService.DEFAULT_MASTER_KE
 import io.iohk.atala.agent.walletapi.storage.{DIDNonSecretStorage, DIDSecretStorage}
 import io.iohk.atala.agent.walletapi.util.{
   ManagedDIDTemplateValidator,
-  KeyRotationMaterial,
   OperationFactory,
   UpdateManagedDIDActionValidator
 }
@@ -41,10 +39,9 @@ import io.iohk.atala.mercury.PeerDID
 import io.iohk.atala.mercury.model.DidId
 
 import java.security.{PrivateKey as JavaPrivateKey, PublicKey as JavaPublicKey}
-import io.iohk.atala.agent.walletapi.model.KeyManagementMode
 import io.iohk.atala.shared.models.HexString
 import io.iohk.atala.agent.walletapi.util.KeyResolver
-import io.iohk.atala.agent.walletapi.util.KeyRotation
+import io.iohk.atala.agent.walletapi.service.handler.{DIDUpdateHandler, DIDUpdateMaterial}
 
 /** A wrapper around Castor's DIDService providing key-management capability. Analogous to the secretAPI in
   * indy-wallet-sdk.
@@ -70,7 +67,7 @@ final class ManagedDIDService private[walletapi] (
 
   private val keyResolver = KeyResolver(apollo, nonSecretStorage, secretStorage)(seed)
 
-  private val keyRotation = KeyRotation(apollo, nonSecretStorage, secretStorage)(seed)
+  private val didUpdateHandler = DIDUpdateHandler(apollo, nonSecretStorage, secretStorage)(seed)
 
   private val generateCreateOperationHdKey =
     OperationFactory(apollo).makeCreateOperationHdKey(DEFAULT_MASTER_KEY_ID, seed)
@@ -182,7 +179,7 @@ final class ManagedDIDService private[walletapi] (
       did: CanonicalPrismDID,
       actions: Seq[UpdateManagedDIDAction]
   ): IO[UpdateManagedDIDError, ScheduleDIDOperationOutcome] = {
-    def doUpdate(state: ManagedDIDState, material: KeyRotationMaterial) = {
+    def doUpdate(state: ManagedDIDState, material: DIDUpdateMaterial) = {
       val operation = material.operation
       val operationHash = operation.toAtalaOperationHash
       for {
@@ -229,7 +226,7 @@ final class ManagedDIDService private[walletapi] (
       )
       _ <- getUnconfirmedUpdateOperationByDid[UpdateManagedDIDError](Some(did))
         .filterOrFail(_.isEmpty)(UpdateManagedDIDError.MultipleInflightUpdateNotAllowed(did))
-      material <- keyRotation.materialize(didState, previousOperationHash, actions)
+      material <- didUpdateHandler.materialize(didState, previousOperationHash, actions)
       _ <- ZIO
         .fromEither(didOpValidator.validate(material.operation))
         .mapError(UpdateManagedDIDError.InvalidOperation.apply)
