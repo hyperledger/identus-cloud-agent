@@ -66,13 +66,12 @@ The derivation path contains the following segments/layers:
 m/wallet-purpose`/did-index`/key-purpose`/key-index`
 ```
 
-`wallet purpose` is used to distinguish the wallet purpose for the identity wallet and is a constant for the PRIMS platform `0x1D`, which looks like ID
+`wallet purpose` is used to distinguish the wallet purpose for the identity wallet and is a constant for the PRISM platform `0x1D`, which looks like ID
 
 `did-index` - the index of the DID, it's possible to create 
 
 `key-purpose` - the purpose of the key associated with the DID. There are the following available values for the `key purpose`:
 
-- unknown key 0 - is an invalid value for the key and shouldn't be used, the index that is not 0 must be provided.
 - master key 1 - is the most privileged key type, when any other key is lost, you could use this to recover the others
 - issuing key 2 - is used for issuing credentials only, it should be kept in a safe place to avoid malicious credentials being issued.
 - key-agreement key 3 - is used to establish a shared symmetric key for secure end-to-end communication, use this key type to encrypt the content.
@@ -100,7 +99,7 @@ The PRIMS platform uses HD key derivation algorithm for `managed` and `unmanaged
 
 ### Negative Consequences
 
-- backward compatibility with the key material created by PRISM v1.4 version
+- backward compatibility with the key material created by PRISM v1.4 version (can be mitigated by removing the `wallet_purpose` from the derivation path)
 
 ## Links
 
