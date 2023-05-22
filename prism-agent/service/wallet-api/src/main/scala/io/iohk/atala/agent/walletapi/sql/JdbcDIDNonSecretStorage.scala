@@ -210,6 +210,7 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
           |  $now,
           |  $operationHash
           | )
+          | ON CONFLICT (did, key_id, operation_hash) DO NOTHING
           |""".stripMargin.update
 
     for {

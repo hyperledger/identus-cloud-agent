@@ -92,12 +92,13 @@ class RandKeyUpdateMaterial(secretStorage: DIDSecretStorage, nonSecretStorage: D
     randKey: UpdateDIDRandKey
 ) extends DIDUpdateMaterial {
 
-  private def persistKeyMaterial: Task[Unit] =
+  private def persistKeyMaterial: Task[Unit] = {
+    val did = operation.did
+    val operationHash = operation.toAtalaOperationHash
     ZIO.foreachDiscard(randKey.newKeyPairs) { case (keyId, keyPair) =>
-      val did = operation.did
-      val operationHash = operation.toAtalaOperationHash
       secretStorage.insertKey(did, keyId, keyPair, operationHash)
     }
+  }
 
   override def persist: Task[Unit] =
     for {
@@ -113,8 +114,13 @@ class HdKeyUpdateMaterial(secretStorage: DIDSecretStorage, nonSecretStorage: DID
     hdKey: UpdateDIDHdKey
 ) extends DIDUpdateMaterial {
 
-  // TODO: think about rejected operation and how to revert persisted material
-  private def persistKeyMaterial: Task[Unit] = ???
+  private def persistKeyMaterial: Task[Unit] = {
+    val did = operation.did
+    val operationHash = operation.toAtalaOperationHash
+    ZIO.foreachDiscard(hdKey.newKeyPaths) { case (keyId, keyPath) =>
+      nonSecretStorage.insertHdKeyPath(did, keyId, keyPath, operationHash)
+    }
+  }
 
   override def persist: Task[Unit] =
     for {
