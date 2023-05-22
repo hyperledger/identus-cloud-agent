@@ -193,6 +193,31 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
     cxnIO.transact(xa)
   }
 
+  override def insertHdKeyPath(
+      did: PrismDID,
+      keyId: String,
+      hdKeyPath: ManagedDIDHdKeyPath,
+      operationHash: Array[Byte]
+  ): Task[Unit] = {
+    val cxnIO = (now: Instant) => sql"""
+          | INSERT INTO public.prism_did_hd_key(did, key_id, key_usage, key_index, created_at, operation_hash)
+          | VALUES
+          | (
+          |  $did,
+          |  $keyId,
+          |  ${hdKeyPath.keyUsage},
+          |  ${hdKeyPath.keyIndex},
+          |  $now,
+          |  $operationHash
+          | )
+          |""".stripMargin.update
+
+    for {
+      now <- Clock.instant
+      _ <- cxnIO(now).run.transact(xa)
+    } yield ()
+  }
+
   override def listManagedDID(
       offset: Option[Int],
       limit: Option[Int]

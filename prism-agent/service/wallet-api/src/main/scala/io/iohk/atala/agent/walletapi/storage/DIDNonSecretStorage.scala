@@ -20,6 +20,13 @@ private[walletapi] trait DIDNonSecretStorage {
 
   def getHdKeyPath(did: PrismDID, keyId: String): Task[Option[ManagedDIDHdKeyPath]]
 
+  def insertHdKeyPath(
+      did: PrismDID,
+      keyId: String,
+      hdKeyPath: ManagedDIDHdKeyPath,
+      operationHash: Array[Byte]
+  ): Task[Unit]
+
   /** Return a list of Managed DID as well as a count of all filtered items */
   def listManagedDID(offset: Option[Int], limit: Option[Int]): Task[(Seq[(PrismDID, ManagedDIDState)], Int)]
 
