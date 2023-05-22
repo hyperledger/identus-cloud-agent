@@ -41,7 +41,7 @@ import io.iohk.atala.mercury.model.DidId
 import java.security.{PrivateKey as JavaPrivateKey, PublicKey as JavaPublicKey}
 import io.iohk.atala.shared.models.HexString
 import io.iohk.atala.agent.walletapi.util.KeyResolver
-import io.iohk.atala.agent.walletapi.service.handler.{DIDUpdateHandler, DIDUpdateMaterial}
+import io.iohk.atala.agent.walletapi.service.handler.{DIDUpdateHandler, PublicationHandler, DIDUpdateMaterial}
 
 /** A wrapper around Castor's DIDService providing key-management capability. Analogous to the secretAPI in
   * indy-wallet-sdk.
@@ -67,7 +67,8 @@ final class ManagedDIDService private[walletapi] (
 
   private val keyResolver = KeyResolver(apollo, nonSecretStorage, secretStorage)(seed)
 
-  private val didUpdateHandler = DIDUpdateHandler(apollo, nonSecretStorage, secretStorage)(seed)
+  private val publicationHandler = PublicationHandler(didService, keyResolver)(DEFAULT_MASTER_KEY_ID)
+  private val didUpdateHandler = DIDUpdateHandler(apollo, nonSecretStorage, secretStorage, publicationHandler)(seed)
 
   private val generateCreateOperationHdKey =
     OperationFactory(apollo).makeCreateOperationHdKey(DEFAULT_MASTER_KEY_ID, seed)
@@ -320,32 +321,12 @@ final class ManagedDIDService private[walletapi] (
   private def signOperationWithMasterKey[E](state: ManagedDIDState, operation: PrismDIDOperation)(using
       c1: Conversion[CommonWalletStorageError, E],
       c2: Conversion[CommonCryptographyError, E]
-  ): IO[E, SignedPrismDIDOperation] = {
-    for {
-      masterKeyPair <-
-        keyResolver
-          .getKey(state, DEFAULT_MASTER_KEY_ID)
-          .mapError[E](CommonWalletStorageError.apply)
-          .someOrElseZIO(
-            ZIO.die(Exception("master-key must exists in the wallet for signing DID operation and submit to Node"))
-          )
-      signedOperation <- ZIO
-        .fromTry(masterKeyPair.privateKey.sign(operation.toAtalaOperation.toByteArray))
-        .mapError[E](CommonCryptographyError.apply)
-        .map(signature =>
-          SignedPrismDIDOperation(
-            operation = operation,
-            signature = ArraySeq.from(signature),
-            signedWithKey = DEFAULT_MASTER_KEY_ID
-          )
-        )
-    } yield signedOperation
-  }
+  ): IO[E, SignedPrismDIDOperation] = publicationHandler.signOperationWithMasterKey(state, operation)
 
   private def submitSignedOperation[E](
       signedOperation: SignedPrismDIDOperation
   )(using c1: Conversion[DIDOperationError, E]): IO[E, ScheduleDIDOperationOutcome] =
-    didService.scheduleOperation(signedOperation).mapError[E](e => e)
+    publicationHandler.submitSignedOperation(signedOperation)
 
   private def computeNewDIDLineageStatusAndPersist[E](
       updateLineage: DIDUpdateLineage
