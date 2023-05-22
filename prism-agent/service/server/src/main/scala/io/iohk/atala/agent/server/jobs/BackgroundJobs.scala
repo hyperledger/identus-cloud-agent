@@ -1,62 +1,51 @@
 package io.iohk.atala.agent.server.jobs
 
-import cats.syntax.all._
-import com.ionspin.kotlin.bignum.integer.BigInteger
-import com.ionspin.kotlin.bignum.integer.Sign
+import cats.syntax.all.*
+import com.ionspin.kotlin.bignum.integer.{BigInteger, Sign}
 import io.circe.Json
-import io.circe.parser._
-import io.circe.syntax._
+import io.circe.parser.*
+import io.circe.syntax.*
 import io.iohk.atala.agent.server.config.AppConfig
-import io.iohk.atala.agent.server.http.model.InvalidState
-import io.iohk.atala.agent.server.http.model.NotImplemented
-import io.iohk.atala.agent.walletapi.model._
+import io.iohk.atala.agent.server.http.model.{InvalidState, NotImplemented}
+import io.iohk.atala.agent.walletapi.model.*
+import io.iohk.atala.agent.walletapi.model.error.*
 import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError.KeyNotFoundError
-import io.iohk.atala.agent.walletapi.model.error._
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
-import io.iohk.atala.castor.core.model.did._
+import io.iohk.atala.castor.core.model.did.*
 import io.iohk.atala.castor.core.service.DIDService
-import io.iohk.atala.mercury._
-import io.iohk.atala.mercury.model._
-import io.iohk.atala.mercury.model.error._
-import io.iohk.atala.mercury.protocol.issuecredential._
-import io.iohk.atala.mercury.protocol.presentproof._
-import io.iohk.atala.mercury.protocol.reportproblem.v2._
-import io.iohk.atala.pollux.core.model.IssueCredentialRecord
-import io.iohk.atala.pollux.core.model._
-import io.iohk.atala.pollux.core.model.error.CredentialServiceError
-import io.iohk.atala.pollux.core.model.error.PresentationError
-import io.iohk.atala.pollux.core.model.error.PresentationError._
-import io.iohk.atala.pollux.core.service.CredentialService
-import io.iohk.atala.pollux.core.service.PresentationService
-import io.iohk.atala.pollux.vc.jwt.ES256KSigner
-import io.iohk.atala.pollux.vc.jwt.JWT
-import io.iohk.atala.pollux.vc.jwt.W3CCredential
-import io.iohk.atala.pollux.vc.jwt.W3cCredentialPayload
-import io.iohk.atala.pollux.vc.jwt.JwtPresentation
-import io.iohk.atala.pollux.vc.jwt.CredentialVerification
-import io.iohk.atala.pollux.vc.jwt.{DidResolver => JwtDidResolver}
-import io.iohk.atala.pollux.vc.jwt.{Issuer => JwtIssuer}
-import io.iohk.atala.resolvers.DIDResolver
-import io.iohk.atala.resolvers.UniversalDidResolver
+import io.iohk.atala.mercury.*
+import io.iohk.atala.mercury.model.*
+import io.iohk.atala.mercury.model.error.*
+import io.iohk.atala.mercury.protocol.issuecredential.*
+import io.iohk.atala.mercury.protocol.presentproof.*
+import io.iohk.atala.mercury.protocol.reportproblem.v2.*
+import io.iohk.atala.pollux.core.model.*
+import io.iohk.atala.pollux.core.model.error.PresentationError.*
+import io.iohk.atala.pollux.core.model.error.{CredentialServiceError, PresentationError}
+import io.iohk.atala.pollux.core.service.{CredentialService, PresentationService}
+import io.iohk.atala.pollux.vc.jwt.{
+  CredentialVerification,
+  ES256KSigner,
+  JWT,
+  JwtPresentation,
+  W3CCredential,
+  W3cCredentialPayload,
+  DidResolver as JwtDidResolver,
+  Issuer as JwtIssuer
+}
+import io.iohk.atala.resolvers.{DIDResolver, UniversalDidResolver}
 import org.bouncycastle.jce.ECNamedCurveTable
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.bouncycastle.jce.spec.ECNamedCurveSpec
 import org.didcommx.didcomm.DIDComm
-import zio.Duration
 import zio.*
-import zio.prelude.AssociativeBothOps
-import zio.prelude.Validation
-import zio.prelude.ZValidation._
+import zio.prelude.ZValidation.*
+import zio.prelude.{AssociativeBothOps, Validation}
 
 import java.io.IOException
 import java.security.KeyFactory
-import java.security.spec.ECPoint
-import java.security.spec.ECPrivateKeySpec
-import java.security.spec.ECPublicKeySpec
-import java.security.spec.EncodedKeySpec
-import java.time.Clock
-import java.time.Instant
-import java.time.ZoneId
+import java.security.spec.{ECPoint, ECPrivateKeySpec, ECPublicKeySpec, EncodedKeySpec}
+import java.time.{Clock, Instant, ZoneId}
 import java.util.UUID
 import scala.jdk.CollectionConverters.*
 
@@ -69,6 +58,7 @@ object BackgroundJobs {
       records <- credentialService
         .getIssueCredentialRecordsByStates(
           ignoreWithZeroRetries = true,
+          limit = config.pollux.issueBgJobRecordsLimit,
           IssueCredentialRecord.ProtocolState.OfferPending,
           IssueCredentialRecord.ProtocolState.RequestPending,
           IssueCredentialRecord.ProtocolState.RequestGenerated,
@@ -77,7 +67,9 @@ object BackgroundJobs {
           IssueCredentialRecord.ProtocolState.CredentialGenerated
         )
         .mapError(err => Throwable(s"Error occurred while getting Issue Credential records: $err"))
-      _ <- ZIO.foreachPar(records)(performExchange).withParallelism(config.pollux.issueBgJobProcessingParallelism)
+      _ <- ZIO
+        .foreachPar(records)(performIssueCredentialExchange)
+        .withParallelism(config.pollux.issueBgJobProcessingParallelism)
     } yield ()
   }
   val presentProofExchanges = {
@@ -87,6 +79,7 @@ object BackgroundJobs {
       records <- presentationService
         .getPresentationRecordsByStates(
           ignoreWithZeroRetries = true,
+          limit = config.pollux.presentationBgJobRecordsLimit,
           PresentationRecord.ProtocolState.RequestPending,
           PresentationRecord.ProtocolState.PresentationPending,
           PresentationRecord.ProtocolState.PresentationGenerated,
@@ -94,21 +87,15 @@ object BackgroundJobs {
         )
         .mapError(err => Throwable(s"Error occurred while getting Presentation records: $err"))
       _ <- ZIO
-        .foreachPar(records)(performPresentation)
+        .foreachPar(records)(performPresentProofExchange)
         .withParallelism(config.pollux.presentationBgJobProcessingParallelism)
     } yield ()
   }
 
-  private[this] def performExchange(
-      record: IssueCredentialRecord
-  ): URIO[
-    DidOps & DIDResolver & JwtDidResolver & HttpClient & CredentialService & DIDService & ManagedDIDService &
-      PresentationService,
-    Unit
-  ] = {
-    import IssueCredentialRecord._
-    import IssueCredentialRecord.ProtocolState._
-    import IssueCredentialRecord.PublicationState._
+  private[this] def performIssueCredentialExchange(record: IssueCredentialRecord) = {
+    import IssueCredentialRecord.*
+    import IssueCredentialRecord.ProtocolState.*
+    import IssueCredentialRecord.PublicationState.*
     val aux = for {
       _ <- ZIO.logDebug(s"Running action with records => $record")
       _ <- record match {
@@ -367,27 +354,23 @@ object BackgroundJobs {
     } yield ()
 
     aux
-      .tapError(ex =>
+      .tapError(e =>
         for {
-          presentationService <- ZIO.service[PresentationService]
-          _ <- presentationService
-            .markFailure(record.id, Some(ex.toString))
-            .catchAll(throwable =>
-              ZIO.logErrorCause(s"Issue Credential fail to markFailure: ${record.id}", Cause.fail(throwable))
+          credentialService <- ZIO.service[CredentialService]
+          _ <- credentialService
+            .reportProcessingFailure(record.id, Some(e.toString))
+            .tapError(err =>
+              ZIO.logErrorCause(
+                s"Issue Credential - failed to report processing failure: ${record.id}",
+                Cause.fail(err)
+              )
             )
         } yield ()
       )
-      .catchAll {
-        case ex: MercuryException =>
-          ZIO.logErrorCause(s"DIDComm communication error processing record: ${record.id}", Cause.fail(ex))
-        case ex: CredentialServiceError =>
-          ZIO.logErrorCause(s"Credential service error processing record: ${record.id} ", Cause.fail(ex))
-        case ex: DIDSecretStorageError =>
-          ZIO.logErrorCause(s"DID secret storage error processing record: ${record.id} ", Cause.fail(ex))
-      }
-      .catchAllDefect { case throwable =>
-        ZIO.logErrorCause(s"Issue Credential protocol defect processing record: ${record.id}", Cause.fail(throwable))
-      }
+      .catchAll(e => ZIO.logErrorCause(s"Issue Credential - Error processing record: ${record.id} ", Cause.fail(e)))
+      .catchAllDefect(d =>
+        ZIO.logErrorCause(s"Issue Credential - Defect processing record: ${record.id}", Cause.fail(d))
+      )
 
   }
 
@@ -477,14 +460,8 @@ object BackgroundJobs {
       jwtIssuer <- createJwtIssuer(longFormPrismDID, VerificationRelationship.Authentication)
     } yield jwtIssuer
 
-  private[this] def performPresentation(
-      record: PresentationRecord
-  ): URIO[
-    DidOps & DIDResolver & JwtDidResolver & HttpClient & PresentationService & CredentialService & DIDService &
-      ManagedDIDService & AppConfig,
-    Unit
-  ] = {
-    import io.iohk.atala.pollux.core.model.PresentationRecord.ProtocolState._
+  private[this] def performPresentProofExchange(record: PresentationRecord) = {
+    import io.iohk.atala.pollux.core.model.PresentationRecord.ProtocolState.*
 
     val aux = for {
       _ <- ZIO.logDebug(s"Running action with records => $record")
@@ -712,19 +689,21 @@ object BackgroundJobs {
     } yield ()
 
     aux
-      .catchAll {
-        case ex: MercuryException =>
-          ZIO.logErrorCause(s"DIDComm communication error processing record: ${record.id}", Cause.fail(ex))
-        case ex: CredentialServiceError =>
-          ZIO.logErrorCause(s"Credential service error processing record: ${record.id} ", Cause.fail(ex))
-        case ex: PresentationError =>
-          ZIO.logErrorCause(s"Presentation service error processing record: ${record.id} ", Cause.fail(ex))
-        case ex: DIDSecretStorageError =>
-          ZIO.logErrorCause(s"DID secret storage error processing record: ${record.id} ", Cause.fail(ex))
-      }
-      .catchAllDefect { case throwable =>
-        ZIO.logErrorCause(s"Proof Presentation protocol defect processing record: ${record.id}", Cause.fail(throwable))
-      }
+      .tapError(e =>
+        for {
+          presentationService <- ZIO.service[PresentationService]
+          _ <- presentationService
+            .reportProcessingFailure(record.id, Some(e.toString))
+            .tapError(err =>
+              ZIO.logErrorCause(
+                s"Present Proof - failed to report processing failure: ${record.id}",
+                Cause.fail(err)
+              )
+            )
+        } yield ()
+      )
+      .catchAll(e => ZIO.logErrorCause(s"Present Proof - Error processing record: ${record.id} ", Cause.fail(e)))
+      .catchAllDefect(d => ZIO.logErrorCause(s"Present Proof - Defect processing record: ${record.id}", Cause.fail(d)))
   }
 
   private[this] def buildDIDCommAgent(
@@ -735,35 +714,6 @@ object BackgroundJobs {
       peerDID <- managedDidService.getPeerDID(myDid)
       agent = AgentPeerService.makeLayer(peerDID)
     } yield agent
-  }
-
-  val publishCredentialsToDlt = {
-    for {
-      credentialService <- ZIO.service[CredentialService]
-      _ <- performPublishCredentialsToDlt(credentialService)
-    } yield ()
-
-  }
-
-  private[this] def performPublishCredentialsToDlt(credentialService: CredentialService) = {
-    val res: ZIO[Any, CredentialServiceError, Unit] = for {
-      records <- credentialService.getIssueCredentialRecordsByStates(
-        ignoreWithZeroRetries = true,
-        IssueCredentialRecord.ProtocolState.CredentialPending
-      )
-      // NOTE: the line below is a potentially slow operation, because <createCredentialPayloadFromRecord> makes a database SELECT call,
-      // so calling this function n times will make n database SELECT calls, while it can be optimized to get
-      // all data in one query, this function here has to be refactored as well. Consider doing this if this job is too slow
-      credentials <- ZIO.foreach(records) { record =>
-        credentialService.createCredentialPayloadFromRecord(record, credentialService.createIssuer, Instant.now())
-      }
-      // FIXME: issuer here should come from castor not from credential service, this needs to be done before going to prod
-      publishedBatchData <- credentialService.publishCredentialBatch(credentials, credentialService.createIssuer)
-      _ <- credentialService.markCredentialRecordsAsPublishQueued(publishedBatchData.credentialsAnsProofs)
-      // publishedBatchData gives back irisOperationId, which should be persisted to track the status
-    } yield ()
-
-    ZIO.unit
   }
 
   val syncDIDPublicationStateFromDlt =
