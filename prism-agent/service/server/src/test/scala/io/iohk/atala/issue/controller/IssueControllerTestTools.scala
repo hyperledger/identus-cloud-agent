@@ -163,21 +163,4 @@ trait IssueGen {
     )
   }
 
-//  def generateCreateIssueCredentialRecordRequetN(
-//      count: Int
-//  ): ZIO[IssueController, Throwable, List[CreateIssueCredentialRecordRequest]] =
-//    for {
-//      controller <- ZIO.service[IssueController]
-//      backend = httpBackend(controller)
-//      inputs <- Generator.schemaInput.runCollectN(count)
-//      _ <- inputs
-//        .map(in =>
-//          basicRequest
-//            .post(uri"${issueUriBase}/credential-offers")
-//            .body(in.toJsonPretty)
-//            .response(asJsonAlways[IssueCredentialRecord])
-//            .send(backend)
-//        )
-//        .reduce((l, r) => l.flatMap(_ => r))
-//    } yield inputs
 }
