@@ -152,9 +152,10 @@ private class CredentialServiceImpl(
         createDidCommOfferCredential(
           pairwiseIssuerDID = pairwiseIssuerDID,
           pairwiseHolderDID = pairwiseHolderDID,
+          schemaId = schemaId,
           claims = attributes,
           thid = thid,
-          UUID.randomUUID().toString(),
+          UUID.randomUUID().toString,
           "domain"
         )
       )
@@ -522,12 +523,13 @@ private class CredentialServiceImpl(
   private[this] def createDidCommOfferCredential(
       pairwiseIssuerDID: DidId,
       pairwiseHolderDID: DidId,
+      schemaId: Option[String],
       claims: Seq[Attribute],
       thid: DidCommID,
       challenge: String,
       domain: String
   ): OfferCredential = {
-    val credentialPreview = CredentialPreview(attributes = claims)
+    val credentialPreview = CredentialPreview(schema_id = schemaId, attributes = claims)
     val body = OfferCredential.Body(goal_code = Some("Offer Credential"), credential_preview = credentialPreview)
 
     OfferCredential(
