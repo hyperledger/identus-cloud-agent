@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v1.2.0...prism-agent-v1.3.0) (2023-05-23)
+
+
+### Features
+
+* restore JVM metrics endpoint capability ([#527](https://github.com/input-output-hk/atala-prism-building-blocks/issues/527)) ([7d603f0](https://github.com/input-output-hk/atala-prism-building-blocks/commit/7d603f09abd6042368ada6afa3685332342d6860))
+
 # [1.2.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v1.1.0...prism-agent-v1.2.0) (2023-05-17)
 
 
