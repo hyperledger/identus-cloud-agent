@@ -36,7 +36,7 @@ trait StorageSpecHelper extends ApolloSpecHelper {
   protected def generateKeyPair() = apollo.ecKeyFactory.generateKeyPair(EllipticCurve.SECP256K1)
 
   protected def generateCreateOperation(keyIds: Seq[String]) =
-    OperationFactory(apollo).makeCreateOperation("master0", generateKeyPair)(
+    OperationFactory(apollo).makeCreateOperationRandKey("master0")(
       ManagedDIDTemplate(
         publicKeys = keyIds.map(DIDPublicKeyTemplate(_, VerificationRelationship.Authentication)),
         services = Nil
@@ -51,9 +51,10 @@ trait StorageSpecHelper extends ApolloSpecHelper {
       (createOperation, secrets) = generated
       did = createOperation.did
       keyPairs = secrets.keyPairs.toSeq
-      _ <- nonSecretStorage.setManagedDIDState(
+      _ <- nonSecretStorage.insertManagedDID(
         did,
-        ManagedDIDState(createOperation, KeyManagementMode.Random, PublicationState.Created())
+        ManagedDIDState(createOperation, None, PublicationState.Created()),
+        Map.empty
       )
       _ <- ZIO.foreach(keyPairs) { case (keyId, keyPair) =>
         secretStorage.insertKey(did, keyId, keyPair, createOperation.toAtalaOperationHash)

@@ -26,10 +26,11 @@ object JdbcDIDNonSecretStorageSpec
     ZIO.foreach(operation) { op =>
       for {
         storage <- ZIO.service[DIDNonSecretStorage]
-        _ <- storage.setManagedDIDState(
+        _ <- storage.insertManagedDID(
           op.did,
-          ManagedDIDState(op, KeyManagementMode.Random, PublicationState.Created())
-        ) // TODO: allow HD key?
+          ManagedDIDState(op, None, PublicationState.Created()),
+          Map.empty
+        )
         _ <- TestClock.adjust(delay)
       } yield ()
     }
@@ -64,13 +65,15 @@ object JdbcDIDNonSecretStorageSpec
         did2 = PrismDID.buildCanonicalFromSuffix("1" * 64).toOption.get
         createOperation1 <- generateCreateOperation(Seq("key-1")).map(_._1)
         createOperation2 <- generateCreateOperation(Seq("key-1")).map(_._1)
-        _ <- storage.setManagedDIDState(
+        _ <- storage.insertManagedDID(
           did1,
-          ManagedDIDState(createOperation1, KeyManagementMode.Random, PublicationState.Created())
+          ManagedDIDState(createOperation1, None, PublicationState.Created()),
+          Map.empty
         )
-        _ <- storage.setManagedDIDState(
+        _ <- storage.insertManagedDID(
           did2,
-          ManagedDIDState(createOperation2, KeyManagementMode.Random, PublicationState.Created())
+          ManagedDIDState(createOperation2, None, PublicationState.Created()),
+          Map.empty
         )
         states <- storage.listManagedDID(None, None).map(_._1)
       } yield assert(states.map(_._1))(hasSameElements(Seq(did1, did2)))
@@ -149,14 +152,16 @@ object JdbcDIDNonSecretStorageSpec
         storage <- ZIO.service[DIDNonSecretStorage]
         createOperation1 <- generateCreateOperation(Seq("key-1")).map(_._1)
         createOperation2 <- generateCreateOperation(Seq("key-1")).map(_._1)
-        _ <- storage.setManagedDIDState(
+        _ <- storage.insertManagedDID(
           didExample,
-          ManagedDIDState(createOperation1, KeyManagementMode.Random, PublicationState.Created())
+          ManagedDIDState(createOperation1, None, PublicationState.Created()),
+          Map.empty
         )
         state1 <- storage.getManagedDIDState(didExample)
-        _ <- storage.setManagedDIDState(
+        _ <- storage.insertManagedDID(
           didExample,
-          ManagedDIDState(createOperation2, KeyManagementMode.Random, PublicationState.Created())
+          ManagedDIDState(createOperation2, None, PublicationState.Created()),
+          Map.empty
         )
         state2 <- storage.getManagedDIDState(didExample)
       } yield assert(state1.get.createOperation)(equalTo(createOperation1))
@@ -184,10 +189,10 @@ object JdbcDIDNonSecretStorageSpec
         states = for {
           keyManagementMode <- KeyManagementMode.values.toSeq
           publicationState <- publicationStates
-        } yield ManagedDIDState(createOperation, keyManagementMode, publicationState)
+        } yield ManagedDIDState(createOperation, None, publicationState)
         readStates <- ZIO.foreach(states) { state =>
           for {
-            _ <- storage.setManagedDIDState(didExample, state)
+            _ <- storage.insertManagedDID(didExample, state, Map.empty)
             readState <- storage.getManagedDIDState(didExample)
           } yield readState
         }
