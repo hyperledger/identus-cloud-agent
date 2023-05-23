@@ -59,11 +59,10 @@ final class ManagedDIDService private[walletapi] (
   private val AUTHENTICATION_KEY_ID = "authentication"
 
   // TODO: use the seed from ENV
-  private val seed: Array[Byte] = HexString
-    .fromStringUnsafe(
-      "fffcf9f6f3f0edeae7e4e1dedbd8d5d2cfccc9c6c3c0bdbab7b4b1aeaba8a5a29f9c999693908d8a8784817e7b7875726f6c696663605d5a5754514e4b484542"
-    )
-    .toByteArray
+  private val seed: Array[Byte] = io.iohk.atala.prism.crypto.derivation.KeyDerivation.INSTANCE.binarySeed(
+    io.iohk.atala.prism.crypto.derivation.KeyDerivation.INSTANCE.randomMnemonicCode(),
+    ""
+  )
 
   private val keyResolver = KeyResolver(apollo, nonSecretStorage, secretStorage)(seed)
 
