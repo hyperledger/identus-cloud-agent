@@ -33,6 +33,7 @@ import io.iohk.atala.castor.core.model.did.InternalKeyPurpose
 import io.iohk.atala.agent.walletapi.model.error.UpdateManagedDIDError
 import io.iohk.atala.agent.walletapi.model.UpdateManagedDIDAction
 import io.iohk.atala.agent.walletapi.crypto.Apollo
+import io.iohk.atala.agent.walletapi.util.SeedResolver
 
 object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSupport, ApolloSpecHelper {
 
@@ -76,7 +77,8 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSuppor
     pgContainerLayer >+> (transactorLayer ++ apolloLayer) >+> (JdbcDIDSecretStorage.layer ++ JdbcDIDNonSecretStorage.layer)
 
   private def managedDIDServiceLayer =
-    (DIDOperationValidator.layer() ++ testDIDServiceLayer ++ apolloLayer) >+> ManagedDIDService.layer
+    (DIDOperationValidator.layer() ++ testDIDServiceLayer ++ apolloLayer ++ SeedResolver
+      .layer()) >+> ManagedDIDService.layer
 
   private def generateDIDTemplate(
       publicKeys: Seq[DIDPublicKeyTemplate] = Nil,
