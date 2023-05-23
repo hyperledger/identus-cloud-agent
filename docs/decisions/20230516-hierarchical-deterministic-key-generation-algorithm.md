@@ -1,6 +1,6 @@
 # Hierarchical deterministic key generation algorithm
 
-- Status: draft
+- Status: accepted
 - Deciders: Jesus Diaz Vico, Ezequiel Postan, Pat Losoponkul, Yurii Shynbuiev
 - Date: 2023-05-16
 - Tags: key management, hierarchical deterministic, key derivation
