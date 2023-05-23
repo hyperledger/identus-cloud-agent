@@ -5,6 +5,7 @@ import io.iohk.atala.castor.core.model.did.{PrismDID, ScheduledDIDOperationStatu
 import zio.*
 import io.iohk.atala.agent.walletapi.model.ManagedDIDHdKeyPath
 import io.iohk.atala.agent.walletapi.model.HdKeyIndexCounter
+import scala.collection.immutable.ArraySeq
 
 private[walletapi] trait DIDNonSecretStorage {
 
@@ -26,6 +27,8 @@ private[walletapi] trait DIDNonSecretStorage {
       hdKeyPath: ManagedDIDHdKeyPath,
       operationHash: Array[Byte]
   ): Task[Unit]
+
+  def listHdKeyPath(did: PrismDID): Task[Seq[(String, ArraySeq[Byte], ManagedDIDHdKeyPath)]]
 
   /** Return a list of Managed DID as well as a count of all filtered items */
   def listManagedDID(offset: Option[Int], limit: Option[Int]): Task[(Seq[(PrismDID, ManagedDIDState)], Int)]

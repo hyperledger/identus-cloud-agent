@@ -197,8 +197,8 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSuppor
       for {
         svc <- ZIO.service[ManagedDIDService]
         did <- svc.createAndStoreDID(template).map(_.asCanonical)
-        keyPairs <- svc.secretStorage.listKeys(did)
-      } yield assert(keyPairs.map(_._1))(hasSameElements(Seq("key1", "key2", ManagedDIDService.DEFAULT_MASTER_KEY_ID)))
+        keyPaths <- svc.nonSecretStorage.listHdKeyPath(did)
+      } yield assert(keyPaths.map(_._1))(hasSameElements(Seq("key1", "key2", ManagedDIDService.DEFAULT_MASTER_KEY_ID)))
     },
     test("created DID have corresponding public keys in CreateOperation") {
       val template = generateDIDTemplate(
@@ -314,8 +314,8 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSuppor
             UpdateManagedDIDAction.AddKey(DIDPublicKeyTemplate(id, VerificationRelationship.Authentication))
           )
           _ <- svc.updateManagedDID(did, actions)
-          keyPairs <- svc.secretStorage.listKeys(did)
-        } yield assert(keyPairs.map(_._1))(
+          keyPaths <- svc.nonSecretStorage.listHdKeyPath(did)
+        } yield assert(keyPaths.map(_._1))(
           hasSameElements(Seq(ManagedDIDService.DEFAULT_MASTER_KEY_ID, "key-1", "key-2"))
         )
       },
@@ -331,8 +331,8 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSuppor
           )
           _ <- svc.updateManagedDID(did, actions) // 1st update
           _ <- svc.updateManagedDID(did, actions.take(1)) // 2nd update: key-1 is added twice
-          keyPairs <- svc.secretStorage.listKeys(did)
-        } yield assert(keyPairs.map(_._1))(
+          keyPaths <- svc.nonSecretStorage.listHdKeyPath(did)
+        } yield assert(keyPaths.map(_._1))(
           hasSameElements(Seq(ManagedDIDService.DEFAULT_MASTER_KEY_ID, "key-1", "key-1", "key-2"))
         )
       },

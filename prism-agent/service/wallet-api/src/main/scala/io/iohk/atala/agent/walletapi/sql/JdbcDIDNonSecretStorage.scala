@@ -17,6 +17,7 @@ import io.iohk.atala.agent.walletapi.model.PublicationState
 import io.iohk.atala.agent.walletapi.model.HdKeyIndexCounter
 import io.iohk.atala.agent.walletapi.model.InternalKeyCounter
 import io.iohk.atala.agent.walletapi.model.VerificationRelationshipCounter
+import scala.collection.immutable.ArraySeq
 
 class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage {
 
@@ -191,6 +192,30 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
         .option
 
     cxnIO.transact(xa)
+  }
+
+  override def listHdKeyPath(did: PrismDID): Task[Seq[(String, ArraySeq[Byte], ManagedDIDHdKeyPath)]] = {
+    val cxnIO =
+      sql"""
+        | SELECT
+        |   key_id,
+        |   operation_hash,
+        |   key_usage,
+        |   key_index
+        | FROM public.prism_did_hd_key
+        | WHERE did = $did
+        """.stripMargin
+        .query[(String, ArraySeq[Byte], VerificationRelationship | InternalKeyPurpose, Int)]
+        .to[List]
+
+    for {
+      state <- getManagedDIDState(did)
+      paths <- cxnIO.transact(xa)
+    } yield state.flatMap(_.didIndex).fold(Nil) { didIndex =>
+      paths.map { (keyId, operationHash, keyUsage, keyIndex) =>
+        (keyId, operationHash, ManagedDIDHdKeyPath(didIndex, keyUsage, keyIndex))
+      }
+    }
   }
 
   override def insertHdKeyPath(

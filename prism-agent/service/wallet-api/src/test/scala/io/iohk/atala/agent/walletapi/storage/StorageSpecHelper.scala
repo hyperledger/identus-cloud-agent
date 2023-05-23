@@ -43,6 +43,15 @@ trait StorageSpecHelper extends ApolloSpecHelper {
       )
     )
 
+  protected def generateCreateOperationHdKey(keyIds: Seq[String], didIndex: Int) =
+    OperationFactory(apollo).makeCreateOperationHdKey("master0", Array.fill(32)(0))(
+      didIndex,
+      ManagedDIDTemplate(
+        publicKeys = keyIds.map(DIDPublicKeyTemplate(_, VerificationRelationship.Authentication)),
+        services = Nil
+      )
+    )
+
   protected def initializeDIDStateAndKeys(keyIds: Seq[String] = Nil) = {
     for {
       nonSecretStorage <- ZIO.service[DIDNonSecretStorage]

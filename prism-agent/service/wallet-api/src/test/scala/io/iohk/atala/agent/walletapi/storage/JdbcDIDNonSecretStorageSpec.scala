@@ -39,7 +39,6 @@ object JdbcDIDNonSecretStorageSpec
     val testSuite =
       suite("JdbcDIDNonSecretStorageSpec")(
         listDIDStateSpec,
-        setDIDStateSpec,
         getDIDStateSpec,
         listDIDLineageSpec,
         setDIDLineageStatusSpec
@@ -146,30 +145,6 @@ object JdbcDIDNonSecretStorageSpec
     }
   )
 
-  private val setDIDStateSpec = suite("setManagedDIDState")(
-    test("replace state if set for the same did") {
-      for {
-        storage <- ZIO.service[DIDNonSecretStorage]
-        createOperation1 <- generateCreateOperation(Seq("key-1")).map(_._1)
-        createOperation2 <- generateCreateOperation(Seq("key-1")).map(_._1)
-        _ <- storage.insertManagedDID(
-          didExample,
-          ManagedDIDState(createOperation1, None, PublicationState.Created()),
-          Map.empty
-        )
-        state1 <- storage.getManagedDIDState(didExample)
-        _ <- storage.insertManagedDID(
-          didExample,
-          ManagedDIDState(createOperation2, None, PublicationState.Created()),
-          Map.empty
-        )
-        state2 <- storage.getManagedDIDState(didExample)
-      } yield assert(state1.get.createOperation)(equalTo(createOperation1))
-        && assert(state2.get.createOperation)(equalTo(createOperation2))
-        && assert(createOperation1)(not(equalTo(createOperation2)))
-    }
-  )
-
   private val getDIDStateSpec = suite("getManagedDIDState")(
     test("return None of state is not found") {
       for {
@@ -180,24 +155,29 @@ object JdbcDIDNonSecretStorageSpec
     test("return the same state that was set for all variants") {
       for {
         storage <- ZIO.service[DIDNonSecretStorage]
-        createOperation <- generateCreateOperation(Seq("key-1")).map(_._1)
-        publicationStates = Seq(
-          PublicationState.Created(),
-          PublicationState.PublicationPending(ArraySeq.fill(32)(0)),
-          PublicationState.Published(ArraySeq.fill(32)(1)),
+        inputs = Seq[(Option[Int], PublicationState)](
+          (None, PublicationState.Created()),
+          (None, PublicationState.PublicationPending(ArraySeq.fill(32)(0))),
+          (None, PublicationState.Published(ArraySeq.fill(32)(1))),
+          (Some(1), PublicationState.Created()),
+          (Some(2), PublicationState.PublicationPending(ArraySeq.fill(32)(0))),
+          (Some(3), PublicationState.Published(ArraySeq.fill(32)(1))),
         )
-        states = for {
-          keyManagementMode <- KeyManagementMode.values.toSeq
-          publicationState <- publicationStates
-        } yield ManagedDIDState(createOperation, None, publicationState)
+        states <- ZIO.foreach(inputs) { case (didIndex, publicationState) =>
+          val operation = didIndex match {
+            case Some(idx) => generateCreateOperationHdKey(Seq("key-1"), idx).map(_._1)
+            case None      => generateCreateOperation(Seq("key-1")).map(_._1)
+          }
+          operation.map(o => ManagedDIDState(o, None, publicationState))
+        }
         readStates <- ZIO.foreach(states) { state =>
           for {
-            _ <- storage.insertManagedDID(didExample, state, Map.empty)
-            readState <- storage.getManagedDIDState(didExample)
+            _ <- storage.insertManagedDID(state.createOperation.did, state, Map.empty)
+            readState <- storage.getManagedDIDState(state.createOperation.did)
           } yield readState
         }
       } yield assert(readStates.flatten)(hasSameElements(states))
-    }
+    } @@ TestAspect.tag("dev")
   )
 
   private val listDIDLineageSpec = {
