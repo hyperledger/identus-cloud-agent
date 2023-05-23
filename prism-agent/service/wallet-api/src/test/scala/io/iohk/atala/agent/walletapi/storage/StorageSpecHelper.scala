@@ -44,7 +44,7 @@ trait StorageSpecHelper extends ApolloSpecHelper {
     )
 
   protected def generateCreateOperationHdKey(keyIds: Seq[String], didIndex: Int) =
-    OperationFactory(apollo).makeCreateOperationHdKey("master0", Array.fill(32)(0))(
+    OperationFactory(apollo).makeCreateOperationHdKey("master0", Array.fill(64)(0))(
       didIndex,
       ManagedDIDTemplate(
         publicKeys = keyIds.map(DIDPublicKeyTemplate(_, VerificationRelationship.Authentication)),

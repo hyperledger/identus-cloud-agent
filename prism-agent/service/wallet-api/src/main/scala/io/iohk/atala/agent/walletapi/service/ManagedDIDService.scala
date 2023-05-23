@@ -42,6 +42,7 @@ import java.security.{PrivateKey as JavaPrivateKey, PublicKey as JavaPublicKey}
 import io.iohk.atala.shared.models.HexString
 import io.iohk.atala.agent.walletapi.util.KeyResolver
 import io.iohk.atala.agent.walletapi.service.handler.{DIDUpdateHandler, PublicationHandler, DIDUpdateMaterial}
+import io.iohk.atala.agent.walletapi.util.SeedResolver
 
 /** A wrapper around Castor's DIDService providing key-management capability. Analogous to the secretAPI in
   * indy-wallet-sdk.
@@ -51,18 +52,13 @@ final class ManagedDIDService private[walletapi] (
     didOpValidator: DIDOperationValidator,
     private[walletapi] val secretStorage: DIDSecretStorage,
     private[walletapi] val nonSecretStorage: DIDNonSecretStorage,
-    apollo: Apollo
+    apollo: Apollo,
+    seed: Array[Byte]
 ) {
 
   private val CURVE = EllipticCurve.SECP256K1
   private val AGREEMENT_KEY_ID = "agreement"
   private val AUTHENTICATION_KEY_ID = "authentication"
-
-  // TODO: use the seed from ENV
-  private val seed: Array[Byte] = io.iohk.atala.prism.crypto.derivation.KeyDerivation.INSTANCE.binarySeed(
-    io.iohk.atala.prism.crypto.derivation.KeyDerivation.INSTANCE.randomMnemonicCode(),
-    ""
-  )
 
   private val keyResolver = KeyResolver(apollo, nonSecretStorage, secretStorage)(seed)
 
@@ -387,10 +383,20 @@ object ManagedDIDService {
 
   val reservedKeyIds: Set[String] = Set(DEFAULT_MASTER_KEY_ID)
 
-  val layer: URLayer[
-    DIDOperationValidator & DIDService & DIDSecretStorage & DIDNonSecretStorage & Apollo,
+  val layer: RLayer[
+    DIDOperationValidator & DIDService & DIDSecretStorage & DIDNonSecretStorage & Apollo & SeedResolver,
     ManagedDIDService
-  ] =
-    ZLayer.fromFunction(ManagedDIDService(_, _, _, _, _))
+  ] = {
+    ZLayer.fromZIO {
+      for {
+        didService <- ZIO.service[DIDService]
+        didOpValidator <- ZIO.service[DIDOperationValidator]
+        secretStorage <- ZIO.service[DIDSecretStorage]
+        nonSecretStorage <- ZIO.service[DIDNonSecretStorage]
+        apollo <- ZIO.service[Apollo]
+        seed <- ZIO.serviceWithZIO[SeedResolver](_.resolve)
+      } yield ManagedDIDService(didService, didOpValidator, secretStorage, nonSecretStorage, apollo, seed)
+    }
+  }
 
 }
