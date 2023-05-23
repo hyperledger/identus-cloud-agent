@@ -2,7 +2,7 @@ package io.iohk.atala.pollux.core.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.protobuf.ByteString
-import com.networknt.schema.{JsonSchemaFactory, SpecVersion, SpecVersionDetector}
+import com.networknt.schema.{JsonMetaSchema, JsonSchemaFactory, SpecVersion, SpecVersionDetector}
 import com.squareup.okhttp.Protocol
 import io.circe.Decoder.Result
 import io.circe.syntax.*
@@ -36,6 +36,9 @@ import java.util.UUID
 object CredentialServiceImpl {
   val layer: URLayer[IrisServiceStub & CredentialRepository[Task] & DidResolver & URIDereferencer, CredentialService] =
     ZLayer.fromFunction(CredentialServiceImpl(_, _, _, _))
+
+  private val VC_JSON_SCHEMA_URI = "https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json"
+  private val VC_JSON_SCHEMA_TYPE = "CredentialSchema2022"
 }
 
 private class CredentialServiceImpl(
@@ -46,6 +49,7 @@ private class CredentialServiceImpl(
     maxRetries: Int = 5 // TODO move to config
 ) extends CredentialService {
 
+  import CredentialServiceImpl.*
   import IssueCredentialRecord.*
 
   override def extractIdFromCredential(credential: W3cCredentialPayload): Option[DidCommID] =
@@ -95,9 +99,17 @@ private class CredentialServiceImpl(
             jsonSchema <- ZIO
               .attempt {
                 val vcSchemaJsonNode = mapper.readTree(vcSchemaString)
+                // Check "vcSchema.type" is "https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json"
+                val vcSchemaURI = vcSchemaJsonNode.get("type").asText()
+                if (vcSchemaURI != VC_JSON_SCHEMA_URI)
+                  throw new RuntimeException(s"VC Schema type should be $VC_JSON_SCHEMA_URI")
                 val jsonSchemaNode = vcSchemaJsonNode.get("schema")
+                // Check "vcSchema.schema.$schema" is "https://json-schema.org/draft/2020-12/schema"
+                val jsonSchemaSpecVersion = SpecVersionDetector.detect(jsonSchemaNode)
+                if (jsonSchemaSpecVersion != SpecVersion.VersionFlag.V202012)
+                  throw new RuntimeException(s"JSON Schema spec version should be ${JsonMetaSchema.getV202012.getUri}")
                 val factory = JsonSchemaFactory
-                  .builder(JsonSchemaFactory.getInstance(SpecVersionDetector.detect(jsonSchemaNode)))
+                  .builder(JsonSchemaFactory.getInstance(jsonSchemaSpecVersion))
                   .objectMapper(mapper)
                   .build
                 factory.getSchema(jsonSchemaNode)
@@ -722,7 +734,8 @@ private class CredentialServiceImpl(
         issuer = issuer.did,
         issuanceDate = issuanceDate,
         maybeExpirationDate = record.validityPeriod.map(sec => issuanceDate.plusSeconds(sec.toLong)),
-        maybeCredentialSchema = None,
+        maybeCredentialSchema =
+          record.schemaId.map(id => io.iohk.atala.pollux.vc.jwt.CredentialSchema(id, VC_JSON_SCHEMA_TYPE)),
         credentialSubject = claims.add("id", jwtPresentation.iss.asJson).asJson,
         maybeCredentialStatus = None,
         maybeRefreshService = None,
