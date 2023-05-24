@@ -23,46 +23,17 @@ import zio.test.TestAspect.{nondeterministic, samples}
 
 import java.io.{BufferedReader, InputStreamReader}
 import java.net.{HttpURLConnection, JarURLConnection, URI}
-import java.util.UUID
+import java.nio.charset.StandardCharsets
+import java.util.{Base64, UUID}
 
 object CredentialServiceImplSpec extends ZIOSpecDefault {
-
-  private[this] val uriDereferencerLayer = ZLayer.succeed {
-    new URIDereferencer {
-      override def dereference(uri: URI): Task[String] = {
-        val result = for {
-          body <- ZIO.attempt {
-            val inputStream = uri.getScheme match {
-              case "resource" =>
-                println(s"URI path => ${uri.getPath}")
-                this.getClass.getResourceAsStream(uri.getPath)
-              case _ =>
-                val conn = uri.toURL.openConnection()
-                conn.setConnectTimeout(5000)
-                conn.setReadTimeout(5000)
-                conn match
-                  case connection: HttpURLConnection => connection.setRequestMethod("GET")
-                  case _                             =>
-                conn.getInputStream
-            }
-            if (inputStream != null)
-              val content = scala.io.Source.fromInputStream(inputStream).mkString
-              inputStream.close()
-              content
-            else ""
-          }
-        } yield body
-        result
-      }
-    }
-  }
 
   val irisStubLayer = ZLayer.fromZIO(
     ZIO.succeed(IrisServiceGrpc.stub(ManagedChannelBuilder.forAddress("localhost", 9999).usePlaintext.build))
   )
   val didResolverLayer = ZLayer.fromZIO(ZIO.succeed(makeResolver(Map.empty)))
   val credentialServiceLayer =
-    irisStubLayer ++ CredentialRepositoryInMemory.layer ++ didResolverLayer ++ uriDereferencerLayer >>> CredentialServiceImpl.layer
+    irisStubLayer ++ CredentialRepositoryInMemory.layer ++ didResolverLayer ++ ResourceURIDereferencerImpl.layer >>> CredentialServiceImpl.layer
 
   override def spec = {
     suite("CredentialServiceImpl")(
@@ -109,7 +80,11 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
             assertTrue(record.offerCredentialData.get.body.formats.isEmpty) &&
             assertTrue(
               record.offerCredentialData.get.body.credential_preview.attributes == Seq(
-                Attribute("name", "Alice", None)
+                Attribute(
+                  "name",
+                  Base64.getUrlEncoder.encodeToString("Alice".asJson.noSpaces.getBytes(StandardCharsets.UTF_8)),
+                  Some("application/json")
+                )
               )
             ) &&
             assertTrue(record.requestCredentialData.isEmpty) &&

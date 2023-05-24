@@ -17,7 +17,7 @@ import io.iohk.atala.connect.sql.repository.Migrations as ConnectMigrations
 import io.iohk.atala.issue.controller.IssueControllerImpl
 import io.iohk.atala.mercury.*
 import io.iohk.atala.pollux.core.service.URIDereferencerError.{ConnectionError, ResourceNotFound, UnexpectedError}
-import io.iohk.atala.pollux.core.service.{CredentialSchemaServiceImpl, URIDereferencer, URIDereferencerError}
+import io.iohk.atala.pollux.core.service.{CredentialSchemaServiceImpl, URIDereferencer, URIDereferencerError, HttpURIDereferencerImpl}
 import io.iohk.atala.pollux.sql.repository.{JdbcCredentialSchemaRepository, Migrations as PolluxMigrations}
 import io.iohk.atala.presentproof.controller.PresentProofControllerImpl
 import io.iohk.atala.resolvers.{DIDResolver, UniversalDidResolver}
@@ -79,29 +79,6 @@ object AgentApp extends ZIOAppDefault {
     _ <- server.join *> ZIO.log(s"Server End")
     _ <- ZIO.never
   } yield ()
-
-  private[this] val uriDereferencerLayer = ZLayer.succeed {
-    new URIDereferencer {
-      override def dereference(uri: URI): IO[URIDereferencerError, String] = {
-        val result = for {
-          response <- Client.request(uri.toString).mapError(t => ConnectionError(t.getMessage))
-          body <- response match
-            case Response(Status.Ok, _, body, _, None) =>
-              body.asString.mapError(t => UnexpectedError(t.getMessage))
-            case Response(Status.NotFound, _, _, _, None) =>
-              ZIO.fail(ResourceNotFound(uri))
-            case Response(_, _, _, _, httpError) =>
-              ZIO.fail(UnexpectedError(s"HTTP response error: $httpError"))
-        } yield body
-        result
-          .provide(Scope.default >>> Client.default)
-          .mapError {
-            case e: URIDereferencerError => e
-            case t                       => UnexpectedError(t.toString)
-          }
-      }
-    }
-  }
 
   override def run: ZIO[Any, Throwable, Unit] = {
 
@@ -166,7 +143,7 @@ object AgentApp extends ZIOAppDefault {
         IssueControllerImpl.layer,
         DIDRegistrarControllerImpl.layer,
         PresentProofControllerImpl.layer,
-        uriDereferencerLayer
+        HttpURIDereferencerImpl.layer
       )
     } yield app
 

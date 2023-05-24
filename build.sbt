@@ -207,6 +207,7 @@ lazy val D_Pollux = new {
   val baseDependencies: Seq[ModuleID] = Seq(
     D.zio,
     D.zioJson,
+    D.zioHttp,
     D.zioTest,
     D.zioTestSbt,
     D.zioTestMagnolia,
