@@ -2,15 +2,11 @@ package io.iohk.atala.agent.walletapi.util
 
 import zio.*
 import zio.test.*
-import zio.test.Assertion.*
 import io.iohk.atala.agent.walletapi.crypto.ApolloSpecHelper
-import io.iohk.atala.agent.walletapi.crypto.Prism14Apollo
 import io.iohk.atala.agent.walletapi.model.DIDPublicKeyTemplate
 import io.iohk.atala.agent.walletapi.model.ManagedDIDTemplate
-import io.iohk.atala.castor.core.model.did.EllipticCurve
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
-import io.iohk.atala.shared.models.{HexString, Base64UrlString}
-import org.didcommx.didcomm.diddoc.VerificationMethod
+import io.iohk.atala.shared.models.HexString
 
 object OperationFactorySpec extends ZIOSpecDefault, ApolloSpecHelper {
 

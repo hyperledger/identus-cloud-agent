@@ -14,7 +14,6 @@ import io.iohk.atala.agent.walletapi.model.DIDPublicKeyTemplate
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import zio.*
 import io.iohk.atala.agent.walletapi.model.ManagedDIDState
-import io.iohk.atala.agent.walletapi.model.KeyManagementMode
 import io.iohk.atala.agent.walletapi.model.PublicationState
 
 trait StorageSpecHelper extends ApolloSpecHelper {

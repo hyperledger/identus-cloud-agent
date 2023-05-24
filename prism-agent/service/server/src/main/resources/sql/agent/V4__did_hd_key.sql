@@ -1,21 +1,19 @@
--- add key management mode to prism did
 CREATE TYPE public.prism_did_key_mode AS ENUM(
   'RANDOM',
   'HD'
 );
 
 ALTER TABLE public.prism_did_wallet_state
-ADD COLUMN "key_mode" PRISM_DID_KEY_MODE,
-ADD COLUMN "did_index" INT UNIQUE;
+  ADD COLUMN "key_mode" PRISM_DID_KEY_MODE,
+  ADD COLUMN "did_index" INT UNIQUE;
 
 UPDATE public.prism_did_wallet_state
-SET "key_mode" = 'RANDOM'
-WHERE "key_mode" IS NULL;
+  SET "key_mode" = 'RANDOM'
+  WHERE "key_mode" IS NULL;
 
 ALTER TABLE public.prism_did_wallet_state
-ALTER COLUMN "key_mode" SET NOT NULL;
+  ALTER COLUMN "key_mode" SET NOT NULL;
 
--- add hd key related tables
 CREATE TYPE public.prism_did_key_usage AS ENUM(
   'MASTER',
   'ISSUING',

@@ -4,8 +4,7 @@ import zio.*
 import zio.test.*
 import zio.test.Assertion.*
 import io.iohk.atala.castor.core.model.did.EllipticCurve
-import io.iohk.atala.shared.models.{HexString, Base64UrlString}
-import org.bitcoinj.core.Base58
+import io.iohk.atala.shared.models.HexString
 
 object ApolloSpec extends ZIOSpecDefault {
 

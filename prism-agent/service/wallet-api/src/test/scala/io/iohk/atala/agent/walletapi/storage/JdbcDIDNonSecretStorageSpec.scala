@@ -14,7 +14,6 @@ import io.iohk.atala.castor.core.model.did.ScheduledDIDOperationStatus
 import io.iohk.atala.castor.core.model.did.PrismDIDOperation
 import org.postgresql.util.PSQLException
 import io.iohk.atala.agent.walletapi.model.PublicationState
-import io.iohk.atala.agent.walletapi.model.KeyManagementMode
 
 object JdbcDIDNonSecretStorageSpec
     extends ZIOSpecDefault,

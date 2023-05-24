@@ -21,7 +21,7 @@ trait ECPrivateKey {
   def sign(data: Array[Byte]): Try[Array[Byte]]
   def encode: Array[Byte]
   def computePublicKey: ECPublicKey
-  override final def toString(): String = "<PRIVATE_KEY>"
+  override final def toString(): String = "**********"
 }
 
 trait ECKeyFactory {

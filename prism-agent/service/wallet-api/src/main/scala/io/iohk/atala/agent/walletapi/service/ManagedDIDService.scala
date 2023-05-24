@@ -27,7 +27,6 @@ import io.iohk.atala.castor.core.model.did.{
   PrismDIDOperation,
   ScheduleDIDOperationOutcome,
   ScheduledDIDOperationStatus,
-  SignedPrismDIDOperation
 }
 import io.iohk.atala.castor.core.model.error.DIDOperationError
 import io.iohk.atala.castor.core.service.DIDService
@@ -39,9 +38,8 @@ import io.iohk.atala.mercury.PeerDID
 import io.iohk.atala.mercury.model.DidId
 
 import java.security.{PrivateKey as JavaPrivateKey, PublicKey as JavaPublicKey}
-import io.iohk.atala.shared.models.HexString
 import io.iohk.atala.agent.walletapi.util.KeyResolver
-import io.iohk.atala.agent.walletapi.service.handler.{DIDUpdateHandler, PublicationHandler, DIDUpdateMaterial}
+import io.iohk.atala.agent.walletapi.service.handler.{DIDUpdateHandler, PublicationHandler}
 import io.iohk.atala.agent.walletapi.util.SeedResolver
 
 /** A wrapper around Castor's DIDService providing key-management capability. Analogous to the secretAPI in

@@ -3,7 +3,6 @@ import org.scoverage.coveralls.Imports.CoverallsKeys._
 
 inThisBuild(
   Seq(
-    maxErrors := 5, // TODO: remove before the PR
     organization := "io.iohk.atala",
     scalaVersion := "3.2.2",
     fork := true,

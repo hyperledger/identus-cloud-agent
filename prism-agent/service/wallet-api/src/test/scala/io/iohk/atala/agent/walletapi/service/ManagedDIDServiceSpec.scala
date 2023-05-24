@@ -77,8 +77,10 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSuppor
     pgContainerLayer >+> (transactorLayer ++ apolloLayer) >+> (JdbcDIDSecretStorage.layer ++ JdbcDIDNonSecretStorage.layer)
 
   private def managedDIDServiceLayer =
-    (DIDOperationValidator.layer() ++ testDIDServiceLayer ++ apolloLayer ++ SeedResolver
-      .layer()) >+> ManagedDIDService.layer
+    (DIDOperationValidator.layer() ++
+      testDIDServiceLayer ++
+      apolloLayer ++
+      SeedResolver.layer()) >+> ManagedDIDService.layer
 
   private def generateDIDTemplate(
       publicKeys: Seq[DIDPublicKeyTemplate] = Nil,
