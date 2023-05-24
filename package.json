@@ -41,6 +41,12 @@
       [
         "@semantic-release/exec",
         {
+          "prepareCmd": "sbt dumpLicenseReportAggregate && cp ./target/license-reports/atala-prism-building-blocks-licenses.md ./LICENSES.md"
+        }
+      ],
+      [
+        "@semantic-release/exec",
+        {
           "prepareCmd": "sbt \"release release-version ${nextRelease.version} next-version ${nextRelease.version}-SNAPSHOT with-defaults\""
         }
       ],
@@ -62,6 +68,7 @@
           "assets": [
             "version.sbt",
             "CHANGELOG.md",
+            "LICENSES.md",
             "package.json",
             "package-lock.json"
           ],
