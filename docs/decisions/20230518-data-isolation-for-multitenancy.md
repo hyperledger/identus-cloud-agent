@@ -89,7 +89,7 @@ All considered options are built using the PostgreSQL database
 
 The first five options are the common architecture patterns for multi-tenancy built using PostgreSQL
 
-The level of isolation grows up from the 1ds to the 5th option
+The level of isolation grows up from the 1st to the 5th option
 
 The maintenance cost grows up from the 1st to the 5th option
 
