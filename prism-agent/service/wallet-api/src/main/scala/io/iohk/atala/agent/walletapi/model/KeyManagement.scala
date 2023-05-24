@@ -118,7 +118,6 @@ private[walletapi] final case class UpdateDIDRandKey(newKeyPairs: Map[String, EC
 private[walletapi] final case class CreateDIDHdKey(
     keyPaths: Map[String, ManagedDIDHdKeyPath],
     internalKeyPaths: Map[String, ManagedDIDHdKeyPath],
-    counter: HdKeyIndexCounter
 )
 
 private[walletapi] final case class UpdateDIDHdKey(

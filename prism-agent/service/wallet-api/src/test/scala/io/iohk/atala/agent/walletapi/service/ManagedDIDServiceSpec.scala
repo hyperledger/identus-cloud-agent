@@ -124,7 +124,7 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSuppor
         deactivateManagedDIDSpec
       ) @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
 
-    testSuite.provideLayer(jdbcStorageLayer >+> managedDIDServiceLayer)
+    testSuite.provideLayer(jdbcStorageLayer >+> managedDIDServiceLayer).provide(Runtime.removeDefaultLoggers)
   }
 
   private val publishStoredDIDSpec =

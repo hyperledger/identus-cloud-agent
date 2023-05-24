@@ -78,7 +78,6 @@ class OperationFactory(apollo: Apollo) {
       hdKeys = CreateDIDHdKey(
         keyPaths = keysWithCounter._1.map { case (publicKey, path) => publicKey.id -> path }.toMap,
         internalKeyPaths = Map(masterKeyOutcome.publicKey.id -> masterKeyOutcome.path),
-        counter = masterKeyOutcome.nextCounter
       )
     } yield operation -> hdKeys
 
