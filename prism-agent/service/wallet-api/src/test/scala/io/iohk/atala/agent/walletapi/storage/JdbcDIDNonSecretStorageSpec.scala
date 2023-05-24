@@ -177,7 +177,7 @@ object JdbcDIDNonSecretStorageSpec
           } yield readState
         }
       } yield assert(readStates.flatten)(hasSameElements(states))
-    } @@ TestAspect.tag("dev")
+    }
   )
 
   private val listDIDLineageSpec = {

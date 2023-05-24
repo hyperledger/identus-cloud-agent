@@ -52,7 +52,7 @@ private class SeedResolverImpl(apollo: Apollo, seedOverrideHex: Option[String]) 
       }
       .flatMap {
         case Some(seed) => ZIO.succeed(seed)
-        case None       => seedRand // Always generate a new seed as final fallback
+        case None       => seedRand
       }
   }
 }
