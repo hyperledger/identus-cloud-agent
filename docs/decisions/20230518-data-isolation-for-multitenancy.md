@@ -103,7 +103,7 @@ The `Row Security Policies` option is the easiest for implementation at the curr
 A single instance of the PostgreSQL database can keep the data and handle requests of hundreds of thousands of tenants leveraging the Row Security Policies without additional operation and infrastructure costs.
 
 At the same time, the PRISM Agent architecture can support `Instance per Tenant` or `Database per Tenant` configuration by isolating the DAL under the repository interface. So, these options also can be considered for organizations with a lot of tenants to provide better isolation and data protection guarantees.
-These two options are excellent for a group of tenants under a single organisation, but should not be used for a single tenant.
+These two options are excellent for a group of tenants under a single organisation or can be considered for tenants that require geographical separation of data, but should not be used for a single tenant.
 
 Moreover, for the SaaS application to manage thousands of organizations and millions of tenants, the `Row Security Policies` option will not be enough because of the resource limitations and amount of requests to the database. In this case, one of the PostgreSQL sharding options is required together with `Row Security Policies`. So, either `Citus extension` or Amazon RDS sharding should be used. `Citus extension` is a preferred way for an on-premise environment, but, it probably, can be used in AWS as well.
 
