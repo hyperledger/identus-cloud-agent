@@ -615,12 +615,12 @@ import scala.language.postfixOps
 
 //define the compile time tasks to build the shim and download the appropriate anoncreds .so
 lazy val getAnonCredsSo = taskKey[Unit]("Download the Anoncreds .so if required")
-lazy val buildShim = taskKey[Unit]("Build  the Anoncreds shim shared object")
+lazy val buildShim = taskKey[Unit]("Build the Anoncreds shim shared object")
 
 // Download the anoncreds .so if necessary and build the shim.
 // The order of these tasks matters.
-(Compile / compile) := ((Compile / compile) dependsOn buildShim).value
-(Compile / compile) := ((Compile / compile) dependsOn getAnonCredsSo).value
+// (Compile / compile) := ((Compile / compile) dependsOn buildShim).value
+// (Compile / compile) := ((Compile / compile) dependsOn getAnonCredsSo).value
 
 // TODO sbt clean must delete this folder! (Shared.TargetForAnoncredsSharedObjectDownload)
 buildShim := {
