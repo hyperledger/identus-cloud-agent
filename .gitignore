@@ -18,6 +18,5 @@ target/
 **.env.*
 
 # anoncreds libs (tmp folder)
-pollux/lib/anoncreds/native-lib/anoncreds-shim.o
-pollux/lib/anoncreds/native-lib/libanoncreds-shim.so
+pollux/lib/anoncreds/native-lib/*
 # TODO pollux/lib/anoncreds/native-lib/libanoncreds.so

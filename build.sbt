@@ -631,6 +631,23 @@ buildShim := {
     case name if name.contains("mac") =>
       println("Building shim for macOS")
 
+      val gccCmd: Seq[String] = Seq(
+        "gcc", "-O2",
+        "-fno-omit-frame-pointer",
+        "-fno-strict-aliasing",
+        "-D_REENTRANT",
+        "-fno-common",
+        "-W", "-Wall", "-Wno-unused", "-Wno-parentheses",
+        "-Itarget",
+        s"-I./${Shared.NativeCodeSourceFolder}",
+        "-arch", "x86_64", "-arch", "arm64",
+        "-c", s"${Shared.NativeCodeSourceFolder}/anoncreds-shim.c",
+        "-o", s"${Shared.TargetForAnoncredsSharedObjectDownload}/anoncreds-shim.o"
+      )
+
+      println(gccCmd.mkString(" "))
+      Process(gccCmd) !
+
       Shared.MacArchs.foreach { arch =>
         val tmp: Seq[String] = Seq("gcc", "-v", "-o",
           s"${Shared.TargetForAnoncredsSharedObjectDownload}/libanoncreds-shim-$arch.dylib",
@@ -651,13 +668,12 @@ buildShim := {
       Process(lipoCmd) !
 
     case name if name.contains("linux") =>
-      val arch = "x86_64"
       val tmp: Seq[String] = "make" :: "-f" ::
         "GNUmakefile" ::
         "CPU=$(uname -m)" ::
         s"SRC_DIR=${Shared.NativeCodeSourceFolder}" ::
         s"SHIM_BUILD_DIR=${Shared.TargetForAnoncredsSharedObjectDownload}" ::
-        s"RT_LOCATION_ANONCREDS_SO=${Shared.TargetForAnoncredsSharedObjectDownload}/libanoncreds-linux-$arch.so" :: // Changed here
+        s"RT_LOCATION_ANONCREDS_SO=${Shared.TargetForAnoncredsSharedObjectDownload}" :: // Changed here
         Nil
       println(tmp.mkString("RUN: \'", " ", "'"))
       Process(tmp) !
@@ -683,7 +699,7 @@ getAnonCredsSo := {
       println("Combining libraries into a single universal one using lipo")
       val lipoCmd: Seq[String] = Seq("lipo", "-create") ++
         Shared.MacArchs.map(arch => Shared.anonCredsLibFilePath("darwin", arch)) ++
-        Seq("-output", Shared.anonCredsLibFilePath("darwin", "universal"))
+        Seq("-output", s"${Shared.TargetForAnoncredsSharedObjectDownload}/libanoncreds.dylib")
 
       println(lipoCmd.mkString(" "))
       Process(lipoCmd) !
@@ -708,6 +724,7 @@ lazy val polluxAnoncreds = project
   .settings(
     name := "pollux-anoncreds",
     // Make these values available to the project source at compile time
+    cleanFiles ++= (file(Shared.TargetForAnoncredsSharedObjectDownload) ** "*").get,
     buildInfoKeys ++= Seq[BuildInfoKey](
       "AnonCredsTag" -> Shared.AnonCredsTag,
       "pathToNativeObjectsInJar" -> Shared.pathToNativeObjectsInJar,

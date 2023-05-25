@@ -2,7 +2,7 @@ import java.nio.file.{Files, Path}
 
 object Shared {
 
-  val AnonCredsTag = "v0.1.0-dev.17"
+  val AnonCredsTag = "v0.1.0-dev.8"
   val AnonCredsLibName = "libanoncreds.so"
   val AnonCredsLibHeaderName = "libanoncreds.h"
   val TargetForAnoncredsSharedObjectDownloadFIXME = "native-lib"
