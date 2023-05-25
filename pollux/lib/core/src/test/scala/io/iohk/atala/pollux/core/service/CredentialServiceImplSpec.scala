@@ -596,7 +596,7 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
         pairwiseIssuerDID = pairwiseIssuerDID,
         pairwiseHolderDID = pairwiseHolderDID,
         thid = thid,
-        schemaId = schemaId,
+        maybeSchemaId = schemaId,
         claims = claims,
         validityPeriod = validityPeriod,
         automaticIssuance = automaticIssuance,

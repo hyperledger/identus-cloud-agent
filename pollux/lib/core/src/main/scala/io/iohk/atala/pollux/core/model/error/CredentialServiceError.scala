@@ -19,9 +19,8 @@ object CredentialServiceError {
   final case class CredentialRequestValidationError(error: String) extends CredentialServiceError
   final case class CredentialIdNotDefined(credential: W3cCredentialPayload) extends CredentialServiceError
   final case class IrisError(cause: Throwable) extends CredentialServiceError
-  final case class VCSchemaParsingError(error: String) extends CredentialServiceError
-  final case class VCClaimsParsingError(cause: Throwable) extends CredentialServiceError
+  final case class CredentialSchemaError(cause: io.iohk.atala.pollux.core.model.error.CredentialSchemaError)
+      extends CredentialServiceError
   final case class UnsupportedVCClaimsValue(error: String) extends CredentialServiceError
   final case class UnsupportedVCClaimsMimeType(mimeType: String) extends CredentialServiceError
-  final case class VCClaimsValidationFailed(causes: Seq[String]) extends CredentialServiceError
 }

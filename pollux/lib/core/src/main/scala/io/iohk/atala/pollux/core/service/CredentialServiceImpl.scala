@@ -14,10 +14,10 @@ import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
 import io.iohk.atala.iris.proto.vc_operations.IssueCredentialsBatch
 import io.iohk.atala.mercury.model.{AttachmentDescriptor, Base64, DidId, JsonData}
 import io.iohk.atala.mercury.protocol.issuecredential.*
-import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError.*
 import io.iohk.atala.pollux.core.model.presentation.*
+import io.iohk.atala.pollux.core.model.{CredentialSchema, *}
 import io.iohk.atala.pollux.core.repository.CredentialRepository
 import io.iohk.atala.pollux.vc.jwt.*
 import io.iohk.atala.prism.crypto.{MerkleInclusionProof, MerkleTreeKt, Sha256}
@@ -73,72 +73,11 @@ private class CredentialServiceImpl(
     } yield record
   }
 
-  private[this] def validateClaimsAgainstSchema(
-      claims: io.circe.Json,
-      maybeSchemaId: Option[String]
-  ): IO[CredentialServiceError, Unit] = {
-    import scala.jdk.CollectionConverters.*
-
-//    val validationMessages = jsonSchema.validate(mapper.readTree(payload))
-    for {
-      result <- maybeSchemaId match
-        case None => ZIO.unit
-        case Some(schemaId) =>
-          for {
-            uri <- ZIO.attempt(new URI(schemaId)).mapError(t => VCSchemaParsingError(t.getMessage))
-            // Dereference VC Schema URI
-            vcSchemaString <- uriDereferencer.dereference(uri).mapError(err => VCSchemaParsingError(err.toString))
-            // Get a Jackson mapper
-            mapper = new ObjectMapper()
-            // Validate the VC Schema structure
-            /*
-            credentialSchema <- ZIO.fromEither(body.fromJson[CredentialSchema])
-            jsonSchemaAsString = credentialSchema.schema.toString
-             */
-            // Extract inner JSON Schema used to validate JSON claims structure
-            jsonSchema <- ZIO
-              .attempt {
-                val vcSchemaJsonNode = mapper.readTree(vcSchemaString)
-                // Check "vcSchema.type" is "https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json"
-                val vcSchemaURI = vcSchemaJsonNode.get("type").asText()
-                if (vcSchemaURI != VC_JSON_SCHEMA_URI)
-                  throw new RuntimeException(s"VC Schema type should be $VC_JSON_SCHEMA_URI")
-                val jsonSchemaNode = vcSchemaJsonNode.get("schema")
-                // Check "vcSchema.schema.$schema" is "https://json-schema.org/draft/2020-12/schema"
-                val jsonSchemaSpecVersion = SpecVersionDetector.detect(jsonSchemaNode)
-                if (jsonSchemaSpecVersion != SpecVersion.VersionFlag.V202012)
-                  throw new RuntimeException(s"JSON Schema spec version should be ${JsonMetaSchema.getV202012.getUri}")
-                val factory = JsonSchemaFactory
-                  .builder(JsonSchemaFactory.getInstance(jsonSchemaSpecVersion))
-                  .objectMapper(mapper)
-                  .build
-                factory.getSchema(jsonSchemaNode)
-              }
-              .mapError(t => VCSchemaParsingError(t.getMessage))
-
-            // Convert claims to JsonNode
-            jsonClaims <- ZIO
-              .attempt(mapper.readTree(claims.noSpaces))
-              .mapError(VCClaimsParsingError.apply)
-
-            // Validate claims JsonNode
-            validationMessages <- ZIO
-              .attempt(jsonSchema.validate(jsonClaims).asScala.toSeq)
-              .mapError(t => VCClaimsValidationFailed(Seq(t.getMessage)))
-            _ <-
-              if (validationMessages.isEmpty)
-                ZIO.unit
-              else
-                ZIO.fail(VCClaimsValidationFailed(validationMessages.map(_.getMessage)))
-          } yield ()
-    } yield result
-  }
-
   override def createIssueCredentialRecord(
       pairwiseIssuerDID: DidId,
       pairwiseHolderDID: DidId,
       thid: DidCommID,
-      schemaId: Option[String],
+      maybeSchemaId: Option[String],
       claims: io.circe.Json,
       validityPeriod: Option[Double],
       automaticIssuance: Option[Boolean],
@@ -146,13 +85,19 @@ private class CredentialServiceImpl(
       issuingDID: Option[CanonicalPrismDID]
   ): IO[CredentialServiceError, IssueCredentialRecord] = {
     for {
-      _ <- validateClaimsAgainstSchema(claims, schemaId)
+      _ <- maybeSchemaId match
+        case Some(schemaId) =>
+          CredentialSchema
+            .validateClaims(schemaId, claims.noSpaces, uriDereferencer)
+            .mapError(e => CredentialSchemaError(e))
+        case None =>
+          ZIO.unit
       attributes <- CredentialService.convertJsonClaimsToAttributes(claims)
       offer <- ZIO.succeed(
         createDidCommOfferCredential(
           pairwiseIssuerDID = pairwiseIssuerDID,
           pairwiseHolderDID = pairwiseHolderDID,
-          schemaId = schemaId,
+          schemaId = maybeSchemaId,
           claims = attributes,
           thid = thid,
           UUID.randomUUID().toString,
@@ -165,7 +110,7 @@ private class CredentialServiceImpl(
           createdAt = Instant.now,
           updatedAt = None,
           thid = thid,
-          schemaId = schemaId,
+          schemaId = maybeSchemaId,
           role = IssueCredentialRecord.Role.Issuer,
           subjectId = None,
           validityPeriod = validityPeriod,
