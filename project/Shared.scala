@@ -1,9 +1,8 @@
-import java.nio.file.{Files, Path, Paths}
+import java.nio.file.{Files, Path}
 
 object Shared {
 
-  val AnonCredsTag = "v0.1.0-15"
-  val AnonCredsLibArchiveName = "library-linux-x86_64.tar.gz"
+  val AnonCredsTag = "v0.1.0-dev.17"
   val AnonCredsLibName = "libanoncreds.so"
   val AnonCredsLibHeaderName = "libanoncreds.h"
   val TargetForAnoncredsSharedObjectDownloadFIXME = "native-lib"
@@ -18,9 +17,18 @@ object Shared {
     )
 
   val AnonCredsRepoBaseUrl = "https://github.com/hyperledger/anoncreds-rs"
-  val AnonCredsLibDownloadUrl = s"${AnonCredsRepoBaseUrl}/releases/download/${AnonCredsTag}/${AnonCredsLibArchiveName}"
   val AnonCredsHeaderDownloadUrl =
     s"https://raw.githubusercontent.com/hyperledger/anoncreds-rs/${AnonCredsTag}/include/${AnonCredsLibHeaderName}"
+
+
+  val MacArchs: Seq[String] = Seq("arm64", "x86_64")
+  val MacArchsToDownloadName: Map[String, String] = Map("arm64" -> "aarch64")
+
+  def anonCredsLibFilePath(os: String, arch: String): String =
+    s"$TargetForAnoncredsSharedObjectDownload/libanoncreds-$os-$arch.dylib"
+
+  def anonCredsLibDownloadUrl(os: String, arch: String): String =
+    s"$AnonCredsRepoBaseUrl/releases/download/$AnonCredsTag/library-$os-${MacArchsToDownloadName.getOrElse(arch, arch)}.tar.gz"
 
   def anonCredsLibLocation: String =
     targetPathForAnoncredsSharedObjectDownload.resolve(AnonCredsLibName).toString
@@ -39,18 +47,18 @@ object Shared {
     }
   }
 
-  def downloadAndExtractAnonCredsSharedObject: Unit = {
+  def downloadAndExtractAnonCredsSharedObject(downloadUrl: String, os: String, arch: String): Unit = {
     if (targetPathForAnoncredsSharedObjectDownload.resolve(AnonCredsLibName).toFile.exists()) {
       println(s"$AnonCredsLibName exists in $targetPathForAnoncredsSharedObjectDownload, no need to download again.")
     } else {
-      println(s"Downloading $AnonCredsLibDownloadUrl to $tempPathForSharedObject.")
-      Download.get(AnonCredsLibDownloadUrl, tempPathForSharedObject) match {
+      println(s"Downloading $downloadUrl to $tempPathForSharedObject.")
+      Download.get(downloadUrl, tempPathForSharedObject) match {
         case Left(httpErrorCode) =>
           println(s"Error code from download: $httpErrorCode")
 
         case Right(pathToZip) =>
           println(s"Unzip $pathToZip to $targetPathForAnoncredsSharedObjectDownload.")
-          GnuUnZip.unzip(pathToZip, targetPathForAnoncredsSharedObjectDownload)
+          GnuUnZip.unzip(pathToZip, targetPathForAnoncredsSharedObjectDownload, s"libanoncreds-$os-$arch.dylib")
       }
     }
   }

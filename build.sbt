@@ -610,6 +610,7 @@ lazy val polluxDoobie = project
 // ########################
 // ### Pollux Anoncreds ###
 // ########################
+
 import scala.sys.process.Process
 import scala.language.postfixOps
 
@@ -619,29 +620,86 @@ lazy val buildShim = taskKey[Unit]("Build the Anoncreds shim shared object")
 
 // Download the anoncreds .so if necessary and build the shim.
 // The order of these tasks matters.
-// (Compile / compile) := ((Compile / compile) dependsOn buildShim).value
-// (Compile / compile) := ((Compile / compile) dependsOn getAnonCredsSo).value
+(Compile / compile) := ((Compile / compile) dependsOn buildShim).value
+(Compile / compile) := ((Compile / compile) dependsOn getAnonCredsSo).value
 
 // TODO sbt clean must delete this folder! (Shared.TargetForAnoncredsSharedObjectDownload)
 buildShim := {
-  val tmp: Seq[String] = "make" :: "-f" ::
-    "GNUmakefile" ::
-    "CPU=$(uname -m)" :: // "CPU=${os.arch}" ::
-    s"SRC_DIR=${Shared.NativeCodeSourceFolder}" ::
-    s"SHIM_BUILD_DIR=${Shared.TargetForAnoncredsSharedObjectDownload}" ::
-    s"RT_LOCATION_ANONCREDS_SO=${Shared.TargetForAnoncredsSharedObjectDownload}" ::
-    Nil
-  println(tmp.mkString("RUN: \'", " ", "'"))
-  Process(tmp) !
+  val osName = System.getProperty("os.name").toLowerCase
+
+  osName match {
+    case name if name.contains("mac") =>
+      println("Building shim for macOS")
+
+      Shared.MacArchs.foreach { arch =>
+        val tmp: Seq[String] = Seq("gcc", "-v", "-o",
+          s"${Shared.TargetForAnoncredsSharedObjectDownload}/libanoncreds-shim-$arch.dylib",
+          "-arch", arch,
+          "-dynamiclib",
+          s"${Shared.TargetForAnoncredsSharedObjectDownload}/anoncreds-shim.o",
+          "-lm", s"-L./${Shared.TargetForAnoncredsSharedObjectDownload}", s"-lanoncreds-darwin-$arch")
+
+        println(tmp.mkString(" "))
+        Process(tmp) !
+      }
+
+      val lipoCmd: Seq[String] = Seq("lipo", "-create") ++
+        Shared.MacArchs.map(arch => s"${Shared.TargetForAnoncredsSharedObjectDownload}/libanoncreds-shim-$arch.dylib") ++
+        Seq("-output", s"${Shared.TargetForAnoncredsSharedObjectDownload}/libanoncreds-shim.dylib")
+
+      println(lipoCmd.mkString(" "))
+      Process(lipoCmd) !
+
+    case name if name.contains("linux") =>
+      val arch = "x86_64"
+      val tmp: Seq[String] = "make" :: "-f" ::
+        "GNUmakefile" ::
+        "CPU=$(uname -m)" ::
+        s"SRC_DIR=${Shared.NativeCodeSourceFolder}" ::
+        s"SHIM_BUILD_DIR=${Shared.TargetForAnoncredsSharedObjectDownload}" ::
+        s"RT_LOCATION_ANONCREDS_SO=${Shared.TargetForAnoncredsSharedObjectDownload}/libanoncreds-linux-$arch.so" :: // Changed here
+        Nil
+      println(tmp.mkString("RUN: \'", " ", "'"))
+      Process(tmp) !
+
+    case _ =>
+      sys.error(s"Unsupported operating system: $osName")
+  }
 }
 
 getAnonCredsSo := {
-  println("getAnonCredsSo: downloadAndExtractAnonCredsSharedObject")
-  Shared.downloadAndExtractAnonCredsSharedObject
+  val osName = System.getProperty("os.name").toLowerCase
+
+  osName match {
+    case name if name.contains("mac") =>
+      println("Getting Anoncreds Shared Object for macOS")
+
+      Shared.MacArchs.foreach { arch =>
+        println(s"Downloading and extracting AnonCreds Shared Object for $arch")
+        val downloadUrl = Shared.anonCredsLibDownloadUrl("darwin", arch)
+        Shared.downloadAndExtractAnonCredsSharedObject(downloadUrl, "darwin", arch)
+      }
+
+      println("Combining libraries into a single universal one using lipo")
+      val lipoCmd: Seq[String] = Seq("lipo", "-create") ++
+        Shared.MacArchs.map(arch => Shared.anonCredsLibFilePath("darwin", arch)) ++
+        Seq("-output", Shared.anonCredsLibFilePath("darwin", "universal"))
+
+      println(lipoCmd.mkString(" "))
+      Process(lipoCmd) !
+
+    case name if name.contains("linux") =>
+      println("Getting Anoncreds Shared Object for Linux")
+      Shared.downloadAndExtractAnonCredsSharedObject(Shared.anonCredsLibDownloadUrl("linux", "x86_64"), "linux", "x86_64")
+    case _ =>
+      sys.error(s"Unsupported operating system: $osName")
+  }
+
   println("getAnonCredsSo: downloadSharedObjectHeaderFile")
   Shared.downloadSharedObjectHeaderFile
   println("getAnonCredsSo END")
 }
+
 lazy val polluxAnoncreds = project
   .in(file("pollux/lib/anoncreds"))
   // .settings(polluxCommonSettings)
