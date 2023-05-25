@@ -5,14 +5,11 @@ import io.iohk.atala.pollux.core.repository.CredentialSchemaRepository
 import io.iohk.atala.pollux.core.service.CredentialSchemaServiceImpl
 import io.iohk.atala.pollux.credentialschema.SchemaRegistryServerEndpoints
 import io.iohk.atala.pollux.credentialschema.controller.{CredentialSchemaController, CredentialSchemaControllerImpl}
-import io.iohk.atala.pollux.credentialschema.http.{
-  CredentialSchemaInput,
-  CredentialSchemaResponse,
-  CredentialSchemaResponsePage
-}
+import io.iohk.atala.pollux.credentialschema.http.{CredentialSchemaInput, CredentialSchemaResponse, CredentialSchemaResponsePage}
 import io.iohk.atala.pollux.sql.repository.JdbcCredentialSchemaRepository
 import io.iohk.atala.container.util.MigrationAspects.*
 import io.iohk.atala.container.util.PostgresLayer.*
+import io.iohk.atala.pollux.core.model.CredentialSchema
 import sttp.client3.testing.SttpBackendStub
 import sttp.client3.ziojson.*
 import sttp.client3.{DeserializationException, Response, ResponseException, SttpBackend, UriContext, basicRequest}
@@ -21,6 +18,7 @@ import sttp.monad.MonadError
 import sttp.tapir.server.interceptor.CustomiseInterceptors
 import sttp.tapir.server.stub.TapirStubInterpreter
 import sttp.tapir.ztapir.RIOMonadError
+import zio.json.ast.Json
 import zio.json.ast.Json.*
 import zio.json.{DecoderOps, EncoderOps, JsonDecoder}
 import zio.stream.ZSink
@@ -113,6 +111,21 @@ trait CredentialSchemaGen {
 
     val schemaAuthor = Gen.alphaNumericStringBounded(64, 64).map(id => s"did:prism:$id")
 
+    val jsonSchema =
+      """
+        |{
+        |    "$schema": "https://json-schema.org/draft/2020-12/schema",
+        |    "description": "Driving License",
+        |    "type": "object",
+        |    "properties": {
+        |        "name" : "Alice"
+        |    },
+        |    "required": [
+        |        "name"
+        |    ]
+        |}
+        |""".stripMargin
+
     val schemaInput = for {
       name <- schemaName
       version <- schemaVersion
@@ -123,8 +136,8 @@ trait CredentialSchemaGen {
       name = name,
       version = version,
       description = Some(description),
-      `type` = "json",
-      schema = Arr(Obj("first_name" -> Str("String"))),
+      `type` = CredentialSchema.VC_JSON_SCHEMA_URI,
+      schema = jsonSchema.fromJson[Json].getOrElse(Json.Null),
       tags = tags,
       author = author
     )

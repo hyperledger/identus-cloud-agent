@@ -5,14 +5,11 @@ import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.pollux.core.service.CredentialSchemaServiceImpl
 import io.iohk.atala.pollux.credentialschema.*
 import io.iohk.atala.pollux.credentialschema.controller.{CredentialSchemaController, CredentialSchemaControllerImpl}
-import io.iohk.atala.pollux.credentialschema.http.{
-  CredentialSchemaInput,
-  CredentialSchemaResponse,
-  CredentialSchemaResponsePage
-}
+import io.iohk.atala.pollux.credentialschema.http.{CredentialSchemaInput, CredentialSchemaResponse, CredentialSchemaResponsePage}
 import io.iohk.atala.pollux.sql.repository.JdbcCredentialSchemaRepository
 import io.iohk.atala.container.util.MigrationAspects.*
 import io.iohk.atala.container.util.PostgresLayer.*
+import io.iohk.atala.pollux.core.model.CredentialSchema
 import sttp.client3.testing.SttpBackendStub
 import sttp.client3.ziojson.*
 import sttp.client3.{DeserializationException, ResponseException, SttpBackend, UriContext, basicRequest, Response as R}
@@ -41,15 +38,27 @@ import java.util.UUID
 
 object CredentialSchemaBasicSpec extends ZIOSpecDefault with CredentialSchemaTestTools:
 
+  val jsonSchema =
+    """
+      |{
+      |    "$schema": "https://json-schema.org/draft/2020-12/schema",
+      |    "description": "Driving License",
+      |    "type": "object",
+      |    "properties": {
+      |        "name" : "Alice"
+      |    },
+      |    "required": [
+      |        "name"
+      |    ]
+      |}
+      |""".stripMargin
+
   private val schemaInput = CredentialSchemaInput(
     name = "TestSchema",
     version = "1.0.0",
     description = Option("schema description"),
-    `type` = "json",
-    schema = """{"first_name":  "string", "dob": "datetime"}"""
-      .fromJson[zio.json.ast.Json]
-      .toOption
-      .get,
+    `type` = CredentialSchema.VC_JSON_SCHEMA_URI,
+    schema = jsonSchema.fromJson[Json].getOrElse(Json.Null),
     tags = List("test"),
     author = "did:prism:agent"
   )
