@@ -40,7 +40,7 @@ class IssueControllerImpl(
           pairwiseIssuerDID = didIdPair.myDID,
           pairwiseHolderDID = didIdPair.theirDid,
           thid = DidCommID(),
-          schemaId = request.schemaId,
+          maybeSchemaId = request.schemaId,
           claims = jsonClaims,
           validityPeriod = request.validityPeriod,
           automaticIssuance = request.automaticIssuance.orElse(Some(true)),
