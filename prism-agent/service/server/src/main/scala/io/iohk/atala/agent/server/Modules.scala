@@ -14,7 +14,12 @@ import io.iohk.atala.agent.walletapi.crypto.Apollo
 import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.agent.walletapi.sql.{JdbcDIDNonSecretStorage, JdbcDIDSecretStorage}
-import io.iohk.atala.castor.controller.{DIDController, DIDRegistrarController, DIDRegistrarServerEndpoints, DIDServerEndpoints}
+import io.iohk.atala.castor.controller.{
+  DIDController,
+  DIDRegistrarController,
+  DIDRegistrarServerEndpoints,
+  DIDServerEndpoints
+}
 import io.iohk.atala.castor.core.service.{DIDService, DIDServiceImpl}
 import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.connect.controller.{ConnectionController, ConnectionControllerImpl, ConnectionServerEndpoints}
@@ -39,9 +44,19 @@ import io.iohk.atala.pollux.core.repository.{CredentialRepository, PresentationR
 import io.iohk.atala.pollux.core.service.*
 import io.iohk.atala.pollux.credentialschema.controller.*
 import io.iohk.atala.pollux.credentialschema.{SchemaRegistryServerEndpoints, VerificationPolicyServerEndpoints}
-import io.iohk.atala.pollux.sql.repository.{JdbcCredentialRepository, JdbcCredentialSchemaRepository, JdbcPresentationRepository, JdbcVerificationPolicyRepository, DbConfig as PolluxDbConfig}
+import io.iohk.atala.pollux.sql.repository.{
+  JdbcCredentialRepository,
+  JdbcCredentialSchemaRepository,
+  JdbcPresentationRepository,
+  JdbcVerificationPolicyRepository,
+  DbConfig as PolluxDbConfig
+}
 import io.iohk.atala.pollux.vc.jwt.{PrismDidResolver, DidResolver as JwtDidResolver}
-import io.iohk.atala.presentproof.controller.{PresentProofController, PresentProofEndpoints, PresentProofServerEndpoints}
+import io.iohk.atala.presentproof.controller.{
+  PresentProofController,
+  PresentProofEndpoints,
+  PresentProofServerEndpoints
+}
 import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc
 import io.iohk.atala.resolvers.{DIDResolver, UniversalDidResolver}
 import org.didcommx.didcomm.DIDComm
@@ -57,12 +72,21 @@ import zio.stream.ZStream
 
 import java.io.IOException
 import java.util.concurrent.Executors
+import io.iohk.atala.mercury.protocol.trustping.TrustPing
+import io.iohk.atala.castor.controller.{
+  DIDController,
+  DIDRegistrarController,
+  DIDRegistrarServerEndpoints,
+  DIDServerEndpoints
+}
+import io.iohk.atala.agent.walletapi.crypto.Apollo
+import io.iohk.atala.system.controller.{SystemController, SystemServerEndpoints}
 
 object Modules {
 
   lazy val zioApp: RIO[
     CredentialSchemaController & VerificationPolicyController & ConnectionController & DIDController &
-      DIDRegistrarController & IssueController & PresentProofController & AppConfig,
+      DIDRegistrarController & IssueController & PresentProofController & SystemController & AppConfig,
     Unit
   ] = {
     val zioHttpServerApp = for {
@@ -73,8 +97,16 @@ object Modules {
       allDIDEndpoints <- DIDServerEndpoints.all
       allDIDRegistrarEndpoints <- DIDRegistrarServerEndpoints.all
       allPresentProofEndpoints <- PresentProofServerEndpoints.all
+      allSystemEndpoints <- SystemServerEndpoints.all
       allEndpoints = ZHttpEndpoints.withDocumentations[Task](
-        allSchemaRegistryEndpoints ++ allVerificationPolicyEndpoints ++ allConnectionEndpoints ++ allDIDEndpoints ++ allDIDRegistrarEndpoints ++ allIssueEndpoints ++ allPresentProofEndpoints
+        allSchemaRegistryEndpoints ++
+          allVerificationPolicyEndpoints ++
+          allConnectionEndpoints ++
+          allDIDEndpoints ++
+          allDIDRegistrarEndpoints ++
+          allIssueEndpoints ++
+          allPresentProofEndpoints ++
+          allSystemEndpoints
       )
       appConfig <- ZIO.service[AppConfig]
       httpServer <- ZHttp4sBlazeServer.start(allEndpoints, port = appConfig.agent.httpEndpoint.http.port)
