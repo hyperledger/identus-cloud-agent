@@ -7,7 +7,9 @@ https://github.com/hyperledger/anoncreds-rs/releases/tag/v0.1.0-dev.15
 
 ## Linux
 
-buildShim
+**build** the lib `.so` with the sbt command `buildShim`
+
+**test** with the sbt command `polluxAnoncreds/test`
 
 ## [WIP/TODO] Multi plataform (linux with x86_64 and Mac with arm64)
 
