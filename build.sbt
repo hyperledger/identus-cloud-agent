@@ -178,7 +178,7 @@ lazy val D_Castor = new {
 lazy val D_Pollux = new {
   val logback = "ch.qos.logback" % "logback-classic" % V.logback % Test
   val slf4jApi = "org.slf4j" % "slf4j-api" % "2.0.7" % Test
-  val slf4jSimple = "org.slf4j" % "slf4j-simple" % "2.0.6" % Test
+  val slf4jSimple = "org.slf4j" % "slf4j-simple" % "2.0.7" % Test
 
   val doobiePostgres = "org.tpolecat" %% "doobie-postgres" % V.doobie
   val doobieHikari = "org.tpolecat" %% "doobie-hikari" % V.doobie
