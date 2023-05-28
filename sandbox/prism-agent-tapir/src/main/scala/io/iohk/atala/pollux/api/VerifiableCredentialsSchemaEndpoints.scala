@@ -13,17 +13,7 @@ import io.iohk.atala.pollux.models.{
 }
 import sttp.tapir.EndpointIO.Info
 import sttp.tapir.json.zio.jsonBody
-import sttp.tapir.{
-  Endpoint,
-  EndpointInfo,
-  PublicEndpoint,
-  endpoint,
-  oneOf,
-  oneOfDefaultVariant,
-  oneOfVariant,
-  path,
-  stringToPath
-}
+import sttp.tapir.{Endpoint, EndpointInfo, PublicEndpoint, endpoint, oneOf, oneOfDefaultVariant, oneOfVariant, path, stringToPath}
 import sttp.tapir.generic.auto.*
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder}
 import sttp.model.StatusCode
@@ -63,8 +53,6 @@ object VerifiableCredentialsSchemaEndpoints {
       )
       .name("getSchemaById")
       .summary("Fetch the schema from the registry by id")
-      .description(
-        "Fetch the schema by the unique identifier. Verifiable Credential Schema in json format is returned."
-      )
+      .description("Fetch the schema by the unique identifier. Verifiable Credential Schema in json format is returned.")
       .tag("Schema Registry")
 }
