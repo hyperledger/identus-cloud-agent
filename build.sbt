@@ -630,7 +630,7 @@ lazy val polluxAnoncreds = project
     buildInfoKeys ++= Seq[BuildInfoKey](
       "AnonCredsTag" -> Shared.AnonCredsTag,
       "pathToNativeObjectsInJar" -> Shared.pathToNativeObjectsInJar,
-      "NameOfAnonCredsSharedObject" -> Shared.AnonCredsLibNameByOS,
+      "NameOfAnonCredsSharedObject" -> Shared.LinuxAnonCredsLibName,
       "NameOfShimSharedObject" -> Shared.NameOfShimSharedObject,
       "TargetForAnoncredsSharedObjectDownload" -> Shared.TargetForAnoncredsSharedObjectDownloadFIXME
     ),
@@ -642,36 +642,36 @@ lazy val polluxAnoncreds = project
 
     // Download the anoncreds .so if necessary and build the shim.
     // The order of these tasks matters.
-    // (Compile / compile) := ((Compile / compile) dependsOn buildShim).value,
-    // (Compile / compile) := ((Compile / compile).dependsOn(getAnonCredsSo)).value,
-
     getAnonCredsSo := {
       val osName = System.getProperty("os.name").toLowerCase
 
       osName match {
-        case name if name.contains("mac") =>
-          println("Getting Anoncreds Shared Object for macOS")
+        case name if name.contains(Shared.MacOS) =>
+          println(s"Getting Anoncreds Shared Object for ${Shared.MacOS}")
+          val os = Shared.MacOSCore
+          val libFileName = Shared.MacAnonCredsLibName
 
           Shared.MacArchs.foreach { arch =>
             println(s"Downloading and extracting AnonCreds Shared Object for $arch")
-            val downloadUrl = Shared.anonCredsLibDownloadUrl("darwin", arch)
-            Shared.downloadAndExtractAnonCredsSharedObject(downloadUrl, "darwin", arch)
+            val downloadUrl = Shared.anonCredsLibDownloadUrl(os, arch)
+            Shared.downloadAndExtractAnonCredsSharedObject(downloadUrl, libFileName, Shared.anonCredsLibFileName(os, arch))
           }
 
           println("Combining libraries into a single universal one using lipo")
           val lipoCmd: Seq[String] = Seq("lipo", "-create") ++
-            Shared.MacArchs.map(arch => Shared.anonCredsLibFilePath("darwin", arch)) ++
-            Seq("-output", s"${Shared.TargetForAnoncredsSharedObjectDownload}/libanoncreds.dylib")
+            Shared.MacArchs.map(arch => Shared.anonCredsLibFilePath(os, arch)) ++
+            Seq("-output", s"${Shared.TargetForAnoncredsSharedObjectDownload}/$libFileName")
 
           println(lipoCmd.mkString(" "))
           Process(lipoCmd) !
 
-        case name if name.contains("linux") =>
-          println("Getting Anoncreds Shared Object for Linux")
+        case name if name.contains(Shared.LinuxOs) =>
+          println(s"Getting Anoncreds Shared Object for ${Shared.LinuxOs}")
+          val libFileName = Shared.LinuxAnonCredsLibName
           Shared.downloadAndExtractAnonCredsSharedObject(
-            Shared.anonCredsLibDownloadUrl("linux", "x86_64"),
-            "linux",
-            "x86_64"
+            Shared.anonCredsLibDownloadUrl(Shared.LinuxOs, Shared.LinuxArch),
+            libFileName,
+            libFileName
           )
 
         // TODO create the libanoncreds main file
@@ -773,7 +773,7 @@ lazy val polluxAnoncreds = project
     },
     Compile / packageBin / mappings += {
       (baseDirectory.value / Shared.anonCredsLibLocation) -> Shared.pathToNativeObjectsInJar
-        .resolve(Shared.AnonCredsLibName)
+        .resolve(Shared.AnonCredsLibNameByOS())
         .toString
     },
   )
