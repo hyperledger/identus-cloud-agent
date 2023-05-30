@@ -80,6 +80,7 @@ import io.iohk.atala.castor.controller.{
 }
 import io.iohk.atala.agent.walletapi.crypto.Apollo
 import io.iohk.atala.system.controller.{SystemController, SystemServerEndpoints}
+import io.iohk.atala.agent.walletapi.util.SeedResolver
 
 object Modules {
 
@@ -442,7 +443,8 @@ object AppModule {
   val manageDIDServiceLayer: TaskLayer[ManagedDIDService] = {
     val secretStorageLayer = (RepoModule.agentTransactorLayer ++ apolloLayer) >>> JdbcDIDSecretStorage.layer
     val nonSecretStorageLayer = RepoModule.agentTransactorLayer >>> JdbcDIDNonSecretStorage.layer
-    (didOpValidatorLayer ++ didServiceLayer ++ secretStorageLayer ++ nonSecretStorageLayer ++ apolloLayer) >>> ManagedDIDService.layer
+    val seedResolverLayer = apolloLayer >>> SeedResolver.layer()
+    (didOpValidatorLayer ++ didServiceLayer ++ secretStorageLayer ++ nonSecretStorageLayer ++ apolloLayer ++ seedResolverLayer) >>> ManagedDIDService.layer
   }
 
   val credentialServiceLayer: RLayer[DidOps & DidAgent & JwtDidResolver, CredentialService] =

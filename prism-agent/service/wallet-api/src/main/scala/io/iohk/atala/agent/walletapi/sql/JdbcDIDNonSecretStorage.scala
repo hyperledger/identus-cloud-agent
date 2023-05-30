@@ -3,13 +3,21 @@ package io.iohk.atala.agent.walletapi.sql
 import doobie.*
 import doobie.implicits.*
 import doobie.postgres.implicits.*
-import io.iohk.atala.agent.walletapi.model.{DIDUpdateLineage, ManagedDIDState}
+import io.iohk.atala.agent.walletapi.model.{DIDUpdateLineage, ManagedDIDState, ManagedDIDStatePatch}
 import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
 import io.iohk.atala.castor.core.model.did.{PrismDID, ScheduledDIDOperationStatus}
 import zio.*
 import zio.interop.catz.*
 
 import java.time.Instant
+import io.iohk.atala.agent.walletapi.model.ManagedDIDHdKeyPath
+import io.iohk.atala.castor.core.model.did.VerificationRelationship
+import io.iohk.atala.castor.core.model.did.InternalKeyPurpose
+import io.iohk.atala.agent.walletapi.model.PublicationState
+import io.iohk.atala.agent.walletapi.model.HdKeyIndexCounter
+import io.iohk.atala.agent.walletapi.model.InternalKeyCounter
+import io.iohk.atala.agent.walletapi.model.VerificationRelationshipCounter
+import scala.collection.immutable.ArraySeq
 
 class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage {
 
@@ -22,11 +30,13 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
         |   atala_operation_content,
         |   publish_operation_id,
         |   created_at,
-        |   updated_at
+        |   updated_at,
+        |   key_mode,
+        |   did_index
         | FROM public.prism_did_wallet_state
         | WHERE did = $did
         """.stripMargin
-        .query[DIDPublicationStateRow]
+        .query[DIDStateRow]
         .option
 
     cxnIO
@@ -34,15 +44,21 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
       .flatMap(_.map(_.toDomain).fold(ZIO.none)(t => ZIO.fromTry(t).asSome))
   }
 
-  override def setManagedDIDState(did: PrismDID, state: ManagedDIDState): Task[Unit] = {
-    val cxnIO = (row: DIDPublicationStateRow) => sql"""
+  override def insertManagedDID(
+      did: PrismDID,
+      state: ManagedDIDState,
+      hdKey: Map[String, ManagedDIDHdKeyPath]
+  ): Task[Unit] = {
+    val insertStateIO = (row: DIDStateRow) => sql"""
         | INSERT INTO public.prism_did_wallet_state(
         |   did,
         |   publication_status,
         |   atala_operation_content,
         |   publish_operation_id,
         |   created_at,
-        |   updated_at
+        |   updated_at,
+        |   key_mode,
+        |   did_index
         | )
         | VALUES (
         |   ${row.did},
@@ -50,19 +66,181 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
         |   ${row.atalaOperationContent},
         |   ${row.publishOperationId},
         |   ${row.createdAt},
-        |   ${row.updatedAt}
+        |   ${row.updatedAt},
+        |   ${row.keyMode},
+        |   ${row.didIndex}
         | )
-        | ON CONFLICT (did) DO UPDATE SET
-        |   publication_status = EXCLUDED.publication_status,
-        |   atala_operation_content = EXCLUDED.atala_operation_content,
-        |   publish_operation_id = EXCLUDED.publish_operation_id,
-        |   updated_at = EXCLUDED.updated_at
         """.stripMargin.update
+
+    val operationHash = state.createOperation.toAtalaOperationHash
+    val hdKeyValues = (now: Instant) =>
+      hdKey.toList.map { case (key, path) => (did, key, path.keyUsage, path.keyIndex, now, operationHash) }
+    val insertHdKeyIO =
+      Update[(PrismDID, String, VerificationRelationship | InternalKeyPurpose, Int, Instant, Array[Byte])](
+        "INSERT INTO public.prism_did_hd_key(did, key_id, key_usage, key_index, created_at, operation_hash) VALUES (?, ?, ?, ?, ?, ?)"
+      )
+
+    val txnIO = (now: Instant) =>
+      for {
+        _ <- insertStateIO(DIDStateRow.from(did, state, now)).run
+        _ <- insertHdKeyIO.updateMany(hdKeyValues(now))
+      } yield ()
 
     for {
       now <- Clock.instant
-      row = DIDPublicationStateRow.from(did, state, now)
-      _ <- cxnIO(row).run.transact(xa)
+      _ <- txnIO(now).transact(xa)
+    } yield ()
+  }
+
+  override def updateManagedDID(did: PrismDID, patch: ManagedDIDStatePatch): Task[Unit] = {
+    val status = PublicationStatusType.from(patch.publicationState)
+    val publishedOperationId = patch.publicationState match {
+      case PublicationState.Created()                       => None
+      case PublicationState.PublicationPending(operationId) => Some(operationId)
+      case PublicationState.Published(operationId)          => Some(operationId)
+    }
+    val cxnIO = (now: Instant) => sql"""
+           | UPDATE public.prism_did_wallet_state
+           | SET
+           |   publication_status = $status,
+           |   publish_operation_id = $publishedOperationId,
+           |   updated_at = $now
+           | WHERE did = $did
+           """.stripMargin.update
+
+    for {
+      now <- Clock.instant
+      _ <- cxnIO(now).run.transact(xa)
+    } yield ()
+  }
+
+  override def getMaxDIDIndex(): Task[Option[Int]] = {
+    val cxnIO =
+      sql"""
+           | SELECT MAX(did_index)
+           | FROM public.prism_did_wallet_state
+           | WHERE did_index IS NOT NULL
+           """.stripMargin
+        .query[Option[Int]]
+        .option
+
+    cxnIO.transact(xa).map(_.flatten)
+  }
+
+  override def getHdKeyCounter(did: PrismDID): Task[Option[HdKeyIndexCounter]] = {
+    val status: ScheduledDIDOperationStatus = ScheduledDIDOperationStatus.Confirmed
+    val cxnIO =
+      sql"""
+           | SELECT
+           |   hd.key_usage AS key_usage,
+           |   MAX(hd.key_index) AS key_index
+           | FROM public.prism_did_hd_key hd
+           |   LEFT JOIN public.prism_did_wallet_state ws ON hd.did = ws.did
+           |   LEFT JOIN public.prism_did_update_lineage ul ON hd.operation_hash = ul.operation_hash
+           | WHERE
+           |   hd.did = $did
+           |   AND (ul.status = $status OR (ul.status IS NULL AND hd.operation_hash = sha256(ws.atala_operation_content)))
+           | GROUP BY hd.did, hd.key_usage
+           """.stripMargin
+        .query[(VerificationRelationship | InternalKeyPurpose, Int)]
+        .to[List]
+
+    getManagedDIDState(did)
+      .map(_.flatMap(_.didIndex))
+      .flatMap {
+        case None => ZIO.none
+        case Some(didIndex) =>
+          for {
+            keyUsageIndex <- cxnIO.transact(xa)
+            keyUsageIndexMap = keyUsageIndex.map { case (k, v) => k -> (v + 1) }.toMap
+          } yield Some(
+            HdKeyIndexCounter(
+              didIndex,
+              VerificationRelationshipCounter(
+                authentication = keyUsageIndexMap.getOrElse(VerificationRelationship.Authentication, 0),
+                assertionMethod = keyUsageIndexMap.getOrElse(VerificationRelationship.AssertionMethod, 0),
+                keyAgreement = keyUsageIndexMap.getOrElse(VerificationRelationship.KeyAgreement, 0),
+                capabilityInvocation = keyUsageIndexMap.getOrElse(VerificationRelationship.CapabilityInvocation, 0),
+                capabilityDelegation = keyUsageIndexMap.getOrElse(VerificationRelationship.CapabilityDelegation, 0),
+              ),
+              InternalKeyCounter(
+                master = keyUsageIndexMap.getOrElse(InternalKeyPurpose.Master, 0),
+                revocation = keyUsageIndexMap.getOrElse(InternalKeyPurpose.Revocation, 0),
+              )
+            )
+          )
+      }
+  }
+
+  override def getHdKeyPath(did: PrismDID, keyId: String): Task[Option[ManagedDIDHdKeyPath]] = {
+    val status: ScheduledDIDOperationStatus = ScheduledDIDOperationStatus.Confirmed
+    val cxnIO =
+      sql"""
+           | SELECT
+           |   ws.did_index,
+           |   hd.key_usage,
+           |   hd.key_index
+           | FROM public.prism_did_hd_key hd
+           |   LEFT JOIN public.prism_did_wallet_state ws ON hd.did = ws.did
+           |   LEFT JOIN public.prism_did_update_lineage ul ON hd.operation_hash = ul.operation_hash
+           | WHERE
+           |   hd.did = $did
+           |   AND hd.key_id = $keyId
+           |   AND (ul.status = $status OR (ul.status IS NULL AND hd.operation_hash = sha256(ws.atala_operation_content)))
+           """.stripMargin
+        .query[ManagedDIDHdKeyPath]
+        .option
+
+    cxnIO.transact(xa)
+  }
+
+  override def listHdKeyPath(did: PrismDID): Task[Seq[(String, ArraySeq[Byte], ManagedDIDHdKeyPath)]] = {
+    val cxnIO =
+      sql"""
+        | SELECT
+        |   key_id,
+        |   operation_hash,
+        |   key_usage,
+        |   key_index
+        | FROM public.prism_did_hd_key
+        | WHERE did = $did
+        """.stripMargin
+        .query[(String, ArraySeq[Byte], VerificationRelationship | InternalKeyPurpose, Int)]
+        .to[List]
+
+    for {
+      state <- getManagedDIDState(did)
+      paths <- cxnIO.transact(xa)
+    } yield state.flatMap(_.didIndex).fold(Nil) { didIndex =>
+      paths.map { (keyId, operationHash, keyUsage, keyIndex) =>
+        (keyId, operationHash, ManagedDIDHdKeyPath(didIndex, keyUsage, keyIndex))
+      }
+    }
+  }
+
+  override def insertHdKeyPath(
+      did: PrismDID,
+      keyId: String,
+      hdKeyPath: ManagedDIDHdKeyPath,
+      operationHash: Array[Byte]
+  ): Task[Unit] = {
+    val cxnIO = (now: Instant) => sql"""
+          | INSERT INTO public.prism_did_hd_key(did, key_id, key_usage, key_index, created_at, operation_hash)
+          | VALUES
+          | (
+          |  $did,
+          |  $keyId,
+          |  ${hdKeyPath.keyUsage},
+          |  ${hdKeyPath.keyIndex},
+          |  $now,
+          |  $operationHash
+          | )
+          | ON CONFLICT (did, key_id, operation_hash) DO NOTHING
+          |""".stripMargin.update
+
+    for {
+      now <- Clock.instant
+      _ <- cxnIO(now).run.transact(xa)
     } yield ()
   }
 
@@ -74,7 +252,7 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
       sql"""
         | SELECT COUNT(*)
         | FROM public.prism_did_wallet_state
-      """.stripMargin
+        """.stripMargin
         .query[Int]
         .unique
 
@@ -86,15 +264,17 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
            |   atala_operation_content,
            |   publish_operation_id,
            |   created_at,
-           |   updated_at
+           |   updated_at,
+           |   key_mode,
+           |   did_index
            | FROM public.prism_did_wallet_state
            | ORDER BY created_at
-      """.stripMargin
+           """.stripMargin
     val withOffsetFr = offset.fold(baseFr)(offsetValue => baseFr ++ fr"OFFSET $offsetValue")
     val withOffsetAndLimitFr = limit.fold(withOffsetFr)(limitValue => withOffsetFr ++ fr"LIMIT $limitValue")
     val didsCxnIO =
       withOffsetAndLimitFr
-        .query[DIDPublicationStateRow]
+        .query[DIDStateRow]
         .to[List]
 
     for {
@@ -149,7 +329,7 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
            |   created_at,
            |   updated_at
            | FROM public.prism_did_update_lineage
-      """.stripMargin
+           """.stripMargin
     val cxnIO = (baseFr ++ whereFr)
       .query[DIDUpdateLineage]
       .to[List]
@@ -167,7 +347,7 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
             |   status = $status,
             |   updated_at = $now
             | WHERE operation_id = $operationId
-        """.stripMargin.update
+            """.stripMargin.update
 
     Clock.instant.flatMap(now => cxnIO(now).run.transact(xa)).unit
   }
