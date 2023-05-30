@@ -70,6 +70,8 @@ lazy val V = new {
   val zioPreludeVersion = "1.0.0-RC16"
 
   val bouncyCastle = "1.70"
+
+  val jsonSchemaValidator = "1.83"
 }
 
 /** Dependencies */
@@ -250,7 +252,7 @@ lazy val D_Pollux_VC_JWT = new {
 
   val nimbusJoseJwt = "com.nimbusds" % "nimbus-jose-jwt" % "10.0.0-preview"
 
-  val networkntJsonSchemaValidator = "com.networknt" % "json-schema-validator" % "1.0.79"
+  val networkntJsonSchemaValidator = "com.networknt" % "json-schema-validator" % V.jsonSchemaValidator
 
   val zioTest = "dev.zio" %% "zio-test" % V.zio % Test
   val zioTestSbt = "dev.zio" %% "zio-test-sbt" % V.zio % Test
