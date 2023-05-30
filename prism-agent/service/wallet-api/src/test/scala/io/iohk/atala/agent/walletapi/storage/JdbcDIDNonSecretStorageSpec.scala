@@ -13,6 +13,7 @@ import io.iohk.atala.agent.walletapi.crypto.ApolloSpecHelper
 import io.iohk.atala.castor.core.model.did.ScheduledDIDOperationStatus
 import io.iohk.atala.castor.core.model.did.PrismDIDOperation
 import org.postgresql.util.PSQLException
+import io.iohk.atala.agent.walletapi.model.PublicationState
 
 object JdbcDIDNonSecretStorageSpec
     extends ZIOSpecDefault,
@@ -24,7 +25,11 @@ object JdbcDIDNonSecretStorageSpec
     ZIO.foreach(operation) { op =>
       for {
         storage <- ZIO.service[DIDNonSecretStorage]
-        _ <- storage.setManagedDIDState(op.did, ManagedDIDState.Created(op))
+        _ <- storage.insertManagedDID(
+          op.did,
+          ManagedDIDState(op, None, PublicationState.Created()),
+          Map.empty
+        )
         _ <- TestClock.adjust(delay)
       } yield ()
     }
@@ -33,7 +38,6 @@ object JdbcDIDNonSecretStorageSpec
     val testSuite =
       suite("JdbcDIDNonSecretStorageSpec")(
         listDIDStateSpec,
-        setDIDStateSpec,
         getDIDStateSpec,
         listDIDLineageSpec,
         setDIDLineageStatusSpec
@@ -59,8 +63,16 @@ object JdbcDIDNonSecretStorageSpec
         did2 = PrismDID.buildCanonicalFromSuffix("1" * 64).toOption.get
         createOperation1 <- generateCreateOperation(Seq("key-1")).map(_._1)
         createOperation2 <- generateCreateOperation(Seq("key-1")).map(_._1)
-        _ <- storage.setManagedDIDState(did1, ManagedDIDState.Created(createOperation1))
-        _ <- storage.setManagedDIDState(did2, ManagedDIDState.Created(createOperation2))
+        _ <- storage.insertManagedDID(
+          did1,
+          ManagedDIDState(createOperation1, None, PublicationState.Created()),
+          Map.empty
+        )
+        _ <- storage.insertManagedDID(
+          did2,
+          ManagedDIDState(createOperation2, None, PublicationState.Created()),
+          Map.empty
+        )
         states <- storage.listManagedDID(None, None).map(_._1)
       } yield assert(states.map(_._1))(hasSameElements(Seq(did1, did2)))
     },
@@ -132,22 +144,6 @@ object JdbcDIDNonSecretStorageSpec
     }
   )
 
-  private val setDIDStateSpec = suite("setManagedDIDState")(
-    test("replace state if set for the same did") {
-      for {
-        storage <- ZIO.service[DIDNonSecretStorage]
-        createOperation1 <- generateCreateOperation(Seq("key-1")).map(_._1)
-        createOperation2 <- generateCreateOperation(Seq("key-1")).map(_._1)
-        _ <- storage.setManagedDIDState(didExample, ManagedDIDState.Created(createOperation1))
-        state1 <- storage.getManagedDIDState(didExample)
-        _ <- storage.setManagedDIDState(didExample, ManagedDIDState.Created(createOperation2))
-        state2 <- storage.getManagedDIDState(didExample)
-      } yield assert(state1.get.createOperation)(equalTo(createOperation1))
-        && assert(state2.get.createOperation)(equalTo(createOperation2))
-        && assert(createOperation1)(not(equalTo(createOperation2)))
-    }
-  )
-
   private val getDIDStateSpec = suite("getManagedDIDState")(
     test("return None of state is not found") {
       for {
@@ -158,19 +154,28 @@ object JdbcDIDNonSecretStorageSpec
     test("return the same state that was set for all variants") {
       for {
         storage <- ZIO.service[DIDNonSecretStorage]
-        createOperation <- generateCreateOperation(Seq("key-1")).map(_._1)
-        states = Seq(
-          ManagedDIDState.Created(createOperation),
-          ManagedDIDState.PublicationPending(createOperation, ArraySeq.fill(32)(0)),
-          ManagedDIDState.Published(createOperation, ArraySeq.fill(32)(1)),
+        inputs = Seq[(Option[Int], PublicationState)](
+          (None, PublicationState.Created()),
+          (None, PublicationState.PublicationPending(ArraySeq.fill(32)(0))),
+          (None, PublicationState.Published(ArraySeq.fill(32)(1))),
+          (Some(1), PublicationState.Created()),
+          (Some(2), PublicationState.PublicationPending(ArraySeq.fill(32)(0))),
+          (Some(3), PublicationState.Published(ArraySeq.fill(32)(1))),
         )
+        states <- ZIO.foreach(inputs) { case (didIndex, publicationState) =>
+          val operation = didIndex match {
+            case Some(idx) => generateCreateOperationHdKey(Seq("key-1"), idx).map(_._1)
+            case None      => generateCreateOperation(Seq("key-1")).map(_._1)
+          }
+          operation.map(o => ManagedDIDState(o, None, publicationState))
+        }
         readStates <- ZIO.foreach(states) { state =>
           for {
-            _ <- storage.setManagedDIDState(didExample, state)
-            readState <- storage.getManagedDIDState(didExample)
+            _ <- storage.insertManagedDID(state.createOperation.did, state, Map.empty)
+            readState <- storage.getManagedDIDState(state.createOperation.did)
           } yield readState
         }
-      } yield assert(readStates.flatten)(equalTo(states))
+      } yield assert(readStates.flatten)(hasSameElements(states))
     }
   )
 
