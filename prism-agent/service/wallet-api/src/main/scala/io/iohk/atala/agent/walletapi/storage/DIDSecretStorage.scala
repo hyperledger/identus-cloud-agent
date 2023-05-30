@@ -1,15 +1,11 @@
 package io.iohk.atala.agent.walletapi.storage
 
-import io.iohk.atala.agent.walletapi.model.ECKeyPair
-import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError
-import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError._
-import io.iohk.atala.castor.core.model.did.PrismDID
-import io.iohk.atala.shared.models.HexStrings.HexString
-import zio.*
-import io.iohk.atala.mercury.PeerDID
 import com.nimbusds.jose.jwk.OctetKeyPair
+import io.iohk.atala.agent.walletapi.crypto.ECKeyPair
+import io.iohk.atala.castor.core.model.did.PrismDID
 import io.iohk.atala.mercury.model.DidId
 import scala.collection.immutable.ArraySeq
+import zio.*
 
 /** A simple single-user DID key storage */
 private[walletapi] trait DIDSecretStorage {

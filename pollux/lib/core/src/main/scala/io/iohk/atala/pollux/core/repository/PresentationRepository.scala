@@ -1,19 +1,20 @@
 package io.iohk.atala.pollux.core.repository
 
-import io.iohk.atala.pollux.core.model._
+import io.iohk.atala.mercury.protocol.presentproof.*
+import io.iohk.atala.pollux.core.model.*
+import io.iohk.atala.pollux.core.model.PresentationRecord.ProtocolState
 import io.iohk.atala.prism.crypto.MerkleInclusionProof
 import zio.*
 
 import java.util.UUID
-import io.iohk.atala.mercury.protocol.presentproof._
-import io.iohk.atala.pollux.core.model.PresentationRecord.ProtocolState
 
 trait PresentationRepository[F[_]] {
   def createPresentationRecord(record: PresentationRecord): F[Int]
   def getPresentationRecords(ignoreWithZeroRetries: Boolean = true): F[Seq[PresentationRecord]]
   def getPresentationRecord(recordId: DidCommID): F[Option[PresentationRecord]]
   def getPresentationRecordsByStates(
-      ignoreWithZeroRetries: Boolean = true,
+      ignoreWithZeroRetries: Boolean,
+      limit: Int,
       states: PresentationRecord.ProtocolState*
   ): F[Seq[PresentationRecord]]
   def getPresentationRecordByThreadId(thid: DidCommID): F[Option[PresentationRecord]]

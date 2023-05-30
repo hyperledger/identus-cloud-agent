@@ -1,32 +1,22 @@
 package io.iohk.atala.agent.walletapi.storage
 
+import io.iohk.atala.agent.walletapi.crypto.ECKeyPair
+import io.iohk.atala.agent.walletapi.crypto.ApolloSpecHelper
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
-import io.iohk.atala.agent.walletapi.crypto.KeyGeneratorWrapper
-import io.iohk.atala.agent.walletapi.model.{
-  DIDPublicKeyTemplate,
-  DIDUpdateLineage,
-  ECKeyPair,
-  ManagedDIDState,
-  ManagedDIDTemplate
-}
 import io.iohk.atala.agent.walletapi.sql.{JdbcDIDNonSecretStorage, JdbcDIDSecretStorage}
-import io.iohk.atala.agent.walletapi.util.OperationFactory
-import io.iohk.atala.castor.core.model.did.{
-  EllipticCurve,
-  PrismDID,
-  PrismDIDOperation,
-  ScheduledDIDOperationStatus,
-  VerificationRelationship
-}
+import io.iohk.atala.castor.core.model.did.{PrismDID, ScheduledDIDOperationStatus}
 import io.iohk.atala.test.container.{DBTestUtils, PostgresTestContainerSupport}
 
-import java.time.Instant
 import scala.collection.immutable.ArraySeq
 import org.postgresql.util.PSQLException
 
-object JdbcDIDSecretStorageSpec extends ZIOSpecDefault, StorageSpecHelper, PostgresTestContainerSupport {
+object JdbcDIDSecretStorageSpec
+    extends ZIOSpecDefault,
+      StorageSpecHelper,
+      PostgresTestContainerSupport,
+      ApolloSpecHelper {
 
   override def spec = {
     val testSuite =
@@ -39,7 +29,7 @@ object JdbcDIDSecretStorageSpec extends ZIOSpecDefault, StorageSpecHelper, Postg
       ) @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
 
     testSuite.provideSomeLayer(
-      pgContainerLayer >+> transactorLayer >+> (JdbcDIDSecretStorage.layer ++ JdbcDIDNonSecretStorage.layer)
+      pgContainerLayer >+> (transactorLayer ++ apolloLayer) >+> (JdbcDIDSecretStorage.layer ++ JdbcDIDNonSecretStorage.layer)
     )
   }
 

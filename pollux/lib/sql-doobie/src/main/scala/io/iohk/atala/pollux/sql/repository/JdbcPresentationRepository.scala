@@ -164,7 +164,8 @@ class JdbcPresentationRepository(
   }
 
   override def getPresentationRecordsByStates(
-      ignoreWithZeroRetries: Boolean = true,
+      ignoreWithZeroRetries: Boolean,
+      limit: Int,
       states: PresentationRecord.ProtocolState*
   ): Task[Seq[PresentationRecord]] = {
     states match
@@ -197,6 +198,7 @@ class JdbcPresentationRepository(
             |   meta_last_failure
             | FROM public.presentation_records
             | $conditionFragment
+            | LIMIT $limit
             """.stripMargin
           .query[PresentationRecord]
           .to[Seq]

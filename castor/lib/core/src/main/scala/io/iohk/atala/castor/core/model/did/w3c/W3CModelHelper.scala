@@ -9,7 +9,7 @@ import io.iohk.atala.castor.core.model.did.{
   Service,
   VerificationRelationship
 }
-import io.iohk.atala.shared.models.HexStrings.*
+import io.iohk.atala.shared.models.HexString
 
 object W3CModelHelper extends W3CModelHelper
 

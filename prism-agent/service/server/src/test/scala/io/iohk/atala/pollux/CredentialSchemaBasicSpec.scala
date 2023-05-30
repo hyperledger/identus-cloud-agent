@@ -11,8 +11,8 @@ import io.iohk.atala.pollux.credentialschema.http.{
   CredentialSchemaResponsePage
 }
 import io.iohk.atala.pollux.sql.repository.JdbcCredentialSchemaRepository
-import io.iohk.atala.pollux.test.container.MigrationAspects.*
-import io.iohk.atala.pollux.test.container.PostgresLayer.*
+import io.iohk.atala.container.util.MigrationAspects.*
+import io.iohk.atala.container.util.PostgresLayer.*
 import sttp.client3.testing.SttpBackendStub
 import sttp.client3.ziojson.*
 import sttp.client3.{DeserializationException, ResponseException, SttpBackend, UriContext, basicRequest, Response as R}

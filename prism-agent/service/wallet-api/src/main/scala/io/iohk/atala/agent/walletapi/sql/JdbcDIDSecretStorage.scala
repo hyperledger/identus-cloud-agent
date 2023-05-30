@@ -1,31 +1,21 @@
 package io.iohk.atala.agent.walletapi.sql
 
-import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
-
-import cats.instances.seq
+import com.nimbusds.jose.jwk.OctetKeyPair
 import doobie.*
 import doobie.implicits.*
 import doobie.postgres.implicits.*
-import io.circe._
-import io.circe.parser._
-import io.circe.syntax._
-
+import io.iohk.atala.agent.walletapi.crypto.{ECKeyPair, Apollo}
+import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
+import io.iohk.atala.castor.core.model.did.{PrismDID, EllipticCurve, ScheduledDIDOperationStatus}
+import io.iohk.atala.mercury.model.DidId
+import io.iohk.atala.shared.utils.Base64Utils
 import java.time.Instant
 import java.util.UUID
-
+import scala.collection.immutable.ArraySeq
 import zio.*
 import zio.interop.catz.*
-import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError
-import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError.KeyNotFoundError
-import io.iohk.atala.mercury.model.DidId
-import io.iohk.atala.castor.core.model.did.{PrismDID, EllipticCurve, ScheduledDIDOperationStatus}
-import io.iohk.atala.agent.walletapi.model.ECKeyPair
-import com.nimbusds.jose.jwk.OctetKeyPair
-import io.iohk.atala.prism.crypto.EC
-import io.iohk.atala.shared.utils.Base64Utils
-import scala.collection.immutable.ArraySeq
 
-class JdbcDIDSecretStorage(xa: Transactor[Task]) extends DIDSecretStorage {
+class JdbcDIDSecretStorage(xa: Transactor[Task], apollo: Apollo) extends DIDSecretStorage {
 
   case class InstantAsBigInt(value: Instant)
 
@@ -38,14 +28,15 @@ class JdbcDIDSecretStorage(xa: Transactor[Task]) extends DIDSecretStorage {
   given instantGet: Get[InstantAsBigInt] = Get[Long].map(Instant.ofEpochSecond).map(InstantAsBigInt.apply)
   given instantPut: Put[InstantAsBigInt] = Put[Long].contramap(_.value.getEpochSecond())
 
+  // FIXME: this assumes that all ECKeyPair are secp256k1 curve
   given ecKeyPairPairGet: Get[ECKeyPair] = Get[String].map { b64 =>
     val bytes = Base64Utils.decodeURL(b64)
-    val privateKey = EC.INSTANCE.toPrivateKeyFromBytes(bytes)
-    val publicKey = EC.INSTANCE.toPublicKeyFromPrivateKey(privateKey)
-    ECKeyPair.fromPrism14ECKeyPair(io.iohk.atala.prism.crypto.keys.ECKeyPair(publicKey, privateKey))
+    val privateKey = apollo.ecKeyFactory.privateKeyFromEncoded(EllipticCurve.SECP256K1, bytes).get
+    val publicKey = privateKey.computePublicKey
+    ECKeyPair(publicKey, privateKey)
   }
   given ecKeyPairPut: Put[ECKeyPair] = Put[String].contramap { kp =>
-    Base64Utils.encodeURL(kp.privateKey.toPaddedByteArray(EllipticCurve.SECP256K1))
+    Base64Utils.encodeURL(kp.privateKey.encode)
   }
 
   given didIdGet: Get[DidId] = Get[String].map(DidId(_))
@@ -172,6 +163,6 @@ class JdbcDIDSecretStorage(xa: Transactor[Task]) extends DIDSecretStorage {
 }
 
 object JdbcDIDSecretStorage {
-  val layer: URLayer[Transactor[Task], DIDSecretStorage] =
-    ZLayer.fromFunction(new JdbcDIDSecretStorage(_))
+  val layer: URLayer[Transactor[Task] & Apollo, DIDSecretStorage] =
+    ZLayer.fromFunction(new JdbcDIDSecretStorage(_, _))
 }

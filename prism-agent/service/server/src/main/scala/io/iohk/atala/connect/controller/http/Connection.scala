@@ -34,7 +34,7 @@ case class Connection(
     @validate(annotations.state.validator)
     state: String,
     @description(annotations.invitation.description)
-    @encodedExample(annotations.invitation.example)
+    // @encodedExample(annotations.invitation.example) // FIXME: tapir incorrectly render this example
     invitation: ConnectionInvitation,
     @description(annotations.createdAt.description)
     @encodedExample(annotations.createdAt.example)
@@ -49,8 +49,8 @@ case class Connection(
     @encodedExample(annotations.kind.example)
     kind: String = "Connection"
 ) {
-  def withBaseUri(base: Uri) = withSelf(base.addPath(connectionId.toString).toString)
-  def withSelf(self: String) = copy(self = self)
+  def withBaseUri(base: Uri): Connection = withSelf(base.addPath(connectionId.toString).toString)
+  def withSelf(self: String): Connection = copy(self = self)
 }
 
 object Connection {

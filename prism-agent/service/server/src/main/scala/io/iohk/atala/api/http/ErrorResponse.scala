@@ -91,4 +91,22 @@ object ErrorResponse {
       detail = detail,
       instance = instance
     )
+
+  def unprocessableEntity(title: String = "UnprocessableEntity", detail: Option[String] = None, instance: String = "") =
+    ErrorResponse(
+      StatusCode.UnprocessableEntity.code,
+      `type` = title,
+      title = title,
+      detail = detail,
+      instance = instance
+    )
+
+  def conflict(title: String = "Conflict", detail: Option[String] = None, instance: String = "") =
+    ErrorResponse(
+      StatusCode.Conflict.code,
+      `type` = title,
+      title = title,
+      detail = detail,
+      instance = instance
+    )
 }

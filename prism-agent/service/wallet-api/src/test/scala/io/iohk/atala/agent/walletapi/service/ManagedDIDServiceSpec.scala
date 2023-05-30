@@ -1,7 +1,7 @@
 package io.iohk.atala.agent.walletapi.service
 
 import io.iohk.atala.agent.walletapi.model.error.{CreateManagedDIDError, PublishManagedDIDError}
-import io.iohk.atala.agent.walletapi.model.{DIDPublicKeyTemplate, ManagedDIDState, ManagedDIDTemplate}
+import io.iohk.atala.agent.walletapi.model.{DIDPublicKeyTemplate, ManagedDIDState, ManagedDIDTemplate, PublicationState}
 import io.iohk.atala.castor.core.model.did.{
   DIDData,
   DIDMetadata,
@@ -19,21 +19,23 @@ import io.iohk.atala.castor.core.model.did.{
 import io.iohk.atala.castor.core.model.error
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.castor.core.util.DIDOperationValidator
-import io.iohk.atala.shared.models.HexStrings.HexString
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
 
 import scala.collection.immutable.ArraySeq
 import io.iohk.atala.test.container.PostgresTestContainerSupport
+import io.iohk.atala.agent.walletapi.crypto.ApolloSpecHelper
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDNonSecretStorage
 import io.iohk.atala.test.container.DBTestUtils
 import io.iohk.atala.castor.core.model.did.InternalKeyPurpose
 import io.iohk.atala.agent.walletapi.model.error.UpdateManagedDIDError
 import io.iohk.atala.agent.walletapi.model.UpdateManagedDIDAction
+import io.iohk.atala.agent.walletapi.crypto.Apollo
+import io.iohk.atala.agent.walletapi.util.SeedResolver
 
-object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSupport {
+object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSupport, ApolloSpecHelper {
 
   private trait TestDIDService extends DIDService {
     def getPublishedOperations: UIO[Seq[SignedPrismDIDOperation]]
@@ -72,10 +74,13 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSuppor
   }
 
   private def jdbcStorageLayer =
-    pgContainerLayer >+> transactorLayer >+> (JdbcDIDSecretStorage.layer ++ JdbcDIDNonSecretStorage.layer)
+    pgContainerLayer >+> (transactorLayer ++ apolloLayer) >+> (JdbcDIDSecretStorage.layer ++ JdbcDIDNonSecretStorage.layer)
 
   private def managedDIDServiceLayer =
-    (DIDOperationValidator.layer() ++ testDIDServiceLayer) >+> ManagedDIDService.layer
+    (DIDOperationValidator.layer() ++
+      testDIDServiceLayer ++
+      apolloLayer ++
+      SeedResolver.layer()) >+> ManagedDIDService.layer
 
   private def generateDIDTemplate(
       publicKeys: Seq[DIDPublicKeyTemplate] = Nil,
@@ -119,7 +124,7 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSuppor
         deactivateManagedDIDSpec
       ) @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
 
-    testSuite.provideLayer(jdbcStorageLayer >+> managedDIDServiceLayer)
+    testSuite.provideLayer(jdbcStorageLayer >+> managedDIDServiceLayer).provide(Runtime.removeDefaultLoggers)
   }
 
   private val publishStoredDIDSpec =
@@ -131,7 +136,7 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSuppor
           testDIDSvc <- ZIO.service[TestDIDService]
           did <- svc.createAndStoreDID(template).map(_.asCanonical)
           createOp <- svc.nonSecretStorage.getManagedDIDState(did).collect(()) {
-            case Some(ManagedDIDState.Created(op)) => op
+            case Some(ManagedDIDState(op, _, PublicationState.Created())) => op
           }
           opsBefore <- testDIDSvc.getPublishedOperations
           _ <- svc.publishStoredDID(did)
@@ -157,11 +162,11 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSuppor
         for {
           svc <- ZIO.service[ManagedDIDService]
           did <- svc.createAndStoreDID(template).map(_.asCanonical)
-          stateBefore <- svc.nonSecretStorage.getManagedDIDState(did)
+          stateBefore <- svc.nonSecretStorage.getManagedDIDState(did).map(_.map(_.publicationState))
           _ <- svc.publishStoredDID(did)
-          stateAfter <- svc.nonSecretStorage.getManagedDIDState(did)
-        } yield assert(stateBefore)(isSome(isSubtype[ManagedDIDState.Created](anything)))
-          && assert(stateAfter)(isSome(isSubtype[ManagedDIDState.PublicationPending](anything)))
+          stateAfter <- svc.nonSecretStorage.getManagedDIDState(did).map(_.map(_.publicationState))
+        } yield assert(stateBefore)(isSome(isSubtype[PublicationState.Created](anything)))
+          && assert(stateAfter)(isSome(isSubtype[PublicationState.PublicationPending](anything)))
       },
       test("do not re-publish when publishing already published DID") {
         val template = generateDIDTemplate()
@@ -196,8 +201,8 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSuppor
       for {
         svc <- ZIO.service[ManagedDIDService]
         did <- svc.createAndStoreDID(template).map(_.asCanonical)
-        keyPairs <- svc.secretStorage.listKeys(did)
-      } yield assert(keyPairs.map(_._1))(hasSameElements(Seq("key1", "key2", ManagedDIDService.DEFAULT_MASTER_KEY_ID)))
+        keyPaths <- svc.nonSecretStorage.listHdKeyPath(did)
+      } yield assert(keyPaths.map(_._1))(hasSameElements(Seq("key1", "key2", ManagedDIDService.DEFAULT_MASTER_KEY_ID)))
     },
     test("created DID have corresponding public keys in CreateOperation") {
       val template = generateDIDTemplate(
@@ -211,7 +216,9 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSuppor
         svc <- ZIO.service[ManagedDIDService]
         did <- svc.createAndStoreDID(template).map(_.asCanonical)
         state <- svc.nonSecretStorage.getManagedDIDState(did)
-        createOperation <- ZIO.fromOption(state.collect { case ManagedDIDState.Created(operation) => operation })
+        createOperation <- ZIO.fromOption(state.collect {
+          case ManagedDIDState(operation, _, PublicationState.Created()) => operation
+        })
         publicKeys = createOperation.publicKeys.collect { case pk: PublicKey => pk }
       } yield assert(publicKeys.map(i => i.id -> i.purpose))(
         hasSameElements(
@@ -228,7 +235,9 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSuppor
         svc <- ZIO.service[ManagedDIDService]
         did <- svc.createAndStoreDID(generateDIDTemplate()).map(_.asCanonical)
         state <- svc.nonSecretStorage.getManagedDIDState(did)
-        createOperation <- ZIO.fromOption(state.collect { case ManagedDIDState.Created(operation) => operation })
+        createOperation <- ZIO.fromOption(state.collect {
+          case ManagedDIDState(operation, _, PublicationState.Created()) => operation
+        })
         internalKeys = createOperation.publicKeys.collect { case pk: InternalPublicKey => pk }
       } yield assert(internalKeys.map(_.purpose))(contains(InternalKeyPurpose.Master))
     },
@@ -309,8 +318,8 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSuppor
             UpdateManagedDIDAction.AddKey(DIDPublicKeyTemplate(id, VerificationRelationship.Authentication))
           )
           _ <- svc.updateManagedDID(did, actions)
-          keyPairs <- svc.secretStorage.listKeys(did)
-        } yield assert(keyPairs.map(_._1))(
+          keyPaths <- svc.nonSecretStorage.listHdKeyPath(did)
+        } yield assert(keyPaths.map(_._1))(
           hasSameElements(Seq(ManagedDIDService.DEFAULT_MASTER_KEY_ID, "key-1", "key-2"))
         )
       },
@@ -326,8 +335,8 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSuppor
           )
           _ <- svc.updateManagedDID(did, actions) // 1st update
           _ <- svc.updateManagedDID(did, actions.take(1)) // 2nd update: key-1 is added twice
-          keyPairs <- svc.secretStorage.listKeys(did)
-        } yield assert(keyPairs.map(_._1))(
+          keyPaths <- svc.nonSecretStorage.listHdKeyPath(did)
+        } yield assert(keyPaths.map(_._1))(
           hasSameElements(Seq(ManagedDIDService.DEFAULT_MASTER_KEY_ID, "key-1", "key-1", "key-2"))
         )
       },

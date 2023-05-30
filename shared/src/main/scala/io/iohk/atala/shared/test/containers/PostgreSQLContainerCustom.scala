@@ -1,10 +1,7 @@
 package io.iohk.atala.shared.test.containers
 
 import com.dimafeng.testcontainers.{JdbcDatabaseContainer, PostgreSQLContainer}
-import org.testcontainers.containers.output.OutputFrame
 import org.testcontainers.utility.DockerImageName
-
-import java.util.function.Consumer
 
 class PostgreSQLContainerCustom(
     dockerImageNameOverride: Option[DockerImageName] = None,
