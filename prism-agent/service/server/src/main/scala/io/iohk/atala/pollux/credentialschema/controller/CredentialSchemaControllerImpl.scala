@@ -1,6 +1,6 @@
 package io.iohk.atala.pollux.credentialschema.controller
 
-import io.iohk.atala.agent.walletapi.model.ManagedDIDState
+import io.iohk.atala.agent.walletapi.model.{ManagedDIDState, PublicationState}
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.api.http.*
 import io.iohk.atala.api.http.model.{CollectionStats, Order, Pagination}
@@ -118,7 +118,7 @@ class CredentialSchemaControllerImpl(service: CredentialSchemaService, managedDI
         )
         .someOrFail(ErrorResponse.notFound(detail = Some(s"Issuer DID does not exist in the wallet: $did")))
         .flatMap {
-          case s: ManagedDIDState.Published => ZIO.succeed(s)
+          case s @ ManagedDIDState(_, _, _: PublicationState.Published) => ZIO.succeed(s)
           case s =>
             ZIO.cond(
               allowUnpublishedIssuingDID,

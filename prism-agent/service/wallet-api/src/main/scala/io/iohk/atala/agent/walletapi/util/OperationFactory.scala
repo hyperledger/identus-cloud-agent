@@ -1,7 +1,15 @@
 package io.iohk.atala.agent.walletapi.util
 
 import io.iohk.atala.agent.walletapi.crypto.{ECKeyPair, ECPublicKey}
-import io.iohk.atala.agent.walletapi.model.{DIDPublicKeyTemplate, ManagedDIDTemplate, UpdateManagedDIDAction}
+import io.iohk.atala.agent.walletapi.model.{
+  DIDPublicKeyTemplate,
+  ManagedDIDTemplate,
+  UpdateManagedDIDAction,
+  CreateDIDHdKey,
+  CreateDIDRandKey,
+  UpdateDIDHdKey,
+  UpdateDIDRandKey
+}
 import io.iohk.atala.agent.walletapi.model.error.{CreateManagedDIDError, UpdateManagedDIDError}
 import io.iohk.atala.castor.core.model.did.{
   CanonicalPrismDID,
@@ -16,86 +24,157 @@ import io.iohk.atala.shared.models.Base64UrlString
 import zio.*
 
 import scala.collection.immutable.ArraySeq
+import io.iohk.atala.agent.walletapi.model.HdKeyIndexCounter
+import io.iohk.atala.agent.walletapi.crypto.Apollo
+import io.iohk.atala.castor.core.model.did.EllipticCurve
+import io.iohk.atala.agent.walletapi.model.ManagedDIDHdKeyPath
 
-private[walletapi] final case class CreateDIDSecret(
-    keyPairs: Map[String, ECKeyPair],
-    internalKeyPairs: Map[String, ECKeyPair]
+private[util] final case class KeyDerivationOutcome[PK](
+    publicKey: PK,
+    path: ManagedDIDHdKeyPath,
+    nextCounter: HdKeyIndexCounter
 )
 
-private[walletapi] final case class UpdateDIDSecret(newKeyPairs: Map[String, ECKeyPair])
+class OperationFactory(apollo: Apollo) {
 
-object OperationFactory {
-
-  def makeCreateOperation(
+  /** Generates a key pair and a public key from a DID template
+    *
+    * @param masterKeyId
+    *   The key id of the master key
+    * @param seed
+    *   The seed to use for the key generation
+    * @param didTemplate
+    *   The DID template
+    * @param didIndex
+    *   The index of the DID to be used for the key derivation
+    */
+  def makeCreateOperationHdKey(
       masterKeyId: String,
-      keyGenerator: () => Task[ECKeyPair]
+      seed: Array[Byte]
   )(
+      didIndex: Int,
       didTemplate: ManagedDIDTemplate
-  ): IO[CreateManagedDIDError, (PrismDIDOperation.Create, CreateDIDSecret)] = {
-    for {
-      keys <- ZIO
-        .foreach(didTemplate.publicKeys)(generateKeyPairAndPublicKey(keyGenerator))
-        .mapError(CreateManagedDIDError.KeyGenerationError.apply)
-      masterKey <- generateKeyPairAndInternalPublicKey(keyGenerator)(masterKeyId, InternalKeyPurpose.Master)
-        .mapError(
-          CreateManagedDIDError.KeyGenerationError.apply
-        )
+  ): IO[CreateManagedDIDError, (PrismDIDOperation.Create, CreateDIDHdKey)] = {
+    val initKeysWithCounter = (Vector.empty[(PublicKey, ManagedDIDHdKeyPath)], HdKeyIndexCounter.zero(didIndex))
+    val result = for {
+      keysWithCounter <- ZIO.foldLeft(didTemplate.publicKeys)(initKeysWithCounter) {
+        case ((keys, keyCounter), template) =>
+          derivePublicKey(seed)(template, keyCounter)
+            .map { outcome =>
+              val newKeys = keys :+ (outcome.publicKey, outcome.path)
+              (newKeys, outcome.nextCounter)
+            }
+      }
+      masterKeyOutcome <- deriveInternalPublicKey(seed)(
+        masterKeyId,
+        InternalKeyPurpose.Master,
+        keysWithCounter._2
+      )
       operation = PrismDIDOperation.Create(
-        publicKeys = keys.map(_._2) ++ Seq(masterKey._2),
+        publicKeys = keysWithCounter._1.map(_._1) ++ Seq(masterKeyOutcome.publicKey),
         services = didTemplate.services,
         context = Seq() // TODO: expose context in the API
       )
-      secret = CreateDIDSecret(
-        keyPairs = keys.map { case (keyPair, publicKey) => publicKey.id -> keyPair }.toMap,
-        internalKeyPairs = Map(masterKey._2.id -> masterKey._1)
+      hdKeys = CreateDIDHdKey(
+        keyPaths = keysWithCounter._1.map { case (publicKey, path) => publicKey.id -> path }.toMap,
+        internalKeyPaths = Map(masterKeyOutcome.publicKey.id -> masterKeyOutcome.path),
       )
-    } yield operation -> secret
+    } yield operation -> hdKeys
+
+    result.mapError(CreateManagedDIDError.KeyGenerationError.apply)
   }
 
-  def makeUpdateOperation(
-      keyGenerator: () => Task[ECKeyPair]
-  )(
+  def makeCreateOperationRandKey(
+      masterKeyId: String
+  )(didTemplate: ManagedDIDTemplate): IO[CreateManagedDIDError, (PrismDIDOperation.Create, CreateDIDRandKey)] = {
+    for {
+      randomSeed <- apollo.ecKeyFactory.randomBip32Seed().mapError(CreateManagedDIDError.KeyGenerationError.apply)
+      operationWithHdKey <- makeCreateOperationHdKey(masterKeyId, randomSeed)(0, didTemplate)
+      (operation, hdKeys) = operationWithHdKey
+      keyPairs <- ZIO.foreach(hdKeys.keyPaths) { case (id, path) =>
+        deriveSecp256k1KeyPair(randomSeed, path).mapBoth(CreateManagedDIDError.KeyGenerationError.apply, id -> _)
+      }
+      internalKeyPairs <- ZIO.foreach(hdKeys.internalKeyPaths) { case (id, path) =>
+        deriveSecp256k1KeyPair(randomSeed, path).mapBoth(CreateManagedDIDError.KeyGenerationError.apply, id -> _)
+      }
+    } yield operation -> CreateDIDRandKey(
+      keyPairs = keyPairs,
+      internalKeyPairs = internalKeyPairs
+    )
+  }
+
+  def makeUpdateOperationHdKey(seed: Array[Byte])(
       did: CanonicalPrismDID,
       previousOperationHash: Array[Byte],
-      actions: Seq[UpdateManagedDIDAction]
-  ): IO[UpdateManagedDIDError, (PrismDIDOperation.Update, UpdateDIDSecret)] = {
-    val actionsWithSecret = actions.map {
-      case a @ UpdateManagedDIDAction.AddKey(template) =>
-        a -> generateKeyPairAndPublicKey(keyGenerator)(template)
-          .mapError(UpdateManagedDIDError.KeyGenerationError.apply)
-          .asSome
-      case a => a -> ZIO.none
+      actions: Seq[UpdateManagedDIDAction],
+      fromKeyCounter: HdKeyIndexCounter
+  ): IO[UpdateManagedDIDError, (PrismDIDOperation.Update, UpdateDIDHdKey)] = {
+    val initKeysWithCounter =
+      (Vector.empty[(UpdateManagedDIDAction, Option[(PublicKey, ManagedDIDHdKeyPath)])], fromKeyCounter)
+    val actionsWithKeyMaterial = ZIO.foldLeft(actions)(initKeysWithCounter) { case ((acc, keyCounter), action) =>
+      val derivation = action match {
+        case UpdateManagedDIDAction.AddKey(template) =>
+          derivePublicKey(seed)(template, keyCounter).mapError(UpdateManagedDIDError.KeyGenerationError.apply).asSome
+        case _ => ZIO.none
+      }
+      derivation.map {
+        case Some(outcome) => (acc :+ (action -> Some((outcome.publicKey, outcome.path))), outcome.nextCounter)
+        case None          => (acc :+ (action -> None), keyCounter)
+      }
     }
 
     for {
-      actionsWithSecret <- ZIO
-        .foreach(actionsWithSecret) { case (action, secret) => secret.map(action -> _) }
-      transformedActions <- ZIO.foreach(actionsWithSecret)(transformUpdateAction)
-      keys = actionsWithSecret.collect { case (UpdateManagedDIDAction.AddKey(_), Some(secret)) => secret }
+      actionsWithKeyMaterial <- actionsWithKeyMaterial
+      (actionWithHdKey, keyCounter) = actionsWithKeyMaterial
+      transformedActions <- ZIO.foreach(actionWithHdKey) { case (action, keyMaterial) =>
+        transformUpdateAction(action, keyMaterial.map(_._1))
+      }
+      keys = actionWithHdKey.collect { case (UpdateManagedDIDAction.AddKey(_), Some(secret)) => secret }
       operation = PrismDIDOperation.Update(
         did = did,
         previousOperationHash = ArraySeq.from(previousOperationHash),
         actions = transformedActions
       )
-      secret = UpdateDIDSecret(
+      hdKeys = UpdateDIDHdKey(
         // NOTE: Prism DID specification currently doesn't allow updating existing key with the same key-id.
         // Duplicated key-id in AddKey action can be ignored as the specification will reject the whole update operation.
         // If the specification supports updating existing key, the key that will be stored in the wallet
         // MUST be aligned with the spec (e.g. keep first / keep last in the action list)
-        newKeyPairs = keys.map { case (keyPair, publicKey) => publicKey.id -> keyPair }.toMap
+        newKeyPaths = keys.map { case (publicKey, path) => publicKey.id -> path }.toMap,
+        counter = keyCounter
       )
-    } yield operation -> secret
+    } yield operation -> hdKeys
+  }
+
+  def makeUpdateOperationRandKey(
+      did: CanonicalPrismDID,
+      previousOperationHash: Array[Byte],
+      actions: Seq[UpdateManagedDIDAction]
+  ): IO[UpdateManagedDIDError, (PrismDIDOperation.Update, UpdateDIDRandKey)] = {
+    for {
+      randomSeed <- apollo.ecKeyFactory.randomBip32Seed().mapError(UpdateManagedDIDError.KeyGenerationError.apply)
+      operationWithHdKey <- makeUpdateOperationHdKey(randomSeed)(
+        did,
+        previousOperationHash,
+        actions,
+        HdKeyIndexCounter.zero(0)
+      )
+      (operation, hdKeys) = operationWithHdKey
+      keyPairs <- ZIO.foreach(hdKeys.newKeyPaths) { case (id, path) =>
+        deriveSecp256k1KeyPair(randomSeed, path).mapBoth(UpdateManagedDIDError.KeyGenerationError.apply, id -> _)
+      }
+    } yield operation -> UpdateDIDRandKey(newKeyPairs = keyPairs)
   }
 
   private def transformUpdateAction(
       updateAction: UpdateManagedDIDAction,
-      secret: Option[(ECKeyPair, PublicKey)]
+      publicKey: Option[PublicKey]
   ): UIO[UpdateDIDAction] = {
     updateAction match {
       case UpdateManagedDIDAction.AddKey(_) =>
-        secret match {
-          case Some((_, publicKey)) => ZIO.succeed(UpdateDIDAction.AddKey(publicKey))
-          case None                 =>
+        publicKey match {
+          case Some(publicKey) => ZIO.succeed(UpdateDIDAction.AddKey(publicKey))
+          case None            =>
             // should be impossible otherwise it's a defect
             ZIO.dieMessage("addKey update DID action must have a generated a key-pair")
         }
@@ -107,23 +186,32 @@ object OperationFactory {
     }
   }
 
-  private def generateKeyPairAndPublicKey(keyGenerator: () => Task[ECKeyPair])(
-      template: DIDPublicKeyTemplate
-  ): Task[(ECKeyPair, PublicKey)] = {
+  private def derivePublicKey(seed: Array[Byte])(
+      template: DIDPublicKeyTemplate,
+      keyCounter: HdKeyIndexCounter
+  ): Task[KeyDerivationOutcome[PublicKey]] = {
+    val purpose = template.purpose
+    val keyPath = keyCounter.path(purpose)
     for {
-      keyPair <- keyGenerator()
-      publicKey = PublicKey(template.id, template.purpose, toPublicKeyData(keyPair.publicKey))
-    } yield (keyPair, publicKey)
+      keyPair <- deriveSecp256k1KeyPair(seed, keyPath)
+      publicKey = PublicKey(template.id, purpose, toPublicKeyData(keyPair.publicKey))
+    } yield KeyDerivationOutcome(publicKey, keyPath, keyCounter.next(purpose))
   }
 
-  private def generateKeyPairAndInternalPublicKey(keyGenerator: () => Task[ECKeyPair])(
+  private def deriveInternalPublicKey(seed: Array[Byte])(
       id: String,
-      purpose: InternalKeyPurpose
-  ): Task[(ECKeyPair, InternalPublicKey)] = {
+      purpose: InternalKeyPurpose,
+      keyCounter: HdKeyIndexCounter
+  ): Task[KeyDerivationOutcome[InternalPublicKey]] = {
+    val keyPath = keyCounter.path(purpose)
     for {
-      keyPair <- keyGenerator()
+      keyPair <- deriveSecp256k1KeyPair(seed, keyPath)
       internalPublicKey = InternalPublicKey(id, purpose, toPublicKeyData(keyPair.publicKey))
-    } yield (keyPair, internalPublicKey)
+    } yield KeyDerivationOutcome(internalPublicKey, keyPath, keyCounter.next(purpose))
+  }
+
+  private def deriveSecp256k1KeyPair(seed: Array[Byte], path: ManagedDIDHdKeyPath): Task[ECKeyPair] = {
+    apollo.ecKeyFactory.deriveKeyPair(EllipticCurve.SECP256K1, seed)(path.derivationPath: _*)
   }
 
   private def toPublicKeyData(publicKey: ECPublicKey): PublicKeyData = PublicKeyData.ECCompressedKeyData(
