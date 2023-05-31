@@ -6,7 +6,7 @@ import io.circe.Json
 import io.circe.parser.*
 import io.circe.syntax.*
 import io.iohk.atala.agent.server.config.AppConfig
-import io.iohk.atala.agent.server.http.model.{InvalidState, NotImplemented}
+import io.iohk.atala.agent.server.jobs.BackgroundJobError.{ErrorResponseReceivedFromPeerAgent, InvalidState, NotImplemented}
 import io.iohk.atala.agent.walletapi.model.*
 import io.iohk.atala.agent.walletapi.model.error.*
 import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError.KeyNotFoundError
@@ -23,16 +23,7 @@ import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.error.PresentationError.*
 import io.iohk.atala.pollux.core.model.error.{CredentialServiceError, PresentationError}
 import io.iohk.atala.pollux.core.service.{CredentialService, PresentationService}
-import io.iohk.atala.pollux.vc.jwt.{
-  CredentialVerification,
-  ES256KSigner,
-  JWT,
-  JwtPresentation,
-  W3CCredential,
-  W3cCredentialPayload,
-  DidResolver as JwtDidResolver,
-  Issuer as JwtIssuer
-}
+import io.iohk.atala.pollux.vc.jwt.{CredentialVerification, ES256KSigner, JWT, JwtPresentation, W3CCredential, W3cCredentialPayload, DidResolver as JwtDidResolver, Issuer as JwtIssuer}
 import io.iohk.atala.resolvers.{DIDResolver, UniversalDidResolver}
 import org.bouncycastle.jce.ECNamedCurveTable
 import org.bouncycastle.jce.provider.BouncyCastleProvider
@@ -131,7 +122,7 @@ object BackgroundJobs {
             credentialService <- ZIO.service[CredentialService]
             _ <- {
               if (resp.status >= 200 && resp.status < 300) credentialService.markOfferSent(id)
-              else ZIO.logWarning(s"DIDComm sending error: [${resp.status}] - ${resp.bodyAsString}")
+              else ZIO.fail(ErrorResponseReceivedFromPeerAgent(resp))
             }
           } yield ()
 
@@ -201,7 +192,7 @@ object BackgroundJobs {
             credentialService <- ZIO.service[CredentialService]
             _ <- {
               if (resp.status >= 200 && resp.status < 300) credentialService.markRequestSent(id)
-              else ZIO.logWarning(s"DIDComm sending error: [${resp.status}] - ${resp.bodyAsString}")
+              else ZIO.fail(ErrorResponseReceivedFromPeerAgent(resp))
             }
           } yield ()
 
@@ -310,7 +301,7 @@ object BackgroundJobs {
             credentialService <- ZIO.service[CredentialService]
             _ <- {
               if (resp.status >= 200 && resp.status < 300) credentialService.markCredentialSent(id)
-              else ZIO.logWarning(s"DIDComm sending error: [${resp.status}] - ${resp.bodyAsString}")
+              else ZIO.fail(ErrorResponseReceivedFromPeerAgent(resp))
             }
           } yield ()
 
@@ -343,7 +334,7 @@ object BackgroundJobs {
             credentialService <- ZIO.service[CredentialService]
             _ <- {
               if (resp.status >= 200 && resp.status < 300) credentialService.markCredentialSent(id)
-              else ZIO.logWarning(s"DIDComm sending error: [${resp.status}] - ${resp.bodyAsString}")
+              else ZIO.fail(ErrorResponseReceivedFromPeerAgent(resp))
             }
           } yield ()
 
@@ -489,7 +480,7 @@ object BackgroundJobs {
                 service <- ZIO.service[PresentationService]
                 _ <- {
                   if (resp.status >= 200 && resp.status < 300) service.markRequestPresentationSent(id)
-                  else ZIO.logWarning(s"DIDComm sending error: [${resp.status}] - ${resp.bodyAsString}")
+                  else ZIO.fail(ErrorResponseReceivedFromPeerAgent(resp))
                 }
               } yield ()
 
@@ -575,7 +566,7 @@ object BackgroundJobs {
                 service <- ZIO.service[PresentationService]
                 _ <- {
                   if (resp.status >= 200 && resp.status < 300) service.markPresentationSent(id)
-                  else ZIO.logWarning(s"DIDComm sending error: [${resp.status}] - ${resp.bodyAsString}")
+                  else ZIO.fail(ErrorResponseReceivedFromPeerAgent(resp))
                 }
               } yield ()
         case PresentationRecord(id, _, _, _, _, _, _, _, PresentationSent, _, _, _, _, _, _, _) =>
