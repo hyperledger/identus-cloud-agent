@@ -33,7 +33,7 @@ class SingleIssuerSingleProver extends AnyFlatSpec {
     )
 
     implicit val api: AnonCreds = AnonCreds(
-      Seq(BuildInfo.TargetForAnoncredsSharedObjectDownload, ".")
+      Seq(BuildInfo.NativeLibFolder, ".")
     )
 
     api.anoncreds_set_default_logger()

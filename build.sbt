@@ -626,13 +626,12 @@ lazy val polluxAnoncreds = project
   .settings(
     name := "pollux-anoncreds",
     // Make these values available to the project source at compile time
-    cleanFiles ++= (file(Shared.TargetForAnoncredsSharedObjectDownload) ** "*").get,
     buildInfoKeys ++= Seq[BuildInfoKey](
-      "AnonCredsTag" -> Shared.AnonCredsTag,
-      "pathToNativeObjectsInJar" -> Shared.pathToNativeObjectsInJar,
-      "NameOfAnonCredsSharedObject" -> Shared.LinuxAnonCredsLibName,
-      "NameOfShimSharedObject" -> Shared.NameOfShimSharedObject,
-      "TargetForAnoncredsSharedObjectDownload" -> Shared.TargetForAnoncredsSharedObjectDownloadFIXME
+      //   "AnonCredsTag" -> Shared.AnonCredsTag,
+      //   "pathToNativeObjectsInJar" -> Shared.pathToNativeObjectsInJar,
+      //   "NameOfAnonCredsSharedObject" -> Shared.LinuxAnonCredsLibName,
+      //   "NameOfShimSharedObject" -> Shared.NameOfShimSharedObject,
+      "NativeLibFolder" -> Shared.NativeLibFolder
     ),
     libraryDependencies ++= Seq(
       "com.github.jnr" % "jnr-ffi" % "2.2.13",
@@ -654,7 +653,8 @@ lazy val polluxAnoncreds = project
           Shared.MacArchs.foreach { arch =>
             println(s"Downloading and extracting AnonCreds Shared Object for $arch")
             val downloadUrl = Shared.anonCredsLibDownloadUrl(os, arch)
-            Shared.downloadAndExtractAnonCredsSharedObject(downloadUrl, libFileName, Shared.anonCredsLibFileName(os, arch))
+            Shared
+              .downloadAndExtractAnonCredsSharedObject(downloadUrl, libFileName, Shared.anonCredsLibFileName(os, arch))
           }
 
           println("Combining libraries into a single universal one using lipo")
@@ -759,24 +759,17 @@ lazy val polluxAnoncreds = project
           sys.error(s"Unsupported operating system: $osName")
       }
     },
-    (Compile / compile) := ((Compile / compile)
-      .dependsOn(buildShim.dependsOn(getAnonCredsSo)))
-      .value,
-    cleanFiles += baseDirectory.value / Shared.TargetForAnoncredsSharedObjectDownloadFIXME,
-
-    // Add the shim .so and the anoncreds .so to the packaged jar
-    Compile / packageBin / mappings += {
-      (baseDirectory.value / Shared.TargetForAnoncredsSharedObjectDownloadFIXME / Shared.NameOfShimSharedObject) ->
-        Shared.pathToNativeObjectsInJar
-          .resolve(Shared.NameOfShimSharedObject)
-          .toString
-    },
-    Compile / packageBin / mappings += {
-      (baseDirectory.value / Shared.anonCredsLibLocation) -> Shared.pathToNativeObjectsInJar
-        .resolve(Shared.AnonCredsLibNameByOS())
-        .toString
-    },
+    Compile / unmanagedResourceDirectories += baseDirectory.value / Shared.NativeLibFolder,
   )
+lazy val polluxAnoncredsTest = project
+  .in(file("pollux/lib/anoncredsTest"))
+  .settings(
+    libraryDependencies ++= Seq(
+      "org.scalatest" %% "scalatest" % "3.2.15" % Test,
+      ("me.vican.jorge" %% "dijon" % "0.6.0" % Test).cross(CrossVersion.for3Use2_13)
+    ),
+  )
+  .dependsOn(polluxAnoncreds % "compile->test")
 
 // #####################
 // #####  connect  #####

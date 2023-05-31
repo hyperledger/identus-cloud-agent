@@ -5,7 +5,7 @@ object Shared {
   val AnonCredsTag = "v0.1.0-dev.8"
 
   val AnonCredsLibHeaderName = "libanoncreds.h"
-  val TargetForAnoncredsSharedObjectDownloadFIXME = "native-lib"
+  val NativeLibFolder = "native-lib"
   val TargetForAnoncredsSharedObjectDownload = "pollux/lib/anoncreds/native-lib" // "native-lib"
   val NativeCodeSourceFolder = "pollux/lib/anoncreds/src/main/c" // "src/main/c"
 
@@ -29,6 +29,8 @@ object Shared {
   val LinuxOs: String = "linux"
   val LinuxArch: String = "x86_64"
   val LinuxAnonCredsLibName = "libanoncreds.so"
+
+  val NameOfShimSharedObject = "libanoncreds-shim.so"
 
   def anonCredsLibFileName(os: String, arch: String): String =
     s"libanoncreds-$os-$arch.dylib"
@@ -56,9 +58,15 @@ object Shared {
     }
   }
 
-  def downloadAndExtractAnonCredsSharedObject(downloadUrl: String, fileToExtract: String, newExtractedFileName: String): Unit = {
+  def downloadAndExtractAnonCredsSharedObject(
+      downloadUrl: String,
+      fileToExtract: String,
+      newExtractedFileName: String
+  ): Unit = {
     if (targetPathForAnoncredsSharedObjectDownload.resolve(LinuxAnonCredsLibName).toFile.exists()) {
-      println(s"$LinuxAnonCredsLibName exists in $targetPathForAnoncredsSharedObjectDownload, no need to download again.")
+      println(
+        s"$LinuxAnonCredsLibName exists in $targetPathForAnoncredsSharedObjectDownload, no need to download again."
+      )
     } else {
       println(s"Downloading $downloadUrl to $tempPathForSharedObject.")
       Download.get(downloadUrl, tempPathForSharedObject) match {
@@ -81,18 +89,16 @@ object Shared {
 
   private def toStandardString(s: String): String = s.toLowerCase.replace("\\s+", "_")
 
-  def pathToNativeObjectsInJar: Path =
-    Path.of("NATIVE", toStandardString(sys.props("os.arch")), toStandardString(sys.props("os.name")))
+  // def pathToNativeObjectsInJar: Path =
+  //   Path.of("NATIVE", toStandardString(sys.props("os.arch")), toStandardString(sys.props("os.name")))
 
-  val NameOfShimSharedObject = "libanoncreds-shim.so"
-
-  def AnonCredsLibNameByOS(): String = {
-    val osName = System.getProperty("os.name").toLowerCase
-    osName.toLowerCase match {
-      case name if name.contains(MacOS) => MacAnonCredsLibName
-      case name if name.contains(LinuxOs) => LinuxAnonCredsLibName
-      case _ => throw new UnsupportedOperationException("Unsupported operating system: " + osName)
-    }
-  }
+  // def AnonCredsLibNameByOS(): String = {
+  //   val osName = System.getProperty("os.name").toLowerCase
+  //   osName.toLowerCase match {
+  //     case name if name.contains(MacOS)   => MacAnonCredsLibName
+  //     case name if name.contains(LinuxOs) => LinuxAnonCredsLibName
+  //     case _ => throw new UnsupportedOperationException("Unsupported operating system: " + osName)
+  //   }
+  // }
 
 }
