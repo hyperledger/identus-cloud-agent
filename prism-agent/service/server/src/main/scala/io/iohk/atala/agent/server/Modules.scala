@@ -560,7 +560,7 @@ object RepoModule {
     RepoModule.polluxTransactorLayer >>>
       JdbcCredentialSchemaRepository.layer >>>
       CredentialSchemaServiceImpl.layer >>>
-      CredentialSchemaControllerImpl.layer
+      (AppModule.manageDIDServiceLayer >>> CredentialSchemaControllerImpl.layer)
 
   val verificationPolicyServiceLayer: TaskLayer[VerificationPolicyController] =
     RepoModule.polluxTransactorLayer >>>

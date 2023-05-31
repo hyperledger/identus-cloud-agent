@@ -1,7 +1,10 @@
 package io.iohk.atala.pollux.credentialschema.controller
 
+import io.iohk.atala.agent.walletapi.model.ManagedDIDState
+import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.api.http.*
 import io.iohk.atala.api.http.model.{CollectionStats, Order, Pagination}
+import io.iohk.atala.castor.core.model.did.{LongFormPrismDID, PrismDID}
 import io.iohk.atala.pollux.core.model.CredentialSchema.FilteredEntries
 import io.iohk.atala.pollux.core.service.CredentialSchemaService
 import io.iohk.atala.pollux.core.service.CredentialSchemaService.Error.*
@@ -18,23 +21,36 @@ import zio.{IO, Task, URLayer, ZIO, ZLayer}
 
 import java.util.UUID
 
-class CredentialSchemaControllerImpl(service: CredentialSchemaService) extends CredentialSchemaController {
+class CredentialSchemaControllerImpl(service: CredentialSchemaService, managedDIDService: ManagedDIDService)
+    extends CredentialSchemaController {
   override def createSchema(
       in: CredentialSchemaInput
   )(implicit
       rc: RequestContext
   ): IO[ErrorResponse, CredentialSchemaResponse] = {
-    service
-      .create(toDomain(in))
-      .map(cs => fromDomain(cs).withBaseUri(rc.request.uri))
+    (for {
+      _ <- validatePrismDID(in.author)
+      result <- service
+        .create(toDomain(in))
+        .map(cs => fromDomain(cs).withBaseUri(rc.request.uri))
+    } yield result).mapError {
+      case e: ErrorResponse                 => e
+      case e: CredentialSchemaService.Error => CredentialSchemaController.domainToHttpError(e)
+    }
   }
 
   override def updateSchema(author: String, id: UUID, in: CredentialSchemaInput)(implicit
       rc: RequestContext
   ): IO[ErrorResponse, CredentialSchemaResponse] = {
-    service
-      .update(id, toDomain(in).copy(author = author))
-      .map(cs => fromDomain(cs).withBaseUri(rc.request.uri))
+    (for {
+      _ <- validatePrismDID(in.author)
+      result <- service
+        .update(id, toDomain(in).copy(author = author))
+        .map(cs => fromDomain(cs).withBaseUri(rc.request.uri))
+    } yield result).mapError {
+      case e: ErrorResponse                 => e
+      case e: CredentialSchemaService.Error => CredentialSchemaController.domainToHttpError(e)
+    }
   }
 
   override def getSchemaByGuid(guid: UUID)(implicit
@@ -79,9 +95,43 @@ class CredentialSchemaControllerImpl(service: CredentialSchemaService) extends C
       stats = CollectionStats(filteredEntries.totalCount, filteredEntries.count)
     } yield CredentialSchemaControllerLogic(rc, pagination, page, stats).result
   }
+
+  private[this] def validatePrismDID(author: String) =
+    for {
+      authorDID <- ZIO
+        .fromEither(PrismDID.fromString(author))
+        .mapError(_ => ErrorResponse.badRequest(detail = Some(s"Unable to parse as a Prism DID: ${author}")))
+      longFormPrismDID <- getLongForm(authorDID, true)
+    } yield longFormPrismDID
+
+  private[this] def getLongForm(
+      did: PrismDID,
+      allowUnpublishedIssuingDID: Boolean = false
+  ): IO[ErrorResponse, LongFormPrismDID] = {
+    for {
+      didState <- managedDIDService
+        .getManagedDIDState(did.asCanonical)
+        .mapError(e =>
+          ErrorResponse.internalServerError(detail =
+            Some(s"Error occurred while getting did from wallet: ${e.toString}")
+          )
+        )
+        .someOrFail(ErrorResponse.notFound(detail = Some(s"Issuer DID does not exist in the wallet: $did")))
+        .flatMap {
+          case s: ManagedDIDState.Published => ZIO.succeed(s)
+          case s =>
+            ZIO.cond(
+              allowUnpublishedIssuingDID,
+              s,
+              ErrorResponse.badRequest(detail = Some(s"Issuer DID must be published: $did"))
+            )
+        }
+      longFormPrismDID = PrismDID.buildLongFormFromOperation(didState.createOperation)
+    } yield longFormPrismDID
+  }
 }
 
 object CredentialSchemaControllerImpl {
-  val layer: URLayer[CredentialSchemaService, CredentialSchemaController] =
-    ZLayer.fromFunction(CredentialSchemaControllerImpl(_))
+  val layer: URLayer[CredentialSchemaService & ManagedDIDService, CredentialSchemaController] =
+    ZLayer.fromFunction(CredentialSchemaControllerImpl(_, _))
 }
