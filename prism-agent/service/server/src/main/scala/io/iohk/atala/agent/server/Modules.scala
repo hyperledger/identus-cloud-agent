@@ -12,7 +12,7 @@ import io.iohk.atala.agent.server.jobs.*
 import io.iohk.atala.agent.server.sql.DbConfig as AgentDbConfig
 import io.iohk.atala.agent.walletapi.crypto.Apollo
 import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError
-import io.iohk.atala.agent.walletapi.service.ManagedDIDService
+import io.iohk.atala.agent.walletapi.service.{ManagedDIDService, ManagedDIDServiceImpl}
 import io.iohk.atala.agent.walletapi.sql.{JdbcDIDNonSecretStorage, JdbcDIDSecretStorage}
 import io.iohk.atala.agent.walletapi.util.SeedResolver
 import io.iohk.atala.castor.controller.{DIDController, DIDRegistrarController, DIDRegistrarServerEndpoints, DIDServerEndpoints}
@@ -422,7 +422,7 @@ object AppModule {
     val secretStorageLayer = (RepoModule.agentTransactorLayer ++ apolloLayer) >>> JdbcDIDSecretStorage.layer
     val nonSecretStorageLayer = RepoModule.agentTransactorLayer >>> JdbcDIDNonSecretStorage.layer
     val seedResolverLayer = apolloLayer >>> SeedResolver.layer()
-    (didOpValidatorLayer ++ didServiceLayer ++ secretStorageLayer ++ nonSecretStorageLayer ++ apolloLayer ++ seedResolverLayer) >>> ManagedDIDService.layer
+    (didOpValidatorLayer ++ didServiceLayer ++ secretStorageLayer ++ nonSecretStorageLayer ++ apolloLayer ++ seedResolverLayer) >>> ManagedDIDServiceImpl.layer
   }
 
   val credentialServiceLayer: RLayer[DidOps & DidAgent & JwtDidResolver & URIDereferencer, CredentialService] =
