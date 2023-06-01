@@ -80,7 +80,7 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSuppor
     (DIDOperationValidator.layer() ++
       testDIDServiceLayer ++
       apolloLayer ++
-      SeedResolver.layer()) >+> ManagedDIDService.layer
+      SeedResolver.layer()) >+> ManagedDIDServiceImpl.layer
 
   private def generateDIDTemplate(
       publicKeys: Seq[DIDPublicKeyTemplate] = Nil,
