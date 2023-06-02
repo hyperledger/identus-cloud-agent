@@ -1,0 +1,1 @@
+ALTER TABLE public.presentation_records ADD CONSTRAINT presentation_records_unique_thid UNIQUE (thid);
