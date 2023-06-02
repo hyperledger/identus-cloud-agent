@@ -159,7 +159,6 @@ object CredentialSchema {
         .attempt(JsonSchemaFactory.builder(JsonSchemaFactory.getInstance(specVersion)).objectMapper(mapper).build)
         .mapError(t => UnexpectedError(t.getMessage))
       jsonSchema <- ZIO.attempt(factory.getSchema(jsonSchemaNode)).mapError(t => UnexpectedError(t.getMessage))
-      _ <- ZIO.log(jsonSchema.toString)
     } yield jsonSchema
   }
 
