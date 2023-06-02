@@ -16,7 +16,12 @@ import io.iohk.atala.connect.sql.repository.Migrations as ConnectMigrations
 import io.iohk.atala.issue.controller.IssueControllerImpl
 import io.iohk.atala.mercury.*
 import io.iohk.atala.pollux.core.service.URIDereferencerError.{ConnectionError, ResourceNotFound, UnexpectedError}
-import io.iohk.atala.pollux.core.service.{CredentialSchemaServiceImpl, URIDereferencer, URIDereferencerError, HttpURIDereferencerImpl}
+import io.iohk.atala.pollux.core.service.{
+  CredentialSchemaServiceImpl,
+  URIDereferencer,
+  URIDereferencerError,
+  HttpURIDereferencerImpl
+}
 import io.iohk.atala.pollux.sql.repository.{JdbcCredentialSchemaRepository, Migrations as PolluxMigrations}
 import io.iohk.atala.presentproof.controller.PresentProofControllerImpl
 import io.iohk.atala.resolvers.{DIDResolver, UniversalDidResolver}
