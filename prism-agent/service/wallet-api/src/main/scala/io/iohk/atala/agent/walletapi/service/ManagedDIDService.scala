@@ -22,7 +22,7 @@ import scala.collection.immutable.ArraySeq
   */
 trait ManagedDIDService {
 
-  private[walletapi] val nonSecretStorage: DIDNonSecretStorage
+  private[walletapi] def nonSecretStorage: DIDNonSecretStorage
 
   def syncManagedDIDState: IO[GetManagedDIDError, Unit]
 
