@@ -140,15 +140,18 @@ object CredentialService {
   ): IO[CredentialServiceError, Seq[Attribute]] = {
     for {
       fields <- ZIO.succeed(claims.asObject.map(_.toMap).getOrElse(Map.empty).toList)
-      res <- ZIO.foreach(fields) { case (k, v) =>
-        ZIO.succeed {
-          val jsonValue = v.noSpaces
-          Attribute(
-            k,
-            java.util.Base64.getUrlEncoder.encodeToString(jsonValue.getBytes(StandardCharsets.UTF_8)),
-            Some("application/json")
-          )
-        }
+      res <- ZIO.foreach(fields) {
+        case (k, v) if v.isString =>
+          ZIO.succeed(Attribute(k, v.asString.get, None))
+        case (k, v) =>
+          ZIO.succeed {
+            val jsonValue = v.noSpaces
+            Attribute(
+              k,
+              java.util.Base64.getUrlEncoder.encodeToString(jsonValue.getBytes(StandardCharsets.UTF_8)),
+              Some("application/json")
+            )
+          }
       }
     } yield res
   }
@@ -159,6 +162,9 @@ object CredentialService {
     for {
       claims <- ZIO.foldLeft(attributes)(JsonObject()) { case (jsonObject, attr) =>
         attr.mimeType match
+          case None =>
+            ZIO.succeed(jsonObject.add(attr.name, attr.value.asJson))
+
           case Some("application/json") =>
             val jsonBytes = java.util.Base64.getUrlDecoder.decode(attr.value.getBytes(StandardCharsets.UTF_8))
             io.circe.parser.parse(new String(jsonBytes, StandardCharsets.UTF_8)) match
@@ -167,9 +173,6 @@ object CredentialService {
 
           case Some(mimeType) =>
             ZIO.fail(UnsupportedVCClaimsMimeType(mimeType))
-
-          case None =>
-            ZIO.succeed(jsonObject.add(attr.name, attr.value.asJson))
       }
     } yield claims
   }

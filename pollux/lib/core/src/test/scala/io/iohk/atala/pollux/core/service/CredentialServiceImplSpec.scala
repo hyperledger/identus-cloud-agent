@@ -80,9 +80,16 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
             assertTrue(record.offerCredentialData.get.body.formats.isEmpty) &&
             assertTrue(
               record.offerCredentialData.get.body.credential_preview.attributes == Seq(
+                Attribute("name", "Alice", None),
                 Attribute(
-                  "name",
-                  Base64.getUrlEncoder.encodeToString("Alice".asJson.noSpaces.getBytes(StandardCharsets.UTF_8)),
+                  "address",
+                  Base64.getUrlEncoder.encodeToString(
+                    io.circe.parser
+                      .parse("""{"street": "Street Name", "number": "12"}""")
+                      .getOrElse(Json.Null)
+                      .noSpaces
+                      .getBytes(StandardCharsets.UTF_8)
+                  ),
                   Some("application/json")
                 )
               )
@@ -578,7 +585,17 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
       })
   }
 
-  val defaultClaims = io.circe.parser.parse("""{"name":"Alice"}""").getOrElse(Json.Null)
+  val defaultClaims = io.circe.parser
+    .parse("""
+      |{
+      | "name":"Alice",
+      | "address": {
+      |   "street": "Street Name",
+      |   "number": "12"
+      | }
+      |}
+      |""".stripMargin)
+    .getOrElse(Json.Null)
 
   extension (svc: CredentialService)
     def createRecord(
