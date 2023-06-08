@@ -9,11 +9,14 @@ object VaultTestContainer {
       imageName: Option[String] = Some("vault:1.13.2"),
       vaultToken: Option[String] = None,
       verbose: Boolean = false
-  ): VaultContainer = {
-    val container = new VaultContainer(
-      dockerImageNameOverride = imageName.map(DockerImageName.parse),
-      vaultToken = vaultToken
-    )
+  ): VaultContainerCustom = {
+    val isOnGithubRunner = sys.env.contains("GITHUB_NETWORK")
+    val container =
+      new VaultContainerCustom(
+        dockerImageNameOverride = imageName.map(DockerImageName.parse),
+        vaultToken = vaultToken,
+        isOnGithubRunner = isOnGithubRunner
+      )
     if (verbose) {
       container.container
         .withLogConsumer((t: OutputFrame) => println(t.getUtf8String))

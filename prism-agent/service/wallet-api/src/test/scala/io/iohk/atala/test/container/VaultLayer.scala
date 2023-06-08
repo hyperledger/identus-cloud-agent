@@ -1,12 +1,12 @@
 package io.iohk.atala.test.container
 
 import zio.*
-import com.dimafeng.testcontainers.VaultContainer
 import io.iohk.atala.shared.test.containers.VaultTestContainer
+import io.iohk.atala.shared.test.containers.VaultContainerCustom
 
 object VaultLayer {
 
-  def vaultLayer(vaultToken: String): ZLayer[Any, Nothing, VaultContainer] = {
+  def vaultLayer(vaultToken: String): ZLayer[Any, Nothing, VaultContainerCustom] = {
     ZLayer.scoped {
       ZIO.acquireRelease(ZIO.attemptBlocking {
         val container = VaultTestContainer.vaultContainer(vaultToken = Some(vaultToken))
