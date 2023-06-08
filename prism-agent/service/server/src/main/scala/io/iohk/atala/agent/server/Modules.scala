@@ -445,8 +445,8 @@ object AppModule {
     (didOpValidatorLayer ++ GrpcModule.layers) >>> DIDServiceImpl.layer
 
   val manageDIDServiceLayer: TaskLayer[ManagedDIDService] = {
-    val vaultClientLayer = VaultKVClientImpl.withToken("http://vault-server:8200", "root")
-    // val jdbcSecretStorageLayer = (RepoModule.agentTransactorLayer ++ apolloLayer) >>> JdbcDIDSecretStorage.layer // TODO: support both types
+    val vaultClientLayer = RepoModule.vaultClientLayer
+    // val jdbcSecretStorageLayer = (RepoModule.agentTransactorLayer ++ apolloLayer) >>> JdbcDIDSecretStorage.layer
     val secretStorageLayer = vaultClientLayer >>> VaultDIDSecretStorage.layer
     val nonSecretStorageLayer = RepoModule.agentTransactorLayer >>> JdbcDIDNonSecretStorage.layer
     val seedResolverLayer =
