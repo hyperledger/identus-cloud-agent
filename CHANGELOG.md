@@ -1,3 +1,15 @@
+# [1.4.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v1.3.0...prism-agent-v1.4.0) (2023-06-01)
+
+
+### Bug Fixes
+
+* **prism-agent:** infinite loop in proof presentation execution ([#540](https://github.com/input-output-hk/atala-prism-building-blocks/issues/540)) ([6a26bb7](https://github.com/input-output-hk/atala-prism-building-blocks/commit/6a26bb78d256bdcd09918cb1e8ee5bfd5cf0dacc))
+
+
+### Features
+
+* **prism-agent:** add support for hierarchical deterministic key with seed ([#534](https://github.com/input-output-hk/atala-prism-building-blocks/issues/534)) ([6129baf](https://github.com/input-output-hk/atala-prism-building-blocks/commit/6129baf1210b68decc4f264bd4a64b4009719956))
+
 # [1.3.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v1.2.0...prism-agent-v1.3.0) (2023-05-23)
 
 
