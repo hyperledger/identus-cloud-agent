@@ -25,7 +25,7 @@ object DIDSecretStorageSpec
     val vaultTestSuite = commonSpec("VaultDIDSecretStorage").provide(vaultKvClientLayer >>> VaultDIDSecretStorage.layer)
 
     suite("DIDSecretStorage")(jdbcTestSuite, vaultTestSuite)
-  }
+  } @@ TestAspect.sequential
 
   private def commonSpec(name: String) = suite(name)(
     test("insert and get the same key for OctetKeyPair") {

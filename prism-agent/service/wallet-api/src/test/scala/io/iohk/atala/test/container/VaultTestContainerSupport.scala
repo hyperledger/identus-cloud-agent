@@ -14,7 +14,11 @@ trait VaultTestContainerSupport {
   protected def vaultKvClientLayer: TaskLayer[VaultKVClient] =
     vaultContainerLayer >>> ZLayer.fromFunction { (container: VaultContainerCustom) =>
       val address = container.getDockerHttpHostAddress()
-      ZLayer.fromZIO(VaultKVClientImpl.fromAddressAndToken(address, TEST_TOKEN))
+      ZLayer.fromZIO(
+        VaultKVClientImpl
+          .fromAddressAndToken(address, TEST_TOKEN)
+          .tap(_ => ZIO.debug(s"VAULT ADDRESS = $address"))
+      )
     }.flatten
 
 }

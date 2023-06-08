@@ -17,6 +17,9 @@ object VaultTestContainer {
         vaultToken = vaultToken,
         isOnGithubRunner = isOnGithubRunner
       )
+    sys.env.get("GITHUB_NETWORK").map { network =>
+      container.container.withNetworkMode(network)
+    }
     if (verbose) {
       container.container
         .withLogConsumer((t: OutputFrame) => println(t.getUtf8String))
