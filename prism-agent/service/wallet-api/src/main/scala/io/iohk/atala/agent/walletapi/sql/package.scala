@@ -56,13 +56,9 @@ package object sql {
     "PRISM_DID_KEY_MODE",
     {
       case "HD" => KeyManagementMode.HD
-      // case "RANDOM" => KeyManagementMode.Random
       case s => throw InvalidEnum[KeyManagementMode](s)
     },
-    { case KeyManagementMode.HD =>
-      "HD"
-    // case KeyManagementMode.Random => "RANDOM"
-    }
+    { case KeyManagementMode.HD => "HD" }
   )
 
   given Meta[PublicationStatusType] = pgEnumString(

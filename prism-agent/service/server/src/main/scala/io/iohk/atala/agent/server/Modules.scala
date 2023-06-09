@@ -446,7 +446,6 @@ object AppModule {
 
   val manageDIDServiceLayer: TaskLayer[ManagedDIDService] = {
     val vaultClientLayer = RepoModule.vaultClientLayer
-    // val jdbcSecretStorageLayer = (RepoModule.agentTransactorLayer ++ apolloLayer) >>> JdbcDIDSecretStorage.layer
     val secretStorageLayer = vaultClientLayer >>> VaultDIDSecretStorage.layer
     val nonSecretStorageLayer = RepoModule.agentTransactorLayer >>> JdbcDIDNonSecretStorage.layer
     val seedResolverLayer =
