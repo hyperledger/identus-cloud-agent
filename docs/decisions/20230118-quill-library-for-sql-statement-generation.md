@@ -1,6 +1,6 @@
 # Quill library for SQL statement generation and validation
 
-- Status: draft [ accepted | deprecated | superseded by [xxx](yyyymmdd-xxx.md)]
+- Status: accepted
 - Deciders: Yurii Shynbuiev, Fabio Pinheiro, Benjamin Voiturier 
 - Date: [2023-01-17] 
 - Tags: DAL, SQL, Postrgresql, Typesafe
