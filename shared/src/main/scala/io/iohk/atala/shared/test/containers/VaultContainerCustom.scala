@@ -15,7 +15,7 @@ class VaultContainerCustom(
 
   private val vaultContainer: JavaVaultContainer[_] = new JavaVaultContainer(dockerImageNameOverride) {
     override def getHost: String = {
-      if (isOnGithubRunner) super.getContainerId()
+      if (isOnGithubRunner) super.getContainerId().take(12)
       else super.getHost()
     }
     override def getMappedPort(originalPort: Int): Integer = {
