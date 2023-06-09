@@ -64,6 +64,10 @@ To do this, make a `POST` request to the [`/issue-credentials/credential-offers`
 1. `claims`: The data stored in a verifiable credential. Claims get expressed in a key-value format. The claims contain the data that the issuer attests to, such as name, address, date of birth, and so on.
 2. `issuingDID`: The DID referring to the issuer to issue this credential from
 3. `connectionId`: The unique ID of the connection between the holder and the issuer to offer this credential over.
+4. `schemaId`: An optional field that, if specified, contains a valid URL to an existing VC schema. 
+The PRISM agent must be able to dereference the specified URL (i.e. fetch the VC schema content from it), in order to validate the provided claims against it.
+When not specified, the claims fields is not validated and can be any valid JSON object.
+Please refer to the [Create VC schema](../schemas/create.md) doc for details on how to create a VC schema.     
 
 :::note
 
@@ -82,12 +86,16 @@ curl -X 'POST' \
     -H "apiKey: $API_KEY" \
     -d '{
           "claims": {
-            "firstname": "Alice",
-            "lastname": "Wonderland",
-            "birthdate": "01/01/2000"
+            "emailAddress": "alice@wonderland.com",
+            "givenName": "Alice",
+            "familyName": "Wonderland",
+            "dateOfIssuance": "2020-11-13T20:20:39+00:00",
+            "drivingLicenseID": "12345",
+            "drivingClass": 3
           },
           "issuingDID": "did:prism:9f847f8bbb66c112f71d08ab39930d468ccbfe1e0e1d002be53d46c431212c26",
-          "connectionId": "9d075518-f97e-4f11-9d10-d7348a7a0fda"
+          "connectionId": "9d075518-f97e-4f11-9d10-d7348a7a0fda",
+          "schemaId": "http://localhost:8080/prism-agent/schema-registry/schemas/3f86a73f-5b78-39c7-af77-0c16123fa9c2"
         }'
 ```
 

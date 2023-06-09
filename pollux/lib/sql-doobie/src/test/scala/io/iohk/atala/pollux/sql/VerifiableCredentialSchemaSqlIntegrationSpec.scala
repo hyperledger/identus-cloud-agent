@@ -16,7 +16,6 @@ import io.getquill.idiom.*
 import io.getquill.util.Messages.{QuatTrace, TraceType, traceQuats}
 import io.iohk.atala.pollux.sql.model.VerifiableCredentialSchema
 import io.iohk.atala.pollux.sql.model.VerifiableCredentialSchema.sql
-import io.iohk.atala.pollux.sql.model.VerifiableCredentialSchema
 import io.iohk.atala.test.container.MigrationAspects.*
 import io.iohk.atala.test.container.PostgresLayer.*
 import zio.*
@@ -61,6 +60,8 @@ object VerifiableCredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault {
     val schemaAttribute =
       Gen.fromIterable(Vocabulary.verifiableCredentialClaims)
     val schemaAttributes = Gen.setOfBounded(1, 4)(schemaAttribute).map(_.toList)
+    val schemaAuthor =
+      Gen.int(1000000, 9999999).map(i => s"did:prism:4fb06243213500578f59588de3e1dd9b266ec1b61e43b0ff86ad0712f$i")
     val schemaAuthored = Gen.offsetDateTime
     val schemaTag: Gen[Any, String] = Gen.alphaNumericStringBounded(3, 5)
     val schemaTags: Gen[Any, List[String]] =
@@ -68,19 +69,20 @@ object VerifiableCredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault {
 
     val schema: Gen[Any, VerifiableCredentialSchema] = for {
       name <- schemaName
-      id <- schemaId
       version <- schemaVersion
       description <- schemaDescription
       attributes <- schemaAttributes
       tags <- schemaTags
+      author <- schemaAuthor
       authored = OffsetDateTime.now(ZoneOffset.UTC)
+      id = UUID.randomUUID()
     } yield VerifiableCredentialSchema(
       id = id,
       name = name,
       version = version,
       description = Some(description),
       attributes = attributes,
-      author = "Prism Agent",
+      author = author,
       authored = authored,
       tags = tags
     )

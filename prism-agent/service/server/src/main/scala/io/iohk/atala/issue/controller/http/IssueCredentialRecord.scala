@@ -2,13 +2,15 @@ package io.iohk.atala.issue.controller.http
 
 import io.iohk.atala.api.http.Annotation
 import io.iohk.atala.issue.controller.http.IssueCredentialRecord.annotations
+import io.iohk.atala.mercury.model.{AttachmentDescriptor, Base64}
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord as PolluxIssueCredentialRecord
-import sttp.tapir.Schema.annotations.{description, encodedExample}
-import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
-import io.iohk.atala.mercury.model.AttachmentDescriptor
-import io.iohk.atala.mercury.model.Base64
 import sttp.tapir.Schema
+import sttp.tapir.Schema.annotations.{description, encodedExample}
+import sttp.tapir.json.zio.schemaForZioJsonValue
+import zio.json.*
+import zio.json.ast.Json
 
+import java.nio.charset.StandardCharsets
 import java.time.{OffsetDateTime, ZoneOffset}
 
 /** A class to represent an an outgoing response for a created credential offer.
@@ -48,7 +50,7 @@ final case class IssueCredentialRecord(
     validityPeriod: Option[Double] = None,
     @description(annotations.claims.description)
     @encodedExample(annotations.claims.example)
-    claims: Map[String, String],
+    claims: zio.json.ast.Json,
     @description(annotations.automaticIssuance.description)
     @encodedExample(annotations.automaticIssuance.example)
     automaticIssuance: Option[Boolean] = None,
@@ -85,8 +87,20 @@ object IssueCredentialRecord {
       role = domain.role.toString,
       subjectId = domain.subjectId,
       claims = domain.offerCredentialData
-        .map(offer => offer.body.credential_preview.attributes.map(attr => (attr.name -> attr.value)).toMap)
-        .getOrElse(Map.empty),
+        .map(offer =>
+          offer.body.credential_preview.attributes
+            .foldLeft(Json.Obj()) { case (jsObject, attr) =>
+              val jsonValue = attr.mimeType match
+                case Some("application/json") =>
+                  val jsonString =
+                    String(java.util.Base64.getUrlDecoder.decode(attr.value.getBytes(StandardCharsets.UTF_8)))
+                  jsonString.fromJson[Json].getOrElse(Json.Str(s"Unsupported VC claims value: $jsonString"))
+                case Some(mime) => Json.Str(s"Unsupported 'mime-type': $mime")
+                case None       => Json.Str(attr.value)
+              jsObject.copy(fields = jsObject.fields.appended(attr.name -> jsonValue))
+            }
+        )
+        .getOrElse(Json.Null),
       validityPeriod = domain.validityPeriod,
       automaticIssuance = domain.automaticIssuance,
       protocolState = domain.protocolState.toString,

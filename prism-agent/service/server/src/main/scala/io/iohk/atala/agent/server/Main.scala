@@ -15,7 +15,13 @@ import io.iohk.atala.connect.controller.ConnectionControllerImpl
 import io.iohk.atala.connect.sql.repository.Migrations as ConnectMigrations
 import io.iohk.atala.issue.controller.IssueControllerImpl
 import io.iohk.atala.mercury.*
-import io.iohk.atala.pollux.core.service.CredentialSchemaServiceImpl
+import io.iohk.atala.pollux.core.service.URIDereferencerError.{ConnectionError, ResourceNotFound, UnexpectedError}
+import io.iohk.atala.pollux.core.service.{
+  CredentialSchemaServiceImpl,
+  URIDereferencer,
+  URIDereferencerError,
+  HttpURIDereferencerImpl
+}
 import io.iohk.atala.pollux.sql.repository.{JdbcCredentialSchemaRepository, Migrations as PolluxMigrations}
 import io.iohk.atala.presentproof.controller.PresentProofControllerImpl
 import io.iohk.atala.resolvers.{DIDResolver, UniversalDidResolver}
@@ -31,6 +37,7 @@ import zio.metrics.connectors.prometheus.PrometheusPublisher
 import zio.metrics.connectors.{MetricsConfig, prometheus}
 import zio.metrics.jvm.DefaultJvmMetrics
 
+import java.net.URI
 import java.security.Security
 
 object MainApp extends ZIOAppDefault {
@@ -142,6 +149,7 @@ object MainApp extends ZIOAppDefault {
         IssueControllerImpl.layer,
         DIDRegistrarControllerImpl.layer,
         PresentProofControllerImpl.layer,
+        HttpURIDereferencerImpl.layer,
         prometheus.prometheusLayer,
         prometheus.publisherLayer,
         ZLayer.succeed(MetricsConfig(5.seconds)),

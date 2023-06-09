@@ -440,7 +440,7 @@ object AppModule {
     (didOpValidatorLayer ++ didServiceLayer ++ secretStorageLayer ++ nonSecretStorageLayer ++ apolloLayer ++ seedResolverLayer) >>> ManagedDIDServiceImpl.layer
   }
 
-  val credentialServiceLayer: RLayer[DidOps & DidAgent & JwtDidResolver, CredentialService] =
+  val credentialServiceLayer: RLayer[DidOps & DidAgent & JwtDidResolver & URIDereferencer, CredentialService] =
     (GrpcModule.layers ++ RepoModule.credentialRepoLayer) >>> CredentialServiceImpl.layer
 
   def presentationServiceLayer =
@@ -577,7 +577,7 @@ object RepoModule {
     RepoModule.polluxTransactorLayer >>>
       JdbcCredentialSchemaRepository.layer >>>
       CredentialSchemaServiceImpl.layer >>>
-      CredentialSchemaControllerImpl.layer
+      (AppModule.manageDIDServiceLayer >>> CredentialSchemaControllerImpl.layer)
 
   val verificationPolicyServiceLayer: TaskLayer[VerificationPolicyController] =
     RepoModule.polluxTransactorLayer >>>

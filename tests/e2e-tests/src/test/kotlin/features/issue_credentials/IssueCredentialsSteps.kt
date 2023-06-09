@@ -22,7 +22,7 @@ class IssueCredentialsSteps {
             issuer.recall("shortFormDid") else issuer.recall("longFormDid")
 
         val newCredential = Credential(
-            schemaId = "schema:1234",
+            schemaId = null,
             validityPeriod = 3600,
             automaticIssuance = false,
             awaitConfirmation = false,

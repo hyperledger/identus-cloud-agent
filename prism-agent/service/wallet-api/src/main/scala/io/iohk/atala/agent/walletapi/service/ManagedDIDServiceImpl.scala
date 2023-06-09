@@ -25,7 +25,7 @@ final class ManagedDIDServiceImpl private[walletapi] (
     didService: DIDService,
     didOpValidator: DIDOperationValidator,
     private[walletapi] val secretStorage: DIDSecretStorage,
-    private[walletapi] val nonSecretStorage: DIDNonSecretStorage,
+    override private[walletapi] val nonSecretStorage: DIDNonSecretStorage,
     apollo: Apollo,
     seed: Array[Byte]
 ) extends ManagedDIDService {

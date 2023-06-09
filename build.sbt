@@ -37,13 +37,14 @@ lazy val V = new {
   val munitZio = "0.1.1"
 
   // https://mvnrepository.com/artifact/dev.zio/zio
-  val zio = "2.0.4"
+  val zio = "2.0.14"
   val zioConfig = "3.0.2"
   val zioLogging = "2.0.0"
   val zioJson = "0.3.0"
   val zioHttp = "0.0.3"
   val zioCatsInterop = "3.3.0"
   val zioMetrics = "2.0.6"
+  val zioMock = "1.0.0-RC10"
 
   // https://mvnrepository.com/artifact/io.circe/circe-core
   val circe = "0.14.2"
@@ -70,6 +71,8 @@ lazy val V = new {
   val zioPreludeVersion = "1.0.0-RC16"
 
   val bouncyCastle = "1.70"
+
+  val jsonSchemaValidator = "1.0.83"
 }
 
 /** Dependencies */
@@ -116,6 +119,7 @@ lazy val D = new {
   val zioTest: ModuleID = "dev.zio" %% "zio-test" % V.zio % Test
   val zioTestSbt: ModuleID = "dev.zio" %% "zio-test-sbt" % V.zio % Test
   val zioTestMagnolia: ModuleID = "dev.zio" %% "zio-test-magnolia" % V.zio % Test
+  val zioMock: ModuleID = "dev.zio" %% "zio-mock" % V.zioMock
 
   // LIST of Dependencies
   val doobieDependencies: Seq[ModuleID] =
@@ -207,6 +211,7 @@ lazy val D_Pollux = new {
   val baseDependencies: Seq[ModuleID] = Seq(
     D.zio,
     D.zioJson,
+    D.zioHttp,
     D.zioTest,
     D.zioTestSbt,
     D.zioTestMagnolia,
@@ -249,6 +254,8 @@ lazy val D_Pollux_VC_JWT = new {
 
   val nimbusJoseJwt = "com.nimbusds" % "nimbus-jose-jwt" % "10.0.0-preview"
 
+  val networkntJsonSchemaValidator = "com.networknt" % "json-schema-validator" % V.jsonSchemaValidator
+
   val zioTest = "dev.zio" %% "zio-test" % V.zio % Test
   val zioTestSbt = "dev.zio" %% "zio-test-sbt" % V.zio % Test
   val zioTestMagnolia = "dev.zio" %% "zio-test-magnolia" % V.zio % Test
@@ -259,7 +266,7 @@ lazy val D_Pollux_VC_JWT = new {
   val zioDependencies: Seq[ModuleID] = Seq(zio, zioPrelude, zioTest, zioTestSbt, zioTestMagnolia)
   val circeDependencies: Seq[ModuleID] = Seq(D.circeCore, D.circeGeneric, D.circeParser)
   val baseDependencies: Seq[ModuleID] =
-    circeDependencies ++ zioDependencies :+ jwtCirce :+ circeJsonSchema :+ nimbusJoseJwt :+ scalaTest
+    circeDependencies ++ zioDependencies :+ jwtCirce :+ circeJsonSchema :+ networkntJsonSchemaValidator :+ nimbusJoseJwt :+ scalaTest
 
   // Project Dependencies
   lazy val polluxVcJwtDependencies: Seq[ModuleID] = baseDependencies
@@ -329,10 +336,10 @@ lazy val D_PrismAgent = new {
 
   // Project Dependencies
   lazy val keyManagementDependencies: Seq[ModuleID] =
-    baseDependencies ++ bouncyDependencies ++ D.doobieDependencies ++ Seq(D.zioCatsInterop)
+    baseDependencies ++ bouncyDependencies ++ D.doobieDependencies ++ Seq(D.zioCatsInterop, D.zioMock)
 
   lazy val serverDependencies: Seq[ModuleID] =
-    baseDependencies ++ tapirDependencies ++ postgresDependencies
+    baseDependencies ++ tapirDependencies ++ postgresDependencies ++ Seq(D.zioMock)
 }
 
 publish / skip := true
