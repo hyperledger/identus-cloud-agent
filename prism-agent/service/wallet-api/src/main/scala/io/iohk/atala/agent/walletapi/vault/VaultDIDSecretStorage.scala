@@ -9,7 +9,7 @@ import scala.util.Failure
 
 class VaultDIDSecretStorage(vaultKV: VaultKVClient) extends DIDSecretStorage {
 
-  private val WALLET_PATH_PREFIX = "secret/my-wallet" // TODO: use actual value
+  private val WALLET_PATH_PREFIX = "secret/default" // static <tenant-id> in signle-tenant mode
 
   override def insertKey(did: DidId, keyId: String, keyPair: OctetKeyPair): Task[Int] = {
     val path = s"$WALLET_PATH_PREFIX/peer-dids/${did.value}/$keyId"

@@ -48,12 +48,7 @@ private class SeedResolverImpl(apollo: Apollo, isDevMode: Boolean) extends SeedR
         case Some(seed) => ZIO.succeed(seed)
         case None       => seedRand
       }
-      .flatMap { seed =>
-        validateSeed(seed) match {
-          case Right(_)  => ZIO.succeed(seed)
-          case Left(msg) => ZIO.fail(Exception(msg))
-        }
-      }
+      .flatMap(seed => ZIO.fromEither(validateSeed(seed)).mapError(Exception(_)).as(seed))
   }
 
   private def validateSeed(seed: Array[Byte]): Either[String, Unit] = {
