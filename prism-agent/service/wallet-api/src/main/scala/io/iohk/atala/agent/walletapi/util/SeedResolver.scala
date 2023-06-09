@@ -43,10 +43,22 @@ private class SeedResolverImpl(apollo: Apollo, isDevMode: Boolean) extends SeedR
           .when(isDevMode)
       } yield seed
 
-    seedEnv.flatMap {
-      case Some(seed) => ZIO.succeed(seed)
-      case None       => seedRand
-    }
+    seedEnv
+      .flatMap {
+        case Some(seed) => ZIO.succeed(seed)
+        case None       => seedRand
+      }
+      .flatMap { seed =>
+        validateSeed(seed) match {
+          case Right(_)  => ZIO.succeed(seed)
+          case Left(msg) => ZIO.fail(Exception(msg))
+        }
+      }
+  }
+
+  private def validateSeed(seed: Array[Byte]): Either[String, Unit] = {
+    if (seed.length != 64) Left(s"The seed must be 64 bytes- (got ${seed.length} bytes)")
+    else Right(())
   }
 
 }

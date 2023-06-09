@@ -9,7 +9,7 @@ trait VaultTestContainerSupport {
 
   private val TEST_TOKEN = "root"
 
-  protected val vaultContainerLayer: ULayer[VaultContainerCustom] = VaultLayer.vaultLayer(vaultToken = TEST_TOKEN)
+  protected val vaultContainerLayer: TaskLayer[VaultContainerCustom] = VaultLayer.vaultLayer(vaultToken = TEST_TOKEN)
 
   protected def vaultKvClientLayer: TaskLayer[VaultKVClient] =
     vaultContainerLayer >>> ZLayer.fromFunction { (container: VaultContainerCustom) =>
@@ -17,7 +17,6 @@ trait VaultTestContainerSupport {
       ZLayer.fromZIO(
         VaultKVClientImpl
           .fromAddressAndToken(address, TEST_TOKEN)
-          .tap(_ => ZIO.debug(s"VAULT ADDRESS = $address"))
       )
     }.flatten
 

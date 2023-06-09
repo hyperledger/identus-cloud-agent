@@ -6,14 +6,17 @@ import io.iohk.atala.shared.test.containers.VaultContainerCustom
 
 object VaultLayer {
 
-  def vaultLayer(vaultToken: String): ZLayer[Any, Nothing, VaultContainerCustom] = {
-    ZLayer.scoped {
-      ZIO.acquireRelease(ZIO.attemptBlocking {
-        val container = VaultTestContainer.vaultContainer(vaultToken = Some(vaultToken))
-        container.start()
-        container
-      }.orDie)(container => ZIO.attemptBlocking(container.stop()).orDie)
-    }
+  def vaultLayer(vaultToken: String): TaskLayer[VaultContainerCustom] = {
+    ZLayer
+      .scoped {
+        ZIO
+          .acquireRelease(ZIO.attemptBlocking {
+            VaultTestContainer.vaultContainer(vaultToken = Some(vaultToken))
+          })(container => ZIO.attemptBlocking(container.stop()).orDie)
+          // Start outside the aquireRelease to as this might fail
+          // to ensure contianer.stop() is added to the finalizer
+          .tap(container => ZIO.attemptBlocking(container.start()))
+      }
   }
 
 }

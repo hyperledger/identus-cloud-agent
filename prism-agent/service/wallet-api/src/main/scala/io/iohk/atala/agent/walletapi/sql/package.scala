@@ -56,7 +56,7 @@ package object sql {
     "PRISM_DID_KEY_MODE",
     {
       case "HD" => KeyManagementMode.HD
-      case s => throw InvalidEnum[KeyManagementMode](s)
+      case s    => throw InvalidEnum[KeyManagementMode](s)
     },
     { case KeyManagementMode.HD => "HD" }
   )
