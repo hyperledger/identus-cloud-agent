@@ -6,6 +6,7 @@ import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.utility.DockerImageName
 import org.testcontainers.vault
 
+/** See PostgreSQLContainerCustom for explanation */
 class VaultContainerCustom(
     dockerImageNameOverride: DockerImageName,
     vaultToken: Option[String] = None,

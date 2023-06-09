@@ -13,7 +13,7 @@ object VaultLayer {
           .acquireRelease(ZIO.attemptBlocking {
             VaultTestContainer.vaultContainer(vaultToken = Some(vaultToken))
           })(container => ZIO.attemptBlocking(container.stop()).orDie)
-          // Start outside the aquireRelease to as this might fail
+          // Start the container outside the aquireRelease as this might fail
           // to ensure contianer.stop() is added to the finalizer
           .tap(container => ZIO.attemptBlocking(container.start()))
       }
