@@ -13,7 +13,7 @@ trait VaultTestContainerSupport {
 
   protected def vaultKvClientLayer: TaskLayer[VaultKVClient] =
     vaultContainerLayer >>> ZLayer.fromFunction { (container: VaultContainerCustom) =>
-      val address = container.getDockerHttpHostAddress()
+      val address = container.container.getHttpHostAddress()
       ZLayer.fromZIO(
         VaultKVClientImpl
           .fromAddressAndToken(address, TEST_TOKEN)
