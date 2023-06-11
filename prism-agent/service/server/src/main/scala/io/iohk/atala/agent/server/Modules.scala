@@ -10,9 +10,11 @@ import io.iohk.atala.agent.server.config.{AgentConfig, AppConfig}
 import io.iohk.atala.agent.server.http.{ZHttp4sBlazeServer, ZHttpEndpoints}
 import io.iohk.atala.agent.server.jobs.*
 import io.iohk.atala.agent.server.sql.DbConfig as AgentDbConfig
+import io.iohk.atala.agent.walletapi.crypto.Apollo
 import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError
-import io.iohk.atala.agent.walletapi.service.ManagedDIDService
+import io.iohk.atala.agent.walletapi.service.{ManagedDIDService, ManagedDIDServiceImpl}
 import io.iohk.atala.agent.walletapi.sql.{JdbcDIDNonSecretStorage, JdbcDIDSecretStorage}
+import io.iohk.atala.agent.walletapi.util.SeedResolver
 import io.iohk.atala.castor.controller.{
   DIDController,
   DIDRegistrarController,
@@ -58,6 +60,7 @@ import io.iohk.atala.presentproof.controller.{
 }
 import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc
 import io.iohk.atala.resolvers.{DIDResolver, UniversalDidResolver}
+import io.iohk.atala.system.controller.{SystemController, SystemServerEndpoints}
 import org.didcommx.didcomm.DIDComm
 import org.didcommx.didcomm.model.UnpackParams
 import org.didcommx.didcomm.secret.{Secret, SecretResolver}
@@ -71,15 +74,6 @@ import zio.stream.ZStream
 
 import java.io.IOException
 import java.util.concurrent.Executors
-import io.iohk.atala.mercury.protocol.trustping.TrustPing
-import io.iohk.atala.castor.controller.{
-  DIDController,
-  DIDRegistrarController,
-  DIDRegistrarServerEndpoints,
-  DIDServerEndpoints
-}
-import io.iohk.atala.agent.walletapi.crypto.Apollo
-import io.iohk.atala.system.controller.{SystemController, SystemServerEndpoints}
 
 object Modules {
 
@@ -442,10 +436,11 @@ object AppModule {
   val manageDIDServiceLayer: TaskLayer[ManagedDIDService] = {
     val secretStorageLayer = (RepoModule.agentTransactorLayer ++ apolloLayer) >>> JdbcDIDSecretStorage.layer
     val nonSecretStorageLayer = RepoModule.agentTransactorLayer >>> JdbcDIDNonSecretStorage.layer
-    (didOpValidatorLayer ++ didServiceLayer ++ secretStorageLayer ++ nonSecretStorageLayer ++ apolloLayer) >>> ManagedDIDService.layer
+    val seedResolverLayer = apolloLayer >>> SeedResolver.layer()
+    (didOpValidatorLayer ++ didServiceLayer ++ secretStorageLayer ++ nonSecretStorageLayer ++ apolloLayer ++ seedResolverLayer) >>> ManagedDIDServiceImpl.layer
   }
 
-  val credentialServiceLayer: RLayer[DidOps & DidAgent & JwtDidResolver, CredentialService] =
+  val credentialServiceLayer: RLayer[DidOps & DidAgent & JwtDidResolver & URIDereferencer, CredentialService] =
     (GrpcModule.layers ++ RepoModule.credentialRepoLayer) >>> CredentialServiceImpl.layer
 
   def presentationServiceLayer =
@@ -582,7 +577,7 @@ object RepoModule {
     RepoModule.polluxTransactorLayer >>>
       JdbcCredentialSchemaRepository.layer >>>
       CredentialSchemaServiceImpl.layer >>>
-      CredentialSchemaControllerImpl.layer
+      (AppModule.manageDIDServiceLayer >>> CredentialSchemaControllerImpl.layer)
 
   val verificationPolicyServiceLayer: TaskLayer[VerificationPolicyController] =
     RepoModule.polluxTransactorLayer >>>

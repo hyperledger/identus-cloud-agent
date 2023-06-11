@@ -7,7 +7,7 @@ data class Credential(
     var protocolState: String = "",
     var recordId: String = "",
     var role: String = "",
-    var schemaId: String = "",
+    var schemaId: String? = "",
     var subjectId: String = "",
     var updatedAt: String = "",
     var validityPeriod: Int = 0,

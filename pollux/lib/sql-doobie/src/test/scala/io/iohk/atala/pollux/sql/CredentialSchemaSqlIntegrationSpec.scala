@@ -14,23 +14,22 @@ import doobie.util.transactor.Transactor
 import io.getquill.*
 import io.getquill.idiom.*
 import io.getquill.util.Messages.{QuatTrace, TraceType, traceQuats}
+import io.iohk.atala.pollux.sql.model.db.{CredentialSchema, CredentialSchemaSql}
 import io.iohk.atala.test.container.MigrationAspects.*
 import io.iohk.atala.test.container.PostgresLayer.*
 import zio.*
 import zio.interop.catz.*
 import zio.interop.catz.implicits.*
-import zio.test.*
+import zio.json.ast.Json
 import zio.test.Assertion.*
 import zio.test.TestAspect.*
-import zio.json.ast.Json
+import zio.test.{Gen, *}
 
 import java.time.{OffsetDateTime, ZoneOffset, ZonedDateTime}
 import java.util.concurrent.TimeUnit
 import java.util.{UUID, concurrent}
 import scala.collection.mutable
 import scala.io.Source
-
-import io.iohk.atala.pollux.sql.model.db.{CredentialSchemaSql, CredentialSchema}
 
 object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault {
 
@@ -67,7 +66,8 @@ object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault {
     val schemaAttributes = Gen.setOfBounded(1, 4)(schemaAttribute).map(_.toList)
     val jsonSchema =
       schemaAttributes.map(attributes => Json.Arr(attributes.map(Json.Str(_)): _*))
-
+    val schemaAuthor =
+      Gen.int(1000000, 9999999).map(i => s"did:prism:4fb06243213500578f59588de3e1dd9b266ec1b61e43b0ff86ad0712f$i")
     val schemaAuthored = Gen.offsetDateTime
 
     val schemaTag: Gen[Any, String] = Gen.alphaNumericStringBounded(3, 5)
@@ -76,13 +76,14 @@ object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault {
 
     val schema: Gen[Any, CredentialSchema] = for {
       name <- schemaName
-      id <- schemaId
       version <- schemaVersion
       description <- schemaDescription
       attributes <- schemaAttributes
       schema <- jsonSchema
       tags <- schemaTags
+      author <- schemaAuthor
       authored = OffsetDateTime.now(ZoneOffset.UTC)
+      id = UUID.randomUUID()
     } yield CredentialSchema(
       guid = id,
       id = id,
@@ -91,7 +92,7 @@ object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault {
       description = description,
       schema = JsonValue(schema),
       `type` = "AnonCreds",
-      author = "Prism Agent",
+      author = author,
       authored = authored,
       tags = tags
     )

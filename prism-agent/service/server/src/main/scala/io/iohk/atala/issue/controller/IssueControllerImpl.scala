@@ -37,13 +37,16 @@ class IssueControllerImpl(
     val result: IO[ConnectionServiceError | CredentialServiceError | ErrorResponse, IssueCredentialRecord] = for {
       didIdPair <- getPairwiseDIDs(request.connectionId)
       issuingDID <- extractPrismDIDFromString(request.issuingDID)
+      jsonClaims <- ZIO
+        .fromEither(io.circe.parser.parse(request.claims.toString()))
+        .mapError(e => ErrorResponse.badRequest(detail = Some(e.getMessage)))
       outcome <- credentialService
         .createIssueCredentialRecord(
           pairwiseIssuerDID = didIdPair.myDID,
           pairwiseHolderDID = didIdPair.theirDid,
           thid = DidCommID(),
-          schemaId = None,
-          claims = request.claims,
+          maybeSchemaId = request.schemaId,
+          claims = jsonClaims,
           validityPeriod = request.validityPeriod,
           automaticIssuance = request.automaticIssuance.orElse(Some(true)),
           awaitConfirmation = Some(false),
@@ -59,7 +62,7 @@ class IssueControllerImpl(
       rc: RequestContext
   ): IO[ErrorResponse, IssueCredentialRecordPage] = {
     val result = for {
-      records <- credentialService.getIssueCredentialRecords()
+      records <- credentialService.getIssueCredentialRecords
       outcome = thid match
         case None        => records
         case Some(value) => records.filter(_.thid.value == value) // this logic should be moved to the DB

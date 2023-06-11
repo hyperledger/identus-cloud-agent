@@ -51,59 +51,55 @@ The JSON Schema changes must be defined as follows:
 
 ```json
 {
-  "$id": "driving-license-1.1.0",
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "description": "Driving License",
-  "type": "object",
-  "properties": {
-    "credentialSubject": {
-      "type": "object",
-      "properties": {
-        "emailAddress": {
-          "type": "string",
-          "format": "email"
-        },
-        "givenName": {
-          "type": "string"
-        },
-        "familyName": {
-          "type": "string"
-        },
-        "dateOfIssuance": {
-          "type": "datetime"
-        },
-        "drivingLicenseID": {
-          "type": "string"
-        },
-        "drivingClass": {
-          "type": "integer"
-        },
-        "bloodType": {
-          "type": "string",
-          "pattern": "^(A|B|AB|O)[+-]?$"
-        },
-        "donorStatus": {
-          "type": "string",
-          "enum": [
+   "$id": "https://example.com/driving-license-1.1.0",
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "description": "Driving License",
+   "type": "object",
+   "properties": {
+      "emailAddress": {
+         "type": "string",
+         "format": "email"
+      },
+      "givenName": {
+         "type": "string"
+      },
+      "familyName": {
+         "type": "string"
+      },
+      "dateOfIssuance": {
+         "type": "string",
+         "format": "date-time"
+      },
+      "drivingLicenseID": {
+         "type": "string"
+      },
+      "drivingClass": {
+         "type": "integer"
+      },
+      "bloodType": {
+         "type": "string",
+         "pattern": "^(A|B|AB|O)[+-]?$"
+      },
+      "donorStatus": {
+         "type": "string",
+         "enum": [
             "true",
             "false",
             "yes",
             "no"
-          ]
-        },
-        "required": [
-          "emailAddress",
-          "familyName",
-          "dateOfIssuance",
-          "drivingLicenseID",
-          "drivingClass",
-          "bloodType",
-          "donorStatus"
-        ],
-        "additionalProperties": true
+         ]
       }
-    }
-  }
+   },
+   "required": [
+      "emailAddress",
+      "familyName",
+      "dateOfIssuance",
+      "drivingLicenseID",
+      "drivingClass",
+      "bloodType",
+      "donorStatus"
+   ],
+   "additionalProperties": true
 }
 ```
 
@@ -113,69 +109,69 @@ The JSON Schema changes must be defined as follows:
    OpenAPI specification.
 
 2. In the client, create a new PUT request to the `/prism-agent/schema-registry/schemas/{id}` endpoint, where `id` is a
-   locally unique credential schema id.
-   In the request body, create a JSON object:
+   locally unique credential schema id, formatted as a URL.
 
+Note that the value of the `author` field must match the short form of a PRISM DID that has been created using the same agent. An unpublished DID is sufficient. Please refer to the [Create DID](../dids/create.md) documentation page for more details on how to create a PRISM DID. 
+
+In the request body, create a JSON object:
+   
 ```json
 {
   "name": "driving-license",
   "version": "1.1.0",
   "description": "Driving License Schema",
   "type": "https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json",
+  "author": "did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff",
   "schema": {
-    "$id": "driving-license-1.1.0",
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "description": "Driving License",
-    "type": "object",
-    "properties": {
-      "credentialSubject": {
-        "type": "object",
-        "properties": {
-          "emailAddress": {
-            "type": "string",
-            "format": "email"
-          },
-          "givenName": {
-            "type": "string"
-          },
-          "familyName": {
-            "type": "string"
-          },
-          "dateOfIssuance": {
-            "type": "datetime"
-          },
-          "drivingLicenseID": {
-            "type": "string"
-          },
-          "drivingClass": {
-            "type": "integer"
-          },
-          "bloodType": {
-            "type": "string",
-            "pattern": "^(A|B|AB|O)[+-]?$"
-          },
-          "donorStatus": {
-            "type": "string",
-            "enum": [
+     "$id": "https://example.com/driving-license-1.1.0",
+     "$schema": "https://json-schema.org/draft/2020-12/schema",
+     "description": "Driving License",
+     "type": "object",
+     "properties": {
+        "emailAddress": {
+           "type": "string",
+           "format": "email"
+        },
+        "givenName": {
+           "type": "string"
+        },
+        "familyName": {
+           "type": "string"
+        },
+        "dateOfIssuance": {
+           "type": "string",
+           "format": "date-time"
+        },
+        "drivingLicenseID": {
+           "type": "string"
+        },
+        "drivingClass": {
+           "type": "integer"
+        },
+        "bloodType": {
+           "type": "string",
+           "pattern": "^(A|B|AB|O)[+-]?$"
+        },
+        "donorStatus": {
+           "type": "string",
+           "enum": [
               "true",
               "false",
               "yes",
               "no"
-            ]
-          },
-          "required": [
-            "emailAddress",
-            "familyName",
-            "dateOfIssuance",
-            "drivingLicenseID",
-            "drivingClass",
-            "bloodType",
-            "donorStatus"
-          ],
-          "additionalProperties": true
+           ]
         }
-      }
-    }
+     },
+     "required": [
+        "emailAddress",
+        "familyName",
+        "dateOfIssuance",
+        "drivingLicenseID",
+        "drivingClass",
+        "bloodType",
+        "donorStatus"
+     ],
+     "additionalProperties": true
   },
   "tags": [
     "driving",
@@ -197,55 +193,57 @@ curl -X 'PUT' \
   "version": "1.1.0",
   "description": "Driving License Schema",
   "type": "https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json",
+  "author": "did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff",
   "schema": {
-    "$id": "driving-license-1.1.0",
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "description": "Driving License",
-    "type": "object",
-    "properties": {
-      "credentialSubject": {
-        "type": "object",
-        "properties": {
-          "emailAddress": {
-            "type": "string",
-            "format": "email"
-          },
-          "givenName": {
-            "type": "string"
-          },
-          "familyName": {
-            "type": "string"
-          },
-          "dateOfIssuance": {
-            "type": "datetime"
-          },
-          "drivingLicenseID": {
-            "type": "string"
-          },
-          "drivingClass": {
-            "type": "integer"
-          },
-          "bloodType": {
-            "type": "string",
-            "pattern": "^(A|B|AB|O)[+-]?$"
-          },
-          "donorStatus": {
-            "type": "string",
-            "enum": ["true", "false", "yes", "no"]
-          },
-          "required": [
-            "emailAddress",
-            "familyName",
-            "dateOfIssuance",
-            "drivingLicenseID",
-            "drivingClass",
-            "bloodType",
-            "donorStatus"
-          ],
-          "additionalProperties": true
+     "$id": "https://example.com/driving-license-1.1.0",
+     "$schema": "https://json-schema.org/draft/2020-12/schema",
+     "description": "Driving License",
+     "type": "object",
+     "properties": {
+        "emailAddress": {
+           "type": "string",
+           "format": "email"
+        },
+        "givenName": {
+           "type": "string"
+        },
+        "familyName": {
+           "type": "string"
+        },
+        "dateOfIssuance": {
+           "type": "string",
+           "format": "date-time"
+        },
+        "drivingLicenseID": {
+           "type": "string"
+        },
+        "drivingClass": {
+           "type": "integer"
+        },
+        "bloodType": {
+           "type": "string",
+           "pattern": "^(A|B|AB|O)[+-]?$"
+        },
+        "donorStatus": {
+           "type": "string",
+           "enum": [
+              "true",
+              "false",
+              "yes",
+              "no"
+           ]
         }
-      }
-    }
+     },
+     "required": [
+        "emailAddress",
+        "familyName",
+        "dateOfIssuance",
+        "drivingLicenseID",
+        "drivingClass",
+        "bloodType",
+        "donorStatus"
+     ],
+     "additionalProperties": true
   },
   "tags": [
     "driving",
@@ -258,60 +256,71 @@ curl -X 'PUT' \
 
 ```json
 {
-  "guid": "3f86a73f-5b78-39c7-af77-0c16123fa9c3",
-  "id": "f2bfbf78-8bd6-4cc6-8b39-b3a25e01e8ea",
-  "longId": "did:prism:agent/f2bfbf78-8bd6-4cc6-8b39-b3a25e01e8ea?version=1.1.0",
-  "name": "driving-license",
-  "version": "1.1.0",
-  "tags": [
-    "driving",
-    "license"
-  ],
-  "description": "Driving License Schema",
-  "type": "https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json",
-  "schema": {
-    "$id": "driving-license-1.0.0",
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "description": "Driving License",
-    "type": "object",
-    "properties": {
-      "credentialSubject": {
-        "type": "object",
-        "properties": {
-          "emailAddress": {
+   "guid": "3f86a73f-5b78-39c7-af77-0c16123fa9c2",
+   "id": "f2bfbf78-8bd6-4cc6-8b39-b3a25e01e8ea",
+   "longId": "did:prism:agent/f2bfbf78-8bd6-4cc6-8b39-b3a25e01e8ea?version=1.1.0",
+   "name": "driving-license",
+   "version": "1.1.0",
+   "description": "Driving License Schema",
+   "type": "https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json",
+   "author": "did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff",
+   "authored": "2023-03-14T14:41:46.713943Z",
+   "tags": [
+      "driving",
+      "license"
+   ],
+   "schema": {
+      "$id": "https://example.com/driving-license-1.1.0",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "description": "Driving License",
+      "type": "object",
+      "properties": {
+         "emailAddress": {
             "type": "string",
             "format": "email"
-          },
-          "givenName": {
+         },
+         "givenName": {
             "type": "string"
-          },
-          "familyName": {
+         },
+         "familyName": {
             "type": "string"
-          },
-          "dateOfIssuance": {
-            "type": "datetime"
-          },
-          "drivingLicenseID": {
+         },
+         "dateOfIssuance": {
+            "type": "string",
+            "format": "date-time"
+         },
+         "drivingLicenseID": {
             "type": "string"
-          },
-          "drivingClass": {
+         },
+         "drivingClass": {
             "type": "integer"
-          },
-          "required": [
-            "emailAddress",
-            "familyName",
-            "dateOfIssuance",
-            "drivingLicenseID",
-            "drivingClass"
-          ],
-          "additionalProperties": true
-        }
-      }
-    }
-  },
-  "author": "did:prism:agent",
-  "authored": "2023-04-14T14:41:46.713943Z",
-  "kind": "CredentialSchema",
-  "self": "/schema-registry/schemas/3f86a73f-5b78-39c7-af77-0c16123fa9cd"
+         },
+         "bloodType": {
+            "type": "string",
+            "pattern": "^(A|B|AB|O)[+-]?$"
+         },
+         "donorStatus": {
+            "type": "string",
+            "enum": [
+               "true",
+               "false",
+               "yes",
+               "no"
+            ]
+         }
+      },
+      "required": [
+         "emailAddress",
+         "familyName",
+         "dateOfIssuance",
+         "drivingLicenseID",
+         "drivingClass",
+         "bloodType",
+         "donorStatus"
+      ],
+      "additionalProperties": true
+   },
+   "kind": "CredentialSchema",
+   "self": "/schema-registry/schemas/3f86a73f-5b78-39c7-af77-0c16123fa9c2"
 }
 ```

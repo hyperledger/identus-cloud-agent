@@ -161,44 +161,40 @@ JSON Schema must be composed according to <https://json-schema.org/draft/2020-12
 
 ```json
 {
-  "$id": "driving-license-1.0.0",
+  "$id": "https://example.com/driving-license-1.0",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "description": "Driving License",
   "type": "object",
   "properties": {
-    "credentialSubject": {
-      "type": "object",
-      "properties": {
-        "emailAddress": {
-          "type": "string",
-          "format": "email"
-        },
-        "givenName": {
-          "type": "string"
-        },
-        "familyName": {
-          "type": "string"
-        },
-        "dateOfIssuance": {
-          "type": "datetime"
-        },
-        "drivingLicenseID": {
-          "type": "string"
-        },
-        "drivingClass": {
-          "type": "integer"
-        },
-        "required": [
-          "emailAddress",
-          "familyName",
-          "dateOfIssuance",
-          "drivingLicenseID",
-          "drivingClass"
-        ],
-        "additionalProperties": true
-      }
+    "emailAddress": {
+      "type": "string",
+      "format": "email"
+    },
+    "givenName": {
+      "type": "string"
+    },
+    "familyName": {
+      "type": "string"
+    },
+    "dateOfIssuance": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "drivingLicenseID": {
+      "type": "string"
+    },
+    "drivingClass": {
+      "type": "integer"
     }
-  }
+  },
+  "required": [
+    "emailAddress",
+    "familyName",
+    "dateOfIssuance",
+    "drivingLicenseID",
+    "drivingClass"
+  ],
+  "additionalProperties": true
 }
 ```
 

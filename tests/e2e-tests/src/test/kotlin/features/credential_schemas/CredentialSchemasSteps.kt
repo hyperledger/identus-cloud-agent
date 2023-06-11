@@ -1,7 +1,6 @@
 package features.credential_schemas
 
 import api_models.CredentialSchema
-import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import common.TestConstants
 import common.Utils.lastResponseObject
@@ -26,7 +25,7 @@ class CredentialSchemasSteps {
     fun acmeCreatesANewCredentialSchema(actor: Actor) {
         actor.attemptsTo(
             Post.to("/schema-registry/schemas").with {
-                it.body(TestConstants.CREDENTIAL_SCHEMAS.STUDENT_SCHEMA)
+                it.body(TestConstants.CREDENTIAL_SCHEMAS.STUDENT_SCHEMA.copy(author = actor.recall("shortFormDid")))
             },
         )
     }
@@ -70,7 +69,12 @@ class CredentialSchemasSteps {
         repeat(numberOfSchemas) { i: Int ->
             actor.attemptsTo(
                 Post.to("/schema-registry/schemas").with {
-                    it.body(TestConstants.CREDENTIAL_SCHEMAS.generate_with_name_suffix(i.toString()))
+                    it.body(
+                        TestConstants.CREDENTIAL_SCHEMAS.generate_with_name_suffix_and_author(
+                            i.toString(),
+                            actor.recall("shortFormDid")
+                        )
+                    )
                 },
             )
             actor.should(

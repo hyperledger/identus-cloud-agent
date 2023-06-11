@@ -57,7 +57,7 @@ object SchemaRegistryEndpoints {
       )
       .out(jsonBody[CredentialSchemaResponse])
       .description("Credential schema record")
-      .errorOut(basicFailures)
+      .errorOut(basicFailuresAndNotFound)
       .name("createSchema")
       .summary("Publish new schema to the schema registry")
       .description(
@@ -93,7 +93,7 @@ object SchemaRegistryEndpoints {
       )
       .out(jsonBody[CredentialSchemaResponse])
       .description("Credential schema record")
-      .errorOut(basicFailures)
+      .errorOut(basicFailuresAndNotFound)
       .name("updateSchema")
       .summary("Publish the new version of the credential schema to the schema registry")
       .description(

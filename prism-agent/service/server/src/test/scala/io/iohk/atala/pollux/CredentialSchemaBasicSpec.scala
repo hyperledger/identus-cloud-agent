@@ -1,7 +1,13 @@
 package io.iohk.atala.pollux
 
 import io.iohk.atala.agent.server.http.ZHttp4sBlazeServer
+import io.iohk.atala.agent.walletapi.model.{ManagedDIDState, PublicationState}
+import io.iohk.atala.agent.walletapi.service.MockManagedDIDService
 import io.iohk.atala.api.http.ErrorResponse
+import io.iohk.atala.castor.core.model.did.PrismDIDOperation
+import io.iohk.atala.container.util.MigrationAspects.*
+import io.iohk.atala.container.util.PostgresLayer.*
+import io.iohk.atala.pollux.core.model.CredentialSchema
 import io.iohk.atala.pollux.core.service.CredentialSchemaServiceImpl
 import io.iohk.atala.pollux.credentialschema.*
 import io.iohk.atala.pollux.credentialschema.controller.{CredentialSchemaController, CredentialSchemaControllerImpl}
@@ -11,8 +17,6 @@ import io.iohk.atala.pollux.credentialschema.http.{
   CredentialSchemaResponsePage
 }
 import io.iohk.atala.pollux.sql.repository.JdbcCredentialSchemaRepository
-import io.iohk.atala.container.util.MigrationAspects.*
-import io.iohk.atala.container.util.PostgresLayer.*
 import sttp.client3.testing.SttpBackendStub
 import sttp.client3.ziojson.*
 import sttp.client3.{DeserializationException, ResponseException, SttpBackend, UriContext, basicRequest, Response as R}
@@ -29,6 +33,7 @@ import zio.interop.catz.implicits.*
 import zio.json.*
 import zio.json.ast.Json
 import zio.json.ast.Json.*
+import zio.mock.Expectation
 import zio.stream.ZSink
 import zio.stream.ZStream.unfold
 import zio.test.*
@@ -41,17 +46,29 @@ import java.util.UUID
 
 object CredentialSchemaBasicSpec extends ZIOSpecDefault with CredentialSchemaTestTools:
 
+  val jsonSchema =
+    """
+      |{
+      |    "$schema": "https://json-schema.org/draft/2020-12/schema",
+      |    "description": "Driving License",
+      |    "type": "object",
+      |    "properties": {
+      |        "name" : "Alice"
+      |    },
+      |    "required": [
+      |        "name"
+      |    ]
+      |}
+      |""".stripMargin
+
   private val schemaInput = CredentialSchemaInput(
     name = "TestSchema",
     version = "1.0.0",
     description = Option("schema description"),
-    `type` = "json",
-    schema = """{"first_name":  "string", "dob": "datetime"}"""
-      .fromJson[zio.json.ast.Json]
-      .toOption
-      .get,
+    `type` = CredentialSchema.VC_JSON_SCHEMA_URI,
+    schema = jsonSchema.fromJson[Json].getOrElse(Json.Null),
     tags = List("test"),
-    author = "did:prism:agent"
+    author = "did:prism:557a4ef2ed0cf86fb50d91577269136b3763722ef00a72a1fb1e66895f52b6d8"
   )
 
   def spec = (
@@ -60,7 +77,7 @@ object CredentialSchemaBasicSpec extends ZIOSpecDefault with CredentialSchemaTes
         schema = "public",
         paths = "classpath:sql/pollux"
       )
-  ).provideSomeLayerShared(testEnvironmentLayer)
+  ).provideSomeLayerShared(mockManagedDIDServiceLayer.toLayer >+> testEnvironmentLayer)
 
   private val schemaCreateAndGetOperationsSpec = {
     val backendZIO = ZIO.service[CredentialSchemaController].map(httpBackend)

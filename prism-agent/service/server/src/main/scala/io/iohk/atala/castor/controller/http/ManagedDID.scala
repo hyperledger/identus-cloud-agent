@@ -4,6 +4,7 @@ import io.iohk.atala.agent.walletapi.model as walletDomain
 import io.iohk.atala.agent.walletapi.model.DIDPublicKeyTemplate
 import io.iohk.atala.agent.walletapi.model.ManagedDIDDetail
 import io.iohk.atala.agent.walletapi.model.ManagedDIDState
+import io.iohk.atala.agent.walletapi.model.PublicationState
 import io.iohk.atala.api.http.Annotation
 import io.iohk.atala.castor.core.model.did as castorDomain
 import io.iohk.atala.castor.core.model.did.PrismDID
@@ -54,11 +55,12 @@ object ManagedDID {
   given schema: Schema[ManagedDID] = Schema.derived
 
   given Conversion[ManagedDIDDetail, ManagedDID] = { didDetail =>
-    val (longFormDID, status) = didDetail.state match {
-      case ManagedDIDState.Created(operation) => Some(PrismDID.buildLongFormFromOperation(operation)) -> "CREATED"
-      case ManagedDIDState.PublicationPending(operation, _) =>
+    val operation = didDetail.state.createOperation
+    val (longFormDID, status) = didDetail.state.publicationState match {
+      case PublicationState.Created() => Some(PrismDID.buildLongFormFromOperation(operation)) -> "CREATED"
+      case PublicationState.PublicationPending(_) =>
         Some(PrismDID.buildLongFormFromOperation(operation)) -> "PUBLICATION_PENDING"
-      case ManagedDIDState.Published(_, _) => None -> "PUBLISHED"
+      case PublicationState.Published(_) => None -> "PUBLISHED"
     }
     ManagedDID(
       did = didDetail.did.toString,
