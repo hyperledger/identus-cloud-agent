@@ -33,7 +33,7 @@ inThisBuild(
 )
 
 lazy val V = new {
-  val munit = "1.0.0-M6" // "0.7.29"
+  val munit = "1.0.0-M8" // "0.7.29"
   val munitZio = "0.1.1"
 
   // https://mvnrepository.com/artifact/dev.zio/zio
