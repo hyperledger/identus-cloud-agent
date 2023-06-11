@@ -72,7 +72,7 @@ lazy val V = new {
 
   val bouncyCastle = "1.70"
 
-  val jsonSchemaValidator = "1.0.83"
+  val jsonSchemaValidator = "1.0.84"
 }
 
 /** Dependencies */
