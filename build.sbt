@@ -60,7 +60,7 @@ lazy val V = new {
   val quill = "4.6.0"
   val iris = "0.1.0" // TODO REMOVE
   val flyway = "9.8.3"
-  val logback = "1.4.5"
+  val logback = "1.4.7"
 
   val prismNodeClient = "0.4.0"
   val prismSdk = "v1.4.1" // scala-steward:off
