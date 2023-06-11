@@ -9,4 +9,4 @@ addSbtPlugin("org.scoverage" % "sbt-coveralls" % "1.3.7")
 addSbtPlugin("com.github.sbt" % "sbt-license-report" % "1.5.0")
 
 // In order to import proper version of com.google.protobuf.ByteString we need to add this dependency
-libraryDependencies ++= Seq("com.thesamet.scalapb" %% "compilerplugin" % "0.11.12")
+libraryDependencies ++= Seq("com.thesamet.scalapb" %% "compilerplugin" % "0.11.13")
