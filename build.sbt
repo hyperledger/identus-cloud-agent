@@ -50,7 +50,7 @@ lazy val V = new {
   val circe = "0.14.2"
 
   // val tapir = "1.0.3"
-  val tapir = "1.2.3"
+  val tapir = "1.2.13"
 
   val typesafeConfig = "1.4.2"
   val protobuf = "3.1.9"
