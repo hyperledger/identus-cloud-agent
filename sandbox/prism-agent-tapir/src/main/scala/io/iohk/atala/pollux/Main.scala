@@ -20,7 +20,8 @@ object Main extends ZIOAppDefault:
           DefaultServerLog[Task](
             doLogWhenReceived = msg => ZIO.succeed(log.debug(msg)),
             doLogWhenHandled = (msg, error) => ZIO.succeed(error.fold(log.debug(msg))(err => log.debug(msg, err))),
-            doLogAllDecodeFailures = (msg, error) => ZIO.succeed(error.fold(log.debug(msg))(err => log.debug(msg, err))),
+            doLogAllDecodeFailures =
+              (msg, error) => ZIO.succeed(error.fold(log.debug(msg))(err => log.debug(msg, err))),
             doLogExceptions = (msg: String, ex: Throwable) => ZIO.succeed(log.debug(msg, ex)),
             noLog = ZIO.unit
           )
@@ -33,7 +34,9 @@ object Main extends ZIOAppDefault:
 
     (for
       serverStart <- Server(app).withPort(port).make
-      _ <- Console.printLine(s"Go to http://localhost:${serverStart.port}/docs to open SwaggerUI. Press ENTER key to exit.")
+      _ <- Console.printLine(
+        s"Go to http://localhost:${serverStart.port}/docs to open SwaggerUI. Press ENTER key to exit."
+      )
       _ <- Console.readLine
     yield serverStart)
       .provideSomeLayer(EventLoopGroup.auto(0) ++ ServerChannelFactory.auto ++ Scope.default)
