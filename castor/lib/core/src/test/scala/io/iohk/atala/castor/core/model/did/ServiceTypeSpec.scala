@@ -20,7 +20,7 @@ object ServiceTypeSpec extends ZIOSpecDefault {
 
   private val parseServiceTypeNameSpec = suite("parse ServiceType.Name")(
     testParse("parse valid name", "LinkedDomains"),
-    testParse("parse valid name with - and _", "-_-LinkedDomains-_-"),
+    testParse("parse valid name with allowed symbols", "-_-LinkedDomains-_-"),
     testParse("parse valid name with space in between", "Linked Domains"),
     testParse("parse valid name with multiple spaces in between", "Linked   Domains"),
     testParse("parse valid name only number", "123"),
