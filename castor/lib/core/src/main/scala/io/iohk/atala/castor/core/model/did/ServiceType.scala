@@ -10,10 +10,12 @@ object ServiceType {
     def fromStringUnsafe(name: String): Name = name
 
     def fromString(name: String): Either[String, Name] = {
-      if (name.trim().isEmpty()) Left("service type name must have at least a non whitespace character")
-      else if (name.take(1).isBlank() || name.takeRight(1).isBlank())
-        Left("service type name cannot start nor end with whitespaces")
-      else Right(name)
+      val pattern = """^[A-Za-z0-9\-_]+(\s*[A-Za-z0-9\-_])*$""".r
+      pattern
+        .findFirstIn(name)
+        .toRight(
+          s"The service type '$name' is not a valid value."
+        )
     }
   }
 
