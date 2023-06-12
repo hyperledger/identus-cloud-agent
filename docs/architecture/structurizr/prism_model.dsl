@@ -26,6 +26,8 @@ enterprise "IOG" {
 
         apiGateway = container "API Gateway" "Acts as the the entry point to API exposed by the backend microservices. Main functions: API backend documentation, TLS endpoint, reverse proxy, authentication & authorization, traffic monitoring, rate limiting, etc" "Middleware"
 
+        walletAPI = container "Wallet API" "Manages the creation and storage of cryptographic secrets"
+
         pollux = container "Pollux" "Exposes a suite of credential operations to issue, manage and verify standards based verifiable credentials in a privacy preserving manner" "Service BB"
         mercury = container "Mercury" "Exposes secure, standards based communications protocols to establish and manage trusted, peer-to-peer connections and interactions between DIDs in a transport agnostic and interoperable manner" "Service BB"
         pluto = container "Pluto" "Exposes storage operations to securely store, manage, and recover verifiable data linked to DIDs in a portable, storage agnostic manner" "Service BB"
@@ -43,6 +45,9 @@ enterprise "IOG" {
         # relations to/from containers within Prism
         mobileApp -> apiGateway "Makes API calls to BB" "REST/HTTPS"
         apiGateway -> castorApi "Routes requests to" "REST/HTTP"
+        apiGateway -> walletApi "Routes requests to" "REST/HTTP"
+        walletAPI -> castorApi "Routes requests to" "REST/HTTP"
+        walletAPI -> mercury "Routes requests to" "REST/HTTP"
         apiGateway -> pollux "Routes requests to" "REST/HTTP"
         apiGateway -> mercury "Routes requests to" "REST/HTTP"
         apiGateway -> pluto "Routes requests to" "REST/HTTP"
