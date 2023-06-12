@@ -3,8 +3,7 @@
 
 APPLY_FIXES: all
 DEFAULT_BRANCH: main
-DISABLE_LINTERS:
-  [
+DISABLE_LINTERS: [
     REPOSITORY_DEVSKIM,
     REPOSITORY_GITLEAKS,
     DOCKERFILE_HADOLINT,
@@ -13,6 +12,9 @@ DISABLE_LINTERS:
     REPOSITORY_SECRETLINT,
     SCALA_SCALAFIX,
     SQL_TSQLLINT,
+    C_CPPLINT, # For pollux/lib/anoncreds/src/main/c
+    CPP_CPPLINT, # For pollux/lib/anoncreds/src/main/c
+    JAVA_CHECKSTYLE, # For pollux/lib/anoncreds/src/main/java
   ]
 DISABLE_ERRORS_LINTERS:
   [

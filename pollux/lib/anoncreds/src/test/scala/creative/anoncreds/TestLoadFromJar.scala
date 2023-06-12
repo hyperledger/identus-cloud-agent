@@ -1,6 +1,7 @@
 package creative.anoncreds
 
 import scala.util.{Failure, Success, Try}
+import io.iohk.atala.pollux.anoncreds.ClasspathSharedObject
 
 object TestLoadFromJar {
 

@@ -101,3 +101,7 @@ llvm-lipo -create \
     native-lib/libanoncreds-shim-x86_64.dylib \
     -output native-lib/libanoncreds-shim.dylib
 ```
+## Check JAR
+
+The jar must contens the native jars
+`jar tf ./pollux/lib/anoncreds/target/scala-3.2.2/pollux-anoncreds_3-1.3.0-SNAPSHOT.jar`

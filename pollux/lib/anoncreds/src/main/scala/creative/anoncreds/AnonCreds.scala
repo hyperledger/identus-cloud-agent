@@ -5,6 +5,7 @@ import jnr.ffi.{LibraryLoader, Pointer, Runtime}
 import jnr.ffi.annotations.{In, Out, Pinned}
 import jnr.ffi.byref.{ByteByReference, IntByReference, NumberByReference, PointerByReference}
 import jnr.ffi.types.{int32_t, int64_t, int8_t, size_t}
+import io.iohk.atala.pollux.anoncreds.ClasspathSharedObject
 
 /** C function definitions taken from https://github.com/hyperledger/anoncreds-rs/blob/main/include/libanoncreds.h
   */
@@ -15,23 +16,21 @@ object AnonCreds {
   type FfiList_i32 = Array[Int @int32_t]
 
   def apply(): AnonCreds = apply(
-    Seq(ClasspathSharedObject.createTempFolderWithExtractedLibs.toString)
+    pathsToSearch = Seq(ClasspathSharedObject.createTempFolderWithExtractedLibs.toString)
   )
 
+  // FIXME REMOVE this is just for the tests!
   def apply(
       pathsToSearch: Seq[String],
       libsToLoad: Seq[String] = ClasspathSharedObject.namesOfSharedObjectsToLoad
   ): AnonCreds = {
+    val withPathsToSearch = pathsToSearch
+      .foldLeft(LibraryLoader.create(classOf[AnonCreds])) { case (acc, e) => acc.search(e) }
 
-    val withPathsToSearch = pathsToSearch.foldLeft(LibraryLoader.create(classOf[AnonCreds])) { case (acc, e) =>
-      acc.search(e)
-    }
-    val withLibsToLoadAndPathsToSearch = libsToLoad.foldLeft(withPathsToSearch) { case (acc, e) =>
-      acc.library(e)
-    }
+    val withLibsToLoadAndPathsToSearch = libsToLoad
+      .foldLeft(withPathsToSearch) { case (acc, e) => acc.library(e) }
 
     withLibsToLoadAndPathsToSearch.load()
-
   }
 
   def eitherErrorCodeOr[T](errorCode: ErrorCode, t: => T): Either[ErrorCode, T] = errorCode match {
