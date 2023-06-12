@@ -257,32 +257,32 @@ object ProtoModelHelperSpec extends ZIOSpecDefault {
     test("parse empty string") {
       val serviceType = ""
       val result = ProtoModelHelper.parseServiceType(serviceType)
-      assert(result)(isLeft(containsString("service type name must have at least a non whitespace character")))
+      assert(result)(isLeft(containsString("is not a valid value")))
     },
     test("parse single service type starting with a white space character") {
       val serviceType = " LinkedDomains"
       val result = ProtoModelHelper.parseServiceType(serviceType)
-      assert(result)(isLeft(containsString("service type name cannot start nor end with whitespaces")))
+      assert(result)(isLeft(containsString("is not a valid value")))
     },
     test("parse single service type ending with a white space character") {
       val serviceType = "LinkedDomains "
       val result = ProtoModelHelper.parseServiceType(serviceType)
-      assert(result)(isLeft(containsString("service type name cannot start nor end with whitespaces")))
+      assert(result)(isLeft(containsString("is not a valid value")))
     },
     test("parse multiple service type starting with a white space character") {
       val serviceType = """["LinkedDomains", " IdentityHub"]"""
       val result = ProtoModelHelper.parseServiceType(serviceType)
-      assert(result)(isLeft(containsString("service type name cannot start nor end with whitespaces")))
+      assert(result)(isLeft(containsString("is not a valid value")))
     },
     test("parse multiple service type ending with a white space character") {
       val serviceType = """["LinkedDomains", "IdentityHub "]"""
       val result = ProtoModelHelper.parseServiceType(serviceType)
-      assert(result)(isLeft(containsString("service type name cannot start nor end with whitespaces")))
+      assert(result)(isLeft(containsString("is not a valid value")))
     },
     test("parse multiple service type that contain item with empty string") {
       val serviceType = """["LinkedDomains", ""]"""
       val result = ProtoModelHelper.parseServiceType(serviceType)
-      assert(result)(isLeft(containsString("service type name must have at least a non whitespace character")))
+      assert(result)(isLeft(containsString("is not a valid value")))
     },
     test("parse multiple service type with extra whitespace between items") {
       val serviceType = """[   "LinkedDomains" ,      "IdentityHub"    ]"""
