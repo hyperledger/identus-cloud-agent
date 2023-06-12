@@ -234,10 +234,15 @@ object ProtoModelHelperSpec extends ZIOSpecDefault {
       val result = ProtoModelHelper.parseServiceType(serviceType)
       assert(result)(isRight(equalTo(ServiceType.Single("LinkedDomains"))))
     },
-    test("parse valid multiple service type") {
-      val serviceType = """["LinkedDomains", "IdentityHub"]"""
+    test("parse valid unquoted number") {
+      val serviceType = "3"
       val result = ProtoModelHelper.parseServiceType(serviceType)
-      assert(result)(isRight(equalTo(ServiceType.Multiple("LinkedDomains", List("IdentityHub")))))
+      assert(result)(isRight(equalTo(ServiceType.Single("3"))))
+    },
+    test("parse valid multiple service type") {
+      val serviceType = """["LinkedDomains","IdentityHub","123"]"""
+      val result = ProtoModelHelper.parseServiceType(serviceType)
+      assert(result)(isRight(equalTo(ServiceType.Multiple("LinkedDomains", List("IdentityHub", "123")))))
     },
     test("parse valid multiple service type with one item") {
       val serviceType = """["LinkedDomains"]"""
@@ -245,7 +250,7 @@ object ProtoModelHelperSpec extends ZIOSpecDefault {
       assert(result)(isRight(equalTo(ServiceType.Multiple("LinkedDomains", List()))))
     },
     test("parse multiple service type containing item that is not a string") {
-      val serviceType = """["LinkedDomains", 1]"""
+      val serviceType = """["LinkedDomains",1]"""
       val result = ProtoModelHelper.parseServiceType(serviceType)
       assert(result)(isLeft(containsString("service type is not a JSON array of strings")))
     },
@@ -259,23 +264,33 @@ object ProtoModelHelperSpec extends ZIOSpecDefault {
       val result = ProtoModelHelper.parseServiceType(serviceType)
       assert(result)(isLeft(containsString("is not a valid value")))
     },
-    test("parse single service type starting with a white space character") {
+    test("parse single service type starting with a whitespace character") {
       val serviceType = " LinkedDomains"
       val result = ProtoModelHelper.parseServiceType(serviceType)
       assert(result)(isLeft(containsString("is not a valid value")))
     },
-    test("parse single service type ending with a white space character") {
+    test("parse single service type ending with a whitespace character") {
       val serviceType = "LinkedDomains "
       val result = ProtoModelHelper.parseServiceType(serviceType)
       assert(result)(isLeft(containsString("is not a valid value")))
     },
+    test("parse multiple service type starting with a whitespace character outside bracket") {
+      val serviceType = """ ["LinkedDomains"]"""
+      val result = ProtoModelHelper.parseServiceType(serviceType)
+      assert(result)(isLeft(containsString("not conform to the ABNF")))
+    },
+    test("parse multiple service type ending with a whitespace character outside bracket") {
+      val serviceType = """["LinkedDomains"] """
+      val result = ProtoModelHelper.parseServiceType(serviceType)
+      assert(result)(isLeft(containsString("not conform to the ABNF")))
+    },
     test("parse multiple service type starting with a white space character") {
-      val serviceType = """["LinkedDomains", " IdentityHub"]"""
+      val serviceType = """["LinkedDomains"," IdentityHub"]"""
       val result = ProtoModelHelper.parseServiceType(serviceType)
       assert(result)(isLeft(containsString("is not a valid value")))
     },
     test("parse multiple service type ending with a white space character") {
-      val serviceType = """["LinkedDomains", "IdentityHub "]"""
+      val serviceType = """["LinkedDomains","IdentityHub "]"""
       val result = ProtoModelHelper.parseServiceType(serviceType)
       assert(result)(isLeft(containsString("is not a valid value")))
     },
@@ -284,10 +299,15 @@ object ProtoModelHelperSpec extends ZIOSpecDefault {
       val result = ProtoModelHelper.parseServiceType(serviceType)
       assert(result)(isLeft(containsString("is not a valid value")))
     },
-    test("parse multiple service type with extra whitespace between items") {
+    test("parse multiple service type with whitespace between items") {
       val serviceType = """[   "LinkedDomains" ,      "IdentityHub"    ]"""
       val result = ProtoModelHelper.parseServiceType(serviceType)
-      assert(result)(isRight(equalTo(ServiceType.Multiple("LinkedDomains", List("IdentityHub")))))
+      assert(result)(isLeft(containsString("not conform to the ABNF")))
+    },
+    test("parse multiple service type with whitespace around one item") {
+      val serviceType = """[ "LinkedDomains" ]"""
+      val result = ProtoModelHelper.parseServiceType(serviceType)
+      assert(result)(isLeft(containsString("not conform to the ABNF")))
     },
   )
 

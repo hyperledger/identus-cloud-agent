@@ -354,19 +354,24 @@ private[castor] trait ProtoModelHelper {
 
   def parseServiceType(s: String): Either[String, ServiceType] = {
     // The type field MUST be a string or a non empty JSON array of strings.
-    val parsedJson = io.circe.parser
+    val parsedJson: Option[Either[String, ServiceType.Multiple]] = io.circe.parser
       .parse(s)
       .toOption // it's OK to let parsing fail (e.g. LinkedDomains without quote is not a JSON string)
       .flatMap(_.asArray)
-      .map(
-        _.traverse(_.asString.toRight("the service type is not a JSON array of strings"))
+      .map { jsonArr =>
+        jsonArr
+          .traverse(_.asString.toRight("the service type is not a JSON array of strings"))
           .flatMap(_.traverse(ServiceType.Name.fromString))
           .map(_.toList)
           .flatMap {
             case head :: tail => Right(ServiceType.Multiple(head, tail))
             case Nil          => Left("the service type cannot be an empty JSON array")
           }
-      )
+          .filterOrElse(
+            _ => s == io.circe.Json.arr(jsonArr: _*).noSpaces,
+            "the service type is a valid JSON array of strings, but not conform to the ABNF"
+          )
+      }
 
     parsedJson match {
       // serviceType is a valid JSON array of strings
