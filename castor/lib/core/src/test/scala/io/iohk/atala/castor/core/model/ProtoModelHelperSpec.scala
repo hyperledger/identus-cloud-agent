@@ -68,7 +68,14 @@ object ProtoModelHelperSpec extends ZIOSpecDefault {
   }
 
   override def spec =
-    suite("ProtoModelHelper")(conversionSpec, didDataFilterSpec, parseServiceType, parseServiceEndpoint)
+    suite("ProtoModelHelper")(
+      conversionSpec,
+      didDataFilterSpec,
+      parseServiceType,
+      parseServiceEndpoint,
+      encodeServiceTypeSpec,
+      encodeServiceEndpointSpec
+    )
 
   private val conversionSpec = suite("round trip model conversion does not change data of models")(
     test("PublicKeyData") {
@@ -384,6 +391,48 @@ object ProtoModelHelperSpec extends ZIOSpecDefault {
         Seq("https://example2.com")
       )
       assert(result)(isRight(equalTo(expected)))
+    },
+  )
+
+  private val encodeServiceTypeSpec = suite("encode service type")(
+    test("encode single service type") {
+      val serviceType = ServiceType.Single("LinkedDomains")
+      val encoded = serviceType.toProto
+      assert(encoded)(equalTo("LinkedDomains"))
+    },
+    test("encode multiple service types") {
+      val serviceType = ServiceType.Multiple("LinkedDomains", Seq("CredentialSchemaService"))
+      val encoded = serviceType.toProto
+      assert(encoded)(equalTo("""["LinkedDomains","CredentialSchemaService"]"""))
+    }
+  )
+
+  private val encodeServiceEndpointSpec = suite("encode service endpoint")(
+    test("encode single endoint URI") {
+      val uri: UriOrJsonEndpoint = "http://example.com"
+      val serviceEndpoint = ServiceEndpoint.Single(uri)
+      val encoded = serviceEndpoint.toProto
+      assert(encoded)(equalTo("http://example.com"))
+    },
+    test("encode single endoint JSON object") {
+      val uri: UriOrJsonEndpoint = JsonObject("uri" -> Json.fromString("http://example.com"))
+      val serviceEndpoint = ServiceEndpoint.Single(uri)
+      val encoded = serviceEndpoint.toProto
+      assert(encoded)(equalTo("""{"uri":"http://example.com"}"""))
+    },
+    test("encode multiple endoints URI") {
+      val uri: UriOrJsonEndpoint = "http://example.com"
+      val uri2: UriOrJsonEndpoint = "http://example2.com"
+      val serviceEndpoint = ServiceEndpoint.Multiple(uri, Seq(uri2))
+      val encoded = serviceEndpoint.toProto
+      assert(encoded)(equalTo("""["http://example.com","http://example2.com"]"""))
+    },
+    test("encode multiple endoints JSON object") {
+      val uri: UriOrJsonEndpoint = JsonObject("uri" -> Json.fromString("http://example.com"))
+      val uri2: UriOrJsonEndpoint = JsonObject("uri" -> Json.fromString("http://example2.com"))
+      val serviceEndpoint = ServiceEndpoint.Multiple(uri, Seq(uri2))
+      val encoded = serviceEndpoint.toProto
+      assert(encoded)(equalTo("""[{"uri":"http://example.com"},{"uri":"http://example2.com"}]"""))
     },
   )
 
