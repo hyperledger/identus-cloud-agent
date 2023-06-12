@@ -9,23 +9,12 @@ trait SeedResolver {
 }
 
 object SeedResolver {
-  def layer(seedOverrideHex: Option[String] = None): URLayer[Apollo, SeedResolver] =
-    ZLayer.fromFunction(SeedResolverImpl(_, seedOverrideHex))
+  def layer(isDevMode: Boolean = false): URLayer[Apollo, SeedResolver] =
+    ZLayer.fromFunction(SeedResolverImpl(_, isDevMode))
 }
 
-private class SeedResolverImpl(apollo: Apollo, seedOverrideHex: Option[String]) extends SeedResolver {
+private class SeedResolverImpl(apollo: Apollo, isDevMode: Boolean) extends SeedResolver {
   override def resolve: Task[Array[Byte]] = {
-    val seedOverride =
-      for {
-        _ <- ZIO.logInfo("Resolving a wallet seed using seed-override")
-        maybeSeed <- seedOverrideHex
-          .fold(ZIO.none) { hex =>
-            ZIO.fromTry(HexString.fromString(hex)).map(_.toByteArray).asSome
-          }
-          .tapError(e => ZIO.logError("Failed to parse seed-override"))
-        _ <- ZIO.logInfo("seed-override is not found. Fallback to the next resolver").when(maybeSeed.isEmpty)
-      } yield maybeSeed
-
     val seedEnv =
       for {
         _ <- ZIO.logInfo("Resolving a wallet seed using WALLET_SEED environemnt variable")
@@ -36,23 +25,28 @@ private class SeedResolverImpl(apollo: Apollo, seedOverrideHex: Option[String]) 
             case None      => ZIO.none
           }
           .tapError(e => ZIO.logError("Failed to parse WALLET_SEED"))
-        _ <- ZIO.logInfo("WALLET_SEED environment is not found. Fallback to the next resolver").when(maybeSeed.isEmpty)
+        _ <- ZIO.logInfo("WALLET_SEED environment is not found.").when(maybeSeed.isEmpty)
+        // When DEV_MODE=fase, the WALLET_SEED must be set.
+        _ <- ZIO
+          .fail(Exception("WALLET_SEED must be present when running with DEV_MODE=false"))
+          .when(maybeSeed.isEmpty && !isDevMode)
       } yield maybeSeed
 
     val seedRand =
       for {
         _ <- ZIO.logInfo("Generating a new wallet seed")
-        seed <- apollo.ecKeyFactory.randomBip32Seed()
+        seedWithMnemonic <- apollo.ecKeyFactory.randomBip32Seed()
+        (seed, mnemonic) = seedWithMnemonic
+        seedHex = HexString.fromByteArray(seed)
+        _ <- ZIO
+          .logInfo(s"New seed generated : $seedHex (${mnemonic.mkString("[", ", ", "]")})")
+          .when(isDevMode)
       } yield seed
 
-    seedOverride
-      .flatMap {
-        case Some(seed) => ZIO.some(seed)
-        case None       => seedEnv
-      }
-      .flatMap {
-        case Some(seed) => ZIO.succeed(seed)
-        case None       => seedRand
-      }
+    seedEnv.flatMap {
+      case Some(seed) => ZIO.succeed(seed)
+      case None       => seedRand
+    }
   }
+
 }

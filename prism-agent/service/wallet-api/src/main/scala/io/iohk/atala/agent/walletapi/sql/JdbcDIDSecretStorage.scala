@@ -3,15 +3,13 @@ package io.iohk.atala.agent.walletapi.sql
 import com.nimbusds.jose.jwk.OctetKeyPair
 import doobie.*
 import doobie.implicits.*
-import doobie.postgres.implicits.*
 import io.iohk.atala.agent.walletapi.crypto.{ECKeyPair, Apollo}
 import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
-import io.iohk.atala.castor.core.model.did.{PrismDID, EllipticCurve, ScheduledDIDOperationStatus}
+import io.iohk.atala.castor.core.model.did.EllipticCurve
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.shared.utils.Base64Utils
 import java.time.Instant
 import java.util.UUID
-import scala.collection.immutable.ArraySeq
 import zio.*
 import zio.interop.catz.*
 
@@ -44,88 +42,63 @@ class JdbcDIDSecretStorage(xa: Transactor[Task], apollo: Apollo) extends DIDSecr
   given octetKeyPairGet: Get[OctetKeyPair] = Get[String].map(OctetKeyPair.parse)
   given octetKeyPairPut: Put[OctetKeyPair] = Put[String].contramap(_.toJSONString)
 
-  override def removeDIDSecret(did: PrismDID): Task[Int] = {
-    val cxnIO = sql"""
-        | DELETE
-        | FROM public.prism_did_secret_storage
-        | WHERE
-        |   did = $did
-        """.stripMargin.update
+  // override def getKey(did: PrismDID, keyId: String): Task[Option[ECKeyPair]] = {
+  //   // By specification, it is possible to have multiple unconfirmed operation_id with
+  //   // the same operation_hash (same content different signature).
+  //   // However, there can be only 1 confirmed operation_id per operation_hash.
+  //   val status: ScheduledDIDOperationStatus = ScheduledDIDOperationStatus.Confirmed
+  //   val cxnIO = sql"""
+  //       | SELECT
+  //       |   sc.key_pair
+  //       | FROM public.prism_did_secret_storage sc
+  //       |   LEFT JOIN public.prism_did_wallet_state ws ON sc.did = ws.did
+  //       |   LEFT JOIN public.prism_did_update_lineage ul ON sc.operation_hash = ul.operation_hash
+  //       | WHERE
+  //       |   sc.did = $did
+  //       |   AND sc.key_id = $keyId
+  //       |   AND (ul.status = $status OR (ul.status IS NULL AND sc.operation_hash = sha256(ws.atala_operation_content)))
+  //       """.stripMargin
+  //     .query[ECKeyPair]
+  //     .option
 
-    cxnIO.run
-      .transact(xa)
-  }
+  //   cxnIO.transact(xa)
+  // }
 
-  override def getKey(did: PrismDID, keyId: String): Task[Option[ECKeyPair]] = {
-    // By specification, it is possible to have multiple unconfirmed operation_id with
-    // the same operation_hash (same content different signature).
-    // However, there can be only 1 confirmed operation_id per operation_hash.
-    val status: ScheduledDIDOperationStatus = ScheduledDIDOperationStatus.Confirmed
-    val cxnIO = sql"""
-        | SELECT
-        |   sc.key_pair
-        | FROM public.prism_did_secret_storage sc
-        |   LEFT JOIN public.prism_did_wallet_state ws ON sc.did = ws.did
-        |   LEFT JOIN public.prism_did_update_lineage ul ON sc.operation_hash = ul.operation_hash
-        | WHERE
-        |   sc.did = $did
-        |   AND sc.key_id = $keyId
-        |   AND (ul.status = $status OR (ul.status IS NULL AND sc.operation_hash = sha256(ws.atala_operation_content)))
-        """.stripMargin
-      .query[ECKeyPair]
-      .option
+  // override def insertKey(did: PrismDID, keyId: String, keyPair: ECKeyPair, operationHash: Array[Byte]): Task[Int] = {
+  //   val cxnIO = (now: Instant) => sql"""
+  //       | INSERT INTO public.prism_did_secret_storage(
+  //       |   did,
+  //       |   created_at,
+  //       |   key_id,
+  //       |   key_pair,
+  //       |   operation_hash
+  //       | ) values (
+  //       |   ${did},
+  //       |   ${now},
+  //       |   ${keyId},
+  //       |   ${keyPair},
+  //       |   ${operationHash}
+  //       | )
+  //       """.stripMargin.update
 
-    cxnIO.transact(xa)
-  }
+  //   Clock.instant.flatMap(cxnIO(_).run.transact(xa))
+  // }
 
-  override def insertKey(did: PrismDID, keyId: String, keyPair: ECKeyPair, operationHash: Array[Byte]): Task[Int] = {
-    val cxnIO = (now: Instant) => sql"""
-        | INSERT INTO public.prism_did_secret_storage(
-        |   did,
-        |   created_at,
-        |   key_id,
-        |   key_pair,
-        |   operation_hash
-        | ) values (
-        |   ${did},
-        |   ${now},
-        |   ${keyId},
-        |   ${keyPair},
-        |   ${operationHash}
-        | )
-        """.stripMargin.update
+  // override def listKeys(did: PrismDID): Task[Seq[(String, ArraySeq[Byte], ECKeyPair)]] = {
+  //   val cxnIO = sql"""
+  //       | SELECT
+  //       |   key_id,
+  //       |   operation_hash,
+  //       |   key_pair
+  //       | FROM public.prism_did_secret_storage
+  //       | WHERE
+  //       |   did = $did
+  //       """.stripMargin
+  //     .query[(String, ArraySeq[Byte], ECKeyPair)]
+  //     .to[List]
 
-    Clock.instant.flatMap(cxnIO(_).run.transact(xa))
-  }
-
-  override def listKeys(did: PrismDID): Task[Seq[(String, ArraySeq[Byte], ECKeyPair)]] = {
-    val cxnIO = sql"""
-        | SELECT
-        |   key_id,
-        |   operation_hash,
-        |   key_pair
-        | FROM public.prism_did_secret_storage
-        | WHERE
-        |   did = $did
-        """.stripMargin
-      .query[(String, ArraySeq[Byte], ECKeyPair)]
-      .to[List]
-
-    cxnIO.transact(xa)
-  }
-
-  override def removeKey(did: PrismDID, keyId: String): Task[Int] = {
-    val cxnIO = sql"""
-        | DELETE
-        | FROM public.prism_did_secret_storage
-        | WHERE
-        |   did = $did
-        |   AND key_id = $keyId
-        """.stripMargin.update
-
-    cxnIO.run
-      .transact(xa)
-  }
+  //   cxnIO.transact(xa)
+  // }
 
   override def getKey(did: DidId, keyId: String): Task[Option[OctetKeyPair]] = {
     val cxnIO = sql"""

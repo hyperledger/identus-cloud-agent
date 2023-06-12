@@ -19,8 +19,8 @@ class KeyResolver(apollo: Apollo, nonSecretStorage: DIDNonSecretStorage, secretS
 
   def getKey(did: PrismDID, keyMode: KeyManagementMode, keyId: String): Task[Option[ECKeyPair]] = {
     keyMode match {
-      case KeyManagementMode.HD     => resolveHdKey(did, keyId)
-      case KeyManagementMode.Random => secretStorage.getKey(did, keyId)
+      case KeyManagementMode.HD => resolveHdKey(did, keyId)
+      // case KeyManagementMode.Random => secretStorage.getKey(did, keyId)
     }
   }
 
