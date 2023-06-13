@@ -48,7 +48,7 @@ object ClasspathSharedObject {
     val pathToNativeObjectsInJar: Path =
       getOS match {
         case OS.UNIX      => Path.of("/NATIVE/linux/amd64") // TODO Fix arch name for other similar arch
-        case OS.MAC       => Path.of("/NATIVE/mac/aarch64")
+        case OS.MAC       => Path.of("/NATIVE/mac")
         case OS.WINDOWS   => ??? // TODO
         case OS.UnknownOS => ??? // TODO same as UNIX ???
         case OS.MissingOS => ???
