@@ -4,7 +4,6 @@ import org.scoverage.coveralls.Imports.CoverallsKeys._
 
 inThisBuild(
   Seq(
-    maxErrors := 5, // TODO: remove this
     organization := "io.iohk.atala",
     scalaVersion := "3.3.0",
     fork := true,

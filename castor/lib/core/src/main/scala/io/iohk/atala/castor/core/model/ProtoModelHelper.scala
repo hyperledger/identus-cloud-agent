@@ -353,7 +353,7 @@ private[castor] trait ProtoModelHelper {
   }
 
   def parseServiceType(s: String): Either[String, ServiceType] = {
-    // The type field MUST be a string or a non empty JSON array of strings.
+    // The type field MUST be a string or a non-empty JSON array of strings.
     val parsedJson: Option[Either[String, ServiceType.Multiple]] = io.circe.parser
       .parse(s)
       .toOption // it's OK to let parsing fail (e.g. LinkedDomains without quote is not a JSON string)
