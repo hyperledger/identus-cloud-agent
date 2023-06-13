@@ -241,10 +241,25 @@ object ProtoModelHelperSpec extends ZIOSpecDefault {
       val result = ProtoModelHelper.parseServiceType(serviceType)
       assert(result)(isRight(equalTo(ServiceType.Single("LinkedDomains"))))
     },
-    test("parse valid unquoted number") {
+    test("parse valid string with only number") {
       val serviceType = "3"
       val result = ProtoModelHelper.parseServiceType(serviceType)
       assert(result)(isRight(equalTo(ServiceType.Single("3"))))
+    },
+    test("parse valid string 'null'") {
+      val serviceType = "null"
+      val result = ProtoModelHelper.parseServiceType(serviceType)
+      assert(result)(isRight(equalTo(ServiceType.Single("null"))))
+    },
+    test("parse valid string 'true'") {
+      val serviceType = "true"
+      val result = ProtoModelHelper.parseServiceType(serviceType)
+      assert(result)(isRight(equalTo(ServiceType.Single("true"))))
+    },
+    test("parse valid string 'false'") {
+      val serviceType = "false"
+      val result = ProtoModelHelper.parseServiceType(serviceType)
+      assert(result)(isRight(equalTo(ServiceType.Single("false"))))
     },
     test("parse valid multiple service type") {
       val serviceType = """["LinkedDomains","IdentityHub","123"]"""
