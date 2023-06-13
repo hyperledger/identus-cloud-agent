@@ -65,6 +65,12 @@ case class CredentialRequest(
     ref: PointerByReference = new PointerByReference(),
     meta_ref: PointerByReference = new PointerByReference(),
 )
+
+case class EncodeCredentialAttributes(ref: PointerByReference = new PointerByReference()) {
+  def values: Array[String] = ref.getValue.getString(0).split(",")
+}
+case class Credential(ref: PointerByReference = new PointerByReference())
+
 object AnonCredsAPI {
 
   val api: AnonCreds = AnonCreds()
@@ -195,4 +201,57 @@ object AnonCredsAPI {
       .onSuccess(tmp)
   }
 
+  def encodeCredentialAttributes(attr: Array[String]): Either[String, EncodeCredentialAttributes] = {
+    val tmp = EncodeCredentialAttributes()
+    api
+      .shim_anoncreds_encode_credential_attributes(
+        attr,
+        attr.length,
+        tmp.ref
+      )
+      .onSuccess(tmp)
+  }
+
+  def createCredential(
+      credDef: CredentialDefinitionPrivate,
+      credOffer: CredentialOffer,
+      credRequest: CredentialRequest,
+      attrNames: Array[String],
+      attrRawValues: Array[String],
+      attrEncValues: EncodeCredentialAttributes,
+      // rev_reg_id: String,
+      // rev_status_list: Pointer,
+      // ffiCredRevInfoRegDef: Pointer,
+      // ffiCredRevInfoRegDefPrivate: Pointer,
+      // ffiCredRevInfoRegIdx: Long,
+      // ffiCredRevInfoTailsPath: String,
+  ): Either[String, Credential] = {
+    val tmp = Credential()
+    assert(
+      (attrRawValues.length == attrRawValues.length) && (attrRawValues.length == attrEncValues.values.length),
+      "TODO"
+    ) // return a Left
+    val ref = new PointerByReference()
+    api
+      .shim_anoncreds_create_credential(
+        cred_def = credDef.cred_def_ptr.getValue,
+        cred_def_private = credDef.cred_def_pvt_ptr.getValue,
+        cred_offer = credOffer.ref.getValue,
+        cred_request = credRequest.ref.getValue,
+        attr_names = attrNames,
+        attr_names_len = attrNames.length,
+        attr_raw_values = attrRawValues,
+        attr_raw_values_len = attrRawValues.length,
+        attr_enc_values = attrEncValues.values,
+        attr_enc_values_len = attrEncValues.values.length,
+        rev_reg_id = "",
+        rev_status_list = ref.getValue(),
+        ffiCredRevInfoRegDef = ref.getValue(),
+        ffiCredRevInfoRegDefPrivate = ref.getValue(),
+        /*@int64_t*/ ffiCredRevInfoRegIdx = 0,
+        ffiCredRevInfoTailsPath = "",
+        cred_p = tmp.ref
+      )
+      .onSuccess(tmp)
+  }
 }

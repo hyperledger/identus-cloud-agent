@@ -640,11 +640,14 @@ lazy val polluxAnoncreds = project
       //   "NameOfShimSharedObject" -> Shared.NameOfShimSharedObject,
       "NativeLibFolder" -> Shared.NativeLibFolder
     ),
+    // libraryDependencies += D.zioJson,
     libraryDependencies ++= Seq(
       "com.github.jnr" % "jnr-ffi" % "2.2.13",
       "org.scalatest" %% "scalatest" % "3.2.15" % Test,
-      ("me.vican.jorge" %% "dijon" % "0.6.0" % Test).cross(CrossVersion.for3Use2_13)
+      ("me.vican.jorge" % "dijon" % "0.6.0" % Test).cross(CrossVersion.for3Use2_13)
     ),
+    libraryDependencies += ("dev.zio" %% "zio-json" % V.zioJson)
+      .cross(CrossVersion.for3Use2_13), // REMOVE THIS CrossVersion.for3Use2_13
 
     // Download the anoncreds .so if necessary and build the shim.
     // The order of these tasks matters.
@@ -661,7 +664,11 @@ lazy val polluxAnoncreds = project
             println(s"Downloading and extracting AnonCreds Shared Object for $arch")
             val downloadUrl = Shared.anonCredsLibDownloadUrl(os, arch)
             Shared
-              .downloadAndExtractAnonCredsSharedObject(downloadUrl, libFileName, Shared.anonCredsLibFileName(os, arch))
+              .downloadAndExtractAnonCredsSharedObject(
+                downloadUrl,
+                libFileName,
+                Shared.anonCredsLibFileName(os, arch)
+              )
           }
 
           println("Combining libraries into a single universal one using lipo")

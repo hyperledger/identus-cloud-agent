@@ -78,45 +78,21 @@ class PoC extends AnyFlatSpec {
       .toOption
       .get
 
+    print("cred_req_p: ")
     println(credentialRequest.ref)
-    println(credentialRequest.meta_ref)
     println(AnonCredsAPI.getJson(credentialRequest.ref.getValue()))
+
+    print("cred_req_meta_p: ")
+    println(credentialRequest.meta_ref)
     println(AnonCredsAPI.getJson(credentialRequest.meta_ref.getValue()))
 
-    // val cred_req_ptr = new PointerByReference()
-    // val cred_req_meta_ptr = new PointerByReference()
+    println("*" * 100)
 
-    // printIfError(
-    //   api.anoncreds_create_credential_request(
-    //     prover_did = null,
-    //     cred_def_ptr.getValue,
-    //     master_secret_ptr.getValue,
-    //     master_secret_id,
-    //     cred_offer_ptr.getValue,
-    //     cred_req_ptr,
-    //     cred_req_meta_ptr
-    //   )
-    // )
+    val attrsValue = Array("Alan", "29")
+    val encodeCredentialAttributes = AnonCredsAPI.encodeCredentialAttributes(attrsValue).toOption.get
 
-    // print("cred_req_meta_p: ")
-    // api.getJson(cred_req_meta_ptr.getValue).map(println)
-
-    // print("cred_req_p: ")
-    // api.getJson(cred_req_ptr.getValue).map(println)
-
-    // val attr_raw_values = Array("Alan", "29")
-
-    // val attr_enc_values_ptr = new PointerByReference()
-
-    // printIfError(
-    //   api.shim_anoncreds_encode_credential_attributes(
-    //     attr_raw_values,
-    //     attr_raw_values.length,
-    //     attr_enc_values_ptr
-    //   )
-    // )
-
-    // val attr_enc_values = attr_enc_values_ptr.getValue.getString(0).split(",")
+    val attr_enc_values = encodeCredentialAttributes.ref.getValue.getString(0) // .split(",")
+    println(attr_enc_values.toString)
 
     // val reg_def_ptr = new PointerByReference()
     // val reg_def_private_ptr = new PointerByReference()
@@ -134,35 +110,25 @@ class PoC extends AnyFlatSpec {
     //     reg_def_private_ptr
     //   )
     // )
-
     // print("cred_def_p: ")
     // api.getJson(cred_def_ptr.getValue).map(println)
-
     // print("cred_def_pvt_p: ")
     // api.getJson(cred_def_pvt_ptr.getValue).map(println)
-
     // print("cred_offer: ")
     // api.getJson(cred_offer_ptr.getValue).map(println)
-
     // print("reg_def_p: ")
     // api.getJson(reg_def_ptr.getValue).map(println)
-
     // val cred_offer_json = getJsonUnsafe(reg_def_ptr.getValue)
     // println(s"reg_def_private_p: ${cred_offer_json}")
-
     // val pathToTailsFileIncName: String = {
     //   // the JSON lib I used failed to parse this first time.
     //   val begin = cred_offer_json.indexOf("\"tailsLocation\":") + 17
     //   val end = cred_offer_json.substring(begin).indexOf('"')
     //   cred_offer_json.substring(begin, begin + end)
     // }
-
     // println(s"Tails location $pathToTailsFileIncName")
-
     // val rev_status_list_ptr = new PointerByReference()
-
     // val rev_reg_def_id = "mock:uri2"
-
     // val timeStamp = 12L
     // printIfError(
     //   api.anoncreds_create_revocation_status_list(
@@ -173,11 +139,22 @@ class PoC extends AnyFlatSpec {
     //     rev_status_list_ptr
     //   )
     // )
-
     // print("rev_status_list: ")
     // api.getJson(rev_status_list_ptr.getValue).map(println)
 
-    // val credential_ptr = new PointerByReference()
+    val credential = AnonCredsAPI
+      .createCredential(
+        credDef = credentialDefinition,
+        credOffer = credentialOffer,
+        credRequest = credentialRequest,
+        attrNames = attrs,
+        attrRawValues = attrsValue,
+        attrEncValues = encodeCredentialAttributes,
+      )
+    // .toOption
+    // .get
+
+    println(credential)
 
     // printIfError(
     //   api.shim_anoncreds_create_credential(
