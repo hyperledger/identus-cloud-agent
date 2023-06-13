@@ -9,46 +9,6 @@ import org.scalatest.flatspec.AnyFlatSpec
 
 import java.nio.file.Files
 
-
-case class CredentialDefinitionResponse (
-  val cred_def_ptr: PointerByReference,
-  val cred_def_pvt_ptr: PointerByReference,
-  val key_proof_ptr: PointerByReference
-
-)
-
-object AnonCredsAPI{
-
-  def createCredentialDefinition(schemaId: String,schema: Schema, tag: String, sigType: String):  Either[String, CredentialDefinitionResponse] = {
-    val cred_def_ptr = new PointerByReference()
-    val cred_def_pvt_ptr = new PointerByReference()
-    val key_proof_ptr = new PointerByReference()
-    
-    api.anoncreds_create_credential_definition(
-        SCHEMA_ID,
-        schema,
-        "tag",
-        issuerDid,
-        sigType,
-        supportRevocation,
-        cred_def_ptr,
-        cred_def_pvt_ptr,
-        key_proof_ptr
-      )
-
-      return CredentialDefinitionResponse(
-        cred_def_ptr,
-        cred_def_pvt_ptr,
-        key_proof_ptr
-      )
-  }
-}
-
-
-
-
-
-
 class SingleIssuerSingleProver extends AnyFlatSpec {
 
   val SCHEMA_ID = "mock:uri2"
@@ -66,7 +26,6 @@ class SingleIssuerSingleProver extends AnyFlatSpec {
   "The script" should "run to completion" in {
     script()
   }
-  
 
   def script(): Unit = {
     println(
@@ -89,7 +48,6 @@ class SingleIssuerSingleProver extends AnyFlatSpec {
     val cred_def_pvt_ptr = new PointerByReference()
     val key_proof_ptr = new PointerByReference()
 
-    print(AnonCredsAPI.createCredentialDefinition(SCHEMA_ID, schema, "tag", issuerDid, sigType))
     printIfError(
       api.anoncreds_create_credential_definition(
         SCHEMA_ID,
