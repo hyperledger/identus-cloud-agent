@@ -8,11 +8,25 @@ import java.nio.file.Files
 import creative.anoncreds.AnonCredsOps
 import creative.anoncreds.AnonCredsOps.{FfiCredentialEntry, FfiCredentialProve, Helpers}
 
-case class CredentialDefinition(
+trait CredentialDefinition {
+  def cred_def_ptr: PointerByReference
+  def key_proof_ptr: PointerByReference
+}
+case class CredentialDefinitionPublic(
+    cred_def_ptr: PointerByReference,
+    key_proof_ptr: PointerByReference,
+) extends CredentialDefinition
+case class CredentialDefinitionPrivate(
     cred_def_ptr: PointerByReference,
     cred_def_pvt_ptr: PointerByReference,
     key_proof_ptr: PointerByReference,
-)
+) extends CredentialDefinition {
+  def toPublic = CredentialDefinitionPublic(
+    cred_def_ptr: PointerByReference,
+    cred_def_pvt_ptr: PointerByReference,
+  )
+}
+
 case class SchemaRef(ref: PointerByReference) {
   def getPointer = ref.getValue()
   def json = AnonCredsAPI.getJson(ref.getValue)
@@ -22,22 +36,39 @@ enum SigType:
   case CL extends SigType
   // .... ?
 
+extension (code: ErrorCode)
+  def onSuccess[T](defualt: T) = code match
+    case ErrorCode.SUCCESS                => Right(defualt)
+    case ErrorCode.INPUT                  => Left("Error INPUT")
+    case ErrorCode.IOERROR                => Left("Error IOERROR")
+    case ErrorCode.INVALIDSTATE           => Left("Error INVALIDSTATE")
+    case ErrorCode.UNEXPECTED             => Left("Error UNEXPECTED")
+    case ErrorCode.CREDENTIALREVOKED      => Left("Error CREDENTIALREVOKED")
+    case ErrorCode.INVALIDUSERREVOCID     => Left("Error INVALIDUSERREVOCID")
+    case ErrorCode.PROOFREJECTED          => Left("Error PROOFREJECTED")
+    case ErrorCode.REVOCATIONREGISTRYFULL => Left("Error REVOCATIONREGISTRYFULL")
+
+case class LinkSecret(ref: PointerByReference = new PointerByReference())
+object LinkSecret {
+  def create: Either[String, LinkSecret] = {
+    val linkSecret = new LinkSecret()
+    AnonCredsAPI.api
+      .anoncreds_create_master_secret(linkSecret.ref)
+      .onSuccess(linkSecret)
+  }
+}
+case class CredentialOffer(
+    ref: PointerByReference = new PointerByReference()
+)
+
+case class CredentialRequest(
+    ref: PointerByReference = new PointerByReference(),
+    meta_ref: PointerByReference = new PointerByReference(),
+)
 object AnonCredsAPI {
 
-  private implicit val api: AnonCreds = AnonCreds()
+  val api: AnonCreds = AnonCreds()
   api.anoncreds_set_default_logger()
-
-  extension (code: ErrorCode)
-    def onSuccess[T](defualt: T) = code match
-      case ErrorCode.SUCCESS                => Right(defualt)
-      case ErrorCode.INPUT                  => Left("Error INPUT")
-      case ErrorCode.IOERROR                => Left("Error IOERROR")
-      case ErrorCode.INVALIDSTATE           => Left("Error INVALIDSTATE")
-      case ErrorCode.UNEXPECTED             => Left("Error UNEXPECTED")
-      case ErrorCode.CREDENTIALREVOKED      => Left("Error CREDENTIALREVOKED")
-      case ErrorCode.INVALIDUSERREVOCID     => Left("Error INVALIDUSERREVOCID")
-      case ErrorCode.PROOFREJECTED          => Left("Error PROOFREJECTED")
-      case ErrorCode.REVOCATIONREGISTRYFULL => Left("Error REVOCATIONREGISTRYFULL")
 
   def version = api.anoncreds_version()
 
@@ -86,20 +117,20 @@ object AnonCredsAPI {
       tag: String,
       sigType: SigType = SigType.CL,
       supportRevocation: Boolean = false,
-  ): Either[String, CredentialDefinition] = {
+  ): Either[String, CredentialDefinitionPrivate] = {
     val cred_def_ptr = new PointerByReference()
     val cred_def_pvt_ptr = new PointerByReference()
     val key_proof_ptr = new PointerByReference()
 
-    println(schemaId)
-    println(schema.getPointer)
-    println("tag")
-    println(issuerDid)
-    println(sigType.toString)
-    println(if (supportRevocation) (0: Byte) else (1: Byte))
-    println(cred_def_ptr)
-    println(cred_def_pvt_ptr)
-    println(key_proof_ptr)
+    // println(schemaId)
+    // println(schema.getPointer)
+    // println("tag")
+    // println(issuerDid)
+    // println(sigType.toString)
+    // println(if (supportRevocation) (0: Byte) else (1: Byte))
+    // println(cred_def_ptr)
+    // println(cred_def_pvt_ptr)
+    // println(key_proof_ptr)
 
     api
       .anoncreds_create_credential_definition(
@@ -114,7 +145,7 @@ object AnonCredsAPI {
         key_proof_ptr
       )
       .onSuccess(
-        CredentialDefinition(
+        CredentialDefinitionPrivate(
           cred_def_ptr,
           cred_def_pvt_ptr,
           key_proof_ptr
@@ -122,4 +153,46 @@ object AnonCredsAPI {
       )
 
   }
+
+  def createCredentialOffer(
+      schemaId: String, // FfiStr,
+      credDefId: String, // FfiStr,
+      // key_proof: Pointer,
+      credentialDefinition: CredentialDefinitionPrivate
+  ): Either[String, CredentialOffer] = {
+    val offer = CredentialOffer()
+    api
+      .anoncreds_create_credential_offer(
+        schema_id = schemaId,
+        cred_def_id = credDefId,
+        key_proof = credentialDefinition.key_proof_ptr.getValue(),
+        cred_offer_p = offer.ref,
+      )
+      .onSuccess(offer)
+  }
+
+  // *********************************************************************
+
+  def createCredentialRequest(
+      proverDID: String = null,
+      credDef: CredentialDefinitionPublic,
+      linkSecret: LinkSecret,
+      linkSecretId: String,
+      credOffer: CredentialOffer,
+  ): Either[String, CredentialRequest] = {
+    val tmp = CredentialRequest()
+
+    api
+      .anoncreds_create_credential_request(
+        proverDID,
+        credDef.cred_def_ptr.getValue,
+        linkSecret.ref.getValue,
+        linkSecretId,
+        credOffer.ref.getValue,
+        tmp.ref,
+        tmp.meta_ref,
+      )
+      .onSuccess(tmp)
+  }
+
 }

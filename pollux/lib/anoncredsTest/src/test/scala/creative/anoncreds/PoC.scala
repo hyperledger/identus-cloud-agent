@@ -8,7 +8,7 @@ import jnr.ffi.byref.{ByteByReference, NumberByReference, PointerByReference}
 import org.scalatest.flatspec.AnyFlatSpec
 
 import java.nio.file.Files
-import io.iohk.atala.pollux.anoncreds.AnonCredsAPI
+import io.iohk.atala.pollux.anoncreds._
 
 /** polluxAnoncredsTest/Test/testOnly creative.anoncreds.PoC
   */
@@ -37,50 +37,51 @@ class PoC extends AnyFlatSpec {
 
     val credentialDefinition = AnonCredsAPI
       .createCredentialDefinition(
-        schemaId = "schemaId",
+        schemaId = "mock:uri2",
         schema = schema,
-        issuerDid = "issuerDid",
+        issuerDid = "mock:issuer_id/path&q=bar",
         tag = "tag",
       )
-    // .toOption
-    // .get
-    println(credentialDefinition)
+      .toOption
+      .get
 
-    // println(credentialDefinition.cred_def_ptr)
-    // println(credentialDefinition.cred_def_pvt_ptr)
-    // println(credentialDefinition.key_proof_ptr)
+    println(credentialDefinition.cred_def_ptr)
+    println(credentialDefinition.cred_def_pvt_ptr)
+    println(credentialDefinition.key_proof_ptr)
 
-    // printIfError(
-    //   api.anoncreds_create_credential_definition(
-    //     SCHEMA_ID,
-    //     schema,
-    //     "tag",
-    //     issuerDid,
-    //     sigType,
-    //     supportRevocation,
-    //     cred_def_ptr,
-    //     cred_def_pvt_ptr,
-    //     key_proof_ptr
-    //   )
-    // )
+    // println(AnonCredsAPI.getJson(credentialDefinition.cred_def_ptr.getValue()))
+    // println(AnonCredsAPI.getJson(credentialDefinition.cred_def_pvt_ptr.getValue()))
+    // println(AnonCredsAPI.getJson(credentialDefinition.key_proof_ptr.getValue()))
 
-    // val cred_offer_ptr = new PointerByReference()
+    println("*" * 100)
 
-    // printIfError(
-    //   api.anoncreds_create_credential_offer(
-    //     SCHEMA_ID,
-    //     CRED_DEF_ID,
-    //     key_proof_ptr.getValue,
-    //     cred_offer_ptr
-    //   )
-    // )
+    val credentialOffer = AnonCredsAPI.createCredentialOffer(SCHEMA_ID, CRED_DEF_ID, credentialDefinition).toOption.get
 
-    // val master_secret_ptr = new PointerByReference()
-    // val master_secret_id = "master secret id"
+    // println(credentialOffer.ref)
+    // println(AnonCredsAPI.getJson(credentialOffer.ref.getValue()))
 
-    // printIfError(
-    //   api.anoncreds_create_master_secret(master_secret_ptr)
-    // )
+    println("*" * 100)
+
+    val linkSecret = LinkSecret.create.toOption.get
+
+    // println(linkSecret.ref)
+    // println(AnonCredsAPI.getJson(linkSecret.ref.getValue()))
+
+    val credentialRequest = AnonCredsAPI
+      .createCredentialRequest(
+        proverDID = null,
+        credDef = credentialDefinition.toPublic,
+        linkSecret = linkSecret,
+        linkSecretId = "linkSecretId",
+        credOffer = credentialOffer,
+      )
+      .toOption
+      .get
+
+    println(credentialRequest.ref)
+    println(credentialRequest.meta_ref)
+    println(AnonCredsAPI.getJson(credentialRequest.ref.getValue()))
+    println(AnonCredsAPI.getJson(credentialRequest.meta_ref.getValue()))
 
     // val cred_req_ptr = new PointerByReference()
     // val cred_req_meta_ptr = new PointerByReference()
