@@ -33,14 +33,22 @@ class PoC extends AnyFlatSpec {
   def script(): Unit = {
     println(s"Version of anoncreds library is ${AnonCredsAPI.version}")
 
-    val schema = AnonCredsAPI.createSchema
+    val schema = AnonCredsAPI.createSchema().toOption.get
 
-    AnonCredsAPI.createCredentialDefinition(
-      schemaId = "schemaId",
-      schema = schema,
-      issuerDid = "issuerDid",
-      tag = "tag",
-    )
+    val credentialDefinition = AnonCredsAPI
+      .createCredentialDefinition(
+        schemaId = "schemaId",
+        schema = schema,
+        issuerDid = "issuerDid",
+        tag = "tag",
+      )
+    // .toOption
+    // .get
+    println(credentialDefinition)
+
+    // println(credentialDefinition.cred_def_ptr)
+    // println(credentialDefinition.cred_def_pvt_ptr)
+    // println(credentialDefinition.key_proof_ptr)
 
     // printIfError(
     //   api.anoncreds_create_credential_definition(

@@ -14,10 +14,9 @@ case class CredentialDefinition(
     key_proof_ptr: PointerByReference,
 )
 case class SchemaRef(ref: PointerByReference) {
-  def value = ref.getValue()
+  def getPointer = ref.getValue()
+  def json = AnonCredsAPI.getJson(ref.getValue)
 }
-
-type Schema = Pointer
 
 enum SigType:
   case CL extends SigType
@@ -43,47 +42,46 @@ object AnonCredsAPI {
   def version = api.anoncreds_version()
 
   def getJson(p: Pointer): Either[String, String] = {
-    api.getJson(p) match {
-      case Left(value) =>
-        throw new RuntimeException(s"json error $value")
-      case Right(value) => value
-    }
+
+    val buf = new PointerByReference()
+
+    val data = api
+      .shim_anoncreds_object_get_json(
+        p,
+        buf
+      )
+      .onSuccess(buf.getValue.getString(0))
+
+    data
 
   }
 
-  // def createSchema(
-  //     issuerDid: String = "mock:issuer_id/path&q=bar",
-  //     attrs: Array[String] = Array("name", "age")
-  // ): Pointer = {
+  def createSchema(
+      issuerDid: String = "mock:issuer_id/path&q=bar",
+      attrs: Array[String] = Array("name", "age")
+  ): Either[String, SchemaRef] = {
 
-  //   val gvtSchemaName = "gvt2"
-  //   val schemaVersion = "1.3"
+    val gvtSchemaName = "gvt2"
+    val schemaVersion = "1.3"
 
-  //   val tails_path = Files.createTempDirectory("tails")
-  //   val result_p_int = new PointerByReference()
+    val tails_path = Files.createTempDirectory("tails")
+    val result_p_int = new PointerByReference()
 
-  //   val result_p = api
-  //     .shim_anoncreds_create_schema(
-  //       gvtSchemaName,
-  //       schemaVersion,
-  //       issuerDid,
-  //       attrs,
-  //       attrs.length,
-  //       result_p_int
-  //     )
-  //     .onSuccess(SchemaRef(result_p_int))
-
-  //   api.getJson(result_p.getValue) match {
-  //     case Left(value) => printIfError(value)
-  //     case Right(value) =>
-  //       println(value)
-  //   }
-  //   result_p.getValue
-  // }
+    api
+      .shim_anoncreds_create_schema(
+        gvtSchemaName,
+        schemaVersion,
+        issuerDid,
+        attrs,
+        attrs.length,
+        result_p_int
+      )
+      .onSuccess(SchemaRef(result_p_int))
+  }
 
   def createCredentialDefinition(
       schemaId: String,
-      schema: Schema,
+      schema: SchemaRef,
       issuerDid: String,
       tag: String,
       sigType: SigType = SigType.CL,
@@ -93,14 +91,24 @@ object AnonCredsAPI {
     val cred_def_pvt_ptr = new PointerByReference()
     val key_proof_ptr = new PointerByReference()
 
+    println(schemaId)
+    println(schema.getPointer)
+    println("tag")
+    println(issuerDid)
+    println(sigType.toString)
+    println(if (supportRevocation) (0: Byte) else (1: Byte))
+    println(cred_def_ptr)
+    println(cred_def_pvt_ptr)
+    println(key_proof_ptr)
+
     api
       .anoncreds_create_credential_definition(
         schemaId,
-        schema,
+        schema.getPointer,
         "tag",
         issuerDid,
         sigType.toString,
-        if (supportRevocation) 0 else 1,
+        if (supportRevocation) (0: Byte) else (1: Byte),
         cred_def_ptr,
         cred_def_pvt_ptr,
         key_proof_ptr
