@@ -562,6 +562,7 @@ val prismNodeClient = project
   .settings(
     name := "prism-node-client",
     libraryDependencies ++= Seq(D.scalaPbGrpc, D.scalaPbRuntime),
+    coverageEnabled := false,
     // gRPC settings
     Compile / PB.targets := Seq(scalapb.gen() -> (Compile / sourceManaged).value / "scalapb"),
     Compile / PB.protoSources := Seq(
