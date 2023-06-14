@@ -1,8 +1,8 @@
-# Operating a PRISM agent with secret storage
+# Operating an agent with secrets
 
 ## Introduction
 
-PRISM agent is a cloud-based agent within the SSI ecosystem that facilitates user
+PRISM agent is a cloud-based agent within the SSI ecosystem that offers user
 DID (Decentralized Identifier) management. To generate a DID key material,
 the software relies on a seed, following the BIP32 / BIP39 standards.
 The system operators have the option to either provide their own seed or
@@ -12,13 +12,13 @@ This ensures full control over the DID key material and guarantees secure manage
 
 The PRISM agent has a default configuration of starting in development mode.
 This behavior can be modified using the `DEV_MODE` environment variable,
-which accepts the value `true` or `false` to indicate the desired mode.
-In development mode, the agent can start with or without a user-specified seed.
-To provide a specific seed, set the `WALLET_SEED` environment variable with a
-BIP32 binary master seed represented as a hexadecimal string.
+which accepts the value `true` or `false`.
+In development mode, the agent can start with or without a user-provided seed.
+To provide a seed, set the `WALLET_SEED` variable with a
+BIP32 binary seed encoded as a hexadecimal string.
 If `WALLET_SEED` is not provided, the agent will generate one automatically.
-However, if `DEV_MODE=false` and the `WALLET_SEED` is not supplied,
-the agent will fail to initialize. This requirement is crucial to maintain secure
+However, if `DEV_MODE=false` and the `WALLET_SEED` is not provided,
+the agent will fail to initialize. This is crucial to maintain secure
 and controlled management of the system, given the agent's lack of seed persistence.
 
 __Note that it is important to set `DEV_MODE=false` for the production instance.__
@@ -52,7 +52,7 @@ level=INFO message="New seed generated : 1044f87e445ca10c537688a9645d738bb48747a
 ```
 The log indicates an attempt to read the seed from the environment variable initially.
 As the variable is not set, the log message includes a binary seed (encode as hex string)
-and a 24-word mnemonic phrase (BIP39 compliant).
+and a 24-words mnemonic (BIP39 compliant).
 
 ## Specify a wallet seed in the development mode
 
