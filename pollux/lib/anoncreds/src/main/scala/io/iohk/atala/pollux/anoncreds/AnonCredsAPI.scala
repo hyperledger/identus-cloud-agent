@@ -8,69 +8,6 @@ import java.nio.file.Files
 import creative.anoncreds.AnonCredsOps
 import creative.anoncreds.AnonCredsOps.{FfiCredentialEntry, FfiCredentialProve, Helpers}
 
-trait CredentialDefinition {
-  def cred_def_ptr: PointerByReference
-  def key_proof_ptr: PointerByReference
-}
-case class CredentialDefinitionPublic(
-    cred_def_ptr: PointerByReference,
-    key_proof_ptr: PointerByReference,
-) extends CredentialDefinition
-case class CredentialDefinitionPrivate(
-    cred_def_ptr: PointerByReference,
-    cred_def_pvt_ptr: PointerByReference,
-    key_proof_ptr: PointerByReference,
-) extends CredentialDefinition {
-  def toPublic = CredentialDefinitionPublic(
-    cred_def_ptr: PointerByReference,
-    cred_def_pvt_ptr: PointerByReference,
-  )
-}
-
-case class SchemaRef(ref: PointerByReference) {
-  def getPointer = ref.getValue()
-  def json = AnonCredsAPI.getJson(ref.getValue)
-}
-
-enum SigType:
-  case CL extends SigType
-  // .... ?
-
-extension (code: ErrorCode)
-  def onSuccess[T](defualt: T) = code match
-    case ErrorCode.SUCCESS                => Right(defualt)
-    case ErrorCode.INPUT                  => Left("Error INPUT")
-    case ErrorCode.IOERROR                => Left("Error IOERROR")
-    case ErrorCode.INVALIDSTATE           => Left("Error INVALIDSTATE")
-    case ErrorCode.UNEXPECTED             => Left("Error UNEXPECTED")
-    case ErrorCode.CREDENTIALREVOKED      => Left("Error CREDENTIALREVOKED")
-    case ErrorCode.INVALIDUSERREVOCID     => Left("Error INVALIDUSERREVOCID")
-    case ErrorCode.PROOFREJECTED          => Left("Error PROOFREJECTED")
-    case ErrorCode.REVOCATIONREGISTRYFULL => Left("Error REVOCATIONREGISTRYFULL")
-
-case class LinkSecret(ref: PointerByReference = new PointerByReference())
-object LinkSecret {
-  def create: Either[String, LinkSecret] = {
-    val linkSecret = new LinkSecret()
-    AnonCredsAPI.api
-      .anoncreds_create_master_secret(linkSecret.ref)
-      .onSuccess(linkSecret)
-  }
-}
-case class CredentialOffer(
-    ref: PointerByReference = new PointerByReference()
-)
-
-case class CredentialRequest(
-    ref: PointerByReference = new PointerByReference(),
-    meta_ref: PointerByReference = new PointerByReference(),
-)
-
-case class EncodeCredentialAttributes(ref: PointerByReference = new PointerByReference()) {
-  def values: Array[String] = ref.getValue.getString(0).split(",")
-}
-case class Credential(ref: PointerByReference = new PointerByReference())
-
 object AnonCredsAPI {
 
   val api: AnonCreds = AnonCreds()
@@ -120,13 +57,13 @@ object AnonCredsAPI {
       schemaId: String,
       schema: SchemaRef,
       issuerDid: String,
-      tag: String,
+      tag: Tag,
       sigType: SigType = SigType.CL,
       supportRevocation: Boolean = false,
   ): Either[String, CredentialDefinitionPrivate] = {
-    val cred_def_ptr = new PointerByReference()
-    val cred_def_pvt_ptr = new PointerByReference()
-    val key_proof_ptr = new PointerByReference()
+    val pub = new PointerByReference()
+    val pvt = new PointerByReference()
+    val keyProof = new PointerByReference()
 
     // println(schemaId)
     // println(schema.getPointer)
@@ -134,36 +71,35 @@ object AnonCredsAPI {
     // println(issuerDid)
     // println(sigType.toString)
     // println(if (supportRevocation) (0: Byte) else (1: Byte))
-    // println(cred_def_ptr)
-    // println(cred_def_pvt_ptr)
-    // println(key_proof_ptr)
+    // println(pub)
+    // println(pvt)
+    // println(keyProof)
 
     api
       .anoncreds_create_credential_definition(
         schemaId,
         schema.getPointer,
-        "tag",
+        tag.value,
         issuerDid,
         sigType.toString,
         if (supportRevocation) (0: Byte) else (1: Byte),
-        cred_def_ptr,
-        cred_def_pvt_ptr,
-        key_proof_ptr
+        pub,
+        pvt,
+        keyProof
       )
       .onSuccess(
         CredentialDefinitionPrivate(
-          cred_def_ptr,
-          cred_def_pvt_ptr,
-          key_proof_ptr
+          pub,
+          pvt,
+          keyProof
         )
       )
 
   }
 
   def createCredentialOffer(
-      schemaId: String, // FfiStr,
-      credDefId: String, // FfiStr,
-      // key_proof: Pointer,
+      schemaId: String,
+      credDefId: String,
       credentialDefinition: CredentialDefinitionPrivate
   ): Either[String, CredentialOffer] = {
     val offer = CredentialOffer()
@@ -171,7 +107,7 @@ object AnonCredsAPI {
       .anoncreds_create_credential_offer(
         schema_id = schemaId,
         cred_def_id = credDefId,
-        key_proof = credentialDefinition.key_proof_ptr.getValue(),
+        key_proof = credentialDefinition.keyProof.getValue(),
         cred_offer_p = offer.ref,
       )
       .onSuccess(offer)
@@ -191,7 +127,7 @@ object AnonCredsAPI {
     api
       .anoncreds_create_credential_request(
         proverDID,
-        credDef.cred_def_ptr.getValue,
+        credDef.pub.getValue,
         linkSecret.ref.getValue,
         linkSecretId,
         credOffer.ref.getValue,
@@ -221,8 +157,10 @@ object AnonCredsAPI {
       attrEncValues: EncodeCredentialAttributes,
       // rev_reg_id: String,
       // rev_status_list: Pointer,
-      // ffiCredRevInfoRegDef: Pointer,
-      // ffiCredRevInfoRegDefPrivate: Pointer,
+      revocationRegistryDefinition: RevocationRegistryDefinition,
+      revocationStatusList: RevocationStatusList,
+      // 00 ffiCredRevInfoRegDef: Pointer,
+      // 00 ffiCredRevInfoRegDefPrivate: Pointer,
       // ffiCredRevInfoRegIdx: Long,
       // ffiCredRevInfoTailsPath: String,
   ): Either[String, Credential] = {
@@ -232,10 +170,32 @@ object AnonCredsAPI {
       "TODO"
     ) // return a Left
     val ref = new PointerByReference()
+
+    // println(s"""
+    // .shim_anoncreds_create_credential(
+    //     cred_def = ${credDef.pub.getValue},
+    //     cred_def_private = ${credDef.pvt.getValue},
+    //     cred_offer = ${credOffer.ref.getValue},
+    //     cred_request = ${credRequest.ref.getValue},
+    //     attr_names = ${attrNames},
+    //     attr_names_len = ${attrNames.length},
+    //     attr_raw_values = ${attrRawValues},
+    //     attr_raw_values_len = ${attrRawValues.length},
+    //     attr_enc_values = ${attrEncValues.values},
+    //     attr_enc_values_len = ${attrEncValues.values.length},
+    //     rev_reg_id = ${revocationStatusList.revRegDefId},
+    //     rev_status_list = ${revocationStatusList.ref.getValue()},
+    //     ffiCredRevInfoRegDef = ${revocationRegistryDefinition.pub.getValue()},
+    //     ffiCredRevInfoRegDefPrivate = ${revocationRegistryDefinition.pvt.getValue()},
+    //     /*@int64_t*/ ffiCredRevInfoRegIdx = ${0L},
+    //     ffiCredRevInfoTailsPath = ${revocationRegistryDefinition.pathToTailsFileIncName},
+    //     cred_p = ${tmp.ref}
+    //   )
+    // """)
     api
       .shim_anoncreds_create_credential(
-        cred_def = credDef.cred_def_ptr.getValue,
-        cred_def_private = credDef.cred_def_pvt_ptr.getValue,
+        cred_def = credDef.pub.getValue,
+        cred_def_private = credDef.pvt.getValue,
         cred_offer = credOffer.ref.getValue,
         cred_request = credRequest.ref.getValue,
         attr_names = attrNames,
@@ -244,14 +204,98 @@ object AnonCredsAPI {
         attr_raw_values_len = attrRawValues.length,
         attr_enc_values = attrEncValues.values,
         attr_enc_values_len = attrEncValues.values.length,
-        rev_reg_id = "",
-        rev_status_list = ref.getValue(),
-        ffiCredRevInfoRegDef = ref.getValue(),
-        ffiCredRevInfoRegDefPrivate = ref.getValue(),
-        /*@int64_t*/ ffiCredRevInfoRegIdx = 0,
-        ffiCredRevInfoTailsPath = "",
+        rev_reg_id = revocationStatusList.revRegDefId,
+        rev_status_list = revocationStatusList.ref.getValue(),
+        ffiCredRevInfoRegDef = revocationRegistryDefinition.pub.getValue(),
+        ffiCredRevInfoRegDefPrivate = revocationRegistryDefinition.pvt.getValue(),
+        /*@int64_t*/ ffiCredRevInfoRegIdx = 0L,
+        ffiCredRevInfoTailsPath = revocationRegistryDefinition.pathToTailsFileIncName,
         cred_p = tmp.ref
       )
       .onSuccess(tmp)
   }
+
+  // REVOCATION!
+
+  def createRevocationRegistry(
+      credentialDefinition: CredentialDefinition,
+      credDefId: String,
+      issuerDID: String,
+      tag: Tag,
+  ): Either[String, RevocationRegistryDefinition] = {
+
+    val tailsPath: java.nio.file.Path = Files.createTempDirectory("tails") // what is this for???
+    val tmp = RevocationRegistryDefinition(tailsPath = tailsPath)
+
+    api
+      .anoncreds_create_revocation_registry_def(
+        cred_def = credentialDefinition.pub.getValue,
+        cred_def_id = credDefId,
+        issuer_id = issuerDID,
+        tag = tag.value,
+        rev_reg_type = RevRegType.CL_ACCUM.toString(),
+        max_cred_num = 2,
+        tails_dir_path = tailsPath.toString,
+        tmp.pub,
+        tmp.pvt,
+      )
+      .onSuccess(tmp)
+  }
+
+  def createRevocationStatusList(
+      revRegDefId: String, //  "mock:uri2"
+      revocationRegistryDefinition: RevocationRegistryDefinition,
+      timeStamp: Long = 12L
+  ): Either[String, RevocationStatusList] = {
+    val tmp = RevocationStatusList(revRegDefId = revRegDefId)
+    api
+      .anoncreds_create_revocation_status_list(
+        tmp.revRegDefId,
+        revocationRegistryDefinition.pub.getValue,
+        timeStamp,
+        0, /// not sure what this does, but only 0 seems to work
+        tmp.ref
+      )
+      .onSuccess(tmp)
+  }
 }
+
+// .shim_anoncreds_create_credential(
+//     cred_def = jnr.ffi.provider.jffi.DirectMemoryIO[address=0x2]
+//     cred_def_private = jnr.ffi.provider.jffi.DirectMemoryIO[address=0x3]
+//     cred_offer = jnr.ffi.provider.jffi.DirectMemoryIO[address=0x5]
+//     cred_request = jnr.ffi.provider.jffi.DirectMemoryIO[address=0x7]
+//     attr_names = [Ljava.lang.String;@21e6b84
+//     attr_names_len = 2
+//     attr_raw_values = [Ljava.lang.String;@2f64e8d7
+//     attr_raw_values_len = 2
+//     attr_enc_values = [Ljava.lang.String;@9607a78
+//     attr_enc_values_len = 2
+//     rev_reg_id = mock:uri2
+//     rev_status_list = jnr.ffi.provider.jffi.DirectMemoryIO[address=0xb]
+//     ffiCredRevInfoRegDef = jnr.ffi.provider.jffi.DirectMemoryIO[address=0x9]
+//     ffiCredRevInfoRegDefPrivate = jnr.ffi.provider.jffi.DirectMemoryIO[address=0xa]
+//     /*@int64_t*/ ffiCredRevInfoRegIdx = 0
+//     ffiCredRevInfoTailsPath = /tmp/tails1892628276345612448/8BzH3Agfy33RuPK5m4nMcqTcnsq5DfCz91b6SUwc8oGp
+//     cred_p = jnr.ffi.byref.PointerByReference@1e1687b
+//   )
+
+//   .shim_anoncreds_create_credential(
+//     cred_def = jnr.ffi.provider.jffi.DirectMemoryIO[address=0x2],
+//     cred_def_private = jnr.ffi.provider.jffi.DirectMemoryIO[address=0x3],
+//     cred_offer = jnr.ffi.provider.jffi.DirectMemoryIO[address=0x5],
+//     cred_request = jnr.ffi.provider.jffi.DirectMemoryIO[address=0x7],
+//     attr_names = [Ljava.lang.String;@5f39399e,
+//     attr_names_len = 2,
+//     attr_raw_values = [Ljava.lang.String;@3ad5e936,
+//     attr_raw_values_len = 2,
+//     attr_enc_values = [Ljava.lang.String;@58cb96ef,
+//     attr_enc_values_len = 2,
+//     rev_reg_id = mock:uri2,
+//     rev_status_list = jnr.ffi.provider.jffi.DirectMemoryIO[address=0xb],
+//     ffiCredRevInfoRegDef = jnr.ffi.provider.jffi.DirectMemoryIO[address=0x9],
+//     ffiCredRevInfoRegDefPrivate = jnr.ffi.provider.jffi.DirectMemoryIO[address=0xa],
+//     /*@int64_t*/ ffiCredRevInfoRegIdx = 0,
+//     ffiCredRevInfoTailsPath = /tmp/tails596794321566758195,
+//     cred_p = jnr.ffi.byref.PointerByReference@8089af8
+//   )
