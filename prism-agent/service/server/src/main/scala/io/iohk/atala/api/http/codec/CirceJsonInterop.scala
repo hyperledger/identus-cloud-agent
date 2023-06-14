@@ -13,7 +13,7 @@ object CirceJsonInterop {
     val encoded = circeJson.noSpaces
     encoded.fromJson[ZioJson] match {
       case Left(failure) =>
-        throw Exception(s"Circe and Zio Json interop fail. Unable to  convert from Circe to Zio AST. $failure")
+        throw Exception(s"Circe and Zio Json interop fail. Unable to convert from Circe to Zio AST. $failure")
       case Right(value) => value
     }
   }
@@ -22,7 +22,7 @@ object CirceJsonInterop {
     val encoded = zioJson.toJson
     io.circe.parser.parse(encoded).left.map(_.toString) match {
       case Left(failure) =>
-        throw Exception(s"Circe and Zio Json interop fail. Unable to  convert from Zio to Circe AST. $failure")
+        throw Exception(s"Circe and Zio Json interop fail. Unable to convert from Zio to Circe AST. $failure")
       case Right(value) => value
     }
   }
