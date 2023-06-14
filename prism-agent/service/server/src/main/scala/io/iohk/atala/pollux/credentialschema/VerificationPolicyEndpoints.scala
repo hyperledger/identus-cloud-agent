@@ -109,7 +109,7 @@ object VerificationPolicyEndpoints {
       .tag("Verification")
 
   val deleteVerificationPolicyByIdEndpoint: PublicEndpoint[
-    (RequestContext, UUID, Int),
+    (RequestContext, UUID),
     ErrorResponse,
     Unit,
     Any
@@ -119,11 +119,6 @@ object VerificationPolicyEndpoints {
       .in(
         "verification" / "policies" / path[UUID]("id")
           .description("Delete the verification policy by id")
-      )
-      .in(
-        query[Int](name = "nonce").description(
-          "Nonce of the previous VerificationPolicy"
-        )
       )
       .out(
         statusCode(StatusCode.Ok).description(
