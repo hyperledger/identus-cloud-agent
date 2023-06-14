@@ -25,7 +25,7 @@ __Note that it is important to set `DEV_MODE=false` for the production instance.
 
 PRISM agent uses the following environment variables for secret management.
 
-| Name          | Descritpion                                          | Default                 |
+| Name          | Description                                          | Default                 |
 |---------------|------------------------------------------------------|-------------------------|
 | `DEV_MODE`    | Whether PRISM agent should start in development mode | `true`                  |
 | `VAULT_TOKEN` | The token for accessing HashiCorp Vault              | `root`                  |
