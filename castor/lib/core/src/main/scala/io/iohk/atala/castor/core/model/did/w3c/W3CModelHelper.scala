@@ -14,6 +14,7 @@ import io.iohk.atala.castor.core.model.did.ServiceType
 import io.circe.Json
 import io.iohk.atala.castor.core.model.did.ServiceEndpoint
 import io.iohk.atala.castor.core.model.did.ServiceEndpoint.UriOrJsonEndpoint
+import io.iohk.atala.castor.core.model.did.EllipticCurve
 
 object W3CModelHelper extends W3CModelHelper
 
@@ -105,29 +106,62 @@ private[castor] trait W3CModelHelper {
     }
   }
 
+  // TODO: check if we need to support uncompress for OKP key types
   extension (publicKey: PublicKey) {
-    def toW3C(did: PrismDID, controller: PrismDID): PublicKeyRepr = PublicKeyRepr(
-      id = s"${did.toString}#${publicKey.id}",
-      `type` = "EcdsaSecp256k1VerificationKey2019",
-      controller = controller.toString,
-      publicKeyJwk = publicKey.publicKeyData match {
+    def toW3C(did: PrismDID, controller: PrismDID): PublicKeyRepr = {
+      val curve = publicKey.publicKeyData match {
+        case PublicKeyData.ECCompressedKeyData(crv, _) => crv
+        case PublicKeyData.ECKeyData(crv, _, _)        => crv
+      }
+      val publicKeyJwk = curve match {
+        case EllipticCurve.SECP256K1 => secp256k1Repr(publicKey.publicKeyData)
+        case EllipticCurve.ED25519   => okpPublicKeyRepr(publicKey.publicKeyData)
+        case EllipticCurve.X25519    => okpPublicKeyRepr(publicKey.publicKeyData)
+      }
+      PublicKeyRepr(
+        id = s"${did.toString}#${publicKey.id}",
+        `type` = "JsonWebKey2020",
+        controller = controller.toString,
+        publicKeyJwk = publicKeyJwk
+      )
+    }
+
+    private def okpPublicKeyRepr(pk: PublicKeyData): PublicKeyJwk = {
+      pk match {
+        case PublicKeyData.ECCompressedKeyData(crv, data) =>
+          PublicKeyJwk(
+            kty = "OKP",
+            crv = crv.joseName,
+            x = Some(data.toStringNoPadding),
+            y = None
+          )
+        case PublicKeyData.ECKeyData(crv, _, _) =>
+          throw Exception(s"Uncompressed key for curve ${crv.name} is not supported")
+      }
+    }
+
+    private def secp256k1Repr(pk: PublicKeyData): PublicKeyJwk = {
+      pk match {
+        case pk: PublicKeyData.ECCompressedKeyData =>
+          val uncomporessed = pk.toUncompressedKeyData.getOrElse(
+            throw Exception(s"Conversion to uncompress key is not supported for curve ${pk.crv.name}")
+          )
+          PublicKeyJwk(
+            kty = "EC",
+            crv = uncomporessed.crv.joseName,
+            x = Some(uncomporessed.x.toStringNoPadding),
+            y = Some(uncomporessed.y.toStringNoPadding)
+          )
         case PublicKeyData.ECKeyData(crv, x, y) =>
           PublicKeyJwk(
             kty = "EC",
-            crv = crv.name,
-            x = x.toStringNoPadding,
-            y = y.toStringNoPadding
+            crv = crv.joseName,
+            x = Some(x.toStringNoPadding),
+            y = Some(y.toStringNoPadding)
           )
-        case pk: PublicKeyData.ECCompressedKeyData =>
-          val uncompressed = pk.toUncompressedKeyData
-          PublicKeyJwk(
-            kty = "EC",
-            crv = uncompressed.crv.name,
-            x = uncompressed.x.toStringNoPadding,
-            y = uncompressed.y.toStringNoPadding
-          )
+
       }
-    )
+    }
   }
 
 }
