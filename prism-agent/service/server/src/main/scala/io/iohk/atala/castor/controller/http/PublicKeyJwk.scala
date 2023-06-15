@@ -19,8 +19,8 @@ object PublicKeyJwk {
   given Conversion[w3c.PublicKeyJwk, PublicKeyJwk] = (publicKeyJwk: w3c.PublicKeyJwk) =>
     PublicKeyJwk(
       crv = Some(publicKeyJwk.crv),
-      x = Some(publicKeyJwk.x),
-      y = Some(publicKeyJwk.y),
+      x = publicKeyJwk.x,
+      y = publicKeyJwk.y,
       kty = publicKeyJwk.kty
     )
 }

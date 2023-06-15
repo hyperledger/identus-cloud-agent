@@ -33,14 +33,20 @@ object PublicKeyData {
       crv: EllipticCurve,
       data: Base64UrlString
   ) extends PublicKeyData {
-    def toUncompressedKeyData: ECKeyData = {
-      val prism14PublicKey = EC.INSTANCE.toPublicKeyFromCompressed(data.toByteArray)
-      val ecPoint = prism14PublicKey.getCurvePoint()
-      ECKeyData(
-        crv = crv,
-        x = Base64UrlString.fromByteArray(ecPoint.getX().bytes()),
-        y = Base64UrlString.fromByteArray(ecPoint.getY().bytes())
-      )
+    def toUncompressedKeyData: Option[ECKeyData] = {
+      crv match {
+        case EllipticCurve.SECP256K1 =>
+          val prism14PublicKey = EC.INSTANCE.toPublicKeyFromCompressed(data.toByteArray)
+          val ecPoint = prism14PublicKey.getCurvePoint()
+          Some(
+            ECKeyData(
+              crv = crv,
+              x = Base64UrlString.fromByteArray(ecPoint.getX().bytes()),
+              y = Base64UrlString.fromByteArray(ecPoint.getY().bytes())
+            )
+          )
+        case _ => None
+      }
     }
   }
 }
