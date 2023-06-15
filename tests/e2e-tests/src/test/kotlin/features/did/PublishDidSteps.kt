@@ -110,6 +110,9 @@ class PublishDidSteps {
             "ERROR: DID was not published to ledger!",
             timeout = TestConstants.DID_UPDATE_PUBLISH_MAX_WAIT_5_MIN,
         )
+        actor.attemptsTo(
+            Get.resource("/dids/${actor.recall<String>("shortFormDid")}"),
+        )
         actor.should(
             ResponseConsequence.seeThatResponse {
                 it.statusCode(SC_OK)
