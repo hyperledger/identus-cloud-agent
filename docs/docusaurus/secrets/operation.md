@@ -10,7 +10,7 @@ allow the software to generate one automatically. However, in a production envir
 it is crucial for the system operators to explicitly supply the seed to the agent.
 This ensures full control over the DID key material and guarantees secure management of user identities.
 
-The PRISM agent has a default configuration of starting in development mode.
+The PRISM agent has a default configuration of starting in non-development mode.
 This behavior can be modified using the `DEV_MODE` environment variable,
 which accepts the value `true` or `false`.
 In development mode, the agent can start with or without a user-provided seed.
@@ -27,14 +27,14 @@ PRISM agent uses the following environment variables for secret management.
 
 | Name          | Description                                          | Default                 |
 |---------------|------------------------------------------------------|-------------------------|
-| `DEV_MODE`    | Whether PRISM agent should start in development mode | `true`                  |
+| `DEV_MODE`    | Whether PRISM agent should start in development mode | `false`                 |
 | `VAULT_TOKEN` | The token for accessing HashiCorp Vault              | `root`                  |
 | `VAULT_ADDR`  | The address which PRISM agent can reach the Vault    | `http://localhost:8200` |
 | `WALLET_SEED` | The seed used for DID key management                 | -                       |
 
 ## Automatic seed generation in the development mode
 
-When starting the agent in development mode without setting the `WALLET_SEED`,
+When starting the agent in development mode (`DEV_MODE=true`) without setting the `WALLET_SEED`,
 it automatically generates a new seed, which is logged in the console for convenience.
 However, this mode is insecure and intended solely for development purposes.
 It's important to note that the agent does not persist the seed, so it will be regenerated
