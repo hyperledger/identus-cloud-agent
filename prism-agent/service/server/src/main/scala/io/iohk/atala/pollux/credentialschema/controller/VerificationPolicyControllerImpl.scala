@@ -87,7 +87,8 @@ class VerificationPolicyControllerImpl(service: VerificationPolicyService) exten
       vp <- model.VerificationPolicy.make(
         update.name,
         update.description,
-        constraints
+        constraints,
+        nonce = nonce + 1
       )
       updated <- service.update(id, nonce, vp)
     } yield updated
@@ -102,11 +103,10 @@ class VerificationPolicyControllerImpl(service: VerificationPolicyService) exten
 
   override def deleteVerificationPolicyById(
       ctx: RequestContext,
-      id: UUID,
-      nonce: Int
+      id: UUID
   ): IO[ErrorResponse, Unit] = {
     service
-      .delete(id, nonce)
+      .delete(id)
       .flatMap {
         case Some(_) => succeed(())
         case None    => fail(NotFoundError(id))
