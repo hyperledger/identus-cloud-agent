@@ -2,7 +2,7 @@ package io.iohk.atala.agent.walletapi.service.handler
 
 import zio.*
 import io.iohk.atala.agent.walletapi.crypto.Apollo
-import io.iohk.atala.agent.walletapi.model.{UpdateDIDRandKey, UpdateDIDHdKey}
+import io.iohk.atala.agent.walletapi.model.UpdateDIDHdKey
 import io.iohk.atala.agent.walletapi.model.DIDUpdateLineage
 import io.iohk.atala.agent.walletapi.model.error.{*, given}
 import io.iohk.atala.agent.walletapi.model.error.UpdateManagedDIDError
@@ -45,13 +45,6 @@ class DIDUpdateHandler(
           (operation, hdKey) = result
           signedOperation <- publicationHandler.signOperationWithMasterKey[UpdateManagedDIDError](state, operation)
         } yield HdKeyUpdateMaterial(secretStorage, nonSecretStorage)(operation, signedOperation, state, hdKey)
-      case KeyManagementMode.Random =>
-        for {
-          result <- operationFactory
-            .makeUpdateOperationRandKey(did, previousOperationHash, actions)
-          (operation, randKey) = result
-          signedOperation <- publicationHandler.signOperationWithMasterKey[UpdateManagedDIDError](state, operation)
-        } yield RandKeyUpdateMaterial(secretStorage, nonSecretStorage)(operation, signedOperation, state, randKey)
     }
   }
 }
@@ -83,28 +76,6 @@ trait DIDUpdateMaterial {
     } yield ()
   }
 
-}
-
-class RandKeyUpdateMaterial(secretStorage: DIDSecretStorage, nonSecretStorage: DIDNonSecretStorage)(
-    val operation: PrismDIDOperation.Update,
-    val signedOperation: SignedPrismDIDOperation,
-    val state: ManagedDIDState,
-    randKey: UpdateDIDRandKey
-) extends DIDUpdateMaterial {
-
-  private def persistKeyMaterial: Task[Unit] = {
-    val did = operation.did
-    val operationHash = operation.toAtalaOperationHash
-    ZIO.foreachDiscard(randKey.newKeyPairs) { case (keyId, keyPair) =>
-      secretStorage.insertKey(did, keyId, keyPair, operationHash)
-    }
-  }
-
-  override def persist: Task[Unit] =
-    for {
-      _ <- persistKeyMaterial
-      _ <- persistUpdateLineage(nonSecretStorage)
-    } yield ()
 }
 
 class HdKeyUpdateMaterial(secretStorage: DIDSecretStorage, nonSecretStorage: DIDNonSecretStorage)(

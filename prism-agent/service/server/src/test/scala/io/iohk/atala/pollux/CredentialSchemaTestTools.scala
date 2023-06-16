@@ -64,7 +64,7 @@ trait CredentialSchemaTestTools {
         Some(
           ManagedDIDState(
             PrismDIDOperation.Create(Nil, Nil, Nil),
-            None,
+            0,
             PublicationState.Published(scala.collection.immutable.ArraySeq.empty)
           )
         )

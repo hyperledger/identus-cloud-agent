@@ -47,7 +47,7 @@ object JdbcConnectionRepositorySpec extends ZIOSpecDefault {
   override def spec: Spec[TestEnvironment with Scope, Any] =
     (suite("JDBC Connection Repository test suite")(
       ConnectionRepositorySpecSuite.testSuite
-    ) @@ TestAspect.before(
+    ) @@ TestAspect.sequential @@ TestAspect.before(
       ZIO.serviceWithZIO[Migrations](_.migrate)
     )).provide(testEnvironmentLayer)
 }
