@@ -36,7 +36,7 @@ object OperationFactorySpec extends ZIOSpecDefault, ApolloSpecHelper {
 
   private val makeCreateOpeartionHdKeySpec = suite("makeCreateOpeartionHdKeySpec ")(
     test("make CrateOperation from same seed is deterministic") {
-      val didTemplate = ManagedDIDTemplate(Nil, Nil)
+      val didTemplate = ManagedDIDTemplate(Nil, Nil, Nil)
       for {
         result1 <- operationFactory.makeCreateOperationHdKey("master0", seed)(0, didTemplate)
         (op1, hdKey1) = result1
@@ -46,7 +46,7 @@ object OperationFactorySpec extends ZIOSpecDefault, ApolloSpecHelper {
         assert(hdKey1)(equalTo(hdKey2))
     },
     test("make CreateOperation must contain 1 master key") {
-      val didTemplate = ManagedDIDTemplate(Nil, Nil)
+      val didTemplate = ManagedDIDTemplate(Nil, Nil, Nil)
       for {
         result <- operationFactory.makeCreateOperationHdKey("master-0", seed)(0, didTemplate)
         (op, hdKey) = result
@@ -62,6 +62,7 @@ object OperationFactorySpec extends ZIOSpecDefault, ApolloSpecHelper {
           DIDPublicKeyTemplate("auth-1", VerificationRelationship.Authentication),
           DIDPublicKeyTemplate("issue-0", VerificationRelationship.AssertionMethod),
         ),
+        Nil,
         Nil
       )
       for {

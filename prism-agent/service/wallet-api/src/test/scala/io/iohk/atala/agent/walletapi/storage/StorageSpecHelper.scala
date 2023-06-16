@@ -38,7 +38,8 @@ trait StorageSpecHelper extends ApolloSpecHelper {
     OperationFactory(apollo).makeCreateOperationRandKey("master0")(
       ManagedDIDTemplate(
         publicKeys = keyIds.map(DIDPublicKeyTemplate(_, VerificationRelationship.Authentication)),
-        services = Nil
+        services = Nil,
+        context = Nil
       )
     )
 
@@ -47,7 +48,8 @@ trait StorageSpecHelper extends ApolloSpecHelper {
       didIndex,
       ManagedDIDTemplate(
         publicKeys = keyIds.map(DIDPublicKeyTemplate(_, VerificationRelationship.Authentication)),
-        services = Nil
+        services = Nil,
+        context = Nil
       )
     )
 
