@@ -102,12 +102,16 @@ class PublishDidSteps {
         wait(
             {
                 actor.attemptsTo(
-                    Get.resource("/dids/${actor.recall<String>("shortFormDid")}"),
+                    Get.resource("/did-registrar/dids/${actor.recall<String>("longFormDid")}"),
                 )
-                SerenityRest.lastResponse().statusCode == SC_OK
+                SerenityRest.lastResponse().statusCode == SC_OK && lastResponseObject("", ManagedDid::class)
+                    .status == ManagedDidStatuses.PUBLISHED
             },
             "ERROR: DID was not published to ledger!",
             timeout = TestConstants.DID_UPDATE_PUBLISH_MAX_WAIT_5_MIN,
+        )
+        actor.attemptsTo(
+            Get.resource("/dids/${actor.recall<String>("shortFormDid")}"),
         )
         actor.should(
             ResponseConsequence.seeThatResponse {
