@@ -16,7 +16,7 @@ object ManagedDIDTemplateValidatorSpec extends ZIOSpecDefault {
 
   override def spec = suite("ManagedDIDTemplateValidator")(
     test("accept empty DID template") {
-      val template = ManagedDIDTemplate(publicKeys = Nil, services = Nil)
+      val template = ManagedDIDTemplate(publicKeys = Nil, services = Nil, context = Nil)
       assert(ManagedDIDTemplateValidator.validate(template))(isRight)
     },
     test("accept valid non-empty DID template") {
@@ -33,7 +33,8 @@ object ManagedDIDTemplateValidatorSpec extends ZIOSpecDefault {
             `type` = ServiceType.Single(ServiceType.Name.fromStringUnsafe("LinkedDomains")),
             serviceEndpoint = ServiceEndpoint.Single(UriValue.fromString("http://example.com/").toOption.get)
           )
-        )
+        ),
+        context = Nil
       )
       assert(ManagedDIDTemplateValidator.validate(template))(isRight)
     },
@@ -45,7 +46,8 @@ object ManagedDIDTemplateValidatorSpec extends ZIOSpecDefault {
             purpose = VerificationRelationship.Authentication
           )
         ),
-        services = Nil
+        services = Nil,
+        context = Nil
       )
       assert(ManagedDIDTemplateValidator.validate(template))(isLeft)
     }

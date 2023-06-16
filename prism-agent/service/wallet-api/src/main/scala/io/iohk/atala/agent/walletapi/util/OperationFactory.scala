@@ -73,7 +73,7 @@ class OperationFactory(apollo: Apollo) {
       operation = PrismDIDOperation.Create(
         publicKeys = keysWithCounter._1.map(_._1) ++ Seq(masterKeyOutcome.publicKey),
         services = didTemplate.services,
-        context = Seq() // TODO: expose context in the API
+        context = didTemplate.context
       )
       hdKeys = CreateDIDHdKey(
         keyPaths = keysWithCounter._1.map { case (publicKey, path) => publicKey.id -> path }.toMap,
@@ -183,6 +183,7 @@ class OperationFactory(apollo: Apollo) {
       case UpdateManagedDIDAction.RemoveService(id)   => ZIO.succeed(UpdateDIDAction.RemoveService(id))
       case UpdateManagedDIDAction.UpdateService(patch) =>
         ZIO.succeed(UpdateDIDAction.UpdateService(patch.id, patch.serviceType, patch.serviceEndpoints))
+      case UpdateManagedDIDAction.PatchContext(context) => ZIO.succeed(UpdateDIDAction.PatchContext(context))
     }
   }
 

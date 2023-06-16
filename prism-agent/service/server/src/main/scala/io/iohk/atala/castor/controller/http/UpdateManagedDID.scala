@@ -28,6 +28,7 @@ enum ActionType {
   case ADD_SERVICE extends ActionType
   case REMOVE_SERVICE extends ActionType
   case UPDATE_SERVICE extends ActionType
+  case PATCH_CONTEXT extends ActionType
 }
 
 object ActionType {
@@ -45,14 +46,15 @@ final case class UpdateManagedDIDRequestAction(
     removeKey: Option[RemoveEntryById] = None,
     addService: Option[Service] = None,
     removeService: Option[RemoveEntryById] = None,
-    updateService: Option[UpdateManagedDIDServiceAction] = None
+    updateService: Option[UpdateManagedDIDServiceAction] = None,
+    patchContext: Option[PatchContextAction] = None
 )
 
 object UpdateManagedDIDRequestAction {
   object annotations {
     val description =
       """A list of actions to perform on DID document.
-        |The field `addKey`, `removeKey`, `addService`, `removeService`, `updateService` must corresponds to
+        |The field `addKey`, `removeKey`, `addService`, `removeService`, `updateService`, `patchContext` must corresponds to
         |the `actionType` specified. For example, `addKey` must be present when `actionType` is `ADD_KEY`.""".stripMargin
   }
 
@@ -86,6 +88,10 @@ object UpdateManagedDIDRequestAction {
             .toRight("updateService property is missing from action type UPDATE_SERVICE")
             .flatMap(_.toDomain)
             .map(s => UpdateService(s))
+        case ActionType.PATCH_CONTEXT =>
+          action.patchContext
+            .toRight("patchContext property is missing from action type PATCH_CONTEXT")
+            .map(i => PatchContext(i.context))
       }
     }
   }
@@ -152,4 +158,12 @@ object UpdateManagedDIDServiceAction {
         serviceEndpoints = serviceEndpoint.map(_.normalize())
       )
   }
+}
+
+final case class PatchContextAction(context: Seq[String])
+
+object PatchContextAction {
+  given JsonEncoder[PatchContextAction] = DeriveJsonEncoder.gen[PatchContextAction]
+  given JsonDecoder[PatchContextAction] = DeriveJsonDecoder.gen[PatchContextAction]
+  given Schema[PatchContextAction] = Schema.derived
 }

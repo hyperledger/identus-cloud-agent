@@ -7,7 +7,8 @@ import io.iohk.atala.castor.core.model.did.ServiceEndpoint
 
 final case class ManagedDIDTemplate(
     publicKeys: Seq[DIDPublicKeyTemplate],
-    services: Seq[Service]
+    services: Seq[Service],
+    context: Seq[String]
 )
 
 final case class DIDPublicKeyTemplate(
@@ -23,6 +24,7 @@ object UpdateManagedDIDAction {
   final case class AddService(service: Service) extends UpdateManagedDIDAction
   final case class RemoveService(id: String) extends UpdateManagedDIDAction
   final case class UpdateService(patch: UpdateServicePatch) extends UpdateManagedDIDAction
+  final case class PatchContext(context: Seq[String]) extends UpdateManagedDIDAction
 }
 
 final case class UpdateServicePatch(
