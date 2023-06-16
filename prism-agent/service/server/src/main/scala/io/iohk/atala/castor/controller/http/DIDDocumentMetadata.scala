@@ -14,7 +14,10 @@ final case class DIDDocumentMetadata(
     deactivated: Option[Boolean] = None,
     @description(annotations.canonicalId.description)
     @encodedExample(annotations.canonicalId.example)
-    canonicalId: Option[String] = None
+    canonicalId: Option[String] = None,
+    @description(annotations.versionId.description)
+    @encodedExample(annotations.versionId.example)
+    versionId: Option[String] = None
 )
 
 object DIDDocumentMetadata {
@@ -36,6 +39,14 @@ object DIDDocumentMetadata {
             |""".stripMargin,
           example = "did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff"
         )
+
+    object versionId
+        extends Annotation[String](
+          description = """
+            |DID document metadata MUST contain a versionId property with the hash of the AtalaOperation contained in the latest valid SignedAtalaOperation that created the DID or changed the DID's internal state.
+            |""".stripMargin,
+          example = "4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff"
+        )
   }
 
   given encoder: JsonEncoder[DIDDocumentMetadata] = DeriveJsonEncoder.gen[DIDDocumentMetadata]
@@ -46,6 +57,7 @@ object DIDDocumentMetadata {
     (didDocumentMetadata: w3c.DIDDocumentMetadataRepr) =>
       DIDDocumentMetadata(
         deactivated = Some(didDocumentMetadata.deactivated),
-        canonicalId = didDocumentMetadata.canonicalId
+        canonicalId = didDocumentMetadata.canonicalId,
+        versionId = Some(didDocumentMetadata.versionId)
       )
 }
