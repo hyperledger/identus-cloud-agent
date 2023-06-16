@@ -6,7 +6,7 @@ import zio.*
 
 trait PostgresTestContainerSupport {
 
-  protected val pgContainerLayer: ULayer[PostgreSQLContainer] = PostgresLayer.postgresLayer()
+  protected val pgContainerLayer: TaskLayer[PostgreSQLContainer] = PostgresLayer.postgresLayer()
 
   protected val transactorLayer: TaskLayer[Transactor[Task]] =
     pgContainerLayer >>> PostgresLayer.hikariConfigLayer >>> PostgresLayer.transactor

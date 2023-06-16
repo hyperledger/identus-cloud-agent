@@ -146,7 +146,7 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
         .to[List]
 
     getManagedDIDState(did)
-      .map(_.flatMap(_.didIndex))
+      .map(_.map(_.didIndex))
       .flatMap {
         case None => ZIO.none
         case Some(didIndex) =>
@@ -211,7 +211,7 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
     for {
       state <- getManagedDIDState(did)
       paths <- cxnIO.transact(xa)
-    } yield state.flatMap(_.didIndex).fold(Nil) { didIndex =>
+    } yield state.map(_.didIndex).fold(Nil) { didIndex =>
       paths.map { (keyId, operationHash, keyUsage, keyIndex) =>
         (keyId, operationHash, ManagedDIDHdKeyPath(didIndex, keyUsage, keyIndex))
       }
