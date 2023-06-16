@@ -1,6 +1,7 @@
 package io.iohk.atala.pollux.core.service
 import io.iohk.atala.pollux.core.model.CredentialSchema
 import io.iohk.atala.pollux.core.model.CredentialSchema.FilteredEntries
+import io.iohk.atala.pollux.core.model.error.CredentialSchemaError
 import io.iohk.atala.pollux.core.repository.CredentialSchemaRepository
 import io.iohk.atala.pollux.core.repository.Repository.SearchQuery
 import io.iohk.atala.pollux.core.service.CredentialSchemaService.Error.*
@@ -15,10 +16,14 @@ class CredentialSchemaServiceImpl(
   override def create(in: CredentialSchema.Input): Result[CredentialSchema] = {
     for {
       credentialSchema <- CredentialSchema.make(in)
+      _ <- CredentialSchema.validateCredentialSchema(credentialSchema)
       createdCredentialSchema <- credentialSchemaRepository
         .create(credentialSchema)
     } yield createdCredentialSchema
-  }.mapError(t => RepositoryError(t))
+  }.mapError {
+    case e: CredentialSchemaError => CredentialSchemaValidationError(e)
+    case t: Throwable             => RepositoryError(t)
+  }
 
   override def getByGUID(guid: UUID): Result[CredentialSchema] = {
     credentialSchemaRepository
@@ -43,6 +48,7 @@ class CredentialSchemaServiceImpl(
   ): Result[CredentialSchema] = {
     for {
       cs <- CredentialSchema.make(id, in)
+      _ <- CredentialSchema.validateCredentialSchema(cs).mapError(CredentialSchemaValidationError.apply)
       existingVersions <- credentialSchemaRepository
         .getAllVersions(id, in.author)
         .mapError[CredentialSchemaService.Error](RepositoryError.apply)

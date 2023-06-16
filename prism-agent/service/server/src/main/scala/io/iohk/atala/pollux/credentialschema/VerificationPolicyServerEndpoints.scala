@@ -47,8 +47,8 @@ class VerificationPolicyServerEndpoints(
     }
 
   val deleteVerificationPolicyByIdServerEndpoint: ZServerEndpoint[Any, Any] =
-    deleteVerificationPolicyByIdEndpoint.zServerLogic { case (ctx: RequestContext, id: UUID, nonce: Int) =>
-      controller.deleteVerificationPolicyById(ctx, id, nonce)
+    deleteVerificationPolicyByIdEndpoint.zServerLogic { case (ctx: RequestContext, id: UUID) =>
+      controller.deleteVerificationPolicyById(ctx, id)
     }
 
   val lookupVerificationPoliciesByQueryServerEndpoint: ZServerEndpoint[Any, Any] =

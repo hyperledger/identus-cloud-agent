@@ -74,6 +74,17 @@ import zio.stream.ZStream
 
 import java.io.IOException
 import java.util.concurrent.Executors
+import io.iohk.atala.mercury.protocol.trustping.TrustPing
+import io.iohk.atala.castor.controller.{
+  DIDController,
+  DIDRegistrarController,
+  DIDRegistrarServerEndpoints,
+  DIDServerEndpoints
+}
+import io.iohk.atala.agent.walletapi.crypto.Apollo
+import io.iohk.atala.system.controller.{SystemController, SystemServerEndpoints}
+import io.iohk.atala.agent.walletapi.util.SeedResolver
+import io.iohk.atala.agent.walletapi.vault.{VaultDIDSecretStorage, VaultKVClient, VaultKVClientImpl}
 
 object Modules {
 
@@ -434,13 +445,16 @@ object AppModule {
     (didOpValidatorLayer ++ GrpcModule.layers) >>> DIDServiceImpl.layer
 
   val manageDIDServiceLayer: TaskLayer[ManagedDIDService] = {
-    val secretStorageLayer = (RepoModule.agentTransactorLayer ++ apolloLayer) >>> JdbcDIDSecretStorage.layer
+    val vaultClientLayer = RepoModule.vaultClientLayer
+    val secretStorageLayer = vaultClientLayer >>> VaultDIDSecretStorage.layer
     val nonSecretStorageLayer = RepoModule.agentTransactorLayer >>> JdbcDIDNonSecretStorage.layer
-    val seedResolverLayer = apolloLayer >>> SeedResolver.layer()
+    val seedResolverLayer =
+      (apolloLayer ++ SystemModule.configLayer) >>>
+        ZLayer.fromFunction((config: AppConfig) => SeedResolver.layer(isDevMode = config.devMode)).flatten
     (didOpValidatorLayer ++ didServiceLayer ++ secretStorageLayer ++ nonSecretStorageLayer ++ apolloLayer ++ seedResolverLayer) >>> ManagedDIDServiceImpl.layer
   }
 
-  val credentialServiceLayer: RLayer[DidOps & DidAgent & JwtDidResolver, CredentialService] =
+  val credentialServiceLayer: RLayer[DidOps & DidAgent & JwtDidResolver & URIDereferencer, CredentialService] =
     (GrpcModule.layers ++ RepoModule.credentialRepoLayer) >>> CredentialServiceImpl.layer
 
   def presentationServiceLayer =
@@ -577,7 +591,7 @@ object RepoModule {
     RepoModule.polluxTransactorLayer >>>
       JdbcCredentialSchemaRepository.layer >>>
       CredentialSchemaServiceImpl.layer >>>
-      CredentialSchemaControllerImpl.layer
+      (AppModule.manageDIDServiceLayer >>> CredentialSchemaControllerImpl.layer)
 
   val verificationPolicyServiceLayer: TaskLayer[VerificationPolicyController] =
     RepoModule.polluxTransactorLayer >>>
@@ -585,4 +599,15 @@ object RepoModule {
       VerificationPolicyServiceImpl.layer >+>
       VerificationPolicyControllerImpl.layer
 
+  val vaultClientLayer: TaskLayer[VaultKVClient] = {
+    val vaultClientConfig = ZLayer {
+      for {
+        config <- ZIO.service[AppConfig].map(_.vault)
+        _ = ZIO.logInfo("Vault client config loaded. Address: " + config.address)
+        vaultKVClient <- VaultKVClientImpl.fromAddressAndToken(config.address, config.token)
+      } yield vaultKVClient
+    }
+
+    SystemModule.configLayer >>> vaultClientConfig
+  }
 }

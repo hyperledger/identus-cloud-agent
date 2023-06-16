@@ -6,6 +6,7 @@ import io.iohk.atala.mercury.model.{AttachmentDescriptor, Base64}
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord as PolluxIssueCredentialRecord
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
+import sttp.tapir.json.zio.schemaForZioJsonValue
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 import java.time.{OffsetDateTime, ZoneOffset}
@@ -31,9 +32,12 @@ final case class CreateIssueCredentialRecordRequest(
     @description(annotations.validityPeriod.description)
     @encodedExample(annotations.validityPeriod.example)
     validityPeriod: Option[Double] = None,
+    @description(annotations.schemaId.description)
+    @encodedExample(annotations.schemaId.example)
+    schemaId: Option[String],
     @description(annotations.claims.description)
     @encodedExample(annotations.claims.example)
-    claims: Map[String, String],
+    claims: zio.json.ast.Json,
     @description(annotations.automaticIssuance.description)
     @encodedExample(annotations.automaticIssuance.example)
     automaticIssuance: Option[Boolean] = None,
@@ -53,6 +57,13 @@ object CreateIssueCredentialRecordRequest {
         extends Annotation[Double](
           description = "The validity period in seconds of the verifiable credential that will be issued.",
           example = 3600
+        )
+
+    object schemaId
+        extends Annotation[Option[String]](
+          description = "The unique identifier of the schema used for this credential offer.",
+          example =
+            Some("https://agent-host.com/prism-agent/schema-registry/schemas/d9569cec-c81e-4779-aa86-0d5994d82676")
         )
 
     object claims

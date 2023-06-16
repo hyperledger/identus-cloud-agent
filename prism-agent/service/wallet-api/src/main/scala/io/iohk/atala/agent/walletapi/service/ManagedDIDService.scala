@@ -1,28 +1,21 @@
 package io.iohk.atala.agent.walletapi.service
 
-import io.iohk.atala.agent.walletapi.crypto.Apollo
 import io.iohk.atala.agent.walletapi.model.*
-import io.iohk.atala.agent.walletapi.model.error.{*, given}
-import io.iohk.atala.agent.walletapi.service.handler.{DIDUpdateHandler, PublicationHandler}
-import io.iohk.atala.agent.walletapi.storage.{DIDNonSecretStorage, DIDSecretStorage}
-import io.iohk.atala.agent.walletapi.util.*
+import io.iohk.atala.agent.walletapi.model.error.*
+import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
 import io.iohk.atala.castor.core.model.did.*
-import io.iohk.atala.castor.core.model.error.DIDOperationError
-import io.iohk.atala.castor.core.service.DIDService
-import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.mercury.PeerDID
 import io.iohk.atala.mercury.model.DidId
 import zio.*
 
 import java.security.{PrivateKey as JavaPrivateKey, PublicKey as JavaPublicKey}
-import scala.collection.immutable.ArraySeq
 
 /** A wrapper around Castor's DIDService providing key-management capability. Analogous to the secretAPI in
   * indy-wallet-sdk.
   */
 trait ManagedDIDService {
 
-  private[walletapi] val nonSecretStorage: DIDNonSecretStorage
+  private[walletapi] def nonSecretStorage: DIDNonSecretStorage
 
   def syncManagedDIDState: IO[GetManagedDIDError, Unit]
 

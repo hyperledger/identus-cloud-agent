@@ -1,7 +1,9 @@
 package io.iohk.atala.pollux
 
 import io.iohk.atala.agent.server.http.ZHttp4sBlazeServer
+import io.iohk.atala.agent.walletapi.service.MockManagedDIDService
 import io.iohk.atala.api.http.ErrorResponse
+import io.iohk.atala.container.util.MigrationAspects.migrate
 import io.iohk.atala.pollux.credentialschema.*
 import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaController
 import io.iohk.atala.pollux.credentialschema.http.{
@@ -9,7 +11,6 @@ import io.iohk.atala.pollux.credentialschema.http.{
   CredentialSchemaResponse,
   CredentialSchemaResponsePage
 }
-import io.iohk.atala.container.util.MigrationAspects.migrate
 import sttp.client3.testing.SttpBackendStub
 import sttp.client3.ziojson.*
 import sttp.client3.{DeserializationException, Response, ResponseException, SttpBackend, UriContext, basicRequest}
@@ -37,7 +38,7 @@ object CredentialSchemaFailureSpec extends ZIOSpecDefault with CredentialSchemaT
   def spec = (schemaBadRequestAsJsonSpec @@ migrate(
     schema = "public",
     paths = "classpath:sql/pollux"
-  )).provideSomeLayerShared(testEnvironmentLayer)
+  )).provideSomeLayerShared(MockManagedDIDService.empty >+> testEnvironmentLayer)
 
   private val schemaBadRequestAsJsonSpec = suite("schema-registry BadRequest as json logic")(
     test("create the schema with wrong json body returns BadRequest as json") {

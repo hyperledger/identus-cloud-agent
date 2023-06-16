@@ -27,51 +27,47 @@ For the above fields, the JSON Schema definition must be:
 
 ```json
 {
-  "$id": "driving-license-1.0.0",
+  "$id": "https://example.com/driving-license-1.0.0",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "description": "Driving License",
   "type": "object",
   "properties": {
-    "credentialSubject": {
-      "type": "object",
-      "properties": {
-        "emailAddress": {
-          "type": "string",
-          "format": "email"
-        },
-        "givenName": {
-          "type": "string"
-        },
-        "familyName": {
-          "type": "string"
-        },
-        "dateOfIssuance": {
-          "type": "datetime"
-        },
-        "drivingLicenseID": {
-          "type": "string"
-        },
-        "drivingClass": {
-          "type": "integer"
-        },
-        "required": [
-          "emailAddress",
-          "familyName",
-          "dateOfIssuance",
-          "drivingLicenseID",
-          "drivingClass"
-        ],
-        "additionalProperties": true
-      }
+    "emailAddress": {
+      "type": "string",
+      "format": "email"
+    },
+    "givenName": {
+      "type": "string"
+    },
+    "familyName": {
+      "type": "string"
+    },
+    "dateOfIssuance": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "drivingLicenseID": {
+      "type": "string"
+    },
+    "drivingClass": {
+      "type": "integer"
     }
-  }
+  },
+  "required": [
+    "emailAddress",
+    "familyName",
+    "dateOfIssuance",
+    "drivingLicenseID",
+    "drivingClass"
+  ],
+  "additionalProperties": true
 }
 ```
 
 The fields `$id` and `$schema` must correspond values that describe
 
-- the identity of the given JSON Schema `driving-license-1.0.0` and
-- the meta schema `https://json-schema.org/draft/2020-12/schema`
+- the identity of the given JSON Schema as a **correctly formatted URL** `https://example.com/driving-license-1.0.0` and
+- the meta schema fixed to `https://json-schema.org/draft/2020-12/schema` which is the only supported value 
 
 All the claims are listed under the `properties` object with corresponding `type`s and `format`s according to JSON
 Specification.
@@ -84,7 +80,10 @@ Specification.
    OpenAPI specification.
 
 2. In the client, create a new POST request to the `/prism-agent/schema-registry/schemas` endpoint.
-   In the request body, create a JSON object:
+
+Note that the value of the `author` field must match the short form of a PRISM DID that has been created using the same agent. An unpublished DID is sufficient. Please refer to the [Create DID](../dids/create.md) documentation page for more details on how to create a PRISM DID.  
+
+In the request body, create a JSON object:
 
 ```json
 {
@@ -92,50 +91,47 @@ Specification.
   "version": "1.0.0",
   "description": "Driving License Schema",
   "type": "https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json",
+  "author": "did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff",
+  "tags": [
+    "driving",
+    "license"
+  ],
   "schema": {
-    "$id": "driving-license-1.0.0",
+    "$id": "https://example.com/driving-license-1.0.0",
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "description": "Driving License",
     "type": "object",
     "properties": {
-      "credentialSubject": {
-        "type": "object",
-        "properties": {
-          "emailAddress": {
-            "type": "string",
-            "format": "email"
-          },
-          "givenName": {
-            "type": "string"
-          },
-          "familyName": {
-            "type": "string"
-          },
-          "dateOfIssuance": {
-            "type": "datetime"
-          },
-          "drivingLicenseID": {
-            "type": "string"
-          },
-          "drivingClass": {
-            "type": "integer"
-          },
-          "required": [
-            "emailAddress",
-            "familyName",
-            "dateOfIssuance",
-            "drivingLicenseID",
-            "drivingClass"
-          ],
-          "additionalProperties": true
-        }
+      "emailAddress": {
+        "type": "string",
+        "format": "email"
+      },
+      "givenName": {
+        "type": "string"
+      },
+      "familyName": {
+        "type": "string"
+      },
+      "dateOfIssuance": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "drivingLicenseID": {
+        "type": "string"
+      },
+      "drivingClass": {
+        "type": "integer"
       }
-    }
-  },
-  "tags": [
-    "driving",
-    "license"
-  ]
+    },
+    "required": [
+      "emailAddress",
+      "familyName",
+      "dateOfIssuance",
+      "drivingLicenseID",
+      "drivingClass"
+    ],
+    "additionalProperties": true
+  }
 }
 ```
 
@@ -154,50 +150,47 @@ curl -X 'POST' \
   "version": "1.0.0",
   "description": "Driving License Schema",
   "type": "https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json",
+  "author": "did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff",
+  "tags": [
+    "driving",
+    "license"
+  ],
   "schema": {
-    "$id": "driving-license-1.0.0",
+    "$id": "https://example.com/driving-license-1.0.0",
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "description": "Driving License",
     "type": "object",
     "properties": {
-      "credentialSubject": {
-        "type": "object",
-        "properties": {
-          "emailAddress": {
-            "type": "string",
-            "format": "email"
-          },
-          "givenName": {
-            "type": "string"
-          },
-          "familyName": {
-            "type": "string"
-          },
-          "dateOfIssuance": {
-            "type": "datetime"
-          },
-          "drivingLicenseID": {
-            "type": "string"
-          },
-          "drivingClass": {
-            "type": "integer"
-          },
-          "required": [
-            "emailAddress",
-            "familyName",
-            "dateOfIssuance",
-            "drivingLicenseID",
-            "drivingClass"
-          ],
-          "additionalProperties": true
-        }
+      "emailAddress": {
+        "type": "string",
+        "format": "email"
+      },
+      "givenName": {
+        "type": "string"
+      },
+      "familyName": {
+        "type": "string"
+      },
+      "dateOfIssuance": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "drivingLicenseID": {
+        "type": "string"
+      },
+      "drivingClass": {
+        "type": "integer"
       }
-    }
-  },
-  "tags": [
-    "driving",
-    "license"
-  ]
+    },
+    "required": [
+      "emailAddress",
+      "familyName",
+      "dateOfIssuance",
+      "drivingLicenseID",
+      "drivingClass"
+    ],
+    "additionalProperties": true
+  }
 }'
 ```
 
@@ -210,54 +203,50 @@ curl -X 'POST' \
   "longId": "did:prism:agent/f2bfbf78-8bd6-4cc6-8b39-b3a25e01e8ea?version=1.0.0",
   "name": "driving-license",
   "version": "1.0.0",
+  "description": "Driving License Schema",
+  "type": "https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json",
+  "author": "did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff",
+  "authored": "2023-03-14T14:41:46.713943Z",
   "tags": [
     "driving",
     "license"
   ],
-  "description": "Driving License Schema",
-  "type": "https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json",
   "schema": {
-    "$id": "driving-license-1.0.0",
+    "$id": "https://example.com/driving-license-1.0.0",
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "description": "Driving License",
     "type": "object",
     "properties": {
-      "credentialSubject": {
-        "type": "object",
-        "properties": {
-          "emailAddress": {
-            "type": "string",
-            "format": "email"
-          },
-          "givenName": {
-            "type": "string"
-          },
-          "familyName": {
-            "type": "string"
-          },
-          "dateOfIssuance": {
-            "type": "datetime"
-          },
-          "drivingLicenseID": {
-            "type": "string"
-          },
-          "drivingClass": {
-            "type": "integer"
-          },
-          "required": [
-            "emailAddress",
-            "familyName",
-            "dateOfIssuance",
-            "drivingLicenseID",
-            "drivingClass"
-          ],
-          "additionalProperties": true
-        }
+      "emailAddress": {
+        "type": "string",
+        "format": "email"
+      },
+      "givenName": {
+        "type": "string"
+      },
+      "familyName": {
+        "type": "string"
+      },
+      "dateOfIssuance": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "drivingLicenseID": {
+        "type": "string"
+      },
+      "drivingClass": {
+        "type": "integer"
       }
-    }
+    },
+    "required": [
+      "emailAddress",
+      "familyName",
+      "dateOfIssuance",
+      "drivingLicenseID",
+      "drivingClass"
+    ],
+    "additionalProperties": true
   },
-  "author": "did:prism:agent",
-  "authored": "2023-03-14T14:41:46.713943Z",
   "kind": "CredentialSchema",
   "self": "/schema-registry/schemas/3f86a73f-5b78-39c7-af77-0c16123fa9c2"
 }
@@ -285,58 +274,53 @@ The response should contain the JSON object representing the schema you just cre
   "longId": "did:prism:agent/f2bfbf78-8bd6-4cc6-8b39-b3a25e01e8ea?version=1.0.0",
   "name": "driving-license",
   "version": "1.0.0",
+  "description": "Driving License Schema",
+  "type": "https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json",
+  "author": "did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff",
+  "authored": "2023-03-14T14:41:46.713943Z",
   "tags": [
     "driving",
     "license"
   ],
-  "description": "Driving License Schema",
-  "type": "https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json",
   "schema": {
-    "$id": "driving-license-1.0.0",
+    "$id": "https://example.com/driving-license-1.0.0",
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "description": "Driving License",
     "type": "object",
     "properties": {
-      "credentialSubject": {
-        "type": "object",
-        "properties": {
-          "emailAddress": {
-            "type": "string",
-            "format": "email"
-          },
-          "givenName": {
-            "type": "string"
-          },
-          "familyName": {
-            "type": "string"
-          },
-          "dateOfIssuance": {
-            "type": "datetime"
-          },
-          "drivingLicenseID": {
-            "type": "string"
-          },
-          "drivingClass": {
-            "type": "integer"
-          },
-          "required": [
-            "emailAddress",
-            "familyName",
-            "dateOfIssuance",
-            "drivingLicenseID",
-            "drivingClass"
-          ],
-          "additionalProperties": true
-        }
+      "emailAddress": {
+        "type": "string",
+        "format": "email"
+      },
+      "givenName": {
+        "type": "string"
+      },
+      "familyName": {
+        "type": "string"
+      },
+      "dateOfIssuance": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "drivingLicenseID": {
+        "type": "string"
+      },
+      "drivingClass": {
+        "type": "integer"
       }
-    }
+    },
+    "required": [
+      "emailAddress",
+      "familyName",
+      "dateOfIssuance",
+      "drivingLicenseID",
+      "drivingClass"
+    ],
+    "additionalProperties": true
   },
-  "author": "did:prism:agent",
-  "authored": "2023-03-14T14:41:46.713943Z",
   "kind": "CredentialSchema",
   "self": "/schema-registry/schemas/3f86a73f-5b78-39c7-af77-0c16123fa9c2"
 }
-
 ```
 
 The PRISM Agent instance's triple `author`, `id`, and `version` are unique.

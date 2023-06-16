@@ -24,6 +24,7 @@ inThisBuild(
       "UTF-8",
       "-deprecation",
       "-unchecked",
+      "-Dquill.macro.log=false" // disable quill macro logs
       // TODO "-feature",
       // TODO "-Xfatal-warnings",
       // TODO "-Yexplicit-nulls",
@@ -37,13 +38,14 @@ lazy val V = new {
   val munitZio = "0.1.1"
 
   // https://mvnrepository.com/artifact/dev.zio/zio
-  val zio = "2.0.4"
+  val zio = "2.0.14"
   val zioConfig = "3.0.2"
   val zioLogging = "2.0.0"
   val zioJson = "0.3.0"
   val zioHttp = "0.0.3"
   val zioCatsInterop = "3.3.0"
   val zioMetrics = "2.0.6"
+  val zioMock = "1.0.0-RC10"
 
   // https://mvnrepository.com/artifact/io.circe/circe-core
   val circe = "0.14.2"
@@ -53,7 +55,7 @@ lazy val V = new {
 
   val typesafeConfig = "1.4.2"
   val protobuf = "3.1.9"
-  val testContainersScalaPostgresql = "0.40.11"
+  val testContainersScala = "0.40.16"
 
   val doobie = "1.0.0-RC2"
   val quill = "4.6.0"
@@ -70,6 +72,12 @@ lazy val V = new {
   val zioPreludeVersion = "1.0.0-RC16"
 
   val bouncyCastle = "1.70"
+
+  val jsonSchemaValidator = "1.0.83"
+
+  // https://github.com/jopenlibs/vault-java-driver/issues/36
+  // v5.4.0 is not available on Maven yet.
+  val vaultDriver = "5.3.0"
 }
 
 /** Dependencies */
@@ -102,7 +110,8 @@ lazy val D = new {
   val typesafeConfig: ModuleID = "com.typesafe" % "config" % V.typesafeConfig
   val scalaPbGrpc: ModuleID = "com.thesamet.scalapb" %% "scalapb-runtime-grpc" % scalapb.compiler.Version.scalapbVersion
   // TODO we are adding test stuff to the main dependencies
-  val testcontainers: ModuleID = "com.dimafeng" %% "testcontainers-scala-postgresql" % V.testContainersScalaPostgresql
+  val testcontainersPostgres: ModuleID = "com.dimafeng" %% "testcontainers-scala-postgresql" % V.testContainersScala
+  val testcontainersVault: ModuleID = "com.dimafeng" %% "testcontainers-scala-vault" % V.testContainersScala
 
   val doobiePostgres: ModuleID = "org.tpolecat" %% "doobie-postgres" % V.doobie
   val doobieHikari: ModuleID = "org.tpolecat" %% "doobie-hikari" % V.doobie
@@ -116,6 +125,7 @@ lazy val D = new {
   val zioTest: ModuleID = "dev.zio" %% "zio-test" % V.zio % Test
   val zioTestSbt: ModuleID = "dev.zio" %% "zio-test-sbt" % V.zio % Test
   val zioTestMagnolia: ModuleID = "dev.zio" %% "zio-test-magnolia" % V.zio % Test
+  val zioMock: ModuleID = "dev.zio" %% "zio-mock" % V.zioMock
 
   // LIST of Dependencies
   val doobieDependencies: Seq[ModuleID] =
@@ -123,20 +133,16 @@ lazy val D = new {
 }
 
 lazy val D_Shared = new {
-
-  lazy val dependencies: Seq[ModuleID] = Seq(D.typesafeConfig, D.scalaPbGrpc, D.testcontainers)
+  lazy val dependencies: Seq[ModuleID] = Seq(D.typesafeConfig, D.scalaPbGrpc, D.testcontainersPostgres, D.testcontainersVault)
 }
 
 lazy val D_Connect = new {
 
   private lazy val logback = "ch.qos.logback" % "logback-classic" % V.logback % Test
 
-  private lazy val testcontainers =
-    "com.dimafeng" %% "testcontainers-scala-postgresql" % V.testContainersScalaPostgresql % Test
-
   // Dependency Modules
   private lazy val baseDependencies: Seq[ModuleID] =
-    Seq(D.zio, D.zioTest, D.zioTestSbt, D.zioTestMagnolia, testcontainers, logback)
+    Seq(D.zio, D.zioTest, D.zioTestSbt, D.zioTestMagnolia, D.testcontainersPostgres, logback)
 
   // Project Dependencies
   lazy val coreDependencies: Seq[ModuleID] =
@@ -191,9 +197,6 @@ lazy val D_Pollux = new {
   val quillDoobie = "io.getquill" %% "quill-doobie" %
     V.quill exclude ("org.scala-lang.modules", "scala-java8-compat_3")
 
-  val testcontainers =
-    "com.dimafeng" %% "testcontainers-scala-postgresql" % V.testContainersScalaPostgresql % Test
-
   // We have to exclude bouncycastle since for some reason bitcoinj depends on bouncycastle jdk15to18
   // (i.e. JDK 1.5 to 1.8), but we are using JDK 11
   val prismCrypto = "io.iohk.atala" % "prism-crypto-jvm" % V.prismSdk excludeAll
@@ -207,6 +210,7 @@ lazy val D_Pollux = new {
   val baseDependencies: Seq[ModuleID] = Seq(
     D.zio,
     D.zioJson,
+    D.zioHttp,
     D.zioTest,
     D.zioTestSbt,
     D.zioTestMagnolia,
@@ -223,10 +227,10 @@ lazy val D_Pollux = new {
     D.zioCatsInterop,
     D.doobiePostgres,
     D.doobieHikari,
+    D.testcontainersPostgres,
     flyway,
     quillDoobie,
     quillJdbcZio,
-    testcontainers
   )
 
   // Project Dependencies
@@ -249,6 +253,8 @@ lazy val D_Pollux_VC_JWT = new {
 
   val nimbusJoseJwt = "com.nimbusds" % "nimbus-jose-jwt" % "10.0.0-preview"
 
+  val networkntJsonSchemaValidator = "com.networknt" % "json-schema-validator" % V.jsonSchemaValidator
+
   val zioTest = "dev.zio" %% "zio-test" % V.zio % Test
   val zioTestSbt = "dev.zio" %% "zio-test-sbt" % V.zio % Test
   val zioTestMagnolia = "dev.zio" %% "zio-test-magnolia" % V.zio % Test
@@ -259,7 +265,7 @@ lazy val D_Pollux_VC_JWT = new {
   val zioDependencies: Seq[ModuleID] = Seq(zio, zioPrelude, zioTest, zioTestSbt, zioTestMagnolia)
   val circeDependencies: Seq[ModuleID] = Seq(D.circeCore, D.circeGeneric, D.circeParser)
   val baseDependencies: Seq[ModuleID] =
-    circeDependencies ++ zioDependencies :+ jwtCirce :+ circeJsonSchema :+ nimbusJoseJwt :+ scalaTest
+    circeDependencies ++ zioDependencies :+ jwtCirce :+ circeJsonSchema :+ networkntJsonSchemaValidator :+ nimbusJoseJwt :+ scalaTest
 
   // Project Dependencies
   lazy val polluxVcJwtDependencies: Seq[ModuleID] = baseDependencies
@@ -294,8 +300,8 @@ lazy val D_PrismAgent = new {
     "io.getquill" %% "quill-jdbc-zio" % V.quill exclude ("org.scala-lang.modules", "scala-java8-compat_3")
 
   val flyway = "org.flywaydb" % "flyway-core" % V.flyway
-  val testcontainers_scala_postgresql =
-    "com.dimafeng" %% "testcontainers-scala-postgresql" % V.testContainersScalaPostgresql % Test
+
+  val vaultDriver = "io.github.jopenlibs" % "vault-java-driver" % V.vaultDriver
 
   // Dependency Modules
   val baseDependencies: Seq[ModuleID] = Seq(
@@ -325,14 +331,14 @@ lazy val D_PrismAgent = new {
     )
 
   val postgresDependencies: Seq[ModuleID] =
-    Seq(quillDoobie, quillJdbcZio, postgresql, flyway, testcontainers_scala_postgresql)
+    Seq(quillDoobie, quillJdbcZio, postgresql, flyway, D.testcontainersPostgres)
 
   // Project Dependencies
   lazy val keyManagementDependencies: Seq[ModuleID] =
-    baseDependencies ++ bouncyDependencies ++ D.doobieDependencies ++ Seq(D.zioCatsInterop)
+    baseDependencies ++ bouncyDependencies ++ D.doobieDependencies ++ Seq(D.zioCatsInterop, D.zioMock, vaultDriver)
 
   lazy val serverDependencies: Seq[ModuleID] =
-    baseDependencies ++ tapirDependencies ++ postgresDependencies
+    baseDependencies ++ tapirDependencies ++ postgresDependencies ++ Seq(D.zioMock)
 }
 
 publish / skip := true
@@ -663,7 +669,8 @@ lazy val prismAgentServer = project
     dockerExposedPorts := Seq(8080, 8085, 8090),
     dockerBaseImage := "openjdk:11",
     buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion),
-    buildInfoPackage := "io.iohk.atala.agent.server.buildinfo"
+    buildInfoPackage := "io.iohk.atala.agent.server.buildinfo",
+    Compile / packageDoc / publishArtifact := false
   )
   .enablePlugins(JavaAppPackaging, DockerPlugin)
   .enablePlugins(BuildInfoPlugin)

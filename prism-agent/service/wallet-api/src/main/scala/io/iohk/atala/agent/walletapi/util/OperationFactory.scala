@@ -88,7 +88,7 @@ class OperationFactory(apollo: Apollo) {
       masterKeyId: String
   )(didTemplate: ManagedDIDTemplate): IO[CreateManagedDIDError, (PrismDIDOperation.Create, CreateDIDRandKey)] = {
     for {
-      randomSeed <- apollo.ecKeyFactory.randomBip32Seed().mapError(CreateManagedDIDError.KeyGenerationError.apply)
+      randomSeed <- apollo.ecKeyFactory.randomBip32Seed().mapBoth(CreateManagedDIDError.KeyGenerationError.apply, _._1)
       operationWithHdKey <- makeCreateOperationHdKey(masterKeyId, randomSeed)(0, didTemplate)
       (operation, hdKeys) = operationWithHdKey
       keyPairs <- ZIO.foreach(hdKeys.keyPaths) { case (id, path) =>
@@ -152,7 +152,7 @@ class OperationFactory(apollo: Apollo) {
       actions: Seq[UpdateManagedDIDAction]
   ): IO[UpdateManagedDIDError, (PrismDIDOperation.Update, UpdateDIDRandKey)] = {
     for {
-      randomSeed <- apollo.ecKeyFactory.randomBip32Seed().mapError(UpdateManagedDIDError.KeyGenerationError.apply)
+      randomSeed <- apollo.ecKeyFactory.randomBip32Seed().mapBoth(UpdateManagedDIDError.KeyGenerationError.apply, _._1)
       operationWithHdKey <- makeUpdateOperationHdKey(randomSeed)(
         did,
         previousOperationHash,

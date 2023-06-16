@@ -84,7 +84,7 @@ object VerificationPolicySqlIntegrationSpec extends ZIOSpecDefault {
           actualUpdated <- repo
             .update(
               actualCreated.id,
-              actualCreated.hashCode(),
+              actualCreated.nonce,
               expectedUpdated
             )
             .map(_.get)
@@ -93,13 +93,32 @@ object VerificationPolicySqlIntegrationSpec extends ZIOSpecDefault {
           isUpdated = assert(actualUpdated)(equalTo(expectedUpdated.copy(updatedAt = actualUpdated.updatedAt))) &&
             assert(getByIdUpdated)(equalTo(expectedUpdated.copy(updatedAt = actualUpdated.updatedAt)))
 
+          //
+
+          expectedUpdated2 = actualUpdated.copy(
+            name = "new name 2 ",
+            description = "new description 2"
+          )
+          actualUpdated2 <- repo
+            .update(
+              actualUpdated.id,
+              actualUpdated.nonce,
+              expectedUpdated2
+            )
+            .map(_.get)
+          getByIdUpdated2 <- repo.get(expectedUpdated2.id).map(_.get)
+
+          isUpdated2 = assert(actualUpdated2)(equalTo(expectedUpdated2.copy(updatedAt = actualUpdated.updatedAt))) &&
+            assert(getByIdUpdated2)(equalTo(expectedUpdated2.copy(updatedAt = actualUpdated.updatedAt)))
+
+          //
+
           actualDeleted <- repo.delete(
-            expectedUpdated.id,
-            actualUpdated.hashCode()
+            expectedUpdated.id
           )
 
           isDeletedReturnedBack = assert(actualDeleted)(
-            isSome(equalTo(actualUpdated))
+            isSome(equalTo(actualUpdated2))
           )
           getByIdDeleted <- repo.get(actualUpdated.id)
 

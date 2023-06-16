@@ -1,8 +1,9 @@
 package io.iohk.atala.pollux.core.service
 
-import zio.{Task, ZIO, ZLayer, IO}
 import io.iohk.atala.pollux.core.model.CredentialSchema
 import io.iohk.atala.pollux.core.model.CredentialSchema.*
+import io.iohk.atala.pollux.core.model.error.CredentialSchemaError
+import zio.{IO, Task, ZIO, ZLayer}
 
 import java.util.UUID
 trait CredentialSchemaService {
@@ -49,5 +50,7 @@ object CredentialSchemaService {
     final case class UpdateError(id: UUID, version: String, author: String, message: String) extends Error
 
     final case class UnexpectedError(msg: String) extends Error
+
+    final case class CredentialSchemaValidationError(cause: CredentialSchemaError) extends Error
   }
 }

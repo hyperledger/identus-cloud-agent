@@ -27,8 +27,7 @@ trait VerificationPolicyController {
 
   def deleteVerificationPolicyById(
       ctx: RequestContext,
-      id: UUID,
-      nonce: Int
+      id: UUID
   ): IO[ErrorResponse, Unit]
 
   def lookupVerificationPolicies(

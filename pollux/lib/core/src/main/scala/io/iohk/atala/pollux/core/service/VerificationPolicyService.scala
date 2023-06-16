@@ -17,15 +17,13 @@ trait VerificationPolicyService {
 
   def get(id: UUID): IO[VerificationPolicyError, Option[VerificationPolicy]]
 
-  def getHash(id: UUID): IO[VerificationPolicyError, Option[Int]]
-
   def update(
       id: UUID,
-      hash: Int,
+      nonce: Int,
       verificationPolicy: VerificationPolicy
   ): IO[VerificationPolicyError, Option[VerificationPolicy]]
 
-  def delete(id: UUID, hash: Int): IO[VerificationPolicyError, Option[VerificationPolicy]]
+  def delete(id: UUID): IO[VerificationPolicyError, Option[VerificationPolicy]]
 
   def totalCount(): IO[VerificationPolicyError, Long]
 
