@@ -5,7 +5,9 @@ import io.circe.*
 import io.circe.generic.auto.*
 import io.circe.parser.*
 import io.circe.syntax.*
+import io.iohk.atala.agent.notification.{Event, EventNotificationService, EventNotificationServiceInMemoryImpl, WebhookPublisher}
 import io.iohk.atala.agent.server.buildinfo.BuildInfo
+import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.server.http.ZioHttpClient
 import io.iohk.atala.agent.server.sql.Migrations as AgentMigrations
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
@@ -16,12 +18,7 @@ import io.iohk.atala.connect.sql.repository.Migrations as ConnectMigrations
 import io.iohk.atala.issue.controller.IssueControllerImpl
 import io.iohk.atala.mercury.*
 import io.iohk.atala.pollux.core.service.URIDereferencerError.{ConnectionError, ResourceNotFound, UnexpectedError}
-import io.iohk.atala.pollux.core.service.{
-  CredentialSchemaServiceImpl,
-  URIDereferencer,
-  URIDereferencerError,
-  HttpURIDereferencerImpl
-}
+import io.iohk.atala.pollux.core.service.{CredentialSchemaServiceImpl, HttpURIDereferencerImpl, URIDereferencer, URIDereferencerError}
 import io.iohk.atala.pollux.sql.repository.{JdbcCredentialSchemaRepository, Migrations as PolluxMigrations}
 import io.iohk.atala.presentproof.controller.PresentProofControllerImpl
 import io.iohk.atala.resolvers.{DIDResolver, UniversalDidResolver}
@@ -82,6 +79,7 @@ object MainApp extends ZIOAppDefault {
     server <- serverProgram(didCommServicePort)
     _ <- Modules.syncDIDPublicationStateFromDltJob.fork
     _ <- Modules.zioApp.fork
+    _ <- ZIO.scoped(WebhookPublisher.layer.build.map(_.get[WebhookPublisher])).flatMap(_.run.debug.fork)
     _ <- server.join *> ZIO.log(s"Server End")
     _ <- ZIO.never
   } yield ()
@@ -154,7 +152,8 @@ object MainApp extends ZIOAppDefault {
         prometheus.publisherLayer,
         ZLayer.succeed(MetricsConfig(5.seconds)),
         DefaultJvmMetrics.live.unit,
-        SystemControllerImpl.layer
+        SystemControllerImpl.layer,
+        ZLayer.fromZIO(Queue.bounded[Event](500)) >>> EventNotificationServiceInMemoryImpl.layer
       )
     } yield app
 
