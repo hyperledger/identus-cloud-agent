@@ -37,7 +37,7 @@ package object w3c {
     } yield {
       // https://www.w3.org/TR/did-core/#dfn-diddocument
       // The value of id in the resolved DID document MUST match the DID that was resolved.
-      (didData._1.toW3C(prismDID), didData._2.toW3C(prismDID))
+      (didData._1.toW3C, didData._2.toW3C(prismDID))
     }
   }
 

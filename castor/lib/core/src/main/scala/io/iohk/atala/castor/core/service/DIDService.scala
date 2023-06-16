@@ -110,6 +110,8 @@ private class DIDServiceImpl(didOpValidator: DIDOperationValidator, nodeClient: 
               .map { didData =>
                 val metadata = DIDMetadata(
                   lastOperationHash = ArraySeq.from(result.lastUpdateOperation.toByteArray),
+                  canonicalId =
+                    unpublishedDidData.map(_ => canonicalDID), // only shows canonicalId if long-form and published
                   deactivated = didData.internalKeys.isEmpty && didData.publicKeys.isEmpty
                 )
                 metadata -> didData
@@ -134,6 +136,7 @@ private class DIDServiceImpl(didOpValidator: DIDOperationValidator, nodeClient: 
         val metadata =
           DIDMetadata(
             lastOperationHash = ArraySeq.from(did.stateHash.toByteArray),
+            canonicalId = None, // unpublished DID must not contain canonicalId
             deactivated = false // unpublished DID cannot be deactivated
           )
         val didData = DIDData(

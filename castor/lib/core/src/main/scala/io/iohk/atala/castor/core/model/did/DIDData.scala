@@ -12,5 +12,6 @@ final case class DIDData(
 
 final case class DIDMetadata(
     lastOperationHash: ArraySeq[Byte],
+    canonicalId: Option[CanonicalPrismDID],
     deactivated: Boolean
 )

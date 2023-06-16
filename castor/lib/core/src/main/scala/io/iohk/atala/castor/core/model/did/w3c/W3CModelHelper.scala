@@ -21,9 +21,9 @@ object W3CModelHelper extends W3CModelHelper
 private[castor] trait W3CModelHelper {
 
   extension (didMetadata: DIDMetadata) {
-    def toW3C(did: PrismDID): DIDDocumentMetadataRepr = DIDDocumentMetadataRepr(
+    def toW3C: DIDDocumentMetadataRepr = DIDDocumentMetadataRepr(
       deactivated = didMetadata.deactivated,
-      canonicalId = did.asCanonical.toString,
+      canonicalId = didMetadata.canonicalId.map(_.toString),
       versionId = HexString.fromByteArray(didMetadata.lastOperationHash.toArray).toString
     )
   }
