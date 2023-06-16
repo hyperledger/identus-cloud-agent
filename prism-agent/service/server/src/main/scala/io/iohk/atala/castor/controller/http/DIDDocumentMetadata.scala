@@ -46,6 +46,6 @@ object DIDDocumentMetadata {
     (didDocumentMetadata: w3c.DIDDocumentMetadataRepr) =>
       DIDDocumentMetadata(
         deactivated = Some(didDocumentMetadata.deactivated),
-        canonicalId = Some(didDocumentMetadata.canonicalId)
+        canonicalId = didDocumentMetadata.canonicalId
       )
 }

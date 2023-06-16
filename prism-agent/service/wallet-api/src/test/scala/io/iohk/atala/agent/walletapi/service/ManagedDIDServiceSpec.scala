@@ -105,6 +105,7 @@ object ManagedDIDServiceSpec
   ): (DIDMetadata, DIDData) = {
     val metadata = DIDMetadata(
       lastOperationHash = lastOperationHash,
+      canonicalId = None,
       deactivated = deactivated
     )
     val didData = DIDData(
