@@ -13,7 +13,9 @@ Secrets are sensitive data that should be stored securely.
 There are following types of the secrets in the PRISM Platform:
 - seed: a secret used to derive cryptographic keys
 - private key: a secret used to sign data
-- public key: a secret used to verify signatures
+- any other entities that contain sensitive data (for instance, `credential-definition` and the `link-secret` used by the AnonCreds)
+
+**NOTE**: public keys are not considered as secrets and can be stored in the same of other storage depending on the needs
 
 The PRISM Platform provides a secure storage for secrets.
 Hashicorp Vault is used as a secret storage service and provides a REST API, Web UI and command client to interact with the service.
@@ -24,18 +26,20 @@ Hashicorp Vault is used as a secret storage service and provides a REST API, Web
 
 ### Vault
 Vault is a secrets management service developed by HashiCorp.
+It can be used as the default secret storage for the PRISM Platform as well as for authentication and account management.
+
+**NOTE**: The PRISM platform must not be dependent on the Vault service and must be able to use other services for the same purposes
 
 ### Agent
-PRISM Agent is a service that provides an APIs to interact with the PRISM Platform.
+PRISM Agent is a service that provides an APIs to interact with the PRISM Platform and use the SSI capabilities.
 
 ### Wallet
-Logical component fo the Agent that holds secrets.
+Logical component of the Agent that holds secrets and provides the logical or physical isolation of the data.
 
 ## Technical Overview
 
 ### PRISM Agent Logical Isolation
 Each instance of the PRISM agent needs to have access to the secrets but must be isolated from other agents at the same environment.
-Vault namespaces are used to achieve this goal, so each agent has its own namespace and can access only its own secrets.
 For horizontal scalability the group of agents can be configured to share the same namespace, so they can access the same secrets, but they still need to use different Vault account to authenticate themselves to the Vault service.
 
 ### PRISM Agent Authentication
@@ -57,11 +61,11 @@ KV2 secrets engine is used to store secrets in the Vault service and provides th
 - secrets are versioned
 - secrets can be deleted, restored and rolled back to a previous version
 - secrets are available via REST API, WEB UI, and command client
-- secrets are logically separated by namespaces and tenants
+- secrets are logically separated by tenants
 
 ### Single and Multi-Tenant Configuration
 The PRISM Platform supports single and multi-tenant configurations.
-In the single-tenant configuration, the PRISM Agent uses a single Vault namespace, a single Wallet and a single Vault account to authenticate itself to the Vault service.
+In the single-tenant configuration, the PRISM Agent uses a single Wallet and a single Vault account to authenticate itself to the Vault service.
 In the multi-tenant configuration, the PRISM Agent manages multiple Wallets, each Wallet is associated with a single tenant.
 Multi-tenant configuration is used to achieve logical data separation between tenants, so each Wallet can access only its own secrets.
 The Wallet is identified by the tenant ID and represented by the account in the Vault service.
@@ -85,36 +89,40 @@ The PRISM Platform uses HD key derivation to derive cryptographic keys from the 
 The Wallet is initialized with the seed and uses it to derive cryptographic keys for managed DIDs.
 Key derivation path is conventional and is defined as follows:
 ```agsl
-m / wallet-purpose` / DID-index` / key-purpose` / key-index`
+m / wallet-purpose / DID-index / key-purpose / key-index
 ```
-
 
 ### Naming Convention
 
-The Wallet uses the following naming convention for secrets (DIDs and keys) stored in the Vault service:
+To store the assets in the Vault service each asset is assigned a unique name.
+The Vault is a key/value store with metadata attached to the key and versioning.
 
-```agsl
-<tenant-id>/dids/<did-index>/keys/<key-purpose>/<key-index>/<key-type> value=<base64-encoded-value> <metadata>
+The naming convention for the Vault assets is a matter of the implementation, but for the multi-tenant configuration all the assets of the Wallet must be stored under the path that contains the `tenant-id`.
+
+For example, the `seed` can be stored by the following path:
+```mermaid
+<tenant-id>/seed value=<base64-encoded-value> <metadata>
+```
+
+The private keys for the DID can be stored by the following path:
+```mermaid
+<tenant-id>/dids/prism/<did-ref>/keys/<key-purpose>/<key-index>/<operation-hash> value=<base64-encoded-value> <metadata>
 ```
 
 where:
 - `tenant-id` is the tenant ID assigned to the Wallet
-- `did-index` is the DID index. Starts from 0 and grows incrementally after each DID creation.
+- `did-ref` is the DID ref
 - `key-purpose` is the key purpose according to the PRISM DID Method specification
 - `key-index` is the key index. Starts from 0 and grows incrementally after each key rotation
-- `key-type` is the key type: public or private
+- `operation-hash` is the reference to the update DID document operation
 - `base64-encoded-value` is the base64-encoded value of the key
 - `metadata` is the key/value metadata attached the key that can be used to store additional information about the key such as `seed` or `key-derivation-path`
 
-## Key Rotation
-The Agent supports key rotation for the managed DIDs.
-The key rotation is performed by the Agent and consists of the following steps:
-- select the DID to rotate the keys
-- generate new keys and store them in the Vault service
-- update and publish the DID document with the new keys
+The keys material of the DID peer can be stored by the following path:
 
-**NOTE:** The Agent does not delete the old keys from the Vault service, so the old keys can be used to verify signatures of the messages signed with the old keys.
-**NOTE:** The key rotation procedure is not clarified yet and might be changed in the future. This functionality is not implemented yet.
+```mermaid
+<tenant-id>/dids/peer/<did-ref>/keys/<key-purpose> value=<base64-encoded-value> <metadata>
+```
 
 Links:
 - [PRISM DID Method Specification](https://github.com/input-output-hk/prism-did-method-spec)

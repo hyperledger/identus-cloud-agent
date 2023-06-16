@@ -8,7 +8,7 @@
 
 ## Introduction
 
-Current document describes the levels of access control in the PRISM platform configured in the Vault secret service
+Current document describes the levels of access control in the PRISM platform configured in the Vault service
 The Vault service uses policies to control the access to the secrets, configuration, and other resources.
 The policies are applied to the entities and groups of entities.
 
@@ -20,8 +20,7 @@ According to the Principle of Least Privilege (PoLP), the access to the resource
 
 The account with `sudo` privileges that allows to configure the Vault service.
 The root token is used for this purpose.
-Can be used for development and testing purposes only.
-Must be kept in the most safe place and not used for regular requests as it has access to all resources managed by the Vault.
+The root token must be kept in the most safe place and not used for regular cases.
 
 SUDO Account is used for the following purposes:
 - configure the Vault service
@@ -32,37 +31,33 @@ Managed by DevOps and SRE teams.
 
 ### Management Account
 
-Management Account is created for and used by Atala tribe members.
-GitHub authentication and teleport access must be configured for this account.
+Management Account is special account that allows to manage the PRISM platform.
 
 The account with the limited access to configure the Vault service with the following permissions:
-- create the Wallet and Tenants accounts
-- create the Agent account
-- enforces the policies to the tenant account
+- manage the Wallet accounts
+- manage the Agent accounts
+- enforces the policies to the Wallet account
+
+Management Account can be used in the configuration scripts or by the SRE team.
 
 ### Agent Account
 
-Agent Account is created for and used by the PRISM Agent.
+Agent Account is created for the PRISM Agent to authenticate itself to the Vault service.
 AppRole authentication method is used for this account.
 
 The account with the limited access to configure the Vault service with the following permissions:
-- create the Wallet account
+- create the Wallet accounts
 - issue the token to the Wallet account
+- do other operations required to configure the Wallet account
 
 ### Wallet Account
 
-The Wallet Account is created for and used by the Wallet, and is associated with the Tenant.
-The Wallet Account is has access to the secrets of the Tenant only.
+The Wallet Account is created for and used by the Wallet.
+The Wallet Account is has access to the secrets of the Wallet and the PRISM Agent must guarantee the data isolation at the Wallet level.
 This account has the following permissions:
-- list the secrets associated with the Tenant
-- read the secrets associated with the Tenant
-- write the secrets associated with the Tenant
-- delete the secrets associated with the Tenant
-
-### Tenant Account
-
-Tenant Account is created for and used by the Tenant to authenticate itself to the PRISM platform from Web and Mobile application.
-Tenant account must be linked to the Wallet account to have access to the secrets.
+- list, read, write, delete the secrets associated with the Wallet
+- use the REST API associated with the Wallet
+- manage the data associated with the Wallet
 
 ## Technical Overview
 
@@ -79,7 +74,7 @@ The following practices are applied to implement the PoLP:
 
 In order to implement the PoLP, the following access control rules are defined:
 - PRISM Agent account has access to the Wallet account that belong to the Agent only
-- PRISM Agent account transparently issues the token to the Wallet account based on the Tenant account
+- PRISM Agent account transparently issues the token to the Wallet account based on configured authentication method
 
 ### Token Issuing, Renewal, Expiration and Revocation
 
@@ -102,11 +97,7 @@ Agent Account token policies:
 - token expiration time: 24 hour
 
 Wallet Account token policies:
-- authentication methods: JWT, token issued by the Agent account
-- token expiration time: 1 hour
-
-Tenant account token policies:
-- authentication methods: JWT/OIDC, GitHub, GoogleAuth, user/password
+- authentication methods: JWT, token issued by the Agent account, user/password
 - token expiration time: 1 hour
 
 **NOTE**: user/password method is used for the development and testing purposes only.
