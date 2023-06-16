@@ -1,6 +1,6 @@
 # Mediator message storage 
 
-- Status: draft [ accepted | deprecated | superseded by [xxx](yyyymmdd-xxx.md)]
+- Status: accepted [ accepted | deprecated | superseded by [xxx](yyyymmdd-xxx.md)]
 - Deciders: Yurii Shynbuiev, Benjamin Voiturier, Shailesh Patil, Fabio Pinheiro , David Poltorak
 - Date: [2023-05-09] 
 - Tags: storage, db, message, mongo, postgres, sql

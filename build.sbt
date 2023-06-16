@@ -55,7 +55,7 @@ lazy val V = new {
 
   val typesafeConfig = "1.4.2"
   val protobuf = "3.1.9"
-  val testContainersScalaPostgresql = "0.40.11"
+  val testContainersScala = "0.40.16"
 
   val doobie = "1.0.0-RC2"
   val quill = "4.6.0"
@@ -74,6 +74,10 @@ lazy val V = new {
   val bouncyCastle = "1.70"
 
   val jsonSchemaValidator = "1.0.83"
+
+  // https://github.com/jopenlibs/vault-java-driver/issues/36
+  // v5.4.0 is not available on Maven yet.
+  val vaultDriver = "5.3.0"
 }
 
 /** Dependencies */
@@ -106,7 +110,8 @@ lazy val D = new {
   val typesafeConfig: ModuleID = "com.typesafe" % "config" % V.typesafeConfig
   val scalaPbGrpc: ModuleID = "com.thesamet.scalapb" %% "scalapb-runtime-grpc" % scalapb.compiler.Version.scalapbVersion
   // TODO we are adding test stuff to the main dependencies
-  val testcontainers: ModuleID = "com.dimafeng" %% "testcontainers-scala-postgresql" % V.testContainersScalaPostgresql
+  val testcontainersPostgres: ModuleID = "com.dimafeng" %% "testcontainers-scala-postgresql" % V.testContainersScala
+  val testcontainersVault: ModuleID = "com.dimafeng" %% "testcontainers-scala-vault" % V.testContainersScala
 
   val doobiePostgres: ModuleID = "org.tpolecat" %% "doobie-postgres" % V.doobie
   val doobieHikari: ModuleID = "org.tpolecat" %% "doobie-hikari" % V.doobie
@@ -128,20 +133,16 @@ lazy val D = new {
 }
 
 lazy val D_Shared = new {
-
-  lazy val dependencies: Seq[ModuleID] = Seq(D.typesafeConfig, D.scalaPbGrpc, D.testcontainers)
+  lazy val dependencies: Seq[ModuleID] = Seq(D.typesafeConfig, D.scalaPbGrpc, D.testcontainersPostgres, D.testcontainersVault)
 }
 
 lazy val D_Connect = new {
 
   private lazy val logback = "ch.qos.logback" % "logback-classic" % V.logback % Test
 
-  private lazy val testcontainers =
-    "com.dimafeng" %% "testcontainers-scala-postgresql" % V.testContainersScalaPostgresql % Test
-
   // Dependency Modules
   private lazy val baseDependencies: Seq[ModuleID] =
-    Seq(D.zio, D.zioTest, D.zioTestSbt, D.zioTestMagnolia, testcontainers, logback)
+    Seq(D.zio, D.zioTest, D.zioTestSbt, D.zioTestMagnolia, D.testcontainersPostgres, logback)
 
   // Project Dependencies
   lazy val coreDependencies: Seq[ModuleID] =
@@ -196,9 +197,6 @@ lazy val D_Pollux = new {
   val quillDoobie = "io.getquill" %% "quill-doobie" %
     V.quill exclude ("org.scala-lang.modules", "scala-java8-compat_3")
 
-  val testcontainers =
-    "com.dimafeng" %% "testcontainers-scala-postgresql" % V.testContainersScalaPostgresql % Test
-
   // We have to exclude bouncycastle since for some reason bitcoinj depends on bouncycastle jdk15to18
   // (i.e. JDK 1.5 to 1.8), but we are using JDK 11
   val prismCrypto = "io.iohk.atala" % "prism-crypto-jvm" % V.prismSdk excludeAll
@@ -229,10 +227,10 @@ lazy val D_Pollux = new {
     D.zioCatsInterop,
     D.doobiePostgres,
     D.doobieHikari,
+    D.testcontainersPostgres,
     flyway,
     quillDoobie,
     quillJdbcZio,
-    testcontainers
   )
 
   // Project Dependencies
@@ -302,8 +300,8 @@ lazy val D_PrismAgent = new {
     "io.getquill" %% "quill-jdbc-zio" % V.quill exclude ("org.scala-lang.modules", "scala-java8-compat_3")
 
   val flyway = "org.flywaydb" % "flyway-core" % V.flyway
-  val testcontainers_scala_postgresql =
-    "com.dimafeng" %% "testcontainers-scala-postgresql" % V.testContainersScalaPostgresql % Test
+
+  val vaultDriver = "io.github.jopenlibs" % "vault-java-driver" % V.vaultDriver
 
   // Dependency Modules
   val baseDependencies: Seq[ModuleID] = Seq(
@@ -333,11 +331,11 @@ lazy val D_PrismAgent = new {
     )
 
   val postgresDependencies: Seq[ModuleID] =
-    Seq(quillDoobie, quillJdbcZio, postgresql, flyway, testcontainers_scala_postgresql)
+    Seq(quillDoobie, quillJdbcZio, postgresql, flyway, D.testcontainersPostgres)
 
   // Project Dependencies
   lazy val keyManagementDependencies: Seq[ModuleID] =
-    baseDependencies ++ bouncyDependencies ++ D.doobieDependencies ++ Seq(D.zioCatsInterop, D.zioMock)
+    baseDependencies ++ bouncyDependencies ++ D.doobieDependencies ++ Seq(D.zioCatsInterop, D.zioMock, vaultDriver)
 
   lazy val serverDependencies: Seq[ModuleID] =
     baseDependencies ++ tapirDependencies ++ postgresDependencies ++ Seq(D.zioMock)
