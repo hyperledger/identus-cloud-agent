@@ -6,6 +6,7 @@ import io.iohk.atala.castor.core.model.error.DIDResolutionError
 import io.iohk.atala.castor.core.util.{DIDOperationValidator, GenUtils}
 import io.iohk.atala.prism.protos.common_models.{HealthCheckRequest, HealthCheckResponse}
 import io.iohk.atala.prism.protos.node_api
+import io.iohk.atala.prism.protos.node_models
 import io.iohk.atala.prism.protos.node_api.{
   GetBatchStateRequest,
   GetBatchStateResponse,
@@ -38,6 +39,28 @@ object DIDServiceSpec extends ZIOSpecDefault {
     lastSyncedBlockTimestamp = None,
     lastUpdateOperation = ByteString.EMPTY
   )
+
+  private def mockNodeService(
+      createOperation: PrismDIDOperation.Create
+  ): ULayer[node_api.NodeServiceGrpc.NodeService] = {
+    import io.iohk.atala.castor.core.model.ProtoModelHelper.*
+
+    val operationProto = createOperation.toProto
+    val didData = node_models.DIDData(
+      id = createOperation.did.suffix.toString,
+      publicKeys = operationProto.value.didData.get.publicKeys,
+      services = operationProto.value.didData.get.services,
+      context = operationProto.value.didData.get.context
+    )
+
+    mockNodeService(
+      GetDidDocumentResponse(
+        document = Some(didData),
+        lastSyncedBlockTimestamp = None,
+        lastUpdateOperation = ByteString.EMPTY
+      )
+    )
+  }
 
   private def mockNodeService(
       didData: GetDidDocumentResponse = notFoundDidDocumentResponse
@@ -77,7 +100,10 @@ object DIDServiceSpec extends ZIOSpecDefault {
   private def didServiceLayer(): ULayer[DIDService] =
     DIDOperationValidator.layer() ++ mockNodeService() >>> DIDServiceImpl.layer
 
-  override def spec = suite("DIDServiceImpl")(resolveDIDSpec).provide(didServiceLayer())
+  private def didServiceLayer(createOperation: PrismDIDOperation.Create): ULayer[DIDService] =
+    DIDOperationValidator.layer() ++ mockNodeService(createOperation: PrismDIDOperation.Create) >>> DIDServiceImpl.layer
+
+  override def spec = suite("DIDServiceImpl")(resolveDIDSpec.provide(didServiceLayer()), resolveDIDMetadataSpec)
 
   private val resolveDIDSpec = suite("resolveDID")(
     test("long-form unpublished DID returns content in encoded state") {
@@ -111,4 +137,33 @@ object DIDServiceSpec extends ZIOSpecDefault {
     }
   )
 
+  private val resolveDIDMetadataSpec = suite("resolveDID metadata")(
+    test("short-form published DID doesn't return canonicalID")(
+      for {
+        operation <- GenUtils.createOperation.runCollectN(1).map(_.head)
+        prismDID = PrismDID.buildLongFormFromOperation(operation)
+        svc <- ZIO.service[DIDService].provide(didServiceLayer(operation))
+        resolutionResult <- svc.resolveDID(prismDID.asCanonical).someOrFailException
+        (didMetadata, _) = resolutionResult
+      } yield assert(didMetadata.canonicalId)(isNone)
+    ),
+    test("long-form published DID return canonicalID")(
+      for {
+        operation <- GenUtils.createOperation.runCollectN(1).map(_.head)
+        prismDID = PrismDID.buildLongFormFromOperation(operation)
+        svc <- ZIO.service[DIDService].provide(didServiceLayer(operation))
+        resolutionResult <- svc.resolveDID(prismDID).someOrFailException
+        (didMetadata, _) = resolutionResult
+      } yield assert(didMetadata.canonicalId)(isSome(equalTo(prismDID.asCanonical)))
+    ),
+    test("long-form unpublished DID doesn't return canonicalID")(
+      for {
+        operation <- GenUtils.createOperation.runCollectN(1).map(_.head)
+        prismDID = PrismDID.buildLongFormFromOperation(operation)
+        svc <- ZIO.service[DIDService].provide(didServiceLayer())
+        resolutionResult <- svc.resolveDID(prismDID).someOrFailException
+        (didMetadata, _) = resolutionResult
+      } yield assert(didMetadata.canonicalId)(isNone)
+    ),
+  )
 }
