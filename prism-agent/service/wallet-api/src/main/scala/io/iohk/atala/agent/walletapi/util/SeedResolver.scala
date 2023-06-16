@@ -24,7 +24,11 @@ private class SeedResolverImpl(apollo: Apollo, isDevMode: Boolean) extends SeedR
             case Some(hex) => ZIO.fromTry(HexString.fromString(hex)).map(_.toByteArray).asSome
             case None      => ZIO.none
           }
-          .tapError(e => ZIO.logError("Failed to parse WALLET_SEED"))
+          .tapError(e =>
+            ZIO.logError(
+              "Failed to parse WALLET_SEED. The WALLET_SEED must be a hex string representing 64-bytes (128-characters) BIP39 seed"
+            )
+          )
         _ <- ZIO.logInfo("WALLET_SEED environment is not found.").when(maybeSeed.isEmpty)
         // When DEV_MODE=fase, the WALLET_SEED must be set.
         _ <- ZIO
@@ -52,7 +56,7 @@ private class SeedResolverImpl(apollo: Apollo, isDevMode: Boolean) extends SeedR
   }
 
   private def validateSeed(seed: Array[Byte]): Either[String, Unit] = {
-    if (seed.length != 64) Left(s"The seed must be 64 bytes- (got ${seed.length} bytes)")
+    if (seed.length != 64) Left(s"The seed must be 64-bytes (got ${seed.length} bytes)")
     else Right(())
   }
 
