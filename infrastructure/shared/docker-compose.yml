@@ -78,6 +78,7 @@ services:
       DIDCOMM_SERVICE_URL: http://host.docker.internal:${PORT}/didcomm
       PRISM_NODE_HOST: prism-node
       PRISM_NODE_PORT: 50053
+      WEBHOOK_URL: https://localhost:8080/my-webhook
     depends_on:
       db:
         condition: service_healthy
