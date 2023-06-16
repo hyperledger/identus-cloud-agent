@@ -106,7 +106,7 @@ private[castor] trait W3CModelHelper {
     }
   }
 
-  // TODO: check if we need to support uncompress for OKP key types
+  // FIXME: do we need to support uncompress for OKP key types?
   extension (publicKey: PublicKey) {
     def toW3C(did: PrismDID, controller: PrismDID): PublicKeyRepr = {
       val curve = publicKey.publicKeyData match {
@@ -131,7 +131,7 @@ private[castor] trait W3CModelHelper {
         case PublicKeyData.ECCompressedKeyData(crv, data) =>
           PublicKeyJwk(
             kty = "OKP",
-            crv = crv.joseName,
+            crv = crv.name,
             x = Some(data.toStringNoPadding),
             y = None
           )
@@ -148,14 +148,14 @@ private[castor] trait W3CModelHelper {
           )
           PublicKeyJwk(
             kty = "EC",
-            crv = uncomporessed.crv.joseName,
+            crv = uncomporessed.crv.name,
             x = Some(uncomporessed.x.toStringNoPadding),
             y = Some(uncomporessed.y.toStringNoPadding)
           )
         case PublicKeyData.ECKeyData(crv, x, y) =>
           PublicKeyJwk(
             kty = "EC",
-            crv = crv.joseName,
+            crv = crv.name,
             x = Some(x.toStringNoPadding),
             y = Some(y.toStringNoPadding)
           )
