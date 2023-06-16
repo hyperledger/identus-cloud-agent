@@ -282,29 +282,38 @@ private trait BaseOperationValidator {
       )
   }
 
+  // NOTE
+  // W3C spec requires URI to be normalized. In practice, it is impractical
+  // to ensure consistent normalization algorithm across all implementation / libraries.
+  //
+  // 2023-06-15
+  // We decided that the URI normalization check will be omitted.
+  // This is not aligned with the W3C spec, but we'll wait and see what W3C
+  // comment will be around that normalization rule.
   protected def validateServiceEndpointNormalized[T <: PrismDIDOperation](
       operation: T,
       endpointExtractor: ServiceEndpointExtractor[T]
   ): Either[OperationValidationError, Unit] = {
-    val uris = endpointExtractor(operation)
-      .flatMap { case (_, serviceEndpoint) =>
-        val ls: Seq[UriOrJsonEndpoint] = serviceEndpoint match {
-          case ServiceEndpoint.Single(value) => Seq(value)
-          case i: ServiceEndpoint.Multiple   => i.values
-        }
-        ls.flatMap {
-          case UriOrJsonEndpoint.Uri(uri) => Some(uri.value)
-          case _                          => None
-        }
-      }
-    val nonNormalizedUris = uris.filterNot(isUriNormalized)
-    if (nonNormalizedUris.isEmpty) Right(())
-    else
-      Left(
-        OperationValidationError.InvalidArgument(
-          s"serviceEndpoint URIs must be normalized: ${nonNormalizedUris.mkString("[", ", ", "]")}"
-        )
-      )
+    // val uris = endpointExtractor(operation)
+    //   .flatMap { case (_, serviceEndpoint) =>
+    //     val ls: Seq[UriOrJsonEndpoint] = serviceEndpoint match {
+    //       case ServiceEndpoint.Single(value) => Seq(value)
+    //       case i: ServiceEndpoint.Multiple   => i.values
+    //     }
+    //     ls.flatMap {
+    //       case UriOrJsonEndpoint.Uri(uri) => Some(uri.value)
+    //       case _                          => None
+    //     }
+    //   }
+    // val nonNormalizedUris = uris.filterNot(isUriNormalized)
+    // if (nonNormalizedUris.isEmpty) Right(())
+    // else
+    //   Left(
+    //     OperationValidationError.InvalidArgument(
+    //       s"serviceEndpoint URIs must be normalized: ${nonNormalizedUris.mkString("[", ", ", "]")}"
+    //     )
+    //   )
+    Right(())
   }
 
   protected def validateServiceTypeLength[T <: PrismDIDOperation](
