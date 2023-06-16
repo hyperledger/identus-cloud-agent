@@ -80,7 +80,8 @@ The server side is interpreted using a ZIO-HTTP interpreter to be aligned with t
 Client side stubs are generated using OpenAPI tools and OpenAPI specification file. (must be a part of CI)
 
 For server-side code the flow is following:
-```mermaid
+
+<pre class="mermaid">
 graph TD
     ED(Endpoint Definition) --> |Generate| OAS(OpenAPI Specification)
     ED --> |Generate| AAUI(AsyncAPI Specification)
@@ -91,7 +92,7 @@ graph TD
     OAS --> |Input| OAT(OpenAPI Tools)
     OAT --> |Generate| SS(Server Stub)
     OAT --> |Generate| CS(Client Stub)
-```
+</pre>
 
 ### Positive Consequences <!-- optional -->
 
@@ -108,7 +109,7 @@ graph TD
 - There is a risk that Tapir might have some hidden surprises and constraints
 
 ### Option 1 & 2: Feature Implementation Workflow
-```mermaid
+<pre class="mermaid">
 graph TD
     U[Start Feature] --> |Edit OAS| A
     A[OAS File] --> |Input| E
@@ -123,9 +124,10 @@ graph TD
     S --> |Compilation Error| I(Investigate)
     I --> |Try again| U
     S --> |Success| T(Complete Feature)
-```
+</pre>
+
 ### Option 3: Feature Implementation Workflow
-```mermaid
+<pre class="mermaid">
 graph TD
     U[Start Feature] --> |Edit Endpoint Specification| ED(Endpoint Definition)
     U --> |Edit Input/Output Types| DM(Domain Model)
@@ -149,8 +151,8 @@ graph TD
     S --> |Compilation Error| I(Investigate)
     I --> |Try again| U
     S --> |Success| T(Complete Feature)
-    
-```
+</pre>
+
 ## Pros and Cons of the Options <!-- optional -->
 
 ### Option 1: use OpenAPI tools and mustache templates for Akka server
@@ -205,3 +207,8 @@ Then all the endpoints are translated to Tapir, it will be possible to switch th
 - [OpenAPI Tools](https://github.com/OpenAPITools/openapi-generator)
 - [Goals of Tapir library](https://tapir.softwaremill.com/en/latest/goals.html)
 - [Tapir](https://tapir.softwaremill.com/en/latest/index.html)
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/9.2.1/mermaid.min.js"/>
+<script>
+  mermaid.initialize({ startOnLoad: true });
+</script>
