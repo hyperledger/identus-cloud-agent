@@ -60,7 +60,7 @@ lazy val V = new {
   val doobie = "1.0.0-RC2"
   val quill = "4.6.0.1"
   val iris = "0.1.0" // TODO REMOVE
-  val flyway = "9.8.3"
+  val flyway = "9.19.4"
   val logback = "1.4.8"
 
   val prismNodeClient = "0.4.0"
