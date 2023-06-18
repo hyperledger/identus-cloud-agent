@@ -8,7 +8,7 @@ import sttp.tapir.swagger.bundle.SwaggerInterpreter
 import zio.Task
 import sttp.tapir.ztapir.{ZServerEndpoint}
 
-// Here we bind particular endpoint definition to the controller layer that is able to
+// Here we bind particular endpoint definition to the controller layer that is able to 
 // - get the INPUT
 // - call the service layer
 // - transform the result to the OUTPUT
