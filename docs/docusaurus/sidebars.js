@@ -52,6 +52,19 @@ const sidebars = {
         'schemas/update',
         'schemas/delete'
       ]
+    },
+    {
+      type: 'category',
+      label: 'Secret Management',
+      link: {
+        type: 'generated-index',
+        title: 'Secret Management',
+        description: 'Secret Management'
+      },
+      items: [
+        'secrets/secret-storage',
+        'secrets/operation'
+      ]
     }
   ]
 }

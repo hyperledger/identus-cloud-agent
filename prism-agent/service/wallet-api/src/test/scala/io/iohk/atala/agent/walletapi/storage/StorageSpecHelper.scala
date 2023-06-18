@@ -51,22 +51,17 @@ trait StorageSpecHelper extends ApolloSpecHelper {
       )
     )
 
-  protected def initializeDIDStateAndKeys(keyIds: Seq[String] = Nil) = {
+  protected def initializeDIDStateAndKeys(keyIds: Seq[String] = Nil, didIndex: Int) = {
     for {
       nonSecretStorage <- ZIO.service[DIDNonSecretStorage]
-      secretStorage <- ZIO.service[DIDSecretStorage]
-      generated <- generateCreateOperation(keyIds)
-      (createOperation, secrets) = generated
+      generated <- generateCreateOperationHdKey(keyIds, didIndex)
+      (createOperation, hdKeys) = generated
       did = createOperation.did
-      keyPairs = secrets.keyPairs.toSeq
       _ <- nonSecretStorage.insertManagedDID(
         did,
-        ManagedDIDState(createOperation, None, PublicationState.Created()),
-        Map.empty
+        ManagedDIDState(createOperation, didIndex, PublicationState.Created()),
+        hdKeys.keyPaths ++ hdKeys.internalKeyPaths
       )
-      _ <- ZIO.foreach(keyPairs) { case (keyId, keyPair) =>
-        secretStorage.insertKey(did, keyId, keyPair, createOperation.toAtalaOperationHash)
-      }
-    } yield (did, keyPairs)
+    } yield did
   }
 }

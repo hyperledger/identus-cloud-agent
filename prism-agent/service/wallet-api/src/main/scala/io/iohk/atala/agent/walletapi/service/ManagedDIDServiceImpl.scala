@@ -141,7 +141,7 @@ final class ManagedDIDServiceImpl private[walletapi] (
       _ <- ZIO
         .fromEither(didOpValidator.validate(createOperation))
         .mapError(CreateManagedDIDError.InvalidOperation.apply)
-      state = ManagedDIDState(createOperation, Some(didIndex), PublicationState.Created())
+      state = ManagedDIDState(createOperation, didIndex, PublicationState.Created())
       _ <- nonSecretStorage
         .insertManagedDID(did, state, hdKey.keyPaths ++ hdKey.internalKeyPaths)
         .mapError(CreateManagedDIDError.WalletStorageError.apply)
