@@ -77,7 +77,7 @@ lazy val V = new {
 
   // https://github.com/jopenlibs/vault-java-driver/issues/36
   // v5.4.0 is not available on Maven yet.
-  val vaultDriver = "5.3.0"
+  val vaultDriver = "5.4.0"
 }
 
 /** Dependencies */
