@@ -61,7 +61,7 @@ lazy val V = new {
   val quill = "4.6.0"
   val iris = "0.1.0" // TODO REMOVE
   val flyway = "9.8.3"
-  val logback = "1.4.5"
+  val logback = "1.4.8"
 
   val prismNodeClient = "0.4.0"
   val prismSdk = "v1.4.1" // scala-steward:off
@@ -133,7 +133,8 @@ lazy val D = new {
 }
 
 lazy val D_Shared = new {
-  lazy val dependencies: Seq[ModuleID] = Seq(D.typesafeConfig, D.scalaPbGrpc, D.testcontainersPostgres, D.testcontainersVault)
+  lazy val dependencies: Seq[ModuleID] =
+    Seq(D.typesafeConfig, D.scalaPbGrpc, D.testcontainersPostgres, D.testcontainersVault)
 }
 
 lazy val D_Connect = new {
