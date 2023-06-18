@@ -4,7 +4,7 @@ import org.scoverage.coveralls.Imports.CoverallsKeys._
 inThisBuild(
   Seq(
     organization := "io.iohk.atala",
-    scalaVersion := "3.2.2",
+    scalaVersion := "3.3.0",
     fork := true,
     run / connectInput := true,
     releaseUseGlobalVersion := false,
