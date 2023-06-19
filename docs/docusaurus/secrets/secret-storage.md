@@ -88,7 +88,7 @@ sequenceDiagram
 The PRISM Platform uses HD key derivation to derive cryptographic keys from the seed.
 The Wallet is initialized with the seed and uses it to derive cryptographic keys for managed DIDs.
 Key derivation path is conventional and is defined as follows:
-```agsl
+```
 m / wallet-purpose / DID-index / key-purpose / key-index
 ```
 
@@ -100,12 +100,14 @@ The Vault is a key/value store with metadata attached to the key and versioning.
 The naming convention for the Vault assets is a matter of the implementation, but for the multi-tenant configuration all the assets of the Wallet must be stored under the path that contains the `tenant-id`.
 
 For example, the `seed` can be stored by the following path:
-```mermaid
+
+```
 <tenant-id>/seed value=<base64-encoded-value> <metadata>
 ```
 
 The private keys for the DID can be stored by the following path:
-```mermaid
+
+```
 <tenant-id>/dids/prism/<did-ref>/keys/<key-purpose>/<key-index>/<operation-hash> value=<base64-encoded-value> <metadata>
 ```
 
@@ -120,7 +122,7 @@ where:
 
 The keys material of the DID peer can be stored by the following path:
 
-```mermaid
+```
 <tenant-id>/dids/peer/<did-ref>/keys/<key-purpose> value=<base64-encoded-value> <metadata>
 ```
 
