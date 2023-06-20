@@ -15,22 +15,16 @@ object Agents {
     lateinit var Faber: Actor
         private set
 
-    init {
-        if (Environments.AGENT_AUTH_REQUIRED) {
-            SerenityRest.setDefaultRequestSpecification(
-                RequestSpecBuilder().addHeader(
-                    Environments.AGENT_AUTH_HEADER,
-                    Environments.AGENT_AUTH_KEY,
-                )
-                    .build(),
-            )
-        }
-    }
-
     fun createAgents() {
         Acme = Actor.named("Acme").whoCan(CallAnApi.at(Environments.ACME_AGENT_URL))
         Bob = Actor.named("Bob").whoCan(CallAnApi.at(Environments.BOB_AGENT_URL))
         Mallory = Actor.named("Mallory").whoCan(CallAnApi.at(Environments.MALLORY_AGENT_URL))
         Faber = Actor.named("Faber").whoCan(CallAnApi.at(Environments.FABER_AGENT_URL))
+        if (Environments.AGENT_AUTH_REQUIRED) {
+            Acme.remember("AUTH_KEY", Environments.ACME_AUTH_KEY)
+            Bob.remember("AUTH_KEY", Environments.BOB_AUTH_KEY)
+            Mallory.remember("AUTH_KEY", Environments.MALLORY_AUTH_KEY)
+            Faber.remember("AUTH_KEY", Environments.FABER_AUTH_KEY)
+        }
     }
 }
