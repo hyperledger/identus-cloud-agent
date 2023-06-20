@@ -7,7 +7,7 @@ which follows the BIP32 standard. In order to generate the required keys,
 BIP32 uses a master binary seed serving as the root of the derivation tree,
 and all other keys are derived from this seed.
 Given that the PRISM agent employs BIP32, it expects a 64-byte binary seed as input.
-Various methods exist for generating a 64-byte byte sequence, each serving different purposes.
+Various methods exist for generating a byte sequence, each serving different purposes.
 
 PRISM agent does not have any opinion on how the seed should be generated as long as a valid hex string is provided.
 However, it is strongly recommended to use high entropy for generating the master seed.
@@ -29,7 +29,20 @@ WALLET_SEED=0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a
 ```
 __Note: Do not use method this in production.__
 
-### 2. Use BIP39 mnemonic to generate a seed
+### 2. Simple dynamic seed
+
+Users have the option to create a random hexadecimal string of a desired length using scripting languages
+like Bash or Python. An example of a Bash script is shown below.
+
+```bash
+WALLET_SEED=$(tr -dc a-f0-9 </dev/urandom | head -c 128 ; echo '')
+```
+This approach is suitable for basic testing scenarios requiring dynamically generated seeds.
+However, for production use, it is advisable to employ a reputable implementation of BIP39
+with a high level of entropy. (Refer to the details below for further information.)
+
+
+### 3. Use BIP39 implementation to generate a seed (recommended)
 
 The [BIP39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki#user-content-From_mnemonic_to_seed)
 protocol can be utilized to generate a BIP32 master seed, offering a human-friendly approach to seed management.
