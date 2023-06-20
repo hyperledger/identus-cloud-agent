@@ -172,7 +172,7 @@ object BackgroundJobs {
             jwtIssuer <- createJwtIssuer(longFormPrismDID, VerificationRelationship.Authentication)
             presentationPayload <- credentialService.createPresentationPayload(id, jwtIssuer)
             signedPayload = JwtPresentation.encodeJwt(presentationPayload.toJwtPresentationPayload, jwtIssuer)
-            _ <- credentialService.generateCredentialRequest(id, signedPayload)
+            _ <- notifyIfSuccessful(credentialService.generateCredentialRequest(id, signedPayload))
           } yield ()
 
         // Request should be sent from Holder to Issuer
