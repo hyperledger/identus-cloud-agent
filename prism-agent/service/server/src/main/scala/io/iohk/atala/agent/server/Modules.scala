@@ -6,7 +6,7 @@ import com.typesafe.config.ConfigFactory
 import doobie.util.transactor.Transactor
 import io.circe.{DecodingFailure, ParsingFailure}
 import io.grpc.ManagedChannelBuilder
-import io.iohk.atala.agent.notification.EventNotificationService
+import io.iohk.atala.agent.notification.{Event, EventNotificationService}
 import io.iohk.atala.agent.server.config.{AgentConfig, AppConfig}
 import io.iohk.atala.agent.server.http.{ZHttp4sBlazeServer, ZHttpEndpoints}
 import io.iohk.atala.agent.server.jobs.*
@@ -16,7 +16,12 @@ import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError
 import io.iohk.atala.agent.walletapi.service.{ManagedDIDService, ManagedDIDServiceImpl}
 import io.iohk.atala.agent.walletapi.sql.{JdbcDIDNonSecretStorage, JdbcDIDSecretStorage}
 import io.iohk.atala.agent.walletapi.util.SeedResolver
-import io.iohk.atala.castor.controller.{DIDController, DIDRegistrarController, DIDRegistrarServerEndpoints, DIDServerEndpoints}
+import io.iohk.atala.castor.controller.{
+  DIDController,
+  DIDRegistrarController,
+  DIDRegistrarServerEndpoints,
+  DIDServerEndpoints
+}
 import io.iohk.atala.castor.core.service.{DIDService, DIDServiceImpl}
 import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.connect.controller.{ConnectionController, ConnectionControllerImpl, ConnectionServerEndpoints}
@@ -35,15 +40,26 @@ import io.iohk.atala.mercury.protocol.connection.{ConnectionRequest, ConnectionR
 import io.iohk.atala.mercury.protocol.issuecredential.*
 import io.iohk.atala.mercury.protocol.presentproof.*
 import io.iohk.atala.mercury.protocol.trustping.TrustPing
+import io.iohk.atala.pollux.core.model.IssueCredentialRecord
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError.RepositoryError
 import io.iohk.atala.pollux.core.model.error.{CredentialServiceError, PresentationError}
 import io.iohk.atala.pollux.core.repository.{CredentialRepository, PresentationRepository}
 import io.iohk.atala.pollux.core.service.*
 import io.iohk.atala.pollux.credentialschema.controller.*
 import io.iohk.atala.pollux.credentialschema.{SchemaRegistryServerEndpoints, VerificationPolicyServerEndpoints}
-import io.iohk.atala.pollux.sql.repository.{JdbcCredentialRepository, JdbcCredentialSchemaRepository, JdbcPresentationRepository, JdbcVerificationPolicyRepository, DbConfig as PolluxDbConfig}
+import io.iohk.atala.pollux.sql.repository.{
+  JdbcCredentialRepository,
+  JdbcCredentialSchemaRepository,
+  JdbcPresentationRepository,
+  JdbcVerificationPolicyRepository,
+  DbConfig as PolluxDbConfig
+}
 import io.iohk.atala.pollux.vc.jwt.{PrismDidResolver, DidResolver as JwtDidResolver}
-import io.iohk.atala.presentproof.controller.{PresentProofController, PresentProofEndpoints, PresentProofServerEndpoints}
+import io.iohk.atala.presentproof.controller.{
+  PresentProofController,
+  PresentProofEndpoints,
+  PresentProofServerEndpoints
+}
 import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc
 import io.iohk.atala.resolvers.{DIDResolver, UniversalDidResolver}
 import io.iohk.atala.system.controller.{SystemController, SystemServerEndpoints}
@@ -96,7 +112,7 @@ object Modules {
 
   def didCommServiceEndpoint: HttpApp[
     DidOps & DidAgent & CredentialService & PresentationService & ConnectionService & ManagedDIDService & HttpClient &
-      DidAgent & DIDResolver,
+      DidAgent & DIDResolver & EventNotificationService,
     Throwable
   ] = Http.collectZIO[Request] {
     case Method.GET -> !! / "did" =>
@@ -192,7 +208,7 @@ object Modules {
 
   def webServerProgram(jsonString: String): ZIO[
     DidOps & CredentialService & PresentationService & ConnectionService & ManagedDIDService & HttpClient & DidAgent &
-      DIDResolver,
+      DIDResolver & EventNotificationService,
     MercuryThrowable | DIDSecretStorageError,
     Unit
   ] = {
@@ -253,8 +269,7 @@ object Modules {
                 _ <- ZIO.logInfo("As an Holder in issue-credential:")
                 _ <- ZIO.logInfo("Got OfferCredential: " + msg)
                 offerFromIssuer = OfferCredential.readFromMessage(msg)
-                _ <- credentialService
-                  .receiveCredentialOffer(offerFromIssuer)
+                _ <- notifyIfSuccessful(credentialService.receiveCredentialOffer(offerFromIssuer))
                   .catchSome { case CredentialServiceError.RepositoryError(cause) =>
                     ZIO.logError(cause.getMessage()) *>
                       ZIO.fail(cause)
@@ -270,8 +285,7 @@ object Modules {
                 requestCredential = RequestCredential.readFromMessage(msg)
                 _ <- ZIO.logInfo("Got RequestCredential: " + requestCredential)
                 credentialService <- ZIO.service[CredentialService]
-                todoTestOption <- credentialService
-                  .receiveCredentialRequest(requestCredential)
+                _ <- notifyIfSuccessful(credentialService.receiveCredentialRequest(requestCredential))
                   .catchSome { case CredentialServiceError.RepositoryError(cause) =>
                     ZIO.logError(cause.getMessage()) *>
                       ZIO.fail(cause)
@@ -288,8 +302,7 @@ object Modules {
                 issueCredential = IssueCredential.readFromMessage(msg)
                 _ <- ZIO.logInfo("Got IssueCredential: " + issueCredential)
                 credentialService <- ZIO.service[CredentialService]
-                _ <- credentialService
-                  .receiveCredentialIssue(issueCredential)
+                _ <- notifyIfSuccessful(credentialService.receiveCredentialIssue(issueCredential))
                   .catchSome { case CredentialServiceError.RepositoryError(cause) =>
                     ZIO.logError(cause.getMessage()) *>
                       ZIO.fail(cause)
@@ -394,6 +407,12 @@ object Modules {
       } yield ()
     }
   }
+
+  private[this] def notifyIfSuccessful(effect: IO[_, IssueCredentialRecord]) = for {
+    notificationService <- ZIO.service[EventNotificationService]
+    record <- effect
+    _ <- notificationService.notify(Event(s"Record updated => $record"))
+  } yield ()
 
 }
 object SystemModule {
