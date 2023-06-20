@@ -1,4 +1,5 @@
-package io.iohk.atala.agent.notification
+package io.iohk.atala.event.notification
+
 import zio.{IO, Queue, ULayer, URLayer, ZIO, ZLayer}
 
 class EventNotificationServiceInMemoryImpl(queue: Queue[Event]) extends EventNotificationService {

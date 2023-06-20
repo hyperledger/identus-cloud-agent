@@ -273,6 +273,12 @@ lazy val D_Pollux_VC_JWT = new {
   lazy val polluxVcJwtDependencies: Seq[ModuleID] = baseDependencies
 }
 
+lazy val D_EventNotification = new {
+  val zio = "dev.zio" %% "zio" % V.zio
+  val zioDependencies: Seq[ModuleID] = Seq(zio)
+  val baseDependencies: Seq[ModuleID] = zioDependencies
+}
+
 lazy val D_PrismAgent = new {
 
   // Added here to make prism-crypto works.
@@ -603,7 +609,7 @@ lazy val polluxCore = project
   )
   .dependsOn(shared)
   .dependsOn(polluxVcJWT)
-  .dependsOn(protocolIssueCredential, protocolPresentProof, resolver, agentDidcommx)
+  .dependsOn(protocolIssueCredential, protocolPresentProof, resolver, agentDidcommx, eventNotification)
 
 lazy val polluxDoobie = project
   .in(file("pollux/lib/sql-doobie"))
@@ -641,6 +647,17 @@ lazy val connectDoobie = project
   )
   .dependsOn(shared)
   .dependsOn(connectCore % "compile->compile;test->test")
+
+// ############################
+// #### Event Notification ####
+// ############################
+
+lazy val eventNotification = project
+  .in(file("event-notification"))
+  .settings(
+    name := "event-notification",
+    libraryDependencies ++= D_EventNotification.baseDependencies
+  )
 
 // #####################
 // #### Prism Agent ####
@@ -683,7 +700,8 @@ lazy val prismAgentServer = project
     polluxDoobie,
     connectCore,
     connectDoobie,
-    castorCore
+    castorCore,
+    eventNotification
   )
 
 // ##################

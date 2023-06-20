@@ -1,4 +1,4 @@
-package io.iohk.atala.agent.notification
+package io.iohk.atala.event.notification
 
 import zio.IO
 
