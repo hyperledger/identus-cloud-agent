@@ -6,7 +6,6 @@ import com.typesafe.config.ConfigFactory
 import doobie.util.transactor.Transactor
 import io.circe.{DecodingFailure, ParsingFailure}
 import io.grpc.ManagedChannelBuilder
-import io.iohk.atala.agent.notification.{Event, EventNotificationService}
 import io.iohk.atala.agent.server.config.{AgentConfig, AppConfig}
 import io.iohk.atala.agent.server.http.{ZHttp4sBlazeServer, ZHttpEndpoints}
 import io.iohk.atala.agent.server.jobs.*
@@ -29,6 +28,7 @@ import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.connect.core.repository.ConnectionRepository
 import io.iohk.atala.connect.core.service.{ConnectionService, ConnectionServiceImpl}
 import io.iohk.atala.connect.sql.repository.{JdbcConnectionRepository, DbConfig as ConnectDbConfig}
+import io.iohk.atala.event.notification.EventNotificationService
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
 import io.iohk.atala.issue.controller.{IssueController, IssueControllerImpl, IssueEndpoints, IssueServerEndpoints}
@@ -112,7 +112,7 @@ object Modules {
 
   def didCommServiceEndpoint: HttpApp[
     DidOps & DidAgent & CredentialService & PresentationService & ConnectionService & ManagedDIDService & HttpClient &
-      DidAgent & DIDResolver & EventNotificationService,
+      DidAgent & DIDResolver,
     Throwable
   ] = Http.collectZIO[Request] {
     case Method.GET -> !! / "did" =>
@@ -144,7 +144,7 @@ object Modules {
 
   val issueCredentialDidCommExchangesJob: RIO[
     AppConfig & DidOps & DIDResolver & JwtDidResolver & HttpClient & CredentialService & DIDService &
-      ManagedDIDService & PresentationService & EventNotificationService,
+      ManagedDIDService & PresentationService,
     Unit
   ] =
     for {
@@ -208,7 +208,7 @@ object Modules {
 
   def webServerProgram(jsonString: String): ZIO[
     DidOps & CredentialService & PresentationService & ConnectionService & ManagedDIDService & HttpClient & DidAgent &
-      DIDResolver & EventNotificationService,
+      DIDResolver,
     MercuryThrowable | DIDSecretStorageError,
     Unit
   ] = {
@@ -269,7 +269,8 @@ object Modules {
                 _ <- ZIO.logInfo("As an Holder in issue-credential:")
                 _ <- ZIO.logInfo("Got OfferCredential: " + msg)
                 offerFromIssuer = OfferCredential.readFromMessage(msg)
-                _ <- notifyIfSuccessful(credentialService.receiveCredentialOffer(offerFromIssuer))
+                _ <- credentialService
+                  .receiveCredentialOffer(offerFromIssuer)
                   .catchSome { case CredentialServiceError.RepositoryError(cause) =>
                     ZIO.logError(cause.getMessage()) *>
                       ZIO.fail(cause)
@@ -285,7 +286,8 @@ object Modules {
                 requestCredential = RequestCredential.readFromMessage(msg)
                 _ <- ZIO.logInfo("Got RequestCredential: " + requestCredential)
                 credentialService <- ZIO.service[CredentialService]
-                _ <- notifyIfSuccessful(credentialService.receiveCredentialRequest(requestCredential))
+                _ <- credentialService
+                  .receiveCredentialRequest(requestCredential)
                   .catchSome { case CredentialServiceError.RepositoryError(cause) =>
                     ZIO.logError(cause.getMessage()) *>
                       ZIO.fail(cause)
@@ -302,7 +304,8 @@ object Modules {
                 issueCredential = IssueCredential.readFromMessage(msg)
                 _ <- ZIO.logInfo("Got IssueCredential: " + issueCredential)
                 credentialService <- ZIO.service[CredentialService]
-                _ <- notifyIfSuccessful(credentialService.receiveCredentialIssue(issueCredential))
+                _ <- credentialService
+                  .receiveCredentialIssue(issueCredential)
                   .catchSome { case CredentialServiceError.RepositoryError(cause) =>
                     ZIO.logError(cause.getMessage()) *>
                       ZIO.fail(cause)
@@ -408,12 +411,6 @@ object Modules {
     }
   }
 
-  private[this] def notifyIfSuccessful(effect: IO[_, IssueCredentialRecord]) = for {
-    notificationService <- ZIO.service[EventNotificationService]
-    record <- effect
-    _ <- notificationService.notify(Event(s"Record updated => $record"))
-  } yield ()
-
 }
 object SystemModule {
   val configLayer: Layer[ReadError[String], AppConfig] = ZLayer.fromZIO {
@@ -445,8 +442,9 @@ object AppModule {
     (didOpValidatorLayer ++ didServiceLayer ++ secretStorageLayer ++ nonSecretStorageLayer ++ apolloLayer ++ seedResolverLayer) >>> ManagedDIDServiceImpl.layer
   }
 
-  val credentialServiceLayer: RLayer[DidOps & DidAgent & JwtDidResolver & URIDereferencer, CredentialService] =
-    (GrpcModule.layers ++ RepoModule.credentialRepoLayer) >>> CredentialServiceImpl.layer
+  val credentialServiceLayer
+      : RLayer[DidOps & DidAgent & JwtDidResolver & URIDereferencer & EventNotificationService, CredentialService] =
+    (GrpcModule.layers ++ RepoModule.credentialRepoLayer) >>> CredentialServiceWithEventNotificationImpl.layer
 
   def presentationServiceLayer =
     (RepoModule.presentationRepoLayer ++ RepoModule.credentialRepoLayer) >>> PresentationServiceImpl.layer

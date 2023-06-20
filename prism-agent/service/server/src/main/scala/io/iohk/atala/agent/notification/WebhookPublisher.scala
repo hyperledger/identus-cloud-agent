@@ -1,6 +1,7 @@
 package io.iohk.atala.agent.notification
 import io.iohk.atala.agent.notification.WebhookPublisherError.{InvalidWebhookURL, UnexpectedError}
 import io.iohk.atala.agent.server.config.{AppConfig, WebhookPublisherConfig}
+import io.iohk.atala.event.notification.{Event, EventNotificationService}
 import zio.{IO, UIO, URLayer, ZIO, ZLayer}
 
 import java.net.{URI, URL}

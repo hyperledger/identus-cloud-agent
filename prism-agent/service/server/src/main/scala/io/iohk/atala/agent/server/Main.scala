@@ -5,7 +5,7 @@ import io.circe.*
 import io.circe.generic.auto.*
 import io.circe.parser.*
 import io.circe.syntax.*
-import io.iohk.atala.agent.notification.{Event, EventNotificationService, EventNotificationServiceInMemoryImpl, WebhookPublisher}
+import io.iohk.atala.agent.notification.WebhookPublisher
 import io.iohk.atala.agent.server.buildinfo.BuildInfo
 import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.server.http.ZioHttpClient
@@ -15,10 +15,16 @@ import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
 import io.iohk.atala.castor.controller.{DIDControllerImpl, DIDRegistrarControllerImpl}
 import io.iohk.atala.connect.controller.ConnectionControllerImpl
 import io.iohk.atala.connect.sql.repository.Migrations as ConnectMigrations
+import io.iohk.atala.event.notification.{Event, EventNotificationServiceInMemoryImpl}
 import io.iohk.atala.issue.controller.IssueControllerImpl
 import io.iohk.atala.mercury.*
 import io.iohk.atala.pollux.core.service.URIDereferencerError.{ConnectionError, ResourceNotFound, UnexpectedError}
-import io.iohk.atala.pollux.core.service.{CredentialSchemaServiceImpl, HttpURIDereferencerImpl, URIDereferencer, URIDereferencerError}
+import io.iohk.atala.pollux.core.service.{
+  CredentialSchemaServiceImpl,
+  HttpURIDereferencerImpl,
+  URIDereferencer,
+  URIDereferencerError
+}
 import io.iohk.atala.pollux.sql.repository.{JdbcCredentialSchemaRepository, Migrations as PolluxMigrations}
 import io.iohk.atala.presentproof.controller.PresentProofControllerImpl
 import io.iohk.atala.resolvers.{DIDResolver, UniversalDidResolver}
