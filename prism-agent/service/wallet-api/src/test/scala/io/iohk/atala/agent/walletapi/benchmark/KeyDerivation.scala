@@ -10,6 +10,7 @@ import io.iohk.atala.agent.walletapi.crypto.DerivationPath
 import io.iohk.atala.agent.walletapi.vault.VaultKVClientImpl
 import io.iohk.atala.agent.walletapi.vault.VaultKVClient
 import io.iohk.atala.test.container.VaultTestContainerSupport
+import io.iohk.atala.shared.models.Base64UrlString
 
 object KeyDerivation extends ZIOSpecDefault, VaultTestContainerSupport {
 
@@ -36,11 +37,11 @@ object KeyDerivation extends ZIOSpecDefault, VaultTestContainerSupport {
   ) @@ TestAspect.before(vaultWarmUp())
 
   private def benchamrkKeyDerivation(parallelism: Int) = {
-    test(s"derive 10000 keys - $parallelism parallelism") {
+    test(s"derive 50000 keys - $parallelism parallelism") {
       for {
         apollo <- ZIO.service[Apollo]
         durationList <- ZIO
-          .foreachPar(1 to 10000) { i =>
+          .foreachPar(1 to 50_000) { i =>
             Live.live {
               apollo.ecKeyFactory
                 .deriveKeyPair(EllipticCurve.SECP256K1, seed)(derivationPath(keyIndex = i): _*)
@@ -55,21 +56,22 @@ object KeyDerivation extends ZIOSpecDefault, VaultTestContainerSupport {
   }
 
   private def benchmarkVaultQuery(parallelism: Int) = {
-    test(s"query 10000 keys - $parallelism parallelism") {
+    test(s"query 50000 keys - $parallelism parallelism") {
       for {
         vaultClient <- ZIO.service[VaultKVClient]
         apollo <- ZIO.service[Apollo]
         keyPair <- apollo.ecKeyFactory.generateKeyPair(EllipticCurve.SECP256K1)
-        encodedKey = HexString.fromByteArray(keyPair.privateKey.encode).toString()
+        encodedKey = Base64UrlString.fromByteArray(keyPair.privateKey.encode).toString()
         _ <- ZIO
-          .foreach(1 to 10000) { i => vaultClient.set(s"secret/did/prism/key-$i", Map("value" -> encodedKey)) }
+          .foreach(1 to 50_000) { i => vaultClient.set(s"secret/did/prism/key-$i", Map("value" -> encodedKey)) }
         durationList <- ZIO
-          .foreachPar(1 to 10000) { i =>
+          .foreachPar(1 to 50_000) { i =>
             Live.live {
               vaultClient
                 .get(s"secret/did/prism/key-$i")
                 .flatMap { encodedKey =>
-                  val encodedBytes = HexString.fromString(encodedKey.get.get("value").get).toOption.get.toByteArray
+                  val encodedBytes =
+                    Base64UrlString.fromString(encodedKey.get.get("value").get).toOption.get.toByteArray
                   ZIO.fromTry(apollo.ecKeyFactory.privateKeyFromEncoded(EllipticCurve.SECP256K1, encodedBytes))
                 }
                 .timed
@@ -117,12 +119,13 @@ object KeyDerivation extends ZIOSpecDefault, VaultTestContainerSupport {
   }
 
   private def logStats(durationList: Seq[Duration]) = {
+    val n = durationList.length
     val sortedDurationInMicro = durationList.sorted.map(_.toNanos() / 1000.0)
-    val avg = sortedDurationInMicro.sum / durationList.length
-    val p50 = sortedDurationInMicro.apply(5000)
-    val p75 = sortedDurationInMicro.apply(7500)
-    val p90 = sortedDurationInMicro.apply(9000)
-    val p99 = sortedDurationInMicro.apply(9900)
+    val avg = sortedDurationInMicro.sum / n
+    val p50 = sortedDurationInMicro.apply((0.50 * n).toInt)
+    val p75 = sortedDurationInMicro.apply((0.75 * n).toInt)
+    val p90 = sortedDurationInMicro.apply((0.90 * n).toInt)
+    val p99 = sortedDurationInMicro.apply((0.99 * n).toInt)
     val max = sortedDurationInMicro.last
     ZIO.debug(s"execution time in us. avg: $avg | p50: $p50 | p90: $p90 | p99: $p99 | max: $max")
   }
