@@ -1,0 +1,294 @@
+[Custom]
+typedef sequence<string> AttributeNames;
+[Custom]
+typedef string IssuerId;
+[Custom]
+typedef string SchemaId;
+[Custom]
+typedef string CredentialDefinitionId;
+[Custom]
+typedef string RevocationRegistryDefinitionId;
+[Custom]
+typedef string RevocationRegistryId;
+
+[Error]
+enum AnoncredsError {
+  "ConversionError",
+  "SomethingWentWrong", 
+  "CreateCrentialRequestError",
+  "CreateSchemaError",
+  "CreateCredentialDefinition",
+  "CreateRevocationRegistryDef",
+  "CreateRevocationStatusList",
+  "UpdateRevocationStatusList",
+  "CreateCredentialOffer",
+  "CreateCredential",
+  "ProcessCredential",
+};
+
+enum SignatureType {
+    "CL",
+};
+
+enum RegistryType {
+    "CL_ACCUM"
+};
+
+interface LinkSecret {
+    constructor();
+    string get_big_number();
+};
+
+interface Nonce {
+    constructor();
+};
+
+dictionary CredentialDefinitionConfig {
+    boolean support_revocation;
+};
+
+dictionary Schema {
+    string name;
+    string version;
+    AttributeNames attr_names;
+    IssuerId issuer_id;
+};
+
+dictionary CredentialValues {
+    record<string, AttributeValues> values;
+};
+
+dictionary AttributeValues {
+    string raw;
+    string encoded;
+};
+
+dictionary CredentialDefinitionData {
+    string primary;
+    string? revocation;
+};
+
+interface CredentialDefinition {
+    [Throws=AnoncredsError]
+    constructor(string json_string);
+    SchemaId get_schema_id();
+    SignatureType get_signature_type();
+    string get_tag();
+    IssuerId get_issuer_id();
+};
+
+interface CredentialOffer {
+    [Throws=AnoncredsError]
+    constructor(string json_string);
+    SchemaId get_schema_id();
+    CredentialDefinitionId get_cred_def_id();
+    string get_key_correctness_proof();
+    Nonce get_nonce();
+    string? get_method_name();
+};
+
+interface CredentialRequest {
+    string get_blinded_credential_secrets_json();
+    string get_blinded_credential_secrets_correctness_proof_json();
+    Nonce get_nonce();
+    string get_json();
+};
+
+interface CredentialKeyCorrectnessProof {
+    [Throws=AnoncredsError]
+    constructor(string json_string);
+    string get_json();
+};
+
+interface RevocationRegistryDefinition {
+    [Throws=AnoncredsError]
+    constructor(string json_string);
+    IssuerId get_issuer_id();
+    string get_tag();
+    CredentialDefinitionId get_cred_def_id();
+    RevocationRegistryDefinitionValue get_value();
+    [Throws=AnoncredsError]
+    string get_json();
+};
+
+interface RevocationRegistryDefinitionPrivate {
+    [Throws=AnoncredsError]
+    constructor(string json_string);
+    [Throws=AnoncredsError]
+    string get_json();
+};
+
+dictionary CredentialRevocationConfig {
+    RevocationRegistryDefinition reg_def;
+    RevocationRegistryDefinitionPrivate reg_def_private;
+    u32 registry_idx;
+};
+
+dictionary CredentialRequestMetadata {
+    string link_secret_blinding_data;
+    Nonce nonce;
+    string link_secret_name;
+};
+
+dictionary CreateCrendentialRequestResponse {
+    CredentialRequest request;
+    CredentialRequestMetadata metadata;
+};
+
+dictionary IssuerCreateCredentialDefinitionReturn {
+    CredentialDefinition credential_definition;
+    CredentialDefinitionPrivate credential_definition_private;
+    CredentialKeyCorrectnessProof credential_key_correctness_proof;
+};
+
+dictionary IssuerCreateRevocationRegistryDefReturn {
+    RevocationRegistryDefinition reg_def;
+    RevocationRegistryDefinitionPrivate reg_def_private;
+};
+
+interface Credential {
+    [Throws=AnoncredsError]
+    constructor(string json_string);
+    SchemaId get_schema_id();
+    CredentialDefinitionId get_cred_def_id();
+    RevocationRegistryId? get_rev_reg_id();
+    CredentialValues get_values();
+    string get_signature_json();
+    string get_signature_correctness_proof_json();
+    string? get_rev_reg_json();
+    string? get_witness_json();
+    [Throws=AnoncredsError]
+    string get_json();
+};
+
+interface RevocationStatusList {
+    [Throws=AnoncredsError]
+    constructor(string json_string);
+    [Throws=AnoncredsError]
+    string get_json();
+};
+
+interface RevocationRegistryDefinitionValue {
+    [Throws=AnoncredsError]
+    constructor(string json_string);
+    u32 get_max_cred_num();
+    string get_tails_hash();
+    string get_tails_location();
+    [Throws=AnoncredsError]
+    string get_json();
+};
+
+interface RevocationRegistryDefinitionValuePublicKeys {
+    [Throws=AnoncredsError]
+    constructor(string json_string);
+    [Throws=AnoncredsError]
+    string get_json();
+};
+
+interface CredentialDefinitionPrivate {
+    [Throws=AnoncredsError]
+    constructor(string json_string);
+    [Throws=AnoncredsError]
+    string get_json();
+};
+
+interface Issuer {
+  constructor();
+
+  [Throws=AnoncredsError]
+  Schema create_schema(
+    string schema_name,
+    string schema_version,
+    string issuer_id,
+    sequence<string> attr_names
+  );
+  
+  [Throws=AnoncredsError]
+  IssuerCreateCredentialDefinitionReturn create_credential_definition(
+        string schema_id,
+        Schema schema,
+        string issuer_id,
+        string tag,
+        SignatureType signature_type,
+        CredentialDefinitionConfig config
+   );
+
+  [Throws=AnoncredsError]
+  IssuerCreateRevocationRegistryDefReturn create_revocation_registry_def(
+        CredentialDefinition cred_def,
+        string cred_def_id,
+        string issuer_id,
+        string tag,
+        RegistryType rev_reg_type,
+        u32 max_cred_num
+   );
+
+   [Throws=AnoncredsError]
+   RevocationStatusList create_revocation_status_list(
+        string rev_reg_def_id,
+        RevocationRegistryDefinition rev_reg_def,
+        string issuer_id,
+        u64? timestamp,
+        boolean issuance_by_default
+   );
+
+   RevocationStatusList update_revocation_status_list_timestamp_only(
+        u64 timestamp,
+        RevocationStatusList current_list
+   );
+
+   [Throws=AnoncredsError]
+   RevocationStatusList update_revocation_status_list(
+        u64? timestamp,
+        sequence<u32>? issued,
+        sequence<u32>? revoked,
+        RevocationRegistryDefinition rev_reg_def,
+        RevocationStatusList current_list
+   );
+
+   [Throws=AnoncredsError]
+   CredentialOffer create_credential_offer(
+        string schema_id,
+        string cred_def_id,
+        CredentialKeyCorrectnessProof correctness_proof
+   );
+
+   [Throws=AnoncredsError]
+   Credential create_credential(
+        CredentialDefinition cred_def,
+        CredentialDefinitionPrivate cred_def_private,
+        CredentialOffer cred_offer,
+        CredentialRequest cred_request,
+        sequence<AttributeValues> cred_values,
+        RevocationRegistryId? rev_reg_id,
+        RevocationStatusList? rev_status_list,
+        CredentialRevocationConfig? revocation_config
+   );
+};
+
+interface Prover {
+  constructor();
+
+  [Throws=AnoncredsError]
+  CreateCrendentialRequestResponse create_credential_request(
+    string? entropy,
+    string? prover_did,
+    CredentialDefinition cred_def,
+    LinkSecret link_secret,
+    string link_secret_id,
+    CredentialOffer credential_offer
+  );
+
+  [Throws=AnoncredsError]
+   void process_credential(
+        Credential credential,
+        CredentialRequestMetadata cred_request_metadata,
+        LinkSecret link_secret,
+        CredentialDefinition cred_def,
+        RevocationRegistryDefinition? rev_reg_def
+   );
+
+  LinkSecret create_link_secret();
+};
+
+namespace anoncreds {};

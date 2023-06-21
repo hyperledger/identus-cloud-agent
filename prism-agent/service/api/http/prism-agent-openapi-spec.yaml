@@ -977,6 +977,40 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /issue-anoncred/credential-offers:
+    post:
+      tags:
+        - Issue Anoncred Protocol
+      summary: As a credential issuer, create a new anoncred credential offer to be sent to
+        a holder.
+      description: Creates a new anoncred credential offer in the database
+      operationId: createCredentialOffer
+      requestBody:
+        description: The credential offer object.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateIssueAnoncredRecordRequest'
+        required: true
+      responses:
+        '201':
+          description: The issue credential record.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueCredentialRecord'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /issue-credentials/records:
     get:
       tags:
@@ -1522,6 +1556,37 @@ components:
           description: The unique identifier of a DIDComm connection that already
             exists between the issuer and the holder, and that will be used to execute
             the issue credential protocol.
+    CreateIssueAnoncredRecordRequest:
+      required:
+        - claims
+        - issuingDID
+        - connectionId
+      type: object
+      properties:
+        validityPeriod:
+          type: number
+          description: The validity period in seconds of the verifiable credential
+            that will be issued.
+          format: double
+          example: 3600.0
+        claims:
+          $ref: '#/components/schemas/Map_String'
+        automaticIssuance:
+          type: boolean
+          description: Specifies whether or not the credential should be automatically
+            generated and issued when receiving the `CredentialRequest` from the holder.
+            If set to `false`, a manual approval by the issuer via API call will be
+            required for the VC to be issued.
+          example: true
+        issuingDID:
+          type: string
+          description: The issuer DID of the verifiable credential object.
+          example: did:prism:issuerofverifiablecredentials
+        connectionId:
+          type: string
+          description: The unique identifier of a DIDComm connection that already
+            exists between the issuer and the holder, and that will be used to execute
+            the issue credential protocol.
     CreateManagedDIDResponse:
       required:
         - longFormDid
@@ -1941,6 +2006,66 @@ components:
             the problem. It may or may not yield further information if dereferenced.
           example: The received '{}à!è@!.b}' email does not conform to the email format
     IssueCredentialRecord:
+      required:
+        - claims
+        - recordId
+        - createdAt
+        - role
+        - protocolState
+      type: object
+      properties:
+        subjectId:
+          type: string
+          description: The identifier (e.g DID) of the subject to which the verifiable
+            credential will be issued.
+          example: did:prism:subjectofverifiablecredentials
+        validityPeriod:
+          type: number
+          description: The validity period in seconds of the verifiable credential
+            that will be issued.
+          format: double
+          example: 3600.0
+        claims:
+          $ref: '#/components/schemas/Map_String'
+        automaticIssuance:
+          type: boolean
+          description: Specifies whether or not the credential should be automatically
+            generated and issued when receiving the `CredentialRequest` from the holder.
+            If set to `false`, a manual approval by the issuer via API call will be
+            required for the VC to be issued.
+          example: true
+        recordId:
+          type: string
+          description: The unique identifier of the issue credential record.
+          example: 80d612dc-0ded-4ac9-90b4-1b8eabb04545
+        createdAt:
+          type: string
+          description: The date and time when the issue credential record was created.
+          format: date-time
+          example: '2023-05-15T13:11:32.328823Z'
+        updatedAt:
+          type: string
+          description: The date and time when the issue credential record was last
+            updated.
+          format: date-time
+        role:
+          type: string
+          description: The role played by the Prism agent in the credential issuance
+            flow.
+          example: Issuer
+        protocolState:
+          type: string
+          description: The current state of the issue credential protocol execution.
+          example: OfferPending
+        jwtCredential:
+          type: string
+          description: The base64-encoded JWT verifiable credential that has been
+            sent by the issuer.
+        issuingDID:
+          type: string
+          description: Issuer DID of the verifiable credential object.
+          example: did:prism:issuerofverifiablecredentials
+    IssueAnoncredCredentialRecord:
       required:
         - claims
         - recordId
