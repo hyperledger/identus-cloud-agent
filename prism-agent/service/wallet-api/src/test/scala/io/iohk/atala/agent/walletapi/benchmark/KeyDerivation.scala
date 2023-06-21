@@ -21,132 +21,66 @@ object KeyDerivation extends ZIOSpecDefault, VaultTestContainerSupport {
     queryKeyBenchmark.provide(vaultKvClientLayer, Apollo.prism14Layer)
   ) @@ TestAspect.sequential @@ TestAspect.timed @@ TestAspect.tag("benchmark")
 
-  private val deriveKeyBenchmark = suite("Derive key benchmark")(
-    test("derive 10000 keys - sequential") {
-      for {
-        apollo <- ZIO.service[Apollo]
-        durationList <- ZIO
-          .foreach(1 to 10000) { i =>
-            Live.live {
-              apollo.ecKeyFactory
-                .deriveKeyPair(EllipticCurve.SECP256K1, seed)(derivationPath(keyIndex = i): _*)
-                .timed
-                .map(_._1)
-            }
-          }
-        _ <- logStats(durationList)
-      } yield assertCompletes
-    },
-    test("derive 10000 keys - 16 parallelism") {
-      for {
-        apollo <- ZIO.service[Apollo]
-        durationList <- ZIO
-          .foreachPar(1 to 10000) { i =>
-            Live.live {
-              apollo.ecKeyFactory
-                .deriveKeyPair(EllipticCurve.SECP256K1, seed)(derivationPath(keyIndex = i): _*)
-                .timed
-                .map(_._1)
-            }
-          }
-          .withParallelism(16)
-        _ <- logStats(durationList)
-      } yield assertCompletes
-    },
-    test("derive 10000 keys - 32 parallelism") {
-      for {
-        apollo <- ZIO.service[Apollo]
-        durationList <- ZIO
-          .foreachPar(1 to 10000) { i =>
-            Live.live {
-              apollo.ecKeyFactory
-                .deriveKeyPair(EllipticCurve.SECP256K1, seed)(derivationPath(keyIndex = i): _*)
-                .timed
-                .map(_._1)
-            }
-          }
-          .withParallelism(32)
-        _ <- logStats(durationList)
-      } yield assertCompletes
-    },
+  private val deriveKeyBenchmark = suite("Key derivation benchmark")(
+    benchamrkKeyDerivation(1),
+    benchamrkKeyDerivation(8),
+    benchamrkKeyDerivation(16),
+    benchamrkKeyDerivation(32),
   ) @@ TestAspect.before(deriveKeyWarmUp())
 
   private val queryKeyBenchmark = suite("Query key benchmark - vault storage")(
-    test("query 10000 keys - sequential") {
-      for {
-        vaultClient <- ZIO.service[VaultKVClient]
-        apollo <- ZIO.service[Apollo]
-        keyPair <- apollo.ecKeyFactory.generateKeyPair(EllipticCurve.SECP256K1)
-        encodedKey = HexString.fromByteArray(keyPair.privateKey.encode).toString()
-        _ <- ZIO
-          .foreach(1 to 10000) { i => vaultClient.set(s"secret/did/prism/key-$i", Map("value" -> encodedKey)) }
-        durationList <- ZIO
-          .foreach(1 to 10000) { i =>
-            Live.live {
-              vaultClient
-                .get(s"secret/did/prism/key-$i")
-                .flatMap { encodedKey =>
-                  val encodedBytes = HexString.fromString(encodedKey.get.get("value").get).toOption.get.toByteArray
-                  ZIO.fromTry(apollo.ecKeyFactory.privateKeyFromEncoded(EllipticCurve.SECP256K1, encodedBytes))
-                }
-                .timed
-                .map(_._1)
-            }
-          }
-        _ <- logStats(durationList)
-      } yield assertCompletes
-    },
-    test("query 10000 keys - 16 parallelism") {
-      for {
-        vaultClient <- ZIO.service[VaultKVClient]
-        apollo <- ZIO.service[Apollo]
-        keyPair <- apollo.ecKeyFactory.generateKeyPair(EllipticCurve.SECP256K1)
-        encodedKey = HexString.fromByteArray(keyPair.privateKey.encode).toString()
-        _ <- ZIO
-          .foreach(1 to 10000) { i => vaultClient.set(s"secret/did/prism/key-$i", Map("value" -> encodedKey)) }
-        durationList <- ZIO
-          .foreachPar(1 to 10000) { i =>
-            Live.live {
-              vaultClient
-                .get(s"secret/did/prism/key-$i")
-                .flatMap { encodedKey =>
-                  val encodedBytes = HexString.fromString(encodedKey.get.get("value").get).toOption.get.toByteArray
-                  ZIO.fromTry(apollo.ecKeyFactory.privateKeyFromEncoded(EllipticCurve.SECP256K1, encodedBytes))
-                }
-                .timed
-                .map(_._1)
-            }
-          }
-          .withParallelism(16)
-        _ <- logStats(durationList)
-      } yield assertCompletes
-    },
-    test("query 10000 keys - 32 parallelism") {
-      for {
-        vaultClient <- ZIO.service[VaultKVClient]
-        apollo <- ZIO.service[Apollo]
-        keyPair <- apollo.ecKeyFactory.generateKeyPair(EllipticCurve.SECP256K1)
-        encodedKey = HexString.fromByteArray(keyPair.privateKey.encode).toString()
-        _ <- ZIO
-          .foreach(1 to 10000) { i => vaultClient.set(s"secret/did/prism/key-$i", Map("value" -> encodedKey)) }
-        durationList <- ZIO
-          .foreachPar(1 to 10000) { i =>
-            Live.live {
-              vaultClient
-                .get(s"secret/did/prism/key-$i")
-                .flatMap { encodedKey =>
-                  val encodedBytes = HexString.fromString(encodedKey.get.get("value").get).toOption.get.toByteArray
-                  ZIO.fromTry(apollo.ecKeyFactory.privateKeyFromEncoded(EllipticCurve.SECP256K1, encodedBytes))
-                }
-                .timed
-                .map(_._1)
-            }
-          }
-          .withParallelism(32)
-        _ <- logStats(durationList)
-      } yield assertCompletes
-    },
+    benchmarkVaultQuery(1),
+    benchmarkVaultQuery(8),
+    benchmarkVaultQuery(16),
+    benchmarkVaultQuery(32),
   ) @@ TestAspect.before(vaultWarmUp())
+
+  private def benchamrkKeyDerivation(parallelism: Int) = {
+    test(s"derive 10000 keys - $parallelism parallelism") {
+      for {
+        apollo <- ZIO.service[Apollo]
+        durationList <- ZIO
+          .foreachPar(1 to 10000) { i =>
+            Live.live {
+              apollo.ecKeyFactory
+                .deriveKeyPair(EllipticCurve.SECP256K1, seed)(derivationPath(keyIndex = i): _*)
+                .timed
+                .map(_._1)
+            }
+          }
+          .withParallelism(parallelism)
+        _ <- logStats(durationList)
+      } yield assertCompletes
+    }
+  }
+
+  private def benchmarkVaultQuery(parallelism: Int) = {
+    test(s"query 10000 keys - $parallelism parallelism") {
+      for {
+        vaultClient <- ZIO.service[VaultKVClient]
+        apollo <- ZIO.service[Apollo]
+        keyPair <- apollo.ecKeyFactory.generateKeyPair(EllipticCurve.SECP256K1)
+        encodedKey = HexString.fromByteArray(keyPair.privateKey.encode).toString()
+        _ <- ZIO
+          .foreach(1 to 10000) { i => vaultClient.set(s"secret/did/prism/key-$i", Map("value" -> encodedKey)) }
+        durationList <- ZIO
+          .foreachPar(1 to 10000) { i =>
+            Live.live {
+              vaultClient
+                .get(s"secret/did/prism/key-$i")
+                .flatMap { encodedKey =>
+                  val encodedBytes = HexString.fromString(encodedKey.get.get("value").get).toOption.get.toByteArray
+                  ZIO.fromTry(apollo.ecKeyFactory.privateKeyFromEncoded(EllipticCurve.SECP256K1, encodedBytes))
+                }
+                .timed
+                .map(_._1)
+            }
+          }
+          .withParallelism(parallelism)
+        _ <- logStats(durationList)
+      } yield assertCompletes
+    }
+  }
 
   private def deriveKeyWarmUp(n: Int = 10000) = {
     for {
