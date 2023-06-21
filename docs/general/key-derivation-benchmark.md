@@ -32,8 +32,8 @@ __Setup__
 
 1. Warm-up JVM by running key derivation for 10k iterations
 2. Running key derivation for 50k iterations with `N` parallelism
-3. Measure the average, maximum and percentile of execution duration (p50, p90, p99).
-   The measurements consider derivation execution time.
+3. Measure the average, maximum and percentile of execution time (p50, p90, p99).
+   The measurements consider derivation execution time of a single key.
 
 __Results__
 
@@ -53,7 +53,7 @@ __Setup__
 1. Warm-up JVM, Vault and their connections by setting/getting 100 keys
 2. Running querying the KV from Vault for 50k iterations with `N` parallelism
 3. Measure the average, maximum and percentile of execution duration (p50, p90, p99).
-   The measurements consider the query time and serialization time.
+   The measurements consider the query time and serialization time of a single key.
 
 Note: Vault server runs in a docker container on the same machine using in-memory storage.
 So the setup may yield optimistic results.
