@@ -11,7 +11,9 @@ future decisions in managing the key material on PRISM agent.
 __System information__
 - Platform: Linux (6.3.7)
 - CPU: AMD Ryzen 7 PRO 6850U
-- Memory: 32GB
+- Memory: 30856MiB
+- JDK version: OpenJDK 11.0.18
+- SBT version: 1.8.0
 
 __JVM options__
 - Xmx:4G
