@@ -47,7 +47,7 @@ with a high level of entropy. (Refer to the details below for further informatio
 The [BIP39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki#user-content-From_mnemonic_to_seed)
 protocol can be utilized to generate a BIP32 master seed, offering a human-friendly approach to seed management.
 Instead of noting down a seemingly random hexadecimal string,
-users can simply write down their mnemonic phrase, making it more convenient to keep track of.
+users can write down their mnemonic phrase, making it more convenient to keep track of them.
 
 By using BIP39, users have options to choose a mnemonic phrase length as well as a passphrase.
 There are many tools for generating a BIP39 seed including but not limited to:
