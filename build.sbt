@@ -618,12 +618,12 @@ lazy val polluxDoobie = project
 // ### Pollux Anoncreds ###
 // ########################
 
-import scala.sys.process.Process
-import scala.language.postfixOps
+// import scala.sys.process.Process
+// import scala.language.postfixOps
 
-//define the compile time tasks to build the shim and download the appropriate anoncreds .so
-lazy val getAnonCredsSo = taskKey[Unit]("Download the Anoncreds .so if required")
-lazy val buildShim = taskKey[Unit]("Build the Anoncreds shim shared object")
+// //define the compile time tasks to build the shim and download the appropriate anoncreds .so
+// lazy val getAnonCredsSo = taskKey[Unit]("Download the Anoncreds .so if required")
+// lazy val buildShim = taskKey[Unit]("Build the Anoncreds shim shared object")
 
 lazy val polluxAnoncreds = project
   .in(file("pollux/lib/anoncreds"))
@@ -632,148 +632,153 @@ lazy val polluxAnoncreds = project
   .enablePlugins(JavaAppPackaging)
   .settings(
     name := "pollux-anoncreds",
-    // Make these values available to the project source at compile time
-    buildInfoKeys ++= Seq[BuildInfoKey](
-      //   "AnonCredsTag" -> Shared.AnonCredsTag,
-      //   "pathToNativeObjectsInJar" -> Shared.pathToNativeObjectsInJar,
-      //   "NameOfAnonCredsSharedObject" -> Shared.LinuxAnonCredsLibName,
-      //   "NameOfShimSharedObject" -> Shared.NameOfShimSharedObject,
-      "NativeLibFolder" -> Shared.NativeLibFolder
+    // // Make these values available to the project source at compile time
+    // buildInfoKeys ++= Seq[BuildInfoKey](
+    //   //   "AnonCredsTag" -> Shared.AnonCredsTag,
+    //   //   "pathToNativeObjectsInJar" -> Shared.pathToNativeObjectsInJar,
+    //   //   "NameOfAnonCredsSharedObject" -> Shared.LinuxAnonCredsLibName,
+    //   //   "NameOfShimSharedObject" -> Shared.NameOfShimSharedObject,
+    //   "NativeLibFolder" -> Shared.NativeLibFolder
+    // ),
+    // // libraryDependencies += D.zioJson,
+    // libraryDependencies ++= Seq(
+    //   "com.github.jnr" % "jnr-ffi" % "2.2.13",
+    //   "org.scalatest" %% "scalatest" % "3.2.15" % Test,
+    //   ("me.vican.jorge" % "dijon" % "0.6.0" % Test).cross(CrossVersion.for3Use2_13)
+    // ),
+    // libraryDependencies += ("dev.zio" %% "zio-json" % V.zioJson)
+    //   .cross(CrossVersion.for3Use2_13), // REMOVE THIS CrossVersion.for3Use2_13
+
+    // // Download the anoncreds .so if necessary and build the shim.
+    // // The order of these tasks matters.
+    // getAnonCredsSo := {
+    //   val osName = System.getProperty("os.name").toLowerCase
+
+    //   osName match {
+    //     case name if name.contains(Shared.MacOS) =>
+    //       println(s"Getting Anoncreds Shared Object for ${Shared.MacOS}")
+    //       val os = Shared.MacOSCore
+    //       val libFileName = Shared.MacAnonCredsLibName
+
+    //       Shared.MacArchs.foreach { arch =>
+    //         println(s"Downloading and extracting AnonCreds Shared Object for $arch")
+    //         val downloadUrl = Shared.anonCredsLibDownloadUrl(os, arch)
+    //         Shared
+    //           .downloadAndExtractAnonCredsSharedObject(
+    //             downloadUrl,
+    //             libFileName,
+    //             Shared.anonCredsLibFileName(os, arch)
+    //           )
+    //       }
+
+    //       println("Combining libraries into a single universal one using lipo")
+    //       val lipoCmd: Seq[String] = Seq("lipo", "-create") ++
+    //         Shared.MacArchs.map(arch => Shared.anonCredsLibFilePath(os, arch)) ++
+    //         Seq("-output", s"${Shared.TargetForAnoncredsSharedObjectDownload}/$libFileName")
+
+    //       println(lipoCmd.mkString(" "))
+    //       Process(lipoCmd) !
+
+    //     case name if name.contains(Shared.LinuxOs) =>
+    //       println(s"Getting Anoncreds Shared Object for ${Shared.LinuxOs}")
+    //       val libFileName = Shared.LinuxAnonCredsLibName
+    //       Shared.downloadAndExtractAnonCredsSharedObject(
+    //         Shared.anonCredsLibDownloadUrl(Shared.LinuxOs, Shared.LinuxArch),
+    //         libFileName,
+    //         libFileName
+    //       )
+
+    //     // TODO create the libanoncreds main file
+
+    //     case _ =>
+    //       sys.error(s"Unsupported operating system: $osName")
+    //   }
+
+    //   println("getAnonCredsSo: downloadSharedObjectHeaderFile")
+    //   Shared.downloadSharedObjectHeaderFile
+    //   println("getAnonCredsSo END")
+    // },
+    // buildShim := {
+    //   val osName = System.getProperty("os.name").toLowerCase
+
+    //   osName match {
+    //     case name if name.contains("mac") =>
+    //       println("Building shim for macOS")
+
+    //       val gccCmd: Seq[String] = Seq(
+    //         "gcc",
+    //         "-O2",
+    //         "-fno-omit-frame-pointer",
+    //         "-fno-strict-aliasing",
+    //         "-D_REENTRANT",
+    //         "-fno-common",
+    //         "-W",
+    //         "-Wall",
+    //         "-Wno-unused",
+    //         "-Wno-parentheses",
+    //         "-Itarget",
+    //         s"-I./${Shared.NativeCodeSourceFolder}",
+    //         "-arch",
+    //         "x86_64",
+    //         "-arch",
+    //         "arm64",
+    //         "-c",
+    //         s"${Shared.NativeCodeSourceFolder}/anoncreds-shim.c",
+    //         "-o",
+    //         s"${Shared.TargetForAnoncredsSharedObjectDownload}/anoncreds-shim.o"
+    //       )
+
+    //       println(gccCmd.mkString(" "))
+    //       Process(gccCmd) !
+
+    //       Shared.MacArchs.foreach { arch =>
+    //         val tmp: Seq[String] = Seq(
+    //           "gcc",
+    //           "-v",
+    //           "-o",
+    //           s"${Shared.TargetForAnoncredsSharedObjectDownload}/libanoncreds-shim-$arch.dylib",
+    //           "-arch",
+    //           arch,
+    //           "-dynamiclib",
+    //           s"${Shared.TargetForAnoncredsSharedObjectDownload}/anoncreds-shim.o",
+    //           "-lm",
+    //           s"-L./${Shared.TargetForAnoncredsSharedObjectDownload}",
+    //           s"-lanoncreds-darwin-$arch"
+    //         )
+
+    //         println(tmp.mkString(" "))
+    //         Process(tmp) !
+    //       }
+
+    //       val lipoCmd: Seq[String] = Seq("lipo", "-create") ++
+    //         Shared.MacArchs
+    //           .map(arch => s"${Shared.TargetForAnoncredsSharedObjectDownload}/libanoncreds-shim-$arch.dylib") ++
+    //         Seq("-output", s"${Shared.TargetForAnoncredsSharedObjectDownload}/libanoncreds-shim.dylib")
+
+    //       println(lipoCmd.mkString(" "))
+    //       Process(lipoCmd) !
+
+    //     case name if name.contains("linux") =>
+    //       val tmp: Seq[String] = "make" :: "-f" ::
+    //         "GNUmakefile" ::
+    //         "CPU=$(uname -m)" ::
+    //         s"SRC_DIR=${Shared.NativeCodeSourceFolder}" ::
+    //         s"SHIM_BUILD_DIR=${Shared.TargetForAnoncredsSharedObjectDownload}" ::
+    //         s"RT_LOCATION_ANONCREDS_SO=${Shared.TargetForAnoncredsSharedObjectDownload}" :: // Changed here
+    //         Nil
+    //       println(tmp.mkString("RUN: \'", " ", "'"))
+    //       Process(tmp) !
+
+    //     case _ =>
+    //       sys.error(s"Unsupported operating system: $osName")
+    //   }
+    // },
+    // Compile / unmanagedResourceDirectories += baseDirectory.value / Shared.NativeLibFolder,
+    // export LD_LIBRARY_PATH=/home/fabio/workspace/anoncreds-rs/uniffi/target/x86_64-unknown-linux-gnu/release:$LD_LIBRARY_PATH,
+    Compile / unmanagedJars += file(
+      "/home/fabio/workspace/anoncreds-rs/uniffi/target/x86_64-unknown-linux-gnu/release/UniffiPOC-1.0-SNAPSHOT.jar"
+      // "/home/fabio/workspace/atala-prism-building-blocks/aaa/UniffiPOC-1.0-SNAPSHOT.jar"
     ),
-    // libraryDependencies += D.zioJson,
-    libraryDependencies ++= Seq(
-      "com.github.jnr" % "jnr-ffi" % "2.2.13",
-      "org.scalatest" %% "scalatest" % "3.2.15" % Test,
-      ("me.vican.jorge" % "dijon" % "0.6.0" % Test).cross(CrossVersion.for3Use2_13)
-    ),
-    libraryDependencies += ("dev.zio" %% "zio-json" % V.zioJson)
-      .cross(CrossVersion.for3Use2_13), // REMOVE THIS CrossVersion.for3Use2_13
-
-    // Download the anoncreds .so if necessary and build the shim.
-    // The order of these tasks matters.
-    getAnonCredsSo := {
-      val osName = System.getProperty("os.name").toLowerCase
-
-      osName match {
-        case name if name.contains(Shared.MacOS) =>
-          println(s"Getting Anoncreds Shared Object for ${Shared.MacOS}")
-          val os = Shared.MacOSCore
-          val libFileName = Shared.MacAnonCredsLibName
-
-          Shared.MacArchs.foreach { arch =>
-            println(s"Downloading and extracting AnonCreds Shared Object for $arch")
-            val downloadUrl = Shared.anonCredsLibDownloadUrl(os, arch)
-            Shared
-              .downloadAndExtractAnonCredsSharedObject(
-                downloadUrl,
-                libFileName,
-                Shared.anonCredsLibFileName(os, arch)
-              )
-          }
-
-          println("Combining libraries into a single universal one using lipo")
-          val lipoCmd: Seq[String] = Seq("lipo", "-create") ++
-            Shared.MacArchs.map(arch => Shared.anonCredsLibFilePath(os, arch)) ++
-            Seq("-output", s"${Shared.TargetForAnoncredsSharedObjectDownload}/$libFileName")
-
-          println(lipoCmd.mkString(" "))
-          Process(lipoCmd) !
-
-        case name if name.contains(Shared.LinuxOs) =>
-          println(s"Getting Anoncreds Shared Object for ${Shared.LinuxOs}")
-          val libFileName = Shared.LinuxAnonCredsLibName
-          Shared.downloadAndExtractAnonCredsSharedObject(
-            Shared.anonCredsLibDownloadUrl(Shared.LinuxOs, Shared.LinuxArch),
-            libFileName,
-            libFileName
-          )
-
-        // TODO create the libanoncreds main file
-
-        case _ =>
-          sys.error(s"Unsupported operating system: $osName")
-      }
-
-      println("getAnonCredsSo: downloadSharedObjectHeaderFile")
-      Shared.downloadSharedObjectHeaderFile
-      println("getAnonCredsSo END")
-    },
-    buildShim := {
-      val osName = System.getProperty("os.name").toLowerCase
-
-      osName match {
-        case name if name.contains("mac") =>
-          println("Building shim for macOS")
-
-          val gccCmd: Seq[String] = Seq(
-            "gcc",
-            "-O2",
-            "-fno-omit-frame-pointer",
-            "-fno-strict-aliasing",
-            "-D_REENTRANT",
-            "-fno-common",
-            "-W",
-            "-Wall",
-            "-Wno-unused",
-            "-Wno-parentheses",
-            "-Itarget",
-            s"-I./${Shared.NativeCodeSourceFolder}",
-            "-arch",
-            "x86_64",
-            "-arch",
-            "arm64",
-            "-c",
-            s"${Shared.NativeCodeSourceFolder}/anoncreds-shim.c",
-            "-o",
-            s"${Shared.TargetForAnoncredsSharedObjectDownload}/anoncreds-shim.o"
-          )
-
-          println(gccCmd.mkString(" "))
-          Process(gccCmd) !
-
-          Shared.MacArchs.foreach { arch =>
-            val tmp: Seq[String] = Seq(
-              "gcc",
-              "-v",
-              "-o",
-              s"${Shared.TargetForAnoncredsSharedObjectDownload}/libanoncreds-shim-$arch.dylib",
-              "-arch",
-              arch,
-              "-dynamiclib",
-              s"${Shared.TargetForAnoncredsSharedObjectDownload}/anoncreds-shim.o",
-              "-lm",
-              s"-L./${Shared.TargetForAnoncredsSharedObjectDownload}",
-              s"-lanoncreds-darwin-$arch"
-            )
-
-            println(tmp.mkString(" "))
-            Process(tmp) !
-          }
-
-          val lipoCmd: Seq[String] = Seq("lipo", "-create") ++
-            Shared.MacArchs
-              .map(arch => s"${Shared.TargetForAnoncredsSharedObjectDownload}/libanoncreds-shim-$arch.dylib") ++
-            Seq("-output", s"${Shared.TargetForAnoncredsSharedObjectDownload}/libanoncreds-shim.dylib")
-
-          println(lipoCmd.mkString(" "))
-          Process(lipoCmd) !
-
-        case name if name.contains("linux") =>
-          val tmp: Seq[String] = "make" :: "-f" ::
-            "GNUmakefile" ::
-            "CPU=$(uname -m)" ::
-            s"SRC_DIR=${Shared.NativeCodeSourceFolder}" ::
-            s"SHIM_BUILD_DIR=${Shared.TargetForAnoncredsSharedObjectDownload}" ::
-            s"RT_LOCATION_ANONCREDS_SO=${Shared.TargetForAnoncredsSharedObjectDownload}" :: // Changed here
-            Nil
-          println(tmp.mkString("RUN: \'", " ", "'"))
-          Process(tmp) !
-
-        case _ =>
-          sys.error(s"Unsupported operating system: $osName")
-      }
-    },
-    Compile / unmanagedResourceDirectories += baseDirectory.value / Shared.NativeLibFolder,
   )
 
 lazy val polluxAnoncredsTest = project
@@ -785,9 +790,6 @@ lazy val polluxAnoncredsTest = project
     // // run / javaOptions += "-Djava.library.path=/home/fabio/workspace/anoncreds-rs/uniffi/target/x86_64-unknown-linux-gnu/release/libuniffi_anoncreds.so",
     // run / javaOptions += "-Djava.library.path=/home/fabio/workspace/anoncreds-rs/uniffi/target/x86_64-unknown-linux-gnu/release",
     // Compile / unmanagedJars += file("/home/fabio/workspace/atala-prism-building-blocks/aaa/UniffiPOC-1.0-SNAPSHOT.jar"),
-    Compile / unmanagedJars += file(
-      "/home/fabio/workspace/anoncreds-rs/uniffi/target/x86_64-unknown-linux-gnu/release/UniffiPOC-1.0-SNAPSHOT.jar"
-    ),
     libraryDependencies ++= Seq(
       "org.scalatest" %% "scalatest" % "3.2.15" % Test,
       ("me.vican.jorge" %% "dijon" % "0.6.0" % Test).cross(CrossVersion.for3Use2_13)
