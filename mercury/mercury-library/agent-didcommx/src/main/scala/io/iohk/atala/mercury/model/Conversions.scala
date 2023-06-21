@@ -10,6 +10,7 @@ import io.iohk.atala.mercury.model.*
 import java.util.Random
 import io.circe.*
 import org.didcommx.didcomm.message.Attachment.Data
+import scala.language.implicitConversions
 
 given Conversion[PackEncryptedResult, EncryptedMessage] with {
   def apply(msg: PackEncryptedResult): EncryptedMessage = EncryptedMessageImp(msg)

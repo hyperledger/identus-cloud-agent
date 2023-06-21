@@ -6,6 +6,7 @@ import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonEncoder, JsonDecoder}
 import io.iohk.atala.castor.controller.http.DIDDocument.annotations
+import scala.language.implicitConversions
 
 @description("A W3C compliant Prism DID document representation.")
 final case class DIDDocument(

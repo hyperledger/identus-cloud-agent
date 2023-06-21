@@ -56,7 +56,7 @@ object PostgresLayer {
         ec <- ExecutionContexts.cachedThreadPool[Task]
         xa <- HikariTransactor.fromHikariConfig[Task](config, ec)
       } yield xa
-      layer <- Dispatcher[Task].allocated.map {
+      layer <- Dispatcher.parallel[Task].allocated.map {
         case (dispatcher, _) => {
           given Dispatcher[Task] = dispatcher
           htxResource.toManaged.toLayer[Transactor[Task]]

@@ -14,6 +14,7 @@ import io.iohk.atala.castor.core.model.did.w3c.{
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.castor.core.model.did.w3c.makeW3CResolver
 import io.iohk.atala.castor.controller.DIDControllerImpl.resolutionStatusCodeMapping
+import scala.language.implicitConversions
 
 trait DIDController {
   def getDID(did: String): UIO[(StatusCode, DIDResolutionResult)]
