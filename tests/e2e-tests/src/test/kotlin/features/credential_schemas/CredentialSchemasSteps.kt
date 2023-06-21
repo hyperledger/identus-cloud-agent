@@ -10,8 +10,8 @@ import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.restassured.path.json.JsonPath
 import net.serenitybdd.screenplay.Actor
-import net.serenitybdd.screenplay.rest.interactions.Get
-import net.serenitybdd.screenplay.rest.interactions.Post
+import interactions.Get
+import interactions.Post
 import net.serenitybdd.screenplay.rest.questions.ResponseConsequence
 import org.apache.http.HttpStatus.*
 import org.hamcrest.CoreMatchers.*

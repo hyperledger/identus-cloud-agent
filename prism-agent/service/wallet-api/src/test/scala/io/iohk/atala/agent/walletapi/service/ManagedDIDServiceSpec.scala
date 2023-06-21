@@ -9,9 +9,9 @@ import io.iohk.atala.castor.core.model.did.{
   PrismDID,
   PrismDIDOperation,
   PublicKey,
+  ScheduleDIDOperationOutcome,
   ScheduledDIDOperationDetail,
   ScheduledDIDOperationStatus,
-  ScheduleDIDOperationOutcome,
   Service,
   SignedPrismDIDOperation,
   VerificationRelationship
@@ -25,6 +25,7 @@ import zio.test.Assertion.*
 
 import scala.collection.immutable.ArraySeq
 import io.iohk.atala.test.container.PostgresTestContainerSupport
+import io.iohk.atala.test.container.VaultTestContainerSupport
 import io.iohk.atala.agent.walletapi.crypto.ApolloSpecHelper
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDNonSecretStorage
@@ -34,8 +35,14 @@ import io.iohk.atala.agent.walletapi.model.error.UpdateManagedDIDError
 import io.iohk.atala.agent.walletapi.model.UpdateManagedDIDAction
 import io.iohk.atala.agent.walletapi.crypto.Apollo
 import io.iohk.atala.agent.walletapi.util.SeedResolver
+import io.iohk.atala.agent.walletapi.vault.VaultDIDSecretStorage
+import zio.test.TestAspect.sequential
 
-object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSupport, ApolloSpecHelper {
+object ManagedDIDServiceSpec
+    extends ZIOSpecDefault,
+      PostgresTestContainerSupport,
+      ApolloSpecHelper,
+      VaultTestContainerSupport {
 
   private trait TestDIDService extends DIDService {
     def getPublishedOperations: UIO[Seq[SignedPrismDIDOperation]]
@@ -73,14 +80,19 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSuppor
     }
   }
 
-  private def jdbcStorageLayer =
-    pgContainerLayer >+> (transactorLayer ++ apolloLayer) >+> (JdbcDIDSecretStorage.layer ++ JdbcDIDNonSecretStorage.layer)
+  private def jdbcNonSecretStorageLayer =
+    pgContainerLayer >+> (transactorLayer ++ apolloLayer) >+> JdbcDIDNonSecretStorage.layer
+
+  private def jdbcSecretStorageLayer =
+    pgContainerLayer >+> (transactorLayer ++ apolloLayer) >+> JdbcDIDSecretStorage.layer
+
+  private def vaultSecretStorageLayer = vaultKvClientLayer >>> VaultDIDSecretStorage.layer
 
   private def managedDIDServiceLayer =
     (DIDOperationValidator.layer() ++
       testDIDServiceLayer ++
       apolloLayer ++
-      SeedResolver.layer()) >+> ManagedDIDServiceImpl.layer
+      SeedResolver.layer(isDevMode = true)) >+> ManagedDIDServiceImpl.layer
 
   private def generateDIDTemplate(
       publicKeys: Seq[DIDPublicKeyTemplate] = Nil,
@@ -116,15 +128,23 @@ object ManagedDIDServiceSpec extends ZIOSpecDefault, PostgresTestContainerSuppor
     } yield did
 
   override def spec = {
-    val testSuite =
-      suite("ManagedDIDService")(
+    def testSuite(name: String) =
+      suite(name)(
         publishStoredDIDSpec,
         createAndStoreDIDSpec,
         updateManagedDIDSpec,
         deactivateManagedDIDSpec
-      ) @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
+      ) @@ TestAspect.before(DBTestUtils.runMigrationAgentDB) @@ sequential
 
-    testSuite.provideLayer(jdbcStorageLayer >+> managedDIDServiceLayer).provide(Runtime.removeDefaultLoggers)
+    val suite1 = testSuite("jdbc as secret storage")
+      .provideLayer((jdbcNonSecretStorageLayer ++ jdbcSecretStorageLayer) >+> managedDIDServiceLayer)
+      .provide(Runtime.removeDefaultLoggers)
+
+    val suite2 = testSuite("vault as secret storage")
+      .provideLayer((jdbcNonSecretStorageLayer ++ vaultSecretStorageLayer) >+> managedDIDServiceLayer)
+      .provide(Runtime.removeDefaultLoggers)
+
+    suite("ManagedDIDService")(suite1, suite2)
   }
 
   private val publishStoredDIDSpec =

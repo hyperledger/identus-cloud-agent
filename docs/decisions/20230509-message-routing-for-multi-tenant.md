@@ -13,7 +13,7 @@ All the API endpoints are same from outside
 Multi-tenancy, message routing can be used to ensure that messages are delivered only to the intended recipient or tenants, and not to unauthorized tenants.
 
 Backend services: Prism Agent use PostgreSQL. Authentication and authorization
-```mermaid
+<pre class="mermaid">
     sequenceDiagram
     autonumber
     actor H as Holder(DidComm)
@@ -48,5 +48,9 @@ Backend services: Prism Agent use PostgreSQL. Authentication and authorization
         A-->>DB:lookup to Agent DID identify tenantId
         A-->>A:decrypt message
     deactivate H
-      
-```
+</pre>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/9.2.1/mermaid.min.js"/>
+<script>
+  mermaid.initialize({ startOnLoad: true });
+</script>

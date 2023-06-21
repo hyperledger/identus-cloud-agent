@@ -15,7 +15,8 @@ services:
       - pg_data_db:/var/lib/postgresql/data
       - ./postgres/init-script.sh:/docker-entrypoint-initdb.d/init-script.sh
       - ./postgres/max_conns.sql:/docker-entrypoint-initdb.d/max_conns.sql
-
+    #    ports:
+    #      - "5432:5432"
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "postgres", "-d", "iris"]
       interval: 10s
@@ -50,6 +51,22 @@ services:
       db:
         condition: service_healthy
 
+  vault-server:
+    image: vault:latest
+    #    ports:
+    #      - "8200:8200"
+    environment:
+      VAULT_ADDR: "http://0.0.0.0:8200"
+      VAULT_DEV_ROOT_TOKEN_ID: ${VAULT_DEV_ROOT_TOKEN_ID}
+    command: server -dev -dev-root-token-id=${VAULT_DEV_ROOT_TOKEN_ID}
+    cap_add:
+      - IPC_LOCK
+    healthcheck:
+      test: ["CMD", "vault", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   prism-agent:
     image: ghcr.io/input-output-hk/prism-agent:${PRISM_AGENT_VERSION}
     environment:
@@ -78,12 +95,17 @@ services:
       DIDCOMM_SERVICE_URL: http://host.docker.internal:${PORT}/didcomm
       PRISM_NODE_HOST: prism-node
       PRISM_NODE_PORT: 50053
+      VAULT_ADDR: ${VAULT_ADDR:-http://vault-server:8200}
+      VAULT_TOKEN: ${VAULT_DEV_ROOT_TOKEN_ID:-root}
+      DEV_MODE: "true"
       WEBHOOK_URL: https://localhost:8080/my-webhook
     depends_on:
       db:
         condition: service_healthy
       prism-node:
         condition: service_started
+      vault-server:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://prism-agent:8085/connections"]
       interval: 30s
@@ -91,6 +113,8 @@ services:
       retries: 5
     extra_hosts:
       - "host.docker.internal:host-gateway"
+  #    ports:
+  #      - "8085:8085"
 
   swagger-ui:
     image: swaggerapi/swagger-ui:v4.14.0
@@ -114,7 +138,6 @@ services:
 volumes:
   pg_data_db:
   pgadmin:
-
 # Temporary commit network setting due to e2e CI bug
 # to be enabled later after debugging
 #networks:

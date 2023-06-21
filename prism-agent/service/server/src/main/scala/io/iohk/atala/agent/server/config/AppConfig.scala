@@ -4,21 +4,26 @@ import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import io.iohk.atala.pollux.vc.jwt.*
 import zio.config.*
 import zio.config.magnolia.Descriptor
+import zio.http.URL
 
 import java.time.Duration
 
 final case class AppConfig(
+    devMode: Boolean,
     iris: IrisConfig,
     castor: CastorConfig,
     pollux: PolluxConfig,
     agent: AgentConfig,
     connect: ConnectConfig,
-    prismNode: PrismNodeConfig
+    prismNode: PrismNodeConfig,
+    vault: VaultConfig
 )
 
 object AppConfig {
   val descriptor: ConfigDescriptor[AppConfig] = Descriptor[AppConfig]
 }
+
+final case class VaultConfig(address: String, token: String)
 
 final case class IrisConfig(service: GrpcServiceConfig)
 

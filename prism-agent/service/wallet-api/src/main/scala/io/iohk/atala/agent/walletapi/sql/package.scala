@@ -55,14 +55,10 @@ package object sql {
   given Meta[KeyManagementMode] = pgEnumString(
     "PRISM_DID_KEY_MODE",
     {
-      case "HD"     => KeyManagementMode.HD
-      case "RANDOM" => KeyManagementMode.Random
-      case s        => throw InvalidEnum[KeyManagementMode](s)
+      case "HD" => KeyManagementMode.HD
+      case s    => throw InvalidEnum[KeyManagementMode](s)
     },
-    {
-      case KeyManagementMode.HD     => "HD"
-      case KeyManagementMode.Random => "RANDOM"
-    }
+    { case KeyManagementMode.HD => "HD" }
   )
 
   given Meta[PublicationStatusType] = pgEnumString(
@@ -111,7 +107,7 @@ package object sql {
       createdAt: Instant,
       updatedAt: Instant,
       keyMode: KeyManagementMode,
-      didIndex: Option[Int]
+      didIndex: Int
   ) {
     def toDomain: Try[ManagedDIDState] = {
       publicationStatus match {

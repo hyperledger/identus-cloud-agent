@@ -10,8 +10,8 @@ import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
-import net.serenitybdd.screenplay.rest.interactions.Get
-import net.serenitybdd.screenplay.rest.interactions.Post
+import interactions.Get
+import interactions.Post
 import net.serenitybdd.screenplay.rest.questions.ResponseConsequence
 import org.apache.http.HttpStatus.*
 import org.assertj.core.api.Assertions.assertThat
@@ -102,12 +102,16 @@ class PublishDidSteps {
         wait(
             {
                 actor.attemptsTo(
-                    Get.resource("/dids/${actor.recall<String>("shortFormDid")}"),
+                    Get.resource("/did-registrar/dids/${actor.recall<String>("longFormDid")}"),
                 )
-                SerenityRest.lastResponse().statusCode == SC_OK
+                SerenityRest.lastResponse().statusCode == SC_OK && lastResponseObject("", ManagedDid::class)
+                    .status == ManagedDidStatuses.PUBLISHED
             },
             "ERROR: DID was not published to ledger!",
             timeout = TestConstants.DID_UPDATE_PUBLISH_MAX_WAIT_5_MIN,
+        )
+        actor.attemptsTo(
+            Get.resource("/dids/${actor.recall<String>("shortFormDid")}"),
         )
         actor.should(
             ResponseConsequence.seeThatResponse {

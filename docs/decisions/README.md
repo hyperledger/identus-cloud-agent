@@ -28,6 +28,24 @@ To create a new ADR interactively, run:
 log4brains adr new
 ```
 
+## Mermaid support
+
+Log4brains does not support [Github Mermaid Diagrams](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-diagrams) diagrams by default.
+
+To successfully render Mermaid diagrams on the server side, add the following code to your ADR:
+```
+<pre class="mermaid">
+  ... your mermaid code here ...
+</pre>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/9.2.1/mermaid.min.js"/>
+<script>
+  mermaid.initialize({ startOnLoad: true });
+</script>
+```
+
+> Unfortunately, this diagram won't be automatically rendered in your preview mode.
+> So, you could debug using github mermaid diagrams, but then integrate the code above in your ADR.
+
 ## More information
 
 - [RFC-0016](https://input-output.atlassian.net/wiki/spaces/ATB/pages/3580559403/RFC+0016+-+Use+Architectural+Design+Records)

@@ -1,6 +1,6 @@
 # Update DID
 
-PRISM DID method allows [DID Controller](/docs/concepts/glossary#did-controller) to update the content of the [DID document(/docs/concepts/glossary#did-document) by constructing a DID update-operation.
+PRISM DID method allows [DID Controller](/docs/concepts/glossary#did-controller) to update the content of the [DID document](/docs/concepts/glossary#did-document) by constructing a DID update-operation.
 The update-operation describes the update action on the DID document.
 For example, DID Controller can add a new key to the DID document by constructing an update-operation containing the `AddKeyAction`.
 It is also possible for DID Controller to compose multiple actions in the same update-operation.

@@ -6,7 +6,6 @@ import io.iohk.atala.agent.walletapi.crypto.DerivationPath
 import io.iohk.atala.agent.walletapi.crypto.ECKeyPair
 
 enum KeyManagementMode {
-  case Random extends KeyManagementMode
   case HD extends KeyManagementMode
 }
 
