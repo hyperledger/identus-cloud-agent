@@ -20,7 +20,7 @@ object KeyDerivation extends ZIOSpecDefault, VaultTestContainerSupport {
   override def spec = suite("Key derivation benchamrk")(
     deriveKeyBenchmark.provide(Apollo.prism14Layer),
     queryKeyBenchmark.provide(vaultKvClientLayer, Apollo.prism14Layer)
-  ) @@ TestAspect.sequential @@ TestAspect.timed @@ TestAspect.tag("benchmark")
+  ) @@ TestAspect.sequential @@ TestAspect.timed @@ TestAspect.tag("benchmark") @@ TestAspect.ignore
 
   private val deriveKeyBenchmark = suite("Key derivation benchmark")(
     benchamrkKeyDerivation(1),
