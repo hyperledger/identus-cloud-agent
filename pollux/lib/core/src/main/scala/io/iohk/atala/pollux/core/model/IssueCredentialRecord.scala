@@ -9,28 +9,6 @@ import java.time.Instant
 import io.iohk.atala.pollux.vc.jwt.JwtCredential
 import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
 
-trait IssueCredentialRecordTrait {
-  def id: DidCommID
-  def createdAt: Instant
-  def updatedAt: Option[Instant]
-  def thid: DidCommID
-  def schemaId: Option[String]
-  def role: Role
-  def subjectId: Option[String]
-  def validityPeriod: Option[Double] = None
-  def automaticIssuance: Option[Boolean]
-  def awaitConfirmation: Option[Boolean]
-  def protocolState: ProtocolState
-  def publicationState: Option[PublicationState]
-  def offerCredentialData: Option[OfferCredential]
-  def requestCredentialData: Option[RequestCredential]
-  def issueCredentialData: Option[IssueCredential]
-  def issuedCredentialRaw: Option[String]
-  def issuingDID: Option[CanonicalPrismDID]
-  def metaRetries: Int
-  def metaNextRetry: Option[Instant]
-  def metaLastFailure: Option[String]
-}
 final case class IssueCredentialRecord(
     id: DidCommID,
     createdAt: Instant,
@@ -39,7 +17,7 @@ final case class IssueCredentialRecord(
     schemaId: Option[String],
     role: Role,
     subjectId: Option[String],
-    override val validityPeriod: Option[Double] = None,
+    validityPeriod: Option[Double] = None,
     automaticIssuance: Option[Boolean],
     awaitConfirmation: Option[Boolean],
     protocolState: ProtocolState,
@@ -52,7 +30,7 @@ final case class IssueCredentialRecord(
     metaRetries: Int,
     metaNextRetry: Option[Instant],
     metaLastFailure: Option[String],
-) extends IssueCredentialRecordTrait
+)
 final case class ValidIssuedCredentialRecord(
     id: DidCommID,
     issuedCredentialRaw: Option[String],
@@ -106,26 +84,3 @@ object IssueCredentialRecord {
     // The credential publication has been confirmed by Iris
     case Published extends PublicationState
 }
-
-final case class IssueAnoncredRecord(
-    id: DidCommID,
-    createdAt: Instant,
-    updatedAt: Option[Instant],
-    thid: DidCommID,
-    schemaId: Option[String],
-    role: Role,
-    subjectId: Option[String],
-    override val validityPeriod: Option[Double] = None,
-    automaticIssuance: Option[Boolean],
-    awaitConfirmation: Option[Boolean],
-    protocolState: ProtocolState,
-    publicationState: Option[PublicationState],
-    offerCredentialData: Option[OfferCredential],
-    requestCredentialData: Option[RequestCredential],
-    issueCredentialData: Option[IssueCredential],
-    issuedCredentialRaw: Option[String],
-    issuingDID: Option[CanonicalPrismDID],
-    metaRetries: Int,
-    metaNextRetry: Option[Instant],
-    metaLastFailure: Option[String],
-) extends IssueCredentialRecordTrait
