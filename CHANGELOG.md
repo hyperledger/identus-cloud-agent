@@ -1,3 +1,10 @@
+## [1.5.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v1.5.0...prism-agent-v1.5.1) (2023-06-22)
+
+
+### Bug Fixes
+
+* log seed error before effect fail ([#557](https://github.com/input-output-hk/atala-prism-building-blocks/issues/557)) ([c3a5d8e](https://github.com/input-output-hk/atala-prism-building-blocks/commit/c3a5d8eb9e62675053f9b7fc80ee18d7a62f857c))
+
 # [1.5.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v1.4.0...prism-agent-v1.5.0) (2023-06-16)
 
 
