@@ -16,3 +16,5 @@ package-lock.json
 **/.docker-volumes/*
 target/
 **.env.*
+workspace.json
+docs/architecture/structurizr/.structurizr/

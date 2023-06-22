@@ -4,9 +4,10 @@ import api_models.PublicKey
 import api_models.Purpose
 import api_models.Service
 import java.time.Duration
-import java.util.UUID
+import java.util.*
 
 object TestConstants {
+    val VERIFICATION_POLICIES = VerificationPolicies
     val CREDENTIAL_SCHEMAS = CredentialSchemas
     val RANDOM_CONSTAND_UUID = UUID.randomUUID().toString()
     val DID_UPDATE_PUBLISH_MAX_WAIT_5_MIN = Duration.ofSeconds(60L)

@@ -20,7 +20,7 @@ trait VerificationPolicyRepository[F[_]] {
       verificationPolicy: VerificationPolicy
   ): F[Option[VerificationPolicy]]
 
-  def delete(id: UUID, hash: Int): F[Option[VerificationPolicy]]
+  def delete(id: UUID): F[Option[VerificationPolicy]]
 
   def totalCount(): F[Long]
 

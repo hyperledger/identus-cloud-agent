@@ -11,17 +11,24 @@ case class VerificationPolicy(
     description: String,
     createdAt: OffsetDateTime,
     updatedAt: OffsetDateTime,
-    constrains: Seq[VerificationPolicyConstraint]
-) {
-  def nonce: Int = hashCode()
-}
+    constrains: Seq[VerificationPolicyConstraint],
+    nonce: Int
+)
 
 object VerificationPolicy {
-  def make(name: String, description: String, constraints: Seq[VerificationPolicyConstraint]) =
+  def make(name: String, description: String, constraints: Seq[VerificationPolicyConstraint], nonce: Int = 0) =
     for {
       id <- Random.nextUUID
       ts <- Clock.currentDateTime.map(_.atZoneSameInstant(ZoneOffset.UTC).toOffsetDateTime)
-    } yield VerificationPolicy(id, name, description, createdAt = ts, updatedAt = ts, constrains = constraints)
+    } yield VerificationPolicy(
+      id,
+      name,
+      description,
+      createdAt = ts,
+      updatedAt = ts,
+      constrains = constraints,
+      nonce = nonce
+    )
 }
 sealed trait VerificationPolicyConstraint
 

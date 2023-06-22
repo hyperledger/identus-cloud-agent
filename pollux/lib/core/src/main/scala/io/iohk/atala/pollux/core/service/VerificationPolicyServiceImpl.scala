@@ -35,23 +35,18 @@ class VerificationPolicyServiceImpl(
       .get(id)
       .mapError(throwableToVerificationPolicyError)
 
-  override def getHash(id: UUID): IO[VerificationPolicyError, Option[Int]] =
-    repository
-      .getHash(id)
-      .mapError(throwableToVerificationPolicyError)
-
   override def update(
       id: UUID,
-      hash: Int,
+      nonce: Int,
       verificationPolicy: VerificationPolicy
   ): IO[VerificationPolicyError, Option[VerificationPolicy]] =
     repository
-      .update(id, hash, verificationPolicy)
+      .update(id, nonce, verificationPolicy)
       .mapError(throwableToVerificationPolicyError)
 
-  override def delete(id: UUID, hash: Int): IO[VerificationPolicyError, Option[VerificationPolicy]] =
+  override def delete(id: UUID): IO[VerificationPolicyError, Option[VerificationPolicy]] =
     repository
-      .delete(id, hash)
+      .delete(id)
       .mapError(throwableToVerificationPolicyError)
 
   override def totalCount(): IO[VerificationPolicyError, Long] =

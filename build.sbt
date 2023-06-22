@@ -24,6 +24,7 @@ inThisBuild(
       "UTF-8",
       "-deprecation",
       "-unchecked",
+      "-Dquill.macro.log=false" // disable quill macro logs
       // TODO "-feature",
       // TODO "-Xfatal-warnings",
       // TODO "-Yexplicit-nulls",
@@ -853,7 +854,8 @@ lazy val prismAgentServer = project
     dockerExposedPorts := Seq(8080, 8085, 8090),
     dockerBaseImage := "openjdk:11",
     buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion),
-    buildInfoPackage := "io.iohk.atala.agent.server.buildinfo"
+    buildInfoPackage := "io.iohk.atala.agent.server.buildinfo",
+    Compile / packageDoc / publishArtifact := false
   )
   .enablePlugins(JavaAppPackaging, DockerPlugin)
   .enablePlugins(BuildInfoPlugin)

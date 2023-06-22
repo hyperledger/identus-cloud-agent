@@ -55,7 +55,8 @@ object VerificationPolicyExtensions {
         description = vp.description,
         createdAt = vp.createdAt.atZoneSameInstant(ZoneOffset.UTC).toOffsetDateTime,
         updatedAt = vp.updatedAt.atZoneSameInstant(ZoneOffset.UTC).toOffsetDateTime,
-        constrains = constraints.map(_.toDomain)
+        constrains = constraints.map(_.toDomain),
+        nonce = vp.nonce
       )
   }
 
@@ -122,7 +123,7 @@ class JdbcVerificationPolicyRepository(xa: Transactor[Task]) extends Verificatio
     program.transact(xa)
   }
 
-  override def delete(id: UUID, nonce: Int): Task[Option[model.VerificationPolicy]] = {
+  override def delete(id: UUID): Task[Option[model.VerificationPolicy]] = {
     val program = for {
       vp <- VerificationPolicySql.getById(id)
       vpc <- VerificationPolicySql.getVerificationPolicyConstrains(Seq(id))
