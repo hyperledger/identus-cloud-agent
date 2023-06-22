@@ -5,13 +5,14 @@ import io.iohk.atala.event.notification.{Event, EventNotificationService}
 import zio.*
 import zio.http.*
 import zio.http.ZClient.ClientLive
-import zio.http.model.*
+import zio.http.model.{Header, Headers, Method}
 
 import java.net.{URI, URL}
 
 class WebhookPublisher(appConfig: AppConfig, notificationService: EventNotificationService) {
 
   private val config = appConfig.agent.webhookPublisher
+  private val baseHeaders = config.apiKey.map(key => Headers.authorization(key)).getOrElse(Headers.empty)
 
   private val parallelism = config.parallelism match {
     case Some(p) if p < 1  => 1
@@ -45,7 +46,12 @@ class WebhookPublisher(appConfig: AppConfig, notificationService: EventNotificat
       _ <- ZIO.log(s"Sending event: $event to HTTP webhook URL: $url with API key ${config.apiKey}")
       response <- Client
         // TODO serialize event to JSON here
-        .request(url = url.toString, method = Method.POST, content = Body.fromString(event.content))
+        .request(
+          url = url.toString,
+          method = Method.POST,
+          headers = baseHeaders,
+          content = Body.fromString(event.content)
+        )
         .mapError(t => UnexpectedError(s"Webhook request error: $t"))
       resp <- response match
         case Response(status, _, _, _, _) if status.isSuccess =>
