@@ -7,8 +7,8 @@ import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
-import net.serenitybdd.screenplay.rest.interactions.Post
-import net.serenitybdd.screenplay.rest.interactions.Put
+import interactions.Put
+import interactions.Post
 import net.serenitybdd.screenplay.rest.questions.ResponseConsequence
 import org.apache.http.HttpStatus
 import org.hamcrest.CoreMatchers

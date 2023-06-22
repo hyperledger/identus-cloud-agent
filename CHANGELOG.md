@@ -1,3 +1,11 @@
+# [1.5.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v1.4.0...prism-agent-v1.5.0) (2023-06-16)
+
+
+### Features
+
+* **prism-agent:** integrate credential schema into VC issue flow ([#541](https://github.com/input-output-hk/atala-prism-building-blocks/issues/541)) ([ab88736](https://github.com/input-output-hk/atala-prism-building-blocks/commit/ab88736dc9d6dfec3d39f6a58619eb115f520bf8))
+* **prism-agent:** integrate DID secret storage with Vault ([#543](https://github.com/input-output-hk/atala-prism-building-blocks/issues/543)) ([ee43feb](https://github.com/input-output-hk/atala-prism-building-blocks/commit/ee43febacddb06210065c3f812beb8c948d5c369))
+
 # [1.4.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v1.3.0...prism-agent-v1.4.0) (2023-06-01)
 
 

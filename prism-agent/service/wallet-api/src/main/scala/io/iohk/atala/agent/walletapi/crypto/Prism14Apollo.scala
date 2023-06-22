@@ -14,6 +14,7 @@ import io.iohk.atala.prism.crypto.EC
 import zio.*
 import io.iohk.atala.prism.crypto.derivation.KeyDerivation
 import io.iohk.atala.prism.crypto.derivation.DerivationAxis
+import scala.jdk.CollectionConverters.*
 
 final case class Prism14ECPublicKey(publicKey: io.iohk.atala.prism.crypto.keys.ECPublicKey) extends ECPublicKey {
 
@@ -144,9 +145,10 @@ object Prism14ECKeyFactory extends ECKeyFactory {
     }
   }
 
-  override def randomBip32Seed(): Task[Array[Byte]] = ZIO.attempt {
+  override def randomBip32Seed(): Task[(Array[Byte], Seq[String])] = ZIO.attempt {
     val mnemonic = KeyDerivation.INSTANCE.randomMnemonicCode()
-    KeyDerivation.INSTANCE.binarySeed(mnemonic, "")
+    val words = mnemonic.getWords().asScala.toList
+    KeyDerivation.INSTANCE.binarySeed(mnemonic, "") -> words
   }
 
 }

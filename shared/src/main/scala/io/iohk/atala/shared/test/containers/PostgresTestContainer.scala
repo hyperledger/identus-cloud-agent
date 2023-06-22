@@ -5,7 +5,7 @@ import org.testcontainers.containers.output.OutputFrame
 import org.testcontainers.utility.DockerImageName
 
 object PostgresTestContainer {
-  def postgresContainer(imageName: Option[String] = Some("postgres"), verbose: Boolean = false) = {
+  def postgresContainer(imageName: Option[String] = Some("postgres"), verbose: Boolean = false): PostgreSQLContainer = {
     val container =
       if (sys.env.contains("GITHUB_NETWORK"))
         new PostgreSQLContainerCustom(dockerImageNameOverride = imageName.map(DockerImageName.parse))
