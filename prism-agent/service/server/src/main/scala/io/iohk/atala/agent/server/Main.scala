@@ -75,7 +75,7 @@ object MainApp extends ZIOAppDefault {
     } yield (myServer)
   }
 
-  def appComponents(didCommServicePort: Int, restServicePort: Int) = for {
+  def appComponents(didCommServicePort: Int) = for {
     _ <- Modules.issueCredentialDidCommExchangesJob.debug.fork
     _ <- Modules.presentProofExchangeJob.debug.fork
     _ <- Modules.connectDidCommExchangesJob.debug.fork
@@ -110,12 +110,6 @@ object MainApp extends ZIOAppDefault {
       |""".stripMargin)
         .ignore
 
-      restServicePort <- System.env("REST_SERVICE_PORT").map {
-        case Some(s) if s.toIntOption.isDefined => s.toInt
-        case _                                  => 8080
-      }
-      _ <- ZIO.logInfo(s"REST Service port => $restServicePort")
-
       didCommServiceUrl <- System.env("DIDCOMM_SERVICE_URL").map {
         case Some(s) => s
         case _       => "http://localhost:8090"
@@ -130,7 +124,7 @@ object MainApp extends ZIOAppDefault {
 
       _ <- migrations
 
-      app <- appComponents(didCommServicePort, restServicePort).provide(
+      app <- appComponents(didCommServicePort).provide(
         didCommAgentLayer(didCommServiceUrl),
         DidCommX.liveLayer,
         AppModule.didJwtResolverlayer,
