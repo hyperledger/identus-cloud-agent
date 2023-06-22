@@ -14,16 +14,7 @@ class PoCNewLib extends AnyFlatSpec {
 
   val SCHEMA_ID = "mock:uri2"
   val CRED_DEF_ID = "mock:uri2"
-  // val TAG = Tag("tag")
   val ISSUER_DID = "mock:issuer_id/path&q=bar"
-
-  // private[anoncreds] val gvtSchemaName = "gvt2"
-  // private[anoncreds] val schemaVersion = "1.3"
-  // private[anoncreds] val credentialId1 = "id1"
-  // private[anoncreds] val credentialId2 = "id2"
-  // private[anoncreds] val credentialIdX = "idX"
-  // private[anoncreds] val attrs = Array("name", "age")
-  // private[anoncreds] val tails_path = Files.createTempDirectory("tails")
 
   "The POC New Lib script" should "run to completion" in {
     script()
