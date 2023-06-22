@@ -159,7 +159,8 @@ object MainApp extends ZIOAppDefault {
         ZLayer.succeed(MetricsConfig(5.seconds)),
         DefaultJvmMetrics.live.unit,
         SystemControllerImpl.layer,
-        ZLayer.fromZIO(Queue.bounded[Event](500)) >>> EventNotificationServiceInMemoryImpl.layer
+        ZLayer.fromZIO(Queue.bounded[Event](500)) >>> EventNotificationServiceInMemoryImpl.layer,
+        Scope.default >>> Client.default
       )
     } yield app
 
