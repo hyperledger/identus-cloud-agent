@@ -1,3 +1,4 @@
+import scala.concurrent.duration.fromNow
 import sbtbuildinfo.BuildInfoPlugin.autoImport.*
 import org.scoverage.coveralls.Imports.CoverallsKeys._
 
@@ -625,21 +626,16 @@ lazy val polluxAnoncreds = project
   .enablePlugins(JavaAppPackaging)
   .settings(
     name := "pollux-anoncreds",
-    // export LD_LIBRARY_PATH=/home/fabio/workspace/anoncreds-rs/uniffi/target/x86_64-unknown-linux-gnu/release:$LD_LIBRARY_PATH,
-    Compile / unmanagedJars += file(
-      "/home/fabio/workspace/anoncreds-rs/uniffi/target/x86_64-unknown-linux-gnu/release/UniffiPOC-1.0-SNAPSHOT.jar"
+    Compile / unmanagedJars += baseDirectory.value / "UniffiPOC-1.0-SNAPSHOT.jar",
+    Compile / unmanagedResourceDirectories ++= Seq(
+      // export LD_LIBRARY_PATH=.../anoncreds-rs/uniffi/target/x86_64-unknown-linux-gnu/release:$LD_LIBRARY_PATH,
+      baseDirectory.value / "native-lib" / "NATIVE" / "linux" / "amd64"
     ),
   )
 
 lazy val polluxAnoncredsTest = project
   .in(file("pollux/lib/anoncredsTest"))
   .settings(
-    // ---->>>
-    // export LD_LIBRARY_PATH=/home/fabio/workspace/anoncreds-rs/uniffi/target/x86_64-unknown-linux-gnu/release:$LD_LIBRARY_PATH,
-    // // run / javaOptions += "-Djava.library.path=/home/fabio/workspace/anoncreds-rs/uniffi/target/x86_64-unknown-linux-gnu/release/libanoncreds_uniffi.so",
-    // // run / javaOptions += "-Djava.library.path=/home/fabio/workspace/anoncreds-rs/uniffi/target/x86_64-unknown-linux-gnu/release/libuniffi_anoncreds.so",
-    // run / javaOptions += "-Djava.library.path=/home/fabio/workspace/anoncreds-rs/uniffi/target/x86_64-unknown-linux-gnu/release",
-    // Compile / unmanagedJars += file("/home/fabio/workspace/atala-prism-building-blocks/aaa/UniffiPOC-1.0-SNAPSHOT.jar"),
     libraryDependencies ++= Seq(
       "org.scalatest" %% "scalatest" % "3.2.15" % Test,
       ("me.vican.jorge" %% "dijon" % "0.6.0" % Test).cross(CrossVersion.for3Use2_13)
