@@ -3,6 +3,7 @@ package io.iohk.atala.mercury.model
 import munit.*
 import zio.*
 import io.circe.JsonObject
+import scala.language.implicitConversions
 
 /** agentDidcommx/testOnly io.iohk.atala.mercury.model.UnpackMessageImpSpec */
 class UnpackMessageImpSpec extends ZSuite {

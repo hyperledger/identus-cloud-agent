@@ -43,7 +43,7 @@ trait MailStorage {
 final case class InmemoryMailStorage(private var bd: Map[DidId, Seq[MessageString]]) extends MailStorage {
   def store(id: DidId, msg: MessageString): UIO[Unit] =
     ZIO.succeed { bd = bd + (id -> (bd.getOrElse(id, Seq.empty) :+ msg)) }
-      <* ZIO.logInfo("InmemoryMailStorage: " + bd.mapValues(_.size).toMap.toString)
+      <* ZIO.logInfo("InmemoryMailStorage: " + bd.view.mapValues(_.size).toMap.toString)
 
   def get(id: DidId): UIO[Seq[MessageString]] =
     ZIO.succeed { bd.get(id).toSeq.flatten }

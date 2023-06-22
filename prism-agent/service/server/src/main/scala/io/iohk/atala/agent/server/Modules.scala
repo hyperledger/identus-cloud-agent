@@ -517,7 +517,7 @@ object RepoModule {
   val polluxTransactorLayer: TaskLayer[Transactor[Task]] = {
     val transactorLayer = ZLayer.fromZIO {
       ZIO.service[PolluxDbConfig].flatMap { config =>
-        Dispatcher[Task].allocated.map { case (dispatcher, _) =>
+        Dispatcher.parallel[Task].allocated.map { case (dispatcher, _) =>
           given Dispatcher[Task] = dispatcher
           io.iohk.atala.pollux.sql.repository.TransactorLayer.hikari[Task](config)
         }
@@ -543,7 +543,7 @@ object RepoModule {
   val connectTransactorLayer: TaskLayer[Transactor[Task]] = {
     val transactorLayer = ZLayer.fromZIO {
       ZIO.service[ConnectDbConfig].flatMap { config =>
-        Dispatcher[Task].allocated.map { case (dispatcher, _) =>
+        Dispatcher.parallel[Task].allocated.map { case (dispatcher, _) =>
           given Dispatcher[Task] = dispatcher
           io.iohk.atala.connect.sql.repository.TransactorLayer.hikari[Task](config)
         }
@@ -569,7 +569,7 @@ object RepoModule {
   val agentTransactorLayer: TaskLayer[Transactor[Task]] = {
     val transactorLayer = ZLayer.fromZIO {
       ZIO.service[AgentDbConfig].flatMap { config =>
-        Dispatcher[Task].allocated.map { case (dispatcher, _) =>
+        Dispatcher.parallel[Task].allocated.map { case (dispatcher, _) =>
           given Dispatcher[Task] = dispatcher
           io.iohk.atala.agent.server.sql.TransactorLayer.hikari[Task](config)
         }

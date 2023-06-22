@@ -15,6 +15,7 @@ import org.didcommx.peerdid.core.PeerDIDUtils
 import org.didcommx.didcomm.common._
 import org.didcommx.didcomm.secret._
 import scala.jdk.CollectionConverters.*
+import scala.language.implicitConversions
 
 object DidCommX {
   val liveLayer: ZLayer[Any, Nothing, DidOps] = ZLayer.succeed(

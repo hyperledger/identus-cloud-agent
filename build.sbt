@@ -22,6 +22,7 @@ inThisBuild(
     scalacOptions ++= Seq(
       "-encoding",
       "UTF-8",
+      "-feature",
       "-deprecation",
       "-unchecked",
       "-Dquill.macro.log=false" // disable quill macro logs

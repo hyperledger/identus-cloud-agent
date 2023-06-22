@@ -23,6 +23,7 @@ import io.iohk.atala.resolvers._
 import io.circe.Json
 import io.circe.parser.*
 import io.circe.syntax.*
+import scala.language.implicitConversions
 
 /** AgentCli
   * {{{

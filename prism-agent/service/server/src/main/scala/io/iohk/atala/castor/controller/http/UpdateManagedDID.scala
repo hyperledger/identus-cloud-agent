@@ -11,6 +11,7 @@ import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonEncoder, JsonDecoder}
 import sttp.tapir.Codec
+import scala.language.implicitConversions
 
 final case class UpdateManagedDIDRequest(
     actions: Seq[UpdateManagedDIDRequestAction]
