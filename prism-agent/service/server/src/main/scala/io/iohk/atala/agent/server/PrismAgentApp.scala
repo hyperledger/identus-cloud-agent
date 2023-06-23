@@ -107,19 +107,3 @@ object AgentHttpServer {
       httpServer <- ZHttp4sBlazeServer.start(allEndpoints, port = appConfig.agent.httpEndpoint.http.port)
     } yield ()
 }
-
-object DidCommHttpServer {
-  def run(didCommServicePort: Int) = {
-    val server = {
-      val config = ServerConfig(address = new java.net.InetSocketAddress(didCommServicePort))
-      ServerConfig.live(config)(using Trace.empty) >>> Server.live
-    }
-    for {
-      _ <- ZIO.logInfo(s"Server Started on port $didCommServicePort")
-      _ <- Server
-        .serve(Modules.didCommServiceEndpoint) // TODO: encapsulate this
-        .provideSomeLayer(server)
-        .debug *> ZIO.logWarning(s"Server STOP (on port $didCommServicePort)")
-    } yield ()
-  }
-}
