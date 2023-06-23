@@ -3,8 +3,7 @@
 
 APPLY_FIXES: all
 DEFAULT_BRANCH: main
-DISABLE_LINTERS:
-  [
+DISABLE_LINTERS: [
     REPOSITORY_DEVSKIM,
     REPOSITORY_GITLEAKS,
     DOCKERFILE_HADOLINT,
@@ -13,14 +12,16 @@ DISABLE_LINTERS:
     REPOSITORY_SECRETLINT,
     SCALA_SCALAFIX,
     SQL_TSQLLINT,
-  ]
-DISABLE_ERRORS_LINTERS:
-  [
+    C_CPPLINT, # For pollux/lib/anoncreds/src/main/c
+    CPP_CPPLINT, # For pollux/lib/anoncreds/src/main/c
+    JAVA_CHECKSTYLE, # For pollux/lib/anoncreds/src/main/java
+]
+DISABLE_ERRORS_LINTERS: [
     KOTLIN_KTLINT,
     PROTOBUF_PROTOLINT,
     OPENAPI_SPECTRAL,
     MARKDOWN_MARKDOWN_LINK_CHECK,
-  ]
+]
 
 DISABLE: [COPYPASTE, SPELL, CREDENTIALS]
 SHOW_ELAPSED_TIME: false
@@ -36,10 +37,10 @@ BASH_SHELLCHECK_DISABLE_ERRORS: true
 # that could lead to new files in workspace created
 # with CLRF instead of CL due docker/python/git chain
 PRE_COMMANDS:
-  - command: git config --global core.autocrlf input
-    cwd: "workspace"
-  - command: pip install Click==8.1.3
-    cwd: "workspace"
+    - command: git config --global core.autocrlf input
+      cwd: "workspace"
+    - command: pip install Click==8.1.3
+      cwd: "workspace"
 
 # Linter customisation
 MARKDOWN_MARKDOWN_LINK_CHECK_FILTER_REGEX_EXCLUDE: "CHANGELOG.md"
