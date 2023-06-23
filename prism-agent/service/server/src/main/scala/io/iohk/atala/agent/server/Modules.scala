@@ -85,9 +85,7 @@ import io.iohk.atala.agent.walletapi.crypto.Apollo
 import io.iohk.atala.system.controller.{SystemController, SystemServerEndpoints}
 import io.iohk.atala.agent.walletapi.util.SeedResolver
 import io.iohk.atala.agent.walletapi.vault.{VaultDIDSecretStorage, VaultKVClient, VaultKVClientImpl}
-
-// TODO: make module dynamic according to the configured value
-object Module {}
+import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
 
 object SystemModule {
   val configLayer: Layer[ReadError[String], AppConfig] = ZLayer.fromZIO {
@@ -104,33 +102,15 @@ object SystemModule {
 object AppModule {
   val apolloLayer: ULayer[Apollo] = Apollo.prism14Layer
 
-  val didOpValidatorLayer: ULayer[DIDOperationValidator] = DIDOperationValidator.layer()
+  val seedResolverLayer =
+    ZLayer.make[SeedResolver](
+      ZLayer.fromFunction((config: AppConfig) => SeedResolver.layer(isDevMode = config.devMode)).flatten,
+      apolloLayer,
+      SystemModule.configLayer
+    )
 
   val didJwtResolverlayer: URLayer[DIDService, JwtDidResolver] =
     ZLayer.fromFunction(PrismDidResolver(_))
-
-  val didServiceLayer: TaskLayer[DIDService] =
-    (didOpValidatorLayer ++ GrpcModule.layers) >>> DIDServiceImpl.layer
-
-  val manageDIDServiceLayer: TaskLayer[ManagedDIDService] = {
-    val vaultClientLayer = RepoModule.vaultClientLayer
-    val secretStorageLayer = vaultClientLayer >>> VaultDIDSecretStorage.layer
-    val nonSecretStorageLayer = RepoModule.agentTransactorLayer >>> JdbcDIDNonSecretStorage.layer
-    val seedResolverLayer =
-      (apolloLayer ++ SystemModule.configLayer) >>>
-        ZLayer.fromFunction((config: AppConfig) => SeedResolver.layer(isDevMode = config.devMode)).flatten
-    (didOpValidatorLayer ++ didServiceLayer ++ secretStorageLayer ++ nonSecretStorageLayer ++ apolloLayer ++ seedResolverLayer) >>> ManagedDIDServiceImpl.layer
-  }
-
-  val credentialServiceLayer: RLayer[DidOps & DidAgent & JwtDidResolver & URIDereferencer, CredentialService] =
-    (GrpcModule.layers ++ RepoModule.credentialRepoLayer) >>> CredentialServiceImpl.layer
-
-  def presentationServiceLayer =
-    (RepoModule.presentationRepoLayer ++ RepoModule.credentialRepoLayer) >>> PresentationServiceImpl.layer
-
-  val connectionServiceLayer: RLayer[DidOps & DidAgent, ConnectionService] =
-    (GrpcModule.layers ++ RepoModule.connectionRepoLayer) >>> ConnectionServiceImpl.layer
-
 }
 
 object GrpcModule {
@@ -162,8 +142,6 @@ object GrpcModule {
     )
     SystemModule.configLayer >>> stubLayer
   }
-
-  val layers = irisStubLayer ++ prismNodeStubLayer
 }
 
 object RepoModule {
@@ -246,27 +224,6 @@ object RepoModule {
     agentDbConfigLayer >>> transactorLayer
   }
 
-  val credentialRepoLayer: TaskLayer[CredentialRepository[Task]] =
-    RepoModule.polluxTransactorLayer >>> JdbcCredentialRepository.layer
-
-  val presentationRepoLayer: TaskLayer[PresentationRepository[Task]] =
-    polluxTransactorLayer >>> JdbcPresentationRepository.layer
-
-  val connectionRepoLayer: TaskLayer[ConnectionRepository[Task]] =
-    RepoModule.connectTransactorLayer >>> JdbcConnectionRepository.layer
-
-  val credentialSchemaServiceLayer: TaskLayer[CredentialSchemaController] =
-    RepoModule.polluxTransactorLayer >>>
-      JdbcCredentialSchemaRepository.layer >>>
-      CredentialSchemaServiceImpl.layer >>>
-      (AppModule.manageDIDServiceLayer >>> CredentialSchemaControllerImpl.layer)
-
-  val verificationPolicyServiceLayer: TaskLayer[VerificationPolicyController] =
-    RepoModule.polluxTransactorLayer >>>
-      JdbcVerificationPolicyRepository.layer >+>
-      VerificationPolicyServiceImpl.layer >+>
-      VerificationPolicyControllerImpl.layer
-
   val vaultClientLayer: TaskLayer[VaultKVClient] = {
     val vaultClientConfig = ZLayer {
       for {
@@ -282,4 +239,26 @@ object RepoModule {
 
     SystemModule.configLayer >>> vaultClientConfig
   }
+
+  val didSecretStorageLayer: TaskLayer[DIDSecretStorage] = {
+    ZLayer.fromZIO {
+      ZIO
+        .service[AppConfig]
+        .map(_.agent.secretStorage.backend)
+        .map {
+          case "vault" =>
+            ZLayer.make[DIDSecretStorage](
+              VaultDIDSecretStorage.layer,
+              vaultClientLayer,
+            )
+          case "postgres" =>
+            ZLayer.make[DIDSecretStorage](
+              JdbcDIDSecretStorage.layer,
+              agentTransactorLayer,
+            )
+        }
+        .provide(SystemModule.configLayer)
+    }.flatten
+  }
+
 }

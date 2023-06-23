@@ -26,8 +26,6 @@ import zio.*
 import zio.http.Server
 import zio.http.ServerConfig
 
-/** Contains things that will be run by an application
-  */
 object PrismAgentApp {
 
   def run(didCommServicePort: Int) = for {

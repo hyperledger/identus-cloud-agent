@@ -39,6 +39,21 @@ import zio.metrics.jvm.DefaultJvmMetrics
 
 import java.net.URI
 import java.security.Security
+import io.iohk.atala.castor.core.service.DIDServiceImpl
+import io.iohk.atala.agent.walletapi.service.ManagedDIDServiceImpl
+import io.iohk.atala.pollux.core.service.PresentationServiceImpl
+import io.iohk.atala.pollux.core.service.CredentialServiceImpl
+import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaController
+import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaControllerImpl
+import io.iohk.atala.pollux.credentialschema.controller.VerificationPolicyControllerImpl
+import io.iohk.atala.connect.core.service.ConnectionServiceImpl
+import io.iohk.atala.pollux.sql.repository.JdbcCredentialRepository
+import io.iohk.atala.pollux.core.service.VerificationPolicyServiceImpl
+import io.iohk.atala.pollux.sql.repository.JdbcVerificationPolicyRepository
+import io.iohk.atala.agent.walletapi.sql.JdbcDIDNonSecretStorage
+import io.iohk.atala.castor.core.util.DIDOperationValidator
+import io.iohk.atala.pollux.sql.repository.JdbcPresentationRepository
+import io.iohk.atala.connect.sql.repository.JdbcConnectionRepository
 
 object MainApp extends ZIOAppDefault {
 
@@ -102,29 +117,49 @@ object MainApp extends ZIOAppDefault {
         .provide(
           didCommAgentLayer(didCommServiceUrl),
           DidCommX.liveLayer,
-          AppModule.didJwtResolverlayer,
-          AppModule.didServiceLayer,
-          DIDResolver.layer,
-          ZioHttpClient.layer,
-          AppModule.credentialServiceLayer,
-          AppModule.presentationServiceLayer,
-          AppModule.connectionServiceLayer,
+          // infra
           SystemModule.configLayer,
-          RepoModule.credentialSchemaServiceLayer,
-          AppModule.manageDIDServiceLayer,
-          RepoModule.verificationPolicyServiceLayer,
-          ConnectionControllerImpl.layer,
-          DIDControllerImpl.layer,
-          IssueControllerImpl.layer,
-          DIDRegistrarControllerImpl.layer,
-          PresentProofControllerImpl.layer,
-          HttpURIDereferencerImpl.layer,
-          prometheus.prometheusLayer,
-          prometheus.publisherLayer,
-          ZLayer.succeed(MetricsConfig(5.seconds)),
+          ZioHttpClient.layer,
+          // observability
           DefaultJvmMetrics.live.unit,
           SystemControllerImpl.layer,
-          ZLayer.Debug.tree // TODO: remove
+          ZLayer.succeed(MetricsConfig(5.seconds)),
+          prometheus.prometheusLayer,
+          prometheus.publisherLayer,
+          // controller
+          ConnectionControllerImpl.layer,
+          CredentialSchemaControllerImpl.layer,
+          DIDControllerImpl.layer,
+          DIDRegistrarControllerImpl.layer,
+          IssueControllerImpl.layer,
+          PresentProofControllerImpl.layer,
+          VerificationPolicyControllerImpl.layer,
+          // domain
+          AppModule.apolloLayer,
+          AppModule.didJwtResolverlayer,
+          AppModule.seedResolverLayer,
+          DIDOperationValidator.layer(),
+          DIDResolver.layer,
+          HttpURIDereferencerImpl.layer,
+          // service
+          ConnectionServiceImpl.layer,
+          CredentialSchemaServiceImpl.layer,
+          CredentialServiceImpl.layer,
+          DIDServiceImpl.layer,
+          ManagedDIDServiceImpl.layer,
+          PresentationServiceImpl.layer,
+          VerificationPolicyServiceImpl.layer,
+          // grpc
+          GrpcModule.irisStubLayer,
+          GrpcModule.prismNodeStubLayer,
+          // storage
+          RepoModule.agentTransactorLayer >>> JdbcDIDNonSecretStorage.layer,
+          RepoModule.connectTransactorLayer >>> JdbcConnectionRepository.layer,
+          RepoModule.didSecretStorageLayer,
+          RepoModule.polluxTransactorLayer >>> JdbcCredentialRepository.layer,
+          RepoModule.polluxTransactorLayer >>> JdbcCredentialSchemaRepository.layer,
+          RepoModule.polluxTransactorLayer >>> JdbcPresentationRepository.layer,
+          RepoModule.polluxTransactorLayer >>> JdbcVerificationPolicyRepository.layer,
         )
     } yield app
 
