@@ -270,8 +270,12 @@ object RepoModule {
   val vaultClientLayer: TaskLayer[VaultKVClient] = {
     val vaultClientConfig = ZLayer {
       for {
-        config <- ZIO.service[AppConfig].map(_.vault)
-        _ = ZIO.logInfo("Vault client config loaded. Address: " + config.address)
+        config <- ZIO
+          .service[AppConfig]
+          .map(_.agent.secretStorage.vault)
+          .someOrFailException
+          .tapError(_ => ZIO.logError("Vault config is not found"))
+        _ <- ZIO.logInfo("Vault client config loaded. Address: " + config.address)
         vaultKVClient <- VaultKVClientImpl.fromAddressAndToken(config.address, config.token)
       } yield vaultKVClient
     }

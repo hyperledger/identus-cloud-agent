@@ -30,7 +30,7 @@ import zio.http.ServerConfig
   */
 object PrismAgentApp {
 
-  def mainApp(didCommServicePort: Int) = for {
+  def run(didCommServicePort: Int) = for {
     _ <- issueCredentialDidCommExchangesJob.debug.fork
     _ <- presentProofExchangeJob.debug.fork
     _ <- connectDidCommExchangesJob.debug.fork

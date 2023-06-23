@@ -98,7 +98,7 @@ object MainApp extends ZIOAppDefault {
       _ <- migrations
 
       app <- PrismAgentApp
-        .mainApp(didCommServicePort)
+        .run(didCommServicePort)
         .provide(
           didCommAgentLayer(didCommServiceUrl),
           DidCommX.liveLayer,
@@ -123,7 +123,8 @@ object MainApp extends ZIOAppDefault {
           prometheus.publisherLayer,
           ZLayer.succeed(MetricsConfig(5.seconds)),
           DefaultJvmMetrics.live.unit,
-          SystemControllerImpl.layer
+          SystemControllerImpl.layer,
+          ZLayer.Debug.tree // TODO: remove
         )
     } yield app
 
