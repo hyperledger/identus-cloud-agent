@@ -81,8 +81,16 @@ object PresentationServiceSpec extends ZIOSpecDefault {
         ) { (thid, connectionId, proofTypes, options) =>
           for {
             svc <- ZIO.service[PresentationService].provideLayer(presentationServiceLayer)
+            pairwiseVerifierDid = DidId("did:peer:Verifier")
             pairwiseProverDid = DidId("did:peer:Prover")
-            record <- svc.createPresentationRecord(thid, pairwiseProverDid, connectionId, proofTypes, options)
+            record <- svc.createPresentationRecord(
+              pairwiseVerifierDid,
+              pairwiseProverDid,
+              thid,
+              connectionId,
+              proofTypes,
+              options
+            )
           } yield {
             assertTrue(record.thid == thid) &&
             assertTrue(record.updatedAt.isEmpty) &&
@@ -567,7 +575,8 @@ object PresentationServiceSpec extends ZIOSpecDefault {
       val proofType = ProofType(schemaId, None, None)
       svc.createPresentationRecord(
         thid = thid,
-        subjectDid = pairwiseVerifierDID,
+        pairwiseVerifierDID = pairwiseVerifierDID,
+        pairwiseProverDID = pairwiseProverDID,
         connectionId = Some("connectionId"),
         proofTypes = Seq(proofType),
         options = None,

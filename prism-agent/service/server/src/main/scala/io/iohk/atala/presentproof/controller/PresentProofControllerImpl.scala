@@ -1,4 +1,5 @@
 package io.iohk.atala.presentproof.controller
+import io.iohk.atala.agent.server.ControllerHelper
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.connect.controller.ConnectionController
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
@@ -18,27 +19,27 @@ import java.util.UUID
 class PresentProofControllerImpl(
     presentationService: PresentationService,
     connectionService: ConnectionService
-) extends PresentProofController {
-  override def requestPresentation(requestPresentationInput: RequestPresentationInput)(implicit
+) extends PresentProofController
+    with ControllerHelper {
+  override def requestPresentation(request: RequestPresentationInput)(implicit
       rc: RequestContext
   ): IO[ErrorResponse, RequestPresentationOutput] = {
     val result: IO[ConnectionServiceError | PresentationError, RequestPresentationOutput] = for {
-      didId <- connectionService
-        .getConnectionRecord(UUID.fromString(requestPresentationInput.connectionId))
-        .map(_.flatMap(_.connectionRequest).map(_.from).get) // TODO GET
+      didIdPair <- getPairwiseDIDs(request.connectionId).provide(ZLayer.succeed(connectionService))
       record <- presentationService
         .createPresentationRecord(
+          pairwiseVerifierDID = didIdPair.myDID,
+          pairwiseProverDID = didIdPair.theirDid,
           thid = DidCommID(),
-          subjectDid = didId,
-          connectionId = Some(requestPresentationInput.connectionId),
-          proofTypes = requestPresentationInput.proofs.map { e =>
+          connectionId = Some(request.connectionId),
+          proofTypes = request.proofs.map { e =>
             ProofType(
               schema = e.schemaId, // TODO rename field to schemaId
               requiredFields = None,
               trustIssuers = Some(e.trustIssuers.map(DidId(_)))
             )
           },
-          options = requestPresentationInput.options.map(x => Options(x.challenge, x.domain)),
+          options = request.options.map(x => Options(x.challenge, x.domain)),
         )
     } yield RequestPresentationOutput.fromDomain(record)
 

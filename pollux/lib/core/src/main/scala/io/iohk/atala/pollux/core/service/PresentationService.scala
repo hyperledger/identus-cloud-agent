@@ -32,8 +32,9 @@ trait PresentationService {
   def extractIdFromCredential(credential: W3cCredentialPayload): Option[UUID]
 
   def createPresentationRecord(
+      pairwiseVerifierDID: DidId,
+      pairwiseProverDID: DidId,
       thid: DidCommID,
-      subjectDid: DidId,
       connectionId: Option[String],
       proofTypes: Seq[ProofType],
       options: Option[io.iohk.atala.pollux.core.model.presentation.Options]
