@@ -16,7 +16,3 @@ package-lock.json
 **/.docker-volumes/*
 target/
 **.env.*
-
-# anoncreds libs (tmp folder)
-# pollux/lib/anoncreds/native-lib/*
-# TODO pollux/lib/anoncreds/native-lib/libanoncreds.so

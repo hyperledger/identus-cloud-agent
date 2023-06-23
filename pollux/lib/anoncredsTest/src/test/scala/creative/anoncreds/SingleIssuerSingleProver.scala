@@ -72,6 +72,8 @@ class SingleIssuerSingleProver extends AnyFlatSpec {
         cred_offer_ptr
       )
     )
+    print("cred_offer: ")
+    api.getJson(cred_offer_ptr.getValue).map(println)
 
     val master_secret_ptr = new PointerByReference()
     val master_secret_id = "master secret id"
@@ -175,6 +177,28 @@ class SingleIssuerSingleProver extends AnyFlatSpec {
     api.getJson(rev_status_list_ptr.getValue).map(println)
 
     val credential_ptr = new PointerByReference()
+
+    // println(s"""
+    // .shim_anoncreds_create_credential(
+    //     cred_def = ${cred_def_ptr.getValue}
+    //     cred_def_private = ${cred_def_pvt_ptr.getValue}
+    //     cred_offer = ${cred_offer_ptr.getValue}
+    //     cred_request = ${cred_req_ptr.getValue}
+    //     attr_names = ${attrs}
+    //     attr_names_len = ${attrs.length}
+    //     attr_raw_values = ${attr_raw_values}
+    //     attr_raw_values_len = ${attr_raw_values.length}
+    //     attr_enc_values = ${attr_enc_values}
+    //     attr_enc_values_len = ${attr_enc_values.length}
+    //     rev_reg_id = ${rev_reg_def_id}
+    //     rev_status_list = ${rev_status_list_ptr.getValue}
+    //     ffiCredRevInfoRegDef = ${reg_def_ptr.getValue}
+    //     ffiCredRevInfoRegDefPrivate = ${reg_def_private_ptr.getValue}
+    //     /*@int64_t*/ ffiCredRevInfoRegIdx = ${0L}
+    //     ffiCredRevInfoTailsPath = ${pathToTailsFileIncName}
+    //     cred_p = ${credential_ptr}
+    //   )
+    // """)
 
     printIfError(
       api.shim_anoncreds_create_credential(
