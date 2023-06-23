@@ -120,45 +120,6 @@ object Modules {
         }
   }
 
-  val issueCredentialDidCommExchangesJob: RIO[
-    AppConfig & DidOps & DIDResolver & JwtDidResolver & HttpClient & CredentialService & DIDService &
-      ManagedDIDService & PresentationService,
-    Unit
-  ] =
-    for {
-      config <- ZIO.service[AppConfig]
-      job <- BackgroundJobs.issueCredentialDidCommExchanges
-        .repeat(Schedule.spaced(config.pollux.issueBgJobRecurrenceDelay))
-        .unit
-    } yield job
-
-  val presentProofExchangeJob: RIO[
-    AppConfig & DidOps & DIDResolver & JwtDidResolver & HttpClient & PresentationService & CredentialService &
-      DIDService & ManagedDIDService,
-    Unit
-  ] =
-    for {
-      config <- ZIO.service[AppConfig]
-      job <- BackgroundJobs.presentProofExchanges
-        .repeat(Schedule.spaced(config.pollux.presentationBgJobRecurrenceDelay))
-        .unit
-    } yield job
-
-  val connectDidCommExchangesJob
-      : RIO[AppConfig & DidOps & DIDResolver & HttpClient & ConnectionService & ManagedDIDService, Unit] =
-    for {
-      config <- ZIO.service[AppConfig]
-      job <- ConnectBackgroundJobs.didCommExchanges
-        .repeat(Schedule.spaced(config.connect.connectBgJobRecurrenceDelay))
-        .unit
-    } yield job
-
-  val syncDIDPublicationStateFromDltJob: URIO[ManagedDIDService, Unit] =
-    BackgroundJobs.syncDIDPublicationStateFromDlt
-      .catchAll(e => ZIO.logError(s"error while syncing DID publication state: $e"))
-      .repeat(Schedule.spaced(10.seconds))
-      .unit
-
   private[this] def extractFirstRecipientDid(jsonMessage: String): IO[ParsingFailure | DecodingFailure, String] = {
     import io.circe.*
     import io.circe.parser.*
