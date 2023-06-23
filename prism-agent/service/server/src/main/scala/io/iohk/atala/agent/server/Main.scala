@@ -59,33 +59,6 @@ object MainApp extends ZIOAppDefault {
     _ <- ZIO.serviceWithZIO[AgentMigrations](_.migrate)
   } yield ()
 
-  def serverProgram(didCommServicePort: Int) = {
-    val server = {
-      val config = ServerConfig(address = new java.net.InetSocketAddress(didCommServicePort))
-      ServerConfig.live(config)(using Trace.empty) >>> Server.live
-    }
-    for {
-      _ <- ZIO.logInfo(s"Server Started on port $didCommServicePort")
-      myServer <- {
-        Server
-          .serve(Modules.didCommServiceEndpoint)
-          .provideSomeLayer(server)
-          .debug *> ZIO.logWarning(s"Server STOP (on port $didCommServicePort)")
-      }.fork
-    } yield (myServer)
-  }
-
-  def appComponents(didCommServicePort: Int) = for {
-    _ <- Modules.issueCredentialDidCommExchangesJob.debug.fork
-    _ <- Modules.presentProofExchangeJob.debug.fork
-    _ <- Modules.connectDidCommExchangesJob.debug.fork
-    server <- serverProgram(didCommServicePort)
-    _ <- Modules.syncDIDPublicationStateFromDltJob.fork
-    _ <- Modules.zioApp.fork
-    _ <- server.join *> ZIO.log(s"Server End")
-    _ <- ZIO.never
-  } yield ()
-
   override def run: ZIO[Any, Throwable, Unit] = {
 
     val app = for {
@@ -124,32 +97,34 @@ object MainApp extends ZIOAppDefault {
 
       _ <- migrations
 
-      app <- appComponents(didCommServicePort).provide(
-        didCommAgentLayer(didCommServiceUrl),
-        DidCommX.liveLayer,
-        AppModule.didJwtResolverlayer,
-        AppModule.didServiceLayer,
-        DIDResolver.layer,
-        ZioHttpClient.layer,
-        AppModule.credentialServiceLayer,
-        AppModule.presentationServiceLayer,
-        AppModule.connectionServiceLayer,
-        SystemModule.configLayer,
-        RepoModule.credentialSchemaServiceLayer,
-        AppModule.manageDIDServiceLayer,
-        RepoModule.verificationPolicyServiceLayer,
-        ConnectionControllerImpl.layer,
-        DIDControllerImpl.layer,
-        IssueControllerImpl.layer,
-        DIDRegistrarControllerImpl.layer,
-        PresentProofControllerImpl.layer,
-        HttpURIDereferencerImpl.layer,
-        prometheus.prometheusLayer,
-        prometheus.publisherLayer,
-        ZLayer.succeed(MetricsConfig(5.seconds)),
-        DefaultJvmMetrics.live.unit,
-        SystemControllerImpl.layer
-      )
+      app <- PrismAgentApp
+        .mainApp(didCommServicePort)
+        .provide(
+          didCommAgentLayer(didCommServiceUrl),
+          DidCommX.liveLayer,
+          AppModule.didJwtResolverlayer,
+          AppModule.didServiceLayer,
+          DIDResolver.layer,
+          ZioHttpClient.layer,
+          AppModule.credentialServiceLayer,
+          AppModule.presentationServiceLayer,
+          AppModule.connectionServiceLayer,
+          SystemModule.configLayer,
+          RepoModule.credentialSchemaServiceLayer,
+          AppModule.manageDIDServiceLayer,
+          RepoModule.verificationPolicyServiceLayer,
+          ConnectionControllerImpl.layer,
+          DIDControllerImpl.layer,
+          IssueControllerImpl.layer,
+          DIDRegistrarControllerImpl.layer,
+          PresentProofControllerImpl.layer,
+          HttpURIDereferencerImpl.layer,
+          prometheus.prometheusLayer,
+          prometheus.publisherLayer,
+          ZLayer.succeed(MetricsConfig(5.seconds)),
+          DefaultJvmMetrics.live.unit,
+          SystemControllerImpl.layer
+        )
     } yield app
 
     app.provide(

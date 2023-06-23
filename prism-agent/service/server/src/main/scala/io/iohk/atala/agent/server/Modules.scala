@@ -88,37 +88,6 @@ import io.iohk.atala.agent.walletapi.vault.{VaultDIDSecretStorage, VaultKVClient
 
 object Modules {
 
-  lazy val zioApp: RIO[
-    CredentialSchemaController & VerificationPolicyController & ConnectionController & DIDController &
-      DIDRegistrarController & IssueController & PresentProofController & SystemController & AppConfig,
-    Unit
-  ] = {
-    val zioHttpServerApp = for {
-      allSchemaRegistryEndpoints <- SchemaRegistryServerEndpoints.all
-      allVerificationPolicyEndpoints <- VerificationPolicyServerEndpoints.all
-      allConnectionEndpoints <- ConnectionServerEndpoints.all
-      allIssueEndpoints <- IssueServerEndpoints.all
-      allDIDEndpoints <- DIDServerEndpoints.all
-      allDIDRegistrarEndpoints <- DIDRegistrarServerEndpoints.all
-      allPresentProofEndpoints <- PresentProofServerEndpoints.all
-      allSystemEndpoints <- SystemServerEndpoints.all
-      allEndpoints = ZHttpEndpoints.withDocumentations[Task](
-        allSchemaRegistryEndpoints ++
-          allVerificationPolicyEndpoints ++
-          allConnectionEndpoints ++
-          allDIDEndpoints ++
-          allDIDRegistrarEndpoints ++
-          allIssueEndpoints ++
-          allPresentProofEndpoints ++
-          allSystemEndpoints
-      )
-      appConfig <- ZIO.service[AppConfig]
-      httpServer <- ZHttp4sBlazeServer.start(allEndpoints, port = appConfig.agent.httpEndpoint.http.port)
-    } yield httpServer
-
-    zioHttpServerApp.unit
-  }
-
   def didCommServiceEndpoint: HttpApp[
     DidOps & DidAgent & CredentialService & PresentationService & ConnectionService & ManagedDIDService & HttpClient &
       DidAgent & DIDResolver,
