@@ -13,6 +13,7 @@ import io.iohk.atala.shared.utils.Traverse.*
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonEncoder, JsonDecoder}
+import scala.language.implicitConversions
 
 final case class ManagedDID(
     @description(ManagedDID.annotations.did.description)

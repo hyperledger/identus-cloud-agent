@@ -46,8 +46,13 @@ import java.time.Instant
   val validator = Loader.empty.fromJson(io.circe.parser.parse(schemaCode).toOption.get)
 
   def test(s: Json): Unit = {
-    val result = validator.right.get.validate(s)
-    println(s"Result of ${s}: ${result}")
+    validator match {
+      case Right(v) =>
+        val result = v.validate(s)
+        println(s"Result of $s: $result")
+      case Left(e) =>
+        println(s"Validation failed with error: $e")
+    }
   }
 
   test(Json.fromString("wrongType"))

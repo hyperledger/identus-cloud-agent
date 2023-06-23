@@ -2,15 +2,16 @@
 
 ## Introduction
 
-PRISM agent is a cloud-based agent within the SSI ecosystem that offers user
-DID (Decentralized Identifier) management. To generate a DID key material,
-the software relies on a seed, following the BIP32 / BIP39 standards.
+PRISM agent offers a DID (Decentralized Identifier) management solution
+which involves creating, storing and using key materials.
+To generate a DID key material, the software relies on a seed, following the BIP32 / BIP39 standards.
 The system operators have the option to either provide their own seed or
 allow the software to generate one automatically. However, in a production environment,
 it is crucial for the system operators to explicitly supply the seed to the agent.
 This ensures full control over the DID key material and guarantees secure management of user identities.
 
-The PRISM agent has a default configuration of starting in non-development mode.
+The PRISM agent includes a development mode that conveniently bypasses certain checks during development or integration.
+By default, the agent does not start in the development mode.
 This behavior can be modified using the `DEV_MODE` environment variable,
 which accepts the value `true` or `false`.
 In development mode, the agent can start with or without a user-provided seed.

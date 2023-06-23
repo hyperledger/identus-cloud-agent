@@ -11,7 +11,7 @@ import io.iohk.atala.pollux.credentialschema.http.{
   FilterInput
 }
 import zio.{IO, Task, ZIO, ZLayer}
-//import io.iohk.atala.api.http.ErrorResponse.*
+import scala.language.implicitConversions
 
 import java.util.UUID
 

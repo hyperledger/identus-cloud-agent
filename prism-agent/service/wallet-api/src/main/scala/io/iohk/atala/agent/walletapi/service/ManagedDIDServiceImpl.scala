@@ -14,6 +14,7 @@ import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.mercury.PeerDID
 import io.iohk.atala.mercury.model.DidId
 import zio.*
+import scala.language.implicitConversions
 
 import java.security.{PrivateKey as JavaPrivateKey, PublicKey as JavaPublicKey}
 import scala.collection.immutable.ArraySeq
