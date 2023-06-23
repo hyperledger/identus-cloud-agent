@@ -1,91 +1,27 @@
 package io.iohk.atala.agent.server
 
 import cats.effect.std.Dispatcher
-import cats.implicits.*
 import com.typesafe.config.ConfigFactory
 import doobie.util.transactor.Transactor
-import io.circe.{DecodingFailure, ParsingFailure}
 import io.grpc.ManagedChannelBuilder
-import io.iohk.atala.agent.server.config.{AgentConfig, AppConfig}
-import io.iohk.atala.agent.server.http.{ZHttp4sBlazeServer, ZHttpEndpoints}
-import io.iohk.atala.agent.server.jobs.*
+import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.server.sql.DbConfig as AgentDbConfig
 import io.iohk.atala.agent.walletapi.crypto.Apollo
-import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError
-import io.iohk.atala.agent.walletapi.service.{ManagedDIDService, ManagedDIDServiceImpl}
-import io.iohk.atala.agent.walletapi.sql.{JdbcDIDNonSecretStorage, JdbcDIDSecretStorage}
+import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
+import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
 import io.iohk.atala.agent.walletapi.util.SeedResolver
-import io.iohk.atala.castor.controller.{
-  DIDController,
-  DIDRegistrarController,
-  DIDRegistrarServerEndpoints,
-  DIDServerEndpoints
-}
-import io.iohk.atala.castor.core.service.{DIDService, DIDServiceImpl}
-import io.iohk.atala.castor.core.util.DIDOperationValidator
-import io.iohk.atala.connect.controller.{ConnectionController, ConnectionControllerImpl, ConnectionServerEndpoints}
-import io.iohk.atala.connect.core.model.error.ConnectionServiceError
-import io.iohk.atala.connect.core.repository.ConnectionRepository
-import io.iohk.atala.connect.core.service.{ConnectionService, ConnectionServiceImpl}
-import io.iohk.atala.connect.sql.repository.{JdbcConnectionRepository, DbConfig as ConnectDbConfig}
+import io.iohk.atala.agent.walletapi.vault.{VaultDIDSecretStorage, VaultKVClient, VaultKVClientImpl}
+import io.iohk.atala.castor.core.service.DIDService
+import io.iohk.atala.connect.sql.repository.DbConfig as ConnectDbConfig
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
-import io.iohk.atala.issue.controller.{IssueController, IssueControllerImpl, IssueEndpoints, IssueServerEndpoints}
-import io.iohk.atala.mercury.*
-import io.iohk.atala.mercury.DidOps.*
-import io.iohk.atala.mercury.model.*
-import io.iohk.atala.mercury.model.error.*
-import io.iohk.atala.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
-import io.iohk.atala.mercury.protocol.issuecredential.*
-import io.iohk.atala.mercury.protocol.presentproof.*
-import io.iohk.atala.mercury.protocol.trustping.TrustPing
-import io.iohk.atala.pollux.core.model.error.CredentialServiceError.RepositoryError
-import io.iohk.atala.pollux.core.model.error.{CredentialServiceError, PresentationError}
-import io.iohk.atala.pollux.core.repository.{CredentialRepository, PresentationRepository}
-import io.iohk.atala.pollux.core.service.*
-import io.iohk.atala.pollux.credentialschema.controller.*
-import io.iohk.atala.pollux.credentialschema.{SchemaRegistryServerEndpoints, VerificationPolicyServerEndpoints}
-import io.iohk.atala.pollux.sql.repository.{
-  JdbcCredentialRepository,
-  JdbcCredentialSchemaRepository,
-  JdbcPresentationRepository,
-  JdbcVerificationPolicyRepository,
-  DbConfig as PolluxDbConfig
-}
+import io.iohk.atala.pollux.sql.repository.DbConfig as PolluxDbConfig
 import io.iohk.atala.pollux.vc.jwt.{PrismDidResolver, DidResolver as JwtDidResolver}
-import io.iohk.atala.presentproof.controller.{
-  PresentProofController,
-  PresentProofEndpoints,
-  PresentProofServerEndpoints
-}
 import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc
-import io.iohk.atala.resolvers.{DIDResolver, UniversalDidResolver}
-import io.iohk.atala.system.controller.{SystemController, SystemServerEndpoints}
-import org.didcommx.didcomm.DIDComm
-import org.didcommx.didcomm.model.UnpackParams
-import org.didcommx.didcomm.secret.{Secret, SecretResolver}
 import zio.*
 import zio.config.typesafe.TypesafeConfigSource
 import zio.config.{ReadError, read}
-import zio.http.*
-import zio.http.model.*
 import zio.interop.catz.*
-import zio.stream.ZStream
-
-import java.io.IOException
-import java.util.concurrent.Executors
-import io.iohk.atala.mercury.protocol.trustping.TrustPing
-import io.iohk.atala.castor.controller.{
-  DIDController,
-  DIDRegistrarController,
-  DIDRegistrarServerEndpoints,
-  DIDServerEndpoints
-}
-import io.iohk.atala.agent.walletapi.crypto.Apollo
-import io.iohk.atala.system.controller.{SystemController, SystemServerEndpoints}
-import io.iohk.atala.agent.walletapi.util.SeedResolver
-import io.iohk.atala.agent.walletapi.vault.{VaultDIDSecretStorage, VaultKVClient, VaultKVClientImpl}
-import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
 
 object SystemModule {
   val configLayer: Layer[ReadError[String], AppConfig] = ZLayer.fromZIO {

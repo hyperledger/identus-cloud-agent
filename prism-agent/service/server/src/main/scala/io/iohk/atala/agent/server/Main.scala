@@ -1,59 +1,39 @@
 package io.iohk.atala.agent.server
 
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
-import io.circe.*
-import io.circe.generic.auto.*
-import io.circe.parser.*
-import io.circe.syntax.*
-import io.iohk.atala.agent.server.buildinfo.BuildInfo
 import io.iohk.atala.agent.server.http.ZioHttpClient
 import io.iohk.atala.agent.server.sql.Migrations as AgentMigrations
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
-import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
+import io.iohk.atala.agent.walletapi.service.ManagedDIDServiceImpl
+import io.iohk.atala.agent.walletapi.sql.JdbcDIDNonSecretStorage
 import io.iohk.atala.castor.controller.{DIDControllerImpl, DIDRegistrarControllerImpl}
+import io.iohk.atala.castor.core.service.DIDServiceImpl
+import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.connect.controller.ConnectionControllerImpl
+import io.iohk.atala.connect.core.service.ConnectionServiceImpl
+import io.iohk.atala.connect.sql.repository.JdbcConnectionRepository
 import io.iohk.atala.connect.sql.repository.Migrations as ConnectMigrations
 import io.iohk.atala.issue.controller.IssueControllerImpl
 import io.iohk.atala.mercury.*
-import io.iohk.atala.pollux.core.service.URIDereferencerError.{ConnectionError, ResourceNotFound, UnexpectedError}
-import io.iohk.atala.pollux.core.service.{
-  CredentialSchemaServiceImpl,
-  URIDereferencer,
-  URIDereferencerError,
-  HttpURIDereferencerImpl
-}
-import io.iohk.atala.pollux.sql.repository.{JdbcCredentialSchemaRepository, Migrations as PolluxMigrations}
-import io.iohk.atala.presentproof.controller.PresentProofControllerImpl
-import io.iohk.atala.resolvers.{DIDResolver, UniversalDidResolver}
-import io.iohk.atala.system.controller.SystemControllerImpl
-import io.iohk.atala.system.controller.http.HealthInfo
-import org.didcommx.didcomm.DIDComm
-import org.flywaydb.core.extensibility.AppliedMigration
-import zio.*
-import zio.http.*
-import zio.http.ZClient.ClientLive
-import zio.http.model.*
-import zio.metrics.connectors.prometheus.PrometheusPublisher
-import zio.metrics.connectors.{MetricsConfig, prometheus}
-import zio.metrics.jvm.DefaultJvmMetrics
-
-import java.net.URI
-import java.security.Security
-import io.iohk.atala.castor.core.service.DIDServiceImpl
-import io.iohk.atala.agent.walletapi.service.ManagedDIDServiceImpl
-import io.iohk.atala.pollux.core.service.PresentationServiceImpl
 import io.iohk.atala.pollux.core.service.CredentialServiceImpl
+import io.iohk.atala.pollux.core.service.PresentationServiceImpl
+import io.iohk.atala.pollux.core.service.VerificationPolicyServiceImpl
+import io.iohk.atala.pollux.core.service.{CredentialSchemaServiceImpl, URIDereferencer, HttpURIDereferencerImpl}
 import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaController
 import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaControllerImpl
 import io.iohk.atala.pollux.credentialschema.controller.VerificationPolicyControllerImpl
-import io.iohk.atala.connect.core.service.ConnectionServiceImpl
 import io.iohk.atala.pollux.sql.repository.JdbcCredentialRepository
-import io.iohk.atala.pollux.core.service.VerificationPolicyServiceImpl
-import io.iohk.atala.pollux.sql.repository.JdbcVerificationPolicyRepository
-import io.iohk.atala.agent.walletapi.sql.JdbcDIDNonSecretStorage
-import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.pollux.sql.repository.JdbcPresentationRepository
-import io.iohk.atala.connect.sql.repository.JdbcConnectionRepository
+import io.iohk.atala.pollux.sql.repository.JdbcVerificationPolicyRepository
+import io.iohk.atala.pollux.sql.repository.{JdbcCredentialSchemaRepository, Migrations as PolluxMigrations}
+import io.iohk.atala.presentproof.controller.PresentProofControllerImpl
+import io.iohk.atala.resolvers.DIDResolver
+import io.iohk.atala.system.controller.SystemControllerImpl
+import java.security.Security
+import zio.*
+import zio.metrics.connectors.prometheus.PrometheusPublisher
+import zio.metrics.connectors.{MetricsConfig, prometheus}
+import zio.metrics.jvm.DefaultJvmMetrics
 
 object MainApp extends ZIOAppDefault {
 

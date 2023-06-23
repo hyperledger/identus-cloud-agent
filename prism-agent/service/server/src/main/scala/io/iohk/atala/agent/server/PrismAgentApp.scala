@@ -23,8 +23,6 @@ import io.iohk.atala.presentproof.controller.PresentProofServerEndpoints
 import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.system.controller.SystemServerEndpoints
 import zio.*
-import zio.http.Server
-import zio.http.ServerConfig
 
 object PrismAgentApp {
 
