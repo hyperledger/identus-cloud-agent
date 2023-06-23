@@ -140,6 +140,7 @@ class PoCNewLib extends AnyFlatSpec {
     )
 
     println(cred.getJson())
+    cred
   }
 
   def script(): Unit = {
