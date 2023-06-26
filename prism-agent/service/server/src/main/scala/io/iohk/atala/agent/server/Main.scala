@@ -1,44 +1,39 @@
 package io.iohk.atala.agent.server
 
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
-import io.circe.*
-import io.circe.generic.auto.*
-import io.circe.parser.*
-import io.circe.syntax.*
-import io.iohk.atala.agent.server.buildinfo.BuildInfo
 import io.iohk.atala.agent.server.http.ZioHttpClient
 import io.iohk.atala.agent.server.sql.Migrations as AgentMigrations
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
-import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
+import io.iohk.atala.agent.walletapi.service.ManagedDIDServiceImpl
+import io.iohk.atala.agent.walletapi.sql.JdbcDIDNonSecretStorage
 import io.iohk.atala.castor.controller.{DIDControllerImpl, DIDRegistrarControllerImpl}
+import io.iohk.atala.castor.core.service.DIDServiceImpl
+import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.connect.controller.ConnectionControllerImpl
+import io.iohk.atala.connect.core.service.ConnectionServiceImpl
+import io.iohk.atala.connect.sql.repository.JdbcConnectionRepository
 import io.iohk.atala.connect.sql.repository.Migrations as ConnectMigrations
 import io.iohk.atala.issue.controller.IssueControllerImpl
 import io.iohk.atala.mercury.*
-import io.iohk.atala.pollux.core.service.URIDereferencerError.{ConnectionError, ResourceNotFound, UnexpectedError}
-import io.iohk.atala.pollux.core.service.{
-  CredentialSchemaServiceImpl,
-  URIDereferencer,
-  URIDereferencerError,
-  HttpURIDereferencerImpl
-}
+import io.iohk.atala.pollux.core.service.CredentialServiceImpl
+import io.iohk.atala.pollux.core.service.PresentationServiceImpl
+import io.iohk.atala.pollux.core.service.VerificationPolicyServiceImpl
+import io.iohk.atala.pollux.core.service.{CredentialSchemaServiceImpl, URIDereferencer, HttpURIDereferencerImpl}
+import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaController
+import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaControllerImpl
+import io.iohk.atala.pollux.credentialschema.controller.VerificationPolicyControllerImpl
+import io.iohk.atala.pollux.sql.repository.JdbcCredentialRepository
+import io.iohk.atala.pollux.sql.repository.JdbcPresentationRepository
+import io.iohk.atala.pollux.sql.repository.JdbcVerificationPolicyRepository
 import io.iohk.atala.pollux.sql.repository.{JdbcCredentialSchemaRepository, Migrations as PolluxMigrations}
 import io.iohk.atala.presentproof.controller.PresentProofControllerImpl
-import io.iohk.atala.resolvers.{DIDResolver, UniversalDidResolver}
+import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.system.controller.SystemControllerImpl
-import io.iohk.atala.system.controller.http.HealthInfo
-import org.didcommx.didcomm.DIDComm
-import org.flywaydb.core.extensibility.AppliedMigration
+import java.security.Security
 import zio.*
-import zio.http.*
-import zio.http.ZClient.ClientLive
-import zio.http.model.*
 import zio.metrics.connectors.prometheus.PrometheusPublisher
 import zio.metrics.connectors.{MetricsConfig, prometheus}
 import zio.metrics.jvm.DefaultJvmMetrics
-
-import java.net.URI
-import java.security.Security
 
 object MainApp extends ZIOAppDefault {
 
@@ -57,33 +52,6 @@ object MainApp extends ZIOAppDefault {
     _ <- ZIO.serviceWithZIO[PolluxMigrations](_.migrate)
     _ <- ZIO.serviceWithZIO[ConnectMigrations](_.migrate)
     _ <- ZIO.serviceWithZIO[AgentMigrations](_.migrate)
-  } yield ()
-
-  def serverProgram(didCommServicePort: Int) = {
-    val server = {
-      val config = ServerConfig(address = new java.net.InetSocketAddress(didCommServicePort))
-      ServerConfig.live(config)(using Trace.empty) >>> Server.live
-    }
-    for {
-      _ <- ZIO.logInfo(s"Server Started on port $didCommServicePort")
-      myServer <- {
-        Server
-          .serve(Modules.didCommServiceEndpoint)
-          .provideSomeLayer(server)
-          .debug *> ZIO.logWarning(s"Server STOP (on port $didCommServicePort)")
-      }.fork
-    } yield (myServer)
-  }
-
-  def appComponents(didCommServicePort: Int) = for {
-    _ <- Modules.issueCredentialDidCommExchangesJob.debug.fork
-    _ <- Modules.presentProofExchangeJob.debug.fork
-    _ <- Modules.connectDidCommExchangesJob.debug.fork
-    server <- serverProgram(didCommServicePort)
-    _ <- Modules.syncDIDPublicationStateFromDltJob.fork
-    _ <- Modules.zioApp.fork
-    _ <- server.join *> ZIO.log(s"Server End")
-    _ <- ZIO.never
   } yield ()
 
   override def run: ZIO[Any, Throwable, Unit] = {
@@ -124,32 +92,55 @@ object MainApp extends ZIOAppDefault {
 
       _ <- migrations
 
-      app <- appComponents(didCommServicePort).provide(
-        didCommAgentLayer(didCommServiceUrl),
-        DidCommX.liveLayer,
-        AppModule.didJwtResolverlayer,
-        AppModule.didServiceLayer,
-        DIDResolver.layer,
-        ZioHttpClient.layer,
-        AppModule.credentialServiceLayer,
-        AppModule.presentationServiceLayer,
-        AppModule.connectionServiceLayer,
-        SystemModule.configLayer,
-        RepoModule.credentialSchemaServiceLayer,
-        AppModule.manageDIDServiceLayer,
-        RepoModule.verificationPolicyServiceLayer,
-        ConnectionControllerImpl.layer,
-        DIDControllerImpl.layer,
-        IssueControllerImpl.layer,
-        DIDRegistrarControllerImpl.layer,
-        PresentProofControllerImpl.layer,
-        HttpURIDereferencerImpl.layer,
-        prometheus.prometheusLayer,
-        prometheus.publisherLayer,
-        ZLayer.succeed(MetricsConfig(5.seconds)),
-        DefaultJvmMetrics.live.unit,
-        SystemControllerImpl.layer
-      )
+      app <- PrismAgentApp
+        .run(didCommServicePort)
+        .provide(
+          didCommAgentLayer(didCommServiceUrl),
+          DidCommX.liveLayer,
+          // infra
+          SystemModule.configLayer,
+          ZioHttpClient.layer,
+          // observability
+          DefaultJvmMetrics.live.unit,
+          SystemControllerImpl.layer,
+          ZLayer.succeed(MetricsConfig(5.seconds)),
+          prometheus.prometheusLayer,
+          prometheus.publisherLayer,
+          // controller
+          ConnectionControllerImpl.layer,
+          CredentialSchemaControllerImpl.layer,
+          DIDControllerImpl.layer,
+          DIDRegistrarControllerImpl.layer,
+          IssueControllerImpl.layer,
+          PresentProofControllerImpl.layer,
+          VerificationPolicyControllerImpl.layer,
+          // domain
+          AppModule.apolloLayer,
+          AppModule.didJwtResolverlayer,
+          AppModule.seedResolverLayer,
+          DIDOperationValidator.layer(),
+          DIDResolver.layer,
+          HttpURIDereferencerImpl.layer,
+          // service
+          ConnectionServiceImpl.layer,
+          CredentialSchemaServiceImpl.layer,
+          CredentialServiceImpl.layer,
+          DIDServiceImpl.layer,
+          ManagedDIDServiceImpl.layer,
+          PresentationServiceImpl.layer,
+          VerificationPolicyServiceImpl.layer,
+          // grpc
+          GrpcModule.irisStubLayer,
+          GrpcModule.prismNodeStubLayer,
+          // storage
+          RepoModule.agentTransactorLayer >>> JdbcDIDNonSecretStorage.layer,
+          RepoModule.connectTransactorLayer >>> JdbcConnectionRepository.layer,
+          RepoModule.didSecretStorageLayer,
+          RepoModule.polluxTransactorLayer >>> JdbcCredentialRepository.layer,
+          RepoModule.polluxTransactorLayer >>> JdbcCredentialSchemaRepository.layer,
+          RepoModule.polluxTransactorLayer >>> JdbcPresentationRepository.layer,
+          RepoModule.polluxTransactorLayer >>> JdbcVerificationPolicyRepository.layer,
+        )
     } yield app
 
     app.provide(

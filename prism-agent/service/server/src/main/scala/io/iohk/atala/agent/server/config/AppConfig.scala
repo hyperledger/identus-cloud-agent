@@ -16,7 +16,6 @@ final case class AppConfig(
     agent: AgentConfig,
     connect: ConnectConfig,
     prismNode: PrismNodeConfig,
-    vault: VaultConfig
 )
 
 object AppConfig {
@@ -96,9 +95,15 @@ final case class AgentConfig(
     httpEndpoint: HttpEndpointConfig,
     didCommServiceEndpointUrl: String,
     database: DatabaseConfig,
-    verification: VerificationConfig
+    verification: VerificationConfig,
+    secretStorage: SecretStorageConfig
 )
 
 final case class HttpEndpointConfig(http: HttpConfig)
 
 final case class HttpConfig(port: Int)
+
+final case class SecretStorageConfig(
+    backend: String,
+    vault: Option[VaultConfig],
+)
