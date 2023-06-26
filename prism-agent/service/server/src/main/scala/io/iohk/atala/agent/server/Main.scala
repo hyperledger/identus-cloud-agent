@@ -3,38 +3,30 @@ package io.iohk.atala.agent.server
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
 import io.iohk.atala.agent.server.http.ZioHttpClient
 import io.iohk.atala.agent.server.sql.Migrations as AgentMigrations
-import io.iohk.atala.agent.walletapi.service.ManagedDIDService
-import io.iohk.atala.agent.walletapi.service.ManagedDIDServiceImpl
+import io.iohk.atala.agent.walletapi.service.{ManagedDIDService, ManagedDIDServiceImpl}
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDNonSecretStorage
 import io.iohk.atala.castor.controller.{DIDControllerImpl, DIDRegistrarControllerImpl}
 import io.iohk.atala.castor.core.service.DIDServiceImpl
 import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.connect.controller.ConnectionControllerImpl
 import io.iohk.atala.connect.core.service.ConnectionServiceImpl
-import io.iohk.atala.connect.sql.repository.JdbcConnectionRepository
-import io.iohk.atala.connect.sql.repository.Migrations as ConnectMigrations
+import io.iohk.atala.connect.sql.repository.{JdbcConnectionRepository, Migrations as ConnectMigrations}
+import io.iohk.atala.event.notification.{Event, EventNotificationServiceInMemoryImpl}
 import io.iohk.atala.issue.controller.IssueControllerImpl
 import io.iohk.atala.mercury.*
-import io.iohk.atala.pollux.core.service.CredentialServiceImpl
-import io.iohk.atala.pollux.core.service.PresentationServiceImpl
-import io.iohk.atala.pollux.core.service.VerificationPolicyServiceImpl
-import io.iohk.atala.pollux.core.service.{CredentialSchemaServiceImpl, URIDereferencer, HttpURIDereferencerImpl}
-import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaController
-import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaControllerImpl
-import io.iohk.atala.pollux.credentialschema.controller.VerificationPolicyControllerImpl
-import io.iohk.atala.pollux.sql.repository.JdbcCredentialRepository
-import io.iohk.atala.pollux.sql.repository.JdbcPresentationRepository
-import io.iohk.atala.pollux.sql.repository.JdbcVerificationPolicyRepository
-import io.iohk.atala.pollux.sql.repository.{JdbcCredentialSchemaRepository, Migrations as PolluxMigrations}
+import io.iohk.atala.pollux.core.service.*
+import io.iohk.atala.pollux.credentialschema.controller.{CredentialSchemaController, CredentialSchemaControllerImpl, VerificationPolicyControllerImpl}
+import io.iohk.atala.pollux.sql.repository.{JdbcCredentialRepository, JdbcCredentialSchemaRepository, JdbcPresentationRepository, JdbcVerificationPolicyRepository, Migrations as PolluxMigrations}
 import io.iohk.atala.presentproof.controller.PresentProofControllerImpl
 import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.system.controller.SystemControllerImpl
-import java.security.Security
 import zio.*
 import zio.http.Client
 import zio.metrics.connectors.prometheus.PrometheusPublisher
 import zio.metrics.connectors.{MetricsConfig, prometheus}
 import zio.metrics.jvm.DefaultJvmMetrics
+
+import java.security.Security
 
 object MainApp extends ZIOAppDefault {
 
@@ -125,7 +117,7 @@ object MainApp extends ZIOAppDefault {
           // service
           ConnectionServiceImpl.layer,
           CredentialSchemaServiceImpl.layer,
-          CredentialServiceImpl.layer,
+          CredentialServiceWithEventNotificationImpl.layer,
           DIDServiceImpl.layer,
           ManagedDIDServiceImpl.layer,
           PresentationServiceImpl.layer,
@@ -141,6 +133,8 @@ object MainApp extends ZIOAppDefault {
           RepoModule.polluxTransactorLayer >>> JdbcCredentialSchemaRepository.layer,
           RepoModule.polluxTransactorLayer >>> JdbcPresentationRepository.layer,
           RepoModule.polluxTransactorLayer >>> JdbcVerificationPolicyRepository.layer,
+          // event notification service
+          ZLayer.fromZIO(Queue.bounded[Event](500)) >>> EventNotificationServiceInMemoryImpl.layer,
           // HTTP client
           Scope.default >>> Client.default,
         )
