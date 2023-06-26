@@ -29,9 +29,37 @@ PRISM agent uses the following environment variables for secret management.
 | Name          | Description                                          | Default                 |
 |---------------|------------------------------------------------------|-------------------------|
 | `DEV_MODE`    | Whether PRISM agent should start in development mode | `false`                 |
+| `SECRET_STORAGE_BACKEND`| The storage backend that will be used for the secret storage | `vault` |
 | `VAULT_TOKEN` | The token for accessing HashiCorp Vault              | `root`                  |
 | `VAULT_ADDR`  | The address which PRISM agent can reach the Vault    | `http://localhost:8200` |
 | `WALLET_SEED` | The seed used for DID key management                 | -                       |
+
+## Storage backend configuration
+
+Secret storage supports various backends like Vault or Postgres.
+By default, the backend chosen for secret storage is Vault, which is suitable for production environments.
+There are multiple supported backend implementations, each catering to specific use cases.
+
+__HachiCorp Vault__
+
+When operating in a production environment, the agent has the option to utilize Vault
+as a secure secret storage backend. This choice is deemed suitable for production because
+all data is encrypted and it also offers additional security-related capabilities.
+By default, the agent uses this backend but the option is configurable.
+To utilize this backend, set the `SECRET_STORAGE_BACKEND` variable to `vault` and
+provide the `VAULT_TOKEN` and `VAULT_ADDR` environment variables.
+
+__Postgres__
+
+Postgres is an alternative backend option for secret storage.
+However, this option must be explicitly chosen and will replace Vault.
+By opting for Postgres, there is no need for an additional service like Vault,
+which simplifies the process of setting up a local development instance.
+It utilizes the same database instance as the agent itself. To enable this option,
+set the `SECRET_STORAGE_BACKEND` to `postgres`, and it will utilize the same database
+configuration as the agent's database. It is important to note that while this option
+facilitates an easier development experience, it does not provide a secure method of storing secrets.
+The data is not encrypted, making it unsuitable for production use.
 
 ## Automatic seed generation in the development mode
 
