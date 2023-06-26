@@ -181,6 +181,7 @@ object RepoModule {
       ZIO
         .service[AppConfig]
         .map(_.agent.secretStorage.backend)
+        .tap(backend => ZIO.logInfo(s"Using '$backend' as a secret storage backend"))
         .map {
           case "vault" =>
             ZLayer.make[DIDSecretStorage](
