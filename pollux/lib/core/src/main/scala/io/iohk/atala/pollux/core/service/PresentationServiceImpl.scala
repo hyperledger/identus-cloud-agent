@@ -8,7 +8,6 @@ import com.google.protobuf.ByteString
 import io.circe.*
 import io.circe.parser.*
 import io.circe.syntax.*
-import io.iohk.atala.mercury.DidAgent
 import io.iohk.atala.mercury.model.*
 import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
 import io.iohk.atala.mercury.protocol.presentproof.*
@@ -30,7 +29,6 @@ import java.util.UUID
 private class PresentationServiceImpl(
     presentationRepository: PresentationRepository[Task],
     credentialRepository: CredentialRepository[Task],
-    didAgent: DidAgent,
     maxRetries: Int = 5, // TODO move to config
 ) extends PresentationService {
 
@@ -122,14 +120,23 @@ private class PresentationServiceImpl(
   }
 
   override def createPresentationRecord(
+      pairwiseVerifierDID: DidId,
+      pairwiseProverDID: DidId,
       thid: DidCommID,
-      subjectId: DidId,
       connectionId: Option[String],
       proofTypes: Seq[ProofType],
       options: Option[io.iohk.atala.pollux.core.model.presentation.Options]
   ): IO[PresentationError, PresentationRecord] = {
     for {
-      request <- ZIO.succeed(createDidCommRequestPresentation(proofTypes, thid, subjectId, options))
+      request <- ZIO.succeed(
+        createDidCommRequestPresentation(
+          proofTypes,
+          thid,
+          pairwiseVerifierDID,
+          pairwiseProverDID,
+          options
+        )
+      )
       record <- ZIO.succeed(
         PresentationRecord(
           id = DidCommID(),
@@ -139,7 +146,7 @@ private class PresentationServiceImpl(
           connectionId = connectionId,
           schemaId = None, // TODO REMOVE from DB
           role = PresentationRecord.Role.Verifier,
-          subjectId = subjectId,
+          subjectId = pairwiseProverDID,
           protocolState = PresentationRecord.ProtocolState.RequestPending,
           requestPresentationData = Some(request),
           proposePresentationData = None,
@@ -497,7 +504,8 @@ private class PresentationServiceImpl(
   private[this] def createDidCommRequestPresentation(
       proofTypes: Seq[ProofType],
       thid: DidCommID,
-      subjectDId: DidId,
+      pairwiseVerifierDID: DidId,
+      pairwiseProverDID: DidId,
       maybeOptions: Option[io.iohk.atala.pollux.core.model.presentation.Options]
   ): RequestPresentation = {
     RequestPresentation(
@@ -514,8 +522,8 @@ private class PresentationServiceImpl(
           )
         )
         .getOrElse(Seq.empty),
-      from = didAgent.id,
-      to = subjectDId,
+      from = pairwiseVerifierDID,
+      to = pairwiseProverDID,
       thid = Some(thid.toString)
     )
   }
@@ -529,7 +537,7 @@ private class PresentationServiceImpl(
     RequestPresentation(
       body = body,
       attachments = proposePresentation.attachments,
-      from = didAgent.id,
+      from = proposePresentation.to,
       to = proposePresentation.from,
       thid = proposePresentation.thid
     )
@@ -592,6 +600,6 @@ private class PresentationServiceImpl(
 }
 
 object PresentationServiceImpl {
-  val layer: URLayer[PresentationRepository[Task] & CredentialRepository[Task] & DidAgent, PresentationService] =
-    ZLayer.fromFunction(PresentationServiceImpl(_, _, _))
+  val layer: URLayer[PresentationRepository[Task] & CredentialRepository[Task], PresentationService] =
+    ZLayer.fromFunction(PresentationServiceImpl(_, _))
 }

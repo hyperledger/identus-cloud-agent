@@ -1,5 +1,6 @@
 package io.iohk.atala.issue.controller
 
+import io.iohk.atala.agent.server.ControllerHelper
 import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.api.http.model.{Pagination, PaginationInput}
@@ -28,14 +29,14 @@ import scala.util.Try
 
 class IssueControllerImpl(
     credentialService: CredentialService,
-    connectionService: ConnectionService,
-    appConfig: AppConfig
-) extends IssueController {
+    connectionService: ConnectionService
+) extends IssueController
+    with ControllerHelper {
   override def createCredentialOffer(
       request: CreateIssueCredentialRecordRequest
   )(implicit rc: RequestContext): IO[ErrorResponse, IssueCredentialRecord] = {
     val result: IO[ConnectionServiceError | CredentialServiceError | ErrorResponse, IssueCredentialRecord] = for {
-      didIdPair <- getPairwiseDIDs(request.connectionId)
+      didIdPair <- getPairwiseDIDs(request.connectionId).provide(ZLayer.succeed(connectionService))
       issuingDID <- extractPrismDIDFromString(request.issuingDID)
       jsonClaims <- ZIO
         .fromEither(io.circe.parser.parse(request.claims.toString()))
@@ -119,52 +120,9 @@ class IssueControllerImpl(
     }
   }
 
-  private[this] case class DidIdPair(myDID: DidId, theirDid: DidId)
-
-  private[this] def extractDidCommIdFromString(
-      maybeDidCommId: String
-  ): IO[ErrorResponse, io.iohk.atala.pollux.core.model.DidCommID] = {
-    ZIO
-      .fromTry(Try(io.iohk.atala.pollux.core.model.DidCommID(maybeDidCommId)))
-      .mapError(e => ErrorResponse.badRequest(detail = Some(s"Error parsing string as DidCommID: ${e.getMessage}")))
-  }
-
-  private[this] def extractPrismDIDFromString(maybeDid: String): IO[ErrorResponse, PrismDID] = {
-    ZIO
-      .fromEither(PrismDID.fromString(maybeDid))
-      .mapError(e => ErrorResponse.badRequest(detail = Some(s"Error parsing string as PrismDID: ${e}")))
-  }
-
-  private[this] def extractDidIdPairFromValidConnection(connRecord: ConnectionRecord): Option[DidIdPair] = {
-    (connRecord.protocolState, connRecord.connectionResponse, connRecord.role) match {
-      case (ProtocolState.ConnectionResponseReceived, Some(resp), Role.Invitee) =>
-        // If Invitee, myDid is the target
-        Some(DidIdPair(resp.to, resp.from))
-      case (ProtocolState.ConnectionResponseSent, Some(resp), Role.Inviter) =>
-        // If Inviter, myDid is the source
-        Some(DidIdPair(resp.from, resp.to))
-      case _ => None
-    }
-  }
-
-  private[this] def getPairwiseDIDs(connectionId: String): IO[ConnectionServiceError, DidIdPair] = {
-    val lookupId = UUID.fromString(connectionId)
-    for {
-      maybeConnection <- connectionService.getConnectionRecord(lookupId)
-      didIdPair <- maybeConnection match
-        case Some(connRecord: ConnectionRecord) =>
-          extractDidIdPairFromValidConnection(connRecord) match {
-            case Some(didIdPair: DidIdPair) => ZIO.succeed(didIdPair)
-            case None =>
-              ZIO.fail(ConnectionServiceError.UnexpectedError("Invalid connection record state for operation"))
-          }
-        case _ => ZIO.fail(ConnectionServiceError.RecordIdNotFound(lookupId))
-    } yield didIdPair
-  }
-
 }
 
 object IssueControllerImpl {
-  val layer: URLayer[CredentialService & ConnectionService & AppConfig, IssueController] =
-    ZLayer.fromFunction(IssueControllerImpl(_, _, _))
+  val layer: URLayer[CredentialService & ConnectionService, IssueController] =
+    ZLayer.fromFunction(IssueControllerImpl(_, _))
 }
