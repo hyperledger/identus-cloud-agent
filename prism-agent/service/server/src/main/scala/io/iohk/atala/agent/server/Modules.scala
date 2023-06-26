@@ -182,17 +182,26 @@ object RepoModule {
         .service[AppConfig]
         .map(_.agent.secretStorage.backend)
         .tap(backend => ZIO.logInfo(s"Using '$backend' as a secret storage backend"))
-        .map {
+        .flatMap {
           case "vault" =>
-            ZLayer.make[DIDSecretStorage](
-              VaultDIDSecretStorage.layer,
-              vaultClientLayer,
+            ZIO.succeed(
+              ZLayer.make[DIDSecretStorage](
+                VaultDIDSecretStorage.layer,
+                vaultClientLayer,
+              )
             )
           case "postgres" =>
-            ZLayer.make[DIDSecretStorage](
-              JdbcDIDSecretStorage.layer,
-              agentTransactorLayer,
+            ZIO.succeed(
+              ZLayer.make[DIDSecretStorage](
+                JdbcDIDSecretStorage.layer,
+                agentTransactorLayer,
+              )
             )
+          case backend =>
+            ZIO
+              .fail(s"Unsupported secret storage backend $backend. Available options are 'postgres', 'vault'")
+              .tapError(msg => ZIO.logError(msg))
+              .mapError(msg => Exception(msg))
         }
         .provide(SystemModule.configLayer)
     }.flatten
