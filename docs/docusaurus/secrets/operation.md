@@ -36,7 +36,7 @@ PRISM agent uses the following environment variables for secret management.
 
 ## Storage backend configuration
 
-Secret storage supports various backends like Vault or Postgres.
+Secret storage supports various backends like the Vault service or Postgres database.
 By default, the backend chosen for secret storage is Vault, which is suitable for production environments.
 There are multiple supported backend implementations, each catering to specific use cases.
 
