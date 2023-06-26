@@ -1,7 +1,16 @@
 package io.iohk.atala.agent.walletapi.service
 
+import io.iohk.atala.agent.walletapi.crypto.Apollo
+import io.iohk.atala.agent.walletapi.crypto.ApolloSpecHelper
+import io.iohk.atala.agent.walletapi.model.UpdateManagedDIDAction
+import io.iohk.atala.agent.walletapi.model.error.UpdateManagedDIDError
 import io.iohk.atala.agent.walletapi.model.error.{CreateManagedDIDError, PublishManagedDIDError}
 import io.iohk.atala.agent.walletapi.model.{DIDPublicKeyTemplate, ManagedDIDState, ManagedDIDTemplate, PublicationState}
+import io.iohk.atala.agent.walletapi.sql.JdbcDIDNonSecretStorage
+import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
+import io.iohk.atala.agent.walletapi.util.SeedResolver
+import io.iohk.atala.agent.walletapi.vault.VaultDIDSecretStorage
+import io.iohk.atala.castor.core.model.did.InternalKeyPurpose
 import io.iohk.atala.castor.core.model.did.{
   DIDData,
   DIDMetadata,
@@ -19,23 +28,13 @@ import io.iohk.atala.castor.core.model.did.{
 import io.iohk.atala.castor.core.model.error
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.castor.core.util.DIDOperationValidator
+import io.iohk.atala.test.container.DBTestUtils
+import io.iohk.atala.test.container.PostgresTestContainerSupport
+import io.iohk.atala.test.container.VaultTestContainerSupport
+import scala.collection.immutable.ArraySeq
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
-
-import scala.collection.immutable.ArraySeq
-import io.iohk.atala.test.container.PostgresTestContainerSupport
-import io.iohk.atala.test.container.VaultTestContainerSupport
-import io.iohk.atala.agent.walletapi.crypto.ApolloSpecHelper
-import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
-import io.iohk.atala.agent.walletapi.sql.JdbcDIDNonSecretStorage
-import io.iohk.atala.test.container.DBTestUtils
-import io.iohk.atala.castor.core.model.did.InternalKeyPurpose
-import io.iohk.atala.agent.walletapi.model.error.UpdateManagedDIDError
-import io.iohk.atala.agent.walletapi.model.UpdateManagedDIDAction
-import io.iohk.atala.agent.walletapi.crypto.Apollo
-import io.iohk.atala.agent.walletapi.util.SeedResolver
-import io.iohk.atala.agent.walletapi.vault.VaultDIDSecretStorage
 import zio.test.TestAspect.sequential
 
 object ManagedDIDServiceSpec
@@ -270,7 +269,17 @@ object ManagedDIDServiceSpec
       )
       val result = ZIO.serviceWithZIO[ManagedDIDService](_.createAndStoreDID(template))
       assertZIO(result.exit)(fails(isSubtype[CreateManagedDIDError.InvalidArgument](anything)))
-    }
+    },
+    test("concurrent DID creation successfully create DID using different did-index") {
+      for {
+        svc <- ZIO.service[ManagedDIDService]
+        dids <- ZIO
+          .foreachPar(1 to 4)(_ => svc.createAndStoreDID(generateDIDTemplate()).map(_.asCanonical))
+          .withParallelism(4)
+          .map(_.toList)
+          .debug("dids")
+      } yield assertCompletes // TODO: implement
+    } @@ TestAspect.tag("dev") @@ TestAspect.ignore
   )
 
   private val updateManagedDIDSpec =
