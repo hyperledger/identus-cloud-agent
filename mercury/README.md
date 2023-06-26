@@ -15,7 +15,7 @@ We are following the directory structure defined in [RFC 0013 - Service-Oriented
 - `mercury-mediator`:
   Is our project implementation of the DID Comm mediator agent.
 
-  See [Mercury Mediator](./prism-mediator/README.md)
+  See [Mercury Mediator](./mercury-mediator/Mercury-Mailbox-Mediator.md)
 
 - `roots-id-mediator`:
   Contains a configuration setup and utilities script to test interoperability against ROOTS-ID's mediator.
