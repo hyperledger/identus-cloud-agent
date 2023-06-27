@@ -1,3 +1,3 @@
 package io.iohk.atala.event.notification
 
-case class Event(content: String)
+case class Event[A](data: A)
