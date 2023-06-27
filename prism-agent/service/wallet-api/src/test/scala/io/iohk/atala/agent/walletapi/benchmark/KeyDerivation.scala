@@ -17,16 +17,16 @@ object KeyDerivation extends ZIOSpecDefault, VaultTestContainerSupport {
   private val seedHex = "00" * 64
   private val seed = HexString.fromStringUnsafe(seedHex).toByteArray
 
-  override def spec = suite("Key derivation benchamrk")(
+  override def spec = suite("Key derivation benchmark")(
     deriveKeyBenchmark.provide(Apollo.prism14Layer),
     queryKeyBenchmark.provide(vaultKvClientLayer, Apollo.prism14Layer)
   ) @@ TestAspect.sequential @@ TestAspect.timed @@ TestAspect.tag("benchmark") @@ TestAspect.ignore
 
   private val deriveKeyBenchmark = suite("Key derivation benchmark")(
-    benchamrkKeyDerivation(1),
-    benchamrkKeyDerivation(8),
-    benchamrkKeyDerivation(16),
-    benchamrkKeyDerivation(32),
+    benchmarkKeyDerivation(1),
+    benchmarkKeyDerivation(8),
+    benchmarkKeyDerivation(16),
+    benchmarkKeyDerivation(32),
   ) @@ TestAspect.before(deriveKeyWarmUp())
 
   private val queryKeyBenchmark = suite("Query key benchmark - vault storage")(
@@ -36,7 +36,7 @@ object KeyDerivation extends ZIOSpecDefault, VaultTestContainerSupport {
     benchmarkVaultQuery(32),
   ) @@ TestAspect.before(vaultWarmUp())
 
-  private def benchamrkKeyDerivation(parallelism: Int) = {
+  private def benchmarkKeyDerivation(parallelism: Int) = {
     test(s"derive 50000 keys - $parallelism parallelism") {
       for {
         apollo <- ZIO.service[Apollo]
