@@ -15,10 +15,10 @@ private[walletapi] class DIDCreateHandler(
     apollo: Apollo,
     nonSecretStorage: DIDNonSecretStorage
 )(
-    seed: Array[Byte]
+    seed: Array[Byte],
+    masterKeyId: String
 ) {
   def materialize(
-      masterKeyId: String,
       didTemplate: ManagedDIDTemplate
   ): IO[CreateManagedDIDError, DIDCreateMaterial] = {
     val operationFactory = OperationFactory(apollo)

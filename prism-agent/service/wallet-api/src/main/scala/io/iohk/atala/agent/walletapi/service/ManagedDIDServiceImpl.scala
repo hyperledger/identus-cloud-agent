@@ -40,7 +40,7 @@ final class ManagedDIDServiceImpl private[walletapi] (
   private val keyResolver = KeyResolver(apollo, nonSecretStorage, secretStorage)(seed)
 
   private val publicationHandler = PublicationHandler(didService, keyResolver)(DEFAULT_MASTER_KEY_ID)
-  private val didCreateHandler = DIDCreateHandler(apollo, nonSecretStorage)(seed)
+  private val didCreateHandler = DIDCreateHandler(apollo, nonSecretStorage)(seed, DEFAULT_MASTER_KEY_ID)
   private val didUpdateHandler = DIDUpdateHandler(apollo, nonSecretStorage, publicationHandler)(seed)
 
   def syncManagedDIDState: IO[GetManagedDIDError, Unit] = nonSecretStorage
@@ -128,19 +128,20 @@ final class ManagedDIDServiceImpl private[walletapi] (
       _ <- ZIO
         .fromEither(ManagedDIDTemplateValidator.validate(didTemplate))
         .mapError(CreateManagedDIDError.InvalidArgument.apply)
-      material <- didCreateHandler.materialize(DEFAULT_MASTER_KEY_ID, didTemplate)
+      material <- didCreateHandler.materialize(didTemplate)
       _ <- ZIO
         .fromEither(didOpValidator.validate(material.operation))
         .mapError(CreateManagedDIDError.InvalidOperation.apply)
       _ <- material.persist.mapError(CreateManagedDIDError.WalletStorageError.apply)
     } yield PrismDID.buildLongFormFromOperation(material.operation)
 
-    // This synchronize createDID effect to only allow 1 execution at a time
+    // This synchronizes createDID effect to only allow 1 execution at a time
     // to avoid concurrent didIndex update. Long-term solution should be
     // solved at the DB level.
     //
-    // Concurrency performance may be improved by not synchronizing the whole operation,
-    // but only the counter increment part allowing multiple in-flight create operations.
+    // Performance may be improved by not synchronizing the whole operation,
+    // but only the counter increment part allowing multiple in-flight create operations
+    // once didIndex is acquired.
     createDIDSem.withPermit(effect)
   }
 
