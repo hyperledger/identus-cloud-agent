@@ -362,7 +362,7 @@ object ManagedDIDServiceImpl {
         nonSecretStorage <- ZIO.service[DIDNonSecretStorage]
         apollo <- ZIO.service[Apollo]
         seed <- ZIO.serviceWithZIO[SeedResolver](_.resolve)
-        creatDIDSem <- Semaphore.make(1)
+        createDIDSem <- Semaphore.make(1)
       } yield ManagedDIDServiceImpl(
         didService,
         didOpValidator,
@@ -370,7 +370,7 @@ object ManagedDIDServiceImpl {
         nonSecretStorage,
         apollo,
         seed,
-        creatDIDSem
+        createDIDSem
       )
     }
   }
