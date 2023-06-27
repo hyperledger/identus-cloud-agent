@@ -29,7 +29,8 @@ final class ManagedDIDServiceImpl private[walletapi] (
     private[walletapi] val secretStorage: DIDSecretStorage,
     override private[walletapi] val nonSecretStorage: DIDNonSecretStorage,
     apollo: Apollo,
-    seed: Array[Byte]
+    seed: Array[Byte],
+    createDIDSem: Semaphore
 ) extends ManagedDIDService {
 
   private val CURVE = EllipticCurve.SECP256K1
@@ -123,29 +124,7 @@ final class ManagedDIDServiceImpl private[walletapi] (
   }
 
   def createAndStoreDID(didTemplate: ManagedDIDTemplate): IO[CreateManagedDIDError, LongFormPrismDID] = {
-    // for {
-    //   _ <- ZIO
-    //     .fromEither(ManagedDIDTemplateValidator.validate(didTemplate))
-    //     .mapError(CreateManagedDIDError.InvalidArgument.apply)
-    //   didIndex <- nonSecretStorage
-    //     .getMaxDIDIndex()
-    //     .mapBoth(
-    //       CreateManagedDIDError.WalletStorageError.apply,
-    //       maybeIdx => maybeIdx.map(_ + 1).getOrElse(0)
-    //     )
-    //   generated <- generateCreateOperationHdKey(didIndex, didTemplate)
-    //   (createOperation, hdKey) = generated
-    //   longFormDID = PrismDID.buildLongFormFromOperation(createOperation)
-    //   did = longFormDID.asCanonical
-    //   _ <- ZIO
-    //     .fromEither(didOpValidator.validate(createOperation))
-    //     .mapError(CreateManagedDIDError.InvalidOperation.apply)
-    //   state = ManagedDIDState(createOperation, didIndex, PublicationState.Created())
-    //   _ <- nonSecretStorage
-    //     .insertManagedDID(did, state, hdKey.keyPaths ++ hdKey.internalKeyPaths)
-    //     .mapError(CreateManagedDIDError.WalletStorageError.apply)
-    // } yield longFormDID
-    for {
+    val effect = for {
       _ <- ZIO
         .fromEither(ManagedDIDTemplateValidator.validate(didTemplate))
         .mapError(CreateManagedDIDError.InvalidArgument.apply)
@@ -155,6 +134,14 @@ final class ManagedDIDServiceImpl private[walletapi] (
         .mapError(CreateManagedDIDError.InvalidOperation.apply)
       _ <- material.persist.mapError(CreateManagedDIDError.WalletStorageError.apply)
     } yield PrismDID.buildLongFormFromOperation(material.operation)
+
+    // This synchronize createDID effect to only allow 1 execution at a time
+    // to avoid concurrent didIndex update. Long-term solution should be
+    // solved at the DB level.
+    //
+    // Concurrency performance may be improved by not synchronizing the whole operation,
+    // but only the counter increment part allowing multiple in-flight create operations.
+    createDIDSem.withPermit(effect)
   }
 
   def updateManagedDID(
@@ -374,7 +361,16 @@ object ManagedDIDServiceImpl {
         nonSecretStorage <- ZIO.service[DIDNonSecretStorage]
         apollo <- ZIO.service[Apollo]
         seed <- ZIO.serviceWithZIO[SeedResolver](_.resolve)
-      } yield ManagedDIDServiceImpl(didService, didOpValidator, secretStorage, nonSecretStorage, apollo, seed)
+        creatDIDSem <- Semaphore.make(1)
+      } yield ManagedDIDServiceImpl(
+        didService,
+        didOpValidator,
+        secretStorage,
+        nonSecretStorage,
+        apollo,
+        seed,
+        creatDIDSem
+      )
     }
   }
 

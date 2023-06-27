@@ -24,7 +24,7 @@ private[walletapi] class DIDCreateHandler(
     val operationFactory = OperationFactory(apollo)
     for {
       didIndex <- nonSecretStorage
-        .getMaxDIDIndex() // TODO: fix this
+        .getMaxDIDIndex()
         .mapBoth(
           CreateManagedDIDError.WalletStorageError.apply,
           maybeIdx => maybeIdx.map(_ + 1).getOrElse(0)

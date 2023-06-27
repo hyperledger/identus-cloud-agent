@@ -274,12 +274,15 @@ object ManagedDIDServiceSpec
       for {
         svc <- ZIO.service[ManagedDIDService]
         dids <- ZIO
-          .foreachPar(1 to 4)(_ => svc.createAndStoreDID(generateDIDTemplate()).map(_.asCanonical))
-          .withParallelism(4)
+          .foreachPar(1 to 50)(_ => svc.createAndStoreDID(generateDIDTemplate()).map(_.asCanonical))
+          .withParallelism(8)
           .map(_.toList)
-          .debug("dids")
-      } yield assertCompletes // TODO: implement
-    } @@ TestAspect.tag("dev") @@ TestAspect.ignore
+        states <- ZIO
+          .foreach(dids)(did => svc.nonSecretStorage.getManagedDIDState(did))
+          .map(_.toList.flatten)
+      } yield assert(dids)(hasSize(equalTo(50))) &&
+        assert(states.map(_.didIndex))(hasSameElementsDistinct(0 until 50))
+    }
   )
 
   private val updateManagedDIDSpec =
