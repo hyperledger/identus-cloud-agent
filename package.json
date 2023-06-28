@@ -24,7 +24,7 @@
         "name": "main"
       },
       {
-        "name": "prerelease/*",
+        "name": "release-ci-fix",
         "prerelease": "snapshot"
       }
     ],
@@ -41,49 +41,7 @@
       [
         "@semantic-release/exec",
         {
-          "prepareCmd": "sbt dumpLicenseReportAggregate && cp ./target/license-reports/atala-prism-building-blocks-licenses.md ./DEPENDENCIES.md"
-        }
-      ],
-      [
-        "@semantic-release/exec",
-        {
-          "prepareCmd": "sbt \"release release-version ${nextRelease.version} next-version ${nextRelease.version}-SNAPSHOT with-defaults\""
-        }
-      ],
-      [
-        "@semantic-release/exec",
-        {
-          "prepareCmd": "docker buildx build --platform=linux/arm64,linux/amd64 --push -t ghcr.io/input-output-hk/prism-agent:${nextRelease.version} ./prism-agent/service/server/target/docker/stage"
-        }
-      ],
-      [
-        "@semantic-release/changelog",
-        {
-          "changelogFile": "CHANGELOG.md"
-        }
-      ],
-      [
-        "@semantic-release/git",
-        {
-          "assets": [
-            "version.sbt",
-            "CHANGELOG.md",
-            "DEPENDENCIES.md",
-            "package.json",
-            "package-lock.json"
-          ],
-          "message": "chore(release): cut atala prism ${nextRelease.version} release\n\n${nextRelease.notes}"
-        }
-      ],
-      [
-        "semantic-release-slack-bot",
-        {
-          "notifyOnSuccess": true,
-          "notifyOnFail": true,
-          "markdownReleaseNotes": true,
-          "onSuccessTemplate": {
-            "text": "A new version of Atala PRISM successfully released!\nVersion: `$npm_package_version`\nTag: $repo_url/releases/tag/$npm_package_version\n\nRelease notes:\n$release_notes"
-          }
+          "prepareCmd": "sbt dumpLicenseReportAggregate && pwd && ls && ls -la ./target/license-reports"
         }
       ]
     ]
