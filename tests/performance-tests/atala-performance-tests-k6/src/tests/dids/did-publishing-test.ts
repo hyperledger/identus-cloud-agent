@@ -18,5 +18,6 @@ export let options: Options = {
 const issuer = new Issuer();
 
 export default () => {
-    issuer.createAndPublishDid();
+    issuer.createUnpublishedDid();
+    issuer.publishDid();
 };

@@ -3,12 +3,15 @@ import { HttpService } from "./HttpService";
 import { WAITING_LOOP_MAX_ITERATIONS, WAITING_LOOP_PAUSE_INTERVAL } from "./Config";
 import { IssueCredentialRecord, Connection } from "@input-output-hk/prism-typescript-client";
 import vu from "k6/execution";
+import {v4 as uuidv4} from 'uuid';
 
 /**
  * A service class for managing credentials in the application.
  * Extends the HttpService class.
  */
 export class CredentialsService extends HttpService {
+
+  myuuid = uuidv4();
 
   /**
    * Creates a credential offer for a specific issuing DID and connection.
@@ -18,7 +21,7 @@ export class CredentialsService extends HttpService {
    */
   createCredentialOffer(issuingDid: string, connection: Connection): IssueCredentialRecord {
     const payload = `{
-        "claims": { "offerId": "${vu.vu.idInInstance}-${vu.vu.idInTest}-${vu.vu.iterationInScenario}" },
+        "claims": { "offerId": "${this.myuuid}-${vu.vu.idInInstance}-${vu.vu.idInTest}-${vu.vu.iterationInScenario}" },
         "issuingDID": "${issuingDid}",
         "connectionId": "${connection.connectionId}",
         "automaticIssuance": false
@@ -77,8 +80,9 @@ export class CredentialsService extends HttpService {
     let iterations = 0;
     let record: IssueCredentialRecord | undefined;
     do {
+      console.log(`${this.myuuid}-${vu.vu.idInInstance}-${vu.vu.idInTest}-${vu.vu.iterationInScenario}`)
       record = this.getCredentialRecords().find(
-        r => r.claims["offerId"] === `${vu.vu.idInInstance}-${vu.vu.idInTest}-${vu.vu.iterationInScenario}`
+        r => r.claims["offerId"] === `${this.myuuid}-${vu.vu.idInInstance}-${vu.vu.idInTest}-${vu.vu.iterationInScenario}`
           && r.protocolState === "OfferReceived");
       if (record) {
         return record;
@@ -101,6 +105,7 @@ export class CredentialsService extends HttpService {
     do {
       const response = this.getCredentialRecord(credentialRecord);
       currentState = response.protocolState;
+      console.log(`Credential state: ${currentState}`)
       sleep(WAITING_LOOP_PAUSE_INTERVAL);
       iterations++;
     } while (currentState !== state && iterations < WAITING_LOOP_MAX_ITERATIONS);
