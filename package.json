@@ -41,7 +41,7 @@
       [
         "@semantic-release/exec",
         {
-          "prepareCmd": "sbt dumpLicenseReportAggregate && cp ./target/license-reports/atala-prism-building-blocks-licenses.md ./DEPENDENCIES.md"
+          "prepareCmd": "sbt dumpLicenseReportAggregate && cp ./target/license-reports/root-licenses.md ./DEPENDENCIES.md"
         }
       ],
       [
