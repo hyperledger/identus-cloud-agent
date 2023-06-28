@@ -3,7 +3,7 @@ import io.iohk.atala.agent.notification.WebhookPublisher.given
 import io.iohk.atala.agent.notification.WebhookPublisherError.{InvalidWebhookURL, UnexpectedError}
 import io.iohk.atala.agent.server.config.{AppConfig, WebhookPublisherConfig}
 import io.iohk.atala.event.notification.EventNotificationServiceError.DecoderError
-import io.iohk.atala.event.notification.{Event, EventDecoder, EventNotificationService}
+import io.iohk.atala.event.notification.{Event, EventConsumer, EventDecoder, EventNotificationService}
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord
 import zio.*
 import zio.http.*
@@ -28,20 +28,27 @@ class WebhookPublisher(appConfig: AppConfig, notificationService: EventNotificat
     case Some(url) =>
       for {
         url <- ZIO.attempt(URL(url)).mapError(th => InvalidWebhookURL(s"$url [${th.getMessage}]"))
-        consumer <- notificationService.consumer("Connect").mapError(e => UnexpectedError(e.toString))
-        pollAndNotify = for {
-          _ <- ZIO.log(s"Polling $parallelism event(s)")
-          events <- consumer.poll(parallelism).mapError(e => UnexpectedError(e.toString))
-          _ <- ZIO.log(s"Got ${events.size} event(s)")
-          _ <- ZIO.foreachPar(events)(e =>
-            notifyWebhook(e, url)
-              .retry(Schedule.spaced(5.second) && Schedule.recurs(2))
-              .catchAll(e => ZIO.logError(s"Webhook permanently failing, with last error being: ${e.msg}"))
-          )
-        } yield ()
-        poll <- pollAndNotify.forever
-      } yield poll
+        connectConsumer <- notificationService.consumer("Connect").mapError(e => UnexpectedError(e.toString))
+        issueConsumer <- notificationService.consumer("Issue").mapError(e => UnexpectedError(e.toString))
+        presentationConsumer <- notificationService.consumer("Presentation").mapError(e => UnexpectedError(e.toString))
+        _ <- pollAndNotify(connectConsumer, url).forever.debug.forkDaemon
+        _ <- pollAndNotify(issueConsumer, url).forever.debug.forkDaemon
+        _ <- pollAndNotify(presentationConsumer, url).forever.debug.forkDaemon
+      } yield ()
     case None => ZIO.unit
+  }
+
+  private[this] def pollAndNotify[A](consumer: EventConsumer[A], url: URL) = {
+    for {
+      _ <- ZIO.log(s"Polling $parallelism event(s)")
+      events <- consumer.poll(parallelism).mapError(e => UnexpectedError(e.toString))
+      _ <- ZIO.log(s"Got ${events.size} event(s)")
+      _ <- ZIO.foreachPar(events)(e =>
+        notifyWebhook(e, url)
+          .retry(Schedule.spaced(5.second) && Schedule.recurs(2))
+          .catchAll(e => ZIO.logError(s"Webhook permanently failing, with last error being: ${e.msg}"))
+      )
+    } yield ()
   }
 
   private[this] def notifyWebhook[A](event: Event[A], url: URL): ZIO[Client, UnexpectedError, Unit] = {
