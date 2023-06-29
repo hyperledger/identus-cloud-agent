@@ -364,13 +364,18 @@ object PresentationServiceSpec extends ZIOSpecDefault {
             svc <- ZIO.service[PresentationService]
             aRecord <- svc.createRecord()
             p = presentation(aRecord.thid.value)
-            aRecordReceived <- svc.receivePresentation(p)
-            aRecordAccept <- svc.markPresentationRejected(aRecord.id)
-
+            _ <- svc.receivePresentation(p)
+            repo <- ZIO.service[PresentationRepository[Task]]
+            _ <- repo.updatePresentationRecordProtocolState(
+              aRecord.id,
+              PresentationRecord.ProtocolState.PresentationReceived,
+              PresentationRecord.ProtocolState.PresentationVerified
+            )
+            aRecordReject <- svc.markPresentationRejected(aRecord.id)
           } yield {
-            assertTrue(aRecordAccept.id == aRecord.id)
-            assertTrue(aRecordAccept.presentationData == Some(p))
-            assertTrue(aRecordAccept.protocolState == PresentationRecord.ProtocolState.PresentationRejected)
+            assertTrue(aRecordReject.id == aRecord.id)
+            assertTrue(aRecordReject.presentationData == Some(p))
+            assertTrue(aRecordReject.protocolState == PresentationRecord.ProtocolState.PresentationRejected)
           }
         )
       },
@@ -381,12 +386,17 @@ object PresentationServiceSpec extends ZIOSpecDefault {
             aRecord <- svc.createRecord()
             p = presentation(aRecord.thid.value)
             aRecordReceived <- svc.receivePresentation(p)
-            aRecordAccept <- svc.rejectPresentation(aRecord.id)
-
+            repo <- ZIO.service[PresentationRepository[Task]]
+            _ <- repo.updatePresentationRecordProtocolState(
+              aRecord.id,
+              PresentationRecord.ProtocolState.PresentationReceived,
+              PresentationRecord.ProtocolState.PresentationVerified
+            )
+            aRecordReject <- svc.rejectPresentation(aRecord.id)
           } yield {
-            assertTrue(aRecordAccept.id == aRecord.id)
-            assertTrue(aRecordAccept.presentationData == Some(p))
-            assertTrue(aRecordAccept.protocolState == PresentationRecord.ProtocolState.PresentationRejected)
+            assertTrue(aRecordReject.id == aRecord.id)
+            assertTrue(aRecordReject.presentationData == Some(p))
+            assertTrue(aRecordReject.protocolState == PresentationRecord.ProtocolState.PresentationRejected)
           }
         )
       },
