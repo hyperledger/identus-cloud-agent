@@ -665,7 +665,7 @@ lazy val connectCore = project
     Test / publishArtifact := true
   )
   .dependsOn(shared)
-  .dependsOn(protocolConnection, protocolReportProblem)
+  .dependsOn(protocolConnection, protocolReportProblem, eventNotification)
 
 lazy val connectDoobie = project
   .in(file("connect/lib/sql-doobie"))
