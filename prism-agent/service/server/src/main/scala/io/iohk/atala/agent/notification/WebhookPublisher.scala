@@ -4,7 +4,7 @@ import io.iohk.atala.agent.notification.WebhookPublisherError.{InvalidWebhookURL
 import io.iohk.atala.agent.server.config.{AppConfig, WebhookPublisherConfig}
 import io.iohk.atala.connect.core.model.ConnectionRecord
 import io.iohk.atala.event.notification.EventNotificationServiceError.DecoderError
-import io.iohk.atala.event.notification.{Event, EventConsumer, EventDecoder, EventNotificationService}
+import io.iohk.atala.event.notification.{Event, EventConsumer, EventNotificationService}
 import io.iohk.atala.pollux.core.model.{IssueCredentialRecord, PresentationRecord}
 import zio.*
 import zio.http.*
@@ -84,15 +84,6 @@ class WebhookPublisher(appConfig: AppConfig, notificationService: EventNotificat
 }
 
 object WebhookPublisher {
-  given EventDecoder[ConnectionRecord] = (data: Any) =>
-    ZIO.attempt(data.asInstanceOf[ConnectionRecord]).mapError(t => DecoderError(t.getMessage))
-
-  given EventDecoder[IssueCredentialRecord] = (data: Any) =>
-    ZIO.attempt(data.asInstanceOf[IssueCredentialRecord]).mapError(t => DecoderError(t.getMessage))
-
-  given EventDecoder[PresentationRecord] = (data: Any) =>
-    ZIO.attempt(data.asInstanceOf[PresentationRecord]).mapError(t => DecoderError(t.getMessage))
-
   val layer: URLayer[AppConfig & EventNotificationService, WebhookPublisher] =
     ZLayer.fromFunction(WebhookPublisher(_, _))
 }

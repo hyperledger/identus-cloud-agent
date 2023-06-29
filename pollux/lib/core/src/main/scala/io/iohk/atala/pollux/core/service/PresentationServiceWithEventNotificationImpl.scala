@@ -1,7 +1,7 @@
 package io.iohk.atala.pollux.core.service
 
 import io.iohk.atala.event.notification.EventNotificationServiceError.EncoderError
-import io.iohk.atala.event.notification.{Event, EventEncoder, EventNotificationService}
+import io.iohk.atala.event.notification.{Event, EventNotificationService}
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.presentproof.{Presentation, ProofType, RequestPresentation}
 import io.iohk.atala.pollux.core.model.error.PresentationError
@@ -88,10 +88,6 @@ class PresentationServiceWithEventNotificationImpl(
 }
 
 object PresentationServiceWithEventNotificationImpl {
-
-  given EventEncoder[PresentationRecord] = (data: PresentationRecord) =>
-    ZIO.attempt(data.asInstanceOf[Any]).mapError(t => EncoderError(t.getMessage))
-
   val layer: URLayer[
     PresentationRepository[Task] & CredentialRepository[Task] & EventNotificationService,
     PresentationService

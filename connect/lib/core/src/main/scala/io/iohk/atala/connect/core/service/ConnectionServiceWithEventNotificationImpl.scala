@@ -5,7 +5,7 @@ import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.connect.core.repository.ConnectionRepository
 import io.iohk.atala.connect.core.service.ConnectionServiceWithEventNotificationImpl.given
 import io.iohk.atala.event.notification.EventNotificationServiceError.EncoderError
-import io.iohk.atala.event.notification.{Event, EventEncoder, EventNotificationService}
+import io.iohk.atala.event.notification.{Event, EventNotificationService}
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
 import zio.{IO, Task, URLayer, ZIO, ZLayer}
@@ -62,9 +62,6 @@ class ConnectionServiceWithEventNotificationImpl(
 }
 
 object ConnectionServiceWithEventNotificationImpl {
-  given EventEncoder[ConnectionRecord] = (data: ConnectionRecord) =>
-    ZIO.attempt(data.asInstanceOf[Any]).mapError(t => EncoderError(t.getMessage))
-
   val layer: URLayer[ConnectionRepository[Task] with EventNotificationService, ConnectionService] =
     ZLayer.fromFunction(ConnectionServiceWithEventNotificationImpl(_, _))
 }

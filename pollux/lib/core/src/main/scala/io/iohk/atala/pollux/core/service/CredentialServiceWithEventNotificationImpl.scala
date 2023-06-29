@@ -102,10 +102,6 @@ class CredentialServiceWithEventNotificationImpl(
 }
 
 object CredentialServiceWithEventNotificationImpl {
-
-  given EventEncoder[IssueCredentialRecord] = (data: IssueCredentialRecord) =>
-    ZIO.attempt(data.asInstanceOf[Any]).mapError(t => EncoderError(t.getMessage))
-
   val layer: URLayer[
     IrisServiceStub with CredentialRepository[Task] with DidResolver with URIDereferencer with EventNotificationService,
     CredentialServiceWithEventNotificationImpl

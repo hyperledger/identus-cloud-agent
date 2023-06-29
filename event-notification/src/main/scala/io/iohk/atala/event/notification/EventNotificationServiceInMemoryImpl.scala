@@ -6,9 +6,9 @@ import zio.{IO, Queue, ULayer, URLayer, ZIO, ZLayer}
 import scala.collection.mutable
 
 class EventNotificationServiceInMemoryImpl extends EventNotificationService:
-  private[this] val queueMap = mutable.Map.empty[String, Queue[Event[Any]]]
+  private[this] val queueMap = mutable.Map.empty[String, Queue[Event[_]]]
 
-  private[this] def getOrCreateQueue(topic: String): IO[EventNotificationServiceError, Queue[Event[Any]]] = {
+  private[this] def getOrCreateQueue(topic: String): IO[EventNotificationServiceError, Queue[Event[_]]] = {
     for {
       maybeQueue <- ZIO.succeed(queueMap.get(topic))
       queue <- maybeQueue match
@@ -20,23 +20,22 @@ class EventNotificationServiceInMemoryImpl extends EventNotificationService:
 
   override def consumer[A](
       topic: String
-  )(using decoder: EventDecoder[A]): IO[EventNotificationServiceError, EventConsumer[A]] =
+  ): IO[EventNotificationServiceError, EventConsumer[A]] =
     ZIO.succeed(new EventConsumer[A] {
       override def poll(count: Int): IO[EventNotificationServiceError, Seq[Event[A]]] = for {
         queue <- getOrCreateQueue(topic)
         events <- queue.takeBetween(1, count)
-        decodedEvents <- ZIO.foreach(events)(e => decoder.decode(e.data).map(d => Event(d)))
+        decodedEvents <- ZIO.foreach(events)(e => ZIO.succeed(e.asInstanceOf[Event[A]]))
       } yield decodedEvents
     })
 
   override def producer[A](
       topic: String
-  )(using encoder: EventEncoder[A]): IO[EventNotificationServiceError, EventProducer[A]] =
+  ): IO[EventNotificationServiceError, EventProducer[A]] =
     ZIO.succeed(new EventProducer[A] {
       override def send(event: Event[A]): IO[EventNotificationServiceError, Unit] = for {
         queue <- getOrCreateQueue(topic)
-        encodedEvent <- encoder.encode(event.data).map(e => Event(e))
-        succeeded <- queue.offer(encodedEvent)
+        succeeded <- queue.offer(event)
         _ <- if (succeeded) ZIO.unit else ZIO.fail(EventSendingFailed("Queue.offer returned 'false'"))
       } yield ()
     })
