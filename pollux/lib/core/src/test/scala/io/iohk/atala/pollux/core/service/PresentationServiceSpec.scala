@@ -211,7 +211,7 @@ object PresentationServiceSpec extends ZIOSpecDefault {
           record <- svc.markRequestPresentationSent(record.id)
 
         } yield {
-          assertTrue(record.get.protocolState == PresentationRecord.ProtocolState.RequestSent)
+          assertTrue(record.protocolState == PresentationRecord.ProtocolState.RequestSent)
         }
       },
       test("markRequestPresentationRejected returns updated PresentationRecord") {
@@ -228,7 +228,7 @@ object PresentationServiceSpec extends ZIOSpecDefault {
           record <- svc.markRequestPresentationRejected(record.id)
 
         } yield {
-          assertTrue(record.get.protocolState == PresentationRecord.ProtocolState.RequestRejected)
+          assertTrue(record.protocolState == PresentationRecord.ProtocolState.RequestRejected)
         })
       },
       test("receiveRequestPresentation updates the RequestPresentation in PresentatinRecord") {
@@ -284,9 +284,9 @@ object PresentationServiceSpec extends ZIOSpecDefault {
             updateRecord <- svc.acceptRequestPresentation(aRecord.id, credentialsToUse)
 
           } yield {
-            assertTrue(updateRecord.get.connectionId == connectionId)
-            assertTrue(updateRecord.get.requestPresentationData == Some(requestPresentation))
-            assertTrue(updateRecord.get.credentialsToUse.contains(credentialsToUse))
+            assertTrue(updateRecord.connectionId == connectionId)
+            assertTrue(updateRecord.requestPresentationData == Some(requestPresentation))
+            assertTrue(updateRecord.credentialsToUse.contains(credentialsToUse))
 
           }
         )
@@ -300,9 +300,9 @@ object PresentationServiceSpec extends ZIOSpecDefault {
             updateRecord <- svc.rejectRequestPresentation(aRecord.id)
 
           } yield {
-            assertTrue(updateRecord.get.connectionId == connectionId)
-            assertTrue(updateRecord.get.requestPresentationData == Some(requestPresentation))
-            assertTrue(updateRecord.get.protocolState == PresentationRecord.ProtocolState.RequestRejected)
+            assertTrue(updateRecord.connectionId == connectionId)
+            assertTrue(updateRecord.requestPresentationData == Some(requestPresentation))
+            assertTrue(updateRecord.protocolState == PresentationRecord.ProtocolState.RequestRejected)
           }
         )
       },
@@ -320,7 +320,7 @@ object PresentationServiceSpec extends ZIOSpecDefault {
           record <- svc.markPresentationSent(record.id)
 
         } yield {
-          assertTrue(record.get.protocolState == PresentationRecord.ProtocolState.PresentationSent)
+          assertTrue(record.protocolState == PresentationRecord.ProtocolState.PresentationSent)
         })
       },
       test("receivePresentation updates the PresentatinRecord") {
@@ -332,8 +332,8 @@ object PresentationServiceSpec extends ZIOSpecDefault {
             aRecordReceived <- svc.receivePresentation(p)
 
           } yield {
-            assertTrue(aRecordReceived.get.id == aRecord.id)
-            assertTrue(aRecordReceived.get.presentationData == Some(p))
+            assertTrue(aRecordReceived.id == aRecord.id)
+            assertTrue(aRecordReceived.presentationData == Some(p))
           }
         )
       },
@@ -353,8 +353,8 @@ object PresentationServiceSpec extends ZIOSpecDefault {
             aRecordAccept <- svc.acceptPresentation(aRecord.id)
 
           } yield {
-            assertTrue(aRecordReceived.get.id == aRecord.id)
-            assertTrue(aRecordReceived.get.presentationData == Some(p))
+            assertTrue(aRecordReceived.id == aRecord.id)
+            assertTrue(aRecordReceived.presentationData == Some(p))
           }
         )
       },
@@ -368,9 +368,9 @@ object PresentationServiceSpec extends ZIOSpecDefault {
             aRecordAccept <- svc.markPresentationRejected(aRecord.id)
 
           } yield {
-            assertTrue(aRecordAccept.get.id == aRecord.id)
-            assertTrue(aRecordAccept.get.presentationData == Some(p))
-            assertTrue(aRecordAccept.get.protocolState == PresentationRecord.ProtocolState.PresentationRejected)
+            assertTrue(aRecordAccept.id == aRecord.id)
+            assertTrue(aRecordAccept.presentationData == Some(p))
+            assertTrue(aRecordAccept.protocolState == PresentationRecord.ProtocolState.PresentationRejected)
           }
         )
       },
@@ -384,9 +384,9 @@ object PresentationServiceSpec extends ZIOSpecDefault {
             aRecordAccept <- svc.rejectPresentation(aRecord.id)
 
           } yield {
-            assertTrue(aRecordAccept.get.id == aRecord.id)
-            assertTrue(aRecordAccept.get.presentationData == Some(p))
-            assertTrue(aRecordAccept.get.protocolState == PresentationRecord.ProtocolState.PresentationRejected)
+            assertTrue(aRecordAccept.id == aRecord.id)
+            assertTrue(aRecordAccept.presentationData == Some(p))
+            assertTrue(aRecordAccept.protocolState == PresentationRecord.ProtocolState.PresentationRejected)
           }
         )
       },
@@ -405,7 +405,7 @@ object PresentationServiceSpec extends ZIOSpecDefault {
           record <- svc.markPresentationGenerated(record.id, p)
 
         } yield {
-          assertTrue(record.get.protocolState == PresentationRecord.ProtocolState.PresentationGenerated)
+          assertTrue(record.protocolState == PresentationRecord.ProtocolState.PresentationGenerated)
         })
       },
       test("markProposePresentationSent returns updated PresentationRecord") {
@@ -422,7 +422,7 @@ object PresentationServiceSpec extends ZIOSpecDefault {
           record <- svc.markProposePresentationSent(record.id)
 
         } yield {
-          assertTrue(record.get.protocolState == PresentationRecord.ProtocolState.ProposalSent)
+          assertTrue(record.protocolState == PresentationRecord.ProtocolState.ProposalSent)
         })
       },
       test("receiveProposePresentation updates the PresentatinRecord") {
@@ -434,8 +434,8 @@ object PresentationServiceSpec extends ZIOSpecDefault {
             aRecordReceived <- svc.receiveProposePresentation(p)
 
           } yield {
-            assertTrue(aRecordReceived.get.id == aRecord.id)
-            assertTrue(aRecordReceived.get.proposePresentationData == Some(p))
+            assertTrue(aRecordReceived.id == aRecord.id)
+            assertTrue(aRecordReceived.proposePresentationData == Some(p))
           }
         )
       },
@@ -455,8 +455,8 @@ object PresentationServiceSpec extends ZIOSpecDefault {
             aRecordAccept <- svc.acceptProposePresentation(aRecord.id)
 
           } yield {
-            assertTrue(aRecordReceived.get.id == aRecord.id)
-            assertTrue(aRecordReceived.get.proposePresentationData == Some(p))
+            assertTrue(aRecordReceived.id == aRecord.id)
+            assertTrue(aRecordReceived.proposePresentationData == Some(p))
           }
         )
       },
