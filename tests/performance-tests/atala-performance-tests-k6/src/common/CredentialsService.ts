@@ -3,6 +3,7 @@ import { HttpService } from "./HttpService";
 import { WAITING_LOOP_MAX_ITERATIONS, WAITING_LOOP_PAUSE_INTERVAL } from "./Config";
 import { IssueCredentialRecord, Connection } from "@input-output-hk/prism-typescript-client";
 import vu from "k6/execution";
+import 'react-native-get-random-values';
 import {v4 as uuidv4} from 'uuid';
 
 /**
