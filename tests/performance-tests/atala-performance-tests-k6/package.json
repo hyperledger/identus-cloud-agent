@@ -25,8 +25,6 @@
     "start": "webpack"
   },
   "dependencies": {
-    "@input-output-hk/prism-typescript-client": "0.1.0",
-    "react-native-get-random-values": "^1.9.0",
-    "uuid": "^9.0.0"
+    "@input-output-hk/prism-typescript-client": "0.1.0"
   }
 }
