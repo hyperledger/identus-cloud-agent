@@ -148,7 +148,8 @@ object DidCommHttpServer {
                 _ <- ZIO.logInfo("*" * 100)
                 _ <- ZIO.logInfo("As an Issuer in issue-credential:")
                 _ <- ZIO.logInfo("Got ProposeCredential: " + msg)
-                credentialService <- ZIO.service[CredentialService]
+                // TODO: Use service
+                _ <- ZIO.service[CredentialService]
 
                 // TODO
               } yield ()

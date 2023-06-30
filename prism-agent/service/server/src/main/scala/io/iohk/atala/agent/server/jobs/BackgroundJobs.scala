@@ -36,7 +36,6 @@ import zio.*
 import zio.prelude.ZValidation.*
 import zio.prelude.Validation
 import java.time.{Clock, Instant, ZoneId}
-import scala.jdk.CollectionConverters.*
 
 object BackgroundJobs {
 

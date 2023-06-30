@@ -1,26 +1,15 @@
 package io.iohk.atala.pollux.vc.jwt.demos
 
-import cats.implicits.*
 import com.nimbusds.jose.jwk.*
-import com.nimbusds.jose.jwk.gen.*
 import io.circe.*
-import io.circe.generic.auto.*
-import io.circe.parser.decode
-import io.circe.syntax.*
 import io.iohk.atala.pollux.vc.jwt.*
-import io.iohk.atala.pollux.vc.jwt.CredentialPayload.Implicits.*
-import io.iohk.atala.pollux.vc.jwt.schema.{PlaceholderSchemaValidator, ReactiveCoreSchemaValidator, SchemaResolver}
-import net.reactivecore.cjs.resolver.Downloader
-import net.reactivecore.cjs.{DocumentValidator, Loader, Result}
-import pdi.jwt.{JwtAlgorithm, JwtCirce, JwtClaim}
+import io.iohk.atala.pollux.vc.jwt.schema.{PlaceholderSchemaValidator, SchemaResolver}
+import pdi.jwt.JwtAlgorithm
 import zio.*
 import zio.Console.*
-
 import java.security.*
 import java.security.interfaces.{ECPrivateKey, ECPublicKey}
-import java.security.spec.*
-import java.time.{Instant, ZonedDateTime}
-import java.util.UUID
+import java.time.Instant
 import scala.collection.immutable.Set
 
 object JwtCredentialDIDDocumentValidationDemo extends ZIOAppDefault {
@@ -167,14 +156,6 @@ object JwtCredentialDIDDocumentValidationDemo extends ZIOAppDefault {
           controller = "",
           publicKeyJwk = Some(
             toJWKFormat(issuer2Jwk)
-          )
-        )
-        val issuer3Key = VerificationMethod(
-          id = "Issuer3Key",
-          `type` = JwtAlgorithm.ES256.name,
-          controller = "",
-          publicKeyJwk = Some(
-            toJWKFormat(issuer3Jwk)
           )
         )
         val didDocument = DIDDocument(
