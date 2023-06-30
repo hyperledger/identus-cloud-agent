@@ -11,16 +11,7 @@ import io.iohk.atala.connect.controller.http.{
 }
 import sttp.model.StatusCode
 import sttp.tapir.json.zio.jsonBody
-import sttp.tapir.{
-  EndpointInput,
-  PublicEndpoint,
-  endpoint,
-  extractFromRequest,
-  path,
-  query,
-  statusCode,
-  stringToPath
-}
+import sttp.tapir.{EndpointInput, PublicEndpoint, endpoint, extractFromRequest, path, query, statusCode, stringToPath}
 
 import java.util.UUID
 

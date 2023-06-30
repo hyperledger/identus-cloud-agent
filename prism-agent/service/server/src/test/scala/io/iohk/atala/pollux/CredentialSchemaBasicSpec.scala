@@ -5,10 +5,7 @@ import io.iohk.atala.container.util.MigrationAspects.*
 import io.iohk.atala.pollux.core.model.CredentialSchema
 import io.iohk.atala.pollux.credentialschema.*
 import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaController
-import io.iohk.atala.pollux.credentialschema.http.{
-  CredentialSchemaInput,
-  CredentialSchemaResponse
-}
+import io.iohk.atala.pollux.credentialschema.http.{CredentialSchemaInput, CredentialSchemaResponse}
 import io.iohk.atala.pollux.sql.repository.JdbcCredentialSchemaRepository
 import sttp.client3.ziojson.*
 import sttp.client3.basicRequest

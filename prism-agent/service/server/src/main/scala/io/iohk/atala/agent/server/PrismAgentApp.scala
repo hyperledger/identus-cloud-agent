@@ -78,16 +78,8 @@ object PrismAgentApp {
 
 }
 
-/**
-  * AppConfig & 
-  * SystemController & 
-  * PresentProofController & 
-  * DIDRegistrarController & 
-  * DIDController & 
-  * IssueController & 
-  * ConnectionController & 
-  * VerificationPolicyController & 
-  * CredentialSchemaController
+/** AppConfig & SystemController & PresentProofController & DIDRegistrarController & DIDController & IssueController &
+  * ConnectionController & VerificationPolicyController & CredentialSchemaController
   */
 
 object AgentHttpServer {

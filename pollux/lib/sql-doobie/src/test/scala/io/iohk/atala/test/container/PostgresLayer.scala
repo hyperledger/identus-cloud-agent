@@ -12,7 +12,6 @@ import zio.*
 import zio.ZIO.*
 import zio.interop.catz.*
 
-
 object PostgresLayer {
 
   def postgresLayer(

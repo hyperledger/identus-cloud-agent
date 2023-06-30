@@ -6,16 +6,7 @@ import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.issue.controller.http.*
 import sttp.model.StatusCode
 import sttp.tapir.json.zio.jsonBody
-import sttp.tapir.{
-  EndpointInput,
-  PublicEndpoint,
-  endpoint,
-  extractFromRequest,
-  path,
-  query,
-  statusCode,
-  stringToPath
-}
+import sttp.tapir.{EndpointInput, PublicEndpoint, endpoint, extractFromRequest, path, query, statusCode, stringToPath}
 
 object IssueEndpoints {
 

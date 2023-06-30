@@ -3,7 +3,6 @@ package io.iohk.atala.pollux.core.repository
 import zio._
 import zio.test._
 
-
 /** core/testOnly io.iohk.atala.pollux.core.repository.CredentialRepositoryInMemorySpec */
 object CredentialRepositoryInMemorySpec extends ZIOSpecDefault {
 

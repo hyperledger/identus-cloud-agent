@@ -1,7 +1,7 @@
 package io.iohk.atala.container.util
 
 import cats.effect.std.Dispatcher
-import cats.effect. Resource
+import cats.effect.Resource
 import com.dimafeng.testcontainers.PostgreSQLContainer
 import com.zaxxer.hikari.HikariConfig
 import doobie.hikari.HikariTransactor

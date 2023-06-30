@@ -3,7 +3,6 @@ package io.iohk.atala.connect.sql.repository
 import org.flywaydb.core.Flyway
 import zio.*
 
-
 final case class Migrations(config: DbConfig) {
 
   val migrationScriptsLocation: String = "sql/connect"

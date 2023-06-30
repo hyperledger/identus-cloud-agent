@@ -2,12 +2,7 @@ package io.iohk.atala.system.controller
 
 import io.iohk.atala.system.controller.http.HealthInfo
 import sttp.client3.ziojson.*
-import sttp.client3.{
-  DeserializationException,
-  UriContext,
-  asString,
-  basicRequest
-}
+import sttp.client3.{DeserializationException, UriContext, asString, basicRequest}
 import sttp.model.StatusCode
 import zio.test.*
 import zio.test.Assertion.*

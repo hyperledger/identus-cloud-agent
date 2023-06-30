@@ -8,11 +8,7 @@ import io.iohk.atala.pollux.core.model.error.VerificationPolicyError
 import io.iohk.atala.pollux.core.model.error.VerificationPolicyError.*
 import io.iohk.atala.pollux.core.service.VerificationPolicyService
 import io.iohk.atala.pollux.credentialschema.http.VerificationPolicy.*
-import io.iohk.atala.pollux.credentialschema.http.{
-  VerificationPolicy,
-  VerificationPolicyInput,
-  VerificationPolicyPage
-}
+import io.iohk.atala.pollux.credentialschema.http.{VerificationPolicy, VerificationPolicyInput, VerificationPolicyPage}
 import zio.ZIO.*
 import zio.*
 

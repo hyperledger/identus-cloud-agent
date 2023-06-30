@@ -28,7 +28,7 @@ case class VerificationPolicyConstraint(
 
 object VerificationPolicySql extends DoobieContext.Postgres(SnakeCase) {
   import io.iohk.atala.pollux.sql.repository.VerificationPolicyExtensions._
-  
+
   def insert(verificationPolicy: VerificationPolicy) = {
     @nowarn
     inline given InsertMeta[VerificationPolicy] = insertMeta(exclude = _.id, _.createdAt, _.updatedAt)

@@ -21,7 +21,6 @@ object JWT {
   }
 }
 
-
 trait Signer {
   def encode(claim: Json): JWT
 }

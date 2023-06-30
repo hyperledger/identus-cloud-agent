@@ -8,7 +8,6 @@ import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.must.Matchers.mustBe
 import org.scalatest.matchers.should.Matchers
 
-
 class ECDSAVerifierTest extends AnyFunSuite with Matchers {
 
   test("toECDSAVerifier should use BouncyCastleProviderSingleton") {

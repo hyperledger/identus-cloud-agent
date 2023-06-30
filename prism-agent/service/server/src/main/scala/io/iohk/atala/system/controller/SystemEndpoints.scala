@@ -7,7 +7,6 @@ import sttp.tapir.ztapir.stringBody
 import sttp.tapir.json.zio.jsonBody
 import sttp.tapir.*
 
-
 object SystemEndpoints {
 
   val health: PublicEndpoint[
