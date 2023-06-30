@@ -6,6 +6,9 @@ concurrency:
 
 on:
   pull_request:
+    paths:
+      - ".github/workflows/performance-tests.yml"
+      - "tests/performance-tests/**"
   push:
     branches:
       - "main"
@@ -81,7 +84,7 @@ jobs:
           node-version: 16.x
           registry-url: "https://npm.pkg.github.com"
 
-      - name: Compile tests to JS
+      - name: Install dependencies
         uses: borales/actions-yarn@v4
         with:
           cmd: install
@@ -93,7 +96,7 @@ jobs:
           cmd: webpack
           dir: ${{ env.BENCHMARKING_DIR }}
 
-      - name: Install k6
+      - name: Connection Flow Smoke Test
         run: |
           curl https://github.com/grafana/k6/releases/download/v0.45.0/k6-v0.45.0-linux-amd64.tar.gz -L | tar xvz --strip-components 1
           ls -la
