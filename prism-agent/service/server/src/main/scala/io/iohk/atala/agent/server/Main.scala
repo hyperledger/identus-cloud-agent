@@ -3,7 +3,7 @@ package io.iohk.atala.agent.server
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
 import io.iohk.atala.agent.server.http.ZioHttpClient
 import io.iohk.atala.agent.server.sql.Migrations as AgentMigrations
-import io.iohk.atala.agent.walletapi.service.{ManagedDIDService, ManagedDIDServiceImpl}
+import io.iohk.atala.agent.walletapi.service.{ManagedDIDService, ManagedDIDServiceImpl, ManagedDIDServiceWithEventNotificationImpl}
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDNonSecretStorage
 import io.iohk.atala.castor.controller.{DIDControllerImpl, DIDRegistrarControllerImpl}
 import io.iohk.atala.castor.core.service.DIDServiceImpl
@@ -15,18 +15,8 @@ import io.iohk.atala.event.notification.{Event, EventNotificationServiceImpl}
 import io.iohk.atala.issue.controller.IssueControllerImpl
 import io.iohk.atala.mercury.*
 import io.iohk.atala.pollux.core.service.*
-import io.iohk.atala.pollux.credentialschema.controller.{
-  CredentialSchemaController,
-  CredentialSchemaControllerImpl,
-  VerificationPolicyControllerImpl
-}
-import io.iohk.atala.pollux.sql.repository.{
-  JdbcCredentialRepository,
-  JdbcCredentialSchemaRepository,
-  JdbcPresentationRepository,
-  JdbcVerificationPolicyRepository,
-  Migrations as PolluxMigrations
-}
+import io.iohk.atala.pollux.credentialschema.controller.{CredentialSchemaController, CredentialSchemaControllerImpl, VerificationPolicyControllerImpl}
+import io.iohk.atala.pollux.sql.repository.{JdbcCredentialRepository, JdbcCredentialSchemaRepository, JdbcPresentationRepository, JdbcVerificationPolicyRepository, Migrations as PolluxMigrations}
 import io.iohk.atala.presentproof.controller.PresentProofControllerImpl
 import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.system.controller.SystemControllerImpl
@@ -129,7 +119,7 @@ object MainApp extends ZIOAppDefault {
           CredentialSchemaServiceImpl.layer,
           CredentialServiceWithEventNotificationImpl.layer,
           DIDServiceImpl.layer,
-          ManagedDIDServiceImpl.layer,
+          ManagedDIDServiceWithEventNotificationImpl.layer,
           PresentationServiceWithEventNotificationImpl.layer,
           VerificationPolicyServiceImpl.layer,
           // grpc

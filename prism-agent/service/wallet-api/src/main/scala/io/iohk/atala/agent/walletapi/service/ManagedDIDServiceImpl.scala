@@ -4,7 +4,7 @@ import io.iohk.atala.agent.walletapi.crypto.Apollo
 import io.iohk.atala.agent.walletapi.model.*
 import io.iohk.atala.agent.walletapi.model.error.{*, given}
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService.DEFAULT_MASTER_KEY_ID
-import io.iohk.atala.agent.walletapi.service.handler.{DIDUpdateHandler, PublicationHandler}
+import io.iohk.atala.agent.walletapi.service.handler.{DIDCreateHandler, DIDUpdateHandler, PublicationHandler}
 import io.iohk.atala.agent.walletapi.storage.{DIDNonSecretStorage, DIDSecretStorage}
 import io.iohk.atala.agent.walletapi.util.*
 import io.iohk.atala.castor.core.model.did.*
@@ -14,16 +14,15 @@ import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.mercury.PeerDID
 import io.iohk.atala.mercury.model.DidId
 import zio.*
-import scala.language.implicitConversions
 
 import java.security.{PrivateKey as JavaPrivateKey, PublicKey as JavaPublicKey}
 import scala.collection.immutable.ArraySeq
-import io.iohk.atala.agent.walletapi.service.handler.DIDCreateHandler
+import scala.language.implicitConversions
 
 /** A wrapper around Castor's DIDService providing key-management capability. Analogous to the secretAPI in
   * indy-wallet-sdk.
   */
-final class ManagedDIDServiceImpl private[walletapi] (
+class ManagedDIDServiceImpl private[walletapi] (
     didService: DIDService,
     didOpValidator: DIDOperationValidator,
     private[walletapi] val secretStorage: DIDSecretStorage,
@@ -266,28 +265,28 @@ final class ManagedDIDServiceImpl private[walletapi] (
     } yield awaitingConfirmationOps ++ pendingOps
   }
 
-  private def computeNewDIDLineageStatusAndPersist[E](
+  protected def computeNewDIDLineageStatusAndPersist[E](
       updateLineage: DIDUpdateLineage
-  )(using c1: Conversion[DIDOperationError, E], c2: Conversion[CommonWalletStorageError, E]): IO[E, Unit] = {
+  )(using c1: Conversion[DIDOperationError, E], c2: Conversion[CommonWalletStorageError, E]): IO[E, Boolean] = {
     for {
       maybeOperationDetail <- didService
         .getScheduledDIDOperationDetail(updateLineage.operationId.toArray)
         .mapError[E](e => e)
       newStatus = maybeOperationDetail.fold(ScheduledDIDOperationStatus.Rejected)(_.status)
-      _ <- nonSecretStorage
+      updated <- nonSecretStorage
         .setDIDUpdateLineageStatus(updateLineage.operationId.toArray, newStatus)
         .mapError[E](CommonWalletStorageError.apply)
         .when(updateLineage.status != newStatus)
-    } yield ()
+    } yield updated.isDefined
   }
 
   /** Reconcile state with DLT and write new state to the storage */
-  private def computeNewDIDStateFromDLTAndPersist[E](
+  protected def computeNewDIDStateFromDLTAndPersist[E](
       did: CanonicalPrismDID
   )(using
       c1: Conversion[CommonWalletStorageError, E],
       c2: Conversion[DIDOperationError, E]
-  ): IO[E, Unit] = {
+  ): IO[E, Boolean] = {
     for {
       maybeCurrentState <- nonSecretStorage
         .getManagedDIDState(did)
@@ -295,13 +294,13 @@ final class ManagedDIDServiceImpl private[walletapi] (
       maybeNewPubState <- ZIO
         .foreach(maybeCurrentState)(i => computeNewDIDStateFromDLT(i.publicationState))
         .mapError[E](e => e)
-      _ <- ZIO.foreach(maybeCurrentState zip maybeNewPubState) { case (currentState, newPubState) =>
+      updated <- ZIO.foreach(maybeCurrentState zip maybeNewPubState) { case (currentState, newPubState) =>
         nonSecretStorage
           .updateManagedDID(did, ManagedDIDStatePatch(newPubState))
           .mapError[E](CommonWalletStorageError.apply)
           .when(currentState.publicationState != newPubState)
       }
-    } yield ()
+    } yield updated.flatten.isDefined
   }
 
   /** Reconcile state with DLT and return an updated state */
