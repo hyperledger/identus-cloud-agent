@@ -11,10 +11,8 @@ on:
       - "main"
   workflow_dispatch:
 
-defaults:
-  run:
-    shell: bash
-    working-directory: "tests/performance-tests/atala-performance-tests-k6"
+env:
+  BENCHMARKING_DIR: "tests/performance-tests/atala-performance-tests-k6"
 
 jobs:
   run-e2e-tests:
@@ -48,11 +46,9 @@ jobs:
 #      - name: Build local version of PRISM Agent
 #        env:
 #          ENV_FILE: "infrastructure/local/.env"
-#          PRISM_AGENT_PATH: "../../.."
 #          GITHUB_ACTOR: ${{ secrets.ATALA_GITHUB_ACTOR }}
 #          GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
 #        run: |
-#          cd "${PRISM_AGENT_PATH}" || exit 129
 #          sbt docker:publishLocal
 #          PRISM_AGENT_VERSION=$(cut version.sbt -d '=' -f2 | tr -d '" ')
 #          sed -i.bak "s/PRISM_AGENT_VERSION=.*/PRISM_AGENT_VERSION=${PRISM_AGENT_VERSION}/" "${ENV_FILE}" && rm -f "${ENV_FILE}.bak"
@@ -87,13 +83,15 @@ jobs:
         uses: borales/actions-yarn@v4
         with:
           cmd: install
+          dir: ${{ env.BENCHMARKING_DIR }}
 
       - name: Compile tests to JS
         uses: borales/actions-yarn@v4
         with:
           cmd: webpack
+          dir: ${{ env.BENCHMARKING_DIR }}
 
       - name: Run k6
         uses: grafana/k6-action@v0.3.0
         with:
-          filename: "./dist/connection-flow-test.js"
+          filename: ${{ env.BENCHMARKING_DIR }}/dist/connection-flow-test.js
