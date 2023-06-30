@@ -92,6 +92,11 @@ object MainApp extends ZIOAppDefault {
 
       _ <- migrations
 
+      /** AppConfig & SystemController & PresentProofController & DIDRegistrarController & DIDController &
+        * IssueController & ConnectionController & VerificationPolicyController & CredentialSchemaController &
+        * ManagedDIDService
+        */
+
       app <- PrismAgentApp
         .run(didCommServicePort)
         .provide(

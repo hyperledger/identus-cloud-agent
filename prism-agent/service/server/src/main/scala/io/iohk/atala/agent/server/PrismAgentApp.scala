@@ -78,6 +78,10 @@ object PrismAgentApp {
 
 }
 
+/** AppConfig & SystemController & PresentProofController & DIDRegistrarController & DIDController & IssueController &
+  * ConnectionController & VerificationPolicyController & CredentialSchemaController
+  */
+
 object AgentHttpServer {
   def run =
     for {
@@ -100,6 +104,6 @@ object AgentHttpServer {
           allSystemEndpoints
       )
       appConfig <- ZIO.service[AppConfig]
-      httpServer <- ZHttp4sBlazeServer.start(allEndpoints, port = appConfig.agent.httpEndpoint.http.port)
+      _ <- ZHttp4sBlazeServer.start(allEndpoints, port = appConfig.agent.httpEndpoint.http.port)
     } yield ()
 }

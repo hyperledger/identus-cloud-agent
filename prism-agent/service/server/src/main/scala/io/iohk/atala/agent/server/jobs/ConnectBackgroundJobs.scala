@@ -1,6 +1,5 @@
 package io.iohk.atala.agent.server.jobs
 
-import com.nimbusds.jose.jwk.OctetKeyPair
 import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.server.jobs.BackgroundJobError.ErrorResponseReceivedFromPeerAgent
 import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError
@@ -13,13 +12,8 @@ import io.iohk.atala.connect.core.service.ConnectionService
 import io.iohk.atala.mercury.*
 import io.iohk.atala.mercury.model.*
 import io.iohk.atala.mercury.model.error.*
-import io.iohk.atala.mercury.protocol.issuecredential.*
-import io.iohk.atala.resolvers.{DIDResolver, UniversalDidResolver}
-import org.didcommx.didcomm.DIDComm
+import io.iohk.atala.resolvers.DIDResolver
 import zio.*
-
-import java.io.IOException
-
 object ConnectBackgroundJobs {
 
   val didCommExchanges = {

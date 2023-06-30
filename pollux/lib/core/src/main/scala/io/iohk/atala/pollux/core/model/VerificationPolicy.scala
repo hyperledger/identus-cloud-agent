@@ -1,8 +1,8 @@
 package io.iohk.atala.pollux.core.model
 
-import zio.{Clock, Random, ZIO}
+import zio.{Clock, Random}
 
-import java.time.{OffsetDateTime, ZoneId, ZoneOffset}
+import java.time.{OffsetDateTime, ZoneOffset}
 import java.util.UUID
 
 case class VerificationPolicy(

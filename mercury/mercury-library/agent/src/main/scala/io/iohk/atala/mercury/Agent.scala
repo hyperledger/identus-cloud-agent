@@ -1,7 +1,6 @@
 package io.iohk.atala.mercury
 
 import io.iohk.atala.mercury.model.DidId
-import io.iohk.atala.resolvers.PeerDidResolver
 
 enum Agent(val id: DidId):
   case Alice extends Agent(DidId("did:example:alice"))

@@ -4,15 +4,11 @@ import scala.jdk.CollectionConverters.*
 import zio._
 
 import io.circe._
-import io.circe.Json._
-import io.circe.parser._
 import io.circe.JsonObject
 import io.iohk.atala.mercury.model._
 import io.iohk.atala.mercury.model.error._
 import io.iohk.atala.mercury.protocol.routing._
 import io.iohk.atala.resolvers.DIDResolver
-import org.didcommx.didcomm.common.VerificationMethodType
-import org.didcommx.didcomm.common.VerificationMaterialFormat
 
 type HttpOrDID = String //TODO
 case class ServiceEndpoint(uri: HttpOrDID, accept: Option[Seq[String]], routingKeys: Option[Seq[String]])

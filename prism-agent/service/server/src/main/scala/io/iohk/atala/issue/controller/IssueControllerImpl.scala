@@ -1,14 +1,9 @@
 package io.iohk.atala.issue.controller
 
 import io.iohk.atala.agent.server.ControllerHelper
-import io.iohk.atala.agent.server.config.AppConfig
-import io.iohk.atala.agent.walletapi.service.ManagedDIDService
-import io.iohk.atala.api.http.model.{Pagination, PaginationInput}
+import io.iohk.atala.api.http.model.PaginationInput
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
-import io.iohk.atala.castor.core.model.did.PrismDID
 import io.iohk.atala.connect.controller.ConnectionController
-import io.iohk.atala.connect.core.model.ConnectionRecord
-import io.iohk.atala.connect.core.model.ConnectionRecord.{ProtocolState, Role}
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.connect.core.service.ConnectionService
 import io.iohk.atala.issue.controller.IssueController.toHttpError
@@ -18,14 +13,10 @@ import io.iohk.atala.issue.controller.http.{
   IssueCredentialRecord,
   IssueCredentialRecordPage
 }
-import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.pollux.core.model.DidCommID
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.core.service.CredentialService
 import zio.{IO, URLayer, ZIO, ZLayer}
-
-import java.util.UUID
-import scala.util.Try
 
 class IssueControllerImpl(
     credentialService: CredentialService,

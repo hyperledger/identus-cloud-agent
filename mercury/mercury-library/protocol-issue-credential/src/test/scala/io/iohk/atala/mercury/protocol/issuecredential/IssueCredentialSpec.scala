@@ -6,7 +6,6 @@ import io.circe.syntax.*
 import io.iohk.atala.mercury.model.AttachmentDescriptor
 import munit.*
 import io.iohk.atala.mercury.model._
-import zio.*
 
 class IssueCredentialSpec extends ZSuite {
 

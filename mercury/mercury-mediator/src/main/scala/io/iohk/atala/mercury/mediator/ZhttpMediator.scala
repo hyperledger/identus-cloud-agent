@@ -3,12 +3,8 @@ package io.iohk.atala.mercury.mediator
 import zio._
 import zio.http._
 import zio.http.model._
-import zio.http.service._
-
-import java.nio.charset.StandardCharsets
 
 import io.iohk.atala.mercury._
-import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.resolvers.MediatorDidComm
 import scala.io.Source
 import java.util.Base64
@@ -35,7 +31,6 @@ object ZhttpMediator extends ZIOAppDefault {
 
     case req @ Method.GET -> !! / "peer" / keyAgreementBase64 / keyAuthenticationBase64 / endpointBase64 => // REMOVE For debug purpose
       import io.iohk.atala.mercury.PeerDID
-      import com.nimbusds.jose.jwk.Curve
       import com.nimbusds.jose.jwk.OctetKeyPair
 
       // REMOVE Example for debug purpose

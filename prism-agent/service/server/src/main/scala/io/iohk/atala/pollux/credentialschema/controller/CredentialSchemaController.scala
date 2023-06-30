@@ -1,7 +1,7 @@
 package io.iohk.atala.pollux.credentialschema.controller
 
 import io.iohk.atala.api.http.*
-import io.iohk.atala.api.http.model.{CollectionStats, Order, Pagination, PaginationInput}
+import io.iohk.atala.api.http.model.{Order, Pagination}
 import io.iohk.atala.pollux.core.service.CredentialSchemaService
 import io.iohk.atala.pollux.core.service.CredentialSchemaService.Error.*
 import io.iohk.atala.pollux.credentialschema.http.{
@@ -10,7 +10,7 @@ import io.iohk.atala.pollux.credentialschema.http.{
   CredentialSchemaResponsePage,
   FilterInput
 }
-import zio.{IO, Task, ZIO, ZLayer}
+import zio.*
 import scala.language.implicitConversions
 
 import java.util.UUID

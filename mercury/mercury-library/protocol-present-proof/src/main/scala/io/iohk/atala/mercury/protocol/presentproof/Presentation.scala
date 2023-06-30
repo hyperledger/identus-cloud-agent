@@ -3,7 +3,6 @@ package io.iohk.atala.mercury.protocol.presentproof
 import io.circe.{Decoder, Encoder}
 import io.circe.generic.semiauto.*
 import io.iohk.atala.mercury.model.{AttachmentDescriptor, DidId, Message, PIURI}
-import io.iohk.atala.mercury.model.AttachmentDescriptor.attachmentDescriptorEncoderV2
 import io.circe.syntax._
 
 /** @param attach_id

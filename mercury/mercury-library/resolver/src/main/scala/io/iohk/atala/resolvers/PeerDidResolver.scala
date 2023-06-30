@@ -1,19 +1,14 @@
 package io.iohk.atala.resolvers
 
-import io.circe.Decoder.Result
-import io.iohk.atala.resolvers.UniversalDidResolver.diddocs
-import org.didcommx.didcomm.diddoc.{DIDCommService, DIDDoc, DIDDocResolver, DIDDocResolverInMemory, VerificationMethod}
+import org.didcommx.didcomm.diddoc.{DIDCommService, DIDDoc, VerificationMethod}
 import org.didcommx.peerdid.PeerDIDResolver.resolvePeerDID
 import org.didcommx.peerdid.VerificationMaterialFormatPeerDID
 import io.circe.{HCursor, Json}
-import io.circe.generic.auto.*
 import io.circe.parser.*
-import io.iohk.atala.resolvers.AliceDidDoc.verficationMethods
 import zio.*
-import zio.{Console, Task, UIO, URLayer, ZIO}
 import org.didcommx.didcomm.common._
 import scala.jdk.CollectionConverters.*
-import java.util.Optional
+import io.circe.Decoder
 
 trait PeerDidResolver {
   def resolve(did: String): UIO[String]
@@ -34,7 +29,6 @@ case class PeerDidResolverImpl() extends PeerDidResolver {
 }
 
 object PeerDidResolver {
-  import io.circe.Decoder, io.circe.generic.auto._
   def resolveUnsafe(didPeer: String) =
     parse(resolvePeerDID(didPeer, VerificationMaterialFormatPeerDID.JWK)).toOption.get
 
@@ -42,12 +36,6 @@ object PeerDidResolver {
     val json = resolveUnsafe(didPeer)
     val cursor: HCursor = json.hcursor
     val did = cursor.downField("id").as[String].getOrElse(???)
-    val authentications = cursor
-      .downField("authentication")
-      .as[List[Json]]
-      .getOrElse(???)
-      .map(_.toString)
-    val keyAgreements: Seq[String] = cursor.downField("keyAgreement").as[List[Json]].getOrElse(???).map(_.toString)
     val service = cursor.downField("service").as[List[Json]]
 
     val didCommServices: List[DIDCommService] = service

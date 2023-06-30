@@ -6,8 +6,6 @@ import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
-import java.util.UUID
-
 case class ConnectionsPage(
     @description(annotations.contents.description)
     @encodedExample(annotations.contents.example)

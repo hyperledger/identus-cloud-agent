@@ -1,47 +1,23 @@
 package io.iohk.atala.pollux
 
-import io.iohk.atala.agent.server.http.ZHttp4sBlazeServer
-import io.iohk.atala.agent.walletapi.model.{ManagedDIDState, PublicationState}
-import io.iohk.atala.agent.walletapi.service.MockManagedDIDService
 import io.iohk.atala.api.http.ErrorResponse
-import io.iohk.atala.castor.core.model.did.PrismDIDOperation
 import io.iohk.atala.container.util.MigrationAspects.*
-import io.iohk.atala.container.util.PostgresLayer.*
 import io.iohk.atala.pollux.core.model.CredentialSchema
-import io.iohk.atala.pollux.core.service.CredentialSchemaServiceImpl
 import io.iohk.atala.pollux.credentialschema.*
-import io.iohk.atala.pollux.credentialschema.controller.{CredentialSchemaController, CredentialSchemaControllerImpl}
-import io.iohk.atala.pollux.credentialschema.http.{
-  CredentialSchemaInput,
-  CredentialSchemaResponse,
-  CredentialSchemaResponsePage
-}
+import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaController
+import io.iohk.atala.pollux.credentialschema.http.{CredentialSchemaInput, CredentialSchemaResponse}
 import io.iohk.atala.pollux.sql.repository.JdbcCredentialSchemaRepository
-import sttp.client3.testing.SttpBackendStub
 import sttp.client3.ziojson.*
-import sttp.client3.{DeserializationException, ResponseException, SttpBackend, UriContext, basicRequest, Response as R}
-import sttp.model.{StatusCode, Uri}
-import sttp.monad.MonadError
-import sttp.tapir.server.interceptor.CustomiseInterceptors
-import sttp.tapir.server.interceptor.RequestResult.Response
-import sttp.tapir.server.stub.TapirStubInterpreter
-import sttp.tapir.ztapir.RIOMonadError
+import sttp.client3.basicRequest
+import sttp.model.StatusCode
 import zio.*
 import zio.ZIO.*
-import zio.interop.catz.*
-import zio.interop.catz.implicits.*
 import zio.json.*
 import zio.json.ast.Json
 import zio.json.ast.Json.*
-import zio.mock.Expectation
-import zio.stream.ZSink
-import zio.stream.ZStream.unfold
 import zio.test.*
 import zio.test.Assertion.*
-import zio.test.Gen.*
 import zio.test.TestAspect.*
-
-import java.time.{OffsetDateTime, ZoneOffset}
 import java.util.UUID
 
 object CredentialSchemaBasicSpec extends ZIOSpecDefault with CredentialSchemaTestTools:

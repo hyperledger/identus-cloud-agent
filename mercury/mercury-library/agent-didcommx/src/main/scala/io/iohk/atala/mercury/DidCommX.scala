@@ -7,14 +7,6 @@ import org.didcommx.didcomm.model._
 
 import io.iohk.atala.resolvers._
 import io.iohk.atala.mercury.model.{given, _}
-import java.util.Base64
-import scala.annotation.nowarn
-import com.nimbusds.jose.jwk.OctetKeyPair
-import org.didcommx.didcomm.diddoc.DIDDoc
-import org.didcommx.peerdid.core.PeerDIDUtils
-import org.didcommx.didcomm.common._
-import org.didcommx.didcomm.secret._
-import scala.jdk.CollectionConverters.*
 import scala.language.implicitConversions
 
 object DidCommX {

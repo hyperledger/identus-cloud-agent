@@ -1,17 +1,15 @@
 package io.iohk.atala.pollux.sql.model.db
 
-import io.getquill.{Literal, SnakeCase}
-import io.getquill.doobie.DoobieContext
-import io.iohk.atala.pollux.core.model.Schema
-import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
-import io.getquill.context.json.PostgresJsonExtensions
 import io.getquill.JsonValue
-
-import java.time.{OffsetDateTime, ZonedDateTime}
-import java.util.UUID
-
+import io.getquill.SnakeCase
 import io.getquill.*
+import io.getquill.context.json.PostgresJsonExtensions
+import io.getquill.doobie.DoobieContext
 import io.getquill.idiom.*
+import io.iohk.atala.pollux.core.model.Schema
+
+import java.time.OffsetDateTime
+import java.util.UUID
 
 case class CredentialSchema(
     guid: UUID,

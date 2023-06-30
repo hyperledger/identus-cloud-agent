@@ -7,8 +7,6 @@ import io.getquill.*
 import io.getquill.doobie.DoobieContext
 
 import java.time.OffsetDateTime
-import io.getquill.*
-import io.getquill.idiom.*
 
 case class VerificationPolicy(
     id: UUID,
@@ -83,6 +81,7 @@ object VerificationPolicySql extends DoobieContext.Postgres(SnakeCase) {
     )
 
   def update(verificationPolicy: VerificationPolicy, nonce: Int) =
+    // TODO, compiler marks this import as unused, since it is new to scala 3 it can be broken for givens or this given is indeed unused
     inline given UpdateMeta[VerificationPolicy] = updateMeta(exclude = _.id)
     run(
       quote(

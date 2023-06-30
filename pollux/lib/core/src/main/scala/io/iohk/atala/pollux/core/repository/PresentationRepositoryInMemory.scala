@@ -7,7 +7,6 @@ import io.iohk.atala.pollux.core.model.error.PresentationError._
 import zio.*
 
 import java.time.Instant
-import java.util.UUID
 
 class PresentationRepositoryInMemory(
     storeRef: Ref[Map[DidCommID, PresentationRecord]],

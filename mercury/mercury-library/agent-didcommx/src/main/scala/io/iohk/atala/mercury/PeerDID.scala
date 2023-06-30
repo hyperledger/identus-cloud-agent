@@ -1,15 +1,10 @@
 package io.iohk.atala.mercury
 
-import org.didcommx.didcomm.common.{VerificationMaterial, VerificationMaterialFormat, VerificationMethodType}
-import org.didcommx.didcomm.secret.{Secret, SecretResolverInMemory}
-import org.didcommx.peerdid.core.PeerDIDUtils
 import org.didcommx.peerdid.*
 
 import com.nimbusds.jose.jwk.*
 import com.nimbusds.jose.jwk.gen.*
 import io.circe._
-import io.circe.generic.semiauto._
-import cats.implicits._
 import io.circe.syntax._
 import io.circe.generic.semiauto._
 import scala.jdk.CollectionConverters.*

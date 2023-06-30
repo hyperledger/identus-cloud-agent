@@ -188,7 +188,6 @@ object ManagedDIDServiceSpec
           && assert(stateAfter)(isSome(isSubtype[PublicationState.PublicationPending](anything)))
       },
       test("do not re-publish when publishing already published DID") {
-        val template = generateDIDTemplate()
         for {
           svc <- ZIO.service[ManagedDIDService]
           testDIDSvc <- ZIO.service[TestDIDService]
@@ -288,7 +287,6 @@ object ManagedDIDServiceSpec
   private val updateManagedDIDSpec =
     suite("updateManagedDID")(
       test("update stored and published DID") {
-        val template = generateDIDTemplate()
         for {
           svc <- ZIO.service[ManagedDIDService]
           testDIDSvc <- ZIO.service[TestDIDService]
@@ -316,7 +314,6 @@ object ManagedDIDServiceSpec
         assertZIO(effect.exit)(fails(isSubtype[UpdateManagedDIDError.DIDNotPublished](anything)))
       },
       test("fail on deactivated DID") {
-        val template = generateDIDTemplate()
         val effect = for {
           svc <- ZIO.service[ManagedDIDService]
           testDIDSvc <- ZIO.service[TestDIDService]
@@ -328,7 +325,6 @@ object ManagedDIDServiceSpec
         assertZIO(effect.exit)(fails(isSubtype[UpdateManagedDIDError.DIDAlreadyDeactivated](anything)))
       },
       test("validate constructed operation before submitting an operation") {
-        val template = generateDIDTemplate()
         for {
           svc <- ZIO.service[ManagedDIDService]
           testDIDSvc <- ZIO.service[TestDIDService]
@@ -340,7 +336,6 @@ object ManagedDIDServiceSpec
         } yield assert(operations)(hasSize(equalTo(1)))
       },
       test("store private keys in update operation") {
-        val template = generateDIDTemplate()
         for {
           svc <- ZIO.service[ManagedDIDService]
           testDIDSvc <- ZIO.service[TestDIDService]
@@ -356,7 +351,6 @@ object ManagedDIDServiceSpec
         )
       },
       test("store private keys with the same key-id across multiple update operation") {
-        val template = generateDIDTemplate()
         for {
           svc <- ZIO.service[ManagedDIDService]
           testDIDSvc <- ZIO.service[TestDIDService]
@@ -373,7 +367,6 @@ object ManagedDIDServiceSpec
         )
       },
       test("store did lineage for each update operation") {
-        val template = generateDIDTemplate()
         for {
           svc <- ZIO.service[ManagedDIDService]
           testDIDSvc <- ZIO.service[TestDIDService]

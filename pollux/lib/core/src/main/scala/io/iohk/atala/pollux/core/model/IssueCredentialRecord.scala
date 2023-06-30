@@ -1,12 +1,10 @@
 package io.iohk.atala.pollux.core.model
-import io.iohk.atala.prism.crypto.MerkleInclusionProof
 
 import io.iohk.atala.mercury.protocol.issuecredential.OfferCredential
 import io.iohk.atala.mercury.protocol.issuecredential.RequestCredential
 import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
 import IssueCredentialRecord._
 import java.time.Instant
-import io.iohk.atala.pollux.vc.jwt.JwtCredential
 import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
 
 final case class IssueCredentialRecord(

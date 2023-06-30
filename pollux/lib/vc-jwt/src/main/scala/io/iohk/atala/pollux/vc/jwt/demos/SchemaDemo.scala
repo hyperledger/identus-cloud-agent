@@ -1,14 +1,7 @@
 package io.iohk.atala.pollux.vc.jwt.demos
 
-import cats.implicits.*
 import io.circe.*
-import net.reactivecore.cjs.resolver.Downloader
-import net.reactivecore.cjs.{DocumentValidator, Loader, Result}
-import pdi.jwt.{JwtAlgorithm, JwtCirce, JwtClaim}
-
-import java.security.*
-import java.security.spec.*
-import java.time.Instant
+import net.reactivecore.cjs.{DocumentValidator, Loader}
 
 @main def schemaDemo(): Unit =
   val schemaCode =

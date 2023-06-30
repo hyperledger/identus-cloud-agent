@@ -1,7 +1,6 @@
 package io.iohk.atala.issue.controller
 
 import io.iohk.atala.api.http.ErrorResponse
-import io.iohk.atala.issue.controller.IssueController
 import io.iohk.atala.pollux.core.model.DidCommID
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.vc.jwt.W3cCredentialPayload
@@ -9,16 +8,8 @@ import zio.*
 import zio.test.*
 import zio.test.Assertion.*
 import io.iohk.atala.pollux.vc.jwt.*
-import io.iohk.atala.pollux.vc.jwt.CredentialPayload.Implicits.*
-import pdi.jwt.{JwtAlgorithm, JwtCirce, JwtClaim}
 import io.circe.*
-import io.circe.generic.auto.*
-import io.circe.parser.decode
-import io.circe.syntax.*
-
-import java.security.*
-import java.security.spec.*
-import java.time.{Instant, ZonedDateTime}
+import java.time.Instant
 
 object IssueControllerSpec extends ZIOSpecDefault {
 

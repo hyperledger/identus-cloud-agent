@@ -1,14 +1,11 @@
 package io.iohk.atala.mercury.protocol.reportproblem.v2
 
 import io.circe.Json
-import io.circe.parser.*
 import io.circe.syntax.*
-import io.iohk.atala.mercury.model.AttachmentDescriptor
 import munit.*
 import io.iohk.atala.mercury.model._
-import zio.*
-import cats.syntax.either._
-import io.circe._, io.circe.parser._
+import io.circe.*
+import io.circe.parser.*
 class ReportProblemSpec extends ZSuite {
 
   test("ReportProblem") {

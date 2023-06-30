@@ -3,9 +3,6 @@ package io.iohk.atala.mercury.model
 import scala.jdk.CollectionConverters.*
 
 import org.didcommx.didcomm.model._
-import io.circe.JsonObject.apply
-import io.circe.JsonObject
-import io.circe.Json
 import scala.language.implicitConversions
 
 final case class EncryptedMessageImp(private val msg: PackEncryptedResult) extends EncryptedMessage {

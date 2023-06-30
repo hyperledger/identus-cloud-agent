@@ -1,22 +1,14 @@
 package io.iohk.atala.mercury
 
-import org.didcommx.didcomm.DIDComm
-
 import zio._
-import org.didcommx.didcomm.model._
 
-import io.iohk.atala.resolvers._
-import io.iohk.atala.mercury.model.{given, _}
-import java.util.Base64
-import scala.annotation.nowarn
+import io.iohk.atala.mercury.model.*
 import com.nimbusds.jose.jwk.OctetKeyPair
-import org.didcommx.didcomm.diddoc.DIDDoc
 import org.didcommx.peerdid.core.PeerDIDUtils
 import org.didcommx.didcomm.common._
 import org.didcommx.didcomm.secret._
 import scala.jdk.CollectionConverters.*
 
-import io.iohk.atala.mercury.{AgentPeerService, DidCommX}
 case class AgentPeerService(
     val id: DidId,
     val jwkForKeyAgreement: Seq[OctetKeyPair],

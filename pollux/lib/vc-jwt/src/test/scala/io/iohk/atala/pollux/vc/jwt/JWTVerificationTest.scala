@@ -3,16 +3,12 @@ package io.iohk.atala.pollux.vc.jwt
 import com.nimbusds.jose.jwk.{Curve, ECKey}
 import com.nimbusds.jose.jwk.gen.ECKeyGenerator
 import io.circe.*
-import io.circe.generic.auto.*
-import io.circe.parser.decode
 import io.circe.syntax.*
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import io.iohk.atala.pollux.vc.jwt.CredentialPayload.Implicits.*
-import io.iohk.atala.pollux.vc.jwt.PresentationPayload.Implicits.*
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
-import zio.test.TestAspect.ignore
 
 import java.time.Instant
 

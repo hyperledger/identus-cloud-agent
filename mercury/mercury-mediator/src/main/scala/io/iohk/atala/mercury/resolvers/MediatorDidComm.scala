@@ -2,7 +2,6 @@ package io.iohk.atala.mercury.resolvers
 
 import zio._
 import io.iohk.atala.mercury._
-import org.didcommx.didcomm.DIDComm
 
 object MediatorDidComm {
 

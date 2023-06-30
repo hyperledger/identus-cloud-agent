@@ -1,10 +1,8 @@
 package io.iohk.atala.pollux.credentialschema.http
 
-import io.iohk.atala.api.http.*
 import io.iohk.atala.pollux.core.model
 import sttp.tapir.EndpointIO.annotations.{example, query}
 import io.iohk.atala.pollux.credentialschema.http.FilterInput.annotations
-import sttp.tapir.Schema.annotations.validateEach
 import sttp.tapir.Validator.*
 import io.iohk.atala.api.http.*
 
