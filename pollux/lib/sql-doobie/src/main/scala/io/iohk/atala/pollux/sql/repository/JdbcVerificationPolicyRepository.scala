@@ -1,6 +1,5 @@
 package io.iohk.atala.pollux.sql.repository
 
-import cats.syntax.functor.*
 import doobie.*
 import doobie.implicits.*
 import doobie.util.transactor.Transactor
