@@ -77,6 +77,7 @@ export class CredentialsService extends HttpService {
     let iterations = 0;
     let record: IssueCredentialRecord | undefined;
     do {
+      console.log(`${vu.vu.idInInstance}-${vu.vu.idInTest}-${vu.vu.iterationInScenario}`)
       record = this.getCredentialRecords().find(
         r => r.claims["offerId"] === `${vu.vu.idInInstance}-${vu.vu.idInTest}-${vu.vu.iterationInScenario}`
           && r.protocolState === "OfferReceived");
@@ -101,6 +102,7 @@ export class CredentialsService extends HttpService {
     do {
       const response = this.getCredentialRecord(credentialRecord);
       currentState = response.protocolState;
+      console.log(`Credential state: ${currentState}`)
       sleep(WAITING_LOOP_PAUSE_INTERVAL);
       iterations++;
     } while (currentState !== state && iterations < WAITING_LOOP_MAX_ITERATIONS);

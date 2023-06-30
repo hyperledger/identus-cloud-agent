@@ -5,8 +5,6 @@ concurrency:
   cancel-in-progress: true
 
 on:
-  schedule:
-    - cron: "0 3 * * *"
   pull_request:
     paths:
       - ".github/workflows/performance-tests.yml"
@@ -16,10 +14,9 @@ on:
       - "main"
   workflow_dispatch:
 
-defaults:
-  run:
-    shell: bash
-    working-directory: "tests/performance-tests/prism-performance-tests"
+env:
+  BENCHMARKING_DIR: "tests/performance-tests/atala-performance-tests-k6"
+  NODE_AUTH_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
 
 jobs:
   run-e2e-tests:
@@ -37,11 +34,6 @@ jobs:
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
 
-      - name: Install Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.8'
-
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
         with:
@@ -54,6 +46,17 @@ jobs:
         with:
           version: v2.12.2
           legacy: true    # will also install in PATH as `docker-compose`
+
+      - name: Build local version of PRISM Agent
+        env:
+          ENV_FILE: "infrastructure/local/.env"
+          GITHUB_ACTOR: ${{ secrets.ATALA_GITHUB_ACTOR }}
+          GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
+        run: |
+          sbt docker:publishLocal
+          PRISM_AGENT_VERSION=$(cut version.sbt -d '=' -f2 | tr -d '" ')
+          sed -i.bak "s/PRISM_AGENT_VERSION=.*/PRISM_AGENT_VERSION=${PRISM_AGENT_VERSION}/" "${ENV_FILE}" && rm -f "${ENV_FILE}.bak"
+          cat "${ENV_FILE}"
 
       - name: Start services for issuer
         env:
@@ -75,11 +78,27 @@ jobs:
           up-flags: "--wait"
           down-flags: "--volumes"
 
-      - name: Run performance tests
-        run: |
-          ./gradlew gatlingRun
-
-      - uses: actions/upload-artifact@v2
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
-          name: performance-tests-results
-          path: tests/performance-tests/prism-performance-tests/build/reports
+          node-version: 16.x
+          registry-url: "https://npm.pkg.github.com"
+
+      - name: Install dependencies
+        uses: borales/actions-yarn@v4
+        with:
+          cmd: install
+          dir: ${{ env.BENCHMARKING_DIR }}
+
+      - name: Compile tests to JS
+        uses: borales/actions-yarn@v4
+        with:
+          cmd: webpack
+          dir: ${{ env.BENCHMARKING_DIR }}
+
+      - name: Connection Flow Smoke Test
+        run: |
+          # Have to use manual download because GitHub action doesnt support localhost execution
+          curl https://github.com/grafana/k6/releases/download/v0.45.0/k6-v0.45.0-linux-amd64.tar.gz -L | tar xvz --strip-components 1
+          ls -la
+          ./k6 run ${{ env.BENCHMARKING_DIR }}/dist/connection-flow-test.js
