@@ -144,7 +144,7 @@ object MainApp extends ZIOAppDefault {
           RepoModule.polluxTransactorLayer >>> JdbcPresentationRepository.layer,
           RepoModule.polluxTransactorLayer >>> JdbcVerificationPolicyRepository.layer,
           // event notification service
-          EventNotificationServiceImpl.layer,
+          ZLayer.succeed(500) >>> EventNotificationServiceImpl.layer,
           // HTTP client
           Scope.default >>> Client.default,
         )

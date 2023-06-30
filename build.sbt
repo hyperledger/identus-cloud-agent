@@ -276,7 +276,11 @@ lazy val D_Pollux_VC_JWT = new {
 
 lazy val D_EventNotification = new {
   val zio = "dev.zio" %% "zio" % V.zio
-  val zioDependencies: Seq[ModuleID] = Seq(zio)
+  val zioTest = "dev.zio" %% "zio-test" % V.zio % Test
+  val zioTestSbt = "dev.zio" %% "zio-test-sbt" % V.zio % Test
+  val zioTestMagnolia = "dev.zio" %% "zio-test-magnolia" % V.zio % Test
+
+  val zioDependencies: Seq[ModuleID] = Seq(zio, zioTest, zioTestSbt, zioTestMagnolia)
   val baseDependencies: Seq[ModuleID] = zioDependencies
 }
 

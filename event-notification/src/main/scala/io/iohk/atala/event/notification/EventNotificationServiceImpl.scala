@@ -5,7 +5,7 @@ import zio.{IO, Queue, ULayer, URLayer, ZIO, ZLayer}
 
 import scala.collection.mutable
 
-class EventNotificationServiceImpl extends EventNotificationService:
+class EventNotificationServiceImpl(queueCapacity: Int) extends EventNotificationService:
   private[this] val queueMap = mutable.Map.empty[String, Queue[Event[_]]]
 
   private[this] def getOrCreateQueue(topic: String): IO[EventNotificationServiceError, Queue[Event[_]]] = {
@@ -13,7 +13,7 @@ class EventNotificationServiceImpl extends EventNotificationService:
       maybeQueue <- ZIO.succeed(queueMap.get(topic))
       queue <- maybeQueue match
         case Some(value) => ZIO.succeed(value)
-        case None        => Queue.bounded(500)
+        case None        => Queue.bounded(queueCapacity)
       _ <- ZIO.succeed(queueMap.put(topic, queue))
     } yield queue
   }
@@ -41,6 +41,6 @@ class EventNotificationServiceImpl extends EventNotificationService:
     })
 
 object EventNotificationServiceImpl {
-  val layer: ULayer[EventNotificationServiceImpl] =
-    ZLayer.succeed(new EventNotificationServiceImpl())
+  val layer: URLayer[Int, EventNotificationServiceImpl] =
+    ZLayer.fromFunction(new EventNotificationServiceImpl(_))
 }
