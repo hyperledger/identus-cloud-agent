@@ -13,6 +13,7 @@ on:
 
 env:
   BENCHMARKING_DIR: "tests/performance-tests/atala-performance-tests-k6"
+  NODE_AUTH_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
 
 jobs:
   run-e2e-tests:
@@ -78,6 +79,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 16.x
+          registry-url: "https://npm.pkg.github.com"
 
       - name: Compile tests to JS
         uses: borales/actions-yarn@v4
