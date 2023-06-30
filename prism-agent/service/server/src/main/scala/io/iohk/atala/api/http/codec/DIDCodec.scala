@@ -3,9 +3,8 @@ package io.iohk.atala.api.http.codec
 import io.iohk.atala.castor.controller.http.{DIDDocument, DIDResolutionResult}
 import sttp.model.MediaType
 import sttp.tapir.*
-import sttp.tapir.DecodeResult.Error.{JsonDecodeException, JsonError}
-import sttp.tapir.DecodeResult.{Error, Value}
-import zio.json.{EncoderOps, JsonCodec, JsonDecoder, JsonEncoder}
+import sttp.tapir.DecodeResult.Error
+import zio.json.{JsonDecoder, JsonEncoder}
 
 object DIDCodec {
 

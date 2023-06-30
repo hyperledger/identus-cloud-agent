@@ -1,23 +1,16 @@
 package io.iohk.atala.container.util
 
-import cats.Functor
 import cats.effect.std.Dispatcher
-import cats.effect.{Async, Resource}
-import cats.syntax.functor.*
-import com.dimafeng.testcontainers.{JdbcDatabaseContainer, PostgreSQLContainer}
+import cats.effect. Resource
+import com.dimafeng.testcontainers.PostgreSQLContainer
 import com.zaxxer.hikari.HikariConfig
 import doobie.hikari.HikariTransactor
 import doobie.util.ExecutionContexts
 import doobie.util.transactor.Transactor
 import io.iohk.atala.shared.test.containers.PostgresTestContainer.postgresContainer
-import org.testcontainers.containers.output.OutputFrame
-import org.testcontainers.utility.DockerImageName
 import zio.*
 import zio.ZIO.*
 import zio.interop.catz.*
-
-import java.util.function.Consumer
-import scala.concurrent.ExecutionContext
 
 object PostgresLayer {
 

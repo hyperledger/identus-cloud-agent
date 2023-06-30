@@ -3,9 +3,7 @@ package io.iohk.atala.mercury.model
 import scala.jdk.CollectionConverters._
 
 import io.circe._
-import io.circe.syntax._
 import io.circe.parser._
-import org.didcommx.didcomm.message.MessageBuilder
 
 object JsonUtilsForDidCommx {
   private type JsonValue = Boolean | JsonNumber | String | Json.Null.type
@@ -87,7 +85,6 @@ object JsonUtilsForDidCommx {
     |  "routingKeys": ["did:example:somemediator#somekey2"],
     |  "accept": ["didcomm/v2", "didcomm/aip2;env=rfc587"]
     |}""".stripMargin
-  val json2 = """["Test"]"""
 
   val x1 = parse(json).toOption.flatMap(_.asObject).get
   println(x1)

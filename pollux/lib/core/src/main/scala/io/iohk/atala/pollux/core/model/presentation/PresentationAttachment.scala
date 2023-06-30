@@ -2,7 +2,6 @@ package io.iohk.atala.pollux.core.model.presentation
 
 import io.circe._
 import io.circe.generic.semiauto._
-import io.circe.syntax._
 
 case class Field(
     id: Option[String] = None,

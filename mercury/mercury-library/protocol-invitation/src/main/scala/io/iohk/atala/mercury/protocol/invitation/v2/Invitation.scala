@@ -1,7 +1,7 @@
 package io.iohk.atala.mercury.protocol.invitation.v2
 import cats.implicits.*
 import io.circe.syntax.*
-import io.circe.{Decoder, Encoder, Json}
+import io.circe.{Decoder, Encoder}
 import io.iohk.atala.mercury.model.*
 import AttachmentDescriptor.attachmentDescriptorEncoderV2
 import io.circe.generic.semiauto._

@@ -1,11 +1,9 @@
 package io.iohk.atala.mercury.protocol.invitation.v1
-import cats.implicits.*
 import io.circe.syntax.*
 import io.circe.generic.semiauto.*
 import io.circe.{Decoder, Encoder, Json}
 import io.iohk.atala.mercury.model.PIURI
 
-import scala.annotation.targetName
 import io.iohk.atala.mercury.model.AttachmentDescriptor
 import io.iohk.atala.mercury.model.AttachmentDescriptor.attachmentDescriptorEncoderV1
 import io.iohk.atala.mercury.protocol.invitation.ServiceType

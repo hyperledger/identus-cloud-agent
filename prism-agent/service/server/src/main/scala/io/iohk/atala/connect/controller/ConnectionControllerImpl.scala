@@ -1,6 +1,6 @@
 package io.iohk.atala.connect.controller
 
-import io.iohk.atala.agent.server.config.{AgentConfig, AppConfig}
+import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.api.http.model.Pagination
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
@@ -13,9 +13,7 @@ import io.iohk.atala.connect.controller.http.{
 }
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.connect.core.service.ConnectionService
-import io.iohk.atala.pollux.core.model.DidCommID
-import io.iohk.atala.pollux.core.model.error.CredentialServiceError
-import zio.{IO, URLayer, ZIO, ZLayer}
+import zio.*
 
 import java.util.UUID
 

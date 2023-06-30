@@ -1,7 +1,6 @@
 package io.iohk.atala.pollux.sql.repository
 
 import cats.data.NonEmptyList
-import cats.instances.seq
 import doobie.*
 import doobie.implicits.*
 import doobie.postgres._
@@ -13,15 +12,13 @@ import io.iohk.atala.mercury.protocol.presentproof._
 import io.iohk.atala.pollux.core.model.PresentationRecord.ProtocolState
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.repository.PresentationRepository
-import io.iohk.atala.pollux.sql.model.JWTCredentialRow
 import io.iohk.atala.prism.crypto.MerkleInclusionProof
 import io.iohk.atala.shared.utils.BytesOps
 import zio.*
 import zio.interop.catz.*
 
 import java.time.Instant
-import java.util.UUID
-import java.{util => ju}
+import scala.annotation.nowarn
 
 // TODO: replace with actual implementation
 class JdbcPresentationRepository(
@@ -52,6 +49,7 @@ class JdbcPresentationRepository(
       .transact(xa)
   }
 
+  @nowarn
   private def serializeInclusionProof(proof: MerkleInclusionProof): String = BytesOps.bytesToHex(proof.encode.getBytes)
 
   // deserializes from the hex string

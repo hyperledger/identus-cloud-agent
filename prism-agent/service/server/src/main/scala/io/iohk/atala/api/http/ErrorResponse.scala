@@ -2,7 +2,6 @@ package io.iohk.atala.api.http
 
 import io.iohk.atala.api.http.ErrorResponse.annotations
 import sttp.model.StatusCode
-import sttp.tapir.EndpointOutput.OneOf
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
 import sttp.tapir.generic.auto.*

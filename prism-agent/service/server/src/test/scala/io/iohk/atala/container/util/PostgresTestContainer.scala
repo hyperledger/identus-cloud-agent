@@ -1,9 +1,7 @@
 package io.iohk.atala.container.util
 
-import cats.Functor
 import cats.effect.std.Dispatcher
-import cats.effect.{Async, Resource}
-import cats.syntax.functor.*
+import cats.effect.Resource
 import com.dimafeng.testcontainers.PostgreSQLContainer
 import com.zaxxer.hikari.HikariConfig
 import doobie.hikari.HikariTransactor
@@ -16,7 +14,6 @@ import zio.ZIO.*
 import zio.interop.catz.*
 
 import java.util.function.Consumer
-import scala.concurrent.ExecutionContext
 
 object PostgresTestContainer {
 

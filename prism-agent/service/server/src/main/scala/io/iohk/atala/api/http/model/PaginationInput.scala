@@ -1,19 +1,11 @@
 package io.iohk.atala.api.http.model
 
-import sttp.tapir.Codec.PlainCodec
-import sttp.tapir.EndpointIO.annotations.{description, query}
-import sttp.tapir.Schema.annotations.{encodedExample, validateEach}
+import sttp.tapir.EndpointIO.annotations.query
+import sttp.tapir.Schema.annotations.validateEach
 import sttp.tapir.Validator
-import sttp.tapir.generic.auto.*
-import sttp.tapir.{Codec, DecodeResult, Schema}
-import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder}
+import sttp.tapir.Schema
 
-import java.time.ZonedDateTime
-import java.util.{Base64, UUID}
-import scala.util.Try
 import io.iohk.atala.api.http.Annotation
-import io.iohk.atala.api.http.model.Pagination.annotations
-
 case class PaginationInput(
     @query
     @validateEach(Validator.positiveOrZero[Int])

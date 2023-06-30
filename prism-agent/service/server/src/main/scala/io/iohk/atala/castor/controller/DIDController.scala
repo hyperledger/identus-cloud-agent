@@ -1,12 +1,10 @@
 package io.iohk.atala.castor.controller
 
-import io.iohk.atala.api.http.RequestContext
 import io.iohk.atala.castor.controller.http.DIDResolutionResult
 import sttp.model.StatusCode
 import zio.*
 import io.iohk.atala.castor.controller.http.{DIDDocument, DIDDocumentMetadata, DIDResolutionMetadata}
 import io.iohk.atala.castor.core.model.did.w3c.{
-  PublicKeyReprOrRef,
   DIDDocumentMetadataRepr,
   DIDDocumentRepr,
   DIDResolutionErrorRepr

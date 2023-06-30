@@ -1,11 +1,8 @@
 package io.iohk.atala.mercury.protocol.anotherclasspath
 
-import cats.implicits.*
 import io.circe.*
-import io.circe.parser.*
 import io.circe.syntax.*
 import io.circe.generic.semiauto.*
-import zio.*
 import munit.*
 
 import io.iohk.atala.mercury.model._

@@ -1,7 +1,6 @@
 package io.iohk.atala.mercury.protocol.mailbox
 
 import io.iohk.atala.mercury.model.{DidId, Message, PIURI}
-import io.iohk.atala.mercury.protocol.routing.ForwardBody
 import io.circe.JsonObject
 
 object Mailbox {

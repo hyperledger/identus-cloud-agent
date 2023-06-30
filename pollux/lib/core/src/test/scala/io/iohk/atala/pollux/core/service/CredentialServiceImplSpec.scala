@@ -1,8 +1,6 @@
 package io.iohk.atala.pollux.core.service
 
-import cats.syntax.validated
 import io.circe.Json
-import io.circe.parser.decode
 import io.circe.syntax.*
 import io.grpc.ManagedChannelBuilder
 import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
@@ -16,13 +14,8 @@ import io.iohk.atala.pollux.core.model.error.CredentialServiceError.*
 import io.iohk.atala.pollux.core.model.presentation.{ClaimFormat, Ldp, Options, PresentationDefinition}
 import io.iohk.atala.pollux.core.repository.CredentialRepositoryInMemory
 import io.iohk.atala.pollux.vc.jwt.*
-import sun.net.www.URLConnection
 import zio.*
 import zio.test.*
-import zio.test.TestAspect.{nondeterministic, samples}
-
-import java.io.{BufferedReader, InputStreamReader}
-import java.net.{HttpURLConnection, JarURLConnection, URI}
 import java.nio.charset.StandardCharsets
 import java.util.{Base64, UUID}
 

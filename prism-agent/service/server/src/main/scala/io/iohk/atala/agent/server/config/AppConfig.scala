@@ -4,7 +4,6 @@ import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import io.iohk.atala.pollux.vc.jwt.*
 import zio.config.*
 import zio.config.magnolia.Descriptor
-import zio.http.URL
 
 import java.time.Duration
 

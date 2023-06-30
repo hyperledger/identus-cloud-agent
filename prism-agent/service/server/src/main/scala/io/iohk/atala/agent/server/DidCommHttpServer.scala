@@ -23,6 +23,8 @@ import java.io.IOException
 import zio.*
 import zio.http.*
 import zio.http.model.*
+import io.circe.*
+import io.circe.parser.*
 
 object DidCommHttpServer {
   def run(didCommServicePort: Int) = {
@@ -72,8 +74,6 @@ object DidCommHttpServer {
   }
 
   private[this] def extractFirstRecipientDid(jsonMessage: String): IO[ParsingFailure | DecodingFailure, String] = {
-    import io.circe.*
-    import io.circe.parser.*
     val doc = parse(jsonMessage).getOrElse(Json.Null)
     val cursor = doc.hcursor
     ZIO.fromEither(
@@ -176,7 +176,8 @@ object DidCommHttpServer {
                 requestCredential = RequestCredential.readFromMessage(msg)
                 _ <- ZIO.logInfo("Got RequestCredential: " + requestCredential)
                 credentialService <- ZIO.service[CredentialService]
-                todoTestOption <- credentialService
+                // todoTestOption
+                _ <- credentialService
                   .receiveCredentialRequest(requestCredential)
                   .catchSome { case CredentialServiceError.RepositoryError(cause) =>
                     ZIO.logError(cause.getMessage()) *>

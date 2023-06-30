@@ -1,8 +1,6 @@
 package io.iohk.atala.mercury.protocol.outofbandlogin
 
 import java.net.URL
-import io.circe._
-import io.circe.parser._
 import io.iohk.atala.mercury
 
 object Utils {

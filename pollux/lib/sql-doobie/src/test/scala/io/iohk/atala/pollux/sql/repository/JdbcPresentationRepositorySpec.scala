@@ -2,16 +2,11 @@ package io.iohk.atala.pollux.sql.repository
 
 import cats.effect.std.Dispatcher
 import com.dimafeng.testcontainers.PostgreSQLContainer
-import io.iohk.atala.pollux.core.model._
 import io.iohk.atala.pollux.core.repository._
-import io.iohk.atala.pollux.sql.repository.DbConfig
-import io.iohk.atala.pollux.sql.repository.Migrations
 import io.iohk.atala.test.container.PostgresLayer.*
 import zio._
 import zio.interop.catz._
 import zio.test._
-import java.util.UUID
-import java.time.Instant
 
 object JdbcPresentationRepositorySpec extends ZIOSpecDefault {
 

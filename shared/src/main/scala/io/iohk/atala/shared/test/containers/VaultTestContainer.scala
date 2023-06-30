@@ -1,6 +1,5 @@
 package io.iohk.atala.shared.test.containers
 
-import com.dimafeng.testcontainers.VaultContainer
 import org.testcontainers.containers.output.OutputFrame
 import org.testcontainers.utility.DockerImageName
 

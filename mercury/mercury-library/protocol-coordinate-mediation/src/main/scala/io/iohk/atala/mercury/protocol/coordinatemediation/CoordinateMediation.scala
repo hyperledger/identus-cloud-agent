@@ -3,8 +3,6 @@ package io.iohk.atala.mercury.protocol.coordinatemediation
 import io.iohk.atala.mercury.model.PIURI
 
 import io.circe._
-import io.circe.parser._
-import io.circe.syntax._
 import io.circe.generic.semiauto._
 
 final case class MediateRequest(

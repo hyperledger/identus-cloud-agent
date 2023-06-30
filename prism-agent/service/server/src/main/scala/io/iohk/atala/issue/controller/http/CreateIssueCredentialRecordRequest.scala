@@ -2,14 +2,10 @@ package io.iohk.atala.issue.controller.http
 
 import io.iohk.atala.api.http.Annotation
 import io.iohk.atala.issue.controller.http.CreateIssueCredentialRecordRequest.annotations
-import io.iohk.atala.mercury.model.{AttachmentDescriptor, Base64}
-import io.iohk.atala.pollux.core.model.IssueCredentialRecord as PolluxIssueCredentialRecord
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
 import sttp.tapir.json.zio.schemaForZioJsonValue
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
-
-import java.time.{OffsetDateTime, ZoneOffset}
 
 /** A class to represent an incoming request to create a new credential offer.
   *
