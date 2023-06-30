@@ -1,14 +1,14 @@
 package io.iohk.atala.pollux.credentialschema.http
 
-import io.iohk.atala.pollux.core.model.CredentialSchema.Input
+import io.iohk.atala.api.http.*
+import io.iohk.atala.pollux.core.model.schema.CredentialSchema.Input
 import io.iohk.atala.pollux.credentialschema.http.CredentialSchemaResponse.annotations
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample, validate, validateEach}
+import sttp.tapir.Validator.*
 import sttp.tapir.json.zio.schemaForZioJsonValue
 import zio.json.*
 import zio.json.ast.Json
-import sttp.tapir.Validator.*
-import io.iohk.atala.api.http.*
 
 case class CredentialSchemaInput(
     @description(annotations.name.description)

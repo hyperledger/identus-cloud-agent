@@ -2,7 +2,7 @@ package io.iohk.atala.pollux.sql.repository
 
 import doobie.*
 import doobie.implicits.*
-import io.iohk.atala.pollux.core.model.CredentialSchema
+import io.iohk.atala.pollux.core.model.schema.CredentialSchema
 import io.iohk.atala.pollux.core.repository.Repository.*
 import io.iohk.atala.pollux.core.repository.{CredentialSchemaRepository, Repository}
 import io.iohk.atala.pollux.sql.model.db.{CredentialSchemaSql, CredentialSchema as CredentialSchemaRow}

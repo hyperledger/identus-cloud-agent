@@ -1,8 +1,8 @@
 package io.iohk.atala.pollux.core.service
 
 import com.google.protobuf.ByteString
-import io.circe.syntax.*
 import io.circe.Json
+import io.circe.syntax.*
 import io.iohk.atala.castor.core.model.did.{CanonicalPrismDID, PrismDID, VerificationRelationship}
 import io.iohk.atala.iris.proto.dlt.IrisOperation
 import io.iohk.atala.iris.proto.service.IrisOperationId
@@ -10,10 +10,11 @@ import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
 import io.iohk.atala.iris.proto.vc_operations.IssueCredentialsBatch
 import io.iohk.atala.mercury.model.{AttachmentDescriptor, Base64, DidId, JsonData}
 import io.iohk.atala.mercury.protocol.issuecredential.*
+import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError.*
 import io.iohk.atala.pollux.core.model.presentation.*
-import io.iohk.atala.pollux.core.model.{CredentialSchema, *}
+import io.iohk.atala.pollux.core.model.schema.CredentialSchema
 import io.iohk.atala.pollux.core.repository.CredentialRepository
 import io.iohk.atala.pollux.vc.jwt.*
 import io.iohk.atala.prism.crypto.{MerkleInclusionProof, MerkleTreeKt, Sha256}
