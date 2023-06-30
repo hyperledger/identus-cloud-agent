@@ -86,6 +86,11 @@ jobs:
       - name: Compile tests to JS
         uses: borales/actions-yarn@v4
         with:
+          cmd: install
+
+      - name: Compile tests to JS
+        uses: borales/actions-yarn@v4
+        with:
           cmd: webpack
 
       - name: Run k6
