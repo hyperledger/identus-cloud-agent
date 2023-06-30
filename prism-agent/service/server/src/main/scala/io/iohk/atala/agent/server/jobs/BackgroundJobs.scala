@@ -6,7 +6,11 @@ import io.circe.Json
 import io.circe.parser.*
 import io.circe.syntax.*
 import io.iohk.atala.agent.server.config.AppConfig
-import io.iohk.atala.agent.server.jobs.BackgroundJobError.{ErrorResponseReceivedFromPeerAgent, InvalidState, NotImplemented}
+import io.iohk.atala.agent.server.jobs.BackgroundJobError.{
+  ErrorResponseReceivedFromPeerAgent,
+  InvalidState,
+  NotImplemented
+}
 import io.iohk.atala.agent.walletapi.model.*
 import io.iohk.atala.agent.walletapi.model.error.*
 import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError.KeyNotFoundError
@@ -23,7 +27,16 @@ import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.error.PresentationError.*
 import io.iohk.atala.pollux.core.model.error.{CredentialServiceError, PresentationError}
 import io.iohk.atala.pollux.core.service.{CredentialService, PresentationService}
-import io.iohk.atala.pollux.vc.jwt.{CredentialVerification, ES256KSigner, JWT, JwtPresentation, W3CCredential, W3cCredentialPayload, DidResolver as JwtDidResolver, Issuer as JwtIssuer}
+import io.iohk.atala.pollux.vc.jwt.{
+  CredentialVerification,
+  ES256KSigner,
+  JWT,
+  JwtPresentation,
+  W3CCredential,
+  W3cCredentialPayload,
+  DidResolver as JwtDidResolver,
+  Issuer as JwtIssuer
+}
 import io.iohk.atala.resolvers.{DIDResolver, UniversalDidResolver}
 import org.bouncycastle.jce.ECNamedCurveTable
 import org.bouncycastle.jce.provider.BouncyCastleProvider
