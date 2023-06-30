@@ -2,6 +2,7 @@ package io.iohk.atala.agent.notification
 import io.iohk.atala.agent.notification.WebhookPublisher.given
 import io.iohk.atala.agent.notification.WebhookPublisherError.{InvalidWebhookURL, UnexpectedError}
 import io.iohk.atala.agent.server.config.{AppConfig, WebhookPublisherConfig}
+import io.iohk.atala.agent.walletapi.model.ManagedDIDState
 import io.iohk.atala.connect.core.model.ConnectionRecord
 import io.iohk.atala.event.notification.EventNotificationServiceError.DecoderError
 import io.iohk.atala.event.notification.{Event, EventConsumer, EventNotificationService}
@@ -38,9 +39,13 @@ class WebhookPublisher(appConfig: AppConfig, notificationService: EventNotificat
         presentationConsumer <- notificationService
           .consumer[PresentationRecord]("Presentation")
           .mapError(e => UnexpectedError(e.toString))
+        didStateConsumer <- notificationService
+          .consumer[ManagedDIDState]("DIDState")
+          .mapError(e => UnexpectedError(e.toString))
         _ <- pollAndNotify(connectConsumer, url).forever.debug.forkDaemon
         _ <- pollAndNotify(issueConsumer, url).forever.debug.forkDaemon
         _ <- pollAndNotify(presentationConsumer, url).forever.debug.forkDaemon
+        _ <- pollAndNotify(didStateConsumer, url).forever.debug.forkDaemon
       } yield ()
     case None => ZIO.unit
   }
