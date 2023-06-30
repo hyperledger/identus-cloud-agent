@@ -704,8 +704,11 @@ lazy val prismAgentWalletAPI = project
     name := "prism-agent-wallet-api",
     libraryDependencies ++= D_PrismAgent.keyManagementDependencies
   )
-  .dependsOn(agentDidcommx)
-  .dependsOn(castorCore)
+  .dependsOn(
+    agentDidcommx,
+    castorCore,
+    eventNotification
+  )
 
 lazy val prismAgentServer = project
   .in(file("prism-agent/service/server"))
