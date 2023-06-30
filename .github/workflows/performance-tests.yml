@@ -5,12 +5,7 @@ concurrency:
   cancel-in-progress: true
 
 on:
-  schedule:
-    - cron: "0 3 * * *"
   pull_request:
-    paths:
-      - ".github/workflows/performance-tests.yml"
-      - "tests/performance-tests/**"
   push:
     branches:
       - "main"
@@ -19,7 +14,7 @@ on:
 defaults:
   run:
     shell: bash
-    working-directory: "tests/performance-tests/prism-performance-tests"
+    working-directory: "tests/performance-tests/atala-performance-tests-k6"
 
 jobs:
   run-e2e-tests:
@@ -37,11 +32,6 @@ jobs:
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
 
-      - name: Install Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.8'
-
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
         with:
@@ -54,6 +44,19 @@ jobs:
         with:
           version: v2.12.2
           legacy: true    # will also install in PATH as `docker-compose`
+
+#      - name: Build local version of PRISM Agent
+#        env:
+#          ENV_FILE: "infrastructure/local/.env"
+#          PRISM_AGENT_PATH: "../../.."
+#          GITHUB_ACTOR: ${{ secrets.ATALA_GITHUB_ACTOR }}
+#          GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
+#        run: |
+#          cd "${PRISM_AGENT_PATH}" || exit 129
+#          sbt docker:publishLocal
+#          PRISM_AGENT_VERSION=$(cut version.sbt -d '=' -f2 | tr -d '" ')
+#          sed -i.bak "s/PRISM_AGENT_VERSION=.*/PRISM_AGENT_VERSION=${PRISM_AGENT_VERSION}/" "${ENV_FILE}" && rm -f "${ENV_FILE}.bak"
+#          cat "${ENV_FILE}"
 
       - name: Start services for issuer
         env:
@@ -75,11 +78,17 @@ jobs:
           up-flags: "--wait"
           down-flags: "--volumes"
 
-      - name: Run performance tests
-        run: |
-          ./gradlew gatlingRun
-
-      - uses: actions/upload-artifact@v2
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
-          name: performance-tests-results
-          path: tests/performance-tests/prism-performance-tests/build/reports
+          node-version: 16.x
+
+      - name: Compile tests to JS
+        uses: borales/actions-yarn@v4
+        with:
+          cmd: webpack
+
+      - name: Run k6
+        uses: grafana/k6-action@v0.3.0
+        with:
+          filename: "./dist/connection-flow-test.js"
