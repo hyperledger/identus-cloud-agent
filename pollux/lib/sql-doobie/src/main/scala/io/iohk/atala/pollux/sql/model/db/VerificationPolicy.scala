@@ -5,7 +5,6 @@ import io.getquill.InsertMeta
 import java.util.UUID
 import io.getquill.*
 import io.getquill.doobie.DoobieContext
-import scala.annotation.nowarn
 
 import java.time.OffsetDateTime
 
@@ -30,7 +29,6 @@ object VerificationPolicySql extends DoobieContext.Postgres(SnakeCase) {
   import io.iohk.atala.pollux.sql.repository.VerificationPolicyExtensions._
 
   def insert(verificationPolicy: VerificationPolicy) = {
-    @nowarn
     inline given InsertMeta[VerificationPolicy] = insertMeta(exclude = _.id, _.createdAt, _.updatedAt)
     run(quote(query[VerificationPolicy].insertValue(lift(verificationPolicy)).returning(vp => vp)))
   }

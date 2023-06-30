@@ -18,7 +18,6 @@ import zio.*
 import zio.interop.catz.*
 
 import java.time.Instant
-import scala.annotation.nowarn
 
 // TODO: replace with actual implementation
 class JdbcPresentationRepository(
@@ -48,9 +47,6 @@ class JdbcPresentationRepository(
     cxnIO.run
       .transact(xa)
   }
-
-  @nowarn
-  private def serializeInclusionProof(proof: MerkleInclusionProof): String = BytesOps.bytesToHex(proof.encode.getBytes)
 
   // deserializes from the hex string
   private def deserializeInclusionProof(proof: String): MerkleInclusionProof =
