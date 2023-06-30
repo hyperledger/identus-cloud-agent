@@ -47,16 +47,16 @@ jobs:
           version: v2.12.2
           legacy: true    # will also install in PATH as `docker-compose`
 
-#      - name: Build local version of PRISM Agent
-#        env:
-#          ENV_FILE: "infrastructure/local/.env"
-#          GITHUB_ACTOR: ${{ secrets.ATALA_GITHUB_ACTOR }}
-#          GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
-#        run: |
-#          sbt docker:publishLocal
-#          PRISM_AGENT_VERSION=$(cut version.sbt -d '=' -f2 | tr -d '" ')
-#          sed -i.bak "s/PRISM_AGENT_VERSION=.*/PRISM_AGENT_VERSION=${PRISM_AGENT_VERSION}/" "${ENV_FILE}" && rm -f "${ENV_FILE}.bak"
-#          cat "${ENV_FILE}"
+      - name: Build local version of PRISM Agent
+        env:
+          ENV_FILE: "infrastructure/local/.env"
+          GITHUB_ACTOR: ${{ secrets.ATALA_GITHUB_ACTOR }}
+          GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
+        run: |
+          sbt docker:publishLocal
+          PRISM_AGENT_VERSION=$(cut version.sbt -d '=' -f2 | tr -d '" ')
+          sed -i.bak "s/PRISM_AGENT_VERSION=.*/PRISM_AGENT_VERSION=${PRISM_AGENT_VERSION}/" "${ENV_FILE}" && rm -f "${ENV_FILE}.bak"
+          cat "${ENV_FILE}"
 
       - name: Start services for issuer
         env:
@@ -98,6 +98,7 @@ jobs:
 
       - name: Connection Flow Smoke Test
         run: |
+          # Have to use manual download because GitHub action doesnt support localhost execution
           curl https://github.com/grafana/k6/releases/download/v0.45.0/k6-v0.45.0-linux-amd64.tar.gz -L | tar xvz --strip-components 1
           ls -la
           ./k6 run ${{ env.BENCHMARKING_DIR }}/dist/connection-flow-test.js
