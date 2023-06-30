@@ -93,7 +93,8 @@ jobs:
           cmd: webpack
           dir: ${{ env.BENCHMARKING_DIR }}
 
-      - name: Run k6
-        uses: grafana/k6-action@v0.3.0
-        with:
-          filename: ${{ env.BENCHMARKING_DIR }}/dist/connection-flow-test.js
+      - name: Install k6
+        run: |
+          curl https://github.com/grafana/k6/releases/download/v0.45.0/k6-v0.45.0-linux-amd64.tar.gz -L | tar xvz --strip-components 1
+          ls -la
+          ./k6 run ${{ env.BENCHMARKING_DIR }}/dist/connection-flow-test.js
