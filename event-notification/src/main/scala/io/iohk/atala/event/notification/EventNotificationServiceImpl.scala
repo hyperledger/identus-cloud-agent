@@ -5,7 +5,7 @@ import zio.{IO, Queue, ULayer, URLayer, ZIO, ZLayer}
 
 import scala.collection.mutable
 
-class EventNotificationServiceInMemoryImpl extends EventNotificationService:
+class EventNotificationServiceImpl extends EventNotificationService:
   private[this] val queueMap = mutable.Map.empty[String, Queue[Event[_]]]
 
   private[this] def getOrCreateQueue(topic: String): IO[EventNotificationServiceError, Queue[Event[_]]] = {
@@ -40,7 +40,7 @@ class EventNotificationServiceInMemoryImpl extends EventNotificationService:
       } yield ()
     })
 
-object EventNotificationServiceInMemoryImpl {
-  val layer: ULayer[EventNotificationServiceInMemoryImpl] =
-    ZLayer.succeed(new EventNotificationServiceInMemoryImpl())
+object EventNotificationServiceImpl {
+  val layer: ULayer[EventNotificationServiceImpl] =
+    ZLayer.succeed(new EventNotificationServiceImpl())
 }
