@@ -56,18 +56,14 @@ object PrismDID extends ProtoModelHelper {
     }
 
   def fromString(s: String): Either[String, PrismDID] = {
-    // Only reuse code in Did.fromString not PrismDid.fromString from 1.4 SDK
-    // because of uncertainty around keeping prism-identity up-to-date
-    // as the protobuf definition evolves
-    Try(io.iohk.atala.prism.identity.Did.Companion.fromString(s)).toEither.left
-      .map(_.getMessage)
+    DID.fromString(s)
       .flatMap { did =>
-        if (did.getMethod.toString == PRISM_METHOD.value) Right(did)
-        else Left(s"Expected DID to have method ${PRISM_METHOD.value}, but got \"${did.getMethod.toString}\" instead")
+        if (did.method.toString == PRISM_METHOD.value) Right(did)
+        else Left(s"Expected DID to have method ${PRISM_METHOD.value}, but got \"${did.method.toString}\" instead")
       }
-      .flatMap { (did: io.iohk.atala.prism.identity.Did) =>
-        val canonicalMatchGroups = CANONICAL_SUFFIX_REGEX.findAllMatchIn(did.getMethodSpecificId.toString).toList
-        val longFormMatchGroups = LONG_FORM_SUFFIX_REGEX.findAllMatchIn(did.getMethodSpecificId.toString).toList
+      .flatMap { did =>
+        val canonicalMatchGroups = CANONICAL_SUFFIX_REGEX.findAllMatchIn(did.methodSpecificId.toString).toList
+        val longFormMatchGroups = LONG_FORM_SUFFIX_REGEX.findAllMatchIn(did.methodSpecificId.toString).toList
 
         (canonicalMatchGroups, longFormMatchGroups) match {
           case (Nil, longFormPattern :: Nil) =>

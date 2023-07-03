@@ -30,3 +30,8 @@ final case class DID(
 ) {
   override def toString: String = s"did:${method.value}:${methodSpecificId.value}"
 }
+
+object DID {
+  // TODO: implement
+  def fromString(s: String): Either[String, DID] = ???
+}
