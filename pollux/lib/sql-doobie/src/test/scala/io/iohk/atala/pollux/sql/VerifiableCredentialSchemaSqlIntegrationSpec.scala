@@ -1,19 +1,9 @@
 package io.iohk.atala.pollux.sql
 
-import cats.Functor
-import cats.effect.std.Dispatcher
-import cats.effect.{Async, Resource}
-import cats.syntax.functor.*
 import com.dimafeng.testcontainers.PostgreSQLContainer
-import com.zaxxer.hikari.HikariConfig
 import doobie.*
-import doobie.hikari.HikariTransactor
 import doobie.implicits.*
-import doobie.util.ExecutionContexts
 import doobie.util.transactor.Transactor
-import io.getquill.*
-import io.getquill.idiom.*
-import io.getquill.util.Messages.{QuatTrace, TraceType, traceQuats}
 import io.iohk.atala.pollux.sql.model.VerifiableCredentialSchema
 import io.iohk.atala.pollux.sql.model.VerifiableCredentialSchema.sql
 import io.iohk.atala.test.container.MigrationAspects.*
@@ -25,9 +15,8 @@ import zio.test.*
 import zio.test.Assertion.*
 import zio.test.TestAspect.*
 
-import java.time.{OffsetDateTime, ZoneOffset, ZonedDateTime}
-import java.util.concurrent.TimeUnit
-import java.util.{UUID, concurrent}
+import java.time.{OffsetDateTime, ZoneOffset}
+import java.util.UUID
 import scala.collection.mutable
 import scala.io.Source
 

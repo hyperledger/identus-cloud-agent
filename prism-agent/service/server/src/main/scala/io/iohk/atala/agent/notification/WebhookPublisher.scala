@@ -4,7 +4,6 @@ import io.iohk.atala.agent.notification.WebhookPublisherError.{InvalidWebhookURL
 import io.iohk.atala.agent.server.config.{AppConfig, WebhookPublisherConfig}
 import io.iohk.atala.agent.walletapi.model.ManagedDIDState
 import io.iohk.atala.connect.core.model.ConnectionRecord
-import io.iohk.atala.event.notification.EventNotificationServiceError.DecoderError
 import io.iohk.atala.event.notification.{Event, EventConsumer, EventNotificationService}
 import io.iohk.atala.pollux.core.model.{IssueCredentialRecord, PresentationRecord}
 import zio.*

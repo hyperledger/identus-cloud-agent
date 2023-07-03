@@ -1,20 +1,17 @@
 package io.iohk.atala.mercury.protocol.presentproof
 
-import cats.implicits.*
 import io.circe.Json
-import io.circe.generic.semiauto.*
 import io.circe.parser.*
 import io.circe.syntax.*
 import io.iohk.atala.mercury.model.AttachmentDescriptor.attachmentDescriptorEncoderV2
 import io.iohk.atala.mercury.model.{AttachmentDescriptor, DidId}
 import munit.*
-import zio.*
 import io.iohk.atala.mercury.model._
+
 class RequestCredentialSpec extends ZSuite {
 
   test("Verifier Request Presentation") {
 
-    val presentationFormat = PresentationFormat(attach_id = "1", "format1")
     val body = RequestPresentation.Body(goal_code = Some("Propose Presentation"))
     val attachmentDescriptor =
       AttachmentDescriptor("1", Some("application/json"), LinkData(links = Seq("http://test"), hash = "1234"))

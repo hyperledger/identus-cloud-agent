@@ -3,8 +3,6 @@ package io.iohk.atala.connect.core.service
 import io.iohk.atala.connect.core.model.ConnectionRecord
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.connect.core.repository.ConnectionRepository
-import io.iohk.atala.connect.core.service.ConnectionServiceWithEventNotificationImpl.given
-import io.iohk.atala.event.notification.EventNotificationServiceError.EncoderError
 import io.iohk.atala.event.notification.{Event, EventNotificationService}
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}

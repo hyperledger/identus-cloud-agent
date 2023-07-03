@@ -2,7 +2,6 @@ package io.iohk.atala.mercury.protocol.presentproof
 
 import io.circe._
 import io.circe.generic.semiauto._
-import io.circe.syntax._
 import io.iohk.atala.mercury.model.DidId
 
 case class ProofType(

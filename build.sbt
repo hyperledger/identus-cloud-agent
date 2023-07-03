@@ -5,7 +5,7 @@ import org.scoverage.coveralls.Imports.CoverallsKeys._
 inThisBuild(
   Seq(
     organization := "io.iohk.atala",
-    scalaVersion := "3.2.2",
+    scalaVersion := "3.3.0",
     fork := true,
     run / connectInput := true,
     releaseUseGlobalVersion := false,
@@ -26,7 +26,9 @@ inThisBuild(
       "-feature",
       "-deprecation",
       "-unchecked",
-      "-Dquill.macro.log=false" // disable quill macro logs
+      "-Dquill.macro.log=false", // disable quill macro logs
+      "-Wunused:all",
+      "-Wconf:any:warning", // TODO: change unused imports to errors, Wconf configuration string is different from scala 2, figure out how!
       // TODO "-feature",
       // TODO "-Xfatal-warnings",
       // TODO "-Yexplicit-nulls",

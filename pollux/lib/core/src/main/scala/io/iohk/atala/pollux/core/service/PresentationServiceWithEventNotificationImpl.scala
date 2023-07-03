@@ -1,6 +1,5 @@
 package io.iohk.atala.pollux.core.service
 
-import io.iohk.atala.event.notification.EventNotificationServiceError.EncoderError
 import io.iohk.atala.event.notification.{Event, EventNotificationService}
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.presentproof.{Presentation, ProofType, RequestPresentation}
@@ -8,7 +7,6 @@ import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.model.presentation.Options
 import io.iohk.atala.pollux.core.model.{DidCommID, PresentationRecord}
 import io.iohk.atala.pollux.core.repository.{CredentialRepository, PresentationRepository}
-import io.iohk.atala.pollux.core.service.PresentationServiceWithEventNotificationImpl.given
 import zio.{IO, Task, URLayer, ZIO, ZLayer}
 
 class PresentationServiceWithEventNotificationImpl(

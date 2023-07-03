@@ -3,34 +3,20 @@ package io.iohk.atala.agent.server
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
 import io.iohk.atala.agent.server.http.ZioHttpClient
 import io.iohk.atala.agent.server.sql.Migrations as AgentMigrations
-import io.iohk.atala.agent.walletapi.service.{
-  ManagedDIDService,
-  ManagedDIDServiceImpl,
-  ManagedDIDServiceWithEventNotificationImpl
-}
+import io.iohk.atala.agent.walletapi.service.{ManagedDIDService, ManagedDIDServiceWithEventNotificationImpl}
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDNonSecretStorage
 import io.iohk.atala.castor.controller.{DIDControllerImpl, DIDRegistrarControllerImpl}
 import io.iohk.atala.castor.core.service.DIDServiceImpl
 import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.connect.controller.ConnectionControllerImpl
-import io.iohk.atala.connect.core.service.{ConnectionServiceImpl, ConnectionServiceWithEventNotificationImpl}
+import io.iohk.atala.connect.core.service.ConnectionServiceWithEventNotificationImpl
 import io.iohk.atala.connect.sql.repository.{JdbcConnectionRepository, Migrations as ConnectMigrations}
-import io.iohk.atala.event.notification.{Event, EventNotificationServiceImpl}
+import io.iohk.atala.event.notification.EventNotificationServiceImpl
 import io.iohk.atala.issue.controller.IssueControllerImpl
 import io.iohk.atala.mercury.*
 import io.iohk.atala.pollux.core.service.*
-import io.iohk.atala.pollux.credentialschema.controller.{
-  CredentialSchemaController,
-  CredentialSchemaControllerImpl,
-  VerificationPolicyControllerImpl
-}
-import io.iohk.atala.pollux.sql.repository.{
-  JdbcCredentialRepository,
-  JdbcCredentialSchemaRepository,
-  JdbcPresentationRepository,
-  JdbcVerificationPolicyRepository,
-  Migrations as PolluxMigrations
-}
+import io.iohk.atala.pollux.credentialschema.controller.{CredentialSchemaController, CredentialSchemaControllerImpl, VerificationPolicyControllerImpl}
+import io.iohk.atala.pollux.sql.repository.{JdbcCredentialRepository, JdbcCredentialSchemaRepository, JdbcPresentationRepository, JdbcVerificationPolicyRepository, Migrations as PolluxMigrations}
 import io.iohk.atala.presentproof.controller.PresentProofControllerImpl
 import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.system.controller.SystemControllerImpl
@@ -98,6 +84,11 @@ object MainApp extends ZIOAppDefault {
       _ <- ZIO.logInfo(s"DIDComm Service port => $didCommServicePort")
 
       _ <- migrations
+
+      /** AppConfig & SystemController & PresentProofController & DIDRegistrarController & DIDController &
+        * IssueController & ConnectionController & VerificationPolicyController & CredentialSchemaController &
+        * ManagedDIDService
+        */
 
       app <- PrismAgentApp
         .run(didCommServicePort)

@@ -4,7 +4,6 @@ import io.iohk.atala.agent.walletapi.model.{ManagedDIDState, PublicationState}
 import io.iohk.atala.agent.walletapi.service.{ManagedDIDService, MockManagedDIDService}
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.castor.core.model.did.PrismDIDOperation
-import io.iohk.atala.container.util.MigrationAspects.*
 import io.iohk.atala.container.util.PostgresLayer.*
 import io.iohk.atala.pollux.core.model.CredentialSchema
 import io.iohk.atala.pollux.core.repository.CredentialSchemaRepository
@@ -19,22 +18,17 @@ import io.iohk.atala.pollux.credentialschema.http.{
 import io.iohk.atala.pollux.sql.repository.JdbcCredentialSchemaRepository
 import sttp.client3.testing.SttpBackendStub
 import sttp.client3.ziojson.*
-import sttp.client3.{DeserializationException, Response, ResponseException, SttpBackend, UriContext, basicRequest}
-import sttp.model.{StatusCode, Uri}
+import sttp.client3.{DeserializationException, Response, UriContext, basicRequest}
 import sttp.monad.MonadError
 import sttp.tapir.server.interceptor.CustomiseInterceptors
 import sttp.tapir.server.stub.TapirStubInterpreter
 import sttp.tapir.ztapir.RIOMonadError
 import zio.json.ast.Json
 import zio.json.ast.Json.*
-import zio.json.{DecoderOps, EncoderOps, JsonDecoder}
+import zio.json.{DecoderOps, EncoderOps}
 import zio.mock.Expectation
-import zio.stream.ZSink
-import zio.stream.ZSink.*
-import zio.stream.ZStream.unfold
-import zio.test.TestAspect.*
-import zio.test.{Assertion, Gen, Spec, ZIOSpecDefault}
-import zio.{RIO, Task, ULayer, URLayer, ZIO, ZLayer}
+import zio.test.{Assertion, Gen, ZIOSpecDefault}
+import zio.*
 
 import java.time.OffsetDateTime
 
@@ -79,7 +73,6 @@ trait CredentialSchemaTestTools {
   val credentialSchemaUriBase = uri"http://test.com/schema-registry/schemas"
 
   def bootstrapOptions[F[_]](monadError: MonadError[F]) = {
-    import sttp.tapir.server.interceptor.RequestResult.Response
     new CustomiseInterceptors[F, Any](_ => ())
       .defaultHandlers(ErrorResponse.failureResponseHandler)
   }

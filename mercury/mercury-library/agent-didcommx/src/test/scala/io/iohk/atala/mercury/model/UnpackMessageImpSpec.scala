@@ -1,7 +1,6 @@
 package io.iohk.atala.mercury.model
 
 import munit.*
-import zio.*
 import io.circe.JsonObject
 import scala.language.implicitConversions
 

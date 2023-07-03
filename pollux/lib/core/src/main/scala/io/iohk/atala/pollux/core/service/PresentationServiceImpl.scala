@@ -1,15 +1,11 @@
 package io.iohk.atala.pollux.core.service
 
 import cats.*
-import cats.data.*
 import cats.implicits.*
-import cats.syntax.all.*
-import com.google.protobuf.ByteString
 import io.circe.*
 import io.circe.parser.*
 import io.circe.syntax.*
 import io.iohk.atala.mercury.model.*
-import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
 import io.iohk.atala.mercury.protocol.presentproof.*
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.error.PresentationError
@@ -20,8 +16,6 @@ import io.iohk.atala.pollux.vc.jwt.*
 import zio.*
 
 import java.rmi.UnexpectedException
-import java.security.spec.ECGenParameterSpec
-import java.security.{KeyPairGenerator, PublicKey, SecureRandom}
 import java.time.Instant
 import java.util as ju
 import java.util.UUID
@@ -560,40 +554,7 @@ private class PresentationServiceImpl(
     )
   }
 
-  private[this] def createDidCommProposePresentation(request: RequestPresentation): ProposePresentation = {
-    ProposePresentation(
-      body = ProposePresentation.Body(
-        goal_code = request.body.goal_code,
-        comment = request.body.comment
-      ),
-      attachments = request.attachments,
-      thid = request.thid.orElse(Some(request.id)),
-      from = request.to,
-      to = request.from
-    )
-  }
-
   import io.iohk.atala.pollux.vc.jwt.CredentialPayload.Implicits.*
-
-  private[this] def createDidCommPresentation(
-      request: RequestPresentation,
-      jwtPresentation: JWT
-  ): Presentation = {
-
-    Presentation(
-      body = Presentation.Body(
-        goal_code = request.body.goal_code,
-        comment = request.body.comment
-      ),
-      attachments = Seq(
-        AttachmentDescriptor
-          .buildJsonAttachment(payload = jwtPresentation.value, mediaType = Some("prism/jwt"))
-      ),
-      thid = request.thid.orElse(Some(request.id)),
-      from = request.to,
-      to = request.from
-    )
-  }
 
   private[this] def updatePresentationRecordProtocolState(
       id: DidCommID,
@@ -601,7 +562,7 @@ private class PresentationServiceImpl(
       to: PresentationRecord.ProtocolState
   ): IO[PresentationError, PresentationRecord] = {
     for {
-      outcome <- presentationRepository
+      _ <- presentationRepository
         .updatePresentationRecordProtocolState(id, from, to)
         .flatMap {
           case 1 => ZIO.succeed(())

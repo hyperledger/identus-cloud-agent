@@ -10,7 +10,6 @@ import io.iohk.atala.prism.crypto.MerkleInclusionProof
 import zio.*
 
 import java.time.Instant
-import java.util.UUID
 
 class CredentialRepositoryInMemory(
     storeRef: Ref[Map[DidCommID, IssueCredentialRecord]],

@@ -1,8 +1,8 @@
 package io.iohk.atala.agent.walletapi.service
 
 import io.iohk.atala.agent.walletapi.crypto.Apollo
+import io.iohk.atala.agent.walletapi.model.ManagedDIDState
 import io.iohk.atala.agent.walletapi.model.error.CommonWalletStorageError
-import io.iohk.atala.agent.walletapi.model.{DIDUpdateLineage, ManagedDIDState}
 import io.iohk.atala.agent.walletapi.storage.{DIDNonSecretStorage, DIDSecretStorage}
 import io.iohk.atala.agent.walletapi.util.SeedResolver
 import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
@@ -11,7 +11,7 @@ import io.iohk.atala.castor.core.model.error.DIDOperationError
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.event.notification.{Event, EventNotificationService}
-import zio.{IO, RLayer, Semaphore, Task, URLayer, ZIO, ZLayer}
+import zio.{IO, RLayer, Semaphore, ZIO, ZLayer}
 
 class ManagedDIDServiceWithEventNotificationImpl(
     didService: DIDService,

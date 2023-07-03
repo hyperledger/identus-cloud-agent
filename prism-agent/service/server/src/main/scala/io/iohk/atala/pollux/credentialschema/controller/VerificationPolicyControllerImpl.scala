@@ -7,16 +7,10 @@ import io.iohk.atala.pollux.core.model.CredentialSchemaAndTrustedIssuersConstrai
 import io.iohk.atala.pollux.core.model.error.VerificationPolicyError
 import io.iohk.atala.pollux.core.model.error.VerificationPolicyError.*
 import io.iohk.atala.pollux.core.service.VerificationPolicyService
-import io.iohk.atala.pollux.credentialschema.controller.*
 import io.iohk.atala.pollux.credentialschema.http.VerificationPolicy.*
-import io.iohk.atala.pollux.credentialschema.http.{
-  VerificationPolicy,
-  VerificationPolicyConstraint,
-  VerificationPolicyInput,
-  VerificationPolicyPage
-}
+import io.iohk.atala.pollux.credentialschema.http.{VerificationPolicy, VerificationPolicyInput, VerificationPolicyPage}
 import zio.ZIO.*
-import zio.{IO, Task, URLayer, ZLayer}
+import zio.*
 
 import java.util.UUID
 

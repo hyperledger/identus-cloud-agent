@@ -9,7 +9,7 @@ import io.iohk.atala.agent.walletapi.model.error.UpdateManagedDIDError
 import io.iohk.atala.agent.walletapi.model.KeyManagementMode
 import io.iohk.atala.agent.walletapi.model.ManagedDIDState
 import io.iohk.atala.agent.walletapi.model.UpdateManagedDIDAction
-import io.iohk.atala.agent.walletapi.storage.{DIDNonSecretStorage, DIDSecretStorage}
+import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
 import io.iohk.atala.agent.walletapi.util.OperationFactory
 import io.iohk.atala.castor.core.model.did.PrismDIDOperation
 import io.iohk.atala.castor.core.model.did.PrismDIDOperation.Update

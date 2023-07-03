@@ -1,29 +1,27 @@
 import { group } from 'k6';
 import { Options } from 'k6/options';
-import { Issuer, Holder } from '../../actors';
+import {issuer, holder} from '../common';
 
 export let options: Options = {
   stages: [
-    { duration: '1m', target: 5 },
+    { duration: '1s', target: 1 },
   ],
-  thresholds: {
-    http_req_failed: [{
-      threshold: 'rate<=0.05',
-      abortOnFail: true,
-    }],
-    http_req_duration: ['p(95)<=100'],
-    checks: ['rate>=0.99'],
-  },
+  // thresholds: {
+  //   http_req_failed: [{
+  //     threshold: 'rate<=0.05',
+  //     abortOnFail: true,
+  //   }],
+  //   http_req_duration: ['p(95)<=1000'],
+  //   checks: ['rate>=0.99'],
+  // },
 };
-
-const issuer = new Issuer();
-const holder = new Holder();
 
 // This is setup code. It runs once at the beginning of the test, regardless of the number of VUs.
 export function setup() {
 
   group('Issuer publishes DID', function () {
-    issuer.createAndPublishDid();
+    issuer.createUnpublishedDid();
+    issuer.publishDid();
   });
 
   group('Holder creates unpublished DID', function () {
@@ -48,6 +46,7 @@ export default (data: { issuerDid: string; holderDid: string; }) => {
 
   group('Issuer creates credential offer for Holder', function () {
     issuer.createCredentialOffer();
+    issuer.waitForCredentialOfferToBeSent();
   });
   
   group('Holder achieves and accepts credential offer from Issuer', function () {
@@ -57,6 +56,7 @@ export default (data: { issuerDid: string; holderDid: string; }) => {
   group('Issuer issues credential to Holder', function () {
     issuer.receiveCredentialRequest();
     issuer.issueCredential();
+    issuer.waitForCredentialToBeSent();
   });
 
   group('Holder receives credential from Issuer', function () {

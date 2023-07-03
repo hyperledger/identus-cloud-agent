@@ -1,6 +1,6 @@
 {
   "name": "atala-prism-building-blocks",
-  "version": "1.5.1",
+  "version": "1.6.0",
   "engines": {
     "node": ">=16.13.0"
   },
@@ -41,7 +41,7 @@
       [
         "@semantic-release/exec",
         {
-          "prepareCmd": "sbt dumpLicenseReportAggregate && cp ./target/license-reports/atala-prism-building-blocks-licenses.md ./DEPENDENCIES.md"
+          "prepareCmd": "sbt dumpLicenseReportAggregate && cp ./target/license-reports/root-licenses.md ./DEPENDENCIES.md"
         }
       ],
       [

@@ -1,21 +1,12 @@
 package io.iohk.atala.pollux.credentialschema
 
-import io.iohk.atala.api.http.model.{CollectionStats, Order, Pagination, PaginationInput}
+import io.iohk.atala.api.http.model.{Order, PaginationInput}
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.pollux.credentialschema.SchemaRegistryEndpoints.*
-import io.iohk.atala.pollux.credentialschema.controller.{CredentialSchemaController, CredentialSchemaControllerLogic}
-import io.iohk.atala.pollux.credentialschema.http.{
-  CredentialSchemaInput,
-  CredentialSchemaResponse,
-  CredentialSchemaResponsePage,
-  FilterInput
-}
-import sttp.tapir.redoc.RedocUIOptions
-import sttp.tapir.redoc.bundle.RedocInterpreter
-import sttp.tapir.server.ServerEndpoint
-import sttp.tapir.swagger.bundle.SwaggerInterpreter
+import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaController
+import io.iohk.atala.pollux.credentialschema.http.{CredentialSchemaInput, FilterInput}
 import sttp.tapir.ztapir.*
-import zio.{Task, URIO, ZIO, ZLayer}
+import zio.*
 
 import java.util.UUID
 

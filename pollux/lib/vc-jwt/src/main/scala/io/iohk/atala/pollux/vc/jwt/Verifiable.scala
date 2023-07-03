@@ -3,7 +3,6 @@ package io.iohk.atala.pollux.vc.jwt
 import io.circe
 import io.circe.*
 import io.circe.generic.auto.*
-import io.circe.parser.decode
 import io.circe.syntax.*
 
 trait Verifiable(proof: Proof)

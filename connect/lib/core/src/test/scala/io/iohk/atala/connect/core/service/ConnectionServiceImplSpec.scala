@@ -6,14 +6,12 @@ import io.iohk.atala.connect.core.repository.ConnectionRepositoryInMemory
 import zio._
 import zio.test._
 import zio.test.Assertion._
-import zio.Scope
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.connect.core.model.ConnectionRecord
 import java.util.UUID
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import java.time.Instant
 import io.circe.syntax._
-import io.circe.parser.decode
 import io.iohk.atala.mercury.model.Message
 import io.iohk.atala.mercury.protocol.connection.ConnectionResponse
 

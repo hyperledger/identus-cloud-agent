@@ -1,7 +1,7 @@
 package io.iohk.atala.event.notification
 
 import io.iohk.atala.event.notification.EventNotificationServiceError.EventSendingFailed
-import zio.{IO, Queue, ULayer, URLayer, ZIO, ZLayer}
+import zio.{IO, Queue, URLayer, ZIO, ZLayer}
 
 import scala.collection.mutable
 

@@ -1,8 +1,5 @@
 package io.iohk.atala.pollux.vc.jwt
 
-import com.nimbusds.jose.jwk.*
-import com.nimbusds.jose.jwk.gen.*
-import com.nimbusds.jose.util.Base64URL
 import io.circe
 import io.circe.generic.auto.*
 import io.circe.parser.decode
@@ -10,20 +7,15 @@ import io.circe.syntax.*
 import io.circe.{Decoder, Encoder, HCursor, Json}
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import io.iohk.atala.pollux.vc.jwt.schema.{SchemaResolver, SchemaValidator}
-import net.reactivecore.cjs.validator.Violation
-import net.reactivecore.cjs.{DocumentValidator, Loader}
 import pdi.jwt.*
 import zio.prelude.*
-import zio.{Duration, IO, NonEmptyChunk, Task, ZIO}
+import zio.*
+import java.security.PublicKey
+import java.time.temporal.TemporalAmount
+import java.time.{Clock, Instant}
+import scala.util.Try
 
-import java.security.spec.{ECParameterSpec, ECPublicKeySpec}
-import java.security.{KeyPairGenerator, PublicKey}
-import java.time.temporal.{Temporal, TemporalAmount, TemporalUnit}
-import java.time.{Clock, Instant, ZonedDateTime}
-import java.util
-import scala.util.{Failure, Success, Try}
 opaque type DID = String
-
 object DID {
   def apply(value: String): DID = value
 

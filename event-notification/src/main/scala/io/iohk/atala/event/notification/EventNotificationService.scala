@@ -1,6 +1,5 @@
 package io.iohk.atala.event.notification
 
-import io.iohk.atala.event.notification.EventNotificationServiceError.{DecoderError, EncoderError}
 import zio.IO
 
 trait EventNotificationService:

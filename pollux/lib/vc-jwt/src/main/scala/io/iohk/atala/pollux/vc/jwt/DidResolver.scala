@@ -10,7 +10,7 @@ import io.iohk.atala.castor.core.model.did.w3c.{
   makeW3CResolver
 }
 import io.iohk.atala.castor.core.service.DIDService
-import zio.{Task, UIO}
+import zio.*
 
 import java.time.Instant
 
@@ -33,7 +33,6 @@ sealed trait DIDResolutionError(error: String, message: String)
 case class InvalidDid(message: String) extends DIDResolutionError("invalidDid", message)
 case class NotFound(message: String) extends DIDResolutionError("notFound", message)
 case class RepresentationNotSupported(message: String) extends DIDResolutionError("RepresentationNotSupported", message)
-case class UnsupportedDidMethod(message: String) extends DIDResolutionError("unsupportedDidMethod", message)
 case class InvalidPublicKeyLength(message: String) extends DIDResolutionError("invalidPublicKeyLength", message)
 case class InvalidPublicKeyType(message: String) extends DIDResolutionError("invalidPublicKeyType", message)
 case class UnsupportedPublicKeyType(message: String) extends DIDResolutionError("unsupportedPublicKeyType", message)

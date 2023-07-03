@@ -3,7 +3,6 @@ package io.iohk.atala.agent.server.http
 import zio._
 import zio.http._
 import zio.http.model.{Header => _, _}
-import zio.http.service._
 import io.iohk.atala.mercury._
 
 object ZioHttpClient {

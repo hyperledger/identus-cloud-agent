@@ -1,16 +1,11 @@
 package io.iohk.atala.pollux.vc.jwt.demos
 
 import io.circe.*
-import io.circe.generic.auto.*
 import io.circe.parser.decode
 import io.circe.syntax.*
 import io.iohk.atala.pollux.vc.jwt.*
 import io.iohk.atala.pollux.vc.jwt.CredentialPayload.Implicits.*
-import pdi.jwt.{JwtAlgorithm, JwtCirce, JwtClaim}
-
-import java.security.*
-import java.security.spec.*
-import java.time.{Instant, ZonedDateTime}
+import java.time.Instant
 
 @main def CredentialDemo(): Unit =
   val w3cCredentialPayload = W3cCredentialPayload(

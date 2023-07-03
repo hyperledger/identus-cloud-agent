@@ -1,7 +1,6 @@
 package io.iohk.atala.mercury
 
 import munit.*
-import zio.*
 import io.iohk.atala.mercury.model.DidId
 import com.nimbusds.jose.jwk.OctetKeyPair
 

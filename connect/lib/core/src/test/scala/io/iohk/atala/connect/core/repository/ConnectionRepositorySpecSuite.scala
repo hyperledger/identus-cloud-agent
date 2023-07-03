@@ -7,7 +7,6 @@ import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
 import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
 import zio.test.*
-import zio.test.Assertion.*
 import zio.{Cause, Exit, Task, ZIO}
 
 import java.time.Instant

@@ -2,7 +2,6 @@ package io.iohk.atala.shared.test.containers
 
 import com.dimafeng.testcontainers.{SingleContainer, VaultContainer}
 import org.testcontainers.vault.{VaultContainer => JavaVaultContainer}
-import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.utility.DockerImageName
 
 /** See PostgreSQLContainerCustom for explanation */

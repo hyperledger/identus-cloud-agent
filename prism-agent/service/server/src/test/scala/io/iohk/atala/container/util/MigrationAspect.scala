@@ -3,8 +3,8 @@ package io.iohk.atala.container.util
 import com.dimafeng.testcontainers.PostgreSQLContainer
 import org.flywaydb.core.Flyway
 import zio.ZIO
-import zio.test.TestAspect.{before, beforeAll}
-import zio.test.{TestAspect, TestAspectAtLeastR, TestAspectPoly}
+import zio.test.TestAspect.beforeAll
+import zio.test.{TestAspect, TestAspectAtLeastR}
 
 object MigrationAspects {
   def migrate(schema: String, paths: String*): TestAspectAtLeastR[PostgreSQLContainer] = {

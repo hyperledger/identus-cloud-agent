@@ -1,7 +1,6 @@
 package io.iohk.atala.mercury.protocol.issuecredential
 import io.circe.generic.semiauto.*
 import io.circe.{Decoder, Encoder}
-import io.iohk.atala.mercury.model.AttachmentDescriptor.attachmentDescriptorEncoderV2
 final case class Attribute(name: String, value: String, mimeType: Option[String] = None)
 object Attribute {
   given Encoder[Attribute] = deriveEncoder[Attribute]

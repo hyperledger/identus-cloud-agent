@@ -3,16 +3,14 @@ package io.iohk.atala.pollux.core.service
 import io.circe.Json
 import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
 import io.iohk.atala.event.notification.*
-import io.iohk.atala.event.notification.EventNotificationServiceError.EncoderError
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.issuecredential.{IssueCredential, OfferCredential, RequestCredential}
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.core.model.{DidCommID, IssueCredentialRecord}
 import io.iohk.atala.pollux.core.repository.CredentialRepository
-import io.iohk.atala.pollux.core.service.CredentialServiceWithEventNotificationImpl.given
 import io.iohk.atala.pollux.vc.jwt.{DidResolver, JWT}
-import zio.{IO, Task, UIO, ULayer, URLayer, ZIO, ZLayer}
+import zio.{IO, Task, URLayer, ZIO, ZLayer}
 
 class CredentialServiceWithEventNotificationImpl(
     irisClient: IrisServiceStub,

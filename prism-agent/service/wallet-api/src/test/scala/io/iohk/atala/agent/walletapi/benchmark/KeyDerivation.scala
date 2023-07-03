@@ -2,12 +2,10 @@ package io.iohk.atala.agent.walletapi.benchmark
 
 import zio.*
 import zio.test.*
-import zio.test.Assertion.*
 import io.iohk.atala.agent.walletapi.crypto.Apollo
 import io.iohk.atala.castor.core.model.did.EllipticCurve
 import io.iohk.atala.shared.models.HexString
 import io.iohk.atala.agent.walletapi.crypto.DerivationPath
-import io.iohk.atala.agent.walletapi.vault.VaultKVClientImpl
 import io.iohk.atala.agent.walletapi.vault.VaultKVClient
 import io.iohk.atala.test.container.VaultTestContainerSupport
 import io.iohk.atala.shared.models.Base64UrlString
@@ -127,6 +125,6 @@ object KeyDerivation extends ZIOSpecDefault, VaultTestContainerSupport {
     val p90 = sortedDurationInMicro.apply((0.90 * n).toInt)
     val p99 = sortedDurationInMicro.apply((0.99 * n).toInt)
     val max = sortedDurationInMicro.last
-    ZIO.debug(s"execution time in us. avg: $avg | p50: $p50 | p90: $p90 | p99: $p99 | max: $max")
+    ZIO.debug(s"execution time in us. avg: $avg | p50: $p50 | p75: $p75 | p90: $p90 | p99: $p99 | max: $max")
   }
 }

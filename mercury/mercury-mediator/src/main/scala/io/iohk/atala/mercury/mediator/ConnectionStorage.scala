@@ -1,7 +1,6 @@
 package io.iohk.atala.mercury.mediator
 
 import zio._
-import io.iohk.atala.mercury.model.Message
 import io.iohk.atala.mercury.model.DidId
 
 enum MediationState:

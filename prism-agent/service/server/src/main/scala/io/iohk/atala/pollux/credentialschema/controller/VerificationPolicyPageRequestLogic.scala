@@ -2,13 +2,8 @@ package io.iohk.atala.pollux.credentialschema.controller
 
 import io.iohk.atala.api.http.RequestContext
 import io.iohk.atala.api.http.model.{CollectionStats, Pagination}
-import io.iohk.atala.pollux.core.model
 import io.iohk.atala.pollux.credentialschema.http.{VerificationPolicy, VerificationPolicyPage}
 import sttp.model.Uri
-import sttp.model.Uri.QuerySegment
-import sttp.model.Uri.QuerySegment.KeyValue
-
-import scala.util.Try
 import io.iohk.atala.api.util.PaginationUtils
 
 case class VerificationPolicyPageRequestLogic(

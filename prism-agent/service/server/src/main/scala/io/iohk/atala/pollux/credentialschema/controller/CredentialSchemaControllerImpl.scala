@@ -17,7 +17,7 @@ import io.iohk.atala.pollux.credentialschema.http.{
   CredentialSchemaResponsePage,
   FilterInput
 }
-import zio.{IO, Task, URLayer, ZIO, ZLayer}
+import zio.*
 
 import java.util.UUID
 
