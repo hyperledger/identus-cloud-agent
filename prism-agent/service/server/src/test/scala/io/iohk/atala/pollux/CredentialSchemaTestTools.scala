@@ -5,7 +5,7 @@ import io.iohk.atala.agent.walletapi.service.{ManagedDIDService, MockManagedDIDS
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.castor.core.model.did.PrismDIDOperation
 import io.iohk.atala.container.util.PostgresLayer.*
-import io.iohk.atala.pollux.core.model.CredentialSchema
+import io.iohk.atala.pollux.core.model.schema.`type`.CredentialJsonSchemaType
 import io.iohk.atala.pollux.core.repository.CredentialSchemaRepository
 import io.iohk.atala.pollux.core.service.CredentialSchemaServiceImpl
 import io.iohk.atala.pollux.credentialschema.SchemaRegistryServerEndpoints
@@ -23,12 +23,12 @@ import sttp.monad.MonadError
 import sttp.tapir.server.interceptor.CustomiseInterceptors
 import sttp.tapir.server.stub.TapirStubInterpreter
 import sttp.tapir.ztapir.RIOMonadError
+import zio.*
 import zio.json.ast.Json
 import zio.json.ast.Json.*
 import zio.json.{DecoderOps, EncoderOps}
 import zio.mock.Expectation
 import zio.test.{Assertion, Gen, ZIOSpecDefault}
-import zio.*
 
 import java.time.OffsetDateTime
 
@@ -152,7 +152,7 @@ trait CredentialSchemaGen {
       name = name,
       version = version,
       description = Some(description),
-      `type` = CredentialSchema.VC_JSON_SCHEMA_URI,
+      `type` = CredentialJsonSchemaType.`type`,
       schema = jsonSchema.fromJson[Json].getOrElse(Json.Null),
       tags = tags,
       author = author
