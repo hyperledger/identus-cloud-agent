@@ -5,7 +5,11 @@ import io.iohk.atala.mercury.model.{AttachmentDescriptor, DidId}
 import io.iohk.atala.mercury.protocol.presentproof.*
 import io.iohk.atala.mercury.{AgentPeerService, DidAgent, PeerDID}
 import io.iohk.atala.pollux.core.model.*
-import io.iohk.atala.pollux.core.repository.{CredentialRepository, CredentialRepositoryInMemory, PresentationRepositoryInMemory}
+import io.iohk.atala.pollux.core.repository.{
+  CredentialRepository,
+  CredentialRepositoryInMemory,
+  PresentationRepositoryInMemory
+}
 import io.iohk.atala.pollux.vc.jwt.*
 import zio.*
 
