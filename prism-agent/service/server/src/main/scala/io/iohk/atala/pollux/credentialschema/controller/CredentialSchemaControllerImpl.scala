@@ -5,7 +5,7 @@ import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.api.http.*
 import io.iohk.atala.api.http.model.{CollectionStats, Order, Pagination}
 import io.iohk.atala.castor.core.model.did.{LongFormPrismDID, PrismDID}
-import io.iohk.atala.pollux.core.model.CredentialSchema.FilteredEntries
+import io.iohk.atala.pollux.core.model.schema.CredentialSchema.FilteredEntries
 import io.iohk.atala.pollux.core.service.CredentialSchemaService
 import io.iohk.atala.pollux.core.service.CredentialSchemaService.Error.*
 import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaController.domainToHttpErrorIO
