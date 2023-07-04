@@ -1,12 +1,8 @@
 package io.iohk.atala.pollux.core.service
 
-import cats.syntax.validated
 import io.circe.parser.decode
 import io.circe.syntax._
-import io.grpc.ManagedChannelBuilder
-import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import io.iohk.atala.mercury.model.DidId
-import io.iohk.atala.mercury.model.Message
 import io.iohk.atala.mercury.protocol.presentproof._
 import io.iohk.atala.pollux.core.model._
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord._
@@ -18,12 +14,8 @@ import io.iohk.atala.pollux.core.repository.PresentationRepository
 import zio.*
 import zio.test.*
 import java.util.UUID
-import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
 import io.iohk.atala.mercury.model.AttachmentDescriptor
 import io.iohk.atala.pollux.core.model.presentation.Options
-import io.iohk.atala.pollux.core.model.presentation.Ldp
-import io.iohk.atala.pollux.core.model.presentation.ClaimFormat
-import io.iohk.atala.pollux.core.model.presentation.PresentationDefinition
 import io.iohk.atala.pollux.vc.jwt._
 import io.iohk.atala.pollux.vc.jwt.JwtPresentationPayload
 import io.iohk.atala.pollux.core.repository.CredentialRepositoryInMemory
@@ -32,15 +24,10 @@ import io.iohk.atala.mercury.DidAgent
 import com.nimbusds.jose.jwk.OctetKeyPair
 import io.iohk.atala.mercury.PeerDID
 import io.iohk.atala.mercury.AgentPeerService
-import cats.syntax.all._
-import cats._, cats.data._, cats.implicits._
 import java.time.Instant
 import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
 import java.security.*
-import java.security.interfaces.{ECPrivateKey, ECPublicKey}
-import java.security.spec.*
 import com.nimbusds.jose.jwk.*
-import com.nimbusds.jose.jwk.gen.*
 
 object PresentationServiceSpec extends ZIOSpecDefault {
   type PresentationEnv = PresentationService with PresentationRepository[Task] with CredentialRepository[Task]
@@ -81,8 +68,16 @@ object PresentationServiceSpec extends ZIOSpecDefault {
         ) { (thid, connectionId, proofTypes, options) =>
           for {
             svc <- ZIO.service[PresentationService].provideLayer(presentationServiceLayer)
+            pairwiseVerifierDid = DidId("did:peer:Verifier")
             pairwiseProverDid = DidId("did:peer:Prover")
-            record <- svc.createPresentationRecord(thid, pairwiseProverDid, connectionId, proofTypes, options)
+            record <- svc.createPresentationRecord(
+              pairwiseVerifierDid,
+              pairwiseProverDid,
+              thid,
+              connectionId,
+              proofTypes,
+              options
+            )
           } yield {
             assertTrue(record.thid == thid) &&
             assertTrue(record.updatedAt.isEmpty) &&
@@ -496,7 +491,6 @@ object PresentationServiceSpec extends ZIOSpecDefault {
   }
 
   private def proposePresentation(thid: String): ProposePresentation = {
-    val presentationFormat = PresentationFormat(attach_id = "1", "format1")
     val body = ProposePresentation.Body(goal_code = Some("Propose Presentation"))
     val presentationAttachmentAsJson = """{
                 "id": "1f44d55f-f161-4938-a659-f8026467f126",
@@ -515,7 +509,6 @@ object PresentationServiceSpec extends ZIOSpecDefault {
     )
   }
   private def presentation(thid: String): Presentation = {
-    val presentationFormat = PresentationFormat(attach_id = "1", "format1")
     val body = Presentation.Body(goal_code = Some("Presentation"))
     val presentationAttachmentAsJson = """{
                 "id": "1f44d55f-f161-4938-a659-f8026467f126",
@@ -567,7 +560,8 @@ object PresentationServiceSpec extends ZIOSpecDefault {
       val proofType = ProofType(schemaId, None, None)
       svc.createPresentationRecord(
         thid = thid,
-        subjectDid = pairwiseVerifierDID,
+        pairwiseVerifierDID = pairwiseVerifierDID,
+        pairwiseProverDID = pairwiseProverDID,
         connectionId = Some("connectionId"),
         proofTypes = Seq(proofType),
         options = None,

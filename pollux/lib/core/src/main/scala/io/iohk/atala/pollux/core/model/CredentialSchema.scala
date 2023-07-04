@@ -1,12 +1,10 @@
 package io.iohk.atala.pollux.core.model
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.json.JsonMapper
 import com.networknt.schema.*
-import io.circe.Json
 import io.iohk.atala.pollux.core.model.error.CredentialSchemaError
 import io.iohk.atala.pollux.core.model.error.CredentialSchemaError.*
-import io.iohk.atala.pollux.core.service.{URIDereferencer, URIDereferencerError}
+import io.iohk.atala.pollux.core.service.URIDereferencer
 import zio.*
 import zio.json.*
 

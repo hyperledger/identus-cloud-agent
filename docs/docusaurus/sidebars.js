@@ -62,8 +62,8 @@ const sidebars = {
         description: 'Secret Management'
       },
       items: [
-        'secrets/secret-storage',
-        'secrets/operation'
+        'secrets/operation',
+        'secrets/seed-generation'
       ]
     }
   ]

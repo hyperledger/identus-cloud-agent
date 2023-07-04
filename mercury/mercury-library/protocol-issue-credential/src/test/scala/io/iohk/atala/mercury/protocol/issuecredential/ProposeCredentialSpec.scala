@@ -1,14 +1,11 @@
 package io.iohk.atala.mercury.protocol.issuecredential
 
-import cats.implicits.*
 import io.circe.Json
-import io.circe.generic.auto.*
 import io.circe.parser.*
 import io.circe.syntax.*
 import io.iohk.atala.mercury.model.AttachmentDescriptor
 import io.iohk.atala.mercury.model.AttachmentDescriptor.attachmentDescriptorEncoderV2
 import munit.*
-import zio.*
 import io.iohk.atala.mercury.model._
 class ProposeCredentialSpec extends ZSuite {
 

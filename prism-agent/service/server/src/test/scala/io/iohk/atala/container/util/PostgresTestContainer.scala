@@ -1,9 +1,7 @@
 package io.iohk.atala.container.util
 
-import cats.Functor
 import cats.effect.std.Dispatcher
-import cats.effect.{Async, Resource}
-import cats.syntax.functor.*
+import cats.effect.Resource
 import com.dimafeng.testcontainers.PostgreSQLContainer
 import com.zaxxer.hikari.HikariConfig
 import doobie.hikari.HikariTransactor
@@ -16,7 +14,6 @@ import zio.ZIO.*
 import zio.interop.catz.*
 
 import java.util.function.Consumer
-import scala.concurrent.ExecutionContext
 
 object PostgresTestContainer {
 
@@ -66,7 +63,7 @@ object PostgresTestContainer {
         ec <- ExecutionContexts.cachedThreadPool[Task]
         xa <- HikariTransactor.fromHikariConfig[Task](config, ec)
       } yield xa
-      layer <- Dispatcher[Task].allocated.map {
+      layer <- Dispatcher.parallel[Task].allocated.map {
         case (dispatcher, _) => {
           given Dispatcher[Task] = dispatcher
           htxResource.toManaged.toLayer[Transactor[Task]]

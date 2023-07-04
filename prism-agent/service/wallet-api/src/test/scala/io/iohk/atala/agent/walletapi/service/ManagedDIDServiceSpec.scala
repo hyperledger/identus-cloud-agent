@@ -1,7 +1,16 @@
 package io.iohk.atala.agent.walletapi.service
 
+import io.iohk.atala.agent.walletapi.crypto.Apollo
+import io.iohk.atala.agent.walletapi.crypto.ApolloSpecHelper
+import io.iohk.atala.agent.walletapi.model.UpdateManagedDIDAction
+import io.iohk.atala.agent.walletapi.model.error.UpdateManagedDIDError
 import io.iohk.atala.agent.walletapi.model.error.{CreateManagedDIDError, PublishManagedDIDError}
 import io.iohk.atala.agent.walletapi.model.{DIDPublicKeyTemplate, ManagedDIDState, ManagedDIDTemplate, PublicationState}
+import io.iohk.atala.agent.walletapi.sql.JdbcDIDNonSecretStorage
+import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
+import io.iohk.atala.agent.walletapi.util.SeedResolver
+import io.iohk.atala.agent.walletapi.vault.VaultDIDSecretStorage
+import io.iohk.atala.castor.core.model.did.InternalKeyPurpose
 import io.iohk.atala.castor.core.model.did.{
   DIDData,
   DIDMetadata,
@@ -19,23 +28,13 @@ import io.iohk.atala.castor.core.model.did.{
 import io.iohk.atala.castor.core.model.error
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.castor.core.util.DIDOperationValidator
+import io.iohk.atala.test.container.DBTestUtils
+import io.iohk.atala.test.container.PostgresTestContainerSupport
+import io.iohk.atala.test.container.VaultTestContainerSupport
+import scala.collection.immutable.ArraySeq
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
-
-import scala.collection.immutable.ArraySeq
-import io.iohk.atala.test.container.PostgresTestContainerSupport
-import io.iohk.atala.test.container.VaultTestContainerSupport
-import io.iohk.atala.agent.walletapi.crypto.ApolloSpecHelper
-import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
-import io.iohk.atala.agent.walletapi.sql.JdbcDIDNonSecretStorage
-import io.iohk.atala.test.container.DBTestUtils
-import io.iohk.atala.castor.core.model.did.InternalKeyPurpose
-import io.iohk.atala.agent.walletapi.model.error.UpdateManagedDIDError
-import io.iohk.atala.agent.walletapi.model.UpdateManagedDIDAction
-import io.iohk.atala.agent.walletapi.crypto.Apollo
-import io.iohk.atala.agent.walletapi.util.SeedResolver
-import io.iohk.atala.agent.walletapi.vault.VaultDIDSecretStorage
 import zio.test.TestAspect.sequential
 
 object ManagedDIDServiceSpec
@@ -189,7 +188,6 @@ object ManagedDIDServiceSpec
           && assert(stateAfter)(isSome(isSubtype[PublicationState.PublicationPending](anything)))
       },
       test("do not re-publish when publishing already published DID") {
-        val template = generateDIDTemplate()
         for {
           svc <- ZIO.service[ManagedDIDService]
           testDIDSvc <- ZIO.service[TestDIDService]
@@ -270,13 +268,25 @@ object ManagedDIDServiceSpec
       )
       val result = ZIO.serviceWithZIO[ManagedDIDService](_.createAndStoreDID(template))
       assertZIO(result.exit)(fails(isSubtype[CreateManagedDIDError.InvalidArgument](anything)))
+    },
+    test("concurrent DID creation successfully create DID using different did-index") {
+      for {
+        svc <- ZIO.service[ManagedDIDService]
+        dids <- ZIO
+          .foreachPar(1 to 50)(_ => svc.createAndStoreDID(generateDIDTemplate()).map(_.asCanonical))
+          .withParallelism(8)
+          .map(_.toList)
+        states <- ZIO
+          .foreach(dids)(did => svc.nonSecretStorage.getManagedDIDState(did))
+          .map(_.toList.flatten)
+      } yield assert(dids)(hasSize(equalTo(50))) &&
+        assert(states.map(_.didIndex))(hasSameElementsDistinct(0 until 50))
     }
   )
 
   private val updateManagedDIDSpec =
     suite("updateManagedDID")(
       test("update stored and published DID") {
-        val template = generateDIDTemplate()
         for {
           svc <- ZIO.service[ManagedDIDService]
           testDIDSvc <- ZIO.service[TestDIDService]
@@ -304,7 +314,6 @@ object ManagedDIDServiceSpec
         assertZIO(effect.exit)(fails(isSubtype[UpdateManagedDIDError.DIDNotPublished](anything)))
       },
       test("fail on deactivated DID") {
-        val template = generateDIDTemplate()
         val effect = for {
           svc <- ZIO.service[ManagedDIDService]
           testDIDSvc <- ZIO.service[TestDIDService]
@@ -316,7 +325,6 @@ object ManagedDIDServiceSpec
         assertZIO(effect.exit)(fails(isSubtype[UpdateManagedDIDError.DIDAlreadyDeactivated](anything)))
       },
       test("validate constructed operation before submitting an operation") {
-        val template = generateDIDTemplate()
         for {
           svc <- ZIO.service[ManagedDIDService]
           testDIDSvc <- ZIO.service[TestDIDService]
@@ -328,7 +336,6 @@ object ManagedDIDServiceSpec
         } yield assert(operations)(hasSize(equalTo(1)))
       },
       test("store private keys in update operation") {
-        val template = generateDIDTemplate()
         for {
           svc <- ZIO.service[ManagedDIDService]
           testDIDSvc <- ZIO.service[TestDIDService]
@@ -344,7 +351,6 @@ object ManagedDIDServiceSpec
         )
       },
       test("store private keys with the same key-id across multiple update operation") {
-        val template = generateDIDTemplate()
         for {
           svc <- ZIO.service[ManagedDIDService]
           testDIDSvc <- ZIO.service[TestDIDService]
@@ -361,7 +367,6 @@ object ManagedDIDServiceSpec
         )
       },
       test("store did lineage for each update operation") {
-        val template = generateDIDTemplate()
         for {
           svc <- ZIO.service[ManagedDIDService]
           testDIDSvc <- ZIO.service[TestDIDService]

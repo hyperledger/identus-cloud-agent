@@ -3,7 +3,7 @@ package io.iohk.atala.pollux.core.service
 import io.iohk.atala.pollux.core.model.{VerificationPolicy, VerificationPolicyConstraint}
 import io.iohk.atala.pollux.core.model.error.VerificationPolicyError
 import io.iohk.atala.pollux.core.repository.VerificationPolicyRepository
-import zio.{Clock, IO, Random, Task, URLayer, ZLayer}
+import zio.*
 
 import java.util.UUID
 

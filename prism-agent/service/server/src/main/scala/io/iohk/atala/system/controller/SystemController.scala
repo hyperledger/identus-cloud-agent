@@ -1,6 +1,6 @@
 package io.iohk.atala.system.controller
 
-import zio.{IO, ZIO}
+import zio.*
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.system.controller.http.HealthInfo
 

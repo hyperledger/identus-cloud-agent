@@ -1,7 +1,6 @@
 package io.iohk.atala.pollux.core.service
 
 import io.iohk.atala.pollux.core.model.error.VerificationPolicyError
-import io.iohk.atala.pollux.core.model.error.VerificationPolicyError.*
 import io.iohk.atala.pollux.core.model.{VerificationPolicy, VerificationPolicyConstraint}
 import zio.IO
 

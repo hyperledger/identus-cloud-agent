@@ -11,6 +11,7 @@ import scala.collection.immutable.ArraySeq
 import io.iohk.atala.castor.core.model.error.DIDOperationError
 import io.iohk.atala.castor.core.model.did.ScheduleDIDOperationOutcome
 import io.iohk.atala.castor.core.service.DIDService
+import scala.language.implicitConversions
 
 class PublicationHandler(didService: DIDService, keyResolver: KeyResolver)(masterKeyId: String) {
   def signOperationWithMasterKey[E](state: ManagedDIDState, operation: PrismDIDOperation)(using

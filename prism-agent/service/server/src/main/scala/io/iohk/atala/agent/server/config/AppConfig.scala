@@ -4,7 +4,6 @@ import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import io.iohk.atala.pollux.vc.jwt.*
 import zio.config.*
 import zio.config.magnolia.Descriptor
-import zio.http.URL
 
 import java.time.Duration
 
@@ -16,7 +15,6 @@ final case class AppConfig(
     agent: AgentConfig,
     connect: ConnectConfig,
     prismNode: PrismNodeConfig,
-    vault: VaultConfig
 )
 
 object AppConfig {
@@ -96,9 +94,15 @@ final case class AgentConfig(
     httpEndpoint: HttpEndpointConfig,
     didCommServiceEndpointUrl: String,
     database: DatabaseConfig,
-    verification: VerificationConfig
+    verification: VerificationConfig,
+    secretStorage: SecretStorageConfig
 )
 
 final case class HttpEndpointConfig(http: HttpConfig)
 
 final case class HttpConfig(port: Int)
+
+final case class SecretStorageConfig(
+    backend: String,
+    vault: Option[VaultConfig],
+)

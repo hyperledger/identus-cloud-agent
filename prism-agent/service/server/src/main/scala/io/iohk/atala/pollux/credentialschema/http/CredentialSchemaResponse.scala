@@ -2,19 +2,15 @@ package io.iohk.atala.pollux.credentialschema.http
 
 import io.iohk.atala.api.http.*
 import io.iohk.atala.pollux.core.model
-import io.iohk.atala.pollux.core.model.CredentialSchema.Input
 import io.iohk.atala.pollux.credentialschema.http.CredentialSchemaResponse.annotations
-import io.iohk.atala.pollux.credentialschema.http.{CredentialSchemaInput, Proof}
 import sttp.model.Uri
 import sttp.model.Uri.*
-import sttp.tapir.EndpointIO.annotations.{example, query}
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{default, description, encodedExample, encodedName}
 import sttp.tapir.json.zio.schemaForZioJsonValue
 import zio.json.ast.Json
 import zio.json.*
-
-import java.time.{OffsetDateTime, ZoneOffset}
+import java.time.OffsetDateTime
 import java.util.UUID
 
 case class CredentialSchemaResponse(

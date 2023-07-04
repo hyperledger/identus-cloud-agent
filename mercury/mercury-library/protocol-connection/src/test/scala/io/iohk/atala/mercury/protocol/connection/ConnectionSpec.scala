@@ -2,8 +2,6 @@ package io.iohk.atala.mercury.protocol.connection
 
 import io.circe._
 import io.circe.parser._
-import io.circe.syntax._
-import zio.*
 import munit.*
 import io.iohk.atala.mercury.model.*
 

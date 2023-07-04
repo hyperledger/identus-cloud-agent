@@ -1,6 +1,6 @@
 package io.iohk.atala.pollux.core.service
 
-import zio.{IO, Task}
+import zio.IO
 
 import java.net.URI
 

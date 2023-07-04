@@ -3,17 +3,14 @@ package io.iohk.atala.agent.walletapi.sql
 import com.nimbusds.jose.jwk.OctetKeyPair
 import doobie.*
 import doobie.implicits.*
-import io.iohk.atala.agent.walletapi.crypto.{ECKeyPair, Apollo}
 import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
-import io.iohk.atala.castor.core.model.did.EllipticCurve
 import io.iohk.atala.mercury.model.DidId
-import io.iohk.atala.shared.utils.Base64Utils
 import java.time.Instant
 import java.util.UUID
 import zio.*
 import zio.interop.catz.*
 
-class JdbcDIDSecretStorage(xa: Transactor[Task], apollo: Apollo) extends DIDSecretStorage {
+class JdbcDIDSecretStorage(xa: Transactor[Task]) extends DIDSecretStorage {
 
   case class InstantAsBigInt(value: Instant)
 
@@ -25,17 +22,6 @@ class JdbcDIDSecretStorage(xa: Transactor[Task], apollo: Apollo) extends DIDSecr
 
   given instantGet: Get[InstantAsBigInt] = Get[Long].map(Instant.ofEpochSecond).map(InstantAsBigInt.apply)
   given instantPut: Put[InstantAsBigInt] = Put[Long].contramap(_.value.getEpochSecond())
-
-  // FIXME: this assumes that all ECKeyPair are secp256k1 curve
-  given ecKeyPairPairGet: Get[ECKeyPair] = Get[String].map { b64 =>
-    val bytes = Base64Utils.decodeURL(b64)
-    val privateKey = apollo.ecKeyFactory.privateKeyFromEncoded(EllipticCurve.SECP256K1, bytes).get
-    val publicKey = privateKey.computePublicKey
-    ECKeyPair(publicKey, privateKey)
-  }
-  given ecKeyPairPut: Put[ECKeyPair] = Put[String].contramap { kp =>
-    Base64Utils.encodeURL(kp.privateKey.encode)
-  }
 
   given didIdGet: Get[DidId] = Get[String].map(DidId(_))
   given didIdPut: Put[DidId] = Put[String].contramap(_.value)
@@ -78,6 +64,6 @@ class JdbcDIDSecretStorage(xa: Transactor[Task], apollo: Apollo) extends DIDSecr
 }
 
 object JdbcDIDSecretStorage {
-  val layer: URLayer[Transactor[Task] & Apollo, DIDSecretStorage] =
-    ZLayer.fromFunction(new JdbcDIDSecretStorage(_, _))
+  val layer: URLayer[Transactor[Task], DIDSecretStorage] =
+    ZLayer.fromFunction(new JdbcDIDSecretStorage(_))
 }

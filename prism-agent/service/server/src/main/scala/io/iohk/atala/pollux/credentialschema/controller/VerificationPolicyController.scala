@@ -1,9 +1,9 @@
 package io.iohk.atala.pollux.credentialschema.controller
 
-import io.iohk.atala.api.http.model.{CollectionStats, Order, Pagination, PaginationInput}
+import io.iohk.atala.api.http.model.{Order, Pagination}
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.pollux.credentialschema.http.{VerificationPolicy, VerificationPolicyInput, VerificationPolicyPage}
-import zio.{IO, Task, ZIO, ZLayer}
+import zio.*
 
 import java.util.UUID
 

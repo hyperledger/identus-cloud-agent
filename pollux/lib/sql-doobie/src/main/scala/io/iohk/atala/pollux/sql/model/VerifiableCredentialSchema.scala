@@ -1,9 +1,9 @@
 package io.iohk.atala.pollux.sql.model
 
+import io.getquill.SnakeCase
 import io.getquill.doobie.DoobieContext
-import io.getquill.{Literal, SnakeCase, SqlMirrorContext}
 
-import java.time.{OffsetDateTime, ZonedDateTime}
+import java.time.OffsetDateTime
 import java.util.UUID
 
 case class VerifiableCredentialSchema(

@@ -7,9 +7,9 @@ import org.didcommx.didcomm.message.Attachment as XAttachment
 import scala.jdk.CollectionConverters.*
 import io.iohk.atala.mercury.model.*
 
-import java.util.Random
 import io.circe.*
 import org.didcommx.didcomm.message.Attachment.Data
+import scala.language.implicitConversions
 
 given Conversion[PackEncryptedResult, EncryptedMessage] with {
   def apply(msg: PackEncryptedResult): EncryptedMessage = EncryptedMessageImp(msg)
@@ -99,7 +99,6 @@ given Conversion[AttachmentDescriptor, XAttachment] with {
         case JsonData(d) => {
           val hack: Map[String, ?] = d.toMap.view.mapValues(json2Map).toMap
           val hack2 = Map[String, Any]("jws" -> null, "hash" -> null, "json" -> hack.asJava) // OMG
-          val id = attachment.id
           XAttachment.Data.Companion.parse(hack2.asJava)
         }
         case LinkData(links, hash) => new XAttachment.Data.Links(links.asJava, hash, null)

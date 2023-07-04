@@ -1,3 +1,4 @@
+import scala.concurrent.duration.fromNow
 import sbtbuildinfo.BuildInfoPlugin.autoImport.*
 import org.scoverage.coveralls.Imports.CoverallsKeys._
 
@@ -22,9 +23,12 @@ inThisBuild(
     scalacOptions ++= Seq(
       "-encoding",
       "UTF-8",
+      "-feature",
       "-deprecation",
       "-unchecked",
-      "-Dquill.macro.log=false" // disable quill macro logs
+      "-Dquill.macro.log=false", // disable quill macro logs
+      "-Wunused:all",
+      "-Wconf:any:warning", // TODO: change unused imports to errors, Wconf configuration string is different from scala 2, figure out how!
       // TODO "-feature",
       // TODO "-Xfatal-warnings",
       // TODO "-Yexplicit-nulls",
@@ -614,6 +618,34 @@ lazy val polluxDoobie = project
   .dependsOn(polluxCore % "compile->compile;test->test")
   .dependsOn(shared)
 
+// ########################
+// ### Pollux Anoncreds ###
+// ########################
+
+lazy val polluxAnoncreds = project
+  .in(file("pollux/lib/anoncreds"))
+  // .settings(polluxCommonSettings)
+  .enablePlugins(BuildInfoPlugin)
+  .enablePlugins(JavaAppPackaging)
+  .settings(
+    name := "pollux-anoncreds",
+    Compile / unmanagedJars += baseDirectory.value / "UniffiPOC-1.0-SNAPSHOT.jar",
+    Compile / unmanagedResourceDirectories ++= Seq(
+      // export LD_LIBRARY_PATH=.../anoncreds-rs/uniffi/target/x86_64-unknown-linux-gnu/release:$LD_LIBRARY_PATH,
+      baseDirectory.value / "native-lib" / "NATIVE" / "linux" / "amd64"
+    ),
+  )
+
+lazy val polluxAnoncredsTest = project
+  .in(file("pollux/lib/anoncredsTest"))
+  .settings(
+    libraryDependencies ++= Seq(
+      "org.scalatest" %% "scalatest" % "3.2.15" % Test,
+      ("me.vican.jorge" %% "dijon" % "0.6.0" % Test).cross(CrossVersion.for3Use2_13)
+    ),
+  )
+  .dependsOn(polluxAnoncreds % "compile->test")
+
 // #####################
 // #####  connect  #####
 // #####################
@@ -680,6 +712,7 @@ lazy val prismAgentServer = project
     agent,
     polluxCore,
     polluxDoobie,
+    polluxAnoncreds,
     connectCore,
     connectDoobie,
     castorCore
@@ -733,3 +766,38 @@ releaseProcess := Seq[ReleaseStep](
   },
   setNextVersion
 )
+
+lazy val aggregatedProjects: Seq[ProjectReference] = Seq(
+  shared,
+  models,
+  protocolConnection,
+  protocolCoordinateMediation,
+  protocolDidExchange,
+  protocolInvitation,
+  protocolMercuryMailbox,
+  protocolLogin,
+  protocolReportProblem,
+  protocolRouting,
+  protocolIssueCredential,
+  protocolPresentProof,
+  protocolTrustPing,
+  resolver,
+  agent,
+  agentDidcommx,
+  agentCliDidcommx,
+  castorCore,
+  polluxVcJWT,
+  polluxCore,
+  polluxDoobie,
+  polluxAnoncreds,
+  // polluxAnoncredsTest, REMOVE THIS FOR NOW
+  connectCore,
+  connectDoobie,
+  prismAgentWalletAPI,
+  prismAgentServer,
+  mediator,
+)
+
+lazy val root = project
+  .in(file("."))
+  .aggregate(aggregatedProjects: _*)

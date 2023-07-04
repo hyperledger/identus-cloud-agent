@@ -2,19 +2,17 @@ package io.iohk.atala.pollux.vc.jwt
 
 import io.circe
 import io.circe.*
-import io.circe.Decoder.Result
 import io.circe.generic.auto.*
 import io.circe.parser.decode
 import io.circe.syntax.*
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
-import pdi.jwt.{Jwt, JwtCirce, JwtOptions}
+import pdi.jwt.{JwtCirce, JwtOptions}
 import zio.*
 import zio.prelude.*
-
-import java.security.{KeyPairGenerator, PublicKey}
+import java.security.PublicKey
 import java.time.temporal.TemporalAmount
-import java.time.{Clock, Instant, ZonedDateTime}
-import scala.util.{Failure, Success, Try}
+import java.time.{Clock, Instant}
+import scala.util.Try
 
 sealed trait VerifiablePresentationPayload
 

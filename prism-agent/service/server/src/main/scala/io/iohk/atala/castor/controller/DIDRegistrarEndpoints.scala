@@ -11,7 +11,6 @@ import io.iohk.atala.castor.controller.http.{
 }
 import sttp.tapir.*
 import sttp.tapir.json.zio.jsonBody
-import scala.tools.nsc.doc.model.Public
 import io.iohk.atala.castor.controller.http.DIDOperationResponse
 import sttp.model.StatusCode
 import io.iohk.atala.castor.controller.http.UpdateManagedDIDRequest

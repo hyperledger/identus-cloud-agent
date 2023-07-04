@@ -3,8 +3,6 @@ package io.iohk.atala.pollux.sql.repository
 import org.flywaydb.core.Flyway
 import zio.*
 
-import javax.sql.DataSource
-
 final case class Migrations(config: DbConfig) {
 
   val migrationScriptsLocation: String = "sql/pollux"

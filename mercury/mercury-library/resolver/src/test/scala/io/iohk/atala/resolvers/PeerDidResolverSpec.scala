@@ -1,11 +1,8 @@
 package io.iohk.atala.resolvers
-import cats.Traverse
-import io.circe.Decoder.Result
-import io.circe.{DecodingFailure, HCursor, Json}
+import io.circe.Json
 import zio.*
 import munit.*
 import io.circe.parser.*
-import org.didcommx.didcomm.diddoc.{DIDCommService, DIDDoc, VerificationMethod}
 import org.didcommx.peerdid._
 import scala.jdk.CollectionConverters._
 

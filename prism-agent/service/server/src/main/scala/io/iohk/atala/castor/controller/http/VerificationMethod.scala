@@ -6,6 +6,7 @@ import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonEncoder, JsonDecoder}
 import io.iohk.atala.castor.controller.http.VerificationMethod.annotations
+import scala.language.implicitConversions
 
 @description(
   "A cryptographic public key expressed in the DID document. https://www.w3.org/TR/did-core/#verification-methods"

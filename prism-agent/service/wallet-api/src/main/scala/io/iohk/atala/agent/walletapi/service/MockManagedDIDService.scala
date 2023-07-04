@@ -7,7 +7,6 @@ import io.iohk.atala.agent.walletapi.model.{
   ManagedDIDTemplate,
   UpdateManagedDIDAction
 }
-import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
 import io.iohk.atala.castor.core.model.did.{CanonicalPrismDID, LongFormPrismDID, ScheduleDIDOperationOutcome}
 import io.iohk.atala.mercury.PeerDID
@@ -16,7 +15,6 @@ import zio.mock.*
 import zio.{mock, *}
 
 import java.security.{PrivateKey as JavaPrivateKey, PublicKey as JavaPublicKey}
-import scala.collection.immutable.ArraySeq
 
 object MockManagedDIDService extends Mock[ManagedDIDService] {
 

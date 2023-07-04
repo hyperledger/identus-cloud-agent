@@ -2,11 +2,9 @@ package io.iohk.atala.mercury.protocol.reportproblem.v2
 
 import io.circe._
 import io.iohk.atala.mercury.model.{DidId, Message, PIURI}
-import io.iohk.atala.mercury.model.Message
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.{Decoder, Encoder}
 import io.circe.syntax.*
-import io.circe.generic.auto
 object ReportProblem {
 
   /** {{{

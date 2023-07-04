@@ -1,14 +1,10 @@
 package io.iohk.atala.pollux.core.repository
 
-import com.squareup.okhttp.Protocol
-import io.iohk.atala.castor.core.model.did.PrismDID
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.presentproof.{Presentation, ProposePresentation, RequestPresentation}
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.PresentationRecord.*
-import io.iohk.atala.pollux.core.model.error.CredentialRepositoryError.*
-import io.iohk.atala.prism.identity.Did
-import zio.{Cause, Exit, Task, ZIO}
+import zio.{Task, ZIO}
 import zio.test.*
 import zio.test.Assertion.*
 

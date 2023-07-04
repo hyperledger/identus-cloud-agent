@@ -2,21 +2,16 @@ package io.iohk.atala.mercury.mediator
 
 import zio.*
 
-import scala.jdk.CollectionConverters.*
 import io.iohk.atala.mercury._
 import io.iohk.atala.mercury.DidOps._
-import io.iohk.atala.mercury.mediator.MailStorage
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.model.Message
 import io.circe.Json.*
 import io.circe.parser.*
 import io.circe.JsonObject
 import io.circe.syntax._
-import io.iohk.atala.mercury.mediator.MediationState.{Denied, Granted, Requested}
-import io.iohk.atala.mercury.protocol.coordinatemediation.Keylist.Body
+import io.iohk.atala.mercury.mediator.MediationState.{Denied, Granted}
 import io.iohk.atala.mercury.protocol.coordinatemediation.{MediateDeny, MediateGrant}
-import io.iohk.atala.mercury.Agent
-import io.circe.JsonNumber
 object MediatorProgram {
   val port = 8080
 

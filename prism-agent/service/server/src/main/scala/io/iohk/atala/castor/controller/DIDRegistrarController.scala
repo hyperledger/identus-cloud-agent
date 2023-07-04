@@ -19,6 +19,7 @@ import io.iohk.atala.castor.controller.http.UpdateManagedDIDRequest
 import io.iohk.atala.castor.core.model.did.PrismDID
 import io.iohk.atala.shared.utils.Traverse.*
 import zio.*
+import scala.language.implicitConversions
 
 trait DIDRegistrarController {
   def listManagedDid(paginationInput: PaginationInput)(rc: RequestContext): IO[ErrorResponse, ManagedDIDPage]

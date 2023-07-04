@@ -1,16 +1,11 @@
 package io.iohk.atala.mercury.protocol.invitation.v1
 
 import munit.*
-import zio.*
-import cats.implicits._
 import io.circe.syntax._
 import io.circe.Json
-import io.circe.generic.semiauto._
 import io.circe.parser._
-import io.iohk.atala.mercury.protocol.invitation.v1.Invitation
 import io.iohk.atala.mercury.protocol.invitation._
 import io.iohk.atala.mercury.model.AttachmentDescriptor
-import io.iohk.atala.mercury.model.AttachmentDescriptor.attachmentDescriptorEncoderV1
 
 class InvitationV1Spec extends ZSuite {
 
@@ -41,13 +36,6 @@ class InvitationV1Spec extends ZSuite {
                                 |  "services": ["did:sov:LjgpST2rjsoxYegQDRm7EL"]
                                 |}""".stripMargin).getOrElse(Json.Null)
 
-    val service = Service(
-      id = "did:prism:PR6vs6GEZ8rHaVgjg2WodM#did-communication",
-      `type` = "did-communication",
-      recipientKeys = Seq("did:prism:PR6vs6GEZ8rHaVgjg2WodM"),
-      routingKeys = Some(Seq("did:prism:PR6vs6GEZ8rHaVgjg2WodM")),
-      serviceEndpoint = "http://localhost:8080/service"
-    )
     val did = Did("did:sov:LjgpST2rjsoxYegQDRm7EL")
     val accepts = Seq("didcomm/aip2;env=rfc587", "didcomm/aip2;env=rfc19")
     val handshakeProtocols = Seq("https://didcomm.org/didexchange/1.0", "https://didcomm.org/connections/1.0")

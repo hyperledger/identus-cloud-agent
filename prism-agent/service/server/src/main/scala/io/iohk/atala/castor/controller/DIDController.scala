@@ -1,19 +1,14 @@
 package io.iohk.atala.castor.controller
 
-import io.iohk.atala.api.http.RequestContext
 import io.iohk.atala.castor.controller.http.DIDResolutionResult
 import sttp.model.StatusCode
 import zio.*
 import io.iohk.atala.castor.controller.http.{DIDDocument, DIDDocumentMetadata, DIDResolutionMetadata}
-import io.iohk.atala.castor.core.model.did.w3c.{
-  PublicKeyReprOrRef,
-  DIDDocumentMetadataRepr,
-  DIDDocumentRepr,
-  DIDResolutionErrorRepr
-}
+import io.iohk.atala.castor.core.model.did.w3c.{DIDDocumentMetadataRepr, DIDDocumentRepr, DIDResolutionErrorRepr}
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.castor.core.model.did.w3c.makeW3CResolver
 import io.iohk.atala.castor.controller.DIDControllerImpl.resolutionStatusCodeMapping
+import scala.language.implicitConversions
 
 trait DIDController {
   def getDID(did: String): UIO[(StatusCode, DIDResolutionResult)]

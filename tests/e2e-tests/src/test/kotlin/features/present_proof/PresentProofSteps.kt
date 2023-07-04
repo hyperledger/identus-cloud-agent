@@ -9,9 +9,9 @@ import common.Utils.wait
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import net.serenitybdd.screenplay.Actor
-import net.serenitybdd.screenplay.rest.interactions.Get
-import net.serenitybdd.screenplay.rest.interactions.Patch
-import net.serenitybdd.screenplay.rest.interactions.Post
+import interactions.Get
+import interactions.Post
+import interactions.Patch
 import net.serenitybdd.screenplay.rest.questions.ResponseConsequence
 import org.apache.http.HttpStatus.SC_CREATED
 import org.apache.http.HttpStatus.SC_OK

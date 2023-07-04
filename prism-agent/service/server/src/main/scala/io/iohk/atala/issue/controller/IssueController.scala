@@ -9,7 +9,7 @@ import io.iohk.atala.issue.controller.http.{
   IssueCredentialRecordPage
 }
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
-import zio.{IO, ZIO}
+import zio.*
 
 trait IssueController {
   def createCredentialOffer(request: CreateIssueCredentialRecordRequest)(implicit

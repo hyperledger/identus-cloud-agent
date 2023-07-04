@@ -1,6 +1,5 @@
 package io.iohk.atala.pollux.credentialschema.http
 
-import sttp.tapir.EndpointIO.annotations.example
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
 import sttp.tapir.generic.auto.*
@@ -8,7 +7,7 @@ import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 import io.iohk.atala.pollux.credentialschema.http.Proof.annotations
 import io.iohk.atala.api.http.*
 
-import java.time.{OffsetDateTime, ZonedDateTime}
+import java.time.OffsetDateTime
 
 case class Proof(
     @description(annotations.`type`.description)

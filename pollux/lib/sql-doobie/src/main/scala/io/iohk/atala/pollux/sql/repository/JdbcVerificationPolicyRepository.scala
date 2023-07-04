@@ -1,14 +1,7 @@
 package io.iohk.atala.pollux.sql.repository
 
-import cats.Functor
-import cats.effect.std.Dispatcher
-import cats.effect.{Async, Resource}
-import cats.syntax.functor.*
 import doobie.*
-import doobie.enumerated.TransactionIsolation
-import doobie.hikari.HikariTransactor
 import doobie.implicits.*
-import doobie.util.ExecutionContexts
 import doobie.util.transactor.Transactor
 import io.iohk.atala.pollux.core.model
 import io.iohk.atala.pollux.core.model.{CredentialSchemaAndTrustedIssuersConstraint, VerificationPolicy}

@@ -3,7 +3,6 @@ package io.iohk.atala.castor.controller.http
 import io.iohk.atala.agent.walletapi.model as walletDomain
 import io.iohk.atala.agent.walletapi.model.DIDPublicKeyTemplate
 import io.iohk.atala.agent.walletapi.model.ManagedDIDDetail
-import io.iohk.atala.agent.walletapi.model.ManagedDIDState
 import io.iohk.atala.agent.walletapi.model.PublicationState
 import io.iohk.atala.api.http.Annotation
 import io.iohk.atala.castor.core.model.did as castorDomain
@@ -13,6 +12,7 @@ import io.iohk.atala.shared.utils.Traverse.*
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonEncoder, JsonDecoder}
+import scala.language.implicitConversions
 
 final case class ManagedDID(
     @description(ManagedDID.annotations.did.description)

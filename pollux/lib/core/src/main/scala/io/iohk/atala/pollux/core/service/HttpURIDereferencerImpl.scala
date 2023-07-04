@@ -1,9 +1,8 @@
 package io.iohk.atala.pollux.core.service
 import io.iohk.atala.pollux.core.service.URIDereferencerError.{ConnectionError, ResourceNotFound, UnexpectedError}
 import zio.http.*
-import zio.http.ZClient.ClientLive
 import zio.http.model.*
-import zio.{IO, Layer, Scope, ULayer, ZIO, ZLayer}
+import zio.{IO, Scope, ULayer, ZIO, ZLayer}
 
 import java.net.URI
 

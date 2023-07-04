@@ -3,10 +3,9 @@ package io.iohk.atala.system.controller
 import io.iohk.atala.agent.server.buildinfo.BuildInfo
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.system.controller.http.HealthInfo
-import zio.http.Response
 import zio.metrics.connectors.prometheus
 import zio.metrics.connectors.prometheus.PrometheusPublisher
-import zio.{IO, URLayer, ZIO, ZLayer}
+import zio.*
 
 class SystemControllerImpl(
     prometheus: PrometheusPublisher

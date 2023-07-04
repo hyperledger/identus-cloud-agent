@@ -1,28 +1,13 @@
 package io.iohk.atala.pollux.core.service
 
-import cats.*
-import cats.data.*
-import cats.implicits.*
-import cats.syntax.all.*
-import com.google.protobuf.ByteString
-import io.circe.*
-import io.circe.parser.*
-import io.circe.syntax.*
-import io.iohk.atala.mercury.DidAgent
 import io.iohk.atala.mercury.model.*
-import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
 import io.iohk.atala.mercury.protocol.presentproof.*
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.error.PresentationError
-import io.iohk.atala.pollux.core.model.error.PresentationError.*
 import io.iohk.atala.pollux.core.model.presentation.*
-import io.iohk.atala.pollux.core.repository.{CredentialRepository, PresentationRepository}
 import io.iohk.atala.pollux.vc.jwt.*
 import zio.*
 
-import java.rmi.UnexpectedException
-import java.security.spec.ECGenParameterSpec
-import java.security.{KeyPairGenerator, PublicKey, SecureRandom}
 import java.time.Instant
 import java.util as ju
 import java.util.UUID
@@ -32,8 +17,9 @@ trait PresentationService {
   def extractIdFromCredential(credential: W3cCredentialPayload): Option[UUID]
 
   def createPresentationRecord(
+      pairwiseVerifierDID: DidId,
+      pairwiseProverDID: DidId,
       thid: DidCommID,
-      subjectDid: DidId,
       connectionId: Option[String],
       proofTypes: Seq[ProofType],
       options: Option[io.iohk.atala.pollux.core.model.presentation.Options]

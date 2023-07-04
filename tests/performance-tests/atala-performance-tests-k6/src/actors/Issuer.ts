@@ -60,12 +60,18 @@ export class Issuer extends Actor {
   }
 
   /**
+   * Creates an unpublished DID
+   */
+  createUnpublishedDid() {
+    this.longFormDid = this.didService.createUnpublishedDid(this.issuerDidTemplate).longFormDid;
+  }
+
+  /**
    * Creates and publishes a DID.
    */
-  createAndPublishDid() {
-    const unpublishedDid = this.didService.createUnpublishedDid(this.issuerDidTemplate).longFormDid;
-    this.did = this.didService.publishDid(unpublishedDid).didRef;
-    this.didService.waitForDidState(unpublishedDid, "PUBLISHED");
+  publishDid() {
+    this.did = this.didService.publishDid(this.longFormDid!).didRef;
+    this.didService.waitForDidState(this.longFormDid!, "PUBLISHED");
   }
 
   /**
@@ -73,6 +79,12 @@ export class Issuer extends Actor {
    */
   createCredentialOffer() {
     this.credential = this.credentialsService.createCredentialOffer(this.did!, this.connectionWithHolder!);
+  }
+
+  /**
+   * Waits for the credential offer to be sent.
+   */
+  waitForCredentialOfferToBeSent() {
     this.credentialsService.waitForCredentialState(this.credential!, "OfferSent");
   }
 
@@ -88,6 +100,12 @@ export class Issuer extends Actor {
    */
   issueCredential() {
     this.credentialsService.issueCredential(this.credential!);
+  }
+
+  /**
+   * Waits for the credential to be sent.
+   */
+  waitForCredentialToBeSent() {
     this.credentialsService.waitForCredentialState(this.credential!, "CredentialSent");
   }
 }

@@ -1,14 +1,7 @@
 package io.iohk.atala.pollux.vc.jwt.demos
 
-import cats.implicits.*
 import io.circe.*
-import net.reactivecore.cjs.resolver.Downloader
-import net.reactivecore.cjs.{DocumentValidator, Loader, Result}
-import pdi.jwt.{JwtAlgorithm, JwtCirce, JwtClaim}
-
-import java.security.*
-import java.security.spec.*
-import java.time.Instant
+import net.reactivecore.cjs.{DocumentValidator, Loader}
 
 @main def schemaDemo(): Unit =
   val schemaCode =
@@ -46,8 +39,13 @@ import java.time.Instant
   val validator = Loader.empty.fromJson(io.circe.parser.parse(schemaCode).toOption.get)
 
   def test(s: Json): Unit = {
-    val result = validator.right.get.validate(s)
-    println(s"Result of ${s}: ${result}")
+    validator match {
+      case Right(v) =>
+        val result = v.validate(s)
+        println(s"Result of $s: $result")
+      case Left(e) =>
+        println(s"Validation failed with error: $e")
+    }
   }
 
   test(Json.fromString("wrongType"))

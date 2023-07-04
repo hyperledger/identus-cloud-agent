@@ -8,7 +8,8 @@ import io.iohk.atala.mercury.model.{given, _}
 import io.iohk.atala.mercury.protocol.issuecredential._
 import java.io.IOException
 
-import io.iohk.atala.mercury.DidCommX
+import scala.language.implicitConversions
+
 object AgentHardCode extends ZIOAppDefault {
 
   def run = for {

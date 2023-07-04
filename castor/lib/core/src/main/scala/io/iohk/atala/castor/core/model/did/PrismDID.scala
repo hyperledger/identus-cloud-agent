@@ -6,7 +6,6 @@ import io.iohk.atala.prism.protos.node_models
 import io.iohk.atala.prism.protos.node_models.AtalaOperation.Operation
 import io.iohk.atala.shared.models.Base64UrlString
 import io.iohk.atala.shared.models.HexString
-
 import scala.util.Try
 import scala.util.matching.Regex
 
@@ -26,7 +25,7 @@ sealed trait PrismDID {
 }
 
 object PrismDID extends ProtoModelHelper {
-  val PRISM_METHOD: DIDMethod = DIDMethod("prism")
+  val PRISM_METHOD: DIDMethod = DIDMethod.fromStringUnsafe("prism")
   val CANONICAL_SUFFIX_REGEX: Regex = "^([0-9a-f]{64}$)".r
   val LONG_FORM_SUFFIX_REGEX: Regex = "^([0-9a-f]{64}):([A-Za-z0-9_-]+$)".r
 
@@ -56,18 +55,15 @@ object PrismDID extends ProtoModelHelper {
     }
 
   def fromString(s: String): Either[String, PrismDID] = {
-    // Only reuse code in Did.fromString not PrismDid.fromString from 1.4 SDK
-    // because of uncertainty around keeping prism-identity up-to-date
-    // as the protobuf definition evolves
-    Try(io.iohk.atala.prism.identity.Did.Companion.fromString(s)).toEither.left
-      .map(_.getMessage)
+    DID
+      .fromString(s)
       .flatMap { did =>
-        if (did.getMethod.toString == PRISM_METHOD.value) Right(did)
-        else Left(s"Expected DID to have method ${PRISM_METHOD.value}, but got \"${did.getMethod.toString}\" instead")
+        if (did.method == PRISM_METHOD) Right(did)
+        else Left(s"Expected DID to have method $PRISM_METHOD, but got \"${did.method.toString}\" instead")
       }
-      .flatMap { (did: io.iohk.atala.prism.identity.Did) =>
-        val canonicalMatchGroups = CANONICAL_SUFFIX_REGEX.findAllMatchIn(did.getMethodSpecificId.toString).toList
-        val longFormMatchGroups = LONG_FORM_SUFFIX_REGEX.findAllMatchIn(did.getMethodSpecificId.toString).toList
+      .flatMap { did =>
+        val canonicalMatchGroups = CANONICAL_SUFFIX_REGEX.findAllMatchIn(did.methodSpecificId.toString).toList
+        val longFormMatchGroups = LONG_FORM_SUFFIX_REGEX.findAllMatchIn(did.methodSpecificId.toString).toList
 
         (canonicalMatchGroups, longFormMatchGroups) match {
           case (Nil, longFormPattern :: Nil) =>
@@ -106,7 +102,7 @@ object PrismDID extends ProtoModelHelper {
 }
 
 final case class CanonicalPrismDID private[did] (stateHash: HexString) extends PrismDID {
-  override val suffix: DIDMethodSpecificId = DIDMethodSpecificId.fromString(stateHash.toString).get
+  override val suffix: DIDMethodSpecificId = DIDMethodSpecificId.fromStringUnsafe(stateHash.toString)
 }
 
 final case class LongFormPrismDID private[did] (atalaOperation: node_models.AtalaOperation) extends PrismDID {
@@ -118,7 +114,7 @@ final case class LongFormPrismDID private[did] (atalaOperation: node_models.Atal
 
   override val suffix: DIDMethodSpecificId = {
     val encodedState = Base64UrlString.fromByteArray(atalaOperation.toByteArray).toStringNoPadding
-    DIDMethodSpecificId.fromString(s"${stateHash.toString}:${encodedState}").get
+    DIDMethodSpecificId.fromStringUnsafe(s"${stateHash.toString}:${encodedState}")
   }
 
   def createOperation: Either[String, PrismDIDOperation.Create] = {

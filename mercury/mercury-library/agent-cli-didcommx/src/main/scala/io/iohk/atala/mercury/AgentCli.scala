@@ -3,12 +3,9 @@ package io.iohk.atala.mercury
 import scala.jdk.CollectionConverters.*
 import zio.*
 
-import zio._
 import zio.http._
 import zio.http.model._
-import zio.http.service._
 import java.io.IOException
-import org.didcommx.didcomm.DIDComm
 import io.iohk.atala.QRcode
 import io.iohk.atala.mercury._
 import io.iohk.atala.mercury.model.{given, _}
@@ -20,9 +17,7 @@ import io.iohk.atala.mercury.protocol.connection.*
 import io.iohk.atala.mercury.protocol.reportproblem.v2._
 import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
 import io.iohk.atala.resolvers._
-import io.circe.Json
-import io.circe.parser.*
-import io.circe.syntax.*
+import scala.language.implicitConversions
 
 /** AgentCli
   * {{{

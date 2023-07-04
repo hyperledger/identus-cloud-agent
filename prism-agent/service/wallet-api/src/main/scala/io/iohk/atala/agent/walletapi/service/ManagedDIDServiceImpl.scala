@@ -14,9 +14,10 @@ import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.mercury.PeerDID
 import io.iohk.atala.mercury.model.DidId
 import zio.*
-
+import scala.language.implicitConversions
 import java.security.{PrivateKey as JavaPrivateKey, PublicKey as JavaPublicKey}
 import scala.collection.immutable.ArraySeq
+import io.iohk.atala.agent.walletapi.service.handler.DIDCreateHandler
 
 /** A wrapper around Castor's DIDService providing key-management capability. Analogous to the secretAPI in
   * indy-wallet-sdk.
@@ -27,20 +28,18 @@ final class ManagedDIDServiceImpl private[walletapi] (
     private[walletapi] val secretStorage: DIDSecretStorage,
     override private[walletapi] val nonSecretStorage: DIDNonSecretStorage,
     apollo: Apollo,
-    seed: Array[Byte]
+    seed: Array[Byte],
+    createDIDSem: Semaphore
 ) extends ManagedDIDService {
 
-  private val CURVE = EllipticCurve.SECP256K1
   private val AGREEMENT_KEY_ID = "agreement"
   private val AUTHENTICATION_KEY_ID = "authentication"
 
   private val keyResolver = KeyResolver(apollo, nonSecretStorage, secretStorage)(seed)
 
   private val publicationHandler = PublicationHandler(didService, keyResolver)(DEFAULT_MASTER_KEY_ID)
-  private val didUpdateHandler = DIDUpdateHandler(apollo, nonSecretStorage, secretStorage, publicationHandler)(seed)
-
-  private val generateCreateOperationHdKey =
-    OperationFactory(apollo).makeCreateOperationHdKey(DEFAULT_MASTER_KEY_ID, seed)
+  private val didCreateHandler = DIDCreateHandler(apollo, nonSecretStorage)(seed, DEFAULT_MASTER_KEY_ID)
+  private val didUpdateHandler = DIDUpdateHandler(apollo, nonSecretStorage, publicationHandler)(seed)
 
   def syncManagedDIDState: IO[GetManagedDIDError, Unit] = nonSecretStorage
     .listManagedDID(offset = None, limit = None)
@@ -122,30 +121,26 @@ final class ManagedDIDServiceImpl private[walletapi] (
     } yield outcome
   }
 
-  // TODO: update this method to use the same handler as updateManagedDID
   def createAndStoreDID(didTemplate: ManagedDIDTemplate): IO[CreateManagedDIDError, LongFormPrismDID] = {
-    for {
+    val effect = for {
       _ <- ZIO
         .fromEither(ManagedDIDTemplateValidator.validate(didTemplate))
         .mapError(CreateManagedDIDError.InvalidArgument.apply)
-      didIndex <- nonSecretStorage
-        .getMaxDIDIndex()
-        .mapBoth(
-          CreateManagedDIDError.WalletStorageError.apply,
-          maybeIdx => maybeIdx.map(_ + 1).getOrElse(0)
-        )
-      generated <- generateCreateOperationHdKey(didIndex, didTemplate)
-      (createOperation, hdKey) = generated
-      longFormDID = PrismDID.buildLongFormFromOperation(createOperation)
-      did = longFormDID.asCanonical
+      material <- didCreateHandler.materialize(didTemplate)
       _ <- ZIO
-        .fromEither(didOpValidator.validate(createOperation))
+        .fromEither(didOpValidator.validate(material.operation))
         .mapError(CreateManagedDIDError.InvalidOperation.apply)
-      state = ManagedDIDState(createOperation, didIndex, PublicationState.Created())
-      _ <- nonSecretStorage
-        .insertManagedDID(did, state, hdKey.keyPaths ++ hdKey.internalKeyPaths)
-        .mapError(CreateManagedDIDError.WalletStorageError.apply)
-    } yield longFormDID
+      _ <- material.persist.mapError(CreateManagedDIDError.WalletStorageError.apply)
+    } yield PrismDID.buildLongFormFromOperation(material.operation)
+
+    // This synchronizes createDID effect to only allow 1 execution at a time
+    // to avoid concurrent didIndex update. Long-term solution should be
+    // solved at the DB level.
+    //
+    // Performance may be improved by not synchronizing the whole operation,
+    // but only the counter increment part allowing multiple in-flight create operations
+    // once didIndex is acquired.
+    createDIDSem.withPermit(effect)
   }
 
   def updateManagedDID(
@@ -365,7 +360,16 @@ object ManagedDIDServiceImpl {
         nonSecretStorage <- ZIO.service[DIDNonSecretStorage]
         apollo <- ZIO.service[Apollo]
         seed <- ZIO.serviceWithZIO[SeedResolver](_.resolve)
-      } yield ManagedDIDServiceImpl(didService, didOpValidator, secretStorage, nonSecretStorage, apollo, seed)
+        createDIDSem <- Semaphore.make(1)
+      } yield ManagedDIDServiceImpl(
+        didService,
+        didOpValidator,
+        secretStorage,
+        nonSecretStorage,
+        apollo,
+        seed,
+        createDIDSem
+      )
     }
   }
 
