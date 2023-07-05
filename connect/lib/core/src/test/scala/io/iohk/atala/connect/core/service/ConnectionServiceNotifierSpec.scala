@@ -6,11 +6,62 @@ import io.iohk.atala.connect.core.repository.ConnectionRepositoryInMemory
 import io.iohk.atala.event.notification.*
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
+import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
 import zio.*
 import zio.ZIO.*
+import zio.mock.Expectation
 import zio.test.*
 
-object ConnectionServiceWithEventNotificationImplSpec extends ZIOSpecDefault {
+import java.time.Instant
+import java.util.UUID
+
+object ConnectionServiceNotifierSpec extends ZIOSpecDefault {
+
+  private val record = ConnectionRecord(
+    UUID.randomUUID(),
+    Instant.now,
+    None,
+    None,
+    None,
+    ConnectionRecord.Role.Inviter,
+    ProtocolState.InvitationGenerated,
+    Invitation(from = DidId("did:peer:INVITER"), Invitation.Body("", "", Nil)),
+    None,
+    None,
+    5,
+    None,
+    None
+  )
+
+  private val inviterExpectations =
+    MockConnectionService.CreateConnectionInvitation(
+      assertion = Assertion.anything,
+      result = Expectation.value(record)
+    ) ++ MockConnectionService.ReceiveConnectionRequest(
+      assertion = Assertion.anything,
+      result = Expectation.value(record.copy(protocolState = ProtocolState.ConnectionRequestReceived))
+    ) ++ MockConnectionService.AcceptConnectionRequest(
+      assertion = Assertion.anything,
+      result = Expectation.value(record.copy(protocolState = ProtocolState.ConnectionResponsePending))
+    ) ++ MockConnectionService.MarkConnectionResponseSent(
+      assertion = Assertion.anything,
+      result = Expectation.value(record.copy(protocolState = ProtocolState.ConnectionResponseSent))
+    )
+
+  private val inviteeExpectations =
+    MockConnectionService.ReceiveConnectionInvitation(
+      assertion = Assertion.anything,
+      result = Expectation.value(record.copy(protocolState = ProtocolState.InvitationReceived))
+    ) ++ MockConnectionService.AcceptConnectionInvitation(
+      assertion = Assertion.anything,
+      result = Expectation.value(record.copy(protocolState = ProtocolState.ConnectionRequestPending))
+    ) ++ MockConnectionService.MarkConnectionRequestSent(
+      assertion = Assertion.anything,
+      result = Expectation.value(record.copy(protocolState = ProtocolState.ConnectionRequestSent))
+    ) ++ MockConnectionService.ReceiveConnectionResponse(
+      assertion = Assertion.anything,
+      result = Expectation.value(record.copy(protocolState = ProtocolState.ConnectionResponseReceived))
+    )
 
   override def spec: Spec[TestEnvironment with Scope, Any] = {
     suite("ConnectionServiceWithEventNotificationImpl")(
@@ -40,7 +91,10 @@ object ConnectionServiceWithEventNotificationImplSpec extends ZIOSpecDefault {
           assertTrue(events(2).data.protocolState == ProtocolState.ConnectionResponsePending) &&
           assertTrue(events(3).data.protocolState == ProtocolState.ConnectionResponseSent)
         }
-      },
+      }.provide(
+        ZLayer.succeed(50) >>> EventNotificationServiceImpl.layer,
+        inviterExpectations.toLayer >>> ConnectionServiceNotifier.layer
+      ),
       test("should send relevant events during flow execution on the invitee side") {
         for {
           inviterSvc <- ZIO
@@ -75,11 +129,10 @@ object ConnectionServiceWithEventNotificationImplSpec extends ZIOSpecDefault {
           assertTrue(events(2).data.protocolState == ProtocolState.ConnectionRequestSent) &&
           assertTrue(events(3).data.protocolState == ProtocolState.ConnectionResponseReceived)
         }
-      }
-    ).provide(
-      ConnectionRepositoryInMemory.layer,
-      ZLayer.succeed(50) >>> EventNotificationServiceImpl.layer,
-      ConnectionServiceWithEventNotificationImpl.layer
+      }.provide(
+        ZLayer.succeed(50) >>> EventNotificationServiceImpl.layer,
+        inviteeExpectations.toLayer >>> ConnectionServiceNotifier.layer
+      )
     )
   }
 

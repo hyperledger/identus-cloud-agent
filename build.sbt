@@ -147,7 +147,7 @@ lazy val D_Connect = new {
 
   // Dependency Modules
   private lazy val baseDependencies: Seq[ModuleID] =
-    Seq(D.zio, D.zioTest, D.zioTestSbt, D.zioTestMagnolia, D.testcontainersPostgres, logback)
+    Seq(D.zio, D.zioTest, D.zioTestSbt, D.zioTestMagnolia, D.zioMock, D.testcontainersPostgres, logback)
 
   // Project Dependencies
   lazy val coreDependencies: Seq[ModuleID] =

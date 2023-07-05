@@ -2,47 +2,47 @@ package io.iohk.atala.connect.core.service
 
 import io.iohk.atala.connect.core.model.ConnectionRecord
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
-import io.iohk.atala.connect.core.repository.ConnectionRepository
 import io.iohk.atala.event.notification.{Event, EventNotificationService}
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
-import zio.{IO, Task, URLayer, ZIO, ZLayer}
+import zio.{IO, URLayer, ZIO, ZLayer}
 
 import java.util.UUID
 
-class ConnectionServiceWithEventNotificationImpl(
-    connectionRepository: ConnectionRepository[Task],
+class ConnectionServiceNotifier(
+    svc: ConnectionService,
     eventNotificationService: EventNotificationService
-) extends ConnectionServiceImpl(connectionRepository) {
+) extends ConnectionService {
+
   override def createConnectionInvitation(
       label: Option[String],
       pairwiseDID: DidId
   ): IO[ConnectionServiceError, ConnectionRecord] =
-    notifyOnSuccess(super.createConnectionInvitation(label, pairwiseDID))
+    notifyOnSuccess(svc.createConnectionInvitation(label, pairwiseDID))
 
   override def receiveConnectionInvitation(invitation: String): IO[ConnectionServiceError, ConnectionRecord] =
-    notifyOnSuccess(super.receiveConnectionInvitation(invitation))
+    notifyOnSuccess(svc.receiveConnectionInvitation(invitation))
 
   override def acceptConnectionInvitation(
       recordId: UUID,
       pairwiseDid: DidId
   ): IO[ConnectionServiceError, ConnectionRecord] =
-    notifyOnSuccess(super.acceptConnectionInvitation(recordId, pairwiseDid))
+    notifyOnSuccess(svc.acceptConnectionInvitation(recordId, pairwiseDid))
 
   override def markConnectionRequestSent(recordId: UUID): IO[ConnectionServiceError, ConnectionRecord] =
-    notifyOnSuccess(super.markConnectionRequestSent(recordId))
+    notifyOnSuccess(svc.markConnectionRequestSent(recordId))
 
   override def receiveConnectionRequest(request: ConnectionRequest): IO[ConnectionServiceError, ConnectionRecord] =
-    notifyOnSuccess(super.receiveConnectionRequest(request))
+    notifyOnSuccess(svc.receiveConnectionRequest(request))
 
   override def acceptConnectionRequest(recordId: UUID): IO[ConnectionServiceError, ConnectionRecord] =
-    notifyOnSuccess(super.acceptConnectionRequest(recordId))
+    notifyOnSuccess(svc.acceptConnectionRequest(recordId))
 
   override def markConnectionResponseSent(recordId: UUID): IO[ConnectionServiceError, ConnectionRecord] =
-    notifyOnSuccess(super.markConnectionResponseSent(recordId))
+    notifyOnSuccess(svc.markConnectionResponseSent(recordId))
 
   override def receiveConnectionResponse(response: ConnectionResponse): IO[ConnectionServiceError, ConnectionRecord] =
-    notifyOnSuccess(super.receiveConnectionResponse(response))
+    notifyOnSuccess(svc.receiveConnectionResponse(response))
 
   private[this] def notifyOnSuccess(effect: IO[ConnectionServiceError, ConnectionRecord]) =
     for {
@@ -57,9 +57,24 @@ class ConnectionServiceWithEventNotificationImpl(
     } yield ()
     result.catchAll(e => ZIO.logError(s"Notification service error: $e"))
   }
+
+  override def getConnectionRecord(recordId: UUID): IO[ConnectionServiceError, Option[ConnectionRecord]] = ???
+
+  override def deleteConnectionRecord(recordId: UUID): IO[ConnectionServiceError, Int] = ???
+
+  override def reportProcessingFailure(recordId: UUID, failReason: Option[String]): IO[ConnectionServiceError, Unit] =
+    ???
+
+  override def getConnectionRecords(): IO[ConnectionServiceError, Seq[ConnectionRecord]] = ???
+
+  override def getConnectionRecordsByStates(
+      ignoreWithZeroRetries: Boolean,
+      limit: Int,
+      states: ConnectionRecord.ProtocolState*
+  ): IO[ConnectionServiceError, Seq[ConnectionRecord]] = ???
 }
 
-object ConnectionServiceWithEventNotificationImpl {
-  val layer: URLayer[ConnectionRepository[Task] with EventNotificationService, ConnectionService] =
-    ZLayer.fromFunction(ConnectionServiceWithEventNotificationImpl(_, _))
+object ConnectionServiceNotifier {
+  val layer: URLayer[ConnectionService & EventNotificationService, ConnectionService] =
+    ZLayer.fromFunction(ConnectionServiceNotifier(_, _))
 }
