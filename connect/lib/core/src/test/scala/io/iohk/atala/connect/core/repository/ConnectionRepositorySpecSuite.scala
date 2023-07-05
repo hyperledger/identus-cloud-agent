@@ -20,7 +20,7 @@ object ConnectionRepositorySpecSuite {
     UUID.randomUUID,
     Instant.ofEpochSecond(Instant.now.getEpochSecond),
     None,
-    None,
+    UUID.randomUUID(),
     None,
     ConnectionRecord.Role.Inviter,
     ConnectionRecord.ProtocolState.InvitationGenerated,
@@ -57,8 +57,8 @@ object ConnectionRepositorySpecSuite {
       for {
         repo <- ZIO.service[ConnectionRepository[Task]]
         thid = UUID.randomUUID()
-        aRecord = connectionRecord.copy(thid = Some(thid))
-        bRecord = connectionRecord.copy(thid = Some(thid))
+        aRecord = connectionRecord.copy(thid = thid)
+        bRecord = connectionRecord.copy(thid = thid)
         aCount <- repo.createConnectionRecord(aRecord)
         bCount <- repo.createConnectionRecord(bRecord).exit
       } yield {
@@ -209,7 +209,7 @@ object ConnectionRepositorySpecSuite {
       for {
         repo <- ZIO.service[ConnectionRepository[Task]]
         thid = UUID.randomUUID()
-        aRecord = connectionRecord.copy(thid = Some(thid))
+        aRecord = connectionRecord.copy(thid = thid)
         bRecord = connectionRecord
         _ <- repo.createConnectionRecord(aRecord)
         _ <- repo.createConnectionRecord(bRecord)
@@ -219,8 +219,8 @@ object ConnectionRepositorySpecSuite {
     test("getConnectionRecordByThreadId returns nothing for an unknown thid") {
       for {
         repo <- ZIO.service[ConnectionRepository[Task]]
-        aRecord = connectionRecord.copy(thid = Some(UUID.randomUUID()))
-        bRecord = connectionRecord.copy(thid = Some(UUID.randomUUID()))
+        aRecord = connectionRecord.copy(thid = UUID.randomUUID())
+        bRecord = connectionRecord.copy(thid = UUID.randomUUID())
         _ <- repo.createConnectionRecord(aRecord)
         _ <- repo.createConnectionRecord(bRecord)
         record <- repo.getConnectionRecordByThreadId(UUID.randomUUID())

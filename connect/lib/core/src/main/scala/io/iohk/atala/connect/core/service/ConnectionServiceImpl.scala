@@ -32,7 +32,7 @@ private class ConnectionServiceImpl(
           id = UUID.fromString(invitation.id),
           createdAt = Instant.now,
           updatedAt = None,
-          thid = Some(UUID.fromString(invitation.id)), // this is the default, can't with just use None?
+          thid = UUID.fromString(invitation.id),
           label = label,
           role = ConnectionRecord.Role.Inviter,
           protocolState = ConnectionRecord.ProtocolState.InvitationGenerated,
@@ -99,9 +99,8 @@ private class ConnectionServiceImpl(
           id = UUID.randomUUID(),
           createdAt = Instant.now,
           updatedAt = None,
-          thid = Some(
-            UUID.fromString(invitation.id)
-          ), // TODO: According to the standard, we should rather use 'pthid' and not 'thid'
+          // TODO: According to the standard, we should rather use 'pthid' and not 'thid'
+          thid = UUID.fromString(invitation.id),
           label = None,
           role = ConnectionRecord.Role.Invitee,
           protocolState = ConnectionRecord.ProtocolState.InvitationReceived,
