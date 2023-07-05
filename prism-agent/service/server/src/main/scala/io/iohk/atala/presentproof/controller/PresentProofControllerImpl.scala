@@ -88,7 +88,7 @@ class PresentProofControllerImpl(
         case "request-accept" =>
           presentationService.acceptRequestPresentation(
             recordId = didCommId,
-            crecentialsToUse = requestPresentationAction.proofId.getOrElse(Seq.empty)
+            credentialsToUse = requestPresentationAction.proofId.getOrElse(Seq.empty)
           )
         case "request-reject"      => presentationService.rejectRequestPresentation(didCommId)
         case "presentation-accept" => presentationService.acceptPresentation(didCommId)

@@ -48,7 +48,7 @@ trait PresentationService {
 
   def acceptRequestPresentation(
       recordId: DidCommID,
-      crecentialsToUse: Seq[String]
+      credentialsToUse: Seq[String]
   ): IO[PresentationError, PresentationRecord]
 
   def rejectRequestPresentation(recordId: DidCommID): IO[PresentationError, PresentationRecord]
