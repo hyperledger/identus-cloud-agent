@@ -13,10 +13,8 @@ object ServiceEndpoint {
 
   object UriValue {
     def fromString(uri: String): Either[String, UriValue] = {
-      UriUtils
-        .normalizeUri(uri)
-        .toRight(s"unable to parse service endpoint URI: \"$uri\"")
-        .map(_ => uri)
+      val isUri = UriUtils.isValidUriString(uri)
+      if (isUri) Right(uri) else Left(s"unable to parse service endpoint URI: \"$uri\"")
     }
   }
 

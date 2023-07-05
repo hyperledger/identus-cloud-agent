@@ -102,6 +102,17 @@ object UriUtils {
     }
   }
 
+  def isValidUriString(str: String): Boolean = {
+    try {
+      Uri.parse(str) match {
+        case url: Url => url.schemeOption.nonEmpty
+        case Urn(_)   => true
+      }
+    } catch {
+      case _: Exception => false
+    }
+  }
+
   /** Checks if a string is a valid URI fragment according to <a
     * href="https://www.rfc-editor.org/rfc/rfc3986#section-3.5">RFC&nbsp;3986&nbsp;section-3.5</a>
     *
