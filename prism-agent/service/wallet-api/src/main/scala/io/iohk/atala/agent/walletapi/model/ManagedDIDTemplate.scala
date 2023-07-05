@@ -1,9 +1,7 @@
 package io.iohk.atala.agent.walletapi.model
 
-import io.iohk.atala.castor.core.model.did.{Service, VerificationRelationship, ServiceType}
-
-import io.lemonlabs.uri.Uri
 import io.iohk.atala.castor.core.model.did.ServiceEndpoint
+import io.iohk.atala.castor.core.model.did.{Service, VerificationRelationship, ServiceType}
 
 final case class ManagedDIDTemplate(
     publicKeys: Seq[DIDPublicKeyTemplate],

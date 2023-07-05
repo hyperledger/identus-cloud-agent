@@ -1,17 +1,14 @@
 package io.iohk.atala.castor.core.util
 
+import io.iohk.atala.castor.core.model.did.PublicKey
+import io.iohk.atala.castor.core.model.did.ServiceEndpoint
+import io.iohk.atala.castor.core.model.did.ServiceType
 import io.iohk.atala.castor.core.model.did.{InternalKeyPurpose, InternalPublicKey, PrismDIDOperation, UpdateDIDAction}
 import io.iohk.atala.castor.core.model.error.OperationValidationError
 import io.iohk.atala.castor.core.util.DIDOperationValidator.Config
 import io.iohk.atala.castor.core.util.Prelude.*
-import zio.*
-
 import scala.collection.immutable.ArraySeq
-import io.iohk.atala.castor.core.model.did.PublicKey
-import io.iohk.atala.castor.core.model.did.ServiceEndpoint
-import io.iohk.atala.castor.core.model.did.ServiceEndpoint.Single
-import io.iohk.atala.castor.core.model.did.ServiceEndpoint.UriOrJsonEndpoint
-import io.iohk.atala.castor.core.model.did.ServiceType
+import zio.*
 
 object DIDOperationValidator {
   final case class Config(

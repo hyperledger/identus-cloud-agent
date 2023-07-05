@@ -4,7 +4,6 @@ import io.circe.Json as CirceJson
 import sttp.tapir.Schema
 import sttp.tapir.json.zio.*
 import zio.json.ast.Json as ZioJson
-import zio.json.internal.Write
 import zio.json.*
 
 object CirceJsonInterop {

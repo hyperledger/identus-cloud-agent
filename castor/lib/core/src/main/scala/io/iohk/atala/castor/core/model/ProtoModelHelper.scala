@@ -1,8 +1,8 @@
 package io.iohk.atala.castor.core.model
 
-import java.time.Instant
 import com.google.protobuf.ByteString
 import io.circe.Json
+import io.iohk.atala.castor.core.model.did.ServiceEndpoint.UriOrJsonEndpoint
 import io.iohk.atala.castor.core.model.did.{
   DIDData,
   EllipticCurve,
@@ -24,11 +24,12 @@ import io.iohk.atala.castor.core.model.did.{
 import io.iohk.atala.prism.protos.common_models.OperationStatus
 import io.iohk.atala.prism.protos.node_models.KeyUsage
 import io.iohk.atala.prism.protos.node_models.PublicKey.KeyData
+import io.iohk.atala.prism.protos.{common_models, node_api, node_models}
 import io.iohk.atala.shared.models.Base64UrlString
 import io.iohk.atala.shared.utils.Traverse.*
-import io.iohk.atala.prism.protos.{common_models, node_api, node_models}
+import java.time.Instant
+import scala.language.implicitConversions
 import zio.*
-import io.iohk.atala.castor.core.model.did.ServiceEndpoint.UriOrJsonEndpoint
 
 object ProtoModelHelper extends ProtoModelHelper
 

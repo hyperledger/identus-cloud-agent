@@ -1,6 +1,6 @@
 package io.iohk.atala.castor.core.util
 
-import io.iohk.atala.shared.models.Base64UrlString
+import io.iohk.atala.castor.core.model.did.ServiceEndpoint
 import io.iohk.atala.castor.core.model.did.{
   EllipticCurve,
   InternalKeyPurpose,
@@ -16,12 +16,12 @@ import io.iohk.atala.castor.core.model.did.{
 }
 import io.iohk.atala.castor.core.model.error.OperationValidationError
 import io.iohk.atala.castor.core.util.DIDOperationValidator.Config
+import io.iohk.atala.shared.models.Base64UrlString
+import scala.collection.immutable.ArraySeq
+import scala.language.implicitConversions
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
-
-import scala.collection.immutable.ArraySeq
-import io.iohk.atala.castor.core.model.did.ServiceEndpoint
 
 object DIDOperationValidatorSpec extends ZIOSpecDefault {
 

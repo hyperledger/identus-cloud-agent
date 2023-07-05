@@ -1,20 +1,20 @@
 package io.iohk.atala.castor.core.model
 
 import com.google.protobuf.timestamp.Timestamp
+import io.circe.Json
+import io.circe.JsonObject
+import io.iohk.atala.castor.core.model.did.ServiceEndpoint
+import io.iohk.atala.castor.core.model.did.ServiceEndpoint.UriOrJsonEndpoint
+import io.iohk.atala.castor.core.model.did.ServiceEndpoint.UriValue
 import io.iohk.atala.castor.core.model.did.ServiceType
 import io.iohk.atala.castor.core.util.GenUtils
 import io.iohk.atala.prism.protos.common_models.Ledger
+import io.iohk.atala.prism.protos.node_models
+import java.time.Instant
+import scala.language.implicitConversions
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
-import io.iohk.atala.prism.protos.node_models
-
-import java.time.Instant
-import io.iohk.atala.castor.core.model.did.ServiceEndpoint
-import io.circe.Json
-import io.iohk.atala.castor.core.model.did.ServiceEndpoint.UriValue
-import io.iohk.atala.castor.core.model.did.ServiceEndpoint.UriOrJsonEndpoint
-import io.circe.JsonObject
 
 object ProtoModelHelperSpec extends ZIOSpecDefault {
 

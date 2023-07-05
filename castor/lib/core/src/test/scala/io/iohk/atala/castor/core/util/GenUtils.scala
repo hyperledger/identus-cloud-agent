@@ -8,6 +8,7 @@ import zio.test.Gen
 import io.circe.Json
 import io.iohk.atala.castor.core.model.did.ServiceEndpoint.UriValue
 import io.iohk.atala.castor.core.model.did.ServiceEndpoint.UriOrJsonEndpoint
+import scala.language.implicitConversions
 
 object GenUtils {
 

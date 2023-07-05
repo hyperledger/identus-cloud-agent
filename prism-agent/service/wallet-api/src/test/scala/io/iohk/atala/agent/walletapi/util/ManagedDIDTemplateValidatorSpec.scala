@@ -1,16 +1,15 @@
 package io.iohk.atala.agent.walletapi.util
 
-import io.iohk.atala.castor.core.model.did.{Service, ServiceType, VerificationRelationship}
 import io.iohk.atala.agent.walletapi.model.{DIDPublicKeyTemplate, ManagedDIDTemplate}
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
+import io.iohk.atala.castor.core.model.did.ServiceEndpoint
+import io.iohk.atala.castor.core.model.did.ServiceEndpoint.UriOrJsonEndpoint
+import io.iohk.atala.castor.core.model.did.ServiceEndpoint.UriValue
+import io.iohk.atala.castor.core.model.did.{Service, ServiceType, VerificationRelationship}
+import scala.language.implicitConversions
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
-
-import io.lemonlabs.uri.Uri
-import io.iohk.atala.castor.core.model.did.ServiceEndpoint
-import io.iohk.atala.castor.core.model.did.ServiceEndpoint.UriValue
-import io.iohk.atala.castor.core.model.did.ServiceEndpoint.UriOrJsonEndpoint
 
 object ManagedDIDTemplateValidatorSpec extends ZIOSpecDefault {
 
