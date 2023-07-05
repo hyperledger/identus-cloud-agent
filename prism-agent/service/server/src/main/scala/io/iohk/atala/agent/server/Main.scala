@@ -135,7 +135,7 @@ object MainApp extends ZIOAppDefault {
           CredentialServiceWithEventNotificationImpl.layer,
           DIDServiceImpl.layer,
           ManagedDIDServiceWithEventNotificationImpl.layer,
-          PresentationServiceWithEventNotificationImpl.layer,
+          PresentationServiceImpl.layer >>> PresentationServiceNotifier.layer,
           VerificationPolicyServiceImpl.layer,
           // grpc
           GrpcModule.irisStubLayer,

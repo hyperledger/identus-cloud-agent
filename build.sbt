@@ -219,6 +219,7 @@ lazy val D_Pollux = new {
     D.zioTest,
     D.zioTestSbt,
     D.zioTestMagnolia,
+    D.zioMock,
     D.munit,
     D.munitZio,
     prismCrypto,
