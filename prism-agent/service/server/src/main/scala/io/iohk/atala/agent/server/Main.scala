@@ -15,18 +15,8 @@ import io.iohk.atala.event.notification.EventNotificationServiceImpl
 import io.iohk.atala.issue.controller.IssueControllerImpl
 import io.iohk.atala.mercury.*
 import io.iohk.atala.pollux.core.service.*
-import io.iohk.atala.pollux.credentialschema.controller.{
-  CredentialSchemaController,
-  CredentialSchemaControllerImpl,
-  VerificationPolicyControllerImpl
-}
-import io.iohk.atala.pollux.sql.repository.{
-  JdbcCredentialRepository,
-  JdbcCredentialSchemaRepository,
-  JdbcPresentationRepository,
-  JdbcVerificationPolicyRepository,
-  Migrations as PolluxMigrations
-}
+import io.iohk.atala.pollux.credentialschema.controller.{CredentialSchemaController, CredentialSchemaControllerImpl, VerificationPolicyControllerImpl}
+import io.iohk.atala.pollux.sql.repository.{JdbcCredentialRepository, JdbcCredentialSchemaRepository, JdbcPresentationRepository, JdbcVerificationPolicyRepository, Migrations as PolluxMigrations}
 import io.iohk.atala.presentproof.controller.PresentProofControllerImpl
 import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.system.controller.SystemControllerImpl
@@ -132,7 +122,7 @@ object MainApp extends ZIOAppDefault {
           // service
           ConnectionServiceImpl.layer >>> ConnectionServiceNotifier.layer,
           CredentialSchemaServiceImpl.layer,
-          CredentialServiceWithEventNotificationImpl.layer,
+          CredentialServiceImpl.layer >>> CredentialServiceNotifier.layer,
           DIDServiceImpl.layer,
           ManagedDIDServiceWithEventNotificationImpl.layer,
           PresentationServiceImpl.layer >>> PresentationServiceNotifier.layer,

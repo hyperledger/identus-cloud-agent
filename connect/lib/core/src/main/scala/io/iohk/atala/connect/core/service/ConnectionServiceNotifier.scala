@@ -58,20 +58,24 @@ class ConnectionServiceNotifier(
     result.catchAll(e => ZIO.logError(s"Notification service error: $e"))
   }
 
-  override def getConnectionRecord(recordId: UUID): IO[ConnectionServiceError, Option[ConnectionRecord]] = ???
+  override def getConnectionRecord(recordId: UUID): IO[ConnectionServiceError, Option[ConnectionRecord]] =
+    svc.getConnectionRecord(recordId)
 
-  override def deleteConnectionRecord(recordId: UUID): IO[ConnectionServiceError, Int] = ???
+  override def deleteConnectionRecord(recordId: UUID): IO[ConnectionServiceError, Int] =
+    svc.deleteConnectionRecord(recordId)
 
   override def reportProcessingFailure(recordId: UUID, failReason: Option[String]): IO[ConnectionServiceError, Unit] =
-    ???
+    svc.reportProcessingFailure(recordId, failReason)
 
-  override def getConnectionRecords(): IO[ConnectionServiceError, Seq[ConnectionRecord]] = ???
+  override def getConnectionRecords(): IO[ConnectionServiceError, Seq[ConnectionRecord]] =
+    svc.getConnectionRecords()
 
   override def getConnectionRecordsByStates(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: ConnectionRecord.ProtocolState*
-  ): IO[ConnectionServiceError, Seq[ConnectionRecord]] = ???
+  ): IO[ConnectionServiceError, Seq[ConnectionRecord]] =
+    svc.getConnectionRecordsByStates(ignoreWithZeroRetries, limit, states: _*)
 }
 
 object ConnectionServiceNotifier {
