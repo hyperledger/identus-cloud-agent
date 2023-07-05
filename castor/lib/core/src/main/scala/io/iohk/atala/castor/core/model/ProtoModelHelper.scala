@@ -1,7 +1,8 @@
 package io.iohk.atala.castor.core.model
 
-import java.time.Instant
 import com.google.protobuf.ByteString
+import io.circe.Json
+import io.iohk.atala.castor.core.model.did.ServiceEndpoint.UriOrJsonEndpoint
 import io.iohk.atala.castor.core.model.did.{
   DIDData,
   EllipticCurve,
@@ -14,6 +15,7 @@ import io.iohk.atala.castor.core.model.did.{
   ScheduledDIDOperationDetail,
   ScheduledDIDOperationStatus,
   Service,
+  ServiceEndpoint,
   ServiceType,
   SignedPrismDIDOperation,
   UpdateDIDAction,
@@ -22,10 +24,11 @@ import io.iohk.atala.castor.core.model.did.{
 import io.iohk.atala.prism.protos.common_models.OperationStatus
 import io.iohk.atala.prism.protos.node_models.KeyUsage
 import io.iohk.atala.prism.protos.node_models.PublicKey.KeyData
+import io.iohk.atala.prism.protos.{common_models, node_api, node_models}
 import io.iohk.atala.shared.models.Base64UrlString
 import io.iohk.atala.shared.utils.Traverse.*
-import io.iohk.atala.prism.protos.{common_models, node_api, node_models}
-import io.lemonlabs.uri.Uri
+import java.time.Instant
+import scala.language.implicitConversions
 import zio.*
 
 object ProtoModelHelper extends ProtoModelHelper
@@ -100,12 +103,12 @@ private[castor] trait ProtoModelHelper {
           node_models.UpdateDIDAction.Action.AddService(node_models.AddServiceAction(Some(service.toProto)))
         case UpdateDIDAction.RemoveService(id) =>
           node_models.UpdateDIDAction.Action.RemoveService(node_models.RemoveServiceAction(id))
-        case UpdateDIDAction.UpdateService(serviceId, serviceType, endpoints) =>
+        case UpdateDIDAction.UpdateService(serviceId, serviceType, endpoint) =>
           node_models.UpdateDIDAction.Action.UpdateService(
             node_models.UpdateServiceAction(
               serviceId = serviceId,
-              `type` = serviceType.fold("")(_.name),
-              serviceEndpoints = endpoints.map(_.toString)
+              `type` = serviceType.fold("")(_.toProto),
+              serviceEndpoints = endpoint.fold("")(_.toProto)
             )
           )
         case UpdateDIDAction.PatchContext(context) =>
@@ -171,13 +174,44 @@ private[castor] trait ProtoModelHelper {
   }
 
   extension (service: Service) {
-    def toProto: node_models.Service = node_models.Service(
-      id = service.id,
-      `type` = service.`type`.name,
-      serviceEndpoint = service.serviceEndpoint.map(_.toString),
-      addedOn = None,
-      deletedOn = None
-    )
+    def toProto: node_models.Service = {
+      node_models.Service(
+        id = service.id,
+        `type` = service.`type`.toProto,
+        serviceEndpoint = service.serviceEndpoint.toProto,
+        addedOn = None,
+        deletedOn = None
+      )
+    }
+  }
+
+  extension (serviceType: ServiceType) {
+    def toProto: String = {
+      serviceType match {
+        case ServiceType.Single(name) => name.value
+        case ts: ServiceType.Multiple =>
+          val names = ts.values.map(_.value).map(Json.fromString)
+          Json.arr(names: _*).noSpaces
+      }
+    }
+  }
+
+  extension (serviceEndpoint: ServiceEndpoint) {
+    def toProto: String = {
+      serviceEndpoint match {
+        case ServiceEndpoint.Single(value) =>
+          value match {
+            case UriOrJsonEndpoint.Uri(uri)   => uri.value
+            case UriOrJsonEndpoint.Json(json) => Json.fromJsonObject(json).noSpaces
+          }
+        case endpoints: ServiceEndpoint.Multiple =>
+          val uris = endpoints.values.map {
+            case UriOrJsonEndpoint.Uri(uri)   => Json.fromString(uri.value)
+            case UriOrJsonEndpoint.Json(json) => Json.fromJsonObject(json)
+          }
+          Json.arr(uris: _*).noSpaces
+      }
+    }
   }
 
   extension (resp: node_api.GetOperationInfoResponse) {
@@ -247,16 +281,12 @@ private[castor] trait ProtoModelHelper {
   extension (service: node_models.Service) {
     def toDomain: Either[String, Service] = {
       for {
-        uris <- service.serviceEndpoint.traverse(s =>
-          Uri.parseTry(s).toEither.left.map(_ => s"unable to parse serviceEndpoint $s as URI")
-        )
-        serviceType <- ServiceType
-          .parseString(service.`type`)
-          .toRight(s"unable to parse ${service.`type`} as service type")
+        serviceType <- parseServiceType(service.`type`)
+        serviceEndpoint <- parseServiceEndpoint(service.serviceEndpoint)
       } yield Service(
         id = service.id,
         `type` = serviceType,
-        serviceEndpoint = uris
+        serviceEndpoint = serviceEndpoint
       )
     }
   }
@@ -320,6 +350,70 @@ private[castor] trait ProtoModelHelper {
             data = Base64UrlString.fromByteArray(ecKeyData.data.toByteArray)
           )
       }
+    }
+  }
+
+  def parseServiceType(s: String): Either[String, ServiceType] = {
+    // The type field MUST be a string or a non-empty JSON array of strings.
+    val parsedJson: Option[Either[String, ServiceType.Multiple]] = io.circe.parser
+      .parse(s)
+      .toOption // it's OK to let parsing fail (e.g. LinkedDomains without quote is not a JSON string)
+      .flatMap(_.asArray)
+      .map { jsonArr =>
+        jsonArr
+          .traverse(_.asString.toRight("the service type is not a JSON array of strings"))
+          .flatMap(_.traverse(ServiceType.Name.fromString))
+          .map(_.toList)
+          .flatMap {
+            case head :: tail => Right(ServiceType.Multiple(head, tail))
+            case Nil          => Left("the service type cannot be an empty JSON array")
+          }
+          .filterOrElse(
+            _ => s == io.circe.Json.arr(jsonArr: _*).noSpaces,
+            "the service type is a valid JSON array of strings, but not conform to the ABNF"
+          )
+      }
+
+    parsedJson match {
+      // serviceType is a valid JSON array of strings
+      case Some(Right(parsed)) => Right(parsed)
+      // serviceType is a valid JSON array but contains invalid items
+      case Some(Left(error)) => Left(error)
+      // serviceType is a string (raw string, not JSON quoted string)
+      case None => ServiceType.Name.fromString(s).map(name => ServiceType.Single(name))
+    }
+  }
+
+  def parseServiceEndpoint(s: String): Either[String, ServiceEndpoint] = {
+    /* The service_endpoint field MUST contain one of:
+     * 1. a URI
+     * 2. a JSON object
+     * 3. a non-empty JSON array of URIs and/or JSON objects
+     */
+    val parsedJson: Option[Either[String, ServiceEndpoint]] = io.circe.parser
+      .parse(s)
+      .toOption // it's OK to let parsing fail (e.g. http://example.com without quote is not a JSON string)
+      .flatMap { json =>
+        val parsedObject = json.asObject.map(obj => Right(ServiceEndpoint.Single(obj)))
+        val parsedArray = json.asArray.map(_.traverse[String, UriOrJsonEndpoint] { js =>
+          val obj = js.asObject.map(obj => Right(obj: UriOrJsonEndpoint))
+          val str = js.asString.map(str => ServiceEndpoint.UriValue.fromString(str).map[UriOrJsonEndpoint](i => i))
+          obj.orElse(str).getOrElse(Left("the service endpoint is not a JSON array of URIs and/or JSON objects"))
+        }.map(_.toList).flatMap {
+          case head :: tail => Right(ServiceEndpoint.Multiple(head, tail))
+          case Nil          => Left("the service endpoint cannot be an empty JSON array")
+        })
+
+        parsedObject.orElse(parsedArray)
+      }
+
+    parsedJson match {
+      // serviceEndpoint is a valid JSON object or array
+      case Some(Right(parsed)) => Right(parsed)
+      // serviceEndpoint is a valid JSON but contains invalid values
+      case Some(Left(error)) => Left(error)
+      // serviceEndpoint is a string (raw string, not JSON quoted string)
+      case None => ServiceEndpoint.UriValue.fromString(s).map(ServiceEndpoint.Single(_))
     }
   }
 

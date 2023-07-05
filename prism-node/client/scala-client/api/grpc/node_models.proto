@@ -77,8 +77,8 @@ message PublicKey {
   reserved 3, 4;
   string id = 1; // The key identifier within the DID Document.
   KeyUsage usage = 2; // The key's purpose.
-  LedgerData added_on = 5; // The ledger details related to the event that added the key to the DID Document.
-  LedgerData revoked_on = 6; // The ledger details related to the event that revoked the key to the DID Document.
+  LedgerData added_on = 5; // TODO: deprecated
+  LedgerData revoked_on = 6; // TODO: deprecated
 
   // The key's representation.
   oneof key_data {
@@ -127,10 +127,10 @@ message RemoveServiceAction {
 }
 
 message UpdateServiceAction {
-  string service_id = 1; // scoped to the did, unique per did
+  string serviceId = 1; // scoped to the did, unique per did
   string type = 2; // new type if provided
   // Will replace all existing service endpoints of the service with provided ones
-  repeated string service_endpoints = 3;
+  string service_endpoints = 3;
 }
 
 message PatchContextAction {
@@ -287,8 +287,7 @@ message DeactivateDIDOutput {
 message Service {
   string id = 1;
   string type = 2;
-
-  repeated string service_endpoint = 3;
-  LedgerData added_on = 4; // (when present) The ledger details related to the event that added the service.
-  LedgerData deleted_on = 5; // (when present) The ledger details related to the event that revoked the service.
+  string service_endpoint = 3;
+  LedgerData added_on = 4; // TODO: deprecated
+  LedgerData deleted_on = 5; // TODO: deprecated
 }

@@ -35,7 +35,7 @@ final class ManagedDIDServiceImpl private[walletapi] (
   private val AGREEMENT_KEY_ID = "agreement"
   private val AUTHENTICATION_KEY_ID = "authentication"
 
-  private val keyResolver = KeyResolver(apollo, nonSecretStorage, secretStorage)(seed)
+  private val keyResolver = KeyResolver(apollo, nonSecretStorage)(seed)
 
   private val publicationHandler = PublicationHandler(didService, keyResolver)(DEFAULT_MASTER_KEY_ID)
   private val didCreateHandler = DIDCreateHandler(apollo, nonSecretStorage)(seed, DEFAULT_MASTER_KEY_ID)
@@ -250,10 +250,9 @@ final class ManagedDIDServiceImpl private[walletapi] (
     } yield ()
   }
 
-  private def getUnconfirmedUpdateOperationByDid[E](did: Option[PrismDID])(using
-      c1: Conversion[CommonWalletStorageError, E],
-      c2: Conversion[DIDOperationError, E]
-  ): IO[E, Seq[DIDUpdateLineage]] = {
+  private def getUnconfirmedUpdateOperationByDid[E](
+      did: Option[PrismDID]
+  )(using c1: Conversion[CommonWalletStorageError, E]): IO[E, Seq[DIDUpdateLineage]] = {
     for {
       awaitingConfirmationOps <- nonSecretStorage
         .listUpdateLineage(did = did, status = Some(ScheduledDIDOperationStatus.AwaitingConfirmation))

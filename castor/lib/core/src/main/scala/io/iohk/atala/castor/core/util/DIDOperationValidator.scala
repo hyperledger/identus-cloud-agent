@@ -1,20 +1,32 @@
 package io.iohk.atala.castor.core.util
 
+import io.iohk.atala.castor.core.model.did.PublicKey
+import io.iohk.atala.castor.core.model.did.ServiceEndpoint
+import io.iohk.atala.castor.core.model.did.ServiceType
 import io.iohk.atala.castor.core.model.did.{InternalKeyPurpose, InternalPublicKey, PrismDIDOperation, UpdateDIDAction}
 import io.iohk.atala.castor.core.model.error.OperationValidationError
 import io.iohk.atala.castor.core.util.DIDOperationValidator.Config
 import io.iohk.atala.castor.core.util.Prelude.*
+import scala.collection.immutable.ArraySeq
 import zio.*
 
-import io.lemonlabs.uri.Uri
-import scala.collection.immutable.ArraySeq
-import io.iohk.atala.castor.core.model.did.PublicKey
-
 object DIDOperationValidator {
-  final case class Config(publicKeyLimit: Int, serviceLimit: Int)
+  final case class Config(
+      publicKeyLimit: Int,
+      serviceLimit: Int,
+      maxIdSize: Int,
+      maxServiceTypeSize: Int,
+      maxServiceEndpointSize: Int
+  )
 
   object Config {
-    val default: Config = Config(publicKeyLimit = 50, serviceLimit = 50)
+    val default: Config = Config(
+      publicKeyLimit = 50,
+      serviceLimit = 50,
+      maxIdSize = 50,
+      maxServiceTypeSize = 100,
+      maxServiceEndpointSize = 300
+    )
   }
 
   def layer(config: Config = Config.default): ULayer[DIDOperationValidator] =
@@ -39,10 +51,14 @@ private object CreateOperationValidator extends BaseOperationValidator {
       _ <- validateUniquePublicKeyId(operation, extractKeyIds)
       _ <- validateUniqueServiceId(operation, extractServiceIds)
       _ <- validateKeyIdIsUriFragment(operation, extractKeyIds)
+      _ <- validateKeyIdLength(config)(operation, extractKeyIds)
       _ <- validateServiceIdIsUriFragment(operation, extractServiceIds)
+      _ <- validateServiceIdLength(config)(operation, extractServiceIds)
       _ <- validateServiceEndpointNormalized(operation, extractServiceEndpoint)
+      _ <- validateServiceEndpointLength(config)(operation, extractServiceEndpoint)
+      _ <- validateServiceTypeLength(config)(operation, extractServiceType)
+      _ <- validateUniqueContext(operation, _.context :: Nil)
       _ <- validateMasterKeyExists(operation)
-      _ <- validateServiceNonEmptyEndpoints(operation)
     } yield ()
   }
 
@@ -53,19 +69,6 @@ private object CreateOperationValidator extends BaseOperationValidator {
     else Left(OperationValidationError.InvalidArgument("create operation must contain at least 1 master key"))
   }
 
-  private def validateServiceNonEmptyEndpoints(
-      operation: PrismDIDOperation.Create
-  ): Either[OperationValidationError, Unit] = {
-    val serviceWithEmptyEndpoints = operation.services.filter(_.serviceEndpoint.isEmpty).map(_.id)
-    if (serviceWithEmptyEndpoints.isEmpty) Right(())
-    else
-      Left(
-        OperationValidationError.InvalidArgument(
-          s"service must not have empty serviceEndpoint: ${serviceWithEmptyEndpoints.mkString("[", ", ", "]")}"
-        )
-      )
-  }
-
   private def extractKeyIds(operation: PrismDIDOperation.Create): Seq[String] =
     operation.publicKeys.map {
       case PublicKey(id, _, _)         => id
@@ -74,8 +77,14 @@ private object CreateOperationValidator extends BaseOperationValidator {
 
   private def extractServiceIds(operation: PrismDIDOperation.Create): Seq[String] = operation.services.map(_.id)
 
-  private def extractServiceEndpoint(operation: PrismDIDOperation.Create): Seq[(String, Seq[Uri])] =
-    operation.services.map(s => s.id -> s.serviceEndpoint)
+  private def extractServiceEndpoint(operation: PrismDIDOperation.Create): Seq[(String, ServiceEndpoint)] = {
+    operation.services.map { s => (s.id, s.serviceEndpoint) }
+  }
+
+  private def extractServiceType(operation: PrismDIDOperation.Create): Seq[(String, ServiceType)] = {
+    operation.services.map { s => (s.id, s.`type`) }
+  }
+
 }
 
 private object UpdateOperationValidator extends BaseOperationValidator {
@@ -84,12 +93,16 @@ private object UpdateOperationValidator extends BaseOperationValidator {
       _ <- validateMaxPublicKeysAccess(config)(operation, extractKeyIds)
       _ <- validateMaxServiceAccess(config)(operation, extractServiceIds)
       _ <- validateKeyIdIsUriFragment(operation, extractKeyIds)
+      _ <- validateKeyIdLength(config)(operation, extractKeyIds)
       _ <- validateServiceIdIsUriFragment(operation, extractServiceIds)
+      _ <- validateServiceIdLength(config)(operation, extractServiceIds)
       _ <- validateServiceEndpointNormalized(operation, extractServiceEndpoint)
+      _ <- validateServiceEndpointLength(config)(operation, extractServiceEndpoint)
+      _ <- validateServiceTypeLength(config)(operation, extractServiceType)
+      _ <- validateUniqueContext(operation, extractContexts)
       _ <- validatePreviousOperationHash(operation, _.previousOperationHash)
       _ <- validateNonEmptyUpdateAction(operation)
       _ <- validateUpdateServiceNonEmpty(operation)
-      _ <- validateAddServiceNonEmptyEndpoint(operation)
     } yield ()
   }
 
@@ -105,30 +118,14 @@ private object UpdateOperationValidator extends BaseOperationValidator {
       operation: PrismDIDOperation.Update
   ): Either[OperationValidationError, Unit] = {
     val isNonEmptyUpdateService = operation.actions.forall {
-      case UpdateDIDAction.UpdateService(_, None, Nil) => false
-      case _                                           => true
+      case UpdateDIDAction.UpdateService(_, None, None) => false
+      case _                                            => true
     }
     if (isNonEmptyUpdateService) Right(())
     else
       Left(
         OperationValidationError.InvalidArgument(
           "update operation with UpdateServiceAction must not have both 'type' and 'serviceEndpoints' empty"
-        )
-      )
-  }
-
-  private def validateAddServiceNonEmptyEndpoint(
-      operation: PrismDIDOperation.Update
-  ): Either[OperationValidationError, Unit] = {
-    val serviceWithEmptyEndpoints = operation.actions
-      .collect { case UpdateDIDAction.AddService(s) => s }
-      .filter(_.serviceEndpoint.isEmpty)
-      .map(_.id)
-    if (serviceWithEmptyEndpoints.isEmpty) Right(())
-    else
-      Left(
-        OperationValidationError.InvalidArgument(
-          s"service must not have empty serviceEndpoint: ${serviceWithEmptyEndpoints.mkString("[", ", ", "]")}"
         )
       )
   }
@@ -153,11 +150,24 @@ private object UpdateOperationValidator extends BaseOperationValidator {
     case _: UpdateDIDAction.PatchContext         => None
   }
 
-  private def extractServiceEndpoint(operation: PrismDIDOperation.Update): Seq[(String, Seq[Uri])] =
+  private def extractServiceEndpoint(operation: PrismDIDOperation.Update): Seq[(String, ServiceEndpoint)] =
     operation.actions.collect {
-      case UpdateDIDAction.AddService(service)             => service.id -> service.serviceEndpoint
-      case UpdateDIDAction.UpdateService(id, _, endpoints) => id -> endpoints
+      case UpdateDIDAction.AddService(service)                  => service.id -> service.serviceEndpoint
+      case UpdateDIDAction.UpdateService(id, _, Some(endpoint)) => id -> endpoint
     }
+
+  private def extractServiceType(operatio: PrismDIDOperation.Update): Seq[(String, ServiceType)] =
+    operatio.actions.collect {
+      case UpdateDIDAction.AddService(service)                     => service.id -> service.`type`
+      case UpdateDIDAction.UpdateService(id, Some(serviceType), _) => id -> serviceType
+    }
+
+  private def extractContexts(operation: PrismDIDOperation.Update): Seq[Seq[String]] = {
+    operation.actions.flatMap {
+      case UpdateDIDAction.PatchContext(context) => Some(context)
+      case _                                     => None
+    }
+  }
 }
 
 private object DeactivateOperationValidator extends BaseOperationValidator {
@@ -169,7 +179,9 @@ private trait BaseOperationValidator {
 
   type KeyIdExtractor[T] = T => Seq[String]
   type ServiceIdExtractor[T] = T => Seq[String]
-  type ServiceEndpointExtractor[T] = T => Seq[(String, Seq[Uri])]
+  type ServiceTypeExtractor[T] = T => Seq[(String, ServiceType)]
+  type ServiceEndpointExtractor[T] = T => Seq[(String, ServiceEndpoint)]
+  type ContextExtractor[T] = T => Seq[Seq[String]]
 
   protected def validateMaxPublicKeysAccess[T <: PrismDIDOperation](
       config: Config
@@ -205,6 +217,16 @@ private trait BaseOperationValidator {
     else Left(OperationValidationError.InvalidArgument("id for services is not unique"))
   }
 
+  protected def validateUniqueContext[T <: PrismDIDOperation](
+      operation: T,
+      contextExtractor: ContextExtractor[T]
+  ): Either[OperationValidationError, Unit] = {
+    val contexts = contextExtractor(operation)
+    val nonUniqueContextList = contexts.filterNot(_.isUnique)
+    if (nonUniqueContextList.isEmpty) Right(())
+    else Left(OperationValidationError.InvalidArgument("context is not unique"))
+  }
+
   protected def validateKeyIdIsUriFragment[T <: PrismDIDOperation](
       operation: T,
       keyIdExtractor: KeyIdExtractor[T]
@@ -229,17 +251,94 @@ private trait BaseOperationValidator {
       Left(OperationValidationError.InvalidArgument(s"service id is invalid: ${invalidIds.mkString("[", ", ", "]")}"))
   }
 
+  protected def validateKeyIdLength[T <: PrismDIDOperation](
+      config: Config
+  )(operation: T, keyIdExtractor: KeyIdExtractor[T]): Either[OperationValidationError, Unit] = {
+    val ids = keyIdExtractor(operation)
+    val invalidIds = ids.filter(_.length > config.maxIdSize)
+    if (invalidIds.isEmpty) Right(())
+    else
+      Left(
+        OperationValidationError.InvalidArgument(
+          s"public key id is too long: ${invalidIds.mkString("[", ", ", "]")}"
+        )
+      )
+  }
+
+  protected def validateServiceIdLength[T <: PrismDIDOperation](
+      config: Config
+  )(operation: T, serviceIdExtractor: ServiceIdExtractor[T]): Either[OperationValidationError, Unit] = {
+    val ids = serviceIdExtractor(operation)
+    val invalidIds = ids.filter(_.length > config.maxIdSize)
+    if (invalidIds.isEmpty) Right(())
+    else
+      Left(
+        OperationValidationError.InvalidArgument(
+          s"service id is too long: ${invalidIds.mkString("[", ", ", "]")}"
+        )
+      )
+  }
+
+  // NOTE
+  // W3C spec requires URI to be normalized. In practice, it is impractical
+  // to ensure consistent normalization algorithm across all implementation / libraries.
+  //
+  // 2023-06-15
+  // We decided that the URI normalization check will be omitted.
+  // This is not aligned with the W3C spec, but we'll wait and see what W3C
+  // comment will be around that normalization rule.
   protected def validateServiceEndpointNormalized[T <: PrismDIDOperation](
       operation: T,
       endpointExtractor: ServiceEndpointExtractor[T]
   ): Either[OperationValidationError, Unit] = {
-    val uris = endpointExtractor(operation).flatMap(_._2)
-    val nonNormalizedUris = uris.filterNot(isUriNormalized)
-    if (nonNormalizedUris.isEmpty) Right(())
+    // val uris = endpointExtractor(operation)
+    //   .flatMap { case (_, serviceEndpoint) =>
+    //     val ls: Seq[UriOrJsonEndpoint] = serviceEndpoint match {
+    //       case ServiceEndpoint.Single(value) => Seq(value)
+    //       case i: ServiceEndpoint.Multiple   => i.values
+    //     }
+    //     ls.flatMap {
+    //       case UriOrJsonEndpoint.Uri(uri) => Some(uri.value)
+    //       case _                          => None
+    //     }
+    //   }
+    // val nonNormalizedUris = uris.filterNot(isUriNormalized)
+    // if (nonNormalizedUris.isEmpty) Right(())
+    // else
+    //   Left(
+    //     OperationValidationError.InvalidArgument(
+    //       s"serviceEndpoint URIs must be normalized: ${nonNormalizedUris.mkString("[", ", ", "]")}"
+    //     )
+    //   )
+    Right(())
+  }
+
+  protected def validateServiceTypeLength[T <: PrismDIDOperation](
+      config: Config
+  )(operation: T, serviceTypeExtractor: ServiceTypeExtractor[T]): Either[OperationValidationError, Unit] = {
+    import io.iohk.atala.castor.core.model.ProtoModelHelper.*
+    val serviceTypes = serviceTypeExtractor(operation)
+    val invalidServiceTypes = serviceTypes.filter(_._2.toProto.length > config.maxServiceTypeSize)
+    if (invalidServiceTypes.isEmpty) Right(())
     else
       Left(
         OperationValidationError.InvalidArgument(
-          s"serviceEndpoint URIs must be normalized: ${nonNormalizedUris.mkString("[", ", ", "]")}"
+          s"service type is too long: ${invalidServiceTypes.map(_._1).mkString("[", ", ", "]")}"
+        )
+      )
+  }
+
+  protected def validateServiceEndpointLength[T <: PrismDIDOperation](
+      config: Config
+  )(operation: T, serviceEndpointExtractor: ServiceEndpointExtractor[T]): Either[OperationValidationError, Unit] = {
+    import io.iohk.atala.castor.core.model.ProtoModelHelper.*
+    val serviceEndpoints = serviceEndpointExtractor(operation)
+    val invalidServiceEndpoints = serviceEndpoints.filter(_._2.toProto.length > config.maxServiceEndpointSize)
+    if (invalidServiceEndpoints.isEmpty) Right(())
+    else
+      Left(
+        OperationValidationError.InvalidArgument(
+          s"service endpoint is too long: ${invalidServiceEndpoints.map(_._1).mkString("[", ", ", "]")}"
         )
       )
   }
@@ -254,9 +353,8 @@ private trait BaseOperationValidator {
   }
 
   /** @return true if a given uri is normalized */
-  protected def isUriNormalized(uri: Uri): Boolean = {
-    val uriString = uri.toString
-    UriUtils.normalizeUri(uriString).contains(uriString)
+  protected def isUriNormalized(uri: String): Boolean = {
+    UriUtils.normalizeUri(uri).contains(uri)
   }
 
 }

@@ -1,13 +1,15 @@
 package io.iohk.atala.agent.walletapi.util
 
-import io.iohk.atala.castor.core.model.did.{Service, ServiceType, VerificationRelationship}
 import io.iohk.atala.agent.walletapi.model.{DIDPublicKeyTemplate, ManagedDIDTemplate}
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
+import io.iohk.atala.castor.core.model.did.ServiceEndpoint
+import io.iohk.atala.castor.core.model.did.ServiceEndpoint.UriOrJsonEndpoint
+import io.iohk.atala.castor.core.model.did.ServiceEndpoint.UriValue
+import io.iohk.atala.castor.core.model.did.{Service, ServiceType, VerificationRelationship}
+import scala.language.implicitConversions
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
-
-import io.lemonlabs.uri.Uri
 
 object ManagedDIDTemplateValidatorSpec extends ZIOSpecDefault {
 
@@ -27,8 +29,8 @@ object ManagedDIDTemplateValidatorSpec extends ZIOSpecDefault {
         services = Seq(
           Service(
             id = "service0",
-            `type` = ServiceType.LinkedDomains,
-            serviceEndpoint = Seq(Uri.parse("http://example.com/"))
+            `type` = ServiceType.Single(ServiceType.Name.fromStringUnsafe("LinkedDomains")),
+            serviceEndpoint = ServiceEndpoint.Single(UriValue.fromString("http://example.com/").toOption.get)
           )
         )
       )
