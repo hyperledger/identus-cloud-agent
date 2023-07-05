@@ -6,7 +6,7 @@ import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.model.presentation.Options
 import io.iohk.atala.pollux.core.model.{DidCommID, PresentationRecord}
 import io.iohk.atala.pollux.vc.jwt.{Issuer, PresentationPayload, W3cCredentialPayload}
-import zio.{IO, ZIO, ZLayer, URLayer}
+import zio.{IO, URLayer, ZIO, ZLayer}
 
 import java.time.Instant
 import java.util.UUID
@@ -71,11 +71,11 @@ class PresentationServiceNotifier(
   ): IO[PresentationError, PresentationRecord] =
     notifyOnSuccess(svc.markPresentationVerificationFailed(recordId))
 
-  override def markPresentationAccepted(recordId: DidCommID): IO[PresentationError, PresentationRecord] =
-    notifyOnSuccess(svc.markPresentationAccepted(recordId))
+  override def acceptPresentation(recordId: DidCommID): IO[PresentationError, PresentationRecord] =
+    notifyOnSuccess(svc.acceptPresentation(recordId))
 
-  override def markPresentationRejected(recordId: DidCommID): IO[PresentationError, PresentationRecord] =
-    notifyOnSuccess(svc.markPresentationRejected(recordId))
+  override def rejectPresentation(recordId: DidCommID): IO[PresentationError, PresentationRecord] =
+    notifyOnSuccess(svc.rejectPresentation(recordId))
 
   private[this] def notifyOnSuccess(effect: IO[PresentationError, PresentationRecord]) =
     for {
@@ -118,14 +118,14 @@ class PresentationServiceNotifier(
   override def acceptProposePresentation(recordId: DidCommID): IO[PresentationError, PresentationRecord] =
     svc.acceptPresentation(recordId)
 
-  override def acceptPresentation(recordId: DidCommID): IO[PresentationError, PresentationRecord] =
-    svc.acceptPresentation(recordId)
-
-  override def rejectPresentation(recordId: DidCommID): IO[PresentationError, PresentationRecord] =
-    svc.rejectPresentation(recordId)
-
   override def markProposePresentationSent(recordId: DidCommID): IO[PresentationError, PresentationRecord] =
     svc.markProposePresentationSent(recordId)
+
+  override def markPresentationAccepted(recordId: DidCommID): IO[PresentationError, PresentationRecord] =
+    svc.markPresentationAccepted(recordId)
+
+  override def markPresentationRejected(recordId: DidCommID): IO[PresentationError, PresentationRecord] =
+    svc.markPresentationRejected(recordId)
 
   override def reportProcessingFailure(
       recordId: DidCommID,
