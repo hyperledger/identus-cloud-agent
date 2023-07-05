@@ -2,7 +2,7 @@ package io.iohk.atala.connect.controller
 
 import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
-import io.iohk.atala.api.http.model.Pagination
+import io.iohk.atala.api.http.model.PaginationInput
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.connect.controller.ConnectionController.toHttpError
 import io.iohk.atala.connect.controller.http.{
@@ -48,11 +48,15 @@ class ConnectionControllerImpl(
   }
 
   override def getConnections(
-      pagination: Pagination
+      paginationInput: PaginationInput,
+      thid: Option[String]
   )(implicit rc: RequestContext): IO[ErrorResponse, ConnectionsPage] = {
     val result = for {
       connections <- service.getConnectionRecords()
-    } yield ConnectionsPage(contents = connections.map(Connection.fromDomain))
+      filteredRecords = thid match
+        case None        => connections
+        case Some(value) => connections.filter(_.thid.toString == value) // this logic should be moved to the DB
+    } yield ConnectionsPage(contents = filteredRecords.map(Connection.fromDomain))
 
     result.mapError(toHttpError)
   }

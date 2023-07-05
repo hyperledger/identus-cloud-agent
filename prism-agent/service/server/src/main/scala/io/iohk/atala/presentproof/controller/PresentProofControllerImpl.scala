@@ -1,5 +1,6 @@
 package io.iohk.atala.presentproof.controller
 import io.iohk.atala.agent.server.ControllerHelper
+import io.iohk.atala.api.http.model.PaginationInput
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.connect.controller.ConnectionController
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
@@ -49,7 +50,7 @@ class PresentProofControllerImpl(
     }
   }
 
-  override def getAllPresentations(offset: Option[Int], limit: Option[Int], thid: Option[String])(implicit
+  override def getPresentations(paginationInput: PaginationInput, thid: Option[String])(implicit
       rc: RequestContext
   ): IO[ErrorResponse, PresentationStatusPage] = {
     val result = for {
