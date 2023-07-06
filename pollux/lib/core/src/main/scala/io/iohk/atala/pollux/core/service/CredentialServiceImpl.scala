@@ -55,6 +55,15 @@ private class CredentialServiceImpl(
     } yield records
   }
 
+  override def getIssueCredentialRecordByThreadId(
+      thid: DidCommID
+  ): IO[CredentialServiceError, Option[IssueCredentialRecord]] =
+    for {
+      record <- credentialRepository
+        .getIssueCredentialRecordByThreadId(thid)
+        .mapError(RepositoryError.apply)
+    } yield record
+
   override def getIssueCredentialRecord(
       recordId: DidCommID
   ): IO[CredentialServiceError, Option[IssueCredentialRecord]] = {
