@@ -80,6 +80,8 @@ object Connection {
       kind = "Connection",
     )
 
+  given Conversion[model.ConnectionRecord, Connection] = fromDomain
+
   object annotations {
     object connectionId
         extends Annotation[UUID](

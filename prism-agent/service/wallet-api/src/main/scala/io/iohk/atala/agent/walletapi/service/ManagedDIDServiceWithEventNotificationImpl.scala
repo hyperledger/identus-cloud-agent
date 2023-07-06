@@ -1,7 +1,7 @@
 package io.iohk.atala.agent.walletapi.service
 
 import io.iohk.atala.agent.walletapi.crypto.Apollo
-import io.iohk.atala.agent.walletapi.model.ManagedDIDState
+import io.iohk.atala.agent.walletapi.model.{ManagedDIDState, ManagedDIDDetail}
 import io.iohk.atala.agent.walletapi.model.error.CommonWalletStorageError
 import io.iohk.atala.agent.walletapi.storage.{DIDNonSecretStorage, DIDSecretStorage}
 import io.iohk.atala.agent.walletapi.util.SeedResolver
@@ -32,29 +32,6 @@ class ManagedDIDServiceWithEventNotificationImpl(
       createDIDSem
     ) {
 
-//  override protected def computeNewDIDLineageStatusAndPersist[E](
-//      updateLineage: DIDUpdateLineage
-//  )(using
-//      c1: Conversion[DIDOperationError, E],
-//      c2: Conversion[CommonWalletStorageError, E]
-//  ): IO[E, Boolean] = {
-//    for {
-//      updated <- super.computeNewDIDLineageStatusAndPersist(updateLineage)
-//      maybeOperationDetail <- didService
-//        .getScheduledDIDOperationDetail(updateLineage.operationId.toArray)
-//        .mapError[E](e => e)
-//      _ <- ZIO.when(updated) {
-//        val result = for {
-//          maybeUpdatedDID <- nonSecretStorage.getManagedDIDState(updateLineage.???)
-//          updatedDID <- ZIO.fromOption(maybeUpdatedDID)
-//          producer <- eventNotificationService.producer[ManagedDIDState]("DIDState")
-//          _ <- producer.send(Event(updatedDID))
-//        } yield ()
-//        result.catchAll(e => ZIO.logError(s"Notification service error: $e"))
-//      }
-//    } yield updated
-//  }
-
   override protected def computeNewDIDStateFromDLTAndPersist[E](
       did: CanonicalPrismDID
   )(using
@@ -67,14 +44,13 @@ class ManagedDIDServiceWithEventNotificationImpl(
         val result = for {
           maybeUpdatedDID <- nonSecretStorage.getManagedDIDState(did)
           updatedDID <- ZIO.fromOption(maybeUpdatedDID)
-          producer <- eventNotificationService.producer[ManagedDIDState]("DIDState")
-          _ <- producer.send(Event(updatedDID))
+          producer <- eventNotificationService.producer[ManagedDIDDetail]("DIDDetail")
+          _ <- producer.send(Event(ManagedDIDDetail(did, updatedDID)))
         } yield ()
         result.catchAll(e => ZIO.logError(s"Notification service error: $e"))
       }
     } yield updated
   }
-
 }
 
 object ManagedDIDServiceWithEventNotificationImpl {

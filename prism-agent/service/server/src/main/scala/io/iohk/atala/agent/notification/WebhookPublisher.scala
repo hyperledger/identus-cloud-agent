@@ -2,7 +2,7 @@ package io.iohk.atala.agent.notification
 import io.iohk.atala.agent.notification.WebhookPublisher.given
 import io.iohk.atala.agent.notification.WebhookPublisherError.{InvalidWebhookURL, UnexpectedError}
 import io.iohk.atala.agent.server.config.{AppConfig, WebhookPublisherConfig}
-import io.iohk.atala.agent.walletapi.model.ManagedDIDState
+import io.iohk.atala.agent.walletapi.model.ManagedDIDDetail
 import io.iohk.atala.connect.core.model.ConnectionRecord
 import io.iohk.atala.event.notification.{Event, EventConsumer, EventNotificationService}
 import io.iohk.atala.pollux.core.model.{IssueCredentialRecord, PresentationRecord}
@@ -10,6 +10,9 @@ import zio.*
 import zio.http.*
 import zio.http.ZClient.ClientLive
 import zio.http.model.{Header, Headers, Method}
+import zio.json.JsonEncoder
+import zio.json._
+import io.iohk.atala.agent.notification.JsonEventEncoders._
 
 import java.net.{URI, URL}
 
@@ -39,7 +42,7 @@ class WebhookPublisher(appConfig: AppConfig, notificationService: EventNotificat
           .consumer[PresentationRecord]("Presentation")
           .mapError(e => UnexpectedError(e.toString))
         didStateConsumer <- notificationService
-          .consumer[ManagedDIDState]("DIDState")
+          .consumer[ManagedDIDDetail]("DIDDetail")
           .mapError(e => UnexpectedError(e.toString))
         _ <- pollAndNotify(connectConsumer, url).forever.debug.forkDaemon
         _ <- pollAndNotify(issueConsumer, url).forever.debug.forkDaemon
@@ -49,7 +52,7 @@ class WebhookPublisher(appConfig: AppConfig, notificationService: EventNotificat
     case None => ZIO.unit
   }
 
-  private[this] def pollAndNotify[A](consumer: EventConsumer[A], url: URL) = {
+  private[this] def pollAndNotify[A](consumer: EventConsumer[A], url: URL)(implicit encoder: JsonEncoder[A]) = {
     for {
       _ <- ZIO.log(s"Polling $parallelism event(s)")
       events <- consumer.poll(parallelism).mapError(e => UnexpectedError(e.toString))
@@ -62,7 +65,9 @@ class WebhookPublisher(appConfig: AppConfig, notificationService: EventNotificat
     } yield ()
   }
 
-  private[this] def notifyWebhook[A](event: Event[A], url: URL): ZIO[Client, UnexpectedError, Unit] = {
+  private[this] def notifyWebhook[A](event: Event[A], url: URL)(implicit
+      encoder: JsonEncoder[A]
+  ): ZIO[Client, UnexpectedError, Unit] = {
     for {
       _ <- ZIO.log(s"Sending event: $event to HTTP webhook URL: $url with API key ${config.apiKey}")
       response <- Client
@@ -70,8 +75,7 @@ class WebhookPublisher(appConfig: AppConfig, notificationService: EventNotificat
           url = url.toString,
           method = Method.POST,
           headers = baseHeaders,
-          // TODO serialize event to JSON here
-          content = Body.fromString(event.data.toString)
+          content = Body.fromString(event.toJson)
         )
         .mapError(t => UnexpectedError(s"Webhook request error: $t"))
       resp <- response match

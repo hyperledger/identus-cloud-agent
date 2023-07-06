@@ -111,6 +111,8 @@ object IssueCredentialRecord {
       })
     )
 
+  given Conversion[PolluxIssueCredentialRecord, IssueCredentialRecord] = fromDomain
+
   object annotations {
 
     object subjectId
