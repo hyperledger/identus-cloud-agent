@@ -16,28 +16,39 @@ import zio.interop.catz.*
 
 class ZHttp4sBlazeServer(micrometerRegistry: PrometheusMeterRegistry) {
 
-  private val tapirPrometheusMetrics = PrometheusMetrics.default[Task](registry = micrometerRegistry.getPrometheusRegistry)
+  private val tapirPrometheusMetricsZIO: Task[PrometheusMetrics[Task]] = ZIO.attempt {
+    PrometheusMetrics.default[Task](registry = micrometerRegistry.getPrometheusRegistry)
+  }
 
-  private val serverOptions: Http4sServerOptions[Task] = Http4sServerOptions
-    .customiseInterceptors[Task]
-    .defaultHandlers(ErrorResponse.failureResponseHandler)
-    .metricsInterceptor(tapirPrometheusMetrics.metricsInterceptor(
-      ignoreEndpoints = Seq(SystemEndpoints.metrics)
-    ))
-    .options
+  private val serverOptionsZIO: ZIO[PrometheusMetrics[Task], Throwable, Http4sServerOptions[Task]] = for {
+    srv <- ZIO.service[PrometheusMetrics[Task]]
+    options <- ZIO.attempt {
+      Http4sServerOptions
+        .customiseInterceptors[Task]
+        .defaultHandlers(ErrorResponse.failureResponseHandler)
+        .metricsInterceptor(
+          srv.metricsInterceptor(
+            ignoreEndpoints = Seq(SystemEndpoints.metrics)
+          )
+        )
+        .options
+    }
+  } yield options
 
   def start(
       endpoints: List[ZServerEndpoint[Any, Any]],
       port: Int
   ): Task[ExitCode] = {
 
-    ZIO.attempt {
-      val http4sEndpoints: HttpRoutes[Task] =
-        ZHttp4sServerInterpreter(serverOptions)
-          .from(endpoints)
-          .toRoutes
+    val serve = for {
+      metrics <- tapirPrometheusMetricsZIO
+      options <- serverOptionsZIO.provide(ZLayer.succeed(metrics))
+      serve <- ZIO.attempt {
+        val http4sEndpoints: HttpRoutes[Task] =
+          ZHttp4sServerInterpreter(options)
+            .from(endpoints)
+            .toRoutes
 
-      val serve: Task[Unit] =
         ZIO.executor.flatMap(executor =>
           BlazeServerBuilder[Task]
             .withExecutionContext(executor.asExecutionContext)
@@ -47,10 +58,10 @@ class ZHttp4sBlazeServer(micrometerRegistry: PrometheusMeterRegistry) {
             .compile
             .drain
         )
+      }
+    } yield serve
 
-      serve.exitCode
-    }.flatten
-
+    serve.flatten.exitCode
   }
 }
 
