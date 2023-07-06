@@ -1,19 +1,18 @@
 package io.iohk.atala.connect.core.service
 
-import io.iohk.atala.connect.core.model.ConnectionRecord._
-import io.iohk.atala.connect.core.repository.ConnectionRepositoryInMemory
-
-import zio._
-import zio.test._
-import zio.test.Assertion._
-import io.iohk.atala.mercury.model.DidId
+import io.circe.syntax.*
 import io.iohk.atala.connect.core.model.ConnectionRecord
-import java.util.UUID
+import io.iohk.atala.connect.core.model.ConnectionRecord.*
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
-import java.time.Instant
-import io.circe.syntax._
-import io.iohk.atala.mercury.model.Message
+import io.iohk.atala.connect.core.repository.ConnectionRepositoryInMemory
+import io.iohk.atala.mercury.model.{DidId, Message}
 import io.iohk.atala.mercury.protocol.connection.ConnectionResponse
+import zio.*
+import zio.test.*
+import zio.test.Assertion.*
+
+import java.time.Instant
+import java.util.UUID
 
 object ConnectionServiceImplSpec extends ZIOSpecDefault {
 
@@ -32,7 +31,7 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
           assertTrue(record.role == Role.Inviter) &&
           assertTrue(record.connectionRequest.isEmpty) &&
           assertTrue(record.connectionResponse.isEmpty) &&
-          assertTrue(record.thid.contains(record.id)) &&
+          assertTrue(record.thid == record.id.toString) &&
           assertTrue(record.updatedAt.isEmpty) &&
           assertTrue(record.invitation.from == did) &&
           assertTrue(record.invitation.attachments.isEmpty) &&
@@ -113,7 +112,7 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
             assertTrue(inviteeRecord.role == Role.Invitee) &&
             assertTrue(inviteeRecord.connectionRequest.isEmpty) &&
             assertTrue(inviteeRecord.connectionResponse.isEmpty) &&
-            assertTrue(inviteeRecord.thid.contains(UUID.fromString(inviterRecord.invitation.id))) &&
+            assertTrue(inviteeRecord.thid == inviterRecord.invitation.id) &&
             assertTrue(inviteeRecord.updatedAt.isEmpty) &&
             assertTrue(inviteeRecord.invitation == inviterRecord.invitation)
           }

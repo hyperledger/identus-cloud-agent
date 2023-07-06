@@ -41,6 +41,8 @@ trait PresentationService {
 
   def getPresentationRecord(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]]
 
+  def getPresentationRecordByThreadId(thid: DidCommID): IO[PresentationError, Option[PresentationRecord]]
+
   def receiveRequestPresentation(
       connectionId: Option[String],
       request: RequestPresentation

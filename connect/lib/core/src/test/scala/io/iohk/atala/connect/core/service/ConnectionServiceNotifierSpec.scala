@@ -21,7 +21,7 @@ object ConnectionServiceNotifierSpec extends ZIOSpecDefault {
     UUID.randomUUID(),
     Instant.now,
     None,
-    None,
+    UUID.randomUUID().toString,
     None,
     ConnectionRecord.Role.Inviter,
     ProtocolState.InvitationGenerated,
@@ -75,7 +75,7 @@ object ConnectionServiceNotifierSpec extends ZIOSpecDefault {
             ConnectionRequest(
               from = DidId("did:peer:INVITER"),
               to = DidId("did:peer:INVITEE"),
-              thid = connectionRecord.thid.map(_.toString),
+              thid = Some(connectionRecord.thid),
               pthid = None,
               body = ConnectionRequest.Body()
             )
@@ -115,7 +115,7 @@ object ConnectionServiceNotifierSpec extends ZIOSpecDefault {
             ConnectionResponse(
               from = inviterDID,
               to = inviteeDID,
-              thid = connectionRecord.thid.map(_.toString),
+              thid = Some(connectionRecord.thid),
               pthid = None,
               body = ConnectionResponse.Body()
             )

@@ -108,6 +108,13 @@ private class PresentationServiceImpl(
     } yield record
   }
 
+  override def getPresentationRecordByThreadId(thid: DidCommID): IO[PresentationError, Option[PresentationRecord]] =
+    for {
+      record <- presentationRepository
+        .getPresentationRecordByThreadId(thid)
+        .mapError(RepositoryError.apply)
+    } yield record
+
   override def rejectRequestPresentation(recordId: DidCommID): IO[PresentationError, PresentationRecord] = {
     markRequestPresentationRejected(recordId)
   }

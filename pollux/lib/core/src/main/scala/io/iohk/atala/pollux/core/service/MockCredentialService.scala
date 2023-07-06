@@ -186,6 +186,9 @@ object MockCredentialService extends Mock[CredentialService] {
       ): IO[CredentialServiceError, Option[IssueCredentialRecord]] =
         ???
 
+      override def getIssueCredentialRecordByThreadId(
+          thid: DidCommID
+      ): IO[CredentialServiceError, Option[IssueCredentialRecord]] = ???
     }
   }
 }

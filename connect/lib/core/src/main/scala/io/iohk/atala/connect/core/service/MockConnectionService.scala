@@ -64,8 +64,10 @@ object MockConnectionService extends Mock[ConnectionService] {
           states: ConnectionRecord.ProtocolState*
       ): IO[ConnectionServiceError, Seq[ConnectionRecord]] = ???
 
-      /** Get the ConnectionRecord by the record id. If the record is id is not found the value None will be return */
       override def getConnectionRecord(recordId: UUID): IO[ConnectionServiceError, Option[ConnectionRecord]] = ???
+
+      override def getConnectionRecordByThreadId(thid: String): IO[ConnectionServiceError, Option[ConnectionRecord]] =
+        ???
 
       override def deleteConnectionRecord(recordId: UUID): IO[ConnectionServiceError, Int] = ???
 

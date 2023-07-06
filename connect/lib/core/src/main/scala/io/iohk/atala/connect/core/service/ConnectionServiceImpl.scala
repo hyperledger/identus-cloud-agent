@@ -32,7 +32,7 @@ private class ConnectionServiceImpl(
           id = UUID.fromString(invitation.id),
           createdAt = Instant.now,
           updatedAt = None,
-          thid = Some(UUID.fromString(invitation.id)), // this is the default, can't with just use None?
+          thid = invitation.id,
           label = label,
           role = ConnectionRecord.Role.Inviter,
           protocolState = ConnectionRecord.ProtocolState.InvitationGenerated,
@@ -80,6 +80,13 @@ private class ConnectionServiceImpl(
     } yield record
   }
 
+  override def getConnectionRecordByThreadId(thid: String): IO[ConnectionServiceError, Option[ConnectionRecord]] =
+    for {
+      record <- connectionRepository
+        .getConnectionRecordByThreadId(thid)
+        .mapError(RepositoryError.apply)
+    } yield record
+
   override def deleteConnectionRecord(recordId: UUID): IO[ConnectionServiceError, Int] = ???
 
   override def receiveConnectionInvitation(invitation: String): IO[ConnectionServiceError, ConnectionRecord] =
@@ -88,7 +95,7 @@ private class ConnectionServiceImpl(
         .fromEither(io.circe.parser.decode[Invitation](Base64Utils.decodeUrlToString(invitation)))
         .mapError(err => InvitationParsingError(err))
       _ <- connectionRepository
-        .getConnectionRecordByThreadId(UUID.fromString(invitation.id))
+        .getConnectionRecordByThreadId(invitation.id)
         .mapError(RepositoryError.apply)
         .flatMap {
           case None    => ZIO.unit
@@ -99,9 +106,8 @@ private class ConnectionServiceImpl(
           id = UUID.randomUUID(),
           createdAt = Instant.now,
           updatedAt = None,
-          thid = Some(
-            UUID.fromString(invitation.id)
-          ), // TODO: According to the standard, we should rather use 'pthid' and not 'thid'
+          // TODO: According to the standard, we should rather use 'pthid' and not 'thid'
+          thid = invitation.id,
           label = None,
           role = ConnectionRecord.Role.Invitee,
           protocolState = ConnectionRecord.ProtocolState.InvitationReceived,
@@ -285,7 +291,6 @@ private class ConnectionServiceImpl(
       thid <- ZIO
         .fromOption(thid)
         .mapError(_ => UnexpectedError("No `thid` found in credential request"))
-        .map(UUID.fromString)
       maybeRecord <- connectionRepository
         .getConnectionRecordByThreadId(thid)
         .mapError(RepositoryError.apply)

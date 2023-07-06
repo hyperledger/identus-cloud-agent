@@ -112,6 +112,9 @@ class PresentationServiceNotifier(
   override def getPresentationRecord(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]] =
     svc.getPresentationRecord(recordId)
 
+  override def getPresentationRecordByThreadId(thid: DidCommID): IO[PresentationError, Option[PresentationRecord]] =
+    svc.getPresentationRecordByThreadId(thid)
+
   override def receiveProposePresentation(request: ProposePresentation): IO[PresentationError, PresentationRecord] =
     svc.receiveProposePresentation((request))
 

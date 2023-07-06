@@ -61,6 +61,9 @@ class ConnectionServiceNotifier(
   override def getConnectionRecord(recordId: UUID): IO[ConnectionServiceError, Option[ConnectionRecord]] =
     svc.getConnectionRecord(recordId)
 
+  override def getConnectionRecordByThreadId(thid: String): IO[ConnectionServiceError, Option[ConnectionRecord]] =
+    svc.getConnectionRecordByThreadId(thid)
+
   override def deleteConnectionRecord(recordId: UUID): IO[ConnectionServiceError, Int] =
     svc.deleteConnectionRecord(recordId)
 

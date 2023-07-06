@@ -145,6 +145,11 @@ class CredentialServiceNotifier(
   ): IO[CredentialServiceError, Option[IssueCredentialRecord]] =
     svc.getIssueCredentialRecord(recordId)
 
+  override def getIssueCredentialRecordByThreadId(
+      thid: DidCommID
+  ): IO[CredentialServiceError, Option[IssueCredentialRecord]] =
+    svc.getIssueCredentialRecordByThreadId(thid)
+
   override def getIssueCredentialRecords: IO[CredentialServiceError, Seq[IssueCredentialRecord]] =
     svc.getIssueCredentialRecords
 

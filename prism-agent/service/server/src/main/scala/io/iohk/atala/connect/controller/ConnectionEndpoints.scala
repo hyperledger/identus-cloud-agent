@@ -66,11 +66,13 @@ object ConnectionEndpoints {
       .description("Gets an existing connection record by its unique identifier")
       .tag("Connections Management")
 
-  val getConnections: PublicEndpoint[(RequestContext, PaginationInput), ErrorResponse, ConnectionsPage, Any] =
+  val getConnections
+      : PublicEndpoint[(RequestContext, PaginationInput, Option[String]), ErrorResponse, ConnectionsPage, Any] =
     endpoint.get
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in("connections")
       .in(paginationInput)
+      .in(query[Option[String]]("thid").description("The thid of a DIDComm communication."))
       .out(jsonBody[ConnectionsPage].description("The list of connection records."))
       .errorOut(basicFailures)
       .name("getConnections")

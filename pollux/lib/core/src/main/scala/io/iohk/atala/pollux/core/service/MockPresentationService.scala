@@ -132,6 +132,9 @@ object MockPresentationService extends Mock[PresentationService] {
 
       override def getPresentationRecord(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]] = ???
 
+      override def getPresentationRecordByThreadId(thid: DidCommID): IO[PresentationError, Option[PresentationRecord]] =
+        ???
+
       override def receiveProposePresentation(request: ProposePresentation): IO[PresentationError, PresentationRecord] =
         ???
 
