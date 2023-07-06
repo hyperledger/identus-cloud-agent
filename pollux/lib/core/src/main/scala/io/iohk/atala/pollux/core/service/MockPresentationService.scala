@@ -41,6 +41,10 @@ object MockPresentationService extends Mock[PresentationService] {
 
   object MarkPresentationSent extends Effect[DidCommID, PresentationError, PresentationRecord]
 
+  object AcceptPresentation extends Effect[DidCommID, PresentationError, PresentationRecord]
+
+  object RejectPresentation extends Effect[DidCommID, PresentationError, PresentationRecord]
+
   object ReceiveRequestPresentation
       extends Effect[(Option[String], RequestPresentation), PresentationError, PresentationRecord]
 
@@ -104,6 +108,12 @@ object MockPresentationService extends Mock[PresentationService] {
       ): IO[PresentationError, PresentationRecord] =
         proxy(ReceiveRequestPresentation, (connectionId, request))
 
+      override def acceptPresentation(recordId: DidCommID): IO[PresentationError, PresentationRecord] =
+        proxy(AcceptPresentation, recordId)
+
+      override def rejectPresentation(recordId: DidCommID): IO[PresentationError, PresentationRecord] =
+        proxy(RejectPresentation, recordId)
+
       override def extractIdFromCredential(credential: W3cCredentialPayload): Option[UUID] = ???
 
       override def getPresentationRecords(): IO[PresentationError, Seq[PresentationRecord]] = ???
@@ -126,10 +136,6 @@ object MockPresentationService extends Mock[PresentationService] {
         ???
 
       override def acceptProposePresentation(recordId: DidCommID): IO[PresentationError, PresentationRecord] = ???
-
-      override def acceptPresentation(recordId: DidCommID): IO[PresentationError, PresentationRecord] = ???
-
-      override def rejectPresentation(recordId: DidCommID): IO[PresentationError, PresentationRecord] = ???
 
       override def markRequestPresentationRejected(recordId: DidCommID): IO[PresentationError, PresentationRecord] = ???
 

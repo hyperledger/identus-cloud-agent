@@ -49,7 +49,7 @@ object PresentationServiceNotifierSpec extends ZIOSpecDefault with PresentationS
         assertion = Assertion.anything,
         result = Expectation.value(record.copy(protocolState = ProtocolState.PresentationVerified))
       ) ++
-      MockPresentationService.MarkPresentationAccepted(
+      MockPresentationService.AcceptPresentation(
         assertion = Assertion.anything,
         result = Expectation.value(record.copy(protocolState = ProtocolState.PresentationAccepted))
       )
@@ -61,7 +61,7 @@ object PresentationServiceNotifierSpec extends ZIOSpecDefault with PresentationS
     )
 
   private val verifierRejectPresentationExpectations =
-    MockPresentationService.MarkPresentationRejected(
+    MockPresentationService.RejectPresentation(
       assertion = Assertion.anything,
       result = Expectation.value(record.copy(protocolState = ProtocolState.PresentationRejected))
     )
@@ -101,7 +101,7 @@ object PresentationServiceNotifierSpec extends ZIOSpecDefault with PresentationS
           _ <- svc.markRequestPresentationSent(record.id)
           _ <- svc.receivePresentation(presentation(record.thid.value))
           _ <- svc.markPresentationVerified(record.id)
-          _ <- svc.markPresentationAccepted(record.id)
+          _ <- svc.acceptPresentation(record.id)
 
           consumer <- ens.consumer[PresentationRecord]("Presentation")
           events <- consumer.poll(50)
@@ -139,7 +139,7 @@ object PresentationServiceNotifierSpec extends ZIOSpecDefault with PresentationS
           svc <- ZIO.service[PresentationService]
           ens <- ZIO.service[EventNotificationService]
 
-          _ <- svc.markPresentationRejected(DidCommID())
+          _ <- svc.rejectPresentation(DidCommID())
 
           consumer <- ens.consumer[PresentationRecord]("Presentation")
           events <- consumer.poll(50)
