@@ -21,7 +21,7 @@ trait ConnectionRepository[F[_]] {
 
   def deleteConnectionRecord(recordId: UUID): F[Int]
 
-  def getConnectionRecordByThreadId(thid: UUID): F[Option[ConnectionRecord]]
+  def getConnectionRecordByThreadId(thid: String): F[Option[ConnectionRecord]]
 
   def updateWithConnectionRequest(
       recordId: UUID,

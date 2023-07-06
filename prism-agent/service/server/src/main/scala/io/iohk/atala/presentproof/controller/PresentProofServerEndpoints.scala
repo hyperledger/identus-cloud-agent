@@ -23,7 +23,7 @@ class PresentProofServerEndpoints(presentProofController: PresentProofController
   private val getAllPresentationsEndpoint: ZServerEndpoint[Any, Any] =
     getAllPresentations.zServerLogic {
       case (ctx: RequestContext, paginationInput: PaginationInput, thid: Option[String]) =>
-        presentProofController.getAllPresentations(paginationInput.offset, paginationInput.limit, thid)(ctx)
+        presentProofController.getPresentations(paginationInput, thid)(ctx)
     }
 
   private val getPresentationEndpoint: ZServerEndpoint[Any, Any] =

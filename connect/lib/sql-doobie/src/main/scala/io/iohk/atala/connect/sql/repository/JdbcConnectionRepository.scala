@@ -1,16 +1,15 @@
 package io.iohk.atala.connect.sql.repository
 
+import cats.data.NonEmptyList
 import doobie.*
 import doobie.implicits.*
-import doobie.postgres.implicits._
-import io.circe._
-import io.circe.parser._
-import io.circe.syntax._
-import io.iohk.atala.connect.core.model.ConnectionRecord
-import io.iohk.atala.connect.core.model.ConnectionRecord.ProtocolState
-import io.iohk.atala.connect.core.model.ConnectionRecord.Role
+import doobie.postgres.implicits.*
+import io.circe.*
+import io.circe.parser.*
+import io.circe.syntax.*
 import io.iohk.atala.connect.core.model.*
-import io.iohk.atala.connect.core.model.error.ConnectionRepositoryError._
+import io.iohk.atala.connect.core.model.ConnectionRecord.{ProtocolState, Role}
+import io.iohk.atala.connect.core.model.error.ConnectionRepositoryError.*
 import io.iohk.atala.connect.core.repository.ConnectionRepository
 import io.iohk.atala.mercury.protocol.connection.*
 import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
@@ -20,7 +19,6 @@ import zio.interop.catz.*
 
 import java.time.Instant
 import java.util.UUID
-import cats.data.NonEmptyList
 
 class JdbcConnectionRepository(xa: Transactor[Task]) extends ConnectionRepository[Task] {
 
@@ -184,7 +182,7 @@ class JdbcConnectionRepository(xa: Transactor[Task]) extends ConnectionRepositor
       .transact(xa)
   }
 
-  override def getConnectionRecordByThreadId(thid: UUID): Task[Option[ConnectionRecord]] = {
+  override def getConnectionRecordByThreadId(thid: String): Task[Option[ConnectionRecord]] = {
     val cxnIO = sql"""
         | SELECT
         |   id,

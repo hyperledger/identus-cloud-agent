@@ -1,5 +1,6 @@
 package io.iohk.atala.presentproof.controller
 import io.iohk.atala.agent.server.ControllerHelper
+import io.iohk.atala.api.http.model.PaginationInput
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.connect.controller.ConnectionController
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
@@ -49,16 +50,15 @@ class PresentProofControllerImpl(
     }
   }
 
-  override def getAllPresentations(offset: Option[Int], limit: Option[Int], thid: Option[String])(implicit
+  override def getPresentations(paginationInput: PaginationInput, thid: Option[String])(implicit
       rc: RequestContext
   ): IO[ErrorResponse, PresentationStatusPage] = {
     val result = for {
-      records <- presentationService.getPresentationRecords()
-      filteredRecords = thid match
-        case None        => records
-        case Some(value) => records.filter(_.thid.value == value) // this logic should be moved to the DB
+      records <- thid match
+        case None       => presentationService.getPresentationRecords()
+        case Some(thid) => presentationService.getPresentationRecordByThreadId(DidCommID(thid)).map(_.toSeq)
     } yield PresentationStatusPage(
-      filteredRecords.map(PresentationStatus.fromDomain)
+      records.map(PresentationStatus.fromDomain)
     )
 
     result.mapError(PresentProofController.toHttpError)

@@ -22,8 +22,8 @@ class ConnectionServerEndpoints(connectionController: ConnectionController) {
     }
 
   private val getConnectionsServerEndpoint: ZServerEndpoint[Any, Any] =
-    getConnections.zServerLogic { case (ctx: RequestContext, paginationInput: PaginationInput) =>
-      connectionController.getConnections(paginationInput.toPagination)(ctx)
+    getConnections.zServerLogic { case (ctx: RequestContext, paginationInput: PaginationInput, thid: Option[String]) =>
+      connectionController.getConnections(paginationInput, thid)(ctx)
     }
 
   private val acceptConnectionInvitationServerEndpoint: ZServerEndpoint[Any, Any] =
