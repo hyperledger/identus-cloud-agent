@@ -28,7 +28,7 @@ case class ConnectionRecord(
     id: UUID,
     createdAt: Instant,
     updatedAt: Option[Instant],
-    thid: UUID,
+    thid: String,
     label: Option[String],
     role: Role,
     protocolState: ProtocolState,

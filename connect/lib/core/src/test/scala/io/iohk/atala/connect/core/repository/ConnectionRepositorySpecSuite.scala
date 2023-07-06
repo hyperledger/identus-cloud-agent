@@ -20,7 +20,7 @@ object ConnectionRepositorySpecSuite {
     UUID.randomUUID,
     Instant.ofEpochSecond(Instant.now.getEpochSecond),
     None,
-    UUID.randomUUID(),
+    UUID.randomUUID().toString,
     None,
     ConnectionRecord.Role.Inviter,
     ConnectionRecord.ProtocolState.InvitationGenerated,
@@ -56,7 +56,7 @@ object ConnectionRepositorySpecSuite {
     test("createConnectionRecord prevents creation of 2 records with the same thid") {
       for {
         repo <- ZIO.service[ConnectionRepository[Task]]
-        thid = UUID.randomUUID()
+        thid = UUID.randomUUID().toString
         aRecord = connectionRecord.copy(thid = thid)
         bRecord = connectionRecord.copy(thid = thid)
         aCount <- repo.createConnectionRecord(aRecord)
@@ -208,7 +208,7 @@ object ConnectionRepositorySpecSuite {
     test("getConnectionRecordByThreadId correctly returns an existing thid") {
       for {
         repo <- ZIO.service[ConnectionRepository[Task]]
-        thid = UUID.randomUUID()
+        thid = UUID.randomUUID().toString
         aRecord = connectionRecord.copy(thid = thid)
         bRecord = connectionRecord
         _ <- repo.createConnectionRecord(aRecord)
@@ -219,11 +219,11 @@ object ConnectionRepositorySpecSuite {
     test("getConnectionRecordByThreadId returns nothing for an unknown thid") {
       for {
         repo <- ZIO.service[ConnectionRepository[Task]]
-        aRecord = connectionRecord.copy(thid = UUID.randomUUID())
-        bRecord = connectionRecord.copy(thid = UUID.randomUUID())
+        aRecord = connectionRecord.copy(thid = UUID.randomUUID().toString)
+        bRecord = connectionRecord.copy(thid = UUID.randomUUID().toString)
         _ <- repo.createConnectionRecord(aRecord)
         _ <- repo.createConnectionRecord(bRecord)
-        record <- repo.getConnectionRecordByThreadId(UUID.randomUUID())
+        record <- repo.getConnectionRecordByThreadId(UUID.randomUUID().toString)
       } yield assertTrue(record.isEmpty)
     },
     test("updateConnectionProtocolState updates the record") {

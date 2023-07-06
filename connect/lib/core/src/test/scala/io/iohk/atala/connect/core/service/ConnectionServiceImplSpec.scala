@@ -31,7 +31,7 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
           assertTrue(record.role == Role.Inviter) &&
           assertTrue(record.connectionRequest.isEmpty) &&
           assertTrue(record.connectionResponse.isEmpty) &&
-          assertTrue(record.thid == record.id) &&
+          assertTrue(record.thid == record.id.toString) &&
           assertTrue(record.updatedAt.isEmpty) &&
           assertTrue(record.invitation.from == did) &&
           assertTrue(record.invitation.attachments.isEmpty) &&
@@ -112,7 +112,7 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
             assertTrue(inviteeRecord.role == Role.Invitee) &&
             assertTrue(inviteeRecord.connectionRequest.isEmpty) &&
             assertTrue(inviteeRecord.connectionResponse.isEmpty) &&
-            assertTrue(inviteeRecord.thid == UUID.fromString(inviterRecord.invitation.id)) &&
+            assertTrue(inviteeRecord.thid == inviterRecord.invitation.id) &&
             assertTrue(inviteeRecord.updatedAt.isEmpty) &&
             assertTrue(inviteeRecord.invitation == inviterRecord.invitation)
           }

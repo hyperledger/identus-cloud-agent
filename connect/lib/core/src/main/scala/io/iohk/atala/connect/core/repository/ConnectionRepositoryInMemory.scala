@@ -134,10 +134,10 @@ class ConnectionRepositoryInMemory(storeRef: Ref[Map[UUID, ConnectionRecord]]) e
       .getOrElse(ZIO.succeed(0))
   } yield count
 
-  override def getConnectionRecordByThreadId(thid: UUID): Task[Option[ConnectionRecord]] = {
+  override def getConnectionRecordByThreadId(thid: String): Task[Option[ConnectionRecord]] = {
     for {
       store <- storeRef.get
-    } yield store.values.find(_.thid == thid)
+    } yield store.values.find(_.thid.toString == thid)
   }
 
   override def getConnectionRecords: Task[Seq[ConnectionRecord]] = {
