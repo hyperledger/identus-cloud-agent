@@ -1,6 +1,7 @@
 package api_models
 data class Connection(
     var connectionId: String = "",
+    var thid: String = "",
     var createdAt: String = "",
     var updatedAt: String = "",
     var invitation: Invitation = Invitation(),

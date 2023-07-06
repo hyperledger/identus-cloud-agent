@@ -3,10 +3,7 @@ package io.iohk.atala.castor.controller.http
 import io.iohk.atala.agent.walletapi.model as walletDomain
 import io.iohk.atala.api.http.Annotation
 import io.iohk.atala.castor.core.model.did as castorDomain
-import io.iohk.atala.castor.core.model.did.ServiceType
-import io.iohk.atala.castor.core.util.UriUtils
 import io.iohk.atala.shared.utils.Traverse.*
-import io.lemonlabs.uri.Uri
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonEncoder, JsonDecoder}
@@ -114,8 +111,8 @@ final case class UpdateManagedDIDServiceAction(
     id: String,
     @description(UpdateManagedDIDServiceAction.annotations.`type`.description)
     @encodedExample(UpdateManagedDIDServiceAction.annotations.`type`.example)
-    `type`: Option[String] = None,
-    serviceEndpoint: Option[Seq[String]] = None
+    `type`: Option[ServiceType] = None,
+    serviceEndpoint: Option[ServiceEndpoint] = None
 )
 
 object UpdateManagedDIDServiceAction {
@@ -140,23 +137,16 @@ object UpdateManagedDIDServiceAction {
   extension (servicePatch: UpdateManagedDIDServiceAction) {
     def toDomain: Either[String, walletDomain.UpdateServicePatch] =
       for {
-        serviceEndpoint <- servicePatch.serviceEndpoint
-          .getOrElse(Nil)
-          .traverse(s => Uri.parseTry(s).toEither.left.map(_ => s"unable to parse serviceEndpoint $s as URI"))
-        normalizedServiceEndpoint <- serviceEndpoint
-          .traverse(uri =>
-            UriUtils
-              .normalizeUri(uri.toString)
-              .toRight(s"unable to parse serviceEndpoint ${uri.toString} as URI")
-              .map(Uri.parse)
-          )
-        serviceType <- servicePatch.`type`.fold[Either[String, Option[ServiceType]]](Right(None))(s =>
-          castorDomain.ServiceType.parseString(s).toRight(s"unsupported serviceType $s").map(Some(_))
+        serviceType <- servicePatch.`type`.fold[Either[String, Option[castorDomain.ServiceType]]](Right(None))(s =>
+          s.toDomain.map(Some(_))
         )
+        serviceEndpoint <- servicePatch.serviceEndpoint.fold[Either[String, Option[castorDomain.ServiceEndpoint]]](
+          Right(None)
+        )(endpoint => endpoint.toDomain.map(Some(_)))
       } yield walletDomain.UpdateServicePatch(
         id = servicePatch.id,
         serviceType = serviceType,
-        serviceEndpoints = normalizedServiceEndpoint
+        serviceEndpoints = serviceEndpoint.map(_.normalize())
       )
   }
 }

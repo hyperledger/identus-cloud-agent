@@ -134,10 +134,10 @@ class ConnectionRepositoryInMemory(storeRef: Ref[Map[UUID, ConnectionRecord]]) e
       .getOrElse(ZIO.succeed(0))
   } yield count
 
-  override def getConnectionRecordByThreadId(thid: UUID): Task[Option[ConnectionRecord]] = {
+  override def getConnectionRecordByThreadId(thid: String): Task[Option[ConnectionRecord]] = {
     for {
       store <- storeRef.get
-    } yield store.values.find(_.thid.contains(thid))
+    } yield store.values.find(_.thid.toString == thid)
   }
 
   override def getConnectionRecords: Task[Seq[ConnectionRecord]] = {
@@ -161,16 +161,13 @@ class ConnectionRepositoryInMemory(storeRef: Ref[Map[UUID, ConnectionRecord]]) e
 
   override def createConnectionRecord(record: ConnectionRecord): Task[Int] = {
     for {
-      _ <- record.thid match
-        case None => ZIO.unit
-        case Some(value) =>
-          for {
-            store <- storeRef.get
-            maybeRecord <- ZIO.succeed(store.values.find(_.thid == record.thid))
-            _ <- maybeRecord match
-              case None        => ZIO.unit
-              case Some(value) => ZIO.fail(UniqueConstraintViolation("Unique Constraint Violation on 'thid'"))
-          } yield ()
+      _ <- for {
+        store <- storeRef.get
+        maybeRecord <- ZIO.succeed(store.values.find(_.thid == record.thid))
+        _ <- maybeRecord match
+          case None        => ZIO.unit
+          case Some(value) => ZIO.fail(UniqueConstraintViolation("Unique Constraint Violation on 'thid'"))
+      } yield ()
       _ <- storeRef.update(r => r + (record.id -> record))
     } yield 1
   }

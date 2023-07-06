@@ -2,14 +2,16 @@ package io.iohk.atala.pollux.credentialschema.http
 
 import io.iohk.atala.api.http.*
 import io.iohk.atala.pollux.core.model
+import io.iohk.atala.pollux.core.model.schema.CredentialSchema
 import io.iohk.atala.pollux.credentialschema.http.CredentialSchemaResponse.annotations
 import sttp.model.Uri
 import sttp.model.Uri.*
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{default, description, encodedExample, encodedName}
 import sttp.tapir.json.zio.schemaForZioJsonValue
-import zio.json.ast.Json
 import zio.json.*
+import zio.json.ast.Json
+
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -63,7 +65,7 @@ case class CredentialSchemaResponse(
 
 object CredentialSchemaResponse {
 
-  def fromDomain(cs: model.CredentialSchema): CredentialSchemaResponse =
+  def fromDomain(cs: CredentialSchema): CredentialSchemaResponse =
     CredentialSchemaResponse(
       guid = cs.guid,
       id = cs.id.toString,
@@ -79,7 +81,7 @@ object CredentialSchemaResponse {
       proof = None
     )
 
-  given scala.Conversion[model.CredentialSchema, CredentialSchemaResponse] = fromDomain
+  given scala.Conversion[CredentialSchema, CredentialSchemaResponse] = fromDomain
 
   given encoder: zio.json.JsonEncoder[CredentialSchemaResponse] =
     DeriveJsonEncoder.gen[CredentialSchemaResponse]

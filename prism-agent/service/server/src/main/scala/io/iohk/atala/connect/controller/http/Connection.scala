@@ -16,6 +16,9 @@ case class Connection(
     @description(annotations.connectionId.description)
     @encodedExample(annotations.connectionId.example)
     connectionId: UUID,
+    @description(annotations.thid.description)
+    @encodedExample(annotations.thid.example)
+    thid: String,
     @description(annotations.label.description)
     @encodedExample(annotations.label.example)
     label: Option[String] = None,
@@ -58,6 +61,7 @@ object Connection {
   def fromDomain(domain: model.ConnectionRecord): Connection =
     Connection(
       connectionId = domain.id,
+      thid = domain.thid,
       label = domain.label,
       myDid = domain.role match
         case Role.Inviter =>
@@ -85,6 +89,13 @@ object Connection {
         extends Annotation[UUID](
           description = "The unique identifier of the connection.",
           example = UUID.fromString("0527aea1-d131-3948-a34d-03af39aba8b4")
+        )
+
+    object thid
+        extends Annotation[String](
+          description = "The unique identifier of the thread this connection record belongs to. " +
+            "The value will identical on both sides of the connection (inviter and invitee)",
+          example = "0527aea1-d131-3948-a34d-03af39aba8b4"
         )
 
     object label

@@ -1,5 +1,6 @@
 package io.iohk.atala.presentproof.controller
 
+import io.iohk.atala.api.http.model.PaginationInput
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.presentproof.controller.http.*
@@ -15,9 +16,8 @@ trait PresentProofController {
       rc: RequestContext
   ): IO[ErrorResponse, RequestPresentationOutput]
 
-  def getAllPresentations(
-      offset: Option[Int],
-      limit: Option[Int],
+  def getPresentations(
+      paginationInput: PaginationInput,
       thid: Option[String]
   )(implicit
       rc: RequestContext

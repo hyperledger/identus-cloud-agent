@@ -1,11 +1,11 @@
 syntax = "proto3";
 
-option java_multiple_files = true;
-option java_package = "io.iohk.atala.prism.protos";
+package io.iohk.atala.prism.protos;
 
 import "node_models.proto";
 
-package io.iohk.atala.prism.protos;
+option java_multiple_files = true;
+option java_package = "io.iohk.atala.prism.protos";
 
 /**
  * Represent a block that holds operations.
@@ -21,10 +21,10 @@ message AtalaBlock {
  * @exclude Intended for internal usage inside. Not publicly accessible from gRPC.
  */
 message AtalaObject {
-  reserved 1; // Removed block_hash field.
+  reserved 1, 2, 3;
   reserved "block_hash";
+  reserved "block_operation_count"; // Number of operations in the block.
+  reserved "block_byte_length"; // Byte length of the block.
 
-  int32 block_operation_count = 2; // Number of operations in the block.
-  int32 block_byte_length = 3; // Byte length of the block.
   AtalaBlock block_content = 4; // The block content.
 }

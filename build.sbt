@@ -67,11 +67,9 @@ lazy val V = new {
   val flyway = "9.8.3"
   val logback = "1.4.5"
 
-  val prismNodeClient = "0.4.0"
   val prismSdk = "v1.4.1" // scala-steward:off
   val scalaUri = "4.0.3"
 
-  val circeVersion = "0.14.3"
   val jwtCirceVersion = "9.1.2"
   val zioPreludeVersion = "1.0.0-RC16"
 
@@ -116,6 +114,7 @@ lazy val D = new {
   val jwk: ModuleID = "com.nimbusds" % "nimbus-jose-jwt" % "9.25.4"
 
   val typesafeConfig: ModuleID = "com.typesafe" % "config" % V.typesafeConfig
+  val scalaPbRuntime: ModuleID = "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion % "protobuf"
   val scalaPbGrpc: ModuleID = "com.thesamet.scalapb" %% "scalapb-runtime-grpc" % scalapb.compiler.Version.scalapbVersion
   // TODO we are adding test stuff to the main dependencies
   val testcontainersPostgres: ModuleID = "com.dimafeng" %% "testcontainers-scala-postgresql" % V.testContainersScala
@@ -163,7 +162,6 @@ lazy val D_Connect = new {
 lazy val D_Castor = new {
 
   val scalaUri = "io.lemonlabs" %% "scala-uri" % V.scalaUri
-  val prismNodeClient = "io.iohk.atala" %% "prism-node-client" % V.prismNodeClient
 
   // We have to exclude bouncycastle since for some reason bitcoinj depends on bouncycastle jdk15to18
   // (i.e. JDK 1.5 to 1.8), but we are using JDK 11
@@ -180,9 +178,11 @@ lazy val D_Castor = new {
       D.zioTest,
       D.zioTestSbt,
       D.zioTestMagnolia,
+      D.circeCore,
+      D.circeGeneric,
+      D.circeParser,
       prismCrypto,
       prismIdentity,
-      prismNodeClient,
       scalaUri
     )
 
@@ -563,6 +563,23 @@ lazy val agentCliDidcommx = project
 //     .settings(skip / publish := true)
 //     .dependsOn(agent)
 
+// ####################
+// ###  prismNode  ####
+// ####################
+val prismNodeClient = project
+  .in(file("prism-node/client/scala-client"))
+  .settings(
+    name := "prism-node-client",
+    libraryDependencies ++= Seq(D.scalaPbGrpc, D.scalaPbRuntime),
+    coverageEnabled := false,
+    // gRPC settings
+    Compile / PB.targets := Seq(scalapb.gen() -> (Compile / sourceManaged).value / "scalapb"),
+    Compile / PB.protoSources := Seq(
+      baseDirectory.value / "api" / "grpc",
+      (Compile / resourceDirectory).value // includes scalapb codegen package wide config
+    )
+  )
+
 // #####################
 // #####  castor  ######
 // #####################
@@ -583,7 +600,7 @@ lazy val castorCore = project
     name := "castor-core",
     libraryDependencies ++= D_Castor.coreDependencies
   )
-  .dependsOn(shared)
+  .dependsOn(shared, prismNodeClient)
 
 // #####################
 // #####  pollux  ######
