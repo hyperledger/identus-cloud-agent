@@ -15,8 +15,7 @@ import io.iohk.atala.agent.server.config.AppConfig
 import sttp.monad.MonadError
 import zio.metrics.connectors.micrometer.MicrometerConfig
 import zio.test.ZIOSpecDefault
-import io.micrometer.prometheus.{ PrometheusConfig, PrometheusMeterRegistry }
-
+import io.micrometer.prometheus.{PrometheusConfig, PrometheusMeterRegistry}
 
 trait SystemControllerTestTools {
   self: ZIOSpecDefault =>
@@ -27,7 +26,6 @@ trait SystemControllerTestTools {
     Response[
       Either[String, String]
     ]
-
 
   private val controllerLayer = ZLayer.succeed(PrometheusMeterRegistry(PrometheusConfig.DEFAULT)) >+>
     configLayer >+>

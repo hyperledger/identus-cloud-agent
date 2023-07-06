@@ -78,7 +78,6 @@ object PrismAgentApp {
 
 }
 
-
 object AgentHttpServer {
   def run =
     for {
