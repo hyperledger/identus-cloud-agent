@@ -12,6 +12,19 @@ https://github.com/hyperledger/anoncreds-rs/releases/tag/v0.1.0-dev.15
 The file `anoncreds.udl` describes the warp interface generated with Uniffi.
 The file can be found in the IOHK's anoncreds-rs repository [https://github.com/input-output-hk/anoncreds-rs/blob/main/uniffi/src/anoncreds.udl](https://github.com/input-output-hk/anoncreds-rs/blob/main/uniffi/src/anoncreds.udl)
 
+
+## Build Jar lib
+
+Build the NATIVE anoncred lib from IOHK's fork of the anoncreds-rs [https://github.com/input-output-hk/anoncreds-rs](https://github.com/input-output-hk/anoncreds-rs)
+
+Go into the folder `uniffi` and generate the file `anoncreds.kt`
+
+Assuming uniffi_bindgen is install. Install with `cargo install uniffi_bindgen --version $(cargo pkgid uniffi | cut -f 2 -d '@')`
+
+Replace the `anoncreds.kt` file in the UniffiPOC project (`UniffiPOC/src/main/uniffi/anoncreds/anoncreds.kt`)
+
+Generate the Jar with `./gradlew jar` in the UniffiPOC project
+
 ## Build the NATIVE lib 
 
 Build the NATIVE anoncred lib from IOHK's fork of the anoncreds-rs [https://github.com/input-output-hk/anoncreds-rs](https://github.com/input-output-hk/anoncreds-rs)

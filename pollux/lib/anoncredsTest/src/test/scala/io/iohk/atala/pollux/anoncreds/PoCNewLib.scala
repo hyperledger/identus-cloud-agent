@@ -52,7 +52,7 @@ class PoCNewLib extends AnyFlatSpec {
 
     println(credentialDefinition)
 
-    println(credentialDefinition.getCredentialDefinition())
+    println(credentialDefinition.getCredentialDefinition().getJson())
     println(credentialDefinition.getCredentialDefinitionPrivate().getJson())
     println(credentialDefinition.getCredentialKeyCorrectnessProof().getJson())
 
@@ -71,8 +71,7 @@ class PoCNewLib extends AnyFlatSpec {
     )
 
     println("CreateOffer")
-    println(tmp)
-    // println(AnonCredsAPI.getJson(tmp.ref.getValue()))
+    println(tmp.getJson())
     tmp
   }
 
@@ -82,30 +81,19 @@ class PoCNewLib extends AnyFlatSpec {
       credentialOffer: CredentialOffer
   ) = {
 
-    // string? entropy,
-    // string? prover_did,
-    // CredentialDefinition cred_def,
-    // LinkSecret link_secret,
-    // string link_secret_id,
-    // CredentialOffer credential_offer
-
     val credentialRequest = Prover().createCredentialRequest(
-      "entropy",
-      null,
-      credentialDefinition,
-      linkSecret,
-      "linkSecretId",
-      credentialOffer,
+      "entropy", // string? entropy,
+      null, // string? prover_did,
+      credentialDefinition, // CredentialDefinition cred_def,
+      linkSecret, // LinkSecret link_secret,
+      "linkSecretId", // string link_secret_id,
+      credentialOffer, // CredentialOffer credential_offer
     )
 
-    print("Request: ")
+    println("Request: ")
     println(credentialRequest.getRequest().getJson())
-    print("Metadata: ")
-    println(credentialRequest.getMetadata())
-    // println(AnonCredsAPI.getJson(credentialRequest.ref.getValue()))
-    // print("cred_req_meta_p: ")
-    // println(credentialRequest.meta_ref)
-    // println(AnonCredsAPI.getJson(credentialRequest.meta_ref.getValue()))
+    println("Metadata: ")
+    println(credentialRequest.getMetadata()) // FIXME Do we also need a getJson method?
     credentialRequest
   }
 
@@ -139,6 +127,7 @@ class PoCNewLib extends AnyFlatSpec {
       null,
     )
 
+    println("issuer_createCredential:")
     println(cred.getJson())
     cred
   }
@@ -154,7 +143,10 @@ class PoCNewLib extends AnyFlatSpec {
     println("*** holder " + ("*" * 100))
 
     val linkSecret = LinkSecret()
-    println(linkSecret.getBigNumber())
+    println(linkSecret.getBigNumber()) // TODO REMOVE
+    println(
+      linkSecret.getJson()
+    ) // FIXME this printing 5FCC7E4BC91B265C59E059369E5C49901AB38E50DF20C218F7B2135E165BAE3C and should have '"' like: "5FCC7E4BC91B265C59E059369E5C49901AB38E50DF20C218F7B2135E165BAE3C"
 
     val credentialRequest =
       holder_createCredentialRequest(linkSecret, credentialDefinition.getCredentialDefinition(), credentialOffer)
