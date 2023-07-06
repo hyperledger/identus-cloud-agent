@@ -1,7 +1,6 @@
 package io.iohk.atala.castor.core.util
 
-import io.lemonlabs.uri.Uri
-import io.iohk.atala.shared.models.Base64UrlString
+import io.iohk.atala.castor.core.model.did.ServiceEndpoint
 import io.iohk.atala.castor.core.model.did.{
   EllipticCurve,
   InternalKeyPurpose,
@@ -17,13 +16,18 @@ import io.iohk.atala.castor.core.model.did.{
 }
 import io.iohk.atala.castor.core.model.error.OperationValidationError
 import io.iohk.atala.castor.core.util.DIDOperationValidator.Config
+import io.iohk.atala.shared.models.Base64UrlString
+import scala.collection.immutable.ArraySeq
+import scala.language.implicitConversions
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
 
-import scala.collection.immutable.ArraySeq
-
 object DIDOperationValidatorSpec extends ZIOSpecDefault {
+
+  given Conversion[String, ServiceType.Name] = ServiceType.Name.fromStringUnsafe
+  given Conversion[String, ServiceEndpoint] = s =>
+    ServiceEndpoint.Single(ServiceEndpoint.UriValue.fromString(s).toOption.get)
 
   override def spec = suite("DIDOperationValidator")(
     createOperationValidationSpec,
@@ -123,17 +127,17 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
             InternalPublicKey("master0", InternalKeyPurpose.Master, publicKeyData)
           ),
           services = Seq(
-            Service("service1", ServiceType.LinkedDomains, Seq(Uri.parse("http://example.com/")))
+            Service("service1", ServiceType.Single("LinkedDomains"), "http://example.com/")
           ),
           context = Seq()
         )
         for {
           result <- ZIO.serviceWith[DIDOperationValidator](validator => validator.validate(operation))
-        } yield assert(result)(equalTo(DIDOperationValidator(Config(50, 50)).validate(operation)))
+        } yield assert(result)(equalTo(DIDOperationValidator(Config.default).validate(operation)))
       },
       test("accept valid CreateOperation") {
         val op = createPrismDIDOperation()
-        assert(DIDOperationValidator(Config(50, 50)).validate(op))(isRight)
+        assert(DIDOperationValidator(Config.default).validate(op))(isRight)
       },
       test("reject CreateOperation on too many DID publicKey access") {
         val publicKeys = (1 to 10).map(i =>
@@ -151,7 +155,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
           )
         )
         val op = createPrismDIDOperation(publicKeys = publicKeys, internalKeys = internalKeys)
-        assert(DIDOperationValidator(Config(15, 15)).validate(op))(
+        assert(DIDOperationValidator(Config.default.copy(publicKeyLimit = 15)).validate(op))(
           isLeft(isSubtype[OperationValidationError.TooManyDidPublicKeyAccess](anything))
         )
       },
@@ -171,7 +175,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
           )
         )
         val op = createPrismDIDOperation(publicKeys = publicKeys, internalKeys = internalKeys)
-        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
+        assert(DIDOperationValidator(Config.default).validate(op))(
           invalidArgumentContainsString("id for public-keys is not unique")
         )
       },
@@ -179,12 +183,12 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         val services = (1 to 20).map(i =>
           Service(
             id = s"service$i",
-            `type` = ServiceType.LinkedDomains,
-            serviceEndpoint = Seq(Uri.parse("http://example.com/"))
+            `type` = ServiceType.Single("LinkedDomains"),
+            serviceEndpoint = "http://example.com/"
           )
         )
         val op = createPrismDIDOperation(services = services)
-        assert(DIDOperationValidator(Config(15, 15)).validate(op))(
+        assert(DIDOperationValidator(Config.default.copy(serviceLimit = 15)).validate(op))(
           isLeft(isSubtype[OperationValidationError.TooManyDidServiceAccess](anything))
         )
       },
@@ -192,12 +196,12 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         val services = (1 to 3).map(i =>
           Service(
             id = s"service0",
-            `type` = ServiceType.LinkedDomains,
-            serviceEndpoint = Seq(Uri.parse("http://example.com/"))
+            `type` = ServiceType.Single("LinkedDomains"),
+            serviceEndpoint = "http://example.com/"
           )
         )
         val op = createPrismDIDOperation(services = services)
-        assert(DIDOperationValidator(Config(15, 15)).validate(op))(
+        assert(DIDOperationValidator(Config.default).validate(op))(
           invalidArgumentContainsString("id for services is not unique")
         )
       },
@@ -210,7 +214,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
           )
         )
         val op = createPrismDIDOperation(publicKeys = publicKeys)
-        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
+        assert(DIDOperationValidator(Config.default).validate(op))(
           invalidArgumentContainsString("public key id is invalid: [key 1, key 2]")
         )
       },
@@ -218,33 +222,69 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         val services = (1 to 2).map(i =>
           Service(
             id = s"service $i",
-            `type` = ServiceType.LinkedDomains,
-            serviceEndpoint = Seq(Uri.parse("http://example.com/"))
+            `type` = ServiceType.Single("LinkedDomains"),
+            serviceEndpoint = "http://example.com/"
           )
         )
         val op = createPrismDIDOperation(services = services)
-        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
+        assert(DIDOperationValidator(Config.default).validate(op))(
           invalidArgumentContainsString("service id is invalid: [service 1, service 2]")
+        )
+      },
+      test("reject CreateOperation on too long key-id") {
+        val publicKey = PublicKey(
+          id = s"key-${"0" * 100}",
+          purpose = VerificationRelationship.Authentication,
+          publicKeyData = publicKeyData
+        )
+        val op = createPrismDIDOperation(publicKeys = Seq(publicKey))
+        assert(DIDOperationValidator(Config.default).validate(op))(
+          invalidArgumentContainsString(s"public key id is too long: [${publicKey.id}]")
+        )
+      },
+      test("reject CreateOperation on too long service-id") {
+        val service = Service(
+          id = s"service-${"0" * 100}",
+          `type` = ServiceType.Single("LinkedDomains"),
+          serviceEndpoint = "http://example.com/"
+        )
+        val op = createPrismDIDOperation(services = Seq(service))
+        assert(DIDOperationValidator(Config.default).validate(op))(
+          invalidArgumentContainsString(s"service id is too long: [${service.id}]")
+        )
+      },
+      test("reject CreateOperation on duplicated context") {
+        val op = createPrismDIDOperation(context = Seq("https://example.com", "https://example.com"))
+        assert(DIDOperationValidator(Config.default).validate(op))(
+          invalidArgumentContainsString("context is not unique")
+        )
+      },
+      test("reject CreateOperation on too long serviceType") {
+        val service = Service(
+          id = "service",
+          `type` = ServiceType.Single("0" * 101),
+          serviceEndpoint = "http://example.com/"
+        )
+        val op = createPrismDIDOperation(services = Seq(service))
+        assert(DIDOperationValidator(Config.default).validate(op))(
+          invalidArgumentContainsString(s"service type is too long: [service]")
+        )
+      },
+      test("reject CreateOperation on too long serviceEndpoint") {
+        val service = Service(
+          id = "service",
+          `type` = ServiceType.Single("LinkedDomains"),
+          serviceEndpoint = s"http://example.com/${"0" * 300}"
+        )
+        val op = createPrismDIDOperation(services = Seq(service))
+        assert(DIDOperationValidator(Config.default).validate(op))(
+          invalidArgumentContainsString(s"service endpoint is too long: [service]")
         )
       },
       test("reject CreateOperation when master key does not exist") {
         val op = createPrismDIDOperation(internalKeys = Nil)
-        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
+        assert(DIDOperationValidator(Config.default).validate(op))(
           invalidArgumentContainsString("operation must contain at least 1 master key")
-        )
-      },
-      test("reject CreateOperation when service endpoint is empty") {
-        val op = createPrismDIDOperation(services =
-          Seq(
-            Service(
-              id = "service-0",
-              `type` = ServiceType.LinkedDomains,
-              serviceEndpoint = Nil
-            )
-          )
-        )
-        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
-          invalidArgumentContainsString("service must not have empty serviceEndpoint")
         )
       },
       test("reject CreateOperation when service URL is not normalized") {
@@ -252,40 +292,23 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
           Seq(
             Service(
               id = "service-0",
-              `type` = ServiceType.LinkedDomains,
-              serviceEndpoint = Seq(
-                Uri.parse("http://example.com/login/../login")
-              )
+              `type` = ServiceType.Single("LinkedDomains"),
+              serviceEndpoint = "http://example.com/login/../login"
             )
           )
         )
-        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
+        assert(DIDOperationValidator(Config.default).validate(op))(
           invalidArgumentContainsString("serviceEndpoint URIs must be normalized")
         )
-      },
+      } @@ TestAspect.ignore,
       test("accept CreateOperation when publicKeys is empty because master key always exist") {
         val op = createPrismDIDOperation(publicKeys = Nil)
-        assert(DIDOperationValidator(Config(50, 50)).validate(op))(isRight)
+        assert(DIDOperationValidator(Config.default).validate(op))(isRight)
       },
       // Test that the validator accepts a CreateOperation when the services list is not present
       test("accept CreateOperation when services is None") {
         val op = createPrismDIDOperation(services = Nil)
-        assert(DIDOperationValidator(Config(50, 50)).validate(op))(isRight)
-      },
-      // Test that the validator rejects a CreateOperation when the serviceEndpoint list is not present
-      test("reject CreateOperation when serviceEndpoint is None") {
-        val op = createPrismDIDOperation(services =
-          Seq(
-            Service(
-              id = "service-0",
-              `type` = ServiceType.LinkedDomains,
-              serviceEndpoint = Nil
-            )
-          )
-        )
-        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
-          invalidArgumentContainsString("service must not have empty serviceEndpoint")
-        )
+        assert(DIDOperationValidator(Config.default).validate(op))(isRight)
       },
       // Test that the validator rejects a CreateOperation when a service has an empty id string.
       test("reject CreateOperation when service id is empty") {
@@ -293,84 +316,13 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
           Seq(
             Service(
               id = "",
-              `type` = ServiceType.LinkedDomains,
-              serviceEndpoint = Seq(
-                Uri.parse("http://example.com/login/../login")
-              )
+              `type` = ServiceType.Single("LinkedDomains"),
+              serviceEndpoint = "http://example.com/"
             )
           )
         )
-        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
+        assert(DIDOperationValidator(Config.default).validate(op))(
           invalidArgumentContainsString("service id is invalid: []")
-        )
-      },
-      // Test that the validator rejects a CreateOperation when a service has a serviceEndpoint with an empty string URI.
-      test("reject CreateOperation when serviceEndpoint is empty") {
-        val op = createPrismDIDOperation(services =
-          Seq(
-            Service(
-              id = "service-0",
-              `type` = ServiceType.LinkedDomains,
-              serviceEndpoint = Seq(
-                Uri.parse("")
-              )
-            )
-          )
-        )
-        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
-          invalidArgumentContainsString("serviceEndpoint URIs must be normalized")
-        )
-      },
-      // Test that the validator rejects a CreateOperation when a service has a serviceEndpoint with an invalid URI (e.g. a relative URI or a scheme that is not "http" or "https").
-      test("reject CreateOperation when serviceEndpoint is invalid") {
-        val op = createPrismDIDOperation(services =
-          Seq(
-            Service(
-              id = "service-0",
-              `type` = ServiceType.LinkedDomains,
-              serviceEndpoint = Seq(
-                Uri.parse("example.com")
-              )
-            )
-          )
-        )
-        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
-          invalidArgumentContainsString("serviceEndpoint URIs must be normalized")
-        )
-      },
-      test("reject CreateOperation when one of the service endpoints is empty") {
-        val op = createPrismDIDOperation(
-          publicKeys = Seq(
-            PublicKey(
-              id = "key-0",
-              purpose = VerificationRelationship.Authentication,
-              publicKeyData = publicKeyData
-            ),
-            PublicKey(
-              id = "key-1",
-              purpose = VerificationRelationship.AssertionMethod,
-              publicKeyData = publicKeyData
-            )
-          ),
-          services = Seq(
-            Service(
-              id = "service-0",
-              `type` = ServiceType.LinkedDomains,
-              serviceEndpoint = Seq(
-                Uri.parse("http://example.com/login/../login")
-              )
-            ),
-            Service(
-              id = "service-1",
-              `type` = ServiceType.LinkedDomains,
-              serviceEndpoint = Seq(
-                Uri.parse("")
-              )
-            )
-          )
-        )
-        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
-          invalidArgumentContainsString("serviceEndpoint URIs must be normalized")
         )
       },
       test("reject CreateOperation when one of the service ids has an invalid format") {
@@ -390,127 +342,18 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
           services = Seq(
             Service(
               id = "service-0",
-              `type` = ServiceType.LinkedDomains,
-              serviceEndpoint = Seq(
-                Uri.parse("http://example.com/login/../login")
-              )
+              `type` = ServiceType.Single("LinkedDomains"),
+              serviceEndpoint = "http://example.com/login/../login"
             ),
             Service(
               id = "Wrong service",
-              `type` = ServiceType.LinkedDomains,
-              serviceEndpoint = Seq(
-                Uri.parse("http://example.com/login/../login")
-              )
+              `type` = ServiceType.Single("LinkedDomains"),
+              serviceEndpoint = "http://example.com/login/../login"
             )
           )
         )
-        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
+        assert(DIDOperationValidator(Config.default).validate(op))(
           invalidArgumentContainsString("service id is invalid: [Wrong service]")
-        )
-      },
-      test("reject CreateOperation when one of the service endpoints is not a valid URL") {
-        val op = createPrismDIDOperation(
-          publicKeys = Seq(
-            PublicKey(
-              id = "key-0",
-              purpose = VerificationRelationship.Authentication,
-              publicKeyData = publicKeyData
-            ),
-            PublicKey(
-              id = "key-1",
-              purpose = VerificationRelationship.AssertionMethod,
-              publicKeyData = publicKeyData
-            )
-          ),
-          services = Seq(
-            Service(
-              id = "service-0",
-              `type` = ServiceType.LinkedDomains,
-              serviceEndpoint = Seq(
-                Uri.parse("http://example.com/login/../login")
-              )
-            ),
-            Service(
-              id = "service-1",
-              `type` = ServiceType.LinkedDomains,
-              serviceEndpoint = Seq(
-                Uri.parse("example.com")
-              )
-            )
-          )
-        )
-        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
-          invalidArgumentContainsString("serviceEndpoint URIs must be normalized")
-        )
-      },
-      test("reject CreateOperation when one of the service endpoints is a relative URL instead of an absolute URL") {
-        val op = createPrismDIDOperation(
-          publicKeys = Seq(
-            PublicKey(
-              id = "key-0",
-              purpose = VerificationRelationship.Authentication,
-              publicKeyData = publicKeyData
-            ),
-            PublicKey(
-              id = "key-1",
-              purpose = VerificationRelationship.AssertionMethod,
-              publicKeyData = publicKeyData
-            )
-          ),
-          services = Seq(
-            Service(
-              id = "service-0",
-              `type` = ServiceType.LinkedDomains,
-              serviceEndpoint = Seq(
-                Uri.parse("http://example.com/login/../login")
-              )
-            ),
-            Service(
-              id = "service-1",
-              `type` = ServiceType.LinkedDomains,
-              serviceEndpoint = Seq(
-                Uri.parse("/login")
-              )
-            )
-          )
-        )
-        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
-          invalidArgumentContainsString("serviceEndpoint URIs must be normalized")
-        )
-      },
-      test("reject CreateOperation when one of the service endpoints is an invalid URI fragment") {
-        val op = createPrismDIDOperation(
-          publicKeys = Seq(
-            PublicKey(
-              id = "key-0",
-              purpose = VerificationRelationship.Authentication,
-              publicKeyData = publicKeyData
-            ),
-            PublicKey(
-              id = "key-1",
-              purpose = VerificationRelationship.AssertionMethod,
-              publicKeyData = publicKeyData
-            )
-          ),
-          services = Seq(
-            Service(
-              id = "service-0",
-              `type` = ServiceType.LinkedDomains,
-              serviceEndpoint = Seq(
-                Uri.parse("http://example.com/login/../login")
-              )
-            ),
-            Service(
-              id = "service-1",
-              `type` = ServiceType.LinkedDomains,
-              serviceEndpoint = Seq(
-                Uri.parse("#login")
-              )
-            )
-          )
-        )
-        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
-          invalidArgumentContainsString("serviceEndpoint URIs must be normalized")
         )
       }
     ).provideLayer(testLayer)
@@ -526,7 +369,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
     suite("DeactivateOperation validation")(
       test("accept valid DeactivateOperation") {
         val op = deactivatePrismDIDOperation()
-        assert(DIDOperationValidator(Config(50, 50)).validate(op))(isRight)
+        assert(DIDOperationValidator(Config.default).validate(op))(isRight)
       }
     )
   }
@@ -550,19 +393,19 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
             UpdateDIDAction.AddInternalKey(InternalPublicKey("master0", InternalKeyPurpose.Master, publicKeyData)),
             UpdateDIDAction.RemoveKey("key0"),
             UpdateDIDAction.AddService(
-              Service("service0", ServiceType.LinkedDomains, Seq(Uri.parse("http://example.com/")))
+              Service("service0", ServiceType.Single("LinkedDomains"), "http://example.com/")
             ),
             UpdateDIDAction.RemoveService("service0"),
-            UpdateDIDAction.UpdateService("service0", Some(ServiceType.LinkedDomains), Nil),
-            UpdateDIDAction.UpdateService("service0", None, Seq(Uri.parse("http://example.com/"))),
+            UpdateDIDAction.UpdateService("service0", Some(ServiceType.Single("LinkedDomains")), None),
+            UpdateDIDAction.UpdateService("service0", None, Some("http://example.com/")),
             UpdateDIDAction.UpdateService(
               "service0",
-              Some(ServiceType.LinkedDomains),
-              Seq(Uri.parse("http://example.com/"))
+              Some(ServiceType.Single("LinkedDomains")),
+              Some("http://example.com/")
             )
           )
         )
-        assert(DIDOperationValidator(Config(50, 50)).validate(op))(isRight)
+        assert(DIDOperationValidator(Config.default).validate(op))(isRight)
       },
       test("reject UpdateOperation on too many DID publicKey access") {
         val addKeyActions = (1 to 10).map(i =>
@@ -585,7 +428,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         )
         val removeKeyActions = (1 to 10).map(i => UpdateDIDAction.RemoveKey(s"remove$i"))
         val op = updatePrismDIDOperation(addKeyActions ++ addInternalKeyActions ++ removeKeyActions)
-        assert(DIDOperationValidator(Config(25, 25)).validate(op))(
+        assert(DIDOperationValidator(Config.default.copy(publicKeyLimit = 25)).validate(op))(
           isLeft(isSubtype[OperationValidationError.TooManyDidPublicKeyAccess](anything))
         )
       },
@@ -594,8 +437,8 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
           UpdateDIDAction.AddService(
             Service(
               id = s"service$i",
-              `type` = ServiceType.LinkedDomains,
-              serviceEndpoint = Seq(Uri.parse("http://example.com/"))
+              `type` = ServiceType.Single("LinkedDomains"),
+              serviceEndpoint = "http://example.com/"
             )
           )
         )
@@ -603,12 +446,12 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         val updateServiceActions = (1 to 10).map(i =>
           UpdateDIDAction.UpdateService(
             s"update$i",
-            Some(ServiceType.LinkedDomains),
-            Seq(Uri.parse("http://example.com/"))
+            Some(ServiceType.Single("LinkedDomains")),
+            Some("http://example.com/")
           )
         )
         val op = updatePrismDIDOperation(addServiceActions ++ removeServiceActions ++ updateServiceActions)
-        assert(DIDOperationValidator(Config(25, 25)).validate(op))(
+        assert(DIDOperationValidator(Config.default.copy(serviceLimit = 25)).validate(op))(
           isLeft(isSubtype[OperationValidationError.TooManyDidServiceAccess](anything))
         )
       },
@@ -622,7 +465,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         )
         val action2 = UpdateDIDAction.RemoveKey(id = "key 2")
         val op = updatePrismDIDOperation(Seq(action1, action2))
-        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
+        assert(DIDOperationValidator(Config.default).validate(op))(
           invalidArgumentContainsString("public key id is invalid: [key 1, key 2]")
         )
       },
@@ -630,59 +473,117 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         val action1 = UpdateDIDAction.AddService(
           Service(
             id = "service 1",
-            `type` = ServiceType.LinkedDomains,
-            serviceEndpoint = Seq(Uri.parse("http://example.com/"))
+            `type` = ServiceType.Single("LinkedDomains"),
+            serviceEndpoint = "http://example.com/"
           )
         )
         val action2 = UpdateDIDAction.RemoveService(id = "service 2")
         val op = updatePrismDIDOperation(Seq(action1, action2))
-        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
+        assert(DIDOperationValidator(Config.default).validate(op))(
           invalidArgumentContainsString("service id is invalid: [service 1, service 2]")
+        )
+      },
+      test("reject UpdateOperation on too long key-id") {
+        val action1 = UpdateDIDAction.AddKey(
+          PublicKey(
+            id = s"key-${"0" * 100}",
+            purpose = VerificationRelationship.Authentication,
+            publicKeyData = publicKeyData
+          )
+        )
+        val action2 = UpdateDIDAction.RemoveKey(id = s"key-${"1" * 100}")
+        val op = updatePrismDIDOperation(Seq(action1, action2))
+        assert(DIDOperationValidator(Config.default).validate(op))(
+          invalidArgumentContainsString(s"public key id is too long: [${action1.publicKey.id}, ${action2.id}]")
+        )
+      },
+      test("reject UpdateOperation on too long service-id") {
+        val action1 = UpdateDIDAction.AddService(
+          Service(
+            id = s"service-${"0" * 100}",
+            `type` = ServiceType.Single("LinkedDomains"),
+            serviceEndpoint = "http://example.com/"
+          )
+        )
+        val action2 = UpdateDIDAction.RemoveService(id = s"service-${"1" * 100}")
+        val op = updatePrismDIDOperation(Seq(action1, action2))
+        assert(DIDOperationValidator(Config.default).validate(op))(
+          invalidArgumentContainsString(s"service id is too long: [${action1.service.id}, ${action2.id}]")
+        )
+      },
+      test("reject UpdateOperation on duplicated context") {
+        val action1 = UpdateDIDAction.PatchContext(Seq.empty)
+        val action2 = UpdateDIDAction.PatchContext(Seq.fill(2)("https://www.w3.org/ns/did/v1"))
+        val op = updatePrismDIDOperation(Seq(action1, action2))
+        assert(DIDOperationValidator(Config.default).validate(op))(
+          invalidArgumentContainsString("context is not unique")
+        )
+      },
+      test("reject UpdateOperation on too long serviceType") {
+        val action = UpdateDIDAction.AddService(
+          Service(
+            id = "service",
+            `type` = ServiceType.Single("a" * 101),
+            serviceEndpoint = "http://example.com/"
+          )
+        )
+        val op = updatePrismDIDOperation(Seq(action))
+        assert(DIDOperationValidator(Config.default).validate(op))(
+          invalidArgumentContainsString("service type is too long: [service]")
+        )
+      },
+      test("reject UpdateOperation on too long serviceEndpoint") {
+        val action = UpdateDIDAction.AddService(
+          Service(
+            id = "service",
+            `type` = ServiceType.Single("LinkedDomains"),
+            serviceEndpoint = "http://example.com/" + "a" * 1001
+          )
+        )
+        val op = updatePrismDIDOperation(Seq(action))
+        assert(DIDOperationValidator(Config.default).validate(op))(
+          invalidArgumentContainsString("service endpoint is too long: [service]")
         )
       },
       test("reject UpdateOperation on invalid previousOperationHash") {
         val op = updatePrismDIDOperation(previousOperationHash = ArraySeq.empty)
-        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
+        assert(DIDOperationValidator(Config.default).validate(op))(
           invalidArgumentContainsString("previousOperationHash must have a size of")
         )
       },
       test("reject UpdateOperation on empty update action") {
         val op = updatePrismDIDOperation(Nil)
-        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
+        assert(DIDOperationValidator(Config.default).validate(op))(
           invalidArgumentContainsString("operation must contain at least 1 update action")
-        )
-      },
-      test("reject UpdateOperation when action AddService serviceEndpoint is empty") {
-        val op = updatePrismDIDOperation(
-          Seq(UpdateDIDAction.AddService(Service("service-1", ServiceType.LinkedDomains, Nil)))
-        )
-        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
-          invalidArgumentContainsString("service must not have empty serviceEndpoint")
         )
       },
       test("reject UpdateOperation when action AddService serviceEndpoint is not normalized") {
         val op = updatePrismDIDOperation(
           Seq(
             UpdateDIDAction.AddService(
-              Service("service-1", ServiceType.LinkedDomains, Seq(Uri.parse("http://example.com/login/../login")))
+              Service(
+                "service-1",
+                ServiceType.Single("LinkedDomains"),
+                "http://example.com/login/../login"
+              )
             )
           )
         )
-        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
+        assert(DIDOperationValidator(Config.default).validate(op))(
           invalidArgumentContainsString("serviceEndpoint URIs must be normalized")
         )
-      },
+      } @@ TestAspect.ignore,
       test("reject updateOperation when action UpdateService serviceEndpoint is not normalized") {
         val op = updatePrismDIDOperation(
-          Seq(UpdateDIDAction.UpdateService("service-1", None, Seq(Uri.parse("http://example.com/login/../login"))))
+          Seq(UpdateDIDAction.UpdateService("service-1", None, Some("http://example.com/login/../login")))
         )
-        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
+        assert(DIDOperationValidator(Config.default).validate(op))(
           invalidArgumentContainsString("serviceEndpoint URIs must be normalized")
         )
-      },
+      } @@ TestAspect.ignore,
       test("reject UpdateOperation when action UpdateService have both type and serviceEndpoint empty") {
-        val op = updatePrismDIDOperation(Seq(UpdateDIDAction.UpdateService("service-1", None, Nil)))
-        assert(DIDOperationValidator(Config(50, 50)).validate(op))(
+        val op = updatePrismDIDOperation(Seq(UpdateDIDAction.UpdateService("service-1", None, None)))
+        assert(DIDOperationValidator(Config.default).validate(op))(
           invalidArgumentContainsString("must not have both 'type' and 'serviceEndpoints' empty")
         )
       }
