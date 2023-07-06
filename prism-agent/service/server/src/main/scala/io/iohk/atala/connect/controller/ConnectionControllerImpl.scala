@@ -52,11 +52,10 @@ class ConnectionControllerImpl(
       thid: Option[String]
   )(implicit rc: RequestContext): IO[ErrorResponse, ConnectionsPage] = {
     val result = for {
-      connections <- service.getConnectionRecords()
-      filteredRecords = thid match
-        case None        => connections
-        case Some(value) => connections.filter(_.thid.toString == value) // this logic should be moved to the DB
-    } yield ConnectionsPage(contents = filteredRecords.map(Connection.fromDomain))
+      connections <- thid match
+        case None       => service.getConnectionRecords()
+        case Some(thid) => service.getConnectionRecordByThreadId(thid).map(_.toSeq)
+    } yield ConnectionsPage(contents = connections.map(Connection.fromDomain))
 
     result.mapError(toHttpError)
   }

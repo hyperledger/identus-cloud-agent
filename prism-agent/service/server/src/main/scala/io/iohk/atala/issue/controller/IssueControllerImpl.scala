@@ -54,17 +54,16 @@ class IssueControllerImpl(
       rc: RequestContext
   ): IO[ErrorResponse, IssueCredentialRecordPage] = {
     val result = for {
-      records <- credentialService.getIssueCredentialRecords
-      outcome = thid match
-        case None        => records
-        case Some(value) => records.filter(_.thid.value == value) // this logic should be moved to the DB
+      records <- thid match
+        case None       => credentialService.getIssueCredentialRecords
+        case Some(thid) => credentialService.getIssueCredentialRecordByThreadId(DidCommID(thid)).map(_.toSeq)
     } yield IssueCredentialRecordPage(
       self = "/issue-credentials/records",
       kind = "Collection",
       pageOf = "1",
       next = None,
       previous = None,
-      contents = (outcome map IssueCredentialRecord.fromDomain) // TODO - Tech Debt - Optimise this transformation - each time we get a list of things we iterate it once here
+      contents = (records map IssueCredentialRecord.fromDomain) // TODO - Tech Debt - Optimise this transformation - each time we get a list of things we iterate it once here
     )
     mapIssueErrors(result)
   }

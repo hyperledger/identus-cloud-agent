@@ -54,12 +54,11 @@ class PresentProofControllerImpl(
       rc: RequestContext
   ): IO[ErrorResponse, PresentationStatusPage] = {
     val result = for {
-      records <- presentationService.getPresentationRecords()
-      filteredRecords = thid match
-        case None        => records
-        case Some(value) => records.filter(_.thid.value == value) // this logic should be moved to the DB
+      records <- thid match
+        case None       => presentationService.getPresentationRecords()
+        case Some(thid) => presentationService.getPresentationRecordByThreadId(DidCommID(thid)).map(_.toSeq)
     } yield PresentationStatusPage(
-      filteredRecords.map(PresentationStatus.fromDomain)
+      records.map(PresentationStatus.fromDomain)
     )
 
     result.mapError(PresentProofController.toHttpError)

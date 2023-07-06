@@ -18,7 +18,7 @@ case class Connection(
     connectionId: UUID,
     @description(annotations.thid.description)
     @encodedExample(annotations.thid.example)
-    thid: UUID,
+    thid: String,
     @description(annotations.label.description)
     @encodedExample(annotations.label.example)
     label: Option[String] = None,
@@ -92,10 +92,10 @@ object Connection {
         )
 
     object thid
-        extends Annotation[UUID](
+        extends Annotation[String](
           description = "The unique identifier of the thread this connection record belongs to. " +
             "The value will identical on both sides of the connection (inviter and invitee)",
-          example = UUID.fromString("0527aea1-d131-3948-a34d-03af39aba8b4")
+          example = "0527aea1-d131-3948-a34d-03af39aba8b4"
         )
 
     object label
