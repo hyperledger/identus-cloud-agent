@@ -1,25 +1,24 @@
 package io.iohk.atala.agent.notification
-import io.iohk.atala.agent.notification.WebhookPublisher.given
+import io.iohk.atala.agent.notification.JsonEventEncoders.*
 import io.iohk.atala.agent.notification.WebhookPublisherError.{InvalidWebhookURL, UnexpectedError}
-import io.iohk.atala.agent.server.config.{AppConfig, WebhookPublisherConfig}
+import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.walletapi.model.ManagedDIDDetail
 import io.iohk.atala.connect.core.model.ConnectionRecord
 import io.iohk.atala.event.notification.{Event, EventConsumer, EventNotificationService}
 import io.iohk.atala.pollux.core.model.{IssueCredentialRecord, PresentationRecord}
 import zio.*
 import zio.http.*
-import zio.http.ZClient.ClientLive
-import zio.http.model.{Header, Headers, Method}
-import zio.json.JsonEncoder
-import zio.json._
-import io.iohk.atala.agent.notification.JsonEventEncoders._
+import zio.http.model.*
+import zio.json.*
 
-import java.net.{URI, URL}
+import java.net.URL
 
 class WebhookPublisher(appConfig: AppConfig, notificationService: EventNotificationService) {
 
   private val config = appConfig.agent.webhookPublisher
-  private val baseHeaders = config.apiKey.map(key => Headers.authorization(key)).getOrElse(Headers.empty)
+  private val baseHeaders =
+    config.apiKey.map(key => Headers.authorization(key)).getOrElse(Headers.empty) ++
+      Headers.contentType(HeaderValues.applicationJson)
 
   private val parallelism = config.parallelism match {
     case Some(p) if p < 1  => 1
