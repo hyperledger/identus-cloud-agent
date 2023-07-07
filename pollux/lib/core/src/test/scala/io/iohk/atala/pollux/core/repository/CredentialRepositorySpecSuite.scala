@@ -101,7 +101,7 @@ object CredentialRepositorySpecSuite {
         bRecord = issueCredentialRecord
         _ <- repo.createIssueCredentialRecord(aRecord)
         _ <- repo.createIssueCredentialRecord(bRecord)
-        records <- repo.getIssueCredentialRecords()
+        records <- repo.getIssueCredentialRecords().map(_._1)
       } yield {
         assertTrue(records.size == 2) &&
         assertTrue(records.contains(aRecord)) &&
@@ -116,7 +116,7 @@ object CredentialRepositorySpecSuite {
         _ <- repo.createIssueCredentialRecord(aRecord)
         _ <- repo.createIssueCredentialRecord(bRecord)
         count <- repo.deleteIssueCredentialRecord(aRecord.id)
-        records <- repo.getIssueCredentialRecords()
+        records <- repo.getIssueCredentialRecords().map(_._1)
       } yield {
         assertTrue(count == 1) &&
         assertTrue(records.size == 1) &&
@@ -131,7 +131,7 @@ object CredentialRepositorySpecSuite {
         _ <- repo.createIssueCredentialRecord(aRecord)
         _ <- repo.createIssueCredentialRecord(bRecord)
         count <- repo.deleteIssueCredentialRecord(DidCommID())
-        records <- repo.getIssueCredentialRecords()
+        records <- repo.getIssueCredentialRecords().map(_._1)
       } yield {
         assertTrue(count == 0) &&
         assertTrue(records.size == 2) &&
