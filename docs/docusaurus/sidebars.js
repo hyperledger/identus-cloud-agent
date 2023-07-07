@@ -66,7 +66,13 @@ const sidebars = {
         'secrets/seed-generation'
       ]
     },
-    'webhooks/webhook'
+    {
+      type: 'category',
+      label: 'Webhooks',
+      items: [
+        'webhooks/webhook',
+      ]
+    }
   ]
 }
 

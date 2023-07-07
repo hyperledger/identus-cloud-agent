@@ -1,4 +1,4 @@
-# Webhook Notifications in PRISM Agent
+# Webhook Notifications
 
 ## Introduction
 
