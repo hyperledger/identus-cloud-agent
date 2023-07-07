@@ -31,12 +31,15 @@ It has an important implication on how the operation lineage is determined.
 
 PRISM agent allows the DID Controller to update the DID easily. This update mechanism is implementation specific and links the DID update-operation from the last confirmed operation observed on the blockchain.
 
-When updating a DID, it takes time for the update to be confirmed on the blockchain.
-If the DID Controller updates the DID on the PRISM agent without waiting for the previous update
-to be confirmed, it creates a fork in the sequence of updates, which goes against the protocol.
-This puts the subsequent update at risk of being rejected.
-However, the PRISM agent has a mechanism to prevent this issue by rejecting multiple updates
-submitted by the same agent while previous updates are still in progress.
+When updating a DID, there is a waiting period for the update to be confirmed on the blockchain.
+If the DID Controller updates the DID before the previous update is confirmed,
+it can create a situation where the sequence of updates splits into two separate paths,
+which is not allowed according to the protocol. This happens because the PRISM agent connects
+the update operation to the latest confirmed update. Once the pending update operation is confirmed,
+any other pending operation that does not link to the latest confirmed operation will be discarded.
+The subsequent updates continuing from that operation will also be discarded.
+However, the PRISM agent has a safeguard in place to prevent this issue by rejecting
+multiple updates submitted by the same agent while previous updates are still being processed.
 
 Please refer to the `SECURE_DEPTH` parameter in [PRISM method - protocol parameters](https://github.com/input-output-hk/prism-did-method-spec/blob/main/w3c-spec/PRISM-method.md#versioning-and-protocol-parameters) for the number of confirmation blocks.
 At the time of writing, this number is 112 blocks.
