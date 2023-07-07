@@ -171,7 +171,10 @@ object MockCredentialService extends Mock[CredentialService] {
       override def extractIdFromCredential(credential: W3cCredentialPayload): Option[DidCommID] =
         ???
 
-      override def getIssueCredentialRecords: IO[CredentialServiceError, Seq[IssueCredentialRecord]] =
+      override def getIssueCredentialRecords(
+          offset: Option[Int] = None,
+          limit: Option[Int] = None
+      ): IO[CredentialServiceError, (Seq[IssueCredentialRecord], Int)] =
         ???
 
       override def getIssueCredentialRecordsByStates(

@@ -1,8 +1,10 @@
 package io.iohk.atala.issue.controller
 
 import io.iohk.atala.agent.server.ControllerHelper
+import io.iohk.atala.api.http.model.CollectionStats
 import io.iohk.atala.api.http.model.PaginationInput
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
+import io.iohk.atala.api.util.PaginationUtils
 import io.iohk.atala.connect.controller.ConnectionController
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.connect.core.service.ConnectionService
@@ -48,22 +50,30 @@ class IssueControllerImpl(
     mapIssueErrors(result)
   }
 
-  // TODO - Tech Debt - Do not filter this in memory - need to filter at the database level
-  // TODO - Tech Debt - Implement pagination
   override def getCredentialRecords(paginationInput: PaginationInput, thid: Option[String])(implicit
       rc: RequestContext
   ): IO[ErrorResponse, IssueCredentialRecordPage] = {
+    val uri = rc.request.uri
+    val pagination = paginationInput.toPagination
     val result = for {
-      records <- thid match
-        case None       => credentialService.getIssueCredentialRecords
-        case Some(thid) => credentialService.getIssueCredentialRecordByThreadId(DidCommID(thid)).map(_.toSeq)
+      pageResult <- thid match
+        case None =>
+          credentialService
+            .getIssueCredentialRecords(offset = Some(pagination.offset), limit = Some(pagination.limit))
+        case Some(thid) =>
+          credentialService
+            .getIssueCredentialRecordByThreadId(DidCommID(thid))
+            .map(_.toSeq)
+            .map(records => records -> records.length)
+      (records, totalCount) = pageResult
+      stats = CollectionStats(totalCount = totalCount, filteredCount = totalCount)
     } yield IssueCredentialRecordPage(
-      self = "/issue-credentials/records",
+      self = uri.toString(),
       kind = "Collection",
-      pageOf = "1",
-      next = None,
-      previous = None,
-      contents = (records map IssueCredentialRecord.fromDomain) // TODO - Tech Debt - Optimise this transformation - each time we get a list of things we iterate it once here
+      pageOf = PaginationUtils.composePageOfUri(uri).toString,
+      next = PaginationUtils.composeNextUri(uri, records, pagination, stats).map(_.toString),
+      previous = PaginationUtils.composePreviousUri(uri, records, pagination, stats).map(_.toString),
+      contents = (records map IssueCredentialRecord.fromDomain)
     )
     mapIssueErrors(result)
   }

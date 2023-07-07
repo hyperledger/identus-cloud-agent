@@ -1,4 +1,5 @@
 package io.iohk.atala.pollux.core.service
+
 import io.iohk.atala.pollux.core.service.URIDereferencerError.{ConnectionError, ResourceNotFound, UnexpectedError}
 import zio.http.*
 import zio.http.model.*

@@ -28,7 +28,7 @@ inThisBuild(
       "-unchecked",
       "-Dquill.macro.log=false", // disable quill macro logs
       "-Wunused:all",
-      "-Wconf:any:warning", // TODO: change unused imports to errors, Wconf configuration string is different from scala 2, figure out how!
+      "-Wconf:any:warning" // TODO: change unused imports to errors, Wconf configuration string is different from scala 2, figure out how!
       // TODO "-feature",
       // TODO "-Xfatal-warnings",
       // TODO "-Yexplicit-nulls",
@@ -48,14 +48,14 @@ lazy val V = new {
   val zioJson = "0.3.0"
   val zioHttp = "0.0.3"
   val zioCatsInterop = "3.3.0"
-  val zioMetrics = "2.0.6"
+  val zioMetricsConnector = "2.1.0"
   val zioMock = "1.0.0-RC10"
 
   // https://mvnrepository.com/artifact/io.circe/circe-core
   val circe = "0.14.2"
 
-  // val tapir = "1.0.3"
-  val tapir = "1.2.3"
+  val tapir = "1.6.0"
+  val tapirLegacy = "1.2.3" // TODO: remove
 
   val typesafeConfig = "1.4.2"
   val protobuf = "3.1.9"
@@ -63,7 +63,7 @@ lazy val V = new {
 
   val doobie = "1.0.0-RC2"
   val quill = "4.6.0"
-  val iris = "0.1.0" // TODO REMOVE
+  val iris = "0.1.0" // TODO: remove
   val flyway = "9.8.3"
   val logback = "1.4.5"
 
@@ -80,6 +80,7 @@ lazy val V = new {
   // https://github.com/jopenlibs/vault-java-driver/issues/36
   // v5.4.0 is not available on Maven yet.
   val vaultDriver = "5.3.0"
+  val micrometer = "1.11.1"
 }
 
 /** Dependencies */
@@ -91,7 +92,11 @@ lazy val D = new {
   val zioJson: ModuleID = "dev.zio" %% "zio-json" % V.zioJson
   val zioHttp: ModuleID = "dev.zio" %% "zio-http" % V.zioHttp
   val zioCatsInterop: ModuleID = "dev.zio" %% "zio-interop-cats" % V.zioCatsInterop
-  val zioMetrics: ModuleID = "dev.zio" %% "zio-metrics-connectors" % V.zioMetrics
+  val zioMetricsConnectorMicrometer: ModuleID = "dev.zio" %% "zio-metrics-connectors-micrometer" % V.zioMetricsConnector
+  val tapirPrometheusMetrics: ModuleID = "com.softwaremill.sttp.tapir" %% "tapir-prometheus-metrics" % V.tapir
+  val micrometer: ModuleID =  "io.micrometer" % "micrometer-registry-prometheus" % V.micrometer
+  val micrometerPrometheusRegistry =  "io.micrometer" % "micrometer-core" % V.micrometer
+
 
   val zioConfig: ModuleID = "dev.zio" %% "zio-config" % V.zioConfig
   val zioConfigMagnolia: ModuleID = "dev.zio" %% "zio-config-magnolia" % V.zioConfig
@@ -105,7 +110,6 @@ lazy val D = new {
   val didcommx: ModuleID = "org.didcommx" % "didcomm" % "0.3.1"
   val peerDidcommx: ModuleID = "org.didcommx" % "peerdid" % "0.3.0"
   val didScala: ModuleID = "app.fmgp" %% "did" % "0.0.0+113-61efa271-SNAPSHOT"
-
   // https://mvnrepository.com/artifact/com.nimbusds/nimbus-jose-jwt/9.16-preview.1
   val jwk: ModuleID = "com.nimbusds" % "nimbus-jose-jwt" % "9.25.4"
 
@@ -299,7 +303,9 @@ lazy val D_PrismAgent = new {
   val tapirSwaggerUiBundle = "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % V.tapir
   val tapirJsonZio = "com.softwaremill.sttp.tapir" %% "tapir-json-zio" % V.tapir
 
-  val tapirZioHttpServer = "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server" % V.tapir
+  // FIXME: using newest tapir (1.6.0) for this dependency needs refactoring, because it has transitive dependency on zio-http 3.0.0,
+  //   if used all imports for zio.http will use ne newest version, which will break the compilation
+  val tapirZioHttpServer = "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server" % V.tapirLegacy
   val tapirHttp4sServerZio = "com.softwaremill.sttp.tapir" %% "tapir-http4s-server-zio" % V.tapir
   val http4sBlazeServer = "org.http4s" %% "http4s-blaze-server" % "0.23.12"
 
@@ -331,7 +337,10 @@ lazy val D_PrismAgent = new {
     D.zioJson,
     logback,
     D.zioHttp,
-    D.zioMetrics,
+    D.zioMetricsConnectorMicrometer,
+    D.tapirPrometheusMetrics,
+    D.micrometer,
+    D.micrometerPrometheusRegistry
   )
   val bouncyDependencies: Seq[ModuleID] = Seq(bouncyBcpkix, bouncyBcprov)
   val tapirDependencies: Seq[ModuleID] =

@@ -3,7 +3,11 @@ package io.iohk.atala.agent.server
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
 import io.iohk.atala.agent.server.http.ZioHttpClient
 import io.iohk.atala.agent.server.sql.Migrations as AgentMigrations
-import io.iohk.atala.agent.walletapi.service.{ManagedDIDService, ManagedDIDServiceWithEventNotificationImpl}
+import io.iohk.atala.agent.walletapi.service.{
+  ManagedDIDService,
+  ManagedDIDServiceImpl,
+  ManagedDIDServiceWithEventNotificationImpl
+}
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDNonSecretStorage
 import io.iohk.atala.castor.controller.{DIDControllerImpl, DIDRegistrarControllerImpl}
 import io.iohk.atala.castor.core.service.DIDServiceImpl
@@ -30,10 +34,11 @@ import io.iohk.atala.pollux.sql.repository.{
 import io.iohk.atala.presentproof.controller.PresentProofControllerImpl
 import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.system.controller.SystemControllerImpl
+import io.micrometer.prometheus.{PrometheusConfig, PrometheusMeterRegistry}
 import zio.*
 import zio.http.Client
-import zio.metrics.connectors.prometheus.PrometheusPublisher
-import zio.metrics.connectors.{MetricsConfig, prometheus}
+import zio.metrics.connectors.micrometer
+import zio.metrics.connectors.micrometer.MicrometerConfig
 import zio.metrics.jvm.DefaultJvmMetrics
 
 import java.security.Security
@@ -41,7 +46,6 @@ import java.security.Security
 object MainApp extends ZIOAppDefault {
 
   Security.insertProviderAt(BouncyCastleProviderSingleton.getInstance(), 2)
-
   def didCommAgentLayer(didCommServiceUrl: String): ZLayer[ManagedDIDService, Nothing, DidAgent] = {
     val aux = for {
       managedDIDService <- ZIO.service[ManagedDIDService]
@@ -95,11 +99,6 @@ object MainApp extends ZIOAppDefault {
 
       _ <- migrations
 
-      /** AppConfig & SystemController & PresentProofController & DIDRegistrarController & DIDController &
-        * IssueController & ConnectionController & VerificationPolicyController & CredentialSchemaController &
-        * ManagedDIDService
-        */
-
       app <- PrismAgentApp
         .run(didCommServicePort)
         .provide(
@@ -111,9 +110,9 @@ object MainApp extends ZIOAppDefault {
           // observability
           DefaultJvmMetrics.live.unit,
           SystemControllerImpl.layer,
-          ZLayer.succeed(MetricsConfig(5.seconds)),
-          prometheus.prometheusLayer,
-          prometheus.publisherLayer,
+          ZLayer.succeed(PrometheusMeterRegistry(PrometheusConfig.DEFAULT)),
+          ZLayer.succeed(MicrometerConfig.default),
+          micrometer.micrometerLayer,
           // controller
           ConnectionControllerImpl.layer,
           CredentialSchemaControllerImpl.layer,
