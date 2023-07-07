@@ -60,7 +60,6 @@ class IssueControllerImpl(
         case None =>
           credentialService
             .getIssueCredentialRecords(offset = Some(pagination.offset), limit = Some(pagination.limit))
-            .map(_ -> 1000) // TODO: use actual count
         case Some(thid) =>
           credentialService
             .getIssueCredentialRecordByThreadId(DidCommID(thid))

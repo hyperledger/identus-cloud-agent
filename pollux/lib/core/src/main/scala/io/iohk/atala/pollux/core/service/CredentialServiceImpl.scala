@@ -50,11 +50,10 @@ private class CredentialServiceImpl(
   override def getIssueCredentialRecords(
       offset: Option[Int],
       limit: Option[Int]
-  ): IO[CredentialServiceError, Seq[IssueCredentialRecord]] = {
-    // TODO: implement pagination at repo level
+  ): IO[CredentialServiceError, (Seq[IssueCredentialRecord], Int)] = {
     for {
       records <- credentialRepository
-        .getIssueCredentialRecords()
+        .getIssueCredentialRecords(offset = offset, limit = limit)
         .mapError(RepositoryError.apply)
     } yield records
   }

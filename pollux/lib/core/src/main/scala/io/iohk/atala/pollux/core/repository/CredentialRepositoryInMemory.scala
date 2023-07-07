@@ -56,10 +56,12 @@ class CredentialRepositoryInMemory(
 
   override def getIssueCredentialRecords(
       ignoreWithZeroRetries: Boolean = true,
-  ): Task[Seq[IssueCredentialRecord]] = {
+      offset: Option[Int],
+      limit: Option[Int]
+  ): Task[(Seq[IssueCredentialRecord], Int)] = {
     for {
       store <- storeRef.get
-    } yield store.values.toSeq
+    } yield store.values.toSeq -> store.values.size
   }
 
   override def updateCredentialRecordProtocolState(
