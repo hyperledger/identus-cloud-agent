@@ -65,7 +65,8 @@ const sidebars = {
         'secrets/operation',
         'secrets/seed-generation'
       ]
-    }
+    },
+    'webhooks/webhook'
   ]
 }
 
