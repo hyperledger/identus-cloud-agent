@@ -108,6 +108,47 @@ object CredentialRepositorySpecSuite {
         assertTrue(records.contains(bRecord))
       }
     },
+    test("getIssuanceCredentialRecord returns records with offset") {
+      for {
+        repo <- ZIO.service[CredentialRepository[Task]]
+        aRecord = issueCredentialRecord
+        bRecord = issueCredentialRecord
+        _ <- repo.createIssueCredentialRecord(aRecord)
+        _ <- repo.createIssueCredentialRecord(bRecord)
+        records <- repo.getIssueCredentialRecords(offset = Some(1)).map(_._1)
+      } yield {
+        assertTrue(records.size == 1) &&
+        assertTrue(records.contains(bRecord))
+      }
+    },
+    test("getIssuanceCredentialRecord returns records with limit") {
+      for {
+        repo <- ZIO.service[CredentialRepository[Task]]
+        aRecord = issueCredentialRecord
+        bRecord = issueCredentialRecord
+        _ <- repo.createIssueCredentialRecord(aRecord)
+        _ <- repo.createIssueCredentialRecord(bRecord)
+        records <- repo.getIssueCredentialRecords(limit = Some(1)).map(_._1)
+      } yield {
+        assertTrue(records.size == 1) &&
+        assertTrue(records.contains(aRecord))
+      }
+    },
+    test("getIssuanceCredentialRecord returns records with offset and limit") {
+      for {
+        repo <- ZIO.service[CredentialRepository[Task]]
+        aRecord = issueCredentialRecord
+        bRecord = issueCredentialRecord
+        cRecord = issueCredentialRecord
+        _ <- repo.createIssueCredentialRecord(aRecord)
+        _ <- repo.createIssueCredentialRecord(bRecord)
+        _ <- repo.createIssueCredentialRecord(cRecord)
+        records <- repo.getIssueCredentialRecords(offset = Some(1), limit = Some(1)).map(_._1)
+      } yield {
+        assertTrue(records.size == 1) &&
+        assertTrue(records.contains(bRecord))
+      }
+    },
     test("deleteIssueCredentialRecord deletes an exsiting record") {
       for {
         repo <- ZIO.service[CredentialRepository[Task]]

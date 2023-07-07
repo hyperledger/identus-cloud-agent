@@ -61,7 +61,8 @@ class CredentialRepositoryInMemory(
   ): Task[(Seq[IssueCredentialRecord], Int)] = {
     for {
       store <- storeRef.get
-    } yield store.values.toSeq -> store.values.size
+      paginated = store.values.toSeq.drop(offset.getOrElse(0)).take(limit.getOrElse(Int.MaxValue))
+    } yield paginated -> store.values.size
   }
 
   override def updateCredentialRecordProtocolState(
