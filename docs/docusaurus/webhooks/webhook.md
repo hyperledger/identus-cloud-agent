@@ -1,4 +1,4 @@
-# Getting Started with Webhook Notifications in PRISM Agent
+# Webhook Notifications in PRISM Agent
 
 ## Introduction
 
@@ -6,16 +6,16 @@ Welcome to the tutorial on webhook notifications in PRISM Agent. In this tutoria
 notifications can enhance your experience with PRISM Agent by providing real-time updates on events. By leveraging
 webhook notifications, you can stay informed about important changes happening within the agent.
 
-## Section 1: Understanding Webhook Notifications
+## Understanding Webhook Notifications
 
-### 1.1 What are Webhooks?
+### What are Webhooks?
 
 Webhooks enable real-time communication between applications by sending HTTP requests containing event data to specified
 endpoints (webhook URLs) when events occur. They establish a direct communication channel, allowing applications to
 receive instant updates and respond in a timely manner, promoting efficient integration between event-driven
 systems.
 
-### 1.2 Purpose of Webhook Notifications in PRISM Agent
+### Purpose of Webhook Notifications in PRISM Agent
 
 Webhook notifications in PRISM Agent serve as a vital feature, enabling you to receive timely updates on various events
 occurring within the agent. Webhooks allow you to receive HTTP requests containing event details at a specified
@@ -27,9 +27,9 @@ change during the execution of these protocols.
 By leveraging webhooks, you can integrate PRISM Agent seamlessly into your applications and systems. You can track and
 monitor the progress of the main flows, receiving timely updates about changes and events.
 
-## Section 2: Configuring the Webhook Feature
+## Configuring the Webhook Feature
 
-### 2.1 Enabling the Webhook Feature
+### Enabling the Webhook Feature
 
 PRISM Agent uses the following environment variables to manage webhook notifications:
 
@@ -38,7 +38,7 @@ PRISM Agent uses the following environment variables to manage webhook notificat
 | `WEBHOOK_URL`     | The webhook endpoint URL where the notifications will be sent            | null    |
 | `WEBHOOK_API_KEY` | The optional API key (bearer token) to use as the `Authorization` header | `vault` |
 
-### 2.2 Securing the Webhook Endpoint
+### Securing the Webhook Endpoint
 
 It is essential to secure the webhook endpoint to protect the integrity and confidentiality of the event data. Consider
 the following best practices when securing your webhook endpoint:
@@ -52,9 +52,9 @@ configured, the token will be included in the `Authorization` header of the HTTP
 webhook endpoint. You can configure this bearer token by setting the value of the `WEBHOOK_API_KEY` environment
 variable.
 
-## Section 3: Event Format and Types
+## Event Format and Types
 
-### 3.1 Event Format
+### Event Format
 
 Webhook notifications from PRISM Agent are sent as JSON payloads in the HTTP requests.
 
@@ -104,7 +104,7 @@ Here is an example of a webhook notification event related to a connection flow 
 }
 ```
 
-### 3.2 Common Event Types
+### Common Event Types
 
 PRISM Agent sends webhook notifications for events related to protocol state changes in
 the [Connect](../connections/connection.md), [Issue](../credentials/issue.md),
@@ -125,9 +125,9 @@ include:
   the [presentation resource](https://docs.atalaprism.io/agent-api/#tag/Present-Proof/operation/getPresentation) for an
   exhaustive list of states.
 
-## Section 4: Processing Webhook Notifications
+## Processing Webhook Notifications
 
-### 4.1 Handling Incoming Webhook Requests
+### Handling Incoming Webhook Requests
 
 To handle incoming webhook notifications from PRISM Agent in your application, follow these general steps:
 
@@ -138,7 +138,7 @@ To handle incoming webhook notifications from PRISM Agent in your application, f
    the response status code should be `>= 200` and `< 300`. Any other response status code will lead to a new attempt
    from the PRISM Agent.
 
-### 4.2 Error Handling and Retry Mechanisms
+### Error Handling and Retry Mechanisms
 
 When working with webhook notifications in PRISM Agent, it is important to consider error handling and retry mechanisms.
 In case of failed webhook notifications or errors, PRISM Agent employs an automatic retry mechanism to ensure delivery.
