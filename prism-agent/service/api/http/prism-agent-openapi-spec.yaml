@@ -1992,6 +1992,21 @@ components:
           type: string
           description: The current state of the issue credential protocol execution.
           example: OfferPending
+          enum:
+            - OfferPending
+            - OfferSent
+            - OfferReceived
+            - RequestPending
+            - RequestGenerated
+            - RequestSent
+            - RequestReceived
+            - CredentialPending
+            - CredentialGenerated
+            - CredentialSent
+            - CredentialReceived
+            - ProblemReportPending
+            - ProblemReportSent
+            - ProblemReportReceived
         jwtCredential:
           type: string
           description: The base64-encoded JWT verifiable credential that has been
@@ -2140,6 +2155,7 @@ components:
             - PresentationSent
             - PresentationReceived
             - PresentationVerified
+            - PresentationVerificationFailed
             - PresentationAccepted
             - PresentationRejected
             - ProblemReportPending
