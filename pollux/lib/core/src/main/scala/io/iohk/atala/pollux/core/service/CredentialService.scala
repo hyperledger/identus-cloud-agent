@@ -58,7 +58,10 @@ trait CredentialService {
       issuingDID: Option[CanonicalPrismDID]
   ): IO[CredentialServiceError, IssueCredentialRecord]
 
-  def getIssueCredentialRecords: IO[CredentialServiceError, Seq[IssueCredentialRecord]]
+  def getIssueCredentialRecords(
+      offset: Option[Int] = None,
+      limit: Option[Int] = None
+  ): IO[CredentialServiceError, Seq[IssueCredentialRecord]]
 
   def getIssueCredentialRecordsByStates(
       ignoreWithZeroRetries: Boolean,
