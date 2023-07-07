@@ -219,7 +219,7 @@ object CredentialServiceImplSpec extends ZIOSpecDefault {
           svc <- ZIO.service[CredentialService]
           aRecord <- svc.createRecord()
           bRecord <- svc.createRecord()
-          records <- svc.getIssueCredentialRecords
+          records <- svc.getIssueCredentialRecords().map(_._1)
         } yield {
           assertTrue(records.size == 2) &&
           assertTrue(records.contains(aRecord)) &&

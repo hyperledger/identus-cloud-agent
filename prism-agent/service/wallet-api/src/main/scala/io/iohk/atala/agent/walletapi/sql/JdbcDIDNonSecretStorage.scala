@@ -277,13 +277,17 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
         .query[DIDStateRow]
         .to[List]
 
-    for {
-      totalCount <- countCxnIO.transact(xa)
-      dids <- didsCxnIO
-        .transact(xa)
-        .map(_.map(row => row.toDomain.map(row.did -> _)))
-        .flatMap(ls => ZIO.foreach(ls)(ZIO.fromTry[(PrismDID, ManagedDIDState)](_)))
-    } yield (dids, totalCount)
+    val effect = for {
+      totalCount <- countCxnIO
+      rows <- didsCxnIO
+    } yield (rows, totalCount)
+
+    effect
+      .transact(xa)
+      .flatMap { case (rows, totalCount) =>
+        val results = rows.map(row => row.toDomain.map(row.did -> _))
+        ZIO.foreach(results)(ZIO.fromTry).map(_ -> totalCount)
+      }
   }
 
   override def insertDIDUpdateLineage(did: PrismDID, updateLineage: DIDUpdateLineage): Task[Unit] = {

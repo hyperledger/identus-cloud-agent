@@ -10,8 +10,10 @@ import io.iohk.atala.pollux.core.model.IssueCredentialRecord.ProtocolState
 trait CredentialRepository[F[_]] {
   def createIssueCredentialRecord(record: IssueCredentialRecord): F[Int]
   def getIssueCredentialRecords(
-      ignoreWithZeroRetries: Boolean = true
-  ): F[Seq[IssueCredentialRecord]]
+      ignoreWithZeroRetries: Boolean = true,
+      offset: Option[Int] = None,
+      limit: Option[Int] = None
+  ): F[(Seq[IssueCredentialRecord], Int)]
   def getIssueCredentialRecord(recordId: DidCommID): F[Option[IssueCredentialRecord]]
   def getIssueCredentialRecordsByStates(
       ignoreWithZeroRetries: Boolean,
