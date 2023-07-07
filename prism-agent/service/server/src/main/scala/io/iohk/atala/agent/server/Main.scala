@@ -3,42 +3,43 @@ package io.iohk.atala.agent.server
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
 import io.iohk.atala.agent.server.http.ZioHttpClient
 import io.iohk.atala.agent.server.sql.Migrations as AgentMigrations
-import io.iohk.atala.agent.walletapi.service.ManagedDIDService
-import io.iohk.atala.agent.walletapi.service.ManagedDIDServiceImpl
+import io.iohk.atala.agent.walletapi.service.{ManagedDIDService, ManagedDIDServiceImpl}
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDNonSecretStorage
 import io.iohk.atala.castor.controller.{DIDControllerImpl, DIDRegistrarControllerImpl}
 import io.iohk.atala.castor.core.service.DIDServiceImpl
 import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.connect.controller.ConnectionControllerImpl
 import io.iohk.atala.connect.core.service.ConnectionServiceImpl
-import io.iohk.atala.connect.sql.repository.JdbcConnectionRepository
-import io.iohk.atala.connect.sql.repository.Migrations as ConnectMigrations
+import io.iohk.atala.connect.sql.repository.{JdbcConnectionRepository, Migrations as ConnectMigrations}
 import io.iohk.atala.issue.controller.IssueControllerImpl
 import io.iohk.atala.mercury.*
-import io.iohk.atala.pollux.core.service.CredentialServiceImpl
-import io.iohk.atala.pollux.core.service.PresentationServiceImpl
-import io.iohk.atala.pollux.core.service.VerificationPolicyServiceImpl
-import io.iohk.atala.pollux.core.service.{CredentialSchemaServiceImpl, URIDereferencer, HttpURIDereferencerImpl}
-import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaController
-import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaControllerImpl
-import io.iohk.atala.pollux.credentialschema.controller.VerificationPolicyControllerImpl
-import io.iohk.atala.pollux.sql.repository.JdbcCredentialRepository
-import io.iohk.atala.pollux.sql.repository.JdbcPresentationRepository
-import io.iohk.atala.pollux.sql.repository.JdbcVerificationPolicyRepository
-import io.iohk.atala.pollux.sql.repository.{JdbcCredentialSchemaRepository, Migrations as PolluxMigrations}
+import io.iohk.atala.pollux.core.service.*
+import io.iohk.atala.pollux.credentialschema.controller.{
+  CredentialSchemaController,
+  CredentialSchemaControllerImpl,
+  VerificationPolicyControllerImpl
+}
+import io.iohk.atala.pollux.sql.repository.{
+  JdbcCredentialRepository,
+  JdbcCredentialSchemaRepository,
+  JdbcPresentationRepository,
+  JdbcVerificationPolicyRepository,
+  Migrations as PolluxMigrations
+}
 import io.iohk.atala.presentproof.controller.PresentProofControllerImpl
 import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.system.controller.SystemControllerImpl
-import java.security.Security
+import io.micrometer.prometheus.{PrometheusConfig, PrometheusMeterRegistry}
 import zio.*
-import zio.metrics.connectors.prometheus.PrometheusPublisher
-import zio.metrics.connectors.{MetricsConfig, prometheus}
+import zio.metrics.connectors.micrometer
+import zio.metrics.connectors.micrometer.MicrometerConfig
 import zio.metrics.jvm.DefaultJvmMetrics
+
+import java.security.Security
 
 object MainApp extends ZIOAppDefault {
 
   Security.insertProviderAt(BouncyCastleProviderSingleton.getInstance(), 2)
-
   def didCommAgentLayer(didCommServiceUrl: String): ZLayer[ManagedDIDService, Nothing, DidAgent] = {
     val aux = for {
       managedDIDService <- ZIO.service[ManagedDIDService]
@@ -92,11 +93,6 @@ object MainApp extends ZIOAppDefault {
 
       _ <- migrations
 
-      /** AppConfig & SystemController & PresentProofController & DIDRegistrarController & DIDController &
-        * IssueController & ConnectionController & VerificationPolicyController & CredentialSchemaController &
-        * ManagedDIDService
-        */
-
       app <- PrismAgentApp
         .run(didCommServicePort)
         .provide(
@@ -108,9 +104,9 @@ object MainApp extends ZIOAppDefault {
           // observability
           DefaultJvmMetrics.live.unit,
           SystemControllerImpl.layer,
-          ZLayer.succeed(MetricsConfig(5.seconds)),
-          prometheus.prometheusLayer,
-          prometheus.publisherLayer,
+          ZLayer.succeed(PrometheusMeterRegistry(PrometheusConfig.DEFAULT)),
+          ZLayer.succeed(MicrometerConfig.default),
+          micrometer.micrometerLayer,
           // controller
           ConnectionControllerImpl.layer,
           CredentialSchemaControllerImpl.layer,

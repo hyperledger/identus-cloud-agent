@@ -18,7 +18,7 @@ import io.iohk.atala.pollux.core.service.CredentialService
 import io.iohk.atala.pollux.core.service.PresentationService
 import io.iohk.atala.pollux.credentialschema.SchemaRegistryServerEndpoints
 import io.iohk.atala.pollux.credentialschema.VerificationPolicyServerEndpoints
-import io.iohk.atala.pollux.vc.jwt.{DidResolver as JwtDidResolver}
+import io.iohk.atala.pollux.vc.jwt.DidResolver as JwtDidResolver
 import io.iohk.atala.presentproof.controller.PresentProofServerEndpoints
 import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.system.controller.SystemServerEndpoints
@@ -78,10 +78,6 @@ object PrismAgentApp {
 
 }
 
-/** AppConfig & SystemController & PresentProofController & DIDRegistrarController & DIDController & IssueController &
-  * ConnectionController & VerificationPolicyController & CredentialSchemaController
-  */
-
 object AgentHttpServer {
   def run =
     for {
@@ -103,7 +99,8 @@ object AgentHttpServer {
           allPresentProofEndpoints ++
           allSystemEndpoints
       )
+      server <- ZHttp4sBlazeServer.make
       appConfig <- ZIO.service[AppConfig]
-      _ <- ZHttp4sBlazeServer.start(allEndpoints, port = appConfig.agent.httpEndpoint.http.port)
+      _ <- server.start(allEndpoints, port = appConfig.agent.httpEndpoint.http.port).debug
     } yield ()
 }

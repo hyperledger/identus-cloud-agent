@@ -6,17 +6,16 @@ import sttp.client3.{DeserializationException, Response, UriContext}
 import sttp.tapir.server.interceptor.CustomiseInterceptors
 import sttp.tapir.server.stub.TapirStubInterpreter
 import sttp.tapir.ztapir.RIOMonadError
-import zio.metrics.connectors.prometheus
+import zio.metrics.connectors.micrometer
 import zio.*
-import zio.metrics.connectors.prometheus.PrometheusPublisher
-import zio.metrics.connectors.MetricsConfig
 import zio.metrics.jvm.DefaultJvmMetrics
 import io.iohk.atala.system.controller.http.HealthInfo
-import zio.durationInt
 import io.iohk.atala.agent.server.SystemModule.configLayer
 import io.iohk.atala.agent.server.config.AppConfig
 import sttp.monad.MonadError
+import zio.metrics.connectors.micrometer.MicrometerConfig
 import zio.test.ZIOSpecDefault
+import io.micrometer.prometheus.{PrometheusConfig, PrometheusMeterRegistry}
 
 trait SystemControllerTestTools {
   self: ZIOSpecDefault =>
@@ -28,11 +27,11 @@ trait SystemControllerTestTools {
       Either[String, String]
     ]
 
-  private val controllerLayer = prometheus.publisherLayer >+>
+  private val controllerLayer = ZLayer.succeed(PrometheusMeterRegistry(PrometheusConfig.DEFAULT)) >+>
     configLayer >+>
-    ZLayer.succeed(MetricsConfig(1.seconds)) >+>
+    ZLayer.succeed(MicrometerConfig.default) >+>
     DefaultJvmMetrics.live.unit >+>
-    prometheus.prometheusLayer >+>
+    micrometer.micrometerLayer >+>
     SystemControllerImpl.layer
 
   val testEnvironmentLayer = zio.test.testEnvironment ++
