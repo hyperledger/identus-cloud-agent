@@ -73,15 +73,19 @@ object EventNotificationServiceImplSpec extends ZIOSpecDefault {
           _ <- producerFiber.join
         } yield assertTrue(events.map(_.data) == Seq("event #1"))
       },
-      test("should block on sending new messages when queue is full") {
+      test("should drop old items when sending new messages and queue is full") {
         for {
           svc <- ZIO.service[EventNotificationService]
           producer <- svc.producer[String]("TopicA")
+          consumer <- svc.consumer[String]("TopicA")
           _ <- ZIO.collectAll((1 to 10).map(i => producer.send(Event("Foo", s"event #$i"))))
-          fiber <- producer.send(Event("Foo", "One more event")).timeout(5.seconds).fork
-          _ <- TestClock.adjust(5.seconds)
-          res <- fiber.join
-        } yield assertTrue(res.isEmpty)
+          _ <- producer.send(Event("Foo", "One more event"))
+          events <- consumer.poll(10)
+        } yield {
+          assertTrue(events.size == 10) &&
+          assertTrue(events.head.data == "event #2") &&
+          assertTrue(events(9).data == "One more event")
+        }
       },
       test("should block on reading new messages when queue is empty") {
         for {
