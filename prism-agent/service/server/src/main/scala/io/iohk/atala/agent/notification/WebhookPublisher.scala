@@ -76,6 +76,7 @@ class WebhookPublisher(appConfig: AppConfig, notificationService: EventNotificat
           headers = baseHeaders,
           content = Body.fromString(event.toJson)
         )
+        .timeoutFail(new RuntimeException("Client request timed out"))(5.seconds)
         .mapError(t => UnexpectedError(s"Webhook request error: $t"))
       resp <- response match
         case Response(status, _, _, _, _) if status.isSuccess =>
