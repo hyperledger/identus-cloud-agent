@@ -20,8 +20,9 @@ systems.
 Webhook notifications in PRISM Agent serve as a vital feature, enabling you to receive timely updates on various events
 occurring within the agent. Webhooks allow you to receive HTTP requests containing event details at a specified
 endpoint (webhook URL). These events are specifically related to the execution of
-the [Connect](../connections/connection.md), [Issue](../credentials/issue.md),
-and [Presentation](../credentials/present-proof.md) flows. Webhook notifications will be sent each time there is a state
+the [Connect](/tutorials/connections/connection), [Issue](/tutorials/credentials/issue),
+and [Presentation](/tutorials/credentials/present-proof) flows. Webhook notifications will be sent each time there is a
+state
 change during the execution of these protocols.
 
 By leveraging webhooks, you can integrate PRISM Agent seamlessly into your applications and systems. You can track and
@@ -34,9 +35,9 @@ monitor the progress of the main flows, receiving timely updates about changes a
 PRISM Agent uses the following environment variables to manage webhook notifications:
 
 | Name              | Description                                                              | Default |
-|-------------------|--------------------------------------------------------------------------|--------|
-| `WEBHOOK_URL`     | The webhook endpoint URL where the notifications will be sent            | null   |
-| `WEBHOOK_API_KEY` | The optional API key (bearer token) to use as the `Authorization` header | null   |
+|-------------------|--------------------------------------------------------------------------|---------|
+| `WEBHOOK_URL`     | The webhook endpoint URL where the notifications will be sent            | null    |
+| `WEBHOOK_API_KEY` | The optional API key (bearer token) to use as the `Authorization` header | null    |
 
 ### Securing the Webhook Endpoint
 
@@ -107,23 +108,25 @@ Here is an example of a webhook notification event related to a connection flow 
 ### Common Event Types
 
 PRISM Agent sends webhook notifications for events related to protocol state changes in
-the [Connect](../connections/connection.md), [Issue](../credentials/issue.md),
-and [Presentation](../credentials/present-proof.md) flows. These events allow you to track the progress and updates
+the [Connect](/tutorials/connections/connection), [Issue](/tutorials/credentials/issue),
+and [Presentation](/tutorials/credentials/present-proof) flows. These events allow you to track the progress and updates
 within these flows in real-time. Some common event types that you can expect to receive through webhook notifications
 include:
 
 - Connection State Change: Notifies about state changes in the connection flow, such as `InvitationGenerated`,
   `ConnectionRequestSent`, `ConnectionResponseReceived`, etc. Please refer to the `state` field of
-  the [connection resource](https://docs.atalaprism.io/agent-api/#tag/Connections-Management/operation/getConnection)
+  the [connection resource](agent-api/#tag/Connections-Management/operation/getConnection)
   for an exhaustive list of states.
 - Credential State Change: Indicates changes in the credential issuance flow, such as `OfferSent`, `RequestReceived`,
   `CredentialSent`, etc. Please refer to the `protocolState` field of
-  the [credential resource](https://docs.atalaprism.io/agent-api/#tag/Issue-Credentials-Protocol/operation/getCredentialRecord)
+  the [credential resource](agent-api/#tag/Issue-Credentials-Protocol/operation/getCredentialRecord)
   for an exhaustive list of states.
 - Presentation State Change: Notifies about changes in the presentation flow, such as `RequestReceived`,
   `PresentationGenerated`, `PresentationVerified`, etc. Please refer to the `status` field of
-  the [presentation resource](https://docs.atalaprism.io/agent-api/#tag/Present-Proof/operation/getPresentation) for an
+  the [presentation resource](agent-api/#tag/Present-Proof/operation/getPresentation) for an
   exhaustive list of states.
+- DID State Change: Notifies about DID-related state changes. Currently, only the `Published` DID publication state
+  event will be notified.
 
 ## Processing Webhook Notifications
 
