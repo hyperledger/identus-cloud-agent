@@ -16,6 +16,8 @@ class PresentationServiceNotifier(
     eventNotificationService: EventNotificationService
 ) extends PresentationService {
 
+  private val presentationUpdatedEvent = "PresentationUpdated"
+
   override def createPresentationRecord(
       pairwiseVerifierDID: DidId,
       pairwiseProverDID: DidId,
@@ -86,7 +88,7 @@ class PresentationServiceNotifier(
   private[this] def notify(record: PresentationRecord) = {
     val result = for {
       producer <- eventNotificationService.producer[PresentationRecord]("Presentation")
-      _ <- producer.send(Event(record))
+      _ <- producer.send(Event(presentationUpdatedEvent, record))
     } yield ()
     result.catchAll(e => ZIO.logError(s"Notification service error: $e"))
   }

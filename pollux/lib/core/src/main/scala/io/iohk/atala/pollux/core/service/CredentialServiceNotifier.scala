@@ -18,6 +18,8 @@ class CredentialServiceNotifier(
     eventNotificationService: EventNotificationService
 ) extends CredentialService {
 
+  private val issueCredentialRecordUpdatedEvent = "IssueCredentialRecordUpdated"
+
   override def createIssueCredentialRecord(
       pairwiseIssuerDID: DidId,
       pairwiseHolderDID: DidId,
@@ -91,7 +93,7 @@ class CredentialServiceNotifier(
   private[this] def notify(record: IssueCredentialRecord) = {
     val result = for {
       producer <- eventNotificationService.producer[IssueCredentialRecord]("Issue")
-      _ <- producer.send(Event(record))
+      _ <- producer.send(Event(issueCredentialRecordUpdatedEvent, record))
     } yield ()
     result.catchAll(e => ZIO.logError(s"Notification service error: $e"))
   }

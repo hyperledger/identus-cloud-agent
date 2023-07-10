@@ -14,6 +14,8 @@ class ConnectionServiceNotifier(
     eventNotificationService: EventNotificationService
 ) extends ConnectionService {
 
+  private val connectionUpdatedEvent = "ConnectionUpdated"
+
   override def createConnectionInvitation(
       label: Option[String],
       pairwiseDID: DidId
@@ -53,7 +55,7 @@ class ConnectionServiceNotifier(
   private[this] def notify(record: ConnectionRecord) = {
     val result = for {
       producer <- eventNotificationService.producer[ConnectionRecord]("Connect")
-      _ <- producer.send(Event(record))
+      _ <- producer.send(Event(connectionUpdatedEvent, record))
     } yield ()
     result.catchAll(e => ZIO.logError(s"Notification service error: $e"))
   }

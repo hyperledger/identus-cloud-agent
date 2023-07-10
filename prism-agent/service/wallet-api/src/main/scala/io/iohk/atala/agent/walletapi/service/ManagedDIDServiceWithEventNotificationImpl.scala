@@ -32,6 +32,8 @@ class ManagedDIDServiceWithEventNotificationImpl(
       createDIDSem
     ) {
 
+  private val didStatusUpdatedEventName = "DIDStatusUpdated"
+
   override protected def computeNewDIDStateFromDLTAndPersist[E](
       did: CanonicalPrismDID
   )(using
@@ -45,7 +47,7 @@ class ManagedDIDServiceWithEventNotificationImpl(
           maybeUpdatedDID <- nonSecretStorage.getManagedDIDState(did)
           updatedDID <- ZIO.fromOption(maybeUpdatedDID)
           producer <- eventNotificationService.producer[ManagedDIDDetail]("DIDDetail")
-          _ <- producer.send(Event(ManagedDIDDetail(did, updatedDID)))
+          _ <- producer.send(Event(didStatusUpdatedEventName, ManagedDIDDetail(did, updatedDID)))
         } yield ()
         result.catchAll(e => ZIO.logError(s"Notification service error: $e"))
       }
