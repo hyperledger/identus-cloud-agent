@@ -115,15 +115,15 @@ include:
 
 - Connection State Change: Notifies about state changes in the connection flow, such as `InvitationGenerated`,
   `ConnectionRequestSent`, `ConnectionResponseReceived`, etc. Please refer to the `state` field of
-  the [connection resource](agent-api/#tag/Connections-Management/operation/getConnection)
+  the [connection resource](/agent-api/#tag/Connections-Management/operation/getConnection)
   for an exhaustive list of states.
 - Credential State Change: Indicates changes in the credential issuance flow, such as `OfferSent`, `RequestReceived`,
   `CredentialSent`, etc. Please refer to the `protocolState` field of
-  the [credential resource](agent-api/#tag/Issue-Credentials-Protocol/operation/getCredentialRecord)
+  the [credential resource](/agent-api/#tag/Issue-Credentials-Protocol/operation/getCredentialRecord)
   for an exhaustive list of states.
 - Presentation State Change: Notifies about changes in the presentation flow, such as `RequestReceived`,
   `PresentationGenerated`, `PresentationVerified`, etc. Please refer to the `status` field of
-  the [presentation resource](agent-api/#tag/Present-Proof/operation/getPresentation) for an
+  the [presentation resource](/agent-api/#tag/Present-Proof/operation/getPresentation) for an
   exhaustive list of states.
 - DID State Change: Notifies about DID-related state changes. Currently, only the `Published` DID publication state
   event will be notified.
