@@ -39,7 +39,7 @@ the update operation to the latest confirmed update. Once the pending update ope
 any other pending operation that does not link to the latest confirmed operation will be discarded.
 The subsequent updates continuing from that operation will also be discarded.
 However, the PRISM agent has a safeguard in place to prevent this issue by rejecting
-multiple updates submitted by the same agent while previous updates are still being processed.
+multiple updates submitted on the same DID while previous updates are still being processed.
 
 Please refer to the `SECURE_DEPTH` parameter in [PRISM method - protocol parameters](https://github.com/input-output-hk/prism-did-method-spec/blob/main/w3c-spec/PRISM-method.md#versioning-and-protocol-parameters) for the number of confirmation blocks.
 At the time of writing, this number is 112 blocks.
