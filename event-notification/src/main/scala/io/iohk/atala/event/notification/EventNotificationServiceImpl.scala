@@ -1,20 +1,19 @@
 package io.iohk.atala.event.notification
 
 import io.iohk.atala.event.notification.EventNotificationServiceError.EventSendingFailed
+import zio.concurrent.ConcurrentMap
 import zio.{IO, Queue, URLayer, ZIO, ZLayer}
 
-import scala.collection.mutable
-
-class EventNotificationServiceImpl(queueCapacity: Int) extends EventNotificationService:
-  private[this] val queueMap = mutable.Map.empty[String, Queue[Event[_]]]
+class EventNotificationServiceImpl(queueMap: ConcurrentMap[String, Queue[Event[_]]], queueCapacity: Int)
+    extends EventNotificationService:
 
   private[this] def getOrCreateQueue(topic: String): IO[EventNotificationServiceError, Queue[Event[_]]] = {
     for {
-      maybeQueue <- ZIO.succeed(queueMap.get(topic))
+      maybeQueue <- queueMap.get(topic)
       queue <- maybeQueue match
         case Some(value) => ZIO.succeed(value)
         case None        => Queue.bounded(queueCapacity)
-      _ <- ZIO.succeed(queueMap.put(topic, queue))
+      _ <- queueMap.put(topic, queue)
     } yield queue
   }
 
@@ -42,5 +41,10 @@ class EventNotificationServiceImpl(queueCapacity: Int) extends EventNotification
 
 object EventNotificationServiceImpl {
   val layer: URLayer[Int, EventNotificationServiceImpl] =
-    ZLayer.fromFunction(new EventNotificationServiceImpl(_))
+    ZLayer.fromZIO(
+      for {
+        map <- ConcurrentMap.make[String, Queue[Event[_]]]()
+        capacity <- ZIO.service[Int]
+      } yield new EventNotificationServiceImpl(map, capacity)
+    )
 }
