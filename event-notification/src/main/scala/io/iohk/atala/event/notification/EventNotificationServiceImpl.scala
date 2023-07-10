@@ -12,7 +12,7 @@ class EventNotificationServiceImpl(queueMap: ConcurrentMap[String, Queue[Event[_
       maybeQueue <- queueMap.get(topic)
       queue <- maybeQueue match
         case Some(value) => ZIO.succeed(value)
-        case None        => Queue.bounded(queueCapacity)
+        case None        => Queue.sliding(queueCapacity)
       _ <- queueMap.put(topic, queue)
     } yield queue
   }
