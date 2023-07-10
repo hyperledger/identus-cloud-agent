@@ -5,7 +5,9 @@ import io.circe.*
 import io.circe.generic.auto.*
 import io.circe.syntax.*
 
-trait Verifiable(proof: Proof)
+import scala.annotation.unused
+
+trait Verifiable(@unused proof: Proof)
 
 case class Proof(`type`: String, jwt: JWT)
 

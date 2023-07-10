@@ -13,6 +13,7 @@ import io.iohk.atala.castor.core.service.DIDService
 import zio.*
 
 import java.time.Instant
+import scala.annotation.unused
 import io.circe.Json
 
 trait DidResolver {
@@ -30,7 +31,7 @@ sealed case class DIDResolutionSucceeded(
     didDocumentMetadata: DIDDocumentMetadata
 ) extends DIDResolutionResult
 
-sealed trait DIDResolutionError(error: String, message: String)
+sealed trait DIDResolutionError(@unused error: String, @unused message: String)
 case class InvalidDid(message: String) extends DIDResolutionError("invalidDid", message)
 case class NotFound(message: String) extends DIDResolutionError("notFound", message)
 case class RepresentationNotSupported(message: String) extends DIDResolutionError("RepresentationNotSupported", message)
