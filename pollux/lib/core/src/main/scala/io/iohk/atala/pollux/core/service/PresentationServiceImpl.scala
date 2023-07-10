@@ -31,7 +31,7 @@ private class PresentationServiceImpl(
   override def markPresentationGenerated(
       recordId: DidCommID,
       presentation: Presentation
-  ): IO[PresentationError, Option[PresentationRecord]] = {
+  ): IO[PresentationError, PresentationRecord] = {
     for {
       record <- getRecordWithState(recordId, ProtocolState.PresentationPending)
       count <- presentationRepository
@@ -43,7 +43,10 @@ private class PresentationServiceImpl(
       record <- presentationRepository
         .getPresentationRecord(recordId)
         .mapError(RepositoryError.apply)
-
+        .flatMap {
+          case None        => ZIO.fail(RecordIdNotFound(record.id))
+          case Some(value) => ZIO.succeed(value)
+        }
     } yield record
   }
 
@@ -60,7 +63,6 @@ private class PresentationServiceImpl(
       record <- ZIO
         .fromOption(maybeRecord)
         .mapError(_ => RecordIdNotFound(recordId))
-      _ <- ZIO.log(record.toString())
       credentialsToUse <- ZIO
         .fromOption(record.credentialsToUse)
         .mapError(_ => InvalidFlowStateError(s"No request found for this record: $recordId"))
@@ -113,10 +115,10 @@ private class PresentationServiceImpl(
         .mapError(RepositoryError.apply)
     } yield record
 
-  override def rejectRequestPresentation(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]] = {
+  override def rejectRequestPresentation(recordId: DidCommID): IO[PresentationError, PresentationRecord] = {
     markRequestPresentationRejected(recordId)
   }
-  def rejectPresentation(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]] = {
+  def rejectPresentation(recordId: DidCommID): IO[PresentationError, PresentationRecord] = {
     markPresentationRejected(recordId)
   }
 
@@ -285,7 +287,7 @@ private class PresentationServiceImpl(
   def acceptRequestPresentation(
       recordId: DidCommID,
       credentialsToUse: Seq[String]
-  ): IO[PresentationError, Option[PresentationRecord]] = {
+  ): IO[PresentationError, PresentationRecord] = {
 
     for {
       record <- getRecordWithState(recordId, ProtocolState.RequestReceived)
@@ -319,10 +321,14 @@ private class PresentationServiceImpl(
       record <- presentationRepository
         .getPresentationRecord(recordId)
         .mapError(RepositoryError.apply)
+        .flatMap {
+          case None        => ZIO.fail(RecordIdNotFound(record.id))
+          case Some(value) => ZIO.succeed(value)
+        }
     } yield record
   }
 
-  override def acceptPresentation(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]] = {
+  override def acceptPresentation(recordId: DidCommID): IO[PresentationError, PresentationRecord] = {
     for {
       maybeRecord <- presentationRepository
         .getPresentationRecord(recordId)
@@ -330,8 +336,7 @@ private class PresentationServiceImpl(
       record <- ZIO
         .fromOption(maybeRecord)
         .mapError(_ => RecordIdNotFound(recordId))
-      _ <- ZIO.log(record.toString())
-      presentationRequest <- ZIO
+      _ <- ZIO
         .fromOption(record.presentationData)
         .mapError(_ => InvalidFlowStateError(s"No request found for this record: $recordId"))
       recordUpdated <- markPresentationAccepted(record.id)
@@ -339,7 +344,7 @@ private class PresentationServiceImpl(
   }
   override def receivePresentation(
       presentation: Presentation
-  ): IO[PresentationError, Option[PresentationRecord]] = {
+  ): IO[PresentationError, PresentationRecord] = {
     for {
       record <- getRecordFromThreadId(presentation.thid)
       _ <- presentationRepository
@@ -352,10 +357,14 @@ private class PresentationServiceImpl(
       record <- presentationRepository
         .getPresentationRecord(record.id)
         .mapError(RepositoryError.apply)
+        .flatMap {
+          case None        => ZIO.fail(RecordIdNotFound(record.id))
+          case Some(value) => ZIO.succeed(value)
+        }
     } yield record
   }
 
-  override def acceptProposePresentation(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]] = {
+  override def acceptProposePresentation(recordId: DidCommID): IO[PresentationError, PresentationRecord] = {
     for {
       maybeRecord <- presentationRepository
         .getPresentationRecord(recordId)
@@ -377,12 +386,16 @@ private class PresentationServiceImpl(
       record <- presentationRepository
         .getPresentationRecord(record.id)
         .mapError(RepositoryError.apply)
+        .flatMap {
+          case None        => ZIO.fail(RecordIdNotFound(record.id))
+          case Some(value) => ZIO.succeed(value)
+        }
     } yield record
   }
 
   override def receiveProposePresentation(
       proposePresentation: ProposePresentation
-  ): IO[PresentationError, Option[PresentationRecord]] = {
+  ): IO[PresentationError, PresentationRecord] = {
     for {
       record <- getRecordFromThreadId(proposePresentation.thid)
       _ <- presentationRepository
@@ -395,6 +408,10 @@ private class PresentationServiceImpl(
       record <- presentationRepository
         .getPresentationRecord(record.id)
         .mapError(RepositoryError.apply)
+        .flatMap {
+          case None        => ZIO.fail(RecordIdNotFound(record.id))
+          case Some(value) => ZIO.succeed(value)
+        }
     } yield record
   }
 
@@ -416,48 +433,48 @@ private class PresentationServiceImpl(
     } yield record
   }
 
-  override def markRequestPresentationSent(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]] =
+  override def markRequestPresentationSent(recordId: DidCommID): IO[PresentationError, PresentationRecord] =
     updatePresentationRecordProtocolState(
       recordId,
       PresentationRecord.ProtocolState.RequestPending,
       PresentationRecord.ProtocolState.RequestSent
     )
 
-  override def markProposePresentationSent(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]] =
+  override def markProposePresentationSent(recordId: DidCommID): IO[PresentationError, PresentationRecord] =
     updatePresentationRecordProtocolState(
       recordId,
       PresentationRecord.ProtocolState.ProposalPending,
       PresentationRecord.ProtocolState.ProposalSent
     )
-  override def markPresentationVerified(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]] =
+  override def markPresentationVerified(recordId: DidCommID): IO[PresentationError, PresentationRecord] =
     updatePresentationRecordProtocolState(
       recordId,
       PresentationRecord.ProtocolState.PresentationReceived,
       PresentationRecord.ProtocolState.PresentationVerified
     )
 
-  override def markPresentationAccepted(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]] =
+  override def markPresentationAccepted(recordId: DidCommID): IO[PresentationError, PresentationRecord] =
     updatePresentationRecordProtocolState(
       recordId,
       PresentationRecord.ProtocolState.PresentationVerified,
       PresentationRecord.ProtocolState.PresentationAccepted
     )
 
-  override def markPresentationSent(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]] =
+  override def markPresentationSent(recordId: DidCommID): IO[PresentationError, PresentationRecord] =
     updatePresentationRecordProtocolState(
       recordId,
       PresentationRecord.ProtocolState.PresentationGenerated,
       PresentationRecord.ProtocolState.PresentationSent
     )
 
-  override def markPresentationRejected(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]] =
+  override def markPresentationRejected(recordId: DidCommID): IO[PresentationError, PresentationRecord] =
     updatePresentationRecordProtocolState(
       recordId,
-      PresentationRecord.ProtocolState.PresentationReceived,
+      PresentationRecord.ProtocolState.PresentationVerified,
       PresentationRecord.ProtocolState.PresentationRejected
     )
 
-  override def markRequestPresentationRejected(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]] =
+  override def markRequestPresentationRejected(recordId: DidCommID): IO[PresentationError, PresentationRecord] =
     updatePresentationRecordProtocolState(
       recordId,
       PresentationRecord.ProtocolState.RequestReceived,
@@ -466,7 +483,7 @@ private class PresentationServiceImpl(
 
   override def markPresentationVerificationFailed(
       recordId: DidCommID
-  ): IO[PresentationError, Option[PresentationRecord]] =
+  ): IO[PresentationError, PresentationRecord] =
     updatePresentationRecordProtocolState(
       recordId,
       PresentationRecord.ProtocolState.PresentationReceived,
@@ -550,7 +567,7 @@ private class PresentationServiceImpl(
       id: DidCommID,
       from: PresentationRecord.ProtocolState,
       to: PresentationRecord.ProtocolState
-  ): IO[PresentationError, Option[PresentationRecord]] = {
+  ): IO[PresentationError, PresentationRecord] = {
     for {
       _ <- presentationRepository
         .updatePresentationRecordProtocolState(id, from, to)
@@ -562,6 +579,10 @@ private class PresentationServiceImpl(
       record <- presentationRepository
         .getPresentationRecord(id)
         .mapError(RepositoryError.apply)
+        .flatMap {
+          case None        => ZIO.fail(RecordIdNotFound(id))
+          case Some(value) => ZIO.succeed(value)
+        }
     } yield record
   }
 

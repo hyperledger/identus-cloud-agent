@@ -97,7 +97,11 @@ services:
       PRISM_NODE_PORT: 50053
       VAULT_ADDR: ${VAULT_ADDR:-http://vault-server:8200}
       VAULT_TOKEN: ${VAULT_DEV_ROOT_TOKEN_ID:-root}
-      DEV_MODE: "true"
+      SECRET_STORAGE_BACKEND: postgres
+      DEV_MODE: true
+      WALLET_SEED:
+      WEBHOOK_URL:
+      WEBHOOK_API_KEY:
     depends_on:
       db:
         condition: service_healthy

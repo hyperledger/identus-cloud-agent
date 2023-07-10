@@ -52,6 +52,8 @@ object PresentationStatus {
     )
   }
 
+  given Conversion[PresentationRecord, PresentationStatus] = fromDomain
+
   object annotations {
     object presentationId
         extends Annotation[String](

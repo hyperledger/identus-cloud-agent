@@ -50,41 +50,41 @@ trait PresentationService {
 
   def acceptRequestPresentation(
       recordId: DidCommID,
-      crecentialsToUse: Seq[String]
-  ): IO[PresentationError, Option[PresentationRecord]]
+      credentialsToUse: Seq[String]
+  ): IO[PresentationError, PresentationRecord]
 
-  def rejectRequestPresentation(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]]
+  def rejectRequestPresentation(recordId: DidCommID): IO[PresentationError, PresentationRecord]
 
-  def receiveProposePresentation(request: ProposePresentation): IO[PresentationError, Option[PresentationRecord]]
+  def receiveProposePresentation(request: ProposePresentation): IO[PresentationError, PresentationRecord]
 
-  def acceptProposePresentation(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]]
+  def acceptProposePresentation(recordId: DidCommID): IO[PresentationError, PresentationRecord]
 
-  def receivePresentation(presentation: Presentation): IO[PresentationError, Option[PresentationRecord]]
+  def receivePresentation(presentation: Presentation): IO[PresentationError, PresentationRecord]
 
-  def acceptPresentation(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]]
+  def acceptPresentation(recordId: DidCommID): IO[PresentationError, PresentationRecord]
 
-  def rejectPresentation(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]]
+  def rejectPresentation(recordId: DidCommID): IO[PresentationError, PresentationRecord]
 
-  def markRequestPresentationSent(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]]
+  def markRequestPresentationSent(recordId: DidCommID): IO[PresentationError, PresentationRecord]
 
-  def markRequestPresentationRejected(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]]
+  def markRequestPresentationRejected(recordId: DidCommID): IO[PresentationError, PresentationRecord]
 
-  def markProposePresentationSent(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]]
+  def markProposePresentationSent(recordId: DidCommID): IO[PresentationError, PresentationRecord]
 
-  def markPresentationSent(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]]
+  def markPresentationSent(recordId: DidCommID): IO[PresentationError, PresentationRecord]
 
   def markPresentationGenerated(
       recordId: DidCommID,
       presentation: Presentation
-  ): IO[PresentationError, Option[PresentationRecord]]
+  ): IO[PresentationError, PresentationRecord]
 
-  def markPresentationVerified(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]]
+  def markPresentationVerified(recordId: DidCommID): IO[PresentationError, PresentationRecord]
 
-  def markPresentationRejected(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]]
+  def markPresentationRejected(recordId: DidCommID): IO[PresentationError, PresentationRecord]
 
-  def markPresentationAccepted(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]]
+  def markPresentationAccepted(recordId: DidCommID): IO[PresentationError, PresentationRecord]
 
-  def markPresentationVerificationFailed(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]]
+  def markPresentationVerificationFailed(recordId: DidCommID): IO[PresentationError, PresentationRecord]
 
   def reportProcessingFailure(recordId: DidCommID, failReason: Option[String]): IO[PresentationError, Unit]
 

@@ -90,12 +90,19 @@ final case class VerificationConfig(options: Options) {
   }
 }
 
+final case class WebhookPublisherConfig(
+    url: Option[String],
+    apiKey: Option[String],
+    parallelism: Option[Int]
+)
+
 final case class AgentConfig(
     httpEndpoint: HttpEndpointConfig,
     didCommServiceEndpointUrl: String,
     database: DatabaseConfig,
     verification: VerificationConfig,
-    secretStorage: SecretStorageConfig
+    secretStorage: SecretStorageConfig,
+    webhookPublisher: WebhookPublisherConfig
 )
 
 final case class HttpEndpointConfig(http: HttpConfig)

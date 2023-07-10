@@ -84,11 +84,11 @@ class PresentProofControllerImpl(
   ): IO[ErrorResponse, PresentationStatus] = {
     val result: ZIO[Any, ErrorResponse | PresentationError, PresentationStatus] = for {
       didCommId <- ZIO.succeed(DidCommID(id.toString))
-      maybeRecord <- requestPresentationAction.action match {
+      record <- requestPresentationAction.action match {
         case "request-accept" =>
           presentationService.acceptRequestPresentation(
             recordId = didCommId,
-            crecentialsToUse = requestPresentationAction.proofId.getOrElse(Seq.empty)
+            credentialsToUse = requestPresentationAction.proofId.getOrElse(Seq.empty)
           )
         case "request-reject"      => presentationService.rejectRequestPresentation(didCommId)
         case "presentation-accept" => presentationService.acceptPresentation(didCommId)
@@ -102,10 +102,6 @@ class PresentProofControllerImpl(
             )
           )
       }
-      record <- ZIO
-        .fromOption(maybeRecord)
-        .mapError(_ => ErrorResponse.notFound(detail = Some(s"Presentation record not found: $id")))
-
     } yield PresentationStatus.fromDomain(record)
 
     result.mapError {

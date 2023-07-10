@@ -1,13 +1,11 @@
 package io.iohk.atala.agent.server
 
+import io.iohk.atala.agent.notification.WebhookPublisher
 import io.iohk.atala.agent.server.config.AppConfig
-import io.iohk.atala.agent.server.http.ZHttp4sBlazeServer
-import io.iohk.atala.agent.server.http.ZHttpEndpoints
-import io.iohk.atala.agent.server.jobs.BackgroundJobs
-import io.iohk.atala.agent.server.jobs.ConnectBackgroundJobs
+import io.iohk.atala.agent.server.http.{ZHttp4sBlazeServer, ZHttpEndpoints}
+import io.iohk.atala.agent.server.jobs.{BackgroundJobs, ConnectBackgroundJobs}
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
-import io.iohk.atala.castor.controller.DIDRegistrarServerEndpoints
-import io.iohk.atala.castor.controller.DIDServerEndpoints
+import io.iohk.atala.castor.controller.{DIDRegistrarServerEndpoints, DIDServerEndpoints}
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.connect.controller.ConnectionServerEndpoints
 import io.iohk.atala.connect.core.service.ConnectionService
@@ -33,6 +31,7 @@ object PrismAgentApp {
     _ <- syncDIDPublicationStateFromDltJob.fork
     _ <- AgentHttpServer.run.fork
     fiber <- DidCommHttpServer.run(didCommServicePort).fork
+    _ <- WebhookPublisher.layer.build.map(_.get[WebhookPublisher]).flatMap(_.run.debug.fork)
     _ <- fiber.join *> ZIO.log(s"Server End")
     _ <- ZIO.never
   } yield ()

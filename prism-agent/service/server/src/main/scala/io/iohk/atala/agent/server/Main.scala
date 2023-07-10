@@ -3,14 +3,19 @@ package io.iohk.atala.agent.server
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
 import io.iohk.atala.agent.server.http.ZioHttpClient
 import io.iohk.atala.agent.server.sql.Migrations as AgentMigrations
-import io.iohk.atala.agent.walletapi.service.{ManagedDIDService, ManagedDIDServiceImpl}
+import io.iohk.atala.agent.walletapi.service.{
+  ManagedDIDService,
+  ManagedDIDServiceImpl,
+  ManagedDIDServiceWithEventNotificationImpl
+}
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDNonSecretStorage
 import io.iohk.atala.castor.controller.{DIDControllerImpl, DIDRegistrarControllerImpl}
 import io.iohk.atala.castor.core.service.DIDServiceImpl
 import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.connect.controller.ConnectionControllerImpl
-import io.iohk.atala.connect.core.service.ConnectionServiceImpl
+import io.iohk.atala.connect.core.service.{ConnectionServiceImpl, ConnectionServiceNotifier}
 import io.iohk.atala.connect.sql.repository.{JdbcConnectionRepository, Migrations as ConnectMigrations}
+import io.iohk.atala.event.notification.EventNotificationServiceImpl
 import io.iohk.atala.issue.controller.IssueControllerImpl
 import io.iohk.atala.mercury.*
 import io.iohk.atala.pollux.core.service.*
@@ -31,6 +36,7 @@ import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.system.controller.SystemControllerImpl
 import io.micrometer.prometheus.{PrometheusConfig, PrometheusMeterRegistry}
 import zio.*
+import zio.http.Client
 import zio.metrics.connectors.micrometer
 import zio.metrics.connectors.micrometer.MicrometerConfig
 import zio.metrics.jvm.DefaultJvmMetrics
@@ -123,12 +129,12 @@ object MainApp extends ZIOAppDefault {
           DIDResolver.layer,
           HttpURIDereferencerImpl.layer,
           // service
-          ConnectionServiceImpl.layer,
+          ConnectionServiceImpl.layer >>> ConnectionServiceNotifier.layer,
           CredentialSchemaServiceImpl.layer,
-          CredentialServiceImpl.layer,
+          CredentialServiceImpl.layer >>> CredentialServiceNotifier.layer,
           DIDServiceImpl.layer,
-          ManagedDIDServiceImpl.layer,
-          PresentationServiceImpl.layer,
+          ManagedDIDServiceWithEventNotificationImpl.layer,
+          PresentationServiceImpl.layer >>> PresentationServiceNotifier.layer,
           VerificationPolicyServiceImpl.layer,
           // grpc
           GrpcModule.irisStubLayer,
@@ -141,6 +147,11 @@ object MainApp extends ZIOAppDefault {
           RepoModule.polluxTransactorLayer >>> JdbcCredentialSchemaRepository.layer,
           RepoModule.polluxTransactorLayer >>> JdbcPresentationRepository.layer,
           RepoModule.polluxTransactorLayer >>> JdbcVerificationPolicyRepository.layer,
+          // event notification service
+          ZLayer.succeed(500) >>> EventNotificationServiceImpl.layer,
+          // HTTP client
+          Client.default,
+          Scope.default
         )
     } yield app
 

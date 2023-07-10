@@ -150,7 +150,7 @@ lazy val D_Connect = new {
 
   // Dependency Modules
   private lazy val baseDependencies: Seq[ModuleID] =
-    Seq(D.zio, D.zioTest, D.zioTestSbt, D.zioTestMagnolia, D.testcontainersPostgres, logback)
+    Seq(D.zio, D.zioTest, D.zioTestSbt, D.zioTestMagnolia, D.zioMock, D.testcontainersPostgres, logback)
 
   // Project Dependencies
   lazy val coreDependencies: Seq[ModuleID] =
@@ -223,6 +223,7 @@ lazy val D_Pollux = new {
     D.zioTest,
     D.zioTestSbt,
     D.zioTestMagnolia,
+    D.zioMock,
     D.munit,
     D.munitZio,
     prismCrypto,
@@ -278,6 +279,17 @@ lazy val D_Pollux_VC_JWT = new {
 
   // Project Dependencies
   lazy val polluxVcJwtDependencies: Seq[ModuleID] = baseDependencies
+}
+
+lazy val D_EventNotification = new {
+  val zio = "dev.zio" %% "zio" % V.zio
+  val zioConcurrent = "dev.zio" %% "zio-concurrent" % V.zio
+  val zioTest = "dev.zio" %% "zio-test" % V.zio % Test
+  val zioTestSbt = "dev.zio" %% "zio-test-sbt" % V.zio % Test
+  val zioTestMagnolia = "dev.zio" %% "zio-test-magnolia" % V.zio % Test
+
+  val zioDependencies: Seq[ModuleID] = Seq(zio, zioConcurrent, zioTest, zioTestSbt, zioTestMagnolia)
+  val baseDependencies: Seq[ModuleID] = zioDependencies
 }
 
 lazy val D_PrismAgent = new {
@@ -632,7 +644,7 @@ lazy val polluxCore = project
   )
   .dependsOn(shared)
   .dependsOn(polluxVcJWT)
-  .dependsOn(protocolIssueCredential, protocolPresentProof, resolver, agentDidcommx)
+  .dependsOn(protocolIssueCredential, protocolPresentProof, resolver, agentDidcommx, eventNotification)
 
 lazy val polluxDoobie = project
   .in(file("pollux/lib/sql-doobie"))
@@ -687,7 +699,7 @@ lazy val connectCore = project
     Test / publishArtifact := true
   )
   .dependsOn(shared)
-  .dependsOn(protocolConnection, protocolReportProblem)
+  .dependsOn(protocolConnection, protocolReportProblem, eventNotification)
 
 lazy val connectDoobie = project
   .in(file("connect/lib/sql-doobie"))
@@ -698,6 +710,17 @@ lazy val connectDoobie = project
   )
   .dependsOn(shared)
   .dependsOn(connectCore % "compile->compile;test->test")
+
+// ############################
+// #### Event Notification ####
+// ############################
+
+lazy val eventNotification = project
+  .in(file("event-notification"))
+  .settings(
+    name := "event-notification",
+    libraryDependencies ++= D_EventNotification.baseDependencies
+  )
 
 // #####################
 // #### Prism Agent ####
@@ -711,8 +734,11 @@ lazy val prismAgentWalletAPI = project
     name := "prism-agent-wallet-api",
     libraryDependencies ++= D_PrismAgent.keyManagementDependencies
   )
-  .dependsOn(agentDidcommx)
-  .dependsOn(castorCore)
+  .dependsOn(
+    agentDidcommx,
+    castorCore,
+    eventNotification
+  )
 
 lazy val prismAgentServer = project
   .in(file("prism-agent/service/server"))
@@ -741,7 +767,8 @@ lazy val prismAgentServer = project
     polluxAnoncreds,
     connectCore,
     connectDoobie,
-    castorCore
+    castorCore,
+    eventNotification
   )
 
 // ##################
@@ -822,6 +849,7 @@ lazy val aggregatedProjects: Seq[ProjectReference] = Seq(
   prismAgentWalletAPI,
   prismAgentServer,
   mediator,
+  eventNotification,
 )
 
 lazy val root = project
