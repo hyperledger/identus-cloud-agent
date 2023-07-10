@@ -150,7 +150,8 @@ object MainApp extends ZIOAppDefault {
           // event notification service
           ZLayer.succeed(500) >>> EventNotificationServiceImpl.layer,
           // HTTP client
-          Scope.default >>> Client.default,
+          Client.default,
+          Scope.default
         )
     } yield app
 

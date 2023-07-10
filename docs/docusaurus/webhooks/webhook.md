@@ -34,9 +34,9 @@ monitor the progress of the main flows, receiving timely updates about changes a
 PRISM Agent uses the following environment variables to manage webhook notifications:
 
 | Name              | Description                                                              | Default |
-|-------------------|--------------------------------------------------------------------------|---------|
-| `WEBHOOK_URL`     | The webhook endpoint URL where the notifications will be sent            | null    |
-| `WEBHOOK_API_KEY` | The optional API key (bearer token) to use as the `Authorization` header | `vault` |
+|-------------------|--------------------------------------------------------------------------|--------|
+| `WEBHOOK_URL`     | The webhook endpoint URL where the notifications will be sent            | null   |
+| `WEBHOOK_API_KEY` | The optional API key (bearer token) to use as the `Authorization` header | null   |
 
 ### Securing the Webhook Endpoint
 

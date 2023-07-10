@@ -31,7 +31,7 @@ object PrismAgentApp {
     _ <- syncDIDPublicationStateFromDltJob.fork
     _ <- AgentHttpServer.run.fork
     fiber <- DidCommHttpServer.run(didCommServicePort).fork
-    _ <- ZIO.scoped(WebhookPublisher.layer.build.map(_.get[WebhookPublisher])).flatMap(_.run.debug.fork)
+    _ <- WebhookPublisher.layer.build.map(_.get[WebhookPublisher]).flatMap(_.run.debug.fork)
     _ <- fiber.join *> ZIO.log(s"Server End")
     _ <- ZIO.never
   } yield ()
