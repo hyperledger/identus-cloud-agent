@@ -12,4 +12,5 @@ enum DIDResolutionErrorRepr(val value: String, val errorMessage: Option[String])
   case UnsupportedPublicKeyType extends DIDResolutionErrorRepr("unsupportedPublicKeyType", None)
 }
 
+// TODO: add `updated` and `crated` timestamp to metadata
 final case class DIDDocumentMetadataRepr(deactivated: Boolean, canonicalId: Option[String], versionId: String)
