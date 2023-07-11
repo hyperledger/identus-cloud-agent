@@ -63,14 +63,11 @@ The event format is consistent across all events. Each event follows a common st
 within the event payload contains information specific to the type of event. Here is an example of the JSON payload
 format:
 
-The event payload typically includes relevant details about the specific event that occurred within the agent. Below is
-an example of the JSON payload format:
-
 ```json
 {
   "id": "cb8d4e96-30f0-4892-863f-44d49d634211",
   "ts": "2023-07-06T12:01:19.769427Z",
-  "eventType": "xxxx",
+  "type": "xxxx",
   "data": {
     // Event-specific data goes here 
   }
@@ -80,13 +77,14 @@ an example of the JSON payload format:
 This event format ensures consistency and allows you to handle webhook notifications uniformly while easily extracting
 the relevant data specific to each event type from the `data` field.
 
-Here is an example of a webhook notification event related to a connection flow state change (invitation generated):
+Here is a complete example of a webhook notification event related to a connection flow state change (invitation
+generated):
 
 ```json
 {
   "id": "cb8d4e96-30f0-4892-863f-44d49d634211",
   "ts": "2023-07-06T12:01:19.769427Z",
-  "eventType": "Connection",
+  "type": "ConnectionUpdated",
   "data": {
     "connectionId": "c10787cf-99bb-47f4-99bb-1fdcca32b673",
     "label": "Connect with Alice",
@@ -109,9 +107,25 @@ Here is an example of a webhook notification event related to a connection flow 
 
 PRISM Agent sends webhook notifications for events related to protocol state changes in
 the [Connect](/tutorials/connections/connection), [Issue](/tutorials/credentials/issue),
-and [Presentation](/tutorials/credentials/present-proof) flows. These events allow you to track the progress and updates
-within these flows in real-time. Some common event types that you can expect to receive through webhook notifications
-include:
+[Presentation](/tutorials/credentials/present-proof) flows, and also [DID publication](/tutorials/dids/publish)
+state changes. These events allow you to track the progress and updates within these flows in real-time.
+
+The `id` field of the common event structure is the unique identifier (UUID) of the event and is randomly generated at
+event creation time.
+
+the `ts` field contains the timestamp (date + time) at which the event was created.
+
+The `type` field indicates to which flow/process the received event is related, and hence the type of JSON payload that
+can be expected in the inner `data` field. Possible values are:
+
+| Value                          | Description                                 |
+|--------------------------------|---------------------------------------------|
+| `ConnectionUpdated`            | An update in the connection flow state      |
+| `IssueCredentialRecordUpdated` | An update in the VC issuance flow state     |
+| `PresentationUpdated`          | An update in the VC presentation flow state |
+| `DIDStatusUpdated`             | An update in the DID publication state      |
+
+State change notifications that you can expect to receive through webhook notifications include:
 
 - Connection State Change: Notifies about state changes in the connection flow, such as `InvitationGenerated`,
   `ConnectionRequestSent`, `ConnectionResponseReceived`, etc. Please refer to the `state` field of
