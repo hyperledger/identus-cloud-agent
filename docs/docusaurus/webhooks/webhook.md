@@ -110,8 +110,13 @@ the [Connect](/tutorials/connections/connection), [Issue](/tutorials/credentials
 [Presentation](/tutorials/credentials/present-proof) flows, and also [DID publication](/tutorials/dids/publish)
 state changes. These events allow you to track the progress and updates within these flows in real-time.
 
-The `type` field of the common event structure indicates to which flow/process the received event is related, and hence
-the type of JSON payload that can be expected in the inner `data` field. Possible values are:
+The `id` field of the common event structure is the unique identifier (UUID) of the event and is randomly generated at
+event creation time.
+
+the `ts` field contains the timestamp (date + time) at which the event was created.
+
+The `type` field indicates to which flow/process the received event is related, and hence the type of JSON payload that
+can be expected in the inner `data` field. Possible values are:
 
 | Value                          | Description                                 |
 |--------------------------------|---------------------------------------------|
