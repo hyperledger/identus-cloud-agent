@@ -68,7 +68,7 @@ class WebhookPublisher(appConfig: AppConfig, notificationService: EventNotificat
       encoder: JsonEncoder[A]
   ): ZIO[Client, UnexpectedError, Unit] = {
     for {
-      _ <- ZIO.log(s"Sending event: $event to HTTP webhook URL: $url.")
+      _ <- ZIO.logDebug(s"Sending event: $event to HTTP webhook URL: $url.")
       response <- Client
         .request(
           url = url.toString,
