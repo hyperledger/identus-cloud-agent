@@ -17,7 +17,7 @@ class WebhookPublisher(appConfig: AppConfig, notificationService: EventNotificat
 
   private val config = appConfig.agent.webhookPublisher
   private val baseHeaders =
-    config.apiKey.map(key => Headers.authorization(key)).getOrElse(Headers.empty) ++
+    config.apiKey.map(key => Headers.bearerAuthorizationHeader(key)).getOrElse(Headers.empty) ++
       Headers.contentType(HeaderValues.applicationJson)
 
   private val parallelism = config.parallelism match {
