@@ -50,6 +50,7 @@ lazy val V = new {
   val zioCatsInterop = "3.3.0"
   val zioMetricsConnector = "2.1.0"
   val zioMock = "1.0.0-RC10"
+  val mockito = "3.2.16.0"
 
   // https://mvnrepository.com/artifact/io.circe/circe-core
   val circe = "0.14.2"
@@ -133,6 +134,7 @@ lazy val D = new {
   val zioTestSbt: ModuleID = "dev.zio" %% "zio-test-sbt" % V.zio % Test
   val zioTestMagnolia: ModuleID = "dev.zio" %% "zio-test-magnolia" % V.zio % Test
   val zioMock: ModuleID = "dev.zio" %% "zio-mock" % V.zioMock
+  val mockito: ModuleID = "org.scalatestplus" %% "mockito-4-11" % V.mockito % Test
 
   // LIST of Dependencies
   val doobieDependencies: Seq[ModuleID] =
@@ -364,7 +366,7 @@ lazy val D_PrismAgent = new {
     baseDependencies ++ bouncyDependencies ++ D.doobieDependencies ++ Seq(D.zioCatsInterop, D.zioMock, vaultDriver)
 
   lazy val serverDependencies: Seq[ModuleID] =
-    baseDependencies ++ tapirDependencies ++ postgresDependencies ++ Seq(D.zioMock)
+    baseDependencies ++ tapirDependencies ++ postgresDependencies ++ Seq(D.zioMock, D.mockito)
 }
 
 publish / skip := true
