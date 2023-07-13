@@ -4,11 +4,9 @@ import io.iohk.atala.agent.walletapi.model.ManagedDIDDetail
 import io.iohk.atala.castor.controller.http.ManagedDID
 import io.iohk.atala.castor.controller.http.ManagedDID.*
 import io.iohk.atala.connect.controller.http.Connection
-import io.iohk.atala.connect.controller.http.Connection.*
 import io.iohk.atala.connect.core.model.ConnectionRecord
-import io.iohk.atala.event.notification.{Event, EventNotificationServiceError}
+import io.iohk.atala.event.notification.Event
 import io.iohk.atala.issue.controller.http.IssueCredentialRecord
-import io.iohk.atala.issue.controller.http.IssueCredentialRecord.*
 import io.iohk.atala.pollux.core.model.{
   IssueCredentialRecord as PolluxIssueCredentialRecord,
   PresentationRecord as PolluxPresentationRecord

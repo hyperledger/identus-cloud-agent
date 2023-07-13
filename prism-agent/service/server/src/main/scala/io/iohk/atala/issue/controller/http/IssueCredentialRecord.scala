@@ -12,7 +12,6 @@ import zio.json.ast.Json
 
 import java.nio.charset.StandardCharsets
 import java.time.{OffsetDateTime, ZoneOffset}
-import java.util.UUID
 
 /** A class to represent an an outgoing response for a created credential offer.
   *

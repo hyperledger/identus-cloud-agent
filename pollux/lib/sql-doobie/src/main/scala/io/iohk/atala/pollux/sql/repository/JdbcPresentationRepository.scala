@@ -3,14 +3,14 @@ package io.iohk.atala.pollux.sql.repository
 import cats.data.NonEmptyList
 import doobie.*
 import doobie.implicits.*
-import doobie.postgres._
-import doobie.postgres.implicits._
-import io.circe._
-import io.circe.parser._
-import io.circe.syntax._
-import io.iohk.atala.mercury.protocol.presentproof._
-import io.iohk.atala.pollux.core.model.PresentationRecord.ProtocolState
+import doobie.postgres.*
+import doobie.postgres.implicits.*
+import io.circe.*
+import io.circe.parser.*
+import io.circe.syntax.*
+import io.iohk.atala.mercury.protocol.presentproof.*
 import io.iohk.atala.pollux.core.model.*
+import io.iohk.atala.pollux.core.model.PresentationRecord.ProtocolState
 import io.iohk.atala.pollux.core.repository.PresentationRepository
 import io.iohk.atala.prism.crypto.MerkleInclusionProof
 import io.iohk.atala.shared.utils.BytesOps
@@ -59,7 +59,7 @@ class JdbcPresentationRepository(
   // Uncomment to have Doobie LogHandler in scope and automatically output SQL statements in logs
   // given logHandler: LogHandler = LogHandler.jdkLogHandler
 
-  import PresentationRecord._
+  import PresentationRecord.*
 
   given didCommIDGet: Get[DidCommID] = Get[String].map(DidCommID(_))
   given didCommIDPut: Put[DidCommID] = Put[String].contramap(_.value)
