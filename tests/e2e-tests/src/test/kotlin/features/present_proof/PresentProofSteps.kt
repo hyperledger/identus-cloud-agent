@@ -1,15 +1,13 @@
 package features.present_proof
 
-import api_models.Connection
-import api_models.Credential
-import api_models.PresentationProof
-import common.Utils.lastResponseList
+import api_models.*
+import common.ListenToEvents
 import common.Utils.lastResponseObject
 import common.Utils.wait
+import interactions.Get
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import net.serenitybdd.screenplay.Actor
-import interactions.Get
 import interactions.Post
 import interactions.Patch
 import net.serenitybdd.screenplay.rest.questions.ResponseConsequence
@@ -17,6 +15,9 @@ import org.apache.http.HttpStatus.SC_CREATED
 import org.apache.http.HttpStatus.SC_OK
 
 class PresentProofSteps {
+
+    var proofEvent: PresentationEvent? = null
+
     @When("{actor} sends a request for proof presentation to {actor}")
     fun faberSendsARequestForProofPresentationToBob(faber: Actor, bob: Actor) {
         faber.attemptsTo(
@@ -49,32 +50,32 @@ class PresentProofSteps {
                 it.statusCode(SC_CREATED)
             },
         )
-        faber.remember("presentationId", lastResponseObject("", PresentationProof::class).presentationId)
+
+        val presentationId = lastResponseObject("", PresentationProof::class).presentationId
+        faber.remember("presentationId", presentationId)
+        faber.attemptsTo(
+            Get.resource("/present-proof/presentations/${presentationId}"),
+        )
+        faber.should(
+            ResponseConsequence.seeThatResponse("Get presentations") {
+                it.statusCode(SC_OK)
+            },
+        )
+        faber.remember("thid", lastResponseObject("", PresentationProof::class).thid)
+        bob.remember("thid", lastResponseObject("", PresentationProof::class).thid)
     }
 
     @When("{actor} receives the request")
     fun bobReceivesTheRequest(bob: Actor) {
         wait(
             {
-                bob.attemptsTo(
-                    Get.resource("/present-proof/presentations"),
-                )
-                bob.should(
-                    ResponseConsequence.seeThatResponse("Get presentations") {
-                        it.statusCode(SC_OK)
-                    },
-                )
-                lastResponseList("contents", PresentationProof::class).findLast {
-                    it.status == "RequestReceived"
-                } != null
+                proofEvent = ListenToEvents.`as`(bob).presentationEvents.lastOrNull()
+                proofEvent != null && proofEvent!!.data.thid == bob.recall<String>("thid") &&
+                        proofEvent!!.data.status == PresentationProofStatus.REQUEST_RECEIVED
             },
             "ERROR: Bob did not achieve any presentation request!",
         )
-
-        val presentationId = lastResponseList("contents", PresentationProof::class).findLast {
-            it.status == "RequestReceived"
-        }!!.presentationId
-        bob.remember("presentationId", presentationId)
+        bob.remember("presentationId", proofEvent!!.data.presentationId)
     }
 
     @When("{actor} makes the presentation of the proof to {actor}")
@@ -100,37 +101,12 @@ class PresentProofSteps {
     }
 
     @Then("{actor} sees the proof is rejected")
-    fun bobSeesProofIsRejected(actor: Actor) {
+    fun bobSeesProofIsRejected(bob: Actor) {
         wait(
             {
-                actor.attemptsTo(
-                    Get.resource("/present-proof/presentations/${actor.recall<String>("presentationId")}"),
-                )
-                actor.should(
-                    ResponseConsequence.seeThatResponse {
-                        it.statusCode(SC_OK)
-                    },
-                )
-                lastResponseObject("", PresentationProof::class).status == "RequestRejected"
-            },
-            "ERROR: Faber did not receive presentation from Bob!",
-        )
-    }
-
-    @When("{actor} acknowledges the proof")
-    fun faberAcknowledgesTheProof(faber: Actor) {
-        wait(
-            {
-                faber.attemptsTo(
-                    Get.resource("/present-proof/presentations/${faber.recall<String>("presentationId")}"),
-                )
-                faber.should(
-                    ResponseConsequence.seeThatResponse {
-                        it.statusCode(SC_OK)
-                    },
-                )
-                lastResponseObject("", PresentationProof::class).status == "PresentationReceived" ||
-                    lastResponseObject("", PresentationProof::class).status == "PresentationVerified"
+                proofEvent = ListenToEvents.`as`(bob).presentationEvents.lastOrNull()
+                proofEvent != null && proofEvent!!.data.thid == bob.recall<String>("thid") &&
+                        proofEvent!!.data.status == PresentationProofStatus.REQUEST_REJECTED
             },
             "ERROR: Faber did not receive presentation from Bob!",
         )
@@ -140,15 +116,9 @@ class PresentProofSteps {
     fun faberHasTheProofVerified(faber: Actor) {
         wait(
             {
-                faber.attemptsTo(
-                    Get.resource("/present-proof/presentations/${faber.recall<String>("presentationId")}"),
-                )
-                faber.should(
-                    ResponseConsequence.seeThatResponse {
-                        it.statusCode(SC_OK)
-                    },
-                )
-                lastResponseObject("", PresentationProof::class).status == "PresentationVerified"
+                proofEvent = ListenToEvents.`as`(faber).presentationEvents.lastOrNull()
+                proofEvent != null && proofEvent!!.data.thid == faber.recall<String>("thid") &&
+                        proofEvent!!.data.status == PresentationProofStatus.PRESENTATION_VERIFIED
             },
             "ERROR: presentation did not achieve PresentationVerified state!",
         )

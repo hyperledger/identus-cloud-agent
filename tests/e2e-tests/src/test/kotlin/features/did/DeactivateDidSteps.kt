@@ -1,8 +1,9 @@
 package features.did
 
+import common.ListenToEvents
 import common.TestConstants
-import common.Utils
 import common.Utils.lastResponseObject
+import common.Utils.wait
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import net.serenitybdd.screenplay.Actor
@@ -30,7 +31,7 @@ class DeactivateDidSteps {
 
     @Then("{actor} sees that PRISM DID is successfully deactivated")
     fun actorSeesThatPrismDidIsSuccessfullyDeactivated(actor: Actor) {
-        Utils.wait(
+        wait(
             {
                 actor.attemptsTo(
                     Get.resource("/dids/${actor.recall<String>("shortFormDid")}"),

@@ -100,8 +100,8 @@ services:
       SECRET_STORAGE_BACKEND: postgres
       DEV_MODE: true
       WALLET_SEED:
-      WEBHOOK_URL:
-      WEBHOOK_API_KEY:
+      WEBHOOK_URL: ${WEBHOOK_URL}
+      WEBHOOK_API_KEY: ${WEBHOOK_API_KEY}
     depends_on:
       db:
         condition: service_healthy
@@ -116,11 +116,9 @@ services:
       retries: 5
     extra_hosts:
       - "host.docker.internal:host-gateway"
-  #    ports:
-  #      - "8085:8085"
 
   swagger-ui:
-    image: swaggerapi/swagger-ui:v4.14.0
+    image: swaggerapi/swagger-ui:v5.1.0
     environment:
       - 'URLS=[
         { name: "Prism Agent", url: "/docs/prism-agent/api/docs.yaml" },

@@ -71,7 +71,7 @@ jobs:
       - name: Start services for issuer
         env:
           PORT: 8080
-          NETWORK: prism
+          WEBHOOK_URL: http://host.docker.internal:9955
         uses: isbang/compose-action@v1.4.1
         with:
           compose-file: "./infrastructure/shared/docker-compose.yml"
@@ -82,7 +82,7 @@ jobs:
       - name: Start services for holder
         env:
           PORT: 8090
-          NETWORK: prism
+          WEBHOOK_URL: http://host.docker.internal:9956
         uses: isbang/compose-action@v1.4.1
         with:
           compose-file: "./infrastructure/shared/docker-compose.yml"
@@ -93,6 +93,7 @@ jobs:
       - name: Start services for verifier
         env:
           PORT: 8070
+          WEBHOOK_URL: http://host.docker.internal:9957
         uses: isbang/compose-action@v1.4.1
         with:
           compose-file: "./infrastructure/shared/docker-compose.yml"
