@@ -2,10 +2,16 @@ package io.iohk.atala.pollux.core.model.schema
 
 import io.iohk.atala.pollux.core.model.error.CredentialSchemaError
 import io.iohk.atala.pollux.core.model.error.CredentialSchemaError.*
-import io.iohk.atala.pollux.core.model.schema.`type`.{CredentialJsonSchemaType, CredentialSchemaType}
+import io.iohk.atala.pollux.core.model.schema.`type`.{
+  AnoncredSchemaType,
+  CredentialJsonSchemaType,
+  CredentialSchemaType
+}
+import io.iohk.atala.pollux.core.model.schema.validator.CredentialJsonSchemaValidator
 import io.iohk.atala.pollux.core.service.URIDereferencer
 import zio.*
 import zio.json.*
+import zio.prelude.Validation
 
 import java.net.URI
 import java.time.{OffsetDateTime, ZoneOffset}
@@ -119,12 +125,21 @@ object CredentialSchema {
       content <- uriDereferencer.dereference(uri).mapError(err => UnexpectedError(err.toString))
       vcSchema <- parseCredentialSchema(content)
       resolvedSchemaType <- resolveCredentialSchemaType(vcSchema.`type`)
-      _ <- resolvedSchemaType.validateClaims(vcSchema.schema, claims)
+      _ <-
+        Validation
+          .fromPredicateWith(
+            CredentialSchemaParsingError(
+              s"Only ${CredentialJsonSchemaType.`type`} schema type can be used to verify claims"
+            )
+          )(resolvedSchemaType.`type`)(`type` => `type` == CredentialJsonSchemaType.`type`)
+          .toZIO
+      schemaValidator <- CredentialJsonSchemaValidator.from(vcSchema.schema)
+      _ <- schemaValidator.validate(claims)
     } yield ()
   }
 
   private val supportedCredentialSchemaTypes: Map[String, CredentialSchemaType] =
-    IndexedSeq(CredentialJsonSchemaType)
+    IndexedSeq(CredentialJsonSchemaType, AnoncredSchemaType)
       .map(credentialSchemaType => (credentialSchemaType.`type`, credentialSchemaType))
       .toMap
 
@@ -137,7 +152,7 @@ object CredentialSchema {
   def validateCredentialSchema(vcSchema: CredentialSchema): IO[CredentialSchemaError, Unit] = {
     for {
       resolvedSchemaType <- resolveCredentialSchemaType(vcSchema.`type`)
-      _ <- resolvedSchemaType.toSchemaValidator(vcSchema.schema)
+      _ <- resolvedSchemaType.validate(vcSchema.schema)
     } yield ()
   }
 
