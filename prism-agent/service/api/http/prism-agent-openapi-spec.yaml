@@ -465,6 +465,12 @@ paths:
           schema:
             type: integer
             format: int32
+        - name: thid
+          in: query
+          description: The thid of a DIDComm communication.
+          required: false
+          schema:
+            type: string
       responses:
         "200":
           description: The list of connection records.
@@ -1443,6 +1449,7 @@ components:
     Connection:
       required:
         - connectionId
+        - thid
         - role
         - state
         - invitation
@@ -1455,6 +1462,13 @@ components:
           type: string
           description: The unique identifier of the connection.
           format: uuid
+          example: 0527aea1-d131-3948-a34d-03af39aba8b4
+        thid:
+          type: string
+          description:
+            The unique identifier of the thread this connection record
+            belongs to. The value will identical on both sides of the connection (inviter
+            and invitee)
           example: 0527aea1-d131-3948-a34d-03af39aba8b4
         label:
           type: string
@@ -1562,7 +1576,7 @@ components:
           items:
             $ref: "#/components/schemas/Connection"
           description: ""
-          examples: []
+          example: []
         kind:
           type: string
           description: ""
@@ -1737,7 +1751,7 @@ components:
           description:
             Tokens that allow to lookup and filter the credential schema
             records.
-          examples:
+          example:
             - driving
             - licence
             - id
@@ -1803,7 +1817,7 @@ components:
           description:
             Tokens that allow to lookup and filter the credential schema
             records.
-          examples:
+          example:
             - driving
             - licence
             - id
@@ -1889,7 +1903,7 @@ components:
           description:
             A sequence of CredentialSchemaResponse objects representing
             the list of credential schemas that the API response contains
-          examples: []
+          example: []
         kind:
           type: string
           description:
@@ -1994,6 +2008,19 @@ components:
 
             DID document metadata MUST contain a versionId property with the hash of the AtalaOperation contained in the latest valid SignedAtalaOperation that created the DID or changed the DID's internal state.
           example: 4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff
+        created:
+          type: string
+          description:
+            The timestamp of the Cardano block that contained the first
+            valid SignedAtalaOperation with a CreateDIDOperation that created the
+            DID.
+          example: "2023-02-04T13:52:10Z"
+        updated:
+          type: string
+          description:
+            The timestamp of the Cardano block that contained the latest
+            valid SignedAtalaOperation that changed the DID's internal state.
+          example: "2023-02-04T13:52:10Z"
       description: "[DID document metadata](https://www.w3.org/TR/did-core/#did-document-metadata)"
     DIDOperationResponse:
       required:
@@ -2095,13 +2122,25 @@ components:
           example: 1.1.0
     IssueCredentialRecord:
       required:
-        - claims
         - recordId
+        - thid
+        - claims
         - createdAt
         - role
         - protocolState
       type: object
       properties:
+        recordId:
+          type: string
+          description: The unique identifier of the issue credential record.
+          example: 80d612dc-0ded-4ac9-90b4-1b8eabb04545
+        thid:
+          type: string
+          description:
+            The unique identifier of the thread this credential record
+            belongs to. The value will identical on both sides of the issue flow (issuer
+            and holder)
+          example: 0527aea1-d131-3948-a34d-03af39aba8b4
         subjectId:
           type: string
           description:
@@ -2128,15 +2167,11 @@ components:
             If set to `false`, a manual approval by the issuer via API call will be
             required for the VC to be issued.
           example: true
-        recordId:
-          type: string
-          description: The unique identifier of the issue credential record.
-          example: 80d612dc-0ded-4ac9-90b4-1b8eabb04545
         createdAt:
           type: string
           description: The date and time when the issue credential record was created.
           format: date-time
-          example: "2023-06-19T18:21:32.623746+07:00"
+          example: "2023-07-13T16:30:10.206375+07:00"
         updatedAt:
           type: string
           description:
@@ -2153,21 +2188,6 @@ components:
           type: string
           description: The current state of the issue credential protocol execution.
           example: OfferPending
-          enum:
-            - OfferPending
-            - OfferSent
-            - OfferReceived
-            - RequestPending
-            - RequestGenerated
-            - RequestSent
-            - RequestReceived
-            - CredentialPending
-            - CredentialGenerated
-            - CredentialSent
-            - CredentialReceived
-            - ProblemReportPending
-            - ProblemReportSent
-            - ProblemReportReceived
         jwtCredential:
           type: string
           description:
@@ -2219,7 +2239,7 @@ components:
           description:
             A sequence of IssueCredentialRecord objects representing the
             list of credential records that the API response contains
-          examples: []
+          example: []
     Json:
       description:
         The service endpoint. Can contain multiple possible values as described
@@ -2326,6 +2346,7 @@ components:
     PresentationStatus:
       required:
         - presentationId
+        - thid
         - status
       type: object
       properties:
@@ -2333,6 +2354,13 @@ components:
           type: string
           description: The unique identifier of the presentation record.
           example: 3c6d9fa5-d277-431e-a6cb-d3956e47e610
+        thid:
+          type: string
+          description:
+            The unique identifier of the thread this presentation record
+            belongs to. The value will identical on both sides of the presentation
+            flow (verifier and prover)
+          example: 0527aea1-d131-3948-a34d-03af39aba8b4
         status:
           type: string
           description: The current state of the proof presentation record.
@@ -2347,7 +2375,6 @@ components:
             - PresentationSent
             - PresentationReceived
             - PresentationVerified
-            - PresentationVerificationFailed
             - PresentationAccepted
             - PresentationRejected
             - ProblemReportPending
@@ -2360,13 +2387,13 @@ components:
           description:
             The type of proofs requested in the context of this proof presentation
             request (e.g., VC schema, trusted issuers, etc.)
-          examples: []
+          example: []
         data:
           type: array
           items:
             type: string
           description: The list of proofs presented by the prover to the verifier.
-          examples: []
+          example: []
         connectionId:
           type: string
           description:
@@ -2385,7 +2412,7 @@ components:
           items:
             $ref: "#/components/schemas/PresentationStatus"
           description: A sequence of Presentation objects.
-          examples: []
+          example: []
         self:
           type: string
           description: The reference to the presentation collection itself.
@@ -2488,7 +2515,7 @@ components:
           description:
             One or more issuers that are trusted by the verifier emitting
             the proof presentation request.
-          examples:
+          example:
             - did:web:atalaprism.io/users/testUser
             - did.prism:123
             - did:prism:...
@@ -2564,7 +2591,7 @@ components:
           description:
             The type of proofs requested in the context of this proof presentation
             request (e.g., VC schema, trusted issuers, etc.)
-          examples: []
+          example: []
     RequestPresentationOutput:
       required:
         - presentationId
