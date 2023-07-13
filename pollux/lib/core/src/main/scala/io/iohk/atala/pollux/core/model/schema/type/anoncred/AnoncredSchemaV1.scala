@@ -13,27 +13,32 @@ object AnoncredSchemaV1 extends AnoncredSchemaVersion {
       |  "type": "object",
       |  "properties": {
       |    "name": {
-      |      "type": "string"
+      |      "type": "string",
+      |       "minLength": 1
       |    },
       |    "version": {
-      |      "type": "string"
+      |      "type": "string",
+      |       "minLength": 1
       |    },
       |    "attrNames": {
       |      "type": "array",
       |      "items": {
-      |        "type": "string"
+      |        "type": "string",
+      |         "minLength": 1
       |      },
       |      "minItems": 1,
       |      "maxItems": 125,
       |      "uniqueItems": true
       |    },
       |    "issuerId": {
-      |      "type": "string"
+      |      "type": "string",
+      |      "minLength": 1
       |    }
       |  },
       |  "required": ["name", "version", "attrNames", "issuerId"]
       |}
       |""".stripMargin
 
-  override def initialiseJsonSchema: IO[CredentialSchemaError, JsonSchema] = JsonSchemaUtils.jsonSchema(jsonSchemaSchemaStr)
+  override def initialiseJsonSchema: IO[CredentialSchemaError, JsonSchema] =
+    JsonSchemaUtils.jsonSchema(jsonSchemaSchemaStr)
 }

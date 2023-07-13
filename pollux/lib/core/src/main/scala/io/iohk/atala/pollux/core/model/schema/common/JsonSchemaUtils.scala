@@ -9,7 +9,10 @@ import zio.*
 import zio.json.ast.Json
 
 object JsonSchemaUtils {
-  def jsonSchema(schema: String, supportedVersions: IndexedSeq[VersionFlag] = IndexedSeq.empty): IO[CredentialSchemaError, JsonSchema] = {
+  def jsonSchema(
+      schema: String,
+      supportedVersions: IndexedSeq[VersionFlag] = IndexedSeq.empty
+  ): IO[CredentialSchemaError, JsonSchema] = {
     for {
       jsonSchemaNode <- toJsonNode(schema)
       specVersion <- ZIO
@@ -17,7 +20,11 @@ object JsonSchemaUtils {
         .mapError(t => UnexpectedError(t.getMessage))
       _ <-
         if (supportedVersions.nonEmpty && !supportedVersions.contains(specVersion))
-          ZIO.fail(UnsupportedJsonSchemaSpecVersion(s"Unsupported JsonSchemaVersion. Current:$specVersion ExpectedOneOf:${supportedVersions.map(_.getId)}"))
+          ZIO.fail(
+            UnsupportedJsonSchemaSpecVersion(
+              s"Unsupported JsonSchemaVersion. Current:$specVersion ExpectedOneOf:${supportedVersions.map(_.getId)}"
+            )
+          )
         else ZIO.unit
       mapper <- ZIO.attempt(new ObjectMapper()).mapError(t => UnexpectedError(t.getMessage))
       factory <- ZIO
@@ -27,7 +34,10 @@ object JsonSchemaUtils {
     } yield jsonSchema
   }
 
-  def from(schema: Json, supportedVersions: IndexedSeq[VersionFlag] = IndexedSeq.empty): IO[CredentialSchemaError, JsonSchema] = {
+  def from(
+      schema: Json,
+      supportedVersions: IndexedSeq[VersionFlag] = IndexedSeq.empty
+  ): IO[CredentialSchemaError, JsonSchema] = {
     jsonSchema(schema.toString(), supportedVersions)
   }
 

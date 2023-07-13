@@ -125,13 +125,14 @@ object CredentialSchema {
       content <- uriDereferencer.dereference(uri).mapError(err => UnexpectedError(err.toString))
       vcSchema <- parseCredentialSchema(content)
       resolvedSchemaType <- resolveCredentialSchemaType(vcSchema.`type`)
-      _ <- Validation
-        .fromPredicateWith(
-          CredentialSchemaParsingError(
-            s"Only ${CredentialJsonSchemaType.`type`} schema type can be used to verify claims"
-          )
-        )(resolvedSchemaType.`type`)(`type` => `type` == CredentialJsonSchemaType.`type`)
-        .toZIO
+      _ <-
+        Validation
+          .fromPredicateWith(
+            CredentialSchemaParsingError(
+              s"Only ${CredentialJsonSchemaType.`type`} schema type can be used to verify claims"
+            )
+          )(resolvedSchemaType.`type`)(`type` => `type` == CredentialJsonSchemaType.`type`)
+          .toZIO
       schemaValidator <- CredentialJsonSchemaValidator.from(vcSchema.schema)
       _ <- schemaValidator.validate(claims)
     } yield ()
