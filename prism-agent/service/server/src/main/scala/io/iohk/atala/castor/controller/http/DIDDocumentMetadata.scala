@@ -17,7 +17,13 @@ final case class DIDDocumentMetadata(
     canonicalId: Option[String] = None,
     @description(annotations.versionId.description)
     @encodedExample(annotations.versionId.example)
-    versionId: Option[String] = None
+    versionId: Option[String] = None,
+    @description(annotations.created.description)
+    @encodedExample(annotations.created.example)
+    created: Option[String] = None,
+    @description(annotations.updated.description)
+    @encodedExample(annotations.updated.example)
+    updated: Option[String] = None,
 )
 
 object DIDDocumentMetadata {
@@ -47,6 +53,20 @@ object DIDDocumentMetadata {
             |""".stripMargin,
           example = "4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff"
         )
+
+    object created
+        extends Annotation[String](
+          description =
+            "The timestamp of the Cardano block that contained the first valid SignedAtalaOperation with a CreateDIDOperation that created the DID.",
+          example = "2023-02-04T13:52:10Z"
+        )
+
+    object updated
+        extends Annotation[String](
+          description =
+            "The timestamp of the Cardano block that contained the latest valid SignedAtalaOperation that changed the DID's internal state.",
+          example = "2023-02-04T13:52:10Z"
+        )
   }
 
   given encoder: JsonEncoder[DIDDocumentMetadata] = DeriveJsonEncoder.gen[DIDDocumentMetadata]
@@ -58,6 +78,8 @@ object DIDDocumentMetadata {
       DIDDocumentMetadata(
         deactivated = Some(didDocumentMetadata.deactivated),
         canonicalId = didDocumentMetadata.canonicalId,
-        versionId = Some(didDocumentMetadata.versionId)
+        versionId = Some(didDocumentMetadata.versionId),
+        created = didDocumentMetadata.created,
+        updated = didDocumentMetadata.updated
       )
 }
