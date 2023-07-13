@@ -6,7 +6,7 @@ import org.junit.runner.RunWith
 
 @CucumberOptions(
     features = [
-        "src/test/resources/features/did_registrar",
+        "src/test/resources/features",
     ],
     glue = ["features"],
     snippets = CucumberOptions.SnippetType.CAMELCASE,

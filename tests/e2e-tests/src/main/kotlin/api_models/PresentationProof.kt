@@ -13,7 +13,6 @@ data class PresentationProof(
 ): JsonEncoded
 
 object PresentationProofStatus {
-    const val REQUEST_SENT = "RequestSent"
     const val REQUEST_RECEIVED = "RequestReceived"
     const val REQUEST_REJECTED = "RequestRejected"
     const val PRESENTATION_VERIFIED = "PresentationVerified"

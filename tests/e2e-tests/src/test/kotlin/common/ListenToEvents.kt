@@ -20,7 +20,7 @@ open class ListenToEvents(
     private val port: Int,
 ): Ability, HasTeardown {
 
-    private var server: ApplicationEngine? = null
+    private val server: ApplicationEngine
 
     var connectionEvents: MutableList<ConnectionEvent> = mutableListOf()
     var credentialEvents: MutableList<CredentialEvent> = mutableListOf()
@@ -73,6 +73,6 @@ open class ListenToEvents(
     }
 
     override fun tearDown() {
-        server!!.stop()
+        server.stop()
     }
 }
