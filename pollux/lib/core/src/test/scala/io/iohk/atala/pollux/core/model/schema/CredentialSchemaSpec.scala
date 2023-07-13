@@ -2,6 +2,7 @@ package io.iohk.atala.pollux.core.model.schema
 
 import io.iohk.atala.pollux.core.model.error.CredentialSchemaError
 import io.iohk.atala.pollux.core.model.schema.AnoncredSchemaTypeSpec.test
+import io.iohk.atala.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSchemaV1
 import io.iohk.atala.pollux.core.model.schema.`type`.{AnoncredSchemaType, CredentialJsonSchemaType}
 import zio.Scope
 import zio.json.*
@@ -60,7 +61,7 @@ object CredentialSchemaSpec extends ZIOSpecDefault {
           authored = OffsetDateTime.parse("2022-03-10T12:00:00Z"),
           tags = Seq("tag1", "tag2"),
           description = "Anoncred Schema",
-          `type` = AnoncredSchemaType.`type`,
+          `type` = AnoncredSchemaSchemaV1.version,
           schema = jsonSchema.fromJson[Json].getOrElse(Json.Null)
         )
         assertZIO(CredentialSchema.validateCredentialSchema(credentialSchema))(isUnit)
@@ -84,7 +85,7 @@ object CredentialSchemaSpec extends ZIOSpecDefault {
           authored = OffsetDateTime.parse("2022-03-10T12:00:00Z"),
           tags = Seq("tag1", "tag2"),
           description = "Anoncred Schema",
-          `type` = AnoncredSchemaType.`type`,
+          `type` = AnoncredSchemaSchemaV1.version,
           schema = jsonSchema.fromJson[Json].getOrElse(Json.Null)
         )
         assertZIO(CredentialSchema.validateCredentialSchema(credentialSchema).exit)(

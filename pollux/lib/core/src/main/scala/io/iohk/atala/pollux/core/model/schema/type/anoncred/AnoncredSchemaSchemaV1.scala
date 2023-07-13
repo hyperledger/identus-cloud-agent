@@ -5,7 +5,8 @@ import io.iohk.atala.pollux.core.model.error.CredentialSchemaError
 import io.iohk.atala.pollux.core.model.schema.common.JsonSchemaUtils
 import zio.*
 
-object AnoncredSchemaV1 extends AnoncredSchemaVersion {
+object AnoncredSchemaSchemaV1 extends AnoncredSchemaSchemaVersion {
+  val version: String = AnoncredSchemaSchemaV1.getClass.getSimpleName
   private val jsonSchemaSchemaStr: String =
     """
       |{
