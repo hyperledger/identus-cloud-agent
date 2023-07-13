@@ -1,5 +1,6 @@
 package io.iohk.atala.castor.core.service
 
+import io.iohk.atala.castor.core.model.ProtoModelHelper
 import io.iohk.atala.castor.core.model.did.{
   CanonicalPrismDID,
   DIDData,
@@ -12,17 +13,16 @@ import io.iohk.atala.castor.core.model.did.{
   ScheduledDIDOperationDetail,
   SignedPrismDIDOperation
 }
-import zio.*
-import io.iohk.atala.castor.core.model.ProtoModelHelper
+import io.iohk.atala.castor.core.model.error.OperationValidationError
 import io.iohk.atala.castor.core.model.error.{DIDOperationError, DIDResolutionError}
 import io.iohk.atala.castor.core.util.DIDOperationValidator
-import io.iohk.atala.shared.models.HexString
-import io.iohk.atala.prism.protos.{node_api, node_models}
 import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc.NodeService
 import io.iohk.atala.prism.protos.node_models.OperationOutput.OperationMaybe
-
+import io.iohk.atala.prism.protos.{node_api, node_models}
+import io.iohk.atala.shared.models.HexString
+import java.time.Instant
 import scala.collection.immutable.ArraySeq
-import io.iohk.atala.castor.core.model.error.OperationValidationError
+import zio.*
 
 trait DIDService {
   def scheduleOperation(operation: SignedPrismDIDOperation): IO[DIDOperationError, ScheduleDIDOperationOutcome]
@@ -108,17 +108,29 @@ private class DIDServiceImpl(didOpValidator: DIDOperationValidator, nodeClient: 
               .flatMap(didData => ZIO.fromEither(didData.toDomain))
               .mapError(DIDResolutionError.UnexpectedDLTResult.apply)
               .map { didData =>
+                val (created, updated) = getMinMaxLedgerTime(didDataProto)
                 val metadata = DIDMetadata(
                   lastOperationHash = ArraySeq.from(result.lastUpdateOperation.toByteArray),
                   canonicalId =
                     unpublishedDidData.map(_ => canonicalDID), // only shows canonicalId if long-form and published
-                  deactivated = didData.internalKeys.isEmpty && didData.publicKeys.isEmpty
+                  deactivated = didData.internalKeys.isEmpty && didData.publicKeys.isEmpty,
+                  created = created,
+                  updated = updated
                 )
                 metadata -> didData
               }
               .asSome
         )
     } yield publishedDidData.orElse(unpublishedDidData)
+  }
+
+  private def getMinMaxLedgerTime(didData: node_models.DIDData): (Option[Instant], Option[Instant]) = {
+    val ledgerTimes = didData.publicKeys.flatMap(_.addedOn) ++
+      didData.publicKeys.flatMap(_.revokedOn) ++
+      didData.services.flatMap(_.addedOn) ++
+      didData.services.flatMap(_.deletedOn)
+    val instants = ledgerTimes.flatMap(_.toInstant)
+    (instants.minOption, instants.maxOption)
   }
 
   private def extractUnpublishedDIDData(did: LongFormPrismDID): IO[DIDResolutionError, (DIDMetadata, DIDData)] = {
@@ -137,7 +149,9 @@ private class DIDServiceImpl(didOpValidator: DIDOperationValidator, nodeClient: 
           DIDMetadata(
             lastOperationHash = ArraySeq.from(did.stateHash.toByteArray),
             canonicalId = None, // unpublished DID must not contain canonicalId
-            deactivated = false // unpublished DID cannot be deactivated
+            deactivated = false, // unpublished DID cannot be deactivated
+            created = None, // unpublished DID cannot have timestamp
+            updated = None // unpublished DID cannot have timestamp
           )
         val didData = DIDData(
           id = did.asCanonical,

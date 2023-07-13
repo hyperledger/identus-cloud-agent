@@ -106,7 +106,9 @@ object ManagedDIDServiceSpec
     val metadata = DIDMetadata(
       lastOperationHash = lastOperationHash,
       canonicalId = None,
-      deactivated = deactivated
+      deactivated = deactivated,
+      created = None,
+      updated = None
     )
     val didData = DIDData(
       id = PrismDID.buildCanonicalFromSuffix("0" * 64).toOption.get,

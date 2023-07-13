@@ -15,16 +15,28 @@ import io.circe.Json
 import io.iohk.atala.castor.core.model.did.ServiceEndpoint
 import io.iohk.atala.castor.core.model.did.ServiceEndpoint.UriOrJsonEndpoint
 import io.iohk.atala.castor.core.model.did.EllipticCurve
+import java.time.format.DateTimeFormatter
+import java.time.ZoneOffset
+import java.time.Instant
 
 object W3CModelHelper extends W3CModelHelper
 
 private[castor] trait W3CModelHelper {
 
+  private val XML_DATETIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")
+
+  private def toXmlDateTime(time: Instant): String = {
+    val zonedDateTime = time.atZone(ZoneOffset.UTC)
+    XML_DATETIME_FORMATTER.format(zonedDateTime)
+  }
+
   extension (didMetadata: DIDMetadata) {
     def toW3C: DIDDocumentMetadataRepr = DIDDocumentMetadataRepr(
       deactivated = didMetadata.deactivated,
       canonicalId = didMetadata.canonicalId.map(_.toString),
-      versionId = HexString.fromByteArray(didMetadata.lastOperationHash.toArray).toString
+      versionId = HexString.fromByteArray(didMetadata.lastOperationHash.toArray).toString,
+      created = didMetadata.created.map(toXmlDateTime),
+      updated = didMetadata.updated.map(toXmlDateTime)
     )
   }
 
