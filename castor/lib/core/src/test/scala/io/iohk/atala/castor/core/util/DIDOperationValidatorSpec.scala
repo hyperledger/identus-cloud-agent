@@ -259,6 +259,18 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
           invalidArgumentContainsString("context is not unique")
         )
       },
+      test("reject CreateOperation when context is not a URI") {
+        val op = createPrismDIDOperation(context = Seq("not a URI"))
+        assert(DIDOperationValidator(Config.default).validate(op))(
+          invalidArgumentContainsString("context is not a valid URI")
+        )
+      },
+      test("reject CreateOperation when context is too long") {
+        val op = createPrismDIDOperation(context = Seq(s"http://example.com/${"0" * 100}"))
+        assert(DIDOperationValidator(Config.default).validate(op))(
+          invalidArgumentContainsString("context is too long")
+        )
+      },
       test("reject CreateOperation on too long serviceType") {
         val service = Service(
           id = "service",
@@ -517,6 +529,20 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         val op = updatePrismDIDOperation(Seq(action1, action2))
         assert(DIDOperationValidator(Config.default).validate(op))(
           invalidArgumentContainsString("context is not unique")
+        )
+      },
+      test("reject UpdateOperation when context is not a URI") {
+        val action1 = UpdateDIDAction.PatchContext(Seq("not a URI"))
+        val op = updatePrismDIDOperation(Seq(action1))
+        assert(DIDOperationValidator(Config.default).validate(op))(
+          invalidArgumentContainsString("context is not a valid URI")
+        )
+      },
+      test("reject UpdateOperation when context is too long") {
+        val action1 = UpdateDIDAction.PatchContext(Seq(s"http://example.com/${"0" * 100}"))
+        val op = updatePrismDIDOperation(Seq(action1))
+        assert(DIDOperationValidator(Config.default).validate(op))(
+          invalidArgumentContainsString("context is too long")
         )
       },
       test("reject UpdateOperation on too long serviceType") {
