@@ -124,6 +124,8 @@ private class DIDServiceImpl(didOpValidator: DIDOperationValidator, nodeClient: 
     } yield publishedDidData.orElse(unpublishedDidData)
   }
 
+  // FIXME: This doesn't play well detecting timestamp context and revoked service due to
+  // the response from Node missing the ledger data for those items.
   private def getMinMaxLedgerTime(didData: node_models.DIDData): (Option[Instant], Option[Instant]) = {
     val ledgerTimes = didData.publicKeys.flatMap(_.addedOn) ++
       didData.publicKeys.flatMap(_.revokedOn) ++
