@@ -3,21 +3,20 @@ package features
 import api_models.Connection
 import api_models.ConnectionState
 import api_models.Credential
-import common.Agents.Acme
-import common.Agents.Bob
-import common.Agents.Faber
-import common.Agents.Mallory
-import common.Agents.createAgents
+import common.Environments
+import common.ListenToEvents
 import common.Utils.lastResponseList
 import features.connection.ConnectionSteps
 import features.did.PublishDidSteps
 import features.issue_credentials.IssueCredentialsSteps
+import io.cucumber.java.After
 import io.cucumber.java.Before
 import io.cucumber.java.ParameterType
 import io.cucumber.java.en.Given
 import net.serenitybdd.screenplay.Actor
 import net.serenitybdd.screenplay.actors.Cast
 import net.serenitybdd.screenplay.actors.OnStage
+import net.serenitybdd.screenplay.rest.abilities.CallAnApi
 import net.serenitybdd.screenplay.rest.interactions.Get
 import net.serenitybdd.screenplay.rest.questions.ResponseConsequence
 import org.apache.http.HttpStatus.SC_OK
@@ -26,13 +25,29 @@ class CommonSteps {
 
     @Before
     fun setStage() {
-        createAgents()
-        val cast = object : Cast() {
-            override fun getActors(): MutableList<Actor> {
-                return mutableListOf(Acme, Bob, Mallory, Faber)
+        val cast = Cast()
+        cast.actorNamed("Acme", CallAnApi.at(Environments.ACME_AGENT_URL), ListenToEvents.at(Environments.ACME_AGENT_WEBHOOK_HOST, Environments.ACME_AGENT_WEBHOOK_PORT))
+        cast.actorNamed("Bob", CallAnApi.at(Environments.BOB_AGENT_URL), ListenToEvents.at(Environments.BOB_AGENT_WEBHOOK_HOST, Environments.BOB_AGENT_WEBHOOK_PORT))
+        cast.actorNamed("Faber", CallAnApi.at(Environments.FABER_AGENT_URL), ListenToEvents.at(Environments.FABER_AGENT_WEBHOOK_HOST, Environments.FABER_AGENT_WEBHOOK_PORT))
+        cast.actors.forEach { actor ->
+            when(actor.name) {
+                "Acme" -> {
+                    actor.remember("AUTH_KEY", Environments.ACME_AUTH_KEY)
+                }
+                "Bob" -> {
+                    actor.remember("AUTH_KEY", Environments.BOB_AUTH_KEY)
+                }
+                "Faber" -> {
+                    actor.remember("AUTH_KEY", Environments.FABER_AUTH_KEY)
+                }
             }
         }
         OnStage.setTheStage(cast)
+    }
+
+    @After
+    fun clearStage() {
+        OnStage.drawTheCurtain()
     }
 
     @ParameterType(".*")

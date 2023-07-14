@@ -1,4 +1,8 @@
 package api_models
+
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class Connection(
     var connectionId: String = "",
     var thid: String = "",
@@ -12,7 +16,7 @@ data class Connection(
     var myDid: String = "",
     var theirDid: String = "",
     var role: String = "",
-)
+): JsonEncoded
 
 object ConnectionState {
     const val INVITATION_GENERATED = "InvitationGenerated"

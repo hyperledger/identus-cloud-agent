@@ -35,4 +35,8 @@ object TestConstants {
         listOf("https://new.service.com/"),
         "LinkedDomains",
     )
+    val EVENT_TYPE_CONNECTION_UPDATED = "ConnectionUpdated"
+    val EVENT_TYPE_ISSUE_CREDENTIAL_RECORD_UPDATED = "IssueCredentialRecordUpdated"
+    val EVENT_TYPE_PRESENTATION_UPDATED = "PresentationUpdated"
+    val EVENT_TYPE_DID_STATUS_UPDATED = "DIDStatusUpdated"
 }
