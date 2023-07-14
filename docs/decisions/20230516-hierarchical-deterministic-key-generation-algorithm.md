@@ -5,7 +5,7 @@
 - Date: 2023-05-16
 - Tags: key management, hierarchical deterministic, key derivation
 
-Technical Story: 
+Technical Story:
 
 Current ADR is based on the Research Spike [Evaluation of Using a Single Mnemonic both for Cryptocurrency and Identity Wallets](https://drive.google.com/file/d/1SRHWRqY1C88eVuaS1v_uIAt-LNTLi9aO/view) document was written by Atala engineers:
 
@@ -22,13 +22,13 @@ The PRISM platform v2.x must provide the hierarchical deterministic (HD) key der
 
 HD key derivation can be used for both `managed` and `unmanaged` solutions. In both cases, the key material is created from the `seed`.
 
-In the case of a `managed` solution, the keys are created by the `Agent` or `SDK` and stored in the `secured storage` that is managed by the PRISM platform. 
+In the case of a `managed` solution, the keys are created by the `Agent` or `SDK` and stored in the `secured storage` that is managed by the PRISM platform.
 
 In the case of an `unmanaged` solution, the key material is created by the tools (for instance, `prism-cli`) following similar rules, and is stored on the client side in the `secret storage` managed by the client.
 
 ## Out of the Scope
 
-### `did:peer` 
+### `did:peer`
 
 DID peer key material derivation is out of the scope of this ADR, so this type of DIDs is created dynamically from the secure random
 
@@ -36,7 +36,7 @@ DID peer key material derivation is out of the scope of this ADR, so this type o
 
 Key material recovery procedure is out of the scope of this ADR, but the main idea is the following: having a `seed` and the latest versions of the DID Documents published on-chain it is possible to recover all the key materials related to the latest state of the identity wallet related to DIDs.
 
-### Implementation details 
+### Implementation details
 
 The HD key derivation algorithm is a part of the Apollo building block, the choice of the programming language is up to the engineering team.
 
@@ -63,12 +63,16 @@ Implement the HD key derivation algorithm according to the research spike for al
 The derivation path contains the following segments/layers:
 
 ```
-m/wallet-purpose`/did-index`/key-purpose`/key-index`
+m/wallet-purpose`/did-method`/did-index`/key-purpose`/key-index`
 ```
 
 `wallet purpose` is used to distinguish the wallet purpose for the identity wallet and is a constant for the PRISM platform `0x1D`, which looks like ID
 
-`did-index` - the index of the DID, it's possible to create 
+`did-method` - the DID method that the key will be generated for. The value of `did-method` should be registered. The following are available values for the `did-method`:
+
+- PRISM DID method - `0x1d`
+
+`did-index` - the index of the DID, it's possible to create
 
 `key-purpose` - the purpose of the key associated with the DID. There are the following available values for the `key purpose`:
 
@@ -104,4 +108,3 @@ The PRIMS platform uses HD key derivation algorithm for `managed` and `unmanaged
 ## Links
 
 - [Evaluation of Using a Single Mnemonic both for Cryptocurrency and Identity Wallets](https://drive.google.com/file/d/1SRHWRqY1C88eVuaS1v_uIAt-LNTLi9aO/view)
-
