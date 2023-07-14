@@ -47,6 +47,12 @@
       [
         "@semantic-release/exec",
         {
+          "prepareCmd": "sbt \"prismAgentServer/test:runMain io.iohk.atala.api.util.Tapir2StaticOAS ${process.env.PWD}/prism-agent/service/api/http/prism-agent-openapi-spec.yaml ${nextRelease.version}\""
+        }
+      ],
+      [
+        "@semantic-release/exec",
+        {
           "prepareCmd": "sbt \"release release-version ${nextRelease.version} next-version ${nextRelease.version}-SNAPSHOT with-defaults\""
         }
       ],
@@ -70,7 +76,8 @@
             "CHANGELOG.md",
             "DEPENDENCIES.md",
             "package.json",
-            "package-lock.json"
+            "package-lock.json",
+            "prism-agent/service/api/http/prism-agent-openapi-spec.yaml"
           ],
           "message": "chore(release): cut atala prism ${nextRelease.version} release\n\n${nextRelease.notes}"
         }
