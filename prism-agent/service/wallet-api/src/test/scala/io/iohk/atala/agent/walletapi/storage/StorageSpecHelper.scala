@@ -39,7 +39,7 @@ trait StorageSpecHelper extends ApolloSpecHelper {
       ManagedDIDTemplate(
         publicKeys = keyIds.map(DIDPublicKeyTemplate(_, VerificationRelationship.Authentication)),
         services = Nil,
-        context = Nil
+        contexts = Nil
       )
     )
 
@@ -49,7 +49,7 @@ trait StorageSpecHelper extends ApolloSpecHelper {
       ManagedDIDTemplate(
         publicKeys = keyIds.map(DIDPublicKeyTemplate(_, VerificationRelationship.Authentication)),
         services = Nil,
-        context = Nil
+        contexts = Nil
       )
     )
 

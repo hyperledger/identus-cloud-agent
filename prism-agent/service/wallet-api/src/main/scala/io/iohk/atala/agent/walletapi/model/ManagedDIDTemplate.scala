@@ -6,7 +6,7 @@ import io.iohk.atala.castor.core.model.did.{Service, VerificationRelationship, S
 final case class ManagedDIDTemplate(
     publicKeys: Seq[DIDPublicKeyTemplate],
     services: Seq[Service],
-    context: Seq[String]
+    contexts: Seq[String]
 )
 
 final case class DIDPublicKeyTemplate(

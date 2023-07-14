@@ -73,7 +73,7 @@ class OperationFactory(apollo: Apollo) {
       operation = PrismDIDOperation.Create(
         publicKeys = keysWithCounter._1.map(_._1) ++ Seq(masterKeyOutcome.publicKey),
         services = didTemplate.services,
-        context = didTemplate.context
+        context = didTemplate.contexts
       )
       hdKeys = CreateDIDHdKey(
         keyPaths = keysWithCounter._1.map { case (publicKey, path) => publicKey.id -> path }.toMap,
