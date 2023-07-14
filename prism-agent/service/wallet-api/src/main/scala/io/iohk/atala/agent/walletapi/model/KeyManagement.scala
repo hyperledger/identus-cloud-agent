@@ -84,9 +84,14 @@ final case class ManagedDIDHdKeyPath(
     keyUsage: VerificationRelationship | InternalKeyPurpose,
     keyIndex: Int
 ) {
+
+  private val WALLET_PURPOSE: Int = 0x1d
+  private val PRISM_DID_METHOD_PATH: Int = 0x1d
+
   def derivationPath: Seq[DerivationPath] =
     Seq(
-      DerivationPath.Hardened(0x1d),
+      DerivationPath.Hardened(WALLET_PURPOSE),
+      DerivationPath.Hardened(PRISM_DID_METHOD_PATH),
       DerivationPath.Hardened(didIndex),
       DerivationPath.Hardened(keyUsageIndex),
       DerivationPath.Hardened(keyIndex)
