@@ -64,7 +64,6 @@ lazy val V = new {
 
   val doobie = "1.0.0-RC2"
   val quill = "4.6.0"
-  val iris = "0.1.0" // TODO: remove
   val flyway = "9.8.3"
   val logback = "1.4.5"
 
@@ -215,8 +214,6 @@ lazy val D_Pollux = new {
       organization = "org.bouncycastle"
     )
 
-  val irisClient = "io.iohk.atala" %% "iris-client" % V.iris // TODO REMOVE?
-
   // Dependency Modules
   val baseDependencies: Seq[ModuleID] = Seq(
     D.zio,
@@ -246,7 +243,7 @@ lazy val D_Pollux = new {
   )
 
   // Project Dependencies
-  val coreDependencies: Seq[ModuleID] = baseDependencies ++ Seq(irisClient)
+  val coreDependencies: Seq[ModuleID] = baseDependencies
   val sqlDoobieDependencies: Seq[ModuleID] = baseDependencies ++ doobieDependencies
 }
 
@@ -594,6 +591,20 @@ val prismNodeClient = project
     )
   )
 
+// ##############
+// ###  iris ####
+// ##############
+val irisClient = project
+  .in(file("iris/client/scala-client"))
+  .settings(
+    name := "iris-client",
+    libraryDependencies ++= Seq(D.scalaPbGrpc, D.scalaPbRuntime),
+    coverageEnabled := false,
+    // gRPC settings
+    Compile / PB.targets := Seq(scalapb.gen() -> (Compile / sourceManaged).value / "scalapb"),
+    Compile / PB.protoSources := Seq(baseDirectory.value / ".." / ".." / "api" / "grpc")
+  )
+
 // #####################
 // #####  castor  ######
 // #####################
@@ -645,6 +656,7 @@ lazy val polluxCore = project
     libraryDependencies ++= D_Pollux.coreDependencies
   )
   .dependsOn(shared)
+  .dependsOn(irisClient)
   .dependsOn(polluxVcJWT)
   .dependsOn(protocolIssueCredential, protocolPresentProof, resolver, agentDidcommx, eventNotification)
 
