@@ -13,7 +13,7 @@ Multiple great solutions exist today on the market for load testing. We need to 
 
 ## Decision Drivers <!-- optional -->
 
-What are our needs? Let’s try to sum up the required capabilities with regards to [RFC-0028](https://input-output.atlassian.net/wiki/spaces/ATB/pages/3819044870/RFC+0028+-+PI2+-+Performance+Testing+Guidance+Framework), we need:
+What are our needs? Let’s try to sum up the required capabilities based on [RFC-0028](https://input-output.atlassian.net/wiki/spaces/ATB/pages/3819044870/RFC+0028+-+PI2+-+Performance+Testing+Guidance+Framework), we need:
 
 1. create required performance scenarios on various levels: endpoint level (e.g. get connections), flow level (calling endpoints one by one in order, e.g. issuing credentials flow)
 2. do checks for each request to make sure achieved statuses and response data are correct
