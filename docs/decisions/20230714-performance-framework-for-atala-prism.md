@@ -15,7 +15,7 @@ There are multiple great solutions today on the market for load testing. We need
 
 What are our needs? Let’s try to sum up the required capabilities based on [RFC-0028](https://input-output.atlassian.net/wiki/spaces/ATB/pages/3819044870/RFC+0028+-+PI2+-+Performance+Testing+Guidance+Framework), we need:
 
-1. create required performance scenarios on various levels: endpoint level (e.g. get connections), flow level (calling endpoints one by one in order, e.g. issuing credentials flow)
+1. Create required performance scenarios on various levels, such as endpoint level (e.g. get connections) and  flow level (calling endpoints one by one in order, e.g. issuing credentials flow)
 2. do checks for each request to make sure achieved statuses and response data are correct
 3. custom metrics support as we have custom scenarios connected
 4. Protocols support: HTTP (rest API), WebSocket (if we support it in the future for Mediator), gRPC (if we need PRISM Node direct benchmarks on gRPC level)
