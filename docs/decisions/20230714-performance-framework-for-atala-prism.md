@@ -19,7 +19,7 @@ What are our needs? Let’s try to sum up the required capabilities based on [RF
 2. Do checks for each request to make sure achieved statuses and response data are correct
 3. Custom metrics support as we have custom scenarios connected
 4. Protocols support: HTTP (rest API), WebSocket (if we support it in the future for Mediator), gRPC (if we need PRISM Node direct benchmarks on gRPC level)
-5. create required load over time depending on the scenario and type of test, the more different things supported - the better
+5. Create the required load over time depending on the scenario and type of test, the more different things are supported - the better
 6. easy to understand, read and share reports
 7. something that does not require too much RAM/CPU resources on the host machine to run that we can use our custom GitHub runners for performance testing, possible Cloud Execution
 8. the fast learning curve for everybody to contribute
