@@ -9,7 +9,7 @@ Technical Story: [PRISM Performance Management](https://input-output.atlassian.n
 
 ## Context and Problem Statement
 
-Multiple great solutions exist today on the market for load testing. We need to choose one that corresponds to our needs, infrastructure, and price. As part of this research, we’ll analyze what we require, and available load-testing solutions and make a proposal on which load-testing framework we would like to use.
+There are multiple great solutions today on the market for load testing. We need to choose one that corresponds to our needs, infrastructure, and price. The objective is to assess our requirements and explore the range of available load-testing solutions. Subsequently, we will provide a proposal recommending the load-testing framework that best suits our needs.
 
 ## Decision Drivers <!-- optional -->
 
