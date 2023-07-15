@@ -49,7 +49,7 @@ We can read multiple papers about their comparison, for example, this one for re
 
 There are 3 main classes of frameworks:
 
-1. enterprise - huge enterprise solutions in clouds with advanced tools to generate all kinds of load testing scenarios targeted to be used by non-technical testing engineers
+1. enterprise - huge enterprise solutions in clouds with advanced tools to generate all kinds of load testing scenarios targeted for non-technical testing engineers
 2. lightweight - small, highly optimized solutions, open-sourced, and easily extendable
 3. mixed - developer-friendly frameworks that are usually open-sourced with some free version providing cloud-paid plans, a kind of a medium between enterprise and lightweight
 
