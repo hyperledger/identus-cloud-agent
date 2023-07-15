@@ -31,7 +31,7 @@ What are our needs? Let’s try to sum up the required capabilities based on [RF
 
 ## Considered Options
 
-What’s on the market
+What’s on the market?
 Here is the list of TOP10 load test frameworks currently available on the market:
 
 * Apache JMeter
