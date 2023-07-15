@@ -17,7 +17,7 @@ What are our needs? Let’s try to sum up the required capabilities based on [RF
 
 1. Create required performance scenarios on various levels, such as endpoint level (e.g. get connections) and  flow level (calling endpoints one by one in order, e.g. issuing credentials flow)
 2. Do checks for each request to make sure achieved statuses and response data are correct
-3. custom metrics support as we have custom scenarios connected
+3. Custom metrics support as we have custom scenarios connected
 4. Protocols support: HTTP (rest API), WebSocket (if we support it in the future for Mediator), gRPC (if we need PRISM Node direct benchmarks on gRPC level)
 5. create required load over time depending on the scenario and type of test, the more different things supported - the better
 6. easy to understand, read and share reports
