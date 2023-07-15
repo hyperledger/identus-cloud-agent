@@ -60,7 +60,7 @@ Keeping in mind that we are not interested in enterprise solutions, because:
 1. They are very expensive
 2. We are smarter than they think we are (for example, we don’t need GUI simplifications and blocks to generate scenarios, we would like to use our coding power here)
 
-We can conclude that it makes sense to analyze and compare the following load-testing frameworks:
+Based on that, we can conclude that it makes sense for us to analyze and compare the following load-testing frameworks:
 
 1. Gatling
 2. K6
