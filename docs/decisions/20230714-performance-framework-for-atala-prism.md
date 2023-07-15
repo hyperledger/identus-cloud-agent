@@ -24,10 +24,11 @@ What are our needs? Let’s try to sum up the required capabilities based on [RF
 7. Something that does not require too much RAM/CPU resources on the host machine to run, so we can use our custom GitHub runners for performance testing and possible Cloud Execution
 8. The fast learning curve for everybody to contribute
 9. Good documentation and examples to be able to develop complex scenarios faster
-10. cloud support for tests running in analysis in the future to make results visible and present them easily as per request
-11. Support for GitHub actions to integrate into CI/CD
-12. Open source to be able to customize if required
-13. Cheap or free
+10. Cloud support for tests running
+11. Cloud support for tests analysis to make results visible and present them easily as per request
+12. Support for GitHub actions to integrate into CI/CD
+13. Open source to be able to customize if required
+14. Cheap or free
 
 ## Considered Options
 
@@ -45,7 +46,7 @@ Here is the list of TOP10 load test frameworks currently available on the market
 * NeoLoad
 * Locust
 
-We can read multiple papers about their comparison, for example, this one for reference, but we need to understand the difference between them all and which pros and cons they have, and why they were created.
+We can read multiple papers about their comparison, for example, [this one for reference](https://pflb.us/blog/best-load-testing-tools/), but we need to understand the difference between them all and which pros and cons they have, and why they were created.
 
 There are 3 main classes of frameworks:
 
