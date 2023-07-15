@@ -27,7 +27,7 @@ What are our needs? Let’s try to sum up the required capabilities based on [RF
 10. cloud support for tests running in analysis in the future to make results visible and present them easily as per request
 11. Support for GitHub actions to integrate into CI/CD
 12. open source to be able to customize if required
-13. cheap or free
+13. Cheap or free
 
 ## Considered Options
 
