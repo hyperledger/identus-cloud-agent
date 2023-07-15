@@ -22,7 +22,7 @@ What are our needs? Let’s try to sum up the required capabilities based on [RF
 5. Create the required load over time depending on the scenario and type of test, the more different things are supported - the better
 6. Easy to understand, read and share reports
 7. Something that does not require too much RAM/CPU resources on the host machine to run, so we can use our custom GitHub runners for performance testing and possible Cloud Execution
-8. the fast learning curve for everybody to contribute
+8. The fast learning curve for everybody to contribute
 9. good documentation and examples to be able to develop complex scenarios faster
 10. cloud support for tests running in analysis in the future to make results visible and present them easily as per request
 11. support for GitHub actions to integrate into CI/CD
