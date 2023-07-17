@@ -1,7 +1,6 @@
 package io.iohk.atala.event.notification
 import java.time.Instant
 import java.util.UUID
-import zio.IO
 
 case class Event[A](`type`: String, id: UUID, ts: Instant, data: A)
 

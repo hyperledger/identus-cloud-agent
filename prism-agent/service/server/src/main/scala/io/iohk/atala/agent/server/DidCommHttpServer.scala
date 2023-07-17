@@ -1,7 +1,7 @@
 package io.iohk.atala.agent.server
 
-import io.circe.DecodingFailure
-import io.circe.ParsingFailure
+import io.circe.*
+import io.circe.parser.*
 import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
@@ -14,17 +14,14 @@ import io.iohk.atala.mercury.protocol.connection.{ConnectionRequest, ConnectionR
 import io.iohk.atala.mercury.protocol.issuecredential.*
 import io.iohk.atala.mercury.protocol.presentproof.*
 import io.iohk.atala.mercury.protocol.trustping.TrustPing
-import io.iohk.atala.pollux.core.model.error.CredentialServiceError
-import io.iohk.atala.pollux.core.model.error.PresentationError
-import io.iohk.atala.pollux.core.service.CredentialService
-import io.iohk.atala.pollux.core.service.PresentationService
+import io.iohk.atala.pollux.core.model.error.{CredentialServiceError, PresentationError}
+import io.iohk.atala.pollux.core.service.{CredentialService, PresentationService}
 import io.iohk.atala.resolvers.DIDResolver
-import java.io.IOException
 import zio.*
 import zio.http.*
 import zio.http.model.*
-import io.circe.*
-import io.circe.parser.*
+
+import java.io.IOException
 
 object DidCommHttpServer {
   def run(didCommServicePort: Int) = {
@@ -85,7 +82,6 @@ object DidCommHttpServer {
       jsonString: String
   ): ZIO[DidOps & ManagedDIDService, ParseResponse | DIDSecretStorageError, Message] = {
     // Needed for implicit conversion from didcommx UnpackResuilt to mercury UnpackMessage
-    import io.iohk.atala.mercury.model.given
     for {
       recipientDid <- extractFirstRecipientDid(jsonString).mapError(err => ParseResponse(err))
       _ <- ZIO.logInfo(s"Extracted recipient Did => $recipientDid")
