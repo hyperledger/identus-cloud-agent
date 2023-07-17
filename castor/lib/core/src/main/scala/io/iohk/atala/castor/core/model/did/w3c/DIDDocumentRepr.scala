@@ -20,7 +20,7 @@ type PublicKeyReprOrRef = PublicKeyRepr | String
 
 final case class PublicKeyRepr(
     id: String,
-    `type`: "EcdsaSecp256k1VerificationKey2019", // TODO: use JsonWebKey2020 (ATL-3788)
+    `type`: "JsonWebKey2020",
     controller: String,
     publicKeyJwk: PublicKeyJwk
 )
@@ -31,4 +31,4 @@ final case class ServiceRepr(
     serviceEndpoint: Json
 )
 
-final case class PublicKeyJwk(kty: "EC", crv: String, x: String, y: String)
+final case class PublicKeyJwk(kty: String, crv: String, x: Option[String], y: Option[String])

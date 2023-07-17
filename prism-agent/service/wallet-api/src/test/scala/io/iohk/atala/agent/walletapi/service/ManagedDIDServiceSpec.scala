@@ -95,8 +95,9 @@ object ManagedDIDServiceSpec
 
   private def generateDIDTemplate(
       publicKeys: Seq[DIDPublicKeyTemplate] = Nil,
-      services: Seq[Service] = Nil
-  ): ManagedDIDTemplate = ManagedDIDTemplate(publicKeys, services)
+      services: Seq[Service] = Nil,
+      context: Seq[String] = Nil
+  ): ManagedDIDTemplate = ManagedDIDTemplate(publicKeys, services, context)
 
   private def resolutionResult(
       deactivated: Boolean = false,
@@ -104,7 +105,10 @@ object ManagedDIDServiceSpec
   ): (DIDMetadata, DIDData) = {
     val metadata = DIDMetadata(
       lastOperationHash = lastOperationHash,
-      deactivated = deactivated
+      canonicalId = None,
+      deactivated = deactivated,
+      created = None,
+      updated = None
     )
     val didData = DIDData(
       id = PrismDID.buildCanonicalFromSuffix("0" * 64).toOption.get,

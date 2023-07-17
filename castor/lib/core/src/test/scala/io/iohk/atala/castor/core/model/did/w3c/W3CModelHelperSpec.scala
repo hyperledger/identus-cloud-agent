@@ -115,7 +115,7 @@ object W3CModelHelperSpec extends ZIOSpecDefault {
           Seq(
             "https://www.w3.org/ns/did/v1",
             "https://identity.foundation/.well-known/did-configuration/v1",
-            // "https://w3id.org/security/suites/jws-2020/v1", // TODO: enable when align the key type (ATL-3788)
+            "https://w3id.org/security/suites/jws-2020/v1",
             "user-defined-context"
           )
         )
@@ -133,7 +133,7 @@ object W3CModelHelperSpec extends ZIOSpecDefault {
           hasSameElements(
             Seq(
               "https://www.w3.org/ns/did/v1",
-              // "https://w3id.org/security/suites/jws-2020/v1", // TODO: enable when align the key type (ATL-3788)
+              "https://w3id.org/security/suites/jws-2020/v1",
               "user-defined-context"
             )
           )

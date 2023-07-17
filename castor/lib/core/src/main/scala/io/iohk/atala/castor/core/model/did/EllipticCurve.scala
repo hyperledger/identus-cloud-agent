@@ -5,6 +5,8 @@ package io.iohk.atala.castor.core.model.did
 // in the "JSON Web Key Elliptic Curve" section
 enum EllipticCurve(val name: String) {
   case SECP256K1 extends EllipticCurve("secp256k1")
+  case ED25519 extends EllipticCurve("Ed25519")
+  case X25519 extends EllipticCurve("X25519")
 }
 
 object EllipticCurve {

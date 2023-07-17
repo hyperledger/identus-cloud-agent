@@ -58,6 +58,8 @@ private object CreateOperationValidator extends BaseOperationValidator {
       _ <- validateServiceEndpointLength(config)(operation, extractServiceEndpoint)
       _ <- validateServiceTypeLength(config)(operation, extractServiceType)
       _ <- validateUniqueContext(operation, _.context :: Nil)
+      _ <- validateContextLength(operation, _.context :: Nil)
+      _ <- validateContextIsUri(operation, _.context :: Nil)
       _ <- validateMasterKeyExists(operation)
     } yield ()
   }
@@ -100,6 +102,8 @@ private object UpdateOperationValidator extends BaseOperationValidator {
       _ <- validateServiceEndpointLength(config)(operation, extractServiceEndpoint)
       _ <- validateServiceTypeLength(config)(operation, extractServiceType)
       _ <- validateUniqueContext(operation, extractContexts)
+      _ <- validateContextLength(operation, extractContexts)
+      _ <- validateContextIsUri(operation, extractContexts)
       _ <- validatePreviousOperationHash(operation, _.previousOperationHash)
       _ <- validateNonEmptyUpdateAction(operation)
       _ <- validateUpdateServiceNonEmpty(operation)
@@ -225,6 +229,34 @@ private trait BaseOperationValidator {
     val nonUniqueContextList = contexts.filterNot(_.isUnique)
     if (nonUniqueContextList.isEmpty) Right(())
     else Left(OperationValidationError.InvalidArgument("context is not unique"))
+  }
+
+  protected def validateContextIsUri[T <: PrismDIDOperation](
+      operation: T,
+      contextExtractor: ContextExtractor[T]
+  ): Either[OperationValidationError, Unit] = {
+    val contexts = contextExtractor(operation)
+    val nonUriContexts = contexts.flatten.filterNot(UriUtils.isValidUriString)
+    if (nonUriContexts.isEmpty) Right(())
+    else
+      Left(
+        OperationValidationError.InvalidArgument(
+          s"context is not a valid URI: ${nonUriContexts.mkString("[", ", ", "]")}"
+        )
+      )
+  }
+
+  protected def validateContextLength[T <: PrismDIDOperation](
+      operation: T,
+      contextExtractor: ContextExtractor[T]
+  ): Either[OperationValidationError, Unit] = {
+    val contexts = contextExtractor(operation)
+    val invalidContexts = contexts.flatten.filter(_.length > 100) // FIXME: confirm this value  with the spec
+    if (invalidContexts.isEmpty) Right(())
+    else
+      Left(
+        OperationValidationError.InvalidArgument(s"context is too long: ${invalidContexts.mkString("[", ", ", "]")}")
+      )
   }
 
   protected def validateKeyIdIsUriFragment[T <: PrismDIDOperation](

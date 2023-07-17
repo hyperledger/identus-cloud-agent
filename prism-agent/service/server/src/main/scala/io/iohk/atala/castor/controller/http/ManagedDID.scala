@@ -97,7 +97,8 @@ object CreateManagedDidRequest {
 
 final case class CreateManagedDidRequestDocumentTemplate(
     publicKeys: Seq[ManagedDIDKeyTemplate],
-    services: Seq[Service]
+    services: Seq[Service],
+    contexts: Option[Seq[String]]
 )
 
 object CreateManagedDidRequestDocumentTemplate {
@@ -114,7 +115,8 @@ object CreateManagedDidRequestDocumentTemplate {
         publicKeys = template.publicKeys.map[DIDPublicKeyTemplate](k => k)
       } yield walletDomain.ManagedDIDTemplate(
         publicKeys = publicKeys,
-        services = services
+        services = services,
+        contexts = template.contexts.getOrElse(Nil)
       )
     }
   }

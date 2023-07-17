@@ -20,7 +20,7 @@ object JWTVerification {
   // JWT algo <-> publicKey type mapping reference
   // https://github.com/decentralized-identity/did-jwt/blob/8b3655097a1382934cabdf774d580e6731a636b1/src/JWT.ts#L146
   val SUPPORT_PUBLIC_KEY_TYPES: Map[String, Set[String]] = Map(
-    "ES256K" -> Set("EcdsaSecp256k1VerificationKey2019"),
+    "ES256K" -> Set("EcdsaSecp256k1VerificationKey2019", "JsonWebKey2020"),
     "ES256" -> Set("ES256") // TODO: Only use valid type (added just for compatibility in the Demo code)
   )
 

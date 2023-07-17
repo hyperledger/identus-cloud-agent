@@ -90,6 +90,7 @@ final case class Prism14ECPrivateKey(privateKey: io.iohk.atala.prism.crypto.keys
 
 }
 
+// TODO: support operation of other key types
 object Prism14ECKeyFactory extends ECKeyFactory {
 
   override def privateKeyFromEncoded(curve: EllipticCurve, bytes: Array[Byte]): Try[ECPrivateKey] =
@@ -98,6 +99,7 @@ object Prism14ECKeyFactory extends ECKeyFactory {
         Try(
           Prism14ECPrivateKey(EC.INSTANCE.toPrivateKeyFromBytes(bytes))
         )
+      case crv => Failure(Exception(s"Operation on curve ${crv.name} is not yet supported"))
     }
 
   override def publicKeyFromEncoded(curve: EllipticCurve, bytes: Array[Byte]): Try[ECPublicKey] =
@@ -106,12 +108,14 @@ object Prism14ECKeyFactory extends ECKeyFactory {
         Try(EC.INSTANCE.toPublicKeyFromBytes(bytes))
           .orElse(Try(EC.INSTANCE.toPublicKeyFromCompressed(bytes)))
           .map(Prism14ECPublicKey.apply)
+      case crv => Failure(Exception(s"Operation on curve ${crv.name} is not yet supported"))
     }
 
   override def publicKeyFromCoordinate(curve: EllipticCurve, x: BigInt, y: BigInt): Try[ECPublicKey] =
     curve match {
       case EllipticCurve.SECP256K1 =>
         Try(Prism14ECPublicKey(EC.INSTANCE.toPublicKeyFromBigIntegerCoordinates(x.toKotlinBigInt, y.toKotlinBigInt)))
+      case crv => Failure(Exception(s"Operation on curve ${crv.name} is not yet supported"))
     }
 
   override def generateKeyPair(curve: EllipticCurve): Task[ECKeyPair] = {
@@ -121,6 +125,7 @@ object Prism14ECKeyFactory extends ECKeyFactory {
           val keyPair = EC.INSTANCE.generateKeyPair()
           ECKeyPair(Prism14ECPublicKey(keyPair.getPublicKey), Prism14ECPrivateKey(keyPair.getPrivateKey))
         }
+      case crv => ZIO.fail(Exception(s"Operation on curve ${crv.name} is not yet supported"))
     }
   }
 
@@ -142,6 +147,7 @@ object Prism14ECKeyFactory extends ECKeyFactory {
             Prism14ECPrivateKey(prism14KeyPair.getPrivateKey())
           )
         }
+      case crv => ZIO.fail(Exception(s"Operation on curve ${crv.name} is not yet supported"))
     }
   }
 

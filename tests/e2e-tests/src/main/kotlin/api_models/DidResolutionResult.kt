@@ -45,7 +45,10 @@ data class PublicKeyJwk(
 @Serializable
 data class DidDocumentMetadata(
     var canonicalId: String? = null,
+    var versionId: String? = null,
     var deactivated: Boolean? = null,
+    var created: String? = null,
+    var updated: String? = null,
 ): JsonEncoded
 
 @Serializable

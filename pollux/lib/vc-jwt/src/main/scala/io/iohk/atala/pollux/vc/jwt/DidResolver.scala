@@ -171,8 +171,8 @@ class PrismDidResolver(didService: DIDService) extends DidResolver {
     JsonWebKey(
       crv = Some(jwk.crv),
       kty = jwk.kty,
-      x = Some(jwk.x),
-      y = Some(jwk.y)
+      x = jwk.x,
+      y = jwk.y
     )
   }
 
