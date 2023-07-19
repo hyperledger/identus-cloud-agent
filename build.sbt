@@ -56,7 +56,7 @@ lazy val V = new {
   val circe = "0.14.2"
 
   val tapir = "1.6.1"
-  val tapirLegacy = "1.2.3" // TODO: remove
+  val tapirLegacy = "1.2.13" // TODO: remove
 
   val typesafeConfig = "1.4.2"
   val protobuf = "3.1.9"
