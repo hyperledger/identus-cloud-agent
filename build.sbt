@@ -64,7 +64,7 @@ lazy val V = new {
 
   val doobie = "1.0.0-RC2"
   val quill = "4.6.0.1"
-  val flyway = "9.8.3"
+  val flyway = "9.20.1"
   val logback = "1.4.8"
 
   val prismSdk = "v1.4.1" // scala-steward:off
