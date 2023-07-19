@@ -110,7 +110,7 @@ lazy val D = new {
   val peerDidcommx: ModuleID = "org.didcommx" % "peerdid" % "0.3.0"
   val didScala: ModuleID = "app.fmgp" %% "did" % "0.0.0+113-61efa271-SNAPSHOT"
   // https://mvnrepository.com/artifact/com.nimbusds/nimbus-jose-jwt/9.16-preview.1
-  val jwk: ModuleID = "com.nimbusds" % "nimbus-jose-jwt" % "9.25.4"
+  val jwk: ModuleID = "com.nimbusds" % "nimbus-jose-jwt" % "9.25.6"
 
   val typesafeConfig: ModuleID = "com.typesafe" % "config" % V.typesafeConfig
   val scalaPbRuntime: ModuleID =
