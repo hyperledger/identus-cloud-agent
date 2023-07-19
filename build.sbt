@@ -63,7 +63,7 @@ lazy val V = new {
   val testContainersScala = "0.40.17"
 
   val doobie = "1.0.0-RC2"
-  val quill = "4.6.0"
+  val quill = "4.6.0.1"
   val flyway = "9.8.3"
   val logback = "1.4.8"
 
