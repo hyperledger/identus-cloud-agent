@@ -65,7 +65,7 @@ lazy val V = new {
   val doobie = "1.0.0-RC2"
   val quill = "4.6.0"
   val flyway = "9.8.3"
-  val logback = "1.4.5"
+  val logback = "1.4.8"
 
   val prismSdk = "v1.4.1" // scala-steward:off
   val scalaUri = "4.0.3"
@@ -94,9 +94,8 @@ lazy val D = new {
   val zioCatsInterop: ModuleID = "dev.zio" %% "zio-interop-cats" % V.zioCatsInterop
   val zioMetricsConnectorMicrometer: ModuleID = "dev.zio" %% "zio-metrics-connectors-micrometer" % V.zioMetricsConnector
   val tapirPrometheusMetrics: ModuleID = "com.softwaremill.sttp.tapir" %% "tapir-prometheus-metrics" % V.tapir
-  val micrometer: ModuleID =  "io.micrometer" % "micrometer-registry-prometheus" % V.micrometer
-  val micrometerPrometheusRegistry =  "io.micrometer" % "micrometer-core" % V.micrometer
-
+  val micrometer: ModuleID = "io.micrometer" % "micrometer-registry-prometheus" % V.micrometer
+  val micrometerPrometheusRegistry = "io.micrometer" % "micrometer-core" % V.micrometer
 
   val zioConfig: ModuleID = "dev.zio" %% "zio-config" % V.zioConfig
   val zioConfigMagnolia: ModuleID = "dev.zio" %% "zio-config-magnolia" % V.zioConfig
@@ -114,7 +113,8 @@ lazy val D = new {
   val jwk: ModuleID = "com.nimbusds" % "nimbus-jose-jwt" % "9.25.4"
 
   val typesafeConfig: ModuleID = "com.typesafe" % "config" % V.typesafeConfig
-  val scalaPbRuntime: ModuleID = "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion % "protobuf"
+  val scalaPbRuntime: ModuleID =
+    "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion % "protobuf"
   val scalaPbGrpc: ModuleID = "com.thesamet.scalapb" %% "scalapb-runtime-grpc" % scalapb.compiler.Version.scalapbVersion
   // TODO we are adding test stuff to the main dependencies
   val testcontainersPostgres: ModuleID = "com.dimafeng" %% "testcontainers-scala-postgresql" % V.testContainersScala
