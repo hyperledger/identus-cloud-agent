@@ -53,7 +53,7 @@ lazy val V = new {
   val mockito = "3.2.16.0"
 
   // https://mvnrepository.com/artifact/io.circe/circe-core
-  val circe = "0.14.2"
+  val circe = "0.14.5"
 
   val tapir = "1.6.1"
   val tapirLegacy = "1.2.13" // TODO: remove
