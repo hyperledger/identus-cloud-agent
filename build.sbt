@@ -55,7 +55,7 @@ lazy val V = new {
   // https://mvnrepository.com/artifact/io.circe/circe-core
   val circe = "0.14.2"
 
-  val tapir = "1.6.0"
+  val tapir = "1.6.1"
   val tapirLegacy = "1.2.3" // TODO: remove
 
   val typesafeConfig = "1.4.2"
