@@ -73,7 +73,7 @@ lazy val V = new {
   val jwtCirceVersion = "9.4.3"
   val zioPreludeVersion = "1.0.0-RC19"
 
-  val bouncyCastle = "1.70"
+  val bouncyCastle = "1.75"
 
   val jsonSchemaValidator = "1.0.86"
 
@@ -295,7 +295,7 @@ lazy val D_PrismAgent = new {
 
   // Added here to make prism-crypto works.
   // Once migrated to apollo, re-evaluate if this should be removed.
-  val bouncyBcpkix = "org.bouncycastle" % "bcpkix-jdk15on" % V.bouncyCastle
+  val bouncyBcpkix = "org.bouncycastle" % "bcpkix-jdk18on" % V.bouncyCastle
   val bouncyBcprov = "org.bouncycastle" % "bcprov-jdk15on" % V.bouncyCastle
 
   val logback = "ch.qos.logback" % "logback-classic" % V.logback
