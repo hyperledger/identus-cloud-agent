@@ -1,3 +1,16 @@
+# [1.8.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v1.7.0...prism-agent-v1.8.0) (2023-07-20)
+
+
+### Bug Fixes
+
+* **castor:** align DID document translation logic ([#595](https://github.com/input-output-hk/atala-prism-building-blocks/issues/595)) ([bb1f112](https://github.com/input-output-hk/atala-prism-building-blocks/commit/bb1f1121975c3bc8288b1d4577efd3922e5adce7))
+* **prism-agent:** add did-method path segment in HD key derivation ([#596](https://github.com/input-output-hk/atala-prism-building-blocks/issues/596)) ([a1e457a](https://github.com/input-output-hk/atala-prism-building-blocks/commit/a1e457a8d6337e8c941b58c802f9516fe6718396))
+
+
+### Features
+
+* ATL-4888 Anoncred schema type ([#590](https://github.com/input-output-hk/atala-prism-building-blocks/issues/590)) ([a57deef](https://github.com/input-output-hk/atala-prism-building-blocks/commit/a57deef485fea5181e8617a30ab70ca26c409b42))
+
 # [1.7.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v1.6.0...prism-agent-v1.7.0) (2023-07-10)
 
 

@@ -104,8 +104,11 @@ Apache | [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2
 Apache | [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0) | io.netty # netty-transport-native-unix-common # 4.1.82.Final | <notextile></notextile>
 Apache | [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0) | io.netty.incubator # netty-incubator-transport-classes-io_uring # 0.0.15.Final | <notextile></notextile>
 Apache | [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0) | io.netty.incubator # netty-incubator-transport-native-io_uring # 0.0.15.Final | <notextile></notextile>
+Apache | [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) | net.bytebuddy # byte-buddy # 1.12.19 | <notextile></notextile>
+Apache | [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) | net.bytebuddy # byte-buddy-agent # 1.12.19 | <notextile></notextile>
 Apache | [Apache License, Version 2.0](https://flywaydb.org/licenses/flyway-community) | org.flywaydb # flyway-core # 9.8.3 | <notextile></notextile>
 Apache | [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) | [org.log4s # log4s_3 # 1.10.0](http://log4s.org/) | <notextile></notextile>
+Apache | [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) | org.objenesis # objenesis # 3.3 | <notextile></notextile>
 Apache | [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) | [org.yaml # snakeyaml # 1.33](https://bitbucket.org/snakeyaml/snakeyaml) | <notextile></notextile>
 Apache | [Apache-2.0](http://www.apache.org/licenses/) | [com.comcast # ip4s-core_3 # 3.1.2](https://github.com/comcast/ip4s) | <notextile></notextile>
 Apache | [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) | [com.comcast # ip4s-core_3 # 3.3.0](https://github.com/Comcast/ip4s) | <notextile></notextile>
@@ -177,12 +180,14 @@ Apache | [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0) | [org.scala-
 Apache | [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0) | [org.scala-lang.modules # scala-collection-compat_3 # 2.5.0](http://www.scala-lang.org/) | <notextile></notextile>
 Apache | [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0) | [org.scala-lang.modules # scala-collection-compat_3 # 2.8.1](http://www.scala-lang.org/) | <notextile></notextile>
 Apache | [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0) | [org.scala-lang.modules # scala-xml_3 # 2.0.0](http://www.scala-lang.org/) | <notextile></notextile>
+Apache | [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0) | [org.scala-lang.modules # scala-xml_3 # 2.1.0](http://www.scala-lang.org/) | <notextile></notextile>
 Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalameta # junit-interface # 0.7.29](https://github.com/scalameta/munit) | <notextile></notextile>
 Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalameta # junit-interface # 1.0.0-M6](https://github.com/scalameta/munit) | <notextile></notextile>
 Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalameta # munit_3 # 0.7.29](https://github.com/scalameta/munit) | <notextile></notextile>
 Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalameta # munit_3 # 1.0.0-M6](https://github.com/scalameta/munit) | <notextile></notextile>
 Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalameta # scalafmt-core_2.13 # 3.1.0](https://github.com/scalameta/scalafmt) | <notextile></notextile>
 Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalameta # scalafmt-sysops_2.13 # 3.1.0](https://github.com/scalameta/scalafmt) | <notextile></notextile>
+Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalatestplus # mockito-4-11_3 # 3.2.16.0](https://github.com/scalatest/scalatestplus-mockito) | <notextile></notextile>
 Apache | [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) | [org.typelevel # case-insensitive_3 # 1.4.0](https://typelevel.org/case-insensitive) | <notextile></notextile>
 Apache | [Apache-2.0](http://www.apache.org/licenses/) | [org.typelevel # cats-effect-kernel_3 # 3.3.4](https://github.com/typelevel/cats-effect) | <notextile></notextile>
 Apache | [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) | [org.typelevel # cats-effect-kernel_3 # 3.5.1](https://github.com/typelevel/cats-effect) | <notextile></notextile>
@@ -247,8 +252,11 @@ Apache | [The Apache Software License, Version 2.0](https://www.apache.org/licen
 Apache | [The Apache Software License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) | [org.jetbrains.kotlinx # kotlinx-coroutines-jdk8 # 1.5.2](https://github.com/Kotlin/kotlinx.coroutines) | <notextile></notextile>
 Apache | [The Apache Software License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) | [org.jetbrains.kotlinx # kotlinx-serialization-core-jvm # 1.3.0](https://github.com/Kotlin/kotlinx.serialization) | <notextile></notextile>
 Apache | [The Apache Software License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) | [org.jetbrains.kotlinx # kotlinx-serialization-json-jvm # 1.3.0](https://github.com/Kotlin/kotlinx.serialization) | <notextile></notextile>
+Apache | [the Apache License, ASL Version 2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalactic # scalactic_3 # 3.2.16](http://www.scalatest.org) | <notextile></notextile>
 Apache | [the Apache License, ASL Version 2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalactic # scalactic_3 # 3.2.9](http://www.scalatest.org) | <notextile></notextile>
+Apache | [the Apache License, ASL Version 2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalatest # scalatest-compatible # 3.2.16](http://www.scalatest.org) | <notextile></notextile>
 Apache | [the Apache License, ASL Version 2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalatest # scalatest-compatible # 3.2.9](http://www.scalatest.org) | <notextile></notextile>
+Apache | [the Apache License, ASL Version 2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalatest # scalatest-core_3 # 3.2.16](http://www.scalatest.org) | <notextile></notextile>
 Apache | [the Apache License, ASL Version 2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalatest # scalatest-core_3 # 3.2.9](http://www.scalatest.org) | <notextile></notextile>
 Apache | [the Apache License, ASL Version 2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalatest # scalatest-diagrams_3 # 3.2.9](http://www.scalatest.org) | <notextile></notextile>
 Apache | [the Apache License, ASL Version 2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalatest # scalatest-featurespec_3 # 3.2.9](http://www.scalatest.org) | <notextile></notextile>
@@ -331,6 +339,7 @@ MIT | [MIT License](http://www.opensource.org/licenses/mit-license.php) | [org.s
 MIT | [MIT license](http://www.opensource.org/licenses/mit-license.php) | org.codehaus.mojo # animal-sniffer-annotations # 1.19 | <notextile></notextile>
 MIT | [The MIT License](http://opensource.org/licenses/MIT) | [org.checkerframework # checker-compat-qual # 2.5.5](https://checkerframework.org) | <notextile></notextile>
 MIT | [The MIT License](http://opensource.org/licenses/MIT) | [org.checkerframework # checker-qual # 3.12.0](https://checkerframework.org) | <notextile></notextile>
+MIT | [The MIT License](https://github.com/mockito/mockito/blob/main/LICENSE) | [org.mockito # mockito-core # 4.11.0](https://github.com/mockito/mockito) | <notextile></notextile>
 MIT | [The MIT License (MIT)](https://opensource.org/licenses/MIT) | [com.dimafeng # testcontainers-scala-core_3 # 0.40.16](https://github.com/testcontainers/testcontainers-scala) | <notextile></notextile>
 MIT | [The MIT License (MIT)](https://opensource.org/licenses/MIT) | [com.dimafeng # testcontainers-scala-jdbc_3 # 0.40.16](https://github.com/testcontainers/testcontainers-scala) | <notextile></notextile>
 MIT | [The MIT License (MIT)](https://opensource.org/licenses/MIT) | [com.dimafeng # testcontainers-scala-postgresql_3 # 0.40.16](https://github.com/testcontainers/testcontainers-scala) | <notextile></notextile>
@@ -338,35 +347,35 @@ MIT | [The MIT License (MIT)](https://opensource.org/licenses/MIT) | [com.dimafe
 Public Domain | [Public Domain, per Creative Commons CC0](http://creativecommons.org/publicdomain/zero/1.0/) | [org.hdrhistogram # HdrHistogram # 2.1.12](http://hdrhistogram.github.io/HdrHistogram/) | <notextile></notextile>
 Public Domain | [Public Domain, per Creative Commons CC0](http://creativecommons.org/publicdomain/zero/1.0/) | [org.latencyutils # LatencyUtils # 2.0.3](http://latencyutils.github.io/LatencyUtils/) | <notextile></notextile>
 unrecognized | [APL2](http://www.apache.org/licenses/LICENSE-2.0.txt) | [net.reactivecore # circe-json-schema_2.13 # 0.3.0](https://github.com/reactivecore/rc-circe-json-schema) | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # castor-core_3 # 1.6.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # connect-core_3 # 1.6.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # connect-sql-doobie_3 # 1.6.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # event-notification_3 # 1.6.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # iris-client_3 # 0.1.0](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-agent-core_3 # 1.6.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-agent-didcommx_3 # 1.6.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-data-models_3 # 1.6.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-protocol-connection_3 # 1.6.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-protocol-coordinate-mediation_3 # 1.6.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-protocol-invitation_3 # 1.6.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-protocol-issue-credential_3 # 1.6.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-protocol-mailbox_3 # 1.6.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-protocol-outofband-login_3 # 1.6.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-protocol-present-proof_3 # 1.6.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-protocol-report-problem_3 # 1.6.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-protocol-routing-2-0_3 # 1.6.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-protocol-trust-ping_3 # 1.6.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-resolver_3 # 1.6.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # pollux-anoncreds_3 # 1.6.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # pollux-core_3 # 1.6.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # pollux-sql-doobie_3 # 1.6.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # pollux-vc-jwt_3 # 1.6.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # prism-agent-wallet-api_3 # 1.6.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # castor-core_3 # 1.7.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # connect-core_3 # 1.7.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # connect-sql-doobie_3 # 1.7.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # event-notification_3 # 1.7.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # iris-client_3 # 1.7.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-agent-core_3 # 1.7.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-agent-didcommx_3 # 1.7.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-data-models_3 # 1.7.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-protocol-connection_3 # 1.7.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-protocol-coordinate-mediation_3 # 1.7.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-protocol-invitation_3 # 1.7.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-protocol-issue-credential_3 # 1.7.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-protocol-mailbox_3 # 1.7.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-protocol-outofband-login_3 # 1.7.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-protocol-present-proof_3 # 1.7.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-protocol-report-problem_3 # 1.7.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-protocol-routing-2-0_3 # 1.7.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-protocol-trust-ping_3 # 1.7.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-resolver_3 # 1.7.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # pollux-anoncreds_3 # 1.7.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # pollux-core_3 # 1.7.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # pollux-sql-doobie_3 # 1.7.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # pollux-vc-jwt_3 # 1.7.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # prism-agent-wallet-api_3 # 1.7.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
 unrecognized | [none specified](none specified) | io.iohk.atala # prism-common-jvm # v1.4.1 | <notextile></notextile>
 unrecognized | [none specified](none specified) | io.iohk.atala # prism-crypto-jvm # v1.4.1 | <notextile></notextile>
 unrecognized | [none specified](none specified) | io.iohk.atala # prism-identity-jvm # v1.4.1 | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # prism-node-client_3 # 1.6.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # prism-node-client_3 # 1.7.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
 unrecognized | [none specified](none specified) | io.iohk.atala # prism-protos-jvm # v1.4.1 | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # shared # 1.6.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # shared # 1.7.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
 unrecognized | [none specified](none specified) | [net.jcip # jcip-annotations # 1.0](http://jcip.net/) | <notextile></notextile>
 
