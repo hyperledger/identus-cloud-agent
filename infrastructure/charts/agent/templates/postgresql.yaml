@@ -1,0 +1,36 @@
+apiVersion: "acid.zalan.do/v1"
+kind: postgresql
+metadata:
+  name: "{{ .Values.database.postgres.managingTeam }}-prism-agent-postgres-cluster"
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{ template "labels.common" . }}
+spec:
+  teamId: "{{ .Values.database.postgres.managingTeam }}"
+  volume:
+    size: "{{ .Values.database.postgres.databaseSize }}"
+  numberOfInstances: {{ .Values.database.postgres.numberOfInstances }}
+  users:
+    castor-admin:
+      - superuser
+      - createdb
+    castor-application-user: []
+    pollux-admin:
+      - superuser
+      - createdb
+    pollux-application-user: []
+    connect-admin:
+      - superuser
+      - createdb
+    connect-application-user: []
+    agent-admin:
+      - superuser
+      - createdb
+    agent-application-user: []
+  databases:
+    castor: castor-admin
+    pollux: pollux-admin
+    connect: connect-admin
+    agent: agent-admin
+  postgresql:
+    version: "14"
