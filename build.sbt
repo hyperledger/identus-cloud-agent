@@ -60,12 +60,12 @@ lazy val V = new {
 
   val typesafeConfig = "1.4.2"
   val protobuf = "3.1.9"
-  val testContainersScala = "0.40.16"
+  val testContainersScala = "0.40.17"
 
   val doobie = "1.0.0-RC2"
   val quill = "4.6.0"
   val flyway = "9.8.3"
-  val logback = "1.4.5"
+  val logback = "1.4.8"
 
   val prismSdk = "v1.4.1" // scala-steward:off
   val scalaUri = "4.0.3"
@@ -266,7 +266,7 @@ lazy val D_Pollux_VC_JWT = new {
   val zioTestSbt = "dev.zio" %% "zio-test-sbt" % V.zio % Test
   val zioTestMagnolia = "dev.zio" %% "zio-test-magnolia" % V.zio % Test
 
-  val scalaTest = "org.scalatest" %% "scalatest" % "3.2.9" % Test
+  val scalaTest = "org.scalatest" %% "scalatest" % "3.2.15" % Test
 
   // Dependency Modules
   val zioDependencies: Seq[ModuleID] = Seq(zio, zioPrelude, zioTest, zioTestSbt, zioTestMagnolia)
