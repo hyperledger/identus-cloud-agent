@@ -15,7 +15,7 @@ lazy val rootProject = (project in file(".")).settings(
       "com.softwaremill.sttp.tapir" %% "tapir-sttp-stub-server" % tapirVersion % Test,
       "dev.zio" %% "zio-test" % "2.0.0" % Test,
       "dev.zio" %% "zio-test-sbt" % "2.0.0" % Test,
-      "com.softwaremill.sttp.client3" %% "zio-json" % "3.8.3" % Test
+      "com.softwaremill.sttp.client3" %% "zio-json" % "3.8.16" % Test
     ),
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
