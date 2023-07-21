@@ -7,8 +7,8 @@ final case class Migrations(config: DbConfig) {
   val migrationScriptsLocation: String = "sql/agent"
 
   def migrate: Task[Unit] =
-    ZIO.logInfo("Applying database migrations")
     for {
+      _ <- ZIO.logInfo("Applying database migrations")
       _ <- ZIO.attempt {
         Flyway
           .configure()

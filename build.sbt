@@ -38,34 +38,36 @@ inThisBuild(
 )
 
 lazy val V = new {
-  val munit = "1.0.0-M6" // "0.7.29"
+  val munit = "1.0.0-M8" // "0.7.29"
   val munitZio = "0.1.1"
 
   // https://mvnrepository.com/artifact/dev.zio/zio
-  val zio = "2.0.14"
-  val zioConfig = "3.0.2"
-  val zioLogging = "2.0.0"
+  val zio = "2.0.15"
+  val zioConfig = "3.0.7"
+  val zioLogging = "2.0.1"
   val zioJson = "0.3.0"
   val zioHttp = "0.0.3"
   val zioCatsInterop = "3.3.0"
   val zioMetricsConnector = "2.1.0"
-  val zioMock = "1.0.0-RC10"
+  val zioMock = "1.0.0-RC11"
   val mockito = "3.2.16.0"
 
   // https://mvnrepository.com/artifact/io.circe/circe-core
-  val circe = "0.14.2"
+  val circe = "0.14.5"
 
   val tapir = "1.6.0"
   val tapirLegacy = "1.2.3" // TODO: remove
 
   val typesafeConfig = "1.4.2"
   val protobuf = "3.1.9"
-  val testContainersScala = "0.40.16"
+  val testContainersScala = "0.40.17"
 
   val doobie = "1.0.0-RC2"
-  val quill = "4.6.0"
+  val quill = "4.6.0.1"
   val flyway = "9.8.3"
-  val logback = "1.4.5"
+  val postgresDriver = "42.2.27"
+  val logback = "1.4.8"
+  val slf4j = "2.0.7"
 
   val prismSdk = "v1.4.1" // scala-steward:off
   val scalaUri = "4.0.3"
@@ -75,12 +77,12 @@ lazy val V = new {
 
   val bouncyCastle = "1.70"
 
-  val jsonSchemaValidator = "1.0.83"
+  val jsonSchemaValidator = "1.0.86"
 
   // https://github.com/jopenlibs/vault-java-driver/issues/36
   // v5.4.0 is not available on Maven yet.
-  val vaultDriver = "5.3.0"
-  val micrometer = "1.11.1"
+  val vaultDriver = "5.4.0"
+  val micrometer = "1.11.2"
 }
 
 /** Dependencies */
@@ -111,7 +113,7 @@ lazy val D = new {
   val peerDidcommx: ModuleID = "org.didcommx" % "peerdid" % "0.3.0"
   val didScala: ModuleID = "app.fmgp" %% "did" % "0.0.0+113-61efa271-SNAPSHOT"
   // https://mvnrepository.com/artifact/com.nimbusds/nimbus-jose-jwt/9.16-preview.1
-  val jwk: ModuleID = "com.nimbusds" % "nimbus-jose-jwt" % "9.25.4"
+  val jwk: ModuleID = "com.nimbusds" % "nimbus-jose-jwt" % "10.0.0-preview"
 
   val typesafeConfig: ModuleID = "com.typesafe" % "config" % V.typesafeConfig
   val scalaPbRuntime: ModuleID = "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion % "protobuf"
@@ -193,8 +195,8 @@ lazy val D_Castor = new {
 
 lazy val D_Pollux = new {
   val logback = "ch.qos.logback" % "logback-classic" % V.logback % Test
-  val slf4jApi = "org.slf4j" % "slf4j-api" % "2.0.6" % Test
-  val slf4jSimple = "org.slf4j" % "slf4j-simple" % "2.0.6" % Test
+  val slf4jApi = "org.slf4j" % "slf4j-api" % V.slf4j % Test
+  val slf4jSimple = "org.slf4j" % "slf4j-simple" % V.slf4j % Test
 
   val doobiePostgres = "org.tpolecat" %% "doobie-postgres" % V.doobie
   val doobieHikari = "org.tpolecat" %% "doobie-hikari" % V.doobie
@@ -260,21 +262,19 @@ lazy val D_Pollux_VC_JWT = new {
   val zio = "dev.zio" %% "zio" % V.zio
   val zioPrelude = "dev.zio" %% "zio-prelude" % V.zioPreludeVersion
 
-  val nimbusJoseJwt = "com.nimbusds" % "nimbus-jose-jwt" % "10.0.0-preview"
-
   val networkntJsonSchemaValidator = "com.networknt" % "json-schema-validator" % V.jsonSchemaValidator
 
   val zioTest = "dev.zio" %% "zio-test" % V.zio % Test
   val zioTestSbt = "dev.zio" %% "zio-test-sbt" % V.zio % Test
   val zioTestMagnolia = "dev.zio" %% "zio-test-magnolia" % V.zio % Test
 
-  val scalaTest = "org.scalatest" %% "scalatest" % "3.2.9" % Test
+  val scalaTest = "org.scalatest" %% "scalatest" % "3.2.16" % Test
 
   // Dependency Modules
   val zioDependencies: Seq[ModuleID] = Seq(zio, zioPrelude, zioTest, zioTestSbt, zioTestMagnolia)
   val circeDependencies: Seq[ModuleID] = Seq(D.circeCore, D.circeGeneric, D.circeParser)
   val baseDependencies: Seq[ModuleID] =
-    circeDependencies ++ zioDependencies :+ jwtCirce :+ circeJsonSchema :+ networkntJsonSchemaValidator :+ nimbusJoseJwt :+ scalaTest
+    circeDependencies ++ zioDependencies :+ jwtCirce :+ circeJsonSchema :+ networkntJsonSchemaValidator :+ D.jwk :+ scalaTest
 
   // Project Dependencies
   lazy val polluxVcJwtDependencies: Seq[ModuleID] = baseDependencies
@@ -317,7 +317,7 @@ lazy val D_PrismAgent = new {
 
   val quillDoobie =
     "io.getquill" %% "quill-doobie" % V.quill exclude ("org.scala-lang.modules", "scala-java8-compat_3")
-  val postgresql = "org.postgresql" % "postgresql" % "42.2.8"
+  val postgresql = "org.postgresql" % "postgresql" % V.postgresDriver
   val quillJdbcZio =
     "io.getquill" %% "quill-jdbc-zio" % V.quill exclude ("org.scala-lang.modules", "scala-java8-compat_3")
 
