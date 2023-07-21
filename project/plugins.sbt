@@ -11,7 +11,3 @@ addSbtPlugin("com.thesamet" % "sbt-protoc" % "1.0.6")
 
 // In order to import proper version of com.google.protobuf.ByteString we need to add this dependency
 libraryDependencies ++= Seq("com.thesamet.scalapb" %% "compilerplugin" % "0.11.13")
-
-
-// TODO: remove in the final PR
-addSbtPlugin("org.jmotor.sbt" % "sbt-dependency-updates" % "1.2.7")

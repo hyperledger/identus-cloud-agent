@@ -66,6 +66,7 @@ lazy val V = new {
   val quill = "4.6.0"
   val flyway = "9.8.3"
   val logback = "1.4.8"
+  val slf4j = "2.0.7"
 
   val prismSdk = "v1.4.1" // scala-steward:off
   val scalaUri = "4.0.3"
@@ -193,8 +194,8 @@ lazy val D_Castor = new {
 
 lazy val D_Pollux = new {
   val logback = "ch.qos.logback" % "logback-classic" % V.logback % Test
-  val slf4jApi = "org.slf4j" % "slf4j-api" % "2.0.6" % Test
-  val slf4jSimple = "org.slf4j" % "slf4j-simple" % "2.0.6" % Test
+  val slf4jApi = "org.slf4j" % "slf4j-api" % V.slf4j % Test
+  val slf4jSimple = "org.slf4j" % "slf4j-simple" % V.slf4j % Test
 
   val doobiePostgres = "org.tpolecat" %% "doobie-postgres" % V.doobie
   val doobieHikari = "org.tpolecat" %% "doobie-hikari" % V.doobie
@@ -266,7 +267,7 @@ lazy val D_Pollux_VC_JWT = new {
   val zioTestSbt = "dev.zio" %% "zio-test-sbt" % V.zio % Test
   val zioTestMagnolia = "dev.zio" %% "zio-test-magnolia" % V.zio % Test
 
-  val scalaTest = "org.scalatest" %% "scalatest" % "3.2.15" % Test
+  val scalaTest = "org.scalatest" %% "scalatest" % "3.2.16" % Test
 
   // Dependency Modules
   val zioDependencies: Seq[ModuleID] = Seq(zio, zioPrelude, zioTest, zioTestSbt, zioTestMagnolia)
