@@ -47,7 +47,7 @@ lazy val V = new {
   val zioLogging = "2.0.1"
   val zioJson = "0.3.0"
   val zioHttp = "0.0.3"
-  val zioCatsInterop = "3.3.0"
+  val zioCatsInterop = "23.0.03"
   val zioMetricsConnector = "2.1.0"
   val zioMock = "1.0.0-RC11"
   val mockito = "3.2.16.0"
@@ -64,7 +64,8 @@ lazy val V = new {
 
   val doobie = "1.0.0-RC2"
   val quill = "4.6.0"
-  val flyway = "9.8.3"
+  val flyway = "9.20.1"
+  val postgresDriver = "42.2.27"
   val logback = "1.4.8"
   val slf4j = "2.0.7"
 
@@ -76,12 +77,12 @@ lazy val V = new {
 
   val bouncyCastle = "1.70"
 
-  val jsonSchemaValidator = "1.0.83"
+  val jsonSchemaValidator = "1.0.86"
 
   // https://github.com/jopenlibs/vault-java-driver/issues/36
   // v5.4.0 is not available on Maven yet.
   val vaultDriver = "5.4.0"
-  val micrometer = "1.11.1"
+  val micrometer = "1.11.2"
 }
 
 /** Dependencies */
@@ -316,7 +317,7 @@ lazy val D_PrismAgent = new {
 
   val quillDoobie =
     "io.getquill" %% "quill-doobie" % V.quill exclude ("org.scala-lang.modules", "scala-java8-compat_3")
-  val postgresql = "org.postgresql" % "postgresql" % "42.2.8"
+  val postgresql = "org.postgresql" % "postgresql" % V.postgresDriver
   val quillJdbcZio =
     "io.getquill" %% "quill-jdbc-zio" % V.quill exclude ("org.scala-lang.modules", "scala-java8-compat_3")
 
