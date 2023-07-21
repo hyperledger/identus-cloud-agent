@@ -111,7 +111,7 @@ lazy val D = new {
   val peerDidcommx: ModuleID = "org.didcommx" % "peerdid" % "0.3.0"
   val didScala: ModuleID = "app.fmgp" %% "did" % "0.0.0+113-61efa271-SNAPSHOT"
   // https://mvnrepository.com/artifact/com.nimbusds/nimbus-jose-jwt/9.16-preview.1
-  val jwk: ModuleID = "com.nimbusds" % "nimbus-jose-jwt" % "9.25.4"
+  val jwk: ModuleID = "com.nimbusds" % "nimbus-jose-jwt" % "10.0.0-preview"
 
   val typesafeConfig: ModuleID = "com.typesafe" % "config" % V.typesafeConfig
   val scalaPbRuntime: ModuleID = "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion % "protobuf"
@@ -260,8 +260,6 @@ lazy val D_Pollux_VC_JWT = new {
   val zio = "dev.zio" %% "zio" % V.zio
   val zioPrelude = "dev.zio" %% "zio-prelude" % V.zioPreludeVersion
 
-  val nimbusJoseJwt = "com.nimbusds" % "nimbus-jose-jwt" % "10.0.0-preview"
-
   val networkntJsonSchemaValidator = "com.networknt" % "json-schema-validator" % V.jsonSchemaValidator
 
   val zioTest = "dev.zio" %% "zio-test" % V.zio % Test
@@ -274,7 +272,7 @@ lazy val D_Pollux_VC_JWT = new {
   val zioDependencies: Seq[ModuleID] = Seq(zio, zioPrelude, zioTest, zioTestSbt, zioTestMagnolia)
   val circeDependencies: Seq[ModuleID] = Seq(D.circeCore, D.circeGeneric, D.circeParser)
   val baseDependencies: Seq[ModuleID] =
-    circeDependencies ++ zioDependencies :+ jwtCirce :+ circeJsonSchema :+ networkntJsonSchemaValidator :+ nimbusJoseJwt :+ scalaTest
+    circeDependencies ++ zioDependencies :+ jwtCirce :+ circeJsonSchema :+ networkntJsonSchemaValidator :+ D.jwk :+ scalaTest
 
   // Project Dependencies
   lazy val polluxVcJwtDependencies: Seq[ModuleID] = baseDependencies
