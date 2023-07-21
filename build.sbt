@@ -38,11 +38,11 @@ inThisBuild(
 )
 
 lazy val V = new {
-  val munit = "1.0.0-M6" // "0.7.29"
+  val munit = "1.0.0-M8" // "0.7.29"
   val munitZio = "0.1.1"
 
   // https://mvnrepository.com/artifact/dev.zio/zio
-  val zio = "2.0.14"
+  val zio = "2.0.15"
   val zioConfig = "3.0.2"
   val zioLogging = "2.0.0"
   val zioJson = "0.3.0"
@@ -53,7 +53,7 @@ lazy val V = new {
   val mockito = "3.2.16.0"
 
   // https://mvnrepository.com/artifact/io.circe/circe-core
-  val circe = "0.14.2"
+  val circe = "0.14.5"
 
   val tapir = "1.6.0"
   val tapirLegacy = "1.2.3" // TODO: remove
@@ -79,7 +79,7 @@ lazy val V = new {
 
   // https://github.com/jopenlibs/vault-java-driver/issues/36
   // v5.4.0 is not available on Maven yet.
-  val vaultDriver = "5.3.0"
+  val vaultDriver = "5.4.0"
   val micrometer = "1.11.1"
 }
 
