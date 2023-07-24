@@ -61,7 +61,7 @@
         {
           "prepareCmd": "yq -i '.appVersion = \"${nextRelease.version}\"' ./infrastructure/charts/agent/Chart.yaml"
         }
-      ]
+      ],
       [
         "@semantic-release/exec",
         {
