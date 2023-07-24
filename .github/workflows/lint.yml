@@ -32,7 +32,7 @@ jobs:
           fetch-depth: 0
       - name: Mega-Linter
         id: ml
-        uses: megalinter/megalinter@v6
+        uses: megalinter/megalinter@v7.1.0
       - name: Archive production artifacts
         if: success() || failure()
         uses: actions/upload-artifact@v3
