@@ -1,0 +1,84 @@
+ingress:
+  enabled: true
+  applicationUrls:
+  - chart-base-prism-stack.atalaprism.io
+  platformIngressUrl: chart-base-platform-ingress.atalaprism.io
+  cors:
+    enabled: true
+    allow_origins: "*"
+  consumers: []
+
+secrets:
+  secretStore: chart-base-secretstore
+  dockerRegistryToken: chart-base-docker-registry-token
+
+server:
+  image:
+      repository: ghcr.io
+      pullPolicy: IfNotPresent
+      tag: input-output-hk/prism-agent
+  resources:
+    limits:
+      cpu: 500m
+      memory: 1024Mi
+    requests:
+      cpu: 250m
+      memory: 512Mi
+  additionalEnvVariables: []
+  devMode: false
+  useVault: true
+
+database:
+  postgres:
+    managingTeam: atala
+    databaseSize: 4Gi
+    numberOfInstances: 2
+
+vdrManager:
+  host: chart-base-node-service
+  port: 50053
+
+vault:
+  injector:
+    enabled: false
+  server:
+    standalone:
+      config: |
+        ui = true
+
+        listener "tcp" {
+          tls_disable = 1
+          address = "[::]:8200"
+          cluster_address = "[::]:8201"
+          # Enable unauthenticated metrics access (necessary for Prometheus Operator)
+          #telemetry {
+          #  unauthenticated_metrics_access = "true"
+          #}
+        }
+        storage "file" {
+          path = "/vault/data"
+        }
+
+        # Example configuration for using auto-unseal, using Google Cloud KMS. The
+        # GKMS keys must already exist, and the cluster must have a service account
+        # that is authorized to access GCP KMS.
+        #seal "gcpckms" {
+        #   project     = "vault-helm-dev"
+        #   region      = "global"
+        #   key_ring    = "vault-helm-unseal-kr"
+        #   crypto_key  = "vault-helm-unseal-key"
+        #}
+
+        # Example configuration for enabling Prometheus metrics in your config.
+        #telemetry {
+        #  prometheus_retention_time = "30s"
+        #  disable_hostname = true
+        #}
+        secrets {
+          enable = true
+        }
+
+        path "secret/*" {
+          backend = "kv"
+          version = 2
+        }

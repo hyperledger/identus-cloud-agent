@@ -1,0 +1,17 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: apisix.apache.org/v2
+kind: ApisixTls
+metadata:
+  name: "prism-agent-base-path-tls"
+  namespace: "{{ .Release.Namespace }}"
+  labels:
+    {{ template "labels.common" . }}
+spec:
+  hosts:
+  {{- range .Values.ingress.applicationUrls }}
+    - {{ . }}
+  {{- end }}
+  secret:
+    name: "prism-agent-base-path-secret"
+    namespace: "{{ .Release.Namespace }}"
+{{- end }}

@@ -1,0 +1,18 @@
+{{- if .Values.ingress.enabled }}
+{{- $root := . -}}
+{{- range $consumer := .Values.ingress.consumers }}
+apiVersion: apisix.apache.org/v2
+kind: ApisixConsumer
+metadata:
+  name: "{{ $consumer | lower }}"
+  namespace: "{{ $root.Release.Namespace }}"
+  labels:
+    {{ template "labels.common" . }}
+spec:
+  authParameter:
+    keyAuth:
+      secretRef:
+        name: "{{ $root.Release.Namespace }}-{{ $consumer | lower }}"
+---
+{{- end }}
+{{- end }}
