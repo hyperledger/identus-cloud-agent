@@ -3,8 +3,10 @@ package io.iohk.atala.agent.server
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
 import io.iohk.atala.agent.server.http.ZioHttpClient
 import io.iohk.atala.agent.server.sql.Migrations as AgentMigrations
+import io.iohk.atala.agent.walletapi.service.WalletManagementServiceImpl
 import io.iohk.atala.agent.walletapi.service.{ManagedDIDService, ManagedDIDServiceWithEventNotificationImpl}
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDNonSecretStorage
+import io.iohk.atala.agent.walletapi.sql.JdbcWalletSecretStorage
 import io.iohk.atala.castor.controller.{DIDControllerImpl, DIDRegistrarControllerImpl}
 import io.iohk.atala.castor.core.service.DIDServiceImpl
 import io.iohk.atala.castor.core.util.DIDOperationValidator
@@ -40,6 +42,7 @@ import zio.metrics.jvm.DefaultJvmMetrics
 
 import java.security.Security
 import scala.language.implicitConversions
+import io.iohk.atala.agent.walletapi.sql.JdbcWalletNonSecretStorage
 
 object MainApp extends ZIOAppDefault {
 
@@ -137,11 +140,14 @@ object MainApp extends ZIOAppDefault {
           ManagedDIDServiceWithEventNotificationImpl.layer,
           PresentationServiceImpl.layer >>> PresentationServiceNotifier.layer,
           VerificationPolicyServiceImpl.layer,
+          WalletManagementServiceImpl.layer,
           // grpc
           GrpcModule.irisStubLayer,
           GrpcModule.prismNodeStubLayer,
           // storage
           RepoModule.agentTransactorLayer >>> JdbcDIDNonSecretStorage.layer,
+          RepoModule.agentTransactorLayer >>> JdbcWalletNonSecretStorage.layer,
+          RepoModule.agentTransactorLayer >>> JdbcWalletSecretStorage.layer,
           RepoModule.connectTransactorLayer >>> JdbcConnectionRepository.layer,
           RepoModule.didSecretStorageLayer,
           RepoModule.polluxTransactorLayer >>> JdbcCredentialRepository.layer,
@@ -154,7 +160,7 @@ object MainApp extends ZIOAppDefault {
           Client.default,
           Scope.default,
           // FIXME: Remove when support dynamic wallet. Temporarily added to make DIDComm listener works
-          ZLayer.succeed(WalletAccessContext.placeholder)
+          AppModule.defaultWalletContext
         )
     } yield app
 

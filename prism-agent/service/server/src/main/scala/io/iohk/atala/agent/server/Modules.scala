@@ -7,6 +7,7 @@ import io.grpc.ManagedChannelBuilder
 import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.server.sql.DbConfig as AgentDbConfig
 import io.iohk.atala.agent.walletapi.crypto.Apollo
+import io.iohk.atala.agent.walletapi.service.WalletManagementService
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
 import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
 import io.iohk.atala.agent.walletapi.util.SeedResolver
@@ -18,6 +19,7 @@ import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
 import io.iohk.atala.pollux.sql.repository.DbConfig as PolluxDbConfig
 import io.iohk.atala.pollux.vc.jwt.{PrismDidResolver, DidResolver as JwtDidResolver}
 import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc
+import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 import zio.config.typesafe.TypesafeConfigSource
 import zio.config.{ReadError, read}
@@ -47,6 +49,19 @@ object AppModule {
 
   val didJwtResolverlayer: URLayer[DIDService, JwtDidResolver] =
     ZLayer.fromFunction(PrismDidResolver(_))
+
+  // FIXME
+  // Create default wallet and provide it as a global layer.
+  // This should be removed when we support dynamic wallet creation.
+  val defaultWalletContext: RLayer[SeedResolver & WalletManagementService, WalletAccessContext] = ZLayer.fromZIO {
+    for {
+      svc <- ZIO.service[WalletManagementService]
+      seed <- ZIO.serviceWithZIO[SeedResolver](_.resolve)
+      walletId <- svc.listWallets
+        .map(_.headOption)
+        .someOrElseZIO(svc.createWallet(seed))
+    } yield WalletAccessContext(walletId)
+  }
 }
 
 object GrpcModule {

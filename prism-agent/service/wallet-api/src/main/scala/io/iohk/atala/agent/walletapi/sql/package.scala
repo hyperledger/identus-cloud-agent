@@ -13,6 +13,7 @@ import scala.util.Try
 import scala.collection.immutable.ArraySeq
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import io.iohk.atala.castor.core.model.did.InternalKeyPurpose
+import io.iohk.atala.shared.models.WalletId
 
 package object sql {
 
@@ -98,6 +99,9 @@ package object sql {
 
   given arraySeqByteGet: Get[ArraySeq[Byte]] = Get[Array[Byte]].map(ArraySeq.from)
   given arraySeqBytePut: Put[ArraySeq[Byte]] = Put[Array[Byte]].contramap(_.toArray)
+
+  given walletIdGet: Get[WalletId] = Get[Int].map(WalletId.fromInt)
+  given walletIdPut: Put[WalletId] = Put[Int].contramap(_.toInt)
 
   final case class DIDStateRow(
       did: PrismDID,
