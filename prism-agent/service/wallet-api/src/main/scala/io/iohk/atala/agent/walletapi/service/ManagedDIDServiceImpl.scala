@@ -13,6 +13,7 @@ import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.mercury.PeerDID
 import io.iohk.atala.mercury.model.DidId
+import io.iohk.atala.shared.models.WalletAccessContext
 import java.security.{PrivateKey as JavaPrivateKey, PublicKey as JavaPublicKey}
 import scala.collection.immutable.ArraySeq
 import scala.language.implicitConversions
@@ -323,14 +324,14 @@ class ManagedDIDServiceImpl private[walletapi] (
 
   /** PeerDID related methods
     */
-  def createAndStorePeerDID(serviceEndpoint: String): UIO[PeerDID] =
+  def createAndStorePeerDID(serviceEndpoint: String): URIO[WalletAccessContext, PeerDID] =
     for {
       peerDID <- ZIO.succeed(PeerDID.makePeerDid(serviceEndpoint = Some(serviceEndpoint)))
       _ <- secretStorage.insertKey(peerDID.did, AGREEMENT_KEY_ID, peerDID.jwkForKeyAgreement).orDie
       _ <- secretStorage.insertKey(peerDID.did, AUTHENTICATION_KEY_ID, peerDID.jwkForKeyAuthentication).orDie
     } yield peerDID
 
-  def getPeerDID(didId: DidId): IO[DIDSecretStorageError.KeyNotFoundError, PeerDID] =
+  def getPeerDID(didId: DidId): ZIO[WalletAccessContext, DIDSecretStorageError.KeyNotFoundError, PeerDID] =
     for {
       maybeJwkForAgreement <- secretStorage.getKey(didId, AGREEMENT_KEY_ID).orDie
       jwkForAgreement <- ZIO

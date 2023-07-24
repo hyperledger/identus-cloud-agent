@@ -6,6 +6,7 @@ import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
 import io.iohk.atala.castor.core.model.did.*
 import io.iohk.atala.mercury.PeerDID
 import io.iohk.atala.mercury.model.DidId
+import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 
 import java.security.{PrivateKey as JavaPrivateKey, PublicKey as JavaPublicKey}
@@ -17,35 +18,44 @@ trait ManagedDIDService {
 
   private[walletapi] def nonSecretStorage: DIDNonSecretStorage
 
-  def syncManagedDIDState: IO[GetManagedDIDError, Unit]
+  def syncManagedDIDState: ZIO[WalletAccessContext, GetManagedDIDError, Unit]
 
-  def syncUnconfirmedUpdateOperations: IO[GetManagedDIDError, Unit]
+  def syncUnconfirmedUpdateOperations: ZIO[WalletAccessContext, GetManagedDIDError, Unit]
 
   def javaKeyPairWithDID(
       did: CanonicalPrismDID,
       keyId: String
-  ): IO[GetKeyError, Option[(JavaPrivateKey, JavaPublicKey)]]
+  ): ZIO[WalletAccessContext, GetKeyError, Option[(JavaPrivateKey, JavaPublicKey)]]
 
-  def getManagedDIDState(did: CanonicalPrismDID): IO[GetManagedDIDError, Option[ManagedDIDState]]
+  def getManagedDIDState(did: CanonicalPrismDID): ZIO[WalletAccessContext, GetManagedDIDError, Option[ManagedDIDState]]
 
   /** @return A tuple containing a list of items and a count of total items */
-  def listManagedDIDPage(offset: Int, limit: Int): IO[GetManagedDIDError, (Seq[ManagedDIDDetail], Int)]
+  def listManagedDIDPage(
+      offset: Int,
+      limit: Int
+  ): ZIO[WalletAccessContext, GetManagedDIDError, (Seq[ManagedDIDDetail], Int)]
 
-  def publishStoredDID(did: CanonicalPrismDID): IO[PublishManagedDIDError, ScheduleDIDOperationOutcome]
+  def publishStoredDID(
+      did: CanonicalPrismDID
+  ): ZIO[WalletAccessContext, PublishManagedDIDError, ScheduleDIDOperationOutcome]
 
-  def createAndStoreDID(didTemplate: ManagedDIDTemplate): IO[CreateManagedDIDError, LongFormPrismDID]
+  def createAndStoreDID(
+      didTemplate: ManagedDIDTemplate
+  ): ZIO[WalletAccessContext, CreateManagedDIDError, LongFormPrismDID]
 
   def updateManagedDID(
       did: CanonicalPrismDID,
       actions: Seq[UpdateManagedDIDAction]
-  ): IO[UpdateManagedDIDError, ScheduleDIDOperationOutcome]
+  ): ZIO[WalletAccessContext, UpdateManagedDIDError, ScheduleDIDOperationOutcome]
 
-  def deactivateManagedDID(did: CanonicalPrismDID): IO[UpdateManagedDIDError, ScheduleDIDOperationOutcome]
+  def deactivateManagedDID(
+      did: CanonicalPrismDID
+  ): ZIO[WalletAccessContext, UpdateManagedDIDError, ScheduleDIDOperationOutcome]
 
   /** PeerDID related methods */
-  def createAndStorePeerDID(serviceEndpoint: String): UIO[PeerDID]
+  def createAndStorePeerDID(serviceEndpoint: String): URIO[WalletAccessContext, PeerDID]
 
-  def getPeerDID(didId: DidId): IO[DIDSecretStorageError.KeyNotFoundError, PeerDID]
+  def getPeerDID(didId: DidId): ZIO[WalletAccessContext, DIDSecretStorageError.KeyNotFoundError, PeerDID]
 
 }
 

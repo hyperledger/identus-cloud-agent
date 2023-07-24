@@ -22,6 +22,7 @@ import zio.http.*
 import zio.http.model.*
 
 import java.io.IOException
+import io.iohk.atala.shared.models.WalletAccessContext
 
 object DidCommHttpServer {
   def run(didCommServicePort: Int) = {
@@ -40,7 +41,7 @@ object DidCommHttpServer {
 
   private def didCommServiceEndpoint: HttpApp[
     DidOps & DidAgent & CredentialService & PresentationService & ConnectionService & ManagedDIDService & HttpClient &
-      DidAgent & DIDResolver,
+      DidAgent & DIDResolver & WalletAccessContext,
     Throwable
   ] = Http.collectZIO[Request] {
     case Method.GET -> !! / "did" =>
@@ -80,7 +81,7 @@ object DidCommHttpServer {
 
   private[this] def unpackMessage(
       jsonString: String
-  ): ZIO[DidOps & ManagedDIDService, ParseResponse | DIDSecretStorageError, Message] = {
+  ): ZIO[DidOps & ManagedDIDService & WalletAccessContext, ParseResponse | DIDSecretStorageError, Message] = {
     // Needed for implicit conversion from didcommx UnpackResuilt to mercury UnpackMessage
     for {
       recipientDid <- extractFirstRecipientDid(jsonString).mapError(err => ParseResponse(err))
@@ -94,7 +95,7 @@ object DidCommHttpServer {
 
   private def webServerProgram(jsonString: String): ZIO[
     DidOps & CredentialService & PresentationService & ConnectionService & ManagedDIDService & HttpClient & DidAgent &
-      DIDResolver,
+      DIDResolver & WalletAccessContext,
     MercuryThrowable | DIDSecretStorageError,
     Unit
   ] = {

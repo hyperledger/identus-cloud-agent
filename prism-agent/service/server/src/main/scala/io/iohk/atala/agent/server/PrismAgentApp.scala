@@ -21,6 +21,7 @@ import io.iohk.atala.presentproof.controller.PresentProofServerEndpoints
 import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.system.controller.SystemServerEndpoints
 import zio.*
+import io.iohk.atala.shared.models.WalletAccessContext
 
 object PrismAgentApp {
 
@@ -46,6 +47,7 @@ object PrismAgentApp {
       job <- BackgroundJobs.issueCredentialDidCommExchanges
         .repeat(Schedule.spaced(config.pollux.issueBgJobRecurrenceDelay))
         .unit
+        .provideSomeLayer(ZLayer.succeed(WalletAccessContext.placeholder)) // FIXME
     } yield job
 
   private val presentProofExchangeJob: RIO[
@@ -58,6 +60,7 @@ object PrismAgentApp {
       job <- BackgroundJobs.presentProofExchanges
         .repeat(Schedule.spaced(config.pollux.presentationBgJobRecurrenceDelay))
         .unit
+        .provideSomeLayer(ZLayer.succeed(WalletAccessContext.placeholder)) // FIXME
     } yield job
 
   private val connectDidCommExchangesJob
@@ -67,6 +70,7 @@ object PrismAgentApp {
       job <- ConnectBackgroundJobs.didCommExchanges
         .repeat(Schedule.spaced(config.connect.connectBgJobRecurrenceDelay))
         .unit
+        .provideSomeLayer(ZLayer.succeed(WalletAccessContext.placeholder)) // FIXME
     } yield job
 
   private val syncDIDPublicationStateFromDltJob: URIO[ManagedDIDService, Unit] =
@@ -74,6 +78,7 @@ object PrismAgentApp {
       .catchAll(e => ZIO.logError(s"error while syncing DID publication state: $e"))
       .repeat(Schedule.spaced(10.seconds))
       .unit
+      .provideSomeLayer(ZLayer.succeed(WalletAccessContext.placeholder)) // FIXME
 
 }
 

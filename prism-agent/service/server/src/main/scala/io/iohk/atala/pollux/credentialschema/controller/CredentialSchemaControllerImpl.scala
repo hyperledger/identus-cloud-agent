@@ -20,6 +20,7 @@ import io.iohk.atala.pollux.credentialschema.http.{
 import zio.*
 
 import java.util.UUID
+import io.iohk.atala.shared.models.WalletAccessContext
 
 class CredentialSchemaControllerImpl(service: CredentialSchemaService, managedDIDService: ManagedDIDService)
     extends CredentialSchemaController {
@@ -27,7 +28,7 @@ class CredentialSchemaControllerImpl(service: CredentialSchemaService, managedDI
       in: CredentialSchemaInput
   )(implicit
       rc: RequestContext
-  ): IO[ErrorResponse, CredentialSchemaResponse] = {
+  ): ZIO[WalletAccessContext, ErrorResponse, CredentialSchemaResponse] = {
     (for {
       _ <- validatePrismDID(in.author)
       result <- service
@@ -41,7 +42,7 @@ class CredentialSchemaControllerImpl(service: CredentialSchemaService, managedDI
 
   override def updateSchema(author: String, id: UUID, in: CredentialSchemaInput)(implicit
       rc: RequestContext
-  ): IO[ErrorResponse, CredentialSchemaResponse] = {
+  ): ZIO[WalletAccessContext, ErrorResponse, CredentialSchemaResponse] = {
     (for {
       _ <- validatePrismDID(in.author)
       result <- service
@@ -107,7 +108,7 @@ class CredentialSchemaControllerImpl(service: CredentialSchemaService, managedDI
   private[this] def getLongForm(
       did: PrismDID,
       allowUnpublishedIssuingDID: Boolean = false
-  ): IO[ErrorResponse, LongFormPrismDID] = {
+  ): ZIO[WalletAccessContext, ErrorResponse, LongFormPrismDID] = {
     for {
       didState <- managedDIDService
         .getManagedDIDState(did.asCanonical)

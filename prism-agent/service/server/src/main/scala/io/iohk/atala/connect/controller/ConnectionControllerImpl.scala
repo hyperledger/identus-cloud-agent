@@ -13,6 +13,7 @@ import io.iohk.atala.connect.controller.http.{
 }
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.connect.core.service.ConnectionService
+import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 
 import java.util.UUID
@@ -25,7 +26,7 @@ class ConnectionControllerImpl(
 
   override def createConnection(request: CreateConnectionRequest)(implicit
       rc: RequestContext
-  ): IO[ErrorResponse, Connection] = {
+  ): ZIO[WalletAccessContext, ErrorResponse, Connection] = {
     val result = for {
       pairwiseDid <- managedDIDService.createAndStorePeerDID(appConfig.agent.didCommServiceEndpointUrl)
       connection <- service.createConnectionInvitation(request.label, pairwiseDid.did)
@@ -62,7 +63,7 @@ class ConnectionControllerImpl(
 
   override def acceptConnectionInvitation(
       request: AcceptConnectionInvitationRequest
-  )(implicit rc: RequestContext): IO[ErrorResponse, Connection] = {
+  )(implicit rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, Connection] = {
     val result = for {
       record <- service.receiveConnectionInvitation(request.invitation)
       pairwiseDid <- managedDIDService.createAndStorePeerDID(appConfig.agent.didCommServiceEndpointUrl)

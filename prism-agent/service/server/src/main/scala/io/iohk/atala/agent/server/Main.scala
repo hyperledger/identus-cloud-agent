@@ -29,6 +29,7 @@ import io.iohk.atala.pollux.sql.repository.{
 }
 import io.iohk.atala.presentproof.controller.PresentProofControllerImpl
 import io.iohk.atala.resolvers.DIDResolver
+import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.system.controller.SystemControllerImpl
 import io.micrometer.prometheus.{PrometheusConfig, PrometheusMeterRegistry}
 import zio.*
@@ -38,11 +39,15 @@ import zio.metrics.connectors.micrometer.MicrometerConfig
 import zio.metrics.jvm.DefaultJvmMetrics
 
 import java.security.Security
+import scala.language.implicitConversions
 
 object MainApp extends ZIOAppDefault {
 
   Security.insertProviderAt(BouncyCastleProviderSingleton.getInstance(), 2)
-  def didCommAgentLayer(didCommServiceUrl: String): ZLayer[ManagedDIDService, Nothing, DidAgent] = {
+
+  def didCommAgentLayer(
+      didCommServiceUrl: String
+  ): ZLayer[ManagedDIDService & WalletAccessContext, Nothing, DidAgent] = {
     val aux = for {
       managedDIDService <- ZIO.service[ManagedDIDService]
       peerDID <- managedDIDService.createAndStorePeerDID(didCommServiceUrl)
@@ -147,7 +152,9 @@ object MainApp extends ZIOAppDefault {
           ZLayer.succeed(500) >>> EventNotificationServiceImpl.layer,
           // HTTP client
           Client.default,
-          Scope.default
+          Scope.default,
+          // FIXME: Remove when support dynamic wallet. Temporarily added to make DIDComm listener works
+          ZLayer.succeed(WalletAccessContext.placeholder)
         )
     } yield app
 

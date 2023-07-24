@@ -13,7 +13,9 @@ import io.iohk.atala.mercury.*
 import io.iohk.atala.mercury.model.*
 import io.iohk.atala.mercury.model.error.*
 import io.iohk.atala.resolvers.DIDResolver
+import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
+
 object ConnectBackgroundJobs {
 
   val didCommExchanges = {
@@ -34,7 +36,7 @@ object ConnectBackgroundJobs {
 
   private[this] def performExchange(
       record: ConnectionRecord
-  ): URIO[DidOps & DIDResolver & HttpClient & ConnectionService & ManagedDIDService, Unit] = {
+  ): URIO[DidOps & DIDResolver & HttpClient & ConnectionService & ManagedDIDService & WalletAccessContext, Unit] = {
     import ProtocolState.*
     import Role.*
     val exchange = record match {
@@ -115,7 +117,7 @@ object ConnectBackgroundJobs {
 
   private[this] def buildDIDCommAgent(
       myDid: DidId
-  ): ZIO[ManagedDIDService, KeyNotFoundError, ZLayer[Any, Nothing, DidAgent]] = {
+  ): ZIO[ManagedDIDService & WalletAccessContext, KeyNotFoundError, ZLayer[Any, Nothing, DidAgent]] = {
     for {
       managedDidService <- ZIO.service[ManagedDIDService]
       peerDID <- managedDidService.getPeerDID(myDid)

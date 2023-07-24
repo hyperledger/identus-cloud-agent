@@ -14,23 +14,24 @@ import zio.*
 import scala.language.implicitConversions
 
 import java.util.UUID
+import io.iohk.atala.shared.models.WalletAccessContext
 
 trait CredentialSchemaController {
   def createSchema(in: CredentialSchemaInput)(implicit
       rc: RequestContext
-  ): IO[ErrorResponse, CredentialSchemaResponse]
+  ): ZIO[WalletAccessContext, ErrorResponse, CredentialSchemaResponse]
 
   def updateSchema(author: String, id: UUID, in: CredentialSchemaInput)(implicit
       rc: RequestContext
-  ): IO[ErrorResponse, CredentialSchemaResponse]
+  ): ZIO[WalletAccessContext, ErrorResponse, CredentialSchemaResponse]
 
   def getSchemaByGuid(id: UUID)(implicit
       rc: RequestContext
-  ): IO[ErrorResponse, CredentialSchemaResponse]
+  ): ZIO[WalletAccessContext, ErrorResponse, CredentialSchemaResponse]
 
   def delete(guid: UUID)(implicit
       rc: RequestContext
-  ): IO[ErrorResponse, CredentialSchemaResponse]
+  ): ZIO[WalletAccessContext, ErrorResponse, CredentialSchemaResponse]
 
   def lookupSchemas(
       filter: FilterInput,
@@ -38,7 +39,7 @@ trait CredentialSchemaController {
       order: Option[Order]
   )(implicit
       rc: RequestContext
-  ): IO[ErrorResponse, CredentialSchemaResponsePage]
+  ): ZIO[WalletAccessContext, ErrorResponse, CredentialSchemaResponsePage]
 }
 
 object CredentialSchemaController {

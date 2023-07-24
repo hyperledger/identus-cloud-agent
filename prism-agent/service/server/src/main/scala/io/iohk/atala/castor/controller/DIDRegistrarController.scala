@@ -1,42 +1,47 @@
 package io.iohk.atala.castor.controller
 
+import io.iohk.atala.agent.walletapi.model.ManagedDIDDetail
 import io.iohk.atala.agent.walletapi.model.error.CreateManagedDIDError
 import io.iohk.atala.agent.walletapi.model.error.GetManagedDIDError
 import io.iohk.atala.agent.walletapi.model.error.PublishManagedDIDError
 import io.iohk.atala.agent.walletapi.model.error.UpdateManagedDIDError
-import io.iohk.atala.agent.walletapi.model.ManagedDIDDetail
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
-import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.api.http.model.CollectionStats
 import io.iohk.atala.api.http.model.PaginationInput
+import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.api.util.PaginationUtils
-import io.iohk.atala.castor.controller.http.CreateManagedDidRequest
 import io.iohk.atala.castor.controller.http.CreateManagedDIDResponse
+import io.iohk.atala.castor.controller.http.CreateManagedDidRequest
 import io.iohk.atala.castor.controller.http.DIDOperationResponse
 import io.iohk.atala.castor.controller.http.ManagedDID
 import io.iohk.atala.castor.controller.http.ManagedDIDPage
 import io.iohk.atala.castor.controller.http.UpdateManagedDIDRequest
 import io.iohk.atala.castor.core.model.did.PrismDID
+import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.utils.Traverse.*
-import zio.*
 import scala.language.implicitConversions
+import zio.*
 
 trait DIDRegistrarController {
-  def listManagedDid(paginationInput: PaginationInput)(rc: RequestContext): IO[ErrorResponse, ManagedDIDPage]
+  def listManagedDid(paginationInput: PaginationInput)(
+      rc: RequestContext
+  ): ZIO[WalletAccessContext, ErrorResponse, ManagedDIDPage]
 
   def createManagedDid(request: CreateManagedDidRequest)(
       rc: RequestContext
-  ): IO[ErrorResponse, CreateManagedDIDResponse]
+  ): ZIO[WalletAccessContext, ErrorResponse, CreateManagedDIDResponse]
 
-  def getManagedDid(did: String)(rc: RequestContext): IO[ErrorResponse, ManagedDID]
+  def getManagedDid(did: String)(rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, ManagedDID]
 
-  def publishManagedDid(did: String)(rc: RequestContext): IO[ErrorResponse, DIDOperationResponse]
+  def publishManagedDid(did: String)(rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, DIDOperationResponse]
 
   def updateManagedDid(did: String, updateRequest: UpdateManagedDIDRequest)(
       rc: RequestContext
-  ): IO[ErrorResponse, DIDOperationResponse]
+  ): ZIO[WalletAccessContext, ErrorResponse, DIDOperationResponse]
 
-  def deactivateManagedDid(did: String)(rc: RequestContext): IO[ErrorResponse, DIDOperationResponse]
+  def deactivateManagedDid(did: String)(
+      rc: RequestContext
+  ): ZIO[WalletAccessContext, ErrorResponse, DIDOperationResponse]
 }
 
 object DIDRegistrarController {
@@ -90,7 +95,7 @@ class DIDRegistrarControllerImpl(service: ManagedDIDService) extends DIDRegistra
 
   override def listManagedDid(
       paginationInput: PaginationInput
-  )(rc: RequestContext): IO[ErrorResponse, ManagedDIDPage] = {
+  )(rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, ManagedDIDPage] = {
     val uri = rc.request.uri
     val pagination = paginationInput.toPagination
     for {
@@ -110,7 +115,7 @@ class DIDRegistrarControllerImpl(service: ManagedDIDService) extends DIDRegistra
 
   override def createManagedDid(createManagedDidRequest: CreateManagedDidRequest)(
       rc: RequestContext
-  ): IO[ErrorResponse, CreateManagedDIDResponse] = {
+  ): ZIO[WalletAccessContext, ErrorResponse, CreateManagedDIDResponse] = {
     for {
       didTemplate <- ZIO
         .fromEither(createManagedDidRequest.documentTemplate.toDomain)
@@ -121,7 +126,7 @@ class DIDRegistrarControllerImpl(service: ManagedDIDService) extends DIDRegistra
     } yield CreateManagedDIDResponse(longFormDid = longFormDID.toString)
   }
 
-  override def getManagedDid(did: String)(rc: RequestContext): IO[ErrorResponse, ManagedDID] = {
+  override def getManagedDid(did: String)(rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, ManagedDID] = {
     for {
       prismDID <- extractPrismDID(did)
       didDetail <- service
@@ -132,7 +137,9 @@ class DIDRegistrarControllerImpl(service: ManagedDIDService) extends DIDRegistra
     } yield didDetail
   }
 
-  override def publishManagedDid(did: String)(rc: RequestContext): IO[ErrorResponse, DIDOperationResponse] = {
+  override def publishManagedDid(
+      did: String
+  )(rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, DIDOperationResponse] = {
     for {
       prismDID <- extractPrismDID(did)
       outcome <- service
@@ -143,7 +150,7 @@ class DIDRegistrarControllerImpl(service: ManagedDIDService) extends DIDRegistra
 
   override def updateManagedDid(did: String, updateRequest: UpdateManagedDIDRequest)(
       rc: RequestContext
-  ): IO[ErrorResponse, DIDOperationResponse] = {
+  ): ZIO[WalletAccessContext, ErrorResponse, DIDOperationResponse] = {
     for {
       prismDID <- extractPrismDID(did)
       actions <- ZIO
@@ -155,7 +162,9 @@ class DIDRegistrarControllerImpl(service: ManagedDIDService) extends DIDRegistra
     } yield outcome
   }
 
-  override def deactivateManagedDid(did: String)(rc: RequestContext): IO[ErrorResponse, DIDOperationResponse] = {
+  override def deactivateManagedDid(
+      did: String
+  )(rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, DIDOperationResponse] = {
     for {
       prismDID <- extractPrismDID(did)
       outcome <- service
