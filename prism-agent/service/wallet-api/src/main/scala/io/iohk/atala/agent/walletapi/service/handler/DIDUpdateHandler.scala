@@ -1,14 +1,14 @@
 package io.iohk.atala.agent.walletapi.service.handler
 
-import zio.*
 import io.iohk.atala.agent.walletapi.crypto.Apollo
-import io.iohk.atala.agent.walletapi.model.UpdateDIDHdKey
 import io.iohk.atala.agent.walletapi.model.DIDUpdateLineage
-import io.iohk.atala.agent.walletapi.model.error.{*, given}
-import io.iohk.atala.agent.walletapi.model.error.UpdateManagedDIDError
 import io.iohk.atala.agent.walletapi.model.KeyManagementMode
 import io.iohk.atala.agent.walletapi.model.ManagedDIDState
+import io.iohk.atala.agent.walletapi.model.UpdateDIDHdKey
 import io.iohk.atala.agent.walletapi.model.UpdateManagedDIDAction
+import io.iohk.atala.agent.walletapi.model.WalletSeed
+import io.iohk.atala.agent.walletapi.model.error.UpdateManagedDIDError
+import io.iohk.atala.agent.walletapi.model.error.{*, given}
 import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
 import io.iohk.atala.agent.walletapi.util.OperationFactory
 import io.iohk.atala.castor.core.model.did.PrismDIDOperation
@@ -16,13 +16,14 @@ import io.iohk.atala.castor.core.model.did.PrismDIDOperation.Update
 import io.iohk.atala.castor.core.model.did.ScheduledDIDOperationStatus
 import io.iohk.atala.castor.core.model.did.SignedPrismDIDOperation
 import scala.collection.immutable.ArraySeq
+import zio.*
 
 private[walletapi] class DIDUpdateHandler(
     apollo: Apollo,
     nonSecretStorage: DIDNonSecretStorage,
     publicationHandler: PublicationHandler
 )(
-    seed: Array[Byte]
+    seed: WalletSeed
 ) {
   def materialize(
       state: ManagedDIDState,
@@ -40,7 +41,12 @@ private[walletapi] class DIDUpdateHandler(
             .someOrFail(
               UpdateManagedDIDError.DataIntegrityError("DID is in HD key mode, but its key counter is not found")
             )
-          result <- operationFactory.makeUpdateOperationHdKey(seed)(did, previousOperationHash, actions, keyCounter)
+          result <- operationFactory.makeUpdateOperationHdKey(seed.toByteArray)(
+            did,
+            previousOperationHash,
+            actions,
+            keyCounter
+          )
           (operation, hdKey) = result
           signedOperation <- publicationHandler.signOperationWithMasterKey[UpdateManagedDIDError](state, operation)
         } yield HdKeyUpdateMaterial(nonSecretStorage)(operation, signedOperation, state, hdKey)

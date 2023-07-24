@@ -5,12 +5,13 @@ import zio.*
 import io.iohk.atala.agent.walletapi.crypto.ECKeyPair
 import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
 import io.iohk.atala.agent.walletapi.model.KeyManagementMode
+import io.iohk.atala.agent.walletapi.model.WalletSeed
 import io.iohk.atala.castor.core.model.did.PrismDID
 import io.iohk.atala.agent.walletapi.crypto.Apollo
 import io.iohk.atala.castor.core.model.did.EllipticCurve
 
 class KeyResolver(apollo: Apollo, nonSecretStorage: DIDNonSecretStorage)(
-    seed: Array[Byte]
+    seed: WalletSeed
 ) {
   def getKey(state: ManagedDIDState, keyId: String): Task[Option[ECKeyPair]] = {
     val did = state.createOperation.did
@@ -30,7 +31,7 @@ class KeyResolver(apollo: Apollo, nonSecretStorage: DIDNonSecretStorage)(
         case None => ZIO.none
         case Some(path) =>
           apollo.ecKeyFactory
-            .deriveKeyPair(EllipticCurve.SECP256K1, seed)(path.derivationPath: _*)
+            .deriveKeyPair(EllipticCurve.SECP256K1, seed.toByteArray)(path.derivationPath: _*)
             .asSome
       }
   }

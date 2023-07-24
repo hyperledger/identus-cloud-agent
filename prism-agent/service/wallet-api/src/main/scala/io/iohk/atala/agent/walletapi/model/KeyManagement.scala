@@ -1,9 +1,24 @@
 package io.iohk.atala.agent.walletapi.model
 
-import io.iohk.atala.castor.core.model.did.VerificationRelationship
-import io.iohk.atala.castor.core.model.did.InternalKeyPurpose
 import io.iohk.atala.agent.walletapi.crypto.DerivationPath
 import io.iohk.atala.agent.walletapi.crypto.ECKeyPair
+import io.iohk.atala.castor.core.model.did.InternalKeyPurpose
+import io.iohk.atala.castor.core.model.did.VerificationRelationship
+import scala.collection.immutable.ArraySeq
+import scala.language.implicitConversions
+
+opaque type WalletSeed = ArraySeq[Byte]
+
+object WalletSeed {
+  extension (s: WalletSeed) {
+    final def toString(): String = "<REDACTED>"
+    def toByteArray: Array[Byte] = s.toArray
+  }
+
+  def fromByteArray(bytes: Array[Byte]): WalletSeed = ArraySeq.from(bytes)
+
+  given Conversion[Array[Byte], WalletSeed] = bytes => fromByteArray(bytes)
+}
 
 enum KeyManagementMode {
   case HD extends KeyManagementMode

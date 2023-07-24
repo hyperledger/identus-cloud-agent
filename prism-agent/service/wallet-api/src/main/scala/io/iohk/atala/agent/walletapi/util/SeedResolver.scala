@@ -1,11 +1,12 @@
 package io.iohk.atala.agent.walletapi.util
 
-import zio.*
-import io.iohk.atala.shared.models.HexString
 import io.iohk.atala.agent.walletapi.crypto.Apollo
+import io.iohk.atala.agent.walletapi.model.WalletSeed
+import io.iohk.atala.shared.models.HexString
+import zio.*
 
 trait SeedResolver {
-  def resolve: Task[Array[Byte]]
+  def resolve: Task[WalletSeed]
 }
 
 object SeedResolver {
@@ -14,7 +15,7 @@ object SeedResolver {
 }
 
 private class SeedResolverImpl(apollo: Apollo, isDevMode: Boolean) extends SeedResolver {
-  override def resolve: Task[Array[Byte]] = {
+  override def resolve: Task[WalletSeed] = {
     val seedEnv =
       for {
         _ <- ZIO.logInfo("Resolving a wallet seed using WALLET_SEED environemnt variable")
@@ -58,6 +59,7 @@ private class SeedResolverImpl(apollo: Apollo, isDevMode: Boolean) extends SeedR
           .tapError(e => ZIO.logError(e))
           .mapError(Exception(_))
       )
+      .map(WalletSeed.fromByteArray)
   }
 
   private def validateSeed(seed: Array[Byte]): Either[String, Unit] = {

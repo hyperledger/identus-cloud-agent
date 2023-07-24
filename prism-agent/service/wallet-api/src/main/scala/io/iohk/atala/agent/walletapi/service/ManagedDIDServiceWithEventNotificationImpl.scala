@@ -2,6 +2,7 @@ package io.iohk.atala.agent.walletapi.service
 
 import io.iohk.atala.agent.walletapi.crypto.Apollo
 import io.iohk.atala.agent.walletapi.model.ManagedDIDDetail
+import io.iohk.atala.agent.walletapi.model.WalletSeed
 import io.iohk.atala.agent.walletapi.model.error.CommonWalletStorageError
 import io.iohk.atala.agent.walletapi.storage.{DIDNonSecretStorage, DIDSecretStorage}
 import io.iohk.atala.agent.walletapi.util.SeedResolver
@@ -19,7 +20,7 @@ class ManagedDIDServiceWithEventNotificationImpl(
     override private[walletapi] val secretStorage: DIDSecretStorage,
     override private[walletapi] val nonSecretStorage: DIDNonSecretStorage,
     apollo: Apollo,
-    seed: Array[Byte],
+    seed: WalletSeed,
     createDIDSem: Semaphore,
     eventNotificationService: EventNotificationService
 ) extends ManagedDIDServiceImpl(

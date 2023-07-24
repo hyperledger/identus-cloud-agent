@@ -4,18 +4,19 @@ import io.iohk.atala.agent.walletapi.crypto.Apollo
 import io.iohk.atala.agent.walletapi.model.CreateDIDHdKey
 import io.iohk.atala.agent.walletapi.model.ManagedDIDState
 import io.iohk.atala.agent.walletapi.model.ManagedDIDTemplate
+import io.iohk.atala.agent.walletapi.model.PublicationState
+import io.iohk.atala.agent.walletapi.model.WalletSeed
 import io.iohk.atala.agent.walletapi.model.error.CreateManagedDIDError
 import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
+import io.iohk.atala.agent.walletapi.util.OperationFactory
 import io.iohk.atala.castor.core.model.did.PrismDIDOperation
 import zio.*
-import io.iohk.atala.agent.walletapi.util.OperationFactory
-import io.iohk.atala.agent.walletapi.model.PublicationState
 
 private[walletapi] class DIDCreateHandler(
     apollo: Apollo,
     nonSecretStorage: DIDNonSecretStorage
 )(
-    seed: Array[Byte],
+    seed: WalletSeed,
     masterKeyId: String
 ) {
   def materialize(
@@ -29,7 +30,7 @@ private[walletapi] class DIDCreateHandler(
           CreateManagedDIDError.WalletStorageError.apply,
           maybeIdx => maybeIdx.map(_ + 1).getOrElse(0)
         )
-      generated <- operationFactory.makeCreateOperationHdKey(masterKeyId, seed)(didIndex, didTemplate)
+      generated <- operationFactory.makeCreateOperationHdKey(masterKeyId, seed.toByteArray)(didIndex, didTemplate)
       (createOperation, hdKey) = generated
       state = ManagedDIDState(createOperation, didIndex, PublicationState.Created())
     } yield DIDCreateMaterialImpl(nonSecretStorage)(createOperation, state, hdKey)

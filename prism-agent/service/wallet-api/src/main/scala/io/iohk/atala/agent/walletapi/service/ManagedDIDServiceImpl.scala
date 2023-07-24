@@ -13,11 +13,11 @@ import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.mercury.PeerDID
 import io.iohk.atala.mercury.model.DidId
-import zio.*
-import scala.language.implicitConversions
 import java.security.{PrivateKey as JavaPrivateKey, PublicKey as JavaPublicKey}
 import scala.collection.immutable.ArraySeq
 import scala.language.implicitConversions
+import scala.language.implicitConversions
+import zio.*
 
 /** A wrapper around Castor's DIDService providing key-management capability. Analogous to the secretAPI in
   * indy-wallet-sdk.
@@ -28,7 +28,7 @@ class ManagedDIDServiceImpl private[walletapi] (
     private[walletapi] val secretStorage: DIDSecretStorage,
     override private[walletapi] val nonSecretStorage: DIDNonSecretStorage,
     apollo: Apollo,
-    seed: Array[Byte],
+    seed: WalletSeed,
     createDIDSem: Semaphore
 ) extends ManagedDIDService {
 
