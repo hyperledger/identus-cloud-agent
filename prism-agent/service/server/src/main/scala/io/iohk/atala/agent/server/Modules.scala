@@ -54,12 +54,14 @@ object AppModule {
   // Create default wallet and provide it as a global layer.
   // This should be removed when we support dynamic wallet creation.
   val defaultWalletContext: RLayer[SeedResolver & WalletManagementService, WalletAccessContext] = ZLayer.fromZIO {
+    val useNewWallet = false // to create a new wallet or use existing one globally
     for {
       svc <- ZIO.service[WalletManagementService]
       seed <- ZIO.serviceWithZIO[SeedResolver](_.resolve)
-      walletId <- svc.listWallets
-        .map(_.headOption)
-        .someOrElseZIO(svc.createWallet(seed))
+      walletId <-
+        if (useNewWallet) svc.createWallet(seed)
+        else svc.listWallets.map(_.headOption).someOrElseZIO(svc.createWallet(seed))
+      _ <- ZIO.debug(s"Global wallet id: $walletId")
     } yield WalletAccessContext(walletId)
   }
 }
