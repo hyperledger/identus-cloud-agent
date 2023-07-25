@@ -12,8 +12,3 @@ object WalletId {
 }
 
 final case class WalletAccessContext(walletId: WalletId)
-
-object WalletAccessContext {
-  // TODO: remove this!!!
-  val placeholder: WalletAccessContext = WalletAccessContext(walletId = 1)
-}
