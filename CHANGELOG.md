@@ -1,3 +1,10 @@
+## [1.9.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v1.9.0...prism-agent-v1.9.1) (2023-07-25)
+
+
+### Bug Fixes
+
+* include helm Chart.yaml in git commit for release process ([#604](https://github.com/input-output-hk/atala-prism-building-blocks/issues/604)) ([d0372f1](https://github.com/input-output-hk/atala-prism-building-blocks/commit/d0372f19e74ade5627a41038b07010321d5ef600))
+
 # [1.9.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v1.8.0...prism-agent-v1.9.0) (2023-07-25)
 
 
