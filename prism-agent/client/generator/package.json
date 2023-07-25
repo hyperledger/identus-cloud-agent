@@ -1,0 +1,19 @@
+{
+  "name": "prism-agent-clients-generator",
+  "version": "1.0.0",
+  "description": "Generates the clients based on the OAS for many languages",
+  "author": "Allain Magyar",
+  "license": "proprietary",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "download:oas": "node get-file",
+    "generate": "npm-run-all download:oas generate:all",
+    "generate:all": "./generate.sh",
+    "clean:all": "./clean.sh"
+  },
+  "dependencies": {
+    "@openapitools/openapi-generator-cli": "2.7.0",
+    "npm-run-all": "^4.1.5"
+  }
+}

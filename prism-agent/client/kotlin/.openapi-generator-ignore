@@ -1,0 +1,11 @@
+settings.gradle
+build.gradle
+docs
+
+# igore broken files
+src/main/kotlin/io/iohk/atala/prism/models/UpdateManagedDIDServiceAction.kt
+src/main/kotlin/io/iohk/atala/prism/models/UpdateManagedDIDServiceActionType.kt
+
+src/main/kotlin/io/iohk/atala/prism/models/Service.kt
+src/main/kotlin/io/iohk/atala/prism/models/ServiceType.kt
+
