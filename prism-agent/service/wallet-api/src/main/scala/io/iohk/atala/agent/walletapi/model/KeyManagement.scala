@@ -16,8 +16,6 @@ object WalletSeed {
   }
 
   def fromByteArray(bytes: Array[Byte]): WalletSeed = ArraySeq.from(bytes)
-
-  given Conversion[Array[Byte], WalletSeed] = bytes => fromByteArray(bytes)
 }
 
 enum KeyManagementMode {

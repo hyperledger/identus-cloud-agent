@@ -96,7 +96,7 @@ class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage 
     for {
       walletCtx <- ZIO.service[WalletAccessContext]
       now <- Clock.instant
-      _ <- txnIO(now, walletCtx.walletId).transact(xa)
+      _ <- txnIO(now, walletCtx.walletId).transact(xa).debug("insertManagedDID")
     } yield ()
   }
 
