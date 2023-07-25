@@ -19,6 +19,7 @@ import io.iohk.atala.agent.walletapi.model.InternalKeyCounter
 import io.iohk.atala.agent.walletapi.model.VerificationRelationshipCounter
 import scala.collection.immutable.ArraySeq
 
+// TODO: isolate wallet
 class JdbcDIDNonSecretStorage(xa: Transactor[Task]) extends DIDNonSecretStorage {
 
   override def getManagedDIDState(did: PrismDID): Task[Option[ManagedDIDState]] = {

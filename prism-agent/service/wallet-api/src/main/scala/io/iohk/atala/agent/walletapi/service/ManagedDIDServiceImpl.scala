@@ -42,7 +42,7 @@ class ManagedDIDServiceImpl private[walletapi] (
   private val didCreateHandler = DIDCreateHandler(apollo, nonSecretStorage)(seed, DEFAULT_MASTER_KEY_ID)
   private val didUpdateHandler = DIDUpdateHandler(apollo, nonSecretStorage, publicationHandler)(seed)
 
-  def syncManagedDIDState: IO[GetManagedDIDError, Unit] = nonSecretStorage
+  def syncManagedDIDState: ZIO[WalletAccessContext, GetManagedDIDError, Unit] = nonSecretStorage
     .listManagedDID(offset = None, limit = None)
     .mapError(GetManagedDIDError.WalletStorageError.apply)
     .flatMap { case (kv, _) =>
@@ -50,7 +50,8 @@ class ManagedDIDServiceImpl private[walletapi] (
     }
     .unit
 
-  def syncUnconfirmedUpdateOperations: IO[GetManagedDIDError, Unit] = syncUnconfirmedUpdateOperationsByDID(did = None)
+  def syncUnconfirmedUpdateOperations: ZIO[WalletAccessContext, GetManagedDIDError, Unit] =
+    syncUnconfirmedUpdateOperationsByDID(did = None)
 
   // FIXME
   // Instead of returning the privateKey directly, it should provide more secure interface like
@@ -60,7 +61,7 @@ class ManagedDIDServiceImpl private[walletapi] (
   def javaKeyPairWithDID(
       did: CanonicalPrismDID,
       keyId: String
-  ): IO[GetKeyError, Option[(JavaPrivateKey, JavaPublicKey)]] = {
+  ): ZIO[WalletAccessContext, GetKeyError, Option[(JavaPrivateKey, JavaPublicKey)]] = {
     nonSecretStorage
       .getManagedDIDState(did)
       .flatMap {
@@ -75,7 +76,9 @@ class ManagedDIDServiceImpl private[walletapi] (
       )
   }
 
-  def getManagedDIDState(did: CanonicalPrismDID): IO[GetManagedDIDError, Option[ManagedDIDState]] =
+  def getManagedDIDState(
+      did: CanonicalPrismDID
+  ): ZIO[WalletAccessContext, GetManagedDIDError, Option[ManagedDIDState]] =
     for {
       // state in wallet maybe stale, update it from DLT
       _ <- computeNewDIDStateFromDLTAndPersist(did)
@@ -83,7 +86,10 @@ class ManagedDIDServiceImpl private[walletapi] (
     } yield state
 
   /** @return A tuple containing a list of items and a count of total items */
-  def listManagedDIDPage(offset: Int, limit: Int): IO[GetManagedDIDError, (Seq[ManagedDIDDetail], Int)] =
+  def listManagedDIDPage(
+      offset: Int,
+      limit: Int
+  ): ZIO[WalletAccessContext, GetManagedDIDError, (Seq[ManagedDIDDetail], Int)] =
     for {
       results <- nonSecretStorage
         .listManagedDID(offset = Some(offset), limit = Some(limit))
@@ -93,7 +99,9 @@ class ManagedDIDServiceImpl private[walletapi] (
     } yield details -> totalCount
 
   // TODO: update this method to use the same handler as updateManagedDID
-  def publishStoredDID(did: CanonicalPrismDID): IO[PublishManagedDIDError, ScheduleDIDOperationOutcome] = {
+  def publishStoredDID(
+      did: CanonicalPrismDID
+  ): ZIO[WalletAccessContext, PublishManagedDIDError, ScheduleDIDOperationOutcome] = {
     def doPublish(state: ManagedDIDState) = {
       for {
         signedOperation <- publicationHandler
@@ -122,7 +130,9 @@ class ManagedDIDServiceImpl private[walletapi] (
     } yield outcome
   }
 
-  def createAndStoreDID(didTemplate: ManagedDIDTemplate): IO[CreateManagedDIDError, LongFormPrismDID] = {
+  def createAndStoreDID(
+      didTemplate: ManagedDIDTemplate
+  ): ZIO[WalletAccessContext, CreateManagedDIDError, LongFormPrismDID] = {
     val effect = for {
       _ <- ZIO
         .fromEither(ManagedDIDTemplateValidator.validate(didTemplate))
@@ -147,7 +157,7 @@ class ManagedDIDServiceImpl private[walletapi] (
   def updateManagedDID(
       did: CanonicalPrismDID,
       actions: Seq[UpdateManagedDIDAction]
-  ): IO[UpdateManagedDIDError, ScheduleDIDOperationOutcome] = {
+  ): ZIO[WalletAccessContext, UpdateManagedDIDError, ScheduleDIDOperationOutcome] = {
     for {
       _ <- ZIO
         .fromEither(UpdateManagedDIDActionValidator.validate(actions))
@@ -182,7 +192,9 @@ class ManagedDIDServiceImpl private[walletapi] (
   }
 
   // TODO: refactor this method to use the same handler as updateManagedDID
-  def deactivateManagedDID(did: CanonicalPrismDID): IO[UpdateManagedDIDError, ScheduleDIDOperationOutcome] = {
+  def deactivateManagedDID(
+      did: CanonicalPrismDID
+  ): ZIO[WalletAccessContext, UpdateManagedDIDError, ScheduleDIDOperationOutcome] = {
     def doDeactivate(state: ManagedDIDState, operation: PrismDIDOperation.Deactivate) = {
       for {
         signedOperation <- publicationHandler.signOperationWithMasterKey[UpdateManagedDIDError](state, operation)
@@ -224,7 +236,10 @@ class ManagedDIDServiceImpl private[walletapi] (
       did: CanonicalPrismDID,
       didMetadata: DIDMetadata,
       createOperation: PrismDIDOperation.Create
-  )(using c1: Conversion[CommonWalletStorageError, E], c2: Conversion[DIDOperationError, E]): IO[E, Array[Byte]] = {
+  )(using
+      c1: Conversion[CommonWalletStorageError, E],
+      c2: Conversion[DIDOperationError, E]
+  ): ZIO[WalletAccessContext, E, Array[Byte]] = {
     for {
       previousOperationHashInternal <- nonSecretStorage
         .listUpdateLineage(did = Some(did), status = Some(ScheduledDIDOperationStatus.Confirmed))
@@ -244,7 +259,10 @@ class ManagedDIDServiceImpl private[walletapi] (
 
   private def syncUnconfirmedUpdateOperationsByDID[E](
       did: Option[PrismDID]
-  )(using c1: Conversion[CommonWalletStorageError, E], c2: Conversion[DIDOperationError, E]): IO[E, Unit] = {
+  )(using
+      c1: Conversion[CommonWalletStorageError, E],
+      c2: Conversion[DIDOperationError, E]
+  ): ZIO[WalletAccessContext, E, Unit] = {
     for {
       unconfirmedOps <- getUnconfirmedUpdateOperationByDid(did)
       _ <- ZIO.foreach(unconfirmedOps)(computeNewDIDLineageStatusAndPersist[E])
@@ -253,7 +271,7 @@ class ManagedDIDServiceImpl private[walletapi] (
 
   private def getUnconfirmedUpdateOperationByDid[E](
       did: Option[PrismDID]
-  )(using c1: Conversion[CommonWalletStorageError, E]): IO[E, Seq[DIDUpdateLineage]] = {
+  )(using c1: Conversion[CommonWalletStorageError, E]): ZIO[WalletAccessContext, E, Seq[DIDUpdateLineage]] = {
     for {
       awaitingConfirmationOps <- nonSecretStorage
         .listUpdateLineage(did = did, status = Some(ScheduledDIDOperationStatus.AwaitingConfirmation))
@@ -266,7 +284,10 @@ class ManagedDIDServiceImpl private[walletapi] (
 
   protected def computeNewDIDLineageStatusAndPersist[E](
       updateLineage: DIDUpdateLineage
-  )(using c1: Conversion[DIDOperationError, E], c2: Conversion[CommonWalletStorageError, E]): IO[E, Boolean] = {
+  )(using
+      c1: Conversion[DIDOperationError, E],
+      c2: Conversion[CommonWalletStorageError, E]
+  ): ZIO[WalletAccessContext, E, Boolean] = {
     for {
       maybeOperationDetail <- didService
         .getScheduledDIDOperationDetail(updateLineage.operationId.toArray)
@@ -285,7 +306,7 @@ class ManagedDIDServiceImpl private[walletapi] (
   )(using
       c1: Conversion[CommonWalletStorageError, E],
       c2: Conversion[DIDOperationError, E]
-  ): IO[E, Boolean] = {
+  ): ZIO[WalletAccessContext, E, Boolean] = {
     for {
       maybeCurrentState <- nonSecretStorage
         .getManagedDIDState(did)

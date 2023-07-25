@@ -12,7 +12,8 @@ import io.iohk.atala.castor.core.model.error.DIDOperationError
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.event.notification.{Event, EventNotificationService}
-import zio.{IO, RLayer, Semaphore, ZIO, ZLayer}
+import io.iohk.atala.shared.models.WalletAccessContext
+import zio.*
 
 class ManagedDIDServiceWithEventNotificationImpl(
     didService: DIDService,
@@ -40,7 +41,7 @@ class ManagedDIDServiceWithEventNotificationImpl(
   )(using
       c1: Conversion[CommonWalletStorageError, E],
       c2: Conversion[DIDOperationError, E]
-  ): IO[E, Boolean] = {
+  ): ZIO[WalletAccessContext, E, Boolean] = {
     for {
       updated <- super.computeNewDIDStateFromDLTAndPersist(did)
       _ <- ZIO.when(updated) {

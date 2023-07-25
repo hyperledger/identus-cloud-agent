@@ -1,23 +1,24 @@
 package io.iohk.atala.agent.walletapi.service.handler
 
-import zio.*
 import io.iohk.atala.agent.walletapi.model.ManagedDIDState
-import io.iohk.atala.castor.core.model.did.PrismDIDOperation
-import io.iohk.atala.agent.walletapi.model.error.CommonWalletStorageError
 import io.iohk.atala.agent.walletapi.model.error.CommonCryptographyError
-import io.iohk.atala.castor.core.model.did.SignedPrismDIDOperation
+import io.iohk.atala.agent.walletapi.model.error.CommonWalletStorageError
 import io.iohk.atala.agent.walletapi.util.KeyResolver
-import scala.collection.immutable.ArraySeq
-import io.iohk.atala.castor.core.model.error.DIDOperationError
+import io.iohk.atala.castor.core.model.did.PrismDIDOperation
 import io.iohk.atala.castor.core.model.did.ScheduleDIDOperationOutcome
+import io.iohk.atala.castor.core.model.did.SignedPrismDIDOperation
+import io.iohk.atala.castor.core.model.error.DIDOperationError
 import io.iohk.atala.castor.core.service.DIDService
+import io.iohk.atala.shared.models.WalletAccessContext
+import scala.collection.immutable.ArraySeq
 import scala.language.implicitConversions
+import zio.*
 
 class PublicationHandler(didService: DIDService, keyResolver: KeyResolver)(masterKeyId: String) {
   def signOperationWithMasterKey[E](state: ManagedDIDState, operation: PrismDIDOperation)(using
       c1: Conversion[CommonWalletStorageError, E],
       c2: Conversion[CommonCryptographyError, E]
-  ): IO[E, SignedPrismDIDOperation] = {
+  ): ZIO[WalletAccessContext, E, SignedPrismDIDOperation] = {
     for {
       masterKeyPair <-
         keyResolver

@@ -10,6 +10,7 @@ import io.iohk.atala.agent.walletapi.model.error.CreateManagedDIDError
 import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
 import io.iohk.atala.agent.walletapi.util.OperationFactory
 import io.iohk.atala.castor.core.model.did.PrismDIDOperation
+import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 
 private[walletapi] class DIDCreateHandler(
@@ -21,7 +22,7 @@ private[walletapi] class DIDCreateHandler(
 ) {
   def materialize(
       didTemplate: ManagedDIDTemplate
-  ): IO[CreateManagedDIDError, DIDCreateMaterial] = {
+  ): ZIO[WalletAccessContext, CreateManagedDIDError, DIDCreateMaterial] = {
     val operationFactory = OperationFactory(apollo)
     for {
       didIndex <- nonSecretStorage
@@ -40,7 +41,7 @@ private[walletapi] class DIDCreateHandler(
 private[walletapi] trait DIDCreateMaterial {
   def operation: PrismDIDOperation.Create
   def state: ManagedDIDState
-  def persist: Task[Unit]
+  def persist: RIO[WalletAccessContext, Unit]
 }
 
 private[walletapi] class DIDCreateMaterialImpl(nonSecretStorage: DIDNonSecretStorage)(
@@ -48,7 +49,7 @@ private[walletapi] class DIDCreateMaterialImpl(nonSecretStorage: DIDNonSecretSto
     val state: ManagedDIDState,
     hdKey: CreateDIDHdKey
 ) extends DIDCreateMaterial {
-  def persist: Task[Unit] = {
+  def persist: RIO[WalletAccessContext, Unit] = {
     val did = operation.did
     for {
       _ <- nonSecretStorage
