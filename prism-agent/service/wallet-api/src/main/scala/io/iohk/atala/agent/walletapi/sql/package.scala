@@ -111,7 +111,8 @@ package object sql {
       createdAt: Instant,
       updatedAt: Instant,
       keyMode: KeyManagementMode,
-      didIndex: Int
+      didIndex: Int,
+      walletId: WalletId
   ) {
     def toDomain: Try[ManagedDIDState] = {
       publicationStatus match {
@@ -154,7 +155,7 @@ package object sql {
   }
 
   object DIDStateRow {
-    def from(did: PrismDID, state: ManagedDIDState, now: Instant): DIDStateRow = {
+    def from(did: PrismDID, state: ManagedDIDState, now: Instant, walletId: WalletId): DIDStateRow = {
       val createOperation = state.createOperation
       val status = PublicationStatusType.from(state.publicationState)
       val publishedOperationId = state.publicationState match {
@@ -170,7 +171,8 @@ package object sql {
         createdAt = now,
         updatedAt = now,
         keyMode = state.keyMode,
-        didIndex = state.didIndex
+        didIndex = state.didIndex,
+        walletId = walletId
       )
     }
   }

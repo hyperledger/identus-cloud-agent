@@ -159,7 +159,7 @@ object MainApp extends ZIOAppDefault {
           // HTTP client
           Client.default,
           Scope.default,
-          // FIXME: Remove when support dynamic wallet. Temporarily added to make DIDComm listener works
+          // FIXME: Remove when support dynamic wallet. Temporarily added to make some components work
           AppModule.defaultWalletContext
         )
     } yield app
