@@ -6,7 +6,7 @@ import io.iohk.atala.agent.server.sql.Migrations as AgentMigrations
 import io.iohk.atala.agent.walletapi.service.WalletManagementServiceImpl
 import io.iohk.atala.agent.walletapi.service.{ManagedDIDService, ManagedDIDServiceWithEventNotificationImpl}
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDNonSecretStorage
-import io.iohk.atala.agent.walletapi.sql.JdbcWalletSecretStorage
+import io.iohk.atala.agent.walletapi.sql.JdbcWalletNonSecretStorage
 import io.iohk.atala.castor.controller.{DIDControllerImpl, DIDRegistrarControllerImpl}
 import io.iohk.atala.castor.core.service.DIDServiceImpl
 import io.iohk.atala.castor.core.util.DIDOperationValidator
@@ -42,7 +42,6 @@ import zio.metrics.jvm.DefaultJvmMetrics
 
 import java.security.Security
 import scala.language.implicitConversions
-import io.iohk.atala.agent.walletapi.sql.JdbcWalletNonSecretStorage
 
 object MainApp extends ZIOAppDefault {
 
@@ -147,9 +146,8 @@ object MainApp extends ZIOAppDefault {
           // storage
           RepoModule.agentTransactorLayer >>> JdbcDIDNonSecretStorage.layer,
           RepoModule.agentTransactorLayer >>> JdbcWalletNonSecretStorage.layer,
-          RepoModule.agentTransactorLayer >>> JdbcWalletSecretStorage.layer,
+          RepoModule.allSecretStorageLayer,
           RepoModule.connectTransactorLayer >>> JdbcConnectionRepository.layer,
-          RepoModule.didSecretStorageLayer,
           RepoModule.polluxTransactorLayer >>> JdbcCredentialRepository.layer,
           RepoModule.polluxTransactorLayer >>> JdbcCredentialSchemaRepository.layer,
           RepoModule.polluxTransactorLayer >>> JdbcPresentationRepository.layer,

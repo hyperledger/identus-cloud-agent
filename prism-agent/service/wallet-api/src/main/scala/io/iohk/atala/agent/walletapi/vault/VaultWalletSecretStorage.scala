@@ -33,3 +33,7 @@ class VaultWalletSecretStorage(vaultKV: VaultKVClient) extends WalletSecretStora
   }
 
 }
+
+object VaultWalletSecretStorage {
+  def layer: URLayer[VaultKVClient, WalletSecretStorage] = ZLayer.fromFunction(VaultWalletSecretStorage(_))
+}

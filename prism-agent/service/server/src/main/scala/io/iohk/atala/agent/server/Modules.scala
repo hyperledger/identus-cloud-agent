@@ -9,8 +9,11 @@ import io.iohk.atala.agent.server.sql.DbConfig as AgentDbConfig
 import io.iohk.atala.agent.walletapi.crypto.Apollo
 import io.iohk.atala.agent.walletapi.service.WalletManagementService
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
+import io.iohk.atala.agent.walletapi.sql.JdbcWalletSecretStorage
 import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
+import io.iohk.atala.agent.walletapi.storage.WalletSecretStorage
 import io.iohk.atala.agent.walletapi.util.SeedResolver
+import io.iohk.atala.agent.walletapi.vault.VaultWalletSecretStorage
 import io.iohk.atala.agent.walletapi.vault.{VaultDIDSecretStorage, VaultKVClient, VaultKVClientImpl}
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.connect.sql.repository.DbConfig as ConnectDbConfig
@@ -193,7 +196,7 @@ object RepoModule {
     SystemModule.configLayer >>> vaultClientConfig
   }
 
-  val didSecretStorageLayer: TaskLayer[DIDSecretStorage] = {
+  val allSecretStorageLayer: TaskLayer[DIDSecretStorage & WalletSecretStorage] = {
     ZLayer.fromZIO {
       ZIO
         .service[AppConfig]
@@ -202,15 +205,17 @@ object RepoModule {
         .flatMap {
           case "vault" =>
             ZIO.succeed(
-              ZLayer.make[DIDSecretStorage](
+              ZLayer.make[DIDSecretStorage & WalletSecretStorage](
                 VaultDIDSecretStorage.layer,
+                VaultWalletSecretStorage.layer,
                 vaultClientLayer,
               )
             )
           case "postgres" =>
             ZIO.succeed(
-              ZLayer.make[DIDSecretStorage](
+              ZLayer.make[DIDSecretStorage & WalletSecretStorage](
                 JdbcDIDSecretStorage.layer,
+                JdbcWalletSecretStorage.layer,
                 agentTransactorLayer,
               )
             )

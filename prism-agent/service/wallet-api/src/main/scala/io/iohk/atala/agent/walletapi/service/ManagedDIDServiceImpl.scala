@@ -29,7 +29,7 @@ class ManagedDIDServiceImpl private[walletapi] (
     private[walletapi] val secretStorage: DIDSecretStorage,
     override private[walletapi] val nonSecretStorage: DIDNonSecretStorage,
     apollo: Apollo,
-    seed: WalletSeed,
+    seed: WalletSeed, // TODO: support dynamic seed lookup
     createDIDSem: Semaphore
 ) extends ManagedDIDService {
 
