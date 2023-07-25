@@ -83,7 +83,8 @@
             "DEPENDENCIES.md",
             "package.json",
             "package-lock.json",
-            "prism-agent/service/api/http/prism-agent-openapi-spec.yaml"
+            "prism-agent/service/api/http/prism-agent-openapi-spec.yaml",
+            "infrastructure/charts/agent/Chart.yaml"
           ],
           "message": "chore(release): cut atala prism ${nextRelease.version} release\n\n${nextRelease.notes}"
         }
