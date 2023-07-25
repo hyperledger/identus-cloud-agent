@@ -1,3 +1,10 @@
+# [1.9.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v1.8.0...prism-agent-v1.9.0) (2023-07-25)
+
+
+### Features
+
+* add helm-chart for agent  ([#603](https://github.com/input-output-hk/atala-prism-building-blocks/issues/603)) ([63f38d4](https://github.com/input-output-hk/atala-prism-building-blocks/commit/63f38d47f4645bf6172320da5c3413c748c03729))
+
 # [1.8.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v1.7.0...prism-agent-v1.8.0) (2023-07-20)
 
 
