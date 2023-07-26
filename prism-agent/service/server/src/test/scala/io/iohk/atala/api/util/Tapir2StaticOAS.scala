@@ -11,6 +11,7 @@ import io.iohk.atala.issue.controller.{IssueController, IssueServerEndpoints}
 import io.iohk.atala.pollux.credentialschema.controller.{CredentialSchemaController, VerificationPolicyController}
 import io.iohk.atala.pollux.credentialschema.{SchemaRegistryServerEndpoints, VerificationPolicyServerEndpoints}
 import io.iohk.atala.presentproof.controller.{PresentProofController, PresentProofServerEndpoints}
+import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.system.controller.{SystemController, SystemServerEndpoints}
 import org.scalatestplus.mockito.MockitoSugar.*
 import sttp.tapir.docs.openapi.OpenAPIDocsInterpreter
@@ -55,7 +56,8 @@ object Tapir2StaticOAS extends ZIOAppDefault {
         ZLayer.succeed(mock[PresentProofController]) ++
         ZLayer.succeed(mock[IssueController]) ++
         ZLayer.succeed(mock[DIDController]) ++
-        ZLayer.succeed(mock[SystemController])
+        ZLayer.succeed(mock[SystemController]) ++
+        ZLayer.succeed(mock[WalletAccessContext])
     )
   }
 

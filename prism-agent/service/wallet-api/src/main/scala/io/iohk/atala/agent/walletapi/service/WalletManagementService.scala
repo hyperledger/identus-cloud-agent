@@ -5,6 +5,6 @@ import io.iohk.atala.shared.models.WalletId
 import zio.*
 
 trait WalletManagementService {
-  def createWallet(seed: WalletSeed): Task[WalletId]
+  def createWallet(seed: Option[WalletSeed] = None): Task[WalletId]
   def listWallets: Task[Seq[WalletId]]
 }

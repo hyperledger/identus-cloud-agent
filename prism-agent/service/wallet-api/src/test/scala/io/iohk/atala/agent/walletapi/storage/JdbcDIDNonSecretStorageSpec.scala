@@ -1,19 +1,20 @@
 package io.iohk.atala.agent.walletapi.storage
 
+import io.iohk.atala.agent.walletapi.crypto.ApolloSpecHelper
+import io.iohk.atala.agent.walletapi.model.ManagedDIDState
+import io.iohk.atala.agent.walletapi.model.PublicationState
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDNonSecretStorage
+import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
+import io.iohk.atala.castor.core.model.did.PrismDID
+import io.iohk.atala.castor.core.model.did.PrismDIDOperation
+import io.iohk.atala.castor.core.model.did.ScheduledDIDOperationStatus
+import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.test.container.{DBTestUtils, PostgresTestContainerSupport}
+import org.postgresql.util.PSQLException
+import scala.collection.compat.immutable.ArraySeq
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
-import io.iohk.atala.castor.core.model.did.PrismDID
-import io.iohk.atala.agent.walletapi.model.ManagedDIDState
-import scala.collection.compat.immutable.ArraySeq
-import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
-import io.iohk.atala.agent.walletapi.crypto.ApolloSpecHelper
-import io.iohk.atala.castor.core.model.did.ScheduledDIDOperationStatus
-import io.iohk.atala.castor.core.model.did.PrismDIDOperation
-import org.postgresql.util.PSQLException
-import io.iohk.atala.agent.walletapi.model.PublicationState
 
 object JdbcDIDNonSecretStorageSpec
     extends ZIOSpecDefault,
@@ -43,8 +44,10 @@ object JdbcDIDNonSecretStorageSpec
         setDIDLineageStatusSpec
       ) @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
 
-    testSuite.provideSomeLayer(
-      pgContainerLayer >+> (transactorLayer ++ apolloLayer) >+> (JdbcDIDSecretStorage.layer ++ JdbcDIDNonSecretStorage.layer)
+    testSuite.provide(
+      JdbcDIDNonSecretStorage.layer,
+      transactorLayer,
+      pgContainerLayer,
     )
   }
 

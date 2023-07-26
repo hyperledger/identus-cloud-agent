@@ -8,6 +8,8 @@ import io.iohk.atala.agent.walletapi.model.error.{CreateManagedDIDError, Publish
 import io.iohk.atala.agent.walletapi.model.{DIDPublicKeyTemplate, ManagedDIDState, ManagedDIDTemplate, PublicationState}
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDNonSecretStorage
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
+import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
+import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
 import io.iohk.atala.agent.walletapi.util.SeedResolver
 import io.iohk.atala.agent.walletapi.vault.VaultDIDSecretStorage
 import io.iohk.atala.castor.core.model.did.InternalKeyPurpose
@@ -80,18 +82,37 @@ object ManagedDIDServiceSpec
   }
 
   private def jdbcNonSecretStorageLayer =
-    pgContainerLayer >+> (transactorLayer ++ apolloLayer) >+> JdbcDIDNonSecretStorage.layer
+    ZLayer.make[DIDNonSecretStorage](
+      JdbcDIDNonSecretStorage.layer,
+      transactorLayer
+    )
 
   private def jdbcSecretStorageLayer =
-    pgContainerLayer >+> (transactorLayer ++ apolloLayer) >+> JdbcDIDSecretStorage.layer
+    ZLayer.make[DIDSecretStorage](
+      JdbcDIDSecretStorage.layer,
+      transactorLayer
+    )
 
-  private def vaultSecretStorageLayer = vaultKvClientLayer >>> VaultDIDSecretStorage.layer
+  private def vaultSecretStorageLayer =
+    ZLayer.make[DIDSecretStorage](
+      VaultDIDSecretStorage.layer,
+      vaultKvClientLayer
+    )
 
   private def managedDIDServiceLayer =
-    (DIDOperationValidator.layer() ++
-      testDIDServiceLayer ++
-      apolloLayer ++
-      SeedResolver.layer(isDevMode = true)) >+> ManagedDIDServiceImpl.layer
+    ZLayer.makeSome[DIDSecretStorage, ManagedDIDService](
+      ManagedDIDServiceImpl.layer,
+      DIDOperationValidator.layer(),
+      testDIDServiceLayer,
+      apolloLayer,
+      SeedResolver.layer(isDevMode = true),
+      jdbcNonSecretStorageLayer
+    )
+
+    // (DIDOperationValidator.layer() ++
+    //   testDIDServiceLayer ++
+    //   apolloLayer ++
+    //   SeedResolver.layer(isDevMode = true)) >+> ManagedDIDServiceImpl.layer
 
   private def generateDIDTemplate(
       publicKeys: Seq[DIDPublicKeyTemplate] = Nil,
@@ -140,12 +161,22 @@ object ManagedDIDServiceSpec
       ) @@ TestAspect.before(DBTestUtils.runMigrationAgentDB) @@ sequential
 
     val suite1 = testSuite("jdbc as secret storage")
-      .provideLayer((jdbcNonSecretStorageLayer ++ jdbcSecretStorageLayer) >+> managedDIDServiceLayer)
-      .provide(Runtime.removeDefaultLoggers)
+      .provide(
+        managedDIDServiceLayer,
+        jdbcSecretStorageLayer,
+        testDIDServiceLayer,
+        pgContainerLayer,
+        Runtime.removeDefaultLoggers
+      )
 
     val suite2 = testSuite("vault as secret storage")
-      .provideLayer((jdbcNonSecretStorageLayer ++ vaultSecretStorageLayer) >+> managedDIDServiceLayer)
-      .provide(Runtime.removeDefaultLoggers)
+      .provide(
+        managedDIDServiceLayer,
+        vaultSecretStorageLayer,
+        testDIDServiceLayer,
+        pgContainerLayer,
+        Runtime.removeDefaultLoggers
+      )
 
     suite("ManagedDIDService")(suite1, suite2)
   }
