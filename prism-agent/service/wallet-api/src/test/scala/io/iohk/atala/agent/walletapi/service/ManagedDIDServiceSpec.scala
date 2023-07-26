@@ -8,10 +8,15 @@ import io.iohk.atala.agent.walletapi.model.error.{CreateManagedDIDError, Publish
 import io.iohk.atala.agent.walletapi.model.{DIDPublicKeyTemplate, ManagedDIDState, ManagedDIDTemplate, PublicationState}
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDNonSecretStorage
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
+import io.iohk.atala.agent.walletapi.sql.JdbcWalletNonSecretStorage
+import io.iohk.atala.agent.walletapi.sql.JdbcWalletSecretStorage
 import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
 import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
+import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorage
+import io.iohk.atala.agent.walletapi.storage.WalletSecretStorage
 import io.iohk.atala.agent.walletapi.util.SeedResolver
 import io.iohk.atala.agent.walletapi.vault.VaultDIDSecretStorage
+import io.iohk.atala.agent.walletapi.vault.VaultWalletSecretStorage
 import io.iohk.atala.castor.core.model.did.InternalKeyPurpose
 import io.iohk.atala.castor.core.model.did.{
   DIDData,
@@ -30,6 +35,7 @@ import io.iohk.atala.castor.core.model.did.{
 import io.iohk.atala.castor.core.model.error
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.castor.core.util.DIDOperationValidator
+import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.test.container.DBTestUtils
 import io.iohk.atala.test.container.PostgresTestContainerSupport
 import io.iohk.atala.test.container.VaultTestContainerSupport
@@ -37,13 +43,6 @@ import scala.collection.immutable.ArraySeq
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
-import zio.test.TestAspect.sequential
-import io.iohk.atala.agent.walletapi.sql.JdbcWalletSecretStorage
-import io.iohk.atala.agent.walletapi.storage.WalletSecretStorage
-import io.iohk.atala.agent.walletapi.sql.JdbcWalletNonSecretStorage
-import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorage
-import io.iohk.atala.agent.walletapi.vault.VaultWalletSecretStorage
-import io.iohk.atala.shared.models.WalletAccessContext
 
 object ManagedDIDServiceSpec
     extends ZIOSpecDefault,
@@ -87,13 +86,6 @@ object ManagedDIDServiceSpec
     }
   }
 
-  private def jdbcNonSecretStorageLayer =
-    ZLayer.make[DIDNonSecretStorage & WalletNonSecretStorage](
-      JdbcDIDNonSecretStorage.layer,
-      JdbcWalletNonSecretStorage.layer,
-      transactorLayer
-    )
-
   private def jdbcSecretStorageLayer =
     ZLayer.make[DIDSecretStorage & WalletSecretStorage](
       JdbcDIDSecretStorage.layer,
@@ -108,22 +100,19 @@ object ManagedDIDServiceSpec
       vaultKvClientLayer
     )
 
-  private def walletManagementServiceLayer =
-    ZLayer.makeSome[WalletSecretStorage, WalletManagementService](
-      WalletManagementServiceImpl.layer,
-      apolloLayer,
-      jdbcNonSecretStorageLayer
-    )
-
-  private def managedDIDServiceLayer =
-    ZLayer.makeSome[DIDSecretStorage, ManagedDIDService](
-      ManagedDIDServiceImpl.layer,
-      DIDOperationValidator.layer(),
-      testDIDServiceLayer,
-      apolloLayer,
-      SeedResolver.layer(isDevMode = true),
-      jdbcNonSecretStorageLayer
-    )
+  private def serviceLayer =
+    ZLayer
+      .makeSome[DIDSecretStorage & WalletSecretStorage, WalletManagementService & ManagedDIDService & TestDIDService](
+        ManagedDIDServiceImpl.layer,
+        WalletManagementServiceImpl.layer,
+        DIDOperationValidator.layer(),
+        JdbcDIDNonSecretStorage.layer,
+        JdbcWalletNonSecretStorage.layer,
+        SeedResolver.layer(isDevMode = true),
+        transactorLayer,
+        testDIDServiceLayer,
+        apolloLayer
+      )
 
   private def generateDIDTemplate(
       publicKeys: Seq[DIDPublicKeyTemplate] = Nil,
@@ -162,41 +151,47 @@ object ManagedDIDServiceSpec
       _ <- svc.syncManagedDIDState
     } yield did
 
-  override def spec = {
-    val globalWalletAccessContext =
-      ZLayer.fromZIO { ZIO.serviceWithZIO[WalletManagementService](_.createWallet()).map(WalletAccessContext(_)) }
+  extension [R, E](spec: Spec[R & WalletAccessContext, E]) {
+    def globalWallet: Spec[R & WalletManagementService, E] = {
+      spec.provideSomeLayer(
+        ZLayer.fromZIO(
+          ZIO
+            .serviceWithZIO[WalletManagementService](_.createWallet())
+            .map(WalletAccessContext(_))
+            .orDie
+        )
+      )
+    }
+  }
 
+  override def spec = {
     def testSuite(name: String) =
       suite(name)(
         publishStoredDIDSpec,
         createAndStoreDIDSpec,
         updateManagedDIDSpec,
         deactivateManagedDIDSpec
-      ) @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
+      ).globalWallet
+        @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
+        @@ TestAspect.sequential
 
     val suite1 = testSuite("jdbc as secret storage")
       .provide(
-        managedDIDServiceLayer,
-        walletManagementServiceLayer,
-        jdbcSecretStorageLayer,
-        testDIDServiceLayer,
+        serviceLayer,
         pgContainerLayer,
-        globalWalletAccessContext,
-        Runtime.removeDefaultLoggers
+        jdbcSecretStorageLayer
       )
+      .provide(Runtime.removeDefaultLoggers)
 
     val suite2 = testSuite("vault as secret storage")
       .provide(
-        managedDIDServiceLayer,
-        walletManagementServiceLayer,
-        vaultSecretStorageLayer,
-        testDIDServiceLayer,
+        serviceLayer,
         pgContainerLayer,
-        globalWalletAccessContext,
-        Runtime.removeDefaultLoggers
+        vaultSecretStorageLayer
       )
+      .provide(Runtime.removeDefaultLoggers)
 
-    suite("ManagedDIDService")(suite1, suite2) @@ sequential
+    suite("ManagedDIDService")(suite1, suite2)
   }
 
   private val publishStoredDIDSpec =
