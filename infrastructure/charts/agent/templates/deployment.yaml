@@ -123,12 +123,12 @@ spec:
           {{- end }}
           {{- if .Values.server.useVault }}
           - name: VAULT_ADDR
-            value: "http://{{ .Release.Namespace }}-vault.{{ .Release.Namespace }}:8200"
+            value: "http://vault-0.{{ .Release.Namespace }}:8200"
           - name: VAULT_TOKEN
             valueFrom:
               secretKeyRef:
-                name: vault-root-token
-                key: root-token
+                name: vault-unseal-keys
+                key: vault-root
                 optional: false
           {{- end }}
           {{- range $key, $value := .Values.server.additionalEnvVariables }}

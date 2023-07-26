@@ -1,0 +1,137 @@
+{{- if .Values.server.useVault }}
+---
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  name: vault
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: vault
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["*"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "update", "patch"]
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: vault
+roleRef:
+  kind: Role
+  name: vault
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+  - kind: ServiceAccount
+    name: vault
+---
+# This binding allows the deployed Vault instance to authenticate clients
+# through Kubernetes ServiceAccounts (if configured so).
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: vault-auth-delegator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:auth-delegator
+subjects:
+  - kind: ServiceAccount
+    name: vault
+    namespace: "{{ .Release.Namespace }}"
+---
+apiVersion: "vault.banzaicloud.com/v1alpha1"
+kind: "Vault"
+metadata:
+  name: "vault"
+  namespace: "{{ .Release.Namespace }}"
+  labels:
+    app.kubernetes.io/name: vault
+    vault_cr: vault
+spec:
+  size: 1
+  image: hashicorp/vault:1.14.0
+  serviceAccount: vault
+  # serviceType: ClusterIP
+  # ingress:
+  #   annotations: {}
+  #   spec: {}
+  volumeClaimTemplates:
+    - metadata:
+        name: vault-file
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        volumeMode: Filesystem
+        resources:
+          requests:
+            storage: 1Gi
+  volumeMounts:
+    - name: vault-file
+      mountPath: /vault/file
+  # Describe where you would like to store the Vault unseal keys and root token.
+  unsealConfig:
+    options:
+      # The preFlightChecks flag enables unseal and root token storage tests
+      # This is true by default
+      preFlightChecks: true
+      # The storeRootToken flag enables storing of root token in chosen storage
+      # This is true by default
+      storeRootToken: true
+    kubernetes:
+      secretNamespace: "{{ .Release.Namespace }}"
+  # A YAML representation of a final vault config file.
+  # See https://www.vaultproject.io/docs/configuration/ for more information.
+  config:
+    storage:
+      file:
+        path: /vault/file
+    listener:
+      tcp:
+        address: "0.0.0.0:8200"
+        tls_disable: true
+    # api_addr: "http://vault.{{ .Release.Namespace }}:8200"
+    # cluster_addr: "http://${.Env.POD_NAME}:8201"
+    ui: true
+  statsdDisabled: true
+  serviceRegistrationEnabled: true
+  externalConfig:
+    secrets:
+      - path: secret
+        type: kv
+        description: General secrets.
+        options:
+          version: 2
+      - path: pki
+        type: pki
+        description: Vault PKI Backend
+        config:
+          default_lease_ttl: 168h
+          max_lease_ttl: 720h
+        configuration:
+          config:
+          - name: urls
+            issuing_certificates: "https://vault.{{ .Release.Namespace }}:8200/v1/pki/ca"
+            crl_distribution_points: "https://vault.{{ .Release.Namespace }}:8200/v1/pki/crl"
+          root/generate:
+          - name: internal
+            common_name: "vault.{{ .Release.Namespace }}"
+          roles:
+          - name: default
+            allowed_domains: localhost,pod,svc,default
+            allow_subdomains: true
+            generate_lease: true
+            ttl: 1m
+    auth:
+      - type: kubernetes
+        roles:
+          # Allow every pod in the default namespace to use the secret kv store
+          - name: default
+            bound_service_account_names: ["vault"]
+            bound_service_account_namespaces: ["default", "{{ .Release.Namespace }}"]
+{{- end }}
+# "vault-secrets-webhook" TODO

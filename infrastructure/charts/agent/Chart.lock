@@ -1,6 +1,6 @@
 dependencies:
 - name: vault
-  repository: https://helm.releases.hashicorp.com
-  version: 0.24.1
-digest: sha256:f9ee9a8708d36ff7fcf9334fe17404147be8c124ead65830ee72bd4f43c262cd
-generated: "2023-06-16T14:40:33.224500592+10:00"
+  repository: https://kubernetes-charts.banzaicloud.com
+  version: 1.19.0
+digest: sha256:cf6925c98680b5c0e1dd45364ab6248a7446714b6472d865e24b81d0f9c1fbfd
+generated: "2023-07-26T14:50:35.950562014+10:00"
