@@ -38,6 +38,12 @@ import zio.*
 import zio.test.*
 import zio.test.Assertion.*
 import zio.test.TestAspect.sequential
+import io.iohk.atala.agent.walletapi.sql.JdbcWalletSecretStorage
+import io.iohk.atala.agent.walletapi.storage.WalletSecretStorage
+import io.iohk.atala.agent.walletapi.sql.JdbcWalletNonSecretStorage
+import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorage
+import io.iohk.atala.agent.walletapi.vault.VaultWalletSecretStorage
+import io.iohk.atala.shared.models.WalletAccessContext
 
 object ManagedDIDServiceSpec
     extends ZIOSpecDefault,
@@ -82,21 +88,31 @@ object ManagedDIDServiceSpec
   }
 
   private def jdbcNonSecretStorageLayer =
-    ZLayer.make[DIDNonSecretStorage](
+    ZLayer.make[DIDNonSecretStorage & WalletNonSecretStorage](
       JdbcDIDNonSecretStorage.layer,
+      JdbcWalletNonSecretStorage.layer,
       transactorLayer
     )
 
   private def jdbcSecretStorageLayer =
-    ZLayer.make[DIDSecretStorage](
+    ZLayer.make[DIDSecretStorage & WalletSecretStorage](
       JdbcDIDSecretStorage.layer,
+      JdbcWalletSecretStorage.layer,
       transactorLayer
     )
 
   private def vaultSecretStorageLayer =
-    ZLayer.make[DIDSecretStorage](
+    ZLayer.make[DIDSecretStorage & WalletSecretStorage](
       VaultDIDSecretStorage.layer,
+      VaultWalletSecretStorage.layer,
       vaultKvClientLayer
+    )
+
+  private def walletManagementServiceLayer =
+    ZLayer.makeSome[WalletSecretStorage, WalletManagementService](
+      WalletManagementServiceImpl.layer,
+      apolloLayer,
+      jdbcNonSecretStorageLayer
     )
 
   private def managedDIDServiceLayer =
@@ -108,11 +124,6 @@ object ManagedDIDServiceSpec
       SeedResolver.layer(isDevMode = true),
       jdbcNonSecretStorageLayer
     )
-
-    // (DIDOperationValidator.layer() ++
-    //   testDIDServiceLayer ++
-    //   apolloLayer ++
-    //   SeedResolver.layer(isDevMode = true)) >+> ManagedDIDServiceImpl.layer
 
   private def generateDIDTemplate(
       publicKeys: Seq[DIDPublicKeyTemplate] = Nil,
@@ -152,33 +163,40 @@ object ManagedDIDServiceSpec
     } yield did
 
   override def spec = {
+    val globalWalletAccessContext =
+      ZLayer.fromZIO { ZIO.serviceWithZIO[WalletManagementService](_.createWallet()).map(WalletAccessContext(_)) }
+
     def testSuite(name: String) =
       suite(name)(
         publishStoredDIDSpec,
         createAndStoreDIDSpec,
         updateManagedDIDSpec,
         deactivateManagedDIDSpec
-      ) @@ TestAspect.before(DBTestUtils.runMigrationAgentDB) @@ sequential
+      ) @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
 
     val suite1 = testSuite("jdbc as secret storage")
       .provide(
         managedDIDServiceLayer,
+        walletManagementServiceLayer,
         jdbcSecretStorageLayer,
         testDIDServiceLayer,
         pgContainerLayer,
+        globalWalletAccessContext,
         Runtime.removeDefaultLoggers
       )
 
     val suite2 = testSuite("vault as secret storage")
       .provide(
         managedDIDServiceLayer,
+        walletManagementServiceLayer,
         vaultSecretStorageLayer,
         testDIDServiceLayer,
         pgContainerLayer,
+        globalWalletAccessContext,
         Runtime.removeDefaultLoggers
       )
 
-    suite("ManagedDIDService")(suite1, suite2)
+    suite("ManagedDIDService")(suite1, suite2) @@ sequential
   }
 
   private val publishStoredDIDSpec =

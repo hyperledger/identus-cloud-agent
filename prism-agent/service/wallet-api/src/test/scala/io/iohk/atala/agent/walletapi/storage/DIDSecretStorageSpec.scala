@@ -1,15 +1,21 @@
 package io.iohk.atala.agent.walletapi.storage
 
 import io.iohk.atala.agent.walletapi.crypto.ApolloSpecHelper
+import io.iohk.atala.agent.walletapi.service.WalletManagementService
+import io.iohk.atala.agent.walletapi.service.WalletManagementServiceImpl
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
+import io.iohk.atala.agent.walletapi.sql.JdbcWalletNonSecretStorage
+import io.iohk.atala.agent.walletapi.sql.JdbcWalletSecretStorage
+import io.iohk.atala.agent.walletapi.vault.VaultDIDSecretStorage
+import io.iohk.atala.agent.walletapi.vault.VaultWalletSecretStorage
 import io.iohk.atala.mercury.PeerDID
+import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.test.container.DBTestUtils
 import io.iohk.atala.test.container.PostgresTestContainerSupport
 import io.iohk.atala.test.container.VaultTestContainerSupport
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
-import io.iohk.atala.agent.walletapi.vault.VaultDIDSecretStorage
 
 object DIDSecretStorageSpec
     extends ZIOSpecDefault,
@@ -18,14 +24,39 @@ object DIDSecretStorageSpec
       VaultTestContainerSupport,
       ApolloSpecHelper {
 
+  private def walletManagementServiceLayer =
+    ZLayer.makeSome[WalletSecretStorage, WalletManagementService](
+      WalletManagementServiceImpl.layer,
+      JdbcWalletNonSecretStorage.layer,
+      transactorLayer,
+      apolloLayer
+    )
+
   override def spec: Spec[TestEnvironment & Scope, Any] = {
+    val globalWalletAccessContext =
+      ZLayer.fromZIO { ZIO.serviceWithZIO[WalletManagementService](_.createWallet()).map(WalletAccessContext(_)) }
+
     val jdbcTestSuite = (commonSpec("JdbcDIDSecretStorage") @@ TestAspect.before(DBTestUtils.runMigrationAgentDB))
-      .provide(pgContainerLayer >+> (transactorLayer ++ apolloLayer) >+> JdbcDIDSecretStorage.layer)
+      .provide(
+        JdbcDIDSecretStorage.layer,
+        JdbcWalletSecretStorage.layer,
+        transactorLayer,
+        pgContainerLayer,
+        globalWalletAccessContext,
+        walletManagementServiceLayer
+      )
 
-    val vaultTestSuite = commonSpec("VaultDIDSecretStorage").provide(vaultKvClientLayer >>> VaultDIDSecretStorage.layer)
+    val vaultTestSuite = commonSpec("VaultDIDSecretStorage")
+      .provide(
+        VaultDIDSecretStorage.layer,
+        VaultWalletSecretStorage.layer,
+        vaultKvClientLayer,
+        globalWalletAccessContext,
+        walletManagementServiceLayer
+      )
 
-    suite("DIDSecretStorage")(jdbcTestSuite, vaultTestSuite)
-  } @@ TestAspect.sequential
+    suite("DIDSecretStorage")(jdbcTestSuite, vaultTestSuite) @@ TestAspect.sequential
+  }
 
   private def commonSpec(name: String) = suite(name)(
     test("insert and get the same key for OctetKeyPair") {

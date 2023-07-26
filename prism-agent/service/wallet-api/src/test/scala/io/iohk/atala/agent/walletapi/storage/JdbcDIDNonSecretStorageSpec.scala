@@ -3,8 +3,11 @@ package io.iohk.atala.agent.walletapi.storage
 import io.iohk.atala.agent.walletapi.crypto.ApolloSpecHelper
 import io.iohk.atala.agent.walletapi.model.ManagedDIDState
 import io.iohk.atala.agent.walletapi.model.PublicationState
+import io.iohk.atala.agent.walletapi.service.WalletManagementService
+import io.iohk.atala.agent.walletapi.service.WalletManagementServiceImpl
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDNonSecretStorage
-import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
+import io.iohk.atala.agent.walletapi.sql.JdbcWalletNonSecretStorage
+import io.iohk.atala.agent.walletapi.sql.JdbcWalletSecretStorage
 import io.iohk.atala.castor.core.model.did.PrismDID
 import io.iohk.atala.castor.core.model.did.PrismDIDOperation
 import io.iohk.atala.castor.core.model.did.ScheduledDIDOperationStatus
@@ -36,6 +39,9 @@ object JdbcDIDNonSecretStorageSpec
     }
 
   override def spec = {
+    val globalWalletAccessContext =
+      ZLayer.fromZIO { ZIO.serviceWithZIO[WalletManagementService](_.createWallet()).map(WalletAccessContext(_)) }
+
     val testSuite =
       suite("JdbcDIDNonSecretStorageSpec")(
         listDIDStateSpec,
@@ -46,8 +52,13 @@ object JdbcDIDNonSecretStorageSpec
 
     testSuite.provide(
       JdbcDIDNonSecretStorage.layer,
+      JdbcWalletNonSecretStorage.layer,
+      JdbcWalletSecretStorage.layer,
+      WalletManagementServiceImpl.layer,
       transactorLayer,
       pgContainerLayer,
+      globalWalletAccessContext,
+      apolloLayer,
     )
   }
 
