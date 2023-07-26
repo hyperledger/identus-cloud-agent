@@ -22,7 +22,7 @@ class JdbcWalletNonSecretStorage(xa: Transactor[Task]) extends WalletNonSecretSt
 
     for {
       now <- Clock.instant
-      walletId <- cxnIO(Instant.EPOCH).transact(xa)
+      walletId <- cxnIO(now).transact(xa)
     } yield walletId
   }
 
