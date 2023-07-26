@@ -56,11 +56,11 @@ object SeedResolverSpec extends ZIOSpecDefault, ApolloSpecHelper {
         } yield assert(exit)(fails(anything))
       result.provide(SeedResolver.layer(isDevMode = false), apolloLayer)
     },
-    test("read seed form env if set") {
+    test("read seed from env if set") {
       val result = for {
         _ <- TestSystem.putEnv("WALLET_SEED", "00" * 64)
         seed <- ZIO.serviceWithZIO[SeedResolver](_.resolve)
-      } yield assert(seed)(equalTo(Array.fill(64)(0)))
+      } yield assert(seed.toByteArray)(equalTo(Array.fill(64)(0)))
       result.provide(SeedResolver.layer(isDevMode = false), apolloLayer)
     },
     test("fail if seed from env in invalid") {

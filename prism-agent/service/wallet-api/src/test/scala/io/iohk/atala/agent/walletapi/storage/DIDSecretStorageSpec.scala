@@ -33,25 +33,22 @@ object DIDSecretStorageSpec
     )
 
   override def spec: Spec[TestEnvironment & Scope, Any] = {
-    val globalWalletAccessContext =
-      ZLayer.fromZIO { ZIO.serviceWithZIO[WalletManagementService](_.createWallet()).map(WalletAccessContext(_)) }
-
-    val jdbcTestSuite = (commonSpec("JdbcDIDSecretStorage") @@ TestAspect.before(DBTestUtils.runMigrationAgentDB))
-      .provide(
-        JdbcDIDSecretStorage.layer,
-        JdbcWalletSecretStorage.layer,
-        transactorLayer,
-        pgContainerLayer,
-        globalWalletAccessContext,
-        walletManagementServiceLayer
-      )
+    val jdbcTestSuite =
+      commonSpec("JdbcDIDSecretStorage")
+        .provide(
+          JdbcDIDSecretStorage.layer,
+          JdbcWalletSecretStorage.layer,
+          transactorLayer,
+          pgContainerLayer,
+          walletManagementServiceLayer
+        )
 
     val vaultTestSuite = commonSpec("VaultDIDSecretStorage")
       .provide(
         VaultDIDSecretStorage.layer,
         VaultWalletSecretStorage.layer,
+        pgContainerLayer,
         vaultKvClientLayer,
-        globalWalletAccessContext,
         walletManagementServiceLayer
       )
 
@@ -92,6 +89,6 @@ object DIDSecretStorageSpec
         key1 <- secretStorage.getKey(peerDID.did, "agreement")
       } yield assert(key1)(isNone)
     },
-  )
+  ).globalWallet @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
 
 }

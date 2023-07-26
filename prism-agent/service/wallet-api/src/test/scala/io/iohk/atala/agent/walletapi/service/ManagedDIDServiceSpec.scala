@@ -12,6 +12,7 @@ import io.iohk.atala.agent.walletapi.sql.JdbcWalletNonSecretStorage
 import io.iohk.atala.agent.walletapi.sql.JdbcWalletSecretStorage
 import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
 import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
+import io.iohk.atala.agent.walletapi.storage.StorageSpecHelper
 import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorage
 import io.iohk.atala.agent.walletapi.storage.WalletSecretStorage
 import io.iohk.atala.agent.walletapi.util.SeedResolver
@@ -47,6 +48,7 @@ import zio.test.Assertion.*
 object ManagedDIDServiceSpec
     extends ZIOSpecDefault,
       PostgresTestContainerSupport,
+      StorageSpecHelper,
       ApolloSpecHelper,
       VaultTestContainerSupport {
 
@@ -150,19 +152,6 @@ object ManagedDIDServiceSpec
       _ <- testDIDSvc.setOperationStatus(ScheduledDIDOperationStatus.Confirmed)
       _ <- svc.syncManagedDIDState
     } yield did
-
-  extension [R, E](spec: Spec[R & WalletAccessContext, E]) {
-    def globalWallet: Spec[R & WalletManagementService, E] = {
-      spec.provideSomeLayer(
-        ZLayer.fromZIO(
-          ZIO
-            .serviceWithZIO[WalletManagementService](_.createWallet())
-            .map(WalletAccessContext(_))
-            .orDie
-        )
-      )
-    }
-  }
 
   override def spec = {
     def testSuite(name: String) =

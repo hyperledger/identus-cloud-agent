@@ -39,27 +39,24 @@ object JdbcDIDNonSecretStorageSpec
     }
 
   override def spec = {
-    val globalWalletAccessContext =
-      ZLayer.fromZIO { ZIO.serviceWithZIO[WalletManagementService](_.createWallet()).map(WalletAccessContext(_)) }
-
     val testSuite =
       suite("JdbcDIDNonSecretStorageSpec")(
         listDIDStateSpec,
         getDIDStateSpec,
         listDIDLineageSpec,
         setDIDLineageStatusSpec
-      ) @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
+      ).globalWallet @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
 
-    testSuite.provide(
-      JdbcDIDNonSecretStorage.layer,
-      JdbcWalletNonSecretStorage.layer,
-      JdbcWalletSecretStorage.layer,
-      WalletManagementServiceImpl.layer,
-      transactorLayer,
-      pgContainerLayer,
-      globalWalletAccessContext,
-      apolloLayer,
-    )
+    testSuite
+      .provide(
+        JdbcDIDNonSecretStorage.layer,
+        JdbcWalletNonSecretStorage.layer,
+        JdbcWalletSecretStorage.layer,
+        WalletManagementServiceImpl.layer,
+        transactorLayer,
+        pgContainerLayer,
+        apolloLayer,
+      )
   }
 
   private val listDIDStateSpec = suite("listManagedDIDState")(

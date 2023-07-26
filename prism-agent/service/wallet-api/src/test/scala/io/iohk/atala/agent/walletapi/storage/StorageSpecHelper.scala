@@ -1,20 +1,23 @@
 package io.iohk.atala.agent.walletapi.storage
 
+import io.iohk.atala.agent.walletapi.crypto.ApolloSpecHelper
+import io.iohk.atala.agent.walletapi.model.DIDPublicKeyTemplate
+import io.iohk.atala.agent.walletapi.model.DIDUpdateLineage
+import io.iohk.atala.agent.walletapi.model.ManagedDIDState
+import io.iohk.atala.agent.walletapi.model.ManagedDIDTemplate
+import io.iohk.atala.agent.walletapi.model.PublicationState
+import io.iohk.atala.agent.walletapi.service.WalletManagementService
+import io.iohk.atala.agent.walletapi.util.OperationFactory
+import io.iohk.atala.castor.core.model.did.EllipticCurve
 import io.iohk.atala.castor.core.model.did.PrismDID
 import io.iohk.atala.castor.core.model.did.PrismDIDOperation
 import io.iohk.atala.castor.core.model.did.ScheduledDIDOperationStatus
-import io.iohk.atala.agent.walletapi.model.DIDUpdateLineage
-import scala.collection.immutable.ArraySeq
-import java.time.Instant
-import io.iohk.atala.agent.walletapi.crypto.ApolloSpecHelper
-import io.iohk.atala.castor.core.model.did.EllipticCurve
-import io.iohk.atala.agent.walletapi.util.OperationFactory
-import io.iohk.atala.agent.walletapi.model.ManagedDIDTemplate
-import io.iohk.atala.agent.walletapi.model.DIDPublicKeyTemplate
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
+import io.iohk.atala.shared.models.WalletAccessContext
+import java.time.Instant
+import scala.collection.immutable.ArraySeq
 import zio.*
-import io.iohk.atala.agent.walletapi.model.ManagedDIDState
-import io.iohk.atala.agent.walletapi.model.PublicationState
+import zio.test.*
 
 trait StorageSpecHelper extends ApolloSpecHelper {
   protected val didExample = PrismDID.buildLongFormFromOperation(PrismDIDOperation.Create(Nil, Nil, Nil))
@@ -65,5 +68,18 @@ trait StorageSpecHelper extends ApolloSpecHelper {
         hdKeys.keyPaths ++ hdKeys.internalKeyPaths
       )
     } yield did
+  }
+
+  extension [R, E](spec: Spec[R & WalletAccessContext, E]) {
+    def globalWallet: Spec[R & WalletManagementService, E] = {
+      spec.provideSomeLayer(
+        ZLayer.fromZIO(
+          ZIO
+            .serviceWithZIO[WalletManagementService](_.createWallet())
+            .map(WalletAccessContext(_))
+            .orDie
+        )
+      )
+    }
   }
 }
