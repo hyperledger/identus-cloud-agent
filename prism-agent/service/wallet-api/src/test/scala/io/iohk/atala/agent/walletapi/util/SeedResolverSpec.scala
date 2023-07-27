@@ -28,7 +28,7 @@ object SeedResolverSpec extends ZIOSpecDefault, ApolloSpecHelper {
       val result = for {
         _ <- TestSystem.putEnv("WALLET_SEED", "00" * 64)
         seed <- ZIO.serviceWithZIO[SeedResolver](_.resolve)
-      } yield assert(seed)(equalTo(Array.fill(64)(0)))
+      } yield assert(seed.toByteArray)(equalTo(Array.fill(64)(0)))
       result.provide(SeedResolver.layer(isDevMode = true), apolloLayer)
     },
     test("fail if seed from env in invalid") {

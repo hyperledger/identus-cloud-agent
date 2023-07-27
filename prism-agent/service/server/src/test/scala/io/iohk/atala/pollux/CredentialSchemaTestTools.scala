@@ -1,8 +1,6 @@
 package io.iohk.atala.pollux
 
-import io.iohk.atala.agent.walletapi.model.WalletSeed
 import io.iohk.atala.agent.walletapi.model.{ManagedDIDState, PublicationState}
-import io.iohk.atala.agent.walletapi.service.WalletManagementService
 import io.iohk.atala.agent.walletapi.service.{ManagedDIDService, MockManagedDIDService}
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.castor.core.model.did.PrismDIDOperation
@@ -18,6 +16,8 @@ import io.iohk.atala.pollux.credentialschema.http.{
   CredentialSchemaResponsePage
 }
 import io.iohk.atala.pollux.sql.repository.JdbcCredentialSchemaRepository
+import io.iohk.atala.shared.models.WalletAccessContext
+import io.iohk.atala.shared.models.WalletId
 import sttp.client3.testing.SttpBackendStub
 import sttp.client3.ziojson.*
 import sttp.client3.{DeserializationException, Response, UriContext, basicRequest}
@@ -33,7 +33,6 @@ import zio.mock.Expectation
 import zio.test.{Assertion, Gen, ZIOSpecDefault}
 
 import java.time.OffsetDateTime
-import io.iohk.atala.shared.models.WalletAccessContext
 
 trait CredentialSchemaTestTools {
   self: ZIOSpecDefault =>
@@ -80,8 +79,9 @@ trait CredentialSchemaTestTools {
       .defaultHandlers(ErrorResponse.failureResponseHandler)
   }
 
-  def httpBackend(controller: CredentialSchemaController, wallet: WalletAccessContext) = {
-    val schemaRegistryEndpoints = SchemaRegistryServerEndpoints(controller, wallet)
+  def httpBackend(controller: CredentialSchemaController) = {
+    val mockWalletAccessContext = WalletAccessContext(WalletId.fromInt(1)) // FIXME
+    val schemaRegistryEndpoints = SchemaRegistryServerEndpoints(controller, mockWalletAccessContext)
 
     val backend =
       TapirStubInterpreter(
@@ -167,9 +167,7 @@ trait CredentialSchemaGen {
   ): ZIO[CredentialSchemaController, Throwable, List[CredentialSchemaInput]] =
     for {
       controller <- ZIO.service[CredentialSchemaController]
-      walletId <- ZIO.serviceWithZIO[WalletManagementService](_.createWallet(WalletSeed.fromByteArray(Array.empty)))
-      walletAccessCtx = WalletAccessContext(walletId)
-      backend = httpBackend(controller, walletAccessCtx)
+      backend = httpBackend(controller)
       inputs <- Generator.schemaInput.runCollectN(count)
       _ <- inputs
         .map(in =>
