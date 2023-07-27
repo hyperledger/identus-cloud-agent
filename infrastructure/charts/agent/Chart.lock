@@ -1,6 +1,0 @@
-dependencies:
-- name: vault
-  repository: https://kubernetes-charts.banzaicloud.com
-  version: 1.19.0
-digest: sha256:cf6925c98680b5c0e1dd45364ab6248a7446714b6472d865e24b81d0f9c1fbfd
-generated: "2023-07-26T14:50:35.950562014+10:00"

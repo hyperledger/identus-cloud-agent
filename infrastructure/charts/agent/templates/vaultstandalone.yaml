@@ -106,26 +106,26 @@ spec:
         description: General secrets.
         options:
           version: 2
-      - path: pki
-        type: pki
-        description: Vault PKI Backend
-        config:
-          default_lease_ttl: 168h
-          max_lease_ttl: 720h
-        configuration:
-          config:
-          - name: urls
-            issuing_certificates: "https://vault.{{ .Release.Namespace }}:8200/v1/pki/ca"
-            crl_distribution_points: "https://vault.{{ .Release.Namespace }}:8200/v1/pki/crl"
-          root/generate:
-          - name: internal
-            common_name: "vault.{{ .Release.Namespace }}"
-          roles:
-          - name: default
-            allowed_domains: localhost,pod,svc,default
-            allow_subdomains: true
-            generate_lease: true
-            ttl: 1m
+      # - path: pki
+      #   type: pki
+      #   description: Vault PKI Backend
+      #   config:
+      #     default_lease_ttl: 168h
+      #     max_lease_ttl: 720h
+      #   configuration:
+      #     config:
+      #     - name: urls
+      #       issuing_certificates: "https://vault.{{ .Release.Namespace }}:8200/v1/pki/ca"
+      #       crl_distribution_points: "https://vault.{{ .Release.Namespace }}:8200/v1/pki/crl"
+      #     root/generate:
+      #     - name: internal
+      #       common_name: "vault.{{ .Release.Namespace }}"
+      #     roles:
+      #     - name: default
+      #       allowed_domains: localhost,pod,svc,default
+      #       allow_subdomains: true
+      #       generate_lease: true
+      #       ttl: 1m
     auth:
       - type: kubernetes
         roles:
