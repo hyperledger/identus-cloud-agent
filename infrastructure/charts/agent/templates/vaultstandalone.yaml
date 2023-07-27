@@ -98,7 +98,7 @@ spec:
     # cluster_addr: "http://${.Env.POD_NAME}:8201"
     ui: true
   statsdDisabled: true
-  serviceRegistrationEnabled: false
+  # serviceRegistrationEnabled: false
   externalConfig:
     secrets:
       - path: secret
