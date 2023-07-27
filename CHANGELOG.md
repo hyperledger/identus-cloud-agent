@@ -1,3 +1,10 @@
+## [1.9.2](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v1.9.1...prism-agent-v1.9.2) (2023-07-27)
+
+
+### Bug Fixes
+
+* consumer variable nesting correction ([#606](https://github.com/input-output-hk/atala-prism-building-blocks/issues/606)) ([40a0578](https://github.com/input-output-hk/atala-prism-building-blocks/commit/40a0578274d33873c5189d01715244b2b34c0fea))
+
 ## [1.9.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v1.9.0...prism-agent-v1.9.1) (2023-07-25)
 
 
