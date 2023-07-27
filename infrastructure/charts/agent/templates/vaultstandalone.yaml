@@ -62,7 +62,7 @@ spec:
   #   spec: {}
   volumeClaimTemplates:
     - metadata:
-        name: vault-file
+        name: vault-raft
       spec:
         accessModes:
           - ReadWriteOnce
@@ -71,7 +71,7 @@ spec:
           requests:
             storage: 1Gi
   volumeMounts:
-    - name: vault-file
+    - name: vault-raft
       mountPath: /vault/file
   # Describe where you would like to store the Vault unseal keys and root token.
   unsealConfig:
@@ -88,7 +88,7 @@ spec:
   # See https://www.vaultproject.io/docs/configuration/ for more information.
   config:
     storage:
-      file:
+      raft:
         path: /vault/file
     listener:
       tcp:
