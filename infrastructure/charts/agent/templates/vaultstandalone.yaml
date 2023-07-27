@@ -95,7 +95,7 @@ spec:
         address: "0.0.0.0:8200"
         tls_disable: true
     # api_addr: "http://vault.{{ .Release.Namespace }}:8200"
-    # cluster_addr: "http://${.Env.POD_NAME}:8201"
+    cluster_addr: "http://${.Env.POD_NAME}:8201"
     ui: true
   statsdDisabled: true
   # serviceRegistrationEnabled: false
