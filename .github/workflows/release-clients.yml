@@ -1,13 +1,6 @@
 name: Publish prism-agent clients
 
 on:
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: Prism-agent tag
-        required: true
-        default: prism-agent-v
-        type: string
   push:
     tags:
       - "prism-agent-v*"
@@ -24,12 +17,6 @@ jobs:
       NODE_AUTH_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
 
     steps:
-      - name: Check tag
-        if: ${{ github.event_name == 'workflow_dispatch' }}
-        run: |
-          git show-ref --tags --verify "refs/tags/${{ inputs.tag }}"
-          exit=$?
-
       - name: Checkout
         uses: actions/checkout@v3
 

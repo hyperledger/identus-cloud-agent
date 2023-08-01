@@ -29,7 +29,7 @@ yarn publish:clients
 
 ## Prism-agent lifecycle
 
-`prism-client-generator` creates the clients after the `prism-agent-v*` tag is created or manually by providing the specific version.
+`prism-client-generator` creates the clients after the `prism-agent-v*` tag is created.
 
 ## Supported clients
 
