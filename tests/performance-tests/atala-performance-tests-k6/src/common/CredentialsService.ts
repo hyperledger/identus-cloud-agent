@@ -1,8 +1,8 @@
 import { sleep } from "k6";
 import { HttpService } from "./HttpService";
-import { WAITING_LOOP_MAX_ITERATIONS, WAITING_LOOP_PAUSE_INTERVAL } from "./Config";
-import { IssueCredentialRecord, Connection } from "@input-output-hk/prism-typescript-client";
-import vu from "k6/execution";
+import { ISSUER_AGENT_URL, WAITING_LOOP_MAX_ITERATIONS, WAITING_LOOP_PAUSE_INTERVAL } from "./Config";
+import { IssueCredentialRecord, Connection, CredentialSchemaResponse } from "@input-output-hk/prism-typescript-client";
+import {v4 as uuidv4} from 'uuid';
 
 /**
  * A service class for managing credentials in the application.
@@ -16,15 +16,76 @@ export class CredentialsService extends HttpService {
    * @param {Connection} connection - The connection object.
    * @returns {IssueCredentialRecord} The created credential offer record.
    */
-  createCredentialOffer(issuingDid: string, connection: Connection): IssueCredentialRecord {
+  createCredentialOffer(issuingDid: string, connection: Connection, schema: CredentialSchemaResponse): IssueCredentialRecord {
     const payload = `{
-        "claims": { "offerId": "${vu.vu.idInInstance}-${vu.vu.idInTest}-${vu.vu.iterationInScenario}" },
+        "claims": { 
+          "emailAddress": "${uuidv4()}-@atala.io",
+          "familyName": "Test",
+          "dateOfIssuance": "${new Date()}",
+          "drivingLicenseID": "Test",
+          "drivingClass": 1
+        },
+        "schemaId": "${ISSUER_AGENT_URL.replace("localhost", "host.docker.internal")}/schema-registry/schemas/${schema.guid}",
         "issuingDID": "${issuingDid}",
         "connectionId": "${connection.connectionId}",
         "automaticIssuance": false
       }`;
     const res = this.post("issue-credentials/credential-offers", payload);
     return res.json() as unknown as IssueCredentialRecord;
+  }
+
+  createCredentialSchema(issuingDid: string): CredentialSchemaResponse {
+    const payload = `
+    {
+      "name": "${uuidv4()}}",
+      "version": "1.0.0",
+      "description": "Simple credential schema for the driving licence verifiable credential.",
+      "type": "https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json",
+      "schema": {
+        "$id": "https://example.com/driving-license-1.0",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Driving License",
+        "type": "object",
+        "properties": {
+          "emailAddress": {
+            "type": "string",
+            "format": "email"
+          },
+          "givenName": {
+            "type": "string"
+          },
+          "familyName": {
+            "type": "string"
+          },
+          "dateOfIssuance": {
+            "type": "string"
+          },
+          "drivingLicenseID": {
+            "type": "string"
+          },
+          "drivingClass": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "emailAddress",
+          "familyName",
+          "dateOfIssuance",
+          "drivingLicenseID",
+          "drivingClass"
+        ],
+        "additionalProperties": false
+      },
+      "tags": [
+        "driving",
+        "licence",
+        "id"
+      ],
+      "author": "${issuingDid}"
+    }
+    `
+    const res = this.post("schema-registry/schemas", payload);
+    return res.json() as unknown as CredentialSchemaResponse;
   }
 
   /**
@@ -41,8 +102,8 @@ export class CredentialsService extends HttpService {
    * Retrieves all credential records.
    * @returns {IssueCredentialRecord[]} An array of credential records.
    */
-  getCredentialRecords(): IssueCredentialRecord[] {
-    const res = this.get("issue-credentials/records");
+  getCredentialRecords(thid: string): IssueCredentialRecord[] {
+    const res = this.get(`issue-credentials/records?thid=${thid}`);
     return res.json("contents") as unknown as IssueCredentialRecord[];
   }
 
@@ -73,21 +134,21 @@ export class CredentialsService extends HttpService {
    * @returns {IssueCredentialRecord} The received credential offer record.
    * @throws {Error} If the credential offer is not received within the maximum iterations.
    */
-  waitForCredentialOffer(): IssueCredentialRecord {
+  waitForCredentialOffer(thid: string): IssueCredentialRecord {
     let iterations = 0;
     let record: IssueCredentialRecord | undefined;
     do {
-      console.log(`${vu.vu.idInInstance}-${vu.vu.idInTest}-${vu.vu.iterationInScenario}`)
-      record = this.getCredentialRecords().find(
-        r => r.claims["offerId"] === `${vu.vu.idInInstance}-${vu.vu.idInTest}-${vu.vu.iterationInScenario}`
-          && r.protocolState === "OfferReceived");
+      // console.log(`Waiting for credential offer with thid=${thid}`)
+      record = this.getCredentialRecords(thid).find(
+        r => r.thid === thid && r.protocolState === "OfferReceived"
+      );
       if (record) {
         return record;
       }
       sleep(WAITING_LOOP_PAUSE_INTERVAL);
       iterations++;
     } while (iterations < WAITING_LOOP_MAX_ITERATIONS);
-    throw new Error(`Record with offerId=${vu.vu.idInTest} not achieved during the waiting loop`);
+    throw new Error(`Record with thid=${thid} not achieved during the waiting loop`);
   }
 
   /**
@@ -102,7 +163,7 @@ export class CredentialsService extends HttpService {
     do {
       const response = this.getCredentialRecord(credentialRecord);
       currentState = response.protocolState;
-      console.log(`Credential state: ${currentState}`)
+      // console.log(`Credential state: ${currentState}`)
       sleep(WAITING_LOOP_PAUSE_INTERVAL);
       iterations++;
     } while (currentState !== state && iterations < WAITING_LOOP_MAX_ITERATIONS);

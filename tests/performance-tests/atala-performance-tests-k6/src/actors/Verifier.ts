@@ -1,4 +1,4 @@
-import { Connection } from "@input-output-hk/prism-typescript-client";
+import { Connection, PresentationStatus } from "@input-output-hk/prism-typescript-client";
 import { Actor } from "./Actor";
 import { VERIFIER_AGENT_API_KEY, VERIFIER_AGENT_URL } from "../common/Config";
 
@@ -12,7 +12,7 @@ export class Verifier extends Actor {
   /**
    * Presentation ID.
    */
-  presentationId: string | undefined;
+  presentation: PresentationStatus | undefined;
 
   /**
    * Creates a new instance of Verifier.
@@ -42,13 +42,15 @@ export class Verifier extends Actor {
    * Requests proof from the holder.
    */
   requestProof() {
-    this.presentationId = this.proofsService.requestProof(this.connectionWithHolder!);
+    let presentationId = this.proofsService.requestProof(this.connectionWithHolder!);
+    this.presentation = this.proofsService.getPresentation(presentationId);
+    console.log(`Verifier requested proof with presentation thid ${this.presentation!.thid}`);
   }
 
   /**
    * Acknowledges the proof received from the holder.
    */
   acknowledgeProof() {
-    this.proofsService.waitForPresentationState(this.presentationId!, "PresentationVerified");
+    this.proofsService.waitForPresentationState(this.presentation!.presentationId!, "PresentationVerified");
   }
 }

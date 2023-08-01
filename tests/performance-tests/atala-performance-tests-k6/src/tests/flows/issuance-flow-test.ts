@@ -1,19 +1,24 @@
 import { group } from 'k6';
 import { Options } from 'k6/options';
 import {issuer, holder} from '../common';
+import { CredentialSchemaResponse } from '@input-output-hk/prism-typescript-client';
 
 export let options: Options = {
-  stages: [
-    { duration: '1s', target: 1 },
-  ],
-  // thresholds: {
-  //   http_req_failed: [{
-  //     threshold: 'rate<=0.05',
-  //     abortOnFail: true,
-  //   }],
-  //   http_req_duration: ['p(95)<=1000'],
-  //   checks: ['rate>=0.99'],
-  // },
+  scenarios: {
+    smoke: {
+      executor: 'constant-vus',
+      vus: 5,
+      duration: "3m",
+    },
+  },
+  thresholds: {
+    http_req_failed: [{
+      threshold: 'rate==0',
+      abortOnFail: true,
+    }],
+    http_req_duration: ['p(95)<=500'],
+    checks: ['rate==1'],
+  },
 };
 
 // This is setup code. It runs once at the beginning of the test, regardless of the number of VUs.
@@ -24,17 +29,22 @@ export function setup() {
     issuer.publishDid();
   });
 
+  group('Issuer creates credential schema', function () {
+    issuer.createCredentialSchema();
+  });
+
   group('Holder creates unpublished DID', function () {
     holder.createUnpublishedDid();
   });
 
-  return { issuerDid: issuer.did, holderDid: holder.did };
+  return { issuerDid: issuer.did, holderDid: holder.did, issuerSchema: issuer.schema };
 }
 
-export default (data: { issuerDid: string; holderDid: string; }) => {
+export default (data: { issuerDid: string; holderDid: string; issuerSchema: CredentialSchemaResponse}) => {
 
   // This is the only way to pass data from setup to default
   issuer.did = data.issuerDid;
+  issuer.schema = data.issuerSchema;
   holder.did = data.holderDid;
 
   group('Issuer connects with Holder', function () {
@@ -50,7 +60,7 @@ export default (data: { issuerDid: string; holderDid: string; }) => {
   });
   
   group('Holder achieves and accepts credential offer from Issuer', function () {
-    holder.waitAndAcceptCredentialOffer();
+    holder.waitAndAcceptCredentialOffer(issuer.credential!.thid);
   });
 
   group('Issuer issues credential to Holder', function () {

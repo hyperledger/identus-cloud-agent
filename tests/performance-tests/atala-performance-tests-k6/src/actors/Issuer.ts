@@ -1,4 +1,4 @@
-import { Connection, IssueCredentialRecord } from "@input-output-hk/prism-typescript-client";
+import { Connection, CredentialSchemaResponse, IssueCredentialRecord } from "@input-output-hk/prism-typescript-client";
 import { Actor } from "./Actor";
 import { ISSUER_AGENT_API_KEY, ISSUER_AGENT_URL } from "../common/Config";
 
@@ -18,6 +18,11 @@ export class Issuer extends Actor {
    * The credential to be issued.
    */
   credential: IssueCredentialRecord | undefined;
+
+  /**
+   * The schema for issued credential.
+   */
+  schema: CredentialSchemaResponse | undefined;
 
   /**
    * The DID template used to create a DID for Issuer.
@@ -74,11 +79,15 @@ export class Issuer extends Actor {
     this.didService.waitForDidState(this.longFormDid!, "PUBLISHED");
   }
 
+  createCredentialSchema() {
+    this.schema = this.credentialsService.createCredentialSchema(this.did!);
+  }
+ 
   /**
    * Creates a credential offer for the holder.
    */
   createCredentialOffer() {
-    this.credential = this.credentialsService.createCredentialOffer(this.did!, this.connectionWithHolder!);
+    this.credential = this.credentialsService.createCredentialOffer(this.did!, this.connectionWithHolder!, this.schema!);
   }
 
   /**

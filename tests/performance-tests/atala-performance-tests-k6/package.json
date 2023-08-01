@@ -25,6 +25,6 @@
     "start": "webpack"
   },
   "dependencies": {
-    "@input-output-hk/prism-typescript-client": "0.1.0"
+    "@input-output-hk/prism-typescript-client": "1.9.2"
   }
 }
