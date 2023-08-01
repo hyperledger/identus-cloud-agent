@@ -105,11 +105,10 @@ export class ProofsService extends HttpService {
     let state: string;
     do {
       state = this.getPresentation(presentationId).status;
-      if (__ENV.DEBUG) console.log(`Presentation state: ${state}, required: ${requiredState}`);
       sleep(WAITING_LOOP_PAUSE_INTERVAL);
       iterations++;
     } while (state !== requiredState && iterations < WAITING_LOOP_MAX_ITERATIONS);
-    if (state != requiredState) {
+    if (state !== requiredState) {
       throw new Error(`Presentation state is ${state}, required ${requiredState}`);
     }
   }

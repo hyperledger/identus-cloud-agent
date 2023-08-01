@@ -163,14 +163,12 @@ export class CredentialsService extends HttpService {
     do {
       const response = this.getCredentialRecord(credentialRecord);
       currentState = response.protocolState;
-      // console.log(`Credential state: ${currentState}`)
       sleep(WAITING_LOOP_PAUSE_INTERVAL);
       iterations++;
     } while (currentState !== state && iterations < WAITING_LOOP_MAX_ITERATIONS);
     if (currentState !== state) {
       throw new Error(`Credential is not ${state} after the waiting loop`);
     }
-    if (__ENV.DEBUG) console.log(`Credential state achieved: ${currentState}`);
   }
 
 }

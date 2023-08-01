@@ -44,7 +44,6 @@ export class Verifier extends Actor {
   requestProof() {
     let presentationId = this.proofsService.requestProof(this.connectionWithHolder!);
     this.presentation = this.proofsService.getPresentation(presentationId);
-    console.log(`Verifier requested proof with presentation thid ${this.presentation!.thid}`);
   }
 
   /**

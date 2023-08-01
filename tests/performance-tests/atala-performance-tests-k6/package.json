@@ -25,6 +25,7 @@
     "start": "webpack"
   },
   "dependencies": {
-    "@input-output-hk/prism-typescript-client": "1.9.2"
+    "@input-output-hk/prism-typescript-client": "1.9.2",
+    "uuid": "^9.0.0"
   }
 }
