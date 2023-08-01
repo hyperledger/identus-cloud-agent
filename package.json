@@ -1,8 +1,6 @@
 {
   "name": "atala-prism-building-blocks",
-  "version": "1.6.0",
-  "license": "proprietary",
-  "private": true,
+  "version": "1.9.2",
   "engines": {
     "node": ">=16.13.0"
   },
