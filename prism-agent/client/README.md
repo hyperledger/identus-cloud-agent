@@ -1,20 +1,35 @@
-# Usage
+# Prism-agent client generator
 
-Every command should be executed inside the `generator` folder.
+This project goal is to generate the models based on the OpenAPI Specification.
 
-## Commands
+## Generating models
 
-### Generate models
+First start the docker image:
 
-```./generate.sh```
+```bash
+cd docker-compose
+./run.sh
+```
 
-### Clean generated models
+This will allow the scripts to download the OpenAPI Specification file.
 
-```./clean_output.sh```
+Then run the generator scripts:
+
+```bash
+cd generator
+yarn generate
+```
+
+To publish the clients:
+
+```bash
+cd generator
+yarn publish:clients
+```
 
 ## Prism-agent lifecycle
 
-`prism-client-generator` creates the clients after the semantic-release process is done.
+`prism-client-generator` creates the clients after the `prism-agent-v*` tag is created or manually by providing the specific version.
 
 ## Supported clients
 

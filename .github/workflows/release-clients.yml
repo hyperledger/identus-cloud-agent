@@ -76,8 +76,8 @@ jobs:
 
       - name: Generate clients
         working-directory: prism-agent/client/generator
-        run: yarn generate
+        run: yarn generate:all
 
       - name: Publish clients
         working-directory: prism-agent/client/generator
-        run: yarn publish
+        run: yarn publish:clients

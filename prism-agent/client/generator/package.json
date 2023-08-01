@@ -10,7 +10,8 @@
     "download:oas": "node get-file",
     "generate": "npm-run-all download:oas generate:all",
     "generate:all": "./generate.sh",
-    "clean:all": "./clean.sh"
+    "clean:all": "./clean.sh",
+    "publish:clients": "./publish-clients.sh"
   },
   "dependencies": {
     "@openapitools/openapi-generator-cli": "2.7.0",
