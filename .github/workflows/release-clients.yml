@@ -10,7 +10,6 @@ jobs:
     name: 'Build and publish Prism-Agent clients'
     runs-on: ubuntu-latest
     env:
-      PRISM_AGENT_PORT: 8080
       VERSION_TAG: ${{github.ref_name}}
       ATALA_GITHUB_ACTOR: ${{secrets.ATALA_GITHUB_ACTOR}}
       ATALA_GITHUB_TOKEN: ${{secrets.ATALA_GITHUB_TOKEN}}

@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Generates the clients based on the OAS for many languages",
   "author": "Allain Magyar",
-  "license": "proprietary",
+  "license": "Apache-2.0",
   "private": true,
   "type": "module",
   "scripts": {
