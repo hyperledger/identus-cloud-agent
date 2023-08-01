@@ -1,15 +1,10 @@
 #!/bin/bash
 set -e
 
-PRISM_AGENT_VERSION=${VERSION_TAG:13}
-
-# install dependencies
-yarn
-
 # generate kotlin models
 yarn openapi-generator-cli generate \
     -g kotlin \
-    -i oas.yml \
+    -i ../../service/api/http/prism-agent-openapi-spec.yaml \
     -o ../kotlin \
     --ignore-file-override ../kotlin/.openapi-generator-ignore \
     --additional-properties=packageName=io.iohk.atala.prism,serializationLibrary=gson
@@ -17,7 +12,7 @@ yarn openapi-generator-cli generate \
 # generate typescript models
 yarn openapi-generator-cli generate \
     -g typescript \
-    -i oas.yml \
+    -i ../../service/api/http/prism-agent-openapi-spec.yaml \
     -o ../typescript \
     --ignore-file-override ../typescript/.openapi-generator-ignore
 

@@ -42,23 +42,9 @@ jobs:
           username: ${{ secrets.ATALA_GITHUB_ACTOR }}
           password: ${{ secrets.ATALA_GITHUB_TOKEN }}
 
-      - name: Start prism-agent
-        working-directory: prism-agent/client/docker-compose
-        run: ./run.sh
-
       - name: Install generator dependencies
         working-directory: prism-agent/client/generator
         run: yarn install
-
-      - name: Download openapi spec file
-        working-directory: prism-agent/client/generator
-        run: yarn download:oas
-
-      - name: Archive openapi specification file
-        uses: actions/upload-artifact@v3.1.2
-        with:
-          name: oas.yml
-          path: prism-agent/client/generator/oas.yml
 
       - name: Generate clients
         working-directory: prism-agent/client/generator

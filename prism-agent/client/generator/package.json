@@ -7,9 +7,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "download:oas": "node get-file",
-    "generate": "npm-run-all download:oas generate:all",
-    "generate:all": "./generate.sh",
+    "generate": "npm-run-all clean:all generate:all",
+    "generate:all": "./generate-clients.sh",
     "clean:all": "./clean.sh",
     "publish:clients": "./publish-clients.sh"
   },

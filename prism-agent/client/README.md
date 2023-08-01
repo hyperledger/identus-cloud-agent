@@ -4,15 +4,6 @@ This project goal is to generate the models based on the OpenAPI Specification.
 
 ## Generating models
 
-First start the docker image:
-
-```bash
-cd docker-compose
-./run.sh
-```
-
-This will allow the scripts to download the OpenAPI Specification file.
-
 Then run the generator scripts:
 
 ```bash
