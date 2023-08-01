@@ -1,0 +1,83 @@
+
+name: Publish prism-agent clients
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Prism-agent tag
+        required: true
+        default: prism-agent-v
+        type: string
+  push:
+    tags:
+      - "prism-agent-v*"
+
+jobs:
+  publish-clients:
+    name: 'Build and publish Prism-Agent clients'
+    runs-on: ubuntu-latest
+    env:
+      PRISM_AGENT_PORT: 8080
+      VERSION_TAG: ${{github.ref_name}}
+      ATALA_GITHUB_ACTOR: ${{secrets.ATALA_GITHUB_ACTOR}}
+      ATALA_GITHUB_TOKEN: ${{secrets.ATALA_GITHUB_TOKEN}}
+      NODE_AUTH_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
+
+    steps:
+      - name: Check tag
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          git show-ref --tags --verify "refs/tags/${{ inputs.tag }}" 
+          exit_code=$?
+
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "lts/*"
+          registry-url: https://npm.pkg.github.com/
+          scope: "@input-output-hk"
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+
+      - name: Login to Github Hub
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ secrets.ATALA_GITHUB_ACTOR }}
+          password: ${{ secrets.ATALA_GITHUB_TOKEN }}
+
+      - name: Start prism-agent
+        working-directory: prism-agent/client/docker-compose
+        run: ./run.sh
+
+      - name: Install generator dependencies
+        working-directory: prism-agent/client/generator
+        run: yarn install
+
+      - name: Download openapi spec file
+        working-directory: prism-agent/client/generator
+        run: yarn download:oas
+
+      - name: Archive openapi specification file
+        uses: actions/upload-artifact@v3.1.2
+        with:
+          name: oas.yml
+          path: prism-agent/client/generator/oas.yml
+
+      - name: Generate clients
+        working-directory: prism-agent/client/generator
+        run: yarn generate
+
+      - name: Publish clients
+        working-directory: prism-agent/client/generator
+        run: yarn publish

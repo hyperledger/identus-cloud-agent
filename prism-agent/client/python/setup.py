@@ -29,7 +29,7 @@ setup(
     description="Prism Agent Client",
     author="Allain Magyar",
     author_email="",
-    url="https://github.com/amagyar-iohk/prism-client-generator",
+    url="https://github.com/input-output-iohk/prism-client-generator",
     keywords=["Prism Agent"],
     python_requires=">=3.7",
     install_requires=REQUIRES,

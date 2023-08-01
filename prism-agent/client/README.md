@@ -29,4 +29,4 @@ Every command should be executed inside the `generator` folder.
 
 Some of the OAS3 schema types are not fully supported.
 
-The generated files that are not supported were fixed manually and ignored from the creation therefore it requires a diligence work to keep them updated.
+The generated files that are not supported were fixed manually and ignored from the generation, in the `.openapi-generator-ignore` file, therefore it requires a diligence work to keep them updated.

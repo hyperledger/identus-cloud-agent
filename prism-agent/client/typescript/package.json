@@ -1,11 +1,11 @@
 {
-  "name": "@amagyar-iohk/prism-typescript-client",
+  "name": "@input-output-hk/prism-typescript-client",
   "version": "0.0.1",
   "description": "TypeScript OpenAPI client for Atala PRISM V2 Agent",
   "author": "allain.magyar@iohk.io",
   "repository": {
     "type": "git",
-    "url": "https://github.com/amagyar-iohk/prism-client-generator"
+    "url": "https://github.com/input-output-hk/atala-prism-building-blocks/"
   },
   "keywords": [
     "fetch",
