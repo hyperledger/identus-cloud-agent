@@ -17,21 +17,21 @@ DELETE FROM public.prism_did_wallet_state
 
 -- Introduce the concept of wallet
 CREATE TABLE public.wallet(
-  "wallet_id" SERIAL PRIMARY KEY,
+  "wallet_id" VARCHAR(64) PRIMARY KEY,
   "created_at" TIMESTAMPTZ NOT NULL
 );
 
 CREATE TABLE public.wallet_seed(
-  "wallet_id" INT PRIMARY KEY REFERENCES public.wallet("wallet_id"),
+  "wallet_id" VARCHAR(64) PRIMARY KEY REFERENCES public.wallet("wallet_id"),
   "seed" BYTEA NOT NULL,
   "created_at" TIMESTAMPTZ NOT NULL
 );
 
 ALTER TABLE public.peer_did_rand_key
-  ADD COLUMN "wallet_id" INT REFERENCES public.wallet("wallet_id") NOT NULL;
+  ADD COLUMN "wallet_id" VARCHAR(64) REFERENCES public.wallet("wallet_id") NOT NULL;
 
 ALTER TABLE public.prism_did_wallet_state
-  ADD COLUMN "wallet_id" INT REFERENCES public.wallet("wallet_id") NOT NULL;
+  ADD COLUMN "wallet_id" VARCHAR(64) REFERENCES public.wallet("wallet_id") NOT NULL;
 
 -- Change contraints scope to only the same wallet
 ALTER TABLE public.prism_did_wallet_state
