@@ -1,6 +1,5 @@
 package io.iohk.atala.castor.controller
 
-import io.iohk.atala.api.http.RequestContext
 import sttp.tapir.ztapir.*
 import zio.*
 

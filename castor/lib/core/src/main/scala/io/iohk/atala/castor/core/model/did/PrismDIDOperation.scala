@@ -6,8 +6,6 @@ import io.iohk.atala.prism.crypto.Sha256
 import scala.collection.compat.immutable.ArraySeq
 import io.iohk.atala.prism.protos.node_models
 
-import io.lemonlabs.uri.Uri
-
 sealed trait PrismDIDOperation {
   def did: CanonicalPrismDID
   def toAtalaOperation: node_models.AtalaOperation
@@ -69,8 +67,10 @@ object UpdateDIDAction {
   final case class RemoveKey(id: String) extends UpdateDIDAction
   final case class AddService(service: Service) extends UpdateDIDAction
   final case class RemoveService(id: String) extends UpdateDIDAction
-  final case class UpdateService(id: String, `type`: Option[ServiceType] = None, endpoints: Seq[Uri] = Nil)
-      extends UpdateDIDAction
-
+  final case class UpdateService(
+      id: String,
+      `type`: Option[ServiceType] = None,
+      endpoint: Option[ServiceEndpoint] = None
+  ) extends UpdateDIDAction
   final case class PatchContext(context: Seq[String]) extends UpdateDIDAction
 }

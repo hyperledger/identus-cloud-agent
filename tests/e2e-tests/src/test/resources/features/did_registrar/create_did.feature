@@ -1,4 +1,4 @@
-Feature: Create DID
+Feature: Create and publish DID
 
 @TEST_ATL-3838
 Scenario: Create PRISM DID
@@ -29,5 +29,11 @@ Examples:
   | documentTemplate.publicKeys[0].id               | #      | 422   |
   | documentTemplate.publicKeys[0].purpose          | potato | 400   |
   | documentTemplate.services[0].id                 | #      | 422   |
-  | documentTemplate.services[0].type               | potato | 422   |
+  | documentTemplate.services[0].type               | pot@to | 422   |
   | documentTemplate.services[0].serviceEndpoint[0] | potato | 422   |
+
+@TEST_ATL-3842
+Scenario: Successfully publish DID to ledger
+  When Acme creates unpublished DID
+  And He publishes DID to ledger
+  Then He resolves DID document corresponds to W3C standard

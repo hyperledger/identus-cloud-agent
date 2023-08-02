@@ -10,7 +10,6 @@ import io.iohk.atala.prism.crypto.MerkleInclusionProof
 import zio.*
 
 import java.time.Instant
-import java.util.UUID
 
 class CredentialRepositoryInMemory(
     storeRef: Ref[Map[DidCommID, IssueCredentialRecord]],
@@ -57,10 +56,13 @@ class CredentialRepositoryInMemory(
 
   override def getIssueCredentialRecords(
       ignoreWithZeroRetries: Boolean = true,
-  ): Task[Seq[IssueCredentialRecord]] = {
+      offset: Option[Int],
+      limit: Option[Int]
+  ): Task[(Seq[IssueCredentialRecord], Int)] = {
     for {
       store <- storeRef.get
-    } yield store.values.toSeq
+      paginated = store.values.toSeq.drop(offset.getOrElse(0)).take(limit.getOrElse(Int.MaxValue))
+    } yield paginated -> store.values.size
   }
 
   override def updateCredentialRecordProtocolState(

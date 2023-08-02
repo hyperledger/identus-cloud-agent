@@ -1,20 +1,14 @@
 package io.iohk.atala.api.http.model
 
-import sttp.tapir.Codec.PlainCodec
-import sttp.tapir.generic.auto.*
-import sttp.tapir.{Codec, DecodeResult, Schema}
-
-import java.util.Base64
+import scala.annotation.unused
 
 case class Order(field: String, direction: Option[Order.Direction] = None)
 
 object Order {
-  val DefaultDirection = Direction.Ascending
-  val empty = Order("")
+  val DefaultDirection: Direction = Direction.Ascending
+  val empty: Order = Order("")
 
-  enum Direction(kind: String):
+  enum Direction(@unused kind: String):
     case Ascending extends Direction("asc")
     case Descending extends Direction("desc")
-
-  import io.iohk.atala.api.http.codec.OrderCodec.orderCodec
 }

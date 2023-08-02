@@ -1,8 +1,9 @@
 package io.iohk.atala.pollux.core.repository
 
-import io.iohk.atala.pollux.core.model.CredentialSchema
-import io.iohk.atala.pollux.core.model.CredentialSchema.*
+import io.iohk.atala.pollux.core.model.schema.CredentialSchema
+import io.iohk.atala.pollux.core.model.schema.CredentialSchema.*
 import io.iohk.atala.pollux.core.repository.Repository.SearchCapability
+
 import java.util.UUID
 
 trait CredentialSchemaRepository[F[_]]

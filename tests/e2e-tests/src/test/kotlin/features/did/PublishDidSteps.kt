@@ -1,6 +1,7 @@
 package features.did
 
 import api_models.*
+import common.ListenToEvents
 import common.TestConstants
 import common.Utils.lastResponseList
 import common.Utils.lastResponseObject
@@ -8,7 +9,6 @@ import common.Utils.wait
 import io.cucumber.java.en.Given
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
-import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
 import interactions.Get
 import interactions.Post
@@ -101,11 +101,8 @@ class PublishDidSteps {
         )
         wait(
             {
-                actor.attemptsTo(
-                    Get.resource("/did-registrar/dids/${actor.recall<String>("longFormDid")}"),
-                )
-                SerenityRest.lastResponse().statusCode == SC_OK && lastResponseObject("", ManagedDid::class)
-                    .status == ManagedDidStatuses.PUBLISHED
+                val didEvent = ListenToEvents.`as`(actor).didEvents.lastOrNull()
+                didEvent != null && didEvent.data.status == ManagedDidStatuses.PUBLISHED
             },
             "ERROR: DID was not published to ledger!",
             timeout = TestConstants.DID_UPDATE_PUBLISH_MAX_WAIT_5_MIN,
@@ -143,7 +140,6 @@ class PublishDidSteps {
 
         assertThat(didDocument.verificationMethod!![0])
             .hasFieldOrPropertyWithValue("controller", shortFormDid)
-            .hasFieldOrPropertyWithValue("id", "$shortFormDid#${TestConstants.PRISM_DID_ASSERTION_KEY.id}")
             .hasFieldOrProperty("publicKeyJwk")
 
         assertThat(lastResponseObject("", DidResolutionResult::class).didDocumentMetadata!!)

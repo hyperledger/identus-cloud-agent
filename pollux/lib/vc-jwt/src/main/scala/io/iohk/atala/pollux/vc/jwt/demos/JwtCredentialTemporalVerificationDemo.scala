@@ -1,15 +1,9 @@
 package io.iohk.atala.pollux.vc.jwt.demos
 
-import cats.implicits.*
 import io.circe.*
-import io.circe.generic.auto.*
-import io.circe.parser.decode
 import io.circe.syntax.*
 import io.iohk.atala.pollux.vc.jwt.*
 import io.iohk.atala.pollux.vc.jwt.CredentialPayload.Implicits.*
-import net.reactivecore.cjs.resolver.Downloader
-import net.reactivecore.cjs.{DocumentValidator, Loader, Result}
-import pdi.jwt.{JwtAlgorithm, JwtCirce, JwtClaim}
 
 import java.security.*
 import java.security.spec.*

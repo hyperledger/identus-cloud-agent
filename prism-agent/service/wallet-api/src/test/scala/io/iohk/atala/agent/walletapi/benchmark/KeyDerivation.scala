@@ -2,12 +2,10 @@ package io.iohk.atala.agent.walletapi.benchmark
 
 import zio.*
 import zio.test.*
-import zio.test.Assertion.*
 import io.iohk.atala.agent.walletapi.crypto.Apollo
 import io.iohk.atala.castor.core.model.did.EllipticCurve
 import io.iohk.atala.shared.models.HexString
 import io.iohk.atala.agent.walletapi.crypto.DerivationPath
-import io.iohk.atala.agent.walletapi.vault.VaultKVClientImpl
 import io.iohk.atala.agent.walletapi.vault.VaultKVClient
 import io.iohk.atala.test.container.VaultTestContainerSupport
 import io.iohk.atala.shared.models.Base64UrlString
@@ -17,16 +15,16 @@ object KeyDerivation extends ZIOSpecDefault, VaultTestContainerSupport {
   private val seedHex = "00" * 64
   private val seed = HexString.fromStringUnsafe(seedHex).toByteArray
 
-  override def spec = suite("Key derivation benchamrk")(
+  override def spec = suite("Key derivation benchmark")(
     deriveKeyBenchmark.provide(Apollo.prism14Layer),
     queryKeyBenchmark.provide(vaultKvClientLayer, Apollo.prism14Layer)
   ) @@ TestAspect.sequential @@ TestAspect.timed @@ TestAspect.tag("benchmark") @@ TestAspect.ignore
 
   private val deriveKeyBenchmark = suite("Key derivation benchmark")(
-    benchamrkKeyDerivation(1),
-    benchamrkKeyDerivation(8),
-    benchamrkKeyDerivation(16),
-    benchamrkKeyDerivation(32),
+    benchmarkKeyDerivation(1),
+    benchmarkKeyDerivation(8),
+    benchmarkKeyDerivation(16),
+    benchmarkKeyDerivation(32),
   ) @@ TestAspect.before(deriveKeyWarmUp())
 
   private val queryKeyBenchmark = suite("Query key benchmark - vault storage")(
@@ -36,7 +34,7 @@ object KeyDerivation extends ZIOSpecDefault, VaultTestContainerSupport {
     benchmarkVaultQuery(32),
   ) @@ TestAspect.before(vaultWarmUp())
 
-  private def benchamrkKeyDerivation(parallelism: Int) = {
+  private def benchmarkKeyDerivation(parallelism: Int) = {
     test(s"derive 50000 keys - $parallelism parallelism") {
       for {
         apollo <- ZIO.service[Apollo]
@@ -127,6 +125,6 @@ object KeyDerivation extends ZIOSpecDefault, VaultTestContainerSupport {
     val p90 = sortedDurationInMicro.apply((0.90 * n).toInt)
     val p99 = sortedDurationInMicro.apply((0.99 * n).toInt)
     val max = sortedDurationInMicro.last
-    ZIO.debug(s"execution time in us. avg: $avg | p50: $p50 | p90: $p90 | p99: $p99 | max: $max")
+    ZIO.debug(s"execution time in us. avg: $avg | p50: $p50 | p75: $p75 | p90: $p90 | p99: $p99 | max: $max")
   }
 }

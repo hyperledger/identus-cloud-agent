@@ -11,6 +11,7 @@ export class Actor {
   credentialsService: CredentialsService;
   proofsService: ProofsService;
   didService: DidService;
+  longFormDid: string | undefined;
   did: string | undefined;
 
   /**

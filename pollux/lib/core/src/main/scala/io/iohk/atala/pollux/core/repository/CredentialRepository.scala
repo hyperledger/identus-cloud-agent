@@ -1,9 +1,7 @@
 package io.iohk.atala.pollux.core.repository
 
-import io.iohk.atala.pollux.core.model.EncodedJWTCredential
 import io.iohk.atala.pollux.core.model._
 import io.iohk.atala.prism.crypto.MerkleInclusionProof
-import zio.*
 
 import io.iohk.atala.mercury.protocol.issuecredential.RequestCredential
 import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
@@ -12,8 +10,10 @@ import io.iohk.atala.pollux.core.model.IssueCredentialRecord.ProtocolState
 trait CredentialRepository[F[_]] {
   def createIssueCredentialRecord(record: IssueCredentialRecord): F[Int]
   def getIssueCredentialRecords(
-      ignoreWithZeroRetries: Boolean = true
-  ): F[Seq[IssueCredentialRecord]]
+      ignoreWithZeroRetries: Boolean = true,
+      offset: Option[Int] = None,
+      limit: Option[Int] = None
+  ): F[(Seq[IssueCredentialRecord], Int)]
   def getIssueCredentialRecord(recordId: DidCommID): F[Option[IssueCredentialRecord]]
   def getIssueCredentialRecordsByStates(
       ignoreWithZeroRetries: Boolean,

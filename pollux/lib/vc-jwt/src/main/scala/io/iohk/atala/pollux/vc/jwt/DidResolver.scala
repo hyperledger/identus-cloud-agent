@@ -10,9 +10,11 @@ import io.iohk.atala.castor.core.model.did.w3c.{
   makeW3CResolver
 }
 import io.iohk.atala.castor.core.service.DIDService
-import zio.{Task, UIO}
+import zio.*
 
 import java.time.Instant
+import scala.annotation.unused
+import io.circe.Json
 
 trait DidResolver {
   def resolve(didUrl: String): UIO[DIDResolutionResult]
@@ -29,11 +31,10 @@ sealed case class DIDResolutionSucceeded(
     didDocumentMetadata: DIDDocumentMetadata
 ) extends DIDResolutionResult
 
-sealed trait DIDResolutionError(error: String, message: String)
+sealed trait DIDResolutionError(@unused error: String, @unused message: String)
 case class InvalidDid(message: String) extends DIDResolutionError("invalidDid", message)
 case class NotFound(message: String) extends DIDResolutionError("notFound", message)
 case class RepresentationNotSupported(message: String) extends DIDResolutionError("RepresentationNotSupported", message)
-case class UnsupportedDidMethod(message: String) extends DIDResolutionError("unsupportedDidMethod", message)
 case class InvalidPublicKeyLength(message: String) extends DIDResolutionError("invalidPublicKeyLength", message)
 case class InvalidPublicKeyType(message: String) extends DIDResolutionError("invalidPublicKeyType", message)
 case class UnsupportedPublicKeyType(message: String) extends DIDResolutionError("unsupportedPublicKeyType", message)
@@ -91,7 +92,7 @@ case class JsonWebKey(
     x: Option[String] = Option.empty,
     y: Option[String] = Option.empty
 )
-case class Service(id: String, `type`: String, serviceEndpoint: Vector[String])
+case class Service(id: String, `type`: String | Seq[String], serviceEndpoint: Json)
 
 /** An adapter for translating Castor resolver to resolver defined in JWT library */
 class PrismDidResolver(didService: DIDService) extends DidResolver {
@@ -146,7 +147,7 @@ class PrismDidResolver(didService: DIDService) extends DidResolver {
     Service(
       id = service.id,
       `type` = service.`type`,
-      serviceEndpoint = service.serviceEndpoint.toVector
+      serviceEndpoint = service.serviceEndpoint
     )
   }
 
@@ -170,8 +171,8 @@ class PrismDidResolver(didService: DIDService) extends DidResolver {
     JsonWebKey(
       crv = Some(jwk.crv),
       kty = jwk.kty,
-      x = Some(jwk.x),
-      y = Some(jwk.y)
+      x = jwk.x,
+      y = jwk.y
     )
   }
 

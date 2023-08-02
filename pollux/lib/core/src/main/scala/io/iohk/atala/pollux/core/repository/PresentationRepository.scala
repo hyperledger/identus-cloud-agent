@@ -3,10 +3,6 @@ package io.iohk.atala.pollux.core.repository
 import io.iohk.atala.mercury.protocol.presentproof.*
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.PresentationRecord.ProtocolState
-import io.iohk.atala.prism.crypto.MerkleInclusionProof
-import zio.*
-
-import java.util.UUID
 
 trait PresentationRepository[F[_]] {
   def createPresentationRecord(record: PresentationRecord): F[Int]

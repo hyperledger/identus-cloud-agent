@@ -13,7 +13,8 @@ const verifier = new Verifier();
 
 export function setup() {
   group('Issuer publishes DID', function () {
-    issuer.createAndPublishDid();
+    issuer.createUnpublishedDid();
+    issuer.publishDid();
   });
 
   group('Holder creates unpublished DID', function () {
@@ -37,9 +38,11 @@ export default (data: { issuerDid: string; holderDid: string; }) => {
 
   group('Issuer creates credential offer for Holder', function () {
     issuer.createCredentialOffer();
+    issuer.waitForCredentialOfferToBeSent();
     holder.waitAndAcceptCredentialOffer();
     issuer.receiveCredentialRequest();
     issuer.issueCredential();
+    issuer.waitForCredentialToBeSent();
     holder.receiveCredential();
   });
 

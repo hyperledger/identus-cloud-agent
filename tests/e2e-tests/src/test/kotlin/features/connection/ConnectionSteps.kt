@@ -1,8 +1,7 @@
 package features.connection
 
-import api_models.Connection
-import api_models.ConnectionState
-import api_models.Invitation
+import api_models.*
+import common.ListenToEvents
 import common.Utils.lastResponseObject
 import common.Utils.wait
 import interactions.Get
@@ -57,6 +56,7 @@ class ConnectionSteps {
             lastResponseObject("", Connection::class)
                 .connectionId,
         )
+        inviter.remember("thid", lastResponseObject("", Connection::class).thid)
     }
 
     @When("{actor} receives the connection invitation from {actor}")
@@ -94,24 +94,18 @@ class ConnectionSteps {
             },
         )
         invitee.remember("connectionId", lastResponseObject("", Connection::class).connectionId)
+        invitee.remember("thid", lastResponseObject("", Connection::class).thid)
     }
 
     @When("{actor} receives the connection request and sends back the response")
     fun inviterReceivesTheConnectionRequest(inviter: Actor) {
         wait(
             {
-                inviter.attemptsTo(
-                    Get.resource("/connections/${inviter.recall<String>("connectionId")}"),
-                )
-                inviter.should(
-                    ResponseConsequence.seeThatResponse {
-                        it.statusCode(SC_OK)
-                    },
-                )
-                lastResponseObject("", Connection::class).state == ConnectionState.CONNECTION_RESPONSE_SENT
+                val lastEvent = ListenToEvents.`as`(inviter).connectionEvents.last()
+                lastEvent.data.thid == inviter.recall<String>("thid") &&
+                        lastEvent.data.state == ConnectionState.CONNECTION_RESPONSE_SENT
             },
-            "Inviter connection didn't reach ${ConnectionState.CONNECTION_RESPONSE_SENT} state: " +
-                "connection state = ${lastResponseObject("", Connection::class).state}",
+            "Inviter connection didn't reach ${ConnectionState.CONNECTION_RESPONSE_SENT} state",
         )
     }
 
@@ -120,18 +114,11 @@ class ConnectionSteps {
         // Bob (Holder) receives final connection response
         wait(
             {
-                invitee.attemptsTo(
-                    Get.resource("/connections/${invitee.recall<String>("connectionId")}"),
-                )
-                invitee.should(
-                    ResponseConsequence.seeThatResponse {
-                        it.statusCode(SC_OK)
-                    },
-                )
-                lastResponseObject("", Connection::class).state == ConnectionState.CONNECTION_RESPONSE_RECEIVED
+                val lastEvent = ListenToEvents.`as`(invitee).connectionEvents.last()
+                lastEvent.data.thid == invitee.recall<String>("thid") &&
+                        lastEvent.data.state == ConnectionState.CONNECTION_RESPONSE_RECEIVED
             },
-            "Invitee connection didn't reach ${ConnectionState.CONNECTION_RESPONSE_RECEIVED} state: " +
-                "state is ${lastResponseObject("", Connection::class).state}",
+            "Invitee connection didn't reach ${ConnectionState.CONNECTION_RESPONSE_RECEIVED} state.",
         )
     }
 

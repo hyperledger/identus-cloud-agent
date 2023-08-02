@@ -1,7 +1,6 @@
 package io.iohk.atala.pollux.sql.repository
 
 import cats.data.NonEmptyList
-import cats.instances.seq
 import doobie.*
 import doobie.implicits.*
 import doobie.postgres.implicits.*
@@ -11,20 +10,16 @@ import io.circe.syntax.*
 import io.iohk.atala.castor.core.model.did.*
 import io.iohk.atala.mercury.protocol.issuecredential.{IssueCredential, OfferCredential, RequestCredential}
 import io.iohk.atala.pollux.core.model.*
-import io.iohk.atala.pollux.core.model.IssueCredentialRecord.ProtocolState
 import io.iohk.atala.pollux.core.model.error.CredentialRepositoryError
 import io.iohk.atala.pollux.core.model.error.CredentialRepositoryError.*
 import io.iohk.atala.pollux.core.repository.CredentialRepository
-import io.iohk.atala.pollux.sql.model.JWTCredentialRow
 import io.iohk.atala.prism.crypto.MerkleInclusionProof
 import io.iohk.atala.shared.utils.BytesOps
-import org.postgresql.util.{PSQLException, PSQLState}
+import org.postgresql.util.PSQLException
 import zio.*
 import zio.interop.catz.*
 
-import java.sql.SQLException
 import java.time.Instant
-import java.util.UUID
 
 // TODO: replace with actual implementation
 class JdbcCredentialRepository(xa: Transactor[Task], maxRetries: Int) extends CredentialRepository[Task] {
@@ -128,12 +123,15 @@ class JdbcCredentialRepository(xa: Transactor[Task], maxRetries: Int) extends Cr
   }
 
   override def getIssueCredentialRecords(
-      ignoreWithZeroRetries: Boolean = true
-  ): Task[Seq[IssueCredentialRecord]] = {
+      ignoreWithZeroRetries: Boolean = true,
+      offset: Option[Int],
+      limit: Option[Int]
+  ): Task[(Seq[IssueCredentialRecord], Int)] = {
     val conditionFragment = Fragments.whereAndOpt(
       Option.when(ignoreWithZeroRetries)(fr"meta_retries > 0")
     )
-    val cxnIO = sql"""
+    val baseFragment =
+      sql"""
         | SELECT
         |   id,
         |   created_at,
@@ -158,11 +156,29 @@ class JdbcCredentialRepository(xa: Transactor[Task], maxRetries: Int) extends Cr
         | FROM public.issue_credential_records
         | $conditionFragment
         """.stripMargin
+    val withOffsetFragment = offset.fold(baseFragment)(offsetValue => baseFragment ++ fr"OFFSET $offsetValue")
+    val withOffsetAndLimitFragment =
+      limit.fold(withOffsetFragment)(limitValue => withOffsetFragment ++ fr"LIMIT $limitValue")
+
+    val countCxnIO =
+      sql"""
+           | SELECT COUNT(*)
+           | FROM public.issue_credential_records
+           | $conditionFragment
+           """.stripMargin
+        .query[Int]
+        .unique
+
+    val cxnIO = withOffsetAndLimitFragment
       .query[IssueCredentialRecord]
       .to[Seq]
 
-    cxnIO
-      .transact(xa)
+    val effect = for {
+      totalCount <- countCxnIO
+      records <- cxnIO
+    } yield (records, totalCount)
+
+    effect.transact(xa)
   }
 
   override def getIssueCredentialRecordsByStates(

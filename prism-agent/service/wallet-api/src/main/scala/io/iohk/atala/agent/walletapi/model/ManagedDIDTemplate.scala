@@ -1,12 +1,12 @@
 package io.iohk.atala.agent.walletapi.model
 
+import io.iohk.atala.castor.core.model.did.ServiceEndpoint
 import io.iohk.atala.castor.core.model.did.{Service, VerificationRelationship, ServiceType}
-
-import io.lemonlabs.uri.Uri
 
 final case class ManagedDIDTemplate(
     publicKeys: Seq[DIDPublicKeyTemplate],
-    services: Seq[Service]
+    services: Seq[Service],
+    contexts: Seq[String]
 )
 
 final case class DIDPublicKeyTemplate(
@@ -22,6 +22,11 @@ object UpdateManagedDIDAction {
   final case class AddService(service: Service) extends UpdateManagedDIDAction
   final case class RemoveService(id: String) extends UpdateManagedDIDAction
   final case class UpdateService(patch: UpdateServicePatch) extends UpdateManagedDIDAction
+  final case class PatchContext(context: Seq[String]) extends UpdateManagedDIDAction
 }
 
-final case class UpdateServicePatch(id: String, serviceType: Option[ServiceType], serviceEndpoints: Seq[Uri])
+final case class UpdateServicePatch(
+    id: String,
+    serviceType: Option[ServiceType],
+    serviceEndpoints: Option[ServiceEndpoint]
+)

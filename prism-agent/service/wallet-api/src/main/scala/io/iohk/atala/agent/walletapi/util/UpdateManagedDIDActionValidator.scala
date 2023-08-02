@@ -14,6 +14,7 @@ object UpdateManagedDIDActionValidator {
       case UpdateManagedDIDAction.AddService(_)    => None
       case UpdateManagedDIDAction.RemoveService(_) => None
       case UpdateManagedDIDAction.UpdateService(_) => None
+      case UpdateManagedDIDAction.PatchContext(_)  => None
     }
     val reservedKeyIds = keyIds.filter(id => ManagedDIDService.reservedKeyIds.contains(id))
     if (reservedKeyIds.nonEmpty)

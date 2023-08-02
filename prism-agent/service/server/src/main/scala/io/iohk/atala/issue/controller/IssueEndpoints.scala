@@ -3,28 +3,10 @@ package io.iohk.atala.issue.controller
 import io.iohk.atala.api.http.EndpointOutputs.*
 import io.iohk.atala.api.http.model.PaginationInput
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
-import io.iohk.atala.connect.controller.http.{Connection, CreateConnectionRequest}
 import io.iohk.atala.issue.controller.http.*
 import sttp.model.StatusCode
 import sttp.tapir.json.zio.jsonBody
-import sttp.tapir.{
-  Endpoint,
-  EndpointInfo,
-  EndpointInput,
-  PublicEndpoint,
-  endpoint,
-  extractFromRequest,
-  oneOf,
-  oneOfDefaultVariant,
-  oneOfVariant,
-  path,
-  query,
-  statusCode,
-  stringToPath
-}
-import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder}
-
-import java.util.UUID
+import sttp.tapir.{EndpointInput, PublicEndpoint, endpoint, extractFromRequest, path, query, statusCode, stringToPath}
 
 object IssueEndpoints {
 

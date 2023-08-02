@@ -5,7 +5,7 @@ import io.iohk.atala.issue.controller.http.AcceptCredentialOfferRequest.annotati
 import sttp.tapir.Schema.annotations.{description, encodedExample}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 import sttp.tapir.{Schema, Validator}
-import sttp.tapir.Schema.annotations.{description, encodedExample, validate}
+import sttp.tapir.Schema.annotations.validate
 
 /** A request to accept a credential offer received from an issuer.
   *

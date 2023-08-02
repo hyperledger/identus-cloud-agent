@@ -1,8 +1,6 @@
 package io.iohk.atala.agent.server.jobs
 
 import cats.syntax.all.*
-import com.ionspin.kotlin.bignum.integer.{BigInteger, Sign}
-import io.circe.Json
 import io.circe.parser.*
 import io.circe.syntax.*
 import io.iohk.atala.agent.server.config.AppConfig
@@ -19,7 +17,6 @@ import io.iohk.atala.castor.core.model.did.*
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.mercury.*
 import io.iohk.atala.mercury.model.*
-import io.iohk.atala.mercury.model.error.*
 import io.iohk.atala.mercury.protocol.issuecredential.*
 import io.iohk.atala.mercury.protocol.presentproof.*
 import io.iohk.atala.mercury.protocol.reportproblem.v2.*
@@ -28,30 +25,17 @@ import io.iohk.atala.pollux.core.model.error.PresentationError.*
 import io.iohk.atala.pollux.core.model.error.{CredentialServiceError, PresentationError}
 import io.iohk.atala.pollux.core.service.{CredentialService, PresentationService}
 import io.iohk.atala.pollux.vc.jwt.{
-  CredentialVerification,
   ES256KSigner,
   JWT,
   JwtPresentation,
   W3CCredential,
-  W3cCredentialPayload,
   DidResolver as JwtDidResolver,
   Issuer as JwtIssuer
 }
-import io.iohk.atala.resolvers.{DIDResolver, UniversalDidResolver}
-import org.bouncycastle.jce.ECNamedCurveTable
-import org.bouncycastle.jce.provider.BouncyCastleProvider
-import org.bouncycastle.jce.spec.ECNamedCurveSpec
-import org.didcommx.didcomm.DIDComm
 import zio.*
 import zio.prelude.ZValidation.*
-import zio.prelude.{AssociativeBothOps, Validation}
-
-import java.io.IOException
-import java.security.KeyFactory
-import java.security.spec.{ECPoint, ECPrivateKeySpec, ECPublicKeySpec, EncodedKeySpec}
+import zio.prelude.Validation
 import java.time.{Clock, Instant, ZoneId}
-import java.util.UUID
-import scala.jdk.CollectionConverters.*
 
 object BackgroundJobs {
 

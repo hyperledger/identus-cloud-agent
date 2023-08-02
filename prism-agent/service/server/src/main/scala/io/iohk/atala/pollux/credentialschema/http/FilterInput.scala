@@ -2,11 +2,10 @@ package io.iohk.atala.pollux.credentialschema.http
 
 import io.iohk.atala.api.http.*
 import io.iohk.atala.pollux.core.model
-import sttp.tapir.EndpointIO.annotations.{example, query}
+import io.iohk.atala.pollux.core.model.schema.CredentialSchema
 import io.iohk.atala.pollux.credentialschema.http.FilterInput.annotations
-import sttp.tapir.Schema.annotations.validateEach
+import sttp.tapir.EndpointIO.annotations.{example, query}
 import sttp.tapir.Validator.*
-import io.iohk.atala.api.http.*
 
 case class FilterInput(
     @query
@@ -22,7 +21,7 @@ case class FilterInput(
     @example(annotations.tags.example.headOption)
     tags: Option[String] = Option.empty[String]
 ) {
-  def toDomain = model.CredentialSchema.Filter(author, name, version, tags)
+  def toDomain = CredentialSchema.Filter(author, name, version, tags)
 }
 
 object FilterInput {

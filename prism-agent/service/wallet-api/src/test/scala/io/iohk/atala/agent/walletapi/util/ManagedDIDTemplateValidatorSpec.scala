@@ -1,19 +1,21 @@
 package io.iohk.atala.agent.walletapi.util
 
-import io.iohk.atala.castor.core.model.did.{Service, ServiceType, VerificationRelationship}
 import io.iohk.atala.agent.walletapi.model.{DIDPublicKeyTemplate, ManagedDIDTemplate}
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
+import io.iohk.atala.castor.core.model.did.ServiceEndpoint
+import io.iohk.atala.castor.core.model.did.ServiceEndpoint.UriOrJsonEndpoint
+import io.iohk.atala.castor.core.model.did.ServiceEndpoint.UriValue
+import io.iohk.atala.castor.core.model.did.{Service, ServiceType, VerificationRelationship}
+import scala.language.implicitConversions
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
-
-import io.lemonlabs.uri.Uri
 
 object ManagedDIDTemplateValidatorSpec extends ZIOSpecDefault {
 
   override def spec = suite("ManagedDIDTemplateValidator")(
     test("accept empty DID template") {
-      val template = ManagedDIDTemplate(publicKeys = Nil, services = Nil)
+      val template = ManagedDIDTemplate(publicKeys = Nil, services = Nil, contexts = Nil)
       assert(ManagedDIDTemplateValidator.validate(template))(isRight)
     },
     test("accept valid non-empty DID template") {
@@ -27,10 +29,11 @@ object ManagedDIDTemplateValidatorSpec extends ZIOSpecDefault {
         services = Seq(
           Service(
             id = "service0",
-            `type` = ServiceType.LinkedDomains,
-            serviceEndpoint = Seq(Uri.parse("http://example.com/"))
+            `type` = ServiceType.Single(ServiceType.Name.fromStringUnsafe("LinkedDomains")),
+            serviceEndpoint = ServiceEndpoint.Single(UriValue.fromString("http://example.com/").toOption.get)
           )
-        )
+        ),
+        contexts = Nil
       )
       assert(ManagedDIDTemplateValidator.validate(template))(isRight)
     },
@@ -42,7 +45,8 @@ object ManagedDIDTemplateValidatorSpec extends ZIOSpecDefault {
             purpose = VerificationRelationship.Authentication
           )
         ),
-        services = Nil
+        services = Nil,
+        contexts = Nil
       )
       assert(ManagedDIDTemplateValidator.validate(template))(isLeft)
     }

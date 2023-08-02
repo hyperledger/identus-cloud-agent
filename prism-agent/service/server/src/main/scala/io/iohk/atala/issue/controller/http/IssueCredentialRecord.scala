@@ -42,6 +42,12 @@ import java.time.{OffsetDateTime, ZoneOffset}
   *   Issuer DID of the verifiable credential object. for example: ''did:prism:issuerofverifiablecredentials''
   */
 final case class IssueCredentialRecord(
+    @description(annotations.recordId.description)
+    @encodedExample(annotations.recordId.example)
+    recordId: String,
+    @description(annotations.thid.description)
+    @encodedExample(annotations.thid.example)
+    thid: String,
     @description(annotations.subjectId.description)
     @encodedExample(annotations.subjectId.example)
     subjectId: Option[String] = None,
@@ -54,9 +60,6 @@ final case class IssueCredentialRecord(
     @description(annotations.automaticIssuance.description)
     @encodedExample(annotations.automaticIssuance.example)
     automaticIssuance: Option[Boolean] = None,
-    @description(annotations.recordId.description)
-    @encodedExample(annotations.recordId.example)
-    recordId: String,
     @description(annotations.createdAt.description)
     @encodedExample(annotations.createdAt.example)
     createdAt: OffsetDateTime,
@@ -82,6 +85,7 @@ object IssueCredentialRecord {
   def fromDomain(domain: PolluxIssueCredentialRecord): IssueCredentialRecord =
     IssueCredentialRecord(
       recordId = domain.id.value,
+      thid = domain.thid.value,
       createdAt = domain.createdAt.atOffset(ZoneOffset.UTC),
       updatedAt = domain.updatedAt.map(_.atOffset(ZoneOffset.UTC)),
       role = domain.role.toString,
@@ -110,6 +114,8 @@ object IssueCredentialRecord {
         }
       })
     )
+
+  given Conversion[PolluxIssueCredentialRecord, IssueCredentialRecord] = fromDomain
 
   object annotations {
 
@@ -145,6 +151,13 @@ object IssueCredentialRecord {
         extends Annotation[String](
           description = "The unique identifier of the issue credential record.",
           example = "80d612dc-0ded-4ac9-90b4-1b8eabb04545"
+        )
+
+    object thid
+        extends Annotation[String](
+          description = "The unique identifier of the thread this credential record belongs to. " +
+            "The value will identical on both sides of the issue flow (issuer and holder)",
+          example = "0527aea1-d131-3948-a34d-03af39aba8b4"
         )
 
     object createdAt

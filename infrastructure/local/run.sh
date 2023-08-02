@@ -16,6 +16,8 @@ Help() {
 	echo "-e/--env               Provide your own .env file with versions."
 	echo "-w/--wait              Wait until all containers are healthy (only in the background)."
 	echo "--network              Specify a docker network to run containers on."
+	echo "--webhook              Specify webhook URL for agent events"
+	echo "--webhook-api-key      Specify api key to secure webhook if required"
 	echo "--debug                Run additional services for debug using docker-compose debug profile."
 	echo "-h/--help              Print this help text."
 	echo
@@ -53,6 +55,16 @@ while [[ $# -gt 0 ]]; do
 		shift # past argument
 		shift # past value
 		;;
+  --webhook)
+  	WEBHOOK_URL="$2"
+  	shift # past argument
+  	shift # past value
+  	;;
+  --webhook-api-key)
+  	WEBHOOK_API_KEY="$2"
+  	shift # past argument
+  	shift # past value
+  	;;
 	--debug)
 		DEBUG="--profile debug"
 		shift # past argument
@@ -89,12 +101,15 @@ echo "NAME            = ${NAME}"
 echo "PORT            = ${PORT}"
 echo "ENV_FILE        = ${ENV_FILE}"
 echo "NETWORK         = ${NETWORK}"
+echo "WEBHOOK_URL     = ${WEBHOOK_URL}"
+echo "WEBHOOK_API_KEY = ${WEBHOOK_API_KEY}"
+
 
 echo "--------------------------------------"
 echo "Starting stack using docker compose"
 echo "--------------------------------------"
 
-PORT=${PORT} NETWORK=${NETWORK} docker compose \
+PORT=${PORT} NETWORK=${NETWORK} WEBHOOK_URL=${WEBHOOK_URL} WEBHOOK_API_KEY=${WEBHOOK_API_KEY} docker compose \
 	-p ${NAME} \
 	-f ${SCRIPT_DIR}/../shared/docker-compose.yml \
 	--env-file ${ENV_FILE} ${DEBUG} up ${BACKGROUND} ${WAIT}

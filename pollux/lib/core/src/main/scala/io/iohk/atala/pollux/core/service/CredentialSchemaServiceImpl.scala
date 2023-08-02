@@ -1,7 +1,7 @@
 package io.iohk.atala.pollux.core.service
-import io.iohk.atala.pollux.core.model.CredentialSchema
-import io.iohk.atala.pollux.core.model.CredentialSchema.FilteredEntries
 import io.iohk.atala.pollux.core.model.error.CredentialSchemaError
+import io.iohk.atala.pollux.core.model.schema.CredentialSchema
+import io.iohk.atala.pollux.core.model.schema.CredentialSchema.FilteredEntries
 import io.iohk.atala.pollux.core.repository.CredentialSchemaRepository
 import io.iohk.atala.pollux.core.repository.Repository.SearchQuery
 import io.iohk.atala.pollux.core.service.CredentialSchemaService.Error.*

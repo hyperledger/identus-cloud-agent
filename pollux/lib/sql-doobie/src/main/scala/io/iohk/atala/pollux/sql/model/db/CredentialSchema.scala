@@ -1,17 +1,13 @@
 package io.iohk.atala.pollux.sql.model.db
 
-import io.getquill.{Literal, SnakeCase}
-import io.getquill.doobie.DoobieContext
-import io.iohk.atala.pollux.core.model.Schema
-import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
-import io.getquill.context.json.PostgresJsonExtensions
-import io.getquill.JsonValue
-
-import java.time.{OffsetDateTime, ZonedDateTime}
-import java.util.UUID
-
 import io.getquill.*
+import io.getquill.context.json.PostgresJsonExtensions
+import io.getquill.doobie.DoobieContext
 import io.getquill.idiom.*
+import io.iohk.atala.pollux.core.model.schema.Schema
+
+import java.time.OffsetDateTime
+import java.util.UUID
 
 case class CredentialSchema(
     guid: UUID,
@@ -30,7 +26,7 @@ case class CredentialSchema(
 
 object CredentialSchema {
   def fromModel(
-      m: io.iohk.atala.pollux.core.model.CredentialSchema
+      m: io.iohk.atala.pollux.core.model.schema.CredentialSchema
   ): CredentialSchema =
     CredentialSchema(
       guid = m.guid,
@@ -47,8 +43,8 @@ object CredentialSchema {
 
   def toModel(
       db: CredentialSchema
-  ): io.iohk.atala.pollux.core.model.CredentialSchema = {
-    io.iohk.atala.pollux.core.model.CredentialSchema(
+  ): io.iohk.atala.pollux.core.model.schema.CredentialSchema = {
+    io.iohk.atala.pollux.core.model.schema.CredentialSchema(
       guid = db.guid,
       id = db.id,
       name = db.name,

@@ -9,7 +9,7 @@ import io.iohk.atala.agent.walletapi.model.error.UpdateManagedDIDError
 import io.iohk.atala.agent.walletapi.model.KeyManagementMode
 import io.iohk.atala.agent.walletapi.model.ManagedDIDState
 import io.iohk.atala.agent.walletapi.model.UpdateManagedDIDAction
-import io.iohk.atala.agent.walletapi.storage.{DIDNonSecretStorage, DIDSecretStorage}
+import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
 import io.iohk.atala.agent.walletapi.util.OperationFactory
 import io.iohk.atala.castor.core.model.did.PrismDIDOperation
 import io.iohk.atala.castor.core.model.did.PrismDIDOperation.Update
@@ -17,10 +17,9 @@ import io.iohk.atala.castor.core.model.did.ScheduledDIDOperationStatus
 import io.iohk.atala.castor.core.model.did.SignedPrismDIDOperation
 import scala.collection.immutable.ArraySeq
 
-class DIDUpdateHandler(
+private[walletapi] class DIDUpdateHandler(
     apollo: Apollo,
     nonSecretStorage: DIDNonSecretStorage,
-    secretStorage: DIDSecretStorage,
     publicationHandler: PublicationHandler
 )(
     seed: Array[Byte]
@@ -44,12 +43,12 @@ class DIDUpdateHandler(
           result <- operationFactory.makeUpdateOperationHdKey(seed)(did, previousOperationHash, actions, keyCounter)
           (operation, hdKey) = result
           signedOperation <- publicationHandler.signOperationWithMasterKey[UpdateManagedDIDError](state, operation)
-        } yield HdKeyUpdateMaterial(secretStorage, nonSecretStorage)(operation, signedOperation, state, hdKey)
+        } yield HdKeyUpdateMaterial(nonSecretStorage)(operation, signedOperation, state, hdKey)
     }
   }
 }
 
-trait DIDUpdateMaterial {
+private[walletapi] trait DIDUpdateMaterial {
 
   def operation: PrismDIDOperation.Update
 
@@ -78,7 +77,7 @@ trait DIDUpdateMaterial {
 
 }
 
-class HdKeyUpdateMaterial(secretStorage: DIDSecretStorage, nonSecretStorage: DIDNonSecretStorage)(
+private class HdKeyUpdateMaterial(nonSecretStorage: DIDNonSecretStorage)(
     val operation: PrismDIDOperation.Update,
     val signedOperation: SignedPrismDIDOperation,
     val state: ManagedDIDState,

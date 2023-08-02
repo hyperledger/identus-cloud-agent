@@ -1,4 +1,6 @@
 package io.iohk.atala.presentproof.controller
+import io.iohk.atala.agent.server.ControllerHelper
+import io.iohk.atala.api.http.model.PaginationInput
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.connect.controller.ConnectionController
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
@@ -18,27 +20,27 @@ import java.util.UUID
 class PresentProofControllerImpl(
     presentationService: PresentationService,
     connectionService: ConnectionService
-) extends PresentProofController {
-  override def requestPresentation(requestPresentationInput: RequestPresentationInput)(implicit
+) extends PresentProofController
+    with ControllerHelper {
+  override def requestPresentation(request: RequestPresentationInput)(implicit
       rc: RequestContext
   ): IO[ErrorResponse, RequestPresentationOutput] = {
     val result: IO[ConnectionServiceError | PresentationError, RequestPresentationOutput] = for {
-      didId <- connectionService
-        .getConnectionRecord(UUID.fromString(requestPresentationInput.connectionId))
-        .map(_.flatMap(_.connectionRequest).map(_.from).get) // TODO GET
+      didIdPair <- getPairwiseDIDs(request.connectionId).provide(ZLayer.succeed(connectionService))
       record <- presentationService
         .createPresentationRecord(
+          pairwiseVerifierDID = didIdPair.myDID,
+          pairwiseProverDID = didIdPair.theirDid,
           thid = DidCommID(),
-          subjectDid = didId,
-          connectionId = Some(requestPresentationInput.connectionId),
-          proofTypes = requestPresentationInput.proofs.map { e =>
+          connectionId = Some(request.connectionId),
+          proofTypes = request.proofs.map { e =>
             ProofType(
               schema = e.schemaId, // TODO rename field to schemaId
               requiredFields = None,
               trustIssuers = Some(e.trustIssuers.map(DidId(_)))
             )
           },
-          options = requestPresentationInput.options.map(x => Options(x.challenge, x.domain)),
+          options = request.options.map(x => Options(x.challenge, x.domain)),
         )
     } yield RequestPresentationOutput.fromDomain(record)
 
@@ -48,16 +50,15 @@ class PresentProofControllerImpl(
     }
   }
 
-  override def getAllPresentations(offset: Option[Int], limit: Option[Int], thid: Option[String])(implicit
+  override def getPresentations(paginationInput: PaginationInput, thid: Option[String])(implicit
       rc: RequestContext
   ): IO[ErrorResponse, PresentationStatusPage] = {
     val result = for {
-      records <- presentationService.getPresentationRecords()
-      filteredRecords = thid match
-        case None        => records
-        case Some(value) => records.filter(_.thid.value == value) // this logic should be moved to the DB
+      records <- thid match
+        case None       => presentationService.getPresentationRecords()
+        case Some(thid) => presentationService.getPresentationRecordByThreadId(DidCommID(thid)).map(_.toSeq)
     } yield PresentationStatusPage(
-      filteredRecords.map(PresentationStatus.fromDomain)
+      records.map(PresentationStatus.fromDomain)
     )
 
     result.mapError(PresentProofController.toHttpError)
@@ -83,11 +84,11 @@ class PresentProofControllerImpl(
   ): IO[ErrorResponse, PresentationStatus] = {
     val result: ZIO[Any, ErrorResponse | PresentationError, PresentationStatus] = for {
       didCommId <- ZIO.succeed(DidCommID(id.toString))
-      maybeRecord <- requestPresentationAction.action match {
+      record <- requestPresentationAction.action match {
         case "request-accept" =>
           presentationService.acceptRequestPresentation(
             recordId = didCommId,
-            crecentialsToUse = requestPresentationAction.proofId.getOrElse(Seq.empty)
+            credentialsToUse = requestPresentationAction.proofId.getOrElse(Seq.empty)
           )
         case "request-reject"      => presentationService.rejectRequestPresentation(didCommId)
         case "presentation-accept" => presentationService.acceptPresentation(didCommId)
@@ -101,10 +102,6 @@ class PresentProofControllerImpl(
             )
           )
       }
-      record <- ZIO
-        .fromOption(maybeRecord)
-        .mapError(_ => ErrorResponse.notFound(detail = Some(s"Presentation record not found: $id")))
-
     } yield PresentationStatus.fromDomain(record)
 
     result.mapError {

@@ -11,25 +11,8 @@ import io.iohk.atala.pollux.credentialschema.http.{
   FilterInput
 }
 import sttp.model.StatusCode
-import sttp.tapir.EndpointIO.Info
 import sttp.tapir.json.zio.jsonBody
-import sttp.tapir.{
-  Endpoint,
-  EndpointInfo,
-  EndpointInput,
-  PublicEndpoint,
-  endpoint,
-  extractFromRequest,
-  oneOf,
-  oneOfDefaultVariant,
-  oneOfVariant,
-  path,
-  query,
-  statusCode,
-  stringToPath
-}
-import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder}
-
+import sttp.tapir.{EndpointInput, PublicEndpoint, endpoint, extractFromRequest, path, query, statusCode, stringToPath}
 import java.util.UUID
 
 object SchemaRegistryEndpoints {

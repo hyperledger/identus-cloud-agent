@@ -71,7 +71,7 @@ jobs:
       - name: Start services for issuer
         env:
           PORT: 8080
-          NETWORK: prism
+          WEBHOOK_URL: http://host.docker.internal:9955
         uses: isbang/compose-action@v1.4.1
         with:
           compose-file: "./infrastructure/shared/docker-compose.yml"
@@ -82,7 +82,7 @@ jobs:
       - name: Start services for holder
         env:
           PORT: 8090
-          NETWORK: prism
+          WEBHOOK_URL: http://host.docker.internal:9956
         uses: isbang/compose-action@v1.4.1
         with:
           compose-file: "./infrastructure/shared/docker-compose.yml"
@@ -93,6 +93,7 @@ jobs:
       - name: Start services for verifier
         env:
           PORT: 8070
+          WEBHOOK_URL: http://host.docker.internal:9957
         uses: isbang/compose-action@v1.4.1
         with:
           compose-file: "./infrastructure/shared/docker-compose.yml"
@@ -120,15 +121,6 @@ jobs:
         with:
           name: e2e-tests-result
           path: ${{ env.REPORTS_DIR }}
-
-      - name: Publish e2e test Results
-        if: always()
-        id: publish-unit-tests
-        uses: EnricoMi/publish-unit-test-result-action@v2
-        with:
-          junit_files: "${{ env.REPORTS_DIR }}/SERENITY-JUNIT-*.xml"
-          comment_title: "E2E Test Results"
-          check_name: "E2E Test Results"
 
       - name: Extract test results
         id: analyze_test_results
@@ -161,6 +153,15 @@ jobs:
             echo "skipped=${SKIPPED_TESTS}";
             echo "ignored=${IGNORED_TESTS}";
           } >> "$GITHUB_OUTPUT"
+
+      - name: Publish e2e test Results
+        if: github.ref_name == 'main' || steps.analyze_test_results.outputs.conclusion == 'failure'
+        id: publish-unit-tests
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          junit_files: "${{ env.REPORTS_DIR }}/SERENITY-JUNIT-*.xml"
+          comment_title: "E2E Test Results"
+          check_name: "E2E Test Results"
 
       - name: Slack Notification
         if: github.ref_name == 'main' && steps.analyze_test_results.outputs.conclusion == 'failure'

@@ -3,7 +3,6 @@ package io.iohk.atala.castor.controller.http
 import io.iohk.atala.agent.walletapi.model as walletDomain
 import io.iohk.atala.agent.walletapi.model.DIDPublicKeyTemplate
 import io.iohk.atala.agent.walletapi.model.ManagedDIDDetail
-import io.iohk.atala.agent.walletapi.model.ManagedDIDState
 import io.iohk.atala.agent.walletapi.model.PublicationState
 import io.iohk.atala.api.http.Annotation
 import io.iohk.atala.castor.core.model.did as castorDomain
@@ -98,7 +97,8 @@ object CreateManagedDidRequest {
 
 final case class CreateManagedDidRequestDocumentTemplate(
     publicKeys: Seq[ManagedDIDKeyTemplate],
-    services: Seq[Service]
+    services: Seq[Service],
+    contexts: Option[Seq[String]]
 )
 
 object CreateManagedDidRequestDocumentTemplate {
@@ -115,7 +115,8 @@ object CreateManagedDidRequestDocumentTemplate {
         publicKeys = template.publicKeys.map[DIDPublicKeyTemplate](k => k)
       } yield walletDomain.ManagedDIDTemplate(
         publicKeys = publicKeys,
-        services = services
+        services = services,
+        contexts = template.contexts.getOrElse(Nil)
       )
     }
   }

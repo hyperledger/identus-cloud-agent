@@ -7,13 +7,11 @@ import io.iohk.atala.mercury.model.AttachmentDescriptor
 import io.iohk.atala.mercury.model.AttachmentDescriptor.attachmentDescriptorEncoderV2
 import munit.*
 import io.iohk.atala.mercury.model._
-import zio.*
 
 class PresentationSpec extends ZSuite {
 
   test("Verifier Presentation") {
 
-    val presentationFormat = PresentationFormat(attach_id = "1", "format1")
     val body = Presentation.Body(goal_code = Some("Presentation"))
     val attachmentDescriptor =
       AttachmentDescriptor("1", Some("application/json"), LinkData(links = Seq("http://test"), hash = "1234"))
@@ -35,8 +33,6 @@ class PresentationSpec extends ZSuite {
       to = DidId("did:prism:test123"),
       from = DidId("did:prism:test123")
     )
-
-    val did = DidId("did:prism:test123")
 
     val result = presentation.asJson.deepDropNullValues
     assertEquals(result, expectedProposalJson)

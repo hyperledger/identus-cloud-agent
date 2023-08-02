@@ -20,11 +20,6 @@ import java.util.UUID
 
 trait CredentialService {
 
-  /** Copy pasted from Castor codebase for now TODO: replace with actual data from castor later
-    *
-    * @param method
-    * @param methodSpecificId
-    */
   final case class DID(
       method: String,
       methodSpecificId: String
@@ -63,12 +58,11 @@ trait CredentialService {
       issuingDID: Option[CanonicalPrismDID]
   ): IO[CredentialServiceError, IssueCredentialRecord]
 
-  /** Return the full list of CredentialRecords.
-    *
-    * TODO this function API maybe change in the future to return a lazy sequence of records or something similar to a
-    * batabase cursor.
-    */
-  def getIssueCredentialRecords: IO[CredentialServiceError, Seq[IssueCredentialRecord]]
+  /** Return a list of records as well as a count of all filtered items */
+  def getIssueCredentialRecords(
+      offset: Option[Int] = None,
+      limit: Option[Int] = None
+  ): IO[CredentialServiceError, (Seq[IssueCredentialRecord], Int)]
 
   def getIssueCredentialRecordsByStates(
       ignoreWithZeroRetries: Boolean,
@@ -76,10 +70,9 @@ trait CredentialService {
       states: IssueCredentialRecord.ProtocolState*
   ): IO[CredentialServiceError, Seq[IssueCredentialRecord]]
 
-  /** Get the CredentialRecord by the record's id. If the record's id is not found the value None will be return
-    * instead.
-    */
   def getIssueCredentialRecord(recordId: DidCommID): IO[CredentialServiceError, Option[IssueCredentialRecord]]
+
+  def getIssueCredentialRecordByThreadId(thid: DidCommID): IO[CredentialServiceError, Option[IssueCredentialRecord]]
 
   def receiveCredentialOffer(offer: OfferCredential): IO[CredentialServiceError, IssueCredentialRecord]
 

@@ -1,14 +1,12 @@
 package io.iohk.atala.pollux.core.repository
 
-import com.squareup.okhttp.Protocol
 import io.iohk.atala.castor.core.model.did.PrismDID
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.issuecredential.{IssueCredential, RequestCredential}
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord.*
 import io.iohk.atala.pollux.core.model.error.CredentialRepositoryError.*
-import io.iohk.atala.prism.identity.Did
-import zio.{Cause, Exit, Task, ZIO}
+import zio.{Exit, Task, ZIO}
 import zio.test.*
 import zio.test.Assertion.*
 
@@ -103,10 +101,51 @@ object CredentialRepositorySpecSuite {
         bRecord = issueCredentialRecord
         _ <- repo.createIssueCredentialRecord(aRecord)
         _ <- repo.createIssueCredentialRecord(bRecord)
-        records <- repo.getIssueCredentialRecords()
+        records <- repo.getIssueCredentialRecords().map(_._1)
       } yield {
         assertTrue(records.size == 2) &&
         assertTrue(records.contains(aRecord)) &&
+        assertTrue(records.contains(bRecord))
+      }
+    },
+    test("getIssuanceCredentialRecord returns records with offset") {
+      for {
+        repo <- ZIO.service[CredentialRepository[Task]]
+        aRecord = issueCredentialRecord
+        bRecord = issueCredentialRecord
+        _ <- repo.createIssueCredentialRecord(aRecord)
+        _ <- repo.createIssueCredentialRecord(bRecord)
+        records <- repo.getIssueCredentialRecords(offset = Some(1)).map(_._1)
+      } yield {
+        assertTrue(records.size == 1) &&
+        assertTrue(records.contains(bRecord))
+      }
+    },
+    test("getIssuanceCredentialRecord returns records with limit") {
+      for {
+        repo <- ZIO.service[CredentialRepository[Task]]
+        aRecord = issueCredentialRecord
+        bRecord = issueCredentialRecord
+        _ <- repo.createIssueCredentialRecord(aRecord)
+        _ <- repo.createIssueCredentialRecord(bRecord)
+        records <- repo.getIssueCredentialRecords(limit = Some(1)).map(_._1)
+      } yield {
+        assertTrue(records.size == 1) &&
+        assertTrue(records.contains(aRecord))
+      }
+    },
+    test("getIssuanceCredentialRecord returns records with offset and limit") {
+      for {
+        repo <- ZIO.service[CredentialRepository[Task]]
+        aRecord = issueCredentialRecord
+        bRecord = issueCredentialRecord
+        cRecord = issueCredentialRecord
+        _ <- repo.createIssueCredentialRecord(aRecord)
+        _ <- repo.createIssueCredentialRecord(bRecord)
+        _ <- repo.createIssueCredentialRecord(cRecord)
+        records <- repo.getIssueCredentialRecords(offset = Some(1), limit = Some(1)).map(_._1)
+      } yield {
+        assertTrue(records.size == 1) &&
         assertTrue(records.contains(bRecord))
       }
     },
@@ -118,7 +157,7 @@ object CredentialRepositorySpecSuite {
         _ <- repo.createIssueCredentialRecord(aRecord)
         _ <- repo.createIssueCredentialRecord(bRecord)
         count <- repo.deleteIssueCredentialRecord(aRecord.id)
-        records <- repo.getIssueCredentialRecords()
+        records <- repo.getIssueCredentialRecords().map(_._1)
       } yield {
         assertTrue(count == 1) &&
         assertTrue(records.size == 1) &&
@@ -133,7 +172,7 @@ object CredentialRepositorySpecSuite {
         _ <- repo.createIssueCredentialRecord(aRecord)
         _ <- repo.createIssueCredentialRecord(bRecord)
         count <- repo.deleteIssueCredentialRecord(DidCommID())
-        records <- repo.getIssueCredentialRecords()
+        records <- repo.getIssueCredentialRecords().map(_._1)
       } yield {
         assertTrue(count == 0) &&
         assertTrue(records.size == 2) &&

@@ -3,6 +3,7 @@ plugins {
     idea
     jacoco
     id("net.serenity-bdd.serenity-gradle-plugin") version "3.4.2"
+    kotlin("plugin.serialization") version "1.8.21"
 }
 
 repositories {
@@ -23,6 +24,10 @@ dependencies {
     testImplementation("org.assertj:assertj-core:3.23.1")
     // Navigate through Json with xpath
     testImplementation("com.jayway.jsonpath:json-path:2.7.0")
+    // HTTP listener
+    implementation("io.ktor:ktor-server-netty:2.3.0")
+    implementation("io.ktor:ktor-client-apache:2.3.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0")
 }
 
 buildscript {

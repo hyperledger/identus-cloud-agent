@@ -1,0 +1,137 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prism-agent-server
+  namespace: "{{ .Release.Namespace }}"
+  labels:
+    {{ template "labels.common" . }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: prism-agent-server
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: prism-agent-server
+        {{ template "labels.common" . }}
+    spec:
+      imagePullSecrets:
+      - name: atala-prism-dev-deployments-github-docker-registry-key
+      initContainers:
+      - name: wait-postgress-ready
+        image: busybox
+        command: ['sh', '-c', "until nc -z {{ .Values.database.postgres.managingTeam }}-prism-agent-postgres-cluster.{{.Release.Namespace}} 5432; do echo waiting for postgress-operator; sleep 2; done;"]
+      containers:
+      - name: prism-agent-server
+        image: "{{ .Values.server.image.repository }}/{{ .Values.server.image.tag }}:{{ .Values.server.image.version | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.server.image.pullPolicy }}
+        resources:
+            {{- toYaml .Values.server.resources | nindent 12 }}
+        ports:
+        - containerPort: 8085
+        - containerPort: 8090
+        env:
+          - name: CASTOR_DB_HOST
+            value: "{{ .Values.database.postgres.managingTeam }}-prism-agent-postgres-cluster.{{.Release.Namespace}}"
+          - name: CASTOR_DB_PORT
+            value: "5432"
+          - name: CASTOR_DB_NAME
+            value: castor
+          - name: CASTOR_DB_USER
+            valueFrom:
+              secretKeyRef:
+                name: castor-admin.{{ .Values.database.postgres.managingTeam }}-prism-agent-postgres-cluster.credentials.postgresql.acid.zalan.do
+                key: username
+                optional: false
+          - name: CASTOR_DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: castor-admin.{{ .Values.database.postgres.managingTeam }}-prism-agent-postgres-cluster.credentials.postgresql.acid.zalan.do
+                key: password
+                optional: false
+          - name: POLLUX_DB_HOST
+            value: "{{ .Values.database.postgres.managingTeam }}-prism-agent-postgres-cluster.{{.Release.Namespace}}"
+          - name: POLLUX_DB_PORT
+            value: "5432"
+          - name: POLLUX_DB_NAME
+            value: pollux
+          - name: POLLUX_DB_USER
+            valueFrom:
+              secretKeyRef:
+                name: pollux-admin.{{ .Values.database.postgres.managingTeam }}-prism-agent-postgres-cluster.credentials.postgresql.acid.zalan.do
+                key: username
+                optional: false
+          - name: POLLUX_DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: pollux-admin.{{ .Values.database.postgres.managingTeam }}-prism-agent-postgres-cluster.credentials.postgresql.acid.zalan.do
+                key: password
+                optional: false
+          - name: CONNECT_DB_HOST
+            value: "{{ .Values.database.postgres.managingTeam }}-prism-agent-postgres-cluster.{{.Release.Namespace}}"
+          - name: CONNECT_DB_PORT
+            value: "5432"
+          - name: CONNECT_DB_NAME
+            value: connect
+          - name: CONNECT_DB_USER
+            valueFrom:
+              secretKeyRef:
+                name: connect-admin.{{ .Values.database.postgres.managingTeam }}-prism-agent-postgres-cluster.credentials.postgresql.acid.zalan.do
+                key: username
+                optional: false
+          - name: CONNECT_DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: connect-admin.{{ .Values.database.postgres.managingTeam }}-prism-agent-postgres-cluster.credentials.postgresql.acid.zalan.do
+                key: password
+                optional: false
+          - name: AGENT_DB_HOST
+            value: "{{ .Values.database.postgres.managingTeam }}-prism-agent-postgres-cluster.{{.Release.Namespace}}"
+          - name: AGENT_DB_PORT
+            value: "5432"
+          - name: AGENT_DB_NAME
+            value: agent
+          - name: AGENT_DB_USER
+            valueFrom:
+              secretKeyRef:
+                name: agent-admin.{{ .Values.database.postgres.managingTeam }}-prism-agent-postgres-cluster.credentials.postgresql.acid.zalan.do
+                key: username
+                optional: false
+          - name: AGENT_DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: agent-admin.{{ .Values.database.postgres.managingTeam }}-prism-agent-postgres-cluster.credentials.postgresql.acid.zalan.do
+                key: password
+                optional: false
+          - name: DIDCOMM_SERVICE_URL
+            value: "https://{{ index .Values.ingress.applicationUrls 0 }}/prism-agent/didcomm"
+          - name: PRISM_NODE_HOST
+            value: {{ .Values.vdrManager.host | quote }}
+          - name: PRISM_NODE_PORT
+            value: {{ .Values.vdrManager.port | quote }}
+          {{- if .Values.server.devMode }}
+          - name: DEV_MODE
+            value: "true"
+          {{- else }}
+          - name: WALLET_SEED
+            valueFrom:
+              secretKeyRef:
+                name: prism-agent-server-wallet
+                key: seed
+                optional: false
+          {{- end }}
+          {{- if .Values.server.useVault }}
+          - name: VAULT_ADDR
+            value: "http://{{ .Release.Namespace }}-vault.{{ .Release.Namespace }}:8200"
+          - name: VAULT_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: vault-root-token
+                key: root-token
+                optional: false
+          {{- end }}
+          {{- range $key, $value := .Values.server.additionalEnvVariables }}
+          - name: {{ $key }}
+            value: {{ $value | quote }}
+          {{- end }}

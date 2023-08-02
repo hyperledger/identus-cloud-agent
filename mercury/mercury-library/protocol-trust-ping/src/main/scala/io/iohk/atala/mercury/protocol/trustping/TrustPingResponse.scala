@@ -1,8 +1,6 @@
 package io.iohk.atala.mercury.protocol.trustping
 
 import io.circe._
-import io.circe.syntax._
-import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.iohk.atala.mercury.model._
 
 final case class TrustPingResponse(

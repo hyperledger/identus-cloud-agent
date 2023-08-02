@@ -33,7 +33,7 @@ object Utils {
     fun wait(
         blockToWait: () -> Boolean,
         errorMessage: String,
-        poolInterval: FixedPollInterval = FixedPollInterval(Duration.ofSeconds(7L)),
+        poolInterval: FixedPollInterval = FixedPollInterval(Duration.ofMillis(100L)),
         timeout: Duration = Duration.ofSeconds(120L),
     ) {
         try {

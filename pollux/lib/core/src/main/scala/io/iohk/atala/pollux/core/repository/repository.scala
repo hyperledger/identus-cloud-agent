@@ -1,7 +1,5 @@
 package io.iohk.atala.pollux.core.repository
 
-import io.iohk.atala.pollux.core.repository.Repository.{SearchQuery, SearchResult}
-
 trait Repository[F[_], T]
 
 object Repository {

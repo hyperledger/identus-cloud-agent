@@ -1,11 +1,9 @@
 package io.iohk.atala.pollux.core.model.presentation
 
-import cats.implicits.*
 import io.circe.Json
 import io.circe.parser.*
 import io.circe.syntax.*
 import munit.*
-import zio.*
 
 class PresentationAttachmentSpec extends ZSuite {
 

@@ -4,7 +4,7 @@ import io.iohk.atala.agent.walletapi.crypto.Apollo
 import io.iohk.atala.agent.walletapi.model.*
 import io.iohk.atala.agent.walletapi.model.error.{*, given}
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService.DEFAULT_MASTER_KEY_ID
-import io.iohk.atala.agent.walletapi.service.handler.{DIDUpdateHandler, PublicationHandler}
+import io.iohk.atala.agent.walletapi.service.handler.{DIDCreateHandler, DIDUpdateHandler, PublicationHandler}
 import io.iohk.atala.agent.walletapi.storage.{DIDNonSecretStorage, DIDSecretStorage}
 import io.iohk.atala.agent.walletapi.util.*
 import io.iohk.atala.castor.core.model.did.*
@@ -15,33 +15,31 @@ import io.iohk.atala.mercury.PeerDID
 import io.iohk.atala.mercury.model.DidId
 import zio.*
 import scala.language.implicitConversions
-
 import java.security.{PrivateKey as JavaPrivateKey, PublicKey as JavaPublicKey}
 import scala.collection.immutable.ArraySeq
+import scala.language.implicitConversions
 
 /** A wrapper around Castor's DIDService providing key-management capability. Analogous to the secretAPI in
   * indy-wallet-sdk.
   */
-final class ManagedDIDServiceImpl private[walletapi] (
+class ManagedDIDServiceImpl private[walletapi] (
     didService: DIDService,
     didOpValidator: DIDOperationValidator,
     private[walletapi] val secretStorage: DIDSecretStorage,
     override private[walletapi] val nonSecretStorage: DIDNonSecretStorage,
     apollo: Apollo,
-    seed: Array[Byte]
+    seed: Array[Byte],
+    createDIDSem: Semaphore
 ) extends ManagedDIDService {
 
-  private val CURVE = EllipticCurve.SECP256K1
   private val AGREEMENT_KEY_ID = "agreement"
   private val AUTHENTICATION_KEY_ID = "authentication"
 
-  private val keyResolver = KeyResolver(apollo, nonSecretStorage, secretStorage)(seed)
+  private val keyResolver = KeyResolver(apollo, nonSecretStorage)(seed)
 
   private val publicationHandler = PublicationHandler(didService, keyResolver)(DEFAULT_MASTER_KEY_ID)
-  private val didUpdateHandler = DIDUpdateHandler(apollo, nonSecretStorage, secretStorage, publicationHandler)(seed)
-
-  private val generateCreateOperationHdKey =
-    OperationFactory(apollo).makeCreateOperationHdKey(DEFAULT_MASTER_KEY_ID, seed)
+  private val didCreateHandler = DIDCreateHandler(apollo, nonSecretStorage)(seed, DEFAULT_MASTER_KEY_ID)
+  private val didUpdateHandler = DIDUpdateHandler(apollo, nonSecretStorage, publicationHandler)(seed)
 
   def syncManagedDIDState: IO[GetManagedDIDError, Unit] = nonSecretStorage
     .listManagedDID(offset = None, limit = None)
@@ -123,30 +121,26 @@ final class ManagedDIDServiceImpl private[walletapi] (
     } yield outcome
   }
 
-  // TODO: update this method to use the same handler as updateManagedDID
   def createAndStoreDID(didTemplate: ManagedDIDTemplate): IO[CreateManagedDIDError, LongFormPrismDID] = {
-    for {
+    val effect = for {
       _ <- ZIO
         .fromEither(ManagedDIDTemplateValidator.validate(didTemplate))
         .mapError(CreateManagedDIDError.InvalidArgument.apply)
-      didIndex <- nonSecretStorage
-        .getMaxDIDIndex()
-        .mapBoth(
-          CreateManagedDIDError.WalletStorageError.apply,
-          maybeIdx => maybeIdx.map(_ + 1).getOrElse(0)
-        )
-      generated <- generateCreateOperationHdKey(didIndex, didTemplate)
-      (createOperation, hdKey) = generated
-      longFormDID = PrismDID.buildLongFormFromOperation(createOperation)
-      did = longFormDID.asCanonical
+      material <- didCreateHandler.materialize(didTemplate)
       _ <- ZIO
-        .fromEither(didOpValidator.validate(createOperation))
+        .fromEither(didOpValidator.validate(material.operation))
         .mapError(CreateManagedDIDError.InvalidOperation.apply)
-      state = ManagedDIDState(createOperation, didIndex, PublicationState.Created())
-      _ <- nonSecretStorage
-        .insertManagedDID(did, state, hdKey.keyPaths ++ hdKey.internalKeyPaths)
-        .mapError(CreateManagedDIDError.WalletStorageError.apply)
-    } yield longFormDID
+      _ <- material.persist.mapError(CreateManagedDIDError.WalletStorageError.apply)
+    } yield PrismDID.buildLongFormFromOperation(material.operation)
+
+    // This synchronizes createDID effect to only allow 1 execution at a time
+    // to avoid concurrent didIndex update. Long-term solution should be
+    // solved at the DB level.
+    //
+    // Performance may be improved by not synchronizing the whole operation,
+    // but only the counter increment part allowing multiple in-flight create operations
+    // once didIndex is acquired.
+    createDIDSem.withPermit(effect)
   }
 
   def updateManagedDID(
@@ -256,10 +250,9 @@ final class ManagedDIDServiceImpl private[walletapi] (
     } yield ()
   }
 
-  private def getUnconfirmedUpdateOperationByDid[E](did: Option[PrismDID])(using
-      c1: Conversion[CommonWalletStorageError, E],
-      c2: Conversion[DIDOperationError, E]
-  ): IO[E, Seq[DIDUpdateLineage]] = {
+  private def getUnconfirmedUpdateOperationByDid[E](
+      did: Option[PrismDID]
+  )(using c1: Conversion[CommonWalletStorageError, E]): IO[E, Seq[DIDUpdateLineage]] = {
     for {
       awaitingConfirmationOps <- nonSecretStorage
         .listUpdateLineage(did = did, status = Some(ScheduledDIDOperationStatus.AwaitingConfirmation))
@@ -270,28 +263,28 @@ final class ManagedDIDServiceImpl private[walletapi] (
     } yield awaitingConfirmationOps ++ pendingOps
   }
 
-  private def computeNewDIDLineageStatusAndPersist[E](
+  protected def computeNewDIDLineageStatusAndPersist[E](
       updateLineage: DIDUpdateLineage
-  )(using c1: Conversion[DIDOperationError, E], c2: Conversion[CommonWalletStorageError, E]): IO[E, Unit] = {
+  )(using c1: Conversion[DIDOperationError, E], c2: Conversion[CommonWalletStorageError, E]): IO[E, Boolean] = {
     for {
       maybeOperationDetail <- didService
         .getScheduledDIDOperationDetail(updateLineage.operationId.toArray)
         .mapError[E](e => e)
       newStatus = maybeOperationDetail.fold(ScheduledDIDOperationStatus.Rejected)(_.status)
-      _ <- nonSecretStorage
+      updated <- nonSecretStorage
         .setDIDUpdateLineageStatus(updateLineage.operationId.toArray, newStatus)
         .mapError[E](CommonWalletStorageError.apply)
         .when(updateLineage.status != newStatus)
-    } yield ()
+    } yield updated.isDefined
   }
 
   /** Reconcile state with DLT and write new state to the storage */
-  private def computeNewDIDStateFromDLTAndPersist[E](
+  protected def computeNewDIDStateFromDLTAndPersist[E](
       did: CanonicalPrismDID
   )(using
       c1: Conversion[CommonWalletStorageError, E],
       c2: Conversion[DIDOperationError, E]
-  ): IO[E, Unit] = {
+  ): IO[E, Boolean] = {
     for {
       maybeCurrentState <- nonSecretStorage
         .getManagedDIDState(did)
@@ -299,13 +292,13 @@ final class ManagedDIDServiceImpl private[walletapi] (
       maybeNewPubState <- ZIO
         .foreach(maybeCurrentState)(i => computeNewDIDStateFromDLT(i.publicationState))
         .mapError[E](e => e)
-      _ <- ZIO.foreach(maybeCurrentState zip maybeNewPubState) { case (currentState, newPubState) =>
+      updated <- ZIO.foreach(maybeCurrentState zip maybeNewPubState) { case (currentState, newPubState) =>
         nonSecretStorage
           .updateManagedDID(did, ManagedDIDStatePatch(newPubState))
           .mapError[E](CommonWalletStorageError.apply)
           .when(currentState.publicationState != newPubState)
       }
-    } yield ()
+    } yield updated.flatten.isDefined
   }
 
   /** Reconcile state with DLT and return an updated state */
@@ -366,7 +359,16 @@ object ManagedDIDServiceImpl {
         nonSecretStorage <- ZIO.service[DIDNonSecretStorage]
         apollo <- ZIO.service[Apollo]
         seed <- ZIO.serviceWithZIO[SeedResolver](_.resolve)
-      } yield ManagedDIDServiceImpl(didService, didOpValidator, secretStorage, nonSecretStorage, apollo, seed)
+        createDIDSem <- Semaphore.make(1)
+      } yield ManagedDIDServiceImpl(
+        didService,
+        didOpValidator,
+        secretStorage,
+        nonSecretStorage,
+        apollo,
+        seed,
+        createDIDSem
+      )
     }
   }
 

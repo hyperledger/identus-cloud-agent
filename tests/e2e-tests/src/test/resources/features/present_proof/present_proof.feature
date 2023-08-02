@@ -7,7 +7,6 @@ Scenario: Holder presents credential proof to verifier
   When Faber sends a request for proof presentation to Bob
   And Bob receives the request
   And Bob makes the presentation of the proof to Faber
-  And Faber acknowledges the proof
   Then Faber has the proof verified
 
 @TEST_ATL-3881
@@ -26,5 +25,4 @@ Scenario: Holder presents proof to verifier which is the issuer itself
   When Acme sends a request for proof presentation to Bob
   And Bob receives the request
   And Bob makes the presentation of the proof to Acme
-  And Acme acknowledges the proof
   Then Acme has the proof verified

@@ -1,13 +1,11 @@
 package io.iohk.atala.issue.controller
 
-import io.iohk.atala.agent.server.config.AppConfig
-import io.iohk.atala.agent.walletapi.service.ManagedDIDService
-import io.iohk.atala.api.http.model.{Pagination, PaginationInput}
+import io.iohk.atala.agent.server.ControllerHelper
+import io.iohk.atala.api.http.model.CollectionStats
+import io.iohk.atala.api.http.model.PaginationInput
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
-import io.iohk.atala.castor.core.model.did.PrismDID
+import io.iohk.atala.api.util.PaginationUtils
 import io.iohk.atala.connect.controller.ConnectionController
-import io.iohk.atala.connect.core.model.ConnectionRecord
-import io.iohk.atala.connect.core.model.ConnectionRecord.{ProtocolState, Role}
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.connect.core.service.ConnectionService
 import io.iohk.atala.issue.controller.IssueController.toHttpError
@@ -17,25 +15,21 @@ import io.iohk.atala.issue.controller.http.{
   IssueCredentialRecord,
   IssueCredentialRecordPage
 }
-import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.pollux.core.model.DidCommID
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.core.service.CredentialService
 import zio.{IO, URLayer, ZIO, ZLayer}
 
-import java.util.UUID
-import scala.util.Try
-
 class IssueControllerImpl(
     credentialService: CredentialService,
-    connectionService: ConnectionService,
-    appConfig: AppConfig
-) extends IssueController {
+    connectionService: ConnectionService
+) extends IssueController
+    with ControllerHelper {
   override def createCredentialOffer(
       request: CreateIssueCredentialRecordRequest
   )(implicit rc: RequestContext): IO[ErrorResponse, IssueCredentialRecord] = {
     val result: IO[ConnectionServiceError | CredentialServiceError | ErrorResponse, IssueCredentialRecord] = for {
-      didIdPair <- getPairwiseDIDs(request.connectionId)
+      didIdPair <- getPairwiseDIDs(request.connectionId).provide(ZLayer.succeed(connectionService))
       issuingDID <- extractPrismDIDFromString(request.issuingDID)
       jsonClaims <- ZIO
         .fromEither(io.circe.parser.parse(request.claims.toString()))
@@ -56,23 +50,30 @@ class IssueControllerImpl(
     mapIssueErrors(result)
   }
 
-  // TODO - Tech Debt - Do not filter this in memory - need to filter at the database level
-  // TODO - Tech Debt - Implement pagination
   override def getCredentialRecords(paginationInput: PaginationInput, thid: Option[String])(implicit
       rc: RequestContext
   ): IO[ErrorResponse, IssueCredentialRecordPage] = {
+    val uri = rc.request.uri
+    val pagination = paginationInput.toPagination
     val result = for {
-      records <- credentialService.getIssueCredentialRecords
-      outcome = thid match
-        case None        => records
-        case Some(value) => records.filter(_.thid.value == value) // this logic should be moved to the DB
+      pageResult <- thid match
+        case None =>
+          credentialService
+            .getIssueCredentialRecords(offset = Some(pagination.offset), limit = Some(pagination.limit))
+        case Some(thid) =>
+          credentialService
+            .getIssueCredentialRecordByThreadId(DidCommID(thid))
+            .map(_.toSeq)
+            .map(records => records -> records.length)
+      (records, totalCount) = pageResult
+      stats = CollectionStats(totalCount = totalCount, filteredCount = totalCount)
     } yield IssueCredentialRecordPage(
-      self = "/issue-credentials/records",
+      self = uri.toString(),
       kind = "Collection",
-      pageOf = "1",
-      next = None,
-      previous = None,
-      contents = (outcome map IssueCredentialRecord.fromDomain) // TODO - Tech Debt - Optimise this transformation - each time we get a list of things we iterate it once here
+      pageOf = PaginationUtils.composePageOfUri(uri).toString,
+      next = PaginationUtils.composeNextUri(uri, records, pagination, stats).map(_.toString),
+      previous = PaginationUtils.composePreviousUri(uri, records, pagination, stats).map(_.toString),
+      contents = (records map IssueCredentialRecord.fromDomain)
     )
     mapIssueErrors(result)
   }
@@ -119,52 +120,9 @@ class IssueControllerImpl(
     }
   }
 
-  private[this] case class DidIdPair(myDID: DidId, theirDid: DidId)
-
-  private[this] def extractDidCommIdFromString(
-      maybeDidCommId: String
-  ): IO[ErrorResponse, io.iohk.atala.pollux.core.model.DidCommID] = {
-    ZIO
-      .fromTry(Try(io.iohk.atala.pollux.core.model.DidCommID(maybeDidCommId)))
-      .mapError(e => ErrorResponse.badRequest(detail = Some(s"Error parsing string as DidCommID: ${e.getMessage}")))
-  }
-
-  private[this] def extractPrismDIDFromString(maybeDid: String): IO[ErrorResponse, PrismDID] = {
-    ZIO
-      .fromEither(PrismDID.fromString(maybeDid))
-      .mapError(e => ErrorResponse.badRequest(detail = Some(s"Error parsing string as PrismDID: ${e}")))
-  }
-
-  private[this] def extractDidIdPairFromValidConnection(connRecord: ConnectionRecord): Option[DidIdPair] = {
-    (connRecord.protocolState, connRecord.connectionResponse, connRecord.role) match {
-      case (ProtocolState.ConnectionResponseReceived, Some(resp), Role.Invitee) =>
-        // If Invitee, myDid is the target
-        Some(DidIdPair(resp.to, resp.from))
-      case (ProtocolState.ConnectionResponseSent, Some(resp), Role.Inviter) =>
-        // If Inviter, myDid is the source
-        Some(DidIdPair(resp.from, resp.to))
-      case _ => None
-    }
-  }
-
-  private[this] def getPairwiseDIDs(connectionId: String): IO[ConnectionServiceError, DidIdPair] = {
-    val lookupId = UUID.fromString(connectionId)
-    for {
-      maybeConnection <- connectionService.getConnectionRecord(lookupId)
-      didIdPair <- maybeConnection match
-        case Some(connRecord: ConnectionRecord) =>
-          extractDidIdPairFromValidConnection(connRecord) match {
-            case Some(didIdPair: DidIdPair) => ZIO.succeed(didIdPair)
-            case None =>
-              ZIO.fail(ConnectionServiceError.UnexpectedError("Invalid connection record state for operation"))
-          }
-        case _ => ZIO.fail(ConnectionServiceError.RecordIdNotFound(lookupId))
-    } yield didIdPair
-  }
-
 }
 
 object IssueControllerImpl {
-  val layer: URLayer[CredentialService & ConnectionService & AppConfig, IssueController] =
-    ZLayer.fromFunction(IssueControllerImpl(_, _, _))
+  val layer: URLayer[CredentialService & ConnectionService, IssueController] =
+    ZLayer.fromFunction(IssueControllerImpl(_, _))
 }

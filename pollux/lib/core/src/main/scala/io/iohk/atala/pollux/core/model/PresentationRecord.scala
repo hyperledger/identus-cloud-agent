@@ -1,5 +1,4 @@
 package io.iohk.atala.pollux.core.model
-import io.iohk.atala.prism.crypto.MerkleInclusionProof
 
 import io.iohk.atala.mercury.protocol.presentproof.ProposePresentation
 import io.iohk.atala.mercury.protocol.presentproof.RequestPresentation

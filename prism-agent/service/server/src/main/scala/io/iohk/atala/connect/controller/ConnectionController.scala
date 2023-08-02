@@ -1,6 +1,6 @@
 package io.iohk.atala.connect.controller
 
-import io.iohk.atala.api.http.model.Pagination
+import io.iohk.atala.api.http.model.PaginationInput
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.connect.controller.http.{
   AcceptConnectionInvitationRequest,
@@ -22,7 +22,7 @@ trait ConnectionController {
       rc: RequestContext
   ): IO[ErrorResponse, Connection]
 
-  def getConnections(pagination: Pagination)(implicit
+  def getConnections(paginationInput: PaginationInput, thid: Option[String])(implicit
       rc: RequestContext
   ): IO[ErrorResponse, ConnectionsPage]
 

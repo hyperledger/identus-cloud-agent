@@ -1,12 +1,8 @@
 package io.iohk.atala.pollux.core.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.protobuf.ByteString
-import com.networknt.schema.{JsonMetaSchema, JsonSchemaFactory, SpecVersion, SpecVersionDetector}
-import com.squareup.okhttp.Protocol
-import io.circe.Decoder.Result
+import io.circe.Json
 import io.circe.syntax.*
-import io.circe.{Json, JsonObject}
 import io.iohk.atala.castor.core.model.did.{CanonicalPrismDID, PrismDID, VerificationRelationship}
 import io.iohk.atala.iris.proto.dlt.IrisOperation
 import io.iohk.atala.iris.proto.service.IrisOperationId
@@ -14,22 +10,18 @@ import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
 import io.iohk.atala.iris.proto.vc_operations.IssueCredentialsBatch
 import io.iohk.atala.mercury.model.{AttachmentDescriptor, Base64, DidId, JsonData}
 import io.iohk.atala.mercury.protocol.issuecredential.*
+import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError.*
 import io.iohk.atala.pollux.core.model.presentation.*
-import io.iohk.atala.pollux.core.model.{CredentialSchema, *}
+import io.iohk.atala.pollux.core.model.schema.CredentialSchema
 import io.iohk.atala.pollux.core.repository.CredentialRepository
 import io.iohk.atala.pollux.vc.jwt.*
 import io.iohk.atala.prism.crypto.{MerkleInclusionProof, MerkleTreeKt, Sha256}
-import io.iohk.atala.resolvers.DidValidator
 import zio.*
 import zio.prelude.ZValidation
 
-import java.net.URI
-import java.nio.charset.StandardCharsets
 import java.rmi.UnexpectedException
-import java.security.spec.ECGenParameterSpec
-import java.security.{KeyPairGenerator, SecureRandom}
 import java.time.{Instant, ZoneId}
 import java.util.UUID
 
@@ -37,7 +29,7 @@ object CredentialServiceImpl {
   val layer: URLayer[IrisServiceStub & CredentialRepository[Task] & DidResolver & URIDereferencer, CredentialService] =
     ZLayer.fromFunction(CredentialServiceImpl(_, _, _, _))
 
-  private val VC_JSON_SCHEMA_URI = "https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json"
+//  private val VC_JSON_SCHEMA_URI = "https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json"
   private val VC_JSON_SCHEMA_TYPE = "CredentialSchema2022"
 }
 
@@ -55,13 +47,25 @@ private class CredentialServiceImpl(
   override def extractIdFromCredential(credential: W3cCredentialPayload): Option[DidCommID] =
     credential.maybeId.map(_.split("/").last).map(DidCommID(_))
 
-  override def getIssueCredentialRecords: IO[CredentialServiceError, Seq[IssueCredentialRecord]] = {
+  override def getIssueCredentialRecords(
+      offset: Option[Int],
+      limit: Option[Int]
+  ): IO[CredentialServiceError, (Seq[IssueCredentialRecord], Int)] = {
     for {
       records <- credentialRepository
-        .getIssueCredentialRecords()
+        .getIssueCredentialRecords(offset = offset, limit = limit)
         .mapError(RepositoryError.apply)
     } yield records
   }
+
+  override def getIssueCredentialRecordByThreadId(
+      thid: DidCommID
+  ): IO[CredentialServiceError, Option[IssueCredentialRecord]] =
+    for {
+      record <- credentialRepository
+        .getIssueCredentialRecordByThreadId(thid)
+        .mapError(RepositoryError.apply)
+    } yield record
 
   override def getIssueCredentialRecord(
       recordId: DidCommID
@@ -78,7 +82,7 @@ private class CredentialServiceImpl(
       pairwiseHolderDID: DidId,
       thid: DidCommID,
       maybeSchemaId: Option[String],
-      claims: io.circe.Json,
+      claims: Json,
       validityPeriod: Option[Double],
       automaticIssuance: Option[Boolean],
       awaitConfirmation: Option[Boolean],

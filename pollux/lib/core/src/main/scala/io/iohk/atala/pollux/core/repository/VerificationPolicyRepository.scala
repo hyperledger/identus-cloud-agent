@@ -1,6 +1,6 @@
 package io.iohk.atala.pollux.core.repository
 
-import io.iohk.atala.pollux.core.model.{VerificationPolicy, VerificationPolicyConstraint}
+import io.iohk.atala.pollux.core.model.VerificationPolicy
 
 import java.util.UUID
 

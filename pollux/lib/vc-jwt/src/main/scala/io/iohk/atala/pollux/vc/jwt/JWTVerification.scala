@@ -1,39 +1,26 @@
 package io.iohk.atala.pollux.vc.jwt
 import com.nimbusds.jose.crypto.ECDSAVerifier
 import com.nimbusds.jose.jwk.*
-import com.nimbusds.jose.jwk.gen.*
 import com.nimbusds.jose.util.Base64URL
 import com.nimbusds.jose.JWSVerifier
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
 import com.nimbusds.jwt.SignedJWT
 import io.circe
 import io.circe.generic.auto.*
-import io.circe.parser.decode
-import io.circe.syntax.*
-import io.circe.{Decoder, Encoder, HCursor, Json}
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
-import io.iohk.atala.pollux.vc.jwt.JWTVerification.{extractPublicKey, validateEncodedJwt}
-import io.iohk.atala.pollux.vc.jwt.schema.{SchemaResolver, SchemaValidator}
-import net.reactivecore.cjs.validator.Violation
-import net.reactivecore.cjs.{DocumentValidator, Loader}
 import pdi.jwt.*
-import zio.ZIO.none
 import zio.prelude.*
-import zio.{IO, NonEmptyChunk, Task, ZIO}
+import zio.*
 
 import java.security.interfaces.ECPublicKey
-import java.security.spec.{ECParameterSpec, ECPublicKeySpec}
-import java.security.{KeyPairGenerator, PublicKey}
-import java.time.temporal.{Temporal, TemporalAmount, TemporalUnit}
-import java.time.{Clock, Instant, ZonedDateTime}
-import java.util
+import java.security.PublicKey
 import scala.util.{Failure, Success, Try}
 
 object JWTVerification {
   // JWT algo <-> publicKey type mapping reference
   // https://github.com/decentralized-identity/did-jwt/blob/8b3655097a1382934cabdf774d580e6731a636b1/src/JWT.ts#L146
   val SUPPORT_PUBLIC_KEY_TYPES: Map[String, Set[String]] = Map(
-    "ES256K" -> Set("EcdsaSecp256k1VerificationKey2019"),
+    "ES256K" -> Set("EcdsaSecp256k1VerificationKey2019", "JsonWebKey2020"),
     "ES256" -> Set("ES256") // TODO: Only use valid type (added just for compatibility in the Demo code)
   )
 

@@ -1,20 +1,17 @@
 package io.iohk.atala.mercury.protocol.presentproof
 
-import cats.implicits.*
 import io.circe.Json
-import io.circe.generic.auto.*
 import io.circe.parser.*
 import io.circe.syntax.*
 import io.iohk.atala.mercury.model.AttachmentDescriptor
 import io.iohk.atala.mercury.model.AttachmentDescriptor.attachmentDescriptorEncoderV2
 import munit.*
-import zio.*
 import io.iohk.atala.mercury.model._
+
 class ProposePresentationSpec extends ZSuite {
 
   test("Prover Propose Presentation") {
 
-    val presentationFormat = PresentationFormat(attach_id = "1", "format1")
     val body = ProposePresentation.Body(goal_code = Some("Propose Presentation"))
     val attachmentDescriptor =
       AttachmentDescriptor("1", Some("application/json"), LinkData(links = Seq("http://test"), hash = "1234"))

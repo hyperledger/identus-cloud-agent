@@ -12,6 +12,9 @@ final case class PresentationStatus(
     @description(annotations.presentationId.description)
     @encodedExample(annotations.presentationId.example)
     presentationId: String,
+    @description(annotations.thid.description)
+    @encodedExample(annotations.thid.example)
+    thid: String,
     @description(annotations.status.description)
     @encodedExample(annotations.status.example)
     @validate(annotations.status.validator)
@@ -41,6 +44,7 @@ object PresentationStatus {
       case None => Seq.empty
     PresentationStatus(
       domain.id.value,
+      thid = domain.thid.value,
       status = domain.protocolState.toString,
       proofs = Seq.empty,
       data = data,
@@ -48,12 +52,22 @@ object PresentationStatus {
     )
   }
 
+  given Conversion[PresentationRecord, PresentationStatus] = fromDomain
+
   object annotations {
     object presentationId
         extends Annotation[String](
           description = "The unique identifier of the presentation record.",
           example = "3c6d9fa5-d277-431e-a6cb-d3956e47e610"
         )
+
+    object thid
+        extends Annotation[String](
+          description = "The unique identifier of the thread this presentation record belongs to. " +
+            "The value will identical on both sides of the presentation flow (verifier and prover)",
+          example = "0527aea1-d131-3948-a34d-03af39aba8b4"
+        )
+
     object status
         extends Annotation[String](
           description = "The current state of the proof presentation record.",

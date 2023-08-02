@@ -7,7 +7,7 @@ import io.iohk.atala.agent.walletapi.model.ManagedDIDHdKeyPath
 import io.iohk.atala.agent.walletapi.model.HdKeyIndexCounter
 import scala.collection.immutable.ArraySeq
 
-private[walletapi] trait DIDNonSecretStorage {
+trait DIDNonSecretStorage {
 
   def getManagedDIDState(did: PrismDID): Task[Option[ManagedDIDState]]
 

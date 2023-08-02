@@ -1,5 +1,6 @@
 package io.iohk.atala.castor.core.model.did
 
+import java.time.Instant
 import scala.collection.immutable.ArraySeq
 
 final case class DIDData(
@@ -12,5 +13,8 @@ final case class DIDData(
 
 final case class DIDMetadata(
     lastOperationHash: ArraySeq[Byte],
-    deactivated: Boolean
+    canonicalId: Option[CanonicalPrismDID],
+    deactivated: Boolean,
+    created: Option[Instant],
+    updated: Option[Instant]
 )

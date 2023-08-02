@@ -1,9 +1,9 @@
 package io.iohk.atala.pollux.core.service
 
-import io.iohk.atala.pollux.core.model.CredentialSchema
-import io.iohk.atala.pollux.core.model.CredentialSchema.*
 import io.iohk.atala.pollux.core.model.error.CredentialSchemaError
-import zio.{IO, Task, ZIO, ZLayer}
+import io.iohk.atala.pollux.core.model.schema.CredentialSchema
+import io.iohk.atala.pollux.core.model.schema.CredentialSchema.*
+import zio.IO
 
 import java.util.UUID
 trait CredentialSchemaService {

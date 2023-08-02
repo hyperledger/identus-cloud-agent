@@ -2,10 +2,8 @@ package io.iohk.atala.connect.core.service
 
 import io.iohk.atala.connect.core.model.ConnectionRecord
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
-import io.iohk.atala.connect.core.model.error.ConnectionServiceError.RepositoryError
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
-import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
 import zio.*
 
 import java.util.UUID
@@ -42,8 +40,9 @@ trait ConnectionService {
       states: ConnectionRecord.ProtocolState*
   ): IO[ConnectionServiceError, Seq[ConnectionRecord]]
 
-  /** Get the ConnectionRecord by the record id. If the record is id is not found the value None will be return */
   def getConnectionRecord(recordId: UUID): IO[ConnectionServiceError, Option[ConnectionRecord]]
+
+  def getConnectionRecordByThreadId(thid: String): IO[ConnectionServiceError, Option[ConnectionRecord]]
 
   def deleteConnectionRecord(recordId: UUID): IO[ConnectionServiceError, Int]
 

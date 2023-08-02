@@ -3,15 +3,13 @@ package io.iohk.atala.connect.sql.repository
 import org.flywaydb.core.Flyway
 import zio.*
 
-import javax.sql.DataSource
-
 final case class Migrations(config: DbConfig) {
 
   val migrationScriptsLocation: String = "sql/connect"
 
   def migrate: Task[Unit] =
-    ZIO.logInfo("Applying database migrations")
     for {
+      _ <- ZIO.logInfo("Applying database migrations")
       _ <- ZIO.attempt {
         Flyway
           .configure()

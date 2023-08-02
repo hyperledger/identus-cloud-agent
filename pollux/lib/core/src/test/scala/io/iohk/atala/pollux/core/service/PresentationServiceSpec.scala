@@ -1,56 +1,25 @@
 package io.iohk.atala.pollux.core.service
 
-import cats.syntax.validated
 import io.circe.parser.decode
-import io.circe.syntax._
-import io.grpc.ManagedChannelBuilder
-import io.iohk.atala.iris.proto.service.IrisServiceGrpc
-import io.iohk.atala.mercury.model.DidId
-import io.iohk.atala.mercury.model.Message
-import io.iohk.atala.mercury.protocol.presentproof._
-import io.iohk.atala.pollux.core.model._
-import io.iohk.atala.pollux.core.model.IssueCredentialRecord._
-import io.iohk.atala.pollux.core.model.PresentationRecord._
+import io.circe.syntax.*
+import io.iohk.atala.mercury.model.{AttachmentDescriptor, DidId}
+import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
+import io.iohk.atala.mercury.protocol.presentproof.*
+import io.iohk.atala.pollux.core.model.*
+import io.iohk.atala.pollux.core.model.IssueCredentialRecord.*
+import io.iohk.atala.pollux.core.model.PresentationRecord.*
 import io.iohk.atala.pollux.core.model.error.PresentationError
-import io.iohk.atala.pollux.core.model.error.PresentationError._
-import io.iohk.atala.pollux.core.repository.PresentationRepositoryInMemory
-import io.iohk.atala.pollux.core.repository.PresentationRepository
+import io.iohk.atala.pollux.core.model.error.PresentationError.*
+import io.iohk.atala.pollux.core.model.presentation.Options
+import io.iohk.atala.pollux.core.repository.{CredentialRepository, PresentationRepository}
+import io.iohk.atala.pollux.vc.jwt.*
 import zio.*
 import zio.test.*
-import java.util.UUID
-import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
-import io.iohk.atala.mercury.model.AttachmentDescriptor
-import io.iohk.atala.pollux.core.model.presentation.Options
-import io.iohk.atala.pollux.core.model.presentation.Ldp
-import io.iohk.atala.pollux.core.model.presentation.ClaimFormat
-import io.iohk.atala.pollux.core.model.presentation.PresentationDefinition
-import io.iohk.atala.pollux.vc.jwt._
-import io.iohk.atala.pollux.vc.jwt.JwtPresentationPayload
-import io.iohk.atala.pollux.core.repository.CredentialRepositoryInMemory
-import io.iohk.atala.pollux.core.repository.CredentialRepository
-import io.iohk.atala.mercury.DidAgent
-import com.nimbusds.jose.jwk.OctetKeyPair
-import io.iohk.atala.mercury.PeerDID
-import io.iohk.atala.mercury.AgentPeerService
-import cats.syntax.all._
-import cats._, cats.data._, cats.implicits._
+
 import java.time.Instant
-import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
-import java.security.*
-import java.security.interfaces.{ECPrivateKey, ECPublicKey}
-import java.security.spec.*
-import com.nimbusds.jose.jwk.*
-import com.nimbusds.jose.jwk.gen.*
 
-object PresentationServiceSpec extends ZIOSpecDefault {
+object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSpecHelper {
   type PresentationEnv = PresentationService with PresentationRepository[Task] with CredentialRepository[Task]
-
-  val peerDidAgentLayer =
-    AgentPeerService.makeLayer(PeerDID.makePeerDid(serviceEndpoint = Some("http://localhost:9099")))
-  val presentationServiceLayer =
-    PresentationRepositoryInMemory.layer ++ CredentialRepositoryInMemory.layer ++ peerDidAgentLayer >>> PresentationServiceImpl.layer
-  val presentationEnvLayer =
-    PresentationRepositoryInMemory.layer ++ CredentialRepositoryInMemory.layer ++ presentationServiceLayer
 
   def withEnv[E, A](zio: ZIO[PresentationEnv, E, A]): ZIO[Any, E, A] =
     zio.provideLayer(presentationEnvLayer)
@@ -81,8 +50,16 @@ object PresentationServiceSpec extends ZIOSpecDefault {
         ) { (thid, connectionId, proofTypes, options) =>
           for {
             svc <- ZIO.service[PresentationService].provideLayer(presentationServiceLayer)
+            pairwiseVerifierDid = DidId("did:peer:Verifier")
             pairwiseProverDid = DidId("did:peer:Prover")
-            record <- svc.createPresentationRecord(thid, pairwiseProverDid, connectionId, proofTypes, options)
+            record <- svc.createPresentationRecord(
+              pairwiseVerifierDid,
+              pairwiseProverDid,
+              thid,
+              connectionId,
+              proofTypes,
+              options
+            )
           } yield {
             assertTrue(record.thid == thid) &&
             assertTrue(record.updatedAt.isEmpty) &&
@@ -203,7 +180,7 @@ object PresentationServiceSpec extends ZIOSpecDefault {
           record <- svc.markRequestPresentationSent(record.id)
 
         } yield {
-          assertTrue(record.get.protocolState == PresentationRecord.ProtocolState.RequestSent)
+          assertTrue(record.protocolState == PresentationRecord.ProtocolState.RequestSent)
         }
       },
       test("markRequestPresentationRejected returns updated PresentationRecord") {
@@ -220,7 +197,7 @@ object PresentationServiceSpec extends ZIOSpecDefault {
           record <- svc.markRequestPresentationRejected(record.id)
 
         } yield {
-          assertTrue(record.get.protocolState == PresentationRecord.ProtocolState.RequestRejected)
+          assertTrue(record.protocolState == PresentationRecord.ProtocolState.RequestRejected)
         })
       },
       test("receiveRequestPresentation updates the RequestPresentation in PresentatinRecord") {
@@ -276,9 +253,9 @@ object PresentationServiceSpec extends ZIOSpecDefault {
             updateRecord <- svc.acceptRequestPresentation(aRecord.id, credentialsToUse)
 
           } yield {
-            assertTrue(updateRecord.get.connectionId == connectionId)
-            assertTrue(updateRecord.get.requestPresentationData == Some(requestPresentation))
-            assertTrue(updateRecord.get.credentialsToUse.contains(credentialsToUse))
+            assertTrue(updateRecord.connectionId == connectionId)
+            assertTrue(updateRecord.requestPresentationData == Some(requestPresentation))
+            assertTrue(updateRecord.credentialsToUse.contains(credentialsToUse))
 
           }
         )
@@ -292,9 +269,9 @@ object PresentationServiceSpec extends ZIOSpecDefault {
             updateRecord <- svc.rejectRequestPresentation(aRecord.id)
 
           } yield {
-            assertTrue(updateRecord.get.connectionId == connectionId)
-            assertTrue(updateRecord.get.requestPresentationData == Some(requestPresentation))
-            assertTrue(updateRecord.get.protocolState == PresentationRecord.ProtocolState.RequestRejected)
+            assertTrue(updateRecord.connectionId == connectionId)
+            assertTrue(updateRecord.requestPresentationData == Some(requestPresentation))
+            assertTrue(updateRecord.protocolState == PresentationRecord.ProtocolState.RequestRejected)
           }
         )
       },
@@ -312,7 +289,7 @@ object PresentationServiceSpec extends ZIOSpecDefault {
           record <- svc.markPresentationSent(record.id)
 
         } yield {
-          assertTrue(record.get.protocolState == PresentationRecord.ProtocolState.PresentationSent)
+          assertTrue(record.protocolState == PresentationRecord.ProtocolState.PresentationSent)
         })
       },
       test("receivePresentation updates the PresentatinRecord") {
@@ -324,8 +301,8 @@ object PresentationServiceSpec extends ZIOSpecDefault {
             aRecordReceived <- svc.receivePresentation(p)
 
           } yield {
-            assertTrue(aRecordReceived.get.id == aRecord.id)
-            assertTrue(aRecordReceived.get.presentationData == Some(p))
+            assertTrue(aRecordReceived.id == aRecord.id)
+            assertTrue(aRecordReceived.presentationData == Some(p))
           }
         )
       },
@@ -345,8 +322,8 @@ object PresentationServiceSpec extends ZIOSpecDefault {
             aRecordAccept <- svc.acceptPresentation(aRecord.id)
 
           } yield {
-            assertTrue(aRecordReceived.get.id == aRecord.id)
-            assertTrue(aRecordReceived.get.presentationData == Some(p))
+            assertTrue(aRecordReceived.id == aRecord.id)
+            assertTrue(aRecordReceived.presentationData == Some(p))
           }
         )
       },
@@ -356,13 +333,18 @@ object PresentationServiceSpec extends ZIOSpecDefault {
             svc <- ZIO.service[PresentationService]
             aRecord <- svc.createRecord()
             p = presentation(aRecord.thid.value)
-            aRecordReceived <- svc.receivePresentation(p)
-            aRecordAccept <- svc.markPresentationRejected(aRecord.id)
-
+            _ <- svc.receivePresentation(p)
+            repo <- ZIO.service[PresentationRepository[Task]]
+            _ <- repo.updatePresentationRecordProtocolState(
+              aRecord.id,
+              PresentationRecord.ProtocolState.PresentationReceived,
+              PresentationRecord.ProtocolState.PresentationVerified
+            )
+            aRecordReject <- svc.markPresentationRejected(aRecord.id)
           } yield {
-            assertTrue(aRecordAccept.get.id == aRecord.id)
-            assertTrue(aRecordAccept.get.presentationData == Some(p))
-            assertTrue(aRecordAccept.get.protocolState == PresentationRecord.ProtocolState.PresentationRejected)
+            assertTrue(aRecordReject.id == aRecord.id)
+            assertTrue(aRecordReject.presentationData == Some(p))
+            assertTrue(aRecordReject.protocolState == PresentationRecord.ProtocolState.PresentationRejected)
           }
         )
       },
@@ -373,12 +355,17 @@ object PresentationServiceSpec extends ZIOSpecDefault {
             aRecord <- svc.createRecord()
             p = presentation(aRecord.thid.value)
             aRecordReceived <- svc.receivePresentation(p)
-            aRecordAccept <- svc.rejectPresentation(aRecord.id)
-
+            repo <- ZIO.service[PresentationRepository[Task]]
+            _ <- repo.updatePresentationRecordProtocolState(
+              aRecord.id,
+              PresentationRecord.ProtocolState.PresentationReceived,
+              PresentationRecord.ProtocolState.PresentationVerified
+            )
+            aRecordReject <- svc.rejectPresentation(aRecord.id)
           } yield {
-            assertTrue(aRecordAccept.get.id == aRecord.id)
-            assertTrue(aRecordAccept.get.presentationData == Some(p))
-            assertTrue(aRecordAccept.get.protocolState == PresentationRecord.ProtocolState.PresentationRejected)
+            assertTrue(aRecordReject.id == aRecord.id)
+            assertTrue(aRecordReject.presentationData == Some(p))
+            assertTrue(aRecordReject.protocolState == PresentationRecord.ProtocolState.PresentationRejected)
           }
         )
       },
@@ -397,7 +384,7 @@ object PresentationServiceSpec extends ZIOSpecDefault {
           record <- svc.markPresentationGenerated(record.id, p)
 
         } yield {
-          assertTrue(record.get.protocolState == PresentationRecord.ProtocolState.PresentationGenerated)
+          assertTrue(record.protocolState == PresentationRecord.ProtocolState.PresentationGenerated)
         })
       },
       test("markProposePresentationSent returns updated PresentationRecord") {
@@ -414,7 +401,7 @@ object PresentationServiceSpec extends ZIOSpecDefault {
           record <- svc.markProposePresentationSent(record.id)
 
         } yield {
-          assertTrue(record.get.protocolState == PresentationRecord.ProtocolState.ProposalSent)
+          assertTrue(record.protocolState == PresentationRecord.ProtocolState.ProposalSent)
         })
       },
       test("receiveProposePresentation updates the PresentatinRecord") {
@@ -426,8 +413,8 @@ object PresentationServiceSpec extends ZIOSpecDefault {
             aRecordReceived <- svc.receiveProposePresentation(p)
 
           } yield {
-            assertTrue(aRecordReceived.get.id == aRecord.id)
-            assertTrue(aRecordReceived.get.proposePresentationData == Some(p))
+            assertTrue(aRecordReceived.id == aRecord.id)
+            assertTrue(aRecordReceived.proposePresentationData == Some(p))
           }
         )
       },
@@ -447,131 +434,12 @@ object PresentationServiceSpec extends ZIOSpecDefault {
             aRecordAccept <- svc.acceptProposePresentation(aRecord.id)
 
           } yield {
-            assertTrue(aRecordReceived.get.id == aRecord.id)
-            assertTrue(aRecordReceived.get.proposePresentationData == Some(p))
+            assertTrue(aRecordReceived.id == aRecord.id)
+            assertTrue(aRecordReceived.proposePresentationData == Some(p))
           }
         )
       },
     ).provideLayer(presentationServiceLayer)
   }
-
-  def createIssuer(did: DID) = {
-    val keyGen = KeyPairGenerator.getInstance("EC")
-    keyGen.initialize(Curve.P_256.toECParameterSpec)
-    val keyPair = keyGen.generateKeyPair()
-    val privateKey = keyPair.getPrivate
-    val publicKey = keyPair.getPublic
-    Issuer(
-      did = did,
-      signer = ES256Signer(privateKey),
-      publicKey = publicKey
-    )
-  }
-  private def requestCredential = io.iohk.atala.mercury.protocol.issuecredential.RequestCredential(
-    from = DidId("did:prism:aaa"),
-    to = DidId("did:prism:bbb"),
-    thid = Some(UUID.randomUUID.toString),
-    body =
-      io.iohk.atala.mercury.protocol.issuecredential.RequestCredential.Body(goal_code = Some("credential issuance")),
-    attachments = Nil
-  )
-
-  private def requestPresentation: RequestPresentation = {
-    val body = RequestPresentation.Body(goal_code = Some("Presentation Request"))
-    val presentationAttachmentAsJson = """{
-                "challenge": "1f44d55f-f161-4938-a659-f8026467f126",
-                "domain": "us.gov/DriverLicense",
-                "credential_manifest": {}
-            }"""
-    val prover = DidId("did:peer:Prover")
-    val verifier = DidId("did:peer:Verifier")
-
-    val attachmentDescriptor = AttachmentDescriptor.buildJsonAttachment(payload = presentationAttachmentAsJson)
-    RequestPresentation(
-      body = body,
-      attachments = Seq(attachmentDescriptor),
-      to = prover,
-      from = verifier,
-    )
-  }
-
-  private def proposePresentation(thid: String): ProposePresentation = {
-    val presentationFormat = PresentationFormat(attach_id = "1", "format1")
-    val body = ProposePresentation.Body(goal_code = Some("Propose Presentation"))
-    val presentationAttachmentAsJson = """{
-                "id": "1f44d55f-f161-4938-a659-f8026467f126",
-                "subject": "subject",
-                "credential_definition": {}
-            }"""
-    val attachmentDescriptor = AttachmentDescriptor.buildJsonAttachment(payload = presentationAttachmentAsJson)
-    val prover = DidId("did:peer:Prover")
-    val verifier = DidId("did:peer:Verifier")
-    ProposePresentation(
-      body = body,
-      thid = Some(thid),
-      attachments = Seq(attachmentDescriptor),
-      to = verifier,
-      from = prover
-    )
-  }
-  private def presentation(thid: String): Presentation = {
-    val presentationFormat = PresentationFormat(attach_id = "1", "format1")
-    val body = Presentation.Body(goal_code = Some("Presentation"))
-    val presentationAttachmentAsJson = """{
-                "id": "1f44d55f-f161-4938-a659-f8026467f126",
-                "subject": "subject",
-                "credential_definition": {}
-            }"""
-    val attachmentDescriptor = AttachmentDescriptor.buildJsonAttachment(payload = presentationAttachmentAsJson)
-    val prover = DidId("did:peer:Prover")
-    val verifier = DidId("did:peer:Verifier")
-    Presentation(
-      body = body,
-      thid = Some(thid),
-      attachments = Seq(attachmentDescriptor),
-      to = verifier,
-      from = prover
-    )
-  }
-  private def issueCredentialRecord = IssueCredentialRecord(
-    id = DidCommID(),
-    createdAt = Instant.ofEpochSecond(Instant.now.getEpochSecond()),
-    updatedAt = None,
-    thid = DidCommID(),
-    schemaId = None,
-    role = IssueCredentialRecord.Role.Issuer,
-    subjectId = None,
-    validityPeriod = None,
-    automaticIssuance = None,
-    awaitConfirmation = None,
-    protocolState = IssueCredentialRecord.ProtocolState.OfferPending,
-    publicationState = None,
-    offerCredentialData = None,
-    requestCredentialData = None,
-    issueCredentialData = None,
-    issuedCredentialRaw = None,
-    issuingDID = None,
-    metaRetries = 5,
-    metaNextRetry = Some(Instant.now()),
-    metaLastFailure = None,
-  )
-
-  extension (svc: PresentationService)
-    def createRecord(
-        pairwiseVerifierDID: DidId = DidId("did:prism:issuer"),
-        pairwiseProverDID: DidId = DidId("did:prism:prover-pairwise"),
-        thid: DidCommID = DidCommID(),
-        schemaId: String = "schemaId",
-        connectionId: Option[String] = None,
-    ) = {
-      val proofType = ProofType(schemaId, None, None)
-      svc.createPresentationRecord(
-        thid = thid,
-        subjectDid = pairwiseVerifierDID,
-        connectionId = Some("connectionId"),
-        proofTypes = Seq(proofType),
-        options = None,
-      )
-    }
 
 }
