@@ -29,7 +29,7 @@ class VaultWalletSecretStorage(vaultKV: VaultKVClient) extends WalletSecretStora
   }
 
   private def walletSeedPath(walletId: WalletId): String = {
-    s"secret/${walletId.toInt}/seed"
+    s"secret/${walletId.toUUID}/seed"
   }
 
 }

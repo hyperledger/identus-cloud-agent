@@ -80,7 +80,7 @@ trait CredentialSchemaTestTools {
   }
 
   def httpBackend(controller: CredentialSchemaController) = {
-    val mockWalletAccessContext = WalletAccessContext(WalletId.fromInt(1)) // FIXME
+    val mockWalletAccessContext = WalletAccessContext(WalletId.random) // FIXME
     val schemaRegistryEndpoints = SchemaRegistryServerEndpoints(controller, mockWalletAccessContext)
 
     val backend =

@@ -4,16 +4,17 @@ import doobie.*
 import doobie.postgres.implicits.*
 import doobie.util.invariant.InvalidEnum
 import io.iohk.atala.agent.walletapi.model.{ManagedDIDState, PublicationState, KeyManagementMode}
-import io.iohk.atala.castor.core.model.did.{PrismDID, PrismDIDOperation, ScheduledDIDOperationStatus}
 import io.iohk.atala.castor.core.model.ProtoModelHelper.*
+import io.iohk.atala.castor.core.model.did.InternalKeyPurpose
+import io.iohk.atala.castor.core.model.did.VerificationRelationship
+import io.iohk.atala.castor.core.model.did.{PrismDID, PrismDIDOperation, ScheduledDIDOperationStatus}
 import io.iohk.atala.prism.protos.node_models
+import io.iohk.atala.shared.models.WalletId
 
 import java.time.Instant
-import scala.util.Try
+import java.util.UUID
 import scala.collection.immutable.ArraySeq
-import io.iohk.atala.castor.core.model.did.VerificationRelationship
-import io.iohk.atala.castor.core.model.did.InternalKeyPurpose
-import io.iohk.atala.shared.models.WalletId
+import scala.util.Try
 
 package object sql {
 
@@ -100,8 +101,8 @@ package object sql {
   given arraySeqByteGet: Get[ArraySeq[Byte]] = Get[Array[Byte]].map(ArraySeq.from)
   given arraySeqBytePut: Put[ArraySeq[Byte]] = Put[Array[Byte]].contramap(_.toArray)
 
-  given walletIdGet: Get[WalletId] = Get[Int].map(WalletId.fromInt)
-  given walletIdPut: Put[WalletId] = Put[Int].contramap(_.toInt)
+  given walletIdGet: Get[WalletId] = Get[UUID].map(WalletId.fromUUID)
+  given walletIdPut: Put[WalletId] = Put[UUID].contramap(_.toUUID)
 
   final case class DIDStateRow(
       did: PrismDID,

@@ -30,7 +30,7 @@ class VaultDIDSecretStorage(vaultKV: VaultKVClient) extends DIDSecretStorage {
   }
 
   private def peerDidKeyPath(walletId: WalletId)(did: DidId, keyId: String): String = {
-    s"secret/${walletId.toInt}/dids/peer/${did.value}/keys/$keyId"
+    s"secret/${walletId.toUUID}/dids/peer/${did.value}/keys/$keyId"
   }
 }
 

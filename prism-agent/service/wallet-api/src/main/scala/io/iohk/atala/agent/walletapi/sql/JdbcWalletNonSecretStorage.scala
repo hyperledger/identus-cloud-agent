@@ -13,16 +13,15 @@ import zio.interop.catz.*
 class JdbcWalletNonSecretStorage(xa: Transactor[Task]) extends WalletNonSecretStorage {
 
   override def createWallet: Task[WalletId] = {
-    val cxnIO = (now: Instant) =>
-      sql"""
-        | INSERT INTO public.wallet(created_at)
-        | VALUES ($now)
+    val cxnIO = (walletId: WalletId, now: Instant) => sql"""
+        | INSERT INTO public.wallet(wallet_id, created_at)
+        | VALUES ($walletId, $now)
         """.stripMargin.update
-        .withUniqueGeneratedKeys[WalletId]("wallet_id")
 
     for {
       now <- Clock.instant
-      walletId <- cxnIO(now).transact(xa)
+      walletId = WalletId.random
+      _ <- cxnIO(walletId, now).run.transact(xa)
     } yield walletId
   }
 
