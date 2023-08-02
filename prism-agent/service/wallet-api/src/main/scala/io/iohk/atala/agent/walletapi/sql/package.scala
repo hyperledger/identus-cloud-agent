@@ -101,8 +101,8 @@ package object sql {
   given arraySeqByteGet: Get[ArraySeq[Byte]] = Get[Array[Byte]].map(ArraySeq.from)
   given arraySeqBytePut: Put[ArraySeq[Byte]] = Put[Array[Byte]].contramap(_.toArray)
 
-  given walletIdGet: Get[WalletId] = Get[String].map(s => WalletId.fromUUID(UUID.fromString(s)))
-  given walletIdPut: Put[WalletId] = Put[String].contramap(_.toUUID.toString())
+  given walletIdGet: Get[WalletId] = Get[UUID].map(WalletId.fromUUID)
+  given walletIdPut: Put[WalletId] = Put[UUID].contramap(_.toUUID)
 
   final case class DIDStateRow(
       did: PrismDID,
