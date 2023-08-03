@@ -2,10 +2,9 @@ package io.iohk.atala.agent.walletapi.service
 
 import io.iohk.atala.agent.walletapi.crypto.Apollo
 import io.iohk.atala.agent.walletapi.model.ManagedDIDDetail
-import io.iohk.atala.agent.walletapi.model.WalletSeed
 import io.iohk.atala.agent.walletapi.model.error.CommonWalletStorageError
+import io.iohk.atala.agent.walletapi.storage.WalletSecretStorage
 import io.iohk.atala.agent.walletapi.storage.{DIDNonSecretStorage, DIDSecretStorage}
-import io.iohk.atala.agent.walletapi.util.SeedResolver
 import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
 import io.iohk.atala.castor.core.model.error
 import io.iohk.atala.castor.core.model.error.DIDOperationError
@@ -20,8 +19,8 @@ class ManagedDIDServiceWithEventNotificationImpl(
     didOpValidator: DIDOperationValidator,
     override private[walletapi] val secretStorage: DIDSecretStorage,
     override private[walletapi] val nonSecretStorage: DIDNonSecretStorage,
+    walletSecretStorage: WalletSecretStorage,
     apollo: Apollo,
-    seed: WalletSeed,
     createDIDSem: Semaphore,
     eventNotificationService: EventNotificationService
 ) extends ManagedDIDServiceImpl(
@@ -29,8 +28,8 @@ class ManagedDIDServiceWithEventNotificationImpl(
       didOpValidator,
       secretStorage,
       nonSecretStorage,
+      walletSecretStorage,
       apollo,
-      seed,
       createDIDSem
     ) {
 
@@ -59,7 +58,7 @@ class ManagedDIDServiceWithEventNotificationImpl(
 
 object ManagedDIDServiceWithEventNotificationImpl {
   val layer: RLayer[
-    DIDOperationValidator & DIDService & DIDSecretStorage & DIDNonSecretStorage & Apollo & SeedResolver &
+    DIDOperationValidator & DIDService & DIDSecretStorage & DIDNonSecretStorage & WalletSecretStorage & Apollo &
       EventNotificationService,
     ManagedDIDService
   ] = ZLayer.fromZIO {
@@ -68,8 +67,8 @@ object ManagedDIDServiceWithEventNotificationImpl {
       didOpValidator <- ZIO.service[DIDOperationValidator]
       secretStorage <- ZIO.service[DIDSecretStorage]
       nonSecretStorage <- ZIO.service[DIDNonSecretStorage]
+      walletSecretStorage <- ZIO.service[WalletSecretStorage]
       apollo <- ZIO.service[Apollo]
-      seed <- ZIO.serviceWithZIO[SeedResolver](_.resolve)
       createDIDSem <- Semaphore.make(1)
       eventNotificationService <- ZIO.service[EventNotificationService]
     } yield ManagedDIDServiceWithEventNotificationImpl(
@@ -77,8 +76,8 @@ object ManagedDIDServiceWithEventNotificationImpl {
       didOpValidator,
       secretStorage,
       nonSecretStorage,
+      walletSecretStorage,
       apollo,
-      seed,
       createDIDSem,
       eventNotificationService
     )

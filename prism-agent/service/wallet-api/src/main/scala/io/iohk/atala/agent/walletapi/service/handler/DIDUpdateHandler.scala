@@ -10,6 +10,7 @@ import io.iohk.atala.agent.walletapi.model.WalletSeed
 import io.iohk.atala.agent.walletapi.model.error.UpdateManagedDIDError
 import io.iohk.atala.agent.walletapi.model.error.{*, given}
 import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
+import io.iohk.atala.agent.walletapi.storage.WalletSecretStorage
 import io.iohk.atala.agent.walletapi.util.OperationFactory
 import io.iohk.atala.castor.core.model.did.PrismDIDOperation
 import io.iohk.atala.castor.core.model.did.PrismDIDOperation.Update
@@ -22,9 +23,8 @@ import zio.*
 private[walletapi] class DIDUpdateHandler(
     apollo: Apollo,
     nonSecretStorage: DIDNonSecretStorage,
+    walletSecretStorage: WalletSecretStorage,
     publicationHandler: PublicationHandler
-)(
-    seed: WalletSeed
 ) {
   def materialize(
       state: ManagedDIDState,
@@ -36,6 +36,10 @@ private[walletapi] class DIDUpdateHandler(
     state.keyMode match {
       case KeyManagementMode.HD =>
         for {
+          walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
+          seed <- walletSecretStorage.getWalletSeed
+            .someOrElseZIO(ZIO.dieMessage(s"Wallet seed for wallet $walletId does not exist"))
+            .mapError(UpdateManagedDIDError.WalletStorageError.apply)
           keyCounter <- nonSecretStorage
             .getHdKeyCounter(did)
             .mapError(UpdateManagedDIDError.WalletStorageError.apply)

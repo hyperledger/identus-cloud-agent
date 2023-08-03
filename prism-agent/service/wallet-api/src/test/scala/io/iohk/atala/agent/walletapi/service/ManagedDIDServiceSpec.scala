@@ -15,7 +15,6 @@ import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
 import io.iohk.atala.agent.walletapi.storage.StorageSpecHelper
 import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorage
 import io.iohk.atala.agent.walletapi.storage.WalletSecretStorage
-import io.iohk.atala.agent.walletapi.util.SeedResolver
 import io.iohk.atala.agent.walletapi.vault.VaultDIDSecretStorage
 import io.iohk.atala.agent.walletapi.vault.VaultWalletSecretStorage
 import io.iohk.atala.castor.core.model.did.InternalKeyPurpose
@@ -110,7 +109,6 @@ object ManagedDIDServiceSpec
         DIDOperationValidator.layer(),
         JdbcDIDNonSecretStorage.layer,
         JdbcWalletNonSecretStorage.layer,
-        SeedResolver.layer(isDevMode = true),
         transactorLayer,
         testDIDServiceLayer,
         apolloLayer

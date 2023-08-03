@@ -5,6 +5,7 @@ import io.iohk.atala.agent.walletapi.model.*
 import io.iohk.atala.agent.walletapi.model.error.{*, given}
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService.DEFAULT_MASTER_KEY_ID
 import io.iohk.atala.agent.walletapi.service.handler.{DIDCreateHandler, DIDUpdateHandler, PublicationHandler}
+import io.iohk.atala.agent.walletapi.storage.WalletSecretStorage
 import io.iohk.atala.agent.walletapi.storage.{DIDNonSecretStorage, DIDSecretStorage}
 import io.iohk.atala.agent.walletapi.util.*
 import io.iohk.atala.castor.core.model.did.*
@@ -28,19 +29,19 @@ class ManagedDIDServiceImpl private[walletapi] (
     didOpValidator: DIDOperationValidator,
     private[walletapi] val secretStorage: DIDSecretStorage,
     override private[walletapi] val nonSecretStorage: DIDNonSecretStorage,
+    walletSecretStorage: WalletSecretStorage,
     apollo: Apollo,
-    seed: WalletSeed, // TODO: support dynamic seed lookup
     createDIDSem: Semaphore
 ) extends ManagedDIDService {
 
   private val AGREEMENT_KEY_ID = "agreement"
   private val AUTHENTICATION_KEY_ID = "authentication"
 
-  private val keyResolver = KeyResolver(apollo, nonSecretStorage)(seed)
-
+  // TODO: implement seed caching & TTL in dispatching layer
+  private val keyResolver = KeyResolver(apollo, nonSecretStorage, walletSecretStorage)
   private val publicationHandler = PublicationHandler(didService, keyResolver)(DEFAULT_MASTER_KEY_ID)
-  private val didCreateHandler = DIDCreateHandler(apollo, nonSecretStorage)(seed, DEFAULT_MASTER_KEY_ID)
-  private val didUpdateHandler = DIDUpdateHandler(apollo, nonSecretStorage, publicationHandler)(seed)
+  private val didCreateHandler = DIDCreateHandler(apollo, nonSecretStorage, walletSecretStorage)(DEFAULT_MASTER_KEY_ID)
+  private val didUpdateHandler = DIDUpdateHandler(apollo, nonSecretStorage, walletSecretStorage, publicationHandler)
 
   def syncManagedDIDState: ZIO[WalletAccessContext, GetManagedDIDError, Unit] = nonSecretStorage
     .listManagedDID(offset = None, limit = None)
@@ -370,7 +371,7 @@ class ManagedDIDServiceImpl private[walletapi] (
 object ManagedDIDServiceImpl {
 
   val layer: RLayer[
-    DIDOperationValidator & DIDService & DIDSecretStorage & DIDNonSecretStorage & Apollo & SeedResolver,
+    DIDOperationValidator & DIDService & DIDSecretStorage & DIDNonSecretStorage & WalletSecretStorage & Apollo,
     ManagedDIDService
   ] = {
     ZLayer.fromZIO {
@@ -379,16 +380,16 @@ object ManagedDIDServiceImpl {
         didOpValidator <- ZIO.service[DIDOperationValidator]
         secretStorage <- ZIO.service[DIDSecretStorage]
         nonSecretStorage <- ZIO.service[DIDNonSecretStorage]
+        walletSecretStorage <- ZIO.service[WalletSecretStorage]
         apollo <- ZIO.service[Apollo]
-        seed <- ZIO.serviceWithZIO[SeedResolver](_.resolve)
         createDIDSem <- Semaphore.make(1)
       } yield ManagedDIDServiceImpl(
         didService,
         didOpValidator,
         secretStorage,
         nonSecretStorage,
+        walletSecretStorage,
         apollo,
-        seed,
         createDIDSem
       )
     }
