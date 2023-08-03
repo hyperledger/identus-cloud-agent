@@ -15,6 +15,9 @@ inThisBuild(
   )
 )
 
+// Fixes a bug with concurrent packages download from GitHub registry
+Global / concurrentRestrictions += Tags.limit(Tags.Network, 1)
+
 coverageDataDir := target.value / "coverage"
 coberturaFile := target.value / "coverage" / "coverage-report" / "cobertura.xml"
 
