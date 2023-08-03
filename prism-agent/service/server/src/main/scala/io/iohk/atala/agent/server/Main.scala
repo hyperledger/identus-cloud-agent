@@ -17,18 +17,25 @@ import io.iohk.atala.connect.core.service.ConnectionServiceNotifier
 import io.iohk.atala.connect.sql.repository.JdbcConnectionRepository
 import io.iohk.atala.connect.sql.repository.Migrations as ConnectMigrations
 import io.iohk.atala.event.notification.EventNotificationServiceImpl
+import io.iohk.atala.anoncred.controller.AnoncredControllerImpl
 import io.iohk.atala.issue.controller.IssueControllerImpl
 import io.iohk.atala.mercury.*
 import io.iohk.atala.pollux.core.service.*
-import io.iohk.atala.pollux.credentialdefinition.controller.CredentialDefinitionControllerImpl
-import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaControllerImpl
-import io.iohk.atala.pollux.credentialschema.controller.VerificationPolicyControllerImpl
+import io.iohk.atala.pollux.core.service.anoncred.*
+import io.iohk.atala.pollux.credentialdefinition.controller.{
+  CredentialDefinitionControllerImpl,
+  CredentialSchemaControllerImpl,
+  VerificationPolicyControllerImpl
+}
 import io.iohk.atala.pollux.sql.repository.JdbcCredentialDefinitionRepository
-import io.iohk.atala.pollux.sql.repository.JdbcCredentialRepository
-import io.iohk.atala.pollux.sql.repository.JdbcCredentialSchemaRepository
-import io.iohk.atala.pollux.sql.repository.JdbcPresentationRepository
-import io.iohk.atala.pollux.sql.repository.JdbcVerificationPolicyRepository
-import io.iohk.atala.pollux.sql.repository.Migrations as PolluxMigrations
+import io.iohk.atala.pollux.sql.repository.JdbcAnoncredCredentialRepository
+import io.iohk.atala.pollux.sql.repository.{
+  JdbcCredentialRepository,
+  JdbcCredentialSchemaRepository,
+  JdbcPresentationRepository,
+  JdbcVerificationPolicyRepository,
+  Migrations as PolluxMigrations
+}
 import io.iohk.atala.presentproof.controller.PresentProofControllerImpl
 import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.system.controller.SystemControllerImpl
@@ -118,6 +125,7 @@ object MainApp extends ZIOAppDefault {
           CredentialDefinitionControllerImpl.layer,
           DIDControllerImpl.layer,
           DIDRegistrarControllerImpl.layer,
+          AnoncredControllerImpl.layer,
           IssueControllerImpl.layer,
           PresentProofControllerImpl.layer,
           VerificationPolicyControllerImpl.layer,
@@ -133,6 +141,7 @@ object MainApp extends ZIOAppDefault {
           CredentialSchemaServiceImpl.layer,
           CredentialDefinitionServiceImpl.layer,
           CredentialServiceImpl.layer >>> CredentialServiceNotifier.layer,
+          AnoncredCredentialServiceImpl.layer >>> AnoncredCredentialServiceNotifier.layer,
           DIDServiceImpl.layer,
           ManagedDIDServiceWithEventNotificationImpl.layer,
           PresentationServiceImpl.layer >>> PresentationServiceNotifier.layer,
@@ -146,6 +155,7 @@ object MainApp extends ZIOAppDefault {
           RepoModule.agentTransactorLayer >>> JdbcDIDNonSecretStorage.layer,
           RepoModule.connectTransactorLayer >>> JdbcConnectionRepository.layer,
           RepoModule.polluxTransactorLayer >>> JdbcCredentialRepository.layer,
+          RepoModule.polluxTransactorLayer >>> JdbcAnoncredCredentialRepository.layer,
           RepoModule.polluxTransactorLayer >>> JdbcCredentialSchemaRepository.layer,
           RepoModule.polluxTransactorLayer >>> JdbcCredentialDefinitionRepository.layer,
           RepoModule.polluxTransactorLayer >>> JdbcPresentationRepository.layer,

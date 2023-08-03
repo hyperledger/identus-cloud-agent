@@ -73,7 +73,14 @@ private class PresentationServiceImpl(
         .getValidIssuedCredentials(credentialsToUse.map(DidCommID(_)))
         .mapError(RepositoryError.apply)
 
-      issuedRawCredentials = issuedValidCredentials.flatMap(_.issuedCredentialRaw.map(IssuedCredentialRaw(_)))
+      issuedRawCredentials = issuedValidCredentials.flatMap(
+        _.issuedCredentialRaw.map(sc =>
+          IssuedCredentialRaw(
+            signedCredential = sc,
+            format = IssuedCredentialRaw.formatPrismJWT // FIXME formatPrismAnoncred
+          )
+        )
+      )
 
       issuedCredentials <- ZIO.fromEither(
         Either.cond(
@@ -302,7 +309,14 @@ private class PresentationServiceImpl(
               .map(_.subjectId)}"
         )
       )
-      issuedRawCredentials = issuedValidCredentials.flatMap(_.issuedCredentialRaw.map(IssuedCredentialRaw(_)))
+      issuedRawCredentials = issuedValidCredentials.flatMap(
+        _.issuedCredentialRaw.map(sc =>
+          IssuedCredentialRaw(
+            signedCredential = sc,
+            format = IssuedCredentialRaw.formatPrismJWT // FIXME formatPrismAnoncred
+          )
+        )
+      )
       issuedCredentials <- ZIO.fromEither(
         Either.cond(
           issuedRawCredentials.nonEmpty,

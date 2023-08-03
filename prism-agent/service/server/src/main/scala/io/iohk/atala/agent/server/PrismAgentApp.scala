@@ -9,6 +9,7 @@ import io.iohk.atala.castor.controller.{DIDRegistrarServerEndpoints, DIDServerEn
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.connect.controller.ConnectionServerEndpoints
 import io.iohk.atala.connect.core.service.ConnectionService
+import io.iohk.atala.anoncred.controller.AnoncredServerEndpoints
 import io.iohk.atala.issue.controller.IssueServerEndpoints
 import io.iohk.atala.mercury.{DidOps, HttpClient}
 import io.iohk.atala.pollux.core.service.{CredentialService, PresentationService}

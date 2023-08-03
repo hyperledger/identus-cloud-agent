@@ -1,3 +1,3 @@
-package io.iohk.atala.pollux.core.model
+// package io.iohk.atala.pollux.core.model
 
-final case class EncodedJWTCredential(batchId: String, credentialId: String, content: String)
+// final case class EncodedJWTCredential(batchId: String, credentialId: String, content: String)

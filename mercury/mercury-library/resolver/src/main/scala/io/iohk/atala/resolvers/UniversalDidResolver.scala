@@ -33,7 +33,7 @@ object UniversalDidResolver extends DIDDocResolver with DIDResolver {
   val diddocs = Map(
     "did:example:alice" -> didDocAlice,
     "did:example:mediator" -> didDocMediator,
-    "did:example:bob" -> didDocBob
+    "did:example:bob" -> didDocBob,
   ).asJava
 
   override def resolve(did: String): Optional[DIDDoc] = {

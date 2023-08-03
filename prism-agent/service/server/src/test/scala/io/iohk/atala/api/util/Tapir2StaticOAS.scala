@@ -35,6 +35,7 @@ object Tapir2StaticOAS extends ZIOAppDefault {
         ZLayer.succeed(mock[VerificationPolicyController]) ++
         ZLayer.succeed(mock[DIDRegistrarController]) ++
         ZLayer.succeed(mock[PresentProofController]) ++
+        ZLayer.succeed(mock[AnoncredController]) ++
         ZLayer.succeed(mock[IssueController]) ++
         ZLayer.succeed(mock[DIDController]) ++
         ZLayer.succeed(mock[SystemController])

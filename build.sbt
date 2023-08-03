@@ -671,6 +671,7 @@ lazy val polluxDoobie = project
     libraryDependencies ++= D_Pollux.sqlDoobieDependencies
   )
   .dependsOn(polluxCore % "compile->compile;test->test")
+  .dependsOn(polluxAnoncreds)
   .dependsOn(shared)
 
 // ########################
@@ -684,7 +685,7 @@ lazy val polluxAnoncreds = project
   .enablePlugins(JavaAppPackaging)
   .settings(
     name := "pollux-anoncreds",
-    Compile / unmanagedJars += baseDirectory.value / "anoncreds-java-1.0-SNAPSHOT.jar",
+    Compile / unmanagedJars += baseDirectory.value / "anoncreds-jvm-1.0-SNAPSHOT.jar",
     Compile / unmanagedResourceDirectories ++= Seq(
       baseDirectory.value / "native-lib" / "NATIVE"
     ),
