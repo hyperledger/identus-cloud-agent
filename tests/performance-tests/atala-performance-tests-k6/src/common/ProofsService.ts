@@ -68,8 +68,8 @@ export class ProofsService extends HttpService {
    * Retrieves all presentations.
    * @returns {PresentationStatus[]} An array of presentation status objects.
    */
-  getPresentations(): PresentationStatus[] {
-    const res = this.get(`present-proof/presentations`);
+  getPresentations(thid: string): PresentationStatus[] {
+    const res = this.get(`present-proof/presentations?thid=${thid}`);
     return res.json("contents") as unknown as PresentationStatus[];
   }
 
@@ -78,13 +78,13 @@ export class ProofsService extends HttpService {
    * @returns {PresentationStatus} The received presentation status object.
    * @throws {Error} If the proof request is not received within the maximum iterations.
    */
-  waitForProof(): PresentationStatus {
+  waitForProof(thid: string): PresentationStatus {
     let iterations = 0;
     let presentation: PresentationStatus | undefined;
     do {
-      // TODO: add correct filtering here when the API is fixed
-      // see ATL-4665
-      presentation = this.getPresentations().find(r => r.status === "RequestReceived");
+      presentation = this.getPresentations(thid).find(
+        r => r.thid === thid && r.status === "RequestReceived"
+      );
       if (presentation) {
         return presentation;
       }
@@ -105,11 +105,10 @@ export class ProofsService extends HttpService {
     let state: string;
     do {
       state = this.getPresentation(presentationId).status;
-      if (__ENV.DEBUG) console.log(`Presentation state: ${state}, required: ${requiredState}`);
       sleep(WAITING_LOOP_PAUSE_INTERVAL);
       iterations++;
     } while (state !== requiredState && iterations < WAITING_LOOP_MAX_ITERATIONS);
-    if (state != requiredState) {
+    if (state !== requiredState) {
       throw new Error(`Presentation state is ${state}, required ${requiredState}`);
     }
   }
