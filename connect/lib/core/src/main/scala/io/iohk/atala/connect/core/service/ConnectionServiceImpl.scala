@@ -136,7 +136,7 @@ private class ConnectionServiceImpl(
       record <- getRecordWithState(recordId, ProtocolState.InvitationReceived)
       request = ConnectionRequest
         .makeFromInvitation(record.invitation, pairwiseDid)
-        .copy(thid = Some(record.invitation.id)) //  This logic shound be move to the SQL when fetching the record
+        .copy(thid = Some(record.invitation.id)) //  This logic should be moved to the SQL when fetching the record
       count <- connectionRepository
         .updateWithConnectionRequest(recordId, request, ProtocolState.ConnectionRequestPending, maxRetries)
         .mapError(RepositoryError.apply)

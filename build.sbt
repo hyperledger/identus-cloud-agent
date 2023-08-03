@@ -144,7 +144,7 @@ lazy val D = new {
 
 lazy val D_Shared = new {
   lazy val dependencies: Seq[ModuleID] =
-    Seq(D.typesafeConfig, D.scalaPbGrpc, D.testcontainersPostgres, D.testcontainersVault)
+    Seq(D.typesafeConfig, D.scalaPbGrpc, D.testcontainersPostgres, D.testcontainersVault, D.zio)
 }
 
 lazy val D_Connect = new {
