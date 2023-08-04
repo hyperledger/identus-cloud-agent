@@ -1,6 +1,6 @@
 {
   "name": "@input-output-hk/prism-typescript-client",
-  "version": "1.9.3",
+  "version": "0.0.1",
   "description": "TypeScript OpenAPI client for Atala PRISM V2 Agent",
   "author": "allain.magyar@iohk.io",
   "repository": {
