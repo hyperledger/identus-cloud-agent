@@ -17,7 +17,7 @@ object PresentProofEndpoints {
   val requestPresentation: PublicEndpoint[
     (RequestContext, RequestPresentationInput),
     ErrorResponse,
-    RequestPresentationOutput,
+    PresentationStatus,
     Any
   ] =
     endpoint.post
@@ -33,7 +33,7 @@ object PresentProofEndpoints {
           "The proof presentation request was created successfully and will be sent asynchronously to the Prover."
         )
       )
-      .out(jsonBody[RequestPresentationOutput])
+      .out(jsonBody[PresentationStatus])
       .errorOut(basicFailures)
 
   val getAllPresentations
