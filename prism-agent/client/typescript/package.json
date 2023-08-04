@@ -1,6 +1,6 @@
 {
   "name": "@input-output-hk/prism-typescript-client",
-  "version": "0.0.1",
+  "version": "1.9.3",
   "description": "TypeScript OpenAPI client for Atala PRISM V2 Agent",
   "author": "allain.magyar@iohk.io",
   "repository": {
@@ -28,11 +28,8 @@
     "prepare": "npm run build"
   },
   "dependencies": {
-    "@types/node": "*",
-    "@types/node-fetch": "^2.5.7",
+    "whatwg-fetch": "^3.0.0",
     "es6-promise": "^4.2.4",
-    "form-data": "^2.5.0",
-    "node-fetch": "^2.6.0",
     "url-parse": "^1.4.3"
   },
   "devDependencies": {
