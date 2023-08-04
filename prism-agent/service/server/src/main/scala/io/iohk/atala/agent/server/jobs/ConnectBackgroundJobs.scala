@@ -13,6 +13,7 @@ import io.iohk.atala.mercury.*
 import io.iohk.atala.mercury.model.*
 import io.iohk.atala.mercury.model.error.*
 import io.iohk.atala.resolvers.DIDResolver
+import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
 import zio.*
 import zio.metrics.*
 object ConnectBackgroundJobs {
@@ -122,7 +123,13 @@ object ConnectBackgroundJobs {
           connectionService <- ZIO.service[ConnectionService]
           _ <- {
             if (resp.status >= 200 && resp.status < 300)
-              connectionService.markConnectionRequestSent(id) @@ InviteeConnectionRequestMsgSuccess
+              connectionService.markConnectionRequestSent(id)
+                @@ InviteeConnectionRequestMsgSuccess
+                @@ CustomMetricsAspect.createGaugeAfter(s"${record.id}_invitee_pending_to_req_sent", "connection_flow_invitee_pending_to_req_sent_ms", Set(
+                MetricLabel(
+                  "connectionId", record.id.toString
+                )
+              ))
             else ZIO.fail(ErrorResponseReceivedFromPeerAgent(resp)) @@ InviteeConnectionRequestMsgFailed
           }
         } yield ()

@@ -47,41 +47,11 @@ class ConnectionControllerImpl(
     result.mapError(toHttpError)
   }
 
-  object CustomMetricsAspect {
-    import java.util.concurrent.TimeUnit
-    import zio.metrics.*
-    def attachDurationGaugeMetric(name: String): ZIOAspect[Nothing, Any, Nothing, Any, Nothing, Any] =
-      new ZIOAspect[Nothing, Any, Nothing, Any, Nothing, Any] {
-        override def apply[R, E, A](
-            zio: ZIO[R, E, A]
-        )(implicit trace: Trace): ZIO[R, E, A] =
-          def currTime = Clock.currentTime(TimeUnit.MILLISECONDS)
-
-          for {
-            timeBefore <- currTime
-            res <- zio
-            timeAfter <- currTime
-            _ <- ZIO.succeed((timeAfter - timeBefore).toDouble) @@ Metric.gauge(name)
-          } yield res
-      }
-  }
-
   override def getConnections(
       paginationInput: PaginationInput,
       thid: Option[String]
   )(implicit rc: RequestContext): IO[ErrorResponse, ConnectionsPage] = {
-
-    val deleyEffect = ZIO.sleep(Duration.fromMillis(2000)).map(_ => 5)
-    import zio.metrics.*
-
-    val successZIO = ZIO.succeed(1)
-    val errZIO = ZIO.fail("err")
-
-    val succCounter = Metric.counter("success_counter").fromConst(1)
-    val failCounter = Metric.counter("fail_counter").fromConst(1)
-
     val result = for {
-      _ <- successZIO @@ succCounter.trackError
       connections <- thid match
         case None       => service.getConnectionRecords()
         case Some(thid) => service.getConnectionRecordByThreadId(thid).map(_.toSeq)
