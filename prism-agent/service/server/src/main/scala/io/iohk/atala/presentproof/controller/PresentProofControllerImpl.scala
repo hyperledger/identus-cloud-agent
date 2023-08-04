@@ -24,8 +24,8 @@ class PresentProofControllerImpl(
     with ControllerHelper {
   override def requestPresentation(request: RequestPresentationInput)(implicit
       rc: RequestContext
-  ): IO[ErrorResponse, RequestPresentationOutput] = {
-    val result: IO[ConnectionServiceError | PresentationError, RequestPresentationOutput] = for {
+  ): IO[ErrorResponse, PresentationStatus] = {
+    val result: IO[ConnectionServiceError | PresentationError, PresentationStatus] = for {
       didIdPair <- getPairwiseDIDs(request.connectionId).provide(ZLayer.succeed(connectionService))
       record <- presentationService
         .createPresentationRecord(
@@ -42,7 +42,7 @@ class PresentProofControllerImpl(
           },
           options = request.options.map(x => Options(x.challenge, x.domain)),
         )
-    } yield RequestPresentationOutput.fromDomain(record)
+    } yield PresentationStatus.fromDomain(record)
 
     result.mapError {
       case e: ConnectionServiceError => ConnectionController.toHttpError(e)
