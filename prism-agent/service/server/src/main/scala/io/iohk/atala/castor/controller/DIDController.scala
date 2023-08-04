@@ -11,7 +11,7 @@ import io.iohk.atala.castor.controller.DIDControllerImpl.resolutionStatusCodeMap
 import scala.language.implicitConversions
 
 trait DIDController {
-  def getDID(did: String): UIO[(StatusCode, DIDResolutionResult)]
+  def getDID(did: String): UIO[DIDResolutionResult]
 }
 
 object DIDController {
@@ -43,7 +43,7 @@ object DIDController {
 
 class DIDControllerImpl(service: DIDService) extends DIDController {
 
-  override def getDID(did: String): UIO[(StatusCode, DIDResolutionResult)] = {
+  override def getDID(did: String): UIO[DIDResolutionResult] = {
     for {
       result <- makeW3CResolver(service)(did).either
       resolutionResult = result.fold(
@@ -52,8 +52,7 @@ class DIDControllerImpl(service: DIDService) extends DIDController {
           DIDController.toResolutionResult(metadata, document)
         }
       )
-      statusCode = resolutionStatusCodeMapping(resolutionResult, result.swap.toOption)
-    } yield statusCode -> resolutionResult
+    } yield resolutionResult
   }
 
 }
@@ -61,6 +60,7 @@ class DIDControllerImpl(service: DIDService) extends DIDController {
 object DIDControllerImpl {
   val layer: URLayer[DIDService, DIDController] = ZLayer.fromFunction(DIDControllerImpl(_))
 
+  // TODO: remove
   // MUST conform to https://w3c-ccg.github.io/did-resolution/#bindings-https
   def resolutionStatusCodeMapping(
       resolutionResult: DIDResolutionResult,
