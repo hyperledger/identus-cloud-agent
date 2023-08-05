@@ -125,7 +125,7 @@ object ConnectBackgroundJobs {
             if (resp.status >= 200 && resp.status < 300)
               connectionService.markConnectionRequestSent(id)
                 @@ InviteeConnectionRequestMsgSuccess
-                @@ CustomMetricsAspect.createGaugeAfter(s"${record.id}_invitee_pending_to_req_sent", "connection_flow_invitee_pending_to_req_sent_ms", Set(
+                @@ CustomMetricsAspect.endRecordingTime(s"${record.id}_invitee_pending_to_req_sent", "connection_flow_invitee_pending_to_req_sent_ms", Set(
                 MetricLabel(
                   "connectionId", record.id.toString
                 )
@@ -143,7 +143,7 @@ object ConnectBackgroundJobs {
           @@ Metric
             .gauge("connection_flow_invitee_process_connection_record_ms")
             .tagged("connectionId", record.id.toString)
-            .trackDurationWith(_.toNanos.toDouble)
+            .trackDurationWith(_.toMillis.toDouble)
 
       case ConnectionRecord(
             id,
@@ -181,7 +181,7 @@ object ConnectBackgroundJobs {
           @@ Metric
             .gauge("connection_flow_inviter_process_connection_record_ms")
             .tagged("connectionId", record.id.toString)
-            .trackDurationWith(_.toNanos.toDouble)
+            .trackDurationWith(_.toMillis.toDouble)
 
       case _ => ZIO.unit
     }

@@ -3,36 +3,40 @@ package io.iohk.atala.shared.utils.aspects
 import zio.*
 import scala.collection.mutable.{Map => MutMap}
 import zio.metrics.*
+import java.time.{Instant, Clock, Duration}
 
 object CustomMetricsAspect {
-  private val checkpoints: MutMap[String, Long] = MutMap.empty
-  private def currTime = ZIO.succeed(java.lang.System.nanoTime)
+  private val checkpoints: MutMap[String, Instant] = MutMap.empty
+  private val clock = Clock.systemUTC()
+  private def now = ZIO.succeed(clock.instant)
 
-  def recordTimeAfter(key: String): ZIOAspect[Nothing, Any, Nothing, Any, Nothing, Any] =
+  def startRecordingTime(key: String): ZIOAspect[Nothing, Any, Nothing, Any, Nothing, Any] =
     new ZIOAspect[Nothing, Any, Nothing, Any, Nothing, Any] {
       override def apply[R, E, A](
           zio: ZIO[R, E, A]
       )(implicit trace: Trace): ZIO[R, E, A] =
         for {
           res <- zio
-          timeAfter <- currTime
+          timeAfter <- now
           _ = checkpoints.update(key, timeAfter)
         } yield res
     }
 
-  def createGaugeAfter(key: String, metricsKey: String, tags: Set[MetricLabel] = Set.empty): ZIOAspect[Nothing, Any, Nothing, Any, Nothing, Any] =
+  def endRecordingTime(
+      key: String,
+      metricsKey: String,
+      tags: Set[MetricLabel] = Set.empty
+  ): ZIOAspect[Nothing, Any, Nothing, Any, Nothing, Any] =
     new ZIOAspect[Nothing, Any, Nothing, Any, Nothing, Any] {
       override def apply[R, E, A](
           zio: ZIO[R, E, A]
       )(implicit trace: Trace): ZIO[R, E, A] = {
         for {
           res <- zio
-          timeAfter <- currTime
-          timeBefore = checkpoints.get(key)
-          metricsZio = timeBefore.map(before => timeAfter - before) match {
-            case Some(value) =>
-              ZIO.succeed(value.toDouble) @@ Metric.gauge(metricsKey).tagged(tags)
-            case None => ZIO.unit
+          end <- now
+          maybeStart = checkpoints.get(key)
+          metricsZio = maybeStart.map(start => Duration.between(start, end)).fold(ZIO.unit) { duration =>
+            ZIO.succeed(duration.toMillis.toDouble / 1000.0) @@ Metric.gauge(metricsKey).tagged(tags)
           }
           _ <- metricsZio
         } yield res
