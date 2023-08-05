@@ -1,10 +1,24 @@
 import { group } from 'k6';
 import { Options } from 'k6/options';
 import { Issuer, Holder, Verifier } from '../../actors';
+import { CredentialSchemaResponse } from '@input-output-hk/prism-typescript-client';
 
 export let options: Options = {
-  vus: 1,
-  iterations: 1
+  scenarios: {
+    smoke: {
+      executor: 'constant-vus',
+      vus: 5,
+      duration: "3m",
+    },
+  },
+  thresholds: {
+    http_req_failed: [{
+      threshold: 'rate==0',
+      abortOnFail: true,
+    }],
+    http_req_duration: ['p(95)<=500'],
+    checks: ['rate==1'],
+  },
 };
 
 const issuer = new Issuer();
@@ -17,16 +31,21 @@ export function setup() {
     issuer.publishDid();
   });
 
+  group('Issuer creates credential schema', function () {
+    issuer.createCredentialSchema();
+  });
+
   group('Holder creates unpublished DID', function () {
     holder.createUnpublishedDid();
   });
 
-  return { issuerDid: issuer.did, holderDid: holder.did };
+  return { issuerDid: issuer.did, holderDid: holder.did, issuerSchema: issuer.schema };
 }
 
-export default (data: { issuerDid: string; holderDid: string; }) => {
+export default (data: { issuerDid: string; holderDid: string; issuerSchema: CredentialSchemaResponse; }) => {
 
   issuer.did = data.issuerDid;
+  issuer.schema = data.issuerSchema;
   holder.did = data.holderDid;
 
   group('Holder connects with Issuer', function () {
@@ -39,7 +58,7 @@ export default (data: { issuerDid: string; holderDid: string; }) => {
   group('Issuer creates credential offer for Holder', function () {
     issuer.createCredentialOffer();
     issuer.waitForCredentialOfferToBeSent();
-    holder.waitAndAcceptCredentialOffer();
+    holder.waitAndAcceptCredentialOffer(issuer.credential!.thid);
     issuer.receiveCredentialRequest();
     issuer.issueCredential();
     issuer.waitForCredentialToBeSent();
@@ -55,7 +74,7 @@ export default (data: { issuerDid: string; holderDid: string; }) => {
 
   group('Verifier requests proof from Holder', function () {
     verifier.requestProof();
-    holder.waitAndAcceptProofRequest();
+    holder.waitAndAcceptProofRequest(verifier.presentation!.thid);
     verifier.acknowledgeProof();
   });
 

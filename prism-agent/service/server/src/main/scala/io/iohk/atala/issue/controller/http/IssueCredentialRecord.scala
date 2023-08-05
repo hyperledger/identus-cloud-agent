@@ -4,9 +4,9 @@ import io.iohk.atala.api.http.Annotation
 import io.iohk.atala.issue.controller.http.IssueCredentialRecord.annotations
 import io.iohk.atala.mercury.model.{AttachmentDescriptor, Base64}
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord as PolluxIssueCredentialRecord
-import sttp.tapir.Schema
-import sttp.tapir.Schema.annotations.{description, encodedExample}
+import sttp.tapir.Schema.annotations.{description, encodedExample, validate}
 import sttp.tapir.json.zio.schemaForZioJsonValue
+import sttp.tapir.{Schema, Validator}
 import zio.json.*
 import zio.json.ast.Json
 
@@ -68,9 +68,11 @@ final case class IssueCredentialRecord(
     updatedAt: Option[OffsetDateTime] = None,
     @description(annotations.role.description)
     @encodedExample(annotations.role.example)
+    @validate(annotations.role.validator)
     role: String,
     @description(annotations.protocolState.description)
     @encodedExample(annotations.protocolState.example)
+    @validate(annotations.protocolState.validator)
     protocolState: String,
     @description(annotations.jwtCredential.description)
     @encodedExample(annotations.jwtCredential.example)
@@ -175,13 +177,37 @@ object IssueCredentialRecord {
     object role
         extends Annotation[String](
           description = "The role played by the Prism agent in the credential issuance flow.",
-          example = "Issuer"
+          example = "Issuer",
+          validator = Validator.enumeration(
+            List(
+              "Issuer",
+              "Holder"
+            )
+          )
         )
 
     object protocolState
-        extends Annotation[String]( // TODO Support Enum
+        extends Annotation[String](
           description = "The current state of the issue credential protocol execution.",
-          example = "OfferPending"
+          example = "OfferPending",
+          validator = Validator.enumeration(
+            List(
+              "OfferPending",
+              "OfferSent",
+              "OfferReceived",
+              "RequestPending",
+              "RequestGenerated",
+              "RequestSent",
+              "RequestReceived",
+              "CredentialPending",
+              "CredentialGenerated",
+              "CredentialSent",
+              "CredentialReceived",
+              "ProblemReportPending",
+              "ProblemReportSent",
+              "ProblemReportReceived"
+            )
+          )
         )
 
     object jwtCredential
