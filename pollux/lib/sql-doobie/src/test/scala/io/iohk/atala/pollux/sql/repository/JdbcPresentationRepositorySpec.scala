@@ -34,5 +34,6 @@ object JdbcPresentationRepositorySpec extends ZIOSpecDefault {
     ) @@ TestAspect.before(
       ZIO.serviceWithZIO[Migrations](_.migrate)
     )).provide(testEnvironmentLayer)
+      .provide(Runtime.removeDefaultLoggers)
 
 }

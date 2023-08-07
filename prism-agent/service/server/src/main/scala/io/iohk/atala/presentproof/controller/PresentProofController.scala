@@ -14,7 +14,7 @@ trait PresentProofController {
       requestPresentationInput: RequestPresentationInput
   )(implicit
       rc: RequestContext
-  ): IO[ErrorResponse, RequestPresentationOutput]
+  ): IO[ErrorResponse, PresentationStatus]
 
   def getPresentations(
       paginationInput: PaginationInput,

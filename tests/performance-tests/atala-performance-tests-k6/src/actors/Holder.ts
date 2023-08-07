@@ -88,8 +88,8 @@ export class Holder extends Actor {
   /**
    * Waits for a credential offer and accepts it.
    */
-  waitAndAcceptCredentialOffer() {
-    this.credential = this.credentialsService.waitForCredentialOffer();
+  waitAndAcceptCredentialOffer(thid: string) {
+    this.credential = this.credentialsService.waitForCredentialOffer(thid);
     this.credentialsService.acceptCredentialOffer(this.credential, this.did!);
     this.credentialsService.waitForCredentialState(this.credential, "RequestSent");
   }
@@ -104,8 +104,8 @@ export class Holder extends Actor {
   /**
    * Waits for a proof request, accepts it, and waits for the presentation to be sent.
    */
-  waitAndAcceptProofRequest() {
-    const presentation = this.proofsService.waitForProof();
+  waitAndAcceptProofRequest(thid: string) {
+    const presentation = this.proofsService.waitForProof(thid);
     this.proofsService.acceptProofRequest(presentation, this.credential!.recordId);
     this.proofsService.waitForPresentationState(presentation.presentationId, "PresentationSent");
   }
