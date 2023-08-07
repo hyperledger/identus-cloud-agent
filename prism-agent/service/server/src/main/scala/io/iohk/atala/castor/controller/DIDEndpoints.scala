@@ -1,25 +1,26 @@
 package io.iohk.atala.castor.controller
 
+import io.iohk.atala.api.http.codec.DIDCodec.emptyDidJsonLD
 import io.iohk.atala.api.http.codec.DIDCodec.{didJsonLD, didResolutionJsonLD}
 import io.iohk.atala.castor.controller.http.{DIDResolutionResult, DIDInput}
 import sttp.model.StatusCode
 import sttp.tapir.*
-import io.iohk.atala.api.http.codec.DIDCodec.emptyDidJsonLD
-import sttp.tapir.typelevel.MatchType
 
 object DIDEndpoints {
 
-  private def matchStatus(sc: StatusCode): PartialFunction[Any, Boolean] = {
-    case result: DIDResolutionResult =>
-      val maybeError = result.didResolutionMetadata.error
-      val isDeactivated = result.didDocumentMetadata.deactivated.getOrElse(false)
-      maybeError match {
-        case None if !isDeactivated => sc == StatusCode.Ok
-        case None => sc == StatusCode.Gone
-        case Some("invalidDid") => sc == StatusCode.BadRequest
-        case Some("notFound") => sc == StatusCode.NotFound
-        case Some(_) => false
-      }
+  private def matchStatus(sc: StatusCode): PartialFunction[Any, Boolean] = { case result: DIDResolutionResult =>
+    val maybeError = result.didResolutionMetadata.error
+    val isDeactivated = result.didDocumentMetadata.deactivated.getOrElse(false)
+    maybeError match {
+      case None if !isDeactivated             => sc == StatusCode.Ok
+      case None                               => sc == StatusCode.Gone
+      case Some("invalidDid")                 => sc == StatusCode.BadRequest
+      case Some("invalidDidUrl")              => sc == StatusCode.BadRequest
+      case Some("notFound")                   => sc == StatusCode.NotFound
+      case Some("representationNotSupported") => sc == StatusCode.NotAcceptable
+      case Some("internalError")              => sc == StatusCode.InternalServerError
+      case Some(_)                            => false
+    }
   }
 
   val resolutionEndpointOutput = oneOf[DIDResolutionResult](
@@ -45,6 +46,27 @@ object DIDEndpoints {
       )
     )(matchStatus(StatusCode.NotFound)),
     oneOfVariantValueMatcher(
+      StatusCode.NotAcceptable,
+      oneOfBody[DIDResolutionResult](
+        stringBodyUtf8AnyFormat(didResolutionJsonLD),
+        stringBodyUtf8AnyFormat(emptyDidJsonLD)
+      )
+    )(matchStatus(StatusCode.NotAcceptable)),
+    oneOfVariantValueMatcher(
+      StatusCode.Gone,
+      oneOfBody[DIDResolutionResult](
+        stringBodyUtf8AnyFormat(didResolutionJsonLD),
+        stringBodyUtf8AnyFormat(emptyDidJsonLD)
+      )
+    )(matchStatus(StatusCode.Gone)),
+    oneOfVariantValueMatcher(
+      StatusCode.NotImplemented,
+      oneOfBody[DIDResolutionResult](
+        stringBodyUtf8AnyFormat(didResolutionJsonLD),
+        stringBodyUtf8AnyFormat(emptyDidJsonLD)
+      )
+    )(matchStatus(StatusCode.NotImplemented)),
+    oneOfVariantValueMatcher(
       StatusCode.InternalServerError,
       oneOfBody[DIDResolutionResult](
         stringBodyUtf8AnyFormat(didResolutionJsonLD),
@@ -62,22 +84,6 @@ object DIDEndpoints {
   ] = infallibleEndpoint.get
     .in("dids" / DIDInput.didRefPathSegment)
     .out(resolutionEndpointOutput)
-    // .out(
-    //   statusCode
-    //     .description(StatusCode.Ok, "The resolution result or W3C DID document representation")
-    //     .description(StatusCode.BadRequest, "Invalid DID or DID URL")
-    //     .description(StatusCode.NotFound, "The DID is not found")
-    //     .description(StatusCode.NotAcceptable, "The DID document representation is not supported")
-    //     .description(StatusCode.Gone, "The DID is deactivated")
-    //     .description(StatusCode.NotImplemented, "The DID method is not supported")
-    //     .description(StatusCode.InternalServerError, "Internal error")
-    //     .and(
-    //       oneOf[DIDResolutionResult](
-    //         oneOfVariant(stringBodyUtf8AnyFormat(didResolutionJsonLD)),
-    //         oneOfVariant(stringBodyUtf8AnyFormat(didJsonLD)),
-    //       )
-    //     )
-    // )
     .name("getDID")
     .summary("Resolve Prism DID to a W3C representation")
     .description("""Resolve Prism DID to a W3C DID document representation.

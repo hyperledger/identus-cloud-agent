@@ -1,13 +1,11 @@
 package io.iohk.atala.castor.controller
 
 import io.iohk.atala.castor.controller.http.DIDResolutionResult
-import sttp.model.StatusCode
 import zio.*
 import io.iohk.atala.castor.controller.http.{DIDDocument, DIDDocumentMetadata, DIDResolutionMetadata}
 import io.iohk.atala.castor.core.model.did.w3c.{DIDDocumentMetadataRepr, DIDDocumentRepr, DIDResolutionErrorRepr}
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.castor.core.model.did.w3c.makeW3CResolver
-import io.iohk.atala.castor.controller.DIDControllerImpl.resolutionStatusCodeMapping
 import scala.language.implicitConversions
 
 trait DIDController {
@@ -59,24 +57,4 @@ class DIDControllerImpl(service: DIDService) extends DIDController {
 
 object DIDControllerImpl {
   val layer: URLayer[DIDService, DIDController] = ZLayer.fromFunction(DIDControllerImpl(_))
-
-  // TODO: remove
-  // MUST conform to https://w3c-ccg.github.io/did-resolution/#bindings-https
-  def resolutionStatusCodeMapping(
-      resolutionResult: DIDResolutionResult,
-      resolutionError: Option[DIDResolutionErrorRepr]
-  ): StatusCode = {
-    import DIDResolutionErrorRepr.*
-    val isDeactivated = resolutionResult.didDocumentMetadata.deactivated.getOrElse(false)
-    resolutionError match {
-      case None if !isDeactivated           => StatusCode.Ok
-      case None                             => StatusCode.Gone
-      case Some(InvalidDID(_))              => StatusCode.BadRequest
-      case Some(InvalidDIDUrl(_))           => StatusCode.BadRequest
-      case Some(NotFound)                   => StatusCode.NotFound
-      case Some(RepresentationNotSupported) => StatusCode.NotAcceptable
-      case Some(InternalError(_))           => StatusCode.InternalServerError
-      case Some(_)                          => StatusCode.InternalServerError
-    }
-  }
 }
