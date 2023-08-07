@@ -15,6 +15,10 @@ final case class PresentationStatus(
     @description(annotations.thid.description)
     @encodedExample(annotations.thid.example)
     thid: String,
+    @description(annotations.role.description)
+    @encodedExample(annotations.role.example)
+    @validate(annotations.role.validator)
+    role: String,
     @description(annotations.status.description)
     @encodedExample(annotations.status.example)
     @validate(annotations.status.validator)
@@ -45,6 +49,7 @@ object PresentationStatus {
     PresentationStatus(
       domain.id.value,
       thid = domain.thid.value,
+      role = domain.role.toString,
       status = domain.protocolState.toString,
       proofs = Seq.empty,
       data = data,
@@ -67,7 +72,17 @@ object PresentationStatus {
             "The value will identical on both sides of the presentation flow (verifier and prover)",
           example = "0527aea1-d131-3948-a34d-03af39aba8b4"
         )
-
+    object role
+        extends Annotation[String](
+          description = "The role played by the Prism agent in the proof presentation flow.",
+          example = "Verifier",
+          validator = Validator.enumeration(
+            List(
+              "Verifier",
+              "Prover"
+            )
+          )
+        )
     object status
         extends Annotation[String](
           description = "The current state of the proof presentation record.",
