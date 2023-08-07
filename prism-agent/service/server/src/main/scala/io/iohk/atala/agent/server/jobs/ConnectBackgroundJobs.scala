@@ -14,6 +14,7 @@ import io.iohk.atala.mercury.model.*
 import io.iohk.atala.mercury.model.error.*
 import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
+import io.iohk.atala.shared.utils.DurationOps.toMetricsSeconds
 import zio.*
 import zio.metrics.*
 object ConnectBackgroundJobs {
@@ -98,11 +99,11 @@ object ConnectBackgroundJobs {
           resp <- MessagingService.send(request.makeMessage).provideSomeLayer(didCommAgent) @@ Metric
             .gauge("connection_flow_invitee_send_connection_request_ms_gauge")
             .tagged("connectionId", record.id.toString)
-            .trackDurationWith(_.toNanos.toDouble)
+            .trackDurationWith(_.toMetricsSeconds)
           connectionService <- ZIO.service[ConnectionService]
           _ <- {
             if (resp.status >= 200 && resp.status < 300)
-              connectionService.markConnectionRequestSent(id)
+              connectionService.markConnectionRequestSent(id) // TODO: this one throws an error
                 @@ InviteeConnectionRequestMsgSuccess
                 @@ CustomMetricsAspect.endRecordingTime(
                   s"${record.id}_invitee_pending_to_req_sent",
@@ -127,7 +128,7 @@ object ConnectBackgroundJobs {
           @@ Metric
             .gauge("connection_flow_invitee_process_connection_record_ms_gauge")
             .tagged("connectionId", record.id.toString)
-            .trackDurationWith(_.toMillis.toDouble)
+            .trackDurationWith(_.toMetricsSeconds)
 
       case ConnectionRecord(
             id,
@@ -149,7 +150,7 @@ object ConnectBackgroundJobs {
           resp <- MessagingService.send(response.makeMessage).provideSomeLayer(didCommAgent) @@ Metric
             .gauge("connection_flow_inviter_send_connection_response_ms_gauge")
             .tagged("connectionId", record.id.toString)
-            .trackDurationWith(_.toNanos.toDouble)
+            .trackDurationWith(_.toMetricsSeconds)
           connectionService <- ZIO.service[ConnectionService]
           _ <- {
             if (resp.status >= 200 && resp.status < 300)
@@ -165,7 +166,7 @@ object ConnectBackgroundJobs {
           @@ Metric
             .gauge("connection_flow_inviter_process_connection_record_ms_gauge")
             .tagged("connectionId", record.id.toString)
-            .trackDurationWith(_.toMillis.toDouble)
+            .trackDurationWith(_.toMetricsSeconds)
 
       case _ => ZIO.unit
     }

@@ -4,6 +4,7 @@ import zio.*
 import scala.collection.mutable.{Map => MutMap}
 import zio.metrics.*
 import java.time.{Instant, Clock, Duration}
+import io.iohk.atala.shared.utils.DurationOps.toMetricsSeconds
 
 object CustomMetricsAspect {
   private val checkpoints: MutMap[String, Instant] = MutMap.empty
@@ -36,7 +37,7 @@ object CustomMetricsAspect {
           end <- now
           maybeStart = checkpoints.get(key)
           metricsZio = maybeStart.map(start => Duration.between(start, end)).fold(ZIO.unit) { duration =>
-            ZIO.succeed(duration.toMillis.toDouble / 1000.0) @@ Metric.gauge(metricsKey).tagged(tags)
+            ZIO.succeed(duration.toMetricsSeconds) @@ Metric.gauge(metricsKey).tagged(tags)
           }
           _ <- metricsZio
         } yield res
