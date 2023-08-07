@@ -24,7 +24,7 @@ import io.iohk.atala.pollux.vc.jwt.{PrismDidResolver, DidResolver as JwtDidResol
 import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc
 import io.iohk.atala.shared.db.DbConfig
 import io.iohk.atala.shared.db.TransactorLayer
-import io.iohk.atala.shared.db.WalletTask
+import io.iohk.atala.shared.db.ContextfulTask
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 import zio.config.typesafe.TypesafeConfigSource
@@ -171,13 +171,13 @@ object RepoModule {
     SystemModule.configLayer >>> dbConfigLayer
   }
 
-  val agentTransactorLayer: TaskLayer[Transactor[WalletTask]] = {
+  val agentTransactorLayer: TaskLayer[Transactor[ContextfulTask]] = {
     val transactorLayer = ZLayer.fromZIO {
       ZIO.service[DbConfig].flatMap { config =>
-        given Async[WalletTask] = summon[Async[Task]].asInstanceOf
-        Dispatcher.parallel[WalletTask].allocated.map { case (dispatcher, _) =>
-          given Dispatcher[WalletTask] = dispatcher
-          TransactorLayer.hikari[WalletTask](config)
+        given Async[ContextfulTask] = summon[Async[Task]].asInstanceOf
+        Dispatcher.parallel[ContextfulTask].allocated.map { case (dispatcher, _) =>
+          given Dispatcher[ContextfulTask] = dispatcher
+          TransactorLayer.hikari[ContextfulTask](config)
         }
       }
     }.flatten

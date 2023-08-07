@@ -7,20 +7,17 @@ import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 import zio.interop.catz.*
 
-trait ContextRef[T]
-
-trait WalletAware
-type WalletTask[T] = Task[T] with WalletAware
+trait ContextAware
+type ContextfulTask[T] = Task[T] with ContextAware
 
 object Implicits {
 
   extension [A](ma: ConnectionIO[A]) {
-    // TODO: find a better name
-    def globalTransact(xa: Transactor[WalletTask]): Task[A] = {
+    def transactAny(xa: Transactor[ContextfulTask]): Task[A] = {
       ma.transact(xa.asInstanceOf[Transactor[Task]])
     }
 
-    def walletTransact(xa: Transactor[WalletTask]): RIO[WalletAccessContext, A] = {
+    def transactWallet(xa: Transactor[ContextfulTask]): RIO[WalletAccessContext, A] = {
       def walletCxnIO(ctx: WalletAccessContext) =
         for {
           // TODO: set parameter here

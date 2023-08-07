@@ -13,8 +13,7 @@ import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
 import io.iohk.atala.castor.core.model.did.InternalKeyPurpose
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import io.iohk.atala.castor.core.model.did.{PrismDID, ScheduledDIDOperationStatus}
-import io.iohk.atala.shared.db.Implicits.*
-import io.iohk.atala.shared.db.WalletTask
+import io.iohk.atala.shared.db.ContextfulTask
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.models.WalletId
 import java.time.Instant
@@ -22,7 +21,7 @@ import scala.collection.immutable.ArraySeq
 import zio.*
 import zio.interop.catz.*
 
-class JdbcDIDNonSecretStorage(xa: Transactor[WalletTask]) extends DIDNonSecretStorage {
+class JdbcDIDNonSecretStorage(xa: Transactor[ContextfulTask]) extends DIDNonSecretStorage {
 
   override def getManagedDIDState(did: PrismDID): RIO[WalletAccessContext, Option[ManagedDIDState]] = {
     val cxnIO = (walletId: WalletId) =>
@@ -46,7 +45,7 @@ class JdbcDIDNonSecretStorage(xa: Transactor[WalletTask]) extends DIDNonSecretSt
     for {
       walletCtx <- ZIO.service[WalletAccessContext]
       result <- cxnIO(walletCtx.walletId)
-        .walletTransact(xa)
+        .transactWallet(xa)
         .flatMap(_.map(_.toDomain).fold(ZIO.none)(t => ZIO.fromTry(t).asSome))
     } yield result
   }
@@ -98,7 +97,7 @@ class JdbcDIDNonSecretStorage(xa: Transactor[WalletTask]) extends DIDNonSecretSt
     for {
       walletCtx <- ZIO.service[WalletAccessContext]
       now <- Clock.instant
-      _ <- txnIO(now, walletCtx.walletId).walletTransact(xa)
+      _ <- txnIO(now, walletCtx.walletId).transactWallet(xa)
     } yield ()
   }
 
@@ -121,7 +120,7 @@ class JdbcDIDNonSecretStorage(xa: Transactor[WalletTask]) extends DIDNonSecretSt
     for {
       walletCtx <- ZIO.service[WalletAccessContext]
       now <- Clock.instant
-      _ <- cxnIO(now, walletCtx.walletId).run.walletTransact(xa)
+      _ <- cxnIO(now, walletCtx.walletId).run.transactWallet(xa)
     } yield ()
   }
 
@@ -136,7 +135,7 @@ class JdbcDIDNonSecretStorage(xa: Transactor[WalletTask]) extends DIDNonSecretSt
         .option
 
     ZIO.serviceWithZIO[WalletAccessContext] { walletCtx =>
-      cxnIO(walletCtx.walletId).walletTransact(xa).map(_.flatten)
+      cxnIO(walletCtx.walletId).transactWallet(xa).map(_.flatten)
     }
   }
 
@@ -164,7 +163,7 @@ class JdbcDIDNonSecretStorage(xa: Transactor[WalletTask]) extends DIDNonSecretSt
         case None => ZIO.none
         case Some(didIndex) =>
           for {
-            keyUsageIndex <- cxnIO.walletTransact(xa)
+            keyUsageIndex <- cxnIO.transactWallet(xa)
             keyUsageIndexMap = keyUsageIndex.map { case (k, v) => k -> (v + 1) }.toMap
           } yield Some(
             HdKeyIndexCounter(
@@ -206,7 +205,7 @@ class JdbcDIDNonSecretStorage(xa: Transactor[WalletTask]) extends DIDNonSecretSt
         .option
 
     ZIO.serviceWithZIO[WalletAccessContext] { walletCtx =>
-      cxnIO(walletCtx.walletId).walletTransact(xa)
+      cxnIO(walletCtx.walletId).transactWallet(xa)
     }
   }
 
@@ -228,7 +227,7 @@ class JdbcDIDNonSecretStorage(xa: Transactor[WalletTask]) extends DIDNonSecretSt
 
     for {
       state <- getManagedDIDState(did)
-      paths <- cxnIO.walletTransact(xa)
+      paths <- cxnIO.transactWallet(xa)
     } yield state.map(_.didIndex).fold(Nil) { didIndex =>
       paths.map { (keyId, operationHash, keyUsage, keyIndex) =>
         (keyId, operationHash, ManagedDIDHdKeyPath(didIndex, keyUsage, keyIndex))
@@ -258,7 +257,7 @@ class JdbcDIDNonSecretStorage(xa: Transactor[WalletTask]) extends DIDNonSecretSt
 
     for {
       now <- Clock.instant
-      _ <- cxnIO(now).run.walletTransact(xa)
+      _ <- cxnIO(now).run.transactWallet(xa)
     } yield ()
   }
 
@@ -309,7 +308,7 @@ class JdbcDIDNonSecretStorage(xa: Transactor[WalletTask]) extends DIDNonSecretSt
     for {
       walletCtx <- ZIO.service[WalletAccessContext]
       result <- cxnOps(walletCtx.walletId)
-        .walletTransact(xa)
+        .transactWallet(xa)
         .flatMap { case (rows, totalCount) =>
           val results = rows.map(row => row.toDomain.map(row.did -> _))
           ZIO.foreach(results)(ZIO.fromTry).map(_ -> totalCount)
@@ -344,7 +343,7 @@ class JdbcDIDNonSecretStorage(xa: Transactor[WalletTask]) extends DIDNonSecretSt
            | )
            """.stripMargin.update
 
-    cxnIO.run.walletTransact(xa).unit
+    cxnIO.run.transactWallet(xa).unit
   }
 
   override def listUpdateLineage(
@@ -372,7 +371,7 @@ class JdbcDIDNonSecretStorage(xa: Transactor[WalletTask]) extends DIDNonSecretSt
       result <- (baseFr ++ whereFr(walletCtx.walletId))
         .query[DIDUpdateLineage]
         .to[List]
-        .walletTransact(xa)
+        .transactWallet(xa)
     } yield result
   }
 
@@ -389,11 +388,12 @@ class JdbcDIDNonSecretStorage(xa: Transactor[WalletTask]) extends DIDNonSecretSt
             | WHERE operation_id = $operationId
             """.stripMargin.update
 
-    Clock.instant.flatMap(now => cxnIO(now).run.walletTransact(xa)).unit
+    Clock.instant.flatMap(now => cxnIO(now).run.transactWallet(xa)).unit
   }
 
 }
 
 object JdbcDIDNonSecretStorage {
-  val layer: URLayer[Transactor[WalletTask], DIDNonSecretStorage] = ZLayer.fromFunction(new JdbcDIDNonSecretStorage(_))
+  val layer: URLayer[Transactor[ContextfulTask], DIDNonSecretStorage] =
+    ZLayer.fromFunction(new JdbcDIDNonSecretStorage(_))
 }
