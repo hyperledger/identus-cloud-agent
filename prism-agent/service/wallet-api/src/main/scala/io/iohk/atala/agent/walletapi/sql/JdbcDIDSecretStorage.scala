@@ -5,14 +5,15 @@ import doobie.*
 import doobie.implicits.*
 import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
 import io.iohk.atala.mercury.model.DidId
+import io.iohk.atala.shared.db.Implicits.*
+import io.iohk.atala.shared.db.WalletTask
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.models.WalletId
 import java.time.Instant
 import java.util.UUID
 import zio.*
-import zio.interop.catz.*
 
-class JdbcDIDSecretStorage(xa: Transactor[Task]) extends DIDSecretStorage {
+class JdbcDIDSecretStorage(xa: Transactor[WalletTask]) extends DIDSecretStorage {
 
   case class InstantAsBigInt(value: Instant)
 
@@ -44,7 +45,7 @@ class JdbcDIDSecretStorage(xa: Transactor[Task]) extends DIDSecretStorage {
         .query[OctetKeyPair]
         .option
 
-    ZIO.serviceWithZIO[WalletAccessContext](ctx => cxnIO(ctx.walletId).transact(xa))
+    ZIO.serviceWithZIO[WalletAccessContext](ctx => cxnIO(ctx.walletId).walletTransact(xa))
   }
 
   override def insertKey(did: DidId, keyId: String, keyPair: OctetKeyPair): RIO[WalletAccessContext, Int] = {
@@ -67,13 +68,13 @@ class JdbcDIDSecretStorage(xa: Transactor[Task]) extends DIDSecretStorage {
     for {
       now <- Clock.instant
       walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
-      n <- cxnIO(InstantAsBigInt(now), walletId).run.transact(xa)
+      n <- cxnIO(InstantAsBigInt(now), walletId).run.walletTransact(xa)
     } yield n
   }
 
 }
 
 object JdbcDIDSecretStorage {
-  val layer: URLayer[Transactor[Task], DIDSecretStorage] =
+  val layer: URLayer[Transactor[WalletTask], DIDSecretStorage] =
     ZLayer.fromFunction(new JdbcDIDSecretStorage(_))
 }

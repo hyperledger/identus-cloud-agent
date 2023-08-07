@@ -1,5 +1,6 @@
 package io.iohk.atala.agent.server
 
+import cats.effect.kernel.Async
 import cats.effect.std.Dispatcher
 import com.typesafe.config.ConfigFactory
 import doobie.util.transactor.Transactor
@@ -23,6 +24,7 @@ import io.iohk.atala.pollux.vc.jwt.{PrismDidResolver, DidResolver as JwtDidResol
 import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc
 import io.iohk.atala.shared.db.DbConfig
 import io.iohk.atala.shared.db.TransactorLayer
+import io.iohk.atala.shared.db.WalletTask
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 import zio.config.typesafe.TypesafeConfigSource
@@ -169,12 +171,13 @@ object RepoModule {
     SystemModule.configLayer >>> dbConfigLayer
   }
 
-  val agentTransactorLayer: TaskLayer[Transactor[Task]] = {
+  val agentTransactorLayer: TaskLayer[Transactor[WalletTask]] = {
     val transactorLayer = ZLayer.fromZIO {
       ZIO.service[DbConfig].flatMap { config =>
-        Dispatcher.parallel[Task].allocated.map { case (dispatcher, _) =>
-          given Dispatcher[Task] = dispatcher
-          TransactorLayer.hikari[Task](config)
+        given Async[WalletTask] = summon[Async[Task]].asInstanceOf
+        Dispatcher.parallel[WalletTask].allocated.map { case (dispatcher, _) =>
+          given Dispatcher[WalletTask] = dispatcher
+          TransactorLayer.hikari[WalletTask](config)
         }
       }
     }.flatten
