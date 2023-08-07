@@ -5,7 +5,6 @@ import com.typesafe.config.ConfigFactory
 import doobie.util.transactor.Transactor
 import io.grpc.ManagedChannelBuilder
 import io.iohk.atala.agent.server.config.AppConfig
-import io.iohk.atala.agent.server.sql.DbConfig as AgentDbConfig
 import io.iohk.atala.agent.walletapi.crypto.Apollo
 import io.iohk.atala.agent.walletapi.service.WalletManagementService
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
@@ -22,6 +21,8 @@ import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
 import io.iohk.atala.pollux.sql.repository.DbConfig as PolluxDbConfig
 import io.iohk.atala.pollux.vc.jwt.{PrismDidResolver, DidResolver as JwtDidResolver}
 import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc
+import io.iohk.atala.shared.db.DbConfig
+import io.iohk.atala.shared.db.TransactorLayer
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 import zio.config.typesafe.TypesafeConfigSource
@@ -154,10 +155,10 @@ object RepoModule {
     connectDbConfigLayer >>> transactorLayer
   }
 
-  val agentDbConfigLayer: TaskLayer[AgentDbConfig] = {
+  val agentDbConfigLayer: TaskLayer[DbConfig] = {
     val dbConfigLayer = ZLayer.fromZIO {
       ZIO.service[AppConfig].map(_.agent.database) map { config =>
-        AgentDbConfig(
+        DbConfig(
           username = config.username,
           password = config.password,
           jdbcUrl = s"jdbc:postgresql://${config.host}:${config.port}/${config.databaseName}",
@@ -170,10 +171,10 @@ object RepoModule {
 
   val agentTransactorLayer: TaskLayer[Transactor[Task]] = {
     val transactorLayer = ZLayer.fromZIO {
-      ZIO.service[AgentDbConfig].flatMap { config =>
+      ZIO.service[DbConfig].flatMap { config =>
         Dispatcher.parallel[Task].allocated.map { case (dispatcher, _) =>
           given Dispatcher[Task] = dispatcher
-          io.iohk.atala.agent.server.sql.TransactorLayer.hikari[Task](config)
+          TransactorLayer.hikari[Task](config)
         }
       }
     }.flatten
