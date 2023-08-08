@@ -43,3 +43,10 @@ DROP CONSTRAINT prism_did_wallet_state_did_index_key;
 
 ALTER TABLE public.prism_did_wallet_state
 ADD CONSTRAINT wallet_id_did_index UNIQUE (wallet_id, did_index);
+
+-- Enforce RLS
+ALTER TABLE public.peer_did_rand_key ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY peer_did_rand_key_wallet_isolation
+    ON public.peer_did_rand_key
+    USING (wallet_id = current_setting('app.current_wallet_id')::UUID);

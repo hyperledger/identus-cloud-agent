@@ -1,7 +1,6 @@
 package io.iohk.atala.shared.db
 
 import doobie.*
-import doobie.implicits.*
 import doobie.postgres.implicits.*
 import doobie.syntax.ConnectionIOOps
 import doobie.util.transactor.Transactor
@@ -19,6 +18,8 @@ object Implicits {
   given walletIdGet: Get[WalletId] = Get[UUID].map(WalletId.fromUUID)
   given walletIdPut: Put[WalletId] = Put[UUID].contramap(_.toUUID)
 
+  // given logHandler: LogHandler = LogHandler.jdkLogHandler
+
   private val WalletIdVariableName = "app.current_wallet_id"
 
   extension [A](ma: ConnectionIO[A]) {
@@ -27,17 +28,26 @@ object Implicits {
     }
 
     def transactWallet(xa: Transactor[ContextAwareTask]): RIO[WalletAccessContext, A] = {
-      def walletCxnIO(ctx: WalletAccessContext) =
+      def walletCxnIO(ctx: WalletAccessContext) = {
         for {
-          _ <- sql"""SET LOCAL $WalletIdVariableName = '${ctx.walletId}'""".update.run
+          _ <- doobie.free.connection.createStatement.map { statement =>
+            statement.execute(s"SET LOCAL $WalletIdVariableName TO '${ctx.walletId}'")
+          }
           result <- ma
         } yield result
+      }
 
       for {
         ctx <- ZIO.service[WalletAccessContext]
-        result <- walletCxnIO(ctx).transact(xa)
+        _ <- ZIO.debug {
+          s"""
+          | ##### WalletAccessContext #####
+          | ${ctx.toString()}
+          """.stripMargin
+        }
+        result <- ConnectionIOOps(walletCxnIO(ctx)).transact(xa.asInstanceOf[Transactor[Task]])
       } yield result
-    }
+    }.debug("transactWallet")
   }
 
 }
