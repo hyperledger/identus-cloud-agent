@@ -146,7 +146,6 @@ lazy val D = new {
 }
 
 lazy val D_Shared = new {
-  // FIXME: split share DB as subproject?
   lazy val dependencies: Seq[ModuleID] =
     Seq(
       D.typesafeConfig,
@@ -154,7 +153,9 @@ lazy val D_Shared = new {
       D.testcontainersPostgres,
       D.testcontainersVault,
       D.zio,
+      // FIXME: split share DB as subproject?
       D.doobieHikari,
+      D.doobiePostgres,
       D.zioCatsInterop
     )
 }

@@ -7,7 +7,7 @@ import doobie.util.transactor.Transactor
 import io.iohk.atala.agent.walletapi.model.WalletSeed
 import io.iohk.atala.agent.walletapi.storage.WalletSecretStorage
 import io.iohk.atala.shared.db.ContextAwareTask
-import io.iohk.atala.shared.db.Implicits.*
+import io.iohk.atala.shared.db.Implicits.{*, given}
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.models.WalletId
 import java.time.Instant

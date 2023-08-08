@@ -5,7 +5,7 @@ import doobie.*
 import doobie.implicits.*
 import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
 import io.iohk.atala.mercury.model.DidId
-import io.iohk.atala.shared.db.Implicits.*
+import io.iohk.atala.shared.db.Implicits.{*, given}
 import io.iohk.atala.shared.db.ContextAwareTask
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.models.WalletId

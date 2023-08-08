@@ -1,9 +1,13 @@
 package io.iohk.atala.shared.db
 
 import doobie.*
+import doobie.implicits.*
+import doobie.postgres.implicits.*
 import doobie.syntax.ConnectionIOOps
 import doobie.util.transactor.Transactor
 import io.iohk.atala.shared.models.WalletAccessContext
+import io.iohk.atala.shared.models.WalletId
+import java.util.UUID
 import zio.*
 import zio.interop.catz.*
 
@@ -11,6 +15,12 @@ trait ContextAware
 type ContextAwareTask[T] = Task[T] with ContextAware
 
 object Implicits {
+
+  given walletIdGet: Get[WalletId] = Get[UUID].map(WalletId.fromUUID)
+  given walletIdPut: Put[WalletId] = Put[UUID].contramap(_.toUUID)
+
+  private val WalletIdVariableName = "app.current_wallet_id"
+
   extension [A](ma: ConnectionIO[A]) {
     def transact(xa: Transactor[ContextAwareTask]): Task[A] = {
       ConnectionIOOps(ma).transact(xa.asInstanceOf[Transactor[Task]])
@@ -19,19 +29,13 @@ object Implicits {
     def transactWallet(xa: Transactor[ContextAwareTask]): RIO[WalletAccessContext, A] = {
       def walletCxnIO(ctx: WalletAccessContext) =
         for {
-          // TODO: set parameter here
+          _ <- sql"""SET LOCAL $WalletIdVariableName = '${ctx.walletId}'""".update.run
           result <- ma
         } yield result
 
       for {
         ctx <- ZIO.service[WalletAccessContext]
-        _ <- ZIO.debug {
-          s"""
-          | ##### WalletAccesContext #####
-          | ${ctx.toString()}
-          """.stripMargin
-        }
-        result <- ConnectionIOOps(walletCxnIO(ctx)).transact(xa.asInstanceOf[Transactor[Task]])
+        result <- walletCxnIO(ctx).transact(xa)
       } yield result
     }
   }

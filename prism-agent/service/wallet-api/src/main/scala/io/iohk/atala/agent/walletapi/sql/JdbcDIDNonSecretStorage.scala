@@ -14,7 +14,7 @@ import io.iohk.atala.castor.core.model.did.InternalKeyPurpose
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import io.iohk.atala.castor.core.model.did.{PrismDID, ScheduledDIDOperationStatus}
 import io.iohk.atala.shared.db.ContextAwareTask
-import io.iohk.atala.shared.db.Implicits.*
+import io.iohk.atala.shared.db.Implicits.{*, given}
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.models.WalletId
 import java.time.Instant
