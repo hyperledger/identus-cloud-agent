@@ -46,16 +46,47 @@ ADD CONSTRAINT wallet_id_did_index UNIQUE (wallet_id, did_index);
 
 -- Enforce RLS
 ALTER TABLE public.peer_did_rand_key ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.prism_did_wallet_state ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.wallet_seed ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.prism_did_hd_key ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.prism_did_update_lineage ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY peer_did_rand_key_wallet_isolation
 ON public.peer_did_rand_key
 USING (wallet_id = current_setting('app.current_wallet_id')::UUID);
 
-ALTER  TABLE public.prism_did_wallet_state ENABLE ROW LEVEL SECURITY;
-
 CREATE POLICY prism_did_wallet_state_wallet_isolation
 ON public.prism_did_wallet_state
 USING (wallet_id = current_setting('app.current_wallet_id')::UUID);
+
+CREATE POLICY wallet_seed_wallet_isolation
+ON public.wallet_seed
+USING (wallet_id = current_setting('app.current_wallet_id')::UUID);
+
+CREATE POLICY prism_did_hd_key_wallet_isolation
+ON public.prism_did_hd_key
+USING (
+    EXISTS(
+        SELECT 1
+        FROM prism_did_wallet_state s
+        WHERE s.wallet_id = current_setting('app.current_wallet_id')::UUID
+            AND s.did = public.prism_did_hd_key.did
+    )
+);
+
+CREATE POLICY prism_did_update_lineage_wallet_isolation
+ON public.prism_did_update_lineage
+USING (
+    EXISTS(
+        SELECT 1
+        FROM prism_did_wallet_state s
+        WHERE s.wallet_id = current_setting('app.current_wallet_id')::UUID
+            AND s.did = public.prism_did_update_lineage.did
+    )
+);
+
+
+
 
 -- TODO: remove this
 CREATE USER "agent-application-user" WITH PASSWORD 'password';
