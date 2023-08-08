@@ -1,6 +1,5 @@
 package io.iohk.atala.agent.server
 
-import cats.effect.kernel.Async
 import cats.effect.std.Dispatcher
 import com.typesafe.config.ConfigFactory
 import doobie.util.transactor.Transactor
@@ -171,18 +170,8 @@ object RepoModule {
     SystemModule.configLayer >>> dbConfigLayer
   }
 
-  val agentTransactorLayer: TaskLayer[Transactor[ContextAwareTask]] = {
-    val transactorLayer = ZLayer.fromZIO {
-      ZIO.service[DbConfig].flatMap { config =>
-        given Async[ContextAwareTask] = summon[Async[Task]].asInstanceOf
-        Dispatcher.parallel[ContextAwareTask].allocated.map { case (dispatcher, _) =>
-          given Dispatcher[ContextAwareTask] = dispatcher
-          TransactorLayer.hikari[ContextAwareTask](config)
-        }
-      }
-    }.flatten
-    agentDbConfigLayer() >>> transactorLayer
-  }
+  val agentTransactorLayer: TaskLayer[Transactor[ContextAwareTask]] =
+    agentDbConfigLayer() >>> TransactorLayer.contextAwareLayer
 
   val vaultClientLayer: TaskLayer[VaultKVClient] = {
     val vaultClientConfig = ZLayer {

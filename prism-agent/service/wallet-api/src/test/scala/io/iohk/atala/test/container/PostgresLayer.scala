@@ -1,12 +1,13 @@
 package io.iohk.atala.test.container
 
-import cats.effect.std.Dispatcher
 import cats.effect.Resource
+import cats.effect.std.Dispatcher
 import com.dimafeng.testcontainers.PostgreSQLContainer
 import com.zaxxer.hikari.HikariConfig
 import doobie.hikari.HikariTransactor
 import doobie.util.ExecutionContexts
 import doobie.util.transactor.Transactor
+import io.iohk.atala.shared.db.ContextAwareTask
 import io.iohk.atala.shared.test.containers.PostgresTestContainer.postgresContainer
 import zio.*
 import zio.ZIO.*
@@ -42,7 +43,7 @@ object PostgresLayer {
       } yield hikariConfig(container)
     }
 
-  def transactor: ZLayer[HikariConfig, Throwable, Transactor[Task]] = ZLayer.fromZIO {
+  def transactor: ZLayer[HikariConfig, Throwable, Transactor[ContextAwareTask]] = ZLayer.fromZIO {
     val hikariTransactorLayerZIO = for {
       config <- ZIO.service[HikariConfig]
       htxResource: Resource[Task, HikariTransactor[Task]] = for {

@@ -12,6 +12,18 @@ import zio.interop.catz.*
 
 object TransactorLayer {
 
+  def contextAwareLayer: RLayer[DbConfig, Transactor[ContextAwareTask]] = {
+    ZLayer.fromZIO {
+      ZIO.service[DbConfig].flatMap { config =>
+        given Async[ContextAwareTask] = summon[Async[Task]].asInstanceOf
+        Dispatcher[ContextAwareTask].allocated.map { case (dispatcher, _) =>
+          given Dispatcher[ContextAwareTask] = dispatcher
+          TransactorLayer.hikari[ContextAwareTask](config)
+        }
+      }
+    }.flatten
+  }
+
   def hikari[A[_]: Async: Dispatcher](config: DbConfig)(using tag: Tag[Transactor[A]]): TaskLayer[Transactor[A]] = {
     val transactorLayerZio = ZIO
       .attempt {
