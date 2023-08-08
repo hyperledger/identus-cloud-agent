@@ -24,7 +24,7 @@ import zio.*
 class JdbcDIDNonSecretStorage(xa: Transactor[ContextAwareTask]) extends DIDNonSecretStorage {
 
   override def getManagedDIDState(did: PrismDID): RIO[WalletAccessContext, Option[ManagedDIDState]] = {
-    val cxnIO = (walletId: WalletId) =>
+    val cxnIO =
       sql"""
         | SELECT
         |   did,
@@ -34,20 +34,16 @@ class JdbcDIDNonSecretStorage(xa: Transactor[ContextAwareTask]) extends DIDNonSe
         |   created_at,
         |   updated_at,
         |   key_mode,
-        |   did_index,
-        |   wallet_id
+        |   did_index
         | FROM public.prism_did_wallet_state
-        | WHERE did = $did AND wallet_id = $walletId
+        | WHERE did = $did
         """.stripMargin
         .query[DIDStateRow]
         .option
 
-    for {
-      walletCtx <- ZIO.service[WalletAccessContext]
-      result <- cxnIO(walletCtx.walletId)
-        .transactWallet(xa)
-        .flatMap(_.map(_.toDomain).fold(ZIO.none)(t => ZIO.fromTry(t).asSome))
-    } yield result
+    cxnIO
+      .transactWallet(xa)
+      .flatMap(_.map(_.toDomain).fold(ZIO.none)(t => ZIO.fromTry(t).asSome))
   }
 
   override def insertManagedDID(
@@ -108,35 +104,32 @@ class JdbcDIDNonSecretStorage(xa: Transactor[ContextAwareTask]) extends DIDNonSe
       case PublicationState.PublicationPending(operationId) => Some(operationId)
       case PublicationState.Published(operationId)          => Some(operationId)
     }
-    val cxnIO = (now: Instant, walletId: WalletId) => sql"""
+    val cxnIO = (now: Instant) => sql"""
            | UPDATE public.prism_did_wallet_state
            | SET
            |   publication_status = $status,
            |   publish_operation_id = $publishedOperationId,
            |   updated_at = $now
-           | WHERE did = $did AND wallet_id = $walletId
+           | WHERE did = $did
            """.stripMargin.update
 
     for {
-      walletCtx <- ZIO.service[WalletAccessContext]
       now <- Clock.instant
-      _ <- cxnIO(now, walletCtx.walletId).run.transactWallet(xa)
+      _ <- cxnIO(now).run.transactWallet(xa)
     } yield ()
   }
 
   override def getMaxDIDIndex(): RIO[WalletAccessContext, Option[Int]] = {
-    val cxnIO = (walletId: WalletId) =>
+    val cxnIO =
       sql"""
            | SELECT MAX(did_index)
            | FROM public.prism_did_wallet_state
-           | WHERE did_index IS NOT NULL AND wallet_id = $walletId
+           | WHERE did_index IS NOT NULL
            """.stripMargin
         .query[Option[Int]]
         .option
 
-    ZIO.serviceWithZIO[WalletAccessContext] { walletCtx =>
-      cxnIO(walletCtx.walletId).transactWallet(xa).map(_.flatten)
-    }
+    cxnIO.transactWallet(xa).map(_.flatten)
   }
 
   override def getHdKeyCounter(did: PrismDID): RIO[WalletAccessContext, Option[HdKeyIndexCounter]] = {
@@ -186,7 +179,7 @@ class JdbcDIDNonSecretStorage(xa: Transactor[ContextAwareTask]) extends DIDNonSe
 
   override def getHdKeyPath(did: PrismDID, keyId: String): RIO[WalletAccessContext, Option[ManagedDIDHdKeyPath]] = {
     val status: ScheduledDIDOperationStatus = ScheduledDIDOperationStatus.Confirmed
-    val cxnIO = (walletId: WalletId) =>
+    val cxnIO =
       sql"""
            | SELECT
            |   ws.did_index,
@@ -199,14 +192,11 @@ class JdbcDIDNonSecretStorage(xa: Transactor[ContextAwareTask]) extends DIDNonSe
            |   hd.did = $did
            |   AND hd.key_id = $keyId
            |   AND (ul.status = $status OR (ul.status IS NULL AND hd.operation_hash = sha256(ws.atala_operation_content)))
-           |   AND ws.wallet_id = $walletId
            """.stripMargin
         .query[ManagedDIDHdKeyPath]
         .option
 
-    ZIO.serviceWithZIO[WalletAccessContext] { walletCtx =>
-      cxnIO(walletCtx.walletId).transactWallet(xa)
-    }
+    cxnIO.transactWallet(xa)
   }
 
   override def listHdKeyPath(
@@ -273,9 +263,8 @@ class JdbcDIDNonSecretStorage(xa: Transactor[ContextAwareTask]) extends DIDNonSe
         .query[Int]
         .unique
 
-    val didsCxnIO = {
-      val baseFr =
-        sql"""
+    val baseFr =
+      sql"""
            | SELECT
            |   did,
            |   publication_status,
@@ -284,36 +273,30 @@ class JdbcDIDNonSecretStorage(xa: Transactor[ContextAwareTask]) extends DIDNonSe
            |   created_at,
            |   updated_at,
            |   key_mode,
-           |   did_index,
-           |   wallet_id
+           |   did_index
            | FROM public.prism_did_wallet_state
            | ORDER BY created_at
            """.stripMargin
-      val withOffsetFr = offset.fold(baseFr)(offsetValue => baseFr ++ fr"OFFSET $offsetValue")
-      val withOffsetAndLimitFr = limit.fold(withOffsetFr)(limitValue => withOffsetFr ++ fr"LIMIT $limitValue")
-
+    val withOffsetFr = offset.fold(baseFr)(offsetValue => baseFr ++ fr"OFFSET $offsetValue")
+    val withOffsetAndLimitFr = limit.fold(withOffsetFr)(limitValue => withOffsetFr ++ fr"LIMIT $limitValue")
+    val didsCxnIO =
       withOffsetAndLimitFr
         .query[DIDStateRow]
         .to[List]
-    }
 
-    val cxnOps =
-      for {
-        totalCount <- countCxnIO
-        rows <- didsCxnIO
-      } yield (rows, totalCount)
+    val effect = for {
+      totalCount <- countCxnIO
+      rows <- didsCxnIO
+    } yield (rows, totalCount)
 
-    for {
-      result <- cxnOps
-        .transactWallet(xa)
-        .flatMap { case (rows, totalCount) =>
-          val results = rows.map(row => row.toDomain.map(row.did -> _))
-          ZIO.foreach(results)(ZIO.fromTry).map(_ -> totalCount)
-        }
-    } yield result
+    effect
+      .transactWallet(xa)
+      .flatMap { case (rows, totalCount) =>
+        val results = rows.map(row => row.toDomain.map(row.did -> _))
+        ZIO.foreach(results)(ZIO.fromTry).map(_ -> totalCount)
+      }
   }
 
-  // TODO: isolate wallet
   override def insertDIDUpdateLineage(
       did: PrismDID,
       updateLineage: DIDUpdateLineage
@@ -347,32 +330,27 @@ class JdbcDIDNonSecretStorage(xa: Transactor[ContextAwareTask]) extends DIDNonSe
       did: Option[PrismDID],
       status: Option[ScheduledDIDOperationStatus]
   ): RIO[WalletAccessContext, Seq[DIDUpdateLineage]] = {
-    val didFilter = did.map(d => fr"ws.did = $d")
-    val statusFilter = status.map(s => fr"ul.status = $s")
-    val walletIdFilter = (walletId: WalletId) => fr"ws.wallet_id = $walletId"
-    val whereFr = (walletId: WalletId) => Fragments.whereAndOpt(didFilter, statusFilter, Some(walletIdFilter(walletId)))
-    val baseFr = sql"""
+    val didFilter = did.map(d => fr"did = $d")
+    val statusFilter = status.map(s => fr"status = $s")
+    val whereFr = Fragments.whereAndOpt(didFilter, statusFilter)
+    val baseFr =
+      sql"""
            | SELECT
-           |   ul.operation_id,
-           |   ul.operation_hash,
-           |   ul.previous_operation_hash,
-           |   ul.status,
-           |   ul.created_at,
-           |   ul.updated_at
-           | FROM public.prism_did_wallet_state ws
-           |   LEFT JOIN public.prism_did_update_lineage ul ON ws.did = ul.did
+           |   operation_id,
+           |   operation_hash,
+           |   previous_operation_hash,
+           |   status,
+           |   created_at,
+           |   updated_at
+           | FROM public.prism_did_update_lineage
            """.stripMargin
+    val cxnIO = (baseFr ++ whereFr)
+      .query[DIDUpdateLineage]
+      .to[List]
 
-    for {
-      walletCtx <- ZIO.service[WalletAccessContext]
-      result <- (baseFr ++ whereFr(walletCtx.walletId))
-        .query[DIDUpdateLineage]
-        .to[List]
-        .transactWallet(xa)
-    } yield result
+    cxnIO.transactWallet(xa)
   }
 
-  // TODO: isolate wallet
   override def setDIDUpdateLineageStatus(
       operationId: Array[Byte],
       status: ScheduledDIDOperationStatus
