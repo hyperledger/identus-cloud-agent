@@ -22,9 +22,9 @@ import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
 import io.iohk.atala.pollux.sql.repository.DbConfig as PolluxDbConfig
 import io.iohk.atala.pollux.vc.jwt.{PrismDidResolver, DidResolver as JwtDidResolver}
 import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc
+import io.iohk.atala.shared.db.ContextAwareTask
 import io.iohk.atala.shared.db.DbConfig
 import io.iohk.atala.shared.db.TransactorLayer
-import io.iohk.atala.shared.db.ContextfulTask
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 import zio.config.typesafe.TypesafeConfigSource
@@ -171,13 +171,13 @@ object RepoModule {
     SystemModule.configLayer >>> dbConfigLayer
   }
 
-  val agentTransactorLayer: TaskLayer[Transactor[ContextfulTask]] = {
+  val agentTransactorLayer: TaskLayer[Transactor[ContextAwareTask]] = {
     val transactorLayer = ZLayer.fromZIO {
       ZIO.service[DbConfig].flatMap { config =>
-        given Async[ContextfulTask] = summon[Async[Task]].asInstanceOf
-        Dispatcher.parallel[ContextfulTask].allocated.map { case (dispatcher, _) =>
-          given Dispatcher[ContextfulTask] = dispatcher
-          TransactorLayer.hikari[ContextfulTask](config)
+        given Async[ContextAwareTask] = summon[Async[Task]].asInstanceOf
+        Dispatcher.parallel[ContextAwareTask].allocated.map { case (dispatcher, _) =>
+          given Dispatcher[ContextAwareTask] = dispatcher
+          TransactorLayer.hikari[ContextAwareTask](config)
         }
       }
     }.flatten

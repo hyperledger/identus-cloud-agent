@@ -6,14 +6,14 @@ import doobie.implicits.*
 import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.shared.db.Implicits.*
-import io.iohk.atala.shared.db.ContextfulTask
+import io.iohk.atala.shared.db.ContextAwareTask
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.models.WalletId
 import java.time.Instant
 import java.util.UUID
 import zio.*
 
-class JdbcDIDSecretStorage(xa: Transactor[ContextfulTask]) extends DIDSecretStorage {
+class JdbcDIDSecretStorage(xa: Transactor[ContextAwareTask]) extends DIDSecretStorage {
 
   case class InstantAsBigInt(value: Instant)
 
@@ -75,6 +75,6 @@ class JdbcDIDSecretStorage(xa: Transactor[ContextfulTask]) extends DIDSecretStor
 }
 
 object JdbcDIDSecretStorage {
-  val layer: URLayer[Transactor[ContextfulTask], DIDSecretStorage] =
+  val layer: URLayer[Transactor[ContextAwareTask], DIDSecretStorage] =
     ZLayer.fromFunction(new JdbcDIDSecretStorage(_))
 }

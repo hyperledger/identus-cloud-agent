@@ -13,7 +13,7 @@ import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
 import io.iohk.atala.castor.core.model.did.InternalKeyPurpose
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import io.iohk.atala.castor.core.model.did.{PrismDID, ScheduledDIDOperationStatus}
-import io.iohk.atala.shared.db.ContextfulTask
+import io.iohk.atala.shared.db.ContextAwareTask
 import io.iohk.atala.shared.db.Implicits.*
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.models.WalletId
@@ -21,7 +21,7 @@ import java.time.Instant
 import scala.collection.immutable.ArraySeq
 import zio.*
 
-class JdbcDIDNonSecretStorage(xa: Transactor[ContextfulTask]) extends DIDNonSecretStorage {
+class JdbcDIDNonSecretStorage(xa: Transactor[ContextAwareTask]) extends DIDNonSecretStorage {
 
   override def getManagedDIDState(did: PrismDID): RIO[WalletAccessContext, Option[ManagedDIDState]] = {
     val cxnIO = (walletId: WalletId) =>
@@ -394,6 +394,6 @@ class JdbcDIDNonSecretStorage(xa: Transactor[ContextfulTask]) extends DIDNonSecr
 }
 
 object JdbcDIDNonSecretStorage {
-  val layer: URLayer[Transactor[ContextfulTask], DIDNonSecretStorage] =
+  val layer: URLayer[Transactor[ContextAwareTask], DIDNonSecretStorage] =
     ZLayer.fromFunction(new JdbcDIDNonSecretStorage(_))
 }
