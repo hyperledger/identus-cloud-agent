@@ -34,7 +34,8 @@ class JdbcDIDNonSecretStorage(xa: Transactor[ContextAwareTask]) extends DIDNonSe
         |   created_at,
         |   updated_at,
         |   key_mode,
-        |   did_index
+        |   did_index,
+        |   wallet_id
         | FROM public.prism_did_wallet_state
         | WHERE did = $did
         """.stripMargin
@@ -273,7 +274,8 @@ class JdbcDIDNonSecretStorage(xa: Transactor[ContextAwareTask]) extends DIDNonSe
            |   created_at,
            |   updated_at,
            |   key_mode,
-           |   did_index
+           |   did_index,
+           |   wallet_id
            | FROM public.prism_did_wallet_state
            | ORDER BY created_at
            """.stripMargin

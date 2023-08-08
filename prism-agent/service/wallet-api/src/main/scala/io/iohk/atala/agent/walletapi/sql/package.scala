@@ -12,7 +12,6 @@ import io.iohk.atala.prism.protos.node_models
 import io.iohk.atala.shared.models.WalletId
 
 import java.time.Instant
-import java.util.UUID
 import scala.collection.immutable.ArraySeq
 import scala.util.Try
 
