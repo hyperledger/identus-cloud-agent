@@ -10,7 +10,6 @@ import java.time.Duration
 final case class AppConfig(
     devMode: Boolean,
     iris: IrisConfig,
-    castor: CastorConfig,
     pollux: PolluxConfig,
     agent: AgentConfig,
     connect: ConnectConfig,
@@ -25,7 +24,6 @@ final case class VaultConfig(address: String, token: String)
 
 final case class IrisConfig(service: GrpcServiceConfig)
 
-final case class CastorConfig(database: DatabaseConfig)
 final case class PolluxConfig(
     database: DatabaseConfig,
     issueBgJobRecordsLimit: Int,
@@ -52,6 +50,8 @@ final case class DatabaseConfig(
     databaseName: String,
     username: String,
     password: String,
+    appUsername: String,
+    appPassword: String,
     awaitConnectionThreads: Int
 )
 

@@ -265,16 +265,15 @@ class JdbcDIDNonSecretStorage(xa: Transactor[ContextAwareTask]) extends DIDNonSe
       offset: Option[Int],
       limit: Option[Int]
   ): RIO[WalletAccessContext, (Seq[(PrismDID, ManagedDIDState)], Int)] = {
-    val countCxnIO = (walletId: WalletId) =>
+    val countCxnIO =
       sql"""
         | SELECT COUNT(*)
         | FROM public.prism_did_wallet_state
-        | WHERE wallet_id = $walletId
         """.stripMargin
         .query[Int]
         .unique
 
-    val didsCxnIO = (walletId: WalletId) => {
+    val didsCxnIO = {
       val baseFr =
         sql"""
            | SELECT
@@ -288,7 +287,6 @@ class JdbcDIDNonSecretStorage(xa: Transactor[ContextAwareTask]) extends DIDNonSe
            |   did_index,
            |   wallet_id
            | FROM public.prism_did_wallet_state
-           | WHERE wallet_id = $walletId
            | ORDER BY created_at
            """.stripMargin
       val withOffsetFr = offset.fold(baseFr)(offsetValue => baseFr ++ fr"OFFSET $offsetValue")
@@ -299,15 +297,14 @@ class JdbcDIDNonSecretStorage(xa: Transactor[ContextAwareTask]) extends DIDNonSe
         .to[List]
     }
 
-    val cxnOps = (walletId: WalletId) =>
+    val cxnOps =
       for {
-        totalCount <- countCxnIO(walletId)
-        rows <- didsCxnIO(walletId)
+        totalCount <- countCxnIO
+        rows <- didsCxnIO
       } yield (rows, totalCount)
 
     for {
-      walletCtx <- ZIO.service[WalletAccessContext]
-      result <- cxnOps(walletCtx.walletId)
+      result <- cxnOps
         .transactWallet(xa)
         .flatMap { case (rows, totalCount) =>
           val results = rows.map(row => row.toDomain.map(row.did -> _))

@@ -157,12 +157,12 @@ object RepoModule {
     connectDbConfigLayer >>> transactorLayer
   }
 
-  val agentDbConfigLayer: TaskLayer[DbConfig] = {
+  def agentDbConfigLayer(appUser: Boolean = true): TaskLayer[DbConfig] = {
     val dbConfigLayer = ZLayer.fromZIO {
       ZIO.service[AppConfig].map(_.agent.database) map { config =>
         DbConfig(
-          username = config.username,
-          password = config.password,
+          username = if (appUser) config.appUsername else config.username,
+          password = if (appUser) config.appPassword else config.password,
           jdbcUrl = s"jdbc:postgresql://${config.host}:${config.port}/${config.databaseName}",
           awaitConnectionThreads = config.awaitConnectionThreads
         )
@@ -181,7 +181,7 @@ object RepoModule {
         }
       }
     }.flatten
-    agentDbConfigLayer >>> transactorLayer
+    agentDbConfigLayer() >>> transactorLayer
   }
 
   val vaultClientLayer: TaskLayer[VaultKVClient] = {

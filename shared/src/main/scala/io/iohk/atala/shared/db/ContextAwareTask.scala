@@ -39,15 +39,9 @@ object Implicits {
 
       for {
         ctx <- ZIO.service[WalletAccessContext]
-        _ <- ZIO.debug {
-          s"""
-          | ##### WalletAccessContext #####
-          | ${ctx.toString()}
-          """.stripMargin
-        }
         result <- ConnectionIOOps(walletCxnIO(ctx)).transact(xa.asInstanceOf[Transactor[Task]])
       } yield result
-    }.debug("transactWallet")
+    }
   }
 
 }

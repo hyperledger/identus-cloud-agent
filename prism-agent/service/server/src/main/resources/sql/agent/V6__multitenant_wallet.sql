@@ -48,5 +48,16 @@ ADD CONSTRAINT wallet_id_did_index UNIQUE (wallet_id, did_index);
 ALTER TABLE public.peer_did_rand_key ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY peer_did_rand_key_wallet_isolation
-    ON public.peer_did_rand_key
-    USING (wallet_id = current_setting('app.current_wallet_id')::UUID);
+ON public.peer_did_rand_key
+USING (wallet_id = current_setting('app.current_wallet_id')::UUID);
+
+ALTER  TABLE public.prism_did_wallet_state ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY prism_did_wallet_state_wallet_isolation
+ON public.prism_did_wallet_state
+USING (wallet_id = current_setting('app.current_wallet_id')::UUID);
+
+-- TODO: remove this
+CREATE USER "agent-application-user" WITH PASSWORD 'password';
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES
+    IN SCHEMA public TO "agent-application-user";
