@@ -153,7 +153,7 @@ lazy val D_Shared = new {
       D.testcontainersPostgres,
       D.testcontainersVault,
       D.zio,
-      // FIXME: split share DB as subproject?
+      // FIXME: split shared DB stuff as subproject?
       D.doobieHikari,
       D.doobiePostgres,
       D.zioCatsInterop

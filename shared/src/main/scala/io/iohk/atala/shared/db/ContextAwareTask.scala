@@ -18,8 +18,6 @@ object Implicits {
   given walletIdGet: Get[WalletId] = Get[UUID].map(WalletId.fromUUID)
   given walletIdPut: Put[WalletId] = Put[UUID].contramap(_.toUUID)
 
-  // given logHandler: LogHandler = LogHandler.jdkLogHandler
-
   private val WalletIdVariableName = "app.current_wallet_id"
 
   extension [A](ma: ConnectionIO[A]) {

@@ -10,6 +10,6 @@ trait PostgresTestContainerSupport {
   protected val pgContainerLayer: TaskLayer[PostgreSQLContainer] = PostgresLayer.postgresLayer()
 
   protected val transactorLayer: TaskLayer[Transactor[ContextAwareTask]] =
-    pgContainerLayer >>> PostgresLayer.hikariConfigLayer >>> PostgresLayer.transactor
+    pgContainerLayer >>> PostgresLayer.dbConfigLayer >>> PostgresLayer.transactor
 
 }
