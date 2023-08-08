@@ -1,7 +1,7 @@
 package io.iohk.atala.shared.db
 
 import doobie.*
-import doobie.implicits.*
+import doobie.syntax.ConnectionIOOps
 import doobie.util.transactor.Transactor
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
@@ -13,8 +13,8 @@ type ContextfulTask[T] = Task[T] with ContextAware
 object Implicits {
 
   extension [A](ma: ConnectionIO[A]) {
-    def transactAny(xa: Transactor[ContextfulTask]): Task[A] = {
-      ma.transact(xa.asInstanceOf[Transactor[Task]])
+    def transact(xa: Transactor[ContextfulTask]): Task[A] = {
+      ConnectionIOOps(ma).transact(xa.asInstanceOf[Transactor[Task]])
     }
 
     def transactWallet(xa: Transactor[ContextfulTask]): RIO[WalletAccessContext, A] = {
@@ -32,7 +32,7 @@ object Implicits {
           | ${ctx.toString()}
           """.stripMargin
         }
-        result <- walletCxnIO(ctx).transact(xa.asInstanceOf[Transactor[Task]])
+        result <- ConnectionIOOps(walletCxnIO(ctx)).transact(xa.asInstanceOf[Transactor[Task]])
       } yield result
     }
 
