@@ -66,10 +66,11 @@ USING (wallet_id = current_setting('app.current_wallet_id')::UUID);
 CREATE POLICY prism_did_hd_key_wallet_isolation
 ON public.prism_did_hd_key
 USING (
-    EXISTS(
+    EXISTS (
         SELECT 1
-        FROM prism_did_wallet_state s
-        WHERE s.wallet_id = current_setting('app.current_wallet_id')::UUID
+        FROM prism_did_wallet_state AS s
+        WHERE
+            s.wallet_id = current_setting('app.current_wallet_id')::UUID
             AND s.did = public.prism_did_hd_key.did
     )
 );
@@ -77,10 +78,11 @@ USING (
 CREATE POLICY prism_did_update_lineage_wallet_isolation
 ON public.prism_did_update_lineage
 USING (
-    EXISTS(
+    EXISTS (
         SELECT 1
-        FROM prism_did_wallet_state s
-        WHERE s.wallet_id = current_setting('app.current_wallet_id')::UUID
+        FROM prism_did_wallet_state AS s
+        WHERE
+            s.wallet_id = current_setting('app.current_wallet_id')::UUID
             AND s.did = public.prism_did_update_lineage.did
     )
 );
