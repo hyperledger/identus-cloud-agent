@@ -12,7 +12,20 @@ import zio.interop.catz.*
 
 object TransactorLayer {
 
-  def contextAwareLayer: RLayer[DbConfig, Transactor[ContextAwareTask]] = {
+  def task: RLayer[DbConfig, Transactor[Task]] = {
+    ZLayer.fromZIO {
+      ZIO.service[DbConfig].flatMap { config =>
+        // Here we use `Dispatcher.apply`
+        // but at the agent level it is `Dispatcher.parallel` due to evicted version
+        Dispatcher[Task].allocated.map { case (dispatcher, _) =>
+          given Dispatcher[Task] = dispatcher
+          TransactorLayer.hikari[Task](config)
+        }
+      }
+    }.flatten
+  }
+
+  def contextAwareTask: RLayer[DbConfig, Transactor[ContextAwareTask]] = {
     ZLayer.fromZIO {
       ZIO.service[DbConfig].flatMap { config =>
         given Async[ContextAwareTask] = summon[Async[Task]].asInstanceOf

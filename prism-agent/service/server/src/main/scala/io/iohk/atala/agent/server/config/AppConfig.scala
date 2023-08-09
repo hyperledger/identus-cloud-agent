@@ -2,6 +2,7 @@ package io.iohk.atala.agent.server.config
 
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import io.iohk.atala.pollux.vc.jwt.*
+import io.iohk.atala.shared.db.DbConfig
 import zio.config.*
 import zio.config.magnolia.Descriptor
 
@@ -53,7 +54,16 @@ final case class DatabaseConfig(
     appUsername: String,
     appPassword: String,
     awaitConnectionThreads: Int
-)
+) {
+  def dbConfig(appUser: Boolean): DbConfig = {
+    DbConfig(
+      username = if (appUser) appUsername else username,
+      password = if (appUser) appPassword else password,
+      jdbcUrl = s"jdbc:postgresql://${host}:${port}/${databaseName}",
+      awaitConnectionThreads = awaitConnectionThreads
+    )
+  }
+}
 
 final case class PresentationVerificationConfig(
     verifySignature: Boolean,

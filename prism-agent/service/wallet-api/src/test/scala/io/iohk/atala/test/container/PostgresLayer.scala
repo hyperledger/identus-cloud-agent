@@ -35,5 +35,5 @@ object PostgresLayer {
   lazy val dbConfigLayer: ZLayer[PostgreSQLContainer, Nothing, DbConfig] =
     ZLayer.fromZIO { ZIO.serviceWith[PostgreSQLContainer](dbConfig) }
 
-  def transactor: ZLayer[DbConfig, Throwable, Transactor[ContextAwareTask]] = TransactorLayer.contextAwareLayer
+  def transactor: ZLayer[DbConfig, Throwable, Transactor[ContextAwareTask]] = TransactorLayer.contextAwareTask
 }

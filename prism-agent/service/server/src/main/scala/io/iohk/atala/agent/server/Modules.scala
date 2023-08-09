@@ -1,6 +1,5 @@
 package io.iohk.atala.agent.server
 
-import cats.effect.std.Dispatcher
 import com.typesafe.config.ConfigFactory
 import doobie.util.transactor.Transactor
 import io.grpc.ManagedChannelBuilder
@@ -15,10 +14,8 @@ import io.iohk.atala.agent.walletapi.util.SeedResolver
 import io.iohk.atala.agent.walletapi.vault.VaultWalletSecretStorage
 import io.iohk.atala.agent.walletapi.vault.{VaultDIDSecretStorage, VaultKVClient, VaultKVClientImpl}
 import io.iohk.atala.castor.core.service.DIDService
-import io.iohk.atala.connect.sql.repository.DbConfig as ConnectDbConfig
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
-import io.iohk.atala.pollux.sql.repository.DbConfig as PolluxDbConfig
 import io.iohk.atala.pollux.vc.jwt.{PrismDidResolver, DidResolver as JwtDidResolver}
 import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc
 import io.iohk.atala.shared.db.ContextAwareTask
@@ -28,7 +25,6 @@ import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 import zio.config.typesafe.TypesafeConfigSource
 import zio.config.{ReadError, read}
-import zio.interop.catz.*
 
 object SystemModule {
   val configLayer: Layer[ReadError[String], AppConfig] = ZLayer.fromZIO {
@@ -104,74 +100,35 @@ object GrpcModule {
 
 object RepoModule {
 
-  val polluxDbConfigLayer: TaskLayer[PolluxDbConfig] = {
+  val polluxDbConfigLayer: TaskLayer[DbConfig] = {
     val dbConfigLayer = ZLayer.fromZIO {
-      ZIO.service[AppConfig].map(_.pollux.database) map { config =>
-        PolluxDbConfig(
-          username = config.username,
-          password = config.password,
-          jdbcUrl = s"jdbc:postgresql://${config.host}:${config.port}/${config.databaseName}",
-          awaitConnectionThreads = config.awaitConnectionThreads
-        )
-      }
+      ZIO.service[AppConfig].map(_.pollux.database).map(_.dbConfig(appUser = false))
     }
     SystemModule.configLayer >>> dbConfigLayer
   }
 
-  val polluxTransactorLayer: TaskLayer[Transactor[Task]] = {
-    val transactorLayer = ZLayer.fromZIO {
-      ZIO.service[PolluxDbConfig].flatMap { config =>
-        Dispatcher.parallel[Task].allocated.map { case (dispatcher, _) =>
-          given Dispatcher[Task] = dispatcher
-          io.iohk.atala.pollux.sql.repository.TransactorLayer.hikari[Task](config)
-        }
-      }
-    }.flatten
-    polluxDbConfigLayer >>> transactorLayer
-  }
+  val polluxTransactorLayer: TaskLayer[Transactor[Task]] =
+    polluxDbConfigLayer >>> TransactorLayer.task
 
-  val connectDbConfigLayer: TaskLayer[ConnectDbConfig] = {
+  val connectDbConfigLayer: TaskLayer[DbConfig] = {
     val dbConfigLayer = ZLayer.fromZIO {
-      ZIO.service[AppConfig].map(_.connect.database) map { config =>
-        ConnectDbConfig(
-          username = config.username,
-          password = config.password,
-          jdbcUrl = s"jdbc:postgresql://${config.host}:${config.port}/${config.databaseName}",
-          awaitConnectionThreads = config.awaitConnectionThreads
-        )
-      }
+      ZIO.service[AppConfig].map(_.connect.database).map(_.dbConfig(appUser = false))
     }
     SystemModule.configLayer >>> dbConfigLayer
   }
 
-  val connectTransactorLayer: TaskLayer[Transactor[Task]] = {
-    val transactorLayer = ZLayer.fromZIO {
-      ZIO.service[ConnectDbConfig].flatMap { config =>
-        Dispatcher.parallel[Task].allocated.map { case (dispatcher, _) =>
-          given Dispatcher[Task] = dispatcher
-          io.iohk.atala.connect.sql.repository.TransactorLayer.hikari[Task](config)
-        }
-      }
-    }.flatten
-    connectDbConfigLayer >>> transactorLayer
-  }
+  val connectTransactorLayer: TaskLayer[Transactor[Task]] =
+    connectDbConfigLayer >>> TransactorLayer.task
 
   def agentDbConfigLayer(appUser: Boolean = true): TaskLayer[DbConfig] = {
     val dbConfigLayer = ZLayer.fromZIO {
-      ZIO.service[AppConfig].map(_.agent.database) map { config =>
-        DbConfig(
-          username = if (appUser) config.appUsername else config.username,
-          password = if (appUser) config.appPassword else config.password,
-          jdbcUrl = s"jdbc:postgresql://${config.host}:${config.port}/${config.databaseName}",
-          awaitConnectionThreads = config.awaitConnectionThreads
-        )
-      }
+      ZIO.service[AppConfig].map(_.agent.database).map(_.dbConfig(appUser = appUser))
     }
     SystemModule.configLayer >>> dbConfigLayer
   }
 
   val agentTransactorLayer: TaskLayer[Transactor[ContextAwareTask]] =
-    agentDbConfigLayer() >>> TransactorLayer.contextAwareLayer
+    agentDbConfigLayer() >>> TransactorLayer.contextAwareTask
 
   val vaultClientLayer: TaskLayer[VaultKVClient] = {
     val vaultClientConfig = ZLayer {
