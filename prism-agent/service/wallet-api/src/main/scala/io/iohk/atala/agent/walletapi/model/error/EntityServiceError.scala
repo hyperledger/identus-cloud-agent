@@ -1,0 +1,11 @@
+package io.iohk.atala.agent.walletapi.model.error
+
+import java.util.UUID
+
+sealed trait EntityServiceError
+
+object EntityServiceError {
+  final case class EntityNotFound(id: UUID, message: String) extends EntityServiceError
+  final case class EntityAlreadyExists(id: UUID, message: String) extends EntityServiceError
+  final case class EntityStorageError(message: String) extends EntityServiceError
+}

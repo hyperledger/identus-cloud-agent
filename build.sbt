@@ -801,7 +801,8 @@ lazy val prismAgentWalletAPI = project
   .settings(prismAgentConnectCommonSettings)
   .settings(
     name := "prism-agent-wallet-api",
-    libraryDependencies ++= D_PrismAgent.keyManagementDependencies
+    libraryDependencies ++= D_PrismAgent.keyManagementDependencies ++ D_PrismAgent.postgresDependencies ++
+      Seq(D.zioMock) ++ D_PrismAgent.postgresDependencies
   )
   .dependsOn(
     agentDidcommx,
