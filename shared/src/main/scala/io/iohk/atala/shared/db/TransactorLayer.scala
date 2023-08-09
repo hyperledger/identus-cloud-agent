@@ -1,22 +1,44 @@
-package io.iohk.atala.agent.server.sql
+package io.iohk.atala.shared.db
 
-import cats.effect.{Async, Resource}
-import doobie.util.transactor.Transactor
-import com.zaxxer.hikari.HikariConfig
-import doobie.util.ExecutionContexts
-import doobie.hikari.HikariTransactor
-import zio.interop.catz.*
-import zio.*
+import cats.effect.Async
+import cats.effect.kernel.Resource
 import cats.effect.std.Dispatcher
-
-case class DbConfig(
-    username: String,
-    password: String,
-    jdbcUrl: String,
-    awaitConnectionThreads: Int = 8
-)
+import com.zaxxer.hikari.HikariConfig
+import doobie.hikari.HikariTransactor
+import doobie.util.ExecutionContexts
+import doobie.util.transactor.Transactor
+import zio.*
+import zio.interop.catz.*
 
 object TransactorLayer {
+
+  def task: RLayer[DbConfig, Transactor[Task]] = {
+    ZLayer.fromZIO {
+      ZIO.service[DbConfig].flatMap { config =>
+        // Here we use `Dispatcher.apply`
+        // but at the agent level it is `Dispatcher.parallel` due to evicted version
+        Dispatcher[Task].allocated.map { case (dispatcher, _) =>
+          given Dispatcher[Task] = dispatcher
+          TransactorLayer.hikari[Task](config)
+        }
+      }
+    }.flatten
+  }
+
+  def contextAwareTask: RLayer[DbConfig, Transactor[ContextAwareTask]] = {
+    ZLayer.fromZIO {
+      ZIO.service[DbConfig].flatMap { config =>
+        given Async[ContextAwareTask] = summon[Async[Task]].asInstanceOf
+
+        // Here we use `Dispatcher.apply`
+        // but at the agent level it is `Dispatcher.parallel` due to evicted version
+        Dispatcher[ContextAwareTask].allocated.map { case (dispatcher, _) =>
+          given Dispatcher[ContextAwareTask] = dispatcher
+          TransactorLayer.hikari[ContextAwareTask](config)
+        }
+      }
+    }.flatten
+  }
 
   def hikari[A[_]: Async: Dispatcher](config: DbConfig)(using tag: Tag[Transactor[A]]): TaskLayer[Transactor[A]] = {
     val transactorLayerZio = ZIO

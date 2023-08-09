@@ -173,6 +173,23 @@ SQL_SQL_LINT_ARGUMENTS: -d postgres --ignore-errors=postgres-invalid-alter-optio
 
 ---
 
+Date Added: 2023-08-08
+
+Author: Pat Losoponkul
+
+Date Actioned: 2023-08-08
+
+Linter - Current Status: Enabled
+
+Linter - Suggested Change:  Customise
+
+*Change detail*
+
+Add option `postgres-invalid-create-option` to the linter argument due to linter not
+recognizing CREATE POLCIY statement that is used in RLS
+
+---
+
 #### SQL_TSQLLINT
 
 Date Added: 2023-01-18

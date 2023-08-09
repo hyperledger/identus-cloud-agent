@@ -147,7 +147,17 @@ lazy val D = new {
 
 lazy val D_Shared = new {
   lazy val dependencies: Seq[ModuleID] =
-    Seq(D.typesafeConfig, D.scalaPbGrpc, D.testcontainersPostgres, D.testcontainersVault)
+    Seq(
+      D.typesafeConfig,
+      D.scalaPbGrpc,
+      D.testcontainersPostgres,
+      D.testcontainersVault,
+      D.zio,
+      // FIXME: split shared DB stuff as subproject?
+      D.doobieHikari,
+      D.doobiePostgres,
+      D.zioCatsInterop
+    )
 }
 
 lazy val D_Connect = new {

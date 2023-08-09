@@ -5,12 +5,13 @@ import doobie.implicits.*
 import doobie.postgres.implicits.*
 import doobie.util.transactor.Transactor
 import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorage
+import io.iohk.atala.shared.db.Implicits.{*, given}
+import io.iohk.atala.shared.db.ContextAwareTask
 import io.iohk.atala.shared.models.WalletId
 import java.time.Instant
 import zio.*
-import zio.interop.catz.*
 
-class JdbcWalletNonSecretStorage(xa: Transactor[Task]) extends WalletNonSecretStorage {
+class JdbcWalletNonSecretStorage(xa: Transactor[ContextAwareTask]) extends WalletNonSecretStorage {
 
   override def createWallet: Task[WalletId] = {
     val cxnIO = (walletId: WalletId, now: Instant) => sql"""
@@ -40,6 +41,6 @@ class JdbcWalletNonSecretStorage(xa: Transactor[Task]) extends WalletNonSecretSt
 }
 
 object JdbcWalletNonSecretStorage {
-  val layer: URLayer[Transactor[Task], WalletNonSecretStorage] =
+  val layer: URLayer[Transactor[ContextAwareTask], WalletNonSecretStorage] =
     ZLayer.fromFunction(new JdbcWalletNonSecretStorage(_))
 }

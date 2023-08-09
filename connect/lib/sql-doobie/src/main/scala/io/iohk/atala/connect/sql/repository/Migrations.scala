@@ -1,5 +1,6 @@
 package io.iohk.atala.connect.sql.repository
 
+import io.iohk.atala.shared.db.DbConfig
 import org.flywaydb.core.Flyway
 import zio.*
 

@@ -1,16 +1,13 @@
 package io.iohk.atala.test.container
 
-import cats.effect.std.Dispatcher
-import cats.effect.Resource
 import com.dimafeng.testcontainers.PostgreSQLContainer
-import com.zaxxer.hikari.HikariConfig
-import doobie.hikari.HikariTransactor
-import doobie.util.ExecutionContexts
 import doobie.util.transactor.Transactor
+import io.iohk.atala.shared.db.ContextAwareTask
+import io.iohk.atala.shared.db.DbConfig
+import io.iohk.atala.shared.db.TransactorLayer
 import io.iohk.atala.shared.test.containers.PostgresTestContainer.postgresContainer
 import zio.*
 import zio.ZIO.*
-import zio.interop.catz.*
 
 object PostgresLayer {
 
@@ -27,36 +24,16 @@ object PostgresLayer {
         .tap(container => ZIO.attemptBlocking(container.start()))
     }
 
-  private def hikariConfig(container: PostgreSQLContainer): HikariConfig = {
-    val config = HikariConfig()
-    config.setJdbcUrl(container.jdbcUrl)
-    config.setUsername(container.username)
-    config.setPassword(container.password)
-    config
+  private def dbConfig(container: PostgreSQLContainer): DbConfig = {
+    DbConfig(
+      username = container.username,
+      password = container.password,
+      jdbcUrl = container.jdbcUrl
+    )
   }
 
-  lazy val hikariConfigLayer: ZLayer[PostgreSQLContainer, Nothing, HikariConfig] =
-    ZLayer.fromZIO {
-      for {
-        container <- ZIO.service[PostgreSQLContainer]
-      } yield hikariConfig(container)
-    }
+  lazy val dbConfigLayer: ZLayer[PostgreSQLContainer, Nothing, DbConfig] =
+    ZLayer.fromZIO { ZIO.serviceWith[PostgreSQLContainer](dbConfig) }
 
-  def transactor: ZLayer[HikariConfig, Throwable, Transactor[Task]] = ZLayer.fromZIO {
-    val hikariTransactorLayerZIO = for {
-      config <- ZIO.service[HikariConfig]
-      htxResource: Resource[Task, HikariTransactor[Task]] = for {
-        ec <- ExecutionContexts.cachedThreadPool[Task]
-        xa <- HikariTransactor.fromHikariConfig[Task](config, ec)
-      } yield xa
-      layer <- Dispatcher[Task].allocated.map {
-        case (dispatcher, _) => {
-          given Dispatcher[Task] = dispatcher
-          htxResource.toManaged.toLayer[Transactor[Task]]
-        }
-      }
-    } yield layer
-    hikariTransactorLayerZIO
-  }.flatten
-
+  def transactor: ZLayer[DbConfig, Throwable, Transactor[ContextAwareTask]] = TransactorLayer.contextAwareTask
 }

@@ -5,14 +5,15 @@ import doobie.*
 import doobie.implicits.*
 import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
 import io.iohk.atala.mercury.model.DidId
+import io.iohk.atala.shared.db.Implicits.{*, given}
+import io.iohk.atala.shared.db.ContextAwareTask
 import io.iohk.atala.shared.models.WalletAccessContext
-import io.iohk.atala.shared.models.WalletId
 import java.time.Instant
 import java.util.UUID
 import zio.*
-import zio.interop.catz.*
+import io.iohk.atala.shared.models.WalletId
 
-class JdbcDIDSecretStorage(xa: Transactor[Task]) extends DIDSecretStorage {
+class JdbcDIDSecretStorage(xa: Transactor[ContextAwareTask]) extends DIDSecretStorage {
 
   case class InstantAsBigInt(value: Instant)
 
@@ -31,20 +32,18 @@ class JdbcDIDSecretStorage(xa: Transactor[Task]) extends DIDSecretStorage {
   given octetKeyPairPut: Put[OctetKeyPair] = Put[String].contramap(_.toJSONString)
 
   override def getKey(did: DidId, keyId: String): RIO[WalletAccessContext, Option[OctetKeyPair]] = {
-    val cxnIO = (walletId: WalletId) =>
-      sql"""
+    val cxnIO = sql"""
         | SELECT
         |   key_pair
         | FROM public.peer_did_rand_key
         | WHERE
         |   did = $did
         |   AND key_id = $keyId
-        |   AND wallet_id = $walletId
         """.stripMargin
-        .query[OctetKeyPair]
-        .option
+      .query[OctetKeyPair]
+      .option
 
-    ZIO.serviceWithZIO[WalletAccessContext](ctx => cxnIO(ctx.walletId).transact(xa))
+    cxnIO.transactWallet(xa)
   }
 
   override def insertKey(did: DidId, keyId: String, keyPair: OctetKeyPair): RIO[WalletAccessContext, Int] = {
@@ -67,13 +66,13 @@ class JdbcDIDSecretStorage(xa: Transactor[Task]) extends DIDSecretStorage {
     for {
       now <- Clock.instant
       walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
-      n <- cxnIO(InstantAsBigInt(now), walletId).run.transact(xa)
-    } yield n
+      result <- cxnIO(InstantAsBigInt(now), walletId).run.transactWallet(xa)
+    } yield result
   }
 
 }
 
 object JdbcDIDSecretStorage {
-  val layer: URLayer[Transactor[Task], DIDSecretStorage] =
+  val layer: URLayer[Transactor[ContextAwareTask], DIDSecretStorage] =
     ZLayer.fromFunction(new JdbcDIDSecretStorage(_))
 }
