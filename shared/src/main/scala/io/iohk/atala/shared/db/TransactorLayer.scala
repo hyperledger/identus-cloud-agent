@@ -16,6 +16,9 @@ object TransactorLayer {
     ZLayer.fromZIO {
       ZIO.service[DbConfig].flatMap { config =>
         given Async[ContextAwareTask] = summon[Async[Task]].asInstanceOf
+
+        // Here we use `Dispatcher.apply`
+        // but at the agent level it is `Dispatcher.parallel` due to evicted version
         Dispatcher[ContextAwareTask].allocated.map { case (dispatcher, _) =>
           given Dispatcher[ContextAwareTask] = dispatcher
           TransactorLayer.hikari[ContextAwareTask](config)
