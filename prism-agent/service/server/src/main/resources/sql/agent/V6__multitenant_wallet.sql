@@ -84,11 +84,3 @@ USING (
             AND s.did = public.prism_did_update_lineage.did
     )
 );
-
-
-
-
--- TODO: remove this
-CREATE USER "agent-application-user" WITH PASSWORD 'password';
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES
-    IN SCHEMA public TO "agent-application-user";
