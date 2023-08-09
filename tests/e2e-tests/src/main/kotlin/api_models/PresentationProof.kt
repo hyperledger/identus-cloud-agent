@@ -10,6 +10,7 @@ data class PresentationProof(
     var connectionId: String? = null,
     var proofs: List<String>? = null,
     var data: List<String>? = null,
+    var role: String? = null,
 ): JsonEncoded
 
 object PresentationProofStatus {
