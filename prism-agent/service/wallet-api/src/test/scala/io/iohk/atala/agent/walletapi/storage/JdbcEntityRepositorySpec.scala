@@ -13,7 +13,7 @@ import java.util.UUID
 
 object JdbcEntityRepositorySpec extends ZIOSpecDefault, PostgresTestContainerSupport {
 
-  //TODO: move messages to the domain errors
+  // TODO: move messages to the domain errors
   private def createRandomEntity = for {
     clock <- ZIO.clock
     id = UUID.randomUUID()
