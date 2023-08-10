@@ -71,10 +71,7 @@ object WalletManagementServiceSpec
       for {
         svc <- ZIO.service[WalletManagementService]
         secretStorage <- ZIO.service[WalletSecretStorage]
-        createdWallets <- ZIO
-          .foreach(1 to 10) { _ =>
-            svc.createWallet()
-          }
+        createdWallets <- ZIO.foreach(1 to 10)(_ => svc.createWallet())
         listedWallets <- svc.listWallets
         seeds <- ZIO.foreach(listedWallets) { walletId =>
           secretStorage.getWalletSeed.provide(ZLayer.succeed(WalletAccessContext(walletId)))
