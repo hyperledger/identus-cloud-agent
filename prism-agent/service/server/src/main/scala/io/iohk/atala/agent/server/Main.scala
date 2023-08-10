@@ -7,6 +7,12 @@ import io.iohk.atala.agent.walletapi.service.WalletManagementServiceImpl
 import io.iohk.atala.agent.walletapi.service.{ManagedDIDService, ManagedDIDServiceWithEventNotificationImpl}
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDNonSecretStorage
 import io.iohk.atala.agent.walletapi.sql.JdbcWalletNonSecretStorage
+import io.iohk.atala.agent.walletapi.service.{
+  EntityServiceImpl,
+  ManagedDIDService,
+  ManagedDIDServiceWithEventNotificationImpl
+}
+import io.iohk.atala.agent.walletapi.sql.{JdbcDIDNonSecretStorage, JdbcEntityRepository}
 import io.iohk.atala.castor.controller.{DIDControllerImpl, DIDRegistrarControllerImpl}
 import io.iohk.atala.castor.core.service.DIDServiceImpl
 import io.iohk.atala.castor.core.util.DIDOperationValidator
@@ -14,6 +20,7 @@ import io.iohk.atala.connect.controller.ConnectionControllerImpl
 import io.iohk.atala.connect.core.service.{ConnectionServiceImpl, ConnectionServiceNotifier}
 import io.iohk.atala.connect.sql.repository.{JdbcConnectionRepository, Migrations as ConnectMigrations}
 import io.iohk.atala.event.notification.EventNotificationServiceImpl
+import io.iohk.atala.iam.entity.http.controller.{EntityController, EntityControllerImpl}
 import io.iohk.atala.issue.controller.IssueControllerImpl
 import io.iohk.atala.mercury.*
 import io.iohk.atala.pollux.core.service.*
@@ -124,6 +131,7 @@ object MainApp extends ZIOAppDefault {
           IssueControllerImpl.layer,
           PresentProofControllerImpl.layer,
           VerificationPolicyControllerImpl.layer,
+          EntityControllerImpl.layer,
           // domain
           AppModule.apolloLayer,
           AppModule.didJwtResolverlayer,
@@ -139,6 +147,7 @@ object MainApp extends ZIOAppDefault {
           ManagedDIDServiceWithEventNotificationImpl.layer,
           PresentationServiceImpl.layer >>> PresentationServiceNotifier.layer,
           VerificationPolicyServiceImpl.layer,
+          EntityServiceImpl.layer,
           WalletManagementServiceImpl.layer,
           // grpc
           GrpcModule.irisStubLayer,
@@ -147,6 +156,7 @@ object MainApp extends ZIOAppDefault {
           RepoModule.agentTransactorLayer >>> JdbcDIDNonSecretStorage.layer,
           RepoModule.agentTransactorLayer >>> JdbcWalletNonSecretStorage.layer,
           RepoModule.allSecretStorageLayer,
+          RepoModule.agentTransactorLayer >>> JdbcEntityRepository.layer,
           RepoModule.connectTransactorLayer >>> JdbcConnectionRepository.layer,
           RepoModule.polluxTransactorLayer >>> JdbcCredentialRepository.layer,
           RepoModule.polluxTransactorLayer >>> JdbcCredentialSchemaRepository.layer,

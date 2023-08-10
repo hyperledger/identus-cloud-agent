@@ -1,6 +1,7 @@
 package io.iohk.atala.iam.entity.http.controller
 
 import io.iohk.atala.agent.walletapi.model.error.EntityServiceError
+import io.iohk.atala.agent.walletapi.service.EntityService
 import io.iohk.atala.api.http.model.PaginationInput
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.iam.entity.http.model.{CreateEntityRequest, EntityResponse, EntityResponsePage}

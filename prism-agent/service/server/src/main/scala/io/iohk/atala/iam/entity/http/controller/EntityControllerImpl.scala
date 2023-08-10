@@ -5,8 +5,8 @@ import io.iohk.atala.agent.walletapi.service.EntityService
 import io.iohk.atala.api.http.model.PaginationInput
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.iam.entity.http.model.{CreateEntityRequest, EntityResponse, EntityResponsePage}
-import zio.IO
 import zio.ZIO.succeed
+import zio.{IO, URLayer, ZLayer}
 
 import java.util.UUID
 
@@ -63,4 +63,9 @@ class EntityControllerImpl(service: EntityService) extends EntityController {
       _ <- service.deleteById(id)
     } yield ()
   } mapError (EntityController.domainToHttpError)
+}
+
+object EntityControllerImpl {
+  val layer: URLayer[EntityService, EntityController] =
+    ZLayer.fromFunction(new EntityControllerImpl(_))
 }
