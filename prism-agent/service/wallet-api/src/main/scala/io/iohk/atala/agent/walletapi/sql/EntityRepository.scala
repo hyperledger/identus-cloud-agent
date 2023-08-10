@@ -16,7 +16,7 @@ trait EntityRepository {
   def updateName(entityId: UUID, name: String): IO[EntityServiceError, Unit]
   def updateWallet(entityId: UUID, walletId: UUID): IO[EntityServiceError, Unit]
   def delete(id: UUID): IO[EntityServiceError, Unit]
-  def getAll(skip: Int, take: Int): IO[EntityServiceError, List[Entity]]
+  def getAll(offset: Int, limit: Int): IO[EntityServiceError, List[Entity]]
 }
 
 object EntityRepository {

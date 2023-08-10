@@ -11,9 +11,11 @@ trait EntityService {
 
   def getById(entityId: UUID): IO[EntityServiceError, Entity]
 
-//    def deleteById(entityId: UUID): IO[EntityServiceError, Unit]
-//
-//    def updateName(entityId: UUID, name: String): IO[EntityServiceError, Entity]
-//
-//    def assignWallet(entityId: UUID, walletId: UUID): IO[EntityServiceError, Unit]
+  def getAll(offset: Option[Int], limit: Option[Int]): IO[EntityServiceError, Seq[Entity]]
+
+  def deleteById(entityId: UUID): IO[EntityServiceError, Unit]
+
+  def updateName(entityId: UUID, name: String): IO[EntityServiceError, Unit]
+
+  def assignWallet(entityId: UUID, walletId: UUID): IO[EntityServiceError, Unit]
 }

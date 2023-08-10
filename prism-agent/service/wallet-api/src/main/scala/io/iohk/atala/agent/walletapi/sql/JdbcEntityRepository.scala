@@ -80,9 +80,9 @@ class JdbcEntityRepository(xa: Transactor[Task]) extends EntityRepository {
       )
   }
 
-  override def getAll(skip: Index, take: Index): IO[EntityServiceError, List[Entity]] = {
+  override def getAll(offset: Index, limit: Index): IO[EntityServiceError, List[Entity]] = {
     EntityStorageSql
-      .getAll(skip, take)
+      .getAll(offset, limit)
       .transact(xa)
       .logError("Get all entities failed")
       .mapError(throwable => EntityStorageError(throwable.getMessage))

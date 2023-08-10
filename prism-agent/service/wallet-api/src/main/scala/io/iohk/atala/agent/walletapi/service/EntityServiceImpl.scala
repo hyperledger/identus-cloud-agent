@@ -23,12 +23,36 @@ class EntityServiceImpl(repository: EntityRepository) extends EntityService {
     } yield entity
   }
 
+  override def getAll(offset: Option[Int], limit: Option[Int]): IO[EntityServiceError, Seq[Entity]] = {
+    for {
+      entities <- repository
+        .getAll(offset.getOrElse(0), limit.getOrElse(100))
+        .logError("Entity retrieval failed")
+    } yield entities
+  }
+
   def deleteById(entityId: UUID): IO[EntityServiceError, Unit] = {
     for {
       _ <- repository.delete(entityId)
       _ <- ZIO.logInfo(s"Entity deleted: $entityId")
     } yield ()
   } logError (s"Entity deletion failed for $entityId")
+
+  override def updateName(entityId: UUID, name: String): IO[EntityServiceError, Unit] = {
+    for {
+      _ <- repository
+        .updateName(entityId, name)
+        .logError(s"Entity name update failed for $entityId")
+    } yield ()
+  }
+
+  override def assignWallet(entityId: UUID, walletId: UUID): IO[EntityServiceError, Unit] = {
+    for {
+      _ <- repository
+        .updateWallet(entityId, walletId)
+        .logError(s"Entity wallet assignment failed for $entityId")
+    } yield ()
+  }
 }
 
 object EntityServiceImpl {

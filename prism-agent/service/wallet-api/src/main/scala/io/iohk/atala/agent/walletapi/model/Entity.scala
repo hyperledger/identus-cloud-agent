@@ -10,7 +10,10 @@ case class Entity(id: UUID, name: String, walletId: UUID, createdAt: Instant, up
 object Entity {
 
   val ZeroWalletId: UUID = UUID.fromString("00000000-0000-0000-0000-000000000000")
+
+  def apply(id: UUID, name: String, walletId: UUID): Entity =
+    Entity(id, name, walletId, Instant.now(), Instant.now())
   def apply(name: String, walletId: UUID): Entity =
-    Entity(UUID.randomUUID(), name, walletId, Instant.now(), Instant.now())
+    apply(UUID.randomUUID(), name, walletId, Instant.now(), Instant.now())
   def apply(name: String): Entity = Entity(UUID.randomUUID(), name, ZeroWalletId, Instant.now(), Instant.now())
 }
