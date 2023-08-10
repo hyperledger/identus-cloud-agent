@@ -13,10 +13,10 @@ import java.util.UUID
 
 case class EntityResponse(
     @description(annotations.kind.description)
-    @encodedExample(annotations.id.example)
+    @encodedExample(annotations.kind.example)
     kind: String,
     @description(annotations.self.description)
-    @encodedExample(annotations.id.example)
+    @encodedExample(annotations.self.example)
     self: String,
     @description(annotations.id.description)
     @encodedExample(annotations.id.example)
@@ -103,7 +103,7 @@ object EntityResponse {
 
   val Example = EntityResponse(
     kind = "Entity",
-    self = "http://localhost:8080/prism-agent/iam/entities/00000000-0000-0000-0000-000000000000",
+    self = "/prism-agent/iam/entities/00000000-0000-0000-0000-000000000000",
     id = UUID.fromString("00000000-0000-0000-0000-000000000000"),
     name = "John Doe",
     walletId = UUID.fromString("00000000-0000-0000-0000-000000000000"),

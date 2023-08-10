@@ -52,7 +52,7 @@ object EntityEndpoints {
     endpoint.put
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
-        "iam" / "entities" / path[UUID]("id") // .description(EntityResponse.annotations.id.description)
+        "iam" / "entities" / path[UUID]("id") / "name" // .description(EntityResponse.annotations.id.description)
       )
       .in(
         jsonBody[UpdateEntityNameRequest]
@@ -85,7 +85,7 @@ object EntityEndpoints {
     endpoint.put
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
-        "iam" / "entities" / path[UUID]("id") // .description(EntityResponse.annotations.id.description)
+        "iam" / "entities" / path[UUID]("id") / "walletId" // .description(EntityResponse.annotations.id.description)
       )
       .in(
         jsonBody[UpdateEntityWalletIdRequest]
