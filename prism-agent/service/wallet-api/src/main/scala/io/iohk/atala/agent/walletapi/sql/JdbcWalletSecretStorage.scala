@@ -36,17 +36,16 @@ class JdbcWalletSecretStorage(xa: Transactor[ContextAwareTask]) extends WalletSe
   }
 
   override def getWalletSeed: RIO[WalletAccessContext, Option[WalletSeed]] = {
-    val cxnIO = (walletId: WalletId) =>
+    val cxnIO =
       sql"""
         | SELECT seed
         | FROM public.wallet_seed
-        | WHERE wallet_id = $walletId
         """.stripMargin
         .query[Array[Byte]]
         .option
 
-    ZIO
-      .serviceWithZIO[WalletAccessContext](ctx => cxnIO(ctx.walletId).transactWallet(xa))
+    cxnIO
+      .transactWallet(xa)
       .map(_.map(WalletSeed.fromByteArray))
   }
 
