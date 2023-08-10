@@ -43,6 +43,7 @@ import scala.collection.immutable.ArraySeq
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
+import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError
 
 object ManagedDIDServiceSpec
     extends ZIOSpecDefault,
@@ -154,11 +155,12 @@ object ManagedDIDServiceSpec
   override def spec = {
     def testSuite(name: String) =
       suite(name)(
-        publishStoredDIDSpec,
-        createAndStoreDIDSpec,
-        updateManagedDIDSpec,
-        deactivateManagedDIDSpec
-      ).globalWallet
+        publishStoredDIDSpec.globalWallet,
+        createAndStoreDIDSpec.globalWallet,
+        updateManagedDIDSpec.globalWallet,
+        deactivateManagedDIDSpec.globalWallet,
+        multitenancySpec
+      )
         @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
         @@ TestAspect.sequential
 
@@ -468,5 +470,51 @@ object ManagedDIDServiceSpec
       assertZIO(effect.exit)(fails(isSubtype[UpdateManagedDIDError.DIDAlreadyDeactivated](anything)))
     }
   )
+
+  private val multitenancySpec = suite("multitenancy")(
+    test("do not see Prism DID outside of the wallet") {
+      val template = generateDIDTemplate()
+      for {
+        walletSvc <- ZIO.service[WalletManagementService]
+        walletId1 <- walletSvc.createWallet()
+        walletId2 <- walletSvc.createWallet()
+        ctx1 = ZLayer.succeed(WalletAccessContext(walletId1))
+        ctx2 = ZLayer.succeed(WalletAccessContext(walletId2))
+        svc <- ZIO.service[ManagedDIDService]
+        dids1 <- ZIO.foreach(1 to 3)(_ => svc.createAndStoreDID(template).map(_.asCanonical)).provide(ctx1)
+        dids2 <- ZIO.foreach(1 to 3)(_ => svc.createAndStoreDID(template).map(_.asCanonical)).provide(ctx2)
+        ownWalletDids1 <- svc.listManagedDIDPage(0, 1000).map(_._1.map(_.did)).provide(ctx1)
+        ownWalletDids2 <- svc.listManagedDIDPage(0, 1000).map(_._1.map(_.did)).provide(ctx2)
+        crossWalletDids1 <- ZIO.foreach(dids1)(did => svc.getManagedDIDState(did)).provide(ctx2)
+        crossWalletDids2 <- ZIO.foreach(dids2)(did => svc.getManagedDIDState(did)).provide(ctx1)
+      } yield assert(dids1)(hasSameElements(ownWalletDids1)) &&
+        assert(dids2)(hasSameElements(ownWalletDids2)) &&
+        assert(crossWalletDids1)(forall(isNone)) &&
+        assert(crossWalletDids2)(forall(isNone))
+    },
+    test("do not see Peer DID outside of the wallet") {
+      for {
+        walletSvc <- ZIO.service[WalletManagementService]
+        walletId1 <- walletSvc.createWallet()
+        walletId2 <- walletSvc.createWallet()
+        ctx1 = ZLayer.succeed(WalletAccessContext(walletId1))
+        ctx2 = ZLayer.succeed(WalletAccessContext(walletId2))
+        svc <- ZIO.service[ManagedDIDService]
+        dids1 <- ZIO.foreach(1 to 3)(_ => svc.createAndStorePeerDID("http://example.com")).provide(ctx1)
+        dids2 <- ZIO.foreach(1 to 3)(_ => svc.createAndStorePeerDID("http://example.com")).provide(ctx2)
+        ownWalletDids1 <- ZIO.foreach(dids1)(d => svc.getPeerDID(d.did).exit).provide(ctx1)
+        ownWalletDids2 <- ZIO.foreach(dids2)(d => svc.getPeerDID(d.did).exit).provide(ctx2)
+        crossWalletDids1 <- ZIO.foreach(dids1)(d => svc.getPeerDID(d.did).exit).provide(ctx2)
+        crossWalletDids2 <- ZIO.foreach(dids2)(d => svc.getPeerDID(d.did).exit).provide(ctx1)
+      } yield assert(ownWalletDids1)(forall(succeeds(anything))) &&
+        assert(ownWalletDids2)(forall(succeeds(anything))) &&
+        assert(crossWalletDids1)(forall(failsWithA[DIDSecretStorageError.KeyNotFoundError])) &&
+        assert(crossWalletDids2)(forall(failsWithA[DIDSecretStorageError.KeyNotFoundError]))
+    },
+    test("do not increment DID index based on count of on wallet") {
+      // TODO: implement
+      assertCompletes
+    }
+  ) @@ TestAspect.tag("dev")
 
 }
