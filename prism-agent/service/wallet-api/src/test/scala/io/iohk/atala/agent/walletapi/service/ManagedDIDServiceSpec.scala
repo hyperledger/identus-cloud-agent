@@ -159,7 +159,7 @@ object ManagedDIDServiceSpec
         createAndStoreDIDSpec.globalWallet,
         updateManagedDIDSpec.globalWallet,
         deactivateManagedDIDSpec.globalWallet,
-        multitenancySpec
+        multitenantSpec
       )
         @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
         @@ TestAspect.sequential
@@ -471,7 +471,7 @@ object ManagedDIDServiceSpec
     }
   )
 
-  private val multitenancySpec = suite("multitenancy")(
+  private val multitenantSpec = suite("multi-tenant managed DID")(
     test("do not see Prism DID outside of the wallet") {
       val template = generateDIDTemplate()
       for {
@@ -511,10 +511,41 @@ object ManagedDIDServiceSpec
         assert(crossWalletDids1)(forall(failsWithA[DIDSecretStorageError.KeyNotFoundError])) &&
         assert(crossWalletDids2)(forall(failsWithA[DIDSecretStorageError.KeyNotFoundError]))
     },
-    test("do not increment DID index based on count of on wallet") {
-      // TODO: implement
-      assertCompletes
+    test("increment DID index based on count only on its wallet") {
+      val template = generateDIDTemplate()
+      for {
+        walletSvc <- ZIO.service[WalletManagementService]
+        walletId1 <- walletSvc.createWallet()
+        walletId2 <- walletSvc.createWallet()
+        ctx1 = ZLayer.succeed(WalletAccessContext(walletId1))
+        ctx2 = ZLayer.succeed(WalletAccessContext(walletId2))
+        svc <- ZIO.service[ManagedDIDService]
+        wallet1Counter1 <- svc.nonSecretStorage.getMaxDIDIndex().provide(ctx1)
+        wallet2Counter1 <- svc.nonSecretStorage.getMaxDIDIndex().provide(ctx2)
+        _ <- svc.createAndStoreDID(template).provide(ctx1)
+        wallet1Counter2 <- svc.nonSecretStorage.getMaxDIDIndex().provide(ctx1)
+        wallet2Counter2 <- svc.nonSecretStorage.getMaxDIDIndex().provide(ctx2)
+        _ <- svc.createAndStoreDID(template).provide(ctx1)
+        wallet1Counter3 <- svc.nonSecretStorage.getMaxDIDIndex().provide(ctx1)
+        wallet2Counter3 <- svc.nonSecretStorage.getMaxDIDIndex().provide(ctx2)
+        _ <- svc.createAndStoreDID(template).provide(ctx2)
+        wallet1Counter4 <- svc.nonSecretStorage.getMaxDIDIndex().provide(ctx1)
+        wallet2Counter4 <- svc.nonSecretStorage.getMaxDIDIndex().provide(ctx2)
+      } yield {
+        // initial counter
+        assert(wallet1Counter1)(isNone) &&
+        assert(wallet2Counter1)(isNone) &&
+        // add DID to wallet 1
+        assert(wallet1Counter2)(isSome(equalTo(0))) &&
+        assert(wallet2Counter2)(isNone) &&
+        // add DID to wallet 1
+        assert(wallet1Counter3)(isSome(equalTo(1))) &&
+        assert(wallet2Counter3)(isNone) &&
+        // add DID to wallet 2
+        assert(wallet1Counter4)(isSome(equalTo(1))) &&
+        assert(wallet2Counter4)(isSome(equalTo(0)))
+      }
     }
-  ) @@ TestAspect.tag("dev")
+  )
 
 }
