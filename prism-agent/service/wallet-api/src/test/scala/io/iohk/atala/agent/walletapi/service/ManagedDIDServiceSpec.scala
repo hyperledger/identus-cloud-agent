@@ -15,7 +15,6 @@ import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
 import io.iohk.atala.agent.walletapi.storage.StorageSpecHelper
 import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorage
 import io.iohk.atala.agent.walletapi.storage.WalletSecretStorage
-import io.iohk.atala.agent.walletapi.util.SeedResolver
 import io.iohk.atala.agent.walletapi.vault.VaultDIDSecretStorage
 import io.iohk.atala.agent.walletapi.vault.VaultWalletSecretStorage
 import io.iohk.atala.castor.core.model.did.InternalKeyPurpose
@@ -44,6 +43,7 @@ import scala.collection.immutable.ArraySeq
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
+import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError
 
 object ManagedDIDServiceSpec
     extends ZIOSpecDefault,
@@ -110,7 +110,6 @@ object ManagedDIDServiceSpec
         DIDOperationValidator.layer(),
         JdbcDIDNonSecretStorage.layer,
         JdbcWalletNonSecretStorage.layer,
-        SeedResolver.layer(isDevMode = true),
         transactorLayer,
         testDIDServiceLayer,
         apolloLayer
@@ -156,11 +155,12 @@ object ManagedDIDServiceSpec
   override def spec = {
     def testSuite(name: String) =
       suite(name)(
-        publishStoredDIDSpec,
-        createAndStoreDIDSpec,
-        updateManagedDIDSpec,
-        deactivateManagedDIDSpec
-      ).globalWallet
+        publishStoredDIDSpec.globalWallet,
+        createAndStoreDIDSpec.globalWallet,
+        updateManagedDIDSpec.globalWallet,
+        deactivateManagedDIDSpec.globalWallet,
+        multitenantSpec
+      )
         @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
         @@ TestAspect.sequential
 
@@ -468,6 +468,83 @@ object ManagedDIDServiceSpec
         _ <- svc.deactivateManagedDID(did)
       } yield ()
       assertZIO(effect.exit)(fails(isSubtype[UpdateManagedDIDError.DIDAlreadyDeactivated](anything)))
+    }
+  )
+
+  private val multitenantSpec = suite("multi-tenant managed DID")(
+    test("do not see Prism DID outside of the wallet") {
+      val template = generateDIDTemplate()
+      for {
+        walletSvc <- ZIO.service[WalletManagementService]
+        walletId1 <- walletSvc.createWallet()
+        walletId2 <- walletSvc.createWallet()
+        ctx1 = ZLayer.succeed(WalletAccessContext(walletId1))
+        ctx2 = ZLayer.succeed(WalletAccessContext(walletId2))
+        svc <- ZIO.service[ManagedDIDService]
+        dids1 <- ZIO.foreach(1 to 3)(_ => svc.createAndStoreDID(template).map(_.asCanonical)).provide(ctx1)
+        dids2 <- ZIO.foreach(1 to 3)(_ => svc.createAndStoreDID(template).map(_.asCanonical)).provide(ctx2)
+        ownWalletDids1 <- svc.listManagedDIDPage(0, 1000).map(_._1.map(_.did)).provide(ctx1)
+        ownWalletDids2 <- svc.listManagedDIDPage(0, 1000).map(_._1.map(_.did)).provide(ctx2)
+        crossWalletDids1 <- ZIO.foreach(dids1)(did => svc.getManagedDIDState(did)).provide(ctx2)
+        crossWalletDids2 <- ZIO.foreach(dids2)(did => svc.getManagedDIDState(did)).provide(ctx1)
+      } yield assert(dids1)(hasSameElements(ownWalletDids1)) &&
+        assert(dids2)(hasSameElements(ownWalletDids2)) &&
+        assert(crossWalletDids1)(forall(isNone)) &&
+        assert(crossWalletDids2)(forall(isNone))
+    },
+    test("do not see Peer DID outside of the wallet") {
+      for {
+        walletSvc <- ZIO.service[WalletManagementService]
+        walletId1 <- walletSvc.createWallet()
+        walletId2 <- walletSvc.createWallet()
+        ctx1 = ZLayer.succeed(WalletAccessContext(walletId1))
+        ctx2 = ZLayer.succeed(WalletAccessContext(walletId2))
+        svc <- ZIO.service[ManagedDIDService]
+        dids1 <- ZIO.foreach(1 to 3)(_ => svc.createAndStorePeerDID("http://example.com")).provide(ctx1)
+        dids2 <- ZIO.foreach(1 to 3)(_ => svc.createAndStorePeerDID("http://example.com")).provide(ctx2)
+        ownWalletDids1 <- ZIO.foreach(dids1)(d => svc.getPeerDID(d.did).exit).provide(ctx1)
+        ownWalletDids2 <- ZIO.foreach(dids2)(d => svc.getPeerDID(d.did).exit).provide(ctx2)
+        crossWalletDids1 <- ZIO.foreach(dids1)(d => svc.getPeerDID(d.did).exit).provide(ctx2)
+        crossWalletDids2 <- ZIO.foreach(dids2)(d => svc.getPeerDID(d.did).exit).provide(ctx1)
+      } yield assert(ownWalletDids1)(forall(succeeds(anything))) &&
+        assert(ownWalletDids2)(forall(succeeds(anything))) &&
+        assert(crossWalletDids1)(forall(failsWithA[DIDSecretStorageError.KeyNotFoundError])) &&
+        assert(crossWalletDids2)(forall(failsWithA[DIDSecretStorageError.KeyNotFoundError]))
+    },
+    test("increment DID index based on count only on its wallet") {
+      val template = generateDIDTemplate()
+      for {
+        walletSvc <- ZIO.service[WalletManagementService]
+        walletId1 <- walletSvc.createWallet()
+        walletId2 <- walletSvc.createWallet()
+        ctx1 = ZLayer.succeed(WalletAccessContext(walletId1))
+        ctx2 = ZLayer.succeed(WalletAccessContext(walletId2))
+        svc <- ZIO.service[ManagedDIDService]
+        wallet1Counter1 <- svc.nonSecretStorage.getMaxDIDIndex().provide(ctx1)
+        wallet2Counter1 <- svc.nonSecretStorage.getMaxDIDIndex().provide(ctx2)
+        _ <- svc.createAndStoreDID(template).provide(ctx1)
+        wallet1Counter2 <- svc.nonSecretStorage.getMaxDIDIndex().provide(ctx1)
+        wallet2Counter2 <- svc.nonSecretStorage.getMaxDIDIndex().provide(ctx2)
+        _ <- svc.createAndStoreDID(template).provide(ctx1)
+        wallet1Counter3 <- svc.nonSecretStorage.getMaxDIDIndex().provide(ctx1)
+        wallet2Counter3 <- svc.nonSecretStorage.getMaxDIDIndex().provide(ctx2)
+        _ <- svc.createAndStoreDID(template).provide(ctx2)
+        wallet1Counter4 <- svc.nonSecretStorage.getMaxDIDIndex().provide(ctx1)
+        wallet2Counter4 <- svc.nonSecretStorage.getMaxDIDIndex().provide(ctx2)
+      } yield {
+        // initial counter
+        assert(wallet1Counter1)(isNone) &&
+        assert(wallet2Counter1)(isNone) &&
+        // add DID to wallet 1
+        assert(wallet1Counter2)(isSome(equalTo(0))) &&
+        assert(wallet2Counter2)(isNone) &&
+        // add DID to wallet 1
+        assert(wallet1Counter3)(isSome(equalTo(1))) &&
+        assert(wallet2Counter3)(isNone) &&
+        // add DID to wallet 2
+        assert(wallet1Counter4)(isSome(equalTo(1))) &&
+        assert(wallet2Counter4)(isSome(equalTo(0)))
+      }
     }
   )
 

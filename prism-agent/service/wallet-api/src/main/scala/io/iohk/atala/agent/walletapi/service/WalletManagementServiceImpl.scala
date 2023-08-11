@@ -16,7 +16,12 @@ class WalletManagementServiceImpl(
 
   override def createWallet(seed: Option[WalletSeed]): Task[WalletId] =
     for {
-      seed <- seed.fold(apollo.ecKeyFactory.randomBip32Seed().map(_._1).map(WalletSeed.fromByteArray))(ZIO.succeed)
+      seed <- seed.fold(
+        apollo.ecKeyFactory
+          .randomBip32Seed()
+          .map(_._1)
+          .map(WalletSeed.fromByteArray)
+      )(ZIO.succeed)
       walletId <- nonSecretStorage.createWallet
       _ <- secretStorage
         .setWalletSeed(seed)

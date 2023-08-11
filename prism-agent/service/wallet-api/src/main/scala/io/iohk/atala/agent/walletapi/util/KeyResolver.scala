@@ -6,14 +6,13 @@ import io.iohk.atala.agent.walletapi.model.KeyManagementMode
 import io.iohk.atala.agent.walletapi.model.ManagedDIDState
 import io.iohk.atala.agent.walletapi.model.WalletSeed
 import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
+import io.iohk.atala.agent.walletapi.storage.WalletSecretStorage
 import io.iohk.atala.castor.core.model.did.EllipticCurve
 import io.iohk.atala.castor.core.model.did.PrismDID
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 
-class KeyResolver(apollo: Apollo, nonSecretStorage: DIDNonSecretStorage)(
-    seed: WalletSeed
-) {
+class KeyResolver(apollo: Apollo, nonSecretStorage: DIDNonSecretStorage, walletSecretStorage: WalletSecretStorage) {
   def getKey(state: ManagedDIDState, keyId: String): RIO[WalletAccessContext, Option[ECKeyPair]] = {
     val did = state.createOperation.did
     getKey(did, state.keyMode, keyId)
@@ -26,14 +25,19 @@ class KeyResolver(apollo: Apollo, nonSecretStorage: DIDNonSecretStorage)(
   }
 
   private def resolveHdKey(did: PrismDID, keyId: String): RIO[WalletAccessContext, Option[ECKeyPair]] = {
-    nonSecretStorage
-      .getHdKeyPath(did, keyId)
-      .flatMap {
-        case None => ZIO.none
-        case Some(path) =>
-          apollo.ecKeyFactory
-            .deriveKeyPair(EllipticCurve.SECP256K1, seed.toByteArray)(path.derivationPath: _*)
-            .asSome
+    for {
+      maybeSeed <- walletSecretStorage.getWalletSeed
+      maybeKeyPair <- maybeSeed.fold(ZIO.none) { seed =>
+        nonSecretStorage
+          .getHdKeyPath(did, keyId)
+          .flatMap {
+            case None => ZIO.none
+            case Some(path) =>
+              apollo.ecKeyFactory
+                .deriveKeyPair(EllipticCurve.SECP256K1, seed.toByteArray)(path.derivationPath: _*)
+                .asSome
+          }
       }
+    } yield maybeKeyPair
   }
 }

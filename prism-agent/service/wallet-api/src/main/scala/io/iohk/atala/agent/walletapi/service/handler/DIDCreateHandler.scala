@@ -8,6 +8,7 @@ import io.iohk.atala.agent.walletapi.model.PublicationState
 import io.iohk.atala.agent.walletapi.model.WalletSeed
 import io.iohk.atala.agent.walletapi.model.error.CreateManagedDIDError
 import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
+import io.iohk.atala.agent.walletapi.storage.WalletSecretStorage
 import io.iohk.atala.agent.walletapi.util.OperationFactory
 import io.iohk.atala.castor.core.model.did.PrismDIDOperation
 import io.iohk.atala.shared.models.WalletAccessContext
@@ -15,9 +16,9 @@ import zio.*
 
 private[walletapi] class DIDCreateHandler(
     apollo: Apollo,
-    nonSecretStorage: DIDNonSecretStorage
+    nonSecretStorage: DIDNonSecretStorage,
+    walletSecretStorage: WalletSecretStorage,
 )(
-    seed: WalletSeed,
     masterKeyId: String
 ) {
   def materialize(
@@ -25,6 +26,10 @@ private[walletapi] class DIDCreateHandler(
   ): ZIO[WalletAccessContext, CreateManagedDIDError, DIDCreateMaterial] = {
     val operationFactory = OperationFactory(apollo)
     for {
+      walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
+      seed <- walletSecretStorage.getWalletSeed
+        .someOrElseZIO(ZIO.dieMessage(s"Wallet seed for wallet $walletId does not exist"))
+        .mapError(CreateManagedDIDError.WalletStorageError.apply)
       didIndex <- nonSecretStorage
         .getMaxDIDIndex()
         .mapBoth(
