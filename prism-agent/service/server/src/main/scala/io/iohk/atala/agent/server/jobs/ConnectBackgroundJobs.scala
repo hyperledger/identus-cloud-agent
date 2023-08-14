@@ -103,7 +103,7 @@ object ConnectBackgroundJobs {
           connectionService <- ZIO.service[ConnectionService]
           _ <- {
             if (resp.status >= 200 && resp.status < 300)
-              connectionService.markConnectionRequestSent(id) // TODO: this one throws an error
+              connectionService.markConnectionRequestSent(id)
                 @@ InviteeConnectionRequestMsgSuccess
                 @@ CustomMetricsAspect.endRecordingTime(
                   s"${record.id}_invitee_pending_to_req_sent",
@@ -154,7 +154,18 @@ object ConnectBackgroundJobs {
           connectionService <- ZIO.service[ConnectionService]
           _ <- {
             if (resp.status >= 200 && resp.status < 300)
-              connectionService.markConnectionResponseSent(id) @@ InviterConnectionResponseMsgSuccess
+              connectionService.markConnectionResponseSent(id)
+                @@ InviterConnectionResponseMsgSuccess
+                @@ CustomMetricsAspect.endRecordingTime(
+                  s"${record.id}_inviter_pending_to_res_sent",
+                  "connection_flow_inviter_pending_to_res_sent_ms_gauge",
+                  Set(
+                    MetricLabel(
+                      "connectionId",
+                      record.id.toString
+                    )
+                  )
+                )
             else ZIO.fail(ErrorResponseReceivedFromPeerAgent(resp)) @@ InviterConnectionResponseMsgFailed
           }
         } yield ()

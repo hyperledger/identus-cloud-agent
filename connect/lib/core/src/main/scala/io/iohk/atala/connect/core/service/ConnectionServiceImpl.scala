@@ -140,7 +140,9 @@ private class ConnectionServiceImpl(
         .copy(thid = Some(record.invitation.id)) //  This logic should be moved to the SQL when fetching the record
       count <- connectionRepository
         .updateWithConnectionRequest(recordId, request, ProtocolState.ConnectionRequestPending, maxRetries)
-        .mapError(RepositoryError.apply) @@ CustomMetricsAspect.startRecordingTime(s"${record.id}_invitee_pending_to_req_sent")
+        .mapError(RepositoryError.apply) @@ CustomMetricsAspect.startRecordingTime(
+        s"${record.id}_invitee_pending_to_req_sent"
+      )
       _ <- count match
         case 1 => ZIO.succeed(())
         case n => ZIO.fail(RecordIdNotFound(recordId))
@@ -199,7 +201,9 @@ private class ConnectionServiceImpl(
       // response = createDidCommConnectionResponse(record)
       count <- connectionRepository
         .updateWithConnectionResponse(recordId, response, ProtocolState.ConnectionResponsePending, maxRetries)
-        .mapError(RepositoryError.apply)
+        .mapError(RepositoryError.apply) @@ CustomMetricsAspect.startRecordingTime(
+        s"${record.id}_inviter_pending_to_res_sent"
+      )
       _ <- count match
         case 1 => ZIO.succeed(())
         case n => ZIO.fail(RecordIdNotFound(recordId))
