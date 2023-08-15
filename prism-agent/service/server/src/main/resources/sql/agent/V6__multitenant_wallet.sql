@@ -15,7 +15,7 @@ WHERE true;
 DELETE FROM public.prism_did_wallet_state
 WHERE true;
 
--- Introduce the concept of wallet
+-- Introduce a concept of wallet
 CREATE TABLE public.wallet (
     "wallet_id" UUID PRIMARY KEY,
     "created_at" TIMESTAMPTZ NOT NULL
