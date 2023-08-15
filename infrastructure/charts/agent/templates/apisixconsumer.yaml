@@ -16,3 +16,20 @@ spec:
 ---
 {{- end }}
 {{- end }}
+
+{{- $root := . -}}
+{{- range $consumer := .Values.ingress.externalConsumers }}
+apiVersion: apisix.apache.org/v2
+kind: ApisixConsumer
+metadata:
+  name: "external-{{ $consumer | lower }}"
+  namespace: "{{ $root.Release.Namespace }}"
+  labels:
+    {{ template "labels.common" . }}
+spec:
+  authParameter:
+    keyAuth:
+      secretRef:
+        name: "{{ $root.Values.ingress.externalConsumerKeyPrefix }}-{{ $consumer | lower }}"
+---
+{{- end }}
