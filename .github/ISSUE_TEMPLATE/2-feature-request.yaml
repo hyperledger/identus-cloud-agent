@@ -1,0 +1,22 @@
+name: 'Feature Request'
+description: Suggest a new feature for Atala PRISM Cloud Agent
+
+body:
+  - type: textarea
+    id: proposed-feature
+    attributes:
+      label: Proposed feature
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Feature description
+    validations:
+      required: true
+
+  - type: textarea
+    id: other
+    attributes:
+      label: Anything else?
