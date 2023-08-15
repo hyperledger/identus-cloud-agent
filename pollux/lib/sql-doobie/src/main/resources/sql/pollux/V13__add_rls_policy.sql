@@ -31,3 +31,38 @@ ADD COLUMN "wallet_id" UUID NOT NULL;
 
 ALTER TABLE public.presentation_records
 ADD COLUMN "wallet_id" UUID NOT NULL;
+
+-- Enforce RLS
+ALTER TABLE public.credential_schema ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.verification_policy ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.issue_credential_records ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.presentation_records ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.verification_policy_constraint ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY credential_schema_wallet_isolation
+ON public.credential_schema
+USING (wallet_id = current_setting('app.current_wallet_id')::UUID);
+
+CREATE POLICY verification_policy_wallet_isolation
+ON public.verification_policy
+USING (wallet_id = current_setting('app.current_wallet_id')::UUID);
+
+CREATE POLICY issue_credential_records_wallet_isolation
+ON public.issue_credential_records
+USING (wallet_id = current_setting('app.current_wallet_id')::UUID);
+
+CREATE POLICY presentation_records_wallet_isolation
+ON public.presentation_records
+USING (wallet_id = current_setting('app.current_wallet_id')::UUID);
+
+CREATE POLICY verification_policy_constraint_wallet_isolation
+ON public.verification_policy_constraint
+USING (
+    EXISTS (
+        SELECT 1
+        FROM public.verification_policy AS p
+        WHERE
+            p.wallet_id = current_setting('app.current_wallet_id')::UUID
+            AND p.id = public.verification_policy_constraint.fk_id
+    )
+);
