@@ -100,15 +100,15 @@ object GrpcModule {
 
 object RepoModule {
 
-  val polluxDbConfigLayer: TaskLayer[DbConfig] = {
+  def polluxDbConfigLayer(appUser: Boolean = true): TaskLayer[DbConfig] = {
     val dbConfigLayer = ZLayer.fromZIO {
-      ZIO.service[AppConfig].map(_.pollux.database).map(_.dbConfig(appUser = false))
+      ZIO.service[AppConfig].map(_.pollux.database).map(_.dbConfig(appUser = appUser))
     }
     SystemModule.configLayer >>> dbConfigLayer
   }
 
-  val polluxTransactorLayer: TaskLayer[Transactor[Task]] =
-    polluxDbConfigLayer >>> TransactorLayer.task
+  val polluxTransactorLayer: TaskLayer[Transactor[ContextAwareTask]] =
+    polluxDbConfigLayer() >>> TransactorLayer.contextAwareTask
 
   val connectDbConfigLayer: TaskLayer[DbConfig] = {
     val dbConfigLayer = ZLayer.fromZIO {

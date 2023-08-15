@@ -163,7 +163,7 @@ object MainApp extends ZIOAppDefault {
     } yield app
 
     app.provide(
-      RepoModule.polluxDbConfigLayer >>> PolluxMigrations.layer,
+      RepoModule.polluxDbConfigLayer(appUser = false) >>> PolluxMigrations.layer,
       RepoModule.connectDbConfigLayer >>> ConnectMigrations.layer,
       RepoModule.agentDbConfigLayer(appUser = false) >>> AgentMigrations.layer,
     )

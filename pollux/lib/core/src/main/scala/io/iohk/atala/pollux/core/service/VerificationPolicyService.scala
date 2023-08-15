@@ -2,7 +2,8 @@ package io.iohk.atala.pollux.core.service
 
 import io.iohk.atala.pollux.core.model.error.VerificationPolicyError
 import io.iohk.atala.pollux.core.model.{VerificationPolicy, VerificationPolicyConstraint}
-import zio.IO
+import io.iohk.atala.shared.models.WalletAccessContext
+import zio.*
 
 import java.util.UUID
 
@@ -12,7 +13,7 @@ trait VerificationPolicyService {
       name: String,
       description: String,
       constraints: Seq[VerificationPolicyConstraint] = Seq.empty
-  ): IO[VerificationPolicyError, VerificationPolicy]
+  ): ZIO[WalletAccessContext, VerificationPolicyError, VerificationPolicy]
 
   def get(id: UUID): IO[VerificationPolicyError, Option[VerificationPolicy]]
 

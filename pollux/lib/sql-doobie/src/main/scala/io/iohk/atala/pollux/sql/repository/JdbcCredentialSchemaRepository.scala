@@ -1,17 +1,17 @@
 package io.iohk.atala.pollux.sql.repository
 
 import doobie.*
-import doobie.implicits.*
 import io.iohk.atala.pollux.core.model.schema.CredentialSchema
 import io.iohk.atala.pollux.core.repository.Repository.*
 import io.iohk.atala.pollux.core.repository.{CredentialSchemaRepository, Repository}
 import io.iohk.atala.pollux.sql.model.db.{CredentialSchemaSql, CredentialSchema as CredentialSchemaRow}
+import io.iohk.atala.shared.db.ContextAwareTask
+import io.iohk.atala.shared.db.Implicits.*
 import zio.*
-import zio.interop.catz.*
 
 import java.util.UUID
 
-class JdbcCredentialSchemaRepository(xa: Transactor[Task]) extends CredentialSchemaRepository[Task] {
+class JdbcCredentialSchemaRepository(xa: Transactor[ContextAwareTask]) extends CredentialSchemaRepository[Task] {
   import CredentialSchemaSql.*
   override def create(cs: CredentialSchema): Task[CredentialSchema] = {
     CredentialSchemaSql
@@ -86,6 +86,6 @@ class JdbcCredentialSchemaRepository(xa: Transactor[Task]) extends CredentialSch
 }
 
 object JdbcCredentialSchemaRepository {
-  val layer: URLayer[Transactor[Task], JdbcCredentialSchemaRepository] =
+  val layer: URLayer[Transactor[ContextAwareTask], JdbcCredentialSchemaRepository] =
     ZLayer.fromFunction(JdbcCredentialSchemaRepository(_))
 }

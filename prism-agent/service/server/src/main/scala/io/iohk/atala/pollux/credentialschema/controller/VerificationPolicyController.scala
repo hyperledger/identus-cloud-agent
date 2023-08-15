@@ -3,6 +3,7 @@ package io.iohk.atala.pollux.credentialschema.controller
 import io.iohk.atala.api.http.model.{Order, Pagination}
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.pollux.credentialschema.http.{VerificationPolicy, VerificationPolicyInput, VerificationPolicyPage}
+import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 
 import java.util.UUID
@@ -11,7 +12,7 @@ trait VerificationPolicyController {
   def createVerificationPolicy(
       ctx: RequestContext,
       in: VerificationPolicyInput
-  ): IO[ErrorResponse, VerificationPolicy]
+  ): ZIO[WalletAccessContext, ErrorResponse, VerificationPolicy]
 
   def getVerificationPolicyById(
       ctx: RequestContext,

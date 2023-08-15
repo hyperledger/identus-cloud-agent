@@ -14,15 +14,16 @@ import io.iohk.atala.pollux.core.model.error.CredentialRepositoryError
 import io.iohk.atala.pollux.core.model.error.CredentialRepositoryError.*
 import io.iohk.atala.pollux.core.repository.CredentialRepository
 import io.iohk.atala.prism.crypto.MerkleInclusionProof
+import io.iohk.atala.shared.db.ContextAwareTask
+import io.iohk.atala.shared.db.Implicits.*
 import io.iohk.atala.shared.utils.BytesOps
 import org.postgresql.util.PSQLException
 import zio.*
-import zio.interop.catz.*
 
 import java.time.Instant
 
 // TODO: replace with actual implementation
-class JdbcCredentialRepository(xa: Transactor[Task], maxRetries: Int) extends CredentialRepository[Task] {
+class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], maxRetries: Int) extends CredentialRepository[Task] {
   // serializes into hex string
 
   private def serializeInclusionProof(proof: MerkleInclusionProof): String = BytesOps.bytesToHex(proof.encode.getBytes)
@@ -503,6 +504,6 @@ class JdbcCredentialRepository(xa: Transactor[Task], maxRetries: Int) extends Cr
 
 object JdbcCredentialRepository {
   val maxRetries = 5 // TODO Move to config
-  val layer: URLayer[Transactor[Task], CredentialRepository[Task]] =
+  val layer: URLayer[Transactor[ContextAwareTask], CredentialRepository[Task]] =
     ZLayer.fromFunction(new JdbcCredentialRepository(_, maxRetries))
 }

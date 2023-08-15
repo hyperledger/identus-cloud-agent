@@ -1,16 +1,18 @@
 package io.iohk.atala.pollux.credentialschema
 
-import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.api.http.model.{Order, PaginationInput}
+import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.pollux.credentialschema.VerificationPolicyEndpoints.*
 import io.iohk.atala.pollux.credentialschema.controller.VerificationPolicyController
 import io.iohk.atala.pollux.credentialschema.http.{VerificationPolicy, VerificationPolicyInput}
+import io.iohk.atala.shared.models.WalletAccessContext
+import java.util.UUID
 import sttp.tapir.ztapir.*
 import zio.*
-import java.util.UUID
 
 class VerificationPolicyServerEndpoints(
-    controller: VerificationPolicyController
+    controller: VerificationPolicyController,
+    walletAccessCtx: WalletAccessContext
 ) {
   def throwableToInternalServerError(throwable: Throwable) =
     ZIO.fail[ErrorResponse](ErrorResponse.internalServerError(detail = Option(throwable.getMessage)))
@@ -18,7 +20,9 @@ class VerificationPolicyServerEndpoints(
   // TODO: make the endpoint typed ZServerEndpoint[SchemaRegistryService, Any]
   val createVerificationPolicyServerEndpoint: ZServerEndpoint[Any, Any] =
     createVerificationPolicyEndpoint.zServerLogic { case (ctx: RequestContext, input: VerificationPolicyInput) =>
-      controller.createVerificationPolicy(ctx, input)
+      controller
+        .createVerificationPolicy(ctx, input)
+        .provideSomeLayer(ZLayer.succeed(walletAccessCtx)) // FIXME
     }
 
   val updateVerificationPolicyServerEndpoint: ZServerEndpoint[Any, Any] = {
@@ -71,10 +75,12 @@ class VerificationPolicyServerEndpoints(
 }
 
 object VerificationPolicyServerEndpoints {
-  def all: URIO[VerificationPolicyController, List[ZServerEndpoint[Any, Any]]] = {
+  def all: URIO[VerificationPolicyController & WalletAccessContext, List[ZServerEndpoint[Any, Any]]] = {
     for {
+      // FIXME: do not use global wallet context, use context from interceptor instead
+      walletAccessCtx <- ZIO.service[WalletAccessContext]
       controller <- ZIO.service[VerificationPolicyController]
-      endpoints = new VerificationPolicyServerEndpoints(controller)
+      endpoints = new VerificationPolicyServerEndpoints(controller, walletAccessCtx)
     } yield endpoints.all
   }
 }

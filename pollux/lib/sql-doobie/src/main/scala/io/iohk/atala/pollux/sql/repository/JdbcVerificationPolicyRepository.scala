@@ -1,14 +1,14 @@
 package io.iohk.atala.pollux.sql.repository
 
 import doobie.*
-import doobie.implicits.*
 import doobie.util.transactor.Transactor
 import io.iohk.atala.pollux.core.model
 import io.iohk.atala.pollux.core.model.{CredentialSchemaAndTrustedIssuersConstraint, VerificationPolicy}
 import io.iohk.atala.pollux.core.repository.VerificationPolicyRepository
 import io.iohk.atala.pollux.sql.model.db
-import zio.interop.catz.*
-import zio.interop.catz.implicits.*
+import io.iohk.atala.shared.db.ContextAwareTask
+import io.iohk.atala.shared.db.Implicits.*
+import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 
 import java.time.{OffsetDateTime, ZoneOffset}
@@ -63,21 +63,24 @@ object VerificationPolicyExtensions {
 }
 
 object JdbcVerificationPolicyRepository {
-  val layer: URLayer[Transactor[Task], VerificationPolicyRepository[Task]] =
+  val layer: URLayer[Transactor[ContextAwareTask], VerificationPolicyRepository] =
     ZLayer.fromFunction(JdbcVerificationPolicyRepository(_))
 }
 
-class JdbcVerificationPolicyRepository(xa: Transactor[Task]) extends VerificationPolicyRepository[Task] {
+class JdbcVerificationPolicyRepository(xa: Transactor[ContextAwareTask]) extends VerificationPolicyRepository {
   import VerificationPolicyExtensions.*
   import io.iohk.atala.pollux.sql.model.db.VerificationPolicySql
-  override def create(verificationPolicy: model.VerificationPolicy): Task[model.VerificationPolicy] = {
+
+  override def create(
+      verificationPolicy: model.VerificationPolicy
+  ): RIO[WalletAccessContext, model.VerificationPolicy] = {
     val program = for {
       vp <- VerificationPolicySql.insert(verificationPolicy.toDto)
       vpc <- VerificationPolicySql.insertConstraints(verificationPolicy.toDtoConstraints)
     } yield vp.toDomain(vpc)
 
     for {
-      vp: model.VerificationPolicy <- program.transact(xa)
+      vp: model.VerificationPolicy <- program.transactWallet(xa)
     } yield vp
   }
 

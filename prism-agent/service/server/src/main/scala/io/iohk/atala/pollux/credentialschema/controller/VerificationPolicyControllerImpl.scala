@@ -9,8 +9,9 @@ import io.iohk.atala.pollux.core.model.error.VerificationPolicyError.*
 import io.iohk.atala.pollux.core.service.VerificationPolicyService
 import io.iohk.atala.pollux.credentialschema.http.VerificationPolicy.*
 import io.iohk.atala.pollux.credentialschema.http.{VerificationPolicy, VerificationPolicyInput, VerificationPolicyPage}
-import zio.ZIO.*
+import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
+import zio.ZIO.*
 
 import java.util.UUID
 
@@ -31,7 +32,7 @@ class VerificationPolicyControllerImpl(service: VerificationPolicyService) exten
   override def createVerificationPolicy(
       ctx: RequestContext,
       in: VerificationPolicyInput
-  ): IO[ErrorResponse, VerificationPolicy] = {
+  ): ZIO[WalletAccessContext, ErrorResponse, VerificationPolicy] = {
     val constraints = in.constraints
       .map(c =>
         CredentialSchemaAndTrustedIssuersConstraint(

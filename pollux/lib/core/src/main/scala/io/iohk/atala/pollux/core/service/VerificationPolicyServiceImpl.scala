@@ -1,19 +1,20 @@
 package io.iohk.atala.pollux.core.service
 
-import io.iohk.atala.pollux.core.model.{VerificationPolicy, VerificationPolicyConstraint}
 import io.iohk.atala.pollux.core.model.error.VerificationPolicyError
+import io.iohk.atala.pollux.core.model.{VerificationPolicy, VerificationPolicyConstraint}
 import io.iohk.atala.pollux.core.repository.VerificationPolicyRepository
+import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 
 import java.util.UUID
 
 object VerificationPolicyServiceImpl {
-  val layer: URLayer[VerificationPolicyRepository[Task], VerificationPolicyService] =
+  val layer: URLayer[VerificationPolicyRepository, VerificationPolicyService] =
     ZLayer.fromFunction(VerificationPolicyServiceImpl(_))
 }
 
 class VerificationPolicyServiceImpl(
-    repository: VerificationPolicyRepository[Task]
+    repository: VerificationPolicyRepository
 ) extends VerificationPolicyService {
 
   private val throwableToVerificationPolicyError: Throwable => VerificationPolicyError =
@@ -23,7 +24,7 @@ class VerificationPolicyServiceImpl(
       name: String,
       description: String,
       constraints: Seq[VerificationPolicyConstraint]
-  ): IO[VerificationPolicyError, VerificationPolicy] = {
+  ): ZIO[WalletAccessContext, VerificationPolicyError, VerificationPolicy] = {
     for {
       verificationPolicy <- VerificationPolicy.make(name, description, constraints)
       createdVerificationPolicy <- repository.create(verificationPolicy)

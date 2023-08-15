@@ -37,7 +37,7 @@ object VerificationPolicySqlIntegrationSpec extends ZIOSpecDefault {
   ) @@ nondeterministic @@ sequential @@ timed @@ migrate(
     schema = "public",
     paths = "classpath:sql/pollux"
-  )).provideSomeLayerShared(testEnvironmentLayer)
+  )).provideSomeLayerShared(testEnvironmentLayer) @@ TestAspect.tag("dev")
 
   val verificationPolicyCRUDSuite =
     suite("verification policy CRUD operations")(

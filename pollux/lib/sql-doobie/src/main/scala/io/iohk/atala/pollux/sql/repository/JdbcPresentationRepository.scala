@@ -13,15 +13,16 @@ import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.PresentationRecord.ProtocolState
 import io.iohk.atala.pollux.core.repository.PresentationRepository
 import io.iohk.atala.prism.crypto.MerkleInclusionProof
+import io.iohk.atala.shared.db.ContextAwareTask
+import io.iohk.atala.shared.db.Implicits.*
 import io.iohk.atala.shared.utils.BytesOps
 import zio.*
-import zio.interop.catz.*
 
 import java.time.Instant
 
 // TODO: replace with actual implementation
 class JdbcPresentationRepository(
-    xa: Transactor[Task],
+    xa: Transactor[ContextAwareTask],
     maxRetries: Int
 ) extends PresentationRepository[Task] {
   // serializes into hex string
@@ -367,6 +368,6 @@ class JdbcPresentationRepository(
 
 object JdbcPresentationRepository {
   val maxRetries = 5 // TODO Move to config
-  val layer: URLayer[Transactor[Task], PresentationRepository[Task]] =
+  val layer: URLayer[Transactor[ContextAwareTask], PresentationRepository[Task]] =
     ZLayer.fromFunction(new JdbcPresentationRepository(_, maxRetries))
 }
