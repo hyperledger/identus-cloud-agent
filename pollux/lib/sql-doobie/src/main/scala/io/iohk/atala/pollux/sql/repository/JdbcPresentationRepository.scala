@@ -15,6 +15,7 @@ import io.iohk.atala.pollux.core.repository.PresentationRepository
 import io.iohk.atala.prism.crypto.MerkleInclusionProof
 import io.iohk.atala.shared.db.ContextAwareTask
 import io.iohk.atala.shared.db.Implicits.*
+import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.utils.BytesOps
 import zio.*
 
@@ -24,14 +25,14 @@ import java.time.Instant
 class JdbcPresentationRepository(
     xa: Transactor[ContextAwareTask],
     maxRetries: Int
-) extends PresentationRepository[Task] {
+) extends PresentationRepository {
   // serializes into hex string
 
   override def updatePresentationWithCredentialsToUse(
       recordId: DidCommID,
       credentialsToUse: Option[Seq[String]],
       protocolState: ProtocolState
-  ): Task[Int] = {
+  ): RIO[WalletAccessContext, Int] = {
     val cxnIO = sql"""
         | UPDATE public.presentation_records
         | SET
@@ -46,7 +47,7 @@ class JdbcPresentationRepository(
         """.stripMargin.update
 
     cxnIO.run
-      .transact(xa)
+      .transactWallet(xa)
   }
 
   // deserializes from the hex string
@@ -84,7 +85,7 @@ class JdbcPresentationRepository(
 
   given inclusionProofGet: Get[MerkleInclusionProof] = Get[String].map(deserializeInclusionProof)
 
-  override def createPresentationRecord(record: PresentationRecord): Task[Int] = {
+  override def createPresentationRecord(record: PresentationRecord): RIO[WalletAccessContext, Int] = {
     val cxnIO = sql"""
         | INSERT INTO public.presentation_records(
         |   id,
@@ -120,12 +121,12 @@ class JdbcPresentationRepository(
         """.stripMargin.update
 
     cxnIO.run
-      .transact(xa)
+      .transactWallet(xa)
   }
 
   override def getPresentationRecords(
       ignoreWithZeroRetries: Boolean = true
-  ): Task[Seq[PresentationRecord]] = {
+  ): RIO[WalletAccessContext, Seq[PresentationRecord]] = {
     val conditionFragment = Fragments.whereAndOpt(
       Option.when(ignoreWithZeroRetries)(fr"meta_retries > 0")
     )
@@ -155,14 +156,14 @@ class JdbcPresentationRepository(
       .to[Seq]
 
     cxnIO
-      .transact(xa)
+      .transactWallet(xa)
   }
 
   override def getPresentationRecordsByStates(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: PresentationRecord.ProtocolState*
-  ): Task[Seq[PresentationRecord]] = {
+  ): RIO[WalletAccessContext, Seq[PresentationRecord]] = {
     states match
       case Nil =>
         ZIO.succeed(Nil)
@@ -199,10 +200,10 @@ class JdbcPresentationRepository(
           .to[Seq]
 
         cxnIO
-          .transact(xa)
+          .transactWallet(xa)
   }
 
-  override def getPresentationRecord(recordId: DidCommID): Task[Option[PresentationRecord]] = {
+  override def getPresentationRecord(recordId: DidCommID): RIO[WalletAccessContext, Option[PresentationRecord]] = {
     val cxnIO = sql"""
         | SELECT
         |   id,
@@ -228,10 +229,12 @@ class JdbcPresentationRepository(
       .option
 
     cxnIO
-      .transact(xa)
+      .transactWallet(xa)
   }
 
-  override def getPresentationRecordByThreadId(thid: DidCommID): Task[Option[PresentationRecord]] = {
+  override def getPresentationRecordByThreadId(
+      thid: DidCommID
+  ): RIO[WalletAccessContext, Option[PresentationRecord]] = {
     val cxnIO = sql"""
         | SELECT
         |   id,
@@ -257,14 +260,14 @@ class JdbcPresentationRepository(
       .option
 
     cxnIO
-      .transact(xa)
+      .transactWallet(xa)
   }
 
   override def updatePresentationRecordProtocolState(
       recordId: DidCommID,
       from: PresentationRecord.ProtocolState,
       to: PresentationRecord.ProtocolState
-  ): Task[Int] = {
+  ): RIO[WalletAccessContext, Int] = {
     val cxnIO = sql"""
         | UPDATE public.presentation_records
         | SET
@@ -279,14 +282,14 @@ class JdbcPresentationRepository(
         """.stripMargin.update
 
     cxnIO.run
-      .transact(xa)
+      .transactWallet(xa)
   }
 
   override def updateWithRequestPresentation(
       recordId: DidCommID,
       request: RequestPresentation,
       protocolState: ProtocolState
-  ): Task[Int] = {
+  ): RIO[WalletAccessContext, Int] = {
     val cxnIO = sql"""
         | UPDATE public.presentation_records
         | SET
@@ -301,14 +304,14 @@ class JdbcPresentationRepository(
         """.stripMargin.update
 
     cxnIO.run
-      .transact(xa)
+      .transactWallet(xa)
   }
 
   override def updateWithProposePresentation(
       recordId: DidCommID,
       propose: ProposePresentation,
       protocolState: ProtocolState
-  ): Task[Int] = {
+  ): RIO[WalletAccessContext, Int] = {
     val cxnIO = sql"""
         | UPDATE public.presentation_records
         | SET
@@ -323,14 +326,14 @@ class JdbcPresentationRepository(
         """.stripMargin.update
 
     cxnIO.run
-      .transact(xa)
+      .transactWallet(xa)
   }
 
   override def updateWithPresentation(
       recordId: DidCommID,
       presentation: Presentation,
       protocolState: ProtocolState
-  ): Task[Int] = {
+  ): RIO[WalletAccessContext, Int] = {
     val cxnIO = sql"""
         | UPDATE public.presentation_records
         | SET
@@ -345,13 +348,13 @@ class JdbcPresentationRepository(
         """.stripMargin.update
 
     cxnIO.run
-      .transact(xa)
+      .transactWallet(xa)
   }
 
   def updateAfterFail(
       recordId: DidCommID,
       failReason: Option[String]
-  ): Task[Int] = {
+  ): RIO[WalletAccessContext, Int] = {
     val cxnIO = sql"""
         | UPDATE public.presentation_records
         | SET
@@ -361,13 +364,13 @@ class JdbcPresentationRepository(
         | WHERE
         |   id = $recordId
         """.stripMargin.update
-    cxnIO.run.transact(xa)
+    cxnIO.run.transactWallet(xa)
   }
 
 }
 
 object JdbcPresentationRepository {
   val maxRetries = 5 // TODO Move to config
-  val layer: URLayer[Transactor[ContextAwareTask], PresentationRepository[Task]] =
+  val layer: URLayer[Transactor[ContextAwareTask], PresentationRepository] =
     ZLayer.fromFunction(new JdbcPresentationRepository(_, maxRetries))
 }

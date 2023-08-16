@@ -22,7 +22,7 @@ import java.util as ju
 import java.util.UUID
 
 private class PresentationServiceImpl(
-    presentationRepository: PresentationRepository[Task],
+    presentationRepository: PresentationRepository,
     credentialRepository: CredentialRepository,
     maxRetries: Int = 5, // TODO move to config
 ) extends PresentationService {
@@ -32,7 +32,7 @@ private class PresentationServiceImpl(
   override def markPresentationGenerated(
       recordId: DidCommID,
       presentation: Presentation
-  ): IO[PresentationError, PresentationRecord] = {
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
     for {
       record <- getRecordWithState(recordId, ProtocolState.PresentationPending)
       count <- presentationRepository
@@ -93,7 +93,7 @@ private class PresentationServiceImpl(
   override def extractIdFromCredential(credential: W3cCredentialPayload): Option[UUID] =
     credential.maybeId.map(_.split("/").last).map(UUID.fromString)
 
-  override def getPresentationRecords(): IO[PresentationError, Seq[PresentationRecord]] = {
+  override def getPresentationRecords(): ZIO[WalletAccessContext, PresentationError, Seq[PresentationRecord]] = {
     for {
       records <- presentationRepository
         .getPresentationRecords()
@@ -101,7 +101,9 @@ private class PresentationServiceImpl(
     } yield records
   }
 
-  override def getPresentationRecord(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]] = {
+  override def getPresentationRecord(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, PresentationError, Option[PresentationRecord]] = {
     for {
       record <- presentationRepository
         .getPresentationRecord(recordId)
@@ -109,17 +111,22 @@ private class PresentationServiceImpl(
     } yield record
   }
 
-  override def getPresentationRecordByThreadId(thid: DidCommID): IO[PresentationError, Option[PresentationRecord]] =
+  override def getPresentationRecordByThreadId(
+      thid: DidCommID
+  ): ZIO[WalletAccessContext, PresentationError, Option[PresentationRecord]] =
     for {
       record <- presentationRepository
         .getPresentationRecordByThreadId(thid)
         .mapError(RepositoryError.apply)
     } yield record
 
-  override def rejectRequestPresentation(recordId: DidCommID): IO[PresentationError, PresentationRecord] = {
+  override def rejectRequestPresentation(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
     markRequestPresentationRejected(recordId)
   }
-  def rejectPresentation(recordId: DidCommID): IO[PresentationError, PresentationRecord] = {
+
+  def rejectPresentation(recordId: DidCommID): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
     markPresentationRejected(recordId)
   }
 
@@ -130,7 +137,7 @@ private class PresentationServiceImpl(
       connectionId: Option[String],
       proofTypes: Seq[ProofType],
       options: Option[io.iohk.atala.pollux.core.model.presentation.Options]
-  ): IO[PresentationError, PresentationRecord] = {
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
     for {
       request <- ZIO.succeed(
         createDidCommRequestPresentation(
@@ -175,7 +182,7 @@ private class PresentationServiceImpl(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: PresentationRecord.ProtocolState*
-  ): IO[PresentationError, Seq[PresentationRecord]] = {
+  ): ZIO[WalletAccessContext, PresentationError, Seq[PresentationRecord]] = {
     for {
       records <- presentationRepository
         .getPresentationRecordsByStates(ignoreWithZeroRetries, limit, states: _*)
@@ -186,7 +193,7 @@ private class PresentationServiceImpl(
   override def receiveRequestPresentation(
       connectionId: Option[String],
       request: RequestPresentation
-  ): IO[PresentationError, PresentationRecord] = {
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
     for {
       record <- ZIO.succeed(
         PresentationRecord(
@@ -329,7 +336,9 @@ private class PresentationServiceImpl(
     } yield record
   }
 
-  override def acceptPresentation(recordId: DidCommID): IO[PresentationError, PresentationRecord] = {
+  override def acceptPresentation(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
     for {
       maybeRecord <- presentationRepository
         .getPresentationRecord(recordId)
@@ -343,9 +352,10 @@ private class PresentationServiceImpl(
       recordUpdated <- markPresentationAccepted(record.id)
     } yield recordUpdated
   }
+
   override def receivePresentation(
       presentation: Presentation
-  ): IO[PresentationError, PresentationRecord] = {
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
     for {
       record <- getRecordFromThreadId(presentation.thid)
       _ <- presentationRepository
@@ -365,7 +375,9 @@ private class PresentationServiceImpl(
     } yield record
   }
 
-  override def acceptProposePresentation(recordId: DidCommID): IO[PresentationError, PresentationRecord] = {
+  override def acceptProposePresentation(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
     for {
       maybeRecord <- presentationRepository
         .getPresentationRecord(recordId)
@@ -396,7 +408,7 @@ private class PresentationServiceImpl(
 
   override def receiveProposePresentation(
       proposePresentation: ProposePresentation
-  ): IO[PresentationError, PresentationRecord] = {
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
     for {
       record <- getRecordFromThreadId(proposePresentation.thid)
       _ <- presentationRepository
@@ -419,7 +431,7 @@ private class PresentationServiceImpl(
   private[this] def getRecordWithState(
       recordId: DidCommID,
       state: ProtocolState
-  ): IO[PresentationError, PresentationRecord] = {
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
     for {
       maybeRecord <- presentationRepository
         .getPresentationRecord(recordId)
@@ -434,48 +446,62 @@ private class PresentationServiceImpl(
     } yield record
   }
 
-  override def markRequestPresentationSent(recordId: DidCommID): IO[PresentationError, PresentationRecord] =
+  override def markRequestPresentationSent(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] =
     updatePresentationRecordProtocolState(
       recordId,
       PresentationRecord.ProtocolState.RequestPending,
       PresentationRecord.ProtocolState.RequestSent
     )
 
-  override def markProposePresentationSent(recordId: DidCommID): IO[PresentationError, PresentationRecord] =
+  override def markProposePresentationSent(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] =
     updatePresentationRecordProtocolState(
       recordId,
       PresentationRecord.ProtocolState.ProposalPending,
       PresentationRecord.ProtocolState.ProposalSent
     )
-  override def markPresentationVerified(recordId: DidCommID): IO[PresentationError, PresentationRecord] =
+  override def markPresentationVerified(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] =
     updatePresentationRecordProtocolState(
       recordId,
       PresentationRecord.ProtocolState.PresentationReceived,
       PresentationRecord.ProtocolState.PresentationVerified
     )
 
-  override def markPresentationAccepted(recordId: DidCommID): IO[PresentationError, PresentationRecord] =
+  override def markPresentationAccepted(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] =
     updatePresentationRecordProtocolState(
       recordId,
       PresentationRecord.ProtocolState.PresentationVerified,
       PresentationRecord.ProtocolState.PresentationAccepted
     )
 
-  override def markPresentationSent(recordId: DidCommID): IO[PresentationError, PresentationRecord] =
+  override def markPresentationSent(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] =
     updatePresentationRecordProtocolState(
       recordId,
       PresentationRecord.ProtocolState.PresentationGenerated,
       PresentationRecord.ProtocolState.PresentationSent
     )
 
-  override def markPresentationRejected(recordId: DidCommID): IO[PresentationError, PresentationRecord] =
+  override def markPresentationRejected(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] =
     updatePresentationRecordProtocolState(
       recordId,
       PresentationRecord.ProtocolState.PresentationVerified,
       PresentationRecord.ProtocolState.PresentationRejected
     )
 
-  override def markRequestPresentationRejected(recordId: DidCommID): IO[PresentationError, PresentationRecord] =
+  override def markRequestPresentationRejected(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] =
     updatePresentationRecordProtocolState(
       recordId,
       PresentationRecord.ProtocolState.RequestReceived,
@@ -484,7 +510,7 @@ private class PresentationServiceImpl(
 
   override def markPresentationVerificationFailed(
       recordId: DidCommID
-  ): IO[PresentationError, PresentationRecord] =
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] =
     updatePresentationRecordProtocolState(
       recordId,
       PresentationRecord.ProtocolState.PresentationReceived,
@@ -494,7 +520,7 @@ private class PresentationServiceImpl(
   def reportProcessingFailure(
       recordId: DidCommID,
       failReason: Option[String]
-  ): IO[PresentationError, Unit] =
+  ): ZIO[WalletAccessContext, PresentationError, Unit] =
     presentationRepository
       .updateAfterFail(recordId, failReason)
       .mapError(RepositoryError.apply)
@@ -505,7 +531,7 @@ private class PresentationServiceImpl(
 
   private[this] def getRecordFromThreadId(
       thid: Option[String]
-  ): IO[PresentationError, PresentationRecord] = {
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
     for {
       thidID <- ZIO
         .fromOption(thid)
@@ -568,7 +594,7 @@ private class PresentationServiceImpl(
       id: DidCommID,
       from: PresentationRecord.ProtocolState,
       to: PresentationRecord.ProtocolState
-  ): IO[PresentationError, PresentationRecord] = {
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
     for {
       _ <- presentationRepository
         .updatePresentationRecordProtocolState(id, from, to)
@@ -590,6 +616,6 @@ private class PresentationServiceImpl(
 }
 
 object PresentationServiceImpl {
-  val layer: URLayer[PresentationRepository[Task] & CredentialRepository, PresentationService] =
+  val layer: URLayer[PresentationRepository & CredentialRepository, PresentationService] =
     ZLayer.fromFunction(PresentationServiceImpl(_, _))
 }

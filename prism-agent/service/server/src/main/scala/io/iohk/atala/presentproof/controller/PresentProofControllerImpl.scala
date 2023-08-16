@@ -15,7 +15,7 @@ import io.iohk.atala.pollux.core.service.PresentationService
 import io.iohk.atala.presentproof.controller.PresentProofController.toDidCommID
 import io.iohk.atala.presentproof.controller.http.*
 import io.iohk.atala.shared.models.WalletAccessContext
-import zio.{IO, URLayer, ZIO, ZLayer}
+import zio.{URLayer, ZIO, ZLayer}
 
 import java.util.UUID
 
@@ -26,8 +26,8 @@ class PresentProofControllerImpl(
     with ControllerHelper {
   override def requestPresentation(request: RequestPresentationInput)(implicit
       rc: RequestContext
-  ): IO[ErrorResponse, PresentationStatus] = {
-    val result: IO[ConnectionServiceError | PresentationError, PresentationStatus] = for {
+  ): ZIO[WalletAccessContext, ErrorResponse, PresentationStatus] = {
+    val result: ZIO[WalletAccessContext, ConnectionServiceError | PresentationError, PresentationStatus] = for {
       didIdPair <- getPairwiseDIDs(request.connectionId).provide(ZLayer.succeed(connectionService))
       record <- presentationService
         .createPresentationRecord(
@@ -54,7 +54,7 @@ class PresentProofControllerImpl(
 
   override def getPresentations(paginationInput: PaginationInput, thid: Option[String])(implicit
       rc: RequestContext
-  ): IO[ErrorResponse, PresentationStatusPage] = {
+  ): ZIO[WalletAccessContext, ErrorResponse, PresentationStatusPage] = {
     val result = for {
       records <- thid match
         case None       => presentationService.getPresentationRecords()
@@ -66,8 +66,10 @@ class PresentProofControllerImpl(
     result.mapError(PresentProofController.toHttpError)
   }
 
-  override def getPresentation(id: UUID)(implicit rc: RequestContext): IO[ErrorResponse, PresentationStatus] = {
-    val result: ZIO[Any, ErrorResponse | PresentationError, PresentationStatus] = for {
+  override def getPresentation(
+      id: UUID
+  )(implicit rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, PresentationStatus] = {
+    val result: ZIO[WalletAccessContext, ErrorResponse | PresentationError, PresentationStatus] = for {
       presentationId <- toDidCommID(id.toString)
       maybeRecord <- presentationService.getPresentationRecord(presentationId)
       record <- ZIO
