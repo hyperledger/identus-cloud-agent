@@ -6,6 +6,7 @@ import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.model.presentation.*
 import io.iohk.atala.pollux.vc.jwt.*
+import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 
 import java.time.Instant
@@ -31,7 +32,7 @@ trait PresentationService {
       record: DidCommID,
       issuer: Issuer,
       issuanceDate: Instant
-  ): IO[PresentationError, PresentationPayload]
+  ): ZIO[WalletAccessContext, PresentationError, PresentationPayload]
 
   def getPresentationRecordsByStates(
       ignoreWithZeroRetries: Boolean,
@@ -51,7 +52,7 @@ trait PresentationService {
   def acceptRequestPresentation(
       recordId: DidCommID,
       credentialsToUse: Seq[String]
-  ): IO[PresentationError, PresentationRecord]
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord]
 
   def rejectRequestPresentation(recordId: DidCommID): IO[PresentationError, PresentationRecord]
 

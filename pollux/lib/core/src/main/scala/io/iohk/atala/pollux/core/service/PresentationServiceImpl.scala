@@ -13,6 +13,7 @@ import io.iohk.atala.pollux.core.model.error.PresentationError.*
 import io.iohk.atala.pollux.core.model.presentation.*
 import io.iohk.atala.pollux.core.repository.{CredentialRepository, PresentationRepository}
 import io.iohk.atala.pollux.vc.jwt.*
+import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 
 import java.rmi.UnexpectedException
@@ -54,7 +55,7 @@ private class PresentationServiceImpl(
       recordId: DidCommID,
       prover: Issuer,
       issuanceDate: Instant
-  ): IO[PresentationError, PresentationPayload] = {
+  ): ZIO[WalletAccessContext, PresentationError, PresentationPayload] = {
 
     for {
       maybeRecord <- presentationRepository
@@ -287,7 +288,7 @@ private class PresentationServiceImpl(
   def acceptRequestPresentation(
       recordId: DidCommID,
       credentialsToUse: Seq[String]
-  ): IO[PresentationError, PresentationRecord] = {
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
 
     for {
       record <- getRecordWithState(recordId, ProtocolState.RequestReceived)

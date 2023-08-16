@@ -4,7 +4,8 @@ import io.iohk.atala.api.http.model.PaginationInput
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.presentproof.controller.http.*
-import zio.{IO, ZIO}
+import io.iohk.atala.shared.models.WalletAccessContext
+import zio.ZIO
 
 import java.util.UUID
 import scala.util.Try
@@ -14,22 +15,22 @@ trait PresentProofController {
       requestPresentationInput: RequestPresentationInput
   )(implicit
       rc: RequestContext
-  ): IO[ErrorResponse, PresentationStatus]
+  ): ZIO[WalletAccessContext, ErrorResponse, PresentationStatus]
 
   def getPresentations(
       paginationInput: PaginationInput,
       thid: Option[String]
   )(implicit
       rc: RequestContext
-  ): IO[ErrorResponse, PresentationStatusPage]
+  ): ZIO[WalletAccessContext, ErrorResponse, PresentationStatusPage]
 
   def getPresentation(id: UUID)(implicit
       rc: RequestContext
-  ): IO[ErrorResponse, PresentationStatus]
+  ): ZIO[WalletAccessContext, ErrorResponse, PresentationStatus]
 
   def updatePresentation(id: UUID, requestPresentationAction: RequestPresentationAction)(implicit
       rc: RequestContext
-  ): IO[ErrorResponse, PresentationStatus]
+  ): ZIO[WalletAccessContext, ErrorResponse, PresentationStatus]
 
 }
 

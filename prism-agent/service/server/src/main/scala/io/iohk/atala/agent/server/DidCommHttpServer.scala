@@ -174,7 +174,8 @@ object DidCommHttpServer {
   /*
    * Issue Credential
    */
-  private val handleIssueCredential: PartialFunction[Message, ZIO[CredentialService, CredentialServiceError, Unit]] = {
+  private val handleIssueCredential
+      : PartialFunction[Message, ZIO[CredentialService & WalletAccessContext, CredentialServiceError, Unit]] = {
     case msg if msg.piuri == OfferCredential.`type` =>
       for {
         offerFromIssuer <- ZIO.succeed(OfferCredential.readFromMessage(msg))

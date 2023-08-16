@@ -1,4 +1,5 @@
 package io.iohk.atala.presentproof.controller
+
 import io.iohk.atala.agent.server.ControllerHelper
 import io.iohk.atala.api.http.model.PaginationInput
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
@@ -13,6 +14,7 @@ import io.iohk.atala.pollux.core.model.{DidCommID, PresentationRecord}
 import io.iohk.atala.pollux.core.service.PresentationService
 import io.iohk.atala.presentproof.controller.PresentProofController.toDidCommID
 import io.iohk.atala.presentproof.controller.http.*
+import io.iohk.atala.shared.models.WalletAccessContext
 import zio.{IO, URLayer, ZIO, ZLayer}
 
 import java.util.UUID
@@ -81,8 +83,8 @@ class PresentProofControllerImpl(
 
   override def updatePresentation(id: UUID, requestPresentationAction: RequestPresentationAction)(implicit
       rc: RequestContext
-  ): IO[ErrorResponse, PresentationStatus] = {
-    val result: ZIO[Any, ErrorResponse | PresentationError, PresentationStatus] = for {
+  ): ZIO[WalletAccessContext, ErrorResponse, PresentationStatus] = {
+    val result: ZIO[WalletAccessContext, ErrorResponse | PresentationError, PresentationStatus] = for {
       didCommId <- ZIO.succeed(DidCommID(id.toString))
       record <- requestPresentationAction.action match {
         case "request-accept" =>

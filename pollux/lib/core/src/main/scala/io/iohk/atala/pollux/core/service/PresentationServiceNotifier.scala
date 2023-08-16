@@ -1,4 +1,5 @@
 package io.iohk.atala.pollux.core.service
+
 import io.iohk.atala.event.notification.{Event, EventNotificationService}
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.presentproof.{Presentation, ProofType, ProposePresentation, RequestPresentation}
@@ -6,6 +7,7 @@ import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.model.presentation.Options
 import io.iohk.atala.pollux.core.model.{DidCommID, PresentationRecord}
 import io.iohk.atala.pollux.vc.jwt.{Issuer, PresentationPayload, W3cCredentialPayload}
+import io.iohk.atala.shared.models.WalletAccessContext
 import zio.{IO, URLayer, ZIO, ZLayer}
 
 import java.time.Instant
@@ -47,7 +49,7 @@ class PresentationServiceNotifier(
   override def acceptRequestPresentation(
       recordId: DidCommID,
       credentialsToUse: Seq[String]
-  ): IO[PresentationError, PresentationRecord] =
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] =
     notifyOnSuccess(svc.acceptRequestPresentation(recordId, credentialsToUse))
 
   override def rejectRequestPresentation(recordId: DidCommID): IO[PresentationError, PresentationRecord] =
@@ -79,7 +81,7 @@ class PresentationServiceNotifier(
   override def rejectPresentation(recordId: DidCommID): IO[PresentationError, PresentationRecord] =
     notifyOnSuccess(svc.rejectPresentation(recordId))
 
-  private[this] def notifyOnSuccess(effect: IO[PresentationError, PresentationRecord]) =
+  private[this] def notifyOnSuccess[R](effect: ZIO[R, PresentationError, PresentationRecord]) =
     for {
       record <- effect
       _ <- notify(record)
@@ -102,7 +104,8 @@ class PresentationServiceNotifier(
       record: DidCommID,
       issuer: Issuer,
       issuanceDate: Instant
-  ): IO[PresentationError, PresentationPayload] = svc.createPresentationPayloadFromRecord(record, issuer, issuanceDate)
+  ): ZIO[WalletAccessContext, PresentationError, PresentationPayload] =
+    svc.createPresentationPayloadFromRecord(record, issuer, issuanceDate)
 
   override def getPresentationRecordsByStates(
       ignoreWithZeroRetries: Boolean,
