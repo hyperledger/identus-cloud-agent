@@ -45,16 +45,7 @@ private class DidWalletMappingServiceImpl(
         .mapError(RepositoryError.apply)
     } yield records
   }
-
-//  override def getDidWalletMappingRecord(
-//      recordId: UUID
-//  ): IO[DidWalletMappingServiceError, Option[DidWalletMappingRecord]] = {
-//    for {
-//      record <- didWalletMappingRepository
-//        .getDidWalletMappingRecord(recordId)
-//        .mapError(RepositoryError.apply)
-//    } yield record
-//  }
+  
 
   override def getDidWalletMappingByWalletId(
       walletId: WalletId
