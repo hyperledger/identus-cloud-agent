@@ -22,7 +22,7 @@ import java.util.UUID
 
 private class PresentationServiceImpl(
     presentationRepository: PresentationRepository[Task],
-    credentialRepository: CredentialRepository[Task],
+    credentialRepository: CredentialRepository,
     maxRetries: Int = 5, // TODO move to config
 ) extends PresentationService {
 
@@ -589,6 +589,6 @@ private class PresentationServiceImpl(
 }
 
 object PresentationServiceImpl {
-  val layer: URLayer[PresentationRepository[Task] & CredentialRepository[Task], PresentationService] =
+  val layer: URLayer[PresentationRepository[Task] & CredentialRepository, PresentationService] =
     ZLayer.fromFunction(PresentationServiceImpl(_, _))
 }

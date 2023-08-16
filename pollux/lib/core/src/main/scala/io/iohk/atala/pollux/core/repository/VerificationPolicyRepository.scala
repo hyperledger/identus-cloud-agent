@@ -10,27 +10,27 @@ trait VerificationPolicyRepository {
 
   def create(verificationPolicy: VerificationPolicy): RIO[WalletAccessContext, VerificationPolicy]
 
-  def get(id: UUID): Task[Option[VerificationPolicy]]
+  def get(id: UUID): RIO[WalletAccessContext, Option[VerificationPolicy]]
 
-  def exists(id: UUID): Task[Boolean]
+  def exists(id: UUID): RIO[WalletAccessContext, Boolean]
 
-  def getHash(id: UUID): Task[Option[Int]]
+  def getHash(id: UUID): RIO[WalletAccessContext, Option[Int]]
 
   def update(
       id: UUID,
       nonce: Int,
       verificationPolicy: VerificationPolicy
-  ): Task[Option[VerificationPolicy]]
+  ): RIO[WalletAccessContext, Option[VerificationPolicy]]
 
-  def delete(id: UUID): Task[Option[VerificationPolicy]]
+  def delete(id: UUID): RIO[WalletAccessContext, Option[VerificationPolicy]]
 
-  def totalCount(): Task[Long]
+  def totalCount(): RIO[WalletAccessContext, Long]
 
-  def filteredCount(nameOpt: Option[String]): Task[Long]
+  def filteredCount(nameOpt: Option[String]): RIO[WalletAccessContext, Long]
 
   def lookup(
       nameOpt: Option[String],
       offsetOpt: Option[Int],
       limitOpt: Option[Int]
-  ): Task[List[VerificationPolicy]]
+  ): RIO[WalletAccessContext, List[VerificationPolicy]]
 }

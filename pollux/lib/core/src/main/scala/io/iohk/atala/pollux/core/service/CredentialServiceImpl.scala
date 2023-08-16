@@ -26,7 +26,7 @@ import java.time.{Instant, ZoneId}
 import java.util.UUID
 
 object CredentialServiceImpl {
-  val layer: URLayer[IrisServiceStub & CredentialRepository[Task] & DidResolver & URIDereferencer, CredentialService] =
+  val layer: URLayer[IrisServiceStub & CredentialRepository & DidResolver & URIDereferencer, CredentialService] =
     ZLayer.fromFunction(CredentialServiceImpl(_, _, _, _))
 
 //  private val VC_JSON_SCHEMA_URI = "https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json"
@@ -35,7 +35,7 @@ object CredentialServiceImpl {
 
 private class CredentialServiceImpl(
     irisClient: IrisServiceStub,
-    credentialRepository: CredentialRepository[Task],
+    credentialRepository: CredentialRepository,
     didResolver: DidResolver,
     uriDereferencer: URIDereferencer,
     maxRetries: Int = 5 // TODO move to config

@@ -56,7 +56,7 @@ class VerificationPolicyControllerImpl(service: VerificationPolicyService) exten
   override def getVerificationPolicyById(
       ctx: RequestContext,
       id: UUID
-  ): IO[ErrorResponse, VerificationPolicy] = {
+  ): ZIO[WalletAccessContext, ErrorResponse, VerificationPolicy] = {
     service.get(id).flatMap {
       case Some(vp) => succeed(vp.toSchema().withUri(ctx.request.uri))
       case None     => fail(NotFoundError(id))
@@ -68,7 +68,7 @@ class VerificationPolicyControllerImpl(service: VerificationPolicyService) exten
       id: UUID,
       nonce: Int,
       update: VerificationPolicyInput
-  ): IO[ErrorResponse, VerificationPolicy] = {
+  ): ZIO[WalletAccessContext, ErrorResponse, VerificationPolicy] = {
     val updatedZIO = for {
       constraints <- zio.ZIO.succeed(
         update.constraints.toVector // TODO: refactor to Seq
@@ -99,7 +99,7 @@ class VerificationPolicyControllerImpl(service: VerificationPolicyService) exten
   override def deleteVerificationPolicyById(
       ctx: RequestContext,
       id: UUID
-  ): IO[ErrorResponse, Unit] = {
+  ): ZIO[WalletAccessContext, ErrorResponse, Unit] = {
     service
       .delete(id)
       .flatMap {
@@ -114,7 +114,7 @@ class VerificationPolicyControllerImpl(service: VerificationPolicyService) exten
       filter: VerificationPolicy.Filter,
       pagination: Pagination,
       order: Option[Order]
-  ): IO[ErrorResponse, VerificationPolicyPage] = {
+  ): ZIO[WalletAccessContext, ErrorResponse, VerificationPolicyPage] = {
     for {
       filteredDomainRecords <- service
         .lookup(filter.name, Some(pagination.offset), Some(pagination.limit))

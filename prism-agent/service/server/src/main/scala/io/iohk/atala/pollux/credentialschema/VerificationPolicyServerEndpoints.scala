@@ -33,18 +33,24 @@ class VerificationPolicyServerEndpoints(
             nonce: Int,
             update: VerificationPolicyInput
           ) =>
-        controller.updateVerificationPolicyById(ctx, id, nonce, update)
+        controller
+          .updateVerificationPolicyById(ctx, id, nonce, update)
+          .provideSomeLayer(ZLayer.succeed(walletAccessCtx)) // FIXME
     }
   }
 
   val getVerificationPolicyByIdServerEndpoint: ZServerEndpoint[Any, Any] =
     getVerificationPolicyByIdEndpoint.zServerLogic { case (ctx: RequestContext, id: UUID) =>
-      controller.getVerificationPolicyById(ctx, id)
+      controller
+        .getVerificationPolicyById(ctx, id)
+        .provideSomeLayer(ZLayer.succeed(walletAccessCtx)) // FIXME
     }
 
   val deleteVerificationPolicyByIdServerEndpoint: ZServerEndpoint[Any, Any] =
     deleteVerificationPolicyByIdEndpoint.zServerLogic { case (ctx: RequestContext, id: UUID) =>
-      controller.deleteVerificationPolicyById(ctx, id)
+      controller
+        .deleteVerificationPolicyById(ctx, id)
+        .provideSomeLayer(ZLayer.succeed(walletAccessCtx)) // FIXME
     }
 
   val lookupVerificationPoliciesByQueryServerEndpoint: ZServerEndpoint[Any, Any] =
@@ -62,6 +68,7 @@ class VerificationPolicyServerEndpoints(
             paginationInput.toPagination,
             order
           )
+          .provideSomeLayer(ZLayer.succeed(walletAccessCtx)) // FIXME
     }
 
   val all: List[ZServerEndpoint[Any, Any]] =

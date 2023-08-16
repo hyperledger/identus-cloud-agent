@@ -14,7 +14,7 @@ import java.time.Instant
 class CredentialRepositoryInMemory(
     storeRef: Ref[Map[DidCommID, IssueCredentialRecord]],
     maxRetries: Int
-) extends CredentialRepository[Task] {
+) extends CredentialRepository {
 
   override def updateCredentialRecordPublicationState(
       recordId: DidCommID,
@@ -283,7 +283,7 @@ class CredentialRepositoryInMemory(
 
 object CredentialRepositoryInMemory {
   val maxRetries = 5 // TODO Move to config
-  val layer: ULayer[CredentialRepository[Task]] = ZLayer.fromZIO(
+  val layer: ULayer[CredentialRepository] = ZLayer.fromZIO(
     Ref
       .make(Map.empty[DidCommID, IssueCredentialRecord])
       .map(CredentialRepositoryInMemory(_, maxRetries))

@@ -17,24 +17,24 @@ trait VerificationPolicyController {
   def getVerificationPolicyById(
       ctx: RequestContext,
       id: UUID
-  ): IO[ErrorResponse, VerificationPolicy]
+  ): ZIO[WalletAccessContext, ErrorResponse, VerificationPolicy]
 
   def updateVerificationPolicyById(
       ctx: RequestContext,
       id: UUID,
       nonce: Int,
       update: VerificationPolicyInput
-  ): IO[ErrorResponse, VerificationPolicy]
+  ): ZIO[WalletAccessContext, ErrorResponse, VerificationPolicy]
 
   def deleteVerificationPolicyById(
       ctx: RequestContext,
       id: UUID
-  ): IO[ErrorResponse, Unit]
+  ): ZIO[WalletAccessContext, ErrorResponse, Unit]
 
   def lookupVerificationPolicies(
       ctx: RequestContext,
       filter: VerificationPolicy.Filter,
       pagination: Pagination,
       order: Option[Order]
-  ): IO[ErrorResponse, VerificationPolicyPage]
+  ): ZIO[WalletAccessContext, ErrorResponse, VerificationPolicyPage]
 }

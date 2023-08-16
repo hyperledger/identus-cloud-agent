@@ -22,10 +22,9 @@ import zio.*
 
 import java.time.Instant
 
-// TODO: replace with actual implementation
-class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], maxRetries: Int) extends CredentialRepository[Task] {
-  // serializes into hex string
+class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], maxRetries: Int) extends CredentialRepository {
 
+  // serializes into hex string
   private def serializeInclusionProof(proof: MerkleInclusionProof): String = BytesOps.bytesToHex(proof.encode.getBytes)
 
   // deserializes from the hex string
@@ -504,6 +503,6 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], maxRetries: Int
 
 object JdbcCredentialRepository {
   val maxRetries = 5 // TODO Move to config
-  val layer: URLayer[Transactor[ContextAwareTask], CredentialRepository[Task]] =
+  val layer: URLayer[Transactor[ContextAwareTask], CredentialRepository] =
     ZLayer.fromFunction(new JdbcCredentialRepository(_, maxRetries))
 }

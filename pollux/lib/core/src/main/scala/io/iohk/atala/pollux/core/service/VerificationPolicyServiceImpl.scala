@@ -31,7 +31,7 @@ class VerificationPolicyServiceImpl(
     } yield createdVerificationPolicy
   }.mapError(throwableToVerificationPolicyError)
 
-  override def get(id: UUID): IO[VerificationPolicyError, Option[VerificationPolicy]] =
+  override def get(id: UUID): ZIO[WalletAccessContext, VerificationPolicyError, Option[VerificationPolicy]] =
     repository
       .get(id)
       .mapError(throwableToVerificationPolicyError)
@@ -40,29 +40,29 @@ class VerificationPolicyServiceImpl(
       id: UUID,
       nonce: Int,
       verificationPolicy: VerificationPolicy
-  ): IO[VerificationPolicyError, Option[VerificationPolicy]] =
+  ): ZIO[WalletAccessContext, VerificationPolicyError, Option[VerificationPolicy]] =
     repository
       .update(id, nonce, verificationPolicy)
       .mapError(throwableToVerificationPolicyError)
 
-  override def delete(id: UUID): IO[VerificationPolicyError, Option[VerificationPolicy]] =
+  override def delete(id: UUID): ZIO[WalletAccessContext, VerificationPolicyError, Option[VerificationPolicy]] =
     repository
       .delete(id)
       .mapError(throwableToVerificationPolicyError)
 
-  override def totalCount(): IO[VerificationPolicyError, Long] =
+  override def totalCount(): ZIO[WalletAccessContext, VerificationPolicyError, Long] =
     repository.totalCount().mapError(throwableToVerificationPolicyError)
 
   override def filteredCount(
       name: Option[String]
-  ): IO[VerificationPolicyError, Long] =
+  ): ZIO[WalletAccessContext, VerificationPolicyError, Long] =
     repository.filteredCount(name).mapError(throwableToVerificationPolicyError)
 
   override def lookup(
       name: Option[String],
       offset: Option[Int],
       limit: Option[Int]
-  ): IO[VerificationPolicyError, List[VerificationPolicy]] =
+  ): ZIO[WalletAccessContext, VerificationPolicyError, List[VerificationPolicy]] =
     repository
       .lookup(name, offset, limit)
       .mapError(throwableToVerificationPolicyError)
