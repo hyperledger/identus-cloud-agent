@@ -22,7 +22,7 @@ spec:
 apiVersion: apisix.apache.org/v2
 kind: ApisixConsumer
 metadata:
-  name: "external-{{ $consumer | lower }}"
+  name: "{{ $consumer | lower }}"
   namespace: "{{ $root.Release.Namespace }}"
   labels:
     {{ template "labels.common" . }}
