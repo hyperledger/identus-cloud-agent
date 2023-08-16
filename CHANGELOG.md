@@ -1,3 +1,22 @@
+# [1.10.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v1.9.2...prism-agent-v1.10.0) (2023-08-16)
+
+
+### Bug Fixes
+
+* **prism-agent:** fix OAS on empty DID resolution representation ([#616](https://github.com/input-output-hk/atala-prism-building-blocks/issues/616)) ([216ff3a](https://github.com/input-output-hk/atala-prism-building-blocks/commit/216ff3a2ef75d824d0a6285218be01636a595a82))
+
+
+### Features
+
+* **agent:** improve OAS spec and refactor DidCommHttpServer code ([#615](https://github.com/input-output-hk/atala-prism-building-blocks/issues/615)) ([301fbab](https://github.com/input-output-hk/atala-prism-building-blocks/commit/301fbabac6c743130c46572056d9b8848a166be1))
+* **prism-agent:** Metrics for connection flow job ([#611](https://github.com/input-output-hk/atala-prism-building-blocks/issues/611)) ([695d661](https://github.com/input-output-hk/atala-prism-building-blocks/commit/695d66173b40b3ee9f87c3b950b54bdeff8f02d2))
+* update anoncreds demo after the new getJson methods ([#584](https://github.com/input-output-hk/atala-prism-building-blocks/issues/584)) ([d8258ee](https://github.com/input-output-hk/atala-prism-building-blocks/commit/d8258ee5d29b94ac863f9dbf5c8eaadd66fd636e))
+
+
+### Performance Improvements
+
+* support for credential and present-proof flows with thid ([#609](https://github.com/input-output-hk/atala-prism-building-blocks/issues/609)) ([9cef8c0](https://github.com/input-output-hk/atala-prism-building-blocks/commit/9cef8c03cf0a3e5601ec36b1f008dea2a738a415))
+
 ## [1.9.2](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v1.9.1...prism-agent-v1.9.2) (2023-07-27)
 
 
