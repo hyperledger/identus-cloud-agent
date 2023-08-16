@@ -175,6 +175,21 @@ lazy val D_Connect = new {
     baseDependencies ++ D.doobieDependencies ++ Seq(D.zioCatsInterop)
 }
 
+lazy val D_MultiTenancy = new {
+
+  private lazy val logback = "ch.qos.logback" % "logback-classic" % V.logback % Test
+
+  // Dependency Modules
+  private lazy val baseDependencies: Seq[ModuleID] =
+    Seq(D.zio, D.zioTest, D.zioTestSbt, D.zioTestMagnolia, D.zioMock, D.testcontainersPostgres, logback)
+
+  // Project Dependencies
+  lazy val coreDependencies: Seq[ModuleID] =
+    baseDependencies
+  lazy val sqlDoobieDependencies: Seq[ModuleID] =
+    baseDependencies ++ D.doobieDependencies ++ Seq(D.zioCatsInterop)
+}
+
 lazy val D_Castor = new {
 
   val scalaUri = "io.lemonlabs" %% "scala-uri" % V.scalaUri
@@ -750,6 +765,33 @@ lazy val eventNotification = project
   )
 
 // #####################
+// #####  multi-tenancy  #####
+// #####################
+
+def multiTenancyCommonSettings = polluxCommonSettings
+
+lazy val multiTenancyCore = project
+  .in(file("multi-tenancy/lib/core"))
+  .settings(multiTenancyCommonSettings)
+  .settings(
+    name := "multi-tenancy-core",
+    libraryDependencies ++= D_MultiTenancy.coreDependencies,
+    Test / publishArtifact := true
+  )
+  .dependsOn(shared)
+  .dependsOn(models,protocolConnection, protocolReportProblem)
+
+lazy val multiTenancyDoobie = project
+  .in(file("multi-tenancy/lib/sql-doobie"))
+  .settings(multiTenancyCommonSettings)
+  .settings(
+    name := "multi-tenancy-sql-doobie",
+    libraryDependencies ++= D_MultiTenancy.sqlDoobieDependencies
+  )
+  .dependsOn(shared)
+  .dependsOn(multiTenancyCore % "compile->compile;test->test")
+
+// #####################
 // #### Prism Agent ####
 // #####################
 def prismAgentConnectCommonSettings = polluxCommonSettings
@@ -795,7 +837,9 @@ lazy val prismAgentServer = project
     connectCore,
     connectDoobie,
     castorCore,
-    eventNotification
+    eventNotification,
+    multiTenancyCore,
+    multiTenancyDoobie
   )
 
 // ##################
@@ -873,6 +917,8 @@ lazy val aggregatedProjects: Seq[ProjectReference] = Seq(
   // polluxAnoncredsTest, REMOVE THIS FOR NOW
   connectCore,
   connectDoobie,
+  multiTenancyCore,
+  multiTenancyDoobie,
   prismAgentWalletAPI,
   prismAgentServer,
   mediator,

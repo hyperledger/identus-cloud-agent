@@ -1,0 +1,24 @@
+<configuration>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>[%level] %logger{15} - %message%n%rEx%xException{10}</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="ASYNCSTDOUT" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="STDOUT"/>
+    </appender>
+
+    <logger name="io.getquill" level="OFF"/>
+    <logger name="com.zaxxer.hikari" level="OFF"/>
+
+    <!--
+    INFO level is too noisy because of flyway migration log when running "sbt test".
+    If root level set to INFO, we should also set flyway logLevel to WARN
+    -->
+    <root level="WARN">
+        <appender-ref ref="ASYNCSTDOUT"/>
+    </root>
+
+</configuration>
