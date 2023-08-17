@@ -45,7 +45,6 @@ private class DidWalletMappingServiceImpl(
         .mapError(RepositoryError.apply)
     } yield records
   }
-  
 
   override def getDidWalletMappingByWalletId(
       walletId: WalletId
