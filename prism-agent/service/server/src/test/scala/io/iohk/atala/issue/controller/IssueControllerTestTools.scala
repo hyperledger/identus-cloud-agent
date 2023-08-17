@@ -8,7 +8,11 @@ import io.iohk.atala.connect.core.repository.ConnectionRepositoryInMemory
 import io.iohk.atala.connect.core.service.ConnectionServiceImpl
 import io.iohk.atala.container.util.PostgresLayer.*
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
-import io.iohk.atala.issue.controller.http.{CreateIssueCredentialRecordRequest,IssueCredentialRecord,IssueCredentialRecordPage}
+import io.iohk.atala.issue.controller.http.{
+  CreateIssueCredentialRecordRequest,
+  IssueCredentialRecord,
+  IssueCredentialRecordPage
+}
 import io.iohk.atala.pollux.core.repository.CredentialRepositoryInMemory
 import io.iohk.atala.pollux.core.service.*
 import io.iohk.atala.pollux.vc.jwt.*

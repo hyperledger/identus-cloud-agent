@@ -1,5 +1,6 @@
 package io.iohk.atala.pollux
 
+import com.dimafeng.testcontainers.PostgreSQLContainer
 import io.iohk.atala.container.util.MigrationAspects.migrate
 import io.iohk.atala.pollux.credentialschema.*
 import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaController
@@ -60,9 +61,7 @@ object CredentialSchemaLookupAndPaginationSpec
         schema = "public",
         paths = "classpath:sql/pollux"
       )
-  ).provideSomeLayerShared(
-    mockManagedDIDServiceLayer.exactly(201).toLayer >+> testEnvironmentLayer
-  )
+  ).provide(testEnvironmentLayer)
 
   private val schemaPaginationSpec = suite("schema-registry pagination logic")(
     test("pagination of the first page with the empty query params") {

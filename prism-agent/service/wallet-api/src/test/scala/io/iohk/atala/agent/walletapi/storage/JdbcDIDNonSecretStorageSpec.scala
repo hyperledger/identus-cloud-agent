@@ -12,7 +12,8 @@ import io.iohk.atala.castor.core.model.did.PrismDID
 import io.iohk.atala.castor.core.model.did.PrismDIDOperation
 import io.iohk.atala.castor.core.model.did.ScheduledDIDOperationStatus
 import io.iohk.atala.shared.models.WalletAccessContext
-import io.iohk.atala.test.container.{DBTestUtils, PostgresTestContainerSupport}
+import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
+import io.iohk.atala.test.container.DBTestUtils
 import org.postgresql.util.PSQLException
 import scala.collection.compat.immutable.ArraySeq
 import zio.*

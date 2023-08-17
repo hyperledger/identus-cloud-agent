@@ -514,7 +514,7 @@ object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSp
           _ <- holderSvc.receiveCredentialIssue(IssueCredential.readFromMessage(msg))
         } yield assertTrue(true)
       }
-    ).provideLayer(credentialServiceLayer)
+    ).provide(credentialServiceLayer)
   }
 
 }

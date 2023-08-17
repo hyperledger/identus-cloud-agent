@@ -1,4 +1,4 @@
-package io.iohk.atala.test.container
+package io.iohk.atala.shared.test.containers
 
 import com.dimafeng.testcontainers.PostgreSQLContainer
 import doobie.util.transactor.Transactor
@@ -7,7 +7,6 @@ import io.iohk.atala.shared.db.DbConfig
 import io.iohk.atala.shared.db.TransactorLayer
 import io.iohk.atala.shared.test.containers.PostgresTestContainer.postgresContainer
 import zio.*
-import zio.ZIO.*
 
 object PostgresLayer {
 
@@ -16,9 +15,9 @@ object PostgresLayer {
       verbose: Boolean = false
   ): TaskLayer[PostgreSQLContainer] =
     ZLayer.scoped {
-      acquireRelease(ZIO.attemptBlockingIO {
+      ZIO.acquireRelease(ZIO.attemptBlockingIO {
         postgresContainer(imageName, verbose)
-      })(container => attemptBlockingIO(container.stop()).orDie)
+      })(container => ZIO.attemptBlockingIO(container.stop()).orDie)
         // Start the container outside the aquireRelease as this might fail
         // to ensure contianer.stop() is added to the finalizer
         .tap(container => ZIO.attemptBlocking(container.start()))

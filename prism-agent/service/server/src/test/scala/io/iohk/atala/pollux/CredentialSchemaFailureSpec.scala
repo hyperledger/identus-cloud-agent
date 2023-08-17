@@ -1,5 +1,6 @@
 package io.iohk.atala.pollux
 
+import com.dimafeng.testcontainers.PostgreSQLContainer
 import io.iohk.atala.agent.walletapi.service.MockManagedDIDService
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.container.util.MigrationAspects.migrate
@@ -13,10 +14,15 @@ import zio.test.*
 import zio.test.Assertion.*
 
 object CredentialSchemaFailureSpec extends ZIOSpecDefault with CredentialSchemaTestTools:
+
+  private val sharedLayer = ZLayer.make[CredentialSchemaController & PostgreSQLContainer](
+    testEnvironmentLayer
+  )
+
   def spec = (schemaBadRequestAsJsonSpec @@ migrate(
     schema = "public",
     paths = "classpath:sql/pollux"
-  )).provideSomeLayerShared(MockManagedDIDService.empty >+> testEnvironmentLayer)
+  )).provideSomeLayerShared(sharedLayer)
 
   private val schemaBadRequestAsJsonSpec = suite("schema-registry BadRequest as json logic")(
     test("create the schema with wrong json body returns BadRequest as json") {
