@@ -110,7 +110,7 @@ object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault, PostgresTestCo
         _ <- CredentialSchemaSql.insert(expected).transactWallet(tx)
         actual <- CredentialSchemaSql
           .findByGUID(expected.guid)
-          .transact(tx)
+          .transactWallet(tx)
           .map(_.headOption)
 
         schemaCreated = assert(actual.get)(equalTo(expected))
@@ -118,20 +118,20 @@ object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault, PostgresTestCo
         updatedExpected = expected.copy(name = "new name")
         updatedActual <- CredentialSchemaSql
           .update(updatedExpected)
-          .transact(tx)
+          .transactWallet(tx)
         updatedActual2 <- CredentialSchemaSql
           .findByGUID(expected.id)
-          .transact(tx)
+          .transactWallet(tx)
           .map(_.headOption)
 
         schemaUpdated =
           assert(updatedActual)(equalTo(updatedExpected)) &&
             assert(updatedActual2.get)(equalTo(updatedExpected))
 
-        deleted <- CredentialSchemaSql.delete(expected.guid).transact(tx)
+        deleted <- CredentialSchemaSql.delete(expected.guid).transactWallet(tx)
         notFound <- CredentialSchemaSql
           .findByGUID(expected.guid)
-          .transact(tx)
+          .transactWallet(tx)
           .map(_.headOption)
 
         schemaDeleted =
@@ -162,19 +162,19 @@ object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault, PostgresTestCo
         )(equalTo(generatedSchemas.length))
 
         _ <- ZIO.collectAll(
-          generatedSchemas.map(schema => CredentialSchemaSql.insert(schema).transact(tx))
+          generatedSchemas.map(schema => CredentialSchemaSql.insert(schema).transactWallet(tx))
         )
 
         firstActual = generatedSchemas.head
         firstExpected <- CredentialSchemaSql
           .findByGUID(firstActual.guid)
-          .transact(tx)
+          .transactWallet(tx)
           .map(_.headOption)
 
         schemaCreated = assert(firstActual)(equalTo(firstExpected.get))
 
-        totalCount <- CredentialSchemaSql.totalCount.transact(tx)
-        lookupCount <- CredentialSchemaSql.lookupCount().transact(tx)
+        totalCount <- CredentialSchemaSql.totalCount.transactWallet(tx)
+        lookupCount <- CredentialSchemaSql.lookupCount().transactWallet(tx)
 
         totalCountIsN = assert(totalCount)(equalTo(generatedSchemas.length))
         lookupCountIsN = assert(lookupCount)(equalTo(generatedSchemas.length))

@@ -139,7 +139,7 @@ object VerificationPolicySqlIntegrationSpec extends ZIOSpecDefault, PostgresTest
         tx <- ZIO.service[Transactor[ContextAwareTask]]
         repo <- ZIO.service[VerificationPolicyRepository]
 
-        _ <- VerificationPolicySql.deleteAll().transact(tx)
+        _ <- VerificationPolicySql.deleteAll().transactWallet(tx)
         totalCount <- repo.totalCount()
 
         allEntitiesAreDeleted = assert(totalCount)(equalTo(0))

@@ -83,7 +83,7 @@ class JdbcCredentialSchemaRepository(xa: Transactor[ContextAwareTask]) extends C
         )
         .transactWallet(xa)
 
-      totalRowsCount <- CredentialSchemaSql.totalCount.transact(xa)
+      totalRowsCount <- CredentialSchemaSql.totalCount.transactWallet(xa)
     } yield SearchResult(entries, filteredRowsCount, totalRowsCount)
   }
 }
