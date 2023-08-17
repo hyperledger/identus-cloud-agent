@@ -4,12 +4,18 @@ import com.dimafeng.testcontainers.PostgreSQLContainer
 import doobie.*
 import doobie.implicits.*
 import doobie.util.transactor.Transactor
-import io.iohk.atala.pollux.core.model.{CredentialSchemaAndTrustedIssuersConstraint,VerificationPolicy,VerificationPolicyConstraint}
+import io.iohk.atala.pollux.core.model.{
+  CredentialSchemaAndTrustedIssuersConstraint,
+  VerificationPolicy,
+  VerificationPolicyConstraint
+}
 import io.iohk.atala.pollux.core.repository.VerificationPolicyRepository
 import io.iohk.atala.pollux.sql.model.db.VerificationPolicySql
 import io.iohk.atala.pollux.sql.repository.JdbcVerificationPolicyRepository
 import io.iohk.atala.shared.db.ContextAwareTask
 import io.iohk.atala.shared.db.Implicits.*
+import io.iohk.atala.shared.models.WalletAccessContext
+import io.iohk.atala.shared.models.WalletId
 import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
 import io.iohk.atala.test.container.MigrationAspects.*
 import zio.*
@@ -108,7 +114,7 @@ object VerificationPolicySqlIntegrationSpec extends ZIOSpecDefault, PostgresTest
       deleteAllVerificationPoliciesTest,
       insertNVerificationPoliciesTest(100),
       deleteAllVerificationPoliciesTest
-    ) @@ nondeterministic @@ sequential @@ timed
+    ).provideSomeLayer(ZLayer.succeed(WalletAccessContext(WalletId.random))) @@ nondeterministic @@ sequential @@ timed
 
   def insertNVerificationPoliciesTest(n: Int) =
     test(s"insert $n verification policies entries") {
@@ -147,14 +153,14 @@ object VerificationPolicySqlIntegrationSpec extends ZIOSpecDefault, PostgresTest
     insertNVerificationPoliciesTest(N),
     test("get all in one page") {
       for {
-        repo <- ZIO.service[VerificationPolicyRepository[Task]]
+        repo <- ZIO.service[VerificationPolicyRepository]
         all <- repo.lookup(None, None, None)
         allNRecordsAreReturned = assert(all.length)(equalTo(N))
       } yield allNRecordsAreReturned
     },
     test("get all by two pages") {
       for {
-        repo <- ZIO.service[VerificationPolicyRepository[Task]]
+        repo <- ZIO.service[VerificationPolicyRepository]
         first <- repo.lookup(None, offsetOpt = Some(0), limitOpt = Some(N / 2))
         second <- repo.lookup(
           None,
@@ -176,7 +182,7 @@ object VerificationPolicySqlIntegrationSpec extends ZIOSpecDefault, PostgresTest
     },
     test("paginate through the collection of verifiable policies") {
       for {
-        repo <- ZIO.service[VerificationPolicyRepository[Task]]
+        repo <- ZIO.service[VerificationPolicyRepository]
 
         paginator = new Paginator(skipLimit =>
           repo.lookup(
@@ -196,7 +202,7 @@ object VerificationPolicySqlIntegrationSpec extends ZIOSpecDefault, PostgresTest
         allItemsArePaginated20 = assert(totalCount)(equalTo(allItems20.length))
       } yield allItemsArePaginated1 && allItemsArePaginated10 && allItemsArePaginated20
     }
-  )
+  ).provideSomeLayer(ZLayer.succeed(WalletAccessContext(WalletId.random)))
 
   object VerificationPolicyGen {
     val id = Gen.uuid
@@ -235,15 +241,15 @@ object VerificationPolicySqlIntegrationSpec extends ZIOSpecDefault, PostgresTest
   case class SkipLimit(skip: Int, limit: Int) {
     def next: SkipLimit = SkipLimit(skip + limit, limit)
   }
-  class Paginator[T](page: SkipLimit => Task[List[T]]) {
+  class Paginator[R, T](page: SkipLimit => RIO[R, List[T]]) {
     def fetchAll(
         from: SkipLimit,
         acc: List[T] = List.empty[T]
-    ): Task[List[T]] = {
+    ): RIO[R, List[T]] = {
       val nextPage = page(from)
       nextPage.flatMap(items => items.headOption.fold(ZIO.succeed(acc))(nonEmpty => fetchAll(from.next, acc ++ items)))
     }
 
-    def fetchPage(from: SkipLimit): Task[List[T]] = page(from)
+    def fetchPage(from: SkipLimit): RIO[R, List[T]] = page(from)
   }
 }

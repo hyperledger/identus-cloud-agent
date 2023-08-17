@@ -8,6 +8,8 @@ import io.getquill.*
 import io.iohk.atala.pollux.sql.model.db.{CredentialSchema, CredentialSchemaSql}
 import io.iohk.atala.shared.db.ContextAwareTask
 import io.iohk.atala.shared.db.Implicits.*
+import io.iohk.atala.shared.models.WalletAccessContext
+import io.iohk.atala.shared.models.WalletId
 import io.iohk.atala.shared.test.containers.PostgreSQLContainerCustom
 import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
 import io.iohk.atala.test.container.MigrationAspects.*
@@ -186,5 +188,5 @@ object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault, PostgresTestCo
         schemaCreated &&
         totalCountIsN && lookupCountIsN
     }
-  ) @@ nondeterministic @@ sequential @@ timed
+  ).provideSomeLayer(ZLayer.succeed(WalletAccessContext(WalletId.random))) @@ nondeterministic @@ sequential @@ timed
 }

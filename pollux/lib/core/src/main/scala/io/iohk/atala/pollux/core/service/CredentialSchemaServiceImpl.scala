@@ -11,7 +11,7 @@ import zio.{Task, URLayer, ZLayer}
 import java.util.UUID
 
 class CredentialSchemaServiceImpl(
-    credentialSchemaRepository: CredentialSchemaRepository[Task]
+    credentialSchemaRepository: CredentialSchemaRepository
 ) extends CredentialSchemaService {
   override def create(in: CredentialSchema.Input): Result[CredentialSchema] = {
     for {
@@ -110,6 +110,6 @@ class CredentialSchemaServiceImpl(
 }
 
 object CredentialSchemaServiceImpl {
-  val layer: URLayer[CredentialSchemaRepository[Task], CredentialSchemaService] =
+  val layer: URLayer[CredentialSchemaRepository, CredentialSchemaService] =
     ZLayer.fromFunction(CredentialSchemaServiceImpl(_))
 }

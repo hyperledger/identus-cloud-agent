@@ -4,9 +4,11 @@ import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.presentproof.{Presentation, ProposePresentation, RequestPresentation}
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.PresentationRecord.*
-import zio.{Task, ZIO}
+import io.iohk.atala.shared.models.WalletAccessContext
+import io.iohk.atala.shared.models.WalletId
 import zio.test.*
 import zio.test.Assertion.*
+import zio.{ZIO, ZLayer}
 
 import java.time.Instant
 import java.util.UUID
@@ -347,5 +349,5 @@ object PresentationRepositorySpecSuite {
 
       }
     }
-  )
+  ).provideSomeLayer(ZLayer.succeed(WalletAccessContext(WalletId.random)))
 }

@@ -33,6 +33,7 @@ import zio.mock.Expectation
 import zio.test.{Assertion, Gen, ZIOSpecDefault}
 
 import java.time.OffsetDateTime
+import com.dimafeng.testcontainers.PostgreSQLContainer
 
 trait CredentialSchemaTestTools extends PostgresTestContainerSupport {
   self: ZIOSpecDefault =>
@@ -45,11 +46,6 @@ trait CredentialSchemaTestTools extends PostgresTestContainerSupport {
     Response[
       Either[DeserializationException[String], CredentialSchemaResponsePage]
     ]
-
-  private val controllerLayer = transactorLayer >>>
-    JdbcCredentialSchemaRepository.layer >+>
-    CredentialSchemaServiceImpl.layer >+>
-    CredentialSchemaControllerImpl.layer
 
   val mockManagedDIDServiceLayer: Expectation[ManagedDIDService] = MockManagedDIDService
     .GetManagedDIDState(
@@ -65,12 +61,14 @@ trait CredentialSchemaTestTools extends PostgresTestContainerSupport {
       )
     )
 
-  // val testEnvironmentLayer = zio.test.testEnvironment ++
-  //   transactorLayer ++
-  //   controllerLayer
-  val testEnvironmentLayer = ZLayer.make[CredentialSchemaController](
-    CredentialSchemaControllerImpl.layer
-  )
+  val testEnvironmentLayer =
+    ZLayer.makeSome[ManagedDIDService, CredentialSchemaController & CredentialSchemaRepository & PostgreSQLContainer](
+      CredentialSchemaControllerImpl.layer,
+      CredentialSchemaServiceImpl.layer,
+      JdbcCredentialSchemaRepository.layer,
+      transactorLayer,
+      pgContainerLayer
+    )
 
   val credentialSchemaUriBase = uri"http://test.com/schema-registry/schemas"
 
@@ -100,9 +98,9 @@ trait CredentialSchemaTestTools extends PostgresTestContainerSupport {
     backend
   }
 
-  def deleteAllCredentialSchemas: RIO[CredentialSchemaRepository[Task], Long] = {
+  def deleteAllCredentialSchemas: RIO[CredentialSchemaRepository & WalletAccessContext, Long] = {
     for {
-      repository <- ZIO.service[CredentialSchemaRepository[Task]]
+      repository <- ZIO.service[CredentialSchemaRepository]
       count <- repository.deleteAll()
     } yield count
   }

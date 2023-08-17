@@ -16,7 +16,8 @@ import zio.test.Assertion.*
 object CredentialSchemaFailureSpec extends ZIOSpecDefault with CredentialSchemaTestTools:
 
   private val sharedLayer = ZLayer.make[CredentialSchemaController & PostgreSQLContainer](
-    testEnvironmentLayer
+    testEnvironmentLayer,
+    MockManagedDIDService.empty
   )
 
   def spec = (schemaBadRequestAsJsonSpec @@ migrate(

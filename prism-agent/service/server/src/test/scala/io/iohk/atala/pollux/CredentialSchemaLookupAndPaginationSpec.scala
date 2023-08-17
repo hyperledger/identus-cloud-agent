@@ -9,6 +9,8 @@ import io.iohk.atala.pollux.credentialschema.http.{
   CredentialSchemaResponse,
   CredentialSchemaResponsePage
 }
+import io.iohk.atala.shared.models.WalletAccessContext
+import io.iohk.atala.shared.models.WalletId
 import sttp.client3.ziojson.*
 import sttp.client3.{DeserializationException, Response, UriContext, basicRequest}
 import sttp.model.{StatusCode, Uri}
@@ -61,7 +63,7 @@ object CredentialSchemaLookupAndPaginationSpec
         schema = "public",
         paths = "classpath:sql/pollux"
       )
-  ).provide(testEnvironmentLayer)
+  ).provide(testEnvironmentLayer, mockManagedDIDServiceLayer.exactly(201).toLayer)
 
   private val schemaPaginationSpec = suite("schema-registry pagination logic")(
     test("pagination of the first page with the empty query params") {
@@ -115,4 +117,4 @@ object CredentialSchemaLookupAndPaginationSpec
         assert(allPagesWithLimit10.length)(equalTo(10)) &&
         assert(allPagesWithLimit15.length)(equalTo(7))
     }
-  )
+  ).provideSomeLayer(ZLayer.succeed(WalletAccessContext(WalletId.random)))

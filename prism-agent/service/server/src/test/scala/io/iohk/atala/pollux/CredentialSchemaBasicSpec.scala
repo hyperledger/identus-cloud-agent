@@ -51,7 +51,8 @@ object CredentialSchemaBasicSpec extends ZIOSpecDefault with CredentialSchemaTes
   )
 
   private val sharedLayer = ZLayer.make[CredentialSchemaController & PostgreSQLContainer](
-    testEnvironmentLayer
+    testEnvironmentLayer,
+    mockManagedDIDServiceLayer.toLayer
   )
 
   def spec = (

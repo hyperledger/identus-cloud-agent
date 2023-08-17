@@ -3,21 +3,25 @@ package io.iohk.atala.pollux.core.repository
 import io.iohk.atala.pollux.core.model.schema.CredentialSchema
 import io.iohk.atala.pollux.core.model.schema.CredentialSchema.*
 import io.iohk.atala.pollux.core.repository.Repository.SearchCapability
+import io.iohk.atala.shared.models.WalletAccessContext
+import zio.RIO
 
 import java.util.UUID
 
-trait CredentialSchemaRepository[F[_]]
-    extends Repository[F, CredentialSchema]
-    with SearchCapability[F, CredentialSchema.Filter, CredentialSchema] {
-  def create(cs: CredentialSchema): F[CredentialSchema]
+type WalletTask[T] = RIO[WalletAccessContext, T]
 
-  def getByGuid(guid: UUID): F[Option[CredentialSchema]]
+trait CredentialSchemaRepository
+    extends Repository[WalletTask, CredentialSchema]
+    with SearchCapability[WalletTask, CredentialSchema.Filter, CredentialSchema] {
+  def create(cs: CredentialSchema): RIO[WalletAccessContext, CredentialSchema]
 
-  def update(cs: CredentialSchema): F[Option[CredentialSchema]]
+  def getByGuid(guid: UUID): RIO[WalletAccessContext, Option[CredentialSchema]]
 
-  def getAllVersions(id: UUID, author: String): F[Seq[String]]
+  def update(cs: CredentialSchema): RIO[WalletAccessContext, Option[CredentialSchema]]
 
-  def delete(guid: UUID): F[Option[CredentialSchema]]
+  def getAllVersions(id: UUID, author: String): RIO[WalletAccessContext, Seq[String]]
 
-  def deleteAll(): F[Long]
+  def delete(guid: UUID): RIO[WalletAccessContext, Option[CredentialSchema]]
+
+  def deleteAll(): RIO[WalletAccessContext, Long]
 }
