@@ -10,7 +10,7 @@ import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.models.WalletId
 import zio.test.*
 import zio.test.Assertion.*
-import zio.{Exit, Task, ZIO, ZLayer}
+import zio.{Exit, ZIO, ZLayer}
 
 import java.time.Instant
 import java.util.UUID

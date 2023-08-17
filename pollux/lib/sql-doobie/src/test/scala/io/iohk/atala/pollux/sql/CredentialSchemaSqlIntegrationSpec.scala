@@ -2,7 +2,6 @@ package io.iohk.atala.pollux.sql
 
 import com.dimafeng.testcontainers.PostgreSQLContainer
 import doobie.*
-import doobie.implicits.*
 import doobie.util.transactor.Transactor
 import io.getquill.*
 import io.iohk.atala.pollux.sql.model.db.{CredentialSchema, CredentialSchemaSql}
@@ -10,12 +9,9 @@ import io.iohk.atala.shared.db.ContextAwareTask
 import io.iohk.atala.shared.db.Implicits.*
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.models.WalletId
-import io.iohk.atala.shared.test.containers.PostgreSQLContainerCustom
 import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
 import io.iohk.atala.test.container.MigrationAspects.*
 import zio.*
-import zio.interop.catz.*
-import zio.interop.catz.implicits.*
 import zio.json.ast.Json
 import zio.test.*
 import zio.test.Assertion.*

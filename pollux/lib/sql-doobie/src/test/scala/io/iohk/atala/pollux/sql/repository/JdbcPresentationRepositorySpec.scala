@@ -3,7 +3,6 @@ package io.iohk.atala.pollux.sql.repository
 import com.dimafeng.testcontainers.PostgreSQLContainer
 import io.iohk.atala.pollux.core.repository._
 import io.iohk.atala.shared.db.DbConfig
-import io.iohk.atala.shared.db.TransactorLayer
 import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
 import zio._
 import zio.test._

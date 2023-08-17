@@ -6,7 +6,7 @@ import io.iohk.atala.pollux.core.repository.CredentialSchemaRepository
 import io.iohk.atala.pollux.core.repository.Repository.SearchQuery
 import io.iohk.atala.pollux.core.service.CredentialSchemaService.Error.*
 import zio.ZIO.{fail, getOrFailWith, succeed}
-import zio.{Task, URLayer, ZLayer}
+import zio.{URLayer, ZLayer}
 
 import java.util.UUID
 

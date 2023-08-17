@@ -2,7 +2,6 @@ package io.iohk.atala.pollux.sql
 
 import com.dimafeng.testcontainers.PostgreSQLContainer
 import doobie.*
-import doobie.implicits.*
 import doobie.util.transactor.Transactor
 import io.iohk.atala.pollux.core.model.{
   CredentialSchemaAndTrustedIssuersConstraint,
@@ -20,7 +19,6 @@ import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
 import io.iohk.atala.test.container.MigrationAspects.*
 import zio.*
 import zio.interop.catz.*
-import zio.interop.catz.implicits.*
 import zio.test.*
 import zio.test.Assertion.*
 import zio.test.TestAspect.*
