@@ -4,7 +4,6 @@ import io.iohk.atala.agent.walletapi.model.{ManagedDIDState, PublicationState}
 import io.iohk.atala.agent.walletapi.service.{ManagedDIDService, MockManagedDIDService}
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.castor.core.model.did.PrismDIDOperation
-import io.iohk.atala.container.util.PostgresLayer.*
 import io.iohk.atala.pollux.core.model.schema.`type`.CredentialJsonSchemaType
 import io.iohk.atala.pollux.core.repository.CredentialSchemaRepository
 import io.iohk.atala.pollux.core.service.CredentialSchemaServiceImpl
@@ -18,6 +17,7 @@ import io.iohk.atala.pollux.credentialschema.http.{
 import io.iohk.atala.pollux.sql.repository.JdbcCredentialSchemaRepository
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.models.WalletId
+import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
 import sttp.client3.testing.SttpBackendStub
 import sttp.client3.ziojson.*
 import sttp.client3.{DeserializationException, Response, UriContext, basicRequest}
@@ -34,7 +34,7 @@ import zio.test.{Assertion, Gen, ZIOSpecDefault}
 
 import java.time.OffsetDateTime
 
-trait CredentialSchemaTestTools {
+trait CredentialSchemaTestTools extends PostgresTestContainerSupport {
   self: ZIOSpecDefault =>
 
   type SchemaBadRequestResponse =
@@ -46,8 +46,6 @@ trait CredentialSchemaTestTools {
       Either[DeserializationException[String], CredentialSchemaResponsePage]
     ]
 
-  private val pgLayer = postgresLayer(verbose = false)
-  private val transactorLayer = pgLayer >>> hikariConfigLayer >>> transactor
   private val controllerLayer = transactorLayer >>>
     JdbcCredentialSchemaRepository.layer >+>
     CredentialSchemaServiceImpl.layer >+>
@@ -67,10 +65,12 @@ trait CredentialSchemaTestTools {
       )
     )
 
-  val testEnvironmentLayer = zio.test.testEnvironment ++
-    pgLayer ++
-    transactorLayer ++
-    controllerLayer
+  // val testEnvironmentLayer = zio.test.testEnvironment ++
+  //   transactorLayer ++
+  //   controllerLayer
+  val testEnvironmentLayer = ZLayer.make[CredentialSchemaController](
+    CredentialSchemaControllerImpl.layer
+  )
 
   val credentialSchemaUriBase = uri"http://test.com/schema-registry/schemas"
 

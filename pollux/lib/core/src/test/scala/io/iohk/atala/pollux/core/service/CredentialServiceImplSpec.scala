@@ -10,6 +10,8 @@ import io.iohk.atala.pollux.core.model.IssueCredentialRecord.*
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError.*
 import io.iohk.atala.pollux.vc.jwt.*
+import io.iohk.atala.shared.models.WalletAccessContext
+import io.iohk.atala.shared.models.WalletId
 import zio.*
 import zio.test.*
 
@@ -514,7 +516,7 @@ object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSp
           _ <- holderSvc.receiveCredentialIssue(IssueCredential.readFromMessage(msg))
         } yield assertTrue(true)
       }
-    ).provide(credentialServiceLayer)
+    ).provide(credentialServiceLayer, ZLayer.succeed(WalletAccessContext(WalletId.random)))
   }
 
 }

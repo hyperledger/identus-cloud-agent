@@ -6,28 +6,28 @@ import doobie.implicits.*
 import doobie.util.transactor.Transactor
 import io.getquill.*
 import io.iohk.atala.pollux.sql.model.db.{CredentialSchema, CredentialSchemaSql}
+import io.iohk.atala.shared.db.ContextAwareTask
+import io.iohk.atala.shared.db.Implicits.*
+import io.iohk.atala.shared.test.containers.PostgreSQLContainerCustom
+import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
 import io.iohk.atala.test.container.MigrationAspects.*
-import io.iohk.atala.test.container.PostgresLayer.*
 import zio.*
 import zio.interop.catz.*
 import zio.interop.catz.implicits.*
 import zio.json.ast.Json
+import zio.test.*
 import zio.test.Assertion.*
 import zio.test.TestAspect.*
-import zio.test.*
 
 import java.time.{OffsetDateTime, ZoneOffset}
 import java.util.UUID
 import scala.collection.mutable
 import scala.io.Source
 
-object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault {
+object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault, PostgresTestContainerSupport {
 
-  private val pgLayer = postgresLayer(verbose = false)
-  private val transactorLayer =
-    pgLayer >>> hikariConfigLayer >>> transactor
   private val testEnvironmentLayer =
-    zio.test.testEnvironment ++ pgLayer ++ transactorLayer
+    zio.test.testEnvironment ++ pgContainerLayer ++ transactorLayer
 
   object Vocabulary {
     val verifiableCredentialTypes =
@@ -106,10 +106,10 @@ object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault {
   val schemaRegistryCRUDSuite = suite("schema-registry CRUD operations")(
     test("insert, findById, update and delete operations") {
       for {
-        tx <- ZIO.service[Transactor[Task]]
+        tx <- ZIO.service[Transactor[ContextAwareTask]]
 
         expected <- Generators.schema.runCollectN(1).map(_.head)
-        _ <- CredentialSchemaSql.insert(expected).transact(tx)
+        _ <- CredentialSchemaSql.insert(expected).transactWallet(tx)
         actual <- CredentialSchemaSql
           .findByGUID(expected.guid)
           .transact(tx)
@@ -144,8 +144,8 @@ object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault {
     },
     test("insert N generated, findById, ensure constraint is not broken ") {
       for {
-        tx <- ZIO.service[Transactor[Task]]
-        _ <- CredentialSchemaSql.deleteAll.transact(tx)
+        tx <- ZIO.service[Transactor[ContextAwareTask]]
+        _ <- CredentialSchemaSql.deleteAll.transactWallet(tx)
 
         generatedSchemas <- Generators.schemaUnique.runCollectN(10)
 

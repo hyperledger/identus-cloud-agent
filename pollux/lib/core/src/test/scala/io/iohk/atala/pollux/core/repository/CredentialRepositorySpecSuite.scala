@@ -6,9 +6,11 @@ import io.iohk.atala.mercury.protocol.issuecredential.{IssueCredential, RequestC
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord.*
 import io.iohk.atala.pollux.core.model.error.CredentialRepositoryError.*
-import zio.{Exit, Task, ZIO}
+import io.iohk.atala.shared.models.WalletAccessContext
+import io.iohk.atala.shared.models.WalletId
 import zio.test.*
 import zio.test.Assertion.*
+import zio.{Exit, Task, ZIO, ZLayer}
 
 import java.time.Instant
 import java.util.UUID
@@ -465,5 +467,5 @@ object CredentialRepositorySpecSuite {
 
       }
     }
-  )
+  ).provideSomeLayer(ZLayer.succeed(WalletAccessContext(WalletId.random)))
 }

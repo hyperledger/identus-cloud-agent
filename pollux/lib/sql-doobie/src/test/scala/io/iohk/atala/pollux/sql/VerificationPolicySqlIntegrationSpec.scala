@@ -4,16 +4,14 @@ import com.dimafeng.testcontainers.PostgreSQLContainer
 import doobie.*
 import doobie.implicits.*
 import doobie.util.transactor.Transactor
-import io.iohk.atala.pollux.core.model.{
-  CredentialSchemaAndTrustedIssuersConstraint,
-  VerificationPolicy,
-  VerificationPolicyConstraint
-}
+import io.iohk.atala.pollux.core.model.{CredentialSchemaAndTrustedIssuersConstraint,VerificationPolicy,VerificationPolicyConstraint}
 import io.iohk.atala.pollux.core.repository.VerificationPolicyRepository
 import io.iohk.atala.pollux.sql.model.db.VerificationPolicySql
 import io.iohk.atala.pollux.sql.repository.JdbcVerificationPolicyRepository
+import io.iohk.atala.shared.db.ContextAwareTask
+import io.iohk.atala.shared.db.Implicits.*
+import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
 import io.iohk.atala.test.container.MigrationAspects.*
-import io.iohk.atala.test.container.PostgresLayer.*
 import zio.*
 import zio.interop.catz.*
 import zio.interop.catz.implicits.*
@@ -21,15 +19,12 @@ import zio.test.*
 import zio.test.Assertion.*
 import zio.test.TestAspect.*
 
-object VerificationPolicySqlIntegrationSpec extends ZIOSpecDefault {
+object VerificationPolicySqlIntegrationSpec extends ZIOSpecDefault, PostgresTestContainerSupport {
 
-  private val pgLayer = postgresLayer()
-  private val transactorLayer =
-    pgLayer >>> hikariConfigLayer >>> transactor
   private val repositoryLayer =
     transactorLayer >>> JdbcVerificationPolicyRepository.layer
   private val testEnvironmentLayer =
-    zio.test.testEnvironment ++ pgLayer ++ transactorLayer ++ repositoryLayer
+    zio.test.testEnvironment ++ pgContainerLayer ++ transactorLayer ++ repositoryLayer
 
   def spec = (suite("verification policy DAL spec")(
     verificationPolicyCRUDSuite,
@@ -37,14 +32,14 @@ object VerificationPolicySqlIntegrationSpec extends ZIOSpecDefault {
   ) @@ nondeterministic @@ sequential @@ timed @@ migrate(
     schema = "public",
     paths = "classpath:sql/pollux"
-  )).provideSomeLayerShared(testEnvironmentLayer) @@ TestAspect.tag("dev")
+  )).provideSomeLayerShared(testEnvironmentLayer)
 
   val verificationPolicyCRUDSuite =
     suite("verification policy CRUD operations")(
       test("insert, findById, update and delete operations") {
         for {
-          tx <- ZIO.service[Transactor[Task]]
-          repo <- ZIO.service[VerificationPolicyRepository[Task]]
+          tx <- ZIO.service[Transactor[ContextAwareTask]]
+          repo <- ZIO.service[VerificationPolicyRepository]
 
           expectedCreated <- VerificationPolicyGen.verificationPolicyZIO
             .runCollectN(1)
@@ -107,7 +102,7 @@ object VerificationPolicySqlIntegrationSpec extends ZIOSpecDefault {
 
           isDeleted = assert(getByIdDeleted)(isNone)
 
-          _ <- VerificationPolicySql.deleteAll().transact(tx)
+          _ <- VerificationPolicySql.deleteAll().transactWallet(tx)
         } yield isCreated && allRecordsAreSimilar && isUpdated && isDeletedReturnedBack && isDeleted
       },
       deleteAllVerificationPoliciesTest,
@@ -118,7 +113,7 @@ object VerificationPolicySqlIntegrationSpec extends ZIOSpecDefault {
   def insertNVerificationPoliciesTest(n: Int) =
     test(s"insert $n verification policies entries") {
       for {
-        repo <- ZIO.service[VerificationPolicyRepository[Task]]
+        repo <- ZIO.service[VerificationPolicyRepository]
 
         generatedVerificationPolicies: List[VerificationPolicy] <-
           VerificationPolicyGen.verificationPolicyZIO
@@ -137,8 +132,8 @@ object VerificationPolicySqlIntegrationSpec extends ZIOSpecDefault {
   def deleteAllVerificationPoliciesTest =
     test("delete all verification policies entries") {
       for {
-        tx <- ZIO.service[Transactor[Task]]
-        repo <- ZIO.service[VerificationPolicyRepository[Task]]
+        tx <- ZIO.service[Transactor[ContextAwareTask]]
+        repo <- ZIO.service[VerificationPolicyRepository]
 
         _ <- VerificationPolicySql.deleteAll().transact(tx)
         totalCount <- repo.totalCount()

@@ -15,9 +15,10 @@ object PostgresLayer {
       verbose: Boolean = false
   ): TaskLayer[PostgreSQLContainer] =
     ZLayer.scoped {
-      ZIO.acquireRelease(ZIO.attemptBlockingIO {
-        postgresContainer(imageName, verbose)
-      })(container => ZIO.attemptBlockingIO(container.stop()).orDie)
+      ZIO
+        .acquireRelease(ZIO.attemptBlockingIO {
+          postgresContainer(imageName, verbose)
+        })(container => ZIO.attemptBlockingIO(container.stop()).orDie)
         // Start the container outside the aquireRelease as this might fail
         // to ensure contianer.stop() is added to the finalizer
         .tap(container => ZIO.attemptBlocking(container.start()))
