@@ -19,7 +19,7 @@ import zio.test.*
 import java.time.Instant
 
 object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSpecHelper {
-  type PresentationEnv = PresentationService with PresentationRepository[Task] with CredentialRepository[Task]
+  type PresentationEnv = PresentationService with PresentationRepository with CredentialRepository
 
   def withEnv[E, A](zio: ZIO[PresentationEnv, E, A]): ZIO[Any, E, A] =
     zio.provideLayer(presentationEnvLayer)
@@ -146,7 +146,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
       test("createPresentationPayloadFromRecord returns jwt prsentation payload") {
         withEnv(
           for {
-            repo <- ZIO.service[CredentialRepository[Task]]
+            repo <- ZIO.service[CredentialRepository]
             aIssueCredentialRecord = issueCredentialRecord
             _ <- repo.createIssueCredentialRecord(aIssueCredentialRecord)
             rawCredentialData =
@@ -159,7 +159,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
             )
             svc <- ZIO.service[PresentationService]
             aRecord <- svc.createRecord()
-            repo <- ZIO.service[PresentationRepository[Task]]
+            repo <- ZIO.service[PresentationRepository]
             _ <- repo.updatePresentationWithCredentialsToUse(
               aRecord.id,
               Some(Seq(aIssueCredentialRecord.id.value)),
@@ -188,7 +188,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           svc <- ZIO.service[PresentationService]
           pairwiseProverDid = DidId("did:peer:Prover")
           record <- svc.createRecord()
-          repo <- ZIO.service[PresentationRepository[Task]]
+          repo <- ZIO.service[PresentationRepository]
           _ <- repo.updatePresentationRecordProtocolState(
             record.id,
             PresentationRecord.ProtocolState.RequestPending,
@@ -234,7 +234,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
       test("acceptRequestPresentation updates the PresentatinRecord") {
         withEnv(
           for {
-            repo <- ZIO.service[CredentialRepository[Task]]
+            repo <- ZIO.service[CredentialRepository]
             aIssueCredentialRecord = issueCredentialRecord
             _ <- repo.createIssueCredentialRecord(aIssueCredentialRecord)
             rawCredentialData =
@@ -280,7 +280,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           svc <- ZIO.service[PresentationService]
           pairwiseProverDid = DidId("did:peer:Prover")
           record <- svc.createRecord()
-          repo <- ZIO.service[PresentationRepository[Task]]
+          repo <- ZIO.service[PresentationRepository]
           _ <- repo.updatePresentationRecordProtocolState(
             record.id,
             PresentationRecord.ProtocolState.RequestPending,
@@ -313,7 +313,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
             aRecord <- svc.createRecord()
             p = presentation(aRecord.thid.value)
             aRecordReceived <- svc.receivePresentation(p)
-            repo <- ZIO.service[PresentationRepository[Task]]
+            repo <- ZIO.service[PresentationRepository]
             _ <- repo.updatePresentationRecordProtocolState(
               aRecord.id,
               PresentationRecord.ProtocolState.PresentationReceived,
@@ -334,7 +334,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
             aRecord <- svc.createRecord()
             p = presentation(aRecord.thid.value)
             _ <- svc.receivePresentation(p)
-            repo <- ZIO.service[PresentationRepository[Task]]
+            repo <- ZIO.service[PresentationRepository]
             _ <- repo.updatePresentationRecordProtocolState(
               aRecord.id,
               PresentationRecord.ProtocolState.PresentationReceived,
@@ -355,7 +355,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
             aRecord <- svc.createRecord()
             p = presentation(aRecord.thid.value)
             aRecordReceived <- svc.receivePresentation(p)
-            repo <- ZIO.service[PresentationRepository[Task]]
+            repo <- ZIO.service[PresentationRepository]
             _ <- repo.updatePresentationRecordProtocolState(
               aRecord.id,
               PresentationRecord.ProtocolState.PresentationReceived,
@@ -375,7 +375,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           pairwiseProverDid = DidId("did:peer:Prover")
           record <- svc.createRecord()
           p = presentation(record.thid.value)
-          repo <- ZIO.service[PresentationRepository[Task]]
+          repo <- ZIO.service[PresentationRepository]
           _ <- repo.updatePresentationRecordProtocolState(
             record.id,
             PresentationRecord.ProtocolState.RequestPending,
@@ -392,7 +392,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           svc <- ZIO.service[PresentationService]
           pairwiseProverDid = DidId("did:peer:Prover")
           record <- svc.createRecord()
-          repo <- ZIO.service[PresentationRepository[Task]]
+          repo <- ZIO.service[PresentationRepository]
           _ <- repo.updatePresentationRecordProtocolState(
             record.id,
             PresentationRecord.ProtocolState.RequestPending,
@@ -425,7 +425,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
             aRecord <- svc.createRecord()
             p = proposePresentation(aRecord.thid.value)
             aRecordReceived <- svc.receiveProposePresentation(p)
-            repo <- ZIO.service[PresentationRepository[Task]]
+            repo <- ZIO.service[PresentationRepository]
             _ <- repo.updatePresentationRecordProtocolState(
               aRecord.id,
               PresentationRecord.ProtocolState.ProposalPending,

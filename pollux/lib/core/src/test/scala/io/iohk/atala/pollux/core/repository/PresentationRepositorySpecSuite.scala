@@ -52,14 +52,14 @@ object PresentationRepositorySpecSuite {
   val testSuite = suite("CRUD operations")(
     test("createPresentationRecord creates a new record in DB") {
       for {
-        repo <- ZIO.service[PresentationRepository[Task]]
+        repo <- ZIO.service[PresentationRepository]
         record = presentationRecord
         count <- repo.createPresentationRecord(record)
       } yield assertTrue(count == 1)
     },
     test("createPresentationRecord correctly read and write on non-null connectionId") {
       for {
-        repo <- ZIO.service[PresentationRepository[Task]]
+        repo <- ZIO.service[PresentationRepository]
         record = presentationRecord.copy(connectionId = Some("connectionId"))
         count <- repo.createPresentationRecord(record)
         readRecord <- repo.getPresentationRecord(record.id)
@@ -67,7 +67,7 @@ object PresentationRepositorySpecSuite {
     },
     test("getPresentationRecord correctly returns an existing record") {
       for {
-        repo <- ZIO.service[PresentationRepository[Task]]
+        repo <- ZIO.service[PresentationRepository]
         aRecord = presentationRecord
         bRecord = presentationRecord
         _ <- repo.createPresentationRecord(aRecord)
@@ -77,7 +77,7 @@ object PresentationRepositorySpecSuite {
     },
     test("getPresentationRecord returns None for an unknown record") {
       for {
-        repo <- ZIO.service[PresentationRepository[Task]]
+        repo <- ZIO.service[PresentationRepository]
         aRecord = presentationRecord
         bRecord = presentationRecord
         _ <- repo.createPresentationRecord(aRecord)
@@ -87,7 +87,7 @@ object PresentationRepositorySpecSuite {
     },
     test("getPresentationRecord returns all records") {
       for {
-        repo <- ZIO.service[PresentationRepository[Task]]
+        repo <- ZIO.service[PresentationRepository]
         aRecord = presentationRecord
         bRecord = presentationRecord
         _ <- repo.createPresentationRecord(aRecord)
@@ -101,7 +101,7 @@ object PresentationRepositorySpecSuite {
     },
     test("getPresentationRecordByThreadId correctly returns an existing thid") {
       for {
-        repo <- ZIO.service[PresentationRepository[Task]]
+        repo <- ZIO.service[PresentationRepository]
         thid = DidCommID()
         aRecord = presentationRecord.copy(thid = thid)
         bRecord = presentationRecord
@@ -112,7 +112,7 @@ object PresentationRepositorySpecSuite {
     },
     test("getPresentationRecordByThreadId returns nothing for an unknown thid") {
       for {
-        repo <- ZIO.service[PresentationRepository[Task]]
+        repo <- ZIO.service[PresentationRepository]
         aRecord = presentationRecord
         bRecord = presentationRecord
         _ <- repo.createPresentationRecord(aRecord)
@@ -122,7 +122,7 @@ object PresentationRepositorySpecSuite {
     },
     test("getPresentationRecordsByStates returns valid records") {
       for {
-        repo <- ZIO.service[PresentationRepository[Task]]
+        repo <- ZIO.service[PresentationRepository]
         aRecord = presentationRecord
         bRecord = presentationRecord
         cRecord = presentationRecord
@@ -160,7 +160,7 @@ object PresentationRepositorySpecSuite {
     },
     test("getPresentationRecordsByStates returns an empty list if 'states' parameter is empty") {
       for {
-        repo <- ZIO.service[PresentationRepository[Task]]
+        repo <- ZIO.service[PresentationRepository]
         aRecord = presentationRecord
         bRecord = presentationRecord
         cRecord = presentationRecord
@@ -174,7 +174,7 @@ object PresentationRepositorySpecSuite {
     },
     test("updatePresentationWithCredentialsToUse updates the record") {
       for {
-        repo <- ZIO.service[PresentationRepository[Task]]
+        repo <- ZIO.service[PresentationRepository]
         aRecord = presentationRecord
         bRecord = presentationRecord
         cRecord = presentationRecord
@@ -194,7 +194,7 @@ object PresentationRepositorySpecSuite {
     },
     test("updateCredentialRecordProtocolState updates the record") {
       for {
-        repo <- ZIO.service[PresentationRepository[Task]]
+        repo <- ZIO.service[PresentationRepository]
         aRecord = presentationRecord
         _ <- repo.createPresentationRecord(aRecord)
         record <- repo.getPresentationRecord(aRecord.id)
@@ -212,7 +212,7 @@ object PresentationRepositorySpecSuite {
     },
     test("updateCredentialRecordProtocolState doesn't update the record for invalid from state") {
       for {
-        repo <- ZIO.service[PresentationRepository[Task]]
+        repo <- ZIO.service[PresentationRepository]
         aRecord = presentationRecord
         _ <- repo.createPresentationRecord(aRecord)
         record <- repo.getPresentationRecord(aRecord.id)
@@ -230,7 +230,7 @@ object PresentationRepositorySpecSuite {
     },
     test("updateWithRequestPresentation updates record") {
       for {
-        repo <- ZIO.service[PresentationRepository[Task]]
+        repo <- ZIO.service[PresentationRepository]
         aRecord = presentationRecord
         _ <- repo.createPresentationRecord(aRecord)
         record <- repo.getPresentationRecord(aRecord.id)
@@ -249,7 +249,7 @@ object PresentationRepositorySpecSuite {
     },
     test("updateWithPresentation updates record") {
       for {
-        repo <- ZIO.service[PresentationRepository[Task]]
+        repo <- ZIO.service[PresentationRepository]
         aRecord = presentationRecord
         _ <- repo.createPresentationRecord(aRecord)
         record <- repo.getPresentationRecord(aRecord.id)
@@ -268,7 +268,7 @@ object PresentationRepositorySpecSuite {
     },
     test("updateWithProposePresentation updates record") {
       for {
-        repo <- ZIO.service[PresentationRepository[Task]]
+        repo <- ZIO.service[PresentationRepository]
         aRecord = presentationRecord
         _ <- repo.createPresentationRecord(aRecord)
         record <- repo.getPresentationRecord(aRecord.id)
@@ -290,7 +290,7 @@ object PresentationRepositorySpecSuite {
 
       val failReason = Some("Just to test")
       for {
-        repo <- ZIO.service[PresentationRepository[Task]]
+        repo <- ZIO.service[PresentationRepository]
         tmp <- repo.createPresentationRecord(aRecord)
         record0 <- repo.getPresentationRecord(aRecord.id)
         _ <- repo.updateAfterFail(aRecord.id, Some("Just to test")) // TEST
@@ -319,7 +319,7 @@ object PresentationRepositorySpecSuite {
       val aRecord = presentationRecord
 
       for {
-        repo <- ZIO.service[PresentationRepository[Task]]
+        repo <- ZIO.service[PresentationRepository]
         tmp <- repo.createPresentationRecord(aRecord)
         record0 <- repo.getPresentationRecord(aRecord.id)
         count1 <- repo.updateAfterFail(aRecord.id, Some("1 - Just to test"))

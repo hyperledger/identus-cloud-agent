@@ -50,14 +50,14 @@ object CredentialRepositorySpecSuite {
   val testSuite = suite("CRUD operations")(
     test("createIssueCredentialRecord creates a new record in DB") {
       for {
-        repo <- ZIO.service[CredentialRepository[Task]]
+        repo <- ZIO.service[CredentialRepository]
         record = issueCredentialRecord
         count <- repo.createIssueCredentialRecord(record)
       } yield assertTrue(count == 1)
     },
     test("createIssueCredentialRecord prevents creation of 2 records with the same thid") {
       for {
-        repo <- ZIO.service[CredentialRepository[Task]]
+        repo <- ZIO.service[CredentialRepository]
         thid = DidCommID()
         aRecord = issueCredentialRecord.copy(thid = thid)
         bRecord = issueCredentialRecord.copy(thid = thid)
@@ -67,7 +67,7 @@ object CredentialRepositorySpecSuite {
     },
     test("createIssueCredentialRecord correctly read and write on non-null issuingDID") {
       for {
-        repo <- ZIO.service[CredentialRepository[Task]]
+        repo <- ZIO.service[CredentialRepository]
         issuingDID <- ZIO.fromEither(PrismDID.buildCanonicalFromSuffix("0" * 64))
         record = issueCredentialRecord.copy(issuingDID = Some(issuingDID))
         count <- repo.createIssueCredentialRecord(record)
@@ -76,7 +76,7 @@ object CredentialRepositorySpecSuite {
     },
     test("getIssueCredentialRecord correctly returns an existing record") {
       for {
-        repo <- ZIO.service[CredentialRepository[Task]]
+        repo <- ZIO.service[CredentialRepository]
         aRecord = issueCredentialRecord
         bRecord = issueCredentialRecord
         _ <- repo.createIssueCredentialRecord(aRecord)
@@ -86,7 +86,7 @@ object CredentialRepositorySpecSuite {
     },
     test("getIssuanceCredentialRecord returns None for an unknown record") {
       for {
-        repo <- ZIO.service[CredentialRepository[Task]]
+        repo <- ZIO.service[CredentialRepository]
         aRecord = issueCredentialRecord
         bRecord = issueCredentialRecord
         _ <- repo.createIssueCredentialRecord(aRecord)
@@ -96,7 +96,7 @@ object CredentialRepositorySpecSuite {
     },
     test("getIssuanceCredentialRecord returns all records") {
       for {
-        repo <- ZIO.service[CredentialRepository[Task]]
+        repo <- ZIO.service[CredentialRepository]
         aRecord = issueCredentialRecord
         bRecord = issueCredentialRecord
         _ <- repo.createIssueCredentialRecord(aRecord)
@@ -110,7 +110,7 @@ object CredentialRepositorySpecSuite {
     },
     test("getIssuanceCredentialRecord returns records with offset") {
       for {
-        repo <- ZIO.service[CredentialRepository[Task]]
+        repo <- ZIO.service[CredentialRepository]
         aRecord = issueCredentialRecord
         bRecord = issueCredentialRecord
         _ <- repo.createIssueCredentialRecord(aRecord)
@@ -123,7 +123,7 @@ object CredentialRepositorySpecSuite {
     },
     test("getIssuanceCredentialRecord returns records with limit") {
       for {
-        repo <- ZIO.service[CredentialRepository[Task]]
+        repo <- ZIO.service[CredentialRepository]
         aRecord = issueCredentialRecord
         bRecord = issueCredentialRecord
         _ <- repo.createIssueCredentialRecord(aRecord)
@@ -136,7 +136,7 @@ object CredentialRepositorySpecSuite {
     },
     test("getIssuanceCredentialRecord returns records with offset and limit") {
       for {
-        repo <- ZIO.service[CredentialRepository[Task]]
+        repo <- ZIO.service[CredentialRepository]
         aRecord = issueCredentialRecord
         bRecord = issueCredentialRecord
         cRecord = issueCredentialRecord
@@ -151,7 +151,7 @@ object CredentialRepositorySpecSuite {
     },
     test("deleteIssueCredentialRecord deletes an exsiting record") {
       for {
-        repo <- ZIO.service[CredentialRepository[Task]]
+        repo <- ZIO.service[CredentialRepository]
         aRecord = issueCredentialRecord
         bRecord = issueCredentialRecord
         _ <- repo.createIssueCredentialRecord(aRecord)
@@ -166,7 +166,7 @@ object CredentialRepositorySpecSuite {
     },
     test("deleteIssueCredentialRecord does nothing for an unknown record") {
       for {
-        repo <- ZIO.service[CredentialRepository[Task]]
+        repo <- ZIO.service[CredentialRepository]
         aRecord = issueCredentialRecord
         bRecord = issueCredentialRecord
         _ <- repo.createIssueCredentialRecord(aRecord)
@@ -182,7 +182,7 @@ object CredentialRepositorySpecSuite {
     },
     test("getIssueCredentialRecordByThreadId correctly returns an existing thid") {
       for {
-        repo <- ZIO.service[CredentialRepository[Task]]
+        repo <- ZIO.service[CredentialRepository]
         thid = DidCommID()
         aRecord = issueCredentialRecord.copy(thid = thid)
         bRecord = issueCredentialRecord
@@ -193,7 +193,7 @@ object CredentialRepositorySpecSuite {
     },
     test("getIssueCredentialRecordByThreadId returns nothing for an unknown thid") {
       for {
-        repo <- ZIO.service[CredentialRepository[Task]]
+        repo <- ZIO.service[CredentialRepository]
         aRecord = issueCredentialRecord
         bRecord = issueCredentialRecord
         _ <- repo.createIssueCredentialRecord(aRecord)
@@ -203,7 +203,7 @@ object CredentialRepositorySpecSuite {
     },
     test("getIssueCredentialRecordsByStates returns valid records") {
       for {
-        repo <- ZIO.service[CredentialRepository[Task]]
+        repo <- ZIO.service[CredentialRepository]
         aRecord = issueCredentialRecord
         bRecord = issueCredentialRecord
         cRecord = issueCredentialRecord
@@ -237,7 +237,7 @@ object CredentialRepositorySpecSuite {
     },
     test("getIssueCredentialRecordsByStates returns an empty list if 'states' parameter is empty") {
       for {
-        repo <- ZIO.service[CredentialRepository[Task]]
+        repo <- ZIO.service[CredentialRepository]
         aRecord = issueCredentialRecord
         bRecord = issueCredentialRecord
         cRecord = issueCredentialRecord
@@ -251,7 +251,7 @@ object CredentialRepositorySpecSuite {
     },
     test("getValidIssuedCredentials returns valid records") {
       for {
-        repo <- ZIO.service[CredentialRepository[Task]]
+        repo <- ZIO.service[CredentialRepository]
         aRecord = issueCredentialRecord
         bRecord = issueCredentialRecord
         cRecord = issueCredentialRecord
@@ -274,7 +274,7 @@ object CredentialRepositorySpecSuite {
     },
     test("updateCredentialRecordProtocolState updates the record") {
       for {
-        repo <- ZIO.service[CredentialRepository[Task]]
+        repo <- ZIO.service[CredentialRepository]
         aRecord = issueCredentialRecord
         _ <- repo.createIssueCredentialRecord(aRecord)
         record <- repo.getIssueCredentialRecord(aRecord.id)
@@ -292,7 +292,7 @@ object CredentialRepositorySpecSuite {
     },
     test("updateCredentialRecordProtocolState doesn't update the record for invalid from state") {
       for {
-        repo <- ZIO.service[CredentialRepository[Task]]
+        repo <- ZIO.service[CredentialRepository]
         aRecord = issueCredentialRecord
         _ <- repo.createIssueCredentialRecord(aRecord)
         record <- repo.getIssueCredentialRecord(aRecord.id)
@@ -310,7 +310,7 @@ object CredentialRepositorySpecSuite {
     },
     test("updateCredentialRecordPublicationState updates the record") {
       for {
-        repo <- ZIO.service[CredentialRepository[Task]]
+        repo <- ZIO.service[CredentialRepository]
         aRecord = issueCredentialRecord
         _ <- repo.createIssueCredentialRecord(aRecord)
         record <- repo.getIssueCredentialRecord(aRecord.id)
@@ -328,7 +328,7 @@ object CredentialRepositorySpecSuite {
     },
     test("updateCredentialRecordPublicationState doesn't update the record for invalid from state") {
       for {
-        repo <- ZIO.service[CredentialRepository[Task]]
+        repo <- ZIO.service[CredentialRepository]
         aRecord = issueCredentialRecord
         _ <- repo.createIssueCredentialRecord(aRecord)
         record <- repo.getIssueCredentialRecord(aRecord.id)
@@ -346,7 +346,7 @@ object CredentialRepositorySpecSuite {
     },
     test("updateWithRequestCredential updates record") {
       for {
-        repo <- ZIO.service[CredentialRepository[Task]]
+        repo <- ZIO.service[CredentialRepository]
         aRecord = issueCredentialRecord
         _ <- repo.createIssueCredentialRecord(aRecord)
         record <- repo.getIssueCredentialRecord(aRecord.id)
@@ -365,7 +365,7 @@ object CredentialRepositorySpecSuite {
     },
     test("updateWithIssueCredential updates record") {
       for {
-        repo <- ZIO.service[CredentialRepository[Task]]
+        repo <- ZIO.service[CredentialRepository]
         aRecord = issueCredentialRecord
         _ <- repo.createIssueCredentialRecord(aRecord)
         record <- repo.getIssueCredentialRecord(aRecord.id)
@@ -384,7 +384,7 @@ object CredentialRepositorySpecSuite {
     },
     test("updateWithIssuedRawCredential updates record") {
       for {
-        repo <- ZIO.service[CredentialRepository[Task]]
+        repo <- ZIO.service[CredentialRepository]
         aRecord = issueCredentialRecord
         _ <- repo.createIssueCredentialRecord(aRecord)
         record <- repo.getIssueCredentialRecord(aRecord.id)
@@ -408,7 +408,7 @@ object CredentialRepositorySpecSuite {
 
       val failReason = Some("Just to test")
       for {
-        repo <- ZIO.service[CredentialRepository[Task]]
+        repo <- ZIO.service[CredentialRepository]
         tmp <- repo.createIssueCredentialRecord(aRecord)
         record0 <- repo.getIssueCredentialRecord(aRecord.id)
         _ <- repo.updateAfterFail(aRecord.id, Some("Just to test")) // TEST
@@ -437,7 +437,7 @@ object CredentialRepositorySpecSuite {
       val aRecord = issueCredentialRecord
 
       for {
-        repo <- ZIO.service[CredentialRepository[Task]]
+        repo <- ZIO.service[CredentialRepository]
         tmp <- repo.createIssueCredentialRecord(aRecord)
         record0 <- repo.getIssueCredentialRecord(aRecord.id)
         count1 <- repo.updateAfterFail(aRecord.id, Some("1 - Just to test"))
