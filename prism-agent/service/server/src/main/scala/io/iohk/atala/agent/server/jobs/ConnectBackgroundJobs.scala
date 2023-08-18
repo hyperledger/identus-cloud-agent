@@ -44,7 +44,6 @@ object ConnectBackgroundJobs {
     def counterMetric(key: String) = Metric
       .counterInt(key)
       .fromConst(1)
-      .tagged("connectionId", record.id.toString)
 
     val InviteeConnectionRequestMsgFailed = counterMetric(
       "connection_flow_invitee_connection_request_msg_failed_counter"
