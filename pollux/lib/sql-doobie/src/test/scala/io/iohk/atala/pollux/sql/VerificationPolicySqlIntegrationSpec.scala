@@ -18,7 +18,6 @@ import io.iohk.atala.shared.models.WalletId
 import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
 import io.iohk.atala.test.container.MigrationAspects.*
 import zio.*
-import zio.interop.catz.*
 import zio.test.*
 import zio.test.Assertion.*
 import zio.test.TestAspect.*
@@ -28,7 +27,11 @@ object VerificationPolicySqlIntegrationSpec extends ZIOSpecDefault, PostgresTest
   private val repositoryLayer =
     transactorLayer >>> JdbcVerificationPolicyRepository.layer
   private val testEnvironmentLayer =
-    zio.test.testEnvironment ++ pgContainerLayer ++ transactorLayer ++ repositoryLayer
+    zio.test.testEnvironment ++
+      pgContainerLayer ++
+      transactorLayer ++
+      repositoryLayer ++
+      ZLayer.succeed(WalletAccessContext(WalletId.random))
 
   def spec = (suite("verification policy DAL spec")(
     verificationPolicyCRUDSuite,
@@ -36,7 +39,7 @@ object VerificationPolicySqlIntegrationSpec extends ZIOSpecDefault, PostgresTest
   ) @@ nondeterministic @@ sequential @@ timed @@ migrate(
     schema = "public",
     paths = "classpath:sql/pollux"
-  )).provideSomeLayerShared(testEnvironmentLayer)
+  )).provideSomeLayerShared(testEnvironmentLayer) @@ TestAspect.tag("dev")
 
   val verificationPolicyCRUDSuite =
     suite("verification policy CRUD operations")(
@@ -112,7 +115,7 @@ object VerificationPolicySqlIntegrationSpec extends ZIOSpecDefault, PostgresTest
       deleteAllVerificationPoliciesTest,
       insertNVerificationPoliciesTest(100),
       deleteAllVerificationPoliciesTest
-    ).provideSomeLayer(ZLayer.succeed(WalletAccessContext(WalletId.random))) @@ nondeterministic @@ sequential @@ timed
+    ) @@ nondeterministic @@ sequential @@ timed
 
   def insertNVerificationPoliciesTest(n: Int) =
     test(s"insert $n verification policies entries") {
@@ -200,7 +203,7 @@ object VerificationPolicySqlIntegrationSpec extends ZIOSpecDefault, PostgresTest
         allItemsArePaginated20 = assert(totalCount)(equalTo(allItems20.length))
       } yield allItemsArePaginated1 && allItemsArePaginated10 && allItemsArePaginated20
     }
-  ).provideSomeLayer(ZLayer.succeed(WalletAccessContext(WalletId.random)))
+  )
 
   object VerificationPolicyGen {
     val id = Gen.uuid
