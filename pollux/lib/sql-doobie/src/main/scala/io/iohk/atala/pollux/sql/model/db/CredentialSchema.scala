@@ -6,8 +6,6 @@ import io.getquill.doobie.DoobieContext
 import io.getquill.idiom.*
 import io.iohk.atala.pollux.core.model.schema.Schema
 import io.iohk.atala.shared.models.WalletId
-import io.iohk.atala.shared.models.WalletAccessContext
-import zio.{URIO, ZIO}
 
 import java.time.OffsetDateTime
 import java.util.UUID

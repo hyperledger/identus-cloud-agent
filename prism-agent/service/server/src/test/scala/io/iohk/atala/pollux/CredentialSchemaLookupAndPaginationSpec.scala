@@ -63,7 +63,7 @@ object CredentialSchemaLookupAndPaginationSpec
         schema = "public",
         paths = "classpath:sql/pollux"
       )
-  ).provide(testEnvironmentLayer, mockManagedDIDServiceLayer.exactly(201).toLayer)
+  ).provideSomeLayerShared(mockManagedDIDServiceLayer.exactly(201).toLayer >+> testEnvironmentLayer)
 
   private val schemaPaginationSpec = suite("schema-registry pagination logic")(
     test("pagination of the first page with the empty query params") {

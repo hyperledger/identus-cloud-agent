@@ -49,18 +49,13 @@ object CredentialSchemaBasicSpec extends ZIOSpecDefault with CredentialSchemaTes
     author = "did:prism:557a4ef2ed0cf86fb50d91577269136b3763722ef00a72a1fb1e66895f52b6d8"
   )
 
-  private val sharedLayer = ZLayer.make[CredentialSchemaController & PostgreSQLContainer](
-    testEnvironmentLayer,
-    mockManagedDIDServiceLayer.toLayer
-  )
-
   def spec = (
     schemaCreateAndGetOperationsSpec
       @@ nondeterministic @@ sequential @@ timed @@ migrate(
         schema = "public",
         paths = "classpath:sql/pollux"
       )
-  ).provideSomeLayerShared(sharedLayer)
+  ).provideSomeLayerShared(mockManagedDIDServiceLayer.toLayer >+> testEnvironmentLayer) @@ TestAspect.tag("dev")
 
   private val schemaCreateAndGetOperationsSpec = {
     val backendZIO = ZIO.service[CredentialSchemaController].map(httpBackend)
