@@ -72,6 +72,7 @@ object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault, PostgresTestCo
       author <- schemaAuthor
       authored = OffsetDateTime.now(ZoneOffset.UTC)
       id = UUID.randomUUID()
+      walletId = WalletId.random
     } yield CredentialSchema(
       guid = id,
       id = id,
@@ -82,7 +83,8 @@ object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault, PostgresTestCo
       `type` = "AnonCreds",
       author = author,
       authored = authored,
-      tags = tags
+      tags = tags,
+      walletId = walletId
     )
 
     private val unique = mutable.Set.empty[String]

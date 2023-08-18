@@ -90,7 +90,8 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], maxRetries: Int
         |   issuing_did,
         |   meta_retries,
         |   meta_next_retry,
-        |   meta_last_failure
+        |   meta_last_failure,
+        |   wallet_id
         | ) values (
         |   ${record.id},
         |   ${record.createdAt},
@@ -111,7 +112,8 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], maxRetries: Int
         |   ${record.issuingDID},
         |   ${record.metaRetries},
         |   ${record.metaNextRetry},
-        |   ${record.metaLastFailure}
+        |   ${record.metaLastFailure},
+        |   current_setting('app.current_wallet_id')::UUID
         | )
         """.stripMargin.update
 

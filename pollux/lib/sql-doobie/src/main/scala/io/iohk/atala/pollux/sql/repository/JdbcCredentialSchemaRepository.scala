@@ -15,10 +15,12 @@ import java.util.UUID
 class JdbcCredentialSchemaRepository(xa: Transactor[ContextAwareTask]) extends CredentialSchemaRepository {
   import CredentialSchemaSql.*
   override def create(cs: CredentialSchema): RIO[WalletAccessContext, CredentialSchema] = {
-    CredentialSchemaSql
-      .insert(CredentialSchemaRow.fromModel(cs))
-      .transactWallet(xa)
-      .map(CredentialSchemaRow.toModel)
+    ZIO.serviceWithZIO[WalletAccessContext](ctx =>
+      CredentialSchemaSql
+        .insert(CredentialSchemaRow.fromModel(cs, ctx.walletId))
+        .transactWallet(xa)
+        .map(CredentialSchemaRow.toModel)
+    )
   }
 
   override def getByGuid(guid: UUID): RIO[WalletAccessContext, Option[CredentialSchema]] = {
@@ -32,11 +34,13 @@ class JdbcCredentialSchemaRepository(xa: Transactor[ContextAwareTask]) extends C
   }
 
   override def update(cs: CredentialSchema): RIO[WalletAccessContext, Option[CredentialSchema]] = {
-    CredentialSchemaSql
-      .update(CredentialSchemaRow.fromModel(cs))
-      .transactWallet(xa)
-      .map(Option.apply)
-      .map(_.map(CredentialSchemaRow.toModel))
+    ZIO.serviceWithZIO[WalletAccessContext](ctx =>
+      CredentialSchemaSql
+        .update(CredentialSchemaRow.fromModel(cs, ctx.walletId))
+        .transactWallet(xa)
+        .map(Option.apply)
+        .map(_.map(CredentialSchemaRow.toModel))
+    )
   }
 
   def getAllVersions(id: UUID, author: String): RIO[WalletAccessContext, Seq[String]] = {

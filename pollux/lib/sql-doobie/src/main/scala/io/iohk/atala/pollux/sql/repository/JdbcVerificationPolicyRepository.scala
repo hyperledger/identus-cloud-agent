@@ -9,6 +9,7 @@ import io.iohk.atala.pollux.sql.model.db
 import io.iohk.atala.shared.db.ContextAwareTask
 import io.iohk.atala.shared.db.Implicits.*
 import io.iohk.atala.shared.models.WalletAccessContext
+import io.iohk.atala.shared.models.WalletId
 import zio.*
 
 import java.time.{OffsetDateTime, ZoneOffset}
@@ -17,13 +18,14 @@ import java.util.UUID
 object VerificationPolicyExtensions {
 
   extension (vp: model.VerificationPolicy) {
-    def toDto = db.VerificationPolicy(
+    def toDto(walletId: WalletId) = db.VerificationPolicy(
       id = vp.id,
       name = vp.name,
       nonce = vp.nonce,
       description = vp.description,
       createdAt = vp.createdAt,
-      updatedAt = vp.updatedAt
+      updatedAt = vp.updatedAt,
+      walletId = walletId
     )
 
     def toDtoConstraints: Seq[db.VerificationPolicyConstraint] = vp.constrains.zipWithIndex.map((vpc, index) =>
@@ -74,13 +76,15 @@ class JdbcVerificationPolicyRepository(xa: Transactor[ContextAwareTask]) extends
   override def create(
       verificationPolicy: model.VerificationPolicy
   ): RIO[WalletAccessContext, model.VerificationPolicy] = {
-    val program = for {
-      vp <- VerificationPolicySql.insert(verificationPolicy.toDto)
-      vpc <- VerificationPolicySql.insertConstraints(verificationPolicy.toDtoConstraints)
-    } yield vp.toDomain(vpc)
+    val program = (walletId: WalletId) =>
+      for {
+        vp <- VerificationPolicySql.insert(verificationPolicy.toDto(walletId))
+        vpc <- VerificationPolicySql.insertConstraints(verificationPolicy.toDtoConstraints)
+      } yield vp.toDomain(vpc)
 
     for {
-      vp: model.VerificationPolicy <- program.transactWallet(xa)
+      walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
+      vp: model.VerificationPolicy <- program(walletId).transactWallet(xa)
     } yield vp
   }
 
@@ -107,16 +111,20 @@ class JdbcVerificationPolicyRepository(xa: Transactor[ContextAwareTask]) extends
       verificationPolicy: model.VerificationPolicy
   ): RIO[WalletAccessContext, Option[model.VerificationPolicy]] = {
     val preparedVP = verificationPolicy.copy(id = id, updatedAt = OffsetDateTime.now(ZoneOffset.UTC))
-    val program = for {
-      _ <- VerificationPolicySql.update(preparedVP.toDto, nonce)
-      _ <- VerificationPolicySql.dropConstraintsByVerificationPolicyId(id)
-      vp: Option[db.VerificationPolicy] <- VerificationPolicySql.getById(id)
-      vpc: Seq[db.VerificationPolicyConstraint] <- VerificationPolicySql.insertConstraints(
-        preparedVP.toDtoConstraints
-      )
-    } yield vp.map(_.toDomain(vpc))
+    val program = (walletId: WalletId) =>
+      for {
+        _ <- VerificationPolicySql.update(preparedVP.toDto(walletId), nonce)
+        _ <- VerificationPolicySql.dropConstraintsByVerificationPolicyId(id)
+        vp: Option[db.VerificationPolicy] <- VerificationPolicySql.getById(id)
+        vpc: Seq[db.VerificationPolicyConstraint] <- VerificationPolicySql.insertConstraints(
+          preparedVP.toDtoConstraints
+        )
+      } yield vp.map(_.toDomain(vpc))
 
-    program.transactWallet(xa)
+    for {
+      walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
+      vp <- program(walletId).transactWallet(xa)
+    } yield vp
   }
 
   override def delete(id: UUID): RIO[WalletAccessContext, Option[model.VerificationPolicy]] = {

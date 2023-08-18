@@ -101,7 +101,8 @@ class JdbcPresentationRepository(
         |   credentials_to_use,
         |   meta_retries,
         |   meta_next_retry,
-        |   meta_last_failure
+        |   meta_last_failure,
+        |   wallet_id
         | ) values (
         |   ${record.id},
         |   ${record.createdAt},
@@ -116,7 +117,8 @@ class JdbcPresentationRepository(
         |   ${record.credentialsToUse.map(_.toList)},
         |   ${record.metaRetries},
         |   ${record.metaNextRetry},
-        |   ${record.metaLastFailure}
+        |   ${record.metaLastFailure},
+        |   current_setting('app.current_wallet_id')::UUID
         | )
         """.stripMargin.update
 

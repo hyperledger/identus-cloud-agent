@@ -5,6 +5,9 @@ import io.getquill.context.json.PostgresJsonExtensions
 import io.getquill.doobie.DoobieContext
 import io.getquill.idiom.*
 import io.iohk.atala.pollux.core.model.schema.Schema
+import io.iohk.atala.shared.models.WalletId
+import io.iohk.atala.shared.models.WalletAccessContext
+import zio.{URIO, ZIO}
 
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -19,14 +22,16 @@ case class CredentialSchema(
     tags: Seq[String],
     description: String,
     `type`: String,
-    schema: JsonValue[Schema]
+    schema: JsonValue[Schema],
+    walletId: WalletId
 ) {
   lazy val uniqueConstraintKey = author + name + version
 }
 
 object CredentialSchema {
   def fromModel(
-      m: io.iohk.atala.pollux.core.model.schema.CredentialSchema
+      m: io.iohk.atala.pollux.core.model.schema.CredentialSchema,
+      walletId: WalletId
   ): CredentialSchema =
     CredentialSchema(
       guid = m.guid,
@@ -38,7 +43,8 @@ object CredentialSchema {
       tags = m.tags,
       description = m.description,
       `type` = m.`type`,
-      schema = JsonValue(m.schema)
+      schema = JsonValue(m.schema),
+      walletId = walletId
     )
 
   def toModel(
