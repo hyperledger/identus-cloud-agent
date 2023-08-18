@@ -1,12 +1,28 @@
 package io.iohk.atala.iam.entity.http
 
+import io.iohk.atala.agent.walletapi.model.Entity
 import io.iohk.atala.api.http.*
 import io.iohk.atala.api.http.EndpointOutputs.*
 import io.iohk.atala.api.http.model.PaginationInput
+import io.iohk.atala.iam.authentication.Credentials
 import io.iohk.atala.iam.entity.http.model.*
 import sttp.model.StatusCode
+import sttp.tapir.EndpointIO.annotations.header
 import sttp.tapir.json.zio.jsonBody
-import sttp.tapir.{EndpointInput, PublicEndpoint, endpoint, extractFromRequest, path, query, statusCode, stringToPath}
+import sttp.tapir.{
+  Endpoint,
+  EndpointInput,
+  PublicEndpoint,
+  auth,
+  endpoint,
+  extractFromRequest,
+  header,
+  path,
+  query,
+  statusCode,
+  stringToPath
+}
+import io.iohk.atala.iam.authentication.admin.AdminApiKeySecureEndpoint.secureEndpoint
 
 import java.util.UUID
 
