@@ -25,7 +25,10 @@ import scala.io.Source
 object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault, PostgresTestContainerSupport {
 
   private val testEnvironmentLayer =
-    zio.test.testEnvironment ++ pgContainerLayer ++ transactorLayer
+    zio.test.testEnvironment ++
+      pgContainerLayer ++
+      transactorLayer ++
+      ZLayer.succeed(WalletAccessContext(WalletId.random))
 
   object Vocabulary {
     val verifiableCredentialTypes =
@@ -62,7 +65,7 @@ object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault, PostgresTestCo
     val schemaTags: Gen[Any, List[String]] =
       Gen.setOfBounded(0, 3)(schemaTag).map(_.toList)
 
-    val schema: Gen[Any, CredentialSchema] = for {
+    val schema: Gen[WalletAccessContext, CredentialSchema] = for {
       name <- schemaName
       version <- schemaVersion
       description <- schemaDescription
@@ -72,7 +75,7 @@ object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault, PostgresTestCo
       author <- schemaAuthor
       authored = OffsetDateTime.now(ZoneOffset.UTC)
       id = UUID.randomUUID()
-      walletId = WalletId.random
+      walletId <- Gen.fromZIO(ZIO.serviceWith[WalletAccessContext](_.walletId))
     } yield CredentialSchema(
       guid = id,
       id = id,
@@ -186,5 +189,5 @@ object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault, PostgresTestCo
         schemaCreated &&
         totalCountIsN && lookupCountIsN
     }
-  ).provideSomeLayer(ZLayer.succeed(WalletAccessContext(WalletId.random))) @@ nondeterministic @@ sequential @@ timed
+  ) @@ nondeterministic @@ sequential @@ timed
 }
