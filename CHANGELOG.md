@@ -1,3 +1,15 @@
+# [1.11.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v1.10.0...prism-agent-v1.11.0) (2023-08-21)
+
+
+### Bug Fixes
+
+* **prism-agenet:** Remove connection ID from metrics in connection flow ([#635](https://github.com/input-output-hk/atala-prism-building-blocks/issues/635)) ([515f92f](https://github.com/input-output-hk/atala-prism-building-blocks/commit/515f92f67f6ccd9ae5414d1324ebb769c43d5017))
+
+
+### Features
+
+* **prism-agent:** Add prism agent record processing pipeline parameters ([#626](https://github.com/input-output-hk/atala-prism-building-blocks/issues/626)) ([434bdac](https://github.com/input-output-hk/atala-prism-building-blocks/commit/434bdacfc10b854b77bde0c8c7add613d8ee9025))
+
 # [1.10.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v1.9.2...prism-agent-v1.10.0) (2023-08-16)
 
 
