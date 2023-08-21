@@ -57,10 +57,10 @@ object CredentialSchemaBasicSpec extends ZIOSpecDefault with CredentialSchemaTes
         schema = "public",
         paths = "classpath:sql/pollux"
       )
-  ).provide(
-    mockManagedDIDServiceLayer.toLayer,
-    testEnvironmentLayer,
-    ZLayer.succeed(WalletAccessContext(WalletId.random))
+  ).provideSomeLayerShared(
+    mockManagedDIDServiceLayer.toLayer >+>
+      testEnvironmentLayer >+>
+      ZLayer.succeed(WalletAccessContext(WalletId.random))
   )
 
   private val schemaCreateAndGetOperationsSpec = {
@@ -122,6 +122,7 @@ object CredentialSchemaBasicSpec extends ZIOSpecDefault with CredentialSchemaTes
             .get(credentialSchemaUriBase.addPath(uuid.toString))
             .response(asJsonAlways[ErrorResponse])
             .send(backend)
+            .debug("response")
         } yield assert(response.code)(equalTo(StatusCode.NotFound))
       }
     )

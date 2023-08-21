@@ -53,13 +53,13 @@ object CredentialSchemaAnoncredSpec extends ZIOSpecDefault with CredentialSchema
 
   private def wrapSpec(spec: Spec[CredentialSchemaController & WalletAccessContext, Throwable]) = {
     (spec
-      @@ nondeterministic @@ sequential @@ timed @@ migrate(
+      @@ nondeterministic @@ sequential @@ timed @@ migrateEach(
         schema = "public",
         paths = "classpath:sql/pollux"
-      )).provide(
-      mockManagedDIDServiceLayer.toLayer,
-      testEnvironmentLayer,
-      ZLayer.succeed(WalletAccessContext(WalletId.random))
+      )).provideSomeLayerShared(
+      mockManagedDIDServiceLayer.toLayer >+>
+        testEnvironmentLayer >+>
+        ZLayer.succeed(WalletAccessContext(WalletId.random))
     )
   }
 
