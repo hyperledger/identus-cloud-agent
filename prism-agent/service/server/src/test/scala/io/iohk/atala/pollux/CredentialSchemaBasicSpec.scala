@@ -53,7 +53,7 @@ object CredentialSchemaBasicSpec extends ZIOSpecDefault with CredentialSchemaTes
 
   def spec = (
     schemaCreateAndGetOperationsSpec
-      @@ nondeterministic @@ sequential @@ timed @@ migrate(
+      @@ nondeterministic @@ sequential @@ timed @@ migrateEach(
         schema = "public",
         paths = "classpath:sql/pollux"
       )
@@ -61,7 +61,7 @@ object CredentialSchemaBasicSpec extends ZIOSpecDefault with CredentialSchemaTes
     mockManagedDIDServiceLayer.toLayer,
     testEnvironmentLayer,
     ZLayer.succeed(WalletAccessContext(WalletId.random))
-  ) @@ TestAspect.tag("dev")
+  )
 
   private val schemaCreateAndGetOperationsSpec = {
     val backendZIO =
@@ -112,7 +112,7 @@ object CredentialSchemaBasicSpec extends ZIOSpecDefault with CredentialSchemaTes
           credentialSchemaIsFetched = assert(fetchedSchema)(equalTo(credentialSchema))
 
         } yield statusCodeIs201 && credentialSchemaIsCreated && credentialSchemaIsFetched
-      } @@ TestAspect.tag("dev"),
+      },
       test("get the schema by the wrong id") {
         for {
           backend <- backendZIO
