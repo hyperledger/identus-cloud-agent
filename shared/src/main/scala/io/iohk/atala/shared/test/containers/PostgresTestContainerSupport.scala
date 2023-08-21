@@ -3,7 +3,6 @@ package io.iohk.atala.shared.test.containers
 import com.dimafeng.testcontainers.PostgreSQLContainer
 import doobie.util.transactor.Transactor
 import io.iohk.atala.shared.db.ContextAwareTask
-import io.iohk.atala.shared.db.DbConfig
 import io.iohk.atala.shared.db.TransactorLayer
 import zio.*
 
