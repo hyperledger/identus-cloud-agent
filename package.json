@@ -86,7 +86,7 @@
             "prism-agent/service/api/http/prism-agent-openapi-spec.yaml",
             "infrastructure/charts/agent/Chart.yaml"
           ],
-          "message": "chore(release): cut atala prism ${nextRelease.version} release\n\n${nextRelease.notes}"
+          "message": "chore(release): cut atala prism ${nextRelease.version} release\n\n${nextRelease.notes}\n\nSigned-off-by: Anton Baliasnikov <anton.baliasnikov@iohk.io>"
         }
       ],
       [
