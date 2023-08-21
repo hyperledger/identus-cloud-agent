@@ -16,7 +16,6 @@ import io.iohk.atala.pollux.credentialschema.http.{
 }
 import io.iohk.atala.pollux.sql.repository.JdbcCredentialSchemaRepository
 import io.iohk.atala.shared.models.WalletAccessContext
-import io.iohk.atala.shared.models.WalletId
 import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
 import sttp.client3.testing.SttpBackendStub
 import sttp.client3.ziojson.*
@@ -77,9 +76,8 @@ trait CredentialSchemaTestTools extends PostgresTestContainerSupport {
       .defaultHandlers(ErrorResponse.failureResponseHandler)
   }
 
-  def httpBackend(controller: CredentialSchemaController) = {
-    val mockWalletAccessContext = WalletAccessContext(WalletId.random) // FIXME
-    val schemaRegistryEndpoints = SchemaRegistryServerEndpoints(controller, mockWalletAccessContext)
+  def httpBackend(controller: CredentialSchemaController, walletAccessContext: WalletAccessContext) = {
+    val schemaRegistryEndpoints = SchemaRegistryServerEndpoints(controller, walletAccessContext)
 
     val backend =
       TapirStubInterpreter(
@@ -162,10 +160,11 @@ trait CredentialSchemaGen {
 
   def generateSchemasN(
       count: Int
-  ): ZIO[CredentialSchemaController, Throwable, List[CredentialSchemaInput]] =
+  ): ZIO[CredentialSchemaController & WalletAccessContext, Throwable, List[CredentialSchemaInput]] =
     for {
       controller <- ZIO.service[CredentialSchemaController]
-      backend = httpBackend(controller)
+      ctx <- ZIO.service[WalletAccessContext]
+      backend = httpBackend(controller, ctx)
       inputs <- Generator.schemaInput.runCollectN(count)
       _ <- inputs
         .map(in =>

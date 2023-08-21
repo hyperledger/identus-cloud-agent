@@ -8,6 +8,8 @@ import io.iohk.atala.pollux.core.model.schema.`type`.CredentialJsonSchemaType
 import io.iohk.atala.pollux.credentialschema.*
 import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaController
 import io.iohk.atala.pollux.credentialschema.http.{CredentialSchemaInput, CredentialSchemaResponse}
+import io.iohk.atala.shared.models.WalletAccessContext
+import io.iohk.atala.shared.models.WalletId
 import sttp.client3.basicRequest
 import sttp.client3.ziojson.*
 import sttp.model.StatusCode
@@ -55,10 +57,19 @@ object CredentialSchemaBasicSpec extends ZIOSpecDefault with CredentialSchemaTes
         schema = "public",
         paths = "classpath:sql/pollux"
       )
-  ).provideSomeLayerShared(mockManagedDIDServiceLayer.toLayer >+> testEnvironmentLayer) @@ TestAspect.tag("dev")
+  ).provide(
+    mockManagedDIDServiceLayer.toLayer,
+    testEnvironmentLayer,
+    ZLayer.succeed(WalletAccessContext(WalletId.random))
+  ) @@ TestAspect.tag("dev")
 
   private val schemaCreateAndGetOperationsSpec = {
-    val backendZIO = ZIO.service[CredentialSchemaController].map(httpBackend)
+    val backendZIO =
+      for {
+        controller <- ZIO.service[CredentialSchemaController]
+        ctx <- ZIO.service[WalletAccessContext]
+      } yield httpBackend(controller, ctx)
+
     def createSchemaResponseZIO = for {
       backend <- backendZIO
       response <- basicRequest
@@ -101,7 +112,7 @@ object CredentialSchemaBasicSpec extends ZIOSpecDefault with CredentialSchemaTes
           credentialSchemaIsFetched = assert(fetchedSchema)(equalTo(credentialSchema))
 
         } yield statusCodeIs201 && credentialSchemaIsCreated && credentialSchemaIsFetched
-      },
+      } @@ TestAspect.tag("dev"),
       test("get the schema by the wrong id") {
         for {
           backend <- backendZIO

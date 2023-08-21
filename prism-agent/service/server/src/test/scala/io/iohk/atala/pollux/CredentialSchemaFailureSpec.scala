@@ -6,6 +6,8 @@ import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.container.util.MigrationAspects.migrate
 import io.iohk.atala.pollux.credentialschema.*
 import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaController
+import io.iohk.atala.shared.models.WalletAccessContext
+import io.iohk.atala.shared.models.WalletId
 import sttp.client3.ziojson.*
 import sttp.client3.{DeserializationException, basicRequest}
 import sttp.model.StatusCode
@@ -15,21 +17,21 @@ import zio.test.Assertion.*
 
 object CredentialSchemaFailureSpec extends ZIOSpecDefault with CredentialSchemaTestTools:
 
-  private val sharedLayer = ZLayer.make[CredentialSchemaController & PostgreSQLContainer](
-    testEnvironmentLayer,
-    MockManagedDIDService.empty
-  )
-
   def spec = (schemaBadRequestAsJsonSpec @@ migrate(
     schema = "public",
     paths = "classpath:sql/pollux"
-  )).provideSomeLayerShared(sharedLayer)
+  )).provide(
+    testEnvironmentLayer,
+    MockManagedDIDService.empty,
+    ZLayer.succeed(WalletAccessContext(WalletId.random))
+  )
 
   private val schemaBadRequestAsJsonSpec = suite("schema-registry BadRequest as json logic")(
     test("create the schema with wrong json body returns BadRequest as json") {
       for {
-        schemaRegistryService <- ZIO.service[CredentialSchemaController]
-        backend = httpBackend(schemaRegistryService)
+        controller <- ZIO.service[CredentialSchemaController]
+        ctx <- ZIO.service[WalletAccessContext]
+        backend = httpBackend(controller, ctx)
         response: SchemaBadRequestResponse <- basicRequest
           .post(credentialSchemaUriBase)
           .body("""{"foo":"bar"}""")

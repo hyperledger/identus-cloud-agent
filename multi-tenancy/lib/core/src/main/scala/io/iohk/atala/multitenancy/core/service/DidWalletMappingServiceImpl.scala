@@ -11,7 +11,6 @@ import zio.*
 
 import java.rmi.UnexpectedException
 import java.time.Instant
-import java.util.UUID
 
 private class DidWalletMappingServiceImpl(
     didWalletMappingRepository: DidWalletMappingRepository[Task],
