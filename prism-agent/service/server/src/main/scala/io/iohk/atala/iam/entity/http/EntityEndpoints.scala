@@ -1,40 +1,28 @@
 package io.iohk.atala.iam.entity.http
 
-import io.iohk.atala.agent.walletapi.model.Entity
 import io.iohk.atala.api.http.*
 import io.iohk.atala.api.http.EndpointOutputs.*
 import io.iohk.atala.api.http.model.PaginationInput
-import io.iohk.atala.iam.authentication.Credentials
+import io.iohk.atala.iam.authentication.admin.AdminApiKeyCredentials
+import io.iohk.atala.iam.authentication.admin.AdminApiKeySecurityLogic.adminApiKeyHeader
 import io.iohk.atala.iam.entity.http.model.*
 import sttp.model.StatusCode
-import sttp.tapir.EndpointIO.annotations.header
 import sttp.tapir.json.zio.jsonBody
-import sttp.tapir.{
-  Endpoint,
-  EndpointInput,
-  PublicEndpoint,
-  auth,
-  endpoint,
-  extractFromRequest,
-  header,
-  path,
-  query,
-  statusCode,
-  stringToPath
-}
-import io.iohk.atala.iam.authentication.admin.AdminApiKeySecureEndpoint.secureEndpoint
+import sttp.tapir.{Endpoint, EndpointInput, endpoint, extractFromRequest, path, query, statusCode, stringToPath}
 
 import java.util.UUID
 
 object EntityEndpoints {
 
-  val createEntityEndpoint: PublicEndpoint[
+  val createEntityEndpoint: Endpoint[
+    AdminApiKeyCredentials,
     (RequestContext, CreateEntityRequest),
     ErrorResponse,
     EntityResponse,
     Any
   ] =
     endpoint.post
+      .securityIn(adminApiKeyHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in("iam" / "entities")
       .in(
@@ -51,7 +39,7 @@ object EntityEndpoints {
       )
       .out(jsonBody[EntityResponse])
       .description("Entity record")
-      .errorOut(basicFailures)
+      .errorOut(basicFailureAndNotFoundAndForbidden)
       .name("createEntity")
       .summary("Create a new entity record")
       .description(
@@ -59,13 +47,15 @@ object EntityEndpoints {
       )
       .tag("Identity and Access Management")
 
-  val updateEntityNameEndpoint: PublicEndpoint[
+  val updateEntityNameEndpoint: Endpoint[
+    AdminApiKeyCredentials,
     (RequestContext, UUID, UpdateEntityNameRequest),
     ErrorResponse,
     EntityResponse,
     Any
   ] =
     endpoint.put
+      .securityIn(adminApiKeyHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
         "iam" / "entities" / path[UUID]("id") / "name" // .description(EntityResponse.annotations.id.description)
@@ -92,13 +82,15 @@ object EntityEndpoints {
       )
       .tag("Identity and Access Management")
 
-  val updateEntityWalletIdEndpoint: PublicEndpoint[
+  val updateEntityWalletIdEndpoint: Endpoint[
+    AdminApiKeyCredentials,
     (RequestContext, UUID, UpdateEntityWalletIdRequest),
     ErrorResponse,
     EntityResponse,
     Any
   ] =
     endpoint.put
+      .securityIn(adminApiKeyHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
         "iam" / "entities" / path[UUID]("id") / "walletId" // .description(EntityResponse.annotations.id.description)
@@ -125,13 +117,15 @@ object EntityEndpoints {
       )
       .tag("Identity and Access Management")
 
-  val getEntityByIdEndpoint: PublicEndpoint[
+  val getEntityByIdEndpoint: Endpoint[
+    AdminApiKeyCredentials,
     (RequestContext, UUID),
     ErrorResponse,
     EntityResponse,
     Any
   ] =
     endpoint.get
+      .securityIn(adminApiKeyHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
         "iam" / "entities" / path[UUID]("id").description(
@@ -148,7 +142,8 @@ object EntityEndpoints {
       .tag("Identity and Access Management")
 
   private val paginationInput: EndpointInput[PaginationInput] = EndpointInput.derived[PaginationInput]
-  val getEntitiesEndpoint: PublicEndpoint[
+  val getEntitiesEndpoint: Endpoint[
+    AdminApiKeyCredentials,
     (
         RequestContext,
         PaginationInput
@@ -158,6 +153,7 @@ object EntityEndpoints {
     Any
   ] =
     endpoint.get
+      .securityIn(adminApiKeyHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in("iam" / "entities".description("Get all entities"))
       .in(paginationInput)
@@ -170,13 +166,15 @@ object EntityEndpoints {
       )
       .tag("Identity and Access Management")
 
-  val deleteEntityByIdEndpoint: PublicEndpoint[
+  val deleteEntityByIdEndpoint: Endpoint[
+    AdminApiKeyCredentials,
     (RequestContext, UUID),
     ErrorResponse,
     Unit,
     Any
   ] =
     endpoint.delete
+      .securityIn(adminApiKeyHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
         "iam" / "entities" / path[UUID]("id").description(
