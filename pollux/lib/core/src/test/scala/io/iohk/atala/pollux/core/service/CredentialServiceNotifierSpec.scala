@@ -6,9 +6,11 @@ import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord.ProtocolState
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.vc.jwt.JWT
+import io.iohk.atala.shared.models.WalletAccessContext
+import io.iohk.atala.shared.models.WalletId
 import zio.*
 import zio.mock.Expectation
-import zio.test.{Assertion, *}
+import zio.test.*
 
 import java.time.Instant
 
@@ -111,7 +113,8 @@ object CredentialServiceNotifierSpec extends ZIOSpecDefault with CredentialServi
         }
       }.provide(
         ZLayer.succeed(50) >>> EventNotificationServiceImpl.layer,
-        issuerExpectations.toLayer >>> CredentialServiceNotifier.layer
+        issuerExpectations.toLayer >>> CredentialServiceNotifier.layer,
+        ZLayer.succeed(WalletAccessContext(WalletId.random))
       ),
       test("Happy flow generates relevant events on the holder side") {
         for {
@@ -137,7 +140,8 @@ object CredentialServiceNotifierSpec extends ZIOSpecDefault with CredentialServi
         }
       }.provide(
         ZLayer.succeed(50) >>> EventNotificationServiceImpl.layer,
-        holderExpectations.toLayer >>> CredentialServiceNotifier.layer
+        holderExpectations.toLayer >>> CredentialServiceNotifier.layer,
+        ZLayer.succeed(WalletAccessContext(WalletId.random))
       )
     )
   }

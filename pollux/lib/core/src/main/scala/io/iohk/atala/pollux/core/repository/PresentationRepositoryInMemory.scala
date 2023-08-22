@@ -11,7 +11,7 @@ import java.time.Instant
 class PresentationRepositoryInMemory(
     storeRef: Ref[Map[DidCommID, PresentationRecord]],
     maxRetries: Int
-) extends PresentationRepository[Task] {
+) extends PresentationRepository {
 
   override def createPresentationRecord(record: PresentationRecord): Task[Int] = {
     for {
@@ -226,7 +226,7 @@ class PresentationRepositoryInMemory(
 
 object PresentationRepositoryInMemory {
   val maxRetries = 5 // TODO Move to config
-  val layer: ULayer[PresentationRepository[Task]] = ZLayer.fromZIO(
+  val layer: ULayer[PresentationRepository] = ZLayer.fromZIO(
     Ref
       .make(Map.empty[DidCommID, PresentationRecord])
       .map(PresentationRepositoryInMemory(_, maxRetries))

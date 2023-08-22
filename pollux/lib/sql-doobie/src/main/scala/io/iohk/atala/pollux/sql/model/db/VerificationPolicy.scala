@@ -2,9 +2,10 @@ package io.iohk.atala.pollux.sql.model.db
 
 import io.getquill.InsertMeta
 
-import java.util.UUID
 import io.getquill.*
 import io.getquill.doobie.DoobieContext
+import io.iohk.atala.shared.models.WalletId
+import java.util.UUID
 
 import java.time.OffsetDateTime
 
@@ -14,7 +15,8 @@ case class VerificationPolicy(
     name: String,
     description: String,
     createdAt: OffsetDateTime,
-    updatedAt: OffsetDateTime
+    updatedAt: OffsetDateTime,
+    walletId: WalletId
 )
 
 case class VerificationPolicyConstraint(

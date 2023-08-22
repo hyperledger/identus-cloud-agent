@@ -1,5 +1,6 @@
 package io.iohk.atala.pollux
 
+import com.dimafeng.testcontainers.PostgreSQLContainer
 import io.iohk.atala.container.util.MigrationAspects.migrate
 import io.iohk.atala.pollux.credentialschema.*
 import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaController
@@ -8,6 +9,8 @@ import io.iohk.atala.pollux.credentialschema.http.{
   CredentialSchemaResponse,
   CredentialSchemaResponsePage
 }
+import io.iohk.atala.shared.models.WalletAccessContext
+import io.iohk.atala.shared.models.WalletId
 import sttp.client3.ziojson.*
 import sttp.client3.{DeserializationException, Response, UriContext, basicRequest}
 import sttp.model.{StatusCode, Uri}
@@ -22,10 +25,13 @@ object CredentialSchemaLookupAndPaginationSpec
     with CredentialSchemaTestTools
     with CredentialSchemaGen:
 
-  def fetchAllPages(uri: Uri): ZIO[CredentialSchemaController, Throwable, List[CredentialSchemaResponsePage]] = {
+  def fetchAllPages(
+      uri: Uri
+  ): ZIO[CredentialSchemaController & WalletAccessContext, Throwable, List[CredentialSchemaResponsePage]] = {
     for {
       controller <- ZIO.service[CredentialSchemaController]
-      backend = httpBackend(controller)
+      ctx <- ZIO.service[WalletAccessContext]
+      backend = httpBackend(controller, ctx)
       response: SchemaPageResponse <- basicRequest
         .get(uri)
         .response(asJsonAlways[CredentialSchemaResponsePage])
@@ -60,16 +66,15 @@ object CredentialSchemaLookupAndPaginationSpec
         schema = "public",
         paths = "classpath:sql/pollux"
       )
-  ).provideSomeLayerShared(
-    mockManagedDIDServiceLayer.exactly(201).toLayer >+> testEnvironmentLayer
-  )
+  ).provideSomeLayerShared(mockManagedDIDServiceLayer.exactly(201).toLayer >+> testEnvironmentLayer)
 
   private val schemaPaginationSpec = suite("schema-registry pagination logic")(
     test("pagination of the first page with the empty query params") {
       for {
         _ <- deleteAllCredentialSchemas
         controller <- ZIO.service[CredentialSchemaController]
-        backend = httpBackend(controller)
+        ctx <- ZIO.service[WalletAccessContext]
+        backend = httpBackend(controller, ctx)
 
         inputs <- Generator.schemaInput.runCollectN(101)
         _ <- inputs
@@ -116,4 +121,4 @@ object CredentialSchemaLookupAndPaginationSpec
         assert(allPagesWithLimit10.length)(equalTo(10)) &&
         assert(allPagesWithLimit15.length)(equalTo(7))
     }
-  )
+  ).provideSomeLayer(ZLayer.succeed(WalletAccessContext(WalletId.random)))

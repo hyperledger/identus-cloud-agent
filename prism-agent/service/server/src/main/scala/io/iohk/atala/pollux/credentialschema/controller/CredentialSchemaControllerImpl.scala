@@ -56,7 +56,7 @@ class CredentialSchemaControllerImpl(service: CredentialSchemaService, managedDI
 
   override def getSchemaByGuid(guid: UUID)(implicit
       rc: RequestContext
-  ): IO[ErrorResponse, CredentialSchemaResponse] = {
+  ): ZIO[WalletAccessContext, ErrorResponse, CredentialSchemaResponse] = {
     service
       .getByGUID(guid)
       .map(
@@ -67,7 +67,7 @@ class CredentialSchemaControllerImpl(service: CredentialSchemaService, managedDI
 
   override def delete(guid: UUID)(implicit
       rc: RequestContext
-  ): IO[ErrorResponse, CredentialSchemaResponse] = {
+  ): ZIO[WalletAccessContext, ErrorResponse, CredentialSchemaResponse] = {
     service
       .delete(guid)
       .map(
@@ -82,7 +82,7 @@ class CredentialSchemaControllerImpl(service: CredentialSchemaService, managedDI
       order: Option[Order]
   )(implicit
       rc: RequestContext
-  ): IO[ErrorResponse, CredentialSchemaResponsePage] = {
+  ): ZIO[WalletAccessContext, ErrorResponse, CredentialSchemaResponsePage] = {
     for {
       filteredEntries: FilteredEntries <- service.lookup(
         filter.toDomain,

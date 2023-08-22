@@ -4,7 +4,6 @@ import io.iohk.atala.agent.walletapi.model.{ManagedDIDState, PublicationState}
 import io.iohk.atala.agent.walletapi.service.{ManagedDIDService, MockManagedDIDService}
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.castor.core.model.did.PrismDIDOperation
-import io.iohk.atala.container.util.PostgresLayer.*
 import io.iohk.atala.pollux.core.model.schema.`type`.CredentialJsonSchemaType
 import io.iohk.atala.pollux.core.repository.CredentialSchemaRepository
 import io.iohk.atala.pollux.core.service.CredentialSchemaServiceImpl
@@ -17,7 +16,7 @@ import io.iohk.atala.pollux.credentialschema.http.{
 }
 import io.iohk.atala.pollux.sql.repository.JdbcCredentialSchemaRepository
 import io.iohk.atala.shared.models.WalletAccessContext
-import io.iohk.atala.shared.models.WalletId
+import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
 import sttp.client3.testing.SttpBackendStub
 import sttp.client3.ziojson.*
 import sttp.client3.{DeserializationException, Response, UriContext, basicRequest}
@@ -33,8 +32,9 @@ import zio.mock.Expectation
 import zio.test.{Assertion, Gen, ZIOSpecDefault}
 
 import java.time.OffsetDateTime
+import com.dimafeng.testcontainers.PostgreSQLContainer
 
-trait CredentialSchemaTestTools {
+trait CredentialSchemaTestTools extends PostgresTestContainerSupport {
   self: ZIOSpecDefault =>
 
   type SchemaBadRequestResponse =
@@ -45,13 +45,6 @@ trait CredentialSchemaTestTools {
     Response[
       Either[DeserializationException[String], CredentialSchemaResponsePage]
     ]
-
-  private val pgLayer = postgresLayer(verbose = false)
-  private val transactorLayer = pgLayer >>> hikariConfigLayer >>> transactor
-  private val controllerLayer = transactorLayer >>>
-    JdbcCredentialSchemaRepository.layer >+>
-    CredentialSchemaServiceImpl.layer >+>
-    CredentialSchemaControllerImpl.layer
 
   val mockManagedDIDServiceLayer: Expectation[ManagedDIDService] = MockManagedDIDService
     .GetManagedDIDState(
@@ -67,10 +60,14 @@ trait CredentialSchemaTestTools {
       )
     )
 
-  val testEnvironmentLayer = zio.test.testEnvironment ++
-    pgLayer ++
-    transactorLayer ++
-    controllerLayer
+  val testEnvironmentLayer =
+    ZLayer.makeSome[ManagedDIDService, CredentialSchemaController & CredentialSchemaRepository & PostgreSQLContainer](
+      CredentialSchemaControllerImpl.layer,
+      CredentialSchemaServiceImpl.layer,
+      JdbcCredentialSchemaRepository.layer,
+      transactorLayer,
+      pgContainerLayer
+    )
 
   val credentialSchemaUriBase = uri"http://test.com/schema-registry/schemas"
 
@@ -79,9 +76,8 @@ trait CredentialSchemaTestTools {
       .defaultHandlers(ErrorResponse.failureResponseHandler)
   }
 
-  def httpBackend(controller: CredentialSchemaController) = {
-    val mockWalletAccessContext = WalletAccessContext(WalletId.random) // FIXME
-    val schemaRegistryEndpoints = SchemaRegistryServerEndpoints(controller, mockWalletAccessContext)
+  def httpBackend(controller: CredentialSchemaController, walletAccessContext: WalletAccessContext) = {
+    val schemaRegistryEndpoints = SchemaRegistryServerEndpoints(controller, walletAccessContext)
 
     val backend =
       TapirStubInterpreter(
@@ -100,9 +96,9 @@ trait CredentialSchemaTestTools {
     backend
   }
 
-  def deleteAllCredentialSchemas: RIO[CredentialSchemaRepository[Task], Long] = {
+  def deleteAllCredentialSchemas: RIO[CredentialSchemaRepository & WalletAccessContext, Long] = {
     for {
-      repository <- ZIO.service[CredentialSchemaRepository[Task]]
+      repository <- ZIO.service[CredentialSchemaRepository]
       count <- repository.deleteAll()
     } yield count
   }
@@ -164,10 +160,11 @@ trait CredentialSchemaGen {
 
   def generateSchemasN(
       count: Int
-  ): ZIO[CredentialSchemaController, Throwable, List[CredentialSchemaInput]] =
+  ): ZIO[CredentialSchemaController & WalletAccessContext, Throwable, List[CredentialSchemaInput]] =
     for {
       controller <- ZIO.service[CredentialSchemaController]
-      backend = httpBackend(controller)
+      ctx <- ZIO.service[WalletAccessContext]
+      backend = httpBackend(controller, ctx)
       inputs <- Generator.schemaInput.runCollectN(count)
       _ <- inputs
         .map(in =>

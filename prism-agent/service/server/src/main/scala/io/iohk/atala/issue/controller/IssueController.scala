@@ -9,24 +9,29 @@ import io.iohk.atala.issue.controller.http.{
   IssueCredentialRecordPage
 }
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
+import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 
 trait IssueController {
   def createCredentialOffer(request: CreateIssueCredentialRecordRequest)(implicit
       rc: RequestContext
-  ): IO[ErrorResponse, IssueCredentialRecord]
+  ): ZIO[WalletAccessContext, ErrorResponse, IssueCredentialRecord]
 
   def getCredentialRecords(paginationInput: PaginationInput, thid: Option[String])(implicit
       rc: RequestContext
-  ): IO[ErrorResponse, IssueCredentialRecordPage]
+  ): ZIO[WalletAccessContext, ErrorResponse, IssueCredentialRecordPage]
 
-  def getCredentialRecord(recordId: String)(implicit rc: RequestContext): IO[ErrorResponse, IssueCredentialRecord]
+  def getCredentialRecord(recordId: String)(implicit
+      rc: RequestContext
+  ): ZIO[WalletAccessContext, ErrorResponse, IssueCredentialRecord]
 
   def acceptCredentialOffer(recordId: String, request: AcceptCredentialOfferRequest)(implicit
       rc: RequestContext
-  ): IO[ErrorResponse, IssueCredentialRecord]
+  ): ZIO[WalletAccessContext, ErrorResponse, IssueCredentialRecord]
 
-  def issueCredential(recordId: String)(implicit rc: RequestContext): IO[ErrorResponse, IssueCredentialRecord]
+  def issueCredential(recordId: String)(implicit
+      rc: RequestContext
+  ): ZIO[WalletAccessContext, ErrorResponse, IssueCredentialRecord]
 
 }
 

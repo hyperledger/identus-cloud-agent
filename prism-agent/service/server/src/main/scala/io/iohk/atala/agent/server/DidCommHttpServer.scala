@@ -174,7 +174,8 @@ object DidCommHttpServer {
   /*
    * Issue Credential
    */
-  private val handleIssueCredential: PartialFunction[Message, ZIO[CredentialService, CredentialServiceError, Unit]] = {
+  private val handleIssueCredential
+      : PartialFunction[Message, ZIO[CredentialService & WalletAccessContext, CredentialServiceError, Unit]] = {
     case msg if msg.piuri == OfferCredential.`type` =>
       for {
         offerFromIssuer <- ZIO.succeed(OfferCredential.readFromMessage(msg))
@@ -201,7 +202,8 @@ object DidCommHttpServer {
   /*
    * Present Proof
    */
-  private val handlePresentProof: PartialFunction[Message, ZIO[PresentationService, PresentationError, Unit]] = {
+  private val handlePresentProof
+      : PartialFunction[Message, ZIO[PresentationService & WalletAccessContext, PresentationError, Unit]] = {
     case msg if msg.piuri == ProposePresentation.`type` =>
       for {
         proposePresentation <- ZIO.succeed(ProposePresentation.readFromMessage(msg))

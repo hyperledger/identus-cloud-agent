@@ -7,7 +7,7 @@ import io.iohk.atala.pollux.core.model.schema.`type`.{AnoncredSchemaType, Creden
 import io.iohk.atala.pollux.credentialschema.*
 import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaController
 import io.iohk.atala.pollux.credentialschema.http.{CredentialSchemaInput, CredentialSchemaResponse}
-import io.iohk.atala.pollux.sql.repository.JdbcCredentialSchemaRepository
+import io.iohk.atala.shared.models.WalletAccessContext
 import sttp.client3.basicRequest
 import sttp.client3.ziojson.{asJsonAlways, *}
 import sttp.model.StatusCode
@@ -21,6 +21,7 @@ import zio.test.Assertion.*
 import zio.test.TestAspect.*
 
 import java.util.UUID
+import io.iohk.atala.shared.models.WalletId
 
 object CredentialSchemaAnoncredSpec extends ZIOSpecDefault with CredentialSchemaTestTools:
   private def createCredentialSchemaInput(schemaType: String) = {
@@ -50,17 +51,23 @@ object CredentialSchemaAnoncredSpec extends ZIOSpecDefault with CredentialSchema
       + wrapSpec(unsupportedSchemaSpec)
       + wrapSpec(wrongSchemaSpec)
 
-  private def wrapSpec(spec: Spec[CredentialSchemaController, Throwable]) = {
+  private def wrapSpec(spec: Spec[CredentialSchemaController & WalletAccessContext, Throwable]) = {
     (spec
-      @@ nondeterministic @@ sequential @@ timed @@ migrate(
+      @@ nondeterministic @@ sequential @@ timed @@ migrateEach(
         schema = "public",
         paths = "classpath:sql/pollux"
-      )).provideSomeLayerShared(mockManagedDIDServiceLayer.toLayer >+> testEnvironmentLayer)
+      )).provideSomeLayerShared(
+      mockManagedDIDServiceLayer.toLayer >+>
+        testEnvironmentLayer >+>
+        ZLayer.succeed(WalletAccessContext(WalletId.random))
+    )
   }
 
-  private val schemaCreateAndGetOperationsSpec: Spec[CredentialSchemaController, Throwable] = {
+  private val schemaCreateAndGetOperationsSpec = {
     def getSchemaZIO(uuid: UUID) = for {
-      backend <- ZIO.service[CredentialSchemaController].map(httpBackend)
+      controller <- ZIO.service[CredentialSchemaController]
+      ctx <- ZIO.service[WalletAccessContext]
+      backend = httpBackend(controller, ctx)
       response <- basicRequest
         .get(credentialSchemaUriBase.addPath(uuid.toString))
         .response(asJsonAlways[CredentialSchemaResponse])
@@ -125,7 +132,9 @@ object CredentialSchemaAnoncredSpec extends ZIOSpecDefault with CredentialSchema
 
   private def createResponse[B: JsonDecoder](schemaType: String) = {
     for {
-      backend <- ZIO.service[CredentialSchemaController].map(httpBackend)
+      controller <- ZIO.service[CredentialSchemaController]
+      ctx <- ZIO.service[WalletAccessContext]
+      backend = httpBackend(controller, ctx)
       response <-
         basicRequest
           .post(credentialSchemaUriBase)

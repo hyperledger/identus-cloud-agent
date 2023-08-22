@@ -3,6 +3,7 @@ package io.iohk.atala.agent.walletapi.service
 import io.iohk.atala.agent.walletapi.crypto.Apollo
 import io.iohk.atala.agent.walletapi.crypto.ApolloSpecHelper
 import io.iohk.atala.agent.walletapi.model.UpdateManagedDIDAction
+import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError
 import io.iohk.atala.agent.walletapi.model.error.UpdateManagedDIDError
 import io.iohk.atala.agent.walletapi.model.error.{CreateManagedDIDError, PublishManagedDIDError}
 import io.iohk.atala.agent.walletapi.model.{DIDPublicKeyTemplate, ManagedDIDState, ManagedDIDTemplate, PublicationState}
@@ -36,14 +37,13 @@ import io.iohk.atala.castor.core.model.error
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.shared.models.WalletAccessContext
+import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
 import io.iohk.atala.test.container.DBTestUtils
-import io.iohk.atala.test.container.PostgresTestContainerSupport
 import io.iohk.atala.test.container.VaultTestContainerSupport
 import scala.collection.immutable.ArraySeq
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
-import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError
 
 object ManagedDIDServiceSpec
     extends ZIOSpecDefault,

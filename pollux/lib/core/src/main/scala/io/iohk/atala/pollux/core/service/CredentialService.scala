@@ -10,6 +10,7 @@ import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError.*
 import io.iohk.atala.pollux.vc.jwt.{Issuer, JWT, PresentationPayload, W3cCredentialPayload}
 import io.iohk.atala.prism.crypto.MerkleInclusionProof
+import io.iohk.atala.shared.models.WalletAccessContext
 import zio.{IO, ZIO}
 
 import java.nio.charset.StandardCharsets
@@ -56,44 +57,60 @@ trait CredentialService {
       automaticIssuance: Option[Boolean],
       awaitConfirmation: Option[Boolean],
       issuingDID: Option[CanonicalPrismDID]
-  ): IO[CredentialServiceError, IssueCredentialRecord]
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
   /** Return a list of records as well as a count of all filtered items */
   def getIssueCredentialRecords(
       offset: Option[Int] = None,
       limit: Option[Int] = None
-  ): IO[CredentialServiceError, (Seq[IssueCredentialRecord], Int)]
+  ): ZIO[WalletAccessContext, CredentialServiceError, (Seq[IssueCredentialRecord], Int)]
 
   def getIssueCredentialRecordsByStates(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: IssueCredentialRecord.ProtocolState*
-  ): IO[CredentialServiceError, Seq[IssueCredentialRecord]]
+  ): ZIO[WalletAccessContext, CredentialServiceError, Seq[IssueCredentialRecord]]
 
-  def getIssueCredentialRecord(recordId: DidCommID): IO[CredentialServiceError, Option[IssueCredentialRecord]]
+  def getIssueCredentialRecord(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, CredentialServiceError, Option[IssueCredentialRecord]]
 
-  def getIssueCredentialRecordByThreadId(thid: DidCommID): IO[CredentialServiceError, Option[IssueCredentialRecord]]
+  def getIssueCredentialRecordByThreadId(
+      thid: DidCommID
+  ): ZIO[WalletAccessContext, CredentialServiceError, Option[IssueCredentialRecord]]
 
-  def receiveCredentialOffer(offer: OfferCredential): IO[CredentialServiceError, IssueCredentialRecord]
+  def receiveCredentialOffer(
+      offer: OfferCredential
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
-  def acceptCredentialOffer(recordId: DidCommID, subjectId: String): IO[CredentialServiceError, IssueCredentialRecord]
+  def acceptCredentialOffer(
+      recordId: DidCommID,
+      subjectId: String
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
-  def createPresentationPayload(recordId: DidCommID, subject: Issuer): IO[CredentialServiceError, PresentationPayload]
+  def createPresentationPayload(
+      recordId: DidCommID,
+      subject: Issuer
+  ): ZIO[WalletAccessContext, CredentialServiceError, PresentationPayload]
 
   def generateCredentialRequest(
       recordId: DidCommID,
       signedPresentation: JWT
-  ): IO[CredentialServiceError, IssueCredentialRecord]
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
-  def receiveCredentialRequest(request: RequestCredential): IO[CredentialServiceError, IssueCredentialRecord]
+  def receiveCredentialRequest(
+      request: RequestCredential
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
-  def acceptCredentialRequest(recordId: DidCommID): IO[CredentialServiceError, IssueCredentialRecord]
+  def acceptCredentialRequest(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
   def createCredentialPayloadFromRecord(
       record: IssueCredentialRecord,
       issuer: Issuer,
       issuanceDate: Instant
-  ): IO[CredentialServiceError, W3cCredentialPayload]
+  ): ZIO[WalletAccessContext, CredentialServiceError, W3cCredentialPayload]
 
   def publishCredentialBatch(
       credentials: Seq[W3cCredentialPayload],
@@ -102,28 +119,39 @@ trait CredentialService {
 
   def markCredentialRecordsAsPublishQueued(
       credentialsAndProofs: Seq[(W3cCredentialPayload, MerkleInclusionProof)]
-  ): IO[CredentialServiceError, Int]
+  ): ZIO[WalletAccessContext, CredentialServiceError, Int]
 
-  def receiveCredentialIssue(issue: IssueCredential): IO[CredentialServiceError, IssueCredentialRecord]
+  def receiveCredentialIssue(
+      issue: IssueCredential
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
-  def markOfferSent(recordId: DidCommID): IO[CredentialServiceError, IssueCredentialRecord]
+  def markOfferSent(recordId: DidCommID): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
-  def markRequestSent(recordId: DidCommID): IO[CredentialServiceError, IssueCredentialRecord]
+  def markRequestSent(recordId: DidCommID): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
   def markCredentialGenerated(
       recordId: DidCommID,
       issueCredential: IssueCredential
-  ): IO[CredentialServiceError, IssueCredentialRecord]
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
-  def markCredentialSent(recordId: DidCommID): IO[CredentialServiceError, IssueCredentialRecord]
+  def markCredentialSent(recordId: DidCommID): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
-  def markCredentialPublicationPending(recordId: DidCommID): IO[CredentialServiceError, IssueCredentialRecord]
+  def markCredentialPublicationPending(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
-  def markCredentialPublicationQueued(recordId: DidCommID): IO[CredentialServiceError, IssueCredentialRecord]
+  def markCredentialPublicationQueued(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
-  def markCredentialPublished(recordId: DidCommID): IO[CredentialServiceError, IssueCredentialRecord]
+  def markCredentialPublished(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
-  def reportProcessingFailure(recordId: DidCommID, failReason: Option[String]): IO[CredentialServiceError, Unit]
+  def reportProcessingFailure(
+      recordId: DidCommID,
+      failReason: Option[String]
+  ): ZIO[WalletAccessContext, CredentialServiceError, Unit]
 
 }
 

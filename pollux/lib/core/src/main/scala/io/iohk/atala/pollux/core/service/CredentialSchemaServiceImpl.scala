@@ -6,12 +6,12 @@ import io.iohk.atala.pollux.core.repository.CredentialSchemaRepository
 import io.iohk.atala.pollux.core.repository.Repository.SearchQuery
 import io.iohk.atala.pollux.core.service.CredentialSchemaService.Error.*
 import zio.ZIO.{fail, getOrFailWith, succeed}
-import zio.{Task, URLayer, ZLayer}
+import zio.{URLayer, ZLayer}
 
 import java.util.UUID
 
 class CredentialSchemaServiceImpl(
-    credentialSchemaRepository: CredentialSchemaRepository[Task]
+    credentialSchemaRepository: CredentialSchemaRepository
 ) extends CredentialSchemaService {
   override def create(in: CredentialSchema.Input): Result[CredentialSchema] = {
     for {
@@ -110,6 +110,6 @@ class CredentialSchemaServiceImpl(
 }
 
 object CredentialSchemaServiceImpl {
-  val layer: URLayer[CredentialSchemaRepository[Task], CredentialSchemaService] =
+  val layer: URLayer[CredentialSchemaRepository, CredentialSchemaService] =
     ZLayer.fromFunction(CredentialSchemaServiceImpl(_))
 }

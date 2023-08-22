@@ -10,8 +10,8 @@ import io.iohk.atala.agent.walletapi.vault.VaultDIDSecretStorage
 import io.iohk.atala.agent.walletapi.vault.VaultWalletSecretStorage
 import io.iohk.atala.mercury.PeerDID
 import io.iohk.atala.shared.models.WalletAccessContext
+import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
 import io.iohk.atala.test.container.DBTestUtils
-import io.iohk.atala.test.container.PostgresTestContainerSupport
 import io.iohk.atala.test.container.VaultTestContainerSupport
 import zio.*
 import zio.test.*

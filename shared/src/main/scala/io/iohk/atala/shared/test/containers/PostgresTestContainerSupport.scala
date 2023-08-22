@@ -1,4 +1,4 @@
-package io.iohk.atala.test.container
+package io.iohk.atala.shared.test.containers
 
 import com.dimafeng.testcontainers.PostgreSQLContainer
 import doobie.util.transactor.Transactor

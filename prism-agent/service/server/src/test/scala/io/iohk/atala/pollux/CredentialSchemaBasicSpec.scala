@@ -1,12 +1,15 @@
 package io.iohk.atala.pollux
 
+import com.dimafeng.testcontainers.PostgreSQLContainer
+import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.container.util.MigrationAspects.*
 import io.iohk.atala.pollux.core.model.schema.`type`.CredentialJsonSchemaType
 import io.iohk.atala.pollux.credentialschema.*
 import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaController
 import io.iohk.atala.pollux.credentialschema.http.{CredentialSchemaInput, CredentialSchemaResponse}
-import io.iohk.atala.pollux.sql.repository.JdbcCredentialSchemaRepository
+import io.iohk.atala.shared.models.WalletAccessContext
+import io.iohk.atala.shared.models.WalletId
 import sttp.client3.basicRequest
 import sttp.client3.ziojson.*
 import sttp.model.StatusCode
@@ -50,14 +53,23 @@ object CredentialSchemaBasicSpec extends ZIOSpecDefault with CredentialSchemaTes
 
   def spec = (
     schemaCreateAndGetOperationsSpec
-      @@ nondeterministic @@ sequential @@ timed @@ migrate(
+      @@ nondeterministic @@ sequential @@ timed @@ migrateEach(
         schema = "public",
         paths = "classpath:sql/pollux"
       )
-  ).provideSomeLayerShared(mockManagedDIDServiceLayer.toLayer >+> testEnvironmentLayer)
+  ).provideSomeLayerShared(
+    mockManagedDIDServiceLayer.toLayer >+>
+      testEnvironmentLayer >+>
+      ZLayer.succeed(WalletAccessContext(WalletId.random))
+  )
 
   private val schemaCreateAndGetOperationsSpec = {
-    val backendZIO = ZIO.service[CredentialSchemaController].map(httpBackend)
+    val backendZIO =
+      for {
+        controller <- ZIO.service[CredentialSchemaController]
+        ctx <- ZIO.service[WalletAccessContext]
+      } yield httpBackend(controller, ctx)
+
     def createSchemaResponseZIO = for {
       backend <- backendZIO
       response <- basicRequest
@@ -110,6 +122,7 @@ object CredentialSchemaBasicSpec extends ZIOSpecDefault with CredentialSchemaTes
             .get(credentialSchemaUriBase.addPath(uuid.toString))
             .response(asJsonAlways[ErrorResponse])
             .send(backend)
+            .debug("response")
         } yield assert(response.code)(equalTo(StatusCode.NotFound))
       }
     )
