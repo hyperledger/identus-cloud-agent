@@ -395,5 +395,5 @@ object PresentationRepositorySpecSuite {
         assert(update2)(isZero) &&
         assert(update3)(isZero)
     }
-  ) @@ TestAspect.tag("dev")
+  )
 }
