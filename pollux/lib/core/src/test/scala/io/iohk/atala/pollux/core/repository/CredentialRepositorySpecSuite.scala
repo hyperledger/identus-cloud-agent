@@ -525,5 +525,5 @@ object CredentialRepositorySpecSuite {
         delete1 <- repo.deleteIssueCredentialRecord(record1.id).provide(wallet2)
       } yield assert(count1)(equalTo(1)) && assert(delete1)(isZero)
     }
-  ) @@ TestAspect.tag("dev")
+  )
 }

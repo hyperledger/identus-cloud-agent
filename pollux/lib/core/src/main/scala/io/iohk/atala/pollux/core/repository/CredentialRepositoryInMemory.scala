@@ -2,17 +2,19 @@ package io.iohk.atala.pollux.core.repository
 
 import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
 import io.iohk.atala.mercury.protocol.issuecredential.RequestCredential
-import io.iohk.atala.pollux.core.model._
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord.ProtocolState
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord.PublicationState
+import io.iohk.atala.pollux.core.model._
 import io.iohk.atala.pollux.core.model.error.CredentialRepositoryError._
 import io.iohk.atala.prism.crypto.MerkleInclusionProof
+import io.iohk.atala.shared.models.WalletAccessContext
+import io.iohk.atala.shared.models.WalletId
 import zio.*
 
 import java.time.Instant
 
 class CredentialRepositoryInMemory(
-    storeRef: Ref[Map[DidCommID, IssueCredentialRecord]],
+    storeRef: Ref[Map[(WalletId, DidCommID), IssueCredentialRecord]],
     maxRetries: Int
 ) extends CredentialRepository {
 
@@ -20,37 +22,42 @@ class CredentialRepositoryInMemory(
       recordId: DidCommID,
       from: Option[PublicationState],
       to: Option[PublicationState]
-  ): Task[Int] = {
+  ): RIO[WalletAccessContext, Int] = {
     for {
+      walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
       store <- storeRef.get
-      maybeRecord = store.find((id, record) => id == recordId && record.publicationState == from).map(_._2)
+      maybeRecord = store.find((id, record) => id == (walletId, recordId) && record.publicationState == from).map(_._2)
       count <- maybeRecord
         .map(record =>
           for {
-            _ <- storeRef.update(r => r.updated(recordId, record.copy(publicationState = to)))
+            _ <- storeRef.update(r => r.updated((walletId, recordId), record.copy(publicationState = to)))
           } yield 1
         )
         .getOrElse(ZIO.succeed(0))
     } yield count
   }
 
-  override def createIssueCredentialRecord(record: IssueCredentialRecord): Task[Int] = {
+  override def createIssueCredentialRecord(record: IssueCredentialRecord): RIO[WalletAccessContext, Int] = {
     for {
+      walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
       _ <- for {
-        store <- storeRef.get
+        store <- storeRef.get.map(_.filter { case ((wid, _), _) => walletId == wid })
         maybeRecord = store.values.find(_.thid == record.thid)
         _ <- maybeRecord match
           case None        => ZIO.unit
           case Some(value) => ZIO.fail(UniqueConstraintViolation("Unique Constraint Violation on 'thid'"))
       } yield ()
-      _ <- storeRef.update(r => r + (record.id -> record))
+      _ <- storeRef.update(r => r + ((walletId, record.id) -> record))
     } yield 1
   }
 
-  override def getIssueCredentialRecord(recordId: DidCommID): Task[Option[IssueCredentialRecord]] = {
+  override def getIssueCredentialRecord(
+      recordId: DidCommID
+  ): RIO[WalletAccessContext, Option[IssueCredentialRecord]] = {
     for {
-      store <- storeRef.get
-      record = store.get(recordId)
+      walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
+      store <- storeRef.get.map(_.filter { case ((wid, _), _) => walletId == wid })
+      record = store.get((walletId, recordId))
     } yield record
   }
 
@@ -58,9 +65,10 @@ class CredentialRepositoryInMemory(
       ignoreWithZeroRetries: Boolean = true,
       offset: Option[Int],
       limit: Option[Int]
-  ): Task[(Seq[IssueCredentialRecord], Int)] = {
+  ): RIO[WalletAccessContext, (Seq[IssueCredentialRecord], Int)] = {
     for {
-      store <- storeRef.get
+      walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
+      store <- storeRef.get.map(_.filter { case ((wid, _), _) => walletId == wid })
       paginated = store.values.toSeq.drop(offset.getOrElse(0)).take(limit.getOrElse(Int.MaxValue))
     } yield paginated -> store.values.size
   }
@@ -69,16 +77,17 @@ class CredentialRepositoryInMemory(
       recordId: DidCommID,
       from: ProtocolState,
       to: ProtocolState
-  ): Task[Int] = {
+  ): RIO[WalletAccessContext, Int] = {
     for {
+      walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
       store <- storeRef.get
-      maybeRecord = store.find((id, record) => id == recordId && record.protocolState == from).map(_._2)
+      maybeRecord = store.find((id, record) => id == (walletId, recordId) && record.protocolState == from).map(_._2)
       count <- maybeRecord
         .map(record =>
           for {
             _ <- storeRef.update(r =>
               r.updated(
-                recordId,
+                (walletId, recordId),
                 record.copy(
                   protocolState = to,
                   metaRetries = maxRetries,
@@ -97,15 +106,16 @@ class CredentialRepositoryInMemory(
       issue: IssueCredential,
       issuedRawCredential: String,
       protocolState: ProtocolState
-  ): Task[Int] = {
+  ): RIO[WalletAccessContext, Int] = {
     for {
+      walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
       maybeRecord <- getIssueCredentialRecord(recordId)
       count <- maybeRecord
         .map(record =>
           for {
             _ <- storeRef.update(r =>
               r.updated(
-                recordId,
+                (walletId, recordId),
                 record.copy(
                   updatedAt = Some(Instant.now),
                   issueCredentialData = Some(issue),
@@ -122,22 +132,26 @@ class CredentialRepositoryInMemory(
     } yield count
   }
 
-  override def getValidIssuedCredentials(recordId: Seq[DidCommID]): Task[Seq[ValidIssuedCredentialRecord]] = {
+  override def getValidIssuedCredentials(
+      recordId: Seq[DidCommID]
+  ): RIO[WalletAccessContext, Seq[ValidIssuedCredentialRecord]] = {
     for {
-      store <- storeRef.get
+      walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
+      store <- storeRef.get.map(_.filter { case ((wid, _), _) => walletId == wid })
     } yield store.values
       .filter(rec => recordId.contains(rec.id) && rec.issuedCredentialRaw.isDefined)
       .map(rec => ValidIssuedCredentialRecord(rec.id, rec.issuedCredentialRaw, rec.subjectId))
       .toSeq
   }
 
-  override def deleteIssueCredentialRecord(recordId: DidCommID): Task[Int] = {
+  override def deleteIssueCredentialRecord(recordId: DidCommID): RIO[WalletAccessContext, Int] = {
     for {
+      walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
       maybeRecord <- getIssueCredentialRecord(recordId)
       count <- maybeRecord
         .map(record =>
           for {
-            _ <- storeRef.update(r => r.removed(recordId))
+            _ <- storeRef.update(r => r.removed((walletId, recordId)))
           } yield 1
         )
         .getOrElse(ZIO.succeed(0))
@@ -148,15 +162,16 @@ class CredentialRepositoryInMemory(
       recordId: DidCommID,
       issue: IssueCredential,
       protocolState: ProtocolState
-  ): Task[Int] = {
+  ): RIO[WalletAccessContext, Int] = {
     for {
+      walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
       maybeRecord <- getIssueCredentialRecord(recordId)
       count <- maybeRecord
         .map(record =>
           for {
             _ <- storeRef.update(r =>
               r.updated(
-                recordId,
+                (walletId, recordId),
                 record.copy(
                   updatedAt = Some(Instant.now),
                   issueCredentialData = Some(issue),
@@ -176,9 +191,10 @@ class CredentialRepositoryInMemory(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: ProtocolState*
-  ): Task[Seq[IssueCredentialRecord]] = {
+  ): RIO[WalletAccessContext, Seq[IssueCredentialRecord]] = {
     for {
-      store <- storeRef.get
+      walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
+      store <- storeRef.get.map(_.filter { case ((wid, _), _) => walletId == wid })
     } yield store.values
       .filter(rec => states.contains(rec.protocolState) & (!ignoreWithZeroRetries | rec.metaRetries > 0))
       .take(limit)
@@ -188,9 +204,10 @@ class CredentialRepositoryInMemory(
   override def getIssueCredentialRecordByThreadId(
       thid: DidCommID,
       ignoreWithZeroRetries: Boolean = true,
-  ): Task[Option[IssueCredentialRecord]] = {
+  ): RIO[WalletAccessContext, Option[IssueCredentialRecord]] = {
     for {
-      store <- storeRef.get
+      walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
+      store <- storeRef.get.map(_.filter { case ((wid, _), _) => walletId == wid })
     } yield store.values.find(_.thid == thid).filter(!ignoreWithZeroRetries | _.metaRetries > 0)
   }
 
@@ -198,15 +215,16 @@ class CredentialRepositoryInMemory(
       recordId: DidCommID,
       subjectId: String,
       protocolState: ProtocolState
-  ): Task[Int] = {
+  ): RIO[WalletAccessContext, Int] = {
     for {
+      walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
       maybeRecord <- getIssueCredentialRecord(recordId)
       count <- maybeRecord
         .map(record =>
           for {
             _ <- storeRef.update(r =>
               r.updated(
-                recordId,
+                (walletId, recordId),
                 record.copy(
                   updatedAt = Some(Instant.now),
                   protocolState = protocolState,
@@ -218,7 +236,7 @@ class CredentialRepositoryInMemory(
             )
           } yield 1
         )
-        .getOrElse(ZIO.succeed(1))
+        .getOrElse(ZIO.succeed(0))
     } yield count
   }
 
@@ -226,15 +244,16 @@ class CredentialRepositoryInMemory(
       recordId: DidCommID,
       request: RequestCredential,
       protocolState: ProtocolState
-  ): Task[Int] = {
+  ): RIO[WalletAccessContext, Int] = {
     for {
+      walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
       maybeRecord <- getIssueCredentialRecord(recordId)
       count <- maybeRecord
         .map(record =>
           for {
             _ <- storeRef.update(r =>
               r.updated(
-                recordId,
+                (walletId, recordId),
                 record.copy(
                   updatedAt = Some(Instant.now),
                   requestCredentialData = Some(request),
@@ -252,19 +271,20 @@ class CredentialRepositoryInMemory(
 
   override def updateCredentialRecordStateAndProofByCredentialIdBulk(
       idsStatesAndProofs: Seq[(DidCommID, PublicationState, MerkleInclusionProof)]
-  ): Task[Int] = ???
+  ): RIO[WalletAccessContext, Int] = ???
 
   def updateAfterFail(
       recordId: DidCommID,
       failReason: Option[String]
-  ): Task[Int] = for {
+  ): RIO[WalletAccessContext, Int] = for {
     maybeRecord <- getIssueCredentialRecord(recordId)
     count <- maybeRecord
       .map(record =>
         for {
+          walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
           _ <- storeRef.update(r =>
             r.updated(
-              recordId,
+              (walletId, recordId),
               record.copy(
                 metaRetries = math.max(0, record.metaRetries - 1),
                 metaNextRetry =
@@ -285,7 +305,7 @@ object CredentialRepositoryInMemory {
   val maxRetries = 5 // TODO Move to config
   val layer: ULayer[CredentialRepository] = ZLayer.fromZIO(
     Ref
-      .make(Map.empty[DidCommID, IssueCredentialRecord])
+      .make(Map.empty[(WalletId, DidCommID), IssueCredentialRecord])
       .map(CredentialRepositoryInMemory(_, maxRetries))
   )
 }
