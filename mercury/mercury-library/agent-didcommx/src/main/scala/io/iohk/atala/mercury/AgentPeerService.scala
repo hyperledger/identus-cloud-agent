@@ -1,18 +1,18 @@
 package io.iohk.atala.mercury
 
-import zio._
-
+import com.nimbusds.jose.jwk.JWK
 import io.iohk.atala.mercury.model.*
-import com.nimbusds.jose.jwk.OctetKeyPair
+import org.didcommx.didcomm.common.*
+import org.didcommx.didcomm.secret.*
 import org.didcommx.peerdid.core.PeerDIDUtils
-import org.didcommx.didcomm.common._
-import org.didcommx.didcomm.secret._
+import zio.*
+
 import scala.jdk.CollectionConverters.*
 
 case class AgentPeerService(
     val id: DidId,
-    val jwkForKeyAgreement: Seq[OctetKeyPair],
-    val jwkForKeyAuthentication: Seq[OctetKeyPair],
+    val jwkForKeyAgreement: Seq[JWK],
+    val jwkForKeyAuthentication: Seq[JWK],
 ) extends DidAgent
 
 object AgentPeerService {

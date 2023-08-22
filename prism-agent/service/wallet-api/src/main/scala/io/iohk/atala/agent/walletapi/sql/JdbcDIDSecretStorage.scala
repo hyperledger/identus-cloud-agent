@@ -1,14 +1,15 @@
 package io.iohk.atala.agent.walletapi.sql
 
-import com.nimbusds.jose.jwk.OctetKeyPair
+import com.nimbusds.jose.jwk.JWK
 import doobie.*
 import doobie.implicits.*
 import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
 import io.iohk.atala.mercury.model.DidId
-import java.time.Instant
-import java.util.UUID
 import zio.*
 import zio.interop.catz.*
+
+import java.time.Instant
+import java.util.UUID
 
 class JdbcDIDSecretStorage(xa: Transactor[Task]) extends DIDSecretStorage {
 
@@ -25,10 +26,10 @@ class JdbcDIDSecretStorage(xa: Transactor[Task]) extends DIDSecretStorage {
 
   given didIdGet: Get[DidId] = Get[String].map(DidId(_))
   given didIdPut: Put[DidId] = Put[String].contramap(_.value)
-  given octetKeyPairGet: Get[OctetKeyPair] = Get[String].map(OctetKeyPair.parse)
-  given octetKeyPairPut: Put[OctetKeyPair] = Put[String].contramap(_.toJSONString)
+  given jwkGet: Get[JWK] = Get[String].map(JWK.parse)
+  given jwkPut: Put[JWK] = Put[String].contramap(_.toJSONString)
 
-  override def getKey(did: DidId, keyId: String): Task[Option[OctetKeyPair]] = {
+  override def getKey(did: DidId, keyId: String): Task[Option[JWK]] = {
     val cxnIO = sql"""
         | SELECT
         |   key_pair
@@ -37,13 +38,13 @@ class JdbcDIDSecretStorage(xa: Transactor[Task]) extends DIDSecretStorage {
         |   did = $did
         |   AND key_id = $keyId
         """.stripMargin
-      .query[OctetKeyPair]
+      .query[JWK]
       .option
 
     cxnIO.transact(xa)
   }
 
-  override def insertKey(did: DidId, keyId: String, keyPair: OctetKeyPair): Task[Int] = {
+  override def insertKey(did: DidId, keyId: String, keyPair: JWK): Task[Int] = {
     val cxnIO = (now: InstantAsBigInt) => sql"""
         | INSERT INTO public.did_secret_storage(
         |   did,

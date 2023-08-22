@@ -1,20 +1,19 @@
 package io.iohk.atala.mercury
 
-import org.didcommx.peerdid.*
-
 import com.nimbusds.jose.jwk.*
 import com.nimbusds.jose.jwk.gen.*
-import io.circe._
-import io.circe.syntax._
-import io.circe.generic.semiauto._
-import scala.jdk.CollectionConverters.*
-
+import io.circe.*
+import io.circe.generic.semiauto.*
+import io.circe.syntax.*
 import io.iohk.atala.mercury.model.DidId
+import org.didcommx.peerdid.*
+
+import scala.jdk.CollectionConverters.*
 
 final case class PeerDID(
     did: DidId,
-    jwkForKeyAgreement: OctetKeyPair,
-    jwkForKeyAuthentication: OctetKeyPair,
+    jwkForKeyAgreement: JWK,
+    jwkForKeyAuthentication: JWK,
 ) {
   // def keyAgreement = PeerDID.keyAgreemenFromPublicJWK(jwkForKeyAgreement)
   // def keyAuthentication = PeerDID.keyAuthenticationFromPublicJWK(jwkForKeyAuthentication)
@@ -71,17 +70,17 @@ object PeerDID {
     def apply(endpoint: String) = new Service(s = endpoint)
   }
 
-  def makeNewJwkKeyX25519: OctetKeyPair = new OctetKeyPairGenerator(Curve.X25519).generate()
+  def makeNewJwkKeyX25519: JWK = new OctetKeyPairGenerator(Curve.X25519).generate()
 
-  def makeNewJwkKeyEd25519: OctetKeyPair = new OctetKeyPairGenerator(Curve.Ed25519).generate()
+  def makeNewJwkKeyEd25519: JWK = new OctetKeyPairGenerator(Curve.Ed25519).generate()
 
-  def keyAgreemenFromPublicJWK(key: OctetKeyPair) = VerificationMaterialPeerDID[VerificationMethodTypeAgreement](
+  def keyAgreemenFromPublicJWK(key: JWK) = VerificationMaterialPeerDID[VerificationMethodTypeAgreement](
     VerificationMaterialFormatPeerDID.JWK,
     key.toPublicJWK,
     VerificationMethodTypeAgreement.JSON_WEB_KEY_2020.INSTANCE
   )
 
-  def keyAuthenticationFromPublicJWK(key: OctetKeyPair) =
+  def keyAuthenticationFromPublicJWK(key: JWK) =
     VerificationMaterialPeerDID[VerificationMethodTypeAuthentication](
       VerificationMaterialFormatPeerDID.JWK,
       key.toPublicJWK,
@@ -89,8 +88,8 @@ object PeerDID {
     )
 
   def makePeerDid(
-      jwkForKeyAgreement: OctetKeyPair = makeNewJwkKeyX25519,
-      jwkForKeyAuthentication: OctetKeyPair = makeNewJwkKeyEd25519,
+      jwkForKeyAgreement: JWK = makeNewJwkKeyX25519,
+      jwkForKeyAuthentication: JWK = makeNewJwkKeyEd25519,
       serviceEndpoint: Option[String] = None
   ): PeerDID = {
     val did = org.didcommx.peerdid.PeerDIDCreator.createPeerDIDNumalgo2(
