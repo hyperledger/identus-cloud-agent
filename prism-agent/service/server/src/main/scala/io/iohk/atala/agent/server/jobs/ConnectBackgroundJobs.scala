@@ -46,7 +46,6 @@ object ConnectBackgroundJobs {
     def counterMetric(key: String) = Metric
       .counterInt(key)
       .fromConst(1)
-      .tagged("connectionId", record.id.toString)
 
     val InviteeConnectionRequestMsgFailed = counterMetric(
       "connection_flow_invitee_connection_request_msg_failed_counter"
@@ -67,7 +66,7 @@ object ConnectBackgroundJobs {
       "connection_flow_invitee_process_connection_record_failed_counter"
     )
     val InviteeProcessConnectionRecordPendingTotal = counterMetric(
-      "connection_flow_invitee_process_connection_record_total_counter"
+      "connection_flow_invitee_process_connection_record_all_counter"
     )
     val InviterProcessConnectionRecordPendingSuccess = counterMetric(
       "connection_flow_inviter_process_connection_record_success_counter"
@@ -76,7 +75,7 @@ object ConnectBackgroundJobs {
       "connection_flow_inviter_process_connection_record_failed_counter"
     )
     val InviterProcessConnectionRecordPendingTotal = counterMetric(
-      "connection_flow_inviter_process_connection_record_total_counter"
+      "connection_flow_inviter_process_connection_record_all_counter"
     )
 
     val exchange = record match {
@@ -100,7 +99,6 @@ object ConnectBackgroundJobs {
           didCommAgent <- buildDIDCommAgent(request.from)
           resp <- MessagingService.send(request.makeMessage).provideSomeLayer(didCommAgent) @@ Metric
             .gauge("connection_flow_invitee_send_connection_request_ms_gauge")
-            .tagged("connectionId", record.id.toString)
             .trackDurationWith(_.toMetricsSeconds)
           connectionService <- ZIO.service[ConnectionService]
           _ <- {
@@ -109,13 +107,7 @@ object ConnectBackgroundJobs {
                 @@ InviteeConnectionRequestMsgSuccess
                 @@ CustomMetricsAspect.endRecordingTime(
                   s"${record.id}_invitee_pending_to_req_sent",
-                  "connection_flow_invitee_pending_to_req_sent_ms_gauge",
-                  Set(
-                    MetricLabel(
-                      "connectionId",
-                      record.id.toString
-                    )
-                  )
+                  "connection_flow_invitee_pending_to_req_sent_ms_gauge"
                 )
             else ZIO.fail(ErrorResponseReceivedFromPeerAgent(resp)) @@ InviteeConnectionRequestMsgFailed
           }
@@ -129,7 +121,6 @@ object ConnectBackgroundJobs {
           @@ InviteeProcessConnectionRecordPendingTotal
           @@ Metric
             .gauge("connection_flow_invitee_process_connection_record_ms_gauge")
-            .tagged("connectionId", record.id.toString)
             .trackDurationWith(_.toMetricsSeconds)
 
       case ConnectionRecord(
@@ -160,13 +151,7 @@ object ConnectBackgroundJobs {
                 @@ InviterConnectionResponseMsgSuccess
                 @@ CustomMetricsAspect.endRecordingTime(
                   s"${record.id}_inviter_pending_to_res_sent",
-                  "connection_flow_inviter_pending_to_res_sent_ms_gauge",
-                  Set(
-                    MetricLabel(
-                      "connectionId",
-                      record.id.toString
-                    )
-                  )
+                  "connection_flow_inviter_pending_to_res_sent_ms_gauge"
                 )
             else ZIO.fail(ErrorResponseReceivedFromPeerAgent(resp)) @@ InviterConnectionResponseMsgFailed
           }
@@ -178,7 +163,6 @@ object ConnectBackgroundJobs {
           @@ InviterProcessConnectionRecordPendingTotal
           @@ Metric
             .gauge("connection_flow_inviter_process_connection_record_ms_gauge")
-            .tagged("connectionId", record.id.toString)
             .trackDurationWith(_.toMetricsSeconds)
 
       case _ => ZIO.unit
