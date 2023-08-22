@@ -14,14 +14,17 @@ import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.models.WalletId
 import zio.*
 import zio.test.*
+import zio.test.Assertion.*
 
 import java.nio.charset.StandardCharsets
 import java.util.{Base64, UUID}
 
 object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSpecHelper {
 
-  override def spec = {
-    suite("CredentialServiceImpl")(
+  override def spec =
+    suite("CredentialServiceImpl")(singleWalletSpec, multiWalletSpec).provide(credentialServiceLayer)
+  private val singleWalletSpec =
+    suite("singleWalletSpec")(
       test("createIssuerCredentialRecord without schema creates a valid issuer credential record") {
         check(
           Gen.option(Gen.double),
@@ -516,7 +519,28 @@ object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSp
           _ <- holderSvc.receiveCredentialIssue(IssueCredential.readFromMessage(msg))
         } yield assertTrue(true)
       }
-    ).provide(credentialServiceLayer, ZLayer.succeed(WalletAccessContext(WalletId.random)))
-  }
+    ).provideSomeLayer(ZLayer.succeed(WalletAccessContext(WalletId.random)))
+
+  private val multiWalletSpec =
+    suite("multi-wallet spec")(
+      test("createIssueCredentialRecord for different wallet") {
+        val walletId1 = WalletId.random
+        val walletId2 = WalletId.random
+        val wallet1 = ZLayer.succeed(WalletAccessContext(walletId1))
+        val wallet2 = ZLayer.succeed(WalletAccessContext(walletId2))
+        for {
+          svc <- ZIO.service[CredentialService]
+          record1 <- svc.createRecord().provide(wallet1)
+          record2 <- svc.createRecord().provide(wallet2)
+          ownRecord1 <- svc.getIssueCredentialRecord(record1.id).provide(wallet1)
+          ownRecord2 <- svc.getIssueCredentialRecord(record2.id).provide(wallet2)
+          crossRecord1 <- svc.getIssueCredentialRecord(record1.id).provide(wallet2)
+          crossRecord2 <- svc.getIssueCredentialRecord(record2.id).provide(wallet1)
+        } yield assert(ownRecord1)(isSome(equalTo(record1))) &&
+          assert(ownRecord2)(isSome(equalTo(record2))) &&
+          assert(crossRecord1)(isNone) &&
+          assert(crossRecord2)(isNone)
+      }
+    )
 
 }
