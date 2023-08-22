@@ -99,12 +99,44 @@ object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault, PostgresTestCo
     } yield s
   }
 
-  def spec = (suite("schema-registry DAL spec")(
-    schemaRegistryCRUDSuite
-  ) @@ nondeterministic @@ sequential @@ timed @@ migrate(
-    schema = "public",
-    paths = "classpath:sql/pollux"
-  )).provideSomeLayerShared(testEnvironmentLayer)
+  def spec = {
+    val singleWalletSuite = (schemaRegistryCRUDSuite @@ nondeterministic @@ sequential @@ timed @@ migrate(
+      schema = "public",
+      paths = "classpath:sql/pollux"
+    )).provideSomeLayerShared(testEnvironmentLayer)
+
+    val multiWwalletSuite = (multiWalletSchemaRegistryCRUDSuite @@ migrateEach(
+      schema = "public",
+      paths = "classpath:sql/pollux"
+    )).provide(pgContainerLayer, transactorLayer)
+
+    suite("schema-registry DAL spec")(singleWalletSuite, multiWwalletSuite)
+  }
+
+  val multiWalletSchemaRegistryCRUDSuite = suite("schema-registry multi-wallet CRUD operations")(
+    test("do not see records outside of the wallet") {
+      val walletId1 = WalletId.random
+      val walletId2 = WalletId.random
+      val wallet1 = ZLayer.succeed(WalletAccessContext(walletId1))
+      val wallet2 = ZLayer.succeed(WalletAccessContext(walletId2))
+
+      for {
+        tx <- ZIO.service[Transactor[ContextAwareTask]]
+        record <- Generators.schema.runCollectN(1).map(_.head).provide(wallet1)
+        _ <- CredentialSchemaSql.insert(record).transactWallet(tx).provide(wallet1)
+        ownRecord <- CredentialSchemaSql
+          .findByGUID(record.guid)
+          .transactWallet(tx)
+          .map(_.headOption)
+          .provide(wallet1)
+        crossRecord <- CredentialSchemaSql
+          .findByGUID(record.guid)
+          .transactWallet(tx)
+          .map(_.headOption)
+          .provide(wallet2)
+      } yield assert(ownRecord)(isSome(equalTo(record))) && assert(crossRecord)(isNone)
+    }
+  )
 
   val schemaRegistryCRUDSuite = suite("schema-registry CRUD operations")(
     test("insert, findById, update and delete operations") {
@@ -140,8 +172,8 @@ object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault, PostgresTestCo
           .map(_.headOption)
 
         schemaDeleted =
-          assert(deleted)(equalTo(updatedExpected)) &&
-            assert(notFound)(isNone)
+          assert(deleted)(equalTo(updatedExpected))
+          assert(notFound)(isNone)
 
       } yield schemaCreated && schemaUpdated && schemaDeleted
     },
