@@ -16,6 +16,9 @@
         {{- range .Values.ingress.consumers }}
           -  {{ regexReplaceAll "-" $.Release.Name "_" }}_{{ regexReplaceAll "-" . "_" | lower }}
         {{- end }}
+        {{- range .Values.ingress.externalConsumers }}
+          -  {{ regexReplaceAll "-" $.Release.Name "_" }}_{{ regexReplaceAll "-" . "_" | lower }}
+        {{- end }}
 {{- end -}}
 {{- define "labels.common" -}}
 app.kubernetes.io/part-of: prism-agent
