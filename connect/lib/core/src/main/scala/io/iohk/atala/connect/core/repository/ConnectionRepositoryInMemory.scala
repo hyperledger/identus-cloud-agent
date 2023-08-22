@@ -9,7 +9,7 @@ import zio.*
 import java.time.Instant
 import java.util.UUID
 
-class ConnectionRepositoryInMemory(storeRef: Ref[Map[UUID, ConnectionRecord]]) extends ConnectionRepository[Task] {
+class ConnectionRepositoryInMemory(storeRef: Ref[Map[UUID, ConnectionRecord]]) extends ConnectionRepository {
 
   override def updateWithConnectionResponse(
       recordId: UUID,
@@ -182,7 +182,7 @@ class ConnectionRepositoryInMemory(storeRef: Ref[Map[UUID, ConnectionRecord]]) e
 }
 
 object ConnectionRepositoryInMemory {
-  val layer: ULayer[ConnectionRepository[Task]] = ZLayer.fromZIO(
+  val layer: ULayer[ConnectionRepository] = ZLayer.fromZIO(
     Ref
       .make(Map.empty[UUID, ConnectionRecord])
       .map(ConnectionRepositoryInMemory(_))

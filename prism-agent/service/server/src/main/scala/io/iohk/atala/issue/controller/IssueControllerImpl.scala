@@ -34,7 +34,7 @@ class IssueControllerImpl(
       ConnectionServiceError | CredentialServiceError | ErrorResponse,
       IssueCredentialRecord
     ] = for {
-      didIdPair <- getPairwiseDIDs(request.connectionId).provide(ZLayer.succeed(connectionService))
+      didIdPair <- getPairwiseDIDs(request.connectionId).provideSomeLayer(ZLayer.succeed(connectionService))
       issuingDID <- extractPrismDIDFromString(request.issuingDID)
       jsonClaims <- ZIO
         .fromEither(io.circe.parser.parse(request.claims.toString()))
