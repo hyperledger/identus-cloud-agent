@@ -105,12 +105,12 @@ object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault, PostgresTestCo
       paths = "classpath:sql/pollux"
     )).provideSomeLayerShared(testEnvironmentLayer)
 
-    val multiWwalletSuite = (multiWalletSchemaRegistryCRUDSuite @@ migrateEach(
+    val multiWalletSuite = (multiWalletSchemaRegistryCRUDSuite @@ migrateEach(
       schema = "public",
       paths = "classpath:sql/pollux"
     )).provide(pgContainerLayer, transactorLayer)
 
-    suite("schema-registry DAL spec")(singleWalletSuite, multiWwalletSuite)
+    suite("schema-registry DAL spec")(singleWalletSuite, multiWalletSuite)
   }
 
   val multiWalletSchemaRegistryCRUDSuite = suite("schema-registry multi-wallet CRUD operations")(
