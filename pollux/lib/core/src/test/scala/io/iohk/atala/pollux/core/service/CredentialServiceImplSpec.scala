@@ -23,6 +23,7 @@ object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSp
 
   override def spec =
     suite("CredentialServiceImpl")(singleWalletSpec, multiWalletSpec).provide(credentialServiceLayer)
+
   private val singleWalletSpec =
     suite("singleWalletSpec")(
       test("createIssuerCredentialRecord without schema creates a valid issuer credential record") {
@@ -523,7 +524,7 @@ object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSp
 
   private val multiWalletSpec =
     suite("multi-wallet spec")(
-      test("createIssueCredentialRecord for different wallet") {
+      test("createIssueCredentialRecord for different wallet and isolate records") {
         val walletId1 = WalletId.random
         val walletId2 = WalletId.random
         val wallet1 = ZLayer.succeed(WalletAccessContext(walletId1))
