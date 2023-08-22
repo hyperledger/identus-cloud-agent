@@ -350,4 +350,50 @@ object PresentationRepositorySpecSuite {
       }
     }
   ).provideSomeLayer(ZLayer.succeed(WalletAccessContext(WalletId.random)))
+
+  val multitenantTestSuite = suite("muilti-tenant CRUD operation")(
+    test("do not see PresentationRecord outside of the wallet") {
+      val walletId1 = WalletId.random
+      val walletId2 = WalletId.random
+      val wallet1 = ZLayer.succeed(WalletAccessContext(walletId1))
+      val wallet2 = ZLayer.succeed(WalletAccessContext(walletId2))
+      for {
+        repo <- ZIO.service[PresentationRepository]
+        record1 = presentationRecord
+        record2 = presentationRecord
+        count1 <- repo.createPresentationRecord(record1).provide(wallet1)
+        count2 <- repo.createPresentationRecord(record2).provide(wallet2)
+        ownWalletRecords1 <- repo.getPresentationRecords().provide(wallet1)
+        ownWalletRecords2 <- repo.getPresentationRecords().provide(wallet2)
+        crossWalletRecordById <- repo.getPresentationRecord(record2.id).provide(wallet1)
+        crossWalletRecordByThid <- repo.getPresentationRecordByThreadId(record2.thid).provide(wallet1)
+      } yield assert(count1)(equalTo(1)) &&
+        assert(count2)(equalTo(1)) &&
+        assert(ownWalletRecords1)(hasSameElements(Seq(record1))) &&
+        assert(ownWalletRecords2)(hasSameElements(Seq(record2))) &&
+        assert(crossWalletRecordById)(isNone) &&
+        assert(crossWalletRecordByThid)(isNone)
+    },
+    test("unable to update PresentationRecord outside of the wallet") {
+      val walletId1 = WalletId.random
+      val walletId2 = WalletId.random
+      val wallet1 = ZLayer.succeed(WalletAccessContext(walletId1))
+      val wallet2 = ZLayer.succeed(WalletAccessContext(walletId2))
+      val newState = PresentationRecord.ProtocolState.PresentationVerified
+      for {
+        repo <- ZIO.service[PresentationRepository]
+        record1 = presentationRecord
+        record2 = presentationRecord
+        count1 <- repo.createPresentationRecord(record1).provide(wallet1)
+        update1 <- repo.updatePresentationWithCredentialsToUse(record2.id, Option(Nil), newState).provide(wallet2)
+        update2 <- repo.updateAfterFail(record2.id, Some("fail reason")).provide(wallet2)
+        update3 <- repo
+          .updatePresentationRecordProtocolState(record2.id, record1.protocolState, newState)
+          .provide(wallet2)
+      } yield assert(count1)(equalTo(1)) &&
+        assert(update1)(isZero) &&
+        assert(update2)(isZero) &&
+        assert(update3)(isZero)
+    }
+  ) @@ TestAspect.tag("dev")
 }
