@@ -11,26 +11,40 @@ import zio.*
 import java.time.Instant
 
 class PresentationRepositoryInMemory(
-    storeRef: Ref[Map[(WalletId, DidCommID), PresentationRecord]],
+    walletRefs: Ref[Map[WalletId, Ref[Map[DidCommID, PresentationRecord]]]],
     maxRetries: Int
 ) extends PresentationRepository {
 
-  override def createPresentationRecord(record: PresentationRecord): RIO[WalletAccessContext, Int] = {
+  private def walletStoreRef: URIO[WalletAccessContext, Ref[Map[DidCommID, PresentationRecord]]] =
     for {
       walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
+      refs <- walletRefs.get
+      maybeWalletRef = refs.get(walletId)
+      walletRef <- maybeWalletRef
+        .fold {
+          for {
+            ref <- Ref.make(Map.empty[DidCommID, PresentationRecord])
+            _ <- walletRefs.set(refs.updated(walletId, ref))
+          } yield ref
+        }(ZIO.succeed)
+    } yield walletRef
+
+  override def createPresentationRecord(record: PresentationRecord): RIO[WalletAccessContext, Int] = {
+    for {
+      storeRef <- walletStoreRef
       _ <- for {
         store <- storeRef.get
         maybeRecord = store.values.find(_.thid == record.thid)
       } yield ()
-      _ <- storeRef.update(r => r + ((walletId, record.id) -> record))
+      _ <- storeRef.update(r => r + (record.id -> record))
     } yield 1
   }
 
   override def getPresentationRecord(recordId: DidCommID): RIO[WalletAccessContext, Option[PresentationRecord]] = {
     for {
-      walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
+      storeRef <- walletStoreRef
       store <- storeRef.get
-      record = store.get((walletId, recordId))
+      record = store.get(recordId)
     } yield record
   }
 
@@ -38,8 +52,8 @@ class PresentationRepositoryInMemory(
       ignoreWithZeroRetries: Boolean = true,
   ): RIO[WalletAccessContext, Seq[PresentationRecord]] = {
     for {
-      walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
-      store <- storeRef.get.map(_.filter { case ((wid, _), _) => walletId == wid })
+      storeRef <- walletStoreRef
+      store <- storeRef.get
     } yield store.values.toSeq
   }
 
@@ -49,15 +63,15 @@ class PresentationRepositoryInMemory(
       to: ProtocolState
   ): RIO[WalletAccessContext, Int] = {
     for {
-      walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
+      storeRef <- walletStoreRef
       store <- storeRef.get
-      maybeRecord = store.find((id, record) => id == (walletId, recordId) && record.protocolState == from).map(_._2)
+      maybeRecord = store.find((id, record) => id == recordId && record.protocolState == from).map(_._2)
       count <- maybeRecord
         .map(record =>
           for {
             _ <- storeRef.update(r =>
               r.updated(
-                (walletId, recordId),
+                recordId,
                 record.copy(
                   protocolState = to,
                   metaRetries = maxRetries,
@@ -77,14 +91,14 @@ class PresentationRepositoryInMemory(
       protocolState: ProtocolState
   ): RIO[WalletAccessContext, Int] = {
     for {
-      walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
+      storeRef <- walletStoreRef
       maybeRecord <- getPresentationRecord(recordId)
       count <- maybeRecord
         .map(record =>
           for {
             _ <- storeRef.update(r =>
               r.updated(
-                (walletId, recordId),
+                recordId,
                 record.copy(
                   updatedAt = Some(Instant.now),
                   credentialsToUse = credentialsToUse.map(_.toList),
@@ -106,14 +120,14 @@ class PresentationRepositoryInMemory(
       protocolState: ProtocolState
   ): RIO[WalletAccessContext, Int] = {
     for {
-      walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
+      storeRef <- walletStoreRef
       maybeRecord <- getPresentationRecord(recordId)
       count <- maybeRecord
         .map(record =>
           for {
             _ <- storeRef.update(r =>
               r.updated(
-                (walletId, recordId),
+                recordId,
                 record.copy(
                   updatedAt = Some(Instant.now),
                   presentationData = Some(presentation),
@@ -135,8 +149,8 @@ class PresentationRepositoryInMemory(
       states: ProtocolState*
   ): RIO[WalletAccessContext, Seq[PresentationRecord]] = {
     for {
-      walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
-      store <- storeRef.get.map(_.filter { case ((wid, _), _) => walletId == wid })
+      storeRef <- walletStoreRef
+      store <- storeRef.get
     } yield store.values
       .filter(rec => states.contains(rec.protocolState) & (!ignoreWithZeroRetries | rec.metaRetries > 0))
       .take(limit)
@@ -147,8 +161,8 @@ class PresentationRepositoryInMemory(
       thid: DidCommID,
   ): RIO[WalletAccessContext, Option[PresentationRecord]] = {
     for {
-      walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
-      store <- storeRef.get.map(_.filter { case ((wid, _), _) => walletId == wid })
+      storeRef <- walletStoreRef
+      store <- storeRef.get
     } yield store.values.find(_.thid == thid).filter(_.metaRetries > 0)
   }
 
@@ -158,14 +172,14 @@ class PresentationRepositoryInMemory(
       protocolState: ProtocolState
   ): RIO[WalletAccessContext, Int] = {
     for {
-      walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
+      storeRef <- walletStoreRef
       maybeRecord <- getPresentationRecord(recordId)
       count <- maybeRecord
         .map(record =>
           for {
             _ <- storeRef.update(r =>
               r.updated(
-                (walletId, recordId),
+                recordId,
                 record.copy(
                   updatedAt = Some(Instant.now),
                   requestPresentationData = Some(request),
@@ -186,14 +200,14 @@ class PresentationRepositoryInMemory(
       protocolState: ProtocolState
   ): RIO[WalletAccessContext, Int] = {
     for {
-      walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
+      storeRef <- walletStoreRef
       maybeRecord <- getPresentationRecord(recordId)
       count <- maybeRecord
         .map(record =>
           for {
             _ <- storeRef.update(r =>
               r.updated(
-                (walletId, recordId),
+                recordId,
                 record.copy(
                   updatedAt = Some(Instant.now),
                   proposePresentationData = Some(request),
@@ -213,14 +227,14 @@ class PresentationRepositoryInMemory(
       recordId: DidCommID,
       failReason: Option[String]
   ): RIO[WalletAccessContext, Int] = for {
+    storeRef <- walletStoreRef
     maybeRecord <- getPresentationRecord(recordId)
     count <- maybeRecord
       .map(record =>
         for {
-          walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
           _ <- storeRef.update(r =>
             r.updated(
-              (walletId, recordId),
+              recordId,
               record.copy(
                 metaRetries = math.max(0, record.metaRetries - 1),
                 metaNextRetry =
@@ -241,7 +255,7 @@ object PresentationRepositoryInMemory {
   val maxRetries = 5 // TODO Move to config
   val layer: ULayer[PresentationRepository] = ZLayer.fromZIO(
     Ref
-      .make(Map.empty[(WalletId, DidCommID), PresentationRecord])
+      .make(Map.empty[WalletId, Ref[Map[DidCommID, PresentationRecord]]])
       .map(PresentationRepositoryInMemory(_, maxRetries))
   )
 }
