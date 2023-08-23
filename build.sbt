@@ -384,7 +384,7 @@ lazy val D_PrismAgent = new {
     )
 
   val postgresDependencies: Seq[ModuleID] =
-    Seq(quillDoobie, quillJdbcZio, postgresql, flyway, D.testcontainersPostgres)
+    Seq(quillDoobie, quillJdbcZio, postgresql, flyway, D.testcontainersPostgres, D.zioCatsInterop)
 
   // Project Dependencies
   lazy val keyManagementDependencies: Seq[ModuleID] =
@@ -801,8 +801,7 @@ lazy val prismAgentWalletAPI = project
   .settings(prismAgentConnectCommonSettings)
   .settings(
     name := "prism-agent-wallet-api",
-    libraryDependencies ++= D_PrismAgent.keyManagementDependencies ++ D_PrismAgent.postgresDependencies ++
-      Seq(D.zioMock) ++ D_PrismAgent.postgresDependencies
+    libraryDependencies ++= D_PrismAgent.keyManagementDependencies ++ D_PrismAgent.postgresDependencies ++ Seq(D.zioMock)
   )
   .dependsOn(
     agentDidcommx,

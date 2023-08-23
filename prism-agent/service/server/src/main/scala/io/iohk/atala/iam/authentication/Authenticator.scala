@@ -10,9 +10,14 @@ trait AuthenticationError {
   def message: String
 }
 
-case class InvalidCredentials(message: String) extends AuthenticationError
-
 object AuthenticationError {
+
+  case class InvalidCredentials(message: String) extends AuthenticationError
+
+  case class AuthenticationMethodNotEnabled(message: String) extends AuthenticationError
+
+  case class UnexpectedError(message: String) extends AuthenticationError
+
   def toErrorResponse(error: AuthenticationError): ErrorResponse =
     ErrorResponse(
       status = sttp.model.StatusCode.Forbidden.code,
@@ -24,11 +29,6 @@ object AuthenticationError {
 }
 
 trait Authenticator {
-
-  /** @param credentials
-    * @return
-    *   None if authentication cannot be recognized, Some(entity) if authentication succeeded
-    */
   def authenticate(credentials: Credentials): IO[AuthenticationError, Entity]
 
   def apply(credentials: Credentials): IO[AuthenticationError, Entity] = authenticate(credentials)

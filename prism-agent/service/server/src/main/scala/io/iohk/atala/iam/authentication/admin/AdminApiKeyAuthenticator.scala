@@ -1,8 +1,9 @@
 package io.iohk.atala.iam.authentication.admin
 
 import io.iohk.atala.agent.walletapi.model.Entity
-import io.iohk.atala.iam.authentication.{AuthenticationError, Authenticator, Credentials, InvalidCredentials}
+import io.iohk.atala.iam.authentication.{AuthenticationError, Authenticator, Credentials}
 import zio.{IO, URLayer, ZIO, ZLayer}
+import AuthenticationError.*
 
 trait AdminApiKeyAuthenticator extends Authenticator {
 

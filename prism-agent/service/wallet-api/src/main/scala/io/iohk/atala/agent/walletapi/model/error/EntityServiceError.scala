@@ -2,7 +2,9 @@ package io.iohk.atala.agent.walletapi.model.error
 
 import java.util.UUID
 
-sealed trait EntityServiceError
+sealed trait EntityServiceError {
+  def message: String
+}
 
 object EntityServiceError {
   final case class EntityNotFound(id: UUID, message: String) extends EntityServiceError
