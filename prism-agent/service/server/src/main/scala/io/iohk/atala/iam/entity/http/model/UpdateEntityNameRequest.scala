@@ -1,14 +1,11 @@
 package io.iohk.atala.iam.entity.http.model
 
 import io.iohk.atala.api.http.Annotation
+import io.iohk.atala.iam.entity.http.model.UpdateEntityNameRequest.annotations
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample, validate, validateEach}
 import sttp.tapir.Validator.*
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
-import UpdateEntityNameRequest.annotations
-
-import java.time.Instant
-import java.util.UUID
 
 case class UpdateEntityNameRequest(
     @description(annotations.name.description)

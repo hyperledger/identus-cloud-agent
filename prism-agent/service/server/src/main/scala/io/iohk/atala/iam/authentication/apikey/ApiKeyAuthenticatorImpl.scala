@@ -34,8 +34,6 @@ class ApiKeyAuthenticatorImpl(
               UnexpectedError("Internal error")
             case AuthenticationRepositoryError.EntityServiceError(message) =>
               UnexpectedError("Internal error")
-            case _ =>
-              UnexpectedError("Internal error")
           }
       }
     } else {

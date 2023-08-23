@@ -127,8 +127,11 @@ object RepoModule {
     SystemModule.configLayer >>> dbConfigLayer
   }
 
-  val agentTransactorLayer: TaskLayer[Transactor[ContextAwareTask]] =
+  val agentContextAwareTransactorLayer: TaskLayer[Transactor[ContextAwareTask]] =
     agentDbConfigLayer() >>> TransactorLayer.contextAwareTask
+
+  val agentTransactorLayer: TaskLayer[Transactor[Task]] =
+    agentDbConfigLayer(appUser = false) >>> TransactorLayer.task
 
   val vaultClientLayer: TaskLayer[VaultKVClient] = {
     val vaultClientConfig = ZLayer {
@@ -166,7 +169,7 @@ object RepoModule {
               ZLayer.make[DIDSecretStorage & WalletSecretStorage](
                 JdbcDIDSecretStorage.layer,
                 JdbcWalletSecretStorage.layer,
-                agentTransactorLayer,
+                agentContextAwareTransactorLayer,
               )
             )
           case backend =>

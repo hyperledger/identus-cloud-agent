@@ -3,7 +3,8 @@ package io.iohk.atala.agent.walletapi.storage
 import io.iohk.atala.agent.walletapi.model.Entity
 import io.iohk.atala.agent.walletapi.model.error.EntityServiceError.{EntityAlreadyExists, EntityNotFound}
 import io.iohk.atala.agent.walletapi.sql.{EntityRepository, JdbcEntityRepository}
-import io.iohk.atala.test.container.{DBTestUtils, PostgresTestContainerSupport}
+import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
+import io.iohk.atala.test.container.DBTestUtils
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
@@ -35,7 +36,7 @@ object JdbcEntityRepositorySpec extends ZIOSpecDefault, PostgresTestContainerSup
       ) @@ TestAspect.before(DBTestUtils.runMigrationAgentDB) @@ TestAspect.sequential
 
     testSuite.provideSomeLayer(
-      pgContainerLayer >+> transactorLayer >+> JdbcEntityRepository.layer
+      pgContainerLayer >+> transactorLayerNoAppUser >+> JdbcEntityRepository.layer
     )
   }
 

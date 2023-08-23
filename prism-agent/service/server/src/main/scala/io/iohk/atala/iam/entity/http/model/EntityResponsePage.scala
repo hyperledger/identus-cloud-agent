@@ -8,9 +8,6 @@ import sttp.tapir.Schema.annotations.{description, encodedExample, validate, val
 import sttp.tapir.Validator.*
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
-import java.time.Instant
-import java.util.UUID
-
 case class EntityResponsePage(
     @description(annotations.contents.description)
     @encodedExample(annotations.contents.example)

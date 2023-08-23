@@ -3,16 +3,8 @@ package io.iohk.atala.agent.server
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
 import io.iohk.atala.agent.server.http.ZioHttpClient
 import io.iohk.atala.agent.server.sql.Migrations as AgentMigrations
-import io.iohk.atala.agent.walletapi.service.WalletManagementServiceImpl
-import io.iohk.atala.agent.walletapi.service.{ManagedDIDService, ManagedDIDServiceWithEventNotificationImpl}
-import io.iohk.atala.agent.walletapi.sql.JdbcDIDNonSecretStorage
-import io.iohk.atala.agent.walletapi.sql.JdbcWalletNonSecretStorage
-import io.iohk.atala.agent.walletapi.service.{
-  EntityServiceImpl,
-  ManagedDIDService,
-  ManagedDIDServiceWithEventNotificationImpl
-}
-import io.iohk.atala.agent.walletapi.sql.{JdbcDIDNonSecretStorage, JdbcEntityRepository}
+import io.iohk.atala.agent.walletapi.service.{EntityServiceImpl, ManagedDIDService, ManagedDIDServiceWithEventNotificationImpl, WalletManagementServiceImpl}
+import io.iohk.atala.agent.walletapi.sql.{JdbcDIDNonSecretStorage, JdbcEntityRepository, JdbcWalletNonSecretStorage}
 import io.iohk.atala.castor.controller.{DIDControllerImpl, DIDRegistrarControllerImpl}
 import io.iohk.atala.castor.core.service.DIDServiceImpl
 import io.iohk.atala.castor.core.util.DIDOperationValidator
@@ -25,18 +17,8 @@ import io.iohk.atala.iam.entity.http.controller.{EntityController, EntityControl
 import io.iohk.atala.issue.controller.IssueControllerImpl
 import io.iohk.atala.mercury.*
 import io.iohk.atala.pollux.core.service.*
-import io.iohk.atala.pollux.credentialschema.controller.{
-  CredentialSchemaController,
-  CredentialSchemaControllerImpl,
-  VerificationPolicyControllerImpl
-}
-import io.iohk.atala.pollux.sql.repository.{
-  JdbcCredentialRepository,
-  JdbcCredentialSchemaRepository,
-  JdbcPresentationRepository,
-  JdbcVerificationPolicyRepository,
-  Migrations as PolluxMigrations
-}
+import io.iohk.atala.pollux.credentialschema.controller.{CredentialSchemaController, CredentialSchemaControllerImpl, VerificationPolicyControllerImpl}
+import io.iohk.atala.pollux.sql.repository.{JdbcCredentialRepository, JdbcCredentialSchemaRepository, JdbcPresentationRepository, JdbcVerificationPolicyRepository, Migrations as PolluxMigrations}
 import io.iohk.atala.presentproof.controller.PresentProofControllerImpl
 import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.shared.models.WalletAccessContext
@@ -157,8 +139,8 @@ object MainApp extends ZIOAppDefault {
           GrpcModule.irisStubLayer,
           GrpcModule.prismNodeStubLayer,
           // storage
-          RepoModule.agentTransactorLayer >>> JdbcDIDNonSecretStorage.layer,
-          RepoModule.agentTransactorLayer >>> JdbcWalletNonSecretStorage.layer,
+          RepoModule.agentContextAwareTransactorLayer >>> JdbcDIDNonSecretStorage.layer,
+          RepoModule.agentContextAwareTransactorLayer >>> JdbcWalletNonSecretStorage.layer,
           RepoModule.allSecretStorageLayer,
           RepoModule.agentTransactorLayer >>> JdbcEntityRepository.layer,
           RepoModule.connectTransactorLayer >>> JdbcConnectionRepository.layer,

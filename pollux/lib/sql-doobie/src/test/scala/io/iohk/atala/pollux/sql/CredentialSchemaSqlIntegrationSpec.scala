@@ -27,7 +27,7 @@ object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault, PostgresTestCo
   private val testEnvironmentLayer =
     zio.test.testEnvironment ++
       pgContainerLayer ++
-      transactorLayer ++
+      contextAwareTransactorLayer ++
       ZLayer.succeed(WalletAccessContext(WalletId.random))
 
   object Vocabulary {

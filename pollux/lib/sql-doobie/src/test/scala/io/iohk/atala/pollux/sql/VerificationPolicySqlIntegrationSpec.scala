@@ -25,11 +25,11 @@ import zio.test.TestAspect.*
 object VerificationPolicySqlIntegrationSpec extends ZIOSpecDefault, PostgresTestContainerSupport {
 
   private val repositoryLayer =
-    transactorLayer >>> JdbcVerificationPolicyRepository.layer
+    contextAwareTransactorLayer >>> JdbcVerificationPolicyRepository.layer
   private val testEnvironmentLayer =
     zio.test.testEnvironment ++
       pgContainerLayer ++
-      transactorLayer ++
+      contextAwareTransactorLayer ++
       repositoryLayer ++
       ZLayer.succeed(WalletAccessContext(WalletId.random))
 
