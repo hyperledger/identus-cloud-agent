@@ -119,7 +119,6 @@ object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault, PostgresTestCo
       val walletId2 = WalletId.random
       val wallet1 = ZLayer.succeed(WalletAccessContext(walletId1))
       val wallet2 = ZLayer.succeed(WalletAccessContext(walletId2))
-
       for {
         tx <- ZIO.service[Transactor[ContextAwareTask]]
         record <- Generators.schema.runCollectN(1).map(_.head).provide(wallet1)
@@ -135,6 +134,35 @@ object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault, PostgresTestCo
           .map(_.headOption)
           .provide(wallet2)
       } yield assert(ownRecord)(isSome(equalTo(record))) && assert(crossRecord)(isNone)
+    },
+    test("total count do not consider records outside of the wallet") {
+      val walletId1 = WalletId.random
+      val walletId2 = WalletId.random
+      val wallet1 = ZLayer.succeed(WalletAccessContext(walletId1))
+      val wallet2 = ZLayer.succeed(WalletAccessContext(walletId2))
+      for {
+        tx <- ZIO.service[Transactor[ContextAwareTask]]
+        record <- Generators.schema.runCollectN(1).map(_.head).provide(wallet1)
+        _ <- CredentialSchemaSql.insert(record).transactWallet(tx).provide(wallet1)
+        n1 <- CredentialSchemaSql.totalCount.transactWallet(tx).provide(wallet1)
+        n2 <- CredentialSchemaSql.totalCount.transactWallet(tx).provide(wallet2)
+      } yield assert(n1)(equalTo(1)) && assert(n2)(isZero)
+    },
+    test("do not delete records outside of the wallet") {
+      val walletId1 = WalletId.random
+      val walletId2 = WalletId.random
+      val wallet1 = ZLayer.succeed(WalletAccessContext(walletId1))
+      val wallet2 = ZLayer.succeed(WalletAccessContext(walletId2))
+      for {
+        tx <- ZIO.service[Transactor[ContextAwareTask]]
+        record1 <- Generators.schema.runCollectN(1).map(_.head).provide(wallet1)
+        record2 <- Generators.schema.runCollectN(1).map(_.head).provide(wallet2)
+        _ <- CredentialSchemaSql.insert(record1).transactWallet(tx).provide(wallet1)
+        _ <- CredentialSchemaSql.insert(record2).transactWallet(tx).provide(wallet2)
+        _ <- CredentialSchemaSql.deleteAll.transactWallet(tx).provide(wallet2)
+        n1 <- CredentialSchemaSql.totalCount.transactWallet(tx).provide(wallet1)
+        n2 <- CredentialSchemaSql.totalCount.transactWallet(tx).provide(wallet2)
+      } yield assert(n1)(equalTo(1)) && assert(n2)(isZero)
     }
   )
 
