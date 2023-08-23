@@ -56,7 +56,7 @@ class CredentialRepositoryInMemory(
   ): RIO[WalletAccessContext, Option[IssueCredentialRecord]] = {
     for {
       walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
-      store <- storeRef.get.map(_.filter { case ((wid, _), _) => walletId == wid })
+      store <- storeRef.get
       record = store.get((walletId, recordId))
     } yield record
   }
