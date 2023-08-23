@@ -172,7 +172,7 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask]) extends Connect
       .option
 
     cxnIO
-      .transact(xa)
+      .transactWallet(xa)
   }
 
   override def deleteConnectionRecord(recordId: UUID): RIO[WalletAccessContext, Int] = {

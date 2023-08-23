@@ -335,4 +335,47 @@ object ConnectionRepositorySpecSuite {
       }
     }
   ).provideSomeLayer(ZLayer.succeed(WalletAccessContext(WalletId.random)))
+
+  val multitenantTestSuite = suite("multi-tenancy CRUD operations")(
+    test("createConnectionRecord creates a new record for each tenant in DB") {
+      val walletId1 = WalletId.random
+      val walletId2 = WalletId.random
+      for {
+        repo <- ZIO.service[ConnectionRepository]
+        wac1 = ZLayer.succeed(WalletAccessContext(walletId1))
+        wac2 = ZLayer.succeed(WalletAccessContext(walletId2))
+        record1 = connectionRecord
+        record2 = connectionRecord
+        count1 <- repo.createConnectionRecord(record1).provide(wac1)
+        count2 <- repo.createConnectionRecord(record2).provide(wac2)
+      } yield assertTrue(count1 == 1) && assertTrue(count2 == 1)
+    },
+    test("getConnectionRecords filters records per tenant") {
+      val walletId1 = WalletId.random
+      val walletId2 = WalletId.random
+      for {
+        repo <- ZIO.service[ConnectionRepository]
+        wac1 = ZLayer.succeed(WalletAccessContext(walletId1))
+        wac2 = ZLayer.succeed(WalletAccessContext(walletId2))
+        _ <- repo.createConnectionRecord(connectionRecord).provide(wac1)
+        _ <- repo.createConnectionRecord(connectionRecord).provide(wac1)
+        _ <- repo.createConnectionRecord(connectionRecord).provide(wac2)
+        wallet1Records <- repo.getConnectionRecords.provide(wac1)
+        wallet2Records <- repo.getConnectionRecords.provide(wac2)
+      } yield assertTrue(wallet1Records.size == 2) && assertTrue(wallet2Records.size == 1)
+    },
+    test("getConnectionRecord doesn't return record of a different tenant") {
+      val walletId1 = WalletId.random
+      val walletId2 = WalletId.random
+      for {
+        repo <- ZIO.service[ConnectionRepository]
+        record = connectionRecord
+        wac1 = ZLayer.succeed(WalletAccessContext(walletId1))
+        wac2 = ZLayer.succeed(WalletAccessContext(walletId2))
+        _ <- repo.createConnectionRecord(record).provide(wac1)
+        wallet1Record <- repo.getConnectionRecord(record.id).provide(wac1)
+        wallet2Record <- repo.getConnectionRecord(record.id).provide(wac2)
+      } yield assertTrue(wallet1Record.isDefined) && assertTrue(wallet2Record.isEmpty)
+    }
+  )
 }

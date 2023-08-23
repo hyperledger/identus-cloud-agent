@@ -6,7 +6,10 @@ import zio.test.*
 object ConnectionRepositoryInMemorySpec extends ZIOSpecDefault {
 
   override def spec: Spec[TestEnvironment with Scope, Any] =
-    suite("In Memory Connection Repository test suite")(ConnectionRepositorySpecSuite.testSuite).provide(
+    suite("In Memory Connection Repository test suite")(
+      ConnectionRepositorySpecSuite.testSuite,
+      ConnectionRepositorySpecSuite.multitenantTestSuite
+    ).provide(
       ConnectionRepositoryInMemory.layer
     )
 
