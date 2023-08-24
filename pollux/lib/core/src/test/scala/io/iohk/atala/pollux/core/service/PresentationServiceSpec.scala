@@ -15,6 +15,7 @@ import io.iohk.atala.pollux.core.repository.{CredentialRepository, PresentationR
 import io.iohk.atala.pollux.vc.jwt.*
 import zio.*
 import zio.test.*
+import zio.test.Assertion.*
 
 import java.time.Instant
 import io.iohk.atala.shared.models.WalletId
@@ -22,8 +23,11 @@ import io.iohk.atala.shared.models.WalletAccessContext
 
 object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSpecHelper {
 
-  override def spec = {
-    suite("PresentationService")(
+  override def spec =
+    suite("PresentationService")(singleWalletSpec, multiWalletSpec).provide(presentationServiceLayer)
+
+  private val singleWalletSpec =
+    suite("singleWalletSpec")(
       test("createPresentationRecord creates a valid PresentationRecord") {
         val didGen = for {
           suffix <- Gen.stringN(10)(Gen.alphaNumericChar)
@@ -409,7 +413,28 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           assertTrue(aRecordReceived.proposePresentationData == Some(p))
         }
       },
-    ).provide(presentationServiceLayer, ZLayer.succeed(WalletAccessContext(WalletId.random)))
-  }
+    ).provideSomeLayer(ZLayer.succeed(WalletAccessContext(WalletId.random)))
+
+  private val multiWalletSpec =
+    suite("multi-wallet spec")(
+      test("createPresentation for different wallet and isolate records") {
+        val walletId1 = WalletId.random
+        val walletId2 = WalletId.random
+        val wallet1 = ZLayer.succeed(WalletAccessContext(walletId1))
+        val wallet2 = ZLayer.succeed(WalletAccessContext(walletId2))
+        for {
+          svc <- ZIO.service[PresentationService]
+          record1 <- svc.createRecord().provide(wallet1)
+          record2 <- svc.createRecord().provide(wallet2)
+          ownRecord1 <- svc.getPresentationRecord(record1.id).provide(wallet1)
+          ownRecord2 <- svc.getPresentationRecord(record2.id).provide(wallet2)
+          crossRecord1 <- svc.getPresentationRecord(record1.id).provide(wallet2)
+          crossRecord2 <- svc.getPresentationRecord(record2.id).provide(wallet1)
+        } yield assert(ownRecord1)(isSome(equalTo(record1))) &&
+          assert(ownRecord2)(isSome(equalTo(record2))) &&
+          assert(crossRecord1)(isNone) &&
+          assert(crossRecord2)(isNone)
+      }
+    )
 
 }
