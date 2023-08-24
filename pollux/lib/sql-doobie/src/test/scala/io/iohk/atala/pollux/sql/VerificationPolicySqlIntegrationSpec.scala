@@ -43,7 +43,7 @@ object VerificationPolicySqlIntegrationSpec extends ZIOSpecDefault, PostgresTest
     val multiWalletSuite = (multiWalletVerificationPolicyCRUDSuite @@ migrateEach(
       schema = "public",
       paths = "classpath:sql/pollux"
-    )).provide(pgContainerLayer, transactorLayer, JdbcVerificationPolicyRepository.layer)
+    )).provide(pgContainerLayer, contextAwareTransactorLayer, JdbcVerificationPolicyRepository.layer)
 
     suite("verification policy DAL spec")(singleWalletSuite, multiWalletSuite)
   }
