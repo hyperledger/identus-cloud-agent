@@ -25,11 +25,11 @@ import zio.test.TestAspect.*
 object VerificationPolicySqlIntegrationSpec extends ZIOSpecDefault, PostgresTestContainerSupport {
 
   private val repositoryLayer =
-    transactorLayer >>> JdbcVerificationPolicyRepository.layer
+    contextAwareTransactorLayer >>> JdbcVerificationPolicyRepository.layer
   private val testEnvironmentLayer =
     zio.test.testEnvironment ++
       pgContainerLayer ++
-      transactorLayer ++
+      contextAwareTransactorLayer ++
       repositoryLayer ++
       ZLayer.succeed(WalletAccessContext(WalletId.random))
 
@@ -43,7 +43,7 @@ object VerificationPolicySqlIntegrationSpec extends ZIOSpecDefault, PostgresTest
     val multiWalletSuite = (multiWalletVerificationPolicyCRUDSuite @@ migrateEach(
       schema = "public",
       paths = "classpath:sql/pollux"
-    )).provide(pgContainerLayer, transactorLayer, JdbcVerificationPolicyRepository.layer)
+    )).provide(pgContainerLayer, contextAwareTransactorLayer, JdbcVerificationPolicyRepository.layer)
 
     suite("verification policy DAL spec")(singleWalletSuite, multiWalletSuite)
   }

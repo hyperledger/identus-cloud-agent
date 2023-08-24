@@ -31,7 +31,7 @@ object WalletManagementServiceSpec
         WalletManagementServiceImpl.layer,
         JdbcWalletNonSecretStorage.layer,
         JdbcWalletSecretStorage.layer,
-        transactorLayer,
+        contextAwareTransactorLayer,
         pgContainerLayer,
         apolloLayer
       )
@@ -41,7 +41,7 @@ object WalletManagementServiceSpec
         WalletManagementServiceImpl.layer,
         JdbcWalletNonSecretStorage.layer,
         VaultWalletSecretStorage.layer,
-        transactorLayer,
+        contextAwareTransactorLayer,
         pgContainerLayer,
         apolloLayer,
         vaultKvClientLayer

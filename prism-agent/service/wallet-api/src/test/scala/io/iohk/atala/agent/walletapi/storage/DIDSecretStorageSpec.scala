@@ -28,7 +28,7 @@ object DIDSecretStorageSpec
     ZLayer.makeSome[WalletSecretStorage, WalletManagementService](
       WalletManagementServiceImpl.layer,
       JdbcWalletNonSecretStorage.layer,
-      transactorLayer,
+      contextAwareTransactorLayer,
       apolloLayer
     )
 
@@ -38,7 +38,7 @@ object DIDSecretStorageSpec
         .provide(
           JdbcDIDSecretStorage.layer,
           JdbcWalletSecretStorage.layer,
-          transactorLayer,
+          contextAwareTransactorLayer,
           pgContainerLayer,
           walletManagementServiceLayer
         )

@@ -27,7 +27,7 @@ object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault, PostgresTestCo
   private val testEnvironmentLayer =
     zio.test.testEnvironment ++
       pgContainerLayer ++
-      transactorLayer ++
+      contextAwareTransactorLayer ++
       ZLayer.succeed(WalletAccessContext(WalletId.random))
 
   object Vocabulary {
@@ -108,7 +108,7 @@ object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault, PostgresTestCo
     val multiWalletSuite = (multiWalletSchemaRegistryCRUDSuite @@ migrateEach(
       schema = "public",
       paths = "classpath:sql/pollux"
-    )).provide(pgContainerLayer, transactorLayer)
+    )).provide(pgContainerLayer, contextAwareTransactorLayer)
 
     suite("schema-registry DAL spec")(singleWalletSuite, multiWalletSuite)
   }

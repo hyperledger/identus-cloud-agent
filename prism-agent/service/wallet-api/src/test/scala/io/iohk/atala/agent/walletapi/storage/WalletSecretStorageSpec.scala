@@ -23,7 +23,7 @@ object WalletSecretStorageSpec extends ZIOSpecDefault, PostgresTestContainerSupp
       .provide(
         JdbcWalletSecretStorage.layer,
         JdbcWalletNonSecretStorage.layer,
-        transactorLayer,
+        contextAwareTransactorLayer,
         pgContainerLayer
       )
 
@@ -31,7 +31,7 @@ object WalletSecretStorageSpec extends ZIOSpecDefault, PostgresTestContainerSupp
       .provide(
         VaultWalletSecretStorage.layer,
         JdbcWalletNonSecretStorage.layer,
-        transactorLayer,
+        contextAwareTransactorLayer,
         pgContainerLayer,
         vaultKvClientLayer
       )

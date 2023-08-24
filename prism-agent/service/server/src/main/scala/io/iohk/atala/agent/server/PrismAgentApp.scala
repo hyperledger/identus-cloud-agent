@@ -10,6 +10,7 @@ import io.iohk.atala.castor.controller.{DIDRegistrarServerEndpoints, DIDServerEn
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.connect.controller.ConnectionServerEndpoints
 import io.iohk.atala.connect.core.service.ConnectionService
+import io.iohk.atala.iam.entity.http.EntityServerEndpoints
 import io.iohk.atala.issue.controller.IssueServerEndpoints
 import io.iohk.atala.mercury.DidOps
 import io.iohk.atala.mercury.HttpClient
@@ -120,6 +121,7 @@ object AgentHttpServer {
       allDIDRegistrarEndpoints <- DIDRegistrarServerEndpoints.all
       allPresentProofEndpoints <- PresentProofServerEndpoints.all
       allSystemEndpoints <- SystemServerEndpoints.all
+      allEntityEndpoints <- EntityServerEndpoints.all
       allEndpoints = ZHttpEndpoints.withDocumentations[Task](
         allSchemaRegistryEndpoints ++
           allVerificationPolicyEndpoints ++
@@ -128,7 +130,8 @@ object AgentHttpServer {
           allDIDRegistrarEndpoints ++
           allIssueEndpoints ++
           allPresentProofEndpoints ++
-          allSystemEndpoints
+          allSystemEndpoints ++
+          allEntityEndpoints
       )
       server <- ZHttp4sBlazeServer.make
       appConfig <- ZIO.service[AppConfig]

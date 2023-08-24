@@ -73,7 +73,7 @@ trait IssueControllerTestTools extends PostgresTestContainerSupport {
       })
   }
 
-  private val controllerLayer = transactorLayer >+>
+  private val controllerLayer = contextAwareTransactorLayer >+>
     configLayer >+>
     irisStubLayer >+>
     didResolverLayer >+>
@@ -86,7 +86,7 @@ trait IssueControllerTestTools extends PostgresTestContainerSupport {
 
   val testEnvironmentLayer = zio.test.testEnvironment ++
     pgContainerLayer ++
-    transactorLayer ++
+    contextAwareTransactorLayer ++
     controllerLayer
 
   val issueUriBase = uri"http://test.com/issue-credentials/"

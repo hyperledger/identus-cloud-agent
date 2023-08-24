@@ -92,7 +92,7 @@ object ManagedDIDServiceSpec
     ZLayer.make[DIDSecretStorage & WalletSecretStorage](
       JdbcDIDSecretStorage.layer,
       JdbcWalletSecretStorage.layer,
-      transactorLayer
+      contextAwareTransactorLayer
     )
 
   private def vaultSecretStorageLayer =
@@ -110,7 +110,7 @@ object ManagedDIDServiceSpec
         DIDOperationValidator.layer(),
         JdbcDIDNonSecretStorage.layer,
         JdbcWalletNonSecretStorage.layer,
-        transactorLayer,
+        contextAwareTransactorLayer,
         testDIDServiceLayer,
         apolloLayer
       )
