@@ -28,7 +28,7 @@ class PresentProofControllerImpl(
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, PresentationStatus] = {
     val result: ZIO[WalletAccessContext, ConnectionServiceError | PresentationError, PresentationStatus] = for {
-      didIdPair <- getPairwiseDIDs(request.connectionId).provide(ZLayer.succeed(connectionService))
+      didIdPair <- getPairwiseDIDs(request.connectionId).provideSomeLayer(ZLayer.succeed(connectionService))
       record <- presentationService
         .createPresentationRecord(
           pairwiseVerifierDID = didIdPair.myDID,

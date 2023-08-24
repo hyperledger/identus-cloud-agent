@@ -148,8 +148,11 @@ object DidCommHttpServer {
   /*
    * Connect
    */
-  private val handleConnect
-      : PartialFunction[Message, ZIO[ConnectionService, DIDCommMessageParsingError | ConnectionServiceError, Unit]] = {
+  private val handleConnect: PartialFunction[Message, ZIO[
+    ConnectionService & WalletAccessContext,
+    DIDCommMessageParsingError | ConnectionServiceError,
+    Unit
+  ]] = {
     case msg if msg.piuri == ConnectionRequest.`type` =>
       for {
         connectionRequest <- ZIO

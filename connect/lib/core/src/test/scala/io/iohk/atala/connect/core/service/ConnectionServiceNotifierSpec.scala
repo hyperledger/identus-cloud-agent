@@ -7,6 +7,7 @@ import io.iohk.atala.event.notification.*
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
 import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
+import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 import zio.ZIO.*
 import zio.mock.Expectation
@@ -93,7 +94,8 @@ object ConnectionServiceNotifierSpec extends ZIOSpecDefault {
         }
       }.provide(
         ZLayer.succeed(50) >>> EventNotificationServiceImpl.layer,
-        inviterExpectations.toLayer >>> ConnectionServiceNotifier.layer
+        inviterExpectations.toLayer >>> ConnectionServiceNotifier.layer,
+        ZLayer.succeed(WalletAccessContext(WalletId.random))
       ),
       test("should send relevant events during flow execution on the invitee side") {
         for {
@@ -131,7 +133,8 @@ object ConnectionServiceNotifierSpec extends ZIOSpecDefault {
         }
       }.provide(
         ZLayer.succeed(50) >>> EventNotificationServiceImpl.layer,
-        inviteeExpectations.toLayer >>> ConnectionServiceNotifier.layer
+        inviteeExpectations.toLayer >>> ConnectionServiceNotifier.layer,
+        ZLayer.succeed(WalletAccessContext(WalletId.random))
       )
     )
   }

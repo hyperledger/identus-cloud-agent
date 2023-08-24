@@ -7,6 +7,7 @@ import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.connect.core.repository.ConnectionRepositoryInMemory
 import io.iohk.atala.mercury.model.{DidId, Message}
 import io.iohk.atala.mercury.protocol.connection.ConnectionResponse
+import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
@@ -244,7 +245,7 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
           }
         }
       }
-    ).provideLayer(connectionServiceLayer)
+    ).provide(connectionServiceLayer, ZLayer.succeed(WalletAccessContext(WalletId.random)))
   }
 
 }

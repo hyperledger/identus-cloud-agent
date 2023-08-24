@@ -37,7 +37,7 @@ class ConnectionControllerImpl(
 
   override def getConnection(
       connectionId: UUID
-  )(implicit rc: RequestContext): IO[ErrorResponse, Connection] = {
+  )(implicit rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, Connection] = {
     val result = for {
       maybeConnection <- service.getConnectionRecord(connectionId)
       connection <- ZIO
@@ -51,7 +51,7 @@ class ConnectionControllerImpl(
   override def getConnections(
       paginationInput: PaginationInput,
       thid: Option[String]
-  )(implicit rc: RequestContext): IO[ErrorResponse, ConnectionsPage] = {
+  )(implicit rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, ConnectionsPage] = {
     val result = for {
       connections <- thid match
         case None       => service.getConnectionRecords()

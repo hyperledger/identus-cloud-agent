@@ -117,8 +117,8 @@ object RepoModule {
     SystemModule.configLayer >>> dbConfigLayer
   }
 
-  val connectTransactorLayer: TaskLayer[Transactor[Task]] =
-    connectDbConfigLayer >>> TransactorLayer.task
+  val connectTransactorLayer: TaskLayer[Transactor[ContextAwareTask]] =
+    connectDbConfigLayer >>> TransactorLayer.contextAwareTask
 
   def agentDbConfigLayer(appUser: Boolean = true): TaskLayer[DbConfig] = {
     val dbConfigLayer = ZLayer.fromZIO {
