@@ -33,13 +33,69 @@ object VerificationPolicySqlIntegrationSpec extends ZIOSpecDefault, PostgresTest
       repositoryLayer ++
       ZLayer.succeed(WalletAccessContext(WalletId.random))
 
-  def spec = (suite("verification policy DAL spec")(
-    verificationPolicyCRUDSuite,
-    verificationPolicyLookupSuite
-  ) @@ nondeterministic @@ sequential @@ timed @@ migrate(
-    schema = "public",
-    paths = "classpath:sql/pollux"
-  )).provideSomeLayerShared(testEnvironmentLayer)
+  def spec = {
+    val singleWalletSuite =
+      ((verificationPolicyCRUDSuite + verificationPolicyLookupSuite) @@ nondeterministic @@ sequential @@ timed @@ migrate(
+        schema = "public",
+        paths = "classpath:sql/pollux"
+      )).provideSomeLayerShared(testEnvironmentLayer)
+
+    val multiWalletSuite = (multiWalletVerificationPolicyCRUDSuite @@ migrateEach(
+      schema = "public",
+      paths = "classpath:sql/pollux"
+    )).provide(pgContainerLayer, transactorLayer, JdbcVerificationPolicyRepository.layer)
+
+    suite("verification policy DAL spec")(singleWalletSuite, multiWalletSuite)
+  }
+
+  val multiWalletVerificationPolicyCRUDSuite = suite("verification policy multi-wallet CRUD operations")(
+    test("do not see records outside of the wallet") {
+      val walletId1 = WalletId.random
+      val walletId2 = WalletId.random
+      val wallet1 = ZLayer.succeed(WalletAccessContext(walletId1))
+      val wallet2 = ZLayer.succeed(WalletAccessContext(walletId2))
+      for {
+        repo <- ZIO.service[VerificationPolicyRepository]
+        record <- VerificationPolicyGen.verificationPolicyZIO
+          .runCollectN(1)
+          .flatMap(_.head)
+        _ <- repo.create(record).provide(wallet1)
+        ownRecord <- repo.get(record.id).provide(wallet1)
+        crossRecord <- repo.get(record.id).provide(wallet2)
+      } yield assert(ownRecord)(isSome(equalTo(record))) && assert(crossRecord)(isNone)
+    },
+    test("total count do not consider records outside of the wallet") {
+      val walletId1 = WalletId.random
+      val walletId2 = WalletId.random
+      val wallet1 = ZLayer.succeed(WalletAccessContext(walletId1))
+      val wallet2 = ZLayer.succeed(WalletAccessContext(walletId2))
+      for {
+        repo <- ZIO.service[VerificationPolicyRepository]
+        record <- VerificationPolicyGen.verificationPolicyZIO
+          .runCollectN(1)
+          .flatMap(_.head)
+        _ <- repo.create(record).provide(wallet1)
+        n1 <- repo.totalCount().provide(wallet1)
+        n2 <- repo.totalCount().provide(wallet2)
+      } yield assert(n1)(equalTo(1)) && assert(n2)(isZero)
+    },
+    test("do not delete records outside of the wallet") {
+      val walletId1 = WalletId.random
+      val walletId2 = WalletId.random
+      val wallet1 = ZLayer.succeed(WalletAccessContext(walletId1))
+      val wallet2 = ZLayer.succeed(WalletAccessContext(walletId2))
+      for {
+        repo <- ZIO.service[VerificationPolicyRepository]
+        record1 <- VerificationPolicyGen.verificationPolicyZIO
+          .runCollectN(1)
+          .flatMap(_.head)
+        _ <- repo.create(record1).provide(wallet1)
+        deleteResult <- repo.delete(record1.id).provide(wallet2).exit
+        actualRecord <- repo.get(record1.id).provide(wallet1)
+      } yield assert(deleteResult)(failsCause(anything)) &&
+        assert(actualRecord)(isSome(equalTo(record1)))
+    }
+  )
 
   val verificationPolicyCRUDSuite =
     suite("verification policy CRUD operations")(
