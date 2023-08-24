@@ -7,8 +7,9 @@ import zio.test._
 object CredentialRepositoryInMemorySpec extends ZIOSpecDefault {
 
   override def spec: Spec[TestEnvironment with Scope, Any] =
-    suite("Credential Repository In Memory test suite")(CredentialRepositorySpecSuite.testSuite).provide(
-      CredentialRepositoryInMemory.layer
-    )
+    suite("Credential Repository In Memory test suite")(
+      CredentialRepositorySpecSuite.testSuite,
+      CredentialRepositorySpecSuite.multitenantTestSuite
+    ).provide(CredentialRepositoryInMemory.layer)
 
 }

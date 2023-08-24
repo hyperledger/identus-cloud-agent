@@ -25,7 +25,8 @@ object JdbcPresentationRepositorySpec extends ZIOSpecDefault, PostgresTestContai
 
   override def spec =
     (suite("JDBC Presentation Repository test suite")(
-      PresentationRepositorySpecSuite.testSuite
+      PresentationRepositorySpecSuite.testSuite,
+      PresentationRepositorySpecSuite.multitenantTestSuite
     ) @@ TestAspect.before(
       ZIO.serviceWithZIO[Migrations](_.migrate)
     )).provide(testEnvironmentLayer)

@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Prism Agent
-  version: 1.9.2
+  version: 1.11.0
 paths:
   /schema-registry/schemas:
     get:
@@ -620,7 +620,7 @@ paths:
         example: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff
       responses:
         '200':
-          description: The resolution result or W3C DID document representation
+          description: ''
           content:
             application/ld+json; profile=https://w3id.org/did-resolution:
               schema:
@@ -629,59 +629,65 @@ paths:
               schema:
                 $ref: '#/components/schemas/DIDDocument'
         '400':
-          description: Invalid DID or DID URL
+          description: ''
           content:
             application/ld+json; profile=https://w3id.org/did-resolution:
               schema:
                 $ref: '#/components/schemas/DIDResolutionResult'
             application/did+ld+json:
               schema:
-                $ref: '#/components/schemas/DIDDocument'
+                type: string
+                description: Empty representation
         '404':
-          description: The DID is not found
+          description: ''
           content:
             application/ld+json; profile=https://w3id.org/did-resolution:
               schema:
                 $ref: '#/components/schemas/DIDResolutionResult'
             application/did+ld+json:
               schema:
-                $ref: '#/components/schemas/DIDDocument'
+                type: string
+                description: Empty representation
         '406':
-          description: The DID document representation is not supported
+          description: ''
           content:
             application/ld+json; profile=https://w3id.org/did-resolution:
               schema:
                 $ref: '#/components/schemas/DIDResolutionResult'
             application/did+ld+json:
               schema:
-                $ref: '#/components/schemas/DIDDocument'
+                type: string
+                description: Empty representation
         '410':
-          description: The DID is deactivated
+          description: ''
           content:
             application/ld+json; profile=https://w3id.org/did-resolution:
               schema:
                 $ref: '#/components/schemas/DIDResolutionResult'
             application/did+ld+json:
               schema:
-                $ref: '#/components/schemas/DIDDocument'
+                type: string
+                description: Empty representation
         '500':
-          description: Internal error
+          description: ''
           content:
             application/ld+json; profile=https://w3id.org/did-resolution:
               schema:
                 $ref: '#/components/schemas/DIDResolutionResult'
             application/did+ld+json:
               schema:
-                $ref: '#/components/schemas/DIDDocument'
+                type: string
+                description: Empty representation
         '501':
-          description: The DID method is not supported
+          description: ''
           content:
             application/ld+json; profile=https://w3id.org/did-resolution:
               schema:
                 $ref: '#/components/schemas/DIDResolutionResult'
             application/did+ld+json:
               schema:
-                $ref: '#/components/schemas/DIDDocument'
+                type: string
+                description: Empty representation
   /did-registrar/dids:
     get:
       tags:
@@ -1228,7 +1234,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RequestPresentationOutput'
+                $ref: '#/components/schemas/PresentationStatus'
         '400':
           description: Invalid request parameters
           content:
@@ -2103,7 +2109,7 @@ components:
           type: string
           description: The date and time when the issue credential record was created.
           format: date-time
-          example: '2023-07-27T17:23:13.961789Z'
+          example: '2023-08-21T11:02:33.111276Z'
         updatedAt:
           type: string
           description: The date and time when the issue credential record was last
@@ -2114,10 +2120,28 @@ components:
           description: The role played by the Prism agent in the credential issuance
             flow.
           example: Issuer
+          enum:
+          - Issuer
+          - Holder
         protocolState:
           type: string
           description: The current state of the issue credential protocol execution.
           example: OfferPending
+          enum:
+          - OfferPending
+          - OfferSent
+          - OfferReceived
+          - RequestPending
+          - RequestGenerated
+          - RequestSent
+          - RequestReceived
+          - CredentialPending
+          - CredentialGenerated
+          - CredentialSent
+          - CredentialReceived
+          - ProblemReportPending
+          - ProblemReportSent
+          - ProblemReportReceived
         jwtCredential:
           type: string
           description: The base64-encoded JWT verifiable credential that has been
@@ -2269,6 +2293,7 @@ components:
       required:
       - presentationId
       - thid
+      - role
       - status
       type: object
       properties:
@@ -2282,6 +2307,14 @@ components:
             belongs to. The value will identical on both sides of the presentation
             flow (verifier and prover)
           example: 0527aea1-d131-3948-a34d-03af39aba8b4
+        role:
+          type: string
+          description: The role played by the Prism agent in the proof presentation
+            flow.
+          example: Verifier
+          enum:
+          - Verifier
+          - Prover
         status:
           type: string
           description: The current state of the proof presentation record.
@@ -2500,15 +2533,6 @@ components:
           description: The type of proofs requested in the context of this proof presentation
             request (e.g., VC schema, trusted issuers, etc.)
           example: []
-    RequestPresentationOutput:
-      required:
-      - presentationId
-      type: object
-      properties:
-        presentationId:
-          type: string
-          description: Ref to the id on the presentation (db ref)
-          example: 11c91493-01b3-4c4d-ac36-b336bab5bddf
     Service:
       required:
       - id

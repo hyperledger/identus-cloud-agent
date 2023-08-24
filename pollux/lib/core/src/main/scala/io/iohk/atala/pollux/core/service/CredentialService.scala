@@ -14,36 +14,9 @@ import io.iohk.atala.shared.models.WalletAccessContext
 import zio.{IO, ZIO}
 
 import java.nio.charset.StandardCharsets
-import java.security.spec.ECGenParameterSpec
-import java.security.{KeyPairGenerator, SecureRandom}
 import java.time.Instant
-import java.util.UUID
 
 trait CredentialService {
-
-  final case class DID(
-      method: String,
-      methodSpecificId: String
-  ) {
-    override def toString: String = s"did:$method:$methodSpecificId"
-  }
-
-  // FIXME: this function is used as a temporary replacement
-  // eventually, prism-agent should use castor library to get the issuer (issuance key and did)
-  def createIssuer: Issuer = {
-    val keyGen = KeyPairGenerator.getInstance("EC")
-    val ecSpec = ECGenParameterSpec("secp256r1")
-    keyGen.initialize(ecSpec, SecureRandom())
-    val keyPair = keyGen.generateKeyPair()
-    val privateKey = keyPair.getPrivate
-    val publicKey = keyPair.getPublic
-    val uuid = UUID.randomUUID().toString
-    Issuer(
-      did = io.iohk.atala.pollux.vc.jwt.DID(s"did:prism:$uuid"),
-      signer = io.iohk.atala.pollux.vc.jwt.ES256Signer(privateKey),
-      publicKey = publicKey
-    )
-  }
 
   def extractIdFromCredential(credential: W3cCredentialPayload): Option[DidCommID]
 
