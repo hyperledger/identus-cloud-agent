@@ -25,7 +25,7 @@ object JdbcConnectionRepositorySpec extends ZIOSpecDefault, PostgresTestContaine
 
   override def spec: Spec[TestEnvironment with Scope, Any] =
     (suite("JDBC Connection Repository test suite")(
-//      ConnectionRepositorySpecSuite.testSuite,
+      ConnectionRepositorySpecSuite.testSuite,
       ConnectionRepositorySpecSuite.multitenantTestSuite
     ) @@ TestAspect.sequential @@ TestAspect.before(
       ZIO.serviceWithZIO[Migrations](_.migrate)
