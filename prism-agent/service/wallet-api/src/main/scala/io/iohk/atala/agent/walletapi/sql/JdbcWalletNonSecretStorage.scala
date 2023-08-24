@@ -26,16 +26,31 @@ class JdbcWalletNonSecretStorage(xa: Transactor[ContextAwareTask]) extends Walle
     } yield walletId
   }
 
-  override def listWallet: Task[Seq[WalletId]] = {
-    val cxnIO =
+  override def listWallet(offset: Option[Int], limit: Option[Int]): Task[(Seq[WalletId], Int)] = {
+    val countCxnIO =
       sql"""
-           | SELECT wallet_id
-           | FROM public.wallet
-           """.stripMargin
-        .query[WalletId]
-        .to[List]
+        | SELECT COUNT(*)
+        | FROM public.wallet
+        """.stripMargin
+        .query[Int]
+        .unique
 
-    cxnIO.transact(xa)
+    val baseFr =
+      sql"""
+        | SELECT wallet_id
+        | FROM public.wallet
+        | ORDER BY created_at
+        """.stripMargin
+    val withOffsetFr = offset.fold(baseFr)(offsetValue => baseFr ++ fr"OFFSET $offsetValue")
+    val withOffsetAndLimitFr = limit.fold(withOffsetFr)(limitValue => withOffsetFr ++ fr"LIMIT $limitValue")
+    val walletsCxnIO = withOffsetAndLimitFr.query[WalletId].to[List]
+
+    val effect = for {
+      totalCount <- countCxnIO
+      rows <- walletsCxnIO
+    } yield (rows, totalCount)
+
+    effect.transact(xa)
   }
 
 }

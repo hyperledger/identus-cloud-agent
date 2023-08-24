@@ -19,6 +19,7 @@ import io.iohk.atala.connect.sql.repository.{JdbcConnectionRepository, Migration
 import io.iohk.atala.event.notification.EventNotificationServiceImpl
 import io.iohk.atala.iam.authentication.admin.{AdminApiKeyAuthenticatorImpl, AdminConfig}
 import io.iohk.atala.iam.entity.http.controller.{EntityController, EntityControllerImpl}
+import io.iohk.atala.iam.wallet.http.controller.WalletManagementControllerImpl
 import io.iohk.atala.issue.controller.IssueControllerImpl
 import io.iohk.atala.mercury.*
 import io.iohk.atala.pollux.core.service.*
@@ -131,6 +132,7 @@ object MainApp extends ZIOAppDefault {
           PresentProofControllerImpl.layer,
           VerificationPolicyControllerImpl.layer,
           EntityControllerImpl.layer,
+          WalletManagementControllerImpl.layer,
           // domain
           AppModule.apolloLayer,
           AppModule.didJwtResolverlayer,

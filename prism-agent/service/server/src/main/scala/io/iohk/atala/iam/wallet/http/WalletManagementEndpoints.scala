@@ -1,0 +1,54 @@
+package io.iohk.atala.iam.wallet.http
+
+import io.iohk.atala.api.http.EndpointOutputs
+import io.iohk.atala.api.http.ErrorResponse
+import io.iohk.atala.api.http.RequestContext
+import io.iohk.atala.api.http.model.PaginationInput
+import io.iohk.atala.iam.authentication.admin.AdminApiKeyCredentials
+import io.iohk.atala.iam.authentication.admin.AdminApiKeySecurityLogic.adminApiKeyHeader
+import io.iohk.atala.iam.wallet.http.model.CreateWalletRequest
+import io.iohk.atala.iam.wallet.http.model.WalletDetail
+import io.iohk.atala.iam.wallet.http.model.WalletDetailPage
+import sttp.model.StatusCode
+import sttp.tapir.*
+import sttp.tapir.json.zio.jsonBody
+
+object WalletManagementEndpoints {
+
+  private val baseEndpoint = endpoint
+    .tag("Wallet Management")
+    .securityIn(adminApiKeyHeader)
+    .in("wallets")
+    .in(extractFromRequest[RequestContext](RequestContext.apply))
+
+  private val paginationInput: EndpointInput[PaginationInput] = EndpointInput.derived[PaginationInput]
+
+  val listWallet =
+    baseEndpoint.get
+      .in(paginationInput)
+      .errorOut(EndpointOutputs.basicFailureAndForbidden)
+      .out(statusCode(StatusCode.Ok).description("List Prism Agent managed DIDs"))
+      .out(jsonBody[WalletDetailPage])
+      .summary("List all wallets")
+
+  val createWallet: Endpoint[
+    AdminApiKeyCredentials,
+    (RequestContext, CreateWalletRequest),
+    ErrorResponse,
+    WalletDetail,
+    Any
+  ] = baseEndpoint.post
+    .in(jsonBody[CreateWalletRequest])
+    .out(
+      statusCode(StatusCode.Created).description("A new wallet has been created")
+    )
+    .out(jsonBody[WalletDetail])
+    .errorOut(EndpointOutputs.basicFailureAndForbidden)
+    .name("createWallet")
+    .summary("Create a new wallet")
+    .description(
+      """Create a new wallet with optional to use provided seed.
+        |The seed will be used for DID key derivation inside the wallet.""".stripMargin
+    )
+
+}

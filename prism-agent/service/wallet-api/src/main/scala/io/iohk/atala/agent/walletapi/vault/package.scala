@@ -40,7 +40,7 @@ package object vault {
           HexString
             .fromString(encodedSeed)
             .map(_.toByteArray)
-            .map(WalletSeed.fromByteArray)
+            .flatMap(bytes => WalletSeed.fromByteArray(bytes).left.map(Exception(_)).toTry)
       }
     }
   }

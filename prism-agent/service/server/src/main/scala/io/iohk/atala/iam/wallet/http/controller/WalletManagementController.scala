@@ -1,0 +1,95 @@
+package io.iohk.atala.iam.wallet.http.controller
+
+import io.iohk.atala.agent.server.config.AppConfig
+import io.iohk.atala.agent.walletapi.model.WalletSeed
+import io.iohk.atala.agent.walletapi.service.ManagedDIDService
+import io.iohk.atala.agent.walletapi.service.WalletManagementService
+import io.iohk.atala.agent.walletapi.service.WalletManagementServiceError
+import io.iohk.atala.api.http.ErrorResponse
+import io.iohk.atala.api.http.RequestContext
+import io.iohk.atala.api.http.model.CollectionStats
+import io.iohk.atala.api.http.model.PaginationInput
+import io.iohk.atala.iam.wallet.http.model.CreateWalletRequest
+import io.iohk.atala.iam.wallet.http.model.WalletDetail
+import io.iohk.atala.iam.wallet.http.model.WalletDetailPage
+import io.iohk.atala.shared.models.HexString
+import io.iohk.atala.shared.models.WalletAccessContext
+import zio.*
+
+import scala.language.implicitConversions
+import io.iohk.atala.api.util.PaginationUtils
+
+trait WalletManagementController {
+  def listWallet(paginationInput: PaginationInput)(implicit rc: RequestContext): IO[ErrorResponse, WalletDetailPage]
+  def createWallet(request: CreateWalletRequest)(implicit rc: RequestContext): IO[ErrorResponse, WalletDetail]
+}
+
+object WalletManagementController {
+  given Conversion[WalletManagementServiceError, ErrorResponse] = {
+    case WalletManagementServiceError.SeedGenerationError(cause) =>
+      ErrorResponse.internalServerError(detail = Some(cause.toString()))
+    case WalletManagementServiceError.WalletStorageError(cause) =>
+      ErrorResponse.internalServerError(detail = Some(cause.toString()))
+  }
+}
+
+class WalletManagementControllerImpl(
+    service: WalletManagementService,
+    managedDIDService: ManagedDIDService,
+    appConfig: AppConfig
+) extends WalletManagementController {
+
+  import WalletManagementController.given
+
+  override def listWallet(
+      paginationInput: PaginationInput
+  )(implicit rc: RequestContext): IO[ErrorResponse, WalletDetailPage] = {
+    val uri = rc.request.uri
+    val pagination = paginationInput.toPagination
+    for {
+      pageResult <- service
+        .listWallets(offset = paginationInput.offset, limit = paginationInput.limit)
+        .mapError[ErrorResponse](e => e)
+      (items, totalCount) = pageResult
+      stats = CollectionStats(totalCount = totalCount, filteredCount = totalCount)
+    } yield WalletDetailPage(
+      self = uri.toString(),
+      pageOf = PaginationUtils.composePageOfUri(uri).toString,
+      next = PaginationUtils.composeNextUri(uri, items, pagination, stats).map(_.toString),
+      previous = PaginationUtils.composePreviousUri(uri, items, pagination, stats).map(_.toString),
+      contents = items.map(walletId => WalletDetail(id = walletId.toUUID)),
+    )
+  }
+
+  override def createWallet(
+      request: CreateWalletRequest
+  )(implicit rc: RequestContext): IO[ErrorResponse, WalletDetail] = {
+    for {
+      providedSeed <- request.seed
+        .fold(ZIO.none)(s => extractWalletSeed(s).asSome)
+      walletId <- service.createWallet(providedSeed).mapError[ErrorResponse](e => e)
+      // TODO: confirm if trust-ping to be supported by cloud agent
+      // if yes, integrate this with the default wallet PeerDID
+      // if no, remove PeerDID creation
+      pairwiseDid <- managedDIDService
+        .createAndStorePeerDID(appConfig.agent.didCommServiceEndpointUrl)
+        .provide(ZLayer.succeed(WalletAccessContext(walletId)))
+    } yield WalletDetail(walletId.toUUID)
+  }
+
+  private def extractWalletSeed(seedHex: String): IO[ErrorResponse, WalletSeed] = {
+    ZIO
+      .fromTry(HexString.fromString(seedHex))
+      .mapError(_.getMessage())
+      .map(_.toByteArray)
+      .map(WalletSeed.fromByteArray)
+      .absolve
+      .mapError(e => ErrorResponse.badRequest(detail = Some(e)))
+  }
+
+}
+
+object WalletManagementControllerImpl {
+  val layer: URLayer[WalletManagementService & ManagedDIDService & AppConfig, WalletManagementController] =
+    ZLayer.fromFunction(WalletManagementControllerImpl(_, _, _))
+}

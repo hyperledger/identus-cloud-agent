@@ -61,7 +61,7 @@ object AppModule {
       seed <- ZIO.serviceWithZIO[SeedResolver](_.resolve)
       walletId <-
         if (useNewWallet) svc.createWallet(Some(seed))
-        else svc.listWallets.map(_.headOption).someOrElseZIO(svc.createWallet(Some(seed)))
+        else svc.listWallets().map(_._1).map(_.headOption).someOrElseZIO(svc.createWallet(Some(seed)))
       _ <- ZIO.debug(s"Global wallet id: $walletId")
     } yield WalletAccessContext(walletId)
   }
