@@ -25,7 +25,8 @@ object JdbcCredentialRepositorySpec extends ZIOSpecDefault, PostgresTestContaine
 
   override def spec =
     (suite("JDBC Credential Repository test suite")(
-      CredentialRepositorySpecSuite.testSuite
+      CredentialRepositorySpecSuite.testSuite,
+      CredentialRepositorySpecSuite.multitenantTestSuite
     ) @@ TestAspect.before(
       ZIO.serviceWithZIO[Migrations](_.migrate)
     )).provide(testEnvironmentLayer)

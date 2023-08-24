@@ -468,4 +468,62 @@ object CredentialRepositorySpecSuite {
       }
     }
   ).provideSomeLayer(ZLayer.succeed(WalletAccessContext(WalletId.random)))
+
+  val multitenantTestSuite = suite("multi-tenant CRUD operations")(
+    test("do not see IssueCredentialRecord outside of the wallet") {
+      val walletId1 = WalletId.random
+      val walletId2 = WalletId.random
+      val wallet1 = ZLayer.succeed(WalletAccessContext(walletId1))
+      val wallet2 = ZLayer.succeed(WalletAccessContext(walletId2))
+      for {
+        repo <- ZIO.service[CredentialRepository]
+        record1 = issueCredentialRecord
+        record2 = issueCredentialRecord
+        count1 <- repo.createIssueCredentialRecord(record1).provide(wallet1)
+        count2 <- repo.createIssueCredentialRecord(record2).provide(wallet2)
+        ownWalletRecords1 <- repo.getIssueCredentialRecords().provide(wallet1)
+        ownWalletRecords2 <- repo.getIssueCredentialRecords().provide(wallet2)
+        crossWalletRecordById <- repo.getIssueCredentialRecord(record2.id).provide(wallet1)
+        crossWalletRecordByThid <- repo.getIssueCredentialRecordByThreadId(record2.thid).provide(wallet1)
+      } yield assert(count1)(equalTo(1)) &&
+        assert(count2)(equalTo(1)) &&
+        assert(ownWalletRecords1._1)(hasSameElements(Seq(record1))) &&
+        assert(ownWalletRecords2._1)(hasSameElements(Seq(record2))) &&
+        assert(crossWalletRecordById)(isNone) &&
+        assert(crossWalletRecordByThid)(isNone)
+    },
+    test("unable to update IssueCredentialRecord outside of the wallet") {
+      val walletId1 = WalletId.random
+      val walletId2 = WalletId.random
+      val wallet1 = ZLayer.succeed(WalletAccessContext(walletId1))
+      val wallet2 = ZLayer.succeed(WalletAccessContext(walletId2))
+      val newState = IssueCredentialRecord.ProtocolState.OfferReceived
+      for {
+        repo <- ZIO.service[CredentialRepository]
+        record1 = issueCredentialRecord
+        record2 = issueCredentialRecord
+        count1 <- repo.createIssueCredentialRecord(record1).provide(wallet1)
+        update1 <- repo.updateWithSubjectId(record2.id, "my-id", newState).provide(wallet2)
+        update2 <- repo.updateAfterFail(record2.id, Some("fail reason")).provide(wallet2)
+        update3 <- repo
+          .updateCredentialRecordProtocolState(record2.id, record1.protocolState, newState)
+          .provide(wallet2)
+      } yield assert(count1)(equalTo(1)) &&
+        assert(update1)(isZero) &&
+        assert(update2)(isZero) &&
+        assert(update3)(isZero)
+    },
+    test("unable to delete IssueCredentialRecord outside of the wallet") {
+      val walletId1 = WalletId.random
+      val walletId2 = WalletId.random
+      val wallet1 = ZLayer.succeed(WalletAccessContext(walletId1))
+      val wallet2 = ZLayer.succeed(WalletAccessContext(walletId2))
+      for {
+        repo <- ZIO.service[CredentialRepository]
+        record1 = issueCredentialRecord
+        count1 <- repo.createIssueCredentialRecord(record1).provide(wallet1)
+        delete1 <- repo.deleteIssueCredentialRecord(record1.id).provide(wallet2)
+      } yield assert(count1)(equalTo(1)) && assert(delete1)(isZero)
+    }
+  )
 }
