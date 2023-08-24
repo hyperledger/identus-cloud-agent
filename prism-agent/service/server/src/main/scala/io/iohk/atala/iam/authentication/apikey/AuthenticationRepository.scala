@@ -27,7 +27,7 @@ trait AuthenticationRepository {
       entityId: UUID,
       authenticationMethod: AuthenticationMethodType,
       secret: String
-  ): zio.IO[AuthenticationRepositoryError, Unit]
+  ): zio.IO[AuthenticationRepositoryError, UUID]
   def getEntityIdByMethodAndSecret(
       method: AuthenticationMethodType,
       secret: String
@@ -73,7 +73,7 @@ object AuthenticationRepositorySql extends DoobieContext.Postgres(SnakeCase) wit
   def insert(authenticationMethod: AuthenticationMethod) = {
     run {
       quote {
-        query[AuthenticationMethod].insertValue(lift(authenticationMethod))
+        query[AuthenticationMethod].insertValue(lift(authenticationMethod)).returning(_.id)
       }
     }
   }
