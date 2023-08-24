@@ -1,6 +1,7 @@
 package io.iohk.atala.agent.server.config
 
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
+import io.iohk.atala.iam.authentication.AuthenticationConfig
 import io.iohk.atala.pollux.vc.jwt.*
 import io.iohk.atala.shared.db.DbConfig
 import zio.config.*
@@ -108,6 +109,7 @@ final case class WebhookPublisherConfig(
 
 final case class AgentConfig(
     httpEndpoint: HttpEndpointConfig,
+    authentication: AuthenticationConfig,
     didCommServiceEndpointUrl: String,
     database: DatabaseConfig,
     verification: VerificationConfig,

@@ -22,6 +22,8 @@ object EndpointOutputs {
 
   val basicFailuresAndNotFound = basicFailuresWith(FailureVariant.notFound)
 
+  val basicFailureAndNotFoundAndForbidden = basicFailuresWith(FailureVariant.notFound, FailureVariant.forbidden)
+
   object FailureVariant {
     val badRequest = oneOfVariantValueMatcher(
       StatusCode.BadRequest,
@@ -47,6 +49,11 @@ object EndpointOutputs {
       StatusCode.Conflict,
       jsonBody[ErrorResponse].description("Cannot process due to conflict with current state of the resource")
     )(statusCodeMatcher(StatusCode.Conflict))
+
+    val forbidden = oneOfVariantValueMatcher(
+      StatusCode.Forbidden,
+      jsonBody[ErrorResponse].description("Forbidden")
+    )(statusCodeMatcher(StatusCode.Forbidden))
   }
 
 }

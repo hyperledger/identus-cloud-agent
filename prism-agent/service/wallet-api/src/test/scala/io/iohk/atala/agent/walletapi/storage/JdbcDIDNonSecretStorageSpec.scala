@@ -54,7 +54,7 @@ object JdbcDIDNonSecretStorageSpec
         JdbcWalletNonSecretStorage.layer,
         JdbcWalletSecretStorage.layer,
         WalletManagementServiceImpl.layer,
-        transactorLayer,
+        contextAwareTransactorLayer,
         pgContainerLayer,
         apolloLayer,
       )
