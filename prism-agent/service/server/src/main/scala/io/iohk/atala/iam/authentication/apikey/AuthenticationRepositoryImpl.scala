@@ -14,7 +14,7 @@ case class AuthenticationRepositoryImpl(xa: Transactor[Task]) extends Authentica
       entityId: UUID,
       authenticationMethodType: AuthenticationMethodType,
       secret: String
-  ): IO[AuthenticationRepositoryError, Unit] = {
+  ): IO[AuthenticationRepositoryError, UUID] = {
     val authenticationMethod = AuthenticationMethod(UUID.randomUUID(), authenticationMethodType, entityId, secret)
     AuthenticationRepositorySql
       .insert(authenticationMethod)
@@ -23,7 +23,6 @@ case class AuthenticationRepositoryImpl(xa: Transactor[Task]) extends Authentica
         s"insert failed for entityId: $entityId, authenticationMethod: $authenticationMethod, and secret: $secret"
       )
       .mapError(AuthenticationRepositoryError.StorageError.apply)
-      .map(_ => ())
   }
 
   override def getEntityIdByMethodAndSecret(
@@ -61,5 +60,12 @@ case class AuthenticationRepositoryImpl(xa: Transactor[Task]) extends Authentica
       .logError(s"deleteByMethodAndEntityId failed for method: $method and entityId: $entityId")
       .mapError(AuthenticationRepositoryError.StorageError.apply)
       .map(_ => ())
+  }
+}
+
+object AuthenticationRepositoryImpl {
+  val layer: URLayer[Transactor[Task], AuthenticationRepository] = {
+    val fromTransactor: Transactor[Task] => AuthenticationRepository = AuthenticationRepositoryImpl(_)
+    ZLayer.fromFunction(fromTransactor)
   }
 }
