@@ -1,12 +1,12 @@
 package io.iohk.atala.agent.walletapi.storage
 
-import io.iohk.atala.agent.walletapi.model.HdKeyIndexCounter
-import io.iohk.atala.agent.walletapi.model.ManagedDIDHdKeyPath
-import io.iohk.atala.agent.walletapi.model.{DIDUpdateLineage, ManagedDIDState, ManagedDIDStatePatch}
+import io.iohk.atala.agent.walletapi.model.*
 import io.iohk.atala.castor.core.model.did.{PrismDID, ScheduledDIDOperationStatus}
+import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.shared.models.WalletAccessContext
-import scala.collection.immutable.ArraySeq
 import zio.*
+
+import scala.collection.immutable.ArraySeq
 
 trait DIDNonSecretStorage {
 
@@ -52,5 +52,9 @@ trait DIDNonSecretStorage {
       operationId: Array[Byte],
       status: ScheduledDIDOperationStatus
   ): RIO[WalletAccessContext, Unit]
+
+  def createPeerDIDRecord(did: DidId): RIO[WalletAccessContext, Int]
+
+  def getPeerDIDRecord(did: DidId): RIO[WalletAccessContext, Option[PeerDIDRecord]]
 
 }

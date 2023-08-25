@@ -1,49 +1,23 @@
 package io.iohk.atala.agent.walletapi.service
 
-import io.iohk.atala.agent.walletapi.crypto.Apollo
-import io.iohk.atala.agent.walletapi.crypto.ApolloSpecHelper
-import io.iohk.atala.agent.walletapi.model.UpdateManagedDIDAction
-import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError
-import io.iohk.atala.agent.walletapi.model.error.UpdateManagedDIDError
-import io.iohk.atala.agent.walletapi.model.error.{CreateManagedDIDError, PublishManagedDIDError}
-import io.iohk.atala.agent.walletapi.model.{DIDPublicKeyTemplate, ManagedDIDState, ManagedDIDTemplate, PublicationState}
-import io.iohk.atala.agent.walletapi.sql.JdbcDIDNonSecretStorage
-import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
-import io.iohk.atala.agent.walletapi.sql.JdbcWalletNonSecretStorage
-import io.iohk.atala.agent.walletapi.sql.JdbcWalletSecretStorage
-import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
-import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
-import io.iohk.atala.agent.walletapi.storage.StorageSpecHelper
-import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorage
-import io.iohk.atala.agent.walletapi.storage.WalletSecretStorage
-import io.iohk.atala.agent.walletapi.vault.VaultDIDSecretStorage
-import io.iohk.atala.agent.walletapi.vault.VaultWalletSecretStorage
-import io.iohk.atala.castor.core.model.did.InternalKeyPurpose
-import io.iohk.atala.castor.core.model.did.{
-  DIDData,
-  DIDMetadata,
-  InternalPublicKey,
-  PrismDID,
-  PrismDIDOperation,
-  PublicKey,
-  ScheduleDIDOperationOutcome,
-  ScheduledDIDOperationDetail,
-  ScheduledDIDOperationStatus,
-  Service,
-  SignedPrismDIDOperation,
-  VerificationRelationship
-}
+import io.iohk.atala.agent.walletapi.crypto.{Apollo, ApolloSpecHelper}
+import io.iohk.atala.agent.walletapi.model.*
+import io.iohk.atala.agent.walletapi.model.error.{CreateManagedDIDError, DIDSecretStorageError, PublishManagedDIDError, UpdateManagedDIDError}
+import io.iohk.atala.agent.walletapi.sql.{JdbcDIDNonSecretStorage, JdbcDIDSecretStorage, JdbcWalletNonSecretStorage, JdbcWalletSecretStorage}
+import io.iohk.atala.agent.walletapi.storage.*
+import io.iohk.atala.agent.walletapi.vault.{VaultDIDSecretStorage, VaultWalletSecretStorage}
+import io.iohk.atala.castor.core.model.did.*
 import io.iohk.atala.castor.core.model.error
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
-import io.iohk.atala.test.container.DBTestUtils
-import io.iohk.atala.test.container.VaultTestContainerSupport
-import scala.collection.immutable.ArraySeq
+import io.iohk.atala.test.container.{DBTestUtils, VaultTestContainerSupport}
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
+
+import scala.collection.immutable.ArraySeq
 
 object ManagedDIDServiceSpec
     extends ZIOSpecDefault,
@@ -157,6 +131,7 @@ object ManagedDIDServiceSpec
       suite(name)(
         publishStoredDIDSpec.globalWallet,
         createAndStoreDIDSpec.globalWallet,
+        createAndStorePeerDIDSpec.globalWallet,
         updateManagedDIDSpec.globalWallet,
         deactivateManagedDIDSpec.globalWallet,
         multitenantSpec
@@ -318,6 +293,35 @@ object ManagedDIDServiceSpec
           .map(_.toList.flatten)
       } yield assert(dids)(hasSize(equalTo(50))) &&
         assert(states.map(_.didIndex))(hasSameElementsDistinct(0 until 50))
+    }
+  )
+
+  private val createAndStorePeerDIDSpec = suite("createAndStorePeerDID")(
+    test("can get PeerDIDRecord from wallet") {
+      for {
+        walletSvc <- ZIO.service[WalletManagementService]
+        walletId1 <- walletSvc.createWallet()
+        ctx1 = ZLayer.succeed(WalletAccessContext(walletId1))
+        svc <- ZIO.service[ManagedDIDService]
+        peerDid <- svc.createAndStorePeerDID("http://example.com").provide(ctx1)
+        record <- svc.getPeerDIDRecord(peerDid.did).provide(ctx1)
+      } yield {
+        assertTrue(record.isDefined) &&
+        assertTrue(record.get.did == peerDid.did) &&
+        assertTrue(record.get.walletId == walletId1)
+      }
+    },
+    test("can't get PeerDIDRecord from another wallet") {
+      for {
+        walletSvc <- ZIO.service[WalletManagementService]
+        walletId1 <- walletSvc.createWallet()
+        walletId2 <- walletSvc.createWallet()
+        ctx1 = ZLayer.succeed(WalletAccessContext(walletId1))
+        ctx2 = ZLayer.succeed(WalletAccessContext(walletId2))
+        svc <- ZIO.service[ManagedDIDService]
+        peerDid <- svc.createAndStorePeerDID("http://example.com").provide(ctx1)
+        record <- svc.getPeerDIDRecord(peerDid.did).provide(ctx2)
+      } yield assertTrue(record.isEmpty)
     }
   )
 
