@@ -21,9 +21,13 @@ Go into the folder `uniffi` and generate the file `anoncreds.kt`
 
 Assuming uniffi_bindgen is install. Install with `cargo install uniffi_bindgen --version $(cargo pkgid uniffi | cut -f 2 -d '@')`
 
-Replace the `anoncreds.kt` file in the UniffiPOC project (`UniffiPOC/src/main/uniffi/anoncreds/anoncreds.kt`)
+(Note you can also the run the script `build-release-linux.sh` in tere)
 
-Generate the Jar with `./gradlew jar` in the UniffiPOC project
+Run the command `~/.cargo/bin/uniffi-bindgen generate src/anoncreds.udl --language kotlin -o ./wrappers/kotlin/anoncreds`
+
+Replace the `anoncreds.kt` file in the `output-frameworks/anoncreds-java` project (`output-frameworks/anoncreds-java/src/main/uniffi/anoncreds/anoncreds.kt`)
+
+Generate the Jar with `./gradlew jar` in the `output-frameworks/anoncreds-java` project
 
 ## Build the NATIVE lib 
 
@@ -34,3 +38,16 @@ Go into the folder `uniffi` and build the Native lib with:
 - `cargo build --release --target x86_64-unknown-linux-gnu` (For Linux with x86_64)
 - `cargo build --release --target x86_64-apple-darwin` (For Mac with x86_64)
 - `cargo build --release --target aarch64-apple-darwin` (For Mac with arm)
+
+## Copy files
+
+Then copy the files
+- from `target/x86_64-unknown-linux-gnu/release/libanoncreds_uniffi.so` to `pollux/lib/anoncreds/native-lib/NATIVE/linux/amd64/libuniffi_anoncreds.so`
+- from `uniffi/output-frameworks/anoncreds-java/build/libs/anoncreds-java-1.0-SNAPSHOT.jar` to `pollux/lib/anoncreds//anoncreds-java-1.0-SNAPSHOT.jar`
+
+```shell
+rm -f pollux/lib/anoncreds/native-lib/NATIVE/linux/amd64/libuniffi_anoncreds.so
+rm -f pollux/lib/anoncreds//anoncreds-java-1.0-SNAPSHOT.jar
+cp ../anoncreds-rs/uniffi/target/x86_64-unknown-linux-gnu/release/libanoncreds_uniffi.so pollux/lib/anoncreds/native-lib/NATIVE/linux/amd64/libuniffi_anoncreds.so
+cp ../anoncreds-rs/uniffi/output-frameworks/anoncreds-java/build/libs/anoncreds-java-1.0-SNAPSHOT.jar pollux/lib/anoncreds//anoncreds-java-1.0-SNAPSHOT.jar
+```
