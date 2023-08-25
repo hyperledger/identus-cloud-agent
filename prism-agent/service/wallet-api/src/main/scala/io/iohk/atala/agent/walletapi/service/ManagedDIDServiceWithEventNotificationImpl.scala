@@ -3,7 +3,7 @@ package io.iohk.atala.agent.walletapi.service
 import io.iohk.atala.agent.walletapi.crypto.Apollo
 import io.iohk.atala.agent.walletapi.model.ManagedDIDDetail
 import io.iohk.atala.agent.walletapi.model.error.CommonWalletStorageError
-import io.iohk.atala.agent.walletapi.storage.{DIDNonSecretStorage, DIDSecretStorage}
+import io.iohk.atala.agent.walletapi.storage.{DIDNonSecretStorage, DIDKeySecretStorage}
 import io.iohk.atala.agent.walletapi.util.SeedResolver
 import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
 import io.iohk.atala.castor.core.model.error
@@ -16,7 +16,7 @@ import zio.{IO, RLayer, Semaphore, ZIO, ZLayer}
 class ManagedDIDServiceWithEventNotificationImpl(
     didService: DIDService,
     didOpValidator: DIDOperationValidator,
-    override private[walletapi] val secretStorage: DIDSecretStorage,
+    override private[walletapi] val secretStorage: DIDKeySecretStorage,
     override private[walletapi] val nonSecretStorage: DIDNonSecretStorage,
     apollo: Apollo,
     seed: Array[Byte],
@@ -57,14 +57,14 @@ class ManagedDIDServiceWithEventNotificationImpl(
 
 object ManagedDIDServiceWithEventNotificationImpl {
   val layer: RLayer[
-    DIDOperationValidator & DIDService & DIDSecretStorage & DIDNonSecretStorage & Apollo & SeedResolver &
+    DIDOperationValidator & DIDService & DIDKeySecretStorage & DIDNonSecretStorage & Apollo & SeedResolver &
       EventNotificationService,
     ManagedDIDService
   ] = ZLayer.fromZIO {
     for {
       didService <- ZIO.service[DIDService]
       didOpValidator <- ZIO.service[DIDOperationValidator]
-      secretStorage <- ZIO.service[DIDSecretStorage]
+      secretStorage <- ZIO.service[DIDKeySecretStorage]
       nonSecretStorage <- ZIO.service[DIDNonSecretStorage]
       apollo <- ZIO.service[Apollo]
       seed <- ZIO.serviceWithZIO[SeedResolver](_.resolve)

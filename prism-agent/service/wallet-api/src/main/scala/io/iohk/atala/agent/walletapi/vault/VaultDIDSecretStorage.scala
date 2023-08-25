@@ -1,19 +1,23 @@
 package io.iohk.atala.agent.walletapi.vault
 
-import com.nimbusds.jose.jwk.OctetKeyPair
+import io.iohk.atala.agent.walletapi.storage.DIDSecret
 import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
 import io.iohk.atala.mercury.model.DidId
-import scala.util.Try
 import zio.*
+import zio.json.*
+import zio.json.ast.Json
+import zio.json.ast.Json.*
+
 import scala.util.Failure
+import scala.util.Try
 
 class VaultDIDSecretStorage(vaultKV: VaultKVClient) extends DIDSecretStorage {
 
   private val WALLET_PATH_PREFIX = "secret/default" // static <tenant-id> in signle-tenant mode
 
-  override def insertKey(did: DidId, keyId: String, keyPair: OctetKeyPair): Task[Int] = {
+  override def insertKey(did: DidId, keyId: String, didSecret: DIDSecret): Task[Int] = {
     val path = s"$WALLET_PATH_PREFIX/peer-dids/${did.value}/$keyId"
-    val kv = encodeOctetKeyPair(keyPair)
+    val kv = encodeJson(didSecret)
     for {
       alreadyExist <- vaultKV.get(path).map(_.isDefined)
       _ <- vaultKV
@@ -23,22 +27,23 @@ class VaultDIDSecretStorage(vaultKV: VaultKVClient) extends DIDSecretStorage {
     } yield 1
   }
 
-  override def getKey(did: DidId, keyId: String): Task[Option[OctetKeyPair]] = {
+  override def getKey(did: DidId, keyId: String, schemaId: String): Task[Option[DIDSecret]] = {
     val path = s"$WALLET_PATH_PREFIX/peer-dids/${did.value}/$keyId"
     vaultKV.get(path).flatMap {
-      case Some(kv) => ZIO.fromTry(decodeOctetKeyPair(kv)).asSome
+      case Some(kv) => ZIO.fromTry(decodeJson(kv, schemaId)).asSome
       case None     => ZIO.none
     }
   }
 
-  private def encodeOctetKeyPair(keyPair: OctetKeyPair): Map[String, String] = {
-    Map("jwk" -> keyPair.toJSONString())
+  private def encodeJson(didSecret: DIDSecret): Map[String, String] = {
+    Map(didSecret.schemaId -> didSecret.json.toString())
   }
 
-  private def decodeOctetKeyPair(kv: Map[String, String]): Try[OctetKeyPair] = {
-    kv.get("jwk") match {
-      case Some(jwk) => Try(OctetKeyPair.parse(jwk))
-      case None      => Failure(Exception("A property 'jwk' is missing from KV data"))
+  private def decodeJson(kv: Map[String, String], schemaId: String): Try[DIDSecret] = {
+    kv.get(schemaId) match {
+      case Some(json) =>
+        json.fromJson[Json].left.map(new RuntimeException(_)).toTry.map(json => DIDSecret(json, schemaId))
+      case None => Failure(Exception(s"A property '$schemaId' is missing from KV data"))
     }
   }
 }
