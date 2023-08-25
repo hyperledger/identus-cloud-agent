@@ -1,4 +1,4 @@
-package io.iohk.atala.pollux
+package io.iohk.atala.pollux.schema
 
 import io.iohk.atala.agent.walletapi.service.MockManagedDIDService
 import io.iohk.atala.api.http.ErrorResponse
@@ -6,7 +6,8 @@ import io.iohk.atala.container.util.MigrationAspects.migrate
 import io.iohk.atala.pollux.credentialschema.*
 import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaController
 import sttp.client3.ziojson.*
-import sttp.client3.{DeserializationException, basicRequest}
+import sttp.client3.DeserializationException
+import sttp.client3.basicRequest
 import sttp.model.StatusCode
 import zio.*
 import zio.test.*

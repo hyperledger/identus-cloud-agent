@@ -1,11 +1,12 @@
-package io.iohk.atala.pollux
+package io.iohk.atala.pollux.schema
 
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.container.util.MigrationAspects.*
 import io.iohk.atala.pollux.core.model.schema.`type`.CredentialJsonSchemaType
 import io.iohk.atala.pollux.credentialschema.*
 import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaController
-import io.iohk.atala.pollux.credentialschema.http.{CredentialSchemaInput, CredentialSchemaResponse}
+import io.iohk.atala.pollux.credentialschema.http.CredentialSchemaInput
+import io.iohk.atala.pollux.credentialschema.http.CredentialSchemaResponse
 import io.iohk.atala.pollux.sql.repository.JdbcCredentialSchemaRepository
 import sttp.client3.basicRequest
 import sttp.client3.ziojson.*
