@@ -1,10 +1,10 @@
-package io.iohk.atala.pollux.core.model.schema.common
+package io.iohk.atala.pollux.core.model.schema.validator
 
-import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.networknt.schema.*
 import com.networknt.schema.SpecVersion.VersionFlag
-import io.iohk.atala.pollux.core.model.error.CredentialSchemaError
-import io.iohk.atala.pollux.core.model.error.CredentialSchemaError.*
+import io.iohk.atala.pollux.core.model.schema.validator.JsonSchemaError.*
 import zio.*
 import zio.json.ast.Json
 
@@ -12,7 +12,7 @@ object JsonSchemaUtils {
   def jsonSchema(
       schema: String,
       supportedVersions: IndexedSeq[VersionFlag] = IndexedSeq.empty
-  ): IO[CredentialSchemaError, JsonSchema] = {
+  ): IO[JsonSchemaError, JsonSchema] = {
     for {
       jsonSchemaNode <- toJsonNode(schema)
       specVersion <- ZIO
@@ -37,15 +37,15 @@ object JsonSchemaUtils {
   def from(
       schema: Json,
       supportedVersions: IndexedSeq[VersionFlag] = IndexedSeq.empty
-  ): IO[CredentialSchemaError, JsonSchema] = {
+  ): IO[JsonSchemaError, JsonSchema] = {
     jsonSchema(schema.toString(), supportedVersions)
   }
 
-  def toJsonNode(json: Json): IO[CredentialSchemaError, JsonNode] = {
+  def toJsonNode(json: Json): IO[JsonSchemaError, JsonNode] = {
     toJsonNode(json.toString())
   }
 
-  def toJsonNode(json: String): IO[CredentialSchemaError, JsonNode] = {
+  def toJsonNode(json: String): IO[JsonSchemaError, JsonNode] = {
     for {
       mapper <- ZIO.attempt(new ObjectMapper()).mapError(t => UnexpectedError(t.getMessage))
       jsonSchemaNode <- ZIO

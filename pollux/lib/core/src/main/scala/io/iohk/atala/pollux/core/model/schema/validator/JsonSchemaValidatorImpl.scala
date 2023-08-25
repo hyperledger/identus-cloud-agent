@@ -4,33 +4,32 @@ import com.networknt.schema.*
 import io.iohk.atala.pollux.core.model.error.CredentialSchemaError
 import io.iohk.atala.pollux.core.model.error.CredentialSchemaError.*
 import io.iohk.atala.pollux.core.model.schema.Schema
-import io.iohk.atala.pollux.core.model.schema.common.JsonSchemaUtils
 import zio.*
 
-case class CredentialJsonSchemaValidator(schemaValidator: JsonSchema) extends CredentialSchemaValidator {
-  override def validate(claims: String): IO[CredentialSchemaError, Unit] = {
+case class JsonSchemaValidatorImpl(schemaValidator: JsonSchema) extends JsonSchemaValidator {
+  override def validate(jsonString: String): IO[JsonSchemaError, Unit] = {
     import scala.jdk.CollectionConverters.*
     for {
       // Convert claims to JsonNode
-      jsonClaims <- JsonSchemaUtils.toJsonNode(claims)
+      jsonClaims <- JsonSchemaUtils.toJsonNode(jsonString)
 
       // Validate claims JsonNode
       validationMessages <- ZIO
         .attempt(schemaValidator.validate(jsonClaims).asScala.toSeq)
-        .mapError(t => ClaimsValidationError(Seq(t.getMessage)))
+        .mapError(t => JsonSchemaError.JsonValidationErrors(Seq(t.getMessage)))
 
       validationResult <-
         if (validationMessages.isEmpty) ZIO.unit
-        else ZIO.fail(ClaimsValidationError(validationMessages.map(_.getMessage)))
+        else ZIO.fail(JsonSchemaError.JsonValidationErrors(validationMessages.map(_.getMessage)))
     } yield validationResult
   }
 
 }
 
-object CredentialJsonSchemaValidator {
-  def from(schema: Schema): IO[CredentialSchemaError, CredentialJsonSchemaValidator] = {
+object JsonSchemaValidatorImpl {
+  def from(schema: Schema): IO[JsonSchemaError, JsonSchemaValidatorImpl] = {
     for {
       jsonSchema <- JsonSchemaUtils.from(schema, IndexedSeq(SpecVersion.VersionFlag.V202012))
-    } yield CredentialJsonSchemaValidator(jsonSchema)
+    } yield JsonSchemaValidatorImpl(jsonSchema)
   }
 }

@@ -1,7 +1,7 @@
 package io.iohk.atala.pollux.core.model.schema
 
-import io.iohk.atala.pollux.core.model.error.CredentialSchemaError
 import io.iohk.atala.pollux.core.model.schema.`type`.AnoncredSchemaType
+import io.iohk.atala.pollux.core.model.schema.validator.JsonSchemaError
 import zio.*
 import zio.json.*
 import zio.json.ast.Json
@@ -154,7 +154,7 @@ object AnoncredSchemaTypeSpec extends ZIOSpecDefault {
 
   def failsWithErrors(errorMessages: Iterable[String]) = {
     fails(
-      isSubtype[CredentialSchemaError.ClaimsValidationError](
+      isSubtype[JsonSchemaError.JsonValidationErrors](
         hasField("errors", _.errors, hasSameElementsDistinct(errorMessages))
       )
     )
