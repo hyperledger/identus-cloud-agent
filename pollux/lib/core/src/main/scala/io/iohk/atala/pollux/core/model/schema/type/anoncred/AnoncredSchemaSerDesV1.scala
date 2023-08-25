@@ -1,13 +1,19 @@
 package io.iohk.atala.pollux.core.model.schema.`type`.anoncred
 
-import com.networknt.schema.*
-import io.iohk.atala.pollux.core.model.error.CredentialSchemaError
-import io.iohk.atala.pollux.core.model.schema.common.JsonSchemaUtils
+import io.iohk.atala.pollux.core.model.schema.validator.SchemaSerDes
 import zio.*
+import zio.json.*
 
-object AnoncredSchemaSchemaV1 extends AnoncredSchemaSchemaVersion {
-  val version: String = AnoncredSchemaSchemaV1.getClass.getSimpleName
-  private val jsonSchemaSchemaStr: String =
+case class AnoncredSchemaSerDesV1(
+    name: String,
+    version: String,
+    attrNames: Set[String],
+    issuerId: String
+)
+
+object AnoncredSchemaSerDesV1 {
+  val version: String = "AnoncredSchemaV1"
+  private val schema: String =
     """
       |{
       |  "$schema": "http://json-schema.org/draft-07/schema#",
@@ -40,6 +46,9 @@ object AnoncredSchemaSchemaV1 extends AnoncredSchemaSchemaVersion {
       |}
       |""".stripMargin
 
-  override def initialiseJsonSchema: IO[CredentialSchemaError, JsonSchema] =
-    JsonSchemaUtils.jsonSchema(jsonSchemaSchemaStr)
+  val schemaSerDes: SchemaSerDes[AnoncredSchemaSerDesV1] = SchemaSerDes(schema)
+
+  given JsonEncoder[AnoncredSchemaSerDesV1] = DeriveJsonEncoder.gen[AnoncredSchemaSerDesV1]
+
+  given JsonDecoder[AnoncredSchemaSerDesV1] = DeriveJsonDecoder.gen[AnoncredSchemaSerDesV1]
 }
