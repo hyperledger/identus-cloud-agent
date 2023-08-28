@@ -17,6 +17,8 @@ import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
 import io.iohk.atala.shared.utils.DurationOps.toMetricsSeconds
 import zio.*
 import zio.metrics.*
+import java.time.{Instant, Duration}
+
 object ConnectBackgroundJobs {
 
   val didCommExchanges = {
@@ -37,7 +39,7 @@ object ConnectBackgroundJobs {
 
   private[this] def performExchange(
       record: ConnectionRecord
-  ): URIO[DidOps & DIDResolver & HttpClient & ConnectionService & ManagedDIDService, Unit] = {
+  ): URIO[DidOps & DIDResolver & HttpClient & ConnectionService & ManagedDIDService & AppConfig, Unit] = {
     import ProtocolState.*
     import Role.*
 
@@ -56,6 +58,9 @@ object ConnectBackgroundJobs {
     )
     val InviterConnectionResponseMsgSuccess = counterMetric(
       "connection_flow_inviter_connection_response_msg_success_counter"
+    )
+    val InviterConnectionInvitationExpiredSuccess = counterMetric(
+      "connection_flow_inviter_connection_invitation_expired_success_counter"
     )
     val InviteeProcessConnectionRecordPendingSuccess = counterMetric(
       "connection_flow_invitee_process_connection_record_success_counter"
@@ -154,7 +159,6 @@ object ConnectBackgroundJobs {
             else ZIO.fail(ErrorResponseReceivedFromPeerAgent(resp)) @@ InviterConnectionResponseMsgFailed
           }
         } yield ()
-
         inviterProcessFlow
           @@ InviterProcessConnectionRecordPendingSuccess.trackSuccess
           @@ InviterProcessConnectionRecordPendingFailed.trackError
@@ -162,7 +166,35 @@ object ConnectBackgroundJobs {
           @@ Metric
             .gauge("connection_flow_inviter_process_connection_record_ms_gauge")
             .trackDurationWith(_.toMetricsSeconds)
-
+      case ConnectionRecord(
+            id,
+            createdAt,
+            _,
+            _,
+            _,
+            Inviter,
+            InvitationGenerated,
+            _,
+            _,
+            _,
+            metaRetries,
+            _,
+            _
+          ) if metaRetries > 0 =>
+        for {
+          connectionService <- ZIO.service[ConnectionService]
+          config <- ZIO.service[AppConfig]
+          expired <- ZIO.succeed {
+            val expiryDuration = config.connect.connectInvitationExpiry
+            val actualDuration = Duration.between(createdAt, Instant.now())
+            actualDuration > expiryDuration
+          }
+          _ <-
+            if (expired) {
+              connectionService.markConnectionInvitationExpired(id)
+                @@ InviterConnectionInvitationExpiredSuccess
+            } else ZIO.unit
+        } yield ()
       case _ => ZIO.unit
     }
 

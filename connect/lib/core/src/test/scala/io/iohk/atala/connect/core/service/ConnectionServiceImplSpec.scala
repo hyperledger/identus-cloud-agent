@@ -4,6 +4,7 @@ import io.circe.syntax.*
 import io.iohk.atala.connect.core.model.ConnectionRecord
 import io.iohk.atala.connect.core.model.ConnectionRecord.*
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
+import io.iohk.atala.connect.core.model.error.ConnectionServiceError.InvalidFlowStateError
 import io.iohk.atala.connect.core.repository.ConnectionRepositoryInMemory
 import io.iohk.atala.mercury.model.{DidId, Message}
 import io.iohk.atala.mercury.protocol.connection.ConnectionResponse
@@ -175,6 +176,33 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
             assertTrue(updatedRecord.protocolState == ProtocolState.ConnectionRequestReceived) &&
             assertTrue(updatedRecord.connectionRequest.isDefined) &&
             assertTrue(updatedRecord.connectionResponse.isEmpty)
+          }
+        }
+      }, {
+        test("receiveConnectionRequest should update the inviter record accordingly if Invitation Not expired") {
+          for {
+            inviterSvc <- ZIO.service[ConnectionService].provideLayer(connectionServiceLayer)
+            inviteeSvc <- ZIO.service[ConnectionService].provideLayer(connectionServiceLayer)
+            inviterRecord <- inviterSvc.createConnectionInvitation(
+              Some("Test connection invitation"),
+              DidId("did:peer:INVITER")
+            )
+            inviteeRecord <- inviteeSvc.receiveConnectionInvitation(inviterRecord.invitation.toBase64)
+            maybeAcceptedInvitationRecord <- inviteeSvc.acceptConnectionInvitation(
+              inviteeRecord.id,
+              DidId("did:peer:INVITEE")
+            )
+            connectionRequest = maybeAcceptedInvitationRecord.connectionRequest.get
+            connectionRecordUpdated <- inviterSvc.markConnectionInvitationExpired(inviterRecord.id)
+
+            exit <- inviterSvc.receiveConnectionRequest(connectionRequest).exit
+
+          } yield {
+            assertTrue(exit match
+              case Exit.Failure(Cause.Fail(_: InvalidFlowStateError, _)) => true
+              case _ => false
+            )
+            
           }
         }
       }, {

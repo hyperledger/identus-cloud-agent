@@ -165,6 +165,16 @@ private class ConnectionServiceImpl(
       case Some(value) => ZIO.succeed(value)
     }
 
+  override def markConnectionInvitationExpired(recordId: UUID): IO[ConnectionServiceError, ConnectionRecord] =
+    updateConnectionProtocolState(
+      recordId,
+      ProtocolState.InvitationGenerated,
+      ProtocolState.InvitationExpired
+    ).flatMap {
+      case None        => ZIO.fail(RecordIdNotFound(recordId))
+      case Some(value) => ZIO.succeed(value)
+    }
+
   override def receiveConnectionRequest(
       request: ConnectionRequest
   ): IO[ConnectionServiceError, ConnectionRecord] =
@@ -304,7 +314,7 @@ private class ConnectionServiceImpl(
         .mapError(_ => ThreadIdNotFound(thid))
       _ <- record.protocolState match {
         case s if states.contains(s) => ZIO.unit
-        case state                   => ZIO.fail(InvalidFlowStateError(s"Invalid protocol state for operation: $state"))
+        case state => ZIO.fail(InvalidFlowStateError(s"Invalid protocol state for operation: $state"))
       }
     } yield record
   }
