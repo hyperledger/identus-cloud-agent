@@ -165,6 +165,16 @@ private class ConnectionServiceImpl(
       case Some(value) => ZIO.succeed(value)
     }
 
+  override def markConnectionInvitationExpired(recordId: UUID): IO[ConnectionServiceError, ConnectionRecord] =
+    updateConnectionProtocolState(
+      recordId,
+      ProtocolState.InvitationGenerated,
+      ProtocolState.InvitationExpired
+    ).flatMap {
+      case None        => ZIO.fail(RecordIdNotFound(recordId))
+      case Some(value) => ZIO.succeed(value)
+    }
+
   override def receiveConnectionRequest(
       request: ConnectionRequest
   ): IO[ConnectionServiceError, ConnectionRecord] =
