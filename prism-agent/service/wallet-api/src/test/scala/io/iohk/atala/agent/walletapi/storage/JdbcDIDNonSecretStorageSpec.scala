@@ -15,10 +15,22 @@ import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
 import io.iohk.atala.test.container.DBTestUtils
 import org.postgresql.util.PSQLException
-import scala.collection.compat.immutable.ArraySeq
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
+import io.iohk.atala.agent.walletapi.sql.JdbcDIDNonSecretStorage
+import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
+import io.iohk.atala.castor.core.model.did.PrismDID
+import io.iohk.atala.castor.core.model.did.PrismDIDOperation
+import io.iohk.atala.castor.core.model.did.ScheduledDIDOperationStatus
+import io.iohk.atala.test.container.DBTestUtils
+import io.iohk.atala.test.container.PostgresTestContainerSupport
+import org.postgresql.util.PSQLException
+import zio.*
+import zio.test.*
+import zio.test.Assertion.*
+
+import scala.collection.compat.immutable.ArraySeq
 
 object JdbcDIDNonSecretStorageSpec
     extends ZIOSpecDefault,
@@ -48,16 +60,17 @@ object JdbcDIDNonSecretStorageSpec
         setDIDLineageStatusSpec
       ).globalWallet @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
 
-    testSuite
-      .provide(
-        JdbcDIDNonSecretStorage.layer,
-        JdbcWalletNonSecretStorage.layer,
-        JdbcWalletSecretStorage.layer,
-        WalletManagementServiceImpl.layer,
-        contextAwareTransactorLayer,
-        pgContainerLayer,
-        apolloLayer,
-      )
+      testSuite
+        .provide(
+          JdbcDIDNonSecretStorage.layer,
+          JdbcWalletNonSecretStorage.layer,
+          JdbcWalletSecretStorage.layer,
+          DIDKeySecretStorageImpl.layer,
+          WalletManagementServiceImpl.layer,
+          contextAwareTransactorLayer,
+          pgContainerLayer,
+          apolloLayer,
+        )
   }
 
   private val listDIDStateSpec = suite("listManagedDIDState")(
