@@ -200,9 +200,9 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
           } yield {
             assertTrue(exit match
               case Exit.Failure(Cause.Fail(_: InvalidFlowStateError, _)) => true
-              case _ => false
+              case _                                                     => false
             )
-            
+
           }
         }
       }, {

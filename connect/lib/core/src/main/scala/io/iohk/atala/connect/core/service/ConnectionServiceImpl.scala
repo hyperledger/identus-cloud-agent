@@ -314,7 +314,7 @@ private class ConnectionServiceImpl(
         .mapError(_ => ThreadIdNotFound(thid))
       _ <- record.protocolState match {
         case s if states.contains(s) => ZIO.unit
-        case state => ZIO.fail(InvalidFlowStateError(s"Invalid protocol state for operation: $state"))
+        case state                   => ZIO.fail(InvalidFlowStateError(s"Invalid protocol state for operation: $state"))
       }
     } yield record
   }

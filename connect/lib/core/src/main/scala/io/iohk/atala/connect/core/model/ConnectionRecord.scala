@@ -52,9 +52,9 @@ object ConnectionRecord {
     // Invitee has received an offer (In Holder DB)
     case InvitationReceived extends ProtocolState
 
-    //Inviter Invitation is expired in Invitee DB
+    // Inviter Invitation is expired in Invitee DB
     case InvitationExpired extends ProtocolState
-    
+
     //  Invitee has created a Connection Request to Inviter
     case ConnectionRequestPending extends ProtocolState
 

@@ -260,8 +260,8 @@ object ConnectionRepositorySpecSuite {
         updatedRecord <- repo.getConnectionRecord(aRecord.id)
       } yield {
         assertTrue(count == 1) &&
-          assertTrue(record.get.protocolState == ProtocolState.InvitationGenerated) &&
-          assertTrue(updatedRecord.get.protocolState == ProtocolState.InvitationExpired)
+        assertTrue(record.get.protocolState == ProtocolState.InvitationGenerated) &&
+        assertTrue(updatedRecord.get.protocolState == ProtocolState.InvitationExpired)
       }
     },
     test("updateConnectionProtocolState doesn't update the record for invalid states") {
