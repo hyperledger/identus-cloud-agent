@@ -1,7 +1,10 @@
 package io.iohk.atala.castor.controller
 
-import io.iohk.atala.api.http.{EndpointOutputs, ErrorResponse, RequestContext}
+import io.iohk.atala.api.http.EndpointOutputs.FailureVariant
 import io.iohk.atala.api.http.model.PaginationInput
+import io.iohk.atala.api.http.{EndpointOutputs, ErrorResponse, RequestContext}
+import io.iohk.atala.castor.controller.http.DIDOperationResponse
+import io.iohk.atala.castor.controller.http.UpdateManagedDIDRequest
 import io.iohk.atala.castor.controller.http.{
   CreateManagedDIDResponse,
   CreateManagedDidRequest,
@@ -9,12 +12,11 @@ import io.iohk.atala.castor.controller.http.{
   ManagedDID,
   ManagedDIDPage
 }
+import io.iohk.atala.iam.authentication.apikey.ApiKeyCredentials
+import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
+import sttp.model.StatusCode
 import sttp.tapir.*
 import sttp.tapir.json.zio.jsonBody
-import io.iohk.atala.castor.controller.http.DIDOperationResponse
-import sttp.model.StatusCode
-import io.iohk.atala.castor.controller.http.UpdateManagedDIDRequest
-import io.iohk.atala.api.http.EndpointOutputs.FailureVariant
 
 object DIDRegistrarEndpoints {
 
@@ -22,10 +24,12 @@ object DIDRegistrarEndpoints {
     .tag("DID Registrar")
     .in("did-registrar" / "dids")
     .in(extractFromRequest[RequestContext](RequestContext.apply))
+    .securityIn(apiKeyHeader)
 
   private val paginationInput: EndpointInput[PaginationInput] = EndpointInput.derived[PaginationInput]
 
-  val listManagedDid: PublicEndpoint[
+  val listManagedDid: Endpoint[
+    ApiKeyCredentials,
     (RequestContext, PaginationInput),
     ErrorResponse,
     ManagedDIDPage,
@@ -42,7 +46,8 @@ object DIDRegistrarEndpoints {
         |If the `limit` parameter is not set, it defaults to 100 items per page.""".stripMargin
     )
 
-  val createManagedDid: PublicEndpoint[
+  val createManagedDid: Endpoint[
+    ApiKeyCredentials,
     (RequestContext, CreateManagedDidRequest),
     ErrorResponse,
     CreateManagedDIDResponse,
@@ -58,7 +63,8 @@ object DIDRegistrarEndpoints {
         |managed by Prism Agent. The DID can later be published to the VDR using publications endpoint.""".stripMargin
     )
 
-  val getManagedDid: PublicEndpoint[
+  val getManagedDid: Endpoint[
+    ApiKeyCredentials,
     (RequestContext, String),
     ErrorResponse,
     ManagedDID,
@@ -71,7 +77,8 @@ object DIDRegistrarEndpoints {
     .summary("Get DID stored in Prism Agent's wallet")
     .description("Get DID stored in Prism Agent's wallet")
 
-  val publishManagedDid: PublicEndpoint[
+  val publishManagedDid: Endpoint[
+    ApiKeyCredentials,
     (RequestContext, String),
     ErrorResponse,
     DIDOperationResponse,
@@ -84,7 +91,8 @@ object DIDRegistrarEndpoints {
     .summary("Publish the DID stored in Prism Agent's wallet to the VDR")
     .description("Publish the DID stored in Prism Agent's wallet to the VDR.")
 
-  val updateManagedDid: PublicEndpoint[
+  val updateManagedDid: Endpoint[
+    ApiKeyCredentials,
     (RequestContext, String, UpdateManagedDIDRequest),
     ErrorResponse,
     DIDOperationResponse,
@@ -106,7 +114,8 @@ object DIDRegistrarEndpoints {
         |some operations being rejected as only one operation is allowed to be appended to the last confirmed operation.""".stripMargin
     )
 
-  val deactivateManagedDid: PublicEndpoint[
+  val deactivateManagedDid: Endpoint[
+    ApiKeyCredentials,
     (RequestContext, String),
     ErrorResponse,
     DIDOperationResponse,

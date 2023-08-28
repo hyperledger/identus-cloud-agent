@@ -146,13 +146,13 @@ object MainApp extends ZIOAppDefault {
           CredentialSchemaServiceImpl.layer,
           CredentialServiceImpl.layer >>> CredentialServiceNotifier.layer,
           DIDServiceImpl.layer,
+          EntityServiceImpl.layer,
           ManagedDIDServiceWithEventNotificationImpl.layer,
           PresentationServiceImpl.layer >>> PresentationServiceNotifier.layer,
           VerificationPolicyServiceImpl.layer,
-          EntityServiceImpl.layer,
+          WalletManagementServiceImpl.layer,
           // authentication
           AdminApiKeyAuthenticatorImpl.layer >+> ApiKeyAuthenticatorImpl.layer >>> DefaultAuthenticator.layer,
-          WalletManagementServiceImpl.layer,
           // grpc
           GrpcModule.irisStubLayer,
           GrpcModule.prismNodeStubLayer,

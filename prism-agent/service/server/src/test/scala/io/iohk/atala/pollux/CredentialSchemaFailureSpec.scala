@@ -7,8 +7,6 @@ import io.iohk.atala.container.util.MigrationAspects.migrate
 import io.iohk.atala.iam.authentication.Authenticator
 import io.iohk.atala.pollux.credentialschema.*
 import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaController
-import io.iohk.atala.shared.models.WalletAccessContext
-import io.iohk.atala.shared.models.WalletId
 import sttp.client3.ziojson.*
 import sttp.client3.{DeserializationException, basicRequest}
 import sttp.model.StatusCode

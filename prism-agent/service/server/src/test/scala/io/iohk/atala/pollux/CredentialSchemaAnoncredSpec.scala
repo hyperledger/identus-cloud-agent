@@ -8,7 +8,6 @@ import io.iohk.atala.pollux.core.model.schema.`type`.{AnoncredSchemaType, Creden
 import io.iohk.atala.pollux.credentialschema.*
 import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaController
 import io.iohk.atala.pollux.credentialschema.http.{CredentialSchemaInput, CredentialSchemaResponse}
-import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
 import sttp.client3.basicRequest
 import sttp.client3.ziojson.{asJsonAlways, *}
 import sttp.model.StatusCode

@@ -2,7 +2,6 @@ package io.iohk.atala.iam.authentication
 
 import io.iohk.atala.agent.walletapi.model.Entity
 import io.iohk.atala.api.http.ErrorResponse
-import io.iohk.atala.iam.authentication.admin.AdminApiKeyAuthenticator
 import zio.{IO, ZIO, ZLayer}
 
 trait Credentials
