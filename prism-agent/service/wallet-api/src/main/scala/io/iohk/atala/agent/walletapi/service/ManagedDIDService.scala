@@ -57,7 +57,7 @@ trait ManagedDIDService {
 
   def getPeerDID(didId: DidId): ZIO[WalletAccessContext, DIDSecretStorageError.KeyNotFoundError, PeerDID]
 
-  def getPeerDIDRecord(didId: DidId): RIO[WalletAccessContext, Option[PeerDIDRecord]]
+  def getPeerDIDRecord(didId: DidId): RIO[Option[WalletAccessContext], Option[PeerDIDRecord]]
 
 }
 

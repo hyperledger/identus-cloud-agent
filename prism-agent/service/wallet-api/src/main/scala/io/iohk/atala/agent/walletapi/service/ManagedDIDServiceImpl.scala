@@ -368,8 +368,9 @@ class ManagedDIDServiceImpl private[walletapi] (
 
   override def getPeerDIDRecord(
       didId: DidId
-  ): RIO[WalletAccessContext, Option[PeerDIDRecord]] =
+  ): RIO[Option[WalletAccessContext], Option[PeerDIDRecord]] =
     nonSecretStorage.getPeerDIDRecord(didId)
+
 }
 
 object ManagedDIDServiceImpl {

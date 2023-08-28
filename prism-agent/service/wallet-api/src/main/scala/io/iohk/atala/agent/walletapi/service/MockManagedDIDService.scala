@@ -1,7 +1,7 @@
 package io.iohk.atala.agent.walletapi.service
 
-import io.iohk.atala.agent.walletapi.model.error.*
 import io.iohk.atala.agent.walletapi.model.*
+import io.iohk.atala.agent.walletapi.model.error.*
 import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
 import io.iohk.atala.castor.core.model.did.{CanonicalPrismDID, LongFormPrismDID, ScheduleDIDOperationOutcome}
 import io.iohk.atala.mercury.PeerDID
@@ -66,7 +66,7 @@ object MockManagedDIDService extends Mock[ManagedDIDService] {
             didId: DidId
         ): IO[DIDSecretStorageError.KeyNotFoundError, PeerDID] = ???
 
-        override def getPeerDIDRecord(didId: DidId): RIO[WalletAccessContext, Option[PeerDIDRecord]] = ???
+        override def getPeerDIDRecord(didId: DidId): RIO[Option[WalletAccessContext], Option[PeerDIDRecord]] = ???
       }
     }
 }

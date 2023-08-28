@@ -4,11 +4,11 @@ import doobie.*
 import doobie.postgres.implicits.*
 import doobie.syntax.ConnectionIOOps
 import doobie.util.transactor.Transactor
-import io.iohk.atala.shared.models.WalletAccessContext
-import io.iohk.atala.shared.models.WalletId
-import java.util.UUID
+import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 import zio.interop.catz.*
+
+import java.util.UUID
 
 trait ContextAware
 type ContextAwareTask[T] = Task[T] with ContextAware
@@ -38,6 +38,15 @@ object Implicits {
       for {
         ctx <- ZIO.service[WalletAccessContext]
         result <- ConnectionIOOps(walletCxnIO(ctx)).transact(xa.asInstanceOf[Transactor[Task]])
+      } yield result
+    }
+
+    def transactOptionalWallet(xa: Transactor[ContextAwareTask]): RIO[Option[WalletAccessContext], A] = {
+      for {
+        maybeCtx <- ZIO.service[Option[WalletAccessContext]]
+        result <- maybeCtx match
+          case Some(ctx) => transactWallet(xa).provide(ZLayer.succeed(ctx))
+          case None      => transact(xa)
       } yield result
     }
   }

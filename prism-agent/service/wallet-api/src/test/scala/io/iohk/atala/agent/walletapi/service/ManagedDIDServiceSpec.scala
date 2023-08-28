@@ -302,9 +302,10 @@ object ManagedDIDServiceSpec
         walletSvc <- ZIO.service[WalletManagementService]
         walletId1 <- walletSvc.createWallet()
         ctx1 = ZLayer.succeed(WalletAccessContext(walletId1))
+        maybeCtx1 = ZLayer.succeed(Some(WalletAccessContext(walletId1)))
         svc <- ZIO.service[ManagedDIDService]
         peerDid <- svc.createAndStorePeerDID("http://example.com").provide(ctx1)
-        record <- svc.getPeerDIDRecord(peerDid.did).provide(ctx1)
+        record <- svc.getPeerDIDRecord(peerDid.did).provide(maybeCtx1)
       } yield {
         assertTrue(record.isDefined) &&
         assertTrue(record.get.did == peerDid.did) &&
@@ -317,10 +318,10 @@ object ManagedDIDServiceSpec
         walletId1 <- walletSvc.createWallet()
         walletId2 <- walletSvc.createWallet()
         ctx1 = ZLayer.succeed(WalletAccessContext(walletId1))
-        ctx2 = ZLayer.succeed(WalletAccessContext(walletId2))
+        maybeCtx2 = ZLayer.succeed(Some(WalletAccessContext(walletId2)))
         svc <- ZIO.service[ManagedDIDService]
         peerDid <- svc.createAndStorePeerDID("http://example.com").provide(ctx1)
-        record <- svc.getPeerDIDRecord(peerDid.did).provide(ctx2)
+        record <- svc.getPeerDIDRecord(peerDid.did).provide(maybeCtx2)
       } yield assertTrue(record.isEmpty)
     }
   )

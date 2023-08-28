@@ -55,6 +55,6 @@ trait DIDNonSecretStorage {
 
   def createPeerDIDRecord(did: DidId): RIO[WalletAccessContext, Int]
 
-  def getPeerDIDRecord(did: DidId): RIO[WalletAccessContext, Option[PeerDIDRecord]]
+  def getPeerDIDRecord(did: DidId): RIO[Option[WalletAccessContext], Option[PeerDIDRecord]]
 
 }
