@@ -3,9 +3,13 @@ package io.iohk.atala.agent.server
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
 import io.iohk.atala.agent.server.http.ZioHttpClient
 import io.iohk.atala.agent.server.sql.Migrations as AgentMigrations
+import io.iohk.atala.agent.walletapi.service.EntityServiceImpl
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.agent.walletapi.service.ManagedDIDServiceWithEventNotificationImpl
+import io.iohk.atala.agent.walletapi.service.WalletManagementServiceImpl
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDNonSecretStorage
+import io.iohk.atala.agent.walletapi.sql.JdbcEntityRepository
+import io.iohk.atala.agent.walletapi.sql.JdbcWalletNonSecretStorage
 import io.iohk.atala.agent.walletapi.storage.DIDKeySecretStorageImpl
 import io.iohk.atala.castor.controller.DIDControllerImpl
 import io.iohk.atala.castor.controller.DIDRegistrarControllerImpl

@@ -9,7 +9,6 @@ import io.iohk.atala.shared.db.Implicits.{*, given}
 import io.iohk.atala.shared.db.ContextAwareTask
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
-import zio.interop.catz.*
 import zio.json.*
 import zio.json.ast.Json
 import zio.json.ast.Json.*

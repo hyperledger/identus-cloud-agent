@@ -6,6 +6,7 @@ import io.grpc.ManagedChannelBuilder
 import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.walletapi.crypto.Apollo
 import io.iohk.atala.agent.walletapi.memory.DIDSecretStorageInMemory
+import io.iohk.atala.agent.walletapi.memory.WalletSecretStorageInMemory
 import io.iohk.atala.agent.walletapi.service.WalletManagementService
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
 import io.iohk.atala.agent.walletapi.sql.JdbcWalletSecretStorage
@@ -15,10 +16,10 @@ import io.iohk.atala.agent.walletapi.util.SeedResolver
 import io.iohk.atala.agent.walletapi.vault.VaultDIDSecretStorage
 import io.iohk.atala.agent.walletapi.vault.VaultKVClient
 import io.iohk.atala.agent.walletapi.vault.VaultKVClientImpl
+import io.iohk.atala.agent.walletapi.vault.VaultWalletSecretStorage
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
-import io.iohk.atala.pollux.sql.repository.DbConfig as PolluxDbConfig
 import io.iohk.atala.pollux.vc.jwt.DidResolver as JwtDidResolver
 import io.iohk.atala.pollux.vc.jwt.PrismDidResolver
 import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc
@@ -30,8 +31,6 @@ import zio.*
 import zio.config.ReadError
 import zio.config.read
 import zio.config.typesafe.TypesafeConfigSource
-import zio.config.{ReadError, read}
-import zio.interop.catz.*
 
 object SystemModule {
   val configLayer: Layer[ReadError[String], AppConfig] = ZLayer.fromZIO {
@@ -181,8 +180,9 @@ object RepoModule {
             )
           case "memory" =>
             ZIO.succeed(
-              ZLayer.make[DIDSecretStorage](
-                DIDSecretStorageInMemory.layer
+              ZLayer.make[DIDSecretStorage & WalletSecretStorage](
+                DIDSecretStorageInMemory.layer,
+                WalletSecretStorageInMemory.layer,
               )
             )
           case backend =>

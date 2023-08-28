@@ -16,6 +16,8 @@ import io.iohk.atala.test.container.VaultTestContainerSupport
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
+import io.iohk.atala.agent.walletapi.memory.DIDSecretStorageInMemory
+import io.iohk.atala.agent.walletapi.memory.WalletSecretStorageInMemory
 
 object DIDKeySecretStorageSpec
     extends ZIOSpecDefault,
@@ -33,16 +35,15 @@ object DIDKeySecretStorageSpec
     )
 
   override def spec: Spec[TestEnvironment & Scope, Any] = {
-    val jdbcTestSuite =
-      commonSpec("JdbcDIDSecretStorage")
-        .provide(
-          JdbcDIDSecretStorage.layer,
-          JdbcWalletSecretStorage.layer,
-          DIDKeySecretStorageImpl.layer,
-          contextAwareTransactorLayer,
-          pgContainerLayer,
-          walletManagementServiceLayer
-        )
+    val jdbcTestSuite = commonSpec("JdbcDIDSecretStorage")
+      .provide(
+        JdbcDIDSecretStorage.layer,
+        JdbcWalletSecretStorage.layer,
+        DIDKeySecretStorageImpl.layer,
+        contextAwareTransactorLayer,
+        pgContainerLayer,
+        walletManagementServiceLayer
+      )
 
     val vaultTestSuite = commonSpec("VaultDIDSecretStorage")
       .provide(
@@ -54,7 +55,16 @@ object DIDKeySecretStorageSpec
         walletManagementServiceLayer
       )
 
-    suite("DIDSecretStorage")(jdbcTestSuite, vaultTestSuite) @@ TestAspect.sequential
+    val inMemoryTestSuite = commonSpec("InMemoryDIDSecretStorage")
+      .provide(
+        DIDSecretStorageInMemory.layer,
+        WalletSecretStorageInMemory.layer,
+        DIDKeySecretStorageImpl.layer,
+        pgContainerLayer,
+        walletManagementServiceLayer
+      )
+
+    suite("DIDSecretStorage")(jdbcTestSuite, vaultTestSuite, inMemoryTestSuite) @@ TestAspect.sequential
   }
 
   private def commonSpec(name: String) = suite(name)(

@@ -1,6 +1,5 @@
 package io.iohk.atala.agent.walletapi
 
-import com.nimbusds.jose.jwk.OctetKeyPair
 import io.iohk.atala.agent.walletapi.model.WalletSeed
 import io.iohk.atala.agent.walletapi.storage.DIDSecret
 import io.iohk.atala.shared.models.HexString
@@ -48,7 +47,8 @@ package object vault {
     override def decode(kv: Map[String, String]): Try[DIDSecret] = {
       for {
         schemaId <- kv.get("schemaId").toRight(Exception(s"A property 'schemaId' is missing from KV data")).toTry
-        json <- kv.get("json")
+        json <- kv
+          .get("json")
           .toRight(Exception(s"A property 'json' is missing from KV data"))
           .flatMap { jsonStr => jsonStr.fromJson[Json].left.map(RuntimeException(_)) }
           .toTry
