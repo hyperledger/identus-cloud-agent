@@ -23,23 +23,25 @@ import scala.language.implicitConversions
 import zio.*
 
 trait DIDRegistrarController {
-  def listManagedDid(paginationInput: PaginationInput)(
+  def listManagedDid(paginationInput: PaginationInput)(implicit
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, ManagedDIDPage]
 
-  def createManagedDid(request: CreateManagedDidRequest)(
+  def createManagedDid(request: CreateManagedDidRequest)(implicit
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, CreateManagedDIDResponse]
 
-  def getManagedDid(did: String)(rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, ManagedDID]
+  def getManagedDid(did: String)(implicit rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, ManagedDID]
 
-  def publishManagedDid(did: String)(rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, DIDOperationResponse]
-
-  def updateManagedDid(did: String, updateRequest: UpdateManagedDIDRequest)(
+  def publishManagedDid(did: String)(implicit
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, DIDOperationResponse]
 
-  def deactivateManagedDid(did: String)(
+  def updateManagedDid(did: String, updateRequest: UpdateManagedDIDRequest)(implicit
+      rc: RequestContext
+  ): ZIO[WalletAccessContext, ErrorResponse, DIDOperationResponse]
+
+  def deactivateManagedDid(did: String)(implicit
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, DIDOperationResponse]
 }
@@ -95,7 +97,7 @@ class DIDRegistrarControllerImpl(service: ManagedDIDService) extends DIDRegistra
 
   override def listManagedDid(
       paginationInput: PaginationInput
-  )(rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, ManagedDIDPage] = {
+  )(implicit rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, ManagedDIDPage] = {
     val uri = rc.request.uri
     val pagination = paginationInput.toPagination
     for {
@@ -113,7 +115,7 @@ class DIDRegistrarControllerImpl(service: ManagedDIDService) extends DIDRegistra
     )
   }
 
-  override def createManagedDid(createManagedDidRequest: CreateManagedDidRequest)(
+  override def createManagedDid(createManagedDidRequest: CreateManagedDidRequest)(implicit
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, CreateManagedDIDResponse] = {
     for {
@@ -126,7 +128,9 @@ class DIDRegistrarControllerImpl(service: ManagedDIDService) extends DIDRegistra
     } yield CreateManagedDIDResponse(longFormDid = longFormDID.toString)
   }
 
-  override def getManagedDid(did: String)(rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, ManagedDID] = {
+  override def getManagedDid(
+      did: String
+  )(implicit rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, ManagedDID] = {
     for {
       prismDID <- extractPrismDID(did)
       didDetail <- service
@@ -139,7 +143,7 @@ class DIDRegistrarControllerImpl(service: ManagedDIDService) extends DIDRegistra
 
   override def publishManagedDid(
       did: String
-  )(rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, DIDOperationResponse] = {
+  )(implicit rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, DIDOperationResponse] = {
     for {
       prismDID <- extractPrismDID(did)
       outcome <- service
@@ -148,7 +152,7 @@ class DIDRegistrarControllerImpl(service: ManagedDIDService) extends DIDRegistra
     } yield outcome
   }
 
-  override def updateManagedDid(did: String, updateRequest: UpdateManagedDIDRequest)(
+  override def updateManagedDid(did: String, updateRequest: UpdateManagedDIDRequest)(implicit
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, DIDOperationResponse] = {
     for {
@@ -164,7 +168,7 @@ class DIDRegistrarControllerImpl(service: ManagedDIDService) extends DIDRegistra
 
   override def deactivateManagedDid(
       did: String
-  )(rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, DIDOperationResponse] = {
+  )(implicit rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, DIDOperationResponse] = {
     for {
       prismDID <- extractPrismDID(did)
       outcome <- service

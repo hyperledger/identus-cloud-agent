@@ -11,6 +11,7 @@ import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.connect.controller.ConnectionServerEndpoints
 import io.iohk.atala.connect.core.service.ConnectionService
 import io.iohk.atala.iam.entity.http.EntityServerEndpoints
+import io.iohk.atala.iam.wallet.http.WalletManagementServerEndpoints
 import io.iohk.atala.issue.controller.IssueServerEndpoints
 import io.iohk.atala.mercury.DidOps
 import io.iohk.atala.mercury.HttpClient
@@ -47,7 +48,7 @@ object PrismAgentApp {
     for {
       config <- ZIO.service[AppConfig]
       _ <- ZIO
-        .serviceWithZIO[WalletManagementService](_.listWallets)
+        .serviceWithZIO[WalletManagementService](_.listWallets().map(_._1))
         .flatMap { wallets =>
           ZIO.foreach(wallets) { wallet =>
             BackgroundJobs.issueCredentialDidCommExchanges
@@ -66,7 +67,7 @@ object PrismAgentApp {
     for {
       config <- ZIO.service[AppConfig]
       _ <- ZIO
-        .serviceWithZIO[WalletManagementService](_.listWallets)
+        .serviceWithZIO[WalletManagementService](_.listWallets().map(_._1))
         .flatMap { wallets =>
           ZIO.foreach(wallets) { wallet =>
             BackgroundJobs.presentProofExchanges
@@ -84,7 +85,7 @@ object PrismAgentApp {
     for {
       config <- ZIO.service[AppConfig]
       _ <- ZIO
-        .serviceWithZIO[WalletManagementService](_.listWallets)
+        .serviceWithZIO[WalletManagementService](_.listWallets().map(_._1))
         .flatMap { wallets =>
           ZIO.foreach(wallets) { wallet =>
             ConnectBackgroundJobs.didCommExchanges
@@ -97,7 +98,7 @@ object PrismAgentApp {
 
   private val syncDIDPublicationStateFromDltJob: URIO[ManagedDIDService & WalletManagementService, Unit] =
     ZIO
-      .serviceWithZIO[WalletManagementService](_.listWallets)
+      .serviceWithZIO[WalletManagementService](_.listWallets().map(_._1))
       .flatMap { wallets =>
         ZIO.foreach(wallets) { wallet =>
           BackgroundJobs.syncDIDPublicationStateFromDlt
@@ -122,6 +123,7 @@ object AgentHttpServer {
       allPresentProofEndpoints <- PresentProofServerEndpoints.all
       allSystemEndpoints <- SystemServerEndpoints.all
       allEntityEndpoints <- EntityServerEndpoints.all
+      allWalletManagementEndpoints <- WalletManagementServerEndpoints.all
       allEndpoints = ZHttpEndpoints.withDocumentations[Task](
         allSchemaRegistryEndpoints ++
           allVerificationPolicyEndpoints ++
@@ -131,7 +133,8 @@ object AgentHttpServer {
           allIssueEndpoints ++
           allPresentProofEndpoints ++
           allSystemEndpoints ++
-          allEntityEndpoints
+          allEntityEndpoints ++
+          allWalletManagementEndpoints
       )
       server <- ZHttp4sBlazeServer.make
       appConfig <- ZIO.service[AppConfig]

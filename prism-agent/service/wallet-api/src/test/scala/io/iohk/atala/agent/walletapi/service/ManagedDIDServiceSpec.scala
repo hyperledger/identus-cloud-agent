@@ -1,18 +1,48 @@
 package io.iohk.atala.agent.walletapi.service
 
-import io.iohk.atala.agent.walletapi.crypto.{Apollo, ApolloSpecHelper}
-import io.iohk.atala.agent.walletapi.model.*
-import io.iohk.atala.agent.walletapi.model.error.{CreateManagedDIDError, DIDSecretStorageError, PublishManagedDIDError, UpdateManagedDIDError}
-import io.iohk.atala.agent.walletapi.sql.{JdbcDIDNonSecretStorage, JdbcDIDSecretStorage, JdbcWalletNonSecretStorage, JdbcWalletSecretStorage}
-import io.iohk.atala.agent.walletapi.storage.*
-import io.iohk.atala.agent.walletapi.vault.{VaultDIDSecretStorage, VaultWalletSecretStorage}
-import io.iohk.atala.castor.core.model.did.*
+import io.iohk.atala.agent.walletapi.crypto.Apollo
+import io.iohk.atala.agent.walletapi.crypto.ApolloSpecHelper
+import io.iohk.atala.agent.walletapi.model.DIDPublicKeyTemplate
+import io.iohk.atala.agent.walletapi.model.ManagedDIDState
+import io.iohk.atala.agent.walletapi.model.ManagedDIDTemplate
+import io.iohk.atala.agent.walletapi.model.PublicationState
+import io.iohk.atala.agent.walletapi.model.UpdateManagedDIDAction
+import io.iohk.atala.agent.walletapi.model.error.CreateManagedDIDError
+import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError
+import io.iohk.atala.agent.walletapi.model.error.PublishManagedDIDError
+import io.iohk.atala.agent.walletapi.model.error.UpdateManagedDIDError
+import io.iohk.atala.agent.walletapi.sql.JdbcDIDNonSecretStorage
+import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
+import io.iohk.atala.agent.walletapi.sql.JdbcWalletNonSecretStorage
+import io.iohk.atala.agent.walletapi.sql.JdbcWalletSecretStorage
+import io.iohk.atala.agent.walletapi.storage.DIDKeySecretStorageImpl
+import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
+import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
+import io.iohk.atala.agent.walletapi.storage.StorageSpecHelper
+import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorage
+import io.iohk.atala.agent.walletapi.storage.WalletSecretStorage
+import io.iohk.atala.agent.walletapi.vault.VaultDIDSecretStorage
+import io.iohk.atala.agent.walletapi.vault.VaultWalletSecretStorage
+import io.iohk.atala.castor.core.model.did.DIDData
+import io.iohk.atala.castor.core.model.did.DIDMetadata
+import io.iohk.atala.castor.core.model.did.InternalKeyPurpose
+import io.iohk.atala.castor.core.model.did.InternalPublicKey
+import io.iohk.atala.castor.core.model.did.PrismDID
+import io.iohk.atala.castor.core.model.did.PrismDIDOperation
+import io.iohk.atala.castor.core.model.did.PublicKey
+import io.iohk.atala.castor.core.model.did.ScheduleDIDOperationOutcome
+import io.iohk.atala.castor.core.model.did.ScheduledDIDOperationDetail
+import io.iohk.atala.castor.core.model.did.ScheduledDIDOperationStatus
+import io.iohk.atala.castor.core.model.did.Service
+import io.iohk.atala.castor.core.model.did.SignedPrismDIDOperation
+import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import io.iohk.atala.castor.core.model.error
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
-import io.iohk.atala.test.container.{DBTestUtils, VaultTestContainerSupport}
+import io.iohk.atala.test.container.DBTestUtils
+import io.iohk.atala.test.container.VaultTestContainerSupport
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
@@ -78,12 +108,16 @@ object ManagedDIDServiceSpec
 
   private def serviceLayer =
     ZLayer
-      .makeSome[DIDSecretStorage & WalletSecretStorage, WalletManagementService & ManagedDIDService & TestDIDService](
+      .makeSome[
+        DIDSecretStorage & WalletSecretStorage,
+        WalletManagementService & ManagedDIDService & TestDIDService
+      ](
         ManagedDIDServiceImpl.layer,
         WalletManagementServiceImpl.layer,
         DIDOperationValidator.layer(),
         JdbcDIDNonSecretStorage.layer,
         JdbcWalletNonSecretStorage.layer,
+        DIDKeySecretStorageImpl.layer,
         contextAwareTransactorLayer,
         testDIDServiceLayer,
         apolloLayer
