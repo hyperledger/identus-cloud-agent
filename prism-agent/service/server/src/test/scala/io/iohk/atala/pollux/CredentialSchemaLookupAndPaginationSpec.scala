@@ -2,6 +2,7 @@ package io.iohk.atala.pollux
 
 import com.dimafeng.testcontainers.PostgreSQLContainer
 import io.iohk.atala.container.util.MigrationAspects.migrate
+import io.iohk.atala.iam.authentication.Authenticator
 import io.iohk.atala.pollux.credentialschema.*
 import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaController
 import io.iohk.atala.pollux.credentialschema.http.{
@@ -27,11 +28,11 @@ object CredentialSchemaLookupAndPaginationSpec
 
   def fetchAllPages(
       uri: Uri
-  ): ZIO[CredentialSchemaController & WalletAccessContext, Throwable, List[CredentialSchemaResponsePage]] = {
+  ): ZIO[CredentialSchemaController & Authenticator, Throwable, List[CredentialSchemaResponsePage]] = {
     for {
       controller <- ZIO.service[CredentialSchemaController]
-      ctx <- ZIO.service[WalletAccessContext]
-      backend = httpBackend(controller, ctx)
+      authenticator <- ZIO.service[Authenticator]
+      backend = httpBackend(controller, authenticator)
       response: SchemaPageResponse <- basicRequest
         .get(uri)
         .response(asJsonAlways[CredentialSchemaResponsePage])
@@ -73,8 +74,8 @@ object CredentialSchemaLookupAndPaginationSpec
       for {
         _ <- deleteAllCredentialSchemas
         controller <- ZIO.service[CredentialSchemaController]
-        ctx <- ZIO.service[WalletAccessContext]
-        backend = httpBackend(controller, ctx)
+        authenticator <- ZIO.service[Authenticator]
+        backend = httpBackend(controller, authenticator)
 
         inputs <- Generator.schemaInput.runCollectN(101)
         _ <- inputs
@@ -121,4 +122,4 @@ object CredentialSchemaLookupAndPaginationSpec
         assert(allPagesWithLimit10.length)(equalTo(10)) &&
         assert(allPagesWithLimit15.length)(equalTo(7))
     }
-  ).provideSomeLayer(ZLayer.succeed(WalletAccessContext(WalletId.random)))
+  ).provideSomeLayer(ZLayer.succeed(WalletAccessContext(WalletId.default)))

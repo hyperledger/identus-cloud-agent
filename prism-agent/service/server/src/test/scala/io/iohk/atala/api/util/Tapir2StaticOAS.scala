@@ -7,6 +7,7 @@ import io.iohk.atala.castor.controller.{
   DIDServerEndpoints
 }
 import io.iohk.atala.connect.controller.{ConnectionController, ConnectionServerEndpoints}
+import io.iohk.atala.iam.authentication.Authenticator
 import io.iohk.atala.issue.controller.{IssueController, IssueServerEndpoints}
 import io.iohk.atala.pollux.credentialschema.controller.{CredentialSchemaController, VerificationPolicyController}
 import io.iohk.atala.pollux.credentialschema.{SchemaRegistryServerEndpoints, VerificationPolicyServerEndpoints}
@@ -57,7 +58,8 @@ object Tapir2StaticOAS extends ZIOAppDefault {
         ZLayer.succeed(mock[IssueController]) ++
         ZLayer.succeed(mock[DIDController]) ++
         ZLayer.succeed(mock[SystemController]) ++
-        ZLayer.succeed(mock[WalletAccessContext])
+        ZLayer.succeed(mock[WalletAccessContext]) ++
+        ZLayer.succeed(mock[Authenticator])
     )
   }
 

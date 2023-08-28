@@ -17,7 +17,9 @@ import io.iohk.atala.connect.controller.ConnectionControllerImpl
 import io.iohk.atala.connect.core.service.{ConnectionServiceImpl, ConnectionServiceNotifier}
 import io.iohk.atala.connect.sql.repository.{JdbcConnectionRepository, Migrations as ConnectMigrations}
 import io.iohk.atala.event.notification.EventNotificationServiceImpl
+import io.iohk.atala.iam.authentication.DefaultAuthenticator
 import io.iohk.atala.iam.authentication.admin.{AdminApiKeyAuthenticatorImpl, AdminConfig}
+import io.iohk.atala.iam.authentication.apikey.{ApiKeyAuthenticatorImpl, ApiKeyConfig, AuthenticationRepositoryImpl}
 import io.iohk.atala.iam.entity.http.controller.{EntityController, EntityControllerImpl}
 import io.iohk.atala.issue.controller.IssueControllerImpl
 import io.iohk.atala.mercury.*
@@ -115,6 +117,7 @@ object MainApp extends ZIOAppDefault {
           // infra
           SystemModule.configLayer,
           AdminConfig.layer,
+          ApiKeyConfig.layer,
           ZioHttpClient.layer,
           // observability
           DefaultJvmMetrics.live.unit,
@@ -148,7 +151,7 @@ object MainApp extends ZIOAppDefault {
           VerificationPolicyServiceImpl.layer,
           EntityServiceImpl.layer,
           // authentication
-          AdminApiKeyAuthenticatorImpl.layer,
+          AdminApiKeyAuthenticatorImpl.layer >+> ApiKeyAuthenticatorImpl.layer >>> DefaultAuthenticator.layer,
           WalletManagementServiceImpl.layer,
           // grpc
           GrpcModule.irisStubLayer,
@@ -158,6 +161,7 @@ object MainApp extends ZIOAppDefault {
           RepoModule.agentContextAwareTransactorLayer >>> JdbcWalletNonSecretStorage.layer,
           RepoModule.allSecretStorageLayer,
           RepoModule.agentTransactorLayer >>> JdbcEntityRepository.layer,
+          RepoModule.agentTransactorLayer >>> AuthenticationRepositoryImpl.layer,
           RepoModule.connectTransactorLayer >>> JdbcConnectionRepository.layer,
           RepoModule.polluxTransactorLayer >>> JdbcCredentialRepository.layer,
           RepoModule.polluxTransactorLayer >>> JdbcCredentialSchemaRepository.layer,

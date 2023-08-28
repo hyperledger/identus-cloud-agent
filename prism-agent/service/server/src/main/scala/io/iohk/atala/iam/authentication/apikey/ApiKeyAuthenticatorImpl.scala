@@ -5,7 +5,8 @@ import io.iohk.atala.agent.walletapi.service.EntityService
 import io.iohk.atala.iam.authentication.AuthenticationError
 import io.iohk.atala.iam.authentication.AuthenticationError.*
 import io.iohk.atala.prism.crypto.Sha256
-import zio.{IO, ZIO}
+import zio.{IO, URLayer, ZIO, ZLayer}
+
 import scala.util.Try
 
 class ApiKeyAuthenticatorImpl(
@@ -43,7 +44,7 @@ class ApiKeyAuthenticatorImpl(
     }
   }
 
-  private def provisionNewEntity(secret: String): IO[AuthenticationRepositoryError, Entity] = synchronized {
+  protected[apikey] def provisionNewEntity(secret: String): IO[AuthenticationRepositoryError, Entity] = synchronized {
     for {
       entityToCreate <- ZIO.succeed(
         Entity(name = "autocreated")
@@ -55,7 +56,7 @@ class ApiKeyAuthenticatorImpl(
     } yield entity
   }
 
-  def authenticateBy(apiKey: String): IO[AuthenticationRepositoryError, Entity] = {
+  protected[apikey] def authenticateBy(apiKey: String): IO[AuthenticationRepositoryError, Entity] = {
     for {
       saltAndApiKey <- ZIO.succeed(apiKeyConfig.salt + apiKey)
       secret <- ZIO
@@ -69,4 +70,15 @@ class ApiKeyAuthenticatorImpl(
         .mapError(entityServiceError => AuthenticationRepositoryError.EntityServiceError(entityServiceError.message))
     } yield entity
   }
+}
+
+object ApiKeyAuthenticatorImpl {
+  val layer: URLayer[ApiKeyConfig & AuthenticationRepository & EntityService, ApiKeyAuthenticator] =
+    ZLayer.fromZIO {
+      for {
+        apiKeyConfig <- ZIO.service[ApiKeyConfig]
+        repository <- ZIO.service[AuthenticationRepository]
+        entityService <- ZIO.service[EntityService]
+      } yield ApiKeyAuthenticatorImpl(apiKeyConfig, repository, entityService)
+    }
 }

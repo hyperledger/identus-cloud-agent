@@ -1,5 +1,7 @@
 package io.iohk.atala.agent.walletapi.model
 
+import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
+
 import java.time.Instant
 import java.util.UUID
 
@@ -21,4 +23,8 @@ object Entity {
     Entity(UUID.fromString("00000000-0000-0000-0000-000000000000"), "default", ZeroWalletId, Instant.MIN, Instant.MIN)
   val Admin =
     Entity(UUID.fromString("00000000-0000-0000-0000-000000000001"), "admin", ZeroWalletId, Instant.MIN, Instant.MIN)
+
+  extension (entity: Entity) {
+    def walletAccessContext: WalletAccessContext = WalletAccessContext(WalletId.fromUUID(entity.walletId))
+  }
 }

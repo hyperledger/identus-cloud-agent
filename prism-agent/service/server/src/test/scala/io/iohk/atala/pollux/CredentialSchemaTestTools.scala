@@ -33,6 +33,7 @@ import zio.test.{Assertion, Gen, ZIOSpecDefault}
 
 import java.time.OffsetDateTime
 import com.dimafeng.testcontainers.PostgreSQLContainer
+import io.iohk.atala.iam.authentication.{Authenticator, DefaultEntityAuthenticator}
 
 trait CredentialSchemaTestTools extends PostgresTestContainerSupport {
   self: ZIOSpecDefault =>
@@ -61,12 +62,16 @@ trait CredentialSchemaTestTools extends PostgresTestContainerSupport {
     )
 
   val testEnvironmentLayer =
-    ZLayer.makeSome[ManagedDIDService, CredentialSchemaController & CredentialSchemaRepository & PostgreSQLContainer](
+    ZLayer.makeSome[
+      ManagedDIDService,
+      CredentialSchemaController & CredentialSchemaRepository & PostgreSQLContainer & Authenticator
+    ](
       CredentialSchemaControllerImpl.layer,
       CredentialSchemaServiceImpl.layer,
       JdbcCredentialSchemaRepository.layer,
       contextAwareTransactorLayer,
-      pgContainerLayer
+      pgContainerLayer,
+      DefaultEntityAuthenticator.layer
     )
 
   val credentialSchemaUriBase = uri"http://test.com/schema-registry/schemas"
@@ -76,8 +81,8 @@ trait CredentialSchemaTestTools extends PostgresTestContainerSupport {
       .defaultHandlers(ErrorResponse.failureResponseHandler)
   }
 
-  def httpBackend(controller: CredentialSchemaController, walletAccessContext: WalletAccessContext) = {
-    val schemaRegistryEndpoints = SchemaRegistryServerEndpoints(controller, walletAccessContext)
+  def httpBackend(controller: CredentialSchemaController, authenticator: Authenticator) = {
+    val schemaRegistryEndpoints = SchemaRegistryServerEndpoints(controller, authenticator)
 
     val backend =
       TapirStubInterpreter(
@@ -160,11 +165,11 @@ trait CredentialSchemaGen {
 
   def generateSchemasN(
       count: Int
-  ): ZIO[CredentialSchemaController & WalletAccessContext, Throwable, List[CredentialSchemaInput]] =
+  ): ZIO[CredentialSchemaController & Authenticator, Throwable, List[CredentialSchemaInput]] =
     for {
       controller <- ZIO.service[CredentialSchemaController]
-      ctx <- ZIO.service[WalletAccessContext]
-      backend = httpBackend(controller, ctx)
+      authenticator <- ZIO.service[Authenticator]
+      backend = httpBackend(controller, authenticator)
       inputs <- Generator.schemaInput.runCollectN(count)
       _ <- inputs
         .map(in =>

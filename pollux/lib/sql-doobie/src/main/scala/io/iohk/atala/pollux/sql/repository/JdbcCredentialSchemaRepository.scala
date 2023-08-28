@@ -26,7 +26,9 @@ class JdbcCredentialSchemaRepository(xa: Transactor[ContextAwareTask]) extends C
   override def getByGuid(guid: UUID): RIO[WalletAccessContext, Option[CredentialSchema]] = {
     CredentialSchemaSql
       .findByGUID(guid)
-      .transactWallet(xa)
+      .transactWallet(
+        xa
+      ) // FIXME: walletAccessContext shouldn't be used as `get by uuid` must be publicly available. Figure out how to remove WAC from the signature.
       .map(
         _.headOption
           .map(CredentialSchemaRow.toModel)

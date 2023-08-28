@@ -30,7 +30,7 @@ class CredentialSchemaControllerImpl(service: CredentialSchemaService, managedDI
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, CredentialSchemaResponse] = {
     (for {
-      _ <- validatePrismDID(in.author)
+      validated <- validatePrismDID(in.author)
       result <- service
         .create(toDomain(in))
         .map(cs => fromDomain(cs).withBaseUri(rc.request.uri))
