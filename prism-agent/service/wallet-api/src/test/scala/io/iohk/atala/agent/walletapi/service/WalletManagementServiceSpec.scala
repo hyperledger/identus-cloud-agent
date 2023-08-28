@@ -54,7 +54,7 @@ object WalletManagementServiceSpec
     test("initialize with no wallet") {
       for {
         svc <- ZIO.service[WalletManagementService]
-        walletIds <- svc.listWallets
+        walletIds <- svc.listWallets().map(_._1)
       } yield assert(walletIds)(isEmpty)
     },
     test("create a wallet with random seed") {
@@ -62,7 +62,7 @@ object WalletManagementServiceSpec
         svc <- ZIO.service[WalletManagementService]
         secretStorage <- ZIO.service[WalletSecretStorage]
         createdWallet <- svc.createWallet()
-        listedWallets <- svc.listWallets
+        listedWallets <- svc.listWallets().map(_._1)
         seed <- secretStorage.getWalletSeed.provide(ZLayer.succeed(WalletAccessContext(createdWallet)))
       } yield assert(listedWallets)(hasSameElements(Seq(createdWallet))) &&
         assert(seed)(isSome)
@@ -72,7 +72,7 @@ object WalletManagementServiceSpec
         svc <- ZIO.service[WalletManagementService]
         secretStorage <- ZIO.service[WalletSecretStorage]
         createdWallets <- ZIO.foreach(1 to 10)(_ => svc.createWallet())
-        listedWallets <- svc.listWallets
+        listedWallets <- svc.listWallets().map(_._1)
         seeds <- ZIO.foreach(listedWallets) { walletId =>
           secretStorage.getWalletSeed.provide(ZLayer.succeed(WalletAccessContext(walletId)))
         }
@@ -83,9 +83,9 @@ object WalletManagementServiceSpec
       for {
         svc <- ZIO.service[WalletManagementService]
         secretStorage <- ZIO.service[WalletSecretStorage]
-        seed1 = WalletSeed.fromByteArray(Array.fill[Byte](64)(0))
+        seed1 = WalletSeed.fromByteArray(Array.fill[Byte](64)(0)).toOption.get
         createdWallet <- svc.createWallet(Some(seed1))
-        listedWallets <- svc.listWallets
+        listedWallets <- svc.listWallets().map(_._1)
         seed2 <- secretStorage.getWalletSeed.provide(ZLayer.succeed(WalletAccessContext(createdWallet)))
       } yield assert(listedWallets)(hasSameElements(Seq(createdWallet))) &&
         assert(seed2)(isSome(equalTo(seed1)))
@@ -94,9 +94,9 @@ object WalletManagementServiceSpec
       for {
         svc <- ZIO.service[WalletManagementService]
         secretStorage <- ZIO.service[WalletSecretStorage]
-        seeds1 = (1 to 10).map(i => WalletSeed.fromByteArray(Array.fill[Byte](64)(i.toByte)))
+        seeds1 = (1 to 10).map(i => WalletSeed.fromByteArray(Array.fill[Byte](64)(i.toByte)).toOption.get)
         createdWallets <- ZIO.foreach(seeds1) { seed => svc.createWallet(Some(seed)) }
-        listedWallets <- svc.listWallets
+        listedWallets <- svc.listWallets().map(_._1)
         seeds2 <- ZIO.foreach(listedWallets) { walletId =>
           secretStorage.getWalletSeed.provide(ZLayer.succeed(WalletAccessContext(walletId)))
         }
@@ -106,11 +106,11 @@ object WalletManagementServiceSpec
     test("create multiple wallets with same seed must not fail") {
       for {
         svc <- ZIO.service[WalletManagementService]
-        seed = WalletSeed.fromByteArray(Array.fill[Byte](64)(0))
+        seed = WalletSeed.fromByteArray(Array.fill[Byte](64)(0)).toOption.get
         _ <- svc.createWallet(Some(seed))
         _ <- svc.createWallet(Some(seed))
         _ <- svc.createWallet(Some(seed))
-        wallets <- svc.listWallets
+        wallets <- svc.listWallets().map(_._1)
       } yield assert(wallets)(hasSize(equalTo(3))) &&
         assert(wallets)(isDistinct)
     }

@@ -5,5 +5,5 @@ import zio.*
 
 trait WalletNonSecretStorage {
   def createWallet: Task[WalletId]
-  def listWallet: Task[Seq[WalletId]]
+  def listWallet(offset: Option[Int] = None, limit: Option[Int] = None): Task[(Seq[WalletId], Int)]
 }

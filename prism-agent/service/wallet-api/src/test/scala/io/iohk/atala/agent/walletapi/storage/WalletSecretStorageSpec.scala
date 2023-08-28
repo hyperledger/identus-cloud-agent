@@ -45,7 +45,7 @@ object WalletSecretStorageSpec extends ZIOSpecDefault, PostgresTestContainerSupp
         storage <- ZIO.service[WalletSecretStorage]
         walletId <- ZIO.serviceWithZIO[WalletNonSecretStorage](_.createWallet)
         walletAccessCtx = ZLayer.succeed(WalletAccessContext(walletId))
-        seed = WalletSeed.fromByteArray(Array.fill[Byte](64)(0))
+        seed = WalletSeed.fromByteArray(Array.fill[Byte](64)(0)).toOption.get
         seedBefore <- storage.getWalletSeed.provide(walletAccessCtx)
         _ <- storage.setWalletSeed(seed).provide(walletAccessCtx)
         seedAfter <- storage.getWalletSeed.provide(walletAccessCtx)
@@ -58,7 +58,7 @@ object WalletSecretStorageSpec extends ZIOSpecDefault, PostgresTestContainerSupp
         walletIds <- ZIO.foreach(1 to 10) { i =>
           for {
             walletId <- ZIO.serviceWithZIO[WalletNonSecretStorage](_.createWallet)
-            seed = WalletSeed.fromByteArray(Array.fill[Byte](64)(i.toByte))
+            seed = WalletSeed.fromByteArray(Array.fill[Byte](64)(i.toByte)).toOption.get
             walletAccessCtx = ZLayer.succeed(WalletAccessContext(walletId))
             _ <- storage.setWalletSeed(seed).provideSomeLayer(walletAccessCtx)
           } yield walletId

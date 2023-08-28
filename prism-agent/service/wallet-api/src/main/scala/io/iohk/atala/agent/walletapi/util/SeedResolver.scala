@@ -53,18 +53,11 @@ private class SeedResolverImpl(apollo: Apollo, isDevMode: Boolean) extends SeedR
         case Some(seed) => ZIO.succeed(seed)
         case None       => seedRand
       }
-      .tap(seed =>
+      .flatMap(seed =>
         ZIO
-          .fromEither(validateSeed(seed))
+          .fromEither(WalletSeed.fromByteArray(seed))
           .tapError(e => ZIO.logError(e))
           .mapError(Exception(_))
       )
-      .map(WalletSeed.fromByteArray)
   }
-
-  private def validateSeed(seed: Array[Byte]): Either[String, Unit] = {
-    if (seed.length != 64) Left(s"The seed must be 64-bytes (got ${seed.length} bytes)")
-    else Right(())
-  }
-
 }

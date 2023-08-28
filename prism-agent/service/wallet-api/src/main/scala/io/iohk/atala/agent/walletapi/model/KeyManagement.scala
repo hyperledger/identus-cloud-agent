@@ -15,7 +15,10 @@ object WalletSeed {
     def toByteArray: Array[Byte] = s.toArray
   }
 
-  def fromByteArray(bytes: Array[Byte]): WalletSeed = ArraySeq.from(bytes)
+  def fromByteArray(bytes: Array[Byte]): Either[String, WalletSeed] = {
+    if (bytes.length != 64) Left(s"The bytes must be 64-bytes (got ${bytes.length} bytes)")
+    else Right(ArraySeq.from(bytes))
+  }
 }
 
 enum KeyManagementMode {
