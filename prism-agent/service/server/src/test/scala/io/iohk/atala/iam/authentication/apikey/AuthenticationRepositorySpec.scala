@@ -17,7 +17,7 @@ object AuthenticationRepositorySpec extends ZIOSpecDefault, PostgresTestContaine
         crudSpec
       ) @@ TestAspect.sequential @@ migrate(
         schema = "public",
-        paths = "filesystem:../server/src/main/resources/sql/agent"
+        paths = "classpath:sql/agent"
       )
 
     testSuite.provideSomeLayerShared(
