@@ -1,6 +1,7 @@
 import scala.concurrent.duration.fromNow
 import sbtbuildinfo.BuildInfoPlugin.autoImport.*
 import org.scoverage.coveralls.Imports.CoverallsKeys._
+import com.typesafe.sbt.packager.docker.Cmd
 
 inThisBuild(
   Seq(
@@ -770,6 +771,16 @@ lazy val prismAgentServer = project
     Docker / maintainer := "atala-coredid@iohk.io",
     Docker / dockerUsername := Some("input-output-hk"),
     Docker / dockerRepository := Some("ghcr.io"),
+    // Add the libuniffi_anoncreds.so to the docker image
+    // to be removed after .so library can be successfully found by JNA in pollux anoncreds jar
+    // Create additional layer for libuniffi to copy correctly inside the docker image
+    // https://github.com/sbt/sbt-native-packager/issues/1365
+    Docker / dockerGroupLayers := {
+      case (_, path) if path.contains("libuniffi_anoncreds") => 3
+      case in => (Docker / dockerGroupLayers).value(in)
+    },
+    Docker / dockerPackageMappings += (polluxAnoncreds / baseDirectory).value / "native-lib" / "NATIVE" / "linux" / "amd64" / "libuniffi_anoncreds.so" -> "/lib/libuniffi_anoncreds.so",
+    Docker / dockerCommands += Cmd("COPY", "--chmod=777", "3/lib/libuniffi_anoncreds.so", "/lib"),
     dockerExposedPorts := Seq(8080, 8085, 8090),
     dockerBaseImage := "openjdk:11",
     buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion),
