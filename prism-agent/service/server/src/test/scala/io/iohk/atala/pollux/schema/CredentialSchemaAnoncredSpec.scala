@@ -1,4 +1,4 @@
-package io.iohk.atala.pollux
+package io.iohk.atala.pollux.schema
 
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.container.util.MigrationAspects.*

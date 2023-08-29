@@ -1,7 +1,9 @@
-package io.iohk.atala.pollux
+package io.iohk.atala.pollux.schema
 
-import io.iohk.atala.agent.walletapi.model.{ManagedDIDState, PublicationState}
-import io.iohk.atala.agent.walletapi.service.{ManagedDIDService, MockManagedDIDService}
+import io.iohk.atala.agent.walletapi.model.ManagedDIDState
+import io.iohk.atala.agent.walletapi.model.PublicationState
+import io.iohk.atala.agent.walletapi.service.ManagedDIDService
+import io.iohk.atala.agent.walletapi.service.MockManagedDIDService
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.castor.core.model.did.PrismDIDOperation
 import io.iohk.atala.container.util.PostgresLayer.*
@@ -9,26 +11,31 @@ import io.iohk.atala.pollux.core.model.schema.`type`.CredentialJsonSchemaType
 import io.iohk.atala.pollux.core.repository.CredentialSchemaRepository
 import io.iohk.atala.pollux.core.service.CredentialSchemaServiceImpl
 import io.iohk.atala.pollux.credentialschema.SchemaRegistryServerEndpoints
-import io.iohk.atala.pollux.credentialschema.controller.{CredentialSchemaController, CredentialSchemaControllerImpl}
-import io.iohk.atala.pollux.credentialschema.http.{
-  CredentialSchemaInput,
-  CredentialSchemaResponse,
-  CredentialSchemaResponsePage
-}
+import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaController
+import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaControllerImpl
+import io.iohk.atala.pollux.credentialschema.http.CredentialSchemaInput
+import io.iohk.atala.pollux.credentialschema.http.CredentialSchemaResponse
+import io.iohk.atala.pollux.credentialschema.http.CredentialSchemaResponsePage
 import io.iohk.atala.pollux.sql.repository.JdbcCredentialSchemaRepository
+import sttp.client3.DeserializationException
+import sttp.client3.Response
+import sttp.client3.UriContext
+import sttp.client3.basicRequest
 import sttp.client3.testing.SttpBackendStub
 import sttp.client3.ziojson.*
-import sttp.client3.{DeserializationException, Response, UriContext, basicRequest}
 import sttp.monad.MonadError
 import sttp.tapir.server.interceptor.CustomiseInterceptors
 import sttp.tapir.server.stub.TapirStubInterpreter
 import sttp.tapir.ztapir.RIOMonadError
 import zio.*
+import zio.json.DecoderOps
+import zio.json.EncoderOps
 import zio.json.ast.Json
 import zio.json.ast.Json.*
-import zio.json.{DecoderOps, EncoderOps}
 import zio.mock.Expectation
-import zio.test.{Assertion, Gen, ZIOSpecDefault}
+import zio.test.Assertion
+import zio.test.Gen
+import zio.test.ZIOSpecDefault
 
 import java.time.OffsetDateTime
 

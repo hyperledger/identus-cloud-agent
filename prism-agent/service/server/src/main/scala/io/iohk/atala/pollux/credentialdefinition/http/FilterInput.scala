@@ -1,9 +1,9 @@
-package io.iohk.atala.pollux.credentialschema.http
+package io.iohk.atala.pollux.credentialdefinition.http
 
 import io.iohk.atala.api.http.*
 import io.iohk.atala.pollux.core.model
-import io.iohk.atala.pollux.core.model.schema.CredentialSchema
-import io.iohk.atala.pollux.credentialschema.http.FilterInput.annotations
+import io.iohk.atala.pollux.core.model.schema.CredentialDefinition
+import io.iohk.atala.pollux.credentialdefinition.http.FilterInput.annotations
 import sttp.tapir.EndpointIO.annotations.example
 import sttp.tapir.EndpointIO.annotations.query
 import sttp.tapir.Validator.*
@@ -19,10 +19,10 @@ case class FilterInput(
     @example(Option(annotations.version.example))
     version: Option[String] = Option.empty[String],
     @query
-    @example(annotations.tags.example.headOption)
-    tags: Option[String] = Option.empty[String]
+    @example(Option(annotations.tag.example))
+    tag: Option[String] = Option.empty[String]
 ) {
-  def toDomain = CredentialSchema.Filter(author, name, version, tags)
+  def toDomain = CredentialDefinition.Filter(author, name, version, tag)
 }
 
 object FilterInput {
@@ -33,26 +33,26 @@ object FilterInput {
     object author
         extends Annotation[String](
           description =
-            "An optional field that can be used to filter the credential schema collection by `author`'s DID",
-          example = CredentialSchemaResponse.annotations.author.example
+            "An optional field that can be used to filter the credential definition collection by `author`'s DID",
+          example = CredentialDefinitionResponse.annotations.author.example
         )
 
     object name
         extends Annotation[String](
-          description = "An optional field that can be used to filter the credential schema records by `name`",
-          example = CredentialSchemaResponse.annotations.name.example
+          description = "An optional field that can be used to filter the credential definition records by `name`",
+          example = CredentialDefinitionResponse.annotations.name.example
         )
 
     object version
         extends Annotation[String](
           description = "An optional string field that can be used to filter resources by version",
-          example = CredentialSchemaResponse.annotations.version.example
+          example = CredentialDefinitionResponse.annotations.version.example
         )
 
-    object tags
-        extends Annotation[Seq[String]](
-          description = "An optional string field that can be used to filter resources by tags",
-          example = CredentialSchemaResponse.annotations.tags.example
+    object tag
+        extends Annotation[String](
+          description = "An optional string field that can be used to filter resources by tag",
+          example = CredentialDefinitionResponse.annotations.tag.example
         )
   }
 }

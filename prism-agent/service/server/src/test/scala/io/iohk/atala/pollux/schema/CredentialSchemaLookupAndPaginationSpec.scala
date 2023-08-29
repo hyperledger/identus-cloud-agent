@@ -1,16 +1,18 @@
-package io.iohk.atala.pollux
+package io.iohk.atala.pollux.schema
 
 import io.iohk.atala.container.util.MigrationAspects.migrate
 import io.iohk.atala.pollux.credentialschema.*
 import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaController
-import io.iohk.atala.pollux.credentialschema.http.{
-  CredentialSchemaInput,
-  CredentialSchemaResponse,
-  CredentialSchemaResponsePage
-}
+import io.iohk.atala.pollux.credentialschema.http.CredentialSchemaInput
+import io.iohk.atala.pollux.credentialschema.http.CredentialSchemaResponse
+import io.iohk.atala.pollux.credentialschema.http.CredentialSchemaResponsePage
 import sttp.client3.ziojson.*
-import sttp.client3.{DeserializationException, Response, UriContext, basicRequest}
-import sttp.model.{StatusCode, Uri}
+import sttp.client3.DeserializationException
+import sttp.client3.Response
+import sttp.client3.UriContext
+import sttp.client3.basicRequest
+import sttp.model.StatusCode
+import sttp.model.Uri
 import zio.*
 import zio.json.EncoderOps
 import zio.test.*
