@@ -43,7 +43,7 @@ object WalletDetail {
 
 final case class WalletDetailPage(
     self: String,
-    kind: String = "WalletDetailPage",
+    kind: String = "WalletPage",
     pageOf: String,
     next: Option[String] = None,
     previous: Option[String] = None,

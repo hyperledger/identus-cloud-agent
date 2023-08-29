@@ -312,8 +312,8 @@ object ManagedDIDServiceSpec
     test("can get PeerDIDRecord from any wallet") {
       for {
         walletSvc <- ZIO.service[WalletManagementService]
-        walletId1 <- walletSvc.createWallet()
-        walletId2 <- walletSvc.createWallet()
+        walletId1 <- walletSvc.createWallet(Wallet("wallet-1")).map(_.id)
+        walletId2 <- walletSvc.createWallet(Wallet("wallet-2")).map(_.id)
         ctx1 = ZLayer.succeed(WalletAccessContext(walletId1))
         ctx2 = ZLayer.succeed(WalletAccessContext(walletId2))
         svc <- ZIO.service[ManagedDIDService]
