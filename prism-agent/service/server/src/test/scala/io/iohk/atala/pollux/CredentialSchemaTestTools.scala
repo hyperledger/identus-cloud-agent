@@ -6,7 +6,7 @@ import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.castor.core.model.did.PrismDIDOperation
 import io.iohk.atala.pollux.core.model.schema.`type`.CredentialJsonSchemaType
 import io.iohk.atala.pollux.core.repository.CredentialSchemaRepository
-import io.iohk.atala.pollux.core.service.CredentialSchemaServiceImpl
+import io.iohk.atala.pollux.core.service.{CredentialSchemaService, CredentialSchemaServiceImpl}
 import io.iohk.atala.pollux.credentialschema.SchemaRegistryServerEndpoints
 import io.iohk.atala.pollux.credentialschema.controller.{CredentialSchemaController, CredentialSchemaControllerImpl}
 import io.iohk.atala.pollux.credentialschema.http.{
@@ -61,17 +61,20 @@ trait CredentialSchemaTestTools extends PostgresTestContainerSupport {
       )
     )
 
-  val testEnvironmentLayer =
+  val authenticatorLayer: TaskLayer[Authenticator] = DefaultEntityAuthenticator.layer
+
+  lazy val testEnvironmentLayer =
     ZLayer.makeSome[
       ManagedDIDService,
-      CredentialSchemaController & CredentialSchemaRepository & PostgreSQLContainer & Authenticator
+      CredentialSchemaController & CredentialSchemaRepository & CredentialSchemaService & PostgreSQLContainer &
+        Authenticator
     ](
       CredentialSchemaControllerImpl.layer,
       CredentialSchemaServiceImpl.layer,
       JdbcCredentialSchemaRepository.layer,
       contextAwareTransactorLayer,
       pgContainerLayer,
-      DefaultEntityAuthenticator.layer
+      authenticatorLayer
     )
 
   val credentialSchemaUriBase = uri"http://test.com/schema-registry/schemas"

@@ -23,7 +23,7 @@ import io.iohk.atala.connect.sql.repository.Migrations as ConnectMigrations
 import io.iohk.atala.event.notification.EventNotificationServiceImpl
 import io.iohk.atala.iam.authentication.DefaultAuthenticator
 import io.iohk.atala.iam.authentication.admin.{AdminApiKeyAuthenticatorImpl, AdminConfig}
-import io.iohk.atala.iam.authentication.apikey.{ApiKeyAuthenticatorImpl, ApiKeyConfig, AuthenticationRepositoryImpl}
+import io.iohk.atala.iam.authentication.apikey.{ApiKeyAuthenticatorImpl, ApiKeyConfig, JdbcAuthenticationRepository}
 import io.iohk.atala.iam.entity.http.controller.{EntityController, EntityControllerImpl}
 import io.iohk.atala.iam.wallet.http.controller.WalletManagementControllerImpl
 import io.iohk.atala.issue.controller.IssueControllerImpl
@@ -163,9 +163,9 @@ object MainApp extends ZIOAppDefault {
           DIDKeySecretStorageImpl.layer,
           RepoModule.agentContextAwareTransactorLayer >>> JdbcDIDNonSecretStorage.layer,
           RepoModule.agentContextAwareTransactorLayer >>> JdbcWalletNonSecretStorage.layer,
-          RepoModule.agentTransactorLayer >>> AuthenticationRepositoryImpl.layer,
-          RepoModule.agentTransactorLayer >>> JdbcEntityRepository.layer,
           RepoModule.allSecretStorageLayer,
+          RepoModule.agentTransactorLayer >>> JdbcEntityRepository.layer,
+          RepoModule.agentTransactorLayer >>> JdbcAuthenticationRepository.layer,
           RepoModule.connectTransactorLayer >>> JdbcConnectionRepository.layer,
           RepoModule.polluxTransactorLayer >>> JdbcCredentialRepository.layer,
           RepoModule.polluxTransactorLayer >>> JdbcCredentialSchemaRepository.layer,
