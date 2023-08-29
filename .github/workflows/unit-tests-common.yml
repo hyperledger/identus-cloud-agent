@@ -53,9 +53,9 @@ jobs:
         run: |
           # Workaround for container runners to correctly restore
           # https://github.com/actions/runner/issues/863
-          ls -la /nix/store/yaz7pyf0ah88g2v505l38n0f3wg2vzdj-glibc-2.37-8/lib
-          export LD_LIBRARY_PATH="/nix/store/yaz7pyf0ah88g2v505l38n0f3wg2vzdj-glibc-2.37-8/lib:${LD_LIBRARY_PATH}"
+          # ls -la /nix/store/yaz7pyf0ah88g2v505l38n0f3wg2vzdj-glibc-2.37-8/lib
           echo HOME=/root >> "${GITHUB_ENV}"
+          export LD_LIBRARY_PATH="/nix/store/yaz7pyf0ah88g2v505l38n0f3wg2vzdj-glibc-2.37-8/lib:${LD_LIBRARY_PATH}"
           sbt -v coverage test coverageAggregate
 
       - name: Upload coverage data to Coveralls
