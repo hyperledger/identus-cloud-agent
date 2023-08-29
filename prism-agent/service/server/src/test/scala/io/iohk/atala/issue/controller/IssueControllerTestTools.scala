@@ -17,8 +17,6 @@ import io.iohk.atala.issue.controller.http.{
 import io.iohk.atala.pollux.core.repository.CredentialRepositoryInMemory
 import io.iohk.atala.pollux.core.service.*
 import io.iohk.atala.pollux.vc.jwt.*
-import io.iohk.atala.shared.models.WalletAccessContext
-import io.iohk.atala.shared.models.WalletId
 import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
 import sttp.client3.testing.SttpBackendStub
 import sttp.client3.{DeserializationException, Response, UriContext}

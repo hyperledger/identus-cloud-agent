@@ -10,7 +10,6 @@ import io.iohk.atala.shared.db.Implicits.*
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 import zio.interop.catz.*
-import doobie.*
 import doobie.implicits.*
 
 import java.util.UUID
