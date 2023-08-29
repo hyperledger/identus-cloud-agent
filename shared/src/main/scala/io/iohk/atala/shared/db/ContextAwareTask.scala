@@ -41,14 +41,6 @@ object Implicits {
       } yield result
     }
 
-    def transactOptionalWallet(xa: Transactor[ContextAwareTask]): RIO[Option[WalletAccessContext], A] = {
-      for {
-        maybeCtx <- ZIO.service[Option[WalletAccessContext]]
-        result <- maybeCtx match
-          case Some(ctx) => transactWallet(xa).provide(ZLayer.succeed(ctx))
-          case None      => transact(xa)
-      } yield result
-    }
   }
 
 }

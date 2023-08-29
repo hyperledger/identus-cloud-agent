@@ -384,21 +384,6 @@ class JdbcDIDNonSecretStorage(xa: Transactor[ContextAwareTask]) extends DIDNonSe
     cxnIO.run.transactWallet(xa)
   }
 
-  override def getPeerDIDRecord(did: DidId): RIO[Option[WalletAccessContext], Option[PeerDIDRecord]] = {
-    val cnxIO =
-      sql"""
-           | SELECT
-           |  did,
-           |  created_at,
-           |  wallet_id
-           | FROM public.peer_did
-            """.stripMargin
-        .query[PeerDIDRecord]
-        .option
-
-    cnxIO.transactOptionalWallet(xa)
-  }
-
 }
 
 object JdbcDIDNonSecretStorage {

@@ -5,8 +5,7 @@ import io.iohk.atala.agent.walletapi.model.*
 import io.iohk.atala.agent.walletapi.model.error.{*, given}
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService.DEFAULT_MASTER_KEY_ID
 import io.iohk.atala.agent.walletapi.service.handler.{DIDCreateHandler, DIDUpdateHandler, PublicationHandler}
-import io.iohk.atala.agent.walletapi.storage.WalletSecretStorage
-import io.iohk.atala.agent.walletapi.storage.{DIDNonSecretStorage, DIDKeySecretStorage}
+import io.iohk.atala.agent.walletapi.storage.{DIDKeySecretStorage, DIDNonSecretStorage, WalletSecretStorage}
 import io.iohk.atala.agent.walletapi.util.*
 import io.iohk.atala.castor.core.model.did.*
 import io.iohk.atala.castor.core.model.error.DIDOperationError
@@ -366,11 +365,6 @@ class ManagedDIDServiceImpl private[walletapi] (
         .mapError(_ => DIDSecretStorageError.KeyNotFoundError(didId, AUTHENTICATION_KEY_ID))
       peerDID <- ZIO.succeed(PeerDID(didId, jwkForAgreement, jwkForAuthentication))
     } yield peerDID
-
-  override def getPeerDIDRecord(
-      didId: DidId
-  ): RIO[Option[WalletAccessContext], Option[PeerDIDRecord]] =
-    nonSecretStorage.getPeerDIDRecord(didId)
 
 }
 
