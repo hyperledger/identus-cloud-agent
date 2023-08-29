@@ -22,9 +22,9 @@ jobs:
       image: ubuntu:22.04
       volumes:
         - /nix:/nix
-      credentials:
-        username: ${{ secrets.ATALA_GITHUB_ACTOR }}
-        password: ${{ secrets.ATALA_GITHUB_TOKEN }}
+      # credentials:
+      #   username: ${{ secrets.ATALA_GITHUB_ACTOR }}
+      #   password: ${{ secrets.ATALA_GITHUB_TOKEN }}
       env:
         GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
         TESTCONTAINERS_RYUK_DISABLED: true
