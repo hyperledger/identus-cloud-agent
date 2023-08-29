@@ -45,7 +45,7 @@ object DidCommHttpServer {
 
   private def didCommServiceEndpoint: HttpApp[
     DidOps & DidAgent & CredentialService & PresentationService & ConnectionService & ManagedDIDService & HttpClient &
-      DidAgent & DIDResolver & WalletAccessContext & DIDNonSecretStorageUnprotected,
+      DidAgent & DIDResolver & DIDNonSecretStorageUnprotected,
     Nothing
   ] = Http.collectZIO[Request] {
     case Method.GET -> !! / "did" =>
