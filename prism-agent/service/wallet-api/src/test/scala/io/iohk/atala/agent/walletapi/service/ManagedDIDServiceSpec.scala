@@ -2,7 +2,12 @@ package io.iohk.atala.agent.walletapi.service
 
 import io.iohk.atala.agent.walletapi.crypto.{Apollo, ApolloSpecHelper}
 import io.iohk.atala.agent.walletapi.model.*
-import io.iohk.atala.agent.walletapi.model.error.{CreateManagedDIDError, DIDSecretStorageError, PublishManagedDIDError, UpdateManagedDIDError}
+import io.iohk.atala.agent.walletapi.model.error.{
+  CreateManagedDIDError,
+  DIDSecretStorageError,
+  PublishManagedDIDError,
+  UpdateManagedDIDError
+}
 import io.iohk.atala.agent.walletapi.sql.*
 import io.iohk.atala.agent.walletapi.storage.*
 import io.iohk.atala.agent.walletapi.storage.JdbcEntityRepositorySpec.pgContainerLayer
