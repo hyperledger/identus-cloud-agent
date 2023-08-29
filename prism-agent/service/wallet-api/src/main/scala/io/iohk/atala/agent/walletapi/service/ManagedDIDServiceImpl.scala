@@ -5,8 +5,7 @@ import io.iohk.atala.agent.walletapi.model.*
 import io.iohk.atala.agent.walletapi.model.error.{*, given}
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService.DEFAULT_MASTER_KEY_ID
 import io.iohk.atala.agent.walletapi.service.handler.{DIDCreateHandler, DIDUpdateHandler, PublicationHandler}
-import io.iohk.atala.agent.walletapi.storage.WalletSecretStorage
-import io.iohk.atala.agent.walletapi.storage.{DIDNonSecretStorage, DIDKeySecretStorage}
+import io.iohk.atala.agent.walletapi.storage.{DIDKeySecretStorage, DIDNonSecretStorage, WalletSecretStorage}
 import io.iohk.atala.agent.walletapi.util.*
 import io.iohk.atala.castor.core.model.did.*
 import io.iohk.atala.castor.core.model.error.DIDOperationError
@@ -15,11 +14,11 @@ import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.mercury.PeerDID
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.shared.models.WalletAccessContext
+import zio.*
+
 import java.security.{PrivateKey as JavaPrivateKey, PublicKey as JavaPublicKey}
 import scala.collection.immutable.ArraySeq
 import scala.language.implicitConversions
-import scala.language.implicitConversions
-import zio.*
 
 /** A wrapper around Castor's DIDService providing key-management capability. Analogous to the secretAPI in
   * indy-wallet-sdk.
@@ -349,6 +348,7 @@ class ManagedDIDServiceImpl private[walletapi] (
   def createAndStorePeerDID(serviceEndpoint: String): URIO[WalletAccessContext, PeerDID] =
     for {
       peerDID <- ZIO.succeed(PeerDID.makePeerDid(serviceEndpoint = Some(serviceEndpoint)))
+      _ <- nonSecretStorage.createPeerDIDRecord(peerDID.did).orDie
       _ <- secretStorage.insertKey(peerDID.did, AGREEMENT_KEY_ID, peerDID.jwkForKeyAgreement).orDie
       _ <- secretStorage.insertKey(peerDID.did, AUTHENTICATION_KEY_ID, peerDID.jwkForKeyAuthentication).orDie
     } yield peerDID

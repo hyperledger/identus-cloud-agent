@@ -45,7 +45,7 @@ PRE_COMMANDS:
 # Linter customisation
 MARKDOWN_MARKDOWN_LINK_CHECK_FILTER_REGEX_EXCLUDE: "CHANGELOG.md"
 MARKDOWN_MARKDOWNLINT_FILTER_REGEX_EXCLUDE: "CHANGELOG.md"
-SQL_SQL_LINT_ARGUMENTS: -d postgres --ignore-errors=postgres-invalid-alter-option,postgres-invalid-create-option
+SQL_SQL_LINT_ARGUMENTS: -d postgres --ignore-errors=postgres-invalid-alter-option,postgres-invalid-create-option,postgres-invalid-drop-option
 YAML_YAMLLINT_FILTER_REGEX_EXCLUDE: "infrastructure/charts/agent/*"
 YAML_PRETTIER_FILTER_REGEX_EXCLUDE: "infrastructure/charts/agent/*"
 YAML_V8R_FILTER_REGEX_EXCLUDE: "infrastructure/charts/agent/*"

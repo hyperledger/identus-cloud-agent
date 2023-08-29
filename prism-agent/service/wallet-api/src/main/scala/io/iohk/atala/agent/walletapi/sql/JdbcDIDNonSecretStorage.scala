@@ -3,23 +3,22 @@ package io.iohk.atala.agent.walletapi.sql
 import doobie.*
 import doobie.implicits.*
 import doobie.postgres.implicits.*
-import io.iohk.atala.agent.walletapi.model.HdKeyIndexCounter
-import io.iohk.atala.agent.walletapi.model.InternalKeyCounter
-import io.iohk.atala.agent.walletapi.model.ManagedDIDHdKeyPath
-import io.iohk.atala.agent.walletapi.model.PublicationState
-import io.iohk.atala.agent.walletapi.model.VerificationRelationshipCounter
-import io.iohk.atala.agent.walletapi.model.{DIDUpdateLineage, ManagedDIDState, ManagedDIDStatePatch}
+import io.iohk.atala.agent.walletapi.model.*
 import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
-import io.iohk.atala.castor.core.model.did.InternalKeyPurpose
-import io.iohk.atala.castor.core.model.did.VerificationRelationship
-import io.iohk.atala.castor.core.model.did.{PrismDID, ScheduledDIDOperationStatus}
+import io.iohk.atala.castor.core.model.did.{
+  InternalKeyPurpose,
+  PrismDID,
+  ScheduledDIDOperationStatus,
+  VerificationRelationship
+}
+import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.shared.db.ContextAwareTask
 import io.iohk.atala.shared.db.Implicits.{*, given}
-import io.iohk.atala.shared.models.WalletAccessContext
-import io.iohk.atala.shared.models.WalletId
+import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
+import zio.*
+
 import java.time.Instant
 import scala.collection.immutable.ArraySeq
-import zio.*
 
 class JdbcDIDNonSecretStorage(xa: Transactor[ContextAwareTask]) extends DIDNonSecretStorage {
 
@@ -366,6 +365,23 @@ class JdbcDIDNonSecretStorage(xa: Transactor[ContextAwareTask]) extends DIDNonSe
             """.stripMargin.update
 
     Clock.instant.flatMap(now => cxnIO(now).run.transactWallet(xa)).unit
+  }
+
+  override def createPeerDIDRecord(did: DidId): RIO[WalletAccessContext, Int] = {
+    val cxnIO =
+      sql"""
+           | INSERT INTO public.peer_did(
+           |  did,
+           |  created_at,
+           |  wallet_id
+           | ) VALUES (
+           |  ${did},
+           |  ${Instant.now},
+           |  current_setting('app.current_wallet_id')::UUID
+           | )
+            """.stripMargin.update
+
+    cxnIO.run.transactWallet(xa)
   }
 
 }
