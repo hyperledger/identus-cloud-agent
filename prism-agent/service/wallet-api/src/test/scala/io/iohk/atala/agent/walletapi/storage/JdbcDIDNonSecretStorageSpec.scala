@@ -15,10 +15,11 @@ import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
 import io.iohk.atala.test.container.DBTestUtils
 import org.postgresql.util.PSQLException
-import scala.collection.compat.immutable.ArraySeq
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
+
+import scala.collection.compat.immutable.ArraySeq
 
 object JdbcDIDNonSecretStorageSpec
     extends ZIOSpecDefault,

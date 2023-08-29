@@ -2,19 +2,18 @@ package io.iohk.atala.pollux.core.model.schema
 
 import io.iohk.atala.pollux.core.model.error.CredentialSchemaError
 import io.iohk.atala.pollux.core.model.error.CredentialSchemaError.*
-import io.iohk.atala.pollux.core.model.schema.`type`.{
-  AnoncredSchemaType,
-  CredentialJsonSchemaType,
-  CredentialSchemaType
-}
-import io.iohk.atala.pollux.core.model.schema.validator.CredentialJsonSchemaValidator
+import io.iohk.atala.pollux.core.model.schema.`type`.AnoncredSchemaType
+import io.iohk.atala.pollux.core.model.schema.`type`.CredentialJsonSchemaType
+import io.iohk.atala.pollux.core.model.schema.`type`.CredentialSchemaType
+import io.iohk.atala.pollux.core.model.schema.validator.JsonSchemaValidatorImpl
 import io.iohk.atala.pollux.core.service.URIDereferencer
 import zio.*
 import zio.json.*
 import zio.prelude.Validation
 
 import java.net.URI
-import java.time.{OffsetDateTime, ZoneOffset}
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.util.UUID
 
 type Schema = zio.json.ast.Json
@@ -133,8 +132,8 @@ object CredentialSchema {
             )
           )(resolvedSchemaType.`type`)(`type` => `type` == CredentialJsonSchemaType.`type`)
           .toZIO
-      schemaValidator <- CredentialJsonSchemaValidator.from(vcSchema.schema)
-      _ <- schemaValidator.validate(claims)
+      schemaValidator <- JsonSchemaValidatorImpl.from(vcSchema.schema).mapError(SchemaError.apply)
+      _ <- schemaValidator.validate(claims).mapError(SchemaError.apply)
     } yield ()
   }
 
@@ -152,7 +151,7 @@ object CredentialSchema {
   def validateCredentialSchema(vcSchema: CredentialSchema): IO[CredentialSchemaError, Unit] = {
     for {
       resolvedSchemaType <- resolveCredentialSchemaType(vcSchema.`type`)
-      _ <- resolvedSchemaType.validate(vcSchema.schema)
+      _ <- resolvedSchemaType.validate(vcSchema.schema).mapError(SchemaError.apply)
     } yield ()
   }
 

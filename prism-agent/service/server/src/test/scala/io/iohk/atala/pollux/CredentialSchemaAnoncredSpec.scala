@@ -3,7 +3,7 @@ package io.iohk.atala.pollux
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.container.util.MigrationAspects.*
 import io.iohk.atala.iam.authentication.Authenticator
-import io.iohk.atala.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSchemaV1
+import io.iohk.atala.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
 import io.iohk.atala.pollux.core.model.schema.`type`.{AnoncredSchemaType, CredentialJsonSchemaType}
 import io.iohk.atala.pollux.credentialschema.*
 import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaController
@@ -74,7 +74,7 @@ object CredentialSchemaAnoncredSpec extends ZIOSpecDefault with CredentialSchema
 
     suite("Anoncred Schema Creation")(
       test("should create new Schema") {
-        val schemaInput = createCredentialSchemaInput(AnoncredSchemaSchemaV1.version)
+        val schemaInput = createCredentialSchemaInput(AnoncredSchemaSerDesV1.version)
         for {
           response <- createResponse[CredentialSchemaResponse](AnoncredSchemaType.`type`)
           statusCodeIs201 = assert(response.code)(equalTo(StatusCode.Created))

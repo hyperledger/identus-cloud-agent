@@ -14,21 +14,30 @@ class WalletManagementServiceImpl(
     secretStorage: WalletSecretStorage,
 ) extends WalletManagementService {
 
-  override def createWallet(seed: Option[WalletSeed]): Task[WalletId] =
+  override def createWallet(seed: Option[WalletSeed]): IO[WalletManagementServiceError, WalletId] =
     for {
       seed <- seed.fold(
         apollo.ecKeyFactory
           .randomBip32Seed()
           .map(_._1)
-          .map(WalletSeed.fromByteArray)
+          .flatMap(bytes => ZIO.fromEither(WalletSeed.fromByteArray(bytes)).mapError(Exception(_)))
+          .mapError(WalletManagementServiceError.SeedGenerationError.apply)
       )(ZIO.succeed)
       walletId <- nonSecretStorage.createWallet
+        .mapError(WalletManagementServiceError.WalletStorageError.apply)
       _ <- secretStorage
         .setWalletSeed(seed)
+        .mapError(WalletManagementServiceError.WalletStorageError.apply)
         .provide(ZLayer.succeed(WalletAccessContext(walletId)))
     } yield walletId
 
-  override def listWallets: Task[Seq[WalletId]] = nonSecretStorage.listWallet
+  override def listWallets(
+      offset: Option[Int],
+      limit: Option[Int]
+  ): IO[WalletManagementServiceError, (Seq[WalletId], Int)] =
+    nonSecretStorage
+      .listWallet(offset = offset, limit = limit)
+      .mapError(WalletManagementServiceError.WalletStorageError.apply)
 }
 
 object WalletManagementServiceImpl {
