@@ -51,6 +51,7 @@ object CredentialSchemaMultiTenancySpec extends ZIOSpecDefault with CredentialSc
 
   val serviceLayer = ZLayer.make[CredentialSchemaService & PostgreSQLContainer](
     contextAwareTransactorLayer,
+    systemTransactorLayer,
     pgContainerLayer,
     JdbcCredentialSchemaRepository.layer,
     CredentialSchemaServiceImpl.layer
@@ -108,12 +109,16 @@ object CredentialSchemaMultiTenancySpec extends ZIOSpecDefault with CredentialSc
           fails(isSubtype[CredentialSchemaService.Error.NotFoundError](anything))
         )
 
-//        fetchedSchemaAbyB <- service.getByGUID(createdSchemaA.guid).provideLayer(Bob.wacLayer)
-//        fetchedSchemaBbyA <- service.getByGUID(createdSchemaB.guid).provideLayer(Alice.wacLayer)
+        fetchedSchemaAbyB <- service.getByGUID(updatedSchemaA.guid).provideLayer(Bob.wacLayer)
+        fetchedSchemaBbyA <- service.getByGUID(updatedSchemaB.guid).provideLayer(Alice.wacLayer)
+
+        aliceCanAccessBobVCSchemaByGUID = assert(fetchedSchemaAbyB)(equalTo(updatedSchemaA))
+        bobCanAccessAliceVCSchemaByGUID = assert(fetchedSchemaBbyA)(equalTo(updatedSchemaB))
 
       } yield assert(fetchedSchemaA)(equalTo(createdSchemaA)) &&
         assert(fetchedSchemaB)(equalTo(createdSchemaB)) &&
         aliceCannotAccessBobsVCSchema && bobCannotAccessAlicesVCSchema &&
-        aliceCannotUpdateBobsVCSchema && bobCannotUpdateAlicesVCSchema
+        aliceCannotUpdateBobsVCSchema && bobCannotUpdateAlicesVCSchema &&
+        aliceCanAccessBobVCSchemaByGUID && bobCanAccessAliceVCSchemaByGUID
     )
   )

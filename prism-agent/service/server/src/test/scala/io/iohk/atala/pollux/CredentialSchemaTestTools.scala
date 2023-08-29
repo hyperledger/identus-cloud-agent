@@ -73,6 +73,7 @@ trait CredentialSchemaTestTools extends PostgresTestContainerSupport {
       CredentialSchemaServiceImpl.layer,
       JdbcCredentialSchemaRepository.layer,
       contextAwareTransactorLayer,
+      systemTransactorLayer,
       pgContainerLayer,
       authenticatorLayer
     )

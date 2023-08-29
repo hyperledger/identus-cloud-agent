@@ -167,10 +167,10 @@ object MainApp extends ZIOAppDefault {
           RepoModule.agentTransactorLayer >>> JdbcEntityRepository.layer,
           RepoModule.agentTransactorLayer >>> JdbcAuthenticationRepository.layer,
           RepoModule.connectTransactorLayer >>> JdbcConnectionRepository.layer,
-          RepoModule.polluxTransactorLayer >>> JdbcCredentialRepository.layer,
-          RepoModule.polluxTransactorLayer >>> JdbcCredentialSchemaRepository.layer,
-          RepoModule.polluxTransactorLayer >>> JdbcPresentationRepository.layer,
-          RepoModule.polluxTransactorLayer >>> JdbcVerificationPolicyRepository.layer,
+          RepoModule.polluxContextAwareTransactorLayer >>> JdbcCredentialRepository.layer,
+          RepoModule.polluxContextAwareTransactorLayer >+> RepoModule.polluxTransactorLayer >>> JdbcCredentialSchemaRepository.layer,
+          RepoModule.polluxContextAwareTransactorLayer >>> JdbcPresentationRepository.layer,
+          RepoModule.polluxContextAwareTransactorLayer >>> JdbcVerificationPolicyRepository.layer,
           // event notification service
           ZLayer.succeed(500) >>> EventNotificationServiceImpl.layer,
           // HTTP client

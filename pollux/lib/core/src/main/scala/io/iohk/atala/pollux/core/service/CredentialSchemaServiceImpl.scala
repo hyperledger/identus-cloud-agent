@@ -7,6 +7,7 @@ import io.iohk.atala.pollux.core.repository.Repository.SearchQuery
 import io.iohk.atala.pollux.core.service.CredentialSchemaService.Error.*
 import zio.ZIO.{fail, getOrFailWith, succeed}
 import zio.{URLayer, ZLayer}
+import zio.IO
 
 import java.util.UUID
 
@@ -25,7 +26,7 @@ class CredentialSchemaServiceImpl(
     case t: Throwable             => RepositoryError(t)
   }
 
-  override def getByGUID(guid: UUID): Result[CredentialSchema] = {
+  override def getByGUID(guid: UUID): IO[CredentialSchemaService.Error, CredentialSchema] = {
     credentialSchemaRepository
       .getByGuid(guid)
       .mapError[CredentialSchemaService.Error](t => RepositoryError(t))

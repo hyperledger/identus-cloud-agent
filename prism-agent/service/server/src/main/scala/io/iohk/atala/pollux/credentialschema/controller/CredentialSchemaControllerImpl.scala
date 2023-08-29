@@ -56,7 +56,7 @@ class CredentialSchemaControllerImpl(service: CredentialSchemaService, managedDI
 
   override def getSchemaByGuid(guid: UUID)(implicit
       rc: RequestContext
-  ): ZIO[WalletAccessContext, ErrorResponse, CredentialSchemaResponse] = {
+  ): IO[ErrorResponse, CredentialSchemaResponse] = {
     service
       .getByGUID(guid)
       .map(

@@ -22,7 +22,7 @@ class JdbcWalletNonSecretStorage(xa: Transactor[ContextAwareTask]) extends Walle
     for {
       now <- Clock.instant
       walletId = WalletId.random
-      _ <- cxnIO(walletId, now).run.transact(xa)
+      _ <- cxnIO(walletId, now).run.transactWithoutContext(xa)
     } yield walletId
   }
 
@@ -50,7 +50,7 @@ class JdbcWalletNonSecretStorage(xa: Transactor[ContextAwareTask]) extends Walle
       rows <- walletsCxnIO
     } yield (rows, totalCount)
 
-    effect.transact(xa)
+    effect.transactWithoutContext(xa)
   }
 
 }

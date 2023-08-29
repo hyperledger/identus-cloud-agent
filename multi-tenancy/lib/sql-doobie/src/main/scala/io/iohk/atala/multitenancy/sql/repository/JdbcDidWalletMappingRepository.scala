@@ -37,7 +37,7 @@ class JdbcDidWalletMappingRepository(xa: Transactor[ContextAwareTask]) extends D
         """.stripMargin.update
 
     cxnIO.run
-      .transact(xa)
+      .transactWithoutContext(xa)
       .mapError {
         case e: PSQLException => {
           UniqueConstraintViolation(e.getMessage)
@@ -59,7 +59,7 @@ class JdbcDidWalletMappingRepository(xa: Transactor[ContextAwareTask]) extends D
       .to[Seq]
 
     cxnIO
-      .transact(xa)
+      .transactWithoutContext(xa)
   }
 
   override def deleteDidWalletMappingByDid(did: DidId): Task[Int] = {
@@ -70,7 +70,7 @@ class JdbcDidWalletMappingRepository(xa: Transactor[ContextAwareTask]) extends D
       """.stripMargin.update
 
     cxnIO.run
-      .transact(xa)
+      .transactWithoutContext(xa)
   }
 
   override def deleteDidWalletMappingByWalletId(walletId: WalletId): Task[Int] = {
@@ -82,7 +82,7 @@ class JdbcDidWalletMappingRepository(xa: Transactor[ContextAwareTask]) extends D
       """.stripMargin.update
 
     cxnIO.run
-      .transact(xa)
+      .transactWithoutContext(xa)
   }
 
   override def getDidWalletMappingByWalletId(walletId: WalletId): Task[Seq[DidWalletMappingRecord]] = {
@@ -99,7 +99,7 @@ class JdbcDidWalletMappingRepository(xa: Transactor[ContextAwareTask]) extends D
       .to[Seq]
 
     cxnIO
-      .transact(xa)
+      .transactWithoutContext(xa)
   }
 
   override def getDidWalletMappingByDid(did: DidId): Task[Option[DidWalletMappingRecord]] = {
@@ -116,7 +116,7 @@ class JdbcDidWalletMappingRepository(xa: Transactor[ContextAwareTask]) extends D
       .option
 
     cxnIO
-      .transact(xa)
+      .transactWithoutContext(xa)
   }
 
 }

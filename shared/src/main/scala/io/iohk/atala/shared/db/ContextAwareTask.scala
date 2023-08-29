@@ -21,7 +21,7 @@ object Implicits {
   private val WalletIdVariableName = "app.current_wallet_id"
 
   extension [A](ma: ConnectionIO[A]) {
-    def transact(xa: Transactor[ContextAwareTask]): Task[A] = {
+    def transactWithoutContext(xa: Transactor[ContextAwareTask]): Task[A] = {
       ConnectionIOOps(ma).transact(xa.asInstanceOf[Transactor[Task]])
     }
 
