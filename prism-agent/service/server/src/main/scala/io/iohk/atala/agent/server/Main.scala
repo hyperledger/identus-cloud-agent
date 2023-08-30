@@ -45,7 +45,6 @@ import io.iohk.atala.pollux.sql.repository.{
 }
 import io.iohk.atala.presentproof.controller.PresentProofControllerImpl
 import io.iohk.atala.resolvers.DIDResolver
-import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.system.controller.SystemControllerImpl
 import io.micrometer.prometheus.{PrometheusConfig, PrometheusMeterRegistry}
 import zio.*
@@ -60,17 +59,6 @@ import scala.language.implicitConversions
 object MainApp extends ZIOAppDefault {
 
   Security.insertProviderAt(BouncyCastleProviderSingleton.getInstance(), 2)
-
-  def didCommAgentLayer(
-      didCommServiceUrl: String
-  ): ZLayer[ManagedDIDService & WalletAccessContext, Nothing, DidAgent] = {
-    val aux = for {
-      managedDIDService <- ZIO.service[ManagedDIDService]
-      peerDID <- managedDIDService.createAndStorePeerDID(didCommServiceUrl)
-      _ <- ZIO.logInfo(s"New DID: ${peerDID.did}")
-    } yield io.iohk.atala.mercury.AgentPeerService.makeLayer(peerDID)
-    ZLayer.fromZIO(aux).flatten
-  }
 
   val migrations = for {
     _ <- ZIO.serviceWithZIO[PolluxMigrations](_.migrate)
@@ -119,7 +107,6 @@ object MainApp extends ZIOAppDefault {
       app <- PrismAgentApp
         .run(didCommServicePort)
         .provide(
-          didCommAgentLayer(didCommServiceUrl),
           DidCommX.liveLayer,
           // infra
           SystemModule.configLayer,
@@ -145,7 +132,6 @@ object MainApp extends ZIOAppDefault {
           // domain
           AppModule.apolloLayer,
           AppModule.didJwtResolverlayer,
-          AppModule.seedResolverLayer,
           DIDOperationValidator.layer(),
           DIDResolver.layer,
           HttpURIDereferencerImpl.layer,
@@ -182,8 +168,6 @@ object MainApp extends ZIOAppDefault {
           // HTTP client
           Client.default,
           Scope.default,
-          // FIXME: Remove when support dynamic wallet. Temporarily added to make some components work
-          AppModule.defaultWalletContext
         )
     } yield app
 
