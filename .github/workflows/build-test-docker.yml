@@ -55,6 +55,6 @@ jobs:
           context: .github/docker
           push: true
           tags: |
-            "ghcr.io/input-output-hk/${env.IMAGE_NAME}:latest"
-            "ghcr.io/input-output-hk/${env.IMAGE_NAME}:main"
+            "ghcr.io/input-output-hk/agent-ci-ubuntu-22-jdk-11:latest"
+            "ghcr.io/input-output-hk/agent-ci-ubuntu-22-jdk-11:main"
           labels: ${{ steps.meta.outputs.labels }}
