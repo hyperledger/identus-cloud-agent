@@ -315,7 +315,9 @@ private class CredentialServiceImpl(
       issue = createDidCommIssueCredential(request)
       count <- credentialRepository
         .updateWithIssueCredential(recordId, issue, ProtocolState.CredentialPending)
-        .mapError(RepositoryError.apply)
+        .mapError(RepositoryError.apply) @@ CustomMetricsAspect.startRecordingTime(
+        s"${record.id}_issuance_flow_issuer_credential_pending_to_generated"
+      )
       _ <- count match
         case 1 => ZIO.succeed(())
         case n => ZIO.fail(RecordIdNotFound(recordId))
@@ -380,7 +382,10 @@ private class CredentialServiceImpl(
           issueCredential,
           IssueCredentialRecord.ProtocolState.CredentialGenerated
         )
-        .mapError(RepositoryError.apply)
+        .mapError(RepositoryError.apply) @@ CustomMetricsAspect.endRecordingTime(
+        s"${record.id}_issuance_flow_issuer_credential_pending_to_generated",
+        "issuance_flow_issuer_credential_pending_to_generated_ms_gauge"
+      ) @@ CustomMetricsAspect.startRecordingTime(s"${record.id}_issuance_flow_issuer_credential_generated_to_sent")
       _ <- count match
         case 1 => ZIO.succeed(())
         case n => ZIO.fail(RecordIdNotFound(recordId))
@@ -400,6 +405,9 @@ private class CredentialServiceImpl(
       recordId,
       IssueCredentialRecord.ProtocolState.CredentialGenerated,
       IssueCredentialRecord.ProtocolState.CredentialSent
+    ) @@ CustomMetricsAspect.endRecordingTime(
+      s"${recordId}_issuance_flow_issuer_credential_generated_to_sent",
+      "issuance_flow_issuer_credential_generated_to_sent_ms_gauge"
     )
 
   override def markCredentialPublicationPending(
