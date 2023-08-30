@@ -2,7 +2,7 @@ package io.iohk.atala.iam.authentication.apikey
 
 import com.dimafeng.testcontainers.PostgreSQLContainer
 import io.iohk.atala.agent.walletapi.crypto.Apollo
-import io.iohk.atala.agent.walletapi.model.{Entity, Wallet}
+import io.iohk.atala.agent.walletapi.model.Entity
 import io.iohk.atala.agent.walletapi.service.{
   EntityService,
   EntityServiceImpl,
@@ -13,7 +13,6 @@ import io.iohk.atala.agent.walletapi.sql.{JdbcEntityRepository, JdbcWalletNonSec
 import io.iohk.atala.container.util.MigrationAspects.*
 import io.iohk.atala.iam.authentication.AuthenticationError
 import io.iohk.atala.iam.authentication.AuthenticationError.InvalidCredentials
-import io.iohk.atala.shared.models.WalletId
 import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
 import zio.test.Assertion.*
 import zio.test.TestAspect.sequential
@@ -55,6 +54,16 @@ object ApiKeyAuthenticatorSpec extends ZIOSpecDefault, PostgresTestContainerSupp
         contextAwareTransactorLayer,
         pgContainerLayer
       )
+
+//  val layers =
+//    JdbcAuthenticationRepository.layer >+>
+//      EntityServiceImpl.layer >+>
+//      JdbcEntityRepository.layer >+>
+//      Apollo.prism14Layer >+>
+//      WalletManagementServiceImpl.layer >+>
+//      JdbcWalletNonSecretStorage.layer >+>
+//      JdbcWalletSecretStorage.layer >+> systemTransactorLayer >+>
+//      contextAwareTransactorLayer >+> pgContainerLayer
 
   override def spec: Spec[TestEnvironment with Scope, Any] = {
     val testSuite = suite("ApiKeyAuthenticatorSpec")(
@@ -106,8 +115,8 @@ object ApiKeyAuthenticatorSpec extends ZIOSpecDefault, PostgresTestContainerSupp
   val authenticationEnabledMultiTenantSpec = suite("when authentication enabled in the multi-tenant mode")(
     test("registered entity is authenticated")(
       for {
-        wallet <- ZIO.serviceWithZIO[WalletManagementService](_.createWallet(Wallet("wallet", WalletId.random)))
-        entity <- ZIO.serviceWithZIO[EntityService](_.create(Entity(name = "entity", walletId = wallet.id.toUUID)))
+        walletId <- ZIO.serviceWithZIO[WalletManagementService](_.createWallet())
+        entity <- ZIO.serviceWithZIO[EntityService](_.create(Entity(name = "entity", walletId = walletId.toUUID)))
         _ <- ApiKeyAuthenticator.add(entity.id, "registeredkey#1")
         authenticatedEntity <- ZIO.serviceWithZIO[ApiKeyAuthenticator](
           _.authenticate(ApiKeyCredentials(Option("registeredkey#1")))
@@ -129,8 +138,8 @@ object ApiKeyAuthenticatorSpec extends ZIOSpecDefault, PostgresTestContainerSupp
     suite("when authentication enabled in the multi-tenant mode with auto-provisioning")(
       test("registered entity is authenticated")(
         for {
-          wallet <- ZIO.serviceWithZIO[WalletManagementService](_.createWallet(Wallet("wallet", WalletId.random)))
-          entity <- ZIO.serviceWithZIO[EntityService](_.create(Entity(name = "entity", walletId = wallet.id.toUUID)))
+          walletId <- ZIO.serviceWithZIO[WalletManagementService](_.createWallet())
+          entity <- ZIO.serviceWithZIO[EntityService](_.create(Entity(name = "entity", walletId = walletId.toUUID)))
           _ <- ApiKeyAuthenticator.add(entity.id, "registered-key#1")
           authenticatedEntity <- ZIO.serviceWithZIO[ApiKeyAuthenticator](
             _.authenticate(ApiKeyCredentials(Option("registered-key#1")))
@@ -146,13 +155,11 @@ object ApiKeyAuthenticatorSpec extends ZIOSpecDefault, PostgresTestContainerSupp
           entity3 <- ZIO.serviceWithZIO[EntityService](_.getById(authenticatedEntity3.id))
 
           wallet2Exists <- ZIO
-            .serviceWithZIO[WalletManagementService](_.listWallets())
-            .map(tuple => tuple._1)
-            .map(_.exists(_.id == entity2.walletId))
+            .serviceWithZIO[WalletManagementService](_.listWallets)
+            .map(_.exists(_ == entity2.walletId))
           wallet3Exists <- ZIO
-            .serviceWithZIO[WalletManagementService](_.listWallets())
-            .map(tuple => tuple._1)
-            .map(_.exists(_.id == entity3.walletId))
+            .serviceWithZIO[WalletManagementService](_.listWallets)
+            .map(_.exists(_ == entity3.walletId))
 
         } yield assert(authenticatedEntity2)(equalTo(entity2)) && assert(authenticatedEntity3)(equalTo(entity3)) &&
           assert(wallet2Exists)(isTrue) && assert(wallet3Exists)(isTrue)
