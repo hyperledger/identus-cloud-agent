@@ -27,7 +27,7 @@ trait CredentialSchemaController {
 
   def getSchemaByGuid(id: UUID)(implicit
       rc: RequestContext
-  ): ZIO[WalletAccessContext, ErrorResponse, CredentialSchemaResponse]
+  ): IO[ErrorResponse, CredentialSchemaResponse]
 
   def delete(guid: UUID)(implicit
       rc: RequestContext
