@@ -1,12 +1,7 @@
 package io.iohk.atala.agent.walletapi.service
 
+import io.iohk.atala.agent.walletapi.model.*
 import io.iohk.atala.agent.walletapi.model.error.*
-import io.iohk.atala.agent.walletapi.model.{
-  ManagedDIDDetail,
-  ManagedDIDState,
-  ManagedDIDTemplate,
-  UpdateManagedDIDAction
-}
 import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
 import io.iohk.atala.castor.core.model.did.{CanonicalPrismDID, LongFormPrismDID, ScheduleDIDOperationOutcome}
 import io.iohk.atala.mercury.PeerDID

@@ -5,8 +5,8 @@ import doobie.implicits.*
 import io.iohk.atala.agent.walletapi.storage.DIDSecret
 import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
 import io.iohk.atala.mercury.model.DidId
-import io.iohk.atala.shared.db.Implicits.{*, given}
 import io.iohk.atala.shared.db.ContextAwareTask
+import io.iohk.atala.shared.db.Implicits.{*, given}
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 import zio.json.*
@@ -64,28 +64,25 @@ class JdbcDIDSecretStorage(xa: Transactor[ContextAwareTask]) extends DIDSecretSt
   }
 
   override def insertKey(did: DidId, keyId: String, didSecret: DIDSecret): RIO[WalletAccessContext, Int] = {
-    val cxnIO = (now: InstantAsBigInt, walletId: WalletId) => sql"""
+    val cxnIO = (now: InstantAsBigInt) => sql"""
         | INSERT INTO public.peer_did_rand_key(
         |   did,
         |   created_at,
         |   key_id,
         |   key_pair,
-        |   schema_id,
-        |   wallet_id
+        |   schema_id
         | ) values (
         |   ${did},
         |   ${now},
         |   ${keyId},
         |   ${didSecret.json},
-        |   ${didSecret.schemaId},
-        |   ${walletId}
+        |   ${didSecret.schemaId}
         | )
         """.stripMargin.update
 
     for {
       now <- Clock.instant
-      walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
-      result <- cxnIO(InstantAsBigInt(now), walletId).run.transactWallet(xa)
+      result <- cxnIO(InstantAsBigInt(now)).run.transactWallet(xa)
     } yield result
   }
 

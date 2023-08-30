@@ -1,6 +1,7 @@
 package io.iohk.atala.pollux.sql.repository
 
 import doobie.*
+import doobie.implicits.*
 import io.iohk.atala.pollux.core.model.schema.CredentialSchema
 import io.iohk.atala.pollux.core.repository.Repository.*
 import io.iohk.atala.pollux.core.repository.{CredentialSchemaRepository, Repository}
@@ -10,7 +11,6 @@ import io.iohk.atala.shared.db.Implicits.*
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 import zio.interop.catz.*
-import doobie.implicits.*
 
 import java.util.UUID
 
