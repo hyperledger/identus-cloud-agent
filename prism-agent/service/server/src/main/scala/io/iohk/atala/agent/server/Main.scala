@@ -20,9 +20,10 @@ import io.iohk.atala.event.notification.EventNotificationServiceImpl
 import io.iohk.atala.issue.controller.IssueControllerImpl
 import io.iohk.atala.mercury.*
 import io.iohk.atala.pollux.core.service.*
-import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaController
+import io.iohk.atala.pollux.credentialdefinition.controller.CredentialDefinitionControllerImpl
 import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaControllerImpl
 import io.iohk.atala.pollux.credentialschema.controller.VerificationPolicyControllerImpl
+import io.iohk.atala.pollux.sql.repository.JdbcCredentialDefinitionRepository
 import io.iohk.atala.pollux.sql.repository.JdbcCredentialRepository
 import io.iohk.atala.pollux.sql.repository.JdbcCredentialSchemaRepository
 import io.iohk.atala.pollux.sql.repository.JdbcPresentationRepository
@@ -114,6 +115,7 @@ object MainApp extends ZIOAppDefault {
           // controller
           ConnectionControllerImpl.layer,
           CredentialSchemaControllerImpl.layer,
+          CredentialDefinitionControllerImpl.layer,
           DIDControllerImpl.layer,
           DIDRegistrarControllerImpl.layer,
           IssueControllerImpl.layer,
@@ -129,6 +131,7 @@ object MainApp extends ZIOAppDefault {
           // service
           ConnectionServiceImpl.layer >>> ConnectionServiceNotifier.layer,
           CredentialSchemaServiceImpl.layer,
+          CredentialDefinitionServiceImpl.layer,
           CredentialServiceImpl.layer >>> CredentialServiceNotifier.layer,
           DIDServiceImpl.layer,
           ManagedDIDServiceWithEventNotificationImpl.layer,
@@ -138,11 +141,13 @@ object MainApp extends ZIOAppDefault {
           GrpcModule.irisStubLayer,
           GrpcModule.prismNodeStubLayer,
           // storage
+          RepoModule.didSecretStorageLayer,
+          DIDKeySecretStorageImpl.layer,
           RepoModule.agentTransactorLayer >>> JdbcDIDNonSecretStorage.layer,
           RepoModule.connectTransactorLayer >>> JdbcConnectionRepository.layer,
-          RepoModule.didSecretStorageLayer >>> DIDKeySecretStorageImpl.layer,
           RepoModule.polluxTransactorLayer >>> JdbcCredentialRepository.layer,
           RepoModule.polluxTransactorLayer >>> JdbcCredentialSchemaRepository.layer,
+          RepoModule.polluxTransactorLayer >>> JdbcCredentialDefinitionRepository.layer,
           RepoModule.polluxTransactorLayer >>> JdbcPresentationRepository.layer,
           RepoModule.polluxTransactorLayer >>> JdbcVerificationPolicyRepository.layer,
           // event notification service

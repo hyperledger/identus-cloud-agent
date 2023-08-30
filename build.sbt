@@ -1,4 +1,3 @@
-import scala.concurrent.duration.fromNow
 import sbtbuildinfo.BuildInfoPlugin.autoImport.*
 import org.scoverage.coveralls.Imports.CoverallsKeys._
 
@@ -687,9 +686,7 @@ lazy val polluxAnoncreds = project
     name := "pollux-anoncreds",
     Compile / unmanagedJars += baseDirectory.value / "anoncreds-java-1.0-SNAPSHOT.jar",
     Compile / unmanagedResourceDirectories ++= Seq(
-      // export LD_LIBRARY_PATH=.../anoncreds-rs/uniffi/target/x86_64-unknown-linux-gnu/release:$LD_LIBRARY_PATH,
-      baseDirectory.value / "native-lib" / "NATIVE" / "darwin-aarch64",
-      baseDirectory.value / "native-lib" / "NATIVE" / "linux" / "amd64"
+      baseDirectory.value / "native-lib" / "NATIVE"
     ),
   )
 
