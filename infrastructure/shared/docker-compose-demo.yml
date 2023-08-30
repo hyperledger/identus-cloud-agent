@@ -1,0 +1,77 @@
+---
+version: "3.8"
+
+services:
+
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_MULTIPLE_DATABASES: "castor,pollux,connect,iris,agent,node_db"
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - pg_data_db:/var/lib/postgresql/data
+      - ./postgres/init-script.sh:/docker-entrypoint-initdb.d/init-script.sh
+      - ./postgres/max_conns.sql:/docker-entrypoint-initdb.d/max_conns.sql
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "iris"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  prism-node:
+    image: ghcr.io/input-output-hk/prism-node:${PRISM_NODE_VERSION}
+    environment:
+      NODE_PSQL_HOST: db:5432
+    depends_on:
+      db:
+        condition: service_healthy
+
+  prism-agent:
+    image: ghcr.io/input-output-hk/prism-agent:${PRISM_AGENT_VERSION}
+    environment:
+      DIDCOMM_SERVICE_URL: http://host.docker.internal:${PORT}/didcomm
+      PRISM_NODE_HOST: prism-node
+      PRISM_NODE_PORT: 50053
+      SECRET_STORAGE_BACKEND: postgres
+      DEV_MODE: true
+      CASTOR_DB_HOST: db
+      POLLUX_DB_HOST: db
+      CONNECT_DB_HOST: db
+      AGENT_DB_HOST: db
+      WALLET_SEED:
+      WEBHOOK_URL:
+      WEBHOOK_API_KEY:
+    depends_on:
+      db:
+        condition: service_healthy
+      prism-node:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://prism-agent:8085/connections"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  swagger-ui:
+    image: swaggerapi/swagger-ui:v5.4.2
+    environment:
+      - 'URLS=[
+        { name: "Prism Agent", url: "/docs/prism-agent/api/docs.yaml" }
+        ]'
+
+  apisix:
+    image: apache/apisix:2.15.0-alpine
+    volumes:
+      - ./apisix/conf/apisix.yaml:/usr/local/apisix/conf/apisix.yaml:ro
+      - ./apisix/conf/config.yaml:/usr/local/apisix/conf/config.yaml:ro
+    ports:
+      - "${PORT}:9080/tcp"
+    depends_on:
+      - prism-agent
+      - swagger-ui
+
+volumes:
+  pg_data_db:
