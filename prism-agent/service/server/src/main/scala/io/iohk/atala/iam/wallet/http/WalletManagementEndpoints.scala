@@ -13,6 +13,8 @@ import sttp.model.StatusCode
 import sttp.tapir.*
 import sttp.tapir.json.zio.jsonBody
 
+import java.util.UUID
+
 object WalletManagementEndpoints {
 
   private val baseEndpoint = endpoint
@@ -23,13 +25,33 @@ object WalletManagementEndpoints {
 
   private val paginationInput: EndpointInput[PaginationInput] = EndpointInput.derived[PaginationInput]
 
-  val listWallet =
+  val listWallet: Endpoint[
+    AdminApiKeyCredentials,
+    (RequestContext, PaginationInput),
+    ErrorResponse,
+    WalletDetailPage,
+    Any
+  ] =
     baseEndpoint.get
       .in(paginationInput)
       .errorOut(EndpointOutputs.basicFailuresAndForbidden)
       .out(statusCode(StatusCode.Ok).description("List Prism Agent managed DIDs"))
       .out(jsonBody[WalletDetailPage])
       .summary("List all wallets")
+
+  val getWallet: Endpoint[
+    AdminApiKeyCredentials,
+    (RequestContext, UUID),
+    ErrorResponse,
+    WalletDetail,
+    Any
+  ] =
+    baseEndpoint.get
+      .in(path[UUID]("walletId"))
+      .errorOut(EndpointOutputs.basicFailureAndNotFoundAndForbidden)
+      .out(statusCode(StatusCode.Ok).description("Successfully get the wallet"))
+      .out(jsonBody[WalletDetail])
+      .summary("Get the wallet")
 
   val createWallet: Endpoint[
     AdminApiKeyCredentials,

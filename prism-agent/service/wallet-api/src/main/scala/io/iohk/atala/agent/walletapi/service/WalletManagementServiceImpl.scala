@@ -6,6 +6,7 @@ import io.iohk.atala.agent.walletapi.model.WalletSeed
 import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorage
 import io.iohk.atala.agent.walletapi.storage.WalletSecretStorage
 import io.iohk.atala.shared.models.WalletAccessContext
+import io.iohk.atala.shared.models.WalletId
 import zio.*
 
 class WalletManagementServiceImpl(
@@ -31,6 +32,11 @@ class WalletManagementServiceImpl(
         .mapError(WalletManagementServiceError.WalletStorageError.apply)
         .provide(ZLayer.succeed(WalletAccessContext(wallet.id)))
     } yield createdWallet
+
+  override def getWallet(walletId: WalletId): IO[WalletManagementServiceError, Option[Wallet]] =
+    nonSecretStorage
+      .getWallet(walletId)
+      .mapError(WalletManagementServiceError.WalletStorageError.apply)
 
   override def listWallets(
       offset: Option[Int],

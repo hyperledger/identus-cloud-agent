@@ -36,6 +36,23 @@ class JdbcWalletNonSecretStorage(xa: Transactor[ContextAwareTask]) extends Walle
       .as(wallet)
   }
 
+  override def getWallet(walletId: WalletId): Task[Option[Wallet]] = {
+    val cxnIO =
+      sql"""
+        | SELECT
+        |   wallet_id,
+        |   name,
+        |   created_at,
+        |   updated_at
+        | FROM public.wallet
+        | WHERE wallet_id = $walletId
+        """.stripMargin
+        .query[WalletRow]
+        .option
+
+    cxnIO.transact(xa).map(_.map(_.toDomain))
+  }
+
   override def listWallet(offset: Option[Int], limit: Option[Int]): Task[(Seq[Wallet], Int)] = {
     val countCxnIO =
       sql"""

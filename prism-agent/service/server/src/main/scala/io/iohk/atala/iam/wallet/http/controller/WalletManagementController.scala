@@ -15,10 +15,13 @@ import io.iohk.atala.iam.wallet.http.model.WalletDetailPage
 import io.iohk.atala.shared.models.HexString
 import zio.*
 
+import java.util.UUID
 import scala.language.implicitConversions
+import io.iohk.atala.shared.models.WalletId
 
 trait WalletManagementController {
   def listWallet(paginationInput: PaginationInput)(implicit rc: RequestContext): IO[ErrorResponse, WalletDetailPage]
+  def getWallet(walletId: UUID)(implicit rc: RequestContext): IO[ErrorResponse, WalletDetail]
   def createWallet(request: CreateWalletRequest)(implicit rc: RequestContext): IO[ErrorResponse, WalletDetail]
 }
 
@@ -55,6 +58,15 @@ class WalletManagementControllerImpl(
       previous = PaginationUtils.composePreviousUri(uri, items, pagination, stats).map(_.toString),
       contents = items.map(i => i),
     )
+  }
+
+  override def getWallet(walletId: UUID)(implicit rc: RequestContext): IO[ErrorResponse, WalletDetail] = {
+    for {
+      wallet <- service
+        .getWallet(WalletId.fromUUID(walletId))
+        .mapError[ErrorResponse](e => e)
+        .someOrFail(ErrorResponse.notFound(detail = Some(s"Wallet id $walletId does not exist.")))
+    } yield wallet
   }
 
   override def createWallet(
