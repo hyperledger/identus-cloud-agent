@@ -19,6 +19,11 @@ class WalletManagementServerEndpoints(controller: WalletManagementController, au
       .zServerSecurityLogic(adminApiSecurityLogic)
       .serverLogic { _ => { case (rc, paginationInput) => controller.listWallet(paginationInput)(rc) } }
 
+  val getWalletServerEndpoint: ZServerEndpoint[Any, Any] =
+    WalletManagementEndpoints.getWallet
+      .zServerSecurityLogic(adminApiSecurityLogic)
+      .serverLogic { _ => { case (rc, walletId) => controller.getWallet(walletId)(rc) } }
+
   val createWalletServerEndpoint: ZServerEndpoint[Any, Any] =
     WalletManagementEndpoints.createWallet
       .zServerSecurityLogic(adminApiSecurityLogic)
@@ -26,6 +31,7 @@ class WalletManagementServerEndpoints(controller: WalletManagementController, au
 
   def all: List[ZServerEndpoint[Any, Any]] = List(
     listWalletServerEndpoint,
+    getWalletServerEndpoint,
     createWalletServerEndpoint
   )
 

@@ -9,9 +9,11 @@ import io.iohk.atala.connect.controller.http.{
   ConnectionsPage,
   CreateConnectionRequest
 }
+import io.iohk.atala.iam.authentication.apikey.ApiKeyCredentials
+import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
 import sttp.model.StatusCode
+import sttp.tapir.*
 import sttp.tapir.json.zio.jsonBody
-import sttp.tapir.{EndpointInput, PublicEndpoint, endpoint, extractFromRequest, path, query, statusCode, stringToPath}
 
 import java.util.UUID
 
@@ -19,13 +21,15 @@ object ConnectionEndpoints {
 
   private val paginationInput: EndpointInput[PaginationInput] = EndpointInput.derived[PaginationInput]
 
-  val createConnection: PublicEndpoint[
+  val createConnection: Endpoint[
+    ApiKeyCredentials,
     (RequestContext, CreateConnectionRequest),
     ErrorResponse,
     Connection,
     Any
   ] =
     endpoint.post
+      .securityIn(apiKeyHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in("connections")
       .in(
@@ -51,8 +55,9 @@ object ConnectionEndpoints {
          |""".stripMargin)
       .tag("Connections Management")
 
-  val getConnection: PublicEndpoint[(RequestContext, UUID), ErrorResponse, Connection, Any] =
+  val getConnection: Endpoint[ApiKeyCredentials, (RequestContext, UUID), ErrorResponse, Connection, Any] =
     endpoint.get
+      .securityIn(apiKeyHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
         "connections" / path[UUID]("connectionId").description(
@@ -66,9 +71,15 @@ object ConnectionEndpoints {
       .description("Gets an existing connection record by its unique identifier")
       .tag("Connections Management")
 
-  val getConnections
-      : PublicEndpoint[(RequestContext, PaginationInput, Option[String]), ErrorResponse, ConnectionsPage, Any] =
+  val getConnections: Endpoint[
+    ApiKeyCredentials,
+    (RequestContext, PaginationInput, Option[String]),
+    ErrorResponse,
+    ConnectionsPage,
+    Any
+  ] =
     endpoint.get
+      .securityIn(apiKeyHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in("connections")
       .in(paginationInput)
@@ -80,13 +91,15 @@ object ConnectionEndpoints {
       .description("Get the list of connection records paginated")
       .tag("Connections Management")
 
-  val acceptConnectionInvitation: PublicEndpoint[
+  val acceptConnectionInvitation: Endpoint[
+    ApiKeyCredentials,
     (RequestContext, AcceptConnectionInvitationRequest),
     ErrorResponse,
     Connection,
     Any
   ] =
     endpoint.post
+      .securityIn(apiKeyHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in("connection-invitations")
       .in(

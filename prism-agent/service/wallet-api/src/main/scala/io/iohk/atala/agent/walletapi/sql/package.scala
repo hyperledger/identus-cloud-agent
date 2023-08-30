@@ -14,6 +14,7 @@ import io.iohk.atala.shared.models.WalletId
 import java.time.Instant
 import scala.collection.immutable.ArraySeq
 import scala.util.Try
+import io.iohk.atala.agent.walletapi.model.Wallet
 
 package object sql {
 
@@ -170,6 +171,33 @@ package object sql {
         keyMode = state.keyMode,
         didIndex = state.didIndex,
         walletId = walletId
+      )
+    }
+  }
+
+  final case class WalletRow(
+      id: WalletId,
+      name: String,
+      createdAt: Instant,
+      updatedAt: Instant
+  ) {
+    def toDomain: Wallet = {
+      Wallet(
+        id: WalletId,
+        name: String,
+        createdAt: Instant,
+        updatedAt: Instant
+      )
+    }
+  }
+
+  object WalletRow {
+    def from(wallet: Wallet): WalletRow = {
+      WalletRow(
+        id = wallet.id,
+        name = wallet.name,
+        createdAt = wallet.createdAt,
+        updatedAt = wallet.updatedAt
       )
     }
   }

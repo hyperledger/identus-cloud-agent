@@ -52,7 +52,7 @@ object PrismAgentApp {
         .flatMap { wallets =>
           ZIO.foreach(wallets) { wallet =>
             BackgroundJobs.issueCredentialDidCommExchanges
-              .provideSomeLayer(ZLayer.succeed(WalletAccessContext(wallet)))
+              .provideSomeLayer(ZLayer.succeed(WalletAccessContext(wallet.id)))
           }
         }
         .repeat(Schedule.spaced(config.pollux.issueBgJobRecurrenceDelay))
@@ -71,7 +71,7 @@ object PrismAgentApp {
         .flatMap { wallets =>
           ZIO.foreach(wallets) { wallet =>
             BackgroundJobs.presentProofExchanges
-              .provideSomeLayer(ZLayer.succeed(WalletAccessContext(wallet)))
+              .provideSomeLayer(ZLayer.succeed(WalletAccessContext(wallet.id)))
           }
         }
         .repeat(Schedule.spaced(config.pollux.presentationBgJobRecurrenceDelay))
@@ -89,7 +89,7 @@ object PrismAgentApp {
         .flatMap { wallets =>
           ZIO.foreach(wallets) { wallet =>
             ConnectBackgroundJobs.didCommExchanges
-              .provideSomeLayer(ZLayer.succeed(WalletAccessContext(wallet)))
+              .provideSomeLayer(ZLayer.succeed(WalletAccessContext(wallet.id)))
           }
         }
         .repeat(Schedule.spaced(config.connect.connectBgJobRecurrenceDelay))
@@ -102,7 +102,7 @@ object PrismAgentApp {
       .flatMap { wallets =>
         ZIO.foreach(wallets) { wallet =>
           BackgroundJobs.syncDIDPublicationStateFromDlt
-            .provideSomeLayer(ZLayer.succeed(WalletAccessContext(wallet)))
+            .provideSomeLayer(ZLayer.succeed(WalletAccessContext(wallet.id)))
         }
       }
       .catchAll(e => ZIO.logError(s"error while syncing DID publication state: $e"))

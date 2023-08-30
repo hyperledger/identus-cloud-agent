@@ -5,6 +5,8 @@ import io.iohk.atala.iam.authentication.{AuthenticationError, Authenticator, Cre
 import AuthenticationError.*
 import zio.{IO, ZIO}
 
+import java.util.UUID
+
 trait ApiKeyAuthenticator extends Authenticator {
 
   def authenticate(credentials: Credentials): IO[AuthenticationError, Entity] = {
@@ -24,4 +26,6 @@ trait ApiKeyAuthenticator extends Authenticator {
     }
   }
   def authenticate(apiKey: String): IO[AuthenticationError, Entity]
+
+  def add(entityId: UUID, apiKey: String): IO[AuthenticationError, Unit]
 }

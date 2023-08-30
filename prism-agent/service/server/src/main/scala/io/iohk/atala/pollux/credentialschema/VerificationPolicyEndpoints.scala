@@ -4,51 +4,57 @@ import io.iohk.atala.api.http.*
 import io.iohk.atala.api.http.EndpointOutputs.*
 import io.iohk.atala.api.http.codec.OrderCodec.*
 import io.iohk.atala.api.http.model.{Order, PaginationInput}
+import io.iohk.atala.iam.authentication.apikey.ApiKeyCredentials
+import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
 import io.iohk.atala.pollux.credentialschema.http.*
 import sttp.model.StatusCode
+import sttp.tapir.*
 import sttp.tapir.json.zio.jsonBody
-import sttp.tapir.{PublicEndpoint, endpoint, extractFromRequest, path, query, statusCode, stringToPath}
+
 import java.util.UUID
 
 object VerificationPolicyEndpoints {
 
-  val createVerificationPolicyEndpoint: PublicEndpoint[
+  val createVerificationPolicyEndpoint: Endpoint[
+    ApiKeyCredentials,
     (RequestContext, VerificationPolicyInput),
     ErrorResponse,
     VerificationPolicy,
     Any
-  ] =
-    endpoint.post
-      .in(extractFromRequest[RequestContext](RequestContext.apply))
-      .in("verification" / "policies")
-      .in(
-        jsonBody[VerificationPolicyInput].description(
-          "Create verification policy object"
-        )
+  ] = endpoint.post
+    .securityIn(apiKeyHeader)
+    .in(extractFromRequest[RequestContext](RequestContext.apply))
+    .in("verification" / "policies")
+    .in(
+      jsonBody[VerificationPolicyInput].description(
+        "Create verification policy object"
       )
-      .out(
-        statusCode(StatusCode.Created).description(
-          "Verification policy successfully created"
-        )
+    )
+    .out(
+      statusCode(StatusCode.Created).description(
+        "Verification policy successfully created"
       )
-      .out(
-        jsonBody[VerificationPolicy].description(
-          "Created verification policy entity"
-        )
+    )
+    .out(
+      jsonBody[VerificationPolicy].description(
+        "Created verification policy entity"
       )
-      .errorOut(basicFailures)
-      .name("createVerificationPolicy")
-      .summary("Create the new verification policy")
-      .description("Create the new verification policy")
-      .tag("Verification")
+    )
+    .errorOut(basicFailures)
+    .name("createVerificationPolicy")
+    .summary("Create the new verification policy")
+    .description("Create the new verification policy")
+    .tag("Verification")
 
-  val updateVerificationPolicyEndpoint: PublicEndpoint[
+  val updateVerificationPolicyEndpoint: Endpoint[
+    ApiKeyCredentials,
     (RequestContext, UUID, Int, VerificationPolicyInput),
     ErrorResponse,
     VerificationPolicy,
     Any
   ] =
     endpoint.put
+      .securityIn(apiKeyHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in("verification" / "policies" / path[UUID]("id"))
       .in(
@@ -71,13 +77,15 @@ object VerificationPolicyEndpoints {
       )
       .tag("Verification")
 
-  val getVerificationPolicyByIdEndpoint: PublicEndpoint[
+  val getVerificationPolicyByIdEndpoint: Endpoint[
+    ApiKeyCredentials,
     (RequestContext, UUID),
     ErrorResponse,
     VerificationPolicy,
     Any
   ] =
     endpoint.get
+      .securityIn(apiKeyHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
         "verification" / "policies" / path[UUID]("id")
@@ -92,13 +100,15 @@ object VerificationPolicyEndpoints {
       )
       .tag("Verification")
 
-  val deleteVerificationPolicyByIdEndpoint: PublicEndpoint[
+  val deleteVerificationPolicyByIdEndpoint: Endpoint[
+    ApiKeyCredentials,
     (RequestContext, UUID),
     ErrorResponse,
     Unit,
     Any
   ] =
     endpoint.delete
+      .securityIn(apiKeyHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
         "verification" / "policies" / path[UUID]("id")
@@ -117,13 +127,15 @@ object VerificationPolicyEndpoints {
       )
       .tag("Verification")
 
-  val lookupVerificationPoliciesByQueryEndpoint: PublicEndpoint[
+  val lookupVerificationPoliciesByQueryEndpoint: Endpoint[
+    ApiKeyCredentials,
     (RequestContext, VerificationPolicy.Filter, PaginationInput, Option[Order]),
     ErrorResponse,
     VerificationPolicyPage,
     Any
   ] =
     endpoint.get
+      .securityIn(apiKeyHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
         "verification" / "policies"

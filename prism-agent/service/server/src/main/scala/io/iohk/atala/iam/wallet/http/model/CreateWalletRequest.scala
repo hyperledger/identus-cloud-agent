@@ -8,7 +8,10 @@ import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 final case class CreateWalletRequest(
     @description(CreateWalletRequest.annotations.seed.description)
     @encodedExample(CreateWalletRequest.annotations.seed.example)
-    seed: Option[String]
+    seed: Option[String],
+    @description(CreateWalletRequest.annotations.name.description)
+    @encodedExample(CreateWalletRequest.annotations.name.example)
+    name: String
 )
 
 object CreateWalletRequest {
@@ -23,6 +26,12 @@ object CreateWalletRequest {
             "A BIP32 seed encoded in hexadecimal string. It is expected to represent 64-bytes binary seed (128 hex characters).",
           example =
             "c9994785ce6d548134020f610b76102ca1075d3bb672a75ec8c9a27a7b8607e3b9b384e43b77bb08f8d5159651ae38b98573f7ecc79f2d7e1f1cc371ce60cf8a"
+        )
+
+    object name
+        extends Annotation[String](
+          description = "A name of the wallet",
+          example = "my-wallet-1"
         )
   }
 }

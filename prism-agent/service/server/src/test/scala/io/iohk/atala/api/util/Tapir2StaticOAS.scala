@@ -7,11 +7,15 @@ import io.iohk.atala.castor.controller.{
   DIDServerEndpoints
 }
 import io.iohk.atala.connect.controller.{ConnectionController, ConnectionServerEndpoints}
+import io.iohk.atala.iam.authentication.Authenticator
+import io.iohk.atala.iam.entity.http.EntityServerEndpoints
+import io.iohk.atala.iam.entity.http.controller.EntityController
+import io.iohk.atala.iam.wallet.http.WalletManagementServerEndpoints
+import io.iohk.atala.iam.wallet.http.controller.WalletManagementController
 import io.iohk.atala.issue.controller.{IssueController, IssueServerEndpoints}
 import io.iohk.atala.pollux.credentialschema.controller.{CredentialSchemaController, VerificationPolicyController}
 import io.iohk.atala.pollux.credentialschema.{SchemaRegistryServerEndpoints, VerificationPolicyServerEndpoints}
 import io.iohk.atala.presentproof.controller.{PresentProofController, PresentProofServerEndpoints}
-import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.system.controller.{SystemController, SystemServerEndpoints}
 import org.scalatestplus.mockito.MockitoSugar.*
 import sttp.tapir.docs.openapi.OpenAPIDocsInterpreter
@@ -34,6 +38,8 @@ object Tapir2StaticOAS extends ZIOAppDefault {
       allDIDRegistrarEndpoints <- DIDRegistrarServerEndpoints.all
       allPresentProofEndpoints <- PresentProofServerEndpoints.all
       allSystemEndpoints <- SystemServerEndpoints.all
+      allEntityEndpoints <- EntityServerEndpoints.all
+      allWalletManagementEndpoints <- WalletManagementServerEndpoints.all
       allEndpoints = allSchemaRegistryEndpoints ++
         allVerificationPolicyEndpoints ++
         allConnectionEndpoints ++
@@ -41,7 +47,9 @@ object Tapir2StaticOAS extends ZIOAppDefault {
         allDIDRegistrarEndpoints ++
         allIssueEndpoints ++
         allPresentProofEndpoints ++
-        allSystemEndpoints
+        allSystemEndpoints ++
+        allEntityEndpoints ++
+        allWalletManagementEndpoints
     } yield {
       import sttp.apispec.openapi.circe.yaml.*
       val yaml = OpenAPIDocsInterpreter().toOpenAPI(allEndpoints.map(_.endpoint), "Prism Agent", args(1)).toYaml
@@ -57,7 +65,9 @@ object Tapir2StaticOAS extends ZIOAppDefault {
         ZLayer.succeed(mock[IssueController]) ++
         ZLayer.succeed(mock[DIDController]) ++
         ZLayer.succeed(mock[SystemController]) ++
-        ZLayer.succeed(mock[WalletAccessContext])
+        ZLayer.succeed(mock[EntityController]) ++
+        ZLayer.succeed(mock[WalletManagementController]) ++
+        ZLayer.succeed(mock[Authenticator])
     )
   }
 

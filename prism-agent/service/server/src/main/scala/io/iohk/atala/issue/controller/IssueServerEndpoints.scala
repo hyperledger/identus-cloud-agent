@@ -2,50 +2,70 @@ package io.iohk.atala.issue.controller
 
 import io.iohk.atala.api.http.RequestContext
 import io.iohk.atala.api.http.model.PaginationInput
+import io.iohk.atala.iam.authentication.Authenticator
+import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic
 import io.iohk.atala.issue.controller.IssueEndpoints.*
 import io.iohk.atala.issue.controller.http.{AcceptCredentialOfferRequest, CreateIssueCredentialRecordRequest}
 import io.iohk.atala.shared.models.WalletAccessContext
 import sttp.tapir.ztapir.*
 import zio.*
 
-class IssueServerEndpoints(issueController: IssueController, walletAccessCtx: WalletAccessContext) {
+class IssueServerEndpoints(issueController: IssueController, authenticator: Authenticator) {
 
   val createCredentialOfferEndpoint: ZServerEndpoint[Any, Any] =
-    createCredentialOffer.zServerLogic { case (ctx: RequestContext, request: CreateIssueCredentialRecordRequest) =>
-      issueController
-        .createCredentialOffer(request)(ctx)
-        .provideSomeLayer(ZLayer.succeed(walletAccessCtx)) // FIXME
-    }
+    createCredentialOffer
+      .zServerSecurityLogic(ApiKeyEndpointSecurityLogic.securityLogic(_)(authenticator))
+      .serverLogic { entity =>
+        { case (ctx: RequestContext, request: CreateIssueCredentialRecordRequest) =>
+          issueController
+            .createCredentialOffer(request)(ctx)
+            .provideSomeLayer(ZLayer.succeed(entity.walletAccessContext))
+        }
+      }
 
   val getCredentialRecordsEndpoint: ZServerEndpoint[Any, Any] =
-    getCredentialRecords.zServerLogic {
-      case (ctx: RequestContext, paginationInput: PaginationInput, thid: Option[String]) =>
-        issueController
-          .getCredentialRecords(paginationInput, thid)(ctx)
-          .provideSomeLayer(ZLayer.succeed(walletAccessCtx)) // FIXME
-    }
+    getCredentialRecords
+      .zServerSecurityLogic(ApiKeyEndpointSecurityLogic.securityLogic(_)(authenticator))
+      .serverLogic { entity =>
+        { case (ctx: RequestContext, paginationInput: PaginationInput, thid: Option[String]) =>
+          issueController
+            .getCredentialRecords(paginationInput, thid)(ctx)
+            .provideSomeLayer(ZLayer.succeed(entity.walletAccessContext))
+        }
+      }
 
   val getCredentialRecordEndpoint: ZServerEndpoint[Any, Any] =
-    getCredentialRecord.zServerLogic { case (ctx: RequestContext, recordId: String) =>
-      issueController
-        .getCredentialRecord(recordId)(ctx)
-        .provideSomeLayer(ZLayer.succeed(walletAccessCtx)) // FIXME
-    }
+    getCredentialRecord
+      .zServerSecurityLogic(ApiKeyEndpointSecurityLogic.securityLogic(_)(authenticator))
+      .serverLogic { entity =>
+        { case (ctx: RequestContext, recordId: String) =>
+          issueController
+            .getCredentialRecord(recordId)(ctx)
+            .provideSomeLayer(ZLayer.succeed(entity.walletAccessContext))
+        }
+      }
 
   val acceptCredentialOfferEndpoint: ZServerEndpoint[Any, Any] =
-    acceptCredentialOffer.zServerLogic {
-      case (ctx: RequestContext, recordId: String, request: AcceptCredentialOfferRequest) =>
-        issueController
-          .acceptCredentialOffer(recordId, request)(ctx)
-          .provideSomeLayer(ZLayer.succeed(walletAccessCtx)) // FIXME
-    }
+    acceptCredentialOffer
+      .zServerSecurityLogic(ApiKeyEndpointSecurityLogic.securityLogic(_)(authenticator))
+      .serverLogic { entity =>
+        { case (ctx: RequestContext, recordId: String, request: AcceptCredentialOfferRequest) =>
+          issueController
+            .acceptCredentialOffer(recordId, request)(ctx)
+            .provideSomeLayer(ZLayer.succeed(entity.walletAccessContext))
+        }
+      }
 
   val issueCredentialEndpoint: ZServerEndpoint[Any, Any] =
-    issueCredential.zServerLogic { case (ctx: RequestContext, recordId: String) =>
-      issueController
-        .issueCredential(recordId)(ctx)
-        .provideSomeLayer(ZLayer.succeed(walletAccessCtx)) // FIXME
-    }
+    issueCredential
+      .zServerSecurityLogic(ApiKeyEndpointSecurityLogic.securityLogic(_)(authenticator))
+      .serverLogic { entity =>
+        { case (ctx: RequestContext, recordId: String) =>
+          issueController
+            .issueCredential(recordId)(ctx)
+            .provideSomeLayer(ZLayer.succeed(entity.walletAccessContext))
+        }
+      }
 
   val all: List[ZServerEndpoint[Any, Any]] = List(
     createCredentialOfferEndpoint,
@@ -58,12 +78,11 @@ class IssueServerEndpoints(issueController: IssueController, walletAccessCtx: Wa
 }
 
 object IssueServerEndpoints {
-  def all: URIO[IssueController & WalletAccessContext, List[ZServerEndpoint[Any, Any]]] = {
+  def all: URIO[IssueController & Authenticator, List[ZServerEndpoint[Any, Any]]] = {
     for {
-      // FIXME: do not use global wallet context, use context from interceptor instead
-      walletAccessCtx <- ZIO.service[WalletAccessContext]
+      authenticator <- ZIO.service[Authenticator]
       issueController <- ZIO.service[IssueController]
-      issueEndpoints = new IssueServerEndpoints(issueController, walletAccessCtx)
+      issueEndpoints = new IssueServerEndpoints(issueController, authenticator)
     } yield issueEndpoints.all
   }
 }

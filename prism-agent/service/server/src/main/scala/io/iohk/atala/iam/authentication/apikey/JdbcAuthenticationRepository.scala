@@ -7,7 +7,7 @@ import zio.interop.catz.*
 
 import java.util.UUID
 
-case class AuthenticationRepositoryImpl(xa: Transactor[Task]) extends AuthenticationRepository {
+case class JdbcAuthenticationRepository(xa: Transactor[Task]) extends AuthenticationRepository {
 
   import AuthenticationRepositorySql.*
   override def insert(
@@ -63,9 +63,9 @@ case class AuthenticationRepositoryImpl(xa: Transactor[Task]) extends Authentica
   }
 }
 
-object AuthenticationRepositoryImpl {
+object JdbcAuthenticationRepository {
   val layer: URLayer[Transactor[Task], AuthenticationRepository] = {
-    val fromTransactor: Transactor[Task] => AuthenticationRepository = AuthenticationRepositoryImpl(_)
+    val fromTransactor: Transactor[Task] => AuthenticationRepository = JdbcAuthenticationRepository(_)
     ZLayer.fromFunction(fromTransactor)
   }
 }
