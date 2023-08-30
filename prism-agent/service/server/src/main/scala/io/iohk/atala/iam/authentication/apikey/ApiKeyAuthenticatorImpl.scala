@@ -52,10 +52,10 @@ case class ApiKeyAuthenticatorImpl(
 
   protected[apikey] def provisionNewEntity(apiKey: String): IO[AuthenticationRepositoryError, Entity] = synchronized {
     for {
-      wallet <- walletManagementService
-        .createWallet(Wallet("Auto provisioned wallet", WalletId.random))
+      walletId <- walletManagementService
+        .createWallet()
         .mapError(cause => AuthenticationRepositoryError.UnexpectedError(cause))
-      entityToCreate = Entity(name = "Auto provisioned entity", walletId = wallet.id.toUUID)
+      entityToCreate = Entity(name = "Auto provisioned entity", walletId = walletId.toUUID)
       entity <- entityService
         .create(entityToCreate)
         .mapError(entityServiceError => AuthenticationRepositoryError.ServiceError(entityServiceError.message))
