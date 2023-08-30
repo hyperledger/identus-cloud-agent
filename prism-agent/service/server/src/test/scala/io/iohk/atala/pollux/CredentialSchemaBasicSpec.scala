@@ -120,7 +120,6 @@ object CredentialSchemaBasicSpec extends ZIOSpecDefault with CredentialSchemaTes
             .get(credentialSchemaUriBase.addPath(uuid.toString))
             .response(asJsonAlways[ErrorResponse])
             .send(backend)
-            .debug("response")
         } yield assert(response.code)(equalTo(StatusCode.NotFound))
       }
     )

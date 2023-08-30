@@ -7,6 +7,7 @@ import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.walletapi.crypto.Apollo
 import io.iohk.atala.agent.walletapi.memory.DIDSecretStorageInMemory
 import io.iohk.atala.agent.walletapi.memory.WalletSecretStorageInMemory
+import io.iohk.atala.agent.walletapi.model.Wallet
 import io.iohk.atala.agent.walletapi.service.WalletManagementService
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
 import io.iohk.atala.agent.walletapi.sql.JdbcWalletSecretStorage
@@ -66,10 +67,11 @@ object AppModule {
       svc <- ZIO.service[WalletManagementService]
       seed <- ZIO.serviceWithZIO[SeedResolver](_.resolve)
       walletId <-
-        if (useNewWallet) svc.createWallet(Some(seed))
-        else svc.listWallets().map(_._1).map(_.headOption).someOrElseZIO(svc.createWallet(Some(seed)))
+        if (useNewWallet) svc.createWallet(Wallet("default"), Some(seed))
+        else
+          svc.listWallets().map(_._1).map(_.headOption).someOrElseZIO(svc.createWallet(Wallet("default"), Some(seed)))
       _ <- ZIO.debug(s"Global wallet id: $walletId")
-    } yield WalletAccessContext(walletId)
+    } yield WalletAccessContext(walletId.id)
   }
 }
 

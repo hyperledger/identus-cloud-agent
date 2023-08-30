@@ -47,11 +47,7 @@ class SchemaRegistryServerEndpoints(
   val getSchemaByIdServerEndpoint: ZServerEndpoint[Any, Any] =
     getSchemaByIdEndpoint
       .zServerLogic { case (ctx: RequestContext, guid: UUID) =>
-        credentialSchemaController
-          .getSchemaByGuid(guid)(ctx)
-          .provideSomeLayer(
-            ZLayer.succeed(Entity.Default.walletAccessContext)
-          ) // FIXME: figure out what to do with WAC in this case, `get` should be public
+        credentialSchemaController.getSchemaByGuid(guid)(ctx)
       }
 
   val lookupSchemasByQueryServerEndpoint: ZServerEndpoint[Any, Any] =

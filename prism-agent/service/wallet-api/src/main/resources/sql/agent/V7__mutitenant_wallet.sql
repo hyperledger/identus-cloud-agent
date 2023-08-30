@@ -18,7 +18,9 @@ WHERE true;
 -- Introduce the concept of wallet
 CREATE TABLE public.wallet (
     "wallet_id" UUID PRIMARY KEY,
-    "created_at" TIMESTAMPTZ NOT NULL
+    "name" VARCHAR(128) NOT NULL,
+    "created_at" TIMESTAMPTZ NOT NULL,
+    "updated_at" TIMESTAMPTZ NOT NULL
 );
 
 CREATE TABLE public.wallet_seed (
