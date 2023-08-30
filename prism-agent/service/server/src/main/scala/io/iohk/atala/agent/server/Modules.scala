@@ -7,13 +7,10 @@ import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.walletapi.crypto.Apollo
 import io.iohk.atala.agent.walletapi.memory.DIDSecretStorageInMemory
 import io.iohk.atala.agent.walletapi.memory.WalletSecretStorageInMemory
-import io.iohk.atala.agent.walletapi.model.Wallet
-import io.iohk.atala.agent.walletapi.service.WalletManagementService
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
 import io.iohk.atala.agent.walletapi.sql.JdbcWalletSecretStorage
 import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
 import io.iohk.atala.agent.walletapi.storage.WalletSecretStorage
-import io.iohk.atala.agent.walletapi.util.SeedResolver
 import io.iohk.atala.agent.walletapi.vault.VaultDIDSecretStorage
 import io.iohk.atala.agent.walletapi.vault.VaultKVClient
 import io.iohk.atala.agent.walletapi.vault.VaultKVClientImpl
@@ -27,7 +24,6 @@ import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc
 import io.iohk.atala.shared.db.ContextAwareTask
 import io.iohk.atala.shared.db.DbConfig
 import io.iohk.atala.shared.db.TransactorLayer
-import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 import zio.config.ReadError
 import zio.config.read
@@ -48,32 +44,8 @@ object SystemModule {
 object AppModule {
   val apolloLayer: ULayer[Apollo] = Apollo.prism14Layer
 
-  // TODO: remove this when finalize default wallet provisioning
-  val seedResolverLayer =
-    ZLayer.make[SeedResolver](
-      ZLayer.fromFunction((config: AppConfig) => SeedResolver.layer(isDevMode = config.devMode)).flatten,
-      apolloLayer,
-      SystemModule.configLayer
-    )
-
   val didJwtResolverlayer: URLayer[DIDService, JwtDidResolver] =
     ZLayer.fromFunction(PrismDidResolver(_))
-
-  // FIXME
-  // Create default wallet and provide it as a global layer.
-  // This should be removed when we support dynamic wallet creation.
-  val defaultWalletContext: RLayer[SeedResolver & WalletManagementService, WalletAccessContext] = ZLayer.fromZIO {
-    val useNewWallet = false // to create a new wallet or use existing one globally
-    for {
-      svc <- ZIO.service[WalletManagementService]
-      seed <- ZIO.serviceWithZIO[SeedResolver](_.resolve)
-      walletId <-
-        if (useNewWallet) svc.createWallet(Wallet("default"), Some(seed))
-        else
-          svc.listWallets().map(_._1).map(_.headOption).someOrElseZIO(svc.createWallet(Wallet("default"), Some(seed)))
-      _ <- ZIO.debug(s"Global wallet id: $walletId")
-    } yield WalletAccessContext(walletId.id)
-  }
 }
 
 object GrpcModule {
