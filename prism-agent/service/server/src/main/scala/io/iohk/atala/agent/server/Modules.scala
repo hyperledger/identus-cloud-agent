@@ -48,6 +48,7 @@ object SystemModule {
 object AppModule {
   val apolloLayer: ULayer[Apollo] = Apollo.prism14Layer
 
+  // TODO: remove this when finalize default wallet provisioning
   val seedResolverLayer =
     ZLayer.make[SeedResolver](
       ZLayer.fromFunction((config: AppConfig) => SeedResolver.layer(isDevMode = config.devMode)).flatten,

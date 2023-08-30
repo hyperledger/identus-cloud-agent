@@ -119,7 +119,6 @@ object MainApp extends ZIOAppDefault {
       app <- PrismAgentApp
         .run(didCommServicePort)
         .provide(
-          didCommAgentLayer(didCommServiceUrl),
           DidCommX.liveLayer,
           // infra
           SystemModule.configLayer,
@@ -145,7 +144,6 @@ object MainApp extends ZIOAppDefault {
           // domain
           AppModule.apolloLayer,
           AppModule.didJwtResolverlayer,
-          AppModule.seedResolverLayer,
           DIDOperationValidator.layer(),
           DIDResolver.layer,
           HttpURIDereferencerImpl.layer,
@@ -182,8 +180,6 @@ object MainApp extends ZIOAppDefault {
           // HTTP client
           Client.default,
           Scope.default,
-          // FIXME: Remove when support dynamic wallet. Temporarily added to make some components work
-          AppModule.defaultWalletContext
         )
     } yield app
 
