@@ -23,7 +23,9 @@ import io.iohk.atala.connect.controller.ConnectionControllerImpl
 import io.iohk.atala.connect.core.service.{ConnectionServiceImpl, ConnectionServiceNotifier}
 import io.iohk.atala.connect.sql.repository.{JdbcConnectionRepository, Migrations as ConnectMigrations}
 import io.iohk.atala.event.notification.EventNotificationServiceImpl
+import io.iohk.atala.iam.authentication.DefaultAuthenticator
 import io.iohk.atala.iam.authentication.admin.{AdminApiKeyAuthenticatorImpl, AdminConfig}
+import io.iohk.atala.iam.authentication.apikey.{ApiKeyAuthenticatorImpl, ApiKeyConfig, JdbcAuthenticationRepository}
 import io.iohk.atala.iam.entity.http.controller.{EntityController, EntityControllerImpl}
 import io.iohk.atala.iam.wallet.http.controller.WalletManagementControllerImpl
 import io.iohk.atala.issue.controller.IssueControllerImpl
@@ -122,6 +124,7 @@ object MainApp extends ZIOAppDefault {
           // infra
           SystemModule.configLayer,
           AdminConfig.layer,
+          ApiKeyConfig.layer,
           ZioHttpClient.layer,
           // observability
           DefaultJvmMetrics.live.unit,
@@ -151,13 +154,13 @@ object MainApp extends ZIOAppDefault {
           CredentialSchemaServiceImpl.layer,
           CredentialServiceImpl.layer >>> CredentialServiceNotifier.layer,
           DIDServiceImpl.layer,
+          EntityServiceImpl.layer,
           ManagedDIDServiceWithEventNotificationImpl.layer,
           PresentationServiceImpl.layer >>> PresentationServiceNotifier.layer,
           VerificationPolicyServiceImpl.layer,
-          EntityServiceImpl.layer,
-          // authentication
-          AdminApiKeyAuthenticatorImpl.layer,
           WalletManagementServiceImpl.layer,
+          // authentication
+          AdminApiKeyAuthenticatorImpl.layer >+> ApiKeyAuthenticatorImpl.layer >>> DefaultAuthenticator.layer,
           // grpc
           GrpcModule.irisStubLayer,
           GrpcModule.prismNodeStubLayer,
@@ -165,13 +168,14 @@ object MainApp extends ZIOAppDefault {
           DIDKeySecretStorageImpl.layer,
           RepoModule.agentContextAwareTransactorLayer >>> JdbcDIDNonSecretStorage.layer,
           RepoModule.agentContextAwareTransactorLayer >>> JdbcWalletNonSecretStorage.layer,
-          RepoModule.agentTransactorLayer >>> JdbcEntityRepository.layer,
           RepoModule.allSecretStorageLayer,
+          RepoModule.agentTransactorLayer >>> JdbcEntityRepository.layer,
+          RepoModule.agentTransactorLayer >>> JdbcAuthenticationRepository.layer,
           RepoModule.connectTransactorLayer >>> JdbcConnectionRepository.layer,
-          RepoModule.polluxTransactorLayer >>> JdbcCredentialRepository.layer,
-          RepoModule.polluxTransactorLayer >>> JdbcCredentialSchemaRepository.layer,
-          RepoModule.polluxTransactorLayer >>> JdbcPresentationRepository.layer,
-          RepoModule.polluxTransactorLayer >>> JdbcVerificationPolicyRepository.layer,
+          RepoModule.polluxContextAwareTransactorLayer >>> JdbcCredentialRepository.layer,
+          RepoModule.polluxContextAwareTransactorLayer >+> RepoModule.polluxTransactorLayer >>> JdbcCredentialSchemaRepository.layer,
+          RepoModule.polluxContextAwareTransactorLayer >>> JdbcPresentationRepository.layer,
+          RepoModule.polluxContextAwareTransactorLayer >>> JdbcVerificationPolicyRepository.layer,
           RepoModule.agentTransactorLayer >>> JdbcDIDNonSecretStorageUnprotected.layer,
           // event notification service
           ZLayer.succeed(500) >>> EventNotificationServiceImpl.layer,

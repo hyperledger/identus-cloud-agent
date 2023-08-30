@@ -6,7 +6,7 @@ import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.castor.core.model.did.PrismDIDOperation
 import io.iohk.atala.pollux.core.model.schema.`type`.CredentialJsonSchemaType
 import io.iohk.atala.pollux.core.repository.CredentialSchemaRepository
-import io.iohk.atala.pollux.core.service.CredentialSchemaServiceImpl
+import io.iohk.atala.pollux.core.service.{CredentialSchemaService, CredentialSchemaServiceImpl}
 import io.iohk.atala.pollux.credentialschema.SchemaRegistryServerEndpoints
 import io.iohk.atala.pollux.credentialschema.controller.{CredentialSchemaController, CredentialSchemaControllerImpl}
 import io.iohk.atala.pollux.credentialschema.http.{
@@ -33,6 +33,7 @@ import zio.test.{Assertion, Gen, ZIOSpecDefault}
 
 import java.time.OffsetDateTime
 import com.dimafeng.testcontainers.PostgreSQLContainer
+import io.iohk.atala.iam.authentication.{Authenticator, DefaultEntityAuthenticator}
 
 trait CredentialSchemaTestTools extends PostgresTestContainerSupport {
   self: ZIOSpecDefault =>
@@ -60,13 +61,21 @@ trait CredentialSchemaTestTools extends PostgresTestContainerSupport {
       )
     )
 
-  val testEnvironmentLayer =
-    ZLayer.makeSome[ManagedDIDService, CredentialSchemaController & CredentialSchemaRepository & PostgreSQLContainer](
+  val authenticatorLayer: TaskLayer[Authenticator] = DefaultEntityAuthenticator.layer
+
+  lazy val testEnvironmentLayer =
+    ZLayer.makeSome[
+      ManagedDIDService,
+      CredentialSchemaController & CredentialSchemaRepository & CredentialSchemaService & PostgreSQLContainer &
+        Authenticator
+    ](
       CredentialSchemaControllerImpl.layer,
       CredentialSchemaServiceImpl.layer,
       JdbcCredentialSchemaRepository.layer,
       contextAwareTransactorLayer,
-      pgContainerLayer
+      systemTransactorLayer,
+      pgContainerLayer,
+      authenticatorLayer
     )
 
   val credentialSchemaUriBase = uri"http://test.com/schema-registry/schemas"
@@ -76,8 +85,8 @@ trait CredentialSchemaTestTools extends PostgresTestContainerSupport {
       .defaultHandlers(ErrorResponse.failureResponseHandler)
   }
 
-  def httpBackend(controller: CredentialSchemaController, walletAccessContext: WalletAccessContext) = {
-    val schemaRegistryEndpoints = SchemaRegistryServerEndpoints(controller, walletAccessContext)
+  def httpBackend(controller: CredentialSchemaController, authenticator: Authenticator) = {
+    val schemaRegistryEndpoints = SchemaRegistryServerEndpoints(controller, authenticator)
 
     val backend =
       TapirStubInterpreter(
@@ -160,11 +169,11 @@ trait CredentialSchemaGen {
 
   def generateSchemasN(
       count: Int
-  ): ZIO[CredentialSchemaController & WalletAccessContext, Throwable, List[CredentialSchemaInput]] =
+  ): ZIO[CredentialSchemaController & Authenticator, Throwable, List[CredentialSchemaInput]] =
     for {
       controller <- ZIO.service[CredentialSchemaController]
-      ctx <- ZIO.service[WalletAccessContext]
-      backend = httpBackend(controller, ctx)
+      authenticator <- ZIO.service[Authenticator]
+      backend = httpBackend(controller, authenticator)
       inputs <- Generator.schemaInput.runCollectN(count)
       _ <- inputs
         .map(in =>

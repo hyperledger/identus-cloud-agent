@@ -1,6 +1,7 @@
 package io.iohk.atala.pollux.sql.repository
 
 import doobie.*
+import doobie.implicits.*
 import io.iohk.atala.pollux.core.model.schema.CredentialSchema
 import io.iohk.atala.pollux.core.repository.Repository.*
 import io.iohk.atala.pollux.core.repository.{CredentialSchemaRepository, Repository}
@@ -9,10 +10,12 @@ import io.iohk.atala.shared.db.ContextAwareTask
 import io.iohk.atala.shared.db.Implicits.*
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
+import zio.interop.catz.*
 
 import java.util.UUID
 
-class JdbcCredentialSchemaRepository(xa: Transactor[ContextAwareTask]) extends CredentialSchemaRepository {
+case class JdbcCredentialSchemaRepository(xa: Transactor[ContextAwareTask], xb: Transactor[Task])
+    extends CredentialSchemaRepository {
   import CredentialSchemaSql.*
   override def create(cs: CredentialSchema): RIO[WalletAccessContext, CredentialSchema] = {
     ZIO.serviceWithZIO[WalletAccessContext](ctx =>
@@ -23,10 +26,10 @@ class JdbcCredentialSchemaRepository(xa: Transactor[ContextAwareTask]) extends C
     )
   }
 
-  override def getByGuid(guid: UUID): RIO[WalletAccessContext, Option[CredentialSchema]] = {
+  override def getByGuid(guid: UUID): Task[Option[CredentialSchema]] = {
     CredentialSchemaSql
       .findByGUID(guid)
-      .transactWallet(xa)
+      .transact(xb)
       .map(
         _.headOption
           .map(CredentialSchemaRow.toModel)
@@ -93,6 +96,6 @@ class JdbcCredentialSchemaRepository(xa: Transactor[ContextAwareTask]) extends C
 }
 
 object JdbcCredentialSchemaRepository {
-  val layer: URLayer[Transactor[ContextAwareTask], CredentialSchemaRepository] =
-    ZLayer.fromFunction(JdbcCredentialSchemaRepository(_))
+  val layer: URLayer[Transactor[ContextAwareTask] & Transactor[Task], CredentialSchemaRepository] =
+    ZLayer.fromFunction(JdbcCredentialSchemaRepository.apply)
 }

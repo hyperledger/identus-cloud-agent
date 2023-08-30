@@ -113,8 +113,11 @@ object RepoModule {
     SystemModule.configLayer >>> dbConfigLayer
   }
 
-  val polluxTransactorLayer: TaskLayer[Transactor[ContextAwareTask]] =
+  val polluxContextAwareTransactorLayer: TaskLayer[Transactor[ContextAwareTask]] =
     polluxDbConfigLayer() >>> TransactorLayer.contextAwareTask
+
+  val polluxTransactorLayer: TaskLayer[Transactor[Task]] =
+    polluxDbConfigLayer(appUser = false) >>> TransactorLayer.task
 
   val connectDbConfigLayer: TaskLayer[DbConfig] = {
     val dbConfigLayer = ZLayer.fromZIO {

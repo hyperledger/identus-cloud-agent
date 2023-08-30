@@ -9,7 +9,7 @@ import zio.test.TestAspect.*
 import zio.test.Assertion.*
 import io.iohk.atala.container.util.MigrationAspects.migrate
 
-object AuthenticationRepositorySpec extends ZIOSpecDefault, PostgresTestContainerSupport {
+object JdbcAuthenticationRepositorySpec extends ZIOSpecDefault, PostgresTestContainerSupport {
 
   override def spec = {
     val testSuite =
@@ -21,7 +21,7 @@ object AuthenticationRepositorySpec extends ZIOSpecDefault, PostgresTestContaine
       )
 
     testSuite.provideSomeLayerShared(
-      pgContainerLayer >+> systemTransactorLayer >+> AuthenticationRepositoryImpl.layer
+      pgContainerLayer >+> systemTransactorLayer >+> JdbcAuthenticationRepository.layer
     )
   }
 

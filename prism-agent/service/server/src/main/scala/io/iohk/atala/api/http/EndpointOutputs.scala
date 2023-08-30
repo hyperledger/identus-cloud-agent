@@ -20,9 +20,9 @@ object EndpointOutputs {
 
   val basicFailures: EndpointOutput[ErrorResponse] = basicFailuresWith()
 
-  val basicFailuresAndNotFound = basicFailuresWith(FailureVariant.notFound)
+  val basicFailuresAndForbidden = basicFailuresWith(FailureVariant.forbidden)
 
-  val basicFailureAndForbidden = basicFailuresWith(FailureVariant.forbidden)
+  val basicFailuresAndNotFound = basicFailuresWith(FailureVariant.notFound)
 
   val basicFailureAndNotFoundAndForbidden = basicFailuresWith(FailureVariant.notFound, FailureVariant.forbidden)
 

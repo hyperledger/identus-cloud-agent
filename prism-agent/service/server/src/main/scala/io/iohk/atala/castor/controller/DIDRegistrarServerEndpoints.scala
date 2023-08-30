@@ -1,55 +1,81 @@
 package io.iohk.atala.castor.controller
 
+import io.iohk.atala.iam.authentication.Authenticator
+import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic
+import io.iohk.atala.shared.models.WalletAccessContext
 import sttp.tapir.ztapir.*
 import zio.*
-import io.iohk.atala.shared.models.WalletAccessContext
 
 class DIDRegistrarServerEndpoints(
     didRegistrarController: DIDRegistrarController,
-    walletAccessCtx: WalletAccessContext
+    authenticator: Authenticator
 ) {
 
   private val listManagedDidServerEndpoint: ZServerEndpoint[Any, Any] =
-    DIDRegistrarEndpoints.listManagedDid.zServerLogic { (rc, paginationInput) =>
-      didRegistrarController
-        .listManagedDid(paginationInput)(rc)
-        .provideSomeLayer(ZLayer.succeed(walletAccessCtx)) // FIXME
-    }
+    DIDRegistrarEndpoints.listManagedDid
+      .zServerSecurityLogic(ApiKeyEndpointSecurityLogic.securityLogic(_)(authenticator))
+      .serverLogic { entity =>
+        { case (rc, paginationInput) =>
+          didRegistrarController
+            .listManagedDid(paginationInput)(rc)
+            .provideSomeLayer(ZLayer.succeed(entity.walletAccessContext))
+        }
+      }
 
   private val createManagedDidServerEndpoint: ZServerEndpoint[Any, Any] =
-    DIDRegistrarEndpoints.createManagedDid.zServerLogic { (rc, createManagedDidRequest) =>
-      didRegistrarController
-        .createManagedDid(createManagedDidRequest)(rc)
-        .provideSomeLayer(ZLayer.succeed(walletAccessCtx)) // FIXME
-    }
+    DIDRegistrarEndpoints.createManagedDid
+      .zServerSecurityLogic(ApiKeyEndpointSecurityLogic.securityLogic(_)(authenticator))
+      .serverLogic { entity =>
+        { case (rc, createManagedDidRequest) =>
+          didRegistrarController
+            .createManagedDid(createManagedDidRequest)(rc)
+            .provideSomeLayer(ZLayer.succeed(entity.walletAccessContext))
+        }
+      }
 
   private val getManagedDidServerEndpoint: ZServerEndpoint[Any, Any] =
-    DIDRegistrarEndpoints.getManagedDid.zServerLogic { (rc, did) =>
-      didRegistrarController
-        .getManagedDid(did)(rc)
-        .provideSomeLayer(ZLayer.succeed(walletAccessCtx)) // FIXME
-    }
+    DIDRegistrarEndpoints.getManagedDid
+      .zServerSecurityLogic(ApiKeyEndpointSecurityLogic.securityLogic(_)(authenticator))
+      .serverLogic { entity =>
+        { case (rc, did) =>
+          didRegistrarController
+            .getManagedDid(did)(rc)
+            .provideSomeLayer(ZLayer.succeed(entity.walletAccessContext))
+        }
+      }
 
   private val publishManagedDidServerEndpoint: ZServerEndpoint[Any, Any] =
-    DIDRegistrarEndpoints.publishManagedDid.zServerLogic { (rc, did) =>
-      didRegistrarController
-        .publishManagedDid(did)(rc)
-        .provideSomeLayer(ZLayer.succeed(walletAccessCtx)) // FIXME
-    }
+    DIDRegistrarEndpoints.publishManagedDid
+      .zServerSecurityLogic(ApiKeyEndpointSecurityLogic.securityLogic(_)(authenticator))
+      .serverLogic { entity =>
+        { case (rc, did) =>
+          didRegistrarController
+            .publishManagedDid(did)(rc)
+            .provideSomeLayer(ZLayer.succeed(entity.walletAccessContext))
+        }
+      }
 
   private val updateManagedDidServerEndpoint: ZServerEndpoint[Any, Any] =
-    DIDRegistrarEndpoints.updateManagedDid.zServerLogic { (rc, did, updateRequest) =>
-      didRegistrarController
-        .updateManagedDid(did, updateRequest)(rc)
-        .provideSomeLayer(ZLayer.succeed(walletAccessCtx)) // FIXME
-    }
+    DIDRegistrarEndpoints.updateManagedDid
+      .zServerSecurityLogic(ApiKeyEndpointSecurityLogic.securityLogic(_)(authenticator))
+      .serverLogic { entity =>
+        { case (rc, did, updateRequest) =>
+          didRegistrarController
+            .updateManagedDid(did, updateRequest)(rc)
+            .provideSomeLayer(ZLayer.succeed(entity.walletAccessContext))
+        }
+      }
 
   private val deactivateManagedDidServerEndpoint: ZServerEndpoint[Any, Any] =
-    DIDRegistrarEndpoints.deactivateManagedDid.zServerLogic { (rc, did) =>
-      didRegistrarController
-        .deactivateManagedDid(did)(rc)
-        .provideSomeLayer(ZLayer.succeed(walletAccessCtx)) // FIXME
-    }
+    DIDRegistrarEndpoints.deactivateManagedDid
+      .zServerSecurityLogic(ApiKeyEndpointSecurityLogic.securityLogic(_)(authenticator))
+      .serverLogic { entity =>
+        { case (rc, did) =>
+          didRegistrarController
+            .deactivateManagedDid(did)(rc)
+            .provideSomeLayer(ZLayer.succeed(entity.walletAccessContext))
+        }
+      }
 
   val all: List[ZServerEndpoint[Any, Any]] = List(
     listManagedDidServerEndpoint,
@@ -63,12 +89,11 @@ class DIDRegistrarServerEndpoints(
 }
 
 object DIDRegistrarServerEndpoints {
-  def all: URIO[DIDRegistrarController & WalletAccessContext, List[ZServerEndpoint[Any, Any]]] = {
+  def all: URIO[DIDRegistrarController & Authenticator, List[ZServerEndpoint[Any, Any]]] = {
     for {
-      // FIXME: do not use global wallet context, use context from interceptor instead
-      walletAccessCtx <- ZIO.service[WalletAccessContext]
+      authenticator <- ZIO.service[Authenticator]
       didRegistrarController <- ZIO.service[DIDRegistrarController]
-      didRegistrarEndpoints = new DIDRegistrarServerEndpoints(didRegistrarController, walletAccessCtx)
+      didRegistrarEndpoints = new DIDRegistrarServerEndpoints(didRegistrarController, authenticator)
     } yield didRegistrarEndpoints.all
   }
 }

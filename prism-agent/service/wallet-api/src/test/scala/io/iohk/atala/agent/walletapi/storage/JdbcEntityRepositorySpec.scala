@@ -35,9 +35,11 @@ object JdbcEntityRepositorySpec extends ZIOSpecDefault, PostgresTestContainerSup
         getAllEntitiesSpec
       ) @@ TestAspect.before(DBTestUtils.runMigrationAgentDB) @@ TestAspect.sequential
 
-    testSuite.provideSomeLayer(
-      pgContainerLayer >+> systemTransactorLayer >+> JdbcEntityRepository.layer
-    )
+    testSuite
+      .provideSomeLayer(
+        pgContainerLayer >+> systemTransactorLayer >+> JdbcEntityRepository.layer
+      )
+      .provide(Runtime.removeDefaultLoggers)
   }
 
   private val getAllEntitiesSpec = suite("get all entities spec")(

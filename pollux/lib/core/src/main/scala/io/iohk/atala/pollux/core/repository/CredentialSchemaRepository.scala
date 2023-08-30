@@ -4,7 +4,7 @@ import io.iohk.atala.pollux.core.model.schema.CredentialSchema
 import io.iohk.atala.pollux.core.model.schema.CredentialSchema.*
 import io.iohk.atala.pollux.core.repository.Repository.SearchCapability
 import io.iohk.atala.shared.models.WalletAccessContext
-import zio.RIO
+import zio.{RIO, Task}
 
 import java.util.UUID
 
@@ -15,7 +15,7 @@ trait CredentialSchemaRepository
     with SearchCapability[WalletTask, CredentialSchema.Filter, CredentialSchema] {
   def create(cs: CredentialSchema): RIO[WalletAccessContext, CredentialSchema]
 
-  def getByGuid(guid: UUID): RIO[WalletAccessContext, Option[CredentialSchema]]
+  def getByGuid(guid: UUID): Task[Option[CredentialSchema]]
 
   def update(cs: CredentialSchema): RIO[WalletAccessContext, Option[CredentialSchema]]
 
