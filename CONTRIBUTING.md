@@ -15,7 +15,7 @@ As a contributor, here are the guidelines we would like you to follow:
 
 PRISM Cloud Agent enforces the Developer Certificate of Origin (DCO). It requires all commit messages to contain the `Signed-off-by` line with an email address that matches the commit author and the name on your GitHub account.
 
-Please read and follow set up [DCO](DCO).
+Please read and follow set up [DCO](./DCO.md).
 
 ## <a name="issue"></a> Found a Bug?
 
@@ -43,7 +43,7 @@ If you would like to *implement* a new feature, please consider the size of the 
 
 Before you submit an issue, please search the issue tracker. An issue for your problem might already exist and the discussion might inform you of workarounds readily available.
 
-You can file new issues by selecting a `Bug Report` template on our [Issues submition page](#submit-issue-page).
+You can file new issues by selecting a `Bug Report` template on our [Issues submition page](https://github.com/input-output-hk/atala-prism-building-blocks/issues/new/choose).
 
 ### <a name="submit-pr"></a> Submitting a Pull Request (PR)
 
@@ -119,7 +119,7 @@ After your pull request is merged, you can safely delete your branch and pull th
 
 ## <a name="commit"></a> Commit Message Format
 
-Please, follow our [Commit Message guidelines](#commit-guidelines) for all commits you made, and make sure your PR title is following this format.
+Please, follow our [Commit Message guidelines](https://handbook.atalaprism.io/engineering/sdlc/commit-guidelines) for all commits you made, and make sure your PR title is following this format.
 
 ## <a name="rules"></a> Coding Rules
 
@@ -127,8 +127,4 @@ To ensure consistency throughout the source code, keep these rules in mind as yo
 
 * All features or bug fixes **must be tested** by one or more specs (unit-tests).
 * All  **must be documented**.
-* Follow [Scala Style Guide][scala-style-guide]
-
-[submit-issue-page]: https://github.com/input-output-hk/atala-prism-building-blocks/issues/new/choose
-[scala-style-guide]: https://docs.scala-lang.org/style/
-[commit-guidelines]: https://handbook.atalaprism.io/engineering/sdlc/commit-guidelines
+* Follow [Scala Style Guide](https://docs.scala-lang.org/style/)
