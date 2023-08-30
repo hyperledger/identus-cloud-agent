@@ -8,6 +8,7 @@ import io.iohk.atala.agent.walletapi.sql.JdbcWalletSecretStorage
 import io.iohk.atala.agent.walletapi.storage.WalletSecretStorage
 import io.iohk.atala.agent.walletapi.vault.VaultWalletSecretStorage
 import io.iohk.atala.shared.models.WalletAccessContext
+import io.iohk.atala.shared.models.WalletId
 import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
 import io.iohk.atala.test.container.DBTestUtils
 import io.iohk.atala.test.container.VaultTestContainerSupport
@@ -24,7 +25,8 @@ object WalletManagementServiceSpec
   override def spec = {
     def testSuite(name: String) =
       suite(name)(
-        createWalletSpec
+        createWalletSpec,
+        getWalletSpec,
       ) @@ TestAspect.before(DBTestUtils.runMigrationAgentDB) @@ TestAspect.sequential
 
     val suite1 = testSuite("jdbc as secret storage")
@@ -50,6 +52,22 @@ object WalletManagementServiceSpec
 
     suite("WalletManagementService")(suite1, suite2)
   }
+
+  private def getWalletSpec = suite("getWallet")(
+    test("get existing wallet") {
+      for {
+        svc <- ZIO.service[WalletManagementService]
+        createdWallet <- svc.createWallet(Wallet("wallet-1"))
+        wallet <- svc.getWallet(createdWallet.id)
+      } yield assert(wallet)(isSome(equalTo(createdWallet)))
+    },
+    test("get non-existing wallet") {
+      for {
+        svc <- ZIO.service[WalletManagementService]
+        wallet <- svc.getWallet(WalletId.random)
+      } yield assert(wallet)(isNone)
+    },
+  )
 
   private def createWalletSpec = suite("createWallet")(
     test("initialize with no wallet") {
