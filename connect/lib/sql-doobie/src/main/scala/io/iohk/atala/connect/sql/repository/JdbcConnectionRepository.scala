@@ -100,6 +100,7 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask]) extends Connect
         |   meta_next_retry,
         |   meta_last_failure
         | FROM public.connection_records
+        | ORDER BY created_at
         """.stripMargin
       .query[ConnectionRecord]
       .to[Seq]
@@ -140,6 +141,7 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask]) extends Connect
         |   meta_last_failure
         | FROM public.connection_records
         | $conditionFragment
+        | ORDER BY created_at
         | LIMIT $limit
         """.stripMargin
           .query[ConnectionRecord]

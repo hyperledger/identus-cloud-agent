@@ -8,6 +8,13 @@ WHERE true;
 ALTER TABLE public.connection_records
     ADD COLUMN "wallet_id" UUID NOT NULL;
 
+-- Alter unique constraint on 'pthid'
+ALTER TABLE public.connection_records
+    DROP CONSTRAINT unique_thid;
+
+ALTER TABLE public.connection_records
+    ADD CONSTRAINT connection_records_unique_thid_per_wallet UNIQUE (wallet_id, thid);
+
 -- Enforce RLS
 ALTER TABLE public.connection_records
     ENABLE ROW LEVEL SECURITY;
