@@ -153,6 +153,7 @@ class JdbcPresentationRepository(
         | FROM
         |   public.presentation_records
         | $conditionFragment
+        | ORDER BY created_at
         """.stripMargin
       .query[PresentationRecord]
       .to[Seq]
@@ -196,6 +197,7 @@ class JdbcPresentationRepository(
             |   meta_last_failure
             | FROM public.presentation_records
             | $conditionFragment
+            | ORDER BY created_at
             | LIMIT $limit
             """.stripMargin
           .query[PresentationRecord]

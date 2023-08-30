@@ -113,7 +113,7 @@ trait PresentationServiceSpecHelper {
 
   protected def issueCredentialRecord = IssueCredentialRecord(
     id = DidCommID(),
-    createdAt = Instant.ofEpochSecond(Instant.now.getEpochSecond()),
+    createdAt = Instant.now,
     updatedAt = None,
     thid = DidCommID(),
     schemaId = None,

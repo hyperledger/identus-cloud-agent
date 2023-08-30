@@ -158,6 +158,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], maxRetries: Int
         |   meta_last_failure
         | FROM public.issue_credential_records
         | $conditionFragment
+        | ORDER BY created_at
         """.stripMargin
     val withOffsetFragment = offset.fold(baseFragment)(offsetValue => baseFragment ++ fr"OFFSET $offsetValue")
     val withOffsetAndLimitFragment =
@@ -223,6 +224,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], maxRetries: Int
             |   meta_last_failure
             | FROM public.issue_credential_records
             | WHERE $conditionFragment
+            | ORDER BY created_at
             | LIMIT $limit
             """.stripMargin
           .query[IssueCredentialRecord]
