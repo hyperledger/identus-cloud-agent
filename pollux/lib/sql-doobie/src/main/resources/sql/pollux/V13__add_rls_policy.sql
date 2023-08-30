@@ -32,6 +32,22 @@ ADD COLUMN "wallet_id" UUID NOT NULL;
 ALTER TABLE public.presentation_records
 ADD COLUMN "wallet_id" UUID NOT NULL;
 
+-- Alter unique constraints
+ALTER TABLE public.credential_schema
+    DROP CONSTRAINT credential_schema_name_version_author_key;
+ALTER TABLE public.credential_schema
+    ADD CONSTRAINT credential_schema_name_version_author_per_wallet UNIQUE (wallet_id, name, version, author);
+
+ALTER TABLE public.issue_credential_records
+    DROP CONSTRAINT unique_thid;
+ALTER TABLE public.issue_credential_records
+    ADD CONSTRAINT issue_credential_records_unique_thid_per_wallet UNIQUE (wallet_id, thid);
+
+ALTER TABLE public.presentation_records
+    DROP CONSTRAINT presentation_records_unique_thid;
+ALTER TABLE public.presentation_records
+    ADD CONSTRAINT presentation_records_unique_thid_per_wallet UNIQUE (wallet_id, thid);
+
 -- Enforce RLS
 ALTER TABLE public.credential_schema ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.verification_policy ENABLE ROW LEVEL SECURITY;
