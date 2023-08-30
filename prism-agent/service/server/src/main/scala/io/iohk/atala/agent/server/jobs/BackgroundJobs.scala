@@ -164,6 +164,25 @@ object BackgroundJobs {
       "issuance_flow_issuer_cred_pending_to_generated_flow_all_counter"
     )
 
+    val IssuerSendCredentialSuccess = counterMetric(
+      "issuance_flow_issuer_send_cred_success_counter"
+    )
+
+    val IssuerSendCredentialFailed = counterMetric(
+      "issuance_flow_issuer_send_cred_failed_counter"
+    )
+
+    val IssuerSendCredentialAll = counterMetric(
+      "issuance_flow_issuer_send_cred_all_counter"
+    )
+
+    val IssuerSendCredentialMsgFailed = counterMetric(
+      "issuance_flow_issuer_send_credential_msg_failed_counter"
+    )
+    val IssuerSendCredentialMsgSuccess = counterMetric(
+      "issuance_flow_issuer_send_credential_msg_succeed_counter"
+    )
+
     val aux = for {
       _ <- ZIO.logDebug(s"Running action with records => $record")
       _ <- record match {
@@ -420,17 +439,26 @@ object BackgroundJobs {
               _,
               _,
             ) =>
-          for {
+          val sendCredentialManualIssuanceFlow = for {
             didCommAgent <- buildDIDCommAgent(issue.from)
             resp <- MessagingService
               .send(issue.makeMessage)
-              .provideSomeLayer(didCommAgent)
+              .provideSomeLayer(didCommAgent) @@ Metric
+              .gauge("issuance_flow_issuer_send_credential_msg_ms_gauge")
+              .trackDurationWith(_.toMetricsSeconds)
             credentialService <- ZIO.service[CredentialService]
             _ <- {
-              if (resp.status >= 200 && resp.status < 300) credentialService.markCredentialSent(id)
-              else ZIO.fail(ErrorResponseReceivedFromPeerAgent(resp))
+              if (resp.status >= 200 && resp.status < 300)
+                credentialService.markCredentialSent(id) @@ IssuerSendCredentialMsgSuccess
+              else ZIO.fail(ErrorResponseReceivedFromPeerAgent(resp)) @@ IssuerSendCredentialMsgFailed
             }
           } yield ()
+
+          sendCredentialManualIssuanceFlow @@ IssuerSendCredentialSuccess.trackSuccess
+            @@ IssuerSendCredentialFailed.trackError
+            @@ IssuerSendCredentialAll @@ Metric
+              .gauge("issuance_flow_issuer_send_cred_flow_ms_gauge")
+              .trackDurationWith(_.toMetricsSeconds)
 
         // Credential has been generated, published, and can now be sent to the Holder
         case IssueCredentialRecord(
@@ -455,15 +483,24 @@ object BackgroundJobs {
               _,
               _
             ) =>
-          for {
+          val sendCredentialAutomaticIssuanceFlow = for {
             didCommAgent <- buildDIDCommAgent(issue.from)
-            resp <- MessagingService.send(issue.makeMessage).provideSomeLayer(didCommAgent)
+            resp <- MessagingService.send(issue.makeMessage).provideSomeLayer(didCommAgent) @@ Metric
+              .gauge("issuance_flow_issuer_send_credential_msg_ms_gauge")
+              .trackDurationWith(_.toMetricsSeconds)
             credentialService <- ZIO.service[CredentialService]
             _ <- {
-              if (resp.status >= 200 && resp.status < 300) credentialService.markCredentialSent(id)
-              else ZIO.fail(ErrorResponseReceivedFromPeerAgent(resp))
+              if (resp.status >= 200 && resp.status < 300)
+                credentialService.markCredentialSent(id) @@ IssuerSendCredentialMsgSuccess
+              else ZIO.fail(ErrorResponseReceivedFromPeerAgent(resp)) @@ IssuerSendCredentialMsgFailed
             }
           } yield ()
+
+          sendCredentialAutomaticIssuanceFlow @@ IssuerSendCredentialSuccess.trackSuccess
+            @@ IssuerSendCredentialFailed.trackError
+            @@ IssuerSendCredentialAll @@ Metric
+              .gauge("issuance_flow_issuer_send_cred_flow_ms_gauge")
+              .trackDurationWith(_.toMetricsSeconds)
 
         case IssueCredentialRecord(id, _, _, _, _, _, _, _, _, _, ProblemReportPending, _, _, _, _, _, _, _, _, _) =>
           ???
