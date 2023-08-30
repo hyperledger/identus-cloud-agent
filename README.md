@@ -98,9 +98,9 @@ PORT=${PORT} PRISM_AGENT_VERSION=${PRISM_AGENT_VERSION} PRISM_NODE_VERSION=${PRI
     up --wait
 ```
 
-The `PORT` variable is used to specify the port number for the PRISM Cloud Agent to listen on. The `PRISM_AGENT_VERSION` and `PRISM_NODE_VERSION` variables are used to specify the versions of the PRISM Cloud Agent and PRISM Node to use. The `AGENT_ROLE` variable is used to specify the role of the PRISM Cloud Agent. The `AGENT_ROLE` variable can be set to `issuer`, `verifier` or `holder`.
+The `PORT` variable is used to specify the port number for the Cloud Agent to listen on. The `PRISM_AGENT_VERSION` and `PRISM_NODE_VERSION` variables are used to specify the versions of the Cloud Agent and PRISM Node to use. The `AGENT_ROLE` variable is used to specify the role of the Cloud Agent. The `AGENT_ROLE` variable can be set to `issuer`, `verifier` or `holder`.
 
-In real life, you will need to start at least two PRISM Cloud Agent instances with different roles. For example, you can start one instance with the `issuer` role and another one with the `holder` role. The `issuer` instance will be used to issue verifiable credentials (VCs) and the `holder` instance will be used to hold VCs. Here is an example of how you can do this:
+In real life, you will need to start at least two Cloud Agent instances with different roles. For example, you can start one instance with the `issuer` role and another one with the `holder` role. The `issuer` instance will be used to issue verifiable credentials (VCs) and the `holder` instance will be used to hold VCs. Here is an example of how you can do this:
   
 ```bash
 PORT=8080 PRISM_AGENT_VERSION=1.9.2 PRISM_NODE_VERSION=2.2.1 \
@@ -118,7 +118,7 @@ PORT=8090 PRISM_AGENT_VERSION=1.9.2 PRISM_NODE_VERSION=2.2.1 \
     up --wait
 ```
 
-If the PRISM Cloud Agent is started successfully, all the running containers should achieve `Healthy` state, and Cloud Agent Rest API should be available at the specified port, for example:
+If the Cloud Agent is started successfully, all the running containers should achieve `Healthy` state, and Cloud Agent Rest API should be available at the specified port, for example:
 * `http://localhost:8080/prism-agent` for the `issuer` instance
 * `http://localhost:8090/prism-agent` for the `holder` instance
 
@@ -128,9 +128,9 @@ $ curl http://localhost:8080/prism-agent/_system/health
 {"version":"1.9.2"}
 ```
 
-> For more information about all available configuration parameters, please, check [PRISM Cloud Agent configuration](https://docs.atalaprism.io/docs/atala-prism/prism-cloud-agent/environment-variables) section at the documentation portal and edit the `docker-compose-demo.yml` file accordingly.
+> For more information about all available configuration parameters, please, check [Cloud Agent configuration](https://docs.atalaprism.io/docs/atala-prism/prism-cloud-agent/environment-variables) section at the documentation portal and edit the `docker-compose-demo.yml` file accordingly.
 
-#### Compatibility between PRISM Cloud Agent and PRISM Node
+#### Compatibility between Cloud Agent and PRISM Node
 
 There could be some incompatibilities between the most latest versions of Enterprise Cloud Agent and PRISM Node. Please, use the following table to check the compatibility between the versions:
 
@@ -140,9 +140,9 @@ There could be some incompatibilities between the most latest versions of Enterp
 | 1.6.0       | 2.1.1      |
 | 1.4.0       | 2.1.1      |
 
-> Please note: it is not guaranteed that the latest version of PRISM Cloud Agent will work with the latest version of PRISM Node. We recommend using the versions from the table above.
+> Please note: it is not guaranteed that the latest version of Enterprise Cloud Agent will work with the latest version of PRISM Node. We recommend using the versions from the table above.
 
-### Following the PRISM Cloud Agent tutorials
+### Following the Enterprise Cloud Agent tutorials
 
 The following tutorials will help you get started with the Cloud Agent and issue your first credentials:
 
@@ -159,7 +159,9 @@ More information about Atala and how we work can be found in our handbook at htt
 
 ## Contributing
 
-Please read our [contributions guidelines](CONTRIBUTING) and submit your PRs. We enforce [developer certificate of origin (DCO) commit signing](DCO). We also welcome issues submitted about problems you encounter in using PRISM Cloud Agent.
+Please read our [contributions guidelines](CONTRIBUTING) and submit your PRs. We enforce [developer certificate of origin (DCO) commit signing](DCO).
+
+We also welcome issues submitted about problems you encounter in using Enterprise Cloud Agent.
 
 ## License
 
