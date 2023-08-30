@@ -50,7 +50,7 @@ class JdbcWalletNonSecretStorage(xa: Transactor[ContextAwareTask]) extends Walle
         .query[WalletRow]
         .option
 
-    cxnIO.transact(xa).map(_.map(_.toDomain))
+    cxnIO.transactWithoutContext(xa).map(_.map(_.toDomain))
   }
 
   override def listWallet(offset: Option[Int], limit: Option[Int]): Task[(Seq[Wallet], Int)] = {
