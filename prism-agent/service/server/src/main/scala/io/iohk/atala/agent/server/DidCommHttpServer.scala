@@ -48,12 +48,6 @@ object DidCommHttpServer {
       DidAgent & DIDResolver & DIDNonSecretStorageUnprotected,
     Nothing
   ] = Http.collectZIO[Request] {
-    case Method.GET -> !! / "did" =>
-      for {
-        didCommService <- ZIO.service[DidAgent]
-        str = didCommService.id.value
-      } yield Response.text(str)
-
     case req @ Method.POST -> !!
         if req.headersAsList
           .exists(h =>
