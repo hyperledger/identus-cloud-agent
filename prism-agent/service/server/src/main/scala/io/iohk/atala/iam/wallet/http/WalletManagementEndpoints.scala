@@ -26,7 +26,7 @@ object WalletManagementEndpoints {
   val listWallet =
     baseEndpoint.get
       .in(paginationInput)
-      .errorOut(EndpointOutputs.basicFailureAndForbidden)
+      .errorOut(EndpointOutputs.basicFailuresAndForbidden)
       .out(statusCode(StatusCode.Ok).description("List Prism Agent managed DIDs"))
       .out(jsonBody[WalletDetailPage])
       .summary("List all wallets")
@@ -43,7 +43,7 @@ object WalletManagementEndpoints {
       statusCode(StatusCode.Created).description("A new wallet has been created")
     )
     .out(jsonBody[WalletDetail])
-    .errorOut(EndpointOutputs.basicFailureAndForbidden)
+    .errorOut(EndpointOutputs.basicFailuresAndForbidden)
     .name("createWallet")
     .summary("Create a new wallet")
     .description(

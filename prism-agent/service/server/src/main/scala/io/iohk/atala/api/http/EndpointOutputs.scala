@@ -24,8 +24,6 @@ object EndpointOutputs {
 
   val basicFailuresAndNotFound = basicFailuresWith(FailureVariant.notFound)
 
-  val basicFailureAndForbidden = basicFailuresWith(FailureVariant.forbidden)
-
   val basicFailureAndNotFoundAndForbidden = basicFailuresWith(FailureVariant.notFound, FailureVariant.forbidden)
 
   object FailureVariant {
