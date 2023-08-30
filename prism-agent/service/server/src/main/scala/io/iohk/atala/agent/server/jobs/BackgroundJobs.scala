@@ -113,15 +113,33 @@ object BackgroundJobs {
     )
 
     val HolderPendingToGeneratedSuccess = counterMetric(
-      "issuance_flow_holder_pending_to_generated_flow_success_counter"
+      "issuance_flow_holder_req_pending_to_generated_flow_success_counter"
     )
 
     val HolderPendingToGeneratedFailed = counterMetric(
-      "issuance_flow_holder_pending_to_generated_flow_failed_counter"
+      "issuance_flow_holder_req_pending_to_generated_flow_failed_counter"
     )
 
     val HolderPendingToGeneratedAll = counterMetric(
-      "issuance_flow_holder_pending_to_generated_flow_all_counter"
+      "issuance_flow_holder_req_pending_to_generated_flow_all_counter"
+    )
+
+    val HolderSendReqSucceed = counterMetric(
+      "issuance_flow_holder_send_req_msg_succeed_counter"
+    )
+
+    val HolderSendReqFailed = counterMetric(
+      "issuance_flow_holder_send_req_msg_failed_counter"
+    )
+
+    val HolderGeneratedToSentSucceed = counterMetric(
+      "issuance_flow_holder_req_generated_to_sent_flow_success_counter"
+    )
+    val HolderGeneratedToSentFailed = counterMetric(
+      "issuance_flow_holder_req_generated_to_sent_flow_failed_counter"
+    )
+    val HolderGeneratedToSentAll = counterMetric(
+      "issuance_flow_holder_req_generated_to_sent_flow_all_counter"
     )
 
     val aux = for {
@@ -217,8 +235,8 @@ object BackgroundJobs {
             @@ HolderPendingToGeneratedFailed.trackError
             @@ HolderPendingToGeneratedAll
             @@ Metric
-            .gauge("issuance_flow_holder_offer_pending_to_generated_flow_ms_gauge")
-            .trackDurationWith(_.toMetricsSeconds)
+              .gauge("issuance_flow_holder_req_pending_to_generated_flow_ms_gauge")
+              .trackDurationWith(_.toMetricsSeconds)
 
         // Request should be sent from Holder to Issuer
         case IssueCredentialRecord(
@@ -243,17 +261,29 @@ object BackgroundJobs {
               _,
               _
             ) =>
-          for {
+          val holderGeneratedToSentFlow = for {
             didCommAgent <- buildDIDCommAgent(request.from)
             resp <- MessagingService
               .send(request.makeMessage)
               .provideSomeLayer(didCommAgent)
             credentialService <- ZIO.service[CredentialService]
             _ <- {
-              if (resp.status >= 200 && resp.status < 300) credentialService.markRequestSent(id)
-              else ZIO.fail(ErrorResponseReceivedFromPeerAgent(resp))
+              if (resp.status >= 200 && resp.status < 300)
+                credentialService.markRequestSent(id) @@ HolderSendReqSucceed
+                  @@ CustomMetricsAspect.endRecordingTime(
+                    s"${record.id}_issuance_flow_holder_req_generated_to_sent",
+                    "issuance_flow_holder_req_generated_to_sent_ms_gauge"
+                  )
+              else ZIO.fail(ErrorResponseReceivedFromPeerAgent(resp)) @@ HolderSendReqFailed
             }
           } yield ()
+
+          holderGeneratedToSentFlow @@ HolderGeneratedToSentSucceed.trackSuccess
+            @@ HolderGeneratedToSentFailed.trackError
+            @@ HolderGeneratedToSentAll
+            @@ Metric
+              .gauge("issuance_flow_holder_req_generated_to_sent_flow_ms_gauge")
+              .trackDurationWith(_.toMetricsSeconds)
 
         // 'automaticIssuance' is TRUE. Issuer automatically accepts the Request
         case IssueCredentialRecord(
