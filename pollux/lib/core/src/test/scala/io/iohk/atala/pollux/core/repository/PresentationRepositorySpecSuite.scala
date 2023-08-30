@@ -18,7 +18,7 @@ object PresentationRepositorySpecSuite {
 
   private def presentationRecord = PresentationRecord(
     id = DidCommID(),
-    createdAt = Instant.ofEpochSecond(Instant.now.getEpochSecond()),
+    createdAt = Instant.now,
     updatedAt = None,
     thid = DidCommID(),
     schemaId = None,
