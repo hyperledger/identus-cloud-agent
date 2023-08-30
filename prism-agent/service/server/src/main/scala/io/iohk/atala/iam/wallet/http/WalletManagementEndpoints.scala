@@ -51,7 +51,7 @@ object WalletManagementEndpoints {
       .errorOut(EndpointOutputs.basicFailureAndNotFoundAndForbidden)
       .out(statusCode(StatusCode.Ok).description("Successfully get the wallet"))
       .out(jsonBody[WalletDetail])
-      .summary("Get the wallet")
+      .summary("Get the wallet by ID")
 
   val createWallet: Endpoint[
     AdminApiKeyCredentials,

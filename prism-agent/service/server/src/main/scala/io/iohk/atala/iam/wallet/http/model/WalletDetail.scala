@@ -13,8 +13,14 @@ final case class WalletDetail(
     @description(WalletDetail.annotations.id.description)
     @encodedExample(WalletDetail.annotations.id.example)
     id: UUID,
+    @description(WalletDetail.annotations.name.description)
+    @encodedExample(WalletDetail.annotations.name.example)
     name: String,
+    @description(WalletDetail.annotations.createdAt.description)
+    @encodedExample(WalletDetail.annotations.createdAt.example)
     createdAt: Instant,
+    @description(WalletDetail.annotations.updatedAt.description)
+    @encodedExample(WalletDetail.annotations.updatedAt.example)
     updatedAt: Instant
 )
 
@@ -37,6 +43,24 @@ object WalletDetail {
         extends Annotation[UUID](
           description = "A wallet ID",
           example = UUID.fromString("00000000-0000-0000-0000-000000000000")
+        )
+
+    object name
+        extends Annotation[String](
+          description = "The name of the wallet",
+          example = "my-wallet-1"
+        )
+
+    object createdAt
+        extends Annotation[Instant](
+          description = "The `createdAt` timestamp of the wallet.",
+          example = Instant.parse("2023-01-01T00:00:00Z")
+        )
+
+    object updatedAt
+        extends Annotation[Instant](
+          description = "The `updateddAt` timestamp of the wallet.",
+          example = Instant.parse("2023-01-01T00:00:00Z")
         )
   }
 }
