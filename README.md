@@ -3,7 +3,7 @@
     <img src="docs/images/logos/atala-prism-logo.png" alt="atala-prism-logo" width="513px" height="99px" />
   </a>
   <br>
-  <i> <font size="18"> Cloud Agent </font> </i>
+  <i> <font size="18"> Open Enterprise Cloud Agent </font> </i>
   <br>
   <br>
   <a href='https://coveralls.io/github/input-output-hk/atala-prism-building-blocks?branch=main'><img src='https://coveralls.io/repos/github/input-output-hk/atala-prism-building-blocks/badge.svg?branch=main&amp;t=91BUzX&kill_cache=1' alt='Coverage Status' /></a>
@@ -15,11 +15,11 @@
 
 ## Overview
 
-The PRISM Cloud Agent is a W3C/Aries standards-based cloud agent written in Scala that provides self-sovereign identity services to build products and solutions based on it. The term "cloud" indicates that it operates on servers and is not intended for use on mobile devices.
+The Enterprise Cloud Agent is a W3C/Aries standards-based cloud agent written in Scala that provides self-sovereign identity services to build products and solutions based on it. The term "cloud" indicates that it operates on servers and is not intended for use on mobile devices.
 
-PRISM Cloud Agent supports standard-based protocols built on top of DIDComm V2 for issuing, verifying, and holding verifiable credentials using both JWT and Hyperledger AnonCreds (coming soon) formats.
+Enterprise Cloud Agent supports standard-based protocols built on top of DIDComm V2 for issuing, verifying, and holding verifiable credentials using both JWT and Hyperledger AnonCreds (coming soon) formats.
 
-In order to use the PRISM Cloud Agent, you establish a business logic controller responsible for communicating with the agent (initiating HTTP requests and processing webhook notifications). This controller can be created using any programming language capable of sending and receiving HTTP requests.
+In order to use the Cloud Agent, you establish a business logic controller responsible for communicating with the agent (initiating HTTP requests and processing webhook notifications). This controller can be created using any programming language capable of sending and receiving HTTP requests.
 
 As a result, you can concentrate on crafting self-sovereign identity solutions using well-known web development tools, without the need to delve into the intricacies of lower-level cryptography and identity protocol internals.
 
@@ -27,7 +27,7 @@ As a result, you can concentrate on crafting self-sovereign identity solutions u
 
 * Rest API
 * DIDComm V2
-* W3C-compliant `did:prism` method
+* W3C-compliant `did:prism` and `did:peer` methods
 * Credential types
   * JWT
   * AnonCreds (coming soon)
@@ -40,47 +40,47 @@ As a result, you can concentrate on crafting self-sovereign identity solutions u
 
 * A government issues verifiable credentials (VCs) to its citizens to prove their identity and access government services.
 * An enterprise issues VCs to its employees to prove their employment and access enterprise services.
-* A Web3 authentication service based on the presentation of verifiable proofs (VPs).
+* A Web3 authentication service based on verifiable presentations (VPs).
 
 ## Getting started
 
 ### Understanding SSI
 
-Before starting to use the PRISM Cloud Agent, it is important to understand the basic concepts of self-sovereign identity (SSI). The following resources provide a good introduction to SSI:
+Before starting to use the Cloud Agent, it is important to understand the basic concepts of self-sovereign identity (SSI). The following resources provide a good introduction to SSI:
 
 * [Atala PRISM SSI introduction](https://docs.atalaprism.io/docs/category/concepts/)
 * [Linux Foundation Course: Getting Started with SSI](https://www.edx.org/learn/computer-programming/the-linux-foundation-getting-started-with-self-sovereign-identity)
 
 ### Architecture
 
-The next diagram offers a concise architectural overview, depicting a PRISM Cloud Agent instance, a controller, the interconnections linking the controller and agent, as well as the external routes to other agents and public ledgers across the Internet.
+The next diagram offers a concise architectural overview, depicting a Cloud Agent instance, a controller, the interconnections linking the controller and agent, as well as the external routes to other agents and public ledgers across the Internet.
 
-![PRISM Cloud Agent architecture](docs/images/cloud-agent-architecture-dark.png#gh-dark-mode-only)
-![PRISM Cloud Agent architecture](docs/images/cloud-agent-architecture-light.png#gh-light-mode-only)
+![Enterprise Cloud Agent architecture](docs/images/cloud-agent-architecture-dark.png#gh-dark-mode-only)
+![Enterprise Cloud Agent architecture](docs/images/cloud-agent-architecture-light.png#gh-light-mode-only)
 
 ### Installation and usage
 
-Atala PRISM Cloud Agent is distributed as a Docker image to be run in a containerized environment. All versions can be found [here](https://github.com/input-output-hk/atala-prism-building-blocks/pkgs/container/prism-agent).
+Enterprise Cloud Agent is distributed as a Docker image to be run in a containerized environment. All versions can be found [here](https://github.com/input-output-hk/atala-prism-building-blocks/pkgs/container/prism-agent).
 
-The following sections describe how to run the PRISM Cloud Agent in different configurations.
+The following sections describe how to run the Enterprise Cloud Agent in different configurations.
 
 #### Configuration
 
-The PRISM Cloud Agent can be configured to use different types of ledger, secret storage and DID persistence. Any combination of options is available, but the most common configurations are:
+The Enterprise Cloud Agent can be configured to use different types of ledger, secret storage and DID persistence. Any combination of options is available, but the most common configurations are:
 
 | Configuration  | Secret Storage | DIDs persistence | VDR                                  |
 | -------------- | -------------- | ---------------- | ------------------------------------ |
-| Demo           | PostgreSQL     | No               | In-memory                            |
+| Dev            | PostgreSQL     | No               | In-memory                            |
 | Pre-production | PostgreSQL     | Yes              | Cardano testnet (preview or preprod) |
 | Production     | Hashicorp      | Yes              | Cardano mainnet                      |
 
-To start playing with PRISM Cloud Agent, we recommend using the demo configuration. Pre-production and production configurations are intended for real-world use cases and require additional more complex configurations of the Cardano stack setup.
+To start playing with Cloud Agent, we recommend using the Dev configuration. Pre-production and production configurations are intended for real-world use cases and require additional more complex configurations of the Cardano stack setup.
 
-> If you're interested in a hosted version of PRISM Cloud Agent, please, contact us at [atalaprism.io](https://atalaprism.io).
+> If you're interested in a hosted version of Enterprise Cloud Agent, please, contact us at [atalaprism.io](https://atalaprism.io).
 
 #### System requirements
 
-System requirements can vary depending on the use case. The following are the minimum requirements for running the PRISM Cloud Agent with the demo configuration:
+System requirements can vary depending on the use case. The following are the minimum requirements for running the Cloud Agent with the Dev configuration:
 
 * Linux or MacOS operating system
 * Docker (with docker-compose support)
@@ -89,7 +89,7 @@ System requirements can vary depending on the use case. The following are the mi
 
 #### Running locally in demo mode
 
-Here is a general example of running a PRISM Agent locally:
+Here is a general example of running a Cloud Agent locally:
 ```bash
 PORT=${PORT} PRISM_AGENT_VERSION=${PRISM_AGENT_VERSION} PRISM_NODE_VERSION=${PRISM_NODE_VERSION} \
   docker compose \
@@ -132,17 +132,19 @@ $ curl http://localhost:8080/prism-agent/_system/health
 
 #### Compatibility between PRISM Cloud Agent and PRISM Node
 
-There could be some incompatibilities between the most latest versions of PRISM Cloud Agent and PRISM Node. Please, use the following table to check the compatibility between the versions:
+There could be some incompatibilities between the most latest versions of Enterprise Cloud Agent and PRISM Node. Please, use the following table to check the compatibility between the versions:
 
-| PRISM Cloud Agent | PRISM Node |
-| ----------------- | ---------- |
-| 1.9.2             | 2.2.1      |
-| 1.6.0             | 2.1.1      |
-| 1.4.0             | 2.1.1      |
+| Cloud Agent | PRISM Node |
+| ----------- | ---------- |
+| 1.9.2       | 2.2.1      |
+| 1.6.0       | 2.1.1      |
+| 1.4.0       | 2.1.1      |
+
+> Please note: it is not guaranteed that the latest version of PRISM Cloud Agent will work with the latest version of PRISM Node. We recommend using the versions from the table above.
 
 ### Following the PRISM Cloud Agent tutorials
 
-The following tutorials will help you to get started with the PRISM Cloud Agent and issue your first credentials:
+The following tutorials will help you get started with the Cloud Agent and issue your first credentials:
 
 * [Creating, updating and deactivating Decentralized Identifiers (DIDs)](https://docs.atalaprism.io/tutorials/category/dids/)
 * [Setting up connections between agents using out-of-band (OOB) protocol](https://docs.atalaprism.io/tutorials/connections/connection)
@@ -165,4 +167,4 @@ Please read our [contributions guidelines](CONTRIBUTING) and submit your PRs. We
 
 <hr>
 
-**Love Atala PRISM? Give our repo a star :star: :arrow_up:.**
+**Love the repo? Give our repo a star :star: :arrow_up:.**
