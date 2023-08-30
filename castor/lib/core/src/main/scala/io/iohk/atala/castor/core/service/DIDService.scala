@@ -96,9 +96,11 @@ private class DIDServiceImpl(didOpValidator: DIDOperationValidator, nodeClient: 
         case _: CanonicalPrismDID => ZIO.none
         case d: LongFormPrismDID  => extractUnpublishedDIDData(d).asSome
       }
+      _ <- ZIO.logInfo(s"unpublished did data is - ${unpublishedDidData}")
       result <- ZIO
         .fromFuture(_ => nodeClient.getDidDocument(request))
         .mapError(DIDResolutionError.DLTProxyError.apply)
+      _ <- ZIO.logInfo(s"result is ${result}")
       publishedDidData <- ZIO
         .fromOption(result.document)
         .foldZIO(
@@ -121,6 +123,7 @@ private class DIDServiceImpl(didOpValidator: DIDOperationValidator, nodeClient: 
               }
               .asSome
         )
+      _ <- ZIO.logInfo(s"Unpublished did data: ${unpublishedDidData}")
     } yield publishedDidData.orElse(unpublishedDidData)
   }
 

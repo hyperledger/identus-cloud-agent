@@ -32,9 +32,13 @@ import io.iohk.atala.pollux.vc.jwt.{
   DidResolver as JwtDidResolver,
   Issuer as JwtIssuer
 }
+import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
 import zio.*
 import zio.prelude.ZValidation.*
 import zio.prelude.Validation
+import zio.metrics.*
+import io.iohk.atala.shared.utils.DurationOps.toMetricsSeconds
+
 import java.time.{Clock, Instant, ZoneId}
 
 object BackgroundJobs {
@@ -84,6 +88,42 @@ object BackgroundJobs {
     import IssueCredentialRecord.*
     import IssueCredentialRecord.ProtocolState.*
     import IssueCredentialRecord.PublicationState.*
+
+    def counterMetric(key: String) = Metric
+      .counterInt(key)
+      .fromConst(1)
+
+    val IssuerSendOfferMsgFailed = counterMetric(
+      "issuance_flow_issuer_send_offer_msg_failed_counter"
+    )
+    val IssuerSendOfferMsgSucceed = counterMetric(
+      "issuance_flow_issuer_send_offer_msg_succeed_counter"
+    )
+
+    val IssuerSendOfferSucceed = counterMetric(
+      "issuance_flow_issuer_send_offer_flow_succeed_counter"
+    )
+
+    val IssuerSendOfferFailed = counterMetric(
+      "issuance_flow_issuer_send_offer_flow_failed_counter"
+    )
+
+    val IssuerSendOfferAll = counterMetric(
+      "issuance_flow_issuer_send_offer_flow_all_counter"
+    )
+
+    val HolderPendingToGeneratedSuccess = counterMetric(
+      "issuance_flow_holder_pending_to_generated_flow_success_counter"
+    )
+
+    val HolderPendingToGeneratedFailed = counterMetric(
+      "issuance_flow_holder_pending_to_generated_flow_failed_counter"
+    )
+
+    val HolderPendingToGeneratedAll = counterMetric(
+      "issuance_flow_holder_pending_to_generated_flow_all_counter"
+    )
+
     val aux = for {
       _ <- ZIO.logDebug(s"Running action with records => $record")
       _ <- record match {
@@ -110,18 +150,33 @@ object BackgroundJobs {
               _,
               _,
             ) =>
-          for {
+          val sendOfferFlow = for {
             _ <- ZIO.log(s"IssueCredentialRecord: OfferPending (START)")
             didCommAgent <- buildDIDCommAgent(offer.from)
             resp <- MessagingService
               .send(offer.makeMessage)
-              .provideSomeLayer(didCommAgent)
+              .provideSomeLayer(didCommAgent) @@ Metric
+              .gauge("issuance_flow_issuer_send_offer_ms_gauge")
+              .trackDurationWith(_.toMetricsSeconds)
             credentialService <- ZIO.service[CredentialService]
             _ <- {
-              if (resp.status >= 200 && resp.status < 300) credentialService.markOfferSent(id)
-              else ZIO.fail(ErrorResponseReceivedFromPeerAgent(resp))
+              if (resp.status >= 200 && resp.status < 300)
+                credentialService.markOfferSent(id) @@
+                  IssuerSendOfferMsgSucceed @@
+                  CustomMetricsAspect.endRecordingTime(
+                    s"${record.id}_issuer_offer_pending_to_sent_ms_gauge",
+                    "issuance_flow_issuer_offer_pending_to_sent_ms_gauge"
+                  )
+              else ZIO.fail(ErrorResponseReceivedFromPeerAgent(resp)) @@ IssuerSendOfferMsgFailed
             }
           } yield ()
+
+          sendOfferFlow @@ IssuerSendOfferSucceed.trackSuccess
+            @@ IssuerSendOfferFailed.trackError
+            @@ IssuerSendOfferAll
+            @@ Metric
+              .gauge("issuance_flow_issuer_send_offer_flow_ms_gauge")
+              .trackDurationWith(_.toMetricsSeconds)
 
         // Request should be sent from Holder to Issuer
         case IssueCredentialRecord(
@@ -146,7 +201,7 @@ object BackgroundJobs {
               _,
               _
             ) =>
-          for {
+          val holderPendingToGeneratedFlow = for {
             credentialService <- ZIO.service[CredentialService]
             subjectDID <- ZIO
               .fromEither(PrismDID.fromString(subjectId))
@@ -157,6 +212,13 @@ object BackgroundJobs {
             signedPayload = JwtPresentation.encodeJwt(presentationPayload.toJwtPresentationPayload, jwtIssuer)
             _ <- credentialService.generateCredentialRequest(id, signedPayload)
           } yield ()
+
+          holderPendingToGeneratedFlow @@ HolderPendingToGeneratedSuccess.trackSuccess
+            @@ HolderPendingToGeneratedFailed.trackError
+            @@ HolderPendingToGeneratedAll
+            @@ Metric
+            .gauge("issuance_flow_holder_offer_pending_to_generated_flow_ms_gauge")
+            .trackDurationWith(_.toMetricsSeconds)
 
         // Request should be sent from Holder to Issuer
         case IssueCredentialRecord(

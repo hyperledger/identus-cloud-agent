@@ -17,9 +17,10 @@ private class SeedResolverImpl(apollo: Apollo, isDevMode: Boolean) extends SeedR
   override def resolve: Task[Array[Byte]] = {
     val seedEnv =
       for {
-        _ <- ZIO.logInfo("Resolving a wallet seed using WALLET_SEED environemnt variable")
+        _ <- ZIO.logInfo("Resolving a wallet seed using WALLET_SEED environment variable")
         maybeSeed <- System
           .env("WALLET_SEED")
+          .tapSome(seed => ZIO.logInfo(s"got wallet seed - ${seed}"))
           .flatMap {
             case Some(hex) => ZIO.fromTry(HexString.fromString(hex)).map(_.toByteArray).asSome
             case None      => ZIO.none
