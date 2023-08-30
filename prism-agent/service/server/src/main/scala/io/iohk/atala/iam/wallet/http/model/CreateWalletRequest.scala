@@ -8,7 +8,8 @@ import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 final case class CreateWalletRequest(
     @description(CreateWalletRequest.annotations.seed.description)
     @encodedExample(CreateWalletRequest.annotations.seed.example)
-    seed: Option[String]
+    seed: Option[String],
+    name: String
 )
 
 object CreateWalletRequest {

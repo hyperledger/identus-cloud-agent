@@ -1,23 +1,21 @@
 package io.iohk.atala.iam.wallet.http.controller
 
-import io.iohk.atala.agent.server.config.AppConfig
+import io.iohk.atala.agent.walletapi.model.Wallet
 import io.iohk.atala.agent.walletapi.model.WalletSeed
-import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.agent.walletapi.service.WalletManagementService
 import io.iohk.atala.agent.walletapi.service.WalletManagementServiceError
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.api.http.RequestContext
 import io.iohk.atala.api.http.model.CollectionStats
 import io.iohk.atala.api.http.model.PaginationInput
+import io.iohk.atala.api.util.PaginationUtils
 import io.iohk.atala.iam.wallet.http.model.CreateWalletRequest
 import io.iohk.atala.iam.wallet.http.model.WalletDetail
 import io.iohk.atala.iam.wallet.http.model.WalletDetailPage
 import io.iohk.atala.shared.models.HexString
-import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 
 import scala.language.implicitConversions
-import io.iohk.atala.api.util.PaginationUtils
 
 trait WalletManagementController {
   def listWallet(paginationInput: PaginationInput)(implicit rc: RequestContext): IO[ErrorResponse, WalletDetailPage]
@@ -34,9 +32,7 @@ object WalletManagementController {
 }
 
 class WalletManagementControllerImpl(
-    service: WalletManagementService,
-    managedDIDService: ManagedDIDService,
-    appConfig: AppConfig
+    service: WalletManagementService
 ) extends WalletManagementController {
 
   import WalletManagementController.given
@@ -57,7 +53,7 @@ class WalletManagementControllerImpl(
       pageOf = PaginationUtils.composePageOfUri(uri).toString,
       next = PaginationUtils.composeNextUri(uri, items, pagination, stats).map(_.toString),
       previous = PaginationUtils.composePreviousUri(uri, items, pagination, stats).map(_.toString),
-      contents = items.map(walletId => WalletDetail(id = walletId.toUUID)),
+      contents = items.map(i => i),
     )
   }
 
@@ -65,16 +61,9 @@ class WalletManagementControllerImpl(
       request: CreateWalletRequest
   )(implicit rc: RequestContext): IO[ErrorResponse, WalletDetail] = {
     for {
-      providedSeed <- request.seed
-        .fold(ZIO.none)(s => extractWalletSeed(s).asSome)
-      walletId <- service.createWallet(providedSeed).mapError[ErrorResponse](e => e)
-      // TODO: confirm if trust-ping to be supported by cloud agent
-      // if yes, integrate this with the default wallet PeerDID
-      // if no, remove PeerDID creation
-      pairwiseDid <- managedDIDService
-        .createAndStorePeerDID(appConfig.agent.didCommServiceEndpointUrl)
-        .provide(ZLayer.succeed(WalletAccessContext(walletId)))
-    } yield WalletDetail(walletId.toUUID)
+      providedSeed <- request.seed.fold(ZIO.none)(s => extractWalletSeed(s).asSome)
+      wallet <- service.createWallet(Wallet(request.name), providedSeed).mapError[ErrorResponse](e => e)
+    } yield wallet
   }
 
   private def extractWalletSeed(seedHex: String): IO[ErrorResponse, WalletSeed] = {
@@ -90,6 +79,6 @@ class WalletManagementControllerImpl(
 }
 
 object WalletManagementControllerImpl {
-  val layer: URLayer[WalletManagementService & ManagedDIDService & AppConfig, WalletManagementController] =
-    ZLayer.fromFunction(WalletManagementControllerImpl(_, _, _))
+  val layer: URLayer[WalletManagementService, WalletManagementController] =
+    ZLayer.fromFunction(WalletManagementControllerImpl(_))
 }

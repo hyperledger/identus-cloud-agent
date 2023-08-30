@@ -1,5 +1,6 @@
 package io.iohk.atala.agent.walletapi.storage
 
+import io.iohk.atala.agent.walletapi.model.Wallet
 import io.iohk.atala.agent.walletapi.model.WalletSeed
 import io.iohk.atala.agent.walletapi.sql.JdbcWalletNonSecretStorage
 import io.iohk.atala.agent.walletapi.sql.JdbcWalletSecretStorage
@@ -43,7 +44,7 @@ object WalletSecretStorageSpec extends ZIOSpecDefault, PostgresTestContainerSupp
     test("set seed on a new wallet") {
       for {
         storage <- ZIO.service[WalletSecretStorage]
-        walletId <- ZIO.serviceWithZIO[WalletNonSecretStorage](_.createWallet)
+        walletId <- ZIO.serviceWithZIO[WalletNonSecretStorage](_.createWallet(Wallet("wallet-1"))).map(_.id)
         walletAccessCtx = ZLayer.succeed(WalletAccessContext(walletId))
         seed = WalletSeed.fromByteArray(Array.fill[Byte](64)(0)).toOption.get
         seedBefore <- storage.getWalletSeed.provide(walletAccessCtx)
@@ -55,17 +56,17 @@ object WalletSecretStorageSpec extends ZIOSpecDefault, PostgresTestContainerSupp
     test("set seed on multiple wallets") {
       for {
         storage <- ZIO.service[WalletSecretStorage]
-        walletIds <- ZIO.foreach(1 to 10) { i =>
+        wallets <- ZIO.foreach(1 to 10) { i =>
           for {
-            walletId <- ZIO.serviceWithZIO[WalletNonSecretStorage](_.createWallet)
+            wallet <- ZIO.serviceWithZIO[WalletNonSecretStorage](_.createWallet(Wallet(s"wallet-$i")))
             seed = WalletSeed.fromByteArray(Array.fill[Byte](64)(i.toByte)).toOption.get
-            walletAccessCtx = ZLayer.succeed(WalletAccessContext(walletId))
+            walletAccessCtx = ZLayer.succeed(WalletAccessContext(wallet.id))
             _ <- storage.setWalletSeed(seed).provideSomeLayer(walletAccessCtx)
-          } yield walletId
+          } yield wallet
         }
         seeds <- ZIO
-          .foreach(walletIds) { walletId =>
-            val walletAccessCtx = ZLayer.succeed(WalletAccessContext(walletId))
+          .foreach(wallets) { wallet =>
+            val walletAccessCtx = ZLayer.succeed(WalletAccessContext(wallet.id))
             storage.getWalletSeed.provideSomeLayer(walletAccessCtx)
           }
           .map(_.flatten)
