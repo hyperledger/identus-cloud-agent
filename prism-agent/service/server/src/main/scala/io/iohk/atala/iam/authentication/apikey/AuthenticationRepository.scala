@@ -52,7 +52,7 @@ object AuthenticationRepositoryError {
       s"Authentication method not found for type ${authenticationMethodType.value} and secret $secret"
   }
 
-  case class EntityServiceError(message: String) extends AuthenticationRepositoryError
+  case class ServiceError(message: String) extends AuthenticationRepositoryError
   case class StorageError(cause: Throwable) extends AuthenticationRepositoryError {
     def message = cause.getMessage
   }

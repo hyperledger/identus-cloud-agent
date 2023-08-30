@@ -31,6 +31,8 @@ object AuthenticationError {
 trait Authenticator {
   def authenticate(credentials: Credentials): IO[AuthenticationError, Entity]
 
+  def isEnabled: Boolean
+
   def apply(credentials: Credentials): IO[AuthenticationError, Entity] = authenticate(credentials)
 }
 
