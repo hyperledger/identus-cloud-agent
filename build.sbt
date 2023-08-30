@@ -1,4 +1,3 @@
-import scala.concurrent.duration.fromNow
 import sbtbuildinfo.BuildInfoPlugin.autoImport.*
 import org.scoverage.coveralls.Imports.CoverallsKeys._
 
@@ -99,9 +98,8 @@ lazy val D = new {
   val zioCatsInterop: ModuleID = "dev.zio" %% "zio-interop-cats" % V.zioCatsInterop
   val zioMetricsConnectorMicrometer: ModuleID = "dev.zio" %% "zio-metrics-connectors-micrometer" % V.zioMetricsConnector
   val tapirPrometheusMetrics: ModuleID = "com.softwaremill.sttp.tapir" %% "tapir-prometheus-metrics" % V.tapir
-  val micrometer: ModuleID =  "io.micrometer" % "micrometer-registry-prometheus" % V.micrometer
-  val micrometerPrometheusRegistry =  "io.micrometer" % "micrometer-core" % V.micrometer
-
+  val micrometer: ModuleID = "io.micrometer" % "micrometer-registry-prometheus" % V.micrometer
+  val micrometerPrometheusRegistry = "io.micrometer" % "micrometer-core" % V.micrometer
 
   val zioConfig: ModuleID = "dev.zio" %% "zio-config" % V.zioConfig
   val zioConfigMagnolia: ModuleID = "dev.zio" %% "zio-config-magnolia" % V.zioConfig
@@ -119,7 +117,8 @@ lazy val D = new {
   val jwk: ModuleID = "com.nimbusds" % "nimbus-jose-jwt" % "10.0.0-preview"
 
   val typesafeConfig: ModuleID = "com.typesafe" % "config" % V.typesafeConfig
-  val scalaPbRuntime: ModuleID = "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion % "protobuf"
+  val scalaPbRuntime: ModuleID =
+    "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion % "protobuf"
   val scalaPbGrpc: ModuleID = "com.thesamet.scalapb" %% "scalapb-runtime-grpc" % scalapb.compiler.Version.scalapbVersion
   // TODO we are adding test stuff to the main dependencies
   val testcontainersPostgres: ModuleID = "com.dimafeng" %% "testcontainers-scala-postgresql" % V.testContainersScala
@@ -660,8 +659,9 @@ lazy val polluxCore = project
   )
   .dependsOn(shared)
   .dependsOn(irisClient)
+  .dependsOn(prismAgentWalletAPI)
   .dependsOn(polluxVcJWT)
-  .dependsOn(protocolIssueCredential, protocolPresentProof, resolver, agentDidcommx, eventNotification)
+  .dependsOn(protocolIssueCredential, protocolPresentProof, resolver, agentDidcommx, eventNotification, polluxAnoncreds)
 
 lazy val polluxDoobie = project
   .in(file("pollux/lib/sql-doobie"))
@@ -684,10 +684,9 @@ lazy val polluxAnoncreds = project
   .enablePlugins(JavaAppPackaging)
   .settings(
     name := "pollux-anoncreds",
-    Compile / unmanagedJars += baseDirectory.value / "UniffiPOC-1.0-SNAPSHOT.jar",
+    Compile / unmanagedJars += baseDirectory.value / "anoncreds-java-1.0-SNAPSHOT.jar",
     Compile / unmanagedResourceDirectories ++= Seq(
-      // export LD_LIBRARY_PATH=.../anoncreds-rs/uniffi/target/x86_64-unknown-linux-gnu/release:$LD_LIBRARY_PATH,
-      baseDirectory.value / "native-lib" / "NATIVE" / "linux" / "amd64"
+      baseDirectory.value / "native-lib" / "NATIVE"
     ),
   )
 

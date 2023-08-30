@@ -1,8 +1,8 @@
 package io.iohk.atala.pollux.core.model.schema.`type`
 
-import io.iohk.atala.pollux.core.model.error.CredentialSchemaError
 import io.iohk.atala.pollux.core.model.schema.Schema
-import io.iohk.atala.pollux.core.model.schema.validator.CredentialJsonSchemaValidator
+import io.iohk.atala.pollux.core.model.schema.validator.JsonSchemaError
+import io.iohk.atala.pollux.core.model.schema.validator.JsonSchemaValidatorImpl
 import zio.*
 import zio.json.*
 
@@ -11,8 +11,8 @@ object CredentialJsonSchemaType extends CredentialSchemaType {
 
   override val `type`: String = VC_JSON_SCHEMA_URI
 
-  override def validate(schema: Schema): IO[CredentialSchemaError, Unit] =
+  override def validate(schema: Schema): IO[JsonSchemaError, Unit] =
     for {
-      _ <- CredentialJsonSchemaValidator.from(schema)
+      _ <- JsonSchemaValidatorImpl.from(schema)
     } yield ()
 }

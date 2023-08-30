@@ -30,6 +30,8 @@ trait ConnectionService {
 
   def markConnectionResponseSent(recordId: UUID): IO[ConnectionServiceError, ConnectionRecord]
 
+  def markConnectionInvitationExpired(recordId: UUID): IO[ConnectionServiceError, ConnectionRecord]
+
   def receiveConnectionResponse(response: ConnectionResponse): IO[ConnectionServiceError, ConnectionRecord]
 
   def getConnectionRecords(): IO[ConnectionServiceError, Seq[ConnectionRecord]]
