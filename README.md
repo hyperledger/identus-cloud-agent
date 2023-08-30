@@ -159,7 +159,7 @@ More information about Atala and how we work can be found in our handbook at htt
 
 ## Contributing
 
-Please read our [contributions guidelines](CONTRIBUTING) and submit your PRs. We enforce [developer certificate of origin (DCO) commit signing](DCO).
+Please read our [contributions guidelines](./CONTRIBUTING.md) and submit your PRs. We enforce [developer certificate of origin (DCO) commit signing](./DCO.md).
 
 We also welcome issues submitted about problems you encounter in using Enterprise Cloud Agent.
 
