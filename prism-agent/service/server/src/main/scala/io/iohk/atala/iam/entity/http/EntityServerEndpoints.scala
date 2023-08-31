@@ -95,7 +95,9 @@ class EntityServerEndpoints(entityController: EntityController, authenticator: A
     updateEntityWalletIdServerEndpoint,
     getEntityByIdServerEndpoint,
     getEntitiesServerEndpoint,
-    deleteEntityByIdServerEndpoint
+    deleteEntityByIdServerEndpoint,
+    addEntityApiKeyAuthenticationServerEndpoint,
+    deleteEntityApiKeyAuthenticationServerEndpoint
   )
 }
 
