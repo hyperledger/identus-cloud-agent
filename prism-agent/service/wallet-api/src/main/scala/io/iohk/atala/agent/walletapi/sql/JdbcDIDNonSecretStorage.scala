@@ -5,7 +5,12 @@ import doobie.implicits.*
 import doobie.postgres.implicits.*
 import io.iohk.atala.agent.walletapi.model.*
 import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
-import io.iohk.atala.castor.core.model.did.{InternalKeyPurpose, PrismDID, ScheduledDIDOperationStatus, VerificationRelationship}
+import io.iohk.atala.castor.core.model.did.{
+  InternalKeyPurpose,
+  PrismDID,
+  ScheduledDIDOperationStatus,
+  VerificationRelationship
+}
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.shared.db.ContextAwareTask
 import io.iohk.atala.shared.db.Implicits.{*, given}
