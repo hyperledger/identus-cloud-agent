@@ -41,6 +41,7 @@ object DIDKeySecretStorageSpec
         JdbcDIDSecretStorage.layer,
         JdbcWalletSecretStorage.layer,
         DIDKeySecretStorageImpl.layer,
+        systemTransactorLayer,
         contextAwareTransactorLayer,
         pgContainerLayer,
         walletManagementServiceLayer
@@ -52,6 +53,7 @@ object DIDKeySecretStorageSpec
         VaultDIDSecretStorage.layer,
         VaultWalletSecretStorage.layer,
         DIDKeySecretStorageImpl.layer,
+        systemTransactorLayer,
         contextAwareTransactorLayer,
         pgContainerLayer,
         vaultKvClientLayer,
@@ -64,6 +66,7 @@ object DIDKeySecretStorageSpec
         DIDSecretStorageInMemory.layer,
         WalletSecretStorageInMemory.layer,
         DIDKeySecretStorageImpl.layer,
+        systemTransactorLayer,
         contextAwareTransactorLayer,
         pgContainerLayer,
         walletManagementServiceLayer
