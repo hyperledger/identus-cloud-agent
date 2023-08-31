@@ -157,7 +157,7 @@ object MainApp extends ZIOAppDefault {
           RepoModule.allSecretStorageLayer,
           RepoModule.agentTransactorLayer >>> JdbcEntityRepository.layer,
           RepoModule.agentTransactorLayer >>> JdbcAuthenticationRepository.layer,
-          RepoModule.connectTransactorLayer >>> JdbcConnectionRepository.layer,
+          RepoModule.connectContextAwareTransactorLayer >>> JdbcConnectionRepository.layer,
           RepoModule.polluxContextAwareTransactorLayer >>> JdbcCredentialRepository.layer,
           RepoModule.polluxContextAwareTransactorLayer >+> RepoModule.polluxTransactorLayer >>> JdbcCredentialSchemaRepository.layer,
           RepoModule.polluxContextAwareTransactorLayer >>> JdbcPresentationRepository.layer,
@@ -173,7 +173,7 @@ object MainApp extends ZIOAppDefault {
 
     app.provide(
       RepoModule.polluxDbConfigLayer(appUser = false) >>> PolluxMigrations.layer,
-      RepoModule.connectDbConfigLayer >>> ConnectMigrations.layer,
+      RepoModule.connectDbConfigLayer(appUser = false) >>> ConnectMigrations.layer,
       RepoModule.agentDbConfigLayer(appUser = false) >>> AgentMigrations.layer,
     )
   }
