@@ -40,7 +40,7 @@ object VerificationPolicyEndpoints {
         "Created verification policy entity"
       )
     )
-    .errorOut(basicFailures)
+    .errorOut(basicFailuresAndForbidden)
     .name("createVerificationPolicy")
     .summary("Create the new verification policy")
     .description("Create the new verification policy")
@@ -69,7 +69,7 @@ object VerificationPolicyEndpoints {
       )
       .out(statusCode(StatusCode.Ok))
       .out(jsonBody[VerificationPolicy])
-      .errorOut(basicFailuresAndNotFound)
+      .errorOut(basicFailureAndNotFoundAndForbidden)
       .name("updateVerificationPolicy")
       .summary("Update the verification policy object by id")
       .description(
@@ -92,7 +92,7 @@ object VerificationPolicyEndpoints {
           .description("Get the verification policy by id")
       )
       .out(jsonBody[VerificationPolicy])
-      .errorOut(basicFailuresAndNotFound)
+      .errorOut(basicFailureAndNotFoundAndForbidden)
       .name("getVerificationPolicyById")
       .summary("Fetch the verification policy by id")
       .description(
@@ -119,7 +119,7 @@ object VerificationPolicyEndpoints {
           "Verification policy deleted successfully"
         )
       )
-      .errorOut(basicFailuresAndNotFound)
+      .errorOut(basicFailureAndNotFoundAndForbidden)
       .name("deleteVerificationPolicyById")
       .summary("Deleted the verification policy by id")
       .description(
@@ -149,7 +149,7 @@ object VerificationPolicyEndpoints {
       )
       .in(query[Option[Order]]("order"))
       .out(jsonBody[VerificationPolicyPage])
-      .errorOut(basicFailures)
+      .errorOut(basicFailuresAndForbidden)
       .name("lookupVerificationPoliciesByQuery")
       .summary("Lookup verification policies by query")
       .description(

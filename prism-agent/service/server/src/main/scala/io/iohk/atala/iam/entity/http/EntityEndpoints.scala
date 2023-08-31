@@ -74,7 +74,7 @@ object EntityEndpoints {
       )
       .out(jsonBody[EntityResponse])
       .description("Entity record")
-      .errorOut(basicFailuresAndNotFound)
+      .errorOut(basicFailureAndNotFoundAndForbidden)
       .name("updateEntityName")
       .summary("Update the entity record name by `id`")
       .description(
@@ -109,7 +109,7 @@ object EntityEndpoints {
       )
       .out(jsonBody[EntityResponse])
       .description("Entity record")
-      .errorOut(basicFailuresAndNotFound)
+      .errorOut(basicFailureAndNotFoundAndForbidden)
       .name("updateEntityWalletId")
       .summary("Update the entity record `walletId` by `id`")
       .description(
@@ -133,7 +133,7 @@ object EntityEndpoints {
         )
       )
       .out(jsonBody[EntityResponse].description("Entity found by `id`"))
-      .errorOut(basicFailuresAndNotFound)
+      .errorOut(basicFailureAndNotFoundAndForbidden)
       .name("getEntityById")
       .summary("Get the entity by the `id`")
       .description(
@@ -158,7 +158,7 @@ object EntityEndpoints {
       .in("iam" / "entities".description("Get all entities"))
       .in(paginationInput)
       .out(jsonBody[EntityResponsePage].description("Collection of Entity records"))
-      .errorOut(basicFailures)
+      .errorOut(basicFailuresAndForbidden)
       .name("getAllEntities")
       .summary("Get all entities")
       .description(
@@ -184,7 +184,7 @@ object EntityEndpoints {
       .out(
         statusCode(StatusCode.Ok).description("Entity deleted successfully")
       )
-      .errorOut(basicFailuresAndNotFound)
+      .errorOut(basicFailureAndNotFoundAndForbidden)
       .name("deleteEntityById")
       .summary("Delete the entity by `id`")
       .description(
