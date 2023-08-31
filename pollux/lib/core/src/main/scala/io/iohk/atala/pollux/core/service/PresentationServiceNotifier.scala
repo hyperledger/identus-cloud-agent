@@ -103,8 +103,9 @@ class PresentationServiceNotifier(
 
   private[this] def notify(record: PresentationRecord) = {
     val result = for {
+      walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
       producer <- eventNotificationService.producer[PresentationRecord]("Presentation")
-      _ <- producer.send(Event(presentationUpdatedEvent, record))
+      _ <- producer.send(Event(presentationUpdatedEvent, record, walletId))
     } yield ()
     result.catchAll(e => ZIO.logError(s"Notification service error: $e"))
   }

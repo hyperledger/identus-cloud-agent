@@ -1,8 +1,13 @@
 package io.iohk.atala.agent.walletapi.storage
 
-import io.iohk.atala.agent.walletapi.model.Entity
 import io.iohk.atala.agent.walletapi.model.error.EntityServiceError.{EntityAlreadyExists, EntityNotFound}
-import io.iohk.atala.agent.walletapi.sql.{EntityRepository, JdbcEntityRepository}
+import io.iohk.atala.agent.walletapi.model.{Entity, Wallet}
+import io.iohk.atala.agent.walletapi.sql.{EntityRepository, JdbcEntityRepository, JdbcWalletNonSecretStorage}
+import io.iohk.atala.agent.walletapi.storage.JdbcWalletNonSecretStorageSpec.{
+  contextAwareTransactorLayer,
+  pgContainerLayer
+}
+import io.iohk.atala.shared.models.WalletId
 import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
 import io.iohk.atala.test.container.DBTestUtils
 import zio.*
@@ -26,6 +31,13 @@ object JdbcEntityRepositorySpec extends ZIOSpecDefault, PostgresTestContainerSup
     )
   } yield entity
 
+  private def createWalletForEntity(entity: Entity) = {
+    for {
+      storage <- ZIO.service[WalletNonSecretStorage]
+      wallet <- storage.createWallet(Wallet("test", WalletId.fromUUID(entity.walletId)))
+    } yield wallet
+  }
+
   override def spec = {
     val testSuite =
       suite("JdbcEntityRepositorySpec")(
@@ -36,8 +48,12 @@ object JdbcEntityRepositorySpec extends ZIOSpecDefault, PostgresTestContainerSup
       ) @@ TestAspect.before(DBTestUtils.runMigrationAgentDB) @@ TestAspect.sequential
 
     testSuite
-      .provideSomeLayer(
-        pgContainerLayer >+> systemTransactorLayer >+> JdbcEntityRepository.layer
+      .provideSome(
+        pgContainerLayer,
+        systemTransactorLayer,
+        contextAwareTransactorLayer,
+        JdbcEntityRepository.layer,
+        JdbcWalletNonSecretStorage.layer
       )
       .provide(Runtime.removeDefaultLoggers)
   }
@@ -46,6 +62,7 @@ object JdbcEntityRepositorySpec extends ZIOSpecDefault, PostgresTestContainerSup
     test("get all entities - single entity") {
       for {
         in <- createRandomEntity
+        _ <- createWalletForEntity(in)
         _ <- EntityRepository.insert(in)
         entities <- EntityRepository.getAll(0, 100)
         _ <- EntityRepository.delete(in.id)
@@ -55,7 +72,11 @@ object JdbcEntityRepositorySpec extends ZIOSpecDefault, PostgresTestContainerSup
     test("get all entities - 100 entities") {
       for {
         entities <- ZIO.foreach(1 to 100) { _ =>
-          createRandomEntity.flatMap(EntityRepository.insert)
+          for {
+            e <- createRandomEntity
+            _ <- createWalletForEntity(e)
+            _ <- EntityRepository.insert(e)
+          } yield e
         }
         allEntities <- EntityRepository.getAll(0, 100)
       } yield assert(allEntities)(hasSize(equalTo(100)))
@@ -66,6 +87,7 @@ object JdbcEntityRepositorySpec extends ZIOSpecDefault, PostgresTestContainerSup
     test("update the Entity name") {
       for {
         in <- createRandomEntity
+        _ <- createWalletForEntity(in)
         out <- EntityRepository.insert(in)
         _ <- EntityRepository.updateName(in.id, "newName")
         updated <- EntityRepository.getById(in.id)
@@ -90,6 +112,9 @@ object JdbcEntityRepositorySpec extends ZIOSpecDefault, PostgresTestContainerSup
         _ <- random.setSeed(52L)
         walletId <- random.nextUUID
         in <- createRandomEntity
+        _ <- createWalletForEntity(in)
+        storage <- ZIO.service[WalletNonSecretStorage]
+        _ <- storage.createWallet(Wallet("another wallet", WalletId.fromUUID(walletId)))
         out <- EntityRepository.insert(in)
         _ <- EntityRepository.updateWallet(in.id, walletId)
         updated <- EntityRepository.getById(in.id)
@@ -117,6 +142,7 @@ object JdbcEntityRepositorySpec extends ZIOSpecDefault, PostgresTestContainerSup
     test("create and get the Entity by id") {
       for {
         in <- createRandomEntity
+        _ <- createWalletForEntity(in)
         out <- EntityRepository.insert(in)
         get <- EntityRepository.getById(in.id)
       } yield assert(out)(equalTo(in)) &&
@@ -138,6 +164,7 @@ object JdbcEntityRepositorySpec extends ZIOSpecDefault, PostgresTestContainerSup
     test("create the Entity with random id and default wallet id") {
       for {
         in <- ZIO.succeed(Entity("test"))
+        _ <- createWalletForEntity(in)
         out <- EntityRepository.insert(in)
       } yield assert(out)(equalTo(in)) && assert(out.walletId)(equalTo(Entity.ZeroWalletId))
     },
@@ -147,12 +174,14 @@ object JdbcEntityRepositorySpec extends ZIOSpecDefault, PostgresTestContainerSup
         _ <- random.setSeed(42L)
         walletId <- random.nextUUID
         in <- ZIO.succeed(Entity(name = "test", walletId = walletId))
+        _ <- createWalletForEntity(in)
         out <- EntityRepository.insert(in)
       } yield assert(out)(equalTo(in)) && assert(out.walletId)(equalTo(walletId))
     },
     test("create the Entity with id and wallet id") {
       for {
         in <- createRandomEntity
+        _ <- createWalletForEntity(in)
         out <- EntityRepository.insert(in)
       } yield assert(out)(equalTo(in)) &&
         assert(out.walletId)(equalTo(in.walletId)) &&
@@ -163,6 +192,7 @@ object JdbcEntityRepositorySpec extends ZIOSpecDefault, PostgresTestContainerSup
     test("create the Entity with the same id") {
       for {
         in <- createRandomEntity
+        _ <- createWalletForEntity(in)
         out <- EntityRepository.insert(in)
         exit <- EntityRepository.insert(in).exit
       } yield assert(exit)(

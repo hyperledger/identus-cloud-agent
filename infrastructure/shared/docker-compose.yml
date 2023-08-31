@@ -109,12 +109,11 @@ services:
         condition: service_started
       vault-server:
         condition: service_healthy
-### TODO Find another way to conduct healthcheck. A curl on the below URL is rejected by the auth layer as no 'api-key' header is provided.
-#    healthcheck:
-#      test: ["CMD", "curl", "-f", "http://prism-agent:8085/connections"]
-#      interval: 30s
-#      timeout: 10s
-#      retries: 5
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://prism-agent:8085/_system/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
