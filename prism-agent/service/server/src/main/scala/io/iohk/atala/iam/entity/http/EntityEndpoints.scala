@@ -191,4 +191,64 @@ object EntityEndpoints {
         "Delete the entity by the unique identifier"
       )
       .tag("Identity and Access Management")
+
+  val addEntityApiKeyAuthenticationEndpoint: Endpoint[
+    AdminApiKeyCredentials,
+    (RequestContext, ApiKeyAuthenticationRequest),
+    ErrorResponse,
+    Unit,
+    Any
+  ] = endpoint.post
+    .securityIn(adminApiKeyHeader)
+    .in(extractFromRequest[RequestContext](RequestContext.apply))
+    .in("iam" / "api-key-authentication")
+    .in(
+      jsonBody[ApiKeyAuthenticationRequest]
+        .description(
+          "JSON object required for the registering the entity and `api-key`"
+        )
+    )
+    .out(
+      statusCode(StatusCode.Created)
+        .description(
+          "The new `api-key` is successfully registered for the entity"
+        )
+    )
+    .errorOut(basicFailureAndNotFoundAndForbidden)
+    .name("addEntityApiKeyAuthentication")
+    .summary("Register the `api-key` for the entity")
+    .description(
+      "Register the `api-key` for the entity."
+    )
+    .tag("Identity and Access Management")
+
+  val deleteEntityApiKeyAuthenticationEndpoint: Endpoint[
+    AdminApiKeyCredentials,
+    (RequestContext, ApiKeyAuthenticationRequest),
+    ErrorResponse,
+    Unit,
+    Any
+  ] = endpoint.delete
+    .securityIn(adminApiKeyHeader)
+    .in(extractFromRequest[RequestContext](RequestContext.apply))
+    .in("iam" / "api-key-authentication")
+    .in(
+      jsonBody[ApiKeyAuthenticationRequest]
+        .description(
+          "JSON object required for the unregistering the entity and `api-key`"
+        )
+    )
+    .out(
+      statusCode(StatusCode.Ok)
+        .description(
+          "The new `api-key` is successfully unregistered for the entity"
+        )
+    )
+    .errorOut(basicFailureAndNotFoundAndForbidden)
+    .name("deleteEntityApiKeyAuthentication")
+    .summary("Unregister the `api-key` for the entity")
+    .description(
+      "Unregister the `api-key` for the entity."
+    )
+    .tag("Identity and Access Management")
 }

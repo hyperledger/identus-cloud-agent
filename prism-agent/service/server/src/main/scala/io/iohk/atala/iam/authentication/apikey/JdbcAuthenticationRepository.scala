@@ -61,6 +61,15 @@ case class JdbcAuthenticationRepository(xa: Transactor[Task]) extends Authentica
       .mapError(AuthenticationRepositoryError.StorageError.apply)
       .map(_ => ())
   }
+
+  override def deleteByEntityIdAndSecret(id: UUID, secret: String): IO[AuthenticationRepositoryError, Unit] = {
+    AuthenticationRepositorySql
+      .deleteByEntityIdAndSecret(id, secret)
+      .transact(xa)
+      .logError(s"deleteByEntityIdAndSecret failed for id: $id and secret: $secret")
+      .mapError(AuthenticationRepositoryError.StorageError.apply)
+      .map(_ => ())
+  }
 }
 
 object JdbcAuthenticationRepository {
