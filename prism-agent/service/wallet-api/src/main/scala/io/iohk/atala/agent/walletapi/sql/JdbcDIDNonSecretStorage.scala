@@ -5,22 +5,18 @@ import doobie.implicits.*
 import doobie.postgres.implicits.*
 import io.iohk.atala.agent.walletapi.model.*
 import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
-import io.iohk.atala.castor.core.model.did.{
-  InternalKeyPurpose,
-  PrismDID,
-  ScheduledDIDOperationStatus,
-  VerificationRelationship
-}
+import io.iohk.atala.castor.core.model.did.{InternalKeyPurpose, PrismDID, ScheduledDIDOperationStatus, VerificationRelationship}
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.shared.db.ContextAwareTask
 import io.iohk.atala.shared.db.Implicits.{*, given}
 import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
 import zio.*
+import zio.interop.catz.*
 
 import java.time.Instant
 import scala.collection.immutable.ArraySeq
 
-class JdbcDIDNonSecretStorage(xa: Transactor[ContextAwareTask]) extends DIDNonSecretStorage {
+class JdbcDIDNonSecretStorage(xa: Transactor[ContextAwareTask], xb: Transactor[Task]) extends DIDNonSecretStorage {
 
   override def getManagedDIDState(did: PrismDID): RIO[WalletAccessContext, Option[ManagedDIDState]] = {
     val cxnIO =
@@ -384,9 +380,26 @@ class JdbcDIDNonSecretStorage(xa: Transactor[ContextAwareTask]) extends DIDNonSe
     cxnIO.run.transactWallet(xa)
   }
 
+  override def getPeerDIDRecord(did: DidId): Task[Option[PeerDIDRecord]] = {
+    val cnxIO =
+      sql"""
+           | SELECT
+           |  did,
+           |  created_at,
+           |  wallet_id
+           | FROM public.peer_did
+           | WHERE
+           |  did = $did
+            """.stripMargin
+        .query[PeerDIDRecord]
+        .option
+
+    cnxIO.transact(xb)
+  }
+
 }
 
 object JdbcDIDNonSecretStorage {
-  val layer: URLayer[Transactor[ContextAwareTask], DIDNonSecretStorage] =
-    ZLayer.fromFunction(new JdbcDIDNonSecretStorage(_))
+  val layer: URLayer[Transactor[ContextAwareTask] & Transactor[Task], DIDNonSecretStorage] =
+    ZLayer.fromFunction(new JdbcDIDNonSecretStorage(_, _))
 }

@@ -94,6 +94,7 @@ object ManagedDIDServiceSpec
         JdbcDIDNonSecretStorage.layer,
         JdbcWalletNonSecretStorage.layer,
         DIDKeySecretStorageImpl.layer,
+        systemTransactorLayer,
         contextAwareTransactorLayer,
         testDIDServiceLayer,
         apolloLayer
@@ -154,7 +155,7 @@ object ManagedDIDServiceSpec
         serviceLayer,
         pgContainerLayer,
         jdbcSecretStorageLayer,
-        systemTransactorLayer >>> JdbcDIDNonSecretStorageUnprotected.layer
+        contextAwareTransactorLayer >+> systemTransactorLayer >>> JdbcDIDNonSecretStorage.layer
       )
       .provide(Runtime.removeDefaultLoggers)
 
@@ -163,7 +164,7 @@ object ManagedDIDServiceSpec
         serviceLayer,
         pgContainerLayer,
         vaultSecretStorageLayer,
-        systemTransactorLayer >>> JdbcDIDNonSecretStorageUnprotected.layer
+        contextAwareTransactorLayer >+> systemTransactorLayer >>> JdbcDIDNonSecretStorage.layer
       )
       .provide(Runtime.removeDefaultLoggers)
 
@@ -317,7 +318,7 @@ object ManagedDIDServiceSpec
         ctx1 = ZLayer.succeed(WalletAccessContext(walletId1))
         ctx2 = ZLayer.succeed(WalletAccessContext(walletId2))
         svc <- ZIO.service[ManagedDIDService]
-        storage <- ZIO.service[DIDNonSecretStorageUnprotected]
+        storage <- ZIO.service[DIDNonSecretStorage]
         peerDid1 <- svc.createAndStorePeerDID("http://example.com").provide(ctx1)
         peerDid2 <- svc.createAndStorePeerDID("http://example.com").provide(ctx2)
         record1 <- storage.getPeerDIDRecord(peerDid1.did)
