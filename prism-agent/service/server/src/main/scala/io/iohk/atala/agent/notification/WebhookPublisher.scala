@@ -1,4 +1,5 @@
 package io.iohk.atala.agent.notification
+
 import io.iohk.atala.agent.notification.JsonEventEncoders.*
 import io.iohk.atala.agent.notification.WebhookPublisherError.{InvalidWebhookURL, UnexpectedError}
 import io.iohk.atala.agent.server.config.AppConfig
@@ -6,6 +7,7 @@ import io.iohk.atala.agent.walletapi.model.ManagedDIDDetail
 import io.iohk.atala.connect.core.model.ConnectionRecord
 import io.iohk.atala.event.notification.{Event, EventConsumer, EventNotificationService}
 import io.iohk.atala.pollux.core.model.{IssueCredentialRecord, PresentationRecord}
+import io.iohk.atala.shared.models.WalletId
 import zio.*
 import zio.http.*
 import zio.http.model.*
@@ -56,12 +58,23 @@ class WebhookPublisher(appConfig: AppConfig, notificationService: EventNotificat
       _ <- ZIO.log(s"Polling $parallelism event(s)")
       events <- consumer.poll(parallelism).mapError(e => UnexpectedError(e.toString))
       _ <- ZIO.log(s"Got ${events.size} event(s)")
-      _ <- ZIO.foreachPar(events)(e =>
-        notifyWebhook(e, url)
+      _ <- ZIO.foreachPar(events) { e =>
+        val webhookUrl = walletWebhookUrl(e.walletId)
+        notifyWebhook(e, URL(webhookUrl))
           .retry(Schedule.spaced(5.second) && Schedule.recurs(2))
           .catchAll(e => ZIO.logError(s"Webhook permanently failing, with last error being: ${e.msg}"))
-      )
+      }
     } yield ()
+  }
+
+  // TODO: remove this and do a proper lookup
+  private[this] def walletWebhookUrl(walletId: WalletId): String = {
+    walletId.toUUID.toString() match {
+      case "00000000-0000-0000-0000-000000000000" => "http://localhost:9955"
+      case "00000000-0000-0000-0000-000000000001" => "http://localhost:9956"
+      case "00000000-0000-0000-0000-000000000002" => "http://localhost:9957"
+      case _                                      => ???
+    }
   }
 
   private[this] def notifyWebhook[A](event: Event[A], url: URL)(implicit
