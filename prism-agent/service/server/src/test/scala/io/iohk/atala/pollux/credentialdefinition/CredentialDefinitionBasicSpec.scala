@@ -112,7 +112,7 @@ object CredentialDefinitionBasicSpec extends ZIOSpecDefault with CredentialDefin
           svc <- ZIO.service[DIDSecretStorage]
           maybeDidSecret <- svc.getKey(
             DidId(credentialDefinitionInput.author),
-            "anoncred-credential-definition-private-key",
+            s"anoncred-credential-definition-private-key/${fetchedCredentialDefinition.guid}",
             PrivateCredentialDefinitionSchemaSerDesV1.version
           )
           (assertCorrectPrivateDefinitionSchema, maybeValidPrivateDefinitionZIO) = maybeDidSecret match {
