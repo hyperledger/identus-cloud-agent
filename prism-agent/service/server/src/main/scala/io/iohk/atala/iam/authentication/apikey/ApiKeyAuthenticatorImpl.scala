@@ -23,21 +23,26 @@ case class ApiKeyAuthenticatorImpl(
 
   override def authenticate(apiKey: String): IO[AuthenticationError, Entity] = {
     if (apiKeyConfig.enabled) {
-      authenticateBy(apiKey)
-        .catchSome {
-          case AuthenticationRepositoryError.AuthenticationNotFound(method, secret) if apiKeyConfig.autoProvisioning =>
-            provisionNewEntity(apiKey)
-        }
-        .mapError {
-          case AuthenticationRepositoryError.AuthenticationNotFound(method, secret) =>
-            InvalidCredentials("Invalid API key")
-          case AuthenticationRepositoryError.StorageError(cause) =>
-            UnexpectedError("Internal error")
-          case AuthenticationRepositoryError.UnexpectedError(cause) =>
-            UnexpectedError("Internal error")
-          case AuthenticationRepositoryError.ServiceError(message) =>
-            UnexpectedError("Internal error")
-        }
+      if (apiKeyConfig.authenticateAsDefaultUser) {
+        ZIO.succeed(Entity.Default)
+      } else {
+        authenticateBy(apiKey)
+          .catchSome {
+            case AuthenticationRepositoryError.AuthenticationNotFound(method, secret)
+                if apiKeyConfig.autoProvisioning =>
+              provisionNewEntity(apiKey)
+          }
+          .mapError {
+            case AuthenticationRepositoryError.AuthenticationNotFound(method, secret) =>
+              InvalidCredentials("Invalid API key")
+            case AuthenticationRepositoryError.StorageError(cause) =>
+              UnexpectedError("Internal error")
+            case AuthenticationRepositoryError.UnexpectedError(cause) =>
+              UnexpectedError("Internal error")
+            case AuthenticationRepositoryError.ServiceError(message) =>
+              UnexpectedError("Internal error")
+          }
+      }
     } else {
       ZIO.fail(
         AuthenticationMethodNotEnabled(s"Authentication method not enabled: ${AuthenticationMethodType.ApiKey.value}")
