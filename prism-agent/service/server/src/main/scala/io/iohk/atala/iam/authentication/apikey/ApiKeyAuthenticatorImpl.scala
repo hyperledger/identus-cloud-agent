@@ -1,20 +1,25 @@
 package io.iohk.atala.iam.authentication.apikey
 
 import io.iohk.atala.agent.walletapi.model.Entity
-import io.iohk.atala.agent.walletapi.service.EntityService
+import io.iohk.atala.agent.walletapi.service.{EntityService, WalletManagementService}
 import io.iohk.atala.iam.authentication.AuthenticationError
 import io.iohk.atala.iam.authentication.AuthenticationError.*
 import io.iohk.atala.prism.crypto.Sha256
 import zio.{IO, URLayer, ZIO, ZLayer}
+import io.iohk.atala.agent.walletapi.model.Wallet
+import io.iohk.atala.shared.models.WalletId
 
 import java.util.UUID
 import scala.util.Try
 
-class ApiKeyAuthenticatorImpl(
+case class ApiKeyAuthenticatorImpl(
     apiKeyConfig: ApiKeyConfig,
     repository: AuthenticationRepository,
-    entityService: EntityService
+    entityService: EntityService,
+    walletManagementService: WalletManagementService
 ) extends ApiKeyAuthenticator {
+
+  override def isEnabled: Boolean = apiKeyConfig.enabled
 
   override def authenticate(apiKey: String): IO[AuthenticationError, Entity] = {
     if (apiKeyConfig.enabled) {
@@ -25,7 +30,7 @@ class ApiKeyAuthenticatorImpl(
           .catchSome {
             case AuthenticationRepositoryError.AuthenticationNotFound(method, secret)
                 if apiKeyConfig.autoProvisioning =>
-              provisionNewEntity(secret)
+              provisionNewEntity(apiKey)
           }
           .mapError {
             case AuthenticationRepositoryError.AuthenticationNotFound(method, secret) =>
@@ -34,7 +39,7 @@ class ApiKeyAuthenticatorImpl(
               UnexpectedError("Internal error")
             case AuthenticationRepositoryError.UnexpectedError(cause) =>
               UnexpectedError("Internal error")
-            case AuthenticationRepositoryError.EntityServiceError(message) =>
+            case AuthenticationRepositoryError.ServiceError(message) =>
               UnexpectedError("Internal error")
           }
       }
@@ -45,15 +50,17 @@ class ApiKeyAuthenticatorImpl(
     }
   }
 
-  protected[apikey] def provisionNewEntity(secret: String): IO[AuthenticationRepositoryError, Entity] = synchronized {
+  protected[apikey] def provisionNewEntity(apiKey: String): IO[AuthenticationRepositoryError, Entity] = synchronized {
     for {
-      entityToCreate <- ZIO.succeed(
-        Entity(name = "autocreated")
-      ) // FIXME: the new entity is created with the default walletId
+      wallet <- walletManagementService
+        .createWallet(Wallet("Auto provisioned wallet", WalletId.random))
+        .mapError(cause => AuthenticationRepositoryError.UnexpectedError(cause))
+      entityToCreate = Entity(name = "Auto provisioned entity", walletId = wallet.id.toUUID)
       entity <- entityService
         .create(entityToCreate)
-        .mapError(entityServiceError => AuthenticationRepositoryError.EntityServiceError(entityServiceError.message))
-      _ <- repository.insert(entity.id, AuthenticationMethodType.ApiKey, secret)
+        .mapError(entityServiceError => AuthenticationRepositoryError.ServiceError(entityServiceError.message))
+      _ <- add(entity.id, apiKey)
+        .mapError(are => AuthenticationRepositoryError.ServiceError(are.message))
     } yield entity
   }
 
@@ -68,7 +75,7 @@ class ApiKeyAuthenticatorImpl(
         .getEntityIdByMethodAndSecret(AuthenticationMethodType.ApiKey, secret)
       entity <- entityService
         .getById(entityId)
-        .mapError(entityServiceError => AuthenticationRepositoryError.EntityServiceError(entityServiceError.message))
+        .mapError(entityServiceError => AuthenticationRepositoryError.ServiceError(entityServiceError.message))
     } yield entity
   }
 
@@ -87,12 +94,16 @@ class ApiKeyAuthenticatorImpl(
 }
 
 object ApiKeyAuthenticatorImpl {
-  val layer: URLayer[ApiKeyConfig & AuthenticationRepository & EntityService, ApiKeyAuthenticator] =
+  val layer: URLayer[
+    ApiKeyConfig & AuthenticationRepository & EntityService & WalletManagementService,
+    ApiKeyAuthenticator
+  ] =
     ZLayer.fromZIO {
       for {
         apiKeyConfig <- ZIO.service[ApiKeyConfig]
         repository <- ZIO.service[AuthenticationRepository]
         entityService <- ZIO.service[EntityService]
-      } yield ApiKeyAuthenticatorImpl(apiKeyConfig, repository, entityService)
+        walletManagementService <- ZIO.service[WalletManagementService]
+      } yield ApiKeyAuthenticatorImpl(apiKeyConfig, repository, entityService, walletManagementService)
     }
 }

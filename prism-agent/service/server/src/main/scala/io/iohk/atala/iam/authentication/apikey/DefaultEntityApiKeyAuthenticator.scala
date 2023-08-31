@@ -13,4 +13,6 @@ object DefaultEntityApiKeyAuthenticator extends ApiKeyAuthenticator {
   }
 
   override def add(entityId: UUID, apiKey: String): IO[AuthenticationError, Unit] = ZIO.succeed(())
+
+  override def isEnabled = true
 }

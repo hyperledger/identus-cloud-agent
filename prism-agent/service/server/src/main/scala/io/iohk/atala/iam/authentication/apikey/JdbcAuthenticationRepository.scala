@@ -64,8 +64,6 @@ case class JdbcAuthenticationRepository(xa: Transactor[Task]) extends Authentica
 }
 
 object JdbcAuthenticationRepository {
-  val layer: URLayer[Transactor[Task], AuthenticationRepository] = {
-    val fromTransactor: Transactor[Task] => AuthenticationRepository = JdbcAuthenticationRepository(_)
-    ZLayer.fromFunction(fromTransactor)
-  }
+  val layer: URLayer[Transactor[Task], AuthenticationRepository] =
+    ZLayer.fromFunction(JdbcAuthenticationRepository(_))
 }

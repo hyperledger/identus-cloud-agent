@@ -12,6 +12,7 @@ case class DefaultAuthenticator(
     adminApiKeyAuthenticator: AdminApiKeyAuthenticator,
     apiKeyAuthenticator: ApiKeyAuthenticator
 ) extends Authenticator {
+  override def isEnabled = true
   override def authenticate(credentials: Credentials): IO[AuthenticationError, Entity] = credentials match {
     case adminApiKeyCredentials: AdminApiKeyCredentials => adminApiKeyAuthenticator(adminApiKeyCredentials)
     case apiKeyCredentials: ApiKeyCredentials =>

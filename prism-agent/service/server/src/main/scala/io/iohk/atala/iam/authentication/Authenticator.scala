@@ -31,10 +31,13 @@ object AuthenticationError {
 trait Authenticator {
   def authenticate(credentials: Credentials): IO[AuthenticationError, Entity]
 
+  def isEnabled: Boolean
+
   def apply(credentials: Credentials): IO[AuthenticationError, Entity] = authenticate(credentials)
 }
 
 object DefaultEntityAuthenticator extends Authenticator {
+  override def isEnabled: Boolean = true
   override def authenticate(credentials: Credentials): IO[AuthenticationError, Entity] = ZIO.succeed(Entity.Default)
 
   val layer = ZLayer.apply(ZIO.succeed(DefaultEntityAuthenticator))
