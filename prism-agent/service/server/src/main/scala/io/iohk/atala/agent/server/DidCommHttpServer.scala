@@ -6,7 +6,7 @@ import io.iohk.atala.agent.server.DidCommHttpServerError.{DIDCommMessageParsingE
 import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError
 import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError.{KeyNotFoundError, WalletNotFoundError}
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
-import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorageUnprotected
+import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.connect.core.service.ConnectionService
 import io.iohk.atala.mercury.*
@@ -44,7 +44,7 @@ object DidCommHttpServer {
 
   private def didCommServiceEndpoint: HttpApp[
     DidOps & CredentialService & PresentationService & ConnectionService & ManagedDIDService & HttpClient &
-      DIDResolver & DIDNonSecretStorageUnprotected,
+      DIDResolver & DIDNonSecretStorage,
     Nothing
   ] = Http.collectZIO[Request] {
     case req @ Method.POST -> !!
@@ -83,7 +83,7 @@ object DidCommHttpServer {
   private[this] def unpackMessage(
       jsonString: String
   ): ZIO[
-    DidOps & ManagedDIDService & DIDNonSecretStorageUnprotected,
+    DidOps & ManagedDIDService & DIDNonSecretStorage,
     ParseResponse | DIDSecretStorageError,
     (Message, WalletAccessContext)
   ] = {
@@ -92,8 +92,8 @@ object DidCommHttpServer {
       recipientDid <- extractFirstRecipientDid(jsonString).mapError(err => ParseResponse(err))
       _ <- ZIO.logInfo(s"Extracted recipient Did => $recipientDid")
       didId = DidId(recipientDid)
-      nonSecretStorageUnprotected <- ZIO.service[DIDNonSecretStorageUnprotected]
-      maybePeerDIDRecord <- nonSecretStorageUnprotected.getPeerDIDRecord(didId).orDie
+      nonSecretStorage <- ZIO.service[DIDNonSecretStorage]
+      maybePeerDIDRecord <- nonSecretStorage.getPeerDIDRecord(didId).orDie
       peerDIDRecord <- ZIO.fromOption(maybePeerDIDRecord).mapError(_ => WalletNotFoundError(didId))
       _ <- ZIO.logInfo(s"PeerDID record successfully loaded in DIDComm receiver endpoint: $peerDIDRecord")
       walletAccessContext = WalletAccessContext(peerDIDRecord.walletId)

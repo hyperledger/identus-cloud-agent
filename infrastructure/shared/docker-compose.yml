@@ -15,8 +15,8 @@ services:
       - pg_data_db:/var/lib/postgresql/data
       - ./postgres/init-script.sh:/docker-entrypoint-initdb.d/init-script.sh
       - ./postgres/max_conns.sql:/docker-entrypoint-initdb.d/max_conns.sql
-    #    ports:
-    #      - "5432:5432"
+#    ports:
+#      - "5432:5432"
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "postgres", "-d", "iris"]
       interval: 10s
@@ -109,11 +109,12 @@ services:
         condition: service_started
       vault-server:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://prism-agent:8085/connections"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
+### TODO Find another way to conduct healthcheck. A curl on the below URL is rejected by the auth layer as no 'api-key' header is provided.
+#    healthcheck:
+#      test: ["CMD", "curl", "-f", "http://prism-agent:8085/connections"]
+#      interval: 30s
+#      timeout: 10s
+#      retries: 5
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
