@@ -749,6 +749,7 @@ lazy val eventNotification = project
     name := "event-notification",
     libraryDependencies ++= D_EventNotification.baseDependencies
   )
+  .dependsOn(shared)
 
 // #####################
 // #### Prism Agent ####
