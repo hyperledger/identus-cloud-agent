@@ -18,6 +18,8 @@ object AuthenticationError {
 
   case class UnexpectedError(message: String) extends AuthenticationError
 
+  case class ServiceError(message: String) extends AuthenticationError
+
   def toErrorResponse(error: AuthenticationError): ErrorResponse =
     ErrorResponse(
       status = sttp.model.StatusCode.Forbidden.code,

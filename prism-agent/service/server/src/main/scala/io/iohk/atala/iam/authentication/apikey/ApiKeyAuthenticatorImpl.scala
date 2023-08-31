@@ -91,6 +91,19 @@ case class ApiKeyAuthenticatorImpl(
         .mapError(are => AuthenticationError.UnexpectedError(are.message))
     } yield ()
   }
+
+  override def delete(entityId: _root_.java.util.UUID, apiKey: String): IO[AuthenticationError, Unit] = {
+    for {
+      saltAndApiKey <- ZIO.succeed(apiKeyConfig.salt + apiKey)
+      secret <- ZIO
+        .fromTry(Try(Sha256.compute(saltAndApiKey.getBytes).getHexValue))
+        .logError("Failed to compute SHA256 hash")
+        .mapError(cause => AuthenticationError.UnexpectedError(cause.getMessage))
+      _ <- repository
+        .deleteByEntityIdAndSecret(entityId, secret)
+        .mapError(are => AuthenticationError.UnexpectedError(are.message))
+    } yield ()
+  }
 }
 
 object ApiKeyAuthenticatorImpl {

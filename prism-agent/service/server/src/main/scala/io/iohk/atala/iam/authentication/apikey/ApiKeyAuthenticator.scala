@@ -33,6 +33,8 @@ trait ApiKeyAuthenticator extends Authenticator {
   def authenticate(apiKey: String): IO[AuthenticationError, Entity]
 
   def add(entityId: UUID, apiKey: String): IO[AuthenticationError, Unit]
+
+  def delete(entityId: UUID, apiKey: String): IO[AuthenticationError, Unit]
 }
 
 object ApiKeyAuthenticator {

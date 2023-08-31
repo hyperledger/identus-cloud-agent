@@ -126,7 +126,7 @@ object MainApp extends ZIOAppDefault {
           VerificationPolicyServiceImpl.layer,
           WalletManagementServiceImpl.layer,
           // authentication
-          AdminApiKeyAuthenticatorImpl.layer >+> ApiKeyAuthenticatorImpl.layer >>> DefaultAuthenticator.layer,
+          AdminApiKeyAuthenticatorImpl.layer >+> ApiKeyAuthenticatorImpl.layer >+> DefaultAuthenticator.layer,
           // grpc
           GrpcModule.irisStubLayer,
           GrpcModule.prismNodeStubLayer,

@@ -7,7 +7,12 @@ import io.iohk.atala.iam.authentication.Authenticator
 import io.iohk.atala.iam.authentication.admin.{AdminApiKeyCredentials, AdminApiKeySecurityLogic}
 import io.iohk.atala.iam.entity.http.EntityEndpoints.*
 import io.iohk.atala.iam.entity.http.controller.EntityController
-import io.iohk.atala.iam.entity.http.model.{CreateEntityRequest, UpdateEntityNameRequest, UpdateEntityWalletIdRequest}
+import io.iohk.atala.iam.entity.http.model.{
+  ApiKeyAuthenticationRequest,
+  CreateEntityRequest,
+  UpdateEntityNameRequest,
+  UpdateEntityWalletIdRequest
+}
 import sttp.tapir.ztapir.*
 import zio.{IO, URIO, ZIO}
 
@@ -66,6 +71,23 @@ class EntityServerEndpoints(entityController: EntityController, authenticator: A
         entityController.deleteEntity(id)(rc)
       }
     }
+
+  val addEntityApiKeyAuthenticationServerEndpoint: ZServerEndpoint[Any, Any] = addEntityApiKeyAuthenticationEndpoint
+    .zServerSecurityLogic(adminApiSecurityLogic)
+    .serverLogic {
+      case entity: Entity => { case (rc: RequestContext, request: ApiKeyAuthenticationRequest) =>
+        entityController.addApiKeyAuth(request.entityId, request.apiKey)(rc)
+      }
+    }
+
+  val deleteEntityApiKeyAuthenticationServerEndpoint: ZServerEndpoint[Any, Any] =
+    deleteEntityApiKeyAuthenticationEndpoint
+      .zServerSecurityLogic(adminApiSecurityLogic)
+      .serverLogic {
+        case entity: Entity => { case (rc: RequestContext, request: ApiKeyAuthenticationRequest) =>
+          entityController.deleteApiKeyAuth(request.entityId, request.apiKey)(rc)
+        }
+      }
 
   val all: List[ZServerEndpoint[Any, Any]] = List(
     createEntityServerEndpoint,

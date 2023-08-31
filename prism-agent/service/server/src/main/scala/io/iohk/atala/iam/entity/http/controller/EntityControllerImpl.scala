@@ -1,16 +1,20 @@
 package io.iohk.atala.iam.entity.http.controller
 
 import io.iohk.atala.agent.walletapi.model.Entity
+import io.iohk.atala.agent.walletapi.model.error.EntityServiceError
 import io.iohk.atala.agent.walletapi.service.EntityService
 import io.iohk.atala.api.http.model.PaginationInput
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
+import io.iohk.atala.iam.authentication.AuthenticationError
 import io.iohk.atala.iam.entity.http.model.{CreateEntityRequest, EntityResponse, EntityResponsePage}
 import zio.ZIO.succeed
 import zio.{IO, URLayer, ZLayer}
+import io.iohk.atala.iam.authentication.apikey.ApiKeyAuthenticator
 
 import java.util.UUID
 
-class EntityControllerImpl(service: EntityService) extends EntityController {
+case class EntityControllerImpl(service: EntityService, apiKeyAuthenticator: ApiKeyAuthenticator)
+    extends EntityController {
   override def createEntity(in: CreateEntityRequest)(implicit rc: RequestContext): IO[ErrorResponse, EntityResponse] = {
     val id = in.id.getOrElse(UUID.randomUUID())
     val walletId = in.walletId.getOrElse(Entity.ZeroWalletId)
@@ -63,9 +67,33 @@ class EntityControllerImpl(service: EntityService) extends EntityController {
       _ <- service.deleteById(id)
     } yield ()
   } mapError (EntityController.domainToHttpError)
+
+  override def addApiKeyAuth(id: UUID, apiKey: String)(implicit rc: RequestContext): IO[ErrorResponse, Unit] = {
+    service
+      .getById(id)
+      .flatMap(entity => apiKeyAuthenticator.add(entity.id, apiKey))
+      .mapError {
+        case ae: AuthenticationError =>
+          ErrorResponse.internalServerError("AuthenticationRepositoryError", detail = Option(ae.message))
+        case ese: EntityServiceError =>
+          EntityController.domainToHttpError(ese)
+      }
+  }
+
+  override def deleteApiKeyAuth(id: UUID, apiKey: String)(implicit rc: RequestContext): IO[ErrorResponse, Unit] = {
+    service
+      .getById(id)
+      .flatMap(entity => apiKeyAuthenticator.delete(entity.id, apiKey))
+      .mapError {
+        case ae: AuthenticationError =>
+          ErrorResponse.internalServerError("AuthenticationRepositoryError", detail = Option(ae.message))
+        case ese: EntityServiceError =>
+          EntityController.domainToHttpError(ese)
+      }
+  }
 }
 
 object EntityControllerImpl {
-  val layer: URLayer[EntityService, EntityController] =
-    ZLayer.fromFunction(new EntityControllerImpl(_))
+  val layer: URLayer[EntityService & ApiKeyAuthenticator, EntityController] =
+    ZLayer.fromFunction(EntityControllerImpl(_, _))
 }
