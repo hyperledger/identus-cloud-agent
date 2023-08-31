@@ -16,6 +16,8 @@ trait EntityController {
   def updateEntityName(id: UUID, name: String)(implicit rc: RequestContext): IO[ErrorResponse, EntityResponse]
   def updateEntityWalletId(id: UUID, walletId: UUID)(implicit rc: RequestContext): IO[ErrorResponse, EntityResponse]
   def deleteEntity(id: UUID)(implicit rc: RequestContext): IO[ErrorResponse, Unit]
+  def addApiKeyAuth(id: UUID, apiKey: String)(implicit rc: RequestContext): IO[ErrorResponse, Unit]
+  def deleteApiKeyAuth(id: UUID, apiKey: String)(implicit rc: RequestContext): IO[ErrorResponse, Unit]
 }
 
 object EntityController {

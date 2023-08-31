@@ -28,15 +28,20 @@ trait AuthenticationRepository {
       authenticationMethod: AuthenticationMethodType,
       secret: String
   ): zio.IO[AuthenticationRepositoryError, UUID]
+
   def getEntityIdByMethodAndSecret(
       method: AuthenticationMethodType,
       secret: String
   ): zio.IO[AuthenticationRepositoryError, UUID]
+
   def deleteById(id: UUID): zio.IO[AuthenticationRepositoryError, Unit]
+
   def deleteByMethodAndEntityId(
       method: AuthenticationMethodType,
       entityId: UUID
   ): zio.IO[AuthenticationRepositoryError, Unit]
+
+  def deleteByEntityIdAndSecret(id: UUID, secret: String): zio.IO[AuthenticationRepositoryError, Unit]
 }
 
 type AuthenticationMethodConfiguration = zio.json.ast.Json
@@ -101,6 +106,19 @@ object AuthenticationRepositorySql extends DoobieContext.Postgres(SnakeCase) wit
     run {
       quote {
         query[AuthenticationMethod].filter(am => am.`type` == lift(method) && am.entityId == lift(entityId)).delete
+      }
+    }
+  }
+
+  def deleteByEntityIdAndSecret(entityId: UUID, secret: String) = {
+    run {
+      quote {
+        query[AuthenticationMethod]
+          .filter(am =>
+            am.entityId == lift(entityId) &&
+              am.secret == lift(secret)
+          )
+          .delete
       }
     }
   }
