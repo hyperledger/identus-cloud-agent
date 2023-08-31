@@ -88,7 +88,7 @@ class CredentialDefinitionServiceImpl(
       _ <-
         didSecretStorage.insertKey(
           DidId(in.author),
-          KEY_ID,
+          s"$KEY_ID/${createdCredentialDefinition.guid}",
           DIDSecret(privateCredentialDefinitionJson, PrivateCredentialDefinitionSchemaSerDesV1.version)
         )
     } yield createdCredentialDefinition
