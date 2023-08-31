@@ -59,8 +59,8 @@ class WebhookPublisher(appConfig: AppConfig, notificationService: EventNotificat
       events <- consumer.poll(parallelism).mapError(e => UnexpectedError(e.toString))
       _ <- ZIO.log(s"Got ${events.size} event(s)")
       _ <- ZIO.foreachPar(events) { e =>
-        val webhookUrl = walletWebhookUrl(e.walletId)
-        notifyWebhook(e, URL(webhookUrl))
+        val webhookUrl = walletWebhookUrl(e.walletId, url)
+        notifyWebhook(e, webhookUrl)
           .retry(Schedule.spaced(5.second) && Schedule.recurs(2))
           .catchAll(e => ZIO.logError(s"Webhook permanently failing, with last error being: ${e.msg}"))
       }
@@ -68,12 +68,12 @@ class WebhookPublisher(appConfig: AppConfig, notificationService: EventNotificat
   }
 
   // TODO: remove this and do a proper lookup
-  private[this] def walletWebhookUrl(walletId: WalletId): String = {
+  private[this] def walletWebhookUrl(walletId: WalletId, url: URL): URL = {
     walletId.toUUID.toString() match {
-      case "00000000-0000-0000-0000-000000000000" => "http://localhost:9955"
-      case "00000000-0000-0000-0000-000000000001" => "http://localhost:9956"
-      case "00000000-0000-0000-0000-000000000002" => "http://localhost:9957"
-      case _                                      => ???
+      case "00000000-0000-0000-0000-000000000000" => URL("http://localhost:9955")
+      case "00000000-0000-0000-0000-000000000001" => URL("http://localhost:9956")
+      case "00000000-0000-0000-0000-000000000002" => URL("http://localhost:9957")
+      case _                                      => url
     }
   }
 
