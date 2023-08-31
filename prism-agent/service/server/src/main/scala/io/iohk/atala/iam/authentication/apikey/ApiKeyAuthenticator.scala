@@ -44,3 +44,11 @@ object ApiKeyAuthenticator {
   def add(entityId: UUID, apiKey: String): ZIO[ApiKeyAuthenticator, AuthenticationError, Unit] =
     ZIO.serviceWithZIO[ApiKeyAuthenticator](_.add(entityId, apiKey))
 }
+
+object ApiKeyAuthenticator {
+  def authenticate(credentials: Credentials): ZIO[ApiKeyAuthenticator, AuthenticationError, Entity] =
+    ZIO.serviceWithZIO[ApiKeyAuthenticator](_.authenticate(credentials))
+
+  def add(entityId: UUID, apiKey: String): ZIO[ApiKeyAuthenticator, AuthenticationError, Unit] =
+    ZIO.serviceWithZIO[ApiKeyAuthenticator](_.add(entityId, apiKey))
+}
