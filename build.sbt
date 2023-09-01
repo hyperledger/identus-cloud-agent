@@ -787,32 +787,6 @@ lazy val prismAgentServer = project
     eventNotification
   )
 
-// ##################
-// #### Mediator ####
-// ##################
-
-/** The mediator service */
-lazy val mediator = project
-  .in(file("mercury/mercury-mediator"))
-  .settings(name := "mercury-mediator")
-  .settings(libraryDependencies += D.zio)
-  .settings(libraryDependencies += D.zioHttp)
-  .settings(libraryDependencies += D.munitZio)
-  .settings(
-    // Compile / unmanagedResourceDirectories += apiBaseDirectory.value,
-    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
-    // ### Build Docker Image ###
-    Docker / maintainer := "atala-coredid@iohk.io",
-    Docker / dockerRepository := Some("ghcr.io"),
-    Docker / dockerUsername := Some("input-output-hk"),
-    // Docker / githubOwner := "atala-prism-building-blocks",
-    // Docker / dockerUpdateLatest := true,
-    dockerExposedPorts := Seq(8080),
-    dockerBaseImage := "openjdk:11"
-  )
-  .enablePlugins(JavaAppPackaging, DockerPlugin)
-  .dependsOn(models, agentDidcommx)
-
 // ############################
 // ####  Release process  #####
 // ############################
@@ -824,15 +798,6 @@ releaseProcess := Seq[ReleaseStep](
   runTest,
   setReleaseVersion,
   ReleaseStep(releaseStepTask(prismAgentServer / Docker / stage)),
-  sys.env
-    .get("RELEASE_MEDIATOR") match {
-    case Some(value) => ReleaseStep(releaseStepTask(mediator / Docker / stage))
-    case None =>
-      ReleaseStep(action = st => {
-        println("INFO: prism mediator release disabled!")
-        st
-      })
-  },
   setNextVersion
 )
 
@@ -864,7 +829,6 @@ lazy val aggregatedProjects: Seq[ProjectReference] = Seq(
   connectDoobie,
   prismAgentWalletAPI,
   prismAgentServer,
-  mediator,
   eventNotification,
 )
 
