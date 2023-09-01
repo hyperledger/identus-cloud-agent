@@ -135,7 +135,8 @@ $ curl http://localhost:8080/prism-agent/_system/health
 There could be some incompatibilities between the most latest versions of Enterprise Cloud Agent and PRISM Node. Please, use the following table to check the compatibility between the versions:
 
 | Cloud Agent | PRISM Node |
-| ----------- | ---------- |
+|-------------|------------|
+| 1.12.0      | 2.2.1      |
 | 1.9.2       | 2.2.1      |
 | 1.6.0       | 2.1.1      |
 | 1.4.0       | 2.1.1      |
@@ -154,8 +155,6 @@ The following tutorials will help you get started with the Cloud Agent and issue
 ## User documentation
 
 All extended documentation, tutorials and API references for the PRISM ecosystem can be found at https://docs.atalaprism.io/
-
-More information about Atala and how we work can be found in our handbook at https://handbook.atalaprism.io/
 
 ## Contributing
 
