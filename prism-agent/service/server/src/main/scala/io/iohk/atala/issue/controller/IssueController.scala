@@ -60,5 +60,5 @@ object IssueController {
       case CredentialServiceError.UnsupportedVCClaimsValue(error) =>
         ErrorResponse.badRequest(detail = Some(error))
       case CredentialServiceError.UnsupportedVCClaimsMimeType(mimeType) =>
-        ErrorResponse.badRequest(detail = Some(s"Unsupported mime-type for claim: $mimeType"))
+        ErrorResponse.badRequest(detail = Some(s"Unsupported mime_type for claim: $mimeType"))
 }
