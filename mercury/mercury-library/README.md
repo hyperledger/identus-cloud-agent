@@ -2,7 +2,7 @@
 
 ## Index
 
-- [Mediator (Mailbox)](./mediator/Mercury-Mailbox-Mediator.md)
+- [Mediator (Mailbox)](./Mercury-Mailbox-Mediator.md)
 - Protocols:
   - [Invitation-Protocol](./protocol-invitation/Invitation-Protocol.md)
   - [Mercury-Mailbox-Protocol](./protocol-mercury-mailbox/Mercury-Mailbox-Protocol.md)
@@ -17,8 +17,10 @@ Dependencies:
 
 ```mermaid
 flowchart BT
-  models %%[mercury-data-models]
-  resolver %%[mercury-resolver]
+  models
+  %%[mercury-data-models]
+  resolver
+  %%[mercury-resolver]
   invitation[protocol-invitation]
   mailbox[protocol-mercury-mailbox]
   routing[mercury-protocol-routing-2_0]
@@ -47,7 +49,6 @@ flowchart BT
     subgraph DID agents
       alice
       bob
-      mediator
       agent-cli-didcommx
     end
 
@@ -64,13 +65,10 @@ flowchart BT
     alice --> agent-didcommx
     bob --> agent-didcommx
 
-    mediator -.->|server| mailbox
-    mediator --> agent-didcommx
-    %%mediator --> resolver
-    mediator -.-> http
 
     agent ---> models
-    agent -..-> routing %% invitation
+    agent -..-> routing
+    %% invitation
 
 
     agent-didcommx --> agent
@@ -91,12 +89,6 @@ flowchart BT
 ## Quick Reference Guide
 
 ```shell
-# Mailbox Mediator (zhttp)
-sbt "mediator/runMain io.iohk.atala.mercury.mediator.ZhttpMediator"
-
-# Mailbox Mediator (akka)
-sbt "mediator/runMain io.iohk.atala.mercury.mediator.Mediator"
-
 # Alice Agent (send messagem to Bob's Mediator)
 sbt "agentDidcommx/runMain io.iohk.atala.AgentClientAlice"
 
