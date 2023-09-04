@@ -10,5 +10,6 @@ trait WalletNonSecretStorage {
   def createWallet(wallet: Wallet): Task[Wallet]
   def getWallet(walletId: WalletId): Task[Option[Wallet]]
   def listWallet(offset: Option[Int] = None, limit: Option[Int] = None): Task[(Seq[Wallet], Int)]
+  def createWalletNotification(config: EventNotificationConfig): RIO[WalletAccessContext, EventNotificationConfig]
   def walletNotification: RIO[WalletAccessContext, Seq[EventNotificationConfig]]
 }

@@ -2,12 +2,16 @@ package io.iohk.atala.agent.walletapi.storage
 
 import io.iohk.atala.agent.walletapi.model.Wallet
 import io.iohk.atala.agent.walletapi.sql.JdbcWalletNonSecretStorage
+import io.iohk.atala.event.notification.EventNotificationConfig
+import io.iohk.atala.shared.models.WalletAccessContext
+import io.iohk.atala.shared.models.WalletId
 import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
 import io.iohk.atala.test.container.DBTestUtils
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
-import io.iohk.atala.shared.models.WalletId
+
+import java.net.URL
 
 object JdbcWalletNonSecretStorageSpec extends ZIOSpecDefault, PostgresTestContainerSupport {
 
@@ -15,6 +19,7 @@ object JdbcWalletNonSecretStorageSpec extends ZIOSpecDefault, PostgresTestContai
     val s = suite("JdbcWalletNonSecretStorage")(
       getWalletSpec,
       listWalletSpec,
+      createWalletNotificationSpec
     ) @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
 
     s.provide(JdbcWalletNonSecretStorage.layer, contextAwareTransactorLayer, pgContainerLayer)
@@ -106,4 +111,19 @@ object JdbcWalletNonSecretStorageSpec extends ZIOSpecDefault, PostgresTestContai
     }
   )
 
+  // TODO: Cover with more test. This is just a simple sanity check
+  private val createWalletNotificationSpec = suite("walletNotification")(
+    test("insert wallet notification config") {
+      for {
+        storage <- ZIO.service[WalletNonSecretStorage]
+        wallet <- storage.createWallet(Wallet("wallet-1"))
+        config = EventNotificationConfig(wallet.id, URL("https://example.com"))
+        _ <- storage
+          .createWalletNotification(config)
+          .provide(ZLayer.succeed(WalletAccessContext(wallet.id)))
+        configs <- storage.walletNotification
+          .provide(ZLayer.succeed(WalletAccessContext(wallet.id)))
+      } yield assert(configs)(hasSameElements(Seq(config)))
+    }
+  ) @@ TestAspect.tag("dev")
 }

@@ -6,13 +6,15 @@ import doobie.postgres.implicits.*
 import doobie.util.transactor.Transactor
 import io.iohk.atala.agent.walletapi.model.Wallet
 import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorage
+import io.iohk.atala.event.notification.EventNotificationConfig
 import io.iohk.atala.shared.db.ContextAwareTask
 import io.iohk.atala.shared.db.Implicits.{*, given}
-import io.iohk.atala.shared.models.WalletId
-import java.time.Instant
-import zio.*
-import io.iohk.atala.event.notification.EventNotificationConfig
 import io.iohk.atala.shared.models.WalletAccessContext
+import io.iohk.atala.shared.models.WalletId
+import zio.*
+
+import java.net.URL
+import java.time.Instant
 
 class JdbcWalletNonSecretStorage(xa: Transactor[ContextAwareTask]) extends WalletNonSecretStorage {
 
@@ -86,6 +88,31 @@ class JdbcWalletNonSecretStorage(xa: Transactor[ContextAwareTask]) extends Walle
     effect.transactWithoutContext(xa)
   }
 
+  override def createWalletNotification(
+      config: EventNotificationConfig
+  ): RIO[WalletAccessContext, EventNotificationConfig] = {
+    val cxn = (row: WalletNofiticationRow) => sql"""
+        | INSERT INTO public.wallet_notification (
+        |   id,
+        |   wallet_id,
+        |   url,
+        |   custom_headers,
+        |   created_at
+        | ) VALUES (
+        |   ${row.id},
+        |   ${row.walletId},
+        |   ${row.url},
+        |   ${row.customHeaders},
+        |   ${row.createdAt}
+        | )
+        """.stripMargin.update
+
+    val row = WalletNofiticationRow.from(config)
+    cxn(row).run
+      .transactWallet(xa)
+      .as(config)
+  }
+
   override def walletNotification: RIO[WalletAccessContext, Seq[EventNotificationConfig]] = {
     val cxn =
       sql"""
@@ -94,13 +121,15 @@ class JdbcWalletNonSecretStorage(xa: Transactor[ContextAwareTask]) extends Walle
         |   wallet_id,
         |   url,
         |   custom_headers,
-        |   created_at,
+        |   created_at
         | FROM public.wallet_notification
         """.stripMargin
         .query[WalletNofiticationRow]
         .to[List]
 
-    cxn.transactWallet(xa).map(_.map(_.toDomain))
+    cxn
+      .transactWallet(xa)
+      .flatMap(rows => ZIO.foreach(rows) { row => ZIO.fromTry(row.toDomain) })
   }
 
 }

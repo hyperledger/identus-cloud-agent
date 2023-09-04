@@ -13,3 +13,14 @@ final case class EventNotificationConfig(
     customHeaders: Map[String, String],
     createdAt: Instant
 )
+
+object EventNotificationConfig {
+  def apply(walletId: WalletId, url: URL, customHeaders: Map[String, String] = Map.empty): EventNotificationConfig =
+    EventNotificationConfig(
+      id = UUID.randomUUID(),
+      walletId = walletId,
+      url = url,
+      customHeaders = Map.empty,
+      createdAt = Instant.now
+    )
+}

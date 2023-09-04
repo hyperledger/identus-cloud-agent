@@ -3,6 +3,9 @@ package io.iohk.atala.agent.walletapi
 import doobie.*
 import doobie.postgres.implicits.*
 import doobie.util.invariant.InvalidEnum
+import io.circe.*
+import io.circe.parser.*
+import io.circe.syntax.*
 import io.iohk.atala.agent.walletapi.model.Wallet
 import io.iohk.atala.agent.walletapi.model.{ManagedDIDState, PublicationState, KeyManagementMode}
 import io.iohk.atala.castor.core.model.ProtoModelHelper.*
@@ -103,6 +106,9 @@ package object sql {
 
   given arraySeqByteGet: Get[ArraySeq[Byte]] = Get[Array[Byte]].map(ArraySeq.from)
   given arraySeqBytePut: Put[ArraySeq[Byte]] = Put[Array[Byte]].contramap(_.toArray)
+
+  given urlGet: Get[URL] = Get[String].map(URL(_))
+  given urlPut: Put[URL] = Put[String].contramap(_.toString())
 
   final case class DIDStateRow(
       did: PrismDID,
@@ -209,17 +215,20 @@ package object sql {
       id: UUID,
       walletId: WalletId,
       url: URL,
-      customHeaders: Map[String, String],
+      customHeaders: String,
       createdAt: Instant,
   ) {
-    def toDomain: EventNotificationConfig = {
-      EventNotificationConfig(
-        id = id,
-        walletId = walletId,
-        url = url,
-        customHeaders = customHeaders,
-        createdAt = createdAt,
-      )
+    def toDomain: Try[EventNotificationConfig] = {
+      decode[Map[String, String]](customHeaders).toTry
+        .map { headers =>
+          EventNotificationConfig(
+            id = id,
+            walletId = walletId,
+            url = url,
+            customHeaders = headers,
+            createdAt = createdAt,
+          )
+        }
     }
   }
 
@@ -229,7 +238,7 @@ package object sql {
         id = config.id,
         walletId = config.walletId,
         url = config.url,
-        customHeaders = config.customHeaders,
+        customHeaders = config.customHeaders.asJson.toString,
         createdAt = config.createdAt,
       )
     }
