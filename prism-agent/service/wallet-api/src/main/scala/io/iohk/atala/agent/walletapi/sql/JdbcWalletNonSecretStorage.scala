@@ -11,6 +11,8 @@ import io.iohk.atala.shared.db.Implicits.{*, given}
 import io.iohk.atala.shared.models.WalletId
 import java.time.Instant
 import zio.*
+import io.iohk.atala.event.notification.EventNotificationConfig
+import io.iohk.atala.shared.models.WalletAccessContext
 
 class JdbcWalletNonSecretStorage(xa: Transactor[ContextAwareTask]) extends WalletNonSecretStorage {
 
@@ -82,6 +84,23 @@ class JdbcWalletNonSecretStorage(xa: Transactor[ContextAwareTask]) extends Walle
     } yield (rows, totalCount)
 
     effect.transactWithoutContext(xa)
+  }
+
+  override def walletNotification: RIO[WalletAccessContext, Seq[EventNotificationConfig]] = {
+    val cxn =
+      sql"""
+        | SELECT
+        |   id,
+        |   wallet_id,
+        |   url,
+        |   custom_headers,
+        |   created_at,
+        | FROM public.wallet_notification
+        """.stripMargin
+        .query[WalletNofiticationRow]
+        .to[List]
+
+    cxn.transactWallet(xa).map(_.map(_.toDomain))
   }
 
 }

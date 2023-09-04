@@ -29,6 +29,14 @@ CREATE TABLE public.wallet_seed (
     "created_at" TIMESTAMPTZ NOT NULL
 );
 
+CREATE TABLE public.wallet_notification (
+    "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    "wallet_id" UUID REFERENCES public.wallet ("wallet_id"),
+    "url" TEXT NOT NULL,
+    "custom_headers" TEXT,
+    "created_at" TIMESTAMPTZ NOT NULL
+);
+
 ALTER TABLE public.peer_did_rand_key
 ADD COLUMN "wallet_id" UUID REFERENCES public.wallet (
     "wallet_id"
@@ -63,6 +71,10 @@ USING (wallet_id = current_setting('app.current_wallet_id')::UUID);
 
 CREATE POLICY wallet_seed_wallet_isolation
 ON public.wallet_seed
+USING (wallet_id = current_setting('app.current_wallet_id')::UUID);
+
+CREATE POLICY wallet_notification_isolation
+ON public.wallet_notification
 USING (wallet_id = current_setting('app.current_wallet_id')::UUID);
 
 CREATE POLICY prism_did_hd_key_wallet_isolation
