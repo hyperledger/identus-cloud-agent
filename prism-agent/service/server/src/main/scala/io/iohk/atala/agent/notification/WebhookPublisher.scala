@@ -4,6 +4,7 @@ import io.iohk.atala.agent.notification.JsonEventEncoders.*
 import io.iohk.atala.agent.notification.WebhookPublisherError.{InvalidWebhookURL, UnexpectedError}
 import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.walletapi.model.ManagedDIDDetail
+import io.iohk.atala.agent.walletapi.service.WalletManagementService
 import io.iohk.atala.connect.core.model.ConnectionRecord
 import io.iohk.atala.event.notification.{Event, EventConsumer, EventNotificationService}
 import io.iohk.atala.pollux.core.model.{IssueCredentialRecord, PresentationRecord}
@@ -15,19 +16,17 @@ import zio.json.*
 
 import java.net.URL
 
-class WebhookPublisher(appConfig: AppConfig, notificationService: EventNotificationService) {
+class WebhookPublisher(
+    appConfig: AppConfig,
+    notificationService: EventNotificationService,
+    walletService: WalletManagementService
+) {
 
   private val config = appConfig.agent.webhookPublisher
-  private val baseHeaders =
-    config.apiKey.map(key => Headers.bearerAuthorizationHeader(key)).getOrElse(Headers.empty) ++
-      Headers.contentType(HeaderValues.applicationJson)
 
-  private val parallelism = config.parallelism match {
-    case Some(p) if p < 1  => 1
-    case Some(p) if p > 10 => 10
-    case Some(p)           => p
-    case None              => 1
-  }
+  private val baseHeaders = Headers.contentType(HeaderValues.applicationJson)
+
+  private val parallelism = config.parallelism.getOrElse(1).max(1).min(10)
 
   val run: ZIO[Client, WebhookPublisherError, Unit] = config.url match {
     case Some(url) =>
@@ -105,6 +104,6 @@ class WebhookPublisher(appConfig: AppConfig, notificationService: EventNotificat
 }
 
 object WebhookPublisher {
-  val layer: URLayer[AppConfig & EventNotificationService, WebhookPublisher] =
-    ZLayer.fromFunction(WebhookPublisher(_, _))
+  val layer: URLayer[AppConfig & EventNotificationService & WalletManagementService, WebhookPublisher] =
+    ZLayer.fromFunction(WebhookPublisher(_, _, _))
 }

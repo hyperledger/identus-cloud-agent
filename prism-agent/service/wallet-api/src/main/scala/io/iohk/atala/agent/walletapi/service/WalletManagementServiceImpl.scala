@@ -5,6 +5,7 @@ import io.iohk.atala.agent.walletapi.model.Wallet
 import io.iohk.atala.agent.walletapi.model.WalletSeed
 import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorage
 import io.iohk.atala.agent.walletapi.storage.WalletSecretStorage
+import io.iohk.atala.event.notification.EventNotificationConfig
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.models.WalletId
 import zio.*
@@ -45,6 +46,10 @@ class WalletManagementServiceImpl(
     nonSecretStorage
       .listWallet(offset = offset, limit = limit)
       .mapError(WalletManagementServiceError.WalletStorageError.apply)
+
+  override def walletNotification: RIO[WalletAccessContext, Seq[EventNotificationConfig]] =
+    nonSecretStorage.walletNotification
+
 }
 
 object WalletManagementServiceImpl {
