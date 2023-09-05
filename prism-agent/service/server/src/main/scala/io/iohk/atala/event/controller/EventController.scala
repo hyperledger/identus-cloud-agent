@@ -32,7 +32,6 @@ trait EventController {
 }
 
 object EventController {
-  // should we seggregate all the way to all layers?
   given Conversion[WalletManagementServiceError, ErrorResponse] =
     WalletManagementController.walletServiceErrorConversion
 }
@@ -46,7 +45,7 @@ class EventControllerImpl(service: WalletManagementService) extends EventControl
   )(implicit rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, WebhookNotification] = {
     for {
       url <- ZIO.attempt(new URL(request.url)).mapError(e => ErrorResponse.badRequest(detail = Some(e.toString())))
-      notificationConfig <- EventNotificationConfig(url, request.customHeaders.getOrElse(Map.empty))
+      notificationConfig <- EventNotificationConfig.applyWallet(url, request.customHeaders.getOrElse(Map.empty))
       _ <- service
         .createWalletNotification(notificationConfig)
         .mapError[ErrorResponse](e => e)

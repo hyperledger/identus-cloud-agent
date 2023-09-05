@@ -54,7 +54,7 @@ class WebhookPublisher(
       _ <- ZIO.log(s"Polling $parallelism event(s)")
       events <- consumer.poll(parallelism).mapError(e => UnexpectedError(e.toString))
       _ <- ZIO.log(s"Got ${events.size} event(s)")
-      walletUrls <- ZIO
+      allWebhookUrls <- ZIO
         .foreach(events.map(_.walletId).toSet.toList) { walletId =>
           walletService.listWalletNotifications
             .map(walletId -> _)
@@ -62,7 +62,7 @@ class WebhookPublisher(
         }
         .map(_.toMap)
       _ <- ZIO.foreachPar(events) { e =>
-        val webhookUrls = walletUrls.getOrElse(e.walletId, Nil)
+        val webhookUrls = allWebhookUrls.getOrElse(e.walletId, Nil)
         ZIO.foreach(webhookUrls) { webhookUrl =>
           notifyWebhook(e, webhookUrl)
             .retry(Schedule.spaced(5.second) && Schedule.recurs(2))

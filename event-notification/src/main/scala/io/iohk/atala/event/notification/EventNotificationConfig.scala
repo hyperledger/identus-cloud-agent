@@ -26,9 +26,9 @@ object EventNotificationConfig {
       createdAt = Instant.now
     )
 
-  def apply(url: URL, customHeaders: Map[String, String]): URIO[WalletAccessContext, EventNotificationConfig] =
+  def applyWallet(url: URL, customHeaders: Map[String, String]): URIO[WalletAccessContext, EventNotificationConfig] =
     ZIO.serviceWith[WalletAccessContext](ctx => apply(ctx.walletId, url, customHeaders))
 
-  def apply(url: URL): URIO[WalletAccessContext, EventNotificationConfig] =
+  def applyWallet(url: URL): URIO[WalletAccessContext, EventNotificationConfig] =
     ZIO.serviceWith[WalletAccessContext](ctx => apply(ctx.walletId, url, Map.empty))
 }
