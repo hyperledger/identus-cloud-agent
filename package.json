@@ -1,6 +1,6 @@
 {
   "name": "atala-prism-building-blocks",
-  "version": "1.9.2",
+  "version": "1.12.0",
   "engines": {
     "node": ">=16.13.0"
   },
@@ -86,7 +86,7 @@
             "prism-agent/service/api/http/prism-agent-openapi-spec.yaml",
             "infrastructure/charts/agent/Chart.yaml"
           ],
-          "message": "chore(release): cut atala prism ${nextRelease.version} release\n\n${nextRelease.notes}"
+          "message": "chore(release): cut atala prism ${nextRelease.version} release\n\n${nextRelease.notes}\n\nSigned-off-by: Anton Baliasnikov <anton.baliasnikov@iohk.io>"
         }
       ],
       [

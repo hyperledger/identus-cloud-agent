@@ -16,6 +16,14 @@ object DIDCodec {
     override val mediaType: MediaType = CustomMediaTypes.`application/ld+json;did-resolution`
   }
 
+  def emptyDidJsonLD: Codec[String, DIDResolutionResult, DIDJsonLD] =
+    didJsonLD.schema(_ =>
+      Schema.schemaForByteArray
+        .description("Empty representation")
+        .encodedExample(Array.emptyByteArray)
+        .as
+    )
+
   def didJsonLD: Codec[String, DIDResolutionResult, DIDJsonLD] = {
     val errorMsg = "Decoding application/did+ld+json resource is not supported"
     val didDocumentCodec = sttp.tapir.json.zio.zioCodec[Option[DIDDocument]]

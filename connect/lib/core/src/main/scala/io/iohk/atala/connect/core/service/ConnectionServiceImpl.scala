@@ -10,6 +10,7 @@ import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.connection.*
 import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
 import io.iohk.atala.shared.utils.Base64Utils
+import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
 import zio.*
 
 import java.rmi.UnexpectedException
@@ -136,10 +137,12 @@ private class ConnectionServiceImpl(
       record <- getRecordWithState(recordId, ProtocolState.InvitationReceived)
       request = ConnectionRequest
         .makeFromInvitation(record.invitation, pairwiseDid)
-        .copy(thid = Some(record.invitation.id)) //  This logic shound be move to the SQL when fetching the record
+        .copy(thid = Some(record.invitation.id)) //  This logic should be moved to the SQL when fetching the record
       count <- connectionRepository
         .updateWithConnectionRequest(recordId, request, ProtocolState.ConnectionRequestPending, maxRetries)
-        .mapError(RepositoryError.apply)
+        .mapError(RepositoryError.apply) @@ CustomMetricsAspect.startRecordingTime(
+        s"${record.id}_invitee_pending_to_req_sent"
+      )
       _ <- count match
         case 1 => ZIO.succeed(())
         case n => ZIO.fail(RecordIdNotFound(recordId))
@@ -157,6 +160,16 @@ private class ConnectionServiceImpl(
       recordId,
       ProtocolState.ConnectionRequestPending,
       ProtocolState.ConnectionRequestSent
+    ).flatMap {
+      case None        => ZIO.fail(RecordIdNotFound(recordId))
+      case Some(value) => ZIO.succeed(value)
+    }
+
+  override def markConnectionInvitationExpired(recordId: UUID): IO[ConnectionServiceError, ConnectionRecord] =
+    updateConnectionProtocolState(
+      recordId,
+      ProtocolState.InvitationGenerated,
+      ProtocolState.InvitationExpired
     ).flatMap {
       case None        => ZIO.fail(RecordIdNotFound(recordId))
       case Some(value) => ZIO.succeed(value)
@@ -198,7 +211,9 @@ private class ConnectionServiceImpl(
       // response = createDidCommConnectionResponse(record)
       count <- connectionRepository
         .updateWithConnectionResponse(recordId, response, ProtocolState.ConnectionResponsePending, maxRetries)
-        .mapError(RepositoryError.apply)
+        .mapError(RepositoryError.apply) @@ CustomMetricsAspect.startRecordingTime(
+        s"${record.id}_inviter_pending_to_res_sent"
+      )
       _ <- count match
         case 1 => ZIO.succeed(())
         case n => ZIO.fail(RecordIdNotFound(recordId))

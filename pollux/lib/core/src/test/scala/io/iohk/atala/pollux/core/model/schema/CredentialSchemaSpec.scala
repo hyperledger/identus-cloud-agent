@@ -1,15 +1,22 @@
 package io.iohk.atala.pollux.core.model.schema
 
 import io.iohk.atala.pollux.core.model.error.CredentialSchemaError
+import io.iohk.atala.pollux.core.model.error.CredentialSchemaError.SchemaError
 import io.iohk.atala.pollux.core.model.schema.AnoncredSchemaTypeSpec.test
-import io.iohk.atala.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSchemaV1
-import io.iohk.atala.pollux.core.model.schema.`type`.{AnoncredSchemaType, CredentialJsonSchemaType}
+import io.iohk.atala.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
+import io.iohk.atala.pollux.core.model.schema.`type`.AnoncredSchemaType
+import io.iohk.atala.pollux.core.model.schema.`type`.CredentialJsonSchemaType
+import io.iohk.atala.pollux.core.model.schema.validator.JsonSchemaError.JsonValidationErrors
 import zio.Scope
 import zio.json.*
 import zio.json.ast.Json
 import zio.json.ast.Json.*
 import zio.test.Assertion.*
-import zio.test.{Assertion, Spec, TestEnvironment, ZIOSpecDefault, assertZIO}
+import zio.test.Assertion
+import zio.test.Spec
+import zio.test.TestEnvironment
+import zio.test.ZIOSpecDefault
+import zio.test.assertZIO
 
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -34,7 +41,7 @@ object CredentialSchemaSpec extends ZIOSpecDefault {
         assertZIO(result.exit)(
           fails(
             isSubtype[CredentialSchemaError.UnsupportedCredentialSchemaType](
-              hasField("userMessage", _.userMessage, equalTo(s"Unsupported VC Schema type $schemaType"))
+              hasField("message", _.message, equalTo(s"Unsupported VC Schema type $schemaType"))
             )
           )
         )
@@ -61,7 +68,7 @@ object CredentialSchemaSpec extends ZIOSpecDefault {
           authored = OffsetDateTime.parse("2022-03-10T12:00:00Z"),
           tags = Seq("tag1", "tag2"),
           description = "Anoncred Schema",
-          `type` = AnoncredSchemaSchemaV1.version,
+          `type` = AnoncredSchemaSerDesV1.version,
           schema = jsonSchema.fromJson[Json].getOrElse(Json.Null)
         )
         assertZIO(CredentialSchema.validateCredentialSchema(credentialSchema))(isUnit)
@@ -85,11 +92,11 @@ object CredentialSchemaSpec extends ZIOSpecDefault {
           authored = OffsetDateTime.parse("2022-03-10T12:00:00Z"),
           tags = Seq("tag1", "tag2"),
           description = "Anoncred Schema",
-          `type` = AnoncredSchemaSchemaV1.version,
+          `type` = AnoncredSchemaSerDesV1.version,
           schema = jsonSchema.fromJson[Json].getOrElse(Json.Null)
         )
         assertZIO(CredentialSchema.validateCredentialSchema(credentialSchema).exit)(
-          AnoncredSchemaTypeSpec.failsWithErrors(
+          failsWithJsonValidationErrors(
             Seq("$.attrNames: the items in the array must be unique")
           )
         )
@@ -121,11 +128,25 @@ object CredentialSchemaSpec extends ZIOSpecDefault {
         assertZIO(result.exit)(
           fails(
             isSubtype[CredentialSchemaError.UnsupportedCredentialSchemaType](
-              hasField("userMessage", _.userMessage, equalTo(s"Unsupported VC Schema type $schemaType"))
+              hasField("message", _.message, equalTo(s"Unsupported VC Schema type $schemaType"))
             )
           )
         )
       }
     )
   )
+
+  def failsWithJsonValidationErrors(errorMessages: Iterable[String]) = {
+    fails(
+      isSubtype[SchemaError](
+        hasField(
+          "schemaError",
+          _.schemaError,
+          isSubtype[JsonValidationErrors](
+            hasField("errors", _.errors, hasSameElementsDistinct(errorMessages))
+          )
+        )
+      )
+    )
+  }
 }

@@ -1,3 +1,50 @@
+# [1.12.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v1.11.0...prism-agent-v1.12.0) (2023-08-31)
+
+
+### Bug Fixes
+
+* **prism-agent:** invitation expiry configuration and new state ([#655](https://github.com/input-output-hk/atala-prism-building-blocks/issues/655)) ([c61999d](https://github.com/input-output-hk/atala-prism-building-blocks/commit/c61999dd2a256401c30d29b842f0092f4968c6ed))
+
+
+### Features
+
+* add anoncreds credential definition rest api ([#624](https://github.com/input-output-hk/atala-prism-building-blocks/issues/624)) ([99e338a](https://github.com/input-output-hk/atala-prism-building-blocks/commit/99e338af6dc1ab2b4b42f4b1bee2a917ccb77b4c))
+* allow external API keys to be defined for an agent ([#643](https://github.com/input-output-hk/atala-prism-building-blocks/issues/643)) ([756dea7](https://github.com/input-output-hk/atala-prism-building-blocks/commit/756dea707b1ced9de800cdabfded6dfc100e340e))
+* ATL-5571 Generalized Vault to Store Json ([#650](https://github.com/input-output-hk/atala-prism-building-blocks/issues/650)) ([ebf0328](https://github.com/input-output-hk/atala-prism-building-blocks/commit/ebf0328cfb5107954766fe93ffc6b42f4e5a4cb0))
+* ATL-5574 Prime Anoncred Lib ([#652](https://github.com/input-output-hk/atala-prism-building-blocks/issues/652)) ([70b2f16](https://github.com/input-output-hk/atala-prism-building-blocks/commit/70b2f16beecdef7eeeabb18f1b25244046ba5a65))
+* ATL-5575 Generalize and Streamline Json Schema SerDes logic ([#653](https://github.com/input-output-hk/atala-prism-building-blocks/issues/653)) ([eb4f8f4](https://github.com/input-output-hk/atala-prism-building-blocks/commit/eb4f8f488bcef421e20f770669dfff99f4c1dd98))
+
+# [1.11.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v1.10.0...prism-agent-v1.11.0) (2023-08-21)
+
+
+### Bug Fixes
+
+* **prism-agenet:** Remove connection ID from metrics in connection flow ([#635](https://github.com/input-output-hk/atala-prism-building-blocks/issues/635)) ([515f92f](https://github.com/input-output-hk/atala-prism-building-blocks/commit/515f92f67f6ccd9ae5414d1324ebb769c43d5017))
+
+
+### Features
+
+* **prism-agent:** Add prism agent record processing pipeline parameters ([#626](https://github.com/input-output-hk/atala-prism-building-blocks/issues/626)) ([434bdac](https://github.com/input-output-hk/atala-prism-building-blocks/commit/434bdacfc10b854b77bde0c8c7add613d8ee9025))
+
+# [1.10.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v1.9.2...prism-agent-v1.10.0) (2023-08-16)
+
+
+### Bug Fixes
+
+* **prism-agent:** fix OAS on empty DID resolution representation ([#616](https://github.com/input-output-hk/atala-prism-building-blocks/issues/616)) ([216ff3a](https://github.com/input-output-hk/atala-prism-building-blocks/commit/216ff3a2ef75d824d0a6285218be01636a595a82))
+
+
+### Features
+
+* **agent:** improve OAS spec and refactor DidCommHttpServer code ([#615](https://github.com/input-output-hk/atala-prism-building-blocks/issues/615)) ([301fbab](https://github.com/input-output-hk/atala-prism-building-blocks/commit/301fbabac6c743130c46572056d9b8848a166be1))
+* **prism-agent:** Metrics for connection flow job ([#611](https://github.com/input-output-hk/atala-prism-building-blocks/issues/611)) ([695d661](https://github.com/input-output-hk/atala-prism-building-blocks/commit/695d66173b40b3ee9f87c3b950b54bdeff8f02d2))
+* update anoncreds demo after the new getJson methods ([#584](https://github.com/input-output-hk/atala-prism-building-blocks/issues/584)) ([d8258ee](https://github.com/input-output-hk/atala-prism-building-blocks/commit/d8258ee5d29b94ac863f9dbf5c8eaadd66fd636e))
+
+
+### Performance Improvements
+
+* support for credential and present-proof flows with thid ([#609](https://github.com/input-output-hk/atala-prism-building-blocks/issues/609)) ([9cef8c0](https://github.com/input-output-hk/atala-prism-building-blocks/commit/9cef8c03cf0a3e5601ec36b1f008dea2a738a415))
+
 ## [1.9.2](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v1.9.1...prism-agent-v1.9.2) (2023-07-27)
 
 

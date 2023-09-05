@@ -39,7 +39,8 @@ final case class ConnectConfig(
     database: DatabaseConfig,
     connectBgJobRecordsLimit: Int,
     connectBgJobRecurrenceDelay: Duration,
-    connectBgJobProcessingParallelism: Int
+    connectBgJobProcessingParallelism: Int,
+    connectInvitationExpiry: Duration,
 )
 
 final case class PrismNodeConfig(service: GrpcServiceConfig)

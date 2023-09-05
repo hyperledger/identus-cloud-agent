@@ -4,7 +4,8 @@ import io.iohk.atala.api.http.*
 import io.iohk.atala.pollux.core.model
 import io.iohk.atala.pollux.core.model.schema.CredentialSchema
 import io.iohk.atala.pollux.credentialschema.http.FilterInput.annotations
-import sttp.tapir.EndpointIO.annotations.{example, query}
+import sttp.tapir.EndpointIO.annotations.example
+import sttp.tapir.EndpointIO.annotations.query
 import sttp.tapir.Validator.*
 
 case class FilterInput(

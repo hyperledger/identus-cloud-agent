@@ -13,7 +13,12 @@ import io.iohk.atala.mercury.*
 import io.iohk.atala.mercury.model.*
 import io.iohk.atala.mercury.model.error.*
 import io.iohk.atala.resolvers.DIDResolver
+import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
+import io.iohk.atala.shared.utils.DurationOps.toMetricsSeconds
 import zio.*
+import zio.metrics.*
+import java.time.{Instant, Duration}
+
 object ConnectBackgroundJobs {
 
   val didCommExchanges = {
@@ -24,6 +29,7 @@ object ConnectBackgroundJobs {
         .getConnectionRecordsByStates(
           ignoreWithZeroRetries = true,
           limit = config.connect.connectBgJobRecordsLimit,
+          ConnectionRecord.ProtocolState.InvitationGenerated,
           ConnectionRecord.ProtocolState.ConnectionRequestPending,
           ConnectionRecord.ProtocolState.ConnectionResponsePending
         )
@@ -34,9 +40,48 @@ object ConnectBackgroundJobs {
 
   private[this] def performExchange(
       record: ConnectionRecord
-  ): URIO[DidOps & DIDResolver & HttpClient & ConnectionService & ManagedDIDService, Unit] = {
+  ): URIO[DidOps & DIDResolver & HttpClient & ConnectionService & ManagedDIDService & AppConfig, Unit] = {
     import ProtocolState.*
     import Role.*
+
+    def counterMetric(key: String) = Metric
+      .counterInt(key)
+      .fromConst(1)
+
+    val InviteeConnectionRequestMsgFailed = counterMetric(
+      "connection_flow_invitee_connection_request_msg_failed_counter"
+    )
+    val InviteeConnectionRequestMsgSuccess = counterMetric(
+      "connection_flow_invitee_connection_request_msg_success_counter"
+    )
+    val InviterConnectionResponseMsgFailed = counterMetric(
+      "connection_flow_inviter_connection_response_msg_failed_counter"
+    )
+    val InviterConnectionResponseMsgSuccess = counterMetric(
+      "connection_flow_inviter_connection_response_msg_success_counter"
+    )
+    val InviterConnectionInvitationExpiredSuccess = counterMetric(
+      "connection_flow_inviter_connection_invitation_expired_success_counter"
+    )
+    val InviteeProcessConnectionRecordPendingSuccess = counterMetric(
+      "connection_flow_invitee_process_connection_record_success_counter"
+    )
+    val InviteeProcessConnectionRecordPendingFailed = counterMetric(
+      "connection_flow_invitee_process_connection_record_failed_counter"
+    )
+    val InviteeProcessConnectionRecordPendingTotal = counterMetric(
+      "connection_flow_invitee_process_connection_record_all_counter"
+    )
+    val InviterProcessConnectionRecordPendingSuccess = counterMetric(
+      "connection_flow_inviter_process_connection_record_success_counter"
+    )
+    val InviterProcessConnectionRecordPendingFailed = counterMetric(
+      "connection_flow_inviter_process_connection_record_failed_counter"
+    )
+    val InviterProcessConnectionRecordPendingTotal = counterMetric(
+      "connection_flow_inviter_process_connection_record_all_counter"
+    )
+
     val exchange = record match {
       case ConnectionRecord(
             id,
@@ -53,19 +98,34 @@ object ConnectBackgroundJobs {
             _,
             _
           ) if metaRetries > 0 =>
-        val aux = for {
+        val inviteeProcessFlow = for {
 
           didCommAgent <- buildDIDCommAgent(request.from)
-          resp <- MessagingService.send(request.makeMessage).provideSomeLayer(didCommAgent)
+          resp <- MessagingService.send(request.makeMessage).provideSomeLayer(didCommAgent) @@ Metric
+            .gauge("connection_flow_invitee_send_connection_request_ms_gauge")
+            .trackDurationWith(_.toMetricsSeconds)
           connectionService <- ZIO.service[ConnectionService]
           _ <- {
-            if (resp.status >= 200 && resp.status < 300) connectionService.markConnectionRequestSent(id)
-            else ZIO.fail(ErrorResponseReceivedFromPeerAgent(resp))
+            if (resp.status >= 200 && resp.status < 300)
+              connectionService.markConnectionRequestSent(id)
+                @@ InviteeConnectionRequestMsgSuccess
+                @@ CustomMetricsAspect.endRecordingTime(
+                  s"${record.id}_invitee_pending_to_req_sent",
+                  "connection_flow_invitee_pending_to_req_sent_ms_gauge"
+                )
+            else ZIO.fail(ErrorResponseReceivedFromPeerAgent(resp)) @@ InviteeConnectionRequestMsgFailed
           }
         } yield ()
 
-        // aux // TODO decrete metaRetries if it has a error
-        aux
+        // inviteeProcessFlow // TODO decrease metaRetries if it has a error
+
+        inviteeProcessFlow
+          @@ InviteeProcessConnectionRecordPendingSuccess.trackSuccess
+          @@ InviteeProcessConnectionRecordPendingFailed.trackError
+          @@ InviteeProcessConnectionRecordPendingTotal
+          @@ Metric
+            .gauge("connection_flow_invitee_process_connection_record_ms_gauge")
+            .trackDurationWith(_.toMetricsSeconds)
 
       case ConnectionRecord(
             id,
@@ -82,16 +142,60 @@ object ConnectBackgroundJobs {
             _,
             _
           ) if metaRetries > 0 =>
-        for {
+        val inviterProcessFlow = for {
           didCommAgent <- buildDIDCommAgent(response.from)
-          resp <- MessagingService.send(response.makeMessage).provideSomeLayer(didCommAgent)
+          resp <- MessagingService.send(response.makeMessage).provideSomeLayer(didCommAgent) @@ Metric
+            .gauge("connection_flow_inviter_send_connection_response_ms_gauge")
+            .tagged("connectionId", record.id.toString)
+            .trackDurationWith(_.toMetricsSeconds)
           connectionService <- ZIO.service[ConnectionService]
           _ <- {
-            if (resp.status >= 200 && resp.status < 300) connectionService.markConnectionResponseSent(id)
-            else ZIO.fail(ErrorResponseReceivedFromPeerAgent(resp))
+            if (resp.status >= 200 && resp.status < 300)
+              connectionService.markConnectionResponseSent(id)
+                @@ InviterConnectionResponseMsgSuccess
+                @@ CustomMetricsAspect.endRecordingTime(
+                  s"${record.id}_inviter_pending_to_res_sent",
+                  "connection_flow_inviter_pending_to_res_sent_ms_gauge"
+                )
+            else ZIO.fail(ErrorResponseReceivedFromPeerAgent(resp)) @@ InviterConnectionResponseMsgFailed
           }
         } yield ()
-
+        inviterProcessFlow
+          @@ InviterProcessConnectionRecordPendingSuccess.trackSuccess
+          @@ InviterProcessConnectionRecordPendingFailed.trackError
+          @@ InviterProcessConnectionRecordPendingTotal
+          @@ Metric
+            .gauge("connection_flow_inviter_process_connection_record_ms_gauge")
+            .trackDurationWith(_.toMetricsSeconds)
+      case ConnectionRecord(
+            id,
+            createdAt,
+            _,
+            _,
+            _,
+            Inviter,
+            InvitationGenerated,
+            _,
+            _,
+            _,
+            metaRetries,
+            _,
+            _
+          ) if metaRetries > 0 =>
+        for {
+          connectionService <- ZIO.service[ConnectionService]
+          config <- ZIO.service[AppConfig]
+          expired <- ZIO.succeed {
+            val expiryDuration = config.connect.connectInvitationExpiry
+            val actualDuration = Duration.between(createdAt, Instant.now())
+            actualDuration > expiryDuration
+          }
+          _ <-
+            if (expired) {
+              connectionService.markConnectionInvitationExpired(id)
+                @@ InviterConnectionInvitationExpiredSuccess
+            } else ZIO.unit
+        } yield ()
       case _ => ZIO.unit
     }
 

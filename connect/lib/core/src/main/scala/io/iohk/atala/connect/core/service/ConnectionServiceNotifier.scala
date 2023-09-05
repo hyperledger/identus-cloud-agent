@@ -43,6 +43,9 @@ class ConnectionServiceNotifier(
   override def markConnectionResponseSent(recordId: UUID): IO[ConnectionServiceError, ConnectionRecord] =
     notifyOnSuccess(svc.markConnectionResponseSent(recordId))
 
+  override def markConnectionInvitationExpired(recordId: UUID): IO[ConnectionServiceError, ConnectionRecord] =
+    notifyOnSuccess(svc.markConnectionInvitationExpired(recordId))
+
   override def receiveConnectionResponse(response: ConnectionResponse): IO[ConnectionServiceError, ConnectionRecord] =
     notifyOnSuccess(svc.receiveConnectionResponse(response))
 
