@@ -238,7 +238,7 @@ package object sql {
         id = config.id,
         walletId = config.walletId,
         url = config.url,
-        customHeaders = config.customHeaders.asJson.toString,
+        customHeaders = config.customHeaders.asJson.noSpacesSortKeys,
         createdAt = config.createdAt,
       )
     }
