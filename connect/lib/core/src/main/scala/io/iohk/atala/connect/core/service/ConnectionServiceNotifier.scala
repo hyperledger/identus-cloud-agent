@@ -7,6 +7,7 @@ import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
 import zio.{IO, URLayer, ZIO, ZLayer}
 
+import java.time.Duration
 import java.util.UUID
 
 class ConnectionServiceNotifier(
@@ -34,8 +35,11 @@ class ConnectionServiceNotifier(
   override def markConnectionRequestSent(recordId: UUID): IO[ConnectionServiceError, ConnectionRecord] =
     notifyOnSuccess(svc.markConnectionRequestSent(recordId))
 
-  override def receiveConnectionRequest(request: ConnectionRequest): IO[ConnectionServiceError, ConnectionRecord] =
-    notifyOnSuccess(svc.receiveConnectionRequest(request))
+  override def receiveConnectionRequest(
+      request: ConnectionRequest,
+      expirationTime: Option[Duration]
+  ): IO[ConnectionServiceError, ConnectionRecord] =
+    notifyOnSuccess(svc.receiveConnectionRequest(request, expirationTime))
 
   override def acceptConnectionRequest(recordId: UUID): IO[ConnectionServiceError, ConnectionRecord] =
     notifyOnSuccess(svc.acceptConnectionRequest(recordId))

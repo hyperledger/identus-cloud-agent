@@ -78,7 +78,8 @@ object ConnectionServiceNotifierSpec extends ZIOSpecDefault {
               thid = Some(connectionRecord.thid),
               pthid = None,
               body = ConnectionRequest.Body()
-            )
+            ),
+            None
           )
           _ <- cs.acceptConnectionRequest(connectionRecord.id)
           _ <- cs.markConnectionResponseSent(connectionRecord.id)

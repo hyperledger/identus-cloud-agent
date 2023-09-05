@@ -7,6 +7,7 @@ import io.iohk.atala.mercury.protocol.connection.{ConnectionRequest, ConnectionR
 import zio.mock.{Mock, Proxy}
 import zio.{IO, URLayer, ZIO, ZLayer, mock}
 
+import java.time.Duration
 import java.util.UUID
 
 object MockConnectionService extends Mock[ConnectionService] {
@@ -44,7 +45,10 @@ object MockConnectionService extends Mock[ConnectionService] {
       override def markConnectionRequestSent(recordId: UUID): IO[ConnectionServiceError, ConnectionRecord] =
         proxy(MarkConnectionRequestSent, recordId)
 
-      override def receiveConnectionRequest(request: ConnectionRequest): IO[ConnectionServiceError, ConnectionRecord] =
+      override def receiveConnectionRequest(
+          request: ConnectionRequest,
+          expirationTime: Option[Duration]
+      ): IO[ConnectionServiceError, ConnectionRecord] =
         proxy(ReceiveConnectionRequest, request)
 
       override def acceptConnectionRequest(recordId: UUID): IO[ConnectionServiceError, ConnectionRecord] =
