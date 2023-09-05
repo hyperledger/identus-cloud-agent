@@ -76,9 +76,7 @@ class WalletManagementControllerImpl(
   )(implicit rc: RequestContext): IO[ErrorResponse, WalletDetail] = {
     for {
       providedSeed <- request.seed.fold(ZIO.none)(s => extractWalletSeed(s).asSome)
-      walletId = request.id
-        .map(WalletId.fromUUID)
-        .getOrElse(WalletId.random)
+      walletId = request.id.map(WalletId.fromUUID).getOrElse(WalletId.random)
       wallet <- service.createWallet(Wallet(request.name, walletId), providedSeed).mapError[ErrorResponse](e => e)
     } yield wallet
   }
