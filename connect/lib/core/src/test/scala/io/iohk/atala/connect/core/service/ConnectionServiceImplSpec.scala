@@ -221,7 +221,10 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
             )
             connectionRequest = maybeAcceptedInvitationRecord.connectionRequest.get
             expiryTime = Duration.fromSeconds(300)
-            maybeReceivedRequestConnectionRecord <- inviterSvc.receiveConnectionRequest(connectionRequest, Some(expiryTime))
+            maybeReceivedRequestConnectionRecord <- inviterSvc.receiveConnectionRequest(
+              connectionRequest,
+              Some(expiryTime)
+            )
             maybeAcceptedRequestConnectionRecord <- inviterSvc.acceptConnectionRequest(inviterRecord.id)
             allInviterRecords <- inviterSvc.getConnectionRecords()
           } yield {
@@ -253,7 +256,10 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
             _ <- inviteeSvc.markConnectionRequestSent(inviteeRecord.id)
             expiryTime = Duration.fromSeconds(300)
 
-            maybeReceivedRequestConnectionRecord <- inviterSvc.receiveConnectionRequest(connectionRequest,Some(expiryTime))
+            maybeReceivedRequestConnectionRecord <- inviterSvc.receiveConnectionRequest(
+              connectionRequest,
+              Some(expiryTime)
+            )
             maybeAcceptedRequestConnectionRecord <- inviterSvc.acceptConnectionRequest(inviterRecord.id)
             connectionResponseMessage <- ZIO.fromEither(
               maybeAcceptedRequestConnectionRecord.connectionResponse.get.makeMessage.asJson.as[Message]
