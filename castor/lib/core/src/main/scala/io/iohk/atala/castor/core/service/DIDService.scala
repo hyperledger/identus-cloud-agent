@@ -121,7 +121,6 @@ private class DIDServiceImpl(didOpValidator: DIDOperationValidator, nodeClient: 
               }
               .asSome
         )
-      _ <- ZIO.logInfo(s"Unpublished did data: ${unpublishedDidData}")
     } yield publishedDidData.orElse(unpublishedDidData)
   }
 
