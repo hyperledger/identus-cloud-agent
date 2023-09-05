@@ -33,7 +33,7 @@ CREATE TABLE public.wallet_notification (
     "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     "wallet_id" UUID REFERENCES public.wallet ("wallet_id"),
     "url" TEXT NOT NULL,
-    "custom_headers" TEXT,
+    "custom_headers" TEXT NOT NULL,
     "created_at" TIMESTAMPTZ NOT NULL
 );
 

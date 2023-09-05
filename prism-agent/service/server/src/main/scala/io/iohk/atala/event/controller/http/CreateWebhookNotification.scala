@@ -5,7 +5,7 @@ import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonEncoder, JsonDecoder}
 
 final case class CreateWebhookNotification(
     url: String,
-    customHeaders: Map[String, String]
+    customHeaders: Option[Map[String, String]]
 )
 
 object CreateWebhookNotification {

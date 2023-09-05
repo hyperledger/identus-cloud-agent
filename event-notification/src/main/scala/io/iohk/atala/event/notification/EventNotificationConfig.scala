@@ -22,7 +22,7 @@ object EventNotificationConfig {
       id = UUID.randomUUID(),
       walletId = walletId,
       url = url,
-      customHeaders = Map.empty,
+      customHeaders = customHeaders,
       createdAt = Instant.now
     )
 
