@@ -6,6 +6,7 @@ import doobie.implicits.*
 import doobie.postgres.implicits.*
 import doobie.util.transactor.Transactor
 import io.iohk.atala.agent.walletapi.model.Wallet
+import io.iohk.atala.agent.walletapi.sql.JdbcWalletNonSecretStorage.MAX_WEBHOOK_PER_WALLET
 import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorage
 import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorageCustomError.TooManyWebhook
 import io.iohk.atala.event.notification.EventNotificationConfig
@@ -20,8 +21,6 @@ import java.time.Instant
 import java.util.UUID
 
 class JdbcWalletNonSecretStorage(xa: Transactor[ContextAwareTask]) extends WalletNonSecretStorage {
-
-  private val MAX_WEBHOOK_PER_WALLET = 1
 
   override def createWallet(wallet: Wallet): Task[Wallet] = {
     val cxnIO = (row: WalletRow) => sql"""
@@ -163,6 +162,10 @@ class JdbcWalletNonSecretStorage(xa: Transactor[ContextAwareTask]) extends Walle
 }
 
 object JdbcWalletNonSecretStorage {
+
+  val MAX_WEBHOOK_PER_WALLET = 1
+
   val layer: URLayer[Transactor[ContextAwareTask], WalletNonSecretStorage] =
     ZLayer.fromFunction(new JdbcWalletNonSecretStorage(_))
+
 }

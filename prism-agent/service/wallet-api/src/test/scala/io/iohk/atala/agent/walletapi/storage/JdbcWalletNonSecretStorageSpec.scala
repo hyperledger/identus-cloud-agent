@@ -2,6 +2,7 @@ package io.iohk.atala.agent.walletapi.storage
 
 import io.iohk.atala.agent.walletapi.model.Wallet
 import io.iohk.atala.agent.walletapi.sql.JdbcWalletNonSecretStorage
+import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorageCustomError.TooManyWebhook
 import io.iohk.atala.event.notification.EventNotificationConfig
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.models.WalletId
@@ -19,7 +20,7 @@ object JdbcWalletNonSecretStorageSpec extends ZIOSpecDefault, PostgresTestContai
     val s = suite("JdbcWalletNonSecretStorage")(
       getWalletSpec,
       listWalletSpec,
-      createWalletNotificationSpec
+      walletNotificationSpec
     ) @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
 
     s.provide(JdbcWalletNonSecretStorage.layer, contextAwareTransactorLayer, pgContainerLayer)
@@ -111,9 +112,8 @@ object JdbcWalletNonSecretStorageSpec extends ZIOSpecDefault, PostgresTestContai
     }
   )
 
-  // TODO: Cover with more test. This is just a simple sanity check
-  private val createWalletNotificationSpec = suite("walletNotification")(
-    test("insert wallet notification config") {
+  private val walletNotificationSpec = suite("walletNotification")(
+    test("insert wallet notification") {
       for {
         storage <- ZIO.service[WalletNonSecretStorage]
         wallet <- storage.createWallet(Wallet("wallet-1"))
@@ -124,6 +124,35 @@ object JdbcWalletNonSecretStorageSpec extends ZIOSpecDefault, PostgresTestContai
         configs <- storage.walletNotification
           .provide(ZLayer.succeed(WalletAccessContext(wallet.id)))
       } yield assert(configs)(hasSameElements(Seq(config)))
+    },
+    test("unable to create new notification if exceed limit")(
+      for {
+        storage <- ZIO.service[WalletNonSecretStorage]
+        wallet <- storage.createWallet(Wallet("wallet-1"))
+        limit = JdbcWalletNonSecretStorage.MAX_WEBHOOK_PER_WALLET
+        _ <- ZIO.foreach(1 to limit) { _ =>
+          storage
+            .createWalletNotification(EventNotificationConfig(wallet.id, URL("https://example.com")))
+            .provide(ZLayer.succeed(WalletAccessContext(wallet.id)))
+        }
+        exit <- storage
+          .createWalletNotification(EventNotificationConfig(wallet.id, URL("https://example.com")))
+          .provide(ZLayer.succeed(WalletAccessContext(wallet.id)))
+          .exit
+      } yield assert(exit)(fails(isSubtype[TooManyWebhook](anything)))
+    ),
+    test("do not see notification outside of the wallet") {
+      for {
+        storage <- ZIO.service[WalletNonSecretStorage]
+        wallet1 <- storage.createWallet(Wallet("wallet-1"))
+        wallet2 <- storage.createWallet(Wallet("wallet-2"))
+        config = EventNotificationConfig(wallet1.id, URL("https://example.com"))
+        _ <- storage
+          .createWalletNotification(config)
+          .provide(ZLayer.succeed(WalletAccessContext(wallet1.id)))
+        notifications1 <- storage.walletNotification.provide(ZLayer.succeed(WalletAccessContext(wallet1.id)))
+        notifications2 <- storage.walletNotification.provide(ZLayer.succeed(WalletAccessContext(wallet2.id)))
+      } yield assert(notifications1)(hasSameElements(Seq(config))) && assert(notifications2)(isEmpty)
     }
-  ) @@ TestAspect.tag("dev")
+  )
 }
