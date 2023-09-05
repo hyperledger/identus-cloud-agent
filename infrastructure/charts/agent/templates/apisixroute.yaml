@@ -106,24 +106,24 @@ metadata:
     {{ template "labels.common" . }}
 spec:
   http:
-    - name: agent-credential-definition-registry-rule
-      match:
-        hosts:
-        {{- range .Values.ingress.applicationUrls }}
-        - {{ . }}
-        {{- end }}
-        paths:
-          - /prism-agent/credential-definition-registry/definitions/*
-        methods:
-          - GET
-      backends:
-        - serviceName: agent-server-tapir-service
-          servicePort: 8085
-      plugins:
-        - name: proxy-rewrite
-          enable: true
-          config:
-            regex_uri: ["^/prism-agent/credential-definition-registry/definitions/(.*)", "credential-definition-registry/definitions/$1"]
+  - name: agent-credential-definition-registry-rule
+    match:
+      hosts:
+      {{- range .Values.ingress.applicationUrls }}
+      - {{ . }}
+      {{- end }}
+      paths:
+        - /prism-agent/credential-definition-registry/definitions/*
+      methods:
+        - GET
+    backends:
+      - serviceName: agent-server-tapir-service
+        servicePort: 8085
+    plugins:
+    - name: proxy-rewrite
+      enable: true
+      config:
+        regex_uri: ["^/prism-agent/credential-definition-registry/definitions/(.*)", "credential-definition-registry/definitions/$1"]
       {{ template "cors" . }}
 
 ---

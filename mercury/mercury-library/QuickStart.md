@@ -6,7 +6,6 @@ If you don't have [sbt](https://www.scala-sbt.org) installed already, you can us
 ./sbtx -h # shows an usage of a wrapper script
 ./sbtx compile # build the project
 ./sbtx test # run the tests
-./sbtx mediator/run # run the application (Main)
 ./sbtx agents/run # run example of encrypt / decrypt messages
 ```
 

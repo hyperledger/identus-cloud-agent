@@ -123,7 +123,7 @@ object AttachmentDescriptor {
   given attachmentDescriptorEncoderV1: Encoder[AttachmentDescriptor] = (a: AttachmentDescriptor) => {
     Json.obj(
       "@id" -> a.id.asJson,
-      "mime-type" -> a.media_type.asJson,
+      "mime_type" -> a.media_type.asJson,
       "data" -> a.data.asJson
     )
   }

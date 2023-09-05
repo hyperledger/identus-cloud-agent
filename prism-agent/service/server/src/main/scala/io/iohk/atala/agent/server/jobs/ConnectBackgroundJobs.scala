@@ -29,6 +29,7 @@ object ConnectBackgroundJobs {
         .getConnectionRecordsByStates(
           ignoreWithZeroRetries = true,
           limit = config.connect.connectBgJobRecordsLimit,
+          ConnectionRecord.ProtocolState.InvitationGenerated,
           ConnectionRecord.ProtocolState.ConnectionRequestPending,
           ConnectionRecord.ProtocolState.ConnectionResponsePending
         )
