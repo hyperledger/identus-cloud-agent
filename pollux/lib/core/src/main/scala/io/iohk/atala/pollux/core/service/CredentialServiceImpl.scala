@@ -18,6 +18,7 @@ import io.iohk.atala.pollux.core.model.schema.CredentialSchema
 import io.iohk.atala.pollux.core.repository.CredentialRepository
 import io.iohk.atala.pollux.vc.jwt.*
 import io.iohk.atala.prism.crypto.{MerkleInclusionProof, MerkleTreeKt, Sha256}
+import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
 import zio.*
 import zio.prelude.ZValidation
 
@@ -138,7 +139,8 @@ private class CredentialServiceImpl(
           case 1 => ZIO.succeed(())
           case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
         }
-        .mapError(RepositoryError.apply)
+        .mapError(RepositoryError.apply) @@ CustomMetricsAspect
+        .startRecordingTime(s"${record.id}_issuer_offer_pending_to_sent_ms_gauge")
     } yield record
   }
 
@@ -214,7 +216,9 @@ private class CredentialServiceImpl(
       record <- getRecordWithState(recordId, ProtocolState.OfferReceived)
       count <- credentialRepository
         .updateWithSubjectId(recordId, subjectId, ProtocolState.RequestPending)
-        .mapError(RepositoryError.apply)
+        .mapError(RepositoryError.apply) @@ CustomMetricsAspect.startRecordingTime(
+        s"${record.id}_issuance_flow_holder_req_pending_to_generated"
+      )
       _ <- count match
         case 1 => ZIO.succeed(())
         case n => ZIO.fail(RecordIdNotFound(recordId))
@@ -261,7 +265,10 @@ private class CredentialServiceImpl(
       request = createDidCommRequestCredential(offer, signedPresentation)
       count <- credentialRepository
         .updateWithRequestCredential(recordId, request, ProtocolState.RequestGenerated)
-        .mapError(RepositoryError.apply)
+        .mapError(RepositoryError.apply) @@ CustomMetricsAspect.endRecordingTime(
+        s"${record.id}_issuance_flow_holder_req_pending_to_generated",
+        "issuance_flow_holder_req_pending_to_generated_ms_gauge"
+      ) @@ CustomMetricsAspect.startRecordingTime(s"${record.id}_issuance_flow_holder_req_generated_to_sent")
       _ <- count match
         case 1 => ZIO.succeed(())
         case n => ZIO.fail(RecordIdNotFound(recordId))
@@ -308,7 +315,9 @@ private class CredentialServiceImpl(
       issue = createDidCommIssueCredential(request)
       count <- credentialRepository
         .updateWithIssueCredential(recordId, issue, ProtocolState.CredentialPending)
-        .mapError(RepositoryError.apply)
+        .mapError(RepositoryError.apply) @@ CustomMetricsAspect.startRecordingTime(
+        s"${record.id}_issuance_flow_issuer_credential_pending_to_generated"
+      )
       _ <- count match
         case 1 => ZIO.succeed(())
         case n => ZIO.fail(RecordIdNotFound(recordId))
@@ -356,6 +365,9 @@ private class CredentialServiceImpl(
       recordId,
       IssueCredentialRecord.ProtocolState.RequestGenerated,
       IssueCredentialRecord.ProtocolState.RequestSent
+    ) @@ CustomMetricsAspect.endRecordingTime(
+      s"${recordId}_issuance_flow_holder_req_generated_to_sent",
+      "issuance_flow_holder_req_generated_to_sent_ms_gauge"
     )
 
   override def markCredentialGenerated(
@@ -370,7 +382,10 @@ private class CredentialServiceImpl(
           issueCredential,
           IssueCredentialRecord.ProtocolState.CredentialGenerated
         )
-        .mapError(RepositoryError.apply)
+        .mapError(RepositoryError.apply) @@ CustomMetricsAspect.endRecordingTime(
+        s"${record.id}_issuance_flow_issuer_credential_pending_to_generated",
+        "issuance_flow_issuer_credential_pending_to_generated_ms_gauge"
+      ) @@ CustomMetricsAspect.startRecordingTime(s"${record.id}_issuance_flow_issuer_credential_generated_to_sent")
       _ <- count match
         case 1 => ZIO.succeed(())
         case n => ZIO.fail(RecordIdNotFound(recordId))
@@ -390,6 +405,9 @@ private class CredentialServiceImpl(
       recordId,
       IssueCredentialRecord.ProtocolState.CredentialGenerated,
       IssueCredentialRecord.ProtocolState.CredentialSent
+    ) @@ CustomMetricsAspect.endRecordingTime(
+      s"${recordId}_issuance_flow_issuer_credential_generated_to_sent",
+      "issuance_flow_issuer_credential_generated_to_sent_ms_gauge"
     )
 
   override def markCredentialPublicationPending(
