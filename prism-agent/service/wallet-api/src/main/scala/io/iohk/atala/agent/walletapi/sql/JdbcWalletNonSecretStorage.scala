@@ -96,7 +96,7 @@ class JdbcWalletNonSecretStorage(xa: Transactor[ContextAwareTask]) extends Walle
   override def createWalletNotification(
       config: EventNotificationConfig
   ): RIO[WalletAccessContext, EventNotificationConfig] = {
-    val cxn = (row: WalletNofiticationRow) => sql"""
+    val insertIO = (row: WalletNofiticationRow) => sql"""
         | INSERT INTO public.wallet_notification (
         |   id,
         |   wallet_id,
@@ -112,7 +112,7 @@ class JdbcWalletNonSecretStorage(xa: Transactor[ContextAwareTask]) extends Walle
         | )
         """.stripMargin.update
 
-    val countCxn = sql"""
+    val countIO = sql"""
         | SELECT COUNT(*)
         | FROM public.wallet_notification
         """.stripMargin
@@ -120,15 +120,15 @@ class JdbcWalletNonSecretStorage(xa: Transactor[ContextAwareTask]) extends Walle
       .unique
 
     val row = WalletNofiticationRow.from(config)
-    val effect = for {
-      _ <- cxn(row).run
-      count <- countCxn
+    val cxnIO = for {
+      _ <- insertIO(row).run
+      count <- countIO
       _ <-
         if (count <= MAX_WEBHOOK_PER_WALLET) ().pure[ConnectionIO]
         else TooManyWebhook(limit = MAX_WEBHOOK_PER_WALLET, actual = count).raiseError[ConnectionIO, Unit]
     } yield config
 
-    effect.transactWallet(xa)
+    cxnIO.transactWallet(xa)
   }
 
   override def walletNotification: RIO[WalletAccessContext, Seq[EventNotificationConfig]] = {
@@ -154,7 +154,7 @@ class JdbcWalletNonSecretStorage(xa: Transactor[ContextAwareTask]) extends Walle
     val cxn =
       sql"""
         | DELETE FROM public.wallet_notification
-        | WHERE id = ${id}
+        | WHERE id = $id
         """.stripMargin.update
 
     cxn.run.transactWallet(xa).unit

@@ -11,7 +11,7 @@ class EventServerEndpoints(
     authenticator: Authenticator
 ) {
 
-  private val createWebhookNotificationServerEndpoint: ZServerEndpoint[Any, Any] =
+  val createWebhookNotificationServerEndpoint: ZServerEndpoint[Any, Any] =
     EventEndpoints.createWebhookNotification
       .zServerSecurityLogic(ApiKeyEndpointSecurityLogic.securityLogic(_)(authenticator))
       .serverLogic { entity =>
@@ -22,7 +22,7 @@ class EventServerEndpoints(
         }
       }
 
-  private val listWebhookNotificationServerEndpoint: ZServerEndpoint[Any, Any] =
+  val listWebhookNotificationServerEndpoint: ZServerEndpoint[Any, Any] =
     EventEndpoints.listWebhookNotification
       .zServerSecurityLogic(ApiKeyEndpointSecurityLogic.securityLogic(_)(authenticator))
       .serverLogic { entity => rc =>
@@ -31,7 +31,7 @@ class EventServerEndpoints(
           .provideSomeLayer(ZLayer.succeed(entity.walletAccessContext))
       }
 
-  private val deleteWebhookNotificationServerEndpoint: ZServerEndpoint[Any, Any] =
+  val deleteWebhookNotificationServerEndpoint: ZServerEndpoint[Any, Any] =
     EventEndpoints.deleteWebhookNotification
       .zServerSecurityLogic(ApiKeyEndpointSecurityLogic.securityLogic(_)(authenticator))
       .serverLogic { entity =>

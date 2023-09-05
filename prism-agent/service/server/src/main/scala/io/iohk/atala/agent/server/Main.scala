@@ -149,14 +149,14 @@ object MainApp extends ZIOAppDefault {
           GrpcModule.prismNodeStubLayer,
           // storage
           DIDKeySecretStorageImpl.layer,
-          RepoModule.agentContextAwareTransactorLayer >+> RepoModule.agentTransactorLayer >>> JdbcDIDNonSecretStorage.layer,
+          RepoModule.agentContextAwareTransactorLayer ++ RepoModule.agentTransactorLayer >>> JdbcDIDNonSecretStorage.layer,
           RepoModule.agentContextAwareTransactorLayer >>> JdbcWalletNonSecretStorage.layer,
           RepoModule.allSecretStorageLayer,
           RepoModule.agentTransactorLayer >>> JdbcEntityRepository.layer,
           RepoModule.agentTransactorLayer >>> JdbcAuthenticationRepository.layer,
           RepoModule.connectContextAwareTransactorLayer >>> JdbcConnectionRepository.layer,
           RepoModule.polluxContextAwareTransactorLayer >>> JdbcCredentialRepository.layer,
-          RepoModule.polluxContextAwareTransactorLayer >+> RepoModule.polluxTransactorLayer >>> JdbcCredentialSchemaRepository.layer,
+          RepoModule.polluxContextAwareTransactorLayer ++ RepoModule.polluxTransactorLayer >>> JdbcCredentialSchemaRepository.layer,
           RepoModule.polluxContextAwareTransactorLayer >>> JdbcPresentationRepository.layer,
           RepoModule.polluxContextAwareTransactorLayer >>> JdbcVerificationPolicyRepository.layer,
           // event notification service

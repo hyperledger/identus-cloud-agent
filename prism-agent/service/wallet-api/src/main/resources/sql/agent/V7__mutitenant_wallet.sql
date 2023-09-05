@@ -31,7 +31,7 @@ CREATE TABLE public.wallet_seed (
 
 CREATE TABLE public.wallet_notification (
     "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    "wallet_id" UUID REFERENCES public.wallet ("wallet_id"),
+    "wallet_id" UUID REFERENCES public.wallet ("wallet_id") NOT NULL,
     "url" TEXT NOT NULL,
     "custom_headers" TEXT NOT NULL,
     "created_at" TIMESTAMPTZ NOT NULL
@@ -58,6 +58,7 @@ ADD CONSTRAINT wallet_id_did_index UNIQUE (wallet_id, did_index);
 ALTER TABLE public.peer_did_rand_key ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.prism_did_wallet_state ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.wallet_seed ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.wallet_notification ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.prism_did_hd_key ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.prism_did_update_lineage ENABLE ROW LEVEL SECURITY;
 
