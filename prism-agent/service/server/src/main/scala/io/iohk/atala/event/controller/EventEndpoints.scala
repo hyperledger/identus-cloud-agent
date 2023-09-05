@@ -13,6 +13,8 @@ import sttp.model.StatusCode
 import sttp.tapir.*
 import sttp.tapir.json.zio.jsonBody
 
+import java.util.UUID
+
 object EventEndpoints {
 
   private val baseEndpoint = endpoint
@@ -33,6 +35,7 @@ object EventEndpoints {
     .errorOut(EndpointOutputs.basicFailuresWith(FailureVariant.forbidden, FailureVariant.conflict))
     .out(statusCode(StatusCode.Ok).description("Webhook notification has been created successfully"))
     .out(jsonBody[WebhookNotification])
+    .summary("Create wallet webhook notifications")
 
   val listWebhookNotification: Endpoint[
     ApiKeyCredentials,
@@ -45,5 +48,18 @@ object EventEndpoints {
     .errorOut(EndpointOutputs.basicFailuresAndForbidden)
     .out(statusCode(StatusCode.Ok).description("List wallet webhook notifications"))
     .out(jsonBody[WebhookNotificationPage])
+    .summary("List wallet webhook notifications")
+
+  val deleteWebhookNotification: Endpoint[
+    ApiKeyCredentials,
+    (RequestContext, UUID),
+    ErrorResponse,
+    Unit,
+    Any
+  ] = baseEndpoint.delete
+    .in("webhooks" / path[UUID]("id").description("ID of the webhook notification to delete."))
+    .errorOut(EndpointOutputs.basicFailureAndNotFoundAndForbidden)
+    .out(statusCode(StatusCode.Ok).description("Webhook notification has been deleted."))
+    .summary("Delete the wallet webhook notification by `id`")
 
 }

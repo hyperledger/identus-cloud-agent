@@ -7,6 +7,8 @@ import zio.*
 import io.iohk.atala.event.notification.EventNotificationConfig
 import io.iohk.atala.shared.models.WalletAccessContext
 
+import java.util.UUID
+
 sealed trait WalletManagementServiceError extends Throwable
 object WalletManagementServiceError {
   final case class SeedGenerationError(cause: Throwable) extends WalletManagementServiceError
@@ -30,4 +32,6 @@ trait WalletManagementService {
   def createWalletNotification(
       config: EventNotificationConfig
   ): ZIO[WalletAccessContext, WalletManagementServiceError, EventNotificationConfig]
+
+  def deleteWalletNotification(id: UUID): ZIO[WalletAccessContext, WalletManagementServiceError, Unit]
 }

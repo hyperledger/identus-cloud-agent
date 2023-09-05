@@ -7,6 +7,7 @@ import doobie.postgres.implicits.*
 import doobie.util.transactor.Transactor
 import io.iohk.atala.agent.walletapi.model.Wallet
 import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorage
+import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorageCustomError.TooManyWebhook
 import io.iohk.atala.event.notification.EventNotificationConfig
 import io.iohk.atala.shared.db.ContextAwareTask
 import io.iohk.atala.shared.db.Implicits.{*, given}
@@ -16,7 +17,7 @@ import zio.*
 
 import java.net.URL
 import java.time.Instant
-import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorageCustomError.TooManyWebhook
+import java.util.UUID
 
 class JdbcWalletNonSecretStorage(xa: Transactor[ContextAwareTask]) extends WalletNonSecretStorage {
 
@@ -147,6 +148,16 @@ class JdbcWalletNonSecretStorage(xa: Transactor[ContextAwareTask]) extends Walle
     cxn
       .transactWallet(xa)
       .flatMap(rows => ZIO.foreach(rows) { row => ZIO.fromTry(row.toDomain) })
+  }
+
+  override def deleteWalletNotification(id: UUID): RIO[WalletAccessContext, Unit] = {
+    val cxn =
+      sql"""
+        | DELETE FROM public.wallet_notification
+        | WHERE id = ${id}
+        """.stripMargin.update
+
+    cxn.run.transactWallet(xa).unit
   }
 
 }

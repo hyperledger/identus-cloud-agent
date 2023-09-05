@@ -31,9 +31,21 @@ class EventServerEndpoints(
           .provideSomeLayer(ZLayer.succeed(entity.walletAccessContext))
       }
 
+  private val deleteWebhookNotificationServerEndpoint: ZServerEndpoint[Any, Any] =
+    EventEndpoints.deleteWebhookNotification
+      .zServerSecurityLogic(ApiKeyEndpointSecurityLogic.securityLogic(_)(authenticator))
+      .serverLogic { entity =>
+        { case (rc, id) =>
+          eventController
+            .deleteWebhookNotification(id)(rc)
+            .provideSomeLayer(ZLayer.succeed(entity.walletAccessContext))
+        }
+      }
+
   val all: List[ZServerEndpoint[Any, Any]] = List(
     createWebhookNotificationServerEndpoint,
-    listWebhookNotificationServerEndpoint
+    listWebhookNotificationServerEndpoint,
+    deleteWebhookNotificationServerEndpoint
   )
 
 }

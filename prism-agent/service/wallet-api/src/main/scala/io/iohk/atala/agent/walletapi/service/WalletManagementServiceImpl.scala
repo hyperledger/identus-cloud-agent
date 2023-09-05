@@ -13,6 +13,8 @@ import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.models.WalletId
 import zio.*
 
+import java.util.UUID
+
 class WalletManagementServiceImpl(
     apollo: Apollo,
     nonSecretStorage: WalletNonSecretStorage,
@@ -64,6 +66,11 @@ class WalletManagementServiceImpl(
         case TooManyWebhook(limit, actual) => WalletManagementServiceError.TooManyWebhookError(limit, actual)
         case e                             => WalletManagementServiceError.WalletStorageError(e)
       }
+
+  override def deleteWalletNotification(id: UUID): ZIO[WalletAccessContext, WalletManagementServiceError, Unit] =
+    nonSecretStorage
+      .deleteWalletNotification(id)
+      .mapError(WalletManagementServiceError.WalletStorageError.apply)
 
 }
 

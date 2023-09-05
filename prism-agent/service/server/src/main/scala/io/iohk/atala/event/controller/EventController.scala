@@ -4,6 +4,7 @@ import io.iohk.atala.agent.walletapi.service.WalletManagementService
 import io.iohk.atala.agent.walletapi.service.WalletManagementServiceError
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.api.http.RequestContext
+import io.iohk.atala.api.http.model.CollectionStats
 import io.iohk.atala.api.http.model.PaginationInput
 import io.iohk.atala.api.util.PaginationUtils
 import io.iohk.atala.event.controller.http.CreateWebhookNotification
@@ -16,7 +17,7 @@ import zio.*
 
 import java.net.URL
 import scala.language.implicitConversions
-import io.iohk.atala.api.http.model.CollectionStats
+import java.util.UUID
 
 trait EventController {
   def createWebhookNotification(
@@ -26,6 +27,8 @@ trait EventController {
   def listWebhookNotifications(implicit
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, WebhookNotificationPage]
+
+  def deleteWebhookNotification(id: UUID)(implicit rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, Unit]
 }
 
 object EventController {
@@ -68,6 +71,14 @@ class EventControllerImpl(service: WalletManagementService) extends EventControl
       previous = PaginationUtils.composePreviousUri(uri, items, pagination, stats).map(_.toString),
       contents = items.map(i => i),
     )
+  }
+
+  override def deleteWebhookNotification(
+      id: UUID
+  )(implicit rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, Unit] = {
+    service
+      .deleteWalletNotification(id)
+      .mapError[ErrorResponse](e => e)
   }
 
 }
