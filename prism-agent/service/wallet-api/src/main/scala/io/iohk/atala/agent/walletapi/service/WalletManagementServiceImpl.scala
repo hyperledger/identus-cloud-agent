@@ -47,8 +47,17 @@ class WalletManagementServiceImpl(
       .listWallet(offset = offset, limit = limit)
       .mapError(WalletManagementServiceError.WalletStorageError.apply)
 
-  override def walletNotification: RIO[WalletAccessContext, Seq[EventNotificationConfig]] =
+  override def listWalletNotifications
+      : ZIO[WalletAccessContext, WalletManagementServiceError, Seq[EventNotificationConfig]] =
     nonSecretStorage.walletNotification
+      .mapError(WalletManagementServiceError.WalletStorageError.apply)
+
+  override def createWalletNotification(
+      config: EventNotificationConfig
+  ): ZIO[WalletAccessContext, WalletManagementServiceError, EventNotificationConfig] =
+    nonSecretStorage
+      .createWalletNotification(config)
+      .mapError(WalletManagementServiceError.WalletStorageError.apply)
 
 }
 

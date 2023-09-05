@@ -24,5 +24,9 @@ trait WalletManagementService {
       limit: Option[Int] = None
   ): IO[WalletManagementServiceError, (Seq[Wallet], Int)]
 
-  def walletNotification: RIO[WalletAccessContext, Seq[EventNotificationConfig]]
+  def listWalletNotifications: ZIO[WalletAccessContext, WalletManagementServiceError, Seq[EventNotificationConfig]]
+
+  def createWalletNotification(
+      config: EventNotificationConfig
+  ): ZIO[WalletAccessContext, WalletManagementServiceError, EventNotificationConfig]
 }

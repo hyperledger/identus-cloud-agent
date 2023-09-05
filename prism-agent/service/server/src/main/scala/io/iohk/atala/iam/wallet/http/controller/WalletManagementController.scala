@@ -13,11 +13,11 @@ import io.iohk.atala.iam.wallet.http.model.CreateWalletRequest
 import io.iohk.atala.iam.wallet.http.model.WalletDetail
 import io.iohk.atala.iam.wallet.http.model.WalletDetailPage
 import io.iohk.atala.shared.models.HexString
+import io.iohk.atala.shared.models.WalletId
 import zio.*
 
 import java.util.UUID
 import scala.language.implicitConversions
-import io.iohk.atala.shared.models.WalletId
 
 trait WalletManagementController {
   def listWallet(paginationInput: PaginationInput)(implicit rc: RequestContext): IO[ErrorResponse, WalletDetailPage]
@@ -26,7 +26,7 @@ trait WalletManagementController {
 }
 
 object WalletManagementController {
-  given Conversion[WalletManagementServiceError, ErrorResponse] = {
+  given walletServiceErrorConversion: Conversion[WalletManagementServiceError, ErrorResponse] = {
     case WalletManagementServiceError.SeedGenerationError(cause) =>
       ErrorResponse.internalServerError(detail = Some(cause.toString()))
     case WalletManagementServiceError.WalletStorageError(cause) =>

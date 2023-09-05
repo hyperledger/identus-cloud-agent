@@ -1,6 +1,8 @@
 package io.iohk.atala.event.notification
 
+import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.models.WalletId
+import zio.*
 
 import java.net.URL
 import java.time.Instant
@@ -23,4 +25,10 @@ object EventNotificationConfig {
       customHeaders = Map.empty,
       createdAt = Instant.now
     )
+
+  def apply(url: URL, customHeaders: Map[String, String]): URIO[WalletAccessContext, EventNotificationConfig] =
+    ZIO.serviceWith[WalletAccessContext](ctx => apply(ctx.walletId, url, customHeaders))
+
+  def apply(url: URL): URIO[WalletAccessContext, EventNotificationConfig] =
+    ZIO.serviceWith[WalletAccessContext](ctx => apply(ctx.walletId, url, Map.empty))
 }

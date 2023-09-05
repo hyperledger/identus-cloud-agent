@@ -56,7 +56,7 @@ class WebhookPublisher(
       _ <- ZIO.log(s"Got ${events.size} event(s)")
       walletUrls <- ZIO
         .foreach(events.map(_.walletId).toSet.toList) { walletId =>
-          walletService.walletNotification
+          walletService.listWalletNotifications
             .map(walletId -> _)
             .provide(ZLayer.succeed(WalletAccessContext(walletId)))
         }
