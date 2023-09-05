@@ -22,11 +22,9 @@ import io.iohk.atala.issue.controller.IssueControllerImpl
 import io.iohk.atala.mercury.*
 import io.iohk.atala.pollux.core.service.*
 import io.iohk.atala.pollux.core.service.anoncred.*
-import io.iohk.atala.pollux.credentialdefinition.controller.{
-  CredentialDefinitionControllerImpl,
-  CredentialSchemaControllerImpl,
-  VerificationPolicyControllerImpl
-}
+import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaControllerImpl
+import io.iohk.atala.pollux.credentialschema.controller.VerificationPolicyControllerImpl
+import io.iohk.atala.pollux.credentialdefinition.controller.CredentialDefinitionControllerImpl
 import io.iohk.atala.pollux.sql.repository.JdbcCredentialDefinitionRepository
 import io.iohk.atala.pollux.sql.repository.JdbcAnoncredCredentialRepository
 import io.iohk.atala.pollux.sql.repository.{

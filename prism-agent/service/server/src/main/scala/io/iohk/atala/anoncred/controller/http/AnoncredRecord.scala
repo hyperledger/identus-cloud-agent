@@ -94,7 +94,7 @@ object AnoncredRecord {
         .map(offer =>
           offer.body.credential_preview.attributes
             .foldLeft(Json.Obj()) { case (jsObject, attr) =>
-              val jsonValue = attr.mimeType match
+              val jsonValue = attr.mime_type match
                 case Some("application/json") =>
                   val jsonString =
                     String(java.util.Base64.getUrlDecoder.decode(attr.value.getBytes(StandardCharsets.UTF_8)))

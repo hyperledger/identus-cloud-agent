@@ -163,7 +163,7 @@ object AnoncredCredentialService {
   ): IO[CredentialServiceError, JsonObject] = {
     for {
       claims <- ZIO.foldLeft(attributes)(JsonObject()) { case (jsonObject, attr) =>
-        attr.mimeType match
+        attr.mime_type match
           case None =>
             ZIO.succeed(jsonObject.add(attr.name, attr.value.asJson))
 
