@@ -1,5 +1,6 @@
 package io.iohk.atala.agent.walletapi.sql
 
+import cats.implicits.*
 import doobie.*
 import doobie.implicits.*
 import doobie.postgres.implicits.*
@@ -15,8 +16,11 @@ import zio.*
 
 import java.net.URL
 import java.time.Instant
+import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorageCustomError.TooManyWebhook
 
 class JdbcWalletNonSecretStorage(xa: Transactor[ContextAwareTask]) extends WalletNonSecretStorage {
+
+  private val MAX_WEBHOOK_PER_WALLET = 1
 
   override def createWallet(wallet: Wallet): Task[Wallet] = {
     val cxnIO = (row: WalletRow) => sql"""
@@ -107,10 +111,23 @@ class JdbcWalletNonSecretStorage(xa: Transactor[ContextAwareTask]) extends Walle
         | )
         """.stripMargin.update
 
+    val countCxn = sql"""
+        | SELECT COUNT(*)
+        | FROM public.wallet_notification
+        """.stripMargin
+      .query[Int]
+      .unique
+
     val row = WalletNofiticationRow.from(config)
-    cxn(row).run
-      .transactWallet(xa)
-      .as(config)
+    val effect = for {
+      _ <- cxn(row).run
+      count <- countCxn
+      _ <-
+        if (count <= MAX_WEBHOOK_PER_WALLET) ().pure[ConnectionIO]
+        else TooManyWebhook(limit = MAX_WEBHOOK_PER_WALLET, actual = count).raiseError[ConnectionIO, Unit]
+    } yield config
+
+    effect.transactWallet(xa)
   }
 
   override def walletNotification: RIO[WalletAccessContext, Seq[EventNotificationConfig]] = {

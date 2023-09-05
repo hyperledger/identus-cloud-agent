@@ -6,6 +6,10 @@ import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.models.WalletId
 import zio.*
 
+object WalletNonSecretStorageCustomError {
+  final case class TooManyWebhook(limit: Int, actual: Int) extends Throwable
+}
+
 trait WalletNonSecretStorage {
   def createWallet(wallet: Wallet): Task[Wallet]
   def getWallet(walletId: WalletId): Task[Option[Wallet]]

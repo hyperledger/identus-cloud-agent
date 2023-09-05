@@ -3,7 +3,10 @@ package io.iohk.atala.agent.walletapi.service
 import io.iohk.atala.agent.walletapi.crypto.Apollo
 import io.iohk.atala.agent.walletapi.model.Wallet
 import io.iohk.atala.agent.walletapi.model.WalletSeed
+import io.iohk.atala.agent.walletapi.service.WalletManagementServiceError.TooManyWebhookError
 import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorage
+import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorageCustomError
+import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorageCustomError.TooManyWebhook
 import io.iohk.atala.agent.walletapi.storage.WalletSecretStorage
 import io.iohk.atala.event.notification.EventNotificationConfig
 import io.iohk.atala.shared.models.WalletAccessContext
@@ -57,7 +60,10 @@ class WalletManagementServiceImpl(
   ): ZIO[WalletAccessContext, WalletManagementServiceError, EventNotificationConfig] =
     nonSecretStorage
       .createWalletNotification(config)
-      .mapError(WalletManagementServiceError.WalletStorageError.apply)
+      .mapError {
+        case TooManyWebhook(limit, actual) => WalletManagementServiceError.TooManyWebhookError(limit, actual)
+        case e                             => WalletManagementServiceError.WalletStorageError(e)
+      }
 
 }
 

@@ -11,6 +11,7 @@ sealed trait WalletManagementServiceError extends Throwable
 object WalletManagementServiceError {
   final case class SeedGenerationError(cause: Throwable) extends WalletManagementServiceError
   final case class WalletStorageError(cause: Throwable) extends WalletManagementServiceError
+  final case class TooManyWebhookError(limit: Int, actual: Int) extends WalletManagementServiceError
 }
 
 trait WalletManagementService {

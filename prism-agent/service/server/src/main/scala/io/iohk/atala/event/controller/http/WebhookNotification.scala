@@ -2,7 +2,7 @@ package io.iohk.atala.event.controller.http
 
 import io.iohk.atala.event.notification.EventNotificationConfig
 import sttp.tapir.Schema
-import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonEncoder, JsonDecoder}
+import zio.json.*
 
 import java.time.Instant
 import java.util.UUID
@@ -28,4 +28,19 @@ object WebhookNotification {
       createdAt = notification.createdAt
     )
 
+}
+
+final case class WebhookNotificationPage(
+    self: String,
+    kind: String = "WebhookNotificationPage",
+    pageOf: String,
+    next: Option[String] = None,
+    previous: Option[String] = None,
+    contents: Seq[WebhookNotification]
+)
+
+object WebhookNotificationPage {
+  given encoder: JsonEncoder[WebhookNotificationPage] = DeriveJsonEncoder.gen[WebhookNotificationPage]
+  given decoder: JsonDecoder[WebhookNotificationPage] = DeriveJsonDecoder.gen[WebhookNotificationPage]
+  given schema: Schema[WebhookNotificationPage] = Schema.derived
 }

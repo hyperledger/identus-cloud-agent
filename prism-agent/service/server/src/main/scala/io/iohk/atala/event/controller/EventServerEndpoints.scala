@@ -22,8 +22,18 @@ class EventServerEndpoints(
         }
       }
 
+  private val listWebhookNotificationServerEndpoint: ZServerEndpoint[Any, Any] =
+    EventEndpoints.listWebhookNotification
+      .zServerSecurityLogic(ApiKeyEndpointSecurityLogic.securityLogic(_)(authenticator))
+      .serverLogic { entity => rc =>
+        eventController
+          .listWebhookNotifications(rc)
+          .provideSomeLayer(ZLayer.succeed(entity.walletAccessContext))
+      }
+
   val all: List[ZServerEndpoint[Any, Any]] = List(
-    createWebhookNotificationServerEndpoint
+    createWebhookNotificationServerEndpoint,
+    listWebhookNotificationServerEndpoint
   )
 
 }
