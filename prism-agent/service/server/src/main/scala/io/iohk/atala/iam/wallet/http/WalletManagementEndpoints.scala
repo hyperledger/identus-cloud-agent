@@ -6,8 +6,6 @@ import io.iohk.atala.api.http.RequestContext
 import io.iohk.atala.api.http.model.PaginationInput
 import io.iohk.atala.iam.authentication.admin.AdminApiKeyCredentials
 import io.iohk.atala.iam.authentication.admin.AdminApiKeySecurityLogic.adminApiKeyHeader
-import io.iohk.atala.iam.authentication.apikey.ApiKeyCredentials
-import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
 import io.iohk.atala.iam.wallet.http.model.CreateWalletRequest
 import io.iohk.atala.iam.wallet.http.model.WalletDetail
 import io.iohk.atala.iam.wallet.http.model.WalletDetailPage
@@ -19,16 +17,10 @@ import java.util.UUID
 
 object WalletManagementEndpoints {
 
-  private val baseWalletAdminEndpoint = endpoint
+  private val baseEndpoint = endpoint
     .tag("Wallet Management")
     .securityIn(adminApiKeyHeader)
     .in("wallets")
-    .in(extractFromRequest[RequestContext](RequestContext.apply))
-
-  private val baseWalletNotificationEndpoint = endpoint
-    .tag("Wallet Notification Management")
-    .securityIn(apiKeyHeader)
-    .in("notifications")
     .in(extractFromRequest[RequestContext](RequestContext.apply))
 
   private val paginationInput: EndpointInput[PaginationInput] = EndpointInput.derived[PaginationInput]
@@ -40,7 +32,7 @@ object WalletManagementEndpoints {
     WalletDetailPage,
     Any
   ] =
-    baseWalletAdminEndpoint.get
+    baseEndpoint.get
       .in(paginationInput)
       .errorOut(EndpointOutputs.basicFailuresAndForbidden)
       .out(statusCode(StatusCode.Ok).description("List Prism Agent managed DIDs"))
@@ -54,7 +46,7 @@ object WalletManagementEndpoints {
     WalletDetail,
     Any
   ] =
-    baseWalletAdminEndpoint.get
+    baseEndpoint.get
       .in(path[UUID]("walletId"))
       .errorOut(EndpointOutputs.basicFailureAndNotFoundAndForbidden)
       .out(statusCode(StatusCode.Ok).description("Successfully get the wallet"))
@@ -67,7 +59,7 @@ object WalletManagementEndpoints {
     ErrorResponse,
     WalletDetail,
     Any
-  ] = baseWalletAdminEndpoint.post
+  ] = baseEndpoint.post
     .in(jsonBody[CreateWalletRequest])
     .out(
       statusCode(StatusCode.Created).description("A new wallet has been created")
@@ -80,20 +72,5 @@ object WalletManagementEndpoints {
       """Create a new wallet with optional to use provided seed.
         |The seed will be used for DID key derivation inside the wallet.""".stripMargin
     )
-
-  val createWalletNotification: Endpoint[
-    ApiKeyCredentials,
-    RequestContext,
-    ErrorResponse,
-    WalletDetail,
-    Any
-  ] = baseWalletNotificationEndpoint.post
-    .out(
-      statusCode(StatusCode.Created).description("A new wallet notification has been created")
-    )
-    .out(jsonBody[WalletDetail])
-    .errorOut(EndpointOutputs.basicFailuresAndForbidden)
-    .name("createWalletNotification")
-    .summary("Create a new wallet notification")
 
 }
