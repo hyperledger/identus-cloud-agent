@@ -1,3 +1,10 @@
+## [1.14.2](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v1.14.1...prism-agent-v1.14.2) (2023-09-06)
+
+
+### Bug Fixes
+
+* add missing leading '/' in rewrite rule target ([#692](https://github.com/input-output-hk/atala-prism-building-blocks/issues/692)) ([f2be228](https://github.com/input-output-hk/atala-prism-building-blocks/commit/f2be22895c893525b50a0848d2951e668c5fe688))
+
 ## [1.14.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v1.14.0...prism-agent-v1.14.1) (2023-09-06)
 
 
