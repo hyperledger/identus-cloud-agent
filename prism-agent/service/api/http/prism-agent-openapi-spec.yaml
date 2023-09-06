@@ -1,8 +1,157 @@
 openapi: 3.0.3
 info:
   title: Prism Agent
-  version: 1.12.0
+  version: 1.13.0
 paths:
+  /credential-definition-registry/definitions:
+    get:
+      tags:
+      - Credential Definitions Registry
+      summary: Lookup credential definitions by indexed fields
+      description: 'Lookup credential definitions by `author`, `name`, `tag` parameters
+        and control the pagination by `offset` and `limit` parameters '
+      operationId: lookupCredentialDefinitionsByQuery
+      parameters:
+      - name: author
+        in: query
+        required: false
+        schema:
+          type: string
+        example: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff
+      - name: name
+        in: query
+        required: false
+        schema:
+          type: string
+        example: DrivingLicense
+      - name: version
+        in: query
+        required: false
+        schema:
+          type: string
+        example: 1.0.0
+      - name: tag
+        in: query
+        required: false
+        schema:
+          type: string
+        example: licence
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: order
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Collection of CredentialDefinitions records.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CredentialDefinitionResponsePage'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags:
+      - Credential Definition Registry
+      summary: Publish new definition to the definition registry
+      description: Create the new credential definition record with metadata and internal
+        JSON Schema on behalf of Cloud Agent. The credential definition will be signed
+        by the keys of Cloud Agent and issued by the DID that corresponds to it.
+      operationId: createCredentialDefinition
+      requestBody:
+        description: JSON object required for the credential definition creation
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CredentialDefinitionInput'
+        required: true
+      responses:
+        '201':
+          description: The new credential definition record is successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CredentialDefinitionResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /credential-definition-registry/definitions/{guid}:
+    get:
+      tags:
+      - Credential Definition Registry
+      summary: Fetch the credential definition from the registry by `guid`
+      description: Fetch the credential definition by the unique identifier
+      operationId: getCredentialDefinitionById
+      parameters:
+      - name: guid
+        in: path
+        description: Globally unique identifier of the credential definition record
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: CredentialDefinition found by `guid`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CredentialDefinitionResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /schema-registry/schemas:
     get:
       tags:
@@ -638,6 +787,8 @@ paths:
               schema:
                 type: string
                 description: Empty representation
+                format: binary
+                example: ''
         '404':
           description: ''
           content:
@@ -648,6 +799,8 @@ paths:
               schema:
                 type: string
                 description: Empty representation
+                format: binary
+                example: ''
         '406':
           description: ''
           content:
@@ -658,6 +811,8 @@ paths:
               schema:
                 type: string
                 description: Empty representation
+                format: binary
+                example: ''
         '410':
           description: ''
           content:
@@ -668,6 +823,8 @@ paths:
               schema:
                 type: string
                 description: Empty representation
+                format: binary
+                example: ''
         '500':
           description: ''
           content:
@@ -678,6 +835,8 @@ paths:
               schema:
                 type: string
                 description: Empty representation
+                format: binary
+                example: ''
         '501':
           description: ''
           content:
@@ -688,6 +847,8 @@ paths:
               schema:
                 type: string
                 description: Empty representation
+                format: binary
+                example: ''
   /did-registrar/dids:
     get:
       tags:
@@ -1650,6 +1811,209 @@ components:
           type: array
           items:
             type: string
+    CredentialDefinitionInput:
+      required:
+      - name
+      - version
+      - tag
+      - author
+      - schemaId
+      - signatureType
+      - supportRevocation
+      type: object
+      properties:
+        name:
+          type: string
+          description: A human-readable name for the credential definition. A piece
+            of Metadata.
+          example: DrivingLicense
+          minLength: 1
+        description:
+          type: string
+          description: A human-readable description of the credential definition
+          example: Simple credential definition for the driving licence verifiable
+            credential.
+          minLength: 1
+        version:
+          type: string
+          description: Denotes the revision of a given Credential Definition. It should
+            follow semantic version convention to describe the impact of the credential
+            definition evolution.
+          example: 1.0.0
+          pattern: ^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$
+        tag:
+          type: string
+          description: Token that allow to lookup and filter the credential definition
+            records.
+          example: licence
+        author:
+          type: string
+          description: DID of the identity which authored the credential definition.
+            A piece of Metadata.
+          example: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff
+          pattern: ^did:(?<method>[a-z0-9]+(:[a-z0-9]+)*)\:(?<idstring>[^#?]*)$
+        schemaId:
+          type: string
+          description: The unique identifier of the schema used for this credential
+            definition.
+          example: https://agent-host.com/prism-agent/schema-registry/schemas/d9569cec-c81e-4779-aa86-0d5994d82676
+        signatureType:
+          type: string
+          description: Signature type used in the CredentialDefinition.
+          example: CL
+        supportRevocation:
+          type: boolean
+          description: Boolean flag indicating whether revocation is supported for
+            this CredentialDefinition.
+          example: false
+    CredentialDefinitionResponse:
+      required:
+      - guid
+      - id
+      - name
+      - version
+      - tag
+      - description
+      - author
+      - authored
+      - schemaId
+      - definition
+      - keyCorrectnessProof
+      - signatureType
+      - supportRevocation
+      - kind
+      - self
+      type: object
+      properties:
+        guid:
+          type: string
+          description: 'Globally unique id of the credential definition.It''s composed
+            from the bytes of the string that contain the `author`, `name`, and `version`
+            values.The string format looks like the resource identifier: `author`/`id`?version=`version`'
+          format: uuid
+          example: 0527aea1-d131-3948-a34d-03af39aba8b4
+        id:
+          type: string
+          description: A locally unique identifier to address the credential definition.
+            UUID is generated by the backend.
+          example: 0527aea1-d131-3948-a34d-03af39aba8b5
+        longId:
+          type: string
+          description: Resource id of the credential definition. Contains the `author`'s
+            DID, `id` and `version` fields.
+          example: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff/0527aea1-d131-3948-a34d-03af39aba8b4?version=1.0.0
+        name:
+          type: string
+          description: A human-readable name for the credential definition. A piece
+            of Metadata.
+          example: DrivingLicense
+        version:
+          type: string
+          description: Denotes the revision of a given Credential Definition. It should
+            follow semantic version convention to describe the impact of the credential
+            definition evolution.
+          example: 1.0.0
+        tag:
+          type: string
+          description: Token that allow to lookup and filter the credential definition
+            records.
+          example: licence
+        description:
+          type: string
+          description: A human-readable description of the credential definition
+          example: Simple credential definition for the driving licence verifiable
+            credential.
+        author:
+          type: string
+          description: DID of the identity which authored the credential definition.
+            A piece of Metadata.
+          example: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff
+        authored:
+          type: string
+          description: '[RFC3339](https://www.rfc-editor.org/rfc/rfc3339) date on
+            which the credential definition was created. A piece of Metadata.'
+          format: date-time
+          example: 2022-03-10T12:00Z
+        schemaId:
+          type: string
+          description: The unique identifier of the schema used for this credential
+            definition.
+          example: https://agent-host.com/prism-agent/schema-registry/schemas/d9569cec-c81e-4779-aa86-0d5994d82676
+        definition:
+          description: Definition object that represents the actual definition of
+            the credential.
+          example:
+            credentialSubject:
+              emailAddress: alice@wonderland.com
+              givenName: Alice
+              familyName: Wonderland
+              dateOfIssuance: '2000-01-01T10:00:00Z'
+              drivingLicenseID: '12345'
+              drivingClass: 5
+        keyCorrectnessProof:
+          description: A proof that validates the correctness of the key within the
+            context of the credential definition.
+        signatureType:
+          type: string
+          description: Signature type used in the CredentialDefinition.
+          example: CL
+        supportRevocation:
+          type: boolean
+          description: Boolean flag indicating whether revocation is supported for
+            this CredentialDefinition.
+          example: false
+        proof:
+          $ref: '#/components/schemas/Proof'
+        kind:
+          type: string
+          description: A string that identifies the type of resource being returned
+            in the response.
+          example: CredentialDefinition
+        self:
+          type: string
+          description: The URL that uniquely identifies the resource being returned
+            in the response.
+          example: /prism-agent/credential-definition-registry/schemas/0527aea1-d131-3948-a34d-03af39aba8b4
+    CredentialDefinitionResponsePage:
+      required:
+      - kind
+      - self
+      - pageOf
+      type: object
+      properties:
+        contents:
+          type: array
+          items:
+            $ref: '#/components/schemas/CredentialDefinitionResponse'
+          description: A sequence of CredentialSchemaResponse objects representing
+            the list of credential schemas that the API response contains
+          example: []
+        kind:
+          type: string
+          description: A string field indicating the type of the API response. In
+            this case, it will always be set to `CredentialSchemaPage`
+          example: CredentialSchemaPage
+        self:
+          type: string
+          description: A string field containing the URL of the current API endpoint
+          example: /prism-agent/schema-registry/schemas?skip=10&limit=10
+        pageOf:
+          type: string
+          description: A string field indicating the type of resource that the contents
+            field contains
+          example: /prism-agent/schema-registry/schemas
+        next:
+          type: string
+          description: An optional string field containing the URL of the next page
+            of results. If the API response does not contain any more pages, this
+            field should be set to None.
+          example: /prism-agent/schema-registry/schemas?skip=20&limit=10
+        previous:
+          type: string
+          description: An optional string field containing the URL of the previous
+            page of results. If the API response is the first page of results, this
+            field should be set to None.
+          example: /prism-agent/schema-registry/schemas?skip=0&limit=10
     CredentialSchemaInput:
       required:
       - name
@@ -1832,7 +2196,7 @@ components:
           format: date-time
           example: 2022-03-10T12:00Z
         proof:
-          $ref: '#/components/schemas/Proof'
+          $ref: '#/components/schemas/Proof1'
         kind:
           type: string
           description: A string that identifies the type of resource being returned
@@ -2109,7 +2473,7 @@ components:
           type: string
           description: The date and time when the issue credential record was created.
           format: date-time
-          example: '2023-08-31T12:08:00.885539Z'
+          example: '2023-09-06T08:12:41.924557Z'
         updatedAt:
           type: string
           description: The date and time when the issue credential record was last
@@ -2386,6 +2750,65 @@ components:
           description: URL of the previous page (if available)
           example: ''
     Proof:
+      required:
+      - type
+      - created
+      - verificationMethod
+      - proofPurpose
+      - proofValue
+      - jws
+      type: object
+      properties:
+        type:
+          type: string
+          description: The type of cryptographic signature algorithm used to generate
+            the proof.
+          example: Ed25519Signature2018
+        created:
+          type: string
+          description: The date and time at which the proof was created, in UTC format.
+            This field is used to ensure that the proof was generated before or at
+            the same time as the credential definition itself.
+          format: date-time
+          example: 2022-03-10T12:00Z
+        verificationMethod:
+          type: string
+          description: The verification method used to generate the proof. This is
+            usually a DID and key ID combination that can be used to look up the public
+            key needed to verify the proof.
+          example: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff#key-1
+        proofPurpose:
+          type: string
+          description: 'The purpose of the proof (for example: `assertionMethod`).
+            This indicates that the proof is being used to assert that the issuer
+            really issued this credential definition instance.'
+          example: assertionMethod
+        proofValue:
+          type: string
+          description: The cryptographic signature value that was generated using
+            the private key associated with the verification method, and which can
+            be used to verify the proof.
+          example: FiPfjknHikKmZ...
+        jws:
+          type: string
+          description: The JSON Web Signature (JWS) that contains the proof information.
+          example: eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il0sImt0eSI6Ik...
+        domain:
+          type: string
+          description: It specifies the domain context within which the credential
+            definition and proof are being used
+          example: prims.atala.com
+      description: A digital signature over the Credential Definition for the sake
+        of asserting authorship. A piece of Metadata.
+      example:
+        type: Ed25519Signature2018
+        created: '2022-03-10T12:00:00Z'
+        verificationMethod: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff#key-1
+        proofPurpose: assertionMethod
+        proofValue: FiPfjknHikKmZ...
+        jws: eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il0sImt0eSI6Ik...
+        domain: prims.atala.com
+    Proof1:
       required:
       - type
       - created
