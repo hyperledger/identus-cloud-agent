@@ -21,9 +21,15 @@ object Entity {
   def apply(name: String): Entity = Entity(UUID.randomUUID(), name, ZeroWalletId, Instant.now(), Instant.now())
 
   val Default =
-    Entity(UUID.fromString("00000000-0000-0000-0000-000000000000"), "default", ZeroWalletId, Instant.MIN, Instant.MIN)
+    Entity(
+      UUID.fromString("00000000-0000-0000-0000-000000000000"),
+      "default",
+      ZeroWalletId,
+      Instant.EPOCH,
+      Instant.EPOCH
+    )
   val Admin =
-    Entity(UUID.fromString("00000000-0000-0000-0000-000000000001"), "admin", ZeroWalletId, Instant.MIN, Instant.MIN)
+    Entity(UUID.fromString("00000000-0000-0000-0000-000000000001"), "admin", ZeroWalletId, Instant.EPOCH, Instant.EPOCH)
 
   extension (entity: Entity) {
     def walletAccessContext: WalletAccessContext = WalletAccessContext(WalletId.fromUUID(entity.walletId))

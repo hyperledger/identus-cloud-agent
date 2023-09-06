@@ -101,7 +101,19 @@ final case class VerificationConfig(options: Options) {
   }
 }
 
-final case class WebhookPublisherConfig(parallelism: Option[Int])
+final case class WebhookPublisherConfig(
+    url: Option[String],
+    apiKey: Option[String],
+    parallelism: Option[Int]
+)
+
+final case class DefaultWalletConfig(
+    enabled: Boolean,
+    seed: Option[String],
+    webhookUrl: Option[String],
+    webhookApiKey: Option[String],
+    authApiKey: String
+)
 
 final case class AgentConfig(
     httpEndpoint: HttpEndpointConfig,
@@ -110,7 +122,8 @@ final case class AgentConfig(
     database: DatabaseConfig,
     verification: VerificationConfig,
     secretStorage: SecretStorageConfig,
-    webhookPublisher: WebhookPublisherConfig
+    webhookPublisher: WebhookPublisherConfig,
+    defaultWallet: DefaultWalletConfig
 )
 
 final case class HttpEndpointConfig(http: HttpConfig)
