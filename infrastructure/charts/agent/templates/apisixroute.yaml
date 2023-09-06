@@ -123,7 +123,7 @@ spec:
     - name: proxy-rewrite
       enable: true
       config:
-        regex_uri: ["^/prism-agent/credential-definition-registry/definitions/(.*)", "credential-definition-registry/definitions/$1"]
+        regex_uri: ["^/prism-agent/credential-definition-registry/definitions/(.*)", "/credential-definition-registry/definitions/$1"]
       {{ template "cors" . }}
 
 ---
