@@ -58,22 +58,22 @@ class WebhookPublisher(
       _ <- ZIO.log(s"Polling $parallelism event(s)")
       events <- consumer.poll(parallelism).mapError(e => UnexpectedError(e.toString))
       _ <- ZIO.log(s"Got ${events.size} event(s)")
-      allWebhooks <- ZIO
+      webhookConfig <- ZIO
         .foreach(events.map(_.walletId).toSet.toList) { walletId =>
           walletService.listWalletNotifications
             .map(walletId -> _)
             .provide(ZLayer.succeed(WalletAccessContext(walletId)))
         }
         .map(_.toMap)
-      _ <- ZIO.foreachPar(events) { e =>
-        val webhooks = allWebhooks.getOrElse(e.walletId, Nil)
-        val tasks = generateNotifyWebhookTasks(e, webhooks)
+      notifyTasks = events.flatMap { e =>
+        val webhooks = webhookConfig.getOrElse(e.walletId, Nil)
+        generateNotifyWebhookTasks(e, webhooks)
           .map(
             _.retry(Schedule.spaced(5.second) && Schedule.recurs(2))
               .catchAll(e => ZIO.logError(s"Webhook permanently failing, with last error being: ${e.msg}"))
           )
-        ZIO.collectAllDiscard(tasks)
       }
+      _ <- ZIO.collectAllParDiscard(notifyTasks).withParallelism(parallelism)
     } yield ()
   }
 
