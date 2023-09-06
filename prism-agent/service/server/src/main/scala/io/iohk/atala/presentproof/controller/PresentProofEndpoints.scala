@@ -1,6 +1,6 @@
 package io.iohk.atala.presentproof.controller
 
-import io.iohk.atala.api.http.EndpointOutputs.{basicFailures, basicFailuresAndNotFound}
+import io.iohk.atala.api.http.EndpointOutputs.*
 import io.iohk.atala.api.http.model.PaginationInput
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.iam.authentication.apikey.ApiKeyCredentials
@@ -38,7 +38,7 @@ object PresentProofEndpoints {
         )
       )
       .out(jsonBody[PresentationStatus])
-      .errorOut(basicFailures)
+      .errorOut(basicFailuresAndForbidden)
 
   val getAllPresentations: Endpoint[
     ApiKeyCredentials,
@@ -59,7 +59,7 @@ object PresentProofEndpoints {
       .in(query[Option[String]]("thid"))
       .out(statusCode(StatusCode.Ok).description("The list of proof presentation records."))
       .out(jsonBody[PresentationStatusPage])
-      .errorOut(basicFailures)
+      .errorOut(basicFailuresAndForbidden)
 
   val getPresentation: Endpoint[ApiKeyCredentials, (RequestContext, UUID), ErrorResponse, PresentationStatus, Any] =
     endpoint.get
@@ -79,7 +79,7 @@ object PresentProofEndpoints {
       )
       .out(statusCode(StatusCode.Ok).description("The proof presentation record."))
       .out(jsonBody[PresentationStatus])
-      .errorOut(basicFailuresAndNotFound)
+      .errorOut(basicFailureAndNotFoundAndForbidden)
 
   val updatePresentation: Endpoint[
     ApiKeyCredentials,
@@ -106,6 +106,6 @@ object PresentProofEndpoints {
       .in(jsonBody[RequestPresentationAction].description("The action to perform on the proof presentation record."))
       .out(statusCode(StatusCode.Ok).description("The proof presentation record was successfully updated."))
       .out(jsonBody[PresentationStatus])
-      .errorOut(basicFailuresAndNotFound)
+      .errorOut(basicFailureAndNotFoundAndForbidden)
 
 }

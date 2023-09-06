@@ -101,11 +101,7 @@ final case class VerificationConfig(options: Options) {
   }
 }
 
-final case class WebhookPublisherConfig(
-    url: Option[String],
-    apiKey: Option[String],
-    parallelism: Option[Int]
-)
+final case class WebhookPublisherConfig(parallelism: Option[Int])
 
 final case class AgentConfig(
     httpEndpoint: HttpEndpointConfig,

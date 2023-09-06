@@ -10,6 +10,7 @@ import io.iohk.atala.castor.controller.{DIDRegistrarServerEndpoints, DIDServerEn
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.connect.controller.ConnectionServerEndpoints
 import io.iohk.atala.connect.core.service.ConnectionService
+import io.iohk.atala.event.controller.EventServerEndpoints
 import io.iohk.atala.iam.entity.http.EntityServerEndpoints
 import io.iohk.atala.iam.wallet.http.WalletManagementServerEndpoints
 import io.iohk.atala.issue.controller.IssueServerEndpoints
@@ -124,6 +125,7 @@ object AgentHttpServer {
       allSystemEndpoints <- SystemServerEndpoints.all
       allEntityEndpoints <- EntityServerEndpoints.all
       allWalletManagementEndpoints <- WalletManagementServerEndpoints.all
+      allEventEndpoints <- EventServerEndpoints.all
       allEndpoints = ZHttpEndpoints.withDocumentations[Task](
         allSchemaRegistryEndpoints ++
           allVerificationPolicyEndpoints ++
@@ -134,7 +136,8 @@ object AgentHttpServer {
           allPresentProofEndpoints ++
           allSystemEndpoints ++
           allEntityEndpoints ++
-          allWalletManagementEndpoints
+          allWalletManagementEndpoints ++
+          allEventEndpoints
       )
       server <- ZHttp4sBlazeServer.make
       appConfig <- ZIO.service[AppConfig]
