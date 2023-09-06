@@ -71,7 +71,7 @@ lazy val V = new {
   val logback = "1.4.8"
   val slf4j = "2.0.7"
 
-  val prismSdk = "v1.4.1" // scala-steward:off
+  val prismSdk = "1.4.1" // scala-steward:off
   val scalaUri = "4.0.3"
 
   val jwtCirceVersion = "9.1.2"
@@ -613,8 +613,6 @@ val irisClient = project
 
 val castorCommonSettings = Seq(
   testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
-  githubTokenSource := TokenSource.Environment("GITHUB_TOKEN"),
-  resolvers += Resolver.githubPackages("input-output-hk"),
   // Needed for Kotlin coroutines that support new memory management mode
   resolvers += "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven"
 )
@@ -635,8 +633,6 @@ lazy val castorCore = project
 
 val polluxCommonSettings = Seq(
   testFrameworks ++= Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
-  githubTokenSource := TokenSource.Environment("GITHUB_TOKEN"),
-  resolvers += Resolver.githubPackages("input-output-hk"),
   // Needed for Kotlin coroutines that support new memory management mode
   resolvers += "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven"
 )
