@@ -49,4 +49,6 @@ object ConnectionController {
         ErrorResponse.badRequest(title = "InvalidFlowState", detail = Some(msg))
       case ConnectionServiceError.InvitationAlreadyReceived(msg) =>
         ErrorResponse.badRequest(title = "InvitationAlreadyReceived", detail = Some(msg))
+      case ConnectionServiceError.InvitationExpired(msg) =>
+        ErrorResponse.badRequest(title = "InvitationExpired", detail = Some(msg))
 }

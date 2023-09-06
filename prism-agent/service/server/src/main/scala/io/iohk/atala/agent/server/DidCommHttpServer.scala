@@ -3,6 +3,7 @@ package io.iohk.atala.agent.server
 import io.circe.*
 import io.circe.parser.*
 import io.iohk.atala.agent.server.DidCommHttpServerError.{DIDCommMessageParsingError, RequestBodyParsingError}
+import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
@@ -42,7 +43,7 @@ object DidCommHttpServer {
 
   private def didCommServiceEndpoint: HttpApp[
     DidOps & DidAgent & CredentialService & PresentationService & ConnectionService & ManagedDIDService & HttpClient &
-      DidAgent & DIDResolver,
+      DidAgent & DIDResolver & AppConfig,
     Nothing
   ] = Http.collectZIO[Request] {
     case Method.GET -> !! / "did" =>
@@ -147,8 +148,11 @@ object DidCommHttpServer {
   /*
    * Connect
    */
-  private val handleConnect
-      : PartialFunction[Message, ZIO[ConnectionService, DIDCommMessageParsingError | ConnectionServiceError, Unit]] = {
+  private val handleConnect: PartialFunction[Message, ZIO[
+    ConnectionService & AppConfig,
+    DIDCommMessageParsingError | ConnectionServiceError,
+    Unit
+  ]] = {
     case msg if msg.piuri == ConnectionRequest.`type` =>
       for {
         connectionRequest <- ZIO
@@ -156,8 +160,12 @@ object DidCommHttpServer {
           .mapError(DIDCommMessageParsingError.apply)
         _ <- ZIO.logInfo("As an Inviter in connect got ConnectionRequest: " + connectionRequest)
         connectionService <- ZIO.service[ConnectionService]
-        maybeRecord <- connectionService.receiveConnectionRequest(connectionRequest)
-        _ <- connectionService.acceptConnectionRequest(maybeRecord.id)
+        config <- ZIO.service[AppConfig]
+        record <- connectionService.receiveConnectionRequest(
+          connectionRequest,
+          Some(config.connect.connectInvitationExpiry)
+        )
+        _ <- connectionService.acceptConnectionRequest(record.id)
       } yield ()
     case msg if msg.piuri == ConnectionResponse.`type` =>
       for {

@@ -12,5 +12,6 @@ object ConnectionServiceError {
   final case class UnexpectedError(msg: String) extends ConnectionServiceError
   final case class InvalidFlowStateError(msg: String) extends ConnectionServiceError
   final case class InvitationAlreadyReceived(msg: String) extends ConnectionServiceError
+  final case class InvitationExpired(msg: String) extends ConnectionServiceError
 
 }
