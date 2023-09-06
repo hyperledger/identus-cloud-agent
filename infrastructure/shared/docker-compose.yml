@@ -121,8 +121,7 @@ services:
     image: swaggerapi/swagger-ui:v5.1.0
     environment:
       - 'URLS=[
-        { name: "Prism Agent", url: "/docs/prism-agent/api/docs.yaml" },
-        { name: "Mediator", url: "/docs/mediator/api/openapi-spec.yaml" }
+        { name: "Prism Agent", url: "/docs/prism-agent/api/docs.yaml" }
         ]'
 
   apisix:

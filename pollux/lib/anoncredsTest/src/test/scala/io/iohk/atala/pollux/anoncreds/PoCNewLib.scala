@@ -1,6 +1,7 @@
 package io.iohk.atala.pollux.anoncreds
 
 import org.scalatest.flatspec.AnyFlatSpec
+
 import scala.jdk.CollectionConverters.*
 
 /** polluxAnoncredsTest/Test/testOnly io.iohk.atala.pollux.anoncreds.PoCNewLib

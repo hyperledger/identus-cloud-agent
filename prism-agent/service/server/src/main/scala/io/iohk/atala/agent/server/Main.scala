@@ -117,6 +117,7 @@ object MainApp extends ZIOAppDefault {
           // controller
           ConnectionControllerImpl.layer,
           CredentialSchemaControllerImpl.layer,
+          CredentialDefinitionControllerImpl.layer,
           DIDControllerImpl.layer,
           DIDRegistrarControllerImpl.layer,
           IssueControllerImpl.layer,
@@ -133,6 +134,7 @@ object MainApp extends ZIOAppDefault {
           // service
           ConnectionServiceImpl.layer >>> ConnectionServiceNotifier.layer,
           CredentialSchemaServiceImpl.layer,
+          CredentialDefinitionServiceImpl.layer,
           CredentialServiceImpl.layer >>> CredentialServiceNotifier.layer,
           DIDServiceImpl.layer,
           EntityServiceImpl.layer,

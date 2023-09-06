@@ -18,6 +18,8 @@ object MockConnectionService extends Mock[ConnectionService] {
   object ReceiveConnectionRequest extends Effect[ConnectionRequest, ConnectionServiceError, ConnectionRecord]
   object AcceptConnectionRequest extends Effect[UUID, ConnectionServiceError, ConnectionRecord]
   object MarkConnectionResponseSent extends Effect[UUID, ConnectionServiceError, ConnectionRecord]
+  object MarkConnectionInvitationExpired extends Effect[UUID, ConnectionServiceError, ConnectionRecord]
+
   object ReceiveConnectionResponse extends Effect[ConnectionResponse, ConnectionServiceError, ConnectionRecord]
 
   override val compose: URLayer[mock.Proxy, ConnectionService] = ZLayer {
@@ -47,6 +49,9 @@ object MockConnectionService extends Mock[ConnectionService] {
 
       override def acceptConnectionRequest(recordId: UUID): IO[ConnectionServiceError, ConnectionRecord] =
         proxy(AcceptConnectionRequest, recordId)
+
+      override def markConnectionInvitationExpired(recordId: UUID): IO[ConnectionServiceError, ConnectionRecord] =
+        proxy(MarkConnectionInvitationExpired, recordId)
 
       override def markConnectionResponseSent(recordId: UUID): IO[ConnectionServiceError, ConnectionRecord] =
         proxy(MarkConnectionResponseSent, recordId)

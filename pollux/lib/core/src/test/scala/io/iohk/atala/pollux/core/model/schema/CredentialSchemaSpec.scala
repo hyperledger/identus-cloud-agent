@@ -41,7 +41,7 @@ object CredentialSchemaSpec extends ZIOSpecDefault {
         assertZIO(result.exit)(
           fails(
             isSubtype[CredentialSchemaError.UnsupportedCredentialSchemaType](
-              hasField("userMessage", _.userMessage, equalTo(s"Unsupported VC Schema type $schemaType"))
+              hasField("message", _.message, equalTo(s"Unsupported VC Schema type $schemaType"))
             )
           )
         )
@@ -128,7 +128,7 @@ object CredentialSchemaSpec extends ZIOSpecDefault {
         assertZIO(result.exit)(
           fails(
             isSubtype[CredentialSchemaError.UnsupportedCredentialSchemaType](
-              hasField("userMessage", _.userMessage, equalTo(s"Unsupported VC Schema type $schemaType"))
+              hasField("message", _.message, equalTo(s"Unsupported VC Schema type $schemaType"))
             )
           )
         )

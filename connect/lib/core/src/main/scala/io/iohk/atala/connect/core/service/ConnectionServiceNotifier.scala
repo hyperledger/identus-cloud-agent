@@ -54,6 +54,9 @@ class ConnectionServiceNotifier(
   ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
     notifyOnSuccess(svc.markConnectionResponseSent(recordId))
 
+  override def markConnectionInvitationExpired(recordId: UUID): IO[ConnectionServiceError, ConnectionRecord] =
+    notifyOnSuccess(svc.markConnectionInvitationExpired(recordId))
+
   override def receiveConnectionResponse(
       response: ConnectionResponse
   ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =

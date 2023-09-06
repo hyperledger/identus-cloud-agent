@@ -1,5 +1,10 @@
 package io.iohk.atala.api.util
 
+import io.iohk.atala.agent.server.AgentHttpServer
+import io.iohk.atala.castor.controller.{DIDController, DIDRegistrarController}
+import io.iohk.atala.connect.controller.ConnectionController
+import io.iohk.atala.issue.controller.IssueController
+import io.iohk.atala.pollux.credentialdefinition.controller.CredentialDefinitionController
 import io.iohk.atala.castor.controller.{
   DIDController,
   DIDRegistrarController,
@@ -14,9 +19,8 @@ import io.iohk.atala.iam.wallet.http.WalletManagementServerEndpoints
 import io.iohk.atala.iam.wallet.http.controller.WalletManagementController
 import io.iohk.atala.issue.controller.{IssueController, IssueServerEndpoints}
 import io.iohk.atala.pollux.credentialschema.controller.{CredentialSchemaController, VerificationPolicyController}
-import io.iohk.atala.pollux.credentialschema.{SchemaRegistryServerEndpoints, VerificationPolicyServerEndpoints}
-import io.iohk.atala.presentproof.controller.{PresentProofController, PresentProofServerEndpoints}
-import io.iohk.atala.system.controller.{SystemController, SystemServerEndpoints}
+import io.iohk.atala.presentproof.controller.PresentProofController
+import io.iohk.atala.system.controller.SystemController
 import org.scalatestplus.mockito.MockitoSugar.*
 import sttp.tapir.docs.openapi.OpenAPIDocsInterpreter
 import zio.{Scope, ZIO, ZIOAppArgs, ZIOAppDefault, ZLayer}
@@ -30,26 +34,7 @@ object Tapir2StaticOAS extends ZIOAppDefault {
   @main override def run: ZIO[Any with ZIOAppArgs with Scope, Any, Any] = {
     val effect = for {
       args <- getArgs
-      allSchemaRegistryEndpoints <- SchemaRegistryServerEndpoints.all
-      allVerificationPolicyEndpoints <- VerificationPolicyServerEndpoints.all
-      allConnectionEndpoints <- ConnectionServerEndpoints.all
-      allIssueEndpoints <- IssueServerEndpoints.all
-      allDIDEndpoints <- DIDServerEndpoints.all
-      allDIDRegistrarEndpoints <- DIDRegistrarServerEndpoints.all
-      allPresentProofEndpoints <- PresentProofServerEndpoints.all
-      allSystemEndpoints <- SystemServerEndpoints.all
-      allEntityEndpoints <- EntityServerEndpoints.all
-      allWalletManagementEndpoints <- WalletManagementServerEndpoints.all
-      allEndpoints = allSchemaRegistryEndpoints ++
-        allVerificationPolicyEndpoints ++
-        allConnectionEndpoints ++
-        allDIDEndpoints ++
-        allDIDRegistrarEndpoints ++
-        allIssueEndpoints ++
-        allPresentProofEndpoints ++
-        allSystemEndpoints ++
-        allEntityEndpoints ++
-        allWalletManagementEndpoints
+      allEndpoints <- AgentHttpServer.agentRESTServiceEndpoints
     } yield {
       import sttp.apispec.openapi.circe.yaml.*
       val yaml = OpenAPIDocsInterpreter().toOpenAPI(allEndpoints.map(_.endpoint), "Prism Agent", args(1)).toYaml
@@ -58,6 +43,7 @@ object Tapir2StaticOAS extends ZIOAppDefault {
     }
     effect.provideSomeLayer(
       ZLayer.succeed(mock[ConnectionController]) ++
+        ZLayer.succeed(mock[CredentialDefinitionController]) ++
         ZLayer.succeed(mock[CredentialSchemaController]) ++
         ZLayer.succeed(mock[VerificationPolicyController]) ++
         ZLayer.succeed(mock[DIDRegistrarController]) ++

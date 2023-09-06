@@ -13,12 +13,10 @@ import io.iohk.atala.connect.core.service.ConnectionService
 import io.iohk.atala.iam.entity.http.EntityServerEndpoints
 import io.iohk.atala.iam.wallet.http.WalletManagementServerEndpoints
 import io.iohk.atala.issue.controller.IssueServerEndpoints
-import io.iohk.atala.mercury.DidOps
-import io.iohk.atala.mercury.HttpClient
-import io.iohk.atala.pollux.core.service.CredentialService
-import io.iohk.atala.pollux.core.service.PresentationService
-import io.iohk.atala.pollux.credentialschema.SchemaRegistryServerEndpoints
-import io.iohk.atala.pollux.credentialschema.VerificationPolicyServerEndpoints
+import io.iohk.atala.mercury.{DidOps, HttpClient}
+import io.iohk.atala.pollux.core.service.{CredentialService, PresentationService}
+import io.iohk.atala.pollux.credentialdefinition.CredentialDefinitionRegistryServerEndpoints
+import io.iohk.atala.pollux.credentialschema.{SchemaRegistryServerEndpoints, VerificationPolicyServerEndpoints}
 import io.iohk.atala.pollux.vc.jwt.DidResolver as JwtDidResolver
 import io.iohk.atala.presentproof.controller.PresentProofServerEndpoints
 import io.iohk.atala.resolvers.DIDResolver
@@ -112,32 +110,35 @@ object PrismAgentApp {
 }
 
 object AgentHttpServer {
+  val agentRESTServiceEndpoints = for {
+    allCredentialDefinitionRegistryEndpoints <- CredentialDefinitionRegistryServerEndpoints.all
+    allSchemaRegistryEndpoints <- SchemaRegistryServerEndpoints.all
+    allVerificationPolicyEndpoints <- VerificationPolicyServerEndpoints.all
+    allConnectionEndpoints <- ConnectionServerEndpoints.all
+    allIssueEndpoints <- IssueServerEndpoints.all
+    allDIDEndpoints <- DIDServerEndpoints.all
+    allDIDRegistrarEndpoints <- DIDRegistrarServerEndpoints.all
+    allPresentProofEndpoints <- PresentProofServerEndpoints.all
+    allSystemEndpoints <- SystemServerEndpoints.all
+    allEntityEndpoints <- EntityServerEndpoints.all
+    allWalletManagementEndpoints <- WalletManagementServerEndpoints.all
+  } yield allCredentialDefinitionRegistryEndpoints ++
+    allSchemaRegistryEndpoints ++
+    allVerificationPolicyEndpoints ++
+    allConnectionEndpoints ++
+    allDIDEndpoints ++
+    allDIDRegistrarEndpoints ++
+    allIssueEndpoints ++
+    allPresentProofEndpoints ++
+    allSystemEndpoints
+    allEntityEndpoints ++
+    allWalletManagementEndpoints
   def run =
     for {
-      allSchemaRegistryEndpoints <- SchemaRegistryServerEndpoints.all
-      allVerificationPolicyEndpoints <- VerificationPolicyServerEndpoints.all
-      allConnectionEndpoints <- ConnectionServerEndpoints.all
-      allIssueEndpoints <- IssueServerEndpoints.all
-      allDIDEndpoints <- DIDServerEndpoints.all
-      allDIDRegistrarEndpoints <- DIDRegistrarServerEndpoints.all
-      allPresentProofEndpoints <- PresentProofServerEndpoints.all
-      allSystemEndpoints <- SystemServerEndpoints.all
-      allEntityEndpoints <- EntityServerEndpoints.all
-      allWalletManagementEndpoints <- WalletManagementServerEndpoints.all
-      allEndpoints = ZHttpEndpoints.withDocumentations[Task](
-        allSchemaRegistryEndpoints ++
-          allVerificationPolicyEndpoints ++
-          allConnectionEndpoints ++
-          allDIDEndpoints ++
-          allDIDRegistrarEndpoints ++
-          allIssueEndpoints ++
-          allPresentProofEndpoints ++
-          allSystemEndpoints ++
-          allEntityEndpoints ++
-          allWalletManagementEndpoints
-      )
+      allEndpoints <- agentRESTServiceEndpoints
+      allEndpointsWithDocumentation = ZHttpEndpoints.withDocumentations[Task](allEndpoints)
       server <- ZHttp4sBlazeServer.make
       appConfig <- ZIO.service[AppConfig]
-      _ <- server.start(allEndpoints, port = appConfig.agent.httpEndpoint.http.port).debug
+      _ <- server.start(allEndpointsWithDocumentation, port = appConfig.agent.httpEndpoint.http.port).debug
     } yield ()
 }

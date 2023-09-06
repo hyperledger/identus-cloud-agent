@@ -17,7 +17,12 @@ object DIDCodec {
   }
 
   def emptyDidJsonLD: Codec[String, DIDResolutionResult, DIDJsonLD] =
-    didJsonLD.schema(s => Schema.schemaForString.description("Empty representation").as)
+    didJsonLD.schema(_ =>
+      Schema.schemaForByteArray
+        .description("Empty representation")
+        .encodedExample(Array.emptyByteArray)
+        .as
+    )
 
   def didJsonLD: Codec[String, DIDResolutionResult, DIDJsonLD] = {
     val errorMsg = "Decoding application/did+ld+json resource is not supported"

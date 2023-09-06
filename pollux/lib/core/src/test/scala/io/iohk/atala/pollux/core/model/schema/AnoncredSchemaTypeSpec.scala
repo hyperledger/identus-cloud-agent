@@ -8,11 +8,26 @@ import zio.json.ast.Json
 import zio.json.ast.Json.*
 import zio.test.*
 import zio.test.Assertion.*
+import zio.test.assertZIO
 
 import scala.util.Random
 
 object AnoncredSchemaTypeSpec extends ZIOSpecDefault {
   override def spec: Spec[TestEnvironment with Scope, Any] = suite("AnoncredSchemaTypeTest")(
+    test("should validate a correct schema") {
+      val jsonSchema =
+        """
+          |{
+          |  "name": "Anoncred",
+          |  "version": "1.0",
+          |  "attrNames": ["attr1", "attr2"],
+          |  "issuerId": "issuer"
+          |}
+          |""".stripMargin
+
+      val schema: Json = jsonSchema.fromJson[Json].getOrElse(Json.Null)
+      assertZIO(AnoncredSchemaType.validate(schema))(isUnit)
+    },
     test("should validate a correct schema") {
       val jsonSchema =
         """
