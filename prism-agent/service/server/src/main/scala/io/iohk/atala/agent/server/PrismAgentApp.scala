@@ -35,8 +35,6 @@ import io.iohk.atala.shared.models.WalletId
 import io.iohk.atala.system.controller.SystemServerEndpoints
 import zio.*
 
-import java.net.URL
-
 object PrismAgentApp {
 
   def run(didCommServicePort: Int) = for {
@@ -194,8 +192,7 @@ object AgentInitialization {
       _ <- walletService.createWallet(defaultWallet, seed)
       _ <- entityService.create(defaultEntity).mapError(e => Exception(e.message))
       _ <- apiKeyAuth.add(defaultEntity.id, config.authApiKey).mapError(e => Exception(e.message))
-      webhookUrl <- config.webhookUrl.fold(ZIO.none)(url => ZIO.attempt(URL(url)).asSome)
-      _ <- webhookUrl.fold(ZIO.unit) { url =>
+      _ <- config.webhookUrl.fold(ZIO.unit) { url =>
         val customHeaders = config.webhookApiKey.fold(Map.empty)(apiKey => Map("Authorization" -> s"Bearer $apiKey"))
         walletService
           .createWalletNotification(EventNotificationConfig(defaultWalletId, url, customHeaders))
