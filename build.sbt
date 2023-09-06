@@ -788,7 +788,7 @@ lazy val prismAgentServer = project
   )
   .enablePlugins(JavaAppPackaging, DockerPlugin)
   .enablePlugins(BuildInfoPlugin)
-  .dependsOn(prismAgentWalletAPI)
+  .dependsOn(prismAgentWalletAPI % "compile->compile;test->test")
   .dependsOn(
     agent,
     polluxCore,

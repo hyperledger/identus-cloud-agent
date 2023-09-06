@@ -12,7 +12,7 @@ case class Entity(id: UUID, name: String, walletId: UUID, createdAt: Instant, up
 
 object Entity {
 
-  val ZeroWalletId: UUID = UUID.fromString("00000000-0000-0000-0000-000000000000")
+  val ZeroWalletId: UUID = WalletId.default.toUUID
 
   def apply(id: UUID, name: String, walletId: UUID): Entity =
     Entity(id, name, walletId, Instant.now(), Instant.now())
