@@ -100,13 +100,13 @@ spec:
 apiVersion: apisix.apache.org/v2
 kind: ApisixRoute
 metadata:
-  name: agent-credential-definition-registry-route
+  name: agent-cred-def-registry-route
   namespace: "{{ .Release.Namespace }}"
   labels:
     {{ template "labels.common" . }}
 spec:
   http:
-  - name: agent-credential-definition-registry-rule
+  - name: agent-cred-def-registry-rule
     match:
       hosts:
       {{- range .Values.ingress.applicationUrls }}
