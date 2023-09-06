@@ -74,7 +74,9 @@ private class PresentationServiceImpl(
         .getValidIssuedCredentials(credentialsToUse.map(DidCommID(_)))
         .mapError(RepositoryError.apply)
 
-      issuedRawCredentials = issuedValidCredentials.flatMap(_.issuedCredentialRaw.map(IssuedCredentialRaw(_)))
+      issuedRawCredentials = issuedValidCredentials.flatMap(
+        _.issuedCredentialRaw.map(data => IssuedCredentialRaw(signedCredential = data, format = ???)) // FIXME
+      )
 
       issuedCredentials <- ZIO.fromEither(
         Either.cond(
@@ -230,14 +232,24 @@ private class PresentationServiceImpl(
       requestPresentation: RequestPresentation,
       prover: Issuer
   ): IO[PresentationError, PresentationPayload] = {
+    type ANOTHER_PAYLOAD_TYPE = Any // FIXME
+    type ErrorOrPayload = // FIXME
+      Either[PresentationError.PresentationDecodingError, Seq[JwtVerifiableCredentialPayload | ANOTHER_PAYLOAD_TYPE]]
 
-    val verifiableCredentials =
+    val verifiableCredentials: ErrorOrPayload =
       issuedCredentials.map { issuedCredential =>
-        decode[io.iohk.atala.mercury.model.Base64](issuedCredential.signedCredential)
-          .flatMap(x => Right(new String(java.util.Base64.getDecoder().decode(x.base64))))
-          .flatMap(x => Right(JwtVerifiableCredentialPayload(JWT(x))))
-          .left
-          .map(err => PresentationDecodingError(new Throwable(s"JsonData decoding error: $err")))
+        val typePrismJWT = IssuedCredentialRaw.formatPrismJWT
+        val typeAnoncred = IssuedCredentialRaw.formatPrismAnoncred
+        issuedCredential.signedCredential match {
+          case `typePrismJWT` =>
+            decode[io.iohk.atala.mercury.model.Base64](issuedCredential.signedCredential)
+              .flatMap(x => Right(new String(java.util.Base64.getDecoder().decode(x.base64))))
+              .flatMap(x => Right(JwtVerifiableCredentialPayload(JWT(x))))
+              .left
+              .map(err => PresentationDecodingError(new Throwable(s"JsonData decoding error: $err")))
+          case `typeAnoncred` => ??? // TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+          case any            => ??? // FIXME ERROR this is a unsupported format
+        }
       }.sequence
 
     val maybePresentationOptions
@@ -268,7 +280,7 @@ private class PresentationServiceImpl(
                 `@context` = Vector("https://www.w3.org/2018/presentations/v1"),
                 maybeId = None,
                 `type` = Vector("VerifiablePresentation"),
-                verifiableCredential = vcs.toVector,
+                verifiableCredential = ???, // FIXME vcs.toVector,
                 holder = prover.did.value,
                 verifier = Vector(options.domain),
                 maybeIssuanceDate = None,
@@ -280,7 +292,7 @@ private class PresentationServiceImpl(
                 `@context` = Vector("https://www.w3.org/2018/presentations/v1"),
                 maybeId = None,
                 `type` = Vector("VerifiablePresentation"),
-                verifiableCredential = vcs.toVector,
+                verifiableCredential = ???, // FIXME vcs.toVector,
                 holder = prover.did.value,
                 verifier = Vector("https://example.verifier"), // TODO Fix this
                 maybeIssuanceDate = None,
@@ -310,7 +322,9 @@ private class PresentationServiceImpl(
               .map(_.subjectId)}"
         )
       )
-      issuedRawCredentials = issuedValidCredentials.flatMap(_.issuedCredentialRaw.map(IssuedCredentialRaw(_)))
+      issuedRawCredentials = issuedValidCredentials.flatMap(
+        _.issuedCredentialRaw.map(data => IssuedCredentialRaw(signedCredential = data, format = ???)) // FIXME
+      )
       issuedCredentials <- ZIO.fromEither(
         Either.cond(
           issuedRawCredentials.nonEmpty,
