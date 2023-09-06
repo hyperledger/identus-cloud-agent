@@ -1,3 +1,10 @@
+## [1.14.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v1.14.0...prism-agent-v1.14.1) (2023-09-06)
+
+
+### Bug Fixes
+
+* APISIX config route and rule names too long ([#691](https://github.com/input-output-hk/atala-prism-building-blocks/issues/691)) ([bef008e](https://github.com/input-output-hk/atala-prism-building-blocks/commit/bef008ecb8f07a7e92cba1ba009a343af7a71adb))
+
 # [1.14.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v1.13.0...prism-agent-v1.14.0) (2023-09-06)
 
 
