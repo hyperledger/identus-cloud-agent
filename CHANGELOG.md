@@ -1,3 +1,16 @@
+# [1.14.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v1.13.0...prism-agent-v1.14.0) (2023-09-06)
+
+
+### Bug Fixes
+
+* change private sdk 1.4 to public maven ([#685](https://github.com/input-output-hk/atala-prism-building-blocks/issues/685)) ([128bcac](https://github.com/input-output-hk/atala-prism-building-blocks/commit/128bcac5b7006b485ea3dc9272fde29d159f1a03))
+* **prism-agent:** update invitation expiration on connection request ([#687](https://github.com/input-output-hk/atala-prism-building-blocks/issues/687)) ([1a1702f](https://github.com/input-output-hk/atala-prism-building-blocks/commit/1a1702fc4e62b4a03a4e4ee32ac7419ea67a4ea1))
+
+
+### Features
+
+* **prism-agent:** add syncwave to certificate to fix race condition with tls ([#686](https://github.com/input-output-hk/atala-prism-building-blocks/issues/686)) ([854dcf9](https://github.com/input-output-hk/atala-prism-building-blocks/commit/854dcf96c48defcb1f44062c3dfd88555dcaebe1))
+
 # [1.13.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v1.12.0...prism-agent-v1.13.0) (2023-09-06)
 
 
