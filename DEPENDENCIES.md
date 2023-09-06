@@ -82,6 +82,10 @@ Apache | [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2
 Apache | [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) | [com.github.stephenc.jcip # jcip-annotations # 1.0-1](http://stephenc.github.com/jcip-annotations) | <notextile></notextile>
 Apache | [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) | [com.google.crypto.tink # tink # 1.6.1](http://github.com/google/tink) | <notextile></notextile>
 Apache | [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) | [com.google.guava # guava # 31.0.1-android](https://github.com/google/guava) | <notextile></notextile>
+Apache | [Apache License, Version 2.0](https://opensource.org/licenses/Apache-2.0) | [io.iohk.atala # prism-common-jvm # 1.4.1](https://github.com/input-output-hk/atala-prism-sdk.git) | <notextile></notextile>
+Apache | [Apache License, Version 2.0](https://opensource.org/licenses/Apache-2.0) | [io.iohk.atala # prism-crypto-jvm # 1.4.1](https://github.com/input-output-hk/atala-prism-sdk.git) | <notextile></notextile>
+Apache | [Apache License, Version 2.0](https://opensource.org/licenses/Apache-2.0) | [io.iohk.atala # prism-identity-jvm # 1.4.1](https://github.com/input-output-hk/atala-prism-sdk.git) | <notextile></notextile>
+Apache | [Apache License, Version 2.0](https://opensource.org/licenses/Apache-2.0) | [io.iohk.atala # prism-protos-jvm # 1.4.1](https://github.com/input-output-hk/atala-prism-sdk.git) | <notextile></notextile>
 Apache | [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0) | io.netty # netty-buffer # 4.1.82.Final | <notextile></notextile>
 Apache | [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0) | io.netty # netty-codec # 4.1.82.Final | <notextile></notextile>
 Apache | [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0) | io.netty # netty-codec-http # 4.1.82.Final | <notextile></notextile>
@@ -326,35 +330,31 @@ MIT | [The MIT License (MIT)](https://opensource.org/licenses/MIT) | [com.dimafe
 Public Domain | [Public Domain, per Creative Commons CC0](http://creativecommons.org/publicdomain/zero/1.0/) | [org.hdrhistogram # HdrHistogram # 2.1.12](http://hdrhistogram.github.io/HdrHistogram/) | <notextile></notextile>
 Public Domain | [Public Domain, per Creative Commons CC0](http://creativecommons.org/publicdomain/zero/1.0/) | [org.latencyutils # LatencyUtils # 2.0.3](http://latencyutils.github.io/LatencyUtils/) | <notextile></notextile>
 unrecognized | [APL2](http://www.apache.org/licenses/LICENSE-2.0.txt) | [net.reactivecore # circe-json-schema_2.13 # 0.3.0](https://github.com/reactivecore/rc-circe-json-schema) | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # castor-core_3 # 1.12.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # connect-core_3 # 1.12.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # connect-sql-doobie_3 # 1.12.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # event-notification_3 # 1.12.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # iris-client_3 # 1.12.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-agent-core_3 # 1.12.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-agent-didcommx_3 # 1.12.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-data-models_3 # 1.12.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-protocol-connection_3 # 1.12.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-protocol-coordinate-mediation_3 # 1.12.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-protocol-invitation_3 # 1.12.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-protocol-issue-credential_3 # 1.12.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-protocol-mailbox_3 # 1.12.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-protocol-outofband-login_3 # 1.12.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-protocol-present-proof_3 # 1.12.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-protocol-report-problem_3 # 1.12.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-protocol-routing-2-0_3 # 1.12.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-protocol-trust-ping_3 # 1.12.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-resolver_3 # 1.12.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # pollux-anoncreds_3 # 1.12.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # pollux-core_3 # 1.12.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # pollux-sql-doobie_3 # 1.12.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # pollux-vc-jwt_3 # 1.12.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # prism-agent-wallet-api_3 # 1.12.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-unrecognized | [none specified](none specified) | io.iohk.atala # prism-common-jvm # v1.4.1 | <notextile></notextile>
-unrecognized | [none specified](none specified) | io.iohk.atala # prism-crypto-jvm # v1.4.1 | <notextile></notextile>
-unrecognized | [none specified](none specified) | io.iohk.atala # prism-identity-jvm # v1.4.1 | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # prism-node-client_3 # 1.12.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-unrecognized | [none specified](none specified) | io.iohk.atala # prism-protos-jvm # v1.4.1 | <notextile></notextile>
-unrecognized | [none specified](none specified) | [io.iohk.atala # shared # 1.12.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # castor-core_3 # 1.13.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # connect-core_3 # 1.13.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # connect-sql-doobie_3 # 1.13.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # event-notification_3 # 1.13.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # iris-client_3 # 1.13.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-agent-core_3 # 1.13.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-agent-didcommx_3 # 1.13.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-data-models_3 # 1.13.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-protocol-connection_3 # 1.13.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-protocol-coordinate-mediation_3 # 1.13.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-protocol-invitation_3 # 1.13.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-protocol-issue-credential_3 # 1.13.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-protocol-mailbox_3 # 1.13.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-protocol-outofband-login_3 # 1.13.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-protocol-present-proof_3 # 1.13.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-protocol-report-problem_3 # 1.13.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-protocol-routing-2-0_3 # 1.13.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-protocol-trust-ping_3 # 1.13.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # mercury-resolver_3 # 1.13.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # pollux-anoncreds_3 # 1.13.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # pollux-core_3 # 1.13.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # pollux-sql-doobie_3 # 1.13.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # pollux-vc-jwt_3 # 1.13.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # prism-agent-wallet-api_3 # 1.13.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # prism-node-client_3 # 1.13.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+unrecognized | [none specified](none specified) | [io.iohk.atala # shared # 1.13.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
 unrecognized | [none specified](none specified) | [net.jcip # jcip-annotations # 1.0](http://jcip.net/) | <notextile></notextile>
 
