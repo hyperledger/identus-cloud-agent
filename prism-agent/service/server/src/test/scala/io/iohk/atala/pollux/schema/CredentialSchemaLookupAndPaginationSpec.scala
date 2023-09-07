@@ -1,4 +1,4 @@
-package io.iohk.atala.pollux
+package io.iohk.atala.pollux.schema
 
 import com.dimafeng.testcontainers.PostgreSQLContainer
 import io.iohk.atala.container.util.MigrationAspects.migrate
@@ -10,8 +10,7 @@ import io.iohk.atala.pollux.credentialschema.http.{
   CredentialSchemaResponse,
   CredentialSchemaResponsePage
 }
-import io.iohk.atala.shared.models.WalletAccessContext
-import io.iohk.atala.shared.models.WalletId
+import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
 import sttp.client3.ziojson.*
 import sttp.client3.{DeserializationException, Response, UriContext, basicRequest}
 import sttp.model.{StatusCode, Uri}

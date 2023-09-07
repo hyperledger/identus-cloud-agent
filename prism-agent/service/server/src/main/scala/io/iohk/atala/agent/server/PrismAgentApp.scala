@@ -4,12 +4,8 @@ import io.iohk.atala.agent.notification.WebhookPublisher
 import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.server.http.{ZHttp4sBlazeServer, ZHttpEndpoints}
 import io.iohk.atala.agent.server.jobs.{BackgroundJobs, ConnectBackgroundJobs}
-import io.iohk.atala.agent.walletapi.model.Entity
-import io.iohk.atala.agent.walletapi.model.Wallet
-import io.iohk.atala.agent.walletapi.model.WalletSeed
-import io.iohk.atala.agent.walletapi.service.EntityService
-import io.iohk.atala.agent.walletapi.service.ManagedDIDService
-import io.iohk.atala.agent.walletapi.service.WalletManagementService
+import io.iohk.atala.agent.walletapi.model.{Entity, Wallet, WalletSeed}
+import io.iohk.atala.agent.walletapi.service.{EntityService, ManagedDIDService, WalletManagementService}
 import io.iohk.atala.castor.controller.{DIDRegistrarServerEndpoints, DIDServerEndpoints}
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.connect.controller.ConnectionServerEndpoints
@@ -27,9 +23,7 @@ import io.iohk.atala.pollux.credentialschema.{SchemaRegistryServerEndpoints, Ver
 import io.iohk.atala.pollux.vc.jwt.DidResolver as JwtDidResolver
 import io.iohk.atala.presentproof.controller.PresentProofServerEndpoints
 import io.iohk.atala.resolvers.DIDResolver
-import io.iohk.atala.shared.models.HexString
-import io.iohk.atala.shared.models.WalletAccessContext
-import io.iohk.atala.shared.models.WalletId
+import io.iohk.atala.shared.models.{HexString, WalletAccessContext, WalletId}
 import io.iohk.atala.system.controller.SystemServerEndpoints
 import zio.*
 
@@ -141,7 +135,7 @@ object AgentHttpServer {
     allDIDRegistrarEndpoints ++
     allIssueEndpoints ++
     allPresentProofEndpoints ++
-    allSystemEndpoints
+    allSystemEndpoints ++
     allEntityEndpoints ++
     allWalletManagementEndpoints ++
     allEventEndpoints

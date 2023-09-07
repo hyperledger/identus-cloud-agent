@@ -248,7 +248,7 @@ object ConnectionRepositorySpecSuite {
     },
     test("updateConnectionProtocolState updates the record to InvitationExpired") {
       for {
-        repo <- ZIO.service[ConnectionRepository[Task]]
+        repo <- ZIO.service[ConnectionRepository]
         aRecord = connectionRecord
         _ <- repo.createConnectionRecord(aRecord)
         record <- repo.getConnectionRecord(aRecord.id)

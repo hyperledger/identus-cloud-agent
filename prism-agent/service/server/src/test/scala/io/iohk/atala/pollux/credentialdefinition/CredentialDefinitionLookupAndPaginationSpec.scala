@@ -1,16 +1,13 @@
 package io.iohk.atala.pollux.credentialdefinition
 
 import io.iohk.atala.container.util.MigrationAspects.migrate
+import io.iohk.atala.iam.authentication.Authenticator
 import io.iohk.atala.pollux.credentialdefinition.controller.CredentialDefinitionController
-import io.iohk.atala.pollux.credentialdefinition.http.CredentialDefinitionResponse
-import io.iohk.atala.pollux.credentialdefinition.http.CredentialDefinitionResponsePage
-import sttp.client3.DeserializationException
-import sttp.client3.Response
-import sttp.client3.UriContext
-import sttp.client3.basicRequest
+import io.iohk.atala.pollux.credentialdefinition.http.{CredentialDefinitionResponse, CredentialDefinitionResponsePage}
+import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
 import sttp.client3.ziojson.*
-import sttp.model.StatusCode
-import sttp.model.Uri
+import sttp.client3.{DeserializationException, Response, UriContext, basicRequest}
+import sttp.model.{StatusCode, Uri}
 import zio.*
 import zio.json.EncoderOps
 import zio.test.*
@@ -24,10 +21,11 @@ object CredentialDefinitionLookupAndPaginationSpec
 
   def fetchAllPages(
       uri: Uri
-  ): ZIO[CredentialDefinitionController, Throwable, List[CredentialDefinitionResponsePage]] = {
+  ): ZIO[CredentialDefinitionController & Authenticator, Throwable, List[CredentialDefinitionResponsePage]] = {
     for {
       controller <- ZIO.service[CredentialDefinitionController]
-      backend = httpBackend(controller)
+      authenticator <- ZIO.service[Authenticator]
+      backend = httpBackend(controller, authenticator)
       response: CredentialDefinitionResponsePageType <-
         for {
           response <- basicRequest
@@ -78,7 +76,8 @@ object CredentialDefinitionLookupAndPaginationSpec
       for {
         _ <- deleteAllCredentialDefinitions
         controller <- ZIO.service[CredentialDefinitionController]
-        backend = httpBackend(controller)
+        authenticator <- ZIO.service[Authenticator]
+        backend = httpBackend(controller, authenticator)
 
         inputs <- Generator.credentialDefinitionInput.runCollectN(10)
         _ <- inputs
@@ -129,4 +128,4 @@ object CredentialDefinitionLookupAndPaginationSpec
         assert(allPagesWithLimit10.length)(equalTo(2)) &&
         assert(allPagesWithLimit15.length)(equalTo(4))
     }
-  )
+  ).provideSomeLayer(ZLayer.succeed(WalletAccessContext(WalletId.default)))

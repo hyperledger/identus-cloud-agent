@@ -3,14 +3,15 @@ package io.iohk.atala.pollux.core.repository
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.error.CredentialRepositoryError.*
 import io.iohk.atala.pollux.core.model.schema.CredentialDefinition
+import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 
 import java.util.UUID
 
 class CredentialDefinitionRepositoryInMemory(
     storeRef: Ref[Map[UUID, CredentialDefinition]]
-) extends CredentialDefinitionRepository[Task] {
-  override def create(record: CredentialDefinition): Task[CredentialDefinition] = {
+) extends CredentialDefinitionRepository {
+  override def create(record: CredentialDefinition): RIO[WalletAccessContext, CredentialDefinition] = {
     for {
       _ <- for {
         store <- storeRef.get
@@ -30,7 +31,7 @@ class CredentialDefinitionRepositoryInMemory(
     } yield record
   }
 
-  override def update(cs: CredentialDefinition): Task[Option[CredentialDefinition]] = {
+  override def update(cs: CredentialDefinition): RIO[WalletAccessContext, Option[CredentialDefinition]] = {
     for {
       store <- storeRef.get
       maybeExisting = store.get(cs.id)
@@ -43,7 +44,7 @@ class CredentialDefinitionRepositoryInMemory(
     } yield maybeExisting
   }
 
-  override def getAllVersions(id: UUID, author: String): Task[Seq[String]] = {
+  override def getAllVersions(id: UUID, author: String): RIO[WalletAccessContext, Seq[String]] = {
     storeRef.get.map { store =>
       store.values
         .filter(credDef => credDef.id == id && credDef.author == author)
@@ -52,7 +53,7 @@ class CredentialDefinitionRepositoryInMemory(
     }
   }
 
-  override def delete(guid: UUID): Task[Option[CredentialDefinition]] = {
+  override def delete(guid: UUID): RIO[WalletAccessContext, Option[CredentialDefinition]] = {
     for {
       store <- storeRef.get
       maybeRecord = store.get(guid)
@@ -63,7 +64,7 @@ class CredentialDefinitionRepositoryInMemory(
     } yield maybeRecord
   }
 
-  override def deleteAll(): Task[Long] = {
+  override def deleteAll(): RIO[WalletAccessContext, Long] = {
     for {
       store <- storeRef.get
       deleted = store.size
@@ -73,7 +74,7 @@ class CredentialDefinitionRepositoryInMemory(
 
   override def search(
       query: Repository.SearchQuery[CredentialDefinition.Filter]
-  ): Task[Repository.SearchResult[CredentialDefinition]] = {
+  ): RIO[WalletAccessContext, Repository.SearchResult[CredentialDefinition]] = {
     storeRef.get.map { store =>
       val filtered = store.values.filter { credDef =>
         query.filter.author.forall(_ == credDef.author) &&
@@ -88,7 +89,7 @@ class CredentialDefinitionRepositoryInMemory(
 }
 
 object CredentialDefinitionRepositoryInMemory {
-  val layer: ULayer[CredentialDefinitionRepository[Task]] = ZLayer.fromZIO(
+  val layer: ULayer[CredentialDefinitionRepository] = ZLayer.fromZIO(
     Ref
       .make(Map.empty[UUID, CredentialDefinition])
       .map(CredentialDefinitionRepositoryInMemory(_))

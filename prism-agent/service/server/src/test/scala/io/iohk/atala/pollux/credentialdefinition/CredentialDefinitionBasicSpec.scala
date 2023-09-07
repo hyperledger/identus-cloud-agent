@@ -1,15 +1,18 @@
 package io.iohk.atala.pollux.credentialdefinition
 
+import io.iohk.atala.agent.walletapi.model.Entity
 import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.container.util.MigrationAspects.*
+import io.iohk.atala.iam.authentication.Authenticator
 import io.iohk.atala.mercury.model.DidId
-import io.iohk.atala.pollux.core.service.serdes.PrivateCredentialDefinitionSchemaSerDesV1
-import io.iohk.atala.pollux.core.service.serdes.ProofKeyCredentialDefinitionSchemaSerDesV1
-import io.iohk.atala.pollux.core.service.serdes.PublicCredentialDefinitionSerDesV1
+import io.iohk.atala.pollux.core.service.serdes.{
+  PrivateCredentialDefinitionSchemaSerDesV1,
+  ProofKeyCredentialDefinitionSchemaSerDesV1,
+  PublicCredentialDefinitionSerDesV1
+}
 import io.iohk.atala.pollux.credentialdefinition.controller.CredentialDefinitionController
-import io.iohk.atala.pollux.credentialdefinition.http.CredentialDefinitionInput
-import io.iohk.atala.pollux.credentialdefinition.http.CredentialDefinitionResponse
+import io.iohk.atala.pollux.credentialdefinition.http.{CredentialDefinitionInput, CredentialDefinitionResponse}
 import sttp.client3.basicRequest
 import sttp.client3.ziojson.*
 import sttp.model.StatusCode
@@ -52,14 +55,18 @@ object CredentialDefinitionBasicSpec extends ZIOSpecDefault with CredentialDefin
 
   def spec = (
     credentialDefinitionCreateAndGetOperationsSpec
-      @@ nondeterministic @@ sequential @@ timed @@ migrate(
+      @@ nondeterministic @@ sequential @@ timed @@ migrateEach(
         schema = "public",
         paths = "classpath:sql/pollux"
       )
   ).provideSomeLayerShared(mockManagedDIDServiceLayer.toLayer >+> testEnvironmentLayer)
 
   private val credentialDefinitionCreateAndGetOperationsSpec = {
-    val backendZIO = ZIO.service[CredentialDefinitionController].map(httpBackend)
+    val backendZIO =
+      for {
+        controller <- ZIO.service[CredentialDefinitionController]
+        authenticator <- ZIO.service[Authenticator]
+      } yield httpBackend(controller, authenticator)
 
     def createCredentialDefinitionResponseZIO = for {
       backend <- backendZIO
@@ -110,11 +117,13 @@ object CredentialDefinitionBasicSpec extends ZIOSpecDefault with CredentialDefin
           )
           assertValidKeyCorrectnessProof = assert(maybeValidKeyCorrectnessProof)(Assertion.isTrue)
           svc <- ZIO.service[DIDSecretStorage]
-          maybeDidSecret <- svc.getKey(
-            DidId(credentialDefinitionInput.author),
-            s"anoncred-credential-definition-private-key/${fetchedCredentialDefinition.guid}",
-            PrivateCredentialDefinitionSchemaSerDesV1.version
-          )
+          maybeDidSecret <- svc
+            .getKey(
+              DidId(credentialDefinitionInput.author),
+              s"anoncred-credential-definition-private-key/${fetchedCredentialDefinition.guid}",
+              PrivateCredentialDefinitionSchemaSerDesV1.version
+            )
+            .provideSomeLayer(Entity.Default.wacLayer)
           (assertCorrectPrivateDefinitionSchema, maybeValidPrivateDefinitionZIO) = maybeDidSecret match {
             case Some(didSecret) =>
               val schemaAssertion =

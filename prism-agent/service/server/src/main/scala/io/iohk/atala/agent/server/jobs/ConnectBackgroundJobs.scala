@@ -14,11 +14,12 @@ import io.iohk.atala.mercury.model.*
 import io.iohk.atala.mercury.model.error.*
 import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.shared.models.WalletAccessContext
-import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
 import io.iohk.atala.shared.utils.DurationOps.toMetricsSeconds
+import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
 import zio.*
 import zio.metrics.*
-import java.time.{Instant, Duration}
+
+import java.time.{Duration, Instant}
 
 object ConnectBackgroundJobs {
 
@@ -40,7 +41,10 @@ object ConnectBackgroundJobs {
 
   private[this] def performExchange(
       record: ConnectionRecord
-  ): URIO[DidOps & DIDResolver & HttpClient & ConnectionService & ManagedDIDService & WalletAccessContext & AppConfig, Unit] = {
+  ): URIO[
+    DidOps & DIDResolver & HttpClient & ConnectionService & ManagedDIDService & WalletAccessContext & AppConfig,
+    Unit
+  ] = {
     import ProtocolState.*
     import Role.*
 

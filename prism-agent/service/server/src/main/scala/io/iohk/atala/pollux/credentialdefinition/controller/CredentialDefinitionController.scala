@@ -1,14 +1,16 @@
 package io.iohk.atala.pollux.credentialdefinition.controller
 
 import io.iohk.atala.api.http.*
-import io.iohk.atala.api.http.model.Order
-import io.iohk.atala.api.http.model.Pagination
+import io.iohk.atala.api.http.model.{Order, Pagination}
 import io.iohk.atala.pollux.core.service.CredentialDefinitionService
 import io.iohk.atala.pollux.core.service.CredentialDefinitionService.Error.*
-import io.iohk.atala.pollux.credentialdefinition.http.CredentialDefinitionInput
-import io.iohk.atala.pollux.credentialdefinition.http.CredentialDefinitionResponse
-import io.iohk.atala.pollux.credentialdefinition.http.CredentialDefinitionResponsePage
-import io.iohk.atala.pollux.credentialdefinition.http.FilterInput
+import io.iohk.atala.pollux.credentialdefinition.http.{
+  CredentialDefinitionInput,
+  CredentialDefinitionResponse,
+  CredentialDefinitionResponsePage,
+  FilterInput
+}
+import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 
 import java.util.UUID
@@ -17,7 +19,7 @@ import scala.language.implicitConversions
 trait CredentialDefinitionController {
   def createCredentialDefinition(in: CredentialDefinitionInput)(implicit
       rc: RequestContext
-  ): IO[ErrorResponse, CredentialDefinitionResponse]
+  ): ZIO[WalletAccessContext, ErrorResponse, CredentialDefinitionResponse]
 
   def getCredentialDefinitionByGuid(id: UUID)(implicit
       rc: RequestContext
@@ -25,7 +27,7 @@ trait CredentialDefinitionController {
 
   def delete(guid: UUID)(implicit
       rc: RequestContext
-  ): IO[ErrorResponse, CredentialDefinitionResponse]
+  ): ZIO[WalletAccessContext, ErrorResponse, CredentialDefinitionResponse]
 
   def lookupCredentialDefinitions(
       filter: FilterInput,
@@ -33,7 +35,7 @@ trait CredentialDefinitionController {
       order: Option[Order]
   )(implicit
       rc: RequestContext
-  ): IO[ErrorResponse, CredentialDefinitionResponsePage]
+  ): ZIO[WalletAccessContext, ErrorResponse, CredentialDefinitionResponsePage]
 
 }
 

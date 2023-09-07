@@ -27,12 +27,14 @@ import io.iohk.atala.iam.wallet.http.controller.WalletManagementControllerImpl
 import io.iohk.atala.issue.controller.IssueControllerImpl
 import io.iohk.atala.mercury.*
 import io.iohk.atala.pollux.core.service.*
+import io.iohk.atala.pollux.credentialdefinition.controller.CredentialDefinitionControllerImpl
 import io.iohk.atala.pollux.credentialschema.controller.{
   CredentialSchemaController,
   CredentialSchemaControllerImpl,
   VerificationPolicyControllerImpl
 }
 import io.iohk.atala.pollux.sql.repository.{
+  JdbcCredentialDefinitionRepository,
   JdbcCredentialRepository,
   JdbcCredentialSchemaRepository,
   JdbcPresentationRepository,
@@ -159,6 +161,7 @@ object MainApp extends ZIOAppDefault {
           RepoModule.connectContextAwareTransactorLayer >>> JdbcConnectionRepository.layer,
           RepoModule.polluxContextAwareTransactorLayer >>> JdbcCredentialRepository.layer,
           RepoModule.polluxContextAwareTransactorLayer ++ RepoModule.polluxTransactorLayer >>> JdbcCredentialSchemaRepository.layer,
+          RepoModule.polluxContextAwareTransactorLayer ++ RepoModule.polluxTransactorLayer >>> JdbcCredentialDefinitionRepository.layer,
           RepoModule.polluxContextAwareTransactorLayer >>> JdbcPresentationRepository.layer,
           RepoModule.polluxContextAwareTransactorLayer >>> JdbcVerificationPolicyRepository.layer,
           // event notification service

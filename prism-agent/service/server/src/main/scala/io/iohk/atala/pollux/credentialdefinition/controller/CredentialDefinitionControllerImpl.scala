@@ -1,25 +1,24 @@
 package io.iohk.atala.pollux.credentialdefinition.controller
 
-import io.iohk.atala.agent.walletapi.model.ManagedDIDState
-import io.iohk.atala.agent.walletapi.model.PublicationState
+import io.iohk.atala.agent.walletapi.model.{ManagedDIDState, PublicationState}
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.api.http.*
-import io.iohk.atala.api.http.model.CollectionStats
-import io.iohk.atala.api.http.model.Order
-import io.iohk.atala.api.http.model.Pagination
-import io.iohk.atala.castor.core.model.did.LongFormPrismDID
-import io.iohk.atala.castor.core.model.did.PrismDID
+import io.iohk.atala.api.http.model.{CollectionStats, Order, Pagination}
+import io.iohk.atala.castor.core.model.did.{LongFormPrismDID, PrismDID}
 import io.iohk.atala.pollux.core.model.schema.CredentialDefinition.FilteredEntries
 import io.iohk.atala.pollux.core.service.CredentialDefinitionService
 import io.iohk.atala.pollux.core.service.CredentialDefinitionService.Error.*
 import io.iohk.atala.pollux.credentialdefinition
 import io.iohk.atala.pollux.credentialdefinition.controller.CredentialDefinitionController.domainToHttpErrorIO
-import io.iohk.atala.pollux.credentialdefinition.http.CredentialDefinitionInput
 import io.iohk.atala.pollux.credentialdefinition.http.CredentialDefinitionInput.toDomain
-import io.iohk.atala.pollux.credentialdefinition.http.CredentialDefinitionResponse
 import io.iohk.atala.pollux.credentialdefinition.http.CredentialDefinitionResponse.fromDomain
-import io.iohk.atala.pollux.credentialdefinition.http.CredentialDefinitionResponsePage
-import io.iohk.atala.pollux.credentialdefinition.http.FilterInput
+import io.iohk.atala.pollux.credentialdefinition.http.{
+  CredentialDefinitionInput,
+  CredentialDefinitionResponse,
+  CredentialDefinitionResponsePage,
+  FilterInput
+}
+import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 
 import java.util.UUID
@@ -30,7 +29,7 @@ class CredentialDefinitionControllerImpl(service: CredentialDefinitionService, m
       in: CredentialDefinitionInput
   )(implicit
       rc: RequestContext
-  ): IO[ErrorResponse, CredentialDefinitionResponse] = {
+  ): ZIO[WalletAccessContext, ErrorResponse, CredentialDefinitionResponse] = {
     (for {
       _ <- validatePrismDID(in.author)
       result <- service
@@ -55,7 +54,7 @@ class CredentialDefinitionControllerImpl(service: CredentialDefinitionService, m
 
   override def delete(guid: UUID)(implicit
       rc: RequestContext
-  ): IO[ErrorResponse, CredentialDefinitionResponse] = {
+  ): ZIO[WalletAccessContext, ErrorResponse, CredentialDefinitionResponse] = {
     service
       .delete(guid)
       .map(
@@ -70,7 +69,7 @@ class CredentialDefinitionControllerImpl(service: CredentialDefinitionService, m
       order: Option[Order]
   )(implicit
       rc: RequestContext
-  ): IO[ErrorResponse, CredentialDefinitionResponsePage] = {
+  ): ZIO[WalletAccessContext, ErrorResponse, CredentialDefinitionResponsePage] = {
     for {
       filteredEntries: FilteredEntries <- service.lookup(
         filter.toDomain,
@@ -96,7 +95,7 @@ class CredentialDefinitionControllerImpl(service: CredentialDefinitionService, m
   private[this] def getLongForm(
       did: PrismDID,
       allowUnpublishedIssuingDID: Boolean = false
-  ): IO[ErrorResponse, LongFormPrismDID] = {
+  ): ZIO[WalletAccessContext, ErrorResponse, LongFormPrismDID] = {
     for {
       didState <- managedDIDService
         .getManagedDIDState(did.asCanonical)

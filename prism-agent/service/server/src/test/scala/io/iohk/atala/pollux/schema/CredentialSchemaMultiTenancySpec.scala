@@ -1,4 +1,4 @@
-package io.iohk.atala.pollux
+package io.iohk.atala.pollux.schema
 
 import com.dimafeng.testcontainers.PostgreSQLContainer
 import io.iohk.atala.agent.walletapi.model.Entity

@@ -16,7 +16,8 @@ CREATE TABLE public.credential_definition
     schema_id          VARCHAR(255)             NOT NULL,
     signature_type     VARCHAR(64)              NOT NULL,
     support_revocation BOOLEAN                  NOT NULL,
-    UNIQUE (name, version, author)
+    wallet_id          UUID                     NOT NULL,
+    UNIQUE (wallet_id, name, version, author)
 );
 
 CREATE INDEX credential_definition_name_index ON public.credential_definition (name);
@@ -25,5 +26,9 @@ CREATE INDEX credential_definition_tags_index ON public.credential_definition (t
 CREATE INDEX credential_definition_author_index ON public.credential_definition (author);
 CREATE INDEX credential_definition_authored_index ON public.credential_definition (authored);
 
+ALTER TABLE public.credential_definition ENABLE ROW LEVEL SECURITY;
 
+CREATE POLICY credential_definition_wallet_isolation
+ON public.credential_definition
+USING (wallet_id = current_setting('app.current_wallet_id')::UUID);
 

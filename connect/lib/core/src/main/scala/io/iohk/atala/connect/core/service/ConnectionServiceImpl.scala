@@ -174,7 +174,9 @@ private class ConnectionServiceImpl(
       case Some(value) => ZIO.succeed(value)
     }
 
-  override def markConnectionInvitationExpired(recordId: UUID): IO[ConnectionServiceError, ConnectionRecord] =
+  override def markConnectionInvitationExpired(
+      recordId: UUID
+  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
     updateConnectionProtocolState(
       recordId,
       ProtocolState.InvitationGenerated,

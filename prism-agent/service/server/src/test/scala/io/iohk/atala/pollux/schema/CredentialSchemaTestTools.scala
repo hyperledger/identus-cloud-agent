@@ -1,9 +1,11 @@
-package io.iohk.atala.pollux
+package io.iohk.atala.pollux.schema
 
+import com.dimafeng.testcontainers.PostgreSQLContainer
 import io.iohk.atala.agent.walletapi.model.{ManagedDIDState, PublicationState}
 import io.iohk.atala.agent.walletapi.service.{ManagedDIDService, MockManagedDIDService}
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.castor.core.model.did.PrismDIDOperation
+import io.iohk.atala.iam.authentication.{Authenticator, DefaultEntityAuthenticator}
 import io.iohk.atala.pollux.core.model.schema.`type`.CredentialJsonSchemaType
 import io.iohk.atala.pollux.core.repository.CredentialSchemaRepository
 import io.iohk.atala.pollux.core.service.{CredentialSchemaService, CredentialSchemaServiceImpl}
@@ -32,8 +34,6 @@ import zio.mock.Expectation
 import zio.test.{Assertion, Gen, ZIOSpecDefault}
 
 import java.time.OffsetDateTime
-import com.dimafeng.testcontainers.PostgreSQLContainer
-import io.iohk.atala.iam.authentication.{Authenticator, DefaultEntityAuthenticator}
 
 trait CredentialSchemaTestTools extends PostgresTestContainerSupport {
   self: ZIOSpecDefault =>
