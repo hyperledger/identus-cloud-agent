@@ -46,7 +46,7 @@ curl --location 'http://localhost:8080/prism-agent/events/webhooks' \
     "url": "http://host.docker.internal:9957"
   }'
 
-# (
-# 	cd ${SCRIPT_DIR}/../../tests/e2e-tests/
-# 	./gradlew test reports
-# )
+(
+	cd ${SCRIPT_DIR}/../../tests/e2e-tests/
+	./gradlew test reports
+)
