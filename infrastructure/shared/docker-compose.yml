@@ -99,9 +99,9 @@ services:
       VAULT_TOKEN: ${VAULT_DEV_ROOT_TOKEN_ID:-root}
       SECRET_STORAGE_BACKEND: postgres
       DEV_MODE: true
-      WALLET_SEED:
-      WEBHOOK_URL:
-      WEBHOOK_API_KEY:
+      DEFAULT_WALLET_SEED:
+      GLOBAL_WEBHOOK_URL:
+      GLOBAL_WEBHOOK_API_KEY:
     depends_on:
       db:
         condition: service_healthy

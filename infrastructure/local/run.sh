@@ -55,16 +55,16 @@ while [[ $# -gt 0 ]]; do
 		shift # past argument
 		shift # past value
 		;;
-  --webhook)
-  	WEBHOOK_URL="$2"
-  	shift # past argument
-  	shift # past value
-  	;;
-  --webhook-api-key)
-  	WEBHOOK_API_KEY="$2"
-  	shift # past argument
-  	shift # past value
-  	;;
+	--webhook)
+		GLOBAL_WEBHOOK_URL="$2"
+		shift # past argument
+		shift # past value
+		;;
+	--webhook-api-key)
+		GLOBAL_WEBHOOK_API_KEY="$2"
+		shift # past argument
+		shift # past value
+		;;
 	--debug)
 		DEBUG="--profile debug"
 		shift # past argument
@@ -103,7 +103,6 @@ echo "ENV_FILE        = ${ENV_FILE}"
 echo "NETWORK         = ${NETWORK}"
 echo "WEBHOOK_URL     = ${WEBHOOK_URL}"
 echo "WEBHOOK_API_KEY = ${WEBHOOK_API_KEY}"
-
 
 echo "--------------------------------------"
 echo "Starting stack using docker compose"
