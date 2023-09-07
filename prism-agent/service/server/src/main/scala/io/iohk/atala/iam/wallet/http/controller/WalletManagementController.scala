@@ -13,11 +13,11 @@ import io.iohk.atala.iam.wallet.http.model.CreateWalletRequest
 import io.iohk.atala.iam.wallet.http.model.WalletDetail
 import io.iohk.atala.iam.wallet.http.model.WalletDetailPage
 import io.iohk.atala.shared.models.HexString
+import io.iohk.atala.shared.models.WalletId
 import zio.*
 
 import java.util.UUID
 import scala.language.implicitConversions
-import io.iohk.atala.shared.models.WalletId
 
 trait WalletManagementController {
   def listWallet(paginationInput: PaginationInput)(implicit rc: RequestContext): IO[ErrorResponse, WalletDetailPage]
@@ -26,11 +26,13 @@ trait WalletManagementController {
 }
 
 object WalletManagementController {
-  given Conversion[WalletManagementServiceError, ErrorResponse] = {
+  given walletServiceErrorConversion: Conversion[WalletManagementServiceError, ErrorResponse] = {
     case WalletManagementServiceError.SeedGenerationError(cause) =>
       ErrorResponse.internalServerError(detail = Some(cause.toString()))
     case WalletManagementServiceError.WalletStorageError(cause) =>
       ErrorResponse.internalServerError(detail = Some(cause.toString()))
+    case WalletManagementServiceError.TooManyWebhookError(limit, actual) =>
+      ErrorResponse.conflict(detail = Some(s"Too many webhook created for a wallet. (limit $limit, actual $actual)"))
   }
 }
 
@@ -74,7 +76,8 @@ class WalletManagementControllerImpl(
   )(implicit rc: RequestContext): IO[ErrorResponse, WalletDetail] = {
     for {
       providedSeed <- request.seed.fold(ZIO.none)(s => extractWalletSeed(s).asSome)
-      wallet <- service.createWallet(Wallet(request.name), providedSeed).mapError[ErrorResponse](e => e)
+      walletId = request.id.map(WalletId.fromUUID).getOrElse(WalletId.random)
+      wallet <- service.createWallet(Wallet(request.name, walletId), providedSeed).mapError[ErrorResponse](e => e)
     } yield wallet
   }
 

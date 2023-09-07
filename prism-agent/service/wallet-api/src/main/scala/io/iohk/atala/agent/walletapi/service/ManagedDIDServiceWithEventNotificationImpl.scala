@@ -42,13 +42,14 @@ class ManagedDIDServiceWithEventNotificationImpl(
       c2: Conversion[DIDOperationError, E]
   ): ZIO[WalletAccessContext, E, Boolean] = {
     for {
+      walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
       updated <- super.computeNewDIDStateFromDLTAndPersist(did)
       _ <- ZIO.when(updated) {
         val result = for {
           maybeUpdatedDID <- nonSecretStorage.getManagedDIDState(did)
           updatedDID <- ZIO.fromOption(maybeUpdatedDID)
           producer <- eventNotificationService.producer[ManagedDIDDetail]("DIDDetail")
-          _ <- producer.send(Event(didStatusUpdatedEventName, ManagedDIDDetail(did, updatedDID)))
+          _ <- producer.send(Event(didStatusUpdatedEventName, ManagedDIDDetail(did, updatedDID), walletId))
         } yield ()
         result.catchAll(e => ZIO.logError(s"Notification service error: $e"))
       }

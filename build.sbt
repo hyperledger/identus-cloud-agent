@@ -747,6 +747,7 @@ lazy val eventNotification = project
     name := "event-notification",
     libraryDependencies ++= D_EventNotification.baseDependencies
   )
+  .dependsOn(shared)
 
 // #####################
 // #### Prism Agent ####
@@ -785,7 +786,7 @@ lazy val prismAgentServer = project
   )
   .enablePlugins(JavaAppPackaging, DockerPlugin)
   .enablePlugins(BuildInfoPlugin)
-  .dependsOn(prismAgentWalletAPI)
+  .dependsOn(prismAgentWalletAPI % "compile->compile;test->test")
   .dependsOn(
     agent,
     polluxCore,

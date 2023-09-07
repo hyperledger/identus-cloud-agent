@@ -12,8 +12,11 @@ import io.iohk.atala.pollux.core.model.{
   PresentationRecord as PolluxPresentationRecord
 }
 import io.iohk.atala.presentproof.controller.http.PresentationStatus
+import io.iohk.atala.shared.models.WalletId
 import zio.*
 import zio.json.*
+
+import java.util.UUID
 
 object JsonEventEncoders {
 
@@ -30,6 +33,8 @@ object JsonEventEncoders {
 
   implicit val managedDIDDetailEncoder: JsonEncoder[ManagedDIDDetail] =
     ManagedDID.encoder.contramap(implicitly[Conversion[ManagedDIDDetail, ManagedDID]].convert)
+
+  implicit val walletIdEncoder: JsonEncoder[WalletId] = summon[JsonEncoder[UUID]].contramap(_.toUUID)
 
   implicit def eventEncoder[T](implicit jsonEncoder: JsonEncoder[T]): JsonEncoder[Event[T]] =
     DeriveJsonEncoder.gen[Event[T]]

@@ -36,7 +36,7 @@ object DIDRegistrarEndpoints {
     Any
   ] = baseEndpoint.get
     .in(paginationInput)
-    .errorOut(EndpointOutputs.basicFailures)
+    .errorOut(EndpointOutputs.basicFailuresAndForbidden)
     .out(statusCode(StatusCode.Ok).description("List Prism Agent managed DIDs"))
     .out(jsonBody[ManagedDIDPage])
     .summary("List all DIDs stored in Prism Agent's wallet")
@@ -54,7 +54,7 @@ object DIDRegistrarEndpoints {
     Any
   ] = baseEndpoint.post
     .in(jsonBody[CreateManagedDidRequest])
-    .errorOut(EndpointOutputs.basicFailuresWith(FailureVariant.unprocessableEntity))
+    .errorOut(EndpointOutputs.basicFailuresWith(FailureVariant.unprocessableEntity, FailureVariant.notFound))
     .out(statusCode(StatusCode.Created).description("Created unpublished DID."))
     .out(jsonBody[CreateManagedDIDResponse])
     .summary("Create unpublished DID and store it in Prism Agent's wallet")
@@ -71,7 +71,7 @@ object DIDRegistrarEndpoints {
     Any
   ] = baseEndpoint.get
     .in(DIDInput.didRefPathSegment)
-    .errorOut(EndpointOutputs.basicFailuresAndNotFound)
+    .errorOut(EndpointOutputs.basicFailureAndNotFoundAndForbidden)
     .out(statusCode(StatusCode.Ok).description("Get Prism Agent managed DID"))
     .out(jsonBody[ManagedDID])
     .summary("Get DID stored in Prism Agent's wallet")
@@ -85,7 +85,7 @@ object DIDRegistrarEndpoints {
     Any
   ] = baseEndpoint.post
     .in(DIDInput.didRefPathSegment / "publications")
-    .errorOut(EndpointOutputs.basicFailuresAndNotFound)
+    .errorOut(EndpointOutputs.basicFailureAndNotFoundAndForbidden)
     .out(statusCode(StatusCode.Accepted).description("Publishing DID to the VDR."))
     .out(jsonBody[DIDOperationResponse])
     .summary("Publish the DID stored in Prism Agent's wallet to the VDR")
@@ -102,7 +102,12 @@ object DIDRegistrarEndpoints {
     .in(jsonBody[UpdateManagedDIDRequest])
     .errorOut(
       EndpointOutputs
-        .basicFailuresWith(FailureVariant.unprocessableEntity, FailureVariant.notFound, FailureVariant.conflict)
+        .basicFailuresWith(
+          FailureVariant.unprocessableEntity,
+          FailureVariant.notFound,
+          FailureVariant.conflict,
+          FailureVariant.forbidden
+        )
     )
     .out(statusCode(StatusCode.Accepted).description("DID update operation accepted"))
     .out(jsonBody[DIDOperationResponse])
@@ -122,7 +127,10 @@ object DIDRegistrarEndpoints {
     Any
   ] = baseEndpoint.post
     .in(DIDInput.didRefPathSegment / "deactivations")
-    .errorOut(EndpointOutputs.basicFailuresWith(FailureVariant.unprocessableEntity, FailureVariant.notFound))
+    .errorOut(
+      EndpointOutputs
+        .basicFailuresWith(FailureVariant.unprocessableEntity, FailureVariant.notFound, FailureVariant.forbidden)
+    )
     .out(statusCode(StatusCode.Accepted).description("DID deactivation operation accepted"))
     .out(jsonBody[DIDOperationResponse])
     .summary("Deactivate DID in Prism Agent's wallet and post deactivate operation to the VDR")

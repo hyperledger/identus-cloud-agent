@@ -26,7 +26,7 @@ object IssueEndpoints {
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in("issue-credentials" / "credential-offers")
       .in(jsonBody[CreateIssueCredentialRecordRequest].description("The credential offer object."))
-      .errorOut(basicFailures)
+      .errorOut(basicFailuresAndForbidden)
       .out(statusCode(StatusCode.Created))
       .out(jsonBody[IssueCredentialRecord].description("The issue credential record."))
       .tag("Issue Credentials Protocol")
@@ -47,7 +47,7 @@ object IssueEndpoints {
       .in("issue-credentials" / "records")
       .in(paginationInput)
       .in(query[Option[String]]("thid").description("The thid of a DIDComm communication."))
-      .errorOut(basicFailures)
+      .errorOut(basicFailuresAndForbidden)
       .out(jsonBody[IssueCredentialRecordPage].description("The list of issue credential records."))
       .tag("Issue Credentials Protocol")
       .summary("Gets the list of issue credential records.")
@@ -69,7 +69,7 @@ object IssueEndpoints {
           "The unique identifier of the issue credential record."
         )
       )
-      .errorOut(basicFailuresAndNotFound)
+      .errorOut(basicFailureAndNotFoundAndForbidden)
       .out(jsonBody[IssueCredentialRecord].description("The issue credential record."))
       .tag("Issue Credentials Protocol")
       .summary("Gets an existing issue credential record by its unique identifier.")
@@ -93,7 +93,7 @@ object IssueEndpoints {
       )
       .in("accept-offer")
       .in(jsonBody[AcceptCredentialOfferRequest].description("The accept credential offer request object."))
-      .errorOut(basicFailuresAndNotFound)
+      .errorOut(basicFailureAndNotFoundAndForbidden)
       .out(jsonBody[IssueCredentialRecord].description("The issue credential offer was successfully accepted."))
       .tag("Issue Credentials Protocol")
       .summary("As a holder, accepts a credential offer received from an issuer.")
@@ -116,7 +116,7 @@ object IssueEndpoints {
         )
       )
       .in("issue-credential")
-      .errorOut(basicFailuresAndNotFound)
+      .errorOut(basicFailureAndNotFoundAndForbidden)
       .out(
         jsonBody[IssueCredentialRecord].description(
           "The request was processed successfully and the credential will be issued asynchronously."

@@ -146,7 +146,7 @@ object SchemaRegistryEndpoints {
       .in(paginationInput)
       .in(query[Option[Order]]("order"))
       .out(jsonBody[CredentialSchemaResponsePage].description("Collection of CredentialSchema records."))
-      .errorOut(basicFailures)
+      .errorOut(basicFailuresAndForbidden)
       .name("lookupSchemasByQuery")
       .summary("Lookup schemas by indexed fields")
       .description(

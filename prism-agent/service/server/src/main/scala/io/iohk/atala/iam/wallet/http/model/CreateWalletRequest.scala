@@ -4,6 +4,7 @@ import io.iohk.atala.api.http.Annotation
 import sttp.tapir.*
 import sttp.tapir.Schema.annotations.{description, encodedExample}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
+import java.util.UUID
 
 final case class CreateWalletRequest(
     @description(CreateWalletRequest.annotations.seed.description)
@@ -11,7 +12,10 @@ final case class CreateWalletRequest(
     seed: Option[String],
     @description(CreateWalletRequest.annotations.name.description)
     @encodedExample(CreateWalletRequest.annotations.name.example)
-    name: String
+    name: String,
+    @description(CreateWalletRequest.annotations.id.description)
+    @encodedExample(CreateWalletRequest.annotations.id.example)
+    id: Option[UUID]
 )
 
 object CreateWalletRequest {
@@ -32,6 +36,12 @@ object CreateWalletRequest {
         extends Annotation[String](
           description = "A name of the wallet",
           example = "my-wallet-1"
+        )
+
+    object id
+        extends Annotation[UUID](
+          description = "The unique `id` of the wallet. Randomly generated if not specified.",
+          example = UUID.fromString("00000000-0000-0000-0000-000000000000")
         )
   }
 }

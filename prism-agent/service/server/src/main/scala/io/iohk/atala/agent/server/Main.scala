@@ -17,6 +17,7 @@ import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.connect.controller.ConnectionControllerImpl
 import io.iohk.atala.connect.core.service.{ConnectionServiceImpl, ConnectionServiceNotifier}
 import io.iohk.atala.connect.sql.repository.{JdbcConnectionRepository, Migrations as ConnectMigrations}
+import io.iohk.atala.event.controller.EventControllerImpl
 import io.iohk.atala.event.notification.EventNotificationServiceImpl
 import io.iohk.atala.iam.authentication.DefaultAuthenticator
 import io.iohk.atala.iam.authentication.admin.{AdminApiKeyAuthenticatorImpl, AdminConfig}
@@ -125,6 +126,7 @@ object MainApp extends ZIOAppDefault {
           VerificationPolicyControllerImpl.layer,
           EntityControllerImpl.layer,
           WalletManagementControllerImpl.layer,
+          EventControllerImpl.layer,
           // domain
           AppModule.apolloLayer,
           AppModule.didJwtResolverlayer,
@@ -149,14 +151,14 @@ object MainApp extends ZIOAppDefault {
           GrpcModule.prismNodeStubLayer,
           // storage
           DIDKeySecretStorageImpl.layer,
-          RepoModule.agentContextAwareTransactorLayer >+> RepoModule.agentTransactorLayer >>> JdbcDIDNonSecretStorage.layer,
+          RepoModule.agentContextAwareTransactorLayer ++ RepoModule.agentTransactorLayer >>> JdbcDIDNonSecretStorage.layer,
           RepoModule.agentContextAwareTransactorLayer >>> JdbcWalletNonSecretStorage.layer,
           RepoModule.allSecretStorageLayer,
           RepoModule.agentTransactorLayer >>> JdbcEntityRepository.layer,
           RepoModule.agentTransactorLayer >>> JdbcAuthenticationRepository.layer,
           RepoModule.connectContextAwareTransactorLayer >>> JdbcConnectionRepository.layer,
           RepoModule.polluxContextAwareTransactorLayer >>> JdbcCredentialRepository.layer,
-          RepoModule.polluxContextAwareTransactorLayer >+> RepoModule.polluxTransactorLayer >>> JdbcCredentialSchemaRepository.layer,
+          RepoModule.polluxContextAwareTransactorLayer ++ RepoModule.polluxTransactorLayer >>> JdbcCredentialSchemaRepository.layer,
           RepoModule.polluxContextAwareTransactorLayer >>> JdbcPresentationRepository.layer,
           RepoModule.polluxContextAwareTransactorLayer >>> JdbcVerificationPolicyRepository.layer,
           // event notification service
