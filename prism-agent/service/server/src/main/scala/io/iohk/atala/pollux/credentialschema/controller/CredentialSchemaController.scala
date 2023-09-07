@@ -60,7 +60,7 @@ object CredentialSchemaController {
       case UnexpectedError(msg: String) =>
         ErrorResponse.internalServerError(detail = Option(msg))
       case CredentialSchemaValidationError(cause) =>
-        ErrorResponse.badRequest(detail = Some(cause.userMessage))
+        ErrorResponse.badRequest(detail = Some(cause.message))
     }
   }
 

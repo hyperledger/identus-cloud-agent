@@ -15,8 +15,8 @@ services:
       - pg_data_db:/var/lib/postgresql/data
       - ./postgres/init-script.sh:/docker-entrypoint-initdb.d/init-script.sh
       - ./postgres/max_conns.sql:/docker-entrypoint-initdb.d/max_conns.sql
-#    ports:
-#      - "5432:5432"
+    #    ports:
+    #      - "5432:5432"
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "postgres", "-d", "iris"]
       interval: 10s
@@ -121,8 +121,7 @@ services:
     image: swaggerapi/swagger-ui:v5.1.0
     environment:
       - 'URLS=[
-        { name: "Prism Agent", url: "/docs/prism-agent/api/docs.yaml" },
-        { name: "Mediator", url: "/docs/mediator/api/openapi-spec.yaml" }
+        { name: "Prism Agent", url: "/docs/prism-agent/api/docs.yaml" }
         ]'
 
   apisix:

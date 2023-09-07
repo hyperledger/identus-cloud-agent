@@ -1,3 +1,19 @@
+# [1.12.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v1.11.0...prism-agent-v1.12.0) (2023-08-31)
+
+
+### Bug Fixes
+
+* **prism-agent:** invitation expiry configuration and new state ([#655](https://github.com/input-output-hk/atala-prism-building-blocks/issues/655)) ([c61999d](https://github.com/input-output-hk/atala-prism-building-blocks/commit/c61999dd2a256401c30d29b842f0092f4968c6ed))
+
+
+### Features
+
+* add anoncreds credential definition rest api ([#624](https://github.com/input-output-hk/atala-prism-building-blocks/issues/624)) ([99e338a](https://github.com/input-output-hk/atala-prism-building-blocks/commit/99e338af6dc1ab2b4b42f4b1bee2a917ccb77b4c))
+* allow external API keys to be defined for an agent ([#643](https://github.com/input-output-hk/atala-prism-building-blocks/issues/643)) ([756dea7](https://github.com/input-output-hk/atala-prism-building-blocks/commit/756dea707b1ced9de800cdabfded6dfc100e340e))
+* ATL-5571 Generalized Vault to Store Json ([#650](https://github.com/input-output-hk/atala-prism-building-blocks/issues/650)) ([ebf0328](https://github.com/input-output-hk/atala-prism-building-blocks/commit/ebf0328cfb5107954766fe93ffc6b42f4e5a4cb0))
+* ATL-5574 Prime Anoncred Lib ([#652](https://github.com/input-output-hk/atala-prism-building-blocks/issues/652)) ([70b2f16](https://github.com/input-output-hk/atala-prism-building-blocks/commit/70b2f16beecdef7eeeabb18f1b25244046ba5a65))
+* ATL-5575 Generalize and Streamline Json Schema SerDes logic ([#653](https://github.com/input-output-hk/atala-prism-building-blocks/issues/653)) ([eb4f8f4](https://github.com/input-output-hk/atala-prism-building-blocks/commit/eb4f8f488bcef421e20f770669dfff99f4c1dd98))
+
 # [1.11.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v1.10.0...prism-agent-v1.11.0) (2023-08-21)
 
 

@@ -54,6 +54,12 @@ class ConnectionServiceNotifier(
   ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
     notifyOnSuccess(svc.markConnectionResponseSent(recordId))
 
+  // FIXME: should it be context aware????
+  override def markConnectionInvitationExpired(
+      recordId: UUID
+  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
+    notifyOnSuccess(svc.markConnectionInvitationExpired(recordId))
+
   override def receiveConnectionResponse(
       response: ConnectionResponse
   ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =

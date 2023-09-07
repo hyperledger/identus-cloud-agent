@@ -26,51 +26,51 @@ object DIDEndpoints {
   val resolutionEndpointOutput = oneOf[DIDResolutionResult](
     oneOfVariantValueMatcher(
       StatusCode.Ok,
-      oneOfBody[DIDResolutionResult](
-        stringBodyUtf8AnyFormat(didResolutionJsonLD),
-        stringBodyUtf8AnyFormat(didJsonLD)
+      oneOf[DIDResolutionResult](
+        oneOfVariant(stringBodyUtf8AnyFormat(didResolutionJsonLD)),
+        oneOfVariant(stringBodyUtf8AnyFormat(didJsonLD))
       )
     )(matchStatus(StatusCode.Ok)),
     oneOfVariantValueMatcher(
       StatusCode.BadRequest,
-      oneOfBody[DIDResolutionResult](
-        stringBodyUtf8AnyFormat(didResolutionJsonLD),
-        stringBodyUtf8AnyFormat(emptyDidJsonLD)
+      oneOf[DIDResolutionResult](
+        oneOfVariant(stringBodyUtf8AnyFormat(didResolutionJsonLD)),
+        oneOfVariant(stringBodyUtf8AnyFormat(emptyDidJsonLD))
       )
     )(matchStatus(StatusCode.BadRequest)),
     oneOfVariantValueMatcher(
       StatusCode.NotFound,
-      oneOfBody[DIDResolutionResult](
-        stringBodyUtf8AnyFormat(didResolutionJsonLD),
-        stringBodyUtf8AnyFormat(emptyDidJsonLD)
+      oneOf[DIDResolutionResult](
+        oneOfVariant(stringBodyUtf8AnyFormat(didResolutionJsonLD)),
+        oneOfVariant(stringBodyUtf8AnyFormat(emptyDidJsonLD))
       )
     )(matchStatus(StatusCode.NotFound)),
     oneOfVariantValueMatcher(
       StatusCode.NotAcceptable,
-      oneOfBody[DIDResolutionResult](
-        stringBodyUtf8AnyFormat(didResolutionJsonLD),
-        stringBodyUtf8AnyFormat(emptyDidJsonLD)
+      oneOf[DIDResolutionResult](
+        oneOfVariant(stringBodyUtf8AnyFormat(didResolutionJsonLD)),
+        oneOfVariant(stringBodyUtf8AnyFormat(emptyDidJsonLD))
       )
     )(matchStatus(StatusCode.NotAcceptable)),
     oneOfVariantValueMatcher(
       StatusCode.Gone,
-      oneOfBody[DIDResolutionResult](
-        stringBodyUtf8AnyFormat(didResolutionJsonLD),
-        stringBodyUtf8AnyFormat(emptyDidJsonLD)
+      oneOf[DIDResolutionResult](
+        oneOfVariant(stringBodyUtf8AnyFormat(didResolutionJsonLD)),
+        oneOfVariant(stringBodyUtf8AnyFormat(emptyDidJsonLD))
       )
     )(matchStatus(StatusCode.Gone)),
     oneOfVariantValueMatcher(
       StatusCode.NotImplemented,
-      oneOfBody[DIDResolutionResult](
-        stringBodyUtf8AnyFormat(didResolutionJsonLD),
-        stringBodyUtf8AnyFormat(emptyDidJsonLD)
+      oneOf[DIDResolutionResult](
+        oneOfVariant(stringBodyUtf8AnyFormat(didResolutionJsonLD)),
+        oneOfVariant(stringBodyUtf8AnyFormat(emptyDidJsonLD))
       )
     )(matchStatus(StatusCode.NotImplemented)),
     oneOfVariantValueMatcher(
       StatusCode.InternalServerError,
-      oneOfBody[DIDResolutionResult](
-        stringBodyUtf8AnyFormat(didResolutionJsonLD),
-        stringBodyUtf8AnyFormat(emptyDidJsonLD)
+      oneOf[DIDResolutionResult](
+        oneOfVariant(stringBodyUtf8AnyFormat(didResolutionJsonLD)),
+        oneOfVariant(stringBodyUtf8AnyFormat(emptyDidJsonLD))
       )
     )(_ => true),
   )

@@ -17,7 +17,7 @@ class VaultDIDSecretStorage(vaultKV: VaultKVClient) extends DIDSecretStorage {
       _ <- vaultKV
         .set[DIDSecret](path, didSecret)
         .when(!alreadyExist)
-        .someOrFail(Exception(s"Secret on path $path alraedy exists."))
+        .someOrFail(Exception(s"Secret on path $path already exists."))
     } yield 1
   }
 

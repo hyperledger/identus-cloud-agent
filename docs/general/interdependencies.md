@@ -42,7 +42,6 @@ flowchart
         mercury --> pollux
         mercury --> connect
         mercury --> prism-agent
-        mercury --> mediator
 
         connect --> prism-agent
 
