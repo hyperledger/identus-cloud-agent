@@ -97,18 +97,26 @@ PORT="${PORT:=80}"
 ENV_FILE="${ENV_FILE:=${SCRIPT_DIR}/.env}"
 NETWORK="${NETWORK:=${NAME}-prism}"
 
-echo "NAME            = ${NAME}"
-echo "PORT            = ${PORT}"
-echo "ENV_FILE        = ${ENV_FILE}"
-echo "NETWORK         = ${NETWORK}"
-echo "WEBHOOK_URL     = ${WEBHOOK_URL}"
-echo "WEBHOOK_API_KEY = ${WEBHOOK_API_KEY}"
+echo "NAME                   = ${NAME}"
+echo "PORT                   = ${PORT}"
+echo "ENV_FILE               = ${ENV_FILE}"
+echo "NETWORK                = ${NETWORK}"
+echo "GLOBAL_WEBHOOK_URL     = ${GLOBAL_WEBHOOK_URL}"
+echo "GLOBAL_WEBHOOK_API_KEY = ${GLOBAL_WEBHOOK_API_KEY}"
 
 echo "--------------------------------------"
 echo "Starting stack using docker compose"
 echo "--------------------------------------"
 
-PORT=${PORT} NETWORK=${NETWORK} WEBHOOK_URL=${WEBHOOK_URL} WEBHOOK_API_KEY=${WEBHOOK_API_KEY} docker compose \
+# optionally pass variable if and only if the variable is set
+if [ -n "$GLOBAL_WEBHOOK_URL" ]; then
+	export GLOBAL_WEBHOOK_URL=${GLOBAL_WEBHOOK_URL}
+fi
+if [ -n "$GLOBAL_WEBHOOK_API_KEY" ]; then
+	export GLOBAL_WEBHOOK_API_KEY=${GLOBAL_WEBHOOK_API_KEY}
+fi
+
+PORT=${PORT} NETWORK=${NETWORK} docker compose \
 	-p ${NAME} \
 	-f ${SCRIPT_DIR}/../shared/docker-compose.yml \
 	--env-file ${ENV_FILE} ${DEBUG} up ${BACKGROUND} ${WAIT}
