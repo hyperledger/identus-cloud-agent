@@ -17,6 +17,7 @@ import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.connect.controller.ConnectionControllerImpl
 import io.iohk.atala.connect.core.service.{ConnectionServiceImpl, ConnectionServiceNotifier}
 import io.iohk.atala.connect.sql.repository.{JdbcConnectionRepository, Migrations as ConnectMigrations}
+import io.iohk.atala.event.controller.EventControllerImpl
 import io.iohk.atala.event.notification.EventNotificationServiceImpl
 import io.iohk.atala.iam.authentication.DefaultAuthenticator
 import io.iohk.atala.iam.authentication.admin.{AdminApiKeyAuthenticatorImpl, AdminConfig}
@@ -26,12 +27,14 @@ import io.iohk.atala.iam.wallet.http.controller.WalletManagementControllerImpl
 import io.iohk.atala.issue.controller.IssueControllerImpl
 import io.iohk.atala.mercury.*
 import io.iohk.atala.pollux.core.service.*
+import io.iohk.atala.pollux.credentialdefinition.controller.CredentialDefinitionControllerImpl
 import io.iohk.atala.pollux.credentialschema.controller.{
   CredentialSchemaController,
   CredentialSchemaControllerImpl,
   VerificationPolicyControllerImpl
 }
 import io.iohk.atala.pollux.sql.repository.{
+  JdbcCredentialDefinitionRepository,
   JdbcCredentialRepository,
   JdbcCredentialSchemaRepository,
   JdbcPresentationRepository,
@@ -117,6 +120,7 @@ object MainApp extends ZIOAppDefault {
           // controller
           ConnectionControllerImpl.layer,
           CredentialSchemaControllerImpl.layer,
+          CredentialDefinitionControllerImpl.layer,
           DIDControllerImpl.layer,
           DIDRegistrarControllerImpl.layer,
           IssueControllerImpl.layer,
@@ -124,6 +128,7 @@ object MainApp extends ZIOAppDefault {
           VerificationPolicyControllerImpl.layer,
           EntityControllerImpl.layer,
           WalletManagementControllerImpl.layer,
+          EventControllerImpl.layer,
           // domain
           AppModule.apolloLayer,
           AppModule.didJwtResolverlayer,
@@ -133,6 +138,7 @@ object MainApp extends ZIOAppDefault {
           // service
           ConnectionServiceImpl.layer >>> ConnectionServiceNotifier.layer,
           CredentialSchemaServiceImpl.layer,
+          CredentialDefinitionServiceImpl.layer,
           CredentialServiceImpl.layer >>> CredentialServiceNotifier.layer,
           DIDServiceImpl.layer,
           EntityServiceImpl.layer,
@@ -147,14 +153,15 @@ object MainApp extends ZIOAppDefault {
           GrpcModule.prismNodeStubLayer,
           // storage
           DIDKeySecretStorageImpl.layer,
-          RepoModule.agentContextAwareTransactorLayer >+> RepoModule.agentTransactorLayer >>> JdbcDIDNonSecretStorage.layer,
+          RepoModule.agentContextAwareTransactorLayer ++ RepoModule.agentTransactorLayer >>> JdbcDIDNonSecretStorage.layer,
           RepoModule.agentContextAwareTransactorLayer >>> JdbcWalletNonSecretStorage.layer,
           RepoModule.allSecretStorageLayer,
           RepoModule.agentTransactorLayer >>> JdbcEntityRepository.layer,
           RepoModule.agentTransactorLayer >>> JdbcAuthenticationRepository.layer,
           RepoModule.connectContextAwareTransactorLayer >>> JdbcConnectionRepository.layer,
           RepoModule.polluxContextAwareTransactorLayer >>> JdbcCredentialRepository.layer,
-          RepoModule.polluxContextAwareTransactorLayer >+> RepoModule.polluxTransactorLayer >>> JdbcCredentialSchemaRepository.layer,
+          RepoModule.polluxContextAwareTransactorLayer ++ RepoModule.polluxTransactorLayer >>> JdbcCredentialSchemaRepository.layer,
+          RepoModule.polluxContextAwareTransactorLayer ++ RepoModule.polluxTransactorLayer >>> JdbcCredentialDefinitionRepository.layer,
           RepoModule.polluxContextAwareTransactorLayer >>> JdbcPresentationRepository.layer,
           RepoModule.polluxContextAwareTransactorLayer >>> JdbcVerificationPolicyRepository.layer,
           // event notification service

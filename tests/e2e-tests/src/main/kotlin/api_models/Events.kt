@@ -4,41 +4,46 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 
 @Serializable
-data class Event (
+data class Event(
     var type: String,
     var id: String,
     var ts: String,
     var data: JsonElement,
-): JsonEncoded
+    var walletId: String,
+) : JsonEncoded
 
 @Serializable
-data class ConnectionEvent (
+data class ConnectionEvent(
     var type: String,
     var id: String,
     var ts: String,
     var data: Connection,
-): JsonEncoded
+    var walletId: String,
+) : JsonEncoded
 
 @Serializable
-data class CredentialEvent (
+data class CredentialEvent(
     var type: String,
     var id: String,
     var ts: String,
     var data: Credential,
-): JsonEncoded
+    var walletId: String,
+) : JsonEncoded
 
 @Serializable
-data class PresentationEvent (
+data class PresentationEvent(
     var type: String,
     var id: String,
     var ts: String,
     var data: PresentationProof,
-): JsonEncoded
+    var walletId: String,
+) : JsonEncoded
 
 @Serializable
-data class DidEvent (
+data class DidEvent(
     var type: String,
     var id: String,
     var ts: String,
     var data: ManagedDid,
-): JsonEncoded
+    var walletId: String,
+) : JsonEncoded

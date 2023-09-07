@@ -8,8 +8,6 @@ import zio.{RIO, Task}
 
 import java.util.UUID
 
-type WalletTask[T] = RIO[WalletAccessContext, T]
-
 trait CredentialSchemaRepository
     extends Repository[WalletTask, CredentialSchema]
     with SearchCapability[WalletTask, CredentialSchema.Filter, CredentialSchema] {

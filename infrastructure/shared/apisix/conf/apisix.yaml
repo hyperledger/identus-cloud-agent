@@ -1,16 +1,5 @@
 plugins:
   - name: proxy-rewrite
-  - name: key-auth
-
-consumers:
-  - username: default
-    plugins:
-      key-auth:
-        key: "default"
-  - username: default2
-    plugins:
-      key-auth:
-        key: "default2"
 
 routes:
   - uri: /prism-agent/*
@@ -18,13 +7,11 @@ routes:
     plugins:
       proxy-rewrite:
         regex_uri: ["^/prism-agent/(.*)", "/$1"]
-#      key-auth: {}
   - uri: /docs/prism-agent/api/*
     upstream_id: 4
     plugins:
       proxy-rewrite:
         regex_uri: ["^/docs/prism-agent/api/(.*)", "/docs/$1"]
-#      key-auth: {}
   - uri: /didcomm*
     upstream_id: 3
     plugins:

@@ -33,11 +33,11 @@ object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault, PostgresTestCo
   object Vocabulary {
     val verifiableCredentialTypes =
       Source
-        .fromResource("data/verifiableCredentialTypes.csv")
+        .fromResource("data/verifiableCredentialTypes.csv")(scala.io.Codec.UTF8)
         .getLines()
         .toSet
     val verifiableCredentialClaims = Source
-      .fromResource("data/verifiableCredentialClaims.csv")
+      .fromResource("data/verifiableCredentialClaims.csv")(scala.io.Codec.UTF8)
       .getLines()
       .toSet
   }

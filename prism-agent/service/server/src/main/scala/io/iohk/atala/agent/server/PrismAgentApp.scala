@@ -4,31 +4,33 @@ import io.iohk.atala.agent.notification.WebhookPublisher
 import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.server.http.{ZHttp4sBlazeServer, ZHttpEndpoints}
 import io.iohk.atala.agent.server.jobs.{BackgroundJobs, ConnectBackgroundJobs}
-import io.iohk.atala.agent.walletapi.service.ManagedDIDService
-import io.iohk.atala.agent.walletapi.service.WalletManagementService
+import io.iohk.atala.agent.walletapi.model.{Entity, Wallet, WalletSeed}
+import io.iohk.atala.agent.walletapi.service.{EntityService, ManagedDIDService, WalletManagementService}
 import io.iohk.atala.castor.controller.{DIDRegistrarServerEndpoints, DIDServerEndpoints}
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.connect.controller.ConnectionServerEndpoints
 import io.iohk.atala.connect.core.service.ConnectionService
+import io.iohk.atala.event.controller.EventServerEndpoints
+import io.iohk.atala.event.notification.EventNotificationConfig
+import io.iohk.atala.iam.authentication.apikey.ApiKeyAuthenticator
 import io.iohk.atala.iam.entity.http.EntityServerEndpoints
 import io.iohk.atala.iam.wallet.http.WalletManagementServerEndpoints
 import io.iohk.atala.issue.controller.IssueServerEndpoints
-import io.iohk.atala.mercury.DidOps
-import io.iohk.atala.mercury.HttpClient
-import io.iohk.atala.pollux.core.service.CredentialService
-import io.iohk.atala.pollux.core.service.PresentationService
-import io.iohk.atala.pollux.credentialschema.SchemaRegistryServerEndpoints
-import io.iohk.atala.pollux.credentialschema.VerificationPolicyServerEndpoints
+import io.iohk.atala.mercury.{DidOps, HttpClient}
+import io.iohk.atala.pollux.core.service.{CredentialService, PresentationService}
+import io.iohk.atala.pollux.credentialdefinition.CredentialDefinitionRegistryServerEndpoints
+import io.iohk.atala.pollux.credentialschema.{SchemaRegistryServerEndpoints, VerificationPolicyServerEndpoints}
 import io.iohk.atala.pollux.vc.jwt.DidResolver as JwtDidResolver
 import io.iohk.atala.presentproof.controller.PresentProofServerEndpoints
 import io.iohk.atala.resolvers.DIDResolver
-import io.iohk.atala.shared.models.WalletAccessContext
+import io.iohk.atala.shared.models.{HexString, WalletAccessContext, WalletId}
 import io.iohk.atala.system.controller.SystemServerEndpoints
 import zio.*
 
 object PrismAgentApp {
 
   def run(didCommServicePort: Int) = for {
+    _ <- AgentInitialization.run
     _ <- issueCredentialDidCommExchangesJob.debug.fork
     _ <- presentProofExchangeJob.debug.fork
     _ <- connectDidCommExchangesJob.debug.fork
@@ -112,32 +114,85 @@ object PrismAgentApp {
 }
 
 object AgentHttpServer {
+  val agentRESTServiceEndpoints = for {
+    allCredentialDefinitionRegistryEndpoints <- CredentialDefinitionRegistryServerEndpoints.all
+    allSchemaRegistryEndpoints <- SchemaRegistryServerEndpoints.all
+    allVerificationPolicyEndpoints <- VerificationPolicyServerEndpoints.all
+    allConnectionEndpoints <- ConnectionServerEndpoints.all
+    allIssueEndpoints <- IssueServerEndpoints.all
+    allDIDEndpoints <- DIDServerEndpoints.all
+    allDIDRegistrarEndpoints <- DIDRegistrarServerEndpoints.all
+    allPresentProofEndpoints <- PresentProofServerEndpoints.all
+    allSystemEndpoints <- SystemServerEndpoints.all
+    allEntityEndpoints <- EntityServerEndpoints.all
+    allWalletManagementEndpoints <- WalletManagementServerEndpoints.all
+    allEventEndpoints <- EventServerEndpoints.all
+  } yield allCredentialDefinitionRegistryEndpoints ++
+    allSchemaRegistryEndpoints ++
+    allVerificationPolicyEndpoints ++
+    allConnectionEndpoints ++
+    allDIDEndpoints ++
+    allDIDRegistrarEndpoints ++
+    allIssueEndpoints ++
+    allPresentProofEndpoints ++
+    allSystemEndpoints ++
+    allEntityEndpoints ++
+    allWalletManagementEndpoints ++
+    allEventEndpoints
   def run =
     for {
-      allSchemaRegistryEndpoints <- SchemaRegistryServerEndpoints.all
-      allVerificationPolicyEndpoints <- VerificationPolicyServerEndpoints.all
-      allConnectionEndpoints <- ConnectionServerEndpoints.all
-      allIssueEndpoints <- IssueServerEndpoints.all
-      allDIDEndpoints <- DIDServerEndpoints.all
-      allDIDRegistrarEndpoints <- DIDRegistrarServerEndpoints.all
-      allPresentProofEndpoints <- PresentProofServerEndpoints.all
-      allSystemEndpoints <- SystemServerEndpoints.all
-      allEntityEndpoints <- EntityServerEndpoints.all
-      allWalletManagementEndpoints <- WalletManagementServerEndpoints.all
-      allEndpoints = ZHttpEndpoints.withDocumentations[Task](
-        allSchemaRegistryEndpoints ++
-          allVerificationPolicyEndpoints ++
-          allConnectionEndpoints ++
-          allDIDEndpoints ++
-          allDIDRegistrarEndpoints ++
-          allIssueEndpoints ++
-          allPresentProofEndpoints ++
-          allSystemEndpoints ++
-          allEntityEndpoints ++
-          allWalletManagementEndpoints
-      )
+      allEndpoints <- agentRESTServiceEndpoints
+      allEndpointsWithDocumentation = ZHttpEndpoints.withDocumentations[Task](allEndpoints)
       server <- ZHttp4sBlazeServer.make
       appConfig <- ZIO.service[AppConfig]
-      _ <- server.start(allEndpoints, port = appConfig.agent.httpEndpoint.http.port).debug
+      _ <- server.start(allEndpointsWithDocumentation, port = appConfig.agent.httpEndpoint.http.port).debug
     } yield ()
+}
+
+object AgentInitialization {
+
+  private val defaultWalletId = WalletId.default
+  private val defaultWallet = Wallet("default", defaultWalletId)
+  private val defaultEntity = Entity.Default
+
+  def run: RIO[AppConfig & WalletManagementService & EntityService & ApiKeyAuthenticator, Unit] =
+    initializeDefaultWallet
+
+  private val initializeDefaultWallet =
+    for {
+      _ <- ZIO.logInfo("Initializing default wallet.")
+      config <- ZIO.serviceWith[AppConfig](_.agent.defaultWallet)
+      walletService <- ZIO.service[WalletManagementService]
+      isDefaultWalletEnabled = config.enabled
+      isDefaultWalletExist <- walletService.getWallet(defaultWalletId).map(_.isDefined)
+      _ <- ZIO.logInfo(s"Default wallet not enabled.").when(!isDefaultWalletEnabled)
+      _ <- ZIO.logInfo(s"Default wallet already exist.").when(isDefaultWalletExist)
+      _ <- createDefaultWallet.when(isDefaultWalletEnabled && !isDefaultWalletExist)
+    } yield ()
+
+  private val createDefaultWallet =
+    for {
+      walletService <- ZIO.service[WalletManagementService]
+      entityService <- ZIO.service[EntityService]
+      apiKeyAuth <- ZIO.service[ApiKeyAuthenticator]
+      config <- ZIO.serviceWith[AppConfig](_.agent.defaultWallet)
+      seed <- config.seed.fold(ZIO.none) { seedHex =>
+        ZIO
+          .fromTry(HexString.fromString(seedHex))
+          .map(bytes => WalletSeed.fromByteArray(bytes.toByteArray).left.map(Exception(_)))
+          .absolve
+          .asSome
+      }
+      _ <- ZIO.logInfo(s"Default wallet seed is not provided. New seed will be generated.").when(seed.isEmpty)
+      _ <- walletService.createWallet(defaultWallet, seed)
+      _ <- entityService.create(defaultEntity).mapError(e => Exception(e.message))
+      _ <- apiKeyAuth.add(defaultEntity.id, config.authApiKey).mapError(e => Exception(e.message))
+      _ <- config.webhookUrl.fold(ZIO.unit) { url =>
+        val customHeaders = config.webhookApiKey.fold(Map.empty)(apiKey => Map("Authorization" -> s"Bearer $apiKey"))
+        walletService
+          .createWalletNotification(EventNotificationConfig(defaultWalletId, url, customHeaders))
+          .provide(ZLayer.succeed(WalletAccessContext(defaultWalletId)))
+      }
+    } yield ()
+
 }

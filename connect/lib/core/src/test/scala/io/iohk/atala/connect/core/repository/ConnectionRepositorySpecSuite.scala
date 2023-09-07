@@ -246,6 +246,25 @@ object ConnectionRepositorySpecSuite {
         assertTrue(updatedRecord.get.protocolState == ProtocolState.ConnectionRequestReceived)
       }
     },
+    test("updateConnectionProtocolState updates the record to InvitationExpired") {
+      for {
+        repo <- ZIO.service[ConnectionRepository]
+        aRecord = connectionRecord
+        _ <- repo.createConnectionRecord(aRecord)
+        record <- repo.getConnectionRecord(aRecord.id)
+        count <- repo.updateConnectionProtocolState(
+          aRecord.id,
+          ProtocolState.InvitationGenerated,
+          ProtocolState.InvitationExpired,
+          maxRetries
+        )
+        updatedRecord <- repo.getConnectionRecord(aRecord.id)
+      } yield {
+        assertTrue(count == 1) &&
+        assertTrue(record.get.protocolState == ProtocolState.InvitationGenerated) &&
+        assertTrue(updatedRecord.get.protocolState == ProtocolState.InvitationExpired)
+      }
+    },
     test("updateConnectionProtocolState doesn't update the record for invalid states") {
       for {
         repo <- ZIO.service[ConnectionRepository]

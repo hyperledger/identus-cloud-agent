@@ -112,8 +112,9 @@ class CredentialServiceNotifier(
 
   private[this] def notify(record: IssueCredentialRecord) = {
     val result = for {
+      walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
       producer <- eventNotificationService.producer[IssueCredentialRecord]("Issue")
-      _ <- producer.send(Event(issueCredentialRecordUpdatedEvent, record))
+      _ <- producer.send(Event(issueCredentialRecordUpdatedEvent, record, walletId))
     } yield ()
     result.catchAll(e => ZIO.logError(s"Notification service error: $e"))
   }
