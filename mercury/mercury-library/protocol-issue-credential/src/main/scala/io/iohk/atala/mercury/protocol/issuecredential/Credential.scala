@@ -35,4 +35,7 @@ final case class CredentialFormat(attach_id: String, format: String)
 object CredentialFormat {
   given Encoder[CredentialFormat] = deriveEncoder[CredentialFormat]
   given Decoder[CredentialFormat] = deriveDecoder[CredentialFormat]
+
+  val AnonCreds = "anoncreds/credential-offer@v1.0"
+  val JWT = "jwt/credential-offer@v1.0"
 }
