@@ -9,7 +9,12 @@ import io.iohk.atala.agent.walletapi.memory.{DIDSecretStorageInMemory, WalletSec
 import io.iohk.atala.agent.walletapi.sql.{JdbcDIDSecretStorage, JdbcWalletSecretStorage}
 import io.iohk.atala.agent.walletapi.storage.{DIDSecretStorage, WalletSecretStorage}
 import io.iohk.atala.agent.walletapi.util.SeedResolver
-import io.iohk.atala.agent.walletapi.vault.{VaultDIDSecretStorage, VaultKVClient, VaultKVClientImpl, VaultWalletSecretStorage}
+import io.iohk.atala.agent.walletapi.vault.{
+  VaultDIDSecretStorage,
+  VaultKVClient,
+  VaultKVClientImpl,
+  VaultWalletSecretStorage
+}
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub

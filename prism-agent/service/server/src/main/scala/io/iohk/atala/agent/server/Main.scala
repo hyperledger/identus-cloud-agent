@@ -3,7 +3,12 @@ package io.iohk.atala.agent.server
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
 import io.iohk.atala.agent.server.http.ZioHttpClient
 import io.iohk.atala.agent.server.sql.Migrations as AgentMigrations
-import io.iohk.atala.agent.walletapi.service.{EntityServiceImpl, ManagedDIDService, ManagedDIDServiceWithEventNotificationImpl, WalletManagementServiceImpl}
+import io.iohk.atala.agent.walletapi.service.{
+  EntityServiceImpl,
+  ManagedDIDService,
+  ManagedDIDServiceWithEventNotificationImpl,
+  WalletManagementServiceImpl
+}
 import io.iohk.atala.agent.walletapi.sql.{JdbcDIDNonSecretStorage, JdbcEntityRepository, JdbcWalletNonSecretStorage}
 import io.iohk.atala.agent.walletapi.storage.DIDKeySecretStorageImpl
 import io.iohk.atala.castor.controller.{DIDControllerImpl, DIDRegistrarControllerImpl}
@@ -23,8 +28,19 @@ import io.iohk.atala.issue.controller.IssueControllerImpl
 import io.iohk.atala.mercury.*
 import io.iohk.atala.pollux.core.service.*
 import io.iohk.atala.pollux.credentialdefinition.controller.CredentialDefinitionControllerImpl
-import io.iohk.atala.pollux.credentialschema.controller.{CredentialSchemaController, CredentialSchemaControllerImpl, VerificationPolicyControllerImpl}
-import io.iohk.atala.pollux.sql.repository.{JdbcCredentialDefinitionRepository, JdbcCredentialRepository, JdbcCredentialSchemaRepository, JdbcPresentationRepository, JdbcVerificationPolicyRepository, Migrations as PolluxMigrations}
+import io.iohk.atala.pollux.credentialschema.controller.{
+  CredentialSchemaController,
+  CredentialSchemaControllerImpl,
+  VerificationPolicyControllerImpl
+}
+import io.iohk.atala.pollux.sql.repository.{
+  JdbcCredentialDefinitionRepository,
+  JdbcCredentialRepository,
+  JdbcCredentialSchemaRepository,
+  JdbcPresentationRepository,
+  JdbcVerificationPolicyRepository,
+  Migrations as PolluxMigrations
+}
 import io.iohk.atala.presentproof.controller.PresentProofControllerImpl
 import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
@@ -47,7 +63,9 @@ object MainApp extends ZIOAppDefault {
       managedDIDService <- ZIO.service[ManagedDIDService]
       peerDID <- managedDIDService
         .createAndStorePeerDID(didCommServiceUrl)
-        .provideSomeLayer(ZLayer.succeed(WalletAccessContext(WalletId.default))) // FIXME: what wallet ID should be used?
+        .provideSomeLayer(
+          ZLayer.succeed(WalletAccessContext(WalletId.default))
+        ) // FIXME: what wallet ID should be used?
       _ <- ZIO.logInfo(s"New DID: ${peerDID.did} for the default wallet")
     } yield io.iohk.atala.mercury.AgentPeerService.makeLayer(peerDID)
     ZLayer.fromZIO(aux).flatten
