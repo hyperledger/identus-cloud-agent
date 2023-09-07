@@ -82,7 +82,7 @@ private class CredentialServiceImpl(
       pairwiseIssuerDID: DidId,
       pairwiseHolderDID: DidId,
       thid: DidCommID,
-      maybeSchemaId: Option[String],
+      schemaId: Option[String],
       credentialDefinitionId: Option[String],
       credentialFormat: CredentialFormat,
       claims: Json,
@@ -92,8 +92,8 @@ private class CredentialServiceImpl(
       issuingDID: Option[CanonicalPrismDID]
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
     for {
-      // TODO For AnonCreds, validate claims is a flat structure
-      _ <- maybeSchemaId match
+      // TODO For AnonCreds, validate claims is a flat structure of type [String, String] or [String, Int]
+      _ <- schemaId match
         case Some(schemaId) =>
           CredentialSchema
             .validateClaims(schemaId, claims.noSpaces, uriDereferencer)
@@ -105,7 +105,7 @@ private class CredentialServiceImpl(
         createDidCommOfferCredential(
           pairwiseIssuerDID = pairwiseIssuerDID,
           pairwiseHolderDID = pairwiseHolderDID,
-          schemaId = maybeSchemaId,
+          schemaId = schemaId,
           credentialDefinitionId = credentialDefinitionId,
           credentialFormat = credentialFormat,
           claims = attributes,
@@ -120,7 +120,7 @@ private class CredentialServiceImpl(
           createdAt = Instant.now,
           updatedAt = None,
           thid = thid,
-          schemaId = maybeSchemaId,
+          schemaId = schemaId,
           credentialDefinitionId = credentialDefinitionId,
           credentialFormat = credentialFormat,
           role = IssueCredentialRecord.Role.Issuer,

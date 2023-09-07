@@ -39,7 +39,7 @@ class IssueControllerImpl(
           pairwiseIssuerDID = didIdPair.myDID,
           pairwiseHolderDID = didIdPair.theirDid,
           thid = DidCommID(),
-          maybeSchemaId = request.schemaId,
+          schemaId = request.schemaId,
           credentialDefinitionId = Some("Fake credential definition id"), // TODO Should come from the request
           credentialFormat = CredentialFormat.JWT, // TODO Should come from the request
           claims = jsonClaims,

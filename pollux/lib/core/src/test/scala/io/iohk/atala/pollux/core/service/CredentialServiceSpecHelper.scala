@@ -104,7 +104,7 @@ trait CredentialServiceSpecHelper {
         pairwiseIssuerDID = pairwiseIssuerDID,
         pairwiseHolderDID = pairwiseHolderDID,
         thid = thid,
-        maybeSchemaId = schemaId,
+        schemaId = schemaId,
         claims = claims,
         validityPeriod = validityPeriod,
         automaticIssuance = automaticIssuance,

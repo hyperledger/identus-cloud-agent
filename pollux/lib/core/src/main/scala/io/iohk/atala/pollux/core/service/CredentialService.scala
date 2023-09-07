@@ -25,7 +25,7 @@ trait CredentialService {
       pairwiseIssuerDID: DidId,
       pairwiseHolderDID: DidId,
       thid: DidCommID,
-      maybeSchemaId: Option[String],
+      schemaId: Option[String],
       credentialDefinitionId: Option[String],
       credentialFormat: CredentialFormat,
       claims: io.circe.Json,
