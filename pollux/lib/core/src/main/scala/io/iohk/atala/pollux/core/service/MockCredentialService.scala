@@ -4,6 +4,7 @@ import io.circe.Json
 import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.issuecredential.{IssueCredential, OfferCredential, RequestCredential}
+import io.iohk.atala.pollux.core.model.IssueCredentialRecord.CredentialFormat
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.core.model.{DidCommID, IssueCredentialRecord, PublishedBatchData}
 import io.iohk.atala.pollux.vc.jwt.{Issuer, JWT, PresentationPayload, W3cCredentialPayload}
@@ -22,6 +23,7 @@ object MockCredentialService extends Mock[CredentialService] {
             DidId,
             DidCommID,
             Option[String],
+            CredentialFormat,
             Json,
             Option[Double],
             Option[Boolean],
@@ -65,6 +67,7 @@ object MockCredentialService extends Mock[CredentialService] {
           pairwiseHolderDID: DidId,
           thid: DidCommID,
           maybeSchemaId: Option[String],
+          credentialFormat: CredentialFormat,
           claims: Json,
           validityPeriod: Option[Double],
           automaticIssuance: Option[Boolean],
@@ -77,6 +80,7 @@ object MockCredentialService extends Mock[CredentialService] {
           pairwiseHolderDID,
           thid,
           maybeSchemaId,
+          credentialFormat,
           claims,
           validityPeriod,
           automaticIssuance,

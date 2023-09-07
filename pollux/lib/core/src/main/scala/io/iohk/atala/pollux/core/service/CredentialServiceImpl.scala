@@ -9,7 +9,7 @@ import io.iohk.atala.iris.proto.service.IrisOperationId
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
 import io.iohk.atala.iris.proto.vc_operations.IssueCredentialsBatch
 import io.iohk.atala.mercury.model.{AttachmentDescriptor, Base64, DidId, JsonData}
-import io.iohk.atala.mercury.protocol.issuecredential.*
+import io.iohk.atala.mercury.protocol.issuecredential.{CredentialFormat as MercuryCredentialFormat, *}
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError.*
@@ -83,6 +83,7 @@ private class CredentialServiceImpl(
       pairwiseHolderDID: DidId,
       thid: DidCommID,
       maybeSchemaId: Option[String],
+      credentialFormat: CredentialFormat,
       claims: Json,
       validityPeriod: Option[Double],
       automaticIssuance: Option[Boolean],
@@ -90,6 +91,7 @@ private class CredentialServiceImpl(
       issuingDID: Option[CanonicalPrismDID]
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
     for {
+      // TODO For AnonCreds, validate claims is a flat structure
       _ <- maybeSchemaId match
         case Some(schemaId) =>
           CredentialSchema
@@ -103,6 +105,7 @@ private class CredentialServiceImpl(
           pairwiseIssuerDID = pairwiseIssuerDID,
           pairwiseHolderDID = pairwiseHolderDID,
           schemaId = maybeSchemaId,
+          credentialFormat = credentialFormat,
           claims = attributes,
           thid = thid,
           UUID.randomUUID().toString,
@@ -116,6 +119,7 @@ private class CredentialServiceImpl(
           updatedAt = None,
           thid = thid,
           schemaId = maybeSchemaId,
+          credentialFormat = credentialFormat,
           role = IssueCredentialRecord.Role.Issuer,
           subjectId = None,
           validityPeriod = validityPeriod,
@@ -170,6 +174,9 @@ private class CredentialServiceImpl(
                 CredentialServiceError.UnexpectedError(s"Unexpected CredentialOffer attachment format: ${e.toString()}")
               )
         }
+      credentialFormat =
+        if (offer.body.formats.exists(_.format == MercuryCredentialFormat.AnonCreds)) CredentialFormat.AnonCreds
+        else CredentialFormat.JWT
       record <- ZIO.succeed(
         IssueCredentialRecord(
           id = DidCommID(),
@@ -177,6 +184,7 @@ private class CredentialServiceImpl(
           updatedAt = None,
           thid = DidCommID(offer.thid.getOrElse(offer.id)),
           schemaId = None,
+          credentialFormat = credentialFormat,
           role = Role.Holder,
           subjectId = None,
           validityPeriod = None,
@@ -484,25 +492,58 @@ private class CredentialServiceImpl(
       pairwiseIssuerDID: DidId,
       pairwiseHolderDID: DidId,
       schemaId: Option[String],
+      credentialFormat: CredentialFormat,
       claims: Seq[Attribute],
       thid: DidCommID,
       challenge: String,
       domain: String
   ): OfferCredential = {
     val credentialPreview = CredentialPreview(schema_id = schemaId, attributes = claims)
-    val body = OfferCredential.Body(goal_code = Some("Offer Credential"), credential_preview = credentialPreview)
+    val attachmentId = java.util.UUID.randomUUID.toString
+    val body = OfferCredential.Body(
+      goal_code = Some("Offer Credential"),
+      credential_preview = credentialPreview,
+      formats = Seq(
+        MercuryCredentialFormat(
+          attachmentId,
+          credentialFormat match
+            case CredentialFormat.JWT       => MercuryCredentialFormat.JWT
+            case CredentialFormat.AnonCreds => MercuryCredentialFormat.AnonCreds
+        )
+      )
+    )
 
     OfferCredential(
       body = body,
-      // TODO: align with the standard (ATL-3507)
-      attachments = Seq(
-        AttachmentDescriptor.buildJsonAttachment(
-          payload = PresentationAttachment(
-            Some(Options(challenge, domain)),
-            PresentationDefinition(format = Some(ClaimFormat(jwt = Some(Jwt(alg = Seq("ES256K"), proof_type = Nil)))))
+      attachments = credentialFormat match
+        case CredentialFormat.JWT =>
+          Seq(
+            AttachmentDescriptor.buildJsonAttachment(
+              id = attachmentId,
+              payload = PresentationAttachment(
+                Some(Options(challenge, domain)),
+                PresentationDefinition(format =
+                  Some(ClaimFormat(jwt = Some(Jwt(alg = Seq("ES256K"), proof_type = Nil))))
+                )
+              )
+            )
           )
-        )
-      ),
+        case CredentialFormat.AnonCreds =>
+          Seq(
+            AttachmentDescriptor.buildBase64Attachment(
+              id = attachmentId,
+              mediaType = Some("application/json"),
+              payload = """
+                  |{
+                  |    "schema_id": "4RW6QK2HZhHxa2tg7t1jqt:2:bcgov-mines-act-permit.bcgov-mines-permitting:0.2.0",
+                  |    "cred_def_id": "4RW6QK2HZhHxa2tg7t1jqt:3:CL:58160:default",
+                  |    "nonce": "57a62300-fbe2-4f08-ace0-6c329c5210e1",
+                  |    "key_correctness_proof" : "<key_correctness_proof>"
+                  |}
+                  |""".asJson.noSpaces.getBytes()
+            )
+          )
+      ,
       from = pairwiseIssuerDID,
       to = pairwiseHolderDID,
       thid = Some(thid.toString())
