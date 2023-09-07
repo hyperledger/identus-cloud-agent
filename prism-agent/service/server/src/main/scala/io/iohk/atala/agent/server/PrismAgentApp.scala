@@ -154,7 +154,6 @@ object AgentHttpServer {
     } yield ()
 }
 
-// TODO: add tests
 object AgentInitialization {
 
   private val defaultWalletId = WalletId.default
