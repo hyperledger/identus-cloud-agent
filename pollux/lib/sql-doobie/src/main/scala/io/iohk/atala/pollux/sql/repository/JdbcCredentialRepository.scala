@@ -44,6 +44,9 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], maxRetries: Int
   given didCommIDGet: Get[DidCommID] = Get[String].map(DidCommID(_))
   given didCommIDPut: Put[DidCommID] = Put[String].contramap(_.value)
 
+  given credentialFormatGet: Get[CredentialFormat] = Get[String].map(CredentialFormat.valueOf)
+  given credentialFormatPut: Put[CredentialFormat] = Put[String].contramap(_.toString)
+
   given protocolStateGet: Get[ProtocolState] = Get[String].map(ProtocolState.valueOf)
   given protocolStatePut: Put[ProtocolState] = Put[String].contramap(_.toString)
 
@@ -76,6 +79,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], maxRetries: Int
         |   updated_at,
         |   thid,
         |   schema_id,
+        |   credential_format,
         |   role,
         |   subject_id,
         |   validity_period,
@@ -98,6 +102,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], maxRetries: Int
         |   ${record.updatedAt},
         |   ${record.thid},
         |   ${record.schemaId},
+        |   ${record.credentialFormat},
         |   ${record.role},
         |   ${record.subjectId},
         |   ${record.validityPeriod},
@@ -141,6 +146,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], maxRetries: Int
         |   updated_at,
         |   thid,
         |   schema_id,
+        |   credential_format,
         |   role,
         |   subject_id,
         |   validity_period,
@@ -207,6 +213,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], maxRetries: Int
             |   updated_at,
             |   thid,
             |   schema_id,
+            |   credential_format,
             |   role,
             |   subject_id,
             |   validity_period,
@@ -244,6 +251,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], maxRetries: Int
         |   updated_at,
         |   thid,
         |   schema_id,
+        |   credential_format,
         |   role,
         |   subject_id,
         |   validity_period,
@@ -284,6 +292,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], maxRetries: Int
         |   updated_at,
         |   thid,
         |   schema_id,
+        |   credential_format,
         |   role,
         |   subject_id,
         |   validity_period,

@@ -1,11 +1,10 @@
 package io.iohk.atala.pollux.core.model
 
-import io.iohk.atala.mercury.protocol.issuecredential.OfferCredential
-import io.iohk.atala.mercury.protocol.issuecredential.RequestCredential
-import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
-import IssueCredentialRecord._
-import java.time.Instant
 import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
+import io.iohk.atala.mercury.protocol.issuecredential.{IssueCredential, OfferCredential, RequestCredential}
+import io.iohk.atala.pollux.core.model.IssueCredentialRecord.*
+
+import java.time.Instant
 
 final case class IssueCredentialRecord(
     id: DidCommID,
@@ -13,6 +12,7 @@ final case class IssueCredentialRecord(
     updatedAt: Option[Instant],
     thid: DidCommID,
     schemaId: Option[String],
+    credentialFormat: CredentialFormat,
     role: Role,
     subjectId: Option[String],
     validityPeriod: Option[Double] = None,
@@ -40,6 +40,10 @@ object IssueCredentialRecord {
   enum Role:
     case Issuer extends Role
     case Holder extends Role
+
+  enum CredentialFormat:
+    case JWT extends CredentialFormat
+    case AnonCreds extends CredentialFormat
 
   enum ProtocolState:
     // Issuer has created an offer in a database, but it has not been sent yet (in Issuer DB)
