@@ -1,8 +1,7 @@
 package io.iohk.atala.issue.controller
 
 import io.iohk.atala.agent.server.ControllerHelper
-import io.iohk.atala.api.http.model.CollectionStats
-import io.iohk.atala.api.http.model.PaginationInput
+import io.iohk.atala.api.http.model.{CollectionStats, PaginationInput}
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.api.util.PaginationUtils
 import io.iohk.atala.connect.controller.ConnectionController
@@ -41,6 +40,7 @@ class IssueControllerImpl(
           pairwiseHolderDID = didIdPair.theirDid,
           thid = DidCommID(),
           maybeSchemaId = request.schemaId,
+          credentialDefinitionId = Some("Fake credential definition id"), // TODO Should come from the request
           credentialFormat = CredentialFormat.JWT, // TODO Should come from the request
           claims = jsonClaims,
           validityPeriod = request.validityPeriod,
