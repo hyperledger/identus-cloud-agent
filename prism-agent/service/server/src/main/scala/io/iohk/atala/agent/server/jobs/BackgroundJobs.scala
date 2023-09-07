@@ -32,16 +32,15 @@ import io.iohk.atala.pollux.vc.jwt.{
   DidResolver as JwtDidResolver,
   Issuer as JwtIssuer
 }
-import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
 import io.iohk.atala.shared.models.WalletAccessContext
-import java.time.{Clock, Instant, ZoneId}
-import zio.*
-import zio.prelude.Validation
-import zio.metrics.*
 import io.iohk.atala.shared.utils.DurationOps.toMetricsSeconds
+import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
+import zio.*
+import zio.metrics.*
+import zio.prelude.Validation
+import zio.prelude.ZValidation.*
 
 import java.time.{Clock, Instant, ZoneId}
-import zio.prelude.ZValidation.*
 
 object BackgroundJobs {
 
@@ -66,6 +65,7 @@ object BackgroundJobs {
         .withParallelism(config.pollux.issueBgJobProcessingParallelism)
     } yield ()
   }
+
   val presentProofExchanges = {
     for {
       presentationService <- ZIO.service[PresentationService]

@@ -118,7 +118,6 @@ object MainApp extends ZIOAppDefault {
       app <- PrismAgentApp
         .run(didCommServicePort)
         .provide(
-          didCommAgentLayer(didCommServiceUrl),
           DidCommX.liveLayer,
           // infra
           SystemModule.configLayer,
