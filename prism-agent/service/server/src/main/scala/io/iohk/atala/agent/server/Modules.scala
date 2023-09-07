@@ -8,12 +8,8 @@ import io.iohk.atala.agent.walletapi.crypto.Apollo
 import io.iohk.atala.agent.walletapi.memory.{DIDSecretStorageInMemory, WalletSecretStorageInMemory}
 import io.iohk.atala.agent.walletapi.sql.{JdbcDIDSecretStorage, JdbcWalletSecretStorage}
 import io.iohk.atala.agent.walletapi.storage.{DIDSecretStorage, WalletSecretStorage}
-import io.iohk.atala.agent.walletapi.vault.{
-  VaultDIDSecretStorage,
-  VaultKVClient,
-  VaultKVClientImpl,
-  VaultWalletSecretStorage
-}
+import io.iohk.atala.agent.walletapi.util.SeedResolver
+import io.iohk.atala.agent.walletapi.vault.{VaultDIDSecretStorage, VaultKVClient, VaultKVClientImpl, VaultWalletSecretStorage}
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
@@ -38,6 +34,13 @@ object SystemModule {
 
 object AppModule {
   val apolloLayer: ULayer[Apollo] = Apollo.prism14Layer
+
+  val seedResolverLayer =
+    ZLayer.make[SeedResolver](
+      ZLayer.fromFunction((config: AppConfig) => SeedResolver.layer(isDevMode = config.devMode)).flatten,
+      apolloLayer,
+      SystemModule.configLayer
+    )
 
   val didJwtResolverlayer: URLayer[DIDService, JwtDidResolver] =
     ZLayer.fromFunction(PrismDidResolver(_))

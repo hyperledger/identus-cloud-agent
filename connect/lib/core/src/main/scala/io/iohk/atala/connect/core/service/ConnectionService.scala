@@ -7,6 +7,7 @@ import io.iohk.atala.mercury.protocol.connection.{ConnectionRequest, ConnectionR
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 
+import java.time.Duration
 import java.util.UUID
 
 trait ConnectionService {
@@ -28,7 +29,8 @@ trait ConnectionService {
   def markConnectionRequestSent(recordId: UUID): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord]
 
   def receiveConnectionRequest(
-      request: ConnectionRequest
+      request: ConnectionRequest,
+      expirationTime: Option[Duration]
   ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord]
 
   def acceptConnectionRequest(recordId: UUID): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord]
