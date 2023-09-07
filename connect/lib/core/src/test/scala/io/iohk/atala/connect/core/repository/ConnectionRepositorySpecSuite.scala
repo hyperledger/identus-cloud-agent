@@ -19,7 +19,7 @@ object ConnectionRepositorySpecSuite {
 
   private def connectionRecord = ConnectionRecord(
     UUID.randomUUID,
-    Instant.now,
+    Instant.ofEpochSecond(Instant.now.getEpochSecond),
     None,
     UUID.randomUUID().toString,
     None,

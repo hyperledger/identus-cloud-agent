@@ -168,7 +168,7 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
             )
             // FIXME: Should the service return an Option while we have dedicated "not found" error for that case !?
             connectionRequest = maybeAcceptedInvitationRecord.connectionRequest.get
-            maybeReceivedRequestConnectionRecord <- inviterSvc.receiveConnectionRequest(connectionRequest)
+            maybeReceivedRequestConnectionRecord <- inviterSvc.receiveConnectionRequest(connectionRequest, None)
             allInviterRecords <- inviterSvc.getConnectionRecords()
           } yield {
             val updatedRecord = maybeReceivedRequestConnectionRecord
@@ -195,8 +195,8 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
             )
             connectionRequest = maybeAcceptedInvitationRecord.connectionRequest.get
             connectionRecordUpdated <- inviterSvc.markConnectionInvitationExpired(inviterRecord.id)
-
-            exit <- inviterSvc.receiveConnectionRequest(connectionRequest).exit
+            expiryTime = Duration.fromSeconds(300)
+            exit <- inviterSvc.receiveConnectionRequest(connectionRequest, Some(expiryTime)).exit
 
           } yield {
             assertTrue(exit match
@@ -221,7 +221,11 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
               DidId("did:peer:INVITEE")
             )
             connectionRequest = maybeAcceptedInvitationRecord.connectionRequest.get
-            maybeReceivedRequestConnectionRecord <- inviterSvc.receiveConnectionRequest(connectionRequest)
+            expiryTime = Duration.fromSeconds(300)
+            maybeReceivedRequestConnectionRecord <- inviterSvc.receiveConnectionRequest(
+              connectionRequest,
+              Some(expiryTime)
+            )
             maybeAcceptedRequestConnectionRecord <- inviterSvc.acceptConnectionRequest(inviterRecord.id)
             allInviterRecords <- inviterSvc.getConnectionRecords()
           } yield {
@@ -251,7 +255,12 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
             )
             connectionRequest = maybeAcceptedInvitationRecord.connectionRequest.get
             _ <- inviteeSvc.markConnectionRequestSent(inviteeRecord.id)
-            maybeReceivedRequestConnectionRecord <- inviterSvc.receiveConnectionRequest(connectionRequest)
+            expiryTime = Duration.fromSeconds(300)
+
+            maybeReceivedRequestConnectionRecord <- inviterSvc.receiveConnectionRequest(
+              connectionRequest,
+              Some(expiryTime)
+            )
             maybeAcceptedRequestConnectionRecord <- inviterSvc.acceptConnectionRequest(inviterRecord.id)
             connectionResponseMessage <- ZIO.fromEither(
               maybeAcceptedRequestConnectionRecord.connectionResponse.get.makeMessage.asJson.as[Message]

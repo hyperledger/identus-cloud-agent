@@ -123,7 +123,7 @@ object MessagingService {
           else
             didCommService.packEncrypted(msg = finalMessage, to = finalMessage.to.head) // TODO Head
 
-        _ <- ZIO.log(s"Sending to Message to '$serviceEndpoint'")
+        _ <- ZIO.log(s"Sending a Message to '$serviceEndpoint'")
         resp <- HttpClient
           .postDIDComm(url = serviceEndpoint, data = encryptedMessage.string)
           .catchAll { case ex => ZIO.fail(SendMessageError(ex, Some(encryptedMessage.string))) }

@@ -57,6 +57,14 @@ import scala.language.implicitConversions
 object MainApp extends ZIOAppDefault {
 
   Security.insertProviderAt(BouncyCastleProviderSingleton.getInstance(), 2)
+  def didCommAgentLayer(didCommServiceUrl: String): ZLayer[ManagedDIDService, Nothing, DidAgent] = {
+    val aux = for {
+      managedDIDService <- ZIO.service[ManagedDIDService]
+      peerDID <- managedDIDService.createAndStorePeerDID(didCommServiceUrl)
+      _ <- ZIO.logInfo(s"New DID: ${peerDID.did}")
+    } yield io.iohk.atala.mercury.AgentPeerService.makeLayer(peerDID)
+    ZLayer.fromZIO(aux).flatten
+  }
 
   val migrations = for {
     _ <- ZIO.serviceWithZIO[PolluxMigrations](_.migrate)
@@ -105,6 +113,7 @@ object MainApp extends ZIOAppDefault {
       app <- PrismAgentApp
         .run(didCommServicePort)
         .provide(
+          didCommAgentLayer(didCommServiceUrl),
           DidCommX.liveLayer,
           // infra
           SystemModule.configLayer,
@@ -132,6 +141,7 @@ object MainApp extends ZIOAppDefault {
           // domain
           AppModule.apolloLayer,
           AppModule.didJwtResolverlayer,
+          AppModule.seedResolverLayer,
           DIDOperationValidator.layer(),
           DIDResolver.layer,
           HttpURIDereferencerImpl.layer,
@@ -152,6 +162,7 @@ object MainApp extends ZIOAppDefault {
           GrpcModule.irisStubLayer,
           GrpcModule.prismNodeStubLayer,
           // storage
+          RepoModule.didSecretStorageLayer, //FIXME
           DIDKeySecretStorageImpl.layer,
           RepoModule.agentContextAwareTransactorLayer ++ RepoModule.agentTransactorLayer >>> JdbcDIDNonSecretStorage.layer,
           RepoModule.agentContextAwareTransactorLayer >>> JdbcWalletNonSecretStorage.layer,
@@ -168,7 +179,7 @@ object MainApp extends ZIOAppDefault {
           ZLayer.succeed(500) >>> EventNotificationServiceImpl.layer,
           // HTTP client
           Client.default,
-          Scope.default,
+          Scope.default
         )
     } yield app
 

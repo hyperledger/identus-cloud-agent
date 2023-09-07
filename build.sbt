@@ -1,5 +1,5 @@
-import org.scoverage.coveralls.Imports.CoverallsKeys.*
 import sbtbuildinfo.BuildInfoPlugin.autoImport.*
+import org.scoverage.coveralls.Imports.CoverallsKeys.*
 
 inThisBuild(
   Seq(
@@ -71,7 +71,7 @@ lazy val V = new {
   val logback = "1.4.8"
   val slf4j = "2.0.7"
 
-  val prismSdk = "v1.4.1" // scala-steward:off
+  val prismSdk = "1.4.1" // scala-steward:off
   val scalaUri = "4.0.3"
 
   val jwtCirceVersion = "9.1.2"
@@ -623,8 +623,6 @@ val irisClient = project
 
 val castorCommonSettings = Seq(
   testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
-  githubTokenSource := TokenSource.Environment("GITHUB_TOKEN"),
-  resolvers += Resolver.githubPackages("input-output-hk"),
   // Needed for Kotlin coroutines that support new memory management mode
   resolvers += "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven"
 )
@@ -645,8 +643,6 @@ lazy val castorCore = project
 
 val polluxCommonSettings = Seq(
   testFrameworks ++= Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
-  githubTokenSource := TokenSource.Environment("GITHUB_TOKEN"),
-  resolvers += Resolver.githubPackages("input-output-hk"),
   // Needed for Kotlin coroutines that support new memory management mode
   resolvers += "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven"
 )
@@ -696,7 +692,9 @@ lazy val polluxAnoncreds = project
     name := "pollux-anoncreds",
     Compile / unmanagedJars += baseDirectory.value / "anoncreds-java-1.0-SNAPSHOT.jar",
     Compile / unmanagedResourceDirectories ++= Seq(
-      baseDirectory.value / "native-lib" / "NATIVE"
+      // export LD_LIBRARY_PATH=.../anoncreds-rs/uniffi/target/x86_64-unknown-linux-gnu/release:$LD_LIBRARY_PATH,
+      baseDirectory.value / "native-lib" / "NATIVE" / "darwin-aarch64",
+      baseDirectory.value / "native-lib" / "NATIVE" / "linux" / "amd64"
     ),
   )
 
