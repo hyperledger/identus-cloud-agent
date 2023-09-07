@@ -12,6 +12,7 @@ final case class IssueCredentialRecord(
     updatedAt: Option[Instant],
     thid: DidCommID,
     schemaId: Option[String],
+    credentialDefinitionId: Option[String],
     credentialFormat: CredentialFormat,
     role: Role,
     subjectId: Option[String],
