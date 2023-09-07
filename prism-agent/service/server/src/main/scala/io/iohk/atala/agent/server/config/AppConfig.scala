@@ -7,6 +7,7 @@ import io.iohk.atala.shared.db.DbConfig
 import zio.config.*
 import zio.config.magnolia.Descriptor
 
+import java.net.URL
 import java.time.Duration
 
 final case class AppConfig(
@@ -101,7 +102,19 @@ final case class VerificationConfig(options: Options) {
   }
 }
 
-final case class WebhookPublisherConfig(parallelism: Option[Int])
+final case class WebhookPublisherConfig(
+    url: Option[URL],
+    apiKey: Option[String],
+    parallelism: Option[Int]
+)
+
+final case class DefaultWalletConfig(
+    enabled: Boolean,
+    seed: Option[String],
+    webhookUrl: Option[URL],
+    webhookApiKey: Option[String],
+    authApiKey: String
+)
 
 final case class AgentConfig(
     httpEndpoint: HttpEndpointConfig,
@@ -110,7 +123,8 @@ final case class AgentConfig(
     database: DatabaseConfig,
     verification: VerificationConfig,
     secretStorage: SecretStorageConfig,
-    webhookPublisher: WebhookPublisherConfig
+    webhookPublisher: WebhookPublisherConfig,
+    defaultWallet: DefaultWalletConfig
 )
 
 final case class HttpEndpointConfig(http: HttpConfig)

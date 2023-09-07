@@ -26,6 +26,10 @@ class WebhookPublisher(
 
   private val baseHeaders = Headers.contentType(HeaderValues.applicationJson)
 
+  private val globalWebhookBaseHeaders = config.apiKey
+    .map(key => Headers.bearerAuthorizationHeader(key))
+    .getOrElse(Headers.empty)
+
   private val parallelism = config.parallelism.getOrElse(1).max(1).min(10)
 
   val run: ZIO[Client, WebhookPublisherError, Unit] = {
@@ -54,35 +58,49 @@ class WebhookPublisher(
       _ <- ZIO.log(s"Polling $parallelism event(s)")
       events <- consumer.poll(parallelism).mapError(e => UnexpectedError(e.toString))
       _ <- ZIO.log(s"Got ${events.size} event(s)")
-      allWebhookUrls <- ZIO
+      webhookConfig <- ZIO
         .foreach(events.map(_.walletId).toSet.toList) { walletId =>
           walletService.listWalletNotifications
             .map(walletId -> _)
             .provide(ZLayer.succeed(WalletAccessContext(walletId)))
         }
         .map(_.toMap)
-      _ <- ZIO.foreachPar(events) { e =>
-        val webhookUrls = allWebhookUrls.getOrElse(e.walletId, Nil)
-        ZIO.foreach(webhookUrls) { webhookUrl =>
-          notifyWebhook(e, webhookUrl)
-            .retry(Schedule.spaced(5.second) && Schedule.recurs(2))
-            .catchAll(e => ZIO.logError(s"Webhook permanently failing, with last error being: ${e.msg}"))
-        }
+      notifyTasks = events.flatMap { e =>
+        val webhooks = webhookConfig.getOrElse(e.walletId, Nil)
+        generateNotifyWebhookTasks(e, webhooks)
+          .map(
+            _.retry(Schedule.spaced(5.second) && Schedule.recurs(2))
+              .catchAll(e => ZIO.logError(s"Webhook permanently failing, with last error being: ${e.msg}"))
+          )
       }
+      _ <- ZIO.collectAllParDiscard(notifyTasks).withParallelism(parallelism)
     } yield ()
   }
 
-  private[this] def notifyWebhook[A](event: Event[A], conf: EventNotificationConfig)(implicit
+  private[this] def generateNotifyWebhookTasks[A](
+      event: Event[A],
+      webhooks: Seq[EventNotificationConfig]
+  )(implicit encoder: JsonEncoder[A]): Seq[ZIO[Client, UnexpectedError, Unit]] = {
+    val globalWebhookTarget = config.url.map(_ -> globalWebhookBaseHeaders).toSeq
+    val walletWebhookTargets = webhooks
+      .map(i => i.url -> i.customHeaders)
+      .map { case (url, headers) =>
+        url -> headers.foldLeft(Headers.empty) { case (acc, (k, v)) => acc ++ Header(k, v) }
+      }
+    (walletWebhookTargets ++ globalWebhookTarget)
+      .map { case (url, headers) => notifyWebhook(event, url.toString, headers) }
+  }
+
+  private[this] def notifyWebhook[A](event: Event[A], url: String, headers: Headers)(implicit
       encoder: JsonEncoder[A]
   ): ZIO[Client, UnexpectedError, Unit] = {
-    val customHeaders = conf.customHeaders.foldLeft(Headers.empty) { case (acc, (k, v)) => acc ++ Header(k, v) }
     for {
-      _ <- ZIO.logDebug(s"Sending event: $event to HTTP webhook URL: ${conf.url}.")
+      _ <- ZIO.logDebug(s"Sending event: $event to HTTP webhook URL: $url.")
       response <- Client
         .request(
-          url = conf.url.toString,
+          url = url,
           method = Method.POST,
-          headers = baseHeaders ++ customHeaders,
+          headers = baseHeaders ++ headers,
           content = Body.fromString(event.toJson)
         )
         .timeoutFail(new RuntimeException("Client request timed out"))(5.seconds)
