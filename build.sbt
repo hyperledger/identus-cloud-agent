@@ -52,7 +52,7 @@ lazy val V = new {
   val zioCatsInterop = "23.0.03"
   val zioMetricsConnector = "2.1.0"
   val zioMock = "1.0.0-RC11"
-  val mockito = "3.2.16.0"
+  val mockito = "3.2.17.0"
 
   // https://mvnrepository.com/artifact/io.circe/circe-core
   val circe = "0.14.6"
