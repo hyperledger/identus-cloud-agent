@@ -37,7 +37,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], maxRetries: Int
     )
 
   // Uncomment to have Doobie LogHandler in scope and automatically output SQL statements in logs
-  // given logHandler: LogHandler = LogHandler.jdkLogHandler
+   given logHandler: LogHandler = LogHandler.jdkLogHandler
 
   import IssueCredentialRecord.*
 
@@ -103,6 +103,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], maxRetries: Int
         |   ${record.updatedAt},
         |   ${record.thid},
         |   ${record.schemaId},
+        |   ${record.credentialDefinitionId},
         |   ${record.credentialFormat},
         |   ${record.role},
         |   ${record.subjectId},
