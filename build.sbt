@@ -113,8 +113,9 @@ lazy val D = new {
   val didcommx: ModuleID = "org.didcommx" % "didcomm" % "0.3.1"
   val peerDidcommx: ModuleID = "org.didcommx" % "peerdid" % "0.3.0"
   val didScala: ModuleID = "app.fmgp" %% "did" % "0.0.0+113-61efa271-SNAPSHOT"
-  // https://mvnrepository.com/artifact/com.nimbusds/nimbus-jose-jwt/9.16-preview.1
-  val jwk: ModuleID = "com.nimbusds" % "nimbus-jose-jwt" % "10.0.0-preview"
+  // Customized version of numbus jose jwt
+  // from https://github.com/goncalo-frade-iohk/Nimbus-JWT_Fork/commit/8a6665c25979e771afae29ce8c965c8b0312fefb
+  val jwk: ModuleID = "io.iohk.atala" % "nimbus-jose-jwt" % "10.0.0"
 
   val typesafeConfig: ModuleID = "com.typesafe" % "config" % V.typesafeConfig
   val scalaPbRuntime: ModuleID =
