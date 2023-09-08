@@ -16,6 +16,8 @@ import io.iohk.atala.pollux.core.service.CredentialService
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.{URLayer, ZIO, ZLayer}
 
+import java.util.UUID
+
 class IssueControllerImpl(
     credentialService: CredentialService,
     connectionService: ConnectionService
@@ -40,7 +42,7 @@ class IssueControllerImpl(
           pairwiseHolderDID = didIdPair.theirDid,
           thid = DidCommID(),
           schemaId = request.schemaId,
-          credentialDefinitionId = Some("Fake credential definition id"), // TODO Should come from the request
+          credentialDefinitionId = Some(UUID.randomUUID()), // TODO Should come from the request
           credentialFormat = CredentialFormat.JWT, // TODO Should come from the request
           claims = jsonClaims,
           validityPeriod = request.validityPeriod,

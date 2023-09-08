@@ -14,6 +14,7 @@ import io.iohk.atala.shared.models.WalletAccessContext
 import zio.{IO, URLayer, ZIO, ZLayer}
 
 import java.time.Instant
+import java.util.UUID
 
 class CredentialServiceNotifier(
     svc: CredentialService,
@@ -27,7 +28,7 @@ class CredentialServiceNotifier(
       pairwiseHolderDID: DidId,
       thid: DidCommID,
       schemaId: Option[String],
-      credentialDefinitionId: Option[String],
+      credentialDefinitionId: Option[UUID],
       credentialFormat: CredentialFormat,
       claims: Json,
       validityPeriod: Option[Double],

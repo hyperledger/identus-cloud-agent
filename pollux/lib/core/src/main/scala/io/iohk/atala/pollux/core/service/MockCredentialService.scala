@@ -13,6 +13,7 @@ import zio.mock.{Mock, Proxy}
 import zio.{IO, URLayer, ZIO, ZLayer, mock}
 
 import java.time.Instant
+import java.util.UUID
 
 object MockCredentialService extends Mock[CredentialService] {
 
@@ -23,7 +24,7 @@ object MockCredentialService extends Mock[CredentialService] {
             DidId,
             DidCommID,
             Option[String],
-            Option[String],
+            Option[UUID],
             CredentialFormat,
             Json,
             Option[Double],
@@ -68,7 +69,7 @@ object MockCredentialService extends Mock[CredentialService] {
           pairwiseHolderDID: DidId,
           thid: DidCommID,
           schemaId: Option[String],
-          credentialDefinitionId: Option[String],
+          credentialDefinitionId: Option[UUID],
           credentialFormat: CredentialFormat,
           claims: Json,
           validityPeriod: Option[Double],

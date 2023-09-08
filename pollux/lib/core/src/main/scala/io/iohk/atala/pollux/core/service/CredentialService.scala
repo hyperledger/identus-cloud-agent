@@ -16,6 +16,7 @@ import zio.{IO, ZIO}
 
 import java.nio.charset.StandardCharsets
 import java.time.Instant
+import java.util.UUID
 
 trait CredentialService {
 
@@ -26,7 +27,7 @@ trait CredentialService {
       pairwiseHolderDID: DidId,
       thid: DidCommID,
       schemaId: Option[String],
-      credentialDefinitionId: Option[String],
+      credentialDefinitionId: Option[UUID],
       credentialFormat: CredentialFormat,
       claims: io.circe.Json,
       validityPeriod: Option[Double] = None,

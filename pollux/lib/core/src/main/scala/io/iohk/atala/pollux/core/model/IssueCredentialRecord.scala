@@ -5,6 +5,7 @@ import io.iohk.atala.mercury.protocol.issuecredential.{IssueCredential, OfferCre
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord.*
 
 import java.time.Instant
+import java.util.UUID
 
 final case class IssueCredentialRecord(
     id: DidCommID,
@@ -12,7 +13,7 @@ final case class IssueCredentialRecord(
     updatedAt: Option[Instant],
     thid: DidCommID,
     schemaId: Option[String],
-    credentialDefinitionId: Option[String],
+    credentialDefinitionId: Option[UUID],
     credentialFormat: CredentialFormat,
     role: Role,
     subjectId: Option[String],

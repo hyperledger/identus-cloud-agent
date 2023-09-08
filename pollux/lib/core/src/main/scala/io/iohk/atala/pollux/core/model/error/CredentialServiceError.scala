@@ -3,6 +3,8 @@ package io.iohk.atala.pollux.core.model.error
 import io.iohk.atala.pollux.core.model.DidCommID
 import io.iohk.atala.pollux.vc.jwt.W3cCredentialPayload
 
+import java.util.UUID
+
 sealed trait CredentialServiceError
 
 object CredentialServiceError {
@@ -21,4 +23,6 @@ object CredentialServiceError {
       extends CredentialServiceError
   final case class UnsupportedVCClaimsValue(error: String) extends CredentialServiceError
   final case class UnsupportedVCClaimsMimeType(mimeType: String) extends CredentialServiceError
+  final case class CredentialDefinitionPrivatePartNotFound(credentialDefinitionId: UUID) extends CredentialServiceError
+  case object CredentialDefinitionIdUndefined extends CredentialServiceError
 }
