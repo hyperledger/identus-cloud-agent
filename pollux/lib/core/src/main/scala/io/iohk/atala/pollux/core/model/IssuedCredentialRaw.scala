@@ -1,6 +1,7 @@
-package io.iohk.atala.pollux.core.model
+//FIXME REMOVE
+// package io.iohk.atala.pollux.core.model
 
-final case class IssuedCredentialRaw(
-    signedCredential: String,
-    format: CredentialOfferFormat
-)
+// final case class IssuedCredentialRaw(
+//     signedCredential: String,
+//     format: CredentialOfferFormat
+// )

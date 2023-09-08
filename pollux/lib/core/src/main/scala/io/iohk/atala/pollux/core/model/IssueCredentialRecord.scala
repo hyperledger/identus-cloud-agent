@@ -6,6 +6,7 @@ import io.iohk.atala.pollux.core.model.IssueCredentialRecord.*
 
 import java.time.Instant
 import java.util.UUID
+import io.iohk.atala.mercury.protocol.issuecredential._
 
 final case class IssueCredentialRecord(
     id: DidCommID,
@@ -30,7 +31,27 @@ final case class IssueCredentialRecord(
     metaRetries: Int,
     metaNextRetry: Option[Instant],
     metaLastFailure: Option[String],
-)
+) {
+  def offerCredentialFormatAndData: Option[(IssueCredentialOfferFormat, OfferCredential)] =
+    offerCredentialData.map { data =>
+      credentialFormat.match
+        case CredentialFormat.JWT       => (IssueCredentialOfferFormat.JWT, data)
+        case CredentialFormat.AnonCreds => (IssueCredentialOfferFormat.Anoncred, data)
+    }
+  def requestCredentialFormatAndData: Option[(IssueCredentialRequestFormat, RequestCredential)] =
+    requestCredentialData.map { data =>
+      credentialFormat.match
+        case CredentialFormat.JWT       => (IssueCredentialRequestFormat.JWT, data)
+        case CredentialFormat.AnonCreds => (IssueCredentialRequestFormat.Anoncred, data)
+    }
+  def issuedCredentialFormatAndData: Option[(IssueCredentialIssuedFormat, IssueCredential)] =
+    issueCredentialData.map { data =>
+      credentialFormat.match
+        case CredentialFormat.JWT       => (IssueCredentialIssuedFormat.JWT, data)
+        case CredentialFormat.AnonCreds => (IssueCredentialIssuedFormat.Anoncred, data)
+    }
+
+}
 final case class ValidIssuedCredentialRecord(
     id: DidCommID,
     issuedCredentialRaw: Option[String],

@@ -29,6 +29,7 @@ import zio.prelude.ZValidation
 import java.rmi.UnexpectedException
 import java.time.{Instant, ZoneId}
 import java.util.UUID
+import sttp.tapir.Schema.annotations.format
 
 object CredentialServiceImpl {
   val layer: URLayer[
@@ -206,9 +207,12 @@ private class CredentialServiceImpl(
                 CredentialServiceError.UnexpectedError(s"Unexpected CredentialOffer attachment format: ${e.toString()}")
               )
         }
-      credentialFormat =
-        if (offer.body.formats.exists(_.format == MercuryCredentialFormat.AnonCreds)) CredentialFormat.AnonCreds
-        else CredentialFormat.JWT
+      attachment = offer.attachments.head // TODO FIXME head
+      credentialFormat = attachment.format match
+        case Some(value) if (value == IssueCredentialOfferFormat.JWT.name)      => CredentialFormat.JWT
+        case Some(value) if (value == IssueCredentialOfferFormat.Anoncred.name) => CredentialFormat.AnonCreds
+        case None                                                               => ??? // FIXME Missing format
+        case Some(value)                                                        => ??? // FIXME Unsupported format
       record <- ZIO.succeed(
         IssueCredentialRecord(
           id = DidCommID(),
@@ -297,10 +301,10 @@ private class CredentialServiceImpl(
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
     for {
       record <- getRecordWithState(recordId, ProtocolState.RequestPending)
-      offer <- ZIO
-        .fromOption(record.offerCredentialData)
+      formatAndOffer <- ZIO
+        .fromOption(record.offerCredentialFormatAndData)
         .mapError(_ => InvalidFlowStateError(s"No offer found for this record: $recordId"))
-      request = createDidCommRequestCredential(offer, signedPresentation)
+      request = createDidCommRequestCredential(formatAndOffer._1, formatAndOffer._2, signedPresentation)
       count <- credentialRepository
         .updateWithRequestCredential(recordId, request, ProtocolState.RequestGenerated)
         .mapError(RepositoryError.apply)
@@ -542,6 +546,8 @@ private class CredentialServiceImpl(
         Seq(
           AttachmentDescriptor.buildJsonAttachment(
             id = attachmentId,
+            mediaType = Some("application/json"),
+            format = Some(IssueCredentialOfferFormat.JWT.name),
             payload = PresentationAttachment(
               Some(Options(challenge, domain)),
               PresentationDefinition(format = Some(ClaimFormat(jwt = Some(Jwt(alg = Seq("ES256K"), proof_type = Nil)))))
@@ -579,7 +585,7 @@ private class CredentialServiceImpl(
           AttachmentDescriptor.buildBase64Attachment(
             id = attachmentId,
             mediaType = Some("application/json"),
-            payload = offer.data.getBytes()
+            format = Some(IssueCredentialOfferFormat.Anoncred.name) payload = offer.data.getBytes()
           )
         )
       }
@@ -614,6 +620,7 @@ private class CredentialServiceImpl(
   } yield offer
 
   private[this] def createDidCommRequestCredential(
+      format: IssueCredentialOfferFormat,
       offer: OfferCredential,
       signedPresentation: JWT
   ): RequestCredential = {
@@ -621,13 +628,14 @@ private class CredentialServiceImpl(
       body = RequestCredential.Body(
         goal_code = offer.body.goal_code,
         comment = offer.body.comment,
-        formats = offer.body.formats
       ),
       attachments = Seq(
         AttachmentDescriptor
           .buildBase64Attachment(
+            mediaType = Some("application/json"),
+            format = Some(format.name),
+            // FIXME yeah copy payload will probabli not work for anoncreds... !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             payload = signedPresentation.value.getBytes(),
-            mediaType = Some("prism/jwt")
           )
       ),
       thid = offer.thid.orElse(Some(offer.id)),
@@ -643,9 +651,8 @@ private class CredentialServiceImpl(
         comment = request.body.comment,
         replacement_id = None,
         more_available = None,
-        formats = request.body.formats
       ),
-      attachments = Seq(),
+      attachments = Seq(???), // FIXME !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       thid = request.thid.orElse(Some(request.id)),
       from = request.to,
       to = request.from
