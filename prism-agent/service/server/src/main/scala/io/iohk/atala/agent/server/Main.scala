@@ -43,7 +43,6 @@ import io.iohk.atala.pollux.sql.repository.{
 }
 import io.iohk.atala.presentproof.controller.PresentProofControllerImpl
 import io.iohk.atala.resolvers.DIDResolver
-import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
 import io.iohk.atala.system.controller.SystemControllerImpl
 import io.micrometer.prometheus.{PrometheusConfig, PrometheusMeterRegistry}
 import zio.*

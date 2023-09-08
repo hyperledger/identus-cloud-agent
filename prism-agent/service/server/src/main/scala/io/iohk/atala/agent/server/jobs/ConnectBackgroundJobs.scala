@@ -19,8 +19,6 @@ import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
 import zio.*
 import zio.metrics.*
 
-import java.time.{Duration, Instant}
-
 object ConnectBackgroundJobs {
 
   val didCommExchanges = {
@@ -63,9 +61,6 @@ object ConnectBackgroundJobs {
     )
     val InviterConnectionResponseMsgSuccess = counterMetric(
       "connection_flow_inviter_connection_response_msg_success_counter"
-    )
-    val InviterConnectionInvitationExpiredSuccess = counterMetric(
-      "connection_flow_inviter_connection_invitation_expired_success_counter"
     )
     val InviteeProcessConnectionRecordPendingSuccess = counterMetric(
       "connection_flow_invitee_process_connection_record_success_counter"
@@ -171,35 +166,6 @@ object ConnectBackgroundJobs {
           @@ Metric
             .gauge("connection_flow_inviter_process_connection_record_ms_gauge")
             .trackDurationWith(_.toMetricsSeconds)
-      case ConnectionRecord(
-            id,
-            createdAt,
-            _,
-            _,
-            _,
-            Inviter,
-            InvitationGenerated,
-            _,
-            _,
-            _,
-            metaRetries,
-            _,
-            _
-          ) if metaRetries > 0 =>
-        for {
-          connectionService <- ZIO.service[ConnectionService]
-          config <- ZIO.service[AppConfig]
-          expired <- ZIO.succeed {
-            val expiryDuration = config.connect.connectInvitationExpiry
-            val actualDuration = Duration.between(createdAt, Instant.now())
-            actualDuration > expiryDuration
-          }
-          _ <-
-            if (expired) {
-              connectionService.markConnectionInvitationExpired(id)
-                @@ InviterConnectionInvitationExpiredSuccess
-            } else ZIO.unit
-        } yield ()
       case _ => ZIO.unit
     }
 
