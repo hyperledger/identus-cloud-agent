@@ -11,7 +11,7 @@ import sttp.tapir.ztapir.{oneOf, oneOfVariant}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder}
 
 object CommonEndpointDefinitions {
-  
+
   // This is an example of the common output definition for the endpoint that can be reused in the endpoint definition
   val httpErrors: OneOf[FailureResponse, FailureResponse] = oneOf[FailureResponse](
     oneOfVariant(StatusCode.InternalServerError, jsonBody[InternalServerError]),
