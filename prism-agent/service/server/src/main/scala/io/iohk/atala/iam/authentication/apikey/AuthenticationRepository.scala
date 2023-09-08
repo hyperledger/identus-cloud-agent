@@ -10,7 +10,7 @@ import zio.interop.catz.*
 import java.util.UUID
 
 enum AuthenticationMethodType(val value: String) {
-  case ApiKey extends AuthenticationMethodType("api-key")
+  case ApiKey extends AuthenticationMethodType("apikey")
 }
 
 case class AuthenticationMethod(

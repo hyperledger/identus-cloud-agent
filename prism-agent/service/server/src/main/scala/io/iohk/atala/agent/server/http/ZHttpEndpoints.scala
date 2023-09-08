@@ -48,8 +48,8 @@ object ZHttpEndpoints {
 
   private val apiKeySecuritySchema = SecurityScheme(
     `type` = "apiKey",
-    description = Some("API Key Authentication. The header `api-key` must be set with the API key."),
-    name = Some("api-key"),
+    description = Some("API Key Authentication. The header `apikey` must be set with the API key."),
+    name = Some("apikey"),
     in = Some("header"),
     scheme = None,
     bearerFormat = None,
