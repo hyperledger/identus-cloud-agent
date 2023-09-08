@@ -2,10 +2,12 @@ package io.iohk.atala.issue.controller.http
 
 import io.iohk.atala.api.http.Annotation
 import io.iohk.atala.issue.controller.http.CreateIssueCredentialRecordRequest.annotations
-import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
 import sttp.tapir.json.zio.schemaForZioJsonValue
+import sttp.tapir.{Schema, Validator}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
+
+import java.util.UUID
 
 /** A class to represent an incoming request to create a new credential offer.
   *
@@ -31,6 +33,12 @@ final case class CreateIssueCredentialRecordRequest(
     @description(annotations.schemaId.description)
     @encodedExample(annotations.schemaId.example)
     schemaId: Option[String],
+    @description(annotations.credentialDefinitionId.description)
+    @encodedExample(annotations.credentialDefinitionId.example)
+    credentialDefinitionId: Option[UUID],
+    @description(annotations.credentialFormat.description)
+    @encodedExample(annotations.credentialFormat.example)
+    credentialFormat: String,
     @description(annotations.claims.description)
     @encodedExample(annotations.claims.example)
     claims: zio.json.ast.Json,
@@ -60,6 +68,25 @@ object CreateIssueCredentialRecordRequest {
           description = "The unique identifier of the schema used for this credential offer.",
           example =
             Some("https://agent-host.com/prism-agent/schema-registry/schemas/d9569cec-c81e-4779-aa86-0d5994d82676")
+        )
+
+    object credentialDefinitionId
+        extends Annotation[Option[UUID]](
+          description =
+            "The unique identifier of the credential definition used for this credential offer (AnonCreds only)",
+          example = Some(UUID.fromString("d9569cec-c81e-4779-aa86-0d5994d82676"))
+        )
+
+    object credentialFormat
+        extends Annotation[String](
+          description = "The format used for this credential offer",
+          example = "JWT",
+          validator = Validator.enumeration(
+            List(
+              "JWT",
+              "AnonCreds"
+            )
+          )
         )
 
     object claims

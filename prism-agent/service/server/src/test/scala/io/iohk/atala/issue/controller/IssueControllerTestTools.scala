@@ -9,11 +9,8 @@ import io.iohk.atala.connect.core.repository.ConnectionRepositoryInMemory
 import io.iohk.atala.connect.core.service.ConnectionServiceImpl
 import io.iohk.atala.iam.authentication.{Authenticator, DefaultEntityAuthenticator}
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
-import io.iohk.atala.issue.controller.http.{
-  CreateIssueCredentialRecordRequest,
-  IssueCredentialRecord,
-  IssueCredentialRecordPage
-}
+import io.iohk.atala.issue.controller.http.{CreateIssueCredentialRecordRequest, IssueCredentialRecord, IssueCredentialRecordPage}
+import io.iohk.atala.pollux.core.model.IssueCredentialRecord.CredentialFormat
 import io.iohk.atala.pollux.core.repository.{CredentialDefinitionRepositoryInMemory, CredentialRepositoryInMemory}
 import io.iohk.atala.pollux.core.service.*
 import io.iohk.atala.pollux.vc.jwt.*
@@ -153,7 +150,9 @@ trait IssueGen {
       claims = claims,
       automaticIssuance = Some(automaticIssuance),
       issuingDID = issuingDID,
-      connectionId = connectionId
+      connectionId = connectionId,
+      credentialDefinitionId = None,
+      credentialFormat = CredentialFormat.JWT.toString
     )
   }
 

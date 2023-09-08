@@ -8,15 +8,18 @@ import io.iohk.atala.connect.controller.ConnectionController
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.connect.core.service.ConnectionService
 import io.iohk.atala.issue.controller.IssueController.toHttpError
-import io.iohk.atala.issue.controller.http.{AcceptCredentialOfferRequest, CreateIssueCredentialRecordRequest, IssueCredentialRecord, IssueCredentialRecordPage}
+import io.iohk.atala.issue.controller.http.{
+  AcceptCredentialOfferRequest,
+  CreateIssueCredentialRecordRequest,
+  IssueCredentialRecord,
+  IssueCredentialRecordPage
+}
 import io.iohk.atala.pollux.core.model.DidCommID
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord.CredentialFormat
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.core.service.CredentialService
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.{URLayer, ZIO, ZLayer}
-
-import java.util.UUID
 
 class IssueControllerImpl(
     credentialService: CredentialService,
@@ -42,8 +45,8 @@ class IssueControllerImpl(
           pairwiseHolderDID = didIdPair.theirDid,
           thid = DidCommID(),
           schemaId = request.schemaId,
-          credentialDefinitionId = Some(UUID.randomUUID()), // TODO Should come from the request
-          credentialFormat = CredentialFormat.JWT, // TODO Should come from the request
+          credentialDefinitionId = request.credentialDefinitionId,
+          credentialFormat = CredentialFormat.valueOf(request.credentialFormat),
           claims = jsonClaims,
           validityPeriod = request.validityPeriod,
           automaticIssuance = request.automaticIssuance.orElse(Some(true)),

@@ -3,6 +3,7 @@ package io.iohk.atala.pollux.core.service
 import com.google.protobuf.ByteString
 import io.circe.Json
 import io.circe.syntax.*
+import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
 import io.iohk.atala.castor.core.model.did.{CanonicalPrismDID, PrismDID, VerificationRelationship}
 import io.iohk.atala.iris.proto.dlt.IrisOperation
 import io.iohk.atala.iris.proto.service.IrisOperationId
@@ -10,12 +11,15 @@ import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
 import io.iohk.atala.iris.proto.vc_operations.IssueCredentialsBatch
 import io.iohk.atala.mercury.model.{AttachmentDescriptor, Base64, DidId, JsonData}
 import io.iohk.atala.mercury.protocol.issuecredential.{CredentialFormat as MercuryCredentialFormat, *}
+import io.iohk.atala.pollux.*
+import io.iohk.atala.pollux.anoncreds.{AnoncredLib, CreateCredentialDefinition}
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError.*
 import io.iohk.atala.pollux.core.model.presentation.*
 import io.iohk.atala.pollux.core.model.schema.CredentialSchema
 import io.iohk.atala.pollux.core.repository.CredentialRepository
+import io.iohk.atala.pollux.core.service.serdes.PrivateCredentialDefinitionSchemaSerDesV1
 import io.iohk.atala.pollux.vc.jwt.*
 import io.iohk.atala.prism.crypto.{MerkleInclusionProof, MerkleTreeKt, Sha256}
 import io.iohk.atala.shared.models.WalletAccessContext
@@ -27,8 +31,12 @@ import java.time.{Instant, ZoneId}
 import java.util.UUID
 
 object CredentialServiceImpl {
-  val layer: URLayer[IrisServiceStub & CredentialRepository & DidResolver & URIDereferencer, CredentialService] =
-    ZLayer.fromFunction(CredentialServiceImpl(_, _, _, _))
+  val layer: URLayer[
+    IrisServiceStub & CredentialRepository & DidResolver & URIDereferencer & DIDSecretStorage &
+      CredentialDefinitionService,
+    CredentialService
+  ] =
+    ZLayer.fromFunction(CredentialServiceImpl(_, _, _, _, _, _))
 
 //  private val VC_JSON_SCHEMA_URI = "https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json"
   private val VC_JSON_SCHEMA_TYPE = "CredentialSchema2022"
@@ -39,6 +47,8 @@ private class CredentialServiceImpl(
     credentialRepository: CredentialRepository,
     didResolver: DidResolver,
     uriDereferencer: URIDereferencer,
+    didSecretStorage: DIDSecretStorage,
+    credentialDefinitionService: CredentialDefinitionService,
     maxRetries: Int = 5 // TODO move to config
 ) extends CredentialService {
 
@@ -83,7 +93,7 @@ private class CredentialServiceImpl(
       pairwiseHolderDID: DidId,
       thid: DidCommID,
       schemaId: Option[String],
-      credentialDefinitionId: Option[String],
+      credentialDefinitionId: Option[UUID],
       credentialFormat: CredentialFormat,
       claims: Json,
       validityPeriod: Option[Double],
@@ -95,25 +105,44 @@ private class CredentialServiceImpl(
       // TODO For AnonCreds, validate claims is a flat structure of type [String, String] or [String, Int]
       _ <- schemaId match
         case Some(schemaId) =>
-          CredentialSchema
-            .validateClaims(schemaId, claims.noSpaces, uriDereferencer)
-            .mapError(e => CredentialSchemaError(e))
+          credentialFormat match
+            case CredentialFormat.JWT =>
+              CredentialSchema
+                .validateClaims(schemaId, claims.noSpaces, uriDereferencer)
+                .mapError(e => CredentialSchemaError(e))
+            case CredentialFormat.AnonCreds =>
+              ZIO.unit
         case None =>
           ZIO.unit
+
       attributes <- CredentialService.convertJsonClaimsToAttributes(claims)
-      offer <- ZIO.succeed(
-        createDidCommOfferCredential(
-          pairwiseIssuerDID = pairwiseIssuerDID,
-          pairwiseHolderDID = pairwiseHolderDID,
-          schemaId = schemaId,
-          credentialDefinitionId = credentialDefinitionId,
-          credentialFormat = credentialFormat,
-          claims = attributes,
-          thid = thid,
-          UUID.randomUUID().toString,
-          "domain"
-        )
-      )
+
+      offer <- (credentialFormat, schemaId, credentialDefinitionId) match
+        case (CredentialFormat.JWT, schemaId, None) =>
+          createJWTDidCommOfferCredential(
+            pairwiseIssuerDID = pairwiseIssuerDID,
+            pairwiseHolderDID = pairwiseHolderDID,
+            schemaId = schemaId,
+            claims = attributes,
+            thid = thid,
+            UUID.randomUUID().toString,
+            "domain"
+          )
+        case (CredentialFormat.AnonCreds, Some(schemaId), Some(credentialDefinitionId)) =>
+          createAnonCredsDidCommOfferCredential(
+            pairwiseIssuerDID = pairwiseIssuerDID,
+            pairwiseHolderDID = pairwiseHolderDID,
+            schemaId = schemaId,
+            credentialDefinitionId = credentialDefinitionId,
+            claims = attributes,
+            thid = thid
+          )
+        case _ =>
+          ZIO.fail(
+            CredentialServiceError.UnexpectedError(
+              s"Invalid schemaId/credDefId input for $credentialFormat offer creation: ${schemaId}/${credentialDefinitionId}"
+            )
+          )
       record <- ZIO.succeed(
         IssueCredentialRecord(
           id = DidCommID(),
@@ -492,68 +521,97 @@ private class CredentialServiceImpl(
     } yield record
   }
 
-  private[this] def createDidCommOfferCredential(
+  private[this] def createJWTDidCommOfferCredential(
       pairwiseIssuerDID: DidId,
       pairwiseHolderDID: DidId,
       schemaId: Option[String],
-      credentialDefinitionId: Option[String],
-      credentialFormat: CredentialFormat,
       claims: Seq[Attribute],
       thid: DidCommID,
       challenge: String,
       domain: String
-  ): OfferCredential = {
-    val credentialPreview = CredentialPreview(schema_id = schemaId, attributes = claims)
-    val attachmentId = java.util.UUID.randomUUID.toString
-    val body = OfferCredential.Body(
-      goal_code = Some("Offer Credential"),
-      credential_preview = credentialPreview,
-      formats = Seq(
-        MercuryCredentialFormat(
-          attachmentId,
-          credentialFormat match
-            case CredentialFormat.JWT       => MercuryCredentialFormat.JWT
-            case CredentialFormat.AnonCreds => MercuryCredentialFormat.AnonCreds
+  ) = {
+    for {
+      credentialPreview <- ZIO.succeed(CredentialPreview(schema_id = schemaId, attributes = claims))
+      attachmentId = java.util.UUID.randomUUID.toString
+      body = OfferCredential.Body(
+        goal_code = Some("Offer Credential"),
+        credential_preview = credentialPreview,
+        formats = Seq(MercuryCredentialFormat(attachmentId, MercuryCredentialFormat.JWT))
+      )
+      attachments <- ZIO.succeed(
+        Seq(
+          AttachmentDescriptor.buildJsonAttachment(
+            id = attachmentId,
+            payload = PresentationAttachment(
+              Some(Options(challenge, domain)),
+              PresentationDefinition(format = Some(ClaimFormat(jwt = Some(Jwt(alg = Seq("ES256K"), proof_type = Nil)))))
+            )
+          )
         )
       )
-    )
-
-    OfferCredential(
+    } yield OfferCredential(
       body = body,
-      attachments = credentialFormat match
-        case CredentialFormat.JWT =>
-          Seq(
-            AttachmentDescriptor.buildJsonAttachment(
-              id = attachmentId,
-              payload = PresentationAttachment(
-                Some(Options(challenge, domain)),
-                PresentationDefinition(format =
-                  Some(ClaimFormat(jwt = Some(Jwt(alg = Seq("ES256K"), proof_type = Nil))))
-                )
-              )
-            )
-          )
-        case CredentialFormat.AnonCreds =>
-          Seq(
-            AttachmentDescriptor.buildBase64Attachment(
-              id = attachmentId,
-              mediaType = Some("application/json"),
-              payload = """
-                  |{
-                  |    "schema_id": "4RW6QK2HZhHxa2tg7t1jqt:2:bcgov-mines-act-permit.bcgov-mines-permitting:0.2.0",
-                  |    "cred_def_id": "4RW6QK2HZhHxa2tg7t1jqt:3:CL:58160:default",
-                  |    "nonce": "57a62300-fbe2-4f08-ace0-6c329c5210e1",
-                  |    "key_correctness_proof" : "<key_correctness_proof>"
-                  |}
-                  |""".asJson.noSpaces.getBytes()
-            )
-          )
-      ,
+      attachments = attachments,
       from = pairwiseIssuerDID,
       to = pairwiseHolderDID,
-      thid = Some(thid.toString())
+      thid = Some(thid.value)
     )
   }
+
+  private[this] def createAnonCredsDidCommOfferCredential(
+      pairwiseIssuerDID: DidId,
+      pairwiseHolderDID: DidId,
+      schemaId: String,
+      credentialDefinitionId: UUID,
+      claims: Seq[Attribute],
+      thid: DidCommID
+  ) = {
+    for {
+      credentialPreview <- ZIO.succeed(CredentialPreview(schema_id = Some(schemaId), attributes = claims))
+      attachmentId = java.util.UUID.randomUUID.toString
+      body = OfferCredential.Body(
+        goal_code = Some("Offer Credential"),
+        credential_preview = credentialPreview,
+        formats = Seq(MercuryCredentialFormat(attachmentId, MercuryCredentialFormat.AnonCreds))
+      )
+      attachments <- createAnonCredsOffer(credentialDefinitionId).map { offer =>
+        Seq(
+          AttachmentDescriptor.buildBase64Attachment(
+            id = attachmentId,
+            mediaType = Some("application/json"),
+            payload = offer.data.getBytes()
+          )
+        )
+      }
+    } yield OfferCredential(
+      body = body,
+      attachments = attachments,
+      from = pairwiseIssuerDID,
+      to = pairwiseHolderDID,
+      thid = Some(thid.value)
+    )
+  }
+
+  private[this] def createAnonCredsOffer(credentialDefinitionId: UUID) = for {
+    credentialDefinition <- credentialDefinitionService
+      .getByGUID(credentialDefinitionId)
+      .mapError(e => CredentialServiceError.UnexpectedError(e.toString))
+    cd = anoncreds.CredentialDefinition(credentialDefinition.definition.toString)
+    kcp = anoncreds.CredentialKeyCorrectnessProof(credentialDefinition.keyCorrectnessProof.toString)
+    maybeDidSecret <- didSecretStorage
+      .getKey(
+        DidId(credentialDefinition.author),
+        s"anoncred-credential-definition-private-key/${credentialDefinition.guid}",
+        PrivateCredentialDefinitionSchemaSerDesV1.version
+      )
+      .orDie
+    didSecret <- ZIO
+      .fromOption(maybeDidSecret)
+      .mapError(_ => CredentialServiceError.CredentialDefinitionPrivatePartNotFound(credentialDefinition.guid))
+    cdp = anoncreds.CredentialDefinitionPrivate(didSecret.json.toString)
+    createCredentialDefinition = CreateCredentialDefinition(cd, cdp, kcp)
+    offer = AnoncredLib.createOffer(createCredentialDefinition, credentialDefinition.guid.toString)
+  } yield offer
 
   private[this] def createDidCommRequestCredential(
       offer: OfferCredential,
