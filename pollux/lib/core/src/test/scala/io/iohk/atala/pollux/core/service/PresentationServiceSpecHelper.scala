@@ -117,6 +117,8 @@ trait PresentationServiceSpecHelper {
     updatedAt = None,
     thid = DidCommID(),
     schemaId = None,
+    credentialDefinitionId = None,
+    credentialFormat = IssueCredentialRecord.CredentialFormat.JWT,
     role = IssueCredentialRecord.Role.Issuer,
     subjectId = None,
     validityPeriod = None,

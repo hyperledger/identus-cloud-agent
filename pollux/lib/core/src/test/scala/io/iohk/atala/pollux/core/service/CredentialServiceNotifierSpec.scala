@@ -22,6 +22,8 @@ object CredentialServiceNotifierSpec extends ZIOSpecDefault with CredentialServi
     None,
     DidCommID(),
     None,
+    None,
+    IssueCredentialRecord.CredentialFormat.JWT,
     IssueCredentialRecord.Role.Issuer,
     None,
     None,

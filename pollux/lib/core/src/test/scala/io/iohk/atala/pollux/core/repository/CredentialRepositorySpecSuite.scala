@@ -24,6 +24,8 @@ object CredentialRepositorySpecSuite {
     updatedAt = None,
     thid = DidCommID(),
     schemaId = None,
+    credentialDefinitionId = None,
+    credentialFormat = CredentialFormat.JWT,
     role = IssueCredentialRecord.Role.Issuer,
     subjectId = None,
     validityPeriod = None,

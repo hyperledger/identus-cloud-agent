@@ -2,6 +2,7 @@ package io.iohk.atala.pollux.core.service
 
 import io.circe.Json
 import io.grpc.ManagedChannelBuilder
+import io.iohk.atala.agent.walletapi.memory.DIDSecretStorageInMemory
 import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import io.iohk.atala.mercury.model.{AttachmentDescriptor, DidId}
@@ -10,8 +11,9 @@ import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError.*
 import io.iohk.atala.pollux.core.model.presentation.{ClaimFormat, Ldp, Options, PresentationDefinition}
-import io.iohk.atala.pollux.core.repository.CredentialRepositoryInMemory
+import io.iohk.atala.pollux.core.repository.{CredentialDefinitionRepositoryInMemory, CredentialRepositoryInMemory}
 import io.iohk.atala.pollux.vc.jwt.*
+import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 
 import java.util.UUID
@@ -22,8 +24,16 @@ trait CredentialServiceSpecHelper {
     ZIO.succeed(IrisServiceGrpc.stub(ManagedChannelBuilder.forAddress("localhost", 9999).usePlaintext.build))
   )
   protected val didResolverLayer = ZLayer.fromZIO(ZIO.succeed(makeResolver(Map.empty)))
+
+  protected val defaultWalletLayer = ZLayer.succeed(WalletAccessContext(WalletId.default))
+
+  protected val credentialDefinitionServiceLayer =
+    CredentialDefinitionRepositoryInMemory.layer ++ ResourceURIDereferencerImpl.layer >>>
+      CredentialDefinitionServiceImpl.layer ++ defaultWalletLayer
+
   protected val credentialServiceLayer =
-    irisStubLayer ++ CredentialRepositoryInMemory.layer ++ didResolverLayer ++ ResourceURIDereferencerImpl.layer >>> CredentialServiceImpl.layer
+    irisStubLayer ++ CredentialRepositoryInMemory.layer ++ didResolverLayer ++ ResourceURIDereferencerImpl.layer ++
+      DIDSecretStorageInMemory.layer >+> credentialDefinitionServiceLayer >>> CredentialServiceImpl.layer
 
   protected def offerCredential(
       thid: Option[UUID] = Some(UUID.randomUUID())
@@ -105,6 +115,8 @@ trait CredentialServiceSpecHelper {
         pairwiseHolderDID = pairwiseHolderDID,
         thid = thid,
         schemaId = schemaId,
+        credentialDefinitionId = None,
+        credentialFormat = IssueCredentialRecord.CredentialFormat.JWT,
         claims = claims,
         validityPeriod = validityPeriod,
         automaticIssuance = automaticIssuance,

@@ -3,20 +3,21 @@ package io.iohk.atala.issue.controller
 import com.typesafe.config.ConfigFactory
 import io.grpc.ManagedChannelBuilder
 import io.iohk.atala.agent.server.config.AppConfig
+import io.iohk.atala.agent.walletapi.memory.DIDSecretStorageInMemory
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.connect.core.repository.ConnectionRepositoryInMemory
 import io.iohk.atala.connect.core.service.ConnectionServiceImpl
-import io.iohk.atala.iam.authentication.Authenticator
-import io.iohk.atala.iam.authentication.DefaultEntityAuthenticator
+import io.iohk.atala.iam.authentication.{Authenticator, DefaultEntityAuthenticator}
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import io.iohk.atala.issue.controller.http.{
   CreateIssueCredentialRecordRequest,
   IssueCredentialRecord,
   IssueCredentialRecordPage
 }
-import io.iohk.atala.pollux.core.repository.CredentialRepositoryInMemory
+import io.iohk.atala.pollux.core.repository.{CredentialDefinitionRepositoryInMemory, CredentialRepositoryInMemory}
 import io.iohk.atala.pollux.core.service.*
 import io.iohk.atala.pollux.vc.jwt.*
+import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
 import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
 import sttp.client3.testing.SttpBackendStub
 import sttp.client3.{DeserializationException, Response, UriContext}
@@ -84,9 +85,16 @@ trait IssueControllerTestTools extends PostgresTestContainerSupport {
     ConnectionServiceImpl.layer >+>
     IssueControllerImpl.layer
 
+  protected val defaultWalletLayer = ZLayer.succeed(WalletAccessContext(WalletId.default))
+
+  protected val credentialDefinitionServiceLayer =
+    CredentialDefinitionRepositoryInMemory.layer ++ ResourceURIDereferencerImpl.layer >>>
+      CredentialDefinitionServiceImpl.layer
+
   val testEnvironmentLayer = zio.test.testEnvironment ++
     pgContainerLayer ++
     contextAwareTransactorLayer ++
+    DIDSecretStorageInMemory.layer >+>credentialDefinitionServiceLayer >+>
     controllerLayer ++
     DefaultEntityAuthenticator.layer
 
