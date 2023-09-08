@@ -316,7 +316,7 @@ lazy val D_PrismAgent = new {
   val tapirSwaggerUiBundle = "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % V.tapir
   val tapirJsonZio = "com.softwaremill.sttp.tapir" %% "tapir-json-zio" % V.tapir
 
-  // FIXME: using newest tapir (1.6.0) for this dependency needs refactoring, because it has transitive dependency on zio-http 3.0.0,
+  // FIXME: using newest tapir (1.6.4) for this dependency needs refactoring, because it has transitive dependency on zio-http 3.0.0,
   //   if used all imports for zio.http will use ne newest version, which will break the compilation
   val tapirZioHttpServer = "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server" % V.tapirLegacy
   val tapirHttp4sServerZio = "com.softwaremill.sttp.tapir" %% "tapir-http4s-server-zio" % V.tapir
