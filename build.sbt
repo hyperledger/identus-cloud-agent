@@ -1,5 +1,5 @@
 import sbtbuildinfo.BuildInfoPlugin.autoImport.*
-import org.scoverage.coveralls.Imports.CoverallsKeys._
+import org.scoverage.coveralls.Imports.CoverallsKeys.*
 
 inThisBuild(
   Seq(
@@ -146,7 +146,17 @@ lazy val D = new {
 
 lazy val D_Shared = new {
   lazy val dependencies: Seq[ModuleID] =
-    Seq(D.typesafeConfig, D.scalaPbGrpc, D.testcontainersPostgres, D.testcontainersVault, D.zio)
+    Seq(
+      D.typesafeConfig,
+      D.scalaPbGrpc,
+      D.testcontainersPostgres,
+      D.testcontainersVault,
+      D.zio,
+      // FIXME: split shared DB stuff as subproject?
+      D.doobieHikari,
+      D.doobiePostgres,
+      D.zioCatsInterop
+    )
 }
 
 lazy val D_Connect = new {
@@ -358,7 +368,7 @@ lazy val D_PrismAgent = new {
     )
 
   val postgresDependencies: Seq[ModuleID] =
-    Seq(quillDoobie, quillJdbcZio, postgresql, flyway, D.testcontainersPostgres)
+    Seq(quillDoobie, quillJdbcZio, postgresql, flyway, D.testcontainersPostgres, D.zioCatsInterop)
 
   // Project Dependencies
   lazy val keyManagementDependencies: Seq[ModuleID] =
@@ -733,6 +743,7 @@ lazy val eventNotification = project
     name := "event-notification",
     libraryDependencies ++= D_EventNotification.baseDependencies
   )
+  .dependsOn(shared)
 
 // #####################
 // #### Prism Agent ####
@@ -744,7 +755,7 @@ lazy val prismAgentWalletAPI = project
   .settings(prismAgentConnectCommonSettings)
   .settings(
     name := "prism-agent-wallet-api",
-    libraryDependencies ++= D_PrismAgent.keyManagementDependencies
+    libraryDependencies ++= D_PrismAgent.keyManagementDependencies ++ D_PrismAgent.postgresDependencies ++ Seq(D.zioMock)
   )
   .dependsOn(
     agentDidcommx,
@@ -771,7 +782,7 @@ lazy val prismAgentServer = project
   )
   .enablePlugins(JavaAppPackaging, DockerPlugin)
   .enablePlugins(BuildInfoPlugin)
-  .dependsOn(prismAgentWalletAPI)
+  .dependsOn(prismAgentWalletAPI % "compile->compile;test->test")
   .dependsOn(
     agent,
     polluxCore,

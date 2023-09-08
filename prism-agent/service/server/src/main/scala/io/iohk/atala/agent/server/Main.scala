@@ -3,37 +3,49 @@ package io.iohk.atala.agent.server
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
 import io.iohk.atala.agent.server.http.ZioHttpClient
 import io.iohk.atala.agent.server.sql.Migrations as AgentMigrations
-import io.iohk.atala.agent.walletapi.service.ManagedDIDService
-import io.iohk.atala.agent.walletapi.service.ManagedDIDServiceWithEventNotificationImpl
-import io.iohk.atala.agent.walletapi.sql.JdbcDIDNonSecretStorage
+import io.iohk.atala.agent.walletapi.service.{
+  EntityServiceImpl,
+  ManagedDIDService,
+  ManagedDIDServiceWithEventNotificationImpl,
+  WalletManagementServiceImpl
+}
+import io.iohk.atala.agent.walletapi.sql.{JdbcDIDNonSecretStorage, JdbcEntityRepository, JdbcWalletNonSecretStorage}
 import io.iohk.atala.agent.walletapi.storage.DIDKeySecretStorageImpl
-import io.iohk.atala.castor.controller.DIDControllerImpl
-import io.iohk.atala.castor.controller.DIDRegistrarControllerImpl
+import io.iohk.atala.castor.controller.{DIDControllerImpl, DIDRegistrarControllerImpl}
 import io.iohk.atala.castor.core.service.DIDServiceImpl
 import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.connect.controller.ConnectionControllerImpl
-import io.iohk.atala.connect.core.service.ConnectionServiceImpl
-import io.iohk.atala.connect.core.service.ConnectionServiceNotifier
-import io.iohk.atala.connect.sql.repository.JdbcConnectionRepository
-import io.iohk.atala.connect.sql.repository.Migrations as ConnectMigrations
+import io.iohk.atala.connect.core.service.{ConnectionServiceImpl, ConnectionServiceNotifier}
+import io.iohk.atala.connect.sql.repository.{JdbcConnectionRepository, Migrations as ConnectMigrations}
+import io.iohk.atala.event.controller.EventControllerImpl
 import io.iohk.atala.event.notification.EventNotificationServiceImpl
+import io.iohk.atala.iam.authentication.DefaultAuthenticator
+import io.iohk.atala.iam.authentication.admin.{AdminApiKeyAuthenticatorImpl, AdminConfig}
+import io.iohk.atala.iam.authentication.apikey.{ApiKeyAuthenticatorImpl, ApiKeyConfig, JdbcAuthenticationRepository}
+import io.iohk.atala.iam.entity.http.controller.{EntityController, EntityControllerImpl}
+import io.iohk.atala.iam.wallet.http.controller.WalletManagementControllerImpl
 import io.iohk.atala.issue.controller.IssueControllerImpl
 import io.iohk.atala.mercury.*
 import io.iohk.atala.pollux.core.service.*
 import io.iohk.atala.pollux.credentialdefinition.controller.CredentialDefinitionControllerImpl
-import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaControllerImpl
-import io.iohk.atala.pollux.credentialschema.controller.VerificationPolicyControllerImpl
-import io.iohk.atala.pollux.sql.repository.JdbcCredentialDefinitionRepository
-import io.iohk.atala.pollux.sql.repository.JdbcCredentialRepository
-import io.iohk.atala.pollux.sql.repository.JdbcCredentialSchemaRepository
-import io.iohk.atala.pollux.sql.repository.JdbcPresentationRepository
-import io.iohk.atala.pollux.sql.repository.JdbcVerificationPolicyRepository
-import io.iohk.atala.pollux.sql.repository.Migrations as PolluxMigrations
+import io.iohk.atala.pollux.credentialschema.controller.{
+  CredentialSchemaController,
+  CredentialSchemaControllerImpl,
+  VerificationPolicyControllerImpl
+}
+import io.iohk.atala.pollux.sql.repository.{
+  JdbcCredentialDefinitionRepository,
+  JdbcCredentialRepository,
+  JdbcCredentialSchemaRepository,
+  JdbcPresentationRepository,
+  JdbcVerificationPolicyRepository,
+  Migrations as PolluxMigrations
+}
 import io.iohk.atala.presentproof.controller.PresentProofControllerImpl
 import io.iohk.atala.resolvers.DIDResolver
+import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
 import io.iohk.atala.system.controller.SystemControllerImpl
-import io.micrometer.prometheus.PrometheusConfig
-import io.micrometer.prometheus.PrometheusMeterRegistry
+import io.micrometer.prometheus.{PrometheusConfig, PrometheusMeterRegistry}
 import zio.*
 import zio.http.Client
 import zio.metrics.connectors.micrometer
@@ -41,18 +53,11 @@ import zio.metrics.connectors.micrometer.MicrometerConfig
 import zio.metrics.jvm.DefaultJvmMetrics
 
 import java.security.Security
+import scala.language.implicitConversions
 
 object MainApp extends ZIOAppDefault {
 
   Security.insertProviderAt(BouncyCastleProviderSingleton.getInstance(), 2)
-  def didCommAgentLayer(didCommServiceUrl: String): ZLayer[ManagedDIDService, Nothing, DidAgent] = {
-    val aux = for {
-      managedDIDService <- ZIO.service[ManagedDIDService]
-      peerDID <- managedDIDService.createAndStorePeerDID(didCommServiceUrl)
-      _ <- ZIO.logInfo(s"New DID: ${peerDID.did}")
-    } yield io.iohk.atala.mercury.AgentPeerService.makeLayer(peerDID)
-    ZLayer.fromZIO(aux).flatten
-  }
 
   val migrations = for {
     _ <- ZIO.serviceWithZIO[PolluxMigrations](_.migrate)
@@ -101,10 +106,11 @@ object MainApp extends ZIOAppDefault {
       app <- PrismAgentApp
         .run(didCommServicePort)
         .provide(
-          didCommAgentLayer(didCommServiceUrl),
           DidCommX.liveLayer,
           // infra
           SystemModule.configLayer,
+          AdminConfig.layer,
+          ApiKeyConfig.layer,
           ZioHttpClient.layer,
           // observability
           DefaultJvmMetrics.live.unit,
@@ -121,10 +127,13 @@ object MainApp extends ZIOAppDefault {
           IssueControllerImpl.layer,
           PresentProofControllerImpl.layer,
           VerificationPolicyControllerImpl.layer,
+          EntityControllerImpl.layer,
+          WalletManagementControllerImpl.layer,
+          EventControllerImpl.layer,
           // domain
           AppModule.apolloLayer,
           AppModule.didJwtResolverlayer,
-          AppModule.seedResolverLayer,
+          // AppModule.seedResolverLayer,
           DIDOperationValidator.layer(),
           DIDResolver.layer,
           HttpURIDereferencerImpl.layer,
@@ -134,22 +143,29 @@ object MainApp extends ZIOAppDefault {
           CredentialDefinitionServiceImpl.layer,
           CredentialServiceImpl.layer >>> CredentialServiceNotifier.layer,
           DIDServiceImpl.layer,
+          EntityServiceImpl.layer,
           ManagedDIDServiceWithEventNotificationImpl.layer,
           PresentationServiceImpl.layer >>> PresentationServiceNotifier.layer,
           VerificationPolicyServiceImpl.layer,
+          WalletManagementServiceImpl.layer,
+          // authentication
+          AdminApiKeyAuthenticatorImpl.layer >+> ApiKeyAuthenticatorImpl.layer >+> DefaultAuthenticator.layer,
           // grpc
           GrpcModule.irisStubLayer,
           GrpcModule.prismNodeStubLayer,
           // storage
-          RepoModule.didSecretStorageLayer,
           DIDKeySecretStorageImpl.layer,
-          RepoModule.agentTransactorLayer >>> JdbcDIDNonSecretStorage.layer,
-          RepoModule.connectTransactorLayer >>> JdbcConnectionRepository.layer,
-          RepoModule.polluxTransactorLayer >>> JdbcCredentialRepository.layer,
-          RepoModule.polluxTransactorLayer >>> JdbcCredentialSchemaRepository.layer,
-          RepoModule.polluxTransactorLayer >>> JdbcCredentialDefinitionRepository.layer,
-          RepoModule.polluxTransactorLayer >>> JdbcPresentationRepository.layer,
-          RepoModule.polluxTransactorLayer >>> JdbcVerificationPolicyRepository.layer,
+          RepoModule.agentContextAwareTransactorLayer ++ RepoModule.agentTransactorLayer >>> JdbcDIDNonSecretStorage.layer,
+          RepoModule.agentContextAwareTransactorLayer >>> JdbcWalletNonSecretStorage.layer,
+          RepoModule.allSecretStorageLayer,
+          RepoModule.agentTransactorLayer >>> JdbcEntityRepository.layer,
+          RepoModule.agentTransactorLayer >>> JdbcAuthenticationRepository.layer,
+          RepoModule.connectContextAwareTransactorLayer >>> JdbcConnectionRepository.layer,
+          RepoModule.polluxContextAwareTransactorLayer >>> JdbcCredentialRepository.layer,
+          RepoModule.polluxContextAwareTransactorLayer ++ RepoModule.polluxTransactorLayer >>> JdbcCredentialSchemaRepository.layer,
+          RepoModule.polluxContextAwareTransactorLayer ++ RepoModule.polluxTransactorLayer >>> JdbcCredentialDefinitionRepository.layer,
+          RepoModule.polluxContextAwareTransactorLayer >>> JdbcPresentationRepository.layer,
+          RepoModule.polluxContextAwareTransactorLayer >>> JdbcVerificationPolicyRepository.layer,
           // event notification service
           ZLayer.succeed(500) >>> EventNotificationServiceImpl.layer,
           // HTTP client
@@ -159,9 +175,9 @@ object MainApp extends ZIOAppDefault {
     } yield app
 
     app.provide(
-      RepoModule.polluxDbConfigLayer >>> PolluxMigrations.layer,
-      RepoModule.connectDbConfigLayer >>> ConnectMigrations.layer,
-      RepoModule.agentDbConfigLayer >>> AgentMigrations.layer,
+      RepoModule.polluxDbConfigLayer(appUser = false) >>> PolluxMigrations.layer,
+      RepoModule.connectDbConfigLayer(appUser = false) >>> ConnectMigrations.layer,
+      RepoModule.agentDbConfigLayer(appUser = false) >>> AgentMigrations.layer,
     )
   }
 

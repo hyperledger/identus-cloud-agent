@@ -99,9 +99,13 @@ services:
       VAULT_TOKEN: ${VAULT_DEV_ROOT_TOKEN_ID:-root}
       SECRET_STORAGE_BACKEND: postgres
       DEV_MODE: true
-      WALLET_SEED:
-      WEBHOOK_URL:
-      WEBHOOK_API_KEY:
+      DEFAULT_WALLET_ENABLED:
+      DEFAULT_WALLET_SEED:
+      DEFAULT_WALLET_WEBHOOK_URL:
+      DEFAULT_WALLET_WEBHOOK_API_KEY:
+      DEFAULT_WALLET_AUTH_API_KEY:
+      GLOBAL_WEBHOOK_URL:
+      GLOBAL_WEBHOOK_API_KEY:
     depends_on:
       db:
         condition: service_healthy
@@ -110,7 +114,7 @@ services:
       vault-server:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://prism-agent:8085/connections"]
+      test: ["CMD", "curl", "-f", "http://prism-agent:8085/_system/health"]
       interval: 30s
       timeout: 10s
       retries: 5

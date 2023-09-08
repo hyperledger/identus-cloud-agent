@@ -3,11 +3,12 @@ package io.iohk.atala.pollux.core.service
 import io.iohk.atala.pollux.core.model.error.CredentialSchemaError
 import io.iohk.atala.pollux.core.model.schema.CredentialSchema
 import io.iohk.atala.pollux.core.model.schema.CredentialSchema.*
-import zio.IO
+import zio.{IO, ZIO}
+import io.iohk.atala.shared.models.WalletAccessContext
 
 import java.util.UUID
 trait CredentialSchemaService {
-  type Result[T] = IO[CredentialSchemaService.Error, T]
+  type Result[T] = ZIO[WalletAccessContext, CredentialSchemaService.Error, T]
 
   /** @param in
     *   CredentialSchema form for creating the instance
@@ -21,7 +22,7 @@ trait CredentialSchemaService {
     * @return
     *   The instance of the credential schema or credential service error
     */
-  def getByGUID(guid: UUID): Result[CredentialSchema]
+  def getByGUID(guid: UUID): IO[CredentialSchemaService.Error, CredentialSchema]
 
   def update(id: UUID, in: Input): Result[CredentialSchema]
 

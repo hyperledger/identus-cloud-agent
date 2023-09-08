@@ -3,38 +3,46 @@ package io.iohk.atala.pollux.credentialdefinition
 import io.iohk.atala.api.http.*
 import io.iohk.atala.api.http.EndpointOutputs.*
 import io.iohk.atala.api.http.codec.OrderCodec.*
-import io.iohk.atala.api.http.model.Order
-import io.iohk.atala.api.http.model.PaginationInput
-import io.iohk.atala.pollux.credentialdefinition.http.CredentialDefinitionInput
-import io.iohk.atala.pollux.credentialdefinition.http.CredentialDefinitionResponse
-import io.iohk.atala.pollux.credentialdefinition.http.CredentialDefinitionResponsePage
-import io.iohk.atala.pollux.credentialdefinition.http.FilterInput
+import io.iohk.atala.api.http.model.{Order, PaginationInput}
+import io.iohk.atala.iam.authentication.apikey.ApiKeyCredentials
+import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
+import io.iohk.atala.pollux.credentialdefinition.http.{
+  CredentialDefinitionInput,
+  CredentialDefinitionResponse,
+  CredentialDefinitionResponsePage,
+  FilterInput
+}
 import sttp.model.StatusCode
-import sttp.tapir.EndpointInput
-import sttp.tapir.PublicEndpoint
-import sttp.tapir.endpoint
-import sttp.tapir.extractFromRequest
 import sttp.tapir.json.zio.jsonBody
-import sttp.tapir.path
-import sttp.tapir.query
-import sttp.tapir.statusCode
-import sttp.tapir.stringToPath
+import sttp.tapir.{
+  Endpoint,
+  EndpointInput,
+  PublicEndpoint,
+  endpoint,
+  extractFromRequest,
+  path,
+  query,
+  statusCode,
+  stringToPath
+}
 
 import java.util.UUID
 
 object CredentialDefinitionRegistryEndpoints {
 
-  val createCredentialDefinitionEndpoint: PublicEndpoint[
+  val createCredentialDefinitionEndpoint: Endpoint[
+    ApiKeyCredentials,
     (RequestContext, CredentialDefinitionInput),
     ErrorResponse,
     CredentialDefinitionResponse,
     Any
   ] =
     endpoint.post
+      .securityIn(apiKeyHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in("credential-definition-registry" / "definitions")
       .in(
-        jsonBody[http.CredentialDefinitionInput]
+        jsonBody[CredentialDefinitionInput]
           .description(
             "JSON object required for the credential definition creation"
           )
@@ -47,7 +55,7 @@ object CredentialDefinitionRegistryEndpoints {
       )
       .out(jsonBody[http.CredentialDefinitionResponse])
       .description("Credential definition record")
-      .errorOut(basicFailuresAndNotFound)
+      .errorOut(basicFailureAndNotFoundAndForbidden)
       .name("createCredentialDefinition")
       .summary("Publish new definition to the definition registry")
       .description(
@@ -78,9 +86,10 @@ object CredentialDefinitionRegistryEndpoints {
       )
       .tag("Credential Definition Registry")
 
-  private val credentialDefinitionFilterInput: EndpointInput[FilterInput] = EndpointInput.derived[FilterInput]
+  private val credentialDefinitionFilterInput: EndpointInput[http.FilterInput] = EndpointInput.derived[http.FilterInput]
   private val paginationInput: EndpointInput[PaginationInput] = EndpointInput.derived[PaginationInput]
-  val lookupCredentialDefinitionsByQueryEndpoint: PublicEndpoint[
+  val lookupCredentialDefinitionsByQueryEndpoint: Endpoint[
+    ApiKeyCredentials,
     (
         RequestContext,
         FilterInput,
@@ -92,6 +101,7 @@ object CredentialDefinitionRegistryEndpoints {
     Any
   ] =
     endpoint.get
+      .securityIn(apiKeyHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
         "credential-definition-registry" / "definitions".description(

@@ -4,8 +4,8 @@ import io.getquill.*
 import io.getquill.context.json.PostgresJsonExtensions
 import io.getquill.doobie.DoobieContext
 import io.getquill.idiom.*
-import io.iohk.atala.pollux.core.model.schema.CorrectnessProof
-import io.iohk.atala.pollux.core.model.schema.Definition
+import io.iohk.atala.pollux.core.model.schema.{CorrectnessProof, Definition}
+import io.iohk.atala.shared.models.WalletId
 
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -25,14 +25,16 @@ case class CredentialDefinition(
     keyCorrectnessProofJsonSchemaId: String,
     keyCorrectnessProof: JsonValue[CorrectnessProof],
     signatureType: String,
-    supportRevocation: Boolean
+    supportRevocation: Boolean,
+    walletId: WalletId
 ) {
   lazy val uniqueConstraintKey = author + name + version
 }
 
 object CredentialDefinition {
   def fromModel(
-      m: io.iohk.atala.pollux.core.model.schema.CredentialDefinition
+      m: io.iohk.atala.pollux.core.model.schema.CredentialDefinition,
+      walletId: WalletId
   ): CredentialDefinition =
     CredentialDefinition(
       guid = m.guid,
@@ -49,7 +51,8 @@ object CredentialDefinition {
       keyCorrectnessProof = JsonValue(m.keyCorrectnessProof),
       schemaId = m.schemaId,
       signatureType = m.signatureType,
-      supportRevocation = m.supportRevocation
+      supportRevocation = m.supportRevocation,
+      walletId = walletId
     )
 
   def toModel(

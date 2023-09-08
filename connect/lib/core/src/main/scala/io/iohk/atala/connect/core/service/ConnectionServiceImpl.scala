@@ -9,6 +9,7 @@ import io.iohk.atala.mercury.*
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.connection.*
 import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
+import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.utils.Base64Utils
 import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
 import zio.*
@@ -18,14 +19,14 @@ import java.time.Instant
 import java.util.UUID
 import java.time.Duration
 private class ConnectionServiceImpl(
-    connectionRepository: ConnectionRepository[Task],
+    connectionRepository: ConnectionRepository,
     maxRetries: Int = 5, // TODO move to config
 ) extends ConnectionService {
 
   override def createConnectionInvitation(
       label: Option[String],
       pairwiseDID: DidId
-  ): IO[ConnectionServiceError, ConnectionRecord] =
+  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
     for {
       invitation <- ZIO.succeed(ConnectionInvitation.makeConnectionInvitation(pairwiseDID))
       record <- ZIO.succeed(
@@ -54,7 +55,7 @@ private class ConnectionServiceImpl(
         .mapError(RepositoryError.apply)
     } yield record
 
-  override def getConnectionRecords(): IO[ConnectionServiceError, Seq[ConnectionRecord]] = {
+  override def getConnectionRecords(): ZIO[WalletAccessContext, ConnectionServiceError, Seq[ConnectionRecord]] = {
     for {
       records <- connectionRepository.getConnectionRecords
         .mapError(RepositoryError.apply)
@@ -65,7 +66,7 @@ private class ConnectionServiceImpl(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: ProtocolState*
-  ): IO[ConnectionServiceError, Seq[ConnectionRecord]] = {
+  ): ZIO[WalletAccessContext, ConnectionServiceError, Seq[ConnectionRecord]] = {
     for {
       records <- connectionRepository
         .getConnectionRecordsByStates(ignoreWithZeroRetries, limit, states: _*)
@@ -73,7 +74,9 @@ private class ConnectionServiceImpl(
     } yield records
   }
 
-  override def getConnectionRecord(recordId: UUID): IO[ConnectionServiceError, Option[ConnectionRecord]] = {
+  override def getConnectionRecord(
+      recordId: UUID
+  ): ZIO[WalletAccessContext, ConnectionServiceError, Option[ConnectionRecord]] = {
     for {
       record <- connectionRepository
         .getConnectionRecord(recordId)
@@ -81,16 +84,20 @@ private class ConnectionServiceImpl(
     } yield record
   }
 
-  override def getConnectionRecordByThreadId(thid: String): IO[ConnectionServiceError, Option[ConnectionRecord]] =
+  override def getConnectionRecordByThreadId(
+      thid: String
+  ): ZIO[WalletAccessContext, ConnectionServiceError, Option[ConnectionRecord]] =
     for {
       record <- connectionRepository
         .getConnectionRecordByThreadId(thid)
         .mapError(RepositoryError.apply)
     } yield record
 
-  override def deleteConnectionRecord(recordId: UUID): IO[ConnectionServiceError, Int] = ???
+  override def deleteConnectionRecord(recordId: UUID): ZIO[WalletAccessContext, ConnectionServiceError, Int] = ???
 
-  override def receiveConnectionInvitation(invitation: String): IO[ConnectionServiceError, ConnectionRecord] =
+  override def receiveConnectionInvitation(
+      invitation: String
+  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
     for {
       invitation <- ZIO
         .fromEither(io.circe.parser.decode[Invitation](Base64Utils.decodeUrlToString(invitation)))
@@ -132,7 +139,7 @@ private class ConnectionServiceImpl(
   override def acceptConnectionInvitation(
       recordId: UUID,
       pairwiseDid: DidId
-  ): IO[ConnectionServiceError, ConnectionRecord] =
+  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
     for {
       record <- getRecordWithState(recordId, ProtocolState.InvitationReceived)
       request = ConnectionRequest
@@ -155,7 +162,9 @@ private class ConnectionServiceImpl(
         }
     } yield record
 
-  override def markConnectionRequestSent(recordId: UUID): IO[ConnectionServiceError, ConnectionRecord] =
+  override def markConnectionRequestSent(
+      recordId: UUID
+  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
     updateConnectionProtocolState(
       recordId,
       ProtocolState.ConnectionRequestPending,
@@ -165,7 +174,9 @@ private class ConnectionServiceImpl(
       case Some(value) => ZIO.succeed(value)
     }
 
-  override def markConnectionInvitationExpired(recordId: UUID): IO[ConnectionServiceError, ConnectionRecord] =
+  override def markConnectionInvitationExpired(
+      recordId: UUID
+  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
     updateConnectionProtocolState(
       recordId,
       ProtocolState.InvitationGenerated,
@@ -178,7 +189,7 @@ private class ConnectionServiceImpl(
   override def receiveConnectionRequest(
       request: ConnectionRequest,
       expirationTime: Option[Duration] = None
-  ): IO[ConnectionServiceError, ConnectionRecord] =
+  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
     for {
       record <- getRecordFromThreadIdAndState(
         Some(request.thid.orElse(request.pthid).getOrElse(request.id)),
@@ -211,7 +222,9 @@ private class ConnectionServiceImpl(
         }
     } yield record
 
-  override def acceptConnectionRequest(recordId: UUID): IO[ConnectionServiceError, ConnectionRecord] =
+  override def acceptConnectionRequest(
+      recordId: UUID
+  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
     for {
       record <- getRecordWithState(recordId, ProtocolState.ConnectionRequestReceived)
       response <- {
@@ -238,7 +251,9 @@ private class ConnectionServiceImpl(
         }
     } yield record
 
-  override def markConnectionResponseSent(recordId: UUID): IO[ConnectionServiceError, ConnectionRecord] =
+  override def markConnectionResponseSent(
+      recordId: UUID
+  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
     updateConnectionProtocolState(
       recordId,
       ProtocolState.ConnectionResponsePending,
@@ -250,7 +265,7 @@ private class ConnectionServiceImpl(
 
   override def receiveConnectionResponse(
       response: ConnectionResponse
-  ): IO[ConnectionServiceError, ConnectionRecord] =
+  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
     for {
       record <- getRecordFromThreadIdAndState(
         response.thid.orElse(response.pthid),
@@ -276,7 +291,7 @@ private class ConnectionServiceImpl(
   private[this] def getRecordWithState(
       recordId: UUID,
       state: ProtocolState
-  ): IO[ConnectionServiceError, ConnectionRecord] = {
+  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] = {
     for {
       maybeRecord <- connectionRepository
         .getConnectionRecord(recordId)
@@ -295,7 +310,7 @@ private class ConnectionServiceImpl(
       recordId: UUID,
       from: ProtocolState,
       to: ProtocolState,
-  ): IO[ConnectionServiceError, Option[ConnectionRecord]] = {
+  ): ZIO[WalletAccessContext, ConnectionServiceError, Option[ConnectionRecord]] = {
     for {
       _ <- connectionRepository
         .updateConnectionProtocolState(recordId, from, to, maxRetries)
@@ -313,7 +328,7 @@ private class ConnectionServiceImpl(
   private[this] def getRecordFromThreadIdAndState(
       thid: Option[String],
       states: ProtocolState*
-  ): IO[ConnectionServiceError, ConnectionRecord] = {
+  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] = {
     for {
       thid <- ZIO
         .fromOption(thid)
@@ -331,7 +346,10 @@ private class ConnectionServiceImpl(
     } yield record
   }
 
-  def reportProcessingFailure(recordId: UUID, failReason: Option[String]): IO[ConnectionServiceError, Unit] =
+  def reportProcessingFailure(
+      recordId: UUID,
+      failReason: Option[String]
+  ): ZIO[WalletAccessContext, ConnectionServiceError, Unit] =
     connectionRepository
       .updateAfterFail(recordId, failReason)
       .mapError(RepositoryError.apply)
@@ -343,6 +361,6 @@ private class ConnectionServiceImpl(
 }
 
 object ConnectionServiceImpl {
-  val layer: URLayer[ConnectionRepository[Task], ConnectionService] =
+  val layer: URLayer[ConnectionRepository, ConnectionService] =
     ZLayer.fromFunction(ConnectionServiceImpl(_))
 }

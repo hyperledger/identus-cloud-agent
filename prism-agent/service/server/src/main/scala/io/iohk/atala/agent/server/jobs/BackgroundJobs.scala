@@ -32,12 +32,13 @@ import io.iohk.atala.pollux.vc.jwt.{
   DidResolver as JwtDidResolver,
   Issuer as JwtIssuer
 }
+import io.iohk.atala.shared.models.WalletAccessContext
+import io.iohk.atala.shared.utils.DurationOps.toMetricsSeconds
 import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
 import zio.*
-import zio.prelude.ZValidation.*
-import zio.prelude.Validation
 import zio.metrics.*
-import io.iohk.atala.shared.utils.DurationOps.toMetricsSeconds
+import zio.prelude.Validation
+import zio.prelude.ZValidation.*
 
 import java.time.{Clock, Instant, ZoneId}
 
@@ -64,6 +65,7 @@ object BackgroundJobs {
         .withParallelism(config.pollux.issueBgJobProcessingParallelism)
     } yield ()
   }
+
   val presentProofExchanges = {
     for {
       presentationService <- ZIO.service[PresentationService]
@@ -532,7 +534,7 @@ object BackgroundJobs {
   private[this] def getLongForm(
       did: PrismDID,
       allowUnpublishedIssuingDID: Boolean = false
-  ): ZIO[ManagedDIDService, Throwable, LongFormPrismDID] = {
+  ): ZIO[ManagedDIDService & WalletAccessContext, Throwable, LongFormPrismDID] = {
     for {
       managedDIDService <- ZIO.service[ManagedDIDService]
       didState <- managedDIDService
@@ -552,7 +554,7 @@ object BackgroundJobs {
   private[this] def createJwtIssuer(
       jwtIssuerDID: PrismDID,
       verificationRelationship: VerificationRelationship
-  ): ZIO[DIDService & ManagedDIDService, Throwable, JwtIssuer] = {
+  ): ZIO[DIDService & ManagedDIDService & WalletAccessContext, Throwable, JwtIssuer] = {
     for {
       managedDIDService <- ZIO.service[ManagedDIDService]
       didService <- ZIO.service[DIDService]
@@ -863,7 +865,7 @@ object BackgroundJobs {
 
   private[this] def buildDIDCommAgent(
       myDid: DidId
-  ): ZIO[ManagedDIDService, KeyNotFoundError, ZLayer[Any, Nothing, DidAgent]] = {
+  ): ZIO[ManagedDIDService & WalletAccessContext, KeyNotFoundError, ZLayer[Any, Nothing, DidAgent]] = {
     for {
       managedDidService <- ZIO.service[ManagedDIDService]
       peerDID <- managedDidService.getPeerDID(myDid)

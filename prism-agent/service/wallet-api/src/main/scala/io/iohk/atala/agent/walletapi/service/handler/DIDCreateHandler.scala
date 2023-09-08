@@ -4,32 +4,39 @@ import io.iohk.atala.agent.walletapi.crypto.Apollo
 import io.iohk.atala.agent.walletapi.model.CreateDIDHdKey
 import io.iohk.atala.agent.walletapi.model.ManagedDIDState
 import io.iohk.atala.agent.walletapi.model.ManagedDIDTemplate
+import io.iohk.atala.agent.walletapi.model.PublicationState
+import io.iohk.atala.agent.walletapi.model.WalletSeed
 import io.iohk.atala.agent.walletapi.model.error.CreateManagedDIDError
 import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
-import io.iohk.atala.castor.core.model.did.PrismDIDOperation
-import zio.*
+import io.iohk.atala.agent.walletapi.storage.WalletSecretStorage
 import io.iohk.atala.agent.walletapi.util.OperationFactory
-import io.iohk.atala.agent.walletapi.model.PublicationState
+import io.iohk.atala.castor.core.model.did.PrismDIDOperation
+import io.iohk.atala.shared.models.WalletAccessContext
+import zio.*
 
 private[walletapi] class DIDCreateHandler(
     apollo: Apollo,
-    nonSecretStorage: DIDNonSecretStorage
+    nonSecretStorage: DIDNonSecretStorage,
+    walletSecretStorage: WalletSecretStorage,
 )(
-    seed: Array[Byte],
     masterKeyId: String
 ) {
   def materialize(
       didTemplate: ManagedDIDTemplate
-  ): IO[CreateManagedDIDError, DIDCreateMaterial] = {
+  ): ZIO[WalletAccessContext, CreateManagedDIDError, DIDCreateMaterial] = {
     val operationFactory = OperationFactory(apollo)
     for {
+      walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
+      seed <- walletSecretStorage.getWalletSeed
+        .someOrElseZIO(ZIO.dieMessage(s"Wallet seed for wallet $walletId does not exist"))
+        .mapError(CreateManagedDIDError.WalletStorageError.apply)
       didIndex <- nonSecretStorage
         .getMaxDIDIndex()
         .mapBoth(
           CreateManagedDIDError.WalletStorageError.apply,
           maybeIdx => maybeIdx.map(_ + 1).getOrElse(0)
         )
-      generated <- operationFactory.makeCreateOperationHdKey(masterKeyId, seed)(didIndex, didTemplate)
+      generated <- operationFactory.makeCreateOperationHdKey(masterKeyId, seed.toByteArray)(didIndex, didTemplate)
       (createOperation, hdKey) = generated
       state = ManagedDIDState(createOperation, didIndex, PublicationState.Created())
     } yield DIDCreateMaterialImpl(nonSecretStorage)(createOperation, state, hdKey)
@@ -39,7 +46,7 @@ private[walletapi] class DIDCreateHandler(
 private[walletapi] trait DIDCreateMaterial {
   def operation: PrismDIDOperation.Create
   def state: ManagedDIDState
-  def persist: Task[Unit]
+  def persist: RIO[WalletAccessContext, Unit]
 }
 
 private[walletapi] class DIDCreateMaterialImpl(nonSecretStorage: DIDNonSecretStorage)(
@@ -47,7 +54,7 @@ private[walletapi] class DIDCreateMaterialImpl(nonSecretStorage: DIDNonSecretSto
     val state: ManagedDIDState,
     hdKey: CreateDIDHdKey
 ) extends DIDCreateMaterial {
-  def persist: Task[Unit] = {
+  def persist: RIO[WalletAccessContext, Unit] = {
     val did = operation.did
     for {
       _ <- nonSecretStorage

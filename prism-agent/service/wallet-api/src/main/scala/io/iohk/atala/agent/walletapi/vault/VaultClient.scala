@@ -8,15 +8,15 @@ import zio.*
 import io.github.jopenlibs.vault.VaultConfig
 
 trait VaultKVClient {
-  def get(path: String): Task[Option[Map[String, String]]]
-  def set(path: String, data: Map[String, String]): Task[Unit]
+  def get[T: KVCodec](path: String): Task[Option[T]]
+  def set[T: KVCodec](path: String, data: T): Task[Unit]
 }
 
 class VaultKVClientImpl(vault: Vault) extends VaultKVClient {
 
-  override def get(path: String): Task[Option[Map[String, String]]] = {
+  override def get[T: KVCodec](path: String): Task[Option[T]] = {
     for {
-      data <- ZIO
+      maybeData <- ZIO
         .attemptBlocking(
           vault
             .logical()
@@ -24,16 +24,18 @@ class VaultKVClientImpl(vault: Vault) extends VaultKVClient {
         )
         .handleVaultErrorOpt("Error reading a secret from Vault.")
         .map(_.map(_.getData().asScala.toMap))
-    } yield data
+      decodedData <- maybeData.fold(ZIO.none)(data => ZIO.fromTry(summon[KVCodec[T]].decode(data)).asSome)
+    } yield decodedData
   }
 
-  override def set(path: String, data: Map[String, String]): Task[Unit] = {
+  override def set[T: KVCodec](path: String, data: T): Task[Unit] = {
+    val kv = summon[KVCodec[T]].encode(data)
     for {
       _ <- ZIO
         .attemptBlocking {
           vault
             .logical()
-            .write(path, data.asJava)
+            .write(path, kv.asJava)
         }
         .handleVaultError("Error writing a secret to Vault.")
     } yield ()

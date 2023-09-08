@@ -2,32 +2,33 @@ package io.iohk.atala.pollux.sql
 
 import com.dimafeng.testcontainers.PostgreSQLContainer
 import doobie.*
-import doobie.implicits.*
 import doobie.util.transactor.Transactor
 import io.getquill.*
 import io.iohk.atala.pollux.sql.model.db.{CredentialSchema, CredentialSchemaSql}
+import io.iohk.atala.shared.db.ContextAwareTask
+import io.iohk.atala.shared.db.Implicits.*
+import io.iohk.atala.shared.models.WalletAccessContext
+import io.iohk.atala.shared.models.WalletId
+import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
 import io.iohk.atala.test.container.MigrationAspects.*
-import io.iohk.atala.test.container.PostgresLayer.*
 import zio.*
-import zio.interop.catz.*
-import zio.interop.catz.implicits.*
 import zio.json.ast.Json
+import zio.test.*
 import zio.test.Assertion.*
 import zio.test.TestAspect.*
-import zio.test.*
 
 import java.time.{OffsetDateTime, ZoneOffset}
 import java.util.UUID
 import scala.collection.mutable
 import scala.io.Source
 
-object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault {
+object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault, PostgresTestContainerSupport {
 
-  private val pgLayer = postgresLayer(verbose = false)
-  private val transactorLayer =
-    pgLayer >>> hikariConfigLayer >>> transactor
   private val testEnvironmentLayer =
-    zio.test.testEnvironment ++ pgLayer ++ transactorLayer
+    zio.test.testEnvironment ++
+      pgContainerLayer ++
+      contextAwareTransactorLayer ++
+      ZLayer.succeed(WalletAccessContext(WalletId.random))
 
   object Vocabulary {
     val verifiableCredentialTypes =
@@ -64,7 +65,7 @@ object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault {
     val schemaTags: Gen[Any, List[String]] =
       Gen.setOfBounded(0, 3)(schemaTag).map(_.toList)
 
-    val schema: Gen[Any, CredentialSchema] = for {
+    val schema: Gen[WalletAccessContext, CredentialSchema] = for {
       name <- schemaName
       version <- schemaVersion
       description <- schemaDescription
@@ -74,6 +75,7 @@ object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault {
       author <- schemaAuthor
       authored = OffsetDateTime.now(ZoneOffset.UTC)
       id = UUID.randomUUID()
+      walletId <- Gen.fromZIO(ZIO.serviceWith[WalletAccessContext](_.walletId))
     } yield CredentialSchema(
       guid = id,
       id = id,
@@ -84,7 +86,8 @@ object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault {
       `type` = "AnonCreds",
       author = author,
       authored = authored,
-      tags = tags
+      tags = tags,
+      walletId = walletId
     )
 
     private val unique = mutable.Set.empty[String]
@@ -96,23 +99,83 @@ object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault {
     } yield s
   }
 
-  def spec = (suite("schema-registry DAL spec")(
-    schemaRegistryCRUDSuite
-  ) @@ nondeterministic @@ sequential @@ timed @@ migrate(
-    schema = "public",
-    paths = "classpath:sql/pollux"
-  )).provideSomeLayerShared(testEnvironmentLayer)
+  def spec = {
+    val singleWalletSuite = (schemaRegistryCRUDSuite @@ nondeterministic @@ sequential @@ timed @@ migrate(
+      schema = "public",
+      paths = "classpath:sql/pollux"
+    )).provideSomeLayerShared(testEnvironmentLayer)
+
+    val multiWalletSuite = (multiWalletSchemaRegistryCRUDSuite @@ migrateEach(
+      schema = "public",
+      paths = "classpath:sql/pollux"
+    )).provide(pgContainerLayer, contextAwareTransactorLayer)
+
+    suite("schema-registry DAL spec")(singleWalletSuite, multiWalletSuite)
+  }
+
+  val multiWalletSchemaRegistryCRUDSuite = suite("schema-registry multi-wallet CRUD operations")(
+    test("do not see records outside of the wallet") {
+      val walletId1 = WalletId.random
+      val walletId2 = WalletId.random
+      val wallet1 = ZLayer.succeed(WalletAccessContext(walletId1))
+      val wallet2 = ZLayer.succeed(WalletAccessContext(walletId2))
+      for {
+        tx <- ZIO.service[Transactor[ContextAwareTask]]
+        record <- Generators.schema.runCollectN(1).map(_.head).provide(wallet1)
+        _ <- CredentialSchemaSql.insert(record).transactWallet(tx).provide(wallet1)
+        ownRecord <- CredentialSchemaSql
+          .findByGUID(record.guid)
+          .transactWallet(tx)
+          .map(_.headOption)
+          .provide(wallet1)
+        crossRecord <- CredentialSchemaSql
+          .findByGUID(record.guid)
+          .transactWallet(tx)
+          .map(_.headOption)
+          .provide(wallet2)
+      } yield assert(ownRecord)(isSome(equalTo(record))) && assert(crossRecord)(isNone)
+    },
+    test("total count do not consider records outside of the wallet") {
+      val walletId1 = WalletId.random
+      val walletId2 = WalletId.random
+      val wallet1 = ZLayer.succeed(WalletAccessContext(walletId1))
+      val wallet2 = ZLayer.succeed(WalletAccessContext(walletId2))
+      for {
+        tx <- ZIO.service[Transactor[ContextAwareTask]]
+        record <- Generators.schema.runCollectN(1).map(_.head).provide(wallet1)
+        _ <- CredentialSchemaSql.insert(record).transactWallet(tx).provide(wallet1)
+        n1 <- CredentialSchemaSql.totalCount.transactWallet(tx).provide(wallet1)
+        n2 <- CredentialSchemaSql.totalCount.transactWallet(tx).provide(wallet2)
+      } yield assert(n1)(equalTo(1)) && assert(n2)(isZero)
+    },
+    test("do not delete records outside of the wallet") {
+      val walletId1 = WalletId.random
+      val walletId2 = WalletId.random
+      val wallet1 = ZLayer.succeed(WalletAccessContext(walletId1))
+      val wallet2 = ZLayer.succeed(WalletAccessContext(walletId2))
+      for {
+        tx <- ZIO.service[Transactor[ContextAwareTask]]
+        record1 <- Generators.schema.runCollectN(1).map(_.head).provide(wallet1)
+        record2 <- Generators.schema.runCollectN(1).map(_.head).provide(wallet2)
+        _ <- CredentialSchemaSql.insert(record1).transactWallet(tx).provide(wallet1)
+        _ <- CredentialSchemaSql.insert(record2).transactWallet(tx).provide(wallet2)
+        _ <- CredentialSchemaSql.deleteAll.transactWallet(tx).provide(wallet2)
+        n1 <- CredentialSchemaSql.totalCount.transactWallet(tx).provide(wallet1)
+        n2 <- CredentialSchemaSql.totalCount.transactWallet(tx).provide(wallet2)
+      } yield assert(n1)(equalTo(1)) && assert(n2)(isZero)
+    }
+  )
 
   val schemaRegistryCRUDSuite = suite("schema-registry CRUD operations")(
     test("insert, findById, update and delete operations") {
       for {
-        tx <- ZIO.service[Transactor[Task]]
+        tx <- ZIO.service[Transactor[ContextAwareTask]]
 
         expected <- Generators.schema.runCollectN(1).map(_.head)
-        _ <- CredentialSchemaSql.insert(expected).transact(tx)
+        _ <- CredentialSchemaSql.insert(expected).transactWallet(tx)
         actual <- CredentialSchemaSql
           .findByGUID(expected.guid)
-          .transact(tx)
+          .transactWallet(tx)
           .map(_.headOption)
 
         schemaCreated = assert(actual.get)(equalTo(expected))
@@ -120,32 +183,32 @@ object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault {
         updatedExpected = expected.copy(name = "new name")
         updatedActual <- CredentialSchemaSql
           .update(updatedExpected)
-          .transact(tx)
+          .transactWallet(tx)
         updatedActual2 <- CredentialSchemaSql
           .findByGUID(expected.id)
-          .transact(tx)
+          .transactWallet(tx)
           .map(_.headOption)
 
         schemaUpdated =
           assert(updatedActual)(equalTo(updatedExpected)) &&
             assert(updatedActual2.get)(equalTo(updatedExpected))
 
-        deleted <- CredentialSchemaSql.delete(expected.guid).transact(tx)
+        deleted <- CredentialSchemaSql.delete(expected.guid).transactWallet(tx)
         notFound <- CredentialSchemaSql
           .findByGUID(expected.guid)
-          .transact(tx)
+          .transactWallet(tx)
           .map(_.headOption)
 
         schemaDeleted =
-          assert(deleted)(equalTo(updatedExpected)) &&
-            assert(notFound)(isNone)
+          assert(deleted)(equalTo(updatedExpected))
+          assert(notFound)(isNone)
 
       } yield schemaCreated && schemaUpdated && schemaDeleted
     },
     test("insert N generated, findById, ensure constraint is not broken ") {
       for {
-        tx <- ZIO.service[Transactor[Task]]
-        _ <- CredentialSchemaSql.deleteAll.transact(tx)
+        tx <- ZIO.service[Transactor[ContextAwareTask]]
+        _ <- CredentialSchemaSql.deleteAll.transactWallet(tx)
 
         generatedSchemas <- Generators.schemaUnique.runCollectN(10)
 
@@ -164,19 +227,19 @@ object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault {
         )(equalTo(generatedSchemas.length))
 
         _ <- ZIO.collectAll(
-          generatedSchemas.map(schema => CredentialSchemaSql.insert(schema).transact(tx))
+          generatedSchemas.map(schema => CredentialSchemaSql.insert(schema).transactWallet(tx))
         )
 
         firstActual = generatedSchemas.head
         firstExpected <- CredentialSchemaSql
           .findByGUID(firstActual.guid)
-          .transact(tx)
+          .transactWallet(tx)
           .map(_.headOption)
 
         schemaCreated = assert(firstActual)(equalTo(firstExpected.get))
 
-        totalCount <- CredentialSchemaSql.totalCount.transact(tx)
-        lookupCount <- CredentialSchemaSql.lookupCount().transact(tx)
+        totalCount <- CredentialSchemaSql.totalCount.transactWallet(tx)
+        lookupCount <- CredentialSchemaSql.lookupCount().transactWallet(tx)
 
         totalCountIsN = assert(totalCount)(equalTo(generatedSchemas.length))
         lookupCountIsN = assert(lookupCount)(equalTo(generatedSchemas.length))

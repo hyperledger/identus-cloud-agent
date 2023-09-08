@@ -18,6 +18,7 @@ import io.iohk.atala.pollux.core.model.schema.CredentialSchema
 import io.iohk.atala.pollux.core.repository.CredentialRepository
 import io.iohk.atala.pollux.vc.jwt.*
 import io.iohk.atala.prism.crypto.{MerkleInclusionProof, MerkleTreeKt, Sha256}
+import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
 import zio.*
 import zio.prelude.ZValidation
@@ -27,7 +28,7 @@ import java.time.{Instant, ZoneId}
 import java.util.UUID
 
 object CredentialServiceImpl {
-  val layer: URLayer[IrisServiceStub & CredentialRepository[Task] & DidResolver & URIDereferencer, CredentialService] =
+  val layer: URLayer[IrisServiceStub & CredentialRepository & DidResolver & URIDereferencer, CredentialService] =
     ZLayer.fromFunction(CredentialServiceImpl(_, _, _, _))
 
 //  private val VC_JSON_SCHEMA_URI = "https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json"
@@ -36,7 +37,7 @@ object CredentialServiceImpl {
 
 private class CredentialServiceImpl(
     irisClient: IrisServiceStub,
-    credentialRepository: CredentialRepository[Task],
+    credentialRepository: CredentialRepository,
     didResolver: DidResolver,
     uriDereferencer: URIDereferencer,
     maxRetries: Int = 5 // TODO move to config
@@ -51,7 +52,7 @@ private class CredentialServiceImpl(
   override def getIssueCredentialRecords(
       offset: Option[Int],
       limit: Option[Int]
-  ): IO[CredentialServiceError, (Seq[IssueCredentialRecord], Int)] = {
+  ): ZIO[WalletAccessContext, CredentialServiceError, (Seq[IssueCredentialRecord], Int)] = {
     for {
       records <- credentialRepository
         .getIssueCredentialRecords(offset = offset, limit = limit)
@@ -61,7 +62,7 @@ private class CredentialServiceImpl(
 
   override def getIssueCredentialRecordByThreadId(
       thid: DidCommID
-  ): IO[CredentialServiceError, Option[IssueCredentialRecord]] =
+  ): ZIO[WalletAccessContext, CredentialServiceError, Option[IssueCredentialRecord]] =
     for {
       record <- credentialRepository
         .getIssueCredentialRecordByThreadId(thid)
@@ -70,7 +71,7 @@ private class CredentialServiceImpl(
 
   override def getIssueCredentialRecord(
       recordId: DidCommID
-  ): IO[CredentialServiceError, Option[IssueCredentialRecord]] = {
+  ): ZIO[WalletAccessContext, CredentialServiceError, Option[IssueCredentialRecord]] = {
     for {
       record <- credentialRepository
         .getIssueCredentialRecord(recordId)
@@ -88,7 +89,7 @@ private class CredentialServiceImpl(
       automaticIssuance: Option[Boolean],
       awaitConfirmation: Option[Boolean],
       issuingDID: Option[CanonicalPrismDID]
-  ): IO[CredentialServiceError, IssueCredentialRecord] = {
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
     for {
       _ <- maybeSchemaId match
         case Some(schemaId) =>
@@ -148,7 +149,7 @@ private class CredentialServiceImpl(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: IssueCredentialRecord.ProtocolState*
-  ): IO[CredentialServiceError, Seq[IssueCredentialRecord]] = {
+  ): ZIO[WalletAccessContext, CredentialServiceError, Seq[IssueCredentialRecord]] = {
     for {
       records <- credentialRepository
         .getIssueCredentialRecordsByStates(ignoreWithZeroRetries, limit, states: _*)
@@ -158,7 +159,7 @@ private class CredentialServiceImpl(
 
   override def receiveCredentialOffer(
       offer: OfferCredential
-  ): IO[CredentialServiceError, IssueCredentialRecord] = {
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
     for {
       // TODO: align with the standard (ATL-3507)
       offerAttachment <- offer.attachments.headOption
@@ -208,7 +209,7 @@ private class CredentialServiceImpl(
   override def acceptCredentialOffer(
       recordId: DidCommID,
       subjectId: String
-  ): IO[CredentialServiceError, IssueCredentialRecord] = {
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
     for {
       prismDID <- ZIO
         .fromEither(PrismDID.fromString(subjectId))
@@ -235,7 +236,7 @@ private class CredentialServiceImpl(
   override def createPresentationPayload(
       recordId: DidCommID,
       subject: Issuer
-  ): IO[CredentialServiceError, PresentationPayload] = {
+  ): ZIO[WalletAccessContext, CredentialServiceError, PresentationPayload] = {
     for {
       record <- getRecordWithState(recordId, ProtocolState.RequestPending)
       maybeOptions <- getOptionsFromOfferCredentialData(record)
@@ -256,7 +257,7 @@ private class CredentialServiceImpl(
   override def generateCredentialRequest(
       recordId: DidCommID,
       signedPresentation: JWT
-  ): IO[CredentialServiceError, IssueCredentialRecord] = {
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
     for {
       record <- getRecordWithState(recordId, ProtocolState.RequestPending)
       offer <- ZIO
@@ -284,7 +285,7 @@ private class CredentialServiceImpl(
 
   override def receiveCredentialRequest(
       request: RequestCredential
-  ): IO[CredentialServiceError, IssueCredentialRecord] = {
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
     for {
       record <- getRecordFromThreadIdWithState(
         request.thid.map(DidCommID(_)),
@@ -306,7 +307,9 @@ private class CredentialServiceImpl(
     } yield record
   }
 
-  override def acceptCredentialRequest(recordId: DidCommID): IO[CredentialServiceError, IssueCredentialRecord] = {
+  override def acceptCredentialRequest(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
     for {
       record <- getRecordWithState(recordId, ProtocolState.RequestReceived)
       request <- ZIO
@@ -330,7 +333,7 @@ private class CredentialServiceImpl(
 
   override def receiveCredentialIssue(
       issue: IssueCredential
-  ): IO[CredentialServiceError, IssueCredentialRecord] = {
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
     val rawIssuedCredential = issue.attachments.map(_.data.asJson.noSpaces).headOption.getOrElse("???") // TODO
     for {
       record <- getRecordFromThreadIdWithState(
@@ -353,14 +356,18 @@ private class CredentialServiceImpl(
     } yield record
   }
 
-  override def markOfferSent(recordId: DidCommID): IO[CredentialServiceError, IssueCredentialRecord] =
+  override def markOfferSent(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
     updateCredentialRecordProtocolState(
       recordId,
       IssueCredentialRecord.ProtocolState.OfferPending,
       IssueCredentialRecord.ProtocolState.OfferSent
     )
 
-  override def markRequestSent(recordId: DidCommID): IO[CredentialServiceError, IssueCredentialRecord] =
+  override def markRequestSent(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
     updateCredentialRecordProtocolState(
       recordId,
       IssueCredentialRecord.ProtocolState.RequestGenerated,
@@ -373,7 +380,7 @@ private class CredentialServiceImpl(
   override def markCredentialGenerated(
       recordId: DidCommID,
       issueCredential: IssueCredential
-  ): IO[CredentialServiceError, IssueCredentialRecord] = {
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
     for {
       record <- getRecordWithState(recordId, ProtocolState.CredentialPending)
       count <- credentialRepository
@@ -400,7 +407,9 @@ private class CredentialServiceImpl(
     } yield record
   }
 
-  override def markCredentialSent(recordId: DidCommID): IO[CredentialServiceError, IssueCredentialRecord] =
+  override def markCredentialSent(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
     updateCredentialRecordProtocolState(
       recordId,
       IssueCredentialRecord.ProtocolState.CredentialGenerated,
@@ -412,7 +421,7 @@ private class CredentialServiceImpl(
 
   override def markCredentialPublicationPending(
       recordId: DidCommID
-  ): IO[CredentialServiceError, IssueCredentialRecord] =
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
     updateCredentialRecordPublicationState(
       recordId,
       None,
@@ -421,14 +430,16 @@ private class CredentialServiceImpl(
 
   override def markCredentialPublicationQueued(
       recordId: DidCommID
-  ): IO[CredentialServiceError, IssueCredentialRecord] =
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
     updateCredentialRecordPublicationState(
       recordId,
       Some(IssueCredentialRecord.PublicationState.PublicationPending),
       Some(IssueCredentialRecord.PublicationState.PublicationQueued)
     )
 
-  override def markCredentialPublished(recordId: DidCommID): IO[CredentialServiceError, IssueCredentialRecord] =
+  override def markCredentialPublished(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
     updateCredentialRecordPublicationState(
       recordId,
       Some(IssueCredentialRecord.PublicationState.PublicationQueued),
@@ -438,7 +449,7 @@ private class CredentialServiceImpl(
   override def reportProcessingFailure(
       recordId: DidCommID,
       failReason: Option[String]
-  ): IO[CredentialServiceError, Unit] =
+  ): ZIO[WalletAccessContext, CredentialServiceError, Unit] =
     credentialRepository
       .updateAfterFail(recordId, failReason)
       .mapError(RepositoryError.apply)
@@ -450,7 +461,7 @@ private class CredentialServiceImpl(
   private[this] def getRecordWithState(
       recordId: DidCommID,
       state: ProtocolState
-  ): IO[CredentialServiceError, IssueCredentialRecord] = {
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
     for {
       maybeRecord <- credentialRepository
         .getIssueCredentialRecord(recordId)
@@ -469,7 +480,7 @@ private class CredentialServiceImpl(
       thid: Option[DidCommID],
       ignoreWithZeroRetries: Boolean,
       states: ProtocolState*
-  ): IO[CredentialServiceError, IssueCredentialRecord] = {
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
     for {
       thid <- ZIO
         .fromOption(thid)
@@ -567,7 +578,7 @@ private class CredentialServiceImpl(
       id: DidCommID,
       from: IssueCredentialRecord.ProtocolState,
       to: IssueCredentialRecord.ProtocolState
-  ): IO[CredentialServiceError, IssueCredentialRecord] = {
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
     for {
       record <- credentialRepository
         .updateCredentialRecordProtocolState(id, from, to)
@@ -620,7 +631,7 @@ private class CredentialServiceImpl(
       id: DidCommID,
       from: Option[IssueCredentialRecord.PublicationState],
       to: Option[IssueCredentialRecord.PublicationState]
-  ): IO[CredentialServiceError, IssueCredentialRecord] = {
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
     for {
       record <- credentialRepository
         .updateCredentialRecordPublicationState(id, from, to)
@@ -666,7 +677,7 @@ private class CredentialServiceImpl(
       record: IssueCredentialRecord,
       issuer: Issuer,
       issuanceDate: Instant
-  ): IO[CredentialServiceError, W3cCredentialPayload] = {
+  ): ZIO[WalletAccessContext, CredentialServiceError, W3cCredentialPayload] = {
     val credential = for {
       offerCredentialData <- ZIO
         .fromOption(record.offerCredentialData)
@@ -832,7 +843,7 @@ private class CredentialServiceImpl(
 
   override def markCredentialRecordsAsPublishQueued(
       credentialsAndProofs: Seq[(W3cCredentialPayload, MerkleInclusionProof)]
-  ): IO[CredentialServiceError, Int] = {
+  ): ZIO[WalletAccessContext, CredentialServiceError, Int] = {
 
     /*
      * Since id of the credential is optional according to W3 spec,

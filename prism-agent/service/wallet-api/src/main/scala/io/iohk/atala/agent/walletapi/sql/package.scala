@@ -3,16 +3,24 @@ package io.iohk.atala.agent.walletapi
 import doobie.*
 import doobie.postgres.implicits.*
 import doobie.util.invariant.InvalidEnum
+import io.circe.*
+import io.circe.parser.*
+import io.circe.syntax.*
+import io.iohk.atala.agent.walletapi.model.Wallet
 import io.iohk.atala.agent.walletapi.model.{ManagedDIDState, PublicationState, KeyManagementMode}
-import io.iohk.atala.castor.core.model.did.{PrismDID, PrismDIDOperation, ScheduledDIDOperationStatus}
 import io.iohk.atala.castor.core.model.ProtoModelHelper.*
-import io.iohk.atala.prism.protos.node_models
-
-import java.time.Instant
-import scala.util.Try
-import scala.collection.immutable.ArraySeq
-import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import io.iohk.atala.castor.core.model.did.InternalKeyPurpose
+import io.iohk.atala.castor.core.model.did.VerificationRelationship
+import io.iohk.atala.castor.core.model.did.{PrismDID, PrismDIDOperation, ScheduledDIDOperationStatus}
+import io.iohk.atala.event.notification.EventNotificationConfig
+import io.iohk.atala.prism.protos.node_models
+import io.iohk.atala.shared.models.WalletId
+
+import java.net.URL
+import java.time.Instant
+import java.util.UUID
+import scala.collection.immutable.ArraySeq
+import scala.util.Try
 
 package object sql {
 
@@ -99,6 +107,9 @@ package object sql {
   given arraySeqByteGet: Get[ArraySeq[Byte]] = Get[Array[Byte]].map(ArraySeq.from)
   given arraySeqBytePut: Put[ArraySeq[Byte]] = Put[Array[Byte]].contramap(_.toArray)
 
+  given urlGet: Get[URL] = Get[String].map(URL(_))
+  given urlPut: Put[URL] = Put[String].contramap(_.toString())
+
   final case class DIDStateRow(
       did: PrismDID,
       publicationStatus: PublicationStatusType,
@@ -107,7 +118,8 @@ package object sql {
       createdAt: Instant,
       updatedAt: Instant,
       keyMode: KeyManagementMode,
-      didIndex: Int
+      didIndex: Int,
+      walletId: WalletId
   ) {
     def toDomain: Try[ManagedDIDState] = {
       publicationStatus match {
@@ -150,7 +162,7 @@ package object sql {
   }
 
   object DIDStateRow {
-    def from(did: PrismDID, state: ManagedDIDState, now: Instant): DIDStateRow = {
+    def from(did: PrismDID, state: ManagedDIDState, now: Instant, walletId: WalletId): DIDStateRow = {
       val createOperation = state.createOperation
       val status = PublicationStatusType.from(state.publicationState)
       val publishedOperationId = state.publicationState match {
@@ -166,7 +178,68 @@ package object sql {
         createdAt = now,
         updatedAt = now,
         keyMode = state.keyMode,
-        didIndex = state.didIndex
+        didIndex = state.didIndex,
+        walletId = walletId
+      )
+    }
+  }
+
+  final case class WalletRow(
+      id: WalletId,
+      name: String,
+      createdAt: Instant,
+      updatedAt: Instant
+  ) {
+    def toDomain: Wallet = {
+      Wallet(
+        id: WalletId,
+        name: String,
+        createdAt: Instant,
+        updatedAt: Instant
+      )
+    }
+  }
+
+  object WalletRow {
+    def from(wallet: Wallet): WalletRow = {
+      WalletRow(
+        id = wallet.id,
+        name = wallet.name,
+        createdAt = wallet.createdAt,
+        updatedAt = wallet.updatedAt
+      )
+    }
+  }
+
+  final case class WalletNofiticationRow(
+      id: UUID,
+      walletId: WalletId,
+      url: URL,
+      customHeaders: String,
+      createdAt: Instant,
+  ) {
+    def toDomain: Try[EventNotificationConfig] = {
+      decode[Map[String, String]](customHeaders).toTry
+        .map { headers =>
+          EventNotificationConfig(
+            id = id,
+            walletId = walletId,
+            url = url,
+            customHeaders = headers,
+            createdAt = createdAt,
+          )
+        }
+    }
+  }
+
+  object WalletNofiticationRow {
+    def from(config: EventNotificationConfig): WalletNofiticationRow = {
+      WalletNofiticationRow(
+        id = config.id,
+        walletId = config.walletId,
+        url = config.url,
+        customHeaders = config.customHeaders.asJson.noSpacesSortKeys,
+        createdAt = config.createdAt,
       )
     }
   }

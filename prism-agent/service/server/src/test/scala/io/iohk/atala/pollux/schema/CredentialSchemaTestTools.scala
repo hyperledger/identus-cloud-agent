@@ -1,45 +1,41 @@
 package io.iohk.atala.pollux.schema
 
-import io.iohk.atala.agent.walletapi.model.ManagedDIDState
-import io.iohk.atala.agent.walletapi.model.PublicationState
-import io.iohk.atala.agent.walletapi.service.ManagedDIDService
-import io.iohk.atala.agent.walletapi.service.MockManagedDIDService
+import com.dimafeng.testcontainers.PostgreSQLContainer
+import io.iohk.atala.agent.walletapi.model.{ManagedDIDState, PublicationState}
+import io.iohk.atala.agent.walletapi.service.{ManagedDIDService, MockManagedDIDService}
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.castor.core.model.did.PrismDIDOperation
-import io.iohk.atala.container.util.PostgresLayer.*
+import io.iohk.atala.iam.authentication.{Authenticator, DefaultEntityAuthenticator}
 import io.iohk.atala.pollux.core.model.schema.`type`.CredentialJsonSchemaType
 import io.iohk.atala.pollux.core.repository.CredentialSchemaRepository
-import io.iohk.atala.pollux.core.service.CredentialSchemaServiceImpl
+import io.iohk.atala.pollux.core.service.{CredentialSchemaService, CredentialSchemaServiceImpl}
 import io.iohk.atala.pollux.credentialschema.SchemaRegistryServerEndpoints
-import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaController
-import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaControllerImpl
-import io.iohk.atala.pollux.credentialschema.http.CredentialSchemaInput
-import io.iohk.atala.pollux.credentialschema.http.CredentialSchemaResponse
-import io.iohk.atala.pollux.credentialschema.http.CredentialSchemaResponsePage
+import io.iohk.atala.pollux.credentialschema.controller.{CredentialSchemaController, CredentialSchemaControllerImpl}
+import io.iohk.atala.pollux.credentialschema.http.{
+  CredentialSchemaInput,
+  CredentialSchemaResponse,
+  CredentialSchemaResponsePage
+}
 import io.iohk.atala.pollux.sql.repository.JdbcCredentialSchemaRepository
-import sttp.client3.DeserializationException
-import sttp.client3.Response
-import sttp.client3.UriContext
-import sttp.client3.basicRequest
+import io.iohk.atala.shared.models.WalletAccessContext
+import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
 import sttp.client3.testing.SttpBackendStub
 import sttp.client3.ziojson.*
+import sttp.client3.{DeserializationException, Response, UriContext, basicRequest}
 import sttp.monad.MonadError
 import sttp.tapir.server.interceptor.CustomiseInterceptors
 import sttp.tapir.server.stub.TapirStubInterpreter
 import sttp.tapir.ztapir.RIOMonadError
 import zio.*
-import zio.json.DecoderOps
-import zio.json.EncoderOps
 import zio.json.ast.Json
 import zio.json.ast.Json.*
+import zio.json.{DecoderOps, EncoderOps}
 import zio.mock.Expectation
-import zio.test.Assertion
-import zio.test.Gen
-import zio.test.ZIOSpecDefault
+import zio.test.{Assertion, Gen, ZIOSpecDefault}
 
 import java.time.OffsetDateTime
 
-trait CredentialSchemaTestTools {
+trait CredentialSchemaTestTools extends PostgresTestContainerSupport {
   self: ZIOSpecDefault =>
 
   type SchemaBadRequestResponse =
@@ -50,13 +46,6 @@ trait CredentialSchemaTestTools {
     Response[
       Either[DeserializationException[String], CredentialSchemaResponsePage]
     ]
-
-  private val pgLayer = postgresLayer(verbose = false)
-  private val transactorLayer = pgLayer >>> hikariConfigLayer >>> transactor
-  private val controllerLayer = transactorLayer >>>
-    JdbcCredentialSchemaRepository.layer >+>
-    CredentialSchemaServiceImpl.layer >+>
-    CredentialSchemaControllerImpl.layer
 
   val mockManagedDIDServiceLayer: Expectation[ManagedDIDService] = MockManagedDIDService
     .GetManagedDIDState(
@@ -72,10 +61,22 @@ trait CredentialSchemaTestTools {
       )
     )
 
-  val testEnvironmentLayer = zio.test.testEnvironment ++
-    pgLayer ++
-    transactorLayer ++
-    controllerLayer
+  val authenticatorLayer: TaskLayer[Authenticator] = DefaultEntityAuthenticator.layer
+
+  lazy val testEnvironmentLayer =
+    ZLayer.makeSome[
+      ManagedDIDService,
+      CredentialSchemaController & CredentialSchemaRepository & CredentialSchemaService & PostgreSQLContainer &
+        Authenticator
+    ](
+      CredentialSchemaControllerImpl.layer,
+      CredentialSchemaServiceImpl.layer,
+      JdbcCredentialSchemaRepository.layer,
+      contextAwareTransactorLayer,
+      systemTransactorLayer,
+      pgContainerLayer,
+      authenticatorLayer
+    )
 
   val credentialSchemaUriBase = uri"http://test.com/schema-registry/schemas"
 
@@ -84,8 +85,8 @@ trait CredentialSchemaTestTools {
       .defaultHandlers(ErrorResponse.failureResponseHandler)
   }
 
-  def httpBackend(controller: CredentialSchemaController) = {
-    val schemaRegistryEndpoints = SchemaRegistryServerEndpoints(controller)
+  def httpBackend(controller: CredentialSchemaController, authenticator: Authenticator) = {
+    val schemaRegistryEndpoints = SchemaRegistryServerEndpoints(controller, authenticator)
 
     val backend =
       TapirStubInterpreter(
@@ -104,9 +105,9 @@ trait CredentialSchemaTestTools {
     backend
   }
 
-  def deleteAllCredentialSchemas: RIO[CredentialSchemaRepository[Task], Long] = {
+  def deleteAllCredentialSchemas: RIO[CredentialSchemaRepository & WalletAccessContext, Long] = {
     for {
-      repository <- ZIO.service[CredentialSchemaRepository[Task]]
+      repository <- ZIO.service[CredentialSchemaRepository]
       count <- repository.deleteAll()
     } yield count
   }
@@ -168,10 +169,11 @@ trait CredentialSchemaGen {
 
   def generateSchemasN(
       count: Int
-  ): ZIO[CredentialSchemaController, Throwable, List[CredentialSchemaInput]] =
+  ): ZIO[CredentialSchemaController & Authenticator, Throwable, List[CredentialSchemaInput]] =
     for {
       controller <- ZIO.service[CredentialSchemaController]
-      backend = httpBackend(controller)
+      authenticator <- ZIO.service[Authenticator]
+      backend = httpBackend(controller, authenticator)
       inputs <- Generator.schemaInput.runCollectN(count)
       _ <- inputs
         .map(in =>

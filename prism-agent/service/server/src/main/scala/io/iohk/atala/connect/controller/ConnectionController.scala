@@ -9,26 +9,27 @@ import io.iohk.atala.connect.controller.http.{
   CreateConnectionRequest
 }
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
-import zio.IO
+import io.iohk.atala.shared.models.WalletAccessContext
+import zio.*
 
 import java.util.UUID
 
 trait ConnectionController {
   def createConnection(request: CreateConnectionRequest)(implicit
       rc: RequestContext
-  ): IO[ErrorResponse, Connection]
+  ): ZIO[WalletAccessContext, ErrorResponse, Connection]
 
   def getConnection(connectionId: UUID)(implicit
       rc: RequestContext
-  ): IO[ErrorResponse, Connection]
+  ): ZIO[WalletAccessContext, ErrorResponse, Connection]
 
   def getConnections(paginationInput: PaginationInput, thid: Option[String])(implicit
       rc: RequestContext
-  ): IO[ErrorResponse, ConnectionsPage]
+  ): ZIO[WalletAccessContext, ErrorResponse, ConnectionsPage]
 
   def acceptConnectionInvitation(request: AcceptConnectionInvitationRequest)(implicit
       rc: RequestContext
-  ): IO[ErrorResponse, Connection]
+  ): ZIO[WalletAccessContext, ErrorResponse, Connection]
 
 }
 

@@ -1,12 +1,15 @@
 package io.iohk.atala.connect.core.repository
 
-import zio._
-import zio.test._
+import zio.*
+import zio.test.*
 
 object ConnectionRepositoryInMemorySpec extends ZIOSpecDefault {
 
   override def spec: Spec[TestEnvironment with Scope, Any] =
-    suite("In Memory Connection Repository test suite")(ConnectionRepositorySpecSuite.testSuite).provide(
+    suite("In Memory Connection Repository test suite")(
+      ConnectionRepositorySpecSuite.testSuite,
+      ConnectionRepositorySpecSuite.multitenantTestSuite
+    ).provide(
       ConnectionRepositoryInMemory.layer
     )
 

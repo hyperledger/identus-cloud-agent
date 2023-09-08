@@ -4,9 +4,11 @@ import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.presentproof.{Presentation, ProposePresentation, RequestPresentation}
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.PresentationRecord.*
-import zio.{Task, ZIO}
+import io.iohk.atala.shared.models.WalletAccessContext
+import io.iohk.atala.shared.models.WalletId
 import zio.test.*
 import zio.test.Assertion.*
+import zio.{ZIO, ZLayer}
 
 import java.time.Instant
 import java.util.UUID
@@ -16,7 +18,7 @@ object PresentationRepositorySpecSuite {
 
   private def presentationRecord = PresentationRecord(
     id = DidCommID(),
-    createdAt = Instant.ofEpochSecond(Instant.now.getEpochSecond()),
+    createdAt = Instant.now,
     updatedAt = None,
     thid = DidCommID(),
     schemaId = None,
@@ -52,14 +54,14 @@ object PresentationRepositorySpecSuite {
   val testSuite = suite("CRUD operations")(
     test("createPresentationRecord creates a new record in DB") {
       for {
-        repo <- ZIO.service[PresentationRepository[Task]]
+        repo <- ZIO.service[PresentationRepository]
         record = presentationRecord
         count <- repo.createPresentationRecord(record)
       } yield assertTrue(count == 1)
     },
     test("createPresentationRecord correctly read and write on non-null connectionId") {
       for {
-        repo <- ZIO.service[PresentationRepository[Task]]
+        repo <- ZIO.service[PresentationRepository]
         record = presentationRecord.copy(connectionId = Some("connectionId"))
         count <- repo.createPresentationRecord(record)
         readRecord <- repo.getPresentationRecord(record.id)
@@ -67,7 +69,7 @@ object PresentationRepositorySpecSuite {
     },
     test("getPresentationRecord correctly returns an existing record") {
       for {
-        repo <- ZIO.service[PresentationRepository[Task]]
+        repo <- ZIO.service[PresentationRepository]
         aRecord = presentationRecord
         bRecord = presentationRecord
         _ <- repo.createPresentationRecord(aRecord)
@@ -77,7 +79,7 @@ object PresentationRepositorySpecSuite {
     },
     test("getPresentationRecord returns None for an unknown record") {
       for {
-        repo <- ZIO.service[PresentationRepository[Task]]
+        repo <- ZIO.service[PresentationRepository]
         aRecord = presentationRecord
         bRecord = presentationRecord
         _ <- repo.createPresentationRecord(aRecord)
@@ -87,7 +89,7 @@ object PresentationRepositorySpecSuite {
     },
     test("getPresentationRecord returns all records") {
       for {
-        repo <- ZIO.service[PresentationRepository[Task]]
+        repo <- ZIO.service[PresentationRepository]
         aRecord = presentationRecord
         bRecord = presentationRecord
         _ <- repo.createPresentationRecord(aRecord)
@@ -101,7 +103,7 @@ object PresentationRepositorySpecSuite {
     },
     test("getPresentationRecordByThreadId correctly returns an existing thid") {
       for {
-        repo <- ZIO.service[PresentationRepository[Task]]
+        repo <- ZIO.service[PresentationRepository]
         thid = DidCommID()
         aRecord = presentationRecord.copy(thid = thid)
         bRecord = presentationRecord
@@ -112,7 +114,7 @@ object PresentationRepositorySpecSuite {
     },
     test("getPresentationRecordByThreadId returns nothing for an unknown thid") {
       for {
-        repo <- ZIO.service[PresentationRepository[Task]]
+        repo <- ZIO.service[PresentationRepository]
         aRecord = presentationRecord
         bRecord = presentationRecord
         _ <- repo.createPresentationRecord(aRecord)
@@ -122,7 +124,7 @@ object PresentationRepositorySpecSuite {
     },
     test("getPresentationRecordsByStates returns valid records") {
       for {
-        repo <- ZIO.service[PresentationRepository[Task]]
+        repo <- ZIO.service[PresentationRepository]
         aRecord = presentationRecord
         bRecord = presentationRecord
         cRecord = presentationRecord
@@ -160,7 +162,7 @@ object PresentationRepositorySpecSuite {
     },
     test("getPresentationRecordsByStates returns an empty list if 'states' parameter is empty") {
       for {
-        repo <- ZIO.service[PresentationRepository[Task]]
+        repo <- ZIO.service[PresentationRepository]
         aRecord = presentationRecord
         bRecord = presentationRecord
         cRecord = presentationRecord
@@ -174,7 +176,7 @@ object PresentationRepositorySpecSuite {
     },
     test("updatePresentationWithCredentialsToUse updates the record") {
       for {
-        repo <- ZIO.service[PresentationRepository[Task]]
+        repo <- ZIO.service[PresentationRepository]
         aRecord = presentationRecord
         bRecord = presentationRecord
         cRecord = presentationRecord
@@ -194,7 +196,7 @@ object PresentationRepositorySpecSuite {
     },
     test("updateCredentialRecordProtocolState updates the record") {
       for {
-        repo <- ZIO.service[PresentationRepository[Task]]
+        repo <- ZIO.service[PresentationRepository]
         aRecord = presentationRecord
         _ <- repo.createPresentationRecord(aRecord)
         record <- repo.getPresentationRecord(aRecord.id)
@@ -212,7 +214,7 @@ object PresentationRepositorySpecSuite {
     },
     test("updateCredentialRecordProtocolState doesn't update the record for invalid from state") {
       for {
-        repo <- ZIO.service[PresentationRepository[Task]]
+        repo <- ZIO.service[PresentationRepository]
         aRecord = presentationRecord
         _ <- repo.createPresentationRecord(aRecord)
         record <- repo.getPresentationRecord(aRecord.id)
@@ -230,7 +232,7 @@ object PresentationRepositorySpecSuite {
     },
     test("updateWithRequestPresentation updates record") {
       for {
-        repo <- ZIO.service[PresentationRepository[Task]]
+        repo <- ZIO.service[PresentationRepository]
         aRecord = presentationRecord
         _ <- repo.createPresentationRecord(aRecord)
         record <- repo.getPresentationRecord(aRecord.id)
@@ -249,7 +251,7 @@ object PresentationRepositorySpecSuite {
     },
     test("updateWithPresentation updates record") {
       for {
-        repo <- ZIO.service[PresentationRepository[Task]]
+        repo <- ZIO.service[PresentationRepository]
         aRecord = presentationRecord
         _ <- repo.createPresentationRecord(aRecord)
         record <- repo.getPresentationRecord(aRecord.id)
@@ -268,7 +270,7 @@ object PresentationRepositorySpecSuite {
     },
     test("updateWithProposePresentation updates record") {
       for {
-        repo <- ZIO.service[PresentationRepository[Task]]
+        repo <- ZIO.service[PresentationRepository]
         aRecord = presentationRecord
         _ <- repo.createPresentationRecord(aRecord)
         record <- repo.getPresentationRecord(aRecord.id)
@@ -290,7 +292,7 @@ object PresentationRepositorySpecSuite {
 
       val failReason = Some("Just to test")
       for {
-        repo <- ZIO.service[PresentationRepository[Task]]
+        repo <- ZIO.service[PresentationRepository]
         tmp <- repo.createPresentationRecord(aRecord)
         record0 <- repo.getPresentationRecord(aRecord.id)
         _ <- repo.updateAfterFail(aRecord.id, Some("Just to test")) // TEST
@@ -319,7 +321,7 @@ object PresentationRepositorySpecSuite {
       val aRecord = presentationRecord
 
       for {
-        repo <- ZIO.service[PresentationRepository[Task]]
+        repo <- ZIO.service[PresentationRepository]
         tmp <- repo.createPresentationRecord(aRecord)
         record0 <- repo.getPresentationRecord(aRecord.id)
         count1 <- repo.updateAfterFail(aRecord.id, Some("1 - Just to test"))
@@ -346,6 +348,52 @@ object PresentationRepositorySpecSuite {
         assertTrue(updatedRecord1.get.metaLastFailure.contains("6 - Just to test"))
 
       }
+    }
+  ).provideSomeLayer(ZLayer.succeed(WalletAccessContext(WalletId.random)))
+
+  val multitenantTestSuite = suite("muilti-tenant CRUD operation")(
+    test("do not see PresentationRecord outside of the wallet") {
+      val walletId1 = WalletId.random
+      val walletId2 = WalletId.random
+      val wallet1 = ZLayer.succeed(WalletAccessContext(walletId1))
+      val wallet2 = ZLayer.succeed(WalletAccessContext(walletId2))
+      for {
+        repo <- ZIO.service[PresentationRepository]
+        record1 = presentationRecord
+        record2 = presentationRecord
+        count1 <- repo.createPresentationRecord(record1).provide(wallet1)
+        count2 <- repo.createPresentationRecord(record2).provide(wallet2)
+        ownWalletRecords1 <- repo.getPresentationRecords().provide(wallet1)
+        ownWalletRecords2 <- repo.getPresentationRecords().provide(wallet2)
+        crossWalletRecordById <- repo.getPresentationRecord(record2.id).provide(wallet1)
+        crossWalletRecordByThid <- repo.getPresentationRecordByThreadId(record2.thid).provide(wallet1)
+      } yield assert(count1)(equalTo(1)) &&
+        assert(count2)(equalTo(1)) &&
+        assert(ownWalletRecords1)(hasSameElements(Seq(record1))) &&
+        assert(ownWalletRecords2)(hasSameElements(Seq(record2))) &&
+        assert(crossWalletRecordById)(isNone) &&
+        assert(crossWalletRecordByThid)(isNone)
+    },
+    test("unable to update PresentationRecord outside of the wallet") {
+      val walletId1 = WalletId.random
+      val walletId2 = WalletId.random
+      val wallet1 = ZLayer.succeed(WalletAccessContext(walletId1))
+      val wallet2 = ZLayer.succeed(WalletAccessContext(walletId2))
+      val newState = PresentationRecord.ProtocolState.PresentationVerified
+      for {
+        repo <- ZIO.service[PresentationRepository]
+        record1 = presentationRecord
+        record2 = presentationRecord
+        count1 <- repo.createPresentationRecord(record1).provide(wallet1)
+        update1 <- repo.updatePresentationWithCredentialsToUse(record2.id, Option(Nil), newState).provide(wallet2)
+        update2 <- repo.updateAfterFail(record2.id, Some("fail reason")).provide(wallet2)
+        update3 <- repo
+          .updatePresentationRecordProtocolState(record2.id, record1.protocolState, newState)
+          .provide(wallet2)
+      } yield assert(count1)(equalTo(1)) &&
+        assert(update1)(isZero) &&
+        assert(update2)(isZero) &&
+        assert(update3)(isZero)
     }
   )
 }

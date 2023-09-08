@@ -40,7 +40,7 @@ jobs:
       - name: Install Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.8'
+          python-version: "3.8"
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
@@ -53,7 +53,7 @@ jobs:
         uses: ndeloof/install-compose-action@v0.0.1
         with:
           version: v2.12.2 # defaults to 'latest'
-          legacy: true    # will also install in PATH as `docker-compose`
+          legacy: true # will also install in PATH as `docker-compose`
 
       - name: Build local version of PRISM Agent
         env:
@@ -71,7 +71,9 @@ jobs:
       - name: Start services for issuer
         env:
           PORT: 8080
-          WEBHOOK_URL: http://host.docker.internal:9955
+          DEFAULT_WALLET_ENABLED: "true"
+          DEFAULT_WALLET_WEBHOOK_URL: http://host.docker.internal:9955
+          DEFAULT_WALLET_AUTH_API_KEY: default
         uses: isbang/compose-action@v1.4.1
         with:
           compose-file: "./infrastructure/shared/docker-compose.yml"
@@ -82,7 +84,9 @@ jobs:
       - name: Start services for holder
         env:
           PORT: 8090
-          WEBHOOK_URL: http://host.docker.internal:9956
+          DEFAULT_WALLET_ENABLED: "true"
+          DEFAULT_WALLET_WEBHOOK_URL: http://host.docker.internal:9956
+          DEFAULT_WALLET_AUTH_API_KEY: default
         uses: isbang/compose-action@v1.4.1
         with:
           compose-file: "./infrastructure/shared/docker-compose.yml"
@@ -93,7 +97,9 @@ jobs:
       - name: Start services for verifier
         env:
           PORT: 8070
-          WEBHOOK_URL: http://host.docker.internal:9957
+          DEFAULT_WALLET_ENABLED: "true"
+          DEFAULT_WALLET_WEBHOOK_URL: http://host.docker.internal:9957
+          DEFAULT_WALLET_AUTH_API_KEY: default
         uses: isbang/compose-action@v1.4.1
         with:
           compose-file: "./infrastructure/shared/docker-compose.yml"
@@ -103,6 +109,12 @@ jobs:
 
       - name: Run e2e tests
         continue-on-error: true
+        env:
+          AGENT_AUTH_REQUIRED: "true"
+          AGENT_AUTH_HEADER: api-key
+          ACME_AUTH_KEY: default
+          BOB_AUTH_KEY: default
+          FABER_AUTH_KEY: default
         run: |
           ./gradlew test --tests "E2eTestsRunner" || true
           ./gradlew reports

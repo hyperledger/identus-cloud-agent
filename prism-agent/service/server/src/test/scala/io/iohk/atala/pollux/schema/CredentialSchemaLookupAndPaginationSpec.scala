@@ -1,18 +1,19 @@
 package io.iohk.atala.pollux.schema
 
+import com.dimafeng.testcontainers.PostgreSQLContainer
 import io.iohk.atala.container.util.MigrationAspects.migrate
+import io.iohk.atala.iam.authentication.Authenticator
 import io.iohk.atala.pollux.credentialschema.*
 import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaController
-import io.iohk.atala.pollux.credentialschema.http.CredentialSchemaInput
-import io.iohk.atala.pollux.credentialschema.http.CredentialSchemaResponse
-import io.iohk.atala.pollux.credentialschema.http.CredentialSchemaResponsePage
+import io.iohk.atala.pollux.credentialschema.http.{
+  CredentialSchemaInput,
+  CredentialSchemaResponse,
+  CredentialSchemaResponsePage
+}
+import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
 import sttp.client3.ziojson.*
-import sttp.client3.DeserializationException
-import sttp.client3.Response
-import sttp.client3.UriContext
-import sttp.client3.basicRequest
-import sttp.model.StatusCode
-import sttp.model.Uri
+import sttp.client3.{DeserializationException, Response, UriContext, basicRequest}
+import sttp.model.{StatusCode, Uri}
 import zio.*
 import zio.json.EncoderOps
 import zio.test.*
@@ -24,10 +25,13 @@ object CredentialSchemaLookupAndPaginationSpec
     with CredentialSchemaTestTools
     with CredentialSchemaGen:
 
-  def fetchAllPages(uri: Uri): ZIO[CredentialSchemaController, Throwable, List[CredentialSchemaResponsePage]] = {
+  def fetchAllPages(
+      uri: Uri
+  ): ZIO[CredentialSchemaController & Authenticator, Throwable, List[CredentialSchemaResponsePage]] = {
     for {
       controller <- ZIO.service[CredentialSchemaController]
-      backend = httpBackend(controller)
+      authenticator <- ZIO.service[Authenticator]
+      backend = httpBackend(controller, authenticator)
       response: SchemaPageResponse <- basicRequest
         .get(uri)
         .response(asJsonAlways[CredentialSchemaResponsePage])
@@ -62,16 +66,15 @@ object CredentialSchemaLookupAndPaginationSpec
         schema = "public",
         paths = "classpath:sql/pollux"
       )
-  ).provideSomeLayerShared(
-    mockManagedDIDServiceLayer.exactly(201).toLayer >+> testEnvironmentLayer
-  )
+  ).provideSomeLayerShared(mockManagedDIDServiceLayer.exactly(201).toLayer >+> testEnvironmentLayer)
 
   private val schemaPaginationSpec = suite("schema-registry pagination logic")(
     test("pagination of the first page with the empty query params") {
       for {
         _ <- deleteAllCredentialSchemas
         controller <- ZIO.service[CredentialSchemaController]
-        backend = httpBackend(controller)
+        authenticator <- ZIO.service[Authenticator]
+        backend = httpBackend(controller, authenticator)
 
         inputs <- Generator.schemaInput.runCollectN(101)
         _ <- inputs
@@ -118,4 +121,4 @@ object CredentialSchemaLookupAndPaginationSpec
         assert(allPagesWithLimit10.length)(equalTo(10)) &&
         assert(allPagesWithLimit15.length)(equalTo(7))
     }
-  )
+  ).provideSomeLayer(ZLayer.succeed(WalletAccessContext(WalletId.default)))

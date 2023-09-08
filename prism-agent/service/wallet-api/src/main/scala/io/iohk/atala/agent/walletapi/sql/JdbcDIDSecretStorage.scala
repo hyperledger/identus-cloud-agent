@@ -5,8 +5,10 @@ import doobie.implicits.*
 import io.iohk.atala.agent.walletapi.storage.DIDSecret
 import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
 import io.iohk.atala.mercury.model.DidId
+import io.iohk.atala.shared.db.ContextAwareTask
+import io.iohk.atala.shared.db.Implicits.*
+import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
-import zio.interop.catz.*
 import zio.json.*
 import zio.json.ast.Json
 import zio.json.ast.Json.*
@@ -14,7 +16,7 @@ import zio.json.ast.Json.*
 import java.time.Instant
 import java.util.UUID
 
-class JdbcDIDSecretStorage(xa: Transactor[Task]) extends DIDSecretStorage {
+class JdbcDIDSecretStorage(xa: Transactor[ContextAwareTask]) extends DIDSecretStorage {
 
   case class InstantAsBigInt(value: Instant)
 
@@ -43,46 +45,49 @@ class JdbcDIDSecretStorage(xa: Transactor[Task]) extends DIDSecretStorage {
 
   given jsonPut: Put[Json] = Put[String].contramap(_.toString())
 
-  override def getKey(did: DidId, keyId: String, schemaId: String): Task[Option[DIDSecret]] = {
+  override def getKey(did: DidId, keyId: String, schemaId: String): RIO[WalletAccessContext, Option[DIDSecret]] = {
     val cxnIO = sql"""
-                     | SELECT
-                     |   key_pair,
-                     |   schema_id
-                     | FROM public.did_secret_storage
-                     | WHERE
-                     |   did = $did
-                     |   AND schema_id = $schemaId
-                     |   AND key_id = $keyId
+         | SELECT
+         |   key_pair,
+         |   schema_id
+         | FROM public.peer_did_rand_key
+         | WHERE
+         |   did = $did
+         |   AND schema_id = $schemaId
+         |   AND key_id = $keyId
         """.stripMargin
       .query[DIDSecret]
       .option
 
-    cxnIO.transact(xa)
+    cxnIO.transactWallet(xa)
   }
 
-  override def insertKey(did: DidId, keyId: String, didSecret: DIDSecret): Task[Int] = {
+  override def insertKey(did: DidId, keyId: String, didSecret: DIDSecret): RIO[WalletAccessContext, Int] = {
     val cxnIO = (now: InstantAsBigInt) => sql"""
-           | INSERT INTO public.did_secret_storage(
-           |   did,
-           |   created_at,
-           |   key_id,
-           |   key_pair,
-           |   schema_id
-           | ) values (
-           |   ${did},
-           |   ${now},
-           |   ${keyId},
-           |   ${didSecret.json},
-           |   ${didSecret.schemaId}
-           | )
+        | INSERT INTO public.peer_did_rand_key(
+        |   did,
+        |   created_at,
+        |   key_id,
+        |   key_pair,
+        |   schema_id
+        | ) values (
+        |   ${did},
+        |   ${now},
+        |   ${keyId},
+        |   ${didSecret.json},
+        |   ${didSecret.schemaId}
+        | )
         """.stripMargin.update
 
-    Clock.instant.flatMap(i => cxnIO(InstantAsBigInt(i)).run.transact(xa))
+    for {
+      now <- Clock.instant
+      result <- cxnIO(InstantAsBigInt(now)).run.transactWallet(xa)
+    } yield result
   }
 
 }
 
 object JdbcDIDSecretStorage {
-  val layer: URLayer[Transactor[Task], DIDSecretStorage] =
+  val layer: URLayer[Transactor[ContextAwareTask], DIDSecretStorage] =
     ZLayer.fromFunction(new JdbcDIDSecretStorage(_))
 }
