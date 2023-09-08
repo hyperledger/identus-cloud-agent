@@ -200,8 +200,8 @@ object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault, PostgresTestCo
           .map(_.headOption)
 
         schemaDeleted =
-          assert(deleted)(equalTo(updatedExpected))
-          assert(notFound)(isNone)
+          assert(deleted)(equalTo(updatedExpected)) &&
+            assert(notFound)(isNone)
 
       } yield schemaCreated && schemaUpdated && schemaDeleted
     },
