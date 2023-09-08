@@ -154,7 +154,6 @@ object AgentCli extends ZIOAppDefault {
           goal_code = Some("goal_code"),
           comment = None,
           credential_preview = credentialPreview, // Option[CredentialPreview], // JSON STRinf
-          formats = Seq.empty // : Seq[CredentialFormat]
         ),
         attachments = Seq(attachmentDescriptor),
         from = agentService.id,
