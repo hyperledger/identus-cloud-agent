@@ -133,7 +133,6 @@ object MainApp extends ZIOAppDefault {
           // domain
           AppModule.apolloLayer,
           AppModule.didJwtResolverlayer,
-          // AppModule.seedResolverLayer,
           DIDOperationValidator.layer(),
           DIDResolver.layer,
           HttpURIDereferencerImpl.layer,
