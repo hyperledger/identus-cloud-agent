@@ -16,10 +16,10 @@ trait ApiKeyAuthenticator extends Authenticator {
           apiKey match {
             case Some(value) if value.nonEmpty => authenticate(value)
             case Some(value) =>
-              ZIO.logInfo(s"ApiKey API authentication is enabled, but `api-key` token is empty") *>
+              ZIO.logInfo(s"ApiKey API authentication is enabled, but `apikey` token is empty") *>
                 ZIO.fail(ApiKeyAuthenticationError.emptyApiKey)
             case None =>
-              ZIO.logInfo(s"ApiKey API authentication is enabled, but `api-key` token is not provided") *>
+              ZIO.logInfo(s"ApiKey API authentication is enabled, but `apikey` token is not provided") *>
                 ZIO.fail(InvalidCredentials("ApiKey key is not provided"))
           }
         case other =>

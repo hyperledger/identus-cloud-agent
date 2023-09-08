@@ -11,7 +11,7 @@ echo "--------------------------------------"
 ${SCRIPT_DIR}/run.sh -p 8080 -n multitenant -w
 
 export AGENT_AUTH_REQUIRED=true
-export AGENT_AUTH_HEADER=api-key
+export AGENT_AUTH_HEADER=apikey
 
 export ACME_AUTH_KEY=acme
 export ACME_AGENT_URL=http://localhost:8080/prism-agent
@@ -23,7 +23,7 @@ export FABER_AUTH_KEY=faber
 export FABER_AGENT_URL=http://localhost:8080/prism-agent
 
 curl --location 'http://localhost:8080/prism-agent/events/webhooks' \
-	--header "api-key: $ACME_AUTH_KEY" \
+	--header "apikey: $ACME_AUTH_KEY" \
 	--header 'Content-Type: application/json' \
 	--header 'Accept: application/json' \
 	--data '{
@@ -31,7 +31,7 @@ curl --location 'http://localhost:8080/prism-agent/events/webhooks' \
   }'
 
 curl --location 'http://localhost:8080/prism-agent/events/webhooks' \
-	--header "api-key: $BOB_AUTH_KEY" \
+	--header "apikey: $BOB_AUTH_KEY" \
 	--header 'Content-Type: application/json' \
 	--header 'Accept: application/json' \
 	--data '{
@@ -39,12 +39,13 @@ curl --location 'http://localhost:8080/prism-agent/events/webhooks' \
   }'
 
 curl --location 'http://localhost:8080/prism-agent/events/webhooks' \
-	--header "api-key: $FABER_AUTH_KEY" \
+	--header "apikey: $FABER_AUTH_KEY" \
 	--header 'Content-Type: application/json' \
 	--header 'Accept: application/json' \
 	--data '{
     "url": "http://host.docker.internal:9957"
   }'
+
 
 (
 	cd ${SCRIPT_DIR}/../../tests/e2e-tests/

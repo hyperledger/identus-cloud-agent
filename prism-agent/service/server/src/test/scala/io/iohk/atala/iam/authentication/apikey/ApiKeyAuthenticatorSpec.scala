@@ -137,7 +137,7 @@ object ApiKeyAuthenticatorSpec extends ZIOSpecDefault, PostgresTestContainerSupp
           )
         } yield assert(authenticatedEntity)(equalTo(entity))
       ),
-      test("unregistered entity is authenticated (assuming that the api-key is valid)")(
+      test("unregistered entity is authenticated (assuming that the apikey is valid)")(
         for {
           authenticatedEntity2 <- ApiKeyAuthenticator.authenticate(ApiKeyCredentials(Option("registered-key#2")))
           authenticatedEntity3 <- ApiKeyAuthenticator.authenticate(ApiKeyCredentials(Option("registered-key#3")))

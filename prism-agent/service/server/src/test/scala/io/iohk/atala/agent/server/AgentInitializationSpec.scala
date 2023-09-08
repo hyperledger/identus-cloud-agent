@@ -92,7 +92,7 @@ object AgentInitializationSpec extends ZIOSpecDefault, PostgresTestContainerSupp
         assert(webhooks.head.customHeaders)(isEmpty) &&
         assert(webhooks)(hasSize(equalTo(1)))
     },
-    test("create wallet with provided webhook and api-key") {
+    test("create wallet with provided webhook and apikey") {
       val url = "http://example.com"
       val apiKey = "secret"
       for {

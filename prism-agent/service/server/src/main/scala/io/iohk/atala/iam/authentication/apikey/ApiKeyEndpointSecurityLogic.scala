@@ -8,7 +8,7 @@ import sttp.tapir.ztapir.*
 import zio.*
 
 object ApiKeyEndpointSecurityLogic {
-  val apiKeyHeader: EndpointIO.Header[ApiKeyCredentials] = header[Option[String]]("api-key")
+  val apiKeyHeader: EndpointIO.Header[ApiKeyCredentials] = header[Option[String]]("apikey")
     .mapTo[ApiKeyCredentials]
     .description("API key")
 

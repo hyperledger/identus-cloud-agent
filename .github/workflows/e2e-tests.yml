@@ -111,7 +111,7 @@ jobs:
         continue-on-error: true
         env:
           AGENT_AUTH_REQUIRED: "true"
-          AGENT_AUTH_HEADER: api-key
+          AGENT_AUTH_HEADER: apikey
           ACME_AUTH_KEY: default
           BOB_AUTH_KEY: default
           FABER_AUTH_KEY: default
