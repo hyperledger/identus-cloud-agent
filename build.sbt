@@ -320,7 +320,7 @@ lazy val D_PrismAgent = new {
   //   if used all imports for zio.http will use ne newest version, which will break the compilation
   val tapirZioHttpServer = "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server" % V.tapirLegacy
   val tapirHttp4sServerZio = "com.softwaremill.sttp.tapir" %% "tapir-http4s-server-zio" % V.tapir
-  val http4sBlazeServer = "org.http4s" %% "http4s-blaze-server" % "0.23.12"
+  val http4sBlazeServer = "org.http4s" %% "http4s-blaze-server" % "0.23.15"
 
   val tapirRedocBundle = "com.softwaremill.sttp.tapir" %% "tapir-redoc-bundle" % V.tapir
 
