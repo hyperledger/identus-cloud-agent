@@ -62,7 +62,7 @@ lazy val V = new {
 
   val typesafeConfig = "1.4.2"
   val protobuf = "3.1.9"
-  val testContainersScala = "0.40.17"
+  val testContainersScala = "0.41.0"
 
   val doobie = "1.0.0-RC2"
   val quill = "4.6.0.1"
