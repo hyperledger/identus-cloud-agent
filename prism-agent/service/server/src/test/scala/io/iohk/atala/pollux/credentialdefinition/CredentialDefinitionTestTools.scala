@@ -1,28 +1,34 @@
 package io.iohk.atala.pollux.credentialdefinition
 
+import com.dimafeng.testcontainers.PostgreSQLContainer
 import io.iohk.atala.agent.walletapi.memory.DIDSecretStorageInMemory
-import io.iohk.atala.agent.walletapi.model.ManagedDIDState
-import io.iohk.atala.agent.walletapi.model.PublicationState
-import io.iohk.atala.agent.walletapi.service.ManagedDIDService
-import io.iohk.atala.agent.walletapi.service.MockManagedDIDService
+import io.iohk.atala.agent.walletapi.model.{ManagedDIDState, PublicationState}
+import io.iohk.atala.agent.walletapi.service.{ManagedDIDService, MockManagedDIDService}
+import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.castor.core.model.did.PrismDIDOperation
-import io.iohk.atala.container.util.PostgresLayer.*
+import io.iohk.atala.iam.authentication.{Authenticator, DefaultEntityAuthenticator}
 import io.iohk.atala.pollux.core.repository.CredentialDefinitionRepository
-import io.iohk.atala.pollux.core.service.CredentialDefinitionServiceImpl
-import io.iohk.atala.pollux.core.service.ResourceURIDereferencerImpl
-import io.iohk.atala.pollux.credentialdefinition.controller.CredentialDefinitionController
-import io.iohk.atala.pollux.credentialdefinition.controller.CredentialDefinitionControllerImpl
-import io.iohk.atala.pollux.credentialdefinition.http.CredentialDefinitionInput
-import io.iohk.atala.pollux.credentialdefinition.http.CredentialDefinitionResponse
-import io.iohk.atala.pollux.credentialdefinition.http.CredentialDefinitionResponsePage
+import io.iohk.atala.pollux.core.service.{
+  CredentialDefinitionService,
+  CredentialDefinitionServiceImpl,
+  ResourceURIDereferencerImpl
+}
+import io.iohk.atala.pollux.credentialdefinition.controller.{
+  CredentialDefinitionController,
+  CredentialDefinitionControllerImpl
+}
+import io.iohk.atala.pollux.credentialdefinition.http.{
+  CredentialDefinitionInput,
+  CredentialDefinitionResponse,
+  CredentialDefinitionResponsePage
+}
 import io.iohk.atala.pollux.sql.repository.JdbcCredentialDefinitionRepository
-import sttp.client3.DeserializationException
-import sttp.client3.Response
-import sttp.client3.UriContext
-import sttp.client3.basicRequest
+import io.iohk.atala.shared.models.WalletAccessContext
+import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
 import sttp.client3.testing.SttpBackendStub
 import sttp.client3.ziojson.*
+import sttp.client3.{DeserializationException, Response, UriContext, basicRequest}
 import sttp.monad.MonadError
 import sttp.tapir.server.interceptor.CustomiseInterceptors
 import sttp.tapir.server.stub.TapirStubInterpreter
@@ -30,13 +36,11 @@ import sttp.tapir.ztapir.RIOMonadError
 import zio.*
 import zio.json.EncoderOps
 import zio.mock.Expectation
-import zio.test.Assertion
-import zio.test.Gen
-import zio.test.ZIOSpecDefault
+import zio.test.{Assertion, Gen, ZIOSpecDefault}
 
 import java.time.OffsetDateTime
 
-trait CredentialDefinitionTestTools {
+trait CredentialDefinitionTestTools extends PostgresTestContainerSupport {
   self: ZIOSpecDefault =>
 
   type CredentialDefinitionBadRequestResponse =
@@ -48,12 +52,9 @@ trait CredentialDefinitionTestTools {
       Either[DeserializationException[String], CredentialDefinitionResponsePage]
     ]
 
-  private val pgLayer = postgresLayer(verbose = false)
-  private val transactorLayer = pgLayer >>> hikariConfigLayer >>> transactor
-  private val jdbcCredentialDefinitionRepository = transactorLayer >>> JdbcCredentialDefinitionRepository.layer
   private val controllerLayer =
     DIDSecretStorageInMemory.layer >+>
-      jdbcCredentialDefinitionRepository >+>
+      systemTransactorLayer >+> contextAwareTransactorLayer >+> JdbcCredentialDefinitionRepository.layer >+>
       ResourceURIDereferencerImpl.layer >+>
       CredentialDefinitionServiceImpl.layer >+>
       CredentialDefinitionControllerImpl.layer
@@ -72,10 +73,17 @@ trait CredentialDefinitionTestTools {
       )
     )
 
-  val testEnvironmentLayer = zio.test.testEnvironment ++
-    pgLayer ++
-    transactorLayer ++
-    controllerLayer
+  val authenticatorLayer: TaskLayer[Authenticator] = DefaultEntityAuthenticator.layer
+
+  lazy val testEnvironmentLayer = ZLayer.makeSome[
+    ManagedDIDService,
+    CredentialDefinitionController & CredentialDefinitionRepository & CredentialDefinitionService &
+      PostgreSQLContainer & Authenticator & DIDSecretStorage
+  ](
+    controllerLayer,
+    pgContainerLayer,
+    authenticatorLayer
+  )
 
   val credentialDefinitionUriBase = uri"http://test.com/credential-definition-registry/definitions"
 
@@ -84,8 +92,8 @@ trait CredentialDefinitionTestTools {
       .defaultHandlers(ErrorResponse.failureResponseHandler)
   }
 
-  def httpBackend(controller: CredentialDefinitionController) = {
-    val credentialDefinitionRegistryEndpoints = CredentialDefinitionRegistryServerEndpoints(controller)
+  def httpBackend(controller: CredentialDefinitionController, authenticator: Authenticator) = {
+    val credentialDefinitionRegistryEndpoints = CredentialDefinitionRegistryServerEndpoints(controller, authenticator)
 
     val backend =
       TapirStubInterpreter(
@@ -104,9 +112,9 @@ trait CredentialDefinitionTestTools {
     backend
   }
 
-  def deleteAllCredentialDefinitions: RIO[CredentialDefinitionRepository[Task], Long] = {
+  def deleteAllCredentialDefinitions: RIO[CredentialDefinitionRepository & WalletAccessContext, Long] = {
     for {
-      repository <- ZIO.service[CredentialDefinitionRepository[Task]]
+      repository <- ZIO.service[CredentialDefinitionRepository]
       count <- repository.deleteAll()
     } yield count
   }
@@ -173,10 +181,11 @@ trait CredentialDefinitionGen {
 
   def generateCredentialDefinitionsN(
       count: Int
-  ): ZIO[CredentialDefinitionController, Throwable, List[CredentialDefinitionInput]] =
+  ): ZIO[CredentialDefinitionController & Authenticator, Throwable, List[CredentialDefinitionInput]] =
     for {
       controller <- ZIO.service[CredentialDefinitionController]
-      backend = httpBackend(controller)
+      authenticator <- ZIO.service[Authenticator]
+      backend = httpBackend(controller, authenticator)
       inputs <- Generator.credentialDefinitionInput.runCollectN(count)
       _ <- inputs
         .map(in =>

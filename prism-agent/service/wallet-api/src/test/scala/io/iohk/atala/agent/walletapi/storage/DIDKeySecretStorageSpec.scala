@@ -1,15 +1,23 @@
 package io.iohk.atala.agent.walletapi.storage
 
 import io.iohk.atala.agent.walletapi.crypto.ApolloSpecHelper
-import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
-import io.iohk.atala.agent.walletapi.vault.VaultDIDSecretStorage
+import io.iohk.atala.agent.walletapi.service.{WalletManagementService, WalletManagementServiceImpl}
+import io.iohk.atala.agent.walletapi.sql.{
+  JdbcDIDNonSecretStorage,
+  JdbcDIDSecretStorage,
+  JdbcWalletNonSecretStorage,
+  JdbcWalletSecretStorage
+}
+import io.iohk.atala.agent.walletapi.vault.{VaultDIDSecretStorage, VaultWalletSecretStorage}
 import io.iohk.atala.mercury.PeerDID
-import io.iohk.atala.test.container.DBTestUtils
-import io.iohk.atala.test.container.PostgresTestContainerSupport
-import io.iohk.atala.test.container.VaultTestContainerSupport
+import io.iohk.atala.shared.models.WalletAccessContext
+import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
+import io.iohk.atala.test.container.{DBTestUtils, VaultTestContainerSupport}
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
+import io.iohk.atala.agent.walletapi.memory.DIDSecretStorageInMemory
+import io.iohk.atala.agent.walletapi.memory.WalletSecretStorageInMemory
 
 object DIDKeySecretStorageSpec
     extends ZIOSpecDefault,
@@ -18,25 +26,62 @@ object DIDKeySecretStorageSpec
       VaultTestContainerSupport,
       ApolloSpecHelper {
 
+  private def walletManagementServiceLayer =
+    ZLayer.makeSome[WalletSecretStorage, WalletManagementService](
+      WalletManagementServiceImpl.layer,
+      JdbcWalletNonSecretStorage.layer,
+      contextAwareTransactorLayer,
+      apolloLayer
+    )
+
   override def spec: Spec[TestEnvironment & Scope, Any] = {
-    val jdbcTestSuite = (commonSpec("JdbcDIDSecretStorage") @@ TestAspect.before(DBTestUtils.runMigrationAgentDB))
+    val jdbcTestSuite = commonSpec("JdbcDIDSecretStorage")
       .provide(
-        pgContainerLayer >+> (transactorLayer ++ apolloLayer) >+> JdbcDIDSecretStorage.layer >+> DIDKeySecretStorageImpl.layer
+        JdbcDIDNonSecretStorage.layer,
+        JdbcDIDSecretStorage.layer,
+        JdbcWalletSecretStorage.layer,
+        DIDKeySecretStorageImpl.layer,
+        systemTransactorLayer,
+        contextAwareTransactorLayer,
+        pgContainerLayer,
+        walletManagementServiceLayer
       )
 
-    val vaultTestSuite =
-      commonSpec("VaultDIDSecretStorage").provide(
-        vaultKvClientLayer >>> VaultDIDSecretStorage.layer >>> DIDKeySecretStorageImpl.layer
+    val vaultTestSuite = commonSpec("VaultDIDSecretStorage")
+      .provide(
+        JdbcDIDNonSecretStorage.layer,
+        VaultDIDSecretStorage.layer,
+        VaultWalletSecretStorage.layer,
+        DIDKeySecretStorageImpl.layer,
+        systemTransactorLayer,
+        contextAwareTransactorLayer,
+        pgContainerLayer,
+        vaultKvClientLayer,
+        walletManagementServiceLayer
       )
 
-    suite("DIDSecretStorage")(jdbcTestSuite, vaultTestSuite)
-  } @@ TestAspect.sequential
+    val inMemoryTestSuite = commonSpec("InMemoryDIDSecretStorage")
+      .provide(
+        JdbcDIDNonSecretStorage.layer,
+        DIDSecretStorageInMemory.layer,
+        WalletSecretStorageInMemory.layer,
+        DIDKeySecretStorageImpl.layer,
+        systemTransactorLayer,
+        contextAwareTransactorLayer,
+        pgContainerLayer,
+        walletManagementServiceLayer
+      )
+
+    suite("DIDSecretStorage")(jdbcTestSuite, vaultTestSuite, inMemoryTestSuite) @@ TestAspect.sequential
+  }
 
   private def commonSpec(name: String) = suite(name)(
     test("insert and get the same key for OctetKeyPair") {
       for {
+        nonSecretStorage <- ZIO.service[DIDNonSecretStorage]
         secretStorage <- ZIO.service[DIDKeySecretStorage]
         peerDID = PeerDID.makePeerDid()
+        _ <- nonSecretStorage.createPeerDIDRecord(peerDID.did)
         n1 <- secretStorage.insertKey(peerDID.did, "agreement", peerDID.jwkForKeyAgreement)
         n2 <- secretStorage.insertKey(peerDID.did, "authentication", peerDID.jwkForKeyAuthentication)
         key1 <- secretStorage.getKey(peerDID.did, "agreement")
@@ -48,8 +93,10 @@ object DIDKeySecretStorageSpec
     },
     test("insert same key id return error") {
       for {
+        nonSecretStorage <- ZIO.service[DIDNonSecretStorage]
         secretStorage <- ZIO.service[DIDKeySecretStorage]
         peerDID = PeerDID.makePeerDid()
+        _ <- nonSecretStorage.createPeerDIDRecord(peerDID.did)
         n1 <- secretStorage.insertKey(peerDID.did, "agreement", peerDID.jwkForKeyAgreement)
         exit <- secretStorage
           .insertKey(peerDID.did, "agreement", peerDID.jwkForKeyAuthentication)
@@ -66,6 +113,6 @@ object DIDKeySecretStorageSpec
         key1 <- secretStorage.getKey(peerDID.did, "agreement")
       } yield assert(key1)(isNone)
     },
-  )
+  ).globalWallet @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
 
 }

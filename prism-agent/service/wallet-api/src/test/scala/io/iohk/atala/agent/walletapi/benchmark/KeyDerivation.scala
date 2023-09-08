@@ -1,19 +1,40 @@
 package io.iohk.atala.agent.walletapi.benchmark
 
+import io.iohk.atala.agent.walletapi.crypto.Apollo
+import io.iohk.atala.agent.walletapi.crypto.DerivationPath
+import io.iohk.atala.agent.walletapi.crypto.ECKeyPair
+import io.iohk.atala.agent.walletapi.crypto.ECPrivateKey
+import io.iohk.atala.agent.walletapi.vault.KVCodec
+import io.iohk.atala.agent.walletapi.vault.VaultKVClient
+import io.iohk.atala.castor.core.model.did.EllipticCurve
+import io.iohk.atala.shared.models.Base64UrlString
+import io.iohk.atala.shared.models.HexString
+import io.iohk.atala.test.container.VaultTestContainerSupport
+import scala.util.Try
 import zio.*
 import zio.test.*
-import io.iohk.atala.agent.walletapi.crypto.Apollo
-import io.iohk.atala.castor.core.model.did.EllipticCurve
-import io.iohk.atala.shared.models.HexString
-import io.iohk.atala.agent.walletapi.crypto.DerivationPath
-import io.iohk.atala.agent.walletapi.vault.VaultKVClient
-import io.iohk.atala.test.container.VaultTestContainerSupport
-import io.iohk.atala.shared.models.Base64UrlString
 
 object KeyDerivation extends ZIOSpecDefault, VaultTestContainerSupport {
 
   private val seedHex = "00" * 64
   private val seed = HexString.fromStringUnsafe(seedHex).toByteArray
+
+  private def codec(apollo: Apollo): KVCodec[ECPrivateKey] = new {
+    override def encode(value: ECPrivateKey): Map[String, String] = {
+      val encodedKey = Base64UrlString.fromByteArray(value.encode).toString()
+      Map("value" -> encodedKey)
+    }
+
+    override def decode(kv: Map[String, String]): Try[ECPrivateKey] = {
+      val encodedBytes = Base64UrlString.fromString(kv.get("value").get).toOption.get.toByteArray
+      apollo.ecKeyFactory.privateKeyFromEncoded(EllipticCurve.SECP256K1, encodedBytes)
+    }
+  }
+
+  given KVCodec[Map[String, String]] = new {
+    override def encode(value: Map[String, String]): Map[String, String] = value
+    override def decode(kv: Map[String, String]): Try[Map[String, String]] = Try(kv)
+  }
 
   override def spec = suite("Key derivation benchmark")(
     deriveKeyBenchmark.provide(Apollo.prism14Layer),
@@ -59,22 +80,15 @@ object KeyDerivation extends ZIOSpecDefault, VaultTestContainerSupport {
         vaultClient <- ZIO.service[VaultKVClient]
         apollo <- ZIO.service[Apollo]
         keyPair <- apollo.ecKeyFactory.generateKeyPair(EllipticCurve.SECP256K1)
-        encodedKey = Base64UrlString.fromByteArray(keyPair.privateKey.encode).toString()
         _ <- ZIO
-          .foreach(1 to 50_000) { i => vaultClient.set(s"secret/did/prism/key-$i", Map("value" -> encodedKey)) }
+          .foreach(1 to 50_000) { i =>
+            given KVCodec[ECPrivateKey] = codec(apollo)
+            vaultClient.set(s"secret/did/prism/key-$i", keyPair.privateKey)
+          }
         durationList <- ZIO
           .foreachPar(1 to 50_000) { i =>
-            Live.live {
-              vaultClient
-                .get(s"secret/did/prism/key-$i")
-                .flatMap { encodedKey =>
-                  val encodedBytes =
-                    Base64UrlString.fromString(encodedKey.get.get("value").get).toOption.get.toByteArray
-                  ZIO.fromTry(apollo.ecKeyFactory.privateKeyFromEncoded(EllipticCurve.SECP256K1, encodedBytes))
-                }
-                .timed
-                .map(_._1)
-            }
+            given KVCodec[ECPrivateKey] = codec(apollo)
+            Live.live { vaultClient.get(s"secret/did/prism/key-$i").timed.map(_._1) }
           }
           .withParallelism(parallelism)
         _ <- logStats(durationList)

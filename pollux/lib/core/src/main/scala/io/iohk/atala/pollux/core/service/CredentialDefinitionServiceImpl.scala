@@ -1,31 +1,26 @@
 package io.iohk.atala.pollux.core.service
 
 import io.iohk.atala.agent.walletapi.storage
-import io.iohk.atala.agent.walletapi.storage.DIDSecret
-import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
+import io.iohk.atala.agent.walletapi.storage.{DIDSecret, DIDSecretStorage}
 import io.iohk.atala.mercury.model.DidId
-import io.iohk.atala.pollux.anoncreds.AnoncredLib
-import io.iohk.atala.pollux.anoncreds.SchemaDef
+import io.iohk.atala.pollux.anoncreds.{AnoncredLib, SchemaDef}
 import io.iohk.atala.pollux.core.model.error.CredentialSchemaError
 import io.iohk.atala.pollux.core.model.error.CredentialSchemaError.URISyntaxError
-import io.iohk.atala.pollux.core.model.schema.CredentialDefinition
-import io.iohk.atala.pollux.core.model.schema.CredentialDefinition.Filter
-import io.iohk.atala.pollux.core.model.schema.CredentialDefinition.FilteredEntries
-import io.iohk.atala.pollux.core.model.schema.CredentialSchema
+import io.iohk.atala.pollux.core.model.schema.CredentialDefinition.{Filter, FilteredEntries}
 import io.iohk.atala.pollux.core.model.schema.CredentialSchema.parseCredentialSchema
 import io.iohk.atala.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
 import io.iohk.atala.pollux.core.model.schema.validator.JsonSchemaError
+import io.iohk.atala.pollux.core.model.schema.{CredentialDefinition, CredentialSchema}
 import io.iohk.atala.pollux.core.repository.CredentialDefinitionRepository
 import io.iohk.atala.pollux.core.repository.Repository.SearchQuery
 import io.iohk.atala.pollux.core.service.CredentialDefinitionService.Error.*
-import io.iohk.atala.pollux.core.service.serdes.PrivateCredentialDefinitionSchemaSerDesV1
-import io.iohk.atala.pollux.core.service.serdes.ProofKeyCredentialDefinitionSchemaSerDesV1
-import io.iohk.atala.pollux.core.service.serdes.PublicCredentialDefinitionSerDesV1
-import zio.Task
-import zio.URLayer
-import zio.ZIO
+import io.iohk.atala.pollux.core.service.serdes.{
+  PrivateCredentialDefinitionSchemaSerDesV1,
+  ProofKeyCredentialDefinitionSchemaSerDesV1,
+  PublicCredentialDefinitionSerDesV1
+}
 import zio.ZIO.getOrFailWith
-import zio.ZLayer
+import zio.{IO, URLayer, ZIO, ZLayer}
 
 import java.net.URI
 import java.util.UUID
@@ -33,7 +28,7 @@ import scala.util.Try
 
 class CredentialDefinitionServiceImpl(
     didSecretStorage: DIDSecretStorage,
-    credentialDefinitionRepository: CredentialDefinitionRepository[Task],
+    credentialDefinitionRepository: CredentialDefinitionRepository,
     uriDereferencer: URIDereferencer
 ) extends CredentialDefinitionService {
   private val KEY_ID = "anoncred-credential-definition-private-key"
@@ -116,7 +111,7 @@ class CredentialDefinitionServiceImpl(
       .map(sr => FilteredEntries(sr.entries, sr.count.toInt, sr.totalCount.toInt))
   }
 
-  override def getByGUID(guid: UUID): Result[CredentialDefinition] = {
+  override def getByGUID(guid: UUID): IO[CredentialDefinitionService.Error, CredentialDefinition] = {
     credentialDefinitionRepository
       .getByGuid(guid)
       .mapError[CredentialDefinitionService.Error](t => RepositoryError(t))
@@ -128,7 +123,7 @@ class CredentialDefinitionServiceImpl(
 
 object CredentialDefinitionServiceImpl {
   val layer: URLayer[
-    DIDSecretStorage & CredentialDefinitionRepository[Task] & URIDereferencer,
+    DIDSecretStorage & CredentialDefinitionRepository & URIDereferencer,
     CredentialDefinitionService
   ] =
     ZLayer.fromFunction(CredentialDefinitionServiceImpl(_, _, _))

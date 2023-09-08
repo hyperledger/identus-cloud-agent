@@ -3,23 +3,24 @@ package io.iohk.atala.agent.walletapi.service
 import io.iohk.atala.agent.walletapi.crypto.Apollo
 import io.iohk.atala.agent.walletapi.model.ManagedDIDDetail
 import io.iohk.atala.agent.walletapi.model.error.CommonWalletStorageError
+import io.iohk.atala.agent.walletapi.storage.WalletSecretStorage
 import io.iohk.atala.agent.walletapi.storage.{DIDNonSecretStorage, DIDKeySecretStorage}
-import io.iohk.atala.agent.walletapi.util.SeedResolver
 import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
 import io.iohk.atala.castor.core.model.error
 import io.iohk.atala.castor.core.model.error.DIDOperationError
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.event.notification.{Event, EventNotificationService}
-import zio.{IO, RLayer, Semaphore, ZIO, ZLayer}
+import io.iohk.atala.shared.models.WalletAccessContext
+import zio.*
 
 class ManagedDIDServiceWithEventNotificationImpl(
     didService: DIDService,
     didOpValidator: DIDOperationValidator,
     override private[walletapi] val secretStorage: DIDKeySecretStorage,
     override private[walletapi] val nonSecretStorage: DIDNonSecretStorage,
+    walletSecretStorage: WalletSecretStorage,
     apollo: Apollo,
-    seed: Array[Byte],
     createDIDSem: Semaphore,
     eventNotificationService: EventNotificationService
 ) extends ManagedDIDServiceImpl(
@@ -27,8 +28,8 @@ class ManagedDIDServiceWithEventNotificationImpl(
       didOpValidator,
       secretStorage,
       nonSecretStorage,
+      walletSecretStorage,
       apollo,
-      seed,
       createDIDSem
     ) {
 
@@ -39,15 +40,16 @@ class ManagedDIDServiceWithEventNotificationImpl(
   )(using
       c1: Conversion[CommonWalletStorageError, E],
       c2: Conversion[DIDOperationError, E]
-  ): IO[E, Boolean] = {
+  ): ZIO[WalletAccessContext, E, Boolean] = {
     for {
+      walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
       updated <- super.computeNewDIDStateFromDLTAndPersist(did)
       _ <- ZIO.when(updated) {
         val result = for {
           maybeUpdatedDID <- nonSecretStorage.getManagedDIDState(did)
           updatedDID <- ZIO.fromOption(maybeUpdatedDID)
           producer <- eventNotificationService.producer[ManagedDIDDetail]("DIDDetail")
-          _ <- producer.send(Event(didStatusUpdatedEventName, ManagedDIDDetail(did, updatedDID)))
+          _ <- producer.send(Event(didStatusUpdatedEventName, ManagedDIDDetail(did, updatedDID), walletId))
         } yield ()
         result.catchAll(e => ZIO.logError(s"Notification service error: $e"))
       }
@@ -57,7 +59,7 @@ class ManagedDIDServiceWithEventNotificationImpl(
 
 object ManagedDIDServiceWithEventNotificationImpl {
   val layer: RLayer[
-    DIDOperationValidator & DIDService & DIDKeySecretStorage & DIDNonSecretStorage & Apollo & SeedResolver &
+    DIDOperationValidator & DIDService & DIDKeySecretStorage & DIDNonSecretStorage & WalletSecretStorage & Apollo &
       EventNotificationService,
     ManagedDIDService
   ] = ZLayer.fromZIO {
@@ -66,8 +68,8 @@ object ManagedDIDServiceWithEventNotificationImpl {
       didOpValidator <- ZIO.service[DIDOperationValidator]
       secretStorage <- ZIO.service[DIDKeySecretStorage]
       nonSecretStorage <- ZIO.service[DIDNonSecretStorage]
+      walletSecretStorage <- ZIO.service[WalletSecretStorage]
       apollo <- ZIO.service[Apollo]
-      seed <- ZIO.serviceWithZIO[SeedResolver](_.resolve)
       createDIDSem <- Semaphore.make(1)
       eventNotificationService <- ZIO.service[EventNotificationService]
     } yield ManagedDIDServiceWithEventNotificationImpl(
@@ -75,8 +77,8 @@ object ManagedDIDServiceWithEventNotificationImpl {
       didOpValidator,
       secretStorage,
       nonSecretStorage,
+      walletSecretStorage,
       apollo,
-      seed,
       createDIDSem,
       eventNotificationService
     )

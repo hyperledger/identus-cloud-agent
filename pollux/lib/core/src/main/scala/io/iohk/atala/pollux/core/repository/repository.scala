@@ -1,6 +1,11 @@
 package io.iohk.atala.pollux.core.repository
 
+import io.iohk.atala.shared.models.WalletAccessContext
+import zio.RIO
+
 trait Repository[F[_], T]
+
+type WalletTask[T] = RIO[WalletAccessContext, T]
 
 object Repository {
   case class SearchQuery[Filter](filter: Filter, skip: Int, limit: Int)

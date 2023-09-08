@@ -1,51 +1,53 @@
 package io.iohk.atala.connect.core.repository
 
+import io.iohk.atala.connect.core.model.ConnectionRecord
 import io.iohk.atala.connect.core.model.ConnectionRecord.ProtocolState
+import io.iohk.atala.mercury.protocol.connection.*
+import io.iohk.atala.shared.models.WalletAccessContext
+import zio.RIO
 
 import java.util.UUID
-import io.iohk.atala.mercury.protocol.connection.*
-import io.iohk.atala.connect.core.model.ConnectionRecord
 
-trait ConnectionRepository[F[_]] {
-  def createConnectionRecord(record: ConnectionRecord): F[Int]
+trait ConnectionRepository {
+  def createConnectionRecord(record: ConnectionRecord): RIO[WalletAccessContext, Int]
 
-  def getConnectionRecords: F[Seq[ConnectionRecord]]
+  def getConnectionRecords: RIO[WalletAccessContext, Seq[ConnectionRecord]]
 
   def getConnectionRecordsByStates(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: ConnectionRecord.ProtocolState*
-  ): F[Seq[ConnectionRecord]]
+  ): RIO[WalletAccessContext, Seq[ConnectionRecord]]
 
-  def getConnectionRecord(recordId: UUID): F[Option[ConnectionRecord]]
+  def getConnectionRecord(recordId: UUID): RIO[WalletAccessContext, Option[ConnectionRecord]]
 
-  def deleteConnectionRecord(recordId: UUID): F[Int]
+  def deleteConnectionRecord(recordId: UUID): RIO[WalletAccessContext, Int]
 
-  def getConnectionRecordByThreadId(thid: String): F[Option[ConnectionRecord]]
+  def getConnectionRecordByThreadId(thid: String): RIO[WalletAccessContext, Option[ConnectionRecord]]
 
   def updateWithConnectionRequest(
       recordId: UUID,
       request: ConnectionRequest,
       state: ProtocolState,
       maxRetries: Int, // max numbre of retries -> set the metaRetries
-  ): F[Int]
+  ): RIO[WalletAccessContext, Int]
 
   def updateWithConnectionResponse(
       recordId: UUID,
       response: ConnectionResponse,
       state: ProtocolState,
       maxRetries: Int, // max numbre of retries -> set the metaRetries
-  ): F[Int]
+  ): RIO[WalletAccessContext, Int]
 
   def updateConnectionProtocolState(
       recordId: UUID,
       from: ProtocolState,
       to: ProtocolState,
       maxRetries: Int, // max numbre of retries -> set the metaRetries
-  ): F[Int]
+  ): RIO[WalletAccessContext, Int]
 
   def updateAfterFail(
       recordId: UUID,
       failReason: Option[String],
-  ): F[Int]
+  ): RIO[WalletAccessContext, Int]
 }

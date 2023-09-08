@@ -13,10 +13,12 @@ import io.iohk.atala.mercury.*
 import io.iohk.atala.mercury.model.*
 import io.iohk.atala.mercury.model.error.*
 import io.iohk.atala.resolvers.DIDResolver
-import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
+import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.utils.DurationOps.toMetricsSeconds
+import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
 import zio.*
 import zio.metrics.*
+
 object ConnectBackgroundJobs {
 
   val didCommExchanges = {
@@ -37,7 +39,10 @@ object ConnectBackgroundJobs {
 
   private[this] def performExchange(
       record: ConnectionRecord
-  ): URIO[DidOps & DIDResolver & HttpClient & ConnectionService & ManagedDIDService, Unit] = {
+  ): URIO[
+    DidOps & DIDResolver & HttpClient & ConnectionService & ManagedDIDService & WalletAccessContext & AppConfig,
+    Unit
+  ] = {
     import ProtocolState.*
     import Role.*
 
@@ -154,7 +159,6 @@ object ConnectBackgroundJobs {
             else ZIO.fail(ErrorResponseReceivedFromPeerAgent(resp)) @@ InviterConnectionResponseMsgFailed
           }
         } yield ()
-
         inviterProcessFlow
           @@ InviterProcessConnectionRecordPendingSuccess.trackSuccess
           @@ InviterProcessConnectionRecordPendingFailed.trackError
@@ -162,7 +166,6 @@ object ConnectBackgroundJobs {
           @@ Metric
             .gauge("connection_flow_inviter_process_connection_record_ms_gauge")
             .trackDurationWith(_.toMetricsSeconds)
-
       case _ => ZIO.unit
     }
 
@@ -186,7 +189,7 @@ object ConnectBackgroundJobs {
 
   private[this] def buildDIDCommAgent(
       myDid: DidId
-  ): ZIO[ManagedDIDService, KeyNotFoundError, ZLayer[Any, Nothing, DidAgent]] = {
+  ): ZIO[ManagedDIDService & WalletAccessContext, KeyNotFoundError, ZLayer[Any, Nothing, DidAgent]] = {
     for {
       managedDidService <- ZIO.service[ManagedDIDService]
       peerDID <- managedDidService.getPeerDID(myDid)

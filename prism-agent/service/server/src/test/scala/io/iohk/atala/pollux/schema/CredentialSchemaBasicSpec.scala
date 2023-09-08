@@ -1,13 +1,14 @@
 package io.iohk.atala.pollux.schema
 
+import com.dimafeng.testcontainers.PostgreSQLContainer
+import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.container.util.MigrationAspects.*
+import io.iohk.atala.iam.authentication.Authenticator
 import io.iohk.atala.pollux.core.model.schema.`type`.CredentialJsonSchemaType
 import io.iohk.atala.pollux.credentialschema.*
 import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaController
-import io.iohk.atala.pollux.credentialschema.http.CredentialSchemaInput
-import io.iohk.atala.pollux.credentialschema.http.CredentialSchemaResponse
-import io.iohk.atala.pollux.sql.repository.JdbcCredentialSchemaRepository
+import io.iohk.atala.pollux.credentialschema.http.{CredentialSchemaInput, CredentialSchemaResponse}
 import sttp.client3.basicRequest
 import sttp.client3.ziojson.*
 import sttp.model.StatusCode
@@ -51,14 +52,22 @@ object CredentialSchemaBasicSpec extends ZIOSpecDefault with CredentialSchemaTes
 
   def spec = (
     schemaCreateAndGetOperationsSpec
-      @@ nondeterministic @@ sequential @@ timed @@ migrate(
+      @@ nondeterministic @@ sequential @@ timed @@ migrateEach(
         schema = "public",
         paths = "classpath:sql/pollux"
       )
-  ).provideSomeLayerShared(mockManagedDIDServiceLayer.toLayer >+> testEnvironmentLayer)
+  ).provideSomeLayerShared(
+    mockManagedDIDServiceLayer.toLayer >+>
+      testEnvironmentLayer
+  )
 
   private val schemaCreateAndGetOperationsSpec = {
-    val backendZIO = ZIO.service[CredentialSchemaController].map(httpBackend)
+    val backendZIO =
+      for {
+        controller <- ZIO.service[CredentialSchemaController]
+        authenticator <- ZIO.service[Authenticator]
+      } yield httpBackend(controller, authenticator)
+
     def createSchemaResponseZIO = for {
       backend <- backendZIO
       response <- basicRequest

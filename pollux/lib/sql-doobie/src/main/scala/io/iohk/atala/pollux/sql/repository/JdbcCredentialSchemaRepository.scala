@@ -6,58 +6,68 @@ import io.iohk.atala.pollux.core.model.schema.CredentialSchema
 import io.iohk.atala.pollux.core.repository.Repository.*
 import io.iohk.atala.pollux.core.repository.{CredentialSchemaRepository, Repository}
 import io.iohk.atala.pollux.sql.model.db.{CredentialSchemaSql, CredentialSchema as CredentialSchemaRow}
+import io.iohk.atala.shared.db.ContextAwareTask
+import io.iohk.atala.shared.db.Implicits.*
+import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 import zio.interop.catz.*
 
 import java.util.UUID
 
-class JdbcCredentialSchemaRepository(xa: Transactor[Task]) extends CredentialSchemaRepository[Task] {
+case class JdbcCredentialSchemaRepository(xa: Transactor[ContextAwareTask], xb: Transactor[Task])
+    extends CredentialSchemaRepository {
   import CredentialSchemaSql.*
-  override def create(cs: CredentialSchema): Task[CredentialSchema] = {
-    CredentialSchemaSql
-      .insert(CredentialSchemaRow.fromModel(cs))
-      .transact(xa)
-      .map(CredentialSchemaRow.toModel)
+  override def create(cs: CredentialSchema): RIO[WalletAccessContext, CredentialSchema] = {
+    ZIO.serviceWithZIO[WalletAccessContext](ctx =>
+      CredentialSchemaSql
+        .insert(CredentialSchemaRow.fromModel(cs, ctx.walletId))
+        .transactWallet(xa)
+        .map(CredentialSchemaRow.toModel)
+    )
   }
 
   override def getByGuid(guid: UUID): Task[Option[CredentialSchema]] = {
     CredentialSchemaSql
       .findByGUID(guid)
-      .transact(xa)
+      .transact(xb)
       .map(
         _.headOption
           .map(CredentialSchemaRow.toModel)
       )
   }
 
-  override def update(cs: CredentialSchema): Task[Option[CredentialSchema]] = {
-    CredentialSchemaSql
-      .update(CredentialSchemaRow.fromModel(cs))
-      .transact(xa)
-      .map(Option.apply)
-      .map(_.map(CredentialSchemaRow.toModel))
+  override def update(cs: CredentialSchema): RIO[WalletAccessContext, Option[CredentialSchema]] = {
+    ZIO.serviceWithZIO[WalletAccessContext](ctx =>
+      CredentialSchemaSql
+        .update(CredentialSchemaRow.fromModel(cs, ctx.walletId))
+        .transactWallet(xa)
+        .map(Option.apply)
+        .map(_.map(CredentialSchemaRow.toModel))
+    )
   }
 
-  def getAllVersions(id: UUID, author: String): Task[Seq[String]] = {
+  def getAllVersions(id: UUID, author: String): RIO[WalletAccessContext, Seq[String]] = {
     CredentialSchemaSql
       .getAllVersions(id, author)
-      .transact(xa)
+      .transactWallet(xa)
   }
 
-  override def delete(guid: UUID): Task[Option[CredentialSchema]] = {
+  override def delete(guid: UUID): RIO[WalletAccessContext, Option[CredentialSchema]] = {
     CredentialSchemaSql
       .delete(guid)
-      .transact(xa)
+      .transactWallet(xa)
       .map(Option.apply)
       .map(_.map(CredentialSchemaRow.toModel))
   }
 
-  def deleteAll(): Task[Long] = {
+  def deleteAll(): RIO[WalletAccessContext, Long] = {
     CredentialSchemaSql.deleteAll
-      .transact(xa)
+      .transactWallet(xa)
   }
 
-  override def search(query: SearchQuery[CredentialSchema.Filter]): Task[SearchResult[CredentialSchema]] = {
+  override def search(
+      query: SearchQuery[CredentialSchema.Filter]
+  ): RIO[WalletAccessContext, SearchResult[CredentialSchema]] = {
     for {
       filteredRows <- CredentialSchemaSql
         .lookup(
@@ -68,7 +78,7 @@ class JdbcCredentialSchemaRepository(xa: Transactor[Task]) extends CredentialSch
           offset = query.skip,
           limit = query.limit
         )
-        .transact(xa)
+        .transactWallet(xa)
       entries = filteredRows.map(CredentialSchemaRow.toModel)
 
       filteredRowsCount <- CredentialSchemaSql
@@ -78,14 +88,14 @@ class JdbcCredentialSchemaRepository(xa: Transactor[Task]) extends CredentialSch
           versionOpt = query.filter.version,
           tagOpt = query.filter.tags
         )
-        .transact(xa)
+        .transactWallet(xa)
 
-      totalRowsCount <- CredentialSchemaSql.totalCount.transact(xa)
+      totalRowsCount <- CredentialSchemaSql.totalCount.transactWallet(xa)
     } yield SearchResult(entries, filteredRowsCount, totalRowsCount)
   }
 }
 
 object JdbcCredentialSchemaRepository {
-  val layer: URLayer[Transactor[Task], JdbcCredentialSchemaRepository] =
-    ZLayer.fromFunction(JdbcCredentialSchemaRepository(_))
+  val layer: URLayer[Transactor[ContextAwareTask] & Transactor[Task], CredentialSchemaRepository] =
+    ZLayer.fromFunction(JdbcCredentialSchemaRepository.apply)
 }

@@ -10,6 +10,8 @@ import zio.test.{Assertion, Spec, TestEnvironment, ZIOSpecDefault, assertTrue}
 import zio.{Scope, ZIO, ZLayer}
 
 import java.time.Instant
+import io.iohk.atala.shared.models.WalletAccessContext
+import io.iohk.atala.shared.models.WalletId
 
 object PresentationServiceNotifierSpec extends ZIOSpecDefault with PresentationServiceSpecHelper {
 
@@ -115,7 +117,8 @@ object PresentationServiceNotifierSpec extends ZIOSpecDefault with PresentationS
         }
       }.provide(
         ZLayer.succeed(50) >>> EventNotificationServiceImpl.layer,
-        verifierHappyFlowExpectations.toLayer >>> PresentationServiceNotifier.layer
+        verifierHappyFlowExpectations.toLayer >>> PresentationServiceNotifier.layer,
+        ZLayer.succeed(WalletAccessContext(WalletId.random))
       ),
       test("Generates relevant events on presentation verification failed") {
         for {
@@ -132,7 +135,8 @@ object PresentationServiceNotifierSpec extends ZIOSpecDefault with PresentationS
         }
       }.provide(
         ZLayer.succeed(50) >>> EventNotificationServiceImpl.layer,
-        verifierPresentationVerificationFailedExpectations.toLayer >>> PresentationServiceNotifier.layer
+        verifierPresentationVerificationFailedExpectations.toLayer >>> PresentationServiceNotifier.layer,
+        ZLayer.succeed(WalletAccessContext(WalletId.random))
       ),
       test("Generates relevant events on presentation rejected") {
         for {
@@ -149,7 +153,8 @@ object PresentationServiceNotifierSpec extends ZIOSpecDefault with PresentationS
         }
       }.provide(
         ZLayer.succeed(50) >>> EventNotificationServiceImpl.layer,
-        verifierRejectPresentationExpectations.toLayer >>> PresentationServiceNotifier.layer
+        verifierRejectPresentationExpectations.toLayer >>> PresentationServiceNotifier.layer,
+        ZLayer.succeed(WalletAccessContext(WalletId.random))
       ),
       test("Happy flow generates relevant events on the prover side") {
         for {
@@ -172,7 +177,8 @@ object PresentationServiceNotifierSpec extends ZIOSpecDefault with PresentationS
         }
       }.provide(
         ZLayer.succeed(50) >>> EventNotificationServiceImpl.layer,
-        proverHappyFlowExpectations.toLayer >>> PresentationServiceNotifier.layer
+        proverHappyFlowExpectations.toLayer >>> PresentationServiceNotifier.layer,
+        ZLayer.succeed(WalletAccessContext(WalletId.random))
       ),
       test("Happy flow generates relevant events on the prover side") {
         for {
@@ -189,7 +195,8 @@ object PresentationServiceNotifierSpec extends ZIOSpecDefault with PresentationS
         }
       }.provide(
         ZLayer.succeed(50) >>> EventNotificationServiceImpl.layer,
-        proverRejectPresentationRequestExpectations.toLayer >>> PresentationServiceNotifier.layer
+        proverRejectPresentationRequestExpectations.toLayer >>> PresentationServiceNotifier.layer,
+        ZLayer.succeed(WalletAccessContext(WalletId.random))
       )
     )
 }

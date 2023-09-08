@@ -1,36 +1,32 @@
 package io.iohk.atala.pollux.sql.repository
 
-import cats.effect.std.Dispatcher
 import com.dimafeng.testcontainers.PostgreSQLContainer
 import io.iohk.atala.pollux.core.repository._
-import io.iohk.atala.test.container.PostgresLayer.*
+import io.iohk.atala.shared.db.DbConfig
+import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
 import zio._
-import zio.interop.catz._
 import zio.test._
 
-object JdbcPresentationRepositorySpec extends ZIOSpecDefault {
+object JdbcPresentationRepositorySpec extends ZIOSpecDefault, PostgresTestContainerSupport {
 
-  private val pgLayer = postgresLayer(verbose = false)
   private val dbConfig = ZLayer.fromZIO(
     for {
       postgres <- ZIO.service[PostgreSQLContainer]
     } yield DbConfig(postgres.username, postgres.password, postgres.jdbcUrl)
   )
-  private val transactorLayer = ZLayer.fromZIO {
-    ZIO.service[DbConfig].flatMap { config =>
-      Dispatcher[Task].allocated.map { case (dispatcher, _) =>
-        given Dispatcher[Task] = dispatcher
-        TransactorLayer.hikari[Task](config)
-      }
-    }
-  }.flatten
-  private val testEnvironmentLayer = zio.test.testEnvironment ++ pgLayer ++
-    (pgLayer >>> dbConfig >>> transactorLayer >>> JdbcPresentationRepository.layer) ++
-    (pgLayer >>> dbConfig >>> Migrations.layer)
+
+  private val testEnvironmentLayer = ZLayer.make[PresentationRepository & Migrations](
+    JdbcPresentationRepository.layer,
+    Migrations.layer,
+    dbConfig,
+    pgContainerLayer,
+    contextAwareTransactorLayer
+  )
 
   override def spec =
     (suite("JDBC Presentation Repository test suite")(
-      PresentationRepositorySpecSuite.testSuite
+      PresentationRepositorySpecSuite.testSuite,
+      PresentationRepositorySpecSuite.multitenantTestSuite
     ) @@ TestAspect.before(
       ZIO.serviceWithZIO[Migrations](_.migrate)
     )).provide(testEnvironmentLayer)

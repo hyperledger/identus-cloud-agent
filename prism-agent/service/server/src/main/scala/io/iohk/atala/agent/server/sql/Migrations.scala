@@ -1,7 +1,9 @@
 package io.iohk.atala.agent.server.sql
 
+import io.iohk.atala.shared.db.DbConfig
 import org.flywaydb.core.Flyway
 import zio.*
+
 final case class Migrations(config: DbConfig) {
 
   val migrationScriptsLocation: String = "sql/agent"

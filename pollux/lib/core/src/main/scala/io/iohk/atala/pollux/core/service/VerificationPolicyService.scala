@@ -2,7 +2,8 @@ package io.iohk.atala.pollux.core.service
 
 import io.iohk.atala.pollux.core.model.error.VerificationPolicyError
 import io.iohk.atala.pollux.core.model.{VerificationPolicy, VerificationPolicyConstraint}
-import zio.IO
+import io.iohk.atala.shared.models.WalletAccessContext
+import zio.*
 
 import java.util.UUID
 
@@ -12,25 +13,25 @@ trait VerificationPolicyService {
       name: String,
       description: String,
       constraints: Seq[VerificationPolicyConstraint] = Seq.empty
-  ): IO[VerificationPolicyError, VerificationPolicy]
+  ): ZIO[WalletAccessContext, VerificationPolicyError, VerificationPolicy]
 
-  def get(id: UUID): IO[VerificationPolicyError, Option[VerificationPolicy]]
+  def get(id: UUID): ZIO[WalletAccessContext, VerificationPolicyError, Option[VerificationPolicy]]
 
   def update(
       id: UUID,
       nonce: Int,
       verificationPolicy: VerificationPolicy
-  ): IO[VerificationPolicyError, Option[VerificationPolicy]]
+  ): ZIO[WalletAccessContext, VerificationPolicyError, Option[VerificationPolicy]]
 
-  def delete(id: UUID): IO[VerificationPolicyError, Option[VerificationPolicy]]
+  def delete(id: UUID): ZIO[WalletAccessContext, VerificationPolicyError, Option[VerificationPolicy]]
 
-  def totalCount(): IO[VerificationPolicyError, Long]
+  def totalCount(): ZIO[WalletAccessContext, VerificationPolicyError, Long]
 
-  def filteredCount(name: Option[String]): IO[VerificationPolicyError, Long]
+  def filteredCount(name: Option[String]): ZIO[WalletAccessContext, VerificationPolicyError, Long]
 
   def lookup(
       name: Option[String],
       offset: Option[Int],
       limit: Option[Int]
-  ): IO[VerificationPolicyError, List[VerificationPolicy]]
+  ): ZIO[WalletAccessContext, VerificationPolicyError, List[VerificationPolicy]]
 }

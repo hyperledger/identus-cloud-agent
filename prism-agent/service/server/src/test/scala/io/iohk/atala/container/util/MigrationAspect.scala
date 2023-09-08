@@ -3,7 +3,7 @@ package io.iohk.atala.container.util
 import com.dimafeng.testcontainers.PostgreSQLContainer
 import org.flywaydb.core.Flyway
 import zio.ZIO
-import zio.test.TestAspect.beforeAll
+import zio.test.TestAspect.{beforeAll, before}
 import zio.test.{TestAspect, TestAspectAtLeastR}
 
 object MigrationAspects {
@@ -14,6 +14,15 @@ object MigrationAspects {
     } yield ()
 
     beforeAll(migration.orDie)
+  }
+
+  def migrateEach(schema: String, paths: String*): TestAspectAtLeastR[PostgreSQLContainer] = {
+    val migration = for {
+      pg <- ZIO.service[PostgreSQLContainer]
+      _ <- runMigration(pg.jdbcUrl, pg.username, pg.password, schema, paths: _*)
+    } yield ()
+
+    before(migration.orDie)
   }
 
   def runMigration(

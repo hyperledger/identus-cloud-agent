@@ -1,8 +1,10 @@
 package io.iohk.atala.pollux.schema
 
+import com.dimafeng.testcontainers.PostgreSQLContainer
 import io.iohk.atala.agent.walletapi.service.MockManagedDIDService
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.container.util.MigrationAspects.migrate
+import io.iohk.atala.iam.authentication.Authenticator
 import io.iohk.atala.pollux.credentialschema.*
 import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaController
 import sttp.client3.ziojson.*
@@ -14,16 +16,18 @@ import zio.test.*
 import zio.test.Assertion.*
 
 object CredentialSchemaFailureSpec extends ZIOSpecDefault with CredentialSchemaTestTools:
+
   def spec = (schemaBadRequestAsJsonSpec @@ migrate(
     schema = "public",
     paths = "classpath:sql/pollux"
-  )).provideSomeLayerShared(MockManagedDIDService.empty >+> testEnvironmentLayer)
+  )).provide(testEnvironmentLayer, MockManagedDIDService.empty)
 
   private val schemaBadRequestAsJsonSpec = suite("schema-registry BadRequest as json logic")(
     test("create the schema with wrong json body returns BadRequest as json") {
       for {
-        schemaRegistryService <- ZIO.service[CredentialSchemaController]
-        backend = httpBackend(schemaRegistryService)
+        controller <- ZIO.service[CredentialSchemaController]
+        authenticator <- ZIO.service[Authenticator]
+        backend = httpBackend(controller, authenticator)
         response: SchemaBadRequestResponse <- basicRequest
           .post(credentialSchemaUriBase)
           .body("""{"foo":"bar"}""")

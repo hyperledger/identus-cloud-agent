@@ -5,7 +5,9 @@ import io.circe.parser.*
 import io.iohk.atala.agent.server.DidCommHttpServerError.{DIDCommMessageParsingError, RequestBodyParsingError}
 import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError
+import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError.{KeyNotFoundError, WalletNotFoundError}
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
+import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.connect.core.service.ConnectionService
 import io.iohk.atala.mercury.*
@@ -15,10 +17,10 @@ import io.iohk.atala.mercury.model.error.*
 import io.iohk.atala.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
 import io.iohk.atala.mercury.protocol.issuecredential.*
 import io.iohk.atala.mercury.protocol.presentproof.*
-import io.iohk.atala.mercury.protocol.trustping.TrustPing
 import io.iohk.atala.pollux.core.model.error.{CredentialServiceError, PresentationError}
 import io.iohk.atala.pollux.core.service.{CredentialService, PresentationService}
 import io.iohk.atala.resolvers.DIDResolver
+import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 import zio.http.*
 import zio.http.model.*
@@ -42,16 +44,10 @@ object DidCommHttpServer {
   }
 
   private def didCommServiceEndpoint: HttpApp[
-    DidOps & DidAgent & CredentialService & PresentationService & ConnectionService & ManagedDIDService & HttpClient &
-      DidAgent & DIDResolver & AppConfig,
+    DidOps & CredentialService & PresentationService & ConnectionService & ManagedDIDService & HttpClient &
+      DIDResolver & DIDNonSecretStorage & AppConfig,
     Nothing
   ] = Http.collectZIO[Request] {
-    case Method.GET -> !! / "did" =>
-      for {
-        didCommService <- ZIO.service[DidAgent]
-        str = didCommService.id.value
-      } yield Response.text(str)
-
     case req @ Method.POST -> !!
         if req.headersAsList
           .exists(h =>
@@ -70,7 +66,6 @@ object DidCommHttpServer {
           case _: DIDCommMessageParsingError => ZIO.succeed(Response.status(Status.BadRequest))
           case _: ParseResponse              => ZIO.succeed(Response.status(Status.BadRequest))
           case _: DIDSecretStorageError      => ZIO.succeed(Response.status(Status.UnprocessableEntity))
-          case _: SendMessageError           => ZIO.succeed(Response.status(Status.UnprocessableEntity))
           case _: ConnectionServiceError     => ZIO.succeed(Response.status(Status.UnprocessableEntity))
           case _: CredentialServiceError     => ZIO.succeed(Response.status(Status.UnprocessableEntity))
           case _: PresentationError          => ZIO.succeed(Response.status(Status.UnprocessableEntity))
@@ -88,16 +83,26 @@ object DidCommHttpServer {
 
   private[this] def unpackMessage(
       jsonString: String
-  ): ZIO[DidOps & ManagedDIDService, ParseResponse | DIDSecretStorageError, Message] = {
+  ): ZIO[
+    DidOps & ManagedDIDService & DIDNonSecretStorage,
+    ParseResponse | DIDSecretStorageError,
+    (Message, WalletAccessContext)
+  ] = {
     // Needed for implicit conversion from didcommx UnpackResuilt to mercury UnpackMessage
     for {
       recipientDid <- extractFirstRecipientDid(jsonString).mapError(err => ParseResponse(err))
       _ <- ZIO.logInfo(s"Extracted recipient Did => $recipientDid")
+      didId = DidId(recipientDid)
+      nonSecretStorage <- ZIO.service[DIDNonSecretStorage]
+      maybePeerDIDRecord <- nonSecretStorage.getPeerDIDRecord(didId).orDie
+      peerDIDRecord <- ZIO.fromOption(maybePeerDIDRecord).mapError(_ => WalletNotFoundError(didId))
+      _ <- ZIO.logInfo(s"PeerDID record successfully loaded in DIDComm receiver endpoint: $peerDIDRecord")
+      walletAccessContext = WalletAccessContext(peerDIDRecord.walletId)
       managedDIDService <- ZIO.service[ManagedDIDService]
-      peerDID <- managedDIDService.getPeerDID(DidId(recipientDid))
+      peerDID <- managedDIDService.getPeerDID(didId).provide(ZLayer.succeed(walletAccessContext))
       agent = AgentPeerService.makeLayer(peerDID)
       msg <- unpack(jsonString).provideSomeLayer(agent)
-    } yield msg.message
+    } yield (msg.message, walletAccessContext)
   }
 
   private def webServerProgram(jsonString: String) = {
@@ -105,51 +110,20 @@ object DidCommHttpServer {
       for {
         _ <- ZIO.logInfo("Received new message")
         _ <- ZIO.logTrace(jsonString)
-        msg <- unpackMessage(jsonString)
-        _ <- (handleTrustPing orElse
-          handleConnect orElse
+        msgAndContext <- unpackMessage(jsonString)
+        _ <- (handleConnect orElse
           handleIssueCredential orElse
           handlePresentProof orElse
-          handleUnknownMessage)(msg)
+          handleUnknownMessage)(msgAndContext._1).provideSomeLayer(ZLayer.succeed(msgAndContext._2))
       } yield ()
     }
-  }
-
-  /*
-   * Trust Ping
-   */
-  private val handleTrustPing
-      : PartialFunction[Message, ZIO[DidOps & DidAgent & DIDResolver & HttpClient, SendMessageError, Unit]] = {
-    case msg if msg.piuri == TrustPing.`type` =>
-      for {
-        trustPingMsg <- ZIO.succeed(TrustPing.fromMessage(msg))
-        _ <- ZIO.logInfo(s"Got TrustPing from ${msg.from}: $trustPingMsg")
-        trustPingResponseMsg = trustPingMsg match {
-          case Left(value) => None
-          case Right(trustPing) =>
-            trustPing.body.response_requested match
-              case None        => Some(trustPing.makeReply.makeMessage)
-              case Some(true)  => Some(trustPing.makeReply.makeMessage)
-              case Some(false) => None
-        }
-        _ <- trustPingResponseMsg match
-          case None => ZIO.logWarning(s"Did not reply to the ${TrustPing.`type`}")
-          case Some(message) =>
-            MessagingService
-              .send(message)
-              .flatMap(response =>
-                response.status match
-                  case c if c >= 200 & c < 300 => ZIO.unit
-                  case _                       => ZIO.logWarning(response.toString)
-              )
-      } yield ()
   }
 
   /*
    * Connect
    */
   private val handleConnect: PartialFunction[Message, ZIO[
-    ConnectionService & AppConfig,
+    ConnectionService & WalletAccessContext & AppConfig,
     DIDCommMessageParsingError | ConnectionServiceError,
     Unit
   ]] = {
@@ -181,7 +155,8 @@ object DidCommHttpServer {
   /*
    * Issue Credential
    */
-  private val handleIssueCredential: PartialFunction[Message, ZIO[CredentialService, CredentialServiceError, Unit]] = {
+  private val handleIssueCredential
+      : PartialFunction[Message, ZIO[CredentialService & WalletAccessContext, CredentialServiceError, Unit]] = {
     case msg if msg.piuri == OfferCredential.`type` =>
       for {
         offerFromIssuer <- ZIO.succeed(OfferCredential.readFromMessage(msg))
@@ -208,7 +183,8 @@ object DidCommHttpServer {
   /*
    * Present Proof
    */
-  private val handlePresentProof: PartialFunction[Message, ZIO[PresentationService, PresentationError, Unit]] = {
+  private val handlePresentProof
+      : PartialFunction[Message, ZIO[PresentationService & WalletAccessContext, PresentationError, Unit]] = {
     case msg if msg.piuri == ProposePresentation.`type` =>
       for {
         proposePresentation <- ZIO.succeed(ProposePresentation.readFromMessage(msg))

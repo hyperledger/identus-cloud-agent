@@ -1,49 +1,34 @@
 package io.iohk.atala.agent.walletapi.service
 
-import io.iohk.atala.agent.walletapi.crypto.Apollo
-import io.iohk.atala.agent.walletapi.crypto.ApolloSpecHelper
-import io.iohk.atala.agent.walletapi.model.UpdateManagedDIDAction
-import io.iohk.atala.agent.walletapi.model.error.UpdateManagedDIDError
-import io.iohk.atala.agent.walletapi.model.error.CreateManagedDIDError
-import io.iohk.atala.agent.walletapi.model.error.PublishManagedDIDError
-import io.iohk.atala.agent.walletapi.model.DIDPublicKeyTemplate
-import io.iohk.atala.agent.walletapi.model.ManagedDIDState
-import io.iohk.atala.agent.walletapi.model.ManagedDIDTemplate
-import io.iohk.atala.agent.walletapi.model.PublicationState
-import io.iohk.atala.agent.walletapi.sql.JdbcDIDNonSecretStorage
-import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
-import io.iohk.atala.agent.walletapi.storage.DIDKeySecretStorageImpl
-import io.iohk.atala.agent.walletapi.util.SeedResolver
-import io.iohk.atala.agent.walletapi.vault.VaultDIDSecretStorage
-import io.iohk.atala.castor.core.model.did.InternalKeyPurpose
-import io.iohk.atala.castor.core.model.did.DIDData
-import io.iohk.atala.castor.core.model.did.DIDMetadata
-import io.iohk.atala.castor.core.model.did.InternalPublicKey
-import io.iohk.atala.castor.core.model.did.PrismDID
-import io.iohk.atala.castor.core.model.did.PrismDIDOperation
-import io.iohk.atala.castor.core.model.did.PublicKey
-import io.iohk.atala.castor.core.model.did.ScheduleDIDOperationOutcome
-import io.iohk.atala.castor.core.model.did.ScheduledDIDOperationDetail
-import io.iohk.atala.castor.core.model.did.ScheduledDIDOperationStatus
-import io.iohk.atala.castor.core.model.did.Service
-import io.iohk.atala.castor.core.model.did.SignedPrismDIDOperation
-import io.iohk.atala.castor.core.model.did.VerificationRelationship
+import io.iohk.atala.agent.walletapi.crypto.{Apollo, ApolloSpecHelper}
+import io.iohk.atala.agent.walletapi.model.*
+import io.iohk.atala.agent.walletapi.model.error.{
+  CreateManagedDIDError,
+  DIDSecretStorageError,
+  PublishManagedDIDError,
+  UpdateManagedDIDError
+}
+import io.iohk.atala.agent.walletapi.sql.*
+import io.iohk.atala.agent.walletapi.storage.*
+import io.iohk.atala.agent.walletapi.storage.JdbcEntityRepositorySpec.pgContainerLayer
+import io.iohk.atala.agent.walletapi.vault.{VaultDIDSecretStorage, VaultWalletSecretStorage}
+import io.iohk.atala.castor.core.model.did.*
 import io.iohk.atala.castor.core.model.error
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.castor.core.util.DIDOperationValidator
-import io.iohk.atala.test.container.DBTestUtils
-import io.iohk.atala.test.container.PostgresTestContainerSupport
-import io.iohk.atala.test.container.VaultTestContainerSupport
+import io.iohk.atala.shared.models.WalletAccessContext
+import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
+import io.iohk.atala.test.container.{DBTestUtils, VaultTestContainerSupport}
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
-import zio.test.TestAspect.sequential
 
 import scala.collection.immutable.ArraySeq
 
 object ManagedDIDServiceSpec
     extends ZIOSpecDefault,
       PostgresTestContainerSupport,
+      StorageSpecHelper,
       ApolloSpecHelper,
       VaultTestContainerSupport {
 
@@ -83,20 +68,37 @@ object ManagedDIDServiceSpec
     }
   }
 
-  private def jdbcNonSecretStorageLayer =
-    pgContainerLayer >+> (transactorLayer ++ apolloLayer) >+> JdbcDIDNonSecretStorage.layer
-
   private def jdbcSecretStorageLayer =
-    pgContainerLayer >+> (transactorLayer ++ apolloLayer) >+> JdbcDIDSecretStorage.layer >+> DIDKeySecretStorageImpl.layer
+    ZLayer.make[DIDSecretStorage & WalletSecretStorage](
+      JdbcDIDSecretStorage.layer,
+      JdbcWalletSecretStorage.layer,
+      contextAwareTransactorLayer
+    )
 
   private def vaultSecretStorageLayer =
-    vaultKvClientLayer >>> VaultDIDSecretStorage.layer >+> DIDKeySecretStorageImpl.layer
+    ZLayer.make[DIDSecretStorage & WalletSecretStorage](
+      VaultDIDSecretStorage.layer,
+      VaultWalletSecretStorage.layer,
+      vaultKvClientLayer
+    )
 
-  private def managedDIDServiceLayer =
-    (DIDOperationValidator.layer() ++
-      testDIDServiceLayer ++
-      apolloLayer ++
-      SeedResolver.layer(isDevMode = true)) >+> ManagedDIDServiceImpl.layer
+  private def serviceLayer =
+    ZLayer
+      .makeSome[
+        DIDSecretStorage & WalletSecretStorage,
+        WalletManagementService & ManagedDIDService & TestDIDService
+      ](
+        ManagedDIDServiceImpl.layer,
+        WalletManagementServiceImpl.layer,
+        DIDOperationValidator.layer(),
+        JdbcDIDNonSecretStorage.layer,
+        JdbcWalletNonSecretStorage.layer,
+        DIDKeySecretStorageImpl.layer,
+        systemTransactorLayer,
+        contextAwareTransactorLayer,
+        testDIDServiceLayer,
+        apolloLayer
+      )
 
   private def generateDIDTemplate(
       publicKeys: Seq[DIDPublicKeyTemplate] = Nil,
@@ -138,18 +140,32 @@ object ManagedDIDServiceSpec
   override def spec = {
     def testSuite(name: String) =
       suite(name)(
-        publishStoredDIDSpec,
-        createAndStoreDIDSpec,
-        updateManagedDIDSpec,
-        deactivateManagedDIDSpec
-      ) @@ TestAspect.before(DBTestUtils.runMigrationAgentDB) @@ sequential
+        publishStoredDIDSpec.globalWallet,
+        createAndStoreDIDSpec.globalWallet,
+        createAndStorePeerDIDSpec.globalWallet,
+        updateManagedDIDSpec.globalWallet,
+        deactivateManagedDIDSpec.globalWallet,
+        multitenantSpec
+      )
+        @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
+        @@ TestAspect.sequential
 
     val suite1 = testSuite("jdbc as secret storage")
-      .provideLayer((jdbcNonSecretStorageLayer ++ jdbcSecretStorageLayer) >+> managedDIDServiceLayer)
+      .provide(
+        serviceLayer,
+        pgContainerLayer,
+        jdbcSecretStorageLayer,
+        contextAwareTransactorLayer >+> systemTransactorLayer >>> JdbcDIDNonSecretStorage.layer
+      )
       .provide(Runtime.removeDefaultLoggers)
 
     val suite2 = testSuite("vault as secret storage")
-      .provideLayer((jdbcNonSecretStorageLayer ++ vaultSecretStorageLayer) >+> managedDIDServiceLayer)
+      .provide(
+        serviceLayer,
+        pgContainerLayer,
+        vaultSecretStorageLayer,
+        contextAwareTransactorLayer >+> systemTransactorLayer >>> JdbcDIDNonSecretStorage.layer
+      )
       .provide(Runtime.removeDefaultLoggers)
 
     suite("ManagedDIDService")(suite1, suite2)
@@ -290,6 +306,31 @@ object ManagedDIDServiceSpec
           .map(_.toList.flatten)
       } yield assert(dids)(hasSize(equalTo(50))) &&
         assert(states.map(_.didIndex))(hasSameElementsDistinct(0 until 50))
+    }
+  )
+
+  private val createAndStorePeerDIDSpec = suite("createAndStorePeerDID")(
+    test("can get PeerDIDRecord from any wallet") {
+      for {
+        walletSvc <- ZIO.service[WalletManagementService]
+        walletId1 <- walletSvc.createWallet(Wallet("wallet-1")).map(_.id)
+        walletId2 <- walletSvc.createWallet(Wallet("wallet-2")).map(_.id)
+        ctx1 = ZLayer.succeed(WalletAccessContext(walletId1))
+        ctx2 = ZLayer.succeed(WalletAccessContext(walletId2))
+        svc <- ZIO.service[ManagedDIDService]
+        storage <- ZIO.service[DIDNonSecretStorage]
+        peerDid1 <- svc.createAndStorePeerDID("http://example.com").provide(ctx1)
+        peerDid2 <- svc.createAndStorePeerDID("http://example.com").provide(ctx2)
+        record1 <- storage.getPeerDIDRecord(peerDid1.did)
+        record2 <- storage.getPeerDIDRecord(peerDid2.did)
+      } yield {
+        assertTrue(record1.isDefined) &&
+        assertTrue(record1.get.did == peerDid1.did) &&
+        assertTrue(record1.get.walletId == walletId1) &&
+        assertTrue(record2.isDefined) &&
+        assertTrue(record2.get.did == peerDid2.did) &&
+        assertTrue(record2.get.walletId == walletId2)
+      }
     }
   )
 
@@ -440,6 +481,83 @@ object ManagedDIDServiceSpec
         _ <- svc.deactivateManagedDID(did)
       } yield ()
       assertZIO(effect.exit)(fails(isSubtype[UpdateManagedDIDError.DIDAlreadyDeactivated](anything)))
+    }
+  )
+
+  private val multitenantSpec = suite("multi-tenant managed DID")(
+    test("do not see Prism DID outside of the wallet") {
+      val template = generateDIDTemplate()
+      for {
+        walletSvc <- ZIO.service[WalletManagementService]
+        walletId1 <- walletSvc.createWallet(Wallet("wallet-1")).map(_.id)
+        walletId2 <- walletSvc.createWallet(Wallet("wallet-2")).map(_.id)
+        ctx1 = ZLayer.succeed(WalletAccessContext(walletId1))
+        ctx2 = ZLayer.succeed(WalletAccessContext(walletId2))
+        svc <- ZIO.service[ManagedDIDService]
+        dids1 <- ZIO.foreach(1 to 3)(_ => svc.createAndStoreDID(template).map(_.asCanonical)).provide(ctx1)
+        dids2 <- ZIO.foreach(1 to 3)(_ => svc.createAndStoreDID(template).map(_.asCanonical)).provide(ctx2)
+        ownWalletDids1 <- svc.listManagedDIDPage(0, 1000).map(_._1.map(_.did)).provide(ctx1)
+        ownWalletDids2 <- svc.listManagedDIDPage(0, 1000).map(_._1.map(_.did)).provide(ctx2)
+        crossWalletDids1 <- ZIO.foreach(dids1)(did => svc.getManagedDIDState(did)).provide(ctx2)
+        crossWalletDids2 <- ZIO.foreach(dids2)(did => svc.getManagedDIDState(did)).provide(ctx1)
+      } yield assert(dids1)(hasSameElements(ownWalletDids1)) &&
+        assert(dids2)(hasSameElements(ownWalletDids2)) &&
+        assert(crossWalletDids1)(forall(isNone)) &&
+        assert(crossWalletDids2)(forall(isNone))
+    },
+    test("do not see Peer DID outside of the wallet") {
+      for {
+        walletSvc <- ZIO.service[WalletManagementService]
+        walletId1 <- walletSvc.createWallet(Wallet("wallet-1")).map(_.id)
+        walletId2 <- walletSvc.createWallet(Wallet("wallet-2")).map(_.id)
+        ctx1 = ZLayer.succeed(WalletAccessContext(walletId1))
+        ctx2 = ZLayer.succeed(WalletAccessContext(walletId2))
+        svc <- ZIO.service[ManagedDIDService]
+        dids1 <- ZIO.foreach(1 to 3)(_ => svc.createAndStorePeerDID("http://example.com")).provide(ctx1)
+        dids2 <- ZIO.foreach(1 to 3)(_ => svc.createAndStorePeerDID("http://example.com")).provide(ctx2)
+        ownWalletDids1 <- ZIO.foreach(dids1)(d => svc.getPeerDID(d.did).exit).provide(ctx1)
+        ownWalletDids2 <- ZIO.foreach(dids2)(d => svc.getPeerDID(d.did).exit).provide(ctx2)
+        crossWalletDids1 <- ZIO.foreach(dids1)(d => svc.getPeerDID(d.did).exit).provide(ctx2)
+        crossWalletDids2 <- ZIO.foreach(dids2)(d => svc.getPeerDID(d.did).exit).provide(ctx1)
+      } yield assert(ownWalletDids1)(forall(succeeds(anything))) &&
+        assert(ownWalletDids2)(forall(succeeds(anything))) &&
+        assert(crossWalletDids1)(forall(failsWithA[DIDSecretStorageError.KeyNotFoundError])) &&
+        assert(crossWalletDids2)(forall(failsWithA[DIDSecretStorageError.KeyNotFoundError]))
+    },
+    test("increment DID index based on count only on its wallet") {
+      val template = generateDIDTemplate()
+      for {
+        walletSvc <- ZIO.service[WalletManagementService]
+        walletId1 <- walletSvc.createWallet(Wallet("wallet-1")).map(_.id)
+        walletId2 <- walletSvc.createWallet(Wallet("wallet-2")).map(_.id)
+        ctx1 = ZLayer.succeed(WalletAccessContext(walletId1))
+        ctx2 = ZLayer.succeed(WalletAccessContext(walletId2))
+        svc <- ZIO.service[ManagedDIDService]
+        wallet1Counter1 <- svc.nonSecretStorage.getMaxDIDIndex().provide(ctx1)
+        wallet2Counter1 <- svc.nonSecretStorage.getMaxDIDIndex().provide(ctx2)
+        _ <- svc.createAndStoreDID(template).provide(ctx1)
+        wallet1Counter2 <- svc.nonSecretStorage.getMaxDIDIndex().provide(ctx1)
+        wallet2Counter2 <- svc.nonSecretStorage.getMaxDIDIndex().provide(ctx2)
+        _ <- svc.createAndStoreDID(template).provide(ctx1)
+        wallet1Counter3 <- svc.nonSecretStorage.getMaxDIDIndex().provide(ctx1)
+        wallet2Counter3 <- svc.nonSecretStorage.getMaxDIDIndex().provide(ctx2)
+        _ <- svc.createAndStoreDID(template).provide(ctx2)
+        wallet1Counter4 <- svc.nonSecretStorage.getMaxDIDIndex().provide(ctx1)
+        wallet2Counter4 <- svc.nonSecretStorage.getMaxDIDIndex().provide(ctx2)
+      } yield {
+        // initial counter
+        assert(wallet1Counter1)(isNone) &&
+        assert(wallet2Counter1)(isNone) &&
+        // add DID to wallet 1
+        assert(wallet1Counter2)(isSome(equalTo(0))) &&
+        assert(wallet2Counter2)(isNone) &&
+        // add DID to wallet 1
+        assert(wallet1Counter3)(isSome(equalTo(1))) &&
+        assert(wallet2Counter3)(isNone) &&
+        // add DID to wallet 2
+        assert(wallet1Counter4)(isSome(equalTo(1))) &&
+        assert(wallet2Counter4)(isSome(equalTo(0)))
+      }
     }
   )
 

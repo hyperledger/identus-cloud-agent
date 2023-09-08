@@ -6,8 +6,9 @@ import io.iohk.atala.connect.core.model.error.ConnectionRepositoryError.*
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
 import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
+import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
 import zio.test.*
-import zio.{Cause, Exit, Task, ZIO}
+import zio.{Cause, Exit, ZIO, ZLayer}
 
 import java.time.Instant
 import java.util.UUID
@@ -48,14 +49,14 @@ object ConnectionRepositorySpecSuite {
   val testSuite = suite("CRUD operations")(
     test("createConnectionRecord creates a new record in DB") {
       for {
-        repo <- ZIO.service[ConnectionRepository[Task]]
+        repo <- ZIO.service[ConnectionRepository]
         record = connectionRecord
         count <- repo.createConnectionRecord(record)
       } yield assertTrue(count == 1)
     },
     test("createConnectionRecord prevents creation of 2 records with the same thid") {
       for {
-        repo <- ZIO.service[ConnectionRepository[Task]]
+        repo <- ZIO.service[ConnectionRepository]
         thid = UUID.randomUUID().toString
         aRecord = connectionRecord.copy(thid = thid)
         bRecord = connectionRecord.copy(thid = thid)
@@ -70,7 +71,7 @@ object ConnectionRepositorySpecSuite {
     },
     test("getConnectionRecord correctly returns an existing record") {
       for {
-        repo <- ZIO.service[ConnectionRepository[Task]]
+        repo <- ZIO.service[ConnectionRepository]
         aRecord = connectionRecord
         bRecord = connectionRecord
         _ <- repo.createConnectionRecord(aRecord)
@@ -80,7 +81,7 @@ object ConnectionRepositorySpecSuite {
     },
     test("getConnectionRecord returns None for an unknown record") {
       for {
-        repo <- ZIO.service[ConnectionRepository[Task]]
+        repo <- ZIO.service[ConnectionRepository]
         aRecord = connectionRecord
         bRecord = connectionRecord
         _ <- repo.createConnectionRecord(aRecord)
@@ -90,7 +91,7 @@ object ConnectionRepositorySpecSuite {
     },
     test("getConnectionRecords returns all records") {
       for {
-        repo <- ZIO.service[ConnectionRepository[Task]]
+        repo <- ZIO.service[ConnectionRepository]
         aRecord = connectionRecord
         bRecord = connectionRecord
         _ <- repo.createConnectionRecord(aRecord)
@@ -104,7 +105,7 @@ object ConnectionRepositorySpecSuite {
     },
     test("getConnectionRecordsByStates returns correct records") {
       for {
-        repo <- ZIO.service[ConnectionRepository[Task]]
+        repo <- ZIO.service[ConnectionRepository]
         aRecord = connectionRecord
         bRecord = connectionRecord
         cRecord = connectionRecord
@@ -144,7 +145,7 @@ object ConnectionRepositorySpecSuite {
     },
     test("getConnectionRecordsByStates returns an empty list if 'states' parameter is empty") {
       for {
-        repo <- ZIO.service[ConnectionRepository[Task]]
+        repo <- ZIO.service[ConnectionRepository]
         aRecord = connectionRecord
         bRecord = connectionRecord
         cRecord = connectionRecord
@@ -158,7 +159,7 @@ object ConnectionRepositorySpecSuite {
     },
     test("getConnectionRecordsByStates returns an a subset of records when limit is specified") {
       for {
-        repo <- ZIO.service[ConnectionRepository[Task]]
+        repo <- ZIO.service[ConnectionRepository]
         aRecord = connectionRecord
         bRecord = connectionRecord
         cRecord = connectionRecord
@@ -176,7 +177,7 @@ object ConnectionRepositorySpecSuite {
     },
     test("deleteRecord deletes an existing record") {
       for {
-        repo <- ZIO.service[ConnectionRepository[Task]]
+        repo <- ZIO.service[ConnectionRepository]
         aRecord = connectionRecord
         bRecord = connectionRecord
         _ <- repo.createConnectionRecord(aRecord)
@@ -191,7 +192,7 @@ object ConnectionRepositorySpecSuite {
     },
     test("deleteRecord does nothing for an unknown record") {
       for {
-        repo <- ZIO.service[ConnectionRepository[Task]]
+        repo <- ZIO.service[ConnectionRepository]
         aRecord = connectionRecord
         bRecord = connectionRecord
         _ <- repo.createConnectionRecord(aRecord)
@@ -207,7 +208,7 @@ object ConnectionRepositorySpecSuite {
     },
     test("getConnectionRecordByThreadId correctly returns an existing thid") {
       for {
-        repo <- ZIO.service[ConnectionRepository[Task]]
+        repo <- ZIO.service[ConnectionRepository]
         thid = UUID.randomUUID().toString
         aRecord = connectionRecord.copy(thid = thid)
         bRecord = connectionRecord
@@ -218,7 +219,7 @@ object ConnectionRepositorySpecSuite {
     },
     test("getConnectionRecordByThreadId returns nothing for an unknown thid") {
       for {
-        repo <- ZIO.service[ConnectionRepository[Task]]
+        repo <- ZIO.service[ConnectionRepository]
         aRecord = connectionRecord.copy(thid = UUID.randomUUID().toString)
         bRecord = connectionRecord.copy(thid = UUID.randomUUID().toString)
         _ <- repo.createConnectionRecord(aRecord)
@@ -228,7 +229,7 @@ object ConnectionRepositorySpecSuite {
     },
     test("updateConnectionProtocolState updates the record") {
       for {
-        repo <- ZIO.service[ConnectionRepository[Task]]
+        repo <- ZIO.service[ConnectionRepository]
         aRecord = connectionRecord
         _ <- repo.createConnectionRecord(aRecord)
         record <- repo.getConnectionRecord(aRecord.id)
@@ -247,7 +248,7 @@ object ConnectionRepositorySpecSuite {
     },
     test("updateConnectionProtocolState updates the record to InvitationExpired") {
       for {
-        repo <- ZIO.service[ConnectionRepository[Task]]
+        repo <- ZIO.service[ConnectionRepository]
         aRecord = connectionRecord
         _ <- repo.createConnectionRecord(aRecord)
         record <- repo.getConnectionRecord(aRecord.id)
@@ -266,7 +267,7 @@ object ConnectionRepositorySpecSuite {
     },
     test("updateConnectionProtocolState doesn't update the record for invalid states") {
       for {
-        repo <- ZIO.service[ConnectionRepository[Task]]
+        repo <- ZIO.service[ConnectionRepository]
         aRecord = connectionRecord
         _ <- repo.createConnectionRecord(aRecord)
         record <- repo.getConnectionRecord(aRecord.id)
@@ -285,7 +286,7 @@ object ConnectionRepositorySpecSuite {
     },
     test("updateWithConnectionRequest updates record") {
       for {
-        repo <- ZIO.service[ConnectionRepository[Task]]
+        repo <- ZIO.service[ConnectionRepository]
         aRecord = connectionRecord
         _ <- repo.createConnectionRecord(aRecord)
         record <- repo.getConnectionRecord(aRecord.id)
@@ -305,7 +306,7 @@ object ConnectionRepositorySpecSuite {
     },
     test("updateWithConnectionResponse updates record") {
       for {
-        repo <- ZIO.service[ConnectionRepository[Task]]
+        repo <- ZIO.service[ConnectionRepository]
         aRecord = connectionRecord
         _ <- repo.createConnectionRecord(aRecord)
         record <- repo.getConnectionRecord(aRecord.id)
@@ -326,7 +327,7 @@ object ConnectionRepositorySpecSuite {
     test("updateFail (fail one retry) updates record") {
       val failReason = Some("Just to test")
       for {
-        repo <- ZIO.service[ConnectionRepository[Task]]
+        repo <- ZIO.service[ConnectionRepository]
         aRecord = connectionRecord
         _ <- repo.createConnectionRecord(aRecord)
         record <- repo.getConnectionRecord(aRecord.id)
@@ -351,6 +352,49 @@ object ConnectionRepositorySpecSuite {
         assertTrue(record.get.connectionResponse.isEmpty) &&
         assertTrue(updatedRecord2.get.connectionResponse.contains(response))
       }
+    }
+  ).provideSomeLayer(ZLayer.succeed(WalletAccessContext(WalletId.random)))
+
+  val multitenantTestSuite = suite("multi-tenancy CRUD operations")(
+    test("createConnectionRecord creates a new record for each tenant in DB") {
+      val walletId1 = WalletId.random
+      val walletId2 = WalletId.random
+      for {
+        repo <- ZIO.service[ConnectionRepository]
+        wac1 = ZLayer.succeed(WalletAccessContext(walletId1))
+        wac2 = ZLayer.succeed(WalletAccessContext(walletId2))
+        record1 = connectionRecord
+        record2 = connectionRecord
+        count1 <- repo.createConnectionRecord(record1).provide(wac1)
+        count2 <- repo.createConnectionRecord(record2).provide(wac2)
+      } yield assertTrue(count1 == 1) && assertTrue(count2 == 1)
+    },
+    test("getConnectionRecords filters records per tenant") {
+      val walletId1 = WalletId.random
+      val walletId2 = WalletId.random
+      for {
+        repo <- ZIO.service[ConnectionRepository]
+        wac1 = ZLayer.succeed(WalletAccessContext(walletId1))
+        wac2 = ZLayer.succeed(WalletAccessContext(walletId2))
+        _ <- repo.createConnectionRecord(connectionRecord).provide(wac1)
+        _ <- repo.createConnectionRecord(connectionRecord).provide(wac1)
+        _ <- repo.createConnectionRecord(connectionRecord).provide(wac2)
+        wallet1Records <- repo.getConnectionRecords.provide(wac1)
+        wallet2Records <- repo.getConnectionRecords.provide(wac2)
+      } yield assertTrue(wallet1Records.size == 2) && assertTrue(wallet2Records.size == 1)
+    },
+    test("getConnectionRecord doesn't return record of a different tenant") {
+      val walletId1 = WalletId.random
+      val walletId2 = WalletId.random
+      for {
+        repo <- ZIO.service[ConnectionRepository]
+        record = connectionRecord
+        wac1 = ZLayer.succeed(WalletAccessContext(walletId1))
+        wac2 = ZLayer.succeed(WalletAccessContext(walletId2))
+        _ <- repo.createConnectionRecord(record).provide(wac1)
+        wallet1Record <- repo.getConnectionRecord(record.id).provide(wac1)
+        wallet2Record <- repo.getConnectionRecord(record.id).provide(wac2)
+      } yield assertTrue(wallet1Record.isDefined) && assertTrue(wallet2Record.isEmpty)
     }
   )
 }

@@ -2,7 +2,6 @@ package io.iohk.atala.pollux.sql
 
 import com.dimafeng.testcontainers.PostgreSQLContainer
 import doobie.*
-import doobie.implicits.*
 import doobie.util.transactor.Transactor
 import io.iohk.atala.pollux.core.model.{
   CredentialSchemaAndTrustedIssuersConstraint,
@@ -12,39 +11,98 @@ import io.iohk.atala.pollux.core.model.{
 import io.iohk.atala.pollux.core.repository.VerificationPolicyRepository
 import io.iohk.atala.pollux.sql.model.db.VerificationPolicySql
 import io.iohk.atala.pollux.sql.repository.JdbcVerificationPolicyRepository
+import io.iohk.atala.shared.db.ContextAwareTask
+import io.iohk.atala.shared.db.Implicits.*
+import io.iohk.atala.shared.models.WalletAccessContext
+import io.iohk.atala.shared.models.WalletId
+import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
 import io.iohk.atala.test.container.MigrationAspects.*
-import io.iohk.atala.test.container.PostgresLayer.*
 import zio.*
-import zio.interop.catz.*
-import zio.interop.catz.implicits.*
 import zio.test.*
 import zio.test.Assertion.*
 import zio.test.TestAspect.*
 
-object VerificationPolicySqlIntegrationSpec extends ZIOSpecDefault {
+object VerificationPolicySqlIntegrationSpec extends ZIOSpecDefault, PostgresTestContainerSupport {
 
-  private val pgLayer = postgresLayer()
-  private val transactorLayer =
-    pgLayer >>> hikariConfigLayer >>> transactor
   private val repositoryLayer =
-    transactorLayer >>> JdbcVerificationPolicyRepository.layer
+    contextAwareTransactorLayer >>> JdbcVerificationPolicyRepository.layer
   private val testEnvironmentLayer =
-    zio.test.testEnvironment ++ pgLayer ++ transactorLayer ++ repositoryLayer
+    zio.test.testEnvironment ++
+      pgContainerLayer ++
+      contextAwareTransactorLayer ++
+      repositoryLayer ++
+      ZLayer.succeed(WalletAccessContext(WalletId.random))
 
-  def spec = (suite("verification policy DAL spec")(
-    verificationPolicyCRUDSuite,
-    verificationPolicyLookupSuite
-  ) @@ nondeterministic @@ sequential @@ timed @@ migrate(
-    schema = "public",
-    paths = "classpath:sql/pollux"
-  )).provideSomeLayerShared(testEnvironmentLayer)
+  def spec = {
+    val singleWalletSuite =
+      ((verificationPolicyCRUDSuite + verificationPolicyLookupSuite) @@ nondeterministic @@ sequential @@ timed @@ migrate(
+        schema = "public",
+        paths = "classpath:sql/pollux"
+      )).provideSomeLayerShared(testEnvironmentLayer)
+
+    val multiWalletSuite = (multiWalletVerificationPolicyCRUDSuite @@ migrateEach(
+      schema = "public",
+      paths = "classpath:sql/pollux"
+    )).provide(pgContainerLayer, contextAwareTransactorLayer, JdbcVerificationPolicyRepository.layer)
+
+    suite("verification policy DAL spec")(singleWalletSuite, multiWalletSuite)
+  }
+
+  val multiWalletVerificationPolicyCRUDSuite = suite("verification policy multi-wallet CRUD operations")(
+    test("do not see records outside of the wallet") {
+      val walletId1 = WalletId.random
+      val walletId2 = WalletId.random
+      val wallet1 = ZLayer.succeed(WalletAccessContext(walletId1))
+      val wallet2 = ZLayer.succeed(WalletAccessContext(walletId2))
+      for {
+        repo <- ZIO.service[VerificationPolicyRepository]
+        record <- VerificationPolicyGen.verificationPolicyZIO
+          .runCollectN(1)
+          .flatMap(_.head)
+        _ <- repo.create(record).provide(wallet1)
+        ownRecord <- repo.get(record.id).provide(wallet1)
+        crossRecord <- repo.get(record.id).provide(wallet2)
+      } yield assert(ownRecord)(isSome(equalTo(record))) && assert(crossRecord)(isNone)
+    },
+    test("total count do not consider records outside of the wallet") {
+      val walletId1 = WalletId.random
+      val walletId2 = WalletId.random
+      val wallet1 = ZLayer.succeed(WalletAccessContext(walletId1))
+      val wallet2 = ZLayer.succeed(WalletAccessContext(walletId2))
+      for {
+        repo <- ZIO.service[VerificationPolicyRepository]
+        record <- VerificationPolicyGen.verificationPolicyZIO
+          .runCollectN(1)
+          .flatMap(_.head)
+        _ <- repo.create(record).provide(wallet1)
+        n1 <- repo.totalCount().provide(wallet1)
+        n2 <- repo.totalCount().provide(wallet2)
+      } yield assert(n1)(equalTo(1)) && assert(n2)(isZero)
+    },
+    test("do not delete records outside of the wallet") {
+      val walletId1 = WalletId.random
+      val walletId2 = WalletId.random
+      val wallet1 = ZLayer.succeed(WalletAccessContext(walletId1))
+      val wallet2 = ZLayer.succeed(WalletAccessContext(walletId2))
+      for {
+        repo <- ZIO.service[VerificationPolicyRepository]
+        record1 <- VerificationPolicyGen.verificationPolicyZIO
+          .runCollectN(1)
+          .flatMap(_.head)
+        _ <- repo.create(record1).provide(wallet1)
+        deleteResult <- repo.delete(record1.id).provide(wallet2).exit
+        actualRecord <- repo.get(record1.id).provide(wallet1)
+      } yield assert(deleteResult)(failsCause(anything)) &&
+        assert(actualRecord)(isSome(equalTo(record1)))
+    }
+  )
 
   val verificationPolicyCRUDSuite =
     suite("verification policy CRUD operations")(
       test("insert, findById, update and delete operations") {
         for {
-          tx <- ZIO.service[Transactor[Task]]
-          repo <- ZIO.service[VerificationPolicyRepository[Task]]
+          tx <- ZIO.service[Transactor[ContextAwareTask]]
+          repo <- ZIO.service[VerificationPolicyRepository]
 
           expectedCreated <- VerificationPolicyGen.verificationPolicyZIO
             .runCollectN(1)
@@ -107,7 +165,7 @@ object VerificationPolicySqlIntegrationSpec extends ZIOSpecDefault {
 
           isDeleted = assert(getByIdDeleted)(isNone)
 
-          _ <- VerificationPolicySql.deleteAll().transact(tx)
+          _ <- VerificationPolicySql.deleteAll().transactWallet(tx)
         } yield isCreated && allRecordsAreSimilar && isUpdated && isDeletedReturnedBack && isDeleted
       },
       deleteAllVerificationPoliciesTest,
@@ -118,7 +176,7 @@ object VerificationPolicySqlIntegrationSpec extends ZIOSpecDefault {
   def insertNVerificationPoliciesTest(n: Int) =
     test(s"insert $n verification policies entries") {
       for {
-        repo <- ZIO.service[VerificationPolicyRepository[Task]]
+        repo <- ZIO.service[VerificationPolicyRepository]
 
         generatedVerificationPolicies: List[VerificationPolicy] <-
           VerificationPolicyGen.verificationPolicyZIO
@@ -137,10 +195,10 @@ object VerificationPolicySqlIntegrationSpec extends ZIOSpecDefault {
   def deleteAllVerificationPoliciesTest =
     test("delete all verification policies entries") {
       for {
-        tx <- ZIO.service[Transactor[Task]]
-        repo <- ZIO.service[VerificationPolicyRepository[Task]]
+        tx <- ZIO.service[Transactor[ContextAwareTask]]
+        repo <- ZIO.service[VerificationPolicyRepository]
 
-        _ <- VerificationPolicySql.deleteAll().transact(tx)
+        _ <- VerificationPolicySql.deleteAll().transactWallet(tx)
         totalCount <- repo.totalCount()
 
         allEntitiesAreDeleted = assert(totalCount)(equalTo(0))
@@ -152,14 +210,14 @@ object VerificationPolicySqlIntegrationSpec extends ZIOSpecDefault {
     insertNVerificationPoliciesTest(N),
     test("get all in one page") {
       for {
-        repo <- ZIO.service[VerificationPolicyRepository[Task]]
+        repo <- ZIO.service[VerificationPolicyRepository]
         all <- repo.lookup(None, None, None)
         allNRecordsAreReturned = assert(all.length)(equalTo(N))
       } yield allNRecordsAreReturned
     },
     test("get all by two pages") {
       for {
-        repo <- ZIO.service[VerificationPolicyRepository[Task]]
+        repo <- ZIO.service[VerificationPolicyRepository]
         first <- repo.lookup(None, offsetOpt = Some(0), limitOpt = Some(N / 2))
         second <- repo.lookup(
           None,
@@ -181,7 +239,7 @@ object VerificationPolicySqlIntegrationSpec extends ZIOSpecDefault {
     },
     test("paginate through the collection of verifiable policies") {
       for {
-        repo <- ZIO.service[VerificationPolicyRepository[Task]]
+        repo <- ZIO.service[VerificationPolicyRepository]
 
         paginator = new Paginator(skipLimit =>
           repo.lookup(
@@ -240,15 +298,15 @@ object VerificationPolicySqlIntegrationSpec extends ZIOSpecDefault {
   case class SkipLimit(skip: Int, limit: Int) {
     def next: SkipLimit = SkipLimit(skip + limit, limit)
   }
-  class Paginator[T](page: SkipLimit => Task[List[T]]) {
+  class Paginator[R, T](page: SkipLimit => RIO[R, List[T]]) {
     def fetchAll(
         from: SkipLimit,
         acc: List[T] = List.empty[T]
-    ): Task[List[T]] = {
+    ): RIO[R, List[T]] = {
       val nextPage = page(from)
       nextPage.flatMap(items => items.headOption.fold(ZIO.succeed(acc))(nonEmpty => fetchAll(from.next, acc ++ items)))
     }
 
-    def fetchPage(from: SkipLimit): Task[List[T]] = page(from)
+    def fetchPage(from: SkipLimit): RIO[R, List[T]] = page(from)
   }
 }

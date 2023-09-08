@@ -4,14 +4,19 @@ import io.iohk.atala.agent.walletapi.memory.DIDSecretStorageInMemory
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.schema.CredentialDefinition
 import io.iohk.atala.pollux.core.repository.CredentialDefinitionRepositoryInMemory
+import io.iohk.atala.shared.models.WalletId.*
+import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 
 import java.time.OffsetDateTime
 
 trait CredentialDefinitionServiceSpecHelper {
 
+  protected val defaultWalletLayer = ZLayer.succeed(WalletAccessContext(WalletId.default))
+
   protected val credentialDefinitionServiceLayer =
-    DIDSecretStorageInMemory.layer ++ CredentialDefinitionRepositoryInMemory.layer ++ ResourceURIDereferencerImpl.layer >>> CredentialDefinitionServiceImpl.layer
+    DIDSecretStorageInMemory.layer ++ CredentialDefinitionRepositoryInMemory.layer ++ ResourceURIDereferencerImpl.layer >>>
+      CredentialDefinitionServiceImpl.layer ++ defaultWalletLayer
 
   val defaultDefinition =
     """

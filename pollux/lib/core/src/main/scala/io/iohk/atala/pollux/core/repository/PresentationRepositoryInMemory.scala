@@ -1,20 +1,37 @@
 package io.iohk.atala.pollux.core.repository
 
 import io.iohk.atala.mercury.protocol.presentproof._
-import io.iohk.atala.pollux.core.model._
 import io.iohk.atala.pollux.core.model.PresentationRecord.ProtocolState
+import io.iohk.atala.pollux.core.model._
 import io.iohk.atala.pollux.core.model.error.PresentationError._
+import io.iohk.atala.shared.models.WalletAccessContext
+import io.iohk.atala.shared.models.WalletId
 import zio.*
 
 import java.time.Instant
 
 class PresentationRepositoryInMemory(
-    storeRef: Ref[Map[DidCommID, PresentationRecord]],
+    walletRefs: Ref[Map[WalletId, Ref[Map[DidCommID, PresentationRecord]]]],
     maxRetries: Int
-) extends PresentationRepository[Task] {
+) extends PresentationRepository {
 
-  override def createPresentationRecord(record: PresentationRecord): Task[Int] = {
+  private def walletStoreRef: URIO[WalletAccessContext, Ref[Map[DidCommID, PresentationRecord]]] =
     for {
+      walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
+      refs <- walletRefs.get
+      maybeWalletRef = refs.get(walletId)
+      walletRef <- maybeWalletRef
+        .fold {
+          for {
+            ref <- Ref.make(Map.empty[DidCommID, PresentationRecord])
+            _ <- walletRefs.set(refs.updated(walletId, ref))
+          } yield ref
+        }(ZIO.succeed)
+    } yield walletRef
+
+  override def createPresentationRecord(record: PresentationRecord): RIO[WalletAccessContext, Int] = {
+    for {
+      storeRef <- walletStoreRef
       _ <- for {
         store <- storeRef.get
         maybeRecord = store.values.find(_.thid == record.thid)
@@ -23,8 +40,9 @@ class PresentationRepositoryInMemory(
     } yield 1
   }
 
-  override def getPresentationRecord(recordId: DidCommID): Task[Option[PresentationRecord]] = {
+  override def getPresentationRecord(recordId: DidCommID): RIO[WalletAccessContext, Option[PresentationRecord]] = {
     for {
+      storeRef <- walletStoreRef
       store <- storeRef.get
       record = store.get(recordId)
     } yield record
@@ -32,8 +50,9 @@ class PresentationRepositoryInMemory(
 
   override def getPresentationRecords(
       ignoreWithZeroRetries: Boolean = true,
-  ): Task[Seq[PresentationRecord]] = {
+  ): RIO[WalletAccessContext, Seq[PresentationRecord]] = {
     for {
+      storeRef <- walletStoreRef
       store <- storeRef.get
     } yield store.values.toSeq
   }
@@ -42,8 +61,9 @@ class PresentationRepositoryInMemory(
       recordId: DidCommID,
       from: ProtocolState,
       to: ProtocolState
-  ): Task[Int] = {
+  ): RIO[WalletAccessContext, Int] = {
     for {
+      storeRef <- walletStoreRef
       store <- storeRef.get
       maybeRecord = store.find((id, record) => id == recordId && record.protocolState == from).map(_._2)
       count <- maybeRecord
@@ -69,8 +89,9 @@ class PresentationRepositoryInMemory(
       recordId: DidCommID,
       credentialsToUse: Option[Seq[String]],
       protocolState: ProtocolState
-  ): Task[Int] = {
+  ): RIO[WalletAccessContext, Int] = {
     for {
+      storeRef <- walletStoreRef
       maybeRecord <- getPresentationRecord(recordId)
       count <- maybeRecord
         .map(record =>
@@ -97,8 +118,9 @@ class PresentationRepositoryInMemory(
       recordId: DidCommID,
       presentation: Presentation,
       protocolState: ProtocolState
-  ): Task[Int] = {
+  ): RIO[WalletAccessContext, Int] = {
     for {
+      storeRef <- walletStoreRef
       maybeRecord <- getPresentationRecord(recordId)
       count <- maybeRecord
         .map(record =>
@@ -125,8 +147,9 @@ class PresentationRepositoryInMemory(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: ProtocolState*
-  ): Task[Seq[PresentationRecord]] = {
+  ): RIO[WalletAccessContext, Seq[PresentationRecord]] = {
     for {
+      storeRef <- walletStoreRef
       store <- storeRef.get
     } yield store.values
       .filter(rec => states.contains(rec.protocolState) & (!ignoreWithZeroRetries | rec.metaRetries > 0))
@@ -136,8 +159,9 @@ class PresentationRepositoryInMemory(
 
   override def getPresentationRecordByThreadId(
       thid: DidCommID,
-  ): Task[Option[PresentationRecord]] = {
+  ): RIO[WalletAccessContext, Option[PresentationRecord]] = {
     for {
+      storeRef <- walletStoreRef
       store <- storeRef.get
     } yield store.values.find(_.thid == thid).filter(_.metaRetries > 0)
   }
@@ -146,8 +170,9 @@ class PresentationRepositoryInMemory(
       recordId: DidCommID,
       request: RequestPresentation,
       protocolState: ProtocolState
-  ): Task[Int] = {
+  ): RIO[WalletAccessContext, Int] = {
     for {
+      storeRef <- walletStoreRef
       maybeRecord <- getPresentationRecord(recordId)
       count <- maybeRecord
         .map(record =>
@@ -173,8 +198,9 @@ class PresentationRepositoryInMemory(
       recordId: DidCommID,
       request: ProposePresentation,
       protocolState: ProtocolState
-  ): Task[Int] = {
+  ): RIO[WalletAccessContext, Int] = {
     for {
+      storeRef <- walletStoreRef
       maybeRecord <- getPresentationRecord(recordId)
       count <- maybeRecord
         .map(record =>
@@ -200,7 +226,8 @@ class PresentationRepositoryInMemory(
   def updateAfterFail(
       recordId: DidCommID,
       failReason: Option[String]
-  ): Task[Int] = for {
+  ): RIO[WalletAccessContext, Int] = for {
+    storeRef <- walletStoreRef
     maybeRecord <- getPresentationRecord(recordId)
     count <- maybeRecord
       .map(record =>
@@ -226,9 +253,9 @@ class PresentationRepositoryInMemory(
 
 object PresentationRepositoryInMemory {
   val maxRetries = 5 // TODO Move to config
-  val layer: ULayer[PresentationRepository[Task]] = ZLayer.fromZIO(
+  val layer: ULayer[PresentationRepository] = ZLayer.fromZIO(
     Ref
-      .make(Map.empty[DidCommID, PresentationRecord])
+      .make(Map.empty[WalletId, Ref[Map[DidCommID, PresentationRecord]]])
       .map(PresentationRepositoryInMemory(_, maxRetries))
   )
 }

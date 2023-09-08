@@ -18,7 +18,8 @@ import io.iohk.atala.issue.controller.http.{
 import io.iohk.atala.pollux.core.model.DidCommID
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.core.service.CredentialService
-import zio.{IO, URLayer, ZIO, ZLayer}
+import io.iohk.atala.shared.models.WalletAccessContext
+import zio.{URLayer, ZIO, ZLayer}
 
 class IssueControllerImpl(
     credentialService: CredentialService,
@@ -27,9 +28,13 @@ class IssueControllerImpl(
     with ControllerHelper {
   override def createCredentialOffer(
       request: CreateIssueCredentialRecordRequest
-  )(implicit rc: RequestContext): IO[ErrorResponse, IssueCredentialRecord] = {
-    val result: IO[ConnectionServiceError | CredentialServiceError | ErrorResponse, IssueCredentialRecord] = for {
-      didIdPair <- getPairwiseDIDs(request.connectionId).provide(ZLayer.succeed(connectionService))
+  )(implicit rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, IssueCredentialRecord] = {
+    val result: ZIO[
+      WalletAccessContext,
+      ConnectionServiceError | CredentialServiceError | ErrorResponse,
+      IssueCredentialRecord
+    ] = for {
+      didIdPair <- getPairwiseDIDs(request.connectionId).provideSomeLayer(ZLayer.succeed(connectionService))
       issuingDID <- extractPrismDIDFromString(request.issuingDID)
       jsonClaims <- ZIO
         .fromEither(io.circe.parser.parse(request.claims.toString()))
@@ -52,7 +57,7 @@ class IssueControllerImpl(
 
   override def getCredentialRecords(paginationInput: PaginationInput, thid: Option[String])(implicit
       rc: RequestContext
-  ): IO[ErrorResponse, IssueCredentialRecordPage] = {
+  ): ZIO[WalletAccessContext, ErrorResponse, IssueCredentialRecordPage] = {
     val uri = rc.request.uri
     val pagination = paginationInput.toPagination
     val result = for {
@@ -80,8 +85,8 @@ class IssueControllerImpl(
 
   override def getCredentialRecord(
       recordId: String
-  )(implicit rc: RequestContext): IO[ErrorResponse, IssueCredentialRecord] = {
-    val result: IO[CredentialServiceError | ErrorResponse, Option[IssueCredentialRecord]] = for {
+  )(implicit rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, IssueCredentialRecord] = {
+    val result: ZIO[WalletAccessContext, CredentialServiceError | ErrorResponse, Option[IssueCredentialRecord]] = for {
       id <- extractDidCommIdFromString(recordId)
       outcome <- credentialService.getIssueCredentialRecord(id)
     } yield (outcome map IssueCredentialRecord.fromDomain)
@@ -92,8 +97,8 @@ class IssueControllerImpl(
 
   override def acceptCredentialOffer(recordId: String, request: AcceptCredentialOfferRequest)(implicit
       rc: RequestContext
-  ): IO[ErrorResponse, IssueCredentialRecord] = {
-    val result: IO[CredentialServiceError | ErrorResponse, IssueCredentialRecord] = for {
+  ): ZIO[WalletAccessContext, ErrorResponse, IssueCredentialRecord] = {
+    val result: ZIO[WalletAccessContext, CredentialServiceError | ErrorResponse, IssueCredentialRecord] = for {
       id <- extractDidCommIdFromString(recordId)
       outcome <- credentialService.acceptCredentialOffer(id, request.subjectId)
     } yield IssueCredentialRecord.fromDomain(outcome)
@@ -102,17 +107,17 @@ class IssueControllerImpl(
 
   override def issueCredential(
       recordId: String
-  )(implicit rc: RequestContext): IO[ErrorResponse, IssueCredentialRecord] = {
-    val result: IO[ErrorResponse | CredentialServiceError, IssueCredentialRecord] = for {
+  )(implicit rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, IssueCredentialRecord] = {
+    val result: ZIO[WalletAccessContext, ErrorResponse | CredentialServiceError, IssueCredentialRecord] = for {
       id <- extractDidCommIdFromString(recordId)
       outcome <- credentialService.acceptCredentialRequest(id)
     } yield IssueCredentialRecord.fromDomain(outcome)
     mapIssueErrors(result)
   }
 
-  private def mapIssueErrors[T](
-      result: IO[CredentialServiceError | ConnectionServiceError | ErrorResponse, T]
-  ): IO[ErrorResponse, T] = {
+  private def mapIssueErrors[R, T](
+      result: ZIO[R, CredentialServiceError | ConnectionServiceError | ErrorResponse, T]
+  ): ZIO[R, ErrorResponse, T] = {
     result mapError {
       case e: ErrorResponse                  => e
       case connError: ConnectionServiceError => ConnectionController.toHttpError(connError)

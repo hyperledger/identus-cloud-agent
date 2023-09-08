@@ -3,13 +3,17 @@ package io.iohk.atala.agent.walletapi.storage
 import io.iohk.atala.agent.walletapi.crypto.ApolloSpecHelper
 import io.iohk.atala.agent.walletapi.model.ManagedDIDState
 import io.iohk.atala.agent.walletapi.model.PublicationState
+import io.iohk.atala.agent.walletapi.service.WalletManagementService
+import io.iohk.atala.agent.walletapi.service.WalletManagementServiceImpl
 import io.iohk.atala.agent.walletapi.sql.JdbcDIDNonSecretStorage
-import io.iohk.atala.agent.walletapi.sql.JdbcDIDSecretStorage
+import io.iohk.atala.agent.walletapi.sql.JdbcWalletNonSecretStorage
+import io.iohk.atala.agent.walletapi.sql.JdbcWalletSecretStorage
 import io.iohk.atala.castor.core.model.did.PrismDID
 import io.iohk.atala.castor.core.model.did.PrismDIDOperation
 import io.iohk.atala.castor.core.model.did.ScheduledDIDOperationStatus
+import io.iohk.atala.shared.models.WalletAccessContext
+import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
 import io.iohk.atala.test.container.DBTestUtils
-import io.iohk.atala.test.container.PostgresTestContainerSupport
 import org.postgresql.util.PSQLException
 import zio.*
 import zio.test.*
@@ -43,11 +47,19 @@ object JdbcDIDNonSecretStorageSpec
         getDIDStateSpec,
         listDIDLineageSpec,
         setDIDLineageStatusSpec
-      ) @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
+      ).globalWallet @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
 
-    testSuite.provideSomeLayer(
-      pgContainerLayer >+> (transactorLayer ++ apolloLayer) >+> JdbcDIDSecretStorage.layer >+> (DIDKeySecretStorageImpl.layer ++ JdbcDIDNonSecretStorage.layer)
-    )
+    testSuite
+      .provide(
+        JdbcDIDNonSecretStorage.layer,
+        JdbcWalletNonSecretStorage.layer,
+        JdbcWalletSecretStorage.layer,
+        WalletManagementServiceImpl.layer,
+        systemTransactorLayer,
+        contextAwareTransactorLayer,
+        pgContainerLayer,
+        apolloLayer,
+      )
   }
 
   private val listDIDStateSpec = suite("listManagedDIDState")(

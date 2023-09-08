@@ -1,5 +1,6 @@
 package io.iohk.atala.pollux.sql.repository
 
+import io.iohk.atala.shared.db.DbConfig
 import org.flywaydb.core.Flyway
 import zio.*
 

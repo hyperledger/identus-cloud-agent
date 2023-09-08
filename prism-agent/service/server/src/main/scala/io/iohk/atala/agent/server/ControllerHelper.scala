@@ -7,6 +7,7 @@ import io.iohk.atala.connect.core.model.ConnectionRecord.{ProtocolState, Role}
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.connect.core.service.ConnectionService
 import io.iohk.atala.mercury.model.DidId
+import io.iohk.atala.shared.models.WalletAccessContext
 import zio.{IO, ZIO}
 
 import java.util.UUID
@@ -28,7 +29,9 @@ trait ControllerHelper {
     }
   }
 
-  protected def getPairwiseDIDs(connectionId: String): ZIO[ConnectionService, ConnectionServiceError, DidIdPair] = {
+  protected def getPairwiseDIDs(
+      connectionId: String
+  ): ZIO[WalletAccessContext & ConnectionService, ConnectionServiceError, DidIdPair] = {
     val lookupId = UUID.fromString(connectionId)
     for {
       connectionService <- ZIO.service[ConnectionService]

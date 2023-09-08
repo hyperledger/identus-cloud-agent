@@ -2,34 +2,32 @@ package io.iohk.atala.pollux.sql
 
 import com.dimafeng.testcontainers.PostgreSQLContainer
 import doobie.*
-import doobie.implicits.*
 import doobie.util.transactor.Transactor
 import io.getquill.*
-import io.iohk.atala.pollux.sql.model.db.CredentialDefinition
-import io.iohk.atala.pollux.sql.model.db.CredentialDefinitionSql
+import io.iohk.atala.pollux.sql.model.db.{CredentialDefinition, CredentialDefinitionSql}
+import io.iohk.atala.shared.db.ContextAwareTask
+import io.iohk.atala.shared.db.Implicits.*
+import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
+import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
 import io.iohk.atala.test.container.MigrationAspects.*
-import io.iohk.atala.test.container.PostgresLayer.*
 import zio.*
-import zio.interop.catz.*
-import zio.interop.catz.implicits.*
 import zio.json.ast.Json
 import zio.test.*
 import zio.test.Assertion.*
 import zio.test.TestAspect.*
 
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
+import java.time.{OffsetDateTime, ZoneOffset}
 import java.util.UUID
 import scala.collection.mutable
 import scala.io.Source
 
-object CredentialDefinitionSqlIntegrationSpec extends ZIOSpecDefault {
+object CredentialDefinitionSqlIntegrationSpec extends ZIOSpecDefault with PostgresTestContainerSupport {
 
-  private val pgLayer = postgresLayer(verbose = false)
-  private val transactorLayer =
-    pgLayer >>> hikariConfigLayer >>> transactor
   private val testEnvironmentLayer =
-    zio.test.testEnvironment ++ pgLayer ++ transactorLayer
+    zio.test.testEnvironment ++
+      pgContainerLayer ++
+      contextAwareTransactorLayer ++
+      ZLayer.succeed(WalletAccessContext(WalletId.default))
 
   object Vocabulary {
     val verifiableCredentialTypes =
@@ -79,7 +77,7 @@ object CredentialDefinitionSqlIntegrationSpec extends ZIOSpecDefault {
     val credentialDefinitionSignatureType = Gen.alphaNumericStringBounded(4, 12)
     val credentialDefinitionSupportRevocation = Gen.boolean
 
-    val credentialDefinition: Gen[Any, CredentialDefinition] = for {
+    val credentialDefinition: Gen[WalletAccessContext, CredentialDefinition] = for {
       name <- credentialDefinitionName
       version <- credentialDefinitionVersion
       description <- credentialDefinitionDescription
@@ -94,6 +92,7 @@ object CredentialDefinitionSqlIntegrationSpec extends ZIOSpecDefault {
       schemaId <- credentialDefinitionSchemaId
       signatureType <- credentialDefinitionSignatureType
       supportRevocation <- credentialDefinitionSupportRevocation
+      walletId <- Gen.fromZIO(ZIO.serviceWith[WalletAccessContext](_.walletId))
     } yield CredentialDefinition(
       guid = id,
       id = id,
@@ -109,7 +108,8 @@ object CredentialDefinitionSqlIntegrationSpec extends ZIOSpecDefault {
       keyCorrectnessProof = JsonValue(keyCorrectnessProof),
       schemaId = schemaId,
       signatureType = signatureType,
-      supportRevocation = supportRevocation
+      supportRevocation = supportRevocation,
+      walletId = walletId
     )
 
     private val unique = mutable.Set.empty[String]
@@ -131,13 +131,13 @@ object CredentialDefinitionSqlIntegrationSpec extends ZIOSpecDefault {
   val credentialDefinitionRegistryCRUDSuite = suite("credential-definition-registry CRUD operations")(
     test("insert, findById, update and delete operations") {
       for {
-        tx <- ZIO.service[Transactor[Task]]
+        tx <- ZIO.service[Transactor[ContextAwareTask]]
 
         expected <- Generators.credentialDefinition.runCollectN(1).map(_.head)
-        _ <- CredentialDefinitionSql.insert(expected).transact(tx)
+        _ <- CredentialDefinitionSql.insert(expected).transactWallet(tx)
         actual <- CredentialDefinitionSql
           .findByGUID(expected.guid)
-          .transact(tx)
+          .transactWallet(tx)
           .map(_.headOption)
 
         credentialDefinitionCreated = assert(actual.get)(equalTo(expected))
@@ -145,20 +145,20 @@ object CredentialDefinitionSqlIntegrationSpec extends ZIOSpecDefault {
         updatedExpected = expected.copy(name = "new name")
         updatedActual <- CredentialDefinitionSql
           .update(updatedExpected)
-          .transact(tx)
+          .transactWallet(tx)
         updatedActual2 <- CredentialDefinitionSql
           .findByGUID(expected.id)
-          .transact(tx)
+          .transactWallet(tx)
           .map(_.headOption)
 
         credentialDefinitionUpdated =
           assert(updatedActual)(equalTo(updatedExpected)) &&
             assert(updatedActual2.get)(equalTo(updatedExpected))
 
-        deleted <- CredentialDefinitionSql.delete(expected.guid).transact(tx)
+        deleted <- CredentialDefinitionSql.delete(expected.guid).transactWallet(tx)
         notFound <- CredentialDefinitionSql
           .findByGUID(expected.guid)
-          .transact(tx)
+          .transactWallet(tx)
           .map(_.headOption)
 
         credentialDefinitionDeleted =
@@ -169,8 +169,8 @@ object CredentialDefinitionSqlIntegrationSpec extends ZIOSpecDefault {
     },
     test("insert N generated, findById, ensure constraint is not broken ") {
       for {
-        tx <- ZIO.service[Transactor[Task]]
-        _ <- CredentialDefinitionSql.deleteAll.transact(tx)
+        tx <- ZIO.service[Transactor[ContextAwareTask]]
+        _ <- CredentialDefinitionSql.deleteAll.transactWallet(tx)
 
         generatedCredentialDefinitions <- Generators.credentialDefinitionUnique.runCollectN(10)
 
@@ -190,20 +190,20 @@ object CredentialDefinitionSqlIntegrationSpec extends ZIOSpecDefault {
 
         _ <- ZIO.collectAll(
           generatedCredentialDefinitions.map(credentialDefinition =>
-            CredentialDefinitionSql.insert(credentialDefinition).transact(tx)
+            CredentialDefinitionSql.insert(credentialDefinition).transactWallet(tx)
           )
         )
 
         firstActual = generatedCredentialDefinitions.head
         firstExpected <- CredentialDefinitionSql
           .findByGUID(firstActual.guid)
-          .transact(tx)
+          .transactWallet(tx)
           .map(_.headOption)
 
         credentialDefinitionCreated = assert(firstActual)(equalTo(firstExpected.get))
 
-        totalCount <- CredentialDefinitionSql.totalCount.transact(tx)
-        lookupCount <- CredentialDefinitionSql.lookupCount().transact(tx)
+        totalCount <- CredentialDefinitionSql.totalCount.transactWallet(tx)
+        lookupCount <- CredentialDefinitionSql.lookupCount().transactWallet(tx)
 
         totalCountIsN = assert(totalCount)(equalTo(generatedCredentialDefinitions.length))
         lookupCountIsN = assert(lookupCount)(equalTo(generatedCredentialDefinitions.length))

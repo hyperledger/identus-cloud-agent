@@ -3,8 +3,9 @@ package io.iohk.atala.pollux.core.service
 import com.nimbusds.jose.jwk.*
 import io.iohk.atala.mercury.model.{AttachmentDescriptor, DidId}
 import io.iohk.atala.mercury.protocol.presentproof.*
-import io.iohk.atala.mercury.{AgentPeerService, DidAgent, PeerDID}
+import io.iohk.atala.mercury.{AgentPeerService, PeerDID}
 import io.iohk.atala.pollux.core.model.*
+import io.iohk.atala.pollux.core.repository.PresentationRepository
 import io.iohk.atala.pollux.core.repository.{
   CredentialRepository,
   CredentialRepositoryInMemory,
@@ -21,10 +22,12 @@ trait PresentationServiceSpecHelper {
 
   val peerDidAgentLayer =
     AgentPeerService.makeLayer(PeerDID.makePeerDid(serviceEndpoint = Some("http://localhost:9099")))
-  val presentationServiceLayer =
-    PresentationRepositoryInMemory.layer ++ CredentialRepositoryInMemory.layer ++ peerDidAgentLayer >>> PresentationServiceImpl.layer
-  val presentationEnvLayer =
-    PresentationRepositoryInMemory.layer ++ CredentialRepositoryInMemory.layer ++ presentationServiceLayer
+
+  val presentationServiceLayer = ZLayer.make[PresentationService & PresentationRepository & CredentialRepository](
+    PresentationServiceImpl.layer,
+    PresentationRepositoryInMemory.layer,
+    CredentialRepositoryInMemory.layer
+  )
 
   def createIssuer(did: DID) = {
     val keyGen = KeyPairGenerator.getInstance("EC")
@@ -110,7 +113,7 @@ trait PresentationServiceSpecHelper {
 
   protected def issueCredentialRecord = IssueCredentialRecord(
     id = DidCommID(),
-    createdAt = Instant.ofEpochSecond(Instant.now.getEpochSecond()),
+    createdAt = Instant.now,
     updatedAt = None,
     thid = DidCommID(),
     schemaId = None,
