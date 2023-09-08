@@ -61,6 +61,8 @@ jobs:
       - name: Start services for issuer
         env:
           PORT: 8080
+          DEFAULT_WALLET_ENABLED: "true"
+          DEFAULT_WALLET_AUTH_API_KEY: default
         uses: isbang/compose-action@v1.4.1
         with:
           compose-file: "./infrastructure/shared/docker-compose.yml"
@@ -71,6 +73,8 @@ jobs:
       - name: Start services for holder
         env:
           PORT: 8090
+          DEFAULT_WALLET_ENABLED: "true"
+          DEFAULT_WALLET_AUTH_API_KEY: default
         uses: isbang/compose-action@v1.4.1
         with:
           compose-file: "./infrastructure/shared/docker-compose.yml"
@@ -97,6 +101,9 @@ jobs:
           dir: ${{ env.BENCHMARKING_DIR }}
 
       - name: Connection Flow Smoke Test
+        env:
+          ISSUER_AGENT_API_KEY: default
+          HOLDER_AGENT_API_KEY: default
         run: |
           # Have to use manual download because GitHub action doesnt support localhost execution
           curl https://github.com/grafana/k6/releases/download/v0.45.0/k6-v0.45.0-linux-amd64.tar.gz -L | tar xvz --strip-components 1
