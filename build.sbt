@@ -575,7 +575,7 @@ lazy val agentDidcommx = project
 lazy val agentCliDidcommx = project
   .in(file("mercury/mercury-library/agent-cli-didcommx"))
   .settings(name := "mercury-agent-cli-didcommx")
-  .settings(libraryDependencies += "com.google.zxing" % "core" % "3.5.0")
+  .settings(libraryDependencies += "com.google.zxing" % "core" % "3.5.2")
   .settings(libraryDependencies += D.zioHttp)
   .dependsOn(agentDidcommx)
 
