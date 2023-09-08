@@ -68,7 +68,7 @@ lazy val V = new {
   val quill = "4.6.0.1"
   val flyway = "9.8.3"
   val postgresDriver = "42.2.27"
-  val logback = "1.4.8"
+  val logback = "1.4.11"
   val slf4j = "2.0.7"
 
   val prismSdk = "1.4.1" // scala-steward:off
@@ -756,7 +756,9 @@ lazy val prismAgentWalletAPI = project
   .settings(prismAgentConnectCommonSettings)
   .settings(
     name := "prism-agent-wallet-api",
-    libraryDependencies ++= D_PrismAgent.keyManagementDependencies ++ D_PrismAgent.postgresDependencies ++ Seq(D.zioMock)
+    libraryDependencies ++= D_PrismAgent.keyManagementDependencies ++ D_PrismAgent.postgresDependencies ++ Seq(
+      D.zioMock
+    )
   )
   .dependsOn(
     agentDidcommx,
