@@ -23,3 +23,24 @@
 {{- define "labels.common" -}}
 app.kubernetes.io/part-of: prism-agent
 {{- end -}}
+{{- define "headers.security" }}
+    - name: response-rewrite
+      enable: true
+      config:
+        headers:
+          set:
+            X-Content-Type-Options: "nosniff"
+            X-Frame-Options: "deny"
+            Content-Security-Policy: "default-src 'self' data:; script-src 'self'; connect-src 'self'; img-src 'self' data:; style-src 'self'; frame-ancestors 'self'; form-action 'self';"
+            Strict-Transport-Security: "dmax-age=31536000; includeSubDomains"
+            Referrer-Policy: "same-origin"
+            Cache-Control: "no-cache, no-store"
+          remove: ["Server"]
+{{- end -}}
+{{- define "headers.requestId" }}
+    - name: request-id
+      enable: true
+      config:
+        header_name: "X-Request-ID"
+        include_in_response: true
+{{- end -}}
