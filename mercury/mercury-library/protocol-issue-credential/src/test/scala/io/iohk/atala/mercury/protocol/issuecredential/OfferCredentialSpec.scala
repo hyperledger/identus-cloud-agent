@@ -20,13 +20,13 @@ class OfferCredentialSpec extends ZSuite {
 
     val expectedOfferCredentialJson = parse(s"""{
          |    "id": "041bf917-2cbe-460b-8d12-b1a9609505c2",
-         |    "type": "https://didcomm.org/issue-credential/2.0/offer-credential",
+         |    "type": "https://didcomm.org/issue-credential/3.0/offer-credential",
          |    "body":
          |    {
          |        "goal_code": "Offer Credential",
          |        "credential_preview":
          |        {
-         |            "type": "https://didcomm.org/issue-credential/2.0/credential-preview",
+         |            "type": "https://didcomm.org/issue-credential/3.0/credential-preview",
          |            "attributes":
          |            [
          |                {

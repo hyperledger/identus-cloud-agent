@@ -40,15 +40,19 @@ class UtilsCredentialSpec extends ZSuite {
       .build(
         fromDID = DidId("did:prism:test123from"),
         toDID = DidId("did:prism:test123to"),
-        credentials = Map(nameCredentialType -> credential.asJson.noSpaces.getBytes()),
+        credentials =
+          Seq(IssueCredentialIssuedFormat.Unsupported(nameCredentialType) -> credential.asJson.noSpaces.getBytes()),
       )
       .makeMessage
 
     val obj = IssueCredential.readFromMessage(msg)
 
     assertEquals(obj.getCredentialFormatAndCredential.size, 1)
-    assertEquals(obj.getCredentialFormatAndCredential.keySet, Set(nameCredentialType))
-    assertEquals(obj.getCredential[TestCredentialType](nameCredentialType), Some(credential))
+    assertEquals(
+      obj.getCredentialFormatAndCredential.map(_._2),
+      Seq(IssueCredentialIssuedFormat.Unsupported(nameCredentialType).name)
+    )
+    assertEquals(obj.getCredential[TestCredentialType](nameCredentialType).headOption, Some(credential))
   }
 
   test("OfferCredential encode and decode any type of Credential into the attachments") {
@@ -58,15 +62,19 @@ class UtilsCredentialSpec extends ZSuite {
         fromDID = DidId("did:prism:test123from"),
         toDID = DidId("did:prism:test123to"),
         credential_preview = credentialPreview,
-        credentials = Map(nameCredentialType -> credential.asJson.noSpaces.getBytes()),
+        credentials =
+          Seq(IssueCredentialOfferFormat.Unsupported(nameCredentialType) -> credential.asJson.noSpaces.getBytes()),
       )
       .makeMessage
 
     val obj = OfferCredential.readFromMessage(msg)
 
     assertEquals(obj.getCredentialFormatAndCredential.size, 1)
-    assertEquals(obj.getCredentialFormatAndCredential.keySet, Set(nameCredentialType))
-    assertEquals(obj.getCredential[TestCredentialType](nameCredentialType), Some(credential))
+    assertEquals(
+      obj.getCredentialFormatAndCredential.map(_._2),
+      Seq(IssueCredentialOfferFormat.Unsupported(nameCredentialType).name)
+    )
+    assertEquals(obj.getCredential[TestCredentialType](nameCredentialType).headOption, Some(credential))
   }
 
   test("ProposeCredential encode and decode any type of Credential into the attachments") {
@@ -76,15 +84,19 @@ class UtilsCredentialSpec extends ZSuite {
         fromDID = DidId("did:prism:test123from"),
         toDID = DidId("did:prism:test123to"),
         credential_preview = credentialPreview,
-        credentials = Map(nameCredentialType -> credential.asJson.noSpaces.getBytes()),
+        credentials =
+          Seq(IssueCredentialProposeFormat.Unsupported(nameCredentialType) -> credential.asJson.noSpaces.getBytes()),
       )
       .makeMessage
 
     val obj = ProposeCredential.readFromMessage(msg)
 
     assertEquals(obj.getCredentialFormatAndCredential.size, 1)
-    assertEquals(obj.getCredentialFormatAndCredential.keySet, Set(nameCredentialType))
-    assertEquals(obj.getCredential[TestCredentialType](nameCredentialType), Some(credential))
+    assertEquals(
+      obj.getCredentialFormatAndCredential.map(_._2),
+      Seq(IssueCredentialProposeFormat.Unsupported(nameCredentialType).name)
+    )
+    assertEquals(obj.getCredential[TestCredentialType](nameCredentialType).headOption, Some(credential))
   }
 
   test("RequestCredential encode and decode any type of Credential into the attachments") {
@@ -93,14 +105,18 @@ class UtilsCredentialSpec extends ZSuite {
       .build(
         fromDID = DidId("did:prism:test123from"),
         toDID = DidId("did:prism:test123to"),
-        credentials = Map(nameCredentialType -> credential.asJson.noSpaces.getBytes()),
+        credentials =
+          Seq(IssueCredentialRequestFormat.Unsupported(nameCredentialType) -> credential.asJson.noSpaces.getBytes()),
       )
       .makeMessage
 
     val obj = RequestCredential.readFromMessage(msg)
 
     assertEquals(obj.getCredentialFormatAndCredential.size, 1)
-    assertEquals(obj.getCredentialFormatAndCredential.keySet, Set(nameCredentialType))
-    assertEquals(obj.getCredential[TestCredentialType](nameCredentialType), Some(credential))
+    assertEquals(
+      obj.getCredentialFormatAndCredential.map(_._2),
+      Seq(IssueCredentialRequestFormat.Unsupported(nameCredentialType).name)
+    )
+    assertEquals(obj.getCredential[TestCredentialType](nameCredentialType).headOption, Some(credential))
   }
 }

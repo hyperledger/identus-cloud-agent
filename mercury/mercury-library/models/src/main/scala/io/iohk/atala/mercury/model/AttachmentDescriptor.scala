@@ -94,10 +94,11 @@ final case class AttachmentDescriptor(
     id: String,
     media_type: Option[String] = None,
     data: AttachmentData = Base64(""),
+    format: Option[String] = None,
     filename: Option[String] = None,
     lastmod_time: Option[Long] = None,
     byte_count: Option[Long] = None,
-    description: Option[String] = None
+    description: Option[String] = None,
 )
 
 object AttachmentDescriptor {
@@ -105,19 +106,21 @@ object AttachmentDescriptor {
   def buildBase64Attachment(
       id: String = java.util.UUID.randomUUID.toString,
       payload: Array[Byte],
-      mediaType: Option[String] = None
+      mediaType: Option[String] = None,
+      format: Option[String] = None,
   ): AttachmentDescriptor = {
     val encoded = JBase64.getUrlEncoder.encodeToString(payload)
-    AttachmentDescriptor(id, mediaType, Base64(encoded))
+    AttachmentDescriptor(id, mediaType, Base64(encoded), format = format)
   }
 
   def buildJsonAttachment[A](
       id: String = java.util.UUID.randomUUID.toString,
       payload: A,
-      mediaType: Option[String] = Some("application/json")
+      mediaType: Option[String] = Some("application/json"),
+      format: Option[String] = None,
   )(using Encoder[A]): AttachmentDescriptor = {
     val jsonObject = payload.asJson.asObject.getOrElse(JsonObject.empty)
-    AttachmentDescriptor(id, mediaType, JsonData(jsonObject)) // use JsonData or Base64 by default?
+    AttachmentDescriptor(id, mediaType, JsonData(jsonObject), format = format) // use JsonData or Base64 by default?
   }
 
   given attachmentDescriptorEncoderV1: Encoder[AttachmentDescriptor] = (a: AttachmentDescriptor) => {

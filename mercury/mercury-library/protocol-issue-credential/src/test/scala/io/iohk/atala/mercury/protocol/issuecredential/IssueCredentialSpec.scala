@@ -24,7 +24,7 @@ class IssueCredentialSpec extends ZSuite {
 
     val expectedProposalJson = parse(s"""{
                          |    "id": "061bf917-2cbe-460b-8d12-b1a9609505c2",
-                         |    "type": "https://didcomm.org/issue-credential/2.0/issue-credential",
+                         |    "type": "https://didcomm.org/issue-credential/3.0/issue-credential",
                          |    "body":
                          |    {
                          |        "goal_code": "Issued Credential",

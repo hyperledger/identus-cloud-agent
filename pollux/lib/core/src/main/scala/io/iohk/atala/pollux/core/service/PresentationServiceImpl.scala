@@ -64,6 +64,7 @@ private class PresentationServiceImpl(
       record <- ZIO
         .fromOption(maybeRecord)
         .mapError(_ => RecordIdNotFound(recordId))
+      fixme = record.requestPresentationData.get /////////////////////////////////////////////////////////////////////////////////////
       credentialsToUse <- ZIO
         .fromOption(record.credentialsToUse)
         .mapError(_ => InvalidFlowStateError(s"No request found for this record: $recordId"))
@@ -232,23 +233,27 @@ private class PresentationServiceImpl(
       requestPresentation: RequestPresentation,
       prover: Issuer
   ): IO[PresentationError, PresentationPayload] = {
-    type ANOTHER_PAYLOAD_TYPE = Any // FIXME
-    type ErrorOrPayload = // FIXME
-      Either[PresentationError.PresentationDecodingError, Seq[JwtVerifiableCredentialPayload | ANOTHER_PAYLOAD_TYPE]]
 
-    val verifiableCredentials: ErrorOrPayload =
+    val verifiableCredentials: Either[
+      PresentationError.PresentationDecodingError,
+      Seq[JwtVerifiableCredentialPayload | AnoncredVerifiableCredentialPayload]
+    ] =
       issuedCredentials.map { issuedCredential =>
-        val typePrismJWT = IssuedCredentialRaw.formatPrismJWT
-        val typeAnoncred = IssuedCredentialRaw.formatPrismAnoncred
-        issuedCredential.signedCredential match {
-          case `typePrismJWT` =>
+        issuedCredential.format match {
+          case CredentialFormat.PrismJWT =>
             decode[io.iohk.atala.mercury.model.Base64](issuedCredential.signedCredential)
               .flatMap(x => Right(new String(java.util.Base64.getDecoder().decode(x.base64))))
               .flatMap(x => Right(JwtVerifiableCredentialPayload(JWT(x))))
               .left
               .map(err => PresentationDecodingError(new Throwable(s"JsonData decoding error: $err")))
-          case `typeAnoncred` => ??? // TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-          case any            => ??? // FIXME ERROR this is a unsupported format
+          case CredentialFormat.PrismAnoncred =>
+            decode[io.iohk.atala.mercury.model.Base64](issuedCredential.signedCredential)
+              .flatMap(x => Right(new String(java.util.Base64.getDecoder().decode(x.base64))))
+              .flatMap(x => Right(AnoncredVerifiableCredentialPayload(x)))
+              .left
+              .map(err => PresentationDecodingError(new Throwable(s"JsonData decoding error: $err")))
+          case CredentialFormat.UnsupportedCredentialFormat(otherFormat) =>
+            Left(PresentationDecodingError(new Throwable(s"This is a UnsupportedCredentialFormat: $otherFormat")))
         }
       }.sequence
 

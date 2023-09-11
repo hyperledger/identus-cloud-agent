@@ -20,13 +20,13 @@ class ProposeCredentialSpec extends ZSuite {
 
     val expectedProposalJson = parse(s"""{
                          |    "id": "031bf917-2cbe-460b-8d12-b1a9609505c2",
-                         |    "type": "https://didcomm.org/issue-credential/2.0/propose-credential",
+                         |    "type": "https://didcomm.org/issue-credential/3.0/propose-credential",
                          |    "body":
                          |    {
                          |        "goal_code": "Propose Credential",
                          |        "credential_preview":
                          |        {
-                         |            "type": "https://didcomm.org/issue-credential/2.0/credential-preview",
+                         |            "type": "https://didcomm.org/issue-credential/3.0/credential-preview",
                          |            "attributes":
                          |            [
                          |                {

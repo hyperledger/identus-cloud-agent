@@ -44,25 +44,23 @@ object IssueCredential {
   given Encoder[IssueCredential] = deriveEncoder[IssueCredential]
   given Decoder[IssueCredential] = deriveDecoder[IssueCredential]
 
-  def `type`: PIURI = "https://didcomm.org/issue-credential/2.0/issue-credential"
+  def `type`: PIURI = "https://didcomm.org/issue-credential/3.0/issue-credential"
 
   def build(
       fromDID: DidId,
       toDID: DidId,
       thid: Option[String] = None,
-      credentials: Map[String, Array[Byte]],
+      credentials: Seq[(IssueCredentialIssuedFormat, Array[Byte])],
   ): IssueCredential = {
-    val aux = credentials.map { case (formatName, singleCredential) =>
-      val attachment = AttachmentDescriptor.buildBase64Attachment(payload = singleCredential)
-      val credentialFormat: CredentialFormat = CredentialFormat(attachment.id, formatName)
-      (credentialFormat, attachment)
-    }
+    val attachments = credentials.map { case (format, singleCredential) =>
+      AttachmentDescriptor.buildBase64Attachment(payload = singleCredential, format = Some(format.name))
+    }.toSeq
     IssueCredential(
       thid = thid,
       from = fromDID,
       to = toDID,
-      body = Body(formats = aux.keys.toSeq),
-      attachments = aux.values.toSeq
+      body = Body(),
+      attachments = attachments
     )
   }
   final case class Body(
@@ -70,8 +68,7 @@ object IssueCredential {
       comment: Option[String] = None,
       replacement_id: Option[String] = None,
       more_available: Option[String] = None,
-      formats: Seq[CredentialFormat] = Seq.empty[CredentialFormat],
-  ) extends BodyUtils
+  )
   object Body {
     given Encoder[Body] = deriveEncoder[Body]
     given Decoder[Body] = deriveDecoder[Body]
@@ -86,7 +83,7 @@ object IssueCredential {
         comment = rc.body.comment,
         replacement_id = None,
         more_available = None,
-        formats = rc.body.formats,
+        // formats = rc.body.formats,
       ),
       attachments = rc.attachments,
       thid = msg.thid.orElse(Some(rc.id)),
