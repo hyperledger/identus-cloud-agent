@@ -599,7 +599,8 @@ private class CredentialServiceImpl(
           AttachmentDescriptor.buildBase64Attachment(
             id = attachmentId,
             mediaType = Some("application/json"),
-            format = Some(IssueCredentialOfferFormat.Anoncred.name) payload = offer.data.getBytes()
+            format = Some(IssueCredentialOfferFormat.Anoncred.name),
+            payload = offer.data.getBytes()
           )
         )
       }

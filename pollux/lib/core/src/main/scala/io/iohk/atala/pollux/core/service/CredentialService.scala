@@ -16,6 +16,7 @@ import zio.{IO, ZIO}
 
 import java.nio.charset.StandardCharsets
 import java.time.Instant
+import java.util.UUID
 
 trait CredentialService {
 
