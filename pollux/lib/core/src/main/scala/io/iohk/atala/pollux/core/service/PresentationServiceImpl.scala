@@ -74,22 +74,23 @@ private class PresentationServiceImpl(
       issuedValidCredentials <- credentialRepository
         .getValidIssuedCredentials(credentialsToUse.map(DidCommID(_)))
         .mapError(RepositoryError.apply)
-
-      issuedRawCredentials = issuedValidCredentials.flatMap(
-        _.issuedCredentialRaw.map(data => IssuedCredentialRaw(signedCredential = data, format = ???)) // FIXME
-      )
-
+      signedCredentials = issuedValidCredentials.flatMap(_.issuedCredentialRaw)
       issuedCredentials <- ZIO.fromEither(
         Either.cond(
-          issuedRawCredentials.nonEmpty,
-          issuedRawCredentials,
+          signedCredentials.nonEmpty,
+          signedCredentials,
           PresentationError.IssuedCredentialNotFoundError(
             new Throwable("No matching issued credentials found in prover db")
           )
         )
       )
 
-      presentationPayload <- createPresentationPayloadFromCredential(issuedCredentials, requestPresentation, prover)
+      presentationPayload <- createPresentationPayloadFromCredential(
+        issuedCredentials,
+        record.credentialFormat,
+        requestPresentation,
+        prover
+      )
     } yield presentationPayload
   }
 
@@ -162,6 +163,7 @@ private class PresentationServiceImpl(
           role = PresentationRecord.Role.Verifier,
           subjectId = pairwiseProverDID,
           protocolState = PresentationRecord.ProtocolState.RequestPending,
+          credentialFormat = ???, // FIXME
           requestPresentationData = Some(request),
           proposePresentationData = None,
           presentationData = None,
@@ -209,6 +211,7 @@ private class PresentationServiceImpl(
           role = Role.Prover,
           subjectId = request.to,
           protocolState = PresentationRecord.ProtocolState.RequestReceived,
+          credentialFormat = ???, // FIXME
           requestPresentationData = Some(request),
           proposePresentationData = None,
           presentationData = None,
@@ -229,7 +232,8 @@ private class PresentationServiceImpl(
   }
 
   private def createPresentationPayloadFromCredential(
-      issuedCredentials: Seq[IssuedCredentialRaw],
+      issuedCredentials: Seq[String],
+      format: CredentialFormat,
       requestPresentation: RequestPresentation,
       prover: Issuer
   ): IO[PresentationError, PresentationPayload] = {
@@ -238,22 +242,22 @@ private class PresentationServiceImpl(
       PresentationError.PresentationDecodingError,
       Seq[JwtVerifiableCredentialPayload | AnoncredVerifiableCredentialPayload]
     ] =
-      issuedCredentials.map { issuedCredential =>
-        issuedCredential.format match {
-          case CredentialFormat.PrismJWT =>
-            decode[io.iohk.atala.mercury.model.Base64](issuedCredential.signedCredential)
+      issuedCredentials.map { signedCredential =>
+        format match {
+          case CredentialFormat.JWT =>
+            decode[io.iohk.atala.mercury.model.Base64](signedCredential)
               .flatMap(x => Right(new String(java.util.Base64.getDecoder().decode(x.base64))))
               .flatMap(x => Right(JwtVerifiableCredentialPayload(JWT(x))))
               .left
               .map(err => PresentationDecodingError(new Throwable(s"JsonData decoding error: $err")))
-          case CredentialFormat.PrismAnoncred =>
-            decode[io.iohk.atala.mercury.model.Base64](issuedCredential.signedCredential)
+          case CredentialFormat.AnonCreds =>
+            decode[io.iohk.atala.mercury.model.Base64](signedCredential)
               .flatMap(x => Right(new String(java.util.Base64.getDecoder().decode(x.base64))))
               .flatMap(x => Right(AnoncredVerifiableCredentialPayload(x)))
               .left
               .map(err => PresentationDecodingError(new Throwable(s"JsonData decoding error: $err")))
-          case CredentialFormat.UnsupportedCredentialFormat(otherFormat) =>
-            Left(PresentationDecodingError(new Throwable(s"This is a UnsupportedCredentialFormat: $otherFormat")))
+          // case CredentialFormat.Unsupported(otherFormat) =>
+          //   Left(PresentationDecodingError(new Throwable(s"This is a UnsupportedCredentialFormat: $otherFormat")))
         }
       }.sequence
 
@@ -327,13 +331,15 @@ private class PresentationServiceImpl(
               .map(_.subjectId)}"
         )
       )
-      issuedRawCredentials = issuedValidCredentials.flatMap(
-        _.issuedCredentialRaw.map(data => IssuedCredentialRaw(signedCredential = data, format = ???)) // FIXME
-      )
+      signedCredentials = issuedValidCredentials.flatMap(_.issuedCredentialRaw)
+      // record.credentialFormat match {
+      //   case PresentationRecord.CredentialFormat.JWT => issuedRawCredentials
+      //   case CredentialFormat.AnonCreds => issuedRawCredentials
+      // }
       issuedCredentials <- ZIO.fromEither(
         Either.cond(
-          issuedRawCredentials.nonEmpty,
-          issuedRawCredentials,
+          signedCredentials.nonEmpty,
+          signedCredentials,
           PresentationError.IssuedCredentialNotFoundError(
             new Throwable(s"No matching issued credentials found in prover db from the given: $credentialsToUse")
           )

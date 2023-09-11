@@ -10,7 +10,7 @@ import io.iohk.atala.iris.proto.service.IrisOperationId
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
 import io.iohk.atala.iris.proto.vc_operations.IssueCredentialsBatch
 import io.iohk.atala.mercury.model.{AttachmentDescriptor, Base64, DidId, JsonData}
-import io.iohk.atala.mercury.protocol.issuecredential.{CredentialFormat as MercuryCredentialFormat, *}
+import io.iohk.atala.mercury.protocol.issuecredential.*
 import io.iohk.atala.pollux.*
 import io.iohk.atala.pollux.anoncreds.{AnoncredLib, CreateCredentialDefinition}
 import io.iohk.atala.pollux.core.model.*
@@ -536,16 +536,13 @@ private class CredentialServiceImpl(
   ) = {
     for {
       credentialPreview <- ZIO.succeed(CredentialPreview(schema_id = schemaId, attributes = claims))
-      attachmentId = java.util.UUID.randomUUID.toString
       body = OfferCredential.Body(
         goal_code = Some("Offer Credential"),
         credential_preview = credentialPreview,
-        formats = Seq(MercuryCredentialFormat(attachmentId, MercuryCredentialFormat.JWT))
       )
       attachments <- ZIO.succeed(
         Seq(
           AttachmentDescriptor.buildJsonAttachment(
-            id = attachmentId,
             mediaType = Some("application/json"),
             format = Some(IssueCredentialOfferFormat.JWT.name),
             payload = PresentationAttachment(
@@ -574,18 +571,16 @@ private class CredentialServiceImpl(
   ) = {
     for {
       credentialPreview <- ZIO.succeed(CredentialPreview(schema_id = Some(schemaId), attributes = claims))
-      attachmentId = java.util.UUID.randomUUID.toString
       body = OfferCredential.Body(
         goal_code = Some("Offer Credential"),
         credential_preview = credentialPreview,
-        formats = Seq(MercuryCredentialFormat(attachmentId, MercuryCredentialFormat.AnonCreds))
       )
       attachments <- createAnonCredsOffer(credentialDefinitionId).map { offer =>
         Seq(
           AttachmentDescriptor.buildBase64Attachment(
-            id = attachmentId,
             mediaType = Some("application/json"),
-            format = Some(IssueCredentialOfferFormat.Anoncred.name) payload = offer.data.getBytes()
+            format = Some(IssueCredentialOfferFormat.Anoncred.name),
+            payload = offer.data.getBytes()
           )
         )
       }

@@ -64,10 +64,6 @@ object IssueCredentialRecord {
     case Issuer extends Role
     case Holder extends Role
 
-  enum CredentialFormat:
-    case JWT extends CredentialFormat
-    case AnonCreds extends CredentialFormat
-
   enum ProtocolState:
     // Issuer has created an offer in a database, but it has not been sent yet (in Issuer DB)
     case OfferPending extends ProtocolState

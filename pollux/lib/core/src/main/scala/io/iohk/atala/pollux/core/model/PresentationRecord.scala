@@ -5,6 +5,7 @@ import io.iohk.atala.mercury.protocol.presentproof.RequestPresentation
 import io.iohk.atala.mercury.protocol.presentproof.Presentation
 import io.iohk.atala.mercury.model.DidId
 import java.time.Instant
+
 final case class PresentationRecord(
     id: DidCommID,
     createdAt: Instant,
@@ -15,6 +16,7 @@ final case class PresentationRecord(
     role: PresentationRecord.Role,
     subjectId: DidId,
     protocolState: PresentationRecord.ProtocolState,
+    credentialFormat: CredentialFormat,
     requestPresentationData: Option[RequestPresentation],
     proposePresentationData: Option[ProposePresentation],
     presentationData: Option[Presentation],
