@@ -1,3 +1,47 @@
+## [1.14.2](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v1.14.1...prism-agent-v1.14.2) (2023-09-06)
+
+
+### Bug Fixes
+
+* add missing leading '/' in rewrite rule target ([#692](https://github.com/input-output-hk/atala-prism-building-blocks/issues/692)) ([f2be228](https://github.com/input-output-hk/atala-prism-building-blocks/commit/f2be22895c893525b50a0848d2951e668c5fe688))
+
+## [1.14.1](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v1.14.0...prism-agent-v1.14.1) (2023-09-06)
+
+
+### Bug Fixes
+
+* APISIX config route and rule names too long ([#691](https://github.com/input-output-hk/atala-prism-building-blocks/issues/691)) ([bef008e](https://github.com/input-output-hk/atala-prism-building-blocks/commit/bef008ecb8f07a7e92cba1ba009a343af7a71adb))
+
+# [1.14.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v1.13.0...prism-agent-v1.14.0) (2023-09-06)
+
+
+### Bug Fixes
+
+* change private sdk 1.4 to public maven ([#685](https://github.com/input-output-hk/atala-prism-building-blocks/issues/685)) ([128bcac](https://github.com/input-output-hk/atala-prism-building-blocks/commit/128bcac5b7006b485ea3dc9272fde29d159f1a03))
+* **prism-agent:** update invitation expiration on connection request ([#687](https://github.com/input-output-hk/atala-prism-building-blocks/issues/687)) ([1a1702f](https://github.com/input-output-hk/atala-prism-building-blocks/commit/1a1702fc4e62b4a03a4e4ee32ac7419ea67a4ea1))
+
+
+### Features
+
+* **prism-agent:** add syncwave to certificate to fix race condition with tls ([#686](https://github.com/input-output-hk/atala-prism-building-blocks/issues/686)) ([854dcf9](https://github.com/input-output-hk/atala-prism-building-blocks/commit/854dcf96c48defcb1f44062c3dfd88555dcaebe1))
+
+# [1.13.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v1.12.0...prism-agent-v1.13.0) (2023-09-06)
+
+
+### Bug Fixes
+
+* another indentation in apisixroute ([#683](https://github.com/input-output-hk/atala-prism-building-blocks/issues/683)) ([d7c5e52](https://github.com/input-output-hk/atala-prism-building-blocks/commit/d7c5e526c2b40897b3e26a8272468f21fc1dd81f))
+* correct vault path ([#678](https://github.com/input-output-hk/atala-prism-building-blocks/issues/678)) ([9426e7f](https://github.com/input-output-hk/atala-prism-building-blocks/commit/9426e7f069e2dd72c18b1e09f7b34b2d37854771))
+* CredentialOffer not following spec ([#569](https://github.com/input-output-hk/atala-prism-building-blocks/issues/569)) ([3d479b9](https://github.com/input-output-hk/atala-prism-building-blocks/commit/3d479b9fc0c0bdb0aa78b8c4e2edc8d287a0b6d9))
+* indentation in apisixroute ([#682](https://github.com/input-output-hk/atala-prism-building-blocks/issues/682)) ([6eec8ba](https://github.com/input-output-hk/atala-prism-building-blocks/commit/6eec8ba6a32ce088eaaeafe953c4ff554d4765ab))
+* **prism-agent:** fix added the InvitationGenerated state to the conn… ([#684](https://github.com/input-output-hk/atala-prism-building-blocks/issues/684)) ([7fdffe3](https://github.com/input-output-hk/atala-prism-building-blocks/commit/7fdffe3990ea08bd6dad5f9d2124146cb8efcff4))
+* **prism-agent:** make resolve did representation content type work ([#679](https://github.com/input-output-hk/atala-prism-building-blocks/issues/679)) ([fd417d9](https://github.com/input-output-hk/atala-prism-building-blocks/commit/fd417d9bdac0db98bc3de7a84e4d3277aef3c403))
+
+
+### Features
+
+* **prism-agent:** metrics for issuance flow ([#669](https://github.com/input-output-hk/atala-prism-building-blocks/issues/669)) ([20315ae](https://github.com/input-output-hk/atala-prism-building-blocks/commit/20315aedea3c8c2953cfd5ee391feb10fbc1146c))
+
 # [1.12.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v1.11.0...prism-agent-v1.12.0) (2023-08-31)
 
 

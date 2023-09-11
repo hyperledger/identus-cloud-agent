@@ -1,5 +1,5 @@
-import org.scoverage.coveralls.Imports.CoverallsKeys.*
 import sbtbuildinfo.BuildInfoPlugin.autoImport.*
+import org.scoverage.coveralls.Imports.CoverallsKeys.*
 
 inThisBuild(
   Seq(
@@ -71,7 +71,7 @@ lazy val V = new {
   val logback = "1.4.8"
   val slf4j = "2.0.7"
 
-  val prismSdk = "v1.4.1" // scala-steward:off
+  val prismSdk = "1.4.1" // scala-steward:off
   val scalaUri = "4.0.3"
 
   val jwtCirceVersion = "9.1.2"
@@ -113,8 +113,9 @@ lazy val D = new {
   val didcommx: ModuleID = "org.didcommx" % "didcomm" % "0.3.1"
   val peerDidcommx: ModuleID = "org.didcommx" % "peerdid" % "0.3.0"
   val didScala: ModuleID = "app.fmgp" %% "did" % "0.0.0+113-61efa271-SNAPSHOT"
-  // https://mvnrepository.com/artifact/com.nimbusds/nimbus-jose-jwt/9.16-preview.1
-  val jwk: ModuleID = "com.nimbusds" % "nimbus-jose-jwt" % "10.0.0-preview"
+  // Customized version of numbus jose jwt
+  // from https://github.com/goncalo-frade-iohk/Nimbus-JWT_Fork/commit/8a6665c25979e771afae29ce8c965c8b0312fefb
+  val jwk: ModuleID = "io.iohk.atala" % "nimbus-jose-jwt" % "10.0.0"
 
   val typesafeConfig: ModuleID = "com.typesafe" % "config" % V.typesafeConfig
   val scalaPbRuntime: ModuleID =
@@ -623,8 +624,6 @@ val irisClient = project
 
 val castorCommonSettings = Seq(
   testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
-  githubTokenSource := TokenSource.Environment("GITHUB_TOKEN"),
-  resolvers += Resolver.githubPackages("input-output-hk"),
   // Needed for Kotlin coroutines that support new memory management mode
   resolvers += "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven"
 )
@@ -645,8 +644,6 @@ lazy val castorCore = project
 
 val polluxCommonSettings = Seq(
   testFrameworks ++= Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
-  githubTokenSource := TokenSource.Environment("GITHUB_TOKEN"),
-  resolvers += Resolver.githubPackages("input-output-hk"),
   // Needed for Kotlin coroutines that support new memory management mode
   resolvers += "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven"
 )

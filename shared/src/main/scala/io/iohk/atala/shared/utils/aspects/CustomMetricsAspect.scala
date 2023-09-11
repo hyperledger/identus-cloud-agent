@@ -36,6 +36,7 @@ object CustomMetricsAspect {
           res <- zio
           end <- now
           maybeStart = checkpoints.get(key)
+          _ = checkpoints.remove(key)
           metricsZio = maybeStart.map(start => Duration.between(start, end)).fold(ZIO.unit) { duration =>
             ZIO.succeed(duration.toMetricsSeconds) @@ Metric.gauge(metricsKey).tagged(tags)
           }

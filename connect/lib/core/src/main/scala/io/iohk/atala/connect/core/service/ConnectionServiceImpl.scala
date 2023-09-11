@@ -17,7 +17,7 @@ import zio.*
 import java.rmi.UnexpectedException
 import java.time.Instant
 import java.util.UUID
-
+import java.time.Duration
 private class ConnectionServiceImpl(
     connectionRepository: ConnectionRepository,
     maxRetries: Int = 5, // TODO move to config
@@ -187,13 +187,25 @@ private class ConnectionServiceImpl(
     }
 
   override def receiveConnectionRequest(
-      request: ConnectionRequest
+      request: ConnectionRequest,
+      expirationTime: Option[Duration] = None
   ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
     for {
       record <- getRecordFromThreadIdAndState(
         Some(request.thid.orElse(request.pthid).getOrElse(request.id)),
         ProtocolState.InvitationGenerated
       )
+      _ <- expirationTime.fold {
+        ZIO.unit
+      } { expiryDuration =>
+        val actualDuration = Duration.between(record.createdAt, Instant.now())
+        if (actualDuration > expiryDuration) {
+          for {
+            _ <- markConnectionInvitationExpired(record.id)
+            result <- ZIO.fail(InvitationExpired(record.id.toString))
+          } yield result
+        } else ZIO.unit
+      }
       _ <- connectionRepository
         .updateWithConnectionRequest(record.id, request, ProtocolState.ConnectionRequestReceived, maxRetries)
         .flatMap {

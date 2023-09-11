@@ -8,6 +8,7 @@ import io.iohk.atala.mercury.protocol.connection.{ConnectionRequest, ConnectionR
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.{URLayer, ZIO, ZLayer}
 
+import java.time.Duration
 import java.util.UUID
 
 class ConnectionServiceNotifier(
@@ -40,9 +41,10 @@ class ConnectionServiceNotifier(
     notifyOnSuccess(svc.markConnectionRequestSent(recordId))
 
   override def receiveConnectionRequest(
-      request: ConnectionRequest
+      request: ConnectionRequest,
+      expirationTime: Option[Duration]
   ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
-    notifyOnSuccess(svc.receiveConnectionRequest(request))
+    notifyOnSuccess(svc.receiveConnectionRequest(request, expirationTime))
 
   override def acceptConnectionRequest(
       recordId: UUID
@@ -54,7 +56,6 @@ class ConnectionServiceNotifier(
   ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
     notifyOnSuccess(svc.markConnectionResponseSent(recordId))
 
-  // FIXME: should it be context aware????
   override def markConnectionInvitationExpired(
       recordId: UUID
   ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =

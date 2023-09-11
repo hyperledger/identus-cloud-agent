@@ -4,15 +4,13 @@ import io.getquill.context.json.PostgresJsonExtensions
 import io.getquill.doobie.DoobieContext
 import io.getquill.*
 import zio.IO
-//import doobie.implicits.*
 import zio.*
 import zio.interop.catz.*
-//import doobie.implicits.*
 
 import java.util.UUID
 
 enum AuthenticationMethodType(val value: String) {
-  case ApiKey extends AuthenticationMethodType("api-key")
+  case ApiKey extends AuthenticationMethodType("apikey")
 }
 
 case class AuthenticationMethod(

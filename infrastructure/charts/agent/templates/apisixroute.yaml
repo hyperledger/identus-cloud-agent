@@ -34,6 +34,8 @@ spec:
         rejected_message: "access to metrics resource is not allowed from an external location"
     {{ template "cors" . }}
     {{ template "consumer-restriction" . }}
+    {{ template "headers.requestId" . }}
+    {{ template "headers.security" . }}
 
 ---
 
@@ -63,6 +65,8 @@ spec:
       config:
         regex_uri: ["^/prism-agent/didcomm(.*)", "/$1"]
     {{ template "cors" . }}
+    {{ template "headers.requestId" . }}
+    {{ template "headers.security" . }}
 
 ---
 
@@ -94,6 +98,41 @@ spec:
       config:
         regex_uri: ["^/prism-agent/schema-registry/schemas/(.*)", "/schema-registry/schemas/$1"]
     {{ template "cors" . }}
+    {{ template "headers.requestId" . }}
+    {{ template "headers.security" . }}
+
+---
+
+apiVersion: apisix.apache.org/v2
+kind: ApisixRoute
+metadata:
+  name: agent-cred-def-registry-route
+  namespace: "{{ .Release.Namespace }}"
+  labels:
+    {{ template "labels.common" . }}
+spec:
+  http:
+  - name: agent-cred-def-registry-rule
+    match:
+      hosts:
+      {{- range .Values.ingress.applicationUrls }}
+      - {{ . }}
+      {{- end }}
+      paths:
+        - /prism-agent/credential-definition-registry/definitions/*
+      methods:
+        - GET
+    backends:
+      - serviceName: agent-server-tapir-service
+        servicePort: 8085
+    plugins:
+    - name: proxy-rewrite
+      enable: true
+      config:
+        regex_uri: ["^/prism-agent/credential-definition-registry/definitions/(.*)", "/credential-definition-registry/definitions/$1"]
+    {{ template "cors" . }}
+    {{ template "headers.requestId" . }}
+    {{ template "headers.security" . }}
 
 ---
 
@@ -154,6 +193,8 @@ spec:
       config:
         regex_uri: ["^/prism-agent/docs/(.*)","/docs/$1"]
     {{ template "cors" . }}
+    {{ template "headers.requestId" . }}
+    {{ template "headers.security" . }}
 
 ---
 {{- end }}

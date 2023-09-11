@@ -201,24 +201,24 @@ object EntityEndpoints {
   ] = endpoint.post
     .securityIn(adminApiKeyHeader)
     .in(extractFromRequest[RequestContext](RequestContext.apply))
-    .in("iam" / "api-key-authentication")
+    .in("iam" / "apikey-authentication")
     .in(
       jsonBody[ApiKeyAuthenticationRequest]
         .description(
-          "JSON object required for the registering the entity and `api-key`"
+          "JSON object required for the registering the entity and `apikey`"
         )
     )
     .out(
       statusCode(StatusCode.Created)
         .description(
-          "The new `api-key` is successfully registered for the entity"
+          "The new `apikey` is successfully registered for the entity"
         )
     )
     .errorOut(basicFailureAndNotFoundAndForbidden)
     .name("addEntityApiKeyAuthentication")
-    .summary("Register the `api-key` for the entity")
+    .summary("Register the `apikey` for the entity")
     .description(
-      "Register the `api-key` for the entity."
+      "Register the `apikey` for the entity."
     )
     .tag("Identity and Access Management")
 
@@ -231,24 +231,24 @@ object EntityEndpoints {
   ] = endpoint.delete
     .securityIn(adminApiKeyHeader)
     .in(extractFromRequest[RequestContext](RequestContext.apply))
-    .in("iam" / "api-key-authentication")
+    .in("iam" / "apikey-authentication")
     .in(
       jsonBody[ApiKeyAuthenticationRequest]
         .description(
-          "JSON object required for the unregistering the entity and `api-key`"
+          "JSON object required for the unregistering the entity and `apikey`"
         )
     )
     .out(
       statusCode(StatusCode.Ok)
         .description(
-          "The new `api-key` is successfully unregistered for the entity"
+          "The new `apikey` is successfully unregistered for the entity"
         )
     )
     .errorOut(basicFailureAndNotFoundAndForbidden)
     .name("deleteEntityApiKeyAuthentication")
-    .summary("Unregister the `api-key` for the entity")
+    .summary("Unregister the `apikey` for the entity")
     .description(
-      "Unregister the `api-key` for the entity."
+      "Unregister the `apikey` for the entity."
     )
     .tag("Identity and Access Management")
 }

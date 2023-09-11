@@ -3,6 +3,7 @@ package io.iohk.atala.agent.server
 import io.circe.*
 import io.circe.parser.*
 import io.iohk.atala.agent.server.DidCommHttpServerError.{DIDCommMessageParsingError, RequestBodyParsingError}
+import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError
 import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError.{KeyNotFoundError, WalletNotFoundError}
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
@@ -44,7 +45,7 @@ object DidCommHttpServer {
 
   private def didCommServiceEndpoint: HttpApp[
     DidOps & CredentialService & PresentationService & ConnectionService & ManagedDIDService & HttpClient &
-      DIDResolver & DIDNonSecretStorage,
+      DIDResolver & DIDNonSecretStorage & AppConfig,
     Nothing
   ] = Http.collectZIO[Request] {
     case req @ Method.POST -> !!
@@ -122,7 +123,7 @@ object DidCommHttpServer {
    * Connect
    */
   private val handleConnect: PartialFunction[Message, ZIO[
-    ConnectionService & WalletAccessContext,
+    ConnectionService & WalletAccessContext & AppConfig,
     DIDCommMessageParsingError | ConnectionServiceError,
     Unit
   ]] = {
@@ -133,8 +134,12 @@ object DidCommHttpServer {
           .mapError(DIDCommMessageParsingError.apply)
         _ <- ZIO.logInfo("As an Inviter in connect got ConnectionRequest: " + connectionRequest)
         connectionService <- ZIO.service[ConnectionService]
-        maybeRecord <- connectionService.receiveConnectionRequest(connectionRequest)
-        _ <- connectionService.acceptConnectionRequest(maybeRecord.id)
+        config <- ZIO.service[AppConfig]
+        record <- connectionService.receiveConnectionRequest(
+          connectionRequest,
+          Some(config.connect.connectInvitationExpiry)
+        )
+        _ <- connectionService.acceptConnectionRequest(record.id)
       } yield ()
     case msg if msg.piuri == ConnectionResponse.`type` =>
       for {

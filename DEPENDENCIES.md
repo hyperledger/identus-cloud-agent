@@ -357,4 +357,3 @@ unrecognized                 | [none specified](none specified)                 
 unrecognized                 | [none specified](none specified)                                                                   | io.iohk.atala # prism-protos-jvm # v1.4.1                                                                                                   | <notextile></notextile>
 unrecognized                 | [none specified](none specified)                                                                   | [io.iohk.atala # shared # 1.11.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks)                                  | <notextile></notextile>
 unrecognized                 | [none specified](none specified)                                                                   | [net.jcip # jcip-annotations # 1.0](http://jcip.net/)                                                                                       | <notextile></notextile>
-

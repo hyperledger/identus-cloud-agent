@@ -81,11 +81,6 @@ trait CredentialDefinitionTestTools extends PostgresTestContainerSupport {
       PostgreSQLContainer & Authenticator & DIDSecretStorage
   ](
     controllerLayer,
-//    CredentialDefinitionControllerImpl.layer,
-//    CredentialDefinitionServiceImpl.layer,
-//    JdbcCredentialDefinitionRepository.layer,
-//    contextAwareTransactorLayer,
-//    systemTransactorLayer,
     pgContainerLayer,
     authenticatorLayer
   )
