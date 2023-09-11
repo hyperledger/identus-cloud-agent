@@ -34,6 +34,8 @@ spec:
         rejected_message: "access to metrics resource is not allowed from an external location"
     {{ template "cors" . }}
     {{ template "consumer-restriction" . }}
+    {{ template "headers.requestId" . }}
+    {{ template "headers.security" . }}
 
 ---
 
@@ -63,6 +65,8 @@ spec:
       config:
         regex_uri: ["^/prism-agent/didcomm(.*)", "/$1"]
     {{ template "cors" . }}
+    {{ template "headers.requestId" . }}
+    {{ template "headers.security" . }}
 
 ---
 
@@ -94,6 +98,8 @@ spec:
       config:
         regex_uri: ["^/prism-agent/schema-registry/schemas/(.*)", "/schema-registry/schemas/$1"]
     {{ template "cors" . }}
+    {{ template "headers.requestId" . }}
+    {{ template "headers.security" . }}
 
 ---
 
@@ -124,7 +130,9 @@ spec:
       enable: true
       config:
         regex_uri: ["^/prism-agent/credential-definition-registry/definitions/(.*)", "/credential-definition-registry/definitions/$1"]
-      {{ template "cors" . }}
+    {{ template "cors" . }}
+    {{ template "headers.requestId" . }}
+    {{ template "headers.security" . }}
 
 ---
 
@@ -154,6 +162,8 @@ spec:
       config:
         regex_uri: ["^/prism-agent/docs/(.*)","/docs/$1"]
     {{ template "cors" . }}
+    {{ template "headers.requestId" . }}
+    {{ template "headers.security" . }}
 
 ---
 {{- end }}
