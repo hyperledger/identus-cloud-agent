@@ -8,7 +8,12 @@ import io.iohk.atala.connect.controller.ConnectionController
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.connect.core.service.ConnectionService
 import io.iohk.atala.issue.controller.IssueController.toHttpError
-import io.iohk.atala.issue.controller.http.{AcceptCredentialOfferRequest, CreateIssueCredentialRecordRequest, IssueCredentialRecord, IssueCredentialRecordPage}
+import io.iohk.atala.issue.controller.http.{
+  AcceptCredentialOfferRequest,
+  CreateIssueCredentialRecordRequest,
+  IssueCredentialRecord,
+  IssueCredentialRecordPage
+}
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.core.model.{CredentialFormat, DidCommID}
 import io.iohk.atala.pollux.core.service.CredentialService
@@ -40,7 +45,7 @@ class IssueControllerImpl(
           thid = DidCommID(),
           schemaId = request.schemaId,
           credentialDefinitionId = request.credentialDefinitionId,
-          credentialFormat = CredentialFormat.valueOf(request.credentialFormat),
+          credentialFormat = request.credentialFormat.map(CredentialFormat.valueOf).getOrElse(CredentialFormat.JWT),
           claims = jsonClaims,
           validityPeriod = request.validityPeriod,
           automaticIssuance = request.automaticIssuance.orElse(Some(true)),

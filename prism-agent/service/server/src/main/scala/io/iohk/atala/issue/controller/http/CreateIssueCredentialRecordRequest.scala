@@ -38,7 +38,7 @@ final case class CreateIssueCredentialRecordRequest(
     credentialDefinitionId: Option[UUID],
     @description(annotations.credentialFormat.description)
     @encodedExample(annotations.credentialFormat.example)
-    credentialFormat: String,
+    credentialFormat: Option[String],
     @description(annotations.claims.description)
     @encodedExample(annotations.claims.example)
     claims: zio.json.ast.Json,
@@ -78,13 +78,13 @@ object CreateIssueCredentialRecordRequest {
         )
 
     object credentialFormat
-        extends Annotation[String](
-          description = "The format used for this credential offer",
-          example = "JWT",
+        extends Annotation[Option[String]](
+          description = "The format used for this credential offer (default to 'JWT')",
+          example = Some("JWT"),
           validator = Validator.enumeration(
             List(
-              "JWT",
-              "AnonCreds"
+              Some("JWT"),
+              Some("AnonCreds")
             )
           )
         )
