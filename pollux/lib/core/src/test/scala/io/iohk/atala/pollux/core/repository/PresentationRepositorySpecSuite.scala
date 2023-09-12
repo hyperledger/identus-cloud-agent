@@ -26,6 +26,7 @@ object PresentationRepositorySpecSuite {
     role = PresentationRecord.Role.Verifier,
     subjectId = DidId("did:prism:aaa"),
     protocolState = PresentationRecord.ProtocolState.RequestPending,
+    credentialFormat = CredentialFormat.JWT,
     requestPresentationData = None,
     proposePresentationData = None,
     presentationData = None,

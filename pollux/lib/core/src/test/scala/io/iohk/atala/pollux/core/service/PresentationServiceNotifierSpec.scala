@@ -4,7 +4,7 @@ import io.iohk.atala.event.notification.{EventNotificationService, EventNotifica
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.presentproof.{Presentation, RequestPresentation}
 import io.iohk.atala.pollux.core.model.PresentationRecord.ProtocolState
-import io.iohk.atala.pollux.core.model.{DidCommID, PresentationRecord}
+import io.iohk.atala.pollux.core.model.{CredentialFormat, DidCommID, PresentationRecord}
 import zio.mock.Expectation
 import zio.test.{Assertion, Spec, TestEnvironment, ZIOSpecDefault, assertTrue}
 import zio.{Scope, ZIO, ZLayer}
@@ -25,6 +25,7 @@ object PresentationServiceNotifierSpec extends ZIOSpecDefault with PresentationS
     PresentationRecord.Role.Verifier,
     DidId(""),
     ProtocolState.RequestPending,
+    CredentialFormat.JWT,
     None,
     None,
     None,

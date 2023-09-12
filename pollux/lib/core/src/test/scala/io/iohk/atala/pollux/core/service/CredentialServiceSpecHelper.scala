@@ -116,7 +116,7 @@ trait CredentialServiceSpecHelper {
         thid = thid,
         schemaId = schemaId,
         credentialDefinitionId = None,
-        credentialFormat = IssueCredentialRecord.CredentialFormat.JWT,
+        credentialFormat = CredentialFormat.JWT,
         claims = claims,
         validityPeriod = validityPeriod,
         automaticIssuance = automaticIssuance,
