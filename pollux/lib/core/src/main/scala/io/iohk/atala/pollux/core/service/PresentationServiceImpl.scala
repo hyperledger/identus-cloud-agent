@@ -64,7 +64,6 @@ private class PresentationServiceImpl(
       record <- ZIO
         .fromOption(maybeRecord)
         .mapError(_ => RecordIdNotFound(recordId))
-      fixme = record.requestPresentationData.get /////////////////////////////////////////////////////////////////////////////////////
       credentialsToUse <- ZIO
         .fromOption(record.credentialsToUse)
         .mapError(_ => InvalidFlowStateError(s"No request found for this record: $recordId"))
@@ -231,6 +230,7 @@ private class PresentationServiceImpl(
     } yield record
   }
 
+  /** All credentials MUST be of the same format */
   private def createPresentationPayloadFromCredential(
       issuedCredentials: Seq[String],
       format: CredentialFormat,
@@ -256,8 +256,6 @@ private class PresentationServiceImpl(
               .flatMap(x => Right(AnoncredVerifiableCredentialPayload(x)))
               .left
               .map(err => PresentationDecodingError(new Throwable(s"JsonData decoding error: $err")))
-          // case CredentialFormat.Unsupported(otherFormat) =>
-          //   Left(PresentationDecodingError(new Throwable(s"This is a UnsupportedCredentialFormat: $otherFormat")))
         }
       }.sequence
 
