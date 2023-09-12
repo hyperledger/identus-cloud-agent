@@ -31,13 +31,13 @@ isolated wallet environment using the PRISM Agent.
 
 ## Endpoints
 
-| Endpoint | Description | Role |
-|-|-|-|
-| `GET /wallets` | List the wallets on PRISM Agent | Administrator |
-| `POST /wallets` | Create a new wallet on PRISM Agent | Administrator |
-| `POST /iam/entities` | Create a new entity on PRISM Agent | Administrator |
+| Endpoint                          | Description                                | Role          |
+|-----------------------------------|--------------------------------------------|---------------|
+| `GET /wallets`                    | List the wallets on PRISM Agent            | Administrator |
+| `POST /wallets`                   | Create a new wallet on PRISM Agent         | Administrator |
+| `POST /iam/entities`              | Create a new entity on PRISM Agent         | Administrator |
 | `POST /iam/apikey-authentication` | Create a new authentication for the entity | Administrator |
-| `GET /did-registrar/dids` | List the DIDs inside the wallet | Tenant |
+| `GET /did-registrar/dids`         | List the DIDs inside the wallet            | Tenant        |
 
 ## Administrator interactions
 
@@ -150,7 +150,7 @@ HTTP code 201 returns in the case of the successful request execution.
 
 With the `apikey` provisioned by the administrator, the tenant is able to authenticate and use PRISM Agent.
 
-### 1. Perform sample action by listing DID in the wallet
+### 1. Perform a simple action to verify access to PRISM Agent
 
 To prove that the tenant can be authenticated as the created entity and use the wallet,
 try listing the DIDs in the wallet using `apikey` header.
