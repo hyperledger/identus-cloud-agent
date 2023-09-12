@@ -136,10 +136,8 @@ There could be some incompatibilities between the most latest versions of Enterp
 
 | Cloud Agent | PRISM Node |
 |-------------|------------|
-| 1.12.0      | 2.2.1      |
-| 1.9.2       | 2.2.1      |
-| 1.6.0       | 2.1.1      |
-| 1.4.0       | 2.1.1      |
+| >=1.9.2     | 2.2.1      |
+| <1.9.2      | 2.1.1      |
 
 > Please note: it is not guaranteed that the latest version of Enterprise Cloud Agent will work with the latest version of PRISM Node. We recommend using the versions from the table above.
 
