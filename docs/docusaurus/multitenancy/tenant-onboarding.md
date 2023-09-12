@@ -23,7 +23,7 @@ In tenant management, there are 2 roles:
 
 ## Overview
 
-This is a structured guide on how to onboard a new tenant from scratch.
+This is a guide on how to onboard a new tenant from scratch.
 This tutorial will demonstrate the creation of a new entity representing the tenant,
 the provisioning of a wallet, and enabling an authentication method for this tenant.
 Subsequently, the tenant will gain the capability to engage in SSI activities within an
@@ -129,7 +129,6 @@ Response Example:
 
 With the new tenant now equipped with both a wallet and an entity,
 the final step involves setting up the entity's authentication method.
-This task can only be performed by the administrator.
 Once this step is completed, the administrator should provide the tenant with an `apikey`, granting them access to utilize the Agent.
 
 ```bash
