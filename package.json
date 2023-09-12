@@ -1,6 +1,6 @@
 {
   "name": "atala-prism-building-blocks",
-  "version": "1.14.2",
+  "version": "1.15.0",
   "engines": {
     "node": ">=16.13.0"
   },
