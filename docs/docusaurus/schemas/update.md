@@ -186,7 +186,7 @@ The curl example might be the following:
 curl -X 'PUT' \
   'http://localhost:8080/prism-agent/schema-registry/schemas/f2bfbf78-8bd6-4cc6-8b39-b3a25e01e8ea' \
   -H 'accept: application/json' \
-  -H "apiKey: $API_KEY" \
+  -H "apikey: $API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{
   "name": "driving-license",

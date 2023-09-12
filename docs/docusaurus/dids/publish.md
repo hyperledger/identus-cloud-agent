@@ -50,7 +50,7 @@ When a DID gets created and not published, it has the status of `CREATED`.
 
 ```bash
 curl --location --request GET 'http://localhost:8080/prism-agent/did-registrar/dids/{didRef}' \
---header "apiKey: $API_KEY" \
+--header "apikey: $API_KEY" \
 --header 'Accept: application/json'
 ```
 
@@ -69,7 +69,7 @@ To publish a DID, use DID Controller `POST` a request to `/did-registrar/dids/{d
 
 ```bash
 curl --location --request POST 'http://localhost:8080/prism-agent/did-registrar/dids/{didRef}/publications' \
---header "apiKey: $API_KEY" \
+--header "apikey: $API_KEY" \
 --header 'Accept: application/json'
 ```
 
@@ -128,6 +128,6 @@ Replace `{didRef}` with the short-form DID; the response should return a DID doc
 
 ```bash
 curl --location --request GET 'http://localhost:8080/prism-agent/dids/{didRef}' \
---header "apiKey: $API_KEY" \
+--header "apikey: $API_KEY" \
 --header 'Accept: */*'
 ```
