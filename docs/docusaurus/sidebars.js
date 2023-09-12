@@ -70,7 +70,14 @@ const sidebars = {
       type: 'category',
       label: 'Webhooks',
       items: [
-        'webhooks/webhook',
+        'webhooks/webhook'
+      ]
+    },
+    {
+      type: 'category',
+      label: 'Multi-Tenancy',
+      items: [
+        'multitenancy/tenant-onboarding'
       ]
     }
   ]
