@@ -8,15 +8,9 @@ import io.iohk.atala.connect.controller.ConnectionController
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.connect.core.service.ConnectionService
 import io.iohk.atala.issue.controller.IssueController.toHttpError
-import io.iohk.atala.issue.controller.http.{
-  AcceptCredentialOfferRequest,
-  CreateIssueCredentialRecordRequest,
-  IssueCredentialRecord,
-  IssueCredentialRecordPage
-}
-import io.iohk.atala.pollux.core.model.DidCommID
-import io.iohk.atala.pollux.core.model.IssueCredentialRecord.CredentialFormat
+import io.iohk.atala.issue.controller.http.{AcceptCredentialOfferRequest, CreateIssueCredentialRecordRequest, IssueCredentialRecord, IssueCredentialRecordPage}
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
+import io.iohk.atala.pollux.core.model.{CredentialFormat, DidCommID}
 import io.iohk.atala.pollux.core.service.CredentialService
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.{URLayer, ZIO, ZLayer}

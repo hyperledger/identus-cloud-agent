@@ -4,7 +4,11 @@ import cats.syntax.all.*
 import io.circe.parser.*
 import io.circe.syntax.*
 import io.iohk.atala.agent.server.config.AppConfig
-import io.iohk.atala.agent.server.jobs.BackgroundJobError.{ErrorResponseReceivedFromPeerAgent, InvalidState, NotImplemented}
+import io.iohk.atala.agent.server.jobs.BackgroundJobError.{
+  ErrorResponseReceivedFromPeerAgent,
+  InvalidState,
+  NotImplemented
+}
 import io.iohk.atala.agent.walletapi.model.*
 import io.iohk.atala.agent.walletapi.model.error.*
 import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError.KeyNotFoundError
@@ -20,7 +24,14 @@ import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.error.PresentationError.*
 import io.iohk.atala.pollux.core.model.error.{CredentialServiceError, PresentationError}
 import io.iohk.atala.pollux.core.service.{CredentialService, PresentationService}
-import io.iohk.atala.pollux.vc.jwt.{ES256KSigner, JWT, JwtPresentation, W3CCredential, DidResolver as JwtDidResolver, Issuer as JwtIssuer}
+import io.iohk.atala.pollux.vc.jwt.{
+  ES256KSigner,
+  JWT,
+  JwtPresentation,
+  W3CCredential,
+  DidResolver as JwtDidResolver,
+  Issuer as JwtIssuer
+}
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.utils.DurationOps.toMetricsSeconds
 import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
@@ -404,7 +415,7 @@ object BackgroundJobs {
               fromDID = issue.from,
               toDID = issue.to,
               thid = issue.thid,
-              credentials = Map("prims/jwt" -> signedJwtCredential.value.getBytes)
+              credentials = Seq(IssueCredentialIssuedFormat.JWT -> signedJwtCredential.value.getBytes)
             )
             _ <- credentialService.markCredentialGenerated(id, issueCredential)
 
@@ -652,15 +663,16 @@ object BackgroundJobs {
         // ##########################
         // ### PresentationRecord ###
         // ##########################
-        case PresentationRecord(id, _, _, _, _, _, _, _, ProposalPending, _, _, _, _, _, _, _) =>
+        case PresentationRecord(id, _, _, _, _, _, _, _, ProposalPending, _, _, _, _, _, _, _, _) =>
           ZIO.fail(NotImplemented)
-        case PresentationRecord(id, _, _, _, _, _, _, _, ProposalSent, _, _, _, _, _, _, _) => ZIO.fail(NotImplemented)
-        case PresentationRecord(id, _, _, _, _, _, _, _, ProposalReceived, _, _, _, _, _, _, _) =>
+        case PresentationRecord(id, _, _, _, _, _, _, _, ProposalSent, _, _, _, _, _, _, _, _) =>
           ZIO.fail(NotImplemented)
-        case PresentationRecord(id, _, _, _, _, _, _, _, ProposalRejected, _, _, _, _, _, _, _) =>
+        case PresentationRecord(id, _, _, _, _, _, _, _, ProposalReceived, _, _, _, _, _, _, _, _) =>
+          ZIO.fail(NotImplemented)
+        case PresentationRecord(id, _, _, _, _, _, _, _, ProposalRejected, _, _, _, _, _, _, _, _) =>
           ZIO.fail(NotImplemented)
 
-        case PresentationRecord(id, _, _, _, _, _, _, _, RequestPending, oRecord, _, _, _, _, _, _) => // Verifier
+        case PresentationRecord(id, _, _, _, _, _, _, _, RequestPending, _, oRecord, _, _, _, _, _, _) => // Verifier
           oRecord match
             case None => ZIO.fail(InvalidState("PresentationRecord 'RequestPending' with no Record"))
             case Some(record) =>
@@ -676,17 +688,17 @@ object BackgroundJobs {
                 }
               } yield ()
 
-        case PresentationRecord(id, _, _, _, _, _, _, _, RequestSent, _, _, _, _, _, _, _) => // Verifier
+        case PresentationRecord(id, _, _, _, _, _, _, _, RequestSent, _, _, _, _, _, _, _, _) => // Verifier
           ZIO.logDebug("PresentationRecord: RequestSent") *> ZIO.unit
-        case PresentationRecord(id, _, _, _, _, _, _, _, RequestReceived, _, _, _, _, _, _, _) => // Prover
+        case PresentationRecord(id, _, _, _, _, _, _, _, RequestReceived, _, _, _, _, _, _, _, _) => // Prover
           ZIO.logDebug("PresentationRecord: RequestReceived") *> ZIO.unit
-        case PresentationRecord(id, _, _, _, _, _, _, _, RequestRejected, _, _, _, _, _, _, _) => // Prover
+        case PresentationRecord(id, _, _, _, _, _, _, _, RequestRejected, _, _, _, _, _, _, _, _) => // Prover
           ZIO.logDebug("PresentationRecord: RequestRejected") *> ZIO.unit
-        case PresentationRecord(id, _, _, _, _, _, _, _, ProblemReportPending, _, _, _, _, _, _, _) =>
+        case PresentationRecord(id, _, _, _, _, _, _, _, ProblemReportPending, _, _, _, _, _, _, _, _) =>
           ZIO.fail(NotImplemented)
-        case PresentationRecord(id, _, _, _, _, _, _, _, ProblemReportSent, _, _, _, _, _, _, _) =>
+        case PresentationRecord(id, _, _, _, _, _, _, _, ProblemReportSent, _, _, _, _, _, _, _, _) =>
           ZIO.fail(NotImplemented)
-        case PresentationRecord(id, _, _, _, _, _, _, _, ProblemReportReceived, _, _, _, _, _, _, _) =>
+        case PresentationRecord(id, _, _, _, _, _, _, _, ProblemReportReceived, _, _, _, _, _, _, _, _) =>
           ZIO.fail(NotImplemented)
         case PresentationRecord(
               id,
@@ -698,6 +710,7 @@ object BackgroundJobs {
               _,
               _,
               PresentationPending,
+              _,
               oRequestPresentation,
               _,
               _,
@@ -744,7 +757,7 @@ object BackgroundJobs {
             _ <- presentationService.markPresentationGenerated(id, presentation)
 
           } yield ()
-        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationGenerated, _, _, presentation, _, _, _, _) =>
+        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationGenerated, _, _, _, presentation, _, _, _, _) =>
           ZIO.logDebug("PresentationRecord: PresentationGenerated") *> ZIO.unit
           presentation match
             case None => ZIO.fail(InvalidState("PresentationRecord in 'PresentationPending' with no Presentation"))
@@ -761,7 +774,7 @@ object BackgroundJobs {
                   else ZIO.fail(ErrorResponseReceivedFromPeerAgent(resp))
                 }
               } yield ()
-        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationSent, _, _, _, _, _, _, _) =>
+        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationSent, _, _, _, _, _, _, _, _) =>
           ZIO.logDebug("PresentationRecord: PresentationSent") *> ZIO.unit
         case PresentationRecord(
               id,
@@ -773,6 +786,7 @@ object BackgroundJobs {
               _,
               _,
               PresentationReceived,
+              _,
               mayBeRequestPresentation,
               _,
               presentation,
@@ -860,13 +874,13 @@ object BackgroundJobs {
                 }
 
               } yield ()
-        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationVerificationFailed, _, _, _, _, _, _, _) =>
+        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationVerificationFailed, _, _, _, _, _, _, _, _) =>
           ZIO.logDebug("PresentationRecord: PresentationVerificationFailed") *> ZIO.unit
-        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationAccepted, _, _, _, _, _, _, _) =>
+        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationAccepted, _, _, _, _, _, _, _, _) =>
           ZIO.logDebug("PresentationRecord: PresentationVerifiedAccepted") *> ZIO.unit
-        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationVerified, _, _, _, _, _, _, _) =>
+        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationVerified, _, _, _, _, _, _, _, _) =>
           ZIO.logDebug("PresentationRecord: PresentationVerified") *> ZIO.unit
-        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationRejected, _, _, _, _, _, _, _) =>
+        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationRejected, _, _, _, _, _, _, _, _) =>
           ZIO.logDebug("PresentationRecord: PresentationRejected") *> ZIO.unit
       }
     } yield ()

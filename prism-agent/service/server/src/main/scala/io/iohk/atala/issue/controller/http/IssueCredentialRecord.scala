@@ -111,7 +111,7 @@ object IssueCredentialRecord {
       automaticIssuance = domain.automaticIssuance,
       protocolState = domain.protocolState.toString,
       jwtCredential = domain.issueCredentialData.flatMap(issueCredential => {
-        issueCredential.attachments.collectFirst { case AttachmentDescriptor(_, _, Base64(jwt), _, _, _, _) =>
+        issueCredential.attachments.collectFirst { case AttachmentDescriptor(_, _, Base64(jwt), _, _, _, _, _) =>
           jwt
         }
       })
