@@ -32,8 +32,11 @@ import java.time.{Instant, ZoneId}
 import java.util.UUID
 
 object CredentialServiceImpl {
-  val layer: URLayer[IrisServiceStub & CredentialRepository & DidResolver & URIDereferencer & DIDSecretStorage &
-    CredentialDefinitionService, CredentialService] =
+  val layer: URLayer[
+    IrisServiceStub & CredentialRepository & DidResolver & URIDereferencer & DIDSecretStorage &
+      CredentialDefinitionService,
+    CredentialService
+  ] =
     ZLayer.fromFunction(CredentialServiceImpl(_, _, _, _, _, _))
 
 //  private val VC_JSON_SCHEMA_URI = "https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json"
@@ -206,11 +209,13 @@ private class CredentialServiceImpl(
               )
         }
       attachment = offer.attachments.head // TODO FIXME head
-      credentialFormat = attachment.format match
-        case Some(value) if (value == IssueCredentialOfferFormat.JWT.name)      => CredentialFormat.JWT
-        case Some(value) if (value == IssueCredentialOfferFormat.Anoncred.name) => CredentialFormat.AnonCreds
-        case None                                                               => ??? // FIXME Missing format
-        case Some(value)                                                        => ??? // FIXME Unsupported format
+      credentialFormat <- attachment.format match
+        case Some(value) if (value == IssueCredentialOfferFormat.JWT.name) =>
+          ZIO.succeed(CredentialFormat.JWT)
+        case Some(value) if (value == IssueCredentialOfferFormat.Anoncred.name) =>
+          ZIO.succeed(CredentialFormat.AnonCreds)
+        case None        => ZIO.fail(MissingCredentialFormat)
+        case Some(value) => ZIO.fail(UnsupportedCredentialFormat(value))
       record <- ZIO.succeed(
         IssueCredentialRecord(
           id = DidCommID(),
@@ -643,7 +648,7 @@ private class CredentialServiceImpl(
           .buildBase64Attachment(
             mediaType = Some("application/json"),
             format = Some(format.name),
-            // FIXME yeah copy payload will probabli not work for anoncreds... !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            // FIXME copy payload will probably not work for anoncreds!
             payload = signedPresentation.value.getBytes(),
           )
       ),

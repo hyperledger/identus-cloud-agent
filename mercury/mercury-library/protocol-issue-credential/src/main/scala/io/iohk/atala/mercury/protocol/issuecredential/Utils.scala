@@ -6,13 +6,8 @@ import io.circe.parser._
 import io.iohk.atala.mercury.model._
 import io.circe.Decoder
 
-// private[this] trait BodyUtils {
-//   def formats: Seq[CredentialFormat]
-// }
-
 private[this] trait ReadAttachmentsUtils {
 
-  // def body: BodyUtils
   def attachments: Seq[AttachmentDescriptor]
 
   // TODO this formatName shoud be type safe
@@ -23,7 +18,7 @@ private[this] trait ReadAttachmentsUtils {
           attachment.data match {
             case obj: JwsData  => ??? // TODO
             case obj: Base64   => (attachment.id, formatName, obj.base64.getBytes())
-            case obj: LinkData => ??? // TODO Does this make sens
+            case obj: LinkData => ??? // TODO
             case obj: JsonData =>
               (
                 attachment.id,
