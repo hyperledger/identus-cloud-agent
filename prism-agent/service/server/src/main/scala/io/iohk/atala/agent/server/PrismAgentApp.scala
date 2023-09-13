@@ -156,7 +156,21 @@ object AgentInitialization {
   private val defaultEntity = Entity.Default
 
   def run: RIO[AppConfig & WalletManagementService & EntityService & ApiKeyAuthenticator, Unit] =
-    initializeDefaultWallet
+    for {
+      _ <- validateAppConfig
+      _ <- initializeDefaultWallet
+    } yield ()
+
+  private val validateAppConfig =
+    for {
+      config <- ZIO.service[AppConfig]
+      isApiKeyEnabled = config.agent.authentication.apiKey.enabled
+      isDefaultWalletEnabled = config.agent.defaultWallet.enabled
+      _ <- ZIO
+        .fail(RuntimeException("The default wallet cannot be disabled if the apikey authentication is disabled."))
+        .when(!isApiKeyEnabled && !isDefaultWalletEnabled)
+        .unit
+    } yield ()
 
   private val initializeDefaultWallet =
     for {
