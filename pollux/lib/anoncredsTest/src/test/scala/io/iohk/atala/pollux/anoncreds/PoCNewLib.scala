@@ -37,6 +37,8 @@ class PoCNewLib extends AnyFlatSpec {
     // // ############################################################################################
     val credentialOffer = AnoncredLib.createOffer(credentialDefinition, CRED_DEF_ID)
 
+    println("credentialOffer.schemaId: " + credentialOffer.schemaId)
+
     // ##############
     // ### HOLDER ###
     // ##############

@@ -165,7 +165,11 @@ case class CreateCredentialDefinition(
 )
 // ****************************************************************************
 
-case class CredentialOffer(data: String)
+case class CredentialOffer(data: String) {
+  def schemaId = CredentialOffer
+    .given_Conversion_CredentialOffer_UniffiCredentialOffer(this)
+    .getSchemaId()
+}
 object CredentialOffer {
   given Conversion[CredentialOffer, UniffiCredentialOffer] with {
     def apply(credentialOffer: CredentialOffer): UniffiCredentialOffer =
