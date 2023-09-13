@@ -645,7 +645,11 @@ object BackgroundJobs {
                 resp <- MessagingService.send(record.makeMessage).provideSomeLayer(didCommAgent)
                 service <- ZIO.service[PresentationService]
                 _ <- {
-                  if (resp.status >= 200 && resp.status < 300) service.markRequestPresentationSent(id)
+                  if (resp.status >= 200 && resp.status < 300)
+                    service.markRequestPresentationSent(id) @@ CustomMetricsAspect.endRecordingTime(
+                      s"${record.id}_present_proof_flow_verifier_req_pending_to_sent_ms_gauge",
+                      "present_proof_flow_verifier_req_pending_to_sent_ms_gauge"
+                    )
                   else ZIO.fail(ErrorResponseReceivedFromPeerAgent(resp))
                 }
               } yield ()
@@ -731,7 +735,11 @@ object BackgroundJobs {
                   .provideSomeLayer(didCommAgent)
                 service <- ZIO.service[PresentationService]
                 _ <- {
-                  if (resp.status >= 200 && resp.status < 300) service.markPresentationSent(id)
+                  if (resp.status >= 200 && resp.status < 300)
+                    service.markPresentationSent(id) @@ CustomMetricsAspect.endRecordingTime(
+                      s"${record.id}_present_proof_flow_prover_presentation_generated_to_sent_ms_gauge",
+                      "present_proof_flow_prover_presentation_generated_to_sent_ms_gauge"
+                    )
                   else ZIO.fail(ErrorResponseReceivedFromPeerAgent(resp))
                 }
               } yield ()
@@ -790,11 +798,10 @@ object BackgroundJobs {
                         )
                         .getOrElse(Left(UnexpectedError("RequestPresentation NotFound")))
                     for {
-                      _ <- ZIO.fromEither(maybePresentationOptions.map { maybeOptions =>
-                        maybeOptions match
-                          case Some(options) =>
-                            JwtPresentation.validatePresentation(JWT(base64Decoded), options.domain, options.challenge)
-                          case _ => Validation.unit
+                      _ <- ZIO.fromEither(maybePresentationOptions.map {
+                        case Some(options) =>
+                          JwtPresentation.validatePresentation(JWT(base64Decoded), options.domain, options.challenge)
+                        case _ => Validation.unit
                       })
                       verificationConfig <- ZIO.service[AppConfig].map(_.agent.verification)
                       _ <- ZIO.log(s"VerificationConfig: ${verificationConfig}")
@@ -812,11 +819,15 @@ object BackgroundJobs {
                 }
                 _ <- ZIO.log(s"CredentialsValidationResult: $credentialsValidationResult")
                 service <- ZIO.service[PresentationService]
+                presReceivedToProcessedAspect = CustomMetricsAspect.endRecordingTime(
+                  s"${record.id}_present_proof_flow_verifier_presentation_received_to_verification_success_or_failure_ms_gauge",
+                  "present_proof_flow_verifier_presentation_received_to_verification_success_or_failure_ms_gauge"
+                )
                 _ <- credentialsValidationResult match {
-                  case Success(log, value) => service.markPresentationVerified(id)
+                  case Success(log, value) => service.markPresentationVerified(id) @@ presReceivedToProcessedAspect
                   case Failure(log, error) => {
                     for {
-                      _ <- service.markPresentationVerificationFailed(id)
+                      _ <- service.markPresentationVerificationFailed(id) @@ presReceivedToProcessedAspect
                       didCommAgent <- buildDIDCommAgent(p.from)
                       reportproblem = ReportProblem.build(
                         fromDID = p.to,
