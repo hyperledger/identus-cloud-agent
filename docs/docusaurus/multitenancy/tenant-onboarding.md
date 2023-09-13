@@ -75,7 +75,7 @@ The wallet seed may be provided during the wallet creation or omitted to let the
 curl -X 'POST' \
   'http://localhost:8080/prism-agent/wallets' \
   -H 'accept: application/json' \
-  -H 'x-admin-api-key: my-admin-token \
+  -H 'x-admin-api-key: my-admin-token' \
   -H 'Content-Type: application/json' \
   -d '{
     "seed": "c9994785ce6d548134020f610b76102ca1075d3bb672a75ec8c9a27a7b8607e3b9b384e43b77bb08f8d5159651ae38b98573f7ecc79f2d7e1f1cc371ce60cf8a",
@@ -111,6 +111,8 @@ curl -X 'POST' \
   }'
 ```
 
+Make sure to use the `walletId` from the previous step.
+
 Response Example:
 
 ```json
@@ -142,6 +144,8 @@ curl -X 'POST' \
     "apiKey": "my-tenant-token"
   }'
 ```
+
+Make sure to use the `entityId` from the previous step.
 
 HTTP code 201 returns in the case of the successful request execution.
 
