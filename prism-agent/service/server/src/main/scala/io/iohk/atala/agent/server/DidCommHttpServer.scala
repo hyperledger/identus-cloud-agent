@@ -39,7 +39,8 @@ object DidCommHttpServer {
       _ <- Server
         .serve(didCommServiceEndpoint)
         .provideSomeLayer(server)
-        .debug *> ZIO.logWarning(s"Server STOP (on port $didCommServicePort)")
+        .debug *> ZIO
+        .logWarning(s"Server STOP (on port $didCommServicePort)")
         .tapDefect(error => ZIO.logErrorCause("Defect processing incoming DIDComm message", Cause.fail(error)))
     } yield ()
   }

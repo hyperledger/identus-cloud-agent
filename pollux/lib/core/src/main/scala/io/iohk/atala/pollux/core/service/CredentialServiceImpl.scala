@@ -206,7 +206,7 @@ private class CredentialServiceImpl(
       credentialFormat <- format match
         case value if value == IssueCredentialOfferFormat.JWT.name      => ZIO.succeed(CredentialFormat.JWT)
         case value if value == IssueCredentialOfferFormat.Anoncred.name => ZIO.succeed(CredentialFormat.AnonCreds)
-        case value => ZIO.fail(UnsupportedCredentialFormat(value))
+        case value                                                      => ZIO.fail(UnsupportedCredentialFormat(value))
 
       _ <- validateCredentialOfferAttachment(credentialFormat, attachment)
 
