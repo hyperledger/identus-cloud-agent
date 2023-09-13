@@ -9,7 +9,7 @@ import scala.jdk.CollectionConverters.*
 class PoCNewLib extends AnyFlatSpec {
 
   val SCHEMA_ID = "mock:uri2"
-  val CRED_DEF_ID = "mock:uri2"
+  val CRED_DEF_ID = "mock:uri3"
   val ISSUER_DID = "mock:issuer_id/path&q=bar"
 
   "The POC New Lib script" should "run to completion" in {
@@ -38,6 +38,7 @@ class PoCNewLib extends AnyFlatSpec {
     val credentialOffer = AnoncredLib.createOffer(credentialDefinition, CRED_DEF_ID)
 
     println("credentialOffer.schemaId: " + credentialOffer.schemaId)
+    println("credentialOffer.credDefId: " + credentialOffer.credDefId)
 
     // ##############
     // ### HOLDER ###

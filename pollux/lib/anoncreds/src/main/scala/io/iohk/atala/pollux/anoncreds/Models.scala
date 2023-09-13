@@ -166,9 +166,12 @@ case class CreateCredentialDefinition(
 // ****************************************************************************
 
 case class CredentialOffer(data: String) {
-  def schemaId = CredentialOffer
+  lazy val schemaId = CredentialOffer
     .given_Conversion_CredentialOffer_UniffiCredentialOffer(this)
     .getSchemaId()
+  lazy val credDefId = CredentialOffer
+    .given_Conversion_CredentialOffer_UniffiCredentialOffer(this)
+    .getCredDefId()
 }
 object CredentialOffer {
   given Conversion[CredentialOffer, UniffiCredentialOffer] with {
