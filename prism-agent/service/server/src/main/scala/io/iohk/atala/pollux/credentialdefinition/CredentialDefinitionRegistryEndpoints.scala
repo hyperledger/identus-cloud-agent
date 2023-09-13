@@ -13,7 +13,7 @@ import io.iohk.atala.pollux.credentialdefinition.http.{
   FilterInput
 }
 import sttp.model.StatusCode
-import sttp.tapir.json.zio.jsonBody
+import sttp.tapir.json.zio.{jsonBody, schemaForZioJsonValue}
 import sttp.tapir.{
   Endpoint,
   EndpointInput,
@@ -83,6 +83,28 @@ object CredentialDefinitionRegistryEndpoints {
       .summary("Fetch the credential definition from the registry by `guid`")
       .description(
         "Fetch the credential definition by the unique identifier"
+      )
+      .tag("Credential Definition Registry")
+
+  val getCredentialDefinitionInnerDefinitionByIdEndpoint: PublicEndpoint[
+    (RequestContext, UUID),
+    ErrorResponse,
+    zio.json.ast.Json,
+    Any
+  ] =
+    endpoint.get
+      .in(extractFromRequest[RequestContext](RequestContext.apply))
+      .in(
+        "credential-definition-registry" / "definitions" / path[UUID]("guid") / "definition".description(
+          "Globally unique identifier of the credential definition record"
+        )
+      )
+      .out(jsonBody[zio.json.ast.Json].description("CredentialDefinition found by `guid`"))
+      .errorOut(basicFailuresAndNotFound)
+      .name("getCredentialDefinitionInnerDefinitionById")
+      .summary("Fetch the inner definition field of the credential definition from the registry by `guid`")
+      .description(
+        "Fetch the inner definition fields of the credential definition by the unique identifier"
       )
       .tag("Credential Definition Registry")
 
