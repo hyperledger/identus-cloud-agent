@@ -111,6 +111,8 @@ curl -X 'POST' \
   }'
 ```
 
+Make sure to use the `walletId` from the previous step.
+
 Response Example:
 
 ```json
@@ -142,6 +144,8 @@ curl -X 'POST' \
     "apiKey": "my-tenant-token"
   }'
 ```
+
+Make sure to use the `entityId` from the previous step.
 
 HTTP code 201 returns in the case of the successful request execution.
 
