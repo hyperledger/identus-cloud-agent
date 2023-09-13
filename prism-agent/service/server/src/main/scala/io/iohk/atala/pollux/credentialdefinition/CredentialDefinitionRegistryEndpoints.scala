@@ -118,5 +118,5 @@ object CredentialDefinitionRegistryEndpoints {
       .description(
         "Lookup credential definitions by `author`, `name`, `tag` parameters and control the pagination by `offset` and `limit` parameters "
       )
-      .tag("Credential Definitions Registry")
+      .tag("Credential Definition Registry")
 }
