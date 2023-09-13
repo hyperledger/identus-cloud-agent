@@ -54,7 +54,10 @@ object DIDRegistrarEndpoints {
     Any
   ] = baseEndpoint.post
     .in(jsonBody[CreateManagedDidRequest])
-    .errorOut(EndpointOutputs.basicFailuresWith(FailureVariant.unprocessableEntity, FailureVariant.notFound))
+    .errorOut(
+      EndpointOutputs
+        .basicFailuresWith(FailureVariant.unprocessableEntity, FailureVariant.notFound, FailureVariant.forbidden)
+    )
     .out(statusCode(StatusCode.Created).description("Created unpublished DID."))
     .out(jsonBody[CreateManagedDIDResponse])
     .summary("Create unpublished DID and store it in Prism Agent's wallet")

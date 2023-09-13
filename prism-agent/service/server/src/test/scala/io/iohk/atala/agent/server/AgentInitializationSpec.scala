@@ -27,6 +27,7 @@ object AgentInitializationSpec extends ZIOSpecDefault, PostgresTestContainerSupp
 
   override def spec = {
     val s = suite("AgentInitialization")(
+      validateAppConfigSpec,
       initializeDefaultWalletSpec
     ) @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
 
@@ -46,6 +47,24 @@ object AgentInitializationSpec extends ZIOSpecDefault, PostgresTestContainerSupp
       pgContainerLayer
     ).provide(Runtime.removeDefaultLoggers)
   }
+
+  private val validateAppConfigSpec = suite("validateAppConfig")(
+    test("do not fail when the config is valid")(
+      for {
+        _ <- AgentInitialization.run.overrideConfig()
+      } yield assertCompletes
+    ),
+    test("fail when both apikey and default wallet are disabled")(
+      for {
+        exit <- AgentInitialization.run
+          .overrideConfig(
+            enableApiKey = false,
+            enableDefaultWallet = false
+          )
+          .exit
+      } yield assert(exit)(fails(isSubtype[RuntimeException](anything)))
+    )
+  )
 
   private val initializeDefaultWalletSpec = suite("initializeDefaultWallet")(
     test("do not create default wallet if disabled") {
@@ -113,16 +132,25 @@ object AgentInitializationSpec extends ZIOSpecDefault, PostgresTestContainerSupp
         enableDefaultWallet: Boolean = true,
         seed: Option[String] = None,
         webhookUrl: Option[URL] = None,
-        webhookApiKey: Option[String] = None
+        webhookApiKey: Option[String] = None,
+        enableApiKey: Boolean = true
     ): ZIO[R, E, A] = {
       for {
         appConfig <- ZIO.service[AppConfig]
         agentConfig = appConfig.agent
         defaultWalletConfig = agentConfig.defaultWallet
+        authConfig = agentConfig.authentication
+        apiKeyConfig = authConfig.apiKey
+        // consider using lens
         result <- effect.provideSomeLayer(
           ZLayer.succeed(
             appConfig.copy(
               agent = agentConfig.copy(
+                authentication = authConfig.copy(
+                  apiKey = apiKeyConfig.copy(
+                    enabled = enableApiKey
+                  )
+                ),
                 defaultWallet = defaultWalletConfig.copy(
                   enabled = enableDefaultWallet,
                   seed = seed,
