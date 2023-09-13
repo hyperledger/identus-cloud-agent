@@ -87,6 +87,7 @@ jobs:
         with:
           node-version: 16.x
           registry-url: "https://npm.pkg.github.com"
+          scope: 'input-output-hk'
 
       - name: Install dependencies
         uses: borales/actions-yarn@v4
