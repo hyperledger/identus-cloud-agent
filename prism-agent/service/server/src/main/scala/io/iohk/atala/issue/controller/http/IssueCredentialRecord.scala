@@ -48,6 +48,10 @@ final case class IssueCredentialRecord(
     @description(annotations.thid.description)
     @encodedExample(annotations.thid.example)
     thid: String,
+    @description(annotations.credentialFormat.description)
+    @encodedExample(annotations.credentialFormat.example)
+    @validate(annotations.credentialFormat.validator)
+    credentialFormat: String,
     @description(annotations.subjectId.description)
     @encodedExample(annotations.subjectId.example)
     subjectId: Option[String] = None,
@@ -91,6 +95,7 @@ object IssueCredentialRecord {
       createdAt = domain.createdAt.atOffset(ZoneOffset.UTC),
       updatedAt = domain.updatedAt.map(_.atOffset(ZoneOffset.UTC)),
       role = domain.role.toString,
+      credentialFormat = domain.credentialFormat.toString,
       subjectId = domain.subjectId,
       claims = domain.offerCredentialData
         .map(offer =>
@@ -160,6 +165,18 @@ object IssueCredentialRecord {
           description = "The unique identifier of the thread this credential record belongs to. " +
             "The value will identical on both sides of the issue flow (issuer and holder)",
           example = "0527aea1-d131-3948-a34d-03af39aba8b4"
+        )
+
+    object credentialFormat
+        extends Annotation[String](
+          description = "The format used for this credential offer (default to 'JWT')",
+          example = "JWT",
+          validator = Validator.enumeration(
+            List(
+              "JWT",
+              "AnonCreds"
+            )
+          )
         )
 
     object createdAt

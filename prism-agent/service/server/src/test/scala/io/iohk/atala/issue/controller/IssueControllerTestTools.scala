@@ -156,7 +156,7 @@ trait IssueGen {
       issuingDID = issuingDID,
       connectionId = connectionId,
       credentialDefinitionId = None,
-      credentialFormat = CredentialFormat.JWT.toString
+      credentialFormat = Some(CredentialFormat.JWT.toString)
     )
   }
 

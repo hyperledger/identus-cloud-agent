@@ -9,10 +9,10 @@ import io.iohk.atala.iris.proto.dlt.IrisOperation
 import io.iohk.atala.iris.proto.service.IrisOperationId
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
 import io.iohk.atala.iris.proto.vc_operations.IssueCredentialsBatch
-import io.iohk.atala.mercury.model.{AttachmentDescriptor, Base64, DidId, JsonData}
+import io.iohk.atala.mercury.model.*
 import io.iohk.atala.mercury.protocol.issuecredential.*
 import io.iohk.atala.pollux.*
-import io.iohk.atala.pollux.anoncreds.{AnoncredLib, CreateCredentialDefinition}
+import io.iohk.atala.pollux.anoncreds.{AnoncredLib, CreateCredentialDefinition, CredentialOffer}
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError.*
@@ -197,25 +197,19 @@ private class CredentialServiceImpl(
       offer: OfferCredential
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
     for {
-      // TODO: align with the standard (ATL-3507)
-      offerAttachment <- offer.attachments.headOption
-        .map(_.data.asJson)
-        .fold(ZIO.fail(CredentialServiceError.UnexpectedError("An attachment is expected in CredentialOffer"))) {
-          json =>
-            ZIO
-              .fromTry(json.hcursor.downField("json").as[CredentialOfferAttachment].toTry)
-              .mapError(e =>
-                CredentialServiceError.UnexpectedError(s"Unexpected CredentialOffer attachment format: ${e.toString()}")
-              )
-        }
-      attachment = offer.attachments.head // TODO FIXME head
-      credentialFormat <- attachment.format match
-        case Some(value) if (value == IssueCredentialOfferFormat.JWT.name) =>
-          ZIO.succeed(CredentialFormat.JWT)
-        case Some(value) if (value == IssueCredentialOfferFormat.Anoncred.name) =>
-          ZIO.succeed(CredentialFormat.AnonCreds)
-        case None        => ZIO.fail(MissingCredentialFormat)
-        case Some(value) => ZIO.fail(UnsupportedCredentialFormat(value))
+      attachment <- ZIO
+        .fromOption(offer.attachments.headOption)
+        .mapError(_ => CredentialServiceError.UnexpectedError("Missing attachment in credential offer"))
+
+      format <- ZIO.fromOption(attachment.format).mapError(_ => MissingCredentialFormat)
+
+      credentialFormat <- format match
+        case value if value == IssueCredentialOfferFormat.JWT.name      => ZIO.succeed(CredentialFormat.JWT)
+        case value if value == IssueCredentialOfferFormat.Anoncred.name => ZIO.succeed(CredentialFormat.AnonCreds)
+        case value => ZIO.fail(UnsupportedCredentialFormat(value))
+
+      _ <- validateCredentialOfferAttachment(credentialFormat, attachment)
+
       record <- ZIO.succeed(
         IssueCredentialRecord(
           id = DidCommID(),
@@ -251,6 +245,45 @@ private class CredentialServiceImpl(
         .mapError(RepositoryError.apply)
     } yield record
   }
+
+  private[this] def validateCredentialOfferAttachment(
+      credentialFormat: CredentialFormat,
+      attachment: AttachmentDescriptor
+  ) = for {
+    _ <- credentialFormat match
+      case CredentialFormat.JWT =>
+        attachment.data match
+          case JsonData(json) =>
+            ZIO
+              .attempt(json.asJson.hcursor.downField("json").as[CredentialOfferAttachment])
+              .mapError(e =>
+                CredentialServiceError
+                  .UnexpectedError(s"Unexpected error parsing credential offer attachment: ${e.toString}")
+              )
+          case _ =>
+            ZIO.fail(
+              CredentialServiceError
+                .UnexpectedError(s"A JSON attachment is expected in the credential offer")
+            )
+      case CredentialFormat.AnonCreds =>
+        attachment.data match
+          case Base64(value) =>
+            for {
+              credentialOffer <- ZIO
+                .attempt(CredentialOffer(value))
+                .mapError(e =>
+                  CredentialServiceError.UnexpectedError(
+                    s"Unexpected error parsing credential offer attachment: ${e.toString}"
+                  )
+                )
+              _ <- ZIO.logInfo(s"Credential Offer parsed => $credentialOffer")
+            } yield ()
+          case _ =>
+            ZIO.fail(
+              CredentialServiceError
+                .UnexpectedError(s"A Base64 attachment is expected in the credential offer")
+            )
+  } yield ()
 
   override def acceptCredentialOffer(
       recordId: DidCommID,
@@ -630,7 +663,7 @@ private class CredentialServiceImpl(
       .mapError(_ => CredentialServiceError.CredentialDefinitionPrivatePartNotFound(credentialDefinition.guid))
     cdp = anoncreds.CredentialDefinitionPrivate(didSecret.json.toString)
     createCredentialDefinition = CreateCredentialDefinition(cd, cdp, kcp)
-    offer = AnoncredLib.createOffer(createCredentialDefinition, credentialDefinition.guid.toString)
+    offer = AnoncredLib.createOffer(createCredentialDefinition, s"prism:${credentialDefinition.guid.toString}")
   } yield offer
 
   private[this] def createDidCommRequestCredential(
@@ -666,7 +699,7 @@ private class CredentialServiceImpl(
         replacement_id = None,
         more_available = None,
       ),
-      attachments = Seq(???), // FIXME !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      attachments = Seq(), // FIXME !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       thid = request.thid.orElse(Some(request.id)),
       from = request.to,
       to = request.from

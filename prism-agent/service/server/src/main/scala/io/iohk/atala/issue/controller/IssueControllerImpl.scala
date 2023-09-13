@@ -50,6 +50,7 @@ class IssueControllerImpl(
           validityPeriod = request.validityPeriod,
           automaticIssuance = request.automaticIssuance.orElse(Some(true)),
           awaitConfirmation = Some(false),
+          // TODO Check what to do with the issuingDID in case of AnonCreds? Should it be defined or not?
           issuingDID = Some(issuingDID.asCanonical)
         )
     } yield IssueCredentialRecord.fromDomain(outcome)
