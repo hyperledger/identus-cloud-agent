@@ -1,3 +1,0 @@
-[submodule "mercury/roots-id-mediator/didcomm-mediator"]
-	path = mercury/roots-id-mediator/didcomm-mediator
-	url = git@github.com:roots-id/didcomm-mediator.git
