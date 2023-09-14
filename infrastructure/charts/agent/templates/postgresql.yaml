@@ -14,47 +14,19 @@ spec:
     castor-admin:
       - superuser
       - createdb
-    castor-application-user:
-      - privileges:
-        databases:
-          castor:
-            - SELECT
-            - INSERT
-            - UPDATE
-            - DELETE
+    castor-application-user: []
     pollux-admin:
       - superuser
       - createdb
-    pollux-application-user:
-      - privileges:
-        databases:
-          pollux:
-            - SELECT
-            - INSERT
-            - UPDATE
-            - DELETE
+    pollux-application-user: []
     connect-admin:
       - superuser
       - createdb
-    connect-application-user:
-      - privileges:
-        databases:
-          connect:
-            - SELECT
-            - INSERT
-            - UPDATE
-            - DELETE
+    connect-application-user: []
     agent-admin:
       - superuser
       - createdb
-    agent-application-user:
-      - privileges:
-        databases:
-          agent:
-            - SELECT
-            - INSERT
-            - UPDATE
-            - DELETE
+    agent-application-user: []
   databases:
     castor: castor-admin
     pollux: pollux-admin
