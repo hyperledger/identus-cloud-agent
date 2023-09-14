@@ -14,23 +14,35 @@ spec:
     castor-admin:
       - superuser
       - createdb
-    castor-application-user: []
+    castor-application-user:
+      - nologin
     pollux-admin:
       - superuser
       - createdb
-    pollux-application-user: []
+    pollux-application-user:
+      - nologin
     connect-admin:
       - superuser
       - createdb
-    connect-application-user: []
+    connect-application-user:
+      - nologin
     agent-admin:
       - superuser
       - createdb
-    agent-application-user: []
+    agent-application-user:
+      - nologin
   databases:
-    castor: castor-admin
-    pollux: pollux-admin
-    connect: connect-admin
-    agent: agent-admin
+    castor:
+    - castor-admin
+    - castor-application-user
+    pollux:
+    - pollux-admin
+    - pollux-application-user
+    connect:
+    - connect-admin
+    - connect-application-user
+    agent:
+    - agent-admin
+    - agent-application-user
   postgresql:
     version: "14"
