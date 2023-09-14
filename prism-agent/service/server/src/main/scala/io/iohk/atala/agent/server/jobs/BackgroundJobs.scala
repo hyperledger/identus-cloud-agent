@@ -67,7 +67,7 @@ object BackgroundJobs {
   }
 
   val presentProofExchanges = {
-    for {
+    val presentProofDidComExchange = for {
       presentationService <- ZIO.service[PresentationService]
       config <- ZIO.service[AppConfig]
       records <- presentationService
@@ -84,6 +84,7 @@ object BackgroundJobs {
         .foreachPar(records)(performPresentProofExchange)
         .withParallelism(config.pollux.presentationBgJobProcessingParallelism)
     } yield ()
+    presentProofDidComExchange
   }
 
   private def counterMetric(key: String) = Metric
@@ -619,7 +620,6 @@ object BackgroundJobs {
 
   private[this] def performPresentProofExchange(record: PresentationRecord) = {
     import io.iohk.atala.pollux.core.model.PresentationRecord.ProtocolState.*
-    // JOB START
 
     val VerifierReqPendingToSentSuccess = counterMetric(
       "present_proof_flow_verifier_request_pending_to_sent_success_counter"
@@ -989,7 +989,6 @@ object BackgroundJobs {
       .catchAll(e => ZIO.logErrorCause(s"Present Proof - Error processing record: ${record.id} ", Cause.fail(e)))
       .catchAllDefect(d => ZIO.logErrorCause(s"Present Proof - Defect processing record: ${record.id}", Cause.fail(d)))
 
-    // JOB ENDS
   }
 
   private[this] def buildDIDCommAgent(
