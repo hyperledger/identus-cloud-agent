@@ -17,7 +17,12 @@ final case class AppConfig(
     agent: AgentConfig,
     connect: ConnectConfig,
     prismNode: PrismNodeConfig,
-)
+) {
+  def validate: Either[String, Unit] =
+    for {
+      _ <- agent.validate
+    } yield ()
+}
 
 object AppConfig {
   val descriptor: ConfigDescriptor[AppConfig] = Descriptor[AppConfig]
@@ -126,7 +131,14 @@ final case class AgentConfig(
     secretStorage: SecretStorageConfig,
     webhookPublisher: WebhookPublisherConfig,
     defaultWallet: DefaultWalletConfig
-)
+) {
+  def validate: Either[String, Unit] = {
+    if (!defaultWallet.enabled && !authentication.apiKey.enabled)
+      Left("The default wallet cannot be disabled if the apikey authentication is disabled.")
+    else
+      Right(())
+  }
+}
 
 final case class HttpEndpointConfig(http: HttpConfig)
 

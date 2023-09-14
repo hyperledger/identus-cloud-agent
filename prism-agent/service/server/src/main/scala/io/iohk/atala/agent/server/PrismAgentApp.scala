@@ -170,15 +170,11 @@ object AgentInitialization {
     } yield ()
 
   private val validateAppConfig =
-    for {
-      config <- ZIO.service[AppConfig]
-      isApiKeyEnabled = config.agent.authentication.apiKey.enabled
-      isDefaultWalletEnabled = config.agent.defaultWallet.enabled
-      _ <- ZIO
-        .fail(RuntimeException("The default wallet cannot be disabled if the apikey authentication is disabled."))
-        .when(!isApiKeyEnabled && !isDefaultWalletEnabled)
-        .unit
-    } yield ()
+    ZIO.serviceWithZIO[AppConfig](conf =>
+      ZIO
+        .fromEither(conf.validate)
+        .mapError(msg => RuntimeException(s"Application configuration is invalid. $msg"))
+    )
 
   private val initializeDefaultWallet =
     for {
