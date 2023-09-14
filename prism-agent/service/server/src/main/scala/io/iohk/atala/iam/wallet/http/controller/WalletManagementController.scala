@@ -88,7 +88,11 @@ class WalletManagementControllerImpl(
       .map(_.toByteArray)
       .map(WalletSeed.fromByteArray)
       .absolve
-      .mapError(e => ErrorResponse.badRequest(detail = Some(e)))
+      .mapError(e =>
+        ErrorResponse.badRequest(detail =
+          Some(s"The provided wallet seed is not valid hex string representing a BIP-32 seed. ($e)")
+        )
+      )
   }
 
 }
