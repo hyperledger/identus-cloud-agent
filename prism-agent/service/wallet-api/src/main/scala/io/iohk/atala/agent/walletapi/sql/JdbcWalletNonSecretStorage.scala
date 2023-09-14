@@ -8,7 +8,8 @@ import doobie.util.transactor.Transactor
 import io.iohk.atala.agent.walletapi.model.Wallet
 import io.iohk.atala.agent.walletapi.sql.JdbcWalletNonSecretStorage.MAX_WEBHOOK_PER_WALLET
 import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorage
-import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorageCustomError.TooManyWebhook
+import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorageRefinedError
+import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorageRefinedError.TooManyWebhook
 import io.iohk.atala.event.notification.EventNotificationConfig
 import io.iohk.atala.shared.db.ContextAwareTask
 import io.iohk.atala.shared.db.Implicits.{*, given}
@@ -42,6 +43,7 @@ class JdbcWalletNonSecretStorage(xa: Transactor[ContextAwareTask]) extends Walle
     cxnIO(row).run
       .transactWithoutContext(xa)
       .as(wallet)
+      .mapError(e => WalletNonSecretStorageRefinedError.refineWith(wallet.id).applyOrElse(e, identity))
   }
 
   override def getWallet(walletId: WalletId): Task[Option[Wallet]] = {

@@ -33,6 +33,8 @@ object WalletManagementController {
       ErrorResponse.internalServerError(detail = Some(cause.toString()))
     case WalletManagementServiceError.TooManyWebhookError(limit, actual) =>
       ErrorResponse.conflict(detail = Some(s"Too many webhook created for a wallet. (limit $limit, actual $actual)"))
+    case WalletManagementServiceError.DuplicatedWalletId(id) =>
+      ErrorResponse.badRequest(s"Wallet id $id is not unique.")
   }
 }
 

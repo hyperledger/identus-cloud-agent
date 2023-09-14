@@ -2,7 +2,8 @@ package io.iohk.atala.agent.walletapi.storage
 
 import io.iohk.atala.agent.walletapi.model.Wallet
 import io.iohk.atala.agent.walletapi.sql.JdbcWalletNonSecretStorage
-import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorageCustomError.TooManyWebhook
+import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorageRefinedError.TooManyWebhook
+import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorageRefinedError.DuplicatedWalletId
 import io.iohk.atala.event.notification.EventNotificationConfig
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.models.WalletId
@@ -20,6 +21,7 @@ object JdbcWalletNonSecretStorageSpec extends ZIOSpecDefault, PostgresTestContai
     val s = suite("JdbcWalletNonSecretStorage")(
       getWalletSpec,
       listWalletSpec,
+      createWalletSpec,
       walletNotificationSpec
     ) @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
 
@@ -39,6 +41,25 @@ object JdbcWalletNonSecretStorageSpec extends ZIOSpecDefault, PostgresTestContai
         storage <- ZIO.service[WalletNonSecretStorage]
         wallet <- storage.getWallet(WalletId.random)
       } yield assert(wallet)(isNone)
+    }
+  )
+
+  private val createWalletSpec = suite("createWallet")(
+    test("create wallet with same name should not fail") {
+      for {
+        storage <- ZIO.service[WalletNonSecretStorage]
+        _ <- storage.createWallet(Wallet("wallet-1"))
+        _ <- storage.createWallet(Wallet("wallet-1"))
+        wallets <- storage.listWallet().map(_._1).debug("wallets")
+        names = wallets.map(_.name)
+      } yield assert(names)(hasSameElements(Seq("wallet-1", "wallet-1")))
+    },
+    test("create wallet with same id fail with duplicate id error") {
+      for {
+        storage <- ZIO.service[WalletNonSecretStorage]
+        _ <- storage.createWallet(Wallet("wallet-1", WalletId.default))
+        exit <- storage.createWallet(Wallet("wallet-2", WalletId.default)).exit
+      } yield assert(exit)(fails(isSubtype[DuplicatedWalletId](anything)))
     }
   )
 
