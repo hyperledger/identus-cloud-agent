@@ -32,17 +32,9 @@ spec:
     agent-application-user:
       - nologin
   databases:
-    castor:
-    - castor-admin
-    - castor-application-user
-    pollux:
-    - pollux-admin
-    - pollux-application-user
-    connect:
-    - connect-admin
-    - connect-application-user
-    agent:
-    - agent-admin
-    - agent-application-user
+    castor: castor-admin
+    pollux: pollux-admin
+    connect: connect-admin
+    agent: agent-admin
   postgresql:
     version: "14"
