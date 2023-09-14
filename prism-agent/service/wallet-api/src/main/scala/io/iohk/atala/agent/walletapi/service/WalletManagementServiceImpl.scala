@@ -28,7 +28,7 @@ class WalletManagementServiceImpl(
           .mapError(WalletManagementServiceError.SeedGenerationError.apply)
       )(ZIO.succeed)
       createdWallet <- nonSecretStorage
-        .createWallet(wallet)
+        .createWallet(wallet, seed.sha256Digest)
         .mapError(WalletManagementServiceError.fromStorageError)
       _ <- secretStorage
         .setWalletSeed(seed)

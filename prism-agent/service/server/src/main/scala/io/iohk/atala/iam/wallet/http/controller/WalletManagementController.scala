@@ -35,6 +35,10 @@ object WalletManagementController {
       ErrorResponse.conflict(detail = Some(s"Too many webhook created for a wallet. (limit $limit, actual $actual)"))
     case WalletManagementServiceError.DuplicatedWalletId(id) =>
       ErrorResponse.badRequest(s"Wallet id $id is not unique.")
+    case WalletManagementServiceError.DuplicatedWalletSeed(id) =>
+      // Should we return this error message?
+      // Returning less revealing message also doesn't help for open-source repo.
+      ErrorResponse.badRequest(s"Wallet id $id cannot be created. The seed value is not unique.")
   }
 }
 

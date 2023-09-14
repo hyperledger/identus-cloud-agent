@@ -20,13 +20,23 @@ object WalletNonSecretStorageRefinedError {
     override def getMessage(): String = toString()
   }
 
-  def refineWith(walletId: WalletId): PartialFunction[Throwable, WalletNonSecretStorageRefinedError] = {
-    case e: PSQLException if e.getSQLState() == "23505" /* PSQLState.UNIQUE_VIOLATION */ => DuplicatedWalletId(walletId)
+  final case class DuplicatedWalletSeed(id: WalletId) extends WalletNonSecretStorageRefinedError {
+    override def getMessage(): String = s"The wallet seed of wallet $id is not unique."
   }
+
+  def refineWalletError(walletId: WalletId): PartialFunction[Throwable, WalletNonSecretStorageRefinedError] = {
+    /* PSQLState.UNIQUE_VIOLATION */
+    case e: PSQLException if e.getSQLState() == "23505" && e.getMessage().contains("wallet_id") =>
+      DuplicatedWalletId(walletId)
+    /* PSQLState.UNIQUE_VIOLATION */
+    case e: PSQLException if e.getSQLState() == "23505" && e.getMessage().contains("wallet_seed_digest") =>
+      DuplicatedWalletSeed(walletId)
+  }
+
 }
 
 trait WalletNonSecretStorage {
-  def createWallet(wallet: Wallet): Task[Wallet]
+  def createWallet(wallet: Wallet, seedDigest: Array[Byte]): Task[Wallet]
   def getWallet(walletId: WalletId): Task[Option[Wallet]]
   def listWallet(offset: Option[Int] = None, limit: Option[Int] = None): Task[(Seq[Wallet], Int)]
   def createWalletNotification(config: EventNotificationConfig): RIO[WalletAccessContext, EventNotificationConfig]

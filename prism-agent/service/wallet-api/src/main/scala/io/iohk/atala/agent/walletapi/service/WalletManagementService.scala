@@ -25,13 +25,17 @@ object WalletManagementServiceError {
   final case class DuplicatedWalletId(id: WalletId) extends WalletManagementServiceError {
     override def getMessage(): String = toString()
   }
+  final case class DuplicatedWalletSeed(id: WalletId) extends WalletManagementServiceError {
+    override def getMessage(): String = toString()
+  }
 
   def fromStorageError(e: Throwable): WalletManagementServiceError = {
     e match {
       case re: WalletNonSecretStorageRefinedError =>
         re match {
-          case WalletNonSecretStorageRefinedError.DuplicatedWalletId(id)        => DuplicatedWalletId(id)
           case WalletNonSecretStorageRefinedError.TooManyWebhook(limit, actual) => TooManyWebhookError(limit, actual)
+          case WalletNonSecretStorageRefinedError.DuplicatedWalletId(id)        => DuplicatedWalletId(id)
+          case WalletNonSecretStorageRefinedError.DuplicatedWalletSeed(id)      => DuplicatedWalletSeed(id)
         }
       case e => WalletStorageError(e)
     }

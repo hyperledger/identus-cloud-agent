@@ -37,7 +37,8 @@ object JdbcEntityRepositorySpec extends ZIOSpecDefault, PostgresTestContainerSup
   private def createAndStoreWallet(entity: Entity) = {
     for {
       storage <- ZIO.service[WalletNonSecretStorage]
-      wallet <- storage.createWallet(Wallet("test", WalletId.fromUUID(entity.walletId)))
+      seedDigest <- Random.nextBytes(32).map(_.toArray)
+      wallet <- storage.createWallet(Wallet("test", WalletId.fromUUID(entity.walletId)), seedDigest)
     } yield wallet
   }
 
@@ -117,7 +118,7 @@ object JdbcEntityRepositorySpec extends ZIOSpecDefault, PostgresTestContainerSup
         in <- createRandomEntity
         _ <- createAndStoreWallet(in)
         storage <- ZIO.service[WalletNonSecretStorage]
-        _ <- storage.createWallet(Wallet("another wallet", WalletId.fromUUID(walletId)))
+        _ <- storage.createWallet(Wallet("another wallet", WalletId.fromUUID(walletId)), Array.emptyByteArray)
         out <- EntityRepository.insert(in)
         _ <- EntityRepository.updateWallet(in.id, walletId)
         updated <- EntityRepository.getById(in.id)

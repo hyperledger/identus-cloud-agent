@@ -23,19 +23,21 @@ import java.util.UUID
 
 class JdbcWalletNonSecretStorage(xa: Transactor[ContextAwareTask]) extends WalletNonSecretStorage {
 
-  override def createWallet(wallet: Wallet): Task[Wallet] = {
+  override def createWallet(wallet: Wallet, seedDigest: Array[Byte]): Task[Wallet] = {
     val cxnIO = (row: WalletRow) => sql"""
         | INSERT INTO public.wallet(
         |   wallet_id,
         |   name,
         |   created_at,
-        |   updated_at
+        |   updated_at,
+        |   seed_digest
         | )
         | VALUES (
         |   ${row.id},
         |   ${row.name},
         |   ${row.createdAt},
-        |   ${row.updatedAt}
+        |   ${row.updatedAt},
+        |   ${seedDigest}
         | )
         """.stripMargin.update
 
@@ -43,7 +45,7 @@ class JdbcWalletNonSecretStorage(xa: Transactor[ContextAwareTask]) extends Walle
     cxnIO(row).run
       .transactWithoutContext(xa)
       .as(wallet)
-      .mapError(e => WalletNonSecretStorageRefinedError.refineWith(wallet.id).applyOrElse(e, identity))
+      .mapError(e => WalletNonSecretStorageRefinedError.refineWalletError(wallet.id).applyOrElse(e, identity))
   }
 
   override def getWallet(walletId: WalletId): Task[Option[Wallet]] = {
