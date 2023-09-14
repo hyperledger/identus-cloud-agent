@@ -661,6 +661,20 @@ object BackgroundJobs {
       "present_proof_flow_verifier_presentation_received_to_verification_success_or_failure_all_counter"
     )
 
+    val VerifierSendPresentationRequestMsgSuccess = counterMetric(
+      "present_proof_flow_verifier_send_presentation_request_msg_success_counter"
+    )
+    val VerifierSendPresentationRequestMsgFailed = counterMetric(
+      "present_proof_flow_verifier_send_presentation_request_msg_failed_counter"
+    )
+
+    val ProverSendPresentationMsgSuccess = counterMetric(
+      "present_proof_flow_prover_send_presentation_msg_success_counter"
+    )
+    val ProverSendPresentationMsgFailed = counterMetric(
+      "present_proof_flow_prover_send_presentation_msg_failed_counter"
+    )
+
     val aux = for {
       _ <- ZIO.logDebug(s"Running action with records => $record")
       _ <- record match {
@@ -683,15 +697,19 @@ object BackgroundJobs {
                 _ <- ZIO.log(s"PresentationRecord: RequestPending (Send Massage)")
                 didOps <- ZIO.service[DidOps]
                 didCommAgent <- buildDIDCommAgent(record.from)
-                resp <- MessagingService.send(record.makeMessage).provideSomeLayer(didCommAgent)
+                resp <- MessagingService.send(record.makeMessage).provideSomeLayer(didCommAgent) @@ Metric
+                  .gauge("present_proof_flow_verifier_send_presentation_request_msg_ms_gauge")
+                  .trackDurationWith(_.toMetricsSeconds)
                 service <- ZIO.service[PresentationService]
                 _ <- {
                   if (resp.status >= 200 && resp.status < 300)
-                    service.markRequestPresentationSent(id) @@ CustomMetricsAspect.endRecordingTime(
+                    service.markRequestPresentationSent(
+                      id
+                    ) @@ VerifierSendPresentationRequestMsgSuccess @@ CustomMetricsAspect.endRecordingTime(
                       s"${record.id}_present_proof_flow_verifier_req_pending_to_sent_ms_gauge",
                       "present_proof_flow_verifier_req_pending_to_sent_ms_gauge"
                     )
-                  else ZIO.fail(ErrorResponseReceivedFromPeerAgent(resp))
+                  else ZIO.fail(ErrorResponseReceivedFromPeerAgent(resp)) @@ VerifierSendPresentationRequestMsgFailed
                 }
               } yield ()
 
@@ -807,15 +825,18 @@ object BackgroundJobs {
                 didCommAgent <- buildDIDCommAgent(p.from)
                 resp <- MessagingService
                   .send(p.makeMessage)
-                  .provideSomeLayer(didCommAgent)
+                  .provideSomeLayer(didCommAgent) @@ Metric
+                  .gauge("present_proof_flow_prover_send_presentation_msg_ms_gauge")
+                  .trackDurationWith(_.toMetricsSeconds)
                 service <- ZIO.service[PresentationService]
                 _ <- {
                   if (resp.status >= 200 && resp.status < 300)
-                    service.markPresentationSent(id) @@ CustomMetricsAspect.endRecordingTime(
-                      s"${record.id}_present_proof_flow_prover_presentation_generated_to_sent_ms_gauge",
-                      "present_proof_flow_prover_presentation_generated_to_sent_ms_gauge"
-                    )
-                  else ZIO.fail(ErrorResponseReceivedFromPeerAgent(resp))
+                    service.markPresentationSent(id) @@ ProverSendPresentationMsgSuccess @@ CustomMetricsAspect
+                      .endRecordingTime(
+                        s"${record.id}_present_proof_flow_prover_presentation_generated_to_sent_ms_gauge",
+                        "present_proof_flow_prover_presentation_generated_to_sent_ms_gauge"
+                      )
+                  else ZIO.fail(ErrorResponseReceivedFromPeerAgent(resp)) @@ ProverSendPresentationMsgFailed
                 }
               } yield ()
 
@@ -852,7 +873,7 @@ object BackgroundJobs {
           presentation match
             case None => ZIO.fail(InvalidState("PresentationRecord in 'PresentationReceived' with no Presentation"))
             case Some(p) =>
-              val verifierPresentationRecievedToProcessed =
+              val verifierPresentationReceivedToProcessed =
                 for {
                   didResolverService <- ZIO.service[JwtDidResolver]
                   credentialsValidationResult <- p.attachments.head.data match {
@@ -930,7 +951,7 @@ object BackgroundJobs {
                   }
 
                 } yield ()
-              verifierPresentationRecievedToProcessed
+              verifierPresentationReceivedToProcessed
                 @@ VerifierPresentationReceivedToProcessedSuccess.trackSuccess
                 @@ VerifierPresentationReceivedToProcessedFailed.trackError
                 @@ VerifierPresentationReceivedToProcessed
