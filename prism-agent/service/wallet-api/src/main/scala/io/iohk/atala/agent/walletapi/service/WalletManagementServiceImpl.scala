@@ -11,6 +11,7 @@ import io.iohk.atala.shared.models.WalletId
 import zio.*
 
 import java.util.UUID
+import scala.language.implicitConversions
 
 class WalletManagementServiceImpl(
     apollo: Apollo,
@@ -29,17 +30,17 @@ class WalletManagementServiceImpl(
       )(ZIO.succeed)
       createdWallet <- nonSecretStorage
         .createWallet(wallet, seed.sha256Digest)
-        .mapError(WalletManagementServiceError.fromStorageError)
+        .mapError[WalletManagementServiceError](e => e)
       _ <- secretStorage
         .setWalletSeed(seed)
-        .mapError(WalletManagementServiceError.fromStorageError)
+        .mapError(WalletManagementServiceError.UnexpectedStorageError.apply)
         .provide(ZLayer.succeed(WalletAccessContext(wallet.id)))
     } yield createdWallet
 
   override def getWallet(walletId: WalletId): IO[WalletManagementServiceError, Option[Wallet]] =
     nonSecretStorage
       .getWallet(walletId)
-      .mapError(WalletManagementServiceError.fromStorageError)
+      .mapError[WalletManagementServiceError](e => e)
 
   override def listWallets(
       offset: Option[Int],
@@ -47,24 +48,24 @@ class WalletManagementServiceImpl(
   ): IO[WalletManagementServiceError, (Seq[Wallet], Int)] =
     nonSecretStorage
       .listWallet(offset = offset, limit = limit)
-      .mapError(WalletManagementServiceError.fromStorageError)
+      .mapError[WalletManagementServiceError](e => e)
 
   override def listWalletNotifications
       : ZIO[WalletAccessContext, WalletManagementServiceError, Seq[EventNotificationConfig]] =
     nonSecretStorage.walletNotification
-      .mapError(WalletManagementServiceError.fromStorageError)
+      .mapError[WalletManagementServiceError](e => e)
 
   override def createWalletNotification(
       config: EventNotificationConfig
   ): ZIO[WalletAccessContext, WalletManagementServiceError, EventNotificationConfig] =
     nonSecretStorage
       .createWalletNotification(config)
-      .mapError(WalletManagementServiceError.fromStorageError)
+      .mapError[WalletManagementServiceError](e => e)
 
   override def deleteWalletNotification(id: UUID): ZIO[WalletAccessContext, WalletManagementServiceError, Unit] =
     nonSecretStorage
       .deleteWalletNotification(id)
-      .mapError(WalletManagementServiceError.WalletStorageError.apply)
+      .mapError[WalletManagementServiceError](e => e)
 
 }
 

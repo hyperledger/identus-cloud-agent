@@ -9,37 +9,40 @@ import zio.*
 
 import java.util.UUID
 
-sealed trait WalletNonSecretStorageRefinedError extends Throwable
+sealed trait WalletNonSecretStorageError
 
-object WalletNonSecretStorageRefinedError {
-  final case class TooManyWebhook(limit: Int, actual: Int) extends WalletNonSecretStorageRefinedError {
-    override def getMessage(): String = toString()
-  }
+object WalletNonSecretStorageError {
+  final case class DuplicatedWalletId(id: WalletId) extends WalletNonSecretStorageError
+  final case class DuplicatedWalletSeed(id: WalletId) extends WalletNonSecretStorageError
+  final case class UnexpectedError(cause: Throwable) extends WalletNonSecretStorageError
+  final case class TooManyWebhook(limit: Int, actual: Int)
+      extends Throwable("Too many webhook is created for a wallet"),
+        WalletNonSecretStorageError
 
-  final case class DuplicatedWalletId(id: WalletId) extends WalletNonSecretStorageRefinedError {
-    override def getMessage(): String = toString()
-  }
-
-  final case class DuplicatedWalletSeed(id: WalletId) extends WalletNonSecretStorageRefinedError {
-    override def getMessage(): String = s"The wallet seed of wallet $id is not unique."
-  }
-
-  def refineWalletError(walletId: WalletId): PartialFunction[Throwable, WalletNonSecretStorageRefinedError] = {
-    /* PSQLState.UNIQUE_VIOLATION */
-    case e: PSQLException if e.getSQLState() == "23505" && e.getMessage().contains("wallet_id") =>
-      DuplicatedWalletId(walletId)
-    /* PSQLState.UNIQUE_VIOLATION */
-    case e: PSQLException if e.getSQLState() == "23505" && e.getMessage().contains("wallet_seed_digest") =>
-      DuplicatedWalletSeed(walletId)
+  def fromWalletOps(walletId: WalletId)(e: Throwable): WalletNonSecretStorageError = {
+    e match {
+      /* PSQLState.UNIQUE_VIOLATION */
+      case e: PSQLException if e.getSQLState() == "23505" && e.getMessage().contains("wallet_id") =>
+        DuplicatedWalletId(walletId)
+      /* PSQLState.UNIQUE_VIOLATION */
+      case e: PSQLException if e.getSQLState() == "23505" && e.getMessage().contains("wallet_seed_digest") =>
+        DuplicatedWalletSeed(walletId)
+      case e => UnexpectedError(e)
+    }
   }
 
 }
 
 trait WalletNonSecretStorage {
-  def createWallet(wallet: Wallet, seedDigest: Array[Byte]): Task[Wallet]
-  def getWallet(walletId: WalletId): Task[Option[Wallet]]
-  def listWallet(offset: Option[Int] = None, limit: Option[Int] = None): Task[(Seq[Wallet], Int)]
-  def createWalletNotification(config: EventNotificationConfig): RIO[WalletAccessContext, EventNotificationConfig]
-  def walletNotification: RIO[WalletAccessContext, Seq[EventNotificationConfig]]
-  def deleteWalletNotification(id: UUID): RIO[WalletAccessContext, Unit]
+  def createWallet(wallet: Wallet, seedDigest: Array[Byte]): IO[WalletNonSecretStorageError, Wallet]
+  def getWallet(walletId: WalletId): IO[WalletNonSecretStorageError, Option[Wallet]]
+  def listWallet(
+      offset: Option[Int] = None,
+      limit: Option[Int] = None
+  ): IO[WalletNonSecretStorageError, (Seq[Wallet], Int)]
+  def createWalletNotification(
+      config: EventNotificationConfig
+  ): ZIO[WalletAccessContext, WalletNonSecretStorageError, EventNotificationConfig]
+  def walletNotification: ZIO[WalletAccessContext, WalletNonSecretStorageError, Seq[EventNotificationConfig]]
+  def deleteWalletNotification(id: UUID): ZIO[WalletAccessContext, WalletNonSecretStorageError, Unit]
 }

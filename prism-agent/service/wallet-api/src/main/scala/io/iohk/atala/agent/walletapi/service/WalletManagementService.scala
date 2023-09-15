@@ -2,7 +2,7 @@ package io.iohk.atala.agent.walletapi.service
 
 import io.iohk.atala.agent.walletapi.model.Wallet
 import io.iohk.atala.agent.walletapi.model.WalletSeed
-import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorageRefinedError
+import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorageError
 import io.iohk.atala.event.notification.EventNotificationConfig
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.models.WalletId
@@ -16,7 +16,7 @@ object WalletManagementServiceError {
   final case class SeedGenerationError(cause: Throwable) extends WalletManagementServiceError {
     override def getCause(): Throwable = cause
   }
-  final case class WalletStorageError(cause: Throwable) extends WalletManagementServiceError {
+  final case class UnexpectedStorageError(cause: Throwable) extends WalletManagementServiceError {
     override def getCause(): Throwable = cause
   }
   final case class TooManyWebhookError(limit: Int, actual: Int) extends WalletManagementServiceError {
@@ -29,17 +29,13 @@ object WalletManagementServiceError {
     override def getMessage(): String = toString()
   }
 
-  def fromStorageError(e: Throwable): WalletManagementServiceError = {
-    e match {
-      case re: WalletNonSecretStorageRefinedError =>
-        re match {
-          case WalletNonSecretStorageRefinedError.TooManyWebhook(limit, actual) => TooManyWebhookError(limit, actual)
-          case WalletNonSecretStorageRefinedError.DuplicatedWalletId(id)        => DuplicatedWalletId(id)
-          case WalletNonSecretStorageRefinedError.DuplicatedWalletSeed(id)      => DuplicatedWalletSeed(id)
-        }
-      case e => WalletStorageError(e)
-    }
+  given Conversion[WalletNonSecretStorageError, WalletManagementServiceError] = {
+    case WalletNonSecretStorageError.TooManyWebhook(limit, actual) => TooManyWebhookError(limit, actual)
+    case WalletNonSecretStorageError.DuplicatedWalletId(id)        => DuplicatedWalletId(id)
+    case WalletNonSecretStorageError.DuplicatedWalletSeed(id)      => DuplicatedWalletSeed(id)
+    case WalletNonSecretStorageError.UnexpectedError(cause)        => UnexpectedStorageError(cause)
   }
+
 }
 
 trait WalletManagementService {

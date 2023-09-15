@@ -2,9 +2,9 @@ package io.iohk.atala.agent.walletapi.storage
 
 import io.iohk.atala.agent.walletapi.model.Wallet
 import io.iohk.atala.agent.walletapi.sql.JdbcWalletNonSecretStorage
-import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorageRefinedError.TooManyWebhook
-import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorageRefinedError.DuplicatedWalletId
-import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorageRefinedError.DuplicatedWalletSeed
+import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorageError.TooManyWebhook
+import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorageError.DuplicatedWalletId
+import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorageError.DuplicatedWalletSeed
 import io.iohk.atala.event.notification.EventNotificationConfig
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.models.WalletId
