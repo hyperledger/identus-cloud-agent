@@ -11,7 +11,8 @@ Various methods exist for generating a byte sequence, each serving different pur
 
 PRISM agent does not have any opinion on how the seed should be generated as long as a valid hex string is provided.
 However, it is strongly recommended to use high entropy for generating the master seed.
-PRISM agent allows customizing the wallet seed by using the environment variable `WALLET_SEED`.
+PRISM agent allows customizing the default wallet seed by using the environment variable `DEFAULT_WALLET_SEED`.
+Other wallet seeds can also be configured when creating a wallet using REST API.
 The variable must contain a 64-byte value encoded in hexadecimal format.
 
 ### 1. Static seed
@@ -23,9 +24,9 @@ For example
 
 ```sh
 # Any of these are valid
-WALLET_SEED=00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-WALLET_SEED=11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-WALLET_SEED=0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a
+DEFAULT_WALLET_SEED=00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+DEFAULT_WALLET_SEED=11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
+DEFAULT_WALLET_SEED=0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a
 ```
 __Note: Do not use method this in production.__
 
@@ -35,7 +36,7 @@ Users have the option to create a random hexadecimal string of a desired length 
 like Bash or Python. An example of a Bash script is shown below.
 
 ```bash
-WALLET_SEED=$(tr -dc a-f0-9 </dev/urandom | head -c 128 ; echo '')
+DEFAULT_WALLET_SEED=$(tr -dc a-f0-9 </dev/urandom | head -c 128 ; echo '')
 ```
 This approach is suitable for basic testing scenarios requiring dynamically generated seeds.
 However, for production use, it is advisable to employ a reputable implementation of BIP39

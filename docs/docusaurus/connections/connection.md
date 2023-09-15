@@ -87,7 +87,7 @@ The following example demonstrates how you could use two PRISM Agent APIs to set
 curl -X 'POST' \
 	'http://localhost:8080/prism-agent/connections' \
 	-H 'Content-Type: application/json' \
-	-H "apiKey: $API_KEY" \
+	-H "apikey: $API_KEY" \
 	-d '{ "label": "Connect with Alice" }' | jq
 ```
 
@@ -116,7 +116,7 @@ Replace `{RAW_INVITATION}` with the value of the '_oob' query string parameter f
 curl -X 'POST' \
 	'http://localhost:8090/prism-agent/connection-invitations' \
 	-H 'Content-Type: application/json' \
-	-H "apiKey: $API_KEY" \
+	-H "apikey: $API_KEY" \
 	-d '{ "invitation": "{RAW_INVITATION}" }' | jq
 ```
 
@@ -144,7 +144,7 @@ Example response:
 
 ```shell
 curl -X 'GET' 'http://localhost:8090/prism-agent/connections' \
-    -H "apiKey: $API_KEY" | jq
+    -H "apikey: $API_KEY" | jq
 ```
 
 Example output:
@@ -177,7 +177,7 @@ Example output:
 
 ```shell
 curl -X 'GET' 'http://localhost:8080/prism-agent/connections' \
-    -H "apiKey: $API_KEY" | jq
+    -H "apikey: $API_KEY" | jq
 ```
 
 Example response:

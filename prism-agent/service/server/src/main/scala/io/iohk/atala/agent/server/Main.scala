@@ -1,6 +1,7 @@
 package io.iohk.atala.agent.server
 
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
+import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.server.http.ZioHttpClient
 import io.iohk.atala.agent.server.sql.Migrations as AgentMigrations
 import io.iohk.atala.agent.walletapi.service.{
@@ -58,6 +59,22 @@ object MainApp extends ZIOAppDefault {
 
   Security.insertProviderAt(BouncyCastleProviderSingleton.getInstance(), 2)
 
+  // FIXME: remove this when db app user have correct privileges provisioned by k8s operator.
+  // This should be executed before migration to have correct privilege for new objects.
+  val preMigrations = for {
+    _ <- ZIO.logInfo("running pre-migration steps.")
+    appConfig <- ZIO.service[AppConfig].provide(SystemModule.configLayer)
+    _ <- PolluxMigrations
+      .initDbPrivileges(appConfig.pollux.database.appUsername)
+      .provide(RepoModule.polluxTransactorLayer)
+    _ <- ConnectMigrations
+      .initDbPrivileges(appConfig.connect.database.appUsername)
+      .provide(RepoModule.connectTransactorLayer)
+    _ <- AgentMigrations
+      .initDbPrivileges(appConfig.agent.database.appUsername)
+      .provide(RepoModule.agentTransactorLayer)
+  } yield ()
+
   val migrations = for {
     _ <- ZIO.serviceWithZIO[PolluxMigrations](_.migrate)
     _ <- ZIO.serviceWithZIO[ConnectMigrations](_.migrate)
@@ -100,6 +117,7 @@ object MainApp extends ZIOAppDefault {
       }
       _ <- ZIO.logInfo(s"DIDComm Service port => $didCommServicePort")
 
+      _ <- preMigrations
       _ <- migrations
 
       app <- PrismAgentApp
