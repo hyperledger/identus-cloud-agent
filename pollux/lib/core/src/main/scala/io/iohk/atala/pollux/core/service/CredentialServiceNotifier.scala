@@ -105,9 +105,9 @@ class CredentialServiceNotifier(
     notifyOnSuccess(svc.markCredentialSent(recordId))
 
   override def receiveCredentialIssue(
-      issue: IssueCredential
+      issueCredential: IssueCredential
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
-    notifyOnSuccess(svc.receiveCredentialIssue(issue))
+    notifyOnSuccess(svc.receiveCredentialIssue(issueCredential))
 
   private[this] def notifyOnSuccess[R](effect: ZIO[R, CredentialServiceError, IssueCredentialRecord]) =
     for {

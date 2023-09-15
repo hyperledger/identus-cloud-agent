@@ -106,7 +106,7 @@ trait CredentialService {
   ): ZIO[WalletAccessContext, CredentialServiceError, Int]
 
   def receiveCredentialIssue(
-      issue: IssueCredential
+      issueCredential: IssueCredential
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
   def markOfferSent(recordId: DidCommID): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]

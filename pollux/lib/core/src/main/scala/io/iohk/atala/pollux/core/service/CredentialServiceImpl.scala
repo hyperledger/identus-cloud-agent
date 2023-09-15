@@ -505,18 +505,39 @@ private class CredentialServiceImpl(
   }
 
   override def receiveCredentialIssue(
-      issue: IssueCredential
+      issueCredential: IssueCredential
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
-    val rawIssuedCredential = issue.attachments.map(_.data.asJson.noSpaces).headOption.getOrElse("???") // TODO
+    // TODO We can get rid of this 'raw' representation stored in DB, because it is not used.
+    val rawIssuedCredential = issueCredential.attachments.map(_.data.asJson.noSpaces).headOption.getOrElse("???")
     for {
+      // TODO Move this type of generic/reusable code to a helper trait
+      attachmentFormatAndData <- ZIO.succeed {
+        import IssueCredentialIssuedFormat.{Anoncred, JWT}
+        issueCredential.attachments
+          .collectFirst {
+            case AttachmentDescriptor(_, _, Base64(v), Some(JWT.name), _, _, _, _)      => (JWT, v)
+            case AttachmentDescriptor(_, _, Base64(v), Some(Anoncred.name), _, _, _, _) => (Anoncred, v)
+          }
+          .map { case (f, v) => (f, java.util.Base64.getUrlDecoder.decode(v)) }
+      }
+      _ = attachmentFormatAndData match
+        case Some(IssueCredentialIssuedFormat.JWT, _)      => ZIO.succeed(())
+        case Some(IssueCredentialIssuedFormat.Anoncred, v) => processAnonCredsCredential(v)
+        case _ => UnexpectedError("No AnonCreds or JWT credential attachment found")
+
       record <- getRecordFromThreadIdWithState(
-        issue.thid.map(DidCommID(_)),
+        issueCredential.thid.map(DidCommID(_)),
         ignoreWithZeroRetries = true,
         ProtocolState.RequestPending,
         ProtocolState.RequestSent
       )
       _ <- credentialRepository
-        .updateWithIssuedRawCredential(record.id, issue, rawIssuedCredential, ProtocolState.CredentialReceived)
+        .updateWithIssuedRawCredential(
+          record.id,
+          issueCredential,
+          rawIssuedCredential,
+          ProtocolState.CredentialReceived
+        )
         .flatMap {
           case 1 => ZIO.succeed(())
           case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
@@ -527,6 +548,21 @@ private class CredentialServiceImpl(
         .mapError(RepositoryError.apply)
         .someOrFail(RecordIdNotFound(record.id))
     } yield record
+  }
+
+  private[this] def processAnonCredsCredential(credential: Array[Byte]) = {
+    // TODO Implement credential processing/validation by holder
+//    for {
+//      _ <- ZIO.attempt(
+//        AnoncredLib.processCredential(
+//          anoncreds.Credential(new String(credential)),
+//          ???,
+//          ???,
+//          ???
+//        )
+//      )
+//    } yield ()
+    ZIO.succeed(())
   }
 
   override def markOfferSent(

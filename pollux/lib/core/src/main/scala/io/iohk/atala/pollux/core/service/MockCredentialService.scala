@@ -152,8 +152,8 @@ object MockCredentialService extends Mock[CredentialService] {
       ): IO[CredentialServiceError, Int] =
         proxy(MarkCredentialRecordsAsPublishQueued, credentialsAndProofs)
 
-      override def receiveCredentialIssue(issue: IssueCredential): IO[CredentialServiceError, IssueCredentialRecord] =
-        proxy(ReceiveCredentialIssue, issue)
+      override def receiveCredentialIssue(issueCredential: IssueCredential): IO[CredentialServiceError, IssueCredentialRecord] =
+        proxy(ReceiveCredentialIssue, issueCredential)
 
       override def markOfferSent(recordId: DidCommID): IO[CredentialServiceError, IssueCredentialRecord] =
         proxy(MarkOfferSent, recordId)

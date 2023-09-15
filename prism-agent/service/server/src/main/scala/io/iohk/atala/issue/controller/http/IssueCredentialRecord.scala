@@ -80,6 +80,7 @@ final case class IssueCredentialRecord(
     protocolState: String,
     @description(annotations.jwtCredential.description)
     @encodedExample(annotations.jwtCredential.example)
+    // TODO Check with SDK-side if this field can be renamed to 'credential' and contain JWT or AnonCreds
     jwtCredential: Option[String] = None,
     @description(annotations.issuingDID.description)
     @encodedExample(annotations.issuingDID.example)
