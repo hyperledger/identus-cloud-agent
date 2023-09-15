@@ -36,7 +36,7 @@ object Migrations {
     ZLayer.fromFunction(Migrations.apply _)
 
   def initDbPrivileges(appUser: String): RIO[Transactor[Task], Unit] = {
-    val cxnIO =for {
+    val cxnIO = for {
       _ <- doobie.free.connection.createStatement.map { stm =>
         stm.execute(s"""
           | ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO "$appUser"
