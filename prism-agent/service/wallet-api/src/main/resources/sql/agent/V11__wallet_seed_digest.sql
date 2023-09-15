@@ -1,7 +1,7 @@
 ALTER TABLE public.wallet
 ADD COLUMN "seed_digest" BYTEA;
 
--- Fill the seed hash with a dummy value just to make it uniuqe
+-- Fill the seed digest with a dummy value just to make it unique
 UPDATE public.wallet
 SET "seed_digest" = decode(replace("wallet_id"::text, '-', ''), 'hex')
 WHERE "seed_digest" IS NULL;
