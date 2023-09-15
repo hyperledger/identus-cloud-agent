@@ -26,6 +26,8 @@ import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.shared.models.{HexString, WalletAccessContext, WalletId}
 import io.iohk.atala.system.controller.SystemServerEndpoints
 import zio.*
+import zio.metrics.*
+import io.iohk.atala.shared.utils.DurationOps.toMetricsSeconds
 
 object PrismAgentApp {
 
@@ -54,7 +56,9 @@ object PrismAgentApp {
         .flatMap { wallets =>
           ZIO.foreach(wallets) { wallet =>
             BackgroundJobs.issueCredentialDidCommExchanges
-              .provideSomeLayer(ZLayer.succeed(WalletAccessContext(wallet.id)))
+              .provideSomeLayer(ZLayer.succeed(WalletAccessContext(wallet.id))) @@ Metric
+              .gauge("issuance_flow_did_com_exchange_job_ms_gauge")
+              .trackDurationWith(_.toMetricsSeconds)
           }
         }
         .repeat(Schedule.spaced(config.pollux.issueBgJobRecurrenceDelay))
@@ -73,7 +77,9 @@ object PrismAgentApp {
         .flatMap { wallets =>
           ZIO.foreach(wallets) { wallet =>
             BackgroundJobs.presentProofExchanges
-              .provideSomeLayer(ZLayer.succeed(WalletAccessContext(wallet.id)))
+              .provideSomeLayer(ZLayer.succeed(WalletAccessContext(wallet.id))) @@ Metric
+              .gauge("present_proof_flow_did_com_exchange_job_ms_gauge")
+              .trackDurationWith(_.toMetricsSeconds)
           }
         }
         .repeat(Schedule.spaced(config.pollux.presentationBgJobRecurrenceDelay))
@@ -91,7 +97,9 @@ object PrismAgentApp {
         .flatMap { wallets =>
           ZIO.foreach(wallets) { wallet =>
             ConnectBackgroundJobs.didCommExchanges
-              .provideSomeLayer(ZLayer.succeed(WalletAccessContext(wallet.id)))
+              .provideSomeLayer(ZLayer.succeed(WalletAccessContext(wallet.id))) @@ Metric
+              .gauge("connection_flow_did_com_exchange_job_ms_gauge")
+              .trackDurationWith(_.toMetricsSeconds)
           }
         }
         .repeat(Schedule.spaced(config.connect.connectBgJobRecurrenceDelay))
@@ -156,7 +164,21 @@ object AgentInitialization {
   private val defaultEntity = Entity.Default
 
   def run: RIO[AppConfig & WalletManagementService & EntityService & ApiKeyAuthenticator, Unit] =
-    initializeDefaultWallet
+    for {
+      _ <- validateAppConfig
+      _ <- initializeDefaultWallet
+    } yield ()
+
+  private val validateAppConfig =
+    for {
+      config <- ZIO.service[AppConfig]
+      isApiKeyEnabled = config.agent.authentication.apiKey.enabled
+      isDefaultWalletEnabled = config.agent.defaultWallet.enabled
+      _ <- ZIO
+        .fail(RuntimeException("The default wallet cannot be disabled if the apikey authentication is disabled."))
+        .when(!isApiKeyEnabled && !isDefaultWalletEnabled)
+        .unit
+    } yield ()
 
   private val initializeDefaultWallet =
     for {

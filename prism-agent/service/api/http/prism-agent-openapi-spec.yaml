@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Prism Agent
-  version: 1.14.2
+  version: 1.15.0
 paths:
   /credential-definition-registry/definitions:
     get:
@@ -12,6 +12,12 @@ paths:
         and control the pagination by `offset` and `limit` parameters '
       operationId: lookupCredentialDefinitionsByQuery
       parameters:
+      - name: apikey
+        in: header
+        description: API key
+        required: false
+        schema:
+          type: string
       - name: author
         in: query
         required: false
@@ -80,6 +86,13 @@ paths:
         JSON Schema on behalf of Cloud Agent. The credential definition will be signed
         by the keys of Cloud Agent and issued by the DID that corresponds to it.
       operationId: createCredentialDefinition
+      parameters:
+      - name: apikey
+        in: header
+        description: API key
+        required: false
+        schema:
+          type: string
       requestBody:
         description: JSON object required for the credential definition creation
         content:
@@ -96,6 +109,12 @@ paths:
                 $ref: '#/components/schemas/CredentialDefinitionResponse'
         '400':
           description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -161,6 +180,12 @@ paths:
         the pagination by `offset` and `limit` parameters '
       operationId: lookupSchemasByQuery
       parameters:
+      - name: apikey
+        in: header
+        description: API key
+        required: false
+        schema:
+          type: string
       - name: author
         in: query
         required: false
@@ -215,6 +240,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
@@ -229,6 +260,13 @@ paths:
         JSON Schema on behalf of Cloud Agent. The credential schema will be signed
         by the keys of Cloud Agent and issued by the DID that corresponds to it.
       operationId: createSchema
+      parameters:
+      - name: apikey
+        in: header
+        description: API key
+        required: false
+        schema:
+          type: string
       requestBody:
         description: JSON object required for the credential schema creation
         content:
@@ -245,6 +283,12 @@ paths:
                 $ref: '#/components/schemas/CredentialSchemaResponse'
         '400':
           description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -272,6 +316,12 @@ paths:
         to it.
       operationId: updateSchema
       parameters:
+      - name: apikey
+        in: header
+        description: API key
+        required: false
+        schema:
+          type: string
       - name: author
         in: path
         description: DID of the identity which authored the credential schema. A piece
@@ -303,6 +353,12 @@ paths:
                 $ref: '#/components/schemas/CredentialSchemaResponse'
         '400':
           description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -366,6 +422,13 @@ paths:
       summary: Trace the request input from the point of view of the server
       description: Trace the request input from the point of view of the server
       operationId: test
+      parameters:
+      - name: apikey
+        in: header
+        description: API key
+        required: false
+        schema:
+          type: string
       responses:
         '200':
           description: ''
@@ -374,11 +437,23 @@ paths:
               schema:
                 type: string
         '400':
-          description: Invalid value
+          description: Invalid request parameters
           content:
-            text/plain:
+            application/json:
               schema:
-                type: string
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /verification/policies:
     get:
       tags:
@@ -388,6 +463,12 @@ paths:
         by `offset` and `limit` parameters
       operationId: lookupVerificationPoliciesByQuery
       parameters:
+      - name: apikey
+        in: header
+        description: API key
+        required: false
+        schema:
+          type: string
       - name: name
         in: query
         required: false
@@ -423,6 +504,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
@@ -435,6 +522,13 @@ paths:
       summary: Create the new verification policy
       description: Create the new verification policy
       operationId: createVerificationPolicy
+      parameters:
+      - name: apikey
+        in: header
+        description: API key
+        required: false
+        schema:
+          type: string
       requestBody:
         description: Create verification policy object
         content:
@@ -455,6 +549,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
@@ -469,6 +569,12 @@ paths:
       description: Get the verification policy by id
       operationId: getVerificationPolicyById
       parameters:
+      - name: apikey
+        in: header
+        description: API key
+        required: false
+        schema:
+          type: string
       - name: id
         in: path
         description: Get the verification policy by id
@@ -485,6 +591,12 @@ paths:
                 $ref: '#/components/schemas/VerificationPolicy'
         '400':
           description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -508,6 +620,12 @@ paths:
       description: Update the verification policy entry
       operationId: updateVerificationPolicy
       parameters:
+      - name: apikey
+        in: header
+        description: API key
+        required: false
+        schema:
+          type: string
       - name: id
         in: path
         required: true
@@ -541,6 +659,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Resource could not be found
           content:
@@ -560,6 +684,12 @@ paths:
       description: Delete the verification policy by id
       operationId: deleteVerificationPolicyById
       parameters:
+      - name: apikey
+        in: header
+        description: API key
+        required: false
+        schema:
+          type: string
       - name: id
         in: path
         description: Delete the verification policy by id
@@ -572,6 +702,12 @@ paths:
           description: Verification policy deleted successfully
         '400':
           description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -596,6 +732,12 @@ paths:
       description: Get the list of connection records paginated
       operationId: getConnections
       parameters:
+      - name: apikey
+        in: header
+        description: API key
+        required: false
+        schema:
+          type: string
       - name: offset
         in: query
         required: false
@@ -627,6 +769,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
@@ -643,6 +791,13 @@ paths:
         It returns a new connection record in `InvitationGenerated` state.
         The request body may contain a `label` that can be used as a human readable alias for the connection, for example `{'label': "Bob"}`
       operationId: createConnection
+      parameters:
+      - name: apikey
+        in: header
+        description: API key
+        required: false
+        schema:
+          type: string
       requestBody:
         description: JSON object required for the connection creation
         content:
@@ -664,6 +819,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
@@ -678,6 +839,12 @@ paths:
       description: Gets an existing connection record by its unique identifier
       operationId: getConnection
       parameters:
+      - name: apikey
+        in: header
+        description: API key
+        required: false
+        schema:
+          type: string
       - name: connectionId
         in: path
         description: The unique identifier of the connection record.
@@ -694,6 +861,12 @@ paths:
                 $ref: '#/components/schemas/Connection'
         '400':
           description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -721,6 +894,13 @@ paths:
         and submits a Connection Request to the inviter.
         It returns a connection object in `ConnectionRequestPending` state, until the Connection Request is eventually sent to the inviter by the prism-agent's background process. The connection object state will then automatically move to `ConnectionRequestSent`.
       operationId: acceptConnectionInvitation
+      parameters:
+      - name: apikey
+        in: header
+        description: API key
+        required: false
+        schema:
+          type: string
       requestBody:
         description: The request used by an invitee to accept a connection invitation
           received from an inviter, using out-of-band mechanism.
@@ -738,6 +918,12 @@ paths:
                 $ref: '#/components/schemas/Connection'
         '400':
           description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -860,6 +1046,12 @@ paths:
         If the `limit` parameter is not set, it defaults to 100 items per page.
       operationId: getDid-registrarDids
       parameters:
+      - name: apikey
+        in: header
+        description: API key
+        required: false
+        schema:
+          type: string
       - name: offset
         in: query
         required: false
@@ -885,6 +1077,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
@@ -899,6 +1097,13 @@ paths:
         Create unpublished DID and store it inside Prism Agent's wallet. The private keys of the DID is
         managed by Prism Agent. The DID can later be published to the VDR using publications endpoint.
       operationId: postDid-registrarDids
+      parameters:
+      - name: apikey
+        in: header
+        description: API key
+        required: false
+        schema:
+          type: string
       requestBody:
         content:
           application/json:
@@ -914,6 +1119,12 @@ paths:
                 $ref: '#/components/schemas/CreateManagedDIDResponse'
         '400':
           description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource could not be found
           content:
             application/json:
               schema:
@@ -938,6 +1149,12 @@ paths:
       description: Get DID stored in Prism Agent's wallet
       operationId: getDid-registrarDidsDidref
       parameters:
+      - name: apikey
+        in: header
+        description: API key
+        required: false
+        schema:
+          type: string
       - name: didRef
         in: path
         description: Prism DID according to [the Prism DID method syntax](https://github.com/input-output-hk/prism-did-method-spec/blob/main/w3c-spec/PRISM-method.md#prism-did-method-syntax)
@@ -954,6 +1171,12 @@ paths:
                 $ref: '#/components/schemas/ManagedDID'
         '400':
           description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -978,6 +1201,12 @@ paths:
       description: Publish the DID stored in Prism Agent's wallet to the VDR.
       operationId: postDid-registrarDidsDidrefPublications
       parameters:
+      - name: apikey
+        in: header
+        description: API key
+        required: false
+        schema:
+          type: string
       - name: didRef
         in: path
         description: Prism DID according to [the Prism DID method syntax](https://github.com/input-output-hk/prism-did-method-spec/blob/main/w3c-spec/PRISM-method.md#prism-did-method-syntax)
@@ -994,6 +1223,12 @@ paths:
                 $ref: '#/components/schemas/DIDOperationResponse'
         '400':
           description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -1023,6 +1258,12 @@ paths:
         some operations being rejected as only one operation is allowed to be appended to the last confirmed operation.
       operationId: postDid-registrarDidsDidrefUpdates
       parameters:
+      - name: apikey
+        in: header
+        description: API key
+        required: false
+        schema:
+          type: string
       - name: didRef
         in: path
         description: Prism DID according to [the Prism DID method syntax](https://github.com/input-output-hk/prism-did-method-spec/blob/main/w3c-spec/PRISM-method.md#prism-did-method-syntax)
@@ -1045,6 +1286,12 @@ paths:
                 $ref: '#/components/schemas/DIDOperationResponse'
         '400':
           description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -1083,6 +1330,12 @@ paths:
         to the VDR.
       operationId: postDid-registrarDidsDidrefDeactivations
       parameters:
+      - name: apikey
+        in: header
+        description: API key
+        required: false
+        schema:
+          type: string
       - name: didRef
         in: path
         description: Prism DID according to [the Prism DID method syntax](https://github.com/input-output-hk/prism-did-method-spec/blob/main/w3c-spec/PRISM-method.md#prism-did-method-syntax)
@@ -1099,6 +1352,12 @@ paths:
                 $ref: '#/components/schemas/DIDOperationResponse'
         '400':
           description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -1129,6 +1388,13 @@ paths:
         a holder.
       description: Creates a new credential offer in the database
       operationId: createCredentialOffer
+      parameters:
+      - name: apikey
+        in: header
+        description: API key
+        required: false
+        schema:
+          type: string
       requestBody:
         description: The credential offer object.
         content:
@@ -1149,6 +1415,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
@@ -1163,6 +1435,12 @@ paths:
       description: Get the list of issue credential records paginated
       operationId: getCredentialRecords
       parameters:
+      - name: apikey
+        in: header
+        description: API key
+        required: false
+        schema:
+          type: string
       - name: offset
         in: query
         required: false
@@ -1194,6 +1472,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
@@ -1208,6 +1492,12 @@ paths:
       description: Gets issue credential records by record id
       operationId: getCredentialRecord
       parameters:
+      - name: apikey
+        in: header
+        description: API key
+        required: false
+        schema:
+          type: string
       - name: recordId
         in: path
         description: The unique identifier of the issue credential record.
@@ -1223,6 +1513,12 @@ paths:
                 $ref: '#/components/schemas/IssueCredentialRecord'
         '400':
           description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -1248,6 +1544,12 @@ paths:
         back a credential request.
       operationId: acceptCredentialOffer
       parameters:
+      - name: apikey
+        in: header
+        description: API key
+        required: false
+        schema:
+          type: string
       - name: recordId
         in: path
         description: The unique identifier of the issue credential record.
@@ -1270,6 +1572,12 @@ paths:
                 $ref: '#/components/schemas/IssueCredentialRecord'
         '400':
           description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -1297,6 +1605,12 @@ paths:
         by credential id.
       operationId: issueCredential
       parameters:
+      - name: apikey
+        in: header
+        description: API key
+        required: false
+        schema:
+          type: string
       - name: recordId
         in: path
         description: The unique identifier of the issue credential record.
@@ -1313,6 +1627,12 @@ paths:
                 $ref: '#/components/schemas/IssueCredentialRecord'
         '400':
           description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -1337,6 +1657,12 @@ paths:
       description: list of presentation statuses
       operationId: getAllPresentation
       parameters:
+      - name: apikey
+        in: header
+        description: API key
+        required: false
+        schema:
+          type: string
       - name: offset
         in: query
         required: false
@@ -1367,6 +1693,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
@@ -1381,6 +1713,13 @@ paths:
       description: Holder presents proof derived from the verifiable credential to
         verifier.
       operationId: requestPresentation
+      parameters:
+      - name: apikey
+        in: header
+        description: API key
+        required: false
+        schema:
+          type: string
       requestBody:
         description: The present proof creation request.
         content:
@@ -1402,6 +1741,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
@@ -1417,6 +1762,12 @@ paths:
       description: Returns an existing presentation record by id.
       operationId: getPresentation
       parameters:
+      - name: apikey
+        in: header
+        description: API key
+        required: false
+        schema:
+          type: string
       - name: presentationId
         in: path
         description: The unique identifier of the presentation record.
@@ -1433,6 +1784,12 @@ paths:
                 $ref: '#/components/schemas/PresentationStatus'
         '400':
           description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -1457,6 +1814,12 @@ paths:
       description: Accept or reject presentation of proof request.
       operationId: updatePresentation
       parameters:
+      - name: apikey
+        in: header
+        description: API key
+        required: false
+        schema:
+          type: string
       - name: presentationId
         in: path
         description: The unique identifier of the presentation record.
@@ -1480,6 +1843,12 @@ paths:
                 $ref: '#/components/schemas/PresentationStatus'
         '400':
           description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -1548,6 +1917,699 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /iam/entities:
+    get:
+      tags:
+      - Identity and Access Management
+      summary: Get all entities
+      description: 'Get all entities with the pagination by `offset` and `limit` parameters '
+      operationId: getAllEntities
+      parameters:
+      - name: x-admin-api-key
+        in: header
+        description: Admin API Key
+        required: true
+        schema:
+          type: string
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: Collection of Entity records
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EntityResponsePage'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags:
+      - Identity and Access Management
+      summary: Create a new entity record
+      description: Create the new entity record. The entity record is a representation
+        of the account in the system.
+      operationId: createEntity
+      parameters:
+      - name: x-admin-api-key
+        in: header
+        description: Admin API Key
+        required: true
+        schema:
+          type: string
+      requestBody:
+        description: JSON object required for the entity creation
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEntityRequest'
+        required: true
+      responses:
+        '201':
+          description: The new entity is successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EntityResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /iam/entities/{id}/name:
+    put:
+      tags:
+      - Identity and Access Management
+      summary: Update the entity record name by `id`
+      description: Update the entity record name by `id`
+      operationId: updateEntityName
+      parameters:
+      - name: x-admin-api-key
+        in: header
+        description: Admin API Key
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        description: JSON object required for the entity name update
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateEntityNameRequest'
+        required: true
+      responses:
+        '200':
+          description: The entity record is successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EntityResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /iam/entities/{id}/walletId:
+    put:
+      tags:
+      - Identity and Access Management
+      summary: Update the entity record `walletId` by `id`
+      description: Update the entity record `walletId` field by `id`
+      operationId: updateEntityWalletId
+      parameters:
+      - name: x-admin-api-key
+        in: header
+        description: Admin API Key
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        description: JSON object required for the entity walletId update
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateEntityWalletIdRequest'
+        required: true
+      responses:
+        '200':
+          description: The entity record is successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EntityResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /iam/entities/{id}:
+    get:
+      tags:
+      - Identity and Access Management
+      summary: Get the entity by the `id`
+      description: Get the entity by the unique identifier
+      operationId: getEntityById
+      parameters:
+      - name: x-admin-api-key
+        in: header
+        description: Admin API Key
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        description: Identifier of the entity
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Entity found by `id`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EntityResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags:
+      - Identity and Access Management
+      summary: Delete the entity by `id`
+      description: Delete the entity by the unique identifier
+      operationId: deleteEntityById
+      parameters:
+      - name: x-admin-api-key
+        in: header
+        description: Admin API Key
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        description: Identifier of the entity
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Entity deleted successfully
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /iam/apikey-authentication:
+    post:
+      tags:
+      - Identity and Access Management
+      summary: Register the `apikey` for the entity
+      description: Register the `apikey` for the entity.
+      operationId: addEntityApiKeyAuthentication
+      parameters:
+      - name: x-admin-api-key
+        in: header
+        description: Admin API Key
+        required: true
+        schema:
+          type: string
+      requestBody:
+        description: JSON object required for the registering the entity and `apikey`
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApiKeyAuthenticationRequest'
+        required: true
+      responses:
+        '201':
+          description: The new `apikey` is successfully registered for the entity
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags:
+      - Identity and Access Management
+      summary: Unregister the `apikey` for the entity
+      description: Unregister the `apikey` for the entity.
+      operationId: deleteEntityApiKeyAuthentication
+      parameters:
+      - name: x-admin-api-key
+        in: header
+        description: Admin API Key
+        required: true
+        schema:
+          type: string
+      requestBody:
+        description: JSON object required for the unregistering the entity and `apikey`
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApiKeyAuthenticationRequest'
+        required: true
+      responses:
+        '200':
+          description: The new `apikey` is successfully unregistered for the entity
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /wallets:
+    get:
+      tags:
+      - Wallet Management
+      summary: List all wallets
+      operationId: getWallets
+      parameters:
+      - name: x-admin-api-key
+        in: header
+        description: Admin API Key
+        required: true
+        schema:
+          type: string
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: List Prism Agent managed DIDs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletDetailPage'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags:
+      - Wallet Management
+      summary: Create a new wallet
+      description: |-
+        Create a new wallet with optional to use provided seed.
+        The seed will be used for DID key derivation inside the wallet.
+      operationId: createWallet
+      parameters:
+      - name: x-admin-api-key
+        in: header
+        description: Admin API Key
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateWalletRequest'
+        required: true
+      responses:
+        '201':
+          description: A new wallet has been created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletDetail'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /wallets/{walletId}:
+    get:
+      tags:
+      - Wallet Management
+      summary: Get the wallet by ID
+      operationId: getWalletsWalletid
+      parameters:
+      - name: x-admin-api-key
+        in: header
+        description: Admin API Key
+        required: true
+        schema:
+          type: string
+      - name: walletId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Successfully get the wallet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletDetail'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /events/webhooks:
+    get:
+      tags:
+      - Events
+      summary: List wallet webhook notifications
+      operationId: getEventsWebhooks
+      parameters:
+      - name: apikey
+        in: header
+        description: API key
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: List wallet webhook notifications
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookNotificationPage'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags:
+      - Events
+      summary: Create wallet webhook notifications
+      operationId: postEventsWebhooks
+      parameters:
+      - name: apikey
+        in: header
+        description: API key
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateWebhookNotification'
+        required: true
+      responses:
+        '200':
+          description: Webhook notification has been created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookNotification'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Cannot process due to conflict with current state of the resource
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /events/webhooks/{id}:
+    delete:
+      tags:
+      - Events
+      summary: Delete the wallet webhook notification by `id`
+      operationId: deleteEventsWebhooksId
+      parameters:
+      - name: apikey
+        in: header
+        description: API key
+        required: false
+        schema:
+          type: string
+      - name: id
+        in: path
+        description: ID of the webhook notification to delete.
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Webhook notification has been deleted.
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
     AcceptConnectionInvitationRequest:
@@ -1578,6 +2640,22 @@ components:
       - REMOVE_KEY
       - REMOVE_SERVICE
       - UPDATE_SERVICE
+    ApiKeyAuthenticationRequest:
+      required:
+      - entityId
+      - apiKey
+      type: object
+      properties:
+        entityId:
+          type: string
+          description: The `entityId` of the entity to be updated
+          format: uuid
+          example: 01234567-0000-0000-0000-000000000000
+        apiKey:
+          type: string
+          description: The `apikey` of the entity to be updated
+          example: dkflks3DflkFmkllnDfde
+          minLength: 1
     Arr:
       type: object
       properties:
@@ -1742,6 +2820,29 @@ components:
           type: string
           description: A human readable alias for the connection.
           example: Peter
+    CreateEntityRequest:
+      required:
+      - name
+      type: object
+      properties:
+        id:
+          type: string
+          description: The new `id` of the entity to be created. If this field is
+            not provided, the server will generate a new UUID for the entity
+          format: uuid
+          example: 00000000-0000-0000-0000-000000000000
+        name:
+          type: string
+          description: The new `id` of the entity to be created. If this field is
+            not provided, the server will generate a new UUID for the entity
+          example: 00000000-0000-0000-0000-000000000000
+          minLength: 1
+        walletId:
+          type: string
+          description: The new `walletId` of the entity to be created. If this field
+            is not provided, the server will set the default `walletId`
+          format: uuid
+          example: 00000000-0000-0000-0000-000000000000
     CreateIssueCredentialRecordRequest:
       required:
       - claims
@@ -1811,6 +2912,34 @@ components:
           type: array
           items:
             type: string
+    CreateWalletRequest:
+      required:
+      - name
+      type: object
+      properties:
+        seed:
+          type: string
+          description: A BIP32 seed encoded in hexadecimal string. It is expected
+            to represent 64-bytes binary seed (128 hex characters).
+          example: c9994785ce6d548134020f610b76102ca1075d3bb672a75ec8c9a27a7b8607e3b9b384e43b77bb08f8d5159651ae38b98573f7ecc79f2d7e1f1cc371ce60cf8a
+        name:
+          type: string
+          description: A name of the wallet
+          example: my-wallet-1
+        id:
+          type: string
+          description: The unique `id` of the wallet. Randomly generated if not specified.
+          format: uuid
+          example: 00000000-0000-0000-0000-000000000000
+    CreateWebhookNotification:
+      required:
+      - url
+      type: object
+      properties:
+        url:
+          type: string
+        customHeaders:
+          $ref: '#/components/schemas/Map_String'
     CredentialDefinitionInput:
       required:
       - name
@@ -2386,6 +3515,91 @@ components:
           type: string
           description: A DID affected by the scheduled operation
           example: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff
+    EntityResponse:
+      required:
+      - kind
+      - self
+      - id
+      - name
+      - walletId
+      - createdAt
+      - updatedAt
+      type: object
+      properties:
+        kind:
+          type: string
+          description: The `kind` of the entity.
+          example: Entity
+        self:
+          type: string
+          description: The `self` link of the entity.
+          example: http://localhost:8080/prism-agent/iam/entities/00000000-0000-0000-0000-000000000000
+        id:
+          type: string
+          description: The unique `id` of the entity
+          format: uuid
+          example: 00000000-0000-0000-0000-000000000000
+        name:
+          type: string
+          description: The `name` of the entity.
+          example: John Doe
+        walletId:
+          type: string
+          description: The `walletId` owned by the entity.
+          format: uuid
+          example: 00000000-0000-0000-0000-000000000000
+        createdAt:
+          type: string
+          description: The `createdAt` timestamp of the entity.
+          format: date-time
+          example: '2023-01-01T00:00:00Z'
+        updatedAt:
+          type: string
+          description: The `updatedAt` timestamp of the entity.
+          format: date-time
+          example: '2023-01-01T00:00:00Z'
+    EntityResponsePage:
+      required:
+      - kind
+      - self
+      - pageOf
+      type: object
+      properties:
+        contents:
+          type: array
+          items:
+            $ref: '#/components/schemas/EntityResponse'
+          description: A sequence of CredentialSchemaResponse objects representing
+            the list of credential schemas that the API response contains
+          example:
+          - EntityResponse(Entity,/prism-agent/iam/entities/00000000-0000-0000-0000-000000000000,00000000-0000-0000-0000-000000000000,John
+            Doe,00000000-0000-0000-0000-000000000000,2023-01-01T00:00:00Z,2023-01-01T00:00:00Z)
+        kind:
+          type: string
+          description: A string field indicating the type of the API response. In
+            this case, it will always be set to `CredentialSchemaPage`
+          example: CredentialSchemaPage
+        self:
+          type: string
+          description: A string field containing the URL of the current API endpoint
+          example: /prism-agent/schema-registry/schemas?skip=10&limit=10
+        pageOf:
+          type: string
+          description: A string field indicating the type of resource that the contents
+            field contains
+          example: /prism-agent/schema-registry/schemas
+        next:
+          type: string
+          description: An optional string field containing the URL of the next page
+            of results. If the API response does not contain any more pages, this
+            field should be set to None.
+          example: /prism-agent/schema-registry/schemas?skip=20&limit=10
+        previous:
+          type: string
+          description: An optional string field containing the URL of the previous
+            page of results. If the API response is the first page of results, this
+            field should be set to None.
+          example: /prism-agent/schema-registry/schemas?skip=0&limit=10
     ErrorResponse:
       required:
       - status
@@ -2473,7 +3687,7 @@ components:
           type: string
           description: The date and time when the issue credential record was created.
           format: date-time
-          example: '2023-09-06T11:36:33.488917Z'
+          example: '2023-09-12T16:54:40.653149Z'
         updatedAt:
           type: string
           description: The date and time when the issue credential record was last
@@ -2619,6 +3833,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ManagedDID'
+    Map_String:
+      type: object
+      additionalProperties:
+        type: string
     'Null':
       type: object
     Num:
@@ -2990,6 +4208,26 @@ components:
       properties:
         value:
           type: string
+    UpdateEntityNameRequest:
+      required:
+      - name
+      type: object
+      properties:
+        name:
+          type: string
+          description: New name of the entity
+          example: John Doe
+          minLength: 1
+    UpdateEntityWalletIdRequest:
+      required:
+      - walletId
+      type: object
+      properties:
+        walletId:
+          type: string
+          description: The walletId owned by the entity
+          format: uuid
+          example: 00000000-0000-0000-0000-000000000000
     UpdateManagedDIDRequest:
       type: object
       properties:
@@ -3149,3 +4387,96 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/VerificationPolicy'
+    WalletDetail:
+      required:
+      - id
+      - name
+      - createdAt
+      - updatedAt
+      type: object
+      properties:
+        id:
+          type: string
+          description: A wallet ID
+          format: uuid
+          example: 00000000-0000-0000-0000-000000000000
+        name:
+          type: string
+          description: The name of the wallet
+          example: my-wallet-1
+        createdAt:
+          type: string
+          description: The `createdAt` timestamp of the wallet.
+          format: date-time
+          example: '2023-01-01T00:00:00Z'
+        updatedAt:
+          type: string
+          description: The `updateddAt` timestamp of the wallet.
+          format: date-time
+          example: '2023-01-01T00:00:00Z'
+    WalletDetailPage:
+      required:
+      - self
+      - kind
+      - pageOf
+      type: object
+      properties:
+        self:
+          type: string
+        kind:
+          type: string
+        pageOf:
+          type: string
+        next:
+          type: string
+        previous:
+          type: string
+        contents:
+          type: array
+          items:
+            $ref: '#/components/schemas/WalletDetail'
+    WebhookNotification:
+      required:
+      - id
+      - url
+      - customHeaders
+      - createdAt
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID of webhook notification resource
+          format: uuid
+          example: 00000000-0000-0000-0000-000000000000
+        url:
+          type: string
+          description: A URL of webhook for event notification
+          example: http://example.com
+        customHeaders:
+          $ref: '#/components/schemas/Map_String'
+        createdAt:
+          type: string
+          description: A time which the webhook notification resource was created.
+          format: date-time
+          example: '1970-01-01T00:00:00Z'
+    WebhookNotificationPage:
+      required:
+      - self
+      - kind
+      - pageOf
+      type: object
+      properties:
+        self:
+          type: string
+        kind:
+          type: string
+        pageOf:
+          type: string
+        next:
+          type: string
+        previous:
+          type: string
+        contents:
+          type: array
+          items:
+            $ref: '#/components/schemas/WebhookNotification'

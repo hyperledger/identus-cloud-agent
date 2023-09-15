@@ -46,7 +46,7 @@ The example uses the following endpoints
 
 ```bash
 curl --location --request GET 'http://localhost:8080/prism-agent/did-registrar/dids' \
-  --header "apiKey: $API_KEY" \
+  --header "apikey: $API_KEY" \
   --header 'Accept: application/json'
 ```
 The result should show an empty list, as no DIDs exist on this PRISM Agent instance.
@@ -61,7 +61,7 @@ The current PRISM DID method supports a key with a single purpose, but it is ext
 curl --location --request POST 'http://localhost:8080/prism-agent/did-registrar/dids' \
   --header 'Content-Type: application/json' \
   --header 'Accept: application/json' \
-  --header "apiKey: $API_KEY" \
+  --header "apikey: $API_KEY" \
   --data-raw '{
     "documentTemplate": {
       "publicKeys": [
@@ -111,7 +111,7 @@ Replacing the `{didRef}` with the short-form DID, and the resolution should fail
 
 ```bash
 curl --location --request GET 'http://localhost:8080/prism-agent/dids/{didRef}' \
---header "apiKey: $API_KEY" \
+--header "apikey: $API_KEY" \
 --header 'Accept: */*'
 ```
 

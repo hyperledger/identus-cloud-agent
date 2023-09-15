@@ -32,12 +32,57 @@ monitor the progress of the main flows, receiving timely updates about changes a
 
 ### Enabling the Webhook Feature
 
-PRISM Agent uses the following environment variables to manage webhook notifications:
+There are two kinds of webhook notifications: global webhooks and wallet webhooks.
+Global webhooks capture all events that happen on the PRISM Agent across all wallets,
+whereas wallet webhooks only capture events that are specific to assets within a particular wallet.
 
-| Name              | Description                                                              | Default |
-|-------------------|--------------------------------------------------------------------------|---------|
-| `WEBHOOK_URL`     | The webhook endpoint URL where the notifications will be sent            | null    |
-| `WEBHOOK_API_KEY` | The optional API key (bearer token) to use as the `Authorization` header | null    |
+#### Enable global webhook using environment variables
+
+PRISM Agent uses the following environment variables to manage global webhook notifications:
+
+| Name                     | Description                                                              | Default |
+|--------------------------|--------------------------------------------------------------------------|---------|
+| `GLOBAL_WEBHOOK_URL`     | The webhook endpoint URL where the notifications will be sent            | null    |
+| `GLOBAL_WEBHOOK_API_KEY` | The optional API key (bearer token) to use as the `Authorization` header | null    |
+
+#### Enable wallet webhook for default wallet using environment variables
+
+In a multi-tenant scenario, the PRISM Agent can optionally create a default wallet to simplify the development and deployment process.
+The webhook configuration for this default wallet can be defined using environment variables.
+After the default wallet is created, its webhook settings are stored in the system and are no longer influenced by these environment variables.
+
+| Name                             | Description                                                              | Default |
+|----------------------------------|--------------------------------------------------------------------------|---------|
+| `DEFAULT_WALLET_ENABLED`         | Automatically create default on PRISM Agent startup                      | true    |
+| `DEFAULT_WALLET_WEBHOOK_URL`     | The webhook endpoint URL where the notifications will be sent            | null    |
+| `DEFAULT_WALLET_WEBHOOK_API_KEY` | The optional API key (bearer token) to use as the `Authorization` header | null    |
+
+#### Enable wallet hook using REST API
+
+In a multi-tenant scenario, there is an option to configure wallet webhook parameters using a REST API, which offers more flexibility.
+For each individual wallet, users can create a new webhook by making a POST request to `/events/webhooks`,
+which in turn creates a new webhook resource specific to their wallet.
+
+```bash
+curl --location --request POST 'http://localhost:8080/prism-agent/events/webhooks' \
+  --header 'Content-Type: application/json' \
+  --header 'Accept: application/json' \
+  --header "apiKey: $API_KEY" \
+  --data-raw '{
+    "url": "http://localhost:9095"
+  }'
+```
+
+Response Example:
+
+```json
+{
+    "id": "e9569dd0-bffa-4be4-94fe-f5025a79029a",
+    "url": "http://localhost:9095",
+    "customHeaders": {},
+    "createdAt": "2023-09-12T08:39:03.871339Z"
+}
+```
 
 ### Securing the Webhook Endpoint
 
@@ -48,10 +93,13 @@ the following best practices when securing your webhook endpoint:
 - Implement authentication mechanisms (e.g., API keys, tokens) to verify the authenticity of incoming requests.
 - Validate and sanitize incoming webhook requests to mitigate potential security risks.
 
-The current supported authorization mechanism for PRISM Agent's webhook notifications is the bearer token. If
+One of the authorization mechanism for PRISM Agent's webhook notifications is the bearer token. If
 configured, the token will be included in the `Authorization` header of the HTTP request sent by the agent to the
-webhook endpoint. You can configure this bearer token by setting the value of the `WEBHOOK_API_KEY` environment
-variable.
+webhook endpoint. You can configure this bearer token by setting the value of the
+`GLOBAL_WEBHOOK_API_KEY` or `DEFAULT_WALLET_WEBHOOK_API_KEY` environment variable.
+
+An alternative approach is to make use of the `customHeaders` property within the REST API for configuring webhooks.
+This option offers increased flexibility when custom or multiple headers are needed.
 
 ## Event Format and Types
 
@@ -70,7 +118,8 @@ format:
   "type": "xxxx",
   "data": {
     // Event-specific data goes here 
-  }
+  },
+  "walletId": "00000000-0000-0000-0000-000000000000"
 }
 ```
 
@@ -99,7 +148,8 @@ generated):
     "createdAt": "2023-07-06T12:01:19.760126Z",
     "self": "c10787cf-99bb-47f4-99bb-1fdcca32b673",
     "kind": "Connection"
-  }
+  },
+  "walletId": "00000000-0000-0000-0000-000000000000"
 }
 ```
 
@@ -113,7 +163,9 @@ state changes. These events allow you to track the progress and updates within t
 The `id` field of the common event structure is the unique identifier (UUID) of the event and is randomly generated at
 event creation time.
 
-the `ts` field contains the timestamp (date + time) at which the event was created.
+The `ts` field contains the timestamp (date + time) at which the event was created.
+
+The `walletId` field contains information about the wallet from which the event originates.
 
 The `type` field indicates to which flow/process the received event is related, and hence the type of JSON payload that
 can be expected in the inner `data` field. Possible values are:

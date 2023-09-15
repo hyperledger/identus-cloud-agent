@@ -103,7 +103,7 @@ The `PORT` variable is used to specify the port number for the Cloud Agent to li
 In real life, you will need to start at least two Cloud Agent instances with different roles. For example, you can start one instance with the `issuer` role and another one with the `holder` role. The `issuer` instance will be used to issue verifiable credentials (VCs) and the `holder` instance will be used to hold VCs. Here is an example of how you can do this:
   
 ```bash
-PORT=8080 PRISM_AGENT_VERSION=1.9.2 PRISM_NODE_VERSION=2.2.1 \
+PORT=8080 PRISM_AGENT_VERSION=1.12.0 PRISM_NODE_VERSION=2.2.1 \
   docker compose \
     -p "issuer" \
     -f ./infrastructure/shared/docker-compose-demo.yml \
@@ -111,7 +111,7 @@ PORT=8080 PRISM_AGENT_VERSION=1.9.2 PRISM_NODE_VERSION=2.2.1 \
 ```
 
 ```bash
-PORT=8090 PRISM_AGENT_VERSION=1.9.2 PRISM_NODE_VERSION=2.2.1 \
+PORT=8090 PRISM_AGENT_VERSION=1.12.0 PRISM_NODE_VERSION=2.2.1 \
   docker compose \
     -p "holder" \
     -f ./infrastructure/shared/docker-compose-demo.yml \
@@ -125,7 +125,7 @@ If the Cloud Agent is started successfully, all the running containers should ac
 You can check the status of the running containers using the [health endpoint](https://docs.atalaprism.io/agent-api/#tag/System/operation/systemHealth):
 ```bash
 $ curl http://localhost:8080/prism-agent/_system/health
-{"version":"1.9.2"}
+{"version":"1.12.0"}
 ```
 
 > For more information about all available configuration parameters, please, check [Cloud Agent configuration](https://docs.atalaprism.io/docs/atala-prism/prism-cloud-agent/environment-variables) section at the documentation portal and edit the `docker-compose-demo.yml` file accordingly.
@@ -136,10 +136,8 @@ There could be some incompatibilities between the most latest versions of Enterp
 
 | Cloud Agent | PRISM Node |
 |-------------|------------|
-| 1.12.0      | 2.2.1      |
-| 1.9.2       | 2.2.1      |
-| 1.6.0       | 2.1.1      |
-| 1.4.0       | 2.1.1      |
+| >=1.9.2     | 2.2.1      |
+| <1.9.2      | 2.1.1      |
 
 > Please note: it is not guaranteed that the latest version of Enterprise Cloud Agent will work with the latest version of PRISM Node. We recommend using the versions from the table above.
 

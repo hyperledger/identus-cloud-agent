@@ -1,3 +1,11 @@
+# [1.15.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v1.14.2...prism-agent-v1.15.0) (2023-09-12)
+
+
+### Features
+
+* add security headers in helm-chart apisix route ([#697](https://github.com/input-output-hk/atala-prism-building-blocks/issues/697)) ([7f7e0a4](https://github.com/input-output-hk/atala-prism-building-blocks/commit/7f7e0a4b7709c9eb0dbfc0557ed68648a98e5756))
+* **prism-agent:** add multi-tenancy capability ([#696](https://github.com/input-output-hk/atala-prism-building-blocks/issues/696)) ([b6c9a40](https://github.com/input-output-hk/atala-prism-building-blocks/commit/b6c9a40733af1a80c2fc7c17650d1f9ca53c21da))
+
 ## [1.14.2](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v1.14.1...prism-agent-v1.14.2) (2023-09-06)
 
 

@@ -262,7 +262,7 @@ Send the GET request to retrieve the schema. Curl example is the following:
 curl -X 'GET' \
   'http://localhost:8080/prism-agent/schema-registry/schemas/3f86a73f-5b78-39c7-af77-0c16123fa9c2' \
   -H 'accept: application/json' \
-  -H "apiKey: $API_KEY"
+  -H "apikey: $API_KEY"
 ```
 
 The response should contain the JSON object representing the schema you just created.

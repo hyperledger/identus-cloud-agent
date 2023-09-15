@@ -14,6 +14,7 @@ import io.iohk.atala.pollux.core.model.presentation.*
 import io.iohk.atala.pollux.core.repository.{CredentialRepository, PresentationRepository}
 import io.iohk.atala.pollux.vc.jwt.*
 import io.iohk.atala.shared.models.WalletAccessContext
+import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
 import zio.*
 
 import java.rmi.UnexpectedException
@@ -37,7 +38,12 @@ private class PresentationServiceImpl(
       record <- getRecordWithState(recordId, ProtocolState.PresentationPending)
       count <- presentationRepository
         .updateWithPresentation(recordId, presentation, ProtocolState.PresentationGenerated)
-        .mapError(RepositoryError.apply)
+        .mapError(RepositoryError.apply) @@ CustomMetricsAspect.endRecordingTime(
+        s"${record.id}_present_proof_flow_prover_presentation_pending_to_generated_ms_gauge",
+        "present_proof_flow_prover_presentation_pending_to_generated_ms_gauge"
+      ) @@ CustomMetricsAspect.startRecordingTime(
+        s"${record.id}_present_proof_flow_prover_presentation_generated_to_sent_ms_gauge"
+      )
       _ <- count match
         case 1 => ZIO.succeed(())
         case n => ZIO.fail(RecordIdNotFound(recordId))
@@ -174,7 +180,9 @@ private class PresentationServiceImpl(
           case 1 => ZIO.succeed(())
           case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
         }
-        .mapError(RepositoryError.apply)
+        .mapError(RepositoryError.apply) @@ CustomMetricsAspect.startRecordingTime(
+        s"${record.id}_present_proof_flow_verifier_req_pending_to_sent_ms_gauge"
+      )
     } yield record
   }
 
@@ -322,7 +330,9 @@ private class PresentationServiceImpl(
       )
       count <- presentationRepository
         .updatePresentationWithCredentialsToUse(recordId, Option(credentialsToUse), ProtocolState.PresentationPending)
-        .mapError(RepositoryError.apply)
+        .mapError(RepositoryError.apply) @@ CustomMetricsAspect.startRecordingTime(
+        s"${record.id}_present_proof_flow_prover_presentation_pending_to_generated_ms_gauge"
+      )
       _ <- count match
         case 1 => ZIO.succeed(())
         case n => ZIO.fail(RecordIdNotFound(recordId))
@@ -364,7 +374,9 @@ private class PresentationServiceImpl(
           case 1 => ZIO.succeed(())
           case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
         }
-        .mapError(RepositoryError.apply)
+        .mapError(RepositoryError.apply) @@ CustomMetricsAspect.startRecordingTime(
+        s"${record.id}_present_proof_flow_verifier_presentation_received_to_verification_success_or_failure_ms_gauge"
+      )
       record <- presentationRepository
         .getPresentationRecord(record.id)
         .mapError(RepositoryError.apply)

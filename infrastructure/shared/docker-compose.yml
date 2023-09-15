@@ -106,6 +106,12 @@ services:
       DEFAULT_WALLET_AUTH_API_KEY:
       GLOBAL_WEBHOOK_URL:
       GLOBAL_WEBHOOK_API_KEY:
+      WEBHOOK_PARALLELISM:
+      ADMIN_TOKEN:
+      API_KEY_SALT:
+      API_KEY_ENABLED:
+      API_KEY_AUTHENTICATE_AS_DEFAULT_USER:
+      API_KEY_AUTO_PROVISIONING:
     depends_on:
       db:
         condition: service_healthy

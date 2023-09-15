@@ -61,7 +61,7 @@ To do this, he makes a `POST` request to the [`/present-proof/presentations`](/a
 curl -X 'POST' 'http://localhost:8070/prism-agent/present-proof/presentations' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
-	-H "apiKey: $API_KEY" \
+	-H "apikey: $API_KEY" \
   -d '{
         "connectionId": "872ddfa9-4115-46c2-8a1b-22c24c7431d7",
         "proofs":[],
@@ -78,7 +78,7 @@ The Verifier can retrieve the list of presentation records by making a `GET` req
 ```bash
 curl -X 'GET' 'http://localhost:8070/prism-agent/present-proof/presentations' \
   -H 'accept: application/json' \
-	-H "apiKey: $API_KEY"
+	-H "apikey: $API_KEY"
 ```
 
 ### Accept presentation proof received from the Holder/prover
@@ -89,7 +89,7 @@ The Verifier can then explicitly accept the specific verified proof presentation
 ```bash
 curl -X 'PATCH' 'http://localhost:8070/prism-agent/present-proof/presentations/{PRESENTATION_ID}' \
   -H 'Content-Type: application/json' \
-  -H "apiKey: $API_KEY" \
+  -H "apikey: $API_KEY" \
   -d '{
         "action": "presentation-accept"
       }'
@@ -116,7 +116,7 @@ The Holder/Prover can retrieve the list of presentation requests received by its
 ```bash
 curl -X 'GET' 'http://localhost:8090/prism-agent/present-proof/presentations' \
   -H 'accept: application/json' \
-  -H "apiKey: $API_KEY"
+  -H "apikey: $API_KEY"
 ```
 
 The Holder/Prover can then accept a specific request, generate the proof, and send it to the Verifier PRISM Agent by making a `PATCH` request to the [`/present-proof/presentations/{id}`](/agent-api/#tag/Present-Proof/operation/updatePresentation) endpoint:
@@ -124,7 +124,7 @@ The Holder/Prover can then accept a specific request, generate the proof, and se
 ```bash
 curl -X 'PATCH' 'http://localhost:8090/prism-agent/present-proof/presentations/{PRESENTATION_ID}' \
   -H 'Content-Type: application/json' \
-  -H "apiKey: $API_KEY" \
+  -H "apikey: $API_KEY" \
   -d '{
         "action": "request-accept",
         "proofId": ["{CRED_RECORD_ID}"]
