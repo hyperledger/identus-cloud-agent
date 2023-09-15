@@ -25,51 +25,46 @@ import net.serenitybdd.screenplay.rest.abilities.CallAnApi
 import net.serenitybdd.screenplay.rest.questions.ResponseConsequence
 import org.apache.http.HttpStatus.SC_OK
 
-@BeforeAll(order = 1)
+@BeforeAll
 fun initializeIssuerVerifierMultitenantAgent() {
-    val admin = Cast().actorNamed("Admin", CallAnApi.at(Environments.ADMIN_AGENT_URL))
-    val walletSteps = WalletsSteps()
-    val entitySteps = EntitySteps()
-
-    // Create issuer wallet and tenant
-    val issuerWalletId = walletSteps.createNewWallet(admin, "issuerWallet")
-    val issuerEntityId = entitySteps.createNewEntity(
-        admin, walletId = Utils.lastResponseObject("id", String::class), name = "issuer"
-    )
-    entitySteps.addNewApiKeyToEntity(admin, issuerEntityId, Environments.ACME_AUTH_KEY)
-
-    // Create verifier wallet
-    val verifierWalletId = walletSteps.createNewWallet(admin, "verifierWallet")
-    val verifierEntityId = entitySteps.createNewEntity(
-        admin, walletId = Utils.lastResponseObject("id", String::class), name = "verifier"
-    )
-    entitySteps.addNewApiKeyToEntity(admin, verifierEntityId, Environments.FABER_AUTH_KEY)
-}
-
-@BeforeAll(order = 2)
-fun initializeActors() {
     val eventSteps = EventsSteps()
     val cast = Cast()
     cast.actorNamed("Admin", CallAnApi.at(Environments.ADMIN_AGENT_URL))
     cast.actorNamed("Acme", CallAnApi.at(Environments.ACME_AGENT_URL), ListenToEvents.at(Environments.ACME_AGENT_WEBHOOK_HOST, Environments.ACME_AGENT_WEBHOOK_PORT))
     cast.actorNamed("Bob", CallAnApi.at(Environments.BOB_AGENT_URL), ListenToEvents.at(Environments.BOB_AGENT_WEBHOOK_HOST, Environments.BOB_AGENT_WEBHOOK_PORT))
     cast.actorNamed("Faber", CallAnApi.at(Environments.FABER_AGENT_URL), ListenToEvents.at(Environments.FABER_AGENT_WEBHOOK_HOST, Environments.FABER_AGENT_WEBHOOK_PORT))
+    OnStage.setTheStage(cast)
+    val walletSteps = WalletsSteps()
+    val entitySteps = EntitySteps()
+
+    // Create issuer wallet and tenant
+    walletSteps.createNewWallet(cast.actorNamed("Admin"), "issuerWallet")
+    val issuerEntityId = entitySteps.createNewEntity(
+        cast.actorNamed("Admin"), walletId = Utils.lastResponseObject("id", String::class), name = "issuer"
+    )
+    entitySteps.addNewApiKeyToEntity(cast.actorNamed("Admin"), issuerEntityId, Environments.ACME_AUTH_KEY)
+
+    // Create verifier wallet
+    walletSteps.createNewWallet(cast.actorNamed("Admin"), "verifierWallet")
+    val verifierEntityId = entitySteps.createNewEntity(
+        cast.actorNamed("Admin"), walletId = Utils.lastResponseObject("id", String::class), name = "verifier"
+    )
+    entitySteps.addNewApiKeyToEntity(cast.actorNamed("Admin"), verifierEntityId, Environments.FABER_AUTH_KEY)
     cast.actors.forEach { actor ->
         when(actor.name) {
             "Acme" -> {
                 actor.remember("AUTH_KEY", Environments.ACME_AUTH_KEY)
-                eventSteps.registerNewWebhook(actor, Environments.ACME_AGENT_WEBHOOK_URL)
             }
             "Bob" -> {
                 actor.remember("AUTH_KEY", Environments.BOB_AUTH_KEY)
             }
             "Faber" -> {
                 actor.remember("AUTH_KEY", Environments.FABER_AUTH_KEY)
-                eventSteps.registerNewWebhook(actor, Environments.FABER_AGENT_WEBHOOK_URL)
             }
         }
     }
-    OnStage.setTheStage(cast)
+    eventSteps.registerNewWebhook(cast.actorNamed("Acme"), Environments.ACME_AGENT_WEBHOOK_URL)
+    eventSteps.registerNewWebhook(cast.actorNamed("Faber"), Environments.FABER_AGENT_WEBHOOK_URL)
 }
 
 @AfterAll

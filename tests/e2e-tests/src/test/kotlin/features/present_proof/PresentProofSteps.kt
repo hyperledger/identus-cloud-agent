@@ -70,7 +70,7 @@ class PresentProofSteps {
         wait(
             {
                 proofEvent = ListenToEvents.`as`(bob).presentationEvents.lastOrNull {
-                    it!!.data.thid == bob.recall<String>("thid")
+                    it.data.thid == bob.recall<String>("thid")
                 }
                 proofEvent != null &&
                         proofEvent!!.data.status == PresentationProofStatus.REQUEST_RECEIVED
@@ -107,7 +107,7 @@ class PresentProofSteps {
         wait(
             {
                 proofEvent = ListenToEvents.`as`(bob).presentationEvents.lastOrNull {
-                    it!!.data.thid == bob.recall<String>("thid")
+                    it.data.thid == bob.recall<String>("thid")
                 }
                 proofEvent != null &&
                         proofEvent!!.data.status == PresentationProofStatus.REQUEST_REJECTED
@@ -121,8 +121,9 @@ class PresentProofSteps {
         wait(
             {
                 proofEvent = ListenToEvents.`as`(faber).presentationEvents.lastOrNull {
-                    it!!.data.thid == faber.recall<String>("thid")
+                    it.data.thid == faber.recall<String>("thid")
                 }
+
                 proofEvent != null &&
                         proofEvent!!.data.status == PresentationProofStatus.PRESENTATION_VERIFIED
             },
