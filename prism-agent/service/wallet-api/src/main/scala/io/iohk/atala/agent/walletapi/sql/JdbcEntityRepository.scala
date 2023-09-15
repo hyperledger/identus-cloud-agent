@@ -7,7 +7,8 @@ import io.iohk.atala.agent.walletapi.model.error.EntityServiceError
 import io.iohk.atala.agent.walletapi.model.error.EntityServiceError.{
   EntityAlreadyExists,
   EntityNotFound,
-  EntityStorageError
+  EntityStorageError,
+  EntityWalletNotFound
 }
 import org.postgresql.util.PSQLException
 import zio.*
@@ -26,7 +27,12 @@ class JdbcEntityRepository(xa: Transactor[Task]) extends EntityRepository {
         case sqlException: PSQLException
             if sqlException.getMessage.contains("duplicate key value violates unique constraint") =>
           EntityAlreadyExists(entity.id, sqlException.getMessage)
-        case other: Throwable => EntityStorageError(other.getMessage)
+        case sqlException: PSQLException
+            if sqlException.getMessage
+              .contains("violates foreign key constraint \"entity_wallet_id_fkey\"") =>
+          EntityWalletNotFound(entity.id, entity.walletId)
+        case other: Throwable =>
+          EntityStorageError(other.getMessage)
       }
       .map(db2model)
   }
@@ -61,7 +67,13 @@ class JdbcEntityRepository(xa: Transactor[Task]) extends EntityRepository {
       .updateWallet(entityId, walletId)
       .transact(xa)
       .logError(s"Update entity walletId=$walletId by id=$entityId failed")
-      .mapError(throwable => EntityStorageError(throwable.getMessage))
+      .mapError {
+        case sqlException: PSQLException
+            if sqlException.getMessage
+              .contains("violates foreign key constraint \"entity_wallet_id_fkey\"") =>
+          EntityWalletNotFound(entityId, walletId)
+        case other: Throwable => EntityStorageError(other.getMessage)
+      }
       .flatMap(updatedCount =>
         if updatedCount == 1 then ZIO.unit
         else ZIO.fail(EntityNotFound(entityId, s"Update entity walletId=$walletId by id=$entityId failed"))
