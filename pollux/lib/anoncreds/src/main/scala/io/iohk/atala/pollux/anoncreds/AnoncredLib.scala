@@ -88,6 +88,24 @@ object AnoncredLib {
     CreateCrendentialRequest(credentialRequest.getRequest(), credentialRequest.getMetadata())
   }
 
+  // holder
+  def processCredential(
+      credential: Credential,
+      metadata: CredentialRequestMetadata,
+      linkSecret: LinkSecretWithId,
+      credentialDefinition: CredentialDefinition,
+  ): Unit = {
+    anoncreds
+      .Prover()
+      .processCredential(
+        credential,
+        metadata,
+        linkSecret.secret,
+        credentialDefinition,
+        null
+      )
+  }
+
   // issuer
   def createCredential(
       credentialDefinition: CredentialDefinition,
