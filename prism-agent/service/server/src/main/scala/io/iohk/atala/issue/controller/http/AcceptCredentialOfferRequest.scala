@@ -2,10 +2,9 @@ package io.iohk.atala.issue.controller.http
 
 import io.iohk.atala.api.http.Annotation
 import io.iohk.atala.issue.controller.http.AcceptCredentialOfferRequest.annotations
-import sttp.tapir.Schema.annotations.{description, encodedExample}
-import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
+import sttp.tapir.Schema.annotations.{description, encodedExample, validate}
 import sttp.tapir.{Schema, Validator}
-import sttp.tapir.Schema.annotations.validate
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 /** A request to accept a credential offer received from an issuer.
   *
@@ -16,16 +15,17 @@ import sttp.tapir.Schema.annotations.validate
 final case class AcceptCredentialOfferRequest(
     @description(annotations.subjectId.description)
     @encodedExample(annotations.subjectId.example)
-    subjectId: String
+    subjectId: Option[String]
 )
 
 object AcceptCredentialOfferRequest {
 
   object annotations {
     object subjectId
-        extends Annotation[String](
-          description = "The short-form subject Prism DID to which the verifiable credential should be issued.",
-          example = "did:prism:3bb0505d13fcb04d28a48234edb27b0d4e6d7e18a81e2c1abab58f3bbc21ce6f"
+        extends Annotation[Option[String]](
+          description = "The short-form subject Prism DID to which the JWT verifiable credential will be issued." +
+            "This parameter is used for JWT credentials only.",
+          example = Some("did:prism:3bb0505d13fcb04d28a48234edb27b0d4e6d7e18a81e2c1abab58f3bbc21ce6f")
         )
 
   }

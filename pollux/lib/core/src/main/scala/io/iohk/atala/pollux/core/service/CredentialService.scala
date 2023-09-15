@@ -61,7 +61,7 @@ trait CredentialService {
 
   def acceptCredentialOffer(
       recordId: DidCommID,
-      subjectId: String
+      subjectId: Option[String]
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
   def createPresentationPayload(
@@ -69,9 +69,13 @@ trait CredentialService {
       subject: Issuer
   ): ZIO[WalletAccessContext, CredentialServiceError, PresentationPayload]
 
-  def generateCredentialRequest(
+  def generateJWTCredentialRequest(
       recordId: DidCommID,
       signedPresentation: JWT
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
+
+  def generateAnonCredsCredentialRequest(
+      recordId: DidCommID
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
   def receiveCredentialRequest(
