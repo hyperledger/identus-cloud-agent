@@ -101,8 +101,10 @@ class ConnectionSteps {
     fun inviterReceivesTheConnectionRequest(inviter: Actor) {
         wait(
             {
-                val lastEvent = ListenToEvents.`as`(inviter).connectionEvents.lastOrNull()
-                lastEvent != null && lastEvent.data.thid == inviter.recall<String>("thid") &&
+                val lastEvent = ListenToEvents.`as`(inviter).connectionEvents.lastOrNull {
+                    it.data.thid == inviter.recall<String>("thid")
+                }
+                lastEvent != null &&
                         lastEvent.data.state == ConnectionState.CONNECTION_RESPONSE_SENT
             },
             "Inviter connection didn't reach ${ConnectionState.CONNECTION_RESPONSE_SENT} state",
@@ -114,8 +116,10 @@ class ConnectionSteps {
         // Bob (Holder) receives final connection response
         wait(
             {
-                val lastEvent = ListenToEvents.`as`(invitee).connectionEvents.lastOrNull()
-                lastEvent != null && lastEvent.data.thid == invitee.recall<String>("thid") &&
+                val lastEvent = ListenToEvents.`as`(invitee).connectionEvents.lastOrNull {
+                    it.data.thid == invitee.recall<String>("thid")
+                }
+                lastEvent != null &&
                         lastEvent.data.state == ConnectionState.CONNECTION_RESPONSE_RECEIVED
             },
             "Invitee connection didn't reach ${ConnectionState.CONNECTION_RESPONSE_RECEIVED} state.",

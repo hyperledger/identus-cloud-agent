@@ -1,4 +1,4 @@
-name: End-to-end tests
+name: Integration tests
 
 concurrency:
   group: ${{ github.head_ref }}${{ github.ref }}-e2e-tests
@@ -24,7 +24,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       REPORTS_DIR: "tests/e2e-tests/target/site/serenity"
-      XRAY_EXECUTION_TAG_LOCALHOST: "@ATL-3851"
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -36,11 +35,6 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2.8.0
-
-      - name: Install Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: "3.8"
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
@@ -68,44 +62,40 @@ jobs:
           sed -i.bak "s/PRISM_AGENT_VERSION=.*/PRISM_AGENT_VERSION=${PRISM_AGENT_VERSION}/" "${ENV_FILE}" && rm -f "${ENV_FILE}.bak"
           cat "${ENV_FILE}"
 
-      - name: Start services for issuer
+      - name: Start Cloud Agent for issuer and verifier
         env:
           PORT: 8080
-          DEFAULT_WALLET_ENABLED: "true"
-          DEFAULT_WALLET_WEBHOOK_URL: http://host.docker.internal:9955
-          DEFAULT_WALLET_AUTH_API_KEY: default
+          ADMIN_TOKEN: "admin"
+          DEFAULT_WALLET_ENABLED: "false"
+          API_KEY_AUTO_PROVISIONING: "false"
+          API_KEY_ENABLED: "true"
         uses: isbang/compose-action@v1.4.1
         with:
-          compose-file: "./infrastructure/shared/docker-compose.yml"
+          compose-file: "./infrastructure/shared/docker-compose-demo.yml"
           compose-flags: "--env-file ./infrastructure/local/.env -p issuer"
           up-flags: "--wait"
           down-flags: "--volumes"
 
-      - name: Start services for holder
+      - name: Start Cloud Agent for holder
         env:
           PORT: 8090
-          DEFAULT_WALLET_ENABLED: "true"
+          ADMIN_TOKEN: admin
+          DEFAULT_WALLET_ENABLED: true
           DEFAULT_WALLET_WEBHOOK_URL: http://host.docker.internal:9956
           DEFAULT_WALLET_AUTH_API_KEY: default
+          API_KEY_AUTO_PROVISIONING: false
+          API_KEY_ENABLED: true
         uses: isbang/compose-action@v1.4.1
         with:
-          compose-file: "./infrastructure/shared/docker-compose.yml"
+          compose-file: "./infrastructure/shared/docker-compose-demo.yml"
           compose-flags: "--env-file ./infrastructure/local/.env -p holder"
           up-flags: "--wait"
           down-flags: "--volumes"
 
-      - name: Start services for verifier
-        env:
-          PORT: 8070
-          DEFAULT_WALLET_ENABLED: "true"
-          DEFAULT_WALLET_WEBHOOK_URL: http://host.docker.internal:9957
-          DEFAULT_WALLET_AUTH_API_KEY: default
-        uses: isbang/compose-action@v1.4.1
+      - uses: actions/setup-java@v3
         with:
-          compose-file: "./infrastructure/shared/docker-compose.yml"
-          compose-flags: "--env-file ./infrastructure/local/.env -p verifier"
-          up-flags: "--wait"
-          down-flags: "--volumes"
+          distribution: 'zulu'
+          java-version: '19'
 
       - name: Run e2e tests
         continue-on-error: true
@@ -118,15 +108,6 @@ jobs:
         run: |
           ./gradlew test --tests "E2eTestsRunner" || true
           ./gradlew reports
-
-      - name: Update X-Ray test execution
-        uses: ./.github/actions/upload-to-xray
-        if: github.ref_name == 'main'
-        with:
-          username: ${{ secrets.XRAY_CLIENT_ID }}
-          password: ${{ secrets.XRAY_CLIENT_SECRET }}
-          json: "tests/e2e-tests/target/serenity-reports/cucumber_report.json"
-          execution_tag: ${{ env.XRAY_EXECUTION_TAG_LOCALHOST }}
 
       - name: Extract test results
         id: analyze_test_results
@@ -150,7 +131,6 @@ jobs:
             fi
           fi
           {
-            echo "slack_report_failure=${SLACK_REPORT_FAILURE}";
             echo "conclusion=${CONCLUSION}";
             echo "tests=${TOTAL_TESTS}";
             echo "failures=${FAILED_TESTS}";
@@ -165,8 +145,8 @@ jobs:
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:
           junit_files: "${{ env.REPORTS_DIR }}/SERENITY-JUNIT-*.xml"
-          comment_title: "E2E Test Results"
-          check_name: "E2E Test Results"
+          comment_title: "Integration Test Results"
+          check_name: "Integration Test Results"
 
       - name: Upload artifacts
         if: github.ref_name == 'main' || steps.analyze_test_results.outputs.conclusion == 'failure'
@@ -185,6 +165,6 @@ jobs:
             Failed: ${{ steps.analyze_test_results.outputs.failures }}
             Errors in tests: ${{ steps.analyze_test_results.outputs.errors }}
             Skipped (known bugs): ${{ steps.analyze_test_results.outputs.skipped }}
-          SLACK_TITLE: "Atala PRISM V2 E2E tests: ${{ steps.analyze_test_results.outputs.conclusion }}"
+          SLACK_TITLE: "Atala PRISM V2 Integration tests: ${{ steps.analyze_test_results.outputs.conclusion }}"
           SLACK_USERNAME: circleci
           SLACK_WEBHOOK: ${{ secrets.E2E_TESTS_SLACK_WEBHOOK }}

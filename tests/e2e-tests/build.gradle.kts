@@ -1,9 +1,9 @@
 plugins {
-    kotlin("jvm") version "1.7.22"
+    id("org.jetbrains.kotlin.jvm") version "1.9.0"
     idea
     jacoco
-    id("net.serenity-bdd.serenity-gradle-plugin") version "3.4.2"
-    kotlin("plugin.serialization") version "1.8.21"
+    id("net.serenity-bdd.serenity-gradle-plugin") version "4.0.1"
+    kotlin("plugin.serialization") version "1.9.0"
 }
 
 repositories {
@@ -17,9 +17,10 @@ dependencies {
     implementation("org.awaitility:awaitility-kotlin:4.2.0")
     // Test engines and reports
     testImplementation("junit:junit:4.13.2")
-    implementation("net.serenity-bdd:serenity-core:3.4.3")
-    implementation("net.serenity-bdd:serenity-cucumber:3.4.3")
-    implementation("net.serenity-bdd:serenity-screenplay-rest:3.4.3")
+    implementation("net.serenity-bdd:serenity-core:4.0.1")
+    implementation("net.serenity-bdd:serenity-cucumber:4.0.1")
+    implementation("net.serenity-bdd:serenity-screenplay-rest:4.0.1")
+    testImplementation("net.serenity-bdd:serenity-ensure:4.0.1")
     // Beautify exceptions handling assertions
     testImplementation("org.assertj:assertj-core:3.23.1")
     // Navigate through Json with xpath
@@ -32,8 +33,8 @@ dependencies {
 
 buildscript {
     dependencies {
-        classpath("net.serenity-bdd:serenity-single-page-report:3.4.3")
-        classpath("net.serenity-bdd:serenity-json-summary-report:3.4.3")
+        classpath("net.serenity-bdd:serenity-single-page-report:4.0.1")
+        classpath("net.serenity-bdd:serenity-json-summary-report:4.0.1")
     }
 }
 
@@ -47,4 +48,8 @@ serenity {
 tasks.test {
     testLogging.showStandardStreams = true
     systemProperty("cucumber.filter.tags", System.getProperty("cucumber.filter.tags"))
+}
+
+kotlin {
+    jvmToolchain(19)
 }
