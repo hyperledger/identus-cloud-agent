@@ -145,7 +145,6 @@ object ConnectBackgroundJobs {
           didCommAgent <- buildDIDCommAgent(response.from)
           resp <- MessagingService.send(response.makeMessage).provideSomeLayer(didCommAgent) @@ Metric
             .gauge("connection_flow_inviter_send_connection_response_ms_gauge")
-            .tagged("connectionId", record.id.toString)
             .trackDurationWith(_.toMetricsSeconds)
           connectionService <- ZIO.service[ConnectionService]
           _ <- {
