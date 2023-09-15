@@ -59,7 +59,7 @@ object MainApp extends ZIOAppDefault {
 
   Security.insertProviderAt(BouncyCastleProviderSingleton.getInstance(), 2)
 
-  // FIXME: remove this when db app user is provisioned from output application.
+  // FIXME: remove this when db app user have correct privileges provisioned by k8s operator.
   // This should be executed before migration to have correct privilege for new objects.
   val preMigrations = for {
     _ <- ZIO.logInfo("running pre-migration steps.")
