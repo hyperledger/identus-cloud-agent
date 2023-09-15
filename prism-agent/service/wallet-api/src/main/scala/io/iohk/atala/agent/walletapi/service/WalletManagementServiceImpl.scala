@@ -40,7 +40,7 @@ class WalletManagementServiceImpl(
   override def getWallet(walletId: WalletId): IO[WalletManagementServiceError, Option[Wallet]] =
     nonSecretStorage
       .getWallet(walletId)
-      .mapError[WalletManagementServiceError](e => e)
+      .mapError(e => e)
 
   override def listWallets(
       offset: Option[Int],
@@ -48,24 +48,24 @@ class WalletManagementServiceImpl(
   ): IO[WalletManagementServiceError, (Seq[Wallet], Int)] =
     nonSecretStorage
       .listWallet(offset = offset, limit = limit)
-      .mapError[WalletManagementServiceError](e => e)
+      .mapError(e => e)
 
   override def listWalletNotifications
       : ZIO[WalletAccessContext, WalletManagementServiceError, Seq[EventNotificationConfig]] =
     nonSecretStorage.walletNotification
-      .mapError[WalletManagementServiceError](e => e)
+      .mapError(e => e)
 
   override def createWalletNotification(
       config: EventNotificationConfig
   ): ZIO[WalletAccessContext, WalletManagementServiceError, EventNotificationConfig] =
     nonSecretStorage
       .createWalletNotification(config)
-      .mapError[WalletManagementServiceError](e => e)
+      .mapError(e => e)
 
   override def deleteWalletNotification(id: UUID): ZIO[WalletAccessContext, WalletManagementServiceError, Unit] =
     nonSecretStorage
       .deleteWalletNotification(id)
-      .mapError[WalletManagementServiceError](e => e)
+      .mapError(e => e)
 
 }
 
