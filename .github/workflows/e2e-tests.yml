@@ -99,12 +99,6 @@ jobs:
 
       - name: Run e2e tests
         continue-on-error: true
-        env:
-          AGENT_AUTH_REQUIRED: "true"
-          AGENT_AUTH_HEADER: apikey
-          ACME_AUTH_KEY: default
-          BOB_AUTH_KEY: default
-          FABER_AUTH_KEY: default
         run: |
           ./gradlew test --tests "E2eTestsRunner" || true
           ./gradlew reports

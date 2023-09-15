@@ -54,7 +54,7 @@ class IssueCredentialsSteps {
         wait(
             {
                 credentialEvent = ListenToEvents.`as`(holder).credentialEvents.lastOrNull {
-                    it!!.data.thid == holder.recall<String>("thid")
+                    it.data.thid == holder.recall<String>("thid")
                 }
                 credentialEvent != null &&
                         credentialEvent!!.data.protocolState == CredentialState.OFFER_RECEIVED
@@ -85,7 +85,7 @@ class IssueCredentialsSteps {
         wait(
             {
                 credentialEvent = ListenToEvents.`as`(issuer).credentialEvents.lastOrNull {
-                    it!!.data.thid == issuer.recall<String>("thid")
+                    it.data.thid == issuer.recall<String>("thid")
                 }
                 credentialEvent != null &&
                         credentialEvent!!.data.protocolState == CredentialState.REQUEST_RECEIVED
@@ -105,7 +105,7 @@ class IssueCredentialsSteps {
         wait(
             {
                 credentialEvent = ListenToEvents.`as`(issuer).credentialEvents.lastOrNull {
-                    it!!.data.thid == issuer.recall<String>("thid")
+                    it.data.thid == issuer.recall<String>("thid")
                 }
                 credentialEvent != null &&
                         credentialEvent!!.data.protocolState == CredentialState.CREDENTIAL_SENT
@@ -120,7 +120,7 @@ class IssueCredentialsSteps {
         wait(
             {
                 credentialEvent = ListenToEvents.`as`(holder).credentialEvents.lastOrNull {
-                    it!!.data.thid == holder.recall<String>("thid")
+                    it.data.thid == holder.recall<String>("thid")
                 }
                 credentialEvent != null &&
                         credentialEvent!!.data.protocolState == CredentialState.CREDENTIAL_RECEIVED
