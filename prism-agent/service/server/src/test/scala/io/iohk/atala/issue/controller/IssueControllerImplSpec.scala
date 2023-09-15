@@ -27,7 +27,7 @@ object IssueControllerImplSpec extends ZIOSpecDefault with IssueControllerTestTo
         backend = httpBackend(issueControllerService, authenticator)
         response: IssueCredentialBadRequestResponse <- basicRequest
           .post(uri"${issueUriBase}/records/12345/accept-offer")
-          .body(AcceptCredentialOfferRequest("subjectId").toJsonPretty)
+          .body(AcceptCredentialOfferRequest(Some("subjectId")).toJsonPretty)
           .response(asJsonAlways[ErrorResponse])
           .send(backend)
 

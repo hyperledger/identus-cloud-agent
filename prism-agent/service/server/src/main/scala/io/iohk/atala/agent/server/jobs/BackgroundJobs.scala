@@ -4,11 +4,7 @@ import cats.syntax.all.*
 import io.circe.parser.*
 import io.circe.syntax.*
 import io.iohk.atala.agent.server.config.AppConfig
-import io.iohk.atala.agent.server.jobs.BackgroundJobError.{
-  ErrorResponseReceivedFromPeerAgent,
-  InvalidState,
-  NotImplemented
-}
+import io.iohk.atala.agent.server.jobs.BackgroundJobError.{ErrorResponseReceivedFromPeerAgent, InvalidState, NotImplemented}
 import io.iohk.atala.agent.walletapi.model.*
 import io.iohk.atala.agent.walletapi.model.error.*
 import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError.KeyNotFoundError
@@ -24,14 +20,7 @@ import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.error.PresentationError.*
 import io.iohk.atala.pollux.core.model.error.{CredentialServiceError, PresentationError}
 import io.iohk.atala.pollux.core.service.{CredentialService, PresentationService}
-import io.iohk.atala.pollux.vc.jwt.{
-  ES256KSigner,
-  JWT,
-  JwtPresentation,
-  W3CCredential,
-  DidResolver as JwtDidResolver,
-  Issuer as JwtIssuer
-}
+import io.iohk.atala.pollux.vc.jwt.{ES256KSigner, JWT, JwtPresentation, W3CCredential, DidResolver as JwtDidResolver, Issuer as JwtIssuer}
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.utils.DurationOps.toMetricsSeconds
 import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
@@ -249,7 +238,7 @@ object BackgroundJobs {
               _,
               _,
               _,
-              _,
+              CredentialFormat.JWT,
               Role.Holder,
               Some(subjectId),
               _,
@@ -257,7 +246,7 @@ object BackgroundJobs {
               _,
               RequestPending,
               _,
-              _,
+              Some(_),
               None,
               _,
               _,
@@ -275,7 +264,43 @@ object BackgroundJobs {
             jwtIssuer <- createJwtIssuer(longFormPrismDID, VerificationRelationship.Authentication)
             presentationPayload <- credentialService.createPresentationPayload(id, jwtIssuer)
             signedPayload = JwtPresentation.encodeJwt(presentationPayload.toJwtPresentationPayload, jwtIssuer)
-            _ <- credentialService.generateCredentialRequest(id, signedPayload)
+            _ <- credentialService.generateJWTCredentialRequest(id, signedPayload)
+          } yield ()
+
+          holderPendingToGeneratedFlow @@ HolderPendingToGeneratedSuccess.trackSuccess
+            @@ HolderPendingToGeneratedFailed.trackError
+            @@ HolderPendingToGeneratedAll
+            @@ Metric
+              .gauge("issuance_flow_holder_req_pending_to_generated_flow_ms_gauge")
+              .trackDurationWith(_.toMetricsSeconds)
+
+        case IssueCredentialRecord(
+              id,
+              _,
+              _,
+              _,
+              _,
+              _,
+              CredentialFormat.AnonCreds,
+              Role.Holder,
+              None,
+              _,
+              _,
+              _,
+              RequestPending,
+              _,
+              Some(_),
+              None,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _
+            ) =>
+          val holderPendingToGeneratedFlow = for {
+            credentialService <- ZIO.service[CredentialService]
+            _ <- credentialService.generateAnonCredsCredentialRequest(id)
           } yield ()
 
           holderPendingToGeneratedFlow @@ HolderPendingToGeneratedSuccess.trackSuccess

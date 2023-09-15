@@ -5,8 +5,8 @@ import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
 import io.iohk.atala.event.notification.*
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.issuecredential.{IssueCredential, OfferCredential, RequestCredential}
-import io.iohk.atala.pollux.core.model.{CredentialFormat, DidCommID, IssueCredentialRecord, PublishedBatchData}
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
+import io.iohk.atala.pollux.core.model.{CredentialFormat, DidCommID, IssueCredentialRecord, PublishedBatchData}
 import io.iohk.atala.pollux.vc.jwt.{Issuer, JWT, PresentationPayload, W3cCredentialPayload}
 import io.iohk.atala.prism.crypto.MerkleInclusionProof
 import io.iohk.atala.shared.models.WalletAccessContext
@@ -63,15 +63,20 @@ class CredentialServiceNotifier(
 
   override def acceptCredentialOffer(
       recordId: DidCommID,
-      subjectId: String
+      subjectId: Option[String]
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
     notifyOnSuccess(svc.acceptCredentialOffer(recordId, subjectId))
 
-  override def generateCredentialRequest(
+  override def generateJWTCredentialRequest(
       recordId: DidCommID,
       signedPresentation: JWT
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
-    notifyOnSuccess(svc.generateCredentialRequest(recordId, signedPresentation))
+    notifyOnSuccess(svc.generateJWTCredentialRequest(recordId, signedPresentation))
+
+  override def generateAnonCredsCredentialRequest(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
+    notifyOnSuccess(svc.generateAnonCredsCredentialRequest(recordId))
 
   override def markRequestSent(
       recordId: DidCommID

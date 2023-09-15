@@ -75,7 +75,7 @@ object CredentialServiceNotifierSpec extends ZIOSpecDefault with CredentialServi
       assertion = Assertion.anything,
       result = Expectation.value(issueCredentialRecord.copy(protocolState = ProtocolState.RequestPending))
     ) ++
-      MockCredentialService.GenerateCredentialRequest(
+      MockCredentialService.GenerateJWTCredentialRequest(
         assertion = Assertion.anything,
         result = Expectation.value(issueCredentialRecord.copy(protocolState = ProtocolState.RequestGenerated))
       ) ++
@@ -126,8 +126,8 @@ object CredentialServiceNotifierSpec extends ZIOSpecDefault with CredentialServi
           offerReceivedRecord <- svc.receiveCredentialOffer(offerCredential())
           holderRecordId = offerReceivedRecord.id
           subjectId = "did:prism:60821d6833158c93fde5bb6a40d69996a683bf1fa5cdf32c458395b2887597c3"
-          _ <- svc.acceptCredentialOffer(holderRecordId, subjectId)
-          _ <- svc.generateCredentialRequest(offerReceivedRecord.id, JWT("Fake JWT"))
+          _ <- svc.acceptCredentialOffer(holderRecordId, Some(subjectId))
+          _ <- svc.generateJWTCredentialRequest(offerReceivedRecord.id, JWT("Fake JWT"))
           _ <- svc.markRequestSent(holderRecordId)
           _ <- svc.receiveCredentialIssue(issueCredential())
           consumer <- ens.consumer[IssueCredentialRecord]("Issue")

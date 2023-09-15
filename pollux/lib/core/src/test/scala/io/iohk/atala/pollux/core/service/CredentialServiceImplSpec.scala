@@ -297,7 +297,7 @@ object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSp
           offer = offerCredential()
           subjectId = "did:prism:60821d6833158c93fde5bb6a40d69996a683bf1fa5cdf32c458395b2887597c3"
           offerReceivedRecord <- holderSvc.receiveCredentialOffer(offer)
-          offerAcceptedRecord <- holderSvc.acceptCredentialOffer(offerReceivedRecord.id, subjectId)
+          offerAcceptedRecord <- holderSvc.acceptCredentialOffer(offerReceivedRecord.id, Some(subjectId))
         } yield {
           assertTrue(offerAcceptedRecord.protocolState == ProtocolState.RequestPending) &&
           assertTrue(offerAcceptedRecord.offerCredentialData.isDefined) &&
@@ -324,8 +324,8 @@ object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSp
           offer = offerCredential()
           subjectId = "did:prism:60821d6833158c93fde5bb6a40d69996a683bf1fa5cdf32c458395b2887597c3"
           offerReceivedRecord <- holderSvc.receiveCredentialOffer(offer)
-          _ <- holderSvc.acceptCredentialOffer(offerReceivedRecord.id, subjectId)
-          exit <- holderSvc.acceptCredentialOffer(offerReceivedRecord.id, subjectId).exit
+          _ <- holderSvc.acceptCredentialOffer(offerReceivedRecord.id, Some(subjectId))
+          exit <- holderSvc.acceptCredentialOffer(offerReceivedRecord.id, Some(subjectId)).exit
         } yield {
           assertTrue(exit match
             case Exit.Failure(Cause.Fail(_: InvalidFlowStateError, _)) => true
@@ -339,7 +339,7 @@ object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSp
           offer = offerCredential()
           subjectId = "did:unknown:subject"
           offerReceivedRecord <- holderSvc.receiveCredentialOffer(offer)
-          record <- holderSvc.acceptCredentialOffer(offerReceivedRecord.id, subjectId).exit
+          record <- holderSvc.acceptCredentialOffer(offerReceivedRecord.id, Some(subjectId)).exit
         } yield {
           assertTrue(record match
             case Exit.Failure(Cause.Fail(_: UnsupportedDidFormat, _)) => true
@@ -438,8 +438,8 @@ object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSp
           offer = offerCredential()
           subjectId = "did:prism:60821d6833158c93fde5bb6a40d69996a683bf1fa5cdf32c458395b2887597c3"
           offerReceivedRecord <- holderSvc.receiveCredentialOffer(offer)
-          _ <- holderSvc.acceptCredentialOffer(offerReceivedRecord.id, subjectId)
-          _ <- holderSvc.generateCredentialRequest(offerReceivedRecord.id, JWT("Fake JWT"))
+          _ <- holderSvc.acceptCredentialOffer(offerReceivedRecord.id, Some(subjectId))
+          _ <- holderSvc.generateJWTCredentialRequest(offerReceivedRecord.id, JWT("Fake JWT"))
           _ <- holderSvc.markRequestSent(offerReceivedRecord.id)
           issue = issueCredential(thid = Some(offerReceivedRecord.thid))
           credentialReceivedRecord <- holderSvc.receiveCredentialIssue(issue)
@@ -454,8 +454,8 @@ object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSp
           offer = offerCredential()
           subjectId = "did:prism:60821d6833158c93fde5bb6a40d69996a683bf1fa5cdf32c458395b2887597c3"
           offerReceivedRecord <- holderSvc.receiveCredentialOffer(offer)
-          _ <- holderSvc.acceptCredentialOffer(offerReceivedRecord.id, subjectId)
-          _ <- holderSvc.generateCredentialRequest(offerReceivedRecord.id, JWT("Fake JWT"))
+          _ <- holderSvc.acceptCredentialOffer(offerReceivedRecord.id, Some(subjectId))
+          _ <- holderSvc.generateJWTCredentialRequest(offerReceivedRecord.id, JWT("Fake JWT"))
           _ <- holderSvc.markRequestSent(offerReceivedRecord.id)
           issue = issueCredential(thid = Some(offerReceivedRecord.thid))
           credentialReceivedRecord <- holderSvc.receiveCredentialIssue(issue)
@@ -473,8 +473,8 @@ object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSp
           offer = offerCredential()
           subjectId = "did:prism:60821d6833158c93fde5bb6a40d69996a683bf1fa5cdf32c458395b2887597c3"
           offerReceivedRecord <- holderSvc.receiveCredentialOffer(offer)
-          _ <- holderSvc.acceptCredentialOffer(offerReceivedRecord.id, subjectId)
-          _ <- holderSvc.generateCredentialRequest(offerReceivedRecord.id, JWT("Fake JWT"))
+          _ <- holderSvc.acceptCredentialOffer(offerReceivedRecord.id, Some(subjectId))
+          _ <- holderSvc.generateJWTCredentialRequest(offerReceivedRecord.id, JWT("Fake JWT"))
           _ <- holderSvc.markRequestSent(offerReceivedRecord.id)
           issue = issueCredential(thid = Some(DidCommID()))
           exit <- holderSvc.receiveCredentialIssue(issue).exit
@@ -500,9 +500,9 @@ object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSp
           holderRecordId = offerReceivedRecord.id
           subjectId = "did:prism:60821d6833158c93fde5bb6a40d69996a683bf1fa5cdf32c458395b2887597c3"
           // Holder accepts offer
-          _ <- holderSvc.acceptCredentialOffer(holderRecordId, subjectId)
+          _ <- holderSvc.acceptCredentialOffer(holderRecordId, Some(subjectId))
           // Holder generates proof
-          requestGeneratedRecord <- holderSvc.generateCredentialRequest(offerReceivedRecord.id, JWT("Fake JWT"))
+          requestGeneratedRecord <- holderSvc.generateJWTCredentialRequest(offerReceivedRecord.id, JWT("Fake JWT"))
           // Holder sends offer
           _ <- holderSvc.markRequestSent(holderRecordId)
           msg <- ZIO.fromEither(requestGeneratedRecord.requestCredentialData.get.makeMessage.asJson.as[Message])

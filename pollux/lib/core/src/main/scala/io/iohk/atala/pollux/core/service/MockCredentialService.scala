@@ -8,6 +8,7 @@ import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.core.model.{CredentialFormat, DidCommID, IssueCredentialRecord, PublishedBatchData}
 import io.iohk.atala.pollux.vc.jwt.{Issuer, JWT, PresentationPayload, W3cCredentialPayload}
 import io.iohk.atala.prism.crypto.MerkleInclusionProof
+import io.iohk.atala.shared.models.WalletAccessContext
 import zio.mock.{Mock, Proxy}
 import zio.{IO, URLayer, ZIO, ZLayer, mock}
 
@@ -36,9 +37,11 @@ object MockCredentialService extends Mock[CredentialService] {
       ]
 
   object ReceiveCredentialOffer extends Effect[OfferCredential, CredentialServiceError, IssueCredentialRecord]
-  object AcceptCredentialOffer extends Effect[(DidCommID, String), CredentialServiceError, IssueCredentialRecord]
+  object AcceptCredentialOffer
+      extends Effect[(DidCommID, Option[String]), CredentialServiceError, IssueCredentialRecord]
   object CreatePresentationPayload extends Effect[(DidCommID, Issuer), CredentialServiceError, PresentationPayload]
-  object GenerateCredentialRequest extends Effect[(DidCommID, JWT), CredentialServiceError, IssueCredentialRecord]
+  object GenerateJWTCredentialRequest extends Effect[(DidCommID, JWT), CredentialServiceError, IssueCredentialRecord]
+  object GenerateAnonCredsCredentialRequest extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
   object ReceiveCredentialRequest extends Effect[RequestCredential, CredentialServiceError, IssueCredentialRecord]
   object AcceptCredentialRequest extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
   object CreateCredentialPayloadFromRecord
@@ -96,7 +99,7 @@ object MockCredentialService extends Mock[CredentialService] {
 
       override def acceptCredentialOffer(
           recordId: DidCommID,
-          subjectId: String
+          subjectId: Option[String]
       ): IO[CredentialServiceError, IssueCredentialRecord] =
         proxy(AcceptCredentialOffer, recordId, subjectId)
 
@@ -106,11 +109,16 @@ object MockCredentialService extends Mock[CredentialService] {
       ): IO[CredentialServiceError, PresentationPayload] =
         proxy(CreatePresentationPayload, recordId, subject)
 
-      override def generateCredentialRequest(
+      override def generateJWTCredentialRequest(
           recordId: DidCommID,
           signedPresentation: JWT
       ): IO[CredentialServiceError, IssueCredentialRecord] =
-        proxy(GenerateCredentialRequest, recordId, signedPresentation)
+        proxy(GenerateJWTCredentialRequest, recordId, signedPresentation)
+
+      override def generateAnonCredsCredentialRequest(
+          recordId: DidCommID
+      ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
+        proxy(GenerateAnonCredsCredentialRequest, recordId)
 
       override def receiveCredentialRequest(
           request: RequestCredential
