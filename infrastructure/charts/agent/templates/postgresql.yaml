@@ -14,19 +14,23 @@ spec:
     castor-admin:
       - superuser
       - createdb
-    castor-application-user: []
+    castor-application-user:
+      - superuser
     pollux-admin:
       - superuser
       - createdb
-    pollux-application-user: []
+    pollux-application-user:
+      - superuser
     connect-admin:
       - superuser
       - createdb
-    connect-application-user: []
+    connect-application-user:
+      - superuser
     agent-admin:
       - superuser
       - createdb
-    agent-application-user: []
+    agent-application-user:
+      - superuser
   databases:
     castor: castor-admin
     pollux: pollux-admin
