@@ -4,6 +4,7 @@ import io.iohk.atala.agent.walletapi.crypto.DerivationPath
 import io.iohk.atala.agent.walletapi.crypto.ECKeyPair
 import io.iohk.atala.castor.core.model.did.InternalKeyPurpose
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
+import io.iohk.atala.prism.crypto.Sha256
 import scala.collection.immutable.ArraySeq
 import scala.language.implicitConversions
 
@@ -13,6 +14,7 @@ object WalletSeed {
   extension (s: WalletSeed) {
     final def toString(): String = "<REDACTED>"
     def toByteArray: Array[Byte] = s.toArray
+    def sha256Digest: Array[Byte] = Sha256.compute(toByteArray).getValue()
   }
 
   def fromByteArray(bytes: Array[Byte]): Either[String, WalletSeed] = {
