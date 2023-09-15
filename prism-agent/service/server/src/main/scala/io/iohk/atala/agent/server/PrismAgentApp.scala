@@ -53,6 +53,7 @@ object PrismAgentApp {
       config <- ZIO.service[AppConfig]
       _ <- ZIO
         .serviceWithZIO[WalletManagementService](_.listWallets().map(_._1))
+        .mapError(_.toThrowable)
         .flatMap { wallets =>
           ZIO.foreach(wallets) { wallet =>
             BackgroundJobs.issueCredentialDidCommExchanges
@@ -74,6 +75,7 @@ object PrismAgentApp {
       config <- ZIO.service[AppConfig]
       _ <- ZIO
         .serviceWithZIO[WalletManagementService](_.listWallets().map(_._1))
+        .mapError(_.toThrowable)
         .flatMap { wallets =>
           ZIO.foreach(wallets) { wallet =>
             BackgroundJobs.presentProofExchanges
@@ -94,6 +96,7 @@ object PrismAgentApp {
       config <- ZIO.service[AppConfig]
       _ <- ZIO
         .serviceWithZIO[WalletManagementService](_.listWallets().map(_._1))
+        .mapError(_.toThrowable)
         .flatMap { wallets =>
           ZIO.foreach(wallets) { wallet =>
             ConnectBackgroundJobs.didCommExchanges
@@ -182,7 +185,10 @@ object AgentInitialization {
       config <- ZIO.serviceWith[AppConfig](_.agent.defaultWallet)
       walletService <- ZIO.service[WalletManagementService]
       isDefaultWalletEnabled = config.enabled
-      isDefaultWalletExist <- walletService.getWallet(defaultWalletId).map(_.isDefined)
+      isDefaultWalletExist <- walletService
+        .getWallet(defaultWalletId)
+        .map(_.isDefined)
+        .mapError(_.toThrowable)
       _ <- ZIO.logInfo(s"Default wallet not enabled.").when(!isDefaultWalletEnabled)
       _ <- ZIO.logInfo(s"Default wallet already exist.").when(isDefaultWalletExist)
       _ <- createDefaultWallet.when(isDefaultWalletEnabled && !isDefaultWalletExist)
@@ -202,13 +208,16 @@ object AgentInitialization {
           .asSome
       }
       _ <- ZIO.logInfo(s"Default wallet seed is not provided. New seed will be generated.").when(seed.isEmpty)
-      _ <- walletService.createWallet(defaultWallet, seed)
+      _ <- walletService
+        .createWallet(defaultWallet, seed)
+        .mapError(_.toThrowable)
       _ <- entityService.create(defaultEntity).mapError(e => Exception(e.message))
       _ <- apiKeyAuth.add(defaultEntity.id, config.authApiKey).mapError(e => Exception(e.message))
       _ <- config.webhookUrl.fold(ZIO.unit) { url =>
         val customHeaders = config.webhookApiKey.fold(Map.empty)(apiKey => Map("Authorization" -> s"Bearer $apiKey"))
         walletService
           .createWalletNotification(EventNotificationConfig(defaultWalletId, url, customHeaders))
+          .mapError(_.toThrowable)
           .provide(ZLayer.succeed(WalletAccessContext(defaultWalletId)))
       }
     } yield ()
