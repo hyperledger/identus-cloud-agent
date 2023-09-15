@@ -1,6 +1,7 @@
 package features.did
 
 import api_models.*
+import common.Ensure
 import common.TestConstants
 import common.Utils.lastResponseList
 import common.Utils.lastResponseObject
@@ -93,14 +94,11 @@ class ManageDidSteps {
 
     @Then("{actor} sees the list contains all created DIDs")
     fun seeTheListContainsAllCreatedDids(actor: Actor) {
-        val expectedDidsCount = actor.recall<Int>("number")
         val expectedDids = actor.recall<List<String>>("createdDids")
-        val managedDidList = lastResponseList("contents", ManagedDid::class)
-        Assertions.assertThat(managedDidList)
-            .filteredOn {
-                expectedDids.contains(it.longFormDid) && it.status == ManagedDidStatuses.CREATED
-            }
-            .hasSize(expectedDidsCount)
+        val managedDidList = lastResponseList("contents.longFormDid", String::class)
+        actor.attemptsTo(
+            Ensure.that(managedDidList).containsElementsFrom(expectedDids)
+        )
     }
 
     private fun createPrismDidRequest(): CreatePrismDidRequest {

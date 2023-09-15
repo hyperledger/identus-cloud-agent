@@ -25,7 +25,6 @@ class VerificationPoliciesSteps {
                 it.body(TestConstants.VERIFICATION_POLICIES.VERIFICATION_POLICY)
             },
         )
-        Thread.sleep(10000)
     }
 
     @Then("{actor} sees new verification policy is available")
@@ -67,7 +66,6 @@ class VerificationPoliciesSteps {
             },
         )
         actor.remember("updatedPolicyInput", updatePolicyInput)
-        Thread.sleep(10000)
     }
 
     @Then("{actor} sees the updated verification policy is available")

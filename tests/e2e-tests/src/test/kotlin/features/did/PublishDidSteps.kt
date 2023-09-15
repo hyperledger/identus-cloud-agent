@@ -12,6 +12,7 @@ import io.cucumber.java.en.When
 import net.serenitybdd.screenplay.Actor
 import interactions.Get
 import interactions.Post
+import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.rest.questions.ResponseConsequence
 import org.apache.http.HttpStatus.*
 import org.assertj.core.api.Assertions.assertThat
@@ -101,7 +102,10 @@ class PublishDidSteps {
         )
         wait(
             {
-                val didEvent = ListenToEvents.`as`(actor).didEvents.lastOrNull()
+                val didEvent =
+                    ListenToEvents.`as`(actor).didEvents.lastOrNull {
+                        it.data.did == actor.recall<String>("shortFormDid")
+                    }
                 didEvent != null && didEvent.data.status == ManagedDidStatuses.PUBLISHED
             },
             "ERROR: DID was not published to ledger!",
