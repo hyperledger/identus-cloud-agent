@@ -46,6 +46,7 @@ object MockCredentialService extends Mock[CredentialService] {
   object AcceptCredentialRequest extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
   object CreateCredentialPayloadFromRecord
       extends Effect[(IssueCredentialRecord, Issuer, Instant), CredentialServiceError, W3cCredentialPayload]
+  object GenerateAnonCredsCredential extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
   object PublishCredentialBatch
       extends Effect[(Seq[W3cCredentialPayload], Issuer), CredentialServiceError, PublishedBatchData]
   object MarkCredentialRecordsAsPublishQueued
@@ -134,6 +135,11 @@ object MockCredentialService extends Mock[CredentialService] {
           issuanceDate: Instant
       ): IO[CredentialServiceError, W3cCredentialPayload] =
         proxy(CreateCredentialPayloadFromRecord, record, issuer, issuanceDate)
+
+      override def generateAnonCredsCredential(
+          recordId: DidCommID
+      ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
+        proxy(GenerateAnonCredsCredential, recordId)
 
       override def publishCredentialBatch(
           credentials: Seq[W3cCredentialPayload],

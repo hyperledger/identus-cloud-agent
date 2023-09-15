@@ -390,10 +390,7 @@ private class CredentialServiceImpl(
       offerCredential <- ZIO
         .fromOption(record.offerCredentialData)
         .mapError(_ => InvalidFlowStateError(s"No offer found for this record: ${record.id}"))
-      body = RequestCredential.Body(
-        goal_code = Some("Request Credential"),
-        None
-      )
+      body = RequestCredential.Body(goal_code = Some("Request Credential"))
       attachments <- createAnonCredsRequestCredential(offerCredential).map { createCredentialRequest =>
         Seq(
           AttachmentDescriptor.buildBase64Attachment(
@@ -447,7 +444,7 @@ private class CredentialServiceImpl(
             }
         )
         .mapError(_ => InvalidFlowStateError(s"No AnonCreds offer attachment found"))
-      credentialOffer = CredentialOffer(attachmentData)
+      credentialOffer = anoncreds.CredentialOffer(attachmentData)
       _ <- ZIO.logInfo(s"Cred def ID => ${credentialOffer.getCredDefId}")
       credDefContent <- uriDereferencer
         .dereference(new URI(credentialOffer.getCredDefId))
@@ -967,6 +964,116 @@ private class CredentialServiceImpl(
 
     credential
 
+  }
+
+  override def generateAnonCredsCredential(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
+    for {
+      record <- getRecordWithState(recordId, ProtocolState.CredentialPending)
+      requestCredential <- ZIO
+        .fromOption(record.requestCredentialData)
+        .mapError(_ => InvalidFlowStateError(s"No request found for this record: ${record.id}"))
+      body = IssueCredential.Body(goal_code = Some("Issue Credential"))
+      attachments <- createAnonCredsCredential(record).map { credential =>
+        Seq(
+          AttachmentDescriptor.buildBase64Attachment(
+            mediaType = Some("application/json"),
+            format = Some(IssueCredentialIssuedFormat.Anoncred.name),
+            payload = credential.data.getBytes()
+          )
+        )
+      }
+      issue = IssueCredential(
+        body = body,
+        attachments = attachments,
+        from = requestCredential.to,
+        to = requestCredential.from,
+        thid = requestCredential.thid
+      )
+      count <- credentialRepository
+        .updateWithIssueCredential(recordId, issue, ProtocolState.CredentialGenerated)
+        .mapError(RepositoryError.apply) @@ CustomMetricsAspect.endRecordingTime(
+        s"${record.id}_issuance_flow_issuer_credential_pending_to_generated",
+        "issuance_flow_issuer_credential_pending_to_generated_ms_gauge"
+      ) @@ CustomMetricsAspect.startRecordingTime(s"${record.id}_issuance_flow_issuer_credential_generated_to_sent")
+      _ <- count match
+        case 1 => ZIO.succeed(())
+        case n => ZIO.fail(RecordIdNotFound(recordId))
+      record <- credentialRepository
+        .getIssueCredentialRecord(record.id)
+        .mapError(RepositoryError.apply)
+        .flatMap {
+          case None        => ZIO.fail(RecordIdNotFound(recordId))
+          case Some(value) => ZIO.succeed(value)
+        }
+    } yield record
+  }
+
+  private[this] def createAnonCredsCredential(record: IssueCredentialRecord) = {
+    for {
+      credentialDefinitionId <- ZIO
+        .fromOption(record.credentialDefinitionId)
+        .mapError(_ => CredentialServiceError.UnexpectedError(s"No cred def Id found un record: ${record.id}"))
+      credentialDefinition <- credentialDefinitionService
+        .getByGUID(credentialDefinitionId)
+        .mapError(e => CredentialServiceError.UnexpectedError(e.toString))
+      cd = anoncreds.CredentialDefinition(credentialDefinition.definition.toString)
+      offerCredential <- ZIO
+        .fromOption(record.offerCredentialData)
+        .mapError(_ => InvalidFlowStateError(s"No offer found for this record: ${record.id}"))
+      offerCredentialAttachmentData <- ZIO
+        .fromOption(
+          offerCredential.attachments
+            .find(_.format.contains(IssueCredentialOfferFormat.Anoncred.name))
+            .map(_.data)
+            .flatMap {
+              case Base64(value) => Some(new String(java.util.Base64.getUrlDecoder.decode(value)))
+              case _             => None
+            }
+        )
+        .mapError(_ => InvalidFlowStateError(s"No AnonCreds offer attachment found"))
+      credentialOffer = anoncreds.CredentialOffer(offerCredentialAttachmentData)
+      requestCredential <- ZIO
+        .fromOption(record.requestCredentialData)
+        .mapError(_ => InvalidFlowStateError(s"No request found for this record: ${record.id}"))
+      requestCredentialAttachmentData <- ZIO
+        .fromOption(
+          requestCredential.attachments
+            .find(_.format.contains(IssueCredentialRequestFormat.Anoncred.name))
+            .map(_.data)
+            .flatMap {
+              case Base64(value) => Some(new String(java.util.Base64.getUrlDecoder.decode(value)))
+              case _             => None
+            }
+        )
+        .mapError(_ => InvalidFlowStateError(s"No AnonCreds request attachment found"))
+      credentialRequest = anoncreds.CredentialRequest(requestCredentialAttachmentData)
+      attrValues = offerCredential.body.credential_preview.attributes.map { attr =>
+        (attr.name, attr.value)
+      }
+      did <- ZIO
+        .fromOption(record.issuingDID)
+        .mapError(_ => CredentialServiceError.UnexpectedError("No issuingDID found"))
+      maybeDidSecret <- didSecretStorage
+        .getKey(
+          DidId(did.toString),
+          s"anoncred-credential-definition-private-key/${credentialDefinition.guid}",
+          PrivateCredentialDefinitionSchemaSerDesV1.version
+        )
+        .mapError(error => CredentialServiceError.UnexpectedError(error.getMessage))
+      cdPrivate <- ZIO
+        .fromOption(maybeDidSecret)
+        .map(secret => anoncreds.CredentialDefinitionPrivate(secret.json.toString))
+        .mapError(_ => CredentialServiceError.UnexpectedError("Credential Definition Private part not found in secret"))
+      credential = AnoncredLib.createCredential(
+        cd,
+        cdPrivate,
+        credentialOffer,
+        credentialRequest,
+        attrValues
+      )
+    } yield credential
   }
 
   private[this] def getOptionsFromOfferCredentialData(record: IssueCredentialRecord) = {

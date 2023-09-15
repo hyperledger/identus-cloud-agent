@@ -92,6 +92,10 @@ trait CredentialService {
       issuanceDate: Instant
   ): ZIO[WalletAccessContext, CredentialServiceError, W3cCredentialPayload]
 
+  def generateAnonCredsCredential(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
+
   def publishCredentialBatch(
       credentials: Seq[W3cCredentialPayload],
       issuer: Issuer

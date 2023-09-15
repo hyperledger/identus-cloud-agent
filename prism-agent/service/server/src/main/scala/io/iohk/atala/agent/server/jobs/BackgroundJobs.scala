@@ -406,7 +406,7 @@ object BackgroundJobs {
               _,
               _,
               _,
-              _,
+              CredentialFormat.JWT,
               Role.Issuer,
               _,
               _,
@@ -426,6 +426,7 @@ object BackgroundJobs {
           // Generate the JWT Credential and store it in DB as an attachment to IssueCredentialData
           // Set ProtocolState to CredentialGenerated
           // Set PublicationState to PublicationPending
+          // TODO Move all logic to service
           val issuerPendingToGeneratedFlow = for {
             credentialService <- ZIO.service[CredentialService]
             longFormPrismDID <- getLongForm(issuerDID, true)
@@ -442,6 +443,52 @@ object BackgroundJobs {
               thid = issue.thid,
               credentials = Seq(IssueCredentialIssuedFormat.JWT -> signedJwtCredential.value.getBytes)
             )
+            _ <- credentialService.markCredentialGenerated(id, issueCredential)
+
+          } yield ()
+
+          issuerPendingToGeneratedFlow @@ IssuerPendingToGeneratedSuccess.trackSuccess
+            @@ IssuerPendingToGeneratedFailed.trackError
+            @@ IssuerPendingToGeneratedAll
+            @@ Metric
+              .gauge("issuance_flow_issuer_cred_received_to_pending_flow_ms_gauge")
+              .trackDurationWith(_.toMetricsSeconds)
+
+        case IssueCredentialRecord(
+              id,
+              _,
+              _,
+              _,
+              _,
+              _,
+              CredentialFormat.AnonCreds,
+              Role.Issuer,
+              _,
+              _,
+              _,
+              _,
+              CredentialPending,
+              _,
+              _,
+              _,
+              Some(issue),
+              _,
+              _,
+              _,
+              _,
+              _,
+            ) =>
+          val issuerPendingToGeneratedFlow = for {
+            credentialService <- ZIO.service[CredentialService]
+
+            issueCredential = IssueCredential.build(
+              fromDID = issue.from,
+              toDID = issue.to,
+              thid = issue.thid,
+              credentials = Seq.empty
+            )
+            _ <- credentialService.generateAnonCredsCredential(id)
+            // TODO Move all logic to service
             _ <- credentialService.markCredentialGenerated(id, issueCredential)
 
           } yield ()
