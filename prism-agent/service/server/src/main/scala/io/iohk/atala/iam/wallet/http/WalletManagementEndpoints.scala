@@ -35,7 +35,7 @@ object WalletManagementEndpoints {
     baseEndpoint.get
       .in(paginationInput)
       .errorOut(EndpointOutputs.basicFailuresAndForbidden)
-      .out(statusCode(StatusCode.Ok).description("List Prism Agent managed DIDs"))
+      .out(statusCode(StatusCode.Ok).description("Successfully list all the wallets"))
       .out(jsonBody[WalletDetailPage])
       .summary("List all wallets")
 

@@ -4,7 +4,7 @@ import io.iohk.atala.api.http.Annotation
 import io.iohk.atala.iam.entity.http.model.CreateEntityRequest.annotations
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample, validate, validateEach}
-import sttp.tapir.Validator.*
+import sttp.tapir.Validator
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 import java.util.UUID
@@ -13,9 +13,9 @@ case class CreateEntityRequest(
     @description(annotations.id.description)
     @encodedExample(annotations.id.example)
     id: Option[UUID],
-    @description(annotations.id.description)
-    @encodedExample(annotations.id.example)
-    @validate(nonEmptyString)
+    @description(annotations.name.description)
+    @encodedExample(annotations.name.example)
+    @validate(annotations.name.validator)
     name: String,
     @description(annotations.walletId.description)
     @encodedExample(annotations.walletId.example)
@@ -44,7 +44,8 @@ object CreateEntityRequest {
         extends Annotation[String](
           description =
             "The new `name` of the entity to be created. If this field is not provided, the server will generate a random name for the entity",
-          example = "John Doe"
+          example = "John Doe",
+          validator = Validator.all(Validator.nonEmptyString, Validator.maxLength(128))
         )
 
     object walletId

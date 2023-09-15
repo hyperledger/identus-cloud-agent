@@ -93,7 +93,7 @@ object EntityEndpoints {
       .securityIn(adminApiKeyHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
-        "iam" / "entities" / path[UUID]("id") / "walletId" // .description(EntityResponse.annotations.id.description)
+        "iam" / "entities" / path[UUID]("id") / "walletId"
       )
       .in(
         jsonBody[UpdateEntityWalletIdRequest]
