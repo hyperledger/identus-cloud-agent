@@ -1,6 +1,10 @@
 package io.iohk.atala.agent.walletapi.storage
 
-import io.iohk.atala.agent.walletapi.model.error.EntityServiceError.{EntityAlreadyExists, EntityNotFound}
+import io.iohk.atala.agent.walletapi.model.error.EntityServiceError.{
+  EntityAlreadyExists,
+  EntityNotFound,
+  EntityWalletNotFound
+}
 import io.iohk.atala.agent.walletapi.model.{Entity, Wallet}
 import io.iohk.atala.agent.walletapi.sql.{EntityRepository, JdbcEntityRepository, JdbcWalletNonSecretStorage}
 import io.iohk.atala.agent.walletapi.storage.JdbcWalletNonSecretStorageSpec.{
@@ -14,7 +18,6 @@ import zio.*
 import zio.test.*
 import zio.test.Assertion.*
 
-import java.time.Instant
 import java.util.UUID
 
 object JdbcEntityRepositorySpec extends ZIOSpecDefault, PostgresTestContainerSupport {
@@ -31,10 +34,11 @@ object JdbcEntityRepositorySpec extends ZIOSpecDefault, PostgresTestContainerSup
     )
   } yield entity
 
-  private def createWalletForEntity(entity: Entity) = {
+  private def createAndStoreWallet(entity: Entity) = {
     for {
       storage <- ZIO.service[WalletNonSecretStorage]
-      wallet <- storage.createWallet(Wallet("test", WalletId.fromUUID(entity.walletId)))
+      seedDigest <- Random.nextBytes(32).map(_.toArray)
+      wallet <- storage.createWallet(Wallet("test", WalletId.fromUUID(entity.walletId)), seedDigest)
     } yield wallet
   }
 
@@ -62,7 +66,7 @@ object JdbcEntityRepositorySpec extends ZIOSpecDefault, PostgresTestContainerSup
     test("get all entities - single entity") {
       for {
         in <- createRandomEntity
-        _ <- createWalletForEntity(in)
+        _ <- createAndStoreWallet(in)
         _ <- EntityRepository.insert(in)
         entities <- EntityRepository.getAll(0, 100)
         _ <- EntityRepository.delete(in.id)
@@ -74,7 +78,7 @@ object JdbcEntityRepositorySpec extends ZIOSpecDefault, PostgresTestContainerSup
         entities <- ZIO.foreach(1 to 100) { _ =>
           for {
             e <- createRandomEntity
-            _ <- createWalletForEntity(e)
+            _ <- createAndStoreWallet(e)
             _ <- EntityRepository.insert(e)
           } yield e
         }
@@ -87,7 +91,7 @@ object JdbcEntityRepositorySpec extends ZIOSpecDefault, PostgresTestContainerSup
     test("update the Entity name") {
       for {
         in <- createRandomEntity
-        _ <- createWalletForEntity(in)
+        _ <- createAndStoreWallet(in)
         out <- EntityRepository.insert(in)
         _ <- EntityRepository.updateName(in.id, "newName")
         updated <- EntityRepository.getById(in.id)
@@ -112,9 +116,9 @@ object JdbcEntityRepositorySpec extends ZIOSpecDefault, PostgresTestContainerSup
         _ <- random.setSeed(52L)
         walletId <- random.nextUUID
         in <- createRandomEntity
-        _ <- createWalletForEntity(in)
+        _ <- createAndStoreWallet(in)
         storage <- ZIO.service[WalletNonSecretStorage]
-        _ <- storage.createWallet(Wallet("another wallet", WalletId.fromUUID(walletId)))
+        _ <- storage.createWallet(Wallet("another wallet", WalletId.fromUUID(walletId)), Array.emptyByteArray)
         out <- EntityRepository.insert(in)
         _ <- EntityRepository.updateWallet(in.id, walletId)
         updated <- EntityRepository.getById(in.id)
@@ -136,13 +140,36 @@ object JdbcEntityRepositorySpec extends ZIOSpecDefault, PostgresTestContainerSup
         )
       )
     },
+    test("update the Entity walletId by the walletId that does not exist") {
+      for {
+        random <- ZIO.random
+        _ <- random.setSeed(56L)
+        randomWalletId <- random.nextUUID
+
+        in <- createRandomEntity
+        wallet <- createAndStoreWallet(in)
+        entity <- EntityRepository.insert(in)
+
+        updated <- EntityRepository.updateWallet(entity.id, randomWalletId).exit
+      } yield assert(updated)(
+        fails(
+          isSubtype[EntityWalletNotFound](
+            hasField(
+              "message",
+              _.message,
+              containsString(s"Wallet with id:$randomWalletId not found for entity with id:${in.id}")
+            )
+          )
+        )
+      )
+    },
   )
 
   private val getEntitySpec = suite("get the Entity spec")(
     test("create and get the Entity by id") {
       for {
         in <- createRandomEntity
-        _ <- createWalletForEntity(in)
+        _ <- createAndStoreWallet(in)
         out <- EntityRepository.insert(in)
         get <- EntityRepository.getById(in.id)
       } yield assert(out)(equalTo(in)) &&
@@ -164,7 +191,7 @@ object JdbcEntityRepositorySpec extends ZIOSpecDefault, PostgresTestContainerSup
     test("create the Entity with random id and default wallet id") {
       for {
         in <- ZIO.succeed(Entity("test"))
-        _ <- createWalletForEntity(in)
+        _ <- createAndStoreWallet(in)
         out <- EntityRepository.insert(in)
       } yield assert(out)(equalTo(in)) && assert(out.walletId)(equalTo(Entity.ZeroWalletId))
     },
@@ -174,14 +201,14 @@ object JdbcEntityRepositorySpec extends ZIOSpecDefault, PostgresTestContainerSup
         _ <- random.setSeed(42L)
         walletId <- random.nextUUID
         in <- ZIO.succeed(Entity(name = "test", walletId = walletId))
-        _ <- createWalletForEntity(in)
+        _ <- createAndStoreWallet(in)
         out <- EntityRepository.insert(in)
       } yield assert(out)(equalTo(in)) && assert(out.walletId)(equalTo(walletId))
     },
     test("create the Entity with id and wallet id") {
       for {
         in <- createRandomEntity
-        _ <- createWalletForEntity(in)
+        _ <- createAndStoreWallet(in)
         out <- EntityRepository.insert(in)
       } yield assert(out)(equalTo(in)) &&
         assert(out.walletId)(equalTo(in.walletId)) &&
@@ -192,11 +219,28 @@ object JdbcEntityRepositorySpec extends ZIOSpecDefault, PostgresTestContainerSup
     test("create the Entity with the same id") {
       for {
         in <- createRandomEntity
-        _ <- createWalletForEntity(in)
+        _ <- createAndStoreWallet(in)
         out <- EntityRepository.insert(in)
         exit <- EntityRepository.insert(in).exit
       } yield assert(exit)(
         fails(isSubtype[EntityAlreadyExists](hasField("message", _.message, containsString("duplicate key value"))))
+      )
+    },
+    test("create the Entity with the walletId that doesn't exist") {
+      for {
+        in <- createRandomEntity
+        // _ <- createAndStoreWallet(in) - the wallet is not created
+        exit <- EntityRepository.insert(in).exit
+      } yield assert(exit)(
+        fails(
+          isSubtype[EntityWalletNotFound](
+            hasField(
+              "message",
+              _.message,
+              containsString(s"Wallet with id:${in.walletId} not found for entity with id:${in.id}")
+            )
+          )
+        )
       )
     }
   )

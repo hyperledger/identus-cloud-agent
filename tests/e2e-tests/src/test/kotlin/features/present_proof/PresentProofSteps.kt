@@ -69,8 +69,10 @@ class PresentProofSteps {
     fun bobReceivesTheRequest(bob: Actor) {
         wait(
             {
-                proofEvent = ListenToEvents.`as`(bob).presentationEvents.lastOrNull()
-                proofEvent != null && proofEvent!!.data.thid == bob.recall<String>("thid") &&
+                proofEvent = ListenToEvents.`as`(bob).presentationEvents.lastOrNull {
+                    it.data.thid == bob.recall<String>("thid")
+                }
+                proofEvent != null &&
                         proofEvent!!.data.status == PresentationProofStatus.REQUEST_RECEIVED
             },
             "ERROR: Bob did not achieve any presentation request!",
@@ -104,8 +106,10 @@ class PresentProofSteps {
     fun bobSeesProofIsRejected(bob: Actor) {
         wait(
             {
-                proofEvent = ListenToEvents.`as`(bob).presentationEvents.lastOrNull()
-                proofEvent != null && proofEvent!!.data.thid == bob.recall<String>("thid") &&
+                proofEvent = ListenToEvents.`as`(bob).presentationEvents.lastOrNull {
+                    it.data.thid == bob.recall<String>("thid")
+                }
+                proofEvent != null &&
                         proofEvent!!.data.status == PresentationProofStatus.REQUEST_REJECTED
             },
             "ERROR: Faber did not receive presentation from Bob!",
@@ -116,8 +120,11 @@ class PresentProofSteps {
     fun faberHasTheProofVerified(faber: Actor) {
         wait(
             {
-                proofEvent = ListenToEvents.`as`(faber).presentationEvents.lastOrNull()
-                proofEvent != null && proofEvent!!.data.thid == faber.recall<String>("thid") &&
+                proofEvent = ListenToEvents.`as`(faber).presentationEvents.lastOrNull {
+                    it.data.thid == faber.recall<String>("thid")
+                }
+
+                proofEvent != null &&
                         proofEvent!!.data.status == PresentationProofStatus.PRESENTATION_VERIFIED
             },
             "ERROR: presentation did not achieve PresentationVerified state!",

@@ -2,7 +2,9 @@ package io.iohk.atala.agent.walletapi.storage
 
 import io.iohk.atala.agent.walletapi.model.Wallet
 import io.iohk.atala.agent.walletapi.sql.JdbcWalletNonSecretStorage
-import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorageCustomError.TooManyWebhook
+import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorageError.TooManyWebhook
+import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorageError.DuplicatedWalletId
+import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorageError.DuplicatedWalletSeed
 import io.iohk.atala.event.notification.EventNotificationConfig
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.models.WalletId
@@ -16,10 +18,20 @@ import java.net.URL
 
 object JdbcWalletNonSecretStorageSpec extends ZIOSpecDefault, PostgresTestContainerSupport {
 
+  private def createWallets(n: Int) =
+    ZIO.foreach(1 to n) { i =>
+      for {
+        storage <- ZIO.service[WalletNonSecretStorage]
+        seedDigest <- Random.nextBytes(32).map(_.toArray)
+        wallet <- storage.createWallet(Wallet(s"wallet-$i"), seedDigest)
+      } yield wallet
+    }
+
   override def spec = {
     val s = suite("JdbcWalletNonSecretStorage")(
       getWalletSpec,
       listWalletSpec,
+      createWalletSpec,
       walletNotificationSpec
     ) @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
 
@@ -30,7 +42,7 @@ object JdbcWalletNonSecretStorageSpec extends ZIOSpecDefault, PostgresTestContai
     test("get existing wallet") {
       for {
         storage <- ZIO.service[WalletNonSecretStorage]
-        wallet <- storage.createWallet(Wallet("wallet-1"))
+        wallet <- createWallets(1).map(_.head)
         wallet2 <- storage.getWallet(wallet.id)
       } yield assert(wallet2)(isSome(equalTo(wallet)))
     },
@@ -39,6 +51,35 @@ object JdbcWalletNonSecretStorageSpec extends ZIOSpecDefault, PostgresTestContai
         storage <- ZIO.service[WalletNonSecretStorage]
         wallet <- storage.getWallet(WalletId.random)
       } yield assert(wallet)(isNone)
+    }
+  )
+
+  private val createWalletSpec = suite("createWallet")(
+    test("create wallet with same name should not fail") {
+      for {
+        storage <- ZIO.service[WalletNonSecretStorage]
+        _ <- createWallets(1)
+        _ <- createWallets(1)
+        wallets <- storage.listWallet().map(_._1)
+        names = wallets.map(_.name)
+      } yield assert(names)(hasSameElements(Seq("wallet-1", "wallet-1")))
+    },
+    test("create wallet with same id fail with duplicate id error") {
+      for {
+        storage <- ZIO.service[WalletNonSecretStorage]
+        seedDigest1 <- Random.nextBytes(32).map(_.toArray)
+        seedDigest2 <- Random.nextBytes(32).map(_.toArray)
+        _ <- storage.createWallet(Wallet("wallet-1", WalletId.default), seedDigest1)
+        exit <- storage.createWallet(Wallet("wallet-2", WalletId.default), seedDigest2).exit
+      } yield assert(exit)(fails(isSubtype[DuplicatedWalletId](anything)))
+    },
+    test("create wallet with same seed digest fail with duplicate seed error") {
+      for {
+        storage <- ZIO.service[WalletNonSecretStorage]
+        seedDigest1 <- Random.nextBytes(32).map(_.toArray)
+        _ <- storage.createWallet(Wallet("wallet-1", WalletId.random), seedDigest1)
+        exit <- storage.createWallet(Wallet("wallet-2", WalletId.random), seedDigest1).exit
+      } yield assert(exit)(fails(isSubtype[DuplicatedWalletSeed](anything)))
     }
   )
 
@@ -53,9 +94,7 @@ object JdbcWalletNonSecretStorageSpec extends ZIOSpecDefault, PostgresTestContai
     test("list created wallets") {
       for {
         storage <- ZIO.service[WalletNonSecretStorage]
-        _ <- storage.createWallet(Wallet("wallet-1"))
-        _ <- storage.createWallet(Wallet("wallet-2"))
-        _ <- storage.createWallet(Wallet("wallet-3"))
+        _ <- createWallets(3)
         walletsWithCount <- storage.listWallet()
         (wallets, count) = walletsWithCount
       } yield assert(wallets.map(_.name))(hasSameElements(Seq("wallet-1", "wallet-2", "wallet-3"))) &&
@@ -64,7 +103,7 @@ object JdbcWalletNonSecretStorageSpec extends ZIOSpecDefault, PostgresTestContai
     test("list stored wallet and return correct item count when using offset and limit") {
       for {
         storage <- ZIO.service[WalletNonSecretStorage]
-        wallets <- ZIO.foreach(1 to 50) { i => storage.createWallet(Wallet(s"wallet-$i")) }
+        wallets <- createWallets(50)
         walletsWithCount <- storage.listWallet(offset = Some(20), limit = Some(20))
         (pagedWallets, count) = walletsWithCount
       } yield assert(wallets.drop(20).take(20))(equalTo(pagedWallets)) &&
@@ -73,7 +112,7 @@ object JdbcWalletNonSecretStorageSpec extends ZIOSpecDefault, PostgresTestContai
     test("list stored wallet and return correct item count when using offset only") {
       for {
         storage <- ZIO.service[WalletNonSecretStorage]
-        wallets <- ZIO.foreach(1 to 50) { i => storage.createWallet(Wallet(s"wallet-$i")) }
+        wallets <- createWallets(50)
         walletsWithCount <- storage.listWallet(offset = Some(20))
         (pagedWallets, count) = walletsWithCount
       } yield assert(wallets.drop(20))(equalTo(pagedWallets)) &&
@@ -82,7 +121,7 @@ object JdbcWalletNonSecretStorageSpec extends ZIOSpecDefault, PostgresTestContai
     test("list stored wallet and return correct item count when using limit only") {
       for {
         storage <- ZIO.service[WalletNonSecretStorage]
-        wallets <- ZIO.foreach(1 to 50) { i => storage.createWallet(Wallet(s"wallet-$i")) }
+        wallets <- createWallets(50)
         walletsWithCount <- storage.listWallet(limit = Some(20))
         (pagedWallets, count) = walletsWithCount
       } yield assert(wallets.take(20))(equalTo(pagedWallets)) &&
@@ -91,7 +130,7 @@ object JdbcWalletNonSecretStorageSpec extends ZIOSpecDefault, PostgresTestContai
     test("return empty list when limit is zero") {
       for {
         storage <- ZIO.service[WalletNonSecretStorage]
-        wallets <- ZIO.foreach(1 to 50) { i => storage.createWallet(Wallet(s"wallet-$i")) }
+        wallets <- createWallets(50)
         walletsWithCount <- storage.listWallet(limit = Some(0))
         (pagedWallets, count) = walletsWithCount
       } yield assert(pagedWallets)(isEmpty) && assert(count)(equalTo(50))
@@ -99,14 +138,14 @@ object JdbcWalletNonSecretStorageSpec extends ZIOSpecDefault, PostgresTestContai
     test("fail when limit is negative") {
       for {
         storage <- ZIO.service[WalletNonSecretStorage]
-        wallets <- ZIO.foreach(1 to 50) { i => storage.createWallet(Wallet(s"wallet-$i")) }
+        wallets <- createWallets(50)
         exit <- storage.listWallet(limit = Some(-1)).exit
       } yield assert(exit)(fails(anything))
     },
     test("fail when offset is negative") {
       for {
         storage <- ZIO.service[WalletNonSecretStorage]
-        wallets <- ZIO.foreach(1 to 50) { i => storage.createWallet(Wallet(s"wallet-$i")) }
+        wallets <- createWallets(50)
         exit <- storage.listWallet(offset = Some(-1)).exit
       } yield assert(exit)(fails(anything))
     }
@@ -116,7 +155,7 @@ object JdbcWalletNonSecretStorageSpec extends ZIOSpecDefault, PostgresTestContai
     test("insert wallet notification") {
       for {
         storage <- ZIO.service[WalletNonSecretStorage]
-        wallet <- storage.createWallet(Wallet("wallet-1"))
+        wallet <- createWallets(1).map(_.head)
         config = EventNotificationConfig(wallet.id, URL("https://example.com"))
         _ <- storage
           .createWalletNotification(config)
@@ -128,7 +167,7 @@ object JdbcWalletNonSecretStorageSpec extends ZIOSpecDefault, PostgresTestContai
     test("unable to create new notification if exceed limit")(
       for {
         storage <- ZIO.service[WalletNonSecretStorage]
-        wallet <- storage.createWallet(Wallet("wallet-1"))
+        wallet <- createWallets(1).map(_.head)
         limit = JdbcWalletNonSecretStorage.MAX_WEBHOOK_PER_WALLET
         _ <- ZIO.foreach(1 to limit) { _ =>
           storage
@@ -144,8 +183,9 @@ object JdbcWalletNonSecretStorageSpec extends ZIOSpecDefault, PostgresTestContai
     test("do not see notification outside of the wallet") {
       for {
         storage <- ZIO.service[WalletNonSecretStorage]
-        wallet1 <- storage.createWallet(Wallet("wallet-1"))
-        wallet2 <- storage.createWallet(Wallet("wallet-2"))
+        wallets <- createWallets(2)
+        wallet1 = wallets.head
+        wallet2 = wallets.last
         config = EventNotificationConfig(wallet1.id, URL("https://example.com"))
         _ <- storage
           .createWalletNotification(config)
