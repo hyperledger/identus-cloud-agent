@@ -1,0 +1,69 @@
+argocd-apps:
+  itemTemplates:
+    - items:
+        - name: prism-agent-application-set
+          generators: &generators
+            - list:
+                elements:
+                  - name: eu-prism-agent-holder
+                    namespace: eu-prism-agent-holder
+                    ingressURL: eu-prism-agent-holder.atalaprism.io
+                  - name: eu-prism-agent-issuer
+                    namespace: eu-prism-agent-issuer
+                    ingressURL: eu-prism-agent-issuer.atalaprism.io
+                  - name: eu-prism-agent-verifier
+                    namespace: eu-prism-agent-verifier
+                    ingressURL: eu-prism-agent-verifier.atalaprism.io
+      template:
+        metadata:
+          name: "{{name}}"
+          namespace: argocd
+          labels:
+            type: agent
+          annotations: {}
+          finalizers:
+            - resources-finalizer.argocd.argoproj.io
+        spec:
+          project: system-integration-testing
+          source:
+            path: infrastructure/charts/agent
+            repoURL: "https://github.com/hyperledger-labs/open-enterprise-agent"
+            targetRevision: "main"
+            helm:
+              values:
+                ingress:
+                  applicationUrls:
+                    - "{{ingressURL}}"
+                  platformIngressUrl: internal-eucentral1-prt9a.atalaprism.io
+                  consumers:
+                    - "key1"
+                secrets:
+                  secretStore: prism-v2-prt9a-us-east-1-externalsecrets
+                  dockerRegistryToken: prt9a-argocd-github-docker-registry-token
+                server:
+                  useVault: false
+                  additionalEnvVariables:
+                    SECRET_STORAGE_BACKEND: "postgres"
+                vdrManager:
+                  host: node-service.sit-prism-node
+                vault:
+                  global:
+                    enabled: false
+          destination:
+            server: https://kubernetes.default.svc
+            namespace: "{{namespace}}"
+          syncPolicy:
+            automated:
+              prune: true
+              selfHeal: true
+            syncOptions:
+              - Validate=true
+              - CreateNamespace=true
+              - PrunePropagationPolicy=foreground
+              - PruneLast=true
+            retry:
+              limit: 5
+              backoff:
+                duration: 5s
+                factor: 2
+                maxDuration: 3m
