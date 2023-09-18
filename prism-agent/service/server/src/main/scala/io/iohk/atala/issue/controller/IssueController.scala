@@ -66,4 +66,15 @@ object IssueController {
         ErrorResponse.badRequest(detail = Some(error))
       case CredentialServiceError.UnsupportedVCClaimsMimeType(mimeType) =>
         ErrorResponse.badRequest(detail = Some(s"Unsupported mime_type for claim: $mimeType"))
+      case CredentialServiceError.UnsupportedCredentialFormat(format) =>
+        ErrorResponse.badRequest(detail = Some(s"Unsupported format in claim: $format"))
+      case CredentialServiceError.MissingCredentialFormat =>
+        ErrorResponse.badRequest(detail = Some(s"Missing credential format in claim"))
+      case CredentialServiceError.CredentialDefinitionPrivatePartNotFound(credentialDefinitionId) =>
+        ErrorResponse.badRequest(detail =
+          Some(s"Credential Definition (id: $credentialDefinitionId) private part not found")
+        )
+      case CredentialServiceError.CredentialDefinitionIdUndefined =>
+        ErrorResponse.badRequest(detail = Some(s"Credential Definition id undefined"))
+
 }
