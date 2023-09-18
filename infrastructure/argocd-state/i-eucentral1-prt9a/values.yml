@@ -1,7 +1,7 @@
 argocd-apps:
   itemTemplates:
     - items:
-        - name: prism-agent-application-set
+        - app_set: prism-agent-application-set
           generators: &generators
             - list:
                 elements:
@@ -15,8 +15,10 @@ argocd-apps:
                     namespace: eu-prism-agent-verifier
                     ingressURL: eu-prism-agent-verifier.atalaprism.io
       template:
+        apiVersion: argoproj.io/v1alpha1
+        kind: ApplicationSet
         metadata:
-          name: "{{name}}"
+          name: "{{.app_set}}"
           namespace: argocd
           labels:
             type: agent
@@ -24,46 +26,55 @@ argocd-apps:
           finalizers:
             - resources-finalizer.argocd.argoproj.io
         spec:
-          project: system-integration-testing
-          source:
-            path: infrastructure/charts/agent
-            repoURL: "https://github.com/hyperledger-labs/open-enterprise-agent"
-            targetRevision: "main"
-            helm:
-              values:
-                ingress:
-                  applicationUrls:
-                    - "{{ingressURL}}"
-                  platformIngressUrl: internal-eucentral1-prt9a.atalaprism.io
-                  consumers:
-                    - "key1"
-                secrets:
-                  secretStore: prism-v2-prt9a-us-east-1-externalsecrets
-                  dockerRegistryToken: prt9a-argocd-github-docker-registry-token
-                server:
-                  useVault: false
-                  additionalEnvVariables:
-                    SECRET_STORAGE_BACKEND: "postgres"
-                vdrManager:
-                  host: node-service.sit-prism-node
-                vault:
-                  global:
-                    enabled: false
-          destination:
-            server: https://kubernetes.default.svc
-            namespace: "{{namespace}}"
-          syncPolicy:
-            automated:
-              prune: true
-              selfHeal: true
-            syncOptions:
-              - Validate=true
-              - CreateNamespace=true
-              - PrunePropagationPolicy=foreground
-              - PruneLast=true
-            retry:
-              limit: 5
-              backoff:
-                duration: 5s
-                factor: 2
-                maxDuration: 3m
+          generators: *generators
+          annotations: {}
+          finalizers:
+            - resources-finalizer.argocd.argoproj.io
+          template:
+            metadata:
+              name: "{{name}}"
+              namespace: argocd
+            spec:
+              project: system-integration-testing
+              source:
+                path: infrastructure/charts/agent
+                repoURL: "https://github.com/hyperledger-labs/open-enterprise-agent"
+                targetRevision: "main"
+                helm:
+                  values:
+                    ingress:
+                      applicationUrls:
+                        - "{{ingressURL}}"
+                      platformIngressUrl: internal-eucentral1-prt9a.atalaprism.io
+                      consumers:
+                        - "key1"
+                    secrets:
+                      secretStore: prism-v2-prt9a-us-east-1-externalsecrets
+                      dockerRegistryToken: prt9a-argocd-github-docker-registry-token
+                    server:
+                      useVault: false
+                      additionalEnvVariables:
+                        SECRET_STORAGE_BACKEND: "postgres"
+                    vdrManager:
+                      host: node-service.sit-prism-node
+                    vault:
+                      global:
+                        enabled: false
+              destination:
+                server: https://kubernetes.default.svc
+                namespace: "{{namespace}}"
+              syncPolicy:
+                automated:
+                  prune: true
+                  selfHeal: true
+                syncOptions:
+                  - Validate=true
+                  - CreateNamespace=true
+                  - PrunePropagationPolicy=foreground
+                  - PruneLast=true
+                retry:
+                  limit: 5
+                  backoff:
+                    duration: 5s
+                    factor: 2
+                    maxDuration: 3m
