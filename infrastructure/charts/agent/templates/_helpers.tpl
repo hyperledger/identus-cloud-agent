@@ -32,7 +32,7 @@ app.kubernetes.io/part-of: prism-agent
             X-Content-Type-Options: "nosniff"
             X-Frame-Options: "deny"
             Content-Security-Policy: "default-src 'self' data:; script-src 'self'; connect-src 'self'; img-src 'self' data:; style-src 'self'; frame-ancestors 'self'; form-action 'self';"
-            Strict-Transport-Security: "dmax-age=31536000; includeSubDomains"
+            Strict-Transport-Security: "max-age=31536000; includeSubDomains"
             Referrer-Policy: "same-origin"
             Cache-Control: "no-cache, no-store"
           remove: ["Server"]
