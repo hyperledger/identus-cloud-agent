@@ -691,7 +691,7 @@ lazy val polluxAnoncreds = project
   .enablePlugins(JavaAppPackaging)
   .settings(
     name := "pollux-anoncreds",
-    Compile / unmanagedJars += baseDirectory.value / "anoncreds-java-1.0-SNAPSHOT.jar",
+    Compile / unmanagedJars += baseDirectory.value / "anoncreds-jvm-1.0-SNAPSHOT.jar",
     Compile / unmanagedResourceDirectories ++= Seq(
       baseDirectory.value / "native-lib" / "NATIVE"
     ),
@@ -756,7 +756,9 @@ lazy val prismAgentWalletAPI = project
   .settings(prismAgentConnectCommonSettings)
   .settings(
     name := "prism-agent-wallet-api",
-    libraryDependencies ++= D_PrismAgent.keyManagementDependencies ++ D_PrismAgent.postgresDependencies ++ Seq(D.zioMock)
+    libraryDependencies ++= D_PrismAgent.keyManagementDependencies ++ D_PrismAgent.postgresDependencies ++ Seq(
+      D.zioMock
+    )
   )
   .dependsOn(
     agentDidcommx,

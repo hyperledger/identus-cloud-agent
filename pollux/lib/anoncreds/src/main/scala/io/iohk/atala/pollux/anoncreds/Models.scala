@@ -29,13 +29,13 @@ object LinkSecret {
 
   given Conversion[LinkSecret, UniffiLinkSecret] with {
     def apply(linkSecret: LinkSecret): UniffiLinkSecret =
-      UniffiLinkSecret.Companion.newFromJson(linkSecret.data)
+      UniffiLinkSecret.Companion.newFromValue(linkSecret.data)
 
   }
 
   given Conversion[UniffiLinkSecret, LinkSecret] with {
     def apply(uniffiLinkSecret: UniffiLinkSecret): LinkSecret =
-      LinkSecret.apply(uniffiLinkSecret.getJson())
+      LinkSecret.apply(uniffiLinkSecret.getValue())
 
   }
 }

@@ -12,6 +12,19 @@ class PoCNewLib extends AnyFlatSpec {
   val CRED_DEF_ID = "mock:uri3"
   val ISSUER_DID = "mock:issuer_id/path&q=bar"
 
+  "LinkSecret" should "be able to parse back to the anoncreds lib" in {
+    import scala.language.implicitConversions
+
+    val ls1 = LinkSecret("65965334953670062552662719679603258895632947953618378932199361160021795698890")
+    val ls1p = ls1: uniffi.anoncreds.LinkSecret
+    assert(ls1p.getValue() == "65965334953670062552662719679603258895632947953618378932199361160021795698890")
+
+    val ls0 = LinkSecret()
+    val ls0p = ls0: uniffi.anoncreds.LinkSecret
+    val ls0_ = ls0p: LinkSecret
+    assert(ls0.data == ls0_.data)
+  }
+
   "The POC New Lib script" should "run to completion" in {
     script()
   }
