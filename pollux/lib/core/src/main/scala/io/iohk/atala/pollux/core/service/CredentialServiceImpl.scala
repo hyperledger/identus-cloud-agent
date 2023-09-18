@@ -104,7 +104,8 @@ private class CredentialServiceImpl(
       validityPeriod: Option[Double],
       automaticIssuance: Option[Boolean],
       awaitConfirmation: Option[Boolean],
-      issuingDID: Option[CanonicalPrismDID]
+      issuingDID: Option[CanonicalPrismDID],
+      restServiceUrl: String
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
     for {
       // TODO For AnonCreds, validate claims is a flat structure of type [String, String] or [String, Int]
@@ -140,7 +141,8 @@ private class CredentialServiceImpl(
             schemaId = schemaId,
             credentialDefinitionId = credentialDefinitionId,
             claims = attributes,
-            thid = thid
+            thid = thid,
+            restServiceUrl
           )
         case _ =>
           ZIO.fail(
@@ -749,7 +751,8 @@ private class CredentialServiceImpl(
       schemaId: String,
       credentialDefinitionId: UUID,
       claims: Seq[Attribute],
-      thid: DidCommID
+      thid: DidCommID,
+      restServiceUrl: String
   ) = {
     for {
       credentialPreview <- ZIO.succeed(CredentialPreview(schema_id = Some(schemaId), attributes = claims))
@@ -757,7 +760,7 @@ private class CredentialServiceImpl(
         goal_code = Some("Offer Credential"),
         credential_preview = credentialPreview,
       )
-      attachments <- createAnonCredsCredentialOffer(credentialDefinitionId).map { offer =>
+      attachments <- createAnonCredsCredentialOffer(credentialDefinitionId, restServiceUrl).map { offer =>
         Seq(
           AttachmentDescriptor.buildBase64Attachment(
             mediaType = Some("application/json"),
@@ -775,7 +778,7 @@ private class CredentialServiceImpl(
     )
   }
 
-  private[this] def createAnonCredsCredentialOffer(credentialDefinitionId: UUID) = for {
+  private[this] def createAnonCredsCredentialOffer(credentialDefinitionId: UUID, restServiceUrl: String) = for {
     credentialDefinition <- credentialDefinitionService
       .getByGUID(credentialDefinitionId)
       .mapError(e => CredentialServiceError.UnexpectedError(e.toString))
@@ -794,9 +797,11 @@ private class CredentialServiceImpl(
     cdp = anoncreds.CredentialDefinitionPrivate(didSecret.json.toString)
     createCredentialDefinition = CreateCredentialDefinition(cd, cdp, kcp)
     offer = AnoncredLib.createOffer(
-      createCredentialDefinition,
-      // TODO The CD URL should be built dynamically (e.g. use 'Host' header). Check with SRE what's available at APISIX level...
-      s"http://host.docker.internal:8080/prism-agent/credential-definition-registry/definitions/${credentialDefinition.guid.toString}/definition"
+      createCredentialDefinition, {
+        val urlSuffix = s"credential-definition-registry/definitions/${credentialDefinition.guid.toString}/definition"
+        val urlPrefix = if (restServiceUrl.endsWith("/")) restServiceUrl else restServiceUrl + "/"
+        s"$urlPrefix$urlSuffix"
+      }
     )
   } yield offer
 

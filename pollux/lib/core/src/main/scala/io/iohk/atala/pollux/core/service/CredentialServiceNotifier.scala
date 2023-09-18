@@ -33,7 +33,8 @@ class CredentialServiceNotifier(
       validityPeriod: Option[Double],
       automaticIssuance: Option[Boolean],
       awaitConfirmation: Option[Boolean],
-      issuingDID: Option[CanonicalPrismDID]
+      issuingDID: Option[CanonicalPrismDID],
+      restServiceUrl: String
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
     notifyOnSuccess(
       svc.createIssueCredentialRecord(
@@ -47,7 +48,8 @@ class CredentialServiceNotifier(
         validityPeriod,
         automaticIssuance,
         awaitConfirmation,
-        issuingDID
+        issuingDID,
+        restServiceUrl
       )
     )
 

@@ -30,7 +30,8 @@ object MockCredentialService extends Mock[CredentialService] {
             Option[Double],
             Option[Boolean],
             Option[Boolean],
-            Option[CanonicalPrismDID]
+            Option[CanonicalPrismDID],
+            String
         ),
         CredentialServiceError,
         IssueCredentialRecord
@@ -68,17 +69,18 @@ object MockCredentialService extends Mock[CredentialService] {
     } yield new CredentialService {
 
       override def createIssueCredentialRecord(
-          pairwiseIssuerDID: DidId,
-          pairwiseHolderDID: DidId,
-          thid: DidCommID,
-          schemaId: Option[String],
-          credentialDefinitionId: Option[UUID],
-          credentialFormat: CredentialFormat,
-          claims: Json,
-          validityPeriod: Option[Double],
-          automaticIssuance: Option[Boolean],
-          awaitConfirmation: Option[Boolean],
-          issuingDID: Option[CanonicalPrismDID]
+                                                pairwiseIssuerDID: DidId,
+                                                pairwiseHolderDID: DidId,
+                                                thid: DidCommID,
+                                                schemaId: Option[String],
+                                                credentialDefinitionId: Option[UUID],
+                                                credentialFormat: CredentialFormat,
+                                                claims: Json,
+                                                validityPeriod: Option[Double],
+                                                automaticIssuance: Option[Boolean],
+                                                awaitConfirmation: Option[Boolean],
+                                                issuingDID: Option[CanonicalPrismDID],
+                                                restServiceUrl: String
       ): IO[CredentialServiceError, IssueCredentialRecord] =
         proxy(
           CreateIssueCredentialRecord,
@@ -92,7 +94,8 @@ object MockCredentialService extends Mock[CredentialService] {
           validityPeriod,
           automaticIssuance,
           awaitConfirmation,
-          issuingDID
+          issuingDID,
+          restServiceUrl
         )
 
       override def receiveCredentialOffer(offer: OfferCredential): IO[CredentialServiceError, IssueCredentialRecord] =
@@ -152,7 +155,9 @@ object MockCredentialService extends Mock[CredentialService] {
       ): IO[CredentialServiceError, Int] =
         proxy(MarkCredentialRecordsAsPublishQueued, credentialsAndProofs)
 
-      override def receiveCredentialIssue(issueCredential: IssueCredential): IO[CredentialServiceError, IssueCredentialRecord] =
+      override def receiveCredentialIssue(
+          issueCredential: IssueCredential
+      ): IO[CredentialServiceError, IssueCredentialRecord] =
         proxy(ReceiveCredentialIssue, issueCredential)
 
       override def markOfferSent(recordId: DidCommID): IO[CredentialServiceError, IssueCredentialRecord] =

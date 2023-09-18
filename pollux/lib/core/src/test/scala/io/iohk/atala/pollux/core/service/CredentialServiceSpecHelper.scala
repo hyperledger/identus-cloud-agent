@@ -121,7 +121,8 @@ trait CredentialServiceSpecHelper {
         validityPeriod = validityPeriod,
         automaticIssuance = automaticIssuance,
         awaitConfirmation = awaitConfirmation,
-        issuingDID = issuingDID
+        issuingDID = issuingDID,
+        restServiceUrl = "http://localhost/prism-agent"
       )
     }
 

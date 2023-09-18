@@ -32,7 +32,8 @@ trait CredentialService {
       validityPeriod: Option[Double] = None,
       automaticIssuance: Option[Boolean],
       awaitConfirmation: Option[Boolean],
-      issuingDID: Option[CanonicalPrismDID]
+      issuingDID: Option[CanonicalPrismDID],
+      restServiceUrl: String
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
   /** Return a list of records as well as a count of all filtered items */

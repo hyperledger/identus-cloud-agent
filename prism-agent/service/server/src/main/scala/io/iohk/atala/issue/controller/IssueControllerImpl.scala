@@ -1,6 +1,7 @@
 package io.iohk.atala.issue.controller
 
 import io.iohk.atala.agent.server.ControllerHelper
+import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.api.http.model.{CollectionStats, PaginationInput}
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.api.util.PaginationUtils
@@ -22,7 +23,8 @@ import zio.{URLayer, ZIO, ZLayer}
 
 class IssueControllerImpl(
     credentialService: CredentialService,
-    connectionService: ConnectionService
+    connectionService: ConnectionService,
+    appConfig: AppConfig
 ) extends IssueController
     with ControllerHelper {
   override def createCredentialOffer(
@@ -51,7 +53,8 @@ class IssueControllerImpl(
           automaticIssuance = request.automaticIssuance.orElse(Some(true)),
           awaitConfirmation = Some(false),
           // TODO Check what to do with the issuingDID in case of AnonCreds? Should it be defined or not?
-          issuingDID = Some(issuingDID.asCanonical)
+          issuingDID = Some(issuingDID.asCanonical),
+          appConfig.agent.restServiceUrl
         )
     } yield IssueCredentialRecord.fromDomain(outcome)
     mapIssueErrors(result)
@@ -80,7 +83,7 @@ class IssueControllerImpl(
       pageOf = PaginationUtils.composePageOfUri(uri).toString,
       next = PaginationUtils.composeNextUri(uri, records, pagination, stats).map(_.toString),
       previous = PaginationUtils.composePreviousUri(uri, records, pagination, stats).map(_.toString),
-      contents = (records map IssueCredentialRecord.fromDomain)
+      contents = records map IssueCredentialRecord.fromDomain
     )
     mapIssueErrors(result)
   }
@@ -130,6 +133,6 @@ class IssueControllerImpl(
 }
 
 object IssueControllerImpl {
-  val layer: URLayer[CredentialService & ConnectionService, IssueController] =
-    ZLayer.fromFunction(IssueControllerImpl(_, _))
+  val layer: URLayer[CredentialService & ConnectionService & AppConfig, IssueController] =
+    ZLayer.fromFunction(IssueControllerImpl(_, _, _))
 }
