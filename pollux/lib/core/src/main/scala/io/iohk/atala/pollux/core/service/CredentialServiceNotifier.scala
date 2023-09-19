@@ -6,11 +6,10 @@ import io.iohk.atala.event.notification.*
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.issuecredential.{IssueCredential, OfferCredential, RequestCredential}
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
-import io.iohk.atala.pollux.core.model.{DidCommID, IssueCredentialRecord, PublishedBatchData}
+import io.iohk.atala.pollux.core.model.{DidCommID, IssueCredentialRecord}
 import io.iohk.atala.pollux.vc.jwt.{Issuer, JWT, PresentationPayload, W3cCredentialPayload}
-import io.iohk.atala.prism.crypto.MerkleInclusionProof
 import io.iohk.atala.shared.models.WalletAccessContext
-import zio.{IO, URLayer, ZIO, ZLayer}
+import zio.{URLayer, ZIO, ZLayer}
 
 import java.time.Instant
 import java.util.UUID
@@ -165,40 +164,11 @@ class CredentialServiceNotifier(
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
     svc.generateAnonCredsCredential(recordId)
 
-  override def publishCredentialBatch(
-      credentials: Seq[W3cCredentialPayload],
-      issuer: Issuer
-  ): IO[CredentialServiceError, PublishedBatchData] =
-    svc.publishCredentialBatch(credentials, issuer)
-
-  override def markCredentialRecordsAsPublishQueued(
-      credentialsAndProofs: Seq[(W3cCredentialPayload, MerkleInclusionProof)]
-  ): ZIO[WalletAccessContext, CredentialServiceError, Int] =
-    svc.markCredentialRecordsAsPublishQueued(credentialsAndProofs)
-
-  override def markCredentialPublicationPending(
-      recordId: DidCommID
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
-    svc.markCredentialPublicationPending(recordId)
-
-  override def markCredentialPublicationQueued(
-      recordId: DidCommID
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
-    svc.markCredentialPublicationQueued(recordId)
-
-  override def markCredentialPublished(
-      recordId: DidCommID
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
-    svc.markCredentialPublished(recordId)
-
   override def reportProcessingFailure(
       recordId: DidCommID,
       failReason: Option[_root_.java.lang.String]
   ): ZIO[WalletAccessContext, CredentialServiceError, Unit] =
     svc.reportProcessingFailure(recordId, failReason)
-
-  override def extractIdFromCredential(credential: W3cCredentialPayload): Option[DidCommID] =
-    svc.extractIdFromCredential(credential)
 
   override def getIssueCredentialRecord(
       recordId: DidCommID

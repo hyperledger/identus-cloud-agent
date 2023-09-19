@@ -179,17 +179,6 @@ object MockCredentialService extends Mock[CredentialService] {
       ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
         proxy(GenerateAnonCredsCredential, recordId)
 
-      override def publishCredentialBatch(
-          credentials: Seq[W3cCredentialPayload],
-          issuer: Issuer
-      ): IO[CredentialServiceError, PublishedBatchData] =
-        proxy(PublishCredentialBatch, credentials, issuer)
-
-      override def markCredentialRecordsAsPublishQueued(
-          credentialsAndProofs: Seq[(W3cCredentialPayload, MerkleInclusionProof)]
-      ): IO[CredentialServiceError, Int] =
-        proxy(MarkCredentialRecordsAsPublishQueued, credentialsAndProofs)
-
       override def receiveCredentialIssue(
           issueCredential: IssueCredential
       ): IO[CredentialServiceError, IssueCredentialRecord] =
@@ -210,27 +199,11 @@ object MockCredentialService extends Mock[CredentialService] {
       override def markCredentialSent(recordId: DidCommID): IO[CredentialServiceError, IssueCredentialRecord] =
         proxy(MarkCredentialSent, recordId)
 
-      override def markCredentialPublicationPending(
-          recordId: DidCommID
-      ): IO[CredentialServiceError, IssueCredentialRecord] =
-        proxy(MarkCredentialPublicationPending, recordId)
-
-      override def markCredentialPublicationQueued(
-          recordId: DidCommID
-      ): IO[CredentialServiceError, IssueCredentialRecord] =
-        proxy(MarkCredentialPublicationQueued, recordId)
-
-      override def markCredentialPublished(recordId: DidCommID): IO[CredentialServiceError, IssueCredentialRecord] =
-        proxy(MarkCredentialPublished, recordId)
-
       override def reportProcessingFailure(
           recordId: DidCommID,
           failReason: Option[String]
       ): IO[CredentialServiceError, Unit] =
         proxy(ReportProcessingFailure, recordId, failReason)
-
-      override def extractIdFromCredential(credential: W3cCredentialPayload): Option[DidCommID] =
-        ???
 
       override def getIssueCredentialRecords(
           offset: Option[Int] = None,

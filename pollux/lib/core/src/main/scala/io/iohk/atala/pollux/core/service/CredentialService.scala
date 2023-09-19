@@ -9,7 +9,6 @@ import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError.*
 import io.iohk.atala.pollux.vc.jwt.{Issuer, JWT, PresentationPayload, W3cCredentialPayload}
-import io.iohk.atala.prism.crypto.MerkleInclusionProof
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.{IO, ZIO}
 
@@ -18,8 +17,6 @@ import java.time.Instant
 import java.util.UUID
 
 trait CredentialService {
-
-  def extractIdFromCredential(credential: W3cCredentialPayload): Option[DidCommID]
 
   def createJWTIssueCredentialRecord(
       pairwiseIssuerDID: DidId,
@@ -107,15 +104,6 @@ trait CredentialService {
       recordId: DidCommID
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
-  def publishCredentialBatch(
-      credentials: Seq[W3cCredentialPayload],
-      issuer: Issuer
-  ): IO[CredentialServiceError, PublishedBatchData]
-
-  def markCredentialRecordsAsPublishQueued(
-      credentialsAndProofs: Seq[(W3cCredentialPayload, MerkleInclusionProof)]
-  ): ZIO[WalletAccessContext, CredentialServiceError, Int]
-
   def receiveCredentialIssue(
       issueCredential: IssueCredential
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
@@ -130,18 +118,6 @@ trait CredentialService {
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
   def markCredentialSent(recordId: DidCommID): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
-
-  def markCredentialPublicationPending(
-      recordId: DidCommID
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
-
-  def markCredentialPublicationQueued(
-      recordId: DidCommID
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
-
-  def markCredentialPublished(
-      recordId: DidCommID
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
   def reportProcessingFailure(
       recordId: DidCommID,

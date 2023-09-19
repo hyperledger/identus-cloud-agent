@@ -1,29 +1,23 @@
 package io.iohk.atala.pollux.core.service
 
-import com.google.protobuf.ByteString
 import io.circe.Json
 import io.circe.syntax.*
 import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
 import io.iohk.atala.castor.core.model.did.{CanonicalPrismDID, PrismDID, VerificationRelationship}
-import io.iohk.atala.iris.proto.dlt.IrisOperation
-import io.iohk.atala.iris.proto.service.IrisOperationId
-import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
-import io.iohk.atala.iris.proto.vc_operations.IssueCredentialsBatch
 import io.iohk.atala.mercury.model.*
 import io.iohk.atala.mercury.protocol.issuecredential.*
 import io.iohk.atala.pollux.*
 import io.iohk.atala.pollux.anoncreds.{AnoncredLib, CreateCredentialDefinition, CredentialOffer, LinkSecretWithId}
+import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.CredentialFormat.AnonCreds
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord.ProtocolState.OfferReceived
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError.*
 import io.iohk.atala.pollux.core.model.presentation.*
 import io.iohk.atala.pollux.core.model.schema.CredentialSchema
-import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.repository.CredentialRepository
 import io.iohk.atala.pollux.core.service.serdes.PrivateCredentialDefinitionSchemaSerDesV1
 import io.iohk.atala.pollux.vc.jwt.*
-import io.iohk.atala.prism.crypto.{MerkleInclusionProof, MerkleTreeKt, Sha256}
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
 import zio.*
@@ -37,18 +31,16 @@ import scala.language.implicitConversions
 
 object CredentialServiceImpl {
   val layer: URLayer[
-    IrisServiceStub & CredentialRepository & DidResolver & URIDereferencer & DIDSecretStorage &
-      CredentialDefinitionService,
+    CredentialRepository & DidResolver & URIDereferencer & DIDSecretStorage & CredentialDefinitionService,
     CredentialService
   ] =
-    ZLayer.fromFunction(CredentialServiceImpl(_, _, _, _, _, _))
+    ZLayer.fromFunction(CredentialServiceImpl(_, _, _, _, _))
 
 //  private val VC_JSON_SCHEMA_URI = "https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json"
   private val VC_JSON_SCHEMA_TYPE = "CredentialSchema2022"
 }
 
 private class CredentialServiceImpl(
-    irisClient: IrisServiceStub,
     credentialRepository: CredentialRepository,
     didResolver: DidResolver,
     uriDereferencer: URIDereferencer,
@@ -59,9 +51,6 @@ private class CredentialServiceImpl(
 
   import CredentialServiceImpl.*
   import IssueCredentialRecord.*
-
-  override def extractIdFromCredential(credential: W3cCredentialPayload): Option[DidCommID] =
-    credential.maybeId.map(_.split("/").last).map(DidCommID(_))
 
   override def getIssueCredentialRecords(
       offset: Option[Int],
@@ -131,9 +120,7 @@ private class CredentialServiceImpl(
           subjectId = None,
           validityPeriod = validityPeriod,
           automaticIssuance = automaticIssuance,
-          awaitConfirmation = awaitConfirmation,
           protocolState = IssueCredentialRecord.ProtocolState.OfferPending,
-          publicationState = None,
           offerCredentialData = Some(offer),
           requestCredentialData = None,
           issueCredentialData = None,
@@ -198,9 +185,7 @@ private class CredentialServiceImpl(
           subjectId = None,
           validityPeriod = validityPeriod,
           automaticIssuance = automaticIssuance,
-          awaitConfirmation = awaitConfirmation,
           protocolState = IssueCredentialRecord.ProtocolState.OfferPending,
-          publicationState = None,
           offerCredentialData = Some(offer),
           requestCredentialData = None,
           issueCredentialData = None,
@@ -264,9 +249,7 @@ private class CredentialServiceImpl(
           subjectId = None,
           validityPeriod = None,
           automaticIssuance = None,
-          awaitConfirmation = None,
           protocolState = IssueCredentialRecord.ProtocolState.OfferReceived,
-          publicationState = None,
           offerCredentialData = Some(offer),
           requestCredentialData = None,
           issueCredentialData = None,
@@ -665,33 +648,6 @@ private class CredentialServiceImpl(
       "issuance_flow_issuer_credential_generated_to_sent_ms_gauge"
     )
 
-  override def markCredentialPublicationPending(
-      recordId: DidCommID
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
-    updateCredentialRecordPublicationState(
-      recordId,
-      None,
-      Some(IssueCredentialRecord.PublicationState.PublicationPending)
-    )
-
-  override def markCredentialPublicationQueued(
-      recordId: DidCommID
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
-    updateCredentialRecordPublicationState(
-      recordId,
-      Some(IssueCredentialRecord.PublicationState.PublicationPending),
-      Some(IssueCredentialRecord.PublicationState.PublicationQueued)
-    )
-
-  override def markCredentialPublished(
-      recordId: DidCommID
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
-    updateCredentialRecordPublicationState(
-      recordId,
-      Some(IssueCredentialRecord.PublicationState.PublicationQueued),
-      Some(IssueCredentialRecord.PublicationState.Published)
-    )
-
   override def reportProcessingFailure(
       recordId: DidCommID,
       failReason: Option[String]
@@ -933,60 +889,6 @@ private class CredentialServiceImpl(
     } yield record
   }
 
-  /** this is an auxiliary function.
-    *
-    * @note
-    *   Between updating and getting the CredentialRecord back the CredentialRecord can be updated by other operations
-    *   in the middle.
-    *
-    * TODO: this should be improved to behave exactly like atomic operation.
-    */
-  private[this] def updateCredentialRecordPublicationState(
-      id: DidCommID,
-      from: Option[IssueCredentialRecord.PublicationState],
-      to: Option[IssueCredentialRecord.PublicationState]
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
-    for {
-      record <- credentialRepository
-        .updateCredentialRecordPublicationState(id, from, to)
-        .mapError(RepositoryError.apply)
-        .flatMap {
-          case 0 =>
-            credentialRepository
-              .getIssueCredentialRecord(id)
-              .mapError(RepositoryError.apply)
-              .flatMap {
-                case None => ZIO.fail(RecordIdNotFound(id))
-                case Some(record) if record.publicationState == to => // Not update by is alredy on the desirable state
-                  ZIO.succeed(record)
-                case Some(record) =>
-                  ZIO.fail(
-                    OperationNotExecuted(
-                      id,
-                      s"CredentialRecord was not updated because have the PublicationState ${record.publicationState}"
-                    )
-                  )
-              }
-          case 1 =>
-            credentialRepository
-              .getIssueCredentialRecord(id)
-              .mapError(RepositoryError.apply)
-              .flatMap {
-                case None => ZIO.fail(RecordIdNotFound(id))
-                case Some(record) =>
-                  {
-                    if (record.publicationState == to) (ZIO.unit)
-                    else
-                      ZIO.logError(
-                        s"The CredentialRecord ($id) is expected to be on the PublicationState '$to' after updating it"
-                      ) // The expectation is for the record to still be on the state we (just) updated to
-                  } *> ZIO.succeed(record)
-              }
-          case n => ZIO.fail(UnexpectedError(s"Invalid row count result: $n"))
-        }
-    } yield record
-  }
-
   override def createJWTCredentialPayloadFromRecord(
       record: IssueCredentialRecord,
       issuer: Issuer,
@@ -1220,78 +1122,6 @@ private class CredentialServiceImpl(
         .fromTry(JwtPresentation.decodeJwt(jwt))
         .mapError(t => CredentialRequestValidationError(s"JWT presentation decoding failed: ${t.getMessage()}"))
     } yield jwtPresentation
-  }
-
-  def publishCredentialBatch(
-      credentials: Seq[W3cCredentialPayload],
-      issuer: Issuer
-  ): IO[CredentialServiceError, PublishedBatchData] = {
-    import scala.jdk.CollectionConverters.*
-
-    val hashes = credentials
-      .map { c =>
-        val encoded = W3CCredential.toEncodedJwt(c, issuer)
-        Sha256.compute(encoded.value.getBytes)
-      }
-      .toBuffer
-      .asJava
-
-    val merkelRootAndProofs = MerkleTreeKt.generateProofs(hashes)
-    val root = merkelRootAndProofs.component1()
-    val proofs = merkelRootAndProofs.component2().asScala.toSeq
-
-    val irisOperation = IrisOperation(
-      IrisOperation.Operation.IssueCredentialsBatch(
-        IssueCredentialsBatch(
-          issuerDid = issuer.did.value,
-          merkleRoot = ByteString.copyFrom(root.getHash.component1)
-        )
-      )
-    )
-
-    val credentialsAndProofs = credentials.zip(proofs)
-
-    val result = ZIO
-      .fromFuture(_ => irisClient.scheduleOperation(irisOperation))
-      .mapBoth(
-        IrisError(_),
-        irisOpeRes =>
-          PublishedBatchData(
-            operationId = IrisOperationId(irisOpeRes.operationId),
-            credentialsAnsProofs = credentialsAndProofs
-          )
-      )
-
-    result
-  }
-
-  override def markCredentialRecordsAsPublishQueued(
-      credentialsAndProofs: Seq[(W3cCredentialPayload, MerkleInclusionProof)]
-  ): ZIO[WalletAccessContext, CredentialServiceError, Int] = {
-
-    /*
-     * Since id of the credential is optional according to W3 spec,
-     * it is of a type Option in W3cCredentialPayload since it is a generic W3 credential payload
-     * but for our use-case, credentials must have an id, so if for some reason at least one
-     * credential does not have an id, we return an error
-     *
-     */
-    val maybeUndefinedId = credentialsAndProofs.find(x => extractIdFromCredential(x._1).isEmpty)
-
-    if (maybeUndefinedId.isDefined) then ZIO.fail(CredentialIdNotDefined(maybeUndefinedId.get._1))
-    else
-      val idStateAndProof = credentialsAndProofs.map { credentialAndProof =>
-        (
-          extractIdFromCredential(credentialAndProof._1).get, // won't fail because of checks above
-          IssueCredentialRecord.PublicationState.PublicationQueued,
-          credentialAndProof._2
-        )
-      }
-
-      credentialRepository
-        .updateCredentialRecordStateAndProofByCredentialIdBulk(idStateAndProof)
-        .mapError(RepositoryError(_))
-
   }
 
 }

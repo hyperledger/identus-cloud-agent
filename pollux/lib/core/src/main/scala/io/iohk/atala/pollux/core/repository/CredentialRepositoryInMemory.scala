@@ -1,17 +1,13 @@
 package io.iohk.atala.pollux.core.repository
 
-import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
-import io.iohk.atala.mercury.protocol.issuecredential.RequestCredential
+import io.iohk.atala.mercury.protocol.issuecredential.{IssueCredential, RequestCredential}
+import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord.ProtocolState
-import io.iohk.atala.pollux.core.model.IssueCredentialRecord.PublicationState
-import io.iohk.atala.pollux.core.model._
-import io.iohk.atala.pollux.core.model.error.CredentialRepositoryError._
-import io.iohk.atala.prism.crypto.MerkleInclusionProof
-import io.iohk.atala.shared.models.WalletId
+import io.iohk.atala.pollux.core.model.error.CredentialRepositoryError.*
+import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 
 import java.time.Instant
-import io.iohk.atala.shared.models.WalletAccessContext
 
 class CredentialRepositoryInMemory(
     walletRefs: Ref[Map[WalletId, Ref[Map[DidCommID, IssueCredentialRecord]]]],
@@ -31,25 +27,6 @@ class CredentialRepositoryInMemory(
           } yield ref
         }(ZIO.succeed)
     } yield walletRef
-
-  override def updateCredentialRecordPublicationState(
-      recordId: DidCommID,
-      from: Option[PublicationState],
-      to: Option[PublicationState]
-  ): RIO[WalletAccessContext, Int] = {
-    for {
-      storeRef <- walletStoreRef
-      store <- storeRef.get
-      maybeRecord = store.find((id, record) => id == recordId && record.publicationState == from).map(_._2)
-      count <- maybeRecord
-        .map(record =>
-          for {
-            _ <- storeRef.update(r => r.updated(recordId, record.copy(publicationState = to)))
-          } yield 1
-        )
-        .getOrElse(ZIO.succeed(0))
-    } yield count
-  }
 
   override def createIssueCredentialRecord(record: IssueCredentialRecord): RIO[WalletAccessContext, Int] = {
     for {
@@ -282,10 +259,6 @@ class CredentialRepositoryInMemory(
         .getOrElse(ZIO.succeed(1))
     } yield count
   }
-
-  override def updateCredentialRecordStateAndProofByCredentialIdBulk(
-      idsStatesAndProofs: Seq[(DidCommID, PublicationState, MerkleInclusionProof)]
-  ): RIO[WalletAccessContext, Int] = ???
 
   def updateAfterFail(
       recordId: DidCommID,

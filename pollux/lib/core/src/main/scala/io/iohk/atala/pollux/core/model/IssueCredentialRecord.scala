@@ -1,12 +1,11 @@
 package io.iohk.atala.pollux.core.model
 
 import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
-import io.iohk.atala.mercury.protocol.issuecredential.{IssueCredential, OfferCredential, RequestCredential}
+import io.iohk.atala.mercury.protocol.issuecredential.*
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord.*
 
 import java.time.Instant
 import java.util.UUID
-import io.iohk.atala.mercury.protocol.issuecredential._
 
 final case class IssueCredentialRecord(
     id: DidCommID,
@@ -20,9 +19,7 @@ final case class IssueCredentialRecord(
     subjectId: Option[String],
     validityPeriod: Option[Double] = None,
     automaticIssuance: Option[Boolean],
-    awaitConfirmation: Option[Boolean],
     protocolState: ProtocolState,
-    publicationState: Option[PublicationState],
     offerCredentialData: Option[OfferCredential],
     requestCredentialData: Option[RequestCredential],
     issueCredentialData: Option[IssueCredential],
@@ -97,11 +94,4 @@ object IssueCredentialRecord {
     // Holder has received the credential (In Holder DB)
     case CredentialReceived extends ProtocolState
 
-  enum PublicationState:
-    // The credential requires on-chain publication and should therefore be included in the next Merkle Tree computation/publication
-    case PublicationPending extends PublicationState
-    // The credential publication operation has been successfully sent to Iris and is pending publication
-    case PublicationQueued extends PublicationState
-    // The credential publication has been confirmed by Iris
-    case Published extends PublicationState
 }

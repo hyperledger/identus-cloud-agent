@@ -50,10 +50,8 @@ object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSp
             assertTrue(record.schemaId.isEmpty) &&
             assertTrue(record.validityPeriod == validityPeriod) &&
             assertTrue(record.automaticIssuance == automaticIssuance) &&
-            assertTrue(record.awaitConfirmation == awaitConfirmation) &&
             assertTrue(record.role == Role.Issuer) &&
             assertTrue(record.protocolState == ProtocolState.OfferPending) &&
-            assertTrue(record.publicationState.isEmpty) &&
             assertTrue(record.offerCredentialData.isDefined) &&
             assertTrue(record.offerCredentialData.get.from == pairwiseIssuerDid) &&
             assertTrue(record.offerCredentialData.get.to == pairwiseHolderDid) &&
@@ -131,10 +129,8 @@ object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSp
             ) &&
             assertTrue(record.validityPeriod == validityPeriod) &&
             assertTrue(record.automaticIssuance == automaticIssuance) &&
-            assertTrue(record.awaitConfirmation == awaitConfirmation) &&
             assertTrue(record.role == Role.Issuer) &&
             assertTrue(record.protocolState == ProtocolState.OfferPending) &&
-            assertTrue(record.publicationState.isEmpty) &&
             assertTrue(record.offerCredentialData.isDefined) &&
             assertTrue(record.offerCredentialData.get.from == pairwiseIssuerDid) &&
             assertTrue(record.offerCredentialData.get.to == pairwiseHolderDid) &&
@@ -266,10 +262,8 @@ object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSp
           assertTrue(holderRecord.schemaId.isEmpty) &&
           assertTrue(holderRecord.validityPeriod.isEmpty) &&
           assertTrue(holderRecord.automaticIssuance.isEmpty) &&
-          assertTrue(holderRecord.awaitConfirmation.isEmpty) &&
           assertTrue(holderRecord.role == Role.Holder) &&
           assertTrue(holderRecord.protocolState == ProtocolState.OfferReceived) &&
-          assertTrue(holderRecord.publicationState.isEmpty) &&
           assertTrue(holderRecord.offerCredentialData.contains(offer)) &&
           assertTrue(holderRecord.requestCredentialData.isEmpty) &&
           assertTrue(holderRecord.issueCredentialData.isEmpty) &&

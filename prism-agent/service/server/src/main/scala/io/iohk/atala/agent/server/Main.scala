@@ -167,7 +167,6 @@ object MainApp extends ZIOAppDefault {
           // authentication
           AdminApiKeyAuthenticatorImpl.layer >+> ApiKeyAuthenticatorImpl.layer >+> DefaultAuthenticator.layer,
           // grpc
-          GrpcModule.irisStubLayer,
           GrpcModule.prismNodeStubLayer,
           // storage
           DIDKeySecretStorageImpl.layer,
