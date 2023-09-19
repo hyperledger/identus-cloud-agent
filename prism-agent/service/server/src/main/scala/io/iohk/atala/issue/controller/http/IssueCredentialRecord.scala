@@ -13,34 +13,6 @@ import zio.json.ast.Json
 import java.nio.charset.StandardCharsets
 import java.time.{OffsetDateTime, ZoneOffset}
 
-/** A class to represent an an outgoing response for a created credential offer.
-  *
-  * @param subjectId
-  *   The identifier (e.g DID) of the subject to which the verifiable credential will be issued. for example:
-  *   ''did:prism:subjectofverifiablecredentials''
-  * @param validityPeriod
-  *   The validity period in seconds of the verifiable credential that will be issued. for example: ''3600''
-  * @param claims
-  *   The claims that will be associated with the issued verifiable credential. for example: ''null''
-  * @param automaticIssuance
-  *   Specifies whether or not the credential should be automatically generated and issued when receiving the
-  *   `CredentialRequest` from the holder. If set to `false`, a manual approval by the issuer via API call will be
-  *   required for the VC to be issued. for example: ''null''
-  * @param recordId
-  *   The unique identifier of the issue credential record. for example: ''null''
-  * @param createdAt
-  *   The date and time when the issue credential record was created. for example: ''null''
-  * @param updatedAt
-  *   The date and time when the issue credential record was last updated. for example: ''null''
-  * @param role
-  *   The role played by the Prism agent in the credential issuance flow. for example: ''null''
-  * @param protocolState
-  *   The current state of the issue credential protocol execution. for example: ''null''
-  * @param jwtCredential
-  *   The base64-encoded JWT verifiable credential that has been sent by the issuer. for example: ''null''
-  * @param issuingDID
-  *   Issuer DID of the verifiable credential object. for example: ''did:prism:issuerofverifiablecredentials''
-  */
 final case class IssueCredentialRecord(
     @description(annotations.recordId.description)
     @encodedExample(annotations.recordId.example)
@@ -78,10 +50,9 @@ final case class IssueCredentialRecord(
     @encodedExample(annotations.protocolState.example)
     @validate(annotations.protocolState.validator)
     protocolState: String,
-    @description(annotations.jwtCredential.description)
-    @encodedExample(annotations.jwtCredential.example)
-    // TODO Check with SDK-side if this field can be renamed to 'credential' and contain JWT or AnonCreds
-    jwtCredential: Option[String] = None,
+    @description(annotations.credential.description)
+    @encodedExample(annotations.credential.example)
+    credential: Option[String] = None,
     @description(annotations.issuingDID.description)
     @encodedExample(annotations.issuingDID.example)
     issuingDID: Option[String] = None
@@ -116,9 +87,9 @@ object IssueCredentialRecord {
       validityPeriod = domain.validityPeriod,
       automaticIssuance = domain.automaticIssuance,
       protocolState = domain.protocolState.toString,
-      jwtCredential = domain.issueCredentialData.flatMap(issueCredential => {
-        issueCredential.attachments.collectFirst { case AttachmentDescriptor(_, _, Base64(jwt), _, _, _, _, _) =>
-          jwt
+      credential = domain.issueCredentialData.flatMap(issueCredential => {
+        issueCredential.attachments.collectFirst { case AttachmentDescriptor(_, _, Base64(vc), _, _, _, _, _) =>
+          vc
         }
       })
     )
@@ -228,9 +199,10 @@ object IssueCredentialRecord {
           )
         )
 
-    object jwtCredential
+    object credential
         extends Annotation[Option[String]](
-          description = "The base64-encoded JWT verifiable credential that has been sent by the issuer.",
+          description =
+            "The base64-encoded verifiable credential, in JWT or AnonCreds format, that has been sent by the issuer.",
           example = None
         )
 

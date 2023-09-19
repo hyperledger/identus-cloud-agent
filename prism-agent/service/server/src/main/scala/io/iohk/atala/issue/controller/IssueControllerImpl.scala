@@ -37,7 +37,7 @@ class IssueControllerImpl(
     ] = for {
       didIdPair <- getPairwiseDIDs(request.connectionId).provideSomeLayer(ZLayer.succeed(connectionService))
       issuingDID <- extractPrismDIDFromString(request.issuingDID)
-      jsonClaims <- ZIO
+      jsonClaims <- ZIO // TODO Get read of Circe and use zio-json all the way down
         .fromEither(io.circe.parser.parse(request.claims.toString()))
         .mapError(e => ErrorResponse.badRequest(detail = Some(e.getMessage)))
       outcome <- credentialService
