@@ -9,12 +9,7 @@ import io.iohk.atala.connect.controller.ConnectionController
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.connect.core.service.ConnectionService
 import io.iohk.atala.issue.controller.IssueController.toHttpError
-import io.iohk.atala.issue.controller.http.{
-  AcceptCredentialOfferRequest,
-  CreateIssueCredentialRecordRequest,
-  IssueCredentialRecord,
-  IssueCredentialRecordPage
-}
+import io.iohk.atala.issue.controller.http.{AcceptCredentialOfferRequest, CreateIssueCredentialRecordRequest, IssueCredentialRecord, IssueCredentialRecordPage}
 import io.iohk.atala.pollux.core.model.CredentialFormat.{AnonCreds, JWT}
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.core.model.{CredentialFormat, DidCommID}
@@ -61,7 +56,6 @@ class IssueControllerImpl(
                   claims = jsonClaims,
                   validityPeriod = request.validityPeriod,
                   automaticIssuance = request.automaticIssuance.orElse(Some(true)),
-                  awaitConfirmation = Some(false),
                   issuingDID = issuingDID.asCanonical
                 )
             } yield record
@@ -86,7 +80,6 @@ class IssueControllerImpl(
                   claims = jsonClaims,
                   validityPeriod = request.validityPeriod,
                   automaticIssuance = request.automaticIssuance.orElse(Some(true)),
-                  awaitConfirmation = Some(false),
                   issuingDID = issuingDID.asCanonical,
                   appConfig.agent.restServiceUrl
                 )

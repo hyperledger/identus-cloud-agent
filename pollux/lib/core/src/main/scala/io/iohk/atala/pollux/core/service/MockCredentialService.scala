@@ -27,7 +27,6 @@ object MockCredentialService extends Mock[CredentialService] {
             Json,
             Option[Double],
             Option[Boolean],
-            Option[Boolean],
             CanonicalPrismDID
         ),
         CredentialServiceError,
@@ -43,7 +42,6 @@ object MockCredentialService extends Mock[CredentialService] {
             UUID,
             Json,
             Option[Double],
-            Option[Boolean],
             Option[Boolean],
             CanonicalPrismDID,
             String
@@ -91,7 +89,6 @@ object MockCredentialService extends Mock[CredentialService] {
           claims: Json,
           validityPeriod: Option[Double],
           automaticIssuance: Option[Boolean],
-          awaitConfirmation: Option[Boolean],
           issuingDID: CanonicalPrismDID
       ): IO[CredentialServiceError, IssueCredentialRecord] =
         proxy(
@@ -103,7 +100,6 @@ object MockCredentialService extends Mock[CredentialService] {
           claims,
           validityPeriod,
           automaticIssuance,
-          awaitConfirmation,
           issuingDID
         )
 
@@ -115,7 +111,6 @@ object MockCredentialService extends Mock[CredentialService] {
           claims: Json,
           validityPeriod: Option[Double],
           automaticIssuance: Option[Boolean],
-          awaitConfirmation: Option[Boolean],
           issuingDID: CanonicalPrismDID,
           restServiceUrl: String
       ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
@@ -128,7 +123,6 @@ object MockCredentialService extends Mock[CredentialService] {
           claims,
           validityPeriod,
           automaticIssuance,
-          awaitConfirmation,
           issuingDID,
           restServiceUrl
         )

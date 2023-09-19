@@ -27,9 +27,8 @@ object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSp
       test("createIssuerCredentialRecord without schema creates a valid issuer credential record") {
         check(
           Gen.option(Gen.double),
-          Gen.option(Gen.boolean),
           Gen.option(Gen.boolean)
-        ) { (validityPeriod, automaticIssuance, awaitConfirmation) =>
+        ) { (validityPeriod, automaticIssuance) =>
           for {
             svc <- ZIO.service[CredentialService]
             pairwiseIssuerDid = DidId("did:peer:INVITER")
@@ -41,8 +40,7 @@ object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSp
               pairwiseHolderDID = pairwiseHolderDid,
               schemaId = "https://localhost/schemas/1234",
               validityPeriod = validityPeriod,
-              automaticIssuance = automaticIssuance,
-              awaitConfirmation = awaitConfirmation
+              automaticIssuance = automaticIssuance
             )
           } yield {
             assertTrue(record.thid == thid) &&
@@ -88,9 +86,8 @@ object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSp
       test("createIssuerCredentialRecord with a schema and valid claims creates a valid issuer credential record") {
         check(
           Gen.option(Gen.double),
-          Gen.option(Gen.boolean),
           Gen.option(Gen.boolean)
-        ) { (validityPeriod, automaticIssuance, awaitConfirmation) =>
+        ) { (validityPeriod, automaticIssuance) =>
           for {
             svc <- ZIO.service[CredentialService]
             pairwiseIssuerDid = DidId("did:peer:INVITER")
@@ -117,8 +114,7 @@ object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSp
               schemaId = "resource:///vc-schema-example.json",
               claims = claims,
               validityPeriod = validityPeriod,
-              automaticIssuance = automaticIssuance,
-              awaitConfirmation = awaitConfirmation
+              automaticIssuance = automaticIssuance
             )
             attributes <- CredentialService.convertJsonClaimsToAttributes(claims)
           } yield {
@@ -152,9 +148,8 @@ object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSp
       test("createIssuerCredentialRecord with a schema and invalid claims should fail") {
         check(
           Gen.option(Gen.double),
-          Gen.option(Gen.boolean),
           Gen.option(Gen.boolean)
-        ) { (validityPeriod, automaticIssuance, awaitConfirmation) =>
+        ) { (validityPeriod, automaticIssuance) =>
           for {
             svc <- ZIO.service[CredentialService]
             pairwiseIssuerDid = DidId("did:peer:INVITER")
@@ -179,8 +174,7 @@ object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSp
                 schemaId = "resource:///vc-schema-example.json",
                 claims = claims,
                 validityPeriod = validityPeriod,
-                automaticIssuance = automaticIssuance,
-                awaitConfirmation = awaitConfirmation
+                automaticIssuance = automaticIssuance
               )
               .exit
           } yield {

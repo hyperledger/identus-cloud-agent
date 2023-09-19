@@ -90,7 +90,6 @@ private class CredentialServiceImpl(
       claims: Json,
       validityPeriod: Option[Double],
       automaticIssuance: Option[Boolean],
-      awaitConfirmation: Option[Boolean],
       issuingDID: CanonicalPrismDID
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
     for {
@@ -150,7 +149,6 @@ private class CredentialServiceImpl(
       claims: Json,
       validityPeriod: Option[Double],
       automaticIssuance: Option[Boolean],
-      awaitConfirmation: Option[Boolean],
       issuingDID: CanonicalPrismDID,
       restServiceUrl: String
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {

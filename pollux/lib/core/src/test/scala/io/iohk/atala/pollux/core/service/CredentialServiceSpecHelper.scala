@@ -106,8 +106,7 @@ trait CredentialServiceSpecHelper {
         schemaId: String = "https://localhost/schemas/1234",
         claims: Json = defaultClaims,
         validityPeriod: Option[Double] = None,
-        automaticIssuance: Option[Boolean] = None,
-        awaitConfirmation: Option[Boolean] = None
+        automaticIssuance: Option[Boolean] = None
     ) = for {
       issuingDID <- ZIO.fromEither(
         PrismDID.buildCanonicalFromSuffix(
@@ -122,7 +121,6 @@ trait CredentialServiceSpecHelper {
         claims = claims,
         validityPeriod = validityPeriod,
         automaticIssuance = automaticIssuance,
-        awaitConfirmation = awaitConfirmation,
         issuingDID = issuingDID
       )
     } yield record

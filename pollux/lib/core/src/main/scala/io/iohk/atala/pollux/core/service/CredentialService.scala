@@ -26,7 +26,6 @@ trait CredentialService {
       claims: io.circe.Json,
       validityPeriod: Option[Double] = None,
       automaticIssuance: Option[Boolean],
-      awaitConfirmation: Option[Boolean],
       issuingDID: CanonicalPrismDID
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
@@ -38,7 +37,6 @@ trait CredentialService {
       claims: io.circe.Json,
       validityPeriod: Option[Double] = None,
       automaticIssuance: Option[Boolean],
-      awaitConfirmation: Option[Boolean],
       issuingDID: CanonicalPrismDID,
       restServiceUrl: String
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
