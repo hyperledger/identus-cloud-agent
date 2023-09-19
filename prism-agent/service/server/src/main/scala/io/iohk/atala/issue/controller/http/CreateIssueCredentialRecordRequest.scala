@@ -47,7 +47,7 @@ final case class CreateIssueCredentialRecordRequest(
     automaticIssuance: Option[Boolean] = None,
     @description(annotations.issuingDID.description)
     @encodedExample(annotations.issuingDID.example)
-    issuingDID: String,
+    issuingDID: Option[String],
     @description(annotations.connectionId.description)
     @encodedExample(annotations.connectionId.example)
     connectionId: String
@@ -106,9 +106,9 @@ object CreateIssueCredentialRecordRequest {
         )
 
     object issuingDID
-        extends Annotation[String](
-          description = "The issuer DID of the verifiable credential object.",
-          example = "did:prism:issuerofverifiablecredentials"
+        extends Annotation[Option[String]](
+          description = "The issuer DID of the verifiable credential (JWT credentials only)",
+          example = Some("did:prism:issuerofverifiablecredentials")
         )
 
     object connectionId

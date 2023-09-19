@@ -9,12 +9,7 @@ import io.iohk.atala.connect.controller.ConnectionController
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.connect.core.service.ConnectionService
 import io.iohk.atala.issue.controller.IssueController.toHttpError
-import io.iohk.atala.issue.controller.http.{
-  AcceptCredentialOfferRequest,
-  CreateIssueCredentialRecordRequest,
-  IssueCredentialRecord,
-  IssueCredentialRecordPage
-}
+import io.iohk.atala.issue.controller.http.{AcceptCredentialOfferRequest, CreateIssueCredentialRecordRequest, IssueCredentialRecord, IssueCredentialRecordPage}
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.core.model.{CredentialFormat, DidCommID}
 import io.iohk.atala.pollux.core.service.CredentialService
@@ -36,7 +31,10 @@ class IssueControllerImpl(
       IssueCredentialRecord
     ] = for {
       didIdPair <- getPairwiseDIDs(request.connectionId).provideSomeLayer(ZLayer.succeed(connectionService))
-      issuingDID <- extractPrismDIDFromString(request.issuingDID)
+      issuingDID <- ZIO.succeed(request.issuingDID).flatMap {
+        case Some(value) => extractPrismDIDFromString(value).map(Some(_))
+        case None        => ZIO.succeed(None)
+      }
       jsonClaims <- ZIO // TODO Get read of Circe and use zio-json all the way down
         .fromEither(io.circe.parser.parse(request.claims.toString()))
         .mapError(e => ErrorResponse.badRequest(detail = Some(e.getMessage)))
@@ -52,8 +50,7 @@ class IssueControllerImpl(
           validityPeriod = request.validityPeriod,
           automaticIssuance = request.automaticIssuance.orElse(Some(true)),
           awaitConfirmation = Some(false),
-          // TODO Check what to do with the issuingDID in case of AnonCreds? Should it be defined or not?
-          issuingDID = Some(issuingDID.asCanonical),
+          issuingDID = issuingDID.map(_.asCanonical),
           appConfig.agent.restServiceUrl
         )
     } yield IssueCredentialRecord.fromDomain(outcome)

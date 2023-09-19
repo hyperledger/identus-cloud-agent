@@ -123,8 +123,8 @@ private class CredentialServiceImpl(
 
       attributes <- CredentialService.convertJsonClaimsToAttributes(claims)
 
-      offer <- (credentialFormat, schemaId, credentialDefinitionId) match
-        case (CredentialFormat.JWT, schemaId, None) =>
+      offer <- (credentialFormat, schemaId, credentialDefinitionId, issuingDID) match
+        case (CredentialFormat.JWT, Some(schemaId), None, Some(_)) =>
           createJWTDidCommOfferCredential(
             pairwiseIssuerDID = pairwiseIssuerDID,
             pairwiseHolderDID = pairwiseHolderDID,
@@ -134,7 +134,8 @@ private class CredentialServiceImpl(
             UUID.randomUUID().toString,
             "domain"
           )
-        case (CredentialFormat.AnonCreds, Some(schemaId), Some(credentialDefinitionId)) =>
+        // TODO For AnonCreds, schemaId should be None. But still required for now because used to get CD secret.
+        case (CredentialFormat.AnonCreds, Some(schemaId), Some(credentialDefinitionId), None) =>
           createAnonCredsDidCommOfferCredential(
             pairwiseIssuerDID = pairwiseIssuerDID,
             pairwiseHolderDID = pairwiseHolderDID,
@@ -147,7 +148,7 @@ private class CredentialServiceImpl(
         case _ =>
           ZIO.fail(
             CredentialServiceError.UnexpectedError(
-              s"Invalid schemaId/credDefId input for $credentialFormat offer creation: ${schemaId}/${credentialDefinitionId}"
+              s"Invalid 'schemaId/credentialDefinitionId/issuingDID' combination for $credentialFormat format"
             )
           )
       record <- ZIO.succeed(
@@ -712,14 +713,14 @@ private class CredentialServiceImpl(
   private[this] def createJWTDidCommOfferCredential(
       pairwiseIssuerDID: DidId,
       pairwiseHolderDID: DidId,
-      schemaId: Option[String],
+      schemaId: String,
       claims: Seq[Attribute],
       thid: DidCommID,
       challenge: String,
       domain: String
   ) = {
     for {
-      credentialPreview <- ZIO.succeed(CredentialPreview(schema_id = schemaId, attributes = claims))
+      credentialPreview <- ZIO.succeed(CredentialPreview(schema_id = Some(schemaId), attributes = claims))
       body = OfferCredential.Body(
         goal_code = Some("Offer Credential"),
         credential_preview = credentialPreview,
