@@ -167,7 +167,7 @@ object MockCredentialService extends Mock[CredentialService] {
       override def acceptCredentialRequest(recordId: DidCommID): IO[CredentialServiceError, IssueCredentialRecord] =
         proxy(AcceptCredentialRequest, recordId)
 
-      override def createCredentialPayloadFromRecord(
+      override def createJWTCredentialPayloadFromRecord(
           record: IssueCredentialRecord,
           issuer: Issuer,
           issuanceDate: Instant

@@ -987,7 +987,7 @@ private class CredentialServiceImpl(
     } yield record
   }
 
-  override def createCredentialPayloadFromRecord(
+  override def createJWTCredentialPayloadFromRecord(
       record: IssueCredentialRecord,
       issuer: Issuer,
       issuanceDate: Instant

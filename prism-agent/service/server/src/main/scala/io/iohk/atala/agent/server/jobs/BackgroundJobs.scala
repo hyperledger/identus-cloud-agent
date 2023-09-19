@@ -432,7 +432,7 @@ object BackgroundJobs {
             credentialService <- ZIO.service[CredentialService]
             longFormPrismDID <- getLongForm(issuerDID, true)
             jwtIssuer <- createJwtIssuer(longFormPrismDID, VerificationRelationship.AssertionMethod)
-            w3Credential <- credentialService.createCredentialPayloadFromRecord(
+            w3Credential <- credentialService.createJWTCredentialPayloadFromRecord(
               record,
               jwtIssuer,
               Instant.now()

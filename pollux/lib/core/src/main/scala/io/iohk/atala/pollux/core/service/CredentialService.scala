@@ -97,7 +97,7 @@ trait CredentialService {
       recordId: DidCommID
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
-  def createCredentialPayloadFromRecord(
+  def createJWTCredentialPayloadFromRecord(
       record: IssueCredentialRecord,
       issuer: Issuer,
       issuanceDate: Instant

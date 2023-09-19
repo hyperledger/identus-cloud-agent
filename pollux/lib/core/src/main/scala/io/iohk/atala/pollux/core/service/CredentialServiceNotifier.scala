@@ -153,12 +153,12 @@ class CredentialServiceNotifier(
   ): ZIO[WalletAccessContext, CredentialServiceError, PresentationPayload] =
     svc.createPresentationPayload(recordId, subject)
 
-  override def createCredentialPayloadFromRecord(
+  override def createJWTCredentialPayloadFromRecord(
       record: IssueCredentialRecord,
       issuer: Issuer,
       issuanceDate: Instant
   ): ZIO[WalletAccessContext, CredentialServiceError, W3cCredentialPayload] =
-    svc.createCredentialPayloadFromRecord(record, issuer, issuanceDate)
+    svc.createJWTCredentialPayloadFromRecord(record, issuer, issuanceDate)
 
   override def generateAnonCredsCredential(
       recordId: DidCommID
