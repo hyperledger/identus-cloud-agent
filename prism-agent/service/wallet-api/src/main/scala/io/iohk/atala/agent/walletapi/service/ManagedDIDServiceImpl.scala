@@ -5,7 +5,7 @@ import io.iohk.atala.agent.walletapi.model.*
 import io.iohk.atala.agent.walletapi.model.error.{*, given}
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService.DEFAULT_MASTER_KEY_ID
 import io.iohk.atala.agent.walletapi.service.handler.{DIDCreateHandler, DIDUpdateHandler, PublicationHandler}
-import io.iohk.atala.agent.walletapi.storage.{DIDKeySecretStorage, DIDNonSecretStorage, WalletSecretStorage}
+import io.iohk.atala.agent.walletapi.storage.{DIDSecretStorage, DIDNonSecretStorage, WalletSecretStorage}
 import io.iohk.atala.agent.walletapi.util.*
 import io.iohk.atala.castor.core.model.did.*
 import io.iohk.atala.castor.core.model.error.DIDOperationError
@@ -26,7 +26,7 @@ import scala.language.implicitConversions
 class ManagedDIDServiceImpl private[walletapi] (
     didService: DIDService,
     didOpValidator: DIDOperationValidator,
-    private[walletapi] val secretStorage: DIDKeySecretStorage,
+    private[walletapi] val secretStorage: DIDSecretStorage,
     override private[walletapi] val nonSecretStorage: DIDNonSecretStorage,
     walletSecretStorage: WalletSecretStorage,
     apollo: Apollo,
@@ -371,14 +371,14 @@ class ManagedDIDServiceImpl private[walletapi] (
 object ManagedDIDServiceImpl {
 
   val layer: RLayer[
-    DIDOperationValidator & DIDService & DIDKeySecretStorage & DIDNonSecretStorage & WalletSecretStorage & Apollo,
+    DIDOperationValidator & DIDService & DIDSecretStorage & DIDNonSecretStorage & WalletSecretStorage & Apollo,
     ManagedDIDService
   ] = {
     ZLayer.fromZIO {
       for {
         didService <- ZIO.service[DIDService]
         didOpValidator <- ZIO.service[DIDOperationValidator]
-        secretStorage <- ZIO.service[DIDKeySecretStorage]
+        secretStorage <- ZIO.service[DIDSecretStorage]
         nonSecretStorage <- ZIO.service[DIDNonSecretStorage]
         walletSecretStorage <- ZIO.service[WalletSecretStorage]
         apollo <- ZIO.service[Apollo]

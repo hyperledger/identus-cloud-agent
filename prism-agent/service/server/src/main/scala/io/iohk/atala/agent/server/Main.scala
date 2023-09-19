@@ -11,7 +11,6 @@ import io.iohk.atala.agent.walletapi.service.{
   WalletManagementServiceImpl
 }
 import io.iohk.atala.agent.walletapi.sql.{JdbcDIDNonSecretStorage, JdbcEntityRepository, JdbcWalletNonSecretStorage}
-import io.iohk.atala.agent.walletapi.storage.DIDKeySecretStorageImpl
 import io.iohk.atala.castor.controller.{DIDControllerImpl, DIDRegistrarControllerImpl}
 import io.iohk.atala.castor.core.service.DIDServiceImpl
 import io.iohk.atala.castor.core.util.DIDOperationValidator
@@ -54,6 +53,7 @@ import zio.metrics.jvm.DefaultJvmMetrics
 
 import java.security.Security
 import scala.language.implicitConversions
+import io.iohk.atala.agent.walletapi.storage.GenericSecretStorage
 
 object MainApp extends ZIOAppDefault {
 
@@ -170,7 +170,6 @@ object MainApp extends ZIOAppDefault {
           GrpcModule.irisStubLayer,
           GrpcModule.prismNodeStubLayer,
           // storage
-          DIDKeySecretStorageImpl.layer,
           RepoModule.agentContextAwareTransactorLayer ++ RepoModule.agentTransactorLayer >>> JdbcDIDNonSecretStorage.layer,
           RepoModule.agentContextAwareTransactorLayer >>> JdbcWalletNonSecretStorage.layer,
           RepoModule.allSecretStorageLayer,
