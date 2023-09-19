@@ -53,8 +53,10 @@ class IssueCredentialsSteps {
     fun bobRequestsTheCredential(holder: Actor) {
         wait(
             {
-                credentialEvent = ListenToEvents.`as`(holder).credentialEvents.lastOrNull()
-                credentialEvent != null && credentialEvent!!.data.thid == holder.recall<String>("thid") &&
+                credentialEvent = ListenToEvents.`as`(holder).credentialEvents.lastOrNull {
+                    it.data.thid == holder.recall<String>("thid")
+                }
+                credentialEvent != null &&
                         credentialEvent!!.data.protocolState == CredentialState.OFFER_RECEIVED
             },
             "Holder was unable to receive the credential offer from Issuer! Protocol state did not achieve OfferReceived state.",
@@ -82,8 +84,10 @@ class IssueCredentialsSteps {
     fun acmeIssuesTheCredential(issuer: Actor) {
         wait(
             {
-                credentialEvent = ListenToEvents.`as`(issuer).credentialEvents.lastOrNull()
-                credentialEvent != null && credentialEvent!!.data.thid == issuer.recall<String>("thid") &&
+                credentialEvent = ListenToEvents.`as`(issuer).credentialEvents.lastOrNull {
+                    it.data.thid == issuer.recall<String>("thid")
+                }
+                credentialEvent != null &&
                         credentialEvent!!.data.protocolState == CredentialState.REQUEST_RECEIVED
             },
             "Issuer was unable to receive the credential request from Holder! Protocol state did not achieve RequestReceived state.",
@@ -100,8 +104,10 @@ class IssueCredentialsSteps {
 
         wait(
             {
-                credentialEvent = ListenToEvents.`as`(issuer).credentialEvents.lastOrNull()
-                credentialEvent!!.data.thid == issuer.recall<String>("thid") &&
+                credentialEvent = ListenToEvents.`as`(issuer).credentialEvents.lastOrNull {
+                    it.data.thid == issuer.recall<String>("thid")
+                }
+                credentialEvent != null &&
                         credentialEvent!!.data.protocolState == CredentialState.CREDENTIAL_SENT
             },
             "Issuer was unable to issue the credential! " +
@@ -113,8 +119,10 @@ class IssueCredentialsSteps {
     fun bobHasTheCredentialIssued(holder: Actor) {
         wait(
             {
-                credentialEvent = ListenToEvents.`as`(holder).credentialEvents.lastOrNull()
-                credentialEvent!!.data.thid == holder.recall<String>("thid") &&
+                credentialEvent = ListenToEvents.`as`(holder).credentialEvents.lastOrNull {
+                    it.data.thid == holder.recall<String>("thid")
+                }
+                credentialEvent != null &&
                         credentialEvent!!.data.protocolState == CredentialState.CREDENTIAL_RECEIVED
             },
             "Holder was unable to receive the credential from Issuer! " +

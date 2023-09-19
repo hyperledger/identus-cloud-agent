@@ -39,4 +39,5 @@ object TestConstants {
     val EVENT_TYPE_ISSUE_CREDENTIAL_RECORD_UPDATED = "IssueCredentialRecordUpdated"
     val EVENT_TYPE_PRESENTATION_UPDATED = "PresentationUpdated"
     val EVENT_TYPE_DID_STATUS_UPDATED = "DIDStatusUpdated"
+    val WRONG_SEED = "wrong seed"
 }

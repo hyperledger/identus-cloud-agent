@@ -40,15 +40,20 @@ services:
       CONNECT_DB_HOST: db
       AGENT_DB_HOST: db
       WALLET_SEED:
-      WEBHOOK_URL:
-      WEBHOOK_API_KEY:
+      GLOBAL_WEBHOOK_URL:
+      GLOBAL_WEBHOOK_API_KEY:
+      DEFAULT_WALLET_ENABLED:
+      DEFAULT_WALLET_WEBHOOK_URL:
+      DEFAULT_WALLET_AUTH_API_KEY:
+      API_KEY_ENABLED:
+      API_KEY_AUTO_PROVISIONING:
     depends_on:
       db:
         condition: service_healthy
       prism-node:
         condition: service_started
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://prism-agent:8085/connections"]
+      test: ["CMD", "curl", "-f", "http://prism-agent:8085/_system/health"]
       interval: 30s
       timeout: 10s
       retries: 5

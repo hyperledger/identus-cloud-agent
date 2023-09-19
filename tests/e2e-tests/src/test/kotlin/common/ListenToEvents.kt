@@ -37,7 +37,6 @@ open class ListenToEvents(
                     TestConstants.EVENT_TYPE_ISSUE_CREDENTIAL_RECORD_UPDATED -> credentialEvents.add(Json.decodeFromString<CredentialEvent>(eventString))
                     TestConstants.EVENT_TYPE_PRESENTATION_UPDATED -> presentationEvents.add(Json.decodeFromString<PresentationEvent>(eventString))
                     TestConstants.EVENT_TYPE_DID_STATUS_UPDATED -> {
-                        println("Updating did events")
                         didEvents.add(Json.decodeFromString<DidEvent>(eventString))
                     }
                     else -> {
@@ -63,7 +62,7 @@ open class ListenToEvents(
         server = embeddedServer(
             Netty,
             port = port,
-            host = host,
+            host = if (host == "host.docker.internal") "0.0.0.0" else host,
             module = {route(this)})
             .start(wait = false)
     }
