@@ -10,7 +10,7 @@ import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.presentproof.ProofType
 import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.model.presentation.Options
-import io.iohk.atala.pollux.core.model.{DidCommID, PresentationRecord}
+import io.iohk.atala.pollux.core.model.{CredentialFormat, DidCommID, PresentationRecord}
 import io.iohk.atala.pollux.core.service.PresentationService
 import io.iohk.atala.presentproof.controller.PresentProofController.toDidCommID
 import io.iohk.atala.presentproof.controller.http.*
@@ -28,6 +28,9 @@ class PresentProofControllerImpl(
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, PresentationStatus] = {
     val result: ZIO[WalletAccessContext, ConnectionServiceError | PresentationError, PresentationStatus] = for {
+      format <- CredentialFormat.fromString(request.format) match
+        case Some(value) => ZIO.succeed(value)
+        case None        => ZIO.fail(PresentationError.UnsupportedCredentialFormat(request.format))
       didIdPair <- getPairwiseDIDs(request.connectionId).provideSomeLayer(ZLayer.succeed(connectionService))
       record <- presentationService
         .createPresentationRecord(
@@ -43,6 +46,7 @@ class PresentProofControllerImpl(
             )
           },
           options = request.options.map(x => Options(x.challenge, x.domain)),
+          format = format,
         )
     } yield PresentationStatus.fromDomain(record)
 

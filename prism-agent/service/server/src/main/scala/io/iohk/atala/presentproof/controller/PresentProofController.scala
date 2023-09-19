@@ -55,6 +55,21 @@ object PresentProofController {
         ErrorResponse.notFound(detail = Some("Presentation no found"))
       case PresentationError.HolderBindingError(msg) =>
         ErrorResponse.internalServerError(detail = Some(s"Holder binding error: $msg"))
+      case PresentationError.MissingCredential =>
+        ErrorResponse.badRequest(
+          title = "MissingCredential",
+          detail = Some("The Credential is missing from attachments")
+        )
+      case PresentationError.MissingCredentialFormat =>
+        ErrorResponse.badRequest(
+          title = "MissingCredentialFormat",
+          detail = Some("The Credential format is missing from the credential in attachment")
+        )
+      case PresentationError.UnsupportedCredentialFormat(format) =>
+        ErrorResponse.badRequest(
+          title = "UnsupportedCredentialFormat",
+          detail = Some(s"The Credential format '$format' is not Unsupported")
+        )
 
   def toDidCommID(str: String): ZIO[Any, ErrorResponse, io.iohk.atala.pollux.core.model.DidCommID] =
     ZIO

@@ -60,7 +60,8 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
               thid,
               connectionId,
               proofTypes,
-              options
+              options,
+              format = CredentialFormat.JWT,
             )
           } yield {
             assertTrue(record.thid == thid) &&

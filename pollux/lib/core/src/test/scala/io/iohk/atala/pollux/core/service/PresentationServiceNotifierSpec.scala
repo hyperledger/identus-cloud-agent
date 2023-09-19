@@ -100,7 +100,15 @@ object PresentationServiceNotifierSpec extends ZIOSpecDefault with PresentationS
           svc <- ZIO.service[PresentationService]
           ens <- ZIO.service[EventNotificationService]
 
-          record <- svc.createPresentationRecord(DidId(""), DidId(""), DidCommID(""), None, Seq.empty, None)
+          record <- svc.createPresentationRecord(
+            DidId(""),
+            DidId(""),
+            DidCommID(""),
+            None,
+            Seq.empty,
+            None,
+            format = CredentialFormat.JWT,
+          )
           _ <- svc.markRequestPresentationSent(record.id)
           _ <- svc.receivePresentation(presentation(record.thid.value))
           _ <- svc.markPresentationVerified(record.id)

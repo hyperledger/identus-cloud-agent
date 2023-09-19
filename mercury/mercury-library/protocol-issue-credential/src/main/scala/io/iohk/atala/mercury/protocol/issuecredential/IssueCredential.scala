@@ -83,7 +83,6 @@ object IssueCredential {
         comment = rc.body.comment,
         replacement_id = None,
         more_available = None,
-        // formats = rc.body.formats,
       ),
       attachments = rc.attachments,
       thid = msg.thid.orElse(Some(rc.id)),

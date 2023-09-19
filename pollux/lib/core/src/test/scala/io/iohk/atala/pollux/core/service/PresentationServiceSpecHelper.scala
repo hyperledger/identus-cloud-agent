@@ -152,6 +152,7 @@ trait PresentationServiceSpecHelper {
         connectionId = Some("connectionId"),
         proofTypes = Seq(proofType),
         options = None,
+        format = CredentialFormat.JWT,
       )
     }
 

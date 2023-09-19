@@ -15,7 +15,10 @@ final case class RequestPresentationInput(
     options: Option[Options] = None,
     @description(annotations.proofs.description)
     @encodedExample(annotations.proofs.example)
-    proofs: Seq[ProofRequestAux]
+    proofs: Seq[ProofRequestAux],
+    @description(annotations.format.description)
+    @encodedExample(annotations.format.example)
+    format: String,
 )
 
 object RequestPresentationInput {
@@ -35,6 +38,12 @@ object RequestPresentationInput {
           description =
             "The type of proofs requested in the context of this proof presentation request (e.g., VC schema, trusted issuers, etc.)",
           example = Seq.empty
+        )
+
+    object format
+        extends Annotation[String](
+          description = "The Credential format. Can be 'JWT' or 'AnonCreds'",
+          example = "JWT"
         )
   }
 

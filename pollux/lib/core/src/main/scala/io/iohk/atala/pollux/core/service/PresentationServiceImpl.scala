@@ -21,6 +21,7 @@ import java.rmi.UnexpectedException
 import java.time.Instant
 import java.util as ju
 import java.util.UUID
+import io.iohk.atala.mercury.protocol.issuecredential.PresentCredentialRequestFormat
 
 private class PresentationServiceImpl(
     presentationRepository: PresentationRepository,
@@ -145,7 +146,8 @@ private class PresentationServiceImpl(
       thid: DidCommID,
       connectionId: Option[String],
       proofTypes: Seq[ProofType],
-      options: Option[io.iohk.atala.pollux.core.model.presentation.Options]
+      options: Option[io.iohk.atala.pollux.core.model.presentation.Options],
+      format: CredentialFormat,
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
     for {
       request <- ZIO.succeed(
@@ -154,7 +156,8 @@ private class PresentationServiceImpl(
           thid,
           pairwiseVerifierDID,
           pairwiseProverDID,
-          options
+          options,
+          format,
         )
       )
       record <- ZIO.succeed(
@@ -168,7 +171,7 @@ private class PresentationServiceImpl(
           role = PresentationRecord.Role.Verifier,
           subjectId = pairwiseProverDID,
           protocolState = PresentationRecord.ProtocolState.RequestPending,
-          credentialFormat = ???, // FIXME
+          credentialFormat = format,
           requestPresentationData = Some(request),
           proposePresentationData = None,
           presentationData = None,
@@ -207,6 +210,18 @@ private class PresentationServiceImpl(
       request: RequestPresentation
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
     for {
+      format <- request.attachments match {
+        case Seq() => ZIO.fail(PresentationError.MissingCredential)
+        case Seq(head) =>
+          val jsonF = PresentCredentialRequestFormat.JWT.name // stable identifier
+          val anoncredF = PresentCredentialRequestFormat.Anoncreds.name // stable identifier
+          head.format match
+            case None                    => ZIO.fail(PresentationError.MissingCredentialFormat)
+            case Some(`jsonF`)           => ZIO.succeed(CredentialFormat.JWT)
+            case Some(`anoncredF`)       => ZIO.succeed(CredentialFormat.AnonCreds)
+            case Some(unsupportedFormat) => ZIO.fail(PresentationError.UnsupportedCredentialFormat(unsupportedFormat))
+        case _ => ZIO.fail(PresentationError.UnexpectedError("Presentation with multi attachments"))
+      }
       record <- ZIO.succeed(
         PresentationRecord(
           id = DidCommID(),
@@ -218,7 +233,7 @@ private class PresentationServiceImpl(
           role = Role.Prover,
           subjectId = request.to,
           protocolState = PresentationRecord.ProtocolState.RequestReceived,
-          credentialFormat = ???, // FIXME
+          credentialFormat = format,
           requestPresentationData = Some(request),
           proposePresentationData = None,
           presentationData = None,
@@ -586,7 +601,8 @@ private class PresentationServiceImpl(
       thid: DidCommID,
       pairwiseVerifierDID: DidId,
       pairwiseProverDID: DidId,
-      maybeOptions: Option[io.iohk.atala.pollux.core.model.presentation.Options]
+      maybeOptions: Option[io.iohk.atala.pollux.core.model.presentation.Options],
+      format: CredentialFormat,
   ): RequestPresentation = {
     RequestPresentation(
       body = RequestPresentation.Body(
@@ -596,8 +612,11 @@ private class PresentationServiceImpl(
       attachments = maybeOptions
         .map(options =>
           Seq(
-            AttachmentDescriptor.buildJsonAttachment(payload =
-              io.iohk.atala.pollux.core.model.presentation.PresentationAttachment.build(Some(options))
+            AttachmentDescriptor.buildJsonAttachment(
+              payload = PresentationAttachment.build(Some(options)),
+              format = format match
+                case CredentialFormat.JWT       => Some(PresentCredentialRequestFormat.JWT.name)
+                case CredentialFormat.AnonCreds => Some(PresentCredentialRequestFormat.Anoncreds.name)
             )
           )
         )
