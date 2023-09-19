@@ -9,7 +9,13 @@ import io.iohk.atala.connect.controller.ConnectionController
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.connect.core.service.ConnectionService
 import io.iohk.atala.issue.controller.IssueController.toHttpError
-import io.iohk.atala.issue.controller.http.{AcceptCredentialOfferRequest, CreateIssueCredentialRecordRequest, IssueCredentialRecord, IssueCredentialRecordPage}
+import io.iohk.atala.issue.controller.http.{
+  AcceptCredentialOfferRequest,
+  CreateIssueCredentialRecordRequest,
+  IssueCredentialRecord,
+  IssueCredentialRecordPage
+}
+import io.iohk.atala.pollux.core.model.CredentialFormat.{AnonCreds, JWT}
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.core.model.{CredentialFormat, DidCommID}
 import io.iohk.atala.pollux.core.service.CredentialService
@@ -31,28 +37,60 @@ class IssueControllerImpl(
       IssueCredentialRecord
     ] = for {
       didIdPair <- getPairwiseDIDs(request.connectionId).provideSomeLayer(ZLayer.succeed(connectionService))
-      issuingDID <- ZIO.succeed(request.issuingDID).flatMap {
-        case Some(value) => extractPrismDIDFromString(value).map(Some(_))
-        case None        => ZIO.succeed(None)
-      }
       jsonClaims <- ZIO // TODO Get read of Circe and use zio-json all the way down
         .fromEither(io.circe.parser.parse(request.claims.toString()))
         .mapError(e => ErrorResponse.badRequest(detail = Some(e.getMessage)))
-      outcome <- credentialService
-        .createIssueCredentialRecord(
-          pairwiseIssuerDID = didIdPair.myDID,
-          pairwiseHolderDID = didIdPair.theirDid,
-          thid = DidCommID(),
-          schemaId = request.schemaId,
-          credentialDefinitionId = request.credentialDefinitionId,
-          credentialFormat = request.credentialFormat.map(CredentialFormat.valueOf).getOrElse(CredentialFormat.JWT),
-          claims = jsonClaims,
-          validityPeriod = request.validityPeriod,
-          automaticIssuance = request.automaticIssuance.orElse(Some(true)),
-          awaitConfirmation = Some(false),
-          issuingDID = issuingDID.map(_.asCanonical),
-          appConfig.agent.restServiceUrl
-        )
+      credentialFormat = request.credentialFormat.map(CredentialFormat.valueOf).getOrElse(CredentialFormat.JWT)
+      outcome <-
+        credentialFormat match
+          case JWT =>
+            for {
+              issuingDID <- ZIO
+                .fromOption(request.issuingDID)
+                .flatMap(extractPrismDIDFromString)
+                .mapError(_ => ErrorResponse.badRequest(detail = Some("Missing request parameter: issuingDID")))
+              schemaId <- ZIO
+                .fromOption(request.schemaId)
+                .mapError(_ => ErrorResponse.badRequest(detail = Some("Missing request parameter: schemaId")))
+              record <- credentialService
+                .createJWTIssueCredentialRecord(
+                  pairwiseIssuerDID = didIdPair.myDID,
+                  pairwiseHolderDID = didIdPair.theirDid,
+                  thid = DidCommID(),
+                  schemaId = schemaId,
+                  claims = jsonClaims,
+                  validityPeriod = request.validityPeriod,
+                  automaticIssuance = request.automaticIssuance.orElse(Some(true)),
+                  awaitConfirmation = Some(false),
+                  issuingDID = issuingDID.asCanonical
+                )
+            } yield record
+          case AnonCreds =>
+            for {
+              credentialDefinitionId <- ZIO
+                .fromOption(request.credentialDefinitionId)
+                .mapError(_ =>
+                  ErrorResponse.badRequest(detail = Some("Missing request parameter: credentialDefinitionId"))
+                )
+              // TODO 'issuingDID' no more expected once generic secret storage is implemented.
+              issuingDID <- ZIO
+                .fromOption(request.issuingDID)
+                .flatMap(extractPrismDIDFromString)
+                .mapError(_ => ErrorResponse.badRequest(detail = Some("Missing request parameter: issuingDID")))
+              record <- credentialService
+                .createAnonCredsIssueCredentialRecord(
+                  pairwiseIssuerDID = didIdPair.myDID,
+                  pairwiseHolderDID = didIdPair.theirDid,
+                  thid = DidCommID(),
+                  credentialDefinitionId = credentialDefinitionId,
+                  claims = jsonClaims,
+                  validityPeriod = request.validityPeriod,
+                  automaticIssuance = request.automaticIssuance.orElse(Some(true)),
+                  awaitConfirmation = Some(false),
+                  issuingDID = issuingDID.asCanonical,
+                  appConfig.agent.restServiceUrl
+                )
+            } yield record
     } yield IssueCredentialRecord.fromDomain(outcome)
     mapIssueErrors(result)
   }

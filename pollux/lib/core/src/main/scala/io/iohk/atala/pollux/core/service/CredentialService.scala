@@ -21,18 +21,28 @@ trait CredentialService {
 
   def extractIdFromCredential(credential: W3cCredentialPayload): Option[DidCommID]
 
-  def createIssueCredentialRecord(
+  def createJWTIssueCredentialRecord(
       pairwiseIssuerDID: DidId,
       pairwiseHolderDID: DidId,
       thid: DidCommID,
-      schemaId: Option[String],
-      credentialDefinitionId: Option[UUID],
-      credentialFormat: CredentialFormat,
+      schemaId: String,
       claims: io.circe.Json,
       validityPeriod: Option[Double] = None,
       automaticIssuance: Option[Boolean],
       awaitConfirmation: Option[Boolean],
-      issuingDID: Option[CanonicalPrismDID],
+      issuingDID: CanonicalPrismDID
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
+
+  def createAnonCredsIssueCredentialRecord(
+      pairwiseIssuerDID: DidId,
+      pairwiseHolderDID: DidId,
+      thid: DidCommID,
+      credentialDefinitionId: UUID,
+      claims: io.circe.Json,
+      validityPeriod: Option[Double] = None,
+      automaticIssuance: Option[Boolean],
+      awaitConfirmation: Option[Boolean],
+      issuingDID: CanonicalPrismDID,
       restServiceUrl: String
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 

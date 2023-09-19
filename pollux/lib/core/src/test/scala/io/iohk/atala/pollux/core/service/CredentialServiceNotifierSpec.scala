@@ -42,7 +42,7 @@ object CredentialServiceNotifierSpec extends ZIOSpecDefault with CredentialServi
   )
 
   private val issuerExpectations =
-    MockCredentialService.CreateIssueCredentialRecord(
+    MockCredentialService.CreateJWTIssueCredentialRecord(
       assertion = Assertion.anything,
       result = Expectation.value(issueCredentialRecord)
     ) ++

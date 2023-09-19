@@ -6,7 +6,7 @@ import io.iohk.atala.event.notification.*
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.issuecredential.{IssueCredential, OfferCredential, RequestCredential}
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
-import io.iohk.atala.pollux.core.model.{CredentialFormat, DidCommID, IssueCredentialRecord, PublishedBatchData}
+import io.iohk.atala.pollux.core.model.{DidCommID, IssueCredentialRecord, PublishedBatchData}
 import io.iohk.atala.pollux.vc.jwt.{Issuer, JWT, PresentationPayload, W3cCredentialPayload}
 import io.iohk.atala.prism.crypto.MerkleInclusionProof
 import io.iohk.atala.shared.models.WalletAccessContext
@@ -22,28 +22,49 @@ class CredentialServiceNotifier(
 
   private val issueCredentialRecordUpdatedEvent = "IssueCredentialRecordUpdated"
 
-  override def createIssueCredentialRecord(
+  override def createJWTIssueCredentialRecord(
       pairwiseIssuerDID: DidId,
       pairwiseHolderDID: DidId,
       thid: DidCommID,
-      schemaId: Option[String],
-      credentialDefinitionId: Option[UUID],
-      credentialFormat: CredentialFormat,
+      schemaId: String,
       claims: Json,
       validityPeriod: Option[Double],
       automaticIssuance: Option[Boolean],
       awaitConfirmation: Option[Boolean],
-      issuingDID: Option[CanonicalPrismDID],
-      restServiceUrl: String
+      issuingDID: CanonicalPrismDID
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
     notifyOnSuccess(
-      svc.createIssueCredentialRecord(
+      svc.createJWTIssueCredentialRecord(
         pairwiseIssuerDID,
         pairwiseHolderDID,
         thid,
         schemaId,
+        claims,
+        validityPeriod,
+        automaticIssuance,
+        awaitConfirmation,
+        issuingDID
+      )
+    )
+
+  override def createAnonCredsIssueCredentialRecord(
+      pairwiseIssuerDID: DidId,
+      pairwiseHolderDID: DidId,
+      thid: DidCommID,
+      credentialDefinitionId: UUID,
+      claims: Json,
+      validityPeriod: Option[Double],
+      automaticIssuance: Option[Boolean],
+      awaitConfirmation: Option[Boolean],
+      issuingDID: CanonicalPrismDID,
+      restServiceUrl: _root_.java.lang.String
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
+    notifyOnSuccess(
+      svc.createAnonCredsIssueCredentialRecord(
+        pairwiseIssuerDID,
+        pairwiseHolderDID,
+        thid,
         credentialDefinitionId,
-        credentialFormat,
         claims,
         validityPeriod,
         automaticIssuance,

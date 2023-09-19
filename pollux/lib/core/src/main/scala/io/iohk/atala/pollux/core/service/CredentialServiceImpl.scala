@@ -13,13 +13,13 @@ import io.iohk.atala.mercury.model.*
 import io.iohk.atala.mercury.protocol.issuecredential.*
 import io.iohk.atala.pollux.*
 import io.iohk.atala.pollux.anoncreds.{AnoncredLib, CreateCredentialDefinition, CredentialOffer, LinkSecretWithId}
-import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.CredentialFormat.AnonCreds
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord.ProtocolState.OfferReceived
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError.*
 import io.iohk.atala.pollux.core.model.presentation.*
 import io.iohk.atala.pollux.core.model.schema.CredentialSchema
+import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.repository.CredentialRepository
 import io.iohk.atala.pollux.core.service.serdes.PrivateCredentialDefinitionSchemaSerDesV1
 import io.iohk.atala.pollux.vc.jwt.*
@@ -93,73 +93,40 @@ private class CredentialServiceImpl(
     } yield record
   }
 
-  override def createIssueCredentialRecord(
+  override def createJWTIssueCredentialRecord(
       pairwiseIssuerDID: DidId,
       pairwiseHolderDID: DidId,
       thid: DidCommID,
-      schemaId: Option[String],
-      credentialDefinitionId: Option[UUID],
-      credentialFormat: CredentialFormat,
+      schemaId: String,
       claims: Json,
       validityPeriod: Option[Double],
       automaticIssuance: Option[Boolean],
       awaitConfirmation: Option[Boolean],
-      issuingDID: Option[CanonicalPrismDID],
-      restServiceUrl: String
+      issuingDID: CanonicalPrismDID
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
     for {
-      // TODO For AnonCreds, validate claims is a flat structure of type [String, String] or [String, Int]
-      _ <- schemaId match
-        case Some(schemaId) =>
-          credentialFormat match
-            case CredentialFormat.JWT =>
-              CredentialSchema
-                .validateClaims(schemaId, claims.noSpaces, uriDereferencer)
-                .mapError(e => CredentialSchemaError(e))
-            case CredentialFormat.AnonCreds =>
-              ZIO.unit
-        case None =>
-          ZIO.unit
-
+      _ <- CredentialSchema
+        .validateClaims(schemaId, claims.noSpaces, uriDereferencer)
+        .mapError(e => CredentialSchemaError(e))
       attributes <- CredentialService.convertJsonClaimsToAttributes(claims)
-
-      offer <- (credentialFormat, schemaId, credentialDefinitionId, issuingDID) match
-        case (CredentialFormat.JWT, Some(schemaId), None, Some(_)) =>
-          createJWTDidCommOfferCredential(
-            pairwiseIssuerDID = pairwiseIssuerDID,
-            pairwiseHolderDID = pairwiseHolderDID,
-            schemaId = schemaId,
-            claims = attributes,
-            thid = thid,
-            UUID.randomUUID().toString,
-            "domain"
-          )
-        // TODO For AnonCreds, schemaId should be None. But still required for now because used to get CD secret.
-        case (CredentialFormat.AnonCreds, Some(schemaId), Some(credentialDefinitionId), None) =>
-          createAnonCredsDidCommOfferCredential(
-            pairwiseIssuerDID = pairwiseIssuerDID,
-            pairwiseHolderDID = pairwiseHolderDID,
-            schemaId = schemaId,
-            credentialDefinitionId = credentialDefinitionId,
-            claims = attributes,
-            thid = thid,
-            restServiceUrl
-          )
-        case _ =>
-          ZIO.fail(
-            CredentialServiceError.UnexpectedError(
-              s"Invalid 'schemaId/credentialDefinitionId/issuingDID' combination for $credentialFormat format"
-            )
-          )
+      offer <- createJWTDidCommOfferCredential(
+        pairwiseIssuerDID = pairwiseIssuerDID,
+        pairwiseHolderDID = pairwiseHolderDID,
+        schemaId = schemaId,
+        claims = attributes,
+        thid = thid,
+        UUID.randomUUID().toString,
+        "domain"
+      )
       record <- ZIO.succeed(
         IssueCredentialRecord(
           id = DidCommID(),
           createdAt = Instant.now,
           updatedAt = None,
           thid = thid,
-          schemaId = schemaId,
-          credentialDefinitionId = credentialDefinitionId,
-          credentialFormat = credentialFormat,
+          schemaId = Some(schemaId),
+          credentialDefinitionId = None,
+          credentialFormat = CredentialFormat.JWT,
           role = IssueCredentialRecord.Role.Issuer,
           subjectId = None,
           validityPeriod = validityPeriod,
@@ -171,7 +138,74 @@ private class CredentialServiceImpl(
           requestCredentialData = None,
           issueCredentialData = None,
           issuedCredentialRaw = None,
-          issuingDID = issuingDID,
+          issuingDID = Some(issuingDID),
+          metaRetries = maxRetries,
+          metaNextRetry = Some(Instant.now()),
+          metaLastFailure = None,
+        )
+      )
+      count <- credentialRepository
+        .createIssueCredentialRecord(record)
+        .flatMap {
+          case 1 => ZIO.succeed(())
+          case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
+        }
+        .mapError(RepositoryError.apply) @@ CustomMetricsAspect
+        .startRecordingTime(s"${record.id}_issuer_offer_pending_to_sent_ms_gauge")
+    } yield record
+  }
+
+  override def createAnonCredsIssueCredentialRecord(
+      pairwiseIssuerDID: DidId,
+      pairwiseHolderDID: DidId,
+      thid: DidCommID,
+      credentialDefinitionId: UUID,
+      claims: Json,
+      validityPeriod: Option[Double],
+      automaticIssuance: Option[Boolean],
+      awaitConfirmation: Option[Boolean],
+      issuingDID: CanonicalPrismDID,
+      restServiceUrl: String
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
+    for {
+      credentialDefinition <- credentialDefinitionService
+        .getByGUID(credentialDefinitionId)
+        .mapError(e => CredentialServiceError.UnexpectedError(e.toString))
+      // TODO For AnonCreds, validate claims is a flat structure of type [String, String] or [String, Int]
+//      _ <- CredentialSchema
+//        .validateClaims(credentialDefinition.schemaId, claims.noSpaces, uriDereferencer)
+//        .mapError(e => CredentialSchemaError(e))
+      attributes <- CredentialService.convertJsonClaimsToAttributes(claims)
+      offer <- createAnonCredsDidCommOfferCredential(
+        pairwiseIssuerDID = pairwiseIssuerDID,
+        pairwiseHolderDID = pairwiseHolderDID,
+        schemaId = credentialDefinition.schemaId,
+        credentialDefinitionId = credentialDefinitionId,
+        claims = attributes,
+        thid = thid,
+        restServiceUrl
+      )
+      record <- ZIO.succeed(
+        IssueCredentialRecord(
+          id = DidCommID(),
+          createdAt = Instant.now,
+          updatedAt = None,
+          thid = thid,
+          schemaId = Some(credentialDefinition.schemaId),
+          credentialDefinitionId = Some(credentialDefinitionId),
+          credentialFormat = CredentialFormat.AnonCreds,
+          role = IssueCredentialRecord.Role.Issuer,
+          subjectId = None,
+          validityPeriod = validityPeriod,
+          automaticIssuance = automaticIssuance,
+          awaitConfirmation = awaitConfirmation,
+          protocolState = IssueCredentialRecord.ProtocolState.OfferPending,
+          publicationState = None,
+          offerCredentialData = Some(offer),
+          requestCredentialData = None,
+          issueCredentialData = None,
+          issuedCredentialRaw = None,
+          issuingDID = Some(issuingDID),
           metaRetries = maxRetries,
           metaNextRetry = Some(Instant.now()),
           metaLastFailure = None,

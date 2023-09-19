@@ -3,7 +3,7 @@ package io.iohk.atala.pollux.core.service
 import io.circe.Json
 import io.grpc.ManagedChannelBuilder
 import io.iohk.atala.agent.walletapi.memory.DIDSecretStorageInMemory
-import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
+import io.iohk.atala.castor.core.model.did.PrismDID
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import io.iohk.atala.mercury.model.{AttachmentDescriptor, DidId}
 import io.iohk.atala.mercury.protocol.issuecredential.*
@@ -103,27 +103,28 @@ trait CredentialServiceSpecHelper {
         pairwiseIssuerDID: DidId = DidId("did:prism:issuer"),
         pairwiseHolderDID: DidId = DidId("did:prism:holder-pairwise"),
         thid: DidCommID = DidCommID(),
-        schemaId: Option[String] = None,
+        schemaId: String = "https://localhost/schemas/1234",
         claims: Json = defaultClaims,
         validityPeriod: Option[Double] = None,
         automaticIssuance: Option[Boolean] = None,
-        awaitConfirmation: Option[Boolean] = None,
-        issuingDID: Option[CanonicalPrismDID] = None
-    ) = {
-      svc.createIssueCredentialRecord(
+        awaitConfirmation: Option[Boolean] = None
+    ) = for {
+      issuingDID <- ZIO.fromEither(
+        PrismDID.buildCanonicalFromSuffix(
+          "did:prism:5c2576867a5544e5ad05cdc94f02c664b99ff65c28e8b62aada767244c2199fe:CoQBCoEBEkIKDm15LWlzc3Vpbmcta2V5EAJKLgoJc2VjcDI1NmsxEiECzoNferDd5RFveC3tIDzZTw03V9ZsadYPFTNVM286GyMSOwoHbWFzdGVyMBABSi4KCXNlY3AyNTZrMRIhAr7faqumrKkxD5c8Zg6te_crGNUe8ExGVyBdFM3uWXPv"
+        )
+      )
+      record <- svc.createJWTIssueCredentialRecord(
         pairwiseIssuerDID = pairwiseIssuerDID,
         pairwiseHolderDID = pairwiseHolderDID,
         thid = thid,
         schemaId = schemaId,
-        credentialDefinitionId = None,
-        credentialFormat = CredentialFormat.JWT,
         claims = claims,
         validityPeriod = validityPeriod,
         automaticIssuance = automaticIssuance,
         awaitConfirmation = awaitConfirmation,
-        issuingDID = issuingDID,
-        restServiceUrl = "http://localhost/prism-agent"
+        issuingDID = issuingDID
       )
-    }
+    } yield record
 
 }

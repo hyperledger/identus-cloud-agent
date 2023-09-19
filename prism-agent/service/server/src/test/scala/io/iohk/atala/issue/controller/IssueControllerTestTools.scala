@@ -153,7 +153,7 @@ trait IssueGen {
       schemaId = None,
       claims = claims,
       automaticIssuance = Some(automaticIssuance),
-      issuingDID = issuingDID,
+      issuingDID = Some(issuingDID),
       connectionId = connectionId,
       credentialDefinitionId = None,
       credentialFormat = Some(CredentialFormat.JWT.toString)

@@ -5,7 +5,7 @@ import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.issuecredential.{IssueCredential, OfferCredential, RequestCredential}
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
-import io.iohk.atala.pollux.core.model.{CredentialFormat, DidCommID, IssueCredentialRecord, PublishedBatchData}
+import io.iohk.atala.pollux.core.model.{DidCommID, IssueCredentialRecord, PublishedBatchData}
 import io.iohk.atala.pollux.vc.jwt.{Issuer, JWT, PresentationPayload, W3cCredentialPayload}
 import io.iohk.atala.prism.crypto.MerkleInclusionProof
 import io.iohk.atala.shared.models.WalletAccessContext
@@ -17,20 +17,35 @@ import java.util.UUID
 
 object MockCredentialService extends Mock[CredentialService] {
 
-  object CreateIssueCredentialRecord
+  object CreateJWTIssueCredentialRecord
       extends Effect[
         (
             DidId,
             DidId,
             DidCommID,
-            Option[String],
-            Option[UUID],
-            CredentialFormat,
+            String,
             Json,
             Option[Double],
             Option[Boolean],
             Option[Boolean],
-            Option[CanonicalPrismDID],
+            CanonicalPrismDID
+        ),
+        CredentialServiceError,
+        IssueCredentialRecord
+      ]
+
+  object CreateAnonCredsIssueCredentialRecord
+      extends Effect[
+        (
+            DidId,
+            DidId,
+            DidCommID,
+            UUID,
+            Json,
+            Option[Double],
+            Option[Boolean],
+            Option[Boolean],
+            CanonicalPrismDID,
             String
         ),
         CredentialServiceError,
@@ -68,28 +83,48 @@ object MockCredentialService extends Mock[CredentialService] {
       proxy <- ZIO.service[Proxy]
     } yield new CredentialService {
 
-      override def createIssueCredentialRecord(
-                                                pairwiseIssuerDID: DidId,
-                                                pairwiseHolderDID: DidId,
-                                                thid: DidCommID,
-                                                schemaId: Option[String],
-                                                credentialDefinitionId: Option[UUID],
-                                                credentialFormat: CredentialFormat,
-                                                claims: Json,
-                                                validityPeriod: Option[Double],
-                                                automaticIssuance: Option[Boolean],
-                                                awaitConfirmation: Option[Boolean],
-                                                issuingDID: Option[CanonicalPrismDID],
-                                                restServiceUrl: String
+      override def createJWTIssueCredentialRecord(
+          pairwiseIssuerDID: DidId,
+          pairwiseHolderDID: DidId,
+          thid: DidCommID,
+          schemaId: String,
+          claims: Json,
+          validityPeriod: Option[Double],
+          automaticIssuance: Option[Boolean],
+          awaitConfirmation: Option[Boolean],
+          issuingDID: CanonicalPrismDID
       ): IO[CredentialServiceError, IssueCredentialRecord] =
         proxy(
-          CreateIssueCredentialRecord,
+          CreateJWTIssueCredentialRecord,
           pairwiseIssuerDID,
           pairwiseHolderDID,
           thid,
           schemaId,
+          claims,
+          validityPeriod,
+          automaticIssuance,
+          awaitConfirmation,
+          issuingDID
+        )
+
+      override def createAnonCredsIssueCredentialRecord(
+          pairwiseIssuerDID: DidId,
+          pairwiseHolderDID: DidId,
+          thid: DidCommID,
+          credentialDefinitionId: UUID,
+          claims: Json,
+          validityPeriod: Option[Double],
+          automaticIssuance: Option[Boolean],
+          awaitConfirmation: Option[Boolean],
+          issuingDID: CanonicalPrismDID,
+          restServiceUrl: String
+      ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
+        proxy(
+          CreateAnonCredsIssueCredentialRecord,
+          pairwiseIssuerDID,
+          pairwiseHolderDID,
+          thid,
           credentialDefinitionId,
-          credentialFormat,
           claims,
           validityPeriod,
           automaticIssuance,

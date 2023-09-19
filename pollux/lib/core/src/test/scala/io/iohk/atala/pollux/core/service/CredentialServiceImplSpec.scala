@@ -2,7 +2,6 @@ package io.iohk.atala.pollux.core.service
 
 import io.circe.Json
 import io.circe.syntax.*
-import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
 import io.iohk.atala.mercury.model.{DidId, Message}
 import io.iohk.atala.mercury.protocol.issuecredential.*
 import io.iohk.atala.pollux.core.model.*
@@ -10,8 +9,7 @@ import io.iohk.atala.pollux.core.model.IssueCredentialRecord.*
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError.*
 import io.iohk.atala.pollux.vc.jwt.*
-import io.iohk.atala.shared.models.WalletAccessContext
-import io.iohk.atala.shared.models.WalletId
+import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
@@ -41,7 +39,7 @@ object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSp
               thid = thid,
               pairwiseIssuerDID = pairwiseIssuerDid,
               pairwiseHolderDID = pairwiseHolderDid,
-              schemaId = None,
+              schemaId = "https://localhost/schemas/1234",
               validityPeriod = validityPeriod,
               automaticIssuance = automaticIssuance,
               awaitConfirmation = awaitConfirmation
@@ -118,7 +116,7 @@ object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSp
               thid = thid,
               pairwiseIssuerDID = pairwiseIssuerDid,
               pairwiseHolderDID = pairwiseHolderDid,
-              schemaId = Some("resource:///vc-schema-example.json"),
+              schemaId = "resource:///vc-schema-example.json",
               claims = claims,
               validityPeriod = validityPeriod,
               automaticIssuance = automaticIssuance,
@@ -182,7 +180,7 @@ object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSp
                 thid = thid,
                 pairwiseIssuerDID = pairwiseIssuerDid,
                 pairwiseHolderDID = pairwiseHolderDid,
-                schemaId = Some("resource:///vc-schema-example.json"),
+                schemaId = "resource:///vc-schema-example.json",
                 claims = claims,
                 validityPeriod = validityPeriod,
                 automaticIssuance = automaticIssuance,
