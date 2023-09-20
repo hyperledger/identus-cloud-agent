@@ -1,10 +1,10 @@
 package io.iohk.atala.pollux.credentialdefinition
 
 import com.dimafeng.testcontainers.PostgreSQLContainer
-import io.iohk.atala.agent.walletapi.memory.DIDSecretStorageInMemory
+import io.iohk.atala.agent.walletapi.memory.GenericSecretStorageInMemory
 import io.iohk.atala.agent.walletapi.model.{ManagedDIDState, PublicationState}
 import io.iohk.atala.agent.walletapi.service.{ManagedDIDService, MockManagedDIDService}
-import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
+import io.iohk.atala.agent.walletapi.storage.GenericSecretStorage
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.castor.core.model.did.PrismDIDOperation
 import io.iohk.atala.iam.authentication.{Authenticator, DefaultEntityAuthenticator}
@@ -53,7 +53,7 @@ trait CredentialDefinitionTestTools extends PostgresTestContainerSupport {
     ]
 
   private val controllerLayer =
-    DIDSecretStorageInMemory.layer >+>
+    GenericSecretStorageInMemory.layer >+>
       systemTransactorLayer >+> contextAwareTransactorLayer >+> JdbcCredentialDefinitionRepository.layer >+>
       ResourceURIDereferencerImpl.layer >+>
       CredentialDefinitionServiceImpl.layer >+>
@@ -78,7 +78,7 @@ trait CredentialDefinitionTestTools extends PostgresTestContainerSupport {
   lazy val testEnvironmentLayer = ZLayer.makeSome[
     ManagedDIDService,
     CredentialDefinitionController & CredentialDefinitionRepository & CredentialDefinitionService &
-      PostgreSQLContainer & Authenticator & DIDSecretStorage
+      PostgreSQLContainer & Authenticator & GenericSecretStorage
   ](
     controllerLayer,
     pgContainerLayer,

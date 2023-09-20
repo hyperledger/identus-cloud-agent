@@ -1,8 +1,8 @@
 package io.iohk.atala.pollux.core.service
 
 import io.iohk.atala.agent.walletapi.storage
-import io.iohk.atala.agent.walletapi.storage.{DIDSecret, DIDSecretStorage}
-import io.iohk.atala.mercury.model.DidId
+import io.iohk.atala.agent.walletapi.storage.GenericSecretStorage
+import io.iohk.atala.agent.walletapi.storage.CredentialDefinitionSecret
 import io.iohk.atala.pollux.anoncreds.{AnoncredLib, SchemaDef}
 import io.iohk.atala.pollux.core.model.error.CredentialSchemaError
 import io.iohk.atala.pollux.core.model.error.CredentialSchemaError.URISyntaxError
@@ -27,11 +27,10 @@ import java.util.UUID
 import scala.util.Try
 
 class CredentialDefinitionServiceImpl(
-    didSecretStorage: DIDSecretStorage,
+    genericSecretStorage: GenericSecretStorage,
     credentialDefinitionRepository: CredentialDefinitionRepository,
     uriDereferencer: URIDereferencer
 ) extends CredentialDefinitionService {
-  private val KEY_ID = "anoncred-credential-definition-private-key"
 
   override def create(in: CredentialDefinition.Input): Result[CredentialDefinition] = {
     for {
@@ -80,11 +79,10 @@ class CredentialDefinitionServiceImpl(
           proofKeyCredentialDefinitionJson
         )
       createdCredentialDefinition <- credentialDefinitionRepository.create(cd)
-      _ <-
-        didSecretStorage.insertKey(
-          DidId(in.author),
-          s"$KEY_ID/${createdCredentialDefinition.guid}",
-          DIDSecret(privateCredentialDefinitionJson, PrivateCredentialDefinitionSchemaSerDesV1.version)
+      _ <- genericSecretStorage
+        .set(
+          createdCredentialDefinition.guid,
+          CredentialDefinitionSecret(privateCredentialDefinitionJson)
         )
     } yield createdCredentialDefinition
   }.mapError {
@@ -123,7 +121,7 @@ class CredentialDefinitionServiceImpl(
 
 object CredentialDefinitionServiceImpl {
   val layer: URLayer[
-    DIDSecretStorage & CredentialDefinitionRepository & URIDereferencer,
+    GenericSecretStorage & CredentialDefinitionRepository & URIDereferencer,
     CredentialDefinitionService
   ] =
     ZLayer.fromFunction(CredentialDefinitionServiceImpl(_, _, _))

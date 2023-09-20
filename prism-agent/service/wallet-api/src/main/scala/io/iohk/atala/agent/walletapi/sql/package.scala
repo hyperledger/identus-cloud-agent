@@ -1,5 +1,6 @@
 package io.iohk.atala.agent.walletapi
 
+import com.nimbusds.jose.jwk.OctetKeyPair
 import doobie.*
 import doobie.postgres.implicits.*
 import doobie.util.invariant.InvalidEnum
@@ -15,6 +16,9 @@ import io.iohk.atala.castor.core.model.did.{PrismDID, PrismDIDOperation, Schedul
 import io.iohk.atala.event.notification.EventNotificationConfig
 import io.iohk.atala.prism.protos.node_models
 import io.iohk.atala.shared.models.WalletId
+import zio.json.*
+import zio.json.ast.Json
+import zio.json.ast.Json.*
 
 import java.net.URL
 import java.time.Instant
@@ -109,6 +113,15 @@ package object sql {
 
   given urlGet: Get[URL] = Get[String].map(URL(_))
   given urlPut: Put[URL] = Put[String].contramap(_.toString())
+
+  given octetKeyPairGet: Get[OctetKeyPair] = Get[String].map(OctetKeyPair.parse)
+  given octetKeyPairPut: Put[OctetKeyPair] = Put[String].contramap(_.toJSONString)
+
+  given jsonGet: Get[Json] = Get[String].map(_.fromJson[Json] match {
+    case Right(value) => value
+    case Left(error)  => throw new RuntimeException(error)
+  })
+  given jsonPut: Put[Json] = Put[String].contramap(_.toString())
 
   final case class DIDStateRow(
       did: PrismDID,

@@ -1,6 +1,6 @@
 package io.iohk.atala.pollux.core.service
 
-import io.iohk.atala.agent.walletapi.memory.DIDSecretStorageInMemory
+import io.iohk.atala.agent.walletapi.memory.GenericSecretStorageInMemory
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.schema.CredentialDefinition
 import io.iohk.atala.pollux.core.repository.CredentialDefinitionRepositoryInMemory
@@ -15,7 +15,7 @@ trait CredentialDefinitionServiceSpecHelper {
   protected val defaultWalletLayer = ZLayer.succeed(WalletAccessContext(WalletId.default))
 
   protected val credentialDefinitionServiceLayer =
-    DIDSecretStorageInMemory.layer ++ CredentialDefinitionRepositoryInMemory.layer ++ ResourceURIDereferencerImpl.layer >>>
+    GenericSecretStorageInMemory.layer ++ CredentialDefinitionRepositoryInMemory.layer ++ ResourceURIDereferencerImpl.layer >>>
       CredentialDefinitionServiceImpl.layer ++ defaultWalletLayer
 
   val defaultDefinition =
