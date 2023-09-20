@@ -23,9 +23,7 @@ class RequestCredentialSpec extends ZSuite {
          |    "type": "https://didcomm.org/issue-credential/3.0/request-credential",
          |    "body":
          |    {
-         |        "goal_code": "Request Credential",
-         |        "formats":
-         |        []
+         |        "goal_code": "Request Credential"
          |    },
          |    "attachments":
          |    [

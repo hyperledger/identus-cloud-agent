@@ -38,9 +38,7 @@ class OfferCredentialSpec extends ZSuite {
          |                    "value": "01/10/1947"
          |                }
          |            ]
-         |        },
-         |        "formats":
-         |        []
+         |        }
          |    },
          |    "attachments":
          |    [

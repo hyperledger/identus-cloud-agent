@@ -27,9 +27,7 @@ class IssueCredentialSpec extends ZSuite {
                          |    "type": "https://didcomm.org/issue-credential/3.0/issue-credential",
                          |    "body":
                          |    {
-                         |        "goal_code": "Issued Credential",
-                         |        "formats":
-                         |        []
+                         |        "goal_code": "Issued Credential"
                          |    },
                          |    "attachments":
                          |    [
