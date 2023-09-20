@@ -1,11 +1,11 @@
 package io.iohk.atala.pollux.credentialdefinition
 
 import io.iohk.atala.agent.walletapi.model.Entity
-import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
+import io.iohk.atala.agent.walletapi.storage.CredentialDefinitionSecret
+import io.iohk.atala.agent.walletapi.storage.GenericSecretStorage
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.container.util.MigrationAspects.*
 import io.iohk.atala.iam.authentication.Authenticator
-import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.pollux.core.service.serdes.{
   PrivateCredentialDefinitionSchemaSerDesV1,
   ProofKeyCredentialDefinitionSchemaSerDesV1,
@@ -116,23 +116,17 @@ object CredentialDefinitionBasicSpec extends ZIOSpecDefault with CredentialDefin
             fetchedCredentialDefinition.keyCorrectnessProof.toString()
           )
           assertValidKeyCorrectnessProof = assert(maybeValidKeyCorrectnessProof)(Assertion.isTrue)
-          svc <- ZIO.service[DIDSecretStorage]
-          maybeDidSecret <- svc
-            .getKey(
-              DidId(credentialDefinitionInput.author),
-              s"anoncred-credential-definition-private-key/${fetchedCredentialDefinition.guid}",
-              PrivateCredentialDefinitionSchemaSerDesV1.version
-            )
+          storage <- ZIO.service[GenericSecretStorage]
+          maybeDidSecret <- storage
+            .get(fetchedCredentialDefinition.guid)
             .provideSomeLayer(Entity.Default.wacLayer)
-          (assertCorrectPrivateDefinitionSchema, maybeValidPrivateDefinitionZIO) = maybeDidSecret match {
+          maybeValidPrivateDefinitionZIO = maybeDidSecret match {
             case Some(didSecret) =>
-              val schemaAssertion =
-                assert(didSecret.schemaId)(equalTo(PrivateCredentialDefinitionSchemaSerDesV1.version))
               val validPrivateDefinition =
                 PrivateCredentialDefinitionSchemaSerDesV1.schemaSerDes.validate(didSecret.json.toString())
-              (schemaAssertion, validPrivateDefinition)
+              validPrivateDefinition
             case None =>
-              (assert(false)(Assertion.isTrue), ZIO.succeed(false))
+              ZIO.succeed(false)
           }
           maybeValidPrivateDefinition <- maybeValidPrivateDefinitionZIO
           assertValidPrivateDefinition = assert(maybeValidPrivateDefinition)(Assertion.isTrue)
@@ -141,7 +135,6 @@ object CredentialDefinitionBasicSpec extends ZIOSpecDefault with CredentialDefin
           credentialDefinitionIsFetched &&
           assertValidPublicDefinition &&
           assertValidKeyCorrectnessProof &&
-          assertCorrectPrivateDefinitionSchema &&
           assertValidPrivateDefinition
       },
       test("get the credential definition by the wrong id") {

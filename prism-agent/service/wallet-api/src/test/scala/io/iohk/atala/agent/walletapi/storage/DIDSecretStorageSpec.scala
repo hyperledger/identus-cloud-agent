@@ -18,8 +18,9 @@ import zio.test.*
 import zio.test.Assertion.*
 import io.iohk.atala.agent.walletapi.memory.DIDSecretStorageInMemory
 import io.iohk.atala.agent.walletapi.memory.WalletSecretStorageInMemory
+import io.iohk.atala.agent.walletapi.model.Wallet
 
-object DIDKeySecretStorageSpec
+object DIDSecretStorageSpec
     extends ZIOSpecDefault,
       StorageSpecHelper,
       PostgresTestContainerSupport,
@@ -40,7 +41,6 @@ object DIDKeySecretStorageSpec
         JdbcDIDNonSecretStorage.layer,
         JdbcDIDSecretStorage.layer,
         JdbcWalletSecretStorage.layer,
-        DIDKeySecretStorageImpl.layer,
         systemTransactorLayer,
         contextAwareTransactorLayer,
         pgContainerLayer,
@@ -52,7 +52,6 @@ object DIDKeySecretStorageSpec
         JdbcDIDNonSecretStorage.layer,
         VaultDIDSecretStorage.layer,
         VaultWalletSecretStorage.layer,
-        DIDKeySecretStorageImpl.layer,
         systemTransactorLayer,
         contextAwareTransactorLayer,
         pgContainerLayer,
@@ -65,7 +64,6 @@ object DIDKeySecretStorageSpec
         JdbcDIDNonSecretStorage.layer,
         DIDSecretStorageInMemory.layer,
         WalletSecretStorageInMemory.layer,
-        DIDKeySecretStorageImpl.layer,
         systemTransactorLayer,
         contextAwareTransactorLayer,
         pgContainerLayer,
@@ -75,11 +73,14 @@ object DIDKeySecretStorageSpec
     suite("DIDSecretStorage")(jdbcTestSuite, vaultTestSuite, inMemoryTestSuite) @@ TestAspect.sequential
   }
 
-  private def commonSpec(name: String) = suite(name)(
+  private def commonSpec(name: String) =
+    suite(name)(singleWalletSpec, multiWalletSpec) @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
+
+  private val singleWalletSpec = suite("single-wallet")(
     test("insert and get the same key for OctetKeyPair") {
       for {
         nonSecretStorage <- ZIO.service[DIDNonSecretStorage]
-        secretStorage <- ZIO.service[DIDKeySecretStorage]
+        secretStorage <- ZIO.service[DIDSecretStorage]
         peerDID = PeerDID.makePeerDid()
         _ <- nonSecretStorage.createPeerDIDRecord(peerDID.did)
         n1 <- secretStorage.insertKey(peerDID.did, "agreement", peerDID.jwkForKeyAgreement)
@@ -94,7 +95,7 @@ object DIDKeySecretStorageSpec
     test("insert same key id return error") {
       for {
         nonSecretStorage <- ZIO.service[DIDNonSecretStorage]
-        secretStorage <- ZIO.service[DIDKeySecretStorage]
+        secretStorage <- ZIO.service[DIDSecretStorage]
         peerDID = PeerDID.makePeerDid()
         _ <- nonSecretStorage.createPeerDIDRecord(peerDID.did)
         n1 <- secretStorage.insertKey(peerDID.did, "agreement", peerDID.jwkForKeyAgreement)
@@ -108,11 +109,55 @@ object DIDKeySecretStorageSpec
     },
     test("get non-exist key return none") {
       for {
-        secretStorage <- ZIO.service[DIDKeySecretStorage]
+        secretStorage <- ZIO.service[DIDSecretStorage]
         peerDID = PeerDID.makePeerDid()
         key1 <- secretStorage.getKey(peerDID.did, "agreement")
       } yield assert(key1)(isNone)
     },
-  ).globalWallet @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
+  ).globalWallet
+
+  private val multiWalletSpec = suite("multi-wallet")(
+    test("do not see peer DID key outside of the wallet") {
+      for {
+        walletSvc <- ZIO.service[WalletManagementService]
+        walletId1 <- walletSvc.createWallet(Wallet("wallet-1")).map(_.id)
+        walletId2 <- walletSvc.createWallet(Wallet("wallet-2")).map(_.id)
+        nonSecretStorage <- ZIO.service[DIDNonSecretStorage]
+        secretStorage <- ZIO.service[DIDSecretStorage]
+        // wallet1 setup
+        peerDID1 = PeerDID.makePeerDid()
+        _ <- nonSecretStorage
+          .createPeerDIDRecord(peerDID1.did)
+          .provide(ZLayer.succeed(WalletAccessContext(walletId1)))
+        _ <- secretStorage
+          .insertKey(peerDID1.did, "key-1", peerDID1.jwkForKeyAgreement)
+          .provide(ZLayer.succeed(WalletAccessContext(walletId1)))
+        // wallet2 setup
+        peerDID2 = PeerDID.makePeerDid()
+        _ <- nonSecretStorage
+          .createPeerDIDRecord(peerDID2.did)
+          .provide(ZLayer.succeed(WalletAccessContext(walletId2)))
+        _ <- secretStorage
+          .insertKey(peerDID2.did, "key-1", peerDID2.jwkForKeyAgreement)
+          .provide(ZLayer.succeed(WalletAccessContext(walletId2)))
+        // assertions
+        ownWallet1 <- secretStorage
+          .getKey(peerDID1.did, "key-1")
+          .provide(ZLayer.succeed(WalletAccessContext(walletId1)))
+        ownWallet2 <- secretStorage
+          .getKey(peerDID2.did, "key-1")
+          .provide(ZLayer.succeed(WalletAccessContext(walletId2)))
+        crossWallet1 <- secretStorage
+          .getKey(peerDID1.did, "key-1")
+          .provide(ZLayer.succeed(WalletAccessContext(walletId2)))
+        crossWallet2 <- secretStorage
+          .getKey(peerDID2.did, "key-1")
+          .provide(ZLayer.succeed(WalletAccessContext(walletId1)))
+      } yield assert(ownWallet1)(isSome(equalTo(peerDID1.jwkForKeyAgreement))) &&
+        assert(ownWallet2)(isSome(equalTo(peerDID2.jwkForKeyAgreement))) &&
+        assert(crossWallet1)(isNone) &&
+        assert(crossWallet2)(isNone)
+    }
+  )
 
 }

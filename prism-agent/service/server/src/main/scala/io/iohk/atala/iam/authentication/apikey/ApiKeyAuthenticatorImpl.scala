@@ -11,6 +11,7 @@ import io.iohk.atala.shared.models.WalletId
 
 import java.util.UUID
 import scala.util.Try
+import scala.language.implicitConversions
 
 case class ApiKeyAuthenticatorImpl(
     apiKeyConfig: ApiKeyConfig,

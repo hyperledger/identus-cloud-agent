@@ -93,7 +93,6 @@ object ManagedDIDServiceSpec
         DIDOperationValidator.layer(),
         JdbcDIDNonSecretStorage.layer,
         JdbcWalletNonSecretStorage.layer,
-        DIDKeySecretStorageImpl.layer,
         systemTransactorLayer,
         contextAwareTransactorLayer,
         testDIDServiceLayer,

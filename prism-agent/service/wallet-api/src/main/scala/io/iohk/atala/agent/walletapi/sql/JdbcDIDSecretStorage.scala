@@ -1,17 +1,14 @@
 package io.iohk.atala.agent.walletapi.sql
 
+import com.nimbusds.jose.jwk.OctetKeyPair
 import doobie.*
 import doobie.implicits.*
-import io.iohk.atala.agent.walletapi.storage.DIDSecret
 import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.shared.db.ContextAwareTask
 import io.iohk.atala.shared.db.Implicits.*
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
-import zio.json.*
-import zio.json.ast.Json
-import zio.json.ast.Json.*
 
 import java.time.Instant
 import java.util.UUID
@@ -32,50 +29,32 @@ class JdbcDIDSecretStorage(xa: Transactor[ContextAwareTask]) extends DIDSecretSt
 
   given didIdPut: Put[DidId] = Put[String].contramap(_.value)
 
-  given didSecretGet: Read[DIDSecret] =
-    Read[(Json, String)].map { case (json, schemaId) => DIDSecret(json, schemaId) }
-
-  given didSecretPut: Write[DIDSecret] =
-    Write[(Json, String)].contramap(ds => (ds.json, ds.schemaId))
-
-  given jsonGet: Get[Json] = Get[String].map(_.fromJson[Json] match {
-    case Right(value) => value
-    case Left(error)  => throw new RuntimeException(error)
-  })
-
-  given jsonPut: Put[Json] = Put[String].contramap(_.toString())
-
-  override def getKey(did: DidId, keyId: String, schemaId: String): RIO[WalletAccessContext, Option[DIDSecret]] = {
+  override def getKey(did: DidId, keyId: String): RIO[WalletAccessContext, Option[OctetKeyPair]] = {
     val cxnIO = sql"""
-         | SELECT
-         |   key_pair,
-         |   schema_id
+         | SELECT key_pair
          | FROM public.peer_did_rand_key
          | WHERE
          |   did = $did
-         |   AND schema_id = $schemaId
          |   AND key_id = $keyId
         """.stripMargin
-      .query[DIDSecret]
+      .query[OctetKeyPair]
       .option
 
     cxnIO.transactWallet(xa)
   }
 
-  override def insertKey(did: DidId, keyId: String, didSecret: DIDSecret): RIO[WalletAccessContext, Int] = {
+  override def insertKey(did: DidId, keyId: String, keyPair: OctetKeyPair): RIO[WalletAccessContext, Int] = {
     val cxnIO = (now: InstantAsBigInt) => sql"""
         | INSERT INTO public.peer_did_rand_key(
         |   did,
         |   created_at,
         |   key_id,
-        |   key_pair,
-        |   schema_id
+        |   key_pair
         | ) values (
         |   ${did},
         |   ${now},
         |   ${keyId},
-        |   ${didSecret.json},
-        |   ${didSecret.schemaId}
+        |   ${keyPair}
         | )
         """.stripMargin.update
 
