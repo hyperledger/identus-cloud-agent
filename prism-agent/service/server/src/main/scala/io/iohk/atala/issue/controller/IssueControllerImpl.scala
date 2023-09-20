@@ -63,11 +63,6 @@ class IssueControllerImpl(
                 .mapError(_ =>
                   ErrorResponse.badRequest(detail = Some("Missing request parameter: credentialDefinitionId"))
                 )
-              // TODO 'issuingDID' no more expected once generic secret storage is implemented.
-              issuingDID <- ZIO
-                .fromOption(request.issuingDID)
-                .flatMap(extractPrismDIDFromString)
-                .mapError(_ => ErrorResponse.badRequest(detail = Some("Missing request parameter: issuingDID")))
               record <- credentialService
                 .createAnonCredsIssueCredentialRecord(
                   pairwiseIssuerDID = didIdPair.myDID,
@@ -77,7 +72,6 @@ class IssueControllerImpl(
                   claims = jsonClaims,
                   validityPeriod = request.validityPeriod,
                   automaticIssuance = request.automaticIssuance.orElse(Some(true)),
-                  issuingDID = issuingDID.asCanonical,
                   appConfig.agent.restServiceUrl
                 )
             } yield record

@@ -2,7 +2,7 @@ package io.iohk.atala.pollux.core.service
 
 import io.circe.Json
 import io.grpc.ManagedChannelBuilder
-import io.iohk.atala.agent.walletapi.memory.DIDSecretStorageInMemory
+import io.iohk.atala.agent.walletapi.memory.GenericSecretStorageInMemory
 import io.iohk.atala.castor.core.model.did.PrismDID
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import io.iohk.atala.mercury.model.{AttachmentDescriptor, DidId}
@@ -33,7 +33,7 @@ trait CredentialServiceSpecHelper {
 
   protected val credentialServiceLayer =
     irisStubLayer ++ CredentialRepositoryInMemory.layer ++ didResolverLayer ++ ResourceURIDereferencerImpl.layer ++
-      DIDSecretStorageInMemory.layer >+> credentialDefinitionServiceLayer >>> CredentialServiceImpl.layer
+      GenericSecretStorageInMemory.layer >+> credentialDefinitionServiceLayer >>> CredentialServiceImpl.layer
 
   protected def offerCredential(
       thid: Option[UUID] = Some(UUID.randomUUID())

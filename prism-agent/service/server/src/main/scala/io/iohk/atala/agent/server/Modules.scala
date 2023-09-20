@@ -5,20 +5,10 @@ import doobie.util.transactor.Transactor
 import io.grpc.ManagedChannelBuilder
 import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.walletapi.crypto.Apollo
-import io.iohk.atala.agent.walletapi.memory.GenericSecretStorageInMemory
-import io.iohk.atala.agent.walletapi.memory.{DIDSecretStorageInMemory, WalletSecretStorageInMemory}
-import io.iohk.atala.agent.walletapi.sql.JdbcGenericSecretStorage
-import io.iohk.atala.agent.walletapi.sql.{JdbcDIDSecretStorage, JdbcWalletSecretStorage}
-import io.iohk.atala.agent.walletapi.storage.GenericSecretStorage
-import io.iohk.atala.agent.walletapi.storage.{DIDSecretStorage, WalletSecretStorage}
-import io.iohk.atala.agent.walletapi.util.SeedResolver
-import io.iohk.atala.agent.walletapi.vault.VaultGenericSecretStorage
-import io.iohk.atala.agent.walletapi.vault.{
-  VaultDIDSecretStorage,
-  VaultKVClient,
-  VaultKVClientImpl,
-  VaultWalletSecretStorage
-}
+import io.iohk.atala.agent.walletapi.memory.{DIDSecretStorageInMemory, GenericSecretStorageInMemory, WalletSecretStorageInMemory}
+import io.iohk.atala.agent.walletapi.sql.{JdbcDIDSecretStorage, JdbcGenericSecretStorage, JdbcWalletSecretStorage}
+import io.iohk.atala.agent.walletapi.storage.{DIDSecretStorage, GenericSecretStorage, WalletSecretStorage}
+import io.iohk.atala.agent.walletapi.vault.*
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub

@@ -52,7 +52,6 @@ class CredentialServiceNotifier(
       claims: Json,
       validityPeriod: Option[Double],
       automaticIssuance: Option[Boolean],
-      issuingDID: CanonicalPrismDID,
       restServiceUrl: _root_.java.lang.String
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
     notifyOnSuccess(
@@ -64,7 +63,6 @@ class CredentialServiceNotifier(
         claims,
         validityPeriod,
         automaticIssuance,
-        issuingDID,
         restServiceUrl
       )
     )

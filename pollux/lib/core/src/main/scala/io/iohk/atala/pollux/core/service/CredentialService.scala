@@ -37,7 +37,6 @@ trait CredentialService {
       claims: io.circe.Json,
       validityPeriod: Option[Double] = None,
       automaticIssuance: Option[Boolean],
-      issuingDID: CanonicalPrismDID,
       restServiceUrl: String
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 

@@ -2,7 +2,7 @@ package io.iohk.atala.pollux.core.service
 
 import io.circe.Json
 import io.circe.syntax.*
-import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
+import io.iohk.atala.agent.walletapi.storage.GenericSecretStorage
 import io.iohk.atala.castor.core.model.did.{CanonicalPrismDID, PrismDID, VerificationRelationship}
 import io.iohk.atala.mercury.model.*
 import io.iohk.atala.mercury.protocol.issuecredential.*
@@ -16,7 +16,6 @@ import io.iohk.atala.pollux.core.model.error.CredentialServiceError.*
 import io.iohk.atala.pollux.core.model.presentation.*
 import io.iohk.atala.pollux.core.model.schema.CredentialSchema
 import io.iohk.atala.pollux.core.repository.CredentialRepository
-import io.iohk.atala.pollux.core.service.serdes.PrivateCredentialDefinitionSchemaSerDesV1
 import io.iohk.atala.pollux.vc.jwt.*
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
@@ -31,7 +30,7 @@ import scala.language.implicitConversions
 
 object CredentialServiceImpl {
   val layer: URLayer[
-    CredentialRepository & DidResolver & URIDereferencer & DIDSecretStorage & CredentialDefinitionService,
+    CredentialRepository & DidResolver & URIDereferencer & GenericSecretStorage & CredentialDefinitionService,
     CredentialService
   ] =
     ZLayer.fromFunction(CredentialServiceImpl(_, _, _, _, _))
@@ -44,7 +43,7 @@ private class CredentialServiceImpl(
     credentialRepository: CredentialRepository,
     didResolver: DidResolver,
     uriDereferencer: URIDereferencer,
-    didSecretStorage: DIDSecretStorage,
+    genericSecretStorage: GenericSecretStorage,
     credentialDefinitionService: CredentialDefinitionService,
     maxRetries: Int = 5 // TODO move to config
 ) extends CredentialService {
@@ -153,7 +152,6 @@ private class CredentialServiceImpl(
       claims: Json,
       validityPeriod: Option[Double],
       automaticIssuance: Option[Boolean],
-      issuingDID: CanonicalPrismDID,
       restServiceUrl: String
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
     for {
@@ -192,7 +190,7 @@ private class CredentialServiceImpl(
           requestCredentialData = None,
           issueCredentialData = None,
           issuedCredentialRaw = None,
-          issuingDID = Some(issuingDID),
+          issuingDID = None,
           metaRetries = maxRetries,
           metaNextRetry = Some(Instant.now()),
           metaLastFailure = None,
@@ -777,17 +775,11 @@ private class CredentialServiceImpl(
       .mapError(e => CredentialServiceError.UnexpectedError(e.toString))
     cd = anoncreds.CredentialDefinition(credentialDefinition.definition.toString)
     kcp = anoncreds.CredentialKeyCorrectnessProof(credentialDefinition.keyCorrectnessProof.toString)
-    maybeDidSecret <- didSecretStorage
-      .getKey(
-        DidId(credentialDefinition.author),
-        s"anoncred-credential-definition-private-key/${credentialDefinition.guid}",
-        PrivateCredentialDefinitionSchemaSerDesV1.version
-      )
-      .orDie
-    didSecret <- ZIO
-      .fromOption(maybeDidSecret)
+    maybeCredentialDefinitionSecret <- genericSecretStorage.get(credentialDefinition.guid).orDie
+    credentialDefinitionSecret <- ZIO
+      .fromOption(maybeCredentialDefinitionSecret)
       .mapError(_ => CredentialServiceError.CredentialDefinitionPrivatePartNotFound(credentialDefinition.guid))
-    cdp = anoncreds.CredentialDefinitionPrivate(didSecret.json.toString)
+    cdp = anoncreds.CredentialDefinitionPrivate(credentialDefinitionSecret.json.toString)
     createCredentialDefinition = CreateCredentialDefinition(cd, cdp, kcp)
     offer = AnoncredLib.createOffer(
       createCredentialDefinition, {
@@ -1032,23 +1024,14 @@ private class CredentialServiceImpl(
       attrValues = offerCredential.body.credential_preview.attributes.map { attr =>
         (attr.name, attr.value)
       }
-      did <- ZIO
-        .fromOption(record.issuingDID)
-        .mapError(_ => CredentialServiceError.UnexpectedError("No issuingDID found"))
-      maybeDidSecret <- didSecretStorage
-        .getKey(
-          DidId(did.toString),
-          s"anoncred-credential-definition-private-key/${credentialDefinition.guid}",
-          PrivateCredentialDefinitionSchemaSerDesV1.version
-        )
-        .mapError(error => CredentialServiceError.UnexpectedError(error.getMessage))
-      cdPrivate <- ZIO
-        .fromOption(maybeDidSecret)
-        .map(secret => anoncreds.CredentialDefinitionPrivate(secret.json.toString))
-        .mapError(_ => CredentialServiceError.UnexpectedError("Credential Definition Private part not found in secret"))
+      maybeCredentialDefinitionSecret <- genericSecretStorage.get(credentialDefinition.guid).orDie
+      credentialDefinitionSecret <- ZIO
+        .fromOption(maybeCredentialDefinitionSecret)
+        .mapError(_ => CredentialServiceError.CredentialDefinitionPrivatePartNotFound(credentialDefinition.guid))
+      cdp = anoncreds.CredentialDefinitionPrivate(credentialDefinitionSecret.json.toString)
       credential = AnoncredLib.createCredential(
         cd,
-        cdPrivate,
+        cdp,
         credentialOffer,
         credentialRequest,
         attrValues

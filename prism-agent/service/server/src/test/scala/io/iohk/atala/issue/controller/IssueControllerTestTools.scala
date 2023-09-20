@@ -3,17 +3,13 @@ package io.iohk.atala.issue.controller
 import com.typesafe.config.ConfigFactory
 import io.grpc.ManagedChannelBuilder
 import io.iohk.atala.agent.server.config.AppConfig
-import io.iohk.atala.agent.walletapi.memory.DIDSecretStorageInMemory
+import io.iohk.atala.agent.walletapi.memory.{DIDSecretStorageInMemory, GenericSecretStorageInMemory}
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.connect.core.repository.ConnectionRepositoryInMemory
 import io.iohk.atala.connect.core.service.ConnectionServiceImpl
 import io.iohk.atala.iam.authentication.{Authenticator, DefaultEntityAuthenticator}
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
-import io.iohk.atala.issue.controller.http.{
-  CreateIssueCredentialRecordRequest,
-  IssueCredentialRecord,
-  IssueCredentialRecordPage
-}
+import io.iohk.atala.issue.controller.http.{CreateIssueCredentialRecordRequest, IssueCredentialRecord, IssueCredentialRecordPage}
 import io.iohk.atala.pollux.core.model.CredentialFormat
 import io.iohk.atala.pollux.core.repository.{CredentialDefinitionRepositoryInMemory, CredentialRepositoryInMemory}
 import io.iohk.atala.pollux.core.service.*
@@ -95,7 +91,7 @@ trait IssueControllerTestTools extends PostgresTestContainerSupport {
   val testEnvironmentLayer = zio.test.testEnvironment ++
     pgContainerLayer ++
     contextAwareTransactorLayer ++
-    DIDSecretStorageInMemory.layer >+> credentialDefinitionServiceLayer >+>
+    GenericSecretStorageInMemory.layer >+> credentialDefinitionServiceLayer >+>
     controllerLayer ++
     DefaultEntityAuthenticator.layer
 
