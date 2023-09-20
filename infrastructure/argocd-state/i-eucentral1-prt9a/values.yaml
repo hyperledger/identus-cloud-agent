@@ -32,7 +32,7 @@ argocd-apps:
                repoURL: "https://github.com/hyperledger-labs/open-enterprise-agent"
                targetRevision: "main"
                helm:
-                 values:
+                 valuesObject:
                    ingress:
                      applicationUrls:
                        - "{{`{{ingressURL}}`}}"
