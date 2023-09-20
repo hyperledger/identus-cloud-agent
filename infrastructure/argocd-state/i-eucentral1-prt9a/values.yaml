@@ -1,4 +1,22 @@
 argocd-apps:
+  projects:
+    - name: system-integration-testing
+      namespace: argocd
+      additionalLabels:
+        audience: internal
+        owner: qa
+      additionalAnnotations: { }
+      finalizers:
+        - resources-finalizer.argocd.argoproj.io
+      description: Project to hold applications for system-integration-testing environment
+      sourceRepos:
+        - '*'
+      destinations:
+        - namespace: '*'
+          server: https://kubernetes.default.svc
+      clusterResourceWhitelist:
+        - group: '*'
+          kind: '*'
   itemTemplates:
    - items:
        - name: prism-agent-application-set
