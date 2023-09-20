@@ -72,6 +72,9 @@ argocd-apps:
              destination:
                server: https://kubernetes.default.svc
                namespace: "{{`{{namespace}}`}}"
+             info:
+               - name: Url
+                 value: "{{`{{ingressURL}}`}}"
              syncPolicy:
                automated:
                  prune: true
