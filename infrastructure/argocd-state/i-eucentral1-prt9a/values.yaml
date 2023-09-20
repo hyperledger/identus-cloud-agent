@@ -23,7 +23,7 @@ argocd-apps:
          generators: *generators
          template:
            metadata:
-             name: "{{app_name}}"
+             name: "{{`{{app_name}}`}}"
              namespace: argocd
            spec:
              project: system-integration-testing
@@ -35,7 +35,7 @@ argocd-apps:
                  values:
                    ingress:
                      applicationUrls:
-                       - "{{ingressURL}}"
+                       - "{{`{{ingressURL}}`}}"
                      platformIngressUrl: internal-eucentral1-prt9a.atalaprism.io
                      consumers:
                        - "key1"
@@ -53,7 +53,7 @@ argocd-apps:
                        enabled: false
              destination:
                server: https://kubernetes.default.svc
-               namespace: "{{namespace}}"
+               namespace: "{{`{{namespace}}`}}"
              syncPolicy:
                automated:
                  prune: true
