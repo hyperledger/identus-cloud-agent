@@ -9,9 +9,9 @@ import io.iohk.atala.shared.db.ContextAwareTask
 import io.iohk.atala.shared.db.Implicits.*
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
+import zio.json.ast.Json
 
 import java.time.Instant
-import zio.json.ast.Json
 
 class JdbcGenericSecretStorage(xa: Transactor[ContextAwareTask]) extends GenericSecretStorage {
 

@@ -31,9 +31,7 @@ class JdbcDIDSecretStorage(xa: Transactor[ContextAwareTask]) extends DIDSecretSt
 
   override def getKey(did: DidId, keyId: String): RIO[WalletAccessContext, Option[OctetKeyPair]] = {
     val cxnIO = sql"""
-         | SELECT
-         |   key_pair,
-         |   schema_id
+         | SELECT key_pair
          | FROM public.peer_did_rand_key
          | WHERE
          |   did = $did

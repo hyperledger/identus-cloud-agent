@@ -53,7 +53,6 @@ import zio.metrics.jvm.DefaultJvmMetrics
 
 import java.security.Security
 import scala.language.implicitConversions
-import io.iohk.atala.agent.walletapi.storage.GenericSecretStorage
 
 object MainApp extends ZIOAppDefault {
 

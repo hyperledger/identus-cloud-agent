@@ -33,7 +33,7 @@ class VaultGenericSecretStorage(vaultKV: VaultKVClient) extends GenericSecretSto
 
   private def constructKeyPath[K, V](walletId: WalletId)(key: K)(implicit ev: GenericSecret[K, V]): String = {
     val keyPath = ev.keyPath(key)
-    s"secret/${walletId.toUUID}/secrets/$keyPath"
+    s"secret/${walletId.toUUID}/generic-secrets/$keyPath"
   }
 
 }
