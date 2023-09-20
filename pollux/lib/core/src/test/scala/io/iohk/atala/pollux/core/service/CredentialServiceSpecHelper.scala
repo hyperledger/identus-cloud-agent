@@ -43,6 +43,7 @@ trait CredentialServiceSpecHelper {
     thid = thid.map(_.toString),
     attachments = Seq(
       AttachmentDescriptor.buildJsonAttachment(
+        format = Some(IssueCredentialOfferFormat.JWT.name),
         payload = CredentialOfferAttachment(
           Options(UUID.randomUUID().toString(), "my-domain"),
           PresentationDefinition(format = Some(ClaimFormat(ldp = Some(Ldp(Seq("EcdsaSecp256k1Signature2019"))))))
@@ -103,21 +104,19 @@ trait CredentialServiceSpecHelper {
         pairwiseIssuerDID: DidId = DidId("did:prism:issuer"),
         pairwiseHolderDID: DidId = DidId("did:prism:holder-pairwise"),
         thid: DidCommID = DidCommID(),
-        schemaId: String = "https://localhost/schemas/1234",
+        maybeSchemaId: Option[String] = None,
         claims: Json = defaultClaims,
         validityPeriod: Option[Double] = None,
         automaticIssuance: Option[Boolean] = None
     ) = for {
       issuingDID <- ZIO.fromEither(
-        PrismDID.buildCanonicalFromSuffix(
-          "did:prism:5c2576867a5544e5ad05cdc94f02c664b99ff65c28e8b62aada767244c2199fe:CoQBCoEBEkIKDm15LWlzc3Vpbmcta2V5EAJKLgoJc2VjcDI1NmsxEiECzoNferDd5RFveC3tIDzZTw03V9ZsadYPFTNVM286GyMSOwoHbWFzdGVyMBABSi4KCXNlY3AyNTZrMRIhAr7faqumrKkxD5c8Zg6te_crGNUe8ExGVyBdFM3uWXPv"
-        )
+        PrismDID.buildCanonicalFromSuffix("5c2576867a5544e5ad05cdc94f02c664b99ff65c28e8b62aada767244c2199fe")
       )
       record <- svc.createJWTIssueCredentialRecord(
         pairwiseIssuerDID = pairwiseIssuerDID,
         pairwiseHolderDID = pairwiseHolderDID,
         thid = thid,
-        schemaId = schemaId,
+        maybeSchemaId = maybeSchemaId,
         claims = claims,
         validityPeriod = validityPeriod,
         automaticIssuance = automaticIssuance,

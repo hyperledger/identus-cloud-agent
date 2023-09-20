@@ -33,12 +33,12 @@ object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSp
             svc <- ZIO.service[CredentialService]
             pairwiseIssuerDid = DidId("did:peer:INVITER")
             pairwiseHolderDid = DidId("did:peer:HOLDER")
-            thid = DidCommID(UUID.randomUUID().toString())
+            thid = DidCommID(UUID.randomUUID().toString)
             record <- svc.createRecord(
               thid = thid,
               pairwiseIssuerDID = pairwiseIssuerDid,
               pairwiseHolderDID = pairwiseHolderDid,
-              schemaId = "https://localhost/schemas/1234",
+              maybeSchemaId = None,
               validityPeriod = validityPeriod,
               automaticIssuance = automaticIssuance
             )
@@ -111,7 +111,7 @@ object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSp
               thid = thid,
               pairwiseIssuerDID = pairwiseIssuerDid,
               pairwiseHolderDID = pairwiseHolderDid,
-              schemaId = "resource:///vc-schema-example.json",
+              maybeSchemaId = Some("resource:///vc-schema-example.json"),
               claims = claims,
               validityPeriod = validityPeriod,
               automaticIssuance = automaticIssuance
@@ -171,7 +171,7 @@ object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSp
                 thid = thid,
                 pairwiseIssuerDID = pairwiseIssuerDid,
                 pairwiseHolderDID = pairwiseHolderDid,
-                schemaId = "resource:///vc-schema-example.json",
+                maybeSchemaId = Some("resource:///vc-schema-example.json"),
                 claims = claims,
                 validityPeriod = validityPeriod,
                 automaticIssuance = automaticIssuance

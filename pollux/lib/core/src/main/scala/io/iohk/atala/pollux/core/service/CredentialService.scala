@@ -22,7 +22,7 @@ trait CredentialService {
       pairwiseIssuerDID: DidId,
       pairwiseHolderDID: DidId,
       thid: DidCommID,
-      schemaId: String,
+      maybeSchemaId: Option[String],
       claims: io.circe.Json,
       validityPeriod: Option[Double] = None,
       automaticIssuance: Option[Boolean],

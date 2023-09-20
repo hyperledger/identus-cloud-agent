@@ -44,15 +44,12 @@ class IssueControllerImpl(
                 .fromOption(request.issuingDID)
                 .flatMap(extractPrismDIDFromString)
                 .mapError(_ => ErrorResponse.badRequest(detail = Some("Missing request parameter: issuingDID")))
-              schemaId <- ZIO
-                .fromOption(request.schemaId)
-                .mapError(_ => ErrorResponse.badRequest(detail = Some("Missing request parameter: schemaId")))
               record <- credentialService
                 .createJWTIssueCredentialRecord(
                   pairwiseIssuerDID = didIdPair.myDID,
                   pairwiseHolderDID = didIdPair.theirDid,
                   thid = DidCommID(),
-                  schemaId = schemaId,
+                  maybeSchemaId = request.schemaId,
                   claims = jsonClaims,
                   validityPeriod = request.validityPeriod,
                   automaticIssuance = request.automaticIssuance.orElse(Some(true)),
