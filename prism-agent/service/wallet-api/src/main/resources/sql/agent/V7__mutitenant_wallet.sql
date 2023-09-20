@@ -55,7 +55,7 @@ ALTER TABLE public.prism_did_wallet_state
 ADD CONSTRAINT wallet_id_did_index UNIQUE (wallet_id, did_index);
 
 -- Enforce RLS
--- ALTER TABLE public.peer_did_rand_key ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.peer_did_rand_key ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.prism_did_wallet_state ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.wallet_seed ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.wallet_notification ENABLE ROW LEVEL SECURITY;
