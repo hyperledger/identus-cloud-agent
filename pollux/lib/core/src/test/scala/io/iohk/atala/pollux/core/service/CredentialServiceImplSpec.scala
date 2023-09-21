@@ -62,7 +62,7 @@ object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSp
             assertTrue(record.offerCredentialData.get.body.replacement_id.isEmpty) &&
             assertTrue(record.offerCredentialData.get.attachments.headOption.flatMap(_.format).isDefined) &&
             assertTrue(
-              record.offerCredentialData.get.body.credential_preview.attributes == Seq(
+              record.offerCredentialData.get.body.credential_preview.body.attributes == Seq(
                 Attribute("name", "Alice", None),
                 Attribute(
                   "address",
@@ -138,7 +138,7 @@ object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSp
             assertTrue(record.offerCredentialData.get.body.multiple_available.isEmpty) &&
             assertTrue(record.offerCredentialData.get.body.replacement_id.isEmpty) &&
             assertTrue(record.offerCredentialData.get.attachments.headOption.flatMap(_.format).isDefined) &&
-            assertTrue(record.offerCredentialData.get.body.credential_preview.attributes == attributes) &&
+            assertTrue(record.offerCredentialData.get.body.credential_preview.body.attributes == attributes) &&
             assertTrue(record.requestCredentialData.isEmpty) &&
             assertTrue(record.issueCredentialData.isEmpty) &&
             assertTrue(record.issuedCredentialRaw.isEmpty)
@@ -298,7 +298,7 @@ object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSp
           assertTrue(offerAcceptedRecord.offerCredentialData.get.body.replacement_id.isEmpty) &&
           assertTrue(offerAcceptedRecord.offerCredentialData.get.attachments.headOption.flatMap(_.format).isDefined) &&
           assertTrue(
-            offerAcceptedRecord.offerCredentialData.get.body.credential_preview.attributes == Seq(
+            offerAcceptedRecord.offerCredentialData.get.body.credential_preview.body.attributes == Seq(
               Attribute("name", "Alice", None)
             )
           )

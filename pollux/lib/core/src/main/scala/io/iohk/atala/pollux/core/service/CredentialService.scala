@@ -131,14 +131,14 @@ object CredentialService {
       fields <- ZIO.succeed(claims.asObject.map(_.toMap).getOrElse(Map.empty).toList)
       res <- ZIO.foreach(fields) {
         case (k, v) if v.isString =>
-          ZIO.succeed(Attribute(k, v.asString.get, None))
+          ZIO.succeed(Attribute(name = k, value = v.asString.get))
         case (k, v) =>
           ZIO.succeed {
             val jsonValue = v.noSpaces
             Attribute(
-              k,
-              java.util.Base64.getUrlEncoder.encodeToString(jsonValue.getBytes(StandardCharsets.UTF_8)),
-              Some("application/json")
+              name = k,
+              value = java.util.Base64.getUrlEncoder.encodeToString(jsonValue.getBytes(StandardCharsets.UTF_8)),
+              media_type = Some("application/json"),
             )
           }
       }
@@ -150,7 +150,7 @@ object CredentialService {
   ): IO[CredentialServiceError, JsonObject] = {
     for {
       claims <- ZIO.foldLeft(attributes)(JsonObject()) { case (jsonObject, attr) =>
-        attr.mime_type match
+        attr.media_type match
           case None =>
             ZIO.succeed(jsonObject.add(attr.name, attr.value.asJson))
 
@@ -160,8 +160,8 @@ object CredentialService {
               case Right(value) => ZIO.succeed(jsonObject.add(attr.name, value))
               case Left(error)  => ZIO.fail(UnsupportedVCClaimsValue(error.message))
 
-          case Some(mimeType) =>
-            ZIO.fail(UnsupportedVCClaimsMimeType(mimeType))
+          case Some(media_type) =>
+            ZIO.fail(UnsupportedVCClaimsMediaType(media_type))
       }
     } yield claims
   }

@@ -83,7 +83,7 @@ class UtilsCredentialSpec extends ZSuite {
       .build(
         fromDID = DidId("did:prism:test123from"),
         toDID = DidId("did:prism:test123to"),
-        credential_preview = credentialPreview,
+        credential_preview = Some(credentialPreview),
         credentials =
           Seq(IssueCredentialProposeFormat.Unsupported(nameCredentialType) -> credential.asJson.noSpaces.getBytes()),
       )

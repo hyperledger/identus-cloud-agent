@@ -1,4 +1,4 @@
-package io.iohk.atala.mercury.protocol.issuecredential
+package io.iohk.atala.mercury.protocol.presentproof
 
 import io.circe.generic.semiauto.*
 import io.circe.{Decoder, Encoder}
@@ -48,7 +48,7 @@ Present Credential Formats:
 enum PresentCredentialProposeFormat(val name: String) {
   case Unsupported(other: String) extends PresentCredentialProposeFormat(other)
   case JWT extends PresentCredentialProposeFormat("jwt/proof-request@v1.0")
-  case Anoncreds extends PresentCredentialProposeFormat("anoncreds/proof-request@v1.0")
+  case Anoncred extends PresentCredentialProposeFormat("anoncreds/proof-request@v1.0")
 }
 
 object PresentCredentialProposeFormat {
@@ -72,7 +72,7 @@ object PresentCredentialProposeFormat {
 enum PresentCredentialRequestFormat(val name: String) {
   case Unsupported(other: String) extends PresentCredentialRequestFormat(other)
   case JWT extends PresentCredentialRequestFormat("jwt/proof-request@v1.0")
-  case Anoncreds extends PresentCredentialRequestFormat("anoncreds/proof-request@v1.0")
+  case Anoncred extends PresentCredentialRequestFormat("anoncreds/proof-request@v1.0")
 }
 
 object PresentCredentialRequestFormat {
@@ -96,7 +96,7 @@ object PresentCredentialRequestFormat {
 enum PresentCredentialFormat(val name: String) {
   case Unsupported(other: String) extends PresentCredentialFormat(other)
   case JWT extends PresentCredentialFormat("jwt/proof-request@v1.0")
-  case Anoncreds extends PresentCredentialFormat("anoncreds/proof-request@v1.0")
+  case Anoncred extends PresentCredentialFormat("anoncreds/proof-request@v1.0")
 }
 
 object PresentCredentialFormat {

@@ -1,3 +1,4 @@
+/*
 package io.iohk.atala.mercury.protocol.issuecredential
 import io.circe.generic.semiauto.*
 import io.circe.{Decoder, Encoder}
@@ -11,10 +12,11 @@ object Attribute {
   given Decoder[Attribute] = deriveDecoder[Attribute]
 }
 
-/** https://github.com/hyperledger/aries-rfcs/tree/main/features/0453-issue-credential-v2#preview-credential
-  * @param `@type`
-  * @param attributes
-  */
+/** @see
+ *   https://github.com/hyperledger/aries-rfcs/tree/main/features/0453-issue-credential-v2#preview-credential
+ * @param `@type`
+ * @param attributes
+ */
 final case class CredentialPreview(
     `type`: String = "https://didcomm.org/issue-credential/3.0/credential-preview",
     schema_id: Option[String] = None,
@@ -25,3 +27,4 @@ object CredentialPreview {
   given Encoder[CredentialPreview] = deriveEncoder[CredentialPreview]
   given Decoder[CredentialPreview] = deriveDecoder[CredentialPreview]
 }
+ */

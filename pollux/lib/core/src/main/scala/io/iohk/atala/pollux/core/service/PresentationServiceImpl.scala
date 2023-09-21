@@ -21,7 +21,7 @@ import java.rmi.UnexpectedException
 import java.time.Instant
 import java.util as ju
 import java.util.UUID
-import io.iohk.atala.mercury.protocol.issuecredential.PresentCredentialRequestFormat
+import io.iohk.atala.mercury.protocol.presentproof.PresentCredentialRequestFormat
 
 private class PresentationServiceImpl(
     presentationRepository: PresentationRepository,
@@ -214,7 +214,7 @@ private class PresentationServiceImpl(
         case Seq() => ZIO.fail(PresentationError.MissingCredential)
         case Seq(head) =>
           val jsonF = PresentCredentialRequestFormat.JWT.name // stable identifier
-          val anoncredF = PresentCredentialRequestFormat.Anoncreds.name // stable identifier
+          val anoncredF = PresentCredentialRequestFormat.Anoncred.name // stable identifier
           head.format match
             case None                    => ZIO.fail(PresentationError.MissingCredentialFormat)
             case Some(`jsonF`)           => ZIO.succeed(CredentialFormat.JWT)
@@ -616,7 +616,7 @@ private class PresentationServiceImpl(
               payload = PresentationAttachment.build(Some(options)),
               format = format match
                 case CredentialFormat.JWT       => Some(PresentCredentialRequestFormat.JWT.name)
-                case CredentialFormat.AnonCreds => Some(PresentCredentialRequestFormat.Anoncreds.name)
+                case CredentialFormat.AnonCreds => Some(PresentCredentialRequestFormat.Anoncred.name)
             )
           )
         )

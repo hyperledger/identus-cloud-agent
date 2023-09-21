@@ -71,14 +71,14 @@ object IssueCredentialRecord {
       subjectId = domain.subjectId,
       claims = domain.offerCredentialData
         .map(offer =>
-          offer.body.credential_preview.attributes
+          offer.body.credential_preview.body.attributes
             .foldLeft(Json.Obj()) { case (jsObject, attr) =>
-              val jsonValue = attr.mime_type match
+              val jsonValue = attr.media_type match
                 case Some("application/json") =>
                   val jsonString =
                     String(java.util.Base64.getUrlDecoder.decode(attr.value.getBytes(StandardCharsets.UTF_8)))
                   jsonString.fromJson[Json].getOrElse(Json.Str(s"Unsupported VC claims value: $jsonString"))
-                case Some(mime) => Json.Str(s"Unsupported 'mime_type': $mime")
+                case Some(mime) => Json.Str(s"Unsupported 'media_type': $mime")
                 case None       => Json.Str(attr.value)
               jsObject.copy(fields = jsObject.fields.appended(attr.name -> jsonValue))
             }

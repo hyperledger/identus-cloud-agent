@@ -45,18 +45,19 @@ object ProposeCredential {
       fromDID: DidId,
       toDID: DidId,
       thid: Option[String] = None,
-      credential_preview: CredentialPreview,
+      goal_code: Option[String] = None,
+      comment: Option[String] = None,
+      credential_preview: Option[CredentialPreview] = None,
       credentials: Seq[(IssueCredentialProposeFormat, Array[Byte])] = Seq.empty,
   ): ProposeCredential = {
-    val attachments = credentials.map { case (format, singleCredential) =>
-      AttachmentDescriptor.buildBase64Attachment(payload = singleCredential, format = Some(format.name))
-    }.toSeq
     ProposeCredential(
       thid = thid,
       from = fromDID,
       to = toDID,
-      body = Body(credential_preview = credential_preview),
-      attachments = attachments
+      body = Body(goal_code = goal_code, comment = comment, credential_preview = credential_preview),
+      attachments = credentials.map { case (format, singleCredential) =>
+        AttachmentDescriptor.buildBase64Attachment(payload = singleCredential, format = Some(format.name))
+      }.toSeq
     )
   }
 
@@ -67,12 +68,12 @@ object ProposeCredential {
   /** @param goal_code
     * @param comment
     * @param credential_preview
-    * @param formats
+    *   JSON-LD object that represents the credential data that Issuer is willing to issue.
     */
   final case class Body(
       goal_code: Option[String] = None,
       comment: Option[String] = None,
-      credential_preview: CredentialPreview, // JSON string
+      credential_preview: Option[CredentialPreview] = None, // JSON string
   )
 
   object Body {

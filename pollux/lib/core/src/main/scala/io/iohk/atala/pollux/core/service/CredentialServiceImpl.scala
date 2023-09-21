@@ -905,7 +905,7 @@ private class CredentialServiceImpl(
           )
         )
       preview = offerCredentialData.body.credential_preview
-      claims <- CredentialService.convertAttributesToJsonClaims(preview.attributes)
+      claims <- CredentialService.convertAttributesToJsonClaims(preview.body.attributes)
       maybeOfferOptions <- getOptionsFromOfferCredentialData(record)
       requestJwt <- getJwtFromRequestCredentialData(record)
 
@@ -1029,7 +1029,7 @@ private class CredentialServiceImpl(
         )
         .mapError(_ => InvalidFlowStateError(s"No AnonCreds request attachment found"))
       credentialRequest = anoncreds.CredentialRequest(requestCredentialAttachmentData)
-      attrValues = offerCredential.body.credential_preview.attributes.map { attr =>
+      attrValues = offerCredential.body.credential_preview.body.attributes.map { attr =>
         (attr.name, attr.value)
       }
       maybeCredentialDefinitionSecret <- genericSecretStorage.get(credentialDefinition.guid).orDie

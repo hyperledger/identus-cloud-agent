@@ -43,7 +43,6 @@ class RequestCredentialSpec extends ZSuite {
 
     val result = requestCredential.asJson.deepDropNullValues
 
-    println(result.noSpaces)
     assertEquals(result, expectedRequestedCredentialJson)
   }
 }

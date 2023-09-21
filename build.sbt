@@ -516,6 +516,11 @@ lazy val protocolPresentProof = project
   .settings(libraryDependencies += D.munitZio)
   .dependsOn(models)
 
+lazy val vc = project
+  .in(file("mercury/mercury-library/vc"))
+  .settings(name := "mercury-verifiable-credentials")
+  .dependsOn(protocolIssueCredential, protocolPresentProof) //TODO merge those two modules into this one
+
 lazy val protocolTrustPing = project
   .in(file("mercury/mercury-library/protocol-trust-ping"))
   .settings(name := "mercury-protocol-trust-ping")
@@ -562,6 +567,7 @@ lazy val agent = project // maybe merge into models
     protocolLogin,
     protocolIssueCredential,
     protocolPresentProof,
+    vc,
     protocolConnection,
     protocolReportProblem,
     protocolTrustPing,
@@ -672,7 +678,7 @@ lazy val polluxCore = project
   .dependsOn(irisClient)
   .dependsOn(prismAgentWalletAPI)
   .dependsOn(polluxVcJWT)
-  .dependsOn(protocolIssueCredential, protocolPresentProof, resolver, agentDidcommx, eventNotification, polluxAnoncreds)
+  .dependsOn(vc, resolver, agentDidcommx, eventNotification, polluxAnoncreds)
 
 lazy val polluxDoobie = project
   .in(file("pollux/lib/sql-doobie"))
@@ -829,6 +835,7 @@ lazy val aggregatedProjects: Seq[ProjectReference] = Seq(
   protocolRouting,
   protocolIssueCredential,
   protocolPresentProof,
+  vc,
   protocolTrustPing,
   resolver,
   agent,

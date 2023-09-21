@@ -92,7 +92,7 @@ object OfferCredential {
         comment = pc.body.comment,
         replacement_id = None,
         multiple_available = None,
-        credential_preview = pc.body.credential_preview,
+        credential_preview = pc.body.credential_preview.get, // FIXME .get
       ),
       attachments = pc.attachments,
       thid = msg.thid.orElse(Some(pc.id)),

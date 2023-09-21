@@ -24,7 +24,7 @@ object CredentialServiceError {
   final case class CredentialSchemaError(cause: io.iohk.atala.pollux.core.model.error.CredentialSchemaError)
       extends CredentialServiceError
   final case class UnsupportedVCClaimsValue(error: String) extends CredentialServiceError
-  final case class UnsupportedVCClaimsMimeType(mimeType: String) extends CredentialServiceError
+  final case class UnsupportedVCClaimsMediaType(media_type: String) extends CredentialServiceError
   final case class CredentialDefinitionPrivatePartNotFound(credentialDefinitionId: UUID) extends CredentialServiceError
   case object CredentialDefinitionIdUndefined extends CredentialServiceError
 }

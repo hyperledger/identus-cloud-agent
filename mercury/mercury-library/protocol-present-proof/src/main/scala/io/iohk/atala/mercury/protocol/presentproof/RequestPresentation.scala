@@ -43,7 +43,9 @@ object RequestPresentation {
       goal_code: Option[String] = None,
       comment: Option[String] = None,
       will_confirm: Option[Boolean] = Some(false), // Will send a ack message after the presentation
-      // AtalaPrism Extension!
+
+      // AtalaPrism Extension! //FIXME REMOVE
+      // TODO This need to go to the attachment
       proof_types: Seq[ProofType] = Seq.empty // TODO  Move this to pollux
   )
 

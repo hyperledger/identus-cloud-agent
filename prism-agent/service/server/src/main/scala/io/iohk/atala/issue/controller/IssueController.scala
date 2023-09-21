@@ -64,8 +64,8 @@ object IssueController {
         ErrorResponse.badRequest(title = "Credential Schema Error", detail = Some(e.message))
       case CredentialServiceError.UnsupportedVCClaimsValue(error) =>
         ErrorResponse.badRequest(detail = Some(error))
-      case CredentialServiceError.UnsupportedVCClaimsMimeType(mimeType) =>
-        ErrorResponse.badRequest(detail = Some(s"Unsupported mime_type for claim: $mimeType"))
+      case CredentialServiceError.UnsupportedVCClaimsMediaType(media_type) =>
+        ErrorResponse.badRequest(detail = Some(s"Unsupported media_type for claim: $media_type"))
       case CredentialServiceError.UnsupportedCredentialFormat(format) =>
         ErrorResponse.badRequest(detail = Some(s"Unsupported format in claim: $format"))
       case CredentialServiceError.MissingCredentialFormat =>

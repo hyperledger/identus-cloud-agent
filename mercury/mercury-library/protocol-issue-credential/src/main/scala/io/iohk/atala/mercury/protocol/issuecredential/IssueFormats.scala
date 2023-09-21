@@ -68,7 +68,7 @@ Issue Credential Formats:
 enum IssueCredentialProposeFormat(val name: String) {
   case Unsupported(other: String) extends IssueCredentialProposeFormat(other)
   case JWT extends IssueCredentialProposeFormat("jwt/credential-propose@v1.0")
-  case Anoncreds extends IssueCredentialProposeFormat("anoncreds/credential-filter@v1.0")
+  case Anoncred extends IssueCredentialProposeFormat("anoncreds/credential-filter@v1.0")
 }
 
 object IssueCredentialProposeFormat {
