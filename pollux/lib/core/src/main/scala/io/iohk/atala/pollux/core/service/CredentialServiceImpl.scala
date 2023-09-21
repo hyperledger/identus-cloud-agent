@@ -95,7 +95,7 @@ private class CredentialServiceImpl(
       _ <- maybeSchemaId match
         case Some(schemaId) =>
           CredentialSchema
-            .validateClaims(schemaId, claims.noSpaces, uriDereferencer)
+            .validateJWTClaims(schemaId, claims.noSpaces, uriDereferencer)
             .mapError(e => CredentialSchemaError(e))
         case None =>
           ZIO.unit
@@ -158,10 +158,9 @@ private class CredentialServiceImpl(
       credentialDefinition <- credentialDefinitionService
         .getByGUID(credentialDefinitionId)
         .mapError(e => CredentialServiceError.UnexpectedError(e.toString))
-      // TODO For AnonCreds, validate claims is a flat structure of type [String, String] or [String, Int]
-//      _ <- CredentialSchema
-//        .validateClaims(credentialDefinition.schemaId, claims.noSpaces, uriDereferencer)
-//        .mapError(e => CredentialSchemaError(e))
+      _ <- CredentialSchema
+        .validateAnonCredsClaims(credentialDefinition.schemaId, claims.noSpaces, uriDereferencer)
+        .mapError(e => CredentialSchemaError(e))
       attributes <- CredentialService.convertJsonClaimsToAttributes(claims)
       offer <- createAnonCredsDidCommOfferCredential(
         pairwiseIssuerDID = pairwiseIssuerDID,
