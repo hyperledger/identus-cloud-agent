@@ -238,7 +238,11 @@ object CredentialRequestMetadata {
 // ****************************************************************************
 
 //Credential
-case class Credential(data: String)
+case class Credential(data: String) {
+  lazy val credDefId: String = Credential
+    .given_Conversion_Credential_UniffiCredential(this)
+    .getCredDefId
+}
 object Credential {
   given Conversion[Credential, UniffiCredential] with {
     def apply(credential: Credential): UniffiCredential =
