@@ -30,10 +30,11 @@ import scala.language.implicitConversions
 
 object CredentialServiceImpl {
   val layer: URLayer[
-    CredentialRepository & DidResolver & URIDereferencer & GenericSecretStorage & CredentialDefinitionService,
+    CredentialRepository & DidResolver & URIDereferencer & GenericSecretStorage & CredentialDefinitionService &
+      LinkSecretWithId,
     CredentialService
   ] =
-    ZLayer.fromFunction(CredentialServiceImpl(_, _, _, _, _))
+    ZLayer.fromFunction(CredentialServiceImpl(_, _, _, _, _, _))
 
 //  private val VC_JSON_SCHEMA_URI = "https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json"
   private val VC_JSON_SCHEMA_TYPE = "CredentialSchema2022"
@@ -45,6 +46,7 @@ private class CredentialServiceImpl(
     uriDereferencer: URIDereferencer,
     genericSecretStorage: GenericSecretStorage,
     credentialDefinitionService: CredentialDefinitionService,
+    linkSecretWithId: LinkSecretWithId,
     maxRetries: Int = 5 // TODO move to config
 ) extends CredentialService {
 
@@ -468,7 +470,7 @@ private class CredentialServiceImpl(
         .mapError(err => UnexpectedError(err.toString))
       _ <- ZIO.logInfo(s"Cred Def Content => $credDefContent")
       credentialDefinition = anoncreds.CredentialDefinition(credDefContent)
-      linkSecret = LinkSecretWithId("Unused Link Secret ID")
+      linkSecret = linkSecretWithId
       createCredentialRequest = AnoncredLib.createCredentialRequest(linkSecret, credentialDefinition, credentialOffer)
     } yield createCredentialRequest
   }
@@ -577,7 +579,7 @@ private class CredentialServiceImpl(
       metadata <- ZIO
         .fromOption(record.anonCredsRequestMetadata)
         .mapError(_ => CredentialServiceError.UnexpectedError(s"No request metadata Id found un record: ${record.id}"))
-      linkSecret = LinkSecretWithId("Unused Link Secret ID")
+      linkSecret = linkSecretWithId
       _ <- ZIO
         .attempt(
           AnoncredLib.processCredential(
