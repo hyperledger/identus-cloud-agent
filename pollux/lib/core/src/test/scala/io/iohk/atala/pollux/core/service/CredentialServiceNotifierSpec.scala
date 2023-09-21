@@ -34,6 +34,7 @@ object CredentialServiceNotifierSpec extends ZIOSpecDefault with CredentialServi
     None,
     None,
     None,
+    None,
     5,
     None,
     None

@@ -4,11 +4,7 @@ import cats.syntax.all.*
 import io.circe.parser.*
 import io.circe.syntax.*
 import io.iohk.atala.agent.server.config.AppConfig
-import io.iohk.atala.agent.server.jobs.BackgroundJobError.{
-  ErrorResponseReceivedFromPeerAgent,
-  InvalidState,
-  NotImplemented
-}
+import io.iohk.atala.agent.server.jobs.BackgroundJobError.{ErrorResponseReceivedFromPeerAgent, InvalidState, NotImplemented}
 import io.iohk.atala.agent.walletapi.model.*
 import io.iohk.atala.agent.walletapi.model.error.*
 import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError.KeyNotFoundError
@@ -24,14 +20,7 @@ import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.error.PresentationError.*
 import io.iohk.atala.pollux.core.model.error.{CredentialServiceError, PresentationError}
 import io.iohk.atala.pollux.core.service.{CredentialService, PresentationService}
-import io.iohk.atala.pollux.vc.jwt.{
-  ES256KSigner,
-  JWT,
-  JwtPresentation,
-  W3CCredential,
-  DidResolver as JwtDidResolver,
-  Issuer as JwtIssuer
-}
+import io.iohk.atala.pollux.vc.jwt.{ES256KSigner, JWT, JwtPresentation, W3CCredential, DidResolver as JwtDidResolver, Issuer as JwtIssuer}
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.utils.DurationOps.toMetricsSeconds
 import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
@@ -210,6 +199,7 @@ object BackgroundJobs {
               _,
               _,
               _,
+              _,
             ) =>
           val sendOfferFlow = for {
             _ <- ZIO.log(s"IssueCredentialRecord: OfferPending (START)")
@@ -260,6 +250,7 @@ object BackgroundJobs {
               _,
               _,
               _,
+              _,
               _
             ) =>
           val holderPendingToGeneratedFlow = for {
@@ -301,6 +292,7 @@ object BackgroundJobs {
               _,
               _,
               _,
+              _,
               _
             ) =>
           val holderPendingToGeneratedFlow = for {
@@ -331,6 +323,7 @@ object BackgroundJobs {
               RequestGenerated,
               _,
               Some(request),
+              _,
               _,
               _,
               _,
@@ -386,6 +379,7 @@ object BackgroundJobs {
               _,
               _,
               _,
+              _,
             ) =>
           val issuerReceivedToPendingFlow = for {
             credentialService <- ZIO.service[CredentialService]
@@ -413,6 +407,7 @@ object BackgroundJobs {
               _,
               _,
               CredentialPending,
+              _,
               _,
               _,
               Some(issue),
@@ -467,6 +462,7 @@ object BackgroundJobs {
               CredentialPending,
               _,
               _,
+              _,
               Some(issue),
               _,
               _,
@@ -512,6 +508,7 @@ object BackgroundJobs {
               CredentialGenerated,
               _,
               _,
+              _,
               Some(issue),
               _,
               _,
@@ -540,30 +537,7 @@ object BackgroundJobs {
               .gauge("issuance_flow_issuer_send_cred_flow_ms_gauge")
               .trackDurationWith(_.toMetricsSeconds)
 
-        case IssueCredentialRecord(
-              id,
-              _,
-              _,
-              _,
-              _,
-              _,
-              _,
-              _,
-              _,
-              _,
-              _,
-              ProblemReportPending,
-              _,
-              _,
-              _,
-              _,
-              _,
-              _,
-              _,
-              _
-            ) =>
-          ???
-        case IssueCredentialRecord(id, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _) => ZIO.unit
+        case _: IssueCredentialRecord => ZIO.unit
       }
     } yield ()
 

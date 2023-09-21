@@ -126,6 +126,7 @@ trait PresentationServiceSpecHelper {
     protocolState = IssueCredentialRecord.ProtocolState.OfferPending,
     offerCredentialData = None,
     requestCredentialData = None,
+    anonCredsRequestMetadata = None,
     issueCredentialData = None,
     issuedCredentialRaw = None,
     issuingDID = None,

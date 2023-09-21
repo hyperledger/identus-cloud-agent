@@ -20,7 +20,6 @@ import io.iohk.atala.pollux.vc.jwt.*
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
 import zio.*
-import zio.json.*
 import zio.prelude.ZValidation
 
 import java.net.URI
@@ -126,6 +125,7 @@ private class CredentialServiceImpl(
           protocolState = IssueCredentialRecord.ProtocolState.OfferPending,
           offerCredentialData = Some(offer),
           requestCredentialData = None,
+          anonCredsRequestMetadata = None,
           issueCredentialData = None,
           issuedCredentialRaw = None,
           issuingDID = Some(issuingDID),
@@ -188,6 +188,7 @@ private class CredentialServiceImpl(
           protocolState = IssueCredentialRecord.ProtocolState.OfferPending,
           offerCredentialData = Some(offer),
           requestCredentialData = None,
+          anonCredsRequestMetadata = None,
           issueCredentialData = None,
           issuedCredentialRaw = None,
           issuingDID = None,
@@ -252,6 +253,7 @@ private class CredentialServiceImpl(
           protocolState = IssueCredentialRecord.ProtocolState.OfferReceived,
           offerCredentialData = Some(offer),
           requestCredentialData = None,
+          anonCredsRequestMetadata = None,
           issueCredentialData = None,
           issuedCredentialRaw = None,
           issuingDID = None,
@@ -384,7 +386,7 @@ private class CredentialServiceImpl(
         .mapError(_ => InvalidFlowStateError(s"No offer found for this record: $recordId"))
       request = createDidCommRequestCredential(formatAndOffer._1, formatAndOffer._2, signedPresentation)
       count <- credentialRepository
-        .updateWithRequestCredential(recordId, request, ProtocolState.RequestGenerated)
+        .updateWithJWTRequestCredential(recordId, request, ProtocolState.RequestGenerated)
         .mapError(RepositoryError.apply) @@ CustomMetricsAspect.endRecordingTime(
         s"${record.id}_issuance_flow_holder_req_pending_to_generated",
         "issuance_flow_holder_req_pending_to_generated_ms_gauge"
@@ -419,11 +421,7 @@ private class CredentialServiceImpl(
           payload = createCredentialRequest.request.data.getBytes()
         )
       )
-      requestMetadata = createCredentialRequest.metadata.toJson
-      // TODO How to serialize this createCredentialRequest to JSON for DB storage??
-      // the request part is sent to issuer
-      // the metadata part is used by holder when later processing received credential
-      // Add a new 'request_credential_metadata' field in DB!
+      requestMetadata = createCredentialRequest.metadata
       request = RequestCredential(
         body = body,
         attachments = attachments,
@@ -432,7 +430,7 @@ private class CredentialServiceImpl(
         thid = offerCredential.thid
       )
       count <- credentialRepository
-        .updateWithRequestCredential(recordId, request, ProtocolState.RequestGenerated)
+        .updateWithAnonCredsRequestCredential(recordId, request, requestMetadata, ProtocolState.RequestGenerated)
         .mapError(RepositoryError.apply) @@ CustomMetricsAspect.endRecordingTime(
         s"${record.id}_issuance_flow_holder_req_pending_to_generated",
         "issuance_flow_holder_req_pending_to_generated_ms_gauge"
@@ -470,7 +468,7 @@ private class CredentialServiceImpl(
         .mapError(err => UnexpectedError(err.toString))
       _ <- ZIO.logInfo(s"Cred Def Content => $credDefContent")
       credentialDefinition = anoncreds.CredentialDefinition(credDefContent)
-      linkSecret = LinkSecretWithId(UUID.randomUUID().toString)
+      linkSecret = LinkSecretWithId("Unused Link Secret ID")
       createCredentialRequest = AnoncredLib.createCredentialRequest(linkSecret, credentialDefinition, credentialOffer)
     } yield createCredentialRequest
   }
@@ -486,7 +484,7 @@ private class CredentialServiceImpl(
         ProtocolState.OfferSent
       )
       _ <- credentialRepository
-        .updateWithRequestCredential(record.id, request, ProtocolState.RequestReceived)
+        .updateWithJWTRequestCredential(record.id, request, ProtocolState.RequestReceived)
         .flatMap {
           case 1 => ZIO.succeed(())
           case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
@@ -539,17 +537,16 @@ private class CredentialServiceImpl(
           }
           .map { case (f, v) => (f, java.util.Base64.getUrlDecoder.decode(v)) }
       }
-      _ = attachmentFormatAndData match
-        case Some(IssueCredentialIssuedFormat.JWT, _)      => ZIO.succeed(())
-        case Some(IssueCredentialIssuedFormat.Anoncred, v) => processAnonCredsCredential(v)
-        case _ => UnexpectedError("No AnonCreds or JWT credential attachment found")
-
       record <- getRecordFromThreadIdWithState(
         issueCredential.thid.map(DidCommID(_)),
         ignoreWithZeroRetries = true,
         ProtocolState.RequestPending,
         ProtocolState.RequestSent
       )
+      _ <- attachmentFormatAndData match
+        case Some(IssueCredentialIssuedFormat.JWT, _)       => ZIO.succeed(())
+        case Some(IssueCredentialIssuedFormat.Anoncred, ba) => processAnonCredsCredential(record, ba)
+        case _ => ZIO.fail(UnexpectedError("No AnonCreds or JWT credential attachment found"))
       _ <- credentialRepository
         .updateWithIssuedRawCredential(
           record.id,
@@ -569,19 +566,29 @@ private class CredentialServiceImpl(
     } yield record
   }
 
-  private[this] def processAnonCredsCredential(credential: Array[Byte]) = {
-    // TODO Implement credential processing/validation by holder
-//    for {
-//      _ <- ZIO.attempt(
-//        AnoncredLib.processCredential(
-//          anoncreds.Credential(new String(credential)),
-//          ???,
-//          ???,
-//          ???
-//        )
-//      )
-//    } yield ()
-    ZIO.succeed(())
+  private[this] def processAnonCredsCredential(record: IssueCredentialRecord, credentialBytes: Array[Byte]) = {
+    for {
+      credential <- ZIO.succeed(anoncreds.Credential(new String(credentialBytes)))
+      credDefContent <- uriDereferencer
+        .dereference(new URI(credential.getCredDefId))
+        .mapError(err => UnexpectedError(err.toString))
+      _ <- ZIO.logInfo(s"Cred Def Content => $credDefContent")
+      credentialDefinition = anoncreds.CredentialDefinition(credDefContent)
+      metadata <- ZIO
+        .fromOption(record.anonCredsRequestMetadata)
+        .mapError(_ => CredentialServiceError.UnexpectedError(s"No request metadata Id found un record: ${record.id}"))
+      linkSecret = LinkSecretWithId("Unused Link Secret ID")
+      _ <- ZIO
+        .attempt(
+          AnoncredLib.processCredential(
+            anoncreds.Credential(new String(credentialBytes)),
+            metadata,
+            linkSecret,
+            credentialDefinition
+          )
+        )
+        .mapError(error => UnexpectedError(s"AnonCreds credential processing error: ${error.getMessage}"))
+    } yield ()
   }
 
   override def markOfferSent(
