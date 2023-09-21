@@ -1,19 +1,20 @@
 package io.iohk.atala.pollux.anoncreds
 
-import scala.jdk.CollectionConverters.*
-
 import uniffi.anoncreds.{
-  LinkSecret as UniffiLinkSecret,
-  Schema as UniffiSchema,
+  Nonce,
+  Credential as UniffiCredential,
   CredentialDefinition as UniffiCredentialDefinition,
   CredentialDefinitionPrivate as UniffiCredentialDefinitionPrivate,
   CredentialKeyCorrectnessProof as UniffiCredentialKeyCorrectnessProof,
   CredentialOffer as UniffiCredentialOffer,
   CredentialRequest as UniffiCredentialRequest,
   CredentialRequestMetadata as UniffiCredentialRequestMetadata,
-  Credential as UniffiCredential,
+  LinkSecret as UniffiLinkSecret,
+  Schema as UniffiSchema
 }
-import uniffi.anoncreds.Nonce
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
+
+import scala.jdk.CollectionConverters.*
 type AttributeNames = Set[String]
 type IssuerId = String
 
@@ -229,6 +230,9 @@ object CredentialRequestMetadata {
         linkSecretName = credentialRequestMetadata.getLinkSecretName(),
       )
   }
+
+  given JsonDecoder[CredentialRequestMetadata] = DeriveJsonDecoder.gen[CredentialRequestMetadata]
+  given JsonEncoder[CredentialRequestMetadata] = DeriveJsonEncoder.gen[CredentialRequestMetadata]
 }
 
 // ****************************************************************************

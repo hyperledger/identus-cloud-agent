@@ -1,5 +1,5 @@
-import sbtbuildinfo.BuildInfoPlugin.autoImport.*
 import org.scoverage.coveralls.Imports.CoverallsKeys.*
+import sbtbuildinfo.BuildInfoPlugin.autoImport.*
 
 inThisBuild(
   Seq(
@@ -302,6 +302,10 @@ lazy val D_EventNotification = new {
 
   val zioDependencies: Seq[ModuleID] = Seq(zio, zioConcurrent, zioTest, zioTestSbt, zioTestMagnolia)
   val baseDependencies: Seq[ModuleID] = zioDependencies
+}
+
+lazy val D_Pollux_AnonCreds = new {
+  val baseDependencies: Seq[ModuleID] = Seq(D.zio, D.zioJson)
 }
 
 lazy val D_PrismAgent = new {
@@ -695,6 +699,7 @@ lazy val polluxAnoncreds = project
     Compile / unmanagedResourceDirectories ++= Seq(
       baseDirectory.value / "native-lib" / "NATIVE"
     ),
+    libraryDependencies ++= D_Pollux_AnonCreds.baseDependencies
   )
 
 lazy val polluxAnoncredsTest = project

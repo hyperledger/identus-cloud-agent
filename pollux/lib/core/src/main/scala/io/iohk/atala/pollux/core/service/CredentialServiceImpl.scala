@@ -20,6 +20,7 @@ import io.iohk.atala.pollux.vc.jwt.*
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
 import zio.*
+import zio.json.*
 import zio.prelude.ZValidation
 
 import java.net.URI
@@ -410,16 +411,15 @@ private class CredentialServiceImpl(
         .fromOption(record.offerCredentialData)
         .mapError(_ => InvalidFlowStateError(s"No offer found for this record: ${record.id}"))
       body = RequestCredential.Body(goal_code = Some("Request Credential"))
-      attachments <- createAnonCredsRequestCredential(offerCredential).map { createCredentialRequest =>
-        Seq(
-          AttachmentDescriptor.buildBase64Attachment(
-            mediaType = Some("application/json"),
-            format = Some(IssueCredentialRequestFormat.Anoncred.name),
-            payload = createCredentialRequest.request.data.getBytes()
-          )
+      createCredentialRequest <- createAnonCredsRequestCredential(offerCredential)
+      attachments = Seq(
+        AttachmentDescriptor.buildBase64Attachment(
+          mediaType = Some("application/json"),
+          format = Some(IssueCredentialRequestFormat.Anoncred.name),
+          payload = createCredentialRequest.request.data.getBytes()
         )
-      }
-
+      )
+      requestMetadata = createCredentialRequest.metadata.toJson
       // TODO How to serialize this createCredentialRequest to JSON for DB storage??
       // the request part is sent to issuer
       // the metadata part is used by holder when later processing received credential
