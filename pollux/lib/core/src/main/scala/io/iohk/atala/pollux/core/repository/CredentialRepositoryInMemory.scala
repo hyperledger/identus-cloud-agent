@@ -1,6 +1,7 @@
 package io.iohk.atala.pollux.core.repository
 
 import io.iohk.atala.mercury.protocol.issuecredential.{IssueCredential, RequestCredential}
+import io.iohk.atala.pollux.anoncreds.CredentialRequestMetadata
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord.ProtocolState
 import io.iohk.atala.pollux.core.model.error.CredentialRepositoryError.*
@@ -231,7 +232,7 @@ class CredentialRepositoryInMemory(
     } yield count
   }
 
-  override def updateWithRequestCredential(
+  override def updateWithJWTRequestCredential(
       recordId: DidCommID,
       request: RequestCredential,
       protocolState: ProtocolState
@@ -248,6 +249,37 @@ class CredentialRepositoryInMemory(
                 record.copy(
                   updatedAt = Some(Instant.now),
                   requestCredentialData = Some(request),
+                  protocolState = protocolState,
+                  metaRetries = maxRetries,
+                  metaLastFailure = None,
+                )
+              )
+            )
+          } yield 1
+        )
+        .getOrElse(ZIO.succeed(1))
+    } yield count
+  }
+
+  override def updateWithAnonCredsRequestCredential(
+      recordId: DidCommID,
+      request: RequestCredential,
+      metadata: CredentialRequestMetadata,
+      protocolState: ProtocolState
+  ): RIO[WalletAccessContext, RuntimeFlags] = {
+    for {
+      storeRef <- walletStoreRef
+      maybeRecord <- getIssueCredentialRecord(recordId)
+      count <- maybeRecord
+        .map(record =>
+          for {
+            _ <- storeRef.update(r =>
+              r.updated(
+                recordId,
+                record.copy(
+                  updatedAt = Some(Instant.now),
+                  requestCredentialData = Some(request),
+                  anonCredsRequestMetadata = Some(metadata),
                   protocolState = protocolState,
                   metaRetries = maxRetries,
                   metaLastFailure = None,

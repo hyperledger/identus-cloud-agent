@@ -33,6 +33,7 @@ object CredentialRepositorySpecSuite {
     protocolState = IssueCredentialRecord.ProtocolState.OfferPending,
     offerCredentialData = None,
     requestCredentialData = None,
+    anonCredsRequestMetadata = None,
     issueCredentialData = None,
     issuedCredentialRaw = None,
     issuingDID = None,
@@ -317,7 +318,7 @@ object CredentialRepositorySpecSuite {
         _ <- repo.createIssueCredentialRecord(aRecord)
         record <- repo.getIssueCredentialRecord(aRecord.id)
         request = requestCredential
-        count <- repo.updateWithRequestCredential(
+        count <- repo.updateWithJWTRequestCredential(
           aRecord.id,
           request,
           ProtocolState.RequestPending

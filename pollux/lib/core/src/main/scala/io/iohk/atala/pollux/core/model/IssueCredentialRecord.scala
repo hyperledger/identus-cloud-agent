@@ -2,6 +2,7 @@ package io.iohk.atala.pollux.core.model
 
 import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
 import io.iohk.atala.mercury.protocol.issuecredential.*
+import io.iohk.atala.pollux.anoncreds.CredentialRequestMetadata
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord.*
 
 import java.time.Instant
@@ -22,6 +23,7 @@ final case class IssueCredentialRecord(
     protocolState: ProtocolState,
     offerCredentialData: Option[OfferCredential],
     requestCredentialData: Option[RequestCredential],
+    anonCredsRequestMetadata: Option[CredentialRequestMetadata],
     issueCredentialData: Option[IssueCredential],
     issuedCredentialRaw: Option[String],
     issuingDID: Option[CanonicalPrismDID],

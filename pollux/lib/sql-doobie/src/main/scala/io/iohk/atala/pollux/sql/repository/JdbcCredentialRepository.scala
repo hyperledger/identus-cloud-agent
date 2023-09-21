@@ -9,6 +9,7 @@ import io.circe.parser.*
 import io.circe.syntax.*
 import io.iohk.atala.castor.core.model.did.*
 import io.iohk.atala.mercury.protocol.issuecredential.{IssueCredential, OfferCredential, RequestCredential}
+import io.iohk.atala.pollux.anoncreds.CredentialRequestMetadata
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.error.CredentialRepositoryError
 import io.iohk.atala.pollux.core.model.error.CredentialRepositoryError.*
@@ -18,6 +19,7 @@ import io.iohk.atala.shared.db.Implicits.*
 import io.iohk.atala.shared.models.WalletAccessContext
 import org.postgresql.util.PSQLException
 import zio.*
+import zio.json.*
 
 import java.time.Instant
 
@@ -46,6 +48,10 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], maxRetries: Int
   given requestCredentialGet: Get[RequestCredential] = Get[String].map(decode[RequestCredential](_).getOrElse(???))
   given requestCredentialPut: Put[RequestCredential] = Put[String].contramap(_.asJson.toString)
 
+  given acRequestMetadataGet: Get[CredentialRequestMetadata] =
+    Get[String].map(_.fromJson[CredentialRequestMetadata].getOrElse(???))
+  given acRequestMetadataPut: Put[CredentialRequestMetadata] = Put[String].contramap(_.toJson)
+
   given issueCredentialGet: Get[IssueCredential] = Get[String].map(decode[IssueCredential](_).getOrElse(???))
   given issueCredentialPut: Put[IssueCredential] = Put[String].contramap(_.asJson.toString)
 
@@ -70,6 +76,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], maxRetries: Int
         |   protocol_state,
         |   offer_credential_data,
         |   request_credential_data,
+        |   ac_request_credential_metadata,
         |   issue_credential_data,
         |   issued_credential_raw,
         |   issuing_did,
@@ -92,6 +99,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], maxRetries: Int
         |   ${record.protocolState},
         |   ${record.offerCredentialData},
         |   ${record.requestCredentialData},
+        |   ${record.anonCredsRequestMetadata},
         |   ${record.issueCredentialData},
         |   ${record.issuedCredentialRaw},
         |   ${record.issuingDID},
@@ -120,30 +128,31 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], maxRetries: Int
     )
     val baseFragment =
       sql"""
-        | SELECT
-        |   id,
-        |   created_at,
-        |   updated_at,
-        |   thid,
-        |   schema_id,
-        |   credential_definition_id,
-        |   credential_format,
-        |   role,
-        |   subject_id,
-        |   validity_period,
-        |   automatic_issuance,
-        |   protocol_state,
-        |   offer_credential_data,
-        |   request_credential_data,
-        |   issue_credential_data,
-        |   issued_credential_raw,
-        |   issuing_did,
-        |   meta_retries,
-        |   meta_next_retry,
-        |   meta_last_failure
-        | FROM public.issue_credential_records
-        | $conditionFragment
-        | ORDER BY created_at
+           | SELECT
+           |   id,
+           |   created_at,
+           |   updated_at,
+           |   thid,
+           |   schema_id,
+           |   credential_definition_id,
+           |   credential_format,
+           |   role,
+           |   subject_id,
+           |   validity_period,
+           |   automatic_issuance,
+           |   protocol_state,
+           |   offer_credential_data,
+           |   request_credential_data,
+           |   ac_request_credential_metadata,
+           |   issue_credential_data,
+           |   issued_credential_raw,
+           |   issuing_did,
+           |   meta_retries,
+           |   meta_next_retry,
+           |   meta_last_failure
+           | FROM public.issue_credential_records
+           | $conditionFragment
+           | ORDER BY created_at
         """.stripMargin
     val withOffsetFragment = offset.fold(baseFragment)(offsetValue => baseFragment ++ fr"OFFSET $offsetValue")
     val withOffsetAndLimitFragment =
@@ -201,6 +210,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], maxRetries: Int
             |   protocol_state,
             |   offer_credential_data,
             |   request_credential_data,
+            |   ac_request_credential_metadata,
             |   issue_credential_data,
             |   issued_credential_raw,
             |   issuing_did,
@@ -238,6 +248,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], maxRetries: Int
         |   protocol_state,
         |   offer_credential_data,
         |   request_credential_data,
+        |   ac_request_credential_metadata,
         |   issue_credential_data,
         |   issued_credential_raw,
         |   issuing_did,
@@ -278,6 +289,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], maxRetries: Int
         |   protocol_state,
         |   offer_credential_data,
         |   request_credential_data,
+        |   ac_request_credential_metadata,
         |   issue_credential_data,
         |   issued_credential_raw,
         |   issuing_did,
@@ -335,7 +347,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], maxRetries: Int
       .transactWallet(xa)
   }
 
-  override def updateWithRequestCredential(
+  override def updateWithJWTRequestCredential(
       recordId: DidCommID,
       request: RequestCredential,
       protocolState: ProtocolState
@@ -348,6 +360,28 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], maxRetries: Int
         |   updated_at = ${Instant.now}
         | WHERE
         |   id = $recordId
+        """.stripMargin.update
+
+    cxnIO.run
+      .transactWallet(xa)
+  }
+
+  override def updateWithAnonCredsRequestCredential(
+      recordId: DidCommID,
+      request: RequestCredential,
+      metadata: CredentialRequestMetadata,
+      protocolState: ProtocolState
+  ): RIO[WalletAccessContext, Int] = {
+    val cxnIO =
+      sql"""
+           | UPDATE public.issue_credential_records
+           | SET
+           |   request_credential_data = $request,
+           |   ac_request_credential_metadata = $metadata,
+           |   protocol_state = $protocolState,
+           |   updated_at = ${Instant.now}
+           | WHERE
+           |   id = $recordId
         """.stripMargin.update
 
     cxnIO.run
