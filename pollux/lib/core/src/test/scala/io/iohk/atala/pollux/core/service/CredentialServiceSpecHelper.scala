@@ -7,6 +7,7 @@ import io.iohk.atala.castor.core.model.did.PrismDID
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import io.iohk.atala.mercury.model.{AttachmentDescriptor, DidId}
 import io.iohk.atala.mercury.protocol.issuecredential.*
+import io.iohk.atala.pollux.anoncreds.LinkSecretWithId
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError.*
@@ -33,7 +34,9 @@ trait CredentialServiceSpecHelper {
 
   protected val credentialServiceLayer =
     irisStubLayer ++ CredentialRepositoryInMemory.layer ++ didResolverLayer ++ ResourceURIDereferencerImpl.layer ++
-      GenericSecretStorageInMemory.layer >+> credentialDefinitionServiceLayer >>> CredentialServiceImpl.layer
+      GenericSecretStorageInMemory.layer >+> credentialDefinitionServiceLayer >+> ZLayer.succeed(
+        LinkSecretWithId("Unused Link Secret Id")
+      ) >>> CredentialServiceImpl.layer
 
   protected def offerCredential(
       thid: Option[UUID] = Some(UUID.randomUUID())
@@ -68,7 +71,14 @@ trait CredentialServiceSpecHelper {
     from = DidId("did:prism:issuer"),
     to = DidId("did:prism:holder"),
     thid = thid.map(_.toString),
-    attachments = Nil,
+    attachments = Seq(
+      AttachmentDescriptor.buildBase64Attachment(
+        UUID.randomUUID().toString,
+        payload = "VC content".getBytes,
+        mediaType = Some("application/json"),
+        format = Some(IssueCredentialIssuedFormat.JWT.name)
+      )
+    ),
     body = IssueCredential.Body()
   )
 
