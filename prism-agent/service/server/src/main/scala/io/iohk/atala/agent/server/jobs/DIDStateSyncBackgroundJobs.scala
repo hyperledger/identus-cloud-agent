@@ -3,7 +3,7 @@ package io.iohk.atala.agent.server.jobs
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import zio.*
 
-object DIDPublicationBackgroundJobs {
+object DIDStateSyncBackgroundJobs {
 
   val syncDIDPublicationStateFromDlt =
     for {

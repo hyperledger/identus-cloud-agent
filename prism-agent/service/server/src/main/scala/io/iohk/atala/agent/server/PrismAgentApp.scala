@@ -3,7 +3,7 @@ package io.iohk.atala.agent.server
 import io.iohk.atala.agent.notification.WebhookPublisher
 import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.server.http.{ZHttp4sBlazeServer, ZHttpEndpoints}
-import io.iohk.atala.agent.server.jobs.{IssueBackgroundJobs, ConnectBackgroundJobs, DIDPublicationBackgroundJobs, PresentBackgroundJobs}
+import io.iohk.atala.agent.server.jobs.{IssueBackgroundJobs, ConnectBackgroundJobs, DIDStateSyncBackgroundJobs, PresentBackgroundJobs}
 import io.iohk.atala.agent.walletapi.model.{Entity, Wallet, WalletSeed}
 import io.iohk.atala.agent.walletapi.service.{EntityService, ManagedDIDService, WalletManagementService}
 import io.iohk.atala.castor.controller.{DIDRegistrarServerEndpoints, DIDServerEndpoints}
@@ -114,7 +114,7 @@ object PrismAgentApp {
       .serviceWithZIO[WalletManagementService](_.listWallets().map(_._1))
       .flatMap { wallets =>
         ZIO.foreach(wallets) { wallet =>
-          DIDPublicationBackgroundJobs.syncDIDPublicationStateFromDlt
+          DIDStateSyncBackgroundJobs.syncDIDPublicationStateFromDlt
             .provideSomeLayer(ZLayer.succeed(WalletAccessContext(wallet.id)))
         }
       }
