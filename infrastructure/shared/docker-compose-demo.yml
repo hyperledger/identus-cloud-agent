@@ -30,7 +30,7 @@ services:
   prism-agent:
     image: ghcr.io/input-output-hk/prism-agent:${PRISM_AGENT_VERSION}
     environment:
-      DIDCOMM_SERVICE_URL: http://host.docker.internal:${PORT}/didcomm
+      DIDCOMM_SERVICE_URL: http://${DOCKERHOST}:${PORT}/didcomm
       PRISM_NODE_HOST: prism-node
       PRISM_NODE_PORT: 50053
       SECRET_STORAGE_BACKEND: postgres
