@@ -5,12 +5,17 @@ import api_models.ConnectionState
 import api_models.Credential
 import common.Environments
 import common.ListenToEvents
+import common.Utils
 import common.Utils.lastResponseList
 import features.connection.ConnectionSteps
 import features.did.PublishDidSteps
 import features.issue_credentials.IssueCredentialsSteps
-import io.cucumber.java.After
-import io.cucumber.java.Before
+import features.multitenancy.EntitySteps
+import features.multitenancy.EventsSteps
+import features.multitenancy.WalletsSteps
+import interactions.Get
+import io.cucumber.java.AfterAll
+import io.cucumber.java.BeforeAll
 import io.cucumber.java.ParameterType
 import io.cucumber.java.en.Given
 import net.serenitybdd.screenplay.Actor
@@ -19,37 +24,55 @@ import net.serenitybdd.screenplay.actors.OnStage
 import net.serenitybdd.screenplay.rest.abilities.CallAnApi
 import net.serenitybdd.screenplay.rest.questions.ResponseConsequence
 import org.apache.http.HttpStatus.SC_OK
-import interactions.Get
 
-class CommonSteps {
+@BeforeAll
+fun initializeIssuerVerifierMultitenantAgent() {
+    val eventSteps = EventsSteps()
+    val cast = Cast()
+    cast.actorNamed("Admin", CallAnApi.at(Environments.ADMIN_AGENT_URL))
+    cast.actorNamed("Acme", CallAnApi.at(Environments.ACME_AGENT_URL), ListenToEvents.at(Environments.ACME_AGENT_WEBHOOK_HOST, Environments.ACME_AGENT_WEBHOOK_PORT))
+    cast.actorNamed("Bob", CallAnApi.at(Environments.BOB_AGENT_URL), ListenToEvents.at(Environments.BOB_AGENT_WEBHOOK_HOST, Environments.BOB_AGENT_WEBHOOK_PORT))
+    cast.actorNamed("Faber", CallAnApi.at(Environments.FABER_AGENT_URL), ListenToEvents.at(Environments.FABER_AGENT_WEBHOOK_HOST, Environments.FABER_AGENT_WEBHOOK_PORT))
+    OnStage.setTheStage(cast)
+    val walletSteps = WalletsSteps()
+    val entitySteps = EntitySteps()
 
-    @Before
-    fun setStage() {
-        val cast = Cast()
-        cast.actorNamed("Acme", CallAnApi.at(Environments.ACME_AGENT_URL), ListenToEvents.at(Environments.ACME_AGENT_WEBHOOK_HOST, Environments.ACME_AGENT_WEBHOOK_PORT))
-        cast.actorNamed("Bob", CallAnApi.at(Environments.BOB_AGENT_URL), ListenToEvents.at(Environments.BOB_AGENT_WEBHOOK_HOST, Environments.BOB_AGENT_WEBHOOK_PORT))
-        cast.actorNamed("Faber", CallAnApi.at(Environments.FABER_AGENT_URL), ListenToEvents.at(Environments.FABER_AGENT_WEBHOOK_HOST, Environments.FABER_AGENT_WEBHOOK_PORT))
-        cast.actors.forEach { actor ->
-            when(actor.name) {
-                "Acme" -> {
-                    actor.remember("AUTH_KEY", Environments.ACME_AUTH_KEY)
-                }
-                "Bob" -> {
-                    actor.remember("AUTH_KEY", Environments.BOB_AUTH_KEY)
-                }
-                "Faber" -> {
-                    actor.remember("AUTH_KEY", Environments.FABER_AUTH_KEY)
-                }
+    // Create issuer wallet and tenant
+    walletSteps.createNewWallet(cast.actorNamed("Admin"), "issuerWallet")
+    val issuerEntityId = entitySteps.createNewEntity(
+        cast.actorNamed("Admin"), walletId = Utils.lastResponseObject("id", String::class), name = "issuer"
+    )
+    entitySteps.addNewApiKeyToEntity(cast.actorNamed("Admin"), issuerEntityId, Environments.ACME_AUTH_KEY)
+
+    // Create verifier wallet
+    walletSteps.createNewWallet(cast.actorNamed("Admin"), "verifierWallet")
+    val verifierEntityId = entitySteps.createNewEntity(
+        cast.actorNamed("Admin"), walletId = Utils.lastResponseObject("id", String::class), name = "verifier"
+    )
+    entitySteps.addNewApiKeyToEntity(cast.actorNamed("Admin"), verifierEntityId, Environments.FABER_AUTH_KEY)
+    cast.actors.forEach { actor ->
+        when(actor.name) {
+            "Acme" -> {
+                actor.remember("AUTH_KEY", Environments.ACME_AUTH_KEY)
+            }
+            "Bob" -> {
+                actor.remember("AUTH_KEY", Environments.BOB_AUTH_KEY)
+            }
+            "Faber" -> {
+                actor.remember("AUTH_KEY", Environments.FABER_AUTH_KEY)
             }
         }
-        OnStage.setTheStage(cast)
     }
+    eventSteps.registerNewWebhook(cast.actorNamed("Acme"), Environments.ACME_AGENT_WEBHOOK_URL)
+    eventSteps.registerNewWebhook(cast.actorNamed("Faber"), Environments.FABER_AGENT_WEBHOOK_URL)
+}
 
-    @After
-    fun clearStage() {
-        OnStage.drawTheCurtain()
-    }
+@AfterAll
+fun clearStage() {
+    OnStage.drawTheCurtain()
+}
 
+class CommonSteps {
     @ParameterType(".*")
     fun actor(actorName: String): Actor {
         return OnStage.theActorCalled(actorName)

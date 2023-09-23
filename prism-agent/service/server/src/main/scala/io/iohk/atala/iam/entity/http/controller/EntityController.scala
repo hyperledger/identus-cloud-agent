@@ -29,6 +29,8 @@ object EntityController {
         ErrorResponse.notFound(detail = Option(message))
       case EntityServiceError.EntityAlreadyExists(id, message) =>
         ErrorResponse.badRequest(detail = Option(message))
+      case ewnf: EntityServiceError.EntityWalletNotFound =>
+        ErrorResponse.badRequest(detail = Option(ewnf.message))
     }
   }
 }

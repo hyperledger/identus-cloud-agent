@@ -8,7 +8,8 @@ import doobie.util.transactor.Transactor
 import io.iohk.atala.agent.walletapi.model.Wallet
 import io.iohk.atala.agent.walletapi.sql.JdbcWalletNonSecretStorage.MAX_WEBHOOK_PER_WALLET
 import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorage
-import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorageCustomError.TooManyWebhook
+import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorageError
+import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorageError.TooManyWebhook
 import io.iohk.atala.event.notification.EventNotificationConfig
 import io.iohk.atala.shared.db.ContextAwareTask
 import io.iohk.atala.shared.db.Implicits.{*, given}
@@ -22,19 +23,21 @@ import java.util.UUID
 
 class JdbcWalletNonSecretStorage(xa: Transactor[ContextAwareTask]) extends WalletNonSecretStorage {
 
-  override def createWallet(wallet: Wallet): Task[Wallet] = {
+  override def createWallet(wallet: Wallet, seedDigest: Array[Byte]): IO[WalletNonSecretStorageError, Wallet] = {
     val cxnIO = (row: WalletRow) => sql"""
         | INSERT INTO public.wallet(
         |   wallet_id,
         |   name,
         |   created_at,
-        |   updated_at
+        |   updated_at,
+        |   seed_digest
         | )
         | VALUES (
         |   ${row.id},
         |   ${row.name},
         |   ${row.createdAt},
-        |   ${row.updatedAt}
+        |   ${row.updatedAt},
+        |   ${seedDigest}
         | )
         """.stripMargin.update
 
@@ -42,9 +45,10 @@ class JdbcWalletNonSecretStorage(xa: Transactor[ContextAwareTask]) extends Walle
     cxnIO(row).run
       .transactWithoutContext(xa)
       .as(wallet)
+      .mapError(WalletNonSecretStorageError.fromWalletOps(wallet.id))
   }
 
-  override def getWallet(walletId: WalletId): Task[Option[Wallet]] = {
+  override def getWallet(walletId: WalletId): IO[WalletNonSecretStorageError, Option[Wallet]] = {
     val cxnIO =
       sql"""
         | SELECT
@@ -58,10 +62,16 @@ class JdbcWalletNonSecretStorage(xa: Transactor[ContextAwareTask]) extends Walle
         .query[WalletRow]
         .option
 
-    cxnIO.transactWithoutContext(xa).map(_.map(_.toDomain))
+    cxnIO
+      .transactWithoutContext(xa)
+      .map(_.map(_.toDomain))
+      .mapError(WalletNonSecretStorageError.UnexpectedError.apply)
   }
 
-  override def listWallet(offset: Option[Int], limit: Option[Int]): Task[(Seq[Wallet], Int)] = {
+  override def listWallet(
+      offset: Option[Int],
+      limit: Option[Int]
+  ): IO[WalletNonSecretStorageError, (Seq[Wallet], Int)] = {
     val countCxnIO =
       sql"""
         | SELECT COUNT(*)
@@ -89,12 +99,14 @@ class JdbcWalletNonSecretStorage(xa: Transactor[ContextAwareTask]) extends Walle
       rows <- walletsCxnIO.map(_.map(_.toDomain))
     } yield (rows, totalCount)
 
-    effect.transactWithoutContext(xa)
+    effect
+      .transactWithoutContext(xa)
+      .mapError(WalletNonSecretStorageError.UnexpectedError.apply)
   }
 
   override def createWalletNotification(
       config: EventNotificationConfig
-  ): RIO[WalletAccessContext, EventNotificationConfig] = {
+  ): ZIO[WalletAccessContext, WalletNonSecretStorageError, EventNotificationConfig] = {
     val insertIO = (row: WalletNofiticationRow) => sql"""
         | INSERT INTO public.wallet_notification (
         |   id,
@@ -127,10 +139,16 @@ class JdbcWalletNonSecretStorage(xa: Transactor[ContextAwareTask]) extends Walle
         else TooManyWebhook(limit = MAX_WEBHOOK_PER_WALLET, actual = count).raiseError[ConnectionIO, Unit]
     } yield config
 
-    cxnIO.transactWallet(xa)
+    cxnIO
+      .transactWallet(xa)
+      .mapError {
+        case e: TooManyWebhook => e
+        case e                 => WalletNonSecretStorageError.UnexpectedError(e)
+      }
   }
 
-  override def walletNotification: RIO[WalletAccessContext, Seq[EventNotificationConfig]] = {
+  override def walletNotification
+      : ZIO[WalletAccessContext, WalletNonSecretStorageError, Seq[EventNotificationConfig]] = {
     val cxn =
       sql"""
         | SELECT
@@ -147,16 +165,20 @@ class JdbcWalletNonSecretStorage(xa: Transactor[ContextAwareTask]) extends Walle
     cxn
       .transactWallet(xa)
       .flatMap(rows => ZIO.foreach(rows) { row => ZIO.fromTry(row.toDomain) })
+      .mapError(WalletNonSecretStorageError.UnexpectedError.apply)
   }
 
-  override def deleteWalletNotification(id: UUID): RIO[WalletAccessContext, Unit] = {
+  override def deleteWalletNotification(id: UUID): ZIO[WalletAccessContext, WalletNonSecretStorageError, Unit] = {
     val cxn =
       sql"""
         | DELETE FROM public.wallet_notification
         | WHERE id = $id
         """.stripMargin.update
 
-    cxn.run.transactWallet(xa).unit
+    cxn.run
+      .transactWallet(xa)
+      .mapError(WalletNonSecretStorageError.UnexpectedError.apply)
+      .unit
   }
 
 }

@@ -28,11 +28,17 @@ trait WalletManagementController {
 object WalletManagementController {
   given walletServiceErrorConversion: Conversion[WalletManagementServiceError, ErrorResponse] = {
     case WalletManagementServiceError.SeedGenerationError(cause) =>
-      ErrorResponse.internalServerError(detail = Some(cause.toString()))
-    case WalletManagementServiceError.WalletStorageError(cause) =>
-      ErrorResponse.internalServerError(detail = Some(cause.toString()))
+      ErrorResponse.internalServerError(detail = Some(cause.getMessage()))
+    case WalletManagementServiceError.UnexpectedStorageError(cause) =>
+      ErrorResponse.internalServerError(detail = Some(cause.getMessage()))
     case WalletManagementServiceError.TooManyWebhookError(limit, actual) =>
       ErrorResponse.conflict(detail = Some(s"Too many webhook created for a wallet. (limit $limit, actual $actual)"))
+    case WalletManagementServiceError.DuplicatedWalletId(id) =>
+      ErrorResponse.badRequest(s"Wallet id $id is not unique.")
+    case WalletManagementServiceError.DuplicatedWalletSeed(id) =>
+      // Should we return this error message?
+      // Returning less revealing message also doesn't help for open-source repo.
+      ErrorResponse.badRequest(s"Wallet id $id cannot be created. The seed value is not unique.")
   }
 }
 
@@ -88,7 +94,11 @@ class WalletManagementControllerImpl(
       .map(_.toByteArray)
       .map(WalletSeed.fromByteArray)
       .absolve
-      .mapError(e => ErrorResponse.badRequest(detail = Some(e)))
+      .mapError(e =>
+        ErrorResponse.badRequest(detail =
+          Some(s"The provided wallet seed is not valid hex string representing a BIP-32 seed. ($e)")
+        )
+      )
   }
 
 }

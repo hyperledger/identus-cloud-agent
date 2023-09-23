@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Prism Agent
-  version: 1.15.0
+  version: 1.16.0
 paths:
   /credential-definition-registry/definitions:
     get:
@@ -1119,6 +1119,12 @@ paths:
                 $ref: '#/components/schemas/CreateManagedDIDResponse'
         '400':
           description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -2357,7 +2363,7 @@ paths:
           format: int32
       responses:
         '200':
-          description: List Prism Agent managed DIDs
+          description: Successfully list all the wallets
           content:
             application/json:
               schema:
@@ -2833,10 +2839,11 @@ components:
           example: 00000000-0000-0000-0000-000000000000
         name:
           type: string
-          description: The new `id` of the entity to be created. If this field is
-            not provided, the server will generate a new UUID for the entity
-          example: 00000000-0000-0000-0000-000000000000
+          description: The new `name` of the entity to be created. If this field is
+            not provided, the server will generate a random name for the entity
+          example: John Doe
           minLength: 1
+          maxLength: 128
         walletId:
           type: string
           description: The new `walletId` of the entity to be created. If this field
@@ -2926,6 +2933,8 @@ components:
           type: string
           description: A name of the wallet
           example: my-wallet-1
+          minLength: 1
+          maxLength: 128
         id:
           type: string
           description: The unique `id` of the wallet. Randomly generated if not specified.
@@ -3687,7 +3696,7 @@ components:
           type: string
           description: The date and time when the issue credential record was created.
           format: date-time
-          example: '2023-09-12T16:54:40.653149Z'
+          example: '2023-09-15T13:25:37.937510Z'
         updatedAt:
           type: string
           description: The date and time when the issue credential record was last
@@ -4218,6 +4227,7 @@ components:
           description: New name of the entity
           example: John Doe
           minLength: 1
+          maxLength: 128
     UpdateEntityWalletIdRequest:
       required:
       - walletId

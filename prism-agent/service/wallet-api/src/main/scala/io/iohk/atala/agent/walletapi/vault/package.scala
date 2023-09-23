@@ -1,7 +1,7 @@
 package io.iohk.atala.agent.walletapi
 
+import com.nimbusds.jose.jwk.OctetKeyPair
 import io.iohk.atala.agent.walletapi.model.WalletSeed
-import io.iohk.atala.agent.walletapi.storage.DIDSecret
 import io.iohk.atala.shared.models.HexString
 import zio.json.*
 import zio.json.ast.Json
@@ -26,7 +26,7 @@ package object vault {
 
     override def decode(kv: Map[String, String]): Try[WalletSeed] = {
       kv.get("value") match {
-        case None => Failure(Exception("A property 'value' is missing from KV data"))
+        case None => Failure(Exception("A property 'value' is missing from vault KV data"))
         case Some(encodedSeed) =>
           HexString
             .fromString(encodedSeed)
@@ -36,23 +36,29 @@ package object vault {
     }
   }
 
-  given KVCodec[DIDSecret] = new {
-    override def encode(value: DIDSecret): Map[String, String] = {
-      Map(
-        "schemaId" -> value.schemaId,
-        "json" -> value.json.toString()
-      )
-    }
+  given KVCodec[OctetKeyPair] = new {
+    override def encode(value: OctetKeyPair): Map[String, String] =
+      Map("value" -> value.toJSONString())
 
-    override def decode(kv: Map[String, String]): Try[DIDSecret] = {
+    override def decode(kv: Map[String, String]): Try[OctetKeyPair] =
       for {
-        schemaId <- kv.get("schemaId").toRight(Exception(s"A property 'schemaId' is missing from KV data")).toTry
-        json <- kv
-          .get("json")
-          .toRight(Exception(s"A property 'json' is missing from KV data"))
-          .flatMap { jsonStr => jsonStr.fromJson[Json].left.map(RuntimeException(_)) }
+        jwk <- kv.get("value").toRight(Exception("A property 'value' is missing from vault KV data")).toTry
+        keyPair <- Try(OctetKeyPair.parse(jwk))
+      } yield keyPair
+  }
+
+  given KVCodec[Json] = new {
+    override def encode(value: Json): Map[String, String] =
+      Map("value" -> value.toJson)
+
+    override def decode(kv: Map[String, String]): Try[Json] =
+      for {
+        json <- kv.get("value").toRight(Exception("A property 'value' is missing from vault KV data")).toTry
+        keyPair <- json
+          .fromJson[Json]
+          .left
+          .map(s => Exception(s"Fail to parse JSON from string: $s"))
           .toTry
-      } yield DIDSecret(json, schemaId)
-    }
+      } yield keyPair
   }
 }

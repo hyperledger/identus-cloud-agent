@@ -5,10 +5,14 @@ import doobie.util.transactor.Transactor
 import io.grpc.ManagedChannelBuilder
 import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.walletapi.crypto.Apollo
+import io.iohk.atala.agent.walletapi.memory.GenericSecretStorageInMemory
 import io.iohk.atala.agent.walletapi.memory.{DIDSecretStorageInMemory, WalletSecretStorageInMemory}
+import io.iohk.atala.agent.walletapi.sql.JdbcGenericSecretStorage
 import io.iohk.atala.agent.walletapi.sql.{JdbcDIDSecretStorage, JdbcWalletSecretStorage}
+import io.iohk.atala.agent.walletapi.storage.GenericSecretStorage
 import io.iohk.atala.agent.walletapi.storage.{DIDSecretStorage, WalletSecretStorage}
 import io.iohk.atala.agent.walletapi.util.SeedResolver
+import io.iohk.atala.agent.walletapi.vault.VaultGenericSecretStorage
 import io.iohk.atala.agent.walletapi.vault.{
   VaultDIDSecretStorage,
   VaultKVClient,
@@ -139,7 +143,7 @@ object RepoModule {
     SystemModule.configLayer >>> vaultClientConfig
   }
 
-  val allSecretStorageLayer: TaskLayer[DIDSecretStorage & WalletSecretStorage] = {
+  val allSecretStorageLayer: TaskLayer[DIDSecretStorage & WalletSecretStorage & GenericSecretStorage] = {
     ZLayer.fromZIO {
       ZIO
         .service[AppConfig]
@@ -148,25 +152,28 @@ object RepoModule {
         .flatMap {
           case "vault" =>
             ZIO.succeed(
-              ZLayer.make[DIDSecretStorage & WalletSecretStorage](
+              ZLayer.make[DIDSecretStorage & WalletSecretStorage & GenericSecretStorage](
                 VaultDIDSecretStorage.layer,
                 VaultWalletSecretStorage.layer,
+                VaultGenericSecretStorage.layer,
                 vaultClientLayer,
               )
             )
           case "postgres" =>
             ZIO.succeed(
-              ZLayer.make[DIDSecretStorage & WalletSecretStorage](
+              ZLayer.make[DIDSecretStorage & WalletSecretStorage & GenericSecretStorage](
                 JdbcDIDSecretStorage.layer,
                 JdbcWalletSecretStorage.layer,
+                JdbcGenericSecretStorage.layer,
                 agentContextAwareTransactorLayer,
               )
             )
           case "memory" =>
             ZIO.succeed(
-              ZLayer.make[DIDSecretStorage & WalletSecretStorage](
+              ZLayer.make[DIDSecretStorage & WalletSecretStorage & GenericSecretStorage](
                 DIDSecretStorageInMemory.layer,
                 WalletSecretStorageInMemory.layer,
+                GenericSecretStorageInMemory.layer
               )
             )
           case backend =>
