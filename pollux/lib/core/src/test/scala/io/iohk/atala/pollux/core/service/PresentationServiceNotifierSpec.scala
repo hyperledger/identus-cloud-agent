@@ -170,7 +170,7 @@ object PresentationServiceNotifierSpec extends ZIOSpecDefault with PresentationS
           svc <- ZIO.service[PresentationService]
           ens <- ZIO.service[EventNotificationService]
 
-          _ <- svc.receiveRequestPresentation(None, requestPresentation)
+          _ <- svc.receiveRequestPresentation(None, requestPresentationJWT)
           _ <- svc.acceptRequestPresentation(record.id, Seq.empty)
           _ <- svc.markPresentationGenerated(record.id, presentation(record.thid.value))
           _ <- svc.markPresentationSent(record.id)

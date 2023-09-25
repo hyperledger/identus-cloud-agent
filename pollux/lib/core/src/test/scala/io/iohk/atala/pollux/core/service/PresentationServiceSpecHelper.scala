@@ -51,7 +51,7 @@ trait PresentationServiceSpecHelper {
     attachments = Nil
   )
 
-  protected def requestPresentation: RequestPresentation = {
+  protected def requestPresentationJWT: RequestPresentation = {
     val body = RequestPresentation.Body(goal_code = Some("Presentation Request"))
     val presentationAttachmentAsJson =
       """{
@@ -62,7 +62,10 @@ trait PresentationServiceSpecHelper {
     val prover = DidId("did:peer:Prover")
     val verifier = DidId("did:peer:Verifier")
 
-    val attachmentDescriptor = AttachmentDescriptor.buildJsonAttachment(payload = presentationAttachmentAsJson)
+    val attachmentDescriptor = AttachmentDescriptor.buildJsonAttachment(
+      payload = presentationAttachmentAsJson,
+      format = Some(PresentCredentialRequestFormat.JWT.name)
+    )
     RequestPresentation(
       body = body,
       attachments = Seq(attachmentDescriptor),

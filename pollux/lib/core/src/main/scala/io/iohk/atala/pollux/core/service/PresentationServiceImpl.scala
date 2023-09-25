@@ -310,7 +310,7 @@ private class PresentationServiceImpl(
                 `@context` = Vector("https://www.w3.org/2018/presentations/v1"),
                 maybeId = None,
                 `type` = Vector("VerifiablePresentation"),
-                verifiableCredential = ???, // FIXME vcs.toVector,
+                verifiableCredential = vcs.toVector,
                 holder = prover.did.value,
                 verifier = Vector(options.domain),
                 maybeIssuanceDate = None,
@@ -322,7 +322,7 @@ private class PresentationServiceImpl(
                 `@context` = Vector("https://www.w3.org/2018/presentations/v1"),
                 maybeId = None,
                 `type` = Vector("VerifiablePresentation"),
-                verifiableCredential = ???, // FIXME vcs.toVector,
+                verifiableCredential = vcs.toVector,
                 holder = prover.did.value,
                 verifier = Vector("https://example.verifier"), // TODO Fix this
                 maybeIssuanceDate = None,
