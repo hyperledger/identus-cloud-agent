@@ -16,7 +16,7 @@ routes:
   - uri: /didcomm*
     upstream_id: 3
     plugins:
-      cors: 
+      cors:
         allow_origins: "*"
       proxy-rewrite:
         regex_uri: ["^/didcomm(.*)", "/$1"]
