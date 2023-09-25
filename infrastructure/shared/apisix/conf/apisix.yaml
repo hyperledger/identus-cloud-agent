@@ -1,5 +1,6 @@
 plugins:
   - name: proxy-rewrite
+  - name: cors
 
 routes:
   - uri: /prism-agent/*
@@ -15,6 +16,8 @@ routes:
   - uri: /didcomm*
     upstream_id: 3
     plugins:
+      cors:
+        allow_origins: "*"
       proxy-rewrite:
         regex_uri: ["^/didcomm(.*)", "/$1"]
   - uri: /apidocs/*

@@ -69,6 +69,7 @@ jobs:
           DEFAULT_WALLET_ENABLED: "false"
           API_KEY_AUTO_PROVISIONING: "false"
           API_KEY_ENABLED: "true"
+          DOCKERHOST: "host.docker.internal"
         uses: isbang/compose-action@v1.4.1
         with:
           compose-file: "./infrastructure/shared/docker-compose-demo.yml"
@@ -85,6 +86,7 @@ jobs:
           DEFAULT_WALLET_AUTH_API_KEY: default
           API_KEY_AUTO_PROVISIONING: false
           API_KEY_ENABLED: true
+          DOCKERHOST: "host.docker.internal"
         uses: isbang/compose-action@v1.4.1
         with:
           compose-file: "./infrastructure/shared/docker-compose-demo.yml"
