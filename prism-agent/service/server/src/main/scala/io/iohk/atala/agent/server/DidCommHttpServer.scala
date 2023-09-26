@@ -47,7 +47,7 @@ object DidCommHttpServer {
     Nothing
   ] = Http.collectZIO[Request] {
     case req @ Method.POST -> Root
-      if req.rawHeader("content-type").fold(false) { _.equalsIgnoreCase(MediaTypes.contentTypeEncrypted) } =>
+        if req.rawHeader("content-type").fold(false) { _.equalsIgnoreCase(MediaTypes.contentTypeEncrypted) } =>
       val result = for {
         data <- req.body.asString.mapError(e => RequestBodyParsingError(e.getMessage))
         _ <- webServerProgram(data)
@@ -76,8 +76,8 @@ object DidCommHttpServer {
   }
 
   private[this] def unpackMessage(
-                                   jsonString: String
-                                 ): ZIO[
+      jsonString: String
+  ): ZIO[
     DidOps & ManagedDIDService & DIDNonSecretStorage,
     ParseResponse | DIDSecretStorageError,
     (Message, WalletAccessContext)
@@ -150,7 +150,7 @@ object DidCommHttpServer {
    * Issue Credential
    */
   private val handleIssueCredential
-  : PartialFunction[Message, ZIO[CredentialService & WalletAccessContext, CredentialServiceError, Unit]] = {
+      : PartialFunction[Message, ZIO[CredentialService & WalletAccessContext, CredentialServiceError, Unit]] = {
     case msg if msg.piuri == OfferCredential.`type` =>
       for {
         offerFromIssuer <- ZIO.succeed(OfferCredential.readFromMessage(msg))
@@ -178,7 +178,7 @@ object DidCommHttpServer {
    * Present Proof
    */
   private val handlePresentProof
-  : PartialFunction[Message, ZIO[PresentationService & WalletAccessContext, PresentationError, Unit]] = {
+      : PartialFunction[Message, ZIO[PresentationService & WalletAccessContext, PresentationError, Unit]] = {
     case msg if msg.piuri == ProposePresentation.`type` =>
       for {
         proposePresentation <- ZIO.succeed(ProposePresentation.readFromMessage(msg))
