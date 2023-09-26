@@ -12,7 +12,12 @@ import io.iohk.atala.pollux.credentialdefinition
 import io.iohk.atala.pollux.credentialdefinition.controller.CredentialDefinitionController.domainToHttpErrorIO
 import io.iohk.atala.pollux.credentialdefinition.http.CredentialDefinitionInput.toDomain
 import io.iohk.atala.pollux.credentialdefinition.http.CredentialDefinitionResponse.fromDomain
-import io.iohk.atala.pollux.credentialdefinition.http.{CredentialDefinitionInput, CredentialDefinitionResponse, CredentialDefinitionResponsePage, FilterInput}
+import io.iohk.atala.pollux.credentialdefinition.http.{
+  CredentialDefinitionInput,
+  CredentialDefinitionResponse,
+  CredentialDefinitionResponsePage,
+  FilterInput
+}
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 import zio.json.ast.Json

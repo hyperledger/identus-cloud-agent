@@ -5,7 +5,11 @@ import doobie.util.transactor.Transactor
 import io.grpc.ManagedChannelBuilder
 import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.walletapi.crypto.Apollo
-import io.iohk.atala.agent.walletapi.memory.{DIDSecretStorageInMemory, GenericSecretStorageInMemory, WalletSecretStorageInMemory}
+import io.iohk.atala.agent.walletapi.memory.{
+  DIDSecretStorageInMemory,
+  GenericSecretStorageInMemory,
+  WalletSecretStorageInMemory
+}
 import io.iohk.atala.agent.walletapi.sql.{JdbcDIDSecretStorage, JdbcGenericSecretStorage, JdbcWalletSecretStorage}
 import io.iohk.atala.agent.walletapi.storage.{DIDSecretStorage, GenericSecretStorage, WalletSecretStorage}
 import io.iohk.atala.agent.walletapi.vault.*

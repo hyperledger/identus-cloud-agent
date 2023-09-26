@@ -4,7 +4,11 @@ import cats.syntax.all.*
 import io.circe.parser.*
 import io.circe.syntax.*
 import io.iohk.atala.agent.server.config.AppConfig
-import io.iohk.atala.agent.server.jobs.BackgroundJobError.{ErrorResponseReceivedFromPeerAgent, InvalidState, NotImplemented}
+import io.iohk.atala.agent.server.jobs.BackgroundJobError.{
+  ErrorResponseReceivedFromPeerAgent,
+  InvalidState,
+  NotImplemented
+}
 import io.iohk.atala.castor.core.model.did.*
 import io.iohk.atala.mercury.*
 import io.iohk.atala.mercury.model.*
