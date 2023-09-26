@@ -32,6 +32,12 @@ spec:
         - containerPort: 8085
         - containerPort: 8090
         env:
+          - name: ADMIN_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: agent-admin-token
+                key: token
+                optional: false
           - name: CASTOR_DB_HOST
             value: "{{ .Values.database.postgres.managingTeam }}-prism-agent-postgres-cluster.{{.Release.Namespace}}"
           - name: CASTOR_DB_PORT
