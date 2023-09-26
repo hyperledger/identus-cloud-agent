@@ -164,7 +164,7 @@ spec:
           - name: DEV_MODE
             value: "true"
           {{- else }}
-          - name: WALLET_SEED
+          - name: DEFAULT_WALLET_SEED
             valueFrom:
               secretKeyRef:
                 name: agent-wallet-seed
