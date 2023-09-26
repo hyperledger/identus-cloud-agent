@@ -38,6 +38,12 @@ spec:
                 name: agent-admin-token
                 key: token
                 optional: false
+          - name: API_KEY_SALT
+            valueFrom:
+              secretKeyRef:
+                name: agent-api-key-salt
+                key: salt
+                optional: false
           - name: CASTOR_DB_HOST
             value: "{{ .Values.database.postgres.managingTeam }}-prism-agent-postgres-cluster.{{.Release.Namespace}}"
           - name: CASTOR_DB_PORT
