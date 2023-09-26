@@ -1,10 +1,8 @@
 package io.iohk.atala.mercury
 
 import zio._
-import zio.http._
-import zio.http.model.{Header => _, _}
+import zio.http.{Header as _, *}
 import io.iohk.atala.mercury._
-
 object ZioHttpClient {
   val layer = ZLayer.succeed(new ZioHttpClient())
 }
@@ -22,7 +20,7 @@ class ZioHttpClient extends HttpClient {
           .map(body =>
             HttpResponse(
               response.status.code,
-              response.headers.toSeq.map(h => Header(h.key.toString, h.value.toString)),
+              response.headers.map(h => Header(h.headerName, h.renderedValue)).toSeq,
               body
             )
           )
@@ -46,7 +44,7 @@ class ZioHttpClient extends HttpClient {
           .map(body =>
             HttpResponse(
               response.status.code,
-              response.headers.toSeq.map(h => Header(h.key.toString, h.value.toString)),
+              response.headers.map(h => Header(h.headerName, h.renderedValue)).toSeq,
               body
             )
           )

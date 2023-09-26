@@ -23,16 +23,14 @@ import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 import zio.http.*
-import zio.http.model.*
-
 import java.util.UUID
 
 object DidCommHttpServer {
 
   def run(didCommServicePort: Int) = {
     val server = {
-      val config = ServerConfig(address = new java.net.InetSocketAddress(didCommServicePort))
-      ServerConfig.live(config)(using Trace.empty) >>> Server.live
+      val config = Server.Config.default.copy(address = new java.net.InetSocketAddress(didCommServicePort))
+      ZLayer.succeed(config) >>> Server.live
     }
     for {
       _ <- ZIO.logInfo(s"Server Started on port $didCommServicePort")
@@ -48,12 +46,8 @@ object DidCommHttpServer {
       DIDResolver & DIDNonSecretStorage & AppConfig,
     Nothing
   ] = Http.collectZIO[Request] {
-    case req @ Method.POST -> !!
-        if req.headersAsList
-          .exists(h =>
-            h.key.toString.equalsIgnoreCase("content-type") &&
-              h.value.toString.equalsIgnoreCase(MediaTypes.contentTypeEncrypted)
-          ) =>
+    case req @ Method.POST -> Root
+      if req.rawHeader("content-type").fold(false) { _.equalsIgnoreCase(MediaTypes.contentTypeEncrypted) } =>
       val result = for {
         data <- req.body.asString.mapError(e => RequestBodyParsingError(e.getMessage))
         _ <- webServerProgram(data)
@@ -82,8 +76,8 @@ object DidCommHttpServer {
   }
 
   private[this] def unpackMessage(
-      jsonString: String
-  ): ZIO[
+                                   jsonString: String
+                                 ): ZIO[
     DidOps & ManagedDIDService & DIDNonSecretStorage,
     ParseResponse | DIDSecretStorageError,
     (Message, WalletAccessContext)
@@ -156,7 +150,7 @@ object DidCommHttpServer {
    * Issue Credential
    */
   private val handleIssueCredential
-      : PartialFunction[Message, ZIO[CredentialService & WalletAccessContext, CredentialServiceError, Unit]] = {
+  : PartialFunction[Message, ZIO[CredentialService & WalletAccessContext, CredentialServiceError, Unit]] = {
     case msg if msg.piuri == OfferCredential.`type` =>
       for {
         offerFromIssuer <- ZIO.succeed(OfferCredential.readFromMessage(msg))
@@ -184,7 +178,7 @@ object DidCommHttpServer {
    * Present Proof
    */
   private val handlePresentProof
-      : PartialFunction[Message, ZIO[PresentationService & WalletAccessContext, PresentationError, Unit]] = {
+  : PartialFunction[Message, ZIO[PresentationService & WalletAccessContext, PresentationError, Unit]] = {
     case msg if msg.piuri == ProposePresentation.`type` =>
       for {
         proposePresentation <- ZIO.succeed(ProposePresentation.readFromMessage(msg))

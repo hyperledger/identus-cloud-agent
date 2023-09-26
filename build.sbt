@@ -4,7 +4,7 @@ import org.scoverage.coveralls.Imports.CoverallsKeys.*
 inThisBuild(
   Seq(
     organization := "io.iohk.atala",
-    scalaVersion := "3.3.0",
+    scalaVersion := "3.3.1",
     fork := true,
     run / connectInput := true,
     releaseUseGlobalVersion := false,
@@ -48,7 +48,7 @@ lazy val V = new {
   val zioConfig = "3.0.7"
   val zioLogging = "2.0.1"
   val zioJson = "0.3.0"
-  val zioHttp = "0.0.3"
+  val zioHttp = "3.0.0-RC2"
   val zioCatsInterop = "3.3.0"
   val zioMetricsConnector = "2.1.0"
   val zioMock = "1.0.0-RC11"
