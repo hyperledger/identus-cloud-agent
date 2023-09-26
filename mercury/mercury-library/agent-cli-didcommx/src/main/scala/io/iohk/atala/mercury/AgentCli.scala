@@ -18,10 +18,10 @@ import io.iohk.atala.resolvers._
 import scala.language.implicitConversions
 
 /** AgentCli
- * {{{
- *   gentDidcommx/runMain io.iohk.atala.mercury.AgentCli
- * }}}
- */
+  * {{{
+  *   gentDidcommx/runMain io.iohk.atala.mercury.AgentCli
+  * }}}
+  */
 object AgentCli extends ZIOAppDefault {
 
   def questionYN(q: String): ZIO[Any, IOException, Boolean] = {
@@ -257,7 +257,7 @@ object AgentCli extends ZIOAppDefault {
     Http
       .collectZIO[Request] {
         case req @ Method.POST -> Root
-          if req.rawHeader(expectedKey).fold(false) { _.equalsIgnoreCase(expectedValue) } =>
+            if req.rawHeader(expectedKey).fold(false) { _.equalsIgnoreCase(expectedValue) } =>
           val res = req.body.asString
             .catchNonFatalOrDie(ex => ZIO.fail(ParseResponse(ex)))
             .flatMap { data =>
@@ -359,8 +359,8 @@ object AgentCli extends ZIOAppDefault {
   } yield ()
 
   def webServerProgram(
-                        jsonString: String
-                      ): ZIO[DidOps & DidAgent & DIDResolver & HttpClient, MercuryThrowable, String] = { // TODO Throwable
+      jsonString: String
+  ): ZIO[DidOps & DidAgent & DIDResolver & HttpClient, MercuryThrowable, String] = { // TODO Throwable
     import io.iohk.atala.mercury.DidOps.*
     ZIO.logAnnotate("request-id", java.util.UUID.randomUUID.toString()) {
       for {
