@@ -710,12 +710,7 @@ lazy val polluxAnoncreds = project
 
 lazy val polluxAnoncredsTest = project
   .in(file("pollux/lib/anoncredsTest"))
-  .settings(
-    libraryDependencies ++= Seq(
-      "org.scalatest" %% "scalatest" % "3.2.15" % Test,
-      ("me.vican.jorge" %% "dijon" % "0.6.0" % Test).cross(CrossVersion.for3Use2_13)
-    ),
-  )
+  .settings(libraryDependencies ++= Seq("org.scalatest" %% "scalatest" % "3.2.15" % Test))
   .dependsOn(polluxAnoncreds % "compile->test")
 
 // #####################
@@ -846,7 +841,7 @@ lazy val aggregatedProjects: Seq[ProjectReference] = Seq(
   polluxCore,
   polluxDoobie,
   polluxAnoncreds,
-  // polluxAnoncredsTest, REMOVE THIS FOR NOW
+  polluxAnoncredsTest,
   connectCore,
   connectDoobie,
   prismAgentWalletAPI,
