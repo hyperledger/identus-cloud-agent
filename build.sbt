@@ -57,8 +57,7 @@ lazy val V = new {
   // https://mvnrepository.com/artifact/io.circe/circe-core
   val circe = "0.14.5"
 
-  val tapir = "1.6.0"
-  val tapirLegacy = "1.2.3" // TODO: remove
+  val tapir = "1.6.4"
 
   val typesafeConfig = "1.4.2"
   val protobuf = "3.1.9"
@@ -316,9 +315,7 @@ lazy val D_PrismAgent = new {
   val tapirSwaggerUiBundle = "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % V.tapir
   val tapirJsonZio = "com.softwaremill.sttp.tapir" %% "tapir-json-zio" % V.tapir
 
-  // FIXME: using newest tapir (1.6.0) for this dependency needs refactoring, because it has transitive dependency on zio-http 3.0.0,
-  //   if used all imports for zio.http will use ne newest version, which will break the compilation
-  val tapirZioHttpServer = "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server" % V.tapirLegacy
+  val tapirZioHttpServer = "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server" % V.tapir
   val tapirHttp4sServerZio = "com.softwaremill.sttp.tapir" %% "tapir-http4s-server-zio" % V.tapir
   val http4sBlazeServer = "org.http4s" %% "http4s-blaze-server" % "0.23.12"
 
