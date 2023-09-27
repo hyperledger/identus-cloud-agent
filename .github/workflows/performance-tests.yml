@@ -6,9 +6,6 @@ concurrency:
 
 on:
   pull_request:
-    paths:
-      - ".github/workflows/performance-tests.yml"
-      - "tests/performance-tests/**"
   push:
     branches:
       - "main"
@@ -90,18 +87,18 @@ jobs:
           scope: 'input-output-hk'
 
       - name: Install dependencies
-        uses: borales/actions-yarn@v4
+        uses: borales/actions-yarn@v4.2.0
         with:
           cmd: install
           dir: ${{ env.BENCHMARKING_DIR }}
 
       - name: Compile tests to JS
-        uses: borales/actions-yarn@v4
+        uses: borales/actions-yarn@v4.2.0
         with:
           cmd: webpack
           dir: ${{ env.BENCHMARKING_DIR }}
 
-      - name: Connection Flow Smoke Test
+      - name: All Smoke Tests
         env:
           ISSUER_AGENT_API_KEY: default
           HOLDER_AGENT_API_KEY: default
@@ -109,4 +106,10 @@ jobs:
           # Have to use manual download because GitHub action doesnt support localhost execution
           curl https://github.com/grafana/k6/releases/download/v0.45.0/k6-v0.45.0-linux-amd64.tar.gz -L | tar xvz --strip-components 1
           ls -la
-          ./k6 run ${{ env.BENCHMARKING_DIR }}/dist/connection-flow-test.js
+          ./k6 run -e SCENARIO_LABEL=create-prism-did-smoke ${{ env.BENCHMARKING_DIR }}/dist/create-prism-did-test.js
+          ./k6 run -e SCENARIO_LABEL=credential-offer-smoke ${{ env.BENCHMARKING_DIR }}/dist/credential-offer-test.js
+          ./k6 run -e SCENARIO_LABEL=credential-schema-smoke ${{ env.BENCHMARKING_DIR }}/dist/credential-schema-test.js
+          ./k6 run -e SCENARIO_LABEL=did-publishing-smoke ${{ env.BENCHMARKING_DIR }}/dist/did-publishing-test.js
+          ./k6 run -e SCENARIO_LABEL=connection-flow-smoke ${{ env.BENCHMARKING_DIR }}/dist/connection-flow-test.js
+          ./k6 run -e SCENARIO_LABEL=issuance-flow-smoke ${{ env.BENCHMARKING_DIR }}/dist/issuance-flow-test.js
+          ./k6 run -e SCENARIO_LABEL=present-proof-flow-smoke ${{ env.BENCHMARKING_DIR }}/dist/present-proof-flow-test.js
