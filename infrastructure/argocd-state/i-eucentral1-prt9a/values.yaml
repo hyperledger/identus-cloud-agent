@@ -18,55 +18,55 @@ argocd-apps:
         - group: '*'
           kind: '*'
   applications:
-  - name: eu-prism-agent-holder
-    namespace: argocd
-    additionalLabels:
-      type: agent
-    additionalAnnotations: { }
-    finalizers:
-      - resources-finalizer.argocd.argoproj.io
-    project: system-integration-testing
-    source:
-      path: infrastructure/charts/agent
-      repoURL: 'git@github.com:input-output-hk/atala-prism-building-blocks.git'
-      targetRevision: "main"
-      helm:
-        values: |
-          ingress:
-            applicationUrls:
-            - eu-prism-agent-holder.atalaprism.io
-            platformIngressUrl: internal-eucentral1-prt9a.atalaprism.io
-            consumers: ["key1"]
-          secrets:
-            secretStore: prism-v2-prt9a-us-east-1-externalsecrets
-            dockerRegistryToken: prt9a-argocd-github-docker-registry-token
-          server:
-            useVault: false
-            additionalEnvVariables:
-              SECRET_STORAGE_BACKEND: "postgres"
-          vdrManager:
-            host: node-service.sit-prism-node
-          vault:
-            global:
-              enabled: false
-    destination:
-      server: https://kubernetes.default.svc
-      namespace: eu-prism-agent-holder
-    syncPolicy:
-#      automated:
-#        prune: true
-#        selfHeal: true
-      syncOptions:
-        - Validate=true
-        - CreateNamespace=true
-        - PrunePropagationPolicy=foreground
-        - PruneLast=true
-      retry:
-        limit: 5
-        backoff:
-          duration: 5s
-          factor: 2
-          maxDuration: 3m
+#  - name: eu-prism-agent-holder
+#    namespace: argocd
+#    additionalLabels:
+#      type: agent
+#    additionalAnnotations: { }
+#    finalizers:
+#      - resources-finalizer.argocd.argoproj.io
+#    project: system-integration-testing
+#    source:
+#      path: infrastructure/charts/agent
+#      repoURL: 'git@github.com:input-output-hk/atala-prism-building-blocks.git'
+#      targetRevision: "main"
+#      helm:
+#        values: |
+#          ingress:
+#            applicationUrls:
+#            - eu-prism-agent-holder.atalaprism.io
+#            platformIngressUrl: internal-eucentral1-prt9a.atalaprism.io
+#            consumers: ["key1"]
+#          secrets:
+#            secretStore: prism-v2-prt9a-us-east-1-externalsecrets
+#            dockerRegistryToken: prt9a-argocd-github-docker-registry-token
+#          server:
+#            useVault: false
+#            additionalEnvVariables:
+#              SECRET_STORAGE_BACKEND: "postgres"
+#          vdrManager:
+#            host: node-service.sit-prism-node
+#          vault:
+#            global:
+#              enabled: false
+#    destination:
+#      server: https://kubernetes.default.svc
+#      namespace: eu-prism-agent-holder
+#    syncPolicy:
+##      automated:
+##        prune: true
+##        selfHeal: true
+#      syncOptions:
+#        - Validate=true
+#        - CreateNamespace=true
+#        - PrunePropagationPolicy=foreground
+#        - PruneLast=true
+#      retry:
+#        limit: 5
+#        backoff:
+#          duration: 5s
+#          factor: 2
+#          maxDuration: 3m
   itemTemplates:
    - items:
        - name: prism-agent-application-set
