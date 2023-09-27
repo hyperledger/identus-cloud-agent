@@ -53,9 +53,9 @@ argocd-apps:
       server: https://kubernetes.default.svc
       namespace: eu-prism-agent-holder
     syncPolicy:
-      automated:
-        prune: true
-        selfHeal: true
+#      automated:
+#        prune: true
+#        selfHeal: true
       syncOptions:
         - Validate=true
         - CreateNamespace=true
@@ -73,9 +73,9 @@ argocd-apps:
          generators: &generators
            - list:
                elements:
-#                 - app_name: eu-prism-agent-holder
-#                   namespace: eu-prism-agent-holder
-#                   ingressURL: eu-prism-agent-holder.atalaprism.io
+                 - app_name: eu-prism-agent-holder
+                   namespace: eu-prism-agent-holder
+                   ingressURL: eu-prism-agent-holder.atalaprism.io
                  - app_name: eu-prism-agent-issuer
                    namespace: eu-prism-agent-issuer
                    ingressURL: eu-prism-agent-issuer.atalaprism.io
@@ -128,9 +128,9 @@ argocd-apps:
                - name: Url
                  value: "{{`{{ingressURL}}`}}"
              syncPolicy:
-               automated:
-                 prune: true
-                 selfHeal: true
+#               automated:
+#                 prune: true
+#                 selfHeal: true
                syncOptions:
                  - Validate=true
                  - CreateNamespace=true
