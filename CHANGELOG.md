@@ -1,3 +1,14 @@
+## [1.16.1](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.16.0...prism-agent-v1.16.1) (2023-09-27)
+
+
+### Bug Fixes
+
+* Adding localhost environment variable in run.sh script for local development ([#728](https://github.com/hyperledger-labs/open-enterprise-agent/issues/728)) ([1a904a6](https://github.com/hyperledger-labs/open-enterprise-agent/commit/1a904a6f72676fb89f87dd2da14c01d291371f8c))
+* correct typo on sts header (dmax -> max) ([#726](https://github.com/hyperledger-labs/open-enterprise-agent/issues/726)) ([2c5bc51](https://github.com/hyperledger-labs/open-enterprise-agent/commit/2c5bc51fc66b2c62a7c8ba7e25944704c335253f))
+* **prism-agent:** introduce generic secret store for CD ([#727](https://github.com/hyperledger-labs/open-enterprise-agent/issues/727)) ([3d4aacd](https://github.com/hyperledger-labs/open-enterprise-agent/commit/3d4aacdd9a7f66f2f656d3c31b3f8202cc37c51b))
+* Separate config for integration flow ATL-5777 ([#731](https://github.com/hyperledger-labs/open-enterprise-agent/issues/731)) ([9e0e2de](https://github.com/hyperledger-labs/open-enterprise-agent/commit/9e0e2de77a25166f019f78356b2e98b60da7b3e1))
+* Separate config for integration flow ATL-5777 ([#733](https://github.com/hyperledger-labs/open-enterprise-agent/issues/733)) ([8380ccc](https://github.com/hyperledger-labs/open-enterprise-agent/commit/8380cccea0eee17c090928b1ae36b877a822177d))
+
 # [1.16.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.15.0...prism-agent-v1.16.0) (2023-09-15)
 
 
