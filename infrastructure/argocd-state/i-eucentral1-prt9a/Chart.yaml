@@ -1,6 +1,6 @@
 apiVersion: v2
-name: d-useast1-sjd4e-argocd-state
-description: A helm chart for managing state in sjd4e
+name: i-eucentral1-prt9a-argocd-state
+description: A helm chart for managing state in prt9a
 
 # A chart can be either an 'application' or a 'library' chart.
 #
