@@ -2,8 +2,7 @@ argocd-apps:
   itemTemplates:
     - items:
         - name: prism-agent-application-set
-          generators:
-            &generators
+          generators: &generators
             - list:
                 elements:
                   - app_name: sit-prism-agent-holder
@@ -37,21 +36,26 @@ argocd-apps:
                 helm:
                   values: >
                     ingress:
+
                       applicationUrls:
                         - "{{`{{ingressURL}}`}}"
                       platformIngressUrl: internal-useast1-sjd4e.atalaprism.io
                       consumers:
                         - "key1"
                     secrets:
+
                       secretStore: prism-v2-dev-sjd4e-us-east-1-externalsecrets
                       dockerRegistryToken: dev-sjd4e-argocd-github-docker-registry-token
                     server:
+
                       useVault: false
                       additionalEnvVariables:
                         SECRET_STORAGE_BACKEND: "postgres"
                     vdrManager:
+
                       host: node-service.sit-prism-node
                     vault:
+
                       global:
                         enabled: false
               destination:
@@ -72,3 +76,5 @@ argocd-apps:
                     duration: 5s
                     factor: 2
                     maxDuration: 3m
+          source:
+            targetRevision: prism-agent-v1.16.1
