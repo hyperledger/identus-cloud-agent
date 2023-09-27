@@ -65,7 +65,7 @@
       [
         "@semantic-release/exec",
         {
-          "prepareCmd": "yq -i  '(.argocd-apps.itemTemplates[] | select(.items[] | .name == \"prism-agent-application-set\") | .template.spec.source.targetRevision) = \"prism-agent-v${nextRelease.version}\"' ./infrastructure/argocd-state/i-eucentral1-prt9a/values.yml"
+          "prepareCmd": "yq -i  '(.argocd-apps.itemTemplates[] | select(.items[] | .name == \"prism-agent-application-set\") | .template.spec.source.targetRevision) = \"prism-agent-v${nextRelease.version}\"' ./infrastructure/argocd-state/d-useast1-sjd4e/values.yml"
         }
       ],
       [
