@@ -45,6 +45,11 @@ while [[ $# -gt 0 ]]; do
 		WAIT="--wait"
 		shift # past argument
 		;;
+	-d | --dockerhost)
+		DOCKERHOST="$2"
+		shift # past argument
+		shift # past value
+		;;
 	-e | --env)
 		ENV_FILE="$2"
 		shift # past argument
@@ -96,6 +101,7 @@ NAME="${NAME:=local}"
 PORT="${PORT:=80}"
 ENV_FILE="${ENV_FILE:=${SCRIPT_DIR}/.env}"
 NETWORK="${NETWORK:=${NAME}-prism}"
+DOCKERHOST="${DOCKERHOST:=host.docker.internal}"
 
 echo "NAME                   = ${NAME}"
 echo "PORT                   = ${PORT}"
@@ -103,6 +109,7 @@ echo "ENV_FILE               = ${ENV_FILE}"
 echo "NETWORK                = ${NETWORK}"
 echo "GLOBAL_WEBHOOK_URL     = ${GLOBAL_WEBHOOK_URL}"
 echo "GLOBAL_WEBHOOK_API_KEY = ${GLOBAL_WEBHOOK_API_KEY}"
+echo "DOCKERHOST = ${DOCKERHOST}"
 
 echo "--------------------------------------"
 echo "Starting stack using docker compose"
@@ -116,7 +123,7 @@ if [ -n "$GLOBAL_WEBHOOK_API_KEY" ]; then
 	export GLOBAL_WEBHOOK_API_KEY=${GLOBAL_WEBHOOK_API_KEY}
 fi
 
-PORT=${PORT} NETWORK=${NETWORK} docker compose \
+PORT=${PORT} NETWORK=${NETWORK} DOCKERHOST=${DOCKERHOST} docker compose \
 	-p ${NAME} \
 	-f ${SCRIPT_DIR}/../shared/docker-compose.yml \
 	--env-file ${ENV_FILE} ${DEBUG} up ${BACKGROUND} ${WAIT}
