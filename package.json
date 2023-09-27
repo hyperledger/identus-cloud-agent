@@ -65,6 +65,12 @@
       [
         "@semantic-release/exec",
         {
+          "prepareCmd": "yq -i  '(.argocd-apps.itemTemplates[] | select(.items[] | .name == \"prism-agent-application-set\") | .template.spec.source.targetRevision) = \"prism-agent-v${nextRelease.version}\"' ./infrastructure/argocd-state/d-useast1-sjd4e/values.yml"
+        }
+      ],
+      [
+        "@semantic-release/exec",
+        {
           "prepareCmd": "docker buildx build --platform=linux/arm64,linux/amd64 --push -t ghcr.io/input-output-hk/prism-agent:${nextRelease.version} ./prism-agent/service/server/target/docker/stage"
         }
       ],
