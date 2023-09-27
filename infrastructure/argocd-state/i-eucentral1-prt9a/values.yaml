@@ -1,0 +1,92 @@
+argocd-apps:
+  projects:
+    - name: system-integration-testing
+      namespace: argocd
+      additionalLabels:
+        audience: internal
+        owner: qa
+      additionalAnnotations: {}
+      finalizers:
+        - resources-finalizer.argocd.argoproj.io
+      description: Project to hold applications for system-integration-testing environment
+      sourceRepos:
+        - "*"
+      destinations:
+        - namespace: "*"
+          server: https://kubernetes.default.svc
+      clusterResourceWhitelist:
+        - group: "*"
+          kind: "*"
+  itemTemplates:
+    - items:
+        - name: prism-agent-application-set
+          generators:
+            &generators
+            - list:
+                elements:
+                  - app_name: eu-prism-agent-holder
+                    namespace: eu-prism-agent-holder
+                    ingressURL: eu-prism-agent-holder.atalaprism.io
+                  - app_name: eu-prism-agent-issuer
+                    namespace: eu-prism-agent-issuer
+                    ingressURL: eu-prism-agent-issuer.atalaprism.io
+                  - app_name: eu-prism-agent-verifier
+                    namespace: eu-prism-agent-verifier
+                    ingressURL: eu-prism-agent-verifier.atalaprism.io
+      template:
+        apiVersion: argoproj.io/v1alpha1
+        kind: ApplicationSet
+        metadata:
+          name: "{{ .name }}"
+        spec:
+          generators: *generators
+          template:
+            metadata:
+              name: "{{`{{app_name}}`}}"
+              namespace: argocd
+              additionalLabels:
+                type: agent
+            spec:
+              project: system-integration-testing
+              source:
+                path: infrastructure/charts/agent
+                repoURL: https://github.com/hyperledger-labs/open-enterprise-agent
+                targetRevision: main
+                helm:
+                  values: >
+                    ingress:
+                      applicationUrls:
+                        - "{{`{{ingressURL}}`}}"
+                      platformIngressUrl: internal-eucentral1-prt9a.atalaprism.io
+                      consumers:
+                        - "key1"
+                    secrets:
+                      secretStore: prism-v2-prt9a-us-east-1-externalsecrets
+                      dockerRegistryToken: prt9a-argocd-github-docker-registry-token
+                    server:
+                      useVault: false
+                      additionalEnvVariables:
+                        SECRET_STORAGE_BACKEND: "postgres"
+                    vdrManager:
+                      host: node-service.sit-prism-node
+                    vault:
+                      global:
+                        enabled: false
+              destination:
+                server: https://kubernetes.default.svc
+                namespace: "{{`{{namespace}}`}}"
+              info:
+                - name: Url
+                  value: "{{`{{ingressURL}}`}}"
+              syncPolicy:
+                syncOptions:
+                  - Validate=true
+                  - CreateNamespace=true
+                  - PrunePropagationPolicy=foreground
+                  - PruneLast=true
+                retry:
+                  limit: 5
+                  backoff:
+                    duration: 5s
+                    factor: 2
+                    maxDuration: 3m
