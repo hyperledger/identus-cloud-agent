@@ -26,7 +26,7 @@ export class ConnectionService extends HttpService {
    */
   getConnection(connectionId: string): Connection {
     const res = this.get(`connections/${connectionId}`);
-    const connection = res.json() as unknown as Connection;
+    const connection = this.toJson(res) as unknown as Connection;
     return connection;
   }
 
@@ -36,7 +36,7 @@ export class ConnectionService extends HttpService {
    */
   createConnection(): Connection {
     const payload = { label: "test" };
-    const connection = this.post("connections", payload).json() as unknown as Connection;
+    const connection = this.toJson(this.post("connections", payload)) as unknown as Connection;
     return connection;
   }
 
@@ -48,7 +48,7 @@ export class ConnectionService extends HttpService {
   acceptConnectionInvitation(invitation: ConnectionInvitation): Connection {
     const payload = { invitation: this.invitationFromUrl(invitation.invitationUrl) };
     const res = this.post("connection-invitations", payload, 200);
-    return res.json() as unknown as Connection;
+    return this.toJson(res) as unknown as Connection;
   }
 
   /**

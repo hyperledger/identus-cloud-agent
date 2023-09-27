@@ -1,7 +1,8 @@
 import { HttpService } from "./HttpService";
 import { WAITING_LOOP_MAX_ITERATIONS, WAITING_LOOP_PAUSE_INTERVAL } from "./Config";
 import { CreateManagedDIDResponse, DIDDocument, DidOperationSubmission, ManagedDID } from "@input-output-hk/prism-typescript-client";
-import { sleep } from "k6";
+import {check, sleep} from "k6";
+import http from "k6/http";
 
 /**
  * A service class for managing decentralized identifiers (DIDs) in the application.
@@ -16,7 +17,7 @@ export class DidService extends HttpService {
    */
   getDid(did: string): ManagedDID {
     const res = this.get(`did-registrar/dids/${did}`);
-    return res.json() as unknown as ManagedDID;
+    return this.toJson(res) as unknown as ManagedDID;
   }
 
   /**
@@ -26,7 +27,7 @@ export class DidService extends HttpService {
    */
   resolveDid(did: string): DIDDocument {
     const res = this.get(`dids/${did}`);
-    return res.json() as unknown as DIDDocument;
+    return this.toJson(res) as unknown as DIDDocument;
   }
 
   /**
@@ -36,7 +37,7 @@ export class DidService extends HttpService {
    */
   publishDid(did: string): DidOperationSubmission {
     const res = this.post(`did-registrar/dids/${did}/publications`, null, 202);
-    return res.json("scheduledOperation") as unknown as DidOperationSubmission;
+    return this.toJson(res).scheduledOperation as unknown as DidOperationSubmission;
   }
 
   /**
@@ -46,7 +47,7 @@ export class DidService extends HttpService {
    */
   createUnpublishedDid(documentTemplate: string): CreateManagedDIDResponse {
     const res = this.post("did-registrar/dids", documentTemplate);
-    return res.json() as unknown as CreateManagedDIDResponse;
+    return this.toJson(res) as unknown as CreateManagedDIDResponse;
   }
 
   /**

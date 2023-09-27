@@ -34,7 +34,7 @@ export class ProofsService extends HttpService {
           ]
       }`
     const res = this.post("present-proof/presentations", payload);
-    return res.json("presentationId") as string;
+    return this.toJson(res).presentationId as string;
   }
 
   /**
@@ -51,7 +51,7 @@ export class ProofsService extends HttpService {
         ]
       }`
     const res = this.patch(`present-proof/presentations/${presentation.presentationId}`, payload);
-    return res.json("presentationId") as string;
+    return this.toJson(res).presentationId  as string;
   }
 
   /**
@@ -61,7 +61,7 @@ export class ProofsService extends HttpService {
    */
   getPresentation(presentationId: string): PresentationStatus {
     const res = this.get(`present-proof/presentations/${presentationId}`);
-    return res.json() as unknown as PresentationStatus;
+    return this.toJson(res) as unknown as PresentationStatus;
   }
 
   /**
@@ -70,7 +70,7 @@ export class ProofsService extends HttpService {
    */
   getPresentations(thid: string): PresentationStatus[] {
     const res = this.get(`present-proof/presentations?thid=${thid}`);
-    return res.json("contents") as unknown as PresentationStatus[];
+    return this.toJson(res).contents as unknown as PresentationStatus[];
   }
 
   /**

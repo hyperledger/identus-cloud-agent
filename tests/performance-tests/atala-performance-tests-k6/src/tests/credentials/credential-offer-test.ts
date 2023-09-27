@@ -2,36 +2,15 @@ import { group } from 'k6';
 import { Options } from 'k6/options';
 import { Issuer, Holder } from '../../actors';
 import { Connection } from '@input-output-hk/prism-typescript-client';
-
-// export let options: Options = {
-//   stages: [
-//     { duration: '1m', target: 5 },
-//   ],
-//   thresholds: {
-//     http_req_failed: [{
-//       threshold: 'rate<=0.05',
-//       abortOnFail: true,
-//     }],
-//     http_req_duration: ['p(95)<=100'],
-//     checks: ['rate>=0.99'],
-//   },
-// };
-
+import { defaultScenarios, defaultThresholds } from '../../scenarios/default';
 export let options: Options = {
   scenarios: {
-    smoke: {
-      executor: 'constant-vus',
-      vus: 3,
-      duration: "1s",
-    },
+    ...defaultScenarios
   },
   thresholds: {
-    'http_req_duration{group:::Issuer creates credential offer}': ['max >= 0'],
-    'http_reqs{group:::Issuer creates credential offer}': ['count >= 0'],
-    'group_duration{group:::Issuer creates credential offer}': ['max >= 0'],
-  },
-};
-
+    ...defaultThresholds
+  }
+}
 export const issuer = new Issuer();
 export const holder = new Holder();
 
@@ -52,7 +31,7 @@ export function setup() {
     holder.finalizeConnectionWithIssuer();
   });
 
-  return { 
+  return {
       issuerDid: issuer.did,
       holderDid: holder.did,
       connectionWithHolder: issuer.connectionWithHolder!,

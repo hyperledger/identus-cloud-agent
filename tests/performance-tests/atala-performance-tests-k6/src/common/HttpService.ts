@@ -1,6 +1,6 @@
 
 import http from 'k6/http';
-import { check } from 'k6';
+import {bytes, check} from 'k6';
 import { RefinedResponse, ResponseType, RequestBody } from 'k6/http';
 
 /**
@@ -32,6 +32,10 @@ export class HttpService {
         apikey: this.apiKey,
       },
     };
+  }
+
+  public toJson(response: RefinedResponse<ResponseType>): any {
+    return JSON.parse(response.body as string)
   }
 
   /**
