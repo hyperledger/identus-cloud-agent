@@ -1,76 +1,74 @@
 argocd-apps:
   itemTemplates:
-   - items:
-       - name: prism-agent-application-set
-         generators: &generators
-           - list:
-               elements:
-                 - app_name: sit-prism-agent-holder
-                   namespace: sit-prism-agent-holder
-                   ingressURL: sit-prism-agent-holder.atalaprism.io
-                 - app_name: sit-prism-agent-issuer
-                   namespace: sit-prism-agent-issuer
-                   ingressURL: sit-prism-agent-issuer.atalaprism.io
-                 - app_name: sit-prism-agent-verifier
-                   namespace: sit-prism-agent-verifier
-                   ingressURL: sit-prism-agent-verifier.atalaprism.io
-     template:
-       apiVersion: argoproj.io/v1alpha1
-       kind: ApplicationSet
-       metadata:
-         name: "{{ .name }}"
-       spec:
-         generators: *generators
-         template:
-           metadata:
-             name: "{{`{{app_name}}`}}"
-             namespace: argocd
-             additionalLabels:
-               type: agent
-           spec:
-             project: system-integration-testing
-             source:
-               path: infrastructure/charts/agent
-               repoURL: "https://github.com/hyperledger-labs/open-enterprise-agent"
-               targetRevision: "main"
-               helm:
-                 values: |
-                   ingress:
-                     applicationUrls:
-                       - "{{`{{ingressURL}}`}}"
-                     platformIngressUrl: internal-useast1-sjd4e.atalaprism.io
-                     consumers:
-                       - "key1"
-                   secrets:
-                     secretStore: prism-v2-dev-sjd4e-us-east-1-externalsecrets
-                     dockerRegistryToken: dev-sjd4e-argocd-github-docker-registry-token
-                   server:
-                     useVault: false
-                     additionalEnvVariables:
-                       SECRET_STORAGE_BACKEND: "postgres"
-                   vdrManager:
-                     host: node-service.sit-prism-node
-                   vault:
-                     global:
-                       enabled: false
-             destination:
-               server: https://kubernetes.default.svc
-               namespace: "{{`{{namespace}}`}}"
-             info:
-               - name: Url
-                 value: "{{`{{ingressURL}}`}}"
-             syncPolicy:
-#               automated:
-#                 prune: true
-#                 selfHeal: true
-               syncOptions:
-                 - Validate=true
-                 - CreateNamespace=true
-                 - PrunePropagationPolicy=foreground
-                 - PruneLast=true
-               retry:
-                 limit: 5
-                 backoff:
-                   duration: 5s
-                   factor: 2
-                   maxDuration: 3m
+    - items:
+        - name: prism-agent-application-set
+          generators:
+            &generators
+            - list:
+                elements:
+                  - app_name: sit-prism-agent-holder
+                    namespace: sit-prism-agent-holder
+                    ingressURL: sit-prism-agent-holder.atalaprism.io
+                  - app_name: sit-prism-agent-issuer
+                    namespace: sit-prism-agent-issuer
+                    ingressURL: sit-prism-agent-issuer.atalaprism.io
+                  - app_name: sit-prism-agent-verifier
+                    namespace: sit-prism-agent-verifier
+                    ingressURL: sit-prism-agent-verifier.atalaprism.io
+      template:
+        apiVersion: argoproj.io/v1alpha1
+        kind: ApplicationSet
+        metadata:
+          name: "{{ .name }}"
+        spec:
+          generators: *generators
+          template:
+            metadata:
+              name: "{{`{{app_name}}`}}"
+              namespace: argocd
+              additionalLabels:
+                type: agent
+            spec:
+              project: system-integration-testing
+              source:
+                path: infrastructure/charts/agent
+                repoURL: https://github.com/hyperledger-labs/open-enterprise-agent
+                targetRevision: main
+                helm:
+                  values: >
+                    ingress:
+                      applicationUrls:
+                        - "{{`{{ingressURL}}`}}"
+                      platformIngressUrl: internal-useast1-sjd4e.atalaprism.io
+                      consumers:
+                        - "key1"
+                    secrets:
+                      secretStore: prism-v2-dev-sjd4e-us-east-1-externalsecrets
+                      dockerRegistryToken: dev-sjd4e-argocd-github-docker-registry-token
+                    server:
+                      useVault: false
+                      additionalEnvVariables:
+                        SECRET_STORAGE_BACKEND: "postgres"
+                    vdrManager:
+                      host: node-service.sit-prism-node
+                    vault:
+                      global:
+                        enabled: false
+              destination:
+                server: https://kubernetes.default.svc
+                namespace: "{{`{{namespace}}`}}"
+              info:
+                - name: Url
+                  value: "{{`{{ingressURL}}`}}"
+              syncPolicy:
+                syncOptions:
+                  - Validate=true
+                  - CreateNamespace=true
+                  - PrunePropagationPolicy=foreground
+                  - PruneLast=true
+                retry:
+                  limit: 5
+                  backoff:
+                    duration: 5s
+                    factor: 2
+                    maxDuration: 3m
