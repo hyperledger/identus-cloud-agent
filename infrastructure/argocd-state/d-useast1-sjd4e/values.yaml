@@ -2,6 +2,7 @@ argocd-apps:
   itemTemplates:
     - items:
         - name: prism-agent-application-set
+          targetRevision: prism-agent-v1.16.0
           generators: &generators
             - list:
                 elements:
@@ -18,12 +19,12 @@ argocd-apps:
         apiVersion: argoproj.io/v1alpha1
         kind: ApplicationSet
         metadata:
-          name: "{{ .name }}"
+          name: '{{ .name }}'
         spec:
           generators: *generators
           template:
             metadata:
-              name: "{{`{{app_name}}`}}"
+              name: '{{`{{app_name}}`}}'
               namespace: argocd
               additionalLabels:
                 type: agent
@@ -32,38 +33,33 @@ argocd-apps:
               source:
                 path: infrastructure/charts/agent
                 repoURL: https://github.com/hyperledger-labs/open-enterprise-agent
-                targetRevision: main
+                targetRevision: '{{ .targetRevision }}'
                 helm:
-                  values: >
+                  values: |
                     ingress:
-
                       applicationUrls:
                         - "{{`{{ingressURL}}`}}"
                       platformIngressUrl: internal-useast1-sjd4e.atalaprism.io
                       consumers:
                         - "key1"
                     secrets:
-
                       secretStore: prism-v2-dev-sjd4e-us-east-1-externalsecrets
                       dockerRegistryToken: dev-sjd4e-argocd-github-docker-registry-token
                     server:
-
                       useVault: false
                       additionalEnvVariables:
                         SECRET_STORAGE_BACKEND: "postgres"
                     vdrManager:
-
                       host: node-service.sit-prism-node
                     vault:
-
                       global:
                         enabled: false
               destination:
                 server: https://kubernetes.default.svc
-                namespace: "{{`{{namespace}}`}}"
+                namespace: '{{`{{namespace}}`}}'
               info:
                 - name: Url
-                  value: "{{`{{ingressURL}}`}}"
+                  value: https://{{`{{ingressURL}}`}}
               syncPolicy:
                 syncOptions:
                   - Validate=true
@@ -76,5 +72,3 @@ argocd-apps:
                     duration: 5s
                     factor: 2
                     maxDuration: 3m
-          source:
-            targetRevision: prism-agent-v1.16.1
