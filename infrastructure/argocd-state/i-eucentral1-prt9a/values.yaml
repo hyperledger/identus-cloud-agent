@@ -10,18 +10,18 @@ argocd-apps:
         - resources-finalizer.argocd.argoproj.io
       description: Project to hold applications for system-integration-testing environment
       sourceRepos:
-        - "*"
+        - '*'
       destinations:
-        - namespace: "*"
+        - namespace: '*'
           server: https://kubernetes.default.svc
       clusterResourceWhitelist:
-        - group: "*"
-          kind: "*"
+        - group: '*'
+          kind: '*'
   itemTemplates:
     - items:
         - name: prism-agent-application-set
-          generators:
-            &generators
+          targetRevision: prism-agent-v1.16.1
+          generators: &generators
             - list:
                 elements:
                   - app_name: eu-prism-agent-holder
@@ -37,12 +37,12 @@ argocd-apps:
         apiVersion: argoproj.io/v1alpha1
         kind: ApplicationSet
         metadata:
-          name: "{{ .name }}"
+          name: '{{ .name }}'
         spec:
           generators: *generators
           template:
             metadata:
-              name: "{{`{{app_name}}`}}"
+              name: '{{`{{app_name}}`}}'
               namespace: argocd
               additionalLabels:
                 type: agent
@@ -51,9 +51,9 @@ argocd-apps:
               source:
                 path: infrastructure/charts/agent
                 repoURL: https://github.com/hyperledger-labs/open-enterprise-agent
-                targetRevision: main
+                targetRevision: '{{ .targetRevision }}'
                 helm:
-                  values: >
+                  values: |
                     ingress:
                       applicationUrls:
                         - "{{`{{ingressURL}}`}}"
@@ -74,10 +74,10 @@ argocd-apps:
                         enabled: false
               destination:
                 server: https://kubernetes.default.svc
-                namespace: "{{`{{namespace}}`}}"
+                namespace: '{{`{{namespace}}`}}'
               info:
                 - name: Url
-                  value: "{{`{{ingressURL}}`}}"
+                  value: https://{{`{{ingressURL}}`}}
               syncPolicy:
                 syncOptions:
                   - Validate=true
