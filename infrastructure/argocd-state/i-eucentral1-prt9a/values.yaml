@@ -61,7 +61,7 @@ argocd-apps:
                       consumers:
                         - "key1"
                     secrets:
-                      secretStore: prism-v2-prt9a-us-east-1-externalsecrets
+                      secretStore: prism-v2-prt9a-eu-central-1-externalsecrets
                       dockerRegistryToken: prt9a-argocd-github-docker-registry-token
                     server:
                       useVault: false
