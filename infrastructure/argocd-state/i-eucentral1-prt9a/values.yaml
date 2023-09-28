@@ -46,8 +46,6 @@ argocd-apps:
               namespace: argocd
             spec:
               project: system-integration-testing
-              additionalLabels:
-                type: agent
               source:
                 path: infrastructure/charts/agent
                 repoURL: https://github.com/hyperledger-labs/open-enterprise-agent
