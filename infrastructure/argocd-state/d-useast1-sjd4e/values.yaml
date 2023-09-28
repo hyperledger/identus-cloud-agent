@@ -2,7 +2,7 @@ argocd-apps:
   itemTemplates:
     - items:
         - name: prism-agent-application-set
-          targetRevision: prism-agent-v1.16.2
+          targetRevision: prism-agent-v1.16.3
           generators: &generators
             - list:
                 elements:
