@@ -44,7 +44,7 @@ argocd-apps:
             metadata:
               name: '{{`{{app_name}}`}}'
               namespace: argocd
-              additionalLabels:
+              labels:
                 type: agent
             spec:
               project: system-integration-testing
