@@ -1,3 +1,12 @@
+## [1.16.2](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.16.1...prism-agent-v1.16.2) (2023-09-28)
+
+
+### Bug Fixes
+
+* Changing yq command [skip ci] ATL-5777 ([#736](https://github.com/hyperledger-labs/open-enterprise-agent/issues/736)) ([01bdfa7](https://github.com/hyperledger-labs/open-enterprise-agent/commit/01bdfa74056d983bc1fd494c99b1bab8496dc62f))
+* Integration flow ([#734](https://github.com/hyperledger-labs/open-enterprise-agent/issues/734)) ([c45a9eb](https://github.com/hyperledger-labs/open-enterprise-agent/commit/c45a9ebf0150245dfa5ebdc2eda94aa1e0fea8f3))
+* Renaming values.yml [skip ci] ATL-5777  ([#735](https://github.com/hyperledger-labs/open-enterprise-agent/issues/735)) ([bcd73c3](https://github.com/hyperledger-labs/open-enterprise-agent/commit/bcd73c310a1c033400f83cfa266cbe0aa304217a))
+
 ## [1.16.1](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.16.0...prism-agent-v1.16.1) (2023-09-27)
 
 
