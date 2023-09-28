@@ -44,10 +44,10 @@ argocd-apps:
             metadata:
               name: '{{`{{app_name}}`}}'
               namespace: argocd
-              additionalLabels:
-                type: agent
             spec:
               project: system-integration-testing
+              additionalLabels:
+                type: agent
               source:
                 path: infrastructure/charts/agent
                 repoURL: https://github.com/hyperledger-labs/open-enterprise-agent
