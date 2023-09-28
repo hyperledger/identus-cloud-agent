@@ -65,7 +65,7 @@
       [
         "@semantic-release/exec",
         {
-          "prepareCmd": "yq -i -P '(.argocd-apps.itemTemplates[].items[] |= (select(.name == \"prism-agent-application-set\").targetRevision |= \"prism-agent-v${nextRelease.version}\"' ./infrastructure/argocd-state/d-useast1-sjd4e/values.yml"
+          "prepareCmd": "yq -i -P '(.argocd-apps.itemTemplates[].items[] |= (select(.name == \"prism-agent-application-set\").targetRevision |= \"prism-agent-v${nextRelease.version}\"' ./infrastructure/argocd-state/d-useast1-sjd4e/values.yaml"
         }
       ],
       [
@@ -91,7 +91,7 @@
             "package-lock.json",
             "prism-agent/service/api/http/prism-agent-openapi-spec.yaml",
             "infrastructure/charts/agent/Chart.yaml",
-            "infrastructure/argocd-state/d-useast1-sjd4e/values.yml"
+            "infrastructure/argocd-state/d-useast1-sjd4e/values.yaml"
           ],
           "message": "chore(release): cut atala prism ${nextRelease.version} release\n\n${nextRelease.notes}\n\nSigned-off-by: Anton Baliasnikov <anton.baliasnikov@iohk.io>"
         }
