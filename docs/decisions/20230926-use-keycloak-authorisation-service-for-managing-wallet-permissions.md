@@ -106,6 +106,16 @@ sequenceDiagram
 Optionally, users or downstream applications can directly call Keycloak permission endpoint to get a RPT (requesting-party token)
 to obtain a self-contained `access-token` which already include permissions.
 
+__Endpoint references__
+
+- Agent checks the user permissions using [permission endpoint](https://www.keycloak.org/docs/22.0.0/authorization_services/#_service_obtaining_permissions)
+  - [optional] Client may also directly call this endpoint on keycloak
+- Agent registers a new resource using [resource endpoints](https://www.keycloak.org/docs/22.0.0/authorization_services/#_service_protection_resources_api)
+  - [obtain a token for the resource endpoints](https://www.keycloak.org/docs/22.0.0/authorization_services/#_service_protection_whatis_obtain_pat)
+- Admin manages the wallet permissions using both
+  - [Permission API](https://www.keycloak.org/docs/22.0.0/authorization_services/#_service_protection_permission_api_papi)
+  - [Policy API](https://www.keycloak.org/docs/22.0.0/authorization_services/#_service_authorization_uma_policy_api)
+
 ### Positive Consequences
 
 - Good separation between IAM and application concerns
